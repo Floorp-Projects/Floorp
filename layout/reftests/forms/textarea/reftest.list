@@ -6,8 +6,8 @@ skip-if(Android) fails-if(stylo) != ltr-scrollbar.html rtl-scrollbar.html
 skip-if(Android) fails-if(stylo) != in-ltr-doc-scrollbar.html in-rtl-doc-scrollbar.html
 skip-if(Android) fails-if(stylo) != ltr.html no-resize.html
 skip-if(Android) fails-if(xulRuntime.widgetToolkit=="gtk2") fails-if(stylo) != rtl.html no-resize.html # bug 834724
-fails-if(stylo) == rtl.html rtl-dynamic-attr.html
-fails-if(stylo) == rtl.html rtl-dynamic-style.html
+fuzzy-if(skiaContent,1,1) fails-if(stylo) == rtl.html rtl-dynamic-attr.html
+fuzzy-if(skiaContent,1,1) fails-if(stylo) == rtl.html rtl-dynamic-style.html
 fails-if(stylo) == rtl.html in-dynamic-rtl-doc.html
 fuzzy-if(skiaContent,1,3) fails-if(stylo) == setvalue-framereconstruction-1.html setvalue-framereconstruction-ref.html
 fuzzy-if(asyncPan&&!layersGPUAccelerated,102,4168) fails-if(stylo) == padding-scrollbar-placement.html padding-scrollbar-placement-ref.html

@@ -185,20 +185,6 @@ nsXULAlerts::ShowAlertWithIconURI(nsIAlertNotification* aAlert,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mDoNotDisturb) {
-    if (!inPrivateBrowsing) {
-      RefPtr<NotificationTelemetryService> telemetry =
-        NotificationTelemetryService::GetInstance();
-      if (telemetry) {
-        // Record the number of unique senders for XUL alerts. The OS X and
-        // libnotify backends will fire `alertshow` even if "do not disturb"
-        // is enabled. In that case, `NotificationObserver` will record the
-        // sender.
-        nsCOMPtr<nsIPrincipal> principal;
-        if (NS_SUCCEEDED(aAlert->GetPrincipal(getter_AddRefs(principal)))) {
-          Unused << NS_WARN_IF(NS_FAILED(telemetry->RecordSender(principal)));
-        }
-      }
-    }
     if (aAlertListener)
       aAlertListener->Observe(nullptr, "alertfinished", cookie.get());
     return NS_OK;

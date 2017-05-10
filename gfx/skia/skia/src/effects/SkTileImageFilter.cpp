@@ -73,7 +73,7 @@ sk_sp<SkSpecialImage> SkTileImageFilter::onFilterImage(SkSpecialImage* source,
     // We create an SkImage here b.c. it needs to be a tight fit for the tiling
     sk_sp<SkImage> subset;
     if (inputBounds.contains(srcIRect)) {
-        subset = input->makeTightSubset(srcIRect);
+        subset = input->asImage(&srcIRect);
         if (!subset) {
             return nullptr;
         }
@@ -114,6 +114,16 @@ sk_sp<SkSpecialImage> SkTileImageFilter::onFilterImage(SkSpecialImage* source,
     offset->fX = dstIRect.fLeft;
     offset->fY = dstIRect.fTop;
     return surf->makeImageSnapshot();
+}
+
+sk_sp<SkImageFilter> SkTileImageFilter::onMakeColorSpace(SkColorSpaceXformer* xformer) const {
+    SkASSERT(1 == this->countInputs());
+    if (!this->getInput(0)) {
+        return sk_ref_sp(const_cast<SkTileImageFilter*>(this));
+    }
+
+    sk_sp<SkImageFilter> input = this->getInput(0)->makeColorSpace(xformer);
+    return SkTileImageFilter::Make(fSrcRect, fDstRect, std::move(input));
 }
 
 SkIRect SkTileImageFilter::onFilterNodeBounds(const SkIRect& src, const SkMatrix& ctm,

@@ -16,8 +16,6 @@
 #include <type_traits>
 #include <utility>
 
-#define SK_SUPPORT_TRANSITION_TO_SP_INTERFACES
-
 /** \class SkRefCntBase
 
     SkRefCntBase is the base class for objects that may be shared by multiple
@@ -71,15 +69,7 @@ public:
     /** Increment the reference count. Must be balanced by a call to unref().
     */
     void ref() const {
-#ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
-        // Android employs some special subclasses that enable the fRefCnt to
-        // go to zero, but not below, prior to reusing the object.  This breaks
-        // the use of unique() on such objects and as such should be removed
-        // once the Android code is fixed.
-        SkASSERT(getRefCnt() >= 0);
-#else
         SkASSERT(getRefCnt() > 0);
-#endif
         // No barrier required.
         (void)fRefCnt.fetch_add(+1, std::memory_order_relaxed);
     }
@@ -147,12 +137,36 @@ class SK_API SkRefCnt : public SkRefCntBase {
     null in on each side of the assignment, and ensuring that ref() is called
     before unref(), in case the two pointers point to the same object.
  */
+
+#if defined(SK_BUILD_FOR_ANDROID_FRAMEWORK)
+// This version heuristically detects data races, since those otherwise result
+// in redundant reference count decrements, which are exceedingly
+// difficult to debug.
+
+#define SkRefCnt_SafeAssign(dst, src)   \
+    do {                                \
+        typedef typename std::remove_reference<decltype(dst)>::type \
+                SkRefCntPtrT;  \
+        SkRefCntPtrT old_dst = *const_cast<SkRefCntPtrT volatile *>(&dst); \
+        if (src) src->ref();            \
+        if (old_dst) old_dst->unref();          \
+        if (old_dst != *const_cast<SkRefCntPtrT volatile *>(&dst)) { \
+            SkDebugf("Detected racing Skia calls at %s:%d\n", \
+                    __FILE__, __LINE__); \
+        } \
+        dst = src;                      \
+    } while (0)
+
+#else /* !SK_BUILD_FOR_ANDROID_FRAMEWORK */
+
 #define SkRefCnt_SafeAssign(dst, src)   \
     do {                                \
         if (src) src->ref();            \
         if (dst) dst->unref();          \
         dst = src;                      \
     } while (0)
+
+#endif
 
 
 /** Call obj->ref() and return obj. The obj must not be nullptr.
@@ -188,32 +202,6 @@ template<typename T> static inline void SkSafeSetNull(T*& obj) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-
-template <typename T> struct SkTUnref {
-    void operator()(T* t) { t->unref(); }
-};
-
-/**
- *  Utility class that simply unref's its argument in the destructor.
- */
-template <typename T> class SkAutoTUnref : public std::unique_ptr<T, SkTUnref<T>> {
-public:
-    explicit SkAutoTUnref(T* obj = nullptr) : std::unique_ptr<T, SkTUnref<T>>(obj) {}
-
-    operator T*() const { return this->get(); }
-
-#if defined(SK_BUILD_FOR_ANDROID_FRAMEWORK)
-    // Need to update graphics/Shader.cpp.
-    T* detach() { return this->release(); }
-#endif
-};
-// Can't use the #define trick below to guard a bare SkAutoTUnref(...) because it's templated. :(
-
-class SkAutoUnref : public SkAutoTUnref<SkRefCnt> {
-public:
-    SkAutoUnref(SkRefCnt* obj) : SkAutoTUnref<SkRefCnt>(obj) {}
-};
-#define SkAutoUnref(...) SK_REQUIRE_LOCAL_VAR(SkAutoUnref)
 
 // This is a variant of SkRefCnt that's Not Virtual, so weighs 4 bytes instead of 8 or 16.
 // There's only benefit to using this if the deriving class does not otherwise need a vtable.
@@ -447,20 +435,14 @@ sk_sp<T> sk_make_sp(Args&&... args) {
     return sk_sp<T>(new T(std::forward<Args>(args)...));
 }
 
-#ifdef SK_SUPPORT_TRANSITION_TO_SP_INTERFACES
-
 /*
  *  Returns a sk_sp wrapping the provided ptr AND calls ref on it (if not null).
  *
  *  This is different than the semantics of the constructor for sk_sp, which just wraps the ptr,
  *  effectively "adopting" it.
- *
- *  This function may be helpful while we convert callers from ptr-based to sk_sp-based parameters.
  */
 template <typename T> sk_sp<T> sk_ref_sp(T* obj) {
     return sk_sp<T>(SkSafeRef(obj));
 }
-
-#endif
 
 #endif

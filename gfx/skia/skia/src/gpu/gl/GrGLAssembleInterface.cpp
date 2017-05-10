@@ -158,7 +158,6 @@ const GrGLInterface* GrGLAssembleGLInterface(void* ctx, GrGLGetProc get) {
     GET_PROC(Flush);
     GET_PROC(FrontFace);
     GET_PROC(GenBuffers);
-    GET_PROC(GenerateMipmap);
     GET_PROC(GetBufferParameteriv);
     GET_PROC(GetError);
     GET_PROC(GetIntegerv);
@@ -198,6 +197,7 @@ const GrGLInterface* GrGLAssembleGLInterface(void* ctx, GrGLGetProc get) {
     }
 
     GET_PROC(PixelStorei);
+    GET_PROC(PolygonMode);
     if (extensions.has("GL_EXT_raster_multisample")) {
         GET_PROC_SUFFIX(RasterSamples, EXT);
     }
@@ -288,6 +288,7 @@ const GrGLInterface* GrGLAssembleGLInterface(void* ctx, GrGLGetProc get) {
     // First look for GL3.0 FBO or GL_ARB_framebuffer_object (same since
     // GL_ARB_framebuffer_object doesn't use ARB suffix.)
     if (glVer >= GR_GL_VER(3,0) || extensions.has("GL_ARB_framebuffer_object")) {
+        GET_PROC(GenerateMipmap);
         GET_PROC(GenFramebuffers);
         GET_PROC(GetFramebufferAttachmentParameteriv);
         GET_PROC(GetRenderbufferParameteriv);
@@ -303,6 +304,7 @@ const GrGLInterface* GrGLAssembleGLInterface(void* ctx, GrGLGetProc get) {
         GET_PROC(RenderbufferStorageMultisample);
         GET_PROC(BlitFramebuffer);
     } else if (extensions.has("GL_EXT_framebuffer_object")) {
+        GET_PROC_SUFFIX(GenerateMipmap, EXT);
         GET_PROC_SUFFIX(GenFramebuffers, EXT);
         GET_PROC_SUFFIX(GetFramebufferAttachmentParameteriv, EXT);
         GET_PROC_SUFFIX(GetRenderbufferParameteriv, EXT);
@@ -529,7 +531,16 @@ const GrGLInterface* GrGLAssembleGLInterface(void* ctx, GrGLGetProc get) {
     if (glVer >= GR_GL_VER(3, 2) || extensions.has("GL_ARB_sync")) {
         GET_PROC(FenceSync);
         GET_PROC(ClientWaitSync);
+        GET_PROC(WaitSync);
         GET_PROC(DeleteSync);
+    }
+
+    if (glVer >= GR_GL_VER(4, 2) || extensions.has("GL_ARB_shader_image_load_store")) {
+        GET_PROC(BindImageTexture);
+        GET_PROC(MemoryBarrier);
+    }
+    if (glVer >= GR_GL_VER(4, 5) || extensions.has("GL_ARB_ES3_1_compatibility")) {
+        GET_PROC(MemoryBarrierByRegion);
     }
 
     interface->fStandard = kGL_GrGLStandard;
@@ -748,12 +759,19 @@ const GrGLInterface* GrGLAssembleGLESInterface(void* ctx, GrGLGetProc get) {
     GET_PROC(FramebufferRenderbuffer);
     GET_PROC(FramebufferTexture2D);
 
-    if (extensions.has("GL_CHROMIUM_framebuffer_multisample")) {
-        GET_PROC_SUFFIX(RenderbufferStorageMultisample, CHROMIUM);
-        GET_PROC_SUFFIX(BlitFramebuffer, CHROMIUM);
-    } else if (version >= GR_GL_VER(3,0)) {
+    if (version >= GR_GL_VER(3,0)) {
         GET_PROC(RenderbufferStorageMultisample);
         GET_PROC(BlitFramebuffer);
+    } else if (extensions.has("GL_CHROMIUM_framebuffer_multisample")) {
+        GET_PROC_SUFFIX(RenderbufferStorageMultisample, CHROMIUM);
+        GET_PROC_SUFFIX(BlitFramebuffer, CHROMIUM);
+    } else {
+        if (extensions.has("GL_ANGLE_framebuffer_multisample")) {
+            GET_PROC_SUFFIX(RenderbufferStorageMultisample, ANGLE);
+        }
+        if (extensions.has("GL_ANGLE_framebuffer_blit")) {
+            GET_PROC_SUFFIX(BlitFramebuffer, ANGLE);
+        }
     }
 
     if (extensions.has("GL_CHROMIUM_map_sub")) {
@@ -792,16 +810,9 @@ const GrGLInterface* GrGLAssembleGLESInterface(void* ctx, GrGLGetProc get) {
     }
 
     if (extensions.has("GL_EXT_debug_marker")) {
-        GET_PROC(InsertEventMarker);
-        GET_PROC(PushGroupMarker);
-        GET_PROC(PopGroupMarker);
-        // The below check is here because a device has been found that has the extension string but
-        // returns nullptr from the eglGetProcAddress for the functions
-        if (nullptr == functions->fInsertEventMarker ||
-            nullptr == functions->fPushGroupMarker ||
-            nullptr == functions->fPopGroupMarker) {
-            extensions.remove("GL_EXT_debug_marker");
-        }
+        GET_PROC_SUFFIX(InsertEventMarker, EXT);
+        GET_PROC_SUFFIX(PushGroupMarker, EXT);
+        GET_PROC_SUFFIX(PopGroupMarker, EXT);
     }
 
     GET_PROC(InvalidateFramebuffer);
@@ -928,7 +939,14 @@ const GrGLInterface* GrGLAssembleGLESInterface(void* ctx, GrGLGetProc get) {
     if (version >= GR_GL_VER(3, 0)) {
         GET_PROC(FenceSync);
         GET_PROC(ClientWaitSync);
+        GET_PROC(WaitSync);
         GET_PROC(DeleteSync);
+    }
+
+    if (version >= GR_GL_VER(3, 1)) {
+        GET_PROC(BindImageTexture);
+        GET_PROC(MemoryBarrier);
+        GET_PROC(MemoryBarrierByRegion);
     }
 
     interface->fStandard = kGLES_GrGLStandard;

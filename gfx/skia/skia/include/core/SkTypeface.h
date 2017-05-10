@@ -11,6 +11,7 @@
 #include "../private/SkBitmaskEnum.h"
 #include "../private/SkOnce.h"
 #include "../private/SkWeakRefCnt.h"
+#include "SkFontArguments.h"
 #include "SkFontStyle.h"
 #include "SkRect.h"
 #include "SkString.h"
@@ -77,6 +78,20 @@ public:
      */
     bool isFixedPitch() const { return fIsFixedPitch; }
 
+    /** Copy into 'coordinates' (allocated by the caller) the design variation coordinates.
+     *
+     *  @param coordinates the buffer into which to write the design variation coordinates.
+     *  @param coordinateCount the number of entries available through 'coordinates'.
+     *
+     *  @return The number of axes, or -1 if there is an error.
+     *  If 'coordinates != nullptr' and 'coordinateCount >= numAxes' then 'coordinates' will be
+     *  filled with the variation coordinates describing the position of this typeface in design
+     *  variation space. It is possible the number of axes can be retrieved but actual position
+     *  cannot.
+     */
+    int getVariationDesignPosition(SkFontArguments::VariationPosition::Coordinate coordinates[],
+                                   int coordinateCount) const;
+
     /** Return a 32bit value for this typeface, unique for the underlying font
         data. Will never return 0.
      */
@@ -95,28 +110,17 @@ public:
 
     /** Returns the default typeface, which is never nullptr. */
     static sk_sp<SkTypeface> MakeDefault(Style style = SkTypeface::kNormal);
-#ifdef SK_SUPPORT_LEGACY_TYPEFACE_PTR
-    static SkTypeface* RefDefault(Style style = SkTypeface::kNormal) {
-        return MakeDefault(style).release();
-    }
-#endif
 
-  /** Creates a new reference to the typeface that most closely matches the
-      requested familyName and fontStyle. This method allows extended font
-      face specifiers as in the SkFontStyle type. Will never return null.
+    /** Creates a new reference to the typeface that most closely matches the
+        requested familyName and fontStyle. This method allows extended font
+        face specifiers as in the SkFontStyle type. Will never return null.
 
-      @param familyName  May be NULL. The name of the font family.
-      @param fontStyle   The style of the typeface.
-      @return reference to the closest-matching typeface. Call must call
+        @param familyName  May be NULL. The name of the font family.
+        @param fontStyle   The style of the typeface.
+        @return reference to the closest-matching typeface. Call must call
               unref() when they are done.
     */
-  static sk_sp<SkTypeface> MakeFromName(const char familyName[], SkFontStyle fontStyle);
-
-#ifdef SK_SUPPORT_LEGACY_TYPEFACE_PTR
-    static SkTypeface* CreateFromName(const char familyName[], Style style) {
-        return MakeFromName(familyName, SkFontStyle::FromOldStyle(style)).release();
-    }
-#endif
+    static sk_sp<SkTypeface> MakeFromName(const char familyName[], SkFontStyle fontStyle);
 
     /** Return the typeface that most closely matches the requested typeface and style.
         Use this to pick a new style from the same family of the existing typeface.
@@ -132,22 +136,12 @@ public:
         not a valid font file, returns nullptr.
     */
     static sk_sp<SkTypeface> MakeFromFile(const char path[], int index = 0);
-#ifdef SK_SUPPORT_LEGACY_TYPEFACE_PTR
-    static SkTypeface* CreateFromFile(const char path[], int index = 0) {
-        return MakeFromFile(path, index).release();
-    }
-#endif
 
     /** Return a new typeface given a stream. If the stream is
         not a valid font file, returns nullptr. Ownership of the stream is
         transferred, so the caller must not reference it again.
     */
     static sk_sp<SkTypeface> MakeFromStream(SkStreamAsset* stream, int index = 0);
-#ifdef SK_SUPPORT_LEGACY_TYPEFACE_PTR
-    static SkTypeface* CreateFromStream(SkStreamAsset* stream, int index = 0) {
-        return MakeFromStream(stream, index).release();
-    }
-#endif
 
     /** Return a new typeface given font data and configuration. If the data
         is not valid font data, returns nullptr.
@@ -308,8 +302,9 @@ public:
      *  if allowFailure is true, this returns NULL, else it returns a
      *  dummy scalercontext that will not crash, but will draw nothing.
      */
-    SkScalerContext* createScalerContext(const SkScalerContextEffects&, const SkDescriptor*,
-                                         bool allowFailure = false) const;
+    std::unique_ptr<SkScalerContext> createScalerContext(const SkScalerContextEffects&,
+                                                         const SkDescriptor*,
+                                                         bool allowFailure = false) const;
 
     /**
      *  Return a rectangle (scaled to 1-pt) that represents the union of the bounds of all
@@ -366,6 +361,10 @@ protected:
     virtual SkStreamAsset* onOpenStream(int* ttcIndex) const = 0;
     // TODO: make pure virtual.
     virtual std::unique_ptr<SkFontData> onMakeFontData() const;
+
+    virtual int onGetVariationDesignPosition(
+        SkFontArguments::VariationPosition::Coordinate coordinates[],
+        int coordinateCount) const = 0;
 
     virtual void onGetFontDescriptor(SkFontDescriptor*, bool* isLocal) const = 0;
 

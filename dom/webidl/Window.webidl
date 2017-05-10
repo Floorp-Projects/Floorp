@@ -35,7 +35,7 @@ interface nsIDOMCrypto;
    CrossOriginReadable] readonly attribute Window self;
   [Unforgeable, StoreInSlot, Pure] readonly attribute Document? document;
   [Throws] attribute DOMString name;
-  [PutForwards=href, Unforgeable,
+  [PutForwards=href, Unforgeable, BinaryName="getLocation",
    CrossOriginReadable, CrossOriginWritable] readonly attribute Location location;
   [Throws] readonly attribute History history;
   [Func="CustomElementRegistry::IsCustomElementEnabled"]

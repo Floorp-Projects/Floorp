@@ -23,6 +23,8 @@ class SkWStream;
 
     The SkPath class encapsulates compound (multiple contour) geometric paths
     consisting of straight line segments, quadratic curves, and cubic curves.
+
+    SkPath is not thread safe unless you've first called SkPath::updateBoundsCache().
 */
 class SK_API SkPath {
 public:
@@ -356,6 +358,19 @@ public:
         // for now, just calling getBounds() is sufficient
         this->getBounds();
     }
+
+    /**
+     *  Computes a bounds that is conservatively "snug" around the path. This assumes that the
+     *  path will be filled. It does not attempt to collapse away contours that are logically
+     *  empty (e.g. moveTo(x, y) + lineTo(x, y)) but will include them in the calculation.
+     *
+     *  It differs from getBounds() in that it will look at the snug bounds of curves, whereas
+     *  getBounds() just returns the bounds of the control-points. Thus computing this may be
+     *  slower than just calling getBounds().
+     *
+     *  If the path is empty (i.e. no points or verbs), it will return SkRect::MakeEmpty().
+     */
+    SkRect computeTightBounds() const;
 
     /**
      * Does a conservative test to see whether a rectangle is inside a path. Currently it only
@@ -1121,12 +1136,12 @@ private:
         kCurrent_Version = 2
     };
 
-    SkAutoTUnref<SkPathRef>                            fPathRef;
+    sk_sp<SkPathRef>                                   fPathRef;
     int                                                fLastMoveToIndex;
     uint8_t                                            fFillType;
     mutable uint8_t                                    fConvexity;
     mutable SkAtomic<uint8_t, sk_memory_order_relaxed> fFirstDirection;// SkPathPriv::FirstDirection
-    mutable SkBool8                                    fIsVolatile;
+    SkBool8                                            fIsVolatile;
 
     /** Resets all fields other than fPathRef to their initial 'empty' values.
      *  Assumes the caller has already emptied fPathRef.
@@ -1190,6 +1205,8 @@ private:
     friend class SkAutoPathBoundsUpdate;
     friend class SkAutoDisableOvalCheck;
     friend class SkAutoDisableDirectionCheck;
+    friend class SkPathWriter;
+    friend class SkOpBuilder;
     friend class SkBench_AddPathTest; // perf test reversePathTo
     friend class PathTest_Private; // unit test reversePathTo
     friend class ForceIsRRect_Private; // unit test isRRect

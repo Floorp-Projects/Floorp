@@ -27,9 +27,8 @@ public:
      *                 Contains partial scanline information.
      *  @param frame   Is non-NULL if the source pixels are part of an image
      *                 frame that is a subset of the full image.
-     *  @param preSwizzled Indicates that the codec has already swizzled to the
-     *                     destination format.  The swizzler only needs to sample
-     *                     and/or subset.
+     *  @param skipFormatConversion Indicates that we should skip format conversion.
+     *                              The swizzler only needs to sample and/or subset.
      *
      *  Note that a deeper discussion of partial scanline subsets and image frame
      *  subsets is below.  Currently, we do not support both simultaneously.  If
@@ -39,7 +38,8 @@ public:
      */
     static SkSwizzler* CreateSwizzler(const SkEncodedInfo& encodedInfo, const SkPMColor* ctable,
                                       const SkImageInfo& dstInfo, const SkCodec::Options&,
-                                      const SkIRect* frame = nullptr, bool preSwizzled = false);
+                                      const SkIRect* frame = nullptr,
+                                      bool skipFormatConversion = false);
 
     /**
      *  Swizzle a line. Generally this will be called height times, once
@@ -77,6 +77,12 @@ public:
      *  scaling, subsetting, and partial frames into account.
      */
     int swizzleWidth() const { return fSwizzleWidth; }
+
+    /**
+     *  Returns the byte offset at which we write to destination memory, taking
+     *  scaling, subsetting, and partial frames into account.
+     */
+    size_t swizzleOffsetBytes() const { return fDstOffsetBytes; }
 
 private:
 

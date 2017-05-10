@@ -1984,6 +1984,7 @@ DocAccessible::ContentRemoved(Accessible* aChild)
 
   TreeMutation mt(parent);
   mt.BeforeRemoval(aChild);
+  MOZ_DIAGNOSTIC_ASSERT(aChild->Parent(), "Unparented #1");
 
   if (aChild->IsRelocated()) {
     nsTArray<RefPtr<Accessible> >* owned = mARIAOwnsHash.Get(parent);
@@ -1993,6 +1994,7 @@ DocAccessible::ContentRemoved(Accessible* aChild)
       mARIAOwnsHash.Remove(parent);
     }
   }
+  MOZ_DIAGNOSTIC_ASSERT(aChild->Parent(), "Unparented #2");
   parent->RemoveChild(aChild);
   UncacheChildrenInSubtree(aChild);
 

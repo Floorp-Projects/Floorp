@@ -1,14 +1,21 @@
 /*
+ * Copyright 2017 Google Inc.
+ *
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
 
-	This file is IGNORED during the build process!
+/*
 
-	As this file is updated so infrequently and flex is not universally present on build machines,
-	the lex.sksl.c file must be manually regenerated if you make any changes to this file. Just run:
+    This file is IGNORED during the build process!
 
-		flex sksl.flex
+    As this file is updated so infrequently and flex is not universally present on build machines,
+    the lex.sksl.c file must be manually regenerated if you make any changes to this file. Just run:
+
+        flex sksl.flex
 
     You will have to manually add a copyright notice to the top of lex.sksl.c.
-    
+
 */
 
 %option prefix="sksl"
@@ -30,6 +37,8 @@ LETTER [a-zA-Z_$]
 
 {DIGIT}+ { return SkSL::Token::INT_LITERAL; }
 
+"0x"[0-9a-fA-F]+ { return SkSL::Token::INT_LITERAL; }
+
 true { return SkSL::Token::TRUE_LITERAL; }
 
 false { return SkSL::Token::FALSE_LITERAL; }
@@ -43,6 +52,12 @@ for { return SkSL::Token::FOR; }
 while { return SkSL::Token::WHILE; }
 
 do { return SkSL::Token::DO; }
+
+switch { return SkSL::Token::SWITCH; }
+
+case { return SkSL::Token::CASE; }
+
+default { return SkSL::Token::DEFAULT; }
 
 break { return SkSL::Token::BREAK; }
 
@@ -71,6 +86,16 @@ highp { return SkSL::Token::HIGHP; }
 flat { return SkSL::Token::FLAT; }
 
 noperspective { return SkSL::Token::NOPERSPECTIVE; }
+
+readonly { return SkSL::Token::READONLY; }
+
+writeonly { return SkSL::Token::WRITEONLY; }
+
+coherent { return SkSL::Token::COHERENT; }
+
+volatile { return SkSL::Token::VOLATILE; }
+
+restrict { return SkSL::Token::RESTRICT; }
 
 struct { return SkSL::Token::STRUCT; }
 
@@ -122,13 +147,15 @@ precision { return SkSL::Token::PRECISION; }
 
 "&" { return SkSL::Token::BITWISEAND; }
 
+"~" { return SkSL::Token::BITWISENOT; }
+
 "||" { return SkSL::Token::LOGICALOR; }
 
 "^^" { return SkSL::Token::LOGICALXOR; }
 
 "&&" { return SkSL::Token::LOGICALAND; }
 
-"!" { return SkSL::Token::NOT; }
+"!" { return SkSL::Token::LOGICALNOT; }
 
 "?" { return SkSL::Token::QUESTION; }
 

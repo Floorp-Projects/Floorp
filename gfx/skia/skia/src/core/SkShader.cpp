@@ -5,6 +5,7 @@
  * found in the LICENSE file.
  */
 
+#include "SkArenaAlloc.h"
 #include "SkAtomics.h"
 #include "SkBitmapProcShader.h"
 #include "SkColorShader.h"
@@ -13,9 +14,12 @@
 #include "SkPaint.h"
 #include "SkPicture.h"
 #include "SkPictureShader.h"
+#include "SkPM4fPriv.h"
+#include "SkRasterPipeline.h"
 #include "SkReadBuffer.h"
 #include "SkScalar.h"
 #include "SkShader.h"
+#include "SkTLazy.h"
 #include "SkWriteBuffer.h"
 
 #if SK_SUPPORT_GPU
@@ -66,15 +70,12 @@ void SkShader::flatten(SkWriteBuffer& buffer) const {
 }
 
 bool SkShader::computeTotalInverse(const ContextRec& rec, SkMatrix* totalInverse) const {
-    SkMatrix total;
-    total.setConcat(*rec.fMatrix, fLocalMatrix);
-
-    const SkMatrix* m = &total;
+    SkMatrix total = SkMatrix::Concat(*rec.fMatrix, fLocalMatrix);
     if (rec.fLocalMatrix) {
-        total.setConcat(*m, *rec.fLocalMatrix);
-        m = &total;
+        total.preConcat(*rec.fLocalMatrix);
     }
-    return m->invert(totalInverse);
+
+    return total.invert(totalInverse);
 }
 
 bool SkShader::asLuminanceColor(SkColor* colorPtr) const {
@@ -89,23 +90,11 @@ bool SkShader::asLuminanceColor(SkColor* colorPtr) const {
     return false;
 }
 
-SkShader::Context* SkShader::createContext(const ContextRec& rec, void* storage) const {
+SkShader::Context* SkShader::makeContext(const ContextRec& rec, SkArenaAlloc* alloc) const {
     if (!this->computeTotalInverse(rec, nullptr)) {
         return nullptr;
     }
-    return this->onCreateContext(rec, storage);
-}
-
-SkShader::Context* SkShader::onCreateContext(const ContextRec& rec, void*) const {
-    return nullptr;
-}
-
-size_t SkShader::contextSize(const ContextRec& rec) const {
-    return this->onContextSize(rec);
-}
-
-size_t SkShader::onContextSize(const ContextRec&) const {
-    return 0;
+    return this->onMakeContext(rec, alloc);
 }
 
 SkShader::Context::Context(const SkShader& shader, const ContextRec& rec)
@@ -230,7 +219,7 @@ sk_sp<GrFragmentProcessor> SkShader::asFragmentProcessor(const AsFPArgs&) const 
 }
 #endif
 
-SkShader* SkShader::refAsALocalMatrixShader(SkMatrix*) const {
+sk_sp<SkShader> SkShader::makeAsALocalMatrixShader(SkMatrix*) const {
     return nullptr;
 }
 
@@ -240,11 +229,17 @@ sk_sp<SkShader> SkShader::MakeColorShader(SkColor color) { return sk_make_sp<SkC
 
 sk_sp<SkShader> SkShader::MakeBitmapShader(const SkBitmap& src, TileMode tmx, TileMode tmy,
                                            const SkMatrix* localMatrix) {
-    return SkMakeBitmapShader(src, tmx, tmy, localMatrix, kIfMutable_SkCopyPixelsMode, nullptr);
+    if (localMatrix && !localMatrix->invert(nullptr)) {
+        return nullptr;
+    }
+    return SkMakeBitmapShader(src, tmx, tmy, localMatrix, kIfMutable_SkCopyPixelsMode);
 }
 
 sk_sp<SkShader> SkShader::MakePictureShader(sk_sp<SkPicture> src, TileMode tmx, TileMode tmy,
                                             const SkMatrix* localMatrix, const SkRect* tile) {
+    if (localMatrix && !localMatrix->invert(nullptr)) {
+        return nullptr;
+    }
     return SkPictureShader::Make(std::move(src), tmx, tmy, localMatrix, tile);
 }
 
@@ -256,6 +251,39 @@ void SkShader::toString(SkString* str) const {
     }
 }
 #endif
+
+bool SkShader::appendStages(SkRasterPipeline* pipeline,
+                            SkColorSpace* dst,
+                            SkArenaAlloc* scratch,
+                            const SkMatrix& ctm,
+                            const SkPaint& paint) const {
+    return this->onAppendStages(pipeline, dst, scratch, ctm, paint, nullptr);
+}
+
+bool SkShader::onAppendStages(SkRasterPipeline* p,
+                              SkColorSpace* cs,
+                              SkArenaAlloc* alloc,
+                              const SkMatrix& ctm,
+                              const SkPaint& paint,
+                              const SkMatrix* localM) const {
+    // Legacy shaders handle the paint opacity internally,
+    // but RP applies it as a separate stage.
+    SkTCopyOnFirstWrite<SkPaint> opaquePaint(paint);
+    if (paint.getAlpha() != SK_AlphaOPAQUE) {
+        opaquePaint.writable()->setAlpha(SK_AlphaOPAQUE);
+    }
+
+    ContextRec rec(*opaquePaint, ctm, localM, ContextRec::kPM4f_DstType, cs);
+    if (auto* ctx = this->makeContext(rec, alloc)) {
+        p->append(SkRasterPipeline::shader_adapter, ctx);
+
+        // Legacy shaders aren't aware of color spaces. We can pretty
+        // safely assume they're in sRGB gamut.
+        return append_gamut_transform(p, alloc,
+                                      SkColorSpace::MakeSRGB().get(), cs);
+    }
+    return false;
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -272,32 +300,5 @@ void SkEmptyShader::toString(SkString* str) const {
     this->INHERITED::toString(str);
 
     str->append(")");
-}
-#endif
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-#ifdef SK_SUPPORT_LEGACY_CREATESHADER_PTR
-SkShader* SkShader::CreateComposeShader(SkShader* dst, SkShader* src, SkXfermode::Mode mode) {
-    return MakeComposeShader(sk_ref_sp(dst), sk_ref_sp(src), mode).release();
-}
-SkShader* SkShader::CreateComposeShader(SkShader* dst, SkShader* src, SkXfermode* xfer) {
-    return MakeComposeShader(sk_ref_sp(dst), sk_ref_sp(src), xfer).release();
-}
-SkShader* SkShader::CreatePictureShader(const SkPicture* src, TileMode tmx, TileMode tmy,
-                                     const SkMatrix* localMatrix, const SkRect* tile) {
-    return MakePictureShader(sk_ref_sp(const_cast<SkPicture*>(src)), tmx, tmy,
-                             localMatrix, tile).release();
-}
-SkShader* SkShader::newWithColorFilter(SkColorFilter* filter) const {
-    return this->makeWithColorFilter(sk_ref_sp(filter)).release();
-}
-#endif
-
-#ifdef SK_SUPPORT_LEGACY_XFERMODE_PTR
-#include "SkXfermode.h"
-sk_sp<SkShader> SkShader::MakeComposeShader(sk_sp<SkShader> dst, sk_sp<SkShader> src,
-                                            SkXfermode* xfer) {
-    return MakeComposeShader(std::move(dst), std::move(src), sk_ref_sp(xfer));
 }
 #endif

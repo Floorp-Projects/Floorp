@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 
-import os
-
 import locale
+import subprocess
 from collections import defaultdict
 locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 
@@ -44,7 +43,6 @@ LOCAL_INCLUDES += [
     'skia/include/core',
     'skia/include/effects',
     'skia/include/gpu',
-    'skia/include/images',
     'skia/include/pathops',
     'skia/include/ports',
     'skia/include/private',
@@ -55,26 +53,16 @@ LOCAL_INCLUDES += [
     'skia/src/gpu',
     'skia/src/gpu/effects',
     'skia/src/gpu/gl',
+    'skia/src/gpu/glsl',
     'skia/src/image',
     'skia/src/lazy',
     'skia/src/opts',
     'skia/src/sfnt',
+    'skia/src/sksl',
     'skia/src/utils',
     'skia/src/utils/mac',
     'skia/src/utils/win',
 ]
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android'):
-    DEFINES['SK_FONTHOST_CAIRO_STANDALONE'] = 0
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in {
-    'android',
-    'cocoa',
-    'gtk2',
-    'gtk3',
-    'uikit',
-  }:
-    DEFINES['SK_FONTHOST_DOES_NOT_USE_FONTMGR'] = 1
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     DEFINES['UNICODE'] = True
@@ -86,19 +74,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 
 # We should autogenerate these SSE related flags.
 
-if CONFIG['_MSC_VER']:
-    # MSVC doesn't need special compiler flags, but Skia needs to be told that these files should
-    # be built with the required SSE level or it will simply compile in stubs and cause runtime crashes
-    SOURCES['skia/src/opts/SkBitmapFilter_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
-    SOURCES['skia/src/opts/SkBitmapProcState_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
-    SOURCES['skia/src/opts/SkBitmapProcState_opts_SSSE3.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=31']
-    SOURCES['skia/src/opts/SkBlitRow_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
-    SOURCES['skia/src/opts/SkOpts_ssse3.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=31']
-    SOURCES['skia/src/opts/SkOpts_sse41.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=41']
-    SOURCES['skia/src/opts/SkOpts_sse42.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=42']
-    SOURCES['skia/src/opts/SkOpts_avx.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=51']
 if CONFIG['INTEL_ARCHITECTURE'] and (CONFIG['GNU_CC'] or CONFIG['CLANG_CL']):
-    SOURCES['skia/src/opts/SkBitmapFilter_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
     SOURCES['skia/src/opts/SkBitmapProcState_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
     SOURCES['skia/src/opts/SkBitmapProcState_opts_SSSE3.cpp'].flags += ['-mssse3']
     SOURCES['skia/src/opts/SkBlitRow_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
@@ -106,8 +82,20 @@ if CONFIG['INTEL_ARCHITECTURE'] and (CONFIG['GNU_CC'] or CONFIG['CLANG_CL']):
     SOURCES['skia/src/opts/SkOpts_sse41.cpp'].flags += ['-msse4.1']
     SOURCES['skia/src/opts/SkOpts_sse42.cpp'].flags += ['-msse4.2']
     SOURCES['skia/src/opts/SkOpts_avx.cpp'].flags += ['-mavx']
-elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC'] and CONFIG['BUILD_ARM_NEON']:
-    DEFINES['SK_ARM_HAS_OPTIONAL_NEON'] = 1
+    SOURCES['skia/src/opts/SkOpts_hsw.cpp'].flags += ['-mavx2']
+elif CONFIG['_MSC_VER']:
+    # MSVC doesn't need special compiler flags, but Skia needs to be told that these files should
+    # be built with the required SSE level or it will simply compile in stubs and cause runtime crashes
+    SOURCES['skia/src/opts/SkBitmapProcState_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
+    SOURCES['skia/src/opts/SkBitmapProcState_opts_SSSE3.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=31']
+    SOURCES['skia/src/opts/SkBlitRow_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
+    SOURCES['skia/src/opts/SkOpts_ssse3.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=31']
+    SOURCES['skia/src/opts/SkOpts_sse41.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=41']
+    SOURCES['skia/src/opts/SkOpts_sse42.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=42']
+    SOURCES['skia/src/opts/SkOpts_avx.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=51']
+    SOURCES['skia/src/opts/SkOpts_hsw.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=52']
+elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC']:
+    CXXFLAGS += CONFIG['NEON_FLAGS']
 
 DEFINES['SKIA_IMPLEMENTATION'] = 1
 
@@ -158,12 +146,22 @@ import json
 
 platforms = ['linux', 'mac', 'android', 'win']
 
+def parse_sources(output):
+  return set(v.replace('//', 'skia/') for v in output.split() if v.endswith('.cpp') or v.endswith('.S'))
+
 def generate_opt_sources():
-  opt_sources = {'opts': {''}}
-  for root, dirs, files in os.walk('skia/src/opts'):
-    for name in files:
-      if name.endswith('.cpp'):
-        opt_sources['opts'].add(os.path.join(root, name))
+  cpus = [('intel', 'x86', [':sse2', ':ssse3', ':sse41', ':sse42', ':avx', ':hsw']),
+          ('arm', 'arm', [':armv7']),
+          ('none', 'none', [':none'])]
+
+  opt_sources = {}
+  for key, cpu, deps in cpus:
+    subprocess.check_output('cd skia && bin/gn gen out/{0} --args=\'target_cpu="{1}"\''.format(key, cpu), shell=True)
+    opt_sources[key] = set()
+    for dep in deps:
+        output = subprocess.check_output('cd skia && bin/gn desc out/{0} {1} sources'.format(key, dep), shell=True)
+        if output:
+            opt_sources[key].update(parse_sources(output))
 
   return opt_sources
 
@@ -171,33 +169,25 @@ def generate_platform_sources():
   sources = {}
 
   for plat in platforms:
-    if os.system("cd skia && GYP_GENERATORS=dump_mozbuild ./gyp_skia -D OS=%s -D host_os=linux gyp/skia_lib.gyp" % plat) != 0:
-      print 'Failed to generate sources for ' + plat
-      continue
+    output = subprocess.check_output('cd skia && bin/gn gen out/{0} --args=\'target_os="{0}"\' > /dev/null && bin/gn desc out/{0} :skia sources'.format(plat), shell=True)
+    if output:
+      sources[plat] = parse_sources(output)
 
-
-    f = open('skia/sources.json');
-    sources[plat] = set(v.replace('../', 'skia/') for v in json.load(f));
-    f.close()
+  deps = {':effects' : 'common', ':gpu' : 'gpu', ':pdf' : 'pdf'}
+  for dep, key in deps.items():
+    output = subprocess.check_output('cd skia && bin/gn desc out/linux {} sources'.format(dep), shell=True)
+    if output:
+      sources[key] = parse_sources(output)
 
   return dict(sources.items() + generate_opt_sources().items())
 
 
 def generate_separated_sources(platform_sources):
   blacklist = [
-    'experimental',
-    'SkXML',
     'GrGLCreateNativeInterface',
     'GrGLCreateNullInterface',
     'GrGLAssembleInterface',
     'GrGLTestInterface',
-    'fontconfig',
-    'FontConfig',
-    'SkThreadUtils_pthread_',
-    'SkFontMgr_android',
-    'SkFontMgr_custom',
-    'SkFontHost_FreeType.cpp',
-    'Movie',
     'ImageEncoder',
     'skia/src/c/',
     'skia/src/effects/Gr',
@@ -205,7 +195,6 @@ def generate_separated_sources(platform_sources):
     'skia/src/fonts/',
     'skia/src/images/',
     'skia/src/ports/SkImageGenerator',
-    'skia/src/sksl/',
     'skia/src/gpu/vk/',
     'SkBitmapRegion',
     'SkLight',
@@ -216,11 +205,7 @@ def generate_separated_sources(platform_sources):
     'codec',
     'SkWGL',
     'SkMemory_malloc',
-    'SkOpts_',
-    'opts_check_x86',
     'third_party',
-    # unused in skia/src/utils
-    'SkBoundaryPatch',
     'SkCamera',
     'SkCanvasStack',
     'SkCanvasStateUtils',
@@ -229,19 +214,17 @@ def generate_separated_sources(platform_sources):
     'SkDumpCanvas',
     'SkFrontBufferedStream',
     'SkInterpolator',
-    'SkLayer',
-    'SkMeshUtils',
     'SkMD5',
     'SkMultiPictureDocument',
-    'SkNinePatch',
     'SkNullCanvas',
     'SkNWayCanvas',
+    'SkOverdrawCanvas',
     'SkPaintFilterCanvas',
     'SkParseColor',
-    'SkPatchGrid',
-    'SkRTConf',
     'SkTextBox',
     'SkWhitelistTypefaces',
+    'SkXPS',
+    'SkCreateCGImageRef',
   ]
 
   def isblacklisted(value):
@@ -268,30 +251,20 @@ def generate_separated_sources(platform_sources):
       # 'skia/src/ports/SkDebug_android.cpp',
       'skia/src/ports/SkFontHost_cairo.cpp',
       # 'skia/src/ports/SkFontHost_FreeType.cpp',
-      # 'skia/src/ports/SkFontHost_FreeType_common.cpp',
+      'skia/src/ports/SkFontHost_FreeType_common.cpp',
       # 'skia/src/ports/SkTime_Unix.cpp',
       # 'skia/src/utils/SkThreadUtils_pthread.cpp',
     },
     'linux': {
       'skia/src/ports/SkFontHost_cairo.cpp',
+      'skia/src/ports/SkFontHost_FreeType_common.cpp',
     },
-    'intel': {
-      # There is currently no x86-specific opt for SkTextureCompression
-      'skia/src/opts/opts_check_x86.cpp',
-      'skia/src/opts/SkOpts_ssse3.cpp',
-      'skia/src/opts/SkOpts_sse41.cpp',
-      'skia/src/opts/SkOpts_sse42.cpp',
-      'skia/src/opts/SkOpts_avx.cpp',
-      'skia/src/opts/SkOpts_hsw.cpp',
-    },
-    'arm': {
-      'skia/src/core/SkUtilsArm.cpp',
-    },
-    'neon': {
-      'skia/src/opts/SkOpts_neon.cpp',
-    },
+    'intel': set(),
+    'arm': set(),
     'none': set(),
-    'pdf': set(),
+    'pdf': {
+      'skia/src/core/SkMD5.cpp',
+    },
     'gpu': set()
   })
 
@@ -305,29 +278,11 @@ def generate_separated_sources(platform_sources):
 
       key = plat
 
-      if '_SSE' in value or '_SSSE' in value:
-        key = 'intel'
-      elif '_neon' in value:
-        key = 'neon'
-      elif '_arm' in value:
-        key = 'arm'
-      elif '_none' in value:
-        key = 'none'
-      elif 'gpu' in value or 'Gpu' in value:
-        key = 'gpu'
-      elif all(value in platform_sources.get(p, {})
-               for p in platforms if p != plat):
+      if all(value in platform_sources.get(p, {})
+             for p in platforms if p != plat):
         key = 'common'
 
       separated[key].add(value)
-
-  if os.system("cd skia && GYP_GENERATORS=dump_mozbuild ./gyp_skia -D OS=linux -D host_os=linux -R pdf gyp/pdf.gyp") != 0:
-    print 'Failed to generate sources for Skia PDF'
-  else:
-    f = open('skia/sources.json');
-    separated['pdf'].add('skia/src/core/SkMD5.cpp');
-    separated['pdf'].update(filter(lambda x: 'pdf' in x, set(v.replace('../', 'skia/') for v in json.load(f))));
-    f.close()
 
   return separated
 
@@ -383,16 +338,18 @@ unified_blacklist = [
   'SkBlitter_RGB16.cpp',
   'SkBlitter_Sprite.cpp',
   'SkScan_Antihair.cpp',
+  'SkScan_AntiPath.cpp',
   'SkParse.cpp',
   'SkPDFFont.cpp',
   'SkPictureData.cpp',
-  'GrDrawContext',
   'GrResourceCache',
+  'GrResourceProvider',
   'GrAA',
   'GrGL',
-  'GrBatchAtlas.cpp',
   'GrMSAAPathRenderer.cpp',
   'GrNonAAFillRect',
+  'GrPathUtils',
+  'GrShadowRRectOp',
   'SkColorSpace',
   'SkImage_Gpu.cpp',
   'SkPathOpsDebug.cpp',
@@ -401,6 +358,10 @@ unified_blacklist = [
   'SkMiniRecorder.cpp',
   'SkXfermode',
   'SkMatrix44.cpp',
+  'SkRTree.cpp',
+  'SkVertices.cpp',
+  'SkJumper',
+  'lex.layout.cpp',
 ] + opt_whitelist
 
 def write_sources(f, values, indent):
@@ -458,13 +419,13 @@ def write_mozbuild(sources):
   f.write("if CONFIG['MOZ_ENABLE_SKIA_GPU']:\n")
   write_sources(f, sources['gpu'], 4)
 
-  f.write("if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android'):\n")
+  f.write("if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':\n")
   write_sources(f, sources['android'], 4)
 
-  f.write("if CONFIG['MOZ_WIDGET_TOOLKIT'] in {'cocoa', 'uikit'}:\n")
+  f.write("if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('cocoa', 'uikit'):\n")
   write_sources(f, sources['mac'], 4)
 
-  f.write("if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:\n")
+  f.write("if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3'):\n")
   write_sources(f, sources['linux'], 4)
 
   f.write("if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':\n")
@@ -479,15 +440,6 @@ def write_mozbuild(sources):
   f.write("elif CONFIG['CPU_ARCH'] in ('arm', 'aarch64') and CONFIG['GNU_CC']:\n")
   write_sources(f, sources['arm'], 4)
   write_cflags(f, sources['arm'], opt_whitelist, 'skia_opt_flags', 4)
-
-  f.write("    if CONFIG['CPU_ARCH'] == 'aarch64':\n")
-  write_sources(f, sources['neon'], 8)
-  f.write("    elif CONFIG['BUILD_ARM_NEON']:\n")
-  write_list(f, 'SOURCES', sources['neon'], 8)
-  write_cflags(f, sources['neon'], 'neon', "CONFIG['NEON_FLAGS']", 8)
-
-  f.write("    if CONFIG['CPU_ARCH'] == 'aarch64' or CONFIG['BUILD_ARM_NEON']:\n")
-  write_cflags(f, sources['neon'], opt_whitelist, 'skia_opt_flags', 8)
  
   f.write("else:\n")
   write_sources(f, sources['none'], 4)

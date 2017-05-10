@@ -23,7 +23,7 @@
 #include "SkShader.h"
 #include "SkTHash.h"
 #include "SkWriteBuffer.h"
-#include "SkXfermode.h"
+#include "SkXfermodePriv.h"
 
 class SkBitmap;
 class SkImage;
@@ -70,6 +70,8 @@ public:
         kBlurMaskFilterWritesOccluder      = 47,
         kGradientShaderFloatColor_Version  = 49,
         kXfermodeToBlendMode_Version       = 50,
+        kXfermodeToBlendMode2_Version      = 51,
+        kTextBlobImplicitRunCount_Version  = 52,
     };
 
     /**
@@ -104,8 +106,6 @@ public:
     bool isScalarFloat() const { return SkToBool(fFlags & kScalarIsFloat_Flag); }
     bool isPtr64Bit() const { return SkToBool(fFlags & kPtrIs64Bit_Flag); }
     bool isValidating() const { return SkToBool(fFlags & kValidation_Flag); }
-
-    SkReader32* getReader32() { return &fReader; }
 
     size_t size() { return fReader.size(); }
     size_t offset() { return fReader.offset(); }

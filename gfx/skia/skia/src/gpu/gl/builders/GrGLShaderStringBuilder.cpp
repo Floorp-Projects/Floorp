@@ -6,9 +6,13 @@
  */
 
 #include "GrGLShaderStringBuilder.h"
+#include "SkAutoMalloc.h"
+#include "SkSLCompiler.h"
+#include "SkSLGLSLCodeGenerator.h"
+#include "SkTraceEvent.h"
 #include "gl/GrGLGpu.h"
 #include "gl/GrGLSLPrettyPrint.h"
-#include "SkTraceEvent.h"
+#include "ir/SkSLProgram.h"
 
 #define GL_CALL(X) GR_GL_CALL(gpu->glInterface(), X)
 #define GL_CALL_RET(R, X) GR_GL_CALL_RET(gpu->glInterface(), R, X)
@@ -16,7 +20,7 @@
 // Print the source code for all shaders generated.
 static const bool c_PrintShaders{false};
 
-static void print_shader_source(const char** strings, int* lengths, int count);
+static void print_source_with_line_numbers(const SkString&);
 
 GrGLuint GrGLCompileAndAttachShader(const GrGLContext& glCtx,
                                     GrGLuint programId,
@@ -24,7 +28,9 @@ GrGLuint GrGLCompileAndAttachShader(const GrGLContext& glCtx,
                                     const char** strings,
                                     int* lengths,
                                     int count,
-                                    GrGpu::Stats* stats) {
+                                    GrGpu::Stats* stats,
+                                    const SkSL::Program::Settings& settings,
+                                    SkSL::Program::Inputs* outInputs) {
     const GrGLInterface* gli = glCtx.interface();
 
     GrGLuint shaderId;
@@ -33,14 +39,41 @@ GrGLuint GrGLCompileAndAttachShader(const GrGLContext& glCtx,
         return 0;
     }
 
+    SkString sksl;
 #ifdef SK_DEBUG
-    SkString prettySource = GrGLSLPrettyPrint::PrettyPrintGLSL(strings, lengths, count, false);
-    const GrGLchar* sourceStr = prettySource.c_str();
-    GrGLint sourceLength = static_cast<GrGLint>(prettySource.size());
-    GR_GL_CALL(gli, ShaderSource(shaderId, 1, &sourceStr, &sourceLength));
+    sksl = GrGLSLPrettyPrint::PrettyPrintGLSL(strings, lengths, count, false);
 #else
-    GR_GL_CALL(gli, ShaderSource(shaderId, count, strings, lengths));
+    for (int i = 0; i < count; i++) {
+        sksl.append(strings[i], lengths[i]);
+    }
 #endif
+
+    SkSL::String glsl;
+    if (type == GR_GL_VERTEX_SHADER || type == GR_GL_FRAGMENT_SHADER) {
+        SkSL::Compiler& compiler = *glCtx.compiler();
+        std::unique_ptr<SkSL::Program> program;
+        program = compiler.convertProgram(
+                                        type == GR_GL_VERTEX_SHADER ? SkSL::Program::kVertex_Kind
+                                                                    : SkSL::Program::kFragment_Kind,
+                                        sksl,
+                                        settings);
+        if (!program || !compiler.toGLSL(*program, &glsl)) {
+            SkDebugf("SKSL compilation error\n----------------------\n");
+            SkDebugf("SKSL:\n");
+            print_source_with_line_numbers(sksl);
+            SkDebugf("\nErrors:\n%s\n", compiler.errorText().c_str());
+            SkDEBUGFAIL("SKSL compilation failed!\n");
+        }
+        *outInputs = program->fInputs;
+    } else {
+        // TODO: geometry shader support in sksl.
+        SkASSERT(type == GR_GL_GEOMETRY_SHADER);
+        glsl = sksl;
+    }
+
+    const char* glslChars = glsl.c_str();
+    GrGLint glslLength = (GrGLint) glsl.size();
+    GR_GL_CALL(gli, ShaderSource(shaderId, 1, &glslChars, &glslLength));
 
     // If tracing is enabled in chrome then we pretty print
     bool traceShader;
@@ -72,17 +105,28 @@ GrGLuint GrGLCompileAndAttachShader(const GrGLContext& glCtx,
                 // buffer param validation.
                 GrGLsizei length = GR_GL_INIT_ZERO;
                 GR_GL_CALL(gli, GetShaderInfoLog(shaderId, infoLen+1, &length, (char*)log.get()));
-                print_shader_source(strings, lengths, count);
-                SkDebugf("\n%s", (const char*)log.get());
+                SkDebugf("GLSL compilation error\n----------------------\n");
+                SkDebugf("SKSL:\n");
+                print_source_with_line_numbers(sksl);
+                SkDebugf("GLSL:\n");
+                print_source_with_line_numbers(glsl);
+                SkDebugf("Errors:\n%s\n", (const char*) log.get());
             }
-            SkDEBUGFAIL("Shader compilation failed!");
+            SkDEBUGFAIL("GLSL compilation failed!");
             GR_GL_CALL(gli, DeleteShader(shaderId));
             return 0;
         }
     }
 
     if (c_PrintShaders) {
-        print_shader_source(strings, lengths, count);
+        const char* typeName = "Unknown";
+        switch (type) {
+            case GR_GL_VERTEX_SHADER: typeName = "Vertex"; break;
+            case GR_GL_GEOMETRY_SHADER: typeName = "Geometry"; break;
+            case GR_GL_FRAGMENT_SHADER: typeName = "Fragment"; break;
+        }
+        SkDebugf("---- %s shader ----------------------------------------------------\n", typeName);
+        print_source_with_line_numbers(sksl);
     }
 
     // Attach the shader, but defer deletion until after we have linked the program.
@@ -94,12 +138,11 @@ GrGLuint GrGLCompileAndAttachShader(const GrGLContext& glCtx,
     return shaderId;
 }
 
-static void print_shader_source(const char** strings, int* lengths, int count) {
-    const SkString& pretty = GrGLSLPrettyPrint::PrettyPrintGLSL(strings, lengths, count, true);
+static void print_source_with_line_numbers(const SkString& source) {
     SkTArray<SkString> lines;
-    SkStrSplit(pretty.c_str(), "\n", &lines);
-    for (const SkString& line : lines) {
+    SkStrSplit(source.c_str(), "\n", kStrict_SkStrSplitMode, &lines);
+    for (int line = 0; line < lines.count(); ++line) {
         // Print the shader one line at the time so it doesn't get truncated by the adb log.
-        SkDebugf("%s\n", line.c_str());
+        SkDebugf("%4i\t%s\n", line + 1, lines[line].c_str());
     }
 }

@@ -3549,6 +3549,12 @@ nsHalfOpenSocket::StartFastOpen()
     gHttpHandler->ConnMgr()->RecvdConnect();
     nsresult rv = SetupConn(mStreamOut, true);
     if (NS_FAILED(rv)) {
+        // If SetupConn failed this will CloseTransaction and socketTransport
+        // with an error, therefore we can close this HalfOpen. socketTransport
+        // will remove reference to this HalfOpen as well.
+        mConnectionNegotiatingFastOpen->SetFastOpen(false);
+        mConnectionNegotiatingFastOpen = nullptr;
+        CancelBackupTimer();
         mStreamOut = nullptr;
         mStreamIn = nullptr;
         mSocketTransport = nullptr;
@@ -3612,6 +3618,11 @@ nsHalfOpenSocket::SetFastOpenConnected(nsresult aError)
         mStreamIn = nullptr;
     }
 
+#ifndef DEBUG
+    if (!mConnectionNegotiatingFastOpen) {
+        return;
+    }
+#endif
     mConnectionNegotiatingFastOpen->SetFastOpen(false);
     mConnectionNegotiatingFastOpen = nullptr;
 }
@@ -3705,8 +3716,10 @@ nsHalfOpenSocket::SetupConn(nsIAsyncOutputStream *out,
             mStreamOut = nullptr;
             mStreamIn = nullptr;
             mSocketTransport = nullptr;
+        } else {
+            conn->SetFastOpen(true);
+            mConnectionNegotiatingFastOpen = conn;
         }
-        conn->SetFastOpen(aFastOpen);
     } else if (out == mBackupStreamOut) {
         TimeDuration rtt = TimeStamp::Now() - mBackupSynStarted;
         rv = conn->Init(mEnt->mConnInfo,
@@ -3805,8 +3818,8 @@ nsHalfOpenSocket::SetupConn(nsIAsyncOutputStream *out,
                 !mEnt->mConnInfo->UsingConnect()) {
                 int32_t idx = mEnt->mIdleConns.IndexOf(conn);
                 if (idx != -1) {
-                    DebugOnly<nsresult> rv = gHttpHandler->ConnMgr()->RemoveIdleConnection(conn);
-                    MOZ_ASSERT(NS_SUCCEEDED(rv));
+                    DebugOnly<nsresult> rvDeb = gHttpHandler->ConnMgr()->RemoveIdleConnection(conn);
+                    MOZ_ASSERT(NS_SUCCEEDED(rvDeb));
                     conn->EndIdleMonitoring();
                     RefPtr<nsAHttpTransaction> trans;
                     if (mTransaction->IsNullTransaction() &&
@@ -3823,9 +3836,6 @@ nsHalfOpenSocket::SetupConn(nsIAsyncOutputStream *out,
                 }
             }
         }
-    }
-    if (aFastOpen) {
-        mConnectionNegotiatingFastOpen = conn;
     }
 
     // If this halfOpenConn was speculative, but at the ende the conn got a

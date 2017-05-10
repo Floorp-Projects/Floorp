@@ -4,7 +4,7 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
- 
+
 #ifndef SKSL_TERNARYEXPRESSION
 #define SKSL_TERNARYEXPRESSION
 
@@ -26,14 +26,14 @@ struct TernaryExpression : public Expression {
         ASSERT(fIfTrue->fType == fIfFalse->fType);
     }
 
-    std::string description() const override {
-        return "(" + fTest->description() + " ? " + fIfTrue->description() + " : " + 
+    String description() const override {
+        return "(" + fTest->description() + " ? " + fIfTrue->description() + " : " +
                fIfFalse->description() + ")";
     }
 
-    const std::unique_ptr<Expression> fTest;
-    const std::unique_ptr<Expression> fIfTrue;
-    const std::unique_ptr<Expression> fIfFalse;
+    std::unique_ptr<Expression> fTest;
+    std::unique_ptr<Expression> fIfTrue;
+    std::unique_ptr<Expression> fIfFalse;
 
     typedef Expression INHERITED;
 };

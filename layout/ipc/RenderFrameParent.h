@@ -90,8 +90,6 @@ public:
 
   void EnsureLayersConnected(CompositorOptions* aCompositorOptions);
 
-  LayerManager* AttachLayerManager();
-
 protected:
   void ActorDestroy(ActorDestroyReason why) override;
 
@@ -116,7 +114,6 @@ private:
 
   RefPtr<nsFrameLoader> mFrameLoader;
   RefPtr<ContainerLayer> mContainer;
-  RefPtr<LayerManager> mLayerManager;
 
   // True after Destroy() has been called, which is triggered
   // originally by nsFrameLoader::Destroy().  After this point, we can

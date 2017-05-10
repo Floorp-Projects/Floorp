@@ -56,17 +56,11 @@ SkSurfaceProps::SkSurfaceProps(const SkSurfaceProps& other)
 ///////////////////////////////////////////////////////////////////////////////
 
 SkSurface_Base::SkSurface_Base(int width, int height, const SkSurfaceProps* props)
-    : INHERITED(width, height, props)
-{
-    fCachedCanvas = nullptr;
-    fCachedImage = nullptr;
+    : INHERITED(width, height, props) {
 }
 
 SkSurface_Base::SkSurface_Base(const SkImageInfo& info, const SkSurfaceProps* props)
-    : INHERITED(info, props)
-{
-    fCachedCanvas = nullptr;
-    fCachedImage = nullptr;
+    : INHERITED(info, props) {
 }
 
 SkSurface_Base::~SkSurface_Base() {
@@ -74,13 +68,10 @@ SkSurface_Base::~SkSurface_Base() {
     if (fCachedCanvas) {
         fCachedCanvas->setSurfaceBase(nullptr);
     }
-
-    SkSafeUnref(fCachedImage);
-    SkSafeUnref(fCachedCanvas);
 }
 
 void SkSurface_Base::onDraw(SkCanvas* canvas, SkScalar x, SkScalar y, const SkPaint* paint) {
-    auto image = this->makeImageSnapshot(SkBudgeted::kYes);
+    auto image = this->makeImageSnapshot();
     if (image) {
         canvas->drawImage(image, x, y, paint);
     }
@@ -106,8 +97,7 @@ void SkSurface_Base::aboutToDraw(ContentChangeMode mode) {
 
         // regardless of copy-on-write, we must drop our cached image now, so
         // that the next request will get our new contents.
-        fCachedImage->unref();
-        fCachedImage = nullptr;
+        fCachedImage.reset();
 
         if (unique) {
             // Our content isn't held by any image now, so we can consider that content mutable.
@@ -163,14 +153,8 @@ SkCanvas* SkSurface::getCanvas() {
     return asSB(this)->getCachedCanvas();
 }
 
-sk_sp<SkImage> SkSurface::makeImageSnapshot(SkBudgeted budgeted) {
-    // the caller will call unref() to balance this
-    return asSB(this)->refCachedImage(budgeted, kNo_ForceUnique);
-}
-
-sk_sp<SkImage> SkSurface::makeImageSnapshot(SkBudgeted budgeted, ForceUnique unique) {
-    // the caller will call unref() to balance this
-    return asSB(this)->refCachedImage(budgeted, unique);
+sk_sp<SkImage> SkSurface::makeImageSnapshot() {
+    return asSB(this)->refCachedImage();
 }
 
 sk_sp<SkSurface> SkSurface::makeSurface(const SkImageInfo& info) {
@@ -185,22 +169,6 @@ void SkSurface::draw(SkCanvas* canvas, SkScalar x, SkScalar y,
 bool SkSurface::peekPixels(SkPixmap* pmap) {
     return this->getCanvas()->peekPixels(pmap);
 }
-
-#ifdef SK_SUPPORT_LEGACY_PEEKPIXELS_PARMS
-const void* SkSurface::peekPixels(SkImageInfo* info, size_t* rowBytes) {
-    SkPixmap pm;
-    if (this->peekPixels(&pm)) {
-        if (info) {
-            *info = pm.info();
-        }
-        if (rowBytes) {
-            *rowBytes = pm.rowBytes();
-        }
-        return pm.addr();
-    }
-    return nullptr;
-}
-#endif
 
 bool SkSurface::readPixels(const SkImageInfo& dstInfo, void* dstPixels, size_t dstRowBytes,
                            int srcX, int srcY) {
