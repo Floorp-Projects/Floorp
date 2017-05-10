@@ -6,7 +6,6 @@
 
 #include "Base64.h"
 
-#include "mozilla/ScopeExit.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "nsIInputStream.h"
 #include "nsString.h"
@@ -465,26 +464,15 @@ Base64Decode(const nsACString& aBase64, nsACString& aBinary)
 nsresult
 Base64Decode(const nsAString& aBase64, nsAString& aBinary)
 {
-  auto truncater = mozilla::MakeScopeExit([&]() { aBinary.Truncate(); });
-
-  // XXX We should really consider decoding directly from the string, rather
-  // than making a separate copy here.
-  nsAutoCString base64;
-  if (!base64.SetCapacity(aBase64.Length(), mozilla::fallible)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  LossyCopyUTF16toASCII(aBase64, base64);
-
+  NS_LossyConvertUTF16toASCII base64(aBase64);
   nsAutoCString binary;
 
   nsresult rv = Base64Decode(base64, binary);
-  NS_ENSURE_STATE(rv, rv);
-
-  if (!CopyASCIItoUTF16(binary, aBinary, mozilla::fallible)) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (NS_SUCCEEDED(rv)) {
+    CopyASCIItoUTF16(binary, aBinary);
+  } else {
+    aBinary.Truncate();
   }
-
-  truncater.release();
 
   return rv;
 }
