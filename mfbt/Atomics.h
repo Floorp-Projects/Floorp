@@ -21,6 +21,8 @@
 #include "mozilla/Compiler.h"
 #include "mozilla/TypeTraits.h"
 
+#include <atomic>
+
 #include <stdint.h>
 
 namespace mozilla {
@@ -139,11 +141,6 @@ enum MemoryOrdering {
   SequentiallyConsistent,
 };
 
-} // namespace mozilla
-
-#include <atomic>
-
-namespace mozilla {
 namespace detail {
 
 /*
