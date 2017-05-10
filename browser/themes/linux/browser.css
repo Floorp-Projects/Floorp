@@ -391,6 +391,7 @@ menuitem.bookmark-item {
   -moz-box-align: center;
 }
 
+%ifndef MOZ_PHOTON_THEME
 @conditionalForwardWithUrlbar@ > #urlbar {
   border-inline-start: none;
   margin-left: 0;
@@ -420,6 +421,7 @@ menuitem.bookmark-item {
 @conditionalForwardWithUrlbar@:-moz-locale-dir(rtl) {
   -moz-box-direction: reverse;
 }
+%endif
 
 #urlbar-icons {
   -moz-box-align: center;
