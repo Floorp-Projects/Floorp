@@ -1539,7 +1539,6 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void guardGroupHasUnanalyzedNewScript(Register group, Register scratch, Label* fail);
 
-    void loadWasmActivationFromTls(Register dest);
     void loadWasmTlsRegFromFrame(Register dest = WasmTlsReg);
 
     template<typename T>
