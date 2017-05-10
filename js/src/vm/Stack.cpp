@@ -1669,7 +1669,7 @@ WasmActivation::~WasmActivation()
 }
 
 void
-WasmActivation::unwindExitFP(uint8_t* exitFP)
+WasmActivation::unwindExitFP(wasm::Frame* exitFP)
 {
     exitFP_ = exitFP;
     exitReason_ = wasm::ExitReason::Fixed::None;
@@ -1688,7 +1688,10 @@ WasmActivation::startInterrupt(void* pc, uint8_t* fp)
     MOZ_ASSERT(compartment()->wasm.lookupCode(pc)->lookupRange(pc)->isFunction());
 
     cx_->runtime()->setWasmResumePC(pc);
-    exitFP_ = fp;
+    exitFP_ = reinterpret_cast<wasm::Frame*>(fp);
+
+    MOZ_ASSERT(cx() == exitFP_->tls->cx);
+    MOZ_ASSERT(compartment() == exitFP_->tls->instance->compartment());
 
     MOZ_ASSERT(interrupted());
 }

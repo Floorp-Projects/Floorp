@@ -1733,7 +1733,7 @@ class InterpreterFrameIterator
 class WasmActivation : public Activation
 {
     WasmActivation* prevWasm_;
-    uint8_t* exitFP_;
+    wasm::Frame* exitFP_;
     wasm::ExitReason exitReason_;
 
   public:
@@ -1748,7 +1748,7 @@ class WasmActivation : public Activation
 
     // Returns null or the final wasm::Frame* when wasm exited this
     // WasmActivation.
-    uint8_t* exitFP() const { return exitFP_; }
+    wasm::Frame* exitFP() const { return exitFP_; }
 
     // Returns the reason why wasm code called out of wasm code.
     wasm::ExitReason exitReason() const { return exitReason_; }
@@ -1766,7 +1766,7 @@ class WasmActivation : public Activation
     void* resumePC() const;
 
     // Used by wasm::FrameIterator during stack unwinding.
-    void unwindExitFP(uint8_t* exitFP);
+    void unwindExitFP(wasm::Frame* exitFP);
 };
 
 // A FrameIter walks over a context's stack of JS script activations,
