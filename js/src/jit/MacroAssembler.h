@@ -464,7 +464,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     void Pop(FloatRegister t) PER_SHARED_ARCH;
     void Pop(const ValueOperand& val) PER_SHARED_ARCH;
     void PopFlags() DEFINED_ON(x86_shared);
-    void PopStackPtr() PER_SHARED_ARCH;
     void popRooted(VMFunction::RootType rootType, Register cellReg, const ValueOperand& valueReg);
 
     // Move the stack pointer based on the requested amount.

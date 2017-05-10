@@ -4980,13 +4980,6 @@ MacroAssembler::Pop(const ValueOperand& val)
     adjustFrame(-sizeof(Value));
 }
 
-void
-MacroAssembler::PopStackPtr()
-{
-    as_dtr(IsLoad, 32, Offset, sp, DTRAddr(sp, DtrOffImm(0)));
-    adjustFrame(-sizeof(intptr_t));
-}
-
 // ===============================================================
 // Simple call functions.
 
