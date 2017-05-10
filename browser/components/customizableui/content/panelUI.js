@@ -457,7 +457,7 @@ const PanelUI = {
       return;
     }
 
-    let container = aAnchor.closest("panelmultiview,photonpanelmultiview");
+    let container = aAnchor.closest("panelmultiview");
     if (container) {
       container.showSubView(aViewId, aAnchor);
     } else if (!aAnchor.open) {
@@ -761,8 +761,7 @@ const PanelUI = {
 
     popupnotification.setAttribute("id", popupnotificationID);
     popupnotification.setAttribute("buttoncommand", "PanelUI._onNotificationButtonEvent(event, 'buttoncommand');");
-    popupnotification.setAttribute("secondarybuttoncommand",
-      "PanelUI._onNotificationButtonEvent(event, 'secondarybuttoncommand');");
+    popupnotification.setAttribute("secondarybuttoncommand", "PanelUI._onNotificationButtonEvent(event, 'secondarybuttoncommand');");
 
     popupnotification.notification = notification;
     popupnotification.hidden = false;

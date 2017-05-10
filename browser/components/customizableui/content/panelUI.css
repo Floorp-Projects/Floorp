@@ -26,25 +26,6 @@
   transition: transform var(--panelui-subview-transition-duration);
 }
 
-.panel-viewcontainer[panelopen]:-moz-any(:not([viewtype="main"]),[transitioning]) {
-  transition-property: height;
-  transition-timing-function: ease-in;
-  transition-duration: var(--panelui-subview-transition-duration);
-  will-change: height;
+.panel-viewcontainer[panelopen]:-moz-any(:not([viewtype="main"]),[transitioning="true"]) {
+  transition: height var(--panelui-subview-transition-duration);
 }
-
-.panel-viewcontainer[panelopen]:-moz-any(:not([viewtype="main"]),[transitioning])[transition-reverse] {
-  transition-timing-function: ease-out;
-}
-
-/* START photon adjustments */
-
-photonpanelmultiview > .panel-viewcontainer > .panel-viewstack {
-  overflow: visible;
-}
-
-photonpanelmultiview[transitioning] {
-  pointer-events: none;
-}
-
-/* END photon adjustments */
