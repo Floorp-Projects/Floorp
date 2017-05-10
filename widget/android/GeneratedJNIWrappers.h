@@ -2319,11 +2319,10 @@ public:
         typedef void SetterType;
         typedef mozilla::jni::Args<
                 int32_t,
-                int32_t,
                 int32_t> Args;
         static constexpr char name[] = "onImeUpdateComposition";
         static constexpr char signature[] =
-                "(III)V";
+                "(II)V";
         static const bool isStatic = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -2424,8 +2423,6 @@ public:
     };
 
     auto UpdateCompositionRects(mozilla::jni::ObjectArray::Param) const -> void;
-
-    static const int32_t FLAG_KEEP_CURRENT_COMPOSITION = 1;
 
     static const mozilla::jni::CallingThread callingThread =
             mozilla::jni::CallingThread::ANY;
