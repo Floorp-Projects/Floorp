@@ -62,7 +62,7 @@ function checkSeparatorInsertion(menuId, buttonId, subviewId) {
   };
 }
 
-add_task(async function () {
+add_task(async function() {
   await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
 });
 
