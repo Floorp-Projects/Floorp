@@ -88,6 +88,9 @@ def executor_kwargs(test_type, server_config, cache_manager, run_info_data,
     executor_kwargs["timeout_multiplier"] = get_timeout_multiplier(test_type,
                                                                    run_info_data,
                                                                    **kwargs)
+    if test_type == "reftest":
+        executor_kwargs["reftest_internal"] = kwargs["reftest_internal"]
+        executor_kwargs["reftest_screenshot"] = kwargs["reftest_screenshot"]
     if test_type == "wdspec":
         executor_kwargs["binary"] = kwargs["binary"]
         executor_kwargs["webdriver_binary"] = kwargs.get("webdriver_binary")
