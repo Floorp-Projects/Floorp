@@ -142,7 +142,7 @@ public class WebViewProvider {
         }
 
         // If we didn't find a chrome token, we just append the focus token at the end:
-        return TextUtils.join(" ", tokens) + focusToken;
+        return TextUtils.join(" ", tokens) + " " + focusToken;
     }
 
     private static String buildUserAgentString(final Context context, final WebSettings settings) {
