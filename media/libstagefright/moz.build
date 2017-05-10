@@ -83,10 +83,9 @@ SOURCES += [
     'system/core/libutils/VectorImpl.cpp',
 ]
 
-if CONFIG['MOZ_RUST']:
-    EXPORTS += [
-        'binding/include/mp4parse.h',
-    ]
+EXPORTS += [
+    'binding/include/mp4parse.h',
+]
 
 UNIFIED_SOURCES += [
     'binding/Adts.cpp',

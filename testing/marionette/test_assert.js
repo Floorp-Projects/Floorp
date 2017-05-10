@@ -21,7 +21,7 @@ add_test(function test_session() {
 add_test(function test_platforms() {
   // at least one will fail
   let raised;
-  for (let fn of [assert.firefox, assert.fennec, assert.b2g, assert.mobile]) {
+  for (let fn of [assert.firefox, assert.fennec]) {
     try {
       fn();
     } catch (e) {
