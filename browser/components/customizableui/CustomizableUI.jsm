@@ -4173,7 +4173,7 @@ OverflowableToolbar.prototype = {
     if (this._chevron.open) {
       this._panel.hidePopup();
       this._chevron.open = false;
-    } else {
+    } else if (this._panel.state != "hiding") {
       this.show();
     }
   },
@@ -4215,6 +4215,7 @@ OverflowableToolbar.prototype = {
           CustomizableUI.addListener(this);
         }
         this._toolbar.setAttribute("overflowing", "true");
+        this._panel.setAttribute("hasdynamicitems", true);
       }
       child = prevChild;
     }
@@ -4277,6 +4278,7 @@ OverflowableToolbar.prototype = {
     if (!this._collapsed.size) {
       this._toolbar.removeAttribute("overflowing");
       CustomizableUI.removeListener(this);
+      this._panel.removeAttribute("hasdynamicitems");
     }
   },
 
@@ -4367,6 +4369,7 @@ OverflowableToolbar.prototype = {
       if (!this._collapsed.size) {
         this._toolbar.removeAttribute("overflowing");
         CustomizableUI.removeListener(this);
+        this._panel.removeAttribute("hasdynamicitems");
       }
     } else if (aNode.previousSibling) {
       // but if it still is, it must have changed places. Bookkeep:
