@@ -9,7 +9,6 @@ import math
 import os
 import re
 import sys
-import shared_telemetry_utils as utils
 
 from shared_telemetry_utils import ParserError
 from collections import OrderedDict
@@ -66,7 +65,7 @@ def exponential_buckets(dmin, dmax, n_buckets):
 
 always_allowed_keys = ['kind', 'description', 'cpp_guard', 'expires_in_version',
                        'alert_emails', 'keyed', 'releaseChannelCollection',
-                       'bug_numbers', 'record_in_processes']
+                       'bug_numbers']
 
 whitelists = None
 try:
@@ -103,8 +102,6 @@ The key 'cpp_guard' is optional; if present, it denotes a preprocessor
 symbol that should guard C/C++ definitions associated with the histogram."""
         self._strict_type_checks = strict_type_checks
         self._is_use_counter = name.startswith("USE_COUNTER2_")
-        if self._is_use_counter:
-            definition.setdefault('record_in_processes', ['main', 'content'])
         self.verify_attributes(name, definition)
         self._name = name
         self._description = definition['description']
@@ -169,14 +166,6 @@ associated with the histogram.  Returns None if no guarding is necessary."""
     def labels(self):
         """Returns a list of labels for a categorical histogram, [] for others."""
         return self._labels
-
-    def record_in_processes(self):
-        """Returns a list of processes this histogram is permitted to record in."""
-        return self.definition['record_in_processes']
-
-    def record_in_processes_enum(self):
-        """Get the non-empty list of flags representing the processes to record data in"""
-        return [utils.process_name_to_enum(p) for p in self.record_in_processes]
 
     def ranges(self):
         """Return an array of lower bounds for each bucket in the histogram."""
@@ -243,7 +232,6 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         self.check_whitelistable_fields(name, definition)
         self.check_expiration(name, definition)
         self.check_label_values(name, definition)
-        self.check_record_in_processes(name, definition)
 
     def check_name(self, name):
         if '#' in name:
@@ -303,18 +291,6 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         if len(invalid) > 0:
             raise ParserError('Label values for %s are not matching pattern "%s": %s' %
                               (name, pattern, ', '.join(invalid)))
-
-    def check_record_in_processes(self, name, definition):
-        field = 'record_in_processes'
-        rip = definition.get(field);
-
-        if not rip:
-            raise ParserError('Histogram "%s" must have a "%s" field.' % (name, field))
-
-        for process in rip:
-            if not utils.is_valid_process_name(process):
-                raise ParserError('Histogram "%s" has unknown process "%s" in %s.' %
-                                  (name, process, field))
 
     def check_whitelisted_kind(self, name, definition):
         # We don't need to run any of these checks on the server.
@@ -382,7 +358,6 @@ associated with the histogram.  Returns None if no guarding is necessary."""
             "bug_numbers": int,
             "alert_emails": basestring,
             "labels": basestring,
-            "record_in_processes": basestring,
         }
 
         # For the server-side, where _strict_type_checks==False, we want to
