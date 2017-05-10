@@ -549,21 +549,9 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
 }
 
 /* Inactive elements are faded out on OSX */
-
-.toolbarbutton-1:not(:hover):-moz-window-inactive > #downloads-indicator-anchor,
-.toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-icon,
-.toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-text,
-.toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-badge-stack > .toolbarbutton-icon,
-.toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-menu-dropmarker,
-.toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon,
-.toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
-  opacity: var(--toolbarbutton-disabled-opacity);
-}
-
-#main-window:not([customizing]) .toolbarbutton-1:-moz-window-inactive[disabled="true"] > .toolbarbutton-icon,
-#main-window:not([customizing]) .toolbarbutton-1:-moz-window-inactive[disabled="true"] > .toolbarbutton-badge-stack > .toolbarbutton-icon,
-#main-window:not([customizing]) .toolbarbutton-1:-moz-window-inactive > .toolbarbutton-menubutton-button[disabled="true"] > .toolbarbutton-icon {
-  opacity: calc(var(--toolbarbutton-disabled-opacity) / 2);
+.toolbarbutton-1:not(:hover):-moz-window-inactive,
+#main-window:not([customizing]) .toolbarbutton-1:-moz-window-inactive[disabled="true"] {
+  opacity: 0.5;
 }
 
 .unified-nav-back[_moz-menuactive]:-moz-locale-dir(ltr),
