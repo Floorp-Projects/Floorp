@@ -1360,9 +1360,6 @@ class Activation
         return hideScriptedCallerCount_ > 0;
     }
 
-    static size_t offsetOfPrev() {
-        return offsetof(Activation, prev_);
-    }
     static size_t offsetOfPrevProfiling() {
         return offsetof(Activation, prevProfiling_);
     }
@@ -1724,18 +1721,26 @@ class InterpreterFrameIterator
     }
 };
 
+// A WasmActivation is part of two activation linked lists:
+//  - the normal Activation list used by FrameIter
+//  - a list of only WasmActivations that is signal-safe since it is accessed
+//    from the profiler at arbitrary points
+//
 // An eventual goal is to remove WasmActivation and to run asm code in a
 // JitActivation interleaved with Ion/Baseline jit code. This would allow
 // efficient calls back and forth but requires that we can walk the stack for
 // all kinds of jit code.
 class WasmActivation : public Activation
 {
+    WasmActivation* prevWasm_;
     wasm::Frame* exitFP_;
     wasm::ExitReason exitReason_;
 
   public:
     explicit WasmActivation(JSContext* cx);
     ~WasmActivation();
+
+    WasmActivation* prevWasm() const { return prevWasm_; }
 
     bool isProfiling() const {
         return true;
