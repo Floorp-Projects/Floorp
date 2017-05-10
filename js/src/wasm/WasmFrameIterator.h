@@ -35,6 +35,7 @@ class Code;
 class CodeRange;
 class DebugFrame;
 class DebugState;
+class Frame;
 class Instance;
 class SigIdDesc;
 struct FuncOffsets;
@@ -60,6 +61,7 @@ class FrameIterator
     const CodeRange* codeRange_;
     uint8_t* fp_;
     Unwind unwind_;
+    void** unwoundAddressOfReturnAddress_;
 
     void popFrame();
 
@@ -75,6 +77,7 @@ class FrameIterator
     unsigned lineOrBytecode() const;
     const CodeRange* codeRange() const { return codeRange_; }
     Instance* instance() const;
+    void** unwoundAddressOfReturnAddress() const;
     bool debugEnabled() const;
     DebugFrame* debugFrame() const;
     const CallSite* debugTrapCallsite() const;
