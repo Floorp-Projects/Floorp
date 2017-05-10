@@ -7,6 +7,7 @@
 var button, menuButton;
 /* Clicking a button should close the panel */
 add_task(function*() {
+  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   button = document.createElement("toolbarbutton");
   button.id = "browser_940307_button";
   button.setAttribute("label", "Button");
