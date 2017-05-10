@@ -258,6 +258,7 @@ js/src/devtools/**
 js/src/octane/**
 js/src/jit-test/**
 js/src/tests/**
+js/src/Y.js
 
 # mobile/android/ exclusions
 mobile/android/tests/browser/chrome/tp5/**
