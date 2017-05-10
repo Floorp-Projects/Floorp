@@ -566,6 +566,7 @@ class TestSource(object):
     def __init__(self, test_queue):
         self.test_queue = test_queue
         self.current_queue = None
+        self.current_metadata = None
 
     @abstractmethod
     def queue_tests(self, test_queue, test_type, tests, **kwargs):
@@ -577,10 +578,10 @@ class TestSource(object):
     def get_queue(self):
         if not self.current_queue or len(self.current_queue) == 0:
             try:
-                self.current_queue = self.test_queue.get(block=False)
+                self.current_queue, self.current_metadata = self.test_queue.get(block=False)
             except Empty:
                 return None, None
-        return self.current_queue
+        return self.current_queue, self.current_metadata
 
     def __exit__(self, *args, **kwargs):
         pass
@@ -599,9 +600,11 @@ class GroupedSource(TestSource):
         for test in tests[test_type]:
             if cls.new_group(state, test, **kwargs):
                 group = deque([])
-                test_queue.put(group)
+                metadata = {}
+                test_queue.put((group, metadata))
 
             group.append(test)
+            test.update_metadata(metadata)
 
 
 class SingleTestSource(TestSource):
@@ -609,12 +612,15 @@ class SingleTestSource(TestSource):
     def queue_tests(cls, test_queue, test_type, tests, **kwargs):
         processes = kwargs["processes"]
         queues = [deque([]) for _ in xrange(processes)]
+        metadatas = [{} for _ in xrange(processes)]
         for test in tests[test_type]:
             idx = hash(test.id) % processes
             group = queues[idx]
+            metadata = metadatas[idx]
             group.append(test)
+            test.update_metadata(metadata)
 
-        for item in queues:
+        for item in zip(queues, metadatas):
             test_queue.put(item)
 
 
