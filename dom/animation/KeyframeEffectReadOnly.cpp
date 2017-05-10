@@ -427,7 +427,7 @@ KeyframeEffectReadOnly::GetUnderlyingStyle(
     // If we are composing with composite operation that is not 'replace'
     // and we have not composed style for the property yet, we have to get
     // the base style for the property.
-    result = BaseStyle(aProperty);
+    result = BaseStyle(aProperty).mGecko;
   }
 
   return result;
@@ -1297,7 +1297,8 @@ KeyframeEffectReadOnly::GetKeyframes(JSContext*& aCx,
           // handle null nsCSSValues for longhand properties.
           DebugOnly<bool> uncomputeResult =
             StyleAnimationValue::UncomputeValue(
-              propertyValue.mProperty, Move(BaseStyle(propertyValue.mProperty)),
+              propertyValue.mProperty,
+              Move(BaseStyle(propertyValue.mProperty).mGecko),
               cssValue);
 
           MOZ_ASSERT(uncomputeResult,
@@ -1848,7 +1849,7 @@ KeyframeEffectReadOnly::ContainsAnimatedScale(const nsIFrame* aFrame) const
       continue;
     }
 
-    StyleAnimationValue baseStyle = BaseStyle(prop.mProperty);
+    AnimationValue baseStyle = BaseStyle(prop.mProperty);
     if (baseStyle.IsNull()) {
       // If we failed to get the base style, we consider it has scale value
       // here just to be safe.
