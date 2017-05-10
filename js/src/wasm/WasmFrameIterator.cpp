@@ -32,24 +32,6 @@ using mozilla::Swap;
 /*****************************************************************************/
 // FrameIterator implementation
 
-static void*
-ReturnAddressFromFP(void* fp)
-{
-    return reinterpret_cast<Frame*>(fp)->returnAddress;
-}
-
-static uint8_t*
-CallerFPFromFP(void* fp)
-{
-    return reinterpret_cast<Frame*>(fp)->callerFP;
-}
-
-static DebugFrame*
-FrameToDebugFrame(void* fp)
-{
-    return reinterpret_cast<DebugFrame*>((uint8_t*)fp - DebugFrame::offsetOfFrame());
-}
-
 FrameIterator::FrameIterator()
   : activation_(nullptr),
     code_(nullptr),
@@ -85,7 +67,7 @@ FrameIterator::FrameIterator(WasmActivation* activation, Unwind unwind)
 
     // When asynchronously interrupted, exitFP is set to the interrupted frame
     // itself and so we do not want to skip it. Instead, we can recover the
-    // Code and CodeRange from the WasmActivation, which set these when control
+    // Code and CodeRange from the WasmActivation, which are set when control
     // flow was interrupted. There is no CallSite (b/c the interrupt was async),
     // but this is fine because CallSite is only used for line number for which
     // we can use the beginning of the function from the CodeRange instead.
@@ -134,8 +116,8 @@ FrameIterator::operator++()
 void
 FrameIterator::popFrame()
 {
-    void* prevFP = fp_;
-    fp_ = CallerFPFromFP(prevFP);
+    Frame* prevFP = fp_;
+    fp_ = prevFP->callerFP;
 
     if (!fp_) {
         code_ = nullptr;
@@ -144,14 +126,14 @@ FrameIterator::popFrame()
 
         if (unwind_ == Unwind::True) {
             activation_->unwindExitFP(nullptr);
-            unwoundAddressOfReturnAddress_ = &reinterpret_cast<Frame*>(prevFP)->returnAddress;
+            unwoundAddressOfReturnAddress_ = &prevFP->returnAddress;
         }
 
         MOZ_ASSERT(done());
         return;
     }
 
-    void* returnAddress = ReturnAddressFromFP(prevFP);
+    void* returnAddress = prevFP->returnAddress;
 
     code_ = activation_->compartment()->wasm.lookupCode(returnAddress);
     MOZ_ASSERT(code_);
@@ -213,7 +195,7 @@ Instance*
 FrameIterator::instance() const
 {
     MOZ_ASSERT(!done());
-    return FrameToDebugFrame(fp_)->instance();
+    return fp_->tls->instance;
 }
 
 void**
@@ -240,7 +222,7 @@ FrameIterator::debugFrame() const
 {
     MOZ_ASSERT(!done());
     MOZ_ASSERT(debugEnabled());
-    return FrameToDebugFrame(fp_);
+    return reinterpret_cast<DebugFrame*>((uint8_t*)fp_ - DebugFrame::offsetOfFrame());
 }
 
 const CallSite*
@@ -517,7 +499,7 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation)
 }
 
 static inline void
-AssertMatchesCallSite(const WasmActivation& activation, void* callerPC, void* callerFP)
+AssertMatchesCallSite(const WasmActivation& activation, void* callerPC, Frame* callerFP)
 {
 #ifdef DEBUG
     const Code* code = activation.compartment()->wasm.lookupCode(callerPC);
@@ -539,8 +521,8 @@ AssertMatchesCallSite(const WasmActivation& activation, void* callerPC, void* ca
 void
 ProfilingFrameIterator::initFromExitFP()
 {
-    uint8_t* fp = activation_->exitFP();
-    void* pc = ReturnAddressFromFP(fp);
+    Frame* fp = activation_->exitFP();
+    void* pc = fp->returnAddress;
 
     stackAddress_ = fp;
 
@@ -550,9 +532,8 @@ ProfilingFrameIterator::initFromExitFP()
     codeRange_ = code_->lookupRange(pc);
     MOZ_ASSERT(codeRange_);
 
-    // Since we don't have the pc for fp, start unwinding at the caller of fp
-    // (ReturnAddressFromFP(fp)). This means that the innermost frame is
-    // skipped. This is fine because:
+    // Since we don't have the pc for fp, start unwinding at the caller of fp.
+    // This means that the innermost frame is skipped. This is fine because:
     //  - for import exit calls, the innermost frame is a thunk, so the first
     //    frame that shows up is the function calling the import;
     //  - for Math and other builtin calls as well as interrupts, we note the absence
@@ -564,9 +545,9 @@ ProfilingFrameIterator::initFromExitFP()
         callerFP_ = nullptr;
         break;
       case CodeRange::Function:
-        fp = CallerFPFromFP(fp);
-        callerPC_ = ReturnAddressFromFP(fp);
-        callerFP_ = CallerFPFromFP(fp);
+        fp = fp->callerFP;
+        callerPC_ = fp->returnAddress;
+        callerFP_ = fp->callerFP;
         AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
         break;
       case CodeRange::ImportJitExit:
@@ -607,7 +588,7 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
         return;
     }
 
-    uint8_t* fp = (uint8_t*)state.fp;
+    Frame* fp = (Frame*)state.fp;
     uint8_t* pc = (uint8_t*)state.pc;
     void** sp = (void**)state.sp;
 
@@ -680,8 +661,8 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
             AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
         } else if (offsetFromEntry == PushedFP) {
             // The full Frame has been pushed; fp is still the caller's fp.
-            MOZ_ASSERT(fp == CallerFPFromFP(sp));
-            callerPC_ = ReturnAddressFromFP(sp);
+            MOZ_ASSERT(fp == reinterpret_cast<Frame*>(sp)->callerFP);
+            callerPC_ = reinterpret_cast<Frame*>(sp)->returnAddress;
             callerFP_ = fp;
             AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
         } else if (offsetInCode == codeRange->ret() - PoppedFP) {
@@ -696,8 +677,8 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
             AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
         } else {
             // Not in the prologue/epilogue.
-            callerPC_ = ReturnAddressFromFP(fp);
-            callerFP_ = CallerFPFromFP(fp);
+            callerPC_ = fp->returnAddress;
+            callerFP_ = fp->callerFP;
             AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
         }
         break;
@@ -705,8 +686,8 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
       case CodeRange::Inline:
         // Inline code stubs execute after the prologue/epilogue have completed
         // so we can simply unwind based on fp.
-        callerPC_ = ReturnAddressFromFP(fp);
-        callerFP_ = CallerFPFromFP(fp);
+        callerPC_ = fp->returnAddress;
+        callerFP_ = fp->callerFP;
         AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
         break;
       case CodeRange::Entry:
@@ -772,9 +753,9 @@ ProfilingFrameIterator::operator++()
       case CodeRange::Inline:
       case CodeRange::FarJumpIsland:
         stackAddress_ = callerFP_;
-        callerPC_ = ReturnAddressFromFP(callerFP_);
-        AssertMatchesCallSite(*activation_, callerPC_, CallerFPFromFP(callerFP_));
-        callerFP_ = CallerFPFromFP(callerFP_);
+        callerPC_ = callerFP_->returnAddress;
+        AssertMatchesCallSite(*activation_, callerPC_, callerFP_->callerFP);
+        callerFP_ = callerFP_->callerFP;
         break;
       case CodeRange::Interrupt:
       case CodeRange::Throw:

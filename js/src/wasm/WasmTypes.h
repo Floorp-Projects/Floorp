@@ -1583,7 +1583,7 @@ struct Frame
 {
     // The caller's Frame*. See GenerateCallableEpilogue for why this must be
     // the first field of wasm::Frame (in a downward-growing stack).
-    uint8_t* callerFP;
+    Frame* callerFP;
 
     // The saved value of WasmTlsReg on entry to the function. This is
     // effectively the callee's instance.
