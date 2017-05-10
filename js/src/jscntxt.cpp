@@ -1133,6 +1133,7 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
     jitActivation(nullptr),
     activation_(nullptr),
     profilingActivation_(nullptr),
+    wasmActivationStack_(nullptr),
     nativeStackBase(GetNativeStackBase()),
     entryMonitor(nullptr),
     noExecuteDebuggerTop(nullptr),
