@@ -469,7 +469,7 @@ class MarionetteRefTestExecutor(RefTestExecutor):
                  screenshot_cache=None, close_after_done=True,
                  debug_info=None, reftest_internal=False,
                  reftest_screenshot="unexpected",
-                 **kwargs):
+                 group_metadata=None, **kwargs):
         """Marionette-based executor for reftests"""
         RefTestExecutor.__init__(self,
                                  browser,
@@ -487,6 +487,7 @@ class MarionetteRefTestExecutor(RefTestExecutor):
         self.close_after_done = close_after_done
         self.has_window = False
         self.original_pref_values = {}
+        self.group_metadata = group_metadata
 
         with open(os.path.join(here, "reftest.js")) as f:
             self.script = f.read()
@@ -564,9 +565,9 @@ class InternalRefTestImplementation(object):
 
     def setup(self, screenshot="unexpected"):
         data = {"screenshot": screenshot}
-        if self.executor.queue_metadata is not None:
+        if self.executor.group_metadata is not None:
             data["urlCount"] = {urlparse.urljoin(self.executor.server_url(key[0]), key[1]):value
-                                for key, value in self.executor.queue_metadata.get("url_count", {}).iteritems()
+                                for key, value in self.executor.group_metadata.get("url_count", {}).iteritems()
                                 if value > 1}
         self.executor.protocol.marionette.set_context(self.executor.protocol.marionette.CONTEXT_CHROME)
         self.executor.protocol.marionette._send_message("reftest:setup", data)
