@@ -410,6 +410,9 @@ SERVO_BINDING_FUNC(Servo_ComputedValues_Inherit, ServoComputedValuesStrong,
                    RawServoStyleSetBorrowed set,
                    ServoComputedValuesBorrowedOrNull parent_style,
                    mozilla::InheritTarget target)
+SERVO_BINDING_FUNC(Servo_ComputedValues_GetVisitedStyle,
+                   ServoComputedValuesStrong,
+                   ServoComputedValuesBorrowed values)
 
 // Initialize Servo components. Should be called exactly once at startup.
 SERVO_BINDING_FUNC(Servo_Initialize, void,
