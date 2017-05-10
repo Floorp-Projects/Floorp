@@ -4,10 +4,14 @@
 
 use app_units::Au;
 use euclid::SideOffsets2D;
-use display_list::AuxiliaryListsBuilder;
-use {ColorF, FontKey, ImageKey, PipelineId, WebGLContextId};
+use {ColorF, FontKey, ImageKey, ItemRange, PipelineId, WebGLContextId};
 use {LayoutPoint, LayoutRect, LayoutSize, LayoutTransform};
 use {PropertyBinding};
+
+// NOTE: some of these structs have an "IMPLICIT" comment.
+// This indicates that the BuiltDisplayList will have serialized
+// a list of values nearby that this item consumes. The traversal
+// iterator should handle finding these.
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub struct ClipAndScrollInfo {
@@ -39,7 +43,6 @@ impl ClipAndScrollInfo {
 pub struct DisplayItem {
     pub item: SpecificDisplayItem,
     pub rect: LayoutRect,
-    pub clip: ClipRegion,
     pub clip_and_scroll: ClipAndScrollInfo,
 }
 
@@ -58,13 +61,8 @@ pub enum SpecificDisplayItem {
     Iframe(IframeDisplayItem),
     PushStackingContext(PushStackingContextDisplayItem),
     PopStackingContext,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-pub struct ItemRange {
-    pub start: usize,
-    pub length: usize,
+    SetGradientStops,
+    SetClipRegion(ClipRegion),
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
@@ -80,13 +78,12 @@ pub struct RectangleDisplayItem {
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct TextDisplayItem {
-    pub glyphs: ItemRange,
     pub font_key: FontKey,
     pub size: Au,
     pub color: ColorF,
     pub blur_radius: Au,
     pub glyph_options: Option<GlyphOptions>,
-}
+} // IMPLICIT: glyphs: Vec<GlyphInstance>
 
 #[derive(Clone, Copy, Debug, Deserialize, Hash, Eq, PartialEq, PartialOrd, Ord, Serialize)]
 pub struct GlyphOptions {
@@ -229,9 +226,8 @@ pub enum ExtendMode {
 pub struct Gradient {
     pub start_point: LayoutPoint,
     pub end_point: LayoutPoint,
-    pub stops: ItemRange,
     pub extend_mode: ExtendMode,
-}
+} // IMPLICIT: stops: Vec<GradientStop>
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct GradientDisplayItem {
@@ -255,9 +251,8 @@ pub struct RadialGradient {
     pub end_center: LayoutPoint,
     pub end_radius: f32,
     pub ratio_xy: f32,
-    pub stops: ItemRange,
     pub extend_mode: ExtendMode,
-}
+} // IMPLICIT stops: Vec<GradientStop>
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct RadialGradientDisplayItem {
@@ -278,8 +273,7 @@ pub struct StackingContext {
     pub transform_style: TransformStyle,
     pub perspective: Option<LayoutTransform>,
     pub mix_blend_mode: MixBlendMode,
-    pub filters: ItemRange,
-}
+} // IMPLICIT: filters: Vec<FilterOp>
 
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -423,9 +417,12 @@ pub struct ImageMask {
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct ClipRegion {
     pub main: LayoutRect,
-    pub complex: ItemRange,
     pub image_mask: Option<ImageMask>,
-}
+    #[serde(default, skip_serializing, skip_deserializing)]
+    pub complex_clips: ItemRange<ComplexClipRegion>,
+    #[serde(default, skip_serializing, skip_deserializing)]
+    pub complex_clip_count: usize,
+} 
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct ComplexClipRegion {
@@ -433,26 +430,6 @@ pub struct ComplexClipRegion {
     pub rect: LayoutRect,
     /// Border radii of this rectangle.
     pub radii: BorderRadius,
-}
-
-impl StackingContext {
-    pub fn new(scroll_policy: ScrollPolicy,
-               transform: Option<PropertyBinding<LayoutTransform>>,
-               transform_style: TransformStyle,
-               perspective: Option<LayoutTransform>,
-               mix_blend_mode: MixBlendMode,
-               filters: Vec<FilterOp>,
-               auxiliary_lists_builder: &mut AuxiliaryListsBuilder)
-               -> StackingContext {
-        StackingContext {
-            scroll_policy: scroll_policy,
-            transform: transform,
-            transform_style: transform_style,
-            perspective: perspective,
-            mix_blend_mode: mix_blend_mode,
-            filters: auxiliary_lists_builder.add_filters(&filters),
-        }
-    }
 }
 
 impl BorderRadius {
@@ -512,27 +489,36 @@ impl BorderRadius {
 
 impl ClipRegion {
     pub fn new(rect: &LayoutRect,
-               complex: Vec<ComplexClipRegion>,
-               image_mask: Option<ImageMask>,
-               auxiliary_lists_builder: &mut AuxiliaryListsBuilder)
+               image_mask: Option<ImageMask>)
                -> ClipRegion {
         ClipRegion {
             main: *rect,
-            complex: auxiliary_lists_builder.add_complex_clip_regions(&complex),
             image_mask: image_mask,
+            complex_clips: ItemRange::default(),
+            complex_clip_count: 0,
         }
     }
 
     pub fn simple(rect: &LayoutRect) -> ClipRegion {
         ClipRegion {
             main: *rect,
-            complex: ItemRange::empty(),
             image_mask: None,
+            complex_clips: ItemRange::default(),
+            complex_clip_count: 0,
+        }
+    }
+
+    pub fn empty() -> ClipRegion {
+        ClipRegion {
+            main: LayoutRect::zero(),
+            image_mask: None,
+            complex_clips: ItemRange::default(),
+            complex_clip_count: 0,
         }
     }
 
     pub fn is_complex(&self) -> bool {
-        self.complex.length !=0 || self.image_mask.is_some()
+        self.complex_clip_count != 0 || self.image_mask.is_some()
     }
 }
 

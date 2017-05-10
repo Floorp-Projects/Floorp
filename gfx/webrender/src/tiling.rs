@@ -24,7 +24,7 @@ use std::collections::HashMap;
 use std::hash::BuildHasherDefault;
 use texture_cache::TexturePage;
 use util::{TransformedRect, TransformedRectKind};
-use webrender_traits::{AuxiliaryLists, ClipAndScrollInfo, ClipId, ColorF, DeviceIntPoint};
+use webrender_traits::{BuiltDisplayList, ClipAndScrollInfo, ClipId, ColorF, DeviceIntPoint};
 use webrender_traits::{DeviceIntRect, DeviceIntSize, DeviceUintPoint, DeviceUintSize};
 use webrender_traits::{ExternalImageType, FontRenderMode, ImageRendering, LayerPoint, LayerRect};
 use webrender_traits::{LayerToWorldTransform, MixBlendMode, PipelineId, TransformStyle};
@@ -36,9 +36,9 @@ use webrender_traits::{YuvColorSpace, YuvFormat};
 const OPAQUE_TASK_INDEX: RenderTaskIndex = RenderTaskIndex(i32::MAX as usize);
 
 
-pub type AuxiliaryListsMap = HashMap<PipelineId,
-                                     AuxiliaryLists,
-                                     BuildHasherDefault<FnvHasher>>;
+pub type DisplayListMap = HashMap<PipelineId,
+                                  BuiltDisplayList,
+                                  BuildHasherDefault<FnvHasher>>;
 
 trait AlphaBatchHelpers {
     fn get_color_textures(&self, metadata: &PrimitiveMetadata) -> [SourceTexture; 3];

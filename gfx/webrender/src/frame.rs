@@ -15,12 +15,12 @@ use resource_cache::ResourceCache;
 use scene::{Scene, SceneProperties};
 use std::collections::HashMap;
 use std::hash::BuildHasherDefault;
-use tiling::{AuxiliaryListsMap, CompositeOps, PrimitiveFlags};
+use tiling::{CompositeOps, DisplayListMap, PrimitiveFlags};
 use util::{ComplexClipRegionHelpers, subtract_rect};
-use webrender_traits::{AuxiliaryLists, ClipAndScrollInfo, ClipDisplayItem, ClipId, ClipRegion};
-use webrender_traits::{ColorF, DeviceUintRect, DeviceUintSize, DisplayItem, Epoch, FilterOp};
-use webrender_traits::{ImageDisplayItem, LayerPoint, LayerRect, LayerSize, LayerToScrollTransform};
-use webrender_traits::{LayoutRect, LayoutTransform, MixBlendMode, PipelineId, ScrollEventPhase};
+use webrender_traits::{BuiltDisplayList, BuiltDisplayListIter, ClipAndScrollInfo, ClipDisplayItem};
+use webrender_traits::{ClipId, ClipRegion, ColorF, DeviceUintRect, DeviceUintSize, Epoch, FilterOp};
+use webrender_traits::{ImageDisplayItem, ItemRange, LayerPoint, LayerRect, LayerSize, LayerToScrollTransform};
+use webrender_traits::{LayoutTransform, MixBlendMode, PipelineId, ScrollEventPhase};
 use webrender_traits::{ScrollLayerState, ScrollLocation, ScrollPolicy, SpecificDisplayItem};
 use webrender_traits::{StackingContext, TileOffset, WorldPoint};
 
@@ -66,25 +66,11 @@ pub struct Frame {
     frame_builder: Option<FrameBuilder>,
 }
 
-trait DisplayListHelpers {
-    fn starting_stacking_context<'a>(&'a self) -> Option<(&'a StackingContext, &'a LayoutRect)>;
-}
-
-impl DisplayListHelpers for Vec<DisplayItem> {
-    fn starting_stacking_context<'a>(&'a self) -> Option<(&'a StackingContext, &'a LayoutRect)> {
-        self.first().and_then(|item| match item.item {
-            SpecificDisplayItem::PushStackingContext(ref specific_item) => {
-                Some((&specific_item.stacking_context, &item.rect))
-            },
-            _ => None,
-        })
-    }
-}
-
 trait StackingContextHelpers {
     fn mix_blend_mode_for_compositing(&self) -> Option<MixBlendMode>;
     fn filter_ops_for_compositing(&self,
-                                  auxiliary_lists: &AuxiliaryLists,
+                                  display_list: &BuiltDisplayList,
+                                  input_filters: ItemRange<FilterOp>,
                                   properties: &SceneProperties) -> Vec<LowLevelFilterOp>;
 }
 
@@ -97,11 +83,12 @@ impl StackingContextHelpers for StackingContext {
     }
 
     fn filter_ops_for_compositing(&self,
-                                  auxiliary_lists: &AuxiliaryLists,
+                                  display_list: &BuiltDisplayList,
+                                  input_filters: ItemRange<FilterOp>,
                                   properties: &SceneProperties) -> Vec<LowLevelFilterOp> {
         let mut filters = vec![];
-        for filter in auxiliary_lists.filters(&self.filters) {
-            match *filter {
+        for filter in display_list.get(input_filters) {
+            match filter {
                 FilterOp::Blur(radius) => {
                     filters.push(LowLevelFilterOp::Blur(
                         radius,
@@ -150,71 +137,16 @@ impl StackingContextHelpers for StackingContext {
     }
 }
 
-struct DisplayListTraversal<'a> {
-    pub display_list: &'a [DisplayItem],
-    pub next_item_index: usize,
-}
-
-impl<'a> DisplayListTraversal<'a> {
-    pub fn new_skipping_first(display_list: &'a Vec<DisplayItem>) -> DisplayListTraversal {
-        DisplayListTraversal {
-            display_list: display_list,
-            next_item_index: 1,
-        }
-    }
-
-    pub fn skip_current_stacking_context(&mut self) {
-        let mut depth = 0;
-        for item in self {
-            match item.item {
-                SpecificDisplayItem::PushStackingContext(..) => depth += 1,
-                SpecificDisplayItem::PopStackingContext if depth == 0 => return,
-                SpecificDisplayItem::PopStackingContext => depth -= 1,
-                _ => {}
-            }
-            debug_assert!(depth >= 0);
-        }
-    }
-
-    pub fn current_stacking_context_empty(&self) -> bool {
-        match self.peek() {
-            Some(item) => item.item == SpecificDisplayItem::PopStackingContext,
-            None => true,
-        }
-    }
-
-    fn peek(&self) -> Option<&'a DisplayItem> {
-        if self.next_item_index >= self.display_list.len() {
-            return None
-        }
-        Some(&self.display_list[self.next_item_index])
-    }
-}
-
-impl<'a> Iterator for DisplayListTraversal<'a> {
-    type Item = &'a DisplayItem;
-
-    fn next(&mut self) -> Option<&'a DisplayItem> {
-        if self.next_item_index >= self.display_list.len() {
-            return None
-        }
-
-        let item = &self.display_list[self.next_item_index];
-        self.next_item_index += 1;
-        Some(item)
-    }
-}
-
 fn clip_intersection(original_rect: &LayerRect,
                      region: &ClipRegion,
-                     aux_lists: &AuxiliaryLists)
+                     display_list: &BuiltDisplayList)
                      -> Option<LayerRect> {
     if region.image_mask.is_some() {
         return None;
     }
-    let clips = aux_lists.complex_clip_regions(&region.complex);
+    let clips = display_list.get(region.complex_clips);
     let base_rect = region.main.intersection(original_rect);
-    clips.iter().fold(base_rect, |inner_combined, ccr| {
+    clips.fold(base_rect, |inner_combined, ccr| {
         inner_combined.and_then(|combined| {
             ccr.get_inner_rect_full().and_then(|ir| ir.intersection(&combined))
         })
@@ -297,13 +229,16 @@ impl Frame {
 
         self.pipeline_epoch_map.insert(root_pipeline_id, root_pipeline.epoch);
 
-        let (root_stacking_context, root_bounds) = match display_list.starting_stacking_context() {
-            Some(some) => some,
-            None => {
-                warn!("Pipeline display list does not start with a stacking context.");
-                return;
-            }
-        };
+        let mut traversal = display_list.iter();
+
+        let (root_stacking_context, root_bounds, root_filters) =
+          match traversal.starting_stacking_context() {
+              Some(some) => some,
+              None => {
+                  warn!("Pipeline display list does not start with a stacking context.");
+                  return;
+              }
+          };
 
         let background_color = root_pipeline.background_color.and_then(|color| {
             if color.a > 0.0 {
@@ -331,15 +266,15 @@ impl Frame {
                                                   device_pixel_ratio,
                                                   &mut self.clip_scroll_tree);
 
-            let mut traversal = DisplayListTraversal::new_skipping_first(display_list);
             self.flatten_stacking_context(&mut traversal,
                                           root_pipeline_id,
                                           &mut context,
                                           clip_id,
                                           LayerPoint::zero(),
                                           0,
-                                          root_bounds,
-                                          root_stacking_context);
+                                          &root_bounds,
+                                          &root_stacking_context,
+                                          root_filters);
         }
 
         self.frame_builder = Some(frame_builder);
@@ -363,14 +298,15 @@ impl Frame {
     }
 
     fn flatten_stacking_context<'a>(&mut self,
-                                    traversal: &mut DisplayListTraversal<'a>,
+                                    traversal: &mut BuiltDisplayListIter<'a>,
                                     pipeline_id: PipelineId,
                                     context: &mut FlattenContext,
                                     context_scroll_node_id: ClipId,
                                     mut reference_frame_relative_offset: LayerPoint,
                                     level: i32,
                                     bounds: &LayerRect,
-                                    stacking_context: &StackingContext) {
+                                    stacking_context: &StackingContext,
+                                    filters: ItemRange<FilterOp>) {
         // Avoid doing unnecessary work for empty stacking contexts.
         if traversal.current_stacking_context_empty() {
             traversal.skip_current_stacking_context();
@@ -378,11 +314,12 @@ impl Frame {
         }
 
         let composition_operations = {
-            let auxiliary_lists = context.scene.pipeline_auxiliary_lists
-                                               .get(&pipeline_id)
-                                               .expect("No auxiliary lists?!");
+            // TODO(optimization?): self.traversal.display_list()
+            let display_list = context.scene.display_lists
+                                      .get(&pipeline_id)
+                                      .expect("No display list?!");
             CompositeOps::new(
-                stacking_context.filter_ops_for_compositing(auxiliary_lists, &context.scene.properties),
+                stacking_context.filter_ops_for_compositing(display_list, filters, &context.scene.properties),
                 stacking_context.mix_blend_mode_for_compositing())
         };
 
@@ -499,8 +436,11 @@ impl Frame {
             None => return,
         };
 
+        let mut traversal = display_list.iter();
+
         let (iframe_stacking_context,
-             iframe_stacking_context_bounds) = match display_list.starting_stacking_context() {
+             iframe_stacking_context_bounds,
+             iframe_filters) = match traversal.starting_stacking_context() {
             Some(some) => some,
             None => {
                 warn!("Pipeline display list does not start with a stacking context.");
@@ -532,35 +472,50 @@ impl Frame {
             &ClipRegion::simple(&iframe_rect),
             &mut self.clip_scroll_tree);
 
-        let mut traversal = DisplayListTraversal::new_skipping_first(display_list);
         self.flatten_stacking_context(&mut traversal,
                                       pipeline_id,
                                       context,
                                       iframe_clip_id,
                                       LayerPoint::zero(),
                                       0,
-                                      iframe_stacking_context_bounds,
-                                      iframe_stacking_context);
+                                      &iframe_stacking_context_bounds,
+                                      &iframe_stacking_context,
+                                      iframe_filters);
 
         context.builder.pop_reference_frame();
     }
 
     fn flatten_items<'a>(&mut self,
-                         traversal: &mut DisplayListTraversal<'a>,
+                         traversal: &mut BuiltDisplayListIter<'a>,
                          pipeline_id: PipelineId,
                          context: &mut FlattenContext,
                          reference_frame_relative_offset: LayerPoint,
                          level: i32) {
-        while let Some(item) = traversal.next() {
-            let mut clip_and_scroll = item.clip_and_scroll;
+
+        // All this continue_traversal stuff is a big borrowck hack ;_;
+        // Non-lexical lifetimes should fix it.
+        //
+        // Basic idea: when we recurse, we make an independent traversal, then assign
+        // it to this variable to be swapped in at the start of the loop. We can't
+        // while-let because we need a brief period where the item doesn't exist.
+        let mut continue_traversal: Option<BuiltDisplayListIter<'a>> = None;
+        loop {
+            if let Some(trav) = continue_traversal.take() {
+                *traversal = trav;
+            }
+            let item = match traversal.next() {
+                Some(item) => item,
+                None => break,
+            };
+
+            let mut clip_and_scroll = item.clip_and_scroll();
             clip_and_scroll.scroll_node_id =
                 context.clip_id_with_replacement(clip_and_scroll.scroll_node_id);
-
-            match item.item {
+            match *item.item() {
                 SpecificDisplayItem::WebGL(ref info) => {
                     context.builder.add_webgl_rectangle(clip_and_scroll,
-                                                        item.rect,
-                                                        &item.clip,
+                                                        item.rect(),
+                                                        item.clip_region(),
                                                         info.context_id);
                 }
                 SpecificDisplayItem::Image(ref info) => {
@@ -571,15 +526,15 @@ impl Frame {
                         let image_size = DeviceUintSize::new(image.descriptor.width, image.descriptor.height);
                         self.decompose_image(clip_and_scroll,
                                              context,
-                                             &item.rect,
-                                             &item.clip,
+                                             &item.rect(),
+                                             item.clip_region(),
                                              info,
                                              image_size,
                                              tile_size as u32);
                     } else {
                         context.builder.add_image(clip_and_scroll,
-                                                  item.rect,
-                                                  &item.clip,
+                                                  item.rect(),
+                                                  item.clip_region(),
                                                   &info.stretch_size,
                                                   &info.tile_spacing,
                                                   None,
@@ -590,73 +545,76 @@ impl Frame {
                 }
                 SpecificDisplayItem::YuvImage(ref info) => {
                     context.builder.add_yuv_image(clip_and_scroll,
-                                                  item.rect,
-                                                  &item.clip,
+                                                  item.rect(),
+                                                  item.clip_region(),
                                                   info.yuv_data,
                                                   info.color_space);
                 }
                 SpecificDisplayItem::Text(ref text_info) => {
                     context.builder.add_text(clip_and_scroll,
-                                             item.rect,
-                                             &item.clip,
+                                             item.rect(),
+                                             item.clip_region(),
                                              text_info.font_key,
                                              text_info.size,
                                              text_info.blur_radius,
                                              &text_info.color,
-                                             text_info.glyphs,
+                                             item.glyphs(),
+                                             item.display_list().get(item.glyphs()).count(),
                                              text_info.glyph_options);
                 }
                 SpecificDisplayItem::Rectangle(ref info) => {
-                    let auxiliary_lists = context.scene.pipeline_auxiliary_lists
-                                                       .get(&pipeline_id)
-                                                       .expect("No auxiliary lists?!");
+                    let display_list = context.scene.display_lists
+                                              .get(&pipeline_id)
+                                              .expect("No display list?!");
                     // Try to extract the opaque inner rectangle out of the clipped primitive.
-                    if let Some(opaque_rect) = clip_intersection(&item.rect, &item.clip, auxiliary_lists) {
+                    if let Some(opaque_rect) = clip_intersection(&item.rect(), item.clip_region(), display_list) {
                         let mut results = Vec::new();
-                        subtract_rect(&item.rect, &opaque_rect, &mut results);
+                        subtract_rect(&item.rect(), &opaque_rect, &mut results);
                         // The inner rectangle is considered opaque within this layer.
                         // It may still inherit some masking from the clip stack.
                         context.builder.add_solid_rectangle(clip_and_scroll,
                                                             &opaque_rect,
-                                                            &ClipRegion::simple(&item.clip.main),
+                                                            &ClipRegion::simple(&item.clip_region().main),
                                                             &info.color,
                                                             PrimitiveFlags::None);
                         for transparent_rect in &results {
                             context.builder.add_solid_rectangle(clip_and_scroll,
                                                                 transparent_rect,
-                                                                &item.clip,
+                                                                item.clip_region(),
                                                                 &info.color,
                                                                 PrimitiveFlags::None);
                         }
                     } else {
                         context.builder.add_solid_rectangle(clip_and_scroll,
-                                                            &item.rect,
-                                                            &item.clip,
+                                                            &item.rect(),
+                                                            item.clip_region(),
                                                             &info.color,
                                                             PrimitiveFlags::None);
                     }
                 }
                 SpecificDisplayItem::Gradient(ref info) => {
                     context.builder.add_gradient(clip_and_scroll,
-                                                 item.rect,
-                                                 &item.clip,
+                                                 item.rect(),
+                                                 item.clip_region(),
                                                  info.gradient.start_point,
                                                  info.gradient.end_point,
-                                                 info.gradient.stops,
+                                                 item.gradient_stops(),
+                                                 item.display_list()
+                                                     .get(item.gradient_stops()).count(),
                                                  info.gradient.extend_mode,
                                                  info.tile_size,
                                                  info.tile_spacing);
                 }
                 SpecificDisplayItem::RadialGradient(ref info) => {
                     context.builder.add_radial_gradient(clip_and_scroll,
-                                                        item.rect,
-                                                        &item.clip,
+                                                        item.rect(),
+                                                        item.clip_region(),
                                                         info.gradient.start_center,
                                                         info.gradient.start_radius,
                                                         info.gradient.end_center,
                                                         info.gradient.end_radius,
                                                         info.gradient.ratio_xy,
-                                                        info.gradient.stops,
+                                                        item.gradient_stops(),
                                                         info.gradient.extend_mode,
                                                         info.tile_size,
                                                         info.tile_spacing);
@@ -664,7 +622,7 @@ impl Frame {
                 SpecificDisplayItem::BoxShadow(ref box_shadow_info) => {
                     context.builder.add_box_shadow(clip_and_scroll,
                                                    &box_shadow_info.box_bounds,
-                                                   &item.clip,
+                                                   item.clip_region(),
                                                    &box_shadow_info.offset,
                                                    &box_shadow_info.color,
                                                    box_shadow_info.blur_radius,
@@ -673,38 +631,48 @@ impl Frame {
                                                    box_shadow_info.clip_mode);
                 }
                 SpecificDisplayItem::Border(ref info) => {
+
                     context.builder.add_border(clip_and_scroll,
-                                               item.rect,
-                                               &item.clip,
-                                               info);
+                                               item.rect(),
+                                               item.clip_region(),
+                                               info,
+                                               item.gradient_stops(),
+                                               item.display_list()
+                                                   .get(item.gradient_stops()).count());
                 }
                 SpecificDisplayItem::PushStackingContext(ref info) => {
-                    self.flatten_stacking_context(traversal,
+                    let mut subtraversal = item.sub_iter();
+                    self.flatten_stacking_context(&mut subtraversal,
                                                   pipeline_id,
                                                   context,
-                                                  item.clip_and_scroll.scroll_node_id,
+                                                  item.clip_and_scroll().scroll_node_id,
                                                   reference_frame_relative_offset,
                                                   level + 1,
-                                                  &item.rect,
-                                                  &info.stacking_context);
+                                                  &item.rect(),
+                                                  &info.stacking_context,
+                                                  item.filters());
+                    continue_traversal = Some(subtraversal);
                 }
                 SpecificDisplayItem::Iframe(ref info) => {
                     self.flatten_iframe(info.pipeline_id,
                                         clip_and_scroll.scroll_node_id,
-                                        &item.rect,
+                                        &item.rect(),
                                         context,
                                         reference_frame_relative_offset);
                 }
                 SpecificDisplayItem::Clip(ref info) => {
-                    let content_rect = &item.rect.translate(&reference_frame_relative_offset);
+                    let content_rect = &item.rect().translate(&reference_frame_relative_offset);
                     self.flatten_clip(context,
                                       pipeline_id,
                                       clip_and_scroll.scroll_node_id,
                                       &info,
                                       &content_rect,
-                                      &item.clip);
+                                      item.clip_region());
                 }
                 SpecificDisplayItem::PopStackingContext => return,
+                SpecificDisplayItem::SetGradientStops | SpecificDisplayItem::SetClipRegion(_) => {
+                    // Do nothing; these are dummy items for the display list parser
+                }
             }
         }
     }
@@ -822,7 +790,7 @@ impl Frame {
         //  ###################-+  -+
         //  #    |    |    |//# |   | image size
         //  #    |    |    |//# |   |
-        //  #----+----+----+--#-+   |  -+ 
+        //  #----+----+----+--#-+   |  -+
         //  #    |    |    |//# |   |   | regular tile size
         //  #    |    |    |//# |   |   |
         //  #----+----+----+--#-+   |  -+-+
@@ -1002,14 +970,14 @@ impl Frame {
 
     pub fn build(&mut self,
                  resource_cache: &mut ResourceCache,
-                 auxiliary_lists_map: &AuxiliaryListsMap,
+                 display_lists: &DisplayListMap,
                  device_pixel_ratio: f32,
                  pan: LayerPoint,
                  texture_cache_profile: &mut TextureCacheProfileCounters)
                  -> RendererFrame {
         self.clip_scroll_tree.update_all_node_transforms(pan);
         let frame = self.build_frame(resource_cache,
-                                     auxiliary_lists_map,
+                                     display_lists,
                                      device_pixel_ratio,
                                      texture_cache_profile);
         resource_cache.expire_old_resources(self.id);
@@ -1018,7 +986,7 @@ impl Frame {
 
     fn build_frame(&mut self,
                    resource_cache: &mut ResourceCache,
-                   auxiliary_lists_map: &AuxiliaryListsMap,
+                   display_lists: &DisplayListMap,
                    device_pixel_ratio: f32,
                    texture_cache_profile: &mut TextureCacheProfileCounters)
                    -> RendererFrame {
@@ -1027,7 +995,7 @@ impl Frame {
             builder.build(resource_cache,
                           self.id,
                           &mut self.clip_scroll_tree,
-                          auxiliary_lists_map,
+                          display_lists,
                           device_pixel_ratio,
                           texture_cache_profile)
         );

@@ -14,14 +14,14 @@ use resource_cache::{CacheItem, ImageProperties, ResourceCache};
 use std::mem;
 use std::usize;
 use util::{TransformedRect, recycle_vec};
-use webrender_traits::{AuxiliaryLists, ColorF, ImageKey, ImageRendering, YuvColorSpace, YuvFormat};
-use webrender_traits::{ClipRegion, ComplexClipRegion, ItemRange, GlyphKey};
+use webrender_traits::{BuiltDisplayList, ColorF, ImageKey, ImageRendering, YuvColorSpace};
+use webrender_traits::{YuvFormat, ClipRegion, ComplexClipRegion, ItemRange, GlyphKey};
 use webrender_traits::{FontKey, FontRenderMode, WebGLContextId};
 use webrender_traits::{device_length, DeviceIntRect, DeviceIntSize};
 use webrender_traits::{DeviceRect, DevicePoint, DeviceSize};
 use webrender_traits::{LayerRect, LayerSize, LayerPoint, LayoutPoint};
 use webrender_traits::{LayerToWorldTransform, GlyphInstance, GlyphOptions};
-use webrender_traits::{ExtendMode, GradientStop, TileOffset};
+use webrender_traits::{ExtendMode, GradientStop, AuxIter, TileOffset};
 
 pub const CLIP_DATA_GPU_SIZE: usize = 5;
 pub const MASK_DATA_GPU_SIZE: usize = 1;
@@ -271,7 +271,8 @@ pub struct GradientPrimitiveGpu {
 
 #[derive(Debug)]
 pub struct GradientPrimitiveCpu {
-    pub stops_range: ItemRange,
+    pub stops_range: ItemRange<GradientStop>,
+    pub stops_count: usize,
     pub extend_mode: ExtendMode,
     pub reverse_stops: bool,
     pub cache_dirty: bool,
@@ -293,7 +294,7 @@ pub struct RadialGradientPrimitiveGpu {
 
 #[derive(Debug)]
 pub struct RadialGradientPrimitiveCpu {
-    pub stops_range: ItemRange,
+    pub stops_range: ItemRange<GradientStop>,
     pub extend_mode: ExtendMode,
     pub cache_dirty: bool,
 }
@@ -379,7 +380,7 @@ impl GradientData {
     }
 
     // Build the gradient data from the supplied stops, reversing them if necessary.
-    fn build(&mut self, src_stops: &[GradientStop], reverse_stops: bool) {
+    fn build(&mut self, src_stops: AuxIter<GradientStop>, reverse_stops: bool) {
 
         const MAX_IDX: usize = GRADIENT_DATA_RESOLUTION;
         const MIN_IDX: usize = 0;
@@ -440,7 +441,8 @@ pub struct TextRunPrimitiveCpu {
     pub font_key: FontKey,
     pub logical_font_size: Au,
     pub blur_radius: Au,
-    pub glyph_range: ItemRange,
+    pub glyph_range: ItemRange<GlyphInstance>,
+    pub glyph_count: usize,
     pub cache_dirty: bool,
     // TODO(gw): Maybe make this an Arc for sharing with resource cache
     pub glyph_instances: Vec<GlyphInstance>,
@@ -710,8 +712,8 @@ impl PrimitiveStore {
             }
             PrimitiveContainer::TextRun(mut text_cpu, text_gpu) => {
                 let gpu_address = self.gpu_data16.push(text_gpu);
-                let gpu_glyphs_address = self.gpu_data16.alloc(text_cpu.glyph_range.length);
-                text_cpu.resource_address = self.gpu_resource_rects.alloc(text_cpu.glyph_range.length);
+                let gpu_glyphs_address = self.gpu_data16.alloc(text_cpu.glyph_count);
+                text_cpu.resource_address = self.gpu_resource_rects.alloc(text_cpu.glyph_count);
 
                 let metadata = PrimitiveMetadata {
                     is_opaque: false,
@@ -721,7 +723,7 @@ impl PrimitiveStore {
                     cpu_prim_index: SpecificPrimitiveIndex(self.cpu_text_runs.len()),
                     gpu_prim_index: gpu_address,
                     gpu_data_address: gpu_glyphs_address,
-                    gpu_data_count: text_cpu.glyph_range.length as i32,
+                    gpu_data_count: text_cpu.glyph_count as i32,
                     render_task: None,
                     clip_task: None,
                 };
@@ -792,7 +794,7 @@ impl PrimitiveStore {
             }
             PrimitiveContainer::AlignedGradient(gradient_cpu, gradient_gpu) => {
                 let gpu_address = self.gpu_data64.push(gradient_gpu);
-                let gpu_stops_address = self.gpu_data32.alloc(gradient_cpu.stops_range.length);
+                let gpu_stops_address = self.gpu_data32.alloc(gradient_cpu.stops_count);
 
                 let metadata = PrimitiveMetadata {
                     // TODO: calculate if the gradient is actually opaque
@@ -803,7 +805,7 @@ impl PrimitiveStore {
                     cpu_prim_index: SpecificPrimitiveIndex(self.cpu_gradients.len()),
                     gpu_prim_index: gpu_address,
                     gpu_data_address: gpu_stops_address,
-                    gpu_data_count: gradient_cpu.stops_range.length as i32,
+                    gpu_data_count: gradient_cpu.stops_count as i32,
                     render_task: None,
                     clip_task: None,
                 };
@@ -985,7 +987,7 @@ impl PrimitiveStore {
                     let font_size_dp = text.logical_font_size.scale_by(device_pixel_ratio);
 
                     let dest_rects = self.gpu_resource_rects.get_slice_mut(text.resource_address,
-                                                                           text.glyph_range.length);
+                                                                           text.glyph_count);
 
                     let texture_id = resource_cache.get_glyphs(text.font_key,
                                                                font_size_dp,
@@ -1131,7 +1133,7 @@ impl PrimitiveStore {
                                    resource_cache: &mut ResourceCache,
                                    layer_transform: &LayerToWorldTransform,
                                    device_pixel_ratio: f32,
-                                   auxiliary_lists: &AuxiliaryLists) -> bool {
+                                   display_list: &BuiltDisplayList) -> bool {
 
         let metadata = &mut self.cpu_metadata[prim_index.0];
         let mut prim_needs_resolve = false;
@@ -1142,9 +1144,9 @@ impl PrimitiveStore {
                              layer_transform,
                              &mut self.gpu_data32,
                              device_pixel_ratio,
-                             auxiliary_lists);
+                             display_list);
             for clip in &metadata.clips {
-                if let ClipSource::Region(ClipRegion{ image_mask: Some(ref mask), .. }, _) = *clip {
+                if let ClipSource::Region(ClipRegion{ image_mask: Some(ref mask), .. }, ..) = *clip {
                     resource_cache.request_image(mask.image, ImageRendering::Auto, None);
                     prim_needs_resolve = true;
                 }
@@ -1175,23 +1177,24 @@ impl PrimitiveStore {
                 let text = &mut self.cpu_text_runs[metadata.cpu_prim_index.0];
 
                 let font_size_dp = text.logical_font_size.scale_by(device_pixel_ratio);
-                let src_glyphs = auxiliary_lists.glyph_instances(&text.glyph_range);
+                let src_glyphs = display_list.get(text.glyph_range);
                 prim_needs_resolve = true;
 
                 if text.cache_dirty {
                     rebuild_bounding_rect = true;
                     text.cache_dirty = false;
 
-                    debug_assert!(metadata.gpu_data_count == text.glyph_range.length as i32);
+                    debug_assert!(metadata.gpu_data_count == src_glyphs.len() as i32);
                     debug_assert!(text.glyph_instances.is_empty());
 
                     let dest_glyphs = self.gpu_data16.get_slice_mut(metadata.gpu_data_address,
-                                                                    text.glyph_range.length);
+                                                                    src_glyphs.len());
+
                     let mut glyph_key = GlyphKey::new(text.font_key,
                                                       font_size_dp,
                                                       text.color,
-                                                      src_glyphs[0].index,
-                                                      src_glyphs[0].point,
+                                                      0,
+                                                      LayoutPoint::new(0.0, 0.0),
                                                       text.render_mode);
                     let mut local_rect = LayerRect::zero();
                     let mut actual_glyph_count = 0;
@@ -1302,13 +1305,13 @@ impl PrimitiveStore {
             PrimitiveKind::AlignedGradient => {
                 let gradient = &mut self.cpu_gradients[metadata.cpu_prim_index.0];
                 if gradient.cache_dirty {
-                    let src_stops = auxiliary_lists.gradient_stops(&gradient.stops_range);
+                    let src_stops = display_list.get(gradient.stops_range);
 
-                    debug_assert!(metadata.gpu_data_count == gradient.stops_range.length as i32);
+                    debug_assert!(metadata.gpu_data_count == src_stops.len() as i32);
                     let dest_stops = self.gpu_data32.get_slice_mut(metadata.gpu_data_address,
-                                                                   gradient.stops_range.length);
+                                                                   src_stops.len());
 
-                    for (src, dest) in src_stops.iter().zip(dest_stops.iter_mut()) {
+                    for (src, dest) in src_stops.zip(dest_stops.iter_mut()) {
                         *dest = GpuBlock32::from(GradientStopGpu {
                             offset: src.offset,
                             color: src.color,
@@ -1322,7 +1325,8 @@ impl PrimitiveStore {
             PrimitiveKind::AngleGradient => {
                 let gradient = &mut self.cpu_gradients[metadata.cpu_prim_index.0];
                 if gradient.cache_dirty {
-                    let src_stops = auxiliary_lists.gradient_stops(&gradient.stops_range);
+                    let src_stops = display_list.get(gradient.stops_range);
+
                     let dest_gradient = self.gpu_gradient_data.get_mut(metadata.gpu_data_address);
                     dest_gradient.build(src_stops, gradient.reverse_stops);
                     gradient.cache_dirty = false;
@@ -1331,7 +1335,8 @@ impl PrimitiveStore {
             PrimitiveKind::RadialGradient => {
                 let gradient = &mut self.cpu_radial_gradients[metadata.cpu_prim_index.0];
                 if gradient.cache_dirty {
-                    let src_stops = auxiliary_lists.gradient_stops(&gradient.stops_range);
+                    let src_stops = display_list.get(gradient.stops_range);
+
                     let dest_gradient = self.gpu_gradient_data.get_mut(metadata.gpu_data_address);
                     dest_gradient.build(src_stops, false);
                     gradient.cache_dirty = false;
