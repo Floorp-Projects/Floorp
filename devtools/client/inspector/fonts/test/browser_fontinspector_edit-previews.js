@@ -11,7 +11,7 @@ const TEST_URI = URL_ROOT + "browser_fontinspector.html";
 
 add_task(function* () {
   let {view} = yield openFontInspectorForURL(TEST_URI);
-  let viewDoc = view.chromeDoc;
+  let viewDoc = view.document;
 
   let previews = viewDoc.querySelectorAll("#all-fonts .font-preview");
   let initialPreviews = [...previews].map(p => p.src);
