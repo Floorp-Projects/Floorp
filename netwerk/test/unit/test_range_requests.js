@@ -383,6 +383,7 @@ function testFinished() {
 
 function run_test() {
   httpserver = new HttpServer();
+  httpserver.keepAliveEnabled = false;
   httpserver.registerPathHandler("/test_2", handler_2);
   httpserver.registerPathHandler("/test_3", handler_3);
   httpserver.registerPathHandler("/test_4", handler_4);
