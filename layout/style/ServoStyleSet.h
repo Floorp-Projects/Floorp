@@ -418,6 +418,23 @@ private:
   // Subset of the pre-traverse steps that involve syncing up data
   void PreTraverseSync();
 
+  /**
+   * Rebuild the stylist.  This should only be called if mStylistMayNeedRebuild
+   * is true.
+   */
+  void RebuildStylist();
+
+  /**
+   * Helper for correctly calling RebuildStylist without paying the cost of an
+   * extra function call in the common no-rebuild-needed case.
+   */
+  void MaybeRebuildStylist()
+  {
+    if (mStylistMayNeedRebuild) {
+      RebuildStylist();
+    }
+  }
+
   already_AddRefed<ServoComputedValues> ResolveStyleLazily(dom::Element* aElement,
                                                            nsIAtom* aPseudoTag);
 
@@ -459,6 +476,7 @@ private:
   uint32_t mUniqueIDCounter;
   bool mAllowResolveStaleStyles;
   bool mAuthorStyleDisabled;
+  bool mStylistMayNeedRebuild;
 
   // Stores pointers to our cached style contexts for non-inheriting anonymous
   // boxes.
