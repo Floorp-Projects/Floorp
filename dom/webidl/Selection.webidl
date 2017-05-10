@@ -90,4 +90,11 @@ partial interface Selection {
 
   [ChromeOnly,Throws]
   void scrollIntoView(short aRegion, boolean aIsSynchronous, short aVPercent, short aHPercent);
+
+  [ChromeOnly,Throws]
+  void setColors(DOMString aForegroundColor, DOMString aBackgroundColor,
+                 DOMString aAltForegroundColor, DOMString aAltBackgroundColor);
+
+  [ChromeOnly,Throws]
+  void resetColors();
 };
