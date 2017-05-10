@@ -420,7 +420,9 @@ MP3TrackDemuxer::Duration(int64_t aNumFrames) const
 MediaByteRange
 MP3TrackDemuxer::FindFirstFrame()
 {
-  static const int MIN_SUCCESSIVE_FRAMES = 4;
+  // Get engough successive frames to avoid invalid frame from cut stream.
+  // However, some website use very short mp3 file so using the same value as Chrome.
+  static const int MIN_SUCCESSIVE_FRAMES = 3;
 
   MediaByteRange candidateFrame = FindNextFrame();
   int numSuccFrames = candidateFrame.Length() > 0;
