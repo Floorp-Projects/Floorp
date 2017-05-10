@@ -46,7 +46,7 @@
 # test appending some nodes whose frame construction should be done lazily
 # followed by appending a node that might not be done lazily
 == multipleappendwithxul.xhtml multipleappendwithxul-ref.xhtml
-fails-if(stylo) == multipleappendwithinput.xhtml multipleappendwithinput-ref.xhtml
+== multipleappendwithinput.xhtml multipleappendwithinput-ref.xhtml
 == multipleappendwitheditable.xhtml multipleappendwitheditable-ref.xhtml
 
 fails-if(stylo) == xbl-children-1.xhtml xbl-children-1-ref.xhtml

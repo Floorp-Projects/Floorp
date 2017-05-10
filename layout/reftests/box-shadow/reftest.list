@@ -13,7 +13,7 @@ random != boxshadow-blur-2.html boxshadow-blur-2-notref.html # fixedpoint divisi
 fails-if(Android) fuzzy-if(webrender,20,3310) == boxshadow-button.html boxshadow-button-ref.html
 fuzzy-if(OSX==1010,1,24) fuzzy-if(d2d,16,908) fuzzy-if(webrender,19,1680) == boxshadow-large-border-radius.html boxshadow-large-border-radius-ref.html # Bug 1209649
 
-fails-if(Android) fails-if(stylo) == boxshadow-fileupload.html boxshadow-fileupload-ref.html
+fails-if(Android) == boxshadow-fileupload.html boxshadow-fileupload-ref.html
 fuzzy-if(skiaContent,13,28) == boxshadow-inner-basic.html boxshadow-inner-basic-ref.svg
 random-if(layersGPUAccelerated) == boxshadow-mixed.html boxshadow-mixed-ref.html
 random-if(d2d) fuzzy-if(skiaContent,1,100) == boxshadow-rounded-spread.html boxshadow-rounded-spread-ref.html
@@ -43,5 +43,5 @@ fuzzy-if(winWidget,5,30) fuzzy-if(skiaContent,16,10) == fieldset.html fieldset-r
 fuzzy-if(winWidget,5,30) fuzzy-if(skiaContent,16,10) == fieldset-inset.html fieldset-inset-ref.html # minor anti-aliasing problem on Windows
 == 1178575.html 1178575-ref.html
 == 1178575-2.html 1178575-2-ref.html
-fuzzy(159,2) fails-if(!dwrite) fails-if(stylo) == 1212823-1.html 1212823-1-ref.html
+fuzzy(159,2) fails-if(!dwrite) == 1212823-1.html 1212823-1-ref.html
 == boxshadow-large-offset.html boxshadow-large-offset-ref.html

@@ -1,7 +1,7 @@
 == output-1.html about:blank
 == output-2.html output-ref.html
 == output-3.html output-ref-2.html
-fails-if(stylo) == output-4.html output-ref-3.html
+== output-4.html output-ref-3.html
 == output-5.html output-ref.html
 == output-6.html output-ref.html
 == output-7.html output-ref.html
