@@ -403,6 +403,14 @@ public:
   // in the given direction.
   bool CanScroll(ScrollDirection aDirection) const;
 
+  /**
+   * Convert a point on the scrollbar from this APZC's ParentLayer coordinates
+   * to CSS coordinates relative to the beginning of the scroll track.
+   * Only the component in the direction of scrolling is returned.
+   */
+  CSSCoord ConvertScrollbarPoint(const ParentLayerPoint& aScrollbarPoint,
+                                 const ScrollThumbData& aThumbData) const;
+
   void NotifyMozMouseScrollEvent(const nsString& aString) const;
 
 protected:
