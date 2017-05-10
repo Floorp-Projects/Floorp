@@ -3785,7 +3785,12 @@ XMLHttpRequestMainThread::MaybeCreateBlobStorage()
       ? MutableBlobStorage::eCouldBeInTemporaryFile
       : MutableBlobStorage::eOnlyInMemory;
 
-  mBlobStorage = new MutableBlobStorage(storageType);
+  nsCOMPtr<nsIEventTarget> eventTarget;
+  if (nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal()) {
+    eventTarget = global->EventTargetFor(TaskCategory::Other);
+  }
+
+  mBlobStorage = new MutableBlobStorage(storageType, eventTarget);
 }
 
 void
