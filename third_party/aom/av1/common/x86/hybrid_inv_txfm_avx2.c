@@ -14,67 +14,9 @@
 #include "./aom_config.h"
 #include "./av1_rtcd.h"
 
-#include "aom_dsp/x86/txfm_common_avx2.h"
+#include "aom_dsp/x86/inv_txfm_common_avx2.h"
 
-static INLINE void load_coeff(const tran_low_t *coeff, __m256i *in) {
-#if CONFIG_HIGHBITDEPTH
-  *in = _mm256_setr_epi16(
-      (int16_t)coeff[0], (int16_t)coeff[1], (int16_t)coeff[2],
-      (int16_t)coeff[3], (int16_t)coeff[4], (int16_t)coeff[5],
-      (int16_t)coeff[6], (int16_t)coeff[7], (int16_t)coeff[8],
-      (int16_t)coeff[9], (int16_t)coeff[10], (int16_t)coeff[11],
-      (int16_t)coeff[12], (int16_t)coeff[13], (int16_t)coeff[14],
-      (int16_t)coeff[15]);
-#else
-  *in = _mm256_loadu_si256((const __m256i *)coeff);
-#endif
-}
-
-static void load_buffer_16x16(const tran_low_t *coeff, __m256i *in) {
-  int i = 0;
-  while (i < 16) {
-    load_coeff(coeff + (i << 4), &in[i]);
-    i += 1;
-  }
-}
-
-static void recon_and_store(const __m256i *res, uint8_t *output) {
-  const __m128i zero = _mm_setzero_si128();
-  __m128i x = _mm_loadu_si128((__m128i const *)output);
-  __m128i p0 = _mm_unpacklo_epi8(x, zero);
-  __m128i p1 = _mm_unpackhi_epi8(x, zero);
-
-  p0 = _mm_add_epi16(p0, _mm256_castsi256_si128(*res));
-  p1 = _mm_add_epi16(p1, _mm256_extractf128_si256(*res, 1));
-  x = _mm_packus_epi16(p0, p1);
-  _mm_storeu_si128((__m128i *)output, x);
-}
-
-#define IDCT_ROUNDING_POS (6)
-
-static void write_buffer_16x16(__m256i *in, const int stride, uint8_t *output) {
-  const __m256i rounding = _mm256_set1_epi16(1 << (IDCT_ROUNDING_POS - 1));
-  int i = 0;
-
-  while (i < 16) {
-    in[i] = _mm256_add_epi16(in[i], rounding);
-    in[i] = _mm256_srai_epi16(in[i], IDCT_ROUNDING_POS);
-    recon_and_store(&in[i], output + i * stride);
-    i += 1;
-  }
-}
-
-static INLINE void unpack_butter_fly(const __m256i *a0, const __m256i *a1,
-                                     const __m256i *c0, const __m256i *c1,
-                                     __m256i *b0, __m256i *b1) {
-  __m256i x0, x1;
-  x0 = _mm256_unpacklo_epi16(*a0, *a1);
-  x1 = _mm256_unpackhi_epi16(*a0, *a1);
-  *b0 = butter_fly(x0, x1, *c0);
-  *b1 = butter_fly(x0, x1, *c1);
-}
-
-static void idct16_avx2(__m256i *in) {
+void av1_idct16_avx2(__m256i *in) {
   const __m256i cospi_p30_m02 = pair256_set_epi16(cospi_30_64, -cospi_2_64);
   const __m256i cospi_p02_p30 = pair256_set_epi16(cospi_2_64, cospi_30_64);
   const __m256i cospi_p14_m18 = pair256_set_epi16(cospi_14_64, -cospi_18_64);
@@ -216,8 +158,8 @@ static void idct16_avx2(__m256i *in) {
 }
 
 static void idct16(__m256i *in) {
-  mm256_transpose_16x16(in);
-  idct16_avx2(in);
+  mm256_transpose_16x16(in, in);
+  av1_idct16_avx2(in);
 }
 
 static INLINE void butterfly_32b(const __m256i *a0, const __m256i *a1,
@@ -398,7 +340,7 @@ static void iadst16_avx2(__m256i *in) {
 }
 
 static void iadst16(__m256i *in) {
-  mm256_transpose_16x16(in);
+  mm256_transpose_16x16(in, in);
   iadst16_avx2(in);
 }
 
@@ -416,8 +358,8 @@ static void flip_col(uint8_t **dest, int *stride, int rows) {
 }
 
 static void iidtx16(__m256i *in) {
-  mm256_transpose_16x16(in);
-  txfm_scaling16_avx2(Sqrt2, in);
+  mm256_transpose_16x16(in, in);
+  txfm_scaling16_avx2((int16_t)Sqrt2, in);
 }
 #endif
 
@@ -503,5 +445,5 @@ void av1_iht16x16_256_add_avx2(const tran_low_t *input, uint8_t *dest,
 #endif  // CONFIG_EXT_TX
     default: assert(0); break;
   }
-  write_buffer_16x16(in, stride, dest);
+  store_buffer_16xN(in, stride, dest, 16);
 }

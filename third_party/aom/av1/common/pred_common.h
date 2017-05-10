@@ -79,6 +79,15 @@ int av1_get_pred_context_intra_interp(const MACROBLOCKD *xd);
 #endif  // CONFIG_INTRA_INTERP
 #endif  // CONFIG_EXT_INTRA
 
+#if CONFIG_PALETTE && CONFIG_PALETTE_DELTA_ENCODING
+// Get a list of palette base colors that are used in the above and left blocks,
+// referred to as "color cache". The return value is the number of colors in the
+// cache (<= 2 * PALETTE_MAX_SIZE). The color values are stored in "cache"
+// in ascending order.
+int av1_get_palette_cache(const MODE_INFO *above_mi, const MODE_INFO *left_mi,
+                          int plane, uint16_t *cache);
+#endif  // CONFIG_PALETTE && CONFIG_PALETTE_DELTA_ENCODING
+
 int av1_get_intra_inter_context(const MACROBLOCKD *xd);
 
 static INLINE aom_prob av1_get_intra_inter_prob(const AV1_COMMON *cm,
@@ -197,13 +206,7 @@ static INLINE int get_tx_size_context(const MACROBLOCKD *xd) {
   if (!has_left) left_ctx = above_ctx;
 
   if (!has_above) above_ctx = left_ctx;
-#if CONFIG_CB4X4
-  // TODO(jingning): Temporary setup. Will rework this after the cb4x4
-  // framework is up running.
-  return (above_ctx + left_ctx) > max_tx_size + 1;
-#else
-  return (above_ctx + left_ctx) > max_tx_size;
-#endif
+  return (above_ctx + left_ctx) > max_tx_size + TX_SIZE_LUMA_MIN;
 }
 
 #if CONFIG_VAR_TX
@@ -222,7 +225,9 @@ static void update_tx_counts(AV1_COMMON *cm, MACROBLOCKD *xd,
   if (blk_row >= max_blocks_high || blk_col >= max_blocks_wide) return;
 
   if (tx_size == plane_tx_size) {
-    ++xd->counts->tx_size[max_tx_size - TX_8X8][ctx][tx_size];
+    int depth;
+    depth = tx_size_to_depth(tx_size);
+    ++xd->counts->tx_size[max_tx_size - TX_SIZE_CTX_MIN][ctx][depth];
     mbmi->tx_size = tx_size;
   } else {
     int bsl = b_width_log2_lookup[bsize];

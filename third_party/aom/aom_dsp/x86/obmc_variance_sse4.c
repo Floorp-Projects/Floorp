@@ -17,8 +17,9 @@
 #include "aom/aom_integer.h"
 
 #include "aom_dsp/aom_dsp_common.h"
-#include "aom_dsp/x86/synonyms.h"
 #include "aom_dsp/aom_filter.h"
+#include "aom_dsp/x86/obmc_intrinsic_ssse3.h"
+#include "aom_dsp/x86/synonyms.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // 8 bit

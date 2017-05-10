@@ -43,57 +43,47 @@ const aom_tree_index av1_mv_fp_tree[TREE_SIZE(MV_FP_SIZE)] = { -0, 2,  -1,
 
 static const nmv_context default_nmv_context = {
   { 32, 64, 96 },  // joints
-#if CONFIG_EC_MULTISYMBOL
   { AOM_ICDF(4096), AOM_ICDF(11264), AOM_ICDF(19328), AOM_ICDF(32768),
     0 },  // joint_cdf
-#endif
   { {
         // Vertical component
         128,                                                   // sign
         { 224, 144, 192, 168, 192, 176, 192, 198, 198, 245 },  // class
-#if CONFIG_EC_MULTISYMBOL
         { AOM_ICDF(28672), AOM_ICDF(30976), AOM_ICDF(31858), AOM_ICDF(32320),
           AOM_ICDF(32551), AOM_ICDF(32656), AOM_ICDF(32740), AOM_ICDF(32757),
           AOM_ICDF(32762), AOM_ICDF(32767), AOM_ICDF(32768), 0 },  // class_cdf
-#endif
-        { 216 },                                               // class0
-        { 136, 140, 148, 160, 176, 192, 224, 234, 234, 240 },  // bits
-        { { 128, 128, 64 }, { 96, 112, 64 } },                 // class0_fp
-        { 64, 96, 64 },                                        // fp
-#if CONFIG_EC_MULTISYMBOL
+        { 216 },                                                   // class0
+        { 136, 140, 148, 160, 176, 192, 224, 234, 234, 240 },      // bits
+        { { 128, 128, 64 }, { 96, 112, 64 } },                     // class0_fp
+        { 64, 96, 64 },                                            // fp
         { { AOM_ICDF(16384), AOM_ICDF(24576), AOM_ICDF(26624), AOM_ICDF(32768),
             0 },
           { AOM_ICDF(12288), AOM_ICDF(21248), AOM_ICDF(24128), AOM_ICDF(32768),
             0 } },  // class0_fp_cdf
         { AOM_ICDF(8192), AOM_ICDF(17408), AOM_ICDF(21248), AOM_ICDF(32768),
           0 },  // fp_cdf
-#endif
-        160,  // class0_hp bit
-        128,  // hp
+        160,    // class0_hp bit
+        128,    // hp
     },
     {
         // Horizontal component
         128,                                                   // sign
         { 216, 128, 176, 160, 176, 176, 192, 198, 198, 208 },  // class
-#if CONFIG_EC_MULTISYMBOL
         { AOM_ICDF(28672), AOM_ICDF(30976), AOM_ICDF(31858), AOM_ICDF(32320),
           AOM_ICDF(32551), AOM_ICDF(32656), AOM_ICDF(32740), AOM_ICDF(32757),
           AOM_ICDF(32762), AOM_ICDF(32767), AOM_ICDF(32768), 0 },  // class_cdf
-#endif
-        { 208 },                                               // class0
-        { 136, 140, 148, 160, 176, 192, 224, 234, 234, 240 },  // bits
-        { { 128, 128, 64 }, { 96, 112, 64 } },                 // class0_fp
-        { 64, 96, 64 },                                        // fp
-#if CONFIG_EC_MULTISYMBOL
+        { 208 },                                                   // class0
+        { 136, 140, 148, 160, 176, 192, 224, 234, 234, 240 },      // bits
+        { { 128, 128, 64 }, { 96, 112, 64 } },                     // class0_fp
+        { 64, 96, 64 },                                            // fp
         { { AOM_ICDF(16384), AOM_ICDF(24576), AOM_ICDF(26624), AOM_ICDF(32768),
             0 },
           { AOM_ICDF(12288), AOM_ICDF(21248), AOM_ICDF(24128), AOM_ICDF(32768),
             0 } },  // class0_fp_cdf
         { AOM_ICDF(8192), AOM_ICDF(17408), AOM_ICDF(21248), AOM_ICDF(32768),
           0 },  // fp_cdf
-#endif
-        160,  // class0_hp bit
-        128,  // hp
+        160,    // class0_hp bit
+        128,    // hp
     } },
 };
 
@@ -232,23 +222,16 @@ void av1_inc_mv(const MV *mv, nmv_context_counts *counts, const int usehp) {
 
 void av1_adapt_mv_probs(AV1_COMMON *cm, int allow_hp) {
   int i, j;
-#if CONFIG_REF_MV
   int idx;
   for (idx = 0; idx < NMV_CONTEXTS; ++idx) {
-    nmv_context *fc = &cm->fc->nmvc[idx];
-    const nmv_context *pre_fc =
-        &cm->frame_contexts[cm->frame_context_idx].nmvc[idx];
+    nmv_context *nmvc = &cm->fc->nmvc[idx];
+    const nmv_context *pre_nmvc = &cm->pre_fc->nmvc[idx];
     const nmv_context_counts *counts = &cm->counts.mv[idx];
-#else
-  nmv_context *fc = &cm->fc->nmvc;
-  const nmv_context *pre_fc = &cm->frame_contexts[cm->frame_context_idx].nmvc;
-  const nmv_context_counts *counts = &cm->counts.mv;
-#endif  // CONFIG_REF_MV
-    aom_tree_merge_probs(av1_mv_joint_tree, pre_fc->joints, counts->joints,
-                         fc->joints);
+    aom_tree_merge_probs(av1_mv_joint_tree, pre_nmvc->joints, counts->joints,
+                         nmvc->joints);
     for (i = 0; i < 2; ++i) {
-      nmv_component *comp = &fc->comps[i];
-      const nmv_component *pre_comp = &pre_fc->comps[i];
+      nmv_component *comp = &nmvc->comps[i];
+      const nmv_component *pre_comp = &pre_nmvc->comps[i];
       const nmv_component_counts *c = &counts->comps[i];
 
       comp->sign = av1_mode_mv_merge_probs(pre_comp->sign, c->sign);
@@ -272,12 +255,10 @@ void av1_adapt_mv_probs(AV1_COMMON *cm, int allow_hp) {
         comp->hp = av1_mode_mv_merge_probs(pre_comp->hp, c->hp);
       }
     }
-#if CONFIG_REF_MV
   }
-#endif  // CONFIG_REF_MV
 }
 
-#if CONFIG_EC_MULTISYMBOL && !CONFIG_EC_ADAPT
+#if !CONFIG_EC_ADAPT
 void av1_set_mv_cdfs(nmv_context *ctx) {
   int i;
   int j;
@@ -297,15 +278,11 @@ void av1_set_mv_cdfs(nmv_context *ctx) {
 #endif
 
 void av1_init_mv_probs(AV1_COMMON *cm) {
-#if CONFIG_REF_MV
   int i;
   for (i = 0; i < NMV_CONTEXTS; ++i) {
     // NB: this sets CDFs too
     cm->fc->nmvc[i] = default_nmv_context;
   }
-#else
-  cm->fc->nmvc = default_nmv_context;
-#endif  // CONFIG_REF_MV
 #if CONFIG_INTRABC
   cm->fc->ndvc = default_nmv_context;
 #endif  // CONFIG_INTRABC

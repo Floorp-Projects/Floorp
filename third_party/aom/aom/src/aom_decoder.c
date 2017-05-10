@@ -69,10 +69,9 @@ aom_codec_err_t aom_codec_peek_stream_info(aom_codec_iface_t *iface,
                                            aom_codec_stream_info_t *si) {
   aom_codec_err_t res;
 
-  if (!iface || !data || !data_sz || !si ||
-      si->sz < sizeof(aom_codec_stream_info_t))
+  if (!iface || !data || !data_sz || !si) {
     res = AOM_CODEC_INVALID_PARAM;
-  else {
+  } else {
     /* Set default/unknown values */
     si->w = 0;
     si->h = 0;
@@ -87,11 +86,11 @@ aom_codec_err_t aom_codec_get_stream_info(aom_codec_ctx_t *ctx,
                                           aom_codec_stream_info_t *si) {
   aom_codec_err_t res;
 
-  if (!ctx || !si || si->sz < sizeof(aom_codec_stream_info_t))
+  if (!ctx || !si) {
     res = AOM_CODEC_INVALID_PARAM;
-  else if (!ctx->iface || !ctx->priv)
+  } else if (!ctx->iface || !ctx->priv) {
     res = AOM_CODEC_ERROR;
-  else {
+  } else {
     /* Set default/unknown values */
     si->w = 0;
     si->h = 0;

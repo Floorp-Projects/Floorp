@@ -34,7 +34,6 @@ typedef struct {
   uint8_t *blk_skip[MAX_MB_PLANE];
 #endif
 
-  // dual buffer pointers, 0: in use, 1: best in store
   tran_low_t *coeff[MAX_MB_PLANE];
   tran_low_t *qcoeff[MAX_MB_PLANE];
   tran_low_t *dqcoeff[MAX_MB_PLANE];
@@ -48,9 +47,8 @@ typedef struct {
 
   int num_4x4_blk;
   int skip;
-  int pred_pixel_ready;
   // For current partition, only if all Y, U, and V transform blocks'
-  // coefficients are quantized to 0, skippable is set to 0.
+  // coefficients are quantized to 0, skippable is set to 1.
   int skippable;
   int best_mode_index;
   int hybrid_pred_diff;

@@ -35,14 +35,10 @@ typedef struct {
 } TOKENVALUE;
 
 typedef struct {
-#if CONFIG_NEW_TOKENSET
   aom_cdf_prob (*tail_cdf)[CDF_SIZE(ENTROPY_TOKENS)];
   aom_cdf_prob (*head_cdf)[CDF_SIZE(ENTROPY_TOKENS)];
   int eob_val;
   int first_val;
-#elif CONFIG_EC_MULTISYMBOL
-  aom_cdf_prob (*token_cdf)[CDF_SIZE(ENTROPY_TOKENS)];
-#endif
   const aom_prob *context_tree;
   EXTRABIT extra;
   uint8_t token;
@@ -51,14 +47,18 @@ typedef struct {
 
 extern const aom_tree_index av1_coef_tree[];
 extern const aom_tree_index av1_coef_con_tree[];
-#if !CONFIG_EC_MULTISYMBOL
-extern const struct av1_token av1_coef_encodings[];
-#endif  // !CONFIG_EC_MULTISYMBOL
 
 int av1_is_skippable_in_plane(MACROBLOCK *x, BLOCK_SIZE bsize, int plane);
 
 struct AV1_COMP;
 struct ThreadData;
+
+struct tokenize_b_args {
+  const struct AV1_COMP *cpi;
+  struct ThreadData *td;
+  TOKENEXTRA **tp;
+  int this_rate;
+};
 
 typedef enum {
   OUTPUT_ENABLED = 0,
@@ -85,8 +85,8 @@ void av1_tokenize_sb(const struct AV1_COMP *cpi, struct ThreadData *td,
                      int *rate, const int mi_row, const int mi_col);
 #if CONFIG_SUPERTX
 void av1_tokenize_sb_supertx(const struct AV1_COMP *cpi, struct ThreadData *td,
-                             TOKENEXTRA **t, RUN_TYPE dry_run, BLOCK_SIZE bsize,
-                             int *rate);
+                             TOKENEXTRA **t, RUN_TYPE dry_run, int mi_row,
+                             int mi_col, BLOCK_SIZE bsize, int *rate);
 #endif
 
 extern const int16_t *av1_dct_value_cost_ptr;

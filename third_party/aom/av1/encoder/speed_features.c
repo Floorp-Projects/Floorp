@@ -139,8 +139,10 @@ static void set_good_speed_feature_framesize_dependent(AV1_COMP *cpi,
   }
 }
 
-static void set_good_speed_feature(AV1_COMP *cpi, AV1_COMMON *cm,
-                                   SPEED_FEATURES *sf, int speed) {
+static void set_good_speed_features_framesize_independent(AV1_COMP *cpi,
+                                                          SPEED_FEATURES *sf,
+                                                          int speed) {
+  AV1_COMMON *const cm = &cpi->common;
   const int boosted = frame_is_boosted(cpi);
 
   if (speed >= 1) {
@@ -205,6 +207,9 @@ static void set_good_speed_feature(AV1_COMP *cpi, AV1_COMMON *cm,
 #if CONFIG_EXT_TX
     sf->tx_type_search.prune_mode = PRUNE_TWO;
 #endif
+#if CONFIG_GLOBAL_MOTION
+    sf->gm_search_type = GM_DISABLE_SEARCH;
+#endif  // CONFIG_GLOBAL_MOTION
   }
 
   if (speed >= 4) {
@@ -286,6 +291,12 @@ static void set_good_speed_feature(AV1_COMP *cpi, AV1_COMMON *cm,
     sf->coeff_prob_appx_step = 4;
     sf->mode_search_skip_flags |= FLAG_SKIP_INTRA_DIRMISMATCH;
   }
+  if (speed >= 8) {
+    sf->mv.search_method = FAST_DIAMOND;
+    sf->mv.fullpel_search_step_param = 10;
+    sf->mv.subpel_force_stop = 2;
+    sf->lpf_pick = LPF_PICK_MINIMAL_LPF;
+  }
 }
 
 void av1_set_speed_features_framesize_dependent(AV1_COMP *cpi) {
@@ -339,12 +350,13 @@ void av1_set_speed_features_framesize_dependent(AV1_COMP *cpi) {
 }
 
 void av1_set_speed_features_framesize_independent(AV1_COMP *cpi) {
-  SPEED_FEATURES *const sf = &cpi->sf;
   AV1_COMMON *const cm = &cpi->common;
+  SPEED_FEATURES *const sf = &cpi->sf;
   MACROBLOCK *const x = &cpi->td.mb;
   const AV1EncoderConfig *const oxcf = &cpi->oxcf;
   int i;
 
+  (void)cm;
   // best quality defaults
   sf->frame_parameter_update = 1;
   sf->mv.search_method = NSTEP;
@@ -418,13 +430,16 @@ void av1_set_speed_features_framesize_independent(AV1_COMP *cpi) {
 
   // Set this at the appropriate speed levels
   sf->use_transform_domain_distortion = 0;
+#if CONFIG_GLOBAL_MOTION
+  sf->gm_search_type = GM_FULL_SEARCH;
+#endif  // CONFIG_GLOBAL_MOTION
 
   if (oxcf->mode == GOOD
 #if CONFIG_XIPHRC
       || oxcf->pass == 1
 #endif
       )
-    set_good_speed_feature(cpi, cm, sf, oxcf->speed);
+    set_good_speed_features_framesize_independent(cpi, sf, oxcf->speed);
 
   // sf->partition_search_breakout_dist_thr is set assuming max 64x64
   // blocks. Normalise this if the blocks are bigger.

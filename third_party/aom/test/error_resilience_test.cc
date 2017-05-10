@@ -150,7 +150,7 @@ TEST_P(ErrorResilienceTestLarge, OnVersusOff) {
   init_flags_ = AOM_CODEC_USE_PSNR;
 
   libaom_test::I420VideoSource video("hantro_collage_w352h288.yuv", 352, 288,
-                                     timebase.den, timebase.num, 0, 30);
+                                     timebase.den, timebase.num, 0, 12);
 
   // Error resilient mode OFF.
   cfg_.g_error_resilient = 0;
@@ -187,7 +187,7 @@ TEST_P(ErrorResilienceTestLarge, DropFramesWithoutRecovery) {
   init_flags_ = AOM_CODEC_USE_PSNR;
 
   libaom_test::I420VideoSource video("hantro_collage_w352h288.yuv", 352, 288,
-                                     timebase.den, timebase.num, 0, 40);
+                                     timebase.den, timebase.num, 0, 20);
 
   // Error resilient mode ON.
   cfg_.g_error_resilient = 1;
@@ -196,9 +196,8 @@ TEST_P(ErrorResilienceTestLarge, DropFramesWithoutRecovery) {
   // Set an arbitrary set of error frames same as droppable frames.
   // In addition to isolated loss/drop, add a long consecutive series
   // (of size 9) of dropped frames.
-  unsigned int num_droppable_frames = 11;
-  unsigned int droppable_frame_list[] = { 5,  16, 22, 23, 24, 25,
-                                          26, 27, 28, 29, 30 };
+  unsigned int num_droppable_frames = 5;
+  unsigned int droppable_frame_list[] = { 5, 10, 13, 16, 19 };
   SetDroppableFrames(num_droppable_frames, droppable_frame_list);
   SetErrorFrames(num_droppable_frames, droppable_frame_list);
   ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
