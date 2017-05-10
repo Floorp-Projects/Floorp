@@ -440,27 +440,27 @@ private:
 
   void RunPostTraversalTasks();
 
-  uint32_t FindSheetOfType(SheetType aType,
+  uint64_t FindSheetOfType(SheetType aType,
                            ServoStyleSheet* aSheet);
 
-  uint32_t PrependSheetOfType(SheetType aType,
+  uint64_t PrependSheetOfType(SheetType aType,
                               ServoStyleSheet* aSheet,
-                              uint32_t aReuseUniqueID = 0);
+                              uint64_t aReuseUniqueID = 0);
 
-  uint32_t AppendSheetOfType(SheetType aType,
+  uint64_t AppendSheetOfType(SheetType aType,
                              ServoStyleSheet* aSheet,
-                             uint32_t aReuseUniqueID = 0);
+                             uint64_t aReuseUniqueID = 0);
 
-  uint32_t InsertSheetOfType(SheetType aType,
+  uint64_t InsertSheetOfType(SheetType aType,
                              ServoStyleSheet* aSheet,
-                             uint32_t aBeforeUniqueID,
-                             uint32_t aReuseUniqueID = 0);
+                             uint64_t aBeforeUniqueID,
+                             uint64_t aReuseUniqueID = 0);
 
-  uint32_t RemoveSheetOfType(SheetType aType,
+  uint64_t RemoveSheetOfType(SheetType aType,
                              ServoStyleSheet* aSheet);
 
   struct Entry {
-    uint32_t uniqueID;
+    uint64_t uniqueID;
     RefPtr<ServoStyleSheet> sheet;
 
     // Provide a cast operator to simplify calling
@@ -472,7 +472,7 @@ private:
   UniquePtr<RawServoStyleSet> mRawSet;
   EnumeratedArray<SheetType, SheetType::Count,
                   nsTArray<Entry>> mEntries;
-  uint32_t mUniqueIDCounter;
+  uint64_t mUniqueIDCounter;
   bool mAllowResolveStaleStyles;
   bool mAuthorStyleDisabled;
   bool mStylistMayNeedRebuild;
