@@ -8,7 +8,7 @@
 #ifndef SkVertState_DEFINED
 #define SkVertState_DEFINED
 
-#include "SkVertices.h"
+#include "SkCanvas.h"
 
 /** \struct VertState
     This is a helper for drawVertices(). It is used to iterate over the triangles
@@ -40,7 +40,7 @@ struct VertState {
      *  Choose an appropriate function to traverse the vertices.
      *  @param mode    Specifies the SkCanvas::VertexMode.
      */
-    Proc chooseProc(SkVertices::VertexMode mode);
+    Proc chooseProc(SkCanvas::VertexMode mode);
 
 private:
     int             fCount;

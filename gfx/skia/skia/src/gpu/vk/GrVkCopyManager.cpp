@@ -7,9 +7,8 @@
 
 #include "GrVkCopyManager.h"
 
-#include "GrSamplerParams.h"
-#include "GrShaderCaps.h"
 #include "GrSurface.h"
+#include "GrTextureParams.h"
 #include "GrTexturePriv.h"
 #include "GrVkCommandBuffer.h"
 #include "GrVkCopyPipeline.h"
@@ -25,16 +24,9 @@
 #include "SkPoint.h"
 #include "SkRect.h"
 
-GrVkCopyManager::GrVkCopyManager()
-    : fVertShaderModule(VK_NULL_HANDLE)
-    , fFragShaderModule(VK_NULL_HANDLE)
-    , fPipelineLayout(VK_NULL_HANDLE) {}
-
-GrVkCopyManager::~GrVkCopyManager() {}
-
 bool GrVkCopyManager::createCopyProgram(GrVkGpu* gpu) {
-    const GrShaderCaps* shaderCaps = gpu->caps()->shaderCaps();
-    const char* version = shaderCaps->versionDeclString();
+    const GrGLSLCaps* glslCaps = gpu->vkCaps().glslCaps();
+    const char* version = glslCaps->versionDeclString();
     SkString vertShaderText(version);
     vertShaderText.append(
         "#extension GL_ARB_separate_shader_objects : enable\n"
@@ -72,21 +64,19 @@ bool GrVkCopyManager::createCopyProgram(GrVkGpu* gpu) {
         "}"
     );
 
-    SkSL::Program::Settings settings;
-    SkSL::Program::Inputs inputs;
-    if (!GrCompileVkShaderModule(gpu, vertShaderText.c_str(), VK_SHADER_STAGE_VERTEX_BIT,
-                                 &fVertShaderModule, &fShaderStageInfo[0], settings, &inputs)) {
+    if (!GrCompileVkShaderModule(gpu, vertShaderText.c_str(),
+                                 VK_SHADER_STAGE_VERTEX_BIT,
+                                 &fVertShaderModule, &fShaderStageInfo[0])) {
         this->destroyResources(gpu);
         return false;
     }
-    SkASSERT(inputs.isEmpty());
 
-    if (!GrCompileVkShaderModule(gpu, fragShaderText.c_str(), VK_SHADER_STAGE_FRAGMENT_BIT,
-                                 &fFragShaderModule, &fShaderStageInfo[1], settings, &inputs)) {
+    if (!GrCompileVkShaderModule(gpu, fragShaderText.c_str(),
+                                 VK_SHADER_STAGE_FRAGMENT_BIT,
+                                 &fFragShaderModule, &fShaderStageInfo[1])) {
         this->destroyResources(gpu);
         return false;
     }
-    SkASSERT(inputs.isEmpty());
 
     VkDescriptorSetLayout dsLayout[2];
 
@@ -132,8 +122,8 @@ bool GrVkCopyManager::createCopyProgram(GrVkGpu* gpu) {
     fVertexBuffer->updateData(vdata, sizeof(vdata));
 
     // We use 2 vec4's for uniforms
-    fUniformBuffer.reset(GrVkUniformBuffer::Create(gpu, 8 * sizeof(float)));
-    SkASSERT(fUniformBuffer.get());
+    fUniformBuffer = GrVkUniformBuffer::Create(gpu, 8 * sizeof(float));
+    SkASSERT(fUniformBuffer);
 
     return true;
 }
@@ -161,7 +151,7 @@ bool GrVkCopyManager::copySurfaceAsDraw(GrVkGpu* gpu,
         SkASSERT(VK_NULL_HANDLE == fFragShaderModule &&
                  VK_NULL_HANDLE == fPipelineLayout &&
                  nullptr == fVertexBuffer.get() &&
-                 nullptr == fUniformBuffer.get());
+                 nullptr == fUniformBuffer);
         if (!this->createCopyProgram(gpu)) {
             SkDebugf("Failed to create copy program.\n");
             return false;
@@ -244,7 +234,7 @@ bool GrVkCopyManager::copySurfaceAsDraw(GrVkGpu* gpu,
     const GrVkDescriptorSet* samplerDS =
         gpu->resourceProvider().getSamplerDescriptorSet(fSamplerDSHandle);
 
-    GrSamplerParams params(SkShader::kClamp_TileMode, GrSamplerParams::kNone_FilterMode);
+    GrTextureParams params(SkShader::kClamp_TileMode, GrTextureParams::kNone_FilterMode);
 
     GrVkSampler* sampler =
         resourceProv.findOrCreateCompatibleSampler(params, srcTex->texturePriv().maxMipMapLevel());
@@ -302,7 +292,7 @@ bool GrVkCopyManager::copySurfaceAsDraw(GrVkGpu* gpu,
 
     GrVkRenderPass::LoadStoreOps vkColorOps(VK_ATTACHMENT_LOAD_OP_DONT_CARE,
                                             VK_ATTACHMENT_STORE_OP_STORE);
-    GrVkRenderPass::LoadStoreOps vkStencilOps(VK_ATTACHMENT_LOAD_OP_LOAD,
+    GrVkRenderPass::LoadStoreOps vkStencilOps(VK_ATTACHMENT_LOAD_OP_DONT_CARE,
                                               VK_ATTACHMENT_STORE_OP_STORE);
     const GrVkRenderPass* renderPass;
     const GrVkResourceProvider::CompatibleRPHandle& rpHandle =
@@ -320,7 +310,7 @@ bool GrVkCopyManager::copySurfaceAsDraw(GrVkGpu* gpu,
     SkASSERT(renderPass->isCompatible(*rt->simpleRenderPass()));
 
 
-    cmdBuffer->beginRenderPass(gpu, renderPass, nullptr, *rt, bounds, false);
+    cmdBuffer->beginRenderPass(gpu, renderPass, 0, nullptr, *rt, bounds, false);
     cmdBuffer->bindPipeline(gpu, pipeline);
 
     // Uniform DescriptorSet, Sampler DescriptorSet, and vertex shader uniformBuffer
@@ -364,7 +354,7 @@ bool GrVkCopyManager::copySurfaceAsDraw(GrVkGpu* gpu,
     scissor.offset.y = 0;
     cmdBuffer->setScissor(gpu, 0, 1, &scissor);
 
-    cmdBuffer->bindVertexBuffer(gpu, fVertexBuffer.get());
+    cmdBuffer->bindVertexBuffer(gpu, fVertexBuffer);
     cmdBuffer->draw(gpu, 4, 1, 0, 0);
     cmdBuffer->endRenderPass(gpu);
 
@@ -399,7 +389,7 @@ void GrVkCopyManager::destroyResources(GrVkGpu* gpu) {
 
     if (fUniformBuffer) {
         fUniformBuffer->release(gpu);
-        fUniformBuffer.reset();
+        fUniformBuffer = nullptr;
     }
 }
 
@@ -410,6 +400,6 @@ void GrVkCopyManager::abandonResources() {
 
     if (fUniformBuffer) {
         fUniformBuffer->abandon();
-        fUniformBuffer.reset();
+        fUniformBuffer = nullptr;
     }
 }

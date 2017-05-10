@@ -7,27 +7,20 @@
 
 #include "GrTextBlobCache.h"
 
-DECLARE_SKMESSAGEBUS_MESSAGE(GrTextBlobCache::PurgeBlobMessage)
-
 GrTextBlobCache::~GrTextBlobCache() {
-    SkDEBUGCODE(this->freeAll();)
+    this->freeAll();
 }
 
 void GrTextBlobCache::freeAll() {
-    fBlobIDCache.foreach([this](uint32_t, BlobIDCacheEntry* entry) {
-        for (const auto& blob : entry->fBlobs) {
-            fBlobList.remove(blob.get());
-        }
-    });
-
-    fBlobIDCache.reset();
+    SkTDynamicHash<GrAtlasTextBlob, GrAtlasTextBlob::Key>::Iter iter(&fCache);
+    while (!iter.done()) {
+        GrAtlasTextBlob* blob = &(*iter);
+        fBlobList.remove(blob);
+        blob->unref();
+        ++iter;
+    }
+    fCache.rewind();
 
     // There should be no allocations in the memory pool at this point
     SkASSERT(fPool.isEmpty());
-    SkASSERT(fBlobList.isEmpty());
-}
-
-void GrTextBlobCache::PostPurgeBlobMessage(uint32_t id) {
-    SkASSERT(id != SK_InvalidGenID);
-    SkMessageBus<PurgeBlobMessage>::Post(PurgeBlobMessage({id}));
 }
