@@ -6,8 +6,10 @@ package org.mozilla.focus.webkit.matcher;
 
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.StrictMode;
 import android.preference.PreferenceManager;
 
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.BuildConfig;
@@ -32,6 +34,18 @@ import static junit.framework.Assert.assertTrue;
 @RunWith(RobolectricTestRunner.class)
 @Config(constants = BuildConfig.class, packageName = "org.mozilla.focus")
 public class DisconnectTest {
+
+    @After
+    public void cleanup() {
+        // Reset strict mode: for every test, Robolectric will create FocusApplication again.
+        // FocusApplication expects strict mode to be disabled (since it loads some preferences from disk),
+        // before enabling it itself. If we run multiple tests, strict mode will stay enabled
+        // and FocusApplication crashes during initialisation for the second test.
+        // This applies across multiple Test classes, e.g. DisconnectTest can cause
+        // TrackingProtectionWebViewCLientTest to fail, unless it clears StrictMode first.
+        // (FocusApplicaiton is initialised before @Before methods are run.)
+        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().build());
+    }
 
     // IMPORTANT NOTE - IF RUNNING TESTS USING ANDROID STUDIO:
     // Read the following for a guide on how to get AS to correctly load resources, if you don't
