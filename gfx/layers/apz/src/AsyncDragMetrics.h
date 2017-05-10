@@ -46,7 +46,7 @@ public:
   FrameMetrics::ViewID mViewId;
   uint32_t mPresShellId;
   uint64_t mDragStartSequenceNumber;
-  CSSCoord mScrollbarDragOffset;
+  CSSCoord mScrollbarDragOffset;  // relative to the thumb's start offset
   ScrollDirection mDirection;
 };
 

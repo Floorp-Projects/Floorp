@@ -408,6 +408,8 @@ nsSliderFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
           isHorizontal ? sliderTrack.x : sliderTrack.y, appUnitsPerCss);
       CSSCoord sliderTrackLength = NSAppUnitsToFloatPixels(
           isHorizontal ? sliderTrack.width : sliderTrack.height, appUnitsPerCss);
+      CSSCoord thumbStart = NSAppUnitsToFloatPixels(
+          isHorizontal ? thumbRect.x : thumbRect.y, appUnitsPerCss);
 
       nsDisplayListBuilder::AutoContainerASRTracker contASRTracker(aBuilder);
       nsDisplayListCollection tempLists;
@@ -432,6 +434,7 @@ nsSliderFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                           flags, scrollTargetId,
                           ScrollThumbData{scrollDirection,
                                           GetThumbRatio(),
+                                          thumbStart,
                                           thumbLength,
                                           isAsyncDraggable,
                                           sliderTrackStart,
