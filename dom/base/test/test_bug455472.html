@@ -15,9 +15,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=455472
   var ran = [ false, false, false, false, false ];
 </script>
 <div id="content" style="display: none">
-  <iframe src="data:text/html,<script>parent.ran[0]=true</script>"></iframe>
-  <object type="text/html" data="data:text/html,<script>parent.ran[1]=true</script>"></object>
-  <embed type="image/svg+xml" src="data:image/svg+xml,<svg%20xmlns='http://www.w3.org/2000/svg'%20onload='parent.ran[2]=true'/>">
+  <iframe srcdoc="<script>parent.ran[0]=true</script>"></iframe>
+  <object id="o1" type="text/html" data="object_bug455472.html"></object>
+  <embed type="image/svg+xml" src="embed_bug455472.html">
   <object type="text/html" data="data:application/octet-stream,<script>parent.ran[3]=true</script>"></object>
   <embed type="image/svg+xml" src="data:application/octet-stream,<svg%20xmlns='http://www.w3.org/2000/svg'%20onload='parent.ran[4]=true'/>">
 </div>

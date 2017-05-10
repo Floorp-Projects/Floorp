@@ -26,7 +26,7 @@ read_procmaps(lul::LUL* aLUL)
 {
   MOZ_ASSERT(aLUL->CountMappings() == 0);
 
-# if defined(GP_OS_linux) || defined(GP_OS_android) || defined(GP_OS_darwin)
+# if defined(GP_OS_linux) || defined(GP_OS_android)
   SharedLibraryInfo info = SharedLibraryInfo::GetInfoForSelf();
 
   for (size_t i = 0; i < info.GetSize(); i++) {
@@ -34,7 +34,7 @@ read_procmaps(lul::LUL* aLUL)
 
     std::string nativePath = lib.GetNativeDebugPath();
 
-#   if defined(USE_FAULTY_LIB)
+#   if defined(GP_OS_android)
     // We're using faulty.lib.  Use a special-case object mapper.
     AutoObjectMapperFaultyLib mapper(aLUL->mLog);
 #   else

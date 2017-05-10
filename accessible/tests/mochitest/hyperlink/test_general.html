@@ -72,7 +72,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
                                              [nsIAccessibleHyperLink]);
       testThis("NormalHyperlink", normalHyperlinkAcc, ROLE_LINK, 1,
                "Mozilla Foundation", true, 17, 18);
-      is(normalHyperlinkAcc.getURI(0).spec, "http://www.mozilla.org/", 
+      is(normalHyperlinkAcc.getURI(0).spec, "http://www.mozilla.org/",
          "URI wrong for normalHyperlinkElement!");
       testStates(normalHyperlinkAcc, STATE_LINKED, 0);
 
@@ -133,7 +133,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
                                                [nsIAccessibleHyperLink]);
       testThis("LinkWithSpan", hyperlinkWithSpanAcc, ROLE_LINK, 1,
                "Heise Online", true, 119, 120);
-      is(hyperlinkWithSpanAcc.getURI(0).spec, "http://www.heise.de/", 
+      is(hyperlinkWithSpanAcc.getURI(0).spec, "http://www.heise.de/",
          "URI wrong for hyperlinkElementWithSpan!");
       testStates(hyperlinkWithSpanAcc, STATE_LINKED, 0);
       testAction("LinkWithSpan", hyperlinkWithSpanAcc, "jump");
@@ -168,7 +168,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
 
       //////////////////////////////////////////////////////////////////////////
       // Maps to group links (bug 431615).
-      var linksMapAcc = getAccessible("linksmap");
+      // var linksMapAcc = getAccessible("linksmap");
 
       //////////////////////////////////////////////////////////////////////////
       // Link with title attribute, no name from the subtree (bug 438325).
@@ -260,13 +260,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
   >This should never be of state_linked</a
   ><br>Link with registered 'click' event: <a id="linkWithClick" onclick="var clicked = true;"
   >This should have state_linked</a
-  ><br>Link with title attribute (no name from subtree): <a 
+  ><br>Link with title attribute (no name from subtree): <a
       id="linkWithTitleNoNameFromSubtree" href="http://www.heise.de/"
       title="Link with title"><img src=""/></a
-  ><br>Link with title attribute (name from subtree): <a 
+  ><br>Link with title attribute (name from subtree): <a
       id="linkWithTitleNameFromSubtree" href="http://www.heise.de/"
       title="Link with title">the name from subtree</a
-  ><br>Link with title attribute (name from nested image): <a 
+  ><br>Link with title attribute (name from nested image): <a
       id="linkWithTitleNameFromImg" href="http://www.heise.de/"
       title="Link with title"><img src="" alt="The title for link"/></a
   ><br><br>Map that is used to group links (www.w3.org/TR/WCAG10-HTML-TECHS/#group-bypass), also see the bug 431615:<br

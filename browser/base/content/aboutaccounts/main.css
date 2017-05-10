@@ -118,6 +118,8 @@ header h1
   overflow: hidden;
   text-indent: 100%;
   white-space: nowrap;
+  -moz-context-properties: fill;
+  fill: #bfcbd3;
 }
 
 .description,

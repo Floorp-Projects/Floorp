@@ -18,7 +18,7 @@ GetAtomBit(TenuredCell* thing)
 {
     MOZ_ASSERT(thing->zoneFromAnyThread()->isAtomsZone());
     Arena* arena = thing->arena();
-    size_t arenaBit = (reinterpret_cast<uintptr_t>(thing) - arena->address()) / CellSize;
+    size_t arenaBit = (reinterpret_cast<uintptr_t>(thing) - arena->address()) / CellBytesPerMarkBit;
     return arena->atomBitmapStart() * JS_BITS_PER_WORD + arenaBit;
 }
 

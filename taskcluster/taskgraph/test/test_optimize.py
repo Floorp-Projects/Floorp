@@ -106,14 +106,6 @@ class TestOptimize(unittest.TestCase):
             task3=(False, None)
         )
 
-    def test_annotate_task_graph_taskid_without_optimize(self):
-        "raises exception if kind returns a taskid without optimizing"
-        graph = self.make_graph(self.make_task('task1', ['false-with-taskid']))
-        self.assertRaises(
-            Exception,
-            lambda: annotate_task_graph(graph, {}, set(), graph.graph.named_links_dict(), {}, None)
-        )
-
     def test_annotate_task_graph_optimize_away_dependency(self):
         "raises exception if kind optimizes away a task on which another depends"
         graph = self.make_graph(

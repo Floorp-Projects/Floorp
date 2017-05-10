@@ -83,6 +83,17 @@
                      function(r, t) {
                        todo(false, "Shouldn't get callback for invalid data: URI");
                      }, null, true), "streamTest GET bad data: URI");
+
+    ok(!p.postFileToURLTest("post.sjs"), "postFileToURLTest POST a file");
+
+    ok(!p.streamTest("post.sjs", true, "non-existent-file",
+                     function(r, t) {
+                       ok(false, "Shouldn't get write callback from file post");
+                     }, function(r, t) {
+                       ok(false, "Shouldn't get notify callback from file post");
+                     }, function(r, t) {
+                       ok(false, "Shouldn't get redirect callback from file post");
+                     }, true, true), "streamTest POST a file");
   }
   </script>
 

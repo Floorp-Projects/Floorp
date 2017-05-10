@@ -660,16 +660,14 @@ NotificationPermissionRequest::GetTypes(nsIArray** aTypes)
                                                          aTypes);
 }
 
-NS_IMPL_ISUPPORTS(NotificationTelemetryService, nsIObserver)
+NS_IMPL_ISUPPORTS(NotificationTelemetryService, nsISupports)
 
 NotificationTelemetryService::NotificationTelemetryService()
   : mDNDRecorded(false)
 {}
 
 NotificationTelemetryService::~NotificationTelemetryService()
-{
-  Unused << NS_WARN_IF(NS_FAILED(RemovePermissionChangeObserver()));
-}
+{}
 
 /* static */ already_AddRefed<NotificationTelemetryService>
 NotificationTelemetryService::GetInstance()
@@ -692,35 +690,9 @@ NotificationTelemetryService::Init()
     return NS_OK;
   }
 
-  nsresult rv = AddPermissionChangeObserver();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   RecordPermissions();
 
   return NS_OK;
-}
-
-nsresult
-NotificationTelemetryService::RemovePermissionChangeObserver()
-{
-  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  if (!obs) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return obs->RemoveObserver(this, "perm-changed");
-}
-
-nsresult
-NotificationTelemetryService::AddPermissionChangeObserver()
-{
-  MOZ_ASSERT(XRE_IsParentProcess(),
-             "AddPermissionChangeObserver may only be called in the parent process");
-
-  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  if (!obs) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return obs->AddObserver(this, "perm-changed", false);
 }
 
 void
@@ -816,48 +788,6 @@ NotificationTelemetryService::RecordDNDSupported()
 
   Telemetry::Accumulate(
     Telemetry::ALERTS_SERVICE_DND_SUPPORTED_FLAG, true);
-}
-
-nsresult
-NotificationTelemetryService::RecordSender(nsIPrincipal* aPrincipal)
-{
-  if (!Telemetry::CanRecordBase() || !Telemetry::CanRecordExtended() ||
-      !nsAlertsUtils::IsActionablePrincipal(aPrincipal)) {
-    return NS_OK;
-  }
-  nsAutoString origin;
-  nsresult rv = Notification::GetOrigin(aPrincipal, origin);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (!mOrigins.Contains(origin)) {
-    mOrigins.PutEntry(origin);
-    Telemetry::Accumulate(Telemetry::WEB_NOTIFICATION_SENDERS, 1);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-NotificationTelemetryService::Observe(nsISupports* aSubject,
-                                      const char* aTopic,
-                                      const char16_t* aData)
-{
-  uint32_t capability;
-  if (strcmp("perm-changed", aTopic) ||
-      !NS_strcmp(u"cleared", aData) ||
-      !GetNotificationPermission(aSubject, &capability)) {
-    return NS_OK;
-  }
-  if (!NS_strcmp(u"deleted", aData)) {
-    if (capability == nsIPermissionManager::DENY_ACTION) {
-      Telemetry::Accumulate(
-        Telemetry::WEB_NOTIFICATION_PERMISSION_REMOVED, 0);
-    } else if (capability == nsIPermissionManager::ALLOW_ACTION) {
-      Telemetry::Accumulate(
-        Telemetry::WEB_NOTIFICATION_PERMISSION_REMOVED, 1);
-    }
-  }
-  return NS_OK;
 }
 
 // Observer that the alert service calls to do common tasks and/or dispatch to the
@@ -1450,10 +1380,6 @@ NotificationObserver::Observe(nsISupports* aSubject, const char* aTopic,
       // Record whether "do not disturb" is supported after the first
       // notification, to account for falling back to XUL alerts.
       telemetry->RecordDNDSupported();
-      if (!mInPrivateBrowsing) {
-        // Ignore senders in private windows.
-        Unused << NS_WARN_IF(NS_FAILED(telemetry->RecordSender(mPrincipal)));
-      }
     }
     Unused << NS_WARN_IF(NS_FAILED(AdjustPushQuota(aTopic)));
 

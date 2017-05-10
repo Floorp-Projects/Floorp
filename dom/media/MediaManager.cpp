@@ -1620,6 +1620,12 @@ public:
     return NS_OK;
   }
 
+  uint64_t
+  GetWindowID()
+  {
+    return mWindowID;
+  }
+
 private:
   MediaStreamConstraints mConstraints;
 
@@ -3010,6 +3016,12 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
       return NS_OK;
     }
 
+    nsTArray<nsString>* array;
+    if (!mCallIds.Get(task->GetWindowID(), &array)) {
+      return NS_OK;
+    }
+    array->RemoveElement(key);
+
     if (aSubject) {
       // A particular device or devices were chosen by the user.
       // NOTE: does not allow setting a device to null; assumes nullptr
@@ -3074,6 +3086,11 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
     mActiveCallbacks.Remove(key, getter_AddRefs(task));
     if (task) {
       task->Denied(errorMessage);
+      nsTArray<nsString>* array;
+      if (!mCallIds.Get(task->GetWindowID(), &array)) {
+        return NS_OK;
+      }
+      array->RemoveElement(key);
     }
     return NS_OK;
 

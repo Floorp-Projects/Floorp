@@ -5,6 +5,8 @@ server.registerDirectory("/data/", do_get_file("data"));
 
 const BASE_URL = `http://localhost:${server.identity.primaryPort}/data`;
 
+ExtensionTestUtils.mockAppInfo();
+
 add_task(function* test_contentscript() {
   function background() {
     browser.runtime.onMessage.addListener(([msg, expectedStates, readyState], sender) => {

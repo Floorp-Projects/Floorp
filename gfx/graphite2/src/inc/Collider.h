@@ -133,7 +133,7 @@ public:
     bool initSlot(Segment *seg, Slot *aSlot, const Rect &constraint,
                 float margin, float marginMin, const Position &currShift,
                 const Position &currOffset, int dir, GR_MAYBE_UNUSED json * const dbgout);
-    bool mergeSlot(Segment *seg, Slot *slot, const Position &currShift, bool isAfter, 
+    bool mergeSlot(Segment *seg, Slot *slot, const SlotCollision *cinfo, const Position &currShift, bool isAfter, 
                 bool sameCluster, bool &hasCol, bool isExclusion, GR_MAYBE_UNUSED json * const dbgout);
     Position resolve(Segment *seg, bool &isCol, GR_MAYBE_UNUSED json * const dbgout);
     void addBox_slope(bool isx, const Rect &box, const BBox &bb, const SlantBox &sb, const Position &org, float weight, float m, bool minright, int mode);

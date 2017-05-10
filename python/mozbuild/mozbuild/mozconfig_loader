@@ -10,49 +10,46 @@
 set -e
 
 ac_add_options() {
-  local opt
-  for opt; do
-    case "$opt" in
+  for _mozconfig_opt; do
+    case "$_mozconfig_opt" in
     --target=*)
       echo "------BEGIN_MK_OPTION"
-      echo $opt | sed s/--target/CONFIG_GUESS/
+      echo $_mozconfig_opt | sed s/--target/CONFIG_GUESS/
       echo "------END_MK_OPTION"
       ;;
     esac
     echo "------BEGIN_AC_OPTION"
-    echo $opt
+    echo $_mozconfig_opt
     echo "------END_AC_OPTION"
   done
 }
 
 ac_add_app_options() {
-  local app
-  app=$1
+  _mozconfig_app=$1
   shift
   echo "------BEGIN_AC_APP_OPTION"
-  echo $app
+  echo $_mozconfig_app
   echo "$*"
   echo "------END_AC_APP_OPTION"
 }
 
 mk_add_options() {
-  local opt name op value
-  for opt; do
+  for _mozconfig_opt; do
     echo "------BEGIN_MK_OPTION"
-    echo $opt
+    echo $_mozconfig_opt
     # Remove any leading "export"
-    opt=${opt#export}
-    case "$opt" in
-    *\?=*) op="?=" ;;
-    *:=*) op=":=" ;;
-    *+=*) op="+=" ;;
-    *=*) op="=" ;;
+    opt=${_mozconfig_opt#export}
+    case "$_mozconfig_opt" in
+    *\?=*) _mozconfig_op="?=" ;;
+    *:=*) _mozconfig_op=":=" ;;
+    *+=*) _mozconfig_op="+=" ;;
+    *=*) _mozconfig_op="=" ;;
     esac
     # Remove the operator and the value that follows
-    name=${opt%%${op}*}
-    # Note: $(echo ${name}) strips the variable from any leading and trailing
+    _mozconfig_name=${_mozconfig_opt%%${_mozconfig_op}*}
+    # Note: $(echo ${_mozconfig_name}) strips the variable from any leading and trailing
     # whitespaces.
-    eval "$(echo ${name})_IS_SET=1"
+    eval "$(echo ${_mozconfig_name})_IS_SET=1"
     echo "------END_MK_OPTION"
   done
 }

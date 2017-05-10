@@ -18,16 +18,11 @@
   --space-above-tabbar: 9px;
   --tabs-toolbar-color: #333;
 
-  --backbutton-urlbar-overlap: 6px;
   --backbutton-border-color: rgba(0,0,0,0.2);
   --backbutton-background: linear-gradient(rgba(255,255,255,0.9),
                                            rgba(255,255,255,0.7)) repeat-x;
 
-  /* icon width + border + horizontal padding (without the overlap from backbutton-urlbar-overlap) */
-  --forwardbutton-width: 26px;
-
-  --toolbarbutton-vertical-inner-padding: 2px;
-  --toolbarbutton-vertical-text-padding: 4px;
+  --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-vertical-inner-padding) + 1px);
 
   --toolbarbutton-border-radius: 3px;
 
@@ -580,6 +575,19 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
 .unified-nav-back[_moz-menuactive]:-moz-locale-dir(rtl) {
   list-style-image: url("chrome://browser/skin/menu-forward.png") !important;
 }
+
+@media (-moz-mac-yosemite-theme) {
+  #forward-button > .toolbarbutton-icon {
+    border-top: none !important;
+    border-bottom: none !important;
+    box-shadow: 0 .5px 0 0 rgba(0,0,0,0.2) !important;
+  }
+  #forward-button:-moz-window-inactive > .toolbarbutton-icon {
+    box-shadow: 0 1px 0 0 rgba(0,0,0,0.2) inset,
+                0 -1px 0 0 rgba(0,0,0,0.2) inset !important;
+  }
+}
+
 
 /* ----- FULLSCREEN WINDOW CONTROLS ----- */
 

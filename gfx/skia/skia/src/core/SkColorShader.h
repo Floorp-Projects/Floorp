@@ -25,6 +25,7 @@ public:
     explicit SkColorShader(SkColor c);
 
     bool isOpaque() const override;
+    bool isConstant() const override { return true; }
 
     class ColorShaderContext : public SkShader::Context {
     public:
@@ -58,12 +59,15 @@ public:
 protected:
     SkColorShader(SkReadBuffer&);
     void flatten(SkWriteBuffer&) const override;
-    Context* onCreateContext(const ContextRec&, void* storage) const override;
-    size_t onContextSize(const ContextRec&) const override { return sizeof(ColorShaderContext); }
+    Context* onMakeContext(const ContextRec&, SkArenaAlloc* storage) const override;
+
     bool onAsLuminanceColor(SkColor* lum) const override {
         *lum = fColor;
         return true;
     }
+
+    bool onAppendStages(SkRasterPipeline*, SkColorSpace*, SkArenaAlloc*,
+                        const SkMatrix& ctm, const SkPaint&, const SkMatrix*) const override;
 
 private:
     SkColor fColor;
@@ -78,6 +82,7 @@ public:
     bool isOpaque() const override {
         return SkColorGetA(fCachedByteColor) == 255;
     }
+    bool isConstant() const override { return true; }
 
     class Color4Context : public SkShader::Context {
     public:
@@ -111,18 +116,19 @@ public:
 protected:
     SkColor4Shader(SkReadBuffer&);
     void flatten(SkWriteBuffer&) const override;
-    Context* onCreateContext(const ContextRec&, void* storage) const override;
-    size_t onContextSize(const ContextRec&) const override { return sizeof(Color4Context); }
+    Context* onMakeContext(const ContextRec&, SkArenaAlloc*) const override;
     bool onAsLuminanceColor(SkColor* lum) const override {
         *lum = fCachedByteColor;
         return true;
     }
+    bool onAppendStages(SkRasterPipeline*, SkColorSpace*, SkArenaAlloc*,
+                        const SkMatrix& ctm, const SkPaint&, const SkMatrix*) const override;
 
 private:
     sk_sp<SkColorSpace> fColorSpace;
     const SkColor4f     fColor4;
     const SkColor       fCachedByteColor;
-    
+
     typedef SkShader INHERITED;
 };
 

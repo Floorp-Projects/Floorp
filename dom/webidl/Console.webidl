@@ -43,14 +43,6 @@ namespace console {
   void profile(any... data);
   void profileEnd(any... data);
 
-  // No-op methods for compatibility with other browsers.
-  [BinaryName="noopMethod"]
-  void markTimeline();
-  [BinaryName="noopMethod"]
-  void timeline();
-  [BinaryName="noopMethod"]
-  void timelineEnd();
-
   [ChromeOnly]
   const boolean IS_NATIVE_CONSOLE = true;
 };

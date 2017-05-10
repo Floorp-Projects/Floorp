@@ -1,0 +1,2 @@
+Content-Security-Policy: img-src 'nonce-abc';
+Cache-Control: no-cache

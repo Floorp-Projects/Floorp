@@ -16,6 +16,7 @@ include protocol PFileSystemRequest;
 include protocol PGamepadEventChannel;
 include protocol PGamepadTestChannel;
 include protocol PIPCBlobInputStream;
+include protocol PPendingIPCBlob;
 include protocol PMemoryStream;
 include protocol PMessagePort;
 include protocol PCameras;
@@ -23,10 +24,12 @@ include protocol PQuota;
 include protocol PChildToParentStream;
 include protocol PParentToChildStream;
 include protocol PServiceWorkerManager;
+include protocol PWebAuthnTransaction;
 include protocol PUDPSocket;
 include protocol PVsync;
 
 include DOMTypes;
+include IPCBlob;
 include PBackgroundSharedTypes;
 include PBackgroundIDBSharedTypes;
 include PFileSystemParams;
@@ -63,12 +66,14 @@ sync protocol PBackground
   manages PGamepadTestChannel;
   manages PIPCBlobInputStream;
   manages PMemoryStream;
+  manages PPendingIPCBlob;
   manages PMessagePort;
   manages PCameras;
   manages PQuota;
   manages PChildToParentStream;
   manages PParentToChildStream;
   manages PServiceWorkerManager;
+  manages PWebAuthnTransaction;
   manages PUDPSocket;
   manages PVsync;
 
@@ -116,6 +121,8 @@ parent:
 
   async PMemoryStream(uint64_t aSize);
 
+  async PWebAuthnTransaction();
+
 child:
   async PCache();
   async PCacheStreamControl();
@@ -123,6 +130,8 @@ child:
   async PParentToChildStream();
 
   async PIPCBlobInputStream(nsID aID, uint64_t aSize);
+
+  async PPendingIPCBlob(IPCBlob blob);
 
 both:
   async PBlob(BlobConstructorParams params);

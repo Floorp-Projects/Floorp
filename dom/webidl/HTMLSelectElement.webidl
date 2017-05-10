@@ -67,4 +67,6 @@ partial interface HTMLSelectElement {
   attribute boolean openInParentProcess;
   [ChromeOnly]
   AutocompleteInfo getAutocompleteInfo();
+  [ChromeOnly]
+  attribute DOMString previewValue;
 };

@@ -119,7 +119,7 @@ body,
   white-space: nowrap;
 }
 
-.status-bar-label::before {
+.status-bar-label:not(:first-of-type)::before {
   content: "";
   display: inline-block;
   margin-inline-end: 10px;

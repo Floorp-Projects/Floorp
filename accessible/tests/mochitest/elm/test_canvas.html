@@ -29,7 +29,7 @@
       context.addHitRegion({control: element});
 
       var input = getAccessible("showA");
-      var [cnvX, cnvY, cnvWidth, cnvHeight] = getBoundsForDOMElm(canv);
+      var [cnvX, cnvY, /*cnvWidth*/, /*cnvHeight*/] = getBoundsForDOMElm(canv);
       var [accX, accY, accWidth, accHeight] = getBounds(input);
 
       var [x, y, w, h] = CSSToDevicePixels(window, kX, kY, kWidth, kHeight);

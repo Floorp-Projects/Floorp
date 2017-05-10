@@ -575,7 +575,6 @@
 
     <!-- PAGE CONTAINER (for styling purposes only) -->
     <div id="errorPageContainer" class="container">
-
       <!-- Error Title -->
       <div class="title">
         <h1 class="title-text"/>
@@ -605,6 +604,15 @@
           <p><a href="https://support.mozilla.org/kb/what-does-your-connection-is-not-secure-mean" id="learnMoreLink" target="new">&errorReporting.learnMore;</a></p>
         </div>
 
+        <!-- UI for option to report certificate errors to Mozilla. Removed on
+             init for other error types .-->
+        <div id="certificateErrorReporting">
+          <p class="toggle-container-with-text">
+            <input type="checkbox" id="automaticallyReportInFuture" role="checkbox" />
+            <label for="automaticallyReportInFuture" id="automaticallyReportInFuture">&errorReporting.automatic2;</label>
+          </p>
+        </div>
+
         <div id="prefChangeContainer" class="button-container">
           <p>&prefReset.longDesc;</p>
           <button id="prefResetButton" class="primary" autocomplete="off">&prefReset.label;</button>
@@ -613,7 +621,6 @@
         <div id="certErrorAndCaptivePortalButtonContainer" class="button-container">
           <button id="returnButton" class="primary" autocomplete="off">&returnToPreviousPage.label;</button>
           <button id="openPortalLoginPageButton" class="primary" autocomplete="off">&openPortalLoginPage.label2;</button>
-          <div class="button-spacer"></div>
           <button id="advancedButton" autocomplete="off">&advanced.label;</button>
         </div>
       </div>
@@ -622,28 +629,20 @@
         <button id="errorTryAgain" class="primary" autocomplete="off" onclick="retryThis(this);">&retry.label;</button>
       </div>
 
-      <!-- UI for option to report certificate errors to Mozilla. Removed on
-           init for other error types .-->
-      <div id="certificateErrorReporting">
-        <p class="toggle-container-with-text">
-          <input type="checkbox" id="automaticallyReportInFuture" role="checkbox" />
-          <label for="automaticallyReportInFuture" id="automaticallyReportInFuture">&errorReporting.automatic2;</label>
-        </p>
-      </div>
-
       <div id="advancedPanelContainer">
         <div id="badCertAdvancedPanel" class="advanced-panel">
           <p id="badCertTechnicalInfo"/>
-          <button id="exceptionDialogButton">&securityOverride.exceptionButtonLabel;</button>
+          <div class="exceptionDialogButtonContainer">
+            <button id="exceptionDialogButton">&securityOverride.exceptionButtonLabel;</button>
+          </div>
+        </div>
+
+        <div id="certificateErrorDebugInformation">
+          <button id="copyToClipboard">&certerror.copyToClipboard.label;</button>
+          <div id="certificateErrorText"/>
+          <button id="copyToClipboard">&certerror.copyToClipboard.label;</button>
         </div>
       </div>
-
-    </div>
-
-    <div id="certificateErrorDebugInformation">
-      <button id="copyToClipboard">&certerror.copyToClipboard.label;</button>
-      <div id="certificateErrorText"/>
-      <button id="copyToClipboard">&certerror.copyToClipboard.label;</button>
     </div>
 
     <!--

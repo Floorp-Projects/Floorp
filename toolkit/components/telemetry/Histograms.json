@@ -2112,11 +2112,13 @@
     "n_values": 4,
     "description": "Whether we raced network with the cache. (0=network & no racing, 1=cache & no racing, 2=network & raced, 3=cache & raced)"
   },
-  "HTTP_AUTH_DIALOG_STATS": {
-    "expires_in_version": "never",
+  "HTTP_AUTH_DIALOG_STATS_2": {
+    "expires_in_version": "61",
+    "alert_emails": ["necko@mozilla.com"],
+    "bug_numbers": [1357835],
     "kind": "enumerated",
-    "n_values": 4,
-    "description": "Stats about what kind of resource requested http authentication. (0=top-level doc, 1=same origin subresources, 2=cross-origin subresources, 3=xhr)"
+    "n_values": 32,
+    "description": "Stats about what kind of resource requested http authentication. (29=top-level doc, 30=same origin subresources, 31=same origin xhr, (nsIContentPolicy type)=cross-origin subresources per nsIContentPolicy type)"
   },
   "HTTP_AUTH_TYPE_STATS": {
     "alert_emails": ["rbarnes@mozilla.com"],
@@ -10681,22 +10683,6 @@
     "n_values": 10,
     "description": "Number of origins with the web notifications permission (0 = denied, 1 = allowed)."
   },
-  "WEB_NOTIFICATION_PERMISSION_REMOVED": {
-    "alert_emails": ["firefox-dev@mozilla.org"],
-    "bug_numbers": [1219030],
-    "expires_in_version": "50",
-    "kind": "enumerated",
-    "n_values": 10,
-    "description": "Number of removed web notifications permissions (0 = remove deny, 1 = remove allow)."
-  },
-  "WEB_NOTIFICATION_SENDERS": {
-    "releaseChannelCollection": "opt-out",
-    "alert_emails": ["firefox-dev@mozilla.org"],
-    "bug_numbers": [1219030],
-    "expires_in_version": "50",
-    "kind": "count",
-    "description": "Number of origins that have shown a web notification. Excludes system alerts like update reminders and add-ons."
-  },
   "PLUGIN_DRAWING_MODEL": {
     "alert_emails": ["danderson@mozilla.com"],
     "expires_in_version": "never",
@@ -10737,15 +10723,15 @@
     "n_values": 10,
     "description": "Media decoder backend (0=WMF Software, 1=DXVA2D3D9, 2=DXVA2D3D11)"
   },
-  "IPC_MESSAGE_SIZE": {
-    "alert_emails": ["wmccloskey@mozilla.com"],
-    "bug_numbers": [1260908],
-    "expires_in_version": "55",
+  "IPC_MESSAGE_SIZE2": {
+    "alert_emails": ["hchang@mozilla.com"],
+    "bug_numbers": [1353159],
+    "expires_in_version": "60",
     "kind": "exponential",
     "high": 8000000,
     "n_buckets": 50,
-    "keyed": true,
-    "description": "Measures the size of IPC messages by message name"
+    "keyed": false,
+    "description": "Measures the size of all IPC messages sent that are >= 4096 bytes."
   },
   "IPC_REPLY_SIZE": {
     "alert_emails": ["wmccloskey@mozilla.com"],
@@ -10767,17 +10753,6 @@
     "n_buckets": 40,
     "keyed": true,
     "description": "Measures the number of milliseconds we spend waiting for sync IPC messages to finish sending, keyed by message name. Note: only messages that wait for more than 500 microseconds and block the main thread are included in this probe."
-  },
-  "MESSAGE_MANAGER_MESSAGE_SIZE2": {
-    "alert_emails": ["wmccloskey@mozilla.com","amccreight@mozilla.com"],
-    "bug_numbers": [1260908],
-    "expires_in_version": "55",
-    "kind": "exponential",
-    "low": 8192,
-    "high": 8000000,
-    "n_buckets": 50,
-    "keyed": true,
-    "description": "Each key is the message name, with digits removed, from an async message manager message that was larger than 8192 bytes, recorded in the sending process at the time of sending."
   },
   "REJECTED_MESSAGE_MANAGER_MESSAGE": {
     "alert_emails": ["amccreight@mozilla.com"],

@@ -4,8 +4,7 @@
 
 'use strict';
 
-/* global nsIAccessibleValue, EVENT_VALUE_CHANGE, EVENT_TEXT_VALUE_CHANGE */
-
+/* import-globals-from ../../mochitest/value.js */
 loadScripts({ name: 'value.js', dir: MOCHITESTS_DIR });
 
 /**

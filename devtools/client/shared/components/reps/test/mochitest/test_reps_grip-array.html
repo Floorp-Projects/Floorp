@@ -40,6 +40,7 @@ window.onload = Task.async(function* () {
     yield testMoreThanLongMaxProps();
     yield testRecursiveArray();
     yield testPreviewLimit();
+    yield testEmptySlots();
     yield testNamedNodeMap();
     yield testNodeList();
     yield testDocumentFragment();
@@ -234,6 +235,206 @@ window.onload = Task.async(function* () {
     ];
 
     testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
+  function testEmptySlots() {
+    testRepRenderModes(
+      [{
+        mode: undefined,
+        expectedOutput: "Array [ <5 empty slots> ]",
+      },
+      {
+        mode: MODE.TINY,
+        expectedOutput: `[5]`,
+      },
+      {
+        mode: MODE.SHORT,
+        expectedOutput: "Array [ <5 empty slots> ]",
+      },
+      {
+        mode: MODE.LONG,
+        expectedOutput: "Array [ <5 empty slots> ]",
+      }],
+      "Array with empty slots only",
+      componentUnderTest,
+      getGripStub("Array(5)")
+    );
+
+    testRepRenderModes(
+      [{
+        mode: undefined,
+        expectedOutput: "Array [ <1 empty slot>, 1, 2, 1 more… ]",
+      },
+      {
+        mode: MODE.TINY,
+        expectedOutput: `[4]`,
+      },
+      {
+        mode: MODE.SHORT,
+        expectedOutput: "Array [ <1 empty slot>, 1, 2, 1 more… ]",
+      },
+      {
+        mode: MODE.LONG,
+        expectedOutput: "Array [ <1 empty slot>, 1, 2, 3 ]",
+      }],
+      "Array with one empty slot at the beginning",
+      componentUnderTest,
+      getGripStub("[,1,2,3]")
+    );
+
+    testRepRenderModes(
+      [{
+        mode: undefined,
+        expectedOutput: "Array [ <3 empty slots>, 3, 4, 1 more… ]",
+      },
+      {
+        mode: MODE.TINY,
+        expectedOutput: `[6]`,
+      },
+      {
+        mode: MODE.SHORT,
+        expectedOutput: "Array [ <3 empty slots>, 3, 4, 1 more… ]",
+      },
+      {
+        mode: MODE.LONG,
+        expectedOutput: "Array [ <3 empty slots>, 3, 4, 5 ]",
+      }],
+      "Array with multiple consecutive empty slots at the beginning",
+      componentUnderTest,
+      getGripStub("[,,,3,4,5]")
+    );
+
+    testRepRenderModes(
+      [{
+        mode: undefined,
+        expectedOutput: "Array [ 0, 1, <1 empty slot>, 3 more… ]",
+      },
+      {
+        mode: MODE.TINY,
+        expectedOutput: `[6]`,
+      },
+      {
+        mode: MODE.SHORT,
+        expectedOutput: "Array [ 0, 1, <1 empty slot>, 3 more… ]",
+      },
+      {
+        mode: MODE.LONG,
+        expectedOutput: "Array [ 0, 1, <1 empty slot>, 3, 4, 5 ]",
+      }],
+      "Array with one empty slot in the middle",
+      componentUnderTest,
+      getGripStub("[0,1,,3,4,5]")
+    );
+
+    testRepRenderModes(
+      [{
+        mode: undefined,
+        expectedOutput: "Array [ 0, 1, <3 empty slots>, 1 more… ]",
+      },
+      {
+        mode: MODE.TINY,
+        expectedOutput: `[6]`,
+      },
+      {
+        mode: MODE.SHORT,
+        expectedOutput: "Array [ 0, 1, <3 empty slots>, 1 more… ]",
+      },
+      {
+        mode: MODE.LONG,
+        expectedOutput: "Array [ 0, 1, <3 empty slots>, 5 ]",
+      }],
+      "Array with multiple successive empty slots in the middle",
+      componentUnderTest,
+      getGripStub("[0,1,,,,5]")
+    );
+
+    testRepRenderModes(
+      [{
+        mode: undefined,
+        expectedOutput: "Array [ 0, <1 empty slot>, 2, 3 more… ]",
+      },
+      {
+        mode: MODE.TINY,
+        expectedOutput: `[6]`,
+      },
+      {
+        mode: MODE.SHORT,
+        expectedOutput: "Array [ 0, <1 empty slot>, 2, 3 more… ]",
+      },
+      {
+        mode: MODE.LONG,
+        expectedOutput: "Array [ 0, <1 empty slot>, 2, <1 empty slot>, 4, 5 ]",
+      }],
+      "Array with multiple non successive single empty slots",
+      componentUnderTest,
+      getGripStub("[0,,2,,4,5]")
+    );
+
+    testRepRenderModes(
+      [{
+        mode: undefined,
+        expectedOutput: "Array [ 0, <2 empty slots>, 3, 5 more… ]",
+      },
+      {
+        mode: MODE.TINY,
+        expectedOutput: `[9]`,
+      },
+      {
+        mode: MODE.SHORT,
+        expectedOutput: "Array [ 0, <2 empty slots>, 3, 5 more… ]",
+      },
+      {
+        mode: MODE.LONG,
+        expectedOutput: "Array [ 0, <2 empty slots>, 3, <3 empty slots>, 7, 8 ]",
+      }],
+      "Array with multiple multi-slot holes",
+      componentUnderTest,
+      getGripStub("[0,,,3,,,,7,8]")
+    );
+
+    testRepRenderModes(
+      [{
+        mode: undefined,
+        expectedOutput: "Array [ 0, 1, 2, 3 more… ]",
+      },
+      {
+        mode: MODE.TINY,
+        expectedOutput: `[6]`,
+      },
+      {
+        mode: MODE.SHORT,
+        expectedOutput: "Array [ 0, 1, 2, 3 more… ]",
+      },
+      {
+        mode: MODE.LONG,
+        expectedOutput: "Array [ 0, 1, 2, 3, 4, <1 empty slot> ]",
+      }],
+      "Array with a single slot hole at the end",
+      componentUnderTest,
+      getGripStub("[0,1,2,3,4,,]")
+    );
+
+    testRepRenderModes(
+      [{
+        mode: undefined,
+        expectedOutput: "Array [ 0, 1, 2, 3 more… ]",
+      },
+      {
+        mode: MODE.TINY,
+        expectedOutput: `[6]`,
+      },
+      {
+        mode: MODE.SHORT,
+        expectedOutput: "Array [ 0, 1, 2, 3 more… ]",
+      },
+      {
+        mode: MODE.LONG,
+        expectedOutput: "Array [ 0, 1, 2, <3 empty slots> ]",
+      }],
+      "Array with multiple consecutive empty slots at the end",
+      componentUnderTest,
+      getGripStub("[0,1,2,,,,]")
+    );
   }
 
   function testNamedNodeMap() {
@@ -912,6 +1113,204 @@ window.onload = Task.async(function* () {
                   "attributesLength": 2
                 }
               }
+            ]
+          }
+        };
+      case "Array(5)" :
+        return {
+          "type": "object",
+          "actor": "server1.conn4.child1/obj33",
+          "class": "Array",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "ownPropertyLength": 1,
+          "preview": {
+            "kind": "ArrayLike",
+            "length": 5,
+            "items": [
+              null,
+              null,
+              null,
+              null,
+              null
+            ]
+          }
+        };
+      case "[,1,2,3]" :
+        return {
+          "type": "object",
+          "actor": "server1.conn4.child1/obj35",
+          "class": "Array",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "ownPropertyLength": 4,
+          "preview": {
+            "kind": "ArrayLike",
+            "length": 4,
+            "items": [
+              null,
+              1,
+              2,
+              3
+            ]
+          }
+        };
+      case "[,,,3,4,5]" :
+        return {
+          "type": "object",
+          "actor": "server1.conn4.child1/obj37",
+          "class": "Array",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "ownPropertyLength": 4,
+          "preview": {
+            "kind": "ArrayLike",
+            "length": 6,
+            "items": [
+              null,
+              null,
+              null,
+              3,
+              4,
+              5
+            ]
+          }
+        };
+      case "[0,1,,3,4,5]" :
+        return {
+          "type": "object",
+          "actor": "server1.conn4.child1/obj65",
+          "class": "Array",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "ownPropertyLength": 6,
+          "preview": {
+            "kind": "ArrayLike",
+            "length": 6,
+            "items": [
+              0,
+              1,
+              null,
+              3,
+              4,
+              5
+            ]
+          }
+        };
+      case "[0,1,,,,5]" :
+        return {
+          "type": "object",
+          "actor": "server1.conn4.child1/obj83",
+          "class": "Array",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "ownPropertyLength": 4,
+          "preview": {
+            "kind": "ArrayLike",
+            "length": 6,
+            "items": [
+              0,
+              1,
+              null,
+              null,
+              null,
+              5
+            ]
+          }
+        };
+      case "[0,,2,,4,5]" :
+        return {
+          "type": "object",
+          "actor": "server1.conn4.child1/obj85",
+          "class": "Array",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "ownPropertyLength": 5,
+          "preview": {
+            "kind": "ArrayLike",
+            "length": 6,
+            "items": [
+              0,
+              null,
+              2,
+              null,
+              4,
+              5
+            ]
+          }
+        };
+      case "[0,,,3,,,,7,8]" :
+        return {
+          "type": "object",
+          "actor": "server1.conn4.child1/obj87",
+          "class": "Array",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "ownPropertyLength": 5,
+          "preview": {
+            "kind": "ArrayLike",
+            "length": 9,
+            "items": [
+              0,
+              null,
+              null,
+              3,
+              null,
+              null,
+              null,
+              7,
+              8
+            ]
+          }
+        };
+      case "[0,1,2,3,4,,]" :
+        return {
+          "type": "object",
+          "actor": "server1.conn4.child1/obj89",
+          "class": "Array",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "ownPropertyLength": 6,
+          "preview": {
+            "kind": "ArrayLike",
+            "length": 6,
+            "items": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              null
+            ]
+          }
+        };
+      case "[0,1,2,,,,]" :
+        return {
+          "type": "object",
+          "actor": "server1.conn13.child1/obj88",
+          "class": "Array",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "ownPropertyLength": 4,
+          "preview": {
+            "kind": "ArrayLike",
+            "length": 6,
+            "items": [
+              0,
+              1,
+              2,
+              null,
+              null,
+              null
             ]
           }
         };

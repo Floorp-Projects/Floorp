@@ -29,7 +29,10 @@ namespace dom {
 // template parameter, we need to move this class outside.
 class SurfaceHelper : public Runnable {
 public:
-  explicit SurfaceHelper(already_AddRefed<layers::Image> aImage) : mImage(aImage) {}
+  explicit SurfaceHelper(already_AddRefed<layers::Image> aImage)
+    : Runnable("SurfaceHelper")
+    , mImage(aImage)
+  {}
 
   // It retrieves a SourceSurface reference and convert color format on main
   // thread and passes DataSourceSurface to caller thread.
@@ -79,7 +82,8 @@ class EncodingCompleteEvent : public CancelableRunnable
 
 public:
   explicit EncodingCompleteEvent(EncodeCompleteCallback* aEncodeCompleteCallback)
-    : mImgSize(0)
+    : CancelableRunnable("EncodingCompleteEvent")
+    , mImgSize(0)
     , mType()
     , mImgData(nullptr)
     , mEncodeCompleteCallback(aEncodeCompleteCallback)
@@ -152,7 +156,8 @@ public:
                    int32_t aFormat,
                    const nsIntSize aSize,
                    bool aUsingCustomOptions)
-    : mType(aType)
+    : Runnable("EncodingRunnable")
+    , mType(aType)
     , mOptions(aOptions)
     , mImageBuffer(Move(aImageBuffer))
     , mImage(aImage)

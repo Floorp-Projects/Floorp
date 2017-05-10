@@ -400,7 +400,9 @@ body.compact #newtab-search-container {
 #newtab-search-submit {
   margin-inline-start: -1px;
   color: transparent;
-  background: url("chrome://browser/skin/search-arrow-go.svg#search-arrow-go") center center no-repeat, linear-gradient(hsla(0,0%,100%,.8), hsla(0,0%,100%,.1)) padding-box;
+  background: url("chrome://browser/skin/search-arrow-go.svg") center center no-repeat, linear-gradient(hsla(0,0%,100%,.8), hsla(0,0%,100%,.1)) padding-box;
+  -moz-context-properties: fill;
+  fill: #616366;
   padding: 0;
   border: 1px solid;
   border-color: hsla(210,54%,20%,.15) hsla(210,54%,20%,.17) hsla(210,54%,20%,.2);
@@ -416,7 +418,7 @@ body.compact #newtab-search-container {
 
 #newtab-search-submit:dir(rtl) {
   border-radius: 2px 0 0 2px;
-  background-image: url("chrome://browser/skin/search-arrow-go.svg#search-arrow-go-rtl"), linear-gradient(hsla(0,0%,100%,.8), hsla(0,0%,100%,.1));
+  background-image: url("chrome://browser/skin/search-arrow-go-rtl.svg"), linear-gradient(hsla(0,0%,100%,.8), hsla(0,0%,100%,.1));
 }
 
 #newtab-search-text:focus + #newtab-search-submit,
@@ -428,14 +430,16 @@ body.compact #newtab-search-container {
 #newtab-search-text:focus + #newtab-search-submit,
 #newtab-search-text[keepfocus] + #newtab-search-submit,
 #newtab-search-text[autofocus] + #newtab-search-submit {
-  background-image: url("chrome://browser/skin/search-arrow-go.svg#search-arrow-go-inverted"), linear-gradient(#4cb1ff, #1793e5);
+  background-image: url("chrome://browser/skin/search-arrow-go.svg"), linear-gradient(#4cb1ff, #1793e5);
+  fill: white;
   box-shadow: 0 1px 0 hsla(0,0%,100%,.2) inset,
               0 0 0 1px hsla(0,0%,100%,.1) inset,
               0 1px 0 hsla(210,54%,20%,.03);
 }
 
 #newtab-search-text + #newtab-search-submit:hover {
-  background-image: url("chrome://browser/skin/search-arrow-go.svg#search-arrow-go-inverted"), linear-gradient(#4cb1ff, #1793e5);
+  background-image: url("chrome://browser/skin/search-arrow-go.svg"), linear-gradient(#4cb1ff, #1793e5);
+  fill: white;
   box-shadow: 0 1px 0 hsla(0,0%,100%,.2) inset,
               0 0 0 1px hsla(0,0%,100%,.1) inset,
               0 1px 0 hsla(210,54%,20%,.03),
@@ -452,7 +456,8 @@ body.compact #newtab-search-container {
 #newtab-search-text[keepfocus] + #newtab-search-submit:dir(rtl),
 #newtab-search-text[autofocus] + #newtab-search-submit:dir(rtl),
 #newtab-search-text + #newtab-search-submit:dir(rtl):hover {
-  background-image: url("chrome://browser/skin/search-arrow-go.svg#search-arrow-go-rtl-inverted"), linear-gradient(#4cb1ff, #1793e5);
+  background-image: url("chrome://browser/skin/search-arrow-go-rtl.svg"), linear-gradient(#4cb1ff, #1793e5);
+  fill: white;
 }
 
 /* CUSTOMIZE */

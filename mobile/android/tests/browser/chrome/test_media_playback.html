@@ -1,0 +1,154 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for media playback</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="head.js"></script>
+  <script type="application/javascript">
+
+"use strict";
+
+const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
+
+let gChromeWin;
+let gBrowserApp;
+
+const URL = "http://example.org/chrome/mobile/android/tests/browser/chrome/media_playback.html";
+
+// Waiting for a tab to load or restore can be slow on the emulator.
+SimpleTest.requestLongerTimeout(2);
+
+setup_browser();
+
+function getAudio(browser) {
+  return browser.contentWindow.document.getElementById("testAudio");
+}
+
+function playAudio(browser) {
+  let audio = getAudio(browser);
+  if (!audio) {
+    ok(false, "can't get the audio!")
+  }
+  return audio.play();
+}
+
+function stopAudio(browser) {
+  let audio = getAudio(browser);
+  if (!audio) {
+    ok(false, "can't get the audio!")
+  }
+  audio.pause();
+}
+
+function isAudioStarted(browser) {
+  let audio = getAudio(browser);
+  if (!audio) {
+    ok(false, "can't get the audio!")
+  }
+  return !audio.paused;
+}
+
+function setup_browser() {
+  gChromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+  gBrowserApp = gChromeWin.BrowserApp;
+}
+
+add_task(function* test_media_control() {
+  info("- open a new tab -");
+  let tab = gBrowserApp.addTab(URL);
+  let browser = tab.browser;
+
+  info("- wait for loading tab's content -");
+  yield promiseBrowserEvent(browser, "load");
+
+  info("- check whether audio starts playing -");
+  yield promiseTabEvent(browser, "DOMAudioPlaybackStarted");
+  ok(isAudioStarted(browser), "audio has started playing.");
+  ok(tab.playingAudio, "tab is playing audio.");
+
+  info("- pause from control -");
+  Services.obs.notifyObservers(browser, "mediaControl", "mediaControlPaused");
+
+  info("- check whether audio stops playing -");
+  yield promiseTabEvent(browser, "DOMAudioPlaybackStopped");
+  ok(!isAudioStarted(browser), "audio has stopped playing.");
+  ok(!tab.playingAudio, "tab isn't playing audio.");
+
+  info("- resume from control -");
+  Services.obs.notifyObservers(browser, "mediaControl", "resumeMedia");
+
+  info("- check whether audio starts playing -");
+  yield promiseTabEvent(browser, "DOMAudioPlaybackStarted");
+  ok(isAudioStarted(browser), "audio has started playing.");
+  ok(tab.playingAudio, "tab is playing audio.");
+
+  info("- stop from control -");
+  Services.obs.notifyObservers(browser, "mediaControl", "mediaControlStopped");
+
+  info("- check whether audio stops playing -");
+  yield promiseTabEvent(browser, "DOMAudioPlaybackStopped");
+  ok(!isAudioStarted(browser), "audio has stopped playing.");
+  ok(!tab.playingAudio, "tab isn't playing audio.");
+
+  info("- remove tab -");
+  gBrowserApp.closeTab(tab);
+});
+
+add_task(function* test_audio_focus() {
+  info("- open a new tab -");
+  let tab = gBrowserApp.addTab(URL);
+  let browser = tab.browser;
+
+  info("- wait for loading tab's content -");
+  yield promiseBrowserEvent(browser, "load");
+
+  info("- check whether audio starts playing -");
+  yield promiseTabEvent(browser, "DOMAudioPlaybackStarted");
+  ok(isAudioStarted(browser), "audio has started playing.");
+  ok(tab.playingAudio, "tab is playing audio.");
+
+  info("- pause when transiently lossing audio focus -");
+  Services.obs.notifyObservers(browser, "audioFocusChanged", "lostAudioFocusTransiently");
+
+  info("- check whether audio stops playing -");
+  yield promiseTabEvent(browser, "DOMAudioPlaybackStopped");
+  ok(!isAudioStarted(browser), "audio has stopped playing.");
+  ok(!tab.playingAudio, "tab isn't playing audio.");
+
+  info("- resume when gain audio focus again -");
+  Services.obs.notifyObservers(browser, "audioFocusChanged", "gainAudioFocus");
+
+  info("- check whether audio starts playing -");
+  yield promiseTabEvent(browser, "DOMAudioPlaybackStarted");
+  ok(isAudioStarted(browser), "audio has started playing.");
+  ok(tab.playingAudio, "tab is playing audio.");
+
+  info("- pause when lossing audio focus -");
+  Services.obs.notifyObservers(browser, "audioFocusChanged", "lostAudioFocus");
+
+  info("- check whether audio stops playing -");
+  yield promiseTabEvent(browser, "DOMAudioPlaybackStopped");
+  ok(!isAudioStarted(browser), "audio has stopped playing.");
+  ok(!tab.playingAudio, "tab isn't playing audio.");
+
+  info("- remove tab -");
+  gBrowserApp.closeTab(tab);
+});
+
+  </script>
+</head>
+<body>
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

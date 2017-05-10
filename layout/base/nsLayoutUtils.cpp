@@ -2060,6 +2060,8 @@ nsLayoutUtils::SetFixedPositionLayerData(Layer* aLayer,
       } else {
         anchor.x = anchorRect.XMost();
       }
+    } else if (position->mOffset.GetLeftUnit() != eStyleUnit_Auto) {
+      sides |= eSideBitsLeft;
     }
     if (position->mOffset.GetBottomUnit() != eStyleUnit_Auto) {
       sides |= eSideBitsBottom;
@@ -2069,6 +2071,8 @@ nsLayoutUtils::SetFixedPositionLayerData(Layer* aLayer,
       } else {
         anchor.y = anchorRect.YMost();
       }
+    } else if (position->mOffset.GetTopUnit() != eStyleUnit_Auto) {
+      sides |= eSideBitsTop;
     }
   }
 
@@ -9205,22 +9209,6 @@ nsLayoutUtils::GetCumulativeApzCallbackTransform(nsIFrame* aFrame)
   }
   return delta;
 }
-
-/* static */ nsRect
-nsLayoutUtils::ComputePartialPrerenderArea(const nsRect& aDirtyRect,
-                                           const nsRect& aOverflow,
-                                           const nsSize& aPrerenderSize)
-{
-  // Simple calculation for now: center the pre-render area on the dirty rect,
-  // and clamp to the overflow area. Later we can do more advanced things like
-  // redistributing from one axis to another, or from one side to another.
-  nscoord xExcess = aPrerenderSize.width - aDirtyRect.width;
-  nscoord yExcess = aPrerenderSize.height - aDirtyRect.height;
-  nsRect result = aDirtyRect;
-  result.Inflate(xExcess / 2, yExcess / 2);
-  return result.MoveInsideAndClamp(aOverflow);
-}
-
 
 /* static */ bool
 nsLayoutUtils::SupportsServoStyleBackend(nsIDocument* aDocument)

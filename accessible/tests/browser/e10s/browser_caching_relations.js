@@ -4,10 +4,7 @@
 
 'use strict';
 
-/* global RELATION_LABELLED_BY, RELATION_LABEL_FOR, RELATION_DESCRIBED_BY,
-          RELATION_DESCRIPTION_FOR, RELATION_CONTROLLER_FOR,
-          RELATION_CONTROLLED_BY, RELATION_FLOWS_TO, RELATION_FLOWS_FROM */
-
+/* import-globals-from ../../mochitest/relations.js */
 loadScripts({ name: 'relations.js', dir: MOCHITESTS_DIR });
 
 /**

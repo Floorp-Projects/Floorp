@@ -10,14 +10,13 @@
 #include "SkColorPriv.h"
 #include "SkReadBuffer.h"
 #include "SkSpecialImage.h"
-#include "SkSpecialSurface.h"
 #include "SkWriteBuffer.h"
 #include "SkRect.h"
 #include "SkUnPreMultiply.h"
 
 #if SK_SUPPORT_GPU
 #include "GrContext.h"
-#include "GrDrawContext.h"
+#include "GrTextureProxy.h"
 #include "effects/GrMatrixConvolutionEffect.h"
 #endif
 
@@ -183,19 +182,19 @@ void SkMatrixConvolutionImageFilter::filterPixels(const SkBitmap& src,
                                                       bounds);
                     SkScalar k = fKernel[cy * fKernelSize.fWidth + cx];
                     if (convolveAlpha) {
-                        sumA += SkScalarMul(SkIntToScalar(SkGetPackedA32(s)), k);
+                        sumA += SkGetPackedA32(s) * k;
                     }
-                    sumR += SkScalarMul(SkIntToScalar(SkGetPackedR32(s)), k);
-                    sumG += SkScalarMul(SkIntToScalar(SkGetPackedG32(s)), k);
-                    sumB += SkScalarMul(SkIntToScalar(SkGetPackedB32(s)), k);
+                    sumR += SkGetPackedR32(s) * k;
+                    sumG += SkGetPackedG32(s) * k;
+                    sumB += SkGetPackedB32(s) * k;
                 }
             }
             int a = convolveAlpha
-                  ? SkClampMax(SkScalarFloorToInt(SkScalarMul(sumA, fGain) + fBias), 255)
+                  ? SkClampMax(SkScalarFloorToInt(sumA * fGain + fBias), 255)
                   : 255;
-            int r = SkClampMax(SkScalarFloorToInt(SkScalarMul(sumR, fGain) + fBias), a);
-            int g = SkClampMax(SkScalarFloorToInt(SkScalarMul(sumG, fGain) + fBias), a);
-            int b = SkClampMax(SkScalarFloorToInt(SkScalarMul(sumB, fGain) + fBias), a);
+            int r = SkClampMax(SkScalarFloorToInt(sumR * fGain + fBias), a);
+            int g = SkClampMax(SkScalarFloorToInt(sumG * fGain + fBias), a);
+            int b = SkClampMax(SkScalarFloorToInt(sumB * fGain + fBias), a);
             if (!convolveAlpha) {
                 a = SkGetPackedA32(PixelFetcher::fetch(src, x, y, bounds));
                 *dptr++ = SkPreMultiplyARGB(a, r, g, b);
@@ -283,7 +282,6 @@ static GrTextureDomain::Mode convert_tilemodes(SkMatrixConvolutionImageFilter::T
     }
     return GrTextureDomain::kIgnore_Mode;
 }
-
 #endif
 
 sk_sp<SkSpecialImage> SkMatrixConvolutionImageFilter::onFilterImage(SkSpecialImage* source,
@@ -307,15 +305,21 @@ sk_sp<SkSpecialImage> SkMatrixConvolutionImageFilter::onFilterImage(SkSpecialIma
         fKernelSize.width() * fKernelSize.height() <= MAX_KERNEL_SIZE) {
         GrContext* context = source->getContext();
 
-        sk_sp<GrTexture> inputTexture(input->asTextureRef(context));
-        SkASSERT(inputTexture);
+        // Ensure the input is in the destination color space. Typically applyCropRect will have
+        // called pad_image to account for our dilation of bounds, so the result will already be
+        // moved to the destination color space. If a filter DAG avoids that, then we use this
+        // fall-back, which saves us from having to do the xform during the filter itself.
+        input = ImageToColorSpace(input.get(), ctx.outputProperties());
+
+        sk_sp<GrTextureProxy> inputProxy(input->asTextureProxyRef(context));
+        SkASSERT(inputProxy);
 
         offset->fX = bounds.left();
         offset->fY = bounds.top();
         bounds.offset(-inputOffset);
 
-        // SRGBTODO: handle sRGB here
-        sk_sp<GrFragmentProcessor> fp(GrMatrixConvolutionEffect::Make(inputTexture.get(),
+        sk_sp<GrFragmentProcessor> fp(GrMatrixConvolutionEffect::Make(context->resourceProvider(),
+                                                                      std::move(inputProxy),
                                                                       bounds,
                                                                       fKernelSize,
                                                                       fKernel,
@@ -382,6 +386,19 @@ sk_sp<SkSpecialImage> SkMatrixConvolutionImageFilter::onFilterImage(SkSpecialIma
     this->filterBorderPixels(inputBM, &dst, bottom, bounds);
     return SkSpecialImage::MakeFromRaster(SkIRect::MakeWH(bounds.width(), bounds.height()),
                                           dst);
+}
+
+sk_sp<SkImageFilter> SkMatrixConvolutionImageFilter::onMakeColorSpace(SkColorSpaceXformer* xformer)
+const {
+    SkASSERT(1 == this->countInputs());
+    if (!this->getInput(0)) {
+        return sk_ref_sp(const_cast<SkMatrixConvolutionImageFilter*>(this));
+    }
+
+    sk_sp<SkImageFilter> input = this->getInput(0)->makeColorSpace(xformer);
+    return SkMatrixConvolutionImageFilter::Make(fKernelSize, fKernel, fGain, fBias, fKernelOffset,
+                                                fTileMode, fConvolveAlpha, std::move(input),
+                                                this->getCropRectIfSet());
 }
 
 SkIRect SkMatrixConvolutionImageFilter::onFilterNodeBounds(const SkIRect& src, const SkMatrix& ctm,
