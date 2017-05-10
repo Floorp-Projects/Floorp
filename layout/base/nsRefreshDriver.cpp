@@ -556,6 +556,7 @@ private:
             mProcessedVsync = false;
             nsCOMPtr<nsIRunnable> vsyncEvent =
               NewRunnableMethod<>(
+                "RefreshDriverVsyncObserver::NormalPriorityNotify",
                 this, &RefreshDriverVsyncObserver::NormalPriorityNotify);
             NS_DispatchToMainThread(vsyncEvent);
           }

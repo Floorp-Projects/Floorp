@@ -2,9 +2,9 @@ This is an import of Skia. See skia/include/core/SkMilestone.h for the milestone
 
 To update to a new version of Skia:
 
-- Clone Skia from upstream using the instructions here: https://sites.google.com/site/skiadocs/user-documentation/downloading
+- Clone Skia from upstream using the instructions here: https://skia.org/user/download
 - Copy the entire source tree from a Skia clone to mozilla-central/gfx/skia/skia
-- cd gfx/skia && ./gyp_mozbuild
+- cd gfx/skia && ./generate_mozbuild.py
 
 Once that's done, use git status to view the files that have changed. Keep an eye on GrUserConfig.h
 and SkUserConfig.h as those probably don't want to be overwritten by upstream versions.

@@ -13,31 +13,62 @@
 
 class SkData;
 
+/**
+ *  Describes a color gamut with primaries and a white point.
+ */
+struct SK_API SkColorSpacePrimaries {
+    float fRX, fRY;
+    float fGX, fGY;
+    float fBX, fBY;
+    float fWX, fWY;
+
+    /**
+     *  Convert primaries and a white point to a toXYZD50 matrix, the preferred color gamut
+     *  representation of SkColorSpace.
+     */
+    bool toXYZD50(SkMatrix44* toXYZD50) const;
+};
+
+/**
+ *  Contains the coefficients for a common transfer function equation, specified as
+ *  a transformation from a curved space to linear.
+ *
+ *  LinearVal = C*InputVal + F        , for 0.0f <= InputVal <  D
+ *  LinearVal = (A*InputVal + B)^G + E, for D    <= InputVal <= 1.0f
+ *
+ *  Function is undefined if InputVal is not in [ 0.0f, 1.0f ].
+ *  Resulting LinearVals must be in [ 0.0f, 1.0f ].
+ *  Function must be positive and increasing.
+ */
+struct SK_API SkColorSpaceTransferFn {
+    float fG;
+    float fA;
+    float fB;
+    float fC;
+    float fD;
+    float fE;
+    float fF;
+
+    /**
+     * Produces a new parametric transfer function equation that is the mathematical inverse of
+     * this one.
+     */
+    SkColorSpaceTransferFn invert() const;
+};
+
 class SK_API SkColorSpace : public SkRefCnt {
 public:
 
     /**
-     *  Common, named profiles that we can recognize.
+     *  Create the sRGB color space.
      */
-    enum Named : uint8_t {
-        /**
-         *  By far the most common color space.
-         *  This is the default space for images, unmarked content, and monitors.
-         */
-        kSRGB_Named,
+    static sk_sp<SkColorSpace> MakeSRGB();
 
-        /**
-         *  Very common wide gamut color space.
-         *  Often used by images and monitors.
-         */
-        kAdobeRGB_Named,
-
-        /**
-         *  Colorspace with the sRGB primaries, but a linear (1.0) gamma. Commonly used for
-         *  half-float surfaces, and high precision individual colors (gradient stops, etc...)
-         */
-        kSRGBLinear_Named,
-    };
+    /**
+     *  Colorspace with the sRGB primaries, but a linear (1.0) gamma. Commonly used for
+     *  half-float surfaces, and high precision individual colors (gradient stops, etc...)
+     */
+    static sk_sp<SkColorSpace> MakeSRGBLinear();
 
     enum RenderTargetGamma : uint8_t {
         kLinear_RenderTargetGamma,
@@ -49,28 +80,34 @@ public:
         kSRGB_RenderTargetGamma,
     };
 
-    /**
-     *  Create an SkColorSpace from a transfer function and a color gamut transform to D50 XYZ.
-     */
-    static sk_sp<SkColorSpace> NewRGB(RenderTargetGamma gamma, const SkMatrix44& toXYZD50);
+    enum Gamut {
+        kSRGB_Gamut,
+        kAdobeRGB_Gamut,
+        kDCIP3_D65_Gamut,
+        kRec2020_Gamut,
+    };
 
     /**
-     *  Create a common, named SkColorSpace.
+     *  Create an SkColorSpace from a transfer function and a color gamut.
+     *
+     *  Transfer function can be specified as an enum or as the coefficients to an equation.
+     *  Gamut can be specified as an enum or as the matrix transformation to XYZ D50.
      */
-    static sk_sp<SkColorSpace> NewNamed(Named);
+    static sk_sp<SkColorSpace> MakeRGB(RenderTargetGamma gamma, Gamut gamut);
+    static sk_sp<SkColorSpace> MakeRGB(RenderTargetGamma gamma, const SkMatrix44& toXYZD50);
+    static sk_sp<SkColorSpace> MakeRGB(const SkColorSpaceTransferFn& coeffs, Gamut gamut);
+    static sk_sp<SkColorSpace> MakeRGB(const SkColorSpaceTransferFn& coeffs,
+                                       const SkMatrix44& toXYZD50);
 
     /**
      *  Create an SkColorSpace from an ICC profile.
      */
-    static sk_sp<SkColorSpace> NewICC(const void*, size_t);
-
-    /**
-     *  Create an SkColorSpace with the same gamut as this color space, but with linear gamma.
-     */
-    sk_sp<SkColorSpace> makeLinearGamma();
+    static sk_sp<SkColorSpace> MakeICC(const void*, size_t);
 
     /**
      *  Returns true if the color space gamma is near enough to be approximated as sRGB.
+     *  This includes the canonical sRGB transfer function as well as a 2.2f exponential
+     *  transfer function.
      */
     bool gammaCloseToSRGB() const;
 
@@ -78,6 +115,34 @@ public:
      *  Returns true if the color space gamma is linear.
      */
     bool gammaIsLinear() const;
+
+    /**
+     *  If the transfer function can be represented as coefficients to the standard
+     *  equation, returns true and sets |fn| to the proper values.
+     *
+     *  If not, returns false.
+     */
+    bool isNumericalTransferFn(SkColorSpaceTransferFn* fn) const;
+
+    /**
+     *  Returns true and sets |toXYZD50| if the color gamut can be described as a matrix.
+     *  Returns false otherwise.
+     */
+    bool toXYZD50(SkMatrix44* toXYZD50) const;
+
+    /**
+     *  Returns true if the color space is sRGB.
+     *  Returns false otherwise.
+     *
+     *  This allows a little bit of tolerance, given that we might see small numerical error
+     *  in some cases: converting ICC fixed point to float, converting white point to D50,
+     *  rounding decisions on transfer function and matrix.
+     *
+     *  This does not consider a 2.2f exponential transfer function to be sRGB.  While these
+     *  functions are similar (and it is sometimes useful to consider them together), this
+     *  function checks for logical equality.
+     */
+    bool isSRGB() const;
 
     /**
      *  Returns nullptr on failure.  Fails when we fallback to serializing ICC data and
@@ -101,6 +166,19 @@ public:
 
 protected:
     SkColorSpace() {}
+};
+
+enum class SkTransferFunctionBehavior {
+    /**
+     *  Converts to a linear space before premultiplying, unpremultiplying, or blending.
+     */
+    kRespect,
+
+    /**
+     *  Premultiplies, unpremultiplies, and blends ignoring the transfer function.  Pixels are
+     *  treated as if they are linear, regardless of their transfer function encoding.
+     */
+    kIgnore,
 };
 
 #endif

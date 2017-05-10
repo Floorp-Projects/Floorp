@@ -695,7 +695,8 @@ class PredictorLearnRunnable final : public Runnable {
 public:
   PredictorLearnRunnable(nsIURI *targetURI, nsIURI *sourceURI,
                          PredictorLearnReason reason, const OriginAttributes &oa)
-    : mTargetURI(targetURI)
+    : Runnable("PredictorLearnRunnable")
+    , mTargetURI(targetURI)
     , mSourceURI(sourceURI)
     , mReason(reason)
     , mOA(oa)

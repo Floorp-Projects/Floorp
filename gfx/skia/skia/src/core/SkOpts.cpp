@@ -36,16 +36,15 @@
     #define SK_OPTS_NS portable
 #endif
 
+#include "SkBitmapFilter_opts.h"
 #include "SkBlend_opts.h"
 #include "SkBlitMask_opts.h"
 #include "SkBlitRow_opts.h"
 #include "SkBlurImageFilter_opts.h"
 #include "SkChecksum_opts.h"
-#include "SkColorCubeFilter_opts.h"
 #include "SkMorphologyImageFilter_opts.h"
 #include "SkRasterPipeline_opts.h"
 #include "SkSwizzler_opts.h"
-#include "SkTextureCompressor_opts.h"
 #include "SkXfermode_opts.h"
 
 namespace SkOpts {
@@ -55,7 +54,6 @@ namespace SkOpts {
     // They'll still get a chance to be replaced with even better ones, e.g. using SSE4.1.
 #define DEFINE_DEFAULT(name) decltype(name) name = SK_OPTS_NS::name
     DEFINE_DEFAULT(create_xfermode);
-    DEFINE_DEFAULT(color_cube_filter_span);
 
     DEFINE_DEFAULT(box_blur_xx);
     DEFINE_DEFAULT(box_blur_xy);
@@ -65,9 +63,6 @@ namespace SkOpts {
     DEFINE_DEFAULT(dilate_y);
     DEFINE_DEFAULT( erode_x);
     DEFINE_DEFAULT( erode_y);
-
-    DEFINE_DEFAULT(texture_compressor);
-    DEFINE_DEFAULT(fill_block_dimensions);
 
     DEFINE_DEFAULT(blit_mask_d32_a8);
 
@@ -88,105 +83,14 @@ namespace SkOpts {
     DEFINE_DEFAULT(srcover_srgb_srgb);
 
     DEFINE_DEFAULT(hash_fn);
+
+    DEFINE_DEFAULT(run_pipeline);
+
+    DEFINE_DEFAULT(convolve_vertically);
+    DEFINE_DEFAULT(convolve_horizontally);
+    DEFINE_DEFAULT(convolve_4_rows_horizontally);
+
 #undef DEFINE_DEFAULT
-
-    // TODO: might be nice to only create one instance of tail-insensitive stages.
-
-    SkRasterPipeline::Fn stages_4[] = {
-        stage_4<SK_OPTS_NS::store_565 , false>,
-        stage_4<SK_OPTS_NS::store_srgb, false>,
-        stage_4<SK_OPTS_NS::store_f16 , false>,
-
-        stage_4<SK_OPTS_NS::load_s_565 , true>,
-        stage_4<SK_OPTS_NS::load_s_srgb, true>,
-        stage_4<SK_OPTS_NS::load_s_f16 , true>,
-
-        stage_4<SK_OPTS_NS::load_d_565 , true>,
-        stage_4<SK_OPTS_NS::load_d_srgb, true>,
-        stage_4<SK_OPTS_NS::load_d_f16 , true>,
-
-        stage_4<SK_OPTS_NS::scale_u8, true>,
-
-        stage_4<SK_OPTS_NS::lerp_u8            , true>,
-        stage_4<SK_OPTS_NS::lerp_565           , true>,
-        stage_4<SK_OPTS_NS::lerp_constant_float, true>,
-
-        stage_4<SK_OPTS_NS::constant_color, true>,
-
-        SK_OPTS_NS::dst,
-        SK_OPTS_NS::dstatop,
-        SK_OPTS_NS::dstin,
-        SK_OPTS_NS::dstout,
-        SK_OPTS_NS::dstover,
-        SK_OPTS_NS::srcatop,
-        SK_OPTS_NS::srcin,
-        SK_OPTS_NS::srcout,
-        SK_OPTS_NS::srcover,
-        SK_OPTS_NS::clear,
-        SK_OPTS_NS::modulate,
-        SK_OPTS_NS::multiply,
-        SK_OPTS_NS::plus_,
-        SK_OPTS_NS::screen,
-        SK_OPTS_NS::xor_,
-        SK_OPTS_NS::colorburn,
-        SK_OPTS_NS::colordodge,
-        SK_OPTS_NS::darken,
-        SK_OPTS_NS::difference,
-        SK_OPTS_NS::exclusion,
-        SK_OPTS_NS::hardlight,
-        SK_OPTS_NS::lighten,
-        SK_OPTS_NS::overlay,
-        SK_OPTS_NS::softlight,
-    };
-    static_assert(SK_ARRAY_COUNT(stages_4) == SkRasterPipeline::kNumStockStages, "");
-
-    SkRasterPipeline::Fn stages_1_3[] = {
-        stage_1_3<SK_OPTS_NS::store_565 , false>,
-        stage_1_3<SK_OPTS_NS::store_srgb, false>,
-        stage_1_3<SK_OPTS_NS::store_f16 , false>,
-
-        stage_1_3<SK_OPTS_NS::load_s_565 , true>,
-        stage_1_3<SK_OPTS_NS::load_s_srgb, true>,
-        stage_1_3<SK_OPTS_NS::load_s_f16 , true>,
-
-        stage_1_3<SK_OPTS_NS::load_d_565 , true>,
-        stage_1_3<SK_OPTS_NS::load_d_srgb, true>,
-        stage_1_3<SK_OPTS_NS::load_d_f16 , true>,
-
-        stage_1_3<SK_OPTS_NS::scale_u8, true>,
-
-        stage_1_3<SK_OPTS_NS::lerp_u8            , true>,
-        stage_1_3<SK_OPTS_NS::lerp_565           , true>,
-        stage_1_3<SK_OPTS_NS::lerp_constant_float, true>,
-
-        stage_1_3<SK_OPTS_NS::constant_color, true>,
-
-        SK_OPTS_NS::dst,
-        SK_OPTS_NS::dstatop,
-        SK_OPTS_NS::dstin,
-        SK_OPTS_NS::dstout,
-        SK_OPTS_NS::dstover,
-        SK_OPTS_NS::srcatop,
-        SK_OPTS_NS::srcin,
-        SK_OPTS_NS::srcout,
-        SK_OPTS_NS::srcover,
-        SK_OPTS_NS::clear,
-        SK_OPTS_NS::modulate,
-        SK_OPTS_NS::multiply,
-        SK_OPTS_NS::plus_,
-        SK_OPTS_NS::screen,
-        SK_OPTS_NS::xor_,
-        SK_OPTS_NS::colorburn,
-        SK_OPTS_NS::colordodge,
-        SK_OPTS_NS::darken,
-        SK_OPTS_NS::difference,
-        SK_OPTS_NS::exclusion,
-        SK_OPTS_NS::hardlight,
-        SK_OPTS_NS::lighten,
-        SK_OPTS_NS::overlay,
-        SK_OPTS_NS::softlight,
-    };
-    static_assert(SK_ARRAY_COUNT(stages_1_3) == SkRasterPipeline::kNumStockStages, "");
 
     // Each Init_foo() is defined in src/opts/SkOpts_foo.cpp.
     void Init_ssse3();
@@ -194,8 +98,7 @@ namespace SkOpts {
     void Init_sse42();
     void Init_avx();
     void Init_hsw();
-    void Init_crc32() {}
-    void Init_neon();
+    void Init_crc32();
 
     static void init() {
 #if !defined(SK_BUILD_NO_OPTS)
@@ -208,9 +111,6 @@ namespace SkOpts {
 
     #elif defined(SK_CPU_ARM64)
         if (SkCpu::Supports(SkCpu::CRC32)) { Init_crc32(); }
-
-    #elif defined(SK_CPU_ARM32) && !defined(SK_ARM_HAS_NEON) && defined(SK_ARM_HAS_OPTIONAL_NEON)
-        if (SkCpu::Supports(SkCpu::NEON)) { Init_neon(); }
 
     #endif
 #endif

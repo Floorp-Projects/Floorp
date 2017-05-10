@@ -39,8 +39,6 @@ GrVkRenderTarget::GrVkRenderTarget(GrVkGpu* gpu,
     , fFramebuffer(nullptr)
     , fCachedSimpleRenderPass(nullptr) {
     SkASSERT(desc.fSampleCnt);
-    // The plus 1 is to account for the resolve texture.
-    fColorValuesPerPixel = desc.fSampleCnt + 1; // TODO: this still correct?
     this->createFramebuffer(gpu);
     this->registerWithCache(budgeted);
 }
@@ -64,8 +62,6 @@ GrVkRenderTarget::GrVkRenderTarget(GrVkGpu* gpu,
     , fFramebuffer(nullptr)
     , fCachedSimpleRenderPass(nullptr) {
     SkASSERT(desc.fSampleCnt);
-    // The plus 1 is to account for the resolve texture.
-    fColorValuesPerPixel = desc.fSampleCnt + 1; // TODO: this still correct?
     this->createFramebuffer(gpu);
 }
 
@@ -86,7 +82,6 @@ GrVkRenderTarget::GrVkRenderTarget(GrVkGpu* gpu,
     , fFramebuffer(nullptr)
     , fCachedSimpleRenderPass(nullptr) {
     SkASSERT(!desc.fSampleCnt);
-    fColorValuesPerPixel = 1;
     this->createFramebuffer(gpu);
     this->registerWithCache(budgeted);
 }
@@ -107,7 +102,6 @@ GrVkRenderTarget::GrVkRenderTarget(GrVkGpu* gpu,
     , fFramebuffer(nullptr)
     , fCachedSimpleRenderPass(nullptr) {
     SkASSERT(!desc.fSampleCnt);
-    fColorValuesPerPixel = 1;
     this->createFramebuffer(gpu);
 }
 
@@ -201,22 +195,15 @@ GrVkRenderTarget::CreateNewRenderTarget(GrVkGpu* gpu,
     return rt;
 }
 
-GrVkRenderTarget*
-GrVkRenderTarget::CreateWrappedRenderTarget(GrVkGpu* gpu,
-                                            const GrSurfaceDesc& desc,
-                                            GrWrapOwnership ownership,
-                                            const GrVkImageInfo* info) {
+sk_sp<GrVkRenderTarget>
+GrVkRenderTarget::MakeWrappedRenderTarget(GrVkGpu* gpu,
+                                          const GrSurfaceDesc& desc,
+                                          const GrVkImageInfo* info) {
     SkASSERT(info);
-    // We can wrap a rendertarget without its allocation, as long as we don't take ownership
     SkASSERT(VK_NULL_HANDLE != info->fImage);
-    SkASSERT(VK_NULL_HANDLE != info->fAlloc.fMemory || kAdopt_GrWrapOwnership != ownership);
 
-    GrVkImage::Wrapped wrapped = kBorrow_GrWrapOwnership == ownership ? GrVkImage::kBorrowed_Wrapped
-                                                                      : GrVkImage::kAdopted_Wrapped;
-
-    GrVkRenderTarget* rt = GrVkRenderTarget::Create(gpu, SkBudgeted::kNo, desc, *info, wrapped);
-
-    return rt;
+    return sk_sp<GrVkRenderTarget>(
+        GrVkRenderTarget::Create(gpu, SkBudgeted::kNo, desc, *info, GrVkImage::kBorrowed_Wrapped));
 }
 
 bool GrVkRenderTarget::completeStencilAttachment() {
@@ -294,7 +281,7 @@ void GrVkRenderTarget::releaseInternalObjects() {
 
     if (fMSAAImage) {
         fMSAAImage->releaseImage(gpu);
-        fMSAAImage = nullptr;
+        fMSAAImage.reset();
     }
 
     if (fResolveAttachmentView) {
@@ -318,7 +305,7 @@ void GrVkRenderTarget::releaseInternalObjects() {
 void GrVkRenderTarget::abandonInternalObjects() {
     if (fMSAAImage) {
         fMSAAImage->abandonImage();
-        fMSAAImage = nullptr;
+        fMSAAImage.reset();
     }
 
     if (fResolveAttachmentView) {

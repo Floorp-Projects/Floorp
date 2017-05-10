@@ -6,21 +6,22 @@
  */
 
 #include "SkSpriteBlitter.h"
+#include "SkArenaAlloc.h"
 #include "SkSpanProcs.h"
 #include "SkTemplates.h"
-#include "SkXfermode.h"
+#include "SkXfermodePriv.h"
 
 class Sprite_4f : public SkSpriteBlitter {
 public:
     Sprite_4f(const SkPixmap& src, const SkPaint& paint) : INHERITED(src) {
-        fXfer = SkXfermode::Peek(paint.getBlendMode());
+        fMode = paint.getBlendMode();
         fLoader = SkLoadSpanProc_Choose(src.info());
         fFilter = SkFilterSpanProc_Choose(paint);
         fBuffer.reset(src.width());
     }
 
 protected:
-    SkXfermode*             fXfer;
+    SkBlendMode             fMode;
     SkLoadSpanProc          fLoader;
     SkFilterSpanProc        fFilter;
     SkAutoTMalloc<SkPM4f>   fBuffer;
@@ -38,7 +39,7 @@ public:
         if (src.isOpaque()) {
             flags |= SkXfermode::kSrcIsOpaque_F16Flag;
         }
-        fWriter = SkXfermode::GetF16Proc(fXfer, flags);
+        fWriter = SkXfermode::GetF16Proc(fMode, flags);
     }
 
     void blitRect(int x, int y, int width, int height) override {
@@ -49,7 +50,7 @@ public:
         for (int bottom = y + height; y < bottom; ++y) {
             fLoader(fSource, x - fLeft, y - fTop, fBuffer, width);
             fFilter(*fPaint, fBuffer, width);
-            fWriter(fXfer, dst, fBuffer, width, nullptr);
+            fWriter(fMode, dst, fBuffer, width, nullptr);
             dst = (uint64_t* SK_RESTRICT)((char*)dst + dstRB);
         }
     }
@@ -62,7 +63,7 @@ private:
 
 
 SkSpriteBlitter* SkSpriteBlitter::ChooseF16(const SkPixmap& source, const SkPaint& paint,
-                                            SkTBlitterAllocator* allocator) {
+                                            SkArenaAlloc* allocator) {
     SkASSERT(allocator != nullptr);
 
     if (paint.getMaskFilter() != nullptr) {
@@ -72,7 +73,7 @@ SkSpriteBlitter* SkSpriteBlitter::ChooseF16(const SkPixmap& source, const SkPain
     switch (source.colorType()) {
         case kN32_SkColorType:
         case kRGBA_F16_SkColorType:
-            return allocator->createT<Sprite_F16>(source, paint);
+            return allocator->make<Sprite_F16>(source, paint);
         default:
             return nullptr;
     }
@@ -87,7 +88,7 @@ public:
         if (src.isOpaque()) {
             flags |= SkXfermode::kSrcIsOpaque_D32Flag;
         }
-        fWriter = SkXfermode::GetD32Proc(fXfer, flags);
+        fWriter = SkXfermode::GetD32Proc(fMode, flags);
     }
 
     void blitRect(int x, int y, int width, int height) override {
@@ -98,7 +99,7 @@ public:
         for (int bottom = y + height; y < bottom; ++y) {
             fLoader(fSource, x - fLeft, y - fTop, fBuffer, width);
             fFilter(*fPaint, fBuffer, width);
-            fWriter(fXfer, dst, fBuffer, width, nullptr);
+            fWriter(fMode, dst, fBuffer, width, nullptr);
             dst = (uint32_t* SK_RESTRICT)((char*)dst + dstRB);
         }
     }
@@ -112,7 +113,7 @@ private:
 
 
 SkSpriteBlitter* SkSpriteBlitter::ChooseS32(const SkPixmap& source, const SkPaint& paint,
-                                            SkTBlitterAllocator* allocator) {
+                                            SkArenaAlloc* allocator) {
     SkASSERT(allocator != nullptr);
 
     if (paint.getMaskFilter() != nullptr) {
@@ -122,7 +123,7 @@ SkSpriteBlitter* SkSpriteBlitter::ChooseS32(const SkPixmap& source, const SkPain
     switch (source.colorType()) {
         case kN32_SkColorType:
         case kRGBA_F16_SkColorType:
-            return allocator->createT<Sprite_sRGB>(source, paint);
+            return allocator->make<Sprite_sRGB>(source, paint);
         default:
             return nullptr;
     }

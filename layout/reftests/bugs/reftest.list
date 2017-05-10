@@ -1139,7 +1139,7 @@ fails-if(!stylo) == 428810-3e-rtl-insets.html 428810-empty-rtl-insets-ref.html #
 == 433700.html 433700-ref.html
 == 436356-1.html 436356-1-ref.html
 == 436356-2.html 436356-2-ref.html
-== 438537-1.html 438537-1-ref.html
+fuzzy-if(skiaContent,3,1) == 438537-1.html 438537-1-ref.html
 == 438981-1.xhtml about:blank
 == 438987-1.html 438987-1-ref.html
 fuzzy-if(skiaContent,1,3280) == 438987-2a.html 438987-2-ref.html
@@ -1149,7 +1149,7 @@ fuzzy-if(skiaContent,1,3280) == 438987-2c.html 438987-2-ref.html
 == 439004-1.html 439004-1-ref.html
 == 439639-1.html 439639-1-ref.html
 == 439910.html 439910-ref.html
-fails-if(stylo) == 440112.html 440112-ref.html
+fuzzy-if(skiaContent,1,1) fails-if(stylo) == 440112.html 440112-ref.html
 fails-if(stylo) == 440149-1.html 440149-1-ref.html
 == 441259-1.html 441259-1-ref.html
 fails-if(!stylo) == 441259-2.html 441259-2-ref.html # bug 441400
@@ -1197,9 +1197,9 @@ test-pref(dom.use_xbl_scopes_for_remote_xul,true) fails-if(stylo) != 449149-1b.h
 == 455280-1.xhtml 455280-1-ref.xhtml
 == 455826-1.html 455826-1-ref.html
 fails-if(cocoaWidget) fails-if(Android) == 456147.xul 456147-ref.html # bug 458047
-fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,4,69) == 456219-1a.html 456219-1-ref.html # bug 1128229
-fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,4,69) == 456219-1b.html 456219-1-ref.html # bug 1128229
-fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,4,69) == 456219-1c.html 456219-1-ref.html # bug 1128229
+fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,4,69) fuzzy-if(skiaContent,42,150) == 456219-1a.html 456219-1-ref.html # bug 1128229
+fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,4,69) fuzzy-if(skiaContent,42,150) == 456219-1b.html 456219-1-ref.html # bug 1128229
+fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,4,69) fuzzy-if(skiaContent,42,150) == 456219-1c.html 456219-1-ref.html # bug 1128229
 fuzzy-if(skiaContent,1,45) == 456219-2.html 456219-2-ref.html
 fails-if(stylo) == 456330-1.gif 456330-1-ref.png
 == 456484-1.html 456484-1-ref.html
@@ -1664,7 +1664,7 @@ HTTP(..) == 635639-1.html 635639-1-ref.html
 HTTP(..) == 635639-2.html 635639-2-ref.html
 random == 637597-1.html 637597-1-ref.html # bug 637597 was never really fixed!
 fuzzy-if(Android,8,500) == 637852-1.html 637852-1-ref.html
-fuzzy-if(Android,8,500) == 637852-2.html 637852-2-ref.html
+fuzzy-if(Android,8,500) fuzzy-if(skiaContent,2,1) == 637852-2.html 637852-2-ref.html
 fuzzy-if(Android,8,500) == 637852-3.html 637852-3-ref.html
 == 641770-1.html 641770-1-ref.html
 == 641856-1.html 641856-1-ref.html
@@ -1729,12 +1729,12 @@ fuzzy-if(cocoaWidget,1,300000) fuzzy-if(skiaContent,2,300000) == 745934-1.html 7
 == 748692-1b.html 748692-1-ref.html
 == 748803-1.html 748803-1-ref.html
 == 750551-1.html 750551-1-ref.html
-fails-if(stylo) == 751012-1a.html 751012-1-ref.html
-fails-if(stylo) == 751012-1b.html 751012-1-ref.html
+fuzzy-if(skiaContent,1,1) fails-if(stylo) == 751012-1a.html 751012-1-ref.html
+fuzzy-if(skiaContent,1,1) fails-if(stylo) == 751012-1b.html 751012-1-ref.html
 random-if(Android) == 753329-1.html about:blank
 == 758561-1.html 758561-1-ref.html
 fuzzy-if(true,1,90) fuzzy-if(skiaContent,1,320) == 759036-1.html 759036-1-ref.html
-fuzzy-if(true,17,5886) == 759036-2.html 759036-2-ref.html
+fuzzy-if(true,17,5886) fuzzy-if(skiaContent,9,5894) == 759036-2.html 759036-2-ref.html
 fails-if(stylo) == 776265-1a.html 776265-1-ref.html
 fails-if(stylo) == 776265-1b.html 776265-1-ref.html
 fails-if(stylo) == 776265-1c.html 776265-1-ref.html
@@ -1937,7 +1937,7 @@ skip-if(!Android) fails-if(Android) fails-if(stylo) == 1133905-6-vh-rtl.html 113
 == 1151306-1.html 1151306-1-ref.html
 == 1153845-1.html 1153845-1-ref.html
 == 1155828-1.html 1155828-1-ref.html
-== 1156129-1.html 1156129-1-ref.html
+fuzzy-if(skiaContent,7,84) == 1156129-1.html 1156129-1-ref.html
 pref(dom.use_xbl_scopes_for_remote_xul,true) HTTP(..) == 1157127-1.html 1157127-1-ref.html
 fuzzy-if(Android,6,6) == 1169331-1.html 1169331-1-ref.html
 fuzzy(1,74) fails-if(gtkWidget&&!stylo) == 1174332-1.html 1174332-1-ref.html # bug 1312658
@@ -1945,7 +1945,7 @@ fuzzy(1,74) fails-if(gtkWidget&&!stylo) == 1174332-1.html 1174332-1-ref.html # b
 == 1179288-1.html 1179288-1-ref.html
 == 1190635-1.html 1190635-1-ref.html
 == 1202512-1.html 1202512-1-ref.html
-fails-if(stylo) == 1202512-2.html 1202512-2-ref.html
+fuzzy-if(skiaContent,1,1) fails-if(stylo) == 1202512-2.html 1202512-2-ref.html
 != 1207326-1.html about:blank
 == 1209603-1.html 1209603-1-ref.html
 == 1209994-1.html 1209994-1-ref.html

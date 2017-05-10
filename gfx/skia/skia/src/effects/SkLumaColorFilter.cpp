@@ -8,11 +8,11 @@
 #include "SkLumaColorFilter.h"
 
 #include "SkColorPriv.h"
+#include "SkRasterPipeline.h"
 #include "SkString.h"
 
 #if SK_SUPPORT_GPU
 #include "GrContext.h"
-#include "GrInvariantOutput.h"
 #include "glsl/GrGLSLFragmentProcessor.h"
 #include "glsl/GrGLSLFragmentShaderBuilder.h"
 #endif
@@ -35,6 +35,14 @@ void SkLumaColorFilter::filterSpan(const SkPMColor src[], int count,
                                            SkGetPackedB32(c));
         dst[i] = SkPackARGB32(luma, 0, 0, 0);
     }
+}
+
+bool SkLumaColorFilter::onAppendStages(SkRasterPipeline* p,
+                                       SkColorSpace* dst,
+                                       SkArenaAlloc* scratch,
+                                       bool shaderIsOpaque) const {
+    p->append(SkRasterPipeline::luminance_to_alpha);
+    return true;
 }
 
 sk_sp<SkColorFilter> SkLumaColorFilter::Make() {
@@ -66,7 +74,7 @@ public:
 
     class GLSLProcessor : public GrGLSLFragmentProcessor {
     public:
-        static void GenKey(const GrProcessor&, const GrGLSLCaps&, GrProcessorKeyBuilder*) {}
+        static void GenKey(const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*) {}
 
         void emitCode(EmitArgs& args) override {
             if (nullptr == args.fInputColor) {
@@ -89,7 +97,7 @@ public:
     };
 
 private:
-    LumaColorFilterEffect() {
+    LumaColorFilterEffect() : INHERITED(kConstantOutputForConstantInput_OptimizationFlag) {
         this->initClassID<LumaColorFilterEffect>();
     }
 
@@ -97,21 +105,24 @@ private:
         return new GLSLProcessor;
     }
 
-    virtual void onGetGLSLProcessorKey(const GrGLSLCaps& caps,
+    virtual void onGetGLSLProcessorKey(const GrShaderCaps& caps,
                                        GrProcessorKeyBuilder* b) const override {
         GLSLProcessor::GenKey(*this, caps, b);
     }
 
     bool onIsEqual(const GrFragmentProcessor&) const override { return true; }
 
-    void onComputeInvariantOutput(GrInvariantOutput* inout) const override {
-        // The output is always black. The alpha value for the color passed in is arbitrary.
-        inout->setToOther(kRGB_GrColorComponentFlags, GrColorPackRGBA(0, 0, 0, 0),
-                          GrInvariantOutput::kWill_ReadInput);
+    GrColor4f constantOutputForConstantInput(GrColor4f input) const override {
+        float luma = SK_ITU_BT709_LUM_COEFF_R * input.fRGBA[0] +
+                     SK_ITU_BT709_LUM_COEFF_G * input.fRGBA[1] +
+                     SK_ITU_BT709_LUM_COEFF_B * input.fRGBA[2];
+        return GrColor4f(0, 0, 0, luma);
     }
+
+    typedef GrFragmentProcessor INHERITED;
 };
 
-sk_sp<GrFragmentProcessor> SkLumaColorFilter::asFragmentProcessor(GrContext*) const {
+sk_sp<GrFragmentProcessor> SkLumaColorFilter::asFragmentProcessor(GrContext*, SkColorSpace*) const {
     return LumaColorFilterEffect::Make();
 }
 #endif

@@ -10,7 +10,7 @@
 #include "js/Date.h"
 #include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/dom/File.h"
-#include "mozilla/dom/ipc/BlobChild.h"
+#include "mozilla/dom/ipc/PendingIPCBlobChild.h"
 #include "MutableFileBase.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
@@ -303,7 +303,7 @@ already_AddRefed<File>
 ConvertActorToFile(FileHandleBase* aFileHandle,
                    const FileRequestGetFileResponse& aResponse)
 {
-  auto* actor = static_cast<BlobChild*>(aResponse.fileChild());
+  auto* actor = static_cast<PendingIPCBlobChild*>(aResponse.fileChild());
 
   MutableFileBase* mutableFile = aFileHandle->MutableFile();
   MOZ_ASSERT(mutableFile);
@@ -316,12 +316,11 @@ ConvertActorToFile(FileHandleBase* aFileHandle,
   const FileRequestLastModified& lastModified = metadata.lastModified();
   MOZ_ASSERT(lastModified.type() == FileRequestLastModified::Tint64_t);
 
-  actor->SetMysteryBlobInfo(mutableFile->Name(),
-                            mutableFile->Type(),
-                            size.get_uint64_t(),
-                            lastModified.get_int64_t());
-
-  RefPtr<BlobImpl> blobImpl = actor->GetBlobImpl();
+  RefPtr<BlobImpl> blobImpl =
+    actor->SetPendingInfoAndDeleteActor(mutableFile->Name(),
+                                        mutableFile->Type(),
+                                        size.get_uint64_t(),
+                                        lastModified.get_int64_t());
   MOZ_ASSERT(blobImpl);
 
   RefPtr<File> file = mutableFile->CreateFileFor(blobImpl, aFileHandle);

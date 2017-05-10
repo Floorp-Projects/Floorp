@@ -151,7 +151,7 @@ skip-if(!winWidget) pref(webgl.disable-angle,true)  == webgl-color-test.html?nat
 
 # Bug 1255062
 == clip-multiple-move-1.html clip-multiple-move-1-ref.html
-== clip-multiple-move-2.html clip-multiple-move-2-ref.html
+fuzzy-if(skiaContent,1,150) == clip-multiple-move-2.html clip-multiple-move-2-ref.html
 
 # Bug 815648
 == stroketext-shadow.html stroketext-shadow-ref.html

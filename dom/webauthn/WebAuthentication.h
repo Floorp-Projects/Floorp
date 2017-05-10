@@ -7,23 +7,7 @@
 #ifndef mozilla_dom_WebAuthentication_h
 #define mozilla_dom_WebAuthentication_h
 
-#include "hasht.h"
-#include "js/TypeDecls.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/WebAuthenticationBinding.h"
-#include "mozilla/dom/WebCryptoCommon.h"
-#include "mozilla/ErrorResult.h"
-#include "mozilla/MozPromise.h"
-#include "mozilla/ReentrantMonitor.h"
-#include "mozilla/SharedThreadPool.h"
-#include "nsCycleCollectionParticipant.h"
-#include "nsNetCID.h"
-#include "nsWrapperCache.h"
-
-#include "U2FAuthenticator.h"
-#include "WebAuthnRequest.h"
 
 namespace mozilla {
 namespace dom {
@@ -31,7 +15,6 @@ namespace dom {
 struct Account;
 class ArrayBufferViewOrArrayBuffer;
 struct AssertionOptions;
-class OwningArrayBufferViewOrArrayBuffer;
 struct ScopedCredentialOptions;
 struct ScopedCredentialParameters;
 
@@ -41,13 +24,6 @@ struct ScopedCredentialParameters;
 namespace mozilla {
 namespace dom {
 
-typedef RefPtr<ScopedCredentialInfo> CredentialPtr;
-typedef RefPtr<WebAuthnAssertion> AssertionPtr;
-typedef WebAuthnRequest<CredentialPtr> CredentialRequest;
-typedef WebAuthnRequest<AssertionPtr> AssertionRequest;
-typedef MozPromise<CredentialPtr, nsresult, false> CredentialPromise;
-typedef MozPromise<AssertionPtr, nsresult, false> AssertionPromise;
-
 class WebAuthentication final : public nsISupports
                               , public nsWrapperCache
 {
@@ -55,13 +31,8 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebAuthentication)
 
-public:
   explicit WebAuthentication(nsPIDOMWindowInner* aParent);
 
-protected:
-  ~WebAuthentication();
-
-public:
   nsPIDOMWindowInner*
   GetParentObject() const
   {
@@ -80,33 +51,13 @@ public:
   already_AddRefed<Promise>
   GetAssertion(const ArrayBufferViewOrArrayBuffer& assertionChallenge,
                const AssertionOptions& options);
-
 private:
-  nsresult
-  InitLazily();
+  ~WebAuthentication();
 
-  void
-  U2FAuthMakeCredential(const RefPtr<CredentialRequest>& aRequest,
-             const Authenticator& aToken, CryptoBuffer& aRpIdHash,
-             const nsACString& aClientData, CryptoBuffer& aClientDataHash,
-             const Account& aAccount,
-             const nsTArray<ScopedCredentialParameters>& aNormalizedParams,
-             const Optional<Sequence<ScopedCredentialDescriptor>>& aExcludeList,
-             const WebAuthnExtensions& aExtensions);
-  void
-  U2FAuthGetAssertion(const RefPtr<AssertionRequest>& aRequest,
-                   const Authenticator& aToken, CryptoBuffer& aRpIdHash,
-                   const nsACString& aClientData, CryptoBuffer& aClientDataHash,
-                   nsTArray<CryptoBuffer>& aAllowList,
-                   const WebAuthnExtensions& aExtensions);
-
-  nsresult
-  RelaxSameOrigin(const nsAString& aInputRpId, nsACString& aRelaxedRpId);
+  already_AddRefed<Promise> CreatePromise();
+  nsresult GetOrigin(/*out*/ nsAString& aOrigin);
 
   nsCOMPtr<nsPIDOMWindowInner> mParent;
-  nsString mOrigin;
-  Sequence<Authenticator> mAuthenticators;
-  bool mInitialized;
 };
 
 } // namespace dom

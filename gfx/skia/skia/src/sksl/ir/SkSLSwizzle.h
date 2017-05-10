@@ -4,17 +4,18 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
- 
+
 #ifndef SKSL_SWIZZLE
 #define SKSL_SWIZZLE
 
+#include "SkSLContext.h"
 #include "SkSLExpression.h"
 #include "SkSLUtil.h"
 
 namespace SkSL {
 
 /**
- * Given a type and a swizzle component count, returns the type that will result from swizzling. For 
+ * Given a type and a swizzle component count, returns the type that will result from swizzling. For
  * instance, swizzling a vec3 with two components will result in a vec2. It is possible to swizzle
  * with more components than the source vector, as in 'vec2(1).xxxx'.
  */
@@ -68,15 +69,15 @@ struct Swizzle : public Expression {
         ASSERT(fComponents.size() >= 1 && fComponents.size() <= 4);
     }
 
-    std::string description() const override {
-        std::string result = fBase->description() + ".";
+    String description() const override {
+        String result = fBase->description() + ".";
         for (int x : fComponents) {
             result += "xyzw"[x];
         }
         return result;
     }
 
-    const std::unique_ptr<Expression> fBase;
+    std::unique_ptr<Expression> fBase;
     const std::vector<int> fComponents;
 
     typedef Expression INHERITED;

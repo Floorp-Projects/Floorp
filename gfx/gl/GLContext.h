@@ -1459,6 +1459,12 @@ public:
         AFTER_GL_CALL;
     }
 
+    void fPolygonMode(GLenum face, GLenum mode) {
+        BEFORE_GL_CALL;
+        mSymbols.fPolygonMode(face, mode);
+        AFTER_GL_CALL;
+    }
+
     void fPolygonOffset(GLfloat factor, GLfloat bias) {
         BEFORE_GL_CALL;
         mSymbols.fPolygonOffset(factor, bias);

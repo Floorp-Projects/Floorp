@@ -25,7 +25,10 @@ if CONFIG['MOZ_OPTIMIZE']:
 UNIFIED_SOURCES += [
     'skia/src/core/SkAAClip.cpp',
     'skia/src/core/SkAlphaRuns.cpp',
+    'skia/src/core/SkAnalyticEdge.cpp',
     'skia/src/core/SkAnnotation.cpp',
+    'skia/src/core/SkArenaAlloc.cpp',
+    'skia/src/core/SkATrace.cpp',
     'skia/src/core/SkAutoPixmapStorage.cpp',
     'skia/src/core/SkBBHFactory.cpp',
     'skia/src/core/SkBigPicture.cpp',
@@ -40,16 +43,17 @@ UNIFIED_SOURCES += [
     'skia/src/core/SkBuffer.cpp',
     'skia/src/core/SkCachedData.cpp',
     'skia/src/core/SkCanvas.cpp',
-    'skia/src/core/SkChunkAlloc.cpp',
     'skia/src/core/SkClipStack.cpp',
+    'skia/src/core/SkClipStackDevice.cpp',
     'skia/src/core/SkColor.cpp',
     'skia/src/core/SkColorFilter.cpp',
     'skia/src/core/SkColorFilterShader.cpp',
+    'skia/src/core/SkColorLookUpTable.cpp',
     'skia/src/core/SkColorMatrixFilterRowMajor255.cpp',
     'skia/src/core/SkColorShader.cpp',
     'skia/src/core/SkColorTable.cpp',
     'skia/src/core/SkComposeShader.cpp',
-    'skia/src/core/SkConfig8888.cpp',
+    'skia/src/core/SkConvertPixels.cpp',
     'skia/src/core/SkConvolver.cpp',
     'skia/src/core/SkCpu.cpp',
     'skia/src/core/SkCubicClipper.cpp',
@@ -69,7 +73,7 @@ UNIFIED_SOURCES += [
     'skia/src/core/SkEdge.cpp',
     'skia/src/core/SkEdgeBuilder.cpp',
     'skia/src/core/SkEdgeClipper.cpp',
-    'skia/src/core/SkError.cpp',
+    'skia/src/core/SkExecutor.cpp',
     'skia/src/core/SkFilterProc.cpp',
     'skia/src/core/SkFlattenable.cpp',
     'skia/src/core/SkFlattenableSerialization.cpp',
@@ -79,13 +83,13 @@ UNIFIED_SOURCES += [
     'skia/src/core/SkFontMgr.cpp',
     'skia/src/core/SkFontStream.cpp',
     'skia/src/core/SkFontStyle.cpp',
-    'skia/src/core/SkForceCPlusPlusLinking.cpp',
     'skia/src/core/SkGeometry.cpp',
     'skia/src/core/SkGlobalInitialization_core.cpp',
     'skia/src/core/SkGlyphCache.cpp',
     'skia/src/core/SkGpuBlurUtils.cpp',
     'skia/src/core/SkGraphics.cpp',
     'skia/src/core/SkHalf.cpp',
+    'skia/src/core/SkICC.cpp',
     'skia/src/core/SkImageCacherator.cpp',
     'skia/src/core/SkImageFilter.cpp',
     'skia/src/core/SkImageFilterCache.cpp',
@@ -144,12 +148,11 @@ UNIFIED_SOURCES += [
     'skia/src/core/SkRegion_path.cpp',
     'skia/src/core/SkResourceCache.cpp',
     'skia/src/core/SkRRect.cpp',
-    'skia/src/core/SkRTree.cpp',
     'skia/src/core/SkRWBuffer.cpp',
     'skia/src/core/SkScalar.cpp',
     'skia/src/core/SkScalerContext.cpp',
     'skia/src/core/SkScan.cpp',
-    'skia/src/core/SkScan_AntiPath.cpp',
+    'skia/src/core/SkScan_AAAPath.cpp',
     'skia/src/core/SkScan_Hairline.cpp',
     'skia/src/core/SkScan_Path.cpp',
     'skia/src/core/SkSemaphore.cpp',
@@ -169,6 +172,7 @@ UNIFIED_SOURCES += [
     'skia/src/core/SkSwizzle.cpp',
     'skia/src/core/SkTaskGroup.cpp',
     'skia/src/core/SkTextBlob.cpp',
+    'skia/src/core/SkThreadedBMPDevice.cpp',
     'skia/src/core/SkThreadID.cpp',
     'skia/src/core/SkTime.cpp',
     'skia/src/core/SkTLS.cpp',
@@ -192,6 +196,9 @@ UNIFIED_SOURCES += [
     'skia/src/effects/gradients/SkRadialGradient.cpp',
     'skia/src/effects/gradients/SkSweepGradient.cpp',
     'skia/src/effects/gradients/SkTwoPointConicalGradient.cpp',
+    'skia/src/effects/gradients/SkTwoPointConicalGradient_gpu.cpp',
+    'skia/src/effects/shadows/SkAmbientShadowMaskFilter.cpp',
+    'skia/src/effects/shadows/SkSpotShadowMaskFilter.cpp',
     'skia/src/effects/SkDashPathEffect.cpp',
     'skia/src/effects/SkImageSource.cpp',
     'skia/src/effects/SkLayerRasterizer.cpp',
@@ -202,7 +209,6 @@ UNIFIED_SOURCES += [
     'skia/src/image/SkSurface.cpp',
     'skia/src/image/SkSurface_Raster.cpp',
     'skia/src/lazy/SkDiscardableMemoryPool.cpp',
-    'skia/src/lazy/SkDiscardablePixelRef.cpp',
     'skia/src/pathops/SkAddIntersections.cpp',
     'skia/src/pathops/SkDConicLineIntersection.cpp',
     'skia/src/pathops/SkDCubicLineIntersection.cpp',
@@ -244,18 +250,23 @@ UNIFIED_SOURCES += [
     'skia/src/ports/SkOSFile_stdio.cpp',
     'skia/src/sfnt/SkOTTable_name.cpp',
     'skia/src/sfnt/SkOTUtils.cpp',
+    'skia/src/utils/mac/SkStream_mac.cpp',
     'skia/src/utils/SkBase64.cpp',
     'skia/src/utils/SkBitmapSourceDeserializer.cpp',
     'skia/src/utils/SkDashPath.cpp',
     'skia/src/utils/SkEventTracer.cpp',
+    'skia/src/utils/SkInsetConvexPolygon.cpp',
     'skia/src/utils/SkMatrix22.cpp',
-    'skia/src/utils/SkOSFile.cpp',
+    'skia/src/utils/SkOSPath.cpp',
     'skia/src/utils/SkPatchUtils.cpp',
     'skia/src/utils/SkRGBAToYUV.cpp',
-    'skia/src/utils/SkTextureCompressor.cpp',
-    'skia/src/utils/SkTextureCompressor_ASTC.cpp',
-    'skia/src/utils/SkTextureCompressor_LATC.cpp',
-    'skia/src/utils/SkTextureCompressor_R11EAC.cpp',
+    'skia/src/utils/SkThreadUtils_win.cpp',
+    'skia/src/utils/win/SkAutoCoInitialize.cpp',
+    'skia/src/utils/win/SkDWrite.cpp',
+    'skia/src/utils/win/SkDWriteFontFileStream.cpp',
+    'skia/src/utils/win/SkDWriteGeometrySink.cpp',
+    'skia/src/utils/win/SkHRESULT.cpp',
+    'skia/src/utils/win/SkIStream.cpp',
 ]
 SOURCES += [
     'skia/src/core/SkBitmapProcState.cpp',
@@ -270,23 +281,33 @@ SOURCES += [
     'skia/src/core/SkBlitter_RGB16.cpp',
     'skia/src/core/SkBlitter_Sprite.cpp',
     'skia/src/core/SkColorSpace.cpp',
+    'skia/src/core/SkColorSpace_A2B.cpp',
     'skia/src/core/SkColorSpace_ICC.cpp',
+    'skia/src/core/SkColorSpace_XYZ.cpp',
     'skia/src/core/SkColorSpaceXform.cpp',
+    'skia/src/core/SkColorSpaceXform_A2B.cpp',
+    'skia/src/core/SkColorSpaceXformCanvas.cpp',
+    'skia/src/core/SkColorSpaceXformer.cpp',
     'skia/src/core/SkMatrix.cpp',
     'skia/src/core/SkMatrix44.cpp',
     'skia/src/core/SkMiniRecorder.cpp',
     'skia/src/core/SkOpts.cpp',
     'skia/src/core/SkPictureData.cpp',
     'skia/src/core/SkRecorder.cpp',
+    'skia/src/core/SkRTree.cpp',
     'skia/src/core/SkScan_Antihair.cpp',
+    'skia/src/core/SkScan_AntiPath.cpp',
     'skia/src/core/SkSpriteBlitter4f.cpp',
     'skia/src/core/SkSpriteBlitter_ARGB32.cpp',
     'skia/src/core/SkSpriteBlitter_RGB16.cpp',
+    'skia/src/core/SkVertices.cpp',
     'skia/src/core/SkXfermode.cpp',
     'skia/src/core/SkXfermode4f.cpp',
     'skia/src/core/SkXfermodeF16.cpp',
     'skia/src/core/SkXfermodeInterpretation.cpp',
     'skia/src/gpu/gl/GrGLCreateNativeInterface_none.cpp',
+    'skia/src/jumper/SkJumper.cpp',
+    'skia/src/jumper/SkJumper_stages.cpp',
     'skia/src/pathops/SkPathOpsDebug.cpp',
     'skia/src/utils/SkParse.cpp',
     'skia/src/utils/SkParsePath.cpp',
@@ -333,52 +354,34 @@ if CONFIG['MOZ_ENABLE_SKIA_PDF']:
     ]
 if CONFIG['MOZ_ENABLE_SKIA_GPU']:
     UNIFIED_SOURCES += [
-        'skia/src/effects/gradients/SkTwoPointConicalGradient_gpu.cpp',
-        'skia/src/gpu/batches/GrAnalyticRectBatch.cpp',
-        'skia/src/gpu/batches/GrAtlasTextBatch.cpp',
-        'skia/src/gpu/batches/GrBatch.cpp',
-        'skia/src/gpu/batches/GrCopySurfaceBatch.cpp',
-        'skia/src/gpu/batches/GrDashLinePathRenderer.cpp',
-        'skia/src/gpu/batches/GrDefaultPathRenderer.cpp',
-        'skia/src/gpu/batches/GrDrawAtlasBatch.cpp',
-        'skia/src/gpu/batches/GrDrawBatch.cpp',
-        'skia/src/gpu/batches/GrDrawPathBatch.cpp',
-        'skia/src/gpu/batches/GrDrawVerticesBatch.cpp',
-        'skia/src/gpu/batches/GrNinePatch.cpp',
-        'skia/src/gpu/batches/GrNonAAStrokeRectBatch.cpp',
-        'skia/src/gpu/batches/GrPLSPathRenderer.cpp',
-        'skia/src/gpu/batches/GrRectBatchFactory.cpp',
-        'skia/src/gpu/batches/GrRegionBatch.cpp',
-        'skia/src/gpu/batches/GrStencilAndCoverPathRenderer.cpp',
-        'skia/src/gpu/batches/GrTessellatingPathRenderer.cpp',
-        'skia/src/gpu/batches/GrVertexBatch.cpp',
         'skia/src/gpu/effects/GrBezierEffect.cpp',
         'skia/src/gpu/effects/GrBicubicEffect.cpp',
         'skia/src/gpu/effects/GrBitmapTextGeoProc.cpp',
+        'skia/src/gpu/effects/GrBlurredEdgeFragmentProcessor.cpp',
         'skia/src/gpu/effects/GrConfigConversionEffect.cpp',
         'skia/src/gpu/effects/GrConstColorProcessor.cpp',
         'skia/src/gpu/effects/GrConvexPolyEffect.cpp',
-        'skia/src/gpu/effects/GrConvolutionEffect.cpp',
         'skia/src/gpu/effects/GrCoverageSetOpXP.cpp',
         'skia/src/gpu/effects/GrCustomXfermode.cpp',
-        'skia/src/gpu/effects/GrDashingEffect.cpp',
         'skia/src/gpu/effects/GrDisableColorXP.cpp',
         'skia/src/gpu/effects/GrDistanceFieldGeoProc.cpp',
         'skia/src/gpu/effects/GrDitherEffect.cpp',
-        'skia/src/gpu/effects/GrGammaEffect.cpp',
+        'skia/src/gpu/effects/GrGaussianConvolutionFragmentProcessor.cpp',
         'skia/src/gpu/effects/GrMatrixConvolutionEffect.cpp',
+        'skia/src/gpu/effects/GrNonlinearColorSpaceXformEffect.cpp',
         'skia/src/gpu/effects/GrOvalEffect.cpp',
         'skia/src/gpu/effects/GrPorterDuffXferProcessor.cpp',
         'skia/src/gpu/effects/GrRRectEffect.cpp',
+        'skia/src/gpu/effects/GrShadowGeoProc.cpp',
         'skia/src/gpu/effects/GrSimpleTextureEffect.cpp',
         'skia/src/gpu/effects/GrSingleTextureEffect.cpp',
+        'skia/src/gpu/effects/GrSRGBEffect.cpp',
         'skia/src/gpu/effects/GrTextureDomain.cpp',
         'skia/src/gpu/effects/GrTextureStripAtlas.cpp',
         'skia/src/gpu/effects/GrXfermodeFragmentProcessor.cpp',
         'skia/src/gpu/effects/GrYUVEffect.cpp',
         'skia/src/gpu/GrAuditTrail.cpp',
-        'skia/src/gpu/GrBatchFlushState.cpp',
-        'skia/src/gpu/GrBatchTest.cpp',
+        'skia/src/gpu/GrBitmapTextureMaker.cpp',
         'skia/src/gpu/GrBlend.cpp',
         'skia/src/gpu/GrBlurUtils.cpp',
         'skia/src/gpu/GrBuffer.cpp',
@@ -389,8 +392,10 @@ if CONFIG['MOZ_ENABLE_SKIA_GPU']:
         'skia/src/gpu/GrContext.cpp',
         'skia/src/gpu/GrCoordTransform.cpp',
         'skia/src/gpu/GrDefaultGeoProcFactory.cpp',
+        'skia/src/gpu/GrDistanceFieldGenFromVector.cpp',
         'skia/src/gpu/GrDrawingManager.cpp',
-        'skia/src/gpu/GrDrawTarget.cpp',
+        'skia/src/gpu/GrDrawOpAtlas.cpp',
+        'skia/src/gpu/GrDrawOpTest.cpp',
         'skia/src/gpu/GrFixedClip.cpp',
         'skia/src/gpu/GrFragmentProcessor.cpp',
         'skia/src/gpu/GrGpu.cpp',
@@ -398,10 +403,10 @@ if CONFIG['MOZ_ENABLE_SKIA_GPU']:
         'skia/src/gpu/GrGpuFactory.cpp',
         'skia/src/gpu/GrGpuResource.cpp',
         'skia/src/gpu/GrGpuResourceRef.cpp',
-        'skia/src/gpu/GrImageIDTextureAdjuster.cpp',
-        'skia/src/gpu/GrInvariantOutput.cpp',
+        'skia/src/gpu/GrImageTextureMaker.cpp',
         'skia/src/gpu/GrMemoryPool.cpp',
-        'skia/src/gpu/GrOvalRenderer.cpp',
+        'skia/src/gpu/GrOpFlushState.cpp',
+        'skia/src/gpu/GrOpList.cpp',
         'skia/src/gpu/GrPaint.cpp',
         'skia/src/gpu/GrPath.cpp',
         'skia/src/gpu/GrPathProcessor.cpp',
@@ -409,37 +414,43 @@ if CONFIG['MOZ_ENABLE_SKIA_GPU']:
         'skia/src/gpu/GrPathRenderer.cpp',
         'skia/src/gpu/GrPathRendererChain.cpp',
         'skia/src/gpu/GrPathRendering.cpp',
-        'skia/src/gpu/GrPathRenderingDrawContext.cpp',
-        'skia/src/gpu/GrPathUtils.cpp',
+        'skia/src/gpu/GrPathRenderingRenderTargetContext.cpp',
         'skia/src/gpu/GrPipeline.cpp',
-        'skia/src/gpu/GrPipelineBuilder.cpp',
+        'skia/src/gpu/GrPreFlushResourceProvider.cpp',
         'skia/src/gpu/GrPrimitiveProcessor.cpp',
         'skia/src/gpu/GrProcessor.cpp',
+        'skia/src/gpu/GrProcessorAnalysis.cpp',
+        'skia/src/gpu/GrProcessorSet.cpp',
         'skia/src/gpu/GrProcessorUnitTest.cpp',
-        'skia/src/gpu/GrProcOptInfo.cpp',
         'skia/src/gpu/GrProgramDesc.cpp',
-        'skia/src/gpu/GrProgramElement.cpp',
         'skia/src/gpu/GrRectanizer_pow2.cpp',
         'skia/src/gpu/GrRectanizer_skyline.cpp',
         'skia/src/gpu/GrReducedClip.cpp',
         'skia/src/gpu/GrRenderTarget.cpp',
+        'skia/src/gpu/GrRenderTargetContext.cpp',
+        'skia/src/gpu/GrRenderTargetOpList.cpp',
         'skia/src/gpu/GrRenderTargetProxy.cpp',
-        'skia/src/gpu/GrResourceProvider.cpp',
+        'skia/src/gpu/GrShaderCaps.cpp',
+        'skia/src/gpu/GrShaderVar.cpp',
         'skia/src/gpu/GrShape.cpp',
         'skia/src/gpu/GrSoftwarePathRenderer.cpp',
         'skia/src/gpu/GrStencilAttachment.cpp',
         'skia/src/gpu/GrStencilSettings.cpp',
         'skia/src/gpu/GrStyle.cpp',
         'skia/src/gpu/GrSurface.cpp',
+        'skia/src/gpu/GrSurfaceContext.cpp',
         'skia/src/gpu/GrSurfaceProxy.cpp',
         'skia/src/gpu/GrSWMaskHelper.cpp',
         'skia/src/gpu/GrTessellator.cpp',
         'skia/src/gpu/GrTestUtils.cpp',
         'skia/src/gpu/GrTexture.cpp',
-        'skia/src/gpu/GrTextureAccess.cpp',
-        'skia/src/gpu/GrTextureParamsAdjuster.cpp',
-        'skia/src/gpu/GrTextureProvider.cpp',
+        'skia/src/gpu/GrTextureAdjuster.cpp',
+        'skia/src/gpu/GrTextureContext.cpp',
+        'skia/src/gpu/GrTextureMaker.cpp',
+        'skia/src/gpu/GrTextureOpList.cpp',
+        'skia/src/gpu/GrTextureProducer.cpp',
         'skia/src/gpu/GrTextureProxy.cpp',
+        'skia/src/gpu/GrTextureRenderTargetProxy.cpp',
         'skia/src/gpu/GrTextureToYUVPlanes.cpp',
         'skia/src/gpu/GrTraceMarker.cpp',
         'skia/src/gpu/GrXferProcessor.cpp',
@@ -447,30 +458,50 @@ if CONFIG['MOZ_ENABLE_SKIA_GPU']:
         'skia/src/gpu/instanced/GLInstancedRendering.cpp',
         'skia/src/gpu/instanced/InstancedRendering.cpp',
         'skia/src/gpu/instanced/InstanceProcessor.cpp',
+        'skia/src/gpu/ops/GrAnalyticRectOp.cpp',
+        'skia/src/gpu/ops/GrAtlasTextOp.cpp',
+        'skia/src/gpu/ops/GrCopySurfaceOp.cpp',
+        'skia/src/gpu/ops/GrDashLinePathRenderer.cpp',
+        'skia/src/gpu/ops/GrDashOp.cpp',
+        'skia/src/gpu/ops/GrDefaultPathRenderer.cpp',
+        'skia/src/gpu/ops/GrDrawAtlasOp.cpp',
+        'skia/src/gpu/ops/GrDrawPathOp.cpp',
+        'skia/src/gpu/ops/GrDrawVerticesOp.cpp',
+        'skia/src/gpu/ops/GrLatticeOp.cpp',
+        'skia/src/gpu/ops/GrMeshDrawOp.cpp',
+        'skia/src/gpu/ops/GrNonAAStrokeRectOp.cpp',
+        'skia/src/gpu/ops/GrOp.cpp',
+        'skia/src/gpu/ops/GrOvalOpFactory.cpp',
+        'skia/src/gpu/ops/GrRectOpFactory.cpp',
+        'skia/src/gpu/ops/GrRegionOp.cpp',
+        'skia/src/gpu/ops/GrSemaphoreOp.cpp',
+        'skia/src/gpu/ops/GrSmallPathRenderer.cpp',
+        'skia/src/gpu/ops/GrStencilAndCoverPathRenderer.cpp',
+        'skia/src/gpu/ops/GrTessellatingPathRenderer.cpp',
         'skia/src/gpu/SkGpuDevice.cpp',
         'skia/src/gpu/SkGpuDevice_drawTexture.cpp',
         'skia/src/gpu/SkGr.cpp',
+        'skia/src/gpu/text/GrAtlasGlyphCache.cpp',
         'skia/src/gpu/text/GrAtlasTextBlob.cpp',
-        'skia/src/gpu/text/GrAtlasTextBlob_regenInBatch.cpp',
+        'skia/src/gpu/text/GrAtlasTextBlob_regenInOp.cpp',
         'skia/src/gpu/text/GrAtlasTextContext.cpp',
-        'skia/src/gpu/text/GrBatchFontCache.cpp',
         'skia/src/gpu/text/GrDistanceFieldAdjustTable.cpp',
         'skia/src/gpu/text/GrStencilAndCoverTextContext.cpp',
         'skia/src/gpu/text/GrTextBlobCache.cpp',
         'skia/src/gpu/text/GrTextUtils.cpp',
         'skia/src/image/SkSurface_Gpu.cpp',
+        'skia/src/sksl/ir/SkSLSymbolTable.cpp',
+        'skia/src/sksl/ir/SkSLType.cpp',
+        'skia/src/sksl/SkSLCFGGenerator.cpp',
+        'skia/src/sksl/SkSLCompiler.cpp',
+        'skia/src/sksl/SkSLGLSLCodeGenerator.cpp',
+        'skia/src/sksl/SkSLIRGenerator.cpp',
+        'skia/src/sksl/SkSLParser.cpp',
+        'skia/src/sksl/SkSLSPIRVCodeGenerator.cpp',
+        'skia/src/sksl/SkSLString.cpp',
+        'skia/src/sksl/SkSLUtil.cpp',
     ]
     SOURCES += [
-        'skia/src/gpu/batches/GrAAConvexPathRenderer.cpp',
-        'skia/src/gpu/batches/GrAAConvexTessellator.cpp',
-        'skia/src/gpu/batches/GrAADistanceFieldPathRenderer.cpp',
-        'skia/src/gpu/batches/GrAAFillRectBatch.cpp',
-        'skia/src/gpu/batches/GrAAHairLinePathRenderer.cpp',
-        'skia/src/gpu/batches/GrAALinearizingConvexPathRenderer.cpp',
-        'skia/src/gpu/batches/GrAAStrokeRectBatch.cpp',
-        'skia/src/gpu/batches/GrMSAAPathRenderer.cpp',
-        'skia/src/gpu/batches/GrNonAAFillRectBatch.cpp',
-        'skia/src/gpu/batches/GrNonAAFillRectPerspectiveBatch.cpp',
         'skia/src/gpu/gl/builders/GrGLProgramBuilder.cpp',
         'skia/src/gpu/gl/builders/GrGLShaderStringBuilder.cpp',
         'skia/src/gpu/gl/builders/GrGLSLPrettyPrint.cpp',
@@ -479,6 +510,7 @@ if CONFIG['MOZ_ENABLE_SKIA_GPU']:
         'skia/src/gpu/gl/GrGLContext.cpp',
         'skia/src/gpu/gl/GrGLDefaultInterface_native.cpp',
         'skia/src/gpu/gl/GrGLExtensions.cpp',
+        'skia/src/gpu/gl/GrGLExternalTextureData.cpp',
         'skia/src/gpu/gl/GrGLGLSL.cpp',
         'skia/src/gpu/gl/GrGLGpu.cpp',
         'skia/src/gpu/gl/GrGLGpuProgramCache.cpp',
@@ -498,7 +530,6 @@ if CONFIG['MOZ_ENABLE_SKIA_GPU']:
         'skia/src/gpu/gl/GrGLVertexArray.cpp',
         'skia/src/gpu/glsl/GrGLSL.cpp',
         'skia/src/gpu/glsl/GrGLSLBlend.cpp',
-        'skia/src/gpu/glsl/GrGLSLCaps.cpp',
         'skia/src/gpu/glsl/GrGLSLFragmentProcessor.cpp',
         'skia/src/gpu/glsl/GrGLSLFragmentShaderBuilder.cpp',
         'skia/src/gpu/glsl/GrGLSLGeometryProcessor.cpp',
@@ -511,12 +542,23 @@ if CONFIG['MOZ_ENABLE_SKIA_GPU']:
         'skia/src/gpu/glsl/GrGLSLVarying.cpp',
         'skia/src/gpu/glsl/GrGLSLVertexShaderBuilder.cpp',
         'skia/src/gpu/glsl/GrGLSLXferProcessor.cpp',
-        'skia/src/gpu/GrBatchAtlas.cpp',
-        'skia/src/gpu/GrDrawContext.cpp',
+        'skia/src/gpu/GrPathUtils.cpp',
         'skia/src/gpu/GrResourceCache.cpp',
+        'skia/src/gpu/GrResourceProvider.cpp',
+        'skia/src/gpu/ops/GrAAConvexPathRenderer.cpp',
+        'skia/src/gpu/ops/GrAAConvexTessellator.cpp',
+        'skia/src/gpu/ops/GrAAFillRectOp.cpp',
+        'skia/src/gpu/ops/GrAAHairLinePathRenderer.cpp',
+        'skia/src/gpu/ops/GrAALinearizingConvexPathRenderer.cpp',
+        'skia/src/gpu/ops/GrAAStrokeRectOp.cpp',
+        'skia/src/gpu/ops/GrMSAAPathRenderer.cpp',
+        'skia/src/gpu/ops/GrNonAAFillRectOp.cpp',
+        'skia/src/gpu/ops/GrNonAAFillRectPerspectiveOp.cpp',
+        'skia/src/gpu/ops/GrShadowRRectOp.cpp',
         'skia/src/image/SkImage_Gpu.cpp',
+        'skia/src/sksl/lex.layout.cpp',
     ]
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     UNIFIED_SOURCES += [
         'skia/src/ports/SkDebug_android.cpp',
         'skia/src/ports/SkOSFile_posix.cpp',
@@ -525,23 +567,23 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android'):
         'skia/src/utils/SkThreadUtils_pthread.cpp',
     ]
     SOURCES += [
+        'skia/src/jumper/SkJumper_generated.S',
         'skia/src/ports/SkFontHost_cairo.cpp',
         'skia/src/ports/SkFontHost_FreeType_common.cpp',
     ]
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in {'cocoa', 'uikit'}:
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('cocoa', 'uikit'):
     UNIFIED_SOURCES += [
         'skia/src/ports/SkDebug_stdio.cpp',
         'skia/src/ports/SkOSFile_posix.cpp',
         'skia/src/ports/SkOSLibrary_posix.cpp',
         'skia/src/ports/SkTLS_pthread.cpp',
-        'skia/src/utils/mac/SkCreateCGImageRef.cpp',
-        'skia/src/utils/mac/SkStream_mac.cpp',
         'skia/src/utils/SkThreadUtils_pthread.cpp',
     ]
     SOURCES += [
+        'skia/src/jumper/SkJumper_generated.S',
         'skia/src/ports/SkFontHost_mac.cpp',
     ]
-if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3'):
     UNIFIED_SOURCES += [
         'skia/src/ports/SkDebug_stdio.cpp',
         'skia/src/ports/SkOSFile_posix.cpp',
@@ -550,35 +592,28 @@ if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
         'skia/src/utils/SkThreadUtils_pthread.cpp',
     ]
     SOURCES += [
+        'skia/src/jumper/SkJumper_generated.S',
         'skia/src/ports/SkFontHost_cairo.cpp',
         'skia/src/ports/SkFontHost_FreeType_common.cpp',
     ]
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     SOURCES += [
+        'skia/src/jumper/SkJumper_generated_win.S',
         'skia/src/ports/SkDebug_win.cpp',
         'skia/src/ports/SkFontHost_win.cpp',
         'skia/src/ports/SkFontMgr_win_dw.cpp',
         'skia/src/ports/SkFontMgr_win_dw_factory.cpp',
         'skia/src/ports/SkOSFile_win.cpp',
         'skia/src/ports/SkOSLibrary_win.cpp',
-        'skia/src/ports/SkRemotableFontMgr_win_dw.cpp',
         'skia/src/ports/SkScalerContext_win_dw.cpp',
         'skia/src/ports/SkTLS_win.cpp',
         'skia/src/ports/SkTypeface_win_dw.cpp',
-        'skia/src/utils/SkThreadUtils_win.cpp',
-        'skia/src/utils/win/SkAutoCoInitialize.cpp',
-        'skia/src/utils/win/SkDWrite.cpp',
-        'skia/src/utils/win/SkDWriteFontFileStream.cpp',
-        'skia/src/utils/win/SkDWriteGeometrySink.cpp',
-        'skia/src/utils/win/SkHRESULT.cpp',
-        'skia/src/utils/win/SkIStream.cpp',
     ]
 if CONFIG['INTEL_ARCHITECTURE']:
     UNIFIED_SOURCES += [
         'skia/src/opts/opts_check_x86.cpp',
     ]
     SOURCES += [
-        'skia/src/opts/SkBitmapFilter_opts_SSE2.cpp',
         'skia/src/opts/SkBitmapProcState_opts_SSE2.cpp',
         'skia/src/opts/SkBitmapProcState_opts_SSSE3.cpp',
         'skia/src/opts/SkBlitRow_opts_SSE2.cpp',
@@ -588,7 +623,6 @@ if CONFIG['INTEL_ARCHITECTURE']:
         'skia/src/opts/SkOpts_sse42.cpp',
         'skia/src/opts/SkOpts_ssse3.cpp',
     ]
-    SOURCES['skia/src/opts/SkBitmapFilter_opts_SSE2.cpp'].flags += skia_opt_flags
     SOURCES['skia/src/opts/SkBitmapProcState_opts_SSE2.cpp'].flags += skia_opt_flags
     SOURCES['skia/src/opts/SkBitmapProcState_opts_SSSE3.cpp'].flags += skia_opt_flags
     SOURCES['skia/src/opts/SkBlitRow_opts_SSE2.cpp'].flags += skia_opt_flags
@@ -598,44 +632,22 @@ if CONFIG['INTEL_ARCHITECTURE']:
     SOURCES['skia/src/opts/SkOpts_sse42.cpp'].flags += skia_opt_flags
     SOURCES['skia/src/opts/SkOpts_ssse3.cpp'].flags += skia_opt_flags
 elif CONFIG['CPU_ARCH'] in ('arm', 'aarch64') and CONFIG['GNU_CC']:
-    UNIFIED_SOURCES += [
-        'skia/src/core/SkUtilsArm.cpp',
-    ]
     SOURCES += [
-        'skia/src/opts/SkBitmapProcState_opts_arm.cpp',
+        'skia/src/opts/SkBitmapProcState_arm_neon.cpp',
+        'skia/src/opts/SkBitmapProcState_matrixProcs_neon.cpp',
+        'skia/src/opts/SkBitmapProcState_opts_none.cpp',
         'skia/src/opts/SkBlitMask_opts_arm.cpp',
+        'skia/src/opts/SkBlitMask_opts_arm_neon.cpp',
         'skia/src/opts/SkBlitRow_opts_arm.cpp',
+        'skia/src/opts/SkBlitRow_opts_arm_neon.cpp',
     ]
-    SOURCES['skia/src/opts/SkBitmapProcState_opts_arm.cpp'].flags += skia_opt_flags
+    SOURCES['skia/src/opts/SkBitmapProcState_arm_neon.cpp'].flags += skia_opt_flags
+    SOURCES['skia/src/opts/SkBitmapProcState_matrixProcs_neon.cpp'].flags += skia_opt_flags
+    SOURCES['skia/src/opts/SkBitmapProcState_opts_none.cpp'].flags += skia_opt_flags
     SOURCES['skia/src/opts/SkBlitMask_opts_arm.cpp'].flags += skia_opt_flags
+    SOURCES['skia/src/opts/SkBlitMask_opts_arm_neon.cpp'].flags += skia_opt_flags
     SOURCES['skia/src/opts/SkBlitRow_opts_arm.cpp'].flags += skia_opt_flags
-    if CONFIG['CPU_ARCH'] == 'aarch64':
-        SOURCES += [
-            'skia/src/opts/SkBitmapProcState_arm_neon.cpp',
-            'skia/src/opts/SkBitmapProcState_matrixProcs_neon.cpp',
-            'skia/src/opts/SkBlitMask_opts_arm_neon.cpp',
-            'skia/src/opts/SkBlitRow_opts_arm_neon.cpp',
-            'skia/src/opts/SkOpts_neon.cpp',
-        ]
-    elif CONFIG['BUILD_ARM_NEON']:
-        SOURCES += [
-            'skia/src/opts/SkBitmapProcState_arm_neon.cpp',
-            'skia/src/opts/SkBitmapProcState_matrixProcs_neon.cpp',
-            'skia/src/opts/SkBlitMask_opts_arm_neon.cpp',
-            'skia/src/opts/SkBlitRow_opts_arm_neon.cpp',
-            'skia/src/opts/SkOpts_neon.cpp',
-        ]
-        SOURCES['skia/src/opts/SkBitmapProcState_arm_neon.cpp'].flags += CONFIG['NEON_FLAGS']
-        SOURCES['skia/src/opts/SkBitmapProcState_matrixProcs_neon.cpp'].flags += CONFIG['NEON_FLAGS']
-        SOURCES['skia/src/opts/SkBlitMask_opts_arm_neon.cpp'].flags += CONFIG['NEON_FLAGS']
-        SOURCES['skia/src/opts/SkBlitRow_opts_arm_neon.cpp'].flags += CONFIG['NEON_FLAGS']
-        SOURCES['skia/src/opts/SkOpts_neon.cpp'].flags += CONFIG['NEON_FLAGS']
-    if CONFIG['CPU_ARCH'] == 'aarch64' or CONFIG['BUILD_ARM_NEON']:
-        SOURCES['skia/src/opts/SkBitmapProcState_arm_neon.cpp'].flags += skia_opt_flags
-        SOURCES['skia/src/opts/SkBitmapProcState_matrixProcs_neon.cpp'].flags += skia_opt_flags
-        SOURCES['skia/src/opts/SkBlitMask_opts_arm_neon.cpp'].flags += skia_opt_flags
-        SOURCES['skia/src/opts/SkBlitRow_opts_arm_neon.cpp'].flags += skia_opt_flags
-        SOURCES['skia/src/opts/SkOpts_neon.cpp'].flags += skia_opt_flags
+    SOURCES['skia/src/opts/SkBlitRow_opts_arm_neon.cpp'].flags += skia_opt_flags
 else:
     SOURCES += [
         'skia/src/opts/SkBitmapProcState_opts_none.cpp',
@@ -654,7 +666,6 @@ LOCAL_INCLUDES += [
     'skia/include/core',
     'skia/include/effects',
     'skia/include/gpu',
-    'skia/include/images',
     'skia/include/pathops',
     'skia/include/ports',
     'skia/include/private',
@@ -665,26 +676,16 @@ LOCAL_INCLUDES += [
     'skia/src/gpu',
     'skia/src/gpu/effects',
     'skia/src/gpu/gl',
+    'skia/src/gpu/glsl',
     'skia/src/image',
     'skia/src/lazy',
     'skia/src/opts',
     'skia/src/sfnt',
+    'skia/src/sksl',
     'skia/src/utils',
     'skia/src/utils/mac',
     'skia/src/utils/win',
 ]
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android'):
-    DEFINES['SK_FONTHOST_CAIRO_STANDALONE'] = 0
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in {
-    'android',
-    'cocoa',
-    'gtk2',
-    'gtk3',
-    'uikit',
-  }:
-    DEFINES['SK_FONTHOST_DOES_NOT_USE_FONTMGR'] = 1
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     DEFINES['UNICODE'] = True
@@ -696,19 +697,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 
 # We should autogenerate these SSE related flags.
 
-if CONFIG['_MSC_VER']:
-    # MSVC doesn't need special compiler flags, but Skia needs to be told that these files should
-    # be built with the required SSE level or it will simply compile in stubs and cause runtime crashes
-    SOURCES['skia/src/opts/SkBitmapFilter_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
-    SOURCES['skia/src/opts/SkBitmapProcState_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
-    SOURCES['skia/src/opts/SkBitmapProcState_opts_SSSE3.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=31']
-    SOURCES['skia/src/opts/SkBlitRow_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
-    SOURCES['skia/src/opts/SkOpts_ssse3.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=31']
-    SOURCES['skia/src/opts/SkOpts_sse41.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=41']
-    SOURCES['skia/src/opts/SkOpts_sse42.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=42']
-    SOURCES['skia/src/opts/SkOpts_avx.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=51']
 if CONFIG['INTEL_ARCHITECTURE'] and (CONFIG['GNU_CC'] or CONFIG['CLANG_CL']):
-    SOURCES['skia/src/opts/SkBitmapFilter_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
     SOURCES['skia/src/opts/SkBitmapProcState_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
     SOURCES['skia/src/opts/SkBitmapProcState_opts_SSSE3.cpp'].flags += ['-mssse3']
     SOURCES['skia/src/opts/SkBlitRow_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
@@ -716,8 +705,20 @@ if CONFIG['INTEL_ARCHITECTURE'] and (CONFIG['GNU_CC'] or CONFIG['CLANG_CL']):
     SOURCES['skia/src/opts/SkOpts_sse41.cpp'].flags += ['-msse4.1']
     SOURCES['skia/src/opts/SkOpts_sse42.cpp'].flags += ['-msse4.2']
     SOURCES['skia/src/opts/SkOpts_avx.cpp'].flags += ['-mavx']
-elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC'] and CONFIG['BUILD_ARM_NEON']:
-    DEFINES['SK_ARM_HAS_OPTIONAL_NEON'] = 1
+    SOURCES['skia/src/opts/SkOpts_hsw.cpp'].flags += ['-mavx2']
+elif CONFIG['_MSC_VER']:
+    # MSVC doesn't need special compiler flags, but Skia needs to be told that these files should
+    # be built with the required SSE level or it will simply compile in stubs and cause runtime crashes
+    SOURCES['skia/src/opts/SkBitmapProcState_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
+    SOURCES['skia/src/opts/SkBitmapProcState_opts_SSSE3.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=31']
+    SOURCES['skia/src/opts/SkBlitRow_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
+    SOURCES['skia/src/opts/SkOpts_ssse3.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=31']
+    SOURCES['skia/src/opts/SkOpts_sse41.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=41']
+    SOURCES['skia/src/opts/SkOpts_sse42.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=42']
+    SOURCES['skia/src/opts/SkOpts_avx.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=51']
+    SOURCES['skia/src/opts/SkOpts_hsw.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=52']
+elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC']:
+    CXXFLAGS += CONFIG['NEON_FLAGS']
 
 DEFINES['SKIA_IMPLEMENTATION'] = 1
 

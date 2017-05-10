@@ -94,13 +94,13 @@ fuzzy-if(azureSkia,1,15) fuzzy-if(skiaContent,1,20) == transformed-gradient.html
 == 749467-1.html 749467-1-ref.html
 
 # You get a little bit of rounding fuzz on OSX from transforming the paths between user space and device space
-fuzzy-if(d2d,12,21) fuzzy-if(skiaContent,12,7) fuzzy-if(d2d&&/^Windows\x20NT\x2010\.0/.test(http.oscpu),2,141) == 784573-1.html 784573-1-ref.html
+fuzzy-if(d2d,12,21) fuzzy-if(skiaContent,16,84) fuzzy-if(d2d&&/^Windows\x20NT\x2010\.0/.test(http.oscpu),2,141) == 784573-1.html 784573-1-ref.html
 
 == 802658-1.html 802658-1-ref.html
 == 1074733-1.html 1074733-1-ref.html
 == 1107096-invisibles.html 1107096-invisibles-ref.html
 == 1151821-1.html 1151821-1-ref.html
-== 1201272-1.html 1201272-1-ref.html
+fuzzy-if(skiaContent,1,43) == 1201272-1.html 1201272-1-ref.html
 == 1224976-1.html 1224976-1-ref.html
 == 1238795-1.html 1238795-1-ref.html
 == 1303534-1.html 1303534-1-ref.html

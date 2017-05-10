@@ -4,6 +4,8 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
+#ifndef SkBmpStandardCodec_DEFINED
+#define SkBmpStandardCodec_DEFINED
 
 #include "SkBmpCodec.h"
 #include "SkColorTable.h"
@@ -52,7 +54,7 @@ protected:
         return fInIco;
     }
 
-    SkCodec::Result prepareToDecode(const SkImageInfo& dstInfo,
+    SkCodec::Result onPrepareToDecode(const SkImageInfo& dstInfo,
             const SkCodec::Options& options, SkPMColor inputColorPtr[],
             int* inputColorCount) override;
 
@@ -61,7 +63,7 @@ protected:
 
     SkSampler* getSampler(bool createIfNecessary) override {
         SkASSERT(fSwizzler);
-        return fSwizzler;
+        return fSwizzler.get();
     }
 
 private:
@@ -84,16 +86,18 @@ private:
      */
     void decodeIcoMask(SkStream* stream, const SkImageInfo& dstInfo, void* dst, size_t dstRowBytes);
 
-    SkAutoTUnref<SkColorTable>          fColorTable;     // owned
+    sk_sp<SkColorTable>         fColorTable;
     // fNumColors is the number specified in the header, or 0 if not present in the header.
-    const uint32_t                      fNumColors;
-    const uint32_t                      fBytesPerColor;
-    const uint32_t                      fOffset;
-    SkAutoTDelete<SkSwizzler>           fSwizzler;
-    SkAutoTDeleteArray<uint8_t>         fSrcBuffer;
-    const bool                          fIsOpaque;
-    const bool                          fInIco;
-    const size_t                        fAndMaskRowBytes; // only used for fInIco decodes
+    const uint32_t              fNumColors;
+    const uint32_t              fBytesPerColor;
+    const uint32_t              fOffset;
+    std::unique_ptr<SkSwizzler> fSwizzler;
+    std::unique_ptr<uint8_t[]>  fSrcBuffer;
+    const bool                  fIsOpaque;
+    const bool                  fInIco;
+    const size_t                fAndMaskRowBytes; // only used for fInIco decodes
+    bool                        fXformOnDecode;
 
     typedef SkBmpCodec INHERITED;
 };
+#endif  // SkBmpStandardCodec_DEFINED

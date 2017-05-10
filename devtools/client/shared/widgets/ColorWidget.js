@@ -260,6 +260,7 @@ ColorWidget.prototype = {
   },
 
   initializeColorWidget: function () {
+    let colorNameLabel = L10N.getStr("inspector.colorwidget.colorNameLabel");
     this.parentEl.innerHTML = "";
     this.element = this.parentEl.ownerDocument.createElementNS(XHTML_NS, "div");
 
@@ -307,6 +308,10 @@ ColorWidget.prototype = {
           <input class="colorwidget-hsla-a" data-id="a" />
         </div>
       </div>
+      <div class="colorwidget-colorname">
+        <label class="colorwidget-colorname-label">${colorNameLabel}</label>
+        <span class="colorwidget-colorname-value"></span>
+      </div>
     <div class="colorwidget-contrast">
       <div class="colorwidget-contrast-info"></div>
       <div class="colorwidget-contrast-inner">
@@ -323,6 +328,8 @@ ColorWidget.prototype = {
     this.parentEl.appendChild(this.element);
 
     this.closestBackgroundColor = "rgba(255, 255, 255, 1)";
+
+    this.colorName = this.element.querySelector(".colorwidget-colorname-value");
 
     this.contrast = this.element.querySelector(".colorwidget-contrast");
     this.contrastInfo = this.element.querySelector(".colorwidget-contrast-info");
@@ -567,7 +574,7 @@ ColorWidget.prototype = {
       this.rgbaColor = new colorUtils.CssColor(this.closestBackgroundColor);
     }
     this.rgbaColor.newColor(this.closestBackgroundColor);
-    let rgba = this.rgbaColor._getRGBATuple();
+    let rgba = this.rgbaColor.getRGBATuple();
     let backgroundColor = [rgba.r, rgba.g, rgba.b, rgba.a];
 
     let textColor = this.rgb;
@@ -658,6 +665,9 @@ ColorWidget.prototype = {
     let alphaGradient = "linear-gradient(to right, " + rgbAlpha0 + ", " +
       rgbNoAlpha + ")";
     this.alphaSliderInner.style.background = alphaGradient;
+
+    let colorName = colorUtils.rgbToColorName(rgb[0], rgb[1], rgb[2]);
+    this.colorName.textContent = colorName || "---";
   },
 
   destroy: function () {
@@ -670,5 +680,6 @@ ColorWidget.prototype = {
     this.alphaSlider = this.alphaSliderInner = this.alphaSliderHelper = null;
     this.parentEl = null;
     this.element = null;
+    this.colorName = null;
   }
 };
