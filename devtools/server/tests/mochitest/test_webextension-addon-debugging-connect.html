@@ -1,0 +1,102 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1302702 - Test connect to a webextension addon
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Mozilla Bug</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script src="webextension-helpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+"use strict";
+
+async function test_connect_addon(oopMode) {
+  // Install and start a test webextension.
+  let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
+    background: function () {
+      browser.test.log("background script executed");
+      browser.test.sendMessage("background page ready");
+    },
+  });
+  await extension.startup();
+  await extension.awaitMessage("background page ready");
+
+  // Connect a DebuggerClient.
+  const transport = DebuggerServer.connectPipe();
+  const client = new DebuggerClient(transport);
+  await client.connect();
+
+  // List addons and assertions on the expected addon actor.
+  const {addons} = await client.mainRoot.listAddons();
+  const addonActor = addons.filter(actor => actor.id === extension.id).pop();
+  ok(addonActor, "The expected webextension addon actor has been found");
+
+  // Connect to the target addon actor and wait for the updated list of frames.
+  const waitFramesUpdated = waitForFramesUpdated({client});
+  const addonTarget = await TargetFactory.forRemoteTab({
+    form: addonActor,
+    client,
+    chrome: true,
+    isTabActor: true,
+  });
+  is(addonTarget.form.isOOP, oopMode,
+     "Got the expected oop mode in the webextension actor form");
+  const frames = await waitFramesUpdated;
+  const backgroundPageFrame = frames.filter((frame) => {
+    return frame.url && frame.url.endsWith("/_generated_background_page.html");
+  }).pop();
+  is(backgroundPageFrame.addonID, extension.id, "Got an extension frame");
+  ok(addonTarget.activeTab, "The addon target has an activeTab");
+
+  // When running in oop mode we can explicitly attach the thread without locking
+  // the main process.
+  if (oopMode) {
+    const [, threadFront] = await addonTarget.activeTab
+                                             .attachThread(addonTarget.form.threadActor);
+
+    ok(threadFront, "Got a threadFront for the target addon");
+    is(threadFront.paused, true, "The addon threadActor is paused");
+    await threadFront.resume();
+    is(threadFront.paused, false, "The addon threadActor has been resumed");
+
+    await threadFront.detach();
+  }
+
+  const waitTransportClosed = new Promise(resolve => {
+    client._transport.once("close", resolve);
+  });
+
+  await addonTarget.destroy();
+  await client.close();
+
+  // Check that if we close the debugging client without uninstalling the addon,
+  // the webextension debugging actor should release the debug browser.
+  await waitTransportClosed;
+  is(ExtensionParent.DebugUtils.debugBrowserPromises.size, 0,
+     "The debug browser has been released when the RDP connection has been closed");
+
+  await extension.unload();
+}
+
+add_task(async function test_webextension_addon_debugging_connect_inprocess() {
+  await setWebExtensionOOPMode(false);
+  await test_connect_addon(false);
+});
+
+add_task(async function test_webextension_addon_debugging_connect_oop() {
+  await setWebExtensionOOPMode(true);
+  await test_connect_addon(true);
+});
+
+</script>
+</pre>
+</body>
+</html>
