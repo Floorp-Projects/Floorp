@@ -858,12 +858,12 @@ HandleFault(PEXCEPTION_POINTERS exception)
         return false;
     AutoSetHandlingSegFault handling(cx);
 
-    const Code* code = activation->compartment()->wasm.lookupCode(pc);
-    if (!code)
+    WasmActivation* activation = cx->wasmActivationStack();
+    if (!activation)
         return false;
 
-    WasmActivation* activation = MaybeActiveActivation(cx);
-    if (!activation)
+    const Code* code = activation->compartment()->wasm.lookupCode(pc);
+    if (!code)
         return false;
 
     if (!code->segment().containsFunctionPC(pc)) {
@@ -1012,7 +1012,7 @@ HandleMachException(JSContext* cx, const ExceptionRequest& request)
     if (request.body.exception != EXC_BAD_ACCESS || request.body.codeCnt != 2)
         return false;
 
-    WasmActivation* activation = MaybeActiveActivation(cx);
+    WasmActivation* activation = cx->wasmActivationStack();
     if (!activation)
         return false;
 
@@ -1224,7 +1224,7 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
         return false;
     AutoSetHandlingSegFault handling(cx);
 
-    WasmActivation* activation = MaybeActiveActivation(cx);
+    WasmActivation* activation = cx->wasmActivationStack();
     if (!activation)
         return false;
 
@@ -1332,54 +1332,38 @@ RedirectJitCodeToInterruptCheck(JSContext* cx, CONTEXT* context)
     if (cx != cx->runtime()->activeContext())
         return false;
 
-    // The faulting thread is suspended so we can access cx fields that can
-    // normally only be accessed by the cx's active thread.
-    AutoNoteSingleThreadedRegion anstr;
-
     RedirectIonBackedgesToInterruptCheck(cx);
 
+    if (WasmActivation* activation = cx->wasmActivationStack()) {
 #ifdef JS_SIMULATOR
-    uint8_t* pc = cx->simulator()->get_pc_as<uint8_t*>();
+        (void)ContextToPC(context);  // silence static 'unused' errors
+
+        void* pc = cx->simulator()->get_pc_as<void*>();
+
+        const Code* code = activation->compartment()->wasm.lookupCode(pc);
+        if (code && code->segment().containsFunctionPC(pc))
+            cx->simulator()->trigger_wasm_interrupt();
 #else
-    uint8_t* pc = *ContextToPC(context);
+        uint8_t** ppc = ContextToPC(context);
+        uint8_t* pc = *ppc;
+        uint8_t* fp = ContextToFP(context);
+
+        // Only interrupt in function code so that the frame iterators have the
+        // invariant that resumePC always has a function CodeRange and we can't
+        // get into any weird interrupt-during-interrupt-stub cases. Note that
+        // the out-of-bounds/unaligned trap paths which call startInterrupt() go
+        // through function code, so test if already interrupted. All these
+        // paths are temporary though, so this case can be removed later.
+        const Code* code = activation->compartment()->wasm.lookupCode(pc);
+        if (code && code->segment().containsFunctionPC(pc) && fp && !activation->interrupted()) {
+            activation->startInterrupt(pc, fp);
+            *ppc = code->segment().interruptCode();
+            return true;
+        }
 #endif
+    }
 
-    // Only interrupt in function code so that the frame iterators have the
-    // invariant that resumePC always has a function CodeRange and we can't
-    // get into any weird interrupt-during-interrupt-stub cases.
-    if (!cx->compartment())
-        return false;
-    const Code* code = cx->compartment()->wasm.lookupCode(pc);
-    if (!code || !code->segment().containsFunctionPC(pc))
-        return false;
-
-    // Only probe cx->activation() via MaybeActiveActivation after we know the
-    // pc is in wasm code. This way we don't depend on signal-safe update of
-    // cx->activation().
-    WasmActivation* activation = MaybeActiveActivation(cx);
-    MOZ_ASSERT(activation);
-
-#ifdef JS_SIMULATOR
-    // The checks performed by the !JS_SIMULATOR path happen in
-    // Simulator::handleWasmInterrupt.
-    cx->simulator()->trigger_wasm_interrupt();
-#else
-    // fp may be null when first entering wasm code from an entry stub.
-    uint8_t* fp = ContextToFP(context);
-    if (!fp)
-        return false;
-
-    // The out-of-bounds/unaligned trap paths which call startInterrupt() go
-    // through function code, so test if already interrupted. These paths are
-    // temporary though, so this case can be removed later.
-    if (activation->interrupted())
-        return false;
-
-    activation->startInterrupt(pc, fp);
-    *ContextToPC(context) = code->segment().interruptCode();
-#endif
-
-    return true;
+    return false;
 }
 
 #if !defined(XP_WIN)
@@ -1592,4 +1576,25 @@ js::InterruptRunningJitCode(JSContext* cx)
     pthread_t thread = (pthread_t)cx->threadNative();
     pthread_kill(thread, sInterruptSignal);
 #endif
+}
+
+MOZ_COLD bool
+js::wasm::IsPCInWasmCode(void* pc)
+{
+    JSContext* cx = TlsContext.get();
+    if (!cx)
+        return false;
+
+    MOZ_RELEASE_ASSERT(!cx->handlingSegFault);
+
+    WasmActivation* activation = cx->wasmActivationStack();
+    if (!activation)
+        return false;
+
+    if (activation->compartment()->wasm.lookupCode(pc))
+        return true;
+
+    const CodeRange* codeRange;
+    uint8_t* codeBase;
+    return LookupBuiltinThunk(pc, &codeRange, &codeBase);
 }

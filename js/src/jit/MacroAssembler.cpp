@@ -3093,6 +3093,13 @@ MacroAssembler::wasmAssertNonExitInvariants(Register activation)
 //}}} check_macroassembler_style
 
 void
+MacroAssembler::loadWasmActivationFromTls(Register dest)
+{
+    loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, cx)), dest);
+    loadPtr(Address(dest, JSContext::offsetOfWasmActivation()), dest);
+}
+
+void
 MacroAssembler::loadWasmTlsRegFromFrame(Register dest)
 {
     loadPtr(Address(getStackPointer(), framePushed() + offsetof(wasm::Frame, tls)), dest);

@@ -697,7 +697,7 @@ class Redirection;
 
 class Simulator : public DecoderVisitor {
  public:
-  explicit Simulator(JSContext* cx, Decoder* decoder, FILE* stream = stdout);
+  explicit Simulator(Decoder* decoder, FILE* stream = stdout);
   ~Simulator();
 
   // Moz changes.
@@ -2509,8 +2509,6 @@ class Simulator : public DecoderVisitor {
   void DoPrintf(const Instruction* instr);
 
   // Processor state ---------------------------------------
-
-  JSContext* const cx_;
 
   // Simulated monitors for exclusive access instructions.
   SimExclusiveLocalMonitor local_monitor_;

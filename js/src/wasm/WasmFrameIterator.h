@@ -187,16 +187,6 @@ TraceActivations(JSContext* cx, const CooperatingContext& target, JSTracer* trc)
 Instance*
 LookupFaultingInstance(WasmActivation* activation, void* pc, void* fp);
 
-// If the innermost (active) Activation is a WasmActivation, return it.
-
-WasmActivation*
-MaybeActiveActivation(JSContext* cx);
-
-// Return whether the given PC is in wasm code.
-
-bool
-InCompiledCode(void* pc);
-
 } // namespace wasm
 } // namespace js
 
