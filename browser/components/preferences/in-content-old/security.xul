@@ -92,33 +92,21 @@
 <groupbox id="passwordsGroup" orient="vertical" data-category="paneSecurity" hidden="true">
   <caption><label>&logins.label;</label></caption>
 
-  <hbox id="savePasswordsBox">
-    <checkbox id="savePasswords"
-              label="&rememberLogins.label;" accesskey="&rememberLogins.accesskey;"
-              preference="signon.rememberSignons"
-              onsyncfrompreference="return gSecurityPane.readSavePasswords();"/>
-    <spacer flex="1"/>
-    <button id="passwordExceptions"
-            label="&passwordExceptions.label;"
-            accesskey="&passwordExceptions.accesskey;"
-            preference="pref.privacy.disable_button.view_passwords_exceptions"/>
-  </hbox>
   <grid id="passwordGrid">
     <columns>
       <column flex="1"/>
       <column/>
     </columns>
     <rows id="passwordRows">
-      <row id="masterPasswordRow">
-        <hbox id="masterPasswordBox">
-          <checkbox id="useMasterPassword"
-                    label="&useMasterPassword.label;"
-                    accesskey="&useMasterPassword.accesskey;"/>
-          <spacer flex="1"/>
-        </hbox>
-        <button id="changeMasterPassword"
-                label="&changeMasterPassword.label;"
-                accesskey="&changeMasterPassword.accesskey;"/>
+      <row id="savePasswordsBox">
+        <checkbox id="savePasswords"
+                  label="&rememberLogins.label;" accesskey="&rememberLogins.accesskey;"
+                  preference="signon.rememberSignons"
+                  onsyncfrompreference="return gSecurityPane.readSavePasswords();"/>
+        <button id="passwordExceptions"
+                label="&passwordExceptions.label;"
+                accesskey="&passwordExceptions.accesskey;"
+                preference="pref.privacy.disable_button.view_passwords_exceptions"/>
       </row>
       <row id="showPasswordRow">
         <hbox id="showPasswordsBox"/>
@@ -128,4 +116,13 @@
       </row>
     </rows>
   </grid>
+  <hbox id="masterPasswordRow">
+    <checkbox id="useMasterPassword"
+              label="&useMasterPassword.label;"
+              accesskey="&useMasterPassword.accesskey;"/>
+    <spacer flex="1"/>
+    <button id="changeMasterPassword"
+            label="&changeMasterPassword.label;"
+            accesskey="&changeMasterPassword.accesskey;"/>
+  </hbox>
 </groupbox>
