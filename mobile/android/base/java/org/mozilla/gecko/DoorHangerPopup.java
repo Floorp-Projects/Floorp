@@ -20,6 +20,8 @@ import org.mozilla.gecko.widget.DoorhangerConfig;
 
 import java.util.HashSet;
 
+import static org.mozilla.gecko.widget.DoorHanger.Type;
+
 public class DoorHangerPopup extends AnchoredPopup
                              implements BundleEventListener,
                                         Tabs.OnTabsChangedListener,
@@ -286,7 +288,9 @@ public class DoorHangerPopup extends AnchoredPopup
 
         final String baseDomain = tab.getBaseDomain();
 
-        if (TextUtils.isEmpty(baseDomain)) {
+        if (firstDoorhanger.getType() == Type.ADDON) {
+            firstDoorhanger.showTitle(null, mContext.getString(R.string.addons));
+        } else if (TextUtils.isEmpty(baseDomain)) {
             firstDoorhanger.hideTitle();
         } else {
             firstDoorhanger.showTitle(tab.getFavicon(), baseDomain);
