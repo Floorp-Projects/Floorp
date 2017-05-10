@@ -216,7 +216,7 @@ protected:
   };
 
   uint32_t mLineNumber;  // The line number we started at in the XBL file
-  
+
   // The following four values make up 32 bits.
   uint8_t mPhase;            // The phase (capturing, bubbling)
   uint8_t mType;             // The type of the handler.  The handler is either a XUL key
@@ -231,7 +231,7 @@ protected:
 
   int32_t mKeyMask;          // Which modifier keys this event handler expects to have down
                              // in order to be matched.
- 
+
   // The primary filter information for mouse/key events.
   int32_t mDetail;           // For key events, contains a charcode or keycode. For
                              // mouse events, stores the button info.
