@@ -22,7 +22,7 @@
   --backbutton-background: linear-gradient(rgba(255,255,255,0.9),
                                            rgba(255,255,255,0.7)) repeat-x;
 
-  --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-vertical-inner-padding) + 1px);
+  --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-inner-padding) + 1px);
 
 %ifdef MOZ_PHOTON_THEME
   --toolbarbutton-border-radius: 4px;
