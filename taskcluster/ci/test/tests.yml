@@ -1180,6 +1180,16 @@ talos-chrome:
                     mozilla-inbound: false
                     autoland: false
                     try: true
+                    default: false
+            linux64-stylo-sequential/opt:
+                by-project:
+                    mozilla-beta: false
+                    mozilla-aurora: false
+                    mozilla-central: true
+                    mozilla-inbound: false
+                    autoland: false
+                    try: true
+                    default: false
             default: both
     mozharness:
         script: talos_script.py
@@ -1218,6 +1228,16 @@ talos-dromaeojs:
                     mozilla-inbound: false
                     autoland: false
                     try: true
+                    default: false
+            linux64-stylo-sequential/opt:
+                by-project:
+                    mozilla-beta: false
+                    mozilla-aurora: false
+                    mozilla-central: true
+                    mozilla-inbound: false
+                    autoland: false
+                    try: true
+                    default: false
             default: both
     mozharness:
         script: talos_script.py
@@ -1256,6 +1276,16 @@ talos-g1:
                     mozilla-inbound: false
                     autoland: false
                     try: true
+                    default: false
+            linux64-stylo-sequential/opt:
+                by-project:
+                    mozilla-beta: false
+                    mozilla-aurora: false
+                    mozilla-central: true
+                    mozilla-inbound: false
+                    autoland: false
+                    try: true
+                    default: false
             default: both
     mozharness:
         script: talos_script.py
@@ -1294,6 +1324,16 @@ talos-g2:
                     mozilla-inbound: false
                     autoland: false
                     try: true
+                    default: false
+            linux64-stylo-sequential/opt:
+                by-project:
+                    mozilla-beta: false
+                    mozilla-aurora: false
+                    mozilla-central: true
+                    mozilla-inbound: false
+                    autoland: false
+                    try: true
+                    default: false
             default: both
     mozharness:
         script: talos_script.py
@@ -1332,6 +1372,16 @@ talos-g3:
                     mozilla-inbound: false
                     autoland: false
                     try: true
+                    default: false
+            linux64-stylo-sequential/opt:
+                by-project:
+                    mozilla-beta: false
+                    mozilla-aurora: false
+                    mozilla-central: true
+                    mozilla-inbound: false
+                    autoland: false
+                    try: true
+                    default: false
             default: both
     mozharness:
         script: talos_script.py
@@ -1370,6 +1420,16 @@ talos-g4:
                     mozilla-inbound: false
                     autoland: false
                     try: true
+                    default: false
+            linux64-stylo-sequential/opt:
+                by-project:
+                    mozilla-beta: false
+                    mozilla-aurora: false
+                    mozilla-central: true
+                    mozilla-inbound: false
+                    autoland: false
+                    try: true
+                    default: false
             default: both
     mozharness:
         script: talos_script.py
@@ -1408,6 +1468,16 @@ talos-other:
                     mozilla-inbound: false
                     autoland: false
                     try: true
+                    default: false
+            linux64-stylo-sequential/opt:
+                by-project:
+                    mozilla-beta: false
+                    mozilla-aurora: false
+                    mozilla-central: true
+                    mozilla-inbound: false
+                    autoland: false
+                    try: true
+                    default: false
             default: both
     mozharness:
         script: talos_script.py
@@ -1446,6 +1516,16 @@ talos-perf-reftest:
                     mozilla-inbound: false
                     autoland: false
                     try: true
+                    default: false
+            linux64-stylo-sequential/opt:
+                by-project:
+                    mozilla-beta: false
+                    mozilla-aurora: false
+                    mozilla-central: true
+                    mozilla-inbound: false
+                    autoland: false
+                    try: true
+                    default: false
             default: both
     mozharness:
         script: talos_script.py
@@ -1479,6 +1559,16 @@ talos-svgr:
                     mozilla-inbound: false
                     autoland: false
                     try: true
+                    default: false
+            linux64-stylo-sequential/opt:
+                by-project:
+                    mozilla-beta: false
+                    mozilla-aurora: false
+                    mozilla-central: true
+                    mozilla-inbound: false
+                    autoland: false
+                    try: true
+                    default: false
             default: both
     mozharness:
         script: talos_script.py
@@ -1517,6 +1607,16 @@ talos-tp5o:
                     mozilla-inbound: false
                     autoland: false
                     try: true
+                    default: false
+            linux64-stylo-sequential/opt:
+                by-project:
+                    mozilla-beta: false
+                    mozilla-aurora: false
+                    mozilla-central: true
+                    mozilla-inbound: false
+                    autoland: false
+                    try: true
+                    default: false
             default: both
     mozharness:
         script: talos_script.py
