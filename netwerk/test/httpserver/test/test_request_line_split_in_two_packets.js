@@ -11,6 +11,7 @@
  */
 
 var srv = createServer();
+srv.keepAliveEnabled = false;
 srv.start(-1);
 const PORT = srv.identity.primaryPort;
 

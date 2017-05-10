@@ -666,6 +666,7 @@ var gMostRecentFirstBytePos;
 add_task(function test_common_initialize() {
   // Start the HTTP server.
   gHttpServer = new HttpServer();
+  gHttpServer.keepAliveEnabled = false;
   gHttpServer.registerDirectory("/", do_get_file("../data"));
   gHttpServer.start(-1);
   do_register_cleanup(() => {
@@ -756,7 +757,7 @@ add_task(function test_common_initialize() {
 
   gHttpServer.registerPathHandler("/shorter-than-content-length-http-1-1.txt",
     function(aRequest, aResponse) {
-      aResponse.processAsync();
+      aResponse.processAsync(false);
       aResponse.setStatusLine("1.1", 200, "OK");
       aResponse.setHeader("Content-Type", "text/plain", false);
       aResponse.setHeader("Content-Length", "" + (TEST_DATA_SHORT.length * 2),

@@ -27,6 +27,8 @@ function handleRequest(request, response)
   while ((bodyAvail = bodyStream.available()) > 0)
     body += String.fromCharCode.apply(null, bodyStream.readByteArray(bodyAvail));
 
+  response.closeConnection();
+
   if (command == "open") {
     response.processAsync();
     setReq(response);

@@ -57,7 +57,7 @@ const HEADER_COUNT = 1000;
 function commonCheck(ch)
 {
   do_check_true(ch.contentLength > -1);
-  do_check_eq(ch.getResponseHeader("connection"), "close");
+  do_check_eq(ch.getResponseHeader("connection"), "keep-alive");
   do_check_false(ch.isNoStoreResponse());
   do_check_false(ch.isPrivateResponse());
 }

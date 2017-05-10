@@ -20,6 +20,7 @@ function run_test()
   dumpn("*** run_test");
 
   srv = createServer();
+  srv.keepAliveEnabled = false;
 
   srv.registerPathHandler("/http/1.0-request", http10Request);
   srv.registerPathHandler("/http/1.1-good-host", http11goodHost);
