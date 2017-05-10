@@ -121,14 +121,10 @@ SessionStore.prototype = {
 
     // Copy changes in Gecko settings to their Java counterparts,
     // so the startup code can access them
-    Services.prefs.addObserver(PREFS_RESTORE_FROM_CRASH, function() {
-      SharedPreferences.forApp().setBoolPref(PREFS_RESTORE_FROM_CRASH,
-        Services.prefs.getBoolPref(PREFS_RESTORE_FROM_CRASH));
-    });
-    Services.prefs.addObserver(PREFS_MAX_CRASH_RESUMES, function() {
-      SharedPreferences.forApp().setIntPref(PREFS_MAX_CRASH_RESUMES,
-        Services.prefs.getIntPref(PREFS_MAX_CRASH_RESUMES));
-    });
+    SharedPreferences.forApp().setBoolPref(PREFS_RESTORE_FROM_CRASH,
+      Services.prefs.getBoolPref(PREFS_RESTORE_FROM_CRASH));
+    SharedPreferences.forApp().setIntPref(PREFS_MAX_CRASH_RESUMES,
+      Services.prefs.getIntPref(PREFS_MAX_CRASH_RESUMES));
   },
 
   _updateMaxTabsUndo: function ss_updateMaxTabsUndo() {
