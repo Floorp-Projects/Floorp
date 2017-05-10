@@ -60,7 +60,6 @@ var willRetry = 6;
 
 function run_test() {
   let ocspResponder = new HttpServer();
-  ocspResponder.keepAliveEnabled = false;
   ocspResponder.registerPrefixHandler("/", function(request, response) {
     if (gCurrentOCSPResponse) {
       response.setStatusLine(request.httpVersion, 200, "OK");

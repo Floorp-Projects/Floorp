@@ -1144,7 +1144,7 @@ function CopyTest(name, next)
 
   /** The copier used by this test. */
   this._copier =
-    new WriteThroughCopier(this._source, this._sink, this, null, false);
+    new WriteThroughCopier(this._source, this._sink, this, null);
 
   // Start watching for data written by the copier to the sink.
   this._waitForWrittenData();
