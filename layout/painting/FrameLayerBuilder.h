@@ -42,6 +42,149 @@ class LayerManagerData;
 class PaintedLayerData;
 class ContainerState;
 
+/**
+  * Retained data storage:
+  *
+  * Each layer manager (widget, and inactive) stores a LayerManagerData object
+  * that keeps a hash-set of DisplayItemData items that were drawn into it.
+  * Each frame also keeps a list of DisplayItemData pointers that were
+  * created for that frame. DisplayItemData objects manage these lists automatically.
+  *
+  * During layer construction we update the data in the LayerManagerData object, marking
+  * items that are modified. At the end we sweep the LayerManagerData hash-set and remove
+  * all items that haven't been modified.
+  */
+
+/**
+  * Retained data for a display item.
+  */
+class DisplayItemData final {
+public:
+  friend class FrameLayerBuilder;
+
+  uint32_t GetDisplayItemKey() { return mDisplayItemKey; }
+  layers::Layer* GetLayer() { return mLayer; }
+  nsDisplayItemGeometry* GetGeometry() const { return mGeometry.get(); }
+  void Invalidate() { mIsInvalid = true; }
+  void ClearAnimationCompositorState();
+
+  static DisplayItemData* AssertDisplayItemData(DisplayItemData* aData);
+
+  void* operator new(size_t sz, nsPresContext* aPresContext)
+  {
+    // Check the recycle list first.
+    return aPresContext->PresShell()->
+      AllocateByObjectID(eArenaObjectID_DisplayItemData, sz);
+  }
+
+  nsrefcnt AddRef() {
+    if (mRefCnt == UINT32_MAX) {
+      NS_WARNING("refcount overflow, leaking object");
+      return mRefCnt;
+    }
+    ++mRefCnt;
+    NS_LOG_ADDREF(this, mRefCnt, "nsStyleContext", sizeof(nsStyleContext));
+    return mRefCnt;
+  }
+
+  nsrefcnt Release() {
+    if (mRefCnt == UINT32_MAX) {
+      NS_WARNING("refcount overflow, leaking object");
+      return mRefCnt;
+    }
+    --mRefCnt;
+    NS_LOG_RELEASE(this, mRefCnt, "nsStyleContext");
+    if (mRefCnt == 0) {
+      Destroy();
+      return 0;
+    }
+    return mRefCnt;
+  }
+
+private:
+  DisplayItemData(LayerManagerData* aParent,
+                  uint32_t aKey,
+                  layers::Layer* aLayer,
+                  nsIFrame* aFrame = nullptr);
+
+  /**
+    * Removes any references to this object from frames
+    * in mFrameList.
+    */
+  ~DisplayItemData();
+
+  void Destroy()
+  {
+    // Get the pres context.
+    RefPtr<nsPresContext> presContext = mFrameList[0]->PresContext();
+
+    // Call our destructor.
+    this->~DisplayItemData();
+
+    // Don't let the memory be freed, since it will be recycled
+    // instead. Don't call the global operator delete.
+    presContext->PresShell()->
+      FreeByObjectID(eArenaObjectID_DisplayItemData, this);
+  }
+
+  /**
+    * Associates this DisplayItemData with a frame, and adds it
+    * to the LayerManagerDataProperty list on the frame.
+    */
+  void AddFrame(nsIFrame* aFrame);
+  void RemoveFrame(nsIFrame* aFrame);
+  const nsTArray<nsIFrame*>& GetFrameListChanges();
+
+  /**
+    * Updates the contents of this item to a new set of data, instead of allocating a new
+    * object.
+    * Set the passed in parameters, and clears the opt layer and inactive manager.
+    * Parent, and display item key are assumed to be the same.
+    *
+    * EndUpdate must be called before the end of the transaction to complete the update.
+    */
+  void BeginUpdate(layers::Layer* aLayer, LayerState aState,
+                    uint32_t aContainerLayerGeneration, nsDisplayItem* aItem = nullptr);
+
+  /**
+    * Completes the update of this, and removes any references to data that won't live
+    * longer than the transaction.
+    *
+    * Updates the geometry, frame list and clip.
+    * For items within a PaintedLayer, a geometry object must be specified to retain
+    * until the next transaction.
+    *
+    */
+  void EndUpdate(nsAutoPtr<nsDisplayItemGeometry> aGeometry);
+  void EndUpdate();
+
+  uint32_t mRefCnt;
+  LayerManagerData* mParent;
+  RefPtr<layers::Layer> mLayer;
+  RefPtr<layers::Layer> mOptLayer;
+  RefPtr<layers::BasicLayerManager> mInactiveManager;
+  AutoTArray<nsIFrame*, 1> mFrameList;
+  nsAutoPtr<nsDisplayItemGeometry> mGeometry;
+  DisplayItemClip mClip;
+  uint32_t        mDisplayItemKey;
+  uint32_t        mContainerLayerGeneration;
+  LayerState      mLayerState;
+
+  /**
+    * Temporary stoarage of the display item being referenced, only valid between
+    * BeginUpdate and EndUpdate.
+    */
+  nsDisplayItem* mItem;
+  AutoTArray<nsIFrame*, 1> mFrameListChanges;
+
+  /**
+    * Used to track if data currently stored in mFramesWithLayers (from an existing
+    * paint) has been updated in the current paint.
+    */
+  bool            mUsed;
+  bool            mIsInvalid;
+};
+
 class RefCountedRegion {
 private:
   ~RefCountedRegion() {}
@@ -416,7 +559,6 @@ public:
    */
   static bool HasRetainedDataFor(nsIFrame* aFrame, uint32_t aDisplayItemKey);
 
-  class DisplayItemData;
   typedef void (*DisplayItemDataCallback)(nsIFrame *aFrame, DisplayItemData* aItem);
 
   static void IterateRetainedDataFor(nsIFrame* aFrame, DisplayItemDataCallback aCallback);
@@ -454,107 +596,6 @@ public:
   NS_DECLARE_FRAME_PROPERTY_WITH_FRAME_IN_DTOR(LayerManagerDataProperty,
                                                nsTArray<DisplayItemData*>,
                                                RemoveFrameFromLayerManager)
-
-  /**
-   * Retained data storage:
-   *
-   * Each layer manager (widget, and inactive) stores a LayerManagerData object
-   * that keeps a hash-set of DisplayItemData items that were drawn into it.
-   * Each frame also keeps a list of DisplayItemData pointers that were
-   * created for that frame. DisplayItemData objects manage these lists automatically.
-   *
-   * During layer construction we update the data in the LayerManagerData object, marking
-   * items that are modified. At the end we sweep the LayerManagerData hash-set and remove
-   * all items that haven't been modified.
-   */
-
-  /**
-   * Retained data for a display item.
-   */
-  class DisplayItemData final {
-  public:
-    friend class FrameLayerBuilder;
-
-    uint32_t GetDisplayItemKey() { return mDisplayItemKey; }
-    Layer* GetLayer() { return mLayer; }
-    nsDisplayItemGeometry* GetGeometry() const { return mGeometry.get(); }
-    void Invalidate() { mIsInvalid = true; }
-    void ClearAnimationCompositorState();
-
-    static DisplayItemData* AssertDisplayItemData(DisplayItemData* aData);
-
-  private:
-    DisplayItemData(LayerManagerData* aParent,
-                    uint32_t aKey,
-                    Layer* aLayer,
-                    nsIFrame* aFrame = nullptr);
-
-    /**
-     * Removes any references to this object from frames
-     * in mFrameList.
-     */
-    ~DisplayItemData();
-
-    NS_INLINE_DECL_REFCOUNTING(DisplayItemData)
-
-
-    /**
-     * Associates this DisplayItemData with a frame, and adds it
-     * to the LayerManagerDataProperty list on the frame.
-     */
-    void AddFrame(nsIFrame* aFrame);
-    void RemoveFrame(nsIFrame* aFrame);
-    const nsTArray<nsIFrame*>& GetFrameListChanges();
-
-    /**
-     * Updates the contents of this item to a new set of data, instead of allocating a new
-     * object.
-     * Set the passed in parameters, and clears the opt layer and inactive manager.
-     * Parent, and display item key are assumed to be the same.
-     *
-     * EndUpdate must be called before the end of the transaction to complete the update.
-     */
-    void BeginUpdate(Layer* aLayer, LayerState aState,
-                     uint32_t aContainerLayerGeneration, nsDisplayItem* aItem = nullptr);
-
-    /**
-     * Completes the update of this, and removes any references to data that won't live
-     * longer than the transaction.
-     *
-     * Updates the geometry, frame list and clip.
-     * For items within a PaintedLayer, a geometry object must be specified to retain
-     * until the next transaction.
-     *
-     */
-    void EndUpdate(nsAutoPtr<nsDisplayItemGeometry> aGeometry);
-    void EndUpdate();
-
-    LayerManagerData* mParent;
-    RefPtr<Layer> mLayer;
-    RefPtr<Layer> mOptLayer;
-    RefPtr<BasicLayerManager> mInactiveManager;
-    AutoTArray<nsIFrame*, 1> mFrameList;
-    nsAutoPtr<nsDisplayItemGeometry> mGeometry;
-    DisplayItemClip mClip;
-    uint32_t        mDisplayItemKey;
-    uint32_t        mContainerLayerGeneration;
-    LayerState      mLayerState;
-
-    /**
-     * Temporary stoarage of the display item being referenced, only valid between
-     * BeginUpdate and EndUpdate.
-     */
-    nsDisplayItem* mItem;
-    AutoTArray<nsIFrame*, 1> mFrameListChanges;
-
-    /**
-     * Used to track if data currently stored in mFramesWithLayers (from an existing
-     * paint) has been updated in the current paint.
-     */
-    bool            mUsed;
-    bool            mIsInvalid;
-  };
-
 protected:
 
   friend class LayerManagerData;
