@@ -22,7 +22,6 @@
 #include "js/Value.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/TypedArray.h"
 #include "ProfileGatherer.h"
 #include "nsLocalFile.h"
 #include "platform.h"
@@ -261,15 +260,14 @@ nsProfiler::GetProfileDataAsync(double aSinceTime, JSContext* aCx,
     return NS_ERROR_FAILURE;
   }
 
-  nsIGlobalObject* globalObject =
-    xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
+  nsIGlobalObject* go = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
 
-  if (NS_WARN_IF(!globalObject)) {
+  if (NS_WARN_IF(!go)) {
     return NS_ERROR_FAILURE;
   }
 
   ErrorResult result;
-  RefPtr<Promise> promise = Promise::Create(globalObject, result);
+  RefPtr<Promise> promise = Promise::Create(go, result);
   if (NS_WARN_IF(result.Failed())) {
     return result.StealNSResult();
   }
@@ -305,62 +303,6 @@ nsProfiler::GetProfileDataAsync(double aSinceTime, JSContext* aCx,
         } else {
           promise->MaybeResolve(val);
         }
-      }
-    },
-    [promise](nsresult aRv) {
-      promise->MaybeReject(aRv);
-    });
-
-  promise.forget(aPromise);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsProfiler::GetProfileDataAsArrayBuffer(double aSinceTime, JSContext* aCx,
-                                        nsISupports** aPromise)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!mGatherer) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (NS_WARN_IF(!aCx)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsIGlobalObject* globalObject =
-    xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
-
-  if (NS_WARN_IF(!globalObject)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  ErrorResult result;
-  RefPtr<Promise> promise = Promise::Create(globalObject, result);
-  if (NS_WARN_IF(result.Failed())) {
-    return result.StealNSResult();
-  }
-
-  mGatherer->Start(aSinceTime)->Then(
-    AbstractThread::MainThread(), __func__,
-    [promise](nsCString aResult) {
-      AutoJSAPI jsapi;
-      if (NS_WARN_IF(!jsapi.Init(promise->GlobalJSObject()))) {
-        // We're really hosed if we can't get a JS context for some reason.
-        promise->MaybeReject(NS_ERROR_DOM_UNKNOWN_ERR);
-        return;
-      }
-
-      JSContext* cx = jsapi.cx();
-      JSObject* typedArray =
-        dom::ArrayBuffer::Create(cx, aResult.Length(),
-                                 reinterpret_cast<const uint8_t*>(aResult.Data()));
-      if (typedArray) {
-        JS::RootedValue val(cx, JS::ObjectValue(*typedArray));
-        promise->MaybeResolve(val);
-      } else {
-        promise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
       }
     },
     [promise](nsresult aRv) {
