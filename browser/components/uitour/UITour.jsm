@@ -537,7 +537,7 @@ this.UITour = {
           return false;
         }
 
-        window.openPreferences(data.pane, { origin: "UITour" });
+        window.openPreferences(data.pane);
         break;
       }
 

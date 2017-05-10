@@ -245,9 +245,9 @@ var Settings = {
           // The advanced subpanes are only supported in the old organization, which will
           // be removed by bug 1349689.
           if (Preferences.get("browser.preferences.useOldOrganization", false)) {
-            mainWindow.openAdvancedPreferences("dataChoicesTab", {origin: "aboutTelemetry"});
+            mainWindow.openAdvancedPreferences("dataChoicesTab");
           } else {
-            mainWindow.openPreferences("paneAdvanced", {origin: "aboutTelemetry"});
+            mainWindow.openPreferences("paneAdvanced");
           }
         }
       });
