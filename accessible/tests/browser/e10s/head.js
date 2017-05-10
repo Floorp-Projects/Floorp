@@ -4,11 +4,10 @@
 
 'use strict';
 
-/* global EVENT_DOCUMENT_LOAD_COMPLETE, CURRENT_CONTENT_DIR, loadFrameScripts */
-
-/* exported addAccessibleTask */
+/* exported addAccessibleTask, findAccessibleChildByID, isDefunct */
 
 // Load the shared-head file first.
+/* import-globals-from ../shared-head.js */
 Services.scriptloader.loadSubScript(
   'chrome://mochitests/content/browser/accessible/tests/browser/shared-head.js',
   this);
@@ -79,6 +78,48 @@ function addAccessibleTask(doc, task) {
   });
 }
 
+/**
+ * Check if an accessible object has a defunct test.
+ * @param  {nsIAccessible}  accessible object to test defunct state for
+ * @return {Boolean}        flag indicating defunct state
+ */
+function isDefunct(accessible) {
+  let defunct = false;
+  try {
+    let extState = {};
+    accessible.getState({}, extState);
+    defunct = extState.value & Ci.nsIAccessibleStates.EXT_STATE_DEFUNCT;
+  } catch (x) {
+    defunct = true;
+  } finally {
+    if (defunct) {
+      Logger.log(`Defunct accessible: ${prettyName(accessible)}`);
+    }
+  }
+  return defunct;
+}
+
+/**
+ * Traverses the accessible tree starting from a given accessible as a root and
+ * looks for an accessible that matches based on its DOMNode id.
+ * @param  {nsIAccessible}  accessible root accessible
+ * @param  {String}         id         id to look up accessible for
+ * @return {nsIAccessible?}            found accessible if any
+ */
+function findAccessibleChildByID(accessible, id) {
+  if (getAccessibleDOMNodeID(accessible) === id) {
+    return accessible;
+  }
+  for (let i = 0; i < accessible.children.length; ++i) {
+    let found = findAccessibleChildByID(accessible.getChildAt(i), id);
+    if (found) {
+      return found;
+    }
+  }
+}
+
 // Loading and common.js from accessible/tests/mochitest/ for all tests, as
 // well as events.js.
+/* import-globals-from ../../mochitest/common.js */
+/* import-globals-from events.js */
 loadScripts({ name: 'common.js', dir: MOCHITESTS_DIR }, 'e10s/events.js');

@@ -587,15 +587,16 @@
       ];
 
       this.invoke = () => {
-        getNode('t9_container').src =
-          `data:text/html,
-            <html><body></body>
-            <script>
-              let el = document.createElement('div');
-              el.id = 'container';
-              el.innerHTML = "<input id='input'>";
-              document.documentElement.appendChild(el);
-            </` + `script></html>`;
+        // The \ before the final /script avoids the script from being terminated
+        // by the html parser.
+        getNode('t9_container').src = `data:text/html,
+          <html><body></body>
+          <script>
+            let el = document.createElement('div');
+            el.id = 'container';
+            el.innerHTML = "<input id='input'>";
+            document.documentElement.appendChild(el);
+          <\/script></html>`;
       }
 
       this.finalCheck = () => {

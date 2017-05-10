@@ -114,6 +114,12 @@ public:
     return 0;
   }
 
+  /**
+   * Returns true if image context paint is allowed to be used in an image that
+   * has the given URI, else returns false.
+   */
+  static bool IsAllowedForImageFromURI(nsIURI* aURI);
+
 private:
   // Member-vars are initialized in InitStrokeGeometry.
   FallibleTArray<gfxFloat> mDashes;

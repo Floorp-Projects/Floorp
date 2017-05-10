@@ -3445,7 +3445,6 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
         // listens for  OnOutputStreamReady not HalfOpenSocket. So this stream
         // cannot be mStreamOut.
         MOZ_ASSERT(out == mBackupStreamOut);
-        MOZ_ASSERT(mTransaction->IsNullTransaction());
         // Here the backup, non-TFO connection has connected successfully,
         // before the TFO connection.
         //
@@ -3536,6 +3535,10 @@ nsHalfOpenSocket::StartFastOpen()
     MOZ_ASSERT(mStreamOut);
     MOZ_ASSERT(mEnt && !mBackupTransport);
     mUsingFastOpen = true;
+    // SetupBackupTimer should setup timer which will hold a ref to this
+    // halfOpen. It will failed only if it cannot create timer. Anyway just
+    // to be sure I will add this deleteProtector!!!
+    RefPtr<nsHalfOpenSocket> deleteProtector(this);
     if (mEnt && !mBackupTransport && !mSynTimer) {
         // For Fast Open we will setup backup timer also for NullTransaction.
         // So maybe it is not set and we need to set it here.
@@ -3546,6 +3549,12 @@ nsHalfOpenSocket::StartFastOpen()
     gHttpHandler->ConnMgr()->RecvdConnect();
     nsresult rv = SetupConn(mStreamOut, true);
     if (NS_FAILED(rv)) {
+        // If SetupConn failed this will CloseTransaction and socketTransport
+        // with an error, therefore we can close this HalfOpen. socketTransport
+        // will remove reference to this HalfOpen as well.
+        mConnectionNegotiatingFastOpen->SetFastOpen(false);
+        mConnectionNegotiatingFastOpen = nullptr;
+        CancelBackupTimer();
         mStreamOut = nullptr;
         mStreamIn = nullptr;
         mSocketTransport = nullptr;
@@ -3609,6 +3618,11 @@ nsHalfOpenSocket::SetFastOpenConnected(nsresult aError)
         mStreamIn = nullptr;
     }
 
+#ifndef DEBUG
+    if (!mConnectionNegotiatingFastOpen) {
+        return;
+    }
+#endif
     mConnectionNegotiatingFastOpen->SetFastOpen(false);
     mConnectionNegotiatingFastOpen = nullptr;
 }
@@ -3702,8 +3716,10 @@ nsHalfOpenSocket::SetupConn(nsIAsyncOutputStream *out,
             mStreamOut = nullptr;
             mStreamIn = nullptr;
             mSocketTransport = nullptr;
+        } else {
+            conn->SetFastOpen(true);
+            mConnectionNegotiatingFastOpen = conn;
         }
-        conn->SetFastOpen(aFastOpen);
     } else if (out == mBackupStreamOut) {
         TimeDuration rtt = TimeStamp::Now() - mBackupSynStarted;
         rv = conn->Init(mEnt->mConnInfo,
@@ -3802,8 +3818,8 @@ nsHalfOpenSocket::SetupConn(nsIAsyncOutputStream *out,
                 !mEnt->mConnInfo->UsingConnect()) {
                 int32_t idx = mEnt->mIdleConns.IndexOf(conn);
                 if (idx != -1) {
-                    DebugOnly<nsresult> rv = gHttpHandler->ConnMgr()->RemoveIdleConnection(conn);
-                    MOZ_ASSERT(NS_SUCCEEDED(rv));
+                    DebugOnly<nsresult> rvDeb = gHttpHandler->ConnMgr()->RemoveIdleConnection(conn);
+                    MOZ_ASSERT(NS_SUCCEEDED(rvDeb));
                     conn->EndIdleMonitoring();
                     RefPtr<nsAHttpTransaction> trans;
                     if (mTransaction->IsNullTransaction() &&
@@ -3820,12 +3836,6 @@ nsHalfOpenSocket::SetupConn(nsIAsyncOutputStream *out,
                 }
             }
         }
-    }
-    if (aFastOpen) {
-        // If it is fast open create a new tranaction for backup stream.
-        mTransaction = new NullHttpTransaction(mEnt->mConnInfo,
-                                               callbacks, mCaps);
-        mConnectionNegotiatingFastOpen = conn;
     }
 
     // If this halfOpenConn was speculative, but at the ende the conn got a

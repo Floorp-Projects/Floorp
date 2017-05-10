@@ -443,6 +443,9 @@ description > html|a {
 
 .fxaSyncIllustration {
   margin-top: 35px;
+  width: 231px;
+  -moz-context-properties: fill;
+  fill: #bfcbd3;
 }
 
 #syncOptions caption {
@@ -496,10 +499,6 @@ description > html|a {
 
 #verifiedManage:visited {
   color: var(--in-content-link-color);
-}
-
-.fxaSyncIllustration {
-  width: 231px;
 }
 
 #fxaLoginStatus[hasName] #fxaEmailAddress1 {

@@ -71,6 +71,10 @@ public:
     return mContextPaint.get();
   }
 
+  void ClearContextPaint() {
+    mContextPaint = nullptr;
+  }
+
   bool operator==(const SVGImageContext& aOther) const {
     bool contextPaintIsEqual =
       // neither have context paint, or they have the same object:

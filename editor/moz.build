@@ -16,7 +16,6 @@ XPIDL_SOURCES += [
     'nsIDocumentStateListener.idl',
     'nsIEditActionListener.idl',
     'nsIEditor.idl',
-    'nsIEditorIMESupport.idl',
     'nsIEditorMailSupport.idl',
     'nsIEditorObserver.idl',
     'nsIEditorSpellCheck.idl',

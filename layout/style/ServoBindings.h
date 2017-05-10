@@ -13,6 +13,7 @@
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/ServoElementSnapshot.h"
 #include "mozilla/css/SheetParsingMode.h"
+#include "mozilla/css/URLMatchingFunction.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/ComputedTimingFunction.h"
 #include "nsChangeHint.h"
@@ -40,6 +41,7 @@ namespace mozilla {
   struct StyleTransition;
   namespace css {
     struct URLValue;
+    struct ImageValue;
   };
   enum class UpdateAnimationsTasks : uint8_t;
   struct LangGroupFontPrefs;
@@ -272,6 +274,7 @@ void Gecko_CopyListStyleTypeFrom(nsStyleList* dst, const nsStyleList* src);
 // background-image style.
 void Gecko_SetNullImageValue(nsStyleImage* image);
 void Gecko_SetGradientImageValue(nsStyleImage* image, nsStyleGradient* gradient);
+NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::ImageValue, ImageValue);
 void Gecko_SetUrlImageValue(nsStyleImage* image,
                             ServoBundledURI uri);
 void Gecko_SetImageElement(nsStyleImage* image, nsIAtom* atom);
@@ -492,6 +495,10 @@ void Gecko_Construct_nsStyleVariables(nsStyleVariables* ptr);
 
 void Gecko_RegisterProfilerThread(const char* name);
 void Gecko_UnregisterProfilerThread();
+
+bool Gecko_DocumentRule_UseForPresentation(RawGeckoPresContextBorrowed,
+                                           const nsACString* aPattern,
+                                           mozilla::css::URLMatchingFunction aURLMatchingFunction);
 
 #define SERVO_BINDING_FUNC(name_, return_, ...) return_ name_(__VA_ARGS__);
 #include "mozilla/ServoBindingList.h"

@@ -380,7 +380,7 @@
   <separator class="thin"/>
 
   <hbox id="addEnginesBox" pack="start">
-    <label id="addEngines" class="text-link" value="&addMoreSearchEngines2.label;"/>
+    <label id="addEngines" class="text-link">&addMoreSearchEngines2.label;</label>
   </hbox>
 </groupbox>
 

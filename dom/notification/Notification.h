@@ -12,6 +12,7 @@
 #include "mozilla/dom/workers/bindings/WorkerHolder.h"
 
 #include "nsIObserver.h"
+#include "nsISupports.h"
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsHashKeys.h"
@@ -51,11 +52,10 @@ public:
 
 // Records telemetry probes at application startup, when a notification is
 // shown, and when the notification permission is revoked for a site.
-class NotificationTelemetryService final : public nsIObserver
+class NotificationTelemetryService final : public nsISupports
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
 
   NotificationTelemetryService();
 
@@ -64,19 +64,14 @@ public:
   nsresult Init();
   void RecordDNDSupported();
   void RecordPermissions();
-  nsresult RecordSender(nsIPrincipal* aPrincipal);
 
 private:
   virtual ~NotificationTelemetryService();
-
-  nsresult AddPermissionChangeObserver();
-  nsresult RemovePermissionChangeObserver();
 
   bool GetNotificationPermission(nsISupports* aSupports,
                                  uint32_t* aCapability);
 
   bool mDNDRecorded;
-  nsTHashtable<nsStringHashKey> mOrigins;
 };
 
 /*

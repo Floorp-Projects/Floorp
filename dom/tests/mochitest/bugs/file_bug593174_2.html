@@ -1,7 +1,7 @@
 <html>
 <body>
 Page 2 has an iframe of its own.
-<iframe id='inner-iframe' onload='innerIframeLoaded()' src='data:text/html,
+<iframe id='inner-iframe' onload='innerIframeLoaded()' srcdoc='
       <html><body>
         <script>function go() { window.location = "file_bug593174_1.html"; }</script>
       </body></html>'>

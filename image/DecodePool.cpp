@@ -252,7 +252,7 @@ DecodePool::DecodePool()
   }
   // The parent process where there are content processes doesn't need as many
   // threads for decoding images.
-  if (limit > 4 && XRE_IsParentProcess() && BrowserTabsRemoteAutostart()) {
+  if (limit > 4 && XRE_IsE10sParentProcess()) {
     limit = 4;
   }
 

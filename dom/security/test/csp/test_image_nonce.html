@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1139297 - Implement CSP upgrade-insecure-requests directive</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+/* Description of the test:
+ * We load three images: (a) with a matching nonce,
+                         (b) with a non matching nonce,
+ *                       (c) with no nonce
+ * and make sure that all three images get blocked because
+ * "img-src nonce-bla" should not allow an image load, not
+ * even if the nonce matches*.
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+var counter = 0;
+
+function finishTest() {
+  window.removeEventListener("message", receiveMessage);
+  SimpleTest.finish();
+}
+
+function checkResults(aResult) {
+  counter++;
+  if (aResult === "img-with-matching-nonce-blocked" ||
+      aResult === "img-with_non-matching-nonce-blocked" ||
+      aResult === "img-without-nonce-blocked") {
+    ok (true, "correct result for: " + aResult);
+  }
+  else {
+    ok(false, "unexpected result: " + aResult + "\n\n");
+  }
+  if (counter < 3) {
+    return;
+  }
+  finishTest();
+}
+
+// a postMessage handler that is used by sandboxed iframes without
+// 'allow-same-origin' to bubble up results back to this main page.
+window.addEventListener("message", receiveMessage);
+function receiveMessage(event) {
+  checkResults(event.data.result);
+}
+
+document.getElementById("testframe").src = "file_image_nonce.html";
+
+</script>
+</body>
+</html>

@@ -45,20 +45,21 @@
 
 #narrate-skip-previous {
   border-top-left-radius: 3px;
-  background-image: url("chrome://global/skin/narrate/back.svg#enabled");
+  background-image: url("chrome://global/skin/narrate/back.svg");
+  -moz-context-properties: fill;
+  fill: rgb(128 128 128);
 }
 
 #narrate-skip-next {
   border-top-right-radius: 3px;
-  background-image: url("chrome://global/skin/narrate/forward.svg#enabled");
+  background-image: url("chrome://global/skin/narrate/forward.svg");
+  -moz-context-properties: fill;
+  fill: rgb(128 128 128);
 }
 
-#narrate-skip-previous:disabled {
-  background-image: url("chrome://global/skin/narrate/back.svg#disabled");
-}
-
+#narrate-skip-previous:disabled,
 #narrate-skip-next:disabled {
-  background-image: url("chrome://global/skin/narrate/forward.svg#disabled");
+  fill: rgb(128 128 128 / 50%);
 }
 
 #narrate-start-stop {

@@ -227,7 +227,8 @@
                 align="center" pack="center" flex="1" anonid="button-box">
         <children>
           <xul:image class="button-icon" xbl:inherits="src=image"/>
-          <xul:label class="button-text" xbl:inherits="value=label,accesskey,crop"/>
+          <xul:label class="button-text" xbl:inherits="value=label,accesskey,crop,highlightable"/>
+          <xul:label class="button-highlightable-text" xbl:inherits="xbl:text=label,accesskey,crop,highlightable"/>
         </children>
       </xul:hbox>
     </content>

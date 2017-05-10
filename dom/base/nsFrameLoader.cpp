@@ -57,7 +57,6 @@
 #include "nsLayoutUtils.h"
 #include "nsMappedAttributes.h"
 #include "nsView.h"
-#include "nsBaseWidget.h"
 #include "GroupedSHistory.h"
 #include "PartialSHistory.h"
 
@@ -1260,18 +1259,9 @@ nsFrameLoader::ShowRemoteFrame(const ScreenIntSize& size,
       return false;
     }
 
-    // We never want to host remote frameloaders in simple popups, like menus.
-    nsIWidget* widget = nsContentUtils::WidgetForContent(mOwnerContent);
-    if (!widget || static_cast<nsBaseWidget*>(widget)->IsSmallPopup()) {
-      return false;
-    }
-
-    RenderFrameParent* rfp = GetCurrentRenderFrame();
-    if (!rfp) {
-      return false;
-    }
-
-    if (!rfp->AttachLayerManager()) {
+    RefPtr<layers::LayerManager> layerManager =
+      nsContentUtils::LayerManagerForDocument(mOwnerContent->GetComposedDoc());
+    if (!layerManager) {
       // This is just not going to work.
       return false;
     }
@@ -1506,9 +1496,6 @@ nsFrameLoader::SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
 
   ourShell->BackingScaleFactorChanged();
   otherShell->BackingScaleFactorChanged();
-
-  ourDoc->FlushPendingNotifications(FlushType::Layout);
-  otherDoc->FlushPendingNotifications(FlushType::Layout);
 
   // Initialize browser API if needed now that owner content has changed.
   InitializeBrowserAPI();
@@ -1949,9 +1936,6 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   // backing scale factor may have changed. (Bug 822266)
   ourShell->BackingScaleFactorChanged();
   otherShell->BackingScaleFactorChanged();
-
-  ourParentDocument->FlushPendingNotifications(FlushType::Layout);
-  otherParentDocument->FlushPendingNotifications(FlushType::Layout);
 
   // Initialize browser API if needed now that owner content has changed
   InitializeBrowserAPI();

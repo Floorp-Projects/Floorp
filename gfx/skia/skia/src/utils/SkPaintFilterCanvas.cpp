@@ -29,15 +29,11 @@ private:
     bool                         fShouldDraw;
 };
 
-SkPaintFilterCanvas::SkPaintFilterCanvas(int width, int height) : INHERITED(width, height) { }
-
 SkPaintFilterCanvas::SkPaintFilterCanvas(SkCanvas *canvas)
     : INHERITED(canvas->imageInfo().width(), canvas->imageInfo().height()) {
 
     // Transfer matrix & clip state before adding the target canvas.
-    SkIRect devClip;
-    canvas->getClipDeviceBounds(&devClip);
-    this->clipRect(SkRect::Make(devClip));
+    this->clipRect(SkRect::Make(canvas->getDeviceClipBounds()));
     this->setMatrix(canvas->getTotalMatrix());
 
     this->addCanvas(canvas);
@@ -151,24 +147,20 @@ void SkPaintFilterCanvas::onDrawImageNine(const SkImage* image, const SkIRect& c
     }
 }
 
-void SkPaintFilterCanvas::onDrawVertices(VertexMode vmode, int vertexCount,
-                                         const SkPoint vertices[], const SkPoint texs[],
-                                         const SkColor colors[], SkXfermode* xmode,
-                                         const uint16_t indices[], int indexCount,
-                                         const SkPaint& paint) {
+void SkPaintFilterCanvas::onDrawVerticesObject(const SkVertices* vertices, SkBlendMode bmode,
+                                               const SkPaint& paint) {
     AutoPaintFilter apf(this, kVertices_Type, paint);
     if (apf.shouldDraw()) {
-        this->INHERITED::onDrawVertices(vmode, vertexCount, vertices, texs, colors, xmode, indices,
-                                        indexCount, *apf.paint());
+        this->INHERITED::onDrawVerticesObject(vertices, bmode, *apf.paint());
     }
 }
 
 void SkPaintFilterCanvas::onDrawPatch(const SkPoint cubics[], const SkColor colors[],
-                                      const SkPoint texCoords[], SkXfermode* xmode,
+                                      const SkPoint texCoords[], SkBlendMode bmode,
                                       const SkPaint& paint) {
     AutoPaintFilter apf(this, kPatch_Type, paint);
     if (apf.shouldDraw()) {
-        this->INHERITED::onDrawPatch(cubics, colors, texCoords, xmode, *apf.paint());
+        this->INHERITED::onDrawPatch(cubics, colors, texCoords, bmode, *apf.paint());
     }
 }
 

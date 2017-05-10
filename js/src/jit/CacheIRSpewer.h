@@ -12,9 +12,9 @@
 #include "mozilla/Maybe.h"
 
 #include "jit/CacheIR.h"
-#include "jit/JSONPrinter.h"
 #include "js/TypeDecls.h"
 #include "threading/LockGuard.h"
+#include "vm/JSONPrinter.h"
 #include "vm/MutexIDs.h"
 
 namespace js {

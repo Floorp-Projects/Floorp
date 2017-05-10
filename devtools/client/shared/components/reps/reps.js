@@ -1165,25 +1165,39 @@ return /******/ (function(modules) { // webpackBootstrap
 	    interestingObject = Object.assign({}, interestingObject, getFilteredObject(object, max - Object.keys(interestingObject).length, (type, value) => !isInterestingProp(type, value)));
 	  }
 	
-	  const truncated = Object.keys(object).length > max;
-	  let propsArray = getPropsArray(interestingObject, truncated);
-	  if (truncated) {
+	  let propsArray = getPropsArray(interestingObject);
+	  if (Object.keys(object).length > max) {
 	    propsArray.push(Caption({
 	      object: safeObjectLink(props, {}, Object.keys(object).length - max + " more…")
 	    }));
 	  }
 	
-	  return propsArray;
+	  return unfoldProps(propsArray);
+	}
+	
+	function unfoldProps(items) {
+	  return items.reduce((res, item, index) => {
+	    if (Array.isArray(item)) {
+	      res = res.concat(item);
+	    } else {
+	      res.push(item);
+	    }
+	
+	    // Interleave commas between elements
+	    if (index !== items.length - 1) {
+	      res.push(", ");
+	    }
+	    return res;
+	  }, []);
 	}
 	
 	/**
 	 * Get an array of components representing the properties of the object
 	 *
 	 * @param {Object} object
-	 * @param {Boolean} truncated true if the object is truncated.
 	 * @return {Array} Array of PropRep.
 	 */
-	function getPropsArray(object, truncated) {
+	function getPropsArray(object) {
 	  let propsArray = [];
 	
 	  if (!object) {
@@ -1197,8 +1211,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    mode,
 	    name,
 	    object: object[name],
-	    equal: ": ",
-	    delim: i !== objectKeys.length - 1 || truncated ? ", " : null
+	    equal: ": "
 	  }));
 	}
 	
@@ -1271,8 +1284,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  name: React.PropTypes.oneOfType([React.PropTypes.string, React.PropTypes.object]).isRequired,
 	  // Equal character rendered between property name and value.
 	  equal: React.PropTypes.string,
-	  // Delimiter character used to separate individual properties.
-	  delim: React.PropTypes.string,
 	  // @TODO Change this to Object.values once it's supported in Node's version of V8
 	  mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
 	  objectLink: React.PropTypes.func,
@@ -1285,6 +1296,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	  suppressQuotes: React.PropTypes.bool
 	};
 	
+	/**
+	 * Function that given a name, a delimiter and an object returns an array
+	 * of React elements representing an object property (e.g. `name: value`)
+	 *
+	 * @param {Object} props
+	 * @return {Array} Array of React elements.
+	 */
 	function PropRep(props) {
 	  const Grip = __webpack_require__(15);
 	  const { Rep } = __webpack_require__(2);
@@ -1293,7 +1311,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    name,
 	    mode,
 	    equal,
-	    delim,
 	    suppressQuotes
 	  } = props;
 	
@@ -1313,16 +1330,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }));
 	  }
 	
-	  let delimElement;
-	  if (delim) {
-	    delimElement = span({
-	      "className": "objectComma"
-	    }, delim);
-	  }
-	
-	  return span({}, key, span({
+	  return [key, span({
 	    "className": "objectEqual"
-	  }, equal), Rep(Object.assign({}, props)), delimElement);
+	  }, equal), Rep(Object.assign({}, props))];
 	}
 	
 	// Exports from this module
@@ -1364,12 +1374,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 	
 	function GripRep(props) {
-	  let object = props.object;
-	  let propsArray = safePropIterator(props, object, props.mode === MODE.LONG ? 10 : 3);
+	  let {
+	    mode,
+	    object
+	  } = props;
 	
-	  if (props.mode === MODE.TINY) {
+	  if (mode === MODE.TINY) {
 	    return span({ className: "objectBox objectBox-object" }, getTitle(props, object));
 	  }
+	
+	  let propsArray = safePropIterator(props, object, mode === MODE.LONG ? 10 : 3);
 	
 	  return span({ className: "objectBox objectBox-object" }, getTitle(props, object), safeObjectLink(props, {
 	    className: "objectLeftBrace"
@@ -1425,21 +1439,36 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }));
 	  }
 	
-	  const truncate = Object.keys(properties).length > max;
 	  // The server synthesizes some property names for a Proxy, like
 	  // <target> and <handler>; we don't want to quote these because,
 	  // as synthetic properties, they appear more natural when
 	  // unquoted.
 	  const suppressQuotes = object.class === "Proxy";
-	  let propsArray = getProps(props, properties, indexes, truncate, suppressQuotes);
-	  if (truncate) {
+	  let propsArray = getProps(props, properties, indexes, suppressQuotes);
+	  if (Object.keys(properties).length > max) {
 	    // There are some undisplayed props. Then display "more...".
 	    propsArray.push(Caption({
 	      object: safeObjectLink(props, {}, `${propertiesLength - max} more…`)
 	    }));
 	  }
 	
-	  return propsArray;
+	  return unfoldProps(propsArray);
+	}
+	
+	function unfoldProps(items) {
+	  return items.reduce((res, item, index) => {
+	    if (Array.isArray(item)) {
+	      res = res.concat(item);
+	    } else {
+	      res.push(item);
+	    }
+	
+	    // Interleave commas between elements
+	    if (index !== items.length - 1) {
+	      res.push(", ");
+	    }
+	    return res;
+	  }, []);
 	}
 	
 	/**
@@ -1448,12 +1477,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param {Object} componentProps Grip Component props.
 	 * @param {Object} properties Properties of the object the Grip describes.
 	 * @param {Array} indexes Indexes of properties.
-	 * @param {Boolean} truncate true if the grip will be truncated.
 	 * @param {Boolean} suppressQuotes true if we should suppress quotes
 	 *                  on property names.
 	 * @return {Array} Props.
 	 */
-	function getProps(componentProps, properties, indexes, truncate, suppressQuotes) {
+	function getProps(componentProps, properties, indexes, suppressQuotes) {
 	  // Make indexes ordered by ascending.
 	  indexes.sort(function (a, b) {
 	    return a - b;
@@ -1469,7 +1497,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      name,
 	      object: value,
 	      equal: ": ",
-	      delim: i !== indexes.length - 1 || truncate ? ", " : null,
 	      defaultRep: Grip,
 	      // Do not propagate title and objectLink to properties reps
 	      title: null,
@@ -2047,17 +2074,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	    keys.push("value");
 	  }
 	
-	  return keys.map((key, i) => {
+	  return keys.reduce((res, key, i) => {
 	    let object = promiseState[key];
-	    return PropRep(Object.assign({}, props, {
+	    res = res.concat(PropRep(Object.assign({}, props, {
 	      mode: MODE.TINY,
 	      name: `<${key}>`,
 	      object,
 	      equal: ": ",
-	      delim: i < keys.length - 1 ? ", " : null,
 	      suppressQuotes: true
-	    }));
-	  });
+	    })));
+	
+	    // Interleave commas between elements
+	    if (i !== keys.length - 1) {
+	      res.push(", ");
+	    }
+	
+	    return res;
+	  }, []);
 	}
 	
 	// Registration
@@ -2953,38 +2986,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return span({
 	    className: "objectBox objectBox-array" }, title, safeObjectLink(props, {
 	    className: "arrayLeftBracket"
-	  }, brackets.left), ...items, safeObjectLink(props, {
+	  }, brackets.left), ...interleaveCommas(items), safeObjectLink(props, {
 	    className: "arrayRightBracket"
 	  }, brackets.right), span({
 	    className: "arrayProperties",
 	    role: "group" }));
 	}
 	
-	/**
-	 * Renders array item. Individual values are separated by
-	 * a delimiter (a comma by default).
-	 */
-	GripArrayItem.propTypes = {
-	  delim: React.PropTypes.string,
-	  object: React.PropTypes.oneOfType([React.PropTypes.object, React.PropTypes.number, React.PropTypes.string]).isRequired,
-	  objectLink: React.PropTypes.func,
-	  // @TODO Change this to Object.values once it's supported in Node's version of V8
-	  mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
-	  provider: React.PropTypes.object,
-	  onDOMNodeMouseOver: React.PropTypes.func,
-	  onDOMNodeMouseOut: React.PropTypes.func,
-	  onInspectIconClick: React.PropTypes.func
-	};
-	
-	function GripArrayItem(props) {
-	  let { Rep } = __webpack_require__(2);
-	  let {
-	    delim
-	  } = props;
-	
-	  return span({}, Rep(Object.assign({}, props, {
-	    mode: MODE.TINY
-	  })), delim);
+	function interleaveCommas(items) {
+	  return items.reduce((res, item, index) => {
+	    if (index !== items.length - 1) {
+	      return res.concat(item, ", ");
+	    }
+	    return res.concat(item);
+	  }, []);
 	}
 	
 	function getLength(grip) {
@@ -3013,6 +3028,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 	
 	function arrayIterator(props, grip, max) {
+	  let { Rep } = __webpack_require__(2);
+	
 	  let items = [];
 	  const gripLength = getLength(grip);
 	
@@ -3025,42 +3042,64 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return items;
 	  }
 	
-	  let delim;
-	  // number of grip preview items is limited to 10, but we may have more
-	  // items in grip-array.
-	  let delimMax = gripLength > previewItems.length ? previewItems.length : previewItems.length - 1;
 	  let provider = props.provider;
 	
-	  for (let i = 0; i < previewItems.length && i < max; i++) {
+	  let emptySlots = 0;
+	  let foldedEmptySlots = 0;
+	  items = previewItems.reduce((res, itemGrip) => {
+	    if (res.length >= max) {
+	      return res;
+	    }
+	
+	    let object;
 	    try {
-	      let itemGrip = previewItems[i];
-	      let value = provider ? provider.getValue(itemGrip) : itemGrip;
+	      if (!provider && itemGrip === null) {
+	        emptySlots++;
+	        return res;
+	      }
 	
-	      delim = i == delimMax ? "" : ", ";
-	
-	      items.push(GripArrayItem(Object.assign({}, props, {
-	        object: value,
-	        delim: delim,
-	        // Do not propagate title to array items reps
-	        title: undefined
-	      })));
+	      object = provider ? provider.getValue(itemGrip) : itemGrip;
 	    } catch (exc) {
-	      items.push(GripArrayItem(Object.assign({}, props, {
-	        object: exc,
-	        delim: delim,
+	      object = exc;
+	    }
+	
+	    if (emptySlots > 0) {
+	      res.push(getEmptySlotsElement(emptySlots));
+	      foldedEmptySlots = foldedEmptySlots + emptySlots - 1;
+	      emptySlots = 0;
+	    }
+	
+	    if (res.length < max) {
+	      res.push(Rep(Object.assign({}, props, {
+	        object,
+	        mode: MODE.TINY,
 	        // Do not propagate title to array items reps
 	        title: undefined
 	      })));
 	    }
+	
+	    return res;
+	  }, []);
+	
+	  // Handle trailing empty slots if there are some.
+	  if (items.length < max && emptySlots > 0) {
+	    items.push(getEmptySlotsElement(emptySlots));
+	    foldedEmptySlots = foldedEmptySlots + emptySlots - 1;
 	  }
-	  if (previewItems.length > max || gripLength > previewItems.length) {
-	    let leftItemNum = gripLength - max > 0 ? gripLength - max : gripLength - previewItems.length;
+	
+	  const itemsShown = items.length + foldedEmptySlots;
+	  if (gripLength > itemsShown) {
 	    items.push(Caption({
-	      object: safeObjectLink(props, {}, leftItemNum + " more…")
+	      object: safeObjectLink(props, {}, gripLength - itemsShown + " more…")
 	    }));
 	  }
 	
 	  return items;
+	}
+	
+	function getEmptySlotsElement(number) {
+	  // TODO: Use l10N - See https://github.com/devtools-html/reps/issues/141
+	  return `<${number} empty slot${number > 1 ? "s" : ""}>`;
 	}
 	
 	function supportsObject(grip, type) {
@@ -3111,16 +3150,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 	
 	function GripMap(props) {
-	  let object = props.object;
-	  let propsArray = safeEntriesIterator(props, object, props.mode === MODE.LONG ? 10 : 3);
+	  let {
+	    mode,
+	    object
+	  } = props;
 	
-	  if (props.mode === MODE.TINY) {
+	  if (mode === MODE.TINY) {
 	    return span({ className: "objectBox objectBox-object" }, getTitle(props, object));
 	  }
 	
+	  let propsArray = safeEntriesIterator(props, object, props.mode === MODE.LONG ? 10 : 3);
+	
 	  return span({ className: "objectBox objectBox-object" }, getTitle(props, object), safeObjectLink(props, {
 	    className: "objectLeftBrace"
-	  }, " { "), propsArray, safeObjectLink(props, {
+	  }, " { "), ...propsArray, safeObjectLink(props, {
 	    className: "objectRightBrace"
 	  }, " }"));
 	}
@@ -3165,7 +3208,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }));
 	  }
 	
-	  return entries;
+	  return unfoldEntries(entries);
+	}
+	
+	function unfoldEntries(items) {
+	  return items.reduce((res, item, index) => {
+	    if (Array.isArray(item)) {
+	      res = res.concat(item);
+	    } else {
+	      res.push(item);
+	    }
+	
+	    // Interleave commas between elements
+	    if (index !== items.length - 1) {
+	      res.push(", ");
+	    }
+	    return res;
+	  }, []);
 	}
 	
 	/**
@@ -3198,9 +3257,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      name: key,
 	      equal: ": ",
 	      object: value,
-	      // Do not add a trailing comma on the last entry
-	      // if there won't be a "more..." item.
-	      delim: i < indexes.length - 1 || indexes.length < entries.length ? ", " : null,
 	      mode: MODE.TINY,
 	      objectLink,
 	      onDOMNodeMouseOver,

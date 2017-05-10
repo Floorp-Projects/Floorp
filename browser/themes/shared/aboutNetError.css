@@ -4,16 +4,8 @@
 
 @import url("chrome://browser/skin/error-pages.css");
 
-body {
-  background-image: linear-gradient(-45deg, #eeeeee,     #eeeeee 33%,
-                                            #fbfbfb 33%, #fbfbfb 66%,
-                                            #eeeeee 66%, #eeeeee);
-}
-
-body.certerror {
-  background-image: linear-gradient(-45deg, #f0d000,     #f0d000 33%,
-                                            #fedc00 33%, #fedc00 66%,
-                                            #f0d000 66%, #f0d000);
+:root {
+  --exception-button-container-background: #F5F5F7;
 }
 
 body.captiveportal .title {
@@ -57,11 +49,6 @@ body:not(.neterror) #netErrorButtonContainer {
 
 #errorTryAgain {
   margin-top: 1.2em;
-  min-width: 150px;
-}
-
-#returnButton {
-  min-width: 250px;
 }
 
 #advancedButton {
@@ -88,14 +75,10 @@ body:not(.neterror) #advancedButton {
   display: none;
 }
 
-.container {
-  position: relative;
-}
-
 #advancedPanelContainer {
   position: absolute;
-  padding: 24px 0;
   width: 100%;
+  left: 0;
 }
 
 .advanced-panel {
@@ -103,11 +86,9 @@ body:not(.neterror) #advancedButton {
   display: none;
   background-color: white;
   border: 1px lightgray solid;
-  /* Don't use top padding because the default p style has top padding, and it
-   * makes the overall div look uneven */
-  padding: 0 12px 12px 12px;
-  box-shadow: 0 0 4px #ddd;
-  font-size: 0.9em;
+  margin: 48px auto;
+  min-width: var(--in-content-container-min-width);
+  max-width: var(--in-content-container-max-width);
 }
 
 #overrideWeakCryptoPanel {
@@ -139,6 +120,7 @@ span#hostname {
 }
 
 #badCertTechnicalInfo {
+  margin: 3em;
   overflow: auto;
   white-space: pre-wrap;
 }
@@ -152,10 +134,9 @@ span#hostname {
   background-color: var(--in-content-box-background-hover) !important;
   border-top: 1px solid var(--in-content-border-color);
   position: absolute;
-  left: 0%;
-  top: 100%;
-  width: 65%;
+  width: 100%;
   padding: 1em 17.5%;
+  box-sizing: border-box;
 }
 
 #certificateErrorText {
@@ -167,4 +148,11 @@ span#hostname {
 #cert_domain_link:not([href]) {
   color: var(--in-content-page-color);
   text-decoration: none;
+}
+
+.exceptionDialogButtonContainer {
+  background-color: var(--exception-button-container-background);
+  display: flex;
+  justify-content: end;
+  padding: 10px;
 }

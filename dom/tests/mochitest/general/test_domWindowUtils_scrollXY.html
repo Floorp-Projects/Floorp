@@ -77,7 +77,7 @@
   <!-- can't run this in the test document, since it potentially runs in a
        scrolling="no" test harness iframe, and that causes a failure for some
        reason -->
-  <iframe src="data:text/html,<body style='width: 100000px; height: 100000px;'><p>top</p></body>"
+  <iframe srcdoc="<body style='width: 100000px; height: 100000px;'><p>top</p></body>"
           id="iframe"
           onload="doTests();">
   </iframe>

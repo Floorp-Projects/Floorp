@@ -452,14 +452,7 @@ void profiler_add_marker(const char *aMarker,
 # define PROFILER_PLATFORM_TRACING(name)
 #endif
 
-// FIXME/bug 789667: memory constraints wouldn't much of a problem for this
-// small a sample buffer size, except that serializing the profile data is
-// extremely, unnecessarily memory intensive.
-#ifdef MOZ_WIDGET_GONK
-# define PROFILER_LIKELY_MEMORY_CONSTRAINED
-#endif
-
-#if !defined(PROFILER_LIKELY_MEMORY_CONSTRAINED) && !defined(ARCH_ARMV6)
+#if !defined(ARCH_ARMV6)
 # define PROFILER_DEFAULT_ENTRIES 1000000
 #else
 # define PROFILER_DEFAULT_ENTRIES 100000
@@ -469,15 +462,7 @@ void profiler_add_marker(const char *aMarker,
 // for a single backtrace.
 #define PROFILER_GET_BACKTRACE_ENTRIES 1000
 
-// A 1ms sampling interval has been shown to be a large perf hit (10fps) on
-// memory-constrained (low-end) platforms, and additionally to yield different
-// results from the profiler. Where this is the important case, b2g, there are
-// also many gecko processes which magnify these effects.
-#if defined(PROFILER_LIKELY_MEMORY_CONSTRAINED)
-# define PROFILER_DEFAULT_INTERVAL 10
-#else
-# define PROFILER_DEFAULT_INTERVAL 1
-#endif
+#define PROFILER_DEFAULT_INTERVAL 1
 
 namespace mozilla {
 

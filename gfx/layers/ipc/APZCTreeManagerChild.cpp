@@ -166,12 +166,6 @@ APZCTreeManagerChild::CancelAnimation(const ScrollableLayerGuid &aGuid)
 }
 
 void
-APZCTreeManagerChild::AdjustScrollForSurfaceShift(const ScreenPoint& aShift)
-{
-  SendAdjustScrollForSurfaceShift(aShift);
-}
-
-void
 APZCTreeManagerChild::SetDPI(float aDpiValue)
 {
   SendSetDPI(aDpiValue);

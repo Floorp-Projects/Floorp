@@ -36,7 +36,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=874640
       ["dom.forms.datetime", state[1] === 'true'],
       ["dom.forms.datetime.others", state[2] === 'true']]},
       function() {
-        iframe.src = 'data:text/html,<script>' +
+        iframe.srcdoc = '<script>' +
                  'parent.is("valueAsDate" in document.createElement("input"), ' +
                  state[3] + ', "valueAsDate presence state should be ' + state[3] + '");' +
                  '<\/script>'

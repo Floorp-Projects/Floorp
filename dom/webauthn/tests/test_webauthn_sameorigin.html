@@ -12,151 +12,175 @@
 </head>
 <body>
 
-<h1>Test Same Origin Policy for W3C Web Authentication</h1>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1309284">Mozilla Bug 1309284</a>
+  <h1>Test Same Origin Policy for W3C Web Authentication</h1>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1309284">Mozilla Bug 1309284</a>
 
-<script class="testbody" type="text/javascript">
-"use strict";
+  <script class="testbody" type="text/javascript">
+   "use strict";
 
-// Execute the full-scope test
-SimpleTest.waitForExplicitFinish();
+   // Execute the full-scope test
+   SimpleTest.waitForExplicitFinish();
 
-var gTrackedCredential = {};
+   var gTrackedCredential = {};
 
-function arrivingHereIsGood(aResult) {
-  ok(true, "Good result! Received a: " + aResult);
-  return Promise.resolve();
-}
+   function arrivingHereIsGood(aResult) {
+     ok(true, "Good result! Received a: " + aResult);
+     return Promise.resolve();
+   }
 
-function arrivingHereIsBad(aResult) {
-  // TODO: Change to `ok` when Bug 1329764 lands
-  todo(false, "Bad result! Received a: " + aResult);
-  return Promise.resolve();
-}
+   function arrivingHereIsBad(aResult) {
+     // TODO: Change to `ok` when Bug 1329764 lands
+     todo(false, "Bad result! Received a: " + aResult);
+     return Promise.resolve();
+   }
 
-function expectSecurityError(aResult) {
-  // TODO: Change to `ok` when Bug 1329764 lands
-  todo(aResult.toString().startsWith("SecurityError"), "Expecting a SecurityError");
-  return Promise.resolve();
-}
+   function expectSecurityError(aResult) {
+     // TODO: Change to `ok` when Bug 1329764 lands
+     todo(aResult.toString().startsWith("SecurityError"), "Expecting a SecurityError");
+     return Promise.resolve();
+   }
 
-function keepThisScopedCredential(aScopedCredInfo) {
-  gTrackedCredential = {
-    type: aScopedCredInfo.credential.type,
-    id: Uint8Array.from(aScopedCredInfo.credential.id),
-    transports: [ "usb" ],
-  }
-  return Promise.resolve(aScopedCredInfo);
-}
+   function keepThisScopedCredential(aScopedCredInfo) {
+     gTrackedCredential = {
+       type: aScopedCredInfo.credential.type,
+       id: Uint8Array.from(aScopedCredInfo.credential.id),
+       transports: [ "usb" ],
+     }
+     return Promise.resolve(aScopedCredInfo);
+   }
 
-SpecialPowers.pushPrefEnv({"set": [["security.webauth.webauthn", true],
-                                   ["security.webauth.webauthn_enable_softtoken", true],
-                                   ["security.webauth.webauthn_enable_usbtoken", false]]},
-function() {
-  isnot(navigator.authentication, undefined, "WebAuthn API endpoint must exist");
-  isnot(navigator.authentication.makeCredential, undefined,
-        "WebAuthn makeCredential API endpoint must exist");
-  isnot(navigator.authentication.getAssertion, undefined,
-        "WebAuthn getAssertion API endpoint must exist");
+   function runTests() {
+     isnot(navigator.authentication, undefined, "WebAuthn API endpoint must exist");
+     isnot(navigator.authentication.makeCredential, undefined,
+           "WebAuthn makeCredential API endpoint must exist");
+     isnot(navigator.authentication.getAssertion, undefined,
+           "WebAuthn getAssertion API endpoint must exist");
 
-  let authn = navigator.authentication;
+     let authn = navigator.authentication;
 
-  let chall = new Uint8Array(16);
-  window.crypto.getRandomValues(chall);
+     let chall = new Uint8Array(16);
+     window.crypto.getRandomValues(chall);
 
-  let acct = {rpDisplayName: "none", displayName: "none", id: "none"};
-  let param = {type: "ScopedCred", algorithm: "p-256"};
+     let acct = {rpDisplayName: "none", displayName: "none", id: "none"};
+     let param = {type: "ScopedCred", algorithm: "p-256"};
 
-  Promise.all([
-    // Test basic good call
-    authn.makeCredential(acct, [param], chall, {rpId: document.origin})
-    .then(keepThisScopedCredential)
-    .then(arrivingHereIsGood)
-    .catch(arrivingHereIsBad),
+     var testFuncs = [
+       function() {
+         // Test basic good call
+         return authn.makeCredential(acct, [param], chall, {rpId: document.origin})
+                     .then(keepThisScopedCredential)
+                     .then(arrivingHereIsGood)
+                     .catch(arrivingHereIsBad);
+       },
 
-    // Test rpId being unset
-    authn.makeCredential(acct, [param], chall, {})
-    .then(arrivingHereIsGood)
-    .catch(arrivingHereIsBad),
+       function() {
+         // Test rpId being unset
+         return authn.makeCredential(acct, [param], chall, {})
+                     .then(arrivingHereIsGood)
+                     .catch(arrivingHereIsBad);
+       },
+       function() {
+         // Test this origin with optional fields
+         return authn.makeCredential(acct, [param], chall,
+                                     {rpId: "user:pass@" + document.origin + ":8888"})
+                     .then(arrivingHereIsBad)
+                     .catch(expectSecurityError);
+       },
+       function() {
+         // Test blank rpId
+         return authn.makeCredential(acct, [param], chall, {rpId: ""})
+                     .then(arrivingHereIsBad)
+                     .catch(expectSecurityError);
+       },
+       function() {
+         // Test subdomain of this origin
+         return authn.makeCredential(acct, [param], chall,
+                                     {rpId: "subdomain." + document.origin})
+                     .then(arrivingHereIsBad)
+                     .catch(expectSecurityError);
+       },
+       function() {
+         // Test another origin
+         return authn.makeCredential(acct, [param], chall, {rpId: "example.com"})
+                     .then(arrivingHereIsBad)
+                     .catch(expectSecurityError);
+       },
+       function () {
+         // est a different domain within the same TLD
+         return authn.makeCredential(acct, [param], chall, {rpId: "alt.test"})
+                     .then(arrivingHereIsBad)
+                     .catch(expectSecurityError);
+       },
+       function () {
+         // Test basic good call
+         return authn.getAssertion(chall, {allowList: [ gTrackedCredential ],
+                                           rpId: document.origin})
+                     .then(arrivingHereIsGood)
+                     .catch(arrivingHereIsBad);
+       },
+       function () {
+         // Test rpId being unset
+         return authn.getAssertion(chall, {allowList: [ gTrackedCredential ]})
+                     .then(arrivingHereIsGood)
+                     .catch(arrivingHereIsBad);
+       },
+       function () {
+         // Test this origin with optional fields
+         return authn.getAssertion(chall, {allowList: [ gTrackedCredential ],
+                                           rpId: "user:pass@" + document.origin + ":8888"})
+                     .then(arrivingHereIsBad)
+                     .catch(expectSecurityError);
+       },
+       function () {
+         // Test blank rpId
+         return authn.getAssertion(chall, {allowList: [ gTrackedCredential ],
+                                           rpId: ""})
+                     .then(arrivingHereIsBad)
+                     .catch(expectSecurityError);
+       },
+       function () {
+         // Test subdomain of this origin
+         return authn.getAssertion(chall, {allowList: [ gTrackedCredential ],
+                                           rpId: "subdomain." + document.origin})
+                     .then(arrivingHereIsBad)
+                     .catch(expectSecurityError);
+       },
+       function () {
+         // Test another origin
+         return authn.getAssertion(chall, {allowList: [ gTrackedCredential ],
+                                           rpId: "example.com"})
+                     .then(arrivingHereIsBad)
+                     .catch(expectSecurityError);
+       },
+       function () {
+         // Test a different domain within the same TLD
+         return authn.getAssertion(chall, {allowList: [ gTrackedCredential ],
+                                           rpId: "alt.test"})
+                     .then(arrivingHereIsBad)
+                     .catch(expectSecurityError)
+       },
+       function () {
+         SimpleTest.finish();
+       }
+     ];
+     var i = 0;
+     var runNextTest = () => {
+       if (i == testFuncs.length) {
+         SimpleTest.finish();
+         return;
+       }
+       console.log(i);
+       testFuncs[i]().then(() => { runNextTest(); });
+       i = i + 1;
+     };
+     runNextTest();
+   };
+   SpecialPowers.pushPrefEnv({"set": [["security.webauth.webauthn", true],
+                                      ["security.webauth.webauthn_enable_softtoken", true],
+                                      ["security.webauth.webauthn_enable_usbtoken", false]]},
+                             runTests);
 
-    // Test this origin with optional fields
-    authn.makeCredential(acct, [param], chall,
-                         {rpId: "user:pass@" + document.origin + ":8888"})
-    .then(arrivingHereIsBad)
-    .catch(expectSecurityError),
-
-    // Test blank rpId
-    authn.makeCredential(acct, [param], chall, {rpId: ""})
-    .then(arrivingHereIsBad)
-    .catch(expectSecurityError),
-
-    // Test subdomain of this origin
-    authn.makeCredential(acct, [param], chall,
-                         {rpId: "subdomain." + document.origin})
-    .then(arrivingHereIsBad)
-    .catch(expectSecurityError),
-
-    // Test another origin
-    authn.makeCredential(acct, [param], chall, {rpId: "example.com"})
-    .then(arrivingHereIsBad)
-    .catch(expectSecurityError),
-
-    // est a different domain within the same TLD
-    authn.makeCredential(acct, [param], chall, {rpId: "alt.test"})
-    .then(arrivingHereIsBad)
-    .catch(expectSecurityError)
-
-  ])
-  .then(function(){
-    return Promise.all([
-      // Test basic good call
-      authn.getAssertion(chall, {allowList: [ gTrackedCredential ],
-                                 rpId: document.origin})
-      .then(arrivingHereIsGood)
-      .catch(arrivingHereIsBad),
-
-      // Test rpId being unset
-      authn.getAssertion(chall, {allowList: [ gTrackedCredential ]})
-      .then(arrivingHereIsGood)
-      .catch(arrivingHereIsBad),
-
-      // Test this origin with optional fields
-      authn.getAssertion(chall, {allowList: [ gTrackedCredential ],
-                                 rpId: "user:pass@" + document.origin + ":8888"})
-      .then(arrivingHereIsBad)
-      .catch(expectSecurityError),
-
-      // Test blank rpId
-      authn.getAssertion(chall, {allowList: [ gTrackedCredential ],
-                                 rpId: ""})
-      .then(arrivingHereIsBad)
-      .catch(expectSecurityError),
-
-      // Test subdomain of this origin
-      authn.getAssertion(chall, {allowList: [ gTrackedCredential ],
-                                 rpId: "subdomain." + document.origin})
-      .then(arrivingHereIsBad)
-      .catch(expectSecurityError),
-
-      // Test another origin
-      authn.getAssertion(chall, {allowList: [ gTrackedCredential ],
-                                 rpId: "example.com"})
-      .then(arrivingHereIsBad)
-      .catch(expectSecurityError),
-
-      // Test a different domain within the same TLD
-      authn.getAssertion(chall, {allowList: [ gTrackedCredential ],
-                                 rpId: "alt.test"})
-      .then(arrivingHereIsBad)
-      .catch(expectSecurityError)
-    ]);
-  })
-  .then(function(){
-    SimpleTest.finish();
-  });
-});
-
-</script>
+  </script>
 
 </body>
 </html>

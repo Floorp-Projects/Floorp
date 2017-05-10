@@ -3512,7 +3512,8 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsINode* aContext,
                           imgINotificationObserver* aObserver, int32_t aLoadFlags,
                           const nsAString& initiatorType,
                           imgRequestProxy** aRequest,
-                          uint32_t aContentPolicyType)
+                          uint32_t aContentPolicyType,
+                          bool aUseUrgentStartForChannel)
 {
   NS_PRECONDITION(aURI, "Must have a URI");
   NS_PRECONDITION(aContext, "Must have a context");
@@ -3551,6 +3552,7 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsINode* aContext,
                               nullptr,              /* cache key */
                               aContentPolicyType,   /* content policy type */
                               initiatorType,        /* the load initiator */
+                              aUseUrgentStartForChannel, /* urgent-start flag */
                               aRequest);
 }
 
@@ -6821,34 +6823,6 @@ nsContentUtils::WidgetForDocument(const nsIDocument* aDoc)
         }
       }
     }
-  }
-
-  return nullptr;
-}
-
-nsIWidget*
-nsContentUtils::WidgetForContent(const nsIContent* aContent)
-{
-  nsIFrame* frame = aContent->GetPrimaryFrame();
-  if (frame) {
-    frame = nsLayoutUtils::GetDisplayRootFrame(frame);
-
-    nsView* view = frame->GetView();
-    if (view) {
-      return view->GetWidget();
-    }
-  }
-
-  return nullptr;
-}
-
-already_AddRefed<LayerManager>
-nsContentUtils::LayerManagerForContent(const nsIContent *aContent)
-{
-  nsIWidget* widget = nsContentUtils::WidgetForContent(aContent);
-  if (widget) {
-    RefPtr<LayerManager> manager = widget->GetLayerManager();
-    return manager.forget();
   }
 
   return nullptr;

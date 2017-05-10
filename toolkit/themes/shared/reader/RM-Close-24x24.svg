@@ -1,23 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24" height="24" viewBox="0 0 24 24">
-  <defs>
-    <style>
-      use:not(:target) {
-        display: none;
-      }
-      #close {
-        fill: #808080;
-      }
-      #close-hover {
-        fill: #fff;
-      }
-    </style>
-
-    <path id="close-shape" d="M19,22H6a2,2,0,0,1-2-2V18l2,2H18a1,1,0,0,0,1-1V5a1,1,0,0,0-1-1H6L4,6V4A2,2,0,0,1,6,2H19a2,2,0,0,1,2,2V20A2,2,0,0,1,19,22Zm-6-9H5.4l4.2,4.154L8.186,18.631,1.567,12.017,8.021,5.411,9.5,6.95,5.424,11H13v2Z"/>
-  </defs>
-  <use id="close" xlink:href="#close-shape"/>
-  <use id="close-hover" xlink:href="#close-shape"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <path fill="context-fill" d="M19,22H6a2,2,0,0,1-2-2V18l2,2H18a1,1,0,0,0,1-1V5a1,1,0,0,0-1-1H6L4,6V4A2,2,0,0,1,6,2H19a2,2,0,0,1,2,2V20A2,2,0,0,1,19,22Zm-6-9H5.4l4.2,4.154L8.186,18.631,1.567,12.017,8.021,5.411,9.5,6.95,5.424,11H13v2Z"/>
 </svg>
+

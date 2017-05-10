@@ -14,12 +14,13 @@
 #include "gl/GrGLVaryingHandler.h"
 #include "glsl/GrGLSLProgramBuilder.h"
 #include "glsl/GrGLSLProgramDataManager.h"
+#include "ir/SkSLProgram.h"
 
 class GrFragmentProcessor;
 class GrGLContextInfo;
 class GrProgramDesc;
 class GrGLSLShaderBuilder;
-class GrGLSLCaps;
+class GrShaderCaps;
 
 class GrGLProgramBuilder : public GrGLSLProgramBuilder {
 public:
@@ -28,26 +29,30 @@ public:
      * The program implements what is specified in the stages given as input.
      * After successful generation, the builder result objects are available
      * to be used.
+     * This function may modify the GrProgramDesc by setting the surface origin
+     * key to 0 (unspecified) if it turns out the program does not care about
+     * the surface origin.
      * @return true if generation was successful.
      */
     static GrGLProgram* CreateProgram(const GrPipeline&,
                                       const GrPrimitiveProcessor&,
-                                      const GrProgramDesc&,
+                                      GrProgramDesc*,
                                       GrGLGpu*);
 
     const GrCaps* caps() const override;
-    const GrGLSLCaps* glslCaps() const override;
 
     GrGLGpu* gpu() const { return fGpu; }
 
 private:
     GrGLProgramBuilder(GrGLGpu*, const GrPipeline&, const GrPrimitiveProcessor&,
-                       const GrProgramDesc&);
+                       GrProgramDesc*);
 
     bool compileAndAttachShaders(GrGLSLShaderBuilder& shader,
                                  GrGLuint programId,
                                  GrGLenum type,
-                                 SkTDArray<GrGLuint>* shaderIds);
+                                 SkTDArray<GrGLuint>* shaderIds,
+                                 const SkSL::Program::Settings& settings,
+                                 SkSL::Program::Inputs* outInputs);
     GrGLProgram* finalize();
     void bindProgramResourceLocations(GrGLuint programID);
     bool checkLinkStatus(GrGLuint programID);

@@ -670,7 +670,8 @@ JSObject::writeBarrierPost(void* cellp, JSObject* prev, JSObject* next)
         return;
     }
 
-    // Remove the prev entry if the new value does not need it.
+    // Remove the prev entry if the new value does not need it. There will only
+    // be a prev entry if the prev value was in the nursery.
     if (prev && (buffer = prev->storeBuffer()))
         buffer->unputCell(static_cast<js::gc::Cell**>(cellp));
 }

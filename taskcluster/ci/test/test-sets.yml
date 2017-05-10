@@ -192,6 +192,7 @@ macosx64-tests-talos:
     - talos-other
     - talos-svgr
     - talos-tp5o
+    - talos-perf-reftest
 
 linux32-tests:
     - cppunit

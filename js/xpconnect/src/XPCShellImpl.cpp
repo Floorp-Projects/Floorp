@@ -1173,76 +1173,6 @@ ProcessArgs(AutoJSAPI& jsapi, char** argv, int argc, XPCShellDirProvider* aDirPr
 
 /***************************************************************************/
 
-// #define TEST_InitClassesWithNewWrappedGlobal
-
-#ifdef TEST_InitClassesWithNewWrappedGlobal
-// XXX hacky test code...
-#include "xpctest.h"
-
-class TestGlobal : public nsIXPCTestNoisy, public nsIXPCScriptable
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIXPCTESTNOISY
-    NS_DECL_NSIXPCSCRIPTABLE
-
-    TestGlobal(){}
-};
-
-NS_IMPL_ISUPPORTS(TestGlobal, nsIXPCTestNoisy, nsIXPCScriptable)
-
-// The nsIXPCScriptable map declaration that will generate stubs for us...
-#define XPC_MAP_CLASSNAME         TestGlobal
-#define XPC_MAP_QUOTED_CLASSNAME "TestGlobal"
-#define XPC_MAP_FLAGS (XPC_SCRIPTABLE_USE_JSSTUB_FOR_ADDPROPERTY |\
-                       XPC_SCRIPTABLE_USE_JSSTUB_FOR_DELPROPERTY |\
-                       XPC_SCRIPTABLE_USE_JSSTUB_FOR_SETPROPERTY)
-#include "xpc_map_end.h" /* This will #undef the above */
-
-NS_IMETHODIMP TestGlobal::Squawk() {return NS_OK;}
-
-#endif
-
-// uncomment to install the test 'this' translator
-// #define TEST_TranslateThis
-
-#ifdef TEST_TranslateThis
-
-#include "xpctest.h"
-
-class nsXPCFunctionThisTranslator : public nsIXPCFunctionThisTranslator
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIXPCFUNCTIONTHISTRANSLATOR
-
-  nsXPCFunctionThisTranslator();
-  virtual ~nsXPCFunctionThisTranslator();
-  /* additional members */
-};
-
-/* Implementation file */
-NS_IMPL_ISUPPORTS(nsXPCFunctionThisTranslator, nsIXPCFunctionThisTranslator)
-
-nsXPCFunctionThisTranslator::nsXPCFunctionThisTranslator()
-{
-}
-
-nsXPCFunctionThisTranslator::~nsXPCFunctionThisTranslator()
-{
-}
-
-NS_IMETHODIMP
-nsXPCFunctionThisTranslator::TranslateThis(nsISupports* aInitialThis,
-                                           nsISupports** _retval)
-{
-    nsCOMPtr<nsISupports> temp = aInitialThis;
-    temp.forget(_retval);
-    return NS_OK;
-}
-
-#endif
-
 static bool
 GetCurrentWorkingDirectory(nsAString& workingDirectory)
 {
@@ -1508,12 +1438,6 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
         shellSecurityCallbacks = *scb;
         JS_SetSecurityCallbacks(cx, &shellSecurityCallbacks);
 
-#ifdef TEST_TranslateThis
-        nsCOMPtr<nsIXPCFunctionThisTranslator>
-            translator(new nsXPCFunctionThisTranslator);
-        xpc->SetFunctionThisTranslator(NS_GET_IID(nsITestXPCFunctionCallback), translator);
-#endif
-
         RefPtr<BackstagePass> backstagePass;
         rv = NS_NewBackstagePass(getter_AddRefs(backstagePass));
         if (NS_FAILED(rv)) {
@@ -1638,13 +1562,6 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
     // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
     rv = NS_ShutdownXPCOM( nullptr );
     MOZ_ASSERT(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
-
-#ifdef TEST_CALL_ON_WRAPPED_JS_AFTER_SHUTDOWN
-    // test of late call and release (see above)
-    JSContext* bogusCX;
-    bogus->Peek(&bogusCX);
-    bogus = nullptr;
-#endif
 
     telStats = nullptr;
 
