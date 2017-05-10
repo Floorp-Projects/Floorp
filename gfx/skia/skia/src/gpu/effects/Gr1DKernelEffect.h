@@ -28,14 +28,14 @@ public:
         kY_Direction,
     };
 
-    Gr1DKernelEffect(GrResourceProvider* resourceProvider, OptimizationFlags optFlags,
-                     sk_sp<GrTextureProxy> proxy, Direction direction, int radius)
-        : INHERITED(resourceProvider, optFlags, std::move(proxy), nullptr, SkMatrix::I())
+    Gr1DKernelEffect(GrTexture* texture,
+                     Direction direction,
+                     int radius)
+        : INHERITED(texture, nullptr, GrCoordTransform::MakeDivByTextureWHMatrix(texture))
         , fDirection(direction)
-        , fRadius(radius) {
-    }
+        , fRadius(radius) {}
 
-    ~Gr1DKernelEffect() override {}
+    virtual ~Gr1DKernelEffect() {}
 
     static int WidthFromRadius(int radius) { return 2 * radius + 1; }
 
@@ -51,6 +51,7 @@ public:
     }
 
 private:
+
     Direction       fDirection;
     int             fRadius;
 

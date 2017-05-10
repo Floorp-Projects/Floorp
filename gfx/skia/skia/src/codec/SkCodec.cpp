@@ -9,7 +9,6 @@
 #include "SkCodec.h"
 #include "SkCodecPriv.h"
 #include "SkColorSpace.h"
-#include "SkColorSpaceXform_Base.h"
 #include "SkData.h"
 #include "SkGifCodec.h"
 #include "SkHalf.h"
@@ -35,7 +34,9 @@ static const DecoderProc gDecoderProcs[] = {
 #ifdef SK_HAS_WEBP_LIBRARY
     { SkWebpCodec::IsWebp, SkWebpCodec::NewFromStream },
 #endif
+#ifdef SK_HAS_GIF_LIBRARY
     { SkGifCodec::IsGif, SkGifCodec::NewFromStream },
+#endif
 #ifdef SK_HAS_PNG_LIBRARY
     { SkIcoCodec::IsIco, SkIcoCodec::NewFromStream },
 #endif
@@ -53,7 +54,7 @@ SkCodec* SkCodec::NewFromStream(SkStream* stream,
         return nullptr;
     }
 
-    std::unique_ptr<SkStream> streamDeleter(stream);
+    SkAutoTDelete<SkStream> streamDeleter(stream);
 
     // 14 is enough to read all of the supported types.
     const size_t bytesToRead = 14;
@@ -141,6 +142,12 @@ SkCodec::SkCodec(const SkEncodedInfo& info, const SkImageInfo& imageInfo, SkStre
 SkCodec::~SkCodec() {}
 
 bool SkCodec::rewindIfNeeded() {
+    if (!fStream) {
+        // Some codecs do not have a stream.  They may hold onto their own data or another codec.
+        // They must handle rewinding themselves.
+        return true;
+    }
+
     // Store the value of fNeedsRewind so we can update it. Next read will
     // require a rewind.
     const bool needsRewind = fNeedsRewind;
@@ -154,9 +161,7 @@ bool SkCodec::rewindIfNeeded() {
     // startIncrementalDecode will need to be called before incrementalDecode.
     fStartedIncrementalDecode = false;
 
-    // Some codecs do not have a stream.  They may hold onto their own data or another codec.
-    // They must handle rewinding themselves.
-    if (fStream && !fStream->rewind()) {
+    if (!fStream->rewind()) {
         return false;
     }
 
@@ -215,7 +220,9 @@ SkCodec::Result SkCodec::getPixels(const SkImageInfo& info, void* pixels, size_t
     }
 
     fDstInfo = info;
-    fOptions = *options;
+    // FIXME: fOptions should be updated to options here, since fillIncompleteImage (called below
+    // in this method) accesses it. Without updating, it uses the old value.
+    //fOptions = *options;
 
     // On an incomplete decode, the subclass will specify the number of scanlines that it decoded
     // successfully.
@@ -233,12 +240,6 @@ SkCodec::Result SkCodec::getPixels(const SkImageInfo& info, void* pixels, size_t
     // their own.  They indicate that all of the memory has been filled by
     // setting rowsDecoded equal to the height.
     if (kIncompleteInput == result && rowsDecoded != info.height()) {
-        // FIXME: (skbug.com/5772) fillIncompleteImage will fill using the swizzler's width, unless
-        // there is a subset. In that case, it will use the width of the subset. From here, the
-        // subset will only be non-null in the case of SkWebpCodec, but it treats the subset
-        // differenty from the other codecs, and it needs to use the width specified by the info.
-        // Set the subset to null so SkWebpCodec uses the correct width.
-        fOptions.fSubset = nullptr;
         this->fillIncompleteImage(info, pixels, rowBytes, options->fZeroInitialized, info.height(),
                 rowsDecoded);
     }
@@ -471,42 +472,14 @@ void SkCodec::fillIncompleteImage(const SkImageInfo& info, void* dst, size_t row
             fill_proc(fillInfo, fillDst, rowBytes, fillValue, zeroInit, sampler);
             break;
         }
-    }
-}
-
-bool SkCodec::initializeColorXform(const SkImageInfo& dstInfo,
-                                   SkTransferFunctionBehavior premulBehavior) {
-    fColorXform = nullptr;
-    bool needsColorCorrectPremul = needs_premul(dstInfo, fEncodedInfo) &&
-                                   SkTransferFunctionBehavior::kRespect == premulBehavior;
-    if (needs_color_xform(dstInfo, fSrcInfo, needsColorCorrectPremul)) {
-        fColorXform = SkColorSpaceXform_Base::New(fSrcInfo.colorSpace(), dstInfo.colorSpace(),
-                                                  premulBehavior);
-        if (!fColorXform) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-std::vector<SkCodec::FrameInfo> SkCodec::getFrameInfo() {
-    const size_t frameCount = this->getFrameCount();
-    switch (frameCount) {
-        case 0:
-            return std::vector<FrameInfo>{};
-        case 1:
-            if (!this->onGetFrameInfo(0, nullptr)) {
-                // Not animated.
-                return std::vector<FrameInfo>{};
+        case kOutOfOrder_SkScanlineOrder: {
+            SkASSERT(1 == linesRequested || this->getInfo().height() == linesRequested);
+            const SkImageInfo fillInfo = info.makeWH(fillWidth, 1);
+            for (int srcY = linesDecoded; srcY < linesRequested; srcY++) {
+                fillDst = SkTAddOffset<void>(dst, this->outputScanline(srcY) * rowBytes);
+                fill_proc(fillInfo, fillDst, rowBytes, fillValue, zeroInit, sampler);
             }
-            // fall through
-        default: {
-            std::vector<FrameInfo> result(frameCount);
-            for (size_t i = 0; i < frameCount; ++i) {
-                SkAssertResult(this->onGetFrameInfo(i, &result[i]));
-            }
-            return result;
+            break;
         }
     }
 }

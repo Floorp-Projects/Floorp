@@ -36,6 +36,42 @@
     #define validate_sort(edge)
 #endif
 
+static inline void remove_edge(SkEdge* edge) {
+    edge->fPrev->fNext = edge->fNext;
+    edge->fNext->fPrev = edge->fPrev;
+}
+
+static inline void insert_edge_after(SkEdge* edge, SkEdge* afterMe) {
+    edge->fPrev = afterMe;
+    edge->fNext = afterMe->fNext;
+    afterMe->fNext->fPrev = edge;
+    afterMe->fNext = edge;
+}
+
+static void backward_insert_edge_based_on_x(SkEdge* edge SkDECLAREPARAM(int, curr_y)) {
+    SkFixed x = edge->fX;
+
+    SkEdge* prev = edge->fPrev;
+    while (prev->fX > x) {
+        prev = prev->fPrev;
+    }
+    if (prev->fNext != edge) {
+        remove_edge(edge);
+        insert_edge_after(edge, prev);
+    }
+}
+
+// Start from the right side, searching backwards for the point to begin the new edge list
+// insertion, marching forwards from here. The implementation could have started from the left
+// of the prior insertion, and search to the right, or with some additional caching, binary
+// search the starting point. More work could be done to determine optimal new edge insertion.
+static SkEdge* backward_insert_start(SkEdge* prev, SkFixed x) {
+    while (prev->fX > x) {
+        prev = prev->fPrev;
+    }
+    return prev;
+}
+
 static void insert_new_edges(SkEdge* newEdge, int curr_y) {
     if (newEdge->fFirstY != curr_y) {
         return;
@@ -155,7 +191,7 @@ static void walk_edges(SkEdge* prevHead, SkPath::FillType fillType,
                 currE->fX = newX;
             NEXT_X:
                 if (newX < prevX) { // ripple currE backwards until it is x-sorted
-                    backward_insert_edge_based_on_x(currE);
+                    backward_insert_edge_based_on_x(currE  SkPARAM(curr_y));
                 } else {
                     prevX = newX;
                 }
@@ -385,24 +421,21 @@ static SkEdge* sort_edges(SkEdge* list[], int count, SkEdge** last) {
     return list[0];
 }
 
-// clipRect has not been shifted up
-void sk_fill_path(const SkPath& path, const SkIRect& clipRect, SkBlitter* blitter,
-                  int start_y, int stop_y, int shiftEdgesUp, bool pathContainedInClip) {
+// clipRect may be null, even though we always have a clip. This indicates that
+// the path is contained in the clip, and so we can ignore it during the blit
+//
+// clipRect (if no null) has already been shifted up
+//
+void sk_fill_path(const SkPath& path, const SkIRect* clipRect, SkBlitter* blitter,
+                  int start_y, int stop_y, int shiftEdgesUp, const SkRegion& clipRgn) {
     SkASSERT(blitter);
-
-    SkIRect shiftedClip = clipRect;
-    shiftedClip.fLeft <<= shiftEdgesUp;
-    shiftedClip.fRight <<= shiftEdgesUp;
-    shiftedClip.fTop <<= shiftEdgesUp;
-    shiftedClip.fBottom <<= shiftEdgesUp;
 
     SkEdgeBuilder   builder;
 
     // If we're convex, then we need both edges, even the right edge is past the clip
     const bool canCullToTheRight = !path.isConvex();
 
-    SkIRect* builderClip = pathContainedInClip ? nullptr : &shiftedClip;
-    int count = builder.build(path, builderClip, shiftEdgesUp, canCullToTheRight);
+    int count = builder.build(path, clipRect, shiftEdgesUp, canCullToTheRight);
     SkASSERT(count >= 0);
 
     SkEdge**    list = builder.edgeList();
@@ -415,7 +448,7 @@ void sk_fill_path(const SkPath& path, const SkIRect& clipRect, SkBlitter* blitte
              *  we need to restrict our drawing to the intersection of the clip
              *  and those two limits.
              */
-            SkIRect rect = clipRect;
+            SkIRect rect = clipRgn.getBounds();
             if (rect.fTop < start_y) {
                 rect.fTop = start_y;
             }
@@ -451,18 +484,18 @@ void sk_fill_path(const SkPath& path, const SkIRect& clipRect, SkBlitter* blitte
 
     start_y = SkLeftShift(start_y, shiftEdgesUp);
     stop_y = SkLeftShift(stop_y, shiftEdgesUp);
-    if (!pathContainedInClip && start_y < shiftedClip.fTop) {
-        start_y = shiftedClip.fTop;
+    if (clipRect && start_y < clipRect->fTop) {
+        start_y = clipRect->fTop;
     }
-    if (!pathContainedInClip && stop_y > shiftedClip.fBottom) {
-        stop_y = shiftedClip.fBottom;
+    if (clipRect && stop_y > clipRect->fBottom) {
+        stop_y = clipRect->fBottom;
     }
 
     InverseBlitter  ib;
     PrePostProc     proc = nullptr;
 
     if (path.isInverseFillType()) {
-        ib.setBlitter(blitter, clipRect, shiftEdgesUp);
+        ib.setBlitter(blitter, clipRgn.getBounds(), shiftEdgesUp);
         blitter = &ib;
         proc = PrePostInverseBlitterProc;
     }
@@ -471,8 +504,14 @@ void sk_fill_path(const SkPath& path, const SkIRect& clipRect, SkBlitter* blitte
         SkASSERT(count >= 2);   // convex walker does not handle missing right edges
         walk_convex_edges(&headEdge, path.getFillType(), blitter, start_y, stop_y, nullptr);
     } else {
-        walk_edges(&headEdge, path.getFillType(), blitter, start_y, stop_y, proc,
-                shiftedClip.right());
+        int rightEdge;
+        if (clipRect) {
+            rightEdge = clipRect->right();
+        } else {
+            rightEdge = SkScalarRoundToInt(path.getBounds().right()) << shiftEdgesUp;
+        }
+
+        walk_edges(&headEdge, path.getFillType(), blitter, start_y, stop_y, proc, rightEdge);
     }
 }
 
@@ -522,21 +561,12 @@ SkScanClipper::SkScanClipper(SkBlitter* blitter, const SkRegion* clip,
 
         if (clip->isRect()) {
             if (fClipRect->contains(ir)) {
-#ifdef SK_DEBUG
-                fRectClipCheckBlitter.init(blitter, *fClipRect);
-                blitter = &fRectClipCheckBlitter;
-#endif
                 fClipRect = nullptr;
             } else {
                 // only need a wrapper blitter if we're horizontally clipped
                 if (fClipRect->fLeft > ir.fLeft || fClipRect->fRight < ir.fRight) {
                     fRectBlitter.init(blitter, *fClipRect);
                     blitter = &fRectBlitter;
-                } else {
-#ifdef SK_DEBUG
-                    fRectClipCheckBlitter.init(blitter, *fClipRect);
-                    blitter = &fRectClipCheckBlitter;
-#endif
                 }
             }
         } else {
@@ -668,10 +698,8 @@ void SkScan::FillPath(const SkPath& path, const SkRegion& origClip,
         if (path.isInverseFillType()) {
             sk_blit_above(blitter, ir, *clipPtr);
         }
-        SkASSERT(clipper.getClipRect() == nullptr ||
-                *clipper.getClipRect() == clipPtr->getBounds());
-        sk_fill_path(path, clipPtr->getBounds(), blitter, ir.fTop, ir.fBottom,
-                     0, clipper.getClipRect() == nullptr);
+        sk_fill_path(path, clipper.getClipRect(), blitter, ir.fTop, ir.fBottom,
+                     0, *clipPtr);
         if (path.isInverseFillType()) {
             sk_blit_below(blitter, ir, *clipPtr);
         }

@@ -5,14 +5,14 @@
  * found in the LICENSE file.
  */
 
-#include "SkImageEncoderPriv.h"
-
+#include "SkTypes.h"
 #if defined(SK_BUILD_FOR_MAC) || defined(SK_BUILD_FOR_IOS)
 
 #include "SkBitmap.h"
 #include "SkCGUtils.h"
 #include "SkColorPriv.h"
 #include "SkData.h"
+#include "SkImageEncoder.h"
 #include "SkStream.h"
 #include "SkStreamPriv.h"
 #include "SkTemplates.h"
@@ -57,41 +57,50 @@ static CGImageDestinationRef SkStreamToImageDestination(SkWStream* stream,
     return CGImageDestinationCreateWithDataConsumer(consumer, type, 1, nullptr);
 }
 
+class SkImageEncoder_CG : public SkImageEncoder {
+public:
+    SkImageEncoder_CG(Type t) : fType(t) {}
+
+protected:
+    virtual bool onEncode(SkWStream* stream, const SkBitmap& bm, int quality);
+
+private:
+    Type fType;
+};
+
 /*  Encode bitmaps via CGImageDestination. We setup a DataConsumer which writes
     to our SkWStream. Since we don't reference/own the SkWStream, our consumer
     must only live for the duration of the onEncode() method.
  */
-bool SkEncodeImageWithCG(SkWStream* stream, const SkPixmap& pixmap, SkEncodedImageFormat format) {
-    SkBitmap bm;
-    if (!bm.installPixels(pixmap)) {
-        return false;
-    }
-    bm.setImmutable();
+bool SkImageEncoder_CG::onEncode(SkWStream* stream, const SkBitmap& bm,
+                                 int quality) {
+    // Used for converting a bitmap to 8888.
+    const SkBitmap* bmPtr = &bm;
+    SkBitmap bitmap8888;
 
     CFStringRef type;
-    switch (format) {
-        case SkEncodedImageFormat::kICO:
+    switch (fType) {
+        case kICO_Type:
             type = kUTTypeICO;
             break;
-        case SkEncodedImageFormat::kBMP:
+        case kBMP_Type:
             type = kUTTypeBMP;
             break;
-        case SkEncodedImageFormat::kGIF:
+        case kGIF_Type:
             type = kUTTypeGIF;
             break;
-        case SkEncodedImageFormat::kJPEG:
+        case kJPEG_Type:
             type = kUTTypeJPEG;
             break;
-        case SkEncodedImageFormat::kPNG:
+        case kPNG_Type:
             // PNG encoding an ARGB_4444 bitmap gives the following errors in GM:
             // <Error>: CGImageDestinationAddImage image could not be converted to destination
             // format.
             // <Error>: CGImageDestinationFinalize image destination does not have enough images
             // So instead we copy to 8888.
             if (bm.colorType() == kARGB_4444_SkColorType) {
-                SkBitmap bitmap8888;
                 bm.copyTo(&bitmap8888, kN32_SkColorType);
-                bm.swap(bitmap8888);
+                bmPtr = &bitmap8888;
             }
             type = kUTTypePNG;
             break;
@@ -105,7 +114,7 @@ bool SkEncodeImageWithCG(SkWStream* stream, const SkPixmap& pixmap, SkEncodedIma
     }
     SkAutoTCallVProc<const void, CFRelease> ardst(dst);
 
-    CGImageRef image = SkCreateCGImageRef(bm);
+    CGImageRef image = SkCreateCGImageRef(*bmPtr);
     if (nullptr == image) {
         return false;
     }
@@ -113,6 +122,30 @@ bool SkEncodeImageWithCG(SkWStream* stream, const SkPixmap& pixmap, SkEncodedIma
 
     CGImageDestinationAddImage(dst, image, nullptr);
     return CGImageDestinationFinalize(dst);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef SK_USE_CG_ENCODER
+static SkImageEncoder* sk_imageencoder_cg_factory(SkImageEncoder::Type t) {
+    switch (t) {
+        case SkImageEncoder::kICO_Type:
+        case SkImageEncoder::kBMP_Type:
+        case SkImageEncoder::kGIF_Type:
+        case SkImageEncoder::kJPEG_Type:
+        case SkImageEncoder::kPNG_Type:
+            break;
+        default:
+            return nullptr;
+    }
+    return new SkImageEncoder_CG(t);
+}
+
+static SkImageEncoder_EncodeReg gEReg(sk_imageencoder_cg_factory);
+#endif
+
+SkImageEncoder* CreateImageEncoder_CG(SkImageEncoder::Type type) {
+    return new SkImageEncoder_CG(type);
 }
 
 #endif//defined(SK_BUILD_FOR_MAC) || defined(SK_BUILD_FOR_IOS)

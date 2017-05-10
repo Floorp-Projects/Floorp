@@ -6,22 +6,27 @@
  */
 
 #include "SkColorFilter.h"
-#include "SkPM4f.h"
+#include "SkXfermode.h"
 
 #ifndef SkModeColorFilter_DEFINED
 #define SkModeColorFilter_DEFINED
 
 class SkModeColorFilter : public SkColorFilter {
 public:
-    static sk_sp<SkColorFilter> Make(SkColor color, SkBlendMode mode) {
+    static sk_sp<SkColorFilter> Make(SkColor color, SkXfermode::Mode mode) {
         return sk_sp<SkColorFilter>(new SkModeColorFilter(color, mode));
     }
+#ifdef SK_SUPPORT_LEGACY_COLORFILTER_PTR
+    static SkColorFilter* Create(SkColor color, SkXfermode::Mode mode) {
+        return Make(color, mode).release();
+    }
+#endif
 
     SkColor getColor() const { return fColor; }
-    SkBlendMode getMode() const { return fMode; }
+    SkXfermode::Mode getMode() const { return fMode; }
     SkPMColor getPMColor() const { return fPMColor; }
 
-    bool asColorMode(SkColor*, SkBlendMode*) const override;
+    bool asColorMode(SkColor*, SkXfermode::Mode*) const override;
     uint32_t getFlags() const override;
     void filterSpan(const SkPMColor shader[], int count, SkPMColor result[]) const override;
     void filterSpan4f(const SkPM4f shader[], int count, SkPM4f result[]) const override;
@@ -31,12 +36,12 @@ public:
 #endif
 
 #if SK_SUPPORT_GPU
-    sk_sp<GrFragmentProcessor> asFragmentProcessor(GrContext*, SkColorSpace*) const override;
+    sk_sp<GrFragmentProcessor> asFragmentProcessor(GrContext*) const override;
 #endif
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkModeColorFilter)
 
 protected:
-    SkModeColorFilter(SkColor color, SkBlendMode mode) {
+    SkModeColorFilter(SkColor color, SkXfermode::Mode mode) {
         fColor = color;
         fMode = mode;
         this->updateCache();
@@ -44,12 +49,9 @@ protected:
 
     void flatten(SkWriteBuffer&) const override;
 
-    bool onAppendStages(SkRasterPipeline*, SkColorSpace*, SkArenaAlloc*,
-                        bool shaderIsOpaque) const override;
-
 private:
     SkColor             fColor;
-    SkBlendMode         fMode;
+    SkXfermode::Mode    fMode;
     // cache
     SkPMColor           fPMColor;
     SkXfermodeProc      fProc;

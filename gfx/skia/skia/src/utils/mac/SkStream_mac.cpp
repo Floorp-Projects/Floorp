@@ -6,11 +6,9 @@
  */
 
 #include "SkTypes.h"
-
 #if defined(SK_BUILD_FOR_MAC) || defined(SK_BUILD_FOR_IOS)
 
 #include "SkCGUtils.h"
-#include "SkMalloc.h"
 #include "SkStream.h"
 
 // These are used by CGDataProviderCreateWithData

@@ -10,16 +10,10 @@
 #define SkRegionPriv_DEFINED
 
 #include "SkRegion.h"
-
 #include "SkAtomics.h"
-#include "SkMalloc.h"
-
-inline bool SkRegionValueIsSentinel(int32_t value) {
-    return value == (int32_t)SkRegion::kRunTypeSentinel;
-}
 
 #define assert_sentinel(value, isSentinel) \
-    SkASSERT(SkRegionValueIsSentinel(value) == isSentinel)
+    SkASSERT(((value) == SkRegion::kRunTypeSentinel) == isSentinel)
 
 //SkDEBUGCODE(extern int32_t gRgnAllocCounter;)
 
@@ -68,9 +62,7 @@ public:
         //SkDEBUGCODE(sk_atomic_inc(&gRgnAllocCounter);)
         //SkDEBUGF(("************** gRgnAllocCounter::alloc %d\n", gRgnAllocCounter));
 
-        if (count < SkRegion::kRectRegionRuns) {
-            return nullptr;
-        }
+        SkASSERT(count >= SkRegion::kRectRegionRuns);
 
         const int64_t size = sk_64_mul(count, sizeof(RunType)) + sizeof(RunHead);
         if (count < 0 || !sk_64_isS32(size)) { SK_ABORT("Invalid Size"); }
@@ -85,14 +77,10 @@ public:
     }
 
     static RunHead* Alloc(int count, int yspancount, int intervalCount) {
-        if (yspancount <= 0 || intervalCount <= 1) {
-            return nullptr;
-        }
+        SkASSERT(yspancount > 0);
+        SkASSERT(intervalCount > 1);
 
         RunHead* head = Alloc(count);
-        if (!head) {
-            return nullptr;
-        }
         head->fYSpanCount = yspancount;
         head->fIntervalCount = intervalCount;
         return head;

@@ -17,11 +17,8 @@
 
 #include "SkFontMgr.h"
 
-// These are forward declared to avoid pimpl but also hide the FreeType implementation.
-typedef struct FT_LibraryRec_* FT_Library;
-typedef struct FT_FaceRec_* FT_Face;
-typedef struct FT_StreamRec_* FT_Stream;
-typedef signed long FT_Pos;
+#include <ft2build.h>
+#include FT_FREETYPE_H
 
 class SkScalerContext_FreeType_Base : public SkScalerContext {
 protected:
@@ -29,9 +26,9 @@ protected:
     // This value was chosen by eyeballing the result in Firefox and trying to match it.
     static const FT_Pos kBitmapEmboldenStrength = 1 << 6;
 
-    SkScalerContext_FreeType_Base(sk_sp<SkTypeface> typeface, const SkScalerContextEffects& effects,
+    SkScalerContext_FreeType_Base(SkTypeface* typeface, const SkScalerContextEffects& effects,
                                   const SkDescriptor *desc)
-        : INHERITED(std::move(typeface), effects, desc)
+        : INHERITED(typeface, effects, desc)
     {}
 
     void generateGlyphImage(FT_Face face, const SkGlyph& glyph, const SkMatrix& bitmapTransform);
@@ -62,7 +59,7 @@ public:
                       AxisDefinitions* axes) const;
         static void computeAxisValues(
             AxisDefinitions axisDefinitions,
-            const SkFontArguments::VariationPosition position,
+            const SkFontMgr::FontParameters::Axis* requestedAxis, int requestedAxisCount,
             SkFixed* axisValues,
             const SkString& name);
 
@@ -83,19 +80,17 @@ protected:
     SkAdvancedTypefaceMetrics* onGetAdvancedTypefaceMetrics(
                         PerGlyphInfo, const uint32_t*, uint32_t) const override;
     int onGetUPEM() const override;
-    bool onGetKerningPairAdjustments(const uint16_t glyphs[], int count,
-                                     int32_t adjustments[]) const override;
-    int onCharsToGlyphs(const void* chars, Encoding, uint16_t glyphs[],
-                        int glyphCount) const override;
+    virtual bool onGetKerningPairAdjustments(const uint16_t glyphs[], int count,
+                                       int32_t adjustments[]) const override;
+    virtual int onCharsToGlyphs(const void* chars, Encoding, uint16_t glyphs[],
+                                int glyphCount) const override;
     int onCountGlyphs() const override;
 
     LocalizedStrings* onCreateFamilyNameIterator() const override;
 
-    int onGetVariationDesignPosition(SkFontArguments::VariationPosition::Coordinate coordinates[],
-                                     int coordinateCount) const override;
     int onGetTableTags(SkFontTableTag tags[]) const override;
-    size_t onGetTableData(SkFontTableTag, size_t offset,
-                          size_t length, void* data) const override;
+    virtual size_t onGetTableData(SkFontTableTag, size_t offset,
+                                  size_t length, void* data) const override;
 
 private:
     typedef SkTypeface INHERITED;

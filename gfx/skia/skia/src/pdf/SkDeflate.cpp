@@ -9,7 +9,6 @@
 #include "SkData.h"
 #include "SkDeflate.h"
 #include "SkMakeUnique.h"
-#include "SkMalloc.h"
 
 #include "zlib.h"
 

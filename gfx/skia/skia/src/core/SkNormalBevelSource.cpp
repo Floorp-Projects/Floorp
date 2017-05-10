@@ -7,7 +7,6 @@
 
 #include "SkNormalBevelSource.h"
 
-#include "SkArenaAlloc.h"
 #include "SkNormalSource.h"
 #include "SkNormalSourcePriv.h"
 #include "SkPoint3.h"
@@ -15,6 +14,7 @@
 #include "SkWriteBuffer.h"
 
 #if SK_SUPPORT_GPU
+#include "GrInvariantOutput.h"
 #include "glsl/GrGLSLFragmentProcessor.h"
 #include "glsl/GrGLSLFragmentShaderBuilder.h"
 #include "SkGr.h"
@@ -30,13 +30,12 @@
 class NormalBevelFP : public GrFragmentProcessor {
 public:
     NormalBevelFP(SkNormalSource::BevelType bevelType, SkScalar bevelWidth, SkScalar bevelHeight)
-            : INHERITED(kNone_OptimizationFlags)
-            , fBevelType(bevelType)
-            , fBevelWidth(bevelWidth)
-            , fBevelHeight(bevelHeight) {
+        : fBevelType(bevelType)
+        , fBevelWidth(bevelWidth)
+        , fBevelHeight(bevelHeight) {
         this->initClassID<NormalBevelFP>();
 
-        this->setWillUseDistanceVectorField();
+        fUsesDistanceVectorField = true;
     }
 
     class GLSLNormalBevelFP : public GLSLNormalFP {
@@ -105,14 +104,15 @@ public:
             fragBuilder->codeAppendf("%s = vec4(normal, 0.0);", args.fOutputColor);
         }
 
-        static void GenKey(const GrProcessor& proc, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
+        static void GenKey(const GrProcessor& proc, const GrGLSLCaps&,
+                           GrProcessorKeyBuilder* b) {
             const NormalBevelFP& fp = proc.cast<NormalBevelFP>();
             b->add32(static_cast<int>(fp.fBevelType));
         }
 
     protected:
         void setNormalData(const GrGLSLProgramDataManager& pdman,
-                           const GrFragmentProcessor& proc) override {
+                           const GrProcessor& proc) override {
             const NormalBevelFP& normalBevelFP = proc.cast<NormalBevelFP>();
 
             // Updating uniform if bevel type requires it and data has changed
@@ -217,11 +217,15 @@ public:
         GrGLSLProgramDataManager::UniformHandle fNormalizedHeightUni;
     };
 
-    void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {
+    void onGetGLSLProcessorKey(const GrGLSLCaps& caps, GrProcessorKeyBuilder* b) const override {
         GLSLNormalBevelFP::GenKey(*this, caps, b);
     }
 
     const char* name() const override { return "NormalBevelFP"; }
+
+    void onComputeInvariantOutput(GrInvariantOutput* inout) const override {
+        inout->setToUnknown(GrInvariantOutput::ReadInput::kWillNot_ReadInput);
+    }
 
 private:
     GrGLSLFragmentProcessor* onCreateGLSLInstance() const override { return new GLSLNormalBevelFP; }
@@ -236,8 +240,6 @@ private:
     SkNormalSource::BevelType fBevelType;
     SkScalar fBevelWidth;
     SkScalar fBevelHeight;
-
-    typedef GrFragmentProcessor INHERITED;
 };
 
 sk_sp<GrFragmentProcessor> SkNormalBevelSourceImpl::asFragmentProcessor(
@@ -259,8 +261,12 @@ SkNormalBevelSourceImpl::Provider::Provider() {}
 SkNormalBevelSourceImpl::Provider::~Provider() {}
 
 SkNormalSource::Provider* SkNormalBevelSourceImpl::asProvider(const SkShader::ContextRec &rec,
-                                                              SkArenaAlloc* alloc) const {
-    return alloc->make<Provider>();
+                                                              void *storage) const {
+    return new (storage) Provider();
+}
+
+size_t SkNormalBevelSourceImpl::providerSize(const SkShader::ContextRec&) const {
+    return sizeof(Provider);
 }
 
 // TODO Implement feature for the CPU pipeline

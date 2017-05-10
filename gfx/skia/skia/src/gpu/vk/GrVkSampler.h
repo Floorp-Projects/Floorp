@@ -12,18 +12,19 @@
 
 #include "vk/GrVkDefines.h"
 
-class GrSamplerParams;
+class GrTextureAccess;
+class GrTextureParams;
 class GrVkGpu;
 
 
 class GrVkSampler : public GrVkResource {
 public:
-    static GrVkSampler* Create(const GrVkGpu* gpu, const GrSamplerParams&, uint32_t mipLevels);
+    static GrVkSampler* Create(const GrVkGpu* gpu, const GrTextureParams&, uint32_t mipLevels);
 
     VkSampler sampler() const { return fSampler; }
 
     // Helpers for hashing GrVkSampler
-    static uint16_t GenerateKey(const GrSamplerParams&, uint32_t mipLevels);
+    static uint16_t GenerateKey(const GrTextureParams&, uint32_t mipLevels);
 
     static const uint16_t& GetKey(const GrVkSampler& sampler) { return sampler.fKey; }
     static uint32_t Hash(const uint16_t& key) { return key; }
