@@ -52,6 +52,7 @@ public:
     NS_DECL_NSIRUNNABLE
 
     static ScriptPreloader& GetSingleton();
+    static ScriptPreloader& GetChildSingleton();
 
     static ProcessType GetChildProcessType(const nsAString& remoteType);
 
@@ -65,7 +66,7 @@ public:
     void NoteScript(const nsCString& url, const nsCString& cachePath, JS::HandleScript script);
 
     // Initializes the script cache from the startup script cache file.
-    Result<Ok, nsresult> InitCache();
+    Result<Ok, nsresult> InitCache(const nsAString& = NS_LITERAL_STRING("scriptCache"));
 
     void Trace(JSTracer* trc);
 
@@ -107,23 +108,23 @@ private:
     public:
         CachedScript(CachedScript&&) = default;
 
-        CachedScript(const nsCString& url, const nsCString& cachePath, JSScript* script)
-            : mURL(url)
+        CachedScript(ScriptPreloader& cache, const nsCString& url, const nsCString& cachePath, JSScript* script)
+            : mCache(cache)
+            , mURL(url)
             , mCachePath(cachePath)
             , mScript(script)
             , mReadyToExecute(true)
         {}
 
-        explicit inline CachedScript(InputBuffer& buf);
+        inline CachedScript(ScriptPreloader& cache, InputBuffer& buf);
 
         ~CachedScript()
         {
-            auto& cache = GetSingleton();
 #ifdef DEBUG
-            auto hashValue = cache.mScripts.Get(mCachePath);
+            auto hashValue = mCache->mScripts.Get(mCachePath);
             MOZ_ASSERT_IF(hashValue, hashValue == this);
 #endif
-            cache.mScripts.Remove(mCachePath);
+            mCache->mScripts.Remove(mCachePath);
         }
 
         void Cancel();
@@ -171,6 +172,8 @@ private:
             }
             return size;
         }
+
+        ScriptPreloader& mCache;
 
         // The URL from which this script was initially read and compiled.
         nsCString mURL;
@@ -247,7 +250,7 @@ private:
     // Returns a file pointer for the cache file with the given name in the
     // current profile.
     Result<nsCOMPtr<nsIFile>, nsresult>
-    GetCacheFile(const char* leafName);
+    GetCacheFile(const nsAString& suffix);
 
     static CachedScript* FindScript(LinkedList<CachedScript>& scripts, const nsCString& cachePath);
 
@@ -298,6 +301,10 @@ private:
 
     // The process type of the current process.
     static ProcessType sProcessType;
+
+    RefPtr<ScriptPreloader> mChildCache;
+
+    nsString mBaseName;
 
     nsCOMPtr<nsIFile> mProfD;
     nsCOMPtr<nsIThread> mSaveThread;
