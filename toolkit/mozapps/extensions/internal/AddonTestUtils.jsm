@@ -218,6 +218,9 @@ var AddonTestUtils = {
     // Get the profile directory for tests to use.
     this.profileDir = testScope.do_get_profile();
 
+    this.profileExtensions = this.profileDir.clone();
+    this.profileExtensions.append("extensions");
+
     this.extensionsINI = this.profileDir.clone();
     this.extensionsINI.append("extensions.ini");
 
@@ -287,10 +290,7 @@ var AddonTestUtils = {
     }
 
     testScope.do_register_cleanup(() => {
-      for (let file of this.tempXPIs) {
-        if (file.exists())
-          file.remove(false);
-      }
+      this.cleanupTempXPIs();
 
       // Check that the temporary directory is empty
       var dirEntries = this.tempDir.directoryEntries
@@ -340,6 +340,37 @@ var AddonTestUtils = {
 
       return this.promiseShutdownManager();
     });
+  },
+
+  initMochitest(testScope) {
+    this.profileDir = FileUtils.getDir("ProfD", []);
+
+    this.profileExtensions = FileUtils.getDir("ProfD", ["extensions"]);
+
+    this.tempDir = FileUtils.getDir("TmpD", []);
+    this.tempDir.append("addons-mochitest");
+    this.tempDir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+
+    testScope.registerCleanupFunction(() => {
+      this.cleanupTempXPIs();
+      try {
+        this.tempDir.remove(true);
+      } catch (e) {
+        Cu.reportError(e);
+      }
+    });
+  },
+
+  cleanupTempXPIs() {
+    for (let file of this.tempXPIs.splice(0)) {
+      if (file.exists()) {
+        try {
+          file.remove(false);
+        } catch (e) {
+          Cu.reportError(e);
+        }
+      }
+    }
   },
 
   /**
@@ -410,6 +441,10 @@ var AddonTestUtils = {
     } finally {
       zip.close();
     }
+  },
+
+  getIDFromExtension(file) {
+    return this.getIDFromManifest(this.getManifestURI(file));
   },
 
   getIDFromManifest: Task.async(function*(manifestURI) {
@@ -852,9 +887,9 @@ var AddonTestUtils = {
    *
    * @param {nsIFile} xpiFile
    *        The XPI file to install.
-   * @param {nsIFile} installLocation
+   * @param {nsIFile} [installLocation = this.profileExtensions]
    *        The install location (an nsIFile) to install into.
-   * @param {string} id
+   * @param {string} [id]
    *        The ID to install as.
    * @param {boolean} [unpacked = this.testUnpacked]
    *        If true, install as an unpacked directory, rather than a
@@ -863,7 +898,11 @@ var AddonTestUtils = {
    *        A file pointing to the installed location of the XPI file or
    *        unpacked directory.
    */
-  manuallyInstall(xpiFile, installLocation, id, unpacked = this.testUnpacked) {
+  async manuallyInstall(xpiFile, installLocation = this.profileExtensions, id = null, unpacked = this.testUnpacked) {
+    if (id == null) {
+      id = await this.getIDFromExtension(xpiFile);
+    }
+
     if (unpacked) {
       let dir = installLocation.clone();
       dir.append(id);

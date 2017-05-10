@@ -1708,7 +1708,8 @@ this.XPIDatabaseReconcile = {
 
         // If we don't have an old app version then this is a new profile in
         // which case just mark any sideloaded add-ons as already seen.
-        aNewAddon.seen = !aOldAppVersion;
+        aNewAddon.seen = (aInstallLocation.name != KEY_APP_PROFILE &&
+                          !aOldAppVersion);
       }
     }
 
