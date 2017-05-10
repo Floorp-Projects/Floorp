@@ -41,81 +41,42 @@ struct Nth<N, T, Ts...>
   using Type = typename Nth<N - 1, Ts...>::Type;
 };
 
-template <typename...>
-struct FirstTypeIsInRest;
-
-template <typename First>
-struct FirstTypeIsInRest<First> : FalseType {};
-
-template <typename First, typename Second, typename... Rest>
-struct FirstTypeIsInRest<First, Second, Rest...>
-{
-  static constexpr bool value =
-    IsSame<First, Second>::value ||
-    FirstTypeIsInRest<First, Rest...>::value;
-};
-
-template <typename...>
-struct TypesAreDistinct;
-
-template <>
-struct TypesAreDistinct<> : TrueType { };
-
-template<typename First, typename... Rest>
-struct TypesAreDistinct<First, Rest...>
-{
-  static constexpr bool value =
-    !FirstTypeIsInRest<First, Rest...>::value &&
-    TypesAreDistinct<Rest...>::value;
-};
-
-// The `IsVariant` helper is used in conjunction with static_assert and
-// `mozilla::EnableIf` to catch passing non-variant types to `Variant::is<T>()`
-// and friends at compile time, rather than at runtime. It ensures that the
-// given type `Needle` is one of the types in the set of types `Haystack`.
-
-template<typename Needle, typename... Haystack>
-struct IsVariant;
-
-template<typename Needle>
-struct IsVariant<Needle> : FalseType {};
-
-template<typename Needle, typename... Haystack>
-struct IsVariant<Needle, Needle, Haystack...> : TrueType {};
-
-template<typename Needle, typename T, typename... Haystack>
-struct IsVariant<Needle, T, Haystack...> : public IsVariant<Needle, Haystack...> { };
-
 /// SelectVariantTypeHelper is used in the implementation of SelectVariantType.
 template<typename T, typename... Variants>
 struct SelectVariantTypeHelper;
 
 template<typename T>
 struct SelectVariantTypeHelper<T>
-{ };
+{
+  static constexpr size_t count = 0;
+};
 
 template<typename T, typename... Variants>
 struct SelectVariantTypeHelper<T, T, Variants...>
 {
   typedef T Type;
+  static constexpr size_t count = 1 + SelectVariantTypeHelper<T, Variants...>::count;
 };
 
 template<typename T, typename... Variants>
 struct SelectVariantTypeHelper<T, const T, Variants...>
 {
   typedef const T Type;
+  static constexpr size_t count = 1 + SelectVariantTypeHelper<T, Variants...>::count;
 };
 
 template<typename T, typename... Variants>
 struct SelectVariantTypeHelper<T, const T&, Variants...>
 {
   typedef const T& Type;
+  static constexpr size_t count = 1 + SelectVariantTypeHelper<T, Variants...>::count;
 };
 
 template<typename T, typename... Variants>
 struct SelectVariantTypeHelper<T, T&&, Variants...>
 {
   typedef T&& Type;
+  static constexpr size_t count = 1 + SelectVariantTypeHelper<T, Variants...>::count;
 };
 
 template<typename T, typename Head, typename... Variants>
@@ -127,6 +88,9 @@ struct SelectVariantTypeHelper<T, Head, Variants...>
  * SelectVariantType takes a type T and a list of variant types Variants and
  * yields a type Type, selected from Variants, that can store a value of type T
  * or a reference to type T. If no such type was found, Type is not defined.
+ * SelectVariantType also has a `count` member that contains the total number of
+ * selectable types (which will be used to check that a requested type is not
+ * ambiguously present twice.)
  */
 template <typename T, typename... Variants>
 struct SelectVariantType
@@ -373,12 +337,42 @@ struct AsVariantTemporary
  *       if (v.is<A>()) {
  *         A& ref = v.as<A>();
  *         ...
- *       } else (v.is<1>()) { // Same as v.is<B> in this case.
+ *       } else (v.is<1>()) { // Instead of v.is<B>.
  *         ...
  *       } else {
  *         ...
  *       }
  *     }
+ *
+ * In some situation, a Variant may be constructed from templated types, in
+ * which case it is possible that the same type could be given multiple times by
+ * an external developer. Or seemingly-different types could be aliases.
+ * In this case, repeated types can only be accessed through their index, to
+ * prevent ambiguous access by type.
+ *
+ *    // Bad!
+ *    template <typename T>
+ *    struct ResultOrError
+ *    {
+ *      Variant<T, int> m;
+ *      bool IsResult() const { return m.is<T>(); }
+ *      bool IsError() const { return m.is<int>(); }
+ *    };
+ *    // Now instantiante with the result being an int too:
+ *    ResultOrError<int> myResult; // Fail!
+ *    // In Variant<int, int>, which 'int' are we refering to, from inside
+ *    // ResultOrError functions?
+ *
+ *    // Good!
+ *    template <typename T>
+ *    struct ResultOrError
+ *    {
+ *      Variant<T, int> m;
+ *      bool IsResult() const { return m.is<0>(); } // 0 -> T
+ *      bool IsError() const { return m.is<1>(); } // 1 -> int
+ *    };
+ *    // Now instantiante with the result being an int too:
+ *    ResultOrError<int> myResult; // It now works!
  *
  * Attempting to use the contained value as type `T1` when the `Variant`
  * instance contains a value of type `T2` causes an assertion failure.
@@ -466,9 +460,6 @@ struct AsVariantTemporary
 template<typename... Ts>
 class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS MOZ_NON_PARAM Variant
 {
-  static_assert(detail::TypesAreDistinct<Ts...>::value,
-                "Variant with duplicate types is not supported");
-
   using Tag = typename detail::VariantTag<Ts...>::Type;
   using Impl = detail::VariantImplementation<Tag, 0, Ts...>;
 
@@ -505,6 +496,8 @@ public:
   explicit Variant(RefT&& aT)
     : tag(Impl::template tag<T>())
   {
+    static_assert(detail::SelectVariantType<RefT, Ts...>::count == 1,
+                  "Variant can only be selected by type if that type is unique");
     ::new (KnownNotNull, ptr()) T(Forward<RefT>(aT));
   }
 
@@ -518,6 +511,8 @@ public:
   MOZ_IMPLICIT Variant(detail::AsVariantTemporary<RefT>&& aValue)
     : tag(Impl::template tag<T>())
   {
+    static_assert(detail::SelectVariantType<RefT, Ts...>::count == 1,
+                  "Variant can only be selected by type if that type is unique");
     ::new (KnownNotNull, ptr()) T(Move(aValue.mValue));
   }
 
@@ -555,6 +550,8 @@ public:
   template<typename T>
   Variant& operator=(detail::AsVariantTemporary<T>&& aValue)
   {
+    static_assert(detail::SelectVariantType<T, Ts...>::count == 1,
+                  "Variant can only be selected by type if that type is unique");
     this->~Variant();
     ::new (KnownNotNull, this) Variant(Move(aValue));
     return *this;
@@ -568,8 +565,8 @@ public:
   /** Check which variant type is currently contained. */
   template<typename T>
   bool is() const {
-    static_assert(detail::IsVariant<T, Ts...>::value,
-                  "provided a type not found in this Variant's type list");
+    static_assert(detail::SelectVariantType<T, Ts...>::count == 1,
+                  "provided a type not uniquely found in this Variant's type list");
     return Impl::template tag<T>() == tag;
   }
 
@@ -603,8 +600,8 @@ public:
   /** Mutable reference. */
   template<typename T>
   T& as() {
-    static_assert(detail::IsVariant<T, Ts...>::value,
-                  "provided a type not found in this Variant's type list");
+    static_assert(detail::SelectVariantType<T, Ts...>::count == 1,
+                  "provided a type not uniquely found in this Variant's type list");
     MOZ_RELEASE_ASSERT(is<T>());
     return *static_cast<T*>(ptr());
   }
@@ -621,7 +618,7 @@ public:
   /** Immutable const reference. */
   template<typename T>
   const T& as() const {
-    static_assert(detail::IsVariant<T, Ts...>::value,
+    static_assert(detail::SelectVariantType<T, Ts...>::count == 1,
                   "provided a type not found in this Variant's type list");
     MOZ_RELEASE_ASSERT(is<T>());
     return *static_cast<const T*>(ptr());
@@ -644,8 +641,8 @@ public:
    */
   template<typename T>
   T extract() {
-    static_assert(detail::IsVariant<T, Ts...>::value,
-                  "provided a type not found in this Variant's type list");
+    static_assert(detail::SelectVariantType<T, Ts...>::count == 1,
+                  "provided a type not uniquely found in this Variant's type list");
     MOZ_ASSERT(is<T>());
     return T(Move(as<T>()));
   }

@@ -37,6 +37,28 @@ testSimple()
 }
 
 static void
+testDuplicate()
+{
+  printf("testDuplicate\n");
+  Variant<uint32_t, uint64_t, uint32_t> v(uint64_t(1));
+  MOZ_RELEASE_ASSERT(v.is<uint64_t>());
+  MOZ_RELEASE_ASSERT(v.as<uint64_t>() == 1);
+  // Note: uint32_t is not unique, so `v.is<uint32_t>()` is not allowed.
+
+  MOZ_RELEASE_ASSERT(v.is<1>());
+  MOZ_RELEASE_ASSERT(!v.is<0>());
+  MOZ_RELEASE_ASSERT(!v.is<2>());
+  static_assert(mozilla::IsSame<decltype(v.as<0>()), uint32_t&>::value,
+                "as<0>() should return a uint64_t");
+  static_assert(mozilla::IsSame<decltype(v.as<1>()), uint64_t&>::value,
+                "as<1>() should return a uint64_t");
+  static_assert(mozilla::IsSame<decltype(v.as<2>()), uint32_t&>::value,
+                "as<2>() should return a uint64_t");
+  MOZ_RELEASE_ASSERT(v.as<1>() == 1);
+  MOZ_RELEASE_ASSERT(v.extract<1>() == 1);
+}
+
+static void
 testCopy()
 {
   printf("testCopy\n");
@@ -182,6 +204,7 @@ int
 main()
 {
   testSimple();
+  testDuplicate();
   testCopy();
   testMove();
   testDestructor();
