@@ -13,7 +13,6 @@ import org.mozilla.gecko.tests.helpers.NavigationHelper;
 
 import com.robotium.solo.Condition;
 
-import android.os.SystemClock;
 import android.view.KeyEvent;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
@@ -24,8 +23,6 @@ import android.view.inputmethod.InputConnection;
 public class testInputConnection extends JavascriptBridgeTest {
 
     private static final String INITIAL_TEXT = "foo";
-
-    private String mEventsLog;
 
     public void testInputConnection() throws InterruptedException {
         GeckoHelper.blockForReady();
@@ -38,25 +35,25 @@ public class testInputConnection extends JavascriptBridgeTest {
         getJS().syncCall("focus_input", INITIAL_TEXT);
         mGeckoView.mTextInput
             .waitForInputConnection()
-            .testInputConnection(new BasicInputConnectionTest("input"));
+            .testInputConnection(new BasicInputConnectionTest());
 
         // Then switch focus to the text area and rerun tests.
         getJS().syncCall("focus_text_area", INITIAL_TEXT);
         mGeckoView.mTextInput
             .waitForInputConnection()
-            .testInputConnection(new BasicInputConnectionTest("textarea"));
+            .testInputConnection(new BasicInputConnectionTest());
 
         // Then switch focus to the content editable and rerun tests.
         getJS().syncCall("focus_content_editable", INITIAL_TEXT);
         mGeckoView.mTextInput
             .waitForInputConnection()
-            .testInputConnection(new BasicInputConnectionTest("contentEditable"));
+            .testInputConnection(new BasicInputConnectionTest());
 
         // Then switch focus to the design mode document and rerun tests.
         getJS().syncCall("focus_design_mode", INITIAL_TEXT);
         mGeckoView.mTextInput
             .waitForInputConnection()
-            .testInputConnection(new BasicInputConnectionTest("designMode"));
+            .testInputConnection(new BasicInputConnectionTest());
 
         // Then switch focus to the resetting input field, and run tests there.
         getJS().syncCall("focus_resetting_input", "");
@@ -73,21 +70,7 @@ public class testInputConnection extends JavascriptBridgeTest {
         getJS().syncCall("finish_test");
     }
 
-    public void setEventsLog(final String log) {
-        mEventsLog = log;
-    }
-
-    public String getEventsLog() {
-        return mEventsLog;
-    }
-
     private class BasicInputConnectionTest extends InputConnectionTest {
-        private final String mType;
-
-        BasicInputConnectionTest(final String type) {
-            mType = type;
-        }
-
         @Override
         public void test(final InputConnection ic, EditorInfo info) {
             waitFor("focus change", new Condition() {
@@ -161,13 +144,10 @@ public class testInputConnection extends JavascriptBridgeTest {
             assertTextAndSelectionAt("Can finish composition", ic, "frabar", 6);
 
             // Test sendKeyEvent
-            final long time = SystemClock.uptimeMillis();
-            final KeyEvent shiftKey = new KeyEvent(time, time, KeyEvent.ACTION_DOWN,
-                                                   KeyEvent.KEYCODE_SHIFT_LEFT, 0);
-            final KeyEvent leftKey = new KeyEvent(time, time, KeyEvent.ACTION_DOWN,
-                                                  KeyEvent.KEYCODE_DPAD_LEFT, 0);
-            final KeyEvent tKey = new KeyEvent(time, time, KeyEvent.ACTION_DOWN,
-                                               KeyEvent.KEYCODE_T, 0);
+            final KeyEvent shiftKey = new KeyEvent(KeyEvent.ACTION_DOWN,
+                                                   KeyEvent.KEYCODE_SHIFT_LEFT);
+            final KeyEvent leftKey = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_LEFT);
+            final KeyEvent tKey = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_T);
 
             ic.sendKeyEvent(shiftKey);
             ic.sendKeyEvent(leftKey);
@@ -241,8 +221,8 @@ public class testInputConnection extends JavascriptBridgeTest {
             assertTextAndSelectionAt("Can clear text", ic, "", 0);
 
             // Bug 1275371 - shift+backspace should not forward delete on Android.
-            final KeyEvent delKey = new KeyEvent(time, time, KeyEvent.ACTION_DOWN,
-                                                 KeyEvent.KEYCODE_DEL, 0);
+            final KeyEvent delKey = new KeyEvent(KeyEvent.ACTION_DOWN,
+                                                 KeyEvent.KEYCODE_DEL);
 
             ic.beginBatchEdit();
             ic.commitText("foo", 1);
@@ -268,55 +248,12 @@ public class testInputConnection extends JavascriptBridgeTest {
             // Gecko will change text to 'abc' when we input 'b', potentially causing
             // incorrect calculation of text replacement offsets.
             ic.commitText("b", 1);
-            // This test only works for input/textarea,
-            if (mType.equals("input") || mType.equals("textarea")) {
-                assertTextAndSelectionAt("Can handle text replacement", ic, "abc", 2);
-            } else {
-                processGeckoEvents();
-                processInputConnectionEvents();
-            }
+            // We don't assert text here because this test only works for input/textarea,
+            // so an assertion would fail for contentEditable/designMode.
+            processGeckoEvents();
+            processInputConnectionEvents();
 
             ic.deleteSurroundingText(2, 1);
-            assertTextAndSelectionAt("Can clear text", ic, "", 0);
-
-            // Bug 1307816 - Don't end then start composition when setting
-            // composing text, which can confuse the Facebook comment box.
-            getJS().syncCall("start_events_log");
-            ic.setComposingText("f", 1);
-            processGeckoEvents();
-            ic.setComposingText("fo", 1);
-            processGeckoEvents();
-            ic.setComposingText("foo", 1);
-            processGeckoEvents();
-            ic.finishComposingText();
-            assertTextAndSelectionAt("Can reuse composition in Java", ic, "foo", 3);
-
-            getJS().syncCall("end_events_log");
-            if (mType.equals("textarea")) {
-                // textarea has a buggy selectionchange behavior.
-                fAssertEquals("Can reuse composition in Gecko", "<=|==", getEventsLog());
-            } else {
-                // compositionstart > (compositionchange > selectionchange) x3
-                fAssertEquals("Can reuse composition in Gecko", "<=|=|=|", getEventsLog());
-            }
-
-            ic.deleteSurroundingText(3, 0);
-            assertTextAndSelectionAt("Can clear text", ic, "", 0);
-
-            // Bug 1353799 - Can set selection while having a composition, so
-            // the caret can be moved to the start of the composition.
-            getJS().syncCall("start_events_log");
-            ic.setComposingText("foo", 1);
-            assertTextAndSelectionAt("Can set composition before selection", ic, "foo", 3);
-            ic.setSelection(0, 0);
-            assertTextAndSelectionAt("Can set selection after composition", ic, "foo", 0);
-
-            getJS().syncCall("end_events_log");
-            // compositionstart > compositionchange > selectionchange x2
-            fAssertEquals("Can update composition caret", "<=||", getEventsLog());
-
-            ic.finishComposingText();
-            ic.deleteSurroundingText(0, 3);
             assertTextAndSelectionAt("Can clear text", ic, "", 0);
 
             // Make sure we don't leave behind stale events for the following test.
