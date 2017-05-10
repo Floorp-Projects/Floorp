@@ -31,7 +31,6 @@ using namespace mozilla::dom;
 
 ServoStyleSet::ServoStyleSet()
   : mPresContext(nullptr)
-  , mBatching(0)
   , mUniqueIDCounter(0)
   , mAllowResolveStaleStyles(false)
   , mAuthorStyleDisabled(false)
@@ -165,14 +164,11 @@ ServoStyleSet::SetAuthorStyleDisabled(bool aStyleDisabled)
 void
 ServoStyleSet::BeginUpdate()
 {
-  ++mBatching;
 }
 
 nsresult
 ServoStyleSet::EndUpdate()
 {
-  MOZ_ASSERT(mBatching > 0);
-  --mBatching;
   return NS_OK;
 }
 

@@ -472,7 +472,6 @@ private:
   UniquePtr<RawServoStyleSet> mRawSet;
   EnumeratedArray<SheetType, SheetType::Count,
                   nsTArray<Entry>> mEntries;
-  int32_t mBatching;
   uint32_t mUniqueIDCounter;
   bool mAllowResolveStaleStyles;
   bool mAuthorStyleDisabled;
