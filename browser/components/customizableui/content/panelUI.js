@@ -40,6 +40,7 @@ const PanelUI = {
       addonNotificationContainer: gPhotonStructure ? "appMenu-addon-banners" : "PanelUI-footer-addons",
 
       overflowFixedList: gPhotonStructure ? "widget-overflow-fixed-list" : "",
+      navbar: "nav-bar",
     };
   },
 
@@ -85,6 +86,10 @@ const PanelUI = {
       this.overflowFixedList.hidden = false;
       this.overflowFixedList.nextSibling.hidden = false;
       CustomizableUI.registerMenuPanel(this.overflowFixedList, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+      this.navbar.setAttribute("photon-structure", "true");
+      this.updateOverflowStatus();
+    } else {
+      this.navbar.removeAttribute("photon-structure");
     }
   },
 
@@ -596,7 +601,20 @@ const PanelUI = {
     this.reinit();
   },
 
+  updateOverflowStatus() {
+    let hasKids = this.overflowFixedList.hasChildNodes();
+    if (hasKids && !this.navbar.hasAttribute("nonemptyoverflow")) {
+      this.navbar.setAttribute("nonemptyoverflow", "true");
+    } else if (!hasKids && this.navbar.hasAttribute("nonemptyoverflow")) {
+      this.navbar.removeAttribute("nonemptyoverflow");
+    }
+  },
+
   onWidgetAfterDOMChange(aNode, aNextNode, aContainer, aWasRemoval) {
+    if (gPhotonStructure && aContainer == this.overflowFixedList) {
+      this.updateOverflowStatus();
+      return;
+    }
     if (aContainer != this.contents) {
       return;
     }

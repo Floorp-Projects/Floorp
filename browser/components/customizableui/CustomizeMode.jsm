@@ -287,6 +287,7 @@ CustomizeMode.prototype = {
         panelHolder.appendChild(window.PanelUI.overflowFixedList);
         window.PanelUI.overflowFixedList.setAttribute("customizing", true);
         window.PanelUI.menuButton.disabled = true;
+        document.getElementById("nav-bar-overflow-button").disabled = true;
       } else {
         window.PanelUI.menuButton.addEventListener("command", this);
         window.PanelUI.menuButton.open = true;
@@ -527,6 +528,7 @@ CustomizeMode.prototype = {
       if (gPhotonStructure) {
         let overflowContainer = document.getElementById("widget-overflow-scroller");
         overflowContainer.insertBefore(window.PanelUI.overflowFixedList, overflowContainer.firstElementChild);
+        document.getElementById("nav-bar-overflow-button").disabled = false;
       } else {
         window.PanelUI.setMainView(window.PanelUI.mainView);
 
