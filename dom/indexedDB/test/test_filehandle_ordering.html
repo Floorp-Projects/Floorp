@@ -34,8 +34,8 @@
     let fileHandle1 = mutableFile.open("readwrite");
     let fileHandle2 = mutableFile.open("readwrite");
 
-    let request1 = fileHandle2.write("2");
-    let request2 = fileHandle1.write("1");
+    fileHandle2.write("2");
+    fileHandle1.write("1");
 
     fileHandle1.oncomplete = grabEventAndContinueHandler;
     fileHandle2.oncomplete = grabEventAndContinueHandler;

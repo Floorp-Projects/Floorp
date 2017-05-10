@@ -71,7 +71,7 @@
       let request = db.transaction([objectStoreName])
                       .objectStore(objectStoreName).get(fileData.key);
       request.onsuccess = grabEventAndContinueHandler;
-      event = yield undefined;
+      let event = yield undefined;
 
       let result = event.target.result;
       verifyBlob(result, fileData.file, 1);
@@ -118,9 +118,9 @@
       trans.onerror = expectedErrorHandler("UnknownError");
       // the database will also throw an error.
       db.onerror = expectedErrorHandler("UnknownError");
-      event = yield undefined;
-      event = yield undefined;
-      event = yield undefined;
+      yield undefined;
+      yield undefined;
+      yield undefined;
       // the database shouldn't throw any more errors now.
       db.onerror = errorHandler;
     }
@@ -138,7 +138,7 @@
       let request = objectStore.getKey(2);
       request.onsuccess = grabEventAndContinueHandler;
       request.onerror = errorHandler;
-      event = yield undefined;
+      let event = yield undefined;
 
       let result = event.target.result;
       is(result, undefined, "no key found"); // (the get returns undefined)
