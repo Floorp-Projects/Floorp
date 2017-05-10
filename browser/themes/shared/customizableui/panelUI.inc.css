@@ -323,6 +323,20 @@ panelview:not([mainview]) .toolbarbutton-text,
   padding: 4px 0;
 }
 
+/* START photonpanelview adjustments */
+
+photonpanelmultiview panelview {
+  background: var(--arrowpanel-background);
+}
+
+photonpanelmultiview .panel-subview-body {
+  /*XXXmikedeboer this flex is unnecessary, so I unset it for our case. It might
+                  break other panels, though, so I refrain from removing it above. */
+  -moz-box-flex: unset;
+}
+
+/* END photonpanelview adjustments */
+
 .cui-widget-panel.cui-widget-panelWithFooter > .panel-arrowcontainer > .panel-arrowcontent {
   padding-bottom: 0;
 }
