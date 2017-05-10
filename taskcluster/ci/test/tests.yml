@@ -1235,11 +1235,9 @@ talos-chrome:
         config:
             by-test-platform:
                 macosx.*:
-                    - remove_executables.py
                     - talos/mac_config.py
                 default:
                     - talos/linux_config.py
-                    - remove_executables.py
         extra-options:
             - --suite=chromez
             - --add-option
@@ -1262,11 +1260,9 @@ talos-dromaeojs:
         config:
             by-test-platform:
                 macosx.*:
-                    - remove_executables.py
                     - talos/mac_config.py
                 default:
                     - talos/linux_config.py
-                    - remove_executables.py
         extra-options:
             - --suite=dromaeojs
             - --add-option
@@ -1289,11 +1285,9 @@ talos-g1:
         config:
             by-test-platform:
                 macosx.*:
-                    - remove_executables.py
                     - talos/mac_config.py
                 default:
                     - talos/linux_config.py
-                    - remove_executables.py
         extra-options:
             - --suite=g1
             - --add-option
@@ -1317,11 +1311,9 @@ talos-g2:
         config:
             by-test-platform:
                 macosx.*:
-                    - remove_executables.py
                     - talos/mac_config.py
                 default:
                     - talos/linux_config.py
-                    - remove_executables.py
         extra-options:
             - --suite=g2
             - --add-option
@@ -1344,11 +1336,9 @@ talos-g3:
         config:
             by-test-platform:
                 macosx.*:
-                    - remove_executables.py
                     - talos/mac_config.py
                 default:
                     - talos/linux_config.py
-                    - remove_executables.py
         extra-options:
             - --suite=g3
             - --add-option
@@ -1371,11 +1361,9 @@ talos-g4:
         config:
             by-test-platform:
                 macosx.*:
-                    - remove_executables.py
                     - talos/mac_config.py
                 default:
                     - talos/linux_config.py
-                    - remove_executables.py
         extra-options:
             - --suite=g4
             - --add-option
@@ -1425,11 +1413,9 @@ talos-other:
         config:
             by-test-platform:
                 macosx.*:
-                    - remove_executables.py
                     - talos/mac_config.py
                 default:
                     - talos/linux_config.py
-                    - remove_executables.py
         extra-options:
             - --suite=other
             - --add-option
@@ -1453,7 +1439,6 @@ talos-perf-reftest:
             by-test-platform:
                 default:
                     - talos/linux_config.py
-                    - remove_executables.py
         extra-options:
             - --suite=perf-reftest
 
@@ -1474,11 +1459,9 @@ talos-svgr:
         config:
             by-test-platform:
                 macosx.*:
-                    - remove_executables.py
                     - talos/mac_config.py
                 default:
                     - talos/linux_config.py
-                    - remove_executables.py
         extra-options:
             - --suite=svgr
             - --add-option
@@ -1501,11 +1484,9 @@ talos-tp5o:
         config:
             by-test-platform:
                 macosx.*:
-                    - remove_executables.py
                     - talos/mac_config.py
                 default:
                     - talos/linux_config.py
-                    - remove_executables.py
         extra-options:
             - --suite=tp5o
             - --add-option
