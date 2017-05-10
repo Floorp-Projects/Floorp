@@ -343,6 +343,12 @@ interface nsIPermissionManager : nsISupports
    */
   void whenPermissionsAvailable(in nsIPrincipal aPrincipal,
                                 in nsIRunnable aRunnable);
+
+  /**
+   * True if any "preload" permissions are present. This is used to avoid making
+   * potentially expensive permissions checks in nsContentBlocker.
+   */
+  [infallible] readonly attribute boolean hasPreloadPermissions;
 };
 
 %{ C++
