@@ -10,6 +10,10 @@
 #include FT_TRUETYPE_TABLES_H
 #include <algorithm>
 
+#ifndef FT_FACE_FLAG_COLOR
+#define FT_FACE_FLAG_COLOR ( 1L << 14 )
+#endif
+
 #ifdef HAVE_FONTCONFIG_FCFREETYPE_H
 #include <fontconfig/fcfreetype.h>
 #endif
@@ -53,7 +57,7 @@ gfxFT2LockedFace::GetMetrics(gfxFont::Metrics* aMetrics,
     if (MOZ_UNLIKELY(!mFace)) {
         // No face.  This unfortunate situation might happen if the font
         // file is (re)moved at the wrong time.
-        const gfxFloat emHeight = mGfxFont->GetStyle()->size;
+        const gfxFloat emHeight = mGfxFont->GetAdjustedSize();
         aMetrics->emHeight = emHeight;
         aMetrics->maxAscent = aMetrics->emAscent = 0.8 * emHeight;
         aMetrics->maxDescent = aMetrics->emDescent = 0.2 * emHeight;
@@ -80,6 +84,11 @@ gfxFT2LockedFace::GetMetrics(gfxFont::Metrics* aMetrics,
 
     const FT_Size_Metrics& ftMetrics = mFace->size->metrics;
 
+    aMetrics->maxAscent = FLOAT_FROM_26_6(ftMetrics.ascender);
+    aMetrics->maxDescent = -FLOAT_FROM_26_6(ftMetrics.descender);
+    aMetrics->maxAdvance = FLOAT_FROM_26_6(ftMetrics.max_advance);
+    gfxFloat lineHeight = FLOAT_FROM_26_6(ftMetrics.height);
+
     gfxFloat emHeight;
     // Scale for vertical design metric conversion: pixels per design unit.
     // If this remains at 0.0, we can't use metrics from OS/2 etc.
@@ -103,6 +112,19 @@ gfxFT2LockedFace::GetMetrics(gfxFont::Metrics* aMetrics,
         const TT_Header* head =
             static_cast<TT_Header*>(FT_Get_Sfnt_Table(mFace, ft_sfnt_head));
         if (head) {
+            // Bug 1267909 - Even if the font is not explicitly scalable,
+            // if the face has color bitmaps, it should be treated as scalable
+            // and scaled to the desired size. Metrics based on y_ppem need
+            // to be rescaled for the adjusted size. This makes metrics agree
+            // with the scales we pass to Cairo for Fontconfig fonts.
+            if (mFace->face_flags & FT_FACE_FLAG_COLOR) {
+                emHeight = mGfxFont->GetAdjustedSize();
+                gfxFloat adjustScale = emHeight / ftMetrics.y_ppem;
+                aMetrics->maxAscent *= adjustScale;
+                aMetrics->maxDescent *= adjustScale;
+                aMetrics->maxAdvance *= adjustScale;
+                lineHeight *= adjustScale;
+            }
             gfxFloat emUnit = head->Units_Per_EM;
             yScale = emHeight / emUnit;
         }
@@ -111,11 +133,6 @@ gfxFT2LockedFace::GetMetrics(gfxFont::Metrics* aMetrics,
     TT_OS2 *os2 =
         static_cast<TT_OS2*>(FT_Get_Sfnt_Table(mFace, ft_sfnt_os2));
 
-    aMetrics->maxAscent = FLOAT_FROM_26_6(ftMetrics.ascender);
-    aMetrics->maxDescent = -FLOAT_FROM_26_6(ftMetrics.descender);
-    aMetrics->maxAdvance = FLOAT_FROM_26_6(ftMetrics.max_advance);
-
-    gfxFloat lineHeight;
     if (os2 && os2->sTypoAscender && yScale > 0.0) {
         aMetrics->emAscent = os2->sTypoAscender * yScale;
         aMetrics->emDescent = -os2->sTypoDescender * yScale;
@@ -142,7 +159,6 @@ gfxFT2LockedFace::GetMetrics(gfxFont::Metrics* aMetrics,
     } else {
         aMetrics->emAscent = aMetrics->maxAscent;
         aMetrics->emDescent = aMetrics->maxDescent;
-        lineHeight = FLOAT_FROM_26_6(ftMetrics.height);
     }
 
     cairo_text_extents_t extents;
