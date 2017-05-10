@@ -594,6 +594,7 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
             { (PRFuncPtr*) &mSymbols.fLoadIdentity, { "LoadIdentity", nullptr } },
             { (PRFuncPtr*) &mSymbols.fLoadMatrixf, { "LoadMatrixf", nullptr } },
             { (PRFuncPtr*) &mSymbols.fMatrixMode, { "MatrixMode", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fPolygonMode, { "PolygonMode", nullptr } },
             { (PRFuncPtr*) &mSymbols.fTexGeni, { "TexGeni", nullptr } },
             { (PRFuncPtr*) &mSymbols.fTexGenf, { "TexGenf", nullptr } },
             { (PRFuncPtr*) &mSymbols.fTexGenfv, { "TexGenfv", nullptr } },

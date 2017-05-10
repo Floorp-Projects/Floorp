@@ -221,6 +221,7 @@ static GrGLInterface* CreateGrGLInterfaceFromGLContext(GLContext* context)
     i->fFunctions.fLineWidth = WrapGL(context, &GLContext::fLineWidth);
     i->fFunctions.fLinkProgram = WrapGL(context, &GLContext::fLinkProgram);
     i->fFunctions.fPixelStorei = WrapGL(context, &GLContext::fPixelStorei);
+    i->fFunctions.fPolygonMode = WrapGL(context, &GLContext::fPolygonMode);
     i->fFunctions.fReadPixels = WrapGL(context, &GLContext::fReadPixels);
     i->fFunctions.fRenderbufferStorage = WrapGL(context, &GLContext::fRenderbufferStorage);
     i->fFunctions.fScissor = WrapGL(context, &GLContext::fScissor);
