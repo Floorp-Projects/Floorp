@@ -6,11 +6,6 @@
 
 <body>
 
-<form id="subform1" onsubmit="return checkSubmit(21)">
-  <input id="subtest1" type="text" name="subtest1">
-  <button type="submit">Submit</button>
-</form>
-
 <form id="subform2" onsubmit="return checkSubmit(100)">
   <input id="subtest2" type="text" name="subtest2">
   <button type="submit">Submit</button>
@@ -22,14 +17,11 @@
   }
 
   function clickButton(num) {
-    if (num == 21)
+    if (num == 100)
       document.querySelectorAll("button")[0].click();
-    else if (num == 100)
-      document.querySelectorAll("button")[1].click();
   }
 
   // set the input's value (can't use a default value, as satchel will ignore it)
-  document.getElementById("subtest1").value = "subtestValue";
   document.getElementById("subtest2").value = "subtestValue";
 </script>
 
