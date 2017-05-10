@@ -46,7 +46,6 @@ CppUnitTests([
     'TestScopeExit',
     'TestSegmentedVector',
     'TestSHA1',
-    'TestSmallPointerArray',
     'TestSplayTree',
     'TestTemplateLib',
     'TestTuple',
