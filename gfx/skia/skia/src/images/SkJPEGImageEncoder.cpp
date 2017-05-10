@@ -5,180 +5,174 @@
  * found in the LICENSE file.
  */
 
+#include "SkImageEncoderPriv.h"
 
-#include "SkImageEncoder.h"
+#ifdef SK_HAS_JPEG_LIBRARY
+
 #include "SkColorPriv.h"
-#include "SkDither.h"
+#include "SkImageEncoderFns.h"
+#include "SkJPEGWriteUtility.h"
 #include "SkStream.h"
 #include "SkTemplates.h"
-#include "SkTime.h"
-#include "SkUtils.h"
-#include "SkRect.h"
-#include "SkCanvas.h"
-
 
 #include <stdio.h>
-#include "SkJPEGWriteUtility.h"
+
 extern "C" {
     #include "jpeglib.h"
     #include "jerror.h"
 }
 
-// These enable timing code that report milliseconds for an encoding
-//#define TIME_ENCODE
-
-typedef void (*WriteScanline)(uint8_t* SK_RESTRICT dst,
-                              const void* SK_RESTRICT src, int width,
-                              const SkPMColor* SK_RESTRICT ctable);
-
-static void Write_32_RGB(uint8_t* SK_RESTRICT dst,
-                         const void* SK_RESTRICT srcRow, int width,
-                         const SkPMColor*) {
-    const uint32_t* SK_RESTRICT src = (const uint32_t*)srcRow;
-    while (--width >= 0) {
-        uint32_t c = *src++;
-        dst[0] = SkGetPackedR32(c);
-        dst[1] = SkGetPackedG32(c);
-        dst[2] = SkGetPackedB32(c);
-        dst += 3;
-    }
-}
-
-static void Write_4444_RGB(uint8_t* SK_RESTRICT dst,
-                           const void* SK_RESTRICT srcRow, int width,
-                           const SkPMColor*) {
-    const SkPMColor16* SK_RESTRICT src = (const SkPMColor16*)srcRow;
-    while (--width >= 0) {
-        SkPMColor16 c = *src++;
-        dst[0] = SkPacked4444ToR32(c);
-        dst[1] = SkPacked4444ToG32(c);
-        dst[2] = SkPacked4444ToB32(c);
-        dst += 3;
-    }
-}
-
-static void Write_16_RGB(uint8_t* SK_RESTRICT dst,
-                         const void* SK_RESTRICT srcRow, int width,
-                         const SkPMColor*) {
-    const uint16_t* SK_RESTRICT src = (const uint16_t*)srcRow;
-    while (--width >= 0) {
-        uint16_t c = *src++;
-        dst[0] = SkPacked16ToR32(c);
-        dst[1] = SkPacked16ToG32(c);
-        dst[2] = SkPacked16ToB32(c);
-        dst += 3;
-    }
-}
-
-static void Write_Index_RGB(uint8_t* SK_RESTRICT dst,
-                            const void* SK_RESTRICT srcRow, int width,
-                            const SkPMColor* SK_RESTRICT ctable) {
-    const uint8_t* SK_RESTRICT src = (const uint8_t*)srcRow;
-    while (--width >= 0) {
-        uint32_t c = ctable[*src++];
-        dst[0] = SkGetPackedR32(c);
-        dst[1] = SkGetPackedG32(c);
-        dst[2] = SkGetPackedB32(c);
-        dst += 3;
-    }
-}
-
-static WriteScanline ChooseWriter(const SkBitmap& bm) {
-    switch (bm.colorType()) {
-        case kN32_SkColorType:
-            return Write_32_RGB;
+/**
+ *  Returns true if |info| is supported by the jpeg encoder and false otherwise.
+ *  |jpegColorType| will be set to the proper libjpeg-turbo type for input to the library.
+ *  |numComponents| will be set to the number of components in the |jpegColorType|.
+ *  |proc|          will be set if we need to pre-convert the input before passing to
+ *                  libjpeg-turbo.  Otherwise will be set to nullptr.
+ */
+// TODO (skbug.com/1501):
+// Should we fail on non-opaque encodes?
+// Or should we change alpha behavior (ex: unpremultiply when the input is premul)?
+// Or is ignoring the alpha type and alpha channel ok here?
+static bool set_encode_config(J_COLOR_SPACE* jpegColorType, int* numComponents,
+                              transform_scanline_proc* proc, const SkImageInfo& info) {
+    *proc = nullptr;
+    switch (info.colorType()) {
+        case kRGBA_8888_SkColorType:
+            *jpegColorType = JCS_EXT_RGBA;
+            *numComponents = 4;
+            return true;
+        case kBGRA_8888_SkColorType:
+            *jpegColorType = JCS_EXT_BGRA;
+            *numComponents = 4;
+            return true;
         case kRGB_565_SkColorType:
-            return Write_16_RGB;
+            *proc = transform_scanline_565;
+            *jpegColorType = JCS_RGB;
+            *numComponents = 3;
+            return true;
         case kARGB_4444_SkColorType:
-            return Write_4444_RGB;
+            *proc = transform_scanline_444;
+            *jpegColorType = JCS_RGB;
+            *numComponents = 3;
+            return true;
         case kIndex_8_SkColorType:
-            return Write_Index_RGB;
+            *proc = transform_scanline_index8_opaque;
+            *jpegColorType = JCS_RGB;
+            *numComponents = 3;
+            return true;
+        case kGray_8_SkColorType:
+            SkASSERT(info.isOpaque());
+            *jpegColorType = JCS_GRAYSCALE;
+            *numComponents = 1;
+            return true;
+        case kRGBA_F16_SkColorType:
+            if (!info.colorSpace() || !info.colorSpace()->gammaIsLinear()) {
+                return false;
+            }
+
+            *proc = transform_scanline_F16_to_8888;
+            *jpegColorType = JCS_EXT_RGBA;
+            *numComponents = 4;
+            return true;
         default:
-            return nullptr;
+            return false;
     }
+
+
 }
 
-class SkJPEGImageEncoder : public SkImageEncoder {
-protected:
-    virtual bool onEncode(SkWStream* stream, const SkBitmap& bm, int quality) {
-#ifdef TIME_ENCODE
-        SkAutoTime atm("JPEG Encode");
+bool SkEncodeImageAsJPEG(SkWStream* stream, const SkPixmap& pixmap, const SkEncodeOptions& opts) {
+    if (SkTransferFunctionBehavior::kRespect == opts.fUnpremulBehavior) {
+        // Respecting the transfer function requries a color space.  It's not actually critical
+        // in the jpeg case (since jpegs are opaque), but Skia color correct behavior generally
+        // requires pixels to be tagged with color spaces.
+        if (!pixmap.colorSpace() || (!pixmap.colorSpace()->gammaCloseToSRGB() &&
+                                     !pixmap.colorSpace()->gammaIsLinear())) {
+            return false;
+        }
+    }
+
+    return SkEncodeImageAsJPEG(stream, pixmap, 100);
+}
+
+bool SkEncodeImageAsJPEG(SkWStream* stream, const SkPixmap& pixmap, int quality) {
+    if (!pixmap.addr()) {
+        return false;
+    }
+    jpeg_compress_struct    cinfo;
+    skjpeg_error_mgr        sk_err;
+    skjpeg_destination_mgr  sk_wstream(stream);
+
+    // Declare before calling setjmp.
+    SkAutoTMalloc<uint8_t>  storage;
+
+    cinfo.err = jpeg_std_error(&sk_err);
+    sk_err.error_exit = skjpeg_error_exit;
+    if (setjmp(sk_err.fJmpBuf)) {
+        return false;
+    }
+
+    J_COLOR_SPACE jpegColorSpace;
+    int numComponents;
+    transform_scanline_proc proc;
+    if (!set_encode_config(&jpegColorSpace, &numComponents, &proc, pixmap.info())) {
+        return false;
+    }
+
+    jpeg_create_compress(&cinfo);
+    cinfo.dest = &sk_wstream;
+    cinfo.image_width = pixmap.width();
+    cinfo.image_height = pixmap.height();
+    cinfo.input_components = numComponents;
+    cinfo.in_color_space = jpegColorSpace;
+
+    jpeg_set_defaults(&cinfo);
+
+    // Tells libjpeg-turbo to compute optimal Huffman coding tables
+    // for the image.  This improves compression at the cost of
+    // slower encode performance.
+    cinfo.optimize_coding = TRUE;
+    jpeg_set_quality(&cinfo, quality, TRUE /* limit to baseline-JPEG values */);
+
+    jpeg_start_compress(&cinfo, TRUE);
+
+    if (pixmap.colorSpace()) {
+        sk_sp<SkData> icc = icc_from_color_space(*pixmap.colorSpace());
+        if (icc) {
+            // Create a contiguous block of memory with the icc signature followed by the profile.
+            sk_sp<SkData> markerData =
+                    SkData::MakeUninitialized(kICCMarkerHeaderSize + icc->size());
+            uint8_t* ptr = (uint8_t*) markerData->writable_data();
+            memcpy(ptr, kICCSig, sizeof(kICCSig));
+            ptr += sizeof(kICCSig);
+            *ptr++ = 1; // This is the first marker.
+            *ptr++ = 1; // Out of one total markers.
+            memcpy(ptr, icc->data(), icc->size());
+
+            jpeg_write_marker(&cinfo, kICCMarker, markerData->bytes(), markerData->size());
+        }
+    }
+
+    if (proc) {
+        storage.reset(numComponents * pixmap.width());
+    }
+
+    const void* srcRow = pixmap.addr();
+    const SkPMColor* colors = pixmap.ctable() ? pixmap.ctable()->readColors() : nullptr;
+    while (cinfo.next_scanline < cinfo.image_height) {
+        JSAMPLE* jpegSrcRow = (JSAMPLE*) srcRow;
+        if (proc) {
+            proc((char*)storage.get(), (const char*)srcRow, pixmap.width(), numComponents, colors);
+            jpegSrcRow = storage.get();
+        }
+
+        (void) jpeg_write_scanlines(&cinfo, &jpegSrcRow, 1);
+        srcRow = SkTAddOffset<const void>(srcRow, pixmap.rowBytes());
+    }
+
+    jpeg_finish_compress(&cinfo);
+    jpeg_destroy_compress(&cinfo);
+
+    return true;
+}
 #endif
-
-        SkAutoLockPixels alp(bm);
-        if (nullptr == bm.getPixels()) {
-            return false;
-        }
-
-        jpeg_compress_struct    cinfo;
-        skjpeg_error_mgr        sk_err;
-        skjpeg_destination_mgr  sk_wstream(stream);
-
-        // allocate these before set call setjmp
-        SkAutoTMalloc<uint8_t>  oneRow;
-
-        cinfo.err = jpeg_std_error(&sk_err);
-        sk_err.error_exit = skjpeg_error_exit;
-        if (setjmp(sk_err.fJmpBuf)) {
-            return false;
-        }
-
-        // Keep after setjmp or mark volatile.
-        const WriteScanline writer = ChooseWriter(bm);
-        if (nullptr == writer) {
-            return false;
-        }
-
-        jpeg_create_compress(&cinfo);
-        cinfo.dest = &sk_wstream;
-        cinfo.image_width = bm.width();
-        cinfo.image_height = bm.height();
-        cinfo.input_components = 3;
-        
-        // FIXME: Can we take advantage of other in_color_spaces in libjpeg-turbo?
-        cinfo.in_color_space = JCS_RGB;
-
-        // The gamma value is ignored by libjpeg-turbo.
-        cinfo.input_gamma = 1;
-
-        jpeg_set_defaults(&cinfo);
-        
-        // Tells libjpeg-turbo to compute optimal Huffman coding tables
-        // for the image.  This improves compression at the cost of
-        // slower encode performance.
-        cinfo.optimize_coding = TRUE;
-        jpeg_set_quality(&cinfo, quality, TRUE /* limit to baseline-JPEG values */);
-
-        jpeg_start_compress(&cinfo, TRUE);
-
-        const int       width = bm.width();
-        uint8_t*        oneRowP = oneRow.reset(width * 3);
-
-        const SkPMColor* colors = bm.getColorTable() ? bm.getColorTable()->readColors() : nullptr;
-        const void*      srcRow = bm.getPixels();
-
-        while (cinfo.next_scanline < cinfo.image_height) {
-            JSAMPROW row_pointer[1];    /* pointer to JSAMPLE row[s] */
-
-            writer(oneRowP, srcRow, width, colors);
-            row_pointer[0] = oneRowP;
-            (void) jpeg_write_scanlines(&cinfo, row_pointer, 1);
-            srcRow = (const void*)((const char*)srcRow + bm.rowBytes());
-        }
-
-        jpeg_finish_compress(&cinfo);
-        jpeg_destroy_compress(&cinfo);
-
-        return true;
-    }
-};
-
-///////////////////////////////////////////////////////////////////////////////
-DEFINE_ENCODER_CREATOR(JPEGImageEncoder);
-///////////////////////////////////////////////////////////////////////////////
-
-static SkImageEncoder* sk_libjpeg_efactory(SkImageEncoder::Type t) {
-    return (SkImageEncoder::kJPEG_Type == t) ? new SkJPEGImageEncoder : nullptr;
-}
-
-static SkImageEncoder_EncodeReg gEReg(sk_libjpeg_efactory);

@@ -67,21 +67,6 @@ public:
     SK_TO_STRING_OVERRIDE()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkMatrixConvolutionImageFilter)
 
-#ifdef SK_SUPPORT_LEGACY_IMAGEFILTER_PTR
-    static SkImageFilter* Create(const SkISize& kernelSize,
-                                 const SkScalar* kernel,
-                                 SkScalar gain,
-                                 SkScalar bias,
-                                 const SkIPoint& kernelOffset,
-                                 TileMode tileMode,
-                                 bool convolveAlpha,
-                                 SkImageFilter* input = NULL,
-                                 const CropRect* cropRect = NULL) {
-        return Make(kernelSize, kernel, gain, bias, kernelOffset, tileMode, convolveAlpha,
-                    sk_ref_sp<SkImageFilter>(input), cropRect).release();
-    }
-#endif
-
 protected:
     SkMatrixConvolutionImageFilter(const SkISize& kernelSize,
                                    const SkScalar* kernel,
@@ -96,6 +81,7 @@ protected:
 
     sk_sp<SkSpecialImage> onFilterImage(SkSpecialImage* source, const Context&,
                                         SkIPoint* offset) const override;
+    sk_sp<SkImageFilter> onMakeColorSpace(SkColorSpaceXformer*) const override;
     SkIRect onFilterNodeBounds(const SkIRect&, const SkMatrix&, MapDirection) const override;
     bool affectsTransparentBlack() const override;
 

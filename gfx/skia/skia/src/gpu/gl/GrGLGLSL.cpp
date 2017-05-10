@@ -5,10 +5,10 @@
  * found in the LICENSE file.
  */
 
-#include "GrGLGLSL.h"
 #include "GrGLContext.h"
 #include "GrGLUtil.h"
 #include "SkString.h"
+#include "../private/GrGLSL.h"
 
 bool GrGLGetGLSLGeneration(const GrGLInterface* gl, GrGLSLGeneration* generation) {
     SkASSERT(generation);
@@ -19,7 +19,9 @@ bool GrGLGetGLSLGeneration(const GrGLInterface* gl, GrGLSLGeneration* generation
     switch (gl->fStandard) {
         case kGL_GrGLStandard:
             SkASSERT(ver >= GR_GLSL_VER(1,10));
-            if (ver >= GR_GLSL_VER(4,00)) {
+            if (ver >= GR_GLSL_VER(4,20)) {
+                *generation = k420_GrGLSLGeneration;
+            } else if (ver >= GR_GLSL_VER(4,00)) {
                 *generation = k400_GrGLSLGeneration;
             } else if (ver >= GR_GLSL_VER(3,30)) {
                 *generation = k330_GrGLSLGeneration;
