@@ -14,7 +14,7 @@ skip-if(stylo) load 343510-1.html # bug 1361235
 load 363696-1.xul
 load 363696-2.html
 load 363696-3.html
-load 366205-1.html
+skip-if(stylo) load 366205-1.html # bug 1361235
 skip-if(stylo) load 366537-1.xhtml # bug 1361235
 load 367587-1.html
 skip-if(stylo) load 370703-1.html # bug 1361235
@@ -49,7 +49,7 @@ load 513113-1.html
 skip-if(stylo) load 538062-1.xhtml # bug 1361235
 load 570624-1.html
 asserts(1) load 578604-1.html # bug 584564
-asserts(4-7) load 590302-1.xhtml # bug 584564
+asserts(4-7) skip-if(stylo) load 590302-1.xhtml # bug 584564 and bug 1361235
 skip-if(stylo) load 626014.xhtml # bug 1361235
 load 639733.xhtml
 load 669767.html
@@ -66,4 +66,4 @@ pref(layout.css.moz-appearance.enabled,true) skip-if(stylo) load 1140216.html # 
 load 1182414.html
 skip-if(stylo) load 1212688.html # bug 1361235
 skip-if(stylo) load 1228670.xhtml # bug 1361235
-load 1279354.html
+skip-if(stylo) load 1279354.html # bug 1361235
