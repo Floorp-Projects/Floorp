@@ -3512,7 +3512,8 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsINode* aContext,
                           imgINotificationObserver* aObserver, int32_t aLoadFlags,
                           const nsAString& initiatorType,
                           imgRequestProxy** aRequest,
-                          uint32_t aContentPolicyType)
+                          uint32_t aContentPolicyType,
+                          bool aUseUrgentStartForChannel)
 {
   NS_PRECONDITION(aURI, "Must have a URI");
   NS_PRECONDITION(aContext, "Must have a context");
@@ -3551,6 +3552,7 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsINode* aContext,
                               nullptr,              /* cache key */
                               aContentPolicyType,   /* content policy type */
                               initiatorType,        /* the load initiator */
+                              aUseUrgentStartForChannel, /* urgent-start flag */
                               aRequest);
 }
 

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:gecko="http://schemas.android.com/apk/res-auto"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/toolbar_divider_grey"
+        android:visibility="gone"/>
+
+    <LinearLayout
+        android:id="@+id/container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:background="?attr/selectableItemBackground"
+        android:minHeight="@dimen/page_row_height"
+        android:orientation="horizontal">
+
+        <View
+            android:id="@+id/padding_start"
+            android:layout_width="@dimen/bookmark_folder_child_padding"
+            android:layout_height="1dp"/>
+
+        <ImageView
+            android:id="@+id/icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:src="@drawable/folder_closed"/>
+
+        <org.mozilla.gecko.widget.FadedSingleColorTextView
+            android:id="@+id/title"
+            style="@style/Widget.FolderTitle.OneLine"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1"
+            android:clickable="false"
+            android:maxLines="1"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
+            android:singleLine="true"
+            android:textColor="@color/text_and_tabs_tray_grey"
+            android:textSize="18sp"
+            gecko:fadeWidth="90dp"
+            tools:text="This is a long test title"/>
+
+        <ImageView
+            android:id="@+id/select"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:src="@drawable/orange_check"
+            android:visibility="gone"
+            tools:visibility="visible"/>
+
+        <View
+            android:id="@+id/padding_end"
+            android:layout_width="@dimen/bookmark_folder_child_padding"
+            android:layout_height="1dp"/>
+    </LinearLayout>
+</RelativeLayout>

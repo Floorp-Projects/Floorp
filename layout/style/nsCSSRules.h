@@ -567,8 +567,7 @@ public:
                                JS::Handle<JSObject*> aGivenProto) override;
 
 private:
-  typedef NS_STDCALL_FUNCPROTO(nsresult, Getter, nsCSSCounterStyleRule,
-                               GetSymbols, (nsAString&));
+  typedef decltype(&nsCSSCounterStyleRule::GetSymbols) Getter;
   static const Getter kGetters[];
 
   nsresult GetDescriptor(nsCSSCounterDesc aDescID, nsAString& aValue);

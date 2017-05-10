@@ -120,8 +120,6 @@ var whitelist = new Set([
   // Bug 1339424 (wontfix?)
   {file: "chrome://browser/locale/taskbar.properties",
    platforms: ["linux", "macosx"]},
-  // Bug 1343584
-  {file: "chrome://browser/skin/click-to-play-warning-stripes.png"},
   // Bug 1343824
   {file: "chrome://browser/skin/customizableui/customize-illustration-rtl@2x.png",
    platforms: ["linux", "win"]},

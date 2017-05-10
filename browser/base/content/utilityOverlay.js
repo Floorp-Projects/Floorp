@@ -18,13 +18,17 @@ XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
                                    "@mozilla.org/browser/aboutnewtab-service;1",
                                    "nsIAboutNewTabService");
 
-this.__defineGetter__("BROWSER_NEW_TAB_URL", () => {
-  if (PrivateBrowsingUtils.isWindowPrivate(window) &&
-      !PrivateBrowsingUtils.permanentPrivateBrowsing &&
-      !aboutNewTabService.overridden) {
-    return "about:privatebrowsing";
-  }
-  return aboutNewTabService.newTabURL;
+Object.defineProperty(this, "BROWSER_NEW_TAB_URL", {
+  configurable: true,
+  enumerable: true,
+  get() {
+    if (PrivateBrowsingUtils.isWindowPrivate(window) &&
+        !PrivateBrowsingUtils.permanentPrivateBrowsing &&
+        !aboutNewTabService.overridden) {
+      return "about:privatebrowsing";
+    }
+    return aboutNewTabService.newTabURL;
+  },
 });
 
 var TAB_DROP_TYPE = "application/x-moz-tabbrowser-tab";

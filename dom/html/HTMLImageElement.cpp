@@ -79,9 +79,11 @@ namespace dom {
 class ImageLoadTask : public Runnable
 {
 public:
-  ImageLoadTask(HTMLImageElement *aElement, bool aAlwaysLoad)
+  ImageLoadTask(HTMLImageElement *aElement, bool aAlwaysLoad,
+                bool aUseUrgentStartForChannel)
     : mElement(aElement)
     , mAlwaysLoad(aAlwaysLoad)
+    , mUseUrgentStartForChannel(aUseUrgentStartForChannel)
   {
     mDocument = aElement->OwnerDoc();
     mDocument->BlockOnload();
@@ -91,6 +93,7 @@ public:
   {
     if (mElement->mPendingImageLoadTask == this) {
       mElement->mPendingImageLoadTask = nullptr;
+      mElement->mUseUrgentStartForChannel = mUseUrgentStartForChannel;
       mElement->LoadSelectedImage(true, true, mAlwaysLoad);
     }
     mDocument->UnblockOnload(false);
@@ -106,6 +109,10 @@ private:
   RefPtr<HTMLImageElement> mElement;
   nsCOMPtr<nsIDocument> mDocument;
   bool mAlwaysLoad;
+
+  // True if we want to set nsIClassOfService::UrgentStart to the channel to
+  // get the response ASAP for better user responsiveness.
+  bool mUseUrgentStartForChannel;
 };
 
 HTMLImageElement::HTMLImageElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
@@ -410,6 +417,10 @@ HTMLImageElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
   if (aName == nsGkAtoms::src &&
       aNameSpaceID == kNameSpaceID_None &&
       !aValue) {
+    // Mark channel as urgent-start before load image if the image load is
+    // initaiated by a user interaction.
+    mUseUrgentStartForChannel = EventStateManager::IsHandlingUserInput();
+
     // SetAttr handles setting src since it needs to catch img.src =
     // img.src, so we only need to handle the unset case
     if (InResponsiveMode()) {
@@ -424,9 +435,17 @@ HTMLImageElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
     }
   } else if (aName == nsGkAtoms::srcset &&
              aNameSpaceID == kNameSpaceID_None) {
+    // Mark channel as urgent-start before load image if the image load is
+    // initaiated by a user interaction.
+    mUseUrgentStartForChannel = EventStateManager::IsHandlingUserInput();
+
     PictureSourceSrcsetChanged(this, attrVal.String(), aNotify);
   } else if (aName == nsGkAtoms::sizes &&
              aNameSpaceID == kNameSpaceID_None) {
+    // Mark channel as urgent-start before load image if the image load is
+    // initaiated by a user interaction.
+    mUseUrgentStartForChannel = EventStateManager::IsHandlingUserInput();
+
     PictureSourceSizesChanged(this, attrVal.String(), aNotify);
   }
 
@@ -505,6 +524,10 @@ HTMLImageElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
   if (aNameSpaceID == kNameSpaceID_None &&
       aName == nsGkAtoms::src) {
 
+    // Mark channel as urgent-start before load image if the image load is
+    // initaiated by a user interaction.
+    mUseUrgentStartForChannel = EventStateManager::IsHandlingUserInput();
+
     if (InResponsiveMode()) {
       if (mResponsiveSelector &&
           mResponsiveSelector->Content() == this) {
@@ -562,6 +585,10 @@ HTMLImageElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
   // reload after the attribute has been set if the reload is triggerred by
   // cross origin changing.
   if (forceReload) {
+    // Mark channel as urgent-start before load image if the image load is
+    // initaiated by a user interaction.
+    mUseUrgentStartForChannel = EventStateManager::IsHandlingUserInput();
+
     if (InResponsiveMode()) {
       // per spec, full selection runs when this changes, even though
       // it doesn't directly affect the source selection
@@ -600,6 +627,10 @@ HTMLImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
       mInDocResponsiveContent = true;
     }
 
+    // Mark channel as urgent-start before load image if the image load is
+    // initaiated by a user interaction.
+    mUseUrgentStartForChannel = EventStateManager::IsHandlingUserInput();
+
     // Run selection algorithm when an img element is inserted into a document
     // in order to react to changes in the environment. See note of
     // https://html.spec.whatwg.org/multipage/embedded-content.html#img-environment-changes
@@ -611,6 +642,10 @@ HTMLImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     // This isn't necessary for responsive mode, since creating the
     // image load task is asynchronous we don't need to take special
     // care to avoid doing so when being filled by the parser.
+
+    // Mark channel as urgent-start before load image if the image load is
+    // initaiated by a user interaction.
+    mUseUrgentStartForChannel = EventStateManager::IsHandlingUserInput();
 
     // FIXME: Bug 660963 it would be nice if we could just have
     // ClearBrokenState update our state and do it fast...
@@ -830,6 +865,10 @@ HTMLImageElement::CopyInnerTo(Element* aDest, bool aPreallocateChildren)
     // reaches a stable state.
     if (!dest->InResponsiveMode() &&
         dest->HasAttr(kNameSpaceID_None, nsGkAtoms::src)) {
+      // Mark channel as urgent-start before load image if the image load is
+      // initaiated by a user interaction.
+      mUseUrgentStartForChannel = EventStateManager::IsHandlingUserInput();
+
       nsContentUtils::AddScriptRunner(
         NewRunnableMethod(dest, &HTMLImageElement::MaybeLoadImage));
     }
@@ -913,7 +952,9 @@ HTMLImageElement::QueueImageLoadTask(bool aAlwaysLoad)
   if (mPendingImageLoadTask) {
     alwaysLoad = alwaysLoad || mPendingImageLoadTask->AlwaysLoad();
   }
-  RefPtr<ImageLoadTask> task = new ImageLoadTask(this, alwaysLoad);
+  RefPtr<ImageLoadTask> task = new ImageLoadTask(this,
+                                                 alwaysLoad,
+                                                 mUseUrgentStartForChannel);
   // The task checks this to determine if it was the last
   // queued event, and so earlier tasks are implicitly canceled.
   mPendingImageLoadTask = task;

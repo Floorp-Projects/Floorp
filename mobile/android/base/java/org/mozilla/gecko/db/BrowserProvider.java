@@ -6,6 +6,7 @@
 package org.mozilla.gecko.db;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -2208,7 +2209,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
     private int bulkDeleteByHistoryGUID(SQLiteDatabase db, ArrayList<String> historyGUIDs, String table, String historyGUIDColumn) {
         // Due to SQLite's maximum variable limitation, we need to chunk our delete statements.
-        // For example, if there were 1200 GUIDs, this will perform 2 delete statements.
+        // For example, if there were 1200 GUIDs, this will perform 2 delete statements if SQLITE_MAX_VARIABLE_NUMBER is 999.
         int deleted = 0;
         for (int chunk = 0; chunk <= historyGUIDs.size() / DBUtils.SQLITE_MAX_VARIABLE_NUMBER; chunk++) {
             final int chunkStart = chunk * DBUtils.SQLITE_MAX_VARIABLE_NUMBER;
@@ -2221,6 +2222,46 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                     table,
                     DBUtils.computeSQLInClause(chunkGUIDs.size(), historyGUIDColumn),
                     chunkGUIDs.toArray(new String[chunkGUIDs.size()])
+            );
+        }
+
+        return deleted;
+    }
+
+    /**
+     * The maximum number of variables in one SQL statement is {@link DBUtils#SQLITE_MAX_VARIABLE_NUMBER},
+     * Base on {@link #bulkDeleteByHistoryGUID}, we chunk the list to prevent 'too many SQL variables' in one statement.
+     */
+    private int bulkDeleteByBookmarkGUIDs(SQLiteDatabase db, List<String> bookmarkGUIDs, String table, String bookmarkGUIDColumn) {
+        // Due to SQLite's maximum variable limitation, we need to chunk our delete statements.
+        // For example, if there were 1200 GUIDs, this will perform 2 delete statements.
+        int deleted = 0;
+
+        final ContentValues values = new ContentValues();
+        values.put(Bookmarks.IS_DELETED, 1);
+        values.put(Bookmarks.POSITION, 0);
+        values.putNull(Bookmarks.PARENT);
+        values.putNull(Bookmarks.URL);
+        values.putNull(Bookmarks.TITLE);
+        values.putNull(Bookmarks.DESCRIPTION);
+        values.putNull(Bookmarks.KEYWORD);
+        values.putNull(Bookmarks.TAGS);
+        values.putNull(Bookmarks.FAVICON_ID);
+
+        // Leave space for variables in values.
+        final int maxVariableNumber = DBUtils.SQLITE_MAX_VARIABLE_NUMBER - values.size();
+
+        for (int chunk = 0; chunk <= bookmarkGUIDs.size() / maxVariableNumber; chunk++) {
+            final int chunkStart = chunk * maxVariableNumber;
+            int chunkEnd = (chunk + 1) * maxVariableNumber;
+            if (chunkEnd > bookmarkGUIDs.size()) {
+                chunkEnd = bookmarkGUIDs.size();
+            }
+            final List<String> chunkGUIDs = bookmarkGUIDs.subList(chunkStart, chunkEnd);
+            deleted += db.update(table,
+                                 values,
+                                 DBUtils.computeSQLInClause(chunkGUIDs.size(), bookmarkGUIDColumn),
+                                 chunkGUIDs.toArray(new String[chunkGUIDs.size()])
             );
         }
 
@@ -2256,19 +2297,21 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         final ContentValues values = new ContentValues();
         values.put(Bookmarks.IS_DELETED, 1);
         values.put(Bookmarks.POSITION, 0);
-        values.putNull(Bookmarks.PARENT);
-        values.putNull(Bookmarks.URL);
-        values.putNull(Bookmarks.TITLE);
-        values.putNull(Bookmarks.DESCRIPTION);
-        values.putNull(Bookmarks.KEYWORD);
-        values.putNull(Bookmarks.TAGS);
-        values.putNull(Bookmarks.FAVICON_ID);
+        // updateBookmarks() and getBookmarkDescendantGUIDs() both use use selection as a SQL filter,
+        // so we don't set column to null here, or the filtering result might be different because of record changed.
+        // We move all values.putNull() operations into bulkDeleteByBookmarkGUIDs().
 
         // Doing this UPDATE (or the DELETE above) first ensures that the
         // first operation within this transaction is a write.
         // The cleanup call below will do a SELECT first, and thus would
         // require the transaction to be upgraded from a reader to a writer.
-        final int updated = updateBookmarks(uri, values, selection, selectionArgs);
+        updateBookmarks(uri, values, selection, selectionArgs);
+
+        // When deleting bookmarks/folders, we have to delete their all descendant bookmarks/folders as well.
+        // We concatenate all IDs into a clause, and delete them at once.
+        final List<String> guids = getBookmarkDescendantGUIDs(db, selection, selectionArgs);
+        final int updated = bulkDeleteByBookmarkGUIDs(db, guids, TABLE_BOOKMARKS, Bookmarks.GUID);
+
         try {
             cleanUpSomeDeletedRecords(uri, TABLE_BOOKMARKS);
         } catch (Exception e) {
@@ -2276,6 +2319,74 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             Log.e(LOGTAG, "Unable to clean up deleted bookmark records: ", e);
         }
         return updated;
+    }
+
+    /**
+     * Get bookmark descendant IDs with conditions.
+     * @return A list of bookmark GUID.
+     */
+    private List<String> getBookmarkDescendantGUIDs(SQLiteDatabase db, String selection, String[] selectionArgs) {
+        // Get GUIDs from selection filter.
+        final Cursor cursor = db.query(TABLE_BOOKMARKS,
+                                       new String[] { Bookmarks._ID, Bookmarks.TYPE, Bookmarks.GUID },
+                                       selection,
+                                       selectionArgs,
+                                       null, null, null);
+        if (cursor == null) {
+            return Collections.emptyList();
+        }
+
+        final List<String> guids = new ArrayList<>();
+        final ArrayDeque<Long> folderQueue = new ArrayDeque<>();
+        try {
+            while (cursor.moveToNext()) {
+                final String guid = cursor.getString(cursor.getColumnIndexOrThrow(Bookmarks.GUID));
+                guids.add(guid);
+
+                final int type = cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks.TYPE));
+                if (type == Bookmarks.TYPE_FOLDER) {
+                    final long id = cursor.getLong(cursor.getColumnIndexOrThrow(Bookmarks._ID));
+                    folderQueue.add(id);
+                }
+            }
+        } finally {
+            cursor.close();
+        }
+
+        // Keep finding descendant GUIDs from parent IDs.
+        while (!folderQueue.isEmpty()) {
+            // Store all parent IDs in a in clause, and can query their children at once.
+            final String[] inClauseArgs = new String[folderQueue.size()];
+            int count = 0;
+            while (folderQueue.peek() != null) {
+                final long id = folderQueue.poll();
+                inClauseArgs[count++] = String.valueOf(id);
+            }
+
+            final String inClause = DBUtils.computeSQLInClause(count, Bookmarks.PARENT);
+            // We only select distinct parent IDs.
+            final Cursor c = db.query(true, TABLE_BOOKMARKS,
+                                      new String[] { Bookmarks._ID, Bookmarks.TYPE, Bookmarks.GUID },
+                                      inClause, inClauseArgs, null, null, null, null);
+            if (c == null) {
+                continue;
+            }
+            try {
+                while (c.moveToNext()) {
+                    final int type = c.getInt(c.getColumnIndexOrThrow(Bookmarks.TYPE));
+                    if (type == Bookmarks.TYPE_FOLDER) {
+                        final long id = c.getLong(c.getColumnIndexOrThrow(Bookmarks._ID));
+                        folderQueue.add(id);
+                    }
+
+                    final String guid = c.getString(c.getColumnIndexOrThrow(Bookmarks.GUID));
+                    guids.add(guid);
+                }
+            } finally {
+                c.close();
+            }
+        }
+        return guids;
     }
 
     private int deleteFavicons(Uri uri, String selection, String[] selectionArgs) {
