@@ -13,9 +13,9 @@
     let testException;
 
     function runTest() {
-      let w = new SharedWorker('browser_permissionsSharedWorker.js');
+      let w = new SharedWorker("browser_permissionsSharedWorker.js");
       w.port.onmessage = function(e) {
-        if (e.data.status == 'success') {
+        if (e.data.status == "success") {
           testIsIDBDatabase = e.data.isIDBDatabase;
         } else {
           testException = e.data.error;

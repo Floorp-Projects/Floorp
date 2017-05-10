@@ -25,7 +25,7 @@ GlobalObjectsComponent.prototype =
 {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]),
 
-  runTest: function() {
+  runTest() {
     const name = "Splendid Test";
 
     let ok = this.ok;
@@ -48,7 +48,7 @@ GlobalObjectsComponent.prototype =
 };
 
 var gFactory = {
-  register: function() {
+  register() {
     var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 
     var classID = Components.ID("{d6f85dcb-537d-447e-b783-75d4b405622d}");
