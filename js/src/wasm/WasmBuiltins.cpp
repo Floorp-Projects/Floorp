@@ -147,11 +147,7 @@ WasmHandleDebugTrap()
     return true;
 }
 
-// Unwind the entire activation in response to a thrown exception. This function
-// is responsible for notifying the debugger of each unwound frame. The return
-// value is the new stack address which the calling stub will set to the sp
-// register before executing a return instruction.
-static void*
+static WasmActivation*
 WasmHandleThrow()
 {
     JSContext* cx = TlsContext.get();
@@ -167,7 +163,10 @@ WasmHandleThrow()
     // (which would lead to the frame being re-added to the map of live frames,
     // right as it becomes trash).
     FrameIterator iter(activation, FrameIterator::Unwind::True);
-    MOZ_ASSERT(!iter.done());
+    if (iter.done()) {
+        MOZ_ASSERT(!activation->interrupted());
+        return activation;
+    }
 
     // Live wasm code on the stack is kept alive (in wasm::TraceActivations) by
     // marking the instance of every wasm::Frame found by FrameIterator.
@@ -209,7 +208,7 @@ WasmHandleThrow()
      }
 
     MOZ_ASSERT(!activation->interrupted(), "unwinding clears the interrupt");
-    return iter.unwoundAddressOfReturnAddress();
+    return activation;
 }
 
 static void
