@@ -1,3 +1,3 @@
 # Tests for repeat behaviour
-skip-if(stylo) == indefinite-repeat-1.svg green-box-ref.svg
+fails-if(stylo) == indefinite-repeat-1.svg green-box-ref.svg
 == init-repeat-1.svg init-repeat-1-ref.svg

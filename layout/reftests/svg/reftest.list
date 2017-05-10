@@ -90,7 +90,7 @@ default-preferences
 == conditions-03.svg pass.svg
 == conditions-04.svg pass.svg
 == conditions-05.svg about:blank
-skip-if(stylo) == conditions-07.svg pass.svg
+== conditions-07.svg pass.svg
 fuzzy-if(skiaContent,1,320) == conditions-08.svg conditions-08-ref.svg
 == conditions-09.svg conditions-09-ref.svg
 
@@ -110,19 +110,19 @@ fails-if(stylo) == currentColor-03.svg pass.svg
 fuzzy-if(Android,4,87) == dynamic-clipPath-01.svg pass.svg
 == dynamic-clipPath-02.svg pass.svg
 == dynamic-clipPath-clip-rule-01.svg pass.svg
-skip-if(stylo) == dynamic-conditions-01.svg pass.svg
-fails-if(stylo) == dynamic-conditions-02.svg about:blank
-fails-if(stylo) == dynamic-conditions-03.svg pass.svg
-fails-if(stylo) == dynamic-conditions-04.svg about:blank
+== dynamic-conditions-01.svg pass.svg
+== dynamic-conditions-02.svg about:blank
+== dynamic-conditions-03.svg pass.svg
+== dynamic-conditions-04.svg about:blank
 == dynamic-conditions-05.svg pass.svg
-fails-if(stylo) == dynamic-conditions-06.svg about:blank
+== dynamic-conditions-06.svg about:blank
 == dynamic-conditions-07.svg pass.svg
 == dynamic-conditions-08.svg pass.svg
-fails-if(stylo) == dynamic-conditions-09.svg about:blank
-fails-if(stylo) == dynamic-conditions-10.svg about:blank
+== dynamic-conditions-09.svg about:blank
+== dynamic-conditions-10.svg about:blank
 == dynamic-conditions-11.svg pass.svg
 == dynamic-conditions-12.svg pass.svg
-fails-if(stylo) == dynamic-conditions-13.svg about:blank
+== dynamic-conditions-13.svg about:blank
 == dynamic-feFlood-01.svg pass.svg
 asserts(0-1) == dynamic-feImage-01.svg pass.svg # intermittent assertions (bug 886080)
 == dynamic-fill-01.svg dynamic-fill-01-ref.svg
@@ -213,7 +213,7 @@ fuzzy-if(skiaContent,1,800000) == filters-and-group-opacity-01.svg filters-and-g
 == foreignObject-01.svg pass.svg
 == foreignObject-02.svg foreignObject-02-ref.svg
 == foreignObject-ancestor-style-change-01.svg foreignObject-ancestor-style-change-01-ref.svg
-fails-if(stylo) == foreignObject-change-transform-01.svg pass.svg
+== foreignObject-change-transform-01.svg pass.svg
 == foreignObject-display-01.svg pass.svg
 pref(layout.css.moz-appearance.enabled,true) == foreignObject-form-theme.svg foreignObject-form-theme-ref.html
 == foreignObject-img-form-theme.html foreignObject-img-form-theme-ref.html
@@ -231,7 +231,7 @@ fuzzy-if(Android,18,600) == foreignObject-fixedpos-01.html foreignObject-dynamic
 
 == fragmentIdentifier-01.xhtml pass.svg
 
-fails-if(stylo) == g-transform-01.svg pass.svg
+== g-transform-01.svg pass.svg
 
 == getElementById-a-element-01.svg pass.svg
 
