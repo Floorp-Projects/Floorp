@@ -60,7 +60,7 @@ random-if(Android) needs-focus fails-if(stylo) != spellcheck-textarea-property-d
 needs-focus == caret_on_focus.html caret_on_focus-ref.html
 needs-focus fails-if(stylo) != caret_on_textarea_lastline.html caret_on_textarea_lastline-ref.html
 needs-focus fails-if(stylo) == input-text-onfocus-reframe.html input-text-onfocus-reframe-ref.html
-needs-focus == input-text-notheme-onfocus-reframe.html input-text-notheme-onfocus-reframe-ref.html
+fuzzy-if(skiaContent,3,1) needs-focus == input-text-notheme-onfocus-reframe.html input-text-notheme-onfocus-reframe-ref.html
 needs-focus fails-if(stylo) == caret_after_reframe.html caret_after_reframe-ref.html
 == nobogusnode-1.html nobogusnode-ref.html
 == nobogusnode-2.html nobogusnode-ref.html
