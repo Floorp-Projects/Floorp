@@ -5,6 +5,7 @@
       "use strict";
       // change the eval function to ensure the window object
       // in the debug-script is correctly wrapped
+      // eslint-disable-next-line no-eval
       window.eval = function () {
         return "unsecure-eval-called";
       };
