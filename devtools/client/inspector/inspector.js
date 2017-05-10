@@ -585,7 +585,7 @@ Inspector.prototype = {
         panel = new BoxModel(this, this.panelWin);
         break;
       case "fontinspector":
-        const {FontInspector} = require("devtools/client/inspector/fonts/fonts");
+        const FontInspector = require("devtools/client/inspector/fonts/fonts");
         panel = new FontInspector(this, this.panelWin);
         break;
       default:
@@ -641,10 +641,9 @@ Inspector.prototype = {
 
     if (Services.prefs.getBoolPref("devtools.fontinspector.enabled") &&
         this.canGetUsedFontFaces) {
-      this.sidebar.addExistingTab(
-        "fontinspector",
-        INSPECTOR_L10N.getStr("inspector.sidebar.fontInspectorTitle"),
-        defaultTab == "fontinspector");
+      const FontInspector = this.browserRequire("devtools/client/inspector/fonts/fonts");
+      this.fontinspector = new FontInspector(this, this.panelWin);
+      this.fontinspector.init();
 
       this.sidebar.toggleTab(true, "fontinspector");
     }
@@ -979,6 +978,10 @@ Inspector.prototype = {
 
     if (this.layoutview) {
       this.layoutview.destroy();
+    }
+
+    if (this.fontinspector) {
+      this.fontinspector.destroy();
     }
 
     let cssPropertiesDestroyer = this._cssPropertiesLoaded.then(({front}) => {

@@ -10,7 +10,7 @@ const TEST_URI = URL_ROOT + "browser_fontinspector.html";
 
 add_task(function* () {
   let { inspector, view } = yield openFontInspectorForURL(TEST_URI);
-  let viewDoc = view.chromeDoc;
+  let viewDoc = view.document;
 
   info("Selecting a node that doesn't contain all document fonts.");
   yield selectNode(".normal-text", inspector);
