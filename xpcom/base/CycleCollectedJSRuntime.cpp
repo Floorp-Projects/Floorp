@@ -511,6 +511,7 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime(JSContext* aCx)
   , mOutOfMemoryState(OOMState::OK)
   , mLargeAllocationFailureState(OOMState::OK)
 {
+  MOZ_COUNT_CTOR(CycleCollectedJSRuntime);
   MOZ_ASSERT(aCx);
   MOZ_ASSERT(mJSRuntime);
 
@@ -561,6 +562,7 @@ CycleCollectedJSRuntime::Shutdown(JSContext* cx)
 
 CycleCollectedJSRuntime::~CycleCollectedJSRuntime()
 {
+  MOZ_COUNT_DTOR(CycleCollectedJSRuntime);
   MOZ_ASSERT(!mDeferredFinalizerTable.Count());
 }
 

@@ -8,6 +8,7 @@ requestLongerTimeout(2);
 
 // One orphaned item should have two placeholders next to it.
 add_task(function*() {
+  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   yield startCustomizing();
 
   if (isInDevEdition()) {

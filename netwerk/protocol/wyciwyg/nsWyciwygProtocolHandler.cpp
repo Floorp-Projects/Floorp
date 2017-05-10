@@ -92,6 +92,11 @@ nsWyciwygProtocolHandler::NewChannel2(nsIURI* url,
   if (IsNeckoChild()) {
     NS_ENSURE_TRUE(gNeckoChild != nullptr, NS_ERROR_FAILURE);
 
+    ContentChild* cc = static_cast<ContentChild*>(gNeckoChild->Manager());
+    if (cc->IsShuttingDown()) {
+      return NS_ERROR_FAILURE;
+    }
+
     WyciwygChannelChild *wcc = static_cast<WyciwygChannelChild *>(
                                  gNeckoChild->SendPWyciwygChannelConstructor());
     if (!wcc)

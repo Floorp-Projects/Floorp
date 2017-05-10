@@ -287,7 +287,8 @@ nsresult NS_NewInputStreamPump(nsIInputStreamPump **result,
                                int64_t              streamLen = int64_t(-1),
                                uint32_t             segsize = 0,
                                uint32_t             segcount = 0,
-                               bool                 closeWhenDone = false);
+                               bool                 closeWhenDone = false,
+                               nsIEventTarget      *mainThreadTarget = nullptr);
 
 // NOTE: you will need to specify whether or not your streams are buffered
 // (i.e., do they implement ReadSegments/WriteSegments).  the default

@@ -20,7 +20,7 @@ function simulateItemDragAndEnd(aToDrag, aTarget) {
 }
 
 add_task(function* checkNoAddingToPanel() {
-  let area = CustomizableUI.AREA_PANEL;
+  let area = gPhotonStructure ? CustomizableUI.AREA_FIXED_OVERFLOW_PANEL : CustomizableUI.AREA_PANEL;
   let previousPlacements = getAreaWidgetIds(area);
   CustomizableUI.addWidgetToArea("separator", area);
   CustomizableUI.addWidgetToArea("spring", area);
@@ -61,6 +61,7 @@ add_task(function* checkAddingToToolbar() {
 
 
 add_task(function* checkDragging() {
+  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   let startArea = CustomizableUI.AREA_NAVBAR;
   let targetArea = CustomizableUI.AREA_PANEL;
   let startingToolbarPlacements = getAreaWidgetIds(startArea);

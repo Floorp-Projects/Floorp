@@ -10,8 +10,6 @@
 #include "nsMixedContentBlocker.h"
 #include "nsCDefaultURIFixup.h"
 #include "nsIURIFixup.h"
-#include "nsINestedURI.h"
-
 #include "mozilla/dom/Element.h"
 
 NS_IMPL_ISUPPORTS(nsContentSecurityManager,
@@ -558,12 +556,6 @@ nsContentSecurityManager::CheckChannel(nsIChannel* aChannel)
 
   if (contentPolicyType == nsIContentPolicy::TYPE_DOCUMENT ||
       contentPolicyType == nsIContentPolicy::TYPE_SUBDOCUMENT) {
-    // query the nested URI for security checks like in the case of view-source
-    nsCOMPtr<nsINestedURI> nestedURI = do_QueryInterface(uri);
-    if (nestedURI) {
-      nestedURI->GetInnerURI(getter_AddRefs(uri));
-    }
-
     // TYPE_DOCUMENT and TYPE_SUBDOCUMENT loads might potentially
     // be wyciwyg:// channels. Let's fix up the URI so we can
     // perform proper security checks.

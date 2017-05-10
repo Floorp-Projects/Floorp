@@ -6,6 +6,7 @@
 
 // Dragging an item from the palette to another button in the panel should work.
 add_task(function*() {
+  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   yield startCustomizing();
   let btn = document.getElementById("feed-button");
   let placements = getAreaWidgetIds(CustomizableUI.AREA_PANEL);

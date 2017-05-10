@@ -1002,7 +1002,7 @@ TCPSocket::CreateInputStreamPump()
   mInputStreamPump = do_CreateInstance("@mozilla.org/network/input-stream-pump;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mInputStreamPump->Init(mSocketInputStream, -1, -1, 0, 0, false);
+  rv = mInputStreamPump->Init(mSocketInputStream, -1, -1, 0, 0, false, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint64_t suspendCount = mSuspendCount;
