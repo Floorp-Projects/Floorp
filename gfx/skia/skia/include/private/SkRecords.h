@@ -16,10 +16,12 @@
 #include "SkPath.h"
 #include "SkPicture.h"
 #include "SkRect.h"
+#include "SkRegion.h"
 #include "SkRRect.h"
 #include "SkRSXform.h"
 #include "SkString.h"
 #include "SkTextBlob.h"
+#include "SkVertices.h"
 
 // Windows.h, will pull in all of the GDI defines.  GDI #defines
 // DrawText to DrawTextA or DrawTextW, but SkRecord has a struct
@@ -192,9 +194,14 @@ RECORD(TranslateZ, 0, SkScalar z);
 
 struct ClipOpAndAA {
     ClipOpAndAA() {}
-    ClipOpAndAA(SkCanvas::ClipOp op, bool aa) : op(op), aa(aa) {}
-    SkCanvas::ClipOp op : 31;  // This really only needs to be 3, but there's no win today to do so.
-    unsigned         aa :  1;  // MSVC won't pack an enum with an bool, so we call this an unsigned.
+    ClipOpAndAA(SkClipOp op, bool aa) : fOp(static_cast<unsigned>(op)), fAA(aa) {}
+
+    SkClipOp op() const { return static_cast<SkClipOp>(fOp); }
+    bool aa() const { return fAA != 0; }
+
+private:
+    unsigned fOp : 31;  // This really only needs to be 3, but there's no win today to do so.
+    unsigned fAA :  1;  // MSVC won't pack an enum with an bool, so we call this an unsigned.
 };
 static_assert(sizeof(ClipOpAndAA) == 4, "ClipOpAndAASize");
 
@@ -213,7 +220,7 @@ RECORD(ClipRect, 0,
 RECORD(ClipRegion, 0,
         SkIRect devBounds;
         SkRegion region;
-        SkCanvas::ClipOp op);
+        SkClipOp op);
 
 // While not strictly required, if you have an SkPaint, it's fastest to put it first.
 RECORD(DrawArc, kDraw_Tag|kHasPaint_Tag,
@@ -327,7 +334,7 @@ RECORD(DrawPatch, kDraw_Tag|kHasPaint_Tag,
         PODArray<SkPoint> cubics;
         PODArray<SkColor> colors;
         PODArray<SkPoint> texCoords;
-        sk_sp<SkXfermode> xmode);
+        SkBlendMode bmode);
 RECORD(DrawAtlas, kDraw_Tag|kHasImage_Tag|kHasPaint_Tag,
         Optional<SkPaint> paint;
         sk_sp<const SkImage> atlas;
@@ -335,18 +342,12 @@ RECORD(DrawAtlas, kDraw_Tag|kHasImage_Tag|kHasPaint_Tag,
         PODArray<SkRect> texs;
         PODArray<SkColor> colors;
         int count;
-        SkXfermode::Mode mode;
+        SkBlendMode mode;
         Optional<SkRect> cull);
 RECORD(DrawVertices, kDraw_Tag|kHasPaint_Tag,
         SkPaint paint;
-        SkCanvas::VertexMode vmode;
-        int vertexCount;
-        PODArray<SkPoint> vertices;
-        PODArray<SkPoint> texs;
-        PODArray<SkColor> colors;
-        sk_sp<SkXfermode> xmode;
-        PODArray<uint16_t> indices;
-        int indexCount);
+        sk_sp<SkVertices> vertices;
+        SkBlendMode bmode);
 RECORD(DrawAnnotation, 0,  // TODO: kDraw_Tag, skia:5548
        SkRect rect;
        SkString key;

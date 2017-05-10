@@ -6828,34 +6828,6 @@ nsContentUtils::WidgetForDocument(const nsIDocument* aDoc)
   return nullptr;
 }
 
-nsIWidget*
-nsContentUtils::WidgetForContent(const nsIContent* aContent)
-{
-  nsIFrame* frame = aContent->GetPrimaryFrame();
-  if (frame) {
-    frame = nsLayoutUtils::GetDisplayRootFrame(frame);
-
-    nsView* view = frame->GetView();
-    if (view) {
-      return view->GetWidget();
-    }
-  }
-
-  return nullptr;
-}
-
-already_AddRefed<LayerManager>
-nsContentUtils::LayerManagerForContent(const nsIContent *aContent)
-{
-  nsIWidget* widget = nsContentUtils::WidgetForContent(aContent);
-  if (widget) {
-    RefPtr<LayerManager> manager = widget->GetLayerManager();
-    return manager.forget();
-  }
-
-  return nullptr;
-}
-
 static already_AddRefed<LayerManager>
 LayerManagerForDocumentInternal(const nsIDocument *aDoc, bool aRequirePersistent)
 {

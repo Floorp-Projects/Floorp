@@ -11,6 +11,8 @@
 namespace mozilla {
 namespace dom {
 
+class VideoDecoderManagerThreadHolder;
+
 class VideoDecoderManagerParent final : public PVideoDecoderManagerParent
 {
 public:
@@ -35,18 +37,20 @@ protected:
   mozilla::ipc::IPCResult RecvReadback(const SurfaceDescriptorGPUVideo& aSD, SurfaceDescriptor* aResult) override;
   mozilla::ipc::IPCResult RecvDeallocateSurfaceDescriptorGPUVideo(const SurfaceDescriptorGPUVideo& aSD) override;
 
-  void ActorDestroy(mozilla::ipc::IProtocol::ActorDestroyReason) override {}
+  void ActorDestroy(mozilla::ipc::IProtocol::ActorDestroyReason) override;
 
   void DeallocPVideoDecoderManagerParent() override;
 
- private:
-  VideoDecoderManagerParent();
+private:
+  explicit VideoDecoderManagerParent(VideoDecoderManagerThreadHolder* aThreadHolder);
   ~VideoDecoderManagerParent();
 
   void Open(Endpoint<PVideoDecoderManagerParent>&& aEndpoint);
 
   std::map<uint64_t, RefPtr<layers::Image>> mImageMap;
   std::map<uint64_t, RefPtr<layers::TextureClient>> mTextureMap;
+
+  RefPtr<VideoDecoderManagerThreadHolder> mThreadHolder;
 };
 
 } // namespace dom

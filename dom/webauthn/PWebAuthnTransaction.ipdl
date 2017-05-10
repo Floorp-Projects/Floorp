@@ -1,0 +1,56 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+ * IPC Transaction protocol for the WebAuthn DOM API. This IPC protocol allows
+ * the content process to call to the parent to access hardware for
+ * authentication registration and challenges. All transactions start in the
+ * child process, and the parent replies with a "Confirm*" message, or a
+ * "Cancel" message if there was an error (no hardware available, no registered
+ * keys, etc) or interruption (another transaction was started in another
+ * content process). Similarly, the content process can also request a cancel,
+ * either triggered explicitly by the user/script or due to UI events like
+ * selecting a different tab.
+ */
+
+include protocol PBackground;
+
+namespace mozilla {
+namespace dom {
+
+struct WebAuthnScopedCredentialDescriptor {
+  // Converted from mozilla::dom::ScopedCredentialType enum
+  uint32_t type;
+  uint8_t[] id;
+  // Converted from mozilla::dom::WebAuthnTransport enum
+  uint32_t[] transports;
+};
+
+struct WebAuthnExtension {
+  /* TODO Fill in with predefined extensions */
+};
+
+struct WebAuthnTransactionInfo {
+  uint8_t[] RpIdHash;
+  uint8_t[] ClientDataHash;
+  uint32_t TimeoutMS;
+  WebAuthnScopedCredentialDescriptor[] Descriptors;
+  WebAuthnExtension[] Extensions;
+};
+
+async protocol PWebAuthnTransaction {
+  manager PBackground;
+  parent:
+    async __delete__();
+    async RequestRegister(WebAuthnTransactionInfo aTransactionInfo);
+    async RequestSign(WebAuthnTransactionInfo aTransactionInfo);
+    async RequestCancel();
+  child:
+    async ConfirmRegister(uint8_t[] RegBuffer, uint8_t[] SigBuffer);
+    async ConfirmSign(uint8_t[] CredentialID, uint8_t[] ReplyBuffer);
+    async Cancel(nsresult Error);
+};
+
+}
+}

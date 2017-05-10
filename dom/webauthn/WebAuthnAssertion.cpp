@@ -19,7 +19,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebAuthnAssertion)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-WebAuthnAssertion::WebAuthnAssertion(WebAuthentication* aParent)
+WebAuthnAssertion::WebAuthnAssertion(nsPIDOMWindowInner* aParent)
   : mParent(aParent)
 {}
 
