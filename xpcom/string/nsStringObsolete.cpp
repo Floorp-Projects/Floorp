@@ -540,8 +540,6 @@ StripChars2(char16_t* aString,uint32_t aLength,const char* aSet) {
 
 /* ***** END RICKG BLOCK ***** */
 
-static const char* kWhitespace="\f\t\r\n ";
-
 // This function is used to implement FindCharInSet and friends
 template <class CharT>
 #ifndef __SUNPRO_CC
