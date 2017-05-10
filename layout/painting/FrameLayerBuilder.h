@@ -518,15 +518,10 @@ public:
   static T*
   GetDebugSingleOldLayerForFrame(nsIFrame* aFrame)
   {
-    const nsTArray<DisplayItemData*>* array =
-      aFrame->Properties().Get(LayerManagerDataProperty());
-
-    if (!array) {
-      return nullptr;
-    }
+    SmallPointerArray<DisplayItemData>& array = aFrame->DisplayItemData();
 
     Layer* layer = nullptr;
-    for (DisplayItemData* data : *array) {
+    for (DisplayItemData* data : array) {
       DisplayItemData::AssertDisplayItemData(data);
       if (data->mLayer->GetType() != T::Type()) {
         continue;
@@ -593,15 +588,12 @@ public:
    */
   void StoreOptimizedLayerForFrame(nsDisplayItem* aItem, Layer* aLayer);
   
-  NS_DECLARE_FRAME_PROPERTY_WITH_FRAME_IN_DTOR(LayerManagerDataProperty,
-                                               nsTArray<DisplayItemData*>,
-                                               RemoveFrameFromLayerManager)
+  static void RemoveFrameFromLayerManager(const nsIFrame* aFrame,
+                                          SmallPointerArray<DisplayItemData>& aArray);
+
 protected:
 
   friend class LayerManagerData;
-
-  static void RemoveFrameFromLayerManager(const nsIFrame* aFrame,
-                                          nsTArray<DisplayItemData*>* aArray);
 
   /**
    * Given a frame and a display item key that uniquely identifies a
