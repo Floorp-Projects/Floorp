@@ -62,11 +62,7 @@ PlacesCategoriesStarter.prototype = {
       case PlacesUtils.TOPIC_SHUTDOWN:
         Services.obs.removeObserver(this, PlacesUtils.TOPIC_SHUTDOWN);
         Services.obs.removeObserver(this, TOPIC_GATHER_TELEMETRY);
-        let globalObj =
-          Cu.getGlobalForObject(PlacesCategoriesStarter.prototype);
-        let descriptor =
-          Object.getOwnPropertyDescriptor(globalObj, "PlacesDBUtils");
-        if (descriptor.value !== undefined) {
+        if (Cu.isModuleLoaded("resource://gre/modules/PlacesDBUtils.jsm")) {
           PlacesDBUtils.shutdown();
         }
         break;

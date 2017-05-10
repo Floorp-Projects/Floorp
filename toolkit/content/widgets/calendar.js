@@ -53,23 +53,21 @@ Calendar.prototype = {
    *          {
    *            {Number} textContent
    *            {Array<String>} classNames
+   *            {Boolean} enabled
    *          }
    *          {Function} getDayString: Transform day number to string
    *          {Function} getWeekHeaderString: Transform day of week number to string
-   *          {Function} setValue: Set value for dateKeeper
-   *          {Number} selectionValue: The selection date value
+   *          {Function} setSelection: Set selection for dateKeeper
    *        }
    */
   setProps(props) {
     if (props.isVisible) {
       // Transform the days and weekHeaders array for rendering
-      const days = props.days.map(({ dateValue, textContent, classNames }) => {
+      const days = props.days.map(({ dateObj, classNames, enabled }) => {
         return {
-          dateValue,
-          textContent: props.getDayString(textContent),
-          className: dateValue == props.selectionValue ?
-                     classNames.concat("selection").join(" ") :
-                     classNames.join(" ")
+          textContent: props.getDayString(dateObj.getUTCDate()),
+          className: classNames.join(" "),
+          enabled
         };
       });
       const weekHeaders = props.weekHeaders.map(({ textContent, classNames }) => {
@@ -151,10 +149,12 @@ Calendar.prototype = {
       case "click": {
         if (event.target.parentNode == this.context.daysView) {
           let targetId = event.target.dataset.id;
-          this.props.setValue({
-            selectionValue: this.props.days[targetId].dateValue,
-            dateValue: this.props.days[targetId].dateValue
-          });
+          let targetObj = this.props.days[targetId];
+          if (targetObj.enabled) {
+            this.props.setSelection({
+              selection: targetObj.dateObj
+            });
+          }
         }
         break;
       }

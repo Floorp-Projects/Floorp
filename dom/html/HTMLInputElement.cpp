@@ -1361,6 +1361,10 @@ HTMLInputElement::BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
     } else if (aNotify && aName == nsGkAtoms::src &&
                mType == NS_FORM_INPUT_IMAGE) {
       if (aValue) {
+        // Mark channel as urgent-start before load image if the image load is
+        // initaiated by a user interaction.
+        mUseUrgentStartForChannel = EventStateManager::IsHandlingUserInput();
+
         LoadImage(aValue->String(), true, aNotify, eImageLoadType_Normal);
       } else {
         // Null value means the attr got unset; drop the image
@@ -5101,6 +5105,10 @@ HTMLInputElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     // Our base URI may have changed; claim that our URI changed, and the
     // nsImageLoadingContent will decide whether a new image load is warranted.
     if (HasAttr(kNameSpaceID_None, nsGkAtoms::src)) {
+      // Mark channel as urgent-start before load image if the image load is
+      // initaiated by a user interaction.
+      mUseUrgentStartForChannel = EventStateManager::IsHandlingUserInput();
+
       // FIXME: Bug 660963 it would be nice if we could just have
       // ClearBrokenState update our state and do it fast...
       ClearBrokenState();
@@ -5292,6 +5300,10 @@ HTMLInputElement::HandleTypeChange(uint8_t aNewType, bool aNotify)
     // whether we have an image to load;
     nsAutoString src;
     if (GetAttr(kNameSpaceID_None, nsGkAtoms::src, src)) {
+      // Mark channel as urgent-start before load image if the image load is
+      // initaiated by a user interaction.
+      mUseUrgentStartForChannel = EventStateManager::IsHandlingUserInput();
+
       LoadImage(src, false, aNotify, eImageLoadType_Normal);
     }
   }

@@ -331,3 +331,4 @@ toolkit/webapps/**
 
 # Third party
 toolkit/modules/third_party/**
+third_party/**

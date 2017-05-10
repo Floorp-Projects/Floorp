@@ -53,6 +53,16 @@ public:
    */
   NS_IMETHOD RedisplaySelectedText() = 0;
 
+  /*
+   * Update preview text for the select control.
+   */
+  virtual void SetPreviewText(const nsAString& aValue) = 0;
+
+  /**
+   * Get the current preview text for select control.
+   */
+  virtual void GetPreviewText(nsAString& aValue) = 0;
+
   /**
    * Method for the listbox to set and get the recent index
    */

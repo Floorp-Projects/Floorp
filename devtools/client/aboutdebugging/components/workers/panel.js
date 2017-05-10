@@ -29,7 +29,8 @@ const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
 
 const WorkerIcon = "chrome://devtools/skin/images/debugging-workers.svg";
-const MORE_INFO_URL = "https://developer.mozilla.org/en-US/docs/Tools/about%3Adebugging";
+const MORE_INFO_URL = "https://developer.mozilla.org/en-US/docs/Tools/about%3Adebugging" +
+                      "#Service_workers_not_compatible";
 const PROCESS_COUNT_PREF = "dom.ipc.processCount";
 const MULTI_OPTOUT_PREF = "dom.ipc.multiOptOut";
 
@@ -185,16 +186,19 @@ module.exports = createClass({
         className: "service-worker-disabled"
       },
       dom.div({ className: "warning" }),
-      Strings.GetStringFromName("configurationIsNotCompatible"),
-      " (",
+      dom.span(
+        {
+          className: "service-worker-disabled-label",
+        },
+        Strings.GetStringFromName("configurationIsNotCompatible.label")
+      ),
       dom.a(
         {
           href: MORE_INFO_URL,
           target: "_blank"
         },
-        Strings.GetStringFromName("moreInfo")
+        Strings.GetStringFromName("configurationIsNotCompatible.learnMore")
       ),
-      ")"
     );
   },
 

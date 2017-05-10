@@ -78,8 +78,6 @@ class TestWindowMaximize(MarionetteTestCase):
         self.assert_window_restored(restored)
 
     def test_stress(self):
-        maximized = False
-
         for i in range(1, 25):
             expect_maximized = bool(i % 2)
 

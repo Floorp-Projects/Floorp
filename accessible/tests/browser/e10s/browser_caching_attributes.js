@@ -4,8 +4,7 @@
 
 'use strict';
 
-/* global EVENT_FOCUS */
-
+/* import-globals-from ../../mochitest/attributes.js */
 loadScripts({ name: 'attributes.js', dir: MOCHITESTS_DIR });
 
 /**

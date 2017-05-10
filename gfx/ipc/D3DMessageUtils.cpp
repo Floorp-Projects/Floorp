@@ -47,6 +47,8 @@ ParamTraits<DxgiAdapterDesc>::Write(Message* aMsg, const paramType& aParam)
   WriteParam(aMsg, aParam.SharedSystemMemory);
   WriteParam(aMsg, aParam.AdapterLuid.LowPart);
   WriteParam(aMsg, aParam.AdapterLuid.HighPart);
+#else
+  MOZ_ASSERT_UNREACHABLE("DxgiAdapterDesc is Windows-only");
 #endif
 }
 
@@ -70,10 +72,10 @@ ParamTraits<DxgiAdapterDesc>::Read(const Message* aMsg, PickleIterator* aIter, p
   {
     return true;
   }
-  return false;
 #else
-  return true;
+  MOZ_ASSERT_UNREACHABLE("DxgiAdapterDesc is Windows-only");
 #endif
+  return false;
 }
 
 } // namespace IPC

@@ -27,7 +27,7 @@
       var paragraph = getAccessible(paragraphNode, [nsIAccessibleText]);
       var offset = 64; // beginning of 4th stanza
 
-      var [x, y] = getPos(paragraph);
+      var [x, /*y*/] = getPos(paragraph);
       var [docX, docY] = getPos(tabDocument);
 
       paragraph.scrollSubstringToPoint(offset, offset,
@@ -39,7 +39,7 @@
       paragraphNode = tabDocument.getElementById("paragraph2");
       paragraph = getAccessible(paragraphNode, [nsIAccessibleText]);
       offset = 52; // // beginning of 4th stanza
-      var [x, y] = getPos(paragraph);
+      var [x, /*y*/] = getPos(paragraph);
       paragraph.scrollSubstringToPoint(offset, offset,
                                        COORDTYPE_SCREEN_RELATIVE, docX, docY);
       testTextPos(paragraph, offset, [x, docY], COORDTYPE_SCREEN_RELATIVE);

@@ -17,13 +17,7 @@
 :root {
   --space-above-tabbar: 15px;
 
-  --backbutton-urlbar-overlap: 6px;
-
-  /* icon width + border + horizontal padding (without the overlap from backbutton-urlbar-overlap) */
-  --forwardbutton-width: 25px;
-
-  --toolbarbutton-vertical-inner-padding: 2px;
-  --toolbarbutton-vertical-text-padding: var(--toolbarbutton-vertical-inner-padding);
+  --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-vertical-inner-padding) - 1px);
 
   --toolbarbutton-border-radius: 1px;
 
@@ -773,7 +767,7 @@ toolbar[brighttext] #close-button {
 
   :root {
     /* let toolbar buttons match the location and search bar's minimum height */
-    --toolbarbutton-vertical-inner-padding: 4px;
+    --toolbarbutton-vertical-inner-padding: 5px;
   }
 }
 

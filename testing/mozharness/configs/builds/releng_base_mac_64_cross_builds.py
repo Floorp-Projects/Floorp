@@ -12,8 +12,7 @@ config = {
         'checkout-sources',
         'build',
         'generate-build-stats',
-        'generate-balrog-properties',
-        # 'update',  # decided by query_is_nightly()
+        'update',  # decided by query_is_nightly()
     ],
     "buildbot_json_path": "buildprops.json",
     'exes': {

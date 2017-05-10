@@ -259,9 +259,6 @@ const WorkerSandbox = Class({
         table: genPropDesc('table'),
         clear: genPropDesc('clear'),
         dirxml: genPropDesc('dirxml'),
-        markTimeline: genPropDesc('markTimeline'),
-        timeline: genPropDesc('timeline'),
-        timelineEnd: genPropDesc('timelineEnd'),
         timeStamp: genPropDesc('timeStamp'),
       };
 

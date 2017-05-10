@@ -18,9 +18,9 @@
   --in-content-box-background-active: #dadada;
   --in-content-box-border-color: #c1c1c1;
   --in-content-item-hover: rgba(0,149,221,0.25);
-  --in-content-item-selected: #0095dd;
+  --in-content-item-selected: #0a84ff;
   --in-content-border-highlight: #ff9500;
-  --in-content-border-focus: #0095dd;
+  --in-content-border-focus: #0a84ff;
   --in-content-border-color: #c1c1c1;
   --in-content-category-text: #c1c1c1;
   --in-content-category-border-focus: 1px dotted #fff;
@@ -29,15 +29,15 @@
   --in-content-category-background-hover: #5e6972;
   --in-content-category-background-active: #343f48;
   --in-content-tab-color: #424f5a;
-  --in-content-link-color: #0095dd;
-  --in-content-link-color-hover: #178ce5;
+  --in-content-link-color: #0a84ff;
+  --in-content-link-color-hover: #0060df;
   --in-content-link-color-active: #ff9500;
   --in-content-link-color-visited: #551a8b;
-  --in-content-primary-button-background: #0095dd;
-  --in-content-primary-button-background-hover: #008acb;
-  --in-content-primary-button-background-active: #006b9d;
+  --in-content-primary-button-background: #0a84ff;
+  --in-content-primary-button-background-hover: #0060df;
+  --in-content-primary-button-background-active: #003EAA;
   --in-content-table-border-dark-color: #d1d1d1;
-  --in-content-table-header-background: #0095dd;
+  --in-content-table-header-background: #0a84ff;
 }
 
 html|html,
