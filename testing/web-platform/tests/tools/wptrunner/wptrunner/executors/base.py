@@ -215,6 +215,12 @@ class RefTestImplementation(object):
         self.screenshot_cache = self.executor.screenshot_cache
         self.message = None
 
+    def setup(self):
+        pass
+
+    def teardown(self):
+        pass
+
     @property
     def logger(self):
         return self.executor.logger
