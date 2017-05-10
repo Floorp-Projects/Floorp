@@ -19,6 +19,7 @@
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/ipc/Transport.h"
 #include "mozilla/StaticMutex.h"
+#include "mozilla/SystemGroup.h"
 #include "mozilla/Unused.h"
 #include "nsPrintfCString.h"
 
@@ -815,6 +816,13 @@ IToplevelProtocol::ShmemDestroyed(const Message& aMsg)
 already_AddRefed<nsIEventTarget>
 IToplevelProtocol::GetMessageEventTarget(const Message& aMsg)
 {
+  if (IsMainThreadProtocol() && SystemGroup::Initialized()) {
+    if (aMsg.type() == SHMEM_CREATED_MESSAGE_TYPE ||
+        aMsg.type() == SHMEM_DESTROYED_MESSAGE_TYPE) {
+      return do_AddRef(SystemGroup::EventTargetFor(TaskCategory::Other));
+    }
+  }
+
   int32_t route = aMsg.routing_id();
 
   Maybe<MutexAutoLock> lock;
