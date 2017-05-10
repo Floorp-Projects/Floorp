@@ -31,6 +31,7 @@ Cu.import("chrome://marionette/content/l10n.js");
 Cu.import("chrome://marionette/content/legacyaction.js");
 Cu.import("chrome://marionette/content/modal.js");
 Cu.import("chrome://marionette/content/proxy.js");
+Cu.import("chrome://marionette/content/reftest.js");
 Cu.import("chrome://marionette/content/session.js");
 Cu.import("chrome://marionette/content/wait.js");
 
@@ -3194,6 +3195,65 @@ GeckoDriver.prototype.localizeProperty = function (cmd, resp) {
   resp.body.value = l10n.localizeProperty(urls, id);
 }
 
+/**
+ * Initialize the reftest mode
+ */
+GeckoDriver.prototype.setupReftest = function* (cmd, resp) {
+  if (this._reftest) {
+    throw new UnsupportedOperationError("Called reftest:setup with a reftest session already active");
+  }
+
+  if (this.context !== Context.CHROME) {
+    throw new UnsupportedOperationError("Must set chrome context before running reftests");
+  }
+
+  let {urlCount = {}, screenshot = "unexpected"} = cmd.parameters;
+  if (!["always", "fail", "unexpected"].includes(screenshot)) {
+    throw new InvalidArgumentError("Value of `screenshot` should be 'always', 'fail' or 'unexpected'");
+  }
+
+  this._reftest = new reftest.Runner(this);
+
+  yield this._reftest.setup(urlCount, screenshot);
+};
+
+
+/**
+ * Run a reftest
+ */
+GeckoDriver.prototype.runReftest = function* (cmd, resp) {
+  let {test, references, expected, timeout} = cmd.parameters;
+
+  if (!this._reftest) {
+    throw new UnsupportedOperationError("Called reftest:run before reftest:start");
+  }
+
+  assert.string(test);
+  assert.string(expected);
+  assert.array(references);
+
+  let result = yield this._reftest.run(test, references, expected, timeout);
+
+  resp.body.value = result;
+};
+
+/**
+ * End a reftest run
+ *
+ * Closes the reftest window (without changing the current window handle),
+ * and removes cached canvases.
+ */
+GeckoDriver.prototype.teardownReftest = function* (cmd, resp) {
+  if (!this._reftest) {
+    throw new UnsupportedOperationError("Called reftest:teardown before reftest:start");
+  }
+
+  this._reftest.abort();
+
+  this._reftest = null;
+};
+
+
 GeckoDriver.prototype.commands = {
   // Marionette service
   "Marionette:SetContext": GeckoDriver.prototype.setContext,
@@ -3216,6 +3276,11 @@ GeckoDriver.prototype.commands = {
   "localization:l10n:localizeEntity": GeckoDriver.prototype.localizeEntity,  // deprecated, remove in Firefox 60
   "L10n:LocalizeProperty": GeckoDriver.prototype.localizeProperty,
   "localization:l10n:localizeProperty": GeckoDriver.prototype.localizeProperty,  // deprecated, remove in Firefox 60
+
+  // Reftest service
+  "reftest:setup": GeckoDriver.prototype.setupReftest,
+  "reftest:run": GeckoDriver.prototype.runReftest,
+  "reftest:teardown": GeckoDriver.prototype.teardownReftest,
 
   // WebDriver service
   "WebDriver:AcceptDialog": GeckoDriver.prototype.acceptDialog,
