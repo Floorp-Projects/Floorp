@@ -123,7 +123,7 @@ def session(configuration, request):
     if _current_session is None:
         _current_session = webdriver.Session(configuration["host"],
                                              configuration["port"],
-                                             capabilities=configuration["capabilities"])
+                                             capabilities={"alwaysMatch": configuration["capabilities"]})
     try:
         _current_session.start()
     except webdriver.errors.SessionNotCreatedException:
