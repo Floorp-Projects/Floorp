@@ -29,9 +29,9 @@ PaintCounter::PaintCounter()
   mSurface = Factory::CreateDataSourceSurface(mRect.Size(), mFormat);
   mStride = mSurface->Stride();
 
-  mCanvas.reset(
-    SkCanvas::NewRasterDirect(MakeSkiaImageInfo(mRect.Size(), mFormat),
-                              mSurface->GetData(), mStride));
+  mCanvas =
+    SkCanvas::MakeRasterDirect(MakeSkiaImageInfo(mRect.Size(), mFormat),
+                              mSurface->GetData(), mStride);
   mCanvas->clear(SK_ColorWHITE);
 }
 
