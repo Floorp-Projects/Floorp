@@ -11,6 +11,7 @@ import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.media.AudioFocusAgent;
 import org.mozilla.gecko.media.AudioFocusAgent.State;
 import org.mozilla.gecko.media.MediaControlService;
+import org.mozilla.gecko.tests.helpers.JavascriptBridge;
 
 import android.content.Intent;
 import android.content.Context;
@@ -26,6 +27,7 @@ import com.robotium.solo.Condition;
 abstract class MediaPlaybackTest extends BaseTest {
     private Context mContext;
     private int mPrevIcon = 0;
+    private JavascriptBridge mJs;
 
     private static final int UI_CHANGED_WAIT_MS = 6000;
 
@@ -298,5 +300,31 @@ abstract class MediaPlaybackTest extends BaseTest {
 
     protected final boolean isAvailableToCheckNotification() {
         return Build.VERSION.SDK_INT >= 23;
+    }
+
+     /**
+     * Can communicte with JS bey getJS(), but caller should create and destroy
+     * JSBridge manually.
+     */
+    protected JavascriptBridge getJS() {
+        mAsserter.ok(mJs != null,
+                     "JSBridege existence check",
+                     "Should connect JSBridge before using JS!");
+        return mJs;
+    }
+
+    protected void createJSBridge() {
+        mAsserter.ok(mJs == null,
+                     "JSBridege existence check",
+                     "Should not recreate the JSBridge!");
+        mJs = new JavascriptBridge(this, mActions, mAsserter);
+    }
+
+    protected void destroyJSBridge() {
+        mAsserter.ok(mJs != null,
+                     "JSBridege existence check",
+                     "Should create JSBridge before destroy it!");
+        mJs.disconnect();
+        mJs = null;
     }
 }
