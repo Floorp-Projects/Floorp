@@ -86,19 +86,9 @@ void SkInitCairoFT(bool fontHintingEnabled)
 typedef struct _FcPattern FcPattern;
 #endif
 
-template<> struct SkTUnref<FcPattern> {
-    void operator()(FcPattern* pattern) {
-#ifdef CAIRO_HAS_FC_FONT
-        if (pattern) {
-            FcPatternDestroy(pattern);
-        }
-#endif
-    }
-};
-
 class SkScalerContext_CairoFT : public SkScalerContext_FreeType_Base {
 public:
-    SkScalerContext_CairoFT(SkTypeface* typeface, const SkScalerContextEffects& effects, const SkDescriptor* desc,
+    SkScalerContext_CairoFT(sk_sp<SkTypeface> typeface, const SkScalerContextEffects& effects, const SkDescriptor* desc,
                             cairo_font_face_t* fontFace, FcPattern* pattern);
     virtual ~SkScalerContext_CairoFT();
 
@@ -112,7 +102,7 @@ protected:
     virtual void generateAdvance(SkGlyph* glyph) override;
     virtual void generateMetrics(SkGlyph* glyph) override;
     virtual void generateImage(const SkGlyph& glyph) override;
-    virtual void generatePath(const SkGlyph& glyph, SkPath* path) override;
+    virtual void generatePath(const SkGlyphID glyphID, SkPath* path) override;
     virtual void generateFontMetrics(SkPaint::FontMetrics* metrics) override;
     virtual SkUnichar generateGlyphToChar(uint16_t glyph) override;
 
@@ -123,7 +113,6 @@ private:
 
 #ifdef CAIRO_HAS_FC_FONT
     void parsePattern(FcPattern* pattern);
-    void resolvePattern(FcPattern* pattern);
 #endif
 
     cairo_scaled_font_t* fScaledFont;
@@ -205,8 +194,8 @@ public:
     virtual SkScalerContext* onCreateScalerContext(const SkScalerContextEffects& effects, const SkDescriptor* desc) const override
     {
         SkScalerContext_CairoFT* ctx =
-            new SkScalerContext_CairoFT(const_cast<SkCairoFTTypeface*>(this), effects, desc,
-                                        fFontFace, fPattern);
+            new SkScalerContext_CairoFT(sk_ref_sp(const_cast<SkCairoFTTypeface*>(this)),
+                                        effects, desc, fFontFace, fPattern);
         if (!ctx->isValid()) {
             delete ctx;
             return nullptr;
@@ -228,6 +217,13 @@ public:
 
         // Don't apply any gamma so that we match cairo-ft's results.
         rec->ignorePreBlend();
+    }
+
+    virtual int onGetVariationDesignPosition(
+        SkFontArguments::VariationPosition::Coordinate coordinates[],
+        int coordinateCount) const override
+    {
+        return -1;
     }
 
     virtual void onGetFontDescriptor(SkFontDescriptor*, bool*) const override
@@ -291,10 +287,15 @@ private:
     {
         cairo_font_face_set_user_data(fFontFace, &kSkTypefaceKey, nullptr, nullptr);
         cairo_font_face_destroy(fFontFace);
+#ifdef CAIRO_HAS_FC_FONT
+        if (fPattern) {
+            FcPatternDestroy(fPattern);
+        }
+#endif
     }
 
     cairo_font_face_t* fFontFace;
-    SkAutoTUnref<FcPattern> fPattern;
+    FcPattern* fPattern;
 };
 
 SkTypeface* SkCreateTypefaceFromCairoFTFontWithFontconfig(cairo_scaled_font_t* scaledFont, FcPattern* pattern)
@@ -321,9 +322,9 @@ SkTypeface* SkCreateTypefaceFromCairoFTFont(cairo_scaled_font_t* scaledFont)
     return SkCreateTypefaceFromCairoFTFontWithFontconfig(scaledFont, nullptr);
 }
 
-SkScalerContext_CairoFT::SkScalerContext_CairoFT(SkTypeface* typeface, const SkScalerContextEffects& effects, const SkDescriptor* desc,
+SkScalerContext_CairoFT::SkScalerContext_CairoFT(sk_sp<SkTypeface> typeface, const SkScalerContextEffects& effects, const SkDescriptor* desc,
                                                  cairo_font_face_t* fontFace, FcPattern* pattern)
-    : SkScalerContext_FreeType_Base(typeface, effects, desc)
+    : SkScalerContext_FreeType_Base(std::move(typeface), effects, desc)
     , fLcdFilter(FT_LCD_FILTER_NONE)
 {
     SkMatrix matrix;
@@ -342,7 +343,9 @@ SkScalerContext_CairoFT::SkScalerContext_CairoFT(SkTypeface* typeface, const SkS
     fRec.fFlags |= SkScalerContext::kEmbeddedBitmapText_Flag;
 
 #ifdef CAIRO_HAS_FC_FONT
-    resolvePattern(pattern);
+    if (pattern) {
+        parsePattern(pattern);
+    }
 #endif
 
     FT_Int32 loadFlags = FT_LOAD_DEFAULT;
@@ -512,29 +515,6 @@ void SkScalerContext_CairoFT::parsePattern(FcPattern* pattern)
             break;
         }
     }
-}
-
-void SkScalerContext_CairoFT::resolvePattern(FcPattern* pattern)
-{
-    if (!pattern) {
-        return;
-    }
-    FcValue value;
-    if (FcPatternGet(pattern, FC_PIXEL_SIZE, 0, &value) == FcResultNoMatch) {
-        SkAutoTUnref<FcPattern> scalePattern(FcPatternDuplicate(pattern));
-        if (scalePattern &&
-            FcPatternAddDouble(scalePattern, FC_PIXEL_SIZE, fScaleY) &&
-            FcConfigSubstitute(nullptr, scalePattern, FcMatchPattern)) {
-            FcDefaultSubstitute(scalePattern);
-            FcResult result;
-            SkAutoTUnref<FcPattern> resolved(FcFontMatch(nullptr, scalePattern, &result));
-            if (resolved) {
-                parsePattern(resolved);
-                return;
-            }
-        }
-    }
-    parsePattern(pattern);
 }
 #endif
 
@@ -781,7 +761,7 @@ void SkScalerContext_CairoFT::generateImage(const SkGlyph& glyph)
     }
 }
 
-void SkScalerContext_CairoFT::generatePath(const SkGlyph& glyph, SkPath* path)
+void SkScalerContext_CairoFT::generatePath(const SkGlyphID glyphID, SkPath* path)
 {
     SkASSERT(fScaledFont != nullptr);
     CairoLockedFTFace faceLock(fScaledFont);
@@ -793,7 +773,7 @@ void SkScalerContext_CairoFT::generatePath(const SkGlyph& glyph, SkPath* path)
     flags |= FT_LOAD_NO_BITMAP; // ignore embedded bitmaps so we're sure to get the outline
     flags &= ~FT_LOAD_RENDER;   // don't scan convert (we just want the outline)
 
-    FT_Error err = FT_Load_Glyph(face, glyph.getGlyphID(), flags);
+    FT_Error err = FT_Load_Glyph(face, glyphID, flags);
 
     if (err != 0) {
         path->reset();
@@ -834,7 +814,7 @@ SkUnichar SkScalerContext_CairoFT::generateGlyphToChar(uint16_t glyph)
 
 #include "SkFontMgr.h"
 
-SkFontMgr* SkFontMgr::Factory() {
+sk_sp<SkFontMgr> SkFontMgr::Factory() {
     // todo
     return nullptr;
 }
