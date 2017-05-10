@@ -134,6 +134,45 @@ SessionStore.prototype = {
     }
   },
 
+  _purgeHistory: function ss_purgeHistory(topic) {
+    log(topic);
+    this._clearDisk();
+
+    // Clear all data about closed tabs
+    this._forgetClosedTabs();
+
+    // Clear all cached session history data.
+    if (topic == "browser:purge-session-history") {
+      this._forEachBrowserWindow((window) => {
+        let tabs = window.BrowserApp.tabs;
+        for (let i = 0; i < tabs.length; i++) {
+          let data = tabs[i].browser.__SS_data;
+          let sHistory = data.entries;
+          // Copy the current history entry to the end...
+          sHistory.push(sHistory[data.index - 1]);
+          // ... and then remove everything else.
+          sHistory.splice(0, sHistory.length - 1);
+          data.index = 1;
+        }
+      });
+    }
+
+    if (this._loadState == STATE_RUNNING) {
+      // Save the purged state immediately
+      this.saveState();
+    } else if (this._loadState <= STATE_QUITTING) {
+      this.saveStateDelayed();
+      if (this._loadState == STATE_QUITTING_FLUSHED) {
+        this.flushPendingState();
+      }
+    }
+
+    Services.obs.notifyObservers(null, "sessionstore-state-purge-complete");
+    if (this._notifyClosedTabs) {
+      this._sendClosedTabsToJava(Services.wm.getMostRecentWindow("navigator:browser"));
+    }
+  },
+
   _clearDisk: function ss_clearDisk() {
     this._sessionDataIsGood = false;
     this._lastBackupTime = 0;
@@ -229,8 +268,6 @@ SessionStore.prototype = {
     }
   },
 
-  // Removal of line below tracked by bug 1360287
-  // eslint-disable-next-line complexity
   observe: function ss_observe(aSubject, aTopic, aData) {
     let observerService = Services.obs;
     switch (aTopic) {
@@ -300,42 +337,7 @@ SessionStore.prototype = {
         break;
       case "browser:purge-session-tabs":
       case "browser:purge-session-history": // catch sanitization
-        log(aTopic);
-        this._clearDisk();
-
-        // Clear all data about closed tabs
-        this._forgetClosedTabs();
-
-        // Clear all cached session history data.
-        if (aTopic == "browser:purge-session-history") {
-          this._forEachBrowserWindow((window) => {
-            let tabs = window.BrowserApp.tabs;
-            for (let i = 0; i < tabs.length; i++) {
-              let data = tabs[i].browser.__SS_data;
-              let sHistory = data.entries;
-              // Copy the current history entry to the end...
-              sHistory.push(sHistory[data.index - 1]);
-              // ... and then remove everything else.
-              sHistory.splice(0, sHistory.length - 1);
-              data.index = 1;
-            }
-          });
-        }
-
-        if (this._loadState == STATE_RUNNING) {
-          // Save the purged state immediately
-          this.saveState();
-        } else if (this._loadState <= STATE_QUITTING) {
-          this.saveStateDelayed();
-          if (this._loadState == STATE_QUITTING_FLUSHED) {
-            this.flushPendingState();
-          }
-        }
-
-        Services.obs.notifyObservers(null, "sessionstore-state-purge-complete");
-        if (this._notifyClosedTabs) {
-          this._sendClosedTabsToJava(Services.wm.getMostRecentWindow("navigator:browser"));
-        }
+        this._purgeHistory(aTopic);
         break;
       case "timer-callback":
         if (this._loadState == STATE_RUNNING) {
