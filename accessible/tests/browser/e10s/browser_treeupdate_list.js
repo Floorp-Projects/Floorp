@@ -4,8 +4,7 @@
 
 'use strict';
 
-/* global ROLE_TEXT_LEAF, EVENT_REORDER, ROLE_STATICTEXT, ROLE_LISTITEM */
-
+/* import-globals-from ../../mochitest/role.js */
 loadScripts({ name: 'role.js', dir: MOCHITESTS_DIR });
 
 function* setDisplayAndWaitForReorder(browser, value) {

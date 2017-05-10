@@ -98,7 +98,6 @@ this.EventManager.prototype = {
       switch (aEvent.type) {
       case 'wheel':
       {
-        let attempts = 0;
         let delta = aEvent.deltaX || aEvent.deltaY;
         this.contentControl.autoMove(
          null,
@@ -271,7 +270,6 @@ this.EventManager.prototype = {
       {
         // Put vc where the focus is at
         let acc = aEvent.accessible;
-        let doc = aEvent.accessibleDocument;
         this._setEditingMode(aEvent);
         if ([Roles.CHROME_WINDOW,
              Roles.DOCUMENT,
@@ -486,7 +484,7 @@ this.EventManager.prototype = {
       }
       return {};
     };
-    let {live, relevant, busy, atomic, memberOf} = getLiveAttributes(aEvent);
+    let {live, relevant, /* busy, atomic, memberOf */ } = getLiveAttributes(aEvent);
     // If container-live is not present or is set to |off| ignore the event.
     if (!live || live === 'off') {
       return {};

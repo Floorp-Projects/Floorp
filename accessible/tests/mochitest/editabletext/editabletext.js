@@ -133,7 +133,7 @@ function editableTextTest(aID)
     }
 
     this.generateTest(aID, null, [aStartPos, aEndPos, getTextFromClipboard],
-                      copyNPasteInvoke, getValueChecker(aID, aResStr), testID);
+                      copyNPasteTextInvoke, getValueChecker(aID, aResStr), testID);
   }
 
   /**
@@ -222,7 +222,6 @@ function editableTextTest(aID)
 
   function getValue(aID)
   {
-    var value = "";
     var elm = getNode(aID);
     if (elm instanceof Components.interfaces.nsIDOMNSEditableElement)
       return elm.value;
@@ -253,21 +252,6 @@ function editableTextTest(aID)
       check: function clipboardChecker_check()
       {
         is(getTextFromClipboard(), aText, "Wrong text in clipboard.");
-      }
-    };
-    return checker;
-  }
-
-  function getValueNClipboardChecker(aID, aValue, aText)
-  {
-    var valueChecker = getValueChecker(aID, aValue);
-    var clipboardChecker = getClipboardChecker(aID, aText);
-
-    var checker = {
-      check: function()
-      {
-        valueChecker.check();
-        clipboardChecker.check();
       }
     };
     return checker;
@@ -350,4 +334,3 @@ function editableTextTest(aID)
   this.mEventQueue = new eventQueue();
   this.mEventQueueReady = false;
 }
-

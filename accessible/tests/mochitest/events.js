@@ -505,7 +505,7 @@ function eventQueue(aEventType)
         // (i.e. event types are matched, targets differs).
         if (!checker.unexpected && checker.unique &&
             eventQueue.compareEventTypes(checker, aEvent)) {
-          var isExppected = false;
+          var isExpected = false;
           for (var jdx = 0; jdx < eventSeq.length; jdx++) {
             isExpected = eventQueue.compareEvents(eventSeq[jdx], aEvent);
             if (isExpected)
@@ -969,7 +969,7 @@ eventQueue.logEvent = function eventQueue_logEvent(aOrigEvent, aMatchedChecker,
 
   var currType = eventQueue.getEventTypeAsString(aMatchedChecker);
   var currTargetDescr = eventQueue.getEventTargetDescr(aMatchedChecker);
-  var consoleMsg = "*****\nScenario " + aScenarioIdx + 
+  var consoleMsg = "*****\nScenario " + aScenarioIdx +
     ", event " + aEventIdx + " matched: " + currType + "\n" + infoMsg + "\n*****";
   gLogger.logToConsole(consoleMsg);
 
@@ -1315,8 +1315,8 @@ function synthFocus(aNodeOrID, aCheckerOrEventSeq)
     this.DOMNode.focus();
   }
 
-  this.getID = function synthFocus_getID() 
-  { 
+  this.getID = function synthFocus_getID()
+  {
     return prettyName(aNodeOrID) + " focus";
   }
 }
@@ -1336,8 +1336,8 @@ function synthFocusOnFrame(aNodeOrID, aCheckerOrEventSeq)
     this.DOMNode.body.focus();
   }
 
-  this.getID = function synthFocus_getID() 
-  { 
+  this.getID = function synthFocus_getID()
+  {
     return prettyName(aNodeOrID) + " frame document focus";
   }
 }
@@ -1991,7 +1991,7 @@ function selChangeSeq(aUnselectedID, aSelectedID)
   }
 
   // Return two possible scenarios: depending on widget type when selection is
-  // moved the the order of items that get selected and unselected may vary. 
+  // moved the the order of items that get selected and unselected may vary.
   return [
     [
       new stateChangeChecker(STATE_SELECTED, false, false, aUnselectedID),
@@ -2151,7 +2151,7 @@ function removeA11yEventListener(aEventType, aEventHandler)
     return false;
 
   listenersArray.splice(index, 1);
-  
+
   if (!listenersArray.length) {
     gA11yEventListeners[aEventType] = null;
     delete gA11yEventListeners[aEventType];
@@ -2270,21 +2270,19 @@ var gLogger =
 function sequenceItem(aProcessor, aEventType, aTarget, aItemID)
 {
   // private
-  
+
   this.startProcess = function sequenceItem_startProcess()
   {
     this.queue.invoke();
   }
-  
-  var item = this;
-  
+
   this.queue = new eventQueue();
   this.queue.onFinish = function()
   {
     aProcessor.onProcessed();
     return DO_NOT_FINISH_TEST;
   }
-  
+
   var invoker = {
     invoke: function invoker_invoke() {
       return aProcessor.process();
@@ -2295,7 +2293,7 @@ function sequenceItem(aProcessor, aEventType, aTarget, aItemID)
     },
     eventSeq: [ new invokerChecker(aEventType, aTarget) ]
   };
-  
+
   this.queue.push(invoker);
 }
 

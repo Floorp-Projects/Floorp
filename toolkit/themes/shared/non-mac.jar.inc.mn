@@ -17,7 +17,6 @@
   skin/classic/global/expander.css                         (../../windows/global/expander.css)
   skin/classic/global/filefield.css                        (../../windows/global/filefield.css)
   skin/classic/global/globalBindings.xml                   (../../windows/global/globalBindings.xml)
-  skin/classic/global/linkTree.css                         (../../windows/global/linkTree.css)
   skin/classic/global/progressmeter.css                    (../../windows/global/progressmeter.css)
   skin/classic/global/resizer.css                          (../../windows/global/resizer.css)
   skin/classic/global/richlistbox.css                      (../../windows/global/richlistbox.css)
@@ -125,4 +124,3 @@
 % override chrome://mozapps/skin/plugins/notifyPluginCrashed.png          chrome://mozapps/skin/plugins/pluginGeneric-16.png
 % override chrome://mozapps/skin/plugins/notifyPluginGeneric.png          chrome://mozapps/skin/plugins/pluginGeneric-16.png
 % override chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png       chrome://mozapps/skin/extensions/extensionGeneric.png
-

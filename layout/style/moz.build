@@ -156,6 +156,7 @@ EXPORTS.mozilla.css += [
     'Rule.h',
     'SheetParsingMode.h',
     'StyleRule.h',
+    'URLMatchingFunction.h',
 ]
 
 UNIFIED_SOURCES += [

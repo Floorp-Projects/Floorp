@@ -4,8 +4,7 @@
 
 'use strict';
 
-/* global EVENT_DESCRIPTION_CHANGE, EVENT_NAME_CHANGE, EVENT_REORDER */
-
+/* import-globals-from ../../mochitest/name.js */
 loadScripts({ name: 'name.js', dir: MOCHITESTS_DIR });
 
 /**

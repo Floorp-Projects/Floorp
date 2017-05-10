@@ -2355,7 +2355,7 @@ locked_profiler_start(PSLockRef aLock, int aEntries, double aInterval,
   MOZ_RELEASE_ASSERT(CorePS::DeadThreads(aLock).empty());
 
 #ifdef MOZ_TASK_TRACER
-  if (featureTaskTracer) {
+  if (ActivePS::FeatureTaskTracer(aLock)) {
     mozilla::tasktracer::StartLogging();
   }
 #endif

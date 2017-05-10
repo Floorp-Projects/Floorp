@@ -214,7 +214,7 @@
 
 .searchbar-engine-one-off-item:not([selected]):not(.dummy):hover,
 .addengine-item:hover {
-  background-color: hsla(0, 0%, 0%, 0.06);
+  background-color: var(--arrowpanel-dimmed-further);
   color: inherit;
 }
 

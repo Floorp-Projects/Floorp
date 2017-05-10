@@ -40,9 +40,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=441519
           // see bug 440770, no actions wanted on outer doc
           is(outerDocAcc.actionCount, 0,
              "Wrong number of actions for internal frame!");
-          var actionTempStr; // not really used, just needs to receive a value
+
           try {
-            actionTempStr = outerDocAcc.getActionName(0);
+            outerDocAcc.getActionName(0);
             do_throw("No exception thrown for actionName!");
           } catch(e) {
             ok(e.result, ns_error_invalid_arg,

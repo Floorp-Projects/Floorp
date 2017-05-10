@@ -185,9 +185,6 @@
 
       this.invoke = function removeTextFromInput_invoke()
       {
-        const nsIDOMNSEditableElement =
-          Components.interfaces.nsIDOMNSEditableElement;
-
         this.DOMNode.focus();
         this.DOMNode.setSelectionRange(aStart, aEnd);
 

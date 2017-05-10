@@ -509,7 +509,6 @@ nsresult nsPluginHost::PostURL(nsISupports* pluginInst,
                                const char* url,
                                uint32_t postDataLen,
                                const char* postData,
-                               bool isFile,
                                const char* target,
                                nsNPAPIPluginStreamListener* streamListener,
                                const char* altHost,
@@ -529,44 +528,23 @@ nsresult nsPluginHost::PostURL(nsISupports* pluginInst,
   nsNPAPIPluginInstance* instance = static_cast<nsNPAPIPluginInstance*>(pluginInst);
 
   nsCOMPtr<nsIInputStream> postStream;
-  if (isFile) {
-    nsCOMPtr<nsIFile> file;
-    rv = CreateTempFileToPost(postData, getter_AddRefs(file));
-    if (NS_FAILED(rv))
-      return rv;
+  char *dataToPost;
+  uint32_t newDataToPostLen;
+  ParsePostBufferToFixHeaders(postData, postDataLen, &dataToPost, &newDataToPostLen);
+  if (!dataToPost)
+    return NS_ERROR_UNEXPECTED;
 
-    nsCOMPtr<nsIInputStream> fileStream;
-    rv = NS_NewLocalFileInputStream(getter_AddRefs(fileStream),
-                                    file,
-                                    PR_RDONLY,
-                                    0600,
-                                    nsIFileInputStream::DELETE_ON_CLOSE |
-                                    nsIFileInputStream::CLOSE_ON_EOF);
-    if (NS_FAILED(rv))
-      return rv;
-
-    rv = NS_NewBufferedInputStream(getter_AddRefs(postStream), fileStream, 8192);
-    if (NS_FAILED(rv))
-      return rv;
-  } else {
-    char *dataToPost;
-    uint32_t newDataToPostLen;
-    ParsePostBufferToFixHeaders(postData, postDataLen, &dataToPost, &newDataToPostLen);
-    if (!dataToPost)
-      return NS_ERROR_UNEXPECTED;
-
-    nsCOMPtr<nsIStringInputStream> sis = do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv);
-    if (!sis) {
-      free(dataToPost);
-      return rv;
-    }
-
-    // data allocated by ParsePostBufferToFixHeaders() is managed and
-    // freed by the string stream.
-    postDataLen = newDataToPostLen;
-    sis->AdoptData(dataToPost, postDataLen);
-    postStream = sis;
+  nsCOMPtr<nsIStringInputStream> sis = do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv);
+  if (!sis) {
+    free(dataToPost);
+    return rv;
   }
+
+  // data allocated by ParsePostBufferToFixHeaders() is managed and
+  // freed by the string stream.
+  postDataLen = newDataToPostLen;
+  sis->AdoptData(dataToPost, postDataLen);
+  postStream = sis;
 
   if (target) {
     RefPtr<nsPluginInstanceOwner> owner = instance->GetOwner();
@@ -3585,107 +3563,6 @@ nsPluginHost::ParsePostBufferToFixHeaders(const char *inPostData, uint32_t inPos
   *outPostDataLen = newBufferLen;
 
   return NS_OK;
-}
-
-nsresult
-nsPluginHost::CreateTempFileToPost(const char *aPostDataURL, nsIFile **aTmpFile)
-{
-  nsresult rv;
-  int64_t fileSize;
-  nsAutoCString filename;
-
-  // stat file == get size & convert file:///c:/ to c: if needed
-  nsCOMPtr<nsIFile> inFile;
-  rv = NS_GetFileFromURLSpec(nsDependentCString(aPostDataURL),
-                             getter_AddRefs(inFile));
-  if (NS_FAILED(rv)) {
-    nsCOMPtr<nsIFile> localFile;
-    rv = NS_NewNativeLocalFile(nsDependentCString(aPostDataURL), false,
-                               getter_AddRefs(localFile));
-    if (NS_FAILED(rv)) return rv;
-    inFile = localFile;
-  }
-  rv = inFile->GetFileSize(&fileSize);
-  if (NS_FAILED(rv)) return rv;
-  rv = inFile->GetNativePath(filename);
-  if (NS_FAILED(rv)) return rv;
-
-  if (fileSize != 0) {
-    nsCOMPtr<nsIInputStream> inStream;
-    rv = NS_NewLocalFileInputStream(getter_AddRefs(inStream), inFile);
-    if (NS_FAILED(rv)) return rv;
-
-    // Create a temporary file to write the http Content-length:
-    // %ld\r\n\" header and "\r\n" == end of headers for post data to
-
-    nsCOMPtr<nsIFile> tempFile;
-    rv = GetPluginTempDir(getter_AddRefs(tempFile));
-    if (NS_FAILED(rv))
-      return rv;
-
-    nsAutoCString inFileName;
-    inFile->GetNativeLeafName(inFileName);
-    // XXX hack around bug 70083
-    inFileName.Insert(NS_LITERAL_CSTRING("post-"), 0);
-    rv = tempFile->AppendNative(inFileName);
-
-    if (NS_FAILED(rv))
-      return rv;
-
-    // make it unique, and mode == 0600, not world-readable
-    rv = tempFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
-    if (NS_FAILED(rv))
-      return rv;
-
-    nsCOMPtr<nsIOutputStream> outStream;
-    if (NS_SUCCEEDED(rv)) {
-      rv = NS_NewLocalFileOutputStream(getter_AddRefs(outStream),
-        tempFile,
-        (PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE),
-        0600); // 600 so others can't read our form data
-    }
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Post data file couldn't be created!");
-    if (NS_FAILED(rv))
-      return rv;
-
-    char buf[1024];
-    uint32_t br, bw;
-    bool firstRead = true;
-    while (true) {
-      // Read() mallocs if buffer is null
-      rv = inStream->Read(buf, 1024, &br);
-      if (NS_FAILED(rv) || (int32_t)br <= 0)
-        break;
-      if (firstRead) {
-        //"For protocols in which the headers must be distinguished from the body,
-        // such as HTTP, the buffer or file should contain the headers, followed by
-        // a blank line, then the body. If no custom headers are required, simply
-        // add a blank line ('\n') to the beginning of the file or buffer.
-
-        char *parsedBuf;
-        // assuming first 1K (or what we got) has all headers in,
-        // lets parse it through nsPluginHost::ParsePostBufferToFixHeaders()
-        ParsePostBufferToFixHeaders((const char *)buf, br, &parsedBuf, &bw);
-        rv = outStream->Write(parsedBuf, bw, &br);
-        free(parsedBuf);
-        if (NS_FAILED(rv) || (bw != br))
-          break;
-
-        firstRead = false;
-        continue;
-      }
-      bw = br;
-      rv = outStream->Write(buf, bw, &br);
-      if (NS_FAILED(rv) || (bw != br))
-        break;
-    }
-
-    inStream->Close();
-    outStream->Close();
-    if (NS_SUCCEEDED(rv))
-      tempFile.forget(aTmpFile);
-  }
-  return rv;
 }
 
 nsresult

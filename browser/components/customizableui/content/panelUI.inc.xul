@@ -546,6 +546,35 @@
                        command="cmd_printPreview"
 #endif
                        />
+        <toolbarseparator/>
+        <toolbarbutton id="appMenu-library-button"
+                       class="subviewbutton subviewbutton-iconic"
+                       label="&places.library.title;"
+                       command="Browser:ShowAllBookmarks"
+                       />
+        <toolbarbutton id="appMenu-addons-button"
+                       class="subviewbutton subviewbutton-iconic"
+                       label="&addons.label;"
+                       key="key_openAddons"
+                       command="Tools:Addons"
+                       />
+        <toolbarbutton id="appMenu-preferences-button"
+                       class="subviewbutton subviewbutton-iconic"
+#ifdef XP_WIN
+                       label="&preferencesCmd2.label;"
+#else
+                       label="&preferencesCmdUnix.label;"
+#ifdef XP_MACOSX
+                       key="key_preferencesCmdMac"
+#endif
+#endif
+                       oncommand="openPreferences()"
+                       />
+        <toolbarbutton id="appMenu-customize-button"
+                       class="subviewbutton subviewbutton-iconic"
+                       label="&viewCustomizeToolbar.label;"
+                       command="cmd_CustomizeToolbars"
+                       />
       </vbox>
     </panelview>
   </panelmultiview>

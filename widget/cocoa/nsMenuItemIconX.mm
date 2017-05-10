@@ -50,8 +50,7 @@ using mozilla::gfx::SourceSurface;
 static const uint32_t kIconWidth = 16;
 static const uint32_t kIconHeight = 16;
 
-typedef NS_STDCALL_FUNCPROTO(nsresult, GetRectSideMethod, nsIDOMRect,
-                             GetBottom, (nsIDOMCSSPrimitiveValue**));
+typedef decltype(&nsIDOMRect::GetBottom) GetRectSideMethod;
 
 NS_IMPL_ISUPPORTS(nsMenuItemIconX, imgINotificationObserver)
 
@@ -320,6 +319,7 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
                                   mLoadingPrincipal, loadGroup, this,
                                   mContent, document, nsIRequest::LOAD_NORMAL, nullptr,
                                   mContentType, EmptyString(),
+                                  /* aUseUrgentStartForChannel */ false,
                                   getter_AddRefs(mIconRequest));
   if (NS_FAILED(rv)) return rv;
 

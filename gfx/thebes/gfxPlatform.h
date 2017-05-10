@@ -175,12 +175,6 @@ public:
      */
     static void Shutdown();
 
-    /**
-     * Initialize gfxPlatform (if not already done) in a child process, with
-     * the provided ContentDeviceData.
-     */
-    static void InitChild(const mozilla::gfx::ContentDeviceData& aData);
-
     static void InitLayersIPC();
     static void ShutdownLayersIPC();
 

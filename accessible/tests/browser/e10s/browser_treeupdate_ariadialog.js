@@ -4,9 +4,7 @@
 
 'use strict';
 
-/* global EVENT_SHOW, ROLE_DIALOG, ROLE_PUSHBUTTON, ROLE_TEXT_LEAF, ROLE_ENTRY,
-          ROLE_DOCUMENT */
-
+/* import-globals-from ../../mochitest/role.js */
 loadScripts({ name: 'role.js', dir: MOCHITESTS_DIR });
 
 // Test ARIA Dialog

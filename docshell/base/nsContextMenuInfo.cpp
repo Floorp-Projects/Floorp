@@ -302,7 +302,8 @@ nsContextMenuInfo::GetBackgroundImageRequestInternal(nsIDOMNode* aDOMNode,
                                doc->GetReferrerPolicy(), principal, nullptr,
                                nullptr, nullptr, nullptr, nsIRequest::LOAD_NORMAL,
                                nullptr, nsIContentPolicy::TYPE_INTERNAL_IMAGE,
-                               EmptyString(), aRequest);
+                               EmptyString(),
+                               /* aUseUrgentStartForChannel */ false, aRequest);
         }
       }
 
