@@ -173,8 +173,12 @@ public:
       iter.Remove();
     }
     RefPtr<SamplesWaitingForKey> k = mSamplesWaitingForKey;
-    return mDecoder->Flush()->Then(mTaskQueue, __func__,
-                                   [k]() { k->Flush(); });
+    return mDecoder->Flush()->Then(
+      mTaskQueue, __func__,
+      [k]() {
+        k->Flush();
+        return FlushPromise::CreateAndResolve(true, __func__);
+      });
   }
 
   RefPtr<DecodePromise> Drain() override

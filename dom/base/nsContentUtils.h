@@ -769,6 +769,8 @@ public:
    * @param aLoadFlags the load flags to use.  See nsIRequest
    * @param [aContentPolicyType=nsIContentPolicy::TYPE_INTERNAL_IMAGE] (Optional)
    *        The CP content type to use
+   * @param aUseUrgentStartForChannel,(Optional) a flag to mark on channel if it
+   *        is triggered by user input events.
    * @return the imgIRequest for the image load
    */
   static nsresult LoadImage(nsIURI* aURI,
@@ -781,7 +783,8 @@ public:
                             int32_t aLoadFlags,
                             const nsAString& initiatorType,
                             imgRequestProxy** aRequest,
-                            uint32_t aContentPolicyType = nsIContentPolicy::TYPE_INTERNAL_IMAGE);
+                            uint32_t aContentPolicyType = nsIContentPolicy::TYPE_INTERNAL_IMAGE,
+                            bool aUseUrgentStartForChannel = false);
 
   /**
    * Obtain an image loader that respects the given document/channel's privacy status.
