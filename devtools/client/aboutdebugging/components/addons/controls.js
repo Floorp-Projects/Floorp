@@ -83,7 +83,7 @@ module.exports = createClass({
             className: "addons-debugging-label",
             htmlFor: "enable-addon-debugging",
             title: Strings.GetStringFromName("addonDebugging.tooltip")
-          }, Strings.GetStringFromName("addonDebugging.label2")),
+          }, Strings.GetStringFromName("addonDebugging.label")),
           dom.a({ href: MORE_INFO_URL, target: "_blank" },
             Strings.GetStringFromName("addonDebugging.learnMore")
           ),
