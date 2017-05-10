@@ -13,7 +13,7 @@ name = "bindgen"
 readme = "README.md"
 repository = "https://github.com/servo/rust-bindgen"
 documentation = "https://docs.rs/bindgen"
-version = "0.24.0"
+version = "0.25.0"
 build = "build.rs"
 
 exclude = [
@@ -44,7 +44,7 @@ quasi_codegen = "0.32"
 [dependencies]
 cexpr = "0.2"
 cfg-if = "0.1.0"
-clang-sys = { version = "0.16.0", features = ["runtime", "clang_3_9"] }
+clang-sys = { version = "0.17.0", features = ["runtime", "clang_3_9"] }
 lazy_static = "0.2.1"
 syntex_syntax = "0.58"
 regex = "0.2"

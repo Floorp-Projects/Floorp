@@ -1465,11 +1465,21 @@ impl CodeGenerator for CompInfo {
         let mut generics = aster::AstBuilder::new().generics();
 
         if let Some(ref params) = used_template_params {
-            for ty in params.iter() {
+            for (idx, ty) in params.iter().enumerate() {
                 let param = ctx.resolve_type(*ty);
                 let name = param.name().unwrap();
                 let ident = ctx.rust_ident(name);
+
                 generics = generics.ty_param_id(ident);
+
+                let prefix = ctx.trait_prefix();
+                let phantom_ty = quote_ty!(
+                    ctx.ext_cx(),
+                    ::$prefix::marker::PhantomData<::$prefix::cell::UnsafeCell<$ident>>);
+                let phantom_field = StructFieldBuilder::named(format!("_phantom_{}", idx))
+                    .pub_()
+                    .build_ty(phantom_ty);
+                fields.push(phantom_field);
             }
         }
 
