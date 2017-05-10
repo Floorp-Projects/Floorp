@@ -279,10 +279,18 @@ public:
   // |aFrame| is used for calculation of scale values.
   bool ContainsAnimatedScale(const nsIFrame* aFrame) const;
 
-  StyleAnimationValue BaseStyle(nsCSSPropertyID aProperty) const
+  AnimationValue BaseStyle(nsCSSPropertyID aProperty) const
   {
-    StyleAnimationValue result;
-    DebugOnly<bool> hasProperty = mBaseStyleValues.Get(aProperty, &result);
+    AnimationValue result;
+    bool hasProperty = false;
+    if (mDocument->IsStyledByServo()) {
+      // We cannot use getters_AddRefs on RawServoAnimationValue because it is
+      // an incomplete type, so Get() doesn't work. Instead, use GetWeak, and
+      // then assign the raw pointer to a RefPtr.
+      result.mServo = mBaseStyleValuesForServo.GetWeak(aProperty, &hasProperty);
+    } else {
+      hasProperty = mBaseStyleValues.Get(aProperty, &result.mGecko);
+    }
     MOZ_ASSERT(hasProperty || result.IsNull());
     return result;
   }

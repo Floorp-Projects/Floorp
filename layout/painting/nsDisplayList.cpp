@@ -566,13 +566,11 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
   // If the animation is additive or accumulates, we need to pass its base value
   // to the compositor.
 
-  StyleAnimationValue baseStyle =
+  AnimationValue baseStyle =
     aAnimation->GetEffect()->AsKeyframeEffect()->BaseStyle(aProperty.mProperty);
   if (!baseStyle.IsNull()) {
-    // FIXME: Bug 1334036: We need to get the baseValue for
-    //        RawServoAnimationValue.
     SetAnimatable(aProperty.mProperty,
-                  AnimationValue(baseStyle),
+                  baseStyle,
                   aFrame, refBox,
                   animation->baseStyle());
   } else {
