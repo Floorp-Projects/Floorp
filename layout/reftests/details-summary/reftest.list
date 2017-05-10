@@ -75,9 +75,9 @@ fails-if(stylo) == mouse-click-twice-single-summary.html single-summary.html
 fails-if(stylo) == mouse-click-open-single-summary.html single-summary.html
 fails-if(stylo) == mouse-click-twice-open-single-summary.html open-single-summary.html
 fails-if(stylo) == mouse-click-open-second-summary.html open-multiple-summary.html
-fails-if(stylo) == mouse-click-overflow-hidden-details.html overflow-hidden-open-details.html
+== mouse-click-overflow-hidden-details.html overflow-hidden-open-details.html
 == mouse-click-twice-overflow-hidden-details.html overflow-hidden-details.html
-fuzzy-if(gtkWidget,1,20) fails-if(stylo) == mouse-click-overflow-auto-details.html overflow-auto-open-details.html #Bug 1294278
+fuzzy-if(gtkWidget,1,20) == mouse-click-overflow-auto-details.html overflow-auto-open-details.html #Bug 1294278
 == mouse-click-twice-overflow-auto-details.html overflow-auto-details.html
 fails-if(stylo) == mouse-click-display-none-details.html open-single-summary.html
 fails-if(stylo) == mouse-click-change-details-to-display-none.html open-single-summary.html
