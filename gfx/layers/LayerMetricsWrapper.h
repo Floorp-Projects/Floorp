@@ -413,7 +413,7 @@ public:
   {
     MOZ_ASSERT(IsValid());
 
-    return mLayer->GetScrollbarDirection();
+    return mLayer->GetScrollThumbData().mDirection;
   }
 
   FrameMetrics::ViewID GetScrollbarTargetContainerId() const

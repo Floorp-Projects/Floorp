@@ -54,7 +54,9 @@ using namespace mozilla;
 using mozilla::layers::APZCCallbackHelper;
 using mozilla::layers::AsyncDragMetrics;
 using mozilla::layers::InputAPZContext;
+using mozilla::layers::ScrollDirection;
 using mozilla::layers::ScrollInputMethod;
+using mozilla::layers::ScrollThumbData;
 
 bool nsSliderFrame::gMiddlePref = false;
 int32_t nsSliderFrame::gSnapMultiplier;
@@ -364,6 +366,12 @@ nsSliderFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
     nsLayoutUtils::SetScrollbarThumbLayerization(thumb, thumbGetsLayer);
 
     if (thumbGetsLayer) {
+      MOZ_ASSERT((flags & nsDisplayOwnLayer::HORIZONTAL_SCROLLBAR) ||
+                 (flags & nsDisplayOwnLayer::VERTICAL_SCROLLBAR));
+      ScrollDirection scrollDirection =
+            (flags & nsDisplayOwnLayer::HORIZONTAL_SCROLLBAR)
+          ? ScrollDirection::HORIZONTAL
+          : ScrollDirection::VERTICAL;
       nsDisplayListBuilder::AutoContainerASRTracker contASRTracker(aBuilder);
       nsDisplayListCollection tempLists;
       nsBoxFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, tempLists);
@@ -385,7 +393,7 @@ nsSliderFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
       aLists.Content()->AppendNewToTop(new (aBuilder)
         nsDisplayOwnLayer(aBuilder, this, &masterList, ownLayerASR,
                           flags, scrollTargetId,
-                          GetThumbRatio()));
+                          ScrollThumbData{scrollDirection, GetThumbRatio()}));
 
       return;
     }
