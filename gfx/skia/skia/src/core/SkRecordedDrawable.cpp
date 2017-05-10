@@ -10,7 +10,6 @@
 #include "SkPicturePlayback.h"
 #include "SkPictureRecord.h"
 #include "SkPictureRecorder.h"
-#include "SkPictureUtils.h"
 #include "SkRecordedDrawable.h"
 #include "SkRecordDraw.h"
 
@@ -21,7 +20,7 @@ void SkRecordedDrawable::onDraw(SkCanvas* canvas) {
         drawables = fDrawableList->begin();
         drawableCount = fDrawableList->count();
     }
-    SkRecordDraw(*fRecord, canvas, nullptr, drawables, drawableCount, fBBH, nullptr/*callback*/);
+    SkRecordDraw(*fRecord, canvas, nullptr, drawables, drawableCount, fBBH.get(), nullptr);
 }
 
 SkPicture* SkRecordedDrawable::onNewPictureSnapshot() {
@@ -34,7 +33,7 @@ SkPicture* SkRecordedDrawable::onNewPictureSnapshot() {
 
     size_t subPictureBytes = 0;
     for (int i = 0; pictList && i < pictList->count(); i++) {
-        subPictureBytes += SkPictureUtils::ApproximateBytesUsed(pictList->begin()[i]);
+        subPictureBytes += pictList->begin()[i]->approximateBytesUsed();
     }
     // SkBigPicture will take ownership of a ref on both fRecord and fBBH.
     // We're not willing to give up our ownership, so we must ref them for SkPicture.
@@ -51,10 +50,8 @@ void SkRecordedDrawable::flatten(SkWriteBuffer& buffer) const {
     SkPictureRecord pictureRecord(SkISize::Make(fBounds.width(), fBounds.height()), 0);
 
     // If the query contains the whole picture, don't bother with the bounding box hierarchy.
-    SkRect clipBounds;
-    pictureRecord.getClipBounds(&clipBounds);
     SkBBoxHierarchy* bbh;
-    if (clipBounds.contains(fBounds)) {
+    if (pictureRecord.getLocalClipBounds().contains(fBounds)) {
         bbh = nullptr;
     } else {
         bbh = fBBH.get();
@@ -81,13 +78,13 @@ sk_sp<SkFlattenable> SkRecordedDrawable::CreateProc(SkReadBuffer& buffer) {
     info.setVersion(buffer.getVersion());
     info.fCullRect = bounds;
     info.fFlags = 0;    // ???
-    SkAutoTDelete<SkPictureData> pictureData(SkPictureData::CreateFromBuffer(buffer, info));
+    std::unique_ptr<SkPictureData> pictureData(SkPictureData::CreateFromBuffer(buffer, info));
     if (!pictureData) {
         return nullptr;
     }
 
     // Create a drawable.
-    SkPicturePlayback playback(pictureData);
+    SkPicturePlayback playback(pictureData.get());
     SkPictureRecorder recorder;
     playback.draw(recorder.beginRecording(bounds), nullptr, &buffer);
     return recorder.finishRecordingAsDrawable();

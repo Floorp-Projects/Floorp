@@ -64,7 +64,7 @@ public:
         return fEnd;
     }
 
-    void insert(SkOpAngle* );
+    bool insert(SkOpAngle* );
     SkOpSpanBase* lastMarked() const;
     bool loopContains(const SkOpAngle* ) const;
     int loopCount() const;
@@ -87,17 +87,22 @@ public:
 
     SkOpSpan* starter();
 
+    bool tangentsAmbiguous() const {
+        return fTangentsAmbiguous;
+    }
+
     bool unorderable() const {
         return fUnorderable;
     }
 
 private:
     bool after(SkOpAngle* test);
+    void alignmentSameSide(const SkOpAngle* test, int* order) const;
     int allOnOneSide(const SkOpAngle* test);
     bool checkCrossesZero() const;
     bool checkParallel(SkOpAngle* );
     bool computeSector();
-    int convexHullOverlaps(const SkOpAngle* ) const;
+    int convexHullOverlaps(const SkOpAngle* );
     bool endToSide(const SkOpAngle* rh, bool* inside) const;
     bool endsIntersect(SkOpAngle* );
     int findSector(SkPath::Verb verb, double x, double y) const;
@@ -109,7 +114,7 @@ private:
     bool orderable(SkOpAngle* rh);  // false == this < rh ; true == this > rh
     void setSector();
     void setSpans();
-    bool tangentsDiverge(const SkOpAngle* rh, double s0xt0) const;
+    bool tangentsDiverge(const SkOpAngle* rh, double s0xt0);
 
     SkDCurve fOriginalCurvePart;  // the curve from start to end
     SkDCurveSweep fPart;  // the curve from start to end offset as needed
@@ -127,6 +132,7 @@ private:
     bool fComputeSector;
     bool fComputedSector;
     bool fCheckCoincidence;
+    bool fTangentsAmbiguous;
     SkDEBUGCODE(int fID);
 
     friend class PathOpsAngleTester;

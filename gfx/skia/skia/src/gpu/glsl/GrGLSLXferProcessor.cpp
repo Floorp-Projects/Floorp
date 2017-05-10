@@ -7,6 +7,7 @@
 
 #include "glsl/GrGLSLXferProcessor.h"
 
+#include "GrShaderCaps.h"
 #include "GrXferProcessor.h"
 #include "glsl/GrGLSLFragmentShaderBuilder.h"
 #include "glsl/GrGLSLProgramDataManager.h"
@@ -24,8 +25,8 @@ void GrGLSLXferProcessor::emitCode(const EmitArgs& args) {
 
     bool needsLocalOutColor = false;
 
-    if (args.fXP.getDstTexture()) {
-        bool topDown = kTopLeft_GrSurfaceOrigin == args.fXP.getDstTexture()->origin();
+    if (args.fDstTextureSamplerHandle.isValid()) {
+        bool flipY = kBottomLeft_GrSurfaceOrigin == args.fDstTextureOrigin;
 
         if (args.fInputCoverage) {
             // We don't think any shaders actually output negative coverage, but just as a safety
@@ -48,21 +49,21 @@ void GrGLSLXferProcessor::emitCode(const EmitArgs& args) {
                                                   kDefault_GrSLPrecision,
                                                   "DstTextureCoordScale",
                                                   &dstCoordScaleName);
-        const char* fragPos = fragBuilder->fragmentPosition();
 
         fragBuilder->codeAppend("// Read color from copy of the destination.\n");
-        fragBuilder->codeAppendf("vec2 _dstTexCoord = (%s.xy - %s) * %s;",
-                                 fragPos, dstTopLeftName, dstCoordScaleName);
+        fragBuilder->codeAppendf("vec2 _dstTexCoord = (sk_FragCoord.xy - %s) * %s;",
+                                 dstTopLeftName, dstCoordScaleName);
 
-        if (!topDown) {
+        if (flipY) {
             fragBuilder->codeAppend("_dstTexCoord.y = 1.0 - _dstTexCoord.y;");
         }
 
         fragBuilder->codeAppendf("vec4 %s = ", dstColor);
-        fragBuilder->appendTextureLookup(args.fTexSamplers[0], "_dstTexCoord", kVec2f_GrSLType);
+        fragBuilder->appendTextureLookup(args.fDstTextureSamplerHandle, "_dstTexCoord",
+                                         kVec2f_GrSLType);
         fragBuilder->codeAppend(";");
     } else {
-        needsLocalOutColor = args.fGLSLCaps->requiresLocalOutputColorForFBFetch();
+        needsLocalOutColor = args.fShaderCaps->requiresLocalOutputColorForFBFetch();
     }
 
     const char* outColor = "_localColorOut";
@@ -85,13 +86,13 @@ void GrGLSLXferProcessor::emitCode(const EmitArgs& args) {
     }
 }
 
-void GrGLSLXferProcessor::setData(const GrGLSLProgramDataManager& pdm, const GrXferProcessor& xp) {
-    if (xp.getDstTexture()) {
+void GrGLSLXferProcessor::setData(const GrGLSLProgramDataManager& pdm, const GrXferProcessor& xp,
+                                  const GrTexture* dstTexture, const SkIPoint& dstTextureOffset) {
+    if (dstTexture) {
         if (fDstTopLeftUni.isValid()) {
-            pdm.set2f(fDstTopLeftUni, static_cast<float>(xp.dstTextureOffset().fX),
-                      static_cast<float>(xp.dstTextureOffset().fY));
-            pdm.set2f(fDstScaleUni, 1.f / xp.getDstTexture()->width(),
-                      1.f / xp.getDstTexture()->height());
+            pdm.set2f(fDstTopLeftUni, static_cast<float>(dstTextureOffset.fX),
+                      static_cast<float>(dstTextureOffset.fY));
+            pdm.set2f(fDstScaleUni, 1.f / dstTexture->width(), 1.f / dstTexture->height());
         } else {
             SkASSERT(!fDstScaleUni.isValid());
         }

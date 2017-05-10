@@ -15,7 +15,7 @@
 class GrGLCaps;
 class GrGLGpu;
 
-#define GR_GL_LOG_INSTANCED_BATCHES 0
+#define GR_GL_LOG_INSTANCED_OPS 0
 
 namespace gr_instanced {
 
@@ -33,10 +33,10 @@ private:
 
     GrGLGpu* glGpu() const;
 
-    Batch* createBatch() override;
+    std::unique_ptr<Op> makeOp(GrPaint&& paint) override;
 
     void onBeginFlush(GrResourceProvider*) override;
-    void onDraw(const GrPipeline&, const InstanceProcessor&, const Batch*) override;
+    void onDraw(const GrPipeline&, const InstanceProcessor&, const Op*) override;
     void onEndFlush() override;
     void onResetGpuResources(ResetType) override;
 
@@ -48,13 +48,13 @@ private:
     };
 
     GrGLuint                              fVertexArrayID;
-    SkAutoTUnref<GrBuffer>                fInstanceBuffer;
-    SkAutoTUnref<GrBuffer>                fDrawIndirectBuffer;
+    sk_sp<GrBuffer>                       fInstanceBuffer;
+    sk_sp<GrBuffer>                       fDrawIndirectBuffer;
     SkAutoSTMalloc<1024, GLDrawCmdInfo>   fGLDrawCmdsInfo;
-    uint32_t                              fInstanceAttribsBufferUniqueId;
+    GrGpuResource::UniqueID               fInstanceAttribsBufferUniqueId;
     int                                   fInstanceAttribsBaseInstance;
 
-    class GLBatch;
+    class GLOp;
 
     friend class ::GrGLCaps; // For CheckSupport.
 

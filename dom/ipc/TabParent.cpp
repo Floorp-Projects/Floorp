@@ -2293,7 +2293,7 @@ TabParent::RecvGetDPI(float* aValue)
 {
   TryCacheDPIAndScale();
 
-  MOZ_ASSERT(mDPI > 0 || mFrameElement,
+  MOZ_ASSERT(mDPI > 0,
              "Must not ask for DPI before OwnerElement is received!");
   *aValue = mDPI;
   return IPC_OK();
@@ -2304,7 +2304,7 @@ TabParent::RecvGetDefaultScale(double* aValue)
 {
   TryCacheDPIAndScale();
 
-  MOZ_ASSERT(mDefaultScale.scale > 0 || mFrameElement,
+  MOZ_ASSERT(mDefaultScale.scale > 0,
              "Must not ask for scale before OwnerElement is received!");
   *aValue = mDefaultScale.scale;
   return IPC_OK();
@@ -2315,7 +2315,7 @@ TabParent::RecvGetWidgetRounding(int32_t* aValue)
 {
   TryCacheDPIAndScale();
 
-  MOZ_ASSERT(mRounding > 0 || mFrameElement,
+  MOZ_ASSERT(mRounding > 0,
              "Must not ask for rounding before OwnerElement is received!");
   *aValue = mRounding;
   return IPC_OK();
@@ -2581,7 +2581,7 @@ TabParent::GetWidget() const
   if (!mFrameElement) {
     return nullptr;
   }
-  nsCOMPtr<nsIWidget> widget = nsContentUtils::WidgetForContent(mFrameElement);
+  nsCOMPtr<nsIWidget> widget = nsContentUtils::WidgetForDocument(mFrameElement->OwnerDoc());
   return widget.forget();
 }
 

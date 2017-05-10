@@ -104,7 +104,7 @@ class SuperBlitter : public BaseSuperBlitter {
 public:
     SuperBlitter(SkBlitter* realBlitter, const SkIRect& ir, const SkRegion& clip, bool isInverse);
 
-    virtual ~SuperBlitter() {
+    ~SuperBlitter() override {
         this->flush();
     }
 
@@ -394,7 +394,7 @@ void SuperBlitter::blitRect(int x, int y, int width, int height) {
 class MaskSuperBlitter : public BaseSuperBlitter {
 public:
     MaskSuperBlitter(SkBlitter* realBlitter, const SkIRect& ir, const SkRegion&, bool isInverse);
-    virtual ~MaskSuperBlitter() {
+    ~MaskSuperBlitter() override {
         fRealBlitter->blitMask(fMask, fClipRect);
     }
 
@@ -691,6 +691,9 @@ void SkScan::AntiFillPath(const SkPath& path, const SkRegion& origClip,
         return;
     }
 
+    SkASSERT(clipper.getClipRect() == nullptr ||
+            *clipper.getClipRect() == clipRgn->getBounds());
+
     // now use the (possibly wrapped) blitter
     blitter = clipper.getBlitter();
 
@@ -715,10 +718,12 @@ void SkScan::AntiFillPath(const SkPath& path, const SkRegion& origClip,
     if (!isInverse && MaskSuperBlitter::CanHandleRect(ir) && !forceRLE) {
         MaskSuperBlitter    superBlit(blitter, ir, *clipRgn, isInverse);
         SkASSERT(SkIntToScalar(ir.fTop) <= path.getBounds().fTop);
-        sk_fill_path(path, superClipRect, &superBlit, ir.fTop, ir.fBottom, SHIFT, *clipRgn);
+        sk_fill_path(path, clipRgn->getBounds(), &superBlit, ir.fTop, ir.fBottom, SHIFT,
+                superClipRect == nullptr);
     } else {
         SuperBlitter    superBlit(blitter, ir, *clipRgn, isInverse);
-        sk_fill_path(path, superClipRect, &superBlit, ir.fTop, ir.fBottom, SHIFT, *clipRgn);
+        sk_fill_path(path, clipRgn->getBounds(), &superBlit, ir.fTop, ir.fBottom, SHIFT,
+                superClipRect == nullptr);
     }
 
     if (isInverse) {
@@ -748,8 +753,28 @@ void SkScan::FillPath(const SkPath& path, const SkRasterClip& clip,
     }
 }
 
+static bool suitableForAAA(const SkPath& path) {
+    if (gSkForceAnalyticAA.load()) {
+        return true;
+    }
+    const SkRect& bounds = path.getBounds();
+    // When the path have so many points compared to the size of its bounds/resolution,
+    // it indicates that the path is not quite smooth in the current resolution:
+    // the expected number of turning points in every pixel row/column is significantly greater than
+    // zero. Hence Aanlytic AA is not likely to produce visible quality improvements, and Analytic
+    // AA might be slower than supersampling.
+    return path.countPoints() < SkTMax(bounds.width(), bounds.height()) / 2 - 10;
+}
+
 void SkScan::AntiFillPath(const SkPath& path, const SkRasterClip& clip,
                           SkBlitter* blitter) {
+    // Do not use AAA if path is too complicated:
+    // there won't be any speedup or significant visual improvement.
+    if (gSkUseAnalyticAA.load() && suitableForAAA(path)) {
+        SkScan::AAAFillPath(path, clip, blitter);
+        return;
+    }
+
     if (clip.isEmpty()) {
         return;
     }

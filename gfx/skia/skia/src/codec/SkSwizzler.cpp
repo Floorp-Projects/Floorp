@@ -7,6 +7,7 @@
 
 #include "SkCodecPriv.h"
 #include "SkColorPriv.h"
+#include "SkHalf.h"
 #include "SkOpts.h"
 #include "SkSwizzler.h"
 #include "SkTemplates.h"
@@ -46,6 +47,27 @@ static void sample4(void* dst, const uint8_t* src, int width, int bpp, int delta
     uint32_t* dst32 = (uint32_t*) dst;
     for (int x = 0; x < width; x++) {
         dst32[x] = *((const uint32_t*) src);
+        src += deltaSrc;
+    }
+}
+
+static void sample6(void* dst, const uint8_t* src, int width, int bpp, int deltaSrc, int offset,
+        const SkPMColor ctable[]) {
+    src += offset;
+    uint8_t* dst8 = (uint8_t*) dst;
+    for (int x = 0; x < width; x++) {
+        memcpy(dst8, src, 6);
+        dst8 += 6;
+        src += deltaSrc;
+    }
+}
+
+static void sample8(void* dst, const uint8_t* src, int width, int bpp, int deltaSrc, int offset,
+        const SkPMColor ctable[]) {
+    src += offset;
+    uint64_t* dst64 = (uint64_t*) dst;
+    for (int x = 0; x < width; x++) {
+        dst64[x] = *((const uint64_t*) src);
         src += deltaSrc;
     }
 }
@@ -149,6 +171,35 @@ static void swizzle_bit_to_565(
 
 #undef RGB565_BLACK
 #undef RGB565_WHITE
+
+static void swizzle_bit_to_f16(
+        void* SK_RESTRICT dstRow, const uint8_t* SK_RESTRICT src, int dstWidth,
+        int bpp, int deltaSrc, int offset, const SkPMColor* /*ctable*/) {
+    static const uint64_t kWhite = (((uint64_t) SK_Half1) <<  0) |
+                                   (((uint64_t) SK_Half1) << 16) |
+                                   (((uint64_t) SK_Half1) << 32) |
+                                   (((uint64_t) SK_Half1) << 48);
+    static const uint64_t kBlack = (((uint64_t)        0) <<  0) |
+                                   (((uint64_t)        0) << 16) |
+                                   (((uint64_t)        0) << 32) |
+                                   (((uint64_t) SK_Half1) << 48);
+
+    uint64_t* SK_RESTRICT dst = (uint64_t*) dstRow;
+
+    // increment src by byte offset and bitIndex by bit offset
+    src += offset / 8;
+    int bitIndex = offset % 8;
+    uint8_t currByte = *src;
+
+    dst[0] = ((currByte >> (7 - bitIndex)) & 1) ? kWhite : kBlack;
+
+    for (int x = 1; x < dstWidth; x++) {
+        int bitOffset = bitIndex + deltaSrc;
+        bitIndex = bitOffset % 8;
+        currByte = *(src += bitOffset / 8);
+        dst[x] = ((currByte >> (7 - bitIndex)) & 1) ? kWhite : kBlack;
+    }
+}
 
 // kIndex1, kIndex2, kIndex4
 
@@ -494,6 +545,113 @@ static void fast_swizzle_rgba_to_bgra_unpremul(
     SkOpts::RGBA_to_BGRA((uint32_t*) dst, src + offset, width);
 }
 
+// 16-bits per component kRGB and kRGBA
+
+static void swizzle_rgb16_to_rgba(
+        void* dst, const uint8_t* src, int width, int bpp, int deltaSrc, int offset,
+        const SkPMColor ctable[]) {
+    auto strip16to8 = [](const uint8_t* ptr) {
+        return 0xFF000000 | (ptr[4] << 16) | (ptr[2] << 8) | ptr[0];
+    };
+
+    src += offset;
+    uint32_t* dst32 = (uint32_t*) dst;
+    for (int x = 0; x < width; x++) {
+        dst32[x] = strip16to8(src);
+        src += deltaSrc;
+    }
+}
+
+static void swizzle_rgb16_to_bgra(
+        void* dst, const uint8_t* src, int width, int bpp, int deltaSrc, int offset,
+        const SkPMColor ctable[]) {
+    auto strip16to8 = [](const uint8_t* ptr) {
+        return 0xFF000000 | (ptr[0] << 16) | (ptr[2] << 8) | ptr[4];
+    };
+
+    src += offset;
+    uint32_t* dst32 = (uint32_t*) dst;
+    for (int x = 0; x < width; x++) {
+        dst32[x] = strip16to8(src);
+        src += deltaSrc;
+    }
+}
+
+static void swizzle_rgb16_to_565(
+        void* dst, const uint8_t* src, int width, int bpp, int deltaSrc, int offset,
+        const SkPMColor ctable[]) {
+    auto strip16to565 = [](const uint8_t* ptr) {
+        return SkPack888ToRGB16(ptr[0], ptr[2], ptr[4]);
+    };
+
+    src += offset;
+    uint16_t* dst16 = (uint16_t*) dst;
+    for (int x = 0; x < width; x++) {
+        dst16[x] = strip16to565(src);
+        src += deltaSrc;
+    }
+}
+
+static void swizzle_rgba16_to_rgba_unpremul(
+        void* dst, const uint8_t* src, int width, int bpp, int deltaSrc, int offset,
+        const SkPMColor ctable[]) {
+    auto strip16to8 = [](const uint8_t* ptr) {
+        return (ptr[6] << 24) | (ptr[4] << 16) | (ptr[2] << 8) | ptr[0];
+    };
+
+    src += offset;
+    uint32_t* dst32 = (uint32_t*) dst;
+    for (int x = 0; x < width; x++) {
+        dst32[x] = strip16to8(src);
+        src += deltaSrc;
+    }
+}
+
+static void swizzle_rgba16_to_rgba_premul(
+        void* dst, const uint8_t* src, int width, int bpp, int deltaSrc, int offset,
+        const SkPMColor ctable[]) {
+    auto stripAndPremul16to8 = [](const uint8_t* ptr) {
+        return premultiply_argb_as_rgba(ptr[6], ptr[0], ptr[2], ptr[4]);
+    };
+
+    src += offset;
+    uint32_t* dst32 = (uint32_t*) dst;
+    for (int x = 0; x < width; x++) {
+        dst32[x] = stripAndPremul16to8(src);
+        src += deltaSrc;
+    }
+}
+
+static void swizzle_rgba16_to_bgra_unpremul(
+        void* dst, const uint8_t* src, int width, int bpp, int deltaSrc, int offset,
+        const SkPMColor ctable[]) {
+    auto strip16to8 = [](const uint8_t* ptr) {
+        return (ptr[6] << 24) | (ptr[0] << 16) | (ptr[2] << 8) | ptr[4];
+    };
+
+    src += offset;
+    uint32_t* dst32 = (uint32_t*) dst;
+    for (int x = 0; x < width; x++) {
+        dst32[x] = strip16to8(src);
+        src += deltaSrc;
+    }
+}
+
+static void swizzle_rgba16_to_bgra_premul(
+        void* dst, const uint8_t* src, int width, int bpp, int deltaSrc, int offset,
+        const SkPMColor ctable[]) {
+    auto stripAndPremul16to8 = [](const uint8_t* ptr) {
+        return premultiply_argb_as_bgra(ptr[6], ptr[0], ptr[2], ptr[4]);
+    };
+
+    src += offset;
+    uint32_t* dst32 = (uint32_t*) dst;
+    for (int x = 0; x < width; x++) {
+        dst32[x] = stripAndPremul16to8(src);
+        src += deltaSrc;
+    }
+}
+
 // kCMYK
 //
 // CMYK is stored as four bytes per pixel.
@@ -652,26 +810,64 @@ SkSwizzler* SkSwizzler::CreateSwizzler(const SkEncodedInfo& encodedInfo,
                                        const SkImageInfo& dstInfo,
                                        const SkCodec::Options& options,
                                        const SkIRect* frame,
-                                       bool preSwizzled) {
+                                       bool skipFormatConversion) {
     if (SkEncodedInfo::kPalette_Color == encodedInfo.color() && nullptr == ctable) {
         return nullptr;
     }
 
     RowProc fastProc = nullptr;
     RowProc proc = nullptr;
-    if (preSwizzled) {
-        switch (dstInfo.colorType()) {
-            case kGray_8_SkColorType:
-                proc = &sample1;
-                fastProc = &copy;
+    int srcBPP;
+    const int dstBPP = SkColorTypeBytesPerPixel(dstInfo.colorType());
+    if (skipFormatConversion) {
+        switch (encodedInfo.color()) {
+            case SkEncodedInfo::kGray_Color:
+            case SkEncodedInfo::kYUV_Color:
+                // We have a jpeg that has already been converted to the dstColorType.
+                srcBPP = dstBPP;
+                switch (dstInfo.colorType()) {
+                    case kGray_8_SkColorType:
+                        proc = &sample1;
+                        fastProc = &copy;
+                        break;
+                    case kRGB_565_SkColorType:
+                        proc = &sample2;
+                        fastProc = &copy;
+                        break;
+                    case kRGBA_8888_SkColorType:
+                    case kBGRA_8888_SkColorType:
+                        proc = &sample4;
+                        fastProc = &copy;
+                        break;
+                    default:
+                        return nullptr;
+                }
                 break;
-            case kRGB_565_SkColorType:
-                proc = &sample2;
-                fastProc = &copy;
-                break;
-            case kRGBA_8888_SkColorType:
-            case kBGRA_8888_SkColorType:
+            case SkEncodedInfo::kInvertedCMYK_Color:
+            case SkEncodedInfo::kYCCK_Color:
+                // We have a jpeg that remains in its original format.
+                srcBPP = 4;
                 proc = &sample4;
+                fastProc = &copy;
+                break;
+            case SkEncodedInfo::kRGBA_Color:
+                // We have a png that should remain in its original format.
+                SkASSERT(16 == encodedInfo.bitsPerComponent() ||
+                          8 == encodedInfo.bitsPerComponent());
+                if (8 == encodedInfo.bitsPerComponent()) {
+                    srcBPP = 4;
+                    proc = &sample4;
+                } else {
+                    srcBPP = 8;
+                    proc = &sample8;
+                }
+                fastProc = &copy;
+                break;
+            case SkEncodedInfo::kRGB_Color:
+                // We have a png that remains in its original format.
+                SkASSERT(16 == encodedInfo.bitsPerComponent());
+                srcBPP = 6;
+                proc = &sample6;
                 fastProc = &copy;
                 break;
             default:
@@ -699,6 +895,9 @@ SkSwizzler* SkSwizzler::CreateSwizzler(const SkEncodedInfo& encodedInfo,
                                 break;
                             case kGray_8_SkColorType:
                                 proc = &swizzle_bit_to_grayscale;
+                                break;
+                            case kRGBA_F16_SkColorType:
+                                proc = &swizzle_bit_to_f16;
                                 break;
                             default:
                                 return nullptr;
@@ -806,14 +1005,31 @@ SkSwizzler* SkSwizzler::CreateSwizzler(const SkEncodedInfo& encodedInfo,
             case SkEncodedInfo::kRGB_Color:
                 switch (dstInfo.colorType()) {
                     case kRGBA_8888_SkColorType:
+                        if (16 == encodedInfo.bitsPerComponent()) {
+                            proc = &swizzle_rgb16_to_rgba;
+                            break;
+                        }
+
+                        SkASSERT(8 == encodedInfo.bitsPerComponent());
                         proc = &swizzle_rgb_to_rgba;
                         fastProc = &fast_swizzle_rgb_to_rgba;
                         break;
                     case kBGRA_8888_SkColorType:
+                        if (16 == encodedInfo.bitsPerComponent()) {
+                            proc = &swizzle_rgb16_to_bgra;
+                            break;
+                        }
+
+                        SkASSERT(8 == encodedInfo.bitsPerComponent());
                         proc = &swizzle_rgb_to_bgra;
                         fastProc = &fast_swizzle_rgb_to_bgra;
                         break;
                     case kRGB_565_SkColorType:
+                        if (16 == encodedInfo.bitsPerComponent()) {
+                            proc = &swizzle_rgb16_to_565;
+                            break;
+                        }
+
                         proc = &swizzle_rgb_to_565;
                         break;
                     default:
@@ -823,6 +1039,13 @@ SkSwizzler* SkSwizzler::CreateSwizzler(const SkEncodedInfo& encodedInfo,
             case SkEncodedInfo::kRGBA_Color:
                 switch (dstInfo.colorType()) {
                     case kRGBA_8888_SkColorType:
+                        if (16 == encodedInfo.bitsPerComponent()) {
+                            proc = premultiply ? &swizzle_rgba16_to_rgba_premul :
+                                                 &swizzle_rgba16_to_rgba_unpremul;
+                            break;
+                        }
+
+                        SkASSERT(8 == encodedInfo.bitsPerComponent());
                         if (premultiply) {
                             if (SkCodec::kYes_ZeroInitialized == zeroInit) {
                                 proc = &SkipLeading8888ZerosThen<swizzle_rgba_to_rgba_premul>;
@@ -843,6 +1066,13 @@ SkSwizzler* SkSwizzler::CreateSwizzler(const SkEncodedInfo& encodedInfo,
                         }
                         break;
                     case kBGRA_8888_SkColorType:
+                        if (16 == encodedInfo.bitsPerComponent()) {
+                            proc = premultiply ? &swizzle_rgba16_to_bgra_premul :
+                                                 &swizzle_rgba16_to_bgra_unpremul;
+                            break;
+                        }
+
+                        SkASSERT(8 == encodedInfo.bitsPerComponent());
                         if (premultiply) {
                             if (SkCodec::kYes_ZeroInitialized == zeroInit) {
                                 proc = &SkipLeading8888ZerosThen<swizzle_rgba_to_bgra_premul>;
@@ -966,13 +1196,7 @@ SkSwizzler* SkSwizzler::CreateSwizzler(const SkEncodedInfo& encodedInfo,
             default:
                 return nullptr;
         }
-    }
 
-    int srcBPP;
-    const int dstBPP = SkColorTypeBytesPerPixel(dstInfo.colorType());
-    if (preSwizzled) {
-        srcBPP = dstBPP;
-    } else {
         // Store bpp in bytes if it is an even multiple, otherwise use bits
         uint8_t bitsPerPixel = encodedInfo.bitsPerPixel();
         srcBPP = SkIsAlign8(bitsPerPixel) ? bitsPerPixel / 8 : bitsPerPixel;

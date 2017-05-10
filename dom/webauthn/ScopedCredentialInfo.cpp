@@ -19,7 +19,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ScopedCredentialInfo)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-ScopedCredentialInfo::ScopedCredentialInfo(WebAuthentication* aParent)
+ScopedCredentialInfo::ScopedCredentialInfo(nsPIDOMWindowInner* aParent)
   : mParent(aParent)
 {}
 
@@ -58,7 +58,6 @@ ScopedCredentialInfo::SetAttestation(RefPtr<WebAuthnAttestation> aAttestation)
 {
   mAttestation = aAttestation;
 }
-
 
 } // namespace dom
 } // namespace mozilla

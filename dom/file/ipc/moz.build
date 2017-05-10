@@ -14,6 +14,8 @@ EXPORTS.mozilla.dom.ipc += [
     'MemoryStreamChild.h',
     'MemoryStreamParent.h',
     'nsIRemoteBlob.h',
+    'PendingIPCBlobChild.h',
+    'PendingIPCBlobParent.h',
 ]
 
 EXPORTS.mozilla.dom += [
@@ -28,6 +30,8 @@ UNIFIED_SOURCES += [
     'IPCBlobInputStreamStorage.cpp',
     'IPCBlobUtils.cpp',
     'MemoryStreamParent.cpp',
+    'PendingIPCBlobChild.cpp',
+    'PendingIPCBlobParent.cpp',
 ]
 
 IPDL_SOURCES += [
@@ -37,6 +41,7 @@ IPDL_SOURCES += [
     'PBlobStream.ipdl',
     'PIPCBlobInputStream.ipdl',
     'PMemoryStream.ipdl',
+    'PPendingIPCBlob.ipdl',
 ]
 
 LOCAL_INCLUDES += [

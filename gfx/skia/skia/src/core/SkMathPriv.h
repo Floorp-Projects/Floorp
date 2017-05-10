@@ -132,6 +132,16 @@ static inline int SkNextPow2(int value) {
 }
 
 /**
+*  Returns the largest power-of-2 that is <= the specified value. If value
+*  is already a power of 2, then it is returned unchanged. It is undefined
+*  if value is <= 0.
+*/
+static inline int SkPrevPow2(int value) {
+    SkASSERT(value > 0);
+    return 1 << (32 - SkCLZ(value >> 1));
+}
+
+/**
  *  Returns the log2 of the specified value, were that value to be rounded up
  *  to the next power of 2. It is undefined to pass 0. Examples:
  *  SkNextLog2(1) -> 0
@@ -145,6 +155,20 @@ static inline int SkNextLog2(uint32_t value) {
     return 32 - SkCLZ(value - 1);
 }
 
+/**
+*  Returns the log2 of the specified value, were that value to be rounded down
+*  to the previous power of 2. It is undefined to pass 0. Examples:
+*  SkPrevLog2(1) -> 0
+*  SkPrevLog2(2) -> 1
+*  SkPrevLog2(3) -> 1
+*  SkPrevLog2(4) -> 2
+*  SkPrevLog2(5) -> 2
+*/
+static inline int SkPrevLog2(uint32_t value) {
+    SkASSERT(value != 0);
+    return 32 - SkCLZ(value >> 1);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -152,6 +176,28 @@ static inline int SkNextLog2(uint32_t value) {
  */
 static inline uint32_t GrNextPow2(uint32_t n) {
     return n ? (1 << (32 - SkCLZ(n - 1))) : 1;
+}
+
+/**
+ * Returns the next power of 2 >= n or n if the next power of 2 can't be represented by size_t.
+ */
+static inline size_t GrNextSizePow2(size_t n) {
+    constexpr int kNumSizeTBits = 8 * sizeof(size_t);
+    constexpr size_t kHighBitSet = size_t(1) << (kNumSizeTBits - 1);
+
+    if (!n) {
+        return 1;
+    } else if (n >= kHighBitSet) {
+        return n;
+    }
+
+    n--;
+    uint32_t shift = 1;
+    while (shift < kNumSizeTBits) {
+        n |= n >> shift;
+        shift <<= 1;
+    }
+    return n + 1;
 }
 
 static inline int GrNextPow2(int n) {

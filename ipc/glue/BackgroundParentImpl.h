@@ -75,6 +75,12 @@ protected:
   virtual bool
   DeallocPMemoryStreamParent(PMemoryStreamParent* aActor) override;
 
+  virtual PPendingIPCBlobParent*
+  AllocPPendingIPCBlobParent(const IPCBlob& aBlob) override;
+
+  virtual bool
+  DeallocPPendingIPCBlobParent(PPendingIPCBlobParent* aActor) override;
+
   virtual PIPCBlobInputStreamParent*
   AllocPIPCBlobInputStreamParent(const nsID& aID,
                                  const uint64_t& aSize) override;
@@ -225,6 +231,12 @@ protected:
 
   virtual bool
   DeallocPGamepadTestChannelParent(PGamepadTestChannelParent* aActor) override;
+
+  virtual PWebAuthnTransactionParent*
+  AllocPWebAuthnTransactionParent() override;
+
+  virtual bool
+  DeallocPWebAuthnTransactionParent(PWebAuthnTransactionParent* aActor) override;
 };
 
 } // namespace ipc

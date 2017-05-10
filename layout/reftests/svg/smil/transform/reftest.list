@@ -4,14 +4,14 @@
 fuzzy(111,1802) fuzzy-if(skiaContent,130,1000) == additive-1.svg additive-1-ref.svg # bug 981344, bug 1239766
 == animate-width-1.svg lime.svg
 fuzzy-if(cocoaWidget,1,32) fuzzy-if(winWidget,15,30) fuzzy-if(gtkWidget,1,30) == paced-1.svg paced-1-ref.svg # bug 981640, Bug 1293550
-fuzzy-if(skiaContent,1,220) == rotate-angle-1.svg rotate-angle-ref.svg
-== rotate-angle-2.svg rotate-angle-ref.svg
-fuzzy-if(skiaContent,1,130) == rotate-angle-3.svg rotate-angle-ref.svg
-fuzzy-if(skiaContent,1,110) == rotate-angle-4.svg rotate-angle-ref.svg
+fuzzy-if(skiaContent,7,90) == rotate-angle-1.svg rotate-angle-ref.svg
+fuzzy-if(skiaContent,7,90) == rotate-angle-2.svg rotate-angle-ref.svg
+fuzzy-if(skiaContent,7,130) == rotate-angle-3.svg rotate-angle-ref.svg
+fuzzy-if(skiaContent,7,90) == rotate-angle-4.svg rotate-angle-ref.svg
 fuzzy-if(skiaContent,1,130) == rotate-angle-5.svg rotate-angle-ref.svg
 fuzzy(12,27) fuzzy-if(skiaContent,1,180) fuzzy-if(Android,16,3) == scale-1.svg scale-1-ref.svg  # bug 981004
 == set-transform-1.svg lime.svg
-fuzzy-if(winWidget||gtkWidget||OSX,1,27) fuzzy-if(Android&&skiaContent,1,20) == skew-1.svg skew-1-ref.svg # bug 983671, Bug 1260629
+fuzzy-if(winWidget||gtkWidget||OSX,1,27) fuzzy-if(skiaContent,7,1548) == skew-1.svg skew-1-ref.svg # bug 983671, Bug 1260629
 == translate-clipPath-1.svg lime.svg
 == translate-gradient-1.svg lime.svg
 == translate-pattern-1.svg lime.svg

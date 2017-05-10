@@ -9,7 +9,7 @@
 #define SkComposeShader_DEFINED
 
 #include "SkShader.h"
-#include "SkXfermode.h"
+#include "SkBlendMode.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -28,10 +28,10 @@ public:
         @param mode     The xfermode that combines the colors from the two shaders. If mode
                         is null, then SRC_OVER is assumed.
     */
-    SkComposeShader(sk_sp<SkShader> sA, sk_sp<SkShader> sB, sk_sp<SkXfermode> mode)
+    SkComposeShader(sk_sp<SkShader> sA, sk_sp<SkShader> sB, SkBlendMode mode)
         : fShaderA(std::move(sA))
         , fShaderB(std::move(sB))
-        , fMode(std::move(mode))
+        , fMode(mode)
     {}
 
 #if SK_SUPPORT_GPU
@@ -44,11 +44,6 @@ public:
         // but it will NOT free the memory.
         ComposeShaderContext(const SkComposeShader&, const ContextRec&,
                              SkShader::Context* contextA, SkShader::Context* contextB);
-
-        SkShader::Context* getShaderContextA() const { return fShaderContextA; }
-        SkShader::Context* getShaderContextB() const { return fShaderContextB; }
-
-        virtual ~ComposeShaderContext();
 
         void shadeSpan(int x, int y, SkPMColor[], int count) override;
 
@@ -72,13 +67,12 @@ public:
 protected:
     SkComposeShader(SkReadBuffer&);
     void flatten(SkWriteBuffer&) const override;
-    size_t onContextSize(const ContextRec&) const override;
-    Context* onCreateContext(const ContextRec&, void*) const override;
+    Context* onMakeContext(const ContextRec&, SkArenaAlloc*) const override;
 
 private:
     sk_sp<SkShader>     fShaderA;
     sk_sp<SkShader>     fShaderB;
-    sk_sp<SkXfermode>   fMode;
+    SkBlendMode         fMode;
 
     typedef SkShader INHERITED;
 };

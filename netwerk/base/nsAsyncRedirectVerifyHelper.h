@@ -27,10 +27,12 @@ namespace net {
  * redirect decision is returned through the callback.
  */
 class nsAsyncRedirectVerifyHelper final : public nsIRunnable,
+                                          public nsINamed,
                                           public nsIAsyncVerifyRedirectCallback
 {
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIRUNNABLE
+    NS_DECL_NSINAMED
     NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
 
 public:

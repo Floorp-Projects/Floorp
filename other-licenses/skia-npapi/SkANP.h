@@ -56,11 +56,10 @@ struct ANPCanvas {
     // redirect all drawing to the specific SkCanvas
     explicit ANPCanvas(SkCanvas* other) {
         skcanvas = other;
-        skcanvas->ref();
     }
 
     ~ANPCanvas() {
-        skcanvas->unref();
+        delete skcanvas;
     }
 };
 
