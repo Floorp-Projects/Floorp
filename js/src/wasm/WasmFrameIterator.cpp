@@ -56,7 +56,8 @@ FrameIterator::FrameIterator()
     callsite_(nullptr),
     codeRange_(nullptr),
     fp_(nullptr),
-    unwind_(Unwind::False)
+    unwind_(Unwind::False),
+    unwoundAddressOfReturnAddress_(nullptr)
 {
     MOZ_ASSERT(done());
 }
@@ -133,21 +134,24 @@ FrameIterator::operator++()
 void
 FrameIterator::popFrame()
 {
-    void* returnAddress = ReturnAddressFromFP(fp_);
-
-    fp_ = CallerFPFromFP(fp_);
+    void* prevFP = fp_;
+    fp_ = CallerFPFromFP(prevFP);
 
     if (!fp_) {
         code_ = nullptr;
         codeRange_ = nullptr;
         callsite_ = nullptr;
 
-        if (unwind_ == Unwind::True)
+        if (unwind_ == Unwind::True) {
             activation_->unwindExitFP(nullptr);
+            unwoundAddressOfReturnAddress_ = &reinterpret_cast<Frame*>(prevFP)->returnAddress;
+        }
 
         MOZ_ASSERT(done());
         return;
     }
+
+    void* returnAddress = ReturnAddressFromFP(prevFP);
 
     code_ = activation_->compartment()->wasm.lookupCode(returnAddress);
     MOZ_ASSERT(code_);
@@ -210,6 +214,15 @@ FrameIterator::instance() const
 {
     MOZ_ASSERT(!done());
     return FrameToDebugFrame(fp_)->instance();
+}
+
+void**
+FrameIterator::unwoundAddressOfReturnAddress() const
+{
+    MOZ_ASSERT(done());
+    MOZ_ASSERT(unwind_ == Unwind::True);
+    MOZ_ASSERT(unwoundAddressOfReturnAddress_);
+    return unwoundAddressOfReturnAddress_;
 }
 
 bool
