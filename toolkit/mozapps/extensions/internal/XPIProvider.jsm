@@ -2239,6 +2239,14 @@ this.XPIStates = {
   // Map(location name -> Map(add-on ID -> XPIState))
   db: null,
 
+  /**
+   * @property {Map<string, XPIState>} sideLoadedAddons
+   *        A map of new add-ons detected during install location
+   *        directory scans. Keys are add-on IDs, values are XPIState
+   *        objects corresponding to those add-ons.
+   */
+  sideLoadedAddons: new Map(),
+
   get size() {
     if (!this.db) {
       return 0;
@@ -2319,6 +2327,7 @@ this.XPIStates = {
           let xpiState = new XPIState({d: file.persistentDescriptor});
           changed = xpiState.getModTime(file, id) || changed;
           foundAddons.set(id, xpiState);
+          this.sideLoadedAddons.set(id, xpiState);
         } else {
           let xpiState = new XPIState(locState[id]);
           // We found this add-on in the file system
@@ -3865,12 +3874,7 @@ this.XPIProvider = {
       // If the application crashed before completing any pending operations then
       // we should perform them now.
       if (extensionListChanged || hasPendingChanges) {
-        logger.debug("Updating database with changes to installed add-ons");
-        XPIDatabase.updateActiveAddons();
-        Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS,
-                                   !XPIDatabase.writeAddonsList());
-        Services.prefs.setCharPref(PREF_BOOTSTRAP_ADDONS,
-                                   JSON.stringify(this.bootstrappedAddons));
+        this._updateActiveAddons();
         return true;
       }
 
@@ -3889,6 +3893,38 @@ this.XPIProvider = {
     }
 
     return false;
+  },
+
+  _updateActiveAddons() {
+    logger.debug("Updating database with changes to installed add-ons");
+    XPIDatabase.updateActiveAddons();
+    Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS,
+                               !XPIDatabase.writeAddonsList());
+    Services.prefs.setCharPref(PREF_BOOTSTRAP_ADDONS,
+                               JSON.stringify(this.bootstrappedAddons));
+  },
+
+  /**
+   * Gets an array of add-ons which were placed in a known install location
+   * prior to startup of the current session, were detected by a directory scan
+   * of those locations, and are currently disabled.
+   *
+   * @returns {Promise<Array<Addon>>}
+   */
+  async getNewSideloads() {
+    if (XPIStates.getInstallState(false)) {
+      // We detected changes. Update the database to account for them.
+      await XPIDatabase.asyncLoadDB(false);
+      XPIDatabaseReconcile.processFileChanges({}, false);
+      this._updateActiveAddons();
+    }
+
+    let addons = await Promise.all(
+      Array.from(XPIStates.sideLoadedAddons.keys(),
+                 id => AddonManager.getAddonByID(id)));
+
+    return addons.filter(addon => (addon.seen === false &&
+                                   addon.permissions & AddonManager.PERM_CAN_ENABLE));
   },
 
   /**
