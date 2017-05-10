@@ -479,6 +479,7 @@ var multiActionFn = dispatch(multiAction);
 var executeFn = dispatch(execute);
 var executeInSandboxFn = dispatch(executeInSandbox);
 var sendKeysToElementFn = dispatch(sendKeysToElement);
+var reftestWaitFn = dispatch(reftestWait);
 
 /**
  * Start all message listeners
@@ -522,6 +523,7 @@ function startListeners() {
   addMessageListenerId("Marionette:sleepSession", sleepSession);
   addMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
   addMessageListenerId("Marionette:takeScreenshot", takeScreenshotFn);
+  addMessageListenerId("Marionette:reftestWait", reftestWaitFn);
 }
 
 /**
@@ -1041,14 +1043,15 @@ function waitForPageLoaded(msg) {
  * driver (in chrome space).
  */
 function get(msg) {
-  let {command_id, pageTimeout, url} = msg.json;
-  let loadEventExpected = true;
+  let {command_id, pageTimeout, url, loadEventExpected=null} = msg.json;
 
   try {
     if (typeof url == "string") {
       try {
         let requestedURL = new URL(url).toString();
-        loadEventExpected = navigate.isLoadEventExpected(requestedURL);
+        if (loadEventExpected === null) {
+          loadEventExpected = navigate.isLoadEventExpected(requestedURL);
+        }
       } catch (e) {
         sendError(new InvalidArgumentError("Malformed URL: " + e.message), command_id);
         return;
@@ -1644,6 +1647,117 @@ function takeScreenshot(format, opts = {}) {
 
     default:
       throw new TypeError("Unknown screenshot format: " + format);
+  }
+}
+
+function flushRendering() {
+  let content = curContainer.frame;
+  let anyPendingPaintsGeneratedInDescendants = false;
+
+  let windowUtils = content.QueryInterface(Ci.nsIInterfaceRequestor)
+    .getInterface(Ci.nsIDOMWindowUtils);
+
+  function flushWindow(win) {
+    let utils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindowUtils);
+    let afterPaintWasPending = utils.isMozAfterPaintPending;
+
+    let root = win.document.documentElement;
+    if (root) {
+      try {
+        // Flush pending restyles and reflows for this window
+        root.getBoundingClientRect();
+      } catch (e) {
+        logger.warning(`flushWindow failed: ${e}`);
+      }
+    }
+
+    if (!afterPaintWasPending && utils.isMozAfterPaintPending) {
+      anyPendingPaintsGeneratedInDescendants = true;
+    }
+
+    for (let i = 0; i < win.frames.length; ++i) {
+      flushWindow(win.frames[i]);
+    }
+  }
+  flushWindow(content);
+
+  if (anyPendingPaintsGeneratedInDescendants &&
+      !windowUtils.isMozAfterPaintPending) {
+    logger.error("Internal error: descendant frame generated a MozAfterPaint event, but the root document doesn't have one!");
+  }
+
+  logger.debug(`flushRendering ${windowUtils.isMozAfterPaintPending}`);
+  return windowUtils.isMozAfterPaintPending;
+}
+
+function* reftestWait(url, remote) {
+  let win = curContainer.frame;
+  let document = curContainer.frame.document;
+
+  let windowUtils = content.QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindowUtils);
+
+
+  let reftestWait = false;
+
+  if (document.location.href !== url || document.readyState != "complete") {
+    logger.debug(`Waiting for page load of ${url}`);
+    yield new Promise(resolve => {
+      let maybeResolve = (event) => {
+        if (event.target === curContainer.frame.document &&
+            event.target.location.href === url) {
+          win = curContainer.frame;
+          document = curContainer.frame.document;
+          reftestWait = document.documentElement.classList.contains("reftest-wait");
+          removeEventListener("load", maybeResolve, {once: true});
+          win.setTimeout(resolve, 0);
+        }
+      };
+      addEventListener("load", maybeResolve, true);
+    });
+  } else {
+    // Ensure that the event loop has spun at least once since load,
+    // so that setTimeout(fn, 0) in the load event has run
+    reftestWait = document.documentElement.classList.contains("reftest-wait");
+    yield new Promise(resolve => win.setTimeout(resolve, 0));
+  };
+
+  let root = document.documentElement;
+  if (reftestWait) {
+    // Check again in case reftest-wait was removed since the load event
+    if (root.classList.contains("reftest-wait")) {
+      logger.debug("Waiting for reftest-wait removal");
+      yield new Promise(resolve => {
+        let observer = new win.MutationObserver(() => {
+          if (!root.classList.contains("reftest-wait")) {
+            observer.disconnect();
+            logger.debug("reftest-wait removed");
+            win.setTimeout(resolve, 0);
+          }
+        });
+        observer.observe(root, {attributes: true});
+      });
+    }
+
+    logger.debug("Waiting for rendering");
+
+    yield new Promise(resolve => {
+      let maybeResolve = () => {
+        if (flushRendering()) {
+          win.addEventListener("MozAfterPaint", maybeResolve, {once: true});
+        } else {
+          win.setTimeout(resolve, 0);
+        }
+      };
+      maybeResolve();
+    });
+  } else {
+    flushRendering();
+  }
+
+  if (remote) {
+    windowUtils.updateLayerTree();
   }
 }
 
