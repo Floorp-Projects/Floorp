@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=622246
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=622246">Mozilla Bug 622246</a>
 <p id="display">
   <iframe id="testframe"
-          src="data:text/html,<span onclick='this.parentNode.removeChild(this)'><a href='data:text/plain,PASS'>Click me</a></span>">
+          srcdoc="<span onclick='this.parentNode.removeChild(this)'><a href='PASS.html'>Click me</a></span>">
   </iframe>
 </p>
 <div id="content" style="display: none">
@@ -25,11 +25,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=622246
 /** Test for Bug 622246 **/
 SimpleTest.waitForExplicitFinish();
 
-const PASSURL = "data:text/plain,PASS";
-
 SimpleTest.waitForFocus(function() {
   $("testframe").onload = function() {
-    is(this.contentDocument.documentElement.textContent, "PASS", "Should have loaded link");
+    is(this.contentDocument.documentElement.innerText, "PASS", "Should have loaded link");
     SimpleTest.finish();
   };
 
