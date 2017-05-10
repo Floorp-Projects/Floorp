@@ -469,6 +469,7 @@ this.PanelMultiView = class {
         nodeToAnimate.style.transition = "transform ease-" + (reverse ? "in" : "out") +
           " var(--panelui-subview-transition-duration)";
         nodeToAnimate.style.willChange = "transform";
+        nodeToAnimate.style.borderInlineStart = "1px solid var(--panel-separator-color)";
 
         // Wait until after the first paint to ensure setting 'current=true'
         // has taken full effect; once both views are visible, we want to
@@ -526,6 +527,7 @@ this.PanelMultiView = class {
               // The cleanup we do doesn't affect the display anymore, so we're not
               // too fussed about the timing here.
               window.addEventListener("MozAfterPaint", () => {
+                nodeToAnimate.style.removeProperty("border-inline-start");
                 nodeToAnimate.style.removeProperty("transition");
                 nodeToAnimate.style.removeProperty("transform");
                 nodeToAnimate.style.removeProperty("width");
