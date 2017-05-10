@@ -917,16 +917,8 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
       (uint32_t) ScrollInputMethod::ApzScrollbarDrag);
 
   ReentrantMonitorAutoEnter lock(mMonitor);
-  CSSPoint scrollFramePoint = aEvent.mLocalOrigin / GetFrameMetrics().GetZoom();
-  // The scrollbar can be transformed with the frame but the pres shell
-  // resolution is only applied to the scroll frame.
-  CSSPoint scrollbarPoint = scrollFramePoint * mFrameMetrics.GetPresShellResolution();
-  CSSRect cssCompositionBound = mFrameMetrics.CalculateCompositedRectInCssPixels();
-
-  CSSCoord mousePosition = GetAxisStart(aDragMetrics.mDirection, scrollbarPoint) -
-                        aDragMetrics.mScrollbarDragOffset -
-                        GetAxisStart(aDragMetrics.mDirection, cssCompositionBound) -
-                        thumbData.mScrollTrackStart;
+  CSSCoord mousePosition = ConvertScrollbarPoint(aEvent.mLocalOrigin, thumbData) -
+                           aDragMetrics.mScrollbarDragOffset;
 
   CSSCoord scrollMax = thumbData.mScrollTrackLength;
   scrollMax -= thumbData.mThumbLength;
@@ -937,7 +929,7 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
     GetAxisStart(aDragMetrics.mDirection, mFrameMetrics.GetScrollableRect().TopLeft());
   CSSCoord maxScrollPosition =
     GetAxisLength(aDragMetrics.mDirection, mFrameMetrics.GetScrollableRect()) -
-    GetAxisLength(aDragMetrics.mDirection, cssCompositionBound);
+    GetAxisLength(aDragMetrics.mDirection, mFrameMetrics.CalculateCompositedRectInCssPixels());
   CSSCoord scrollPosition = scrollPercent * maxScrollPosition;
 
   scrollPosition = std::max(scrollPosition, minScrollPosition);
@@ -1573,6 +1565,25 @@ AsyncPanZoomController::ConvertToGecko(const ScreenIntPoint& aPoint, LayoutDevic
     return true;
   }
   return false;
+}
+
+CSSCoord
+AsyncPanZoomController::ConvertScrollbarPoint(const ParentLayerPoint& aScrollbarPoint,
+                                              const ScrollThumbData& aThumbData) const
+{
+  ReentrantMonitorAutoEnter lock(mMonitor);
+
+  // First, get it into the right coordinate space.
+  CSSPoint scrollbarPoint = aScrollbarPoint / mFrameMetrics.GetZoom();
+  // The scrollbar can be transformed with the frame but the pres shell
+  // resolution is only applied to the scroll frame.
+  scrollbarPoint = scrollbarPoint * mFrameMetrics.GetPresShellResolution();
+
+  // Now, get it to be relative to the beginning of the scroll track.
+  CSSRect cssCompositionBound = mFrameMetrics.CalculateCompositedRectInCssPixels();
+  return GetAxisStart(aThumbData.mDirection, scrollbarPoint)
+      - GetAxisStart(aThumbData.mDirection, cssCompositionBound)
+      - aThumbData.mScrollTrackStart;
 }
 
 static bool
