@@ -819,7 +819,8 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
 
         // Under some conditions, we can confirm the drag block right away.
         // Otherwise, we have to wait for a main-thread confirmation.
-        if (apzDragEnabled && startsDrag && hitScrollbarNode &&
+        if (apzDragEnabled && gfxPrefs::APZDragInitiationEnabled() &&
+            startsDrag && hitScrollbarNode &&
             hitScrollbarNode->IsScrollThumbNode() &&
             hitScrollbarNode->GetScrollThumbData().mIsAsyncDraggable &&
             // check that the scrollbar's target scroll frame is layerized
