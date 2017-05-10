@@ -1647,9 +1647,6 @@ WasmActivation::WasmActivation(JSContext* cx)
     exitFP_(nullptr),
     exitReason_(wasm::ExitReason::Fixed::None)
 {
-    prevWasm_ = cx->wasmActivationStack_;
-    cx->wasmActivationStack_ = this;
-
     // Now that the WasmActivation is fully initialized, make it visible to
     // asynchronous profiling.
     registerProfiling();
@@ -1663,9 +1660,6 @@ WasmActivation::~WasmActivation()
     MOZ_ASSERT(!interrupted());
     MOZ_ASSERT(exitFP_ == nullptr);
     MOZ_ASSERT(exitReason_.isNone());
-
-    MOZ_ASSERT(cx_->wasmActivationStack_ == this);
-    cx_->wasmActivationStack_ = prevWasm_;
 }
 
 void
