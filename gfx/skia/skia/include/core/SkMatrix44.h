@@ -126,6 +126,12 @@ struct SkVector4 {
     }
 };
 
+/** \class SkMatrix44
+
+    The SkMatrix44 class holds a 4x4 matrix.
+
+    SkMatrix44 is not thread safe unless you've first called SkMatrix44::getType().
+*/
 class SK_API SkMatrix44 {
 public:
 
@@ -491,7 +497,10 @@ private:
         return 0 == fTypeMask;
     }
 
+    inline const SkMScalar* values() const { return &fMat[0][0]; }
+
     friend class SkColorSpace;
+    friend class SkColorSpace_XYZ;
 };
 
 #endif

@@ -594,6 +594,7 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
             { (PRFuncPtr*) &mSymbols.fLoadIdentity, { "LoadIdentity", nullptr } },
             { (PRFuncPtr*) &mSymbols.fLoadMatrixf, { "LoadMatrixf", nullptr } },
             { (PRFuncPtr*) &mSymbols.fMatrixMode, { "MatrixMode", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fPolygonMode, { "PolygonMode", nullptr } },
             { (PRFuncPtr*) &mSymbols.fTexGeni, { "TexGeni", nullptr } },
             { (PRFuncPtr*) &mSymbols.fTexGenf, { "TexGenf", nullptr } },
             { (PRFuncPtr*) &mSymbols.fTexGenfv, { "TexGenfv", nullptr } },
@@ -866,7 +867,10 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
     raw_fGetIntegerv(LOCAL_GL_MAX_VIEWPORT_DIMS, mMaxViewportDims);
 
 #ifdef XP_MACOSX
-    if (mWorkAroundDriverBugs) {
+    if (mWorkAroundDriverBugs &&
+        nsCocoaFeatures::OSXVersionMajor() == 10 &&
+        nsCocoaFeatures::OSXVersionMinor() < 12)
+    {
         if (mVendor == GLVendor::Intel) {
             // see bug 737182 for 2D textures, bug 684882 for cube map textures.
             mMaxTextureSize        = std::min(mMaxTextureSize,        4096);

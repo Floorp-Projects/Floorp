@@ -9,11 +9,16 @@
 #define SkBlendModePriv_DEFINED
 
 #include "SkBlendMode.h"
+#include "SkRasterPipeline.h"
 
 bool SkBlendMode_SupportsCoverageAsAlpha(SkBlendMode);
+bool SkBlendMode_CanOverflow(SkBlendMode);
+bool SkBlendMode_AppendStages(SkBlendMode, SkRasterPipeline* = nullptr);
 
 #if SK_SUPPORT_GPU
-sk_sp<GrXPFactory> SkBlendMode_AsXPFactory(SkBlendMode);
+#include "GrXferProcessor.h"
+const GrXPFactory* SkBlendMode_AsXPFactory(SkBlendMode);
 #endif
+
 
 #endif

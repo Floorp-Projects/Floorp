@@ -492,7 +492,9 @@ class ParentImpl::RequestMessageLoopRunnable final : public Runnable
 
 public:
   explicit RequestMessageLoopRunnable(nsIThread* aTargetThread)
-  : mTargetThread(aTargetThread), mMessageLoop(nullptr)
+    : Runnable("Background::ParentImpl::RequestMessageLoopRunnable")
+    , mTargetThread(aTargetThread)
+    , mMessageLoop(nullptr)
   {
     AssertIsInMainProcess();
     AssertIsOnMainThread();
@@ -510,6 +512,7 @@ class ParentImpl::ShutdownBackgroundThreadRunnable final : public Runnable
 {
 public:
   ShutdownBackgroundThreadRunnable()
+    : Runnable("Background::ParentImpl::ShutdownBackgroundThreadRunnable")
   {
     AssertIsInMainProcess();
     AssertIsOnMainThread();
@@ -528,7 +531,8 @@ class ParentImpl::ForceCloseBackgroundActorsRunnable final : public Runnable
 
 public:
   explicit ForceCloseBackgroundActorsRunnable(nsTArray<ParentImpl*>* aActorArray)
-  : mActorArray(aActorArray)
+    : Runnable("Background::ParentImpl::ForceCloseBackgroundActorsRunnable")
+    , mActorArray(aActorArray)
   {
     AssertIsInMainProcess();
     AssertIsOnMainThread();
@@ -548,7 +552,8 @@ class ParentImpl::CreateCallbackRunnable final : public Runnable
 
 public:
   explicit CreateCallbackRunnable(CreateCallback* aCallback)
-  : mCallback(aCallback)
+    : Runnable("Background::ParentImpl::CreateCallbackRunnable")
+    , mCallback(aCallback)
   {
     AssertIsInMainProcess();
     AssertIsOnMainThread();
@@ -572,8 +577,10 @@ public:
   ConnectActorRunnable(ParentImpl* aActor,
                        Endpoint<PBackgroundParent>&& aEndpoint,
                        nsTArray<ParentImpl*>* aLiveActorArray)
-  : mActor(aActor), mEndpoint(Move(aEndpoint)),
-    mLiveActorArray(aLiveActorArray)
+    : Runnable("Background::ParentImpl::ConnectActorRunnable")
+    , mActor(aActor)
+    , mEndpoint(Move(aEndpoint))
+    , mLiveActorArray(aLiveActorArray)
   {
     AssertIsInMainProcess();
     AssertIsOnMainThread();
@@ -634,7 +641,8 @@ class ChildImpl::CreateActorRunnable final : public Runnable
 
 public:
   CreateActorRunnable()
-  : mEventTarget(NS_GetCurrentThread())
+    : Runnable("Background::ChildImpl::CreateActorRunnable")
+    , mEventTarget(NS_GetCurrentThread())
   {
     MOZ_ASSERT(mEventTarget);
   }
@@ -678,6 +686,7 @@ class ChildImpl::AlreadyCreatedCallbackRunnable final :
 {
 public:
   AlreadyCreatedCallbackRunnable()
+    : CancelableRunnable("Background::ChildImpl::AlreadyCreatedCallbackRunnable")
   {
     // May be created on any thread!
   }
@@ -694,6 +703,7 @@ class ChildImpl::FailedCreateCallbackRunnable final : public Runnable
 {
 public:
   FailedCreateCallbackRunnable()
+    : Runnable("Background::ChildImpl::FailedCreateCallbackRunnable")
   {
     // May be created on any thread!
   }
@@ -713,7 +723,9 @@ class ChildImpl::OpenChildProcessActorRunnable final : public Runnable
 public:
   OpenChildProcessActorRunnable(already_AddRefed<ChildImpl>&& aActor,
                                 Endpoint<PBackgroundChild>&& aEndpoint)
-  : mActor(aActor), mEndpoint(Move(aEndpoint))
+    : Runnable("Background::ChildImpl::OpenChildProcessActorRunnable")
+    , mActor(aActor)
+    , mEndpoint(Move(aEndpoint))
   {
     AssertIsOnMainThread();
     MOZ_ASSERT(mActor);

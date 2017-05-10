@@ -19,7 +19,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebAuthnAttestation)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-WebAuthnAttestation::WebAuthnAttestation(WebAuthentication* aParent)
+WebAuthnAttestation::WebAuthnAttestation(nsPIDOMWindowInner* aParent)
   : mParent(aParent)
 {}
 
@@ -57,8 +57,6 @@ void
 WebAuthnAttestation::GetAttestation(JSContext* aCx,
                                     JS::MutableHandle<JS::Value> aRetVal) const
 {
-  // JS::RootedObject obj(aCx);
-  // obj.set();
   aRetVal.setObject(*mAttestation.ToUint8Array(aCx));
 }
 

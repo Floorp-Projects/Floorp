@@ -4,7 +4,7 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
- 
+
 #ifndef SKSL_IFSTATEMENT
 #define SKSL_IFSTATEMENT
 
@@ -17,22 +17,22 @@ namespace SkSL {
  * An 'if' statement.
  */
 struct IfStatement : public Statement {
-    IfStatement(Position position, std::unique_ptr<Expression> test, 
+    IfStatement(Position position, std::unique_ptr<Expression> test,
                 std::unique_ptr<Statement> ifTrue, std::unique_ptr<Statement> ifFalse)
     : INHERITED(position, kIf_Kind)
     , fTest(std::move(test))
     , fIfTrue(std::move(ifTrue))
     , fIfFalse(std::move(ifFalse)) {}
 
-    std::string description() const override {
-        std::string result = "if (" + fTest->description() + ") " + fIfTrue->description();
+    String description() const override {
+        String result = "if (" + fTest->description() + ") " + fIfTrue->description();
         if (fIfFalse) {
             result += " else " + fIfFalse->description();
         }
         return result;
     }
 
-    const std::unique_ptr<Expression> fTest;
+    std::unique_ptr<Expression> fTest;
     const std::unique_ptr<Statement> fIfTrue;
     const std::unique_ptr<Statement> fIfFalse;
 

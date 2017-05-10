@@ -33,13 +33,13 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebAuthnAssertion)
 
 public:
-  explicit WebAuthnAssertion(WebAuthentication* aParent);
+  explicit WebAuthnAssertion(nsPIDOMWindowInner* aParent);
 
 protected:
   ~WebAuthnAssertion();
 
 public:
-  WebAuthentication*
+  nsPIDOMWindowInner*
   GetParentObject() const
   {
     return mParent;
@@ -73,7 +73,7 @@ public:
   SetSignature(CryptoBuffer& aBuffer);
 
 private:
-  RefPtr<WebAuthentication> mParent;
+  nsCOMPtr<nsPIDOMWindowInner> mParent;
   RefPtr<ScopedCredential> mCredential;
   CryptoBuffer mAuthenticatorData;
   CryptoBuffer mClientData;

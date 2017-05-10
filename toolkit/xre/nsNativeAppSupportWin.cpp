@@ -967,7 +967,7 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
                             break;
                         }
                         // Get location.
-                        RefPtr<dom::Location> location = internalContent->Location();
+                        RefPtr<dom::Location> location = internalContent->GetLocation();
                         if ( !location ) {
                             break;
                         }

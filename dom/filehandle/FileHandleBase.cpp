@@ -12,6 +12,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/PBackgroundFileHandle.h"
 #include "mozilla/dom/UnionConversions.h"
 #include "mozilla/ipc/BackgroundChild.h"
@@ -537,9 +538,9 @@ FileHandleBase::WriteOrAppend(Blob& aValue,
     return nullptr;
   }
 
-  ErrorResult rv;
-  uint64_t dataLength = aValue.GetSize(rv);
-  if (NS_WARN_IF(rv.Failed())) {
+  ErrorResult error;
+  uint64_t dataLength = aValue.GetSize(error);
+  if (NS_WARN_IF(error.Failed())) {
     aRv.Throw(NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
     return nullptr;
   }
@@ -551,15 +552,16 @@ FileHandleBase::WriteOrAppend(Blob& aValue,
   PBackgroundChild* backgroundActor = BackgroundChild::GetForCurrentThread();
   MOZ_ASSERT(backgroundActor);
 
-  PBlobChild* blobActor =
-    BackgroundChild::GetOrCreateActorForBlob(backgroundActor, &aValue);
-  if (NS_WARN_IF(!blobActor)) {
+  IPCBlob ipcBlob;
+  nsresult rv =
+    IPCBlobUtils::Serialize(aValue.Impl(), backgroundActor, ipcBlob);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
     return nullptr;
   }
 
   FileRequestBlobData blobData;
-  blobData.blobChild() = blobActor;
+  blobData.blob() = ipcBlob;
 
   // Do nothing if the window is closed
   if (!CheckWindow()) {
