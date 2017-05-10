@@ -103,6 +103,12 @@ const QUERYINDEX_PLACEID       = 8;
 const QUERYINDEX_SWITCHTAB     = 9;
 const QUERYINDEX_FRECENCY      = 10;
 
+// If a URL starts with one of these prefixes, then we don't provide search
+// suggestions for it.
+const DISALLOWED_URLLIKE_PREFIXES = [
+  "http", "https", "ftp"
+];
+
 // This SQL query fragment provides the following:
 //   - whether the entry is bookmarked (QUERYINDEX_BOOKMARKED)
 //   - the bookmark title, if it is a bookmark (QUERYINDEX_BOOKMARKTITLE)
@@ -1296,6 +1302,13 @@ Search.prototype = {
     if (this._searchTokens.length == 1 &&
         REGEXP_SINGLEWORD_HOST.test(this._searchTokens[0]) &&
         Services.uriFixup.isDomainWhitelisted(this._searchTokens[0], -1)) {
+      return true;
+    }
+
+    // Disallow fetching search suggestions for strings that start off looking
+    // like urls.
+    if (DISALLOWED_URLLIKE_PREFIXES.some(prefix => this._trimmedOriginalSearchString == prefix) ||
+        DISALLOWED_URLLIKE_PREFIXES.some(prefix => this._trimmedOriginalSearchString.startsWith(prefix + ":"))) {
       return true;
     }
 

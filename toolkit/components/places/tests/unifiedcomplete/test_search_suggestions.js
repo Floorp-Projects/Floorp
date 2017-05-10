@@ -655,8 +655,7 @@ add_task(function* avoid_http_url_suggestions() {
   Services.prefs.setBoolPref(SUGGEST_PREF, true);
 
   setSuggestionsFn(searchStr => {
-    let suffixes = ["ed", "ing"];
-    return suffixes.map(s => searchStr + s);
+    return [searchStr + "ed"];
   });
 
   yield check_autocomplete({
@@ -675,17 +674,6 @@ add_task(function* avoid_http_url_suggestions() {
         style: ["action", "searchengine"],
         icon: "",
       },
-      {
-        uri: makeActionURI(("searchengine"), {
-          engineName: ENGINE_NAME,
-          input: "htting",
-          searchQuery: "htt",
-          searchSuggestion: "htting",
-        }),
-        title: ENGINE_NAME,
-        style: ["action", "searchengine"],
-        icon: "",
-      },
     ],
   });
 
@@ -694,28 +682,6 @@ add_task(function* avoid_http_url_suggestions() {
     searchParam: "enable-actions",
     matches: [
       makeSearchMatch("ftp", { engineName: ENGINE_NAME, heuristic: true }),
-      {
-        uri: makeActionURI(("searchengine"), {
-          engineName: ENGINE_NAME,
-          input: "ftped",
-          searchQuery: "ftp",
-          searchSuggestion: "ftped",
-        }),
-        title: ENGINE_NAME,
-        style: ["action", "searchengine"],
-        icon: "",
-      },
-      {
-        uri: makeActionURI(("searchengine"), {
-          engineName: ENGINE_NAME,
-          input: "ftping",
-          searchQuery: "ftp",
-          searchSuggestion: "ftping",
-        }),
-        title: ENGINE_NAME,
-        style: ["action", "searchengine"],
-        icon: "",
-      },
     ],
   });
 
@@ -724,28 +690,6 @@ add_task(function* avoid_http_url_suggestions() {
     searchParam: "enable-actions",
     matches: [
       makeSearchMatch("http", { engineName: ENGINE_NAME, heuristic: true }),
-      {
-        uri: makeActionURI(("searchengine"), {
-          engineName: ENGINE_NAME,
-          input: "httped",
-          searchQuery: "http",
-          searchSuggestion: "httped",
-        }),
-        title: ENGINE_NAME,
-        style: ["action", "searchengine"],
-        icon: "",
-      },
-      {
-        uri: makeActionURI(("searchengine"), {
-          engineName: ENGINE_NAME,
-          input: "httping",
-          searchQuery: "http",
-          searchSuggestion: "httping",
-        }),
-        title: ENGINE_NAME,
-        style: ["action", "searchengine"],
-        icon: "",
-      },
     ],
   });
 
@@ -754,23 +698,20 @@ add_task(function* avoid_http_url_suggestions() {
     searchParam: "enable-actions",
     matches: [
       makeSearchMatch("https", { engineName: ENGINE_NAME, heuristic: true }),
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "httpd",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch("httpd", { engineName: ENGINE_NAME, heuristic: true }),
       {
         uri: makeActionURI(("searchengine"), {
           engineName: ENGINE_NAME,
-          input: "httpsed",
-          searchQuery: "https",
-          searchSuggestion: "httpsed",
-        }),
-        title: ENGINE_NAME,
-        style: ["action", "searchengine"],
-        icon: "",
-      },
-      {
-        uri: makeActionURI(("searchengine"), {
-          engineName: ENGINE_NAME,
-          input: "httpsing",
-          searchQuery: "https",
-          searchSuggestion: "httpsing",
+          input: "httpded",
+          searchQuery: "httpd",
+          searchSuggestion: "httpded",
         }),
         title: ENGINE_NAME,
         style: ["action", "searchengine"],
@@ -884,28 +825,6 @@ add_task(function* avoid_http_url_suggestions() {
         style: [ "action", "visiturl", "heuristic" ],
         title: "http://www/",
       },
-      {
-        uri: makeActionURI(("searchengine"), {
-          engineName: ENGINE_NAME,
-          input: "wwwed",
-          searchQuery: "www",
-          searchSuggestion: "wwwed",
-        }),
-        title: ENGINE_NAME,
-        style: ["action", "searchengine"],
-        icon: "",
-      },
-      {
-        uri: makeActionURI(("searchengine"), {
-          engineName: ENGINE_NAME,
-          input: "wwwing",
-          searchQuery: "www",
-          searchSuggestion: "wwwing",
-        }),
-        title: ENGINE_NAME,
-        style: ["action", "searchengine"],
-        icon: "",
-      },
     ],
   });
 
@@ -917,28 +836,6 @@ add_task(function* avoid_http_url_suggestions() {
         uri: makeActionURI("visiturl", { url: "https://www/", input: "https://www" }),
         style: [ "action", "visiturl", "heuristic" ],
         title: "https://www/",
-      },
-      {
-        uri: makeActionURI(("searchengine"), {
-          engineName: ENGINE_NAME,
-          input: "wwwed",
-          searchQuery: "www",
-          searchSuggestion: "wwwed",
-        }),
-        title: ENGINE_NAME,
-        style: ["action", "searchengine"],
-        icon: "",
-      },
-      {
-        uri: makeActionURI(("searchengine"), {
-          engineName: ENGINE_NAME,
-          input: "wwwing",
-          searchQuery: "www",
-          searchSuggestion: "wwwing",
-        }),
-        title: ENGINE_NAME,
-        style: ["action", "searchengine"],
-        icon: "",
       },
     ],
   });
@@ -952,28 +849,6 @@ add_task(function* avoid_http_url_suggestions() {
         style: [ "action", "visiturl", "heuristic" ],
         title: "http://test/",
       },
-      {
-        uri: makeActionURI(("searchengine"), {
-          engineName: ENGINE_NAME,
-          input: "tested",
-          searchQuery: "test",
-          searchSuggestion: "tested",
-        }),
-        title: ENGINE_NAME,
-        style: ["action", "searchengine"],
-        icon: "",
-      },
-      {
-        uri: makeActionURI(("searchengine"), {
-          engineName: ENGINE_NAME,
-          input: "testing",
-          searchQuery: "test",
-          searchSuggestion: "testing",
-        }),
-        title: ENGINE_NAME,
-        style: ["action", "searchengine"],
-        icon: "",
-      },
     ],
   });
 
@@ -985,28 +860,6 @@ add_task(function* avoid_http_url_suggestions() {
         uri: makeActionURI("visiturl", { url: "https://test/", input: "https://test" }),
         style: [ "action", "visiturl", "heuristic" ],
         title: "https://test/",
-      },
-      {
-        uri: makeActionURI(("searchengine"), {
-          engineName: ENGINE_NAME,
-          input: "tested",
-          searchQuery: "test",
-          searchSuggestion: "tested",
-        }),
-        title: ENGINE_NAME,
-        style: ["action", "searchengine"],
-        icon: "",
-      },
-      {
-        uri: makeActionURI(("searchengine"), {
-          engineName: ENGINE_NAME,
-          input: "testing",
-          searchQuery: "test",
-          searchSuggestion: "testing",
-        }),
-        title: ENGINE_NAME,
-        style: ["action", "searchengine"],
-        icon: "",
       },
     ],
   });
@@ -1020,28 +873,6 @@ add_task(function* avoid_http_url_suggestions() {
         style: [ "action", "visiturl", "heuristic" ],
         title: "ftp://test/",
       },
-      {
-        uri: makeActionURI(("searchengine"), {
-          engineName: ENGINE_NAME,
-          input: "tested",
-          searchQuery: "test",
-          searchSuggestion: "tested",
-        }),
-        title: ENGINE_NAME,
-        style: ["action", "searchengine"],
-        icon: "",
-      },
-      {
-        uri: makeActionURI(("searchengine"), {
-          engineName: ENGINE_NAME,
-          input: "testing",
-          searchQuery: "test",
-          searchSuggestion: "testing",
-        }),
-        title: ENGINE_NAME,
-        style: ["action", "searchengine"],
-        icon: "",
-      },
     ],
   });
 
@@ -1053,28 +884,6 @@ add_task(function* avoid_http_url_suggestions() {
         uri: makeActionURI("visiturl", { url: "http://www.test/", input: "http://www.test" }),
         style: [ "action", "visiturl", "heuristic" ],
         title: "http://www.test/",
-      },
-      {
-        uri: makeActionURI(("searchengine"), {
-          engineName: ENGINE_NAME,
-          input: "tested",
-          searchQuery: "test",
-          searchSuggestion: "tested",
-        }),
-        title: ENGINE_NAME,
-        style: ["action", "searchengine"],
-        icon: "",
-      },
-      {
-        uri: makeActionURI(("searchengine"), {
-          engineName: ENGINE_NAME,
-          input: "testing",
-          searchQuery: "test",
-          searchSuggestion: "testing",
-        }),
-        title: ENGINE_NAME,
-        style: ["action", "searchengine"],
-        icon: "",
       },
     ],
   });
