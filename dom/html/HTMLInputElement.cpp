@@ -5327,15 +5327,13 @@ HTMLInputElement::SanitizeValue(nsAString& aValue)
     case NS_FORM_INPUT_TEL:
     case NS_FORM_INPUT_PASSWORD:
       {
-        char16_t crlf[] = { char16_t('\r'), char16_t('\n'), 0 };
-        aValue.StripChars(crlf);
+        aValue.StripCRLF();
       }
       break;
     case NS_FORM_INPUT_EMAIL:
     case NS_FORM_INPUT_URL:
       {
-        char16_t crlf[] = { char16_t('\r'), char16_t('\n'), 0 };
-        aValue.StripChars(crlf);
+        aValue.StripCRLF();
 
         aValue = nsContentUtils::TrimWhitespace<nsContentUtils::IsHTMLWhitespace>(aValue);
       }
