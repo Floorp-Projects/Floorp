@@ -35,6 +35,7 @@ ServoStyleSet::ServoStyleSet()
   , mUniqueIDCounter(0)
   , mAllowResolveStaleStyles(false)
   , mAuthorStyleDisabled(false)
+  , mStylistMayNeedRebuild(false)
 {
 }
 
@@ -177,6 +178,7 @@ ServoStyleSet::EndUpdate()
   }
 
   Servo_StyleSet_FlushStyleSheets(mRawSet.get());
+  mStylistMayNeedRebuild = false;
   return NS_OK;
 }
 
@@ -257,6 +259,8 @@ ServoStyleSet::ResolveMappedAttrDeclarationBlocks()
 void
 ServoStyleSet::PreTraverseSync()
 {
+  MaybeRebuildStylist();
+
   ResolveMappedAttrDeclarationBlocks();
 
   nsCSSRuleProcessor::InitSystemMetrics();
@@ -302,6 +306,7 @@ ServoStyleSet::PrepareAndTraverseSubtree(
   // is necessary to avoid a data race when updating the cache.
   mozilla::Unused << aRoot->OwnerDoc()->GetRootElement();
 
+  MOZ_ASSERT(!mStylistMayNeedRebuild);
   AutoSetInServoTraversal guard(this);
 
   const SnapshotTable& snapshots = Snapshots();
@@ -440,6 +445,8 @@ ServoStyleSet::ResolvePseudoElementStyle(Element* aOriginatingElement,
     NS_WARNING("stylo: We don't support CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE yet");
   }
 
+  MaybeRebuildStylist();
+
   // NB: We ignore aParentContext, on the assumption that pseudo element styles
   // should just inherit from aOriginatingElement's primary style, which Servo
   // already knows.
@@ -486,6 +493,8 @@ ServoStyleSet::ResolveInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag,
   MOZ_ASSERT(nsCSSAnonBoxes::IsAnonBox(aPseudoTag) &&
              !nsCSSAnonBoxes::IsNonInheritingAnonBox(aPseudoTag));
 
+  MaybeRebuildStylist();
+
   bool skipFixup =
     nsCSSAnonBoxes::AnonBoxSkipsParentDisplayBasedStyleFixup(aPseudoTag);
 
@@ -527,6 +536,8 @@ ServoStyleSet::ResolveNonInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag)
     RefPtr<nsStyleContext> retval = cache;
     return retval.forget();
   }
+
+  MaybeRebuildStylist();
 
   // We always want to skip parent-based display fixup here.  It never makes
   // sense for non-inheriting anonymous boxes.  (Static assertions in
@@ -583,6 +594,7 @@ ServoStyleSet::AppendStyleSheet(SheetType aType,
                                     aSheet->RawSheet(),
                                     newUniqueID,
                                     !mBatching);
+    mStylistMayNeedRebuild = true;
   }
 
   return NS_OK;
@@ -609,6 +621,7 @@ ServoStyleSet::PrependStyleSheet(SheetType aType,
                                      aSheet->RawSheet(),
                                      newUniqueID,
                                      !mBatching);
+    mStylistMayNeedRebuild = true;
   }
 
   return NS_OK;
@@ -625,6 +638,7 @@ ServoStyleSet::RemoveStyleSheet(SheetType aType,
   if (mRawSet && uniqueID) {
     // Maintain a mirrored list of sheets on the servo side.
     Servo_StyleSet_RemoveStyleSheet(mRawSet.get(), uniqueID, !mBatching);
+    mStylistMayNeedRebuild = true;
   }
 
   return NS_OK;
@@ -638,6 +652,8 @@ ServoStyleSet::ReplaceSheets(SheetType aType,
   // stores a flattened list. This makes ReplaceSheets a pretty clunky thing
   // to express. If the need ever arises, we can easily make this more efficent,
   // probably by aligning the representations better between engines.
+
+  mStylistMayNeedRebuild = true;
 
   // Remove all the existing sheets first.
   if (mRawSet) {
@@ -661,6 +677,7 @@ ServoStyleSet::ReplaceSheets(SheetType aType,
 
   if (!mBatching) {
     Servo_StyleSet_FlushStyleSheets(mRawSet.get());
+    mStylistMayNeedRebuild = false;
   }
 
   return NS_OK;
@@ -699,6 +716,7 @@ ServoStyleSet::InsertStyleSheetBefore(SheetType aType,
                                           newUniqueID,
                                           beforeUniqueID,
                                           !mBatching);
+    mStylistMayNeedRebuild = true;
   }
 
   return NS_OK;
@@ -754,6 +772,7 @@ ServoStyleSet::AddDocStyleSheet(ServoStyleSheet* aSheet,
                                             newUniqueID,
                                             beforeUniqueID,
                                             !mBatching);
+      mStylistMayNeedRebuild = true;
     }
   } else {
     // This case is append.
@@ -767,6 +786,7 @@ ServoStyleSet::AddDocStyleSheet(ServoStyleSheet* aSheet,
                                       aSheet->RawSheet(),
                                       newUniqueID,
                                       !mBatching);
+      mStylistMayNeedRebuild = true;
     }
   }
 
@@ -778,6 +798,8 @@ ServoStyleSet::ProbePseudoElementStyle(Element* aOriginatingElement,
                                        CSSPseudoElementType aType,
                                        nsStyleContext* aParentContext)
 {
+  MaybeRebuildStylist();
+
   // NB: We ignore aParentContext, on the assumption that pseudo element styles
   // should just inherit from aOriginatingElement's primary style, which Servo
   // already knows.
@@ -901,9 +923,11 @@ ServoStyleSet::StyleSubtreeForReconstruct(Element* aRoot)
 void
 ServoStyleSet::NoteStyleSheetsChanged()
 {
+  mStylistMayNeedRebuild = true;
   Servo_StyleSet_NoteStyleSheetsChanged(mRawSet.get(), mAuthorStyleDisabled);
   if (!mBatching) {
     Servo_StyleSet_FlushStyleSheets(mRawSet.get());
+    mStylistMayNeedRebuild = false;
   }
 }
 
@@ -924,6 +948,8 @@ ServoStyleSet::FillKeyframesForName(const nsString& aName,
                                     const ServoComputedValues* aComputedValues,
                                     nsTArray<Keyframe>& aKeyframes)
 {
+  MaybeRebuildStylist();
+
   NS_ConvertUTF16toUTF8 name(aName);
   return Servo_StyleSet_FillKeyframesForName(mRawSet.get(),
                                              &name,
@@ -982,6 +1008,7 @@ ServoStyleSet::RebuildData()
 already_AddRefed<ServoComputedValues>
 ServoStyleSet::ResolveServoStyle(Element* aElement)
 {
+  MaybeRebuildStylist();
   return Servo_ResolveStyle(aElement, mRawSet.get(),
                             mAllowResolveStaleStyles).Consume();
 }
@@ -998,6 +1025,7 @@ already_AddRefed<ServoComputedValues>
 ServoStyleSet::ResolveStyleLazily(Element* aElement, nsIAtom* aPseudoTag)
 {
   mPresContext->EffectCompositor()->PreTraverse(aElement, aPseudoTag);
+  MOZ_ASSERT(!mStylistMayNeedRebuild);
 
   AutoSetInServoTraversal guard(this);
 
@@ -1046,6 +1074,7 @@ ServoStyleSet::ResolveStyleLazily(Element* aElement, nsIAtom* aPseudoTag)
 bool
 ServoStyleSet::AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray)
 {
+  MaybeRebuildStylist();
   Servo_StyleSet_GetFontFaceRules(mRawSet.get(), &aArray);
   return true;
 }
@@ -1055,9 +1084,18 @@ ServoStyleSet::ResolveForDeclarations(
   ServoComputedValuesBorrowedOrNull aParentOrNull,
   RawServoDeclarationBlockBorrowed aDeclarations)
 {
+  MaybeRebuildStylist();
   return Servo_StyleSet_ResolveForDeclarations(mRawSet.get(),
                                                aParentOrNull,
                                                aDeclarations).Consume();
+}
+
+void
+ServoStyleSet::RebuildStylist()
+{
+  MOZ_ASSERT(mStylistMayNeedRebuild);
+  Servo_StyleSet_FlushStyleSheets(mRawSet.get());
+  mStylistMayNeedRebuild = false;
 }
 
 uint32_t
