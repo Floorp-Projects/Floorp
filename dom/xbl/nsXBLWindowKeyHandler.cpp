@@ -108,7 +108,7 @@ void nsXBLSpecialDocInfo::LoadDocInfo()
   xblService->LoadBindingDocumentInfo(nullptr, nullptr,
                                       bindingURI,
                                       nullptr,
-                                      true, 
+                                      true,
                                       getter_AddRefs(mHTMLBindings));
 
   const nsAdoptingCString& userHTMLBindingStr =
@@ -122,7 +122,7 @@ void nsXBLSpecialDocInfo::LoadDocInfo()
     xblService->LoadBindingDocumentInfo(nullptr, nullptr,
                                         bindingURI,
                                         nullptr,
-                                        true, 
+                                        true,
                                         getter_AddRefs(mUserHTMLBindings));
   }
 }
@@ -130,14 +130,14 @@ void nsXBLSpecialDocInfo::LoadDocInfo()
 //
 // GetHandlers
 //
-// 
+//
 void
 nsXBLSpecialDocInfo::GetHandlers(nsXBLDocumentInfo* aInfo,
                                  const nsACString& aRef,
                                  nsXBLPrototypeHandler** aResult)
 {
   nsXBLPrototypeBinding* binding = aInfo->GetPrototypeBinding(aRef);
-  
+
   NS_ASSERTION(binding, "No binding found for the XBL window key handler.");
   if (!binding)
     return;
@@ -226,7 +226,7 @@ BuildHandlerChain(nsIContent* aContent, nsXBLPrototypeHandler** aResult)
 
 //
 // EnsureHandlers
-//    
+//
 // Lazily load the XBL handlers. Overridden to handle being attached
 // to a particular element rather than the document
 //
@@ -602,7 +602,7 @@ nsXBLWindowKeyHandler::IsHTMLEditableFieldFocused()
 //
 bool
 nsXBLWindowKeyHandler::WalkHandlersInternal(nsIDOMKeyEvent* aKeyEvent,
-                                            nsIAtom* aEventType, 
+                                            nsIAtom* aEventType,
                                             nsXBLPrototypeHandler* aHandler,
                                             bool aExecute,
                                             bool* aOutReservedForChrome)
