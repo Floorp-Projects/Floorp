@@ -10,16 +10,18 @@
 %endif
 
 :root {
-  --toolbarbutton-vertical-inner-padding: 3px;
+%ifdef MOZ_PHOTON_THEME
+  --toolbarbutton-hover-background: hsla(240, 5%, 5%, .1);
+  --toolbarbutton-active-background: hsla(240, 5%, 5%, .15);
 
-%ifndef MOZ_PHOTON_THEME
+  --toolbarbutton-inner-padding: 5px;
+%else
   --backbutton-urlbar-overlap: 6px;
 
   /* icon width + border + horizontal padding (without the overlap from backbutton-urlbar-overlap) */
   --forwardbutton-width: 25px;
-%else
-  --toolbarbutton-hover-background: hsla(240, 5%, 5%, .1);
-  --toolbarbutton-active-background: hsla(240, 5%, 5%, .15);
+
+  --toolbarbutton-inner-padding: 3px;
 %endif
 }
 
@@ -158,7 +160,11 @@ toolbarbutton.bookmark-item:not(.subviewbutton),
 #nav-bar .toolbarbutton-1 > .toolbarbutton-badge-stack,
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
-  padding: var(--toolbarbutton-vertical-inner-padding) 7px;
+%ifdef MOZ_PHOTON_THEME
+  padding: var(--toolbarbutton-inner-padding);
+%else
+  padding: var(--toolbarbutton-inner-padding) 7px;
+%endif
   background-origin: padding-box !important;
   background-clip: padding-box !important;
   border: 1px solid transparent;
@@ -214,8 +220,8 @@ toolbarbutton.bookmark-item:not(.subviewbutton),
 }
 
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
-  padding-top: calc(var(--toolbarbutton-vertical-inner-padding) + 6px);
-  padding-bottom: calc(var(--toolbarbutton-vertical-inner-padding) + 6px);
+  padding-top: calc(var(--toolbarbutton-inner-padding) + 6px);
+  padding-bottom: calc(var(--toolbarbutton-inner-padding) + 6px);
 }
 
 #nav-bar .toolbarbutton-1 > .toolbarbutton-text {
@@ -225,7 +231,7 @@ toolbarbutton.bookmark-item:not(.subviewbutton),
    * height (16px) + padding (2 * 3px) + border (2 * 1px), but as a minimum
    * because otherwise an increase in text sizes would break things.
    */
-  min-height: calc(18px + 2 * var(--toolbarbutton-vertical-inner-padding));
+  min-height: calc(18px + 2 * var(--toolbarbutton-inner-padding));
 }
 
 #nav-bar .toolbaritem-combined-buttons {
@@ -390,8 +396,8 @@ toolbarbutton.bookmark-item[open="true"],
 }
 
 #nav-bar #bookmarks-menu-button[cui-areatype="toolbar"]:not([overflowedItem=true]) > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
-  padding-top: var(--toolbarbutton-vertical-inner-padding);
-  padding-bottom: var(--toolbarbutton-vertical-inner-padding);
+  padding-top: var(--toolbarbutton-inner-padding);
+  padding-bottom: var(--toolbarbutton-inner-padding);
 }
 
 #BMB_bookmarksPopup[side="top"],
