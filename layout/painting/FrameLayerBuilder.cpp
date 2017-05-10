@@ -61,7 +61,7 @@ namespace mozilla {
 
 class PaintedDisplayItemLayerUserData;
 
-static nsTHashtable<nsPtrHashKey<DisplayItemData>>* sAliveDisplayItemDatas;
+static nsTHashtable<nsPtrHashKey<FrameLayerBuilder::DisplayItemData>>* sAliveDisplayItemDatas;
 
 /**
  * The address of gPaintedDisplayItemLayerUserData is used as the user
@@ -135,21 +135,20 @@ FrameLayerBuilder::~FrameLayerBuilder()
   MOZ_COUNT_DTOR(FrameLayerBuilder);
 }
 
-DisplayItemData::DisplayItemData(LayerManagerData* aParent, uint32_t aKey,
-                                 Layer* aLayer, nsIFrame* aFrame)
+FrameLayerBuilder::DisplayItemData::DisplayItemData(LayerManagerData* aParent, uint32_t aKey,
+                                                    Layer* aLayer, nsIFrame* aFrame)
 
-  : mRefCnt(0)
-  , mParent(aParent)
+  : mParent(aParent)
   , mLayer(aLayer)
   , mDisplayItemKey(aKey)
   , mItem(nullptr)
   , mUsed(true)
   , mIsInvalid(false)
 {
-  MOZ_COUNT_CTOR(DisplayItemData);
+  MOZ_COUNT_CTOR(FrameLayerBuilder::DisplayItemData);
 
   if (!sAliveDisplayItemDatas) {
-    sAliveDisplayItemDatas = new nsTHashtable<nsPtrHashKey<DisplayItemData>>();
+    sAliveDisplayItemDatas = new nsTHashtable<nsPtrHashKey<FrameLayerBuilder::DisplayItemData>>();
   }
   MOZ_RELEASE_ASSERT(!sAliveDisplayItemDatas->Contains(this));
   sAliveDisplayItemDatas->PutEntry(this);
@@ -162,7 +161,7 @@ DisplayItemData::DisplayItemData(LayerManagerData* aParent, uint32_t aKey,
 }
 
 void
-DisplayItemData::AddFrame(nsIFrame* aFrame)
+FrameLayerBuilder::DisplayItemData::AddFrame(nsIFrame* aFrame)
 {
   MOZ_RELEASE_ASSERT(mLayer);
   mFrameList.AppendElement(aFrame);
@@ -177,7 +176,7 @@ DisplayItemData::AddFrame(nsIFrame* aFrame)
 }
 
 void
-DisplayItemData::RemoveFrame(nsIFrame* aFrame)
+FrameLayerBuilder::DisplayItemData::RemoveFrame(nsIFrame* aFrame)
 {
   MOZ_RELEASE_ASSERT(mLayer);
   bool result = mFrameList.RemoveElement(aFrame);
@@ -190,7 +189,7 @@ DisplayItemData::RemoveFrame(nsIFrame* aFrame)
 }
 
 void
-DisplayItemData::EndUpdate()
+FrameLayerBuilder::DisplayItemData::EndUpdate()
 {
   MOZ_RELEASE_ASSERT(mLayer);
   MOZ_ASSERT(!mItem);
@@ -199,7 +198,7 @@ DisplayItemData::EndUpdate()
 }
 
 void
-DisplayItemData::EndUpdate(nsAutoPtr<nsDisplayItemGeometry> aGeometry)
+FrameLayerBuilder::DisplayItemData::EndUpdate(nsAutoPtr<nsDisplayItemGeometry> aGeometry)
 {
   MOZ_RELEASE_ASSERT(mLayer);
   MOZ_ASSERT(mItem);
@@ -216,9 +215,9 @@ DisplayItemData::EndUpdate(nsAutoPtr<nsDisplayItemGeometry> aGeometry)
 }
 
 void
-DisplayItemData::BeginUpdate(Layer* aLayer, LayerState aState,
-                             uint32_t aContainerLayerGeneration,
-                             nsDisplayItem* aItem /* = nullptr */)
+FrameLayerBuilder::DisplayItemData::BeginUpdate(Layer* aLayer, LayerState aState,
+                                                uint32_t aContainerLayerGeneration,
+                                                nsDisplayItem* aItem /* = nullptr */)
 {
   MOZ_RELEASE_ASSERT(mLayer);
   MOZ_RELEASE_ASSERT(aLayer);
@@ -261,9 +260,9 @@ DisplayItemData::BeginUpdate(Layer* aLayer, LayerState aState,
 }
 
 static const nsIFrame* sDestroyedFrame = nullptr;
-DisplayItemData::~DisplayItemData()
+FrameLayerBuilder::DisplayItemData::~DisplayItemData()
 {
-  MOZ_COUNT_DTOR(DisplayItemData);
+  MOZ_COUNT_DTOR(FrameLayerBuilder::DisplayItemData);
   MOZ_RELEASE_ASSERT(mLayer);
   for (uint32_t i = 0; i < mFrameList.Length(); i++) {
     nsIFrame* frame = mFrameList[i];
@@ -271,7 +270,7 @@ DisplayItemData::~DisplayItemData()
       continue;
     }
     nsTArray<DisplayItemData*> *array =
-      reinterpret_cast<nsTArray<DisplayItemData*>*>(frame->Properties().Get(FrameLayerBuilder::LayerManagerDataProperty()));
+      reinterpret_cast<nsTArray<DisplayItemData*>*>(frame->Properties().Get(LayerManagerDataProperty()));
     array->RemoveElement(this);
   }
 
@@ -284,7 +283,7 @@ DisplayItemData::~DisplayItemData()
 }
 
 void
-DisplayItemData::ClearAnimationCompositorState()
+FrameLayerBuilder::DisplayItemData::ClearAnimationCompositorState()
 {
   if (mDisplayItemKey != nsDisplayItem::TYPE_TRANSFORM &&
       mDisplayItemKey != nsDisplayItem::TYPE_OPACITY) {
@@ -299,13 +298,13 @@ DisplayItemData::ClearAnimationCompositorState()
 }
 
 const nsTArray<nsIFrame*>&
-DisplayItemData::GetFrameListChanges()
+FrameLayerBuilder::DisplayItemData::GetFrameListChanges()
 {
   return mFrameListChanges;
 }
 
-DisplayItemData*
-DisplayItemData::AssertDisplayItemData(DisplayItemData* aData)
+FrameLayerBuilder::DisplayItemData*
+FrameLayerBuilder::DisplayItemData::AssertDisplayItemData(FrameLayerBuilder::DisplayItemData* aData)
 {
   MOZ_RELEASE_ASSERT(aData);
   MOZ_RELEASE_ASSERT(sAliveDisplayItemDatas && sAliveDisplayItemDatas->Contains(aData));
@@ -395,7 +394,7 @@ public:
 #ifdef DEBUG_DISPLAY_ITEM_DATA
   LayerManagerData *mParent;
 #endif
-  nsTHashtable<nsRefPtrHashKey<DisplayItemData> > mDisplayItems;
+  nsTHashtable<nsRefPtrHashKey<FrameLayerBuilder::DisplayItemData> > mDisplayItems;
   bool mInvalidateAllLayers;
 };
 
@@ -1814,7 +1813,7 @@ FrameLayerBuilder::FlashPaint(gfxContext *aContext)
   aContext->Paint();
 }
 
-DisplayItemData*
+FrameLayerBuilder::DisplayItemData*
 FrameLayerBuilder::GetDisplayItemData(nsIFrame* aFrame, uint32_t aKey)
 {
   const nsTArray<DisplayItemData*>* array =
@@ -2043,7 +2042,7 @@ FrameLayerBuilder::WillEndTransaction()
   data->mInvalidateAllLayers = false;
 }
 
-/* static */ DisplayItemData*
+/* static */ FrameLayerBuilder::DisplayItemData*
 FrameLayerBuilder::GetDisplayItemDataForManager(nsDisplayItem* aItem,
                                                 LayerManager* aManager)
 {
@@ -2093,7 +2092,7 @@ FrameLayerBuilder::IterateRetainedDataFor(nsIFrame* aFrame, DisplayItemDataCallb
   }
 }
 
-DisplayItemData*
+FrameLayerBuilder::DisplayItemData*
 FrameLayerBuilder::GetOldLayerForFrame(nsIFrame* aFrame, uint32_t aDisplayItemKey)
 {
   // If we need to build a new layer tree, then just refuse to recycle
@@ -4778,7 +4777,7 @@ FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
   }
 }
 
-DisplayItemData*
+FrameLayerBuilder::DisplayItemData*
 FrameLayerBuilder::StoreDataForFrame(nsDisplayItem* aItem, Layer* aLayer, LayerState aState)
 {
   DisplayItemData* oldData = GetDisplayItemDataForManager(aItem, mRetainingManager);
@@ -4793,7 +4792,7 @@ FrameLayerBuilder::StoreDataForFrame(nsDisplayItem* aItem, Layer* aLayer, LayerS
     (mRetainingManager->GetUserData(&gLayerManagerUserData));
 
   RefPtr<DisplayItemData> data =
-    new (aItem->Frame()->PresContext()) DisplayItemData(lmd, aItem->GetPerFrameKey(), aLayer);
+    new DisplayItemData(lmd, aItem->GetPerFrameKey(), aLayer);
 
   data->BeginUpdate(aLayer, aState, mContainerLayerGeneration, aItem);
 
@@ -4817,7 +4816,7 @@ FrameLayerBuilder::StoreDataForFrame(nsIFrame* aFrame,
     (mRetainingManager->GetUserData(&gLayerManagerUserData));
 
   RefPtr<DisplayItemData> data =
-    new (aFrame->PresContext()) DisplayItemData(lmd, aDisplayItemKey, aLayer, aFrame);
+    new DisplayItemData(lmd, aDisplayItemKey, aLayer, aFrame);
 
   data->BeginUpdate(aLayer, aState, mContainerLayerGeneration);
 
