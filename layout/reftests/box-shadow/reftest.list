@@ -14,9 +14,9 @@ fails-if(Android) fuzzy-if(webrender,20,3310) == boxshadow-button.html boxshadow
 fuzzy-if(OSX==1010,1,24) fuzzy-if(d2d,16,908) fuzzy-if(webrender,19,1680) == boxshadow-large-border-radius.html boxshadow-large-border-radius-ref.html # Bug 1209649
 
 fails-if(Android) fails-if(stylo) == boxshadow-fileupload.html boxshadow-fileupload-ref.html
-== boxshadow-inner-basic.html boxshadow-inner-basic-ref.svg
+fuzzy-if(skiaContent,13,28) == boxshadow-inner-basic.html boxshadow-inner-basic-ref.svg
 random-if(layersGPUAccelerated) == boxshadow-mixed.html boxshadow-mixed-ref.html
-random-if(d2d) == boxshadow-rounded-spread.html boxshadow-rounded-spread-ref.html
+random-if(d2d) fuzzy-if(skiaContent,1,100) == boxshadow-rounded-spread.html boxshadow-rounded-spread-ref.html
 fuzzy-if(skiaContent,1,50) HTTP(..) == boxshadow-dynamic.xul boxshadow-dynamic-ref.xul
 random-if(d2d) == boxshadow-onecorner.html boxshadow-onecorner-ref.html
 random-if(d2d) == boxshadow-twocorners.html boxshadow-twocorners-ref.html

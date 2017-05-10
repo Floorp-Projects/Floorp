@@ -676,7 +676,8 @@ AudioContext::Shutdown()
 StateChangeTask::StateChangeTask(AudioContext* aAudioContext,
                                  void* aPromise,
                                  AudioContextState aNewState)
-  : mAudioContext(aAudioContext)
+  : Runnable("dom::StateChangeTask")
+  , mAudioContext(aAudioContext)
   , mPromise(aPromise)
   , mAudioNodeStream(nullptr)
   , mNewState(aNewState)
@@ -688,7 +689,8 @@ StateChangeTask::StateChangeTask(AudioContext* aAudioContext,
 StateChangeTask::StateChangeTask(AudioNodeStream* aStream,
                                  void* aPromise,
                                  AudioContextState aNewState)
-  : mAudioContext(nullptr)
+  : Runnable("dom::StateChangeTask")
+  , mAudioContext(nullptr)
   , mPromise(aPromise)
   , mAudioNodeStream(aStream)
   , mNewState(aNewState)
@@ -729,7 +731,8 @@ class OnStateChangeTask final : public Runnable
 {
 public:
   explicit OnStateChangeTask(AudioContext* aAudioContext)
-    : mAudioContext(aAudioContext)
+    : Runnable("dom::OnStateChangeTask")
+    , mAudioContext(aAudioContext)
   {}
 
   NS_IMETHODIMP

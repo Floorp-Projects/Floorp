@@ -539,21 +539,6 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
         gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, &mGLMaxVertexTextureImageUnits);
     }
 
-    // If we don't support a target, its max size is 0. We should only floor-to-POT if the
-    // value if it's non-zero. (NB log2(0) is -Inf, so zero isn't an integer power-of-two)
-    const auto fnFloorPOTIfSupported = [](uint32_t& val) {
-        if (val) {
-            val = FloorPOT(val);
-        }
-    };
-
-    fnFloorPOTIfSupported(mImplMaxTextureSize);
-    fnFloorPOTIfSupported(mImplMaxCubeMapTextureSize);
-    fnFloorPOTIfSupported(mImplMaxRenderbufferSize);
-
-    fnFloorPOTIfSupported(mImplMax3DTextureSize);
-    fnFloorPOTIfSupported(mImplMaxArrayTextureLayers);
-
     ////////////////
 
     mGLMaxColorAttachments = 1;

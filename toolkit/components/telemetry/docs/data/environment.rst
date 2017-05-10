@@ -101,8 +101,9 @@ Structure:
               <string>,
               ...
               // as applicable:
-              // "MMX", "SSE", "SSE2", "SSE3", "SSSE3", "SSE4A", "SSE4_1",
-              // "SSE4_2", "AVX", "AVX2", "EDSP", "ARMv6", "ARMv7", "NEON"
+              // "hasMMX", "hasSSE", "hasSSE2", "hasSSE3", "hasSSSE3",
+              // "hasSSE4A", "hasSSE4_1", "hasSSE4_2", "hasAVX", "hasAVX2",
+              // "hasAES", "hasEDSP", "hasARMv6", "hasARMv7", "hasNEON"
             ],
         },
         device: { // This section is only available on mobile devices.

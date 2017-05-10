@@ -26,6 +26,7 @@
 #include "mozilla/dom/ipc/BlobChild.h"
 #include "mozilla/dom/ipc/IPCBlobInputStreamChild.h"
 #include "mozilla/dom/ipc/MemoryStreamChild.h"
+#include "mozilla/dom/ipc/PendingIPCBlobChild.h"
 #include "mozilla/dom/quota/PQuotaChild.h"
 #include "mozilla/dom/GamepadEventChannelChild.h"
 #include "mozilla/dom/GamepadTestChannelChild.h"
@@ -37,6 +38,7 @@
 #include "mozilla/layout/VsyncChild.h"
 #include "mozilla/net/PUDPSocketChild.h"
 #include "mozilla/dom/network/UDPSocketChild.h"
+#include "mozilla/dom/WebAuthnTransactionChild.h"
 #include "nsID.h"
 #include "nsTraceRefcnt.h"
 
@@ -77,6 +79,8 @@ using mozilla::dom::asmjscache::PAsmJSCacheEntryChild;
 using mozilla::dom::cache::PCacheChild;
 using mozilla::dom::cache::PCacheStorageChild;
 using mozilla::dom::cache::PCacheStreamControlChild;
+
+using mozilla::dom::WebAuthnTransactionChild;
 
 // -----------------------------------------------------------------------------
 // BackgroundChildImpl::ThreadLocal
@@ -226,6 +230,19 @@ BackgroundChildImpl::AllocPMemoryStreamChild(const uint64_t& aSize)
 
 bool
 BackgroundChildImpl::DeallocPMemoryStreamChild(PMemoryStreamChild* aActor)
+{
+  delete aActor;
+  return true;
+}
+
+PPendingIPCBlobChild*
+BackgroundChildImpl::AllocPPendingIPCBlobChild(const IPCBlob& aBlob)
+{
+  return new mozilla::dom::PendingIPCBlobChild(aBlob);
+}
+
+bool
+BackgroundChildImpl::DeallocPPendingIPCBlobChild(PPendingIPCBlobChild* aActor)
 {
   delete aActor;
   return true;
@@ -559,6 +576,22 @@ BackgroundChildImpl::OnChannelReceivedMessage(const Message& aMsg)
   }
 }
 #endif
+
+dom::PWebAuthnTransactionChild*
+BackgroundChildImpl::AllocPWebAuthnTransactionChild()
+{
+  MOZ_CRASH("PWebAuthnTransaction actor should be manually constructed!");
+  return nullptr;
+}
+
+bool
+BackgroundChildImpl::DeallocPWebAuthnTransactionChild(PWebAuthnTransactionChild* aActor)
+{
+  MOZ_ASSERT(aActor);
+  RefPtr<dom::WebAuthnTransactionChild> child =
+    dont_AddRef(static_cast<dom::WebAuthnTransactionChild*>(aActor));
+  return true;
+}
 
 } // namespace ipc
 } // namespace mozilla
