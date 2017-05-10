@@ -210,17 +210,6 @@ public:
   MaybeUpdateCascadeResults(dom::Element* aElement,
                             CSSPseudoElementType aPseudoType);
 
-  // Update the mPropertiesWithImportantRules and
-  // mPropertiesForAnimationsLevel members of the corresponding EffectSet.
-  //
-  // This can be expensive so we should only call it if styles that apply
-  // above the animation level of the cascade might have changed. For all
-  // other cases we should call MaybeUpdateCascadeResults.
-  static void
-  UpdateCascadeResults(dom::Element* aElement,
-                       CSSPseudoElementType aPseudoType,
-                       nsStyleContext* aStyleContext);
-
   // Helper to fetch the corresponding element and pseudo-type from a frame.
   //
   // For frames corresponding to pseudo-elements, the returned element is the
@@ -274,6 +263,12 @@ private:
                           EffectSet& aEffectSet,
                           nsCSSPropertyIDSet& aPropertiesOverridden);
 
+  // Update the mPropertiesWithImportantRules and
+  // mPropertiesForAnimationsLevel members of the given EffectSet.
+  //
+  // This can be expensive so we should only call it if styles that apply
+  // above the animation level of the cascade might have changed. For all
+  // other cases we should call MaybeUpdateCascadeResults.
   static void
   UpdateCascadeResults(EffectSet& aEffectSet,
                        dom::Element* aElement,
