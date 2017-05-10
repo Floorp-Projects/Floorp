@@ -38,6 +38,8 @@ const MonitorPanel = createClass({
     networkDetailsOpen: PropTypes.bool.isRequired,
     openNetworkDetails: PropTypes.func.isRequired,
     request: PropTypes.object,
+    // Service to enable the source map feature.
+    sourceMapService: PropTypes.object,
     updateRequest: PropTypes.func.isRequired,
   },
 
@@ -102,7 +104,7 @@ const MonitorPanel = createClass({
   },
 
   render() {
-    let { isEmpty, networkDetailsOpen } = this.props;
+    let { isEmpty, networkDetailsOpen, sourceMapService } = this.props;
     let initialWidth = Services.prefs.getIntPref(
         "devtools.netmonitor.panes-network-details-width");
     let initialHeight = Services.prefs.getIntPref(
@@ -118,7 +120,10 @@ const MonitorPanel = createClass({
           maxSize: "80%",
           splitterSize: "1px",
           startPanel: RequestList({ isEmpty }),
-          endPanel: networkDetailsOpen && NetworkDetailsPanel({ ref: "endPanel" }),
+          endPanel: networkDetailsOpen && NetworkDetailsPanel({
+            ref: "endPanel",
+            sourceMapService,
+          }),
           endPanelCollapsed: !networkDetailsOpen,
           endPanelControl: true,
           vert: this.state.isVerticalSpliter,
