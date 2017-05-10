@@ -35,22 +35,10 @@ public:
 
     virtual SkIRect onFilterBounds(const SkIRect& src, const SkMatrix&,
                                    MapDirection) const override;
+    sk_sp<SkImageFilter> onMakeColorSpace(SkColorSpaceXformer*) const override;
     SkIRect onFilterNodeBounds(const SkIRect&, const SkMatrix&, MapDirection) const override;
 
     SK_TO_STRING_OVERRIDE()
-
-#ifdef SK_SUPPORT_LEGACY_IMAGEFILTER_PTR
-    static SkImageFilter* Create(ChannelSelectorType xChannelSelector,
-                                 ChannelSelectorType yChannelSelector,
-                                 SkScalar scale, SkImageFilter* displacement,
-                                 SkImageFilter* color = nullptr,
-                                 const CropRect* cropRect = nullptr) {
-        return Make(xChannelSelector, yChannelSelector, scale, 
-                    sk_ref_sp<SkImageFilter>(displacement),
-                    sk_ref_sp<SkImageFilter>(color),
-                    cropRect).release();
-    }
-#endif
 
 protected:
     sk_sp<SkSpecialImage> onFilterImage(SkSpecialImage* source, const Context&,

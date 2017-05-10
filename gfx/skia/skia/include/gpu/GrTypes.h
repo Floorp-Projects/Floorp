@@ -19,56 +19,109 @@
  * bitfield.
  */
 #define GR_MAKE_BITFIELD_OPS(X) \
-    inline X operator | (X a, X b) { \
+    inline X operator |(X a, X b) { \
         return (X) (+a | +b); \
     } \
-    inline X& operator |= (X& a, X b) { \
+    inline X& operator |=(X& a, X b) { \
         return (a = a | b); \
     } \
-    \
-    inline X operator & (X a, X b) { \
+    inline X operator &(X a, X b) { \
+        return (X) (+a & +b); \
+    } \
+    inline X& operator &=(X& a, X b) { \
+        return (a = a & b); \
+    } \
+    template <typename T> \
+    inline X operator &(T a, X b) { \
         return (X) (+a & +b); \
     } \
     template <typename T> \
-    inline X operator & (T a, X b) { \
-        return (X) (+a & +b); \
-    } \
-    template <typename T> \
-    inline X operator & (X a, T b) { \
+    inline X operator &(X a, T b) { \
         return (X) (+a & +b); \
     } \
 
 #define GR_DECL_BITFIELD_OPS_FRIENDS(X) \
-    friend X operator | (X a, X b); \
-    friend X& operator |= (X& a, X b); \
+    friend X operator |(X a, X b); \
+    friend X& operator |=(X& a, X b); \
     \
-    friend X operator & (X a, X b); \
-    \
-    template <typename T> \
-    friend X operator & (T a, X b); \
+    friend X operator &(X a, X b); \
+    friend X& operator &=(X& a, X b); \
     \
     template <typename T> \
-    friend X operator & (X a, T b); \
+    friend X operator &(T a, X b); \
+    \
+    template <typename T> \
+    friend X operator &(X a, T b); \
+
+/**
+ * Wraps a C++11 enum that we use as a bitfield, and enables a limited amount of
+ * masking with type safety. Instantiated with the ~ operator.
+ */
+template<typename TFlags> class GrTFlagsMask {
+public:
+    constexpr explicit GrTFlagsMask(TFlags value) : GrTFlagsMask(static_cast<int>(value)) {}
+    constexpr explicit GrTFlagsMask(int value) : fValue(value) {}
+    constexpr int value() const { return fValue; }
+private:
+    const int fValue;
+};
+
+// Or-ing a mask always returns another mask.
+template<typename TFlags> constexpr GrTFlagsMask<TFlags> operator|(GrTFlagsMask<TFlags> a,
+                                                                   GrTFlagsMask<TFlags> b) {
+    return GrTFlagsMask<TFlags>(a.value() | b.value());
+}
+template<typename TFlags> constexpr GrTFlagsMask<TFlags> operator|(GrTFlagsMask<TFlags> a,
+                                                                   TFlags b) {
+    return GrTFlagsMask<TFlags>(a.value() | static_cast<int>(b));
+}
+template<typename TFlags> constexpr GrTFlagsMask<TFlags> operator|(TFlags a,
+                                                                   GrTFlagsMask<TFlags> b) {
+    return GrTFlagsMask<TFlags>(static_cast<int>(a) | b.value());
+}
+template<typename TFlags> inline GrTFlagsMask<TFlags>& operator|=(GrTFlagsMask<TFlags>& a,
+                                                                  GrTFlagsMask<TFlags> b) {
+    return (a = a | b);
+}
+
+// And-ing two masks returns another mask; and-ing one with regular flags returns flags.
+template<typename TFlags> constexpr GrTFlagsMask<TFlags> operator&(GrTFlagsMask<TFlags> a,
+                                                                   GrTFlagsMask<TFlags> b) {
+    return GrTFlagsMask<TFlags>(a.value() & b.value());
+}
+template<typename TFlags> constexpr TFlags operator&(GrTFlagsMask<TFlags> a, TFlags b) {
+    return static_cast<TFlags>(a.value() & static_cast<int>(b));
+}
+template<typename TFlags> constexpr TFlags operator&(TFlags a, GrTFlagsMask<TFlags> b) {
+    return static_cast<TFlags>(static_cast<int>(a) & b.value());
+}
+template<typename TFlags> inline TFlags& operator&=(TFlags& a, GrTFlagsMask<TFlags> b) {
+    return (a = a & b);
+}
 
 /**
  * Defines bitwise operators that make it possible to use an enum class as a
- * very basic bitfield.
+ * basic bitfield.
  */
 #define GR_MAKE_BITFIELD_CLASS_OPS(X) \
-    inline X operator | (X a, X b) { \
-        return (X) ((int)a | (int)b); \
+    constexpr GrTFlagsMask<X> operator~(X a) { \
+        return GrTFlagsMask<X>(~static_cast<int>(a)); \
     } \
-    inline X& operator |= (X& a, X b) { \
+    constexpr X operator|(X a, X b) { \
+        return static_cast<X>(static_cast<int>(a) | static_cast<int>(b)); \
+    } \
+    inline X& operator|=(X& a, X b) { \
         return (a = a | b); \
     } \
-    inline bool operator & (X a, X b) { \
-        return SkToBool((int)a & (int)b); \
-    }
+    constexpr bool operator&(X a, X b) { \
+        return SkToBool(static_cast<int>(a) & static_cast<int>(b)); \
+    } \
 
 #define GR_DECL_BITFIELD_CLASS_OPS_FRIENDS(X) \
-    friend X operator | (X a, X b); \
-    friend X& operator |= (X& a, X b); \
-    friend bool operator & (X a, X b);
+    friend constexpr GrTFlagsMask<X> operator ~(X); \
+    friend constexpr X operator |(X, X); \
+    friend X& operator |=(X&, X); \
+    friend constexpr bool operator &(X, X);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -149,6 +202,18 @@ typedef intptr_t GrBackendContext;
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
+ * Used to control antialiasing in draw calls.
+ */
+enum class GrAA {
+    kYes,
+    kNo
+};
+
+static inline GrAA GrBoolToAA(bool aa) { return aa ? GrAA::kYes : GrAA::kNo; }
+
+///////////////////////////////////////////////////////////////////////////////
+
+/**
 * Geometric primitives used for drawing.
 */
 enum GrPrimitiveType {
@@ -207,7 +272,7 @@ static inline int GrMaskFormatBytesPerPixel(GrMaskFormat format) {
 enum GrPixelConfig {
     kUnknown_GrPixelConfig,
     kAlpha_8_GrPixelConfig,
-    kIndex_8_GrPixelConfig,
+    kGray_8_GrPixelConfig,
     kRGB_565_GrPixelConfig,
     /**
      * Premultiplied
@@ -230,35 +295,21 @@ enum GrPixelConfig {
      */
     kSBGRA_8888_GrPixelConfig,
     /**
+     * 8 bit signed integers per-channel. Byte order is b,g,r,a.
+     */
+    kRGBA_8888_sint_GrPixelConfig,
+    /**
      * ETC1 Compressed Data
      */
     kETC1_GrPixelConfig,
     /**
-     * LATC/RGTC/3Dc/BC4 Compressed Data
-     */
-    kLATC_GrPixelConfig,
-    /**
-     * R11 EAC Compressed Data
-     * (Corresponds to section C.3.5 of the OpenGL 4.4 core profile spec)
-     */
-    kR11_EAC_GrPixelConfig,
-
-    /**
-     * 12x12 ASTC Compressed Data
-     * ASTC stands for Adaptive Scalable Texture Compression. It is a technique
-     * that allows for a lot of customization in the compressed representataion
-     * of a block. The only thing fixed in the representation is the block size,
-     * which means that a texture that contains ASTC data must be treated as
-     * having RGBA values. However, there are single-channel encodings which set
-     * the alpha to opaque and all three RGB channels equal effectively making the
-     * compression format a single channel such as R11 EAC and LATC.
-     */
-    kASTC_12x12_GrPixelConfig,
-
-    /**
      * Byte order is r, g, b, a.  This color format is 32 bits per channel
      */
     kRGBA_float_GrPixelConfig,
+    /**
+     * Byte order is r, g.  This color format is 32 bits per channel
+     */
+    kRG_float_GrPixelConfig,
 
     /**
      * This color format is a single 16 bit float channel
@@ -280,10 +331,8 @@ static const int kGrPixelConfigCnt = kLast_GrPixelConfig + 1;
 #endif
 #if SK_PMCOLOR_BYTE_ORDER(B,G,R,A)
     static const GrPixelConfig kSkia8888_GrPixelConfig = kBGRA_8888_GrPixelConfig;
-    static const GrPixelConfig kSkiaGamma8888_GrPixelConfig = kSBGRA_8888_GrPixelConfig;
 #elif SK_PMCOLOR_BYTE_ORDER(R,G,B,A)
     static const GrPixelConfig kSkia8888_GrPixelConfig = kRGBA_8888_GrPixelConfig;
-    static const GrPixelConfig kSkiaGamma8888_GrPixelConfig = kSRGBA_8888_GrPixelConfig;
 #else
     #error "SK_*32_SHIFT values must correspond to GL_BGRA or GL_RGBA format."
 #endif
@@ -292,44 +341,77 @@ static const int kGrPixelConfigCnt = kLast_GrPixelConfig + 1;
 // representation.
 static inline bool GrPixelConfigIsCompressed(GrPixelConfig config) {
     switch (config) {
-        case kIndex_8_GrPixelConfig:
         case kETC1_GrPixelConfig:
-        case kLATC_GrPixelConfig:
-        case kR11_EAC_GrPixelConfig:
-        case kASTC_12x12_GrPixelConfig:
             return true;
-        default:
+        case kUnknown_GrPixelConfig:
+        case kAlpha_8_GrPixelConfig:
+        case kGray_8_GrPixelConfig:
+        case kRGB_565_GrPixelConfig:
+        case kRGBA_4444_GrPixelConfig:
+        case kRGBA_8888_GrPixelConfig:
+        case kBGRA_8888_GrPixelConfig:
+        case kSRGBA_8888_GrPixelConfig:
+        case kSBGRA_8888_GrPixelConfig:
+        case kRGBA_8888_sint_GrPixelConfig:
+        case kRGBA_float_GrPixelConfig:
+        case kRG_float_GrPixelConfig:
+        case kAlpha_half_GrPixelConfig:
+        case kRGBA_half_GrPixelConfig:
             return false;
     }
+    SkFAIL("Invalid pixel config");
+    return false;
 }
 
 /** If the pixel config is compressed, return an equivalent uncompressed format. */
 static inline GrPixelConfig GrMakePixelConfigUncompressed(GrPixelConfig config) {
     switch (config) {
-        case kIndex_8_GrPixelConfig:
         case kETC1_GrPixelConfig:
-        case kASTC_12x12_GrPixelConfig:
             return kRGBA_8888_GrPixelConfig;
-        case kLATC_GrPixelConfig:
-        case kR11_EAC_GrPixelConfig:
-            return kAlpha_8_GrPixelConfig;
-        default:
+        case kUnknown_GrPixelConfig:
+        case kAlpha_8_GrPixelConfig:
+        case kGray_8_GrPixelConfig:
+        case kRGB_565_GrPixelConfig:
+        case kRGBA_4444_GrPixelConfig:
+        case kRGBA_8888_GrPixelConfig:
+        case kBGRA_8888_GrPixelConfig:
+        case kSRGBA_8888_GrPixelConfig:
+        case kSBGRA_8888_GrPixelConfig:
+        case kRGBA_8888_sint_GrPixelConfig:
+        case kRGBA_float_GrPixelConfig:
+        case kRG_float_GrPixelConfig:
+        case kAlpha_half_GrPixelConfig:
+        case kRGBA_half_GrPixelConfig:
             SkASSERT(!GrPixelConfigIsCompressed(config));
             return config;
     }
+    SkFAIL("Invalid pixel config");
+    return config;
 }
 
 // Returns true if the pixel config is 32 bits per pixel
-static inline bool GrPixelConfigIs8888(GrPixelConfig config) {
+static inline bool GrPixelConfigIs8888Unorm(GrPixelConfig config) {
     switch (config) {
         case kRGBA_8888_GrPixelConfig:
         case kBGRA_8888_GrPixelConfig:
         case kSRGBA_8888_GrPixelConfig:
         case kSBGRA_8888_GrPixelConfig:
             return true;
-        default:
+        case kUnknown_GrPixelConfig:
+        case kAlpha_8_GrPixelConfig:
+        case kGray_8_GrPixelConfig:
+        case kRGB_565_GrPixelConfig:
+        case kRGBA_4444_GrPixelConfig:
+        case kRGBA_8888_sint_GrPixelConfig:
+        case kETC1_GrPixelConfig:
+        case kRGBA_float_GrPixelConfig:
+        case kRG_float_GrPixelConfig:
+        case kAlpha_half_GrPixelConfig:
+        case kRGBA_half_GrPixelConfig:
             return false;
     }
+    SkFAIL("Invalid pixel config");
+    return false;
 }
 
 // Returns true if the color (non-alpha) components represent sRGB values. It does NOT indicate that
@@ -339,9 +421,23 @@ static inline bool GrPixelConfigIsSRGB(GrPixelConfig config) {
         case kSRGBA_8888_GrPixelConfig:
         case kSBGRA_8888_GrPixelConfig:
             return true;
-        default:
+        case kUnknown_GrPixelConfig:
+        case kAlpha_8_GrPixelConfig:
+        case kGray_8_GrPixelConfig:
+        case kRGB_565_GrPixelConfig:
+        case kRGBA_4444_GrPixelConfig:
+        case kRGBA_8888_GrPixelConfig:
+        case kBGRA_8888_GrPixelConfig:
+        case kRGBA_8888_sint_GrPixelConfig:
+        case kETC1_GrPixelConfig:
+        case kRGBA_float_GrPixelConfig:
+        case kRG_float_GrPixelConfig:
+        case kAlpha_half_GrPixelConfig:
+        case kRGBA_half_GrPixelConfig:
             return false;
     }
+    SkFAIL("Invalid pixel config");
+    return false;
 }
 
 // Takes a config and returns the equivalent config with the R and B order
@@ -356,15 +452,28 @@ static inline GrPixelConfig GrPixelConfigSwapRAndB(GrPixelConfig config) {
             return kSRGBA_8888_GrPixelConfig;
         case kSRGBA_8888_GrPixelConfig:
             return kSBGRA_8888_GrPixelConfig;
-        default:
+        case kUnknown_GrPixelConfig:
+        case kAlpha_8_GrPixelConfig:
+        case kGray_8_GrPixelConfig:
+        case kRGB_565_GrPixelConfig:
+        case kRGBA_4444_GrPixelConfig:
+        case kRGBA_8888_sint_GrPixelConfig:
+        case kETC1_GrPixelConfig:
+        case kRGBA_float_GrPixelConfig:
+        case kRG_float_GrPixelConfig:
+        case kAlpha_half_GrPixelConfig:
+        case kRGBA_half_GrPixelConfig:
             return kUnknown_GrPixelConfig;
     }
+    SkFAIL("Invalid pixel config");
+    return kUnknown_GrPixelConfig;
 }
 
 static inline size_t GrBytesPerPixel(GrPixelConfig config) {
     SkASSERT(!GrPixelConfigIsCompressed(config));
     switch (config) {
         case kAlpha_8_GrPixelConfig:
+        case kGray_8_GrPixelConfig:
             return 1;
         case kRGB_565_GrPixelConfig:
         case kRGBA_4444_GrPixelConfig:
@@ -374,48 +483,96 @@ static inline size_t GrBytesPerPixel(GrPixelConfig config) {
         case kBGRA_8888_GrPixelConfig:
         case kSRGBA_8888_GrPixelConfig:
         case kSBGRA_8888_GrPixelConfig:
+        case kRGBA_8888_sint_GrPixelConfig:
             return 4;
         case kRGBA_half_GrPixelConfig:
             return 8;
         case kRGBA_float_GrPixelConfig:
             return 16;
-        default:
+        case kRG_float_GrPixelConfig:
+            return 8;
+        case kUnknown_GrPixelConfig:
+        case kETC1_GrPixelConfig:
             return 0;
     }
+    SkFAIL("Invalid pixel config");
+    return 0;
 }
 
 static inline bool GrPixelConfigIsOpaque(GrPixelConfig config) {
     switch (config) {
         case kETC1_GrPixelConfig:
         case kRGB_565_GrPixelConfig:
+        case kGray_8_GrPixelConfig:
             return true;
-        default:
+        case kAlpha_8_GrPixelConfig:
+        case kRGBA_4444_GrPixelConfig:
+        case kAlpha_half_GrPixelConfig:
+        case kRGBA_8888_GrPixelConfig:
+        case kBGRA_8888_GrPixelConfig:
+        case kSRGBA_8888_GrPixelConfig:
+        case kSBGRA_8888_GrPixelConfig:
+        case kRGBA_8888_sint_GrPixelConfig:
+        case kRGBA_half_GrPixelConfig:
+        case kRGBA_float_GrPixelConfig:
+        case kRG_float_GrPixelConfig:
+        case kUnknown_GrPixelConfig:
             return false;
     }
+    SkFAIL("Invalid pixel config");
+    return false;
 }
 
 static inline bool GrPixelConfigIsAlphaOnly(GrPixelConfig config) {
     switch (config) {
-        case kR11_EAC_GrPixelConfig:
-        case kLATC_GrPixelConfig:
-        case kASTC_12x12_GrPixelConfig:
         case kAlpha_8_GrPixelConfig:
         case kAlpha_half_GrPixelConfig:
             return true;
-        default:
+        case kUnknown_GrPixelConfig:
+        case kGray_8_GrPixelConfig:
+        case kRGB_565_GrPixelConfig:
+        case kRGBA_4444_GrPixelConfig:
+        case kRGBA_8888_GrPixelConfig:
+        case kBGRA_8888_GrPixelConfig:
+        case kSRGBA_8888_GrPixelConfig:
+        case kSBGRA_8888_GrPixelConfig:
+        case kRGBA_8888_sint_GrPixelConfig:
+        case kETC1_GrPixelConfig:
+        case kRGBA_float_GrPixelConfig:
+        case kRG_float_GrPixelConfig:
+        case kRGBA_half_GrPixelConfig:
             return false;
     }
+    SkFAIL("Invalid pixel config.");
+    return false;
 }
 
 static inline bool GrPixelConfigIsFloatingPoint(GrPixelConfig config) {
     switch (config) {
         case kRGBA_float_GrPixelConfig:
+        case kRG_float_GrPixelConfig:
         case kAlpha_half_GrPixelConfig:
         case kRGBA_half_GrPixelConfig:
             return true;
-        default:
+        case kUnknown_GrPixelConfig:
+        case kAlpha_8_GrPixelConfig:
+        case kGray_8_GrPixelConfig:
+        case kRGB_565_GrPixelConfig:
+        case kRGBA_4444_GrPixelConfig:
+        case kRGBA_8888_GrPixelConfig:
+        case kBGRA_8888_GrPixelConfig:
+        case kSRGBA_8888_GrPixelConfig:
+        case kSBGRA_8888_GrPixelConfig:
+        case kRGBA_8888_sint_GrPixelConfig:
+        case kETC1_GrPixelConfig:
             return false;
     }
+    SkFAIL("Invalid pixel config");
+    return false;
+}
+
+static inline bool GrPixelConfigIsSint(GrPixelConfig config) {
+    return config == kRGBA_8888_sint_GrPixelConfig;
 }
 
 /**
@@ -519,6 +676,9 @@ enum GrWrapOwnership {
 
     /** Skia will assume ownership of the resource and free it. */
     kAdopt_GrWrapOwnership,
+
+    /** Skia will assume ownership of the resource, free it, and reuse it within the cache. */
+    kAdoptAndCache_GrWrapOwnership,
 };
 
 /**
@@ -637,27 +797,33 @@ enum GrGLBackendState {
 static inline size_t GrCompressedFormatDataSize(GrPixelConfig config,
                                                 int width, int height) {
     SkASSERT(GrPixelConfigIsCompressed(config));
-    static const int kGrIndex8TableSize = 256 * 4; // 4 == sizeof(GrColor)
 
     switch (config) {
-        case kIndex_8_GrPixelConfig:
-            return width * height + kGrIndex8TableSize;
-        case kR11_EAC_GrPixelConfig:
-        case kLATC_GrPixelConfig:
         case kETC1_GrPixelConfig:
             SkASSERT((width & 3) == 0);
             SkASSERT((height & 3) == 0);
             return (width >> 2) * (height >> 2) * 8;
 
-        case kASTC_12x12_GrPixelConfig:
-            SkASSERT((width % 12) == 0);
-            SkASSERT((height % 12) == 0);
-            return (width / 12) * (height / 12) * 16;
-
-        default:
+        case kUnknown_GrPixelConfig:
+        case kAlpha_8_GrPixelConfig:
+        case kGray_8_GrPixelConfig:
+        case kRGB_565_GrPixelConfig:
+        case kRGBA_4444_GrPixelConfig:
+        case kRGBA_8888_GrPixelConfig:
+        case kBGRA_8888_GrPixelConfig:
+        case kSRGBA_8888_GrPixelConfig:
+        case kSBGRA_8888_GrPixelConfig:
+        case kRGBA_8888_sint_GrPixelConfig:
+        case kRGBA_float_GrPixelConfig:
+        case kRG_float_GrPixelConfig:
+        case kAlpha_half_GrPixelConfig:
+        case kRGBA_half_GrPixelConfig:
             SkFAIL("Unknown compressed pixel config");
             return 4 * width * height;
     }
+
+    SkFAIL("Invalid pixel config");
+    return 4 * width * height;
 }
 
 /**

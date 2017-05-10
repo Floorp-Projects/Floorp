@@ -41,7 +41,7 @@ public:
             : fKey(key), fImage(SkRef(image)), fOffset(offset) {}
 
         Key fKey;
-        SkAutoTUnref<SkSpecialImage> fImage;
+        sk_sp<SkSpecialImage> fImage;
         SkIPoint fOffset;
         static const Key& GetKey(const Value& v) {
             return v.fKey;
@@ -52,7 +52,7 @@ public:
         SK_DECLARE_INTERNAL_LLIST_INTERFACE(Value);
     };
 
-    SkSpecialImage* get(const Key& key, SkIPoint* offset) const override {
+    sk_sp<SkSpecialImage> get(const Key& key, SkIPoint* offset) const override {
         SkAutoMutexAcquire mutex(fMutex);
         if (Value* v = fLookup.find(key)) {
             *offset = v->fOffset;

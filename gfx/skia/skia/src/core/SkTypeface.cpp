@@ -73,6 +73,11 @@ protected:
     SkTypeface::LocalizedStrings* onCreateFamilyNameIterator() const override {
         return new EmptyLocalizedStrings;
     }
+    int onGetVariationDesignPosition(SkFontArguments::VariationPosition::Coordinate coordinates[],
+                                     int coordinateCount) const override
+    {
+        return 0;
+    }
     int onGetTableTags(SkFontTableTag tags[]) const override { return 0; }
     size_t onGetTableData(SkFontTableTag, size_t, size_t, void*) const override {
         return 0;
@@ -87,7 +92,7 @@ SkTypeface* SkTypeface::GetDefaultTypeface(Style style) {
 
     SkASSERT((int)style < 4);
     once[style]([style] {
-        SkAutoTUnref<SkFontMgr> fm(SkFontMgr::RefDefault());
+        sk_sp<SkFontMgr> fm(SkFontMgr::RefDefault());
         SkTypeface* t = fm->legacyCreateTypeface(nullptr, SkFontStyle::FromOldStyle(style));
         defaults[style] = t ? t : SkEmptyTypeface::Create();
     });
@@ -129,7 +134,7 @@ sk_sp<SkTypeface> SkTypeface::MakeFromName(const char name[],
             (fontStyle.weight() == SkFontStyle::kBold_Weight ? SkTypeface::kBold :
                                                                SkTypeface::kNormal)));
     }
-    SkAutoTUnref<SkFontMgr> fm(SkFontMgr::RefDefault());
+    sk_sp<SkFontMgr> fm(SkFontMgr::RefDefault());
     return sk_sp<SkTypeface>(fm->legacyCreateTypeface(name, fontStyle));
 }
 
@@ -142,22 +147,22 @@ sk_sp<SkTypeface> SkTypeface::MakeFromTypeface(SkTypeface* family, Style s) {
         return sk_ref_sp(family);
     }
 
-    SkAutoTUnref<SkFontMgr> fm(SkFontMgr::RefDefault());
+    sk_sp<SkFontMgr> fm(SkFontMgr::RefDefault());
     return sk_sp<SkTypeface>(fm->matchFaceStyle(family, SkFontStyle::FromOldStyle(s)));
 }
 
 sk_sp<SkTypeface> SkTypeface::MakeFromStream(SkStreamAsset* stream, int index) {
-    SkAutoTUnref<SkFontMgr> fm(SkFontMgr::RefDefault());
+    sk_sp<SkFontMgr> fm(SkFontMgr::RefDefault());
     return sk_sp<SkTypeface>(fm->createFromStream(stream, index));
 }
 
 sk_sp<SkTypeface> SkTypeface::MakeFromFontData(std::unique_ptr<SkFontData> data) {
-    SkAutoTUnref<SkFontMgr> fm(SkFontMgr::RefDefault());
+    sk_sp<SkFontMgr> fm(SkFontMgr::RefDefault());
     return sk_sp<SkTypeface>(fm->createFromFontData(std::move(data)));
 }
 
 sk_sp<SkTypeface> SkTypeface::MakeFromFile(const char path[], int index) {
-    SkAutoTUnref<SkFontMgr> fm(SkFontMgr::RefDefault());
+    sk_sp<SkFontMgr> fm(SkFontMgr::RefDefault());
     return sk_sp<SkTypeface>(fm->createFromFile(path, index));
 }
 
@@ -201,6 +206,12 @@ sk_sp<SkTypeface> SkTypeface::MakeDeserialize(SkStream* stream) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+
+int SkTypeface::getVariationDesignPosition(
+        SkFontArguments::VariationPosition::Coordinate coordinates[], int coordinateCount) const
+{
+    return this->onGetVariationDesignPosition(coordinates, coordinateCount);
+}
 
 int SkTypeface::countTables() const {
     return this->onGetTableTags(nullptr);
@@ -346,13 +357,14 @@ bool SkTypeface::onComputeBounds(SkRect* bounds) const {
     desc->addEntry(kRec_SkDescriptorTag, sizeof(rec), &rec);
 
     SkScalerContextEffects noeffects;
-    SkAutoTDelete<SkScalerContext> ctx(this->createScalerContext(noeffects, desc, true));
-    if (ctx.get()) {
-        SkPaint::FontMetrics fm;
-        ctx->getFontMetrics(&fm);
-        bounds->set(fm.fXMin * invTextSize, fm.fTop * invTextSize,
-                    fm.fXMax * invTextSize, fm.fBottom * invTextSize);
-        return true;
+    std::unique_ptr<SkScalerContext> ctx = this->createScalerContext(noeffects, desc, true);
+    if (!ctx) {
+        return false;
     }
-    return false;
+
+    SkPaint::FontMetrics fm;
+    ctx->getFontMetrics(&fm);
+    bounds->set(fm.fXMin * invTextSize, fm.fTop * invTextSize,
+                fm.fXMax * invTextSize, fm.fBottom * invTextSize);
+    return true;
 }

@@ -4,7 +4,7 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
- 
+
 #ifndef SKSL_RETURNSTATEMENT
 #define SKSL_RETURNSTATEMENT
 
@@ -21,18 +21,18 @@ struct ReturnStatement : public Statement {
     : INHERITED(position, kReturn_Kind) {}
 
     ReturnStatement(std::unique_ptr<Expression> expression)
-    : INHERITED(expression->fPosition, kReturn_Kind) 
+    : INHERITED(expression->fPosition, kReturn_Kind)
     , fExpression(std::move(expression)) {}
 
-    std::string description() const override {
+    String description() const override {
         if (fExpression) {
             return "return " + fExpression->description() + ";";
         } else {
-            return "return;";
+            return String("return;");
         }
     }
 
-    const std::unique_ptr<Expression> fExpression;
+    std::unique_ptr<Expression> fExpression;
 
     typedef Statement INHERITED;
 };

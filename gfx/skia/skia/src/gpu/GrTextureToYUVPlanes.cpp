@@ -10,29 +10,34 @@
 #include "effects/GrYUVEffect.h"
 #include "GrClip.h"
 #include "GrContext.h"
-#include "GrDrawContext.h"
 #include "GrPaint.h"
-#include "GrTextureProvider.h"
+#include "GrRenderTargetContext.h"
+#include "GrResourceProvider.h"
 
 namespace {
     using MakeFPProc = sk_sp<GrFragmentProcessor> (*)(sk_sp<GrFragmentProcessor>,
                                                       SkYUVColorSpace colorSpace);
 };
 
-static bool convert_texture(GrTexture* src, GrDrawContext* dst, int dstW, int dstH,
-                            SkYUVColorSpace colorSpace, MakeFPProc proc) {
+static bool convert_proxy(sk_sp<GrTextureProxy> src,
+                          GrRenderTargetContext* dst, int dstW, int dstH,
+                          SkYUVColorSpace colorSpace, MakeFPProc proc) {
 
-    SkScalar xScale = SkIntToScalar(src->width()) / dstW / src->width();
-    SkScalar yScale = SkIntToScalar(src->height()) / dstH / src->height();
-    GrTextureParams::FilterMode filter;
+    SkScalar xScale = SkIntToScalar(src->width()) / dstW;
+    SkScalar yScale = SkIntToScalar(src->height()) / dstH;
+    GrSamplerParams::FilterMode filter;
     if (dstW == src->width() && dstW == src->height()) {
-        filter = GrTextureParams::kNone_FilterMode;
+        filter = GrSamplerParams::kNone_FilterMode;
     } else {
-        filter = GrTextureParams::kBilerp_FilterMode;
+        filter = GrSamplerParams::kBilerp_FilterMode;
     }
 
-    sk_sp<GrFragmentProcessor> fp(
-            GrSimpleTextureEffect::Make(src, nullptr, SkMatrix::MakeScale(xScale, yScale), filter));
+    GrResourceProvider* resourceProvider = dst->resourceProvider();
+
+    sk_sp<GrFragmentProcessor> fp(GrSimpleTextureEffect::Make(resourceProvider, std::move(src),
+                                                              nullptr,
+                                                              SkMatrix::MakeScale(xScale, yScale),
+                                                              filter));
     if (!fp) {
         return false;
     }
@@ -43,113 +48,124 @@ static bool convert_texture(GrTexture* src, GrDrawContext* dst, int dstW, int ds
     GrPaint paint;
     paint.setPorterDuffXPFactory(SkBlendMode::kSrc);
     paint.addColorFragmentProcessor(std::move(fp));
-    dst->drawRect(GrNoClip(), paint, SkMatrix::I(), SkRect::MakeIWH(dstW, dstH));
+    dst->drawRect(GrNoClip(), std::move(paint), GrAA::kNo, SkMatrix::I(),
+                  SkRect::MakeIWH(dstW, dstH));
     return true;
 }
 
-bool GrTextureToYUVPlanes(GrTexture* texture, const SkISize sizes[3], void* const planes[3],
+bool GrTextureToYUVPlanes(GrContext* context, sk_sp<GrTextureProxy> proxy,
+                          const SkISize sizes[3], void* const planes[3],
                           const size_t rowBytes[3], SkYUVColorSpace colorSpace) {
-    if (GrContext* context = texture->getContext()) {
+    if (!context) {
+        return false;
+    }
+
+    {
         // Depending on the relative sizes of the y, u, and v planes we may do 1 to 3 draws/
         // readbacks.
-        sk_sp<GrDrawContext> yuvDrawContext;
-        sk_sp<GrDrawContext> yDrawContext;
-        sk_sp<GrDrawContext> uvDrawContext;
-        sk_sp<GrDrawContext> uDrawContext;
-        sk_sp<GrDrawContext> vDrawContext;
+        sk_sp<GrRenderTargetContext> yuvRenderTargetContext;
+        sk_sp<GrRenderTargetContext> yRenderTargetContext;
+        sk_sp<GrRenderTargetContext> uvRenderTargetContext;
+        sk_sp<GrRenderTargetContext> uRenderTargetContext;
+        sk_sp<GrRenderTargetContext> vRenderTargetContext;
 
         // We issue draw(s) to convert from RGBA to Y, U, and V. All three planes may have different
         // sizes however we optimize for two other cases - all planes are the same (1 draw to YUV),
         // and U and V are the same but Y differs (2 draws, one for Y, one for UV).
         if (sizes[0] == sizes[1] && sizes[1] == sizes[2]) {
-            yuvDrawContext = context->makeDrawContextWithFallback(SkBackingFit::kApprox,
-                                                                  sizes[0].fWidth,
-                                                                  sizes[0].fHeight,
-                                                                  kRGBA_8888_GrPixelConfig,
-                                                                  nullptr);
-            if (!yuvDrawContext) {
+            yuvRenderTargetContext = context->makeRenderTargetContextWithFallback(
+                                                                           SkBackingFit::kApprox,
+                                                                           sizes[0].fWidth,
+                                                                           sizes[0].fHeight,
+                                                                           kRGBA_8888_GrPixelConfig,
+                                                                           nullptr);
+            if (!yuvRenderTargetContext) {
                 return false;
             }
         } else {
-            yDrawContext = context->makeDrawContextWithFallback(SkBackingFit::kApprox,
-                                                                sizes[0].fWidth,
-                                                                sizes[0].fHeight,
-                                                                kAlpha_8_GrPixelConfig,
-                                                                nullptr);
-            if (!yDrawContext) {
+            yRenderTargetContext = context->makeRenderTargetContextWithFallback(
+                                                                             SkBackingFit::kApprox,
+                                                                             sizes[0].fWidth,
+                                                                             sizes[0].fHeight,
+                                                                             kAlpha_8_GrPixelConfig,
+                                                                             nullptr);
+            if (!yRenderTargetContext) {
                 return false;
             }
             if (sizes[1] == sizes[2]) {
                 // TODO: Add support for GL_RG when available.
-                uvDrawContext = context->makeDrawContextWithFallback(SkBackingFit::kApprox,
-                                                                     sizes[1].fWidth,
-                                                                     sizes[1].fHeight,
-                                                                     kRGBA_8888_GrPixelConfig,
-                                                                     nullptr);
-                if (!uvDrawContext) {
+                uvRenderTargetContext = context->makeRenderTargetContextWithFallback(
+                                                                           SkBackingFit::kApprox,
+                                                                           sizes[1].fWidth,
+                                                                           sizes[1].fHeight,
+                                                                           kRGBA_8888_GrPixelConfig,
+                                                                           nullptr);
+                if (!uvRenderTargetContext) {
                     return false;
                 }
             } else {
-                uDrawContext = context->makeDrawContextWithFallback(SkBackingFit::kApprox,
-                                                                    sizes[1].fWidth,
-                                                                    sizes[1].fHeight,
-                                                                    kAlpha_8_GrPixelConfig,
-                                                                    nullptr);
-                vDrawContext = context->makeDrawContextWithFallback(SkBackingFit::kApprox,
-                                                                    sizes[2].fWidth,
-                                                                    sizes[2].fHeight,
-                                                                    kAlpha_8_GrPixelConfig,
-                                                                    nullptr);
-                if (!uDrawContext || !vDrawContext) {
+                uRenderTargetContext = context->makeRenderTargetContextWithFallback(
+                                                                             SkBackingFit::kApprox,
+                                                                             sizes[1].fWidth,
+                                                                             sizes[1].fHeight,
+                                                                             kAlpha_8_GrPixelConfig,
+                                                                             nullptr);
+                vRenderTargetContext = context->makeRenderTargetContextWithFallback(
+                                                                             SkBackingFit::kApprox,
+                                                                             sizes[2].fWidth,
+                                                                             sizes[2].fHeight,
+                                                                             kAlpha_8_GrPixelConfig,
+                                                                             nullptr);
+                if (!uRenderTargetContext || !vRenderTargetContext) {
                     return false;
                 }
             }
         }
 
         // Do all the draws before any readback.
-        if (yuvDrawContext) {
-            if (!convert_texture(texture, yuvDrawContext.get(),
-                                 sizes[0].fWidth, sizes[0].fHeight,
-                                 colorSpace, GrYUVEffect::MakeRGBToYUV)) {
+        if (yuvRenderTargetContext) {
+            if (!convert_proxy(std::move(proxy), yuvRenderTargetContext.get(),
+                               sizes[0].fWidth, sizes[0].fHeight,
+                               colorSpace, GrYUVEffect::MakeRGBToYUV)) {
                 return false;
             }
         } else {
-            SkASSERT(yDrawContext);
-            if (!convert_texture(texture, yDrawContext.get(),
-                                 sizes[0].fWidth, sizes[0].fHeight,
-                                 colorSpace, GrYUVEffect::MakeRGBToY)) {
+            SkASSERT(yRenderTargetContext);
+            if (!convert_proxy(proxy, yRenderTargetContext.get(),
+                               sizes[0].fWidth, sizes[0].fHeight,
+                               colorSpace, GrYUVEffect::MakeRGBToY)) {
                 return false;
             }
-            if (uvDrawContext) {
-                if (!convert_texture(texture, uvDrawContext.get(),
-                                     sizes[1].fWidth, sizes[1].fHeight,
-                                     colorSpace,  GrYUVEffect::MakeRGBToUV)) {
+            if (uvRenderTargetContext) {
+                if (!convert_proxy(std::move(proxy), uvRenderTargetContext.get(),
+                                   sizes[1].fWidth, sizes[1].fHeight,
+                                   colorSpace,  GrYUVEffect::MakeRGBToUV)) {
                     return false;
                 }
             } else {
-                SkASSERT(uDrawContext && vDrawContext);
-                if (!convert_texture(texture, uDrawContext.get(),
-                                     sizes[1].fWidth, sizes[1].fHeight,
-                                     colorSpace, GrYUVEffect::MakeRGBToU)) {
+                SkASSERT(uRenderTargetContext && vRenderTargetContext);
+                if (!convert_proxy(proxy, uRenderTargetContext.get(),
+                                   sizes[1].fWidth, sizes[1].fHeight,
+                                   colorSpace, GrYUVEffect::MakeRGBToU)) {
                     return false;
                 }
-                if (!convert_texture(texture, vDrawContext.get(),
-                                     sizes[2].fWidth, sizes[2].fHeight,
-                                     colorSpace, GrYUVEffect::MakeRGBToV)) {
+                if (!convert_proxy(std::move(proxy), vRenderTargetContext.get(),
+                                   sizes[2].fWidth, sizes[2].fHeight,
+                                   colorSpace, GrYUVEffect::MakeRGBToV)) {
                     return false;
                 }
             }
         }
 
-        if (yuvDrawContext) {
+        if (yuvRenderTargetContext) {
             SkASSERT(sizes[0] == sizes[1] && sizes[1] == sizes[2]);
-            sk_sp<GrTexture> yuvTex(yuvDrawContext->asTexture());
-            SkASSERT(yuvTex);
             SkISize yuvSize = sizes[0];
             // We have no kRGB_888 pixel format, so readback rgba and then copy three channels.
             SkAutoSTMalloc<128 * 128, uint32_t> tempYUV(yuvSize.fWidth * yuvSize.fHeight);
-            if (!yuvTex->readPixels(0, 0, yuvSize.fWidth, yuvSize.fHeight,
-                                    kRGBA_8888_GrPixelConfig, tempYUV.get(), 0)) {
+
+            const SkImageInfo ii = SkImageInfo::Make(yuvSize.fWidth, yuvSize.fHeight,
+                                                     kRGBA_8888_SkColorType, kOpaque_SkAlphaType);
+            if (!yuvRenderTargetContext->readPixels(ii, tempYUV.get(), 0, 0, 0)) {
                 return false;
             }
             size_t yRowBytes = rowBytes[0] ? rowBytes[0] : yuvSize.fWidth;
@@ -175,22 +191,23 @@ bool GrTextureToYUVPlanes(GrTexture* texture, const SkISize sizes[3], void* cons
             }
             return true;
         } else {
-            SkASSERT(yDrawContext);
-            sk_sp<GrTexture> yTex(yDrawContext->asTexture());
-            SkASSERT(yTex);
-            if (!yTex->readPixels(0, 0, sizes[0].fWidth, sizes[0].fHeight,
-                                  kAlpha_8_GrPixelConfig, planes[0], rowBytes[0])) {
+            SkASSERT(yRenderTargetContext);
+
+            SkImageInfo ii = SkImageInfo::MakeA8(sizes[0].fWidth, sizes[0].fHeight);
+            if (!yRenderTargetContext->readPixels(ii, planes[0], rowBytes[0], 0, 0)) {
                 return false;
             }
-            if (uvDrawContext) {
+
+            if (uvRenderTargetContext) {
                 SkASSERT(sizes[1].fWidth == sizes[2].fWidth);
-                sk_sp<GrTexture> uvTex(uvDrawContext->asTexture());
-                SkASSERT(uvTex);
                 SkISize uvSize = sizes[1];
                 // We have no kRG_88 pixel format, so readback rgba and then copy two channels.
                 SkAutoSTMalloc<128 * 128, uint32_t> tempUV(uvSize.fWidth * uvSize.fHeight);
-                if (!uvTex->readPixels(0, 0, uvSize.fWidth, uvSize.fHeight,
-                                       kRGBA_8888_GrPixelConfig, tempUV.get(), 0)) {
+
+                ii = SkImageInfo::Make(uvSize.fWidth, uvSize.fHeight,
+                                       kRGBA_8888_SkColorType, kOpaque_SkAlphaType);
+
+                if (!uvRenderTargetContext->readPixels(ii, tempUV.get(), 0, 0, 0)) {
                     return false;
                 }
 
@@ -212,19 +229,18 @@ bool GrTextureToYUVPlanes(GrTexture* texture, const SkISize sizes[3], void* cons
                 }
                 return true;
             } else {
-                SkASSERT(uDrawContext && vDrawContext);
-                sk_sp<GrTexture> tex(uDrawContext->asTexture());
-                SkASSERT(tex);
-                if (!tex->readPixels(0, 0, sizes[1].fWidth, sizes[1].fHeight,
-                                     kAlpha_8_GrPixelConfig, planes[1], rowBytes[1])) {
+                SkASSERT(uRenderTargetContext && vRenderTargetContext);
+
+                ii = SkImageInfo::MakeA8(sizes[1].fWidth, sizes[1].fHeight);
+                if (!uRenderTargetContext->readPixels(ii, planes[1], rowBytes[1], 0, 0)) {
                     return false;
                 }
-                tex = vDrawContext->asTexture();
-                SkASSERT(tex);
-                if (!tex->readPixels(0, 0, sizes[2].fWidth, sizes[2].fHeight,
-                                     kAlpha_8_GrPixelConfig, planes[2], rowBytes[2])) {
+
+                ii = SkImageInfo::MakeA8(sizes[2].fWidth, sizes[2].fHeight);
+                if (!vRenderTargetContext->readPixels(ii, planes[2], rowBytes[2], 0, 0)) {
                     return false;
                 }
+
                 return true;
             }
         }

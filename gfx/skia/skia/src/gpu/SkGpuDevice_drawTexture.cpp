@@ -9,11 +9,11 @@
 
 #include "GrBlurUtils.h"
 #include "GrCaps.h"
-#include "GrDrawContext.h"
+#include "GrRenderTargetContext.h"
 #include "GrStyle.h"
-#include "GrTextureParamsAdjuster.h"
+#include "GrTextureAdjuster.h"
 #include "SkDraw.h"
-#include "SkGrPriv.h"
+#include "SkGr.h"
 #include "SkMaskFilter.h"
 #include "effects/GrBicubicEffect.h"
 #include "effects/GrSimpleTextureEffect.h"
@@ -152,10 +152,10 @@ void SkGpuDevice::drawTextureProducerImpl(GrTextureProducer* producer,
                                           const SkMatrix& srcToDstMatrix,
                                           const GrClip& clip,
                                           const SkPaint& paint) {
-    // Specifying the texture coords as local coordinates is an attempt to enable more batching
-    // by not baking anything about the srcRect, dstRect, or viewMatrix, into the texture FP. In
-    // the future this should be an opaque optimization enabled by the combination of batch/GP and
-    // FP.
+    // Specifying the texture coords as local coordinates is an attempt to enable more GrDrawOp
+    // combining by not baking anything about the srcRect, dstRect, or viewMatrix, into the texture
+    // FP. In the future this should be an opaque optimization enabled by the combination of
+    // GrDrawOp/GP and FP.
     const SkMaskFilter* mf = paint.getMaskFilter();
     // The shader expects proper local coords, so we can't replace local coords with texture coords
     // if the shader will be used. If we have a mask filter we will change the underlying geometry
@@ -163,12 +163,12 @@ void SkGpuDevice::drawTextureProducerImpl(GrTextureProducer* producer,
     bool canUseTextureCoordsAsLocalCoords = !use_shader(producer->isAlphaOnly(), paint) && !mf;
 
     bool doBicubic;
-    GrTextureParams::FilterMode fm =
+    GrSamplerParams::FilterMode fm =
         GrSkFilterQualityToGrFilterMode(paint.getFilterQuality(), viewMatrix, srcToDstMatrix,
                                         &doBicubic);
-    const GrTextureParams::FilterMode* filterMode = doBicubic ? nullptr : &fm;
+    const GrSamplerParams::FilterMode* filterMode = doBicubic ? nullptr : &fm;
 
-    GrTextureAdjuster::FilterConstraint constraintMode;
+    GrTextureProducer::FilterConstraint constraintMode;
     if (SkCanvas::kFast_SrcRectConstraint == constraint) {
         constraintMode = GrTextureAdjuster::kNo_FilterConstraint;
     } else {
@@ -181,12 +181,12 @@ void SkGpuDevice::drawTextureProducerImpl(GrTextureProducer* producer,
     bool coordsAllInsideSrcRect = !paint.isAntiAlias() && !mf;
 
     // Check for optimization to drop the src rect constraint when on bilerp.
-    if (filterMode && GrTextureParams::kBilerp_FilterMode == *filterMode &&
+    if (filterMode && GrSamplerParams::kBilerp_FilterMode == *filterMode &&
         GrTextureAdjuster::kYes_FilterConstraint == constraintMode && coordsAllInsideSrcRect) {
         SkMatrix combinedMatrix;
         combinedMatrix.setConcat(viewMatrix, srcToDstMatrix);
         if (can_ignore_bilerp_constraint(*producer, clippedSrcRect, combinedMatrix,
-                                         fDrawContext->isUnifiedMultisampled())) {
+                                         fRenderTargetContext->isUnifiedMultisampled())) {
             constraintMode = GrTextureAdjuster::kNo_FilterConstraint;
         }
     }
@@ -203,24 +203,25 @@ void SkGpuDevice::drawTextureProducerImpl(GrTextureProducer* producer,
     }
     sk_sp<GrFragmentProcessor> fp(producer->createFragmentProcessor(
         *textureMatrix, clippedSrcRect, constraintMode, coordsAllInsideSrcRect, filterMode,
-        fDrawContext->getColorSpace(), fDrawContext->sourceGammaTreatment()));
+        fRenderTargetContext->getColorSpace()));
     if (!fp) {
         return;
     }
 
     GrPaint grPaint;
-    if (!SkPaintToGrPaintWithTexture(fContext, fDrawContext.get(), paint, viewMatrix, fp,
-                                     producer->isAlphaOnly(), &grPaint)) {
+    if (!SkPaintToGrPaintWithTexture(fContext.get(), fRenderTargetContext.get(), paint, viewMatrix,
+                                     fp, producer->isAlphaOnly(), &grPaint)) {
         return;
     }
-
+    GrAA aa = GrBoolToAA(paint.isAntiAlias());
     if (canUseTextureCoordsAsLocalCoords) {
-        fDrawContext->fillRectToRect(clip, grPaint, viewMatrix, clippedDstRect, clippedSrcRect);
+        fRenderTargetContext->fillRectToRect(clip, std::move(grPaint), aa, viewMatrix,
+                                             clippedDstRect, clippedSrcRect);
         return;
     }
 
     if (!mf) {
-        fDrawContext->drawRect(clip, grPaint, viewMatrix, clippedDstRect);
+        fRenderTargetContext->drawRect(clip, std::move(grPaint), aa, viewMatrix, clippedDstRect);
         return;
     }
 
@@ -230,14 +231,14 @@ void SkGpuDevice::drawTextureProducerImpl(GrTextureProducer* producer,
         viewMatrix.mapRectScaleTranslate(&devClippedDstRect, clippedDstRect);
 
         SkStrokeRec rec(SkStrokeRec::kFill_InitStyle);
-        if (mf->directFilterRRectMaskGPU(fContext,
-                                          fDrawContext.get(),
-                                          &grPaint,
-                                          clip,
-                                          viewMatrix,
-                                          rec,
-                                          SkRRect::MakeRect(clippedDstRect),
-                                          SkRRect::MakeRect(devClippedDstRect))) {
+        if (mf->directFilterRRectMaskGPU(fContext.get(),
+                                         fRenderTargetContext.get(),
+                                         std::move(grPaint),
+                                         clip,
+                                         viewMatrix,
+                                         rec,
+                                         SkRRect::MakeRect(clippedDstRect),
+                                         SkRRect::MakeRect(devClippedDstRect))) {
             return;
         }
     }
@@ -245,7 +246,7 @@ void SkGpuDevice::drawTextureProducerImpl(GrTextureProducer* producer,
     SkPath rectPath;
     rectPath.addRect(clippedDstRect);
     rectPath.setIsVolatile(true);
-    GrBlurUtils::drawPathWithMaskFilter(this->context(), fDrawContext.get(), fClip,
-                                        rectPath, &grPaint, viewMatrix, mf, GrStyle::SimpleFill(),
-                                        true);
+    GrBlurUtils::drawPathWithMaskFilter(this->context(), fRenderTargetContext.get(), this->clip(),
+                                        rectPath, std::move(grPaint), aa, viewMatrix, mf,
+                                        GrStyle::SimpleFill(), true);
 }

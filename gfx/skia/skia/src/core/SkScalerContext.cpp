@@ -5,23 +5,25 @@
  * found in the LICENSE file.
  */
 
-
 #include "SkScalerContext.h"
+
+#include "SkAutoMalloc.h"
 #include "SkAutoPixmapStorage.h"
 #include "SkColorPriv.h"
 #include "SkDescriptor.h"
 #include "SkDraw.h"
 #include "SkGlyph.h"
+#include "SkMakeUnique.h"
 #include "SkMaskFilter.h"
 #include "SkMaskGamma.h"
 #include "SkMatrix22.h"
-#include "SkReadBuffer.h"
-#include "SkWriteBuffer.h"
 #include "SkPathEffect.h"
-#include "SkRasterizer.h"
 #include "SkRasterClip.h"
+#include "SkRasterizer.h"
+#include "SkReadBuffer.h"
 #include "SkStroke.h"
 #include "SkStrokeRec.h"
+#include "SkWriteBuffer.h"
 
 #define ComputeBWRowBytes(width)        (((unsigned)(width) + 7) >> 3)
 
@@ -62,11 +64,11 @@ void SkGlyph::zeroMetrics() {
     #define DUMP_RECx
 #endif
 
-SkScalerContext::SkScalerContext(SkTypeface* typeface, const SkScalerContextEffects& effects,
+SkScalerContext::SkScalerContext(sk_sp<SkTypeface> typeface, const SkScalerContextEffects& effects,
                                  const SkDescriptor* desc)
     : fRec(*static_cast<const Rec*>(desc->findEntry(kRec_SkDescriptorTag, nullptr)))
 
-    , fTypeface(sk_ref_sp(typeface))
+    , fTypeface(std::move(typeface))
     , fPathEffect(sk_ref_sp(effects.fPathEffect))
     , fMaskFilter(sk_ref_sp(effects.fMaskFilter))
     , fRasterizer(sk_ref_sp(effects.fRasterizer))
@@ -130,7 +132,7 @@ void SkScalerContext::getMetrics(SkGlyph* glyph) {
         SkPath      devPath, fillPath;
         SkMatrix    fillToDevMatrix;
 
-        this->internalGetPath(*glyph, &fillPath, &devPath, &fillToDevMatrix);
+        this->internalGetPath(glyph->getPackedID(), &fillPath, &devPath, &fillToDevMatrix);
 
         if (fRasterizer) {
             SkMask  mask;
@@ -461,7 +463,7 @@ void SkScalerContext::getImage(const SkGlyph& origGlyph) {
              SkMask::kARGB32_Format != origGlyph.fMaskFormat);
 
     if (fMaskFilter) {   // restore the prefilter bounds
-        tmpGlyph.initGlyphIdFrom(origGlyph);
+        tmpGlyph.initWithGlyphID(origGlyph.getPackedID());
 
         // need the original bounds, sans our maskfilter
         SkMaskFilter* mf = fMaskFilter.release();   // temp disable
@@ -486,7 +488,7 @@ void SkScalerContext::getImage(const SkGlyph& origGlyph) {
         SkMatrix    fillToDevMatrix;
         SkMask      mask;
 
-        this->internalGetPath(*glyph, &fillPath, &devPath, &fillToDevMatrix);
+        this->internalGetPath(glyph->getPackedID(), &fillPath, &devPath, &fillToDevMatrix);
         glyph->toMask(&mask);
 
         if (fRasterizer) {
@@ -563,11 +565,12 @@ void SkScalerContext::getImage(const SkGlyph& origGlyph) {
     }
 }
 
-void SkScalerContext::getPath(const SkGlyph& glyph, SkPath* path) {
-    this->internalGetPath(glyph, nullptr, path, nullptr);
+void SkScalerContext::getPath(SkPackedGlyphID glyphID, SkPath* path) {
+    this->internalGetPath(glyphID, nullptr, path, nullptr);
 }
 
 void SkScalerContext::getFontMetrics(SkPaint::FontMetrics* fm) {
+    SkASSERT(fm);
     this->generateFontMetrics(fm);
 }
 
@@ -577,14 +580,14 @@ SkUnichar SkScalerContext::generateGlyphToChar(uint16_t glyph) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void SkScalerContext::internalGetPath(const SkGlyph& glyph, SkPath* fillPath,
-                                  SkPath* devPath, SkMatrix* fillToDevMatrix) {
+void SkScalerContext::internalGetPath(SkPackedGlyphID glyphID, SkPath* fillPath,
+                                      SkPath* devPath, SkMatrix* fillToDevMatrix) {
     SkPath  path;
-    generatePath(glyph, &path);
+    generatePath(glyphID.code(), &path);
 
     if (fRec.fFlags & SkScalerContext::kSubpixelPositioning_Flag) {
-        SkFixed dx = glyph.getSubXFixed();
-        SkFixed dy = glyph.getSubYFixed();
+        SkFixed dx = glyphID.getSubXFixed();
+        SkFixed dy = glyphID.getSubYFixed();
         if (dx | dy) {
             path.offset(SkFixedToScalar(dx), SkFixedToScalar(dy));
         }
@@ -831,9 +834,9 @@ SkAxisAlignment SkScalerContext::computeAxisAlignmentForHText() {
 
 class SkScalerContext_Empty : public SkScalerContext {
 public:
-    SkScalerContext_Empty(SkTypeface* typeface, const SkScalerContextEffects& effects,
+    SkScalerContext_Empty(sk_sp<SkTypeface> typeface, const SkScalerContextEffects& effects,
                           const SkDescriptor* desc)
-        : SkScalerContext(typeface, effects, desc) {}
+        : SkScalerContext(std::move(typeface), effects, desc) {}
 
 protected:
     unsigned generateGlyphCount() override {
@@ -849,7 +852,7 @@ protected:
         glyph->zeroMetrics();
     }
     void generateImage(const SkGlyph& glyph) override {}
-    void generatePath(const SkGlyph& glyph, SkPath* path) override {}
+    void generatePath(SkGlyphID glyph, SkPath* path) override {}
     void generateFontMetrics(SkPaint::FontMetrics* metrics) override {
         if (metrics) {
             sk_bzero(metrics, sizeof(*metrics));
@@ -859,13 +862,13 @@ protected:
 
 extern SkScalerContext* SkCreateColorScalerContext(const SkDescriptor* desc);
 
-SkScalerContext* SkTypeface::createScalerContext(const SkScalerContextEffects& effects,
-                                                 const SkDescriptor* desc,
-                                                 bool allowFailure) const {
-    SkScalerContext* c = this->onCreateScalerContext(effects, desc);
-
+std::unique_ptr<SkScalerContext> SkTypeface::createScalerContext(
+    const SkScalerContextEffects& effects, const SkDescriptor* desc, bool allowFailure) const
+{
+    std::unique_ptr<SkScalerContext> c(this->onCreateScalerContext(effects, desc));
     if (!c && !allowFailure) {
-        c = new SkScalerContext_Empty(const_cast<SkTypeface*>(this), effects, desc);
+        c = skstd::make_unique<SkScalerContext_Empty>(sk_ref_sp(const_cast<SkTypeface*>(this)),
+                                                      effects, desc);
     }
     return c;
 }

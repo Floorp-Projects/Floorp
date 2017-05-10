@@ -6,8 +6,8 @@
  */
 
 #include "SkFontMgr.h"
-#include "SkFontMgr_custom.h"
+#include "SkFontMgr_empty.h"
 
-SkFontMgr* SkFontMgr::Factory() {
+sk_sp<SkFontMgr> SkFontMgr::Factory() {
     return SkFontMgr_New_Custom_Empty();
 }

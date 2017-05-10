@@ -19,13 +19,6 @@ public:
     SK_TO_STRING_OVERRIDE()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkComposeImageFilter)
 
-#ifdef SK_SUPPORT_LEGACY_IMAGEFILTER_PTR
-    static SkImageFilter* Create(SkImageFilter* outer, SkImageFilter* inner) {
-        return Make(sk_ref_sp<SkImageFilter>(outer),
-                    sk_ref_sp<SkImageFilter>(inner)).release();
-    }
-#endif
-
 protected:
     explicit SkComposeImageFilter(sk_sp<SkImageFilter> inputs[2]) : INHERITED(inputs, 2, nullptr) {
         SkASSERT(inputs[0].get());
@@ -33,6 +26,7 @@ protected:
     }
     sk_sp<SkSpecialImage> onFilterImage(SkSpecialImage* source, const Context&,
                                         SkIPoint* offset) const override;
+    sk_sp<SkImageFilter> onMakeColorSpace(SkColorSpaceXformer*) const override;
     SkIRect onFilterBounds(const SkIRect&, const SkMatrix&, MapDirection) const override;
     bool onCanHandleComplexCTM() const override { return true; }
 

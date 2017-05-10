@@ -16,7 +16,7 @@ class SkPaint;
 
 class SK_API SkLayerRasterizer : public SkRasterizer {
 public:
-    virtual ~SkLayerRasterizer();
+    ~SkLayerRasterizer() override;
 
     class SK_API Builder {
     public:
@@ -58,15 +58,6 @@ public:
           */
         sk_sp<SkLayerRasterizer> snapshot() const;
     
-#ifdef SK_SUPPORT_LEGACY_MINOR_EFFECT_PTR
-        SkLayerRasterizer* detachRasterizer() {
-            return this->detach().release();
-        }
-        SkLayerRasterizer* snapshotRasterizer() const {
-            return this->snapshot().release();
-        }
-#endif
-
     private:
         SkDeque* fLayers;
     };

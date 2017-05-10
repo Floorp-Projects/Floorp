@@ -21,8 +21,8 @@ public:
     static GrVkTexture* CreateNewTexture(GrVkGpu*, SkBudgeted budgeted, const GrSurfaceDesc&,
                                          const GrVkImage::ImageDesc&);
 
-    static GrVkTexture* CreateWrappedTexture(GrVkGpu*, const GrSurfaceDesc&,
-                                             GrWrapOwnership, const GrVkImageInfo*);
+    static sk_sp<GrVkTexture> MakeWrappedTexture(GrVkGpu*, const GrSurfaceDesc&,
+                                                 GrWrapOwnership, const GrVkImageInfo*);
 
     ~GrVkTexture() override;
 
@@ -42,6 +42,7 @@ protected:
 
     void onAbandon() override;
     void onRelease() override;
+    std::unique_ptr<GrExternalTextureData> detachBackendTexture() override;
 
 private:
     enum Wrapped { kWrapped };

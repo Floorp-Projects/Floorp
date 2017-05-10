@@ -29,37 +29,6 @@ const GrGLInterface* GrGLInterfaceAddTestDebugMarker(const GrGLInterface* interf
     return newInterface;
 }
 
-const GrGLInterface* GrGLInterfaceRemoveNVPR(const GrGLInterface* interface) {
-    GrGLInterface* newInterface = GrGLInterface::NewClone(interface);
-
-    newInterface->fExtensions.remove("GL_NV_path_rendering");
-    newInterface->fExtensions.remove("GL_CHROMIUM_path_rendering");
-    newInterface->fFunctions.fMatrixLoadf = nullptr;
-    newInterface->fFunctions.fMatrixLoadIdentity = nullptr;
-    newInterface->fFunctions.fPathCommands = nullptr;
-    newInterface->fFunctions.fPathParameteri = nullptr;
-    newInterface->fFunctions.fPathParameterf = nullptr;
-    newInterface->fFunctions.fGenPaths = nullptr;
-    newInterface->fFunctions.fDeletePaths = nullptr;
-    newInterface->fFunctions.fIsPath = nullptr;
-    newInterface->fFunctions.fPathStencilFunc = nullptr;
-    newInterface->fFunctions.fStencilFillPath = nullptr;
-    newInterface->fFunctions.fStencilStrokePath = nullptr;
-    newInterface->fFunctions.fStencilFillPathInstanced = nullptr;
-    newInterface->fFunctions.fStencilStrokePathInstanced = nullptr;
-    newInterface->fFunctions.fCoverFillPath = nullptr;
-    newInterface->fFunctions.fCoverStrokePath = nullptr;
-    newInterface->fFunctions.fCoverFillPathInstanced = nullptr;
-    newInterface->fFunctions.fCoverStrokePathInstanced = nullptr;
-    newInterface->fFunctions.fStencilThenCoverFillPath = nullptr;
-    newInterface->fFunctions.fStencilThenCoverStrokePath = nullptr;
-    newInterface->fFunctions.fStencilThenCoverFillPathInstanced = nullptr;
-    newInterface->fFunctions.fStencilThenCoverStrokePathInstanced = nullptr;
-    newInterface->fFunctions.fProgramPathFragmentInputGen = nullptr;
-    newInterface->fFunctions.fBindFragmentInputLocation = nullptr;
-    return newInterface;
-}
-
 GrGLInterface::GrGLInterface() {
     fStandard = kNone_GrGLStandard;
 }
@@ -220,7 +189,8 @@ bool GrGLInterface::validate() const {
         if (glVer >= GR_GL_VER(2,0)) {
             if (nullptr == fFunctions.fStencilFuncSeparate ||
                 nullptr == fFunctions.fStencilMaskSeparate ||
-                nullptr == fFunctions.fStencilOpSeparate) {
+                nullptr == fFunctions.fStencilOpSeparate ||
+                nullptr == fFunctions.fPolygonMode) {
                 RETURN_FALSE_INTERFACE
             }
         }
@@ -345,6 +315,15 @@ bool GrGLInterface::validate() const {
     } else {
         if (glVer >= GR_GL_VER(3,0) || fExtensions.has("GL_CHROMIUM_framebuffer_multisample")) {
             if (nullptr == fFunctions.fRenderbufferStorageMultisample ||
+                nullptr == fFunctions.fBlitFramebuffer) {
+                RETURN_FALSE_INTERFACE
+            }
+        } else {
+            if (fExtensions.has("GL_ANGLE_framebuffer_multisample") &&
+                nullptr == fFunctions.fRenderbufferStorageMultisample) {
+                RETURN_FALSE_INTERFACE
+            }
+            if (fExtensions.has("GL_ANGLE_framebuffer_blit") &&
                 nullptr == fFunctions.fBlitFramebuffer) {
                 RETURN_FALSE_INTERFACE
             }
@@ -790,6 +769,7 @@ bool GrGLInterface::validate() const {
         if (glVer >= GR_GL_VER(3, 2) || fExtensions.has("GL_ARB_sync")) {
             if (nullptr == fFunctions.fFenceSync ||
                 nullptr == fFunctions.fClientWaitSync ||
+                nullptr == fFunctions.fWaitSync ||
                 nullptr == fFunctions.fDeleteSync) {
                 RETURN_FALSE_INTERFACE
             }
@@ -798,6 +778,7 @@ bool GrGLInterface::validate() const {
         if (glVer >= GR_GL_VER(3, 0)) {
             if (nullptr == fFunctions.fFenceSync ||
                 nullptr == fFunctions.fClientWaitSync ||
+                nullptr == fFunctions.fWaitSync ||
                 nullptr == fFunctions.fDeleteSync) {
                 RETURN_FALSE_INTERFACE
             }
@@ -817,6 +798,26 @@ bool GrGLInterface::validate() const {
         }
     } else if (kGLES_GrGLStandard == fStandard && glVer >= GR_GL_VER(3,0)) {
         if (nullptr == fFunctions.fDrawRangeElements) {
+            RETURN_FALSE_INTERFACE;
+        }
+    }
+
+    if (kGL_GrGLStandard == fStandard) {
+        if (glVer >= GR_GL_VER(4,2) || fExtensions.has("GL_ARB_shader_image_load_store")) {
+            if (nullptr == fFunctions.fBindImageTexture ||
+                nullptr == fFunctions.fMemoryBarrier) {
+                RETURN_FALSE_INTERFACE;
+            }
+        }
+        if (glVer >= GR_GL_VER(4,5) || fExtensions.has("GL_ARB_ES3_1_compatibility")) {
+            if (nullptr == fFunctions.fMemoryBarrierByRegion) {
+                RETURN_FALSE_INTERFACE;
+            }
+        }
+    } else if (kGLES_GrGLStandard == fStandard && glVer >= GR_GL_VER(3,1)) {
+        if (nullptr == fFunctions.fBindImageTexture ||
+            nullptr == fFunctions.fMemoryBarrier ||
+            nullptr == fFunctions.fMemoryBarrierByRegion) {
             RETURN_FALSE_INTERFACE;
         }
     }

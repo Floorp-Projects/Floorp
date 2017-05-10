@@ -11,6 +11,7 @@
 #define SkTDArray_DEFINED
 
 #include "SkTypes.h"
+#include "SkMalloc.h"
 
 template <typename T> class SkTDArray {
 public:
@@ -71,6 +72,12 @@ public:
         SkTSwap(fReserve, other.fReserve);
         SkTSwap(fCount, other.fCount);
     }
+
+    // The deleter that ought to be used for a std:: smart pointer that takes ownership from
+    // release().
+    struct Deleter {
+        void operator()(const void* p) { sk_free((void*)p); }
+    };
 
     /** Return a ptr to the array of data, to be freed with sk_free. This also
         resets the SkTDArray to be empty.
@@ -228,7 +235,7 @@ public:
         }
         return -1;
     }
-    
+
     int find(const T& elem) const {
         const T* iter = fArray;
         const T* stop = fArray + fCount;
