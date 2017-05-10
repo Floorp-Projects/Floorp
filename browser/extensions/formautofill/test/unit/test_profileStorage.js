@@ -5,7 +5,7 @@
 "use strict";
 
 Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://formautofill/ProfileStorage.jsm");
+const {ProfileStorage} = Cu.import("resource://formautofill/ProfileStorage.jsm", {});
 
 const TEST_STORE_FILE_NAME = "test-profile.json";
 
@@ -141,6 +141,11 @@ add_task(function* test_getByFilter() {
 
   // Check if the filtering logic is free from searching special chars.
   filter = {info: {fieldName: "street-address"}, searchString: ".*"};
+  addresses = profileStorage.getByFilter(filter);
+  do_check_eq(addresses.length, 0);
+
+  // Prevent broken while searching the property that does not exist.
+  filter = {info: {fieldName: "tel"}, searchString: "1"};
   addresses = profileStorage.getByFilter(filter);
   do_check_eq(addresses.length, 0);
 });

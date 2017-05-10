@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <iterator>
 
+#include "nsASCIIMask.h"
 #include "nsURLHelper.h"
 #include "nsIFile.h"
 #include "nsIURLParser.h"
@@ -522,7 +523,7 @@ net_ExtractURLScheme(const nsACString &inURI,
     }
 
     p.Claim(scheme);
-    scheme.StripChars("\r\n\t");
+    scheme.StripTaggedASCII(ASCIIMask::MaskCRLFTab());
     return NS_OK;
 }
 
@@ -591,8 +592,6 @@ net_IsAbsoluteURL(const nsACString& uri)
 void
 net_FilterURIString(const nsACString& input, nsACString& result)
 {
-    const char kCharsToStrip[] = "\r\n\t";
-
     result.Truncate();
 
     auto start = input.BeginReading();
@@ -607,9 +606,14 @@ net_FilterURIString(const nsACString& input, nsACString& result)
         charFilter).base();
 
     // Check if chars need to be stripped.
-    auto itr = std::find_first_of(
-        newStart, newEnd, std::begin(kCharsToStrip), std::end(kCharsToStrip));
-    const bool needsStrip = itr != newEnd;
+    bool needsStrip = false;
+    const ASCIIMaskArray& mask = ASCIIMask::MaskCRLFTab();
+    for (auto itr = start; itr != end; ++itr) {
+        if (ASCIIMask::IsMasked(mask, *itr)) {
+            needsStrip = true;
+            break;
+        }
+    }
 
     // Just use the passed in string rather than creating new copies if no
     // changes are necessary.
@@ -620,7 +624,7 @@ net_FilterURIString(const nsACString& input, nsACString& result)
 
     result.Assign(Substring(newStart, newEnd));
     if (needsStrip) {
-        result.StripChars(kCharsToStrip);
+        result.StripTaggedASCII(mask);
     }
 }
 

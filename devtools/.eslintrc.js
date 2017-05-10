@@ -419,6 +419,10 @@ module.exports = {
     // And these are the rules that haven't been discussed so far, and that are
     // disabled for now until we introduce them, one at a time.
 
+    // enforce consistent spacing before and after the arrow in arrow functions
+    "arrow-spacing": "off",
+    // enforce consistent spacing inside computed property brackets
+    "computed-property-spacing": "off",
     // Require for-in loops to have an if statement.
     "guard-for-in": "off",
     // allow/disallow an empty newline after var statement
@@ -466,6 +470,8 @@ module.exports = {
     "no-undef-init": "off",
     // disallow usage of expressions in statement position
     "no-unused-expressions": "off",
+    // disallow unnecessary concatenation of literals or template literals
+    "no-useless-concat": "off",
     // disallow use of void operator
     "no-void": "off",
     // disallow wrapping of non-IIFE statements in parens

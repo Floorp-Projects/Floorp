@@ -388,6 +388,11 @@ BuildArgArray(const char* fmt, va_list ap, NumArgStateVector& nas)
 
         c = *p++;
 
+        // flags
+        while ((c == '-') || (c == '+') || (c == ' ') || (c == '0')) {
+            c = *p++;
+        }
+
         // width
         if (c == '*') {
             // not supported feature, for the argument is not numbered
@@ -440,10 +445,14 @@ BuildArgArray(const char* fmt, va_list ap, NumArgStateVector& nas)
         case 'd':
         case 'c':
         case 'i':
+            break;
+
         case 'o':
         case 'u':
         case 'x':
         case 'X':
+            // Mark as unsigned type.
+            nas[cn].type |= 1;
             break;
 
         case 'e':
@@ -459,15 +468,10 @@ BuildArgArray(const char* fmt, va_list ap, NumArgStateVector& nas)
         case 'S':
 #if defined(XP_WIN)
             nas[cn].type = TYPE_WSTRING;
-            break;
-#endif
-            /* Fall through here when not XP_WIN.  */
-        case 'C':
-        case 'E':
-        case 'G':
-            // XXX not supported I suppose
+#else
             MOZ_ASSERT(0);
             nas[cn].type = TYPE_UNKNOWN;
+#endif
             break;
 
         case 's':
@@ -477,11 +481,9 @@ BuildArgArray(const char* fmt, va_list ap, NumArgStateVector& nas)
                 break;
             }
 #endif
-            if (nas[cn].type == TYPE_INTN) {
-                nas[cn].type = TYPE_STRING;
-            } else {
-                nas[cn].type = TYPE_UNKNOWN;
-            }
+            // Other type sizes are not supported here.
+            MOZ_ASSERT (nas[cn].type == TYPE_INTN);
+            nas[cn].type = TYPE_STRING;
             break;
 
         case 'n':
@@ -505,10 +507,10 @@ BuildArgArray(const char* fmt, va_list ap, NumArgStateVector& nas)
 
     cn = 0;
     while (cn < number) {
-        if (nas[cn].type == TYPE_UNKNOWN) {
-            cn++;
-            continue;
-        }
+        // A TYPE_UNKNOWN here means that the format asked for a
+        // positional argument without specifying the meaning of some
+        // earlier argument.
+        MOZ_ASSERT (nas[cn].type != TYPE_UNKNOWN);
 
         VARARGS_ASSIGN(nas[cn].ap, ap);
 
@@ -634,6 +636,11 @@ mozilla::PrintfTarget::vprint(const char* fmt, va_list ap)
         if (c == '*') {
             c = *fmt++;
             width = va_arg(ap, int);
+            if (width < 0) {
+                width = -width;
+                flags |= FLAG_LEFT;
+                flags &= ~FLAG_ZEROS;
+            }
         } else {
             width = 0;
             while ((c >= '0') && (c <= '9')) {
@@ -816,24 +823,11 @@ mozilla::PrintfTarget::vprint(const char* fmt, va_list ap)
             radix = 16;
             goto fetch_and_convert;
 
-#if 0
-          case 'C':
-          case 'E':
-          case 'G':
-            // XXX not supported I suppose
-            MOZ_ASSERT(0);
-            break;
-#endif
-
           case 's':
             if (type == TYPE_INTN) {
                 u.s = va_arg(ap, const char*);
                 if (!cvt_s(u.s, width, prec, flags))
                     return false;
-                break;
-            } else if (type == TYPE_LONGLONG) {
-                // This should have asserted during BuildArgArray anyway.
-                MOZ_ASSERT(0);
                 break;
             }
             MOZ_ASSERT(type == TYPE_LONG);
@@ -862,7 +856,7 @@ mozilla::PrintfTarget::vprint(const char* fmt, va_list ap)
                 }
             }
 #else
-            // This should have asserted during BuildArgArray anyway.
+            // Not supported here.
             MOZ_ASSERT(0);
 #endif
             break;
@@ -876,9 +870,6 @@ mozilla::PrintfTarget::vprint(const char* fmt, va_list ap)
 
           default:
             // Not a % token after all... skip it
-#if 0
-            MOZ_ASSERT(0);
-#endif
             if (!emit("%", 1))
                 return false;
             if (!emit(fmt - 1, 1))

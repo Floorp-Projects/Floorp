@@ -133,21 +133,14 @@ if CONFIG['MOZ_PREF_EXTENSIONS']:
 
 DIRS += [
     '/devtools',
+    '/toolkit/library',
+    '/toolkit/library/gtest/rust',
+    '/toolkit/library/rust',
+    '/toolkit/library/StaticXULComponentsEnd',
     '/services',
     '/startupcache',
     '/js/ductwork/debugger',
     '/other-licenses/snappy',
-]
-
-if CONFIG['MOZ_RUST']:
-    DIRS += [
-        '/toolkit/library/gtest/rust',
-        '/toolkit/library/rust',
-    ]
-
-DIRS += [
-    '/toolkit/library/StaticXULComponentsEnd',
-    '/toolkit/library',
 ]
 
 if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
