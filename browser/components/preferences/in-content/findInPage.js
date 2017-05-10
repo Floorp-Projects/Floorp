@@ -12,6 +12,7 @@ var gSearchResultsPane = {
   init() {
     let controller = this.getSelectionController();
     this.findSelection = controller.getSelection(Ci.nsISelectionController.SELECTION_FIND);
+    this.findSelection.setColors("currentColor", "#ffe900", "currentColor", "#540ead");
     this.searchResultsCategory = document.getElementById("category-search-results");
 
     this.searchInput = document.getElementById("searchInput");
