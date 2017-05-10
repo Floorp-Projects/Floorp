@@ -43,5 +43,5 @@ fuzzy-if(winWidget,5,30) fuzzy-if(skiaContent,16,10) == fieldset.html fieldset-r
 fuzzy-if(winWidget,5,30) fuzzy-if(skiaContent,16,10) == fieldset-inset.html fieldset-inset-ref.html # minor anti-aliasing problem on Windows
 == 1178575.html 1178575-ref.html
 == 1178575-2.html 1178575-2-ref.html
-fuzzy(159,2) fails-if(!dwrite) == 1212823-1.html 1212823-1-ref.html
+fuzzy(159,2) fails-if(!dwrite && !stylo) == 1212823-1.html 1212823-1-ref.html
 == boxshadow-large-offset.html boxshadow-large-offset-ref.html
