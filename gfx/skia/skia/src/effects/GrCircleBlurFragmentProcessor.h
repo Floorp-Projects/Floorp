@@ -16,7 +16,7 @@
 #include "GrFragmentProcessor.h"
 #include "GrProcessorUnitTest.h"
 
-class GrResourceProvider;
+class GrTextureProvider;
 
 // This FP handles the special case of a blurred circle. It uses a 1D
 // profile that is just rotated about the origin of the circle.
@@ -34,7 +34,8 @@ public:
         return str;
     }
 
-    static sk_sp<GrFragmentProcessor> Make(GrResourceProvider*, const SkRect& circle, float sigma);
+    static sk_sp<GrFragmentProcessor> Make(GrTextureProvider*textureProvider,
+                                           const SkRect& circle, float sigma);
 
 private:
     // This nested GLSL processor implementation is defined in the cpp file.
@@ -45,13 +46,12 @@ private:
      * The x texture coord should map from 0 to 1 across the radius range of solidRadius to
      * solidRadius + textureRadius.
      */
-    GrCircleBlurFragmentProcessor(GrResourceProvider*, const SkRect& circle,
-                                  float textureRadius, float innerRadius,
-                                  sk_sp<GrTextureProxy> blurProfile);
+    GrCircleBlurFragmentProcessor(const SkRect& circle, float textureRadius, float innerRadius,
+                                  GrTexture* blurProfile);
 
     GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
 
-    void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
+    void onGetGLSLProcessorKey(const GrGLSLCaps& caps, GrProcessorKeyBuilder* b) const override;
 
     bool onIsEqual(const GrFragmentProcessor& other) const override {
         const GrCircleBlurFragmentProcessor& cbfp = other.cast<GrCircleBlurFragmentProcessor>();
@@ -59,10 +59,12 @@ private:
                fTextureRadius == cbfp.fTextureRadius;
     }
 
+    void onComputeInvariantOutput(GrInvariantOutput* inout) const override;
+
     SkRect              fCircle;
     SkScalar            fSolidRadius;
     float               fTextureRadius;
-    TextureSampler      fBlurProfileSampler;
+    GrTextureAccess     fBlurProfileAccess;
 
     GR_DECLARE_FRAGMENT_PROCESSOR_TEST;
 

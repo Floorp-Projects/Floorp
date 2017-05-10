@@ -25,24 +25,6 @@
     #include "sample/chromium/font_subsetter.h"
 #endif
 
-SkAutoGlyphCache SkPDFFont::MakeVectorCache(SkTypeface* face, int* size) {
-    SkPaint tmpPaint;
-    tmpPaint.setHinting(SkPaint::kNo_Hinting);
-    tmpPaint.setTypeface(sk_ref_sp(face));
-    int unitsPerEm = face->getUnitsPerEm();
-    if (unitsPerEm <= 0) {
-        unitsPerEm = 1024;
-    }
-    if (size) {
-        *size = unitsPerEm;
-    }
-    tmpPaint.setTextSize((SkScalar)unitsPerEm);
-    const SkSurfaceProps props(0, kUnknown_SkPixelGeometry);
-    SkAutoGlyphCache glyphCache(tmpPaint, &props, nullptr);
-    SkASSERT(glyphCache.get());
-    return glyphCache;
-}
-
 namespace {
 // PDF's notion of symbolic vs non-symbolic is related to the character set, not
 // symbols vs. characters.  Rarely is a font the right character set to call it
@@ -51,7 +33,7 @@ static const int32_t kPdfSymbolic = 4;
 
 struct SkPDFType0Font final : public SkPDFFont {
     SkPDFType0Font(SkPDFFont::Info, const SkAdvancedTypefaceMetrics&);
-    ~SkPDFType0Font() override;
+    virtual ~SkPDFType0Font();
     void getFontSubset(SkPDFCanon*) override;
 #ifdef SK_DEBUG
     void emitObject(SkWStream*, const SkPDFObjNumMap&) const override;
@@ -62,13 +44,13 @@ struct SkPDFType0Font final : public SkPDFFont {
 
 struct SkPDFType1Font final : public SkPDFFont {
     SkPDFType1Font(SkPDFFont::Info, const SkAdvancedTypefaceMetrics&, SkPDFCanon*);
-    ~SkPDFType1Font() override {}
+    virtual ~SkPDFType1Font() {}
     void getFontSubset(SkPDFCanon*) override {} // TODO(halcanary): implement
 };
 
 struct SkPDFType3Font final : public SkPDFFont {
     SkPDFType3Font(SkPDFFont::Info, const SkAdvancedTypefaceMetrics&);
-    ~SkPDFType3Font() override {}
+    virtual ~SkPDFType3Font() {}
     void getFontSubset(SkPDFCanon*) override;
 };
 
@@ -76,12 +58,28 @@ struct SkPDFType3Font final : public SkPDFFont {
 // File-Local Functions
 ///////////////////////////////////////////////////////////////////////////////
 
+static SkAutoGlyphCache vector_cache(SkTypeface* face, SkScalar size = 0) {
+    SkPaint tmpPaint;
+    tmpPaint.setHinting(SkPaint::kNo_Hinting);
+    tmpPaint.setTypeface(sk_ref_sp(face));
+    if (0 == size) {
+        SkASSERT(face);
+        tmpPaint.setTextSize((SkScalar)face->getUnitsPerEm());
+    } else {
+        tmpPaint.setTextSize(size);
+    }
+    const SkSurfaceProps props(0, kUnknown_SkPixelGeometry);
+    SkAutoGlyphCache glyphCache(tmpPaint, &props, nullptr);
+    SkASSERT(glyphCache.get());
+    return glyphCache;
+}
+
 // scale from em-units to base-1000, returning as a SkScalar
 SkScalar from_font_units(SkScalar scaled, uint16_t emSize) {
     if (emSize == 1000) {
         return scaled;
     } else {
-        return scaled * 1000 / emSize;
+        return SkScalarMulDiv(scaled, 1000, emSize);
     }
 }
 
@@ -157,7 +155,9 @@ const SkAdvancedTypefaceMetrics* SkPDFFont::GetMetrics(SkTypeface* typeface,
                     nullptr, 0));
     if (!metrics) {
         metrics = sk_make_sp<SkAdvancedTypefaceMetrics>();
+        metrics->fLastGlyphID = SkToU16(count - 1);
     }
+    SkASSERT(metrics->fLastGlyphID == SkToU16(count - 1));
     return *canon->fTypefaceMetrics.set(id, metrics.release());
 }
 
@@ -197,7 +197,8 @@ SkPDFFont* SkPDFFont::GetFontResource(SkPDFCanon* canon,
     sk_sp<SkTypeface> typeface(sk_ref_sp(face));
     SkASSERT(typeface);
 
-    SkGlyphID lastGlyph = SkToU16(typeface->countGlyphs() - 1);
+    SkGlyphID lastGlyph = metrics.fLastGlyphID;
+    SkASSERT(typeface->countGlyphs() == SkToInt(1 + metrics.fLastGlyphID));
 
     // should be caught by SkPDFDevice::internalDrawText
     SkASSERT(glyphID <= lastGlyph);
@@ -243,8 +244,8 @@ SkPDFFont::SkPDFFont(SkPDFFont::Info info)
 
 static void  add_common_font_descriptor_entries(SkPDFDict* descriptor,
                                                 const SkAdvancedTypefaceMetrics& metrics,
-                                                uint16_t emSize,
                                                 int16_t defaultWidth) {
+    const uint16_t emSize = metrics.fEmSize;
     descriptor->insertName("FontName", metrics.fFontName);
     descriptor->insertInt("Flags", (size_t)(metrics.fStyle | kPdfSymbolic));
     descriptor->insertScalar("Ascent",
@@ -257,7 +258,7 @@ static void  add_common_font_descriptor_entries(SkPDFDict* descriptor,
             scaleFromFontUnits(metrics.fCapHeight, emSize));
     descriptor->insertInt("ItalicAngle", metrics.fItalicAngle);
     descriptor->insertObject(
-            "FontBBox", makeFontBBox(metrics.fBBox, emSize));
+            "FontBBox", makeFontBBox(metrics.fBBox, metrics.fEmSize));
     if (defaultWidth > 0) {
         descriptor->insertScalar("MissingWidth",
                 scaleFromFontUnits(defaultWidth, emSize));
@@ -316,8 +317,8 @@ static sk_sp<SkPDFStream> get_subset_font_stream(
 
     unsigned char* subsetFont{nullptr};
     sk_sp<SkData> fontData(stream_to_data(std::move(fontAsset)));
-#if defined(GOOGLE3)
-    // TODO(halcanary): update GOOGLE3 to newest version of Sfntly.
+#if defined(SK_BUILD_FOR_ANDROID_FRAMEWORK) || defined(GOOGLE3)
+    // TODO(halcanary): update Android Framework to newest version of Sfntly.
     (void)ttcIndex;
     int subsetFontSize = SfntlyWrapper::SubsetFont(fontName,
                                                    fontData->bytes(),
@@ -363,8 +364,7 @@ void SkPDFType0Font::getFontSubset(SkPDFCanon* canon) {
     SkASSERT(face);
 
     auto descriptor = sk_make_sp<SkPDFDict>("FontDescriptor");
-    uint16_t emSize = SkToU16(this->typeface()->getUnitsPerEm());
-    add_common_font_descriptor_entries(descriptor.get(), metrics, emSize , 0);
+    add_common_font_descriptor_entries(descriptor.get(), metrics, 0);
 
     int ttcIndex;
     std::unique_ptr<SkStreamAsset> fontAsset(face->openStream(&ttcIndex));
@@ -430,17 +430,17 @@ void SkPDFType0Font::getFontSubset(SkPDFCanon* canon) {
     sysInfo->insertInt("Supplement", 0);
     newCIDFont->insertObject("CIDSystemInfo", std::move(sysInfo));
 
+    uint16_t emSize = metrics.fEmSize;
     int16_t defaultWidth = 0;
     {
-        int emSize;
-        SkAutoGlyphCache glyphCache = SkPDFFont::MakeVectorCache(face, &emSize);
+        SkAutoGlyphCache glyphCache = vector_cache(face);
         sk_sp<SkPDFArray> widths = SkPDFMakeCIDGlyphWidthsArray(
-                glyphCache.get(), &this->glyphUsage(), SkToS16(emSize), &defaultWidth);
+                glyphCache.get(), &this->glyphUsage(), emSize, &defaultWidth);
         if (widths && widths->size() > 0) {
             newCIDFont->insertObject("W", std::move(widths));
         }
         newCIDFont->insertScalar(
-                "DW", scaleFromFontUnits(defaultWidth, SkToS16(emSize)));
+                "DW", scaleFromFontUnits(defaultWidth, emSize));
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -472,8 +472,7 @@ static sk_sp<SkPDFDict> make_type1_font_descriptor(
         SkTypeface* typeface,
         const SkAdvancedTypefaceMetrics& info) {
     auto descriptor = sk_make_sp<SkPDFDict>("FontDescriptor");
-    uint16_t emSize = SkToU16(typeface->getUnitsPerEm());
-    add_common_font_descriptor_entries(descriptor.get(), info, emSize, 0);
+    add_common_font_descriptor_entries(descriptor.get(), info, 0);
     if (!can_embed(info)) {
         return descriptor;
     }
@@ -508,14 +507,14 @@ static void populate_type_1_font(SkPDFDict* font,
     font->insertInt("FirstChar", (size_t)0);
     font->insertInt("LastChar", (size_t)glyphCount);
     {
-        int emSize;
-        SkAutoGlyphCache glyphCache = SkPDFFont::MakeVectorCache(typeface, &emSize);
+        SkAutoGlyphCache glyphCache = vector_cache(typeface);
         auto widths = sk_make_sp<SkPDFArray>();
         SkScalar advance = glyphCache->getGlyphIDAdvance(0).fAdvanceX;
-        widths->appendScalar(from_font_units(advance, SkToU16(emSize)));
+        const uint16_t emSize = info.fEmSize;
+        widths->appendScalar(from_font_units(advance, emSize));
         for (unsigned gID = firstGlyphID; gID <= lastGlyphID; gID++) {
             advance = glyphCache->getGlyphIDAdvance(gID).fAdvanceX;
-            widths->appendScalar(from_font_units(advance, SkToU16(emSize)));
+            widths->appendScalar(from_font_units(advance, emSize));
         }
         font->insertObject("Widths", std::move(widths));
     }
@@ -593,6 +592,7 @@ private:
 static void add_type3_font_info(SkPDFCanon* canon,
                                 SkPDFDict* font,
                                 SkTypeface* typeface,
+                                SkScalar emSize,
                                 const SkBitSet& subset,
                                 SkGlyphID firstGlyphID,
                                 SkGlyphID lastGlyphID) {
@@ -603,9 +603,8 @@ static void add_type3_font_info(SkPDFCanon* canon,
     while (lastGlyphID > firstGlyphID && !subset.has(lastGlyphID)) {
         --lastGlyphID;
     }
-    int unitsPerEm;
-    SkAutoGlyphCache cache = SkPDFFont::MakeVectorCache(typeface, &unitsPerEm);
-    SkScalar emSize = (SkScalar)unitsPerEm;
+    SkASSERT(emSize > 0.0f);
+    SkAutoGlyphCache cache = vector_cache(typeface, emSize);
     font->insertName("Subtype", "Type3");
     // Flip about the x-axis and scale by 1/emSize.
     SkMatrix fontMatrix;
@@ -713,7 +712,12 @@ SkPDFType3Font::SkPDFType3Font(SkPDFFont::Info info,
     : SkPDFFont(std::move(info)) {}
 
 void SkPDFType3Font::getFontSubset(SkPDFCanon* canon) {
-    add_type3_font_info(canon, this, this->typeface(), this->glyphUsage(),
+    const SkAdvancedTypefaceMetrics* info =
+        SkPDFFont::GetMetrics(this->typeface(), canon);
+    SkASSERT(info);
+    uint16_t emSize = info->fEmSize > 0 ? info->fEmSize : 1000;
+    add_type3_font_info(canon, this, this->typeface(), (SkScalar)emSize,
+                        this->glyphUsage(),
                         this->firstGlyphID(), this->lastGlyphID());
 }
 

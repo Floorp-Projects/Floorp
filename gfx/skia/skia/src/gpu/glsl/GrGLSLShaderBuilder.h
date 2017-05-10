@@ -9,8 +9,8 @@
 #define GrGLSLShaderBuilder_DEFINED
 
 #include "GrAllocator.h"
-#include "GrShaderVar.h"
 #include "glsl/GrGLSLUniformHandler.h"
+#include "glsl/GrGLSLShaderVar.h"
 #include "SkTDArray.h"
 
 #include <stdarg.h>
@@ -25,13 +25,11 @@ public:
     GrGLSLShaderBuilder(GrGLSLProgramBuilder* program);
     virtual ~GrGLSLShaderBuilder() {}
 
-    using SamplerHandle      = GrGLSLUniformHandler::SamplerHandle;
-    using ImageStorageHandle = GrGLSLUniformHandler::ImageStorageHandle;
+    typedef GrGLSLUniformHandler::SamplerHandle SamplerHandle;
 
     /** Appends a 2D texture sample with projection if necessary. coordType must either be Vec2f or
         Vec3f. The latter is interpreted as projective texture coords. The vec length and swizzle
-        order of the result depends on the GrProcessor::TextureSampler associated with the
-        SamplerHandle.
+        order of the result depends on the GrTextureAccess associated with the GrGLSLSampler.
         */
     void appendTextureLookup(SkString* out,
                              SamplerHandle,
@@ -46,7 +44,7 @@ public:
 
 
     /** Does the work of appendTextureLookup and modulates the result by modulation. The result is
-        always a vec4. modulation and the swizzle specified by SamplerHandle must both be
+        always a vec4. modulation and the swizzle specified by GrGLSLSampler must both be
         vec4 or float. If modulation is "" or nullptr it this function acts as though
         appendTextureLookup were called. */
     void appendTextureLookupAndModulate(const char* modulation,
@@ -73,36 +71,25 @@ public:
     /** Version of above that appends the result to the shader code instead.*/
     void appendTexelFetch(SamplerHandle, const char* coordExpr);
 
-    /** Creates a string of shader code that performs an image load. */
-    void appendImageStorageLoad(SkString* out, ImageStorageHandle, const char* coordExpr);
-    /** Version of above that appends the result to the shader code instead. */
-    void appendImageStorageLoad(ImageStorageHandle, const char* coordExpr);
-
     /**
-    * Adds a constant declaration to the top of the shader.
+    * Adds a #define directive to the top of the shader.
     */
-    void defineConstant(const char* type, const char* name, const char* value) {
-        this->definitions().appendf("const %s %s = %s;\n", type, name, value);
+    void define(const char* macro, const char* replacement) {
+        this->definitions().appendf("#define %s %s\n", macro, replacement);
     }
 
-    void defineConstant(const char* name, int value) {
-        this->definitions().appendf("const int %s = %i;\n", name, value);
+    void define(const char* macro, int replacement) {
+        this->definitions().appendf("#define %s %i\n", macro, replacement);
     }
 
-    void defineConstant(const char* name, float value) {
-        this->definitions().appendf("const float %s = %f;\n", name, value);
-    }
-
-    void defineConstantf(const char* type, const char* name, const char* fmt, ...) {
-       this->definitions().appendf("const %s %s = ", type, name);
+    void definef(const char* macro, const char* replacement, ...) {
+       this->definitions().appendf("#define %s ", macro);
        va_list args;
-       va_start(args, fmt);
-       this->definitions().appendVAList(fmt, args);
+       va_start(args, replacement);
+       this->definitions().appendVAList(replacement, args);
        va_end(args);
-       this->definitions().append(";\n");
+       this->definitions().append("\n");
     }
-
-    void declareGlobal(const GrShaderVar&);
 
     /**
     * Called by GrGLSLProcessors to add code to one of the shaders.
@@ -126,13 +113,18 @@ public:
     /**
      * Appends a variable declaration to one of the shaders
      */
-    void declAppend(const GrShaderVar& var);
+    void declAppend(const GrGLSLShaderVar& var);
+
+    /**
+     * Appends a precision qualifier followed by a space, if relevant for the GLSL version.
+     */
+    void appendPrecisionModifier(GrSLPrecision);
 
     /** Emits a helper function outside of main() in the fragment shader. */
     void emitFunction(GrSLType returnType,
                       const char* name,
                       int argCnt,
-                      const GrShaderVar* args,
+                      const GrGLSLShaderVar* args,
                       const char* body,
                       SkString* outName);
 
@@ -164,7 +156,7 @@ public:
     };
 
 protected:
-    typedef GrTAllocator<GrShaderVar> VarArray;
+    typedef GrTAllocator<GrGLSLShaderVar> VarArray;
     void appendDecls(const VarArray& vars, SkString* out) const;
 
     /**
@@ -191,7 +183,6 @@ protected:
     bool addFeature(uint32_t featureBit, const char* extensionName);
 
     enum InterfaceQualifier {
-        kIn_InterfaceQualifier,
         kOut_InterfaceQualifier,
         kLastInterfaceQualifier = kOut_InterfaceQualifier
     };
@@ -206,6 +197,12 @@ protected:
     void addLayoutQualifier(const char* param, InterfaceQualifier);
 
     void compileAndAppendLayoutQualifiers();
+
+    /* Appends any swizzling we may need to get from some backend internal format to the format used
+     * in GrPixelConfig. If this is implemented by the GrGpu object, then swizzle will be rgba. For
+     * shader prettiness we omit the swizzle rather than appending ".rgba".
+     */
+    void appendTextureSwizzle(SkString* out, GrPixelConfig) const;
 
     void nextStage() {
         fShaderStrings.push_back();

@@ -14,7 +14,8 @@
 #include <android/log.h>
 
 // Print debug output to stdout as well.  This is useful for command line
-// applications (e.g. skia_launcher).
+// applications (e.g. skia_launcher). To enable, include android_output as a
+// gyp dependency.
 bool gSkDebugToStdOut = false;
 
 void SkDebugf(const char format[], ...) {

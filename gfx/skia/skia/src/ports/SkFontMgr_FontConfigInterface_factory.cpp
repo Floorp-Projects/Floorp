@@ -9,7 +9,7 @@
 #include "SkFontMgr.h"
 #include "SkFontMgr_FontConfigInterface.h"
 
-sk_sp<SkFontMgr> SkFontMgr::Factory() {
+SkFontMgr* SkFontMgr::Factory() {
     sk_sp<SkFontConfigInterface> fci(SkFontConfigInterface::RefGlobal());
     if (!fci) {
         return nullptr;
