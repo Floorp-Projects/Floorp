@@ -1601,6 +1601,7 @@ protected:
   static const double kMsPerDay;
 
   nsContentUtils::AutocompleteAttrState mAutocompleteAttrState;
+  nsContentUtils::AutocompleteAttrState mAutocompleteInfoState;
   bool                     mDisabledChanged     : 1;
   bool                     mValueChanged        : 1;
   bool                     mLastValueChangeWasInteractive : 1;
