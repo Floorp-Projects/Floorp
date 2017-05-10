@@ -17,14 +17,20 @@
 
   /* icon width + border + horizontal padding (without the overlap from backbutton-urlbar-overlap) */
   --forwardbutton-width: 25px;
+%else
+  --toolbarbutton-hover-background: hsla(240, 5%, 5%, .1);
+  --toolbarbutton-active-background: hsla(240, 5%, 5%, .15);
 %endif
 }
 
 toolbar:-moz-lwtheme {
+%ifndef MOZ_PHOTON_THEME
   --toolbarbutton-hover-background: rgba(255,255,255,.25);
+  --toolbarbutton-active-background: rgba(70%,70%,70%,.25);
+%endif
+
   --toolbarbutton-hover-bordercolor: rgba(0,0,0,.2);
 
-  --toolbarbutton-active-background: rgba(70%,70%,70%,.25);
   --toolbarbutton-active-bordercolor: rgba(0,0,0,.3);
   --toolbarbutton-active-boxshadow: 0 0 2px rgba(0,0,0,.6) inset;
 
@@ -269,8 +275,10 @@ toolbarbutton.bookmark-item:not(.subviewbutton):hover:not([disabled="true"]):not
 %endif
 #nav-bar .toolbarbutton-1:not([buttonover]):not([open]):not(:active):hover > .toolbarbutton-menubutton-dropmarker:not([disabled]) > .dropmarker-icon {
   background: var(--toolbarbutton-hover-background);
+%ifndef MOZ_PHOTON_THEME
   border-color: var(--toolbarbutton-hover-bordercolor);
   box-shadow: var(--toolbarbutton-hover-boxshadow);
+%endif
 }
 
 .findbar-button:not([disabled=true]):-moz-any([checked="true"],:hover:active) > .toolbarbutton-text,
@@ -282,8 +290,10 @@ toolbarbutton.bookmark-item[open="true"],
 #nav-bar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-text,
 #nav-bar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-badge-stack {
   background: var(--toolbarbutton-active-background);
+%ifndef MOZ_PHOTON_THEME
   border-color: var(--toolbarbutton-active-bordercolor);
   box-shadow: var(--toolbarbutton-active-boxshadow);
+%endif
   transition-duration: 10ms;
 }
 
