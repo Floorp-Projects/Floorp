@@ -3553,8 +3553,7 @@ nsCSSBorderRenderer::CanCreateWebRenderCommands()
 void
 nsCSSBorderRenderer::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
                                              const layers::StackingContextHelper& aSc,
-                                             layers::WebRenderDisplayItemLayer* aLayer,
-                                             gfx::Rect aClipRect)
+                                             layers::WebRenderDisplayItemLayer* aLayer)
 {
   LayoutDeviceRect outerRect = LayoutDeviceRect::FromUnknownRect(mOuterRect);
   WrRect transformedRect = aSc.ToRelativeWrRect(outerRect);
@@ -3564,9 +3563,6 @@ nsCSSBorderRenderer::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
   }
 
   WrClipRegion clipRegion = aBuilder.BuildClipRegion(transformedRect);
-  if (!aClipRect.IsEmpty()) {
-    clipRegion = aBuilder.BuildClipRegion(wr::ToWrRect(aClipRect));
-  }
   WrBorderRadius borderRadius = wr::ToWrBorderRadius(LayerSize(mBorderRadii[0].width, mBorderRadii[0].height),
                                                      LayerSize(mBorderRadii[1].width, mBorderRadii[1].height),
                                                      LayerSize(mBorderRadii[3].width, mBorderRadii[3].height),
