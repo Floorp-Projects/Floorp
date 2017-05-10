@@ -1090,8 +1090,8 @@ nsSliderFrame::StartAPZDrag(WidgetGUIEvent* aEvent)
   AsyncDragMetrics dragMetrics(scrollTargetId, presShellId, inputblockId,
                                NSAppUnitsToFloatPixels(mDragStart,
                                  float(AppUnitsPerCSSPixel())),
-                               isHorizontal ? AsyncDragMetrics::HORIZONTAL :
-                                              AsyncDragMetrics::VERTICAL);
+                               isHorizontal ? ScrollDirection::HORIZONTAL :
+                                              ScrollDirection::VERTICAL);
 
   if (!nsLayoutUtils::HasDisplayPort(scrollableContent)) {
     return;

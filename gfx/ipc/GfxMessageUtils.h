@@ -1287,14 +1287,6 @@ struct ParamTraits<mozilla::layers::EventRegionsOverride>
 {};
 
 template<>
-struct ParamTraits<mozilla::layers::AsyncDragMetrics::DragDirection>
-  : public ContiguousEnumSerializer<
-             mozilla::layers::AsyncDragMetrics::DragDirection,
-             mozilla::layers::AsyncDragMetrics::DragDirection::NONE,
-             mozilla::layers::AsyncDragMetrics::DragDirection::SENTINEL>
-{};
-
-template<>
 struct ParamTraits<mozilla::layers::AsyncDragMetrics>
 {
   typedef mozilla::layers::AsyncDragMetrics paramType;
