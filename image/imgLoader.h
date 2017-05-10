@@ -307,6 +307,7 @@ public:
                                   nsISupports* aCacheKey,
                                   nsContentPolicyType aContentPolicyType,
                                   const nsAString& initiatorType,
+                                  bool aUseUrgentStartForChannel,
                                   imgRequestProxy** _retval);
 
   MOZ_MUST_USE nsresult

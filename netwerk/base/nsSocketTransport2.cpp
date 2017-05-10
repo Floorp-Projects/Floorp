@@ -1534,7 +1534,7 @@ nsSocketTransport::InitiateSocket()
     }
 
     bool tfo = false;
-    if (fd && mFastOpenCallback &&
+    if (mFastOpenCallback &&
         mFastOpenCallback->FastOpenEnabled()) {
         if (NS_SUCCEEDED(AttachTCPFastOpenIOLayer(fd))) {
             tfo = true;

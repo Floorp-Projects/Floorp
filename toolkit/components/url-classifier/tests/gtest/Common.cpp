@@ -30,11 +30,16 @@ nsresult SyncApplyUpdates(Classifier* aClassifier,
   // will be on the caller thread. If we call Classifier::AsyncApplyUpdates
   // and wait on the same thread, this function will never return.
 
-  nsresult ret;
+  nsresult ret = NS_ERROR_FAILURE;
   bool done = false;
   auto onUpdateComplete = [&done, &ret](nsresult rv) {
-    ret = rv;
-    done = true;
+    // We are on the "ApplyUpdate" thread. Post an event to main thread
+    // so that we can avoid busy waiting on the main thread.
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([&done, &ret, rv] {
+      ret = rv;
+      done = true;
+    });
+    NS_DispatchToMainThread(r);
   };
 
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([&]() {
@@ -60,9 +65,7 @@ nsresult SyncApplyUpdates(Classifier* aClassifier,
     // Condition variable doesn't work here because instrusively
     // notifying the from NS_NewCheckSummedOutputStream() or
     // HashStore::WriteFile() is weird.
-    if (!NS_ProcessNextEvent(NS_GetCurrentThread(), false)) {
-      PR_Sleep(PR_MillisecondsToInterval(100));
-    }
+    MOZ_ALWAYS_TRUE(NS_ProcessNextEvent(NS_GetCurrentThread(), true));
   }
 
   return ret;

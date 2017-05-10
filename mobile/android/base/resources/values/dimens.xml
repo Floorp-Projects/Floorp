@@ -235,4 +235,8 @@
     <!-- Custom tabs -->
     <dimen name="custom_tab_action_button_size">56dp</dimen>
     <dimen name="custom_tab_action_button_padding">16dp</dimen>
+
+    <!-- Full bookmark management -->
+    <dimen name="bookmark_folder_first_child_padding">40dp</dimen>
+    <dimen name="bookmark_folder_child_padding">16dp</dimen>
 </resources>

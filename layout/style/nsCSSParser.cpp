@@ -28,6 +28,7 @@
 #include "mozilla/css/Loader.h"
 #include "mozilla/css/StyleRule.h"
 #include "mozilla/css/ImportRule.h"
+#include "mozilla/css/URLMatchingFunction.h"
 #include "nsCSSRules.h"
 #include "nsCSSFontFaceRule.h"
 #include "mozilla/css/NameSpaceRule.h"
@@ -3900,13 +3901,13 @@ CSSParserImpl::ParseMozDocumentRule(RuleAppendFunc aAppendFunc, void* aData)
     css::DocumentRule::URL *cur = *next = new css::DocumentRule::URL;
     next = &cur->next;
     if (mToken.mType == eCSSToken_URL) {
-      cur->func = css::DocumentRule::eURL;
+      cur->func = URLMatchingFunction::eURL;
       CopyUTF16toUTF8(mToken.mIdent, cur->url);
     } else if (mToken.mIdent.LowerCaseEqualsLiteral("regexp")) {
       // regexp() is different from url-prefix() and domain() (but
       // probably the way they *should* have been* in that it requires a
       // string argument, and doesn't try to behave like url().
-      cur->func = css::DocumentRule::eRegExp;
+      cur->func = URLMatchingFunction::eRegExp;
       GetToken(true);
       // copy before we know it's valid (but before ExpectSymbol changes
       // mToken.mIdent)
@@ -3919,9 +3920,9 @@ CSSParserImpl::ParseMozDocumentRule(RuleAppendFunc aAppendFunc, void* aData)
       }
     } else {
       if (mToken.mIdent.LowerCaseEqualsLiteral("url-prefix")) {
-        cur->func = css::DocumentRule::eURLPrefix;
+        cur->func = URLMatchingFunction::eURLPrefix;
       } else if (mToken.mIdent.LowerCaseEqualsLiteral("domain")) {
-        cur->func = css::DocumentRule::eDomain;
+        cur->func = URLMatchingFunction::eDomain;
       }
 
       NS_ASSERTION(!mHavePushBack, "mustn't have pushback at this point");

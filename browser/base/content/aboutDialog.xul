@@ -1,4 +1,4 @@
-<?xml version="1.0"?> <!-- -*- Mode: HTML -*- --> 
+<?xml version="1.0"?> <!-- -*- Mode: HTML -*- -->
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -104,7 +104,7 @@
                 <label>&update.unsupported.start;</label><label id="unsupportedLink" class="text-link">&update.unsupported.linkText;</label><label>&update.unsupported.end;</label>
               </hbox>
               <hbox id="restarting" align="center">
-                <label>&update.restarting;</label>
+                <image class="update-throbber"/><label>&update.restarting;</label>
               </hbox>
             </deck>
 #endif
@@ -144,7 +144,7 @@
       <description id="trademark">&trademarkInfo.part1;</description>
     </vbox>
   </vbox>
-  
+
   <keyset>
     <key keycode="VK_ESCAPE" oncommand="window.close();"/>
   </keyset>

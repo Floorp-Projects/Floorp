@@ -44,12 +44,11 @@ public:
 
   bool ShouldComputeStartTime() const override { return false; }
 
-  void NotifyDataArrived() override;
-
   /* interface for TrackBuffersManager */
   void AttachSourceBuffer(TrackBuffersManager* aSourceBuffer);
   void DetachSourceBuffer(TrackBuffersManager* aSourceBuffer);
   AutoTaskQueue* GetTaskQueue() { return mTaskQueue; }
+  void NotifyInitDataArrived();
 
   // Returns a string describing the state of the MediaSource internal
   // buffered data. Used for debugging purposes.

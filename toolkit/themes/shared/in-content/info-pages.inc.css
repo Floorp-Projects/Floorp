@@ -3,6 +3,12 @@
 % file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 @import url("chrome://global/skin/in-content/common.css");
+
+:root {
+  --in-content-container-min-width: 13em;
+  --in-content-container-max-width: 52em;
+}
+
 /* Body and container */
 body {
   display: flex;
@@ -15,8 +21,8 @@ body {
 }
 
 .container {
-  min-width: 13em;
-  max-width: 52em;
+  min-width: var(--in-content-container-min-width);
+  max-width: var(--in-content-container-max-width);
 }
 
 .container.restore-chosen {
@@ -43,7 +49,6 @@ body {
 }
 
 .title-text {
-  border-bottom: 1px solid #C1C1C1;
   font-size: inherit;
   padding-bottom: 0.4em;
 }
@@ -79,8 +84,9 @@ ul {
   margin-top: 1.2em;
 }
 
-.button-container > button {
-  min-width: 150px;
+button {
+  padding: 0 1.5em;
+  border-radius: 0;
 }
 
 .button-container > button:first-child {

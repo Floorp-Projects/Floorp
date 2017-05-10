@@ -202,9 +202,8 @@ var gSearchResultsPane = {
       let resultsFound = false;
 
       // Building the range for highlighted areas
-      let rootPreferences = document.getElementById("mainPrefPane")
-      let rootPreferencesChildren = rootPreferences
-        .querySelectorAll(":not([data-hidden-from-search])");
+      let rootPreferencesChildren = document
+        .querySelectorAll("#mainPrefPane > *:not([data-hidden-from-search])");
 
       // Showing all the children to bind JS, Access Keys, etc
       for (let i = 0; i < rootPreferencesChildren.length; i++) {

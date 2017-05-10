@@ -241,8 +241,9 @@ OmxDataDecoder::DoAsyncShutdown()
              LOGL("DoAsyncShutdown: flush complete");
              return self->mOmxLayer->SendCommand(OMX_CommandStateSet, OMX_StateIdle, nullptr);
            },
-           [self] () {
+           [self] (const OmxCommandFailureHolder& aError) {
              self->mOmxLayer->Shutdown();
+             return OmxCommandPromise::CreateAndReject(aError, __func__);
            })
     ->Then(mOmxTaskQueue, __func__,
            [self] () -> RefPtr<OmxCommandPromise> {
@@ -263,8 +264,9 @@ OmxDataDecoder::DoAsyncShutdown()
 
              return p;
            },
-           [self] () {
+           [self] (const OmxCommandFailureHolder& aError) {
              self->mOmxLayer->Shutdown();
+             return OmxCommandPromise::CreateAndReject(aError, __func__);
            })
     ->Then(mOmxTaskQueue, __func__,
            [self] () {
@@ -786,8 +788,9 @@ OmxDataDecoder::PortSettingsChanged()
 
                return p;
              },
-             [self] () {
+             [self] (const OmxCommandFailureHolder& aError) {
                self->NotifyError(OMX_ErrorUndefined, __func__);
+               return OmxCommandPromise::CreateAndReject(aError, __func__);
              })
       ->Then(mOmxTaskQueue, __func__,
              [self] () {

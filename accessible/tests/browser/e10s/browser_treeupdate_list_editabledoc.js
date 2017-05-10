@@ -4,9 +4,7 @@
 
 'use strict';
 
-/* global ROLE_TEXT_LEAF, EVENT_REORDER, ROLE_LISTITEM, ROLE_LIST,
-          ROLE_STATICTEXT */
-
+/* import-globals-from ../../mochitest/role.js */
 loadScripts({ name: 'role.js', dir: MOCHITESTS_DIR });
 
 addAccessibleTask('<ol id="list"></ol>', function*(browser, accDoc) {

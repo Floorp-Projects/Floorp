@@ -133,6 +133,7 @@ static bool throwExceptionNextInvoke(NPObject* npobj, const NPVariant* args, uin
 static bool convertPointX(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool convertPointY(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool streamTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool postFileToURLTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool setPluginWantsAllStreams(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool crashPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool crashOnDestroy(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
@@ -206,6 +207,7 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "convertPointX",
   "convertPointY",
   "streamTest",
+  "postFileToURLTest",
   "setPluginWantsAllStreams",
   "crash",
   "crashOnDestroy",
@@ -280,6 +282,7 @@ static const ScriptableFunction sPluginMethodFunctions[] = {
   convertPointX,
   convertPointY,
   streamTest,
+  postFileToURLTest,
   setPluginWantsAllStreams,
   crashPlugin,
   crashOnDestroy,
@@ -2718,8 +2721,8 @@ convertPointY(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVaria
 static bool
 streamTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
 {
-  // .streamTest(url, doPost, doNull, writeCallback, notifyCallback, redirectCallback, allowRedirects)
-  if (7 != argCount)
+  // .streamTest(url, doPost, postData, writeCallback, notifyCallback, redirectCallback, allowRedirects, postFile = false)
+  if (!(7 <= argCount && argCount <= 8))
     return false;
 
   NPP npp = static_cast<TestNPObject*>(npobj)->npp;
@@ -2776,6 +2779,14 @@ streamTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant*
     return false;
   bool allowRedirects = NPVARIANT_TO_BOOLEAN(args[6]);
 
+  bool postFile = false;
+  if (argCount >= 8) {
+    if (!NPVARIANT_IS_BOOLEAN(args[7])) {
+      return false;
+    }
+    postFile = NPVARIANT_TO_BOOLEAN(args[7]);
+  }
+
   URLNotifyData* ndata = new URLNotifyData;
   ndata->cookie = "dynamic-cookie";
   ndata->writeCallback = writeCallback;
@@ -2794,7 +2805,7 @@ streamTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant*
   if (doPost) {
     err = NPN_PostURLNotify(npp, urlstr, nullptr,
                             postData.UTF8Length, postData.UTF8Characters,
-                            false, ndata);
+                            postFile, ndata);
   }
   else {
     err = NPN_GetURLNotify(npp, urlstr, nullptr, ndata);
@@ -2819,6 +2830,38 @@ streamTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant*
     BOOLEAN_TO_NPVARIANT(false, *result);
   }
 
+  return true;
+}
+
+static bool
+postFileToURLTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  if (1 != argCount)
+    return false;
+
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+
+  string url;
+  {
+    if (!NPVARIANT_IS_STRING(args[0]))
+      return false;
+    NPString npurl = NPVARIANT_TO_STRING(args[0]);
+    // make a copy to ensure that the url string is null-terminated
+    url = string(npurl.UTF8Characters, npurl.UTF8Length);
+  }
+
+
+  NPError err;
+  {
+    string buf("/path/to/file");
+    err = NPN_PostURL(npp,
+                      url.c_str(),
+                      nullptr /* target */,
+                      buf.length(), buf.c_str(),
+                      true /* file */);
+  }
+
+  BOOLEAN_TO_NPVARIANT(NPERR_NO_ERROR == err, *result);
   return true;
 }
 

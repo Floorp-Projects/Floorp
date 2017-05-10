@@ -1,0 +1,271 @@
+<!DOCTYPE HTML>
+<!--
+  https://bugzilla.mozilla.org/show_bug.cgi?id=1348050
+  Test for fetch and xhr to guarantee we only mark channel as urgent-start when
+  it is triggered by user input events.
+
+  For { Fetch, SRC-*, XHR }, do the test as following:
+  Step 1: Verify them not mark the channel when there is no any input event.
+  Step 2: Verify them mark the channel there is a user input event.
+  Step 3: Verify them not mark the channel when there is a non input event.
+
+  In each steps, it shows that we only mark channel on direct triggering task.
+  We won't mark the channel for additional task(setTimeout) or
+  micro-task(promise).
+-->
+<html>
+<head>
+  <title>Test for urgent-start on Fetch and XHR</title>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet"
+        type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<img id="image"></body>
+<audio autoplay id="audio"></audio>
+<iframe id="iframe"></iframe>
+<input type="image" id="input"></input>
+<embed id="embed"></embed>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+const { classes: Cc, interfaces: Ci } = Components;
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTest);
+
+const topic_request = "http-on-opening-request";
+const topic_response = "http-on-examine-response";
+const topic_cachedResponse = "http-on-examine-cached-response";
+const scope = "http://mochi.test:8888/chrome/dom/base/test/"
+const url = scope + "file_empty.html";
+
+let expectedResults = [];
+let testcases = [
+  "fetch",
+  "src-embed",
+  "src-img",
+  "src-input",
+  "src-media",
+  "xhr",
+];
+let testcase;
+
+function isUrgentStart(aClassFlags) {
+  if (!aClassFlags) {
+    return false;
+  }
+
+  const urgentStartFlag = 1 << 6;
+  return !!(urgentStartFlag & aClassFlags);
+}
+
+// Test for setTimeout (task)
+function testSetTimeout() {
+  return new Promise(aResolve =>
+    setTimeout(function() {
+      testSimple().then(aResolve);
+    }, 0));
+}
+
+// Test for promise chain (micro-task)
+function testPromise() {
+  return Promise.resolve().then(testSimple);
+}
+
+function testSimple() {
+  let testUrl = url + "?" + expectedResults.length;
+
+  if (testcase == "fetch") {
+    return fetch(testUrl);
+  } else if (testcase == "src-embed") {
+    document.getElementById('embed').src = testUrl;
+    return Promise.resolve();
+  } else if (testcase == "src-img") {
+    document.getElementById('image').src = testUrl;
+    return Promise.resolve();
+  } else if (testcase == "src-input") {
+    document.getElementById('input').src = testUrl;
+    return Promise.resolve();
+  } else if (testcase == "src-media") {
+    document.getElementById('audio').src = testUrl;
+    return Promise.resolve();
+  } else if (testcase == "xhr") {
+    let xhr = new XMLHttpRequest();
+    xhr.open("GET", testUrl, true);
+    xhr.send(null);
+    return Promise.resolve();
+  }
+
+  ok(false, "Shouldn't go here.");
+}
+
+function sendRequsetAndCheckUrgentStart(aEventToTest) {
+  info("SendRequsetAndCheckUrgentStart");
+
+  let promise1, promise2;
+  let promise1_resolve, promise2_resolve;
+
+  function checkUrgentStart(aSubject) {
+    var channel = aSubject.QueryInterface(Ci.nsIChannel);
+    if (channel.URI.spec.indexOf(scope) === -1 ) {
+      return;
+    }
+
+    info("CheckUrgentStart");
+
+    let cos = channel.QueryInterface(Ci.nsIClassOfService);
+
+    let expectedResult = expectedResults.shift();
+    is(isUrgentStart(cos.classFlags), expectedResult,
+       "Expect get: " + expectedResult + ", get: " +
+       isUrgentStart(cos.classFlags) + " in the " +
+       (9 - expectedResults.length) + " test of " + testcase);
+
+    // Make sure we've run the check.
+    promise1_resolve();
+  }
+
+  // Resolve this after we've gotten response to prevent from sending too many
+  // requests to Necko in a short time.
+  function getResponse(aSubject) {
+    var channel = aSubject.QueryInterface(Ci.nsIChannel);
+    if (channel.URI.spec.indexOf(scope) === -1 ) {
+      return;
+    }
+    info("GetResponse");
+
+    promise2_resolve();
+  }
+
+  SpecialPowers.addObserver(checkUrgentStart, topic_request);
+  SpecialPowers.addObserver(getResponse, topic_response);
+  SpecialPowers.addObserver(getResponse, topic_cachedResponse);
+
+  return Promise.resolve()
+    .then(() => {
+      promise1 = new Promise(aResolve => { promise1_resolve = aResolve; });
+      promise2 = new Promise(aResolve => { promise2_resolve = aResolve; });
+      return Promise.all([addListenerAndSendEvent(testSimple, aEventToTest),
+                          promise1,
+                          promise2]);
+    })
+    .then(() => {
+      promise1 = new Promise(aResolve => { promise1_resolve = aResolve; });
+      promise2 = new Promise(aResolve => { promise2_resolve = aResolve; });
+      return Promise.all([addListenerAndSendEvent(testSetTimeout, aEventToTest),
+                          promise1,
+                          promise2]);
+    })
+    .then(() => {
+      promise1 = new Promise(aResolve => { promise1_resolve = aResolve; });
+      promise2 = new Promise(aResolve => { promise2_resolve = aResolve; });
+      return Promise.all([addListenerAndSendEvent(testPromise, aEventToTest),
+                          promise1,
+                          promise2]);
+    })
+    .then(() => {
+      // remove obs if we've tested each three conditions
+      // (simple, promise, setTimeout).
+      SpecialPowers.removeObserver(checkUrgentStart, topic_request);
+      SpecialPowers.removeObserver(getResponse,topic_response);
+      SpecialPowers.removeObserver(getResponse, topic_cachedResponse);
+      return Promise.resolve();
+    });
+}
+
+function addListenerAndSendEvent(aFunction, aEventToTest) {
+  info("AddListenerAndSendEvent:" + aEventToTest);
+
+  let eventHandle = function () {
+    return aFunction();
+  };
+
+  if (aEventToTest === TestEvent.USER_INPUT_EVENT) {
+    // User Input Event
+    window.addEventListener("mousedown", eventHandle, {once: true});
+  } else if (aEventToTest === TestEvent.NONUSER_INPUT_EVENT) {
+    window.addEventListener("message", eventHandle, {once: true});
+  }
+
+  if (aEventToTest === TestEvent.USER_INPUT_EVENT) {
+    // User Input Event
+    var utils = SpecialPowers.getDOMWindowUtils(window);
+    utils.sendMouseEvent("mousedown", 1, 1, 0, 1, 0);
+  } else if (aEventToTest === TestEvent.NONUSER_INPUT_EVENT) {
+    window.postMessage("hello", "*");
+  } else if (aEventToTest === TestEvent.NOEVENT) {
+    eventHandle();
+  }
+}
+
+const TestEvent = {
+  NOEVENT: 0,
+  USER_INPUT_EVENT: 1,
+  NONUSER_INPUT_EVENT: 2,
+};
+
+function executeTest() {
+  is(expectedResults.length, 0, "expectedResults should be 0 be executeTest.");
+
+  // We will test fetch first and then xhr.
+  testcase = testcases.shift();
+  info("Verify " + testcase);
+
+  expectedResults = [
+    /* SimpleTest without any events */ false,
+    /* PromiseTest without any events */ false,
+    /* SetTimeoutTest without any events */ false,
+    /* SimpleTest with a user input event */ true,
+    /* PromiseTest with a user input event */ false,
+    /* SetTimeoutTest with user input event */ false,
+    /* SimpleTest with a non user input event */ false,
+    /* PromiseTest with a non user input event */ false,
+    /* SetTimeoutTest with a non user input event */ false,
+  ];
+
+  return Promise.resolve()
+  // Verify urgent-start is not set when the request is not triggered by any
+  // events.
+    .then(() => sendRequsetAndCheckUrgentStart(TestEvent.NOEVENT))
+
+  // Verify urgent-start is set only when the request is triggered by a user
+  // input event. (not for another microtask (e.g. promise-chain) and
+  // task (e.g. setTimeout)).
+    .then(() => sendRequsetAndCheckUrgentStart(TestEvent.USER_INPUT_EVENT))
+
+  // Verify urgent-start is not set when the request is triggered by a non user
+  // input event.
+    .then(() => sendRequsetAndCheckUrgentStart(TestEvent.NONUSER_INPUT_EVENT))
+    .then(_ => {
+      if (testcases.length !== 0) {
+        // Run the other test if we still have tests needed to be run.
+        return executeTest();
+      }
+
+      return Promise.resolve();
+    });
+}
+
+function endCheck() {
+  info("End Check: make sure that we've done all the tests.");
+
+  is(testcases.length, 0, "All the tests should be executed.");
+  is(expectedResults.length, 0, "All the tests should be executed.");
+
+  return Promise.resolve();
+}
+
+function runTest() {
+  return Promise.resolve()
+    .then(executeTest)
+    .then(endCheck)
+    .catch(aError => ok(false, "Some test failed with error " + aError))
+    .then(SimpleTest.finish);
+}
+</script>
+</pre>
+</body>
+</html>

@@ -3278,8 +3278,6 @@ var SessionStoreInternal = {
       initialTabs = Array.slice(tabbrowser.tabs);
     }
 
-    let numVisibleTabs = 0;
-
     let restoreTabsLazily = this._prefBranch.getBoolPref("sessionstore.restore_tabs_lazily") &&
       this._prefBranch.getBoolPref("sessionstore.restore_on_demand");
 
@@ -3309,9 +3307,6 @@ var SessionStoreInternal = {
 
       if (winData.tabs[t].hidden) {
         tabbrowser.hideTab(tabs[t]);
-      } else {
-        tabbrowser.showTab(tabs[t]);
-        numVisibleTabs++;
       }
     }
 
@@ -3333,12 +3328,6 @@ var SessionStoreInternal = {
         tabbrowser.unpinTab(initialTabs[i]);
         tabbrowser.moveTabTo(initialTabs[i], endPosition);
       }
-    }
-
-    // if all tabs to be restored are hidden, make the first one visible
-    if (!numVisibleTabs && winData.tabs.length) {
-      winData.tabs[0].hidden = false;
-      tabbrowser.showTab(tabs[0]);
     }
 
     // We want to correlate the window with data from the last session, so

@@ -26,7 +26,6 @@ function grid(aTableIdentifier)
 
   this.getCellAtIndex = function getCellAtIndex(aIndex)
   {
-    var rowCount = this.getRowCount();
     var colsCount = this.getColsCount();
 
     var rowIdx = Math.floor(aIndex / colsCount);
@@ -133,7 +132,7 @@ function grid(aTableIdentifier)
   {
     if (aEvent.target.localName != "td")
       return;
-    
+
     var curCell = this.getCurrentCell();
     var cell = aEvent.target;
 

@@ -27,12 +27,16 @@ XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
   ["gViewSourceBundle", "viewSourceBundle"],
   ["gContextMenu",      "viewSourceContextMenu"]
 ].forEach(function([name, id]) {
-  window.__defineGetter__(name, function() {
-    var element = document.getElementById(id);
-    if (!element)
-      return null;
-    delete window[name];
-    return window[name] = element;
+  Object.defineProperty(window, name, {
+    configurable: true,
+    enumerable: true,
+    get() {
+      var element = document.getElementById(id);
+      if (!element)
+        return null;
+      delete window[name];
+      return window[name] = element;
+    },
   });
 });
 
@@ -779,14 +783,18 @@ function getBrowser() {
   return gBrowser;
 }
 
-this.__defineGetter__("gPageLoader", function() {
-  var webnav = viewSourceChrome.webNav;
-  if (!webnav)
-    return null;
-  delete this.gPageLoader;
-  this.gPageLoader = (webnav instanceof Ci.nsIWebPageDescriptor) ? webnav
-                                                                 : null;
-  return this.gPageLoader;
+Object.defineProperty(this, "gPageLoader", {
+  configurable: true,
+  enumerable: true,
+  get() {
+    var webnav = viewSourceChrome.webNav;
+    if (!webnav)
+      return null;
+    delete this.gPageLoader;
+    this.gPageLoader = (webnav instanceof Ci.nsIWebPageDescriptor) ? webnav
+                                                                   : null;
+    return this.gPageLoader;
+  },
 });
 
 // Strips the |view-source:| for internalSave()
@@ -800,11 +808,15 @@ function ViewSourceSavePage() {
 // Below are old deprecated functions and variables left behind for
 // compatibility reasons. These will be removed soon via bug 1159293.
 
-this.__defineGetter__("gLastLineFound", function() {
-  Deprecated.warning("gLastLineFound is deprecated - please use " +
-                     "viewSourceChrome.lastLineFound instead.",
-                     "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/View_Source_for_XUL_Applications");
-  return viewSourceChrome.lastLineFound;
+Object.defineProperty(this, "gLastLineFound", {
+  configurable: true,
+  enumerable: true,
+  get() {
+    Deprecated.warning("gLastLineFound is deprecated - please use " +
+                       "viewSourceChrome.lastLineFound instead.",
+                       "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/View_Source_for_XUL_Applications");
+    return viewSourceChrome.lastLineFound;
+  },
 });
 
 function onLoadViewSource() {

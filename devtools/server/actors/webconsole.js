@@ -527,7 +527,7 @@ WebConsoleActor.prototype =
    *        The actor instance you want to release.
    */
   releaseActor: function (actor) {
-    this._actorPool.removeActor(actor.actorID);
+    this._actorPool.removeActor(actor);
   },
 
   /**
