@@ -71,7 +71,7 @@ class FreeBSDBootstrapper(BaseBootstrapper):
         self.pkg_install(*self.browser_packages)
 
     def ensure_stylo_packages(self, state_dir):
-        self.pkg_install('llvm39')
+        self.pkg_install('llvm40')
 
     def suggest_browser_mozconfig(self):
         if self.stylo:

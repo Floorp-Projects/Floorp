@@ -24,6 +24,7 @@ class HttpData;
 class DnsData;
 class WebSocketRequest;
 class ConnectionData;
+class RcwnData;
 
 class Dashboard final
     : public nsIDashboard
@@ -95,6 +96,7 @@ private:
     nsresult GetHttpConnections(HttpData *);
     nsresult GetDNSCacheEntries(DnsData *);
     nsresult GetWebSocketConnections(WebSocketRequest *);
+    nsresult GetRcwnData(RcwnData *);
 
     nsCOMPtr<nsIDNSService> mDnsService;
 };

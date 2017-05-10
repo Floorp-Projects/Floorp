@@ -32,6 +32,12 @@ public class testMediaControl extends MediaPlaybackTest {
 
         info("- run test : testCloseTab -");
         testCloseTab();
+
+        info("- run test : testResumeMediaFromPage -");
+        testResumeMediaFromPage();
+
+        info("- run test : testAdjustMediaVolumeOrMuted -");
+        testAdjustMediaVolumeOrMuted();
     }
 
     private void testBasicBehaviors() {
@@ -158,5 +164,90 @@ public class testMediaControl extends MediaPlaybackTest {
 
         info("- close tab -");
         closeAllTabs();
+    }
+
+   /**
+     * Media control and audio focus should be changed as well when user resume
+     * media from page, instead of from media control.
+     */
+    private void testResumeMediaFromPage() {
+        info("- create JSBridge -");
+        createJSBridge();
+
+        info("- load URL -");
+        final String MEDIA_URL = getAbsoluteUrl(mStringHelper.ROBOCOP_MEDIA_PLAYBACK_JS_URL);
+        loadUrlAndWait(MEDIA_URL);
+
+        info("- play media -");
+        getJS().syncCall("play_audio");
+
+        info("- wait until media starts playing -");
+        final Tab tab = Tabs.getInstance().getSelectedTab();
+        waitUntilTabMediaStarted(tab);
+        checkIfMediaPlayingSuccess(true /* playing */);
+
+        info("- simulate media control pause -");
+        notifyMediaControlService(MediaControlService.ACTION_PAUSE);
+        checkIfMediaPlayingSuccess(false /* paused */);
+
+        info("- resume media from page -");
+        getJS().syncCall("play_audio");
+        checkIfMediaPlayingSuccess(true /* playing */);
+
+        info("- pause media from page -");
+        getJS().syncCall("pause_audio");
+        checkIfMediaPlayingSuccess(false /* paused */, true /* clear notification */);
+
+        info("- close tab -");
+        closeAllTabs();
+
+        info("- destroy JSBridge -");
+        destroyJSBridge();
+    }
+
+    /**
+     * Media control should always be displayed even the media becomes non-audible.
+     */
+    private void testAdjustMediaVolumeOrMuted() {
+        info("- create JSBridge -");
+        createJSBridge();
+
+        info("- load URL -");
+        final String MEDIA_URL = getAbsoluteUrl(mStringHelper.ROBOCOP_MEDIA_PLAYBACK_JS_URL);
+        loadUrlAndWait(MEDIA_URL);
+
+        info("- play media -");
+        getJS().syncCall("play_audio");
+
+        info("- wait until media starts playing -");
+        final Tab tab = Tabs.getInstance().getSelectedTab();
+        waitUntilTabMediaStarted(tab);
+        checkIfMediaPlayingSuccess(true /* playing */);
+
+        info("- change media's volume to 0.0 -");
+        getJS().syncCall("adjust_audio_volume", 0.0);
+        checkMediaNotificationStates(tab, true);
+
+        info("- change media's volume to 1.0 -");
+        getJS().syncCall("adjust_audio_volume", 1.0);
+        checkMediaNotificationStates(tab, true);
+
+        info("- mute media -");
+        getJS().syncCall("adjust_audio_muted", true);
+        checkMediaNotificationStates(tab, true);
+
+        info("- unmute media -");
+        getJS().syncCall("adjust_audio_muted", false);
+        checkMediaNotificationStates(tab, true);
+
+        info("- pause media -");
+        getJS().syncCall("pause_audio");
+        checkIfMediaPlayingSuccess(false /* paused */, true /* clear notification */);
+
+        info("- close tab -");
+        closeAllTabs();
+
+        info("- destroy JSBridge -");
+        destroyJSBridge();
     }
 }

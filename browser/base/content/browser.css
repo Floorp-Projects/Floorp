@@ -424,29 +424,6 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   max-width: none;
 }
 
-#urlbar-container {
-  min-width: 50ch;
-}
-
-#search-container {
-  min-width: 25ch;
-}
-
-/* Apply crisp rendering for favicons at exactly 2dppx resolution */
-@media (resolution: 2dppx) {
-  .searchbar-engine-image {
-    image-rendering: -moz-crisp-edges;
-  }
-}
-
-#urlbar,
-.searchbar-textbox {
-  /* Setting a width and min-width to let the location & search bars maintain
-     a constant width in case they haven't be resized manually. (bug 965772) */
-  width: 1px;
-  min-width: 1px;
-}
-
 #main-window:-moz-lwtheme {
   background-repeat: no-repeat;
   background-position: top right;
@@ -474,9 +451,40 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   display: none;
 }
 
-/* ::::: location bar ::::: */
+/* ::::: location bar & search bar ::::: */
+
+#urlbar-container {
+  min-width: 50ch;
+}
+
+#search-container {
+  min-width: 25ch;
+}
+
+#urlbar,
+.searchbar-textbox {
+  /* Setting a width and min-width to let the location & search bars maintain
+     a constant width in case they haven't be resized manually. (bug 965772) */
+  width: 1px;
+  min-width: 1px;
+}
+
 #urlbar {
   -moz-binding: url(chrome://browser/content/urlbarBindings.xml#urlbar);
+}
+
+/* Fade out URL on overflow */
+html|input.urlbar-input[textoverflow]:not([focused]) {
+  /* Don't need to worry about RTL here since we use direction:ltr for the
+     input field. */
+  mask-image: linear-gradient(to left, transparent, black 3em);
+}
+
+/* Apply crisp rendering for favicons at exactly 2dppx resolution */
+@media (resolution: 2dppx) {
+  .searchbar-engine-image {
+    image-rendering: -moz-crisp-edges;
+  }
 }
 
 /* Always show URLs LTR. */
@@ -504,14 +512,8 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   list-style-image: none;
 }
 
-#urlbar:not([actiontype="switchtab"]):not([actiontype="extension"]) > #urlbar-display-box {
-  display: none;
-}
-
-#urlbar:not([actiontype="switchtab"]) > #urlbar-display-box > #switchtab {
-  display: none;
-}
-
+#urlbar:not([actiontype="switchtab"]):not([actiontype="extension"]) > #urlbar-display-box,
+#urlbar:not([actiontype="switchtab"]) > #urlbar-display-box > #switchtab,
 #urlbar:not([actiontype="extension"]) > #urlbar-display-box > #extension {
   display: none;
 }
