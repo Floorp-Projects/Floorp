@@ -72,15 +72,14 @@ to mochitest command.
     * test_animations_event_order.html [2]
 * test_computed_style.html `gradient`: -webkit-prefixed gradient values [13]
 * test_bug829816.html: counter-{reset,increment} serialization difference bug 1363968 [8]
-* \@counter-style support bug 1328319
-  * test_counter_descriptor_storage.html [1]
-  * test_counter_style.html [5]
+* dynamic change on \@counter-style rule bug 1363590
+  * test_counter_style.html [11]
+  * test_counter_style.html asserts [11]
+  * test_counter_descriptor_storage.html asserts [110]
+* symbols() function and string value on list-style-type bug 1363596
   * test_value_storage.html `symbols(` [30]
-  * ... `list-style-type` [60]
-  * ... `'list-style'` [30]
-  * ... `'content`: various value as list-style-type in counter functions [2]
-  * test_html_attribute_computed_values.html `list-style-type` [8]
-  * test_rule_insertion.html `counter` [47]
+  * ... `list-style-type` [8]
+  * ... `'list-style'` [18]
 * @page support:
   * test_bug887741_at-rules_in_declaration_lists.html `exception` [1]
 * Unimplemented \@font-face descriptors:
