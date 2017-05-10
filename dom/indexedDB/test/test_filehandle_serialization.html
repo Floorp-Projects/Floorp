@@ -23,8 +23,6 @@
 
     const objectStoreName = "Blobs";
 
-    const testFile = getRandomFile("random.bin", 100000);
-
     let databases = [];
     for (let info of databaseInfo) {
       let request = indexedDB.open(info.name, 1);
@@ -51,7 +49,7 @@
 
     let request = db1.createMutableFile("random.bin", "binary/random");
     request.onsuccess = grabEventAndContinueHandler;
-    event = yield undefined;
+    let event = yield undefined;
 
     let mutableFile = event.target.result;
     is(getFileId(mutableFile), 1, "Correct file id");

@@ -31,7 +31,7 @@
     let mutableFile = event.target.result;
     mutableFile.onerror = errorHandler;
 
-    let fileHandle = mutableFile.open();
+    mutableFile.open();
 
     let fileHandle2;
 
