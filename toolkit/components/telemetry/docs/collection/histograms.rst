@@ -106,7 +106,6 @@ The following is a sample histogram declaration from ``Histograms.json`` for a h
 .. code-block:: json
 
     "MEMORY_RESIDENT": {
-      "record_in_processes": ["main", "content"],
       "alert_emails": ["team@mozilla.xyz"],
       "expires_in_version": "never",
       "kind": "exponential",
@@ -120,16 +119,6 @@ The following is a sample histogram declaration from ``Histograms.json`` for a h
 Histograms which track timings in milliseconds or microseconds should suffix their names with ``"_MS"`` and ``"_US"`` respectively. Flag-type histograms should have the suffix ``"_FLAG"`` in their name.
 
 The possible fields in a histogram declaration are listed below.
-
-``record_in_processes``
------------------------
-Required. This field is a list of processes this histogram can be recorded in. Currently-supported values are:
-
-- ``main``
-- ``content``
-- ``gpu``
-- ``all_child`` (record in all child processes)
-- ``all`` (record in all processes)
 
 ``alert_emails``
 ----------------
