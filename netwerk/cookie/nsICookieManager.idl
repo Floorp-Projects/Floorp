@@ -42,6 +42,12 @@ interface nsICookieManager : nsISupports
   readonly attribute nsISimpleEnumerator enumerator;
 
   /**
+   * Called to enumerate through each session cookie in the cookie list.
+   * The objects enumerated over are of type nsICookie
+   */
+  readonly attribute nsISimpleEnumerator sessionEnumerator;
+
+  /**
    * Called to remove an individual cookie from the cookie list, specified
    * by host, name, and path. If the cookie cannot be found, no exception
    * is thrown. Typically, the arguments to this method will be obtained
