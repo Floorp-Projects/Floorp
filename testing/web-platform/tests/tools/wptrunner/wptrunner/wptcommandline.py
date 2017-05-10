@@ -184,6 +184,13 @@ scheme host and port.""")
                              help="Enable leak checking")
     gecko_group.add_argument("--stylo-threads", action="store", type=int, default=1,
                              help="Number of parallel threads to use for stylo")
+    gecko_group.add_argument("--reftest-internal", dest="reftest_internal", action="store_true",
+                             default=None, help="Enable reftest runner implemented inside Marionette")
+    gecko_group.add_argument("--reftest-external", dest="reftest_internal", action="store_false",
+                             help="Disable reftest runner implemented inside Marionette")
+    gecko_group.add_argument("--reftest-screenshot", dest="reftest_screenshot", action="store",
+                             choices=["always", "fail", "unexpected"], default="unexpected",
+                             help="With --reftest-internal, when to take a screenshot")
 
     servo_group = parser.add_argument_group("Servo-specific")
     servo_group.add_argument("--user-stylesheet",
