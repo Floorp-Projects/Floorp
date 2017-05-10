@@ -12,6 +12,7 @@ webgl = ["offscreen_gl_context"]
 
 [dependencies]
 app_units = "0.4"
+bincode = "1.0.0-alpha2"
 byteorder = "1.0"
 euclid = "0.11"
 gleam = "0.4"

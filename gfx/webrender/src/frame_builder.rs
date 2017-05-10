@@ -22,7 +22,7 @@ use clip_scroll_tree::ClipScrollTree;
 use std::{cmp, f32, i32, mem, usize};
 use euclid::{SideOffsets2D, TypedPoint3D};
 use tiling::{ContextIsolation, StackingContextIndex};
-use tiling::{AuxiliaryListsMap, ClipScrollGroup, ClipScrollGroupIndex, CompositeOps, Frame};
+use tiling::{ClipScrollGroup, ClipScrollGroupIndex, CompositeOps, DisplayListMap, Frame};
 use tiling::{PackedLayer, PackedLayerIndex, PrimitiveFlags, PrimitiveRunCmd, RenderPass};
 use tiling::{RenderTargetContext, RenderTaskCollection, ScrollbarPrimitive, StackingContext};
 use util::{self, pack_as_float, subtract_rect, recycle_vec};
@@ -30,9 +30,10 @@ use util::RectHelpers;
 use webrender_traits::{BorderDetails, BorderDisplayItem, BoxShadowClipMode, ClipAndScrollInfo};
 use webrender_traits::{ClipId, ClipRegion, ColorF, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
 use webrender_traits::{DeviceUintRect, DeviceUintSize, ExtendMode, FontKey, FontRenderMode};
-use webrender_traits::{GlyphOptions, ImageKey, ImageRendering, ItemRange, LayerPoint, LayerRect};
-use webrender_traits::{LayerSize, LayerToScrollTransform, PipelineId, RepeatMode, TileOffset};
-use webrender_traits::{TransformStyle, WebGLContextId, WorldPixel, YuvColorSpace, YuvData};
+use webrender_traits::{GlyphInstance, GlyphOptions, GradientStop, ImageKey, ImageRendering};
+use webrender_traits::{ItemRange, LayerPoint, LayerRect, LayerSize, LayerToScrollTransform};
+use webrender_traits::{PipelineId, RepeatMode, TileOffset, TransformStyle, WebGLContextId};
+use webrender_traits::{WorldPixel, YuvColorSpace, YuvData};
 
 #[derive(Debug, Clone)]
 struct ImageBorderSegment {
@@ -419,7 +420,9 @@ impl FrameBuilder {
                       clip_and_scroll: ClipAndScrollInfo,
                       rect: LayerRect,
                       clip_region: &ClipRegion,
-                      border_item: &BorderDisplayItem) {
+                      border_item: &BorderDisplayItem,
+                      gradient_stops: ItemRange<GradientStop>,
+                      gradient_stops_count: usize) {
         let create_segments = |outset: SideOffsets2D<f32>| {
             // Calculate the modified rect as specific by border-image-outset
             let origin = LayerPoint::new(rect.origin.x - outset.left,
@@ -579,7 +582,8 @@ impl FrameBuilder {
                                       clip_region,
                                       border.gradient.start_point - segment_rel,
                                       border.gradient.end_point - segment_rel,
-                                      border.gradient.stops,
+                                      gradient_stops,
+                                      gradient_stops_count,
                                       border.gradient.extend_mode,
                                       segment.size,
                                       LayerSize::zero());
@@ -597,7 +601,7 @@ impl FrameBuilder {
                                              border.gradient.end_center - segment_rel,
                                              border.gradient.end_radius,
                                              border.gradient.ratio_xy,
-                                             border.gradient.stops,
+                                             gradient_stops,
                                              border.gradient.extend_mode,
                                              segment.size,
                                              LayerSize::zero());
@@ -612,7 +616,8 @@ impl FrameBuilder {
                         clip_region: &ClipRegion,
                         start_point: LayerPoint,
                         end_point: LayerPoint,
-                        stops: ItemRange,
+                        stops: ItemRange<GradientStop>,
+                        stops_count: usize,
                         extend_mode: ExtendMode,
                         tile_size: LayerSize,
                         tile_spacing: LayerSize) {
@@ -643,6 +648,7 @@ impl FrameBuilder {
 
         let gradient_cpu = GradientPrimitiveCpu {
             stops_range: stops,
+            stops_count: stops_count,
             extend_mode: extend_mode,
             reverse_stops: reverse_stops,
             cache_dirty: true,
@@ -684,7 +690,7 @@ impl FrameBuilder {
                                end_center: LayerPoint,
                                end_radius: f32,
                                ratio_xy: f32,
-                               stops: ItemRange,
+                               stops: ItemRange<GradientStop>,
                                extend_mode: ExtendMode,
                                tile_size: LayerSize,
                                tile_spacing: LayerSize) {
@@ -721,7 +727,8 @@ impl FrameBuilder {
                     size: Au,
                     blur_radius: Au,
                     color: &ColorF,
-                    glyph_range: ItemRange,
+                    glyph_range: ItemRange<GlyphInstance>,
+                    glyph_count: usize,
                     glyph_options: Option<GlyphOptions>) {
         if color.a == 0.0 {
             return
@@ -746,6 +753,7 @@ impl FrameBuilder {
             logical_font_size: size,
             blur_radius: blur_radius,
             glyph_range: glyph_range,
+            glyph_count: glyph_count,
             cache_dirty: true,
             glyph_instances: Vec::new(),
             color_texture_id: SourceTexture::Invalid,
@@ -1064,7 +1072,7 @@ impl FrameBuilder {
     fn build_layer_screen_rects_and_cull_layers(&mut self,
                                                 screen_rect: &DeviceIntRect,
                                                 clip_scroll_tree: &mut ClipScrollTree,
-                                                auxiliary_lists_map: &AuxiliaryListsMap,
+                                                display_lists: &DisplayListMap,
                                                 resource_cache: &mut ResourceCache,
                                                 profile_counters: &mut FrameProfileCounters,
                                                 device_pixel_ratio: f32) {
@@ -1072,7 +1080,7 @@ impl FrameBuilder {
         LayerRectCalculationAndCullingPass::create_and_run(self,
                                                            screen_rect,
                                                            clip_scroll_tree,
-                                                           auxiliary_lists_map,
+                                                           display_lists,
                                                            resource_cache,
                                                            profile_counters,
                                                            device_pixel_ratio);
@@ -1326,7 +1334,7 @@ impl FrameBuilder {
                  resource_cache: &mut ResourceCache,
                  frame_id: FrameId,
                  clip_scroll_tree: &mut ClipScrollTree,
-                 auxiliary_lists_map: &AuxiliaryListsMap,
+                 display_lists: &DisplayListMap,
                  device_pixel_ratio: f32,
                  texture_cache_profile: &mut TextureCacheProfileCounters)
                  -> Frame {
@@ -1353,7 +1361,7 @@ impl FrameBuilder {
 
         self.build_layer_screen_rects_and_cull_layers(&screen_rect,
                                                       clip_scroll_tree,
-                                                      auxiliary_lists_map,
+                                                      display_lists,
                                                       resource_cache,
                                                       &mut profile_counters,
                                                       device_pixel_ratio);
@@ -1433,7 +1441,7 @@ struct LayerRectCalculationAndCullingPass<'a> {
     frame_builder: &'a mut FrameBuilder,
     screen_rect: &'a DeviceIntRect,
     clip_scroll_tree: &'a mut ClipScrollTree,
-    auxiliary_lists_map: &'a AuxiliaryListsMap,
+    display_lists: &'a DisplayListMap,
     resource_cache: &'a mut ResourceCache,
     profile_counters: &'a mut FrameProfileCounters,
     device_pixel_ratio: f32,
@@ -1453,7 +1461,7 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
     fn create_and_run(frame_builder: &'a mut FrameBuilder,
                       screen_rect: &'a DeviceIntRect,
                       clip_scroll_tree: &'a mut ClipScrollTree,
-                      auxiliary_lists_map: &'a AuxiliaryListsMap,
+                      display_lists: &'a DisplayListMap,
                       resource_cache: &'a mut ResourceCache,
                       profile_counters: &'a mut FrameProfileCounters,
                       device_pixel_ratio: f32) {
@@ -1462,7 +1470,7 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
             frame_builder: frame_builder,
             screen_rect: screen_rect,
             clip_scroll_tree: clip_scroll_tree,
-            auxiliary_lists_map: auxiliary_lists_map,
+            display_lists: display_lists,
             resource_cache: resource_cache,
             profile_counters: profile_counters,
             device_pixel_ratio: device_pixel_ratio,
@@ -1525,14 +1533,14 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
                 _ => continue,
             };
 
-            let auxiliary_lists = self.auxiliary_lists_map.get(&node.pipeline_id)
-                                                          .expect("No auxiliary lists?");
+            let display_list = self.display_lists.get(&node.pipeline_id)
+                                                 .expect("No display list?");
 
             mask_info.update(&node_clip_info.clip_sources,
                              &packed_layer.transform,
                              &mut self.frame_builder.prim_store.gpu_data32,
                              self.device_pixel_ratio,
-                             auxiliary_lists);
+                             display_list);
 
             for clip_source in &node_clip_info.clip_sources {
                 if let Some(mask) = clip_source.image_mask() {
@@ -1693,8 +1701,8 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
         let stacking_context =
             &mut self.frame_builder.stacking_context_store[stacking_context_index.0];
         let packed_layer = &self.frame_builder.packed_layers[packed_layer_index.0];
-        let auxiliary_lists = self.auxiliary_lists_map.get(&pipeline_id)
-                                                      .expect("No auxiliary lists?");
+        let display_list = self.display_lists.get(&pipeline_id)
+                                             .expect("No display list?");
         for i in 0..prim_count {
             let prim_index = PrimitiveIndex(prim_index.0 + i);
             if self.frame_builder.prim_store.build_bounding_rect(prim_index,
@@ -1706,7 +1714,7 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
                                                                          self.resource_cache,
                                                                          &packed_layer.transform,
                                                                          self.device_pixel_ratio,
-                                                                         auxiliary_lists) {
+                                                                         display_list) {
                     self.frame_builder.prim_store.build_bounding_rect(prim_index,
                                                                       self.screen_rect,
                                                                       &packed_layer.transform,

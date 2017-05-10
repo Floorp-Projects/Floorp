@@ -211,20 +211,6 @@ struct WrVecU8 {
   }
 };
 
-struct WrAuxiliaryListsDescriptor {
-  size_t gradient_stops_size;
-  size_t complex_clip_regions_size;
-  size_t filters_size;
-  size_t glyph_instances_size;
-
-  bool operator==(const WrAuxiliaryListsDescriptor& aOther) const {
-    return gradient_stops_size == aOther.gradient_stops_size &&
-           complex_clip_regions_size == aOther.complex_clip_regions_size &&
-           filters_size == aOther.filters_size &&
-           glyph_instances_size == aOther.glyph_instances_size;
-  }
-};
-
 struct WrOpacityProperty {
   uint64_t id;
   float opacity;

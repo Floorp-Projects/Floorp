@@ -5,9 +5,8 @@
 use fnv::FnvHasher;
 use std::collections::HashMap;
 use std::hash::BuildHasherDefault;
-use tiling::AuxiliaryListsMap;
-use webrender_traits::{AuxiliaryLists, BuiltDisplayList, PipelineId, Epoch, ColorF};
-use webrender_traits::{DisplayItem, DynamicProperties, LayerSize, LayoutTransform};
+use webrender_traits::{BuiltDisplayList, PipelineId, Epoch, ColorF};
+use webrender_traits::{DynamicProperties, LayerSize, LayoutTransform};
 use webrender_traits::{PropertyBinding, PropertyBindingId};
 
 /// Stores a map of the animated property bindings for the current display list. These
@@ -93,8 +92,7 @@ pub struct ScenePipeline {
 pub struct Scene {
     pub root_pipeline_id: Option<PipelineId>,
     pub pipeline_map: HashMap<PipelineId, ScenePipeline, BuildHasherDefault<FnvHasher>>,
-    pub pipeline_auxiliary_lists: AuxiliaryListsMap,
-    pub display_lists: HashMap<PipelineId, Vec<DisplayItem>, BuildHasherDefault<FnvHasher>>,
+    pub display_lists: HashMap<PipelineId, BuiltDisplayList, BuildHasherDefault<FnvHasher>>,
     pub properties: SceneProperties,
 }
 
@@ -103,7 +101,6 @@ impl Scene {
         Scene {
             root_pipeline_id: None,
             pipeline_map: HashMap::default(),
-            pipeline_auxiliary_lists: HashMap::default(),
             display_lists: HashMap::default(),
             properties: SceneProperties::new(),
         }
@@ -118,11 +115,9 @@ impl Scene {
                             epoch: Epoch,
                             built_display_list: BuiltDisplayList,
                             background_color: Option<ColorF>,
-                            viewport_size: LayerSize,
-                            auxiliary_lists: AuxiliaryLists) {
+                            viewport_size: LayerSize) {
 
-        self.pipeline_auxiliary_lists.insert(pipeline_id, auxiliary_lists);
-        self.display_lists.insert(pipeline_id, built_display_list.into_display_items());
+        self.display_lists.insert(pipeline_id, built_display_list);
         
         let new_pipeline = ScenePipeline {
             pipeline_id: pipeline_id,
