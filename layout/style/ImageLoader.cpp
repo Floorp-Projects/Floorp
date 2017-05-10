@@ -315,7 +315,7 @@ ImageLoader::GetPresContext()
 }
 
 void InvalidateImagesCallback(nsIFrame* aFrame, 
-                              DisplayItemData* aItem)
+                              FrameLayerBuilder::DisplayItemData* aItem)
 {
   nsDisplayItem::Type type = nsDisplayItem::GetDisplayItemTypeFromKey(aItem->GetDisplayItemKey());
   uint8_t flags = nsDisplayItem::GetDisplayItemFlagsForType(type);
