@@ -70,6 +70,8 @@ function get(k) {
 function runInSandbox(sandbox, testFunc) {
   is(typeof testFunc, 'function');
   var resolvePromise;
+  // Step-done is defined in the sandbox and used in the add() function above.
+  /* global step_done */
   var testPromise = new Promise(r => resolvePromise = r);
   SpecialPowers.Cu.exportFunction(_ => resolvePromise(), sandbox,
                                   { defineAs: 'step_done' });

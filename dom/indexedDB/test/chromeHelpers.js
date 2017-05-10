@@ -5,6 +5,9 @@
 
 var { 'classes': Cc, 'interfaces': Ci, 'utils': Cu } = Components;
 
+// testSteps is expected to be defined by the file including this file.
+/* global testSteps */
+
 var testGenerator = testSteps();
 
 if (!window.runTest) {

@@ -10,6 +10,8 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
   <script type="text/javascript">
+  /* import-globals-from file.js */
+  /* import-globals-from helpers.js */
   /**
    * Test that a put of a file-backed Blob/File whose backing file has been
    * deleted results in a failure of that put failure.
@@ -109,7 +111,7 @@
       let trans = db.transaction([objectStoreName], READ_WRITE);
       let objectStore = trans.objectStore(objectStoreName);
 
-      request = objectStore.add(fileBackedFile, 2);
+      let request = objectStore.add(fileBackedFile, 2);
       request.onsuccess = unexpectedSuccessHandler;
       request.onerror = expectedErrorHandler("UnknownError");
       trans.onsuccess = unexpectedSuccessHandler;
@@ -133,7 +135,7 @@
 
       // Attempt to fetch the key to verify there's nothing in the DB rather
       // than the value which could return undefined as a misleading error.
-      request = objectStore.getKey(2);
+      let request = objectStore.getKey(2);
       request.onsuccess = grabEventAndContinueHandler;
       request.onerror = errorHandler;
       event = yield undefined;

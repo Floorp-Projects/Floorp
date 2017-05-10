@@ -1,3 +1,5 @@
+/* eslint-env worker */
+
 onconnect = function(e) {
   e.ports[0].onmessage = function(e) {
     var request = indexedDB.open(e.data, { version: 1,
