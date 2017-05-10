@@ -23,13 +23,14 @@
   --toolbarbutton-border-radius: 2px;
 %else
   --toolbarbutton-border-radius: 1px;
-%endif
 
   --toolbarbutton-hover-background: rgba(0,0,0,.1);
+  --toolbarbutton-active-background: rgba(0,0,0,.15);
+%endif
+
   --toolbarbutton-hover-bordercolor: rgba(0,0,0,.2);
   --toolbarbutton-hover-boxshadow: none;
 
-  --toolbarbutton-active-background: rgba(0,0,0,.15);
   --toolbarbutton-active-bordercolor: rgba(0,0,0,.3);
   --toolbarbutton-active-boxshadow: 0 0 0 1px rgba(0,0,0,.15) inset;
 
