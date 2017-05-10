@@ -68,21 +68,19 @@ bool cubeb_should_downmix(cubeb_stream_params const * stream, cubeb_stream_param
 
 bool cubeb_should_mix(cubeb_stream_params const * stream, cubeb_stream_params const * mixer);
 
-void cubeb_downmix_float(float * const in, long inframes, float * out,
-                         unsigned int in_channels, unsigned int out_channels,
-                         cubeb_channel_layout in_layout, cubeb_channel_layout out_layout);
+typedef enum {
+  CUBEB_MIXER_DIRECTION_DOWNMIX = 0x01,
+  CUBEB_MIXER_DIRECTION_UPMIX   = 0x02,
+} cubeb_mixer_direction;
 
-void cubeb_downmix_short(short * const in, long inframes, short * out,
-                         unsigned int in_channels, unsigned int out_channels,
-                         cubeb_channel_layout in_layout, cubeb_channel_layout out_layout);
-
-void cubeb_upmix_float(float * const in, long inframes, float * out,
-                       unsigned int in_channels, unsigned int out_channels);
-
-void cubeb_upmix_short(short * const in, long inframes, short * out,
-                       unsigned int in_channels, unsigned int out_channels);
-
-
+typedef struct cubeb_mixer cubeb_mixer;
+cubeb_mixer * cubeb_mixer_create(cubeb_sample_format format,
+                                 unsigned char direction);
+void cubeb_mixer_destroy(cubeb_mixer * mixer);
+void cubeb_mixer_mix(cubeb_mixer * mixer,
+                     void * input_buffer, long frames, void * output_buffer,
+                     cubeb_stream_params const * stream_params,
+                     cubeb_stream_params const * mixer_params);
 
 #if defined(__cplusplus)
 }

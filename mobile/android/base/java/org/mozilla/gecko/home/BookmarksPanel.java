@@ -105,8 +105,9 @@ public class BookmarksPanel extends HomeFragment implements BookmarkEditFragment
             @Override
             public HomeContextMenuInfo makeInfoForCursor(View view, int position, long id, Cursor cursor) {
                 final int type = cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks.TYPE));
-                if (type == Bookmarks.TYPE_FOLDER) {
-                    // We don't show a context menu for folders
+                final boolean enableFullBookmarkManagement = BookmarkUtils.isEnabled(getContext());
+                if (!enableFullBookmarkManagement && type == Bookmarks.TYPE_FOLDER) {
+                    // We don't show a context menu for folders if full bookmark management isn't enabled.
                     return null;
                 }
                 final HomeContextMenuInfo info = new HomeContextMenuInfo(view, position, id);
@@ -114,6 +115,11 @@ public class BookmarksPanel extends HomeFragment implements BookmarkEditFragment
                 info.title = cursor.getString(cursor.getColumnIndexOrThrow(Bookmarks.TITLE));
                 info.bookmarkId = cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks._ID));
                 info.itemType = RemoveItemType.BOOKMARKS;
+
+                if (type == Bookmarks.TYPE_FOLDER) {
+                    info.isFolder = true;
+                    info.url = "";
+                }
                 return info;
             }
         });

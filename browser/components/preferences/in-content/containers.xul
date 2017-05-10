@@ -18,7 +18,7 @@
 <hbox hidden="true"
       class="container-header-links"
       data-category="paneContainers">
-  <label class="text-link" id="backContainersLink" value="&backLink.label;" />
+  <label class="text-link" id="backContainersLink">&backLink.label;</label>
 </hbox>
 
 <hbox id="header-containers"

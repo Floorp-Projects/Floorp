@@ -961,7 +961,7 @@ class JSFatInlineString : public JSInlineString
     MOZ_ALWAYS_INLINE void finalize(js::FreeOp* fop);
 };
 
-static_assert(sizeof(JSFatInlineString) % js::gc::CellSize == 0,
+static_assert(sizeof(JSFatInlineString) % js::gc::CellAlignBytes == 0,
               "fat inline strings shouldn't waste space up to the next cell "
               "boundary");
 
@@ -1057,7 +1057,7 @@ class NormalAtom : public JSAtom
 {
   protected: // Silence Clang unused-field warning.
     HashNumber hash_;
-    uint32_t padding_; // Ensure the size is a multiple of gc::CellSize.
+    uint32_t padding_; // Ensure the size is a multiple of gc::CellAlignBytes.
 
   public:
     HashNumber hash() const {
@@ -1070,14 +1070,14 @@ class NormalAtom : public JSAtom
 
 static_assert(sizeof(NormalAtom) == sizeof(JSString) + sizeof(uint64_t),
               "NormalAtom must have size of a string + HashNumber, "
-              "aligned to gc::CellSize");
+              "aligned to gc::CellAlignBytes");
 
 class FatInlineAtom : public JSAtom
 {
   protected: // Silence Clang unused-field warning.
     char inlineStorage_[sizeof(JSFatInlineString) - sizeof(JSString)];
     HashNumber hash_;
-    uint32_t padding_; // Ensure the size is a multiple of gc::CellSize.
+    uint32_t padding_; // Ensure the size is a multiple of gc::CellAlignBytes.
 
   public:
     HashNumber hash() const {
@@ -1090,7 +1090,7 @@ class FatInlineAtom : public JSAtom
 
 static_assert(sizeof(FatInlineAtom) == sizeof(JSFatInlineString) + sizeof(uint64_t),
               "FatInlineAtom must have size of a fat inline string + HashNumber, "
-              "aligned to gc::CellSize");
+              "aligned to gc::CellAlignBytes");
 
 } // namespace js
 
@@ -1481,7 +1481,7 @@ template<>
 MOZ_ALWAYS_INLINE bool
 JSFatInlineString::lengthFits<JS::Latin1Char>(size_t length)
 {
-    static_assert((INLINE_EXTENSION_CHARS_LATIN1 * sizeof(char)) % js::gc::CellSize == 0,
+    static_assert((INLINE_EXTENSION_CHARS_LATIN1 * sizeof(char)) % js::gc::CellAlignBytes == 0,
                   "fat inline strings' Latin1 characters don't exactly "
                   "fill subsequent cells and thus are wasteful");
     static_assert(MAX_LENGTH_LATIN1 + 1 ==
@@ -1497,7 +1497,7 @@ template<>
 MOZ_ALWAYS_INLINE bool
 JSFatInlineString::lengthFits<char16_t>(size_t length)
 {
-    static_assert((INLINE_EXTENSION_CHARS_TWO_BYTE * sizeof(char16_t)) % js::gc::CellSize == 0,
+    static_assert((INLINE_EXTENSION_CHARS_TWO_BYTE * sizeof(char16_t)) % js::gc::CellAlignBytes == 0,
                   "fat inline strings' char16_t characters don't exactly "
                   "fill subsequent cells and thus are wasteful");
     static_assert(MAX_LENGTH_TWO_BYTE + 1 ==

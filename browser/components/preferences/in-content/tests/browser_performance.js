@@ -1,10 +1,8 @@
-add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({set: [
-    ["browser.preferences.defaultPerformanceSettings.enabled", true],
-    ["dom.ipc.processCount", 4],
-    ["layers.acceleration.disabled", false],
-  ]});
-});
+SpecialPowers.pushPrefEnv({set: [
+  ["browser.preferences.defaultPerformanceSettings.enabled", true],
+  ["dom.ipc.processCount", 4],
+  ["layers.acceleration.disabled", false],
+]});
 
 add_task(function*() {
   let prefs = yield openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});

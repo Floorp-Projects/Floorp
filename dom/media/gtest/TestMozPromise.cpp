@@ -88,7 +88,7 @@ RunOnTaskQueue(TaskQueue* aQueue, FunctionType aFun)
 }
 
 // std::function can't come soon enough. :-(
-#define DO_FAIL []()->void { EXPECT_TRUE(false); }
+#define DO_FAIL []() { EXPECT_TRUE(false); return TestPromise::CreateAndReject(0, __func__); }
 
 TEST(MozPromise, BasicResolve)
 {
@@ -185,7 +185,11 @@ TEST(MozPromise, CompletionPromises)
     ->Then(queue, __func__,
       [] (int aVal) -> RefPtr<TestPromise> { return TestPromise::CreateAndResolve(aVal + 10, __func__); },
       DO_FAIL)
-    ->Then(queue, __func__, [&invokedPass] () -> void { invokedPass = true; }, DO_FAIL)
+    ->Then(queue, __func__,
+           [&invokedPass] (int aVal) {
+             invokedPass = true;
+             return TestPromise::CreateAndResolve(aVal, __func__);
+           }, DO_FAIL)
     ->Then(queue, __func__,
       [queue] (int aVal) -> RefPtr<TestPromise> {
         RefPtr<TestPromise::Private> p = new TestPromise::Private(__func__);
@@ -222,7 +226,7 @@ TEST(MozPromise, PromiseAllResolve)
         EXPECT_EQ(aResolveValues[2], 42);
         queue->BeginShutdown();
       },
-      DO_FAIL
+      []() { EXPECT_TRUE(false); }
     );
   });
 }
@@ -241,7 +245,7 @@ TEST(MozPromise, PromiseAllReject)
     promises.AppendElement(TestPromise::CreateAndReject(52.0, __func__));
 
     TestPromise::All(queue, promises)->Then(queue, __func__,
-      DO_FAIL,
+      []() { EXPECT_TRUE(false); },
       [queue] (float aRejectValue) -> void {
         EXPECT_EQ(aRejectValue, 32.0);
         queue->BeginShutdown();
@@ -265,8 +269,11 @@ TEST(MozPromise, Chaining)
       p = p->Then(queue, __func__,
         [] (int aVal) {
           EXPECT_EQ(aVal, 42);
+          return TestPromise::CreateAndResolve(aVal, __func__);
         },
-        [] () {}
+        [] (double aVal) {
+          return TestPromise::CreateAndReject(aVal, __func__);
+        }
       );
 
       if (i == kIterations / 2) {

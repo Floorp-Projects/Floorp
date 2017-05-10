@@ -35,19 +35,8 @@ class nsContentPolicy : public nsIContentPolicy
     nsCOMPtr<nsIContentPolicy> mCSPService;
 
     //Helper type for CheckPolicy
-    typedef
-    NS_STDCALL_FUNCPROTO(nsresult, CPMethod, nsIContentPolicy,
-                         ShouldProcess,
-                         (uint32_t, nsIURI*, nsIURI*, nsISupports*,
-                           const nsACString &, nsISupports*, nsIPrincipal*,
-                           int16_t*));
-
-    typedef
-    NS_STDCALL_FUNCPROTO(nsresult, SCPMethod, nsISimpleContentPolicy,
-                         ShouldProcess,
-                         (uint32_t, nsIURI*, nsIURI*, nsIDOMElement*, bool,
-                           const nsACString &, nsISupports*, nsIPrincipal*,
-                           int16_t*));
+    typedef decltype(&nsIContentPolicy::ShouldProcess) CPMethod;
+    typedef decltype(&nsISimpleContentPolicy::ShouldProcess) SCPMethod;
 
     //Helper method that applies policyMethod across all policies in mPolicies
     // with the given parameters

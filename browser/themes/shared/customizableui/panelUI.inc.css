@@ -817,6 +817,8 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 .fxaSyncIllustration {
   width: 180px;
   height: var(--panel-ui-sync-illustration-height);
+  -moz-context-properties: fill;
+  fill: #cdcdcd;
 }
 
 .PanelUI-remotetabs-prefs-button > .toolbarbutton-text {

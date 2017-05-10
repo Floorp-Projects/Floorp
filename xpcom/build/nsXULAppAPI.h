@@ -442,6 +442,17 @@ XRE_API(nsresult,
 XRE_API(GeckoProcessType,
         XRE_GetProcessType, ())
 
+/**
+ * Returns true when called in the e10s parent process.  Does *NOT* return true
+ * when called in the main process if e10s is disabled.
+ */
+XRE_API(bool,
+        XRE_IsE10sParentProcess, ())
+
+/**
+ * Returns true when called in the e10s parent process or called in the main
+ * process when e10s is disabled.
+ */
 XRE_API(bool,
         XRE_IsParentProcess, ())
 

@@ -537,22 +537,14 @@ NetworkResponseListener.prototype = {
       return;
     }
 
-    let openResponse = null;
-
-    for (let id in this.owner.openResponses) {
-      let item = this.owner.openResponses[id];
-      if (item.channel === this.httpActivity.channel) {
-        openResponse = item;
-        break;
-      }
-    }
-
+    let channel = this.httpActivity.channel;
+    let openResponse = this.owner.openResponses.get(channel.channelId);
     if (!openResponse) {
       return;
     }
     this._foundOpenResponse = true;
 
-    delete this.owner.openResponses[openResponse.id];
+    this.owner.openResponses.delete(channel.channelId);
 
     this.httpActivity.owner.addResponseHeaders(openResponse.headers);
     this.httpActivity.owner.addResponseCookies(openResponse.cookies);
@@ -709,8 +701,8 @@ NetworkResponseListener.prototype = {
 function NetworkMonitor(filters, owner) {
   this.filters = filters;
   this.owner = owner;
-  this.openRequests = {};
-  this.openResponses = {};
+  this.openRequests = new Map();
+  this.openResponses = new Map();
   this._httpResponseExaminer =
     DevToolsUtils.makeInfallible(this._httpResponseExaminer).bind(this);
   this._httpModifyExaminer =
@@ -894,7 +886,7 @@ NetworkMonitor.prototype = {
     response.httpVersion = "HTTP/" + httpVersionMaj.value + "." +
                                      httpVersionMin.value;
 
-    this.openResponses[response.id] = response;
+    this.openResponses.set(channel.channelId, response);
 
     if (topic === "http-on-examine-cached-response") {
       // Service worker requests emits cached-reponse notification on non-e10s,
@@ -1178,13 +1170,7 @@ NetworkMonitor.prototype = {
    *        The HTTP activity object, or null if it is not found.
    */
   _findActivityObject: function (channel) {
-    for (let id in this.openRequests) {
-      let item = this.openRequests[id];
-      if (item.channel === channel) {
-        return item;
-      }
-    }
-    return null;
+    return this.openRequests.get(channel.channelId) || null;
   },
 
   /**
@@ -1226,7 +1212,7 @@ NetworkMonitor.prototype = {
         owner: null,
       };
 
-      this.openRequests[httpActivity.id] = httpActivity;
+      this.openRequests.set(channel.channelId, httpActivity);
     }
 
     return httpActivity;
@@ -1377,7 +1363,7 @@ NetworkMonitor.prototype = {
   _onTransactionClose: function (httpActivity) {
     let result = this._setupHarTimings(httpActivity);
     httpActivity.owner.addEventTimings(result.total, result.timings);
-    delete this.openRequests[httpActivity.id];
+    this.openRequests.delete(httpActivity.channel.channelId);
   },
 
   /**
@@ -1496,8 +1482,8 @@ NetworkMonitor.prototype = {
                                 "service-worker-synthesized-response");
 
     this.interceptedChannels.clear();
-    this.openRequests = {};
-    this.openResponses = {};
+    this.openRequests.clear();
+    this.openResponses.clear();
     this.owner = null;
     this.filters = null;
     this._throttler = null;

@@ -34,28 +34,12 @@
 // IWYU pragma: end_exports
 
 #include <string.h>
+// TODO(herb): remove after chromuim skia/ext/SkMemory_new_handler.cpp
+// has been updated to point to private/SkMalloc.h
+#include "../private/SkMalloc.h"
 
-/**
- *  sk_careful_memcpy() is just like memcpy(), but guards against undefined behavior.
- *
- * It is undefined behavior to call memcpy() with null dst or src, even if len is 0.
- * If an optimizer is "smart" enough, it can exploit this to do unexpected things.
- *     memcpy(dst, src, 0);
- *     if (src) {
- *         printf("%x\n", *src);
- *     }
- * In this code the compiler can assume src is not null and omit the if (src) {...} check,
- * unconditionally running the printf, crashing the program if src really is null.
- * Of the compilers we pay attention to only GCC performs this optimization in practice.
- */
-static inline void* sk_careful_memcpy(void* dst, const void* src, size_t len) {
-    // When we pass >0 len we had better already be passing valid pointers.
-    // So we just need to skip calling memcpy when len == 0.
-    if (len) {
-        memcpy(dst,src,len);
-    }
-    return dst;
-}
+// enable to test new device-base clipping
+//#define SK_USE_DEVICE_CLIPPING
 
 /** \file SkTypes.h
 */
@@ -66,56 +50,12 @@ static inline void* sk_careful_memcpy(void* dst, const void* src, size_t len) {
 #define SKIA_VERSION_MINOR  0
 #define SKIA_VERSION_PATCH  0
 
-/*
-    memory wrappers to be implemented by the porting layer (platform)
-*/
 
-/** Called internally if we run out of memory. The platform implementation must
-    not return, but should either throw an exception or otherwise exit.
-*/
-SK_API extern void sk_out_of_memory(void);
 /** Called internally if we hit an unrecoverable error.
     The platform implementation must not return, but should either throw
     an exception or otherwise exit.
 */
 SK_API extern void sk_abort_no_print(void);
-
-enum {
-    SK_MALLOC_TEMP  = 0x01, //!< hint to sk_malloc that the requested memory will be freed in the scope of the stack frame
-    SK_MALLOC_THROW = 0x02  //!< instructs sk_malloc to call sk_throw if the memory cannot be allocated.
-};
-/** Return a block of memory (at least 4-byte aligned) of at least the
-    specified size. If the requested memory cannot be returned, either
-    return null (if SK_MALLOC_TEMP bit is clear) or throw an exception
-    (if SK_MALLOC_TEMP bit is set). To free the memory, call sk_free().
-*/
-SK_API extern void* sk_malloc_flags(size_t size, unsigned flags);
-/** Same as sk_malloc(), but hard coded to pass SK_MALLOC_THROW as the flag
-*/
-SK_API extern void* sk_malloc_throw(size_t size);
-/** Same as standard realloc(), but this one never returns null on failure. It will throw
-    an exception if it fails.
-*/
-SK_API extern void* sk_realloc_throw(void* buffer, size_t size);
-/** Free memory returned by sk_malloc(). It is safe to pass null.
-*/
-SK_API extern void sk_free(void*);
-
-/** Much like calloc: returns a pointer to at least size zero bytes, or NULL on failure.
- */
-SK_API extern void* sk_calloc(size_t size);
-
-/** Same as sk_calloc, but throws an exception instead of returning NULL on failure.
- */
-SK_API extern void* sk_calloc_throw(size_t size);
-
-// bzero is safer than memset, but we can't rely on it, so... sk_bzero()
-static inline void sk_bzero(void* buffer, size_t size) {
-    // Please c.f. sk_careful_memcpy.  It's undefined behavior to call memset(null, 0, 0).
-    if (size) {
-        memset(buffer, 0, size);
-    }
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -395,10 +335,10 @@ static inline constexpr int Sk32ToBool(uint32_t n) {
 
 /** Generic swap function. Classes with efficient swaps should specialize this function to take
     their fast path. This function is used by SkTSort. */
-template <typename T> inline void SkTSwap(T& a, T& b) {
-    T c(a);
-    a = b;
-    b = c;
+template <typename T> static inline void SkTSwap(T& a, T& b) {
+    T c(std::move(a));
+    a = std::move(b);
+    b = std::move(c);
 }
 
 static inline int32_t SkAbs32(int32_t value) {
@@ -409,7 +349,7 @@ static inline int32_t SkAbs32(int32_t value) {
     return value;
 }
 
-template <typename T> inline T SkTAbs(T value) {
+template <typename T> static inline T SkTAbs(T value) {
     if (value < 0) {
         value = -value;
     }
@@ -508,222 +448,6 @@ private:
     SkNoncopyable(const SkNoncopyable&);
     SkNoncopyable& operator=(const SkNoncopyable&);
 };
-
-class SkAutoFree : SkNoncopyable {
-public:
-    SkAutoFree() : fPtr(NULL) {}
-    explicit SkAutoFree(void* ptr) : fPtr(ptr) {}
-    ~SkAutoFree() { sk_free(fPtr); }
-
-    /** Return the currently allocate buffer, or null
-    */
-    void* get() const { return fPtr; }
-
-    /** Assign a new ptr allocated with sk_malloc (or null), and return the
-        previous ptr. Note it is the caller's responsibility to sk_free the
-        returned ptr.
-    */
-    void* set(void* ptr) {
-        void* prev = fPtr;
-        fPtr = ptr;
-        return prev;
-    }
-
-    /** Transfer ownership of the current ptr to the caller, setting the
-        internal reference to null. Note the caller is reponsible for calling
-        sk_free on the returned address.
-    */
-    void* release() { return this->set(NULL); }
-
-    /** Free the current buffer, and set the internal reference to NULL. Same
-        as calling sk_free(release())
-    */
-    void reset() {
-        sk_free(fPtr);
-        fPtr = NULL;
-    }
-
-private:
-    void* fPtr;
-    // illegal
-    SkAutoFree(const SkAutoFree&);
-    SkAutoFree& operator=(const SkAutoFree&);
-};
-#define SkAutoFree(...) SK_REQUIRE_LOCAL_VAR(SkAutoFree)
-
-/**
- *  Manage an allocated block of heap memory. This object is the sole manager of
- *  the lifetime of the block, so the caller must not call sk_free() or delete
- *  on the block, unless release() was called.
- */
-class SkAutoMalloc : SkNoncopyable {
-public:
-    explicit SkAutoMalloc(size_t size = 0) {
-        fPtr = size ? sk_malloc_throw(size) : NULL;
-        fSize = size;
-    }
-
-    ~SkAutoMalloc() {
-        sk_free(fPtr);
-    }
-
-    /**
-     *  Passed to reset to specify what happens if the requested size is smaller
-     *  than the current size (and the current block was dynamically allocated).
-     */
-    enum OnShrink {
-        /**
-         *  If the requested size is smaller than the current size, and the
-         *  current block is dynamically allocated, free the old block and
-         *  malloc a new block of the smaller size.
-         */
-        kAlloc_OnShrink,
-
-        /**
-         *  If the requested size is smaller than the current size, and the
-         *  current block is dynamically allocated, just return the old
-         *  block.
-         */
-        kReuse_OnShrink
-    };
-
-    /**
-     *  Reallocates the block to a new size. The ptr may or may not change.
-     */
-    void* reset(size_t size = 0, OnShrink shrink = kAlloc_OnShrink,  bool* didChangeAlloc = NULL) {
-        if (size == fSize || (kReuse_OnShrink == shrink && size < fSize)) {
-            if (didChangeAlloc) {
-                *didChangeAlloc = false;
-            }
-            return fPtr;
-        }
-
-        sk_free(fPtr);
-        fPtr = size ? sk_malloc_throw(size) : NULL;
-        fSize = size;
-        if (didChangeAlloc) {
-            *didChangeAlloc = true;
-        }
-
-        return fPtr;
-    }
-
-    /**
-     *  Return the allocated block.
-     */
-    void* get() { return fPtr; }
-    const void* get() const { return fPtr; }
-
-   /** Transfer ownership of the current ptr to the caller, setting the
-       internal reference to null. Note the caller is reponsible for calling
-       sk_free on the returned address.
-    */
-    void* release() {
-        void* ptr = fPtr;
-        fPtr = NULL;
-        fSize = 0;
-        return ptr;
-    }
-
-private:
-    void*   fPtr;
-    size_t  fSize;  // can be larger than the requested size (see kReuse)
-};
-#define SkAutoMalloc(...) SK_REQUIRE_LOCAL_VAR(SkAutoMalloc)
-
-/**
- *  Manage an allocated block of memory. If the requested size is <= kSizeRequested (or slightly
- *  more), then the allocation will come from the stack rather than the heap. This object is the
- *  sole manager of the lifetime of the block, so the caller must not call sk_free() or delete on
- *  the block.
- */
-template <size_t kSizeRequested> class SkAutoSMalloc : SkNoncopyable {
-public:
-    /**
-     *  Creates initially empty storage. get() returns a ptr, but it is to a zero-byte allocation.
-     *  Must call reset(size) to return an allocated block.
-     */
-    SkAutoSMalloc() {
-        fPtr = fStorage;
-        fSize = kSize;
-    }
-
-    /**
-     *  Allocate a block of the specified size. If size <= kSizeRequested (or slightly more), then
-     *  the allocation will come from the stack, otherwise it will be dynamically allocated.
-     */
-    explicit SkAutoSMalloc(size_t size) {
-        fPtr = fStorage;
-        fSize = kSize;
-        this->reset(size);
-    }
-
-    /**
-     *  Free the allocated block (if any). If the block was small enough to have been allocated on
-     *  the stack, then this does nothing.
-     */
-    ~SkAutoSMalloc() {
-        if (fPtr != (void*)fStorage) {
-            sk_free(fPtr);
-        }
-    }
-
-    /**
-     *  Return the allocated block. May return non-null even if the block is of zero size. Since
-     *  this may be on the stack or dynamically allocated, the caller must not call sk_free() on it,
-     *  but must rely on SkAutoSMalloc to manage it.
-     */
-    void* get() const { return fPtr; }
-
-    /**
-     *  Return a new block of the requested size, freeing (as necessary) any previously allocated
-     *  block. As with the constructor, if size <= kSizeRequested (or slightly more) then the return
-     *  block may be allocated locally, rather than from the heap.
-     */
-    void* reset(size_t size,
-                SkAutoMalloc::OnShrink shrink = SkAutoMalloc::kAlloc_OnShrink,
-                bool* didChangeAlloc = NULL) {
-        size = (size < kSize) ? kSize : size;
-        bool alloc = size != fSize && (SkAutoMalloc::kAlloc_OnShrink == shrink || size > fSize);
-        if (didChangeAlloc) {
-            *didChangeAlloc = alloc;
-        }
-        if (alloc) {
-            if (fPtr != (void*)fStorage) {
-                sk_free(fPtr);
-            }
-
-            if (size == kSize) {
-                SkASSERT(fPtr != fStorage); // otherwise we lied when setting didChangeAlloc.
-                fPtr = fStorage;
-            } else {
-                fPtr = sk_malloc_flags(size, SK_MALLOC_THROW | SK_MALLOC_TEMP);
-            }
-
-            fSize = size;
-        }
-        SkASSERT(fSize >= size && fSize >= kSize);
-        SkASSERT((fPtr == fStorage) || fSize > kSize);
-        return fPtr;
-    }
-
-private:
-    // Align up to 32 bits.
-    static const size_t kSizeAlign4 = SkAlign4(kSizeRequested);
-#if defined(GOOGLE3)
-    // Stack frame size is limited for GOOGLE3. 4k is less than the actual max, but some functions
-    // have multiple large stack allocations.
-    static const size_t kMaxBytes = 4 * 1024;
-    static const size_t kSize = kSizeRequested > kMaxBytes ? kMaxBytes : kSizeAlign4;
-#else
-    static const size_t kSize = kSizeAlign4;
-#endif
-
-    void*       fPtr;
-    size_t      fSize;  // can be larger than the requested size (see kReuse)
-    uint32_t    fStorage[kSize >> 2];
-};
-// Can't guard the constructor because it's a template class.
 
 #endif /* C++ */
 

@@ -147,4 +147,5 @@
 
   <color name="tablet_tab_strip_divider_color">#555555</color>
 
+  <color name="bookmark_folder_bg_color">#FCFCFC</color>
 </resources>

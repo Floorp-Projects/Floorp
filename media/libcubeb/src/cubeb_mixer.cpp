@@ -356,10 +356,20 @@ downmix_fallback(T const * const in, unsigned long inframes, T * out, unsigned i
 template<typename T>
 void
 cubeb_downmix(T const * const in, long inframes, T * out,
-              unsigned int in_channels, unsigned int out_channels,
-              cubeb_channel_layout in_layout, cubeb_channel_layout out_layout)
+              cubeb_stream_params const * stream_params,
+              cubeb_stream_params const * mixer_params)
 {
-  assert(in_channels >= out_channels && in_layout != CUBEB_LAYOUT_UNDEFINED);
+  assert(in && out);
+  assert(inframes);
+  assert(stream_params->channels >= mixer_params->channels &&
+         mixer_params->channels > 0);
+  assert(stream_params->layout != CUBEB_LAYOUT_UNDEFINED);
+
+  unsigned int in_channels = stream_params->channels;
+  cubeb_channel_layout in_layout = stream_params->layout;
+
+  unsigned int out_channels = mixer_params->channels;
+  cubeb_channel_layout out_layout = mixer_params->layout;
 
   // If the channel number is different from the layout's setting,
   // then we use fallback downmix mechanism.
@@ -395,9 +405,16 @@ mono_to_stereo(T const * in, long insamples, T * out, unsigned int out_channels)
 template<typename T>
 void
 cubeb_upmix(T const * in, long inframes, T * out,
-            unsigned int in_channels, unsigned int out_channels)
+            cubeb_stream_params const * stream_params,
+            cubeb_stream_params const * mixer_params)
 {
-  assert(out_channels >= in_channels && in_channels > 0);
+  assert(in && out);
+  assert(inframes);
+  assert(mixer_params->channels >= stream_params->channels &&
+         stream_params->channels > 0);
+
+  unsigned int in_channels = stream_params->channels;
+  unsigned int out_channels = mixer_params->channels;
 
   /* Either way, if we have 2 or more channels, the first two are L and R. */
   /* If we are playing a mono stream over stereo speakers, copy the data over. */
@@ -453,33 +470,71 @@ cubeb_should_mix(cubeb_stream_params const * stream, cubeb_stream_params const *
   return cubeb_should_upmix(stream, mixer) || cubeb_should_downmix(stream, mixer);
 }
 
-void
-cubeb_downmix_float(float * const in, long inframes, float * out,
-                    unsigned int in_channels, unsigned int out_channels,
-                    cubeb_channel_layout in_layout, cubeb_channel_layout out_layout)
+struct cubeb_mixer {
+  virtual void mix(void * input_buffer, long frames, void * output_buffer,
+                   cubeb_stream_params const * stream_params,
+                   cubeb_stream_params const * mixer_params) = 0;
+  virtual ~cubeb_mixer() {};
+};
+
+template<typename T>
+struct cubeb_mixer_impl : public cubeb_mixer {
+  explicit cubeb_mixer_impl(unsigned int d)
+    : direction(d)
+  {
+  }
+
+  void mix(void * input_buffer, long frames, void * output_buffer,
+           cubeb_stream_params const * stream_params,
+           cubeb_stream_params const * mixer_params)
+  {
+    if (frames <= 0) {
+      return;
+    }
+
+    T * in = static_cast<T*>(input_buffer);
+    T * out = static_cast<T*>(output_buffer);
+
+    if ((direction & CUBEB_MIXER_DIRECTION_DOWNMIX) &&
+        cubeb_should_downmix(stream_params, mixer_params)) {
+      cubeb_downmix(in, frames, out, stream_params, mixer_params);
+    } else if ((direction & CUBEB_MIXER_DIRECTION_UPMIX) &&
+               cubeb_should_upmix(stream_params, mixer_params)) {
+      cubeb_upmix(in, frames, out, stream_params, mixer_params);
+    }
+  }
+
+  ~cubeb_mixer_impl() {};
+
+  unsigned char const direction;
+};
+
+cubeb_mixer * cubeb_mixer_create(cubeb_sample_format format,
+                                 unsigned char direction)
 {
-  cubeb_downmix(in, inframes, out, in_channels, out_channels, in_layout, out_layout);
+  assert(direction & CUBEB_MIXER_DIRECTION_DOWNMIX ||
+         direction & CUBEB_MIXER_DIRECTION_UPMIX);
+  switch(format) {
+    case CUBEB_SAMPLE_S16NE:
+      return new cubeb_mixer_impl<short>(direction);
+    case CUBEB_SAMPLE_FLOAT32NE:
+      return new cubeb_mixer_impl<float>(direction);
+    default:
+      assert(false);
+      return nullptr;
+  }
 }
 
-void
-cubeb_downmix_short(short * const in, long inframes, short * out,
-                    unsigned int in_channels, unsigned int out_channels,
-                    cubeb_channel_layout in_layout, cubeb_channel_layout out_layout)
+void cubeb_mixer_destroy(cubeb_mixer * mixer)
 {
-  cubeb_downmix(in, inframes, out, in_channels, out_channels, in_layout, out_layout);
+  delete mixer;
 }
 
-
-void
-cubeb_upmix_short(short * const in, long inframes, short * out,
-                  unsigned int in_channels, unsigned int out_channels)
+void cubeb_mixer_mix(cubeb_mixer * mixer,
+                     void * const input_buffer, long frames, void * output_buffer,
+                     cubeb_stream_params const * stream_params,
+                     cubeb_stream_params const * mixer_params)
 {
-  cubeb_upmix(in, inframes, out, in_channels, out_channels);
-}
-
-void
-cubeb_upmix_float(float * const in, long inframes, float * out,
-                  unsigned int in_channels, unsigned int out_channels)
-{
-  cubeb_upmix(in, inframes, out, in_channels, out_channels);
+  assert(mixer);
+  mixer->mix(input_buffer, frames, output_buffer, stream_params, mixer_params);
 }

@@ -45,7 +45,7 @@ struct nsFlowAreaRect {
     , mHasFloats(aHasFloats) {}
 };
 
-#define NS_FLOAT_MANAGER_CACHE_SIZE 4
+#define NS_FLOAT_MANAGER_CACHE_SIZE 64
 
 /**
  * nsFloatManager is responsible for implementing CSS's rules for
@@ -596,7 +596,9 @@ private:
 
   // Translation from local to global coordinate space.
   nscoord mLineLeft, mBlockStart;
-  nsTArray<FloatInfo> mFloats;
+  // We use 11 here in order to fill up the jemalloc allocatoed chunk nicely,
+  // see https://bugzilla.mozilla.org/show_bug.cgi?id=1362876#c6.
+  AutoTArray<FloatInfo, 11> mFloats;
   nsIntervalSet   mFloatDamage;
 
   // Did we try to place a float that could not fit at all and had to be

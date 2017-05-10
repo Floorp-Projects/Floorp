@@ -1073,7 +1073,7 @@ ArrayBufferObject::create(JSContext* cx, uint32_t nbytes, BufferContents content
         MOZ_ASSERT(ownsState == OwnsData);
         size_t usableSlots = NativeObject::MAX_FIXED_SLOTS - reservedSlots;
         if (nbytes <= usableSlots * sizeof(Value)) {
-            int newSlots = (nbytes - 1) / sizeof(Value) + 1;
+            int newSlots = JS_HOWMANY(nbytes, sizeof(Value));
             MOZ_ASSERT(int(nbytes) <= newSlots * int(sizeof(Value)));
             nslots = reservedSlots + newSlots;
             contents = BufferContents::createPlain(nullptr);

@@ -107,6 +107,16 @@ ArmIPCTimer(const StaticMutexAutoLock& lock)
   }
 }
 
+void
+DispatchIPCTimerFired()
+{
+  TelemetryIPCAccumulator::DispatchToMainThread(
+    NS_NewRunnableFunction("TelemetryIPCAccumulator::IPCTimerFired",
+                           []() -> void {
+      TelemetryIPCAccumulator::IPCTimerFired(nullptr, nullptr);
+    }));
+}
+
 } // anonymous namespace
 
 ////////////////////////////////////////////////////////////////////////
@@ -123,9 +133,7 @@ TelemetryIPCAccumulator::AccumulateChildHistogram(mozilla::Telemetry::HistogramI
     gHistogramAccumulations = new nsTArray<Accumulation>();
   }
   if (gHistogramAccumulations->Length() == kHistogramAccumulationsArrayHighWaterMark) {
-    TelemetryIPCAccumulator::DispatchToMainThread(NS_NewRunnableFunction([]() -> void {
-      TelemetryIPCAccumulator::IPCTimerFired(nullptr, nullptr);
-    }));
+    DispatchIPCTimerFired();
   }
   gHistogramAccumulations->AppendElement(Accumulation{aId, aSample});
   ArmIPCTimer(locker);
@@ -140,9 +148,7 @@ TelemetryIPCAccumulator::AccumulateChildKeyedHistogram(mozilla::Telemetry::Histo
     gKeyedHistogramAccumulations = new nsTArray<KeyedAccumulation>();
   }
   if (gKeyedHistogramAccumulations->Length() == kHistogramAccumulationsArrayHighWaterMark) {
-    TelemetryIPCAccumulator::DispatchToMainThread(NS_NewRunnableFunction([]() -> void {
-      TelemetryIPCAccumulator::IPCTimerFired(nullptr, nullptr);
-    }));
+    DispatchIPCTimerFired();
   }
   gKeyedHistogramAccumulations->AppendElement(KeyedAccumulation{aId, aSample, aKey});
   ArmIPCTimer(locker);
@@ -158,9 +164,7 @@ TelemetryIPCAccumulator::RecordChildScalarAction(mozilla::Telemetry::ScalarID aI
     gChildScalarsActions = new nsTArray<ScalarAction>();
   }
   if (gChildScalarsActions->Length() == kScalarActionsArrayHighWaterMark) {
-    TelemetryIPCAccumulator::DispatchToMainThread(NS_NewRunnableFunction([]() -> void {
-      TelemetryIPCAccumulator::IPCTimerFired(nullptr, nullptr);
-    }));
+    DispatchIPCTimerFired();
   }
   // Store the action.
   gChildScalarsActions->AppendElement(ScalarAction{aId, aAction, Some(aValue)});
@@ -179,9 +183,7 @@ TelemetryIPCAccumulator::RecordChildKeyedScalarAction(mozilla::Telemetry::Scalar
     gChildKeyedScalarsActions = new nsTArray<KeyedScalarAction>();
   }
   if (gChildKeyedScalarsActions->Length() == kScalarActionsArrayHighWaterMark) {
-    TelemetryIPCAccumulator::DispatchToMainThread(NS_NewRunnableFunction([]() -> void {
-      TelemetryIPCAccumulator::IPCTimerFired(nullptr, nullptr);
-    }));
+    DispatchIPCTimerFired();
   }
   // Store the action.
   gChildKeyedScalarsActions->AppendElement(
@@ -204,9 +206,7 @@ TelemetryIPCAccumulator::RecordChildEvent(const mozilla::TimeStamp& timestamp,
   }
 
   if (gChildEvents->Length() == kEventsArrayHighWaterMark) {
-    TelemetryIPCAccumulator::DispatchToMainThread(NS_NewRunnableFunction([]() -> void {
-      TelemetryIPCAccumulator::IPCTimerFired(nullptr, nullptr);
-    }));
+    DispatchIPCTimerFired();
   }
 
   // Store the event.

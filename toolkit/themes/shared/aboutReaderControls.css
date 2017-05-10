@@ -335,20 +335,21 @@
 /*======= Toolbar icons =======*/
 
 .close-button {
-  background-image: url("chrome://global/skin/reader/RM-Close-24x24.svg#close");
+  background-image: url("chrome://global/skin/reader/RM-Close-24x24.svg");
+  -moz-context-properties: fill;
+  fill: #808080;
   height: 68px;
   background-position: center 8px;
 }
 
 .close-button:hover {
-  background-image: url("chrome://global/skin/reader/RM-Close-24x24.svg#close-hover");
+  fill: #fff;
   background-color: #d94141;
   border-bottom: 1px solid #d94141;
   border-right: 1px solid #d94141;
 }
 
 .close-button:hover:active {
-  background-image: url("chrome://global/skin/reader/RM-Close-24x24.svg#close-hover");
   background-color: #AE2325;
   border-bottom: 1px solid #AE2325;
   border-right: 1px solid #AE2325;

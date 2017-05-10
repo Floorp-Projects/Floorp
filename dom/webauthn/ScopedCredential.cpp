@@ -19,7 +19,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ScopedCredential)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-ScopedCredential::ScopedCredential(WebAuthentication* aParent)
+ScopedCredential::ScopedCredential(nsPIDOMWindowInner* aParent)
   : mParent(aParent)
   , mType(ScopedCredentialType::ScopedCred)
 {}

@@ -4,9 +4,7 @@
 
 'use strict';
 
-/* global ROLE_PUSHBUTTON, ROLE_TEXT_LEAF, EVENT_REORDER, ROLE_DOCUMENT,
-          nsIAccessibleDocument */
-
+/* import-globals-from ../../mochitest/role.js */
 loadScripts({ name: 'role.js', dir: MOCHITESTS_DIR });
 
 const iframeSrc = `data:text/html,

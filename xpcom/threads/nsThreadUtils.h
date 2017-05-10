@@ -1347,4 +1347,45 @@ private:
 void
 NS_SetMainThread();
 
+namespace mozilla {
+
+/**
+ * Cooperative thread scheduling is governed by two rules:
+ * - Only one thread in the pool of cooperatively scheduled threads runs at a
+ *   time.
+ * - Thread switching happens at well-understood safe points.
+ *
+ * In some cases we may want to treat all the threads in a cooperative pool as a
+ * single thread, while other parts of the code may want to view them as separate
+ * threads. GetCurrentVirtualThread() will return the same value for all
+ * threads in a cooperative thread pool. GetCurrentPhysicalThread will return a
+ * different value for each thread in the pool.
+ *
+ * Thread safety assertions are a concrete example where GetCurrentVirtualThread
+ * should be used. An object may want to assert that it only can be used on the
+ * thread that created it. Such assertions would normally prevent the object
+ * from being used on different cooperative threads. However, the object might
+ * really only care that it's used atomically. Cooperative scheduling guarantees
+ * that it will be (assuming we don't yield in the middle of modifying the
+ * object). So we can weaken the assertion to compare the virtual thread the
+ * object was created on to the virtual thread on which it's being used. This
+ * assertion allows the object to be used across threads in a cooperative thread
+ * pool while preventing accesses across preemptively scheduled threads (which
+ * would be unsafe).
+ */
+
+// Returns the PRThread on which this code is running.
+PRThread*
+GetCurrentPhysicalThread();
+
+// Returns a "virtual" PRThread that should only be used for comparison with
+// other calls to GetCurrentVirtualThread. Two threads in the same cooperative
+// thread pool will return the same virtual thread. Threads that are not
+// cooperatively scheduled will have their own unique virtual PRThread (which
+// will be equal to their physical PRThread).
+PRThread*
+GetCurrentVirtualThread();
+
+} // namespace mozilla
+
 #endif  // nsThreadUtils_h__

@@ -650,9 +650,9 @@ nsNPAPIPluginStreamListener::OnDataAvailable(nsPluginStreamListenerPeer* streamP
       
       NPP_PLUGIN_LOG(PLUGIN_LOG_NOISY,
                      ("NPP Write called: this=%p, npp=%p, pos=%d, len=%d, "
-                      "buf=%s, return(written)=%d,  url=%s\n",
+                      "buf=%.*s, return(written)=%d,  url=%s\n",
                       this, npp, streamPosition, numtowrite,
-                      ptrStreamBuffer, writeCount, mNPStreamWrapper->mNPStream.url));
+                      numtowrite, ptrStreamBuffer, writeCount, mNPStreamWrapper->mNPStream.url));
       
       if (mStreamState == eStreamStopped) {
         // The plugin called NPN_DestroyStream() from within

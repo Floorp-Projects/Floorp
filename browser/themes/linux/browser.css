@@ -16,17 +16,12 @@
 %include ../shared/browser.inc.css
 
 :root {
-  --backbutton-urlbar-overlap: 6px;
   --backbutton-border-color: var(--urlbar-border-color-hover);
   --backbutton-background: rgba(255,255,255,.15);
 
-  /* icon width + border + horizontal padding (without the overlap from backbutton-urlbar-overlap) */
-  --forwardbutton-width: 25px;
-
   --toolbarbutton-border-radius: 1px;
 
-  --toolbarbutton-vertical-inner-padding: 2px;
-  --toolbarbutton-vertical-text-padding: var(--toolbarbutton-vertical-inner-padding);
+  --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-vertical-inner-padding) - 1px);
 
   --toolbarbutton-hover-background: rgba(255,255,255,.5) linear-gradient(rgba(255,255,255,.5), transparent);
   --toolbarbutton-hover-bordercolor: rgba(0,0,0,.25);
