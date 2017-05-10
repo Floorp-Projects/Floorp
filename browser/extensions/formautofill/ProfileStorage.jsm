@@ -279,7 +279,7 @@ ProfileStorage.prototype = {
         return !!name;
       }
 
-      return name.toLowerCase().startsWith(lcSearchString);
+      return name && name.toLowerCase().startsWith(lcSearchString);
     });
 
     log.debug("getByFilter: Returning", result.length, "result(s)");
