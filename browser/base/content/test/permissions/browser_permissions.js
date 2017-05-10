@@ -4,13 +4,6 @@
 
 const PERMISSIONS_PAGE  = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "https://example.com") + "permissions.html";
 
-registerCleanupFunction(function() {
-  SitePermissions.remove(gBrowser.currentURI, "cookie");
-  SitePermissions.remove(gBrowser.currentURI, "geo");
-  SitePermissions.remove(gBrowser.currentURI, "camera");
-  SitePermissions.remove(gBrowser.currentURI, "microphone");
-});
-
 function* openIdentityPopup() {
   let promise = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "popupshown");
   gIdentityHandler._identityBox.click();
@@ -179,5 +172,7 @@ add_task(function* testPermissionIcons() {
 
     ok(!geoIcon.hasAttribute("showing"),
       "blocked permission icon is not shown after reset");
+
+    SitePermissions.remove(gBrowser.currentURI, "camera");
   });
 });
