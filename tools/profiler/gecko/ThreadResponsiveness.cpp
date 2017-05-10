@@ -21,6 +21,7 @@ public:
     : mLastTracerTime(TimeStamp::Now())
     , mMonitor("CheckResponsivenessTask")
     , mTimer(nullptr)
+    , mHasEverBeenSuccessfullyDispatched(false)
     , mStop(false)
   {
   }
@@ -31,6 +32,23 @@ protected:
   }
 
 public:
+
+  // Must be called from the same thread every time. Call that the "update"
+  // thread, because it's the thread that ThreadResponsiveness::Update() is
+  // called on. In reality it's the profiler's sampler thread.
+  void DoFirstDispatchIfNeeded()
+  {
+    if (mHasEverBeenSuccessfullyDispatched) {
+      return;
+    }
+
+    // Dispatching can fail during early startup, particularly when
+    // MOZ_PROFILER_STARTUP is used.
+    nsresult rv = NS_DispatchToMainThread(this);
+    if (NS_SUCCEEDED(rv)) {
+      mHasEverBeenSuccessfullyDispatched = true;
+    }
+  }
 
   // Can only run on the main thread.
   NS_IMETHOD Run() override
@@ -74,6 +92,7 @@ private:
   TimeStamp mLastTracerTime;
   Monitor mMonitor;
   nsCOMPtr<nsITimer> mTimer;
+  bool mHasEverBeenSuccessfullyDispatched; // only accessed on the "update" thread
   bool mStop;
 };
 
@@ -81,7 +100,7 @@ NS_IMPL_ISUPPORTS_INHERITED(CheckResponsivenessTask, mozilla::Runnable,
                             nsITimerCallback)
 
 ThreadResponsiveness::ThreadResponsiveness()
-  : mActiveTracerEvent(nullptr)
+  : mActiveTracerEvent(new CheckResponsivenessTask())
 {
   MOZ_COUNT_CTOR(ThreadResponsiveness);
 }
@@ -89,19 +108,13 @@ ThreadResponsiveness::ThreadResponsiveness()
 ThreadResponsiveness::~ThreadResponsiveness()
 {
   MOZ_COUNT_DTOR(ThreadResponsiveness);
-  if (mActiveTracerEvent) {
-    mActiveTracerEvent->Terminate();
-  }
+  mActiveTracerEvent->Terminate();
 }
 
 void
 ThreadResponsiveness::Update()
 {
-  if (!mActiveTracerEvent) {
-    mActiveTracerEvent = new CheckResponsivenessTask();
-    NS_DispatchToMainThread(mActiveTracerEvent);
-  }
-
+  mActiveTracerEvent->DoFirstDispatchIfNeeded();
   mLastTracerTime = mActiveTracerEvent->GetLastTracerTime();
 }
 
