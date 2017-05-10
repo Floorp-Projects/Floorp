@@ -485,7 +485,6 @@ private:
 
   RefPtr<CompositingRenderTarget> mTwoPassTmpTarget;
   RefPtr<TextRenderer> mTextRenderer;
-  bool mGeometryChanged;
 
 #ifdef USE_SKIA
   /**
