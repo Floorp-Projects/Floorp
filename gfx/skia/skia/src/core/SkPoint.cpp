@@ -62,7 +62,7 @@ void SkPoint::rotateCCW(SkPoint* dst) const {
 
 void SkPoint::scale(SkScalar scale, SkPoint* dst) const {
     SkASSERT(dst);
-    dst->set(fX * scale, fY * scale);
+    dst->set(SkScalarMul(fX, scale), SkScalarMul(fY, scale));
 }
 
 bool SkPoint::normalize() {

@@ -59,13 +59,15 @@ void GrGLRenderTarget::init(const GrSurfaceDesc& desc, const IDDesc& idDesc) {
     fViewport.fWidth  = desc.fWidth;
     fViewport.fHeight = desc.fHeight;
 
-    fNumSamplesOwnedPerPixel = this->totalSamples();
+    fGpuMemorySize = this->totalSamples() * this->totalBytesPerSample();
+
+    SkASSERT(fGpuMemorySize <= WorstCaseSize(desc));
 }
 
-sk_sp<GrGLRenderTarget> GrGLRenderTarget::MakeWrapped(GrGLGpu* gpu,
-                                                      const GrSurfaceDesc& desc,
-                                                      const IDDesc& idDesc,
-                                                      int stencilBits) {
+GrGLRenderTarget* GrGLRenderTarget::CreateWrapped(GrGLGpu* gpu,
+                                                  const GrSurfaceDesc& desc,
+                                                  const IDDesc& idDesc,
+                                                  int stencilBits) {
     GrGLStencilAttachment* sb = nullptr;
     if (stencilBits) {
         GrGLStencilAttachment::IDDesc sbDesc;
@@ -78,11 +80,11 @@ sk_sp<GrGLRenderTarget> GrGLRenderTarget::MakeWrapped(GrGLGpu* gpu,
         sb = new GrGLStencilAttachment(gpu, sbDesc, desc.fWidth, desc.fHeight,
                                        desc.fSampleCnt, format);
     }
-    return sk_sp<GrGLRenderTarget>(new GrGLRenderTarget(gpu, desc, idDesc, sb));
+    return (new GrGLRenderTarget(gpu, desc, idDesc, sb));
 }
 
 size_t GrGLRenderTarget::onGpuMemorySize() const {
-    return GrSurface::ComputeSize(fDesc, fNumSamplesOwnedPerPixel, false);
+    return fGpuMemorySize;
 }
 
 bool GrGLRenderTarget::completeStencilAttachment() {
@@ -183,12 +185,12 @@ void GrGLRenderTarget::dumpMemoryStatistics(SkTraceMemoryDump* traceMemoryDump) 
     // Log any renderbuffer's contribution to memory. We only do this if we own the renderbuffer
     // (have a fMSColorRenderbufferID).
     if (fMSColorRenderbufferID) {
-        size_t size = GrSurface::ComputeSize(fDesc, this->msaaSamples(), false);
+        size_t size = this->msaaSamples() * this->totalBytesPerSample();
 
         // Due to this resource having both a texture and a renderbuffer component, dump as
         // skia/gpu_resources/resource_#/renderbuffer
         SkString dumpName("skia/gpu_resources/resource_");
-        dumpName.appendU32(this->uniqueID().asUInt());
+        dumpName.appendS32(this->uniqueID());
         dumpName.append("/renderbuffer");
 
         traceMemoryDump->dumpNumericValue(dumpName.c_str(), "size", "bytes", size);
@@ -202,6 +204,15 @@ void GrGLRenderTarget::dumpMemoryStatistics(SkTraceMemoryDump* traceMemoryDump) 
         traceMemoryDump->setMemoryBacking(dumpName.c_str(), "gl_renderbuffer",
                                           renderbuffer_id.c_str());
     }
+}
+
+size_t GrGLRenderTarget::totalBytesPerSample() const {
+    SkASSERT(kUnknown_GrPixelConfig != fDesc.fConfig);
+    SkASSERT(!GrPixelConfigIsCompressed(fDesc.fConfig));
+    size_t colorBytes = GrBytesPerPixel(fDesc.fConfig);
+    SkASSERT(colorBytes > 0);
+
+    return fDesc.fWidth * fDesc.fHeight * colorBytes;
 }
 
 int GrGLRenderTarget::msaaSamples() const {

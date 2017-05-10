@@ -132,11 +132,11 @@ SkTypeface* SkFontMgr::createFromStream(SkStreamAsset* stream, int ttcIndex) con
     return this->onCreateFromStream(stream, ttcIndex);
 }
 
-SkTypeface* SkFontMgr::createFromStream(SkStreamAsset* stream, const SkFontArguments& args) const {
+SkTypeface* SkFontMgr::createFromStream(SkStreamAsset* stream, const FontParameters& params) const {
     if (nullptr == stream) {
         return nullptr;
     }
-    return this->onCreateFromStream(stream, args);
+    return this->onCreateFromStream(stream, params);
 }
 
 SkTypeface* SkFontMgr::createFromFontData(std::unique_ptr<SkFontData> data) const {
@@ -147,8 +147,8 @@ SkTypeface* SkFontMgr::createFromFontData(std::unique_ptr<SkFontData> data) cons
 }
 
 // This implementation is temporary until it can be made pure virtual.
-SkTypeface* SkFontMgr::onCreateFromStream(SkStreamAsset* stream, const SkFontArguments& args) const{
-    return this->createFromStream(stream, args.getCollectionIndex());
+SkTypeface* SkFontMgr::onCreateFromStream(SkStreamAsset* stream, const FontParameters& p) const {
+    return this->createFromStream(stream, p.getCollectionIndex());
 }
 
 // This implementation is temporary until it can be made pure virtual.
@@ -167,15 +167,15 @@ SkTypeface* SkFontMgr::legacyCreateTypeface(const char familyName[], SkFontStyle
     return this->onLegacyCreateTypeface(familyName, style);
 }
 
-sk_sp<SkFontMgr> SkFontMgr::RefDefault() {
+SkFontMgr* SkFontMgr::RefDefault() {
     static SkOnce once;
-    static sk_sp<SkFontMgr> singleton;
+    static SkFontMgr* singleton;
 
     once([]{
-        sk_sp<SkFontMgr> fm = SkFontMgr::Factory();
-        singleton = fm ? std::move(fm) : sk_make_sp<SkEmptyFontMgr>();
+        SkFontMgr* fm = SkFontMgr::Factory();
+        singleton = fm ? fm : new SkEmptyFontMgr;
     });
-    return singleton;
+    return SkRef(singleton);
 }
 
 /**

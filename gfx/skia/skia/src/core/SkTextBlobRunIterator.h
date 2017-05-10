@@ -36,6 +36,7 @@ public:
 
 private:
     const SkTextBlob::RunRecord* fCurrentRun;
+    int fRemainingRuns;
 
     SkDEBUGCODE(uint8_t* fStorageTop;)
 };

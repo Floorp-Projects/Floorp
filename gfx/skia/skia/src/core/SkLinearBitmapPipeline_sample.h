@@ -10,10 +10,9 @@
 
 #include <tuple>
 
-#include "SkAutoMalloc.h"
 #include "SkColor.h"
 #include "SkColorPriv.h"
-#include "SkFixed.h"  // for SkFixed1 only. Don't use SkFixed in this file.
+#include "SkFixed.h"
 #include "SkHalf.h"
 #include "SkLinearBitmapPipeline_core.h"
 #include "SkNx.h"
@@ -66,17 +65,15 @@ template <>
 class PixelConverter<kAlpha_8_SkColorType, kLinear_SkGammaType> {
 public:
     using Element = uint8_t;
-    PixelConverter(const SkPixmap& srcPixmap, SkColor tintColor) {
-        fTintColor = SkColor4f::FromColor(tintColor);
-        fTintColor.fA = 1.0f;
-    }
+    PixelConverter(const SkPixmap& srcPixmap, SkColor tintColor)
+        : fTintColor{set_alpha(Sk4f_from_SkColor(tintColor), 1.0f)} { }
 
     Sk4f toSk4f(const Element pixel) const {
-        return Sk4f::Load(&fTintColor) * (pixel * (1.0f/255.0f));
+        return fTintColor * (pixel * (1.0f/255.0f));
     }
 
 private:
-    SkColor4f fTintColor;
+    const Sk4f fTintColor;
 };
 
 template <SkGammaType gammaType>
@@ -388,17 +385,15 @@ private:
         SkPoint start; SkScalar length; int count;
         std::tie(start, length, count) = span;
         SkScalar x = X(start);
-        // fx is a fixed 48.16 number.
-        int64_t fx = static_cast<int64_t>(x * SK_Fixed1);
+        SkFixed fx = SkScalarToFixed(x);
         SkScalar dx = length / (count - 1);
-        // fdx is a fixed 48.16 number.
-        int64_t fdx = static_cast<int64_t>(dx * SK_Fixed1);
+        SkFixed fdx = SkScalarToFixed(dx);
 
         const void* row = fAccessor.row((int)std::floor(Y(start)));
         Next* next = fNext;
 
-        int64_t ix = fx >> 16;
-        int64_t prevIX = ix;
+        int ix = SkFixedFloorToInt(fx);
+        int prevIX = ix;
         Sk4f fpixel = fAccessor.getPixelFromRow(row, ix);
 
         // When dx is less than one, each pixel is used more than once. Using the fixed point fx
@@ -410,7 +405,7 @@ private:
                 prevIX = ix;
             }
             fx += fdx;
-            ix = fx >> 16;
+            ix = SkFixedFloorToInt(fx);
             return fpixel;
         };
 

@@ -18,15 +18,25 @@
  */
 class DisableColorXP : public GrXferProcessor {
 public:
-    DisableColorXP() { this->initClassID<DisableColorXP>(); }
+    static GrXferProcessor* Create() { return new DisableColorXP; }
+
+    ~DisableColorXP() override {}
 
     const char* name() const override { return "Disable Color"; }
 
     GrGLSLXferProcessor* createGLSLInstance() const override;
 
 private:
+    DisableColorXP();
 
-    void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
+    GrXferProcessor::OptFlags onGetOptimizations(const GrPipelineOptimizations& optimizations,
+                                                 bool doesStencilWrite,
+                                                 GrColor* color,
+                                                 const GrCaps& caps) const override {
+        return GrXferProcessor::kIgnoreColor_OptFlag | GrXferProcessor::kIgnoreCoverage_OptFlag;
+    }
+
+    void onGetGLSLProcessorKey(const GrGLSLCaps& caps, GrProcessorKeyBuilder* b) const override;
 
     void onGetBlendInfo(GrXferProcessor::BlendInfo* blendInfo) const override;
 
@@ -45,7 +55,7 @@ public:
 
     ~GLDisableColorXP() override {}
 
-    static void GenKey(const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*) {}
+    static void GenKey(const GrProcessor&, const GrGLSLCaps&, GrProcessorKeyBuilder*) {}
 
 private:
     void emitOutputsForBlendState(const EmitArgs& args) override {
@@ -63,7 +73,11 @@ private:
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void DisableColorXP::onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
+DisableColorXP::DisableColorXP() {
+    this->initClassID<DisableColorXP>();
+}
+
+void DisableColorXP::onGetGLSLProcessorKey(const GrGLSLCaps& caps, GrProcessorKeyBuilder* b) const {
     GLDisableColorXP::GenKey(*this, caps, b);
 }
 
@@ -74,18 +88,22 @@ void DisableColorXP::onGetBlendInfo(GrXferProcessor::BlendInfo* blendInfo) const
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-sk_sp<const GrXferProcessor> GrDisableColorXPFactory::makeXferProcessor(
-        const GrProcessorAnalysisColor&,
-        GrProcessorAnalysisCoverage,
-        bool hasMixedSamples,
-        const GrCaps& caps) const {
-    return sk_sp<const GrXferProcessor>(new DisableColorXP);
+
+GrDisableColorXPFactory::GrDisableColorXPFactory() {
+    this->initClassID<GrDisableColorXPFactory>();
+}
+
+GrXferProcessor*
+GrDisableColorXPFactory::onCreateXferProcessor(const GrCaps& caps,
+                                               const GrPipelineOptimizations& optimizations,
+                                               bool hasMixedSamples,
+                                               const DstTexture* dst) const {
+    SkASSERT(!optimizations.fOverrides.fUsePLSDstRead);
+    return DisableColorXP::Create();
 }
 
 GR_DEFINE_XP_FACTORY_TEST(GrDisableColorXPFactory);
 
-#if GR_TEST_UTILS
-const GrXPFactory* GrDisableColorXPFactory::TestGet(GrProcessorTestData*) {
-    return GrDisableColorXPFactory::Get();
+sk_sp<GrXPFactory> GrDisableColorXPFactory::TestCreate(GrProcessorTestData*) {
+    return GrDisableColorXPFactory::Make();
 }
-#endif
