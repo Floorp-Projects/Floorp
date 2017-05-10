@@ -7,6 +7,7 @@
 // Create a new window, then move the home button to the menu and check both windows have
 // customizationchange events fire on the toolbox:
 add_task(function*() {
+  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   let newWindow = yield openAndLoadWindow();
   let otherToolbox = newWindow.gNavToolbox;
 

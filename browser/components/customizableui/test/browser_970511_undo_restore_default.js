@@ -8,6 +8,7 @@ requestLongerTimeout(2);
 
 // Restoring default should reset theme and show an "undo" option which undoes the restoring operation.
 add_task(function*() {
+  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   let homeButtonId = "home-button";
   CustomizableUI.removeWidgetFromArea(homeButtonId);
   yield startCustomizing();
