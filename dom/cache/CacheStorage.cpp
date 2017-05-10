@@ -195,7 +195,8 @@ CacheStorage::CreateOnWorker(Namespace aNamespace, nsIGlobalObject* aGlobal,
   }
 
   RefPtr<CacheWorkerHolder> workerHolder =
-    CacheWorkerHolder::Create(aWorkerPrivate);
+    CacheWorkerHolder::Create(aWorkerPrivate,
+                              CacheWorkerHolder::AllowIdleShutdownStart);
   if (!workerHolder) {
     NS_WARNING("Worker thread is shutting down.");
     aRv.Throw(NS_ERROR_FAILURE);
