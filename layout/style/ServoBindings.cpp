@@ -1324,19 +1324,6 @@ Gecko_ClearPODTArray(void* aArray, size_t aElementSize, size_t aElementAlign)
                                                         aElementSize, aElementAlign);
 }
 
-void Gecko_SetStyleGridTemplateArrayLengths(nsStyleGridTemplate* aValue,
-                                            uint32_t aTrackSizes)
-{
-  aValue->mMinTrackSizingFunctions.SetLength(aTrackSizes);
-  aValue->mMaxTrackSizingFunctions.SetLength(aTrackSizes);
-  aValue->mLineNameLists.SetLength(aTrackSizes + 1);
-}
-
-void Gecko_ResizeTArrayForStrings(nsTArray<nsString>* aArray, uint32_t aLength)
-{
-  aArray->SetLength(aLength);
-}
-
 void
 Gecko_CopyStyleGridTemplateValues(nsStyleGridTemplate* aGridTemplate,
                                   const nsStyleGridTemplate* aOther)
