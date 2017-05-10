@@ -143,6 +143,13 @@ to mochitest command.
 * test_author_specified_style.html: support serializing color as author specified bug 1348165 [27]
 * browser_newtab_share_rule_processors.js: agent style sheet sharing [1]
 * test_default_computed_style.html: getDefaultComputedStyle bug 1366157 [1]
+* :visited support (bug 1328509)
+  * test_visited_reftests.html `selector-descendant-2.xhtml` [2]
+  * ... `selector-child-2.xhtml` [2]
+  * ... `color-on-bullets-1.html` [2]
+  * ... `inherit-keyword-1.xhtml` [2]
+  * ... `mathml-links.html` [2]
+  * ... `caret-color-on-visited-1.html` [2]
 
 ## Assertions
 
