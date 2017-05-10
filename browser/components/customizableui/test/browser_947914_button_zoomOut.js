@@ -7,6 +7,7 @@
 var initialPageZoom = ZoomManager.zoom;
 
 add_task(function*() {
+  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   info("Check zoom out button existence and functionality");
 
   is(initialPageZoom, 1, "Initial zoom factor should be 1");

@@ -13,6 +13,7 @@ registerCleanupFunction(function() {
 // Right-click on an item within the overflow panel should
 // show a context menu with options to move it.
 add_task(function*() {
+  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
 
   overflowPanel.setAttribute("animate", "false");
 

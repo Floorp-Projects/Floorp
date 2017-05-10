@@ -252,6 +252,7 @@
   background-attachment: scroll, scroll, fixed, fixed, scroll;
 }
 
+#widget-overflow-fixed-list > toolbarpaletteitem[place="panel"],
 toolbarpaletteitem[place="toolbar"] {
   transition: border-width 250ms ease-in-out;
 }
@@ -279,6 +280,7 @@ toolbarpaletteitem toolbarbutton[disabled] {
   color: inherit !important;
 }
 
+#widget-overflow-fixed-list > toolbarpaletteitem[notransition][place="panel"],
 toolbarpaletteitem[notransition].panel-customization-placeholder,
 toolbarpaletteitem[notransition][place="toolbar"],
 toolbarpaletteitem[notransition][place="palette"],
@@ -309,6 +311,10 @@ toolbarpaletteitem[place="toolbar"] {
   border-right-width: 0;
   margin-right: 0;
   margin-left: 0;
+}
+#widget-overflow-fixed-list > toolbarpaletteitem[place="panel"] {
+  border-top: 0px solid transparent;
+  border-bottom: 0px solid transparent;
 }
 
 #customization-palette:not([hidden]) {

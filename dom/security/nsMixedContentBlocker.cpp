@@ -427,6 +427,18 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
   return rv;
 }
 
+bool
+nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackURL(nsIURI* aURL) {
+  nsAutoCString host;
+  nsresult rv = aURL->GetHost(host);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  // We could also allow 'localhost' (if we can guarantee that it resolves
+  // to a loopback address), but Chrome doesn't support it as of writing. For
+  // web compat, lets only allow what Chrome allows.
+  return host.Equals("127.0.0.1") || host.Equals("::1");
+}
+
 /* Static version of ShouldLoad() that contains all the Mixed Content Blocker
  * logic.  Called from non-static ShouldLoad().
  */
@@ -729,6 +741,18 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
     return NS_OK;
   }
 
+  bool isHttpScheme = false;
+  rv = innerContentLocation->SchemeIs("http", &isHttpScheme);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Loopback origins are not considered mixed content even over HTTP. See:
+  // https://w3c.github.io/webappsec-mixed-content/#should-block-fetch
+  if (isHttpScheme &&
+      IsPotentiallyTrustworthyLoopbackURL(innerContentLocation)) {
+    *aDecision = ACCEPT;
+    return NS_OK;
+  }
+
   // The page might have set the CSP directive 'upgrade-insecure-requests'. In such
   // a case allow the http: load to succeed with the promise that the channel will
   // get upgraded to https before fetching any data from the netwerk.
@@ -740,9 +764,6 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   // we only have to check against http: here. Skip mixed content blocking if the
   // subresource load uses http: and the CSP directive 'upgrade-insecure-requests'
   // is present on the page.
-  bool isHttpScheme = false;
-  rv = innerContentLocation->SchemeIs("http", &isHttpScheme);
-  NS_ENSURE_SUCCESS(rv, rv);
   nsIDocument* document = docShell->GetDocument();
   MOZ_ASSERT(document, "Expected a document");
   if (isHttpScheme && document->GetUpgradeInsecureRequests(isPreload)) {

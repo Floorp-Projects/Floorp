@@ -5,6 +5,7 @@
 "use strict";
 
 add_task(function*() {
+  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   const kNormalLabel = "Character Encoding";
   CustomizableUI.addWidgetToArea("characterencoding-button", CustomizableUI.AREA_NAVBAR);
   let characterEncoding = document.getElementById("characterencoding-button");

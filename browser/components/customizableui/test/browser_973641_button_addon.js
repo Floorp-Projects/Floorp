@@ -8,6 +8,8 @@ const kButton = "test_button_for_addon";
 var initialLocation = gBrowser.currentURI.spec;
 
 add_task(function*() {
+  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+
   info("Check addon button functionality");
 
   // create mocked addon button on the navigation bar

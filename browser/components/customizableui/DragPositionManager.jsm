@@ -5,6 +5,10 @@
 "use strict";
 
 Components.utils.import("resource:///modules/CustomizableUI.jsm");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyPreferenceGetter(this, "gPhotonStructure",
+  "browser.photon.structure.enabled", false);
 
 var gManagers = new WeakMap();
 
@@ -379,7 +383,7 @@ AreaPositionManager.prototype = {
 
 var DragPositionManager = {
   start(aWindow) {
-    let areas = [CustomizableUI.AREA_PANEL];
+    let areas = gPhotonStructure ? [] : [CustomizableUI.AREA_PANEL];
     areas = areas.map((area) => CustomizableUI.getCustomizeTargetForArea(area, aWindow));
     areas.push(aWindow.document.getElementById(kPaletteId));
     for (let areaNode of areas) {

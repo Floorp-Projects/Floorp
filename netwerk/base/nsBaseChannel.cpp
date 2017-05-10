@@ -264,9 +264,11 @@ nsBaseChannel::BeginPumpingData()
   // call to AsyncRead results in the stream's AsyncWait method being called)
   // and especially when we call into the loadgroup.  Our caller takes care to
   // release mPump if we return an error.
- 
+
+  nsCOMPtr<nsIEventTarget> target =
+    nsContentUtils::GetEventTargetByLoadInfo(mLoadInfo, TaskCategory::Other);
   rv = nsInputStreamPump::Create(getter_AddRefs(mPump), stream, -1, -1, 0, 0,
-                                 true);
+                                 true, target);
   if (NS_SUCCEEDED(rv)) {
     mPumpingData = true;
     mRequest = mPump;

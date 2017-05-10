@@ -169,7 +169,6 @@ DataTextureSourceD3D11::DataTextureSourceD3D11(ID3D11Device* aDevice,
   , mIterating(false)
   , mAllowTextureUploads(true)
 {
-  MOZ_COUNT_CTOR(DataTextureSourceD3D11);
 }
 
 DataTextureSourceD3D11::DataTextureSourceD3D11(ID3D11Device* aDevice,
@@ -183,8 +182,6 @@ DataTextureSourceD3D11::DataTextureSourceD3D11(ID3D11Device* aDevice,
 , mIterating(false)
 , mAllowTextureUploads(false)
 {
-  MOZ_COUNT_CTOR(DataTextureSourceD3D11);
-
   mTexture = aTexture;
   D3D11_TEXTURE2D_DESC desc;
   aTexture->GetDesc(&desc);
@@ -204,7 +201,6 @@ DataTextureSourceD3D11::DataTextureSourceD3D11(gfx::SurfaceFormat aFormat, Textu
 
 DataTextureSourceD3D11::~DataTextureSourceD3D11()
 {
-  MOZ_COUNT_DTOR(DataTextureSourceD3D11);
 }
 
 
