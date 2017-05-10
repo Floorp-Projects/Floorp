@@ -5,22 +5,19 @@
 
 package org.mozilla.gecko;
 
-import java.util.HashSet;
-
 import android.text.TextUtils;
+import android.util.Log;
+import android.view.View;
 import android.widget.PopupWindow;
-import org.mozilla.gecko.AppConstants.Versions;
+
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
-import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.AnchoredPopup;
 import org.mozilla.gecko.widget.DoorHanger;
-
-import android.content.Context;
-import android.util.Log;
-import android.view.View;
 import org.mozilla.gecko.widget.DoorhangerConfig;
+
+import java.util.HashSet;
 
 public class DoorHangerPopup extends AnchoredPopup
                              implements BundleEventListener,
