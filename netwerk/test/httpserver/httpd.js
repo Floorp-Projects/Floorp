@@ -161,6 +161,9 @@ const HEADERS_SUFFIX = HIDDEN_CHAR + "headers" + HIDDEN_CHAR;
 /** Type used to denote SJS scripts for CGI-like functionality. */
 const SJS_TYPE = "sjs";
 
+/** The number of seconds to keep idle persistent connections alive. */
+const DEFAULT_KEEP_ALIVE_TIMEOUT = 2 * 60;
+
 /** Base for relative timestamps produced by dumpn(). */
 var firstStamp = 0;
 
@@ -237,6 +240,8 @@ const WritablePropertyBag = CC("@mozilla.org/hash-property-bag;1",
                                "nsIWritablePropertyBag2");
 const SupportsString = CC("@mozilla.org/supports-string;1",
                           "nsISupportsString");
+
+const Timer = CC("@mozilla.org/timer;1", "nsITimer");
 
 /* These two are non-const only so a test can overwrite them. */
 var BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
@@ -391,6 +396,13 @@ function nsHttpServer()
    * creation.
    */
   this._connections = {};
+
+  /**
+   * Flag for keep-alive behavior, true for default behavior, false for
+   * closing connections after the first response.
+   * Set by nsIHttpServer.keepAlive attribute.
+   */
+  this._keepAliveEnabled = true;
 }
 nsHttpServer.prototype =
 {
@@ -435,14 +447,7 @@ nsHttpServer.prototype =
     {
       var conn = new Connection(input, output, this, socket.port, trans.port,
                                 connectionNumber);
-      var reader = new RequestReader(conn);
-
-      // XXX add request timeout functionality here!
-
-      // Note: must use main thread here, or we might get a GC that will cause
-      //       threadsafety assertions.  We really need to fix XPConnect so that
-      //       you can actually do things in multi-threaded JS.  :-(
-      input.asyncWait(reader, 0, 0, gThreadManager.mainThread);
+      conn.read();
     }
     catch (e)
     {
@@ -472,7 +477,7 @@ nsHttpServer.prototype =
   {
     dumpn(">>> shutting down server on port " + socket.port);
     for (var n in this._connections) {
-      if (!this._connections[n]._requestStarted) {
+      if (!this._connections[n]._requestStarted || this._connections[n].isIdle()) {
         this._connections[n].close();
       }
     }
@@ -743,6 +748,18 @@ nsHttpServer.prototype =
     return this;
   },
 
+  //
+  // see nsIHttpServer.keepAliveEnabled
+  //
+  get keepAliveEnabled()
+  {
+    return this._keepAliveEnabled;
+  },
+
+  set keepAliveEnabled(doKeepAlive)
+  {
+    this._keepAliveEnabled = doKeepAlive;
+  },
 
   // NSISUPPORTS
 
@@ -840,6 +857,22 @@ nsHttpServer.prototype =
     // would interfere with testing GC stuff...
     Components.utils.forceGC();
   },
+
+  /**
+   * Inform the server that the connection is currently in an idle state and
+   * may be closed when the server goes down.
+   */
+  _connectionIdle: function(connection)
+  {
+    // If the server is down, close any now-idle connections.
+    if (this._socketClosed)
+    {
+      connection.close();
+      return;
+    }
+
+    connection.persist();
+   },
 
   /**
    * Requests that the server be shut down when possible.
@@ -1187,10 +1220,63 @@ function Connection(input, output, server, port, outgoingPort, number)
   this._processed = false;
 
   /** whether or not 1st line of request has been received */
-  this._requestStarted = false; 
+  this._requestStarted = false;
+
+  /**
+   * RequestReader may cache the port number here. This is needed because when
+   * going through ssltunnel, we update the Request-URL only for the first
+   * request, though we get knowledge of the actual target server port number.
+   * Subsequent requests are not updated that way and are missing the port number
+   * that may lead to mismatch of the target virtual server identity.
+   *
+   * Default to standard HTTP port 80 to accept common hosts (the port number is
+   * not sent by clients when it is the default port number for a scheme, nor
+   * the scheme is sent by default).
+   *
+   * See also RequestReader._validateRequest method.
+   */
+  this._currentIncomingPort = 80;
+
+  /**
+   * The current keep-alive timeout duration, in seconds.
+   * Individual requests/responses can modify this value through the Keep-Alive header.
+   */
+  this._keepAliveTimeout = DEFAULT_KEEP_ALIVE_TIMEOUT;
+
+  /**
+   * Start the initial timeout. If no data is read from this connection within
+   * the keep alive timeout, then close this connection.
+   */
+  this.persist();
 }
 Connection.prototype =
 {
+  /**
+   * Wait for an incoming data on the connection and
+   * expect to get a new full request.
+   */
+  read: function()
+  {
+    dumpn("*** read on connection " + this);
+    this._processed = false;
+    this.request = null;
+
+    this.server._connectionIdle(this);
+
+    var reader = new RequestReader(this);
+
+    // XXX add request timeout functionality here!
+
+    try
+    {
+      this.input.asyncWait(reader, 0, 0, gThreadManager.mainThread);
+    }
+    catch (e)
+    {
+      this.close();
+    }
+  },
+
   /** Closes this connection's input/output streams. */
   close: function()
   {
@@ -1199,6 +1285,12 @@ Connection.prototype =
 
     dumpn("*** closing connection " + this.number +
           " on port " + this._outgoingPort);
+
+    if (this._idleTimer)
+    {
+      this._idleTimer.cancel();
+      this._idleTimer = null;
+    }
 
     this.input.close();
     this.output.close();
@@ -1212,9 +1304,39 @@ Connection.prototype =
       server.stop(function() { /* not like we can do anything better */ });
   },
 
+  /** Let the connection be persistent for the keep-alive time */
+  persist: function()
+  {
+    // This method is called every time the connection gets to an idle state,
+    // i.e. has sent all queued responses out and doesn't process a request now.
+    var idleTimer = this._idleTimer;
+    if (idleTimer)
+      this._idleTimer.cancel();
+    else
+      this._idleTimer = idleTimer = new Timer();
+
+    dumpn("*** persisting idle connection " + this +
+          " for " + this._keepAliveTimeout + " seconds");
+
+    var connection = this;
+    idleTimer.initWithCallback(function()
+    {
+      // We might get to an active state before the timeout occurred, then
+      // ignore it. The timer will be rescheduled when the connection returns
+      // to the idle state.  This is simpler and less error-prone then canceling
+      // the timer whenever the connection becomes active again.
+      if (!connection.isIdle())
+        return;
+
+      dumpn("*** closing idle connection " + connection);
+      connection.close();
+    }, this._keepAliveTimeout * 1000, Ci.nsITimer.TYPE_ONE_SHOT);
+  },
+
   /**
    * Initiates processing of this connection, using the data in the given
-   * request.
+   * request. Called by RequestReader._handleResponse after the request has
+   * been completely read from the socket.
    *
    * @param request : Request
    *   the request which should be processed
@@ -1246,6 +1368,16 @@ Connection.prototype =
     this._processed = true;
     this.request = request;
     this.server._handler.handleError(code, this);
+  },
+
+  /**
+   * Returns true iff this connection is not closed and is idle.
+   * A connection is idle when all requests received on it have triggered responses,
+   * and those responses have been completely sent.
+   */
+  isIdle: function()
+  {
+    return this.request === null && !this._closed;
   },
 
   /** Converts this to a string for debugging purposes. */
@@ -1363,7 +1495,7 @@ RequestReader.prototype =
     }
     catch (e)
     {
-      if (streamClosed(e))
+      if (streamClosed(e) && !this._connection._closed)
       {
         dumpn("*** WARNING: unexpected error when reading from socket; will " +
               "be treated as if the input stream had been closed");
@@ -1601,7 +1733,10 @@ RequestReader.prototype =
         // the HTTPS case requires a tunnel/proxy and thus requires that the
         // requested URI be absolute (and thus contain the necessary
         // information), let's assume HTTP will prevail and use that.
-        port = +port || 80;
+        // _connection._currentIncomingPort defaults to 80 (HTTP) but can be
+        // overwritten by the first tunneled request with a full specified URL.
+        // See also RequestReader.prototype._parseRequestLine.
+        port = +port || this._connection._currentIncomingPort;
 
         var scheme = identity.getScheme(host, port);
         if (!scheme)
@@ -1788,6 +1923,10 @@ RequestReader.prototype =
         dumpn("*** serverIdentity unknown or path does not start with '/'");
         throw HTTP_400;
       }
+
+      // Remember the port number we have determined. Subsequent requests
+      // might not contain this information.
+      this._connection._currentIncomingPort = port;
     }
 
     var splitter = fullPath.indexOf("?");
@@ -3539,6 +3678,17 @@ function Response(connection)
   this._connection = connection;
 
   /**
+   * If true, close the connection at after the response has been sent out.
+   * Can be set to true whenever before end() method has been called.
+   * If no connection header was present then default to "keep-alive" for
+   * HTTP/1.1 and "close" for HTTP/1.0.
+   */
+  var req = connection.request;
+  this._closeConnection = !connection.server._keepAliveEnabled ||
+                          (req.hasHeader("Connection")
+                          ? req.getHeader("Connection").split(",").includes("close")
+                          : !req._httpVersion.atLeast(nsHttpVersion.HTTP_1_1));
+  /**
    * The HTTP version of this response; defaults to 1.1 if not set by the
    * handler.
    */
@@ -3597,6 +3747,12 @@ function Response(connection)
    * nsIHttpRequestHandler.handle.
    */
   this._processAsync = false;
+
+  /**
+   * Flag indicating use of the chunked encoding to send the asynchronously
+   * generated content.
+   */
+  this._chunked = false;
 
   /**
    * True iff finish() has been called on this, signaling that no more changes
@@ -3779,6 +3935,7 @@ Response.prototype =
     }
 
     this._powerSeized = true;
+    this._closeConnection = true;
     if (this._bodyOutputStream)
       this._startAsyncProcessor();
   },
@@ -3795,11 +3952,25 @@ Response.prototype =
 
     dumpn("*** finishing connection " + this._connection.number);
     this._startAsyncProcessor(); // in case bodyOutputStream was never accessed
+
+    // If we are using chunked encoding then ensure body streams are present
+    // so that WriteTrhoughCopier will send an EOF chunk through.
+    if (this._chunked)
+      this.bodyOutputStream;
+
     if (this._bodyOutputStream)
       this._bodyOutputStream.close();
     this._finished = true;
   },
 
+  //
+  // see nsIHttpResponse.closeConnection
+  //
+  closeConnection: function()
+  {
+    dumpn("*** disable keep-alive for connection " + this._connection.number);
+    this._closeConnection = true;
+  },
 
   // NSISUPPORTS
 
@@ -3926,6 +4097,9 @@ Response.prototype =
   {
     dumpn("*** abort(<" + e + ">)");
 
+    // Close the connection in case of any error.
+    this._closeConnection = true;
+
     // This response will be ended by the processor if one was created.
     var copier = this._asyncCopier;
     if (copier)
@@ -3965,7 +4139,11 @@ Response.prototype =
   {
     NS_ASSERT(!this._ended, "ending this response twice?!?!");
 
-    this._connection.close();
+    if (this._closeConnection)
+      this._connection.close();
+    else
+      this._connection.read(); /* restart reading this keep-alive connection */
+
     if (this._bodyOutputStream)
       this._bodyOutputStream.close();
 
@@ -4028,7 +4206,43 @@ Response.prototype =
     // header post-processing
 
     var headers = this._headers;
-    headers.setHeader("Connection", "close", false);
+    if (headers.hasHeader("Connection"))
+    {
+      // If "Connection: close" header had been manually set on the response,
+      // then set our _closeConnection flag, otherwise leave it as is.
+      this._closeConnection = this._closeConnection ||
+        headers.getHeader("Connection").split(",").includes("close");
+    }
+    else
+    {
+      // There is no Connection header set on the response, set it by state
+      // of the _closeConnection flag.
+      var connectionHeaderValue = this._closeConnection
+                                ? "close"
+                                : "keep-alive";
+      headers.setHeader("Connection", connectionHeaderValue, false);
+    }
+
+    if (headers.hasHeader("Keep-Alive"))
+    {
+      // Read the Keep-alive header and set the timeout according it.
+      // Note: This is documented in RFC 2068, section 19.7.1.
+      var keepAliveTimeout = headers.getHeader("Keep-Alive")
+                             .match(/^timeout=(\d+)$/);
+      if (keepAliveTimeout)
+      {
+        var seconds = parseInt(keepAliveTimeout[1], 10);
+        this._connection._keepAliveTimeout = Math.min(seconds, DEFAULT_KEEP_ALIVE_TIMEOUT);
+      }
+    }
+    else if (!this._closeConnection)
+    {
+      // Add the keep alive header.
+      headers.setHeader("Keep-Alive",
+                        "timeout=" + this._connection._keepAliveTimeout,
+                        false);
+    }
+
     headers.setHeader("Server", "httpd.js", false);
     if (!headers.hasHeader("Date"))
       headers.setHeader("Date", toDateString(Date.now()), false);
@@ -4050,6 +4264,11 @@ Response.prototype =
       headers.setHeader("Content-Length", "" + avail, false);
     }
 
+    this._chunked = !this._headers.hasHeader("Content-Length");
+    dumpn("*** this._chunked= " + this._chunked);
+
+    if (this._chunked)
+      headers.setHeader("Transfer-Encoding", "chunked", false);
 
     // construct and send response
     dumpn("*** header post-processing completed, sending response head...");
@@ -4115,7 +4334,7 @@ Response.prototype =
     var headerCopier = this._asyncCopier =
       new WriteThroughCopier(responseHeadPipe.inputStream,
                              this._connection.output,
-                             copyObserver, null);
+                             copyObserver, null, false);
 
     responseHeadPipe.outputStream.close();
 
@@ -4178,7 +4397,7 @@ Response.prototype =
     dumpn("*** starting async copier of body data...");
     this._asyncCopier =
       new WriteThroughCopier(this._bodyInputStream, this._connection.output,
-                            copyObserver, null);
+                             copyObserver, null, this._chunked);
   },
 
   /** Ensures that this hasn't been ended. */
@@ -4226,10 +4445,12 @@ function wouldBlock(e)
  *   an observer which will be notified when the copy starts and finishes
  * @param context : nsISupports
  *   context passed to observer when notified of start/stop
+ * @param chunked : boolean
+ *   indicate whether to use chunked encoding
  * @throws NS_ERROR_NULL_POINTER
  *   if source, sink, or observer are null
  */
-function WriteThroughCopier(source, sink, observer, context)
+function WriteThroughCopier(source, sink, observer, context, chunked)
 {
   if (!source || !sink || !observer)
     throw Cr.NS_ERROR_NULL_POINTER;
@@ -4245,6 +4466,9 @@ function WriteThroughCopier(source, sink, observer, context)
 
   /** Context for the observer watching this. */
   this._context = context;
+
+  /** Forces use of chunked encoding on the data */
+  this._chunked = chunked;
 
   /**
    * True iff this is currently being canceled (cancel has been called, the
@@ -4354,7 +4578,37 @@ WriteThroughCopier.prototype =
       {
         var data = input.readByteArray(bytesWanted);
         bytesConsumed = data.length;
-        this._pendingData.push(String.fromCharCode.apply(String, data));
+        var dataStr = String.fromCharCode.apply(String, data);
+        if (this._chunked)
+        {
+          // from RFC2616 section 3.6.1, the chunked transfer coding is defined as:
+          //
+          //   Chunked-Body    = *chunk
+          //                     last-chunk
+          //                     trailer
+          //                     CRLF
+          //   chunk           = chunk-size [ chunk-extension ] CRLF
+          //                     chunk-data CRLF
+          //   chunk-size      = 1*HEX
+          //   last-chunk      = 1*("0") [ chunk-extension ] CRLF
+          //
+          //   chunk-extension = *( ";" chunk-ext-name [ "=" chunk-ext-val ] )
+          //   chunk-ext-name  = token
+          //   chunk-ext-val   = token | quoted-string
+          //   chunk-data      = chunk-size(OCTET)
+          //   trailer         = *(entity-header CRLF)
+          //
+          // Apply chunked encoding here
+          data = bytesConsumed.toString(16).toUpperCase()
+               + "\r\n"
+               + dataStr
+               + "\r\n";
+          this._pendingData.push(data);
+        }
+        else
+        {
+          this._pendingData.push(dataStr);
+        }
       }
 
       dumpn("*** " + bytesConsumed + " bytes read");
@@ -4622,6 +4876,25 @@ WriteThroughCopier.prototype =
     dumpn("*** _doneReadingSource(0x" + e.toString(16) + ")");
 
     this._finishSource(e);
+
+    if (this._chunked && this._sink !== null)
+    {
+      // Write the final EOF chunk
+      dumpn("*** _doneReadingSource - write EOF chunk");
+      this._chunked = false;
+      this._pendingData.push("0\r\n\r\n");
+      try
+      {
+        this._waitToWriteData();
+        return;
+      }
+      catch (e)
+      {
+        dumpn("!!! unexpected error waiting to write pending data: " + e);
+        throw e;
+      }
+    }
+
     if (this._pendingData.length === 0)
       this._sink = null;
     else
