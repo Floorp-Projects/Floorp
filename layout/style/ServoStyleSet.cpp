@@ -545,6 +545,13 @@ ServoStyleSet::ResolveNonInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag)
   return retval.forget();
 }
 
+already_AddRefed<RawServoRuleNode>
+ServoStyleSet::ResolveRuleNode(dom::Element *aElement, nsIAtom *aPseudoTag)
+{
+  MOZ_ASSERT(aElement);
+  return Servo_ResolveRuleNode(aElement, aPseudoTag, mRawSet.get()).Consume();
+}
+
 // manage the set of style sheets in the style set
 nsresult
 ServoStyleSet::AppendStyleSheet(SheetType aType,

@@ -386,6 +386,14 @@ SERVO_BINDING_FUNC(Servo_ResolveStyle, ServoComputedValuesStrong,
 SERVO_BINDING_FUNC(Servo_ResolvePseudoStyle, ServoComputedValuesStrong,
                    RawGeckoElementBorrowed element, nsIAtom* pseudo_tag,
                    bool is_probe, RawServoStyleSetBorrowed set)
+SERVO_BINDING_FUNC(Servo_ResolveRuleNode, RawServoRuleNodeStrong,
+                   RawGeckoElementBorrowed element, nsIAtom* pseudo_tag,
+                   RawServoStyleSetBorrowed set)
+SERVO_BINDING_FUNC(Servo_HasAuthorSpecifiedRules, bool,
+                   RawServoRuleNodeBorrowed rule_node,
+                   RawGeckoElementBorrowed element,
+                   uint32_t rule_type_mask,
+                   bool author_colors_allowed)
 
 // Resolves style for an element or pseudo-element without processing pending
 // restyles first. The Element and its ancestors may be unstyled, have pending
