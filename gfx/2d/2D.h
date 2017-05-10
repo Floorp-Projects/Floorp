@@ -1632,6 +1632,7 @@ public:
   static bool SetDWriteFactory(IDWriteFactory *aFactory);
   static ID3D11Device *GetDirect3D11Device();
   static ID2D1Device *GetD2D1Device();
+  static uint32_t GetD2D1DeviceSeq();
   static IDWriteFactory *GetDWriteFactory();
   static bool SupportsD2D1();
 
