@@ -23,6 +23,26 @@ function setInput(selector, value) {
   }, 500));
 }
 
+function clickOnElement(selector) {
+  let element = document.querySelector(selector);
+
+  if (!element) {
+    throw new Error("Can not find the element");
+  }
+
+  SimpleTest.executeSoon(() => element.click());
+}
+
+async function onAddressChanged(type) {
+  return new Promise(resolve => {
+    formFillChromeScript.addMessageListener("formautofill-storage-changed", function onChanged(data) {
+      formFillChromeScript.removeMessageListener("formautofill-storage-changed", onChanged);
+      is(data.data, type, `Receive ${type} storage changed event`);
+      resolve();
+    });
+  });
+}
+
 function checkMenuEntries(expectedValues) {
   let actualValues = getMenuEntries();
 
@@ -32,7 +52,7 @@ function checkMenuEntries(expectedValues) {
   }
 }
 
-function addAddress(address) {
+async function addAddress(address) {
   return new Promise(resolve => {
     formFillChromeScript.sendAsyncMessage("FormAutofillTest:AddAddress", {address});
     formFillChromeScript.addMessageListener("FormAutofillTest:AddressAdded", function onAdded(data) {
@@ -43,7 +63,7 @@ function addAddress(address) {
   });
 }
 
-function removeAddress(guid) {
+async function removeAddress(guid) {
   return new Promise(resolve => {
     formFillChromeScript.sendAsyncMessage("FormAutofillTest:RemoveAddress", {guid});
     formFillChromeScript.addMessageListener("FormAutofillTest:AddressRemoved", function onDeleted(data) {
@@ -54,13 +74,24 @@ function removeAddress(guid) {
   });
 }
 
-function updateAddress(guid, address) {
+async function updateAddress(guid, address) {
   return new Promise(resolve => {
     formFillChromeScript.sendAsyncMessage("FormAutofillTest:UpdateAddress", {address, guid});
     formFillChromeScript.addMessageListener("FormAutofillTest:AddressUpdated", function onUpdated(data) {
       formFillChromeScript.removeMessageListener("FormAutofillTest:AddressUpdated", onUpdated);
 
       resolve();
+    });
+  });
+}
+
+async function checkAddresses(expectedAddresses) {
+  return new Promise(resolve => {
+    formFillChromeScript.sendAsyncMessage("FormAutofillTest:CheckAddresses", {expectedAddresses});
+    formFillChromeScript.addMessageListener("FormAutofillTest:areAddressesMatching", function onChecked(data) {
+      formFillChromeScript.removeMessageListener("FormAutofillTest:areAddressesMatching", onChecked);
+
+      resolve(data);
     });
   });
 }
