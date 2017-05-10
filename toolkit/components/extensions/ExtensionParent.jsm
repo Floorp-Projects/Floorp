@@ -35,6 +35,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
                                   "resource://gre/modules/Schemas.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gAddonPolicyService",
+                                   "@mozilla.org/addons/policy-service;1",
+                                   "nsIAddonPolicyService");
+
 Cu.import("resource://gre/modules/ExtensionCommon.jsm");
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
@@ -1050,7 +1054,26 @@ function watchExtensionProxyContextLoad({extension, viewType, browser}, onExtens
 // Used to cache the list of WebExtensionManifest properties defined in the BASE_SCHEMA.
 let gBaseManifestProperties = null;
 
+/**
+ * Function to obtain the extension name from a moz-extension URI without exposing GlobalManager.
+ *
+ * @param {Object} uri The URI for the extension to look up.
+ * @returns {string} the name of the extension.
+ */
+function extensionNameFromURI(uri) {
+  let id = null;
+  try {
+    id = gAddonPolicyService.extensionURIToAddonId(uri);
+  } catch (ex) {
+    if (ex.name != "NS_ERROR_XPC_BAD_CONVERT_JS") {
+      Cu.reportError("Extension cannot be found in AddonPolicyService.");
+    }
+  }
+  return GlobalManager.getExtension(id).name;
+}
+
 const ExtensionParent = {
+  extensionNameFromURI,
   GlobalManager,
   HiddenExtensionPage,
   ParentAPIManager,

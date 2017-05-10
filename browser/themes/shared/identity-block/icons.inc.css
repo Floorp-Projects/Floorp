@@ -13,6 +13,11 @@
   list-style-image: url(chrome://browser/skin/identity-icon.svg#hover@iconVariant@);
 }
 
+#identity-box.extensionPage > #extension-icon@selectorSuffix@ {
+  list-style-image: url(chrome://browser/skin/controlcenter/extension.svg);
+  visibility: visible;
+}
+
 #identity-box.grantedPermissions > #identity-icon@selectorSuffix@ {
   list-style-image: url(chrome://browser/skin/identity-icon.svg#notice@iconVariant@);
 }
