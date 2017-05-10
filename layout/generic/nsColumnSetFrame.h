@@ -90,6 +90,7 @@ public:
   }
 #endif
 
+  nsRect CalculateBounds(const nsPoint& aOffset);
   void CreateBorderRenderers(nsTArray<nsCSSBorderRenderer>& aBorderRenderers,
                              nsRenderingContext* aCtx,
                              const nsRect& aDirtyRect,
@@ -230,6 +231,9 @@ protected:
                         bool aLastColumnUnbounded,
                         nsCollapsingMargin* aCarriedOutBEndMargin,
                         ColumnBalanceData& aColData);
+
+  void ForEachColumn(const std::function<void(const nsRect& lineRect)>& aSetLineRect,
+                     const nsPoint& aPt);
 };
 
 #endif // nsColumnSetFrame_h___
