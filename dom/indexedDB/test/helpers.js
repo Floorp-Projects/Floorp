@@ -15,8 +15,8 @@ var testGenerator = testSteps();
 // Even if the real |Components| doesn't exist, we might shim in a simple JS
 // placebo for compat. An easy way to differentiate this from the real thing
 // is whether the property is read-only or not.
-var c = Object.getOwnPropertyDescriptor(this, 'Components');
-if ((!c.value || c.writable) && typeof SpecialPowers === 'object')
+var c = Object.getOwnPropertyDescriptor(this, "Components");
+if ((!c.value || c.writable) && typeof SpecialPowers === "object")
   Components = SpecialPowers.Components;
 
 function executeSoon(aFun)
@@ -28,7 +28,7 @@ function executeSoon(aFun)
                    .mainThread;
 
   thread.dispatch({
-    run: function() {
+    run() {
       aFun();
     }
   }, Components.interfaces.nsIThread.DISPATCH_NORMAL);
@@ -157,7 +157,7 @@ function* testHarnessSteps() {
           break;
 
         case "clearAllDatabases":
-          clearAllDatabases(function(){
+          clearAllDatabases(function() {
             worker.postMessage({ op: "clearAllDatabasesDone" });
           });
           break;
@@ -296,7 +296,7 @@ function ExpectError(name, preventDefault)
   this._preventDefault = preventDefault;
 }
 ExpectError.prototype = {
-  handleEvent: function(event)
+  handleEvent(event)
   {
     is(event.type, "error", "Got an error event");
     is(event.target.error.name, this._name, "Expected error was thrown.");
@@ -484,7 +484,7 @@ function workerScript() {
     this._preventDefault = _preventDefault_;
   }
   self.ExpectError.prototype = {
-    handleEvent: function(_event_)
+    handleEvent(_event_)
     {
       is(_event_.type, "error", "Got an error event");
       is(_event_.target.error.name, this._name, "Expected error was thrown.");

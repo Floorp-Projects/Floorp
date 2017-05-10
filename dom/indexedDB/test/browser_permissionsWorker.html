@@ -13,9 +13,9 @@
     let testException;
 
     function runTest() {
-      let w = new Worker('browser_permissionsWorker.js');
+      let w = new Worker("browser_permissionsWorker.js");
       w.onmessage = function(e) {
-        if (e.data.status == 'success') {
+        if (e.data.status == "success") {
           testIsIDBDatabase = e.data.isIDBDatabase;
         } else {
           testException = e.data.error;

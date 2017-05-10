@@ -31,14 +31,14 @@ add_task(function* test1() {
   gBrowser.selectedBrowser.loadURI(testPageURL);
   yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
-  registerPopupEventHandler("popupshowing", function () {
+  registerPopupEventHandler("popupshowing", function() {
     ok(true, "prompt showing");
   });
-  registerPopupEventHandler("popupshown", function () {
+  registerPopupEventHandler("popupshown", function() {
     ok(true, "prompt shown");
     triggerSecondaryCommand(this);
   });
-  registerPopupEventHandler("popuphidden", function () {
+  registerPopupEventHandler("popuphidden", function() {
     ok(true, "prompt hidden");
   });
 
@@ -52,22 +52,22 @@ add_task(function* test1() {
 
 add_task(function* test2() {
   info("creating private window");
-  let win = yield BrowserTestUtils.openNewBrowserWindow({ private : true });
-  
+  let win = yield BrowserTestUtils.openNewBrowserWindow({ private: true });
+
   info("creating private tab");
   win.gBrowser.selectedTab = win.gBrowser.addTab();
 
   info("loading test page: " + testPageURL);
   win.gBrowser.selectedBrowser.loadURI(testPageURL);
   yield BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
-  
-  registerPopupEventHandler("popupshowing", function () {
+
+  registerPopupEventHandler("popupshowing", function() {
     ok(false, "prompt showing");
   });
-  registerPopupEventHandler("popupshown", function () {
+  registerPopupEventHandler("popupshown", function() {
     ok(false, "prompt shown");
   });
-  registerPopupEventHandler("popuphidden", function () {
+  registerPopupEventHandler("popuphidden", function() {
     ok(false, "prompt hidden");
   });
   yield promiseMessage("InvalidStateError", win.gBrowser);
@@ -88,13 +88,13 @@ add_task(function* test3() {
   gBrowser.selectedBrowser.loadURI(testPageURL);
   yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
-  registerPopupEventHandler("popupshowing", function () {
+  registerPopupEventHandler("popupshowing", function() {
     ok(false, "Shouldn't show a popup this time");
   });
-  registerPopupEventHandler("popupshown", function () {
+  registerPopupEventHandler("popupshown", function() {
     ok(false, "Shouldn't show a popup this time");
   });
-  registerPopupEventHandler("popuphidden", function () {
+  registerPopupEventHandler("popuphidden", function() {
     ok(false, "Shouldn't show a popup this time");
   });
 

@@ -23,7 +23,7 @@ function test1()
   info("creating tab");
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
-  gBrowser.selectedBrowser.addEventListener("load", function () {
+  gBrowser.selectedBrowser.addEventListener("load", function() {
     setFinishedCallback(function(isIDBDatabase, exception) {
       ok(isIDBDatabase, "First database creation was successful");
       ok(!exception, "No exception");
@@ -34,14 +34,14 @@ function test1()
       executeSoon(test2);
     });
 
-    registerPopupEventHandler("popupshowing", function () {
+    registerPopupEventHandler("popupshowing", function() {
       ok(true, "prompt showing");
     });
-    registerPopupEventHandler("popupshown", function () {
+    registerPopupEventHandler("popupshown", function() {
       ok(true, "prompt shown");
       triggerMainCommand(this);
     });
-    registerPopupEventHandler("popuphidden", function () {
+    registerPopupEventHandler("popuphidden", function() {
       ok(true, "prompt hidden");
     });
 
@@ -59,7 +59,7 @@ function test2()
   info("creating tab");
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
-  gBrowser.selectedBrowser.addEventListener("load", function () {
+  gBrowser.selectedBrowser.addEventListener("load", function() {
     setFinishedCallback(function(isIDBDatabase, exception) {
       ok(!isIDBDatabase, "First database creation was successful");
       ok(exception, "No exception");
@@ -70,13 +70,13 @@ function test2()
       executeSoon(finish);
     });
 
-    registerPopupEventHandler("popupshowing", function () {
+    registerPopupEventHandler("popupshowing", function() {
       ok(false, "prompt showing");
     });
-    registerPopupEventHandler("popupshown", function () {
+    registerPopupEventHandler("popupshown", function() {
       ok(false, "prompt shown");
     });
-    registerPopupEventHandler("popuphidden", function () {
+    registerPopupEventHandler("popuphidden", function() {
       ok(false, "prompt hidden");
     });
 

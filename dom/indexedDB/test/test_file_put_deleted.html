@@ -91,7 +91,7 @@
     // them up.  We clobber our existing content, then trigger deletion to
     // clean up after it.
     SpecialPowers.createFiles(
-      [{ name: fileRelPath, data: '' }],
+      [{ name: fileRelPath, data: "" }],
       grabEventAndContinueHandler, errorCallbackHandler);
     yield undefined;
     // This is async without a callback because it's intended for cleanup.

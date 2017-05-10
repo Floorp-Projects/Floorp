@@ -34,11 +34,11 @@
     request = mutableFile.getFile();
     ok(request instanceof DOMRequest, "Correct interface");
     ok(!(request instanceof IDBFileRequest), "Correct interface");
-    ok(!('fileHandle' in request), "Property should not exist");
+    ok(!("fileHandle" in request), "Property should not exist");
     ok(request.fileHandle === undefined, "Property should not exist");
-    ok(!('lockedFile' in request), "Property should not exist");
+    ok(!("lockedFile" in request), "Property should not exist");
     ok(request.lockedFile === undefined, "Property should not exist");
-    ok(!('onprogress' in request), "Property should not exist");
+    ok(!("onprogress" in request), "Property should not exist");
     ok(request.onprogress === undefined, "Property should not exist");
 
     finishTest();

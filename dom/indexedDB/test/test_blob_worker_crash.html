@@ -28,7 +28,7 @@
     let iframe = document.getElementById("iframe1");
     window.addEventListener("message", grabEventAndContinueHandler);
     // Put it in a different origin to be safe
-    iframe.src = //"http://example.org" +
+    iframe.src = // "http://example.org" +
                  window.location.pathname.replace(
                    "test_blob_worker_crash.html",
                    "blob_worker_crash_iframe.html");
@@ -47,7 +47,7 @@
     yield undefined;
 
     info("If we are still alive, then we win!");
-    ok('Did not crash / trigger an assert!');
+    ok("Did not crash / trigger an assert!");
 
     finishTest();
   }
