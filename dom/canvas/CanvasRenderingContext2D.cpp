@@ -2808,7 +2808,10 @@ CreateDeclarationForServo(nsCSSPropertyID aProperty,
   NS_ConvertUTF16toUTF8 value(aPropertyValue);
 
   RefPtr<RawServoDeclarationBlock> servoDeclarations =
-    Servo_ParseProperty(aProperty, &value, data).Consume();
+    Servo_ParseProperty(aProperty,
+                        &value,
+                        data,
+                        LengthParsingMode::Default).Consume();
 
   if (!servoDeclarations) {
     // We got a syntax error.  The spec says this value must be ignored.
