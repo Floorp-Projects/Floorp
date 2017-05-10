@@ -69,7 +69,7 @@ ifeq ($(CONFIG_AV1_ENCODER),yes)
   INSTALL-LIBS-yes += include/aom/aom.h include/aom/aomcx.h
   INSTALL_MAPS += include/aom/% $(SRC_PATH_BARE)/$(AV1_PREFIX)/%
   CODEC_DOC_SRCS += aom/aom.h aom/aomcx.h
-  CODEC_DOC_SECTIONS += av1 av1_encoder
+  CODEC_DOC_SECTIONS += av1 av1_encoder encoder
 endif
 
 ifeq ($(CONFIG_AV1_DECODER),yes)
@@ -81,19 +81,11 @@ ifeq ($(CONFIG_AV1_DECODER),yes)
   INSTALL-LIBS-yes += include/aom/aom.h include/aom/aomdx.h
   INSTALL_MAPS += include/aom/% $(SRC_PATH_BARE)/$(AV1_PREFIX)/%
   CODEC_DOC_SRCS += aom/aom.h aom/aomdx.h
-  CODEC_DOC_SECTIONS += av1 av1_decoder
+  CODEC_DOC_SECTIONS += av1 av1_decoder decoder
 endif
 
 AV1_PREFIX=av1/
 $(BUILD_PFX)$(AV1_PREFIX)%.c.o: CFLAGS += -Wextra
-
-ifeq ($(CONFIG_ENCODERS),yes)
-  CODEC_DOC_SECTIONS += encoder
-endif
-ifeq ($(CONFIG_DECODERS),yes)
-  CODEC_DOC_SECTIONS += decoder
-endif
-
 
 ifeq ($(CONFIG_MSVS),yes)
 CODEC_LIB=$(if $(CONFIG_STATIC_MSVCRT),aommt,aommd)
@@ -126,15 +118,15 @@ ifeq ($(ARCH_X86)$(ARCH_X86_64),yes)
 INSTALL-SRCS-$(CONFIG_CODEC_SRCS) += third_party/x86inc/x86inc.asm
 endif
 CODEC_EXPORTS-yes += aom/exports_com
-CODEC_EXPORTS-$(CONFIG_ENCODERS) += aom/exports_enc
-CODEC_EXPORTS-$(CONFIG_DECODERS) += aom/exports_dec
+CODEC_EXPORTS-$(CONFIG_AV1_ENCODER) += aom/exports_enc
+CODEC_EXPORTS-$(CONFIG_AV1_DECODER) += aom/exports_dec
 
 INSTALL-LIBS-yes += include/aom/aom_codec.h
 INSTALL-LIBS-yes += include/aom/aom_frame_buffer.h
 INSTALL-LIBS-yes += include/aom/aom_image.h
 INSTALL-LIBS-yes += include/aom/aom_integer.h
-INSTALL-LIBS-$(CONFIG_DECODERS) += include/aom/aom_decoder.h
-INSTALL-LIBS-$(CONFIG_ENCODERS) += include/aom/aom_encoder.h
+INSTALL-LIBS-$(CONFIG_AV1_DECODER) += include/aom/aom_decoder.h
+INSTALL-LIBS-$(CONFIG_AV1_ENCODER) += include/aom/aom_encoder.h
 ifeq ($(CONFIG_EXTERNAL_BUILD),yes)
 ifeq ($(CONFIG_MSVS),yes)
 INSTALL-LIBS-yes                  += $(foreach p,$(VS_PLATFORMS),$(LIBSUBDIR)/$(p)/$(CODEC_LIB).lib)

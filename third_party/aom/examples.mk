@@ -64,7 +64,7 @@ endif
 
 # List of examples to build. UTILS are tools meant for distribution
 # while EXAMPLES demonstrate specific portions of the API.
-UTILS-$(CONFIG_DECODERS)    += aomdec.c
+UTILS-$(CONFIG_AV1_DECODER) += aomdec.c
 aomdec.SRCS                 += md5_utils.c md5_utils.h
 aomdec.SRCS                 += aom_ports/mem_ops.h
 aomdec.SRCS                 += aom_ports/mem_ops_aligned.h
@@ -86,7 +86,7 @@ ifeq ($(CONFIG_WEBM_IO),yes)
 endif
 aomdec.GUID                  = BA5FE66F-38DD-E034-F542-B1578C5FB950
 aomdec.DESCRIPTION           = Full featured decoder
-UTILS-$(CONFIG_ENCODERS)    += aomenc.c
+UTILS-$(CONFIG_AV1_ENCODER) += aomenc.c
 aomenc.SRCS                 += args.c args.h y4minput.c y4minput.h aomenc.h
 aomenc.SRCS                 += ivfdec.c ivfdec.h
 aomenc.SRCS                 += ivfenc.c ivfenc.h
@@ -112,7 +112,7 @@ aomenc.GUID                  = 548DEC74-7A15-4B2B-AFC3-AA102E7C25C1
 aomenc.DESCRIPTION           = Full featured encoder
 
 ifeq ($(CONFIG_ANALYZER),yes)
-  EXAMPLES-$(CONFIG_DECODERS)        += analyzer.cc
+  EXAMPLES-$(CONFIG_AV1_DECODER)     += analyzer.cc
   analyzer.GUID                       = 83827a8c-e3c3-4b19-8832-0cfc206c4496
   analyzer.SRCS                      += ivfdec.h ivfdec.c
   analyzer.SRCS                      += av1/decoder/inspection.h
@@ -123,20 +123,20 @@ ifeq ($(CONFIG_ANALYZER),yes)
 endif
 
 ifeq ($(CONFIG_INSPECTION),yes)
-EXAMPLES-$(CONFIG_DECODERS) += inspect.c
-inspect.GUID                 = FA46A420-3356-441F-B0FD-60AA1345C181
-inspect.SRCS                += ivfdec.h ivfdec.c
-inspect.SRCS                += args.c args.h
-inspect.SRCS                += tools_common.h tools_common.c
-inspect.SRCS                += video_common.h
-inspect.SRCS                += video_reader.h video_reader.c
-inspect.SRCS                += aom_ports/mem_ops.h
-inspect.SRCS                += aom_ports/mem_ops_aligned.h
-inspect.SRCS                += aom_ports/msvc.h
-inspect.DESCRIPTION          = Dump inspection data
+EXAMPLES-$(CONFIG_AV1_DECODER) += inspect.c
+inspect.GUID                   = FA46A420-3356-441F-B0FD-60AA1345C181
+inspect.SRCS                   += ivfdec.h ivfdec.c
+inspect.SRCS                   += args.c args.h
+inspect.SRCS                   += tools_common.h tools_common.c
+inspect.SRCS                   += video_common.h
+inspect.SRCS                   += video_reader.h video_reader.c
+inspect.SRCS                   += aom_ports/mem_ops.h
+inspect.SRCS                   += aom_ports/mem_ops_aligned.h
+inspect.SRCS                   += aom_ports/msvc.h
+inspect.DESCRIPTION             = Dump inspection data
 endif
 
-EXAMPLES-$(CONFIG_DECODERS)        += simple_decoder.c
+EXAMPLES-$(CONFIG_AV1_DECODER)     += simple_decoder.c
 simple_decoder.GUID                 = D3BBF1E9-2427-450D-BBFF-B2843C1D44CC
 simple_decoder.SRCS                += ivfdec.h ivfdec.c
 simple_decoder.SRCS                += tools_common.h tools_common.c
@@ -146,7 +146,7 @@ simple_decoder.SRCS                += aom_ports/mem_ops.h
 simple_decoder.SRCS                += aom_ports/mem_ops_aligned.h
 simple_decoder.SRCS                += aom_ports/msvc.h
 simple_decoder.DESCRIPTION          = Simplified decoder loop
-EXAMPLES-$(CONFIG_DECODERS)        += decode_to_md5.c
+EXAMPLES-$(CONFIG_AV1_DECODER)     += decode_to_md5.c
 decode_to_md5.SRCS                 += md5_utils.h md5_utils.c
 decode_to_md5.SRCS                 += ivfdec.h ivfdec.c
 decode_to_md5.SRCS                 += tools_common.h tools_common.c
@@ -157,7 +157,7 @@ decode_to_md5.SRCS                 += aom_ports/mem_ops_aligned.h
 decode_to_md5.SRCS                 += aom_ports/msvc.h
 decode_to_md5.GUID                  = 59120B9B-2735-4BFE-B022-146CA340FE42
 decode_to_md5.DESCRIPTION           = Frame by frame MD5 checksum
-EXAMPLES-$(CONFIG_ENCODERS)     += simple_encoder.c
+EXAMPLES-$(CONFIG_AV1_ENCODER)  += simple_encoder.c
 simple_encoder.SRCS             += ivfenc.h ivfenc.c
 simple_encoder.SRCS             += tools_common.h tools_common.c
 simple_encoder.SRCS             += video_common.h
@@ -173,7 +173,7 @@ lossless_encoder.SRCS           += video_writer.h video_writer.c
 lossless_encoder.SRCS           += aom_ports/msvc.h
 lossless_encoder.GUID            = B63C7C88-5348-46DC-A5A6-CC151EF93366
 lossless_encoder.DESCRIPTION     = Simplified lossless encoder
-EXAMPLES-$(CONFIG_ENCODERS)     += twopass_encoder.c
+EXAMPLES-$(CONFIG_AV1_ENCODER)  += twopass_encoder.c
 twopass_encoder.SRCS            += ivfenc.h ivfenc.c
 twopass_encoder.SRCS            += tools_common.h tools_common.c
 twopass_encoder.SRCS            += video_common.h
@@ -181,7 +181,7 @@ twopass_encoder.SRCS            += video_writer.h video_writer.c
 twopass_encoder.SRCS            += aom_ports/msvc.h
 twopass_encoder.GUID             = 73494FA6-4AF9-4763-8FBB-265C92402FD8
 twopass_encoder.DESCRIPTION      = Two-pass encoder loop
-EXAMPLES-$(CONFIG_DECODERS)     += decode_with_drops.c
+EXAMPLES-$(CONFIG_AV1_DECODER)  += decode_with_drops.c
 decode_with_drops.SRCS          += ivfdec.h ivfdec.c
 decode_with_drops.SRCS          += tools_common.h tools_common.c
 decode_with_drops.SRCS          += video_common.h
@@ -191,7 +191,7 @@ decode_with_drops.SRCS          += aom_ports/mem_ops_aligned.h
 decode_with_drops.SRCS          += aom_ports/msvc.h
 decode_with_drops.GUID           = CE5C53C4-8DDA-438A-86ED-0DDD3CDB8D26
 decode_with_drops.DESCRIPTION    = Drops frames while decoding
-EXAMPLES-$(CONFIG_ENCODERS)        += set_maps.c
+EXAMPLES-$(CONFIG_AV1_ENCODER)     += set_maps.c
 set_maps.SRCS                      += ivfenc.h ivfenc.c
 set_maps.SRCS                      += tools_common.h tools_common.c
 set_maps.SRCS                      += video_common.h
@@ -199,9 +199,9 @@ set_maps.SRCS                      += video_writer.h video_writer.c
 set_maps.SRCS                      += aom_ports/msvc.h
 set_maps.GUID                       = ECB2D24D-98B8-4015-A465-A4AF3DCC145F
 set_maps.DESCRIPTION                = Set active and ROI maps
-ifeq ($(CONFIG_ENCODERS),yes)
-ifeq ($(CONFIG_DECODERS),yes)
-EXAMPLES-$(CONFIG_ENCODERS)        += aom_cx_set_ref.c
+ifeq ($(CONFIG_AV1_ENCODER),yes)
+ifeq ($(CONFIG_AV1_DECODER),yes)
+EXAMPLES-$(CONFIG_AV1_ENCODER)     += aom_cx_set_ref.c
 aom_cx_set_ref.SRCS                += ivfenc.h ivfenc.c
 aom_cx_set_ref.SRCS                += tools_common.h tools_common.c
 aom_cx_set_ref.SRCS                += examples/encoder_util.h

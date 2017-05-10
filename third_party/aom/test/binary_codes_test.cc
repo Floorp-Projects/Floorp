@@ -15,12 +15,15 @@
 
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
 
+#include "./aom_config.h"
 #include "test/acm_random.h"
 #include "aom/aom_integer.h"
 #include "aom_dsp/bitreader.h"
 #include "aom_dsp/bitwriter.h"
 #include "aom_dsp/binary_codes_reader.h"
 #include "aom_dsp/binary_codes_writer.h"
+
+#define ACCT_STR __func__
 
 using libaom_test::ACMRandom;
 
@@ -68,8 +71,8 @@ TEST(AV1, TestPrimitiveRefbilivel) {
           const uint16_t range = enc_values[n][p][r][v][0];
           const uint16_t near_range = enc_values[n][p][r][v][1];
           const uint16_t ref = enc_values[n][p][r][v][2];
-          const uint16_t value =
-              aom_read_primitive_refbilevel(&br, range, near_range, ref);
+          const uint16_t value = aom_read_primitive_refbilevel(
+              &br, range, near_range, ref, ACCT_STR);
           GTEST_ASSERT_EQ(value, enc_values[n][p][r][v][3]);
         }
       }
@@ -119,7 +122,7 @@ TEST(AV1, TestPrimitiveRefsubexpfin) {
           assert(k == enc_values[n][k][r][v][1]);
           const uint16_t ref = enc_values[n][k][r][v][2];
           const uint16_t value =
-              aom_read_primitive_refsubexpfin(&br, range, k, ref);
+              aom_read_primitive_refsubexpfin(&br, range, k, ref, ACCT_STR);
           GTEST_ASSERT_EQ(value, enc_values[n][k][r][v][3]);
         }
       }

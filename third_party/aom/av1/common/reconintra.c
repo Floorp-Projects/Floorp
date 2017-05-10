@@ -47,7 +47,11 @@ static const uint8_t extend_modes[INTRA_MODES] = {
   NEED_LEFT | NEED_BOTTOMLEFT,              // D207
   NEED_ABOVE | NEED_ABOVERIGHT,             // D63
 #if CONFIG_ALT_INTRA
-  NEED_LEFT | NEED_ABOVE,                   // SMOOTH
+  NEED_LEFT | NEED_ABOVE,  // SMOOTH
+#if CONFIG_SMOOTH_HV
+  NEED_LEFT | NEED_ABOVE,                   // SMOOTH_V
+  NEED_LEFT | NEED_ABOVE,                   // SMOOTH_H
+#endif                                      // CONFIG_SMOOTH_HV
 #endif                                      // CONFIG_ALT_INTRA
   NEED_LEFT | NEED_ABOVE | NEED_ABOVELEFT,  // TM
 };
@@ -443,8 +447,10 @@ static int has_top_right(BLOCK_SIZE bsize, int mi_row, int mi_col,
   const int plane_bw_unit = AOMMAX(bw_unit >> ss_x, 1);
   const int top_right_count_unit = tx_size_wide_unit[txsz];
 
+#if !CONFIG_CB4X4
   // Special handling for block sizes 4x8 and 4x4.
   if (ss_x == 0 && bw_unit < 2 && col_off == 0) return 1;
+#endif
 
   if (row_off > 0) {  // Just need to check if enough pixels on the right.
     return col_off + top_right_count_unit < plane_bw_unit;
@@ -514,9 +520,13 @@ static int has_bottom_left(BLOCK_SIZE bsize, int mi_row, int mi_col,
     // and/or bottom-left superblocks. But only the left superblock is
     // available, so check if all required pixels fall in that superblock.
     if (blk_col_in_sb == 0) {
-      const int blk_start_row_off = blk_row_in_sb << (bh_in_mi_log2 + !ss_y);
+      const int blk_start_row_off = blk_row_in_sb
+                                        << (bh_in_mi_log2 + MI_SIZE_LOG2 -
+                                            tx_size_wide_log2[0]) >>
+                                    ss_y;
       const int row_off_in_sb = blk_start_row_off + row_off;
-      const int sb_height_unit = MAX_MIB_SIZE << !ss_y;
+      const int sb_height_unit =
+          MAX_MIB_SIZE << (MI_SIZE_LOG2 - tx_size_wide_log2[0]) >> ss_y;
       return row_off_in_sb + bottom_left_count_unit < sb_height_unit;
     }
 
@@ -554,6 +564,9 @@ static intra_high_pred_fn dc_pred_high[2][2][TX_SIZES];
 #endif  // CONFIG_HIGHBITDEPTH
 
 static void av1_init_intra_predictors_internal(void) {
+#if CONFIG_EXT_INTRA
+  assert(NELEMENTS(mode_to_angle_map) == INTRA_MODES);
+#endif  // CONFIG_EXT_INTRA
 #if CONFIG_TX64X64
 #define INIT_NO_4X4(p, type)                  \
   p[TX_8X8] = aom_##type##_predictor_8x8;     \
@@ -567,7 +580,7 @@ static void av1_init_intra_predictors_internal(void) {
   p[TX_32X32] = aom_##type##_predictor_32x32
 #endif  // CONFIG_TX64X64
 
-#if CONFIG_CB4X4
+#if CONFIG_CHROMA_2X2
 #define INIT_ALL_SIZES(p, type)           \
   p[TX_2X2] = aom_##type##_predictor_2x2; \
   p[TX_4X4] = aom_##type##_predictor_4x4; \
@@ -590,6 +603,10 @@ static void av1_init_intra_predictors_internal(void) {
 #if CONFIG_ALT_INTRA
   INIT_ALL_SIZES(pred[TM_PRED], paeth);
   INIT_ALL_SIZES(pred[SMOOTH_PRED], smooth);
+#if CONFIG_SMOOTH_HV
+  INIT_ALL_SIZES(pred[SMOOTH_V_PRED], smooth_v);
+  INIT_ALL_SIZES(pred[SMOOTH_H_PRED], smooth_h);
+#endif  // CONFIG_SMOOTH_HV
 #else
   INIT_ALL_SIZES(pred[TM_PRED], tm);
 #endif  // CONFIG_ALT_INTRA
@@ -612,6 +629,10 @@ static void av1_init_intra_predictors_internal(void) {
 #if CONFIG_ALT_INTRA
   INIT_ALL_SIZES(pred_high[TM_PRED], highbd_paeth);
   INIT_ALL_SIZES(pred_high[SMOOTH_PRED], highbd_smooth);
+#if CONFIG_SMOOTH_HV
+  INIT_ALL_SIZES(pred_high[SMOOTH_V_PRED], highbd_smooth_v);
+  INIT_ALL_SIZES(pred_high[SMOOTH_H_PRED], highbd_smooth_h);
+#endif  // CONFIG_SMOOTH_HV
 #else
   INIT_ALL_SIZES(pred_high[TM_PRED], highbd_tm);
 #endif  // CONFIG_ALT_INTRA
@@ -786,6 +807,7 @@ static void dr_prediction_z2(uint8_t *dst, ptrdiff_t stride, int bs,
 #endif  // CONFIG_INTRA_INTERP
       } else {
         base2 = y >> 8;
+        assert(base2 >= -1);
         shift2 = y & 0xFF;
 #if CONFIG_INTRA_INTERP
         val = intra_subpel_interp(base2, shift2, left, -1, bs - 1, filter_type);
@@ -1191,8 +1213,8 @@ static void highbd_dr_predictor(uint16_t *dst, ptrdiff_t stride, int bs,
 
 #if CONFIG_FILTER_INTRA
 #if USE_3TAP_INTRA_FILTER
-int av1_filter_intra_taps_3[TX_SIZES][INTRA_MODES][3] = {
-#if CONFIG_CB4X4
+static int filter_intra_taps_3[TX_SIZES][FILTER_INTRA_MODES][3] = {
+#if CONFIG_CHROMA_2X2
   {
       { 697, 836, -509 },
       { 993, 513, -482 },
@@ -1203,7 +1225,7 @@ int av1_filter_intra_taps_3[TX_SIZES][INTRA_MODES][3] = {
       { 358, 687, -21 },
       { 411, 1083, -470 },
       { 912, 814, -702 },
-      { 883, 902, 761 },
+      { 883, 902, -761 },
   },
 #endif
   {
@@ -1216,7 +1238,7 @@ int av1_filter_intra_taps_3[TX_SIZES][INTRA_MODES][3] = {
       { 358, 687, -21 },
       { 411, 1083, -470 },
       { 912, 814, -702 },
-      { 883, 902, 761 },
+      { 883, 902, -761 },
   },
   {
       { 659, 816, -451 },
@@ -1270,8 +1292,8 @@ int av1_filter_intra_taps_3[TX_SIZES][INTRA_MODES][3] = {
 #endif  // CONFIG_TX64X64
 };
 #else
-int av1_filter_intra_taps_4[TX_SIZES][INTRA_MODES][4] = {
-#if CONFIG_CB4X4
+static int filter_intra_taps_4[TX_SIZES][FILTER_INTRA_MODES][4] = {
+#if CONFIG_CHROMA_2X2
   {
       { 735, 881, -537, -54 },
       { 1005, 519, -488, -11 },
@@ -1375,9 +1397,9 @@ static void filter_intra_predictors_3tap(uint8_t *dst, ptrdiff_t stride, int bs,
   int buffer[33][33];
 #endif  // CONFIG_TX64X64
   const TX_SIZE tx_size = get_txsize_from_blocklen(bs);
-  const int c0 = av1_filter_intra_taps_3[tx_size][mode][0];
-  const int c1 = av1_filter_intra_taps_3[tx_size][mode][1];
-  const int c2 = av1_filter_intra_taps_3[tx_size][mode][2];
+  const int c0 = filter_intra_taps_3[tx_size][mode][0];
+  const int c1 = filter_intra_taps_3[tx_size][mode][1];
+  const int c2 = filter_intra_taps_3[tx_size][mode][2];
 
   k = 0;
   mean = 0;
@@ -1397,13 +1419,11 @@ static void filter_intra_predictors_3tap(uint8_t *dst, ptrdiff_t stride, int bs,
       ipred = c0 * buffer[r - 1][c] + c1 * buffer[r][c - 1] +
               c2 * buffer[r - 1][c - 1];
       buffer[r][c] = ROUND_POWER_OF_TWO_SIGNED(ipred, FILTER_INTRA_PREC_BITS);
+      buffer[r][c] = clip_pixel(buffer[r][c] + mean) - mean;
     }
 
   for (r = 0; r < bs; ++r) {
-    for (c = 0; c < bs; ++c) {
-      ipred = buffer[r + 1][c + 1] + mean;
-      dst[c] = clip_pixel(ipred);
-    }
+    for (c = 0; c < bs; ++c) dst[c] = clip_pixel(buffer[r + 1][c + 1] + mean);
     dst += stride;
   }
 }
@@ -1419,10 +1439,10 @@ static void filter_intra_predictors_4tap(uint8_t *dst, ptrdiff_t stride, int bs,
   int buffer[33][65];
 #endif  // CONFIG_TX64X64
   const TX_SIZE tx_size = get_txsize_from_blocklen(bs);
-  const int c0 = av1_filter_intra_taps_4[tx_size][mode][0];
-  const int c1 = av1_filter_intra_taps_4[tx_size][mode][1];
-  const int c2 = av1_filter_intra_taps_4[tx_size][mode][2];
-  const int c3 = av1_filter_intra_taps_4[tx_size][mode][3];
+  const int c0 = filter_intra_taps_4[tx_size][mode][0];
+  const int c1 = filter_intra_taps_4[tx_size][mode][1];
+  const int c2 = filter_intra_taps_4[tx_size][mode][2];
+  const int c3 = filter_intra_taps_4[tx_size][mode][3];
 
   k = 0;
   mean = 0;
@@ -1442,13 +1462,11 @@ static void filter_intra_predictors_4tap(uint8_t *dst, ptrdiff_t stride, int bs,
       ipred = c0 * buffer[r - 1][c] + c1 * buffer[r][c - 1] +
               c2 * buffer[r - 1][c - 1] + c3 * buffer[r - 1][c + 1];
       buffer[r][c] = ROUND_POWER_OF_TWO_SIGNED(ipred, FILTER_INTRA_PREC_BITS);
+      buffer[r][c] = clip_pixel(buffer[r][c] + mean) - mean;
     }
 
   for (r = 0; r < bs; ++r) {
-    for (c = 0; c < bs; ++c) {
-      ipred = buffer[r + 1][c + 1] + mean;
-      dst[c] = clip_pixel(ipred);
-    }
+    for (c = 0; c < bs; ++c) dst[c] = clip_pixel(buffer[r + 1][c + 1] + mean);
     dst += stride;
   }
 }
@@ -1457,90 +1475,90 @@ static void filter_intra_predictors_4tap(uint8_t *dst, ptrdiff_t stride, int bs,
 void av1_dc_filter_predictor_c(uint8_t *dst, ptrdiff_t stride, int bs,
                                const uint8_t *above, const uint8_t *left) {
 #if USE_3TAP_INTRA_FILTER
-  filter_intra_predictors_3tap(dst, stride, bs, above, left, DC_PRED);
+  filter_intra_predictors_3tap(dst, stride, bs, above, left, FILTER_DC_PRED);
 #else
-  filter_intra_predictors_4tap(dst, stride, bs, above, left, DC_PRED);
+  filter_intra_predictors_4tap(dst, stride, bs, above, left, FILTER_DC_PRED);
 #endif
 }
 
 void av1_v_filter_predictor_c(uint8_t *dst, ptrdiff_t stride, int bs,
                               const uint8_t *above, const uint8_t *left) {
 #if USE_3TAP_INTRA_FILTER
-  filter_intra_predictors_3tap(dst, stride, bs, above, left, V_PRED);
+  filter_intra_predictors_3tap(dst, stride, bs, above, left, FILTER_V_PRED);
 #else
-  filter_intra_predictors_4tap(dst, stride, bs, above, left, V_PRED);
+  filter_intra_predictors_4tap(dst, stride, bs, above, left, FILTER_V_PRED);
 #endif
 }
 
 void av1_h_filter_predictor_c(uint8_t *dst, ptrdiff_t stride, int bs,
                               const uint8_t *above, const uint8_t *left) {
 #if USE_3TAP_INTRA_FILTER
-  filter_intra_predictors_3tap(dst, stride, bs, above, left, H_PRED);
+  filter_intra_predictors_3tap(dst, stride, bs, above, left, FILTER_H_PRED);
 #else
-  filter_intra_predictors_4tap(dst, stride, bs, above, left, H_PRED);
+  filter_intra_predictors_4tap(dst, stride, bs, above, left, FILTER_H_PRED);
 #endif
 }
 
 void av1_d45_filter_predictor_c(uint8_t *dst, ptrdiff_t stride, int bs,
                                 const uint8_t *above, const uint8_t *left) {
 #if USE_3TAP_INTRA_FILTER
-  filter_intra_predictors_3tap(dst, stride, bs, above, left, D45_PRED);
+  filter_intra_predictors_3tap(dst, stride, bs, above, left, FILTER_D45_PRED);
 #else
-  filter_intra_predictors_4tap(dst, stride, bs, above, left, D45_PRED);
+  filter_intra_predictors_4tap(dst, stride, bs, above, left, FILTER_D45_PRED);
 #endif
 }
 
 void av1_d135_filter_predictor_c(uint8_t *dst, ptrdiff_t stride, int bs,
                                  const uint8_t *above, const uint8_t *left) {
 #if USE_3TAP_INTRA_FILTER
-  filter_intra_predictors_3tap(dst, stride, bs, above, left, D135_PRED);
+  filter_intra_predictors_3tap(dst, stride, bs, above, left, FILTER_D135_PRED);
 #else
-  filter_intra_predictors_4tap(dst, stride, bs, above, left, D135_PRED);
+  filter_intra_predictors_4tap(dst, stride, bs, above, left, FILTER_D135_PRED);
 #endif
 }
 
 void av1_d117_filter_predictor_c(uint8_t *dst, ptrdiff_t stride, int bs,
                                  const uint8_t *above, const uint8_t *left) {
 #if USE_3TAP_INTRA_FILTER
-  filter_intra_predictors_3tap(dst, stride, bs, above, left, D117_PRED);
+  filter_intra_predictors_3tap(dst, stride, bs, above, left, FILTER_D117_PRED);
 #else
-  filter_intra_predictors_4tap(dst, stride, bs, above, left, D117_PRED);
+  filter_intra_predictors_4tap(dst, stride, bs, above, left, FILTER_D117_PRED);
 #endif
 }
 
 void av1_d153_filter_predictor_c(uint8_t *dst, ptrdiff_t stride, int bs,
                                  const uint8_t *above, const uint8_t *left) {
 #if USE_3TAP_INTRA_FILTER
-  filter_intra_predictors_3tap(dst, stride, bs, above, left, D153_PRED);
+  filter_intra_predictors_3tap(dst, stride, bs, above, left, FILTER_D153_PRED);
 #else
-  filter_intra_predictors_4tap(dst, stride, bs, above, left, D153_PRED);
+  filter_intra_predictors_4tap(dst, stride, bs, above, left, FILTER_D153_PRED);
 #endif
 }
 
 void av1_d207_filter_predictor_c(uint8_t *dst, ptrdiff_t stride, int bs,
                                  const uint8_t *above, const uint8_t *left) {
 #if USE_3TAP_INTRA_FILTER
-  filter_intra_predictors_3tap(dst, stride, bs, above, left, D207_PRED);
+  filter_intra_predictors_3tap(dst, stride, bs, above, left, FILTER_D207_PRED);
 #else
-  filter_intra_predictors_4tap(dst, stride, bs, above, left, D207_PRED);
+  filter_intra_predictors_4tap(dst, stride, bs, above, left, FILTER_D207_PRED);
 #endif
 }
 
 void av1_d63_filter_predictor_c(uint8_t *dst, ptrdiff_t stride, int bs,
                                 const uint8_t *above, const uint8_t *left) {
 #if USE_3TAP_INTRA_FILTER
-  filter_intra_predictors_3tap(dst, stride, bs, above, left, D63_PRED);
+  filter_intra_predictors_3tap(dst, stride, bs, above, left, FILTER_D63_PRED);
 #else
-  filter_intra_predictors_4tap(dst, stride, bs, above, left, D63_PRED);
+  filter_intra_predictors_4tap(dst, stride, bs, above, left, FILTER_D63_PRED);
 #endif
 }
 
 void av1_tm_filter_predictor_c(uint8_t *dst, ptrdiff_t stride, int bs,
                                const uint8_t *above, const uint8_t *left) {
 #if USE_3TAP_INTRA_FILTER
-  filter_intra_predictors_3tap(dst, stride, bs, above, left, TM_PRED);
+  filter_intra_predictors_3tap(dst, stride, bs, above, left, FILTER_TM_PRED);
 #else
-  filter_intra_predictors_4tap(dst, stride, bs, above, left, TM_PRED);
+  filter_intra_predictors_4tap(dst, stride, bs, above, left, FILTER_TM_PRED);
 #endif
 }
 
@@ -1595,9 +1613,9 @@ static void highbd_filter_intra_predictors_3tap(uint16_t *dst, ptrdiff_t stride,
   int preds[33][33];
 #endif  // CONFIG_TX64X64
   const TX_SIZE tx_size = get_txsize_from_blocklen(bs);
-  const int c0 = av1_filter_intra_taps_3[tx_size][mode][0];
-  const int c1 = av1_filter_intra_taps_3[tx_size][mode][1];
-  const int c2 = av1_filter_intra_taps_3[tx_size][mode][2];
+  const int c0 = filter_intra_taps_3[tx_size][mode][0];
+  const int c1 = filter_intra_taps_3[tx_size][mode][1];
+  const int c2 = filter_intra_taps_3[tx_size][mode][2];
 
   k = 0;
   mean = 0;
@@ -1617,13 +1635,12 @@ static void highbd_filter_intra_predictors_3tap(uint16_t *dst, ptrdiff_t stride,
       ipred = c0 * preds[r - 1][c] + c1 * preds[r][c - 1] +
               c2 * preds[r - 1][c - 1];
       preds[r][c] = ROUND_POWER_OF_TWO_SIGNED(ipred, FILTER_INTRA_PREC_BITS);
+      preds[r][c] = clip_pixel_highbd(preds[r][c] + mean, bd) - mean;
     }
 
   for (r = 0; r < bs; ++r) {
-    for (c = 0; c < bs; ++c) {
-      ipred = preds[r + 1][c + 1] + mean;
-      dst[c] = clip_pixel_highbd(ipred, bd);
-    }
+    for (c = 0; c < bs; ++c)
+      dst[c] = clip_pixel_highbd(preds[r + 1][c + 1] + mean, bd);
     dst += stride;
   }
 }
@@ -1640,10 +1657,10 @@ static void highbd_filter_intra_predictors_4tap(uint16_t *dst, ptrdiff_t stride,
   int preds[33][65];
 #endif  // CONFIG_TX64X64
   const TX_SIZE tx_size = get_txsize_from_blocklen(bs);
-  const int c0 = av1_filter_intra_taps_4[tx_size][mode][0];
-  const int c1 = av1_filter_intra_taps_4[tx_size][mode][1];
-  const int c2 = av1_filter_intra_taps_4[tx_size][mode][2];
-  const int c3 = av1_filter_intra_taps_4[tx_size][mode][3];
+  const int c0 = filter_intra_taps_4[tx_size][mode][0];
+  const int c1 = filter_intra_taps_4[tx_size][mode][1];
+  const int c2 = filter_intra_taps_4[tx_size][mode][2];
+  const int c3 = filter_intra_taps_4[tx_size][mode][3];
 
   k = 0;
   mean = 0;
@@ -1663,13 +1680,12 @@ static void highbd_filter_intra_predictors_4tap(uint16_t *dst, ptrdiff_t stride,
       ipred = c0 * preds[r - 1][c] + c1 * preds[r][c - 1] +
               c2 * preds[r - 1][c - 1] + c3 * preds[r - 1][c + 1];
       preds[r][c] = ROUND_POWER_OF_TWO_SIGNED(ipred, FILTER_INTRA_PREC_BITS);
+      preds[r][c] = clip_pixel_highbd(preds[r][c] + mean, bd) - mean;
     }
 
   for (r = 0; r < bs; ++r) {
-    for (c = 0; c < bs; ++c) {
-      ipred = preds[r + 1][c + 1] + mean;
-      dst[c] = clip_pixel_highbd(ipred, bd);
-    }
+    for (c = 0; c < bs; ++c)
+      dst[c] = clip_pixel_highbd(preds[r + 1][c + 1] + mean, bd);
     dst += stride;
   }
 }
@@ -1679,11 +1695,11 @@ void av1_highbd_dc_filter_predictor_c(uint16_t *dst, ptrdiff_t stride, int bs,
                                       const uint16_t *above,
                                       const uint16_t *left, int bd) {
 #if USE_3TAP_INTRA_FILTER
-  highbd_filter_intra_predictors_3tap(dst, stride, bs, above, left, DC_PRED,
-                                      bd);
+  highbd_filter_intra_predictors_3tap(dst, stride, bs, above, left,
+                                      FILTER_DC_PRED, bd);
 #else
-  highbd_filter_intra_predictors_4tap(dst, stride, bs, above, left, DC_PRED,
-                                      bd);
+  highbd_filter_intra_predictors_4tap(dst, stride, bs, above, left,
+                                      FILTER_DC_PRED, bd);
 #endif
 }
 
@@ -1691,9 +1707,11 @@ void av1_highbd_v_filter_predictor_c(uint16_t *dst, ptrdiff_t stride, int bs,
                                      const uint16_t *above,
                                      const uint16_t *left, int bd) {
 #if USE_3TAP_INTRA_FILTER
-  highbd_filter_intra_predictors_3tap(dst, stride, bs, above, left, V_PRED, bd);
+  highbd_filter_intra_predictors_3tap(dst, stride, bs, above, left,
+                                      FILTER_V_PRED, bd);
 #else
-  highbd_filter_intra_predictors_4tap(dst, stride, bs, above, left, V_PRED, bd);
+  highbd_filter_intra_predictors_4tap(dst, stride, bs, above, left,
+                                      FILTER_V_PRED, bd);
 #endif
 }
 
@@ -1701,9 +1719,11 @@ void av1_highbd_h_filter_predictor_c(uint16_t *dst, ptrdiff_t stride, int bs,
                                      const uint16_t *above,
                                      const uint16_t *left, int bd) {
 #if USE_3TAP_INTRA_FILTER
-  highbd_filter_intra_predictors_3tap(dst, stride, bs, above, left, H_PRED, bd);
+  highbd_filter_intra_predictors_3tap(dst, stride, bs, above, left,
+                                      FILTER_H_PRED, bd);
 #else
-  highbd_filter_intra_predictors_4tap(dst, stride, bs, above, left, H_PRED, bd);
+  highbd_filter_intra_predictors_4tap(dst, stride, bs, above, left,
+                                      FILTER_H_PRED, bd);
 #endif
 }
 
@@ -1711,11 +1731,11 @@ void av1_highbd_d45_filter_predictor_c(uint16_t *dst, ptrdiff_t stride, int bs,
                                        const uint16_t *above,
                                        const uint16_t *left, int bd) {
 #if USE_3TAP_INTRA_FILTER
-  highbd_filter_intra_predictors_3tap(dst, stride, bs, above, left, D45_PRED,
-                                      bd);
+  highbd_filter_intra_predictors_3tap(dst, stride, bs, above, left,
+                                      FILTER_D45_PRED, bd);
 #else
-  highbd_filter_intra_predictors_4tap(dst, stride, bs, above, left, D45_PRED,
-                                      bd);
+  highbd_filter_intra_predictors_4tap(dst, stride, bs, above, left,
+                                      FILTER_D45_PRED, bd);
 #endif
 }
 
@@ -1723,11 +1743,11 @@ void av1_highbd_d135_filter_predictor_c(uint16_t *dst, ptrdiff_t stride, int bs,
                                         const uint16_t *above,
                                         const uint16_t *left, int bd) {
 #if USE_3TAP_INTRA_FILTER
-  highbd_filter_intra_predictors_3tap(dst, stride, bs, above, left, D135_PRED,
-                                      bd);
+  highbd_filter_intra_predictors_3tap(dst, stride, bs, above, left,
+                                      FILTER_D135_PRED, bd);
 #else
-  highbd_filter_intra_predictors_4tap(dst, stride, bs, above, left, D135_PRED,
-                                      bd);
+  highbd_filter_intra_predictors_4tap(dst, stride, bs, above, left,
+                                      FILTER_D135_PRED, bd);
 #endif
 }
 
@@ -1735,11 +1755,11 @@ void av1_highbd_d117_filter_predictor_c(uint16_t *dst, ptrdiff_t stride, int bs,
                                         const uint16_t *above,
                                         const uint16_t *left, int bd) {
 #if USE_3TAP_INTRA_FILTER
-  highbd_filter_intra_predictors_3tap(dst, stride, bs, above, left, D117_PRED,
-                                      bd);
+  highbd_filter_intra_predictors_3tap(dst, stride, bs, above, left,
+                                      FILTER_D117_PRED, bd);
 #else
-  highbd_filter_intra_predictors_4tap(dst, stride, bs, above, left, D117_PRED,
-                                      bd);
+  highbd_filter_intra_predictors_4tap(dst, stride, bs, above, left,
+                                      FILTER_D117_PRED, bd);
 #endif
 }
 
@@ -1747,11 +1767,11 @@ void av1_highbd_d153_filter_predictor_c(uint16_t *dst, ptrdiff_t stride, int bs,
                                         const uint16_t *above,
                                         const uint16_t *left, int bd) {
 #if USE_3TAP_INTRA_FILTER
-  highbd_filter_intra_predictors_3tap(dst, stride, bs, above, left, D153_PRED,
-                                      bd);
+  highbd_filter_intra_predictors_3tap(dst, stride, bs, above, left,
+                                      FILTER_D153_PRED, bd);
 #else
-  highbd_filter_intra_predictors_4tap(dst, stride, bs, above, left, D153_PRED,
-                                      bd);
+  highbd_filter_intra_predictors_4tap(dst, stride, bs, above, left,
+                                      FILTER_D153_PRED, bd);
 #endif
 }
 
@@ -1759,11 +1779,11 @@ void av1_highbd_d207_filter_predictor_c(uint16_t *dst, ptrdiff_t stride, int bs,
                                         const uint16_t *above,
                                         const uint16_t *left, int bd) {
 #if USE_3TAP_INTRA_FILTER
-  highbd_filter_intra_predictors_3tap(dst, stride, bs, above, left, D207_PRED,
-                                      bd);
+  highbd_filter_intra_predictors_3tap(dst, stride, bs, above, left,
+                                      FILTER_D207_PRED, bd);
 #else
-  highbd_filter_intra_predictors_4tap(dst, stride, bs, above, left, D207_PRED,
-                                      bd);
+  highbd_filter_intra_predictors_4tap(dst, stride, bs, above, left,
+                                      FILTER_D207_PRED, bd);
 #endif
 }
 
@@ -1771,11 +1791,11 @@ void av1_highbd_d63_filter_predictor_c(uint16_t *dst, ptrdiff_t stride, int bs,
                                        const uint16_t *above,
                                        const uint16_t *left, int bd) {
 #if USE_3TAP_INTRA_FILTER
-  highbd_filter_intra_predictors_3tap(dst, stride, bs, above, left, D63_PRED,
-                                      bd);
+  highbd_filter_intra_predictors_3tap(dst, stride, bs, above, left,
+                                      FILTER_D63_PRED, bd);
 #else
-  highbd_filter_intra_predictors_4tap(dst, stride, bs, above, left, D63_PRED,
-                                      bd);
+  highbd_filter_intra_predictors_4tap(dst, stride, bs, above, left,
+                                      FILTER_D63_PRED, bd);
 #endif
 }
 
@@ -1783,11 +1803,11 @@ void av1_highbd_tm_filter_predictor_c(uint16_t *dst, ptrdiff_t stride, int bs,
                                       const uint16_t *above,
                                       const uint16_t *left, int bd) {
 #if USE_3TAP_INTRA_FILTER
-  highbd_filter_intra_predictors_3tap(dst, stride, bs, above, left, TM_PRED,
-                                      bd);
+  highbd_filter_intra_predictors_3tap(dst, stride, bs, above, left,
+                                      FILTER_TM_PRED, bd);
 #else
-  highbd_filter_intra_predictors_4tap(dst, stride, bs, above, left, TM_PRED,
-                                      bd);
+  highbd_filter_intra_predictors_4tap(dst, stride, bs, above, left,
+                                      FILTER_TM_PRED, bd);
 #endif
 }
 
@@ -1832,6 +1852,87 @@ static void highbd_filter_intra_predictors(FILTER_INTRA_MODE mode,
 #endif  // CONFIG_HIGHBITDEPTH
 #endif  // CONFIG_FILTER_INTRA
 
+#if CONFIG_INTRA_EDGE
+static int intra_edge_filter_strength(int bsz, int delta) {
+  const int d = abs(delta);
+  int strength = 0;
+
+  if (bsz == 8) {
+    if (d < 8) {
+      strength = 0;
+    } else if (d < 32) {
+      strength = 1;
+    } else if (d < 90) {
+      strength = 3;
+    }
+  } else if (bsz == 16) {
+    if (d < 4) {
+      strength = 0;
+    } else if (d < 16) {
+      strength = 1;
+    } else if (d < 90) {
+      strength = 3;
+    }
+  } else if (bsz == 32) {
+    if (d < 16) {
+      strength = 2;
+    } else if (d < 90) {
+      strength = 3;
+    }
+  }
+
+  return strength;
+}
+
+static void filter_intra_edge(uint8_t *p, int sz, int strength) {
+  if (!strength) return;
+
+  const int kernel[3][5] = {
+    { 0, 4, 8, 4, 0 }, { 0, 5, 6, 5, 0 }, { 2, 4, 4, 4, 2 }
+  };
+  const int filt = strength - 1;
+  uint8_t edge[129];
+
+  memcpy(edge, p, sz * sizeof(*p));
+  for (int i = 1; i < sz - 1; i++) {
+    int s = 0;
+    for (int j = 0; j < 5; j++) {
+      int k = i - 2 + j;
+      k = (k < 0) ? 0 : k;
+      k = (k > sz - 1) ? sz - 1 : k;
+      s += edge[k] * kernel[filt][j];
+    }
+    s = (s + 8) >> 4;
+    p[i] = s;
+  }
+}
+
+#if CONFIG_HIGHBITDEPTH
+static void filter_intra_edge_high(uint16_t *p, int sz, int strength) {
+  if (!strength) return;
+
+  const int kernel[3][5] = {
+    { 0, 4, 8, 4, 0 }, { 0, 5, 6, 5, 0 }, { 2, 4, 4, 4, 2 }
+  };
+  const int filt = strength - 1;
+  uint16_t edge[129];
+
+  memcpy(edge, p, sz * sizeof(*p));
+  for (int i = 1; i < sz - 1; i++) {
+    int s = 0;
+    for (int j = 0; j < 5; j++) {
+      int k = i - 2 + j;
+      k = (k < 0) ? 0 : k;
+      k = (k > sz - 1) ? sz - 1 : k;
+      s += edge[k] * kernel[filt][j];
+    }
+    s = (s + 8) >> 4;
+    p[i] = s;
+  }
+}
+#endif  // CONFIG_INTRA_EDGE
+#endif  // CONFIG_HIGHBITDEPTH
+
 #if CONFIG_HIGHBITDEPTH
 static void build_intra_predictors_high(
     const MACROBLOCKD *xd, const uint8_t *ref8, int ref_stride, uint8_t *dst8,
@@ -1842,9 +1943,8 @@ static void build_intra_predictors_high(
   uint16_t *ref = CONVERT_TO_SHORTPTR(ref8);
   DECLARE_ALIGNED(16, uint16_t, left_data[MAX_TX_SIZE * 2 + 16]);
   DECLARE_ALIGNED(16, uint16_t, above_data[MAX_TX_SIZE * 2 + 16]);
-  uint16_t *above_row = above_data + 16;
-  uint16_t *left_col = left_data + 16;
-  const uint16_t *const_above_row = above_row;
+  uint16_t *const above_row = above_data + 16;
+  uint16_t *const left_col = left_data + 16;
   const int bs = tx_size_wide[tx_size];
   int need_left = extend_modes[mode] & NEED_LEFT;
   int need_above = extend_modes[mode] & NEED_ABOVE;
@@ -1894,7 +1994,16 @@ static void build_intra_predictors_high(
   assert(n_bottomleft_px >= 0);
 
   if ((!need_above && n_left_px == 0) || (!need_left && n_top_px == 0)) {
+#if CONFIG_INTRA_EDGE
+    int val;
+    if (need_left) {
+      val = (n_top_px > 0) ? above_ref[0] : base + 1;
+    } else {
+      val = (n_left_px > 0) ? ref[-1] : base - 1;
+    }
+#else
     const int val = need_left ? base + 1 : base - 1;
+#endif
     for (i = 0; i < bs; ++i) {
       aom_memset16(dst, val, bs);
       dst += dst_stride;
@@ -1927,7 +2036,15 @@ static void build_intra_predictors_high(
       if (i < (bs << need_bottom))
         aom_memset16(&left_col[i], left_col[i - 1], (bs << need_bottom) - i);
     } else {
-      aom_memset16(left_col, base + 1, bs << need_bottom);
+#if CONFIG_INTRA_EDGE
+      if (n_top_px > 0) {
+        aom_memset16(left_col, above_ref[0], bs << need_bottom);
+      } else {
+#endif
+        aom_memset16(left_col, base + 1, bs << need_bottom);
+#if CONFIG_INTRA_EDGE
+      }
+#endif
     }
   }
 
@@ -1957,20 +2074,58 @@ static void build_intra_predictors_high(
       if (i < (bs << need_right))
         aom_memset16(&above_row[i], above_row[i - 1], (bs << need_right) - i);
     } else {
-      aom_memset16(above_row, base - 1, bs << need_right);
+#if CONFIG_INTRA_EDGE
+      if (n_left_px > 0) {
+        aom_memset16(above_row, ref[-1], bs << need_right);
+      } else {
+#endif
+        aom_memset16(above_row, base - 1, bs << need_right);
+#if CONFIG_INTRA_EDGE
+      }
+#endif
     }
   }
 
   if (need_above_left) {
+#if CONFIG_INTRA_EDGE
+    if (n_top_px > 0 && n_left_px > 0) {
+      above_row[-1] = above_ref[-1];
+    } else if (n_top_px > 0) {
+      above_row[-1] = above_ref[0];
+    } else if (n_left_px > 0) {
+      above_row[-1] = ref[-1];
+    } else {
+      above_row[-1] = base;
+    }
+#else
     above_row[-1] =
         n_top_px > 0 ? (n_left_px > 0 ? above_ref[-1] : base + 1) : base - 1;
+#endif
     left_col[-1] = above_row[-1];
   }
+
+#if CONFIG_EXT_INTRA && CONFIG_INTRA_EDGE
+  if (is_dr_mode && p_angle != 90 && p_angle != 180) {
+    const int ab_le = need_above_left ? 1 : 0;
+    if (need_above && n_top_px > 0) {
+      const int strength = intra_edge_filter_strength(bs, p_angle - 90);
+      const int need_right = p_angle < 90;
+      const int n_px = n_top_px + ab_le + (need_right ? n_topright_px : 0);
+      filter_intra_edge_high(above_row - ab_le, n_px, strength);
+    }
+    if (need_left && n_left_px > 0) {
+      const int strength = intra_edge_filter_strength(bs, p_angle - 180);
+      const int need_bottom = p_angle > 180;
+      const int n_px = n_left_px + ab_le + (need_bottom ? n_bottomleft_px : 0);
+      filter_intra_edge_high(left_col - ab_le, n_px, strength);
+    }
+  }
+#endif
 
 #if CONFIG_FILTER_INTRA
   if (filter_intra_mode_info->use_filter_intra_mode[plane != 0]) {
     highbd_filter_intra_predictors(filter_intra_mode, dst, dst_stride, bs,
-                                   const_above_row, left_col, xd->bd);
+                                   above_row, left_col, xd->bd);
     return;
   }
 #endif  // CONFIG_FILTER_INTRA
@@ -1982,7 +2137,7 @@ static void build_intra_predictors_high(
     if (plane == 0 && av1_is_intra_filter_switchable(p_angle))
       filter = xd->mi[0]->mbmi.intra_filter;
 #endif  // CONFIG_INTRA_INTERP
-    highbd_dr_predictor(dst, dst_stride, bs, const_above_row, left_col,
+    highbd_dr_predictor(dst, dst_stride, bs, above_row, left_col,
 #if CONFIG_INTRA_INTERP
                         filter,
 #endif  // CONFIG_INTRA_INTERP
@@ -1994,10 +2149,9 @@ static void build_intra_predictors_high(
   // predict
   if (mode == DC_PRED) {
     dc_pred_high[n_left_px > 0][n_top_px > 0][tx_size](
-        dst, dst_stride, const_above_row, left_col, xd->bd);
+        dst, dst_stride, above_row, left_col, xd->bd);
   } else {
-    pred_high[mode][tx_size](dst, dst_stride, const_above_row, left_col,
-                             xd->bd);
+    pred_high[mode][tx_size](dst, dst_stride, above_row, left_col, xd->bd);
   }
 }
 #endif  // CONFIG_HIGHBITDEPTH
@@ -2012,9 +2166,8 @@ static void build_intra_predictors(const MACROBLOCKD *xd, const uint8_t *ref,
   const uint8_t *above_ref = ref - ref_stride;
   DECLARE_ALIGNED(16, uint8_t, left_data[MAX_TX_SIZE * 2 + 16]);
   DECLARE_ALIGNED(16, uint8_t, above_data[MAX_TX_SIZE * 2 + 16]);
-  uint8_t *above_row = above_data + 16;
-  uint8_t *left_col = left_data + 16;
-  const uint8_t *const_above_row = above_row;
+  uint8_t *const above_row = above_data + 16;
+  uint8_t *const left_col = left_data + 16;
   const int bs = tx_size_wide[tx_size];
   int need_left = extend_modes[mode] & NEED_LEFT;
   int need_above = extend_modes[mode] & NEED_ABOVE;
@@ -2065,7 +2218,16 @@ static void build_intra_predictors(const MACROBLOCKD *xd, const uint8_t *ref,
   assert(n_bottomleft_px >= 0);
 
   if ((!need_above && n_left_px == 0) || (!need_left && n_top_px == 0)) {
+#if CONFIG_INTRA_EDGE
+    int val;
+    if (need_left) {
+      val = (n_top_px > 0) ? above_ref[0] : 129;
+    } else {
+      val = (n_left_px > 0) ? ref[-1] : 127;
+    }
+#else
     const int val = need_left ? 129 : 127;
+#endif
     for (i = 0; i < bs; ++i) {
       memset(dst, val, bs);
       dst += dst_stride;
@@ -2098,7 +2260,15 @@ static void build_intra_predictors(const MACROBLOCKD *xd, const uint8_t *ref,
       if (i < (bs << need_bottom))
         memset(&left_col[i], left_col[i - 1], (bs << need_bottom) - i);
     } else {
-      memset(left_col, 129, bs << need_bottom);
+#if CONFIG_INTRA_EDGE
+      if (n_top_px > 0) {
+        memset(left_col, above_ref[0], bs << need_bottom);
+      } else {
+#endif
+        memset(left_col, 129, bs << need_bottom);
+#if CONFIG_INTRA_EDGE
+      }
+#endif
     }
   }
 
@@ -2127,19 +2297,57 @@ static void build_intra_predictors(const MACROBLOCKD *xd, const uint8_t *ref,
       if (i < (bs << need_right))
         memset(&above_row[i], above_row[i - 1], (bs << need_right) - i);
     } else {
-      memset(above_row, 127, bs << need_right);
+#if CONFIG_INTRA_EDGE
+      if (n_left_px > 0) {
+        memset(above_row, ref[-1], bs << need_right);
+      } else {
+#endif
+        memset(above_row, 127, bs << need_right);
+#if CONFIG_INTRA_EDGE
+      }
+#endif
     }
   }
 
   if (need_above_left) {
+#if CONFIG_INTRA_EDGE
+    if (n_top_px > 0 && n_left_px > 0) {
+      above_row[-1] = above_ref[-1];
+    } else if (n_top_px > 0) {
+      above_row[-1] = above_ref[0];
+    } else if (n_left_px > 0) {
+      above_row[-1] = ref[-1];
+    } else {
+      above_row[-1] = 128;
+    }
+#else
     above_row[-1] = n_top_px > 0 ? (n_left_px > 0 ? above_ref[-1] : 129) : 127;
+#endif
     left_col[-1] = above_row[-1];
   }
 
+#if CONFIG_EXT_INTRA && CONFIG_INTRA_EDGE
+  if (is_dr_mode && p_angle != 90 && p_angle != 180) {
+    const int ab_le = need_above_left ? 1 : 0;
+    if (need_above && n_top_px > 0) {
+      const int strength = intra_edge_filter_strength(bs, p_angle - 90);
+      const int need_right = p_angle < 90;
+      const int n_px = n_top_px + ab_le + (need_right ? n_topright_px : 0);
+      filter_intra_edge(above_row - ab_le, n_px, strength);
+    }
+    if (need_left && n_left_px > 0) {
+      const int strength = intra_edge_filter_strength(bs, p_angle - 180);
+      const int need_bottom = p_angle > 180;
+      const int n_px = n_left_px + ab_le + (need_bottom ? n_bottomleft_px : 0);
+      filter_intra_edge(left_col - ab_le, n_px, strength);
+    }
+  }
+#endif
+
 #if CONFIG_FILTER_INTRA
   if (filter_intra_mode_info->use_filter_intra_mode[plane != 0]) {
-    filter_intra_predictors(filter_intra_mode, dst, dst_stride, bs,
-                            const_above_row, left_col);
+    filter_intra_predictors(filter_intra_mode, dst, dst_stride, bs, above_row,
+                            left_col);
     return;
   }
 #endif  // CONFIG_FILTER_INTRA
@@ -2150,7 +2358,7 @@ static void build_intra_predictors(const MACROBLOCKD *xd, const uint8_t *ref,
     if (plane == 0 && av1_is_intra_filter_switchable(p_angle))
       filter = xd->mi[0]->mbmi.intra_filter;
 #endif  // CONFIG_INTRA_INTERP
-    dr_predictor(dst, dst_stride, tx_size, const_above_row, left_col,
+    dr_predictor(dst, dst_stride, tx_size, above_row, left_col,
 #if CONFIG_INTRA_INTERP
                  filter,
 #endif  // CONFIG_INTRA_INTERP
@@ -2165,14 +2373,14 @@ static void build_intra_predictors(const MACROBLOCKD *xd, const uint8_t *ref,
     // CFL predict its own DC_PRED for Chromatic planes
     if (plane == AOM_PLANE_Y) {
 #endif
-      dc_pred[n_left_px > 0][n_top_px > 0][tx_size](dst, dst_stride,
-                                                    const_above_row, left_col);
+      dc_pred[n_left_px > 0][n_top_px > 0][tx_size](dst, dst_stride, above_row,
+                                                    left_col);
 #if CONFIG_CFL
     }
 #endif
 
   } else {
-    pred[mode][tx_size](dst, dst_stride, const_above_row, left_col);
+    pred[mode][tx_size](dst, dst_stride, above_row, left_col);
   }
 }
 
@@ -2216,9 +2424,9 @@ static void predict_square_intra_block(const MACROBLOCKD *xd, int wpx, int hpx,
   // the frame bottom edge
   const int yd = (xd->mb_to_bottom_edge >> (3 + pd->subsampling_y)) +
                  (hpx - y - txhpx) - yd_chr_offset;
-  const int right_available =
-      (mi_col + ((col_off + txw) >> (1 - pd->subsampling_x))) <
-      xd->tile.mi_col_end;
+  const int right_available = mi_col + ((col_off + txw) << pd->subsampling_x >>
+                                        (MI_SIZE_LOG2 - tx_size_wide_log2[0])) <
+                              xd->tile.mi_col_end;
   const int bottom_available = (yd > 0);
 #if CONFIG_EXT_PARTITION_TYPES
   const PARTITION_TYPE partition = xd->mi[0]->mbmi.partition;
@@ -2246,30 +2454,27 @@ static void predict_square_intra_block(const MACROBLOCKD *xd, int wpx, int hpx,
     const int stride = wpx;
     int r, c;
     const uint8_t *const map = xd->plane[plane != 0].color_index_map;
-#if CONFIG_HIGHBITDEPTH
     uint16_t *palette = xd->mi[0]->mbmi.palette_mode_info.palette_colors +
                         plane * PALETTE_MAX_SIZE;
-#else
-    uint8_t *palette = xd->mi[0]->mbmi.palette_mode_info.palette_colors +
-                       plane * PALETTE_MAX_SIZE;
-#endif  // CONFIG_HIGHBITDEPTH
 
 #if CONFIG_HIGHBITDEPTH
     if (xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH) {
       uint16_t *dst16 = CONVERT_TO_SHORTPTR(dst);
-      for (r = 0; r < bs; ++r)
-        for (c = 0; c < bs; ++c)
+      for (r = 0; r < bs; ++r) {
+        for (c = 0; c < bs; ++c) {
           dst16[r * dst_stride + c] = palette[map[(r + y) * stride + c + x]];
+        }
+      }
     } else {
-      for (r = 0; r < bs; ++r)
-        for (c = 0; c < bs; ++c)
+#endif  // CONFIG_HIGHBITDEPTH
+      for (r = 0; r < bs; ++r) {
+        for (c = 0; c < bs; ++c) {
           dst[r * dst_stride + c] =
-              (uint8_t)(palette[map[(r + y) * stride + c + x]]);
+              (uint8_t)palette[map[(r + y) * stride + c + x]];
+        }
+      }
+#if CONFIG_HIGHBITDEPTH
     }
-#else
-    for (r = 0; r < bs; ++r)
-      for (c = 0; c < bs; ++c)
-        dst[r * dst_stride + c] = palette[map[(r + y) * stride + c + x]];
 #endif  // CONFIG_HIGHBITDEPTH
     return;
   }
@@ -2316,8 +2521,12 @@ void av1_predict_intra_block_facade(MACROBLOCKD *xd, int plane, int block_idx,
       // is signaled.
       cfl_dc_pred(xd, get_plane_block_size(block_idx, pd), tx_size);
     }
-    cfl_predict_block(xd->cfl, dst, pd->dst.stride, blk_row, blk_col, tx_size,
-                      xd->cfl->dc_pred[plane - 1]);
+
+    cfl_predict_block(
+        xd->cfl, dst, pd->dst.stride, blk_row, blk_col, tx_size,
+        xd->cfl->dc_pred[plane - 1],
+        cfl_idx_to_alpha(mbmi->cfl_alpha_idx, mbmi->cfl_alpha_signs[plane - 1],
+                         plane - 1));
   }
 #endif
 }

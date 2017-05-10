@@ -62,6 +62,12 @@ void av1_dist_block(const AV1_COMP *cpi, MACROBLOCK *x, int plane,
                     TX_SIZE tx_size, int64_t *out_dist, int64_t *out_sse,
                     OUTPUT_STATUS output_status);
 
+#if CONFIG_DAALA_DIST
+int64_t av1_daala_dist(const uint8_t *src, int src_stride, const uint8_t *dst,
+                       int dst_stride, int bsw, int bsh, int qm,
+                       int use_activity_masking, int qindex);
+#endif
+
 #if !CONFIG_PVQ || CONFIG_VAR_TX
 int av1_cost_coeffs(const AV1_COMP *const cpi, MACROBLOCK *x, int plane,
                     int block, TX_SIZE tx_size, const SCAN_ORDER *scan_order,
@@ -100,16 +106,6 @@ int av1_internal_image_edge(const struct AV1_COMP *cpi);
 int av1_active_h_edge(const struct AV1_COMP *cpi, int mi_row, int mi_step);
 int av1_active_v_edge(const struct AV1_COMP *cpi, int mi_col, int mi_step);
 int av1_active_edge_sb(const struct AV1_COMP *cpi, int mi_row, int mi_col);
-
-void av1_rd_pick_inter_mode_sub8x8(const struct AV1_COMP *cpi,
-                                   struct TileDataEnc *tile_data,
-                                   struct macroblock *x, int mi_row, int mi_col,
-                                   struct RD_STATS *rd_cost,
-#if CONFIG_SUPERTX
-                                   int *returnrate_nocoef,
-#endif  // CONFIG_SUPERTX
-                                   BLOCK_SIZE bsize, PICK_MODE_CONTEXT *ctx,
-                                   int64_t best_rd_so_far);
 
 #if CONFIG_MOTION_VAR && CONFIG_NCOBMC
 void av1_check_ncobmc_rd(const struct AV1_COMP *cpi, struct macroblock *x,

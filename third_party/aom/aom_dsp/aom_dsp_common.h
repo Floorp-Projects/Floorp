@@ -31,6 +31,8 @@ extern "C" {
 #define AOMMIN(x, y) (((x) < (y)) ? (x) : (y))
 #define AOMMAX(x, y) (((x) > (y)) ? (x) : (y))
 
+#define NELEMENTS(x) (sizeof((x)) / sizeof((x)[0]))
+
 #define IMPLIES(a, b) (!(a) || (b))  //  Logical 'a implies b' (or 'a -> b')
 
 #define IS_POWER_OF_TWO(x) (((x) & ((x)-1)) == 0)

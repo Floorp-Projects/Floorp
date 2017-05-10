@@ -130,6 +130,10 @@ typedef enum {
 
 #if CONFIG_ALT_INTRA
   THR_SMOOTH,
+#if CONFIG_SMOOTH_HV
+  THR_SMOOTH_V,
+  THR_SMOOTH_H,
+#endif  // CONFIG_SMOOTH_HV
 #endif  // CONFIG_ALT_INTRA
 
 #if CONFIG_EXT_INTER
@@ -357,6 +361,9 @@ static INLINE void av1_init_rd_stats(RD_STATS *rd_stats) {
   rd_stats->rdcost = 0;
   rd_stats->sse = 0;
   rd_stats->skip = 1;
+#if CONFIG_DAALA_DIST && CONFIG_CB4X4
+  rd_stats->dist_y = 0;
+#endif
 #if CONFIG_RD_DEBUG
   for (plane = 0; plane < MAX_MB_PLANE; ++plane) {
     rd_stats->txb_coeff_cost[plane] = 0;
@@ -381,6 +388,9 @@ static INLINE void av1_invalid_rd_stats(RD_STATS *rd_stats) {
   rd_stats->rdcost = INT64_MAX;
   rd_stats->sse = INT64_MAX;
   rd_stats->skip = 0;
+#if CONFIG_DAALA_DIST && CONFIG_CB4X4
+  rd_stats->dist_y = INT64_MAX;
+#endif
 #if CONFIG_RD_DEBUG
   for (plane = 0; plane < MAX_MB_PLANE; ++plane) {
     rd_stats->txb_coeff_cost[plane] = INT_MAX;
@@ -405,6 +415,9 @@ static INLINE void av1_merge_rd_stats(RD_STATS *rd_stats_dst,
   rd_stats_dst->dist += rd_stats_src->dist;
   rd_stats_dst->sse += rd_stats_src->sse;
   rd_stats_dst->skip &= rd_stats_src->skip;
+#if CONFIG_DAALA_DIST && CONFIG_CB4X4
+  rd_stats_dst->dist_y += rd_stats_src->dist_y;
+#endif
 #if CONFIG_RD_DEBUG
   for (plane = 0; plane < MAX_MB_PLANE; ++plane) {
     rd_stats_dst->txb_coeff_cost[plane] += rd_stats_src->txb_coeff_cost[plane];
@@ -454,10 +467,8 @@ YV12_BUFFER_CONFIG *av1_get_scaled_ref_frame(const struct AV1_COMP *cpi,
 
 void av1_init_me_luts(void);
 
-#if CONFIG_REF_MV
 void av1_set_mvcost(MACROBLOCK *x, MV_REFERENCE_FRAME ref_frame, int ref,
                     int ref_mv_idx);
-#endif
 
 void av1_get_entropy_contexts(BLOCK_SIZE bsize, TX_SIZE tx_size,
                               const struct macroblockd_plane *pd,
