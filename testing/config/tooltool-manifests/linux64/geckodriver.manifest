@@ -1,9 +1,9 @@
 [
   {
-    "size": 2081948,
+    "size": 2183421,
     "visibility": "public",
-    "digest": "696f0a2eb9ff3abe253875990a7837877977cccd66f9a4ea4a823daaec866f1eae197c63394c093e664736da4f7ad9c480fd9515f30ad359d24e447c40f34925",
+    "digest": "8e201c5f0f5494cc89b7caad509b2618b1f1b668ac8a81d56df2514968b62b4e06765e9a4e42b7fb273c94d1ca2a712446599654a04716aec204fa8e6a1cee5b",
     "algorithm": "sha512",
-    "filename": "geckodriver-v0.15.0-linux64.tar.gz"
+    "filename": "geckodriver-v0.16.1-linux64.tar.gz"
   }
 ]
