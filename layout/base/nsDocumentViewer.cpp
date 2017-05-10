@@ -173,6 +173,8 @@ public:
 
   nsresult             Init(nsDocumentViewer *aDocViewer);
 
+  void                 Disconnect() { mDocViewer = nullptr; }
+
 protected:
 
   virtual              ~nsDocViewerSelectionListener() {}
@@ -196,6 +198,8 @@ public:
   NS_DECL_NSIDOMEVENTLISTENER
 
   nsresult             Init(nsDocumentViewer *aDocViewer);
+
+  void                 Disconnect() { mDocViewer = nullptr; }
 
 protected:
   /** default destructor
@@ -340,7 +344,7 @@ protected:
   RefPtr<nsPresContext>  mPresContext;
   nsCOMPtr<nsIPresShell>   mPresShell;
 
-  nsCOMPtr<nsISelectionListener> mSelectionListener;
+  RefPtr<nsDocViewerSelectionListener> mSelectionListener;
   RefPtr<nsDocViewerFocusListener> mFocusListener;
 
   nsCOMPtr<nsIContentViewer> mPreviousViewer;
@@ -571,6 +575,14 @@ nsDocumentViewer::~nsDocumentViewer()
     Destroy();
   }
 
+  if (mSelectionListener) {
+    mSelectionListener->Disconnect();
+  }
+
+  if (mFocusListener) {
+    mFocusListener->Disconnect();
+  }
+
   // XXX(?) Revoke pending invalidate events
 }
 
@@ -749,6 +761,9 @@ nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow)
 
   // Save old listener so we can unregister it
   RefPtr<nsDocViewerFocusListener> oldFocusListener = mFocusListener;
+  if (oldFocusListener) {
+    oldFocusListener->Disconnect();
+  }
 
   // focus listener
   //
@@ -1540,11 +1555,14 @@ nsDocumentViewer::Close(nsISHEntry *aSHEntry)
         mDocument->RemovedFromDocShell();
     }
 
-  if (mFocusListener && mDocument) {
-    mDocument->RemoveEventListener(NS_LITERAL_STRING("focus"), mFocusListener,
-                                   false);
-    mDocument->RemoveEventListener(NS_LITERAL_STRING("blur"), mFocusListener,
-                                   false);
+  if (mFocusListener) {
+    mFocusListener->Disconnect();
+    if (mDocument) {
+      mDocument->RemoveEventListener(NS_LITERAL_STRING("focus"), mFocusListener,
+                                     false);
+      mDocument->RemoveEventListener(NS_LITERAL_STRING("blur"), mFocusListener,
+                                     false);
+    }
   }
 
   return NS_OK;
@@ -3693,7 +3711,9 @@ NS_IMETHODIMP nsDocumentViewer::GetInImage(bool* aInImage)
 
 NS_IMETHODIMP nsDocViewerSelectionListener::NotifySelectionChanged(nsIDOMDocument *, nsISelection *, int16_t aReason)
 {
-  NS_ASSERTION(mDocViewer, "Should have doc viewer!");
+  if (!mDocViewer) {
+    return NS_OK;
+  }
 
   // get the selection state
   RefPtr<mozilla::dom::Selection> selection = mDocViewer->GetDocumentSelection();
