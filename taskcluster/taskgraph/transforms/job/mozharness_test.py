@@ -116,6 +116,9 @@ def mozharness_test_on_docker(config, job, taskdesc):
             'docker-worker:relengapi-proxy:tooltool.download.public',
         ])
 
+    if test['reboot']:
+        raise Exception('reboot: {} not supported on generic-worker'.format(test['reboot']))
+
     # assemble the command line
     command = [
         '/home/worker/bin/run-task',
@@ -207,6 +210,9 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
         ['generic-worker:os-group:{}'.format(group) for group in test['os-groups']])
 
     worker['os-groups'] = test['os-groups']
+
+    if test['reboot']:
+        raise Exception('reboot: {} not supported on generic-worker'.format(test['reboot']))
 
     worker['max-run-time'] = test['max-run-time']
     worker['artifacts'] = artifacts
@@ -308,6 +314,7 @@ def mozharness_test_on_native_engine(config, job, taskdesc):
     test = taskdesc['run']['test']
     mozharness = test['mozharness']
     worker = taskdesc['worker']
+    is_talos = test['suite'] == 'talos'
 
     build_platform = taskdesc['attributes']['build_platform']
     build_type = taskdesc['attributes']['build_type']
@@ -326,8 +333,10 @@ def mozharness_test_on_native_engine(config, job, taskdesc):
         'type': 'directory',
     } for (prefix, path) in ARTIFACTS]
 
-    worker['reboot'] = test['reboot']
-    worker['env'] = {
+    if test['reboot']:
+        worker['reboot'] = test['reboot']
+
+    worker['env'] = env = {
         'GECKO_HEAD_REPOSITORY': config.params['head_repository'],
         'GECKO_HEAD_REV': config.params['head_rev'],
         'MOZHARNESS_CONFIG': ' '.join(mozharness['config']),
@@ -341,12 +350,16 @@ def mozharness_test_on_native_engine(config, job, taskdesc):
         "MOZ_HIDE_RESULTS_TABLE": '1',
         "MOZ_NODE_PATH": "/usr/local/bin/node",
     }
+    # talos tests don't need Xvfb
+    if is_talos:
+        env['NEED_XVFB'] = 'false'
 
-    worker['context'] = '{}/raw-file/{}/taskcluster/scripts/tester/test-macosx.sh'.format(
-        config.params['head_repository'], config.params['head_rev']
+    script = 'test-macosx.sh' if test['test-platform'].startswith('macosx') else 'test-linux.sh'
+    worker['context'] = '{}/raw-file/{}/taskcluster/scripts/tester/{}'.format(
+        config.params['head_repository'], config.params['head_rev'], script
     )
 
-    command = worker['command'] = ["./test-macosx.sh"]
+    command = worker['command'] = ["./{}".format(script)]
     if mozharness.get('no-read-buildbot-config'):
         command.append("--no-read-buildbot-config")
     command.extend([

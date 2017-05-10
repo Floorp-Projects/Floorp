@@ -12,8 +12,6 @@ elif [ "${DISTRIB_RELEASE}" == "16.04" ]; then
     UBUNTU_1604=1
 fi
 
-. /home/worker/scripts/xvfb.sh
-
 ####
 # Taskcluster friendly wrapper for performing fx desktop tests via mozharness.
 ####
@@ -29,10 +27,11 @@ fi
 : NEED_PULSEAUDIO               ${NEED_PULSEAUDIO:=false}
 : START_VNC                     ${START_VNC:=false}
 : TASKCLUSTER_INTERACTIVE       ${TASKCLUSTER_INTERACTIVE:=false}
-: WORKSPACE                     ${WORKSPACE:=/home/worker/workspace}
+: WORKSPACE                     ${WORKSPACE:=$HOME/workspace}
 : mozharness args               "${@}"
 
 set -v
+mkdir -p $WORKSPACE
 cd $WORKSPACE
 
 fail() {
@@ -60,11 +59,13 @@ mkdir -p ~/artifacts/public
 
 cleanup() {
     local rv=$?
-    if [[ -s /home/worker/.xsession-errors ]]; then
+    if [[ -s $HOME/.xsession-errors ]]; then
       # To share X issues
-      cp /home/worker/.xsession-errors ~/artifacts/public/xsession-errors.log
+      cp $HOME/.xsession-errors ~/artifacts/public/xsession-errors.log
     fi
-    cleanup_xvfb
+    if $NEED_XVFB; then
+        cleanup_xvfb
+    fi
     exit $rv
 }
 trap cleanup EXIT INT
@@ -118,6 +119,8 @@ fi
 
 # run XVfb in the background, if necessary
 if $NEED_XVFB; then
+    # note that this file is not available when run under native-worker
+    . $HOME/scripts/xvfb.sh
     start_xvfb '1600x1200x24' 0
 fi
 
@@ -127,7 +130,7 @@ fi
 
 if $NEED_WINDOW_MANAGER; then
     # This is read by xsession to select the window manager
-    echo DESKTOP_SESSION=ubuntu > /home/worker/.xsessionrc
+    echo DESKTOP_SESSION=ubuntu > $HOME/.xsessionrc
 
     # note that doing anything with this display before running Xsession will cause sadness (like,
     # crashes in compiz). Make sure that X has enough time to start
@@ -167,7 +170,8 @@ for cfg in $MOZHARNESS_CONFIG; do
   config_cmds="${config_cmds} --config-file ${MOZHARNESS_PATH}/configs/${cfg}"
 done
 
-mozharness_bin="/home/worker/bin/run-mozharness"
+mozharness_bin="$HOME/bin/run-mozharness"
+mkdir -p $(dirname $mozharness_bin)
 
 # Save the computed mozharness command to a binary which is useful
 # for interactive mode.
@@ -190,6 +194,6 @@ fi
 # Run a custom mach command (this is typically used by action tasks to run
 # harnesses in a particular way)
 if [ "$CUSTOM_MACH_COMMAND" ]; then
-    eval "/home/worker/workspace/build/tests/mach ${CUSTOM_MACH_COMMAND}"
+    eval "$HOME/workspace/build/tests/mach ${CUSTOM_MACH_COMMAND}"
     exit $?
 fi
