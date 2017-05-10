@@ -1733,7 +1733,6 @@ class InterpreterFrameIterator
 class WasmActivation : public Activation
 {
     WasmActivation* prevWasm_;
-    void* entrySP_;
     uint8_t* exitFP_;
     wasm::ExitReason exitReason_;
 
@@ -1755,7 +1754,6 @@ class WasmActivation : public Activation
     wasm::ExitReason exitReason() const { return exitReason_; }
 
     // Written by JIT code:
-    static unsigned offsetOfEntrySP() { return offsetof(WasmActivation, entrySP_); }
     static unsigned offsetOfExitFP() { return offsetof(WasmActivation, exitFP_); }
     static unsigned offsetOfExitReason() { return offsetof(WasmActivation, exitReason_); }
 
