@@ -23,29 +23,6 @@
 
 #include <stdint.h>
 
-/*
- * Our minimum deployment target on clang/OS X is OS X 10.6, whose SDK
- * does not have <atomic>.  So be sure to check for <atomic> support
- * along with C++0x support.
- */
-#if defined(_MSC_VER)
-#  define MOZ_HAVE_CXX11_ATOMICS
-#elif defined(__clang__) || defined(__GNUC__)
-   /*
-    * Clang doesn't like <atomic> from libstdc++ before 4.7 due to the
-    * loose typing of the atomic builtins. GCC 4.5 and 4.6 lacks inline
-    * definitions for unspecialized std::atomic and causes linking errors.
-    * Therefore, we require at least 4.7.0 for using libstdc++.
-    *
-    * libc++ <atomic> is only functional with clang.
-    */
-#  if MOZ_USING_LIBSTDCXX && MOZ_LIBSTDCXX_VERSION_AT_LEAST(4, 7, 0)
-#    define MOZ_HAVE_CXX11_ATOMICS
-#  elif MOZ_USING_LIBCXX && defined(__clang__)
-#    define MOZ_HAVE_CXX11_ATOMICS
-#  endif
-#endif
-
 namespace mozilla {
 
 /**
