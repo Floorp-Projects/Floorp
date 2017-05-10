@@ -147,9 +147,13 @@ function setTooltipText(aID, aTooltipText) {
     element.setAttribute("tooltiptext", aTooltipText);
 }
 
-this.__defineGetter__("NS_ASSERT", function() {
-  delete this.NS_ASSERT;
-  var tmpScope = {};
-  Components.utils.import("resource://gre/modules/debug.js", tmpScope);
-  return this.NS_ASSERT = tmpScope.NS_ASSERT;
+Object.defineProperty(this, "NS_ASSERT", {
+  configurable: true,
+  enumerable: true,
+  get() {
+    delete this.NS_ASSERT;
+    var tmpScope = {};
+    Components.utils.import("resource://gre/modules/debug.js", tmpScope);
+    return this.NS_ASSERT = tmpScope.NS_ASSERT;
+  },
 });

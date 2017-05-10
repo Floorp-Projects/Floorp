@@ -47,7 +47,9 @@ ProfileGatherer::GatheredOOPProfile(const nsACString& aProfile)
 
   MOZ_RELEASE_ASSERT(mWriter.isSome(), "Should always have a writer if mGathering is true");
 
-  mWriter->Splice(PromiseFlatCString(aProfile).get());
+  if (!aProfile.IsEmpty()) {
+    mWriter->Splice(PromiseFlatCString(aProfile).get());
+  }
 
   mPendingProfiles--;
 

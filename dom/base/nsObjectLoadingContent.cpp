@@ -11,6 +11,7 @@
 
 // Interface headers
 #include "imgLoader.h"
+#include "nsIClassOfService.h"
 #include "nsIConsoleService.h"
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
@@ -84,6 +85,7 @@
 #include "mozilla/dom/PluginCrashedEvent.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/dom/HTMLObjectElementBinding.h"
@@ -2547,6 +2549,11 @@ nsObjectLoadingContent::OpenChannel()
     nsCOMPtr<nsITimedChannel> timedChannel(do_QueryInterface(httpChan));
     if (timedChannel) {
       timedChannel->SetInitiatorType(thisContent->LocalName());
+    }
+
+    nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(httpChan));
+    if (cos && EventStateManager::IsHandlingUserInput()) {
+      cos->AddClassFlags(nsIClassOfService::UrgentStart);
     }
   }
 

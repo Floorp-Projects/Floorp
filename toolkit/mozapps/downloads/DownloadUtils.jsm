@@ -49,9 +49,13 @@ XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
-this.__defineGetter__("gDecimalSymbol", function() {
+Object.defineProperty(this, "gDecimalSymbol", {
+  configurable: true,
+  enumerable: true,
+  get() {
     delete this.gDecimalSymbol;
       return this.gDecimalSymbol = Number(5.4).toLocaleString().match(/\D/);
+  },
 });
 
 var localeNumberFormatCache = new Map();
@@ -95,11 +99,15 @@ var gStr = {
 };
 
 // This lazily initializes the string bundle upon first use.
-this.__defineGetter__("gBundle", function() {
-  delete this.gBundle;
-  return this.gBundle = Cc["@mozilla.org/intl/stringbundle;1"].
-                        getService(Ci.nsIStringBundleService).
-                        createBundle(kDownloadProperties);
+Object.defineProperty(this, "gBundle", {
+  configurable: true,
+  enumerable: true,
+  get() {
+    delete this.gBundle;
+    return this.gBundle = Cc["@mozilla.org/intl/stringbundle;1"].
+                          getService(Ci.nsIStringBundleService).
+                          createBundle(kDownloadProperties);
+  },
 });
 
 // Keep track of at most this many second/lastSec pairs so that multiple calls
