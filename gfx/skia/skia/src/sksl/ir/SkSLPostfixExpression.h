@@ -4,11 +4,12 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
- 
+
 #ifndef SKSL_POSTFIXEXPRESSION
 #define SKSL_POSTFIXEXPRESSION
 
 #include "SkSLExpression.h"
+#include "SkSLToken.h"
 
 namespace SkSL {
 
@@ -21,11 +22,11 @@ struct PostfixExpression : public Expression {
     , fOperand(std::move(operand))
     , fOperator(op) {}
 
-    virtual std::string description() const override {
+    virtual String description() const override {
         return fOperand->description() + Token::OperatorName(fOperator);
     }
 
-    const std::unique_ptr<Expression> fOperand;
+    std::unique_ptr<Expression> fOperand;
     const Token::Kind fOperator;
 
     typedef Expression INHERITED;

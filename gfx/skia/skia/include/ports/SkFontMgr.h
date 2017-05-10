@@ -8,9 +8,9 @@
 #ifndef SkFontMgr_DEFINED
 #define SkFontMgr_DEFINED
 
+#include "SkFontArguments.h"
 #include "SkFontStyle.h"
 #include "SkRefCnt.h"
-#include "SkScalar.h"
 #include "SkTypes.h"
 
 class SkData;
@@ -102,51 +102,10 @@ public:
      */
     SkTypeface* createFromStream(SkStreamAsset*, int ttcIndex = 0) const;
 
-    struct FontParameters {
-        struct Axis {
-            SkFourByteTag fTag;
-            SkScalar fStyleValue;
-        };
-
-        FontParameters() : fCollectionIndex(0), fAxisCount(0), fAxes(nullptr) {}
-
-        /** Specify the index of the desired font.
-         *
-         *  Font formats like ttc, dfont, cff, cid, pfr, t42, t1, and fon may actually be indexed
-         *  collections of fonts.
-         */
-        FontParameters& setCollectionIndex(int collectionIndex) {
-            fCollectionIndex = collectionIndex;
-            return *this;
-        }
-
-        /** Specify the GX variation axis values.
-         *
-         *  Any axes not specified will use the default value. Specified axes not present in the
-         *  font will be ignored.
-         *
-         *  @param axes not copied. This pointer must remain valid for life of FontParameters.
-         */
-        FontParameters& setAxes(const Axis* axes, int axisCount) {
-            fAxisCount = axisCount;
-            fAxes = axes;
-            return *this;
-        }
-
-        int getCollectionIndex() const {
-            return fCollectionIndex;
-        }
-        const Axis* getAxes(int* axisCount) const {
-            *axisCount = fAxisCount;
-            return fAxes;
-        }
-    private:
-        int fCollectionIndex;
-        int fAxisCount;
-        const Axis* fAxes;
-    };
+    // deprecated, use SkFontArguments instead.
+    using FontParameters = SkFontArguments;
     /* Experimental, API subject to change. */
-    SkTypeface* createFromStream(SkStreamAsset*, const FontParameters&) const;
+    SkTypeface* createFromStream(SkStreamAsset*, const SkFontArguments&) const;
 
     /**
      *  Create a typeface from the specified font data.
@@ -165,11 +124,8 @@ public:
 
     SkTypeface* legacyCreateTypeface(const char familyName[], SkFontStyle style) const;
 
-    /**
-     *  Return a ref to the default fontmgr. The caller must call unref() on
-     *  the returned object.
-     */
-    static SkFontMgr* RefDefault();
+    /** Return the default fontmgr. */
+    static sk_sp<SkFontMgr> RefDefault();
 
 protected:
     virtual int onCountFamilies() const = 0;
@@ -190,14 +146,16 @@ protected:
     virtual SkTypeface* onCreateFromData(SkData*, int ttcIndex) const = 0;
     virtual SkTypeface* onCreateFromStream(SkStreamAsset*, int ttcIndex) const = 0;
     // TODO: make pure virtual.
-    virtual SkTypeface* onCreateFromStream(SkStreamAsset*, const FontParameters&) const;
+    virtual SkTypeface* onCreateFromStream(SkStreamAsset*, const SkFontArguments&) const;
     virtual SkTypeface* onCreateFromFontData(std::unique_ptr<SkFontData>) const;
     virtual SkTypeface* onCreateFromFile(const char path[], int ttcIndex) const = 0;
 
     virtual SkTypeface* onLegacyCreateTypeface(const char familyName[], SkFontStyle) const = 0;
 
 private:
-    static SkFontMgr* Factory();    // implemented by porting layer
+
+    /** Implemented by porting layer to return the default factory. */
+    static sk_sp<SkFontMgr> Factory();
 
     typedef SkRefCnt INHERITED;
 };

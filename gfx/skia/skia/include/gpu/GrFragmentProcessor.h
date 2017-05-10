@@ -11,18 +11,19 @@
 #include "GrProcessor.h"
 
 class GrCoordTransform;
-class GrGLSLCaps;
 class GrGLSLFragmentProcessor;
 class GrInvariantOutput;
 class GrPipeline;
 class GrProcessorKeyBuilder;
+class GrShaderCaps;
+class GrSwizzle;
 
 /** Provides custom fragment shader code. Fragment processors receive an input color (vec4f) and
     produce an output color. They may reference textures and uniforms. They may use
     GrCoordTransforms to receive a transformation of the local coordinates that map from local space
     to the fragment being processed.
  */
-class GrFragmentProcessor : public GrProcessor {
+class GrFragmentProcessor : public GrResourceIOProcessor, public GrProgramElement {
 public:
     /**
     *  In many instances (e.g. SkShader::asFragmentProcessor() implementations) it is desirable to
@@ -35,11 +36,12 @@ public:
     static sk_sp<GrFragmentProcessor> MulOutputByInputAlpha(sk_sp<GrFragmentProcessor>);
 
     /**
-     *  Similar to the above but it modulates the output r,g,b of the child processor by the input
-     *  rgb and then multiplies all the components by the input alpha. This effectively modulates
-     *  the child processor's premul color by a unpremul'ed input and produces a premul output
+     *  This assumes that the input color to the returned processor will be unpremul and that the
+     *  passed processor (which becomes the returned processor's child) produces a premul output.
+     *  The result of the returned processor is a premul of its input color modulated by the child
+     *  processor's premul output.
      */
-    static sk_sp<GrFragmentProcessor> MulOutputByInputUnpremulColor(sk_sp<GrFragmentProcessor>);
+    static sk_sp<GrFragmentProcessor> MakeInputPremulAndMulByOutput(sk_sp<GrFragmentProcessor>);
 
     /**
      *  Returns a parent fragment processor that adopts the passed fragment processor as a child.
@@ -55,6 +57,24 @@ public:
     static sk_sp<GrFragmentProcessor> PremulInput(sk_sp<GrFragmentProcessor>);
 
     /**
+     *  Returns a fragment processor that calls the passed in fragment processor, and then premuls
+     *  the output.
+     */
+    static sk_sp<GrFragmentProcessor> PremulOutput(sk_sp<GrFragmentProcessor>);
+
+    /**
+     *  Returns a fragment processor that calls the passed in fragment processor, and then unpremuls
+     *  the output.
+     */
+    static sk_sp<GrFragmentProcessor> UnpremulOutput(sk_sp<GrFragmentProcessor>);
+
+    /**
+     *  Returns a fragment processor that calls the passed in fragment processor, and then swizzles
+     *  the output.
+     */
+    static sk_sp<GrFragmentProcessor> SwizzleOutput(sk_sp<GrFragmentProcessor>, const GrSwizzle&);
+
+    /**
      * Returns a fragment processor that runs the passed in array of fragment processors in a
      * series. The original input is passed to the first, the first's output is passed to the
      * second, etc. The output of the returned processor is the output of the last processor of the
@@ -64,16 +84,11 @@ public:
      */
     static sk_sp<GrFragmentProcessor> RunInSeries(sk_sp<GrFragmentProcessor>*, int cnt);
 
-    GrFragmentProcessor()
-        : INHERITED()
-        , fUsesDistanceVectorField(false)
-        , fUsesLocalCoords(false) {}
-
     ~GrFragmentProcessor() override;
 
     GrGLSLFragmentProcessor* createGLSLInstance() const;
 
-    void getGLSLProcessorKey(const GrGLSLCaps& caps, GrProcessorKeyBuilder* b) const {
+    void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
         this->onGetGLSLProcessorKey(caps, b);
         for (int i = 0; i < fChildProcessors.count(); ++i) {
             fChildProcessors[i]->getGLSLProcessorKey(caps, b);
@@ -95,10 +110,51 @@ public:
     const GrFragmentProcessor& childProcessor(int index) const { return *fChildProcessors[index]; }
 
     /** Do any of the coordtransforms for this processor require local coords? */
-    bool usesLocalCoords() const { return fUsesLocalCoords; }
+    bool usesLocalCoords() const { return SkToBool(fFlags & kUsesLocalCoords_Flag); }
 
     /** Does this FP need a vector to the nearest edge? */
-    bool usesDistanceVectorField() const { return fUsesDistanceVectorField; }
+    bool usesDistanceVectorField() const {
+        return SkToBool(fFlags & kUsesDistanceVectorField_Flag);
+    }
+
+    /**
+     * A GrDrawOp may premultiply its antialiasing coverage into its GrGeometryProcessor's color
+     * output under the following scenario:
+     *   * all the color fragment processors report true to this query,
+     *   * all the coverage fragment processors report true to this query,
+     *   * the blend mode arithmetic allows for it it.
+     * To be compatible a fragment processor's output must be a modulation of its input color or
+     * alpha with a computed premultiplied color or alpha that is in 0..1 range. The computed color
+     * or alpha that is modulated against the input cannot depend on the input's alpha. The computed
+     * value cannot depend on the input's color channels unless it unpremultiplies the input color
+     * channels by the input alpha.
+     */
+    bool compatibleWithCoverageAsAlpha() const {
+        return SkToBool(fFlags & kCompatibleWithCoverageAsAlpha_OptimizationFlag);
+    }
+
+    /**
+     * If this is true then all opaque input colors to the processor produce opaque output colors.
+     */
+    bool preservesOpaqueInput() const {
+        return SkToBool(fFlags & kPreservesOpaqueInput_OptimizationFlag);
+    }
+
+    /**
+     * Tests whether given a constant input color the processor produces a constant output color
+     * (for all fragments). If true outputColor will contain the constant color produces for
+     * inputColor.
+     */
+    bool hasConstantOutputForConstantInput(GrColor4f inputColor, GrColor4f* outputColor) const {
+        if (fFlags & kConstantOutputForConstantInput_OptimizationFlag) {
+            *outputColor = this->constantOutputForConstantInput(inputColor);
+            return true;
+        }
+        return false;
+    }
+    bool hasConstantOutputForConstantInput() const {
+        return SkToBool(fFlags & kConstantOutputForConstantInput_OptimizationFlag);
+    }
 
     /** Returns true if this and other processor conservatively draw identically. It can only return
         true when the two processor are of the same subclass (i.e. they return the same object from
@@ -108,18 +164,6 @@ public:
         generate the same shader code. To test for identical code generation use getGLSLProcessorKey
      */
     bool isEqual(const GrFragmentProcessor& that) const;
-
-    /**
-     * This function is used to perform optimizations. When called the invarientOuput param
-     * indicate whether the input components to this processor in the FS will have known values.
-     * In inout the validFlags member is a bitfield of GrColorComponentFlags. The isSingleComponent
-     * member indicates whether the input will be 1 or 4 bytes. The function updates the members of
-     * inout to indicate known values of its output. A component of the color member only has
-     * meaning if the corresponding bit in validFlags is set.
-     */
-    void computeInvariantOutput(GrInvariantOutput* inout) const {
-        this->onComputeInvariantOutput(inout);
-    }
 
     /**
      * Pre-order traversal of a FP hierarchy, or of the forest of FPs in a GrPipeline. In the latter
@@ -183,14 +227,41 @@ public:
                                           &GrFragmentProcessor::numCoordTransforms,
                                           &GrFragmentProcessor::coordTransform>;
 
-    using TextureAccessIter = FPItemIter<GrTextureAccess,
-                                         GrProcessor,
-                                         &GrProcessor::numTextures,
-                                         &GrProcessor::textureAccess>;
+    using TextureAccessIter = FPItemIter<TextureSampler,
+                                         GrResourceIOProcessor,
+                                         &GrResourceIOProcessor::numTextureSamplers,
+                                         &GrResourceIOProcessor::textureSampler>;
 
 protected:
-    void addTextureAccess(const GrTextureAccess* textureAccess) override;
-    void addBufferAccess(const GrBufferAccess*) override;
+    enum OptimizationFlags : uint32_t {
+        kNone_OptimizationFlags,
+        kCompatibleWithCoverageAsAlpha_OptimizationFlag = 0x1,
+        kPreservesOpaqueInput_OptimizationFlag = 0x2,
+        kConstantOutputForConstantInput_OptimizationFlag = 0x4,
+        kAll_OptimizationFlags = kCompatibleWithCoverageAsAlpha_OptimizationFlag |
+                                 kPreservesOpaqueInput_OptimizationFlag |
+                                 kConstantOutputForConstantInput_OptimizationFlag
+    };
+    GR_DECL_BITFIELD_OPS_FRIENDS(OptimizationFlags)
+
+    GrFragmentProcessor(OptimizationFlags optimizationFlags) : fFlags(optimizationFlags) {
+        SkASSERT((fFlags & ~kAll_OptimizationFlags) == 0);
+    }
+
+    OptimizationFlags optimizationFlags() const {
+        return static_cast<OptimizationFlags>(kAll_OptimizationFlags & fFlags);
+    }
+
+    /**
+     * This allows one subclass to access another subclass's implementation of
+     * constantOutputForConstantInput. It must only be called when
+     * hasConstantOutputForConstantInput() is known to be true.
+     */
+    static GrColor4f ConstantOutputForConstantInput(const GrFragmentProcessor& fp,
+                                                    GrColor4f input) {
+        SkASSERT(fp.hasConstantOutputForConstantInput());
+        return fp.constantOutputForConstantInput(input);
+    }
 
     /**
      * Fragment Processor subclasses call this from their constructor to register coordinate
@@ -223,20 +294,22 @@ protected:
     int registerChildProcessor(sk_sp<GrFragmentProcessor> child);
 
     /**
-     * Subclass implements this to support getConstantColorComponents(...).
-     *
-     * Note: it's up to the subclass implementation to do any recursive call to compute the child
-     * procs' output invariants; computeInvariantOutput will not be recursive.
-     */
-    virtual void onComputeInvariantOutput(GrInvariantOutput* inout) const = 0;
-
-    /* Sub-classes should set this to true in their constructors if they need access to a distance
+     * Sub-classes should call this in their constructors if they need access to a distance
      * vector field to the nearest edge
      */
-    bool fUsesDistanceVectorField;
+    void setWillUseDistanceVectorField() { fFlags |= kUsesDistanceVectorField_Flag; }
 
 private:
+    void addPendingIOs() const override { GrResourceIOProcessor::addPendingIOs(); }
+    void removeRefs() const override { GrResourceIOProcessor::removeRefs(); }
+    void pendingIOComplete() const override { GrResourceIOProcessor::pendingIOComplete(); }
+
     void notifyRefCntIsZero() const final;
+
+    virtual GrColor4f constantOutputForConstantInput(GrColor4f /* inputColor */) const {
+        SkFAIL("Subclass must override this if advertising this optimization.");
+        return GrColor4f::TransparentBlack();
+    }
 
     /** Returns a new instance of the appropriate *GL* implementation class
         for the given GrFragmentProcessor; caller is responsible for deleting
@@ -244,8 +317,7 @@ private:
     virtual GrGLSLFragmentProcessor* onCreateGLSLInstance() const = 0;
 
     /** Implemented using GLFragmentProcessor::GenKey as described in this class's comment. */
-    virtual void onGetGLSLProcessorKey(const GrGLSLCaps& caps,
-                                       GrProcessorKeyBuilder* b) const = 0;
+    virtual void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const = 0;
 
     /**
      * Subclass implements this to support isEqual(). It will only be called if it is known that
@@ -257,7 +329,13 @@ private:
 
     bool hasSameTransforms(const GrFragmentProcessor&) const;
 
-    bool                                       fUsesLocalCoords;
+    enum PrivateFlags {
+        kFirstPrivateFlag = kAll_OptimizationFlags + 1,
+        kUsesLocalCoords_Flag = kFirstPrivateFlag,
+        kUsesDistanceVectorField_Flag = kFirstPrivateFlag << 1,
+    };
+
+    mutable uint32_t fFlags = 0;
 
     SkSTArray<4, const GrCoordTransform*, true> fCoordTransforms;
 
@@ -265,9 +343,11 @@ private:
      * This is not SkSTArray<1, sk_sp<GrFragmentProcessor>> because this class holds strong
      * references until notifyRefCntIsZero and then it holds pending executions.
      */
-    SkSTArray<1, GrFragmentProcessor*, true>    fChildProcessors;
+    SkSTArray<1, GrFragmentProcessor*, true> fChildProcessors;
 
     typedef GrProcessor INHERITED;
 };
+
+GR_MAKE_BITFIELD_OPS(GrFragmentProcessor::OptimizationFlags)
 
 #endif

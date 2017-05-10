@@ -93,10 +93,6 @@
  */
 //#define SK_DEFAULT_IMAGE_CACHE_LIMIT (1024 * 1024)
 
-/*  Define this to provide font subsetter in PDF generation.
- */
-//#define SK_SFNTLY_SUBSETTER "sample/chromium/font_subsetter.h"
-
 /*  Define this to set the upper limit for text to support LCD. Values that
     are very large increase the cost in the font cache and draw slower, without
     improving readability. If this is undefined, Skia will use its default
@@ -161,8 +157,6 @@
 
 #define SK_DISABLE_SLOW_DEBUG_VALIDATION 1
 
-#define MOZ_SKIA 1
-
 #ifndef MOZ_IMPLICIT
 #  ifdef MOZ_CLANG_PLUGIN
 #    define MOZ_IMPLICIT __attribute__((annotate("moz_implicit")))
@@ -170,5 +164,7 @@
 #    define MOZ_IMPLICIT
 #  endif
 #endif
+
+#define MOZ_SKIA
 
 #endif
