@@ -10,6 +10,18 @@ else:
     TOOLTOOL_MANIFEST_PATH = "config/tooltool-manifests/linux32/releng.manifest"
     MINIDUMP_STACKWALK_PATH = "linux32-minidump_stackwalk"
 
+exes = {
+    'tooltool.py': "/tools/tooltool.py",
+}
+
+# this Python only exists on Buildbot slaves, not on taskcluster workers where both
+# Python and virtualenv can be found in $PATH
+if os.path.exists(PYTHON):
+    exes.update({
+        'python': PYTHON,
+        'virtualenv': [PYTHON, '/tools/misc-python/virtualenv.py'],
+    })
+
 config = {
     "log_name": "talos",
     "buildbot_json_path": "buildprops.json",
@@ -20,11 +32,7 @@ config = {
         "http://pypi.pub.build.mozilla.org/pub",
     ],
     "pip_index": False,
-    "exes": {
-        'python': PYTHON,
-        'virtualenv': [PYTHON, '/tools/misc-python/virtualenv.py'],
-        'tooltool.py': "/tools/tooltool.py",
-    },
+    "exes": exes,
     "title": os.uname()[1].lower().split('.')[0],
     "default_actions": [
         "clobber",
