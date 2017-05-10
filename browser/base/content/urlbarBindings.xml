@@ -40,7 +40,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                       class="autocomplete-textbox urlbar-input textbox-input uri-element-right-align"
                       allowevents="true"
                       inputmode="url"
-                      xbl:inherits="tooltiptext=inputtooltiptext,value,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey"/>
+                      xbl:inherits="tooltiptext=inputtooltiptext,value,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey,focused,textoverflow"/>
         </xul:hbox>
         <xul:dropmarker anonid="historydropmarker"
                         class="autocomplete-history-dropmarker urlbar-history-dropmarker"
@@ -691,11 +691,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         ]]></body>
       </method>
 
-      <field name="_contentIsCropped">false</field>
-
       <method name="_initURLTooltip">
         <body><![CDATA[
-          if (this.focused || !this._contentIsCropped)
+          if (this.focused || !this.hasAttribute("textoverflow"))
             return;
           this.inputField.setAttribute("tooltiptext", this.value);
         ]]></body>
@@ -1000,10 +998,10 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               this._hideURLTooltip();
               break;
             case "overflow":
-              this._contentIsCropped = true;
+              this.setAttribute("textoverflow", "true");
               break;
             case "underflow":
-              this._contentIsCropped = false;
+              this.removeAttribute("textoverflow");
               this._hideURLTooltip();
               break;
           }
