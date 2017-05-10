@@ -203,18 +203,58 @@ function openSiteDataSettingsDialog() {
   return fullyLoadPromise;
 }
 
-function assertSitesListed(doc, origins) {
+function assertSitesListed(doc, hosts) {
   let frameDoc = doc.getElementById("dialogFrame").contentDocument;
   let removeBtn = frameDoc.getElementById("removeSelected");
   let removeAllBtn = frameDoc.getElementById("removeAll");
   let sitesList = frameDoc.getElementById("sitesList");
   let totalSitesNumber = sitesList.getElementsByTagName("richlistitem").length;
-  is(totalSitesNumber, origins.length, "Should list the right sites number");
-  origins.forEach(origin => {
-    let site = sitesList.querySelector(`richlistitem[data-origin="${origin}"]`);
-    let host = site.getAttribute("host");
-    ok(origin.includes(host), `Should list the site of ${origin}`);
+  is(totalSitesNumber, hosts.length, "Should list the right sites number");
+  hosts.forEach(host => {
+    let site = sitesList.querySelector(`richlistitem[host="${host}"]`);
+    ok(site, `Should list the site of ${host}`);
   });
   is(removeBtn.disabled, false, "Should enable the removeSelected button");
   is(removeAllBtn.disabled, false, "Should enable the removeAllBtn button");
 }
+
+const mockSiteDataManager = {
+
+  _SiteDataManager: null,
+  _originalGetQuotaUsage: null,
+  _originalRemoveQuotaUsage: null,
+
+  _getQuotaUsage() {
+    let results = [];
+    this.fakeSites.forEach(site => {
+      results.push({
+        origin: site.principal.origin,
+        usage: site.usage,
+        persisted: site.persisted
+      });
+    });
+    this._SiteDataManager._getQuotaUsagePromise = Promise.resolve(results);
+    return this._SiteDataManager._getQuotaUsagePromise;
+  },
+
+  _removeQuotaUsage(site) {
+    var target = site.principals[0].URI.host;
+    this.fakeSites = this.fakeSites.filter(fakeSite => {
+      return fakeSite.principal.URI.host != target;
+    });
+  },
+
+  register(SiteDataManager) {
+    this._SiteDataManager = SiteDataManager;
+    this._originalGetQuotaUsage = this._SiteDataManager._getQuotaUsage;
+    this._SiteDataManager._getQuotaUsage = this._getQuotaUsage.bind(this);
+    this._originalRemoveQuotaUsage = this._SiteDataManager._removeQuotaUsage;
+    this._SiteDataManager._removeQuotaUsage = this._removeQuotaUsage.bind(this);
+    this.fakeSites = null;
+  },
+
+  unregister() {
+    this._SiteDataManager._getQuotaUsage = this._originalGetQuotaUsage;
+    this._SiteDataManager._removeQuotaUsage = this._originalRemoveQuotaUsage;
+  }
+};
