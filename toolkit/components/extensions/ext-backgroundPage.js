@@ -50,7 +50,7 @@ class BackgroundPage extends HiddenExtensionPage {
       // console.
       if (this.extension.addonData.instanceID) {
         AddonManager.getAddonByInstanceID(this.extension.addonData.instanceID)
-                    .then(addon => addon.setDebugGlobal(window));
+                    .then(addon => addon && addon.setDebugGlobal(window));
       }
     }
 
@@ -67,7 +67,7 @@ class BackgroundPage extends HiddenExtensionPage {
   shutdown() {
     if (this.extension.addonData.instanceID) {
       AddonManager.getAddonByInstanceID(this.extension.addonData.instanceID)
-                  .then(addon => addon.setDebugGlobal(null));
+                  .then(addon => addon && addon.setDebugGlobal(null));
     }
 
     super.shutdown();
