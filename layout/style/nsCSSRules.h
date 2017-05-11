@@ -21,6 +21,7 @@
 #include "mozilla/dom/CSSMediaRule.h"
 #include "mozilla/dom/CSSPageRule.h"
 #include "mozilla/dom/CSSSupportsRule.h"
+#include "mozilla/dom/CSSMozDocumentRule.h"
 #include "nsAutoPtr.h"
 #include "nsCSSPropertyID.h"
 #include "nsCSSValue.h"
@@ -94,8 +95,7 @@ protected:
   RefPtr<nsMediaList> mMedia;
 };
 
-class DocumentRule final : public ConditionRule,
-                           public nsIDOMCSSMozDocumentRule
+class DocumentRule final : public dom::CSSMozDocumentRule
 {
 public:
   DocumentRule(uint32_t aLineNumber, uint32_t aColumnNumber);
@@ -110,18 +110,10 @@ public:
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
-  virtual int32_t GetType() const override;
-  using Rule::GetType;
   virtual already_AddRefed<Rule> Clone() const override;
-
-  // nsIDOMCSSGroupingRule interface
-  NS_DECL_NSIDOMCSSGROUPINGRULE
 
   // nsIDOMCSSConditionRule interface
   NS_DECL_NSIDOMCSSCONDITIONRULE
-
-  // nsIDOMCSSMozDocumentRule interface
-  NS_DECL_NSIDOMCSSMOZDOCUMENTRULE
 
   // rest of GroupRule
   virtual bool UseForPresentation(nsPresContext* aPresContext,
@@ -153,17 +145,11 @@ public:
   void SetURLs(URL *aURLs) { mURLs = aURLs; }
 
   // WebIDL interface
-  uint16_t Type() const override;
   void GetCssTextImpl(nsAString& aCssText) const override;
-  // Our XPCOM GetConditionText is OK
-  virtual void SetConditionText(const nsAString& aConditionText,
-                                ErrorResult& aRv) override;
+  using dom::CSSMozDocumentRule::SetConditionText;
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const override MOZ_MUST_OVERRIDE;
-
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
 
 protected:
   void AppendConditionText(nsAString& aOutput) const;
