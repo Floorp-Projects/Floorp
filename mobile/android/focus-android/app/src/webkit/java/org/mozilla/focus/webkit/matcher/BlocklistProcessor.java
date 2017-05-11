@@ -56,8 +56,6 @@ public class BlocklistProcessor {
         reader.beginObject();
 
         while (reader.hasNext()) {
-            JsonToken token = reader.peek();
-
             final String name = reader.nextName();
 
             if (name.equals("categories")) {
@@ -178,7 +176,9 @@ public class BlocklistProcessor {
             reader.beginObject();
 
             while (reader.hasNext()) {
-                final String siteURL = reader.nextName();
+                // We can get the site name using reader.nextName() here:
+                reader.skipValue();
+
                 JsonToken nextToken = reader.peek();
 
                 if (nextToken.name().equals("STRING")) {
