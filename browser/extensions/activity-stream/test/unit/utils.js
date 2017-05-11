@@ -1,10 +1,3 @@
-const React = require("react");
-const {mount, shallow} = require("enzyme");
-const {IntlProvider, intlShape} = require("react-intl");
-const messages = require("data/locales.json")["en-US"];
-const intlProvider = new IntlProvider({locale: "en", messages});
-const {intl} = intlProvider.getChildContext();
-
 /**
  * GlobalOverrider - Utility that allows you to override properties on the global object.
  *                   See unit-entry.js for example usage.
@@ -122,28 +115,8 @@ function addNumberReducer(prevState = 0, action) {
   return action.type === "ADD" ? prevState + action.data : prevState;
 }
 
-/**
- * Helper functions to test components that need IntlProvider as an ancestor
- */
-function nodeWithIntlProp(node) {
-  return React.cloneElement(node, {intl});
-}
-
-function shallowWithIntl(node) {
-  return shallow(nodeWithIntlProp(node), {context: {intl}});
-}
-
-function mountWithIntl(node) {
-  return mount(nodeWithIntlProp(node), {
-    context: {intl},
-    childContextTypes: {intl: intlShape}
-  });
-}
-
 module.exports = {
   FakePrefs,
   GlobalOverrider,
-  addNumberReducer,
-  mountWithIntl,
-  shallowWithIntl
+  addNumberReducer
 };

@@ -89,7 +89,7 @@ this.ActivityStreamMessageChannel = class ActivityStreamMessageChannel {
    * @param  {string} targetId The portID of the port that sent the message
    */
   onActionFromContent(action, targetId) {
-    this.dispatch(ac.SendToMain(action, targetId));
+    this.dispatch(ac.SendToMain(action, {fromTarget: targetId}));
   }
 
   /**
@@ -196,7 +196,7 @@ this.ActivityStreamMessageChannel = class ActivityStreamMessageChannel {
     action._target = msg.target;
     this.onActionFromContent(action, portID);
   }
-};
+}
 
 this.DEFAULT_OPTIONS = DEFAULT_OPTIONS;
 this.EXPORTED_SYMBOLS = ["ActivityStreamMessageChannel", "DEFAULT_OPTIONS"];
