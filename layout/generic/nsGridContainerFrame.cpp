@@ -3526,6 +3526,7 @@ ContentContribution(const GridItemInfo&       aGridItem,
   nsIFrame* child = aGridItem.mFrame;
   PhysicalAxis axis(aCBWM.PhysicalAxis(aAxis));
   nscoord size = nsLayoutUtils::IntrinsicForAxis(axis, aRC, child, aConstraint,
+                   aPercentageBasis,
                    aFlags | nsLayoutUtils::BAIL_IF_REFLOW_NEEDED |
                             nsLayoutUtils::ADD_PERCENTS,
                    aMinSizeClamp);
