@@ -191,7 +191,8 @@ const Message = createClass({
       notesNodes = [];
     }
 
-    const repeat = MessageRepeat({repeat: this.props.repeat});
+    const repeat = this.props.repeat && this.props.repeat > 1 ?
+      MessageRepeat({repeat: this.props.repeat}) : null;
 
     let onFrameClick;
     if (serviceContainer && frame) {
