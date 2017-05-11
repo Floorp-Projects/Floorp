@@ -1550,41 +1550,6 @@ this.PlacesUtils = {
   },
 
   /**
-   * Given a uri returns list of itemIds associated to it.
-   *
-   * @param aURI
-   *        nsIURI or spec of the page.
-   * @param aCallback
-   *        Function to be called when done.
-   *        The function will receive an array of itemIds associated to aURI and
-   *        aURI itself.
-   *
-   * @return A object with a .cancel() method allowing to cancel the request.
-   *
-   * @note Children of live bookmarks folders are excluded. The callback function is
-   *       not invoked if the request is cancelled or hits an error.
-   */
-  asyncGetBookmarkIds: function PU_asyncGetBookmarkIds(aURI, aCallback) {
-    let abort = false;
-    let itemIds = [];
-    Task.spawn(function* () {
-      let conn = yield this.promiseDBConnection();
-      const QUERY_STR = `SELECT b.id FROM moz_bookmarks b
-                         JOIN moz_places h on h.id = b.fk
-                         WHERE h.url_hash = hash(:url) AND h.url = :url`;
-      let spec = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
-      yield conn.executeCached(QUERY_STR, { url: spec }, aRow => {
-        if (abort)
-          throw StopIteration;
-        itemIds.push(aRow.getResultByIndex(0));
-      });
-      if (!abort)
-        aCallback(itemIds, aURI);
-    }.bind(this)).then(null, Cu.reportError);
-    return { cancel: () => { abort = true; } };
-  },
-
-  /**
    * Lazily adds a bookmarks observer, waiting for the bookmarks service to be
    * alive before registering the observer.  This is especially useful in the
    * startup path, to avoid initializing the service just to add an observer.
