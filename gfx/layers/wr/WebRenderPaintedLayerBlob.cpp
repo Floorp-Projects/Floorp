@@ -47,11 +47,11 @@ WebRenderPaintedLayerBlob::RenderLayer(wr::DisplayListBuilder& aBuilder,
   }
 
   IntSize imageSize(size.ToUnknownSize());
-  RefPtr<gfx::DrawEventRecorderMemory> recorder = MakeAndAddRef<gfx::DrawEventRecorderMemory>();
-  RefPtr<gfx::DrawTarget> dummyDt = gfx::Factory::CreateDrawTarget(gfx::BackendType::SKIA, imageSize, gfx::SurfaceFormat::B8G8R8X8);
-  RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(recorder, dummyDt);
-
   if (!regionToPaint.IsEmpty() && WrManager()->GetPaintedLayerCallback()) {
+    RefPtr<gfx::DrawEventRecorderMemory> recorder = MakeAndAddRef<gfx::DrawEventRecorderMemory>();
+    RefPtr<gfx::DrawTarget> dummyDt = gfx::Factory::CreateDrawTarget(gfx::BackendType::SKIA, imageSize, gfx::SurfaceFormat::B8G8R8X8);
+    RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(recorder, dummyDt);
+
     dt->ClearRect(Rect(0, 0, imageSize.width, imageSize.height));
     dt->SetTransform(Matrix().PreTranslate(-bounds.x, -bounds.y));
     RefPtr<gfxContext> ctx = gfxContext::CreatePreservingTransformOrNull(dt);
@@ -67,17 +67,21 @@ WebRenderPaintedLayerBlob::RenderLayer(wr::DisplayListBuilder& aBuilder,
       dt->FillRect(Rect(0, 0, imageSize.width, imageSize.height), ColorPattern(Color(1.0, 0.0, 0.0, 0.5)));
     }
 
+    wr::ByteBuffer bytes;
+    bytes.Allocate(recorder->RecordingSize());
+    DebugOnly<bool> ok = recorder->CopyRecording((char*)bytes.AsSlice().begin().get(), bytes.AsSlice().length());
+    MOZ_ASSERT(ok);
+
+    //XXX: We should switch to updating the blob image instead of adding a new one
+    //     That will get rid of this discard bit
+    if (mImageKey.isSome()) {
+      WrManager()->AddImageKeyForDiscard(mImageKey.value());
+    }
+    mImageKey = Some(GetImageKey());
+    WrBridge()->SendAddBlobImage(mImageKey.value(), imageSize, size.width * 4, dt->GetFormat(), bytes);
   } else {
-    // we need to reuse the blob image
-    MOZ_ASSERT(mExternalImageId);
-    MOZ_ASSERT(mImageContainer->HasCurrentImage());
     MOZ_ASSERT(GetInvalidRegion().IsEmpty());
   }
-
-  wr::ByteBuffer bytes;
-  bytes.Allocate(recorder->RecordingSize());
-  DebugOnly<bool> ok = recorder->CopyRecording((char*)bytes.AsSlice().begin().get(), bytes.AsSlice().length());
-  MOZ_ASSERT(ok);
 
   ScrollingLayersHelper scroller(this, aBuilder, aSc);
   StackingContextHelper sc(aSc, aBuilder, this);
@@ -90,11 +94,7 @@ WebRenderPaintedLayerBlob::RenderLayer(wr::DisplayListBuilder& aBuilder,
       sc.ToRelativeWrRect(clipRect),
       mask.ptrOr(nullptr));
 
-  WrImageKey key = GetImageKey();
-  WrBridge()->SendAddBlobImage(key, imageSize, size.width * 4, dt->GetFormat(), bytes);
-  WrManager()->AddImageKeyForDiscard(key);
-
-  aBuilder.PushImage(sc.ToRelativeWrRect(rect), clip, wr::ImageRendering::Auto, key);
+  aBuilder.PushImage(sc.ToRelativeWrRect(rect), clip, wr::ImageRendering::Auto, mImageKey.value());
 }
 
 } // namespace layers
