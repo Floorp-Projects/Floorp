@@ -1349,7 +1349,8 @@ WebConsoleFrame.prototype = {
           return null;
         }
         if (timer.error) {
-          console.error(new Error(l10n.getStr(timer.error)));
+          console.error(new Error(l10n.getFormatStr(timer.error,
+                                                    [timer.name])));
           return null;
         }
         body = l10n.getFormatStr("timerStarted", [timer.name]);

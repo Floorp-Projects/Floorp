@@ -90,7 +90,7 @@ public:
     : mMethodName(Console::MethodLog)
     , mTimeStamp(JS_Now() / PR_USEC_PER_MSEC)
     , mStartTimerValue(0)
-    , mStartTimerStatus(false)
+    , mStartTimerStatus(Console::eTimerUnknown)
     , mStopTimerDuration(0)
     , mStopTimerStatus(false)
     , mCountValue(MAX_PAGE_COUNTERS)
@@ -217,7 +217,7 @@ public:
   // when console.time() is used.
   DOMHighResTimeStamp mStartTimerValue;
   nsString mStartTimerLabel;
-  bool mStartTimerStatus;
+  Console::StartTimerStatus mStartTimerStatus;
 
   // These values are set in the owning thread and they contain the duration,
   // the name and the status of the StopTimer method. If status is false,
@@ -2000,7 +2000,7 @@ Console::UnstoreGroupName(nsAString& aName)
   return true;
 }
 
-bool
+Console::StartTimerStatus
 Console::StartTimer(JSContext* aCx, const JS::Value& aName,
                     DOMHighResTimeStamp aTimestamp,
                     nsAString& aTimerLabel,
@@ -2012,38 +2012,67 @@ Console::StartTimer(JSContext* aCx, const JS::Value& aName,
   *aTimerValue = 0;
 
   if (NS_WARN_IF(mTimerRegistry.Count() >= MAX_PAGE_TIMERS)) {
-    return false;
+    return eTimerMaxReached;
   }
 
   JS::Rooted<JS::Value> name(aCx, aName);
   JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, name));
   if (NS_WARN_IF(!jsString)) {
-    return false;
+    return eTimerJSException;
   }
 
   nsAutoJSString label;
   if (NS_WARN_IF(!label.init(aCx, jsString))) {
-    return false;
-  }
-
-  DOMHighResTimeStamp entry = 0;
-  if (!mTimerRegistry.Get(label, &entry)) {
-    mTimerRegistry.Put(label, aTimestamp);
-  } else {
-    aTimestamp = entry;
+    return eTimerJSException;
   }
 
   aTimerLabel = label;
+
+  DOMHighResTimeStamp entry = 0;
+  if (mTimerRegistry.Get(label, &entry)) {
+    return eTimerAlreadyExists;
+  }
+
+  mTimerRegistry.Put(label, aTimestamp);
+
   *aTimerValue = aTimestamp;
-  return true;
+  return eTimerStarted;
+}
+
+void
+Console::StartTimerStatusToError(StartTimerStatus aStatus,
+                                 ConsoleTimerError& aError) const
+{
+  switch (aStatus) {
+  case eTimerAlreadyExists:
+    aError.mError.AssignLiteral("timerAlreadyExists");
+    break;
+
+  case eTimerJSException:
+    aError.mError.AssignLiteral("timerJSError");
+    break;
+
+  case eTimerMaxReached:
+    aError.mError.AssignLiteral("maxTimersExceeded");
+    break;
+
+  default:
+    MOZ_CRASH("Unsupported status");
+    break;
+  }
 }
 
 JS::Value
 Console::CreateStartTimerValue(JSContext* aCx, const nsAString& aTimerLabel,
-                               bool aTimerStatus) const
+                               StartTimerStatus aTimerStatus) const
 {
-  if (!aTimerStatus) {
+  MOZ_ASSERT(aTimerStatus != eTimerUnknown);
+
+  if (aTimerStatus != eTimerStarted) {
     RootedDictionary<ConsoleTimerError> error(aCx);
+
+    error.mName = aTimerLabel;
+    StartTimerStatusToError(aTimerStatus, error);
 
     JS::Rooted<JS::Value> value(aCx);
     if (!ToJSValue(aCx, error, &value)) {
