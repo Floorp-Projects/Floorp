@@ -590,14 +590,6 @@ auto GeckoAppShell::RemoveFullScreenPluginView(mozilla::jni::Object::Param a0) -
 constexpr char GeckoAppShell::ReportJavaCrash_t::name[];
 constexpr char GeckoAppShell::ReportJavaCrash_t::signature[];
 
-constexpr char GeckoAppShell::SetFullScreen_t::name[];
-constexpr char GeckoAppShell::SetFullScreen_t::signature[];
-
-auto GeckoAppShell::SetFullScreen(bool a0) -> void
-{
-    return mozilla::jni::Method<SetFullScreen_t>::Call(GeckoAppShell::Context(), nullptr, a0);
-}
-
 constexpr char GeckoAppShell::SetScreenDepthOverride_t::name[];
 constexpr char GeckoAppShell::SetScreenDepthOverride_t::signature[];
 
