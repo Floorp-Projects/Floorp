@@ -426,7 +426,7 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
             // Reuse existing visible fragment - in this case we know the user is already browsing.
             // The fragment might exist if we "erased" a browsing session, hence we need to check
             // for visibility in addition to existence.
-            browserFragment.loadURL(url);
+            browserFragment.loadUrl(url);
 
             // And this fragment can be removed again.
             fragmentManager.beginTransaction()

@@ -632,7 +632,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         }
     }
 
-    public void loadURL(final String url) {
+    public void loadUrl(final String url) {
         final IWebView webView = getWebView();
         if (webView != null) {
             webView.loadUrl(url);
