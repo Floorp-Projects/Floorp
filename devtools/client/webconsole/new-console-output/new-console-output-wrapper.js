@@ -9,6 +9,7 @@ const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
 const actions = require("devtools/client/webconsole/new-console-output/actions/index");
+const { batchActions } = require("devtools/client/shared/redux/middleware/debounce");
 const { createContextMenu } = require("devtools/client/webconsole/new-console-output/utils/context-menu");
 const { configureStore } = require("devtools/client/webconsole/new-console-output/store");
 
@@ -172,7 +173,7 @@ NewConsoleOutputWrapper.prototype = {
 
   dispatchMessagesAdd: function (messages) {
     const batchedActions = messages.map(message => actions.messageAdd(message));
-    store.dispatch(actions.batchActions(batchedActions));
+    store.dispatch(batchActions(batchedActions));
   },
 
   dispatchMessagesClear: function () {
@@ -204,7 +205,7 @@ function batchedMessageAdd(action) {
   queuedActions.push(action);
   if (!throttledDispatchTimeout) {
     throttledDispatchTimeout = setTimeout(() => {
-      store.dispatch(actions.batchActions(queuedActions));
+      store.dispatch(batchActions(queuedActions));
       queuedActions = [];
       throttledDispatchTimeout = null;
     }, 50);
