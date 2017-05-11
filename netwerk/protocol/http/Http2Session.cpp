@@ -1389,18 +1389,12 @@ Http2Session::ResponseHeadersComplete()
                                                      mDecompressBuffer,
                                                      mFlatHTTPResponseHeaders,
                                                      httpResponseCode);
-  if (rv == NS_ERROR_ABORT) {
-    LOG(("Http2Session::ResponseHeadersComplete ConvertResponseHeaders aborted\n"));
-    if (mInputFrameDataStream->IsTunnel()) {
-      rv = gHttpHandler->ConnMgr()->CancelTransactions(
-        mInputFrameDataStream->Transaction()->ConnectionInfo(),
-        NS_ERROR_CONNECTION_REFUSED);
-      if (NS_FAILED(rv)) {
-        LOG(("Http2Session::ResponseHeadersComplete "
-             "CancelTransactions failed: %08x\n", static_cast<uint32_t>(rv)));
-      }
-    }
-    CleanupStream(mInputFrameDataStream, rv, CANCEL_ERROR);
+  if (rv == NS_ERROR_NET_RESET) {
+    LOG(("Http2Session::ResponseHeadersComplete %p ConvertResponseHeaders reset\n", this));
+    // This means the stream found connection-oriented auth. Treat this like we
+    // got a reset with HTTP_1_1_REQUIRED.
+    mInputFrameDataStream->Transaction()->DisableSpdy();
+    CleanupStream(mInputFrameDataStream, NS_ERROR_NET_RESET, CANCEL_ERROR);
     ResetDownstreamState();
     return NS_OK;
   } else if (NS_FAILED(rv)) {
