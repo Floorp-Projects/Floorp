@@ -11,15 +11,16 @@
 #include "GrFragmentProcessor.h"
 #include "GrPrimitiveProcessor.h"
 #include "glsl/GrGLSLProgramDataManager.h"
-#include "glsl/GrGLSLUniformHandler.h"
+#include "glsl/GrGLSLSampler.h"
 
+class GrBatchTracker;
 class GrPrimitiveProcessor;
+class GrGLSLCaps;
 class GrGLSLPPFragmentBuilder;
-class GrGLSLGeometryBuilder;
 class GrGLSLGPBuilder;
+class GrGLSLUniformHandler;
 class GrGLSLVaryingHandler;
 class GrGLSLVertexBuilder;
-class GrShaderCaps;
 
 class GrGLSLPrimitiveProcessor {
 public:
@@ -27,9 +28,8 @@ public:
 
     virtual ~GrGLSLPrimitiveProcessor() {}
 
-    using UniformHandle      = GrGLSLProgramDataManager::UniformHandle;
-    using SamplerHandle      = GrGLSLUniformHandler::SamplerHandle;
-    using ImageStorageHandle = GrGLSLUniformHandler::ImageStorageHandle;
+    typedef GrGLSLProgramDataManager::UniformHandle UniformHandle;
+    typedef GrGLSLProgramDataManager::UniformHandle SamplerHandle;
 
     /**
      * This class provides access to the GrCoordTransforms across all GrFragmentProcessors in a
@@ -66,49 +66,40 @@ public:
 
     struct EmitArgs {
         EmitArgs(GrGLSLVertexBuilder* vertBuilder,
-                 GrGLSLGeometryBuilder* geomBuilder,
                  GrGLSLPPFragmentBuilder* fragBuilder,
                  GrGLSLVaryingHandler* varyingHandler,
                  GrGLSLUniformHandler* uniformHandler,
-                 const GrShaderCaps* caps,
+                 const GrGLSLCaps* caps,
                  const GrPrimitiveProcessor& gp,
                  const char* outputColor,
                  const char* outputCoverage,
                  const char* distanceVectorName,
-                 const char* rtAdjustName,
                  const SamplerHandle* texSamplers,
                  const SamplerHandle* bufferSamplers,
-                 const ImageStorageHandle* imageStorages,
                  FPCoordTransformHandler* transformHandler)
             : fVertBuilder(vertBuilder)
-            , fGeomBuilder(geomBuilder)
             , fFragBuilder(fragBuilder)
             , fVaryingHandler(varyingHandler)
             , fUniformHandler(uniformHandler)
-            , fShaderCaps(caps)
+            , fGLSLCaps(caps)
             , fGP(gp)
             , fOutputColor(outputColor)
             , fOutputCoverage(outputCoverage)
             , fDistanceVectorName(distanceVectorName)
-            , fRTAdjustName(rtAdjustName)
             , fTexSamplers(texSamplers)
             , fBufferSamplers(bufferSamplers)
-            , fImageStorages(imageStorages)
             , fFPCoordTransformHandler(transformHandler) {}
         GrGLSLVertexBuilder* fVertBuilder;
-        GrGLSLGeometryBuilder* fGeomBuilder;
         GrGLSLPPFragmentBuilder* fFragBuilder;
         GrGLSLVaryingHandler* fVaryingHandler;
         GrGLSLUniformHandler* fUniformHandler;
-        const GrShaderCaps* fShaderCaps;
+        const GrGLSLCaps* fGLSLCaps;
         const GrPrimitiveProcessor& fGP;
         const char* fOutputColor;
         const char* fOutputCoverage;
         const char* fDistanceVectorName;
-        const char* fRTAdjustName;
         const SamplerHandle* fTexSamplers;
         const SamplerHandle* fBufferSamplers;
-        const ImageStorageHandle* fImageStorages;
         FPCoordTransformHandler* fFPCoordTransformHandler;
     };
 

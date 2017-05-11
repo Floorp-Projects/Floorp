@@ -187,7 +187,7 @@ public:
     /** Create a PDF array. Maximum length is 8191.
      */
     SkPDFArray();
-    ~SkPDFArray() override;
+    virtual ~SkPDFArray();
 
     // The SkPDFObject interface.
     void emitObject(SkWStream* stream,
@@ -235,7 +235,7 @@ public:
      */
     explicit SkPDFDict(const char type[] = nullptr);
 
-    ~SkPDFDict() override;
+    virtual ~SkPDFDict();
 
     // The SkPDFObject interface.
     void emitObject(SkWStream* stream,
@@ -298,7 +298,7 @@ private:
 class SkPDFSharedStream final : public SkPDFObject {
 public:
     SkPDFSharedStream(std::unique_ptr<SkStreamAsset> data);
-    ~SkPDFSharedStream() override;
+    ~SkPDFSharedStream();
     SkPDFDict* dict() { return &fDict; }
     void emitObject(SkWStream*,
                     const SkPDFObjNumMap&) const override;
@@ -327,7 +327,7 @@ public:
      *  @param stream The data part of the stream. */
     explicit SkPDFStream(sk_sp<SkData> data);
     explicit SkPDFStream(std::unique_ptr<SkStreamAsset> stream);
-    ~SkPDFStream() override;
+    virtual ~SkPDFStream();
 
     SkPDFDict* dict() { return &fDict; }
 

@@ -11,7 +11,7 @@
 #include "SkPathOpsTypes.h"
 #include "SkPoint.h"
 
-class SkArenaAlloc;
+class SkChunkAlloc;
 class SkOpAngle;
 class SkOpContour;
 class SkOpGlobalState;
@@ -518,7 +518,7 @@ public:
     void setOppValue(int oppValue) {
         SkASSERT(!final());
         SkASSERT(fOppSum == SK_MinS32);
-        SkOPASSERT(!oppValue || !fDone);
+        SkASSERT(!oppValue || !fDone);
         fOppValue = oppValue;
     }
 
