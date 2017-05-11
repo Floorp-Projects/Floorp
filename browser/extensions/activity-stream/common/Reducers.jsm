@@ -6,52 +6,20 @@
 const {actionTypes: at} = Components.utils.import("resource://activity-stream/common/Actions.jsm", {});
 
 const INITIAL_STATE = {
-  App: {
-    // Have we received real data from the app yet?
-    initialized: false,
-    // The locale of the browser
-    locale: "",
-    // Localized strings with defaults
-    strings: {},
-    // The version of the system-addon
-    version: null
-  },
   TopSites: {
-    // Have we received real data from history yet?
-    initialized: false,
-    // The history (and possibly default) links
+    init: false,
     rows: []
   },
   Search: {
-    // The search engine currently set by the browser
     currentEngine: {
       name: "",
       icon: ""
     },
-    // All possible search engines
     engines: []
   }
 };
 
-function App(prevState = INITIAL_STATE.App, action) {
-  switch (action.type) {
-    case at.INIT:
-      return Object.assign({}, action.data || {}, {initialized: true});
-    case at.LOCALE_UPDATED: {
-      if (!action.data) {
-        return prevState;
-      }
-      let {locale, strings} = action.data;
-      return Object.assign({}, prevState, {
-        locale,
-        strings
-      });
-    }
-    default:
-      return prevState;
-  }
-}
-
+// TODO: Handle some real actions here, once we have a TopSites feed working
 function TopSites(prevState = INITIAL_STATE.TopSites, action) {
   let hasMatch;
   let newRows;
@@ -60,7 +28,7 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
       if (!action.data) {
         return prevState;
       }
-      return Object.assign({}, prevState, {initialized: true, rows: action.data});
+      return Object.assign({}, prevState, {init: true, rows: action.data});
     case at.SCREENSHOT_UPDATED:
       newRows = prevState.rows.map(row => {
         if (row.url === action.data.url) {
@@ -70,31 +38,6 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
         return row;
       });
       return hasMatch ? Object.assign({}, prevState, {rows: newRows}) : prevState;
-    case at.PLACES_BOOKMARK_ADDED:
-      newRows = prevState.rows.map(site => {
-        if (site.url === action.data.url) {
-          const {bookmarkGuid, bookmarkTitle, lastModified} = action.data;
-          return Object.assign({}, site, {bookmarkGuid, bookmarkTitle, bookmarkDateCreated: lastModified});
-        }
-        return site;
-      });
-      return Object.assign({}, prevState, {rows: newRows});
-    case at.PLACES_BOOKMARK_REMOVED:
-      newRows = prevState.rows.map(site => {
-        if (site.url === action.data.url) {
-          const newSite = Object.assign({}, site);
-          delete newSite.bookmarkGuid;
-          delete newSite.bookmarkTitle;
-          delete newSite.bookmarkDateCreated;
-          return newSite;
-        }
-        return site;
-      });
-      return Object.assign({}, prevState, {rows: newRows});
-    case at.PLACES_LINK_DELETED:
-    case at.PLACES_LINK_BLOCKED:
-      newRows = prevState.rows.filter(val => val.url !== action.data.url);
-      return Object.assign({}, prevState, {rows: newRows});
     default:
       return prevState;
   }
@@ -117,6 +60,6 @@ function Search(prevState = INITIAL_STATE.Search, action) {
   }
 }
 this.INITIAL_STATE = INITIAL_STATE;
-this.reducers = {TopSites, App, Search};
+this.reducers = {TopSites, Search};
 
 this.EXPORTED_SYMBOLS = ["reducers", "INITIAL_STATE"];
