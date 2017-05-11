@@ -90,6 +90,8 @@ def AppendOptionalArgsToSSHCommandline(cmdline, port, ssh_key):
         if not ssh_key.startswith('~'):
             ssh_key = WindowsPathToMsysPath(ssh_key)
         cmdline.extend(["-o", "IdentityFile=%s" % ssh_key])
+    # In case of an issue here we don't want to hang on a password prompt.
+    cmdline.extend(["-o", "BatchMode=yes"])
 
 def DoSSHCommand(command, user, host, port=None, ssh_key=None):
     """Execute command on user@host using ssh. Optionally use
