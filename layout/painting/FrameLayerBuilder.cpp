@@ -6291,15 +6291,15 @@ FrameLayerBuilder::GetMostRecentGeometry(nsDisplayItem* aItem)
   return nullptr;
 }
 
-gfx::Rect
-CalculateBounds(const nsTArray<DisplayItemClip::RoundedRect>& aRects, int32_t A2D)
+static gfx::Rect
+CalculateBounds(const nsTArray<DisplayItemClip::RoundedRect>& aRects, int32_t aAppUnitsPerDevPixel)
 {
   nsRect bounds = aRects[0].mRect;
   for (uint32_t i = 1; i < aRects.Length(); ++i) {
     bounds.UnionRect(bounds, aRects[i].mRect);
    }
 
-  return gfx::ToRect(nsLayoutUtils::RectToGfxRect(bounds, A2D));
+  return gfx::Rect(bounds.ToNearestPixels(aAppUnitsPerDevPixel));
 }
 
 static void
@@ -6376,7 +6376,6 @@ ContainerState::CreateMaskLayer(Layer *aLayer,
     return maskLayer.forget();
   }
 
-  // calculate a more precise bounding rect
   gfx::Rect boundingRect = CalculateBounds(newData.mRoundedClipRects,
                                            newData.mAppUnitsPerDevPixel);
   boundingRect.Scale(mParameters.mXScale, mParameters.mYScale);
