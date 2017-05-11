@@ -10,7 +10,7 @@ const {
   prepareMessage
 } = require("devtools/client/webconsole/new-console-output/utils/messages");
 const { IdGenerator } = require("devtools/client/webconsole/new-console-output/utils/id-generator");
-const { batchActions } = require("devtools/client/webconsole/new-console-output/actions/enhancers");
+const { batchActions } = require("devtools/client/shared/redux/middleware/debounce");
 const {
   MESSAGE_ADD,
   NETWORK_MESSAGE_UPDATE,
@@ -30,6 +30,7 @@ function messageAdd(packet, idGenerator = null) {
   let message = prepareMessage(packet, idGenerator);
   const addMessageAction = {
     type: MESSAGE_ADD,
+    meta: { debounce: true },
     message
   };
 
@@ -100,6 +101,7 @@ function networkMessageUpdate(packet, idGenerator = null) {
 
   return {
     type: NETWORK_MESSAGE_UPDATE,
+    meta: { debounce: true },
     message,
   };
 }
