@@ -1139,7 +1139,7 @@ fails-if(!stylo) == 428810-3e-rtl-insets.html 428810-empty-rtl-insets-ref.html #
 == 433700.html 433700-ref.html
 == 436356-1.html 436356-1-ref.html
 == 436356-2.html 436356-2-ref.html
-+fuzzy-if(skiaContent,3,1) == 438537-1.html 438537-1-ref.html
+fuzzy-if(skiaContent,3,1) == 438537-1.html 438537-1-ref.html
 == 438981-1.xhtml about:blank
 == 438987-1.html 438987-1-ref.html
 fuzzy-if(skiaContent,1,3280) == 438987-2a.html 438987-2-ref.html
