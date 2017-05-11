@@ -131,18 +131,17 @@ import java.util.concurrent.TimeUnit;
 
 import static org.mozilla.gecko.Tabs.INVALID_TAB_ID;
 
-public abstract class GeckoApp
-    extends GeckoActivity
-    implements
-    BundleEventListener,
-    ContextGetter,
-    GeckoAppShell.GeckoInterface,
-    ScreenOrientationDelegate,
-    GeckoMenu.Callback,
-    GeckoMenu.MenuPresenter,
-    Tabs.OnTabsChangedListener,
-    ViewTreeObserver.OnGlobalLayoutListener,
-    AnchoredPopup.OnVisibilityChangeListener {
+public abstract class GeckoApp extends GeckoActivity
+                               implements AnchoredPopup.OnVisibilityChangeListener,
+                                          BundleEventListener,
+                                          ContextGetter,
+                                          GeckoAppShell.GeckoInterface,
+                                          GeckoMenu.Callback,
+                                          GeckoMenu.MenuPresenter,
+                                          GeckoView.ContentListener,
+                                          ScreenOrientationDelegate,
+                                          Tabs.OnTabsChangedListener,
+                                          ViewTreeObserver.OnGlobalLayoutListener {
 
     private static final String LOGTAG = "GeckoApp";
     private static final long ONE_DAY_MS = TimeUnit.MILLISECONDS.convert(1, TimeUnit.DAYS);
@@ -1194,12 +1193,21 @@ public abstract class GeckoApp
         mLayerView.requestRender();
     }
 
-    @Override
-    public void setFullScreen(final boolean fullscreen) {
+    @Override // GeckoView.ContentListener
+    public void onTitleChange(final GeckoView view, final String title) {
+    }
+
+    @Override // GeckoView.ContentListener
+    public void onFullScreen(final GeckoView view, final boolean fullScreen) {
+        ThreadUtils.assertOnUiThread();
+        ActivityUtils.setFullScreen(this, fullScreen);
+    }
+
+    protected void setFullScreen(final boolean fullscreen) {
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
-                ActivityUtils.setFullScreen(GeckoApp.this, fullscreen);
+                onFullScreen(mLayerView, fullscreen);
             }
         });
     }
@@ -1381,6 +1389,8 @@ public abstract class GeckoApp
         mGeckoLayout = (RelativeLayout) findViewById(R.id.gecko_layout);
         mMainLayout = (RelativeLayout) findViewById(R.id.main_layout);
         mLayerView = (GeckoView) findViewById(R.id.layer_view);
+
+        mLayerView.setContentListener(this);
 
         getAppEventDispatcher().registerGeckoThreadListener(this,
             "Accessibility:Event",
