@@ -5,7 +5,7 @@
   "license": "MPL-2.0",
   "dependencies": {
     "eslint": "3.19.0",
-    "eslint-plugin-html": "2.0.3",
+    "eslint-plugin-html": "1.5.2",
     "eslint-plugin-react": "6.10.3",
     "escope": "^3.6.0",
     "espree": "^3.4.0",
