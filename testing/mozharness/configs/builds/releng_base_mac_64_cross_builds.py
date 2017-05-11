@@ -28,7 +28,6 @@ config = {
          'secret_name': 'project/releng/gecko/build/level-%(scm-level)s/mozilla-desktop-geoloc-api.key',
          'min_scm_level': 2, 'default': 'try-build-has-no-secrets'},
     ],
-    'enable_ccache': True,
     'enable_check_test': False,
     'vcs_share_base': '/builds/hg-shared',
     'objdir': 'obj-firefox/',
