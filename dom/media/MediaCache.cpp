@@ -24,8 +24,10 @@
 namespace mozilla {
 
 #undef LOG
+#undef LOGI
 LazyLogModule gMediaCacheLog("MediaCache");
 #define LOG(...) MOZ_LOG(gMediaCacheLog, LogLevel::Debug, (__VA_ARGS__))
+#define LOGI(...) MOZ_LOG(gMediaCacheLog, LogLevel::Info, (__VA_ARGS__))
 
 
 // Readahead blocks for non-seekable streams will be limited to this
@@ -1243,12 +1245,14 @@ MediaCache::Update()
       } else {
         TimeDuration predictedNewDataUse = PredictNextUseForIncomingData(stream);
 
-        if (stream->mCacheSuspended &&
+        if (stream->mThrottleReadahead &&
+            stream->mCacheSuspended &&
             predictedNewDataUse.ToSeconds() > resumeThreshold) {
           // Don't need data for a while, so don't bother waking up the stream
           LOG("Stream %p avoiding wakeup since more data is not needed", stream);
           enableReading = false;
-        } else if (predictedNewDataUse.ToSeconds() > readaheadLimit) {
+        } else if (stream->mThrottleReadahead &&
+                   predictedNewDataUse.ToSeconds() > readaheadLimit) {
           // Don't read ahead more than this much
           LOG("Stream %p throttling to avoid reading ahead too far", stream);
           enableReading = false;
@@ -2208,6 +2212,18 @@ MediaCacheStream::Seek(int32_t aWhence, int64_t aOffset)
   return NS_OK;
 }
 
+void
+MediaCacheStream::ThrottleReadahead(bool bThrottle)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mThrottleReadahead != bThrottle) {
+    LOGI("Stream %p ThrottleReadahead %d", this, bThrottle);
+    mThrottleReadahead = bThrottle;
+    ReentrantMonitorAutoEnter mon(gMediaCache->GetReentrantMonitor());
+    gMediaCache->QueueUpdate();
+  }
+}
+
 int64_t
 MediaCacheStream::Tell()
 {
@@ -2490,3 +2506,4 @@ nsresult MediaCacheStream::GetCachedRanges(MediaByteRangeSet& aRanges)
 
 // avoid redefined macro in unified build
 #undef LOG
+#undef LOGI
