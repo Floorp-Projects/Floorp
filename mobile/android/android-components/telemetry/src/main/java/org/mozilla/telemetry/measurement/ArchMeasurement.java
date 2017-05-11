@@ -12,38 +12,21 @@ import java.util.Locale;
 public class ArchMeasurement extends TelemetryMeasurement {
     private static final String FIELD_NAME = "arch";
 
-    private static final String VALUE_X86 = "x86";
-    private static final String VALUE_ARM = "arm";
-    private static final String VALUE_MIPS = "mips";
-    private static final String VALUE_UNKNOWN = "?";
-
     public ArchMeasurement() {
         super(FIELD_NAME);
     }
 
     @Override
     public Object flush() {
-        for (String abi : getSupportedAbis()) {
-            abi = abi.toLowerCase(Locale.US);
-
-            if (abi.contains(VALUE_X86)) {
-                return VALUE_X86;
-            } else if (abi.contains(VALUE_ARM)) {
-                return VALUE_ARM;
-            } else if (abi.contains(VALUE_MIPS)) {
-                return VALUE_MIPS;
-            }
-        }
-
-        return VALUE_UNKNOWN;
+        return getArchitecture();
     }
 
-    @VisibleForTesting String[] getSupportedAbis() {
+    @VisibleForTesting String getArchitecture() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            return Build.SUPPORTED_ABIS;
+            return Build.SUPPORTED_ABIS[0];
         } else {
             //noinspection deprecation
-            return new String[] { Build.CPU_ABI };
+            return Build.CPU_ABI;
         }
     }
 }
