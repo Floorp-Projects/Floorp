@@ -6,6 +6,7 @@
 #include "nsAppRunner.h"
 #include "nsToolkitCompsCID.h"
 #include "nsXREDirProvider.h"
+#include "mozilla/AddonManagerStartup.h"
 
 #include "jsapi.h"
 #include "xpcpublic.h"
@@ -27,7 +28,6 @@
 #include "nsXULAppAPI.h"
 #include "nsCategoryManagerUtils.h"
 
-#include "nsINIParser.h"
 #include "nsDependentString.h"
 #include "nsCOMArray.h"
 #include "nsArrayEnumerator.h"
@@ -85,15 +85,6 @@ static bool IsContentSandboxDisabled();
 static const char* GetContentProcessTempBaseDirKey();
 static already_AddRefed<nsIFile> CreateContentProcessSandboxTempDir();
 #endif
-
-static already_AddRefed<nsIFile>
-CloneAndAppend(nsIFile* aFile, const char* name)
-{
-  nsCOMPtr<nsIFile> file;
-  aFile->Clone(getter_AddRefs(file));
-  file->AppendNative(nsDependentCString(name));
-  return file.forget();
-}
 
 nsXREDirProvider* gDirServiceProvider = nullptr;
 
@@ -598,7 +589,7 @@ LoadDirIntoArray(nsIFile* dir,
 }
 
 static void
-LoadDirsIntoArray(nsCOMArray<nsIFile>& aSourceDirs,
+LoadDirsIntoArray(const nsCOMArray<nsIFile>& aSourceDirs,
                   const char *const* aAppendList,
                   nsCOMArray<nsIFile>& aDirectories)
 {
@@ -657,73 +648,6 @@ nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
     return rv;
 
   return NS_SUCCESS_AGGREGATE_RESULT;
-}
-
-static void
-RegisterExtensionInterpositions(nsINIParser &parser)
-{
-  if (!mozilla::Preferences::GetBool("extensions.interposition.enabled", false))
-    return;
-
-  nsCOMPtr<nsIAddonInterposition> interposition =
-    do_GetService("@mozilla.org/addons/multiprocess-shims;1");
-
-  nsresult rv;
-  int32_t i = 0;
-  do {
-    nsAutoCString buf("Extension");
-    buf.AppendInt(i++);
-
-    nsAutoCString addonId;
-    rv = parser.GetString("MultiprocessIncompatibleExtensions", buf.get(), addonId);
-    if (NS_FAILED(rv))
-      return;
-
-    if (!xpc::SetAddonInterposition(addonId, interposition))
-      continue;
-
-    if (!xpc::AllowCPOWsInAddon(addonId, true))
-      continue;
-  }
-  while (true);
-}
-
-static void
-LoadExtensionDirectories(nsINIParser &parser,
-                         const char *aSection,
-                         nsCOMArray<nsIFile> &aDirectories,
-                         NSLocationType aType)
-{
-  nsresult rv;
-  int32_t i = 0;
-  do {
-    nsAutoCString buf("Extension");
-    buf.AppendInt(i++);
-
-    nsAutoCString path;
-    rv = parser.GetString(aSection, buf.get(), path);
-    if (NS_FAILED(rv))
-      return;
-
-    nsCOMPtr<nsIFile> dir = do_CreateInstance("@mozilla.org/file/local;1", &rv);
-    if (NS_FAILED(rv))
-      continue;
-
-    rv = dir->SetPersistentDescriptor(path);
-    if (NS_FAILED(rv))
-      continue;
-
-    aDirectories.AppendObject(dir);
-    if (Substring(path, path.Length() - 4).EqualsLiteral(".xpi")) {
-      XRE_AddJarManifestLocation(aType, dir);
-    }
-    else {
-      nsCOMPtr<nsIFile> manifest =
-        CloneAndAppend(dir, "chrome.manifest");
-      XRE_AddManifestLocation(aType, manifest);
-    }
-  }
-  while (true);
 }
 
 #if (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
@@ -903,59 +827,6 @@ DeleteDirIfExists(nsIFile* dir)
 #endif // (defined(XP_WIN) || defined(XP_MACOSX)) &&
   // defined(MOZ_CONTENT_SANDBOX)
 
-void
-nsXREDirProvider::LoadExtensionBundleDirectories()
-{
-  if (!mozilla::Preferences::GetBool("extensions.defaultProviders.enabled", true))
-    return;
-
-  if (mProfileDir) {
-    if (!gSafeMode) {
-      nsCOMPtr<nsIFile> extensionsINI;
-      mProfileDir->Clone(getter_AddRefs(extensionsINI));
-      if (!extensionsINI)
-        return;
-
-      extensionsINI->AppendNative(NS_LITERAL_CSTRING("extensions.ini"));
-
-      nsCOMPtr<nsIFile> extensionsINILF =
-        do_QueryInterface(extensionsINI);
-      if (!extensionsINILF)
-        return;
-
-      nsINIParser parser;
-      nsresult rv = parser.Init(extensionsINILF);
-      if (NS_FAILED(rv))
-        return;
-
-      RegisterExtensionInterpositions(parser);
-      LoadExtensionDirectories(parser, "ExtensionDirs", mExtensionDirectories,
-                               NS_EXTENSION_LOCATION);
-      LoadExtensionDirectories(parser, "ThemeDirs", mThemeDirectories,
-                               NS_SKIN_LOCATION);
-/* non-Firefox applications that use overrides in their default theme should
- * define AC_DEFINE(MOZ_SEPARATE_MANIFEST_FOR_THEME_OVERRIDES) in their
- * configure.in */
-#if defined(MOZ_BUILD_APP_IS_BROWSER) || defined(MOZ_SEPARATE_MANIFEST_FOR_THEME_OVERRIDES)
-    } else {
-      // In safe mode, still load the default theme directory:
-      nsCOMPtr<nsIFile> themeManifest;
-      mXULAppDir->Clone(getter_AddRefs(themeManifest));
-      themeManifest->AppendNative(NS_LITERAL_CSTRING("extensions"));
-      themeManifest->AppendNative(NS_LITERAL_CSTRING("{972ce4c6-7e08-4474-a285-3208198ce6fd}.xpi"));
-      bool exists = false;
-      if (NS_SUCCEEDED(themeManifest->Exists(&exists)) && exists) {
-        XRE_AddJarManifestLocation(NS_SKIN_LOCATION, themeManifest);
-      } else {
-        themeManifest->SetNativeLeafName(NS_LITERAL_CSTRING("{972ce4c6-7e08-4474-a285-3208198ce6fd}"));
-        themeManifest->AppendNative(NS_LITERAL_CSTRING("chrome.manifest"));
-        XRE_AddManifestLocation(NS_SKIN_LOCATION, themeManifest);
-      }
-#endif
-    }
-  }
-}
-
 #ifdef MOZ_B2G
 void
 nsXREDirProvider::LoadAppBundleDirs()
@@ -1019,7 +890,7 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
 
     LoadDirsIntoArray(mAppBundleDirectories,
                       kAppendNothing, directories);
-    LoadDirsIntoArray(mExtensionDirectories,
+    LoadDirsIntoArray(AddonManagerStartup::GetSingleton().ExtensionPaths(),
                       kAppendNothing, directories);
 
     rv = NS_NewArrayEnumerator(aResult, directories);
@@ -1036,7 +907,7 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
   else if (!strcmp(aProperty, NS_EXT_PREFS_DEFAULTS_DIR_LIST)) {
     nsCOMArray<nsIFile> directories;
 
-    LoadDirsIntoArray(mExtensionDirectories,
+    LoadDirsIntoArray(AddonManagerStartup::GetSingleton().ExtensionPaths(),
                       kAppendPrefDir, directories);
 
     if (mProfileDir) {
@@ -1063,7 +934,7 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
     LoadDirsIntoArray(mAppBundleDirectories,
                       kAppendChromeDir,
                       directories);
-    LoadDirsIntoArray(mExtensionDirectories,
+    LoadDirsIntoArray(AddonManagerStartup::GetSingleton().ExtensionPaths(),
                       kAppendChromeDir,
                       directories);
 
@@ -1088,7 +959,7 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
     LoadDirsIntoArray(mAppBundleDirectories,
                       kAppendPlugins,
                       directories);
-    LoadDirsIntoArray(mExtensionDirectories,
+    LoadDirsIntoArray(AddonManagerStartup::GetSingleton().ExtensionPaths(),
                       kAppendPlugins,
                       directories);
 
@@ -1160,8 +1031,6 @@ nsXREDirProvider::DoStartup()
     } else {
       NS_WARNING("Failed to create Addons Manager.");
     }
-
-    LoadExtensionBundleDirectories();
 
     obsSvc->NotifyObservers(nullptr, "load-extension-defaults", nullptr);
     obsSvc->NotifyObservers(nullptr, "profile-after-change", kStartup);

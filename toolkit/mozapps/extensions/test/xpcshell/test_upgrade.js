@@ -96,8 +96,8 @@ function end_test() {
 }
 
 // Test that the test extensions are all installed
-function run_test_1() {
-  startupManager();
+async function run_test_1() {
+  await promiseStartupManager();
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
@@ -123,7 +123,7 @@ function run_test_1() {
 }
 
 // Test that upgrading the application doesn't disable now incompatible add-ons
-function run_test_2() {
+async function run_test_2() {
   // Upgrade the extension
   var dest = writeInstallRDFForExtension({
     id: "addon4@tests.mozilla.org",
@@ -137,7 +137,7 @@ function run_test_2() {
   }, globalDir);
   setExtensionModifiedTime(dest, gInstallTime);
 
-  restartManager("2");
+  await promiseRestartManager("2");
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
                                "addon3@tests.mozilla.org",
@@ -178,7 +178,7 @@ function run_test_3() {
 
   // Simulates a simple Build ID change, the platform deletes extensions.ini
   // whenever the application is changed.
-  gExtensionsINI.remove(true);
+  gAddonStartup.remove(true);
   restartManager();
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",

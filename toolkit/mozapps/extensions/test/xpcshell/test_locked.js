@@ -182,6 +182,7 @@ add_task(function* init() {
 
 add_task(function* run_test_1() {
   restartManager();
+
   let [a1, a2, a3, a4, a5, a6, a7, t1, t2] =
     yield promiseAddonsByIDs(["addon1@tests.mozilla.org",
                               "addon2@tests.mozilla.org",
@@ -453,8 +454,7 @@ add_task(function* run_test_1() {
    do_print("Unlocking " + gExtensionsJSON.path);
    yield file.close();
    gExtensionsJSON.permissions = filePermissions;
-   startupManager();
-
+   yield promiseStartupManager();
 
    // Shouldn't have seen any startup changes
    check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
