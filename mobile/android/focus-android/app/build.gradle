@@ -196,10 +196,16 @@ afterEvaluate {
 // Generate blocklists
 // -------------------------------------------------------------------------------------------------
 
-task buildBlocklists(type:Exec) {
-    workingDir '..'
+task buildBlocklists(type:Copy) {
+    from('../shavar-prod-lists') {
+        include '*.json'
+    }
+    into 'src/webkit/res/raw'
 
-    commandLine 'python', 'build-disconnect.py'
+    // Android can't handle dashes in the filename, so we need to rename:
+    rename 'disconnect-blacklist.json', 'blocklist.json'
+    rename 'disconnect-entitylist.json', 'entitylist.json'
+    // google_mapping.json already has an expected name
 }
 
 tasks.whenTaskAdded { task ->
