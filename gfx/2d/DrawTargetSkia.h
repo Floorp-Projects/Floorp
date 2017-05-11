@@ -223,7 +223,6 @@ private:
   CGColorSpaceRef mColorSpace;
   uint8_t* mCanvasData;
   IntSize mCGSize;
-  bool mNeedLayer;
 #endif
 };
 
