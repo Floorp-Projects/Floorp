@@ -16,8 +16,4 @@ describe("MessageRepeat component:", () => {
     expect(rendered.classList.contains("message-repeats")).toBe(true);
     expect(rendered.textContent).toBe("99");
   });
-
-  it("does not render un-repeated value", () => {
-    expect(MessageRepeat({ repeat: 1 })).toBe(null);
-  });
 });
