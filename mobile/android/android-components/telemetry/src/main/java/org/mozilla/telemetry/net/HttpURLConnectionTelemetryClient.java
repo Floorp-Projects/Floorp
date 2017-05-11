@@ -17,6 +17,10 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Locale;
+import java.util.TimeZone;
 
 public class HttpURLConnectionTelemetryClient implements TelemetryClient {
     private static final String LOG_TAG = "HttpURLTelemetryClient";
@@ -32,6 +36,7 @@ public class HttpURLConnectionTelemetryClient implements TelemetryClient {
 
             connection.setRequestProperty("Content-Type", "application/json; charset=utf-8");
             connection.setRequestProperty("User-Agent", configuration.getUserAgent());
+            connection.setRequestProperty("Date", createDateHeaderValue());
 
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
@@ -104,5 +109,12 @@ public class HttpURLConnectionTelemetryClient implements TelemetryClient {
     @VisibleForTesting HttpURLConnection openConnectionConnection(String endpoint, String path) throws IOException {
         final URL url = new URL(endpoint + path);
         return (HttpURLConnection) url.openConnection();
+    }
+
+    @VisibleForTesting String createDateHeaderValue() {
+        final Calendar calendar = Calendar.getInstance();
+        final SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
+        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+        return dateFormat.format(calendar.getTime());
     }
 }

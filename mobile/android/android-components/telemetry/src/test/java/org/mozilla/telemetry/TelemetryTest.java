@@ -111,6 +111,7 @@ public class TelemetryTest {
         assertEquals("POST /submit/telemetry/ffffffff-0000-0000-ffff-ffffffffffff/core/TelemetryTest/10.0.1/test/123?v=4 HTTP/1.1", request.getRequestLine());
         assertEquals("application/json; charset=utf-8", request.getHeader("Content-Type"));
         assertEquals(TEST_USER_AGENT, request.getHeader("User-Agent"));
+        assertNotNull(request.getHeader("Date"));
 
         final JSONObject object = new JSONObject(request.getBody().readUtf8());
 
@@ -189,6 +190,7 @@ public class TelemetryTest {
         assertEquals("POST /submit/telemetry/ffffffff-0000-0000-ffff-ffffffffffff/focus-event/TelemetryTest/12.1.1/test/456?v=4 HTTP/1.1", request.getRequestLine());
         assertEquals("application/json; charset=utf-8", request.getHeader("Content-Type"));
         assertEquals(TEST_USER_AGENT, request.getHeader("User-Agent"));
+        assertNotNull(request.getHeader("Date"));
 
         final JSONObject object = new JSONObject(request.getBody().readUtf8());
 
