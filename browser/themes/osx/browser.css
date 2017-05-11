@@ -855,13 +855,10 @@ treechildren.searchbar-treebody::-moz-tree-row(hover) {
   border-color: hsla(0, 0%, 0%, 0.1);
 }
 
-.autocomplete-richlistitem[selected] {
-  background-color: hsl(210, 80%, 52%);
-  color: hsl(0, 0%, 100%);
-}
-
+.autocomplete-richlistitem[selected],
 treechildren.searchbar-treebody::-moz-tree-row(selected) {
   background-color: Highlight;
+  color: HighlightText;
 }
 
 .ac-title {
