@@ -830,10 +830,6 @@ nsHttpChannelAuthProvider::GetCredentialsForChallenge(const char *challenge,
     }
 
     mConnectionBased = !!(authFlags & nsIHttpAuthenticator::CONNECTION_BASED);
-    if (mConnectionBased) {
-        rv = mAuthChannel->ForceNoSpdy();
-        MOZ_ASSERT(NS_SUCCEEDED(rv));
-    }
 
     // It's legal if the peer closes the connection after the first 401/7.
     // Making the connection sticky will prevent its restart giving the user
