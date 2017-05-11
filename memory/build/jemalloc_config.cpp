@@ -11,12 +11,8 @@
 #include <mozilla/Assertions.h>
 #include "mozilla/Types.h"
 
-#if defined(MOZ_SYSTEM_JEMALLOC)
-#include MALLOC_H
-#else
 #define DLLEXPORT
 #include "jemalloc/jemalloc.h"
-#endif
 
 #ifdef XP_WIN
 #include <windows.h>

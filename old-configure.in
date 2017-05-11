@@ -4066,8 +4066,6 @@ Android|WINNT|Darwin)
 esac
 
 if test -n "$MOZ_REPLACE_MALLOC"; then
-    MOZ_SYSTEM_JEMALLOC=
-
     dnl Replace-malloc Mac linkage quirks
     if test -n "$MACOSX_DEPLOYMENT_TARGET"; then
         AC_CACHE_CHECK([how to do weak dynamic linking],
@@ -4134,15 +4132,6 @@ if test -z "$MOZ_MEMORY"; then
       ;;
   esac
 else
-  if test -n "$MOZ_JEMALLOC4" -a -z "$MOZ_REPLACE_MALLOC"; then
-    MOZ_SYSTEM_JEMALLOC=1
-    AC_CHECK_FUNCS(mallctl nallocx,,
-      [MOZ_SYSTEM_JEMALLOC=
-       break])
-    if test -n "$MOZ_SYSTEM_JEMALLOC"; then
-      AC_DEFINE(MOZ_SYSTEM_JEMALLOC)
-    fi
-  fi
   if test "x$MOZ_DEBUG" = "x1"; then
     AC_DEFINE(MOZ_MEMORY_DEBUG)
   fi
@@ -4155,7 +4144,6 @@ else
     ;;
   esac
 fi # MOZ_MEMORY
-AC_SUBST(MOZ_SYSTEM_JEMALLOC)
 AC_SUBST(MOZ_GLUE_IN_PROGRAM)
 
 # Allow the application to provide a subconfigure script.
