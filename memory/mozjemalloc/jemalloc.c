@@ -1441,6 +1441,7 @@ static bool	arena_ralloc_large(void *ptr, size_t size, size_t oldsize);
 static void	*arena_ralloc(void *ptr, size_t size, size_t oldsize);
 static bool	arena_new(arena_t *arena);
 static arena_t	*arenas_extend(unsigned ind);
+#define NO_INDEX ((unsigned) -1)
 static void	*huge_malloc(size_t size, bool zero);
 static void	*huge_palloc(size_t size, size_t alignment, bool zero);
 static void	*huge_ralloc(void *ptr, size_t size, size_t oldsize);
@@ -3051,6 +3052,25 @@ chunk_dealloc(void *chunk, size_t size)
 MOZ_JEMALLOC_API void
 jemalloc_thread_local_arena_impl(bool enabled)
 {
+#ifndef NO_TLS
+	arena_t *arena;
+
+	if (enabled) {
+		/* The arena will essentially be leaked if this function is
+		 * called with `false`, but it doesn't matter at the moment.
+		 * because in practice nothing actually calls this function
+		 * with `false`, except maybe at shutdown. */
+		arena = arenas_extend(NO_INDEX);
+	} else {
+		arena = arenas[0];
+	}
+#ifdef MOZ_MEMORY_WINDOWS
+	TlsSetValue(tlsIndex, arena);
+#else
+	arenas_map = arena;
+#endif
+
+#endif
 }
 
 /*
@@ -5009,7 +5029,9 @@ arenas_extend(unsigned ind)
 	ret = (arena_t *)base_alloc(sizeof(arena_t)
 	    + (sizeof(arena_bin_t) * (ntbins + nqbins + nsbins - 1)));
 	if (ret != NULL && arena_new(ret) == false) {
-		arenas[ind] = ret;
+		if (ind != NO_INDEX) {
+			arenas[ind] = ret;
+		}
 		return (ret);
 	}
 	/* Only reached if there is an OOM error. */
