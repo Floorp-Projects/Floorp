@@ -374,7 +374,7 @@ JS_FRIEND_API(JSObject*)
 js::UnwrapOneChecked(JSObject* obj, bool stopAtWindowProxy)
 {
     if (!obj->is<WrapperObject>() ||
-        MOZ_UNLIKELY(IsWindowProxy(obj) && stopAtWindowProxy))
+        MOZ_UNLIKELY(stopAtWindowProxy && IsWindowProxy(obj)))
     {
         return obj;
     }
