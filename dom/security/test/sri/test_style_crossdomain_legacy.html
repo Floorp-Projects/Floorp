@@ -8,13 +8,13 @@
   <script>
     SpecialPowers.setBoolPref("security.sri.enable", true);
     // TODO: Bug 1324406: Treat 'data:' documents as unique, opaque origins
-    SpecialPowers.setBoolPref("security.data_uri.unique_opaque_origin", true);
+    SpecialPowers.setBoolPref("security.data_uri.unique_opaque_origin", false);
   </script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1196740">Mozilla Bug 1196740</a>
 <div>
-  <iframe src="iframe_style_crossdomain.html" height="100%" width="90%" frameborder="0"></iframe>
+  <iframe src="iframe_style_crossdomain_legacy.html" height="100%" width="90%" frameborder="0"></iframe>
 </div>
 </body>
 </html>
