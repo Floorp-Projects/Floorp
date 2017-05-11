@@ -316,6 +316,10 @@
       "sources": {
         "$ref": "SourcesPanel",
         "description": "Sources panel."
+      },
+      "themeName": {
+        "type": "string",
+        "description": "The name of the current devtools theme."
       }
     },
     "functions": [
@@ -399,6 +403,20 @@
             "type": "function",
             "optional": true,
             "description": "A function that is called when the resource has been successfully loaded."
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "name": "onThemeChanged",
+        "type": "function",
+        "description": "Fired when the devtools theme changes.",
+        "parameters": [
+          {
+            "name": "themeName",
+            "type": "string",
+            "description": "The name of the current devtools theme."
           }
         ]
       }
