@@ -79,6 +79,8 @@ SERVO_BINDING_FUNC(Servo_StyleSet_GetKeyframesForName, bool,
 SERVO_BINDING_FUNC(Servo_StyleSet_GetFontFaceRules, void,
                    RawServoStyleSetBorrowed set,
                    RawGeckoFontFaceRuleListBorrowedMut list)
+SERVO_BINDING_FUNC(Servo_StyleSet_GetCounterStyleRule, nsCSSCounterStyleRule*,
+                   RawServoStyleSetBorrowed set, nsIAtom* name)
 SERVO_BINDING_FUNC(Servo_StyleSet_ResolveForDeclarations,
                    ServoComputedValuesStrong,
                    RawServoStyleSetBorrowed set,

@@ -2008,6 +2008,7 @@ CounterStyleManager::Disconnect()
 CounterStyle*
 CounterStyleManager::BuildCounterStyle(nsIAtom* aName)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   CounterStyle* data = mStyles.Get(aName);
   if (data) {
     return data;
@@ -2015,16 +2016,8 @@ CounterStyleManager::BuildCounterStyle(nsIAtom* aName)
 
   // It is intentional that the predefined names are case-insensitive
   // but the user-defined names case-sensitive.
-  // XXXheycam ServoStyleSets do not support custom counter styles yet.  Bug
-  // 1328319.
   StyleSetHandle styleSet = mPresContext->StyleSet();
-  // When this assertion is removed, please remove the hack to avoid it in
-  // nsStyleList::nsStyleList.
-  NS_ASSERTION(styleSet->IsGecko(),
-               "stylo: ServoStyleSets do not support custom counter "
-               "styles yet");
-  nsCSSCounterStyleRule* rule = styleSet->IsGecko() ?
-    styleSet->AsGecko()->CounterStyleRuleForName(aName) : nullptr;
+  nsCSSCounterStyleRule* rule = styleSet->CounterStyleRuleForName(aName);
   if (rule) {
     MOZ_ASSERT(rule->Name() == aName);
     data = new (mPresContext) CustomCounterStyle(aName, this, rule);
@@ -2065,16 +2058,8 @@ CounterStyleManager::NotifyRuleChanged()
     CounterStyle* style = iter.Data();
     bool toBeUpdated = false;
     bool toBeRemoved = false;
-    // XXXheycam ServoStyleSets do not support custom counter styles yet.  Bug
-    // 1328319.
     StyleSetHandle styleSet = mPresContext->StyleSet();
-    // When this assertion is removed, please remove the hack to avoid it in
-    // nsStyleList::nsStyleList.
-    NS_ASSERTION(styleSet->IsGecko(),
-                 "stylo: ServoStyleSets do not support custom counter "
-                 "styles yet");
-    nsCSSCounterStyleRule* newRule = styleSet->IsGecko() ?
-        styleSet->AsGecko()->CounterStyleRuleForName(iter.Key()) : nullptr;
+    nsCSSCounterStyleRule* newRule = styleSet->CounterStyleRuleForName(iter.Key());
     if (!newRule) {
       if (style->IsCustomStyle()) {
         toBeRemoved = true;
