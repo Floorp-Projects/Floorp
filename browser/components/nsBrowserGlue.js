@@ -598,6 +598,21 @@ BrowserGlue.prototype = {
     // handle any UI migration
     this._migrateUI();
 
+    // This is support code for the location bar search suggestions; passing
+    // from opt-in to opt-out should respect the user's choice, thus we need
+    // to cache that choice in a pref for future use.
+    // Note: this is not in migrateUI because we need to uplift it. This
+    // code is also short-lived, since we can remove it as soon as opt-out
+    // search suggestions shipped in release (Bug 1344928).
+    try {
+      let urlbarPrefs = Services.prefs.getBranch("browser.urlbar.");
+      if (!urlbarPrefs.prefHasUserValue("searchSuggestionsChoice") &&
+          urlbarPrefs.getBoolPref("userMadeSearchSuggestionsChoice")) {
+        urlbarPrefs.setBoolPref("searchSuggestionsChoice",
+                                urlbarPrefs.getBoolPref("suggest.searches"));
+      }
+    } catch (ex) { /* missing any of the prefs is not critical */ }
+
     listeners.init();
 
     PageThumbs.init();
