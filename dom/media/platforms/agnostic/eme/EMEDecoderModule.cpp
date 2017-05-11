@@ -59,7 +59,7 @@ public:
     RefPtr<EMEDecryptor> self = this;
     mSamplesWaitingForKey->WaitIfKeyNotUsable(aSample)
       ->Then(mTaskQueue, __func__,
-             [self, this](MediaRawData* aSample) {
+             [self, this](RefPtr<MediaRawData> aSample) {
                mKeyRequest.Complete();
                ThrottleDecode(aSample);
              },
@@ -76,7 +76,7 @@ public:
     RefPtr<EMEDecryptor> self = this;
     mThroughputLimiter.Throttle(aSample)
       ->Then(mTaskQueue, __func__,
-             [self, this] (MediaRawData* aSample) {
+             [self, this] (RefPtr<MediaRawData> aSample) {
                mThrottleRequest.Complete();
                AttemptDecode(aSample);
              },
@@ -270,7 +270,7 @@ EMEMediaDataDecoderProxy::Decode(MediaRawData* aSample)
   RefPtr<EMEMediaDataDecoderProxy> self = this;
   mSamplesWaitingForKey->WaitIfKeyNotUsable(aSample)
     ->Then(mTaskQueue, __func__,
-           [self, this](MediaRawData* aSample) {
+           [self, this](RefPtr<MediaRawData> aSample) {
              mKeyRequest.Complete();
 
              nsAutoPtr<MediaRawDataWriter> writer(aSample->CreateWriter());

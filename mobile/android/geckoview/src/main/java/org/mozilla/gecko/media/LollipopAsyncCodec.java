@@ -4,7 +4,7 @@
 
 package org.mozilla.gecko.media;
 
-import static android.media.MediaCodecInfo.CodecCapabilities.FEATURE_AdaptivePlayback;
+import org.mozilla.gecko.util.HardwareCodecCapabilityUtils;
 
 import android.media.MediaCodec;
 import android.media.MediaCrypto;
@@ -140,7 +140,7 @@ import java.nio.ByteBuffer;
 
     @Override
     public boolean isAdaptivePlaybackSupported(final String mimeType) {
-        return mCodec.getCodecInfo().getCapabilitiesForType(mimeType).isFeatureSupported(FEATURE_AdaptivePlayback);
+        return HardwareCodecCapabilityUtils.checkSupportsAdaptivePlayback(mCodec, mimeType);
     }
 
     @Override

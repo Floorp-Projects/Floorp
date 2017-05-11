@@ -862,8 +862,8 @@ TextEditor::GetDocumentIsEmpty(bool* aDocumentIsEmpty)
 
   // Protect the edit rules object from dying
   nsCOMPtr<nsIEditRules> rules(mRules);
-
-  return rules->DocumentIsEmpty(aDocumentIsEmpty);
+  *aDocumentIsEmpty = rules->DocumentIsEmpty();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1549,8 +1549,7 @@ TextEditor::SelectEntireDocument(Selection* aSelection)
   nsCOMPtr<nsIEditRules> rules(mRules);
 
   // is doc empty?
-  bool bDocIsEmpty;
-  if (NS_SUCCEEDED(rules->DocumentIsEmpty(&bDocIsEmpty)) && bDocIsEmpty) {
+  if (rules->DocumentIsEmpty()) {
     // get root node
     nsCOMPtr<nsIDOMElement> rootElement = do_QueryInterface(GetRoot());
     NS_ENSURE_TRUE(rootElement, NS_ERROR_FAILURE);
