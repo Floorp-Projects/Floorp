@@ -84,7 +84,10 @@ function waitForDelayedStartup(win) {
  */
 function loadTabs(gBrowser, urls) {
   return new Promise((resolve) => {
-    gBrowser.loadTabs(urls, true);
+    gBrowser.loadTabs(urls, {
+      inBackground: true,
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
 
     let waitingToLoad = new Set(urls);
 
