@@ -73,6 +73,9 @@ protected:
   nsLoadFlags
   GetLoadFlags() const;
 
+  void
+  SetLoadFlags(nsLoadFlags aLoadFlags);
+
 private:
   class CompareCallback;
   class ContinueUpdateRunnable;
@@ -84,8 +87,7 @@ private:
   ComparisonResult(nsresult aStatus,
                    bool aInCacheAndEqual,
                    const nsAString& aNewCacheName,
-                   const nsACString& aMaxScope,
-                   nsLoadFlags aLoadFlags);
+                   const nsACString& aMaxScope);
 
   // Utility method called after evaluating the worker script.
   void
