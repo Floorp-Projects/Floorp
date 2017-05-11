@@ -19,6 +19,7 @@
 #include "nsThreadUtils.h"
 #include "nsURLHelper.h"
 #include "mozilla/Logging.h"
+#include "nsIOService.h"
 
 using mozilla::AutoSafeJSContext;
 using mozilla::dom::Sequence;
@@ -166,6 +167,28 @@ public:
 };
 
 NS_IMPL_ISUPPORTS(ConnectionData, nsITransportEventSink, nsITimerCallback)
+
+
+class RcwnData
+    : public nsISupports
+{
+    virtual ~RcwnData()
+    {
+    }
+
+public:
+    NS_DECL_THREADSAFE_ISUPPORTS
+
+    RcwnData()
+    {
+        mThread = nullptr;
+    }
+
+    nsMainThreadPtrHandle<NetDashboardCallback> mCallback;
+    nsIThread *mThread;
+};
+
+NS_IMPL_ISUPPORTS0(RcwnData)
 
 NS_IMETHODIMP
 ConnectionData::OnTransportStatus(nsITransport *aTransport, nsresult aStatus,
@@ -753,6 +776,39 @@ Dashboard::RequestDNSLookup(const nsACString &aHost,
                                          NS_GetCurrentThread(), attrs,
                                          getter_AddRefs(helper->mCancel));
     return rv;
+}
+
+NS_IMETHODIMP
+Dashboard::RequestRcwnStats(NetDashboardCallback *aCallback)
+{
+    RefPtr<RcwnData> rcwnData = new RcwnData();
+    rcwnData->mThread = NS_GetCurrentThread();
+    rcwnData->mCallback =
+        new nsMainThreadPtrHolder<NetDashboardCallback>(aCallback, true);
+
+    return rcwnData->mThread->Dispatch(
+        NewRunnableMethod<RefPtr<RcwnData>>(this, &Dashboard::GetRcwnData, rcwnData),
+        NS_DISPATCH_NORMAL);
+}
+
+nsresult
+Dashboard::GetRcwnData(RcwnData *aData)
+{
+    AutoSafeJSContext cx;
+    mozilla::dom::RcwnStatus dict;
+
+    dict.mTotalNetworkRequests = gIOService->GetTotalRequestNumber();
+    dict.mRcwnCacheWonCount = gIOService->GetCacheWonRequestNumber();
+    dict.mRcwnNetWonCount = gIOService->GetNetWonRequestNumber();
+
+    JS::RootedValue val(cx);
+    if (!ToJSValue(cx, dict, &val)) {
+        return NS_ERROR_FAILURE;
+    }
+
+    aData->mCallback->OnDashboardDataAvailable(val);
+
+    return NS_OK;
 }
 
 void

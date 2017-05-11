@@ -93,7 +93,7 @@ this.Context.fromString = function (s) {
  * object.
  *
  * @param {string} appName
- *     Description of the product, for example "B2G" or "Firefox".
+ *     Description of the product, for example "Firefox".
  * @param {MarionetteServer} server
  *     The instance of Marionette server.
  */
@@ -110,7 +110,6 @@ this.GeckoDriver = function (appName, server) {
   this.mainFrame = null;
   // chrome iframe that currently has focus
   this.curFrame = null;
-  this.mainContentFrameId = null;
   this.mozBrowserClose = null;
   this.currentFrameElement = null;
   // frame ID of the current remote frame, used for mozbrowserclose events
@@ -505,13 +504,11 @@ GeckoDriver.prototype.registerBrowser = function (id, be) {
     //
     // TODO: Should have a better way of determining that this message
     // is from a remote frame.
-    this.curBrowser.frameManager.currentRemoteFrame.targetFrameId =
-        this.generateFrameId(id);
+    this.curBrowser.frameManager.currentRemoteFrame.targetFrameId = id;
   }
 
   let reg = {};
-  // this will be sent to tell the content process if it is the main content
-  let mainContent = this.curBrowser.mainContentId === null;
+
   // We want to ignore frames that are XUL browsers that aren't in the "main"
   // tabbrowser, but accept things on Fennec (which doesn't have a
   // xul:tabbrowser), and accept HTML iframes (because tests depend on it),
@@ -520,15 +517,8 @@ GeckoDriver.prototype.registerBrowser = function (id, be) {
   if (this.appName != "Firefox" || be.namespaceURI != XUL_NS ||
       be.nodeName != "browser" || be.getTabBrowser()) {
     // curBrowser holds all the registered frames in knownFrames
-    let uid = this.generateFrameId(id);
-    reg.id = uid;
-    reg.remotenessChange = this.curBrowser.register(uid, be);
-  }
-
-  // set to true if we updated mainContentId
-  mainContent = mainContent && this.curBrowser.mainContentId !== null;
-  if (mainContent) {
-    this.mainContentFrameId = this.curBrowser.curFrameId;
+    reg.id = id;
+    reg.remotenessChange = this.curBrowser.register(id, be);
   }
 
   this.wins.set(reg.id, listenerWindow);
@@ -542,7 +532,7 @@ GeckoDriver.prototype.registerBrowser = function (id, be) {
     }
   }
 
-  return [reg, mainContent, this.capabilities.toJSON()];
+  return [reg, this.capabilities.toJSON()];
 };
 
 GeckoDriver.prototype.registerPromise = function () {
@@ -1233,7 +1223,6 @@ GeckoDriver.prototype.getIdForBrowser = function (browser) {
 
   let winId = browser.outerWindowID;
   if (winId) {
-    winId = winId.toString();
     this._browserIds.set(permKey, winId);
     return winId;
   }
@@ -1256,13 +1245,13 @@ GeckoDriver.prototype.getWindowHandle = function (cmd, resp) {
 
   // curFrameId always holds the current tab.
   if (this.curBrowser.curFrameId) {
-    resp.body.value = this.curBrowser.curFrameId;
+    resp.body.value = this.curBrowser.curFrameId.toString();
     return;
   }
 
   for (let i in this.browsers) {
     if (this.curBrowser == this.browsers[i]) {
-      resp.body.value = i;
+      resp.body.value = i.toString();
       return;
     }
   }
@@ -1439,14 +1428,20 @@ GeckoDriver.prototype.setWindowRect = function* (cmd, resp) {
  *      the window. Defaults to true.
  */
 GeckoDriver.prototype.switchToWindow = function* (cmd, resp) {
-  let switchTo = cmd.parameters.name;
   let focus = (cmd.parameters.focus !== undefined) ? cmd.parameters.focus : true;
-  let found;
+
+  // Window IDs are internally handled as numbers, but here it could also be the
+  // name of the window.
+  let switchTo = parseInt(cmd.parameters.name);
+  if (isNaN(switchTo)) {
+    switchTo = cmd.parameters.name;
+  }
 
   let byNameOrId = function (name, windowId) {
     return switchTo === name || switchTo === windowId;
   };
 
+  let found;
   let winEn = Services.wm.getEnumerator(null);
   while (winEn.hasMoreElements()) {
     let win = winEn.getNext();
@@ -2608,7 +2603,7 @@ GeckoDriver.prototype.close = function (cmd, resp) {
     this.mm.removeDelayedFrameScript(FRAME_SCRIPT);
   }
 
-  return this.curBrowser.closeTab().then(() => this.windowHandles);
+  return this.curBrowser.closeTab().then(() => this.windowHandles.map(String));
 };
 
 /**
@@ -2647,7 +2642,7 @@ GeckoDriver.prototype.closeChromeWindow = function (cmd, resp) {
     this.mm.removeDelayedFrameScript(FRAME_SCRIPT);
   }
 
-  return this.curBrowser.closeWindow().then(() => this.chromeWindowHandles);
+  return this.curBrowser.closeWindow().then(() => this.chromeWindowHandles.map(String));
 };
 
 /** Delete Marionette session. */
@@ -3156,15 +3151,6 @@ GeckoDriver.prototype.uninstallAddon = function (cmd, resp) {
   return addon.uninstall(id);
 };
 
-/**
- * Helper function to convert an outerWindowID into a UID that Marionette
- * tracks.
- */
-GeckoDriver.prototype.generateFrameId = function (id) {
-  let uid = id + (this.appName == "B2G" ? "-b2g" : "");
-  return uid;
-};
-
 /** Receives all messages from content messageManager. */
 GeckoDriver.prototype.receiveMessage = function (message) {
   switch (message.name) {
@@ -3433,9 +3419,7 @@ function copy (obj) {
  *     Returns the unique window ID.
  */
 function getOuterWindowId(win) {
-  let id = win.QueryInterface(Ci.nsIInterfaceRequestor)
+  return win.QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIDOMWindowUtils)
       .outerWindowID;
-
-  return id.toString();
 }

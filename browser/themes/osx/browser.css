@@ -720,7 +720,7 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
 }
 
 .urlbar-input-box {
-  margin-inline-start: 0;
+  margin: 0;
   padding: 3px 0 2px;
 }
 

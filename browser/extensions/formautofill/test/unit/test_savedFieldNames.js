@@ -7,21 +7,21 @@
 Cu.import("resource://formautofill/FormAutofillParent.jsm");
 Cu.import("resource://formautofill/ProfileStorage.jsm");
 
-add_task(function* test_profileSavedFieldNames_init() {
+add_task(async function test_profileSavedFieldNames_init() {
   let formAutofillParent = new FormAutofillParent();
   sinon.stub(formAutofillParent, "_updateSavedFieldNames");
 
-  formAutofillParent.init();
+  await formAutofillParent.init();
   do_check_eq(formAutofillParent._updateSavedFieldNames.called, true);
 
   formAutofillParent._uninit();
 });
 
-add_task(function* test_profileSavedFieldNames_observe() {
+add_task(async function test_profileSavedFieldNames_observe() {
   let formAutofillParent = new FormAutofillParent();
   sinon.stub(formAutofillParent, "_updateSavedFieldNames");
 
-  formAutofillParent.init();
+  await formAutofillParent.init();
 
   // profile added => Need to trigger updateValidFields
   formAutofillParent.observe(null, "formautofill-storage-changed", "add");
@@ -38,15 +38,15 @@ add_task(function* test_profileSavedFieldNames_observe() {
   do_check_eq(formAutofillParent._updateSavedFieldNames.called, false);
 });
 
-add_task(function* test_profileSavedFieldNames_update() {
+add_task(async function test_profileSavedFieldNames_update() {
   let formAutofillParent = new FormAutofillParent();
-  formAutofillParent.init();
+  await formAutofillParent.init();
   do_register_cleanup(function cleanup() {
     Services.prefs.clearUserPref("browser.formautofill.enabled");
   });
 
-  sinon.stub(formAutofillParent._profileStore, "getAll");
-  formAutofillParent._profileStore.getAll.returns([]);
+  sinon.stub(profileStorage, "getAll");
+  profileStorage.getAll.returns([]);
 
   // The set is empty if there's no profile in the store.
   formAutofillParent._updateSavedFieldNames();
@@ -74,7 +74,7 @@ add_task(function* test_profileSavedFieldNames_update() {
     timeLastModified: 0,
     timesUsed: 0,
   }];
-  formAutofillParent._profileStore.getAll.returns(fakeStorage);
+  profileStorage.getAll.returns(fakeStorage);
   formAutofillParent._updateSavedFieldNames();
 
   let autofillSavedFieldNames = Services.ppmm.initialProcessData.autofillSavedFieldNames;
