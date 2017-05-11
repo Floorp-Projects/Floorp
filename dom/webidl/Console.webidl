@@ -99,7 +99,8 @@ dictionary ConsoleTimerEnd {
 };
 
 dictionary ConsoleTimerError {
-  DOMString error = "maxTimersExceeded";
+  DOMString error = "";
+  DOMString name = "";
 };
 
 dictionary ConsoleCounter {

@@ -29,6 +29,7 @@ class ConsoleCallData;
 class ConsoleRunnable;
 class ConsoleCallDataRunnable;
 class ConsoleProfileRunnable;
+struct ConsoleTimerError;
 struct ConsoleStackEntry;
 
 class Console final : public nsIObserver
@@ -259,9 +260,16 @@ private:
   bool
   UnstoreGroupName(nsAString& aName);
 
+  enum StartTimerStatus {
+    eTimerUnknown,
+    eTimerStarted,
+    eTimerAlreadyExists,
+    eTimerJSException,
+    eTimerMaxReached,
+  };
+
   // StartTimer is called on the owning thread and populates aTimerLabel and
-  // aTimerValue. It returns false if a JS exception is thrown or if
-  // the max number of timers is reached.
+  // aTimerValue.
   // * aCx - the JSContext rooting aName.
   // * aName - this is (should be) the name of the timer as JS::Value.
   // * aTimestamp - the monotonicTimer for this context taken from
@@ -270,7 +278,7 @@ private:
   //                 string.
   // * aTimerValue - the StartTimer value stored into (or taken from)
   //                 mTimerRegistry.
-  bool
+  StartTimerStatus
   StartTimer(JSContext* aCx, const JS::Value& aName,
              DOMHighResTimeStamp aTimestamp,
              nsAString& aTimerLabel,
@@ -285,7 +293,11 @@ private:
   // * aTimerStatus - the return value of StartTimer.
   JS::Value
   CreateStartTimerValue(JSContext* aCx, const nsAString& aTimerLabel,
-                        bool aTimerStatus) const;
+                        StartTimerStatus aTimerStatus) const;
+
+  void
+  StartTimerStatusToError(StartTimerStatus aStatus,
+                          ConsoleTimerError& aError) const;
 
   // StopTimer follows the same pattern as StartTimer: it runs on the
   // owning thread and populates aTimerLabel and aTimerDuration, used by
