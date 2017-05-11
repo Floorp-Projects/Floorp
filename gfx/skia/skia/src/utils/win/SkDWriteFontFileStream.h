@@ -73,7 +73,7 @@ private:
     virtual ~SkDWriteFontFileStreamWrapper() { }
 
     ULONG fRefCount;
-    std::unique_ptr<SkStreamAsset> fStream;
+    SkAutoTDelete<SkStreamAsset> fStream;
     SkMutex fStreamMutex;
 };
 #endif

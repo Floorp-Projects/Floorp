@@ -8,7 +8,6 @@
 #ifndef SkMatrixUtils_DEFINED
 #define SkMatrixUtils_DEFINED
 
-#include "SkPoint.h"
 #include "SkSize.h"
 
 class SkMatrix;

@@ -4,7 +4,7 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-
+ 
 #ifndef SKSL_ASTSUFFIX
 #define SKSL_ASTSUFFIX
 
@@ -30,15 +30,15 @@ struct ASTSuffix : public ASTPositionNode {
     : INHERITED(position)
     , fKind(kind) {}
 
-    String description() const override {
+    std::string description() const override {
         switch (fKind) {
             case kPostIncrement_Kind:
-                return String("++");
+                return "++";
             case kPostDecrement_Kind:
-                return String("--");
+                return "--";
             default:
                 ABORT("unsupported suffix operator");
-        }
+        }        
     }
 
     Kind fKind;

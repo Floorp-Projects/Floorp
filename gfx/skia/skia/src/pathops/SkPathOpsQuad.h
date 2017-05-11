@@ -40,21 +40,17 @@ struct SkDQuad {
         sk_bzero(fPts, sizeof(fPts));
     }
 
-    void debugSet(const SkDPoint* pts);
-
     SkDQuad flip() const {
-        SkDQuad result = {{fPts[2], fPts[1], fPts[0]}  SkDEBUGPARAMS(fDebugGlobalState) };
+        SkDQuad result = {{fPts[2], fPts[1], fPts[0]}};
         return result;
     }
 
     static bool IsConic() { return false; }
 
-    const SkDQuad& set(const SkPoint pts[kPointCount]
-            SkDEBUGPARAMS(SkOpGlobalState* state = nullptr)) {
+    const SkDQuad& set(const SkPoint pts[kPointCount]) {
         fPts[0] = pts[0];
         fPts[1] = pts[1];
         fPts[2] = pts[2];
-        SkDEBUGCODE(fDebugGlobalState = state);
         return *this;
     }
 
@@ -66,10 +62,6 @@ struct SkDQuad {
     SkDQuadPair chopAt(double t) const;
     SkDVector dxdyAtT(double t) const;
     static int FindExtrema(const double src[], double tValue[1]);
-
-#ifdef SK_DEBUG
-    SkOpGlobalState* globalState() const { return fDebugGlobalState; }
-#endif
 
     /**
      *  Return the number of valid roots (0 < root < 1) for this cubic intersecting the
@@ -114,7 +106,8 @@ struct SkDQuad {
     void dumpID(int id) const;
     void dumpInner() const;
 
-    SkDEBUGCODE(SkOpGlobalState* fDebugGlobalState);
+private:
+//  static double Tangent(const double* quadratic, double t);  // uncalled
 };
 
 #endif

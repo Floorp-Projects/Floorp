@@ -28,15 +28,12 @@ typedef SkDiscardableMemory* (*SkDiscardableFactoryProc)(size_t bytes);
  */
 class SkMipMap : public SkCachedData {
 public:
-    static SkMipMap* Build(const SkPixmap& src, SkDestinationSurfaceColorMode,
-                           SkDiscardableFactoryProc);
-    static SkMipMap* Build(const SkBitmap& src, SkDestinationSurfaceColorMode,
-                           SkDiscardableFactoryProc);
+    static SkMipMap* Build(const SkPixmap& src, SkSourceGammaTreatment, SkDiscardableFactoryProc);
+    static SkMipMap* Build(const SkBitmap& src, SkSourceGammaTreatment, SkDiscardableFactoryProc);
 
-    static SkDestinationSurfaceColorMode DeduceColorMode(const SkShader::ContextRec& rec) {
-        return (SkShader::ContextRec::kPMColor_DstType == rec.fPreferredDstType)
-            ? SkDestinationSurfaceColorMode::kLegacy
-            : SkDestinationSurfaceColorMode::kGammaAndColorSpaceAware;
+    static SkSourceGammaTreatment DeduceTreatment(const SkShader::ContextRec& rec) {
+        return (SkShader::ContextRec::kPMColor_DstType == rec.fPreferredDstType) ?
+                SkSourceGammaTreatment::kIgnore : SkSourceGammaTreatment::kRespect;
     }
 
     // Determines how many levels a SkMipMap will have without creating that mipmap.

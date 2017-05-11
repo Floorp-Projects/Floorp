@@ -48,16 +48,18 @@ public:
 
     /**
      * Creates an effect that clips against the path. If the path is not a convex polygon, is
-     * inverse filled, or has too many edges, this will return nullptr.
+     * inverse filled, or has too many edges, this will return nullptr. If offset is non-nullptr, then
+     * the path is translated by the vector.
      */
-    static sk_sp<GrFragmentProcessor> Make(GrPrimitiveEdgeType, const SkPath&);
+    static sk_sp<GrFragmentProcessor> Make(GrPrimitiveEdgeType, const SkPath&,
+                                           const SkVector* offset = nullptr);
 
     /**
      * Creates an effect that fills inside the rect with AA edges..
      */
     static sk_sp<GrFragmentProcessor> Make(GrPrimitiveEdgeType, const SkRect&);
 
-    ~GrConvexPolyEffect() override;
+    virtual ~GrConvexPolyEffect();
 
     const char* name() const override { return "ConvexPoly"; }
 
@@ -72,9 +74,11 @@ private:
 
     GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
 
-    void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+    void onGetGLSLProcessorKey(const GrGLSLCaps&, GrProcessorKeyBuilder*) const override;
 
     bool onIsEqual(const GrFragmentProcessor& other) const override;
+
+    void onComputeInvariantOutput(GrInvariantOutput* inout) const override;
 
     GrPrimitiveEdgeType    fEdgeType;
     int                    fEdgeCount;

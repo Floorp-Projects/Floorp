@@ -158,7 +158,7 @@ public:
     const SkOpSegment* debugSegment(int id) const;
 
 #if DEBUG_ACTIVE_SPANS
-    void debugShowActiveSpans(SkString* str) const;
+    void debugShowActiveSpans() const;
 #endif
 #if DEBUG_MARK_DONE
     void debugShowNewWinding(const char* fun, const SkOpSpan* span, int winding);
@@ -169,8 +169,8 @@ public:
     void debugValidate() const;
 
 #if DEBUG_COINCIDENCE_ORDER
-    void debugResetCoinT() const;
-    void debugSetCoinT(int, SkScalar ) const;
+    void debugResetCoinT() const; 
+    void debugSetCoinT(int, SkScalar ) const; 
 #endif
 
 #if DEBUG_COIN
@@ -291,7 +291,7 @@ public:
     bool match(const SkOpPtT* span, const SkOpSegment* parent, double t, const SkPoint& pt) const;
     bool missingCoincidence();
     bool moveMultiples();
-    bool moveNearby();
+    void moveNearby();
 
     SkOpSegment* next() const {
         return fNext;
@@ -333,7 +333,7 @@ public:
 
     bool ptsDisjoint(double t1, const SkPoint& pt1, double t2, const SkPoint& pt2) const;
 
-    void rayCheck(const SkOpRayHit& base, SkOpRayDir dir, SkOpRayHit** hits, SkArenaAlloc*);
+    void rayCheck(const SkOpRayHit& base, SkOpRayDir dir, SkOpRayHit** hits, SkChunkAlloc*);
     void release(const SkOpSpan* );
 
 #if DEBUG_COIN
@@ -371,8 +371,8 @@ public:
                        int* maxWinding, int* sumWinding);
     void setUpWindings(SkOpSpanBase* start, SkOpSpanBase* end, int* sumMiWinding, int* sumSuWinding,
                        int* maxWinding, int* sumWinding, int* oppMaxWinding, int* oppSumWinding);
-    bool sortAngles();
-    bool spansNearby(const SkOpSpanBase* ref, const SkOpSpanBase* check, bool* found) const;
+    void sortAngles();
+    bool spansNearby(const SkOpSpanBase* ref, const SkOpSpanBase* check) const;
 
     static int SpanSign(const SkOpSpanBase* start, const SkOpSpanBase* end) {
         int result = start->t() < end->t() ? -start->upCast()->windValue()
@@ -398,7 +398,7 @@ public:
     bool testForCoincidence(const SkOpPtT* priorPtT, const SkOpPtT* ptT, const SkOpSpanBase* prior,
             const SkOpSpanBase* spanBase, const SkOpSegment* opp) const;
 
-    SkOpSpan* undoneSpan();
+    void undoneSpan(SkOpSpanBase** start, SkOpSpanBase** end);
     int updateOppWinding(const SkOpSpanBase* start, const SkOpSpanBase* end) const;
     int updateOppWinding(const SkOpAngle* angle) const;
     int updateOppWindingReverse(const SkOpAngle* angle) const;

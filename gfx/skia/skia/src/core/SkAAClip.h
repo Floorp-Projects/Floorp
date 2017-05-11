@@ -8,7 +8,6 @@
 #ifndef SkAAClip_DEFINED
 #define SkAAClip_DEFINED
 
-#include "SkAutoMalloc.h"
 #include "SkBlitter.h"
 #include "SkRegion.h"
 
@@ -100,7 +99,7 @@ private:
 class SkAAClipBlitter : public SkBlitter {
 public:
     SkAAClipBlitter() : fScanlineScratch(nullptr) {}
-    ~SkAAClipBlitter() override;
+    virtual ~SkAAClipBlitter();
 
     void init(SkBlitter* blitter, const SkAAClip* aaclip) {
         SkASSERT(aaclip && !aaclip->isEmpty());

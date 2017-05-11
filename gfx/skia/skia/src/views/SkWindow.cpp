@@ -342,9 +342,9 @@ sk_sp<SkSurface> SkWindow::makeGpuBackedSurface(const AttachmentInfo& attachment
     // so pretend that it's non-sRGB 8888:
     desc.fConfig =
         grContext->caps()->srgbSupport() &&
-        info().colorSpace() &&
+        SkImageInfoIsGammaCorrect(info()) &&
         (attachmentInfo.fColorBits != 30)
-        ? kSRGBA_8888_GrPixelConfig : kRGBA_8888_GrPixelConfig;
+        ? kSkiaGamma8888_GrPixelConfig : kSkia8888_GrPixelConfig;
     desc.fOrigin = kBottomLeft_GrSurfaceOrigin;
     desc.fSampleCnt = attachmentInfo.fSampleCount;
     desc.fStencilBits = attachmentInfo.fStencilBits;
@@ -353,8 +353,8 @@ sk_sp<SkSurface> SkWindow::makeGpuBackedSurface(const AttachmentInfo& attachment
     desc.fRenderTargetHandle = buffer;
 
     sk_sp<SkColorSpace> colorSpace =
-        grContext->caps()->srgbSupport() && info().colorSpace()
-        ? SkColorSpace::MakeSRGB() : nullptr;
+        grContext->caps()->srgbSupport() && SkImageInfoIsGammaCorrect(info())
+        ? SkColorSpace::NewNamed(SkColorSpace::kSRGB_Named) : nullptr;
     return SkSurface::MakeFromBackendRenderTarget(grContext, desc, colorSpace, &fSurfaceProps);
 }
 

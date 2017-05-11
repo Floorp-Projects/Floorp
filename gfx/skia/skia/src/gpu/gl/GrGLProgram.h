@@ -17,6 +17,7 @@
 #include "glsl/GrGLSLUniformHandler.h"
 
 #include "SkString.h"
+#include "SkXfermode.h"
 
 #include "builders/GrGLProgramBuilder.h"
 
@@ -102,17 +103,16 @@ public:
     void generateMipmaps(const GrPrimitiveProcessor&, const GrPipeline&);
 
 protected:
-    using UniformHandle    = GrGLSLProgramDataManager::UniformHandle ;
-    using UniformInfoArray = GrGLProgramDataManager::UniformInfoArray;
-    using VaryingInfoArray = GrGLProgramDataManager::VaryingInfoArray;
+    typedef GrGLSLProgramDataManager::UniformHandle UniformHandle;
+    typedef GrGLProgramDataManager::UniformInfoArray UniformInfoArray;
+    typedef GrGLProgramDataManager::VaryingInfoArray VaryingInfoArray;
 
     GrGLProgram(GrGLGpu*,
                 const GrProgramDesc&,
                 const BuiltinUniformHandles&,
                 GrGLuint programID,
-                const UniformInfoArray& uniforms,
-                const UniformInfoArray& samplers,
-                const UniformInfoArray& imageStorages,
+                const UniformInfoArray&,
+                const SkTArray<GrGLSampler>&,
                 const VaryingInfoArray&, // used for NVPR only currently
                 GrGLSLPrimitiveProcessor* geometryProcessor,
                 GrGLSLXferProcessor* xferProcessor,
@@ -122,13 +122,13 @@ protected:
     void setFragmentData(const GrPrimitiveProcessor&, const GrPipeline&, int* nextSamplerIdx);
 
     // Helper for setData() that sets the view matrix and loads the render target height uniform
-    void setRenderTargetState(const GrPrimitiveProcessor&, const GrRenderTarget*);
+    void setRenderTargetState(const GrPrimitiveProcessor&, const GrPipeline&);
 
     // Helper for setData() that binds textures and texel buffers to the appropriate texture units
-    void bindTextures(const GrResourceIOProcessor&, bool allowSRGBInputs, int* nextSamplerIdx);
+    void bindTextures(const GrProcessor&, bool allowSRGBInputs, int* nextSamplerIdx);
 
     // Helper for generateMipmaps() that ensures mipmaps are up to date
-    void generateMipmaps(const GrResourceIOProcessor&, bool allowSRGBInputs);
+    void generateMipmaps(const GrProcessor&, bool allowSRGBInputs);
 
     // these reflect the current values of uniforms (GL uniform values travel with program)
     RenderTargetState fRenderTargetState;
@@ -136,8 +136,8 @@ protected:
     GrGLuint fProgramID;
 
     // the installed effects
-    std::unique_ptr<GrGLSLPrimitiveProcessor> fGeometryProcessor;
-    std::unique_ptr<GrGLSLXferProcessor> fXferProcessor;
+    SkAutoTDelete<GrGLSLPrimitiveProcessor> fGeometryProcessor;
+    SkAutoTDelete<GrGLSLXferProcessor> fXferProcessor;
     GrGLSLFragProcs fFragmentProcessors;
 
     GrProgramDesc fDesc;

@@ -4,13 +4,10 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#ifndef SkIcoCodec_DEFINED
-#define SkIcoCodec_DEFINED
 
 #include "SkCodec.h"
 #include "SkImageInfo.h"
 #include "SkStream.h"
-#include "SkTArray.h"
 #include "SkTypes.h"
 
 /*
@@ -42,8 +39,8 @@ protected:
     Result onGetPixels(const SkImageInfo& dstInfo, void* dst, size_t dstRowBytes, const Options&,
             SkPMColor*, int*, int*) override;
 
-    SkEncodedImageFormat onGetEncodedFormat() const override {
-        return SkEncodedImageFormat::kICO;
+    SkEncodedFormat onGetEncodedFormat() const override {
+        return kICO_SkEncodedFormat;
     }
 
     SkScanlineOrder onGetScanlineOrder() const override;
@@ -80,16 +77,16 @@ private:
      * @param embeddedCodecs codecs for the embedded images, takes ownership
      */
     SkIcoCodec(int width, int height, const SkEncodedInfo& info,
-            SkTArray<std::unique_ptr<SkCodec>, true>* embeddedCodecs, sk_sp<SkColorSpace> colorSpace);
+            SkTArray<SkAutoTDelete<SkCodec>, true>* embeddedCodecs);
 
-    std::unique_ptr<SkTArray<std::unique_ptr<SkCodec>, true>> fEmbeddedCodecs;
+    SkAutoTDelete<SkTArray<SkAutoTDelete<SkCodec>, true>> fEmbeddedCodecs; // owned
 
     // Only used by the scanline decoder.  onStartScanlineDecode() will set
     // fCurrScanlineCodec to one of the fEmbeddedCodecs, if it can find a
     // codec of the appropriate size.  We will use fCurrScanlineCodec for
     // subsequent calls to onGetScanlines() or onSkipScanlines().
     // fCurrScanlineCodec is owned by this class, but should not be an
-    // std::unique_ptr.  It will be deleted by the destructor of fEmbeddedCodecs.
+    // SkAutoTDelete.  It will be deleted by the destructor of fEmbeddedCodecs.
     SkCodec* fCurrScanlineCodec;
 
     // Only used by incremental decoder.  onStartIncrementalDecode() will set
@@ -97,9 +94,8 @@ private:
     // codec of the appropriate size.  We will use fCurrIncrementalCodec for
     // subsequent calls to incrementalDecode().
     // fCurrIncrementalCodec is owned by this class, but should not be an
-    // std::unique_ptr.  It will be deleted by the destructor of fEmbeddedCodecs.
+    // SkAutoTDelete.  It will be deleted by the destructor of fEmbeddedCodecs.
     SkCodec* fCurrIncrementalCodec;
 
     typedef SkCodec INHERITED;
 };
-#endif  // SkIcoCodec_DEFINED
