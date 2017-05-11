@@ -21,6 +21,7 @@
 <script class="testbody" type="application/javascript">
 <![CDATA[
 SimpleTest.waitForExplicitFinish();
+SimpleTest.expectChildProcessCrash();
 setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
 Components.utils.import("resource://gre/modules/Services.jsm");
