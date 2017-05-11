@@ -2149,8 +2149,8 @@
           <![CDATA[
             "use strict";
 
-            // If browser is already inserted don't do anything.
-            if (aTab.linkedPanel) {
+            // If browser is already inserted or window is closed don't do anything.
+            if (aTab.linkedPanel || window.closed) {
               return;
             }
 
