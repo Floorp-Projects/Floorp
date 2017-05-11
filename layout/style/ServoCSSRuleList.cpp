@@ -14,6 +14,7 @@
 #include "mozilla/ServoNamespaceRule.h"
 #include "mozilla/ServoPageRule.h"
 #include "mozilla/ServoSupportsRule.h"
+#include "nsCSSFontFaceRule.h"
 
 namespace mozilla {
 
@@ -217,7 +218,7 @@ ServoCSSRuleList::FillStyleRuleHashtable(StyleRuleHashtable& aTable)
       aTable.Put(rawRule, castedRule);
     } else if (type == nsIDOMCSSRule::MEDIA_RULE ||
                type == nsIDOMCSSRule::SUPPORTS_RULE) {
-      GroupRule* castedRule = static_cast<GroupRule*>(GetRule(i));
+      css::GroupRule* castedRule = static_cast<css::GroupRule*>(GetRule(i));
 
       // Call this method recursively on the ServoCSSRuleList in the rule.
       ServoCSSRuleList* castedRuleList = static_cast<ServoCSSRuleList*>(
