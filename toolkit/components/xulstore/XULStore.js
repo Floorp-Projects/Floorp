@@ -85,21 +85,12 @@ XULStore.prototype = {
   },
 
   readFile() {
-    const MODE_RDONLY = 0x01;
-    const FILE_PERMS  = 0o600;
-
-    let stream = Cc["@mozilla.org/network/file-input-stream;1"].
-                 createInstance(Ci.nsIFileInputStream);
-    let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
     try {
-      stream.init(this._storeFile, MODE_RDONLY, FILE_PERMS, 0);
-      this._data = json.decodeFromStream(stream, stream.available());
+      this._data = JSON.parse(Cu.readFile(this._storeFile));
     } catch (e) {
       this.log("Error reading JSON: " + e);
       // This exception could mean that the file didn't exist.
       // We'll just ignore the error and start with a blank slate.
-    } finally {
-      stream.close();
     }
   },
 
