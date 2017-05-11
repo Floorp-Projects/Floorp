@@ -158,6 +158,22 @@ const HEADERS = [
   }
 ];
 
+const HEADER_FILTERS = HEADERS
+  .filter(h => h.canFilter)
+  .map(h => h.filterKey || h.name);
+
+const FILTER_FLAGS = [
+  ...HEADER_FILTERS,
+  "set-cookie-domain",
+  "set-cookie-name",
+  "set-cookie-value",
+  "mime-type",
+  "larger-than",
+  "is",
+  "has-response-header",
+  "regexp",
+];
+
 const REQUESTS_WATERFALL = {
   BACKGROUND_TICKS_MULTIPLE: 5, // ms
   BACKGROUND_TICKS_SCALES: 3,
@@ -180,6 +196,7 @@ const general = {
   EVENTS,
   FILTER_SEARCH_DELAY: 200,
   HEADERS,
+  FILTER_FLAGS,
   SOURCE_EDITOR_SYNTAX_HIGHLIGHT_MAX_SIZE: 51200, // 50 KB in bytes
   REQUESTS_WATERFALL,
 };
