@@ -1799,23 +1799,6 @@ EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
 
       WidgetDragEvent* event = &startEvent;
 
-      // If we didn't get any data in the dataTransfer, yet the targetContent is
-      // a draggable HTML element draggable, we need to fire the drag event
-      // anyway. We'll add a custom dummy data type to the DataTransfer to make
-      // this possible. This data type will be marked as hidden so that content
-      // can't see it. This does not apply to non-HTML elements.
-      uint32_t count = 0;
-      dataTransfer->GetMozItemCount(&count);
-      if (count == 0) {
-        nsCOMPtr<nsIDOMHTMLElement> htmlDragTarget = do_QueryInterface(targetContent);
-        bool draggable = false;
-        if (htmlDragTarget &&
-            NS_SUCCEEDED(htmlDragTarget->GetDraggable(&draggable)) &&
-            draggable) {
-          dataTransfer->AddDummyHiddenData();
-        }
-      }
-
       nsCOMPtr<nsIObserverService> observerService =
         mozilla::services::GetObserverService();
       // Emit observer event to allow addons to modify the DataTransfer object.
