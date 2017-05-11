@@ -434,8 +434,10 @@ function test(window) {
     output += '</table></body></html>';
     dump("total tab switch time:" + time + "\n");
 
-    let resultsTab = win.gBrowser.loadOneTab('data:text/html;charset=utf-8,' +
-                                             encodeURIComponent(output));
+    let resultsTab = win.gBrowser.loadOneTab(
+      'data:text/html;charset=utf-8,' + encodeURIComponent(output), {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
     let pref = Services.prefs.getBoolPref("browser.tabs.warnOnCloseOtherTabs");
     if (pref)
       Services.prefs.setBoolPref("browser.tabs.warnOnCloseOtherTabs", false);

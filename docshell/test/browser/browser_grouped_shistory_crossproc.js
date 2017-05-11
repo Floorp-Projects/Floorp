@@ -30,6 +30,7 @@ add_task(function* () {
       allowThirdPartyFixup: true,
       relatedToCurrent: true,
       isPrerendered: true,
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
     yield BrowserTestUtils.browserLoaded(tab2.linkedBrowser);
     browser1.frameLoader.appendPartialSHistoryAndSwap(tab2.linkedBrowser.frameLoader);
