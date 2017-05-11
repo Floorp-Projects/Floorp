@@ -647,7 +647,6 @@ def invoke_llvm_config(llvm_config, *options):
 def check_minimum_llvm_config_version(llvm_config):
     version = Version(invoke_llvm_config(llvm_config, '--version'))
     min_version = Version('3.9.0')
-    # For various reasons, bindgen doesn't work with LLVM 4.0.x.
     if version < min_version:
         die(dedent('''\
         llvm installation {} is incompatible with Stylo bindgen.
