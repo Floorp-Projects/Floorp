@@ -11,7 +11,7 @@
 == placeholder-1-text.html placeholder-visible-ref.html
 == placeholder-1-password.html placeholder-visible-ref.html
 fails-if(stylo) == placeholder-1-textarea.html placeholder-visible-textarea-ref.html
-fails-if(stylo) == placeholder-2.html placeholder-visible-ref.html
+== placeholder-2.html placeholder-visible-ref.html
 fails-if(stylo) == placeholder-2-textarea.html placeholder-visible-textarea-ref.html
 == placeholder-3.html placeholder-overridden-ref.html
 == placeholder-4.html placeholder-overridden-ref.html
@@ -21,15 +21,15 @@ skip-if(Android&&asyncPan) fails-if(stylo) == placeholder-6-textarea.html placeh
 # needs-focus == placeholder-7.html placeholder-focus-ref.html
 # needs-focus == placeholder-8.html placeholder-focus-ref.html
 # needs-focus == placeholder-9.html placeholder-focus-ref.html
-needs-focus fails-if(stylo) == placeholder-10.html placeholder-visible-ref.html
+needs-focus == placeholder-10.html placeholder-visible-ref.html
 == placeholder-11.html placeholder-visible-ref.html
 == placeholder-12.html placeholder-visible-ref.html
-fails-if(stylo) == placeholder-13.html placeholder-visible-ref.html
-fails-if(stylo) == placeholder-14.html placeholder-visible-ref.html
+== placeholder-13.html placeholder-visible-ref.html
+== placeholder-14.html placeholder-visible-ref.html
 == placeholder-18.html placeholder-overridden-ref.html
 random-if(winWidget) == placeholder-19.xul  placeholder-overridden-ref.xul
 # needs-focus == placeholder-20.html placeholder-focus-ref.html
-needs-focus fails-if(stylo) == placeholder-21.html placeholder-blank-ref.html
-needs-focus fails-if(stylo) == placeholder-22.html placeholder-blank-ref.html
+needs-focus == placeholder-21.html placeholder-blank-ref.html
+needs-focus == placeholder-22.html placeholder-blank-ref.html
 fails-if(stylo) == placeholder-rtl.html placeholder-rtl-ref.html
 pref(dom.placeholder.show_on_focus,false) needs-focus == placeholder-focus-pref.html placeholder-blank-ref.html
