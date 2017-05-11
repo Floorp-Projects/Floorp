@@ -654,6 +654,29 @@ stubPreparedMessages.set("console.time('bar')", new ConsoleMessage({
   "notes": null
 }));
 
+stubPreparedMessages.set("timerAlreadyExists", new ConsoleMessage({
+  "id": "1",
+  "allowRepeating": true,
+  "source": "console-api",
+  "timeStamp": 1494362489620,
+  "type": "time",
+  "level": "warn",
+  "messageText": "Timer “bar” already exists.",
+  "parameters": null,
+  "repeat": 1,
+  "repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"console-api\",\"timeStamp\":null,\"type\":\"time\",\"level\":\"warn\",\"messageText\":\"Timer “bar” already exists.\",\"parameters\":null,\"repeat\":null,\"repeatId\":null,\"stacktrace\":null,\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html\",\"line\":3,\"column\":1},\"groupId\":null,\"exceptionDocURL\":null,\"userProvidedStyles\":[],\"notes\":null}",
+  "stacktrace": null,
+  "frame": {
+    "source": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html",
+    "line": 3,
+    "column": 1
+  },
+  "groupId": null,
+  "exceptionDocURL": null,
+  "userProvidedStyles": [],
+  "notes": null
+}));
+
 stubPreparedMessages.set("console.timeEnd('bar')", new ConsoleMessage({
   "id": "1",
   "allowRepeating": true,
@@ -664,11 +687,34 @@ stubPreparedMessages.set("console.timeEnd('bar')", new ConsoleMessage({
   "messageText": "bar: 1.36ms",
   "parameters": null,
   "repeat": 1,
-  "repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"console-api\",\"timeStamp\":null,\"type\":\"timeEnd\",\"level\":\"log\",\"messageText\":\"bar: 1.36ms\",\"parameters\":null,\"repeat\":null,\"repeatId\":null,\"stacktrace\":null,\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html\",\"line\":3,\"column\":1},\"groupId\":null,\"exceptionDocURL\":null,\"userProvidedStyles\":[],\"notes\":null}",
+  "repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"console-api\",\"timeStamp\":null,\"type\":\"timeEnd\",\"level\":\"log\",\"messageText\":\"bar: 1.36ms\",\"parameters\":null,\"repeat\":null,\"repeatId\":null,\"stacktrace\":null,\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html\",\"line\":4,\"column\":1},\"groupId\":null,\"exceptionDocURL\":null,\"userProvidedStyles\":[],\"notes\":null}",
   "stacktrace": null,
   "frame": {
     "source": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html",
-    "line": 3,
+    "line": 4,
+    "column": 1
+  },
+  "groupId": null,
+  "exceptionDocURL": null,
+  "userProvidedStyles": [],
+  "notes": null
+}));
+
+stubPreparedMessages.set("timerDoesntExist", new ConsoleMessage({
+  "id": "1",
+  "allowRepeating": true,
+  "source": "console-api",
+  "timeStamp": 1494362489622,
+  "type": "timeEnd",
+  "level": "warn",
+  "messageText": "Timer “bar” doesn’t exist.",
+  "parameters": null,
+  "repeat": 1,
+  "repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"console-api\",\"timeStamp\":null,\"type\":\"timeEnd\",\"level\":\"warn\",\"messageText\":\"Timer “bar” doesn’t exist.\",\"parameters\":null,\"repeat\":null,\"repeatId\":null,\"stacktrace\":null,\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html\",\"line\":5,\"column\":1},\"groupId\":null,\"exceptionDocURL\":null,\"userProvidedStyles\":[],\"notes\":null}",
+  "stacktrace": null,
+  "frame": {
+    "source": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html",
+    "line": 5,
     "column": 1
   },
   "groupId": null,
@@ -713,7 +759,6 @@ stubPreparedMessages.set("console.table(['a', 'b', 'c'])", new ConsoleMessage({
   "parameters": [
     {
       "type": "object",
-      "actor": "server1.conn15.child1/obj31",
       "class": "Array",
       "extensible": true,
       "frozen": false,
@@ -731,7 +776,7 @@ stubPreparedMessages.set("console.table(['a', 'b', 'c'])", new ConsoleMessage({
     }
   ],
   "repeat": 1,
-  "repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"console-api\",\"timeStamp\":null,\"type\":\"table\",\"level\":\"log\",\"messageText\":null,\"parameters\":[{\"type\":\"object\",\"actor\":\"server1.conn15.child1/obj31\",\"class\":\"Array\",\"extensible\":true,\"frozen\":false,\"sealed\":false,\"ownPropertyLength\":4,\"preview\":{\"kind\":\"ArrayLike\",\"length\":3,\"items\":[\"a\",\"b\",\"c\"]}}],\"repeat\":null,\"repeatId\":null,\"stacktrace\":null,\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html\",\"line\":2,\"column\":1},\"groupId\":null,\"exceptionDocURL\":null,\"userProvidedStyles\":[],\"notes\":null}",
+  "repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"console-api\",\"timeStamp\":null,\"type\":\"table\",\"level\":\"log\",\"messageText\":null,\"parameters\":[{\"type\":\"object\",\"class\":\"Array\",\"extensible\":true,\"frozen\":false,\"sealed\":false,\"ownPropertyLength\":4,\"preview\":{\"kind\":\"ArrayLike\",\"length\":3,\"items\":[\"a\",\"b\",\"c\"]}}],\"repeat\":null,\"repeatId\":null,\"stacktrace\":null,\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html\",\"line\":2,\"column\":1},\"groupId\":null,\"exceptionDocURL\":null,\"userProvidedStyles\":[],\"notes\":null}",
   "stacktrace": null,
   "frame": {
     "source": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html",
@@ -1652,6 +1697,33 @@ stubPackets.set("console.time('bar')", {
   }
 });
 
+stubPackets.set("timerAlreadyExists", {
+  "from": "server1.conn0.child1/consoleActor2",
+  "type": "consoleAPICall",
+  "message": {
+    "addonId": "",
+    "arguments": [
+      "bar"
+    ],
+    "columnNumber": 1,
+    "counter": null,
+    "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html",
+    "functionName": "triggerPacket",
+    "groupName": "",
+    "level": "time",
+    "lineNumber": 3,
+    "private": false,
+    "timeStamp": 1494362489620,
+    "timer": {
+      "error": "timerAlreadyExists",
+      "name": "bar"
+    },
+    "workerType": "none",
+    "styles": [],
+    "category": "webdev"
+  }
+});
+
 stubPackets.set("console.timeEnd('bar')", {
   "from": "server1.conn13.child1/consoleActor2",
   "type": "consoleAPICall",
@@ -1666,11 +1738,38 @@ stubPackets.set("console.timeEnd('bar')", {
     "functionName": "triggerPacket",
     "groupName": "",
     "level": "timeEnd",
-    "lineNumber": 3,
+    "lineNumber": 4,
     "private": false,
     "timeStamp": 1479159911478,
     "timer": {
       "duration": 1.3550000000000182,
+      "name": "bar"
+    },
+    "workerType": "none",
+    "styles": [],
+    "category": "webdev"
+  }
+});
+
+stubPackets.set("timerDoesntExist", {
+  "from": "server1.conn0.child1/consoleActor2",
+  "type": "consoleAPICall",
+  "message": {
+    "addonId": "",
+    "arguments": [
+      "bar"
+    ],
+    "columnNumber": 1,
+    "counter": null,
+    "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html",
+    "functionName": "triggerPacket",
+    "groupName": "",
+    "level": "timeEnd",
+    "lineNumber": 5,
+    "private": false,
+    "timeStamp": 1494362489622,
+    "timer": {
+      "error": "timerDoesntExist",
       "name": "bar"
     },
     "workerType": "none",
@@ -1711,7 +1810,6 @@ stubPackets.set("console.table(['a', 'b', 'c'])", {
     "arguments": [
       {
         "type": "object",
-        "actor": "server1.conn15.child1/obj31",
         "class": "Array",
         "extensible": true,
         "frozen": false,
