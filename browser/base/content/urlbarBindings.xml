@@ -940,8 +940,13 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               case "formatting.enabled":
                 this._formattingEnabled = this._prefs.getBoolPref(aData);
                 break;
-              case "userMadeSearchSuggestionsChoice":
               case "suggest.searches":
+                // Mirror the value for future use, see the comment in the
+                // binding's constructor.
+                this._prefs.setBoolPref("searchSuggestionsChoice",
+                  this._prefs.getBoolPref("suggest.searches"));
+                // fall-through.
+              case "userMadeSearchSuggestionsChoice":
                 this._cacheUserMadeSearchSuggestionsChoice();
                 if (this._userMadeSearchSuggestionsChoice) {
                   this.popup.searchSuggestionsNotificationWasDismissed(
