@@ -18,12 +18,11 @@ add_task(function* () {
 
   let initialTabsNo = gBrowser.tabs.length;
 
-  let goButton = document.getElementById("urlbar-go-button");
   gBrowser.selectedTab = appTab;
   gURLBar.focus();
   gURLBar.value = TEST_LINK_CHANGED;
 
-  goButton.click();
+  gURLBar.goButton.click();
   yield BrowserTestUtils.browserLoaded(browser);
 
   is(appTab.linkedBrowser.currentURI.spec, TEST_LINK_CHANGED,
