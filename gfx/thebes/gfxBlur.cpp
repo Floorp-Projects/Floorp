@@ -557,8 +557,14 @@ GetBlur(gfxContext* aDestinationCtx,
   // We can get seams using the min size rect when drawing to the destination rect
   // if we have a non-pixel aligned destination transformation. In those cases,
   // fallback to just rendering the destination rect.
+  // During printing, we record all the Moz 2d commands and replay them on the parent side
+  // with Cairo. Cairo printing uses StretchDIBits to stretch the surface. However,
+  // since our source image is only 1px for some parts, we make thousands of calls.
+  // Instead just render the blur ourself here as one image and send it over for printing.
+  // TODO: May need to change this with the blob renderer in WR since it also records.
   Matrix destMatrix = ToMatrix(aDestinationCtx->CurrentMatrix());
-  bool useDestRect = !destMatrix.IsRectilinear() || destMatrix.HasNonIntegerTranslation();
+  bool useDestRect = !destMatrix.IsRectilinear() || destMatrix.HasNonIntegerTranslation() ||
+                     aDestinationCtx->GetDrawTarget()->IsRecording();
   if (useDestRect) {
     minSize = aRectSize;
   }
