@@ -1,6 +1,3 @@
-/* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
-
 "use strict";
 
 /**
@@ -13,19 +10,28 @@
  * for tips on how to do that.
  */
 const EXPECTED_REFLOWS = [
-  // selection change notification may cause querying the focused editor content
-  // by IME and that will cause reflow.
   [
     "select@chrome://global/content/bindings/textbox.xml",
+    "focusAndSelectUrlBar@chrome://browser/content/browser.js",
+    "_adjustFocusAfterTabSwitch@chrome://browser/content/tabbrowser.xml",
   ],
 ];
 
 /*
  * This test ensures that there are no unexpected
- * uninterruptible reflows when opening new tabs.
+ * uninterruptible reflows when opening a new tab that will
+ * cause the existing tabs to squeeze smaller.
  */
 add_task(async function() {
   await ensureNoPreloadedBrowser();
+
+  // Compute the number of tabs we can put into the strip without
+  // overflowing, and remove one, so that we can create
+  // TAB_COUNT_FOR_SQUEEE tabs, and then one more, which should
+  // cause the tab to squeeze to a smaller size rather than overflow.
+  const TAB_COUNT_FOR_SQUEEZE = computeMaxTabCount() - 1;
+
+  await createTabs(TAB_COUNT_FOR_SQUEEZE);
 
   // Because the tab strip is a scrollable frame, we can't use the
   // default dirtying function from withReflowObserver and reliably
@@ -34,16 +40,13 @@ add_task(async function() {
   // original tab.
   let origTab = gBrowser.selectedTab;
 
-  // Add a reflow observer and open a new tab.
   await withReflowObserver(async function() {
     let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
     BrowserOpenTab();
     await BrowserTestUtils.waitForEvent(gBrowser.selectedTab, "transitionend",
-        false, e => e.propertyName === "max-width");
+      false, e => e.propertyName === "max-width");
     await switchDone;
   }, EXPECTED_REFLOWS, window, origTab);
 
-  let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  await switchDone;
+  await removeAllButFirstTab();
 });
