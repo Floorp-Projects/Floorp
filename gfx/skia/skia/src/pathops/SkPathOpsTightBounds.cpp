@@ -47,8 +47,7 @@ bool TightBounds(const SkPath& path, SkRect* result) {
         *result = path.getBounds();
         return true;
     }
-    char storage[4096];
-    SkArenaAlloc allocator(storage);  // FIXME: constant-ize, tune
+    SkChunkAlloc allocator(4096);  // FIXME: constant-ize, tune
     SkOpContour contour;
     SkOpContourHead* contourList = static_cast<SkOpContourHead*>(&contour);
     SkOpGlobalState globalState(contourList, &allocator  SkDEBUGPARAMS(false)
@@ -75,10 +74,6 @@ bool TightBounds(const SkPath& path, SkRect* result) {
     SkPathOpsBounds bounds = current->bounds();
     while ((current = current->next())) {
         bounds.add(current->bounds());
-    }
-    if (scaleFactor > SK_Scalar1) {
-        bounds.set(bounds.left() * scaleFactor, bounds.top() * scaleFactor,
-                   bounds.right() * scaleFactor, bounds.bottom() * scaleFactor);
     }
     *result = bounds;
     if (!moveBounds.isEmpty()) {

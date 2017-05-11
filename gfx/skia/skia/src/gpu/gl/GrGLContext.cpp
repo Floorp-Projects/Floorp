@@ -7,7 +7,6 @@
 
 #include "GrGLContext.h"
 #include "GrGLGLSL.h"
-#include "SkSLCompiler.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -64,17 +63,6 @@ GrGLContext* GrGLContext::Create(const GrGLInterface* interface, const GrContext
     return new GrGLContext(args);
 }
 
-GrGLContext::~GrGLContext() {
-    delete fCompiler;
-}
-
-SkSL::Compiler* GrGLContext::compiler() const {
-    if (!fCompiler) {
-        fCompiler = new SkSL::Compiler();
-    }
-    return fCompiler;
-}
-
 GrGLContextInfo::GrGLContextInfo(const ConstructorArgs& args) {
     fInterface.reset(SkRef(args.fInterface));
     fGLVersion = args.fGLVersion;
@@ -84,5 +72,5 @@ GrGLContextInfo::GrGLContextInfo(const ConstructorArgs& args) {
     fDriver = args.fDriver;
     fDriverVersion = args.fDriverVersion;
 
-    fGLCaps = sk_make_sp<GrGLCaps>(*args.fContextOptions, *this, fInterface.get());
+    fGLCaps.reset(new GrGLCaps(*args.fContextOptions, *this, fInterface));
 }

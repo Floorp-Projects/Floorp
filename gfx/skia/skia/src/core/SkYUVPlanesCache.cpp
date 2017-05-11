@@ -39,7 +39,7 @@ struct YUVPlanesRec : public SkResourceCache::Rec {
         fValue.fInfo = *info;
         fValue.fData->attachToCacheAndRef();
     }
-    ~YUVPlanesRec() override {
+    ~YUVPlanesRec() {
         fValue.fData->detachFromCacheAndUnref();
     }
 

@@ -39,7 +39,7 @@ public:
     static SkImageGenerator* NewFromEncodedWIC(SkData* data);
 
 protected:
-    SkData* onRefEncodedData(GrContext* ctx) override;
+    SkData* onRefEncodedData(SK_REFENCODEDDATA_CTXPARAM) override;
 
     bool onGetPixels(const SkImageInfo& info, void* pixels, size_t rowBytes, SkPMColor ctable[],
             int* ctableCount) override;

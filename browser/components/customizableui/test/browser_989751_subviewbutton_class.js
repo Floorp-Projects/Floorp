@@ -52,6 +52,9 @@ function checkSubviewButtonClass(menuId, buttonId, subviewId) {
     }
   };
 }
+add_task(function*() {
+  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+});
 
 add_task(checkSubviewButtonClass("menuWebDeveloperPopup", "developer-button", "PanelUI-developerItems"));
 add_task(checkSubviewButtonClass("viewSidebarMenu", "sidebar-button", "PanelUI-sidebarItems"));

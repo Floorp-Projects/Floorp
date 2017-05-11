@@ -5,19 +5,18 @@
  * found in the LICENSE file.
  */
 
-#include "SkMaskFilter.h"
 
-#include "SkAutoMalloc.h"
+#include "SkMaskFilter.h"
 #include "SkBlitter.h"
-#include "SkCachedData.h"
 #include "SkDraw.h"
+#include "SkCachedData.h"
 #include "SkPath.h"
-#include "SkRRect.h"
 #include "SkRasterClip.h"
+#include "SkRRect.h"
+#include "SkTypes.h"
 
 #if SK_SUPPORT_GPU
 #include "GrTexture.h"
-#include "GrTextureProxy.h"
 #include "SkGr.h"
 #endif
 
@@ -314,19 +313,20 @@ bool SkMaskFilter::canFilterMaskGPU(const SkRRect& devRRect,
     return false;
 }
 
-bool SkMaskFilter::directFilterMaskGPU(GrContext*,
-                                       GrRenderTargetContext* renderTargetContext,
-                                       GrPaint&&,
-                                       const GrClip&,
-                                       const SkMatrix& viewMatrix,
-                                       const SkStrokeRec& strokeRec,
-                                       const SkPath& path) const {
+ bool SkMaskFilter::directFilterMaskGPU(GrTextureProvider* texProvider,
+                                        GrDrawContext* drawContext,
+                                        GrPaint* grp,
+                                        const GrClip&,
+                                        const SkMatrix& viewMatrix,
+                                        const SkStrokeRec& strokeRec,
+                                        const SkPath& path) const {
     return false;
 }
 
+
 bool SkMaskFilter::directFilterRRectMaskGPU(GrContext*,
-                                            GrRenderTargetContext* renderTargetContext,
-                                            GrPaint&&,
+                                            GrDrawContext* drawContext,
+                                            GrPaint* grp,
                                             const GrClip&,
                                             const SkMatrix& viewMatrix,
                                             const SkStrokeRec& strokeRec,
@@ -335,11 +335,11 @@ bool SkMaskFilter::directFilterRRectMaskGPU(GrContext*,
     return false;
 }
 
-sk_sp<GrTextureProxy> SkMaskFilter::filterMaskGPU(GrContext*,
-                                                  sk_sp<GrTextureProxy> srcProxy,
-                                                  const SkMatrix& ctm,
-                                                  const SkIRect& maskRect) const {
-    return nullptr;
+bool SkMaskFilter::filterMaskGPU(GrTexture* src,
+                                 const SkMatrix& ctm,
+                                 const SkIRect& maskRect,
+                                 GrTexture** result) const {
+    return false;
 }
 #endif
 

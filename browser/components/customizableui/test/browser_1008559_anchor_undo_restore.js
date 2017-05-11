@@ -10,6 +10,7 @@ const kAnchorAttribute = "cui-anchorid";
  * using 'undo'
  */
 add_task(function*() {
+  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   yield startCustomizing();
   let button = document.getElementById("history-panelmenu");
   is(button.getAttribute(kAnchorAttribute), "PanelUI-menu-button",

@@ -6,15 +6,14 @@
  */
 
 #include "SkCodecImageGenerator.h"
-#include "SkMakeUnique.h"
 
-std::unique_ptr<SkImageGenerator> SkCodecImageGenerator::MakeFromEncodedCodec(sk_sp<SkData> data) {
+SkImageGenerator* SkCodecImageGenerator::NewFromEncodedCodec(sk_sp<SkData> data) {
     SkCodec* codec = SkCodec::NewFromData(data);
     if (nullptr == codec) {
         return nullptr;
     }
 
-    return std::unique_ptr<SkImageGenerator>(new SkCodecImageGenerator(codec, data));
+    return new SkCodecImageGenerator(codec, data);
 }
 
 static SkImageInfo make_premul(const SkImageInfo& info) {
@@ -31,25 +30,20 @@ SkCodecImageGenerator::SkCodecImageGenerator(SkCodec* codec, sk_sp<SkData> data)
     , fData(std::move(data))
 {}
 
-SkData* SkCodecImageGenerator::onRefEncodedData(GrContext* ctx) {
+SkData* SkCodecImageGenerator::onRefEncodedData(SK_REFENCODEDDATA_CTXPARAM) {
     return SkRef(fData.get());
 }
 
 bool SkCodecImageGenerator::onGetPixels(const SkImageInfo& info, void* pixels, size_t rowBytes,
         SkPMColor ctable[], int* ctableCount) {
-    Options opts;
-    opts.fColorTable = ctable;
-    opts.fColorTableCount = ctableCount;
-    opts.fBehavior = SkTransferFunctionBehavior::kRespect;
-    return this->onGetPixels(info, pixels, rowBytes, opts);
-}
 
-bool SkCodecImageGenerator::onGetPixels(const SkImageInfo& info, void* pixels, size_t rowBytes,
-                                        const Options& opts) {
-    SkCodec::Options codecOpts;
-    codecOpts.fPremulBehavior = opts.fBehavior;
-    SkCodec::Result result = fCodec->getPixels(info, pixels, rowBytes, &codecOpts, opts.fColorTable,
-                                               opts.fColorTableCount);
+    // FIXME (msarett):
+    // We don't give the client the chance to request an SkColorSpace.  Until we improve
+    // the API, let's assume that they want legacy mode.
+    SkImageInfo decodeInfo = info.makeColorSpace(nullptr);
+
+    SkCodec::Result result = fCodec->getPixels(decodeInfo, pixels, rowBytes, nullptr, ctable,
+            ctableCount);
     switch (result) {
         case SkCodec::kSuccess:
         case SkCodec::kIncompleteInput:

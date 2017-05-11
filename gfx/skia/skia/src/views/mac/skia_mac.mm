@@ -27,12 +27,12 @@
 }
 
 - (void)dealloc {
-    delete self.fWind;
+    delete fWind;
     [super dealloc];
 }
 
 - (void)begin {
-    self.fWind = create_sk_window(self, *_NSGetArgc(), *_NSGetArgv());
+    fWind = create_sk_window(self, *_NSGetArgc(), *_NSGetArgv());
     [self setUpWindow];
 }
 @end

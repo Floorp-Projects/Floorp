@@ -7,6 +7,7 @@
 var newTab = null;
 
 add_task(function*() {
+  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   info("Check preferences button existence and functionality");
 
   yield PanelUI.show();

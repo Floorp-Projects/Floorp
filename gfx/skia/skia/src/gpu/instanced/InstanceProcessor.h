@@ -9,6 +9,7 @@
 #define gr_instanced_InstanceProcessor_DEFINED
 
 #include "GrCaps.h"
+#include "GrBufferAccess.h"
 #include "GrGeometryProcessor.h"
 #include "instanced/InstancedRenderingTypes.h"
 
@@ -22,15 +23,15 @@ namespace gr_instanced {
  */
 class InstanceProcessor : public GrGeometryProcessor {
 public:
-    InstanceProcessor(OpInfo, GrBuffer* paramsBuffer);
+    InstanceProcessor(BatchInfo, GrBuffer* paramsBuffer);
 
     const char* name() const override { return "Instance Processor"; }
-    OpInfo opInfo() const { return fOpInfo; }
+    BatchInfo batchInfo() const { return fBatchInfo; }
 
-    void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const override {
-        b->add32(fOpInfo.fData);
+    void getGLSLProcessorKey(const GrGLSLCaps&, GrProcessorKeyBuilder* b) const override {
+        b->add32(fBatchInfo.fData);
     }
-    GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps&) const override;
+    GrGLSLPrimitiveProcessor* createGLSLInstance(const GrGLSLCaps&) const override;
 
     /**
      * Returns a buffer of ShapeVertex that defines the canonical instanced geometry.
@@ -43,9 +44,9 @@ public:
      */
     static const GrBuffer* SK_WARN_UNUSED_RESULT FindOrCreateIndex8Buffer(GrGpu*);
 
-    static IndexRange GetIndexRangeForRect(GrAAType);
-    static IndexRange GetIndexRangeForOval(GrAAType, const SkRect& devBounds);
-    static IndexRange GetIndexRangeForRRect(GrAAType);
+    static IndexRange GetIndexRangeForRect(AntialiasMode);
+    static IndexRange GetIndexRangeForOval(AntialiasMode, const SkRect& devBounds);
+    static IndexRange GetIndexRangeForRRect(AntialiasMode);
 
     static const char* GetNameOfIndexRange(IndexRange);
 
@@ -54,10 +55,10 @@ private:
      * Called by the platform-specific instanced rendering implementation to determine the level of
      * support this class can offer on the given GLSL platform.
      */
-    static GrCaps::InstancedSupport CheckSupport(const GrShaderCaps&, const GrCaps&);
+    static GrCaps::InstancedSupport CheckSupport(const GrGLSLCaps&, const GrCaps&);
 
-    OpInfo fOpInfo;
-    BufferAccess fParamsAccess;
+    const BatchInfo   fBatchInfo;
+    GrBufferAccess    fParamsAccess;
 
     friend class GLInstancedRendering; // For CheckSupport.
 

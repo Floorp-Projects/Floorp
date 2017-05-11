@@ -9,7 +9,7 @@
 #include "SkCoreBlitters.h"
 #include "SkColorPriv.h"
 #include "SkShader.h"
-#include "SkXfermodePriv.h"
+#include "SkXfermode.h"
 
 SkA8_Blitter::SkA8_Blitter(const SkPixmap& device, const SkPaint& paint) : INHERITED(device) {
     fSrcA = paint.getAlpha();

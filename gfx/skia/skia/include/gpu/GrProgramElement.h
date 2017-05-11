@@ -14,30 +14,32 @@
 class GrGpuResourceRef;
 
 /**
- * Note: We are converting GrProcessor from ref counting to a single owner model using move
- * semantics. This class will be removed.
+ * Base class for GrProcessor. This exists to manage transitioning a GrProcessor from being owned by
+ * a client to being scheduled for execution. While a GrProcessor is ref'ed by drawing code its
+ * GrGpu resources must also be ref'ed to prevent incorrectly recycling them through the cache.
+ * However, once the GrProcessor is baked into a GrPipeline and the drawing code has stopped ref'ing
+ * it, it's internal resources can be recycled in some cases.
  *
- * This is used to track "refs" for two separate types GrProcessor ownership. A regular ref is owned
- * by any client that may continue to issue draws that use the GrProgramElement. A recorded op or
- * GrPipeline uses "pending executions" instead of refs. A pending execution is cleared after the
- * draw is executed (or aborted).
+ * We track this using two types of refs on GrProgramElement. A regular ref is owned by any client
+ * that may continue to issue draws that use the GrProgramElement. The GrPipeline owns "pending
+ * executions" instead of refs. A pending execution is cleared by ~GrPipeline().
  *
  * While a GrProgramElement is ref'ed any resources it owns are also ref'ed. However, once it gets
  * into the state where it has pending executions AND no refs then it converts its ownership of
  * its GrGpuResources from refs to pending IOs. The pending IOs allow the cache to track when it is
- * safe to recycle a resource even though we still have buffered GrOps that read or write to the
+ * safe to recycle a resource even though we still have buffered GrBatches that read or write to the
  * the resource.
  *
- * To make this work the subclass GrProcessor implements addPendingIOs, removeRefs, and
- * pendingIOComplete. addPendingIOs adds pending reads/writes to GrGpuResources owned by the
- * processor as appropriate when the processor is recorded in a GrOpList. removeRefs is called when
- * the ref count reaches 0 and the GrProcessor is only owned by "pending executions".
- * pendingIOComplete occurs if the resource is still owned by a ref but all recorded draws have been
- * completed. Whenever pending executions and refs reach zero the processor is deleted.
+ * To make this work all GrGpuResource objects owned by a GrProgramElement or derived classes
+ * (either directly or indirectly) must be wrapped in a GrGpuResourceRef and registered with the
+ * GrProgramElement using addGpuResource(). This allows the regular refs to be converted to pending
+ * IO events when the program element is scheduled for deferred execution.
  *
- * The GrProcessor may also implement notifyRefCntIsZero in order to change its ownership of child
- * processors from ref to pending execution when the processor is first owned exclusively in pending
- * execution mode.
+ * Moreover, a GrProgramElement that in turn owns other GrProgramElements must convert its ownership
+ * of its children to pending executions when its ref count reaches zero so that the GrGpuResources
+ * owned by the children GrProgramElements are correctly converted from ownership by ref to
+ * ownership by pending IO. Any GrProgramElement hierarchy is managed by subclasses which must
+ * implement notifyRefCntIsZero() in order to convert refs of children to pending executions.
  */
 class GrProgramElement : public SkNoncopyable {
 public:
@@ -71,6 +73,11 @@ public:
         this->validate();
     }
 
+    /**
+     * Gets an id that is unique for this GrProgramElement object. This will never return 0.
+     */
+    uint32_t getUniqueID() const { return fUniqueID; }
+
     void validate() const {
 #ifdef SK_DEBUG
         SkASSERT(fRefCnt >= 0);
@@ -80,10 +87,19 @@ public:
     }
 
 protected:
-    GrProgramElement() : fRefCnt(1), fPendingExecutions(0) {}
+    GrProgramElement() : fRefCnt(1), fPendingExecutions(0), fUniqueID(CreateUniqueID()) {}
+
+    /** Subclasses registers their resources using this function. It is assumed the GrProgramResouce
+        is and will remain owned by the subclass and this function will retain a raw ptr. Once a
+        GrGpuResourceRef is registered its setResource must not be called.
+     */
+    void addGpuResource(const GrGpuResourceRef* res) {
+        fGpuResources.push_back(res);
+    }
 
     void addPendingExecution() const {
         this->validate();
+        SkASSERT(fRefCnt > 0);
         if (0 == fPendingExecutions) {
             this->addPendingIOs();
         }
@@ -106,21 +122,25 @@ protected:
     }
 
 private:
-    virtual void addPendingIOs() const = 0;
-    virtual void removeRefs() const = 0;
-    virtual void pendingIOComplete() const = 0;
-
     /** This will be called when the ref cnt is zero. The object may or may not have pending
         executions. */
     virtual void notifyRefCntIsZero() const = 0;
 
+    static uint32_t CreateUniqueID();
+
+    void removeRefs() const;
+    void addPendingIOs() const;
+    void pendingIOComplete() const;
+
     mutable int32_t fRefCnt;
     // Count of deferred executions not yet issued to the 3D API.
     mutable int32_t fPendingExecutions;
+    uint32_t        fUniqueID;
 
-    // Only these classes can access addPendingExecution() and completedExecution().
+    SkSTArray<4, const GrGpuResourceRef*, true> fGpuResources;
+
+    // Only this class can access addPendingExecution() and completedExecution().
     template <typename T> friend class GrPendingProgramElement;
-    friend class GrProcessorSet;
 
     typedef SkNoncopyable INHERITED;
 };

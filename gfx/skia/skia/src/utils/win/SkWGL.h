@@ -133,8 +133,7 @@ enum SkWGLContextRequest {
  * (including non-MSAA) will be created. If preferCoreProfile is true but a core profile cannot be
  * created then a compatible profile context will be created.
  */
-HGLRC SkCreateWGLContext(HDC dc, int msaaSampleCount, bool deepColor, SkWGLContextRequest context,
-                         HGLRC shareContext = nullptr);
+HGLRC SkCreateWGLContext(HDC dc, int msaaSampleCount, bool deepColor, SkWGLContextRequest context);
 
 /**
  * Helper class for creating a pbuffer context and deleting all the handles when finished. This
@@ -144,7 +143,7 @@ HGLRC SkCreateWGLContext(HDC dc, int msaaSampleCount, bool deepColor, SkWGLConte
 class SkWGLPbufferContext : public SkRefCnt {
 public:
     static SkWGLPbufferContext* Create(HDC parentDC, int msaaSampleCount,
-                                       SkWGLContextRequest contextType, HGLRC shareContext);
+                                       SkWGLContextRequest contextType);
 
     virtual ~SkWGLPbufferContext();
 

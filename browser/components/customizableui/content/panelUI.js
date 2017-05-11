@@ -45,18 +45,7 @@ const PanelUI = {
 
   _initialized: false,
   init() {
-    for (let [k, v] of Object.entries(this.kElements)) {
-      if (!v) {
-        continue;
-      }
-      // Need to do fresh let-bindings per iteration
-      let getKey = k;
-      let id = v;
-      this.__defineGetter__(getKey, function() {
-        delete this[getKey];
-        return this[getKey] = document.getElementById(id);
-      });
-    }
+    this._initElements();
 
     this.notifications = [];
     this.menuButton.addEventListener("mousedown", this);
@@ -75,13 +64,43 @@ const PanelUI = {
       this.notificationPanel.addEventListener(event, this);
     }
 
+    this._initPhotonPanel();
+
+    this._initialized = true;
+  },
+
+  reinit() {
+    this._removeEventListeners();
+    // If the Photon pref changes, we need to re-init our element references.
+    this._initElements();
+    this._initPhotonPanel();
+    delete this._readyPromise;
+    this._isReady = false;
+  },
+
+  // We do this sync on init because in order to have the overflow button show up
+  // we need to know whether anything is in the permanent panel area.
+  _initPhotonPanel() {
     if (gPhotonStructure) {
       this.overflowFixedList.hidden = false;
       this.overflowFixedList.nextSibling.hidden = false;
       CustomizableUI.registerMenuPanel(this.overflowFixedList, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
     }
+  },
 
-    this._initialized = true;
+  _initElements() {
+    for (let [k, v] of Object.entries(this.kElements)) {
+      if (!v) {
+        continue;
+      }
+      // Need to do fresh let-bindings per iteration
+      let getKey = k;
+      let id = v;
+      this.__defineGetter__(getKey, function() {
+        delete this[getKey];
+        return this[getKey] = document.getElementById(id);
+      });
+    }
   },
 
   _eventListenersAdded: false,
@@ -100,9 +119,17 @@ const PanelUI = {
     this._eventListenersAdded = true;
   },
 
-  uninit() {
+  _removeEventListeners() {
     for (let event of this.kEvents) {
       this.panel.removeEventListener(event, this);
+    }
+    this.helpView.removeEventListener("ViewShowing", this._onHelpViewShow);
+    this._eventListenersAdded = false;
+  },
+
+  uninit() {
+    this._removeEventListeners();
+    for (let event of this.kEvents) {
       this.notificationPanel.removeEventListener(event, this);
     }
 
@@ -111,7 +138,6 @@ const PanelUI = {
     Services.obs.removeObserver(this, "panelUI-notification-dismissed");
 
     window.removeEventListener("fullscreen", this);
-    this.helpView.removeEventListener("ViewShowing", this._onHelpViewShow);
     this.menuButton.removeEventListener("mousedown", this);
     this.menuButton.removeEventListener("keypress", this);
     window.matchMedia("(-moz-overlay-scrollbars)").removeListener(this._overlayScrollListenerBoundFn);
@@ -366,6 +392,13 @@ const PanelUI = {
     if (this._readyPromise) {
       return this._readyPromise;
     }
+    this._ensureEventListenersAdded();
+    if (gPhotonStructure) {
+      this.panel.hidden = false;
+      this._readyPromise = Promise.resolve();
+      this._isReady = true;
+      return this._readyPromise;
+    }
     this._readyPromise = Task.spawn(function*() {
       if (!this._initialized) {
         yield new Promise(resolve => {
@@ -557,6 +590,10 @@ const PanelUI = {
 
   enableSingleSubviewPanelAnimations() {
     this._disableAnimations = false;
+  },
+
+  onPhotonChanged() {
+    this.reinit();
   },
 
   onWidgetAfterDOMChange(aNode, aNextNode, aContainer, aWasRemoval) {

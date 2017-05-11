@@ -4,10 +4,7 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-
 #include <new>
-
-#include "SkAutoMalloc.h"
 #include "SkImageGenerator.h"
 #include "SkPictureData.h"
 #include "SkPictureRecord.h"
@@ -87,15 +84,6 @@ SkPictureData::SkPictureData(const SkPictureRecord& record,
         }
     }
 
-    const SkTDArray<const SkVertices*>& verts = record.getVerticesRefs();
-    fVerticesCount = verts.count();
-    if (fVerticesCount > 0) {
-        fVerticesRefs = new const SkVertices* [fVerticesCount];
-        for (int i = 0; i < fVerticesCount; ++i) {
-            fVerticesRefs[i] = SkRef(verts[i]);
-        }
-    }
-    
     const SkTDArray<const SkImage*>& imgs = record.getImageRefs();
     fImageCount = imgs.count();
     if (fImageCount > 0) {
@@ -113,8 +101,6 @@ void SkPictureData::init() {
     fDrawableCount = 0;
     fTextBlobRefs = nullptr;
     fTextBlobCount = 0;
-    fVerticesRefs = nullptr;
-    fVerticesCount = 0;
     fImageRefs = nullptr;
     fImageCount = 0;
     fFactoryPlayback = nullptr;
@@ -138,11 +124,6 @@ SkPictureData::~SkPictureData() {
         fTextBlobRefs[i]->unref();
     }
     delete[] fTextBlobRefs;
-
-    for (int i = 0; i < fVerticesCount; i++) {
-        fVerticesRefs[i]->unref();
-    }
-    delete[] fVerticesRefs;
 
     for (int i = 0; i < fImageCount; i++) {
         fImageRefs[i]->unref();
@@ -263,13 +244,6 @@ void SkPictureData::flattenToBuffer(SkWriteBuffer& buffer) const {
         }
     }
 
-    if (fVerticesCount > 0) {
-        write_tag_size(buffer, SK_PICT_VERTICES_BUFFER_TAG, fVerticesCount);
-        for (i = 0; i  < fVerticesCount; ++i) {
-            buffer.writeDataAsByteArray(fVerticesRefs[i]->encode().get());
-        }
-    }
-
     if (fImageCount > 0) {
         write_tag_size(buffer, SK_PICT_IMAGE_BUFFER_TAG, fImageCount);
         for (i = 0; i  < fImageCount; ++i) {
@@ -294,7 +268,7 @@ void SkPictureData::serialize(SkWStream* stream,
     SkFactorySet factSet;  // buffer refs factSet, so factSet must come first.
     SkBinaryWriteBuffer buffer(SkBinaryWriteBuffer::kCrossProcess_Flag);
     buffer.setFactoryRecorder(&factSet);
-    buffer.setPixelSerializer(sk_ref_sp(pixelSerializer));
+    buffer.setPixelSerializer(pixelSerializer);
     buffer.setTypefaceRecorder(typefaceSet);
     this->flattenToBuffer(buffer);
 
@@ -487,10 +461,6 @@ bool SkPictureData::parseStreamTag(SkStream* stream,
 static const SkImage* create_image_from_buffer(SkReadBuffer& buffer) {
     return buffer.readImage().release();
 }
-static const SkVertices* create_vertices_from_buffer(SkReadBuffer& buffer) {
-    auto data = buffer.readByteArrayAsData();
-    return data ? SkVertices::Decode(data->data(), data->size()).release() : nullptr;
-}
 
 static const SkImage* create_bitmap_image_from_buffer(SkReadBuffer& buffer) {
     return buffer.readBitmapAsImage().release();
@@ -515,10 +485,6 @@ bool new_array_from_buffer(SkReadBuffer& buffer, uint32_t inCount,
     if (0 == inCount) {
         return true;
     }
-    if (!buffer.validate(SkTFitsIn<int>(inCount))) {
-        return false;
-    }
-
     *outCount = inCount;
     *array = new const T* [*outCount];
     bool success = true;
@@ -553,9 +519,6 @@ bool SkPictureData::parseBufferTag(SkReadBuffer& buffer, uint32_t tag, uint32_t 
             }
             break;
         case SK_PICT_PAINT_BUFFER_TAG: {
-            if (!buffer.validate(SkTFitsIn<int>(size))) {
-                return false;
-            }
             const int count = SkToInt(size);
             fPaints.reset(count);
             for (int i = 0; i < count; ++i) {
@@ -573,12 +536,6 @@ bool SkPictureData::parseBufferTag(SkReadBuffer& buffer, uint32_t tag, uint32_t 
         case SK_PICT_TEXTBLOB_BUFFER_TAG:
             if (!new_array_from_buffer(buffer, size, &fTextBlobRefs, &fTextBlobCount,
                                        SkTextBlob::CreateFromBuffer)) {
-                return false;
-            }
-            break;
-        case SK_PICT_VERTICES_BUFFER_TAG:
-            if (!new_array_from_buffer(buffer, size, &fVerticesRefs, &fVerticesCount,
-                                       create_vertices_from_buffer)) {
                 return false;
             }
             break;
@@ -620,7 +577,7 @@ SkPictureData* SkPictureData::CreateFromStream(SkStream* stream,
                                                const SkPictInfo& info,
                                                SkImageDeserializer* factory,
                                                SkTypefacePlayback* topLevelTFPlayback) {
-    std::unique_ptr<SkPictureData> data(new SkPictureData(info));
+    SkAutoTDelete<SkPictureData> data(new SkPictureData(info));
     if (!topLevelTFPlayback) {
         topLevelTFPlayback = &data->fTFPlayback;
     }
@@ -633,7 +590,7 @@ SkPictureData* SkPictureData::CreateFromStream(SkStream* stream,
 
 SkPictureData* SkPictureData::CreateFromBuffer(SkReadBuffer& buffer,
                                                const SkPictInfo& info) {
-    std::unique_ptr<SkPictureData> data(new SkPictureData(info));
+    SkAutoTDelete<SkPictureData> data(new SkPictureData(info));
     buffer.setVersion(info.getVersion());
 
     if (!data->parseBuffer(buffer)) {

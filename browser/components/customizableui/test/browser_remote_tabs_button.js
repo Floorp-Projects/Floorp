@@ -15,6 +15,7 @@ let syncWasCalled = false;
 
 // TODO: This test should probably be re-written, we don't really test much here.
 add_task(async function testSyncRemoteTabsButtonFunctionality() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   info("Test the Sync Remote Tabs button in the PanelUI");
   storeInitialValues();
   mockFunctions();

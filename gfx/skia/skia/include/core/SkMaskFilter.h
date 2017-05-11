@@ -18,13 +18,10 @@
 
 class GrClip;
 class GrContext;
-class GrRenderTargetContext;
+class GrDrawContext;
 class GrPaint;
-class GrFragmentProcessor;
 class GrRenderTarget;
-class GrResourceProvider;
-class GrTexture;
-class GrTextureProxy;
+class GrTextureProvider;
 class SkBitmap;
 class SkBlitter;
 class SkCachedData;
@@ -112,23 +109,23 @@ public:
                                   SkRect* maskRect) const;
 
     /**
-     *  Try to directly render the mask filter into the target. Returns true if drawing was
-     *  successful. If false is returned then paint is unmodified.
+     *  Try to directly render the mask filter into the target.  Returns
+     *  true if drawing was successful.
      */
-    virtual bool directFilterMaskGPU(GrContext*,
-                                     GrRenderTargetContext* renderTargetContext,
-                                     GrPaint&& paint,
+    virtual bool directFilterMaskGPU(GrTextureProvider* texProvider,
+                                     GrDrawContext* drawContext,
+                                     GrPaint* grp,
                                      const GrClip&,
                                      const SkMatrix& viewMatrix,
                                      const SkStrokeRec& strokeRec,
                                      const SkPath& path) const;
     /**
      *  Try to directly render a rounded rect mask filter into the target.  Returns
-     *  true if drawing was successful.  If false is returned then paint is unmodified.
+     *  true if drawing was successful.
      */
     virtual bool directFilterRRectMaskGPU(GrContext*,
-                                          GrRenderTargetContext* renderTargetContext,
-                                          GrPaint&& paint,
+                                          GrDrawContext* drawContext,
+                                          GrPaint* grp,
                                           const GrClip&,
                                           const SkMatrix& viewMatrix,
                                           const SkStrokeRec& strokeRec,
@@ -142,10 +139,10 @@ public:
      * Implementations are free to get the GrContext from the src texture in order to create
      * additional textures and perform multiple passes.
      */
-    virtual sk_sp<GrTextureProxy> filterMaskGPU(GrContext*,
-                                                sk_sp<GrTextureProxy> srcProxy,
-                                                const SkMatrix& ctm,
-                                                const SkIRect& maskRect) const;
+    virtual bool filterMaskGPU(GrTexture* src,
+                               const SkMatrix& ctm,
+                               const SkIRect& maskRect,
+                               GrTexture** result) const;
 #endif
 
     /**

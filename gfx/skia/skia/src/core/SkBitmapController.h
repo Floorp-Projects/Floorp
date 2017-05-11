@@ -57,14 +57,14 @@ protected:
 
 class SkDefaultBitmapController : public SkBitmapController {
 public:
-    enum class CanShadeHQ { kNo, kYes };
-    SkDefaultBitmapController(CanShadeHQ canShadeHQ)
-        : fCanShadeHQ(canShadeHQ == CanShadeHQ::kYes) {}
+    SkDefaultBitmapController(SkSourceGammaTreatment treatment) : fSrcGammaTreatment(treatment) {}
 
 protected:
     State* onRequestBitmap(const SkBitmapProvider&, const SkMatrix& inverse, SkFilterQuality,
                            void* storage, size_t storageSize) override;
-    bool fCanShadeHQ;
+
+private:
+    const SkSourceGammaTreatment fSrcGammaTreatment;
 };
 
 #endif

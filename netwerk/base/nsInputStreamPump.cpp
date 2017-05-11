@@ -59,13 +59,14 @@ nsInputStreamPump::Create(nsInputStreamPump  **result,
                           int64_t              streamLen,
                           uint32_t             segsize,
                           uint32_t             segcount,
-                          bool                 closeWhenDone)
+                          bool                 closeWhenDone,
+                          nsIEventTarget      *mainThreadTarget)
 {
     nsresult rv = NS_ERROR_OUT_OF_MEMORY;
     RefPtr<nsInputStreamPump> pump = new nsInputStreamPump();
     if (pump) {
         rv = pump->Init(stream, streamPos, streamLen,
-                        segsize, segcount, closeWhenDone);
+                        segsize, segcount, closeWhenDone, mainThreadTarget);
         if (NS_SUCCEEDED(rv)) {
             pump.forget(result);
         }
@@ -130,7 +131,9 @@ nsInputStreamPump::EnsureWaiting()
     if (!mWaitingForInputStreamReady && !mProcessingCallbacks) {
         // Ensure OnStateStop is called on the main thread.
         if (mState == STATE_STOP) {
-            nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+            nsCOMPtr<nsIEventTarget> mainThread = mLabeledMainThreadTarget
+                ? mLabeledMainThreadTarget
+                : do_GetMainThread();
             if (mTargetThread != mainThread) {
                 mTargetThread = do_QueryInterface(mainThread);
             }
@@ -296,7 +299,7 @@ NS_IMETHODIMP
 nsInputStreamPump::Init(nsIInputStream *stream,
                         int64_t streamPos, int64_t streamLen,
                         uint32_t segsize, uint32_t segcount,
-                        bool closeWhenDone)
+                        bool closeWhenDone, nsIEventTarget *mainThreadTarget)
 {
     NS_ENSURE_TRUE(mState == STATE_IDLE, NS_ERROR_IN_PROGRESS);
 
@@ -307,6 +310,7 @@ nsInputStreamPump::Init(nsIInputStream *stream,
     mSegSize = segsize;
     mSegCount = segcount;
     mCloseWhenDone = closeWhenDone;
+    mLabeledMainThreadTarget = mainThreadTarget;
 
     return NS_OK;
 }
@@ -376,7 +380,11 @@ nsInputStreamPump::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
 
     // grab event queue (we must do this here by contract, since all notifications
     // must go to the thread which called AsyncRead)
-    mTargetThread = do_GetCurrentThread();
+    if (NS_IsMainThread() && mLabeledMainThreadTarget) {
+        mTargetThread = mLabeledMainThreadTarget;
+    } else {
+        mTargetThread = do_GetCurrentThread();
+    }
     NS_ENSURE_STATE(mTargetThread);
 
     rv = EnsureWaiting();

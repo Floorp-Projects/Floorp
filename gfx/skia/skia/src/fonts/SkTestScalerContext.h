@@ -26,11 +26,13 @@ struct SkTestFontData {
     const SkPaint::FontMetrics& fMetrics;
     const char* fName;
     SkTypeface::Style fStyle;
-    sk_sp<SkTestFont> fCachedFont;
+    SkTestFont* fFontCache;
 };
 
 class SkTestFont : public SkRefCnt {
 public:
+    
+
     SkTestFont(const SkTestFontData& );
     virtual ~SkTestFont();
     int codeToIndex(SkUnichar charCode) const;
@@ -56,11 +58,14 @@ private:
 
 class SkTestTypeface : public SkTypeface {
 public:
-    SkTestTypeface(sk_sp<SkTestFont>, const SkFontStyle& style);
+    SkTestTypeface(SkTestFont*, const SkFontStyle& style);
+    virtual ~SkTestTypeface() {
+        SkSafeUnref(fTestFont);
+    }
     void getAdvance(SkGlyph* glyph);
     void getFontMetrics(SkPaint::FontMetrics* metrics);
     void getMetrics(SkGlyph* glyph);
-    void getPath(SkGlyphID glyph, SkPath* path);
+    void getPath(const SkGlyph& glyph, SkPath* path);
 protected:
     SkScalerContext* onCreateScalerContext(const SkScalerContextEffects&,
                                            const SkDescriptor* desc) const override;
@@ -84,17 +89,12 @@ protected:
     }
 
     int onGetUPEM() const override {
-        return 2048;
+        SkASSERT(0);  // don't expect to get here
+        return 1;
     }
 
     void onGetFamilyName(SkString* familyName) const override;
     SkTypeface::LocalizedStrings* onCreateFamilyNameIterator() const override;
-
-    int onGetVariationDesignPosition(SkFontArguments::VariationPosition::Coordinate coordinates[],
-                                     int coordinateCount) const override
-    {
-        return 0;
-    }
 
     int onGetTableTags(SkFontTableTag tags[]) const override {
         return 0;
@@ -105,7 +105,7 @@ protected:
         return 0;
     }
 private:
-    sk_sp<SkTestFont> fTestFont;
+    SkTestFont* fTestFont;
     friend class SkTestScalerContext;
 };
 

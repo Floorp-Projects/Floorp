@@ -1,0 +1,50 @@
+<!-- See browser_no_mcb_for_localhost.js -->
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf8">
+    <title>Bug 903966</title>
+  </head>
+
+  <style>
+    @font-face {
+      font-family: "Font-IPv4";
+      src: url("http://127.0.0.1:8/test.ttf");
+    }
+
+    @font-face {
+      font-family: "Font-IPv6";
+      src: url("http://[::1]:8/test.ttf");
+    }
+
+    #ip-v4 {
+      font-family: "Font-IPv4"
+    }
+
+    #ip-v6 {
+      font-family: "Font-IPv6"
+    }
+  </style>
+
+  <body>
+    <div id="ip-v4">test</div>
+    <div id="ip-v6">test</div>
+
+    <img src="http://127.0.0.1:8/test.png">
+    <img src="http://[::1]:8/test.png">
+
+    <iframe src="http://127.0.0.1:8/test.html"></iframe>
+    <iframe src="http://[::1]:8/test.html"></iframe>
+  </body>
+
+  <script src="http://127.0.0.1:8/test.js"></script>
+  <script src="http://[::1]:8/test.js"></script>
+
+  <link href="http://127.0.0.1:8/test.css" rel="stylesheet"></link>
+  <link href="http://[::1]:8/test.css" rel="stylesheet"></link>
+
+  <script>
+    fetch("http://127.0.0.1:8");
+    fetch("http://[::1]:8");
+  </script>
+</html>

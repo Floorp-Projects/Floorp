@@ -8,11 +8,9 @@
 #include "SkDeferredCanvas.h"
 #include "SkDrawable.h"
 #include "SkPath.h"
-#include "SkRSXform.h"
 #include "SkRRect.h"
 #include "SkSurface.h"
 #include "SkTextBlob.h"
-#include "SkClipOpPriv.h"
 
 bool SkDeferredCanvas::Rec::isConcat(SkMatrix* m) const {
     switch (fType) {
@@ -33,7 +31,7 @@ bool SkDeferredCanvas::Rec::isConcat(SkMatrix* m) const {
 
 void SkDeferredCanvas::Rec::setConcat(const SkMatrix& m) {
     SkASSERT(m.getType() <= (SkMatrix::kScale_Mask | SkMatrix::kTranslate_Mask));
-
+    
     if (m.getType() <= SkMatrix::kTranslate_Mask) {
         fType = kTrans_Type;
         fData.fTranslate.set(m.getTranslateX(), m.getTranslateY());
@@ -46,27 +44,12 @@ void SkDeferredCanvas::Rec::setConcat(const SkMatrix& m) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-SkDeferredCanvas::SkDeferredCanvas(SkCanvas* canvas, EvalType evalType)
+SkDeferredCanvas::SkDeferredCanvas(SkCanvas* canvas)
     : INHERITED(canvas->getBaseLayerSize().width(), canvas->getBaseLayerSize().height())
-    , fCanvas(nullptr)  // must be here for reset to work.
-    , fEvalType(evalType)
-{
-    this->reset(canvas);
-}
+    , fCanvas(canvas)
+{}
 
 SkDeferredCanvas::~SkDeferredCanvas() {}
-
-void SkDeferredCanvas::reset(SkCanvas* canvas) {
-    if (fCanvas) {
-        this->flush();
-        fCanvas = nullptr;
-    }
-    fRecs.reset();
-    if (canvas) {
-        this->resetForNextPicture(SkIRect::MakeSize(canvas->getBaseLayerSize()));
-        fCanvas = canvas;
-    }
-}
 
 void SkDeferredCanvas::push_save() {
     Rec* r = fRecs.append();
@@ -116,7 +99,7 @@ void SkDeferredCanvas::emit(const Rec& rec) {
         case kClipRect_Type:
             fCanvas->clipRect(rec.fData.fBounds);
             this->INHERITED::onClipRect(rec.fData.fBounds,
-                                        kIntersect_SkClipOp, kHard_ClipEdgeStyle);
+                                        kIntersect_Op, kHard_ClipEdgeStyle);
             break;
         case kTrans_Type:
         case kScaleTrans_Type: {
@@ -289,8 +272,8 @@ void SkDeferredCanvas::didSetMatrix(const SkMatrix& matrix) {
     this->INHERITED::didSetMatrix(matrix);
 }
 
-void SkDeferredCanvas::onClipRect(const SkRect& rect, SkClipOp op, ClipEdgeStyle edgeStyle) {
-    if (kIntersect_SkClipOp == op) {
+void SkDeferredCanvas::onClipRect(const SkRect& rect, ClipOp op, ClipEdgeStyle edgeStyle) {
+    if (kIntersect_Op == op) {
         this->push_cliprect(rect);
     } else {
         this->flush_all();
@@ -299,19 +282,19 @@ void SkDeferredCanvas::onClipRect(const SkRect& rect, SkClipOp op, ClipEdgeStyle
     }
 }
 
-void SkDeferredCanvas::onClipRRect(const SkRRect& rrect, SkClipOp op, ClipEdgeStyle edgeStyle) {
+void SkDeferredCanvas::onClipRRect(const SkRRect& rrect, ClipOp op, ClipEdgeStyle edgeStyle) {
     this->flush_all();
     fCanvas->clipRRect(rrect, op, kSoft_ClipEdgeStyle == edgeStyle);
     this->INHERITED::onClipRRect(rrect, op, edgeStyle);
 }
 
-void SkDeferredCanvas::onClipPath(const SkPath& path, SkClipOp op, ClipEdgeStyle edgeStyle) {
+void SkDeferredCanvas::onClipPath(const SkPath& path, ClipOp op, ClipEdgeStyle edgeStyle) {
     this->flush_all();
     fCanvas->clipPath(path, op, kSoft_ClipEdgeStyle == edgeStyle);
     this->INHERITED::onClipPath(path, op, edgeStyle);
 }
 
-void SkDeferredCanvas::onClipRegion(const SkRegion& deviceRgn, SkClipOp op) {
+void SkDeferredCanvas::onClipRegion(const SkRegion& deviceRgn, ClipOp op) {
     this->flush_all();
     fCanvas->clipRegion(deviceRgn, op);
     this->INHERITED::onClipRegion(deviceRgn, op);
@@ -451,7 +434,7 @@ void SkDeferredCanvas::onDrawImageLattice(const SkImage* image, const Lattice& l
 }
 
 void SkDeferredCanvas::onDrawText(const void* text, size_t byteLength, SkScalar x, SkScalar y,
-                                  const SkPaint& paint) {
+                              const SkPaint& paint) {
     this->flush_translate(&x, &y, paint);
     fCanvas->drawText(text, byteLength, x, y, paint);
 }
@@ -497,50 +480,52 @@ void SkDeferredCanvas::onDrawTextBlob(const SkTextBlob* blob, SkScalar x, SkScal
 #include "SkCanvasPriv.h"
 void SkDeferredCanvas::onDrawPicture(const SkPicture* picture, const SkMatrix* matrix,
                                  const SkPaint* paint) {
-    if (kEager == fEvalType) {
-        SkAutoCanvasMatrixPaint acmp(this, matrix, paint, picture->cullRect());
-        picture->playback(this);
-    } else {
-        this->flush_before_saves();
-        fCanvas->drawPicture(picture, matrix, paint);
-    }
+#if 1
+    SkAutoCanvasMatrixPaint acmp(this, matrix, paint, picture->cullRect());
+    picture->playback(this);
+#else
+    this->flush_before_saves();
+    fCanvas->drawPicture(picture, matrix, paint);
+#endif
 }
 
 void SkDeferredCanvas::onDrawDrawable(SkDrawable* drawable, const SkMatrix* matrix) {
-    if (kEager == fEvalType) {
-        // TODO: investigate culling and applying concat to the matrix
-        drawable->draw(this, matrix);
-    } else {
-        this->flush_before_saves();
-        fCanvas->drawDrawable(drawable, matrix);
-    }
+    // TODO: investigate culling and applying concat to the matrix
+#if 1
+    drawable->draw(this, matrix);
+#else
+    this->flush_before_saves();
+    fCanvas->drawDrawable(drawable, matrix);
+#endif
 }
 
 void SkDeferredCanvas::onDrawAtlas(const SkImage* image, const SkRSXform xform[],
                                    const SkRect rects[], const SkColor colors[],
-                                   int count, SkBlendMode bmode,
+                                   int count, SkXfermode::Mode mode,
                                    const SkRect* cull, const SkPaint* paint) {
     this->flush_before_saves();
-    fCanvas->drawAtlas(image, xform, rects, colors, count, bmode, cull, paint);
+    fCanvas->drawAtlas(image, xform, rects, colors, count, mode, cull, paint);
 }
 
-void SkDeferredCanvas::onDrawVerticesObject(const SkVertices* vertices, SkBlendMode bmode,
-                                            const SkPaint& paint) {
+void SkDeferredCanvas::onDrawVertices(VertexMode vmode, int vertexCount,
+                                  const SkPoint vertices[], const SkPoint texs[],
+                                  const SkColor colors[], SkXfermode* xmode,
+                                  const uint16_t indices[], int indexCount,
+                                  const SkPaint& paint) {
     this->flush_before_saves();
-    fCanvas->drawVertices(vertices, bmode, paint);
+    fCanvas->drawVertices(vmode, vertexCount, vertices, texs, colors, xmode,
+                           indices, indexCount, paint);
 }
 
 void SkDeferredCanvas::onDrawPatch(const SkPoint cubics[12], const SkColor colors[4],
-                               const SkPoint texCoords[4], SkBlendMode bmode,
+                               const SkPoint texCoords[4], SkXfermode* xmode,
                                const SkPaint& paint) {
     this->flush_before_saves();
-    fCanvas->drawPatch(cubics, colors, texCoords, bmode, paint);
+    fCanvas->drawPatch(cubics, colors, texCoords, xmode, paint);
 }
 
 void SkDeferredCanvas::onDrawAnnotation(const SkRect& rect, const char key[], SkData* data) {
-    SkRect modRect = rect;
-    this->flush_check(&modRect, nullptr, kNoClip_Flag);
-    fCanvas->drawAnnotation(modRect, key, data);
+    fCanvas->drawAnnotation(rect, key, data);
 }
 
 #ifdef SK_SUPPORT_LEGACY_DRAWFILTER
@@ -557,11 +542,11 @@ sk_sp<SkSurface> SkDeferredCanvas::onNewSurface(const SkImageInfo& info,
     return fCanvas->makeSurface(info, &props);
 }
 SkISize SkDeferredCanvas::getBaseLayerSize() const { return fCanvas->getBaseLayerSize(); }
-SkRect SkDeferredCanvas::onGetLocalClipBounds() const {
-    return fCanvas->getLocalClipBounds();
+bool SkDeferredCanvas::getClipBounds(SkRect* bounds) const {
+    return fCanvas->getClipBounds(bounds);
 }
-SkIRect SkDeferredCanvas::onGetDeviceClipBounds() const {
-    return fCanvas->getDeviceClipBounds();
+bool SkDeferredCanvas::getClipDeviceBounds(SkIRect* bounds) const {
+    return fCanvas->getClipDeviceBounds(bounds);
 }
 bool SkDeferredCanvas::isClipEmpty() const { return fCanvas->isClipEmpty(); }
 bool SkDeferredCanvas::isClipRect() const { return fCanvas->isClipRect(); }

@@ -205,7 +205,7 @@ private:
 
   IntSize mSize;
   sk_sp<SkSurface> mSurface;
-  SkCanvas* mCanvas;
+  sk_sp<SkCanvas> mCanvas;
   SourceSurfaceSkia* mSnapshot;
 
 #ifdef MOZ_WIDGET_COCOA

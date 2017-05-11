@@ -8,8 +8,7 @@
 #ifndef SkRSXform_DEFINED
 #define SkRSXform_DEFINED
 
-#include "SkPoint.h"
-#include "SkSize.h"
+#include "SkScalar.h"
 
 /**
  *  A compressed form of a rotation+scale matrix.

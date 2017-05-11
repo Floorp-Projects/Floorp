@@ -11,6 +11,7 @@
 #include "GrVkDescriptorSet.h"
 #include "GrVkGpu.h"
 #include "GrVkUniformHandler.h"
+#include "glsl/GrGLSLSampler.h"
 
 GrVkDescriptorSetManager::GrVkDescriptorSetManager(GrVkGpu* gpu,
                                                    VkDescriptorType type,
@@ -19,7 +20,7 @@ GrVkDescriptorSetManager::GrVkDescriptorSetManager(GrVkGpu* gpu,
     if (type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER) {
         SkASSERT(uniformHandler);
         for (int i = 0; i < uniformHandler->numSamplers(); ++i) {
-            fBindingVisibilities.push_back(uniformHandler->samplerVisibility(i));
+            fBindingVisibilities.push_back(uniformHandler->getSampler(i).visibility());
         }
     } else {
         SkASSERT(type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
@@ -102,7 +103,7 @@ bool GrVkDescriptorSetManager::isCompatible(VkDescriptorType type,
             return false;
         }
         for (int i = 0; i < uniHandler->numSamplers(); ++i) {
-            if (uniHandler->samplerVisibility(i) != fBindingVisibilities[i]) {
+            if (uniHandler->getSampler(i).visibility() != fBindingVisibilities[i]) {
                 return false;
             }
         }
@@ -179,12 +180,15 @@ void GrVkDescriptorSetManager::DescriptorPoolManager::init(GrVkGpu* gpu,
             numSamplers = (uint32_t)visibilities->count();
         }
 
-        std::unique_ptr<VkDescriptorSetLayoutBinding[]> dsSamplerBindings(
+        SkAutoTDeleteArray<VkDescriptorSetLayoutBinding> dsSamplerBindings(
             new VkDescriptorSetLayoutBinding[numSamplers]);
         for (uint32_t i = 0; i < numSamplers; ++i) {
             uint32_t visibility;
             if (uniformHandler) {
-                visibility = uniformHandler->samplerVisibility(i);
+                const GrVkGLSLSampler& sampler =
+                    static_cast<const GrVkGLSLSampler&>(uniformHandler->getSampler(i));
+                SkASSERT(sampler.binding() == i);
+                visibility = sampler.visibility();
             } else {
                 visibility = (*visibilities)[i];
             }

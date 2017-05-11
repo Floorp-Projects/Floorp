@@ -29,7 +29,7 @@ public:
 
     // Flush anything we've recorded to the canvas, resetting this SkMiniRecorder.
     // This is logically the same as but rather more efficient than:
-    //    sk_sp<SkPicture> pic(this->detachAsPicture(SkRect::MakeEmpty()));
+    //    SkAutoTUnref<SkPicture> pic(this->detachAsPicture(SkRect::MakeEmpty()));
     //    pic->playback(canvas);
     void flushAndReset(SkCanvas*);
 

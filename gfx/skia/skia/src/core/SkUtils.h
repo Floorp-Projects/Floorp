@@ -9,16 +9,39 @@
 #define SkUtils_DEFINED
 
 #include "SkTypes.h"
-#include "SkMath.h"
 
-/** Similar to memset(), but it assigns a 16, 32, or 64-bit value into the buffer.
+/** Similar to memset(), but it assigns a 16bit value into the buffer.
     @param buffer   The memory to have value copied into it
-    @param value    The value to be copied into buffer
+    @param value    The 16bit value to be copied into buffer
     @param count    The number of times value should be copied into the buffer.
 */
-void sk_memset16(uint16_t buffer[], uint16_t value, int count);
-void sk_memset32(uint32_t buffer[], uint32_t value, int count);
-void sk_memset64(uint64_t buffer[], uint64_t value, int count);
+static inline void sk_memset16(uint16_t buffer[], uint16_t value, int count) {
+    for (int i = 0; i < count; i++) {
+        buffer[i] = value;
+    }
+}
+
+/** Similar to memset(), but it assigns a 32bit value into the buffer.
+    @param buffer   The memory to have value copied into it
+    @param value    The 32bit value to be copied into buffer
+    @param count    The number of times value should be copied into the buffer.
+*/
+static inline void sk_memset32(uint32_t buffer[], uint32_t value, int count) {
+    for (int i = 0; i < count; i++) {
+        buffer[i] = value;
+    }
+}
+
+/** Similar to memset(), but it assigns a 64bit value into the buffer.
+    @param buffer   The memory to have value copied into it
+    @param value    The 64bit value to be copied into buffer
+    @param count    The number of times value should be copied into the buffer.
+*/
+static inline void sk_memset64(uint64_t buffer[], uint64_t value, int count) {
+    for (int i = 0; i < count; i++) {
+        buffer[i] = value;
+    }
+}
 ///////////////////////////////////////////////////////////////////////////////
 
 #define kMaxBytesInUTF8Sequence     4
@@ -35,31 +58,7 @@ inline int SkUTF8_CountUTF8Bytes(const char utf8[]) {
 }
 
 int         SkUTF8_CountUnichars(const char utf8[]);
-
-/** This function is safe: invalid UTF8 sequences will return -1; */
-int         SkUTF8_CountUnicharsWithError(const char utf8[], size_t byteLength);
-
-/** This function is safe: invalid UTF8 sequences will return 0; */
-inline int  SkUTF8_CountUnichars(const char utf8[], size_t byteLength) {
-    return SkClampPos(SkUTF8_CountUnicharsWithError(utf8, byteLength));
-}
-
-/** This function is safe: invalid UTF8 sequences will return -1
- *  When -1 is returned, ptr is unchanged.
- *  Precondition: *ptr < end;
- */
-SkUnichar SkUTF8_NextUnicharWithError(const char** ptr, const char* end);
-
-/** this version replaces invalid utf-8 sequences with code point U+FFFD. */
-inline SkUnichar SkUTF8_NextUnichar(const char** ptr, const char* end) {
-    SkUnichar val = SkUTF8_NextUnicharWithError(ptr, end);
-    if (val < 0) {
-        *ptr = end;
-        return 0xFFFD;  // REPLACEMENT CHARACTER
-    }
-    return val;
-}
-
+int         SkUTF8_CountUnichars(const char utf8[], size_t byteLength);
 SkUnichar   SkUTF8_ToUnichar(const char utf8[]);
 SkUnichar   SkUTF8_NextUnichar(const char**);
 SkUnichar   SkUTF8_PrevUnichar(const char**);
@@ -100,4 +99,5 @@ inline bool SkUnichar_IsVariationSelector(SkUnichar uni) {
     }
     return true;
 }
+
 #endif
