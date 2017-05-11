@@ -1376,7 +1376,10 @@ nsIFrame::Combines3DTransformWithAncestors(const nsStyleDisplay* aStyleDisplay) 
 bool
 nsIFrame::In3DContextAndBackfaceIsHidden() const
 {
-  return Combines3DTransformWithAncestors() && BackfaceIsHidden();
+  // While both tests fail most of the time, test BackfaceIsHidden()
+  // first since it's likely to fail faster.
+  const nsStyleDisplay* disp = StyleDisplay();
+  return BackfaceIsHidden(disp) && Combines3DTransformWithAncestors(disp);
 }
 
 bool
