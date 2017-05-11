@@ -126,43 +126,38 @@
 
 #include "mozilla/Types.h"
 
-#if !defined(MOZ_SYSTEM_JEMALLOC)
-#  ifdef MOZ_MEMORY_IMPL
-#    if defined(MOZ_JEMALLOC_IMPL) && defined(MOZ_REPLACE_MALLOC) && !defined(MOZ_REPLACE_JEMALLOC)
-#      define mozmem_malloc_impl(a)     je_ ## a
-#      define mozmem_jemalloc_impl(a)   je_ ## a
-#    else
-#      define MOZ_JEMALLOC_API MFBT_API
-#      ifdef MOZ_REPLACE_JEMALLOC
-#        define MOZ_MEMORY_API MFBT_API
-#        define mozmem_malloc_impl(a)     replace_ ## a
-#        define mozmem_jemalloc_impl(a)   replace_ ## a
-#      elif (defined(XP_WIN) || defined(XP_DARWIN))
-#        if defined(MOZ_REPLACE_MALLOC)
-#          define mozmem_malloc_impl(a)   a ## _impl
-#        else
-#          define mozmem_malloc_impl(a)   je_ ## a
-#        endif
+#ifdef MOZ_MEMORY_IMPL
+#  if defined(MOZ_JEMALLOC_IMPL) && defined(MOZ_REPLACE_MALLOC) && !defined(MOZ_REPLACE_JEMALLOC)
+#    define mozmem_malloc_impl(a)     je_ ## a
+#    define mozmem_jemalloc_impl(a)   je_ ## a
+#  else
+#    define MOZ_JEMALLOC_API MFBT_API
+#    ifdef MOZ_REPLACE_JEMALLOC
+#      define MOZ_MEMORY_API MFBT_API
+#      define mozmem_malloc_impl(a)     replace_ ## a
+#      define mozmem_jemalloc_impl(a)   replace_ ## a
+#    elif (defined(XP_WIN) || defined(XP_DARWIN))
+#      if defined(MOZ_REPLACE_MALLOC)
+#        define mozmem_malloc_impl(a)   a ## _impl
 #      else
-#        define MOZ_MEMORY_API MFBT_API
-#        if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
-#          define MOZ_WRAP_NEW_DELETE
-#        endif
+#        define mozmem_malloc_impl(a)   je_ ## a
+#      endif
+#    else
+#      define MOZ_MEMORY_API MFBT_API
+#      if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
+#        define MOZ_WRAP_NEW_DELETE
 #      endif
 #    endif
-#    ifdef XP_WIN
-#      define mozmem_dup_impl(a)      wrap_ ## a
-#    endif
 #  endif
-
-/* All other jemalloc3 functions are prefixed with "je_", except when
- * building against an unprefixed system jemalloc library */
-#  define je_(a) je_ ## a
-#else /* defined(MOZ_SYSTEM_JEMALLOC) */
-#  define je_(a) a
+#  ifdef XP_WIN
+#    define mozmem_dup_impl(a)      wrap_ ## a
+#  endif
 #endif
 
-#if !defined(MOZ_MEMORY_IMPL) || defined(MOZ_SYSTEM_JEMALLOC)
+/* All other jemalloc3 functions are prefixed with "je_" */
+#define je_(a) je_ ## a
+
+#if !defined(MOZ_MEMORY_IMPL)
 #  define MOZ_MEMORY_API MFBT_API
 #  define MOZ_JEMALLOC_API MFBT_API
 #endif
