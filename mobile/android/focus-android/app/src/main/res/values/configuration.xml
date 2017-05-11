@@ -12,4 +12,6 @@
     <integer name="erase_animation_translate_offset">150</integer>
 
     <integer name="erase_snackbar_delay">500</integer>
+
+    <integer name="progress_shift_duration">500</integer>
 </resources>

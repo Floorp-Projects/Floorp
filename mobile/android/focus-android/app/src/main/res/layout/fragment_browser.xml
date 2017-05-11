@@ -5,7 +5,8 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <View
         android:id="@+id/background"
@@ -19,7 +20,8 @@
         android:id="@+id/main_content"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:clipChildren="false">
 
         <org.mozilla.focus.web.IWebView
             android:id="@+id/webview"
@@ -32,25 +34,30 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@android:color/transparent"
-            app:elevation="0dp">
+            app:elevation="0dp"
+            android:clipChildren="false">
 
             <FrameLayout
                 android:id="@+id/urlbar"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                app:layout_scrollFlags="scroll|enterAlways|snap">
+                app:layout_scrollFlags="scroll|enterAlways|snap"
+                android:clipChildren="false">
 
                 <include layout="@layout/toolbar"/>
 
-                <ProgressBar
+                <org.mozilla.focus.widget.AnimatedProgressBar
                     android:id="@+id/progress"
-                    style="@android:style/Widget.Material.ProgressBar.Horizontal"
-                    android:progressDrawable="@drawable/progress"
+                    style="@style/Base.Widget.AppCompat.ProgressBar.Horizontal"
                     android:layout_width="match_parent"
-                    android:layout_height="3dp"
+                    android:layout_height="2dp"
+                    android:progressDrawable="@drawable/photon_progressbar"
+                    app:shiftDuration="@integer/progress_shift_duration"
+                    app:wrapShiftDrawable="true"
                     android:layout_gravity="bottom"
-                    android:importantForAccessibility="yes" />
-
+                    android:layout_marginBottom="-1dp"
+                    android:importantForAccessibility="yes"
+                    tools:progress="50" />
             </FrameLayout>
 
         </android.support.design.widget.AppBarLayout>
