@@ -146,7 +146,6 @@ public class GeckoView extends LayerView
             view.mNativeQueue.setState(mNativeQueue.getState());
             mNativeQueue = view.mNativeQueue;
         }
-
     }
 
     // Object to hold onto our nsWindow connection when GeckoView gets destroyed.
@@ -1064,6 +1063,16 @@ public class GeckoView extends LayerView
         * @param title The title sent from the content.
         */
         void onTitleChange(GeckoView view, String title);
+
+        /**
+         * A page has entered or exited full screen mode. Typically, the implementation
+         * would set the Activity containing the GeckoView to full screen when the page is
+         * in full screen mode.
+         *
+         * @param view The GeckoView that initiated the callback.
+         * @param fullScreen True if the page is in full screen mode.
+         */
+        void onFullScreen(GeckoView view, boolean fullScreen);
     }
 
     public interface NavigationListener {
