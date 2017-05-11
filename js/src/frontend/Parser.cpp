@@ -3491,7 +3491,9 @@ Parser<ParseHandler>::appendToCallSiteObj(Node callSiteObj)
 
 template <>
 ParseNode*
-Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, bool strict,
+Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun,
+                                                 uint32_t preludeStart,
+                                                 bool strict,
                                                  GeneratorKind generatorKind,
                                                  FunctionAsyncKind asyncKind)
 {
@@ -3502,7 +3504,7 @@ Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, bool strict
         return null();
 
     Directives directives(strict);
-    FunctionBox* funbox = newFunctionBox(pn, fun, /* preludeStart = */ 0, directives,
+    FunctionBox* funbox = newFunctionBox(pn, fun, preludeStart, directives,
                                          generatorKind, asyncKind, /* tryAnnexB = */ false);
     if (!funbox)
         return null();
@@ -3663,14 +3665,14 @@ Parser<ParseHandler>::functionFormalParametersAndBody(InHandling inHandling,
             error(JSMSG_CURLY_AFTER_BODY);
             return false;
         }
-        funbox->bufEnd = pos().end;
+        funbox->setEnd(tokenStream);
     } else {
 #if !JS_HAS_EXPR_CLOSURES
         MOZ_ASSERT(kind == Arrow);
 #endif
         if (tokenStream.hadError())
             return false;
-        funbox->bufEnd = pos().end;
+        funbox->setEnd(tokenStream);
         if (kind == Statement && !matchOrInsertSemicolonAfterExpression())
             return false;
     }
@@ -8381,7 +8383,7 @@ Parser<ParseHandler>::generatorComprehensionLambda(unsigned begin)
     uint32_t end = pos().end;
     handler.setBeginPosition(comp, begin);
     handler.setEndPosition(comp, end);
-    genFunbox->bufEnd = end;
+    genFunbox->setEnd(tokenStream);
     handler.addStatementToList(body, comp);
     handler.setEndPosition(body, end);
     handler.setBeginPosition(genfn, begin);
