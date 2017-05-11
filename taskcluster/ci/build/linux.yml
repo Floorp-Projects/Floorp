@@ -457,7 +457,7 @@ linux64-qr/debug:
         custom-build-variant-cfg: qr-debug
         tooltool-downloads: public
         need-xvfb: true
-    run-on-projects: [ 'mozilla-central', 'graphics' ]
+    run-on-projects: [ 'autoland', 'mozilla-inbound', 'mozilla-central', 'graphics' ]
 
 linux64-qr/opt:
     description: "Linux64 Opt QuantumRender"
@@ -483,7 +483,7 @@ linux64-qr/opt:
         custom-build-variant-cfg: qr-opt
         tooltool-downloads: public
         need-xvfb: true
-    run-on-projects: [ 'mozilla-central', 'graphics' ]
+    run-on-projects: [ 'autoland', 'mozilla-inbound', 'mozilla-central', 'graphics' ]
 
 linux-qr/opt:
     description: "Linux32 Opt QuantumRender"
