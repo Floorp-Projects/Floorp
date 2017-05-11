@@ -360,7 +360,7 @@ public:
     // a raw pointer here.
     Reader()->ReadMetadata()
       ->Then(OwnerThread(), __func__,
-        [this] (MetadataHolder* aMetadata) {
+        [this] (RefPtr<MetadataHolder> aMetadata) {
           OnMetadataRead(aMetadata);
         },
         [this] (const MediaResult& aError) {
@@ -3234,7 +3234,7 @@ MediaDecoderStateMachine::RequestAudioData()
   RefPtr<MediaDecoderStateMachine> self = this;
   mReader->RequestAudioData()->Then(
     OwnerThread(), __func__,
-    [this, self] (AudioData* aAudio) {
+    [this, self] (RefPtr<AudioData> aAudio) {
       MOZ_ASSERT(aAudio);
       mAudioDataRequest.Complete();
       // audio->GetEndTime() is not always mono-increasing in chained ogg.
@@ -3281,7 +3281,7 @@ MediaDecoderStateMachine::RequestVideoData(bool aSkipToNextKeyframe,
   RefPtr<MediaDecoderStateMachine> self = this;
   mReader->RequestVideoData(aSkipToNextKeyframe, aCurrentTime)->Then(
     OwnerThread(), __func__,
-    [this, self, videoDecodeStartTime] (VideoData* aVideo) {
+    [this, self, videoDecodeStartTime] (RefPtr<VideoData> aVideo) {
       MOZ_ASSERT(aVideo);
       mVideoDataRequest.Complete();
       // Handle abnormal or negative timestamps.

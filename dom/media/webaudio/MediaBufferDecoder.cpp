@@ -114,10 +114,10 @@ private:
   }
 
   void Decode();
-  void OnMetadataRead(MetadataHolder* aMetadata);
+  void OnMetadataRead(RefPtr<MetadataHolder> aMetadata);
   void OnMetadataNotRead(const MediaResult& aError);
   void RequestSample();
-  void SampleDecoded(AudioData* aData);
+  void SampleDecoded(RefPtr<AudioData> aData);
   void SampleNotDecoded(const MediaResult& aError);
   void FinishDecode();
   void AllocateBuffer();
@@ -269,7 +269,7 @@ MediaDecodeTask::Decode()
 }
 
 void
-MediaDecodeTask::OnMetadataRead(MetadataHolder* aMetadata)
+MediaDecodeTask::OnMetadataRead(RefPtr<MetadataHolder> aMetadata)
 {
   mMediaInfo = aMetadata->mInfo;
   if (!mMediaInfo.HasAudio()) {
@@ -316,7 +316,7 @@ MediaDecodeTask::RequestSample()
 }
 
 void
-MediaDecodeTask::SampleDecoded(AudioData* aData)
+MediaDecodeTask::SampleDecoded(RefPtr<AudioData> aData)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   mAudioQueue.Push(aData);
