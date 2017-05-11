@@ -84,7 +84,10 @@ function waitForDelayedStartup(win) {
  */
 function loadTabs(gBrowser, urls) {
   return new Promise((resolve) => {
-    gBrowser.loadTabs(urls, true);
+    gBrowser.loadTabs(urls, {
+      inBackground: true,
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
 
     let waitingToLoad = new Set(urls);
 
@@ -434,8 +437,10 @@ function test(window) {
     output += '</table></body></html>';
     dump("total tab switch time:" + time + "\n");
 
-    let resultsTab = win.gBrowser.loadOneTab('data:text/html;charset=utf-8,' +
-                                             encodeURIComponent(output));
+    let resultsTab = win.gBrowser.loadOneTab(
+      'data:text/html;charset=utf-8,' + encodeURIComponent(output), {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
     let pref = Services.prefs.getBoolPref("browser.tabs.warnOnCloseOtherTabs");
     if (pref)
       Services.prefs.setBoolPref("browser.tabs.warnOnCloseOtherTabs", false);

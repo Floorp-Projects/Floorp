@@ -3321,7 +3321,8 @@ TabChild::ForcePaint(uint64_t aLayerObserverEpoch)
 void
 TabChild::BeforeUnloadAdded()
 {
-  if (mBeforeUnloadListeners == 0) {
+  // Don't bother notifying the parent if we don't have an IPC link open.
+  if (mBeforeUnloadListeners == 0 && IPCOpen()) {
     SendSetHasBeforeUnload(true);
   }
 
@@ -3335,7 +3336,8 @@ TabChild::BeforeUnloadRemoved()
   mBeforeUnloadListeners--;
   MOZ_ASSERT(mBeforeUnloadListeners >= 0);
 
-  if (mBeforeUnloadListeners == 0) {
+  // Don't bother notifying the parent if we don't have an IPC link open.
+  if (mBeforeUnloadListeners == 0 && IPCOpen()) {
     SendSetHasBeforeUnload(false);
   }
 }
