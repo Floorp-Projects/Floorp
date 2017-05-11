@@ -82,35 +82,13 @@ html|button, html|select {
   background-color: transparent;
   border-radius: 4px;
   padding: 1px 0;
-}
-
-.devtools-autocomplete-listbox .autocomplete-selected {
-  background-color: rgba(0,0,0,0.2);
-}
-
-.devtools-autocomplete-listbox.dark-theme .autocomplete-selected,
-.devtools-autocomplete-listbox.dark-theme .autocomplete-item:hover {
-  background-color: rgba(0,0,0,0.5);
-}
-
-.devtools-autocomplete-listbox.dark-theme .autocomplete-selected > .autocomplete-value,
-.devtools-autocomplete-listbox:focus.dark-theme .autocomplete-selected > .initial-value {
-  color: hsl(208,100%,60%);
-}
-
-.devtools-autocomplete-listbox.dark-theme .autocomplete-selected > span {
-  color: #eee;
-}
-
-.devtools-autocomplete-listbox.dark-theme .autocomplete-item > span {
-  color: #ccc;
+  cursor: default;
 }
 
 .devtools-autocomplete-listbox .autocomplete-item > .initial-value,
 .devtools-autocomplete-listbox .autocomplete-item > .autocomplete-value {
   margin: 0;
   padding: 0;
-  cursor: default;
 }
 
 .devtools-autocomplete-listbox .autocomplete-item > .autocomplete-count {
@@ -120,50 +98,58 @@ html|button, html|select {
 /* Rest of the dark and light theme */
 
 .devtools-autocomplete-popup,
+.CodeMirror-hints,
+.CodeMirror-Tern-tooltip {
+  border: 1px solid hsl(210,24%,90%);
+  background-image: linear-gradient(to bottom, hsla(209,18%,100%,0.9), hsl(210,24%,95%));
+  box-shadow: 0 1px 0 hsla(209,29%,90%,.25) inset;
+}
+
+.theme-dark .devtools-autocomplete-popup,
 .theme-dark .CodeMirror-hints,
 .theme-dark .CodeMirror-Tern-tooltip {
   border: 1px solid hsl(210,11%,10%);
   background-image: linear-gradient(to bottom, hsla(209,18%,18%,0.9), hsl(210,11%,16%));
-}
-
-.devtools-autocomplete-popup.light-theme,
-.light-theme .CodeMirror-hints,
-.light-theme .CodeMirror-Tern-tooltip {
-  border: 1px solid hsl(210,24%,90%);
-  background-image: linear-gradient(to bottom, hsla(209,18%,100%,0.9), hsl(210,24%,95%));
-}
-
-.devtools-autocomplete-popup.light-theme {
-  box-shadow: 0 1px 0 hsla(209,29%,90%,.25) inset;
+  box-shadow: none;
 }
 
 .theme-firebug .devtools-autocomplete-popup {
   border-color: var(--theme-splitter-color);
   border-radius: 5px;
   font-size: var(--theme-autompletion-font-size);
-}
-
-.devtools-autocomplete-popup.firebug-theme {
   background: var(--theme-body-background);
 }
 
-.devtools-autocomplete-listbox.firebug-theme .autocomplete-selected,
-.devtools-autocomplete-listbox.firebug-theme .autocomplete-item:hover,
-.devtools-autocomplete-listbox.light-theme .autocomplete-selected,
-.devtools-autocomplete-listbox.light-theme .autocomplete-item:hover {
+.devtools-autocomplete-listbox .autocomplete-selected,
+.devtools-autocomplete-listbox .autocomplete-item:hover {
   background-color: rgba(128,128,128,0.3);
 }
 
-.devtools-autocomplete-listbox.firebug-theme .autocomplete-selected > .autocomplete-value,
-.devtools-autocomplete-listbox:focus.firebug-theme .autocomplete-selected > .initial-value,
-.devtools-autocomplete-listbox.light-theme .autocomplete-selected > .autocomplete-value,
-.devtools-autocomplete-listbox:focus.light-theme .autocomplete-selected > .initial-value {
+.theme-dark .devtools-autocomplete-listbox .autocomplete-selected,
+.theme-dark .devtools-autocomplete-listbox .autocomplete-item:hover {
+  background-color: rgba(0,0,0,0.5);
+}
+
+.devtools-autocomplete-listbox .autocomplete-selected > .autocomplete-value,
+.devtools-autocomplete-listbox:focus .autocomplete-selected > .initial-value {
   color: #222;
 }
 
-.devtools-autocomplete-listbox.firebug-theme .autocomplete-item > span,
-.devtools-autocomplete-listbox.light-theme .autocomplete-item > span {
+.theme-dark .devtools-autocomplete-listbox .autocomplete-selected > .autocomplete-value,
+.theme-dark .devtools-autocomplete-listbox:focus .autocomplete-selected > .initial-value {
+  color: hsl(208,100%,60%);
+}
+
+.devtools-autocomplete-listbox .autocomplete-item > span {
   color: #666;
+}
+
+.theme-dark .devtools-autocomplete-listbox .autocomplete-item > span {
+  color: #ccc;
+}
+
+.theme-dark .devtools-autocomplete-listbox .autocomplete-selected > span {
+  color: #eee;
 }
 
 /* Autocomplete list clone used for accessibility. */
@@ -491,6 +477,14 @@ checkbox:-moz-focusring {
   box-shadow: var(--theme-focus-box-shadow-textbox);
   transition: all 0.2s ease-in-out;
   outline: none;
+}
+
+.devtools-searchbox .devtools-autocomplete-popup {
+  position: absolute;
+  top: 100%;
+  width: 100%;
+  line-height: initial !important;
+  z-index: 999;
 }
 
 /* Don't add 'double spacing' for inputs that are at beginning / end
