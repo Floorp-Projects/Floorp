@@ -746,23 +746,6 @@ MessageChannel::Clear()
     }
 }
 
-class AbstractThreadWrapperCleanup : public MessageLoop::DestructionObserver
-{
-public:
-    AbstractThreadWrapperCleanup(already_AddRefed<AbstractThread> aWrapper)
-        : mWrapper(aWrapper)
-    {}
-    virtual ~AbstractThreadWrapperCleanup() override {}
-    virtual void WillDestroyCurrentMessageLoop() override
-    {
-        mWrapper = nullptr;
-        MessageLoop::current()->RemoveDestructionObserver(this);
-        delete this;
-    }
-private:
-    RefPtr<AbstractThread> mWrapper;
-};
-
 bool
 MessageChannel::Open(Transport* aTransport, MessageLoop* aIOLoop, Side aSide)
 {
@@ -774,9 +757,7 @@ MessageChannel::Open(Transport* aTransport, MessageLoop* aIOLoop, Side aSide)
     mWorkerLoop->AddDestructionObserver(this);
 
     if (!AbstractThread::GetCurrent()) {
-        mWorkerLoop->AddDestructionObserver(
-            new AbstractThreadWrapperCleanup(
-                MessageLoopAbstractThreadWrapper::Create(mWorkerLoop)));
+        mAbstractThread = MessageLoopAbstractThreadWrapper::Create(mWorkerLoop);
     }
 
 
@@ -859,9 +840,7 @@ MessageChannel::CommonThreadOpenInit(MessageChannel *aTargetChan, Side aSide)
     mWorkerLoop->AddDestructionObserver(this);
 
     if (!AbstractThread::GetCurrent()) {
-        mWorkerLoop->AddDestructionObserver(
-            new AbstractThreadWrapperCleanup(
-                MessageLoopAbstractThreadWrapper::Create(mWorkerLoop)));
+        mAbstractThread = MessageLoopAbstractThreadWrapper::Create(mWorkerLoop);
     }
 
     mLink = new ThreadLink(this, aTargetChan);

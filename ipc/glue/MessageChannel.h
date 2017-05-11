@@ -34,6 +34,8 @@
 #include <stack>
 
 namespace mozilla {
+class AbstractThread;
+
 namespace ipc {
 
 class MessageChannel;
@@ -556,6 +558,7 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver
     Side mSide;
     MessageLink* mLink;
     MessageLoop* mWorkerLoop;           // thread where work is done
+    RefPtr<AbstractThread> mAbstractThread;
     RefPtr<CancelableRunnable> mChannelErrorTask;  // NotifyMaybeChannelError runnable
 
     // id() of mWorkerLoop.  This persists even after mWorkerLoop is cleared
