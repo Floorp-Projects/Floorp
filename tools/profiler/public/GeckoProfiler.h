@@ -382,12 +382,6 @@ PROFILER_FUNC(double profiler_time(), 0)
 
 PROFILER_FUNC_VOID(profiler_log(const char* aStr))
 
-// Gets the stack top of the current thread.
-//
-// The thread must have been previously registered with the profiler, otherwise
-// this method will return nullptr.
-PROFILER_FUNC(void* profiler_get_stack_top(), nullptr)
-
 PROFILER_FUNC(int profiler_current_thread_id(), 0)
 
 // This method suspends the thread identified by aThreadId, optionally samples
