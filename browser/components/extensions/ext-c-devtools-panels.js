@@ -2,8 +2,12 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+Cu.import("resource://gre/modules/Services.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
                                   "resource://gre/modules/EventEmitter.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionChildDevToolsUtils",
+                                  "resource://gre/modules/ExtensionChildDevToolsUtils.jsm");
 
 var {
   promiseDocumentLoaded,
@@ -132,6 +136,8 @@ class ChildDevToolsPanel extends EventEmitter {
 
 this.devtools_panels = class extends ExtensionAPI {
   getAPI(context) {
+    const themeChangeObserver = ExtensionChildDevToolsUtils.getThemeChangeObserver();
+
     return {
       devtools: {
         panels: {
@@ -148,6 +154,19 @@ this.devtools_panels = class extends ExtensionAPI {
               return devtoolsPanelAPI;
             });
           },
+          get themeName() {
+            return themeChangeObserver.themeName;
+          },
+          onThemeChanged: new SingletonEventManager(
+            context, "devtools.panels.onThemeChanged", fire => {
+              const listener = (eventName, themeName) => {
+                fire.async(themeName);
+              };
+              themeChangeObserver.on("themeChanged", listener);
+              return () => {
+                themeChangeObserver.off("themeChanged", listener);
+              };
+            }).api(),
         },
       },
     };
