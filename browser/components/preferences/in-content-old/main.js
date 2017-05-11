@@ -45,16 +45,6 @@ var gMainPane = {
     }
 
     this.buildContentProcessCountMenuList();
-    let processCountPref =
-      document.getElementById("dom.ipc.processCount");
-    processCountPref.addEventListener("change", () => {
-      this.updateDefaultPerformanceSettingsPref();
-    });
-    let accelerationPref =
-      document.getElementById("layers.acceleration.disabled");
-    accelerationPref.addEventListener("change", () => {
-      this.updateDefaultPerformanceSettingsPref();
-    });
     this.updateDefaultPerformanceSettingsPref();
 
     let defaultPerformancePref =

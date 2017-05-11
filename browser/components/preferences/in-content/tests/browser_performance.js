@@ -72,6 +72,31 @@ add_task(async function() {
   is(prefs.selectedPane, "paneGeneral", "General pane was selected");
 
   let doc = gBrowser.contentDocument;
+  let useRecommendedPerformanceSettings = doc.querySelector("#useRecommendedPerformanceSettings");
+  let allowHWAccel = doc.querySelector("#allowHWAccel");
+  let contentProcessCount = doc.querySelector("#contentProcessCount");
+  let performanceSettings = doc.querySelector("#performanceSettings");
+
+  useRecommendedPerformanceSettings.click();
+  allowHWAccel.click();
+  contentProcessCount.value = 7;
+  contentProcessCount.doCommand();
+  useRecommendedPerformanceSettings.click();
+
+  is(Services.prefs.getBoolPref("browser.preferences.defaultPerformanceSettings.enabled"), true,
+    "pref value should be true before clicking on checkbox");
+  ok(useRecommendedPerformanceSettings.checked, "checkbox should be checked before clicking on checkbox");
+  is(performanceSettings.hidden, true, "performance settings section should be still shown");
+
+  Services.prefs.setBoolPref("browser.preferences.defaultPerformanceSettings.enabled", true);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+add_task(async function() {
+  let prefs = await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
+  is(prefs.selectedPane, "paneGeneral", "General pane was selected");
+
+  let doc = gBrowser.contentDocument;
   let performanceSettings = doc.querySelector("#performanceSettings");
 
   is(performanceSettings.hidden, true, "performance settings section should not be shown");
