@@ -1,0 +1,94 @@
+commit af965ff7bcafa9c4b1f79a2a297c72d763a77125
+Author: Paul Adenot <paul@paul.cx>
+Date:   Tue Apr 25 15:02:32 2017 +0200
+
+    Make cubeb work with high channel count devices (#288)
+    
+    * Bail if the device has too many channels.
+    
+    If the device on the host where we're trying to open an audio stream has too
+    many channels, just bail instead of trashing the memory in the loop just below.
+    
+    * Allow using audio output devices that have up to 256 channels.
+    
+    In particular, this allows using sound cards that have more than 8 channels
+    (7.1), for musical purposes, and allows using the 64 output channels of
+    SoundFlower, for testing and also advanced musical use-cases.
+    
+    If we are in a topology that has more than 8 channels, the other channels are
+    considered unmapped, i.e. it's just a channel without a specific speaker
+    assignation. This is useful for custom setups, such as wave field synthesis, or
+    other creative applications.
+    
+    * Address chunmin and achronop comments.
+
+diff --git a/src/cubeb_audiounit.cpp b/src/cubeb_audiounit.cpp
+index a648bb8..2d81073 100644
+--- a/src/cubeb_audiounit.cpp
++++ b/src/cubeb_audiounit.cpp
+@@ -226,6 +226,7 @@ channel_label_to_cubeb_channel(UInt32 label)
+     case kAudioChannelLabel_RearSurroundLeft: return CHANNEL_RLS;
+     case kAudioChannelLabel_RearSurroundRight: return CHANNEL_RRS;
+     case kAudioChannelLabel_CenterSurround: return CHANNEL_RCENTER;
++    case kAudioChannelLabel_Unknown: return CHANNEL_UNMAPPED;
+     default: return CHANNEL_INVALID;
+   }
+ }
+@@ -244,6 +245,7 @@ cubeb_channel_to_channel_label(cubeb_channel channel)
+     case CHANNEL_RLS: return kAudioChannelLabel_RearSurroundLeft;
+     case CHANNEL_RRS: return kAudioChannelLabel_RearSurroundRight;
+     case CHANNEL_RCENTER: return kAudioChannelLabel_CenterSurround;
++    case CHANNEL_UNMAPPED: return kAudioChannelLabel_Unknown;
+     default: return kAudioChannelLabel_Unknown;
+   }
+ }
+@@ -1091,6 +1093,12 @@ audiounit_convert_channel_layout(AudioChannelLayout * layout)
+     return CUBEB_LAYOUT_UNDEFINED;
+   }
+ 
++  // This devices has more channels that we can support, bail out.
++  if (layout->mNumberChannelDescriptions >= CHANNEL_MAX) {
++    LOG("Audio device has more than %d channels, bailing out.", CHANNEL_MAX);
++    return CUBEB_LAYOUT_UNDEFINED;
++  }
++
+   cubeb_channel_map cm;
+   cm.channels = layout->mNumberChannelDescriptions;
+   for (UInt32 i = 0; i < layout->mNumberChannelDescriptions; ++i) {
+diff --git a/src/cubeb_mixer.cpp b/src/cubeb_mixer.cpp
+index 32f7e66..f9ac3e7 100644
+--- a/src/cubeb_mixer.cpp
++++ b/src/cubeb_mixer.cpp
+@@ -31,7 +31,8 @@ cubeb_channel_layout cubeb_channel_map_to_layout(cubeb_channel_map const * chann
+ {
+   uint32_t channel_mask = 0;
+   for (uint8_t i = 0 ; i < channel_map->channels ; ++i) {
+-    if (channel_map->map[i] == CHANNEL_INVALID) {
++    if (channel_map->map[i] == CHANNEL_INVALID ||
++        channel_map->map[i] == CHANNEL_UNMAPPED) {
+       return CUBEB_LAYOUT_UNDEFINED;
+     }
+     channel_mask |= 1 << channel_map->map[i];
+diff --git a/src/cubeb_mixer.h b/src/cubeb_mixer.h
+index e9eab59..9b6d8c7 100644
+--- a/src/cubeb_mixer.h
++++ b/src/cubeb_mixer.h
+@@ -27,7 +27,8 @@ typedef enum {
+   CHANNEL_RCENTER,
+   CHANNEL_RRS,
+   CHANNEL_LFE,
+-  CHANNEL_MAX // Max number of supported channels.
++  CHANNEL_UNMAPPED,
++  CHANNEL_MAX = 256 // Max number of supported channels.
+ } cubeb_channel;
+ 
+ static cubeb_channel const CHANNEL_INDEX_TO_ORDER[CUBEB_LAYOUT_MAX][CHANNEL_MAX] = {
+@@ -50,6 +51,8 @@ static cubeb_channel const CHANNEL_INDEX_TO_ORDER[CUBEB_LAYOUT_MAX][CHANNEL_MAX]
+   { CHANNEL_LEFT, CHANNEL_RIGHT, CHANNEL_CENTER, CHANNEL_LFE, CHANNEL_LS, CHANNEL_RS },                           // 3F2_LFE
+   { CHANNEL_LEFT, CHANNEL_RIGHT, CHANNEL_CENTER, CHANNEL_LFE, CHANNEL_RCENTER, CHANNEL_LS, CHANNEL_RS },          // 3F3R_LFE
+   { CHANNEL_LEFT, CHANNEL_RIGHT, CHANNEL_CENTER, CHANNEL_LFE, CHANNEL_RLS, CHANNEL_RRS, CHANNEL_LS, CHANNEL_RS }  // 3F4_LFE
++  // When more channels are present, the stream is considered unmapped to a
++  // particular speaker set.
+ };
+ 
+ typedef struct {
