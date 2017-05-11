@@ -34,7 +34,8 @@ import org.mozilla.telemetry.storage.FileTelemetryStorage;
 import org.mozilla.telemetry.storage.TelemetryStorage;
 
 public final class TelemetryWrapper {
-    private static final String TELEMETRY_APP_NAME = "Focus";
+    private static final String TELEMETRY_APP_NAME_FOCUS = "Focus";
+    private static final String TELEMETRY_APP_NAME_KLAR = "Klar";
 
     private TelemetryWrapper() {}
 
@@ -129,7 +130,7 @@ public final class TelemetryWrapper {
 
             final TelemetryConfiguration configuration = new TelemetryConfiguration(context)
                     .setServerEndpoint("https://incoming.telemetry.mozilla.org")
-                    .setAppName(TELEMETRY_APP_NAME)
+                    .setAppName(AppConstants.isKlarBuild() ? TELEMETRY_APP_NAME_KLAR : TELEMETRY_APP_NAME_FOCUS)
                     .setUpdateChannel(BuildConfig.BUILD_TYPE)
                     .setPreferencesImportantForTelemetry(
                             resources.getString(R.string.pref_key_search_engine),
