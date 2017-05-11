@@ -1662,14 +1662,6 @@ KeyframeEffectReadOnly::SetPerformanceWarning(
   }
 }
 
-void
-KeyframeEffectReadOnly::RecordFrameSizeTelemetry(uint32_t aPixelArea) {
-  if (!mRecordedFrameSize) {
-    Telemetry::Accumulate(Telemetry::ASYNC_ANIMATION_FRAME_SIZE, aPixelArea);
-    mRecordedFrameSize = true;
-  }
-}
-
 static already_AddRefed<nsStyleContext>
 CreateStyleContextForAnimationValue(nsCSSPropertyID aProperty,
                                     const StyleAnimationValue& aValue,
