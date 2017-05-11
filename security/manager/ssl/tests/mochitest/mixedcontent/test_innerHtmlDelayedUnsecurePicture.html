@@ -31,7 +31,7 @@
 
   function afterNavigationTest()
   {
-    is(document.getElementById("buddy").innerHTML, "\n", "innerHTML back to previous");
+    is(document.getElementById("buddy").innerHTML, "", "innerHTML back to previous");
     isSecurityState("secure");
     finish();
   }
