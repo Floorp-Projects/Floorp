@@ -196,16 +196,22 @@ afterEvaluate {
 // Generate blocklists
 // -------------------------------------------------------------------------------------------------
 
+def blockListOutputDir = 'src/webkit/res/raw'
+
 task buildBlocklists(type:Copy) {
     from('../shavar-prod-lists') {
         include '*.json'
     }
-    into 'src/webkit/res/raw'
+    into blockListOutputDir
 
     // Android can't handle dashes in the filename, so we need to rename:
     rename 'disconnect-blacklist.json', 'blocklist.json'
     rename 'disconnect-entitylist.json', 'entitylist.json'
     // google_mapping.json already has an expected name
+}
+
+clean.doLast {
+    file(blockListOutputDir).deleteDir()
 }
 
 tasks.whenTaskAdded { task ->
