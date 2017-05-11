@@ -590,14 +590,6 @@ auto GeckoAppShell::RemoveFullScreenPluginView(mozilla::jni::Object::Param a0) -
 constexpr char GeckoAppShell::ReportJavaCrash_t::name[];
 constexpr char GeckoAppShell::ReportJavaCrash_t::signature[];
 
-constexpr char GeckoAppShell::ScheduleRestart_t::name[];
-constexpr char GeckoAppShell::ScheduleRestart_t::signature[];
-
-auto GeckoAppShell::ScheduleRestart() -> void
-{
-    return mozilla::jni::Method<ScheduleRestart_t>::Call(GeckoAppShell::Context(), nullptr);
-}
-
 constexpr char GeckoAppShell::SetFullScreen_t::name[];
 constexpr char GeckoAppShell::SetFullScreen_t::signature[];
 
