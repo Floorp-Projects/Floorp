@@ -23,6 +23,7 @@ config = {
     ],
     "buildbot_json_path": "buildprops.json",
     'exes': {
+        'python2.7': sys.executable,
         "buildbot": [
             sys.executable,
             'c:\\mozilla-build\\buildbotve\\scripts\\buildbot'
