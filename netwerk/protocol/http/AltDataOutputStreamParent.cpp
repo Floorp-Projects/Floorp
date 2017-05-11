@@ -73,5 +73,13 @@ AltDataOutputStreamParent::ActorDestroy(ActorDestroyReason aWhy)
   mIPCOpen = false;
 }
 
+mozilla::ipc::IPCResult
+AltDataOutputStreamParent::RecvDeleteSelf()
+{
+  mIPCOpen = false;
+  Unused << SendDeleteSelf();
+  return IPC_OK();
+}
+
 } // namespace net
 } // namespace mozilla
