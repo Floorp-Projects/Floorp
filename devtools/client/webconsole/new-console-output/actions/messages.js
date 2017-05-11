@@ -10,7 +10,7 @@ const {
   prepareMessage
 } = require("devtools/client/webconsole/new-console-output/utils/messages");
 const { IdGenerator } = require("devtools/client/webconsole/new-console-output/utils/id-generator");
-const { batchActions } = require("devtools/client/webconsole/new-console-output/actions/enhancers");
+const { batchActions } = require("devtools/client/shared/redux/middleware/debounce");
 const {
   MESSAGE_ADD,
   NETWORK_MESSAGE_UPDATE,
