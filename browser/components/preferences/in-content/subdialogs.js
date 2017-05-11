@@ -128,6 +128,13 @@ var gSubDialog = {
 
   handleEvent(aEvent) {
     switch (aEvent.type) {
+      case "click":
+        // Close the dialog if the user clicked the overlay background, just
+        // like when the user presses the ESC key (case "command" below).
+        if (aEvent.target === this._overlay) {
+          this._frame.contentWindow.close();
+        }
+        break;
       case "command":
         this._frame.contentWindow.close();
         break;
@@ -390,10 +397,13 @@ var gSubDialog = {
     this._frame.addEventListener("load", this);
 
     chromeBrowser.addEventListener("unload", this, true);
+
     // Ensure we get <esc> keypresses even if nothing in the subdialog is focusable
     // (happens on OS X when only text inputs and lists are focusable, and
     //  the subdialog only has checkboxes/radiobuttons/buttons)
     window.addEventListener("keydown", this, true);
+
+    this._overlay.addEventListener("click", this, true);
   },
 
   _removeDialogEventListeners() {
@@ -407,6 +417,9 @@ var gSubDialog = {
     this._frame.removeEventListener("load", this);
     this._frame.contentWindow.removeEventListener("dialogclosing", this);
     window.removeEventListener("keydown", this, true);
+
+    this._overlay.removeEventListener("click", this, true);
+
     if (this._resizeObserver) {
       this._resizeObserver.disconnect();
       this._resizeObserver = null;

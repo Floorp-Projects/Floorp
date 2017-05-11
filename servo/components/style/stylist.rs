@@ -22,7 +22,7 @@ use properties::INHERIT_ALL;
 use properties::PropertyDeclarationBlock;
 use restyle_hints::{RestyleHint, DependencySet};
 use rule_tree::{CascadeLevel, RuleTree, StrongRuleNode, StyleSource};
-use selector_parser::{SelectorImpl, PseudoElement, Snapshot};
+use selector_parser::{SelectorImpl, PseudoElement, SnapshotMap};
 use selectors::Element;
 use selectors::bloom::BloomFilter;
 use selectors::matching::{AFFECTED_BY_STYLE_ATTRIBUTE, AFFECTED_BY_PRESENTATIONAL_HINTS};
@@ -84,6 +84,10 @@ pub struct Stylist {
 
     /// If true, the device has changed, and the stylist needs to be updated.
     is_device_dirty: bool,
+
+    /// If true, the stylist is in a cleared state (e.g. just-constructed, or
+    /// had clear() called on it with no following rebuild()).
+    is_cleared: bool,
 
     /// The current selector maps, after evaluating media
     /// rules against the current device.
@@ -163,13 +167,15 @@ impl<'a> ExtraStyleData<'a> {
 }
 
 impl Stylist {
-    /// Construct a new `Stylist`, using a given `Device`.
+    /// Construct a new `Stylist`, using a given `Device`.  If more members are
+    /// added here, think about whether they should be reset in clear().
     #[inline]
     pub fn new(device: Device) -> Self {
         let mut stylist = Stylist {
             viewport_constraints: None,
             device: Arc::new(device),
             is_device_dirty: true,
+            is_cleared: true,
             quirks_mode: QuirksMode::NoQuirks,
 
             element_map: PerPseudoElementSelectorMap::new(),
@@ -219,22 +225,64 @@ impl Stylist {
         self.selectors_for_cache_revalidation.len()
     }
 
-    /// Update the stylist for the given document stylesheets, and optionally
+    /// Clear the stylist's state, effectively resetting it to more or less
+    /// the state Stylist::new creates.
+    ///
+    /// We preserve the state of the following members:
+    ///   device: Someone might have set this on us.
+    ///   quirks_mode: Again, someone might have set this on us.
+    ///   num_rebuilds: clear() followed by rebuild() should just increment this
+    ///
+    /// We don't just use struct update syntax with Stylist::new(self.device)
+    /// beause for some of our members we can clear them instead of creating new
+    /// objects.  This does cause unfortunate code duplication with
+    /// Stylist::new.
+    pub fn clear(&mut self) {
+        if self.is_cleared {
+            return
+        }
+
+        self.is_cleared = true;
+
+        self.viewport_constraints = None;
+        // preserve current device
+        self.is_device_dirty = true;
+        // preserve current quirks_mode value
+        self.element_map = PerPseudoElementSelectorMap::new();
+        self.pseudos_map = Default::default();
+        self.animations.clear(); // Or set to Default::default()?
+        self.precomputed_pseudo_element_decls = Default::default();
+        self.rules_source_order = 0;
+        // We want to keep rule_tree around across stylist rebuilds.
+        self.dependencies.clear();
+        self.selectors_for_cache_revalidation = SelectorMap::new();
+        self.num_selectors = 0;
+        self.num_declarations = 0;
+        // preserve num_rebuilds value, since it should stay across
+        // clear()/rebuild() cycles.
+    }
+
+    /// rebuild the stylist for the given document stylesheets, and optionally
     /// with a set of user agent stylesheets.
     ///
     /// This method resets all the style data each time the stylesheets change
     /// (which is indicated by the `stylesheets_changed` parameter), or the
     /// device is dirty, which means we need to re-evaluate media queries.
-    pub fn update<'a>(&mut self,
-                      doc_stylesheets: &[Arc<Stylesheet>],
-                      guards: &StylesheetGuards,
-                      ua_stylesheets: Option<&UserAgentStylesheets>,
-                      stylesheets_changed: bool,
-                      author_style_disabled: bool,
-                      extra_data: &mut ExtraStyleData<'a>) -> bool {
+    pub fn rebuild<'a>(&mut self,
+                       doc_stylesheets: &[Arc<Stylesheet>],
+                       guards: &StylesheetGuards,
+                       ua_stylesheets: Option<&UserAgentStylesheets>,
+                       stylesheets_changed: bool,
+                       author_style_disabled: bool,
+                       extra_data: &mut ExtraStyleData<'a>) -> bool {
+        debug_assert!(!self.is_cleared || self.is_device_dirty);
+
+        self.is_cleared = false;
+
         if !(self.is_device_dirty || stylesheets_changed) {
             return false;
         }
+
         self.num_rebuilds += 1;
 
         let cascaded_rule = ViewportRule {
@@ -251,20 +299,9 @@ impl Stylist {
                 .account_for_viewport_rule(constraints);
         }
 
-        self.element_map = PerPseudoElementSelectorMap::new();
-        self.pseudos_map = Default::default();
-        self.animations = Default::default();
         SelectorImpl::each_eagerly_cascaded_pseudo_element(|pseudo| {
             self.pseudos_map.insert(pseudo, PerPseudoElementSelectorMap::new());
         });
-
-        self.precomputed_pseudo_element_decls = Default::default();
-        self.rules_source_order = 0;
-        self.dependencies.clear();
-        self.animations.clear();
-        self.selectors_for_cache_revalidation = SelectorMap::new();
-        self.num_selectors = 0;
-        self.num_declarations = 0;
 
         extra_data.clear_font_faces();
 
@@ -300,6 +337,27 @@ impl Stylist {
 
         self.is_device_dirty = false;
         true
+    }
+
+    /// clear the stylist and then rebuild it.  Chances are, you want to use
+    /// either clear() or rebuild(), with the latter done lazily, instead.
+    pub fn update<'a>(&mut self,
+                      doc_stylesheets: &[Arc<Stylesheet>],
+                      guards: &StylesheetGuards,
+                      ua_stylesheets: Option<&UserAgentStylesheets>,
+                      stylesheets_changed: bool,
+                      author_style_disabled: bool,
+                      extra_data: &mut ExtraStyleData<'a>) -> bool {
+        debug_assert!(!self.is_cleared || self.is_device_dirty);
+
+        // We have to do a dirtiness check before clearing, because if
+        // we're not actually dirty we need to no-op here.
+        if !(self.is_device_dirty || stylesheets_changed) {
+            return false;
+        }
+        self.clear();
+        self.rebuild(doc_stylesheets, guards, ua_stylesheets, stylesheets_changed,
+                     author_style_disabled, extra_data)
     }
 
     fn add_stylesheet<'a>(&mut self, stylesheet: &Stylesheet, guard: &SharedRwLockReadGuard,
@@ -492,12 +550,45 @@ impl Stylist {
                  fmt::Debug +
                  PresentationalHintsSynthetizer
     {
+        let rule_node = match self.lazy_pseudo_rules(guards, element, pseudo) {
+            Some(rule_node) => rule_node,
+            None => return None
+        };
+
+        // Read the comment on `precomputed_values_for_pseudo` to see why it's
+        // difficult to assert that display: contents nodes never arrive here
+        // (tl;dr: It doesn't apply for replaced elements and such, but the
+        // computed value is still "contents").
+        let computed =
+            properties::cascade(&self.device,
+                                &rule_node,
+                                guards,
+                                Some(&**parent),
+                                Some(&**parent),
+                                None,
+                                &RustLogReporter,
+                                font_metrics,
+                                CascadeFlags::empty(),
+                                self.quirks_mode);
+
+        Some(ComputedStyle::new(rule_node, Arc::new(computed)))
+    }
+
+    /// Computes the rule node for a lazily-cascaded pseudo-element.
+    ///
+    /// See the documentation on lazy pseudo-elements in
+    /// docs/components/style.md
+    pub fn lazy_pseudo_rules<E>(&self,
+                                guards: &StylesheetGuards,
+                                element: &E,
+                                pseudo: &PseudoElement)
+                                -> Option<StrongRuleNode>
+        where E: TElement + fmt::Debug + PresentationalHintsSynthetizer
+    {
         debug_assert!(pseudo.is_lazy());
         if self.pseudos_map.get(pseudo).is_none() {
-            return None;
+            return None
         }
-
-        let mut declarations = vec![];
 
         // Apply the selector flags. We should be in sequential mode
         // already, so we can directly apply the parent flags.
@@ -524,6 +615,7 @@ impl Stylist {
         };
 
 
+        let mut declarations = vec![];
         self.push_applicable_declarations(element,
                                           None,
                                           None,
@@ -533,32 +625,14 @@ impl Stylist {
                                           guards,
                                           &mut declarations,
                                           &mut set_selector_flags);
-
         if declarations.is_empty() {
             return None
         }
 
-        let rule_node =
-            self.rule_tree.insert_ordered_rules(
-                declarations.into_iter().map(|a| (a.source, a.level)));
-
-        // Read the comment on `precomputed_values_for_pseudo` to see why it's
-        // difficult to assert that display: contents nodes never arrive here
-        // (tl;dr: It doesn't apply for replaced elements and such, but the
-        // computed value is still "contents").
-        let computed =
-            properties::cascade(&self.device,
-                                &rule_node,
-                                guards,
-                                Some(&**parent),
-                                Some(&**parent),
-                                None,
-                                &RustLogReporter,
-                                font_metrics,
-                                CascadeFlags::empty(),
-                                self.quirks_mode);
-
-        Some(ComputedStyle::new(rule_node, Arc::new(computed)))
+        let rule_node = self.rule_tree.insert_ordered_rules(declarations.into_iter().map(|a| {
+            (a.source, a.level)
+        }));
+        Some(rule_node)
     }
 
     /// Set a given device, which may change the styles that apply to the
@@ -878,16 +952,16 @@ impl Stylist {
         results
     }
 
-    /// Given an element, and a snapshot that represents a previous state of the
-    /// element, compute the appropriate restyle hint, that is, the kind of
+    /// Given an element, and a snapshot table that represents a previous state
+    /// of the tree, compute the appropriate restyle hint, that is, the kind of
     /// restyle we need to do.
     pub fn compute_restyle_hint<E>(&self,
                                    element: &E,
-                                   snapshot: &Snapshot)
+                                   snapshots: &SnapshotMap)
                                    -> RestyleHint
         where E: TElement,
     {
-        self.dependencies.compute_hint(element, snapshot)
+        self.dependencies.compute_hint(element, snapshots)
     }
 
     /// Computes styles for a given declaration with parent_style.

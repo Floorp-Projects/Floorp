@@ -29,17 +29,17 @@ random-if(stylo) == bar-pseudo-element.html bar-pseudo-element-ref.html
 == max-height.html max-height-ref.html
 
 # Tests for block and inline orientation in combination with writing-mode
-fails-if(stylo) != progress-orient-horizontal.html progress-orient-vertical.html
-fails-if(!cocoaWidget||OSX==1010) fails-if(stylo) != progress-orient-vertical.html progress-orient-vertical-rtl.html # only OS X currently has direction-dependent rendering here
-fails-if(stylo) == progress-orient-block.html progress-orient-vertical.html
-fails-if(stylo) == progress-orient-inline.html progress-orient-horizontal.html
-fails-if(stylo) == progress-vlr.html progress-orient-vertical.html
-fails-if(stylo) == progress-vlr-orient-block.html progress-orient-horizontal.html
-fails-if(stylo) == progress-vlr-orient-inline.html progress-orient-vertical.html
-fails-if(stylo) == progress-vlr-orient-horizontal.html progress-orient-horizontal.html
-fails-if(stylo) == progress-vlr-orient-vertical.html progress-orient-vertical.html
-fails-if(stylo) == progress-vrl.html progress-orient-vertical-rtl.html
-fails-if(stylo) == progress-vrl-orient-block.html progress-orient-horizontal-rtl.html
-fails-if(stylo) == progress-vrl-orient-inline.html progress-orient-vertical-rtl.html
-fails-if(stylo) == progress-vrl-orient-horizontal.html progress-orient-horizontal-rtl.html
-fails-if(stylo) == progress-vrl-orient-vertical.html progress-orient-vertical-rtl.html
+!= progress-orient-horizontal.html progress-orient-vertical.html
+fails-if((!cocoaWidget||OSX==1010)&&!stylo) != progress-orient-vertical.html progress-orient-vertical-rtl.html # only OS X currently has direction-dependent rendering here
+== progress-orient-block.html progress-orient-vertical.html
+== progress-orient-inline.html progress-orient-horizontal.html
+== progress-vlr.html progress-orient-vertical.html
+== progress-vlr-orient-block.html progress-orient-horizontal.html
+== progress-vlr-orient-inline.html progress-orient-vertical.html
+== progress-vlr-orient-horizontal.html progress-orient-horizontal.html
+== progress-vlr-orient-vertical.html progress-orient-vertical.html
+== progress-vrl.html progress-orient-vertical-rtl.html
+== progress-vrl-orient-block.html progress-orient-horizontal-rtl.html
+== progress-vrl-orient-inline.html progress-orient-vertical-rtl.html
+== progress-vrl-orient-horizontal.html progress-orient-horizontal-rtl.html
+== progress-vrl-orient-vertical.html progress-orient-vertical-rtl.html

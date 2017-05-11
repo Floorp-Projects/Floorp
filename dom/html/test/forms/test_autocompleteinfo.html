@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html>
 <!--
-Test getAutocompleteInfo() on <input>
+Test getAutocompleteInfo() on <input> and <select>
 -->
 <head>
   <title>Test for getAutocompleteInfo()</title>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 </head>
 
@@ -23,73 +24,82 @@ Test getAutocompleteInfo() on <input>
 
 var values = [
   // Missing or empty attribute
-  [undefined, {}],
-  ["", {}],
+  [undefined, {}, ""],
+  ["", {}, ""],
 
   // One token
-  ["on", {fieldName: "on" }],
-  ["On", {fieldName: "on" }],
-  ["off", {fieldName: "off" } ],
-  ["username", {fieldName: "username" }],
-  [" username ", {fieldName: "username" }],
-  ["foobar", {}],
-  ["section-blue", {}],
+  ["on", {fieldName: "on" }, "on"],
+  ["On", {fieldName: "on" }, "on"],
+  ["off", {fieldName: "off" }, "off" ],
+  ["name", {fieldName: "name" }, "name"],
+  [" name ", {fieldName: "name" }, "name"],
+  ["username", {fieldName: "username"}, ""],
+  [" username ", {fieldName: "username"}, ""],
+  ["cc-csc", {fieldName: "cc-csc"}, ""],
+  ["language", {fieldName: "language"}, ""],
+  ["tel-extension", {fieldName: "tel-extension"}, ""],
+  ["foobar", {}, ""],
+  ["section-blue", {}, ""],
 
   // Two tokens
-  ["on off", {}],
-  ["off on", {}],
-  ["username tel", {}],
-  ["tel username ", {}],
-  [" username tel ", {}],
-  ["tel mobile", {}],
-  ["tel shipping", {}],
-  ["shipping tel", {addressType: "shipping", fieldName: "tel"}],
-  ["shipPING tel", {addressType: "shipping", fieldName: "tel"}],
-  ["mobile tel", {contactType: "mobile", fieldName: "tel"}],
-  ["  MoBiLe  TeL  ", {contactType: "mobile", fieldName: "tel"}],
-  ["XXX tel", {}],
-  ["XXX username", {}],
-  ["name section-blue", {}],
-  ["scetion-blue cc-name", {}],
-  ["section-blue name", {section: "section-blue", fieldName: "name"}],
-  ["section-blue tel", {section: "section-blue", fieldName: "tel"}],
+  ["on off", {}, ""],
+  ["off on", {}, ""],
+  ["username tel", {}, ""],
+  ["tel username ", {}, ""],
+  [" username tel ", {}, ""],
+  ["tel mobile", {}, ""],
+  ["tel shipping", {}, ""],
+  ["shipping tel", {addressType: "shipping", fieldName: "tel"}, "shipping tel"],
+  ["shipPING tel", {addressType: "shipping", fieldName: "tel"}, "shipping tel"],
+  ["mobile tel", {contactType: "mobile", fieldName: "tel"}, "mobile tel"],
+  ["  MoBiLe  TeL  ", {contactType: "mobile", fieldName: "tel"}, "mobile tel"],
+  ["pager impp", {contactType: "pager", fieldName: "impp"}, ""],
+  ["fax tel-extension", {contactType: "fax", fieldName: "tel-extension"}, ""],
+  ["XXX tel", {}, ""],
+  ["XXX username", {}, ""],
+  ["name section-blue", {}, ""],
+  ["scetion-blue cc-name", {}, ""],
+  ["pager language", {}, ""],
+  ["fax url", {}, ""],
+  ["section-blue name", {section: "section-blue", fieldName: "name"}, "section-blue name"],
+  ["section-blue tel", {section: "section-blue", fieldName: "tel"}, "section-blue tel"],
 
   // Three tokens
-  ["billing invalid tel", {}],
-  ["___ mobile tel", {}],
-  ["mobile foo tel", {}],
-  ["mobile tel foo", {}],
-  ["tel mobile billing", {}],
-  ["billing mobile tel", {addressType: "billing", contactType: "mobile", fieldName: "tel"}],
-  ["  BILLing   MoBiLE   tEl  ", {addressType: "billing", contactType: "mobile", fieldName: "tel"}],
-  ["billing home tel", {addressType: "billing", contactType: "home", fieldName: "tel"}],
-  ["home section-blue tel", {}],
-  ["setion-blue work email", {}],
-  ["section-blue home address-level2", {}],
-  ["section-blue shipping name", {section: "section-blue", addressType: "shipping", fieldName: "name"}],
-  ["section-blue mobile tel", {section: "section-blue", contactType: "mobile", fieldName: "tel"}],
+  ["billing invalid tel", {}, ""],
+  ["___ mobile tel", {}, ""],
+  ["mobile foo tel", {}, ""],
+  ["mobile tel foo", {}, ""],
+  ["tel mobile billing", {}, ""],
+  ["billing mobile tel", {addressType: "billing", contactType: "mobile", fieldName: "tel"}, "billing mobile tel"],
+  ["  BILLing   MoBiLE   tEl  ", {addressType: "billing", contactType: "mobile", fieldName: "tel"}, "billing mobile tel"],
+  ["billing home tel", {addressType: "billing", contactType: "home", fieldName: "tel"}, "billing home tel"],
+  ["home section-blue tel", {}, ""],
+  ["setion-blue work email", {}, ""],
+  ["section-blue home address-level2", {}, ""],
+  ["section-blue shipping name", {section: "section-blue", addressType: "shipping", fieldName: "name"}, "section-blue shipping name"],
+  ["section-blue mobile tel", {section: "section-blue", contactType: "mobile", fieldName: "tel"}, "section-blue mobile tel"],
 
   // Four tokens
-  ["billing billing mobile tel", {}],
-  ["name section-blue shipping home", {}],
-  ["secti shipping work address-line1", {}],
-  ["section-blue shipping home name", {}],
-  ["section-blue shipping mobile tel", {section: "section-blue", addressType: "shipping", contactType: "mobile", fieldName: "tel"}],
+  ["billing billing mobile tel", {}, ""],
+  ["name section-blue shipping home", {}, ""],
+  ["secti shipping work address-line1", {}, ""],
+  ["section-blue shipping home name", {}, ""],
+  ["section-blue shipping mobile tel", {section: "section-blue", addressType: "shipping", contactType: "mobile", fieldName: "tel"}, "section-blue shipping mobile tel"],
 
   // Five tokens (invalid)
-  ["billing billing billing mobile tel", {}],
-  ["section-blue section-blue billing mobile tel", {}],
+  ["billing billing billing mobile tel", {}, ""],
+  ["section-blue section-blue billing mobile tel", {}, ""],
 ];
 
+var autocompleteInfoFieldIds = ["input", "select"];
 var autocompleteEnabledTypes = ["hidden", "text", "search", "url", "tel",
                                 "email", "password", "date", "time", "number",
                                 "range", "color"];
 var autocompleteDisabledTypes = ["reset", "submit", "image", "button", "radio",
                                  "checkbox", "file"];
 
-function start() {
+function testInputTypes() {
   let field = document.getElementById("input");
-  testAutocompleteInfoValue(field, "input");
 
   for (var type of autocompleteEnabledTypes) {
     testAutocomplete(field, type, true);
@@ -99,29 +109,37 @@ function start() {
     testAutocomplete(field, type, false);
   }
 
-  field = document.getElementById("select");
-  testAutocompleteInfoValue(field, "select");
-
-  SimpleTest.finish();
+  // Clear input type attribute.
+  field.removeAttribute("type");
 }
 
-function testAutocompleteInfoValue(aField, aFieldId) {
-  for (var test of values) {
-    if (typeof(test[0]) === "undefined")
-      aField.removeAttribute("autocomplete");
-    else
-      aField.setAttribute("autocomplete", test[0]);
+function testAutocompleteInfoValue(aEnabled) {
+  for (var fieldId of autocompleteInfoFieldIds) {
+    let field = document.getElementById(fieldId);
 
-    var info = aField.getAutocompleteInfo();
+    for (var test of values) {
+      if (typeof(test[0]) === "undefined")
+        field.removeAttribute("autocomplete");
+      else
+        field.setAttribute("autocomplete", test[0]);
 
-    is(info.section, "section" in test[1] ? test[1].section : "",
-       "Checking autocompleteInfo.section for " + aFieldId + ": " + test[0]);
-    is(info.addressType, "addressType" in test[1] ? test[1].addressType : "",
-       "Checking autocompleteInfo.addressType for " + aFieldId + ": " + test[0]);
-    is(info.contactType, "contactType" in test[1] ? test[1].contactType : "",
-       "Checking autocompleteInfo.contactType for " + aFieldId + ": " + test[0]);
-    is(info.fieldName, "fieldName" in test[1] ? test[1].fieldName : "",
-       "Checking autocompleteInfo.fieldName for " + aFieldId + ": " + test[0]);
+      var info = field.getAutocompleteInfo();
+      if (aEnabled) {
+        // We need to consider if getAutocompleteInfo() is valid,
+        // but @autocomplete is invalid case, because @autocomplete
+        // has smaller set of values.
+        is(field.autocomplete, test[2], "Checking @autocomplete of: " + test[0]);
+      }
+
+      is(info.section, "section" in test[1] ? test[1].section : "",
+        "Checking autocompleteInfo.section for " + field + ": " + test[0]);
+      is(info.addressType, "addressType" in test[1] ? test[1].addressType : "",
+        "Checking autocompleteInfo.addressType for " + field + ": " + test[0]);
+      is(info.contactType, "contactType" in test[1] ? test[1].contactType : "",
+        "Checking autocompleteInfo.contactType for " + field + ": " + test[0]);
+      is(info.fieldName, "fieldName" in test[1] ? test[1].fieldName : "",
+        "Checking autocompleteInfo.fieldName for " + field + ": " + test[0]);
+    }
   }
 }
 
@@ -134,8 +152,18 @@ function testAutocomplete(aField, aType, aEnabled) {
   }
 }
 
-SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set": [["dom.forms.autocomplete.experimental", true]]}, start);
+// getAutocompleteInfo() should be able to parse all tokens as defined
+// in the spec regardless of whether dom.forms.autocomplete.experimental pref
+// is on or off.
+add_task(function* testAutocompletePreferenceEnabled() {
+  yield SpecialPowers.pushPrefEnv({"set": [["dom.forms.autocomplete.experimental", true]]}, testInputTypes);
+  testAutocompleteInfoValue(true);
+});
+
+add_task(function* testAutocompletePreferenceDisabled() {
+  yield SpecialPowers.pushPrefEnv({"set": [["dom.forms.autocomplete.experimental", false]]}, testInputTypes);
+  testAutocompleteInfoValue(false);
+});
 
 </script>
 </pre>

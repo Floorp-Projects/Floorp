@@ -283,8 +283,7 @@ Gecko_SetOwnerDocumentNeedsStyleFlush(RawGeckoElementBorrowed aElement)
   MOZ_ASSERT(NS_IsMainThread());
 
   if (nsIPresShell* shell = aElement->OwnerDoc()->GetShell()) {
-    shell->SetNeedStyleFlush();
-    shell->ObserveStyleFlushes();
+    shell->EnsureStyleFlush();
   }
 }
 
@@ -345,27 +344,14 @@ Gecko_HintsHandledForDescendants(nsChangeHint aHint)
   return aHint & ~NS_HintsNotHandledForDescendantsIn(aHint);
 }
 
-ServoElementSnapshotOwned
-Gecko_CreateElementSnapshot(RawGeckoElementBorrowed aElement)
+const ServoElementSnapshot*
+Gecko_GetElementSnapshot(const ServoElementSnapshotTable* aTable,
+                         const Element* aElement)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  return new ServoElementSnapshot(aElement);
-}
+  MOZ_ASSERT(aTable);
+  MOZ_ASSERT(aElement);
 
-void
-Gecko_DropElementSnapshot(ServoElementSnapshotOwned aSnapshot)
-{
-  // Proxy deletes have a lot of overhead, so Servo tries hard to only drop
-  // snapshots on the main thread. However, there are certain cases where
-  // it's unavoidable (i.e. synchronously dropping the style data for the
-  // descendants of a new display:none root).
-  if (MOZ_UNLIKELY(!NS_IsMainThread())) {
-    nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction([=]() { delete aSnapshot; });
-    SystemGroup::Dispatch("Gecko_DropElementSnapshot", TaskCategory::Other,
-                          task.forget());
-  } else {
-    delete aSnapshot;
-  }
+  return aTable->Get(const_cast<Element*>(aElement));
 }
 
 RawServoDeclarationBlockStrongBorrowedOrNull

@@ -23,6 +23,15 @@ public class testAudioFocus extends MediaPlaybackTest {
 
         info("- run test : testSwitchTab -");
         testSwitchTab();
+
+        info("- run test : testAdjustMediaVolumeOrMuted -");
+        testAdjustMediaVolumeOrMuted();
+
+        info("- run test : testMediaWithSilentAudioTrack -");
+        testMediaWithSilentAudioTrack();
+
+        info("- run test : testMediaWithoutAudioTrack -");
+        testMediaWithoutAudioTrack();
     }
 
     private void testBasicAbility() {
@@ -139,5 +148,138 @@ public class testAudioFocus extends MediaPlaybackTest {
 
         info("- close tab -");
         closeAllTabs();
+    }
+
+   /**
+     * Audio focus should only be requested when media is audible.
+     */
+    private void testAdjustMediaVolumeOrMuted() {
+        info("- create JSBridge -");
+        createJSBridge();
+
+        info("- load URL -");
+        final String MEDIA_URL = getAbsoluteUrl(mStringHelper.ROBOCOP_MEDIA_PLAYBACK_JS_URL);
+        loadUrlAndWait(MEDIA_URL);
+
+        info("- play media -");
+        getJS().syncCall("play_audio");
+
+        info("- wait until media starts playing -");
+        final Tab tab = Tabs.getInstance().getSelectedTab();
+        waitUntilTabMediaStarted(tab);
+
+        info("- wait tab becomes audible -");
+        checkTabAudioPlayingState(tab, true /* audible */);
+        checkAudioFocusStateAfterChanged(true);
+
+        info("- change media's volume to 0.0 -");
+        getJS().syncCall("adjust_audio_volume", 0.0);
+        checkTabAudioPlayingState(tab, false /* non-audible */);
+        checkAudioFocusStateAfterChanged(false);
+
+        info("- change media's volume to 1.0 -");
+        getJS().syncCall("adjust_audio_volume", 1.0);
+        checkTabAudioPlayingState(tab, true /* audible */);
+        checkAudioFocusStateAfterChanged(true);
+
+        info("- mute media -");
+        getJS().syncCall("adjust_audio_muted", true);
+        checkTabAudioPlayingState(tab, false /* non-audible */);
+        checkAudioFocusStateAfterChanged(false);
+
+        info("- unmute media -");
+        getJS().syncCall("adjust_audio_muted", false);
+        checkTabAudioPlayingState(tab, true /* audible */);
+        checkAudioFocusStateAfterChanged(true);
+
+        info("- pause media -");
+        getJS().syncCall("pause_audio");
+        checkTabAudioPlayingState(tab, false /* non-audible */);
+        checkAudioFocusStateAfterChanged(false);
+
+        info("- close tab -");
+        closeAllTabs();
+
+        info("- destroy JSBridge -");
+        destroyJSBridge();
+    }
+
+    private void testMediaWithSilentAudioTrack() {
+        info("- create JSBridge -");
+        createJSBridge();
+
+        info("- load URL -");
+        final String MEDIA_URL = getAbsoluteUrl(mStringHelper.ROBOCOP_MEDIA_PLAYBACK_JS_URL);
+        loadUrlAndWait(MEDIA_URL);
+
+        info("- play media with silent audio track -");
+        getJS().syncCall("play_media_with_silent_audio_track");
+
+        info("- wait until media starts playing -");
+        final Tab tab = Tabs.getInstance().getSelectedTab();
+        waitUntilTabMediaStarted(tab);
+
+        info("- tab should be non-audible and should not request audio focus -");
+        checkTabAudioPlayingState(tab, false /* non-audible */);
+        checkAudioFocusStateAfterChanged(false);
+
+        info("- pause media -");
+        getJS().syncCall("pause_media_without_audio_track");
+
+        info("- tab should be non-audible and should not request audio focus -");
+        checkTabAudioPlayingState(tab, false /* non-audible */);
+        checkAudioFocusStateAfterChanged(false);
+
+        info("- close tab -");
+        closeAllTabs();
+
+        info("- destroy JSBridge -");
+        destroyJSBridge();
+    }
+
+    private void testMediaWithoutAudioTrack() {
+        info("- create JSBridge -");
+        createJSBridge();
+
+        info("- load URL -");
+        final String MEDIA_URL = getAbsoluteUrl(mStringHelper.ROBOCOP_MEDIA_PLAYBACK_JS_URL);
+        loadUrlAndWait(MEDIA_URL);
+
+        info("- play media without audio track -");
+        getJS().syncCall("play_media_without_audio_track");
+
+        // We can't know whether it starts or not for media without audio track,
+        // because we won't dispatch Tab:MediaPlaybackChange event for this kind
+        // of media. So we just check the state multiple times to make sure we
+        // don't request audio focus.
+        info("- tab should be non-audible and should not request audio focus -");
+        final Tab tab = Tabs.getInstance().getSelectedTab();
+        checkTabAudioPlayingState(tab, false /* non-audible */);
+        checkAudioFocusStateAfterChanged(false);
+
+        info("- tab should be non-audible and should not request audio focus -");
+        checkTabAudioPlayingState(tab, false /* non-audible */);
+        checkAudioFocusStateAfterChanged(false);
+
+        info("- tab should be non-audible and should not request audio focus -");
+        checkTabAudioPlayingState(tab, false /* non-audible */);
+        checkAudioFocusStateAfterChanged(false);
+
+        info("- tab should be non-audible and should not request audio focus -");
+        checkTabAudioPlayingState(tab, false /* non-audible */);
+        checkAudioFocusStateAfterChanged(false);
+
+        info("- tab should be non-audible and should not request audio focus -");
+        checkTabAudioPlayingState(tab, false /* non-audible */);
+        checkAudioFocusStateAfterChanged(false);
+
+        info("- pause media -");
+        getJS().syncCall("pause_media_without_audio_track");
+
+        info("- close tab -");
+        closeAllTabs();
+
+        info("- destroy JSBridge -");
+        destroyJSBridge();
     }
 }

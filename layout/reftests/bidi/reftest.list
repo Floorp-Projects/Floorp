@@ -39,10 +39,10 @@ random-if(cocoaWidget) == mirroring-02.html mirroring-02-ref.html
 == unicode-bidi-isolate-basic.html unicode-bidi-isolate-basic-ref.html
 == unicode-bidi-isolate-aharon.html unicode-bidi-isolate-aharon-ref.html
 fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,73,1) fuzzy-if(skiaContent,104,32) == unicode-bidi-plaintext.html unicode-bidi-plaintext-ref.html
-fails-if(stylo) == unicode-bidi-plaintext-textarea-1.html unicode-bidi-plaintext-textarea-ref.html
-fails-if(stylo) == unicode-bidi-plaintext-textarea-2.html unicode-bidi-plaintext-textarea-ref.html
-fails-if(stylo) == unicode-bidi-plaintext-textarea-3.html unicode-bidi-plaintext-textarea-ref.html
-fails-if(stylo) == unicode-bidi-plaintext-textarea-4.html unicode-bidi-plaintext-textarea-ref.html
+== unicode-bidi-plaintext-textarea-1.html unicode-bidi-plaintext-textarea-ref.html
+== unicode-bidi-plaintext-textarea-2.html unicode-bidi-plaintext-textarea-ref.html
+== unicode-bidi-plaintext-textarea-3.html unicode-bidi-plaintext-textarea-ref.html
+== unicode-bidi-plaintext-textarea-4.html unicode-bidi-plaintext-textarea-ref.html
 == with-first-letter-1a.html with-first-letter-1-ref.html
 == with-first-letter-1b.html with-first-letter-1-ref.html
 random-if(cocoaWidget) == with-first-letter-2a.html with-first-letter-2-ref.html # bug 734313
@@ -75,7 +75,7 @@ fails-if(stylo) == 229367-2.html 229367-2-ref.html
 fails-if(stylo) == 263359-2.html 263359-2-ref.html
 == 263359-3.html 263359-3-ref.html
 == 263359-4.html 263359-4-ref.html
-random-if(winWidget) fuzzy-if(skiaContent,1,1700) fails-if(stylo) == 267459-1.html 267459-1-ref.html # depends on windows version, see bug 590101
+random-if(winWidget) fuzzy-if(skiaContent,1,1700) == 267459-1.html 267459-1-ref.html # depends on windows version, see bug 590101
 fuzzy-if(skiaContent,1,1100) fails-if(stylo) == 267459-2.html 267459-2-ref.html
 == 299065-1.html 299065-1-ref.html
 random-if(winWidget) == 305643-1.html 305643-1-ref.html # depends on windows version, see bug 590101
@@ -128,7 +128,7 @@ fuzzy-if(skiaContent,1,3) fails-if(stylo) == 698291-1.html 698291-1-ref.html
 == 718236-1.html 718236-1-ref.html
 == 718236-2.html 718236-2-ref.html
 == 718236-3.html 718236-3-ref.html
-fails-if(stylo) == 726420-1.html 726420-1-ref.html
+== 726420-1.html 726420-1-ref.html
 == 726460-1.html 726460-1-ref.html
 == 729047-1.html 729047-1-ref.html
 == 730562-1.html 730562-1-ref.html

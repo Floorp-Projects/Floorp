@@ -175,118 +175,20 @@ body.compact .newtab-cell {
 }
 
 /* TITLES */
-.newtab-sponsored,
-.newtab-title,
-.newtab-suggested {
+.newtab-title {
   overflow: hidden;
   position: absolute;
   right: 0;
   text-align: center;
-}
-
-.newtab-sponsored,
-.newtab-title {
   bottom: 0;
   white-space: nowrap;
   text-overflow: ellipsis;
   vertical-align: middle;
 }
 
-.newtab-suggested {
-  border: 1px solid transparent;
-  border-radius: 2px;
-  font-size: 12px;
-  height: 17px;
-  line-height: 17px;
-  margin-bottom: -1px;
-  padding: 2px 8px;
-  display: none;
-  margin-left: auto;
-  margin-right: auto;
-  left: 0;
-  top: 215px;
-  -moz-user-select: none;
-}
-
-.newtab-suggested-bounds {
-  max-height: 34px; /* 34 / 17 = 2 lines maximum */
-}
-
 .newtab-title {
   left: 0;
   padding: 0 4px;
-}
-
-.newtab-sponsored {
-  background-color: #FFFFFF;
-  border: 1px solid #E2E2E2;
-  border-radius: 3px;
-  color: #4A4A4A;
-  cursor: pointer;
-  display: none;
-  font-family: Arial;
-  font-size: 9px;
-  height: 17px;
-  left: 0;
-  line-height: 6px;
-  padding: 4px;
-  right: auto;
-  top: -15px;
-}
-
-.newtab-site[suggested=true] > .newtab-sponsored {
-  background-color: #E2E2E2;
-  border: none;
-}
-
-.newtab-site > .newtab-sponsored:-moz-any(:hover, [active]) {
-  background-color: #4A90E2;
-  border: 0;
-  color: white;
-}
-
-.newtab-site > .newtab-sponsored[active] {
-  background-color: #000000;
-}
-
-.newtab-sponsored:dir(rtl) {
-  right: 0;
-  left: auto;
-}
-
-.newtab-site:-moz-any([type=enhanced], [type=sponsored], [suggested]) .newtab-sponsored {
-  display: block;
-}
-
-.newtab-site[suggested] .newtab-suggested {
-  display: table;
-}
-
-.sponsored-explain,
-.sponsored-explain a,
-.suggested-explain,
-.suggested-explain a {
-  color: white;
-}
-
-.sponsored-explain,
-.suggested-explain {
-  background-color: rgba(51, 51, 51, 0.95);
-  bottom: 30px;
-  line-height: 20px;
-  padding: 15px 10px;
-  position: absolute;
-  text-align: start;
-}
-
-.sponsored-explain input,
-.suggested-explain input {
-  background-size: 18px;
-  height: 18px;
-  opacity: 1;
-  pointer-events: none;
-  position: static;
-  width: 18px;
 }
 
 /* CONTROLS */

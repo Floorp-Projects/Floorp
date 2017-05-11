@@ -50,5 +50,10 @@ interface nsIDashboard : nsISupports
      * aHost: host name */
     void requestDNSLookup(in ACString aHost, in NetDashboardCallback cb);
 
+    /**
+     * Asyncly returns stats regarding the "Race Cache With Network" feature.
+     */
+    void requestRcwnStats(in NetDashboardCallback cb);
+
     AUTF8String getLogPath();
 };

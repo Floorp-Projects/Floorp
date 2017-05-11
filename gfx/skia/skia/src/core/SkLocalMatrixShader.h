@@ -13,13 +13,12 @@
 #include "SkWriteBuffer.h"
 
 class GrFragmentProcessor;
-class SkArenaAlloc;
 
 class SkLocalMatrixShader : public SkShader {
 public:
-    SkLocalMatrixShader(sk_sp<SkShader> proxy, const SkMatrix& localMatrix)
+    SkLocalMatrixShader(SkShader* proxy, const SkMatrix& localMatrix)
     : INHERITED(&localMatrix)
-    , fProxyShader(std::move(proxy))
+    , fProxyShader(SkRef(proxy))
     {}
 
     GradientType asAGradient(GradientInfo* info) const override {
@@ -30,11 +29,11 @@ public:
     sk_sp<GrFragmentProcessor> asFragmentProcessor(const AsFPArgs&) const override;
 #endif
 
-    sk_sp<SkShader> makeAsALocalMatrixShader(SkMatrix* localMatrix) const override {
+    SkShader* refAsALocalMatrixShader(SkMatrix* localMatrix) const override {
         if (localMatrix) {
             *localMatrix = this->getLocalMatrix();
         }
-        return fProxyShader;
+        return SkRef(fProxyShader.get());
     }
 
     SK_TO_STRING_OVERRIDE()
@@ -42,13 +41,15 @@ public:
 
 protected:
     void flatten(SkWriteBuffer&) const override;
+    Context* onCreateContext(const ContextRec&, void*) const override;
 
-    Context* onMakeContext(const ContextRec&, SkArenaAlloc*) const override;
+    size_t onContextSize(const ContextRec& rec) const override {
+        return fProxyShader->contextSize(rec);
+    }
 
-    SkImage* onIsAImage(SkMatrix* matrix, TileMode* mode) const override;
-
-    bool onAppendStages(SkRasterPipeline*, SkColorSpace*, SkArenaAlloc*,
-                        const SkMatrix&, const SkPaint&, const SkMatrix*) const override;
+    SkImage* onIsAImage(SkMatrix* matrix, TileMode* mode) const override {
+        return fProxyShader->isAImage(matrix, mode);
+    }
 
 #ifdef SK_SUPPORT_LEGACY_SHADER_ISABITMAP
     bool onIsABitmap(SkBitmap* bitmap, SkMatrix* matrix, TileMode* mode) const override {
@@ -57,7 +58,7 @@ protected:
 #endif
 
 private:
-    sk_sp<SkShader> fProxyShader;
+    SkAutoTUnref<SkShader> fProxyShader;
 
     typedef SkShader INHERITED;
 };

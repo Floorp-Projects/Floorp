@@ -170,6 +170,24 @@ add_task(function* click_close_button_on_dialog() {
     null, 0, {runClosingFnOutsideOfContentTask: true});
 });
 
+add_task(function* background_click_should_close_dialog() {
+  yield open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
+
+  // Clicking on an inactive part of dialog itself should not close the dialog.
+  // Click the dialog title bar here to make sure nothing happens.
+  info("clicking the dialog title bar");
+  BrowserTestUtils.synthesizeMouseAtCenter("#dialogTitle", {}, tab.linkedBrowser);
+
+  // Close the dialog by clicking on the overlay background. Simulate a click
+  // at point (2,2) instead of (0,0) so we are sure we're clicking on the
+  // overlay background instead of some boundary condition that a real user
+  // would never click.
+  info("clicking the overlay background");
+  yield close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
+    function() { return BrowserTestUtils.synthesizeMouseAtPoint(2, 2, {}, tab.linkedBrowser); },
+    null, 0, {runClosingFnOutsideOfContentTask: true});
+});
+
 add_task(function* back_navigation_on_subdialog_should_close_dialog() {
   yield open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
 

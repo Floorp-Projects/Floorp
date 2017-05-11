@@ -5,22 +5,21 @@
 
 package org.mozilla.gecko;
 
-import java.util.HashSet;
-
 import android.text.TextUtils;
+import android.util.Log;
+import android.view.View;
 import android.widget.PopupWindow;
-import org.mozilla.gecko.AppConstants.Versions;
+
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
-import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.AnchoredPopup;
 import org.mozilla.gecko.widget.DoorHanger;
-
-import android.content.Context;
-import android.util.Log;
-import android.view.View;
 import org.mozilla.gecko.widget.DoorhangerConfig;
+
+import java.util.HashSet;
+
+import static org.mozilla.gecko.widget.DoorHanger.Type;
 
 public class DoorHangerPopup extends AnchoredPopup
                              implements BundleEventListener,
@@ -292,7 +291,9 @@ public class DoorHangerPopup extends AnchoredPopup
 
         final String baseDomain = tab.getBaseDomain();
 
-        if (TextUtils.isEmpty(baseDomain)) {
+        if (firstDoorhanger.getType() == Type.ADDON) {
+            firstDoorhanger.showTitle(null, mContext.getString(R.string.addons));
+        } else if (TextUtils.isEmpty(baseDomain)) {
             firstDoorhanger.hideTitle();
         } else {
             firstDoorhanger.showTitle(tab.getFavicon(), baseDomain);

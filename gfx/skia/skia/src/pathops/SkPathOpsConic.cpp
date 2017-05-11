@@ -156,8 +156,7 @@ SkDConic SkDConic::subDivide(double t1, double t2) const {
     double bx = 2 * dx - (ax + cx) / 2;
     double by = 2 * dy - (ay + cy) / 2;
     double bz = 2 * dz - (az + cz) / 2;
-    SkDConic dst = {{{{ax / az, ay / az}, {bx / bz, by / bz}, {cx / cz, cy / cz}}
-            SkDEBUGPARAMS(fPts.fDebugGlobalState) },
+    SkDConic dst = {{{{ax / az, ay / az}, {bx / bz, by / bz}, {cx / cz, cy / cz}}},
             SkDoubleToScalar(bz / sqrt(az * cz)) };
     return dst;
 }

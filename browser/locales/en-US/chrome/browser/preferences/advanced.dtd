@@ -144,6 +144,8 @@
                                          "Recommended performance settings are tailored to your computer.">
 <!ENTITY useRecommendedPerformanceSettings.accesskey
                                          "U">
+<!ENTITY performanceSettingsLearnMore.label
+                                         "Learn more">
 <!ENTITY limitContentProcess.label       "Content process limit">
 <!ENTITY limitContentProcess.description
                                          "More content processes can make &brandShortName; more responsive when using multiple tabs, but will also consume more memory.">

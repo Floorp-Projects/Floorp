@@ -4780,7 +4780,7 @@ nsDocShell::LoadURIWithOptions(const char16_t* aURI,
   // Cleanup the empty spaces that might be on each end.
   uriString.Trim(" ");
   // Eliminate embedded newlines, which single-line text fields now allow:
-  uriString.StripChars("\r\n");
+  uriString.StripCRLF();
   NS_ENSURE_TRUE(!uriString.IsEmpty(), NS_ERROR_FAILURE);
 
   rv = NS_NewURI(getter_AddRefs(uri), uriString);
@@ -5696,6 +5696,11 @@ nsDocShell::LoadPage(nsISupports* aPageDescriptor, uint32_t aDisplayType)
     }
     shEntry->SetURI(newUri);
     shEntry->SetOriginalURI(nullptr);
+    // shEntry's current triggering principal is whoever loaded that page initially.
+    // But now we're doing another load of the page, via an API that is only exposed
+    // to system code.  The triggering principal for this load should be the system
+    // principal.
+    shEntry->SetTriggeringPrincipal(nsContentUtils::GetSystemPrincipal());
   }
 
   rv = LoadHistoryEntry(shEntry, LOAD_HISTORY);

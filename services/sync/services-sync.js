@@ -87,3 +87,7 @@ pref("services.sync.engine.bookmarks.validation.percentageChance", 10);
 
 // We won't validate an engine if it has more than this many records on the server.
 pref("services.sync.engine.bookmarks.validation.maxRecords", 1000);
+
+// The maximum number of immediate resyncs to trigger for changes made during
+// a sync.
+pref("services.sync.maxResyncs", 5);

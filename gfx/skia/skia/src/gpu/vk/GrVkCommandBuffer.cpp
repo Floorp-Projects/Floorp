@@ -345,6 +345,7 @@ void GrVkPrimaryCommandBuffer::end(const GrVkGpu* gpu) {
 
 void GrVkPrimaryCommandBuffer::beginRenderPass(const GrVkGpu* gpu,
                                                const GrVkRenderPass* renderPass,
+                                               uint32_t clearCount,
                                                const VkClearValue* clearValues,
                                                const GrVkRenderTarget& target,
                                                const SkIRect& bounds,
@@ -364,7 +365,7 @@ void GrVkPrimaryCommandBuffer::beginRenderPass(const GrVkGpu* gpu,
     beginInfo.renderPass = renderPass->vkRenderPass();
     beginInfo.framebuffer = target.framebuffer()->framebuffer();
     beginInfo.renderArea = renderArea;
-    beginInfo.clearValueCount = renderPass->clearValueCount();
+    beginInfo.clearValueCount = clearCount;
     beginInfo.pClearValues = clearValues;
 
     VkSubpassContents contents = forSecondaryCB ? VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS
@@ -386,7 +387,6 @@ void GrVkPrimaryCommandBuffer::endRenderPass(const GrVkGpu* gpu) {
 void GrVkPrimaryCommandBuffer::executeCommands(const GrVkGpu* gpu,
                                                GrVkSecondaryCommandBuffer* buffer) {
     SkASSERT(fIsActive);
-    SkASSERT(!buffer->fIsActive);
     SkASSERT(fActiveRenderPass);
     SkASSERT(fActiveRenderPass->isCompatible(*buffer->fActiveRenderPass));
 
@@ -398,12 +398,9 @@ void GrVkPrimaryCommandBuffer::executeCommands(const GrVkGpu* gpu,
     this->invalidateState();
 }
 
-void GrVkPrimaryCommandBuffer::submitToQueue(
-        const GrVkGpu* gpu,
-        VkQueue queue,
-        GrVkGpu::SyncQueue sync,
-        const GrVkSemaphore::Resource* signalSemaphore,
-        SkTArray<const GrVkSemaphore::Resource*>& waitSemaphores) {
+void GrVkPrimaryCommandBuffer::submitToQueue(const GrVkGpu* gpu,
+                                             VkQueue queue,
+                                             GrVkGpu::SyncQueue sync) {
     SkASSERT(!fIsActive);
 
     VkResult err;
@@ -418,36 +415,17 @@ void GrVkPrimaryCommandBuffer::submitToQueue(
         GR_VK_CALL(gpu->vkInterface(), ResetFences(gpu->device(), 1, &fSubmitFence));
     }
 
-    if (signalSemaphore) {
-        this->addResource(signalSemaphore);
-    }
-
-    int waitCount = waitSemaphores.count();
-    SkTArray<VkSemaphore> vkWaitSems(waitCount);
-    SkTArray<VkPipelineStageFlags> vkWaitStages(waitCount);
-    if (waitCount) {
-        for (int i = 0; i < waitCount; ++i) {
-            this->addResource(waitSemaphores[i]);
-            vkWaitSems.push_back(waitSemaphores[i]->semaphore());
-            vkWaitStages.push_back(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
-        }
-    }
-    SkTArray<VkSemaphore> vkSignalSem;
-    if (signalSemaphore) {
-        vkSignalSem.push_back(signalSemaphore->semaphore());
-    }
-
     VkSubmitInfo submitInfo;
     memset(&submitInfo, 0, sizeof(VkSubmitInfo));
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submitInfo.pNext = nullptr;
-    submitInfo.waitSemaphoreCount = waitCount;
-    submitInfo.pWaitSemaphores = vkWaitSems.begin();
-    submitInfo.pWaitDstStageMask = vkWaitStages.begin();
+    submitInfo.waitSemaphoreCount = 0;
+    submitInfo.pWaitSemaphores = nullptr;
+    submitInfo.pWaitDstStageMask = 0;
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &fCmdBuffer;
-    submitInfo.signalSemaphoreCount = vkSignalSem.count();
-    submitInfo.pSignalSemaphores = vkSignalSem.begin();
+    submitInfo.signalSemaphoreCount = 0;
+    submitInfo.pSignalSemaphores = nullptr;
     GR_VK_CALL_ERRCHECK(gpu->vkInterface(), QueueSubmit(queue, 1, &submitInfo, fSubmitFence));
 
     if (GrVkGpu::kForce_SyncQueue == sync) {

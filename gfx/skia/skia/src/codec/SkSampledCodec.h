@@ -19,7 +19,7 @@ public:
 
     explicit SkSampledCodec(SkCodec*);
 
-    ~SkSampledCodec() override {}
+    virtual ~SkSampledCodec() {}
 
 protected:
 
