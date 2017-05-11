@@ -231,6 +231,9 @@ RootActor.prototype = {
     if (this._parameters.serviceWorkerRegistrationList) {
       this._parameters.serviceWorkerRegistrationList.onListChanged = null;
     }
+    if (this._parameters.processList) {
+      this._parameters.processList.onListChanged = null;
+    }
     if (typeof this._parameters.onShutdown === "function") {
       this._parameters.onShutdown();
     }
