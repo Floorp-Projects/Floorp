@@ -43,7 +43,6 @@ const FILTER_FLAGS = [
   "set-cookie-value",
   "mime-type",
   "larger-than",
-  "transferred-larger-than",
   "is",
   "has-response-header",
   "regexp",
@@ -99,7 +98,6 @@ function processFlagFilter(type, value) {
     case "size":
     case "transferred":
     case "larger-than":
-    case "transferred-larger-than":
       let multiplier = 1;
       if (value.endsWith("k")) {
         multiplier = 1024;
@@ -166,13 +164,6 @@ function isFlagFilterMatch(item, { type, value, negative }) {
       break;
     case "larger-than":
       match = item.contentSize > value;
-      break;
-    case "transferred-larger-than":
-      if (item.fromCache) {
-        match = false;
-      } else {
-        match = item.transferredSize > value;
-      }
       break;
     case "mime-type":
       match = item.mimeType.includes(value);
