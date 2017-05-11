@@ -157,8 +157,16 @@ gl::Version GetClientVersion(const egl::AttributeMap &attribs)
 
 GLenum GetResetStrategy(const egl::AttributeMap &attribs)
 {
-    EGLAttrib attrib = attribs.get(EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_EXT,
-                                   EGL_NO_RESET_NOTIFICATION_EXT);
+    EGLAttrib attrib = attribs.get(EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_KHR, 0);
+    if (!attrib)
+    {
+        attrib = attribs.get(EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_EXT, 0);
+    }
+    if (!attrib)
+    {
+        attrib = EGL_NO_RESET_NOTIFICATION;
+    }
+
     switch (attrib)
     {
         case EGL_NO_RESET_NOTIFICATION:
