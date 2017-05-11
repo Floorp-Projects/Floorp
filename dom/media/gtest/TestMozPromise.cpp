@@ -314,4 +314,37 @@ TEST(MozPromise, ResolveOrRejectValue)
   EXPECT_EQ(val.ResolveValue().get(), nullptr);
 }
 
+TEST(MozPromise, MoveOnlyType)
+{
+  using MyPromise = MozPromise<UniquePtr<int>, bool, true>;
+  using RRValue = MyPromise::ResolveOrRejectValue;
+
+  AutoTaskQueue atq;
+  RefPtr<TaskQueue> queue = atq.Queue();
+
+  MyPromise::CreateAndResolve(MakeUnique<int>(87), __func__)
+  ->Then(queue, __func__,
+    [](UniquePtr<int> aVal) {
+      EXPECT_EQ(87, *aVal);
+    },
+    []() { EXPECT_TRUE(false); });
+
+  MyPromise::CreateAndResolve(MakeUnique<int>(87), __func__)
+  ->Then(queue, __func__,
+    [queue](RRValue&& aVal) {
+      EXPECT_FALSE(aVal.IsNothing());
+      EXPECT_TRUE(aVal.IsResolve());
+      EXPECT_FALSE(aVal.IsReject());
+      EXPECT_EQ(87, *aVal.ResolveValue());
+
+      // Move() shouldn't change the resolve/reject state of aVal.
+      RRValue val = Move(aVal);
+      EXPECT_TRUE(aVal.IsResolve());
+      EXPECT_EQ(nullptr, aVal.ResolveValue().get());
+      EXPECT_EQ(87, *val.ResolveValue());
+
+      queue->BeginShutdown();
+    });
+}
+
 #undef DO_FAIL
