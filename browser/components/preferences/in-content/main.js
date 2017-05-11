@@ -72,6 +72,10 @@ var gMainPane = {
                                       .BrowserSearch.searchEnginesURL;
     addEnginesLink.setAttribute("href", searchEnginesURL);
 
+    let performanceSettingsLink = document.getElementById("performanceSettingsLearnMore");
+    let performanceSettingsUrl = Services.urlFormatter.formatURLPref("app.support.baseURL") + "performance";
+    performanceSettingsLink.setAttribute("href", performanceSettingsUrl);
+
     window.addEventListener("click", this);
     window.addEventListener("command", this);
     window.addEventListener("dragstart", this);

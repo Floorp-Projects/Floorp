@@ -21,7 +21,6 @@
 #include "nsITextControlElement.h"
 #include "nsIDOMNSEditableElement.h"
 #include "nsIRadioVisitor.h"
-#include "nsIPhonetic.h"
 #include "InputType.h"
 
 #include "HTMLFormSubmissionConstants.h"
@@ -1270,7 +1269,6 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLInputElement)
   NS_INTERFACE_TABLE_INHERITED(HTMLInputElement,
                                nsIDOMHTMLInputElement,
                                nsITextControlElement,
-                               nsIPhonetic,
                                imgINotificationObserver,
                                nsIImageLoadingContent,
                                imgIOnloadBlocker,
@@ -5332,15 +5330,13 @@ HTMLInputElement::SanitizeValue(nsAString& aValue)
     case NS_FORM_INPUT_TEL:
     case NS_FORM_INPUT_PASSWORD:
       {
-        char16_t crlf[] = { char16_t('\r'), char16_t('\n'), 0 };
-        aValue.StripChars(crlf);
+        aValue.StripCRLF();
       }
       break;
     case NS_FORM_INPUT_EMAIL:
     case NS_FORM_INPUT_URL:
       {
-        char16_t crlf[] = { char16_t('\r'), char16_t('\n'), 0 };
-        aValue.StripChars(crlf);
+        aValue.StripCRLF();
 
         aValue = nsContentUtils::TrimWhitespace<nsContentUtils::IsHTMLWhitespace>(aValue);
       }
@@ -6537,19 +6533,6 @@ HTMLInputElement::SetSelectionDirection(const nsAString& aDirection, ErrorResult
   nsTextEditorState* state = GetEditorState();
   MOZ_ASSERT(state, "SupportsTextSelection came back true!");
   state->SetSelectionDirection(aDirection, aRv);
-}
-
-NS_IMETHODIMP
-HTMLInputElement::GetPhonetic(nsAString& aPhonetic)
-{
-  aPhonetic.Truncate();
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(true);
-  nsITextControlFrame* textControlFrame = do_QueryFrame(formControlFrame);
-  if (textControlFrame) {
-    textControlFrame->GetPhonetic(aPhonetic);
-  }
-
-  return NS_OK;
 }
 
 #ifdef ACCESSIBILITY

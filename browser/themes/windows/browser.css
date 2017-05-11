@@ -845,7 +845,7 @@ html|*.urlbar-input:-moz-lwtheme::placeholder,
 }
 
 .urlbar-input-box {
-  margin-inline-start: 0;
+  margin: 0;
 }
 
 .urlbar-input-box,
