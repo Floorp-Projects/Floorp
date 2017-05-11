@@ -28,9 +28,6 @@ elif CONFIG['CPU_ARCH'] == 'x86':
     if CONFIG['OS_TARGET'] == 'WINNT':
         ASFLAGS += [ '-I%s/media/libaom/config/win/ia32/' % TOPSRCDIR ]
         CFLAGS += [ '-I%s/media/libaom/config/win/ia32/' % TOPSRCDIR ]
-    elif CONFIG['OS_TARGET'] == 'Darwin':
-        ASFLAGS += [ '-I%s/media/libaom/config/mac/ia32/' % TOPSRCDIR ]
-        CFLAGS += [ '-I%s/media/libaom/config/mac/ia32/' % TOPSRCDIR ]
     else: # Android, Linux, BSDs, etc.
         ASFLAGS += [ '-I%s/media/libaom/config/linux/ia32/' % TOPSRCDIR ]
         CFLAGS += [ '-I%s/media/libaom/config/linux/ia32/' % TOPSRCDIR ]
