@@ -8,7 +8,6 @@
 #include "SkDiscardableMemory.h"
 #include "SkDiscardableMemoryPool.h"
 #include "SkImageGenerator.h"
-#include "SkMalloc.h"
 #include "SkMutex.h"
 #include "SkOnce.h"
 #include "SkTInternalLList.h"
@@ -31,7 +30,7 @@ public:
      *  Without mutex, will be not be thread safe.
      */
     DiscardableMemoryPool(size_t budget, SkBaseMutex* mutex = nullptr);
-    ~DiscardableMemoryPool() override;
+    virtual ~DiscardableMemoryPool();
 
     SkDiscardableMemory* create(size_t bytes) override;
 
@@ -80,7 +79,7 @@ class PoolDiscardableMemory : public SkDiscardableMemory {
 public:
     PoolDiscardableMemory(DiscardableMemoryPool* pool,
                             void* pointer, size_t bytes);
-    ~PoolDiscardableMemory() override;
+    virtual ~PoolDiscardableMemory();
     bool lock() override;
     void* data() override;
     void unlock() override;

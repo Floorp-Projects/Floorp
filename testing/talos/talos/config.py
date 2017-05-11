@@ -94,7 +94,6 @@ DEFAULTS = dict(
         'take_over_this_computer': True,
         'browser.newtabpage.directory.source':
             '${webserver}/directoryLinks.json',
-        'browser.newtabpage.directory.ping': '',
         'browser.newtabpage.introShown': True,
         'browser.safebrowsing.provider.google.gethashURL':
             'http://127.0.0.1/safebrowsing-dummy/gethash',

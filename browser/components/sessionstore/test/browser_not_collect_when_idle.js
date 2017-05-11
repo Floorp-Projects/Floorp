@@ -68,20 +68,10 @@ add_task(async function testIntervalChanges() {
   // scheduled state write. This is needed since the `_lastSaveTime` in
   // runDelayed() should be set at least once, or the `_isIdle` flag will not
   // become effective.
-  // We wait at most 30 sec which is about as long as the timeout for the
-  // regular whole test case, and we don't expect the write event comes fast
-  // enough for an immediate `waitForSaveState()` from now.
-  await new Promise(function(resolve, reject) {
-    waitForTopic("sessionstore-state-write-complete", 30 * 1000, function(isSuccessful) {
-      if (!isSuccessful) {
-        reject(new Error("Timeout: didn't get any `sessionstore-state-write-complete` event"));
-      } else {
-        resolve();
-      }
-    });
-  });
+  info("Waiting for sessionstore-state-write-complete notification");
+  await TestUtils.topicObserved("sessionstore-state-write-complete");
 
-  info("Got the state write event, start to test idle mode...");
+  info("Got the sessionstore-state-write-complete notification, now testing idle mode");
 
   // Enter the "idle mode" (raise the `_isIdle` flag) by firing idle
   // observer of mock idle service.
@@ -108,15 +98,7 @@ add_task(async function testIntervalChanges() {
   info("Start to test active mode...");
   idleService._fireObservers("active");
 
-  await new Promise(function(resolve, reject) {
-    waitForTopic("sessionstore-state-write-complete", PREF_SS_INTERVAL + 10000, function(isSuccessful) {
-      if (!isSuccessful) {
-        reject(new Error("Timeout: didn't get any `sessionstore-state-write-complete` event"));
-      } else {
-        resolve();
-      }
-    });
-  });
-  info("[Test 2] Has state write during active.");
+  info("[Test 2] Waiting for sessionstore-state-write-complete during active");
+  await TestUtils.topicObserved("sessionstore-state-write-complete");
 });
 

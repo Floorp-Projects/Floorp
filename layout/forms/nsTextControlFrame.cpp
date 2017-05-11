@@ -13,7 +13,6 @@
 #include "nsCSSPseudoElements.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIEditor.h"
-#include "nsIPhonetic.h"
 #include "nsTextFragment.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsNameSpaceManager.h"
@@ -1096,22 +1095,6 @@ nsTextControlFrame::GetText(nsString& aText)
   return rv;
 }
 
-
-nsresult
-nsTextControlFrame::GetPhonetic(nsAString& aPhonetic)
-{
-  aPhonetic.Truncate(0);
-
-  nsCOMPtr<nsIEditor> editor;
-  nsresult rv = GetEditor(getter_AddRefs(editor));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIPhonetic> phonetic = do_QueryInterface(editor);
-  if (phonetic) {
-    phonetic->GetPhonetic(aPhonetic);
-  }
-  return NS_OK;
-}
 
 ///END NSIFRAME OVERLOADS
 /////BEGIN PROTECTED METHODS

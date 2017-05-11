@@ -26,6 +26,8 @@ public:
     SkAdvancedTypefaceMetrics()
         : fType(SkAdvancedTypefaceMetrics::kOther_Font)
         , fFlags((FontFlags)0)
+        , fLastGlyphID(0)
+        , fEmSize(0)
         , fStyle((StyleFlags)0)
         , fItalicAngle(0)
         , fAscent(0)
@@ -56,6 +58,9 @@ public:
         kNotSubsettable_FontFlag = 0x04,  //!<May not be subset.
     };
     FontFlags fFlags;  // Global font flags.
+
+    uint16_t fLastGlyphID; // The last valid glyph ID in the font.
+    uint16_t fEmSize;  // The size of the em box (defines font units).
 
     // These enum values match the values used in the PDF file format.
     enum StyleFlags : uint32_t {

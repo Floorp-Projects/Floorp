@@ -8,68 +8,91 @@
 #include "GrRenderTargetProxy.h"
 
 #include "GrCaps.h"
+#include "GrDrawTarget.h"
 #include "GrGpuResourcePriv.h"
-#include "GrRenderTargetOpList.h"
-#include "GrRenderTargetPriv.h"
-#include "GrResourceProvider.h"
-#include "GrTextureRenderTargetProxy.h"
 
 // Deferred version
 // TODO: we can probably munge the 'desc' in both the wrapped and deferred
 // cases to make the sampleConfig/numSamples stuff more rational.
 GrRenderTargetProxy::GrRenderTargetProxy(const GrCaps& caps, const GrSurfaceDesc& desc,
-                                         SkBackingFit fit, SkBudgeted budgeted, uint32_t flags)
-    : INHERITED(desc, fit, budgeted, flags)
-    , fRenderTargetFlags(GrRenderTarget::Flags::kNone) {
+                                         SkBackingFit fit, SkBudgeted budgeted)
+    : INHERITED(desc, fit, budgeted)
+    , fTarget(nullptr)
+    , fFlags(GrRenderTargetPriv::Flags::kNone)
+    , fLastDrawTarget(nullptr) {
     // Since we know the newly created render target will be internal, we are able to precompute
     // what the flags will ultimately end up being.
     if (caps.usesMixedSamples() && fDesc.fSampleCnt > 0) {
-        fRenderTargetFlags |= GrRenderTarget::Flags::kMixedSampled;
+        fFlags |= GrRenderTargetPriv::Flags::kMixedSampled;
     }
     if (caps.maxWindowRectangles() > 0) {
-        fRenderTargetFlags |= GrRenderTarget::Flags::kWindowRectsSupport;
+        fFlags |= GrRenderTargetPriv::Flags::kWindowRectsSupport;
     }
 }
 
 // Wrapped version
-GrRenderTargetProxy::GrRenderTargetProxy(sk_sp<GrSurface> surf)
-    : INHERITED(std::move(surf), SkBackingFit::kExact)
-    , fRenderTargetFlags(fTarget->asRenderTarget()->renderTargetPriv().flags()) {
+GrRenderTargetProxy::GrRenderTargetProxy(const GrCaps& caps, sk_sp<GrRenderTarget> rt)
+    : INHERITED(rt->desc(), SkBackingFit::kExact,
+                rt->resourcePriv().isBudgeted(), rt->uniqueID())
+    , fTarget(std::move(rt))
+    , fFlags(fTarget->renderTargetPriv().flags())
+    , fLastDrawTarget(nullptr) {
 }
 
-int GrRenderTargetProxy::maxWindowRectangles(const GrCaps& caps) const {
-    return (fRenderTargetFlags & GrRenderTarget::Flags::kWindowRectsSupport)
-                   ? caps.maxWindowRectangles()
-                   : 0;
+GrRenderTargetProxy::~GrRenderTargetProxy() {
+    if (fLastDrawTarget) {
+        fLastDrawTarget->clearRT();
+    }
+    SkSafeUnref(fLastDrawTarget);
 }
 
-GrRenderTarget* GrRenderTargetProxy::instantiate(GrResourceProvider* resourceProvider) {
-    SkASSERT(fDesc.fFlags & GrSurfaceFlags::kRenderTarget_GrSurfaceFlag);
+GrRenderTarget* GrRenderTargetProxy::instantiate(GrTextureProvider* texProvider) {
+    if (fTarget) {
+        return fTarget.get();
+    }
 
-    GrSurface* surf = INHERITED::instantiate(resourceProvider);
-    if (!surf || !surf->asRenderTarget()) {
+    // TODO: it would be nice to not have to copy the desc here
+    GrSurfaceDesc desc = fDesc;
+    desc.fFlags |= GrSurfaceFlags::kRenderTarget_GrSurfaceFlag;
+
+    sk_sp<GrTexture> tex;
+    if (SkBackingFit::kApprox == fFit) {
+        tex.reset(texProvider->createApproxTexture(desc));
+    } else {
+        tex.reset(texProvider->createTexture(desc, fBudgeted));
+    }
+    if (!tex || !tex->asRenderTarget()) {
         return nullptr;
     }
 
+    fTarget = sk_ref_sp(tex->asRenderTarget());
+
     // Check that our a priori computation matched the ultimate reality
-    SkASSERT(fRenderTargetFlags == surf->asRenderTarget()->renderTargetPriv().flags());
+    SkASSERT(fFlags == fTarget->renderTargetPriv().flags());
 
-    return surf->asRenderTarget();
+    return fTarget.get();
 }
 
-size_t GrRenderTargetProxy::onGpuMemorySize() const {
-    if (fTarget) {
-        return fTarget->gpuMemorySize();
+void GrRenderTargetProxy::setLastDrawTarget(GrDrawTarget* dt) {
+    if (fLastDrawTarget) {
+        // The non-MDB world never closes so we can't check this condition
+#ifdef ENABLE_MDB
+        SkASSERT(fLastDrawTarget->isClosed());
+#endif
+        fLastDrawTarget->clearRT();
     }
 
-    // TODO: do we have enough information to improve this worst case estimate?
-    return GrSurface::ComputeSize(fDesc, fDesc.fSampleCnt+1, false, SkBackingFit::kApprox == fFit);
+    SkRefCnt_SafeAssign(fLastDrawTarget, dt);
 }
 
-bool GrRenderTargetProxy::refsWrappedObjects() const {
-    if (!fTarget) {
-        return false;
-    }
-
-    return fTarget->resourcePriv().refsWrappedObjects();
+sk_sp<GrRenderTargetProxy> GrRenderTargetProxy::Make(const GrCaps& caps,
+                                                     const GrSurfaceDesc& desc,
+                                                     SkBackingFit fit,
+                                                     SkBudgeted budgeted) {
+    return sk_sp<GrRenderTargetProxy>(new GrRenderTargetProxy(caps, desc, fit, budgeted));
 }
+
+sk_sp<GrRenderTargetProxy> GrRenderTargetProxy::Make(const GrCaps& caps, sk_sp<GrRenderTarget> rt) {
+    return sk_sp<GrRenderTargetProxy>(new GrRenderTargetProxy(caps, rt));
+}
+

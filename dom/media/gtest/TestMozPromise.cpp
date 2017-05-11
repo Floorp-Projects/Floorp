@@ -291,4 +291,27 @@ TEST(MozPromise, Chaining)
   });
 }
 
+TEST(MozPromise, ResolveOrRejectValue)
+{
+  using MyPromise = MozPromise<UniquePtr<int>, bool, false>;
+  using RRValue = MyPromise::ResolveOrRejectValue;
+
+  RRValue val;
+  EXPECT_TRUE(val.IsNothing());
+  EXPECT_FALSE(val.IsResolve());
+  EXPECT_FALSE(val.IsReject());
+
+  val.SetResolve(MakeUnique<int>(87));
+  EXPECT_FALSE(val.IsNothing());
+  EXPECT_TRUE(val.IsResolve());
+  EXPECT_FALSE(val.IsReject());
+  EXPECT_EQ(87, *val.ResolveValue());
+
+  // IsResolve() should remain true after Move().
+  UniquePtr<int> i = Move(val.ResolveValue());
+  EXPECT_EQ(87, *i);
+  EXPECT_TRUE(val.IsResolve());
+  EXPECT_EQ(val.ResolveValue().get(), nullptr);
+}
+
 #undef DO_FAIL

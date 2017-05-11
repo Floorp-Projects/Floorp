@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 backends = {
-    'AndroidEclipse': 'mozbuild.backend.android_eclipse',
     'ChromeMap': 'mozbuild.codecoverage.chrome_map',
     'CompileDB': 'mozbuild.compilation.database',
     'CppEclipse': 'mozbuild.backend.cpp_eclipse',

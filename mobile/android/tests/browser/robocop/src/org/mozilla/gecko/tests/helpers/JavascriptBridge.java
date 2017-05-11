@@ -105,6 +105,17 @@ public final class JavascriptBridge {
         sAsserter = context.getAsserter();
     }
 
+    public JavascriptBridge(final Object target, final Actions action, final Assert asserter) {
+        sActions = action;
+        sAsserter = asserter;
+        mTarget = target;
+        mMethods = target.getClass().getMethods();
+        mExpecter = sActions.expectGlobalEvent(Actions.EventType.GECKO, EVENT_TYPE);
+        // The JS here is unrelated to a test harness, so we
+        // have our message parser end on assertion failure.
+        mLogParser = new JavascriptMessageParser(sAsserter, true);
+    }
+
     public JavascriptBridge(final Object target) {
         mTarget = target;
         mMethods = target.getClass().getMethods();

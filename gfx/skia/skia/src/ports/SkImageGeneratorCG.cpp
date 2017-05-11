@@ -60,7 +60,7 @@ SkImageGenerator* SkImageGeneratorCG::NewFromEncodedCG(SkData* data) {
     }
 
     SkAlphaType alphaType = hasAlpha ? kPremul_SkAlphaType : kOpaque_SkAlphaType;
-    SkImageInfo info = SkImageInfo::MakeS32(width, height, alphaType);
+    SkImageInfo info = SkImageInfo::Make(width, height, kN32_SkColorType, alphaType);
 
     // FIXME: We have the opportunity to extract color space information here,
     //        though I think it makes sense to wait until we understand how
@@ -75,7 +75,7 @@ SkImageGeneratorCG::SkImageGeneratorCG(const SkImageInfo& info, const void* imag
     , fData(SkRef(data))
 {}
 
-SkData* SkImageGeneratorCG::onRefEncodedData(GrContext* ctx) {
+SkData* SkImageGeneratorCG::onRefEncodedData(SK_REFENCODEDDATA_CTXPARAM) {
     return SkRef(fData.get());
 }
 

@@ -17,7 +17,7 @@ pref(layout.css.moz-appearance.enabled,true) fails fails-if(stylo) == flexbox-al
 # This one fails on windows R (but not Ru, strangely) and GTK.
 # On Windows R and GTK, the single-line <label> flex item has a different
 # background size in test vs. ref
-fuzzy-if(cocoaWidget,1,2) random-if(winWidget||gtkWidget) skip-if(Android) fails-if(stylo) == flexbox-align-self-baseline-horiz-3.xhtml  flexbox-align-self-baseline-horiz-3-ref.xhtml # XXXdholbert investigate the random-if. The skip-if(Android) is because checkbox/radio appearance:none doesn't work as expected.
+fuzzy-if(cocoaWidget,1,2) random-if(winWidget||gtkWidget) skip-if(Android) == flexbox-align-self-baseline-horiz-3.xhtml  flexbox-align-self-baseline-horiz-3-ref.xhtml # XXXdholbert investigate the random-if. The skip-if(Android) is because checkbox/radio appearance:none doesn't work as expected.
 == flexbox-align-self-baseline-horiz-4.xhtml flexbox-align-self-baseline-horiz-4-ref.xhtml
 
 # Tests for box-sizing on flex containers and flex items.
@@ -109,10 +109,10 @@ fuzzy-if(skiaContent,1,5) == flexbox-resizeviewport-1.xhtml flexbox-resizeviewpo
 == flexbox-styling-on-svg-1.svg flexbox-styling-on-svg-1-ref.svg
 
 # Tests with widgets as flex items
-fuzzy-if(gtkWidget,1,66) fails-if(stylo) == flexbox-widget-flex-items-1.html flexbox-widget-flex-items-1-ref.html
-fuzzy-if(gtkWidget,1,74) fails-if(stylo) == flexbox-widget-flex-items-2.html flexbox-widget-flex-items-2-ref.html
+fuzzy-if(gtkWidget,1,66) == flexbox-widget-flex-items-1.html flexbox-widget-flex-items-1-ref.html
+fuzzy-if(gtkWidget,1,74) == flexbox-widget-flex-items-2.html flexbox-widget-flex-items-2-ref.html
 skip-if(gtkWidget) == flexbox-widget-flex-items-3.html flexbox-widget-flex-items-3-ref.html # bug 1260965
-fuzzy-if(gtkWidget,1,31) fails-if(stylo) == flexbox-widget-flex-items-4.html flexbox-widget-flex-items-4-ref.html
+fuzzy-if(gtkWidget,1,31) == flexbox-widget-flex-items-4.html flexbox-widget-flex-items-4-ref.html
 
 # Tests for table flex items
 == flexbox-table-flex-items-1.html flexbox-table-flex-items-1-ref.html

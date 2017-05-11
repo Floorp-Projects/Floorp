@@ -34,7 +34,7 @@ random-if(d2d) == 394402-1a.html 394402-1-ref.html # bug 586833
 == 443616-1a.xhtml 443616-1-ref.html
 == 443616-1b.html 443616-1-ref.html
 == 448111-1.html 448111-1-ref.html
-fails-if(stylo) == 490174-1.html 490174-1-ref.html
+== 490174-1.html 490174-1-ref.html
 == 695538-1.html 695538-1-ref.html
 == infer-first-row.html 3x3-ref.html
 == infer-first-row-and-table.html 3x3-ref.html

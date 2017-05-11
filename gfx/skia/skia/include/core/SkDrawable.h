@@ -9,7 +9,6 @@
 #define SkDrawable_DEFINED
 
 #include "SkFlattenable.h"
-#include "SkScalar.h"
 
 class SkCanvas;
 class SkMatrix;

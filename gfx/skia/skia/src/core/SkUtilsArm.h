@@ -8,9 +8,11 @@
 #ifndef SkUtilsArm_DEFINED
 #define SkUtilsArm_DEFINED
 
-#include "SkTypes.h"
+#include "SkCpu.h"
 
-#if defined(SK_ARM_HAS_NEON)
+#if defined(SK_ARM_HAS_OPTIONAL_NEON)
+    #define SK_ARM_NEON_WRAP(x) (SkCpu::Supports(SkCpu::NEON) ? x ## _neon : x)
+#elif defined(SK_ARM_HAS_NEON)
     #define SK_ARM_NEON_WRAP(x) (x ## _neon)
 #else
     #define SK_ARM_NEON_WRAP(x) (x)

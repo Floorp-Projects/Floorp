@@ -45,7 +45,8 @@ def try_compile(includes=None, body='', language='C++', flags=None, check_msg=No
 #   conditional on the value of that function.
 @template
 def check_header(header, language='C++', flags=None, includes=None, when=None):
-    when = when or always
+    if when is None:
+        when = always
 
     if includes:
         includes = includes[:]
@@ -97,12 +98,13 @@ def warnings_cxxflags():
 #   for add_gcc_warning().
 @template
 def check_and_add_gcc_warning(warning, compiler=None, when=None, check=True):
-    if compiler:
+    if compiler is not None:
         compilers = (compiler,)
     else:
         compilers = (c_compiler, cxx_compiler)
 
-    when = when or always
+    if when is None:
+        when = always
 
     for c in compilers:
         assert c in (c_compiler, cxx_compiler)

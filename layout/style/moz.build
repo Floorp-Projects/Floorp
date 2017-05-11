@@ -104,6 +104,7 @@ EXPORTS.mozilla += [
     'ServoCSSRuleList.h',
     'ServoDeclarationBlock.h',
     'ServoElementSnapshot.h',
+    'ServoElementSnapshotTable.h',
     'ServoMediaList.h',
     'ServoMediaRule.h',
     'ServoNamespaceRule.h',

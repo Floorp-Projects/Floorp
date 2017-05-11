@@ -62,10 +62,28 @@ public:
                                           int numOctaves, SkScalar seed,
                                           const SkISize* tileSize = nullptr);
 
+#ifdef SK_SUPPORT_LEGACY_CREATESHADER_PTR
+    static SkShader* CreateFractalNoise(SkScalar baseFrequencyX, SkScalar baseFrequencyY,
+                                        int numOctaves, SkScalar seed,
+                                        const SkISize* tileSize = NULL) {
+        return MakeFractalNoise(baseFrequencyX, baseFrequencyY, numOctaves, seed, tileSize).release();
+    }
+    static SkShader* CreateTurbulence(SkScalar baseFrequencyX, SkScalar baseFrequencyY,
+                                      int numOctaves, SkScalar seed,
+                                      const SkISize* tileSize = NULL) {
+        return MakeTurbulence(baseFrequencyX, baseFrequencyY, numOctaves, seed, tileSize).release();
+    }
+    static SkShader* CreateTubulence(SkScalar baseFrequencyX, SkScalar baseFrequencyY,
+                                     int numOctaves, SkScalar seed,
+                                     const SkISize* tileSize = NULL) {
+        return CreateTurbulence(baseFrequencyX, baseFrequencyY, numOctaves, seed, tileSize);
+    }
+#endif
+
     class PerlinNoiseShaderContext : public SkShader::Context {
     public:
         PerlinNoiseShaderContext(const SkPerlinNoiseShader& shader, const ContextRec&);
-        ~PerlinNoiseShaderContext() override;
+        virtual ~PerlinNoiseShaderContext();
 
         void shadeSpan(int x, int y, SkPMColor[], int count) override;
 
@@ -92,13 +110,14 @@ public:
 
 protected:
     void flatten(SkWriteBuffer&) const override;
-    Context* onMakeContext(const ContextRec&, SkArenaAlloc* storage) const override;
+    Context* onCreateContext(const ContextRec&, void* storage) const override;
+    size_t onContextSize(const ContextRec&) const override;
 
 private:
     SkPerlinNoiseShader(SkPerlinNoiseShader::Type type, SkScalar baseFrequencyX,
                         SkScalar baseFrequencyY, int numOctaves, SkScalar seed,
                         const SkISize* tileSize);
-    ~SkPerlinNoiseShader() override;
+    virtual ~SkPerlinNoiseShader();
 
     const SkPerlinNoiseShader::Type fType;
     const SkScalar                  fBaseFrequencyX;

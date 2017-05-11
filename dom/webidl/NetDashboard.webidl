@@ -75,3 +75,9 @@ dictionary DNSLookupDict {
 dictionary ConnStatusDict {
   DOMString status = "";
 };
+
+dictionary RcwnStatus {
+  unsigned long totalNetworkRequests = 0;
+  unsigned long rcwnCacheWonCount = 0;
+  unsigned long rcwnNetWonCount = 0;
+};

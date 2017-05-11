@@ -12,7 +12,7 @@
 #include "SkBlitter.h"
 #include "SkBlitRow.h"
 #include "SkShader.h"
-#include "SkXfermodePriv.h"
+#include "SkSmallAllocator.h"
 
 class SkRasterBlitter : public SkBlitter {
 public:
@@ -35,6 +35,15 @@ public:
     SkShaderBlitter(const SkPixmap& device, const SkPaint& paint,
                     SkShader::Context* shaderContext);
     virtual ~SkShaderBlitter();
+
+    /**
+      *  Create a new shader context and uses it instead of the old one if successful.
+      *  Will create the context at the same location as the old one (this is safe
+      *  because the shader itself is unchanged).
+      */
+    bool resetShaderContext(const SkShader::ContextRec&) override;
+
+    SkShader::Context* getShaderContext() const override { return fShaderContext; }
 
 protected:
     uint32_t            fShaderFlags;
@@ -85,7 +94,7 @@ class SkA8_Shader_Blitter : public SkShaderBlitter {
 public:
     SkA8_Shader_Blitter(const SkPixmap& device, const SkPaint& paint,
                         SkShader::Context* shaderContext);
-    ~SkA8_Shader_Blitter() override;
+    virtual ~SkA8_Shader_Blitter();
     void blitH(int x, int y, int width) override;
     void blitAntiH(int x, int y, const SkAlpha antialias[], const int16_t runs[]) override;
     void blitMask(const SkMask&, const SkIRect&) override;
@@ -156,7 +165,7 @@ class SkARGB32_Shader_Blitter : public SkShaderBlitter {
 public:
     SkARGB32_Shader_Blitter(const SkPixmap& device, const SkPaint& paint,
                             SkShader::Context* shaderContext);
-    ~SkARGB32_Shader_Blitter() override;
+    virtual ~SkARGB32_Shader_Blitter();
     void blitH(int x, int y, int width) override;
     void blitV(int x, int y, int height, SkAlpha alpha) override;
     void blitRect(int x, int y, int width, int height) override;
@@ -177,10 +186,10 @@ private:
 };
 
 SkBlitter* SkBlitter_ARGB32_Create(const SkPixmap& device, const SkPaint&, SkShader::Context*,
-                                   SkArenaAlloc*);
+                                   SkTBlitterAllocator*);
 
 SkBlitter* SkBlitter_F16_Create(const SkPixmap& device, const SkPaint&, SkShader::Context*,
-                                SkArenaAlloc*);
+                                SkTBlitterAllocator*);
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -199,11 +208,10 @@ SkBlitter* SkBlitter_F16_Create(const SkPixmap& device, const SkPaint&, SkShader
 
 SkBlitter* SkBlitter_ChooseD565(const SkPixmap& device, const SkPaint& paint,
                                 SkShader::Context* shaderContext,
-                                SkArenaAlloc* allocator);
+                                SkTBlitterAllocator* allocator);
 
 
 // Returns nullptr if no SkRasterPipeline blitter can be constructed for this paint.
-SkBlitter* SkCreateRasterPipelineBlitter(const SkPixmap&, const SkPaint&, const SkMatrix& ctm,
-                                         SkArenaAlloc*);
+SkBlitter* SkCreateRasterPipelineBlitter(const SkPixmap&, const SkPaint&, SkTBlitterAllocator*);
 
 #endif

@@ -9,18 +9,17 @@
 #define GrGLSLUniformHandler_DEFINED
 
 #include "GrGLSLProgramDataManager.h"
-#include "GrShaderVar.h"
-#include "GrSwizzle.h"
+#include "GrGLSLShaderVar.h"
 
 class GrGLSLProgramBuilder;
+class GrGLSLSampler;
 
 class GrGLSLUniformHandler {
 public:
     virtual ~GrGLSLUniformHandler() {}
 
-    using UniformHandle = GrGLSLProgramDataManager::UniformHandle;
-    GR_DEFINE_RESOURCE_HANDLE_CLASS(SamplerHandle);
-    GR_DEFINE_RESOURCE_HANDLE_CLASS(ImageStorageHandle);
+    typedef GrGLSLProgramDataManager::UniformHandle UniformHandle;
+    typedef GrGLSLProgramDataManager::UniformHandle SamplerHandle;
 
     /** Add a uniform variable to the current program, that has visibility in one or more shaders.
         visibility is a bitfield of GrShaderFlag values indicating from which shaders the uniform
@@ -48,7 +47,7 @@ public:
                                              outName);
     }
 
-    virtual const GrShaderVar& getUniformVariable(UniformHandle u) const = 0;
+    virtual const GrGLSLShaderVar& getUniformVariable(UniformHandle u) const = 0;
 
     /**
      * Shortcut for getUniformVariable(u).c_str()
@@ -62,16 +61,22 @@ protected:
     GrGLSLProgramBuilder* fProgramBuilder;
 
 private:
-    virtual const GrShaderVar& samplerVariable(SamplerHandle) const = 0;
-    virtual GrSwizzle samplerSwizzle(SamplerHandle) const = 0;
+    virtual int numSamplers() const = 0;
+    virtual const GrGLSLSampler& getSampler(SamplerHandle handle) const = 0;
 
-    virtual SamplerHandle addSampler(uint32_t visibility, GrSwizzle, GrSLType, GrSLPrecision,
-                                     const char* name) = 0;
+    SamplerHandle addSampler(uint32_t visibility,
+                             GrPixelConfig config,
+                             GrSLType type,
+                             GrSLPrecision precision,
+                             const char* name) {
+        return this->internalAddSampler(visibility, config, type, precision, name);
+    }
 
-    virtual const GrShaderVar& imageStorageVariable(ImageStorageHandle) const = 0;
-    virtual ImageStorageHandle addImageStorage(uint32_t visibility, GrSLType type,
-                                               GrImageStorageFormat, GrSLMemoryModel, GrSLRestrict,
-                                               GrIOType, const char* name) = 0;
+    virtual SamplerHandle internalAddSampler(uint32_t visibility,
+                                             GrPixelConfig config,
+                                             GrSLType type,
+                                             GrSLPrecision precision,
+                                             const char* name) = 0;
 
     virtual UniformHandle internalAddUniformArray(uint32_t visibility,
                                                   GrSLType type,

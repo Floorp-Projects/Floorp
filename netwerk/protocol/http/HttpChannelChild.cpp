@@ -3251,9 +3251,13 @@ HttpChannelChild::OverrideWithSynthesizedResponse(nsAutoPtr<nsHttpResponseHead>&
     mSynthesizedStreamLength = int64_t(available);
   }
 
+  nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
+  MOZ_ASSERT(neckoTarget);
+
   rv = nsInputStreamPump::Create(getter_AddRefs(mSynthesizedResponsePump),
                                  aSynthesizedInput,
-                                 int64_t(-1), int64_t(-1), 0, 0, true);
+                                 int64_t(-1), int64_t(-1), 0, 0, true,
+                                 neckoTarget);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aSynthesizedInput->Close();
     return;

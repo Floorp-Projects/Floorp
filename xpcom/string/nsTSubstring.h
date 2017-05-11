@@ -1015,6 +1015,31 @@ public:
   void StripChars(const char_type* aChars, uint32_t aOffset = 0);
 
   /**
+   * This method is used to remove all occurrences of some characters this
+   * from this string.  The characters removed have the corresponding
+   * entries in the bool array set to true; we retain all characters
+   * with code beyond 127.
+   * THE CALLER IS RESPONSIBLE for making sure the complete boolean
+   * array, 128 entries, is properly initialized.
+   *
+   * See also: ASCIIMask class.
+   *
+   *  @param  aToStrip -- Array where each entry is true if the
+   *          corresponding ASCII character is to be stripped.  All
+   *          characters beyond code 127 are retained.  Note that this
+   *          parameter is of ASCIIMaskArray type, but we expand the typedef
+   *          to avoid having to include nsASCIIMask.h in this include file
+   *          as it brings other includes.
+   *  @param  aOffset -- where in this string to start stripping chars
+   */
+  void StripTaggedASCII(const std::array<bool, 128>& aToStrip, uint32_t aOffset = 0);
+
+  /**
+   * A shortcut to strip \r and \n.
+   */
+  void StripCRLF(uint32_t aOffset = 0);
+
+  /**
    * If the string uses a shared buffer, this method
    * clears the pointer without releasing the buffer.
    */

@@ -38,13 +38,12 @@ TEST_HARNESS_FILES.gtest += [
     'test_case_1351094.mp4',
 ]
 
-if CONFIG['MOZ_RUST']:
-    UNIFIED_SOURCES += ['TestMP4Rust.cpp',]
-    TEST_HARNESS_FILES.gtest += [
-        '../../../dom/media/test/street.mp4',
-    ]
-    LOCAL_INCLUDES += [
-        '../binding/include',
-    ]
+UNIFIED_SOURCES += ['TestMP4Rust.cpp',]
+TEST_HARNESS_FILES.gtest += [
+    '../../../dom/media/test/street.mp4',
+]
+LOCAL_INCLUDES += [
+    '../binding/include',
+]
 
 FINAL_LIBRARY = 'xul-gtest'
