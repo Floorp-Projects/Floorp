@@ -31,6 +31,7 @@ function startup(data, reason) {
 
 function shutdown(data, reason) {
   extension.shutdown(BOOTSTRAP_REASON_TO_STRING_MAP[reason]);
+  extension = null;
 }
 
 function uninstall(data, reason) {

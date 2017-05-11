@@ -2248,7 +2248,7 @@ var AddonManagerInternal = {
       throw Components.Exception("aInstanceID must be a symbol",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-    this.getAddonByInstanceID(aInstanceID).then(addon => {
+    return this.getAddonByInstanceID(aInstanceID).then(addon => {
       if (!addon) {
         throw Error("No addon for instanceID:", aInstanceID.toString());
       }
@@ -3663,7 +3663,7 @@ this.AddonManager = {
   },
 
   removeUpgradeListener(aInstanceID) {
-    AddonManagerInternal.removeUpgradeListener(aInstanceID);
+    return AddonManagerInternal.removeUpgradeListener(aInstanceID);
   },
 
   addAddonListener(aListener) {
