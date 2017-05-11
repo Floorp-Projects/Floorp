@@ -986,12 +986,6 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    private static void setFullScreen(boolean fullscreen) {
-        if (getGeckoInterface() != null)
-            getGeckoInterface().setFullScreen(fullscreen);
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
     private static void performHapticFeedback(boolean aIsLongPress) {
         // Don't perform haptic feedback if a vibration is currently playing,
         // because the haptic feedback will nuke the vibration.
@@ -1671,12 +1665,6 @@ public class GeckoAppShell
         public Activity getActivity();
         public String getDefaultUAString();
 
-        /**
-         * This API doesn't make sense for arbitrary GeckoView consumers. In future, consider an
-         * API like Android WebView's, which provides a View to the consumer to display fullscreen.
-         * See <a href="https://developer.android.com/reference/android/webkit/WebChromeClient.html#onShowCustomView(android.view.View,%20android.webkit.WebChromeClient.CustomViewCallback)">https://developer.android.com/reference/android/webkit/WebChromeClient.html#onShowCustomView(android.view.View,%20android.webkit.WebChromeClient.CustomViewCallback)</a>.
-         */
-        public void setFullScreen(boolean fullscreen);
         public void addPluginView(View view);
         public void removePluginView(final View view);
         public void enableOrientationListener();
