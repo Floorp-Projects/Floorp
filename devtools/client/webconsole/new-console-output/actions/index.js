@@ -7,7 +7,6 @@
 "use strict";
 
 const actionModules = [
-  require("./enhancers"),
   require("./filters"),
   require("./messages"),
   require("./ui"),
