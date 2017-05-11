@@ -8,7 +8,7 @@ if test "$MOZ_BUILD_APP" != js -o -n "$JS_STANDALONE"; then
 
   # Run jemalloc configure script
 
-  if test "$MOZ_MEMORY" && test -n "$MOZ_JEMALLOC4" -o -n "$MOZ_REPLACE_MALLOC"; then
+  if test "$MOZ_MEMORY" && test -n "$MOZ_REPLACE_MALLOC"; then
     ac_configure_args="--build=$build --host=$target --enable-stats --with-jemalloc-prefix=je_ --disable-valgrind"
     if test -n "$MOZ_DEBUG"; then
       ac_configure_args="$ac_configure_args --enable-debug"
@@ -25,41 +25,8 @@ if test "$MOZ_BUILD_APP" != js -o -n "$JS_STANDALONE"; then
         ac_configure_args="$ac_configure_args --enable-ivsalloc"
       fi
     fi
-    if test -n "$MOZ_JEMALLOC4"; then
-      case "${OS_ARCH}" in
-        WINNT|Darwin)
-          # We want jemalloc functions to be kept hidden on both Mac and Windows
-          # See memory/build/mozmemory_wrap.h for details.
-          ac_configure_args="$ac_configure_args --without-export"
-          ;;
-      esac
-      if test "${OS_ARCH}" = WINNT; then
-        # Lazy lock initialization doesn't play well with lazy linking of
-        # mozglue.dll on Windows XP (leads to startup crash), so disable it.
-        ac_configure_args="$ac_configure_args --disable-lazy-lock"
-
-        # 64-bit Windows builds require a minimum 16-byte alignment.
-        if test -n "$HAVE_64BIT_BUILD"; then
-          ac_configure_args="$ac_configure_args --with-lg-tiny-min=4"
-        fi
-      fi
-    elif test "${OS_ARCH}" = Darwin; then
-      # When building as a replace-malloc lib, disabling the zone allocator
-      # forces to use pthread_atfork.
-      ac_configure_args="$ac_configure_args --disable-zone-allocator"
-    fi
-    _MANGLE="malloc posix_memalign aligned_alloc calloc realloc free memalign valloc malloc_usable_size"
-    JEMALLOC_WRAPPER=
-    if test -z "$MOZ_REPLACE_MALLOC"; then
-      case "$OS_ARCH" in
-        Linux|DragonFly|FreeBSD|NetBSD|OpenBSD)
-          MANGLE=$_MANGLE
-          ;;
-      esac
-    elif test -z "$MOZ_JEMALLOC4"; then
-      MANGLE=$_MANGLE
-      JEMALLOC_WRAPPER=replace_
-    fi
+    MANGLE="malloc posix_memalign aligned_alloc calloc realloc free memalign valloc malloc_usable_size"
+    JEMALLOC_WRAPPER=replace_
     if test -n "$MANGLE"; then
       MANGLED=
       for mangle in ${MANGLE}; do
