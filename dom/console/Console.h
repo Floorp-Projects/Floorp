@@ -260,13 +260,18 @@ private:
   bool
   UnstoreGroupName(nsAString& aName);
 
-  enum StartTimerStatus {
+  enum TimerStatus {
     eTimerUnknown,
-    eTimerStarted,
+    eTimerDone,
     eTimerAlreadyExists,
+    eTimerDoesntExist,
     eTimerJSException,
     eTimerMaxReached,
   };
+
+  JS::Value
+  CreateTimerError(JSContext* aCx, const nsAString& aTimerLabel,
+                   TimerStatus aStatus) const;
 
   // StartTimer is called on the owning thread and populates aTimerLabel and
   // aTimerValue.
@@ -278,7 +283,7 @@ private:
   //                 string.
   // * aTimerValue - the StartTimer value stored into (or taken from)
   //                 mTimerRegistry.
-  StartTimerStatus
+  TimerStatus
   StartTimer(JSContext* aCx, const JS::Value& aName,
              DOMHighResTimeStamp aTimestamp,
              nsAString& aTimerLabel,
@@ -293,16 +298,11 @@ private:
   // * aTimerStatus - the return value of StartTimer.
   JS::Value
   CreateStartTimerValue(JSContext* aCx, const nsAString& aTimerLabel,
-                        StartTimerStatus aTimerStatus) const;
-
-  void
-  StartTimerStatusToError(StartTimerStatus aStatus,
-                          ConsoleTimerError& aError) const;
+                        TimerStatus aTimerStatus) const;
 
   // StopTimer follows the same pattern as StartTimer: it runs on the
   // owning thread and populates aTimerLabel and aTimerDuration, used by
-  // CreateStopTimerValue. It returns false if a JS exception is thrown or if
-  // the aName timer doesn't exist in the mTimerRegistry.
+  // CreateStopTimerValue.
   // * aCx - the JSContext rooting aName.
   // * aName - this is (should be) the name of the timer as JS::Value.
   // * aTimestamp - the monotonicTimer for this context taken from
@@ -311,7 +311,7 @@ private:
   //                 string.
   // * aTimerDuration - the difference between aTimestamp and when the timer
   //                    started (see StartTimer).
-  bool
+  TimerStatus
   StopTimer(JSContext* aCx, const JS::Value& aName,
             DOMHighResTimeStamp aTimestamp,
             nsAString& aTimerLabel,
@@ -326,7 +326,7 @@ private:
   JS::Value
   CreateStopTimerValue(JSContext* aCx, const nsAString& aTimerLabel,
                        double aTimerDuration,
-                       bool aTimerStatus) const;
+                       TimerStatus aTimerStatus) const;
 
   // The method populates a Sequence from an array of JS::Value.
   bool

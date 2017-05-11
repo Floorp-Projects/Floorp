@@ -1363,6 +1363,11 @@ WebConsoleFrame.prototype = {
         if (!timer) {
           return null;
         }
+        if (timer.error) {
+          console.error(new Error(l10n.getFormatStr(timer.error,
+                                                    [timer.name])));
+          return null;
+        }
         let duration = Math.round(timer.duration * 100) / 100;
         body = l10n.getFormatStr("timeEnd", [timer.name, duration]);
         clipboardText = body;
