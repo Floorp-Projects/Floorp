@@ -673,22 +673,6 @@ EffectCompositor::MaybeUpdateCascadeResults(StyleBackendType aBackendType,
   MOZ_ASSERT(!effects->CascadeNeedsUpdate(), "Failed to update cascade state");
 }
 
-/* static */ void
-EffectCompositor::MaybeUpdateCascadeResults(dom::Element* aElement,
-                                            CSSPseudoElementType aPseudoType)
-{
-  EffectSet* effects = EffectSet::GetEffectSet(aElement, aPseudoType);
-  MOZ_ASSERT(effects);
-  if (!effects->CascadeNeedsUpdate()) {
-    return;
-  }
-
-  UpdateCascadeResults(StyleBackendType::Servo, *effects, aElement, aPseudoType,
-                       nullptr);
-
-  MOZ_ASSERT(!effects->CascadeNeedsUpdate(), "Failed to update cascade state");
-}
-
 /* static */ Maybe<NonOwningAnimationTarget>
 EffectCompositor::GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame)
 {
@@ -1041,8 +1025,10 @@ EffectCompositor::PreTraverseInSubtree(Element* aRoot)
   }
 
   for (const NonOwningAnimationTarget& target: elementsWithCascadeUpdates) {
-      MaybeUpdateCascadeResults(target.mElement,
-                                target.mPseudoType);
+      MaybeUpdateCascadeResults(StyleBackendType::Servo,
+                                target.mElement,
+                                target.mPseudoType,
+                                nullptr);
   }
   elementsWithCascadeUpdates.Clear();
 
@@ -1132,7 +1118,9 @@ EffectCompositor::PreTraverse(dom::Element* aElement,
 
     EffectSet* effects = EffectSet::GetEffectSet(aElement, aPseudoType);
     if (effects) {
-      MaybeUpdateCascadeResults(aElement, aPseudoType);
+      MaybeUpdateCascadeResults(StyleBackendType::Servo,
+                                aElement, aPseudoType,
+                                nullptr);
 
       for (KeyframeEffectReadOnly* effect : *effects) {
         effect->GetAnimation()->WillComposeStyle();
