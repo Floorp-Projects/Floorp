@@ -2682,6 +2682,23 @@ nsTextEditorState::SetValue(const nsAString& aValue, uint32_t aFlags)
   return true;
 }
 
+bool
+nsTextEditorState::HasNonEmptyValue()
+{
+  if (mEditor && mBoundFrame && mEditorInitialized &&
+      !mIsCommittingComposition) {
+    bool empty;
+    nsresult rv = mEditor->GetDocumentIsEmpty(&empty);
+    if (NS_SUCCEEDED(rv)) {
+      return !empty;
+    }
+  }
+
+  nsAutoString value;
+  GetValue(value, true);
+  return !value.IsEmpty();
+}
+
 void
 nsTextEditorState::InitializeKeyboardEventListeners()
 {
@@ -2765,11 +2782,11 @@ void
 nsTextEditorState::UpdateOverlayTextVisibility(bool aNotify)
 {
   nsAutoString value, previewValue;
-  GetValue(value, true);
+  bool valueIsEmpty = !HasNonEmptyValue();
   GetPreviewText(previewValue);
 
-  mPreviewVisibility = value.IsEmpty() && !previewValue.IsEmpty();
-  mPlaceholderVisibility = value.IsEmpty() && previewValue.IsEmpty();
+  mPreviewVisibility = valueIsEmpty && !previewValue.IsEmpty();
+  mPlaceholderVisibility = valueIsEmpty && previewValue.IsEmpty();
 
   if (mPlaceholderVisibility &&
       !Preferences::GetBool("dom.placeholder.show_on_focus", true)) {
