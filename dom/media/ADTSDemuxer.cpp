@@ -861,6 +861,9 @@ ADTSDemuxer::ADTSSniffer(const uint8_t* aData, const uint32_t aLength)
   if (aLength < 7) {
     return false;
   }
+  if (!adts::FrameHeader::MatchesSync(aData)) {
+    return false;
+  }
   auto parser = MakeUnique<adts::FrameParser>();
 
   if (!parser->Parse(0, aData, aData + aLength)) {
