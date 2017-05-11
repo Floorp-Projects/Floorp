@@ -134,8 +134,6 @@ public:
     void DispatchedAsBlocking();
     void RemoveDispatchedAsBlocking();
 
-    void DisableSpdy() override;
-
     nsHttpTransaction *QueryHttpTransaction() override { return this; }
 
     Http2PushedStream *GetPushedStream() { return mPushedStream; }
@@ -200,6 +198,7 @@ private:
 
     bool ResponseTimeoutEnabled() const final;
 
+    void DisableSpdy() override;
     void ReuseConnectionOnRestartOK(bool reuseOk) override { mReuseOnRestart = reuseOk; }
 
     // Called right after we parsed the response head.  Checks for connection based
