@@ -716,6 +716,12 @@ ChannelMediaResource::MediaReadAt(int64_t aOffset, uint32_t aCount)
   return bytes.forget();
 }
 
+void
+ChannelMediaResource::ThrottleReadahead(bool bThrottle)
+{
+  mCacheStream.ThrottleReadahead(bThrottle);
+}
+
 int64_t ChannelMediaResource::Tell()
 {
   return mCacheStream.Tell();
