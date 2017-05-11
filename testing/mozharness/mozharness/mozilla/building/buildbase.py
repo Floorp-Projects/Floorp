@@ -2039,10 +2039,7 @@ or run without that action (ie: --no-{action})"
 
         if self.query_is_nightly():
             for suite in perfherder_data['suites']:
-                if 'extraOptions' in suite:
-                    suite['extraOptions'] = ['nightly'] + suite['extraOptions']
-                else:
-                    suite['extraOptions'] = ['nightly']
+                suite.setdefault('extraOptions', []).insert(0, 'nightly')
 
         if perfherder_data["suites"]:
             self.info('PERFHERDER_DATA: %s' % json.dumps(perfherder_data))
