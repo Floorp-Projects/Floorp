@@ -1,11 +1,22 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var scope = Components.utils.import("resource://gre/modules/addons/XPIProvider.jsm", {});
-const XPIProvider = scope.XPIProvider;
 const ID = "experiment1@tests.mozilla.org";
 
 var gIsNightly = false;
+
+function getXS() {
+  let XPI = Components.utils.import("resource://gre/modules/addons/XPIProvider.jsm", {});
+  return XPI.XPIStates;
+}
+
+function getBootstrappedAddons() {
+  let obj = {}
+  for (let addon of getXS().bootstrappedAddons()) {
+    obj[addon.id] = addon;
+  }
+  return obj;
+}
 
 function run_test() {
   BootstrapMonitor.init();
@@ -80,7 +91,7 @@ add_task(function* test_userDisabledNotPersisted() {
   Assert.equal(addon2.userDisabled, false, "Add-on is no longer user disabled.");
   Assert.ok(addon2.isActive, "Add-on is active.");
 
-  Assert.ok(ID in XPIProvider.bootstrappedAddons,
+  Assert.ok(ID in getBootstrappedAddons(),
             "Experiment add-on listed in XPIProvider bootstrapped list.");
 
   addon = yield promiseAddonByID(ID);
@@ -94,8 +105,8 @@ add_task(function* test_userDisabledNotPersisted() {
 
   // Now when we restart the manager the add-on should revert state.
   yield promiseRestartManager();
-  let persisted = JSON.parse(Services.prefs.getCharPref("extensions.bootstrappedAddons"));
-  Assert.ok(!(ID in persisted),
+
+  Assert.ok(!(ID in getBootstrappedAddons()),
             "Experiment add-on not persisted to bootstrappedAddons.");
 
   BootstrapMonitor.checkAddonInstalled(ID, "1.0");

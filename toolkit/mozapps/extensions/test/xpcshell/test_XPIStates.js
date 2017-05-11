@@ -104,6 +104,12 @@ function getXS() {
   return XPI.XPIStates;
 }
 
+async function getXSJSON() {
+  await AddonTestUtils.loadAddonsList(true);
+
+  return aomStartup.readStartupData();
+}
+
 add_task(function* detect_touches() {
   startupManager();
   let [/* pe */, pd, /* ue */, ud] = yield promiseAddonsByIDs([
@@ -169,7 +175,7 @@ add_task(function* detect_touches() {
   ud.userDisabled = false;
   let xState = XS.getAddon("app-profile", ud.id);
   do_check_true(xState.enabled);
-  do_check_eq(xState.scanTime, ud.updateDate.getTime());
+  do_check_eq(xState.mtime, ud.updateDate.getTime());
 });
 
 /*
@@ -184,8 +190,9 @@ add_task(function* uninstall_bootstrap() {
          "unpacked-disabled@tests.mozilla.org"
          ]);
   pe.uninstall();
-  let xpiState = Services.prefs.getCharPref("extensions.xpiState");
-  do_check_false(xpiState.includes("\"packed-enabled@tests.mozilla.org\""));
+
+  let xpiState = yield getXSJSON();
+  do_check_false("packed-enabled@tests.mozilla.org" in xpiState["app-profile"].addons);
 });
 
 /*
@@ -201,7 +208,7 @@ add_task(function* install_bootstrap() {
   let xState = XS.getAddon("app-profile", newAddon.id);
   do_check_true(!!xState);
   do_check_true(xState.enabled);
-  do_check_eq(xState.scanTime, newAddon.updateDate.getTime());
+  do_check_eq(xState.mtime, newAddon.updateDate.getTime());
   newAddon.uninstall();
 });
 
@@ -234,7 +241,7 @@ add_task(function* install_restart() {
   xState = XS.getAddon("app-profile", newID);
   do_check_true(xState);
   do_check_true(xState.enabled);
-  do_check_eq(xState.scanTime, newAddon.updateDate.getTime());
+  do_check_eq(xState.mtime, newAddon.updateDate.getTime());
 
   // Check that XPIState enabled flag is updated immediately,
   // and doesn't change over restart.

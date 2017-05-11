@@ -261,7 +261,7 @@ add_task(function*() {
   // detection but the periodic scan will catch that
   yield promiseSetExtensionModifiedTime(file.path, Date.now() - 60000);
 
-  startupManager();
+  yield promiseStartupManager();
   let addon = yield promiseAddonByID(ID);
   do_check_neq(addon, null);
   do_check_false(addon.appDisabled);
@@ -274,7 +274,7 @@ add_task(function*() {
   clearCache(file);
   breakAddon(file);
 
-  startupManager();
+  yield promiseStartupManager();
 
   addon = yield promiseAddonByID(ID);
   do_check_neq(addon, null);
