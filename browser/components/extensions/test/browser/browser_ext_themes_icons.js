@@ -112,8 +112,8 @@ function* runTestWithIcons(icons) {
   const ICON_INFO = [
     ["back", "#back-button"],
     ["forward", "#forward-button"],
-    ["reload", "#urlbar-reload-button"],
-    ["stop", "#urlbar-stop-button"],
+    ["reload", "#reload-button"],
+    ["stop", "#stop-button"],
     ["bookmark_star", "#bookmarks-menu-button", "bookmarks-menu-button"],
     ["bookmark_menu", "#bookmarks-menu-button > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon"],
     ["downloads", "#downloads-button", "downloads-button"],

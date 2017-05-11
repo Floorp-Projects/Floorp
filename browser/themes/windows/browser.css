@@ -1152,11 +1152,12 @@ html|span.ac-emphasize-text-url {
   border-top: 1px solid GrayText;
 }
 
+%ifndef MOZ_PHOTON_THEME
 /* combined go/reload/stop button in location bar */
 
 #urlbar-go-button,
-#urlbar-reload-button,
-#urlbar-stop-button {
+#reload-button,
+#stop-button {
   -moz-appearance: none;
   border-style: none;
   list-style-image: url("chrome://browser/skin/reload-stop-go.png");
@@ -1170,19 +1171,19 @@ html|span.ac-emphasize-text-url {
   border-image-slice: 1;
 }
 
-#urlbar-reload-button {
+#reload-button {
   -moz-image-region: rect(0, 14px, 14px, 0);
 }
 
-#urlbar-reload-button:not([disabled]):hover {
+#reload-button:not([disabled]):hover {
   -moz-image-region: rect(14px, 14px, 28px, 0);
 }
 
-#urlbar-reload-button:not([disabled]):hover:active {
+#reload-button:not([disabled]):hover:active {
   -moz-image-region: rect(28px, 14px, 42px, 0);
 }
 
-#urlbar-reload-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
+#reload-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
   transform: scaleX(-1);
 }
 
@@ -1202,28 +1203,28 @@ html|span.ac-emphasize-text-url {
   transform: scaleX(-1);
 }
 
-#urlbar-stop-button {
+#stop-button {
   -moz-image-region: rect(0, 28px, 14px, 14px);
 }
 
-#urlbar-stop-button:not([disabled]):hover {
+#stop-button:not([disabled]):hover {
   -moz-image-region: rect(14px, 28px, 28px, 14px);
 }
 
-#urlbar-stop-button:hover:active {
+#stop-button:hover:active {
   -moz-image-region: rect(28px, 28px, 42px, 14px);
 }
 
 @media (min-resolution: 1.1dppx) {
   #urlbar-go-button,
-  #urlbar-reload-button,
-  #urlbar-stop-button {
+  #reload-button,
+  #stop-button {
     list-style-image: url("chrome://browser/skin/reload-stop-go@2x.png");
   }
 
   #urlbar-go-button > .toolbarbutton-icon,
-  #urlbar-reload-button > .toolbarbutton-icon,
-  #urlbar-stop-button > .toolbarbutton-icon {
+  #reload-button > .toolbarbutton-icon,
+  #stop-button > .toolbarbutton-icon {
     width: 14px;
   }
 
@@ -1239,30 +1240,31 @@ html|span.ac-emphasize-text-url {
     -moz-image-region: rect(56px, 84px, 84px, 56px);
   }
 
-  #urlbar-reload-button {
+  #reload-button {
     -moz-image-region: rect(0, 28px, 28px, 0);
   }
 
-  #urlbar-reload-button:not([disabled]):hover {
+  #reload-button:not([disabled]):hover {
     -moz-image-region: rect(28px, 28px, 56px, 0);
   }
 
-  #urlbar-reload-button:not([disabled]):hover:active {
+  #reload-button:not([disabled]):hover:active {
     -moz-image-region: rect(56px, 28px, 84px, 0);
   }
 
-  #urlbar-stop-button {
+  #stop-button {
     -moz-image-region: rect(0, 56px, 28px, 28px);
   }
 
-  #urlbar-stop-button:not([disabled]):hover {
+  #stop-button:not([disabled]):hover {
     -moz-image-region: rect(28px, 56px, 56px, 28px);
   }
 
-  #urlbar-stop-button:hover:active {
+  #stop-button:hover:active {
     -moz-image-region: rect(56px, 56px, 84px, 28px);
   }
 }
+%endif
 
 /* popup blocker button */
 

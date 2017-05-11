@@ -165,8 +165,7 @@ function triggerCommand(shouldClick, event) {
     is(gURLBar.getAttribute("pageproxystate"), "invalid",
        "page proxy state must be invalid for go button to be visible");
 
-    let goButton = document.getElementById("urlbar-go-button");
-    EventUtils.synthesizeMouseAtCenter(goButton, event);
+    EventUtils.synthesizeMouseAtCenter(gURLBar.goButton, event);
   } else {
     EventUtils.synthesizeKey("VK_RETURN", event);
   }

@@ -21,6 +21,16 @@ toolbar[brighttext] :-moz-any(@primaryToolbarButtons@) {
   list-style-image: url("chrome://browser/skin/forward.svg");
 }
 
+%ifdef MOZ_PHOTON_THEME
+#reload-button {
+  list-style-image: url("chrome://browser/skin/reload.svg");
+}
+
+#stop-button {
+  list-style-image: url("chrome://browser/skin/stop.svg");
+}
+%endif
+
 #home-button[cui-areatype="toolbar"] {
   list-style-image: url("chrome://browser/skin/home.svg");
 }

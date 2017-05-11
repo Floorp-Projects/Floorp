@@ -100,7 +100,7 @@ add_task(function* test_backButton_forwardButton() {
 
 add_task(function* test_reloadButton() {
   yield withTestPage(function*(aBrowser) {
-    let reloadButton = document.getElementById("urlbar-reload-button");
+    let reloadButton = document.getElementById("reload-button");
     let loadPromise = BrowserTestUtils.browserLoaded(aBrowser, false,
                                                      "https://example.com" + DIRECTORY_PATH +
                                                      "formless_basic.html");

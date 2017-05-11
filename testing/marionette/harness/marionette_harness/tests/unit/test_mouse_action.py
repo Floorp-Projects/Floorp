@@ -78,7 +78,7 @@ class TestMouseAction(MarionetteTestCase):
         with self.marionette.using_context("chrome"):
             urlbar = self.marionette.find_element(By.ID, "urlbar")
             urlbar.send_keys(data_uri)
-            go_button = self.marionette.find_element(By.ID, "urlbar-go-button")
+            go_button = self.marionette.execute_script("return gURLBar.goButton")
             self.action.click(go_button).perform()
         self.wait_for_condition(lambda mn: mn.get_url() == data_uri)
 

@@ -16,8 +16,7 @@ function urlEnter(url) {
 function urlClick(url) {
   gURLBar.value = url;
   gURLBar.focus();
-  let goButton = document.getElementById("urlbar-go-button");
-  EventUtils.synthesizeMouseAtCenter(goButton, {});
+  EventUtils.synthesizeMouseAtCenter(gURLBar.goButton, {});
 }
 
 function promiseNewTabSwitched() {

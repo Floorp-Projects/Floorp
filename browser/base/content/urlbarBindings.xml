@@ -41,6 +41,13 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                       allowevents="true"
                       inputmode="url"
                       xbl:inherits="tooltiptext=inputtooltiptext,value,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey,focused,textoverflow"/>
+#ifdef MOZ_PHOTON_THEME
+          <xul:image anonid="go-button"
+                     class="urlbar-go-button"
+                     onclick="gURLBar.handleCommand(event);"
+                     tooltiptext="&goEndCap.tooltip;"
+                     xbl:inherits="pageproxystate,parentfocused=focused"/>
+#endif
         </xul:hbox>
         <xul:dropmarker anonid="historydropmarker"
                         class="autocomplete-history-dropmarker urlbar-history-dropmarker"
@@ -131,6 +138,16 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         this.popup.oneOffSearchButtons.popup = null;
         this.popup.oneOffSearchButtons.textbox = null;
       ]]></destructor>
+
+#ifdef MOZ_PHOTON_THEME
+      <field name="goButton">
+        document.getAnonymousElementByAttribute(this, "anonid", "go-button");
+      </field>
+#else
+      <field name="goButton">
+        document.getElementById("urlbar-go-button");
+      </field>
+#endif
 
       <field name="_value">""</field>
       <field name="gotResultForCurrentQuery">false</field>
