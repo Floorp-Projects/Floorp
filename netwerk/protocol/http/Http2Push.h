@@ -113,7 +113,6 @@ public:
 
 private:
   virtual ~Http2PushTransactionBuffer();
-  uint64_t Available();
 
   const static uint32_t kDefaultBufferSize = 4096;
 

@@ -64,6 +64,9 @@ public:
     // called to notify that a requested DNS cache entry was refreshed.
     virtual void     SetDNSWasRefreshed() = 0;
 
+    // called to find out how much request data is available for writing.
+    virtual uint64_t Available() = 0;
+
     // called to read request data from the transaction.
     virtual MOZ_MUST_USE nsresult ReadSegments(nsAHttpSegmentReader *reader,
                                                uint32_t count,
@@ -211,6 +214,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpTransaction, NS_AHTTPTRANSACTION_IID)
     nsresult Status() override; \
     uint32_t Caps() override;   \
     void     SetDNSWasRefreshed() override; \
+    uint64_t Available() override; \
     virtual MOZ_MUST_USE nsresult ReadSegments(nsAHttpSegmentReader *, uint32_t, uint32_t *) override; \
     virtual MOZ_MUST_USE nsresult WriteSegments(nsAHttpSegmentWriter *, uint32_t, uint32_t *) override; \
     virtual void Close(nsresult reason) override;                                \
