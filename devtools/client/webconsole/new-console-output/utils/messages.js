@@ -76,7 +76,10 @@ function transformPacket(packet) {
           break;
         case "timeEnd":
           parameters = null;
-          if (timer) {
+          if (timer && timer.error) {
+            messageText = l10n.getFormatStr(timer.error, [timer.name]);
+            level = MESSAGE_LEVEL.WARN;
+          } else if (timer) {
             // We show the duration to users when calls console.timeEnd() is called,
             // if corresponding console.time() was called before.
             let duration = Math.round(timer.duration * 100) / 100;
