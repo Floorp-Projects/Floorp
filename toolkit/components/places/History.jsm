@@ -94,9 +94,6 @@ const ONRESULT_CHUNK_SIZE = 300;
 const REMOVE_PAGES_CHUNKLEN = 300;
 
 
-// Timers resolution is not always good, it can have a 16ms precision on Win.
-const TIMERS_RESOLUTION_SKEW_MS = 16;
-
 /**
  * Sends a bookmarks notification through the given observers.
  *
@@ -182,7 +179,7 @@ this.History = Object.freeze({
       throw new TypeError("pageInfo must be an object");
     }
 
-    let info = validatePageInfo(pageInfo);
+    let info = PlacesUtils.validatePageInfo(pageInfo);
 
     return PlacesUtils.withConnectionWrapper("History.jsm: insert",
       db => insert(db, info));
@@ -249,7 +246,7 @@ this.History = Object.freeze({
     }
 
     for (let pageInfo of pageInfos) {
-      let info = validatePageInfo(pageInfo);
+      let info = PlacesUtils.validatePageInfo(pageInfo);
       infos.push(info);
     }
 
@@ -296,7 +293,7 @@ this.History = Object.freeze({
     for (let page of pages) {
       // Normalize to URL or GUID, or throw if `page` cannot
       // be normalized.
-      let normalized = normalizeToURLOrGUID(page);
+      let normalized = PlacesUtils.normalizeToURLOrGUID(page);
       if (typeof normalized === "string") {
         guids.push(normalized);
       } else {
@@ -381,10 +378,10 @@ this.History = Object.freeze({
     let hasURL = "url" in filter;
     let hasLimit = "limit" in filter;
     if (hasBeginDate) {
-      ensureDate(filter.beginDate);
+      this.ensureDate(filter.beginDate);
     }
     if (hasEndDate) {
-      ensureDate(filter.endDate);
+      this.ensureDate(filter.endDate);
     }
     if (hasBeginDate && hasEndDate && filter.beginDate > filter.endDate) {
       throw new TypeError("`beginDate` should be at least as old as `endDate`");
@@ -411,6 +408,88 @@ this.History = Object.freeze({
 
     return PlacesUtils.withConnectionWrapper("History.jsm: removeVisitsByFilter",
       db => removeVisitsByFilter(db, filter, onResult)
+    );
+  },
+
+  /**
+   * Remove pages from the database based on a filter.
+   *
+   * Any change may be observed through nsINavHistoryObserver
+   *
+   *
+   * @param filter: An object containing a non empty subset of the following
+   * properties:
+   * - host: (string)
+   *     Hostname with subhost wildcard (at most one *), or empty for local files.
+   *     The * can be used only if it is the first character in the url, and not the host.
+   *     For example, *.mozilla.org is allowed, *.org, www.*.org or * is not allowed.
+   * - beginDate: (Date)
+   *     The first time the page was visited (inclusive)
+   * - endDate: (Date)
+   *     The last time the page was visited (inclusive)
+   * @param [optional] onResult: (function(PageInfo))
+   *      A callback invoked for each page found.
+   *
+   * @note This removes pages with at least one visit inside the timeframe.
+   *       Any visits outside the timeframe will also be removed with the page.
+   * @return (Promise)
+   *      A promise resolved once the operation is complete.
+   * @resolve (bool)
+   *      `true` if at least one page was removed, `false` otherwise.
+   * @throws (TypeError)
+   *       if `filter` does not have the expected type, in particular
+   *       if the `object` is empty, or its components do not satisfy the
+   *       criteria given above
+   */
+  removeByFilter(filter, onResult) {
+    if (!filter || typeof filter !== "object") {
+      throw new TypeError("Expected a filter object");
+    }
+
+    let hasHost = "host" in filter;
+    if (hasHost) {
+      if (typeof filter.host !== "string") {
+        throw new TypeError("`host` should be a string");
+      }
+      filter.host = filter.host.toLowerCase();
+    }
+
+    let hasBeginDate = "beginDate" in filter;
+    if (hasBeginDate) {
+      this.ensureDate(filter.beginDate);
+    }
+
+    let hasEndDate = "endDate" in filter;
+    if (hasEndDate) {
+      this.ensureDate(filter.endDate);
+    }
+
+    if (hasBeginDate && hasEndDate && filter.beginDate > filter.endDate) {
+      throw new TypeError("`beginDate` should be at least as old as `endDate`");
+    }
+
+    if (!hasBeginDate && !hasEndDate && !hasHost) {
+      throw new TypeError("Expected a non-empty filter");
+    }
+
+    // Host should follow one of these formats
+    // The first one matches `localhost` or any other custom set in hostsfile
+    // The second one matches *.mozilla.org or mozilla.com etc
+    // The third one is for local files
+    if (hasHost &&
+        !((/^[a-z0-9-]+$/).test(filter.host)) &&
+        !((/^(\*\.)?([a-z0-9-]+)(\.[a-z0-9-]+)+$/).test(filter.host)) &&
+        (filter.host !== "")) {
+      throw new TypeError("Expected well formed hostname string for `host` with atmost 1 wildcard.");
+    }
+
+    if (onResult && typeof onResult != "function") {
+      throw new TypeError("Invalid function: " + onResult);
+    }
+
+    return PlacesUtils.withConnectionWrapper(
+      "History.jsm: removeByFilter",
+      db => removeByFilter(db, filter, onResult)
     );
   },
 
@@ -444,6 +523,25 @@ this.History = Object.freeze({
     return PlacesUtils.withConnectionWrapper("History.jsm: clear",
       clear
     );
+  },
+
+  /**
+   * Is a value a valid transition type?
+   *
+   * @param transitionType: (String)
+   * @return (Boolean)
+   */
+  isValidTransition(transitionType) {
+    return Object.values(History.TRANSITIONS).includes(transitionType);
+  },
+
+  /**
+   * Throw if an object is not a Date object.
+   */
+  ensureDate(arg) {
+    if (!arg || typeof arg != "object" || arg.constructor.name != "Date") {
+      throw new TypeError("Expected a Date, got " + arg);
+    }
   },
 
   /**
@@ -506,62 +604,10 @@ this.History = Object.freeze({
 });
 
 /**
- * Validate an input PageInfo object, returning a valid PageInfo object.
- *
- * @param pageInfo: (PageInfo)
- * @return (PageInfo)
- */
-function validatePageInfo(pageInfo) {
-  let info = {
-    visits: [],
-  };
-
-  if (!pageInfo.url) {
-    throw new TypeError("PageInfo object must have a url property");
-  }
-
-  info.url = normalizeToURLOrGUID(pageInfo.url);
-
-  if (typeof pageInfo.title === "string") {
-    info.title = pageInfo.title;
-  } else if (pageInfo.title != null && pageInfo.title != undefined) {
-    throw new TypeError(`title property of PageInfo object: ${pageInfo.title} must be a string if provided`);
-  }
-
-  if (!pageInfo.visits || !Array.isArray(pageInfo.visits) || !pageInfo.visits.length) {
-    throw new TypeError("PageInfo object must have an array of visits");
-  }
-  for (let inVisit of pageInfo.visits) {
-    let visit = {
-      date: new Date(),
-      transition: inVisit.transition || History.TRANSITIONS.LINK,
-    };
-
-    if (!isValidTransitionType(visit.transition)) {
-      throw new TypeError(`transition: ${visit.transition} is not a valid transition type`);
-    }
-
-    if (inVisit.date) {
-      ensureDate(inVisit.date);
-      if (inVisit.date > (Date.now() + TIMERS_RESOLUTION_SKEW_MS)) {
-        throw new TypeError(`date: ${inVisit.date} cannot be a future date`);
-      }
-      visit.date = inVisit.date;
-    }
-
-    if (inVisit.referrer) {
-      visit.referrer = normalizeToURLOrGUID(inVisit.referrer);
-    }
-    info.visits.push(visit);
-  }
-  return info;
-}
-
-/**
  * Convert a PageInfo object into the format expected by updatePlaces.
  *
  * Note: this assumes that the PageInfo object has already been validated
- * via validatePageInfo.
+ * via PlacesUtils.validatePageInfo.
  *
  * @param pageInfo: (PageInfo)
  * @return (info)
@@ -582,50 +628,6 @@ function convertForUpdatePlaces(pageInfo) {
     info.visits.push(visit);
   }
   return info;
-}
-
-/**
- * Is a value a valid transition type?
- *
- * @param transitionType: (String)
- * @return (Boolean)
- */
-function isValidTransitionType(transitionType) {
-  return Object.values(History.TRANSITIONS).includes(transitionType);
-}
-
-/**
- * Normalize a key to either a string (if it is a valid GUID) or an
- * instance of `URL` (if it is a `URL`, `nsIURI`, or a string
- * representing a valid url).
- *
- * @throws (TypeError)
- *         If the key is neither a valid guid nor a valid url.
- */
-function normalizeToURLOrGUID(key) {
-  if (typeof key === "string") {
-    // A string may be a URL or a guid
-    if (PlacesUtils.isValidGuid(key)) {
-      return key;
-    }
-    return new URL(key);
-  }
-  if (key instanceof URL) {
-    return key;
-  }
-  if (key instanceof Ci.nsIURI) {
-    return new URL(key.spec);
-  }
-  throw new TypeError("Invalid url or guid: " + key);
-}
-
-/**
- * Throw if an object is not a Date object.
- */
-function ensureDate(arg) {
-  if (!arg || typeof arg != "object" || arg.constructor.name != "Date") {
-    throw new TypeError("Expected a Date, got " + arg);
-  }
 }
 
 /**
@@ -921,6 +923,112 @@ var removeVisitsByFilter = Task.async(function*(db, filter, onResult = null) {
   return visitsToRemove.length != 0;
 });
 
+// Inner implementation of History.removeByFilter
+var removeByFilter = Task.async(function*(db, filter, onResult = null) {
+  // 1. Create fragment for date filtration
+  let dateFilterSQLFragment = "";
+  let conditions = [];
+  let params = {};
+  if ("beginDate" in filter) {
+    conditions.push("v.visit_date >= :begin");
+    params.begin = PlacesUtils.toPRTime(filter.beginDate);
+  }
+  if ("endDate" in filter) {
+    conditions.push("v.visit_date <= :end");
+    params.end = PlacesUtils.toPRTime(filter.endDate);
+  }
+
+  if (conditions.length !== 0) {
+    dateFilterSQLFragment =
+      `EXISTS
+         (SELECT id FROM moz_historyvisits v WHERE v.place_id = h.id AND
+         ${ conditions.join(" AND ") }
+         LIMIT 1)`;
+  }
+
+  // 2. Create fragment for host and subhost filtering
+  let hostFilterSQLFragment = "";
+  if (filter.host || filter.host === "") {
+    // There are four cases that we need to consider,
+    // mozilla.org, *.mozilla.org, localhost, and local files
+
+    if (filter.host.indexOf("*") === 0) {
+      // Case 1: subhost wildcard is specified (*.mozilla.org)
+      let revHost = filter.host.slice(2).split("").reverse().join("");
+      hostFilterSQLFragment =
+        `h.rev_host between :revHostStart and :revHostEnd`;
+      params.revHostStart = revHost + ".";
+      params.revHostEnd = revHost + "/";
+    } else {
+      // This covers the rest (mozilla.org, localhost and local files)
+      let revHost = filter.host.split("").reverse().join("") + ".";
+      hostFilterSQLFragment =
+        `h.rev_host = :hostName`;
+      params.hostName = revHost;
+    }
+  }
+
+  // 3. Find out what needs to be removed
+  let fragmentArray = [hostFilterSQLFragment, dateFilterSQLFragment];
+  let query =
+      `SELECT h.id, url, rev_host, guid, title, frecency, foreign_count
+       FROM moz_places h WHERE
+       (${ fragmentArray.filter(f => f !== "").join(") AND (") })`;
+  let onResultData = onResult ? [] : null;
+  let pages = [];
+  let hasPagesToRemove = false;
+
+  yield db.executeCached(
+    query,
+    params,
+    row => {
+      let hasForeign = row.getResultByName("foreign_count") != 0;
+      if (!hasForeign) {
+        hasPagesToRemove = true;
+      }
+      let id = row.getResultByName("id");
+      let guid = row.getResultByName("guid");
+      let url = row.getResultByName("url");
+      let page = {
+        id,
+        guid,
+        hasForeign,
+        hasVisits: false,
+        url: new URL(url)
+      };
+      pages.push(page);
+      if (onResult) {
+        onResultData.push({
+          guid,
+          title: row.getResultByName("title"),
+          frecency: row.getResultByName("frecency"),
+          url: new URL(url)
+        });
+      }
+    });
+
+  if (pages.length === 0) {
+    // Nothing to do
+    return false;
+  }
+
+  try {
+    yield db.executeTransaction(Task.async(function*() {
+      // 4. Actually remove visits
+      yield db.execute(`DELETE FROM moz_historyvisits
+                        WHERE place_id IN(${ sqlList(pages.map(p => p.id)) })`);
+      // 5. Clean up and notify
+      yield cleanupPages(db, pages);
+    }));
+
+    notifyCleanup(db, pages);
+    notifyOnResult(onResultData, onResult);
+  } finally {
+    PlacesUtils.history.clearEmbedVisits();
+  }
+
+  return hasPagesToRemove;
+});
 
 // Inner implementation of History.remove.
 var remove = Task.async(function*(db, {guids, urls}, onResult = null) {

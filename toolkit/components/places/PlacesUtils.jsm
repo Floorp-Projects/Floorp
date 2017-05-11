@@ -64,6 +64,9 @@ const MIN_TRANSACTIONS_FOR_BATCH = 5;
 // converts "\r\n" to "\n".
 const NEWLINE = AppConstants.platform == "macosx" ? "\n" : "\r\n";
 
+// Timers resolution is not always good, it can have a 16ms precision on Win.
+const TIMERS_RESOLUTION_SKEW_MS = 16;
+
 function QI_node(aNode, aIID) {
   var result = null;
   try {
@@ -974,6 +977,88 @@ this.PlacesUtils = {
         throw Cr.NS_ERROR_INVALID_ARG;
     }
     return nodes;
+  },
+
+  /**
+   * Validate an input PageInfo object, returning a valid PageInfo object.
+   *
+   * @param pageInfo: (PageInfo)
+   * @return (PageInfo)
+   */
+  validatePageInfo(pageInfo, validateVisits = true) {
+    let info = {
+      visits: [],
+    };
+
+    if (!pageInfo.url) {
+      throw new TypeError("PageInfo object must have a url property");
+    }
+
+    info.url = this.normalizeToURLOrGUID(pageInfo.url);
+
+    if (!validateVisits) {
+      return info;
+    }
+
+    if (typeof pageInfo.title === "string") {
+      info.title = pageInfo.title;
+    } else if (pageInfo.title != null && pageInfo.title != undefined) {
+      throw new TypeError(`title property of PageInfo object: ${pageInfo.title} must be a string if provided`);
+    }
+
+    if (!pageInfo.visits || !Array.isArray(pageInfo.visits) || !pageInfo.visits.length) {
+      throw new TypeError("PageInfo object must have an array of visits");
+    }
+
+    for (let inVisit of pageInfo.visits) {
+      let visit = {
+        date: new Date(),
+        transition: inVisit.transition || History.TRANSITIONS.LINK,
+      };
+
+      if (!PlacesUtils.history.isValidTransition(visit.transition)) {
+        throw new TypeError(`transition: ${visit.transition} is not a valid transition type`);
+      }
+
+      if (inVisit.date) {
+        PlacesUtils.history.ensureDate(inVisit.date);
+        if (inVisit.date > (Date.now() + TIMERS_RESOLUTION_SKEW_MS)) {
+          throw new TypeError(`date: ${inVisit.date} cannot be a future date`);
+        }
+        visit.date = inVisit.date;
+      }
+
+      if (inVisit.referrer) {
+        visit.referrer = this.normalizeToURLOrGUID(inVisit.referrer);
+      }
+      info.visits.push(visit);
+    }
+    return info;
+  },
+
+  /**
+   * Normalize a key to either a string (if it is a valid GUID) or an
+   * instance of `URL` (if it is a `URL`, `nsIURI`, or a string
+   * representing a valid url).
+   *
+   * @throws (TypeError)
+   *         If the key is neither a valid guid nor a valid url.
+   */
+  normalizeToURLOrGUID(key) {
+    if (typeof key === "string") {
+      // A string may be a URL or a guid
+      if (this.isValidGuid(key)) {
+        return key;
+      }
+      return new URL(key);
+    }
+    if (key instanceof URL) {
+      return key;
+    }
+    if (key instanceof Ci.nsIURI) {
+      return new URL(key.spec);
+    }
+    throw new TypeError("Invalid url or guid: " + key);
   },
 
   /**
