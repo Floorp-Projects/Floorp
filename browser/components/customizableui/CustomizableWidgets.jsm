@@ -1074,6 +1074,9 @@ const CustomizableWidgets = [
         }
       };
       CustomizableUI.addListener(listener);
+      this.onInit();
+    },
+    onInit() {
       if (!this.charsetInfo) {
         this.charsetInfo = CharsetMenu.getData();
       }
