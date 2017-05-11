@@ -419,7 +419,6 @@ void *_mmap(void *addr, size_t length, int prot, int flags,
 #endif
 #endif
 
-static const bool isthreaded = true;
 #ifdef MOZ_MEMORY_DARWIN
 static pthread_key_t tlsIndex;
 #endif
@@ -1522,9 +1521,8 @@ static bool
 malloc_mutex_init(malloc_mutex_t *mutex)
 {
 #if defined(MOZ_MEMORY_WINDOWS)
-	if (isthreaded)
-		if (! __crtInitCritSecAndSpinCount(mutex, _CRT_SPINCOUNT))
-			return (true);
+	if (! __crtInitCritSecAndSpinCount(mutex, _CRT_SPINCOUNT))
+		return (true);
 #elif defined(MOZ_MEMORY_DARWIN)
 	mutex->lock = OS_SPINLOCK_INIT;
 #elif defined(MOZ_MEMORY_LINUX) && !defined(MOZ_MEMORY_ANDROID)
@@ -1559,8 +1557,7 @@ malloc_mutex_lock(malloc_mutex_t *mutex)
 #elif defined(MOZ_MEMORY)
 	pthread_mutex_lock(mutex);
 #else
-	if (isthreaded)
-		_SPINLOCK(&mutex->lock);
+	_SPINLOCK(&mutex->lock);
 #endif
 }
 
@@ -1575,8 +1572,7 @@ malloc_mutex_unlock(malloc_mutex_t *mutex)
 #elif defined(MOZ_MEMORY)
 	pthread_mutex_unlock(mutex);
 #else
-	if (isthreaded)
-		_SPINUNLOCK(&mutex->lock);
+	_SPINUNLOCK(&mutex->lock);
 #endif
 }
 
@@ -1587,8 +1583,7 @@ static bool
 malloc_spin_init(malloc_spinlock_t *lock)
 {
 #if defined(MOZ_MEMORY_WINDOWS)
-	if (isthreaded)
-		if (! __crtInitCritSecAndSpinCount(lock, _CRT_SPINCOUNT))
+	if (! __crtInitCritSecAndSpinCount(lock, _CRT_SPINCOUNT))
 			return (true);
 #elif defined(MOZ_MEMORY_DARWIN)
 	lock->lock = OS_SPINLOCK_INIT;
@@ -1622,8 +1617,7 @@ malloc_spin_lock(malloc_spinlock_t *lock)
 #elif defined(MOZ_MEMORY)
 	pthread_mutex_lock(lock);
 #else
-	if (isthreaded)
-		_SPINLOCK(&lock->lock);
+	_SPINLOCK(&lock->lock);
 #endif
 }
 
@@ -1637,8 +1631,7 @@ malloc_spin_unlock(malloc_spinlock_t *lock)
 #elif defined(MOZ_MEMORY)
 	pthread_mutex_unlock(lock);
 #else
-	if (isthreaded)
-		_SPINUNLOCK(&lock->lock);
+	_SPINUNLOCK(&lock->lock);
 #endif
 }
 
@@ -1692,30 +1685,28 @@ malloc_spin_lock(pthread_mutex_t *lock)
 {
 	unsigned ret = 0;
 
-	if (isthreaded) {
-		if (_pthread_mutex_trylock(lock) != 0) {
-			unsigned i;
-			volatile unsigned j;
+	if (_pthread_mutex_trylock(lock) != 0) {
+		unsigned i;
+		volatile unsigned j;
 
-			/* Exponentially back off. */
-			for (i = 1; i <= SPIN_LIMIT_2POW; i++) {
-				for (j = 0; j < (1U << i); j++)
-					ret++;
+		/* Exponentially back off. */
+		for (i = 1; i <= SPIN_LIMIT_2POW; i++) {
+			for (j = 0; j < (1U << i); j++)
+				ret++;
 
-				CPU_SPINWAIT;
-				if (_pthread_mutex_trylock(lock) == 0)
-					return (ret);
-			}
-
-			/*
-			 * Spinning failed.  Block until the lock becomes
-			 * available, in order to avoid indefinite priority
-			 * inversion.
-			 */
-			_pthread_mutex_lock(lock);
-			assert((ret << BLOCK_COST_2POW) != 0);
-			return (ret << BLOCK_COST_2POW);
+			CPU_SPINWAIT;
+			if (_pthread_mutex_trylock(lock) == 0)
+				return (ret);
 		}
+
+		/*
+		 * Spinning failed.  Block until the lock becomes
+		 * available, in order to avoid indefinite priority
+		 * inversion.
+		 */
+		_pthread_mutex_lock(lock);
+		assert((ret << BLOCK_COST_2POW) != 0);
+		return (ret << BLOCK_COST_2POW);
 	}
 
 	return (ret);
@@ -1725,8 +1716,7 @@ static inline void
 malloc_spin_unlock(pthread_mutex_t *lock)
 {
 
-	if (isthreaded)
-		_pthread_mutex_unlock(lock);
+	_pthread_mutex_unlock(lock);
 }
 #endif
 
@@ -2974,10 +2964,6 @@ choose_arena(void)
 	 * introduces a bootstrapping issue.
 	 */
 #ifndef NO_TLS
-	if (isthreaded == false) {
-	    /* Avoid the overhead of TLS for single-threaded operation. */
-	    return (arenas[0]);
-	}
 
 #  ifdef MOZ_MEMORY_WINDOWS
 	ret = (arena_t*)TlsGetValue(tlsIndex);
@@ -2992,7 +2978,7 @@ choose_arena(void)
 		RELEASE_ASSERT(ret != NULL);
 	}
 #else
-	if (isthreaded && narenas > 1) {
+	if (narenas > 1) {
 		unsigned long ind;
 
 		/*
@@ -3048,8 +3034,6 @@ static arena_t *
 choose_arena_hard(void)
 {
 	arena_t *ret;
-
-	assert(isthreaded);
 
 	if (narenas > 1) {
 		malloc_spin_lock(&arenas_lock);
