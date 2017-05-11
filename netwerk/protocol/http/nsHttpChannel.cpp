@@ -5657,25 +5657,6 @@ NS_IMETHODIMP nsHttpChannel::CloseStickyConnection()
     return NS_OK;
 }
 
-NS_IMETHODIMP nsHttpChannel::ForceNoSpdy()
-{
-    LOG(("nsHttpChannel::ForceNoSpdy this=%p", this));
-
-    MOZ_ASSERT(mTransaction);
-    if (!mTransaction) {
-        return NS_ERROR_UNEXPECTED;
-    }
-
-    mAllowSpdy = 0;
-    mCaps |= NS_HTTP_DISALLOW_SPDY;
-
-    if (!(mTransaction->Caps() & NS_HTTP_DISALLOW_SPDY)) {
-        mTransaction->DisableSpdy();
-    }
-
-    return NS_OK;
-}
-
 NS_IMETHODIMP nsHttpChannel::ConnectionRestartable(bool aRestartable)
 {
     LOG(("nsHttpChannel::ConnectionRestartable this=%p, restartable=%d",
