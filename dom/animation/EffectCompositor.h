@@ -293,6 +293,8 @@ private:
                   nsDataHashtable<PseudoElementHashEntry, bool>>
                     mElementsToRestyle;
 
+  bool mIsInPreTraverse = false;
+
   class AnimationStyleRuleProcessor final : public nsIStyleRuleProcessor
   {
   public:
