@@ -205,9 +205,11 @@ toolbar:-moz-lwtheme-darktext {
   box-shadow: none !important;
 }
 
+%ifndef MOZ_PHOTON_THEME
 #forward-button > .toolbarbutton-icon {
   border-inline-start: none !important;
 }
+%endif
 
 /* Override a box shadow for disabled back button */
 #main-window:not([customizing]) #back-button[disabled] > .toolbarbutton-icon {
@@ -259,7 +261,9 @@ toolbar:-moz-lwtheme-darktext {
 %include identity-block/icons.inc.css
 
 #urlbar {
+%ifndef MOZ_PHOTON_THEME
   border-inline-start: none !important;
+%endif
   opacity: 1 !important;
 }
 

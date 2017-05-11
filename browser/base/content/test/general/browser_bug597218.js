@@ -9,7 +9,9 @@ function test() {
   is(gBrowser.tabs.length, 1, "we start with one tab");
 
   // create a tab
-  let tab = gBrowser.loadOneTab("about:blank");
+  let tab = gBrowser.loadOneTab("about:blank", {
+    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+  });
   ok(!tab.hidden, "tab starts out not hidden");
   is(gBrowser.tabs.length, 2, "we now have two tabs");
 

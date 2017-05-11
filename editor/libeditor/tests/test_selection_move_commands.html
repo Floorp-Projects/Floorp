@@ -46,14 +46,7 @@ function* runTests() {
     // http://dev.w3.org/csswg/cssom-view/#dom-element-getboundingclientrect
     // doesn't explicitly rule out -0 here, but for now assume that only
     // positive zeroes are permitted.
-    if (navigator.appVersion.indexOf("Android") != -1 && expectTop != 0) {
-      // Android doesn't get the values exactly correct for some reason
-      todo_is(root.getBoundingClientRect().top, -expectTop + 0, cmd);
-      ok(Math.abs(root.getBoundingClientRect().top + expectTop) < 0.2,
-         cmd + " (approximately)");
-    } else {
-      is(root.getBoundingClientRect().top, -expectTop + 0, cmd);
-    }
+    is(root.getBoundingClientRect().top, -expectTop + 0, cmd);
   }
 
   function testMoveCommand(cmd, expectNode, expectOffset) {

@@ -43,6 +43,7 @@
   padding-right: 2px;
 }
 
+%ifndef MOZ_PHOTON_THEME
 @conditionalForwardWithUrlbar@ > #forward-button[disabled] + #urlbar > #identity-box {
   padding-inline-start: calc(var(--backbutton-urlbar-overlap) + 5px);
 }
@@ -58,6 +59,7 @@
   /* when not hovered anymore, trigger a new non-delayed transition to react to the forward button hiding */
   padding-inline-start: calc(var(--backbutton-urlbar-overlap) + 5.01px);
 }
+%endif
 
 /* MAIN IDENTITY ICON */
 

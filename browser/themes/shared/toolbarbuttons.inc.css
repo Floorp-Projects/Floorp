@@ -5,16 +5,20 @@
 %filter substitution
 %define toolbarShadowColor hsla(209,67%,12%,0.35)
 %define forwardTransitionLength 150ms
+%ifndef MOZ_PHOTON_THEME
 %define conditionalForwardWithUrlbar window:not([chromehidden~="toolbar"]) #urlbar-wrapper
+%endif
 
 :root {
   --toolbarbutton-vertical-inner-padding: 3px;
   --toolbarbutton-disabled-opacity: 0.4;
 
+%ifndef MOZ_PHOTON_THEME
   --backbutton-urlbar-overlap: 6px;
 
   /* icon width + border + horizontal padding (without the overlap from backbutton-urlbar-overlap) */
   --forwardbutton-width: 25px;
+%endif
 }
 
 toolbar:-moz-lwtheme {
@@ -32,6 +36,9 @@ toolbar:-moz-lwtheme {
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up[disabled=true],
 .tabbrowser-arrowscrollbox > .scrollbutton-down[disabled=true],
+/* specialcase the overflow and the hamburger button so they show up disabled in customize mode. */
+#nav-bar-overflow-button[disabled=true] > .toolbarbutton-icon,
+#PanelUI-menu-button[disabled=true] > .toolbarbutton-badge-stack > .toolbarbutton-icon,
 #main-window:not([customizing]) .toolbarbutton-1[disabled=true] > .toolbarbutton-icon,
 #main-window:not([customizing]) .toolbarbutton-1[disabled=true] > .toolbarbutton-menu-dropmarker,
 #main-window:not([customizing]) .toolbarbutton-1[disabled=true] > .toolbarbutton-menubutton-dropmarker,
@@ -136,13 +143,15 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   margin: 0;
 }
 
+%ifndef MOZ_PHOTON_THEME
+@conditionalForwardWithUrlbar@ > .toolbarbutton-1:-moz-any([disabled],:not([open]):not([disabled]):not(:active)) > .toolbarbutton-icon,
+%endif
 .findbar-button > .toolbarbutton-text,
 #nav-bar .toolbarbutton-1 > .toolbarbutton-icon,
 #nav-bar .toolbarbutton-1 > .toolbarbutton-text,
 #nav-bar .toolbarbutton-1 > .toolbarbutton-badge-stack,
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
-#nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon,
-@conditionalForwardWithUrlbar@ > .toolbarbutton-1:-moz-any([disabled],:not([open]):not([disabled]):not(:active)) > .toolbarbutton-icon {
+#nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
   padding: var(--toolbarbutton-vertical-inner-padding) 7px;
   background-origin: padding-box !important;
   background-clip: padding-box !important;
@@ -254,7 +263,9 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 #nav-bar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-icon,
 #nav-bar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-text,
 #nav-bar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-badge-stack,
+%ifndef MOZ_PHOTON_THEME
 @conditionalForwardWithUrlbar@ > #forward-button:not([open]):not(:active):not([disabled]):hover > .toolbarbutton-icon,
+%endif
 #nav-bar .toolbarbutton-1:not([buttonover]):not([open]):not(:active):hover > .toolbarbutton-menubutton-dropmarker:not([disabled]) > .dropmarker-icon {
   background: var(--toolbarbutton-hover-background);
   border-color: var(--toolbarbutton-hover-bordercolor);
@@ -278,6 +289,7 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   transition: background-color .4s;
 }
 
+%ifndef MOZ_PHOTON_THEME
 /* unified back/forward button */
 
 :-moz-any(#back-button, #forward-button) > .toolbarbutton-icon {
@@ -323,6 +335,7 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   /* when not hovered anymore, trigger a new transition to hide the forward button immediately */
   margin-left: calc(-0.01px - var(--forwardbutton-width) - var(--backbutton-urlbar-overlap));
 }
+%endif
 
 #back-button {
   padding-top: 3px !important;
@@ -343,6 +356,9 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 }
 
 #back-button > .toolbarbutton-icon {
+%ifdef MOZ_PHOTON_THEME
+  border-color: var(--backbutton-border-color) !important;
+%endif
   border-radius: 10000px !important;
   padding: 7px !important;
 }
@@ -350,6 +366,13 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 #back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
   transform: scaleX(-1);
 }
+
+%ifdef MOZ_PHOTON_THEME
+#back-button:not(:hover):not(:active):not([open=true]) > .toolbarbutton-icon,
+#back-button[disabled=true] > .toolbarbutton-icon {
+  background: var(--backbutton-background) !important;
+}
+%endif
 
 /* bookmarks menu-button */
 

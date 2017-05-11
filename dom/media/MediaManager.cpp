@@ -2113,7 +2113,7 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
 
   // Record telemetry about whether the source of the call was secure, i.e.,
   // privileged or HTTPS.  We may handle other cases
-if (privileged) {
+  if (privileged) {
     Telemetry::Accumulate(Telemetry::WEBRTC_GET_USER_MEDIA_SECURE_ORIGIN,
                           (uint32_t) GetUserMediaSecurityState::Privileged);
   } else if (isHTTPS) {

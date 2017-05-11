@@ -680,13 +680,23 @@
                          onclick="checkForMiddleClick(this, event);"
                          tooltip="back-button-tooltip"
                          context="backForwardMenu"/>
+#ifdef MOZ_PHOTON_THEME
+          <toolbarbutton id="forward-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                         label="&forwardCmd.label;"
+                         command="Browser:ForwardOrForwardDuplicate"
+                         onclick="checkForMiddleClick(this, event);"
+                         tooltip="forward-button-tooltip"
+                         context="backForwardMenu"/>
+#endif
           <hbox id="urlbar-wrapper" flex="1">
+#ifndef MOZ_PHOTON_THEME
             <toolbarbutton id="forward-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                            label="&forwardCmd.label;"
                            command="Browser:ForwardOrForwardDuplicate"
                            onclick="checkForMiddleClick(this, event);"
                            tooltip="forward-button-tooltip"
                            context="backForwardMenu"/>
+#endif
             <textbox id="urlbar" flex="1"
                      placeholder="&urlbar.placeholder2;"
                      type="autocomplete"
@@ -1148,6 +1158,7 @@
 
   <svg:svg height="0">
 #include tab-shape.inc.svg
+#ifndef MOZ_PHOTON_THEME
     <svg:clipPath id="urlbar-back-button-clip-path">
 #ifndef XP_MACOSX
       <svg:path d="M -9,-4 l 0,1 a 15 15 0 0,1 0,30 l 0,1 l 10000,0 l 0,-32 l -10000,0 z" />
@@ -1159,6 +1170,7 @@
     <svg:clipPath id="urlbar-back-button-clip-path-win10">
       <svg:path d="M -6,-2 l 0,1 a 15 15 0 0,1 0,30 l 0,1 l 10000,0 l 0,-32 l -10000,0 z" />
     </svg:clipPath>
+#endif
 #endif
   </svg:svg>
 

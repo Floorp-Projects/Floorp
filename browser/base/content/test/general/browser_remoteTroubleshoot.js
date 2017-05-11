@@ -25,7 +25,10 @@ function promiseChannelResponse(channelID, originOrPermission) {
 function promiseNewChannelResponse(uri) {
   let channelPromise = promiseChannelResponse("test-remote-troubleshooting-backchannel",
                                               uri);
-  let tab = gBrowser.loadOneTab(uri.spec, { inBackground: false });
+  let tab = gBrowser.loadOneTab(uri.spec, {
+    inBackground: false,
+    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+  });
   return promiseTabLoaded(tab).then(
     () => channelPromise
   ).then(data => {

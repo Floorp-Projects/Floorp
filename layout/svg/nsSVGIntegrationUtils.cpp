@@ -55,10 +55,12 @@ public:
    */
   PreEffectsVisualOverflowCollector(nsIFrame* aFirstContinuation,
                                     nsIFrame* aCurrentFrame,
-                                    const nsRect& aCurrentFrameOverflowArea)
+                                    const nsRect& aCurrentFrameOverflowArea,
+                                    bool aInReflow)
     : mFirstContinuation(aFirstContinuation)
     , mCurrentFrame(aCurrentFrame)
     , mCurrentFrameOverflowArea(aCurrentFrameOverflowArea)
+    , mInReflow(aInReflow)
   {
     NS_ASSERTION(!mFirstContinuation->GetPrevContinuation(),
                  "We want the first continuation here");
@@ -67,7 +69,7 @@ public:
   virtual void AddBox(nsIFrame* aFrame) override {
     nsRect overflow = (aFrame == mCurrentFrame)
       ? mCurrentFrameOverflowArea
-      : GetPreEffectsVisualOverflowRect(aFrame);
+      : GetPreEffectsVisualOverflowRect(aFrame, mInReflow);
     mResult.UnionRect(mResult, overflow + aFrame->GetOffsetTo(mFirstContinuation));
   }
 
@@ -77,7 +79,8 @@ public:
 
 private:
 
-  static nsRect GetPreEffectsVisualOverflowRect(nsIFrame* aFrame) {
+  static nsRect GetPreEffectsVisualOverflowRect(nsIFrame* aFrame,
+                                                bool aInReflow) {
     nsRect* r = aFrame->Properties().Get(nsIFrame::PreEffectsBBoxProperty());
     if (r) {
       return *r;
@@ -89,7 +92,11 @@ private:
     // we want. This function intentional reports pre-effect rect. But it does
     // not matter if there is no SVG effect on this frame, since no effect
     // means post-effect rect matches pre-effect rect.
-    if (nsSVGIntegrationUtils::UsingEffectsForFrame(aFrame)) {
+    //
+    // This function may be called during reflow or painting. We should only
+    // do this check in painting process since the PreEffectsBBoxProperty of
+    // continuations are not set correctly while reflowing.
+    if (nsSVGIntegrationUtils::UsingEffectsForFrame(aFrame) && !aInReflow) {
       nsOverflowAreas* preTransformOverflows =
         aFrame->Properties().Get(aFrame->PreTransformOverflowAreasProperty());
 
@@ -104,6 +111,7 @@ private:
   nsIFrame*     mCurrentFrame;
   const nsRect& mCurrentFrameOverflowArea;
   nsRect        mResult;
+  bool          mInReflow;
 };
 
 /**
@@ -114,13 +122,15 @@ static nsRect
 GetPreEffectsVisualOverflowUnion(nsIFrame* aFirstContinuation,
                                  nsIFrame* aCurrentFrame,
                                  const nsRect& aCurrentFramePreEffectsOverflow,
-                                 const nsPoint& aFirstContinuationToUserSpace)
+                                 const nsPoint& aFirstContinuationToUserSpace,
+                                 bool aInReflow)
 {
   NS_ASSERTION(!aFirstContinuation->GetPrevContinuation(),
                "Need first continuation here");
   PreEffectsVisualOverflowCollector collector(aFirstContinuation,
                                               aCurrentFrame,
-                                              aCurrentFramePreEffectsOverflow);
+                                              aCurrentFramePreEffectsOverflow,
+                                              aInReflow);
   // Compute union of all overflow areas relative to aFirstContinuation:
   nsLayoutUtils::GetAllInFlowBoxes(aFirstContinuation, &collector);
   // Return the result in user space:
@@ -202,7 +212,8 @@ nsSVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(nsIFrame* aNonSVGFrame)
     nsLayoutUtils::FirstContinuationOrIBSplitSibling(aNonSVGFrame);
   // 'r' is in "user space":
   nsRect r = GetPreEffectsVisualOverflowUnion(firstFrame, nullptr, nsRect(),
-                                              GetOffsetToBoundingBox(firstFrame));
+                                              GetOffsetToBoundingBox(firstFrame),
+                                              false);
   return nsLayoutUtils::RectToGfxRect(r,
            aNonSVGFrame->PresContext()->AppUnitsPerCSSPixel());
 }
@@ -264,7 +275,8 @@ nsRect
     nsLayoutUtils::RectToGfxRect(
       GetPreEffectsVisualOverflowUnion(firstFrame, aFrame,
                                        aPreEffectsOverflowRect,
-                                       firstFrameToBoundingBox),
+                                       firstFrameToBoundingBox,
+                                       true),
       aFrame->PresContext()->AppUnitsPerCSSPixel());
   overrideBBox.RoundOut();
 
