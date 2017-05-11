@@ -2356,7 +2356,7 @@ MediaFormatReader::Update(TrackType aTrack)
     decoder.mError.reset();
 
     LOG("%s decoded error count %d", TrackTypeToStr(aTrack),
-                                     decoder.mNumOfConsecutiveError);
+        decoder.mNumOfConsecutiveError);
 
     if (needsNewDecoder) {
       LOG("Error: Need new decoder");
@@ -2377,6 +2377,9 @@ MediaFormatReader::Update(TrackType aTrack)
         decoder.mLastDecodedSampleTime.refOr(TimeInterval()).Length());
     } else if (aTrack == TrackType::kAudioTrack) {
       decoder.Flush();
+    } else {
+      // We can't recover from this error.
+      NotifyError(aTrack, NS_ERROR_DOM_MEDIA_FATAL_ERR);
     }
     return;
   }
