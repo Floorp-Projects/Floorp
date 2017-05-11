@@ -24,6 +24,11 @@ FileLocation::FileLocation(nsIFile* aFile, const char* aPath)
   Init(aFile, aPath);
 }
 
+FileLocation::FileLocation(nsZipArchive* aZip, const char* aPath)
+{
+  Init(aZip, aPath);
+}
+
 FileLocation::FileLocation(const FileLocation& aFile, const char* aPath)
 {
   if (aFile.IsZip()) {
