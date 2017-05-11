@@ -1239,9 +1239,6 @@ pref("dom.forms.datetime.timepicker", false);
 // Support for new @autocomplete values
 pref("dom.forms.autocomplete.experimental", false);
 
-// Enables requestAutocomplete DOM API on forms.
-pref("dom.forms.requestAutocomplete", false);
-
 // Enable search in <select> dropdowns (more than 40 options)
 pref("dom.forms.selectSearch", false);
 // Allow for webpages to provide custom styling for <select>
