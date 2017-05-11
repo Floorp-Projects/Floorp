@@ -25,7 +25,7 @@ var ecmaGlobals =
   [
     "Array",
     "ArrayBuffer",
-    "Atomics",
+    {name: "Atomics", release: false},
     "Boolean",
     "DataView",
     "Date",
@@ -54,7 +54,7 @@ var ecmaGlobals =
     "Reflect",
     "RegExp",
     "Set",
-    "SharedArrayBuffer",
+    {name: "SharedArrayBuffer", release: false},
     {name: "SIMD", nightly: true},
     "StopIteration",
     "String",
