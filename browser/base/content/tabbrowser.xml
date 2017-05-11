@@ -1549,6 +1549,7 @@
         <parameter name="aLoadInBackground"/>
         <parameter name="aReplace"/>
         <body><![CDATA[
+          let aTriggeringPrincipal;
           let aAllowThirdPartyFixup;
           let aTargetTab;
           let aNewIndex = -1;
@@ -1565,6 +1566,7 @@
                                     params.newIndex : aNewIndex;
             aPostDatas            = params.postDatas || aPostDatas;
             aUserContextId        = params.userContextId;
+            aTriggeringPrincipal  = params.triggeringPrincipal;
           }
 
           if (!aURIs.length)
@@ -1602,7 +1604,8 @@
             }
             try {
               browser.loadURIWithFlags(aURIs[0], {
-                flags, postData: aPostDatas[0]
+                flags, postData: aPostDatas[0],
+                triggeringPrincipal: aTriggeringPrincipal,
               });
             } catch (e) {
               // Ignore failure in case a URI is wrong, so we can continue
@@ -1614,7 +1617,8 @@
               skipAnimation: multiple,
               allowThirdPartyFixup: aAllowThirdPartyFixup,
               postData: aPostDatas[0],
-              userContextId: aUserContextId
+              userContextId: aUserContextId,
+              triggeringPrincipal: aTriggeringPrincipal,
             });
             if (aNewIndex !== -1) {
               this.moveTabTo(firstTabAdded, aNewIndex);
@@ -1628,7 +1632,8 @@
               skipAnimation: true,
               allowThirdPartyFixup: aAllowThirdPartyFixup,
               postData: aPostDatas[i],
-              userContextId: aUserContextId
+              userContextId: aUserContextId,
+              triggeringPrincipal: aTriggeringPrincipal,
             });
             if (targetTabIndex !== -1)
               this.moveTabTo(tab, ++tabNum);

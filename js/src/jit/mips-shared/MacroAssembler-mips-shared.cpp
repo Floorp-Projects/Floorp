@@ -1548,6 +1548,12 @@ MacroAssembler::Pop(const ValueOperand& val)
     framePushed_ -= sizeof(Value);
 }
 
+void
+MacroAssembler::PopStackPtr()
+{
+    MOZ_CRASH("NYI");
+}
+
 
 // ===============================================================
 // Simple call functions.

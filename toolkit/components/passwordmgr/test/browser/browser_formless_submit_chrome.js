@@ -63,9 +63,13 @@ add_task(function* test_backButton_forwardButton() {
     yield fillTestPage(aBrowser);
 
     let forwardButton = document.getElementById("forward-button");
-    // We need to wait for the forward button transition to complete before we
-    // can click it, so we hook up a listener to wait for it to be ready.
-    let forwardTransitionPromise = BrowserTestUtils.waitForEvent(forwardButton, "transitionend");
+
+    let forwardTransitionPromise;
+    if (forwardButton.nextSibling == gURLBar) {
+      // We need to wait for the forward button transition to complete before we
+      // can click it, so we hook up a listener to wait for it to be ready.
+      forwardTransitionPromise = BrowserTestUtils.waitForEvent(forwardButton, "transitionend");
+    }
 
     let backPromise = BrowserTestUtils.browserStopped(aBrowser);
     EventUtils.synthesizeMouseAtCenter(document.getElementById("back-button"), {});
@@ -78,8 +82,11 @@ add_task(function* test_backButton_forwardButton() {
     // Now go forward again after filling
     yield fillTestPage(aBrowser);
 
-    yield forwardTransitionPromise;
-    info("transition done");
+    if (forwardTransitionPromise) {
+      yield forwardTransitionPromise;
+      info("transition done");
+    }
+
     yield BrowserTestUtils.waitForCondition(() => {
       return forwardButton.disabled == false;
     });

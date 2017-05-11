@@ -71,106 +71,9 @@ StackDecrementForCall(MacroAssembler& masm, uint32_t alignment, const VectorT& a
     return StackDecrementForCall(masm, alignment, StackArgBytes(args) + extraBytes);
 }
 
-#if defined(JS_CODEGEN_ARM)
-// The ARM system ABI also includes d15 & s31 in the non volatile float registers.
-// Also exclude lr (a.k.a. r14) as we preserve it manually)
-static const LiveRegisterSet NonVolatileRegs =
-    LiveRegisterSet(GeneralRegisterSet(Registers::NonVolatileMask&
-                                       ~(uint32_t(1) << Registers::lr)),
-                    FloatRegisterSet(FloatRegisters::NonVolatileMask
-                                     | (1ULL << FloatRegisters::d15)
-                                     | (1ULL << FloatRegisters::s31)));
-#else
-static const LiveRegisterSet NonVolatileRegs =
-    LiveRegisterSet(GeneralRegisterSet(Registers::NonVolatileMask),
-                    FloatRegisterSet(FloatRegisters::NonVolatileMask));
-#endif
-
-#if defined(JS_CODEGEN_MIPS32)
-// Mips is using one more double slot due to stack alignment for double values.
-// Look at MacroAssembler::PushRegsInMask(RegisterSet set)
-static const unsigned FramePushedAfterSave = NonVolatileRegs.gprs().size() * sizeof(intptr_t) +
-                                             NonVolatileRegs.fpus().getPushSizeInBytes() +
-                                             sizeof(double);
-#elif defined(JS_CODEGEN_NONE)
-static const unsigned FramePushedAfterSave = 0;
-#else
-static const unsigned FramePushedAfterSave = NonVolatileRegs.gprs().size() * sizeof(intptr_t)
-                                           + NonVolatileRegs.fpus().getPushSizeInBytes();
-#endif
-static const unsigned FramePushedForEntrySP = FramePushedAfterSave + sizeof(void*);
-
-// Generate a stub that enters wasm from a C++ caller via the native ABI. The
-// signature of the entry point is Module::ExportFuncPtr. The exported wasm
-// function has an ABI derived from its specific signature, so this function
-// must map from the ABI of ExportFuncPtr to the export's signature's ABI.
-Offsets
-wasm::GenerateEntry(MacroAssembler& masm, const FuncExport& fe)
+static void
+SetupABIArguments(MacroAssembler& masm, const FuncExport& fe, Register argv, Register scratch)
 {
-    masm.haltingAlign(CodeAlignment);
-
-    Offsets offsets;
-    offsets.begin = masm.currentOffset();
-
-    // Save the return address if it wasn't already saved by the call insn.
-#if defined(JS_CODEGEN_ARM)
-    masm.push(lr);
-#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-    masm.push(ra);
-#endif
-
-    // Save all caller non-volatile registers before we clobber them here and in
-    // the asm.js callee (which does not preserve non-volatile registers).
-    masm.setFramePushed(0);
-    masm.PushRegsInMask(NonVolatileRegs);
-    MOZ_ASSERT(masm.framePushed() == FramePushedAfterSave);
-
-    // Put the 'argv' argument into a non-argument/return/TLS register so that
-    // we can use 'argv' while we fill in the arguments for the asm.js callee.
-    Register argv = ABINonArgReturnReg0;
-    Register scratch = ABINonArgReturnReg1;
-
-    // Read the arguments of wasm::ExportFuncPtr according to the native ABI.
-    // The entry stub's frame is 1 word.
-    const unsigned argBase = sizeof(void*) + masm.framePushed();
-    ABIArgGenerator abi;
-    ABIArg arg;
-
-    // arg 1: ExportArg*
-    arg = abi.next(MIRType::Pointer);
-    if (arg.kind() == ABIArg::GPR)
-        masm.movePtr(arg.gpr(), argv);
-    else
-        masm.loadPtr(Address(masm.getStackPointer(), argBase + arg.offsetFromArgBase()), argv);
-
-    // Arg 2: TlsData*
-    arg = abi.next(MIRType::Pointer);
-    if (arg.kind() == ABIArg::GPR)
-        masm.movePtr(arg.gpr(), WasmTlsReg);
-    else
-        masm.loadPtr(Address(masm.getStackPointer(), argBase + arg.offsetFromArgBase()), WasmTlsReg);
-
-    // Setup pinned registers that are assumed throughout wasm code.
-    masm.loadWasmPinnedRegsFromTls();
-
-    // Save 'argv' on the stack so that we can recover it after the call. Use
-    // a second non-argument/return register as temporary scratch.
-    masm.Push(argv);
-
-    // Save the stack pointer in the WasmActivation right before dynamically
-    // aligning the stack so that it may be recovered on return or throw.
-    MOZ_ASSERT(masm.framePushed() == FramePushedForEntrySP);
-    masm.loadWasmActivationFromTls(scratch);
-    masm.storeStackPtr(Address(scratch, WasmActivation::offsetOfEntrySP()));
-
-    // Dynamically align the stack since ABIStackAlignment is not necessarily
-    // WasmStackAlignment. We'll use entrySP to recover the original stack
-    // pointer on return.
-    masm.andToStackPtr(Imm32(~(WasmStackAlignment - 1)));
-
-    // Bump the stack for the call.
-    masm.reserveStack(AlignBytes(StackArgBytes(fe.sig().args()), WasmStackAlignment));
-
     // Copy parameters out of argv and into the registers/stack-slots specified by
     // the system ABI.
     for (ABIArgValTypeIter iter(fe.sig().args()); !iter.done(); iter++) {
@@ -270,33 +173,12 @@ wasm::GenerateEntry(MacroAssembler& masm, const FuncExport& fe)
             break;
         }
     }
+}
 
-    // Set the FramePointer to null for the benefit of debugging.
-    masm.movePtr(ImmWord(0), FramePointer);
-
-    // Call into the real function.
-    masm.assertStackAlignment(WasmStackAlignment);
-    masm.call(CallSiteDesc(CallSiteDesc::Func), fe.funcIndex());
-    masm.assertStackAlignment(WasmStackAlignment);
-
-#ifdef DEBUG
-    // Assert FramePointer was returned to null by the callee.
-    Label ok;
-    masm.branchTestPtr(Assembler::Zero, FramePointer, FramePointer, &ok);
-    masm.breakpoint();
-    masm.bind(&ok);
-#endif
-
-    // Recover the stack pointer value before dynamic alignment.
-    masm.loadWasmActivationFromTls(scratch);
-    masm.wasmAssertNonExitInvariants(scratch);
-    masm.loadStackPtr(Address(scratch, WasmActivation::offsetOfEntrySP()));
-    masm.setFramePushed(FramePushedForEntrySP);
-
-    // Recover the 'argv' pointer which was saved before aligning the stack.
-    masm.Pop(argv);
-
-    // Store the return value in argv[0]
+static void
+StoreABIReturn(MacroAssembler& masm, const FuncExport& fe, Register argv)
+{
+    // Store the return value in argv[0].
     switch (fe.sig().ret()) {
       case ExprType::Void:
         break;
@@ -332,12 +214,157 @@ wasm::GenerateEntry(MacroAssembler& masm, const FuncExport& fe)
       case ExprType::Limit:
         MOZ_CRASH("Limit");
     }
+}
+
+#if defined(JS_CODEGEN_ARM)
+// The ARM system ABI also includes d15 & s31 in the non volatile float registers.
+// Also exclude lr (a.k.a. r14) as we preserve it manually)
+static const LiveRegisterSet NonVolatileRegs =
+    LiveRegisterSet(GeneralRegisterSet(Registers::NonVolatileMask&
+                                       ~(uint32_t(1) << Registers::lr)),
+                    FloatRegisterSet(FloatRegisters::NonVolatileMask
+                                     | (1ULL << FloatRegisters::d15)
+                                     | (1ULL << FloatRegisters::s31)));
+#else
+static const LiveRegisterSet NonVolatileRegs =
+    LiveRegisterSet(GeneralRegisterSet(Registers::NonVolatileMask),
+                    FloatRegisterSet(FloatRegisters::NonVolatileMask));
+#endif
+
+#if defined(JS_CODEGEN_MIPS32)
+static const unsigned NonVolatileRegsPushSize = NonVolatileRegs.gprs().size() * sizeof(intptr_t) +
+                                                NonVolatileRegs.fpus().getPushSizeInBytes() +
+                                                sizeof(double);
+#elif defined(JS_CODEGEN_NONE)
+static const unsigned NonVolatileRegsPushSize = 0;
+#else
+static const unsigned NonVolatileRegsPushSize = NonVolatileRegs.gprs().size() * sizeof(intptr_t) +
+                                                NonVolatileRegs.fpus().getPushSizeInBytes();
+#endif
+static const unsigned FramePushedBeforeAlign = NonVolatileRegsPushSize + sizeof(void*);
+static const unsigned FailFP = 0xbad;
+
+// Generate a stub that enters wasm from a C++ caller via the native ABI. The
+// signature of the entry point is Module::ExportFuncPtr. The exported wasm
+// function has an ABI derived from its specific signature, so this function
+// must map from the ABI of ExportFuncPtr to the export's signature's ABI.
+Offsets
+wasm::GenerateEntry(MacroAssembler& masm, const FuncExport& fe)
+{
+    masm.haltingAlign(CodeAlignment);
+
+    Offsets offsets;
+    offsets.begin = masm.currentOffset();
+
+    // Save the return address if it wasn't already saved by the call insn.
+#if defined(JS_CODEGEN_ARM)
+    masm.push(lr);
+#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+    masm.push(ra);
+#endif
+
+    // Save all caller non-volatile registers before we clobber them here and in
+    // the asm.js callee (which does not preserve non-volatile registers).
+    masm.setFramePushed(0);
+    masm.PushRegsInMask(NonVolatileRegs);
+    MOZ_ASSERT(masm.framePushed() == NonVolatileRegsPushSize);
+
+    // Put the 'argv' argument into a non-argument/return/TLS register so that
+    // we can use 'argv' while we fill in the arguments for the asm.js callee.
+    // Use a second non-argument/return register as temporary scratch.
+    Register argv = ABINonArgReturnReg0;
+    Register scratch = ABINonArgReturnReg1;
+
+    // Read the arguments of wasm::ExportFuncPtr according to the native ABI.
+    // The entry stub's frame is 1 word.
+    const unsigned argBase = sizeof(void*) + masm.framePushed();
+    ABIArgGenerator abi;
+    ABIArg arg;
+
+    // arg 1: ExportArg*
+    arg = abi.next(MIRType::Pointer);
+    if (arg.kind() == ABIArg::GPR)
+        masm.movePtr(arg.gpr(), argv);
+    else
+        masm.loadPtr(Address(masm.getStackPointer(), argBase + arg.offsetFromArgBase()), argv);
+
+    // Arg 2: TlsData*
+    arg = abi.next(MIRType::Pointer);
+    if (arg.kind() == ABIArg::GPR)
+        masm.movePtr(arg.gpr(), WasmTlsReg);
+    else
+        masm.loadPtr(Address(masm.getStackPointer(), argBase + arg.offsetFromArgBase()), WasmTlsReg);
+
+    // Save 'argv' on the stack so that we can recover it after the call.
+    masm.Push(argv);
+
+    // Since we're about to dynamically align the stack, reset the frame depth
+    // so we can still assert static stack depth balancing.
+    MOZ_ASSERT(masm.framePushed() == FramePushedBeforeAlign);
+    masm.setFramePushed(0);
+
+    // Dynamically align the stack since ABIStackAlignment is not necessarily
+    // WasmStackAlignment. Preserve SP so it can be restored after the call.
+    masm.moveStackPtrTo(scratch);
+    masm.andToStackPtr(Imm32(~(WasmStackAlignment - 1)));
+    masm.Push(scratch);
+
+    // Reserve stack space for the call.
+    unsigned argDecrement = StackDecrementForCall(WasmStackAlignment,
+                                                  masm.framePushed(),
+                                                  StackArgBytes(fe.sig().args()));
+    masm.reserveStack(argDecrement);
+
+    // Copy parameters out of argv and into the wasm ABI registers/stack-slots.
+    SetupABIArguments(masm, fe, argv, scratch);
+
+    // Setup wasm register state. The nullness of the frame pointer is used to
+    // determine whether the call ended in success or failure.
+    masm.movePtr(ImmWord(0), FramePointer);
+    masm.loadWasmPinnedRegsFromTls();
+
+    // Call into the real function. Note that, due to the throw stub, fp, tls
+    // and pinned registers may be clobbered.
+    masm.assertStackAlignment(WasmStackAlignment);
+    masm.call(CallSiteDesc(CallSiteDesc::Func), fe.funcIndex());
+    masm.assertStackAlignment(WasmStackAlignment);
+
+    // Pop the arguments pushed after the dynamic alignment.
+    masm.freeStack(argDecrement);
+
+    // Pop the stack pointer to its value right before dynamic alignment.
+    masm.PopStackPtr();
+    MOZ_ASSERT(masm.framePushed() == 0);
+    masm.setFramePushed(FramePushedBeforeAlign);
+
+    // Recover the 'argv' pointer which was saved before aligning the stack.
+    masm.Pop(argv);
+
+    // Store the return value in argv[0].
+    StoreABIReturn(masm, fe, argv);
+
+    // After the ReturnReg is stored into argv[0] but before fp is clobbered by
+    // the PopRegsInMask(NonVolatileRegs) below, set the return value based on
+    // whether fp is null (which is the case for successful returns) or the
+    // FailFP magic value (set by the throw stub);
+    Label success, join;
+    masm.branchTestPtr(Assembler::Zero, FramePointer, FramePointer, &success);
+#ifdef DEBUG
+    Label ok;
+    masm.branchPtr(Assembler::Equal, FramePointer, Imm32(FailFP), &ok);
+    masm.breakpoint();
+    masm.bind(&ok);
+#endif
+    masm.move32(Imm32(false), ReturnReg);
+    masm.jump(&join);
+    masm.bind(&success);
+    masm.move32(Imm32(true), ReturnReg);
+    masm.bind(&join);
 
     // Restore clobbered non-volatile registers of the caller.
     masm.PopRegsInMask(NonVolatileRegs);
     MOZ_ASSERT(masm.framePushed() == 0);
 
-    masm.move32(Imm32(true), ReturnReg);
     masm.ret();
 
     FinishOffsets(masm, &offsets);
@@ -1226,23 +1253,19 @@ wasm::GenerateThrowStub(MacroAssembler& masm, Label* throwLabel)
     Offsets offsets;
     offsets.begin = masm.currentOffset();
 
-    // The following HandleThrow call sets fp of this WasmActivation to null.
+    // The throw stub can be jumped to from an async interrupt that is halting
+    // execution. Thus the stack pointer can be unaligned and we must align it
+    // dynamically.
     masm.andToStackPtr(Imm32(~(ABIStackAlignment - 1)));
     if (ShadowStackSpace)
         masm.subFromStackPtr(Imm32(ShadowStackSpace));
+
+    // WasmHandleThrow unwinds WasmActivation::exitFP and returns the address of
+    // the return address on the stack this stub should return to. Set the
+    // FramePointer to a magic value to indicate a return by throw.
     masm.call(SymbolicAddress::HandleThrow);
-
-    // HandleThrow returns the innermost WasmActivation* in ReturnReg.
-    Register act = ReturnReg;
-    masm.wasmAssertNonExitInvariants(act);
-
-    masm.setFramePushed(FramePushedForEntrySP);
-    masm.loadStackPtr(Address(act, WasmActivation::offsetOfEntrySP()));
-    masm.Pop(ReturnReg);
-    masm.PopRegsInMask(NonVolatileRegs);
-    MOZ_ASSERT(masm.framePushed() == 0);
-
-    masm.mov(ImmWord(0), ReturnReg);
+    masm.moveToStackPtr(ReturnReg);
+    masm.move32(Imm32(FailFP), FramePointer);
     masm.ret();
 
     FinishOffsets(masm, &offsets);
