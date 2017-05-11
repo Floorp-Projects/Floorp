@@ -75,6 +75,8 @@ public:
    */
   already_AddRefed<nsIFile> GetBaseFile();
 
+  nsZipArchive* GetBaseZip() { return mBaseZip; }
+
   /**
    * Returns whether the "base file" (see GetBaseFile) is an archive
    */
