@@ -182,19 +182,19 @@ import static org.mozilla.gecko.Tab.TabType;
 import static org.mozilla.gecko.Tabs.INVALID_TAB_ID;
 
 public class BrowserApp extends GeckoApp
-                        implements TabsPanel.TabsLayoutChangeListener,
-                                   PropertyAnimator.PropertyAnimationListener,
-                                   View.OnKeyListener,
+                        implements ActionModePresenter,
+                                   AnchoredPopup.OnVisibilityChangeListener,
+                                   BookmarkEditFragment.Callbacks,
+                                   BrowserSearch.OnEditSuggestionListener,
+                                   BrowserSearch.OnSearchListener,
                                    DynamicToolbarAnimator.MetricsListener,
                                    DynamicToolbarAnimator.ToolbarChromeProxy,
-                                   BrowserSearch.OnSearchListener,
-                                   BrowserSearch.OnEditSuggestionListener,
+                                   LayoutInflater.Factory,
                                    OnUrlOpenListener,
                                    OnUrlOpenInBackgroundListener,
-                                   AnchoredPopup.OnVisibilityChangeListener,
-                                   ActionModePresenter,
-                                   LayoutInflater.Factory,
-                                   BookmarkEditFragment.Callbacks {
+                                   PropertyAnimator.PropertyAnimationListener,
+                                   TabsPanel.TabsLayoutChangeListener,
+                                   View.OnKeyListener {
     private static final String LOGTAG = "GeckoBrowserApp";
 
     private static final int TABS_ANIMATION_DURATION = 450;
@@ -3294,21 +3294,17 @@ public class BrowserApp extends GeckoApp
             super.closeOptionsMenu();
     }
 
-    @Override
-    public void setFullScreen(final boolean fullscreen) {
-        super.setFullScreen(fullscreen);
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (fullscreen) {
-                    mDynamicToolbar.setVisible(false, VisibilityTransition.IMMEDIATE);
-                    mDynamicToolbar.setPinned(true, PinReason.FULL_SCREEN);
-                } else {
-                    mDynamicToolbar.setPinned(false, PinReason.FULL_SCREEN);
-                    mDynamicToolbar.setVisible(true, VisibilityTransition.IMMEDIATE);
-                }
-            }
-        });
+    @Override // GeckoView.ContentListener
+    public void onFullScreen(final GeckoView view, final boolean fullscreen) {
+        super.onFullScreen(view, fullscreen);
+
+        if (fullscreen) {
+            mDynamicToolbar.setVisible(false, VisibilityTransition.IMMEDIATE);
+            mDynamicToolbar.setPinned(true, PinReason.FULL_SCREEN);
+        } else {
+            mDynamicToolbar.setPinned(false, PinReason.FULL_SCREEN);
+            mDynamicToolbar.setVisible(true, VisibilityTransition.IMMEDIATE);
+        }
     }
 
     @Override
