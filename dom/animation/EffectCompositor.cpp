@@ -13,6 +13,7 @@
 #include "mozilla/AnimationPerformanceWarning.h"
 #include "mozilla/AnimationTarget.h"
 #include "mozilla/AnimationUtils.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/LayerAnimationInfo.h"
 #include "mozilla/RestyleManager.h"
@@ -315,7 +316,7 @@ EffectCompositor::PostRestyleForAnimation(dom::Element* aElement,
     MOZ_ASSERT(NS_IsMainThread(),
                "Restyle request during restyling should be requested only on "
                "the main-thread. e.g. after the parallel traversal");
-    if (ServoStyleSet::IsInServoTraversal()) {
+    if (ServoStyleSet::IsInServoTraversal() || mIsInPreTraverse) {
       MOZ_ASSERT(hint == eRestyle_CSSAnimations ||
                  hint == eRestyle_CSSTransitions);
 
@@ -960,6 +961,9 @@ EffectCompositor::PreTraverseInSubtree(Element* aRoot)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mPresContext->RestyleManager()->IsServo());
 
+  AutoRestore<bool> guard(mIsInPreTraverse);
+  mIsInPreTraverse = true;
+
   // We need to force flush all throttled animations if there are any
   // non-animation restyles.
   bool flushThrottledRestyles = aRoot && aRoot->HasDirtyDescendantsForServo();
@@ -1073,6 +1077,9 @@ EffectCompositor::PreTraverse(dom::Element* aElement,
       aPseudoType != CSSPseudoElementType::after) {
     return found;
   }
+
+  AutoRestore<bool> guard(mIsInPreTraverse);
+  mIsInPreTraverse = true;
 
   PseudoElementHashEntry::KeyType key = { aElement, aPseudoType };
 
