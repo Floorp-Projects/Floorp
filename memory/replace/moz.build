@@ -9,9 +9,6 @@ DIRS += [
     'replace',
 ]
 
-# Build jemalloc4 as a replace-malloc lib when building with mozjemalloc
-DIRS += ['jemalloc']
-
 if CONFIG['MOZ_REPLACE_MALLOC_LINKAGE'] == 'dummy library':
     DIRS += ['dummy']
 

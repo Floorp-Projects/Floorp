@@ -1,9 +1,0 @@
-This is a copy of the jemalloc source code. It is intended to be left pristine.
-Modifications to this code without coordinating with upstream are unacceptable,
-and will be reverted. Integration modifications should be made in memory/build
-whenever possible.
-
-The canonical repository for this source code is https://github.com/jemalloc/jemalloc.
-The information about the upstream repository and revision lives in upstream.info.
-In order to update the code, you can run the update.sh script located in
-the same directory.
