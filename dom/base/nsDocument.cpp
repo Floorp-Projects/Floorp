@@ -233,7 +233,6 @@
 #include "nsIEditor.h"
 #include "nsIDOMCSSStyleRule.h"
 #include "mozilla/css/StyleRule.h"
-#include "nsIDOMLocation.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsISecurityConsoleMessage.h"
 #include "nsCharSeparatedTokenizer.h"
@@ -6854,13 +6853,6 @@ nsDocument::GetDefaultView(mozIDOMWindowProxy** aDefaultView)
   *aDefaultView = nullptr;
   nsCOMPtr<nsPIDOMWindowOuter> win = GetWindow();
   win.forget(aDefaultView);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetLocation(nsIDOMLocation **_retval)
-{
-  *_retval = nsIDocument::GetLocation().take();
   return NS_OK;
 }
 

@@ -73,9 +73,6 @@ public:
   // nsIDocument version applies to us (it's shadowed by the XPCOM thing on
   // nsDocument).
   using nsIDocument::GetLocation;
-  // But then we need to also pull in the nsDocument XPCOM version
-  // because nsXULDocument tries to forward to it.
-  using nsDocument::GetLocation;
 
 protected:
   virtual ~XMLDocument();
