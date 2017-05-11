@@ -27,23 +27,9 @@ function checkPending() {
   }
 }
 
-function checkString(aPref, aValue) {
-  try {
-    do_check_eq(Services.prefs.getCharPref(aPref), aValue)
-  } catch (e) {
-    // OK
-  }
-}
-
 // Make sure all our extension state is empty/nonexistent
 function check_empty_state() {
-  do_check_false(gExtensionsJSON.exists());
-  do_check_false(gExtensionsINI.exists());
-
   do_check_eq(Services.prefs.getIntPref("extensions.databaseSchema"), DB_SCHEMA);
-
-  checkString("extensions.bootstrappedAddons", "{}");
-  checkString("extensions.installCache", "[]");
   checkPending();
 }
 

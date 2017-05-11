@@ -18,16 +18,16 @@ function run_test() {
                    do_get_addon("test_chromemanifest_3"),
                    do_get_addon("test_chromemanifest_4"),
                    do_get_addon("test_chromemanifest_5")],
-                  function() {
+                  async function() {
 
-    restartManager();
+    await promiseRestartManager();
 
     AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                  "addon2@tests.mozilla.org",
                                  "addon3@tests.mozilla.org",
                                  "addon4@tests.mozilla.org",
                                  "addon5@tests.mozilla.org"],
-                                function([a1, a2, a3, a4, a5]) {
+                                async function([a1, a2, a3, a4, a5]) {
       // addon1 has no binary components
       do_check_neq(a1, null);
       do_check_false(a1.userDisabled);

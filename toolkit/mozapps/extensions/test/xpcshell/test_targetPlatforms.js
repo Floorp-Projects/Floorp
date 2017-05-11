@@ -89,7 +89,7 @@ const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
 // Set up the profile
-function run_test() {
+async function run_test() {
   do_test_pending();
 
   writeInstallRDFForExtension(addon1, profileDir);
@@ -98,7 +98,8 @@ function run_test() {
   writeInstallRDFForExtension(addon4, profileDir);
   writeInstallRDFForExtension(addon5, profileDir);
 
-  restartManager();
+  await promiseRestartManager();
+
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
                                "addon3@tests.mozilla.org",

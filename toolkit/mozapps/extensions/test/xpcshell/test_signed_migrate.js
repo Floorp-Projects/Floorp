@@ -104,7 +104,7 @@ function* test_breaking_migrate(addons, test, expectedSignedState) {
 
   // Update the application
   gAppInfo.version = "5";
-  startupManager(true);
+  yield promiseStartupManager(true);
 
   let addon = yield promiseAddonByID(ID);
   do_check_neq(addon, null);
@@ -154,7 +154,7 @@ function* test_working_migrate(addons, test, expectedSignedState) {
 
   // Update the application
   gAppInfo.version = "5";
-  startupManager(true);
+  yield promiseStartupManager(true);
 
   let addon = yield promiseAddonByID(ID);
   do_check_neq(addon, null);

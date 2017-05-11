@@ -16,8 +16,8 @@ function run_test() {
 }
 
 function run_test_1() {
-  installAllFiles([do_get_addon("test_bug595573")], function() {
-    restartManager();
+  installAllFiles([do_get_addon("test_bug595573")], async function() {
+    await promiseRestartManager();
 
     AddonManager.getAddonByID("{2f69dacd-03df-4150-a9f1-e8a7b2748829}", function(a1) {
       do_check_neq(a1, null);
