@@ -187,11 +187,15 @@ nsCommandLine::HandleFlagWithParam(const nsAString& aFlag, bool aCaseSensitive,
 
   ++found;
 
-  if (mArgs[found].First() == '-') {
-    return NS_ERROR_INVALID_ARG;
+  { // scope for validity of |param|, which RemoveArguments call invalidates
+    const nsString& param = mArgs[found];
+    if (!param.IsEmpty() && param.First() == '-') {
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    aResult = param;
   }
 
-  aResult = mArgs[found];
   RemoveArguments(found - 1, found);
 
   return NS_OK;
