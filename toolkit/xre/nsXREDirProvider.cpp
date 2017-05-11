@@ -530,9 +530,6 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
         ensureFilePermissions = true;
       }
     }
-    else if (!strcmp(aProperty, NS_APP_DOWNLOADS_50_FILE)) {
-      rv = file->AppendNative(NS_LITERAL_CSTRING("downloads.rdf"));
-    }
     else if (!strcmp(aProperty, NS_APP_PREFS_OVERRIDE_DIR)) {
       rv = mProfileDir->Clone(getter_AddRefs(file));
       nsresult tmp = file->AppendNative(NS_LITERAL_CSTRING(PREF_OVERRIDE_DIRNAME));
