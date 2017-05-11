@@ -15,7 +15,7 @@ load 348462-2.html
 load 366643.html
 load 369688-1.html
 load 369947-1.html
-skip-if(stylo) load 372094-1.xhtml # bug 1361235
+load 372094-1.xhtml
 load 376627-1.html
 load 377231-1.html
 load 377232-1.xhtml
@@ -90,7 +90,7 @@ pref(layout.css.moz-appearance.enabled,true) load 593526.html
 pref(layout.css.moz-appearance.enabled,true) load 593526.xul
 load 594654-1.xhtml
 pref(layout.css.moz-appearance.enabled,true) load 595042-1.html
-skip-if(stylo) load 595727-1.html # bug 1361235
+load 595727-1.html
 load 624198.xhtml
 load 633322-1.html
 load 633453-1.html
