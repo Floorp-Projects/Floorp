@@ -65,7 +65,7 @@ public:
                           bool* aCancel, bool* aHandled) override;
   NS_IMETHOD DidDoAction(Selection* aSelection, RulesInfo* aInfo,
                          nsresult aResult) override;
-  NS_IMETHOD DocumentIsEmpty(bool* aDocumentIsEmpty) override;
+  NS_IMETHOD_(bool) DocumentIsEmpty() override;
   NS_IMETHOD DocumentModified() override;
 
 protected:
