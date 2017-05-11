@@ -691,10 +691,7 @@
                 if (this._shouldShowProgress(aRequest)) {
                   if (!(aStateFlags & nsIWebProgressListener.STATE_RESTORING)) {
                     this.mTab.setAttribute("busy", "true");
-
-                    if (aWebProgress.isTopLevel &&
-                        !(aWebProgress.loadType & Ci.nsIDocShell.LOAD_CMD_RELOAD))
-                      this.mTabBrowser.setTabTitleLoading(this.mTab);
+                    this.mTabBrowser.setTabTitle(this.mTab);
                   }
 
                   if (this.mTab.selected)
@@ -735,9 +732,6 @@
                 // For keyword URIs clear the user typed value since they will be changed into real URIs
                 if (location.scheme == "keyword")
                   this.mBrowser.userTypedValue = null;
-
-                if (this.mTab.label == this.mTabBrowser.mStringBundle.getString("tabs.connecting"))
-                  this.mTabBrowser.setTabTitle(this.mTab);
 
                 if (this.mTab.selected)
                   this.mTabBrowser.mIsBusy = false;
@@ -1409,14 +1403,10 @@
       </method>
 
 
+      <!-- TODO: remove after 57, once we know add-ons can no longer use it. -->
       <method name="setTabTitleLoading">
         <parameter name="aTab"/>
-        <body>
-          <![CDATA[
-            aTab.label = this.mStringBundle.getString("tabs.connecting");
-            this._tabAttrModified(aTab, ["label"]);
-          ]]>
-        </body>
+        <body/>
       </method>
 
       <method name="setTabTitle">
@@ -3093,10 +3083,7 @@
             // Finish tearing down the tab that's going away.
             remoteBrowser._endRemoveTab(aOtherTab);
 
-            if (isBusy)
-              this.setTabTitleLoading(aOurTab);
-            else
-              this.setTabTitle(aOurTab);
+            this.setTabTitle(aOurTab);
 
             // If the tab was already selected (this happpens in the scenario
             // of replaceTabWithWindow), notify onLocationChange, etc.

@@ -13,7 +13,6 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsITextControlElement.h"
 #include "nsITimer.h"
-#include "nsIPhonetic.h"
 #include "nsIDOMNSEditableElement.h"
 #include "nsCOMPtr.h"
 #include "nsIConstraintValidation.h"
@@ -128,7 +127,6 @@ class HTMLInputElement final : public nsGenericHTMLFormElementWithState,
                                public nsImageLoadingContent,
                                public nsIDOMHTMLInputElement,
                                public nsITextControlElement,
-                               public nsIPhonetic,
                                public nsIDOMNSEditableElement,
                                public nsIConstraintValidation
 {
@@ -173,9 +171,6 @@ public:
 
   // nsIDOMHTMLInputElement
   NS_DECL_NSIDOMHTMLINPUTELEMENT
-
-  // nsIPhonetic
-  NS_DECL_NSIPHONETIC
 
   // nsIDOMNSEditableElement
   NS_IMETHOD GetEditor(nsIEditor** aEditor) override
@@ -874,8 +869,6 @@ public:
 
   void SetUserInput(const nsAString& aInput,
                     nsIPrincipal& aSubjectPrincipal);
-
-  // XPCOM GetPhonetic() is OK
 
   /**
    * If aValue contains a valid floating-point number in the format specified

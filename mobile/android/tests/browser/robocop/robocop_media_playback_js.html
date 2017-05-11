@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<audio id="testAudio" src="audio.ogg" loop></audio>
+<script type="application/javascript" src="robocop_head.js"></script>
+<script type="text/javascript">
+var audio = document.getElementById("testAudio");
+
+let test = {
+  play_audio : function() {
+    audio.play();
+  },
+
+  pause_audio : function() {
+    audio.pause();
+  },
+
+  adjust_audio_volume : function(volume) {
+    audio.volume = volume;
+  },
+
+  adjust_audio_muted : function(muted) {
+    audio.muted = muted;
+  },
+
+  finish_test: function() {
+    java.disconnect();
+  },
+};
+
+var java = new JavaBridge(test);
+
+</script>

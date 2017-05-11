@@ -151,9 +151,7 @@ Calendar.prototype = {
           let targetId = event.target.dataset.id;
           let targetObj = this.props.days[targetId];
           if (targetObj.enabled) {
-            this.props.setSelection({
-              selection: targetObj.dateObj
-            });
+            this.props.setSelection(targetObj.dateObj);
           }
         }
         break;

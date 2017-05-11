@@ -255,7 +255,7 @@ UNIFIED_SOURCES += [
     'TLSServerSocket.cpp',
 ]
 
-if CONFIG['MOZ_RUST'] and CONFIG['MOZ_RUST_URLPARSE']:
+if CONFIG['MOZ_RUST_URLPARSE']:
     EXPORTS.mozilla.net += [ 'RustURL.h' ]
     UNIFIED_SOURCES += [ 'RustURL.cpp' ]
 
