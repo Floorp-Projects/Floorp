@@ -84,7 +84,7 @@ to mochitest command.
   * test_value_storage.html `symbols(` [30]
   * ... `list-style-type` [60]
   * ... `'list-style'` [30]
-  * ... `'content`: various value as list-style-type in counter functions [12]
+  * ... `'content`: various value as list-style-type in counter functions [2]
   * test_html_attribute_computed_values.html `list-style-type` [8]
 * @page support:
   * test_bug887741_at-rules_in_declaration_lists.html `exception` [1]
@@ -132,8 +132,6 @@ to mochitest command.
     * test_inherit_storage.html `font-feature-settings` [2]
     * test_initial_storage.html `font-feature-settings` [1]
     * test_value_storage.html `font-feature-settings` [40]
-  * image-orientation property bug 1341758
-    * test_value_storage.html `image-orientation` [40]
 * Stylesheet cloning is somehow busted bug 1348481
   * test_selectors.html `matched clone` [3]
 * Unsupported prefixed values

@@ -2,8 +2,8 @@
 
 fuzzy-if(OSX==1010,1,10) == display-types-01.html display-types-01-ref.html
 fuzzy-if(OSX==1010,1,10) == dynamic-attr-01.html dynamic-attr-01-ref.html
-fuzzy-if(OSX==1010,1,10) fails-if(stylo) == dynamic-button-01a.html dynamic-button-01-ref.html
-fuzzy-if(OSX==1010,1,10) fails-if(stylo) == dynamic-button-01b.html dynamic-button-01-ref.html
+fuzzy-if(OSX==1010,1,10) == dynamic-button-01a.html dynamic-button-01-ref.html
+fuzzy-if(OSX==1010,1,10) == dynamic-button-01b.html dynamic-button-01-ref.html
 fuzzy-if(OSX==1010,1,10) == dynamic-fieldset-01a.html dynamic-fieldset-01-ref.html
 fuzzy-if(OSX==1010,1,10) == dynamic-fieldset-01b.html dynamic-fieldset-01-ref.html
 fuzzy-if(OSX==1010,1,10) == dynamic-restyle-01.html dynamic-restyle-01-ref.html

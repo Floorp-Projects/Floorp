@@ -319,15 +319,30 @@ def old_configure(prepare_configure, extra_old_configure_args, all_options,
         if value.origin != 'default'
     ]
 
+    env = os.environ
+    extra_env = {}
+
     # We also pass it the options from js/moz.configure so that it can pass
     # them down to js/src/configure. Note this list is empty when running
     # js/src/configure, in which case we don't need to pass those options
     # to old-configure since old-configure doesn't handle them anyways.
     if extra_old_configure_args:
-        cmd += extra_old_configure_args
+        for arg in extra_old_configure_args:
+            if arg.startswith('-'):
+                cmd.append(arg)
+            else:
+                k, v = arg.split('=', 1)
+                extra_env[k] = v
+
+    if extra_env:
+        env = dict(env)
+        env.update(extra_env)
 
     # For debugging purpose, in case it's not what we'd expect.
     log.debug('Running %s', quote(*cmd))
+    if extra_env:
+        log.debug('with extra environment: %s',
+                  ' '.join('%s=%s' % pair for pair in extra_env.iteritems()))
 
     # Our logging goes to config.log, the same file old.configure uses.
     # We can't share the handle on the file, so close it. We assume nothing

@@ -501,7 +501,10 @@ ValueFromStringHelper(nsCSSPropertyID aPropID,
                                                doc->NodePrincipal());
   NS_ConvertUTF16toUTF8 value(aString);
   RefPtr<RawServoDeclarationBlock> servoDeclarationBlock =
-    Servo_ParseProperty(aPropID, &value, data).Consume();
+    Servo_ParseProperty(aPropID,
+                        &value,
+                        data,
+                        LengthParsingMode::SVG).Consume();
   if (!servoDeclarationBlock) {
     return nullptr;
   }

@@ -38,6 +38,18 @@ public class testMediaControl extends MediaPlaybackTest {
 
         info("- run test : testAdjustMediaVolumeOrMuted -");
         testAdjustMediaVolumeOrMuted();
+
+        info("- run test : testMediaWithSilentAudioTrack -");
+        testMediaWithSilentAudioTrack();
+
+        info("- run test : testMediaWithoutAudioTrack -");
+        testMediaWithoutAudioTrack();
+
+        info("- run test : testAudioCompetingForMediaWithSilentAudioTrack -");
+        testAudioCompetingForMediaWithSilentAudioTrack();
+
+        info("- run test : testAudioCompetingForMediaWithoutAudioTrack -");
+        testAudioCompetingForMediaWithoutAudioTrack();
     }
 
     private void testBasicBehaviors() {
@@ -206,7 +218,11 @@ public class testMediaControl extends MediaPlaybackTest {
     }
 
     /**
-     * Media control should always be displayed even the media becomes non-audible.
+     * There are three situations that media would be non-audible,
+     * (1) media is muted/set volume to ZERO
+     * (2) media has silent audio track
+     * (3) media doesn't have audio track
+     * We would show the media control for (1) and (2), but won't show it for (3).
      */
     private void testAdjustMediaVolumeOrMuted() {
         info("- create JSBridge -");
@@ -245,6 +261,188 @@ public class testMediaControl extends MediaPlaybackTest {
         checkIfMediaPlayingSuccess(false /* paused */, true /* clear notification */);
 
         info("- close tab -");
+        closeAllTabs();
+
+        info("- destroy JSBridge -");
+        destroyJSBridge();
+    }
+
+    private void testMediaWithSilentAudioTrack() {
+        info("- create JSBridge -");
+        createJSBridge();
+
+        info("- load URL -");
+        final String MEDIA_URL = getAbsoluteUrl(mStringHelper.ROBOCOP_MEDIA_PLAYBACK_JS_URL);
+        loadUrlAndWait(MEDIA_URL);
+
+        info("- play media with silent audio track -");
+        getJS().syncCall("play_media_with_silent_audio_track");
+
+        info("- wait until media starts playing -");
+        final Tab tab = Tabs.getInstance().getSelectedTab();
+        waitUntilTabMediaStarted(tab);
+
+        info("- media control should be displayed -");
+        checkTabMediaPlayingState(tab, true);
+        checkMediaNotificationStatesAfterChanged(tab,
+                                                 true /* playing */);
+
+        info("- pause media with silent audio track -");
+        getJS().syncCall("pause_media_with_silent_audio_track");
+
+        info("- media control should disappear -");
+        checkMediaNotificationStatesAfterChanged(tab,
+                                                 false /* non-playing */,
+                                                 true /* clear control */);
+        info("- close tab -");
+        closeAllTabs();
+
+        info("- destroy JSBridge -");
+        destroyJSBridge();
+    }
+
+    private void testMediaWithoutAudioTrack() {
+        info("- create JSBridge -");
+        createJSBridge();
+
+        info("- load URL -");
+        final String MEDIA_URL = getAbsoluteUrl(mStringHelper.ROBOCOP_MEDIA_PLAYBACK_JS_URL);
+        loadUrlAndWait(MEDIA_URL);
+
+        info("- play media -");
+        getJS().syncCall("play_media_without_audio_track");
+
+        // We can't know whether it starts or not for media without audio track,
+        // because we won't dispatch Tab:MediaPlaybackChange event for this kind
+        // of media. So we just check the state multiple times to make sure we
+        // don't show the media control.
+        info("- should not show control -");
+        final Tab tab = Tabs.getInstance().getSelectedTab();
+        checkTabMediaPlayingState(tab, false);
+        checkIfMediaNotificationBeCleared();
+
+        info("- should not show control -");
+        checkTabMediaPlayingState(tab, false);
+        checkIfMediaNotificationBeCleared();
+
+        info("- should not show control -");
+        checkTabMediaPlayingState(tab, false);
+        checkIfMediaNotificationBeCleared();
+
+        info("- should not show control -");
+        checkTabMediaPlayingState(tab, false);
+        checkIfMediaNotificationBeCleared();
+
+        info("- should not show control -");
+        checkTabMediaPlayingState(tab, false);
+        checkIfMediaNotificationBeCleared();
+
+        info("- pause media -");
+        getJS().syncCall("pause_media_without_audio_track");
+
+        info("- close tab -");
+        closeAllTabs();
+
+        info("- destroy JSBridge -");
+        destroyJSBridge();
+    }
+
+    /**
+     * There are three situations that media would be non-audible,
+     * (1) media is muted/set volume to ZERO
+     * (2) media has silent audio track
+     * (3) media doesn't have audio track
+     * (1) and (2) would involve in the audio competing within tabs, but (3)
+     * won't, because (3) are more likely GIF-like video and we don't want it
+     * interrupts background audio playback.
+     */
+    private void testAudioCompetingForMediaWithSilentAudioTrack() {
+        info("- create JSBridge -");
+        createJSBridge();
+
+        info("- load URL -");
+        final String MEDIA_URL = getAbsoluteUrl(mStringHelper.ROBOCOP_MEDIA_PLAYBACK_LOOP_URL);
+        loadUrlAndWait(MEDIA_URL);
+
+        info("- wait until media starts playing -");
+        final Tab audibleTab = Tabs.getInstance().getSelectedTab();
+        waitUntilTabMediaStarted(audibleTab);
+
+        info("- check whether audio starts playing -");
+        checkIfMediaPlayingSuccess(true /* playing */);
+
+        info("- switch to the another tab -");
+        final String MEDIA_JS_URL = getAbsoluteUrl(mStringHelper.ROBOCOP_MEDIA_PLAYBACK_JS_URL);
+        addTab(MEDIA_JS_URL);
+
+        info("- play silent media from new tab -");
+        getJS().syncCall("play_media_with_silent_audio_track");
+
+        info("- wait until silent media starts playing -");
+        Tab silentTab = Tabs.getInstance().getFirstTabForUrl(MEDIA_JS_URL);
+        waitUntilTabMediaStarted(silentTab);
+
+        info("- audible tab should be stopped because of audio competing -");
+        checkTabMediaPlayingState(audibleTab, false);
+        checkTabAudioPlayingState(audibleTab, false);
+
+        info("- should show media control for silent tab -");
+        checkMediaNotificationStatesAfterChanged(silentTab,
+                                                 true /* playing */);
+
+        info("- pause silent media -");
+        getJS().syncCall("play_media_with_silent_audio_track");
+
+        info("- close tabs -");
+        closeAllTabs();
+
+        info("- destroy JSBridge -");
+        destroyJSBridge();
+    }
+
+    private void testAudioCompetingForMediaWithoutAudioTrack() {
+        info("- create JSBridge -");
+        createJSBridge();
+
+        info("- load URL -");
+        final String MEDIA_URL = getAbsoluteUrl(mStringHelper.ROBOCOP_MEDIA_PLAYBACK_LOOP_URL);
+        loadUrlAndWait(MEDIA_URL);
+
+        info("- wait until media starts playing -");
+        final Tab audibleTab = Tabs.getInstance().getSelectedTab();
+        waitUntilTabMediaStarted(audibleTab);
+
+        info("- check whether audio starts playing -");
+        checkIfMediaPlayingSuccess(true /* playing */);
+
+        info("- switch to the another tab -");
+        final String MEDIA_JS_URL = getAbsoluteUrl(mStringHelper.ROBOCOP_MEDIA_PLAYBACK_JS_URL);
+        addTab(MEDIA_JS_URL);
+
+        info("- play silent media from new tab -");
+        getJS().syncCall("play_media_without_audio_track");
+
+        // Same with testMediaWithoutAudioTrack, we can't know when the media
+        // has started, so just check the states multiple times.
+        info("- audible tab should still be playing and show media control -");
+        checkTabMediaPlayingState(audibleTab, true);
+        checkTabAudioPlayingState(audibleTab, true);
+        checkMediaNotificationStates(audibleTab, true /* playing */);
+
+        info("- audible tab should still be playing and show media control -");
+        checkTabMediaPlayingState(audibleTab, true);
+        checkTabAudioPlayingState(audibleTab, true);
+        checkMediaNotificationStates(audibleTab, true /* playing */);
+
+        info("- audible tab should still be playing and show media control -");
+        checkTabMediaPlayingState(audibleTab, true);
+        checkTabAudioPlayingState(audibleTab, true);
+        checkMediaNotificationStates(audibleTab, true /* playing */);
+
+        info("- pause sielent media -");
+        getJS().syncCall("pause_media_without_audio_track");
+
+        info("- close tabs -");
         closeAllTabs();
 
         info("- destroy JSBridge -");

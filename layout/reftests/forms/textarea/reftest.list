@@ -2,8 +2,8 @@ skip-if(Android) fails-if(stylo) == resize.html resize-ref.html
 # an offset seems to apply to the native resizer on windows so skip this test for now
 skip-if(Android) skip-if(winWidget) fuzzy-if(cocoaWidget,1,33) fuzzy-if(skiaContent&&!winWidget&&!Android,5,10) fails-if(stylo) == resize-background.html resize-background-ref.html
 skip-if(Android) fails-if(stylo) != ltr.html rtl.html
-skip-if(Android) fails-if(stylo) != ltr-scrollbar.html rtl-scrollbar.html
-skip-if(Android) fails-if(stylo) != in-ltr-doc-scrollbar.html in-rtl-doc-scrollbar.html
+skip-if(Android) != ltr-scrollbar.html rtl-scrollbar.html
+skip-if(Android) != in-ltr-doc-scrollbar.html in-rtl-doc-scrollbar.html
 skip-if(Android) fails-if(stylo) != ltr.html no-resize.html
 skip-if(Android) fails-if(xulRuntime.widgetToolkit=="gtk2") fails-if(stylo) != rtl.html no-resize.html # bug 834724
 fails-if(stylo) == rtl.html rtl-dynamic-attr.html

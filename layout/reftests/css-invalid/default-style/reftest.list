@@ -1,5 +1,5 @@
-fails-if(stylo) == input.html input-ref.html
-fails-if(stylo) == button.html button-ref.html
+== input.html input-ref.html
+== button.html button-ref.html
 fails-if(stylo) == textarea.html textarea-ref.html
-fails-if(stylo) == select.html select-ref.html
+== select.html select-ref.html
 == fieldset.html fieldset-ref.html

@@ -3,38 +3,28 @@ Directory Links Architecture and Data Formats
 =============================================
 
 Directory links are enhancements to the new tab experience that combine content
-Firefox already knows about from user browsing with external content. There are
-3 kinds of links:
+Firefox already knows about from user browsing with external content. There is 1
+kind of links:
 
 - directory links fill in additional tiles on the new tab page if there would
   have been empty tiles because the user has a clean profile or cleared history
-- suggested links are shown if certain triggering criteria matches the user's
-  browsing behavior, i.e., if the user has a top site that matches one of
-  several possible sites. E.g., only show a sports suggestion if the user has a
-  sport site as a top site
-- enhanced links replace a matching user's visible history tile from the same
-  site but only the visual aspects: title, image, and rollover image
 
 To power the above features, DirectoryLinksProvider module downloads, at most
 once per 24 hours, the directory source links as JSON with enough data for
-Firefox to determine what should be shown or not. This module also handles
-reporting back data about the tiles via asynchronous pings that don't return
-data from the server.
+Firefox to determine what should be shown or not.
 
-For the directory source and ping endpoints, the default preference values point
+For the directory source endpoint, the default preference values point
 to Mozilla key-pinned servers with encryption. No cookies are set by the servers
 and Firefox enforces this by making anonymous requests.
 
 - default directory source endpoint:
   https://tiles.services.mozilla.com/v3/links/fetch/%LOCALE%/%CHANNEL%
-- default directory ping endpoint: https://tiles.services.mozilla.com/v3/links/
 
 
 Preferences
 ===========
 
-There are two main preferences that control downloading links and reporting
-metrics.
+There is one main preference that controls downloading links.
 
 ``browser.newtabpage.directory.source``
 ---------------------------------------
@@ -50,19 +40,6 @@ appropriate values for the build of Firefox, e.g.,
 - directory source endpoint:
   https://tiles.services.mozilla.com/v3/links/fetch/en-US/release
 
-``browser.newtabpage.directory.ping``
--------------------------------------
-
-This endpoint tells Firefox where to report Tiles metrics as a POST request. The
-data is sent as a JSON blob. Setting it to empty effectively turns off reporting
-of Tiles data.
-
-A path segment will be appended to the endpoint of "view" or "click" depending
-on the type of ping, e.g.,
-
-- ``view`` ping endpoint: https://tiles.services.mozilla.com/v3/links/view
-- ``click`` ping endpoint: https://tiles.services.mozilla.com/v3/links/click
-
 
 Data Flow
 =========
@@ -72,21 +49,13 @@ exists, it checks for its timestamp to determine if a new file should be
 downloaded.
 
 If a directory source file needs to be downloaded, a GET request is made then
-cacheed and unpacked the JSON into the different types of links. Various checks
+cached and unpacked the JSON into the different types of links. Various checks
 filter out invalid links, e.g., those with http-hosted images or those that
 don't fit the allowed suggestions.
 
 When a new tab page is built, DirectoryLinksProvider module provides additional
 link data that is combined with history link data to determine which links can
 be displayed or not.
-
-When a new tab page is shown, a ``view`` ping is sent with relevant tiles data.
-Similarly, when the user clicks on various parts of tiles (to load the page,
-pin, block, etc.), a ``click`` ping is sent with similar data. Both of these can
-trigger downloading of fresh directory source links if 24 hours have elapsed
-since last download.
-
-Users can turn off the ping with in-new-tab-page controls.
 
 As the new tab page is rendered, any images for tiles are downloaded if not
 already cached. The default servers hosting the images are Mozilla CDN that
@@ -98,9 +67,8 @@ source.
 Source JSON Format
 ==================
 
-Firefox expects links data in a JSON object with top level keys each providing
-an array of tile objects. The keys correspond to the different types of links:
-``directory``, ``suggested``, and ``enhanced``.
+Firefox expects links data in a JSON object with a top level "directory" key
+providing an array of tile objects.
 
 Example
 -------
@@ -118,48 +86,6 @@ Below is an example directory source file::
               "type": "affiliate",
               "url": "http://contribute.mozilla.org/"
           }
-      ],
-      "enhanced": [
-          {
-              "bgColor": "",
-              "directoryId": 776,
-              "enhancedImageURI": "https://tiles.cdn.mozilla.net/images/44a14fc405cebc299ead86514dff0e3735c8cf65.10814.png",
-              "imageURI": "https://tiles.cdn.mozilla.net/images/20e24aa2219ec7542cc8cf0fd79f0c81e16ebeac.11859.png",
-              "title": "TurboTax",
-              "type": "sponsored",
-              "url": "https://turbotax.intuit.com/"
-          }
-      ],
-      "suggested": [
-          {
-              "adgroup_name": "open-source browser",
-              "bgColor": "#cae1f4",
-              "check_inadjacency": true,
-              "directoryId": 702,
-              "explanation": "Suggested for %1$S enthusiasts who visit sites like %2$S",
-              "frecent_sites": [
-                  "addons.mozilla.org",
-                  "air.mozilla.org",
-                  "blog.mozilla.org",
-                  "bugzilla.mozilla.org",
-                  "developer.mozilla.org",
-                  "etherpad.mozilla.org",
-                  "hacks.mozilla.org",
-                  "hg.mozilla.org",
-                  "mozilla.org",
-                  "planet.mozilla.org",
-                  "quality.mozilla.org",
-                  "support.mozilla.org",
-                  "treeherder.mozilla.org",
-                  "wiki.mozilla.org"
-              ],
-              "frequency_caps": {"daily": 3, "total": 10},
-              "imageURI": "https://tiles.cdn.mozilla.net/images/9ee2b265678f2775de2e4bf680df600b502e6038.3875.png",
-              "time_limits": {"start": "2014-01-01T00:00:00.000Z", "end": "2014-02-01T00:00:00.000Z"},
-              "title": "Thanks for testing!",
-              "type": "affiliate",
-              "url": "https://www.mozilla.com/firefox/tiles"
-          }
       ]
   }
 
@@ -172,107 +98,10 @@ Each link object has various values that Firefox uses to display a tile:
   https and http URLs are allowed.
 - ``title`` - string that appears below the tile.
 - ``type`` - string relationship of the link to Mozilla. Expected values:
-  affiliate, organic, sponsored.
+  affiliate.
 - ``imageURI`` - string url for the tile image to show. Only https and data URIs
   are allowed.
 - ``enhancedImageURI`` - string url for the image to be shown before the user
   hovers. Only https and data URIs are allowed.
 - ``bgColor`` - string css color for additional fill background color.
 - ``directoryId`` - id of the tile to be used during ping reporting
-
-Suggested Link Object Extras
-----------------------------
-
-A suggested link has additional values:
-
-- ``adgroup_name`` - string to override the hardcoded display name of the
-  triggering set of sites in Firefox.
-- ``check_inadjacency`` - boolean if true prevents the suggested link from being
-  shown if the new tab page is showing a site from an inadjacency list.
-- ``explanation`` - string to override the default explanation that appears
-  below a Suggested Tile. %1$S is replaced by the triggering adgroup name and
-  %2$S is replaced by the triggering site.
-- ``frecent_sites`` - array of strings of the sites that can trigger showing a
-  Suggested Tile if the user has the site in one of the top 100 most-frecent
-  pages.
-- ``frequency_caps`` - an object consisting of daily and total frequency caps
-  that limit the number of times a Suggested Tile can be shown in the new tab
-  per day and overall.
-- ``time_limits`` - an object consisting of start and end timestamps specifying
-  when a Suggested Tile may start and has to stop showing in the newtab.
-  The timestamp is expected in ISO_8601 format: '2014-01-10T20:00:00.000Z'
-
-The inadjacency list is packaged with Firefox as base64-encoded 1-way-hashed
-sites that tend to have adult, gambling, alcohol, drug, and similar content.
-Its location: chrome://browser/content/newtab/newTab.inadjacent.json
-
-The preapproved arrays follow a policy for determining what topic grouping is
-allowed as well as the composition of a grouping. The topics are broad
-uncontroversial categories, e.g., Mobile Phone, News, Technology, Video Game,
-Web Development. There are at least 5 sites within a grouping, and as many
-popular sites relevant to the topic are included to avoid having one site be
-clearly dominant. These requirements provide some deniability of which site
-actually triggered a suggestion during ping reporting, so it's more difficult to
-determine if a user has gone to a specific site.
-
-
-Ping JSON Format
-================
-
-Firefox reports back an action and the state of tiles on the new tab page based
-on the user opening a new tab or clicking a tile. The top level keys of the
-ping:
-
-- ``locale`` - string locale of the Firefox build
-- ``tiles`` - array of tiles ping objects
-
-An additional key at the top level indicates which action triggered the ping.
-The value associated to the action key is the 0-based index into the tiles array
-of which tile triggered the action. Valid actions: block, click, pin, sponsored,
-sponsored_link, unpin, view. E.g., if the second tile is being clicked, the ping
-will have ``"click": 1``
-
-Example
--------
-
-Below is an example ``click`` ping with 3 tiles: a pinned suggested tile
-followed by a history tile and a directory tile. The first tile is being
-blocked::
-
-  {
-      "locale": "en-US",
-      "tiles": [
-          {
-              "id": 702,
-              "pin": 1,
-              "past_impressions": {"total": 5, "daily": 1},
-          },
-          {},
-          {
-              "id": 498,
-          }
-      ],
-      "block": 0
-  }
-
-Tiles Ping Object
------------------
-
-Each tile of the new tab page is reported back as part of the ping with some or
-none of the following optional values:
-
-- ``id`` - id that was provided as part of the downloaded link object (for all
-  types of links: directory, suggested, enhanced); not present if the tile was
-  created from user behavior, e.g., visiting pages
-- ``past_impressions`` - number of impressions (new tab "views") a suggested
-  tile was shown before it was clicked, pinned or blocked. Where the "total"
-  counter is the overall number of impressions accumulated prior to a click action,
-  and "daily" counter is the number impressions occurred on same calendar day of
-  a click. This infomration is submitted once per a suggested tile upon click,
-  pin or block
-- ``pinned`` - 1 if the tile is pinned; not present otherwise
-- ``pos`` - integer position if the tile is not in the natural order, e.g., a
-  pinned tile after an empty slot; not present otherwise
-- ``score`` - integer truncated score based on the tile's frecency; not present
-  if 0
-- ``url`` - empty string if it's an enhanced tile; not present otherwise

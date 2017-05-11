@@ -32,12 +32,14 @@ class ServoRestyleManager;
 class ServoStyleSheet;
 struct Keyframe;
 struct ServoComputedValuesWithParent;
+class ServoElementSnapshotTable;
 } // namespace mozilla
 class nsIContent;
 class nsIDocument;
 class nsStyleContext;
 class nsPresContext;
 struct nsTimingFunction;
+struct RawServoRuleNode;
 struct TreeMatchContext;
 
 namespace mozilla {
@@ -49,6 +51,8 @@ namespace mozilla {
 class ServoStyleSet
 {
   friend class ServoRestyleManager;
+  typedef ServoElementSnapshotTable SnapshotTable;
+
 public:
   class AutoAllowStaleStyles
   {
@@ -192,6 +196,10 @@ public:
   already_AddRefed<nsStyleContext>
   ResolveNonInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag);
 
+  // Get the rule node for a (pseudo-)element, resolving it lazily if needed.
+  already_AddRefed<RawServoRuleNode>
+  ResolveRuleNode(dom::Element *aElement, nsIAtom *aPseudoTag);
+
   // manage the set of style sheets in the style set
   nsresult AppendStyleSheet(SheetType aType, ServoStyleSheet* aSheet);
   nsresult PrependStyleSheet(SheetType aType, ServoStyleSheet* aSheet);
@@ -230,9 +238,12 @@ public:
 
   /**
    * Performs a Servo traversal to compute style for all dirty nodes in the
-   * document.  This will traverse all of the document's style roots (that
-   * is, its document element, and the roots of the document-level native
-   * anonymous content).  Returns true if a post-traversal is required.
+   * document.
+   *
+   * This will traverse all of the document's style roots (that is, its document
+   * element, and the roots of the document-level native anonymous content).
+   *
+   * Returns true if a post-traversal is required.
    */
   bool StyleDocument();
 
@@ -366,24 +377,34 @@ private:
                                               LazyComputeBehavior aMayCompute);
 
   /**
+   * Gets the pending snapshots to handle from the restyle manager.
+   */
+  const SnapshotTable& Snapshots();
+
+  /**
    * Resolve all ServoDeclarationBlocks attached to mapped
    * presentation attributes cached on the document.
+   *
    * Call this before jumping into Servo's style system.
    */
   void ResolveMappedAttrDeclarationBlocks();
 
   /**
    * Perform all lazy operations required before traversing
-   * a subtree.  Returns whether a post-traversal is required.
+   * a subtree.
+   *
+   * Returns whether a post-traversal is required.
    */
   bool PrepareAndTraverseSubtree(RawGeckoElementBorrowed aRoot,
                                  TraversalRootBehavior aRootBehavior,
                                  TraversalRestyleBehavior aRestyleBehavior);
 
   /**
-   * Clear our cached mNonInheritingStyleContexts.  We do this when we want to
-   * make sure those style contexts won't live too long (e.g. when rebuilding
-   * all style data or when shutting down the style set).
+   * Clear our cached mNonInheritingStyleContexts.
+   *
+   * We do this when we want to make sure those style contexts won't live too
+   * long (e.g. when rebuilding all style data or when shutting down the style
+   * set).
    */
   void ClearNonInheritingStyleContexts();
 
@@ -396,6 +417,23 @@ private:
   void PreTraverse(dom::Element* aRoot = nullptr);
   // Subset of the pre-traverse steps that involve syncing up data
   void PreTraverseSync();
+
+  /**
+   * Rebuild the stylist.  This should only be called if mStylistMayNeedRebuild
+   * is true.
+   */
+  void RebuildStylist();
+
+  /**
+   * Helper for correctly calling RebuildStylist without paying the cost of an
+   * extra function call in the common no-rebuild-needed case.
+   */
+  void MaybeRebuildStylist()
+  {
+    if (mStylistMayNeedRebuild) {
+      RebuildStylist();
+    }
+  }
 
   already_AddRefed<ServoComputedValues> ResolveStyleLazily(dom::Element* aElement,
                                                            nsIAtom* aPseudoTag);
@@ -434,10 +472,10 @@ private:
   UniquePtr<RawServoStyleSet> mRawSet;
   EnumeratedArray<SheetType, SheetType::Count,
                   nsTArray<Entry>> mEntries;
-  int32_t mBatching;
   uint32_t mUniqueIDCounter;
   bool mAllowResolveStaleStyles;
   bool mAuthorStyleDisabled;
+  bool mStylistMayNeedRebuild;
 
   // Stores pointers to our cached style contexts for non-inheriting anonymous
   // boxes.

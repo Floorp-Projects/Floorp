@@ -69,9 +69,8 @@ DEFAULT_NO_CONNECTIONS_PREFS = {
     'app.update.enabled' : False,
     'app.update.staging.enabled': False,
 
-    # Disable about:newtab content fetch and ping
+    # Disable about:newtab content fetch
     'browser.newtabpage.directory.source': 'data:application/json,{"jetpack":1}',
-    'browser.newtabpage.directory.ping': '',
 
     # Point update checks to a nonexistent local URL for fast failures.
     'extensions.update.url' : 'http://localhost/extensions-dummy/updateURL',

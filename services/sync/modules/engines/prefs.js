@@ -259,6 +259,9 @@ PrefTracker.prototype = {
         this.stopTracking();
         break;
       case "nsPref:changed":
+        if (this.ignoreAll) {
+          break;
+        }
         // Trigger a sync for MULTI-DEVICE for a change that determines
         // which prefs are synced or a regular pref change.
         if (data.indexOf(PREF_SYNC_PREFS_PREFIX) == 0 ||

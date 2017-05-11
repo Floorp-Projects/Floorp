@@ -630,6 +630,7 @@ public:
            mInFlush;
   }
 
+  inline void EnsureStyleFlush();
   inline void SetNeedStyleFlush();
   inline void SetNeedLayoutFlush();
   inline void SetNeedThrottledAnimationFlush();

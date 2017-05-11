@@ -116,9 +116,9 @@
   background: #74BF43 url(chrome://browser/skin/update-badge.svg) no-repeat center;
   border-radius: 50%;
   box-shadow: none;
-  border: 1px solid -moz-dialog;
+  border: 2px solid -moz-dialog;
   /* "!important" is necessary to override the rule in toolbarbutton.css */
-  margin: -9px 0 0 !important;
+  margin: -8px 0 0 !important;
   margin-inline-end: -6px !important;
   min-width: 16px;
   min-height: 16px;
@@ -322,6 +322,26 @@ panelview:not([mainview]) .toolbarbutton-text,
 .cui-widget-panel > .panel-arrowcontainer > .panel-arrowcontent {
   padding: 4px 0;
 }
+
+/* START photonpanelview adjustments */
+
+#appMenu-popup > .panel-arrowcontainer > .panel-arrowcontent {
+  padding: 0;
+  margin: 0;
+  border-radius: 0;
+}
+
+photonpanelmultiview panelview {
+  background: var(--arrowpanel-background);
+}
+
+photonpanelmultiview .panel-subview-body {
+  /*XXXmikedeboer this flex is unnecessary, so I unset it for our case. It might
+                  break other panels, though, so I refrain from removing it above. */
+  -moz-box-flex: unset;
+}
+
+/* END photonpanelview adjustments */
 
 .cui-widget-panel.cui-widget-panelWithFooter > .panel-arrowcontainer > .panel-arrowcontent {
   padding-bottom: 0;
@@ -1066,7 +1086,7 @@ panelview .toolbarbutton-1,
   margin: 0;
 }
 
-.subviewbutton.panel-subview-footer > .toolbarbutton-text {
+panelview:not([mainView]) .subviewbutton.panel-subview-footer > .toolbarbutton-text {
   text-align: center;
   padding: 0;
 }
@@ -1092,7 +1112,19 @@ panelview .toolbarbutton-1,
   color: GrayText;
 }
 
-.PanelUI-subView.cui-widget-panelview .subviewbutton[shortcut]::after {
+.PanelUI-subView .subviewbutton-nav::after {
+  -moz-context-properties: fill;
+  content: url(chrome://browser/skin/menu-icons/back-small.svg);
+  fill: GrayText;
+  float: right;
+}
+
+.PanelUI-subView .subviewbutton-nav:-moz-locale-dir(ltr)::after {
+  transform: scaleX(-1);
+}
+
+.PanelUI-subView.cui-widget-panelview .subviewbutton[shortcut]::after,
+.PanelUI-subView .subviewbutton-nav::after {
   margin-inline-start: 10px;
 }
 
@@ -1106,6 +1138,30 @@ panelview .toolbarbutton-1,
   margin-left: 4px;
   margin-right: 4px;
 }
+
+/* START photon adjustments */
+
+photonpanelmultiview .cui-widget-panelview .subviewbutton:not(.panel-subview-footer) {
+  border-radius: 0;
+  border-width: 0;
+  margin-left: 0;
+  margin-right: 0;
+  padding: 4px 12px;
+}
+
+photonpanelmultiview .subviewbutton-iconic:not(.subviewbutton-back) > .toolbarbutton-text {
+  padding-inline-start: 8px; /* See '.subviewbutton-iconic > .toolbarbutton-text' rule above. */
+}
+
+photonpanelmultiview .subviewbutton:not(.subviewbutton-iconic) > .toolbarbutton-text {
+  padding-inline-start: 24px; /* This is 16px for the icon + 8px for the padding as defined above. */
+}
+
+photonpanelmultiview .cui-widget-panelview .panel-subview-footer {
+  font-size: 1.2rem;
+}
+
+/* END photon adjustments */
 
 panelview .toolbarbutton-1,
 .widget-overflow-list > .toolbarbutton-1:not(:first-child),
@@ -1788,8 +1844,58 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
   #PanelUI-panic-actionlist-newwindow {
     background-image: -moz-image-rect(url(chrome://browser/skin/panic-panel/icons@2x.png), 0, 128, 32, 96);
   }
+
+  #PanelUI-menu-button[badge-status="update-available"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
+  #PanelUI-menu-button[badge-status="update-manual"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
+  #PanelUI-menu-button[badge-status="update-restart"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
+    border: 1px solid -moz-dialog;
+    /* "!important" is necessary to override the rule in toolbarbutton.css */
+    margin: -9px 0 0 !important;
+  }
 }
 
 .subviewbutton-iconic > .toolbarbutton-text {
   padding-inline-start: 5px;
 }
+
+/* START photon adjustments */
+
+.panel-header {
+  align-items: center;
+  display: flex;
+  flex: 1 auto;
+  height: 40px; /* fixed item height to prevent flex sizing; height + 2*4px padding */
+  padding: 4px;
+}
+
+.panel-header > label {
+  flex: auto;
+  font-size: 13px;
+  font-weight: 500;
+  margin: 0;
+  /* Add the size of the back button to center properly. */
+  margin-inline-end: 32px;
+  text-align: center;
+}
+
+photonpanelmultiview .cui-widget-panelview .panel-header > .subviewbutton-back {
+  -moz-context-properties: fill;
+  fill: var(--arrowpanel-color);
+  list-style-image: url(chrome://browser/skin/menu-icons/back.svg);
+  padding: 8px;
+}
+
+.panel-header > .subviewbutton-back:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
+}
+
+.panel-header > .subviewbutton-back > .toolbarbutton-text {
+  display: none;
+}
+
+photonpanelmultiview .PanelUI-subView toolbarseparator {
+  margin-inline-start: 0;
+  margin-inline-end: 0;
+}
+
+/* END photon adjustments */
