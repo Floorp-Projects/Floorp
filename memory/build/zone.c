@@ -336,7 +336,7 @@ static malloc_zone_t *get_default_zone()
 }
 
 
-#ifdef MOZ_REPLACE_MALLOC
+#if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_JEMALLOC4)
 __attribute__((constructor))
 #endif
 void
