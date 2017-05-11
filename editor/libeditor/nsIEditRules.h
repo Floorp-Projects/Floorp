@@ -59,7 +59,7 @@ public:
                           bool* aHandled) = 0;
   NS_IMETHOD DidDoAction(mozilla::dom::Selection* aSelection,
                          mozilla::RulesInfo* aInfo, nsresult aResult) = 0;
-  NS_IMETHOD DocumentIsEmpty(bool* aDocumentIsEmpty) = 0;
+  NS_IMETHOD_(bool) DocumentIsEmpty() = 0;
   NS_IMETHOD DocumentModified() = 0;
 };
 
