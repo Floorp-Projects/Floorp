@@ -17,6 +17,7 @@
 #include "Http2HuffmanIncoming.h"
 #include "Http2HuffmanOutgoing.h"
 #include "mozilla/StaticPtr.h"
+#include "nsCharSeparatedTokenizer.h"
 #include "nsHttpHandler.h"
 
 namespace mozilla {
@@ -452,6 +453,12 @@ Http2Decompressor::DecodeHeaderBlock(const uint8_t *data, uint32_t datalen,
       // with the server.
       softfail_rv = rv;
       rv = NS_OK;
+    } else if (rv == NS_ERROR_NET_RESET) {
+      // This happens when we detect connection-based auth being requested in
+      // the response headers. We'll paper over it for now, and the session will
+      // handle this as if it received RST_STREAM with HTTP_1_1_REQUIRED.
+      softfail_rv = rv;
+      rv = NS_OK;
     }
   }
 
@@ -516,6 +523,23 @@ Http2Decompressor::DecodeInteger(uint32_t prefixLen, uint32_t &accum)
     factor = factor * 128;
   }
   return NS_OK;
+}
+
+static bool
+HasConnectionBasedAuth(const nsACString& headerValue)
+{
+  nsCCharSeparatedTokenizer t(headerValue, '\n');
+  while (t.hasMoreTokens()) {
+    const nsDependentCSubstring& authMethod = t.nextToken();
+    if (authMethod.LowerCaseEqualsLiteral("ntlm")) {
+      return true;
+    }
+    if (authMethod.LowerCaseEqualsLiteral("negotiate")) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 nsresult
@@ -613,6 +637,20 @@ Http2Decompressor::OutputHeader(const nsACString &name, const nsACString &value)
   mOutput->AppendLiteral(": ");
   mOutput->Append(value);
   mOutput->AppendLiteral("\r\n");
+
+  // Need to check if the server is going to try to speak connection-based auth
+  // with us. If so, we need to kill this via h2, and dial back with http/1.1.
+  // Technically speaking, the server should've just reset or goaway'd us with
+  // HTTP_1_1_REQUIRED, but there are some busted servers out there, so we need
+  // to check on our own to work around them.
+  if (name.EqualsLiteral("www-authenticate") ||
+      name.EqualsLiteral("proxy-authenticate")) {
+    if (HasConnectionBasedAuth(value)) {
+      LOG3(("Http2Decompressor %p connection-based auth found in %s", this,
+            name.BeginReading()));
+      return NS_ERROR_NET_RESET;
+    }
+  }
   return NS_OK;
 }
 
@@ -957,7 +995,9 @@ Http2Decompressor::DoLiteralWithIncremental()
   if (NS_SUCCEEDED(rv)) {
     rv = OutputHeader(name, value);
   }
-  if (NS_FAILED(rv)) {
+  // Let NET_RESET continue on so that we don't get out of sync, as it is just
+  // used to kill the stream, not the session.
+  if (NS_FAILED(rv) && rv != NS_ERROR_NET_RESET) {
     return rv;
   }
 
@@ -968,7 +1008,7 @@ Http2Decompressor::DoLiteralWithIncremental()
          room, name.get(), value.get()));
     LOG(("Decompressor state after ClearHeaderTable"));
     DumpState();
-    return NS_OK;
+    return rv;
   }
 
   MakeRoom(room, "decompressor");
@@ -989,7 +1029,7 @@ Http2Decompressor::DoLiteralWithIncremental()
   LOG(("HTTP decompressor literal with index 0 %s %s\n",
        name.get(), value.get()));
 
-  return NS_OK;
+  return rv;
 }
 
 nsresult
