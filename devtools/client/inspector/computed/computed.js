@@ -330,7 +330,8 @@ CssComputedView.prototype = {
         classes.contains("bestmatch") ||
         classes.contains("parentmatch")) {
       let selectorText = "";
-      for (let child of node.childNodes) {
+
+      for (let child of node.childNodes[0].childNodes) {
         if (child.nodeType === node.TEXT_NODE) {
           selectorText += child.textContent;
         }
@@ -368,7 +369,7 @@ CssComputedView.prototype = {
                          classes.contains("property-value") ||
                          isHref)) {
       value = {
-        property: parent.querySelector(".property-name").textContent,
+        property: parent.querySelector(".property-name").firstChild.textContent,
         value: parent.querySelector(".property-value").textContent
       };
     }
@@ -376,7 +377,7 @@ CssComputedView.prototype = {
                             isHref)) {
       let view = propertyContent.previousSibling;
       value = {
-        property: view.querySelector(".property-name").textContent,
+        property: view.querySelector(".property-name").firstChild.textContent,
         value: node.textContent
       };
     }
@@ -1150,7 +1151,7 @@ PropertyView.prototype = {
         title: selector.statusText
       });
 
-      let keyDiv = createChild(status, "div", {
+      createChild(status, "div", {
         class: "fix-get-selection",
         textContent: selector.sourceText
       });
