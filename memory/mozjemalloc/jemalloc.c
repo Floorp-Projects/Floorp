@@ -150,12 +150,6 @@
 #   define MOZ_MALLOC_OPTIONS ""
 #endif
 
-/*
- * MALLOC_STATS enables statistics calculation, and is required for
- * jemalloc_stats().
- */
-#define MALLOC_STATS
-
 /* Memory filling (junk/poison/zero). */
 #define MALLOC_FILL
 
@@ -516,8 +510,6 @@ static malloc_mutex_t init_lock = PTHREAD_MUTEX_INITIALIZER;
  * Statistics data structures.
  */
 
-#ifdef MALLOC_STATS
-
 typedef struct malloc_bin_stats_s malloc_bin_stats_t;
 struct malloc_bin_stats_s {
 	/*
@@ -577,8 +569,6 @@ struct arena_stats_s {
 	uint64_t	nmalloc_large;
 	uint64_t	ndalloc_large;
 };
-
-#endif /* #ifdef MALLOC_STATS */
 
 /******************************************************************************/
 /*
@@ -708,11 +698,9 @@ struct arena_chunk_map_s {
  * When it's finally freed with jemalloc_purge_freed_pages, the page is marked
  * as CHUNK_MAP_DECOMMITTED.
  */
-#if defined(MALLOC_DECOMMIT) || defined(MALLOC_STATS) || defined(MALLOC_DOUBLE_PURGE)
 #define	CHUNK_MAP_MADVISED	((size_t)0x40U)
 #define	CHUNK_MAP_DECOMMITTED	((size_t)0x20U)
 #define	CHUNK_MAP_MADVISED_OR_DECOMMITTED (CHUNK_MAP_MADVISED | CHUNK_MAP_DECOMMITTED)
-#endif
 #define	CHUNK_MAP_KEY		((size_t)0x10U)
 #define	CHUNK_MAP_DIRTY		((size_t)0x08U)
 #define	CHUNK_MAP_ZEROED	((size_t)0x04U)
@@ -800,10 +788,8 @@ struct arena_bin_s {
 	/* Offset of first region in a run for this bin's size class. */
 	uint32_t	reg0_offset;
 
-#ifdef MALLOC_STATS
 	/* Bin statistics. */
 	malloc_bin_stats_t stats;
-#endif
 };
 
 struct arena_s {
@@ -815,9 +801,7 @@ struct arena_s {
 	/* All operations on this arena require that lock be locked. */
 	malloc_spinlock_t	lock;
 
-#ifdef MALLOC_STATS
 	arena_stats_t		stats;
-#endif
 
 	/* Tree of dirty-page-containing chunks this arena manages. */
 	arena_chunk_tree_t	chunks_dirty;
@@ -1042,13 +1026,11 @@ static malloc_mutex_t	huge_mtx;
 /* Tree of chunks that are stand-alone huge allocations. */
 static extent_tree_t	huge;
 
-#ifdef MALLOC_STATS
 /* Huge allocation statistics. */
 static uint64_t		huge_nmalloc;
 static uint64_t		huge_ndalloc;
 static size_t		huge_allocated;
 static size_t		huge_mapped;
-#endif
 
 /****************************/
 /*
@@ -1062,16 +1044,12 @@ static size_t		huge_mapped;
  */
 static void		*base_pages;
 static void		*base_next_addr;
-#if defined(MALLOC_DECOMMIT) || defined(MALLOC_STATS)
 static void		*base_next_decommitted;
-#endif
 static void		*base_past_addr; /* Addr immediately past base_pages. */
 static extent_node_t	*base_nodes;
 static malloc_mutex_t	base_mtx;
-#ifdef MALLOC_STATS
 static size_t		base_mapped;
 static size_t		base_committed;
-#endif
 
 /********/
 /*
@@ -1147,21 +1125,17 @@ static bool	malloc_mutex_init(malloc_mutex_t *mutex);
 static bool	malloc_spin_init(malloc_spinlock_t *lock);
 static void	wrtmessage(const char *p1, const char *p2, const char *p3,
 		const char *p4);
-#ifdef MALLOC_STATS
 #ifdef MOZ_MEMORY_DARWIN
 /* Avoid namespace collision with OS X's malloc APIs. */
 #define malloc_printf moz_malloc_printf
 #endif
 static void	malloc_printf(const char *format, ...);
-#endif
 static bool	base_pages_alloc(size_t minsize);
 static void	*base_alloc(size_t size);
 static void	*base_calloc(size_t number, size_t size);
 static extent_node_t *base_node_alloc(void);
 static void	base_node_dealloc(extent_node_t *node);
-#ifdef MALLOC_STATS
 static void	stats_print(arena_t *arena);
-#endif
 static void	*pages_map(void *addr, size_t size);
 static void	pages_unmap(void *addr, size_t size);
 static void	*chunk_alloc_mmap(size_t size, size_t alignment);
@@ -1521,7 +1495,6 @@ _getprogname(void)
 	return ("<jemalloc>");
 }
 
-#ifdef MALLOC_STATS
 /*
  * Print to stderr in such a way as to (hopefully) avoid memory allocation.
  */
@@ -1536,7 +1509,6 @@ malloc_printf(const char *format, ...)
 	va_end(ap);
 	_malloc_message(buf, "", "", "");
 }
-#endif
 
 /******************************************************************************/
 
@@ -1600,9 +1572,7 @@ static bool
 base_pages_alloc(size_t minsize)
 {
 	size_t csize;
-#if defined(MALLOC_DECOMMIT) || defined(MALLOC_STATS)
 	size_t pminsize;
-#endif
 
 	assert(minsize != 0);
 	csize = CHUNK_CEILING(minsize);
@@ -1611,7 +1581,6 @@ base_pages_alloc(size_t minsize)
 		return (true);
 	base_next_addr = base_pages;
 	base_past_addr = (void *)((uintptr_t)base_pages + csize);
-#if defined(MALLOC_DECOMMIT) || defined(MALLOC_STATS)
 	/*
 	 * Leave enough pages for minsize committed, since otherwise they would
 	 * have to be immediately recommitted.
@@ -1622,11 +1591,8 @@ base_pages_alloc(size_t minsize)
 	if (pminsize < csize)
 		pages_decommit(base_next_decommitted, csize - pminsize);
 #  endif
-#  ifdef MALLOC_STATS
 	base_mapped += csize;
 	base_committed += pminsize;
-#  endif
-#endif
 
 	return (false);
 }
@@ -1651,7 +1617,6 @@ base_alloc(size_t size)
 	/* Allocate. */
 	ret = base_next_addr;
 	base_next_addr = (void *)((uintptr_t)base_next_addr + csize);
-#if defined(MALLOC_DECOMMIT) || defined(MALLOC_STATS)
 	/* Make sure enough pages are committed for the new allocation. */
 	if ((uintptr_t)base_next_addr > (uintptr_t)base_next_decommitted) {
 		void *pbase_next_addr =
@@ -1662,12 +1627,9 @@ base_alloc(size_t size)
 		    (uintptr_t)base_next_decommitted);
 #  endif
 		base_next_decommitted = pbase_next_addr;
-#  ifdef MALLOC_STATS
 		base_committed += (uintptr_t)pbase_next_addr -
 		    (uintptr_t)base_next_decommitted;
-#  endif
 	}
-#endif
 	malloc_mutex_unlock(&base_mtx);
 
 	return (ret);
@@ -1714,7 +1676,6 @@ base_node_dealloc(extent_node_t *node)
 
 /******************************************************************************/
 
-#ifdef MALLOC_STATS
 static void
 stats_print(arena_t *arena)
 {
@@ -1825,7 +1786,6 @@ stats_print(arena_t *arena)
 		}
 	}
 }
-#endif
 
 /*
  * End Utility functions/macros.
@@ -2945,7 +2905,6 @@ arena_run_split(arena_t *arena, arena_run_t *run, size_t size, bool large,
 	}
 
 	for (i = 0; i < need_pages; i++) {
-#if defined(MALLOC_DECOMMIT) || defined(MALLOC_STATS) || defined(MALLOC_DOUBLE_PURGE)
 		/*
 		 * Commit decommitted pages if necessary.  If a decommitted
 		 * page is encountered, commit all needed adjacent decommitted
@@ -2973,22 +2932,16 @@ arena_run_split(arena_t *arena, arena_run_t *run, size_t size, bool large,
 #  ifdef MALLOC_DECOMMIT
 			pages_commit((void *)((uintptr_t)chunk + ((run_ind + i)
 			    << pagesize_2pow)), (j << pagesize_2pow));
-#    ifdef MALLOC_STATS
 			arena->stats.ncommit++;
-#    endif
 #  endif
 
-#  ifdef MALLOC_STATS
 			arena->stats.committed += j;
-#  endif
 
 #  ifndef MALLOC_DECOMMIT
                 }
 #  else
 		} else /* No need to zero since commit zeros. */
 #  endif
-
-#endif
 
 		/* Zero if necessary. */
 		if (zero) {
@@ -3036,9 +2989,7 @@ arena_chunk_init(arena_t *arena, arena_chunk_t *chunk)
 	arena_run_t *run;
 	size_t i;
 
-#ifdef MALLOC_STATS
 	arena->stats.mapped += chunksize;
-#endif
 
 	chunk->arena = arena;
 
@@ -3064,14 +3015,10 @@ arena_chunk_init(arena_t *arena, arena_chunk_t *chunk)
 	 * between dirty pages and committed untouched pages.
 	 */
 	pages_decommit(run, arena_maxclass);
-#  ifdef MALLOC_STATS
 	arena->stats.ndecommit++;
 	arena->stats.decommitted += (chunk_npages - arena_chunk_header_npages);
-#  endif
 #endif
-#ifdef MALLOC_STATS
 	arena->stats.committed += arena_chunk_header_npages;
-#endif
 
 	/* Insert the run into the runs_avail tree. */
 	arena_avail_tree_insert(&arena->runs_avail,
@@ -3091,9 +3038,7 @@ arena_chunk_dealloc(arena_t *arena, arena_chunk_t *chunk)
 			arena_chunk_tree_dirty_remove(
 			    &chunk->arena->chunks_dirty, arena->spare);
 			arena->ndirty -= arena->spare->ndirty;
-#ifdef MALLOC_STATS
 			arena->stats.committed -= arena->spare->ndirty;
-#endif
 		}
 
 #ifdef MALLOC_DOUBLE_PURGE
@@ -3102,10 +3047,8 @@ arena_chunk_dealloc(arena_t *arena, arena_chunk_t *chunk)
 #endif
 
 		chunk_dealloc((void *)arena->spare, chunksize);
-#ifdef MALLOC_STATS
 		arena->stats.mapped -= chunksize;
 		arena->stats.committed -= arena_chunk_header_npages;
-#endif
 	}
 
 	/*
@@ -3194,9 +3137,7 @@ arena_purge(arena_t *arena, bool all)
 #endif
 	RELEASE_ASSERT(all || (arena->ndirty > opt_dirty_max));
 
-#ifdef MALLOC_STATS
 	arena->stats.npurge++;
-#endif
 
 	/*
 	 * Iterate downward through chunks until enough dirty memory has been
@@ -3240,14 +3181,10 @@ arena_purge(arena_t *arena, bool all)
 				pages_decommit((void *)((uintptr_t)
 				    chunk + (i << pagesize_2pow)),
 				    (npages << pagesize_2pow));
-#  ifdef MALLOC_STATS
 				arena->stats.ndecommit++;
 				arena->stats.decommitted += npages;
-#  endif
 #endif
-#ifdef MALLOC_STATS
 				arena->stats.committed -= npages;
-#endif
 
 #ifndef MALLOC_DECOMMIT
 				madvise((void *)((uintptr_t)chunk + (i <<
@@ -3257,10 +3194,8 @@ arena_purge(arena_t *arena, bool all)
 				madvised = true;
 #  endif
 #endif
-#ifdef MALLOC_STATS
 				arena->stats.nmadvise++;
 				arena->stats.purged += npages;
-#endif
 				if (arena->ndirty <= (dirty_max >> 1))
 					break;
 			}
@@ -3445,9 +3380,7 @@ arena_bin_nonfull_run_get(arena_t *arena, arena_bin_t *bin)
 		/* run is guaranteed to have available space. */
 		arena_run_tree_remove(&bin->runs, mapelm);
 		run = (arena_run_t *)(mapelm->bits & ~pagesize_mask);
-#ifdef MALLOC_STATS
 		bin->stats.reruns++;
-#endif
 		return (run);
 	}
 	/* No existing runs have any space available. */
@@ -3484,12 +3417,10 @@ arena_bin_nonfull_run_get(arena_t *arena, arena_bin_t *bin)
 	run->magic = ARENA_RUN_MAGIC;
 #endif
 
-#ifdef MALLOC_STATS
 	bin->stats.nruns++;
 	bin->stats.curruns++;
 	if (bin->stats.curruns > bin->stats.highruns)
 		bin->stats.highruns = bin->stats.curruns;
-#endif
 	return (run);
 }
 
@@ -3617,7 +3548,6 @@ arena_malloc_small(arena_t *arena, size_t size, bool zero)
 		size = pow2_ceil(size);
 		bin = &arena->bins[ffs((int)(size >> (TINY_MIN_2POW +
 		    1)))];
-#if (!defined(NDEBUG) || defined(MALLOC_STATS))
 		/*
 		 * Bin calculation is always correct, but we may need
 		 * to fix size for the purposes of assertions and/or
@@ -3625,7 +3555,6 @@ arena_malloc_small(arena_t *arena, size_t size, bool zero)
 		 */
 		if (size < (1U << TINY_MIN_2POW))
 			size = (1U << TINY_MIN_2POW);
-#endif
 	} else if (size <= small_max) {
 		/* Quantum-spaced. */
 		size = QUANTUM_CEILING(size);
@@ -3650,11 +3579,9 @@ arena_malloc_small(arena_t *arena, size_t size, bool zero)
 		return (NULL);
 	}
 
-#ifdef MALLOC_STATS
 	bin->stats.nrequests++;
 	arena->stats.nmalloc_small++;
 	arena->stats.allocated_small += size;
-#endif
 	malloc_spin_unlock(&arena->lock);
 
 	if (zero == false) {
@@ -3683,10 +3610,8 @@ arena_malloc_large(arena_t *arena, size_t size, bool zero)
 		malloc_spin_unlock(&arena->lock);
 		return (NULL);
 	}
-#ifdef MALLOC_STATS
 	arena->stats.nmalloc_large++;
 	arena->stats.allocated_large += size;
-#endif
 	malloc_spin_unlock(&arena->lock);
 
 	if (zero == false) {
@@ -3782,10 +3707,8 @@ arena_palloc(arena_t *arena, size_t alignment, size_t size, size_t alloc_size)
 		}
 	}
 
-#ifdef MALLOC_STATS
 	arena->stats.nmalloc_large++;
 	arena->stats.allocated_large += size;
-#endif
 	malloc_spin_unlock(&arena->lock);
 
 #ifdef MALLOC_FILL
@@ -4037,9 +3960,7 @@ arena_dalloc_small(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 		run->magic = 0;
 #endif
 		arena_run_dalloc(arena, run, true);
-#ifdef MALLOC_STATS
 		bin->stats.curruns--;
-#endif
 	} else if (run->nfree == 1 && run != bin->runcur) {
 		/*
 		 * Make sure that bin->runcur always refers to the lowest
@@ -4076,38 +3997,23 @@ arena_dalloc_small(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 			arena_run_tree_insert(&bin->runs, run_mapelm);
 		}
 	}
-#ifdef MALLOC_STATS
 	arena->stats.allocated_small -= size;
 	arena->stats.ndalloc_small++;
-#endif
 }
 
 static void
 arena_dalloc_large(arena_t *arena, arena_chunk_t *chunk, void *ptr)
 {
-#ifdef MALLOC_FILL
-#ifndef MALLOC_STATS
-	if (opt_poison)
-#endif
-#endif
-	{
-		size_t pageind = ((uintptr_t)ptr - (uintptr_t)chunk) >>
-		    pagesize_2pow;
-		size_t size = chunk->map[pageind].bits & ~pagesize_mask;
+	size_t pageind = ((uintptr_t)ptr - (uintptr_t)chunk) >>
+	    pagesize_2pow;
+	size_t size = chunk->map[pageind].bits & ~pagesize_mask;
 
 #ifdef MALLOC_FILL
-#ifdef MALLOC_STATS
-		if (opt_poison)
+	if (opt_poison)
+		memset(ptr, 0xe5, size);
 #endif
-			memset(ptr, 0xe5, size);
-#endif
-#ifdef MALLOC_STATS
-		arena->stats.allocated_large -= size;
-#endif
-	}
-#ifdef MALLOC_STATS
+	arena->stats.allocated_large -= size;
 	arena->stats.ndalloc_large++;
-#endif
 
 	arena_run_dalloc(arena, (arena_run_t *)ptr, true);
 }
@@ -4171,9 +4077,7 @@ arena_ralloc_large_shrink(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 	malloc_spin_lock(&arena->lock);
 	arena_run_trim_tail(arena, chunk, (arena_run_t *)ptr, oldsize, size,
 	    true);
-#ifdef MALLOC_STATS
 	arena->stats.allocated_large -= oldsize - size;
-#endif
 	malloc_spin_unlock(&arena->lock);
 }
 
@@ -4206,9 +4110,7 @@ arena_ralloc_large_grow(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 		chunk->map[pageind+npages].bits = CHUNK_MAP_LARGE |
 		    CHUNK_MAP_ALLOCATED;
 
-#ifdef MALLOC_STATS
 		arena->stats.allocated_large += size - oldsize;
-#endif
 		malloc_spin_unlock(&arena->lock);
 		return (false);
 	}
@@ -4351,9 +4253,7 @@ arena_new(arena_t *arena)
 	if (malloc_spin_init(&arena->lock))
 		return (true);
 
-#ifdef MALLOC_STATS
 	memset(&arena->stats, 0, sizeof(arena_stats_t));
-#endif
 
 	/* Initialize chunks. */
 	arena_chunk_tree_dirty_new(&arena->chunks_dirty);
@@ -4379,9 +4279,7 @@ arena_new(arena_t *arena)
 
 		prev_run_size = arena_bin_run_size_calc(bin, prev_run_size);
 
-#ifdef MALLOC_STATS
 		memset(&bin->stats, 0, sizeof(malloc_bin_stats_t));
-#endif
 	}
 
 	/* Quantum-spaced bins. */
@@ -4395,9 +4293,7 @@ arena_new(arena_t *arena)
 		pow2_size = pow2_ceil(quantum * (i - ntbins + 1));
 		prev_run_size = arena_bin_run_size_calc(bin, prev_run_size);
 
-#ifdef MALLOC_STATS
 		memset(&bin->stats, 0, sizeof(malloc_bin_stats_t));
-#endif
 	}
 
 	/* (2^n)-spaced sub-page bins. */
@@ -4410,9 +4306,7 @@ arena_new(arena_t *arena)
 
 		prev_run_size = arena_bin_run_size_calc(bin, prev_run_size);
 
-#ifdef MALLOC_STATS
 		memset(&bin->stats, 0, sizeof(malloc_bin_stats_t));
-#endif
 	}
 
 #if defined(MALLOC_DEBUG) || defined(MOZ_JEMALLOC_HARD_ASSERTS)
@@ -4538,7 +4432,6 @@ huge_palloc(size_t size, size_t alignment, bool zero)
 
 	malloc_mutex_lock(&huge_mtx);
 	extent_tree_ad_insert(&huge, node);
-#ifdef MALLOC_STATS
 	huge_nmalloc++;
 
         /* Although we allocated space for csize bytes, we indicate that we've
@@ -4561,7 +4454,6 @@ huge_palloc(size_t size, size_t alignment, bool zero)
          * reasonably claim we never "allocated" them in the first place. */
 	huge_allocated += psize;
 	huge_mapped += csize;
-#endif
 	malloc_mutex_unlock(&huge_mtx);
 
 #ifdef MALLOC_DECOMMIT
@@ -4619,11 +4511,9 @@ huge_ralloc(void *ptr, size_t size, size_t oldsize)
 			node = extent_tree_ad_search(&huge, &key);
 			assert(node != NULL);
 			assert(node->size == oldsize);
-#  ifdef MALLOC_STATS
 			huge_allocated -= oldsize - psize;
 			/* No need to change huge_mapped, because we didn't
 			 * (un)map anything. */
-#  endif
 			node->size = psize;
 			malloc_mutex_unlock(&huge_mtx);
 		} else if (psize > oldsize) {
@@ -4646,11 +4536,9 @@ huge_ralloc(void *ptr, size_t size, size_t oldsize)
                         node = extent_tree_ad_search(&huge, &key);
                         assert(node != NULL);
                         assert(node->size == oldsize);
-#  ifdef MALLOC_STATS
                         huge_allocated += psize - oldsize;
 			/* No need to change huge_mapped, because we didn't
 			 * (un)map anything. */
-#  endif
                         node->size = psize;
                         malloc_mutex_unlock(&huge_mtx);
                 }
@@ -4698,11 +4586,9 @@ huge_dalloc(void *ptr)
 	assert(node->addr == ptr);
 	extent_tree_ad_remove(&huge, node);
 
-#ifdef MALLOC_STATS
 	huge_ndalloc++;
 	huge_allocated -= node->size;
 	huge_mapped -= CHUNK_CEILING(node->size);
-#endif
 
 	malloc_mutex_unlock(&huge_mtx);
 
@@ -4761,7 +4647,6 @@ malloc_print_stats(void)
 		_malloc_message(" (2^", umax2s(opt_chunk_2pow, 10, s), ")\n",
 		    "");
 
-#ifdef MALLOC_STATS
 		{
 			size_t allocated, mapped = 0;
 			unsigned i;
@@ -4826,7 +4711,6 @@ malloc_print_stats(void)
 			}
 			malloc_spin_unlock(&arenas_lock);
 		}
-#endif /* #ifdef MALLOC_STATS */
 		_malloc_message("--- End malloc statistics ---\n", "", "", "");
 	}
 }
@@ -5184,18 +5068,14 @@ MALLOC_OUT:
 	/* Initialize huge allocation data. */
 	malloc_mutex_init(&huge_mtx);
 	extent_tree_ad_new(&huge);
-#ifdef MALLOC_STATS
 	huge_nmalloc = 0;
 	huge_ndalloc = 0;
 	huge_allocated = 0;
 	huge_mapped = 0;
-#endif
 
 	/* Initialize base allocation data structures. */
-#ifdef MALLOC_STATS
 	base_mapped = 0;
 	base_committed = 0;
-#endif
 	base_nodes = NULL;
 	malloc_mutex_init(&base_mtx);
 
