@@ -927,10 +927,10 @@ fuzzy-if(Android,13,9) == 407111-1.html 407111-1-ref.html  # Bug 1128229
 == 408656-1a.html 408656-1-ref.html
 == 408656-1b.html 408656-1-ref.html
 == 408656-1c.html 408656-1-ref.html
-fails-if(stylo) == 408782-1a.html 408782-1-ref.html
-fails-if(stylo) == 408782-1b.html 408782-1-ref.html
+== 408782-1a.html 408782-1-ref.html
+== 408782-1b.html 408782-1-ref.html
 == 408782-2a.html 408782-2-ref.html
-fails-if(stylo) == 408782-2b.html 408782-2-ref.html
+== 408782-2b.html 408782-2-ref.html
 == 409084-1a.html 409084-1-ref.html
 == 409084-1b.html 409084-1-ref.html
 == 409089-1.html 409089-1-ref.html
@@ -1788,8 +1788,8 @@ fails-if(stylo) == 883987-1e.html 883987-1-ref.html
 == 883987-1f.html 883987-1-ref.html
 == 890495-1.html 890495-1-ref.html
 == 894931-1.html 894931-1-ref.html
-fails-if(stylo) == 897491-1.html 897491-1-ref.html
-fails-if(stylo) == 897491-2.html 897491-2-ref.html
+== 897491-1.html 897491-1-ref.html
+== 897491-2.html 897491-2-ref.html
 fuzzy(2,10000) fuzzy-if(Android,5,10000) == 902330-1.html 902330-1-ref.html
 fuzzy-if(Android,8,400) fails-if(webrender) == 906199-1.html 906199-1-ref.html
 == 921716-1.html 921716-1-ref.html

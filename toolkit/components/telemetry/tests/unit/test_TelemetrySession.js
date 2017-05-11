@@ -142,7 +142,7 @@ function checkPingFormat(aPing, aType, aHasClientId, aHasEnvironment) {
 
   // Check that the ping contains all the mandatory fields.
   for (let f of MANDATORY_PING_FIELDS) {
-    Assert.ok(f in aPing, f + "must be available.");
+    Assert.ok(f in aPing, f + " must be available.");
   }
 
   Assert.equal(aPing.type, aType, "The ping must have the correct type.");
