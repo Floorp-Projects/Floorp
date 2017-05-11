@@ -3373,6 +3373,26 @@ protected:
   mozilla::gfx::Color mColor;
 };
 
+class nsDisplayTableBackgroundColor : public nsDisplayBackgroundColor
+{
+public:
+  nsDisplayTableBackgroundColor(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                                const nsRect& aBackgroundRect,
+                                const nsStyleBackground* aBackgroundStyle,
+                                nscolor aColor,
+                                nsIFrame* aAncestorFrame)
+    : nsDisplayBackgroundColor(aBuilder, aFrame, aBackgroundRect, aBackgroundStyle, aColor)
+    , mTableType(GetTableTypeFromFrame(aAncestorFrame))
+  { }
+
+  virtual uint32_t GetPerFrameKey() override {
+    return (static_cast<uint8_t>(mTableType) << nsDisplayItem::TYPE_BITS) |
+           nsDisplayItem::GetPerFrameKey();
+  }
+protected:
+  TableType mTableType;
+};
+
 class nsDisplayClearBackground : public nsDisplayItem
 {
 public:

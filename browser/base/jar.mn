@@ -119,7 +119,6 @@ browser.jar:
         content/browser/newtab/newTab.xhtml           (content/newtab/newTab.xhtml)
 *       content/browser/newtab/newTab.js              (content/newtab/newTab.js)
         content/browser/newtab/newTab.css             (content/newtab/newTab.css)
-        content/browser/newtab/newTab.inadjacent.json         (content/newtab/newTab.inadjacent.json)
         content/browser/newtab/alternativeDefaultSites.json   (content/newtab/alternativeDefaultSites.json)
 *       content/browser/pageinfo/pageInfo.xul         (content/pageinfo/pageInfo.xul)
         content/browser/pageinfo/pageInfo.js          (content/pageinfo/pageInfo.js)

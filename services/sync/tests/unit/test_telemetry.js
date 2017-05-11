@@ -15,7 +15,6 @@ Cu.import("resource://testing-common/services/sync/fxa_utils.js");
 Cu.import("resource://testing-common/services/sync/rotaryengine.js");
 Cu.import("resource://gre/modules/osfile.jsm", this);
 
-Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://services-sync/util.js");
 
 initTestLogging("Trace");

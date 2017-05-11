@@ -305,6 +305,7 @@ mod bindings {
             .include(add_include("mozilla/ComputedTimingFunction.h"))
             .include(add_include("mozilla/Keyframe.h"))
             .include(add_include("mozilla/ServoElementSnapshot.h"))
+            .include(add_include("mozilla/ServoElementSnapshotTable.h"))
             .include(add_include("mozilla/dom/Element.h"))
             .include(add_include("mozilla/dom/NameSpaceConstants.h"))
             .include(add_include("mozilla/LookAndFeel.h"))
@@ -326,8 +327,10 @@ mod bindings {
             .constified_enum("UpdateAnimationsTasks")
             .parse_callbacks(Box::new(Callbacks));
         let whitelist_vars = [
+            "NS_AUTHOR_SPECIFIED_.*",
             "NS_THEME_.*",
             "NODE_.*",
+            "ELEMENT_.*",
             "NS_FONT_.*",
             "NS_STYLE_.*",
             "NS_MATHML_.*",
@@ -669,6 +672,7 @@ mod bindings {
             "Keyframe",
             "ServoBundledURI",
             "ServoElementSnapshot",
+            "ServoElementSnapshotTable",
             "SheetParsingMode",
             "StyleBasicShape",
             "StyleBasicShapeType",
@@ -779,11 +783,6 @@ mod bindings {
             "RawGeckoServoStyleRuleList",
         ];
         for &ty in structs_types.iter() {
-            // XXX cku: will be removed in Part 2.
-            if ty.starts_with("mozilla::css::ImageValue") {
-                builder = builder
-                    .raw_line("#[allow(unused_imports)]");
-            }
             builder = builder.hide_type(ty)
                 .raw_line(format!("use gecko_bindings::structs::{};", ty));
             // TODO this is hacky, figure out a better way to do it without

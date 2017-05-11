@@ -50,10 +50,10 @@ fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azur
 == continuation-positioned-inline-2.html continuation-positioned-inline-ref.html
 == scrollframe-1.html scrollframe-1-ref.html
 fuzzy-if(gtkWidget,1,1) fuzzy-if(Android,9,185) fuzzy-if(asyncPan&&!layersGPUAccelerated,140,144) == scrollframe-2.html scrollframe-2-ref.html #bug 756530
-fuzzy-if(gtkWidget,1,8) fails-if(stylo) == select-1.html select-1-ref.html
-fuzzy-if(gtkWidget,1,8) fails-if(stylo) == select-1-dynamic.html select-1-ref.html
-fails-if(stylo) == select-2.html select-2-ref.html
-fuzzy-if(gtkWidget,1,19) fuzzy-if(Android,17,726) fuzzy-if(asyncPan&&!layersGPUAccelerated,110,114) fuzzy-if(browserIsRemote&&winWidget,110,114) fails-if(stylo) == select-3.html select-3-ref.html
+fuzzy-if(gtkWidget,1,8) == select-1.html select-1-ref.html
+fuzzy-if(gtkWidget,1,8) == select-1-dynamic.html select-1-ref.html
+== select-2.html select-2-ref.html
+fuzzy-if(gtkWidget,1,19) fuzzy-if(Android,17,726) fuzzy-if(asyncPan&&!layersGPUAccelerated,110,114) fuzzy-if(browserIsRemote&&winWidget,110,114) == select-3.html select-3-ref.html
 == multi-column-1.html multi-column-1-ref.html
 == button-1.html button-1-ref.html
 == button-2.html button-2-ref.html

@@ -5130,13 +5130,6 @@ GetMaxWebProcessCount()
     return std::max(1u, optInPrefValue);
   }
 
-  // If there are add-ons that would make the user's experience poor, don't
-  // use more than one web content process.
-  if (Preferences::GetBool("extensions.e10sMultiBlocksEnabling", false) &&
-      Preferences::GetBool("extensions.e10sMultiBlockedByAddons", false)) {
-    return 1;
-  }
-
   if (Preferences::HasUserValue("dom.ipc.processCount.web")) {
     // The user didn't opt in or out so read the .web version of the pref.
     return std::max(1, Preferences::GetInt("dom.ipc.processCount.web", 1));
