@@ -207,7 +207,9 @@ function test() {
       runNextTest();
     }
 
-    gBrowser.loadTabs(uris);
+    gBrowser.loadTabs(uris, {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
   }
 
   // This simulates setting a userTypedValue and ensures that just typing in the

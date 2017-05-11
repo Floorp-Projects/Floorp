@@ -1360,6 +1360,9 @@ class Activation
         return hideScriptedCallerCount_ > 0;
     }
 
+    static size_t offsetOfPrev() {
+        return offsetof(Activation, prev_);
+    }
     static size_t offsetOfPrevProfiling() {
         return offsetof(Activation, prevProfiling_);
     }
@@ -1721,27 +1724,18 @@ class InterpreterFrameIterator
     }
 };
 
-// A WasmActivation is part of two activation linked lists:
-//  - the normal Activation list used by FrameIter
-//  - a list of only WasmActivations that is signal-safe since it is accessed
-//    from the profiler at arbitrary points
-//
 // An eventual goal is to remove WasmActivation and to run asm code in a
 // JitActivation interleaved with Ion/Baseline jit code. This would allow
 // efficient calls back and forth but requires that we can walk the stack for
 // all kinds of jit code.
 class WasmActivation : public Activation
 {
-    WasmActivation* prevWasm_;
-    void* entrySP_;
-    uint8_t* exitFP_;
+    wasm::Frame* exitFP_;
     wasm::ExitReason exitReason_;
 
   public:
     explicit WasmActivation(JSContext* cx);
     ~WasmActivation();
-
-    WasmActivation* prevWasm() const { return prevWasm_; }
 
     bool isProfiling() const {
         return true;
@@ -1749,13 +1743,12 @@ class WasmActivation : public Activation
 
     // Returns null or the final wasm::Frame* when wasm exited this
     // WasmActivation.
-    uint8_t* exitFP() const { return exitFP_; }
+    wasm::Frame* exitFP() const { return exitFP_; }
 
     // Returns the reason why wasm code called out of wasm code.
     wasm::ExitReason exitReason() const { return exitReason_; }
 
     // Written by JIT code:
-    static unsigned offsetOfEntrySP() { return offsetof(WasmActivation, entrySP_); }
     static unsigned offsetOfExitFP() { return offsetof(WasmActivation, exitFP_); }
     static unsigned offsetOfExitReason() { return offsetof(WasmActivation, exitReason_); }
 
@@ -1768,7 +1761,7 @@ class WasmActivation : public Activation
     void* resumePC() const;
 
     // Used by wasm::FrameIterator during stack unwinding.
-    void unwindExitFP(uint8_t* exitFP);
+    void unwindExitFP(wasm::Frame* exitFP);
 };
 
 // A FrameIter walks over a context's stack of JS script activations,

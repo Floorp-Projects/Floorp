@@ -32,31 +32,14 @@ using mozilla::Swap;
 /*****************************************************************************/
 // FrameIterator implementation
 
-static void*
-ReturnAddressFromFP(void* fp)
-{
-    return reinterpret_cast<Frame*>(fp)->returnAddress;
-}
-
-static uint8_t*
-CallerFPFromFP(void* fp)
-{
-    return reinterpret_cast<Frame*>(fp)->callerFP;
-}
-
-static DebugFrame*
-FrameToDebugFrame(void* fp)
-{
-    return reinterpret_cast<DebugFrame*>((uint8_t*)fp - DebugFrame::offsetOfFrame());
-}
-
 FrameIterator::FrameIterator()
   : activation_(nullptr),
     code_(nullptr),
     callsite_(nullptr),
     codeRange_(nullptr),
     fp_(nullptr),
-    unwind_(Unwind::False)
+    unwind_(Unwind::False),
+    unwoundAddressOfReturnAddress_(nullptr)
 {
     MOZ_ASSERT(done());
 }
@@ -84,7 +67,7 @@ FrameIterator::FrameIterator(WasmActivation* activation, Unwind unwind)
 
     // When asynchronously interrupted, exitFP is set to the interrupted frame
     // itself and so we do not want to skip it. Instead, we can recover the
-    // Code and CodeRange from the WasmActivation, which set these when control
+    // Code and CodeRange from the WasmActivation, which are set when control
     // flow was interrupted. There is no CallSite (b/c the interrupt was async),
     // but this is fine because CallSite is only used for line number for which
     // we can use the beginning of the function from the CodeRange instead.
@@ -133,21 +116,24 @@ FrameIterator::operator++()
 void
 FrameIterator::popFrame()
 {
-    void* returnAddress = ReturnAddressFromFP(fp_);
-
-    fp_ = CallerFPFromFP(fp_);
+    Frame* prevFP = fp_;
+    fp_ = prevFP->callerFP;
 
     if (!fp_) {
         code_ = nullptr;
         codeRange_ = nullptr;
         callsite_ = nullptr;
 
-        if (unwind_ == Unwind::True)
+        if (unwind_ == Unwind::True) {
             activation_->unwindExitFP(nullptr);
+            unwoundAddressOfReturnAddress_ = &prevFP->returnAddress;
+        }
 
         MOZ_ASSERT(done());
         return;
     }
+
+    void* returnAddress = prevFP->returnAddress;
 
     code_ = activation_->compartment()->wasm.lookupCode(returnAddress);
     MOZ_ASSERT(code_);
@@ -209,7 +195,16 @@ Instance*
 FrameIterator::instance() const
 {
     MOZ_ASSERT(!done());
-    return FrameToDebugFrame(fp_)->instance();
+    return fp_->tls->instance;
+}
+
+void**
+FrameIterator::unwoundAddressOfReturnAddress() const
+{
+    MOZ_ASSERT(done());
+    MOZ_ASSERT(unwind_ == Unwind::True);
+    MOZ_ASSERT(unwoundAddressOfReturnAddress_);
+    return unwoundAddressOfReturnAddress_;
 }
 
 bool
@@ -227,7 +222,7 @@ FrameIterator::debugFrame() const
 {
     MOZ_ASSERT(!done());
     MOZ_ASSERT(debugEnabled());
-    return FrameToDebugFrame(fp_);
+    return reinterpret_cast<DebugFrame*>((uint8_t*)fp_ - DebugFrame::offsetOfFrame());
 }
 
 const CallSite*
@@ -306,6 +301,16 @@ PushRetAddr(MacroAssembler& masm, unsigned entry)
 }
 
 static void
+LoadActivation(MacroAssembler& masm, Register dest)
+{
+    // WasmCall pushes a WasmActivation and an inactive JitActivation. The
+    // JitActivation only becomes active when calling into JS from wasm.
+    masm.loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, cx)), dest);
+    masm.loadPtr(Address(dest, JSContext::offsetOfActivation()), dest);
+    masm.loadPtr(Address(dest, Activation::offsetOfPrev()), dest);
+}
+
+static void
 GenerateCallablePrologue(MacroAssembler& masm, unsigned framePushed, ExitReason reason,
                          uint32_t* entry)
 {
@@ -331,15 +336,13 @@ GenerateCallablePrologue(MacroAssembler& masm, unsigned framePushed, ExitReason 
     }
 
     if (!reason.isNone()) {
+        // Native callers expect the native ABI, which assume that nonvolatile
+        // registers are preserved.
         Register scratch = ABINonArgReg0;
-
-        // Native callers expect the native ABI, which assume that non-saved
-        // registers are preserved. Explicitly preserve the scratch register
-        // in that case.
         if (reason.isNative() && !scratch.volatile_())
             masm.Push(scratch);
 
-        masm.loadWasmActivationFromTls(scratch);
+        LoadActivation(masm, scratch);
         masm.wasmAssertNonExitInvariants(scratch);
         Address exitReason(scratch, WasmActivation::offsetOfExitReason());
         masm.store32(Imm32(reason.raw()), exitReason);
@@ -362,13 +365,12 @@ GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReason 
         masm.addToStackPtr(Imm32(framePushed));
 
     if (!reason.isNone()) {
-        Register scratch = ABINonArgReturnReg0;
-
         // See comment in GenerateCallablePrologue.
+        Register scratch = ABINonArgReturnReg0;
         if (reason.isNative() && !scratch.volatile_())
             masm.Push(scratch);
 
-        masm.loadWasmActivationFromTls(scratch);
+        LoadActivation(masm, scratch);
         Address exitFP(scratch, WasmActivation::offsetOfExitFP());
         masm.storePtr(ImmWord(0), exitFP);
         Address exitReason(scratch, WasmActivation::offsetOfExitReason());
@@ -504,7 +506,7 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation)
 }
 
 static inline void
-AssertMatchesCallSite(const WasmActivation& activation, void* callerPC, void* callerFP)
+AssertMatchesCallSite(const WasmActivation& activation, void* callerPC, Frame* callerFP)
 {
 #ifdef DEBUG
     const Code* code = activation.compartment()->wasm.lookupCode(callerPC);
@@ -526,8 +528,8 @@ AssertMatchesCallSite(const WasmActivation& activation, void* callerPC, void* ca
 void
 ProfilingFrameIterator::initFromExitFP()
 {
-    uint8_t* fp = activation_->exitFP();
-    void* pc = ReturnAddressFromFP(fp);
+    Frame* fp = activation_->exitFP();
+    void* pc = fp->returnAddress;
 
     stackAddress_ = fp;
 
@@ -537,9 +539,8 @@ ProfilingFrameIterator::initFromExitFP()
     codeRange_ = code_->lookupRange(pc);
     MOZ_ASSERT(codeRange_);
 
-    // Since we don't have the pc for fp, start unwinding at the caller of fp
-    // (ReturnAddressFromFP(fp)). This means that the innermost frame is
-    // skipped. This is fine because:
+    // Since we don't have the pc for fp, start unwinding at the caller of fp.
+    // This means that the innermost frame is skipped. This is fine because:
     //  - for import exit calls, the innermost frame is a thunk, so the first
     //    frame that shows up is the function calling the import;
     //  - for Math and other builtin calls as well as interrupts, we note the absence
@@ -551,9 +552,9 @@ ProfilingFrameIterator::initFromExitFP()
         callerFP_ = nullptr;
         break;
       case CodeRange::Function:
-        fp = CallerFPFromFP(fp);
-        callerPC_ = ReturnAddressFromFP(fp);
-        callerFP_ = CallerFPFromFP(fp);
+        fp = fp->callerFP;
+        callerPC_ = fp->returnAddress;
+        callerFP_ = fp->callerFP;
         AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
         break;
       case CodeRange::ImportJitExit:
@@ -594,7 +595,7 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
         return;
     }
 
-    uint8_t* fp = (uint8_t*)state.fp;
+    Frame* fp = (Frame*)state.fp;
     uint8_t* pc = (uint8_t*)state.pc;
     void** sp = (void**)state.sp;
 
@@ -667,8 +668,8 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
             AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
         } else if (offsetFromEntry == PushedFP) {
             // The full Frame has been pushed; fp is still the caller's fp.
-            MOZ_ASSERT(fp == CallerFPFromFP(sp));
-            callerPC_ = ReturnAddressFromFP(sp);
+            MOZ_ASSERT(fp == reinterpret_cast<Frame*>(sp)->callerFP);
+            callerPC_ = reinterpret_cast<Frame*>(sp)->returnAddress;
             callerFP_ = fp;
             AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
         } else if (offsetInCode == codeRange->ret() - PoppedFP) {
@@ -683,8 +684,8 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
             AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
         } else {
             // Not in the prologue/epilogue.
-            callerPC_ = ReturnAddressFromFP(fp);
-            callerFP_ = CallerFPFromFP(fp);
+            callerPC_ = fp->returnAddress;
+            callerFP_ = fp->callerFP;
             AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
         }
         break;
@@ -692,8 +693,8 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
       case CodeRange::Inline:
         // Inline code stubs execute after the prologue/epilogue have completed
         // so we can simply unwind based on fp.
-        callerPC_ = ReturnAddressFromFP(fp);
-        callerFP_ = CallerFPFromFP(fp);
+        callerPC_ = fp->returnAddress;
+        callerFP_ = fp->callerFP;
         AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
         break;
       case CodeRange::Entry:
@@ -759,9 +760,9 @@ ProfilingFrameIterator::operator++()
       case CodeRange::Inline:
       case CodeRange::FarJumpIsland:
         stackAddress_ = callerFP_;
-        callerPC_ = ReturnAddressFromFP(callerFP_);
-        AssertMatchesCallSite(*activation_, callerPC_, CallerFPFromFP(callerFP_));
-        callerFP_ = CallerFPFromFP(callerFP_);
+        callerPC_ = callerFP_->returnAddress;
+        AssertMatchesCallSite(*activation_, callerPC_, callerFP_->callerFP);
+        callerFP_ = callerFP_->callerFP;
         break;
       case CodeRange::Interrupt:
       case CodeRange::Throw:
@@ -968,4 +969,34 @@ wasm::LookupFaultingInstance(WasmActivation* activation, void* pc, void* fp)
     Instance* instance = reinterpret_cast<Frame*>(fp)->tls->instance;
     MOZ_RELEASE_ASSERT(&instance->code() == code);
     return instance;
+}
+
+WasmActivation*
+wasm::MaybeActiveActivation(JSContext* cx)
+{
+    // WasmCall pushes both an outer WasmActivation and an inner JitActivation
+    // that only becomes active when calling JIT code.
+    Activation* act = cx->activation();
+    while (act && act->isJit() && !act->asJit()->isActive())
+        act = act->prev();
+    if (!act || !act->isWasm())
+        return nullptr;
+    return act->asWasm();
+}
+
+bool
+wasm::InCompiledCode(void* pc)
+{
+    JSContext* cx = TlsContext.get();
+    if (!cx)
+        return false;
+
+    MOZ_RELEASE_ASSERT(!cx->handlingSegFault);
+
+    if (cx->compartment()->wasm.lookupCode(pc))
+        return true;
+
+    const CodeRange* codeRange;
+    uint8_t* codeBase;
+    return LookupBuiltinThunk(pc, &codeRange, &codeBase);
 }

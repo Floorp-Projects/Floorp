@@ -107,6 +107,7 @@ ScaledFontMac::ScaledFontMac(CGFontRef aFont,
                              Float aSize,
                              bool aOwnsFont)
   : ScaledFontBase(aUnscaledFont, aSize)
+  , mFont(aFont)
 {
   if (!sSymbolLookupDone) {
     CTFontDrawGlyphsPtr =
@@ -116,7 +117,7 @@ ScaledFontMac::ScaledFontMac(CGFontRef aFont,
 
   if (!aOwnsFont) {
     // XXX: should we be taking a reference
-    mFont = CGFontRetain(aFont);
+    CGFontRetain(aFont);
   }
 
   if (CTFontDrawGlyphsPtr != nullptr) {

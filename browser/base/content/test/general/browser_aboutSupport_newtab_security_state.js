@@ -15,7 +15,8 @@ add_task(function* checkIdentityOfAboutSupport() {
     allowThirdPartyFixup: false,
     relatedToCurrent: false,
     skipAnimation: true,
-    allowMixedContent: false
+    allowMixedContent: false,
+    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
   });
 
   yield promiseTabLoaded(tab);
