@@ -18,19 +18,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
 this.SearchFeed = class SearchFeed {
   addObservers() {
     Services.obs.addObserver(this, SEARCH_ENGINE_TOPIC);
-
-    // Notice when ContentSearch.init would be lazily loaded from nsBrowserGlue
-    this.contentSearch = new Promise(resolve => Services.mm.addMessageListener(
-      "ContentSearch", (this._onMessage = () => {
-        Services.mm.removeMessageListener("ContentSearch", this._onMessage);
-        resolve(ContentSearch);
-      })));
   }
   removeObservers() {
     Services.obs.removeObserver(this, SEARCH_ENGINE_TOPIC);
-    Services.mm.removeMessageListener("ContentSearch", this._onMessage);
   }
-
   observe(subject, topic, data) {
     switch (topic) {
       case SEARCH_ENGINE_TOPIC:
@@ -40,10 +31,8 @@ this.SearchFeed = class SearchFeed {
         break;
     }
   }
-
   async getState() {
-    // Wait for ContentSearch to be lazily loaded before getting state
-    const state = await (await this.contentSearch).currentStateObj(true);
+    const state = await ContentSearch.currentStateObj(true);
     const engines = state.engines.map(engine => ({
       name: engine.name,
       icon: engine.iconBuffer
@@ -58,12 +47,11 @@ this.SearchFeed = class SearchFeed {
   performSearch(browser, data) {
     ContentSearch.performSearch({target: browser}, data);
   }
-
-  async onAction(action) {
+  onAction(action) {
     switch (action.type) {
       case at.INIT:
         this.addObservers();
-        await this.getState();
+        this.getState();
         break;
       case at.PERFORM_SEARCH:
         this.performSearch(action._target.browser, action.data);
