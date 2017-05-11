@@ -10,7 +10,6 @@ import android.annotation.TargetApi;
 import android.app.DownloadManager;
 import android.content.ContentProviderClient;
 import android.os.Environment;
-import android.os.Process;
 import android.support.annotation.NonNull;
 import android.support.annotation.UiThread;
 
@@ -767,6 +766,7 @@ public class BrowserApp extends GeckoApp
             "CharEncoding:State",
             "Settings:Show",
             "Updater:Launch",
+            "Sanitize:Finished",
             "Sanitize:OpenTabs",
             null);
 
@@ -1567,6 +1567,7 @@ public class BrowserApp extends GeckoApp
             "CharEncoding:State",
             "Settings:Show",
             "Updater:Launch",
+            "Sanitize:Finished",
             "Sanitize:OpenTabs",
             null);
 
@@ -1616,28 +1617,6 @@ public class BrowserApp extends GeckoApp
         GeckoNetworkManager.destroy();
 
         super.onDestroy();
-
-        if (!isFinishing()) {
-            // GeckoApp was not intentionally destroyed, so keep our process alive.
-            return;
-        }
-
-        // Wait for Gecko to handle our pause event sent in onPause.
-        if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-            GeckoThread.waitOnGecko();
-        }
-
-        if (mRestartIntent != null) {
-            // Restarting, so let Restarter kill us.
-            final Intent intent = new Intent();
-            intent.setClass(getApplicationContext(), Restarter.class)
-                  .putExtra("pid", Process.myPid())
-                  .putExtra(Intent.EXTRA_INTENT, mRestartIntent);
-            startService(intent);
-        } else {
-            // Exiting, so kill our own process.
-            Process.killProcess(Process.myPid());
-        }
     }
 
     @Override
@@ -1987,6 +1966,14 @@ public class BrowserApp extends GeckoApp
             case "Feedback:MaybeLater":
                 SharedPreferences settings = getPreferences(Activity.MODE_PRIVATE);
                 settings.edit().putInt(getPackageName() + ".feedback_launch_count", 0).apply();
+                break;
+
+            case "Sanitize:Finished":
+                if (message.getBoolean("shutdown", false)) {
+                    // Gecko is shutting down and has called our sanitize handlers,
+                    // so we can start exiting, too.
+                    finishAndShutdown(/* restart */ false);
+                }
                 break;
 
             case "Sanitize:OpenTabs":
@@ -3796,7 +3783,7 @@ public class BrowserApp extends GeckoApp
                     // Guest Browsing notification.
                     GuestSession.hideNotification(context);
                 }
-                doRestart();
+                finishAndShutdown(/* restart */ true);
             }
         });
 
