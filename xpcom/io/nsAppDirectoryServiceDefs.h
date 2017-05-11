@@ -73,8 +73,6 @@
 #define NS_APP_USER_PANELS_50_FILE              "UPnls"
 #define NS_APP_CACHE_PARENT_DIR                 "cachePDir"
 
-#define NS_APP_DOWNLOADS_50_FILE                "DLoads"
-
 #define NS_APP_SEARCH_50_FILE                   "SrchF"
 
 #define NS_APP_INSTALL_CLEANUP_DIR              "XPIClnupD"  //location of xpicleanup.dat xpicleanup.exe 
