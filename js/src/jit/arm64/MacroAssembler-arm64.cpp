@@ -494,6 +494,12 @@ MacroAssembler::Pop(const ValueOperand& val)
     adjustFrame(-1 * int64_t(sizeof(int64_t)));
 }
 
+void
+MacroAssembler::PopStackPtr()
+{
+    MOZ_CRASH("NYI");
+}
+
 // ===============================================================
 // Simple call functions.
 

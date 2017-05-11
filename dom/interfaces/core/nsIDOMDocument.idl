@@ -18,7 +18,6 @@ interface mozIDOMWindowProxy;
 interface nsIDOMNodeIterator;
 interface nsIDOMNodeFilter;
 interface nsIDOMTreeWalker;
-interface nsIDOMLocation;
 
 /**
  * The nsIDOMDocument interface represents the entire HTML or XML document.
@@ -116,11 +115,6 @@ interface nsIDOMDocument : nsIDOMNode
    * @see <http://www.whatwg.org/html/#dom-document-dir>
    */
            attribute DOMString      dir;
-
-  /**
-   * @see <http://www.whatwg.org/html/#dom-document-location>
-   */
-  readonly attribute nsIDOMLocation location;
 
   /**
    * @see <http://www.whatwg.org/html/#document.title>

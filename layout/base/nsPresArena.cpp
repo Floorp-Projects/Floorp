@@ -14,6 +14,7 @@
 #include "nsArenaMemoryStats.h"
 #include "nsPrintfCString.h"
 #include "nsStyleContext.h"
+#include "FrameLayerBuilder.h"
 
 #include <inttypes.h>
 
