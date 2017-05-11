@@ -6,9 +6,9 @@
  */
 
 #include "InstancedRendering.h"
-#include "GrAppliedClip.h"
+
+#include "GrBatchFlushState.h"
 #include "GrCaps.h"
-#include "GrOpFlushState.h"
 #include "GrPipeline.h"
 #include "GrResourceProvider.h"
 #include "instanced/InstanceProcessor.h"
@@ -18,116 +18,114 @@ namespace gr_instanced {
 InstancedRendering::InstancedRendering(GrGpu* gpu)
     : fGpu(SkRef(gpu)),
       fState(State::kRecordingDraws),
-      fDrawPool(1024, 1024) {
+      fDrawPool(1024 * sizeof(Batch::Draw), 1024 * sizeof(Batch::Draw)) {
 }
 
-std::unique_ptr<GrDrawOp> InstancedRendering::recordRect(const SkRect& rect,
-                                                         const SkMatrix& viewMatrix,
-                                                         GrPaint&& paint, GrAA aa,
-                                                         const GrInstancedPipelineInfo& info) {
-    return this->recordShape(ShapeType::kRect, rect, viewMatrix, std::move(paint), rect, aa, info);
+GrDrawBatch* InstancedRendering::recordRect(const SkRect& rect, const SkMatrix& viewMatrix,
+                                            GrColor color, bool antialias,
+                                            const GrInstancedPipelineInfo& info, bool* useHWAA) {
+    return this->recordShape(ShapeType::kRect, rect, viewMatrix, color, rect, antialias, info,
+                             useHWAA);
 }
 
-std::unique_ptr<GrDrawOp> InstancedRendering::recordRect(const SkRect& rect,
-                                                         const SkMatrix& viewMatrix,
-                                                         GrPaint&& paint, const SkRect& localRect,
-                                                         GrAA aa,
-                                                         const GrInstancedPipelineInfo& info) {
-    return this->recordShape(ShapeType::kRect, rect, viewMatrix, std::move(paint), localRect, aa,
-                             info);
+GrDrawBatch* InstancedRendering::recordRect(const SkRect& rect, const SkMatrix& viewMatrix,
+                                            GrColor color, const SkRect& localRect, bool antialias,
+                                            const GrInstancedPipelineInfo& info, bool* useHWAA) {
+    return this->recordShape(ShapeType::kRect, rect, viewMatrix, color, localRect, antialias, info,
+                             useHWAA);
 }
 
-std::unique_ptr<GrDrawOp> InstancedRendering::recordRect(const SkRect& rect,
-                                                         const SkMatrix& viewMatrix,
-                                                         GrPaint&& paint,
-                                                         const SkMatrix& localMatrix, GrAA aa,
-                                                         const GrInstancedPipelineInfo& info) {
+GrDrawBatch* InstancedRendering::recordRect(const SkRect& rect, const SkMatrix& viewMatrix,
+                                            GrColor color, const SkMatrix& localMatrix,
+                                            bool antialias, const GrInstancedPipelineInfo& info,
+                                            bool* useHWAA) {
     if (localMatrix.hasPerspective()) {
         return nullptr; // Perspective is not yet supported in the local matrix.
     }
-    if (std::unique_ptr<Op> op = this->recordShape(ShapeType::kRect, rect, viewMatrix,
-                                                   std::move(paint), rect, aa, info)) {
-        op->getSingleInstance().fInfo |= kLocalMatrix_InfoFlag;
-        op->appendParamsTexel(localMatrix.getScaleX(), localMatrix.getSkewX(),
-                              localMatrix.getTranslateX());
-        op->appendParamsTexel(localMatrix.getSkewY(), localMatrix.getScaleY(),
-                              localMatrix.getTranslateY());
-        op->fInfo.fHasLocalMatrix = true;
-        return std::move(op);
+    if (Batch* batch = this->recordShape(ShapeType::kRect, rect, viewMatrix, color, rect, antialias,
+                                         info, useHWAA)) {
+        batch->getSingleInstance().fInfo |= kLocalMatrix_InfoFlag;
+        batch->appendParamsTexel(localMatrix.getScaleX(), localMatrix.getSkewX(),
+                                 localMatrix.getTranslateX());
+        batch->appendParamsTexel(localMatrix.getSkewY(), localMatrix.getScaleY(),
+                                 localMatrix.getTranslateY());
+        batch->fInfo.fHasLocalMatrix = true;
+        return batch;
     }
     return nullptr;
 }
 
-std::unique_ptr<GrDrawOp> InstancedRendering::recordOval(const SkRect& oval,
-                                                         const SkMatrix& viewMatrix,
-                                                         GrPaint&& paint, GrAA aa,
-                                                         const GrInstancedPipelineInfo& info) {
-    return this->recordShape(ShapeType::kOval, oval, viewMatrix, std::move(paint), oval, aa, info);
+GrDrawBatch* InstancedRendering::recordOval(const SkRect& oval, const SkMatrix& viewMatrix,
+                                            GrColor color, bool antialias,
+                                            const GrInstancedPipelineInfo& info, bool* useHWAA) {
+    return this->recordShape(ShapeType::kOval, oval, viewMatrix, color, oval, antialias, info,
+                             useHWAA);
 }
 
-std::unique_ptr<GrDrawOp> InstancedRendering::recordRRect(const SkRRect& rrect,
-                                                          const SkMatrix& viewMatrix,
-                                                          GrPaint&& paint, GrAA aa,
-                                                          const GrInstancedPipelineInfo& info) {
-    if (std::unique_ptr<Op> op =
-                this->recordShape(GetRRectShapeType(rrect), rrect.rect(), viewMatrix,
-                                  std::move(paint), rrect.rect(), aa, info)) {
-        op->appendRRectParams(rrect);
-        return std::move(op);
+GrDrawBatch* InstancedRendering::recordRRect(const SkRRect& rrect, const SkMatrix& viewMatrix,
+                                             GrColor color, bool antialias,
+                                             const GrInstancedPipelineInfo& info, bool* useHWAA) {
+    if (Batch* batch = this->recordShape(GetRRectShapeType(rrect), rrect.rect(), viewMatrix, color,
+                                         rrect.rect(), antialias, info, useHWAA)) {
+        batch->appendRRectParams(rrect);
+        return batch;
     }
     return nullptr;
 }
 
-std::unique_ptr<GrDrawOp> InstancedRendering::recordDRRect(const SkRRect& outer,
-                                                           const SkRRect& inner,
-                                                           const SkMatrix& viewMatrix,
-                                                           GrPaint&& paint, GrAA aa,
-                                                           const GrInstancedPipelineInfo& info) {
+GrDrawBatch* InstancedRendering::recordDRRect(const SkRRect& outer, const SkRRect& inner,
+                                              const SkMatrix& viewMatrix, GrColor color,
+                                              bool antialias, const GrInstancedPipelineInfo& info,
+                                              bool* useHWAA) {
     if (inner.getType() > SkRRect::kSimple_Type) {
        return nullptr; // Complex inner round rects are not yet supported.
     }
     if (SkRRect::kEmpty_Type == inner.getType()) {
-        return this->recordRRect(outer, viewMatrix, std::move(paint), aa, info);
+        return this->recordRRect(outer, viewMatrix, color, antialias, info, useHWAA);
     }
-    if (std::unique_ptr<Op> op =
-                this->recordShape(GetRRectShapeType(outer), outer.rect(), viewMatrix,
-                                  std::move(paint), outer.rect(), aa, info)) {
-        op->appendRRectParams(outer);
+    if (Batch* batch = this->recordShape(GetRRectShapeType(outer), outer.rect(), viewMatrix, color,
+                                         outer.rect(), antialias, info, useHWAA)) {
+        batch->appendRRectParams(outer);
         ShapeType innerShapeType = GetRRectShapeType(inner);
-        op->fInfo.fInnerShapeTypes |= GetShapeFlag(innerShapeType);
-        op->getSingleInstance().fInfo |= ((int)innerShapeType << kInnerShapeType_InfoBit);
-        op->appendParamsTexel(inner.rect().asScalars(), 4);
-        op->appendRRectParams(inner);
-        return std::move(op);
+        batch->fInfo.fInnerShapeTypes |= GetShapeFlag(innerShapeType);
+        batch->getSingleInstance().fInfo |= ((int)innerShapeType << kInnerShapeType_InfoBit);
+        batch->appendParamsTexel(inner.rect().asScalars(), 4);
+        batch->appendRRectParams(inner);
+        return batch;
     }
     return nullptr;
 }
 
-std::unique_ptr<InstancedRendering::Op> InstancedRendering::recordShape(
-        ShapeType type, const SkRect& bounds, const SkMatrix& viewMatrix, GrPaint&& paint,
-        const SkRect& localRect, GrAA aa, const GrInstancedPipelineInfo& info) {
+InstancedRendering::Batch* InstancedRendering::recordShape(ShapeType type, const SkRect& bounds,
+                                                           const SkMatrix& viewMatrix,
+                                                           GrColor color, const SkRect& localRect,
+                                                           bool antialias,
+                                                           const GrInstancedPipelineInfo& info,
+                                                           bool* useHWAA) {
     SkASSERT(State::kRecordingDraws == fState);
 
     if (info.fIsRenderingToFloat && fGpu->caps()->avoidInstancedDrawsToFPTargets()) {
         return nullptr;
     }
 
-    GrAAType aaType;
-    if (!this->selectAntialiasMode(viewMatrix, aa, info, &aaType)) {
+    AntialiasMode antialiasMode;
+    if (!this->selectAntialiasMode(viewMatrix, antialias, info, useHWAA, &antialiasMode)) {
         return nullptr;
     }
 
-    GrColor color = paint.getColor();
-    std::unique_ptr<Op> op = this->makeOp(std::move(paint));
-    op->fInfo.setAAType(aaType);
-    op->fInfo.fShapeTypes = GetShapeFlag(type);
-    op->fInfo.fCannotDiscard = true;
-    Instance& instance = op->getSingleInstance();
+    Batch* batch = this->createBatch();
+    batch->fInfo.fAntialiasMode = antialiasMode;
+    batch->fInfo.fShapeTypes = GetShapeFlag(type);
+    batch->fInfo.fCannotDiscard = !info.fCanDiscard;
+
+    Instance& instance = batch->getSingleInstance();
     instance.fInfo = (int)type << kShapeType_InfoBit;
 
-    Op::HasAABloat aaBloat =
-            (aaType == GrAAType::kCoverage) ? Op::HasAABloat::kYes : Op::HasAABloat::kNo;
-    Op::IsZeroArea zeroArea = (bounds.isEmpty()) ? Op::IsZeroArea::kYes : Op::IsZeroArea::kNo;
+    Batch::HasAABloat aaBloat = (antialiasMode == AntialiasMode::kCoverage)
+                                ? Batch::HasAABloat::kYes
+                                : Batch::HasAABloat::kNo;
+    Batch::IsZeroArea zeroArea = (bounds.isEmpty()) ? Batch::IsZeroArea::kYes
+                                                    : Batch::IsZeroArea::kNo;
 
     // The instanced shape renderer draws rectangles of [-1, -1, +1, +1], so we find the matrix that
     // will map this rectangle to the same device coordinates as "viewMatrix * bounds".
@@ -151,19 +149,18 @@ std::unique_ptr<InstancedRendering::Op> InstancedRendering::recordShape(
         // it's quite simple to find the bounding rectangle:
         float devBoundsHalfWidth = fabsf(m[0]) + fabsf(m[1]);
         float devBoundsHalfHeight = fabsf(m[3]) + fabsf(m[4]);
-        SkRect opBounds;
-        opBounds.fLeft = m[2] - devBoundsHalfWidth;
-        opBounds.fRight = m[2] + devBoundsHalfWidth;
-        opBounds.fTop = m[5] - devBoundsHalfHeight;
-        opBounds.fBottom = m[5] + devBoundsHalfHeight;
-        op->setBounds(opBounds, aaBloat, zeroArea);
+        SkRect batchBounds;
+        batchBounds.fLeft = m[2] - devBoundsHalfWidth;
+        batchBounds.fRight = m[2] + devBoundsHalfWidth;
+        batchBounds.fTop = m[5] - devBoundsHalfHeight;
+        batchBounds.fBottom = m[5] + devBoundsHalfHeight;
+        batch->setBounds(batchBounds, aaBloat, zeroArea);
 
         // TODO: Is this worth the CPU overhead?
-        op->fInfo.fNonSquare =
-                fabsf(devBoundsHalfHeight - devBoundsHalfWidth) > 0.5f ||  // Early out.
-                fabs(m[0] * m[3] + m[1] * m[4]) > 1e-3f ||                 // Skew?
-                fabs(m[0] * m[0] + m[1] * m[1] - m[3] * m[3] - m[4] * m[4]) >
-                        1e-2f;  // Diff. lengths?
+        batch->fInfo.fNonSquare =
+            fabsf(devBoundsHalfHeight - devBoundsHalfWidth) > 0.5f || // Early out.
+            fabs(m[0] * m[3] + m[1] * m[4]) > 1e-3f || // Skew?
+            fabs(m[0] * m[0] + m[1] * m[1] - m[3] * m[3] - m[4] * m[4]) > 1e-2f; // Diff. lengths?
     } else {
         SkMatrix shapeMatrix(viewMatrix);
         shapeMatrix.preTranslate(tx, ty);
@@ -179,12 +176,12 @@ std::unique_ptr<InstancedRendering::Op> InstancedRendering::recordShape(
         m[5] = SkScalarToFloat(shapeMatrix.getTranslateY());
 
         // Send the perspective column as a param.
-        op->appendParamsTexel(shapeMatrix[SkMatrix::kMPersp0], shapeMatrix[SkMatrix::kMPersp1],
-                              shapeMatrix[SkMatrix::kMPersp2]);
-        op->fInfo.fHasPerspective = true;
+        batch->appendParamsTexel(shapeMatrix[SkMatrix::kMPersp0], shapeMatrix[SkMatrix::kMPersp1],
+                                 shapeMatrix[SkMatrix::kMPersp2]);
+        batch->fInfo.fHasPerspective = true;
 
-        op->setBounds(bounds, aaBloat, zeroArea);
-        op->fInfo.fNonSquare = true;
+        batch->setBounds(bounds, aaBloat, zeroArea);
+        batch->fInfo.fNonSquare = true;
     }
 
     instance.fColor = color;
@@ -192,36 +189,45 @@ std::unique_ptr<InstancedRendering::Op> InstancedRendering::recordShape(
     const float* rectAsFloats = localRect.asScalars(); // Ensure SkScalar == float.
     memcpy(&instance.fLocalRect, rectAsFloats, 4 * sizeof(float));
 
-    op->fPixelLoad = op->bounds().height() * op->bounds().width();
-    return op;
+    batch->fPixelLoad = batch->bounds().height() * batch->bounds().width();
+    return batch;
 }
 
-inline bool InstancedRendering::selectAntialiasMode(const SkMatrix& viewMatrix, GrAA aa,
+inline bool InstancedRendering::selectAntialiasMode(const SkMatrix& viewMatrix, bool antialias,
                                                     const GrInstancedPipelineInfo& info,
-                                                    GrAAType* aaType) {
+                                                    bool* useHWAA, AntialiasMode* antialiasMode) {
+    SkASSERT(!info.fColorDisabled || info.fDrawingShapeToStencil);
     SkASSERT(!info.fIsMixedSampled || info.fIsMultisampled);
     SkASSERT(GrCaps::InstancedSupport::kNone != fGpu->caps()->instancedSupport());
 
     if (!info.fIsMultisampled || fGpu->caps()->multisampleDisableSupport()) {
-        if (GrAA::kNo == aa) {
-            *aaType = GrAAType::kNone;
+        if (!antialias) {
+            if (info.fDrawingShapeToStencil && !info.fCanDiscard) {
+                // We can't draw to the stencil buffer without discard (or sample mask if MSAA).
+                return false;
+            }
+            *antialiasMode = AntialiasMode::kNone;
+            *useHWAA = false;
             return true;
         }
 
         if (info.canUseCoverageAA() && viewMatrix.preservesRightAngles()) {
-            *aaType = GrAAType::kCoverage;
+            *antialiasMode = AntialiasMode::kCoverage;
+            *useHWAA = false;
             return true;
         }
     }
 
     if (info.fIsMultisampled &&
         fGpu->caps()->instancedSupport() >= GrCaps::InstancedSupport::kMultisampled) {
-        if (!info.fIsMixedSampled) {
-            *aaType = GrAAType::kMSAA;
+        if (!info.fIsMixedSampled || info.fColorDisabled) {
+            *antialiasMode = AntialiasMode::kMSAA;
+            *useHWAA = true;
             return true;
         }
         if (fGpu->caps()->instancedSupport() >= GrCaps::InstancedSupport::kMixedSampled) {
-            *aaType = GrAAType::kMixedSamples;
+            *antialiasMode = AntialiasMode::kMixedSamples;
+            *useHWAA = true;
             return true;
         }
     }
@@ -229,24 +235,22 @@ inline bool InstancedRendering::selectAntialiasMode(const SkMatrix& viewMatrix, 
     return false;
 }
 
-InstancedRendering::Op::Op(uint32_t classID, GrPaint&& paint, InstancedRendering* ir)
-        : INHERITED(classID)
-        , fInstancedRendering(ir)
-        , fProcessors(std::move(paint))
-        , fIsTracked(false)
-        , fRequiresBarrierOnOverlap(false)
-        , fNumDraws(1)
-        , fNumChangesInGeometry(0) {
-    fHeadDraw = fTailDraw = fInstancedRendering->fDrawPool.allocate();
+InstancedRendering::Batch::Batch(uint32_t classID, InstancedRendering* ir)
+    : INHERITED(classID),
+      fInstancedRendering(ir),
+      fIsTracked(false),
+      fNumDraws(1),
+      fNumChangesInGeometry(0) {
+    fHeadDraw = fTailDraw = (Draw*)fInstancedRendering->fDrawPool.allocate(sizeof(Draw));
 #ifdef SK_DEBUG
     fHeadDraw->fGeometry = {-1, 0};
 #endif
     fHeadDraw->fNext = nullptr;
 }
 
-InstancedRendering::Op::~Op() {
+InstancedRendering::Batch::~Batch() {
     if (fIsTracked) {
-        fInstancedRendering->fTrackedOps.remove(this);
+        fInstancedRendering->fTrackedBatches.remove(this);
     }
 
     Draw* draw = fHeadDraw;
@@ -257,7 +261,7 @@ InstancedRendering::Op::~Op() {
     }
 }
 
-void InstancedRendering::Op::appendRRectParams(const SkRRect& rrect) {
+void InstancedRendering::Batch::appendRRectParams(const SkRRect& rrect) {
     SkASSERT(!fIsTracked);
     switch (rrect.getType()) {
         case SkRRect::kSimple_Type: {
@@ -304,7 +308,7 @@ void InstancedRendering::Op::appendRRectParams(const SkRRect& rrect) {
     }
 }
 
-void InstancedRendering::Op::appendParamsTexel(const SkScalar* vals, int count) {
+void InstancedRendering::Batch::appendParamsTexel(const SkScalar* vals, int count) {
     SkASSERT(!fIsTracked);
     SkASSERT(count <= 4 && count >= 0);
     const float* valsAsFloats = vals; // Ensure SkScalar == float.
@@ -312,7 +316,7 @@ void InstancedRendering::Op::appendParamsTexel(const SkScalar* vals, int count) 
     fInfo.fHasParams = true;
 }
 
-void InstancedRendering::Op::appendParamsTexel(SkScalar x, SkScalar y, SkScalar z, SkScalar w) {
+void InstancedRendering::Batch::appendParamsTexel(SkScalar x, SkScalar y, SkScalar z, SkScalar w) {
     SkASSERT(!fIsTracked);
     ParamsTexel& texel = fParams.push_back();
     texel.fX = SkScalarToFloat(x);
@@ -322,7 +326,7 @@ void InstancedRendering::Op::appendParamsTexel(SkScalar x, SkScalar y, SkScalar 
     fInfo.fHasParams = true;
 }
 
-void InstancedRendering::Op::appendParamsTexel(SkScalar x, SkScalar y, SkScalar z) {
+void InstancedRendering::Batch::appendParamsTexel(SkScalar x, SkScalar y, SkScalar z) {
     SkASSERT(!fIsTracked);
     ParamsTexel& texel = fParams.push_back();
     texel.fX = SkScalarToFloat(x);
@@ -331,32 +335,33 @@ void InstancedRendering::Op::appendParamsTexel(SkScalar x, SkScalar y, SkScalar 
     fInfo.fHasParams = true;
 }
 
-bool InstancedRendering::Op::xpRequiresDstTexture(const GrCaps& caps, const GrAppliedClip* clip) {
-    SkASSERT(State::kRecordingDraws == fInstancedRendering->fState);
-    GrProcessorAnalysisCoverage coverageInput;
-    bool isMixedSamples = false;
-    if (GrAAType::kCoverage == fInfo.aaType() ||
-        (GrAAType::kNone == fInfo.aaType() && !fInfo.isSimpleRects() && fInfo.fCannotDiscard)) {
-        coverageInput = GrProcessorAnalysisCoverage::kSingleChannel;
-    } else {
-        coverageInput = GrProcessorAnalysisCoverage::kNone;
-        isMixedSamples = GrAAType::kMixedSamples == fInfo.aaType();
-    }
-    GrProcessorSet::Analysis analysis =
-            fProcessors.finalize(this->getSingleInstance().fColor, coverageInput, clip,
-                                 isMixedSamples, caps, &this->getSingleDraw().fInstance.fColor);
+void InstancedRendering::Batch::computePipelineOptimizations(GrInitInvariantOutput* color,
+                                                            GrInitInvariantOutput* coverage,
+                                                            GrBatchToXPOverrides* overrides) const {
+    color->setKnownFourComponents(this->getSingleInstance().fColor);
 
+    if (AntialiasMode::kCoverage == fInfo.fAntialiasMode ||
+        (AntialiasMode::kNone == fInfo.fAntialiasMode &&
+         !fInfo.isSimpleRects() && fInfo.fCannotDiscard)) {
+        coverage->setUnknownSingleComponent();
+    } else {
+        coverage->setKnownSingleComponent(255);
+    }
+}
+
+void InstancedRendering::Batch::initBatchTracker(const GrXPOverridesForBatch& overrides) {
     Draw& draw = this->getSingleDraw(); // This will assert if we have > 1 command.
     SkASSERT(draw.fGeometry.isEmpty());
     SkASSERT(SkIsPow2(fInfo.fShapeTypes));
     SkASSERT(!fIsTracked);
 
     if (kRect_ShapeFlag == fInfo.fShapeTypes) {
-        draw.fGeometry = InstanceProcessor::GetIndexRangeForRect(fInfo.aaType());
+        draw.fGeometry = InstanceProcessor::GetIndexRangeForRect(fInfo.fAntialiasMode);
     } else if (kOval_ShapeFlag == fInfo.fShapeTypes) {
-        draw.fGeometry = InstanceProcessor::GetIndexRangeForOval(fInfo.aaType(), this->bounds());
+        draw.fGeometry = InstanceProcessor::GetIndexRangeForOval(fInfo.fAntialiasMode,
+                                                                 this->bounds());
     } else {
-        draw.fGeometry = InstanceProcessor::GetIndexRangeForRRect(fInfo.aaType());
+        draw.fGeometry = InstanceProcessor::GetIndexRangeForRRect(fInfo.fAntialiasMode);
     }
 
     if (!fParams.empty()) {
@@ -365,34 +370,31 @@ bool InstancedRendering::Op::xpRequiresDstTexture(const GrCaps& caps, const GrAp
         fInstancedRendering->fParams.push_back_n(fParams.count(), fParams.begin());
     }
 
-    fInfo.fCannotTweakAlphaForCoverage = !analysis.isCompatibleWithCoverageAsAlpha();
+    GrColor overrideColor;
+    if (overrides.getOverrideColorIfSet(&overrideColor)) {
+        SkASSERT(State::kRecordingDraws == fInstancedRendering->fState);
+        this->getSingleInstance().fColor = overrideColor;
+    }
+    fInfo.fUsesLocalCoords = overrides.readsLocalCoords();
+    fInfo.fCannotTweakAlphaForCoverage = !overrides.canTweakAlphaForCoverage();
 
-    fInfo.fUsesLocalCoords = analysis.usesLocalCoords();
-    fRequiresBarrierOnOverlap = analysis.requiresBarrierBetweenOverlappingDraws();
-    return analysis.requiresDstTexture();
-}
-
-void InstancedRendering::Op::wasRecorded() {
-    SkASSERT(!fIsTracked);
-    fInstancedRendering->fTrackedOps.addToTail(this);
+    fInstancedRendering->fTrackedBatches.addToTail(this);
     fIsTracked = true;
 }
 
-bool InstancedRendering::Op::onCombineIfPossible(GrOp* other, const GrCaps& caps) {
-    Op* that = static_cast<Op*>(other);
+bool InstancedRendering::Batch::onCombineIfPossible(GrBatch* other, const GrCaps& caps) {
+    Batch* that = static_cast<Batch*>(other);
     SkASSERT(fInstancedRendering == that->fInstancedRendering);
     SkASSERT(fTailDraw);
     SkASSERT(that->fTailDraw);
 
-    if (!OpInfo::CanCombine(fInfo, that->fInfo) || fProcessors != that->fProcessors) {
+    if (!BatchInfo::CanCombine(fInfo, that->fInfo) ||
+        !GrPipeline::CanCombine(*this->pipeline(), this->bounds(),
+                                *that->pipeline(), that->bounds(), caps)) {
         return false;
     }
 
-    SkASSERT(fRequiresBarrierOnOverlap == that->fRequiresBarrierOnOverlap);
-    if (fRequiresBarrierOnOverlap && this->bounds().intersects(that->bounds())) {
-        return false;
-    }
-    OpInfo combinedInfo = fInfo | that->fInfo;
+    BatchInfo combinedInfo = fInfo | that->fInfo;
     if (!combinedInfo.isSimpleRects()) {
         // This threshold was chosen with the "shapes_mixed" bench on a MacBook with Intel graphics.
         // There seems to be a wide range where it doesn't matter if we combine or not. What matters
@@ -409,7 +411,8 @@ bool InstancedRendering::Op::onCombineIfPossible(GrOp* other, const GrCaps& caps
     this->joinBounds(*that);
     fInfo = combinedInfo;
     fPixelLoad += that->fPixelLoad;
-    // Adopt the other op's draws.
+
+    // Adopt the other batch's draws.
     fNumDraws += that->fNumDraws;
     fNumChangesInGeometry += that->fNumChangesInGeometry;
     if (fTailDraw->fGeometry != that->fHeadDraw->fGeometry) {
@@ -427,19 +430,19 @@ void InstancedRendering::beginFlush(GrResourceProvider* rp) {
     SkASSERT(State::kRecordingDraws == fState);
     fState = State::kFlushing;
 
-    if (fTrackedOps.isEmpty()) {
+    if (fTrackedBatches.isEmpty()) {
         return;
     }
 
     if (!fVertexBuffer) {
-        fVertexBuffer.reset(InstanceProcessor::FindOrCreateVertexBuffer(fGpu.get()));
+        fVertexBuffer.reset(InstanceProcessor::FindOrCreateVertexBuffer(fGpu));
         if (!fVertexBuffer) {
             return;
         }
     }
 
     if (!fIndexBuffer) {
-      fIndexBuffer.reset(InstanceProcessor::FindOrCreateIndex8Buffer(fGpu.get()));
+      fIndexBuffer.reset(InstanceProcessor::FindOrCreateIndex8Buffer(fGpu));
         if (!fIndexBuffer) {
             return;
         }
@@ -459,33 +462,23 @@ void InstancedRendering::beginFlush(GrResourceProvider* rp) {
     this->onBeginFlush(rp);
 }
 
-void InstancedRendering::Op::onExecute(GrOpFlushState* state) {
+void InstancedRendering::Batch::onDraw(GrBatchFlushState* state) {
     SkASSERT(State::kFlushing == fInstancedRendering->fState);
     SkASSERT(state->gpu() == fInstancedRendering->gpu());
 
     state->gpu()->handleDirtyContext();
-
-    GrPipeline pipeline;
-    GrPipeline::InitArgs args;
-    args.fAppliedClip = state->drawOpArgs().fAppliedClip;
-    args.fCaps = &state->caps();
-    args.fProcessors = &fProcessors;
-    args.fFlags = GrAATypeIsHW(fInfo.aaType()) ? GrPipeline::kHWAntialias_Flag : 0;
-    args.fRenderTarget = state->drawOpArgs().fRenderTarget;
-    args.fDstTexture = state->drawOpArgs().fDstTexture;
-    pipeline.init(args);
-
-    if (GrXferBarrierType barrierType = pipeline.xferBarrierType(*state->gpu()->caps())) {
-        state->gpu()->xferBarrier(pipeline.getRenderTarget(), barrierType);
+    if (GrXferBarrierType barrierType = this->pipeline()->xferBarrierType(*state->gpu()->caps())) {
+        state->gpu()->xferBarrier(this->pipeline()->getRenderTarget(), barrierType);
     }
-    InstanceProcessor instProc(fInfo, fInstancedRendering->fParamsBuffer.get());
-    fInstancedRendering->onDraw(pipeline, instProc, this);
+
+    InstanceProcessor instProc(fInfo, fInstancedRendering->fParamsBuffer);
+    fInstancedRendering->onDraw(*this->pipeline(), instProc, this);
 }
 
 void InstancedRendering::endFlush() {
-    // The caller is expected to delete all tracked ops (i.e. ops whose applyPipelineOptimizations
+    // The caller is expected to delete all tracked batches (i.e. batches whose initBatchTracker
     // method has been called) before ending the flush.
-    SkASSERT(fTrackedOps.isEmpty());
+    SkASSERT(fTrackedBatches.isEmpty());
     fParams.reset();
     fParamsBuffer.reset();
     this->onEndFlush();

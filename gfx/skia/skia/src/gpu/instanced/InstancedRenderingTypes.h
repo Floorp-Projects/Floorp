@@ -9,7 +9,6 @@
 #define gr_instanced_InstancedRenderingTypes_DEFINED
 
 #include "GrTypes.h"
-#include "GrTypesPriv.h"
 #include "SkRRect.h"
 
 namespace gr_instanced {
@@ -42,6 +41,14 @@ enum class Attrib : uint8_t {
     kLocalRect
 };
 constexpr int kNumAttribs = 1 + (int)Attrib::kLocalRect;
+
+enum class AntialiasMode : uint8_t {
+    kNone,
+    kCoverage,
+    kMSAA,
+    kMixedSamples
+};
+constexpr int kNumAntialiasModes = 1 + (int)AntialiasMode::kMixedSamples;
 
 enum class ShapeType : uint8_t {
     kRect,
@@ -112,25 +119,22 @@ GR_STATIC_ASSERT(0 == offsetof(ParamsTexel, fX));
 GR_STATIC_ASSERT(4 * 4 == sizeof(ParamsTexel));
 
 /**
- * Tracks all information needed in order to draw a op of instances. This struct also serves
- * as an all-in-one shader key for the op.
+ * Tracks all information needed in order to draw a batch of instances. This struct also serves
+ * as an all-in-one shader key for the batch.
  */
-struct OpInfo {
-    OpInfo() : fData(0) {}
-    explicit OpInfo(uint32_t data) : fData(data) {}
+struct BatchInfo {
+    BatchInfo() : fData(0) {}
+    explicit BatchInfo(uint32_t data) : fData(data) {}
 
-    static bool CanCombine(const OpInfo& a, const OpInfo& b);
+    static bool CanCombine(const BatchInfo& a, const BatchInfo& b);
 
     bool isSimpleRects() const {
         return !((fShapeTypes & ~kRect_ShapeFlag) | fInnerShapeTypes);
     }
 
-    GrAAType aaType() const { return static_cast<GrAAType>(fAAType); }
-    void setAAType(GrAAType aaType) { fAAType = static_cast<uint8_t>(aaType); }
-
     union {
         struct {
-            uint8_t         fAAType;  // GrAAType
+            AntialiasMode   fAntialiasMode;
             uint8_t         fShapeTypes;
             uint8_t         fInnerShapeTypes;
             bool            fHasPerspective               : 1;
@@ -145,8 +149,8 @@ struct OpInfo {
     };
 };
 
-inline bool OpInfo::CanCombine(const OpInfo& a, const OpInfo& b) {
-    if (a.fAAType != b.fAAType) {
+inline bool BatchInfo::CanCombine(const BatchInfo& a, const BatchInfo& b) {
+    if (a.fAntialiasMode != b.fAntialiasMode) {
         return false;
     }
     if (SkToBool(a.fInnerShapeTypes) != SkToBool(b.fInnerShapeTypes)) {
@@ -160,13 +164,13 @@ inline bool OpInfo::CanCombine(const OpInfo& a, const OpInfo& b) {
     return true;
 }
 
-inline OpInfo operator|(const OpInfo& a, const OpInfo& b) {
-    SkASSERT(OpInfo::CanCombine(a, b));
-    return OpInfo(a.fData | b.fData);
+inline BatchInfo operator|(const BatchInfo& a, const BatchInfo& b) {
+    SkASSERT(BatchInfo::CanCombine(a, b));
+    return BatchInfo(a.fData | b.fData);
 }
 
 // This is required since all the data must fit into 32 bits of a shader key.
-GR_STATIC_ASSERT(sizeof(uint32_t) == sizeof(OpInfo));
+GR_STATIC_ASSERT(sizeof(uint32_t) == sizeof(BatchInfo));
 GR_STATIC_ASSERT(kNumShapeTypes <= 8);
 
 struct IndexRange {

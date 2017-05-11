@@ -8,7 +8,7 @@
 #ifndef SkDeduper_DEFINED
 #define SkDeduper_DEFINED
 
-#include "SkFlattenable.h"
+#include "SkTypes.h"
 
 class SkImage;
 class SkPicture;
