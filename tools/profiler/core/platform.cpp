@@ -3089,17 +3089,6 @@ profiler_clear_js_context()
   info->mContext = nullptr;
 }
 
-void*
-profiler_get_stack_top()
-{
-  PSAutoLock lock(gPSMutex);
-  ThreadInfo* threadInfo = FindLiveThreadInfo(lock);
-  if (threadInfo) {
-    return threadInfo->StackTop();
-  }
-  return nullptr;
-}
-
 int
 profiler_current_thread_id()
 {
