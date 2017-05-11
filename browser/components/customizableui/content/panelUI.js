@@ -485,7 +485,7 @@ const PanelUI = {
    * @param aAnchor the element that spawned the subview.
    * @param aPlacementArea the CustomizableUI area that aAnchor is in.
    */
-  showSubView: Task.async(function*(aViewId, aAnchor, aPlacementArea) {
+  showSubView: Task.async(function*(aViewId, aAnchor, aPlacementArea, aAdopted = false) {
     this._ensureEventListenersAdded();
     let viewNode = document.getElementById(aViewId);
     if (!viewNode) {
@@ -500,7 +500,7 @@ const PanelUI = {
 
     let container = aAnchor.closest("panelmultiview,photonpanelmultiview");
     if (container) {
-      container.showSubView(aViewId, aAnchor);
+      container.showSubView(aViewId, aAnchor, null, aAdopted);
     } else if (!aAnchor.open) {
       aAnchor.open = true;
 
