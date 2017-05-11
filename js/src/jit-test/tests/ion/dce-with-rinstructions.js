@@ -1343,6 +1343,7 @@ function rlog_object(i) {
 }
 
 for (j = 100 - max; j < 100; j++) {
+    with({}){} // Do not Ion-compile this loop.
     let i = j < 2 ? (Math.abs(j) % 50) + 2 : j;
     rbitnot_number(i);
     rbitnot_object(i);
