@@ -48,6 +48,18 @@ let getExtension = () => {
                                     "The profile contains a GeckoMain thread.");
             browser.test.sendMessage("tested profile");
             break;
+          case "test profile as array buffer":
+            let arrayBuffer = await browser.geckoProfiler.getProfileAsArrayBuffer();
+            browser.test.assertTrue(arrayBuffer.byteLength >= 2, "The profile array buffer contains data.");
+            let textDecoder = new TextDecoder();
+            let profile = JSON.parse(textDecoder.decode(arrayBuffer));
+            browser.test.assertTrue("libs" in profile, "The profile contains libs.");
+            browser.test.assertTrue("meta" in profile, "The profile contains meta.");
+            browser.test.assertTrue("threads" in profile, "The profile contains threads.");
+            browser.test.assertTrue(profile.threads.some(t => t.name == "GeckoMain"),
+                                    "The profile contains a GeckoMain thread.");
+            browser.test.sendMessage("tested profile as array buffer");
+            break;
           case "remove runningListener":
             browser.geckoProfiler.onRunning.removeListener(runningListener);
             browser.test.sendMessage("removed runningListener");
@@ -85,6 +97,9 @@ add_task(async function testProfilerControl() {
 
   extension.sendMessage("test profile");
   await extension.awaitMessage("tested profile");
+
+  extension.sendMessage("test profile as array buffer");
+  await extension.awaitMessage("tested profile as array buffer");
 
   extension.sendMessage("pause");
   await extension.awaitMessage("paused");
