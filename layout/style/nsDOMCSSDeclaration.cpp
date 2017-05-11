@@ -116,20 +116,6 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  CSSParsingEnvironment env;
-  URLExtraData* urlData = nullptr;
-  if (olddecl->IsGecko()) {
-    GetCSSParsingEnvironment(env);
-    if (!env.mPrincipal) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-  } else {
-    urlData = GetURLData();
-    if (!urlData) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-  }
-
   // For nsDOMCSSAttributeDeclaration, SetCSSDeclaration will lead to
   // Attribute setting code, which leads in turn to BeginUpdate.  We
   // need to start the update now so that the old rule doesn't get used
@@ -139,14 +125,25 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText)
 
   RefPtr<DeclarationBlock> newdecl;
   if (olddecl->IsServo()) {
-    newdecl = ServoDeclarationBlock::FromCssText(aCssText, urlData);
+    ServoCSSParsingEnvironment servoEnv = GetServoCSSParsingEnvironment();
+    if (!servoEnv.mUrlExtraData) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    newdecl = ServoDeclarationBlock::FromCssText(aCssText, servoEnv.mUrlExtraData);
   } else {
+    CSSParsingEnvironment geckoEnv;
+    GetCSSParsingEnvironment(geckoEnv);
+    if (!geckoEnv.mPrincipal) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
     RefPtr<css::Declaration> decl(new css::Declaration());
     decl->InitializeEmpty();
-    nsCSSParser cssParser(env.mCSSLoader);
+    nsCSSParser cssParser(geckoEnv.mCSSLoader);
     bool changed;
-    nsresult result = cssParser.ParseDeclarations(aCssText, env.mSheetURI,
-                                                  env.mBaseURI, env.mPrincipal,
+    nsresult result = cssParser.ParseDeclarations(aCssText, geckoEnv.mSheetURI,
+                                                  geckoEnv.mBaseURI, geckoEnv.mPrincipal,
                                                   decl, &changed);
     if (NS_FAILED(result) || !changed) {
       return result;
@@ -282,13 +279,21 @@ nsDOMCSSDeclaration::GetCSSParsingEnvironmentForRule(css::Rule* aRule,
   aCSSParseEnv.mCSSLoader = document ? document->CSSLoader() : nullptr;
 }
 
-/* static */ URLExtraData*
-nsDOMCSSDeclaration::GetURLDataForRule(const css::Rule* aRule)
+/* static */ nsDOMCSSDeclaration::ServoCSSParsingEnvironment
+nsDOMCSSDeclaration::GetServoCSSParsingEnvironmentForRule(const css::Rule* aRule)
 {
-  if (StyleSheet* sheet = aRule ? aRule->GetStyleSheet() : nullptr) {
-    return sheet->AsServo()->URLData();
+  StyleSheet* sheet = aRule ? aRule->GetStyleSheet() : nullptr;
+  if (!sheet) {
+    return ServoCSSParsingEnvironment(nullptr, eCompatibility_FullStandards);
   }
-  return nullptr;
+
+  if (nsIDocument* document = aRule->GetDocument()) {
+    return ServoCSSParsingEnvironment(sheet->AsServo()->URLData(),
+      document->GetCompatibilityMode());
+  } else {
+    return ServoCSSParsingEnvironment(sheet->AsServo()->URLData(),
+                                      eCompatibility_FullStandards);
+  }
 }
 
 template<typename GeckoFunc, typename ServoFunc>
@@ -301,20 +306,6 @@ nsDOMCSSDeclaration::ModifyDeclaration(GeckoFunc aGeckoFunc,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  CSSParsingEnvironment env;
-  URLExtraData* urlData = nullptr;
-  if (olddecl->IsGecko()) {
-    GetCSSParsingEnvironment(env);
-    if (!env.mPrincipal) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-  } else {
-    urlData = GetURLData();
-    if (!urlData) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-  }
-
   // For nsDOMCSSAttributeDeclaration, SetCSSDeclaration will lead to
   // Attribute setting code, which leads in turn to BeginUpdate.  We
   // need to start the update now so that the old rule doesn't get used
@@ -325,9 +316,20 @@ nsDOMCSSDeclaration::ModifyDeclaration(GeckoFunc aGeckoFunc,
 
   bool changed;
   if (decl->IsGecko()) {
-    aGeckoFunc(decl->AsGecko(), env, &changed);
+    CSSParsingEnvironment geckoEnv;
+    GetCSSParsingEnvironment(geckoEnv);
+    if (!geckoEnv.mPrincipal) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    aGeckoFunc(decl->AsGecko(), geckoEnv, &changed);
   } else {
-    changed = aServoFunc(decl->AsServo(), urlData);
+    ServoCSSParsingEnvironment servoEnv = GetServoCSSParsingEnvironment();
+    if (!servoEnv.mUrlExtraData) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    changed = aServoFunc(decl->AsServo(), servoEnv.mUrlExtraData);
   }
   if (!changed) {
     // Parsing failed -- but we don't throw an exception for that.
