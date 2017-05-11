@@ -62,7 +62,6 @@ typedef struct {
 	jemalloc_bool	opt_xmalloc;	/* abort(3) on OOM? */
 	jemalloc_bool	opt_zero;	/* Fill allocated memory with 0x0? */
 	size_t	narenas;	/* Number of arenas. */
-	size_t	balance_threshold; /* Arena contention rebalance threshold. */
 	size_t	quantum;	/* Allocation quantum. */
 	size_t	small_max;	/* Max quantum-spaced allocation size. */
 	size_t	large_max;	/* Max sub-chunksize allocation size. */
