@@ -98,14 +98,15 @@ public:
   ComparisonResult(nsresult aStatus,
                    bool aInCacheAndEqual,
                    const nsAString& aNewCacheName,
-                   const nsACString& aMaxScope,
-                   nsLoadFlags aLoadFlags) override
+                   const nsACString& aMaxScope) override
   {
-    mJob->ComparisonResult(aStatus,
-                           aInCacheAndEqual,
-                           aNewCacheName,
-                           aMaxScope,
-                           aLoadFlags);
+    mJob->ComparisonResult(aStatus, aInCacheAndEqual, aNewCacheName, aMaxScope);
+  }
+
+  virtual void
+  SaveLoadFlags(nsLoadFlags aLoadFlags) override
+  {
+    mJob->SetLoadFlags(aLoadFlags);
   }
 
   NS_INLINE_DECL_REFCOUNTING(ServiceWorkerUpdateJob::CompareCallback, override)
@@ -317,9 +318,14 @@ ServiceWorkerUpdateJob::Update()
 
   RefPtr<CompareCallback> callback = new CompareCallback(this);
 
-  serviceWorkerScriptCache::Compare(mRegistration, mPrincipal, cacheName,
-                                    NS_ConvertUTF8toUTF16(mScriptSpec),
-                                    callback, mLoadGroup);
+  nsresult rv =
+    serviceWorkerScriptCache::Compare(mRegistration, mPrincipal, cacheName,
+                                      NS_ConvertUTF8toUTF16(mScriptSpec),
+                                      callback, mLoadGroup);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    FailUpdateJob(rv);
+    return;
+  }
 }
 
 nsLoadFlags
@@ -329,11 +335,16 @@ ServiceWorkerUpdateJob::GetLoadFlags() const
 }
 
 void
+ServiceWorkerUpdateJob::SetLoadFlags(nsLoadFlags aLoadFlags)
+{
+  mLoadFlags = aLoadFlags;
+}
+
+void
 ServiceWorkerUpdateJob::ComparisonResult(nsresult aStatus,
                                          bool aInCacheAndEqual,
                                          const nsAString& aNewCacheName,
-                                         const nsACString& aMaxScope,
-                                         nsLoadFlags aLoadFlags)
+                                         const nsACString& aMaxScope)
 {
   AssertIsOnMainThread();
 
@@ -428,7 +439,7 @@ ServiceWorkerUpdateJob::ComparisonResult(nsresult aStatus,
                           mRegistration->mScope,
                           mScriptSpec,
                           aNewCacheName,
-                          aLoadFlags);
+                          mLoadFlags);
 
   mRegistration->SetEvaluating(sw);
 
