@@ -2,18 +2,13 @@
 "use strict";
 
 module.exports = {
-  rules: {
-    "mozilla/import-headjs-globals": "warn",
-    "mozilla/mark-test-function-used": "warn",
-    "no-shadow": "error"
-  },
-
   // All globals made available in the test environment.
   "globals": {
+    "Assert": false,
+    "PromiseDebugging": false,
     "_TEST_FILE": false,
     "add_task": false,
     "add_test": false,
-    "Assert": false,
     "deepEqual": false,
     "do_await_remote_message": false,
     "do_check_eq": false,
@@ -54,11 +49,10 @@ module.exports = {
     "notEqual": false,
     "notStrictEqual": false,
     "ok": false,
-    "PromiseDebugging": false,
-    "runningInParent": false,
     "run_next_test": false,
     "run_test": false,
     "run_test_in_child": false,
+    "runningInParent": false,
     // Defined in XPCShellImpl.
     "sendCommand": false,
     "strictEqual": false,
@@ -70,5 +64,11 @@ module.exports = {
     // eslint-disable-next-line max-len
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/uneval
     "uneval": false
+  },
+
+  rules: {
+    "mozilla/import-headjs-globals": "warn",
+    "mozilla/mark-test-function-used": "warn",
+    "no-shadow": "error"
   }
 };
