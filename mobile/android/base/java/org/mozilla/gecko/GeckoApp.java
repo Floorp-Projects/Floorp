@@ -2717,46 +2717,6 @@ public abstract class GeckoApp
         }
     }
 
-    @Override
-    public void doRestart() {
-        doRestart(null, null);
-    }
-
-    public void doRestart(String args) {
-        doRestart(args, null);
-    }
-
-    public void doRestart(Intent intent) {
-        doRestart(null, intent);
-    }
-
-    public void doRestart(String args, Intent restartIntent) {
-        if (restartIntent == null) {
-            restartIntent = new Intent(Intent.ACTION_MAIN);
-        }
-
-        if (args != null) {
-            restartIntent.putExtra("args", args);
-        }
-
-        mRestartIntent = restartIntent;
-        Log.d(LOGTAG, "doRestart(\"" + restartIntent + "\")");
-
-        doShutdown();
-    }
-
-    private void doShutdown() {
-        // Shut down GeckoApp activity.
-        runOnUiThread(new Runnable() {
-            @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
-            @Override public void run() {
-                if (!isFinishing() && (Versions.preJBMR1 || !isDestroyed())) {
-                    finish();
-                }
-            }
-        });
-    }
-
     private void checkMigrateProfile() {
         final File profileDir = getProfile().getDir();
 
