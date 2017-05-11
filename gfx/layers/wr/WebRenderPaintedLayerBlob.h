@@ -35,6 +35,9 @@ protected:
     if (mExternalImageId.isSome()) {
       WrBridge()->DeallocExternalImageId(mExternalImageId.ref());
     }
+    if (mImageKey.isSome()) {
+      WrManager()->AddImageKeyForDiscard(mImageKey.value());
+    }
   }
 
   wr::MaybeExternalImageId mExternalImageId;
@@ -52,7 +55,7 @@ public:
 private:
   RefPtr<ImageContainer> mImageContainer;
   RefPtr<ImageClient> mImageClient;
-
+  Maybe<WrImageKey> mImageKey;
 };
 
 } // namespace layers
