@@ -32,7 +32,6 @@ protected:
     virtual ~nsBufferedStream();
 
     nsresult Init(nsISupports* stream, uint32_t bufferSize);
-    nsresult GetData(nsISupports **aResult);
     NS_IMETHOD Fill() = 0;
     NS_IMETHOD Flush() = 0;
 
