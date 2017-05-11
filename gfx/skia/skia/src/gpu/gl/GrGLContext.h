@@ -15,9 +15,6 @@
 #include "GrGLUtil.h"
 
 struct GrContextOptions;
-namespace SkSL {
-    class Compiler;
-}
 
 /**
  * Encapsulates information about an OpenGL context including the OpenGL
@@ -35,14 +32,12 @@ public:
     GrGLDriver driver() const { return fDriver; }
     GrGLDriverVersion driverVersion() const { return fDriverVersion; }
     const GrGLCaps* caps() const { return fGLCaps.get(); }
-    GrGLCaps* caps() { return fGLCaps.get(); }
+    GrGLCaps* caps() { return fGLCaps; }
     bool hasExtension(const char* ext) const {
         return fInterface->hasExtension(ext);
     }
 
     const GrGLExtensions& extensions() const { return fInterface->fExtensions; }
-
-    virtual ~GrGLContextInfo() {}
 
 protected:
     struct ConstructorArgs {
@@ -58,18 +53,18 @@ protected:
 
     GrGLContextInfo(const ConstructorArgs& args);
 
-    sk_sp<const GrGLInterface> fInterface;
-    GrGLVersion                fGLVersion;
-    GrGLSLGeneration           fGLSLGeneration;
-    GrGLVendor                 fVendor;
-    GrGLRenderer               fRenderer;
-    GrGLDriver                 fDriver;
-    GrGLDriverVersion          fDriverVersion;
-    sk_sp<GrGLCaps>            fGLCaps;
+    SkAutoTUnref<const GrGLInterface>   fInterface;
+    GrGLVersion                         fGLVersion;
+    GrGLSLGeneration                    fGLSLGeneration;
+    GrGLVendor                          fVendor;
+    GrGLRenderer                        fRenderer;
+    GrGLDriver                          fDriver;
+    GrGLDriverVersion                   fDriverVersion;
+    SkAutoTUnref<GrGLCaps>              fGLCaps;
 };
 
 /**
- * Extension of GrGLContextInfo that also provides access to GrGLInterface and SkSL::Compiler.
+ * Extension of GrGLContextInfo that also provides access to GrGLInterface.
  */
 class GrGLContext : public GrGLContextInfo {
 public:
@@ -79,18 +74,10 @@ public:
      */
     static GrGLContext* Create(const GrGLInterface* interface, const GrContextOptions& options);
 
-    const GrGLInterface* interface() const { return fInterface.get(); }
-
-    SkSL::Compiler* compiler() const;
-
-    ~GrGLContext() override;
+    const GrGLInterface* interface() const { return fInterface; }
 
 private:
-    GrGLContext(const ConstructorArgs& args) 
-    : INHERITED(args)
-    , fCompiler(nullptr) {}
-
-    mutable SkSL::Compiler* fCompiler;
+    GrGLContext(const ConstructorArgs& args) : INHERITED(args) {}
 
     typedef GrGLContextInfo INHERITED;
 };

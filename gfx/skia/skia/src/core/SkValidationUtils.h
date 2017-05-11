@@ -9,8 +9,7 @@
 #define SkValidationUtils_DEFINED
 
 #include "SkBitmap.h"
-#include "SkBlendMode.h"
-#include "SkXfermodePriv.h"
+#include "SkXfermode.h"
 
 /** Returns true if coeff's value is in the SkXfermode::Coeff enum.
   */
@@ -18,10 +17,10 @@ static inline bool SkIsValidCoeff(SkXfermode::Coeff coeff) {
     return coeff >= 0 && coeff < SkXfermode::kCoeffCount;
 }
 
-/** Returns true if mode's value is in the SkBlendMode enum.
+/** Returns true if mode's value is in the SkXfermode::Mode enum.
   */
-static inline bool SkIsValidMode(SkBlendMode mode) {
-    return (unsigned)mode <= (unsigned)SkBlendMode::kLastMode;
+static inline bool SkIsValidMode(SkXfermode::Mode mode) {
+    return (mode >= 0) && (mode <= SkXfermode::kLastMode);
 }
 
 /** Returns true if the rect's dimensions are between 0 and SK_MaxS32

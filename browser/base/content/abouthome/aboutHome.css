@@ -405,14 +405,12 @@ body[narrow] #restorePreviousSession::before {
     background-image: url("chrome://browser/content/abouthome/snippet2@2x.png");
   }
 
-  .launchButton::before,
-  #aboutMozilla::before {
+  .launchButton::before {
     transform: scale(.5);
     transform-origin: 0 0;
   }
 
-  .launchButton:dir(rtl)::before,
-  #aboutMozilla:dir(rtl)::before {
+  .launchButton:dir(rtl)::before {
     transform: scale(.5) translateX(32px);
   }
 

@@ -43,7 +43,7 @@ static SkScalar from_font_units(SkScalar scaled, uint16_t emSize) {
     if (emSize == 1000) {
         return scaled;
     } else {
-        return scaled * 1000 / emSize;
+        return SkScalarMulDiv(scaled, 1000, emSize);
     }
 }
 

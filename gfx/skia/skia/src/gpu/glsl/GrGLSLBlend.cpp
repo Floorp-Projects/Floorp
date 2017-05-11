@@ -4,10 +4,8 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-
 #include "GrGLSLBlend.h"
 #include "glsl/GrGLSLFragmentShaderBuilder.h"
-#include "SkXfermodePriv.h"
 
 //////////////////////////////////////////////////////////////////////////////
 //  Advanced (non-coeff) blend helpers
@@ -124,8 +122,8 @@ static void soft_light_component_pos_dst_alpha(GrGLSLFragmentBuilder* fsBuilder,
 static void add_lum_function(GrGLSLFragmentBuilder* fsBuilder, SkString* setLumFunction) {
     // Emit a helper that gets the luminance of a color.
     SkString getFunction;
-    GrShaderVar getLumArgs[] = {
-        GrShaderVar("color", kVec3f_GrSLType),
+    GrGLSLShaderVar getLumArgs[] = {
+        GrGLSLShaderVar("color", kVec3f_GrSLType),
     };
     SkString getLumBody("return dot(vec3(0.3, 0.59, 0.11), color);");
     fsBuilder->emitFunction(kFloat_GrSLType,
@@ -135,10 +133,10 @@ static void add_lum_function(GrGLSLFragmentBuilder* fsBuilder, SkString* setLumF
                             &getFunction);
 
     // Emit the set luminance function.
-    GrShaderVar setLumArgs[] = {
-        GrShaderVar("hueSat", kVec3f_GrSLType),
-        GrShaderVar("alpha", kFloat_GrSLType),
-        GrShaderVar("lumColor", kVec3f_GrSLType),
+    GrGLSLShaderVar setLumArgs[] = {
+        GrGLSLShaderVar("hueSat", kVec3f_GrSLType),
+        GrGLSLShaderVar("alpha", kFloat_GrSLType),
+        GrGLSLShaderVar("lumColor", kVec3f_GrSLType),
     };
     SkString setLumBody;
     setLumBody.printf("float diff = %s(lumColor - hueSat);", getFunction.c_str());
@@ -169,7 +167,7 @@ static void add_lum_function(GrGLSLFragmentBuilder* fsBuilder, SkString* setLumF
 static void add_sat_function(GrGLSLFragmentBuilder* fsBuilder, SkString* setSatFunction) {
     // Emit a helper that gets the saturation of a color
     SkString getFunction;
-    GrShaderVar getSatArgs[] = { GrShaderVar("color", kVec3f_GrSLType) };
+    GrGLSLShaderVar getSatArgs[] = { GrGLSLShaderVar("color", kVec3f_GrSLType) };
     SkString getSatBody;
     getSatBody.printf("return max(max(color.r, color.g), color.b) - "
                       "min(min(color.r, color.g), color.b);");
@@ -184,11 +182,11 @@ static void add_sat_function(GrGLSLFragmentBuilder* fsBuilder, SkString* setSatF
     // problems on PowerVR drivers. So instead it returns a vec3 where r, g ,b are the
     // adjusted min, mid, and max inputs, respectively.
     SkString helperFunction;
-    GrShaderVar helperArgs[] = {
-        GrShaderVar("minComp", kFloat_GrSLType),
-        GrShaderVar("midComp", kFloat_GrSLType),
-        GrShaderVar("maxComp", kFloat_GrSLType),
-        GrShaderVar("sat", kFloat_GrSLType),
+    GrGLSLShaderVar helperArgs[] = {
+        GrGLSLShaderVar("minComp", kFloat_GrSLType),
+        GrGLSLShaderVar("midComp", kFloat_GrSLType),
+        GrGLSLShaderVar("maxComp", kFloat_GrSLType),
+        GrGLSLShaderVar("sat", kFloat_GrSLType),
     };
     static const char kHelperBody[] = "if (minComp < maxComp) {"
         "vec3 result;"
@@ -205,9 +203,9 @@ static void add_sat_function(GrGLSLFragmentBuilder* fsBuilder, SkString* setSatF
                             kHelperBody,
                             &helperFunction);
 
-    GrShaderVar setSatArgs[] = {
-        GrShaderVar("hueLumColor", kVec3f_GrSLType),
-        GrShaderVar("satColor", kVec3f_GrSLType),
+    GrGLSLShaderVar setSatArgs[] = {
+        GrGLSLShaderVar("hueLumColor", kVec3f_GrSLType),
+        GrGLSLShaderVar("satColor", kVec3f_GrSLType),
     };
     const char* helpFunc = helperFunction.c_str();
     SkString setSatBody;
@@ -239,7 +237,7 @@ static void add_sat_function(GrGLSLFragmentBuilder* fsBuilder, SkString* setSatF
 
 static void emit_advanced_xfermode_code(GrGLSLFragmentBuilder* fsBuilder, const char* srcColor,
                                         const char* dstColor, const char* outputColor,
-                                        SkBlendMode mode) {
+                                        SkXfermode::Mode mode) {
     SkASSERT(srcColor);
     SkASSERT(dstColor);
     SkASSERT(outputColor);
@@ -248,38 +246,38 @@ static void emit_advanced_xfermode_code(GrGLSLFragmentBuilder* fsBuilder, const 
                            outputColor, srcColor, srcColor, dstColor);
 
     switch (mode) {
-        case SkBlendMode::kOverlay:
+        case SkXfermode::kOverlay_Mode:
             // Overlay is Hard-Light with the src and dst reversed
             hard_light(fsBuilder, outputColor, dstColor, srcColor);
             break;
-        case SkBlendMode::kDarken:
+        case SkXfermode::kDarken_Mode:
             fsBuilder->codeAppendf("%s.rgb = min((1.0 - %s.a) * %s.rgb + %s.rgb, "
                                    "(1.0 - %s.a) * %s.rgb + %s.rgb);",
                                    outputColor,
                                    srcColor, dstColor, srcColor,
                                    dstColor, srcColor, dstColor);
             break;
-        case SkBlendMode::kLighten:
+        case SkXfermode::kLighten_Mode:
             fsBuilder->codeAppendf("%s.rgb = max((1.0 - %s.a) * %s.rgb + %s.rgb, "
                                    "(1.0 - %s.a) * %s.rgb + %s.rgb);",
                                    outputColor,
                                    srcColor, dstColor, srcColor,
                                    dstColor, srcColor, dstColor);
             break;
-        case SkBlendMode::kColorDodge:
+        case SkXfermode::kColorDodge_Mode:
             color_dodge_component(fsBuilder, outputColor, srcColor, dstColor, 'r');
             color_dodge_component(fsBuilder, outputColor, srcColor, dstColor, 'g');
             color_dodge_component(fsBuilder, outputColor, srcColor, dstColor, 'b');
             break;
-        case SkBlendMode::kColorBurn:
+        case SkXfermode::kColorBurn_Mode:
             color_burn_component(fsBuilder, outputColor, srcColor, dstColor, 'r');
             color_burn_component(fsBuilder, outputColor, srcColor, dstColor, 'g');
             color_burn_component(fsBuilder, outputColor, srcColor, dstColor, 'b');
             break;
-        case SkBlendMode::kHardLight:
+        case SkXfermode::kHardLight_Mode:
             hard_light(fsBuilder, outputColor, srcColor, dstColor);
             break;
-        case SkBlendMode::kSoftLight:
+        case SkXfermode::kSoftLight_Mode:
             fsBuilder->codeAppendf("if (0.0 == %s.a) {", dstColor);
             fsBuilder->codeAppendf("%s.rgba = %s;", outputColor, srcColor);
             fsBuilder->codeAppendf("} else {");
@@ -288,25 +286,25 @@ static void emit_advanced_xfermode_code(GrGLSLFragmentBuilder* fsBuilder, const 
             soft_light_component_pos_dst_alpha(fsBuilder, outputColor, srcColor, dstColor, 'b');
             fsBuilder->codeAppendf("}");
             break;
-        case SkBlendMode::kDifference:
+        case SkXfermode::kDifference_Mode:
             fsBuilder->codeAppendf("%s.rgb = %s.rgb + %s.rgb -"
                                    "2.0 * min(%s.rgb * %s.a, %s.rgb * %s.a);",
                                    outputColor, srcColor, dstColor, srcColor, dstColor,
                                    dstColor, srcColor);
             break;
-        case SkBlendMode::kExclusion:
+        case SkXfermode::kExclusion_Mode:
             fsBuilder->codeAppendf("%s.rgb = %s.rgb + %s.rgb - "
                                    "2.0 * %s.rgb * %s.rgb;",
                                    outputColor, dstColor, srcColor, dstColor, srcColor);
             break;
-        case SkBlendMode::kMultiply:
+        case SkXfermode::kMultiply_Mode:
             fsBuilder->codeAppendf("%s.rgb = (1.0 - %s.a) * %s.rgb + "
                                    "(1.0 - %s.a) * %s.rgb + "
                                    "%s.rgb * %s.rgb;",
                                    outputColor, srcColor, dstColor, dstColor, srcColor,
                                    srcColor, dstColor);
             break;
-        case SkBlendMode::kHue: {
+        case SkXfermode::kHue_Mode: {
             //  SetLum(SetSat(S * Da, Sat(D * Sa)), Sa*Da, D*Sa) + (1 - Sa) * D + (1 - Da) * S
             SkString setSat, setLum;
             add_sat_function(fsBuilder, &setSat);
@@ -321,7 +319,7 @@ static void emit_advanced_xfermode_code(GrGLSLFragmentBuilder* fsBuilder, const 
                                    outputColor, srcColor, dstColor, dstColor, srcColor);
             break;
         }
-        case SkBlendMode::kSaturation: {
+        case SkXfermode::kSaturation_Mode: {
             // SetLum(SetSat(D * Sa, Sat(S * Da)), Sa*Da, D*Sa)) + (1 - Sa) * D + (1 - Da) * S
             SkString setSat, setLum;
             add_sat_function(fsBuilder, &setSat);
@@ -336,7 +334,7 @@ static void emit_advanced_xfermode_code(GrGLSLFragmentBuilder* fsBuilder, const 
                                    outputColor, srcColor, dstColor, dstColor, srcColor);
             break;
         }
-        case SkBlendMode::kColor: {
+        case SkXfermode::kColor_Mode: {
             //  SetLum(S * Da, Sa* Da, D * Sa) + (1 - Sa) * D + (1 - Da) * S
             SkString setLum;
             add_lum_function(fsBuilder, &setLum);
@@ -348,7 +346,7 @@ static void emit_advanced_xfermode_code(GrGLSLFragmentBuilder* fsBuilder, const 
                                    outputColor, srcColor, dstColor, dstColor, srcColor);
             break;
         }
-        case SkBlendMode::kLuminosity: {
+        case SkXfermode::kLuminosity_Mode: {
             //  SetLum(D * Sa, Sa* Da, S * Da) + (1 - Sa) * D + (1 - Da) * S
             SkString setLum;
             add_lum_function(fsBuilder, &setLum);
@@ -418,26 +416,17 @@ static bool append_porterduff_term(GrGLSLFragmentBuilder* fsBuilder, SkXfermode:
 
 void GrGLSLBlend::AppendMode(GrGLSLFragmentBuilder* fsBuilder, const char* srcColor,
                              const char* dstColor, const char* outColor,
-                             SkBlendMode mode) {
+                             SkXfermode::Mode mode) {
 
     SkXfermode::Coeff srcCoeff, dstCoeff;
     if (SkXfermode::ModeAsCoeff(mode, &srcCoeff, &dstCoeff)) {
-        // The only coeff mode that can go out of range is plus.
-        bool clamp = mode == SkBlendMode::kPlus;
-
         fsBuilder->codeAppendf("%s = ", outColor);
-        if (clamp) {
-            fsBuilder->codeAppend("clamp(");
-        }
         // append src blend
         bool didAppend = append_porterduff_term(fsBuilder, srcCoeff, srcColor, srcColor, dstColor,
                                                 false);
         // append dst blend
         if(!append_porterduff_term(fsBuilder, dstCoeff, dstColor, srcColor, dstColor, didAppend)) {
             fsBuilder->codeAppend("vec4(0, 0, 0, 0)");
-        }
-        if (clamp) {
-            fsBuilder->codeAppend(", 0, 1);");
         }
         fsBuilder->codeAppend(";");
     } else {

@@ -4,7 +4,7 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-
+ 
 #ifndef SKSL_ASTEXTENSION
 #define SKSL_ASTEXTENSION
 
@@ -12,19 +12,19 @@
 
 namespace SkSL {
 
-/**
- * An extension declaration.
+/** 
+ * An extension declaration. 
  */
 struct ASTExtension : public ASTDeclaration {
-    ASTExtension(Position position, String name)
+    ASTExtension(Position position, std::string name)
     : INHERITED(position, kExtension_Kind)
     , fName(std::move(name)) {}
 
-    String description() const override {
+    std::string description() const override {
         return "#extension " + fName + " : enable";
     }
 
-    const String fName;
+    const std::string fName;
 
     typedef ASTDeclaration INHERITED;
 };

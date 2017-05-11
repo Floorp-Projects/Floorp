@@ -5,6 +5,8 @@
  * found in the LICENSE file.
  */
 
+#if defined(SK_BUILD_FOR_MAC)
+
 #import  <Cocoa/Cocoa.h>
 #include "SkOSWindow_Mac.h"
 #include "SkOSMenu.h"
@@ -85,10 +87,9 @@ void SkOSWindow::setVsync(bool enable) {
 }
 
 bool SkOSWindow::makeFullscreen() {
-    NSScreen* _Nullable screen = [NSScreen mainScreen];
-    if (screen) {
-        [(SkNSView*)fHWND enterFullScreenMode:(NSScreen* _Nonnull)screen withOptions:nil];
-    }
+    [(SkNSView*)fHWND enterFullScreenMode:[NSScreen mainScreen] withOptions:nil];
     return true;
 }
 
+
+#endif

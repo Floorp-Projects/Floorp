@@ -24,6 +24,31 @@ static bool g_AllPictureIOSecurityPrecautionsEnabled = false;
 
 DECLARE_SKMESSAGEBUS_MESSAGE(SkPicture::DeletionMessage);
 
+#ifdef SK_SUPPORT_LEGACY_PICTUREINSTALLPIXELREF
+class InstallProcImageDeserializer : public SkImageDeserializer {
+    SkPicture::InstallPixelRefProc fProc;
+public:
+    InstallProcImageDeserializer(SkPicture::InstallPixelRefProc proc) : fProc(proc) {}
+
+    sk_sp<SkImage> makeFromMemory(const void* data, size_t length, const SkIRect* subset) override {
+        SkBitmap bitmap;
+        if (fProc(data, length, &bitmap)) {
+            bitmap.setImmutable();
+            return SkImage::MakeFromBitmap(bitmap);
+        }
+        return nullptr;
+    }
+    sk_sp<SkImage> makeFromData(SkData* data, const SkIRect* subset) override {
+        return this->makeFromMemory(data->data(), data->size(), subset);
+    }
+};
+
+sk_sp<SkPicture> SkPicture::MakeFromStream(SkStream* stream, InstallPixelRefProc proc) {
+    InstallProcImageDeserializer deserializer(proc);
+    return MakeFromStream(stream, &deserializer);
+}
+#endif
+
 /* SkPicture impl.  This handles generic responsibilities like unique IDs and serialization. */
 
 SkPicture::SkPicture() : fUniqueID(0) {}
@@ -171,9 +196,9 @@ sk_sp<SkPicture> SkPicture::MakeFromStream(SkStream* stream, SkImageDeserializer
     if (!InternalOnly_StreamIsSKP(stream, &info) || !stream->readBool()) {
         return nullptr;
     }
-    std::unique_ptr<SkPictureData> data(
+    SkAutoTDelete<SkPictureData> data(
             SkPictureData::CreateFromStream(stream, info, factory, typefaces));
-    return Forwardport(info, data.get(), nullptr);
+    return Forwardport(info, data, nullptr);
 }
 
 sk_sp<SkPicture> SkPicture::MakeFromBuffer(SkReadBuffer& buffer) {
@@ -181,8 +206,8 @@ sk_sp<SkPicture> SkPicture::MakeFromBuffer(SkReadBuffer& buffer) {
     if (!InternalOnly_BufferIsSKP(&buffer, &info) || !buffer.readBool()) {
         return nullptr;
     }
-    std::unique_ptr<SkPictureData> data(SkPictureData::CreateFromBuffer(buffer, info));
-    return Forwardport(info, data.get(), &buffer);
+    SkAutoTDelete<SkPictureData> data(SkPictureData::CreateFromBuffer(buffer, info));
+    return Forwardport(info, data, &buffer);
 }
 
 SkPictureData* SkPicture::backport() const {
@@ -208,7 +233,7 @@ void SkPicture::serialize(SkWStream* stream,
                           SkPixelSerializer* pixelSerializer,
                           SkRefCntSet* typefaceSet) const {
     SkPictInfo info = this->createHeader();
-    std::unique_ptr<SkPictureData> data(this->backport());
+    SkAutoTDelete<SkPictureData> data(this->backport());
 
     stream->write(&info, sizeof(info));
     if (data) {
@@ -221,7 +246,7 @@ void SkPicture::serialize(SkWStream* stream,
 
 void SkPicture::flatten(SkWriteBuffer& buffer) const {
     SkPictInfo info = this->createHeader();
-    std::unique_ptr<SkPictureData> data(this->backport());
+    SkAutoTDelete<SkPictureData> data(this->backport());
 
     buffer.writeByteArray(&info.fMagic, sizeof(info.fMagic));
     buffer.writeUInt(info.getVersion());

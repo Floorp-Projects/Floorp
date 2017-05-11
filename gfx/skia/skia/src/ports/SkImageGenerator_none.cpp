@@ -7,6 +7,6 @@
 
 #include "SkImageGenerator.h"
 
-std::unique_ptr<SkImageGenerator> SkImageGenerator::MakeFromEncodedImpl(sk_sp<SkData>) {
+SkImageGenerator* SkImageGenerator::NewFromEncodedImpl(SkData*) {
     return nullptr;
 }

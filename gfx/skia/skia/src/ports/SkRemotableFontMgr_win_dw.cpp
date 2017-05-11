@@ -9,6 +9,7 @@
 
 #include "SkDWrite.h"
 #include "SkDWriteFontFileStream.h"
+#include "SkDataTable.h"
 #include "SkHRESULT.h"
 #include "SkMutex.h"
 #include "SkRemotableFontMgr.h"
@@ -89,6 +90,26 @@ public:
         memcpy(fLocaleName.get(), localeName, localeNameLength * sizeof(WCHAR));
     }
 
+    sk_sp<SkDataTable> getFamilyNames() const override {
+        int count = fFontCollection->GetFontFamilyCount();
+
+        SkDataTableBuilder names(1024);
+        for (int index = 0; index < count; ++index) {
+            SkTScopedComPtr<IDWriteFontFamily> fontFamily;
+            HRNM(fFontCollection->GetFontFamily(index, &fontFamily),
+                 "Could not get requested family.");
+
+            SkTScopedComPtr<IDWriteLocalizedStrings> familyNames;
+            HRNM(fontFamily->GetFamilyNames(&familyNames), "Could not get family names.");
+
+            SkString familyName;
+            sk_get_locale_string(familyNames.get(), fLocaleName.get(), &familyName);
+
+            names.appendString(familyName);
+        }
+        return names.detachDataTable();
+    }
+
     HRESULT FontToIdentity(IDWriteFont* font, SkFontIdentity* fontId) const {
         SkTScopedComPtr<IDWriteFontFace> fontFace;
         HRM(font->CreateFontFace(&fontFace), "Could not create font face.");
@@ -127,7 +148,7 @@ public:
 
         int count = fontFamily->GetFontCount();
         SkFontIdentity* fontIds;
-        sk_sp<SkRemotableFontIdentitySet> fontIdSet(
+        SkAutoTUnref<SkRemotableFontIdentitySet> fontIdSet(
             new SkRemotableFontIdentitySet(count, &fontIds));
         for (int fontIndex = 0; fontIndex < count; ++fontIndex) {
             SkTScopedComPtr<IDWriteFont> font;
@@ -344,7 +365,7 @@ public:
 
     protected:
         ULONG fRefCount;
-        sk_sp<const SkRemotableFontMgr_DirectWrite> fOuter;
+        SkAutoTUnref<const SkRemotableFontMgr_DirectWrite> fOuter;
         UINT32 fCharacter;
         SkFontIdentity fIdentity;
     };

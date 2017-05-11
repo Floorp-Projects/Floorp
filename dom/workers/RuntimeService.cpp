@@ -1056,6 +1056,7 @@ public:
     : CycleCollectedJSRuntime(aCx)
     , mWorkerPrivate(aWorkerPrivate)
   {
+    MOZ_COUNT_CTOR_INHERITED(WorkerJSRuntime, CycleCollectedJSRuntime);
     MOZ_ASSERT(aWorkerPrivate);
   }
 
@@ -1068,6 +1069,7 @@ public:
 
   ~WorkerJSRuntime()
   {
+    MOZ_COUNT_DTOR_INHERITED(WorkerJSRuntime, CycleCollectedJSRuntime);
   }
 
   virtual void
@@ -1120,11 +1122,13 @@ public:
   explicit WorkerJSContext(WorkerPrivate* aWorkerPrivate)
     : mWorkerPrivate(aWorkerPrivate)
   {
+    MOZ_COUNT_CTOR_INHERITED(WorkerJSContext, CycleCollectedJSContext);
     MOZ_ASSERT(aWorkerPrivate);
   }
 
   ~WorkerJSContext()
   {
+    MOZ_COUNT_DTOR_INHERITED(WorkerJSContext, CycleCollectedJSContext);
     JSContext* cx = MaybeContext();
     if (!cx) {
       return;   // Initialize() must have failed

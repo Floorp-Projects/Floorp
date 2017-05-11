@@ -7,6 +7,7 @@
 const TEST_PAGE = "http://mochi.test:8888/browser/browser/components/customizableui/test/support/test_967000_charEncoding_page.html";
 
 add_task(function*() {
+  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   info("Check Character Encoding button functionality");
 
   // add the Character Encoding button to the panel

@@ -26,7 +26,7 @@ public:
     };
     static const int kInputModeCnt = kLastInputMode + 1;
 
-    static sk_sp<GrFragmentProcessor> Make(GrColor4f color, InputMode mode) {
+    static sk_sp<GrFragmentProcessor> Make(GrColor color, InputMode mode) {
         return sk_sp<GrFragmentProcessor>(new GrConstColorProcessor(color, mode));
     }
 
@@ -34,42 +34,30 @@ public:
 
     SkString dumpInfo() const override {
         SkString str;
-        str.appendf("Color: 0x%08x", fColor.toGrColor());
+        str.appendf("Color: 0x%08x", fColor);
         return str;
     }
 
-    GrColor4f color() const { return fColor; }
+    GrColor color() const { return fColor; }
 
     InputMode inputMode() const { return fMode; }
 
 private:
-    static OptimizationFlags OptFlags(GrColor4f color, InputMode mode) {
-        OptimizationFlags flags = kConstantOutputForConstantInput_OptimizationFlag;
-        if (mode != kIgnore_InputMode) {
-            flags |= kCompatibleWithCoverageAsAlpha_OptimizationFlag;
-        }
-        if (color.isOpaque()) {
-            flags |= kPreservesOpaqueInput_OptimizationFlag;
-        }
-        return flags;
-    }
-
-    GrConstColorProcessor(GrColor4f color, InputMode mode)
-            : INHERITED(OptFlags(color, mode)), fColor(color), fMode(mode) {
+    GrConstColorProcessor(GrColor color, InputMode mode) : fColor(color), fMode(mode) {
         this->initClassID<GrConstColorProcessor>();
     }
 
     GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
 
-    void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+    void onGetGLSLProcessorKey(const GrGLSLCaps&, GrProcessorKeyBuilder*) const override;
 
     bool onIsEqual(const GrFragmentProcessor&) const override;
 
-    GrColor4f constantOutputForConstantInput(GrColor4f input) const override;
+    void onComputeInvariantOutput(GrInvariantOutput* inout) const override;
 
     GR_DECLARE_FRAGMENT_PROCESSOR_TEST;
 
-    GrColor4f   fColor;
+    GrColor     fColor;
     InputMode   fMode;
 
     typedef GrFragmentProcessor INHERITED;

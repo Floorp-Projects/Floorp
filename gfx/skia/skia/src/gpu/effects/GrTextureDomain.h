@@ -13,9 +13,9 @@
 #include "glsl/GrGLSLProgramDataManager.h"
 
 class GrGLProgramBuilder;
-class GrGLSLColorSpaceXformHelper;
 class GrGLSLShaderBuilder;
 class GrInvariantOutput;
+class GrGLSLSampler;
 class GrGLSLUniformHandler;
 struct SkRect;
 
@@ -44,8 +44,8 @@ public:
     static const int kModeCount = kLastMode + 1;
 
     static const GrTextureDomain& IgnoredDomain() {
-        static const GrTextureDomain gDomain((GrTextureProxy*)nullptr,
-                                             SkRect::MakeEmpty(), kIgnore_Mode);
+        static const SkRect gDummyRect = {0, 0, 0, 0};
+        static const GrTextureDomain gDomain(gDummyRect, kIgnore_Mode);
         return gDomain;
     }
 
@@ -53,24 +53,36 @@ public:
      * @param index     Pass a value >= 0 if using multiple texture domains in the same effect.
      *                  It is used to keep inserted variables from causing name collisions.
      */
-    GrTextureDomain(GrTexture*, const SkRect& domain, Mode, int index = -1);
-
-    GrTextureDomain(GrTextureProxy*, const SkRect& domain, Mode, int index = -1);
+    GrTextureDomain(const SkRect& domain, Mode, int index = -1);
 
     const SkRect& domain() const { return fDomain; }
     Mode mode() const { return fMode; }
 
     /* Computes a domain that bounds all the texels in texelRect. Note that with bilerp enabled
        texels neighboring the domain may be read. */
-    static const SkRect MakeTexelDomain(const SkIRect& texelRect) {
-        return SkRect::Make(texelRect);
+    static const SkRect MakeTexelDomain(const GrTexture* texture, const SkIRect& texelRect) {
+        SkScalar wInv = SK_Scalar1 / texture->width();
+        SkScalar hInv = SK_Scalar1 / texture->height();
+        SkRect result = {
+            texelRect.fLeft * wInv,
+            texelRect.fTop * hInv,
+            texelRect.fRight * wInv,
+            texelRect.fBottom * hInv
+        };
+        return result;
     }
 
-    static const SkRect MakeTexelDomainForMode(const SkIRect& texelRect, Mode mode) {
+    static const SkRect MakeTexelDomainForMode(const GrTexture* texture, const SkIRect& texelRect, Mode mode) {
         // For Clamp mode, inset by half a texel.
+        SkScalar wInv = SK_Scalar1 / texture->width();
+        SkScalar hInv = SK_Scalar1 / texture->height();
         SkScalar inset = (mode == kClamp_Mode && !texelRect.isEmpty()) ? SK_ScalarHalf : 0;
-        return SkRect::MakeLTRB(texelRect.fLeft + inset, texelRect.fTop + inset,
-                                texelRect.fRight - inset, texelRect.fBottom - inset);
+        return SkRect::MakeLTRB(
+            (texelRect.fLeft + inset) * wInv,
+            (texelRect.fTop + inset) * hInv,
+            (texelRect.fRight - inset) * wInv,
+            (texelRect.fBottom - inset) * hInv
+        );
     }
 
     bool operator==(const GrTextureDomain& that) const {
@@ -104,13 +116,12 @@ public:
          */
         void sampleTexture(GrGLSLShaderBuilder* builder,
                            GrGLSLUniformHandler* uniformHandler,
-                           const GrShaderCaps* shaderCaps,
+                           const GrGLSLCaps* glslCaps,
                            const GrTextureDomain& textureDomain,
                            const char* outColor,
                            const SkString& inCoords,
                            GrGLSLFragmentProcessor::SamplerHandle sampler,
-                           const char* inModulateColor = nullptr,
-                           GrGLSLColorSpaceXformHelper* colorXformHelper = nullptr);
+                           const char* inModulateColor = nullptr);
 
         /**
          * Call this from GrGLSLFragmentProcessor::setData() to upload uniforms necessary for the
@@ -118,7 +129,7 @@ public:
          * origin.
          */
         void setData(const GrGLSLProgramDataManager& pdman, const GrTextureDomain& textureDomain,
-                     GrTexture* texure);
+                     GrSurfaceOrigin textureOrigin);
 
         enum {
             kDomainKeyBits = 2, // See DomainKey().
@@ -145,6 +156,8 @@ protected:
     Mode    fMode;
     SkRect  fDomain;
     int     fIndex;
+
+    typedef GrSingleTextureEffect INHERITED;
 };
 
 /**
@@ -153,13 +166,12 @@ protected:
 class GrTextureDomainEffect : public GrSingleTextureEffect {
 
 public:
-    static sk_sp<GrFragmentProcessor> Make(GrResourceProvider*,
-                                           sk_sp<GrTextureProxy>,
+    static sk_sp<GrFragmentProcessor> Make(GrTexture*,
                                            sk_sp<GrColorSpaceXform>,
                                            const SkMatrix&,
                                            const SkRect& domain,
                                            GrTextureDomain::Mode,
-                                           GrSamplerParams::FilterMode filterMode);
+                                           GrTextureParams::FilterMode filterMode);
 
     const char* name() const override { return "TextureDomain"; }
 
@@ -175,21 +187,20 @@ public:
 private:
     GrTextureDomain fTextureDomain;
 
-    GrTextureDomainEffect(GrResourceProvider*,
-                          sk_sp<GrTextureProxy>,
+    GrTextureDomainEffect(GrTexture*,
                           sk_sp<GrColorSpaceXform>,
                           const SkMatrix&,
                           const SkRect& domain,
                           GrTextureDomain::Mode,
-                          GrSamplerParams::FilterMode);
-
-    static OptimizationFlags OptFlags(GrPixelConfig config, GrTextureDomain::Mode mode);
+                          GrTextureParams::FilterMode);
 
     GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
 
-    void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+    void onGetGLSLProcessorKey(const GrGLSLCaps&, GrProcessorKeyBuilder*) const override;
 
     bool onIsEqual(const GrFragmentProcessor&) const override;
+
+    void onComputeInvariantOutput(GrInvariantOutput* inout) const override;
 
     GR_DECLARE_FRAGMENT_PROCESSOR_TEST;
 
@@ -198,8 +209,7 @@ private:
 
 class GrDeviceSpaceTextureDecalFragmentProcessor : public GrFragmentProcessor {
 public:
-    static sk_sp<GrFragmentProcessor> Make(GrResourceProvider*, sk_sp<GrTextureProxy>,
-                                           const SkIRect& subset,
+    static sk_sp<GrFragmentProcessor> Make(GrTexture*, const SkIRect& subset,
                                            const SkIPoint& deviceSpaceOffset);
 
     const char* name() const override { return "GrDeviceSpaceTextureDecalFragmentProcessor"; }
@@ -215,19 +225,19 @@ public:
     }
 
 private:
-    TextureSampler fTextureSampler;
+    GrTextureAccess fTextureAccess;
     GrTextureDomain fTextureDomain;
     SkIPoint fDeviceSpaceOffset;
 
-    GrDeviceSpaceTextureDecalFragmentProcessor(GrResourceProvider*, sk_sp<GrTextureProxy>,
-                                               const SkIRect&, const SkIPoint&);
+    GrDeviceSpaceTextureDecalFragmentProcessor(GrTexture*, const SkIRect&, const SkIPoint&);
 
     GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
 
     // Since we always use decal mode, there is no need for key data.
-    void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override {}
+    void onGetGLSLProcessorKey(const GrGLSLCaps&, GrProcessorKeyBuilder*) const override {}
 
     bool onIsEqual(const GrFragmentProcessor& fp) const override;
+    void onComputeInvariantOutput(GrInvariantOutput* inout) const override;
 
     GR_DECLARE_FRAGMENT_PROCESSOR_TEST;
 

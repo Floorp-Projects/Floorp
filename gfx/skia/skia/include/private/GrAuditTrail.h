@@ -9,14 +9,12 @@
 #define GrAuditTrail_DEFINED
 
 #include "GrConfig.h"
-#include "GrGpuResource.h"
-#include "GrRenderTargetProxy.h"
 #include "SkRect.h"
 #include "SkString.h"
 #include "SkTArray.h"
 #include "SkTHash.h"
 
-class GrOp;
+class GrBatch;
 
 /*
  * GrAuditTrail collects a list of draw ops, detailed information about those ops, and can dump them
@@ -50,26 +48,31 @@ public:
         GrAuditTrail* fAuditTrail;
     };
 
-    class AutoManageOpList {
+    class AutoManageBatchList {
     public:
-        AutoManageOpList(GrAuditTrail* auditTrail)
-                : fAutoEnable(auditTrail), fAuditTrail(auditTrail) {}
+        AutoManageBatchList(GrAuditTrail* auditTrail)
+            : fAutoEnable(auditTrail)
+            , fAuditTrail(auditTrail) {
+        }
 
-        ~AutoManageOpList() { fAuditTrail->fullReset(); }
+        ~AutoManageBatchList() {
+            fAuditTrail->fullReset();
+        }
 
     private:
         AutoEnable fAutoEnable;
         GrAuditTrail* fAuditTrail;
     };
 
-    class AutoCollectOps {
+    class AutoCollectBatches {
     public:
-        AutoCollectOps(GrAuditTrail* auditTrail, int clientID)
-                : fAutoEnable(auditTrail), fAuditTrail(auditTrail) {
+        AutoCollectBatches(GrAuditTrail* auditTrail, int clientID)
+            : fAutoEnable(auditTrail)
+            , fAuditTrail(auditTrail) {
             fAuditTrail->setClientID(clientID);
         }
 
-        ~AutoCollectOps() { fAuditTrail->setClientID(kGrAuditTrailInvalidID); }
+        ~AutoCollectBatches() { fAuditTrail->setClientID(kGrAuditTrailInvalidID); }
 
     private:
         AutoEnable fAutoEnable;
@@ -81,21 +84,19 @@ public:
         fCurrentStackTrace.push_back(SkString(framename));
     }
 
-    void addOp(const GrOp*,
-               GrGpuResource::UniqueID resourceID,
-               GrRenderTargetProxy::UniqueID proxyID);
+    void addBatch(const GrBatch* batch);
 
-    void opsCombined(const GrOp* consumer, const GrOp* consumed);
+    void batchingResultCombined(const GrBatch* consumer, const GrBatch* consumed);
 
-    // Because op combining is heavily dependent on sequence of draw calls, these calls will only
-    // produce valid information for the given draw sequence which preceeded them. Specifically, ops
-    // of future draw calls may combine with previous ops and thus would invalidate the json. What
-    // this means is that for some sequence of draw calls N, the below toJson calls will only
-    // produce JSON which reflects N draw calls. This JSON may or may not be accurate for N + 1 or
-    // N - 1 draws depending on the actual combining algorithm used.
+    // Because batching is heavily dependent on sequence of draw calls, these calls will only
+    // produce valid information for the given draw sequence which preceeded them.
+    // Specifically, future draw calls may change the batching and thus would invalidate
+    // the json.  What this means is that for some sequence of draw calls N, the below toJson
+    // calls will only produce JSON which reflects N draw calls.  This JSON may or may not be
+    // accurate for N + 1 or N - 1 draws depending on the actual batching algorithm used.
     SkString toJson(bool prettyPrint = false) const;
 
-    // returns a json string of all of the ops associated with a given client id
+    // returns a json string of all of the batches associated with a given client id
     SkString toJson(int clientID, bool prettyPrint = false) const;
 
     bool isEnabled() { return fEnabled; }
@@ -105,28 +106,18 @@ public:
 
     // We could just return our internal bookkeeping struct if copying the data out becomes
     // a performance issue, but until then its nice to decouple
-    struct OpInfo {
-        // Will the resourceID comparison yield the same decision as the proxyID comparison?
-        bool sameDecision(GrGpuResource::UniqueID resourceUniqueID,
-                          GrSurfaceProxy::UniqueID proxyUniqueID) const {
-            return (fResourceUniqueID == resourceUniqueID) ==
-                   (fProxyUniqueID == proxyUniqueID);
-        }
-
-        struct Op {
-            int    fClientID;
+    struct BatchInfo {
+        SkRect fBounds;
+        uint32_t fRenderTargetUniqueID;
+        struct Batch {
+            int fClientID;
             SkRect fBounds;
         };
-
-        SkRect                   fBounds;
-        // MDB TODO: remove fResourceUniqueID
-        GrGpuResource::UniqueID  fResourceUniqueID;
-        GrSurfaceProxy::UniqueID fProxyUniqueID;
-        SkTArray<Op>             fOps;
+        SkTArray<Batch> fBatches;
     };
 
-    void getBoundsByClientID(SkTArray<OpInfo>* outInfo, int clientID);
-    void getBoundsByOpListID(OpInfo* outInfo, int opListID);
+    void getBoundsByClientID(SkTArray<BatchInfo>* outInfo, int clientID);
+    void getBoundsByBatchListID(BatchInfo* outInfo, int batchListID);
 
     void fullReset();
 
@@ -134,46 +125,40 @@ public:
 
 private:
     // TODO if performance becomes an issue, we can move to using SkVarAlloc
-    struct Op {
+    struct Batch {
         SkString toJson() const;
         SkString fName;
         SkTArray<SkString> fStackTrace;
         SkRect fBounds;
         int fClientID;
-        int fOpListID;
+        int fBatchListID;
         int fChildID;
     };
-    typedef SkTArray<std::unique_ptr<Op>, true> OpPool;
+    typedef SkTArray<SkAutoTDelete<Batch>, true> BatchPool;
 
-    typedef SkTArray<Op*> Ops;
+    typedef SkTArray<Batch*> Batches;
 
-    struct OpNode {
-        OpNode(const GrGpuResource::UniqueID& resourceID, const GrSurfaceProxy::UniqueID& proxyID)
-            : fResourceUniqueID(resourceID)
-            , fProxyUniqueID(proxyID) {
-        }
+    struct BatchNode {
         SkString toJson() const;
-
-        SkRect                         fBounds;
-        Ops                            fChildren;
-        const GrGpuResource::UniqueID  fResourceUniqueID;
-        const GrSurfaceProxy::UniqueID fProxyUniqueID;
+        SkRect fBounds;
+        Batches fChildren;
+        uint32_t fRenderTargetUniqueID;
     };
-    typedef SkTArray<std::unique_ptr<OpNode>, true> OpList;
+    typedef SkTArray<SkAutoTDelete<BatchNode>, true> BatchList;
 
-    void copyOutFromOpList(OpInfo* outOpInfo, int opListID);
+    void copyOutFromBatchList(BatchInfo* outBatchInfo, int batchListID);
 
     template <typename T>
     static void JsonifyTArray(SkString* json, const char* name, const T& array,
                               bool addComma);
-
-    OpPool fOpPool;
+    
+    BatchPool fBatchPool;
     SkTHashMap<uint32_t, int> fIDLookup;
-    SkTHashMap<int, Ops*> fClientIDLookup;
-    OpList fOpList;
+    SkTHashMap<int, Batches*> fClientIDLookup;
+    BatchList fBatchList;
     SkTArray<SkString> fCurrentStackTrace;
 
-    // The client can pass in an optional client ID which we will use to mark the ops
+    // The client cas pass in an optional client ID which we will use to mark the batches
     int fClientID;
     bool fEnabled;
 };
@@ -189,12 +174,13 @@ private:
 #define GR_AUDIT_TRAIL_RESET(audit_trail) \
     //GR_AUDIT_TRAIL_INVOKE_GUARD(audit_trail, fullReset);
 
-#define GR_AUDIT_TRAIL_ADD_OP(audit_trail, op, resource_id, proxy_id) \
-    GR_AUDIT_TRAIL_INVOKE_GUARD(audit_trail, addOp, op, resource_id, proxy_id);
+#define GR_AUDIT_TRAIL_ADDBATCH(audit_trail, batch) \
+    GR_AUDIT_TRAIL_INVOKE_GUARD(audit_trail, addBatch, batch);
 
-#define GR_AUDIT_TRAIL_OPS_RESULT_COMBINED(audit_trail, combineWith, op) \
-    GR_AUDIT_TRAIL_INVOKE_GUARD(audit_trail, opsCombined, combineWith, op);
+#define GR_AUDIT_TRAIL_BATCHING_RESULT_COMBINED(audit_trail, combineWith, batch) \
+    GR_AUDIT_TRAIL_INVOKE_GUARD(audit_trail, batchingResultCombined, combineWith, batch);
 
-#define GR_AUDIT_TRAIL_OP_RESULT_NEW(audit_trail, op) // Doesn't do anything now, one day...
+#define GR_AUDIT_TRAIL_BATCHING_RESULT_NEW(audit_trail, batch) \
+    // Doesn't do anything now, one day... 
 
 #endif

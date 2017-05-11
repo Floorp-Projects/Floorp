@@ -1,6 +1,7 @@
 "use strict";
 
 add_task(function*() {
+  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   ok(!PanelUI.menuButton.hasAttribute("open"), "Menu button should not be 'pressed' outside customize mode");
   yield startCustomizing();
 

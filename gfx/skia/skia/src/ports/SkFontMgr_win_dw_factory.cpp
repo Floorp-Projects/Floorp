@@ -11,7 +11,7 @@
 #include "SkFontMgr.h"
 #include "SkTypeface_win.h"
 
-sk_sp<SkFontMgr> SkFontMgr::Factory() {
+SkFontMgr* SkFontMgr::Factory() {
     return SkFontMgr_New_DirectWrite();
 }
 

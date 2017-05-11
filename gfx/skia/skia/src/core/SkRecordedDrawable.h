@@ -4,8 +4,6 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#ifndef SkRecordedDrawable_DEFINED
-#define SkRecordedDrawable_DEFINED
 
 #include "SkBBoxHierarchy.h"
 #include "SkDrawable.h"
@@ -14,11 +12,11 @@
 
 class SkRecordedDrawable : public SkDrawable {
 public:
-    SkRecordedDrawable(sk_sp<SkRecord> record, sk_sp<SkBBoxHierarchy> bbh,
-                       std::unique_ptr<SkDrawableList> drawableList, const SkRect& bounds)
-        : fRecord(std::move(record))
-        , fBBH(std::move(bbh))
-        , fDrawableList(std::move(drawableList))
+    SkRecordedDrawable(SkRecord* record, SkBBoxHierarchy* bbh, SkDrawableList* drawableList,
+                       const SkRect& bounds)
+        : fRecord(SkRef(record))
+        , fBBH(SkSafeRef(bbh))
+        , fDrawableList(drawableList)   // we take ownership
         , fBounds(bounds)
     {}
 
@@ -36,9 +34,8 @@ protected:
     SkPicture* onNewPictureSnapshot() override;
 
 private:
-    sk_sp<SkRecord>                 fRecord;
-    sk_sp<SkBBoxHierarchy>          fBBH;
-    std::unique_ptr<SkDrawableList> fDrawableList;
+    SkAutoTUnref<SkRecord>          fRecord;
+    SkAutoTUnref<SkBBoxHierarchy>   fBBH;
+    SkAutoTDelete<SkDrawableList>   fDrawableList;
     const SkRect                    fBounds;
 };
-#endif  // SkRecordedDrawable_DEFINED

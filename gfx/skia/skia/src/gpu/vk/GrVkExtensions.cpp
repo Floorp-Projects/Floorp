@@ -30,21 +30,17 @@ static int find_string(const SkTArray<SkString>& strings, const char ext[]) {
     return idx;
 }
 
-#define GET_PROC_LOCAL(F, inst, device) PFN_vk ## F F = (PFN_vk ## F) fGetProc("vk" #F, inst, device)
+#define GET_PROC_LOCAL(inst, F) PFN_vk ## F F = (PFN_vk ## F) vkGetInstanceProcAddr(inst, "vk" #F)
 
 static uint32_t remove_patch_version(uint32_t specVersion) {
     return (specVersion >> 12) << 12;
 }
 
 bool GrVkExtensions::initInstance(uint32_t specVersion) {
-    if (fGetProc == nullptr) {
-        return false;
-    }
-
     uint32_t nonPatchVersion = remove_patch_version(specVersion);
 
-    GET_PROC_LOCAL(EnumerateInstanceExtensionProperties, VK_NULL_HANDLE, VK_NULL_HANDLE);
-    GET_PROC_LOCAL(EnumerateInstanceLayerProperties, VK_NULL_HANDLE, VK_NULL_HANDLE);
+    GET_PROC_LOCAL(nullptr, EnumerateInstanceExtensionProperties);
+    GET_PROC_LOCAL(nullptr, EnumerateInstanceLayerProperties);
 
     SkTLessFunctionToFunctorAdaptor<SkString, extension_compare> cmp;
 
@@ -130,14 +126,10 @@ bool GrVkExtensions::initInstance(uint32_t specVersion) {
 }
 
 bool GrVkExtensions::initDevice(uint32_t specVersion, VkInstance inst, VkPhysicalDevice physDev) {
-    if (fGetProc == nullptr) {
-        return false;
-    }
-
     uint32_t nonPatchVersion = remove_patch_version(specVersion);
 
-    GET_PROC_LOCAL(EnumerateDeviceExtensionProperties, inst, VK_NULL_HANDLE);
-    GET_PROC_LOCAL(EnumerateDeviceLayerProperties, inst, VK_NULL_HANDLE);
+    GET_PROC_LOCAL(inst, EnumerateDeviceExtensionProperties);
+    GET_PROC_LOCAL(inst, EnumerateDeviceLayerProperties);
 
     SkTLessFunctionToFunctorAdaptor<SkString, extension_compare> cmp;
 

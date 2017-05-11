@@ -238,24 +238,29 @@ const Class RegExpObject::protoClass_ = {
 
 RegExpObject*
 RegExpObject::create(JSContext* cx, const char16_t* chars, size_t length, RegExpFlag flags,
-                     TokenStream* tokenStream, LifoAlloc& alloc)
+                     const ReadOnlyCompileOptions* options, TokenStream* tokenStream,
+                     LifoAlloc& alloc)
 {
     RootedAtom source(cx, AtomizeChars(cx, chars, length));
     if (!source)
         return nullptr;
 
-    return create(cx, source, flags, tokenStream, alloc);
+    return create(cx, source, flags, options, tokenStream, alloc);
 }
 
 RegExpObject*
 RegExpObject::create(JSContext* cx, HandleAtom source, RegExpFlag flags,
-                     TokenStream* tokenStream, LifoAlloc& alloc)
+                     const ReadOnlyCompileOptions* options, TokenStream* tokenStream,
+                     LifoAlloc& alloc)
 {
     Maybe<CompileOptions> dummyOptions;
+    if (!tokenStream && !options) {
+        dummyOptions.emplace(cx);
+        options = dummyOptions.ptr();
+    }
     Maybe<TokenStream> dummyTokenStream;
     if (!tokenStream) {
-        dummyOptions.emplace(cx);
-        dummyTokenStream.emplace(cx, *dummyOptions,
+        dummyTokenStream.emplace(cx, *options,
                                    (const char16_t*) nullptr, 0,
                                    (frontend::StrictModeGetter*) nullptr);
         tokenStream = dummyTokenStream.ptr();
@@ -1457,8 +1462,11 @@ js::XDRScriptRegExpObject(XDRState<mode>* xdr, MutableHandle<RegExpObject*> objp
         return false;
     if (mode == XDR_DECODE) {
         RegExpFlag flags = RegExpFlag(flagsword);
-        RegExpObject* reobj = RegExpObject::create(xdr->cx(), source, flags, nullptr,
-                                                   xdr->lifoAlloc());
+        const ReadOnlyCompileOptions* options = nullptr;
+        if (xdr->hasOptions())
+            options = &xdr->options();
+        RegExpObject* reobj = RegExpObject::create(xdr->cx(), source, flags,
+                                                   options, nullptr, xdr->lifoAlloc());
         if (!reobj)
             return false;
 
@@ -1481,7 +1489,8 @@ js::CloneScriptRegExpObject(JSContext* cx, RegExpObject& reobj)
     RootedAtom source(cx, reobj.getSource());
     cx->markAtom(source);
 
-    return RegExpObject::create(cx, source, reobj.getFlags(), nullptr, cx->tempLifoAlloc());
+    return RegExpObject::create(cx, source, reobj.getFlags(),
+                                nullptr, nullptr, cx->tempLifoAlloc());
 }
 
 JS_FRIEND_API(bool)

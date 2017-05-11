@@ -8,7 +8,6 @@
 #define SkSampler_DEFINED
 
 #include "SkCodec.h"
-#include "SkCodecPriv.h"
 #include "SkTypes.h"
 
 class SkSampler : public SkNoncopyable {
@@ -38,10 +37,11 @@ public:
     /**
      *  Based on fSampleY, return whether this row belongs in the output.
      *
-     *  @param row Row of the image, starting with the first row in the subset.
+     *  @param row Row of the image, starting with the first row used in the
+     *      output.
      */
     bool rowNeeded(int row) const {
-        return (row - get_start_coord(fSampleY)) % fSampleY == 0;
+        return row % fSampleY == 0;
     }
 
     /**

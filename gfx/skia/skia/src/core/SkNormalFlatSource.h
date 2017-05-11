@@ -19,7 +19,8 @@ public:
 #endif
 
     SkNormalSource::Provider* asProvider(const SkShader::ContextRec& rec,
-                                         SkArenaAlloc* alloc) const override;
+                                         void* storage) const override;
+    size_t providerSize(const SkShader::ContextRec& rec) const override;
 
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkNormalFlatSourceImpl)
 
@@ -31,7 +32,7 @@ private:
     public:
         Provider();
 
-        ~Provider() override;
+        virtual ~Provider();
 
         void fillScanLine(int x, int y, SkPoint3 output[], int count) const override;
 
