@@ -59,6 +59,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
                                            NetscapeStepUpPolicy netscapeStepUpPolicy,
                                            const OriginAttributes& originAttributes,
                                            UniqueCERTCertList& builtChain,
+                              /*optional*/ UniqueCERTCertList* peerCertChain,
                               /*optional*/ PinningTelemetryInfo* pinningTelemetryInfo,
                               /*optional*/ const char* hostname)
   : mCertDBTrustType(certDBTrustType)
@@ -76,6 +77,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
   , mNetscapeStepUpPolicy(netscapeStepUpPolicy)
   , mOriginAttributes(originAttributes)
   , mBuiltChain(builtChain)
+  , mPeerCertChain(peerCertChain)
   , mPinningTelemetryInfo(pinningTelemetryInfo)
   , mHostname(hostname)
   , mCertBlocklist(do_GetService(NS_CERTBLOCKLIST_CONTRACTID))
@@ -140,10 +142,93 @@ FindIssuerInner(const UniqueCERTCertList& candidates, bool useRoots,
   return Success;
 }
 
+// Remove from newCandidates any CERTCertificates in alreadyTried.
+// alreadyTried is likely to be small or empty.
+static void
+RemoveCandidatesAlreadyTried(UniqueCERTCertList& newCandidates,
+                             const UniqueCERTCertList& alreadyTried)
+{
+  for (const CERTCertListNode* triedNode = CERT_LIST_HEAD(alreadyTried);
+       !CERT_LIST_END(triedNode, alreadyTried);
+       triedNode = CERT_LIST_NEXT(triedNode)) {
+    CERTCertListNode* newNode = CERT_LIST_HEAD(newCandidates);
+    while (!CERT_LIST_END(newNode, newCandidates)) {
+      CERTCertListNode* savedNode = CERT_LIST_NEXT(newNode);
+      if (CERT_CompareCerts(triedNode->cert, newNode->cert)) {
+        CERT_RemoveCertListNode(newNode);
+      }
+      newNode = savedNode;
+    }
+  }
+}
+
+// Add to matchingCandidates any CERTCertificates from candidatesIn that have a
+// DER-encoded subject name equal to the given subject name.
+static Result
+AddMatchingCandidates(UniqueCERTCertList& matchingCandidates,
+                      const UniqueCERTCertList& candidatesIn,
+                      Input subjectName)
+{
+  for (const CERTCertListNode* node = CERT_LIST_HEAD(candidatesIn);
+       !CERT_LIST_END(node, candidatesIn); node = CERT_LIST_NEXT(node)) {
+    Input candidateSubjectName;
+    Result rv = candidateSubjectName.Init(node->cert->derSubject.data,
+                                          node->cert->derSubject.len);
+    if (rv != Success) {
+      continue; // probably just too big - continue processing other candidates
+    }
+    if (InputsAreEqual(candidateSubjectName, subjectName)) {
+      UniqueCERTCertificate certDuplicate(CERT_DupCertificate(node->cert));
+      if (!certDuplicate) {
+        return Result::FATAL_ERROR_NO_MEMORY;
+      }
+      SECStatus srv = CERT_AddCertToListTail(matchingCandidates.get(),
+                                             certDuplicate.get());
+      if (srv != SECSuccess) {
+        return MapPRErrorCodeToResult(PR_GetError());
+      }
+      // matchingCandidates now owns certDuplicate
+      Unused << certDuplicate.release();
+    }
+  }
+  return Success;
+}
+
 Result
 NSSCertDBTrustDomain::FindIssuer(Input encodedIssuerName,
                                  IssuerChecker& checker, Time)
 {
+  // If the peer certificate chain was specified, try to use it before falling
+  // back to CERT_CreateSubjectCertList.
+  bool keepGoing;
+  UniqueCERTCertList peerCertChainCandidates(CERT_NewCertList());
+  if (!peerCertChainCandidates) {
+    return Result::FATAL_ERROR_NO_MEMORY;
+  }
+  if (mPeerCertChain) {
+    // Build a candidate list that consists only of certificates with a subject
+    // matching the issuer we're looking for.
+    Result rv = AddMatchingCandidates(peerCertChainCandidates, *mPeerCertChain,
+                                      encodedIssuerName);
+    if (rv != Success) {
+      return rv;
+    }
+    rv = FindIssuerInner(peerCertChainCandidates, true, encodedIssuerName,
+                         checker, keepGoing);
+    if (rv != Success) {
+      return rv;
+    }
+    if (keepGoing) {
+      rv = FindIssuerInner(peerCertChainCandidates, false, encodedIssuerName,
+                           checker, keepGoing);
+      if (rv != Success) {
+        return rv;
+      }
+    }
+    if (!keepGoing) {
+      return Success;
+    }
+  }
   // TODO: NSS seems to be ambiguous between "no potential issuers found" and
   // "there was an error trying to retrieve the potential issuers."
   SECItem encodedIssuerNameItem = UnsafeMapInputToSECItem(encodedIssuerName);
@@ -152,8 +237,8 @@ NSSCertDBTrustDomain::FindIssuer(Input encodedIssuerName,
                                           &encodedIssuerNameItem, 0,
                                           false));
   if (candidates) {
+    RemoveCandidatesAlreadyTried(candidates, peerCertChainCandidates);
     // First, try all the root certs; then try all the non-root certs.
-    bool keepGoing;
     Result rv = FindIssuerInner(candidates, true, encodedIssuerName, checker,
                                 keepGoing);
     if (rv != Success) {
