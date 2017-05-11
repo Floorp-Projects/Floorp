@@ -6458,6 +6458,7 @@ class LocalAddonInstall extends AddonInstall {
         AddonManagerPrivate.callInstallListeners("onNewInstall",
                                                  this.listeners,
                                                  this.wrapper);
+        flushJarCache(this.file);
         return;
       }
 
