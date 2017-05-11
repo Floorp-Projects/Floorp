@@ -23,6 +23,8 @@ class TestSafeBrowsingWarningPages(PuppeteerMixin, MarionetteTestCase):
             'https://www.itisatrap.org/firefox/its-an-attack.html'
         ]
 
+        self.marionette.set_pref('app.support.baseURL',
+                                 self.marionette.absolute_url("support.html?topic="))
         self.marionette.set_pref('browser.safebrowsing.phishing.enabled', True)
         self.marionette.set_pref('browser.safebrowsing.malware.enabled', True)
 
@@ -39,6 +41,7 @@ class TestSafeBrowsingWarningPages(PuppeteerMixin, MarionetteTestCase):
         try:
             self.puppeteer.utils.permissions.remove('https://www.itisatrap.org', 'safe-browsing')
             self.browser.tabbar.close_all_tabs([self.browser.tabbar.tabs[0]])
+            self.marionette.clear_pref('app.support.baseURL')
             self.marionette.clear_pref('browser.safebrowsing.malware.enabled')
             self.marionette.clear_pref('browser.safebrowsing.phishing.enabled')
         finally:
@@ -96,6 +99,9 @@ class TestSafeBrowsingWarningPages(PuppeteerMixin, MarionetteTestCase):
             lambda mn: expected_url == mn.get_url(),
             message="The expected URL '{}' has not been loaded".format(expected_url)
         )
+
+        topic = self.marionette.find_element(By.ID, "topic")
+        self.assertEquals(topic.text, "phishing-malware")
 
     def check_ignore_warning_button(self, unsafe_page):
         button = self.marionette.find_element(By.ID, 'ignoreWarningButton')

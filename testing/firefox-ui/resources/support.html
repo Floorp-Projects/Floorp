@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <script type="text/javascript">
+    function show() {
+      var results = /\?topic=(.+)$/.exec(window.document.location);
+      var topic = decodeURIComponent(results[1].replace(/\+/g, " "))
+      var node = document.getElementById("topic");
+
+      node.textContent = topic;
+    }
+  </script>
+</head>
+
+<body onload="show()">
+  <div id="topic"></div>
+</body>
+</html>
