@@ -8,6 +8,10 @@ this.EXPORTED_SYMBOLS = ["PanelMultiView"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "CustomizableWidgets",
+  "resource:///modules/CustomizableWidgets.jsm");
+
 /**
  * Simple implementation of the sliding window pattern; panels are added to a
  * linked list, in-order, and the currently shown panel is remembered using a
@@ -354,7 +358,7 @@ this.PanelMultiView = class {
     }
   }
 
-  showSubView(aViewId, aAnchor, aPreviousView) {
+  showSubView(aViewId, aAnchor, aPreviousView, aAdopted = false) {
     const {document, window} = this;
     return window.Task.spawn(function*() {
       // Support passing in the node directly.
@@ -383,7 +387,6 @@ this.PanelMultiView = class {
         previousRect = previousViewNode.__lastKnownBoundingRect =
           dwu.getBoundsWithoutFlushing(previousViewNode);
       }
-      viewNode.setAttribute("current", true);
 
       // Emit the ViewShowing event so that the widget definition has a chance
       // to lazily populate the subview with things.
@@ -393,6 +396,20 @@ this.PanelMultiView = class {
           this.blockers.add(aPromise);
         },
       };
+
+      // Make sure that new panels always have a title set.
+      if (this.panelViews && aAdopted && aAnchor) {
+        if (aAnchor && !viewNode.hasAttribute("title"))
+          viewNode.setAttribute("title", aAnchor.getAttribute("label"));
+        viewNode.classList.add("PanelUI-subView");
+        let custWidget = CustomizableWidgets.find(widget => widget.viewId == viewNode.id);
+        if (custWidget) {
+          if (custWidget.onInit)
+            custWidget.onInit(aAnchor);
+          custWidget.onViewShowing({ target: aAnchor, detail });
+        }
+      }
+      viewNode.setAttribute("current", true);
 
       let evt = new window.CustomEvent("ViewShowing", { bubbles: true, cancelable: true, detail });
       viewNode.dispatchEvent(evt);
