@@ -7,7 +7,6 @@
 interface nsITransport;
 interface nsIInputStream;
 interface nsIOutputStream;
-interface nsIInputAvailableCallback;
 
 /**
  * This service read/writes a stream on a background thread.
@@ -43,8 +42,6 @@ interface nsIStreamTransportService : nsISupports
                                       in long long aReadLimit,
                                       in boolean aCloseWhenDone);
 
-    void InputAvailable(in nsIInputStream aStream,
-                        in nsIInputAvailableCallback aCallback);
     /**
      * CreateOutputTransport
      *
@@ -68,11 +65,4 @@ interface nsIStreamTransportService : nsISupports
                                        in long long aStartOffset,
                                        in long long aWriteLimit,
                                        in boolean aCloseWhenDone);
-};
-
-[builtinclass, uuid(ff2da731-44d0-4dd9-8236-c99387fec721)]
-interface nsIInputAvailableCallback : nsISupports
-{
-  void onInputAvailableComplete(in unsigned long long available,
-			        in nsresult available_return_code);
 };

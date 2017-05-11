@@ -18,11 +18,6 @@ interface nsIBufferedInputStream : nsIInputStream
      */
     void init(in nsIInputStream fillFromStream,
               in unsigned long bufferSize);
-
-    /**
-     * Get the wrapped data stream
-     */
-    readonly attribute nsIInputStream data;
 };
 
 /**
@@ -39,9 +34,4 @@ interface nsIBufferedOutputStream : nsIOutputStream
      */
     void init(in nsIOutputStream sinkToStream,
               in unsigned long bufferSize);
-
-    /**
-     * Get the wrapped data stream
-     */
-    readonly attribute nsIOutputStream data;
 };
