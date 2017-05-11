@@ -3,11 +3,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ifndef MOZ_JEMALLOC4
 # Force optimize mozjemalloc on --disable-optimize builds.
 # This works around the issue that the Android NDK's definition of ffs is
 # broken when compiling without optimization, while avoiding to add yet another
 # configure test.
 MOZ_OPTIMIZE = 1
-endif
 

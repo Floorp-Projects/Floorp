@@ -49,10 +49,7 @@ if CONFIG['OS_TARGET'] == 'Darwin' and not CONFIG['MOZ_REPLACE_MALLOC']:
         'src/src/zone.c',
     ]
 
-if CONFIG['MOZ_JEMALLOC4']:
-    FINAL_LIBRARY = 'memory'
-else:
-    FINAL_LIBRARY = 'replace_jemalloc'
+FINAL_LIBRARY = 'replace_jemalloc'
 
 if CONFIG['MOZ_GLUE_IN_PROGRAM']:
     DIST_INSTALL = True
