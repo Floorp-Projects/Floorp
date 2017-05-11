@@ -1,0 +1,46 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test CacheStorage does not prevent worker GC</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="driver.js"></script>
+</head>
+<body>
+<iframe id="frame"></iframe>
+<script class="testbody" type="text/javascript">
+function startWorker() {
+  return new Promise(resolve => {
+    var w = new Worker('idle_worker.js');
+    w.addEventListener('message', function onMessage(evt) {
+      if (evt.data === 'LOADED') {
+        w.removeEventListener('message', onMessage);
+        resolve(w);
+      }
+    });
+  });
+}
+
+function gc() {
+  return new Promise(resolve => {
+    SpecialPowers.exactGC(resolve);
+  });
+}
+
+var weakWorker;
+
+SimpleTest.waitForExplicitFinish();
+startWorker().then(w => {
+  weakWorker = SpecialPowers.Cu.getWeakReference(w);
+  ok(weakWorker, 'worker supports weak reference');
+}).then(_ => {
+  return gc();
+}).then(_ => {
+  ok(!weakWorker.get(), 'worker weak reference should be garbage collected');
+  SimpleTest.finish();
+});
+</script>
+</body>
+</html>

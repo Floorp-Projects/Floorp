@@ -231,7 +231,7 @@ PR_BEGIN_EXTERN_C
 ** to use <stdint.h>. A patch to do that is in NSPR bug 634793.
 */
 
-#if defined(__APPLE__) || defined(__ANDROID__) || defined(__OpenBSD__)
+#if defined(__APPLE__) || defined(__OpenBSD__)
 #define PR_ALTERNATE_INT64_TYPEDEF
 #endif
 

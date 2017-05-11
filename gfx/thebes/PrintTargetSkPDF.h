@@ -59,14 +59,12 @@ private:
   UniquePtr<SkWStream> mOStream;
 
   // The current page's SkCanvas and its wrapping DrawTarget:
-  // Canvas is owned by mPDFDoc, which handles its deletion.
-  SkCanvas* mPageCanvas;
+  sk_sp<SkCanvas> mPageCanvas;
   RefPtr<DrawTarget> mPageDT;
 
   // Members needed to provide a reference DrawTarget:
   sk_sp<SkDocument> mRefPDFDoc;
-  // Canvas owned by mRefPDFDoc, which handles its deletion.
-  SkCanvas* mRefCanvas;
+  sk_sp<SkCanvas> mRefCanvas;
   SkDynamicMemoryWStream mRefOStream;
 };
 

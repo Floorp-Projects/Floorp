@@ -7,9 +7,10 @@
 
 #include "GrVkResourceProvider.h"
 
-#include "GrSamplerParams.h"
+#include "GrTextureParams.h"
 #include "GrVkCommandBuffer.h"
 #include "GrVkCopyPipeline.h"
+#include "GrVkGLSLSampler.h"
 #include "GrVkPipeline.h"
 #include "GrVkRenderTarget.h"
 #include "GrVkSampler.h"
@@ -56,7 +57,6 @@ void GrVkResourceProvider::init() {
 }
 
 GrVkPipeline* GrVkResourceProvider::createPipeline(const GrPipeline& pipeline,
-                                                   const GrStencilSettings& stencil,
                                                    const GrPrimitiveProcessor& primProc,
                                                    VkPipelineShaderStageCreateInfo* shaderStageInfo,
                                                    int shaderStageCount,
@@ -64,9 +64,8 @@ GrVkPipeline* GrVkResourceProvider::createPipeline(const GrPipeline& pipeline,
                                                    const GrVkRenderPass& renderPass,
                                                    VkPipelineLayout layout) {
 
-    return GrVkPipeline::Create(fGpu, pipeline, stencil, primProc, shaderStageInfo,
-                                shaderStageCount, primitiveType, renderPass, layout,
-                                fPipelineCache);
+    return GrVkPipeline::Create(fGpu, pipeline, primProc, shaderStageInfo, shaderStageCount,
+                                primitiveType, renderPass, layout, fPipelineCache);
 }
 
 GrVkCopyPipeline* GrVkResourceProvider::findOrCreateCopyPipeline(
@@ -163,7 +162,7 @@ GrVkDescriptorPool* GrVkResourceProvider::findOrCreateCompatibleDescriptorPool(
     return new GrVkDescriptorPool(fGpu, type, count);
 }
 
-GrVkSampler* GrVkResourceProvider::findOrCreateCompatibleSampler(const GrSamplerParams& params,
+GrVkSampler* GrVkResourceProvider::findOrCreateCompatibleSampler(const GrTextureParams& params,
                                                                  uint32_t mipLevels) {
     GrVkSampler* sampler = fSamplers.find(GrVkSampler::GenerateKey(params, mipLevels));
     if (!sampler) {
@@ -306,10 +305,10 @@ void GrVkResourceProvider::recycleStandardUniformBufferResource(const GrVkResour
     fAvailableUniformBufferResources.push_back(resource);
 }
 
-void GrVkResourceProvider::destroyResources(bool deviceLost) {
+void GrVkResourceProvider::destroyResources() {
     // release our active command buffers
     for (int i = 0; i < fActiveCommandBuffers.count(); ++i) {
-        SkASSERT(deviceLost || fActiveCommandBuffers[i]->finished(fGpu));
+        SkASSERT(fActiveCommandBuffers[i]->finished(fGpu));
         SkASSERT(fActiveCommandBuffers[i]->unique());
         fActiveCommandBuffers[i]->reset(fGpu);
         fActiveCommandBuffers[i]->unref(fGpu);
@@ -317,7 +316,7 @@ void GrVkResourceProvider::destroyResources(bool deviceLost) {
     fActiveCommandBuffers.reset();
     // release our available command buffers
     for (int i = 0; i < fAvailableCommandBuffers.count(); ++i) {
-        SkASSERT(deviceLost || fAvailableCommandBuffers[i]->finished(fGpu));
+        SkASSERT(fAvailableCommandBuffers[i]->finished(fGpu));
         SkASSERT(fAvailableCommandBuffers[i]->unique());
         fAvailableCommandBuffers[i]->unref(fGpu);
     }

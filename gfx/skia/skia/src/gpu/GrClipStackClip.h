@@ -12,7 +12,9 @@
 #include "SkClipStack.h"
 
 class GrPathRenderer;
-class GrTextureProxy;
+class GrTexture;
+class GrTextureProvider;
+class GrUniqueKey;
 
 /**
  * GrClipStackClip can apply a generic SkClipStack to the draw state. It may need to generate an
@@ -20,26 +22,28 @@ class GrTextureProxy;
  */
 class GrClipStackClip final : public GrClip {
 public:
-    GrClipStackClip(const SkClipStack* stack = nullptr) { this->reset(stack); }
+    GrClipStackClip(const SkClipStack* stack = nullptr, const SkIPoint* origin = nullptr) {
+        this->reset(stack, origin);
+    }
 
-    void reset(const SkClipStack* stack) { fStack = stack; }
+    void reset(const SkClipStack* stack = nullptr, const SkIPoint* origin = nullptr) {
+        fOrigin = origin ? *origin : SkIPoint::Make(0, 0);
+        fStack.reset(SkSafeRef(stack));
+    }
 
     bool quickContains(const SkRect&) const final;
     bool quickContains(const SkRRect&) const final;
     void getConservativeBounds(int width, int height, SkIRect* devResult,
                                bool* isIntersectionOfRects) const final;
-    bool apply(GrContext*, GrRenderTargetContext*, bool useHWAA, bool hasUserStencilSettings,
-               GrAppliedClip* out, SkRect* bounds) const final;
+    bool apply(GrContext*, GrDrawContext*, bool useHWAA, bool hasUserStencilSettings,
+               GrAppliedClip* out) const final;
 
-    bool isRRect(const SkRect& rtBounds, SkRRect* rr, GrAA* aa) const override;
-
-    sk_sp<GrTextureProxy> testingOnly_createClipMask(GrContext*) const;
-    static const char kMaskTestTag[];
+    bool isRRect(const SkRect& rtBounds, SkRRect* rr, bool* aa) const override;
 
 private:
     static bool PathNeedsSWRenderer(GrContext* context,
                                     bool hasUserStencilSettings,
-                                    const GrRenderTargetContext*,
+                                    const GrDrawContext*,
                                     const SkMatrix& viewMatrix,
                                     const SkClipStack::Element* element,
                                     GrPathRenderer** prOut,
@@ -47,17 +51,21 @@ private:
 
     // Creates an alpha mask of the clip. The mask is a rasterization of elements through the
     // rect specified by clipSpaceIBounds.
-    sk_sp<GrTextureProxy> createAlphaClipMask(GrContext*, const GrReducedClip&) const;
+    static sk_sp<GrTexture> CreateAlphaClipMask(GrContext*, const GrReducedClip&);
 
     // Similar to createAlphaClipMask but it rasterizes in SW and uploads to the result texture.
-    sk_sp<GrTextureProxy> createSoftwareClipMask(GrContext*, const GrReducedClip&) const;
+    static sk_sp<GrTexture> CreateSoftwareClipMask(GrTextureProvider*, const GrReducedClip&);
 
-    static bool UseSWOnlyPath(GrContext*,
-                              bool hasUserStencilSettings,
-                              const GrRenderTargetContext*,
-                              const GrReducedClip&);
+   static bool UseSWOnlyPath(GrContext*,
+                             bool hasUserStencilSettings,
+                             const GrDrawContext*,
+                             const GrReducedClip&);
 
-    const SkClipStack*  fStack;
+    static GrTexture* CreateCachedMask(int width, int height, const GrUniqueKey& key,
+                                       bool renderTarget);
+
+    SkIPoint                          fOrigin;
+    SkAutoTUnref<const SkClipStack>   fStack;
 };
 
 #endif // GrClipStackClip_DEFINED

@@ -252,7 +252,10 @@ nsIconChannel::AsyncOpen(nsIStreamListener* aListener,
   }
 
   // Init our streampump
-  rv = mPump->Init(inStream, int64_t(-1), int64_t(-1), 0, 0, false);
+  nsCOMPtr<nsIEventTarget> target =
+    nsContentUtils::GetEventTargetByLoadInfo(mLoadInfo,
+                                             mozilla::TaskCategory::Other);
+  rv = mPump->Init(inStream, int64_t(-1), int64_t(-1), 0, 0, false, target);
   if (NS_FAILED(rv)) {
     mCallbacks = nullptr;
     return rv;

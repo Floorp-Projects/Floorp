@@ -19,16 +19,38 @@ using mozilla::dom::workers::WorkerPrivate;
 
 // static
 already_AddRefed<CacheWorkerHolder>
-CacheWorkerHolder::Create(WorkerPrivate* aWorkerPrivate)
+CacheWorkerHolder::Create(WorkerPrivate* aWorkerPrivate, Behavior aBehavior)
 {
   MOZ_DIAGNOSTIC_ASSERT(aWorkerPrivate);
 
-  RefPtr<CacheWorkerHolder> workerHolder = new CacheWorkerHolder();
+  RefPtr<CacheWorkerHolder> workerHolder = new CacheWorkerHolder(aBehavior);
   if (NS_WARN_IF(!workerHolder->HoldWorker(aWorkerPrivate, Terminating))) {
     return nullptr;
   }
 
   return workerHolder.forget();
+}
+
+// static
+already_AddRefed<CacheWorkerHolder>
+CacheWorkerHolder::PreferBehavior(CacheWorkerHolder* aCurrentHolder,
+                                  Behavior aBehavior)
+{
+  if (!aCurrentHolder) {
+    return nullptr;
+  }
+
+  RefPtr<CacheWorkerHolder> orig = aCurrentHolder;
+  if (orig->GetBehavior() == aBehavior) {
+    return orig.forget();
+  }
+
+  RefPtr<CacheWorkerHolder> replace = Create(orig->mWorkerPrivate, aBehavior);
+  if (!replace) {
+    return orig.forget();
+  }
+
+  return replace.forget();
 }
 
 void
@@ -93,8 +115,9 @@ CacheWorkerHolder::Notify(Status aStatus)
   return true;
 }
 
-CacheWorkerHolder::CacheWorkerHolder()
-  : mNotified(false)
+CacheWorkerHolder::CacheWorkerHolder(Behavior aBehavior)
+  : WorkerHolder(aBehavior)
+  , mNotified(false)
 {
 }
 

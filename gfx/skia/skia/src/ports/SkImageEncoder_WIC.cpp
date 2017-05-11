@@ -28,17 +28,14 @@
 #undef INT64_MAX
 #undef UINT64_MAX
 
+#include <wincodec.h>
 #include "SkAutoCoInitialize.h"
-#include "SkAutoMalloc.h"
 #include "SkBitmap.h"
-#include "SkImageEncoderPriv.h"
-#include "SkIStream.h"
 #include "SkImageEncoder.h"
+#include "SkIStream.h"
 #include "SkStream.h"
 #include "SkTScopedComPtr.h"
-#include "SkTemplates.h"
 #include "SkUnPreMultiply.h"
-#include <wincodec.h>
 
 //All Windows SDKs back to XPSP2 export the CLSID_WICImagingFactory symbol.
 //In the Windows8 SDK the CLSID_WICImagingFactory symbol is still exported
@@ -49,24 +46,32 @@
 #undef CLSID_WICImagingFactory
 #endif
 
-bool SkEncodeImageWithWIC(SkWStream* stream, const SkPixmap& pixmap,
-                          SkEncodedImageFormat format, int quality) {
+class SkImageEncoder_WIC : public SkImageEncoder {
+public:
+    SkImageEncoder_WIC(Type t) : fType(t) {}
+
+protected:
+    virtual bool onEncode(SkWStream* stream, const SkBitmap& bm, int quality);
+
+private:
+    Type fType;
+};
+
+bool SkImageEncoder_WIC::onEncode(SkWStream* stream
+                                , const SkBitmap& bitmapOrig
+                                , int quality)
+{
     GUID type;
-    switch (format) {
-        case SkEncodedImageFormat::kJPEG:
+    switch (fType) {
+        case kJPEG_Type:
             type = GUID_ContainerFormatJpeg;
             break;
-        case SkEncodedImageFormat::kPNG:
+        case kPNG_Type:
             type = GUID_ContainerFormatPng;
             break;
         default:
             return false;
     }
-    SkBitmap bitmapOrig;
-    if (!bitmapOrig.installPixels(pixmap)) {
-        return false;
-    }
-    bitmapOrig.setImmutable();
 
     // First convert to BGRA if necessary.
     SkBitmap bitmap;
@@ -92,7 +97,7 @@ bool SkEncodeImageWithWIC(SkWStream* stream, const SkPixmap& pixmap,
     size_t rowBytes = bitmap.rowBytes();
     SkAutoMalloc pixelStorage;
     WICPixelFormatGUID formatDesired = GUID_WICPixelFormat32bppBGRA;
-    if (SkEncodedImageFormat::kJPEG == format) {
+    if (kJPEG_Type == fType) {
         formatDesired = GUID_WICPixelFormat24bppBGR;
         rowBytes = SkAlign4(bitmap.width() * 3);
         pixelStorage.reset(rowBytes * bitmap.height());
@@ -209,6 +214,27 @@ bool SkEncodeImageWithWIC(SkWStream* stream, const SkPixmap& pixmap,
     }
 
     return SUCCEEDED(hr);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef SK_USE_WIC_ENCODER
+static SkImageEncoder* sk_imageencoder_wic_factory(SkImageEncoder::Type t) {
+    switch (t) {
+        case SkImageEncoder::kPNG_Type:
+        case SkImageEncoder::kJPEG_Type:
+            break;
+        default:
+            return nullptr;
+    }
+    return new SkImageEncoder_WIC(t);
+}
+
+static SkImageEncoder_EncodeReg gEReg(sk_imageencoder_wic_factory);
+#endif
+
+SkImageEncoder* CreateImageEncoder_WIC(SkImageEncoder::Type type) {
+    return new SkImageEncoder_WIC(type);
 }
 
 #endif // defined(SK_BUILD_FOR_WIN32)

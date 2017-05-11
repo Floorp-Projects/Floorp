@@ -34,8 +34,9 @@ public:
     static GrVkRenderTarget* CreateNewRenderTarget(GrVkGpu*, SkBudgeted, const GrSurfaceDesc&,
                                                    const GrVkImage::ImageDesc&);
 
-    static sk_sp<GrVkRenderTarget> MakeWrappedRenderTarget(GrVkGpu*, const GrSurfaceDesc&,
-                                                           const GrVkImageInfo*);
+    static GrVkRenderTarget* CreateWrappedRenderTarget(GrVkGpu*, const GrSurfaceDesc&,
+                                                       GrWrapOwnership,
+                                                       const GrVkImageInfo*);
 
     ~GrVkRenderTarget() override;
 
@@ -47,7 +48,7 @@ public:
         }
         return nullptr;
     }
-    GrVkImage* msaaImage() { return fMSAAImage.get(); }
+    GrVkImage* msaaImage() { return fMSAAImage; }
     const GrVkImageView* resolveAttachmentView() const { return fResolveAttachmentView; }
     const GrVkResource* stencilImageResource() const;
     const GrVkImageView* stencilAttachmentView() const;
@@ -98,15 +99,17 @@ protected:
 
     // This accounts for the texture's memory and any MSAA renderbuffer's memory.
     size_t onGpuMemorySize() const override {
-        // The plus 1 is to account for the resolve texture.
-        // TODO: is this still correct?
-        return GrSurface::ComputeSize(fDesc, fDesc.fSampleCnt+1, false);
+        SkASSERT(kUnknown_GrPixelConfig != fDesc.fConfig);
+        SkASSERT(!GrPixelConfigIsCompressed(fDesc.fConfig));
+        size_t colorBytes = GrBytesPerPixel(fDesc.fConfig);
+        SkASSERT(colorBytes > 0);
+        return fColorValuesPerPixel * fDesc.fWidth * fDesc.fHeight * colorBytes;
     }
 
     void createFramebuffer(GrVkGpu* gpu);
 
     const GrVkImageView*       fColorAttachmentView;
-    std::unique_ptr<GrVkImage> fMSAAImage;
+    GrVkImage*                 fMSAAImage;
     const GrVkImageView*       fResolveAttachmentView;
 
 private:
@@ -135,6 +138,7 @@ private:
     void abandonInternalObjects();
 
     const GrVkFramebuffer*     fFramebuffer;
+    int                        fColorValuesPerPixel;
 
     // This is a cached pointer to a simple render pass. The render target should unref it
     // once it is done with it.

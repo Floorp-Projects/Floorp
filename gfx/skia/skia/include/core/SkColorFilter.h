@@ -8,16 +8,14 @@
 #ifndef SkColorFilter_DEFINED
 #define SkColorFilter_DEFINED
 
-#include "SkBlendMode.h"
 #include "SkColor.h"
 #include "SkFlattenable.h"
 #include "SkRefCnt.h"
+#include "SkXfermode.h"
 
 class GrContext;
 class GrFragmentProcessor;
-class SkArenaAlloc;
 class SkBitmap;
-class SkColorSpace;
 class SkRasterPipeline;
 
 /**
@@ -35,7 +33,7 @@ public:
      *  returns true, and sets (if not NULL) the color and mode appropriately.
      *  If not, this returns false and ignores the parameters.
      */
-    virtual bool asColorMode(SkColor* color, SkBlendMode* bmode) const;
+    virtual bool asColorMode(SkColor* color, SkXfermode::Mode* mode) const;
 
     /**
      *  If the filter can be represented by a 5x4 matrix, this
@@ -73,8 +71,7 @@ public:
 
     virtual void filterSpan4f(const SkPM4f src[], int count, SkPM4f result[]) const;
 
-    bool appendStages(SkRasterPipeline*, SkColorSpace*, SkArenaAlloc*,
-                      bool shaderIsOpaque) const;
+    bool appendStages(SkRasterPipeline*) const;
 
     enum Flags {
         /** If set the filter methods will not change the alpha channel of the colors.
@@ -112,12 +109,15 @@ public:
         If the Mode is DST, this function will return NULL (since that
         mode will have no effect on the result).
         @param c    The source color used with the specified mode
-        @param mode The blend that is applied to each color in
+        @param mode The xfermode mode that is applied to each color in
                         the colorfilter's filterSpan[16,32] methods
         @return colorfilter object that applies the src color and mode,
                     or NULL if the mode will have no effect.
     */
-    static sk_sp<SkColorFilter> MakeModeFilter(SkColor c, SkBlendMode mode);
+    static sk_sp<SkColorFilter> MakeModeFilter(SkColor c, SkXfermode::Mode mode);
+    static sk_sp<SkColorFilter> MakeModeFilter(SkColor c, SkBlendMode mode) {
+        return MakeModeFilter(c, (SkXfermode::Mode)mode);
+    }
 
     /** Construct a colorfilter whose effect is to first apply the inner filter and then apply
      *  the outer filter to the result of the inner's.
@@ -134,6 +134,21 @@ public:
      */
     static sk_sp<SkColorFilter> MakeMatrixFilterRowMajor255(const SkScalar array[20]);
 
+#ifdef SK_SUPPORT_LEGACY_COLORFILTER_PTR
+    static SkColorFilter* CreateModeFilter(SkColor c, SkXfermode::Mode mode) {
+        return MakeModeFilter(c, mode).release();
+    }
+    static SkColorFilter* CreateComposeFilter(SkColorFilter* outer, SkColorFilter* inner) {
+        return MakeComposeFilter(sk_ref_sp(outer), sk_ref_sp(inner)).release();
+    }
+    static SkColorFilter* CreateMatrixFilterRowMajor255(const SkScalar array[20]) {
+        return MakeMatrixFilterRowMajor255(array).release();
+    }
+    virtual SkColorFilter* newComposed(const SkColorFilter* inner) const {
+        return this->makeComposed(sk_ref_sp(const_cast<SkColorFilter*>(inner))).release();
+    }
+#endif
+
 #if SK_SUPPORT_GPU
     /**
      *  A subclass may implement this factory function to work with the GPU backend. It returns
@@ -144,8 +159,7 @@ public:
      *
      *  A null return indicates that the color filter isn't implemented for the GPU backend.
      */
-    virtual sk_sp<GrFragmentProcessor> asFragmentProcessor(GrContext*,
-                                                           SkColorSpace* dstColorSpace) const;
+    virtual sk_sp<GrFragmentProcessor> asFragmentProcessor(GrContext*) const;
 #endif
 
     bool affectsTransparentBlack() const {
@@ -160,8 +174,7 @@ public:
 protected:
     SkColorFilter() {}
 
-    virtual bool onAppendStages(SkRasterPipeline*, SkColorSpace*, SkArenaAlloc*,
-                                bool shaderIsOpaque) const;
+    virtual bool onAppendStages(SkRasterPipeline*) const;
 
 private:
     /*

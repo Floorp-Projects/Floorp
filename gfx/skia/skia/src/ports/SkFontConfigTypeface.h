@@ -22,16 +22,16 @@ class SkTypeface_FCI : public SkTypeface_FreeType {
 public:
     static SkTypeface_FCI* Create(sk_sp<SkFontConfigInterface> fci,
                                   const SkFontConfigInterface::FontIdentity& fi,
-                                  SkString familyName,
+                                  const SkString& familyName,
                                   const SkFontStyle& style)
     {
-        return new SkTypeface_FCI(std::move(fci), fi, std::move(familyName), style);
+        return new SkTypeface_FCI(std::move(fci), fi, familyName, style);
     }
 
     static SkTypeface_FCI* Create(std::unique_ptr<SkFontData> data,
-                                  SkString familyName, SkFontStyle style, bool isFixedPitch)
+                                  SkFontStyle style, bool isFixedPitch)
     {
-        return new SkTypeface_FCI(std::move(data), std::move(familyName), style, isFixedPitch);
+        return new SkTypeface_FCI(std::move(data), style, isFixedPitch);
     }
 
     const SkFontConfigInterface::FontIdentity& getIdentity() const {
@@ -41,18 +41,16 @@ public:
 protected:
     SkTypeface_FCI(sk_sp<SkFontConfigInterface> fci,
                    const SkFontConfigInterface::FontIdentity& fi,
-                   SkString familyName,
+                   const SkString& familyName,
                    const SkFontStyle& style)
             : INHERITED(style, false)
             , fFCI(std::move(fci))
             , fIdentity(fi)
-            , fFamilyName(std::move(familyName))
+            , fFamilyName(familyName)
             , fFontData(nullptr) {}
 
-    SkTypeface_FCI(std::unique_ptr<SkFontData> data,
-                   SkString familyName, SkFontStyle style, bool isFixedPitch)
+    SkTypeface_FCI(std::unique_ptr<SkFontData> data, SkFontStyle style, bool isFixedPitch)
             : INHERITED(style, isFixedPitch)
-            , fFamilyName(std::move(familyName))
             , fFontData(std::move(data))
     {
         SkASSERT(fFontData);

@@ -7,8 +7,6 @@
 
 #include "SkMask.h"
 
-#include "SkMalloc.h"
-
 //#define TRACK_SKMASK_LIFETIME
 
 /** returns the product if it is positive and fits in 31 bits. Otherwise this

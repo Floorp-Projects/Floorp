@@ -17,7 +17,6 @@
 class GrNonInstancedVertices;
 class GrPipeline;
 class GrPrimitiveProcessor;
-class GrStencilSettings;
 class GrVkCommandBuffer;
 class GrVkGpu;
 class GrVkRenderPass;
@@ -26,7 +25,6 @@ class GrVkPipeline : public GrVkResource {
 public:
     static GrVkPipeline* Create(GrVkGpu* gpu,
                                 const GrPipeline& pipeline,
-                                const GrStencilSettings&,
                                 const GrPrimitiveProcessor& primProc,
                                 VkPipelineShaderStageCreateInfo* shaderStageInfo,
                                 int shaderStageCount,

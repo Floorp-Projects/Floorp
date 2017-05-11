@@ -132,6 +132,9 @@ public:
       mListener = nullptr;
     });
 
+    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
+    nsCOMPtr<nsIEventTarget> target =
+      nsContentUtils::GetEventTargetByLoadInfo(loadInfo, TaskCategory::Other);
     if (!mData.IsEmpty()) {
       nsCOMPtr<nsIInputStream> stream;
       rv = NS_NewCStringInputStream(getter_AddRefs(stream), mData);
@@ -139,7 +142,7 @@ public:
       if (NS_SUCCEEDED(rv)) {
         RefPtr<nsInputStreamPump> pump;
         rv = nsInputStreamPump::Create(getter_AddRefs(pump), stream, -1, -1, 0, 0,
-                                      true);
+                                       true, target);
         MOZ_ASSERT(NS_SUCCEEDED(rv));
         if (NS_SUCCEEDED(rv)) {
           return pump->AsyncRead(mListener, nullptr);
@@ -151,7 +154,6 @@ public:
     // we should pass the loadInfo of the original channel along
     // to the new channel. Note that mChannel can not be null,
     // constructor checks that.
-    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
     nsCOMPtr<nsIChannel> newChannel;
     rv = GetDefaultIcon(loadInfo, getter_AddRefs(newChannel));
     if (NS_FAILED(rv)) {

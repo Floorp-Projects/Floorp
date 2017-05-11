@@ -8,18 +8,9 @@
 #include "SkMutex.h"
 #include "SkOpCoincidence.h"
 #include "SkOpContour.h"
-#include "SkOSFile.h"
 #include "SkPath.h"
 #include "SkPathOpsDebug.h"
 #include "SkString.h"
-
-#if DEBUG_DUMP_VERIFY
-bool SkPathOpsDebug::gDumpOp;  // set to true to write op to file before a crash
-bool SkPathOpsDebug::gVerifyOp;  // set to true to compare result against regions
-#endif
-
-bool SkPathOpsDebug::gRunFail;  // set to true to check for success on tests known to fail
-bool SkPathOpsDebug::gVeryVerbose;  // set to true to run extensive checking tests
 
 #undef FAIL_IF
 #define FAIL_IF(cond, coin) \
@@ -35,6 +26,10 @@ bool SkPathOpsDebug::gVeryVerbose;  // set to true to run extensive checking tes
          } while (false)
 
 class SkCoincidentSpans;
+
+#if DEBUG_VALIDATE
+extern bool FLAGS_runFail;
+#endif
 
 #if DEBUG_SORT
 int SkPathOpsDebug::gSortCountDefault = SK_MaxS32;
@@ -62,10 +57,6 @@ bool SkPathOpsDebug::ChaseContains(const SkTDArray<SkOpSpanBase* >& chaseArray,
     }
     return false;
 }
-#endif
- 
-#if DEBUG_ACTIVE_SPANS
-SkString SkPathOpsDebug::gActiveSpans;
 #endif
 
 #if DEBUG_COIN
@@ -286,7 +277,7 @@ static void move_nearby(SkPathOpsDebug::GlitchLog* glitches, const SkOpContourHe
 void SkOpGlobalState::debugAddToCoinChangedDict() {
 
 #if DEBUG_COINCIDENCE
-    SkPathOpsDebug::CheckHealth(fContourHead);
+    CheckHealth(contourList);
 #endif
     // see if next coincident operation makes a change; if so, record it
     SkPathOpsDebug::GlitchLog glitches;
@@ -328,20 +319,10 @@ void SkOpGlobalState::debugAddToCoinChangedDict() {
 
 void SkPathOpsDebug::ShowActiveSpans(SkOpContourHead* contourList) {
 #if DEBUG_ACTIVE_SPANS
-    SkString str;
     SkOpContour* contour = contourList;
     do {
-        contour->debugShowActiveSpans(&str);
+        contour->debugShowActiveSpans();
     } while ((contour = contour->next()));
-    if (!gActiveSpans.equals(str)) {
-        const char* s = str.c_str();
-        const char* end;
-        while ((end = strchr(s, '\n'))) {
-            SkDebugf("%.*s", end - s + 1, s);
-            s = end + 1;
-        }
-        gActiveSpans.set(str);
-    }
 #endif
 }
 
@@ -372,7 +353,6 @@ void SkPathOpsDebug::CheckHealth(SkOpContourHead* contourList) {
     for (int index = 0; index < kGlitchType_Count; ++index) {
         SkDebugf(mask & (1 << index) ? "x" : "-");
     }
-    SkDebugf(" %s\n", contourList->globalState()->debugCoinDictEntry().fFunctionName);
     for (int index = 0; index < glitches.fGlitches.count(); ++index) {
         const SpanGlitch& glitch = glitches.fGlitches[index];
         SkDebugf("%02d: ", index);
@@ -496,6 +476,14 @@ void SkPathOpsDebug::MathematicaIze(char* str, size_t bufferLen) {
         num = str[idx] >= '0' && str[idx] <= '9';
     }
 }
+
+#if DEBUG_VALIDATE
+void SkPathOpsDebug::SetPhase(SkOpContourHead* contourList, CoinID next,
+        int lineNumber, SkOpPhase phase) {
+    AddedCoin(contourList, next, 0, lineNumber);
+    contourList->globalState()->setPhase(phase);
+}
+#endif
 
 bool SkPathOpsDebug::ValidWind(int wind) {
     return wind > SK_MinS32 + 0xFFFF && wind < SK_MaxS32 - 0xFFFF;
@@ -667,9 +655,15 @@ void SkOpGlobalState::debugResetLoopCounts() {
 }
 #endif
 
-bool SkOpGlobalState::DebugRunFail() {
-    return SkPathOpsDebug::gRunFail;
+#ifdef SK_DEBUG
+bool SkOpGlobalState::debugRunFail() const {
+#if DEBUG_VALIDATE
+    return FLAGS_runFail;
+#else
+    return false;
+#endif
 }
+#endif
 
 // this is const so it can be called by const methods that overwise don't alter state
 #if DEBUG_VALIDATE || DEBUG_COIN
@@ -705,8 +699,8 @@ void SkIntersections::debugResetLoopCount() {
 }
 #endif
 
-#include "SkPathOpsConic.h"
 #include "SkPathOpsCubic.h"
+#include "SkPathOpsQuad.h"
 
 SkDCubic SkDQuad::debugToCubic() const {
     SkDCubic cubic;
@@ -718,21 +712,6 @@ SkDCubic SkDQuad::debugToCubic() const {
     cubic[2].fX = (cubic[3].fX + cubic[2].fX * 2) / 3;
     cubic[2].fY = (cubic[3].fY + cubic[2].fY * 2) / 3;
     return cubic;
-}
-
-void SkDQuad::debugSet(const SkDPoint* pts) {
-    memcpy(fPts, pts, sizeof(fPts));
-    SkDEBUGCODE(fDebugGlobalState = nullptr);
-}
-
-void SkDCubic::debugSet(const SkDPoint* pts) {
-    memcpy(fPts, pts, sizeof(fPts));
-    SkDEBUGCODE(fDebugGlobalState = nullptr);
-}
-
-void SkDConic::debugSet(const SkDPoint* pts, SkScalar weight) {
-    fPts.debugSet(pts);
-    fWeight = weight;
 }
 
 void SkDRect::debugInit() {
@@ -968,8 +947,8 @@ void SkOpSegment::debugMoveMultiples(SkPathOpsDebug::GlitchLog* glitches) const 
     const SkOpSpanBase* test = &fHead;
     do {
         int addCount = test->spanAddsCount();
-//        SkASSERT(addCount >= 1);
-        if (addCount <= 1) {
+        SkASSERT(addCount >= 1);
+        if (addCount == 1) {
             continue;
         }
         const SkOpPtT* startPtT = test->ptT();
@@ -1132,7 +1111,7 @@ void SkOpSegment::debugSetCoinT(int index, SkScalar t) const {
 #endif
 
 #if DEBUG_ACTIVE_SPANS
-void SkOpSegment::debugShowActiveSpans(SkString* str) const {
+void SkOpSegment::debugShowActiveSpans() const {
     debugValidate();
     if (done()) {
         return;
@@ -1149,34 +1128,34 @@ void SkOpSegment::debugShowActiveSpans(SkString* str) const {
         }
         lastId = this->debugID();
         lastT = span->t();
-        str->appendf("%s id=%d", __FUNCTION__, this->debugID());
+        SkDebugf("%s id=%d", __FUNCTION__, this->debugID());
         // since endpoints may have be adjusted, show actual computed curves
         SkDCurve curvePart;
         this->subDivide(span, span->next(), &curvePart);
         const SkDPoint* pts = curvePart.fCubic.fPts;
-        str->appendf(" (%1.9g,%1.9g", pts[0].fX, pts[0].fY);
+        SkDebugf(" (%1.9g,%1.9g", pts[0].fX, pts[0].fY);
         for (int vIndex = 1; vIndex <= SkPathOpsVerbToPoints(fVerb); ++vIndex) {
-            str->appendf(" %1.9g,%1.9g", pts[vIndex].fX, pts[vIndex].fY);
+            SkDebugf(" %1.9g,%1.9g", pts[vIndex].fX, pts[vIndex].fY);
         }
         if (SkPath::kConic_Verb == fVerb) {
-            str->appendf(" %1.9gf", curvePart.fConic.fWeight);
+            SkDebugf(" %1.9gf", curvePart.fConic.fWeight);
         }
-        str->appendf(") t=%1.9g tEnd=%1.9g", span->t(), span->next()->t());
+        SkDebugf(") t=%1.9g tEnd=%1.9g", span->t(), span->next()->t());
         if (span->windSum() == SK_MinS32) {
-            str->appendf(" windSum=?");
+            SkDebugf(" windSum=?");
         } else {
-            str->appendf(" windSum=%d", span->windSum());
+            SkDebugf(" windSum=%d", span->windSum());
         }
         if (span->oppValue() && span->oppSum() == SK_MinS32) {
-            str->appendf(" oppSum=?");
+            SkDebugf(" oppSum=?");
         } else if (span->oppValue() || span->oppSum() != SK_MinS32) {
-            str->appendf(" oppSum=%d", span->oppSum());
+            SkDebugf(" oppSum=%d", span->oppSum());
         }
-        str->appendf(" windValue=%d", span->windValue());
+        SkDebugf(" windValue=%d", span->windValue());
         if (span->oppValue() || span->oppSum() != SK_MinS32) {
-            str->appendf(" oppValue=%d", span->oppValue());
+            SkDebugf(" oppValue=%d", span->oppValue());
         }
-        str->appendf("\n");
+        SkDebugf("\n");
    } while ((span = span->next()->upCastable()));
 }
 #endif
@@ -1376,8 +1355,8 @@ void SkOpAngle::debugValidate() const {
         }
         next = next->fNext;
     } while (next && next != first);
-    SkASSERT(wind == 0 || !SkPathOpsDebug::gRunFail);
-    SkASSERT(opp == 0 || !SkPathOpsDebug::gRunFail);
+    SkASSERT(wind == 0 || !FLAGS_runFail);
+    SkASSERT(opp == 0 || !FLAGS_runFail);
 #endif
 }
 
@@ -1404,8 +1383,8 @@ void SkOpAngle::debugValidateNext() const {
 #ifdef SK_DEBUG
 void SkCoincidentSpans::debugStartCheck(const SkOpSpanBase* outer, const SkOpSpanBase* over,
         const SkOpGlobalState* debugState) const {
-    SkASSERT(coinPtTEnd()->span() == over || !SkOpGlobalState::DebugRunFail());
-    SkASSERT(oppPtTEnd()->span() == outer || !SkOpGlobalState::DebugRunFail());
+    SkASSERT(coinPtTEnd()->span() == over || !debugState->debugRunFail());
+    SkASSERT(oppPtTEnd()->span() == outer || !debugState->debugRunFail());
 }
 #endif
 
@@ -1624,7 +1603,6 @@ void SkOpCoincidence::debugAddEndMovedSpans(SkPathOpsDebug::GlitchLog* log) cons
 // for each coincident pair, match the spans
 // if the spans don't match, add the mssing pt to the segment and loop it in the opposite span
 void SkOpCoincidence::debugAddExpanded(SkPathOpsDebug::GlitchLog* log) const {
-//    DEBUG_SET_PHASE();
     const SkCoincidentSpans* coin = this->fHead;
     if (!coin) {
         return;
@@ -1634,7 +1612,7 @@ void SkOpCoincidence::debugAddExpanded(SkPathOpsDebug::GlitchLog* log) const {
         const SkOpPtT* oStartPtT = coin->oppPtTStart();
         double priorT = startPtT->fT;
         double oPriorT = oStartPtT->fT;
-        FAIL_IF(!startPtT->contains(oStartPtT), coin);
+        FAIL_IF(startPtT->contains(oStartPtT), coin);
         SkOPASSERT(coin->coinPtTEnd()->contains(coin->oppPtTEnd()));
         const SkOpSpanBase* start = startPtT->span();
         const SkOpSpanBase* oStart = oStartPtT->span();
@@ -1669,15 +1647,14 @@ void SkOpCoincidence::debugAddExpanded(SkPathOpsDebug::GlitchLog* log) const {
                         walk = walk->upCast()->next();
                     } while (!(walkOpp = walk->ptT()->contains(oSeg))
                             && walk != coin->coinPtTEnd()->span());
-                    FAIL_IF(!walkOpp, coin);
                     nextT = walk->t();
                     oNextT = walkOpp->fT;
                 }
                 // use t ranges to guess which one is missing
-                double startRange = nextT - priorT;
+                double startRange = coin->coinPtTEnd()->fT - startPtT->fT;
                 FAIL_IF(!startRange, coin);
-                double startPart = (test->t() - priorT) / startRange;
-                double oStartRange = oNextT - oPriorT;
+                double startPart = (test->t() - startPtT->fT) / startRange;
+                double oStartRange = coin->oppPtTEnd()->fT - oStartPtT->fT;
                 FAIL_IF(!oStartRange, coin);
                 double oStartPart = (oTest->t() - oStartPtT->fT) / oStartRange;
                 FAIL_IF(startPart == oStartPart, coin);
@@ -1708,6 +1685,21 @@ void SkOpCoincidence::debugAddExpanded(SkPathOpsDebug::GlitchLog* log) const {
             }
         }
     } while ((coin = coin->next()));
+    return;
+}
+
+/* Commented-out lines keep this in sync with addIfMissing() */
+void SkOpCoincidence::debugAddIfMissing(SkPathOpsDebug::GlitchLog* log, const SkCoincidentSpans* outer, const SkOpPtT* over1s,
+            const SkOpPtT* over1e) const {
+//     SkASSERT(fTop);
+    if (fTop && alreadyAdded(fTop, outer, over1s, over1e)) {  // in debug, fTop may be null
+        return;
+    }
+    if (fHead && alreadyAdded(fHead, outer, over1s, over1e)) {
+        return;
+    }
+    log->record(SkPathOpsDebug::kAddIfMissingCoin_Glitch, outer->coinPtTStart(), outer->coinPtTEnd(), over1s, over1e);
+    this->debugValidate();
     return;
 }
 
@@ -2060,8 +2052,7 @@ void SkOpCoincidence::debugMark(SkPathOpsDebug::GlitchLog* log) const {
         const SkOpSegment* oSegment = oStart->segment();
         const SkOpSpanBase* next = start;
         const SkOpSpanBase* oNext = oStart;
-        bool ordered;
-        FAIL_IF(!coin->ordered(&ordered), coin);
+        bool ordered = coin->ordered();
         while ((next = next->upCast()->next()) != end) {
             FAIL_IF(!next->upCastable(), coin);
             if (next->upCast()->debugInsertCoincidence(log, oSegment, flipped, ordered), false) {
@@ -2920,203 +2911,3 @@ void SkPathOpsDebug::ShowOnePath(const SkPath& path, const char* name, bool incl
     iter.setPath(path);
     showPathContours(iter, name);
 }
-
-#if DEBUG_DUMP_VERIFY
-#include "SkData.h"
-#include "SkStream.h"
-
-static void dump_path(FILE* file, const SkPath& path, bool force, bool dumpAsHex) {
-    SkDynamicMemoryWStream wStream;
-    path.dump(&wStream, force, dumpAsHex);
-    sk_sp<SkData> data(wStream.detachAsData());
-    fprintf(file, "%.*s\n", (int) data->size(), (char*) data->data());
-}
-
-static int dumpID = 0;
-
-void SkPathOpsDebug::DumpOp(const SkPath& one, const SkPath& two, SkPathOp op,
-        const char* testName) {
-    FILE* file = sk_fopen("op_dump.txt", kWrite_SkFILE_Flag);
-    DumpOp(file, one, two, op, testName);
-}
-
-void SkPathOpsDebug::DumpOp(FILE* file, const SkPath& one, const SkPath& two, SkPathOp op,
-        const char* testName) {
-    const char* name = testName ? testName : "op";
-    fprintf(file,
-            "\nstatic void %s_%d(skiatest::Reporter* reporter, const char* filename) {\n",
-            name, ++dumpID);
-    fprintf(file, "    SkPath path;\n");
-    fprintf(file, "    path.setFillType((SkPath::FillType) %d);\n", one.getFillType());
-    dump_path(file, one, false, true);
-    fprintf(file, "    SkPath path1(path);\n");
-    fprintf(file, "    path.reset();\n");
-    fprintf(file, "    path.setFillType((SkPath::FillType) %d);\n", two.getFillType());
-    dump_path(file, two, false, true);
-    fprintf(file, "    SkPath path2(path);\n");
-    fprintf(file, "    testPathOp(reporter, path1, path2, (SkPathOp) %d, filename);\n", op);
-    fprintf(file, "}\n\n");
-    fclose(file);
-}
-
-void SkPathOpsDebug::DumpSimplify(const SkPath& path, const char* testName) {
-    FILE* file = sk_fopen("simplify_dump.txt", kWrite_SkFILE_Flag);
-    DumpSimplify(file, path, testName);
-}
-
-void SkPathOpsDebug::DumpSimplify(FILE* file, const SkPath& path, const char* testName) {
-    const char* name = testName ? testName : "simplify";
-    fprintf(file,
-            "\nstatic void %s_%d(skiatest::Reporter* reporter, const char* filename) {\n",
-            name, ++dumpID);
-    fprintf(file, "    SkPath path;\n");
-    fprintf(file, "    path.setFillType((SkPath::FillType) %d);\n", path.getFillType());
-    dump_path(file, path, false, true);
-    fprintf(file, "    testSimplify(reporter, path, filename);\n");
-    fprintf(file, "}\n\n");
-    fclose(file);
-}
-
-#include "SkBitmap.h"
-#include "SkCanvas.h"
-#include "SkPaint.h"
-
-const int bitWidth = 64;
-const int bitHeight = 64;
-
-static void debug_scale_matrix(const SkPath& one, const SkPath* two, SkMatrix& scale) {
-    SkRect larger = one.getBounds();
-    if (two) {
-        larger.join(two->getBounds());
-    }
-    SkScalar largerWidth = larger.width();
-    if (largerWidth < 4) {
-        largerWidth = 4;
-    }
-    SkScalar largerHeight = larger.height();
-    if (largerHeight < 4) {
-        largerHeight = 4;
-    }
-    SkScalar hScale = (bitWidth - 2) / largerWidth;
-    SkScalar vScale = (bitHeight - 2) / largerHeight;
-    scale.reset();
-    scale.preScale(hScale, vScale);
-    larger.fLeft *= hScale;
-    larger.fRight *= hScale;
-    larger.fTop *= vScale;
-    larger.fBottom *= vScale;
-    SkScalar dx = -16000 > larger.fLeft ? -16000 - larger.fLeft
-            : 16000 < larger.fRight ? 16000 - larger.fRight : 0;
-    SkScalar dy = -16000 > larger.fTop ? -16000 - larger.fTop
-            : 16000 < larger.fBottom ? 16000 - larger.fBottom : 0;
-    scale.preTranslate(dx, dy);
-}
-
-static int debug_paths_draw_the_same(const SkPath& one, const SkPath& two, SkBitmap& bits) {
-    if (bits.width() == 0) {
-        bits.allocN32Pixels(bitWidth * 2, bitHeight);
-    }
-    SkCanvas canvas(bits);
-    canvas.drawColor(SK_ColorWHITE);
-    SkPaint paint;
-    canvas.save();
-    const SkRect& bounds1 = one.getBounds();
-    canvas.translate(-bounds1.fLeft + 1, -bounds1.fTop + 1);
-    canvas.drawPath(one, paint);
-    canvas.restore();
-    canvas.save();
-    canvas.translate(-bounds1.fLeft + 1 + bitWidth, -bounds1.fTop + 1);
-    canvas.drawPath(two, paint);
-    canvas.restore();
-    int errors = 0;
-    for (int y = 0; y < bitHeight - 1; ++y) {
-        uint32_t* addr1 = bits.getAddr32(0, y);
-        uint32_t* addr2 = bits.getAddr32(0, y + 1);
-        uint32_t* addr3 = bits.getAddr32(bitWidth, y);
-        uint32_t* addr4 = bits.getAddr32(bitWidth, y + 1);
-        for (int x = 0; x < bitWidth - 1; ++x) {
-            // count 2x2 blocks
-            bool err = addr1[x] != addr3[x];
-            if (err) {
-                errors += addr1[x + 1] != addr3[x + 1]
-                        && addr2[x] != addr4[x] && addr2[x + 1] != addr4[x + 1];
-            }
-        }
-    }
-    return errors;
-}
-
-void SkPathOpsDebug::ReportOpFail(const SkPath& one, const SkPath& two, SkPathOp op) {
-    SkDebugf("// Op did not expect failure\n");
-    DumpOp(stderr, one, two, op, "opTest");
-    fflush(stderr);
-}
-
-void SkPathOpsDebug::VerifyOp(const SkPath& one, const SkPath& two, SkPathOp op,
-        const SkPath& result) {
-    SkPath pathOut, scaledPathOut;
-    SkRegion rgnA, rgnB, openClip, rgnOut;
-    openClip.setRect(-16000, -16000, 16000, 16000);
-    rgnA.setPath(one, openClip);
-    rgnB.setPath(two, openClip);
-    rgnOut.op(rgnA, rgnB, (SkRegion::Op) op);
-    rgnOut.getBoundaryPath(&pathOut);
-    SkMatrix scale;
-    debug_scale_matrix(one, &two, scale);
-    SkRegion scaledRgnA, scaledRgnB, scaledRgnOut;
-    SkPath scaledA, scaledB;
-    scaledA.addPath(one, scale);
-    scaledA.setFillType(one.getFillType());
-    scaledB.addPath(two, scale);
-    scaledB.setFillType(two.getFillType());
-    scaledRgnA.setPath(scaledA, openClip);
-    scaledRgnB.setPath(scaledB, openClip);
-    scaledRgnOut.op(scaledRgnA, scaledRgnB, (SkRegion::Op) op);
-    scaledRgnOut.getBoundaryPath(&scaledPathOut);
-    SkBitmap bitmap;
-    SkPath scaledOut;
-    scaledOut.addPath(result, scale);
-    scaledOut.setFillType(result.getFillType());
-    int errors = debug_paths_draw_the_same(scaledPathOut, scaledOut, bitmap);
-    const int MAX_ERRORS = 9;
-    if (errors > MAX_ERRORS) {
-        fprintf(stderr, "// Op did not expect errors=%d\n", errors);
-        DumpOp(stderr, one, two, op, "opTest");
-        fflush(stderr);
-    }
-}
-
-void SkPathOpsDebug::ReportSimplifyFail(const SkPath& path) {
-    SkDebugf("// Simplify did not expect failure\n");
-    DumpSimplify(stderr, path, "simplifyTest");
-    fflush(stderr);
-}
-
-void SkPathOpsDebug::VerifySimplify(const SkPath& path, const SkPath& result) {
-    SkPath pathOut, scaledPathOut;
-    SkRegion rgnA, openClip, rgnOut;
-    openClip.setRect(-16000, -16000, 16000, 16000);
-    rgnA.setPath(path, openClip);
-    rgnOut.getBoundaryPath(&pathOut);
-    SkMatrix scale;
-    debug_scale_matrix(path, nullptr, scale);
-    SkRegion scaledRgnA;
-    SkPath scaledA;
-    scaledA.addPath(path, scale);
-    scaledA.setFillType(path.getFillType());
-    scaledRgnA.setPath(scaledA, openClip);
-    scaledRgnA.getBoundaryPath(&scaledPathOut);
-    SkBitmap bitmap;
-    SkPath scaledOut;
-    scaledOut.addPath(result, scale);
-    scaledOut.setFillType(result.getFillType());
-    int errors = debug_paths_draw_the_same(scaledPathOut, scaledOut, bitmap);
-    const int MAX_ERRORS = 9;
-    if (errors > MAX_ERRORS) {
-        fprintf(stderr, "// Simplify did not expect errors=%d\n", errors);
-        DumpSimplify(stderr, path, "simplifyTest");
-        fflush(stderr);
-    }
-}
-
-#endif
