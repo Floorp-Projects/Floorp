@@ -12,18 +12,6 @@ const Ci = Components.interfaces;
 const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 const {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 
-let prefs = {
-  // Enable dump as some errors are only printed on the stdout
-  "browser.dom.window.dump.enabled": true,
-  // Enable the browser toolbox and various chrome-only features
-  "devtools.chrome.enabled": true,
-  "devtools.debugger.remote-enabled": true,
-  // Disable the prompt to ease usage of the browser toolbox
-  "devtools.debugger.prompt-connection": false,
-};
-
-// Values of debug pref before overriding them
-let originalPrefValues = {};
 // MultiWindowKeyListener instance for Ctrl+Alt+R key
 let listener;
 // nsIURI to the addon root folder
@@ -53,7 +41,7 @@ function readURI(uri) {
 }
 
 // Read a preference file and set all of its defined pref as default values
-// (This replicate the behavior of preferences files from mozilla-central)
+// (This replicates the behavior of preferences files from mozilla-central)
 function processPrefFile(url) {
   let content = readURI(url);
   content.match(/pref\("[^"]+",\s*.+\s*\)/g).forEach(item => {
@@ -283,18 +271,6 @@ function startup(data) {
   });
   listener.start();
 
-  // Toggle development prefs and save original values
-  originalPrefValues = {};
-  for (let name in prefs) {
-    let value = prefs[name];
-    let userValue = Services.prefs.getBoolPref(name);
-    // Only toggle if the pref isn't already set to the right value
-    if (userValue != value) {
-      Services.prefs.setBoolPref(name, value);
-      originalPrefValues[name] = userValue;
-    }
-  }
-
   reload();
 }
 function shutdown(data, reason) {
@@ -305,15 +281,6 @@ function shutdown(data, reason) {
 
   listener.stop();
   listener = null;
-
-  // Restore preferences that used to be before the addon was installed
-  for (let name in originalPrefValues) {
-    let userValue = Services.prefs.getBoolPref(name);
-    // Only reset the pref if it hasn't changed
-    if (userValue == prefs[name]) {
-      Services.prefs.setBoolPref(name, originalPrefValues[name]);
-    }
-  }
 
   unload("disable");
 }
