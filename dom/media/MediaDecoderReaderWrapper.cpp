@@ -52,9 +52,9 @@ MediaDecoderReaderWrapper::RequestAudioData()
   return InvokeAsync(mReader->OwnerThread(), mReader.get(),
                      __func__, &MediaDecoderReader::RequestAudioData)
     ->Then(mOwnerThread, __func__,
-           [startTime] (AudioData* aAudio) {
+           [startTime] (RefPtr<AudioData> aAudio) {
              aAudio->AdjustForStartTime(startTime);
-             return AudioDataPromise::CreateAndResolve(aAudio, __func__);
+             return AudioDataPromise::CreateAndResolve(aAudio.forget(), __func__);
            },
            [] (const MediaResult& aError) {
              return AudioDataPromise::CreateAndReject(aError, __func__);
@@ -78,9 +78,9 @@ MediaDecoderReaderWrapper::RequestVideoData(bool aSkipToNextKeyframe,
     &MediaDecoderReader::RequestVideoData,
     aSkipToNextKeyframe, aTimeThreshold)
   ->Then(mOwnerThread, __func__,
-         [startTime] (VideoData* aVideo) {
+         [startTime] (RefPtr<VideoData> aVideo) {
            aVideo->AdjustForStartTime(startTime);
-           return VideoDataPromise::CreateAndResolve(aVideo, __func__);
+           return VideoDataPromise::CreateAndResolve(aVideo.forget(), __func__);
          },
          [] (const MediaResult& aError) {
            return VideoDataPromise::CreateAndReject(aError, __func__);
@@ -138,7 +138,7 @@ MediaDecoderReaderWrapper::Shutdown()
 }
 
 RefPtr<MediaDecoderReaderWrapper::MetadataPromise>
-MediaDecoderReaderWrapper::OnMetadataRead(MetadataHolder* aMetadata)
+MediaDecoderReaderWrapper::OnMetadataRead(RefPtr<MetadataHolder> aMetadata)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   if (mShutdown) {
@@ -149,7 +149,7 @@ MediaDecoderReaderWrapper::OnMetadataRead(MetadataHolder* aMetadata)
   if (mStartTime.isNothing()) {
     mStartTime.emplace(aMetadata->mInfo.mStartTime);
   }
-  return MetadataPromise::CreateAndResolve(aMetadata, __func__);
+  return MetadataPromise::CreateAndResolve(aMetadata.forget(), __func__);
 }
 
 RefPtr<MediaDecoderReaderWrapper::MetadataPromise>
