@@ -1372,6 +1372,10 @@ public:
    * width, its 'width', 'min-width', and 'max-width' properties (or 'height'
    * variations if that's what matches aAxis) and its padding, border and margin
    * in the corresponding dimension.
+   * @param aPercentageBasis an optional percentage basis (in aFrame's WM).
+   *   Pass NS_UNCONSTRAINEDSIZE if the basis is indefinite in either/both axes.
+   *   If you pass Nothing() a percentage basis will be calculated from aFrame's
+   *   ancestors' computed size in the relevant axis, if needed.
    * @param aMarginBoxMinSizeClamp make the result fit within this margin-box
    * size by reducing the *content size* (flooring at zero).  This is used for:
    * https://drafts.csswg.org/css-grid/#min-size-auto
@@ -1390,6 +1394,7 @@ public:
                    nsRenderingContext*   aRenderingContext,
                    nsIFrame*             aFrame,
                    IntrinsicISizeType    aType,
+                   const mozilla::Maybe<mozilla::LogicalSize>& aPercentageBasis = mozilla::Nothing(),
                    uint32_t              aFlags = 0,
                    nscoord               aMarginBoxMinSizeClamp = NS_MAXSIZE);
   /**
