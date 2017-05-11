@@ -11,10 +11,13 @@ import android.os.Looper;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public class ThreadUtils {
     private static final ExecutorService backgroundExecutorService = Executors.newSingleThreadExecutor();
     private static final Handler handler = new Handler(Looper.getMainLooper());
 
+    @SuppressFBWarnings(value = "RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", justification = "We don't care about the results here")
     public static void postToBackgroundThread(final Runnable runnable) {
         backgroundExecutorService.submit(runnable);
     }
