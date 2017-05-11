@@ -1078,6 +1078,7 @@ nsSiteSecurityService::ProcessPKPHeader(
                                         now, nullptr, // pinarg
                                         host.get(), // hostname
                                         certList,
+                                        nullptr, // no peerCertChain
                                         false, // don't store intermediates
                                         flags,
                                         aOriginAttributes)
