@@ -6,7 +6,7 @@ fuzzy-if(Android,8,1000) == size-1.html size-1-ref.html
 == image-rendering-test.html image-rendering-ref.html
 == image-shadow.html image-shadow-ref.html
 
-asserts-if(cocoaWidget,0-2) fails-if(stylo) == size-change-1.html size-change-1-ref.html
+asserts-if(cocoaWidget,0-2) == size-change-1.html size-change-1-ref.html
 
 random-if(cocoaWidget) == subpixel-1.html about:blank # see bug 1192616, re-enable once we're off the pandaboards
 

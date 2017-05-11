@@ -28,7 +28,6 @@
 #include "nsStringStream.h"
 
 #include "nsComponentManagerUtils.h" // do_CreateInstance
-#include "nsServiceManagerUtils.h"   // do_GetService
 #include "nsIHttpActivityObserver.h"
 #include "nsSocketTransportService2.h"
 #include "nsICancelable.h"
@@ -217,8 +216,10 @@ nsHttpTransaction::Init(uint32_t caps,
 
     mTopLevelOuterContentWindowId = topLevelOuterContentWindowId;
 
-    mActivityDistributor = do_GetService(NS_HTTPACTIVITYDISTRIBUTOR_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    mActivityDistributor = services::GetActivityDistributor();
+    if (!mActivityDistributor) {
+        return NS_ERROR_NOT_AVAILABLE;
+    }
 
     bool activityDistributorActive;
     rv = mActivityDistributor->GetIsActive(&activityDistributorActive);

@@ -10,8 +10,6 @@ add_task(function* testMainActionCalled() {
     url: "about:blank"
   };
 
-  let extraWindow = yield BrowserTestUtils.openNewBrowserWindow();
-
   yield BrowserTestUtils.withNewTab(options, function*(browser) {
     let doc = browser.ownerDocument;
 
@@ -22,29 +20,121 @@ add_task(function* testMainActionCalled() {
     };
     PanelUI.showNotification("update-manual", mainAction);
 
-    let extraMainActionCalled = false;
-    let extraMainAction = {
-      callback: () => { extraMainActionCalled = true; }
-    };
-    extraWindow.PanelUI.showNotification("update-manual", extraMainAction)
-
     isnot(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is showing.");
     let notifications = [...PanelUI.notificationPanel.children].filter(n => !n.hidden);
     is(notifications.length, 1, "PanelUI doorhanger is only displaying one notification.");
     let doorhanger = notifications[0];
     is(doorhanger.id, "appMenu-update-manual-notification", "PanelUI is displaying the update-manual notification.");
 
-    let mainActionButton = doc.getAnonymousElementByAttribute(doorhanger, "anonid", "button");
-    mainActionButton.click();
+    let button = doc.getAnonymousElementByAttribute(doorhanger, "anonid", "button");
+    button.click();
 
     ok(mainActionCalled, "Main action callback was called");
-    isnot(extraMainActionCalled, true, "Extra window's main action callback was not called");
     is(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is closed.");
-    is(extraWindow.PanelUI.notificationPanel.state, "closed", "Extra window's update-manual doorhanger is closed.");
     is(PanelUI.menuButton.hasAttribute("badge-status"), false, "Should not have a badge status");
   });
+});
 
-  yield BrowserTestUtils.closeWindow(extraWindow);
+/**
+ * Tests that when we try to show a notification in a background window, it
+ * does not display until the window comes back into the foreground. However,
+ * it should display a badge.
+ */
+add_task(function* testDoesNotShowDoorhangerForBackgroundWindow() {
+  let options = {
+    gBrowser: window.gBrowser,
+    url: "about:blank"
+  };
+
+  yield BrowserTestUtils.withNewTab(options, function*(browser) {
+    let doc = browser.ownerDocument;
+
+    let win = yield BrowserTestUtils.openNewBrowserWindow();
+    let mainActionCalled = false;
+    let mainAction = {
+      callback: () => { mainActionCalled = true; }
+    };
+    PanelUI.showNotification("update-manual", mainAction);
+    is(PanelUI.notificationPanel.state, "closed", "The background window's doorhanger is closed.");
+    is(PanelUI.menuButton.hasAttribute("badge-status"), true, "The background window has a badge.");
+
+    yield BrowserTestUtils.closeWindow(win);
+    yield SimpleTest.promiseFocus(window);
+    isnot(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is showing.");
+    let notifications = [...PanelUI.notificationPanel.children].filter(n => !n.hidden);
+    is(notifications.length, 1, "PanelUI doorhanger is only displaying one notification.");
+    let doorhanger = notifications[0];
+    is(doorhanger.id, "appMenu-update-manual-notification", "PanelUI is displaying the update-manual notification.");
+
+    let button = doc.getAnonymousElementByAttribute(doorhanger, "anonid", "button");
+    button.click();
+
+    ok(mainActionCalled, "Main action callback was called");
+    is(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is closed.");
+    is(PanelUI.menuButton.hasAttribute("badge-status"), false, "Should not have a badge status");
+  });
+});
+
+/**
+ * Tests that when we try to show a notification in a background window and in
+ * a foreground window, if the foreground window's main action is called, the
+ * background window's doorhanger will be removed.
+ */
+add_task(function* testBackgroundWindowNotificationsAreRemovedByForeground() {
+  let options = {
+    gBrowser: window.gBrowser,
+    url: "about:blank"
+  };
+
+  yield BrowserTestUtils.withNewTab(options, function*(browser) {
+    let win = yield BrowserTestUtils.openNewBrowserWindow();
+    PanelUI.showNotification("update-manual", {callback() {}});
+    win.PanelUI.showNotification("update-manual", {callback() {}});
+    let doc = win.gBrowser.ownerDocument;
+    let notifications = [...win.PanelUI.notificationPanel.children].filter(n => !n.hidden);
+    let doorhanger = notifications[0];
+    let button = doc.getAnonymousElementByAttribute(doorhanger, "anonid", "button");
+    button.click();
+
+    yield BrowserTestUtils.closeWindow(win);
+    yield SimpleTest.promiseFocus(window);
+
+    is(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is closed.");
+    is(PanelUI.menuButton.hasAttribute("badge-status"), false, "Should not have a badge status");
+  });
+});
+
+/**
+ * Tests that when we try to show a notification in a background window and in
+ * a foreground window, if the foreground window's doorhanger is dismissed,
+ * the background window's doorhanger will also be dismissed once the window
+ * regains focus.
+ */
+add_task(function* testBackgroundWindowNotificationsAreDismissedByForeground() {
+  let options = {
+    gBrowser: window.gBrowser,
+    url: "about:blank"
+  };
+
+  yield BrowserTestUtils.withNewTab(options, function*(browser) {
+    let win = yield BrowserTestUtils.openNewBrowserWindow();
+    PanelUI.showNotification("update-manual", {callback() {}});
+    win.PanelUI.showNotification("update-manual", {callback() {}});
+    let doc = win.gBrowser.ownerDocument;
+    let notifications = [...win.PanelUI.notificationPanel.children].filter(n => !n.hidden);
+    let doorhanger = notifications[0];
+    let button = doc.getAnonymousElementByAttribute(doorhanger, "anonid", "secondarybutton");
+    button.click();
+
+    yield BrowserTestUtils.closeWindow(win);
+    yield SimpleTest.promiseFocus(window);
+
+    is(PanelUI.notificationPanel.state, "closed", "The background window's doorhanger is closed.");
+    is(PanelUI.menuButton.hasAttribute("badge-status"), true,
+       "The dismissed notification should still have a badge status");
+
+    PanelUI.removeNotification(/.*/);
+  });
 });
 
 /**
@@ -59,8 +149,6 @@ add_task(function* testSecondaryActionWorkflow() {
     url: "about:blank"
   };
 
-  let extraWindow = yield BrowserTestUtils.openNewBrowserWindow();
-
   yield BrowserTestUtils.withNewTab(options, function*(browser) {
     let doc = browser.ownerDocument;
 
@@ -72,12 +160,6 @@ add_task(function* testSecondaryActionWorkflow() {
     };
     PanelUI.showNotification("update-manual", mainAction);
 
-    let extraMainActionCalled = false;
-    let extraMainAction = {
-      callback: () => { extraMainActionCalled = true; }
-    };
-    extraWindow.PanelUI.showNotification("update-manual", extraMainAction)
-
     isnot(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is showing.");
     let notifications = [...PanelUI.notificationPanel.children].filter(n => !n.hidden);
     is(notifications.length, 1, "PanelUI doorhanger is only displaying one notification.");
@@ -88,7 +170,6 @@ add_task(function* testSecondaryActionWorkflow() {
     secondaryActionButton.click();
 
     is(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is closed.");
-    is(extraWindow.PanelUI.notificationPanel.state, "closed", "Extra window's update-manual doorhanger is closed.");
 
     is(PanelUI.menuButton.getAttribute("badge-status"), "update-manual", "Badge is displaying on PanelUI button.");
 
@@ -104,12 +185,9 @@ add_task(function* testSecondaryActionWorkflow() {
     yield PanelUI.show();
     menuItem.click();
     ok(mainActionCalled, "Main action callback was called");
-    isnot(extraMainActionCalled, true, "Extra window's main action callback was not called");
 
     PanelUI.removeNotification(/.*/);
   });
-
-  yield BrowserTestUtils.closeWindow(extraWindow);
 });
 
 /**
