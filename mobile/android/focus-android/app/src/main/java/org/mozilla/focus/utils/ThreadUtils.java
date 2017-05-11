@@ -19,6 +19,10 @@ public class ThreadUtils {
         backgroundExecutorService.submit(runnable);
     }
 
+    public static void postToMainThread(final Runnable runnable) {
+        handler.post(runnable);
+    }
+
     public static void postToMainThreadDelayed(final Runnable runnable, long delayMillis) {
         handler.postDelayed(runnable, delayMillis);
     }

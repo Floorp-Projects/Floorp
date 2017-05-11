@@ -2,17 +2,56 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<Switch xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="48dp"
-    android:paddingStart="16dp"
-    android:paddingEnd="16dp"
-    android:clickable="true"
-    android:textSize="16sp"
+    android:layout_height="80dp"
+    android:background="#262626"
     android:gravity="center_vertical"
-    android:background="?android:attr/selectableItemBackground"
-    android:lines="1"
-    android:ellipsize="end"
-    android:text="@string/menu_block_trackers"
-    android:checked="true"
-    style="@android:style/TextAppearance.Material.Menu"/>
+    android:orientation="horizontal"
+    android:paddingEnd="0dp"
+    android:paddingStart="16dp">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center_vertical"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="2dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="@string/menu_trackers_blocked_title"
+            android:textColor="#808080"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/trackers_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#ffffff"
+            android:textSize="24sp"
+            tools:text="0" />
+
+    </LinearLayout>
+
+    <Switch
+        android:id="@+id/blocking_switch"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:layout_gravity="center_vertical|end"
+        android:background="?android:attr/selectableItemBackground"
+        android:checked="true"
+        android:clickable="true"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:lines="1"
+        android:paddingEnd="16dp"
+        android:paddingStart="16dp"
+        android:textSize="16sp"/>
+
+</LinearLayout>

@@ -5,6 +5,8 @@
 
 package org.mozilla.focus.web;
 
+import java.lang.ref.WeakReference;
+
 /**
  * A global object keeping the state of the current browsing session.
  *
@@ -12,6 +14,10 @@ package org.mozilla.focus.web;
  */
 public class BrowsingSession {
     private static BrowsingSession instance;
+
+    public interface TrackingCountListener {
+        void onTrackingCountChanged(int trackingCount);
+    }
 
     public static synchronized BrowsingSession getInstance() {
         if (instance == null) {
@@ -21,8 +27,12 @@ public class BrowsingSession {
     }
 
     private boolean isActive;
+    private int blockedTrackers;
+    private WeakReference<TrackingCountListener> listenerWeakReference;
 
-    private BrowsingSession() {}
+    private BrowsingSession() {
+        listenerWeakReference = new WeakReference<>(null);
+    }
 
     public void start() {
         isActive = true;
@@ -34,5 +44,23 @@ public class BrowsingSession {
 
     public boolean isActive() {
         return isActive;
+    }
+
+    public void countBlockedTracker() {
+        blockedTrackers++;
+
+        final TrackingCountListener listener = listenerWeakReference.get();
+        if (listener != null) {
+            listener.onTrackingCountChanged(blockedTrackers);
+        }
+    }
+
+    public void setTrackingCountListener(TrackingCountListener listener) {
+        listenerWeakReference = new WeakReference<>(listener);
+        listener.onTrackingCountChanged(blockedTrackers);
+    }
+
+    public void resetTrackerCount() {
+        blockedTrackers = 0;
     }
 }
