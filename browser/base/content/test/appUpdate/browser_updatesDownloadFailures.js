@@ -6,6 +6,9 @@ add_task(function* testDownloadFailures() {
   ]});
   let updateParams = "badURL=1";
 
+  // Open a new window to make sure that our pref management isn't duplicated.
+  let extraWindow = yield BrowserTestUtils.openNewBrowserWindow();
+
   yield runUpdateTest(updateParams, 1, [
     {
       // if we fail maxBackgroundErrors download attempts, then we want to
@@ -29,4 +32,6 @@ add_task(function* testDownloadFailures() {
       }
     },
   ]);
+
+  yield BrowserTestUtils.closeWindow(extraWindow);
 });
