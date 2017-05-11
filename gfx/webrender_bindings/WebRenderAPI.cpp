@@ -195,14 +195,14 @@ void
 WebRenderAPI::SetRootDisplayList(gfx::Color aBgColor,
                                  Epoch aEpoch,
                                  LayerSize aViewportSize,
-				 WrPipelineId pipeline_id,
-				 WrBuiltDisplayListDescriptor dl_descriptor,
-				 uint8_t *dl_data,
-				 size_t dl_size)
+                                 WrPipelineId pipeline_id,
+                                 WrBuiltDisplayListDescriptor dl_descriptor,
+                                 uint8_t *dl_data,
+                                 size_t dl_size)
 {
     wr_api_set_root_display_list(mWrApi,
-				 aEpoch,
-				 aViewportSize.width, aViewportSize.height,
+                                 aEpoch,
+                                 aViewportSize.width, aViewportSize.height,
                                  pipeline_id,
                                  dl_descriptor,
                                  dl_data,
