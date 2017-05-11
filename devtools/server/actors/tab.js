@@ -1168,6 +1168,12 @@ TabActor.prototype = {
     this._setWindow(window);
 
     DevToolsUtils.executeSoon(() => {
+      // No need to do anything more if the actor is not attached anymore
+      // e.g. the client has been closed and the actors destroyed in the meantime.
+      if (!this.attached) {
+        return;
+      }
+
       // Then fake window-ready and navigate on the given document
       this._windowReady(window, true);
       DevToolsUtils.executeSoon(() => {
