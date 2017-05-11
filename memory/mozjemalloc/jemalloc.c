@@ -166,11 +166,6 @@
     */
 #  define MALLOC_DEBUG
 
-   /* Allocation tracing. */
-#  ifndef MOZ_MEMORY_WINDOWS
-#    define MALLOC_UTRACE
-#  endif
-
    /* Support optional abort() on OOM. */
 #  define MALLOC_XMALLOC
 
@@ -1135,33 +1130,11 @@ static size_t	opt_quantum_2pow = QUANTUM_2POW_MIN;
 static size_t	opt_small_max_2pow = SMALL_MAX_2POW_DEFAULT;
 static size_t	opt_chunk_2pow = CHUNK_2POW_DEFAULT;
 #endif
-#ifdef MALLOC_UTRACE
-static bool	opt_utrace = false;
-#endif
 #ifdef MALLOC_SYSV
 static bool	opt_sysv = false;
 #endif
 #ifdef MALLOC_XMALLOC
 static bool	opt_xmalloc = false;
-#endif
-
-#ifdef MALLOC_UTRACE
-typedef struct {
-	void	*p;
-	size_t	s;
-	void	*r;
-} malloc_utrace_t;
-
-#define	UTRACE(a, b, c)							\
-	if (opt_utrace) {						\
-		malloc_utrace_t ut;					\
-		ut.p = (a);						\
-		ut.s = (b);						\
-		ut.r = (c);						\
-		utrace(&ut, sizeof(ut));				\
-	}
-#else
-#define	UTRACE(a, b, c)
 #endif
 
 /******************************************************************************/
@@ -1540,52 +1513,6 @@ pow2_ceil(size_t x)
 	x++;
 	return (x);
 }
-
-#ifdef MALLOC_UTRACE
-static int
-utrace(const void *addr, size_t len)
-{
-	malloc_utrace_t *ut = (malloc_utrace_t *)addr;
-	char buf_a[UMAX2S_BUFSIZE];
-	char buf_b[UMAX2S_BUFSIZE];
-
-	assert(len == sizeof(malloc_utrace_t));
-
-	if (ut->p == NULL && ut->s == 0 && ut->r == NULL) {
-		_malloc_message(
-		    umax2s(getpid(), 10, buf_a),
-		    " x USER malloc_init()\n", "", "");
-	} else if (ut->p == NULL && ut->r != NULL) {
-		_malloc_message(
-		    umax2s(getpid(), 10, buf_a),
-		    " x USER 0x",
-		    umax2s((uintptr_t)ut->r, 16, buf_b),
-		    " = malloc(");
-		_malloc_message(
-		    umax2s(ut->s, 10, buf_a),
-		    ")\n", "", "");
-	} else if (ut->p != NULL && ut->r != NULL) {
-		_malloc_message(
-		    umax2s(getpid(), 10, buf_a),
-		    " x USER 0x",
-		    umax2s((uintptr_t)ut->r, 16, buf_b),
-		    " = realloc(0x");
-		_malloc_message(
-		    umax2s((uintptr_t)ut->p, 16, buf_a),
-		    ", ",
-		    umax2s(ut->s, 10, buf_b),
-		    ")\n");
-	} else {
-		_malloc_message(
-		    umax2s(getpid(), 10, buf_a),
-		    " x USER free(0x",
-		    umax2s((uintptr_t)ut->p, 16, buf_b),
-		    ")\n");
-	}
-
-	return (0);
-}
-#endif
 
 static inline const char *
 _getprogname(void)
@@ -4807,9 +4734,6 @@ malloc_print_stats(void)
 		_malloc_message(opt_junk ? "J" : "j", "", "", "");
 #endif
 		_malloc_message("P", "", "", "");
-#ifdef MALLOC_UTRACE
-		_malloc_message(opt_utrace ? "U" : "u", "", "", "");
-#endif
 #ifdef MALLOC_SYSV
 		_malloc_message(opt_sysv ? "V" : "v", "", "", "");
 #endif
@@ -5152,14 +5076,6 @@ MALLOC_OUT:
 						opt_small_max_2pow++;
 					break;
 #endif
-#ifdef MALLOC_UTRACE
-				case 'u':
-					opt_utrace = false;
-					break;
-				case 'U':
-					opt_utrace = true;
-					break;
-#endif
 #ifdef MALLOC_SYSV
 				case 'v':
 					opt_sysv = false;
@@ -5253,8 +5169,6 @@ MALLOC_OUT:
 	assert((chunksize % pagesize) == 0);
 	assert((1 << (ffs(chunksize / pagesize) - 1)) == (chunksize/pagesize));
 #endif
-
-	UTRACE(0, 0, 0);
 
 	/* Various sanity checks that regard configuration. */
 	assert(quantum >= sizeof(void *));
@@ -5395,7 +5309,6 @@ RETURN:
 		errno = ENOMEM;
 	}
 
-	UTRACE(0, size, ret);
 	return (ret);
 }
 
@@ -5475,7 +5388,6 @@ RETURN:
 		abort();
 	}
 #endif
-	UTRACE(0, size, ret);
 	return (ret);
 }
 
@@ -5587,7 +5499,6 @@ RETURN:
 		errno = ENOMEM;
 	}
 
-	UTRACE(0, num_size, ret);
 	return (ret);
 }
 
@@ -5649,7 +5560,6 @@ realloc_impl(void *ptr, size_t size)
 #ifdef MALLOC_SYSV
 RETURN:
 #endif
-	UTRACE(ptr, size, ret);
 	return (ret);
 }
 
@@ -5657,8 +5567,6 @@ MOZ_MEMORY_API void
 free_impl(void *ptr)
 {
 	size_t offset;
-
-	UTRACE(ptr, 0, 0);
 
 	/*
 	 * A version of idalloc that checks for NULL pointer but only for
@@ -5745,11 +5653,6 @@ jemalloc_stats_impl(jemalloc_stats_t *stats)
 	stats->opt_poison =
 #ifdef MALLOC_FILL
 	    opt_poison ? true :
-#endif
-	    false;
-	stats->opt_utrace =
-#ifdef MALLOC_UTRACE
-	    opt_utrace ? true :
 #endif
 	    false;
 	stats->opt_sysv =
