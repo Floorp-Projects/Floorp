@@ -2963,8 +2963,10 @@ CodeGeneratorX86Shared::visitSimdAllTrue(LSimdAllTrue* ins)
     FloatRegister input = ToFloatRegister(ins->input());
     Register output = ToRegister(ins->output());
 
-    masm.vmovmskps(input, output);
-    masm.cmp32(output, Imm32(0xf));
+    // We know that the input lanes are boolean, so they are either 0 or -1.
+    // The all-true vector has all 128 bits set, no matter the lane geometry.
+    masm.vpmovmskb(input, output);
+    masm.cmp32(output, Imm32(0xffff));
     masm.emitSet(Assembler::Zero, output);
 }
 
@@ -2974,7 +2976,7 @@ CodeGeneratorX86Shared::visitSimdAnyTrue(LSimdAnyTrue* ins)
     FloatRegister input = ToFloatRegister(ins->input());
     Register output = ToRegister(ins->output());
 
-    masm.vmovmskps(input, output);
+    masm.vpmovmskb(input, output);
     masm.cmp32(output, Imm32(0x0));
     masm.emitSet(Assembler::NonZero, output);
 }
