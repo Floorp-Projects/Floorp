@@ -124,7 +124,8 @@ NativeObject::elementsRangeWriteBarrierPost(uint32_t start, uint32_t count)
         const Value& v = elements_[start + i];
         if (v.isObject() && IsInsideNursery(&v.toObject())) {
             zone()->group()->storeBuffer().putSlot(this, HeapSlot::Element,
-                                                   start + i, count - i);
+                                                   unshiftedIndex(start + i),
+                                                   count - i);
             return;
         }
     }
@@ -141,8 +142,12 @@ NativeObject::copyDenseElements(uint32_t dstStart, const Value* src, uint32_t co
         checkStoredValue(src[i]);
 #endif
     if (JS::shadow::Zone::asShadowZone(zone())->needsIncrementalBarrier()) {
-        for (uint32_t i = 0; i < count; ++i)
-            elements_[dstStart + i].set(this, HeapSlot::Element, dstStart + i, src[i]);
+        uint32_t numShifted = getElementsHeader()->numShiftedElements();
+        for (uint32_t i = 0; i < count; ++i) {
+            elements_[dstStart + i].set(this, HeapSlot::Element,
+                                        dstStart + i + numShifted,
+                                        src[i]);
+        }
     } else {
         memcpy(&elements_[dstStart], src, count * sizeof(HeapSlot));
         elementsRangeWriteBarrierPost(dstStart, count);
@@ -161,6 +166,36 @@ NativeObject::initDenseElements(uint32_t dstStart, const Value* src, uint32_t co
 #endif
     memcpy(&elements_[dstStart], src, count * sizeof(HeapSlot));
     elementsRangeWriteBarrierPost(dstStart, count);
+}
+
+inline bool
+NativeObject::tryShiftDenseElements(uint32_t count)
+{
+    ObjectElements* header = getElementsHeader();
+    if (header->isCopyOnWrite() ||
+        header->isFrozen() ||
+        header->hasNonwritableArrayLength() ||
+        header->initializedLength == count)
+    {
+        return false;
+    }
+
+    MOZ_ASSERT(count > 0);
+    MOZ_ASSERT(count < header->initializedLength);
+    MOZ_ASSERT(count <= ObjectElements::MaxShiftedElements);
+
+    if (MOZ_UNLIKELY(header->numShiftedElements() + count > ObjectElements::MaxShiftedElements)) {
+        unshiftElements();
+        header = getElementsHeader();
+    }
+
+    prepareElementRangeForOverwrite(0, count);
+    header->addShiftedElements(count);
+
+    elements_ += count;
+    ObjectElements* newHeader = getElementsHeader();
+    memmove(newHeader, header, sizeof(ObjectElements));
+    return true;
 }
 
 inline void
@@ -184,16 +219,17 @@ NativeObject::moveDenseElements(uint32_t dstStart, uint32_t srcStart, uint32_t c
      * the array before and after the move.
      */
     if (JS::shadow::Zone::asShadowZone(zone())->needsIncrementalBarrier()) {
+        uint32_t numShifted = getElementsHeader()->numShiftedElements();
         if (dstStart < srcStart) {
             HeapSlot* dst = elements_ + dstStart;
             HeapSlot* src = elements_ + srcStart;
             for (uint32_t i = 0; i < count; i++, dst++, src++)
-                dst->set(this, HeapSlot::Element, dst - elements_, *src);
+                dst->set(this, HeapSlot::Element, dst - elements_ + numShifted, *src);
         } else {
             HeapSlot* dst = elements_ + dstStart + count - 1;
             HeapSlot* src = elements_ + srcStart + count - 1;
             for (uint32_t i = 0; i < count; i++, dst--, src--)
-                dst->set(this, HeapSlot::Element, dst - elements_, *src);
+                dst->set(this, HeapSlot::Element, dst - elements_ + numShifted, *src);
         }
     } else {
         memmove(elements_ + dstStart, elements_ + srcStart, count * sizeof(HeapSlot));
@@ -231,12 +267,13 @@ NativeObject::ensureDenseInitializedLengthNoPackedCheck(JSContext* cx, uint32_t 
     uint32_t& initlen = getElementsHeader()->initializedLength;
 
     if (initlen < index + extra) {
+        uint32_t numShifted = getElementsHeader()->numShiftedElements();
         size_t offset = initlen;
         for (HeapSlot* sp = elements_ + initlen;
              sp != elements_ + (index + extra);
              sp++, offset++)
         {
-            sp->init(this, HeapSlot::Element, offset, MagicValue(JS_ELEMENTS_HOLE));
+            sp->init(this, HeapSlot::Element, offset + numShifted, MagicValue(JS_ELEMENTS_HOLE));
         }
         initlen = index + extra;
     }
