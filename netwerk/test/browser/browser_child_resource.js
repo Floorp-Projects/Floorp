@@ -12,49 +12,6 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 const resProtocol = Cc["@mozilla.org/network/protocol;1?name=resource"]
                         .getService(Ci.nsIResProtocolHandler);
 
-function getMinidumpDirectory() {
-  var dir = Services.dirsvc.get('ProfD', Ci.nsIFile);
-  dir.append("minidumps");
-  return dir;
-}
-
-// This observer is needed so we can clean up all evidence of the crash so
-// the testrunner thinks things are peachy.
-var CrashObserver = {
-  observe: function(subject, topic, data) {
-    is(topic, 'ipc:content-shutdown', 'Received correct observer topic.');
-    ok(subject instanceof Ci.nsIPropertyBag2,
-       'Subject implements nsIPropertyBag2.');
-    // we might see this called as the process terminates due to previous tests.
-    // We are only looking for "abnormal" exits...
-    if (!subject.hasKey("abnormal")) {
-      info("This is a normal termination and isn't the one we are looking for...");
-      return;
-    }
-
-    var dumpID;
-    if ('nsICrashReporter' in Ci) {
-      dumpID = subject.getPropertyAsAString('dumpID');
-      ok(dumpID, "dumpID is present and not an empty string");
-    }
-
-    if (dumpID) {
-      var minidumpDirectory = getMinidumpDirectory();
-      let file = minidumpDirectory.clone();
-      file.append(dumpID + '.dmp');
-      file.remove(true);
-      file = minidumpDirectory.clone();
-      file.append(dumpID + '.extra');
-      file.remove(true);
-    }
-  }
-}
-Services.obs.addObserver(CrashObserver, 'ipc:content-shutdown');
-
-registerCleanupFunction(() => {
-  Services.obs.removeObserver(CrashObserver, 'ipc:content-shutdown');
-});
-
 function frameScript() {
   Components.utils.import("resource://gre/modules/Services.jsm");
   let resProtocol = Components.classes["@mozilla.org/network/protocol;1?name=resource"]
@@ -69,15 +26,6 @@ function frameScript() {
     catch (e) {
       sendAsyncMessage("Test:ResolvedURI", null);
     }
-  });
-
-  addMessageListener("Test:Crash", function() {
-    dump("Crashing\n");
-    privateNoteIntentionalCrash();
-    Components.utils.import("resource://gre/modules/ctypes.jsm");
-    let zero = new ctypes.intptr_t(8);
-    let badptr = ctypes.cast(zero, ctypes.PointerType(ctypes.int32_t));
-    badptr.contents
   });
 }
 
@@ -133,8 +81,7 @@ var restart = Task.async(function*() {
   if (browser.getAttribute("remote") != "true")
     return browser;
 
-  browser.messageManager.sendAsyncMessage("Test:Crash");
-  yield waitForEvent(browser, "AboutTabCrashedLoad", false, true);
+  yield BrowserTestUtils.crashBrowser(browser);
 
   browser.reload();
 
