@@ -282,15 +282,6 @@ typedef long ssize_t;
 #ifndef __DECONST
 #  define __DECONST(type, var)	((type)(uintptr_t)(const void *)(var))
 #endif
-#ifndef MOZ_MEMORY
-__FBSDID("$FreeBSD: head/lib/libc/stdlib/malloc.c 180599 2008-07-18 19:35:44Z jasone $");
-#include "libc_private.h"
-#ifdef MALLOC_DEBUG
-#  define _LOCK_DEBUG
-#endif
-#include "spinlock.h"
-#include "namespace.h"
-#endif
 #include <sys/mman.h>
 #ifndef MADV_FREE
 #  define MADV_FREE	MADV_DONTNEED
@@ -299,22 +290,12 @@ __FBSDID("$FreeBSD: head/lib/libc/stdlib/malloc.c 180599 2008-07-18 19:35:44Z ja
 #  define MAP_NOSYNC	0
 #endif
 #include <sys/param.h>
-#ifndef MOZ_MEMORY
-#include <sys/stddef.h>
-#endif
 #include <sys/time.h>
 #include <sys/types.h>
 #if !defined(MOZ_MEMORY_SOLARIS) && !defined(MOZ_MEMORY_ANDROID)
 #include <sys/sysctl.h>
 #endif
 #include <sys/uio.h>
-#ifndef MOZ_MEMORY
-#include <sys/ktrace.h> /* Must come after several other sys/ includes. */
-
-#include <machine/atomic.h>
-#include <machine/cpufunc.h>
-#include <machine/vmparam.h>
-#endif
 
 #include <errno.h>
 #include <limits.h>
@@ -322,12 +303,6 @@ __FBSDID("$FreeBSD: head/lib/libc/stdlib/malloc.c 180599 2008-07-18 19:35:44Z ja
 #  define SIZE_T_MAX	SIZE_MAX
 #endif
 #include <pthread.h>
-#ifdef MOZ_MEMORY_DARWIN
-#define _pthread_mutex_init pthread_mutex_init
-#define _pthread_mutex_trylock pthread_mutex_trylock
-#define _pthread_mutex_lock pthread_mutex_lock
-#define _pthread_mutex_unlock pthread_mutex_unlock
-#endif
 #include <sched.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -346,10 +321,6 @@ __FBSDID("$FreeBSD: head/lib/libc/stdlib/malloc.c 180599 2008-07-18 19:35:44Z ja
 #include <mach/mach_init.h>
 #include <mach/vm_map.h>
 #include <malloc/malloc.h>
-#endif
-
-#ifndef MOZ_MEMORY
-#include "un-namespace.h"
 #endif
 
 #endif
@@ -512,29 +483,6 @@ static pthread_key_t tlsIndex;
 #define	RUN_MAX_OVRHD		0x0000003dU
 #define	RUN_MAX_OVRHD_RELAX	0x00001800U
 
-/*
- * Hyper-threaded CPUs may need a special instruction inside spin loops in
- * order to yield to another virtual CPU.  If no such instruction is defined
- * above, make CPU_SPINWAIT a no-op.
- */
-#ifndef CPU_SPINWAIT
-#  define CPU_SPINWAIT
-#endif
-
-/*
- * Adaptive spinning must eventually switch to blocking, in order to avoid the
- * potential for priority inversion deadlock.  Backing off past a certain point
- * can actually waste time.
- */
-#define	SPIN_LIMIT_2POW		11
-
-/*
- * Conversion from spinning to blocking is expensive; we use (1U <<
- * BLOCK_COST_2POW) to estimate how many more times costly blocking is than
- * worst-case spinning.
- */
-#define	BLOCK_COST_2POW		4
-
 /******************************************************************************/
 
 /* MALLOC_DECOMMIT and MALLOC_DOUBLE_PURGE are mutually exclusive. */
@@ -557,15 +505,9 @@ typedef struct {
 typedef struct {
 	OSSpinLock	lock;
 } malloc_spinlock_t;
-#elif defined(MOZ_MEMORY)
+#else
 typedef pthread_mutex_t malloc_mutex_t;
 typedef pthread_mutex_t malloc_spinlock_t;
-#else
-/* XXX these should #ifdef these for freebsd (and linux?) only */
-typedef struct {
-	spinlock_t	lock;
-} malloc_mutex_t;
-typedef malloc_spinlock_t malloc_mutex_t;
 #endif
 
 /* Set to true once the allocator has been initialized. */
@@ -577,10 +519,8 @@ static bool malloc_initialized = false;
 static malloc_mutex_t init_lock = {OS_SPINLOCK_INIT};
 #elif defined(MOZ_MEMORY_LINUX) && !defined(MOZ_MEMORY_ANDROID)
 static malloc_mutex_t init_lock = PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP;
-#elif defined(MOZ_MEMORY)
-static malloc_mutex_t init_lock = PTHREAD_MUTEX_INITIALIZER;
 #else
-static malloc_mutex_t init_lock = {_SPINLOCK_INITIALIZER};
+static malloc_mutex_t init_lock = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
 /******************************************************************************/
@@ -887,11 +827,7 @@ struct arena_s {
 #endif
 
 	/* All operations on this arena require that lock be locked. */
-#ifdef MOZ_MEMORY
 	malloc_spinlock_t	lock;
-#else
-	pthread_mutex_t		lock;
-#endif
 
 #ifdef MALLOC_STATS
 	arena_stats_t		stats;
@@ -1164,11 +1100,7 @@ static size_t		base_committed;
  */
 static arena_t		**arenas;
 static unsigned		narenas;
-#ifdef MOZ_MEMORY
 static malloc_spinlock_t arenas_lock; /* Protects arenas initialization. */
-#else
-static pthread_mutex_t arenas_lock; /* Protects arenas initialization. */
-#endif
 
 #ifndef NO_TLS
 /*
@@ -1396,7 +1328,7 @@ umax2s(uintmax_t x, unsigned base, char *s)
 static void
 wrtmessage(const char *p1, const char *p2, const char *p3, const char *p4)
 {
-#if defined(MOZ_MEMORY) && !defined(MOZ_MEMORY_WINDOWS)
+#if !defined(MOZ_MEMORY_WINDOWS)
 #define	_write	write
 #endif
 	// Pretend to check _write() errors to suppress gcc warnings about
@@ -1468,13 +1400,9 @@ malloc_mutex_init(malloc_mutex_t *mutex)
 		return (true);
 	}
 	pthread_mutexattr_destroy(&attr);
-#elif defined(MOZ_MEMORY)
+#else
 	if (pthread_mutex_init(mutex, NULL) != 0)
 		return (true);
-#else
-	static const spinlock_t lock = _SPINLOCK_INITIALIZER;
-
-	mutex->lock = lock;
 #endif
 	return (false);
 }
@@ -1487,10 +1415,8 @@ malloc_mutex_lock(malloc_mutex_t *mutex)
 	EnterCriticalSection(mutex);
 #elif defined(MOZ_MEMORY_DARWIN)
 	OSSpinLockLock(&mutex->lock);
-#elif defined(MOZ_MEMORY)
-	pthread_mutex_lock(mutex);
 #else
-	_SPINLOCK(&mutex->lock);
+	pthread_mutex_lock(mutex);
 #endif
 }
 
@@ -1502,10 +1428,8 @@ malloc_mutex_unlock(malloc_mutex_t *mutex)
 	LeaveCriticalSection(mutex);
 #elif defined(MOZ_MEMORY_DARWIN)
 	OSSpinLockUnlock(&mutex->lock);
-#elif defined(MOZ_MEMORY)
-	pthread_mutex_unlock(mutex);
 #else
-	_SPINUNLOCK(&mutex->lock);
+	pthread_mutex_unlock(mutex);
 #endif
 }
 
@@ -1530,11 +1454,9 @@ malloc_spin_init(malloc_spinlock_t *lock)
 		return (true);
 	}
 	pthread_mutexattr_destroy(&attr);
-#elif defined(MOZ_MEMORY)
+#else
 	if (pthread_mutex_init(lock, NULL) != 0)
 		return (true);
-#else
-	lock->lock = _SPINLOCK_INITIALIZER;
 #endif
 	return (false);
 }
@@ -1547,10 +1469,8 @@ malloc_spin_lock(malloc_spinlock_t *lock)
 	EnterCriticalSection(lock);
 #elif defined(MOZ_MEMORY_DARWIN)
 	OSSpinLockLock(&lock->lock);
-#elif defined(MOZ_MEMORY)
-	pthread_mutex_lock(lock);
 #else
-	_SPINLOCK(&lock->lock);
+	pthread_mutex_lock(lock);
 #endif
 }
 
@@ -1561,10 +1481,8 @@ malloc_spin_unlock(malloc_spinlock_t *lock)
 	LeaveCriticalSection(lock);
 #elif defined(MOZ_MEMORY_DARWIN)
 	OSSpinLockUnlock(&lock->lock);
-#elif defined(MOZ_MEMORY)
-	pthread_mutex_unlock(lock);
 #else
-	_SPINUNLOCK(&lock->lock);
+	pthread_mutex_unlock(lock);
 #endif
 }
 
@@ -1578,79 +1496,10 @@ malloc_spin_unlock(malloc_spinlock_t *lock)
  * priority inversion.
  */
 
-#if defined(MOZ_MEMORY) && !defined(MOZ_MEMORY_DARWIN)
+#if !defined(MOZ_MEMORY_DARWIN)
 #  define	malloc_spin_init	malloc_mutex_init
 #  define	malloc_spin_lock	malloc_mutex_lock
 #  define	malloc_spin_unlock	malloc_mutex_unlock
-#endif
-
-#ifndef MOZ_MEMORY
-/*
- * We use an unpublished interface to initialize pthread mutexes with an
- * allocation callback, in order to avoid infinite recursion.
- */
-int	_pthread_mutex_init_calloc_cb(pthread_mutex_t *mutex,
-    void *(calloc_cb)(size_t, size_t));
-
-__weak_reference(_pthread_mutex_init_calloc_cb_stub,
-    _pthread_mutex_init_calloc_cb);
-
-int
-_pthread_mutex_init_calloc_cb_stub(pthread_mutex_t *mutex,
-    void *(calloc_cb)(size_t, size_t))
-{
-
-	return (0);
-}
-
-static bool
-malloc_spin_init(pthread_mutex_t *lock)
-{
-
-	if (_pthread_mutex_init_calloc_cb(lock, base_calloc) != 0)
-		return (true);
-
-	return (false);
-}
-
-static inline unsigned
-malloc_spin_lock(pthread_mutex_t *lock)
-{
-	unsigned ret = 0;
-
-	if (_pthread_mutex_trylock(lock) != 0) {
-		unsigned i;
-		volatile unsigned j;
-
-		/* Exponentially back off. */
-		for (i = 1; i <= SPIN_LIMIT_2POW; i++) {
-			for (j = 0; j < (1U << i); j++)
-				ret++;
-
-			CPU_SPINWAIT;
-			if (_pthread_mutex_trylock(lock) == 0)
-				return (ret);
-		}
-
-		/*
-		 * Spinning failed.  Block until the lock becomes
-		 * available, in order to avoid indefinite priority
-		 * inversion.
-		 */
-		_pthread_mutex_lock(lock);
-		assert((ret << BLOCK_COST_2POW) != 0);
-		return (ret << BLOCK_COST_2POW);
-	}
-
-	return (ret);
-}
-
-static inline void
-malloc_spin_unlock(pthread_mutex_t *lock)
-{
-
-	_pthread_mutex_unlock(lock);
-}
 #endif
 
 /*
