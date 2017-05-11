@@ -1638,16 +1638,12 @@ or run without that action (ie: --no-{action})"
                 buildprops,
                 os.path.join(dirs['abs_work_dir'], 'buildprops.json'))
 
-        if 'MOZILLABUILD' in os.environ:
-            mach = [
-                os.path.join(os.environ['MOZILLABUILD'], 'msys', 'bin', 'bash.exe'),
-                os.path.join(dirs['abs_src_dir'], 'mach')
-            ]
-        else:
-            mach = [self.query_exe('python2.7'), 'mach']
-
+        # use mh config override for mach build wrapper, if it exists
+        python = self.query_exe('python2.7')
+        default_mach_build = [python, 'mach', '--log-no-times', 'build', '-v']
+        mach_build = self.query_exe('mach-build', default=default_mach_build)
         return_code = self.run_command_m(
-            command=mach + ['--log-no-times', 'build', '-v'],
+            command=mach_build,
             cwd=dirs['abs_src_dir'],
             env=env,
             output_timeout=self.config.get('max_build_output_timeout', 60 * 40)
