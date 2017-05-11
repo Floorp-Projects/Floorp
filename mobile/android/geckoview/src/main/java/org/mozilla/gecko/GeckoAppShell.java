@@ -767,11 +767,6 @@ public class GeckoAppShell
         // This is a vestige, to be removed as full-screen support for GeckoView is implemented.
     }
 
-    @WrapForJNI(calledFrom = "gecko")
-    public static void scheduleRestart() {
-        getGeckoInterface().doRestart();
-    }
-
     // Creates a homescreen shortcut for a web page.
     // This is the entry point from nsIShellService.
     @WrapForJNI(calledFrom = "gecko")
