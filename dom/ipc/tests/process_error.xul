@@ -13,44 +13,23 @@
     const done = window.opener.wrappedJSObject.done;
     const SimpleTest = window.opener.wrappedJSObject.SimpleTest;
 
-    function getMinidumpDirectory() {
-      var dir = Services.dirsvc.get('ProfD', Components.interfaces.nsIFile);
-      dir.append("minidumps");
-      return dir;
-    }
-
-    function removeFile(directory, filename) {
-      var file = directory.clone();
-      file.append(filename);
-      if (file.exists()) {
-        file.remove(false);
-      }
-    }
-
     function crashObserver(subject, topic, data) {
       is(topic, 'ipc:content-shutdown', 'Received correct observer topic.');
       ok(subject instanceof Components.interfaces.nsIPropertyBag2,
          'Subject implements nsIPropertyBag2.');
 
+      var waitCrash = Promise.resolve();
       var dumpID;
       if ('nsICrashReporter' in Components.interfaces) {
         dumpID = subject.getPropertyAsAString('dumpID');
         ok(dumpID, "dumpID is present and not an empty string");
-      }
-
-      let p = Promise.resolve();
-
-      if (dumpID) {
-        var minidumpDirectory = getMinidumpDirectory();
-        p = Services.crashmanager.ensureCrashIsPresent(dumpID).then(() => {
-          removeFile(minidumpDirectory, dumpID + '.dmp');
-          removeFile(minidumpDirectory, dumpID + '.extra');
-        });
+        waitCrash = Services.crashmanager.ensureCrashIsPresent(dumpID);
       }
 
       Services.obs.removeObserver(crashObserver, 'ipc:content-shutdown');
-      p.then(done);
+      waitCrash.then(done);
     }
+
     Services.obs.addObserver(crashObserver, 'ipc:content-shutdown');
 
     document.getElementById('thebrowser')
