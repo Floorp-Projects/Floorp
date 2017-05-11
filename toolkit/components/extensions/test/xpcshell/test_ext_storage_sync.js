@@ -180,9 +180,10 @@ class KintoServer {
 
       if (this.conflicts.length > 0) {
         const nextConflict = this.conflicts.shift();
-        this.records.push(nextConflict);
+        if (!nextConflict.transient) {
+          this.records.push(nextConflict);
+        }
         const {data} = nextConflict;
-        dump(`responding with etag ${this.etag}\n`);
         postResponse = {
           responses: body.requests.map(req => {
             return {
@@ -792,7 +793,7 @@ add_task(async function ensureCanSync_handles_deleted_conflicts() {
 
       // This is the response that the Kinto server return when the
       // keyring has been deleted.
-      server.addRecord({collectionId: "storage-sync-crypto", conflict: true, data: null, etag: 765});
+      server.addRecord({collectionId: "storage-sync-crypto", conflict: true, transient: true, data: null, etag: 765});
 
       // Try to add a new extension to trigger a sync of the keyring.
       let collectionKeys2 = await extensionStorageSync.ensureCanSync([extensionId2]);
