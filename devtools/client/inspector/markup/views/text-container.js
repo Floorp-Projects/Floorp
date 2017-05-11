@@ -4,10 +4,10 @@
 
 "use strict";
 
-const Heritage = require("sdk/core/heritage");
 const nodeConstants = require("devtools/shared/dom-node-constants");
 const TextEditor = require("devtools/client/inspector/markup/views/text-editor");
 const MarkupContainer = require("devtools/client/inspector/markup/views/markup-container");
+const {extend} = require("devtools/client/inspector/markup/utils");
 
 /**
  * An implementation of MarkupContainer for text node and comment nodes.
@@ -35,6 +35,6 @@ function MarkupTextContainer(markupView, node) {
   this.tagLine.appendChild(this.editor.elt);
 }
 
-MarkupTextContainer.prototype = Heritage.extend(MarkupContainer.prototype, {});
+MarkupTextContainer.prototype = extend(MarkupContainer.prototype, {});
 
 module.exports = MarkupTextContainer;
