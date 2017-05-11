@@ -15,6 +15,7 @@ Cu.import("resource://testing-common/services/common/utils.js");
 Cu.import("resource://testing-common/PlacesTestUtils.jsm");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "SyncPingSchema", function() {
   let ns = {};
@@ -345,26 +346,35 @@ function validate_all_future_pings() {
   telem.submit = assert_valid_ping;
 }
 
-function wait_for_ping(callback, allowErrorPings, getFullPing = false) {
+function wait_for_pings(expectedPings) {
   return new Promise(resolve => {
     let telem = get_sync_test_telemetry();
     let oldSubmit = telem.submit;
+    let pings = [];
     telem.submit = function(record) {
-      telem.submit = oldSubmit;
-      if (allowErrorPings) {
-        assert_valid_ping(record);
-      } else {
-        assert_success_ping(record);
-      }
-      if (getFullPing) {
-        resolve(record);
-      } else {
-        equal(record.syncs.length, 1);
-        resolve(record.syncs[0]);
+      pings.push(record);
+      if (pings.length == expectedPings) {
+        telem.submit = oldSubmit;
+        resolve(pings);
       }
     };
-    callback();
   });
+}
+
+async function wait_for_ping(callback, allowErrorPings, getFullPing = false) {
+  let pingsPromise = wait_for_pings(1);
+  callback();
+  let [record] = await pingsPromise;
+  if (allowErrorPings) {
+    assert_valid_ping(record);
+  } else {
+    assert_success_ping(record);
+  }
+  if (getFullPing) {
+    return record;
+  }
+  equal(record.syncs.length, 1);
+  return record.syncs[0];
 }
 
 // Short helper for wait_for_ping
@@ -544,4 +554,52 @@ function serverForFoo(engine, callback) {
   // syncs running. Neuter that by making the threshold very large.
   Service.scheduler.syncThreshold = 10000000;
   return serverForEnginesWithKeys({"foo": "password"}, engine, callback);
+}
+
+// Places notifies history observers asynchronously, so `addVisits` might return
+// before the tracker receives the notification. This helper registers an
+// observer that resolves once the expected notification fires.
+async function promiseVisit(expectedType, expectedURI) {
+  return new Promise(resolve => {
+    function done(type, uri) {
+      if (uri.equals(expectedURI) && type == expectedType) {
+        PlacesUtils.history.removeObserver(observer);
+        resolve();
+      }
+    }
+    let observer = {
+      onVisit(uri) {
+        done("added", uri);
+      },
+      onBeginUpdateBatch() {},
+      onEndUpdateBatch() {},
+      onTitleChanged() {},
+      onFrecencyChanged() {},
+      onManyFrecenciesChanged() {},
+      onDeleteURI(uri) {
+        done("removed", uri);
+      },
+      onClearHistory() {},
+      onPageChanged() {},
+      onDeleteVisits() {},
+    };
+    PlacesUtils.history.addObserver(observer, false);
+  });
+}
+
+async function addVisit(suffix, referrer = null, transition = PlacesUtils.history.TRANSITION_LINK) {
+  let uriString = "http://getfirefox.com/" + suffix;
+  let uri = Utils.makeURI(uriString);
+  _("Adding visit for URI " + uriString);
+
+  let visitAddedPromise = promiseVisit("added", uri);
+  await PlacesTestUtils.addVisits({
+    uri,
+    visitDate: Date.now() * 1000,
+    transition,
+    referrer,
+  });
+  await visitAddedPromise;
+
+  return uri;
 }

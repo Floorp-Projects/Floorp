@@ -2,7 +2,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 _("Making sure after processing incoming bookmarks, they show up in the right order");
-Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");

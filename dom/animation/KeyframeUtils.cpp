@@ -742,7 +742,10 @@ KeyframeUtils::ParseProperty(nsCSSPropertyID aProperty,
   RefPtr<URLExtraData> data = new URLExtraData(aDocument->GetDocumentURI(),
                                                aDocument->GetDocumentURI(),
                                                aDocument->NodePrincipal());
-  return Servo_ParseProperty(aProperty, &value, data).Consume();
+  return Servo_ParseProperty(aProperty,
+                             &value,
+                             data,
+                             LengthParsingMode::Default).Consume();
 }
 
 // ------------------------------------------------------------------

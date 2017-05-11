@@ -52,23 +52,19 @@ SERVO_BINDING_FUNC(Servo_StyleSet_Drop, void, RawServoStyleSetOwned set)
 SERVO_BINDING_FUNC(Servo_StyleSet_AppendStyleSheet, void,
                    RawServoStyleSetBorrowed set,
                    RawServoStyleSheetBorrowed sheet,
-                   uint32_t unique_id,
-                   bool flush)
+                   uint32_t unique_id)
 SERVO_BINDING_FUNC(Servo_StyleSet_PrependStyleSheet, void,
                    RawServoStyleSetBorrowed set,
                    RawServoStyleSheetBorrowed sheet,
-                   uint32_t unique_id,
-                   bool flush)
+                   uint32_t unique_id)
 SERVO_BINDING_FUNC(Servo_StyleSet_RemoveStyleSheet, void,
                    RawServoStyleSetBorrowed set,
-                   uint32_t unique_id,
-                   bool flush)
+                   uint32_t unique_id)
 SERVO_BINDING_FUNC(Servo_StyleSet_InsertStyleSheetBefore, void,
                    RawServoStyleSetBorrowed set,
                    RawServoStyleSheetBorrowed sheet,
                    uint32_t unique_id,
-                   uint32_t before_unique_id,
-                   bool flush)
+                   uint32_t before_unique_id)
 SERVO_BINDING_FUNC(Servo_StyleSet_FlushStyleSheets, void, RawServoStyleSetBorrowed set)
 SERVO_BINDING_FUNC(Servo_StyleSet_NoteStyleSheetsChanged, void,
                    RawServoStyleSetBorrowed set, bool author_style_disabled)
@@ -147,7 +143,8 @@ SERVO_BINDING_FUNC(Servo_SupportsRule_GetConditionText, void,
 SERVO_BINDING_FUNC(Servo_ParseProperty,
                    RawServoDeclarationBlockStrong,
                    nsCSSPropertyID property, const nsACString* value,
-                   RawGeckoURLExtraData* data)
+                   RawGeckoURLExtraData* data,
+                   mozilla::LengthParsingMode length_parsing_mode)
 SERVO_BINDING_FUNC(Servo_ParseEasing, bool,
                    const nsAString* easing,
                    RawGeckoURLExtraData* data,
@@ -364,11 +361,6 @@ SERVO_BINDING_FUNC(Servo_Initialize, void,
 // Shut down Servo components. Should be called exactly once at shutdown.
 SERVO_BINDING_FUNC(Servo_Shutdown, void)
 
-// Gets the snapshot for the element. This will return null if the element
-// has never been styled, since snapshotting in that case is wasted work.
-SERVO_BINDING_FUNC(Servo_Element_GetSnapshot, ServoElementSnapshot*,
-                   RawGeckoElementBorrowed element)
-
 // Gets the source style rules for the element. This returns the result via
 // rules, which would include a list of unowned pointers to RawServoStyleRule.
 SERVO_BINDING_FUNC(Servo_Element_GetStyleRuleList, void,
@@ -386,6 +378,14 @@ SERVO_BINDING_FUNC(Servo_ResolveStyle, ServoComputedValuesStrong,
 SERVO_BINDING_FUNC(Servo_ResolvePseudoStyle, ServoComputedValuesStrong,
                    RawGeckoElementBorrowed element, nsIAtom* pseudo_tag,
                    bool is_probe, RawServoStyleSetBorrowed set)
+SERVO_BINDING_FUNC(Servo_ResolveRuleNode, RawServoRuleNodeStrong,
+                   RawGeckoElementBorrowed element, nsIAtom* pseudo_tag,
+                   RawServoStyleSetBorrowed set)
+SERVO_BINDING_FUNC(Servo_HasAuthorSpecifiedRules, bool,
+                   RawServoRuleNodeBorrowed rule_node,
+                   RawGeckoElementBorrowed element,
+                   uint32_t rule_type_mask,
+                   bool author_colors_allowed)
 
 // Resolves style for an element or pseudo-element without processing pending
 // restyles first. The Element and its ancestors may be unstyled, have pending
@@ -396,13 +396,18 @@ SERVO_BINDING_FUNC(Servo_ResolvePseudoStyle, ServoComputedValuesStrong,
 // The tree must be in a consistent state such that a normal traversal could be
 // performed, and this function maintains that invariant.
 SERVO_BINDING_FUNC(Servo_ResolveStyleLazily, ServoComputedValuesStrong,
-                   RawGeckoElementBorrowed element, nsIAtom* pseudo_tag,
+                   RawGeckoElementBorrowed element,
+                   nsIAtom* pseudo_tag,
+                   const mozilla::ServoElementSnapshotTable* snapshots,
                    RawServoStyleSetBorrowed set)
 
 // Use ServoStyleSet::PrepareAndTraverseSubtree instead of calling this
 // directly
-SERVO_BINDING_FUNC(Servo_TraverseSubtree, bool,
-                   RawGeckoElementBorrowed root, RawServoStyleSetBorrowed set,
+SERVO_BINDING_FUNC(Servo_TraverseSubtree,
+                   bool,
+                   RawGeckoElementBorrowed root,
+                   RawServoStyleSetBorrowed set,
+                   const mozilla::ServoElementSnapshotTable* snapshots,
                    mozilla::TraversalRootBehavior root_behavior,
                    mozilla::TraversalRestyleBehavior restyle_behavior)
 
@@ -414,6 +419,7 @@ SERVO_BINDING_FUNC(Servo_StyleSet_GetBaseComputedValuesForElement,
                    ServoComputedValuesStrong,
                    RawServoStyleSetBorrowed set,
                    RawGeckoElementBorrowed element,
+                   const mozilla::ServoElementSnapshotTable* snapshots,
                    nsIAtom* pseudo_tag)
 
 // Style-struct management.

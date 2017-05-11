@@ -484,8 +484,6 @@ var PinnedLinks = {
       return false;
     }
     aLink.type = "history";
-    // always remove targetedSite
-    delete aLink.targetedSite;
     return true;
   },
 

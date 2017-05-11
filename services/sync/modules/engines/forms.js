@@ -248,8 +248,9 @@ FormTracker.prototype = {
   },
 
   trackEntry(guid) {
-    this.addChangedID(guid);
-    this.score += SCORE_INCREMENT_MEDIUM;
+    if (this.addChangedID(guid)) {
+      this.score += SCORE_INCREMENT_MEDIUM;
+    }
   },
 };
 

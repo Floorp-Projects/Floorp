@@ -1125,9 +1125,6 @@ class TreeMetadataEmitter(LoggingMixin):
         for name, jar in context.get('JAVA_JAR_TARGETS', {}).items():
             yield ContextWrapped(context, jar)
 
-        for name, data in context.get('ANDROID_ECLIPSE_PROJECT_TARGETS', {}).items():
-            yield ContextWrapped(context, data)
-
         if context.get('USE_YASM') is True:
             yasm = context.config.substs.get('YASM')
             if not yasm:

@@ -66,10 +66,10 @@ skip-if(Android||winWidget) fails-if(stylo) == ua-style-sheet-textarea-1.html ua
 skip-if(!(Android)) fails-if(stylo) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1b-ref.html
 skip-if(!winWidget) fails-if(stylo) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1c-ref.html
 fuzzy-if(Android,1,18) == ua-style-sheet-checkbox-radio-1.html ua-style-sheet-checkbox-radio-1-ref.html
-skip-if(Android) fuzzy-if(skiaContent&&!Android,2,6) fails-if(stylo) == ua-style-sheet-button-1.html ua-style-sheet-button-1a-ref.html
-skip-if(!(Android)) fails-if(stylo) == ua-style-sheet-button-1.html ua-style-sheet-button-1b-ref.html
+skip-if(Android) fuzzy-if(skiaContent&&!Android,2,6) == ua-style-sheet-button-1.html ua-style-sheet-button-1a-ref.html
+skip-if(!(Android)) == ua-style-sheet-button-1.html ua-style-sheet-button-1b-ref.html
 fails-if(stylo) == ua-style-sheet-input-color-1.html ua-style-sheet-input-color-1-ref.html
-pref(layout.css.moz-appearance.enabled,true) fuzzy-if(gtkWidget,1,15) fails-if(stylo) == ua-style-sheet-input-number-1.html ua-style-sheet-input-number-1-ref.html
+pref(layout.css.moz-appearance.enabled,true) fuzzy-if(gtkWidget,1,15) == ua-style-sheet-input-number-1.html ua-style-sheet-input-number-1-ref.html
 
 HTTP(..) == 1127488-align-default-horizontal-tb-ltr.html 1127488-align-top-left-ref.html
 HTTP(..) == 1127488-align-start-horizontal-tb-ltr.html 1127488-align-top-left-ref.html

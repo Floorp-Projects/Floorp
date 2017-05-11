@@ -326,9 +326,10 @@ PasswordTracker.prototype = {
           break;
         }
 
-        this.score += SCORE_INCREMENT_XLARGE;
-        this._log.trace(data + ": " + subject.guid);
-        this.addChangedID(subject.guid);
+        if (this.addChangedID(subject.guid)) {
+          this.score += SCORE_INCREMENT_XLARGE;
+          this._log.trace(data + ": " + subject.guid);
+        }
         break;
       case "removeAllLogins":
         this._log.trace(data);

@@ -103,10 +103,10 @@ fuzzy-if(cocoaWidget,1,5) == decoration-color-override-quirks.html decoration-co
 != inline-baseline-almost-standards.html inline-baseline-almost-standards-ref.html
 != inline-baseline-quirks.html inline-baseline-quirks-ref.html
 == 676538-1.html 676538-1-ref.html
-fuzzy-if(OSX==1010,1,4) fails-if(stylo) == underline-button-1.html underline-button-1-ref.html
-fuzzy-if(OSX==1010,1,2) fails-if(stylo) == underline-button-2.html underline-button-2-ref.html
-fuzzy-if(skiaContent,4,2) fails-if(stylo) == underline-select-1.html underline-select-1-ref.html
-fails-if(stylo) == underline-select-2.html underline-select-2-ref.html
+fuzzy-if(OSX==1010,1,4) == underline-button-1.html underline-button-1-ref.html
+fuzzy-if(OSX==1010,1,2) == underline-button-2.html underline-button-2-ref.html
+fuzzy-if(skiaContent,4,2) == underline-select-1.html underline-select-1-ref.html
+== underline-select-2.html underline-select-2-ref.html
 == 1133392.html 1133392-ref.html
 != 1159729-offset-adjustment.html 1159729-offset-adjustment-notref.html
 == emphasis-style-dynamic.html emphasis-style-dynamic-ref.html
