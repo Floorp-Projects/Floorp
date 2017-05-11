@@ -102,7 +102,6 @@
 
 #ifdef MOZ_MEMORY_ANDROID
 #define NO_TLS
-#define _pthread_self() pthread_self()
 #endif
 
 /*
@@ -138,13 +137,6 @@
 #ifndef MOZ_MEMORY_DEBUG
 #  define	MALLOC_PRODUCTION
 #endif
-
-/*
- * Use only one arena by default.  Mozilla does not currently make extensive
- * use of concurrent allocation, so the increased fragmentation associated with
- * multiple arenas is not warranted.
- */
-#define	MOZ_MEMORY_NARENAS_DEFAULT_ONE
 
 /*
  * Pass this set of options to jemalloc as its default. It does not override
@@ -232,8 +224,6 @@
 #ifndef NO_TLS
 static unsigned long tlsIndex = 0xffffffff;
 #endif
-
-#define	_pthread_self() __threadid()
 
 /* use MSVC intrinsics */
 #pragma intrinsic(_BitScanForward)
@@ -336,7 +326,6 @@ __FBSDID("$FreeBSD: head/lib/libc/stdlib/malloc.c 180599 2008-07-18 19:35:44Z ja
 #endif
 #include <pthread.h>
 #ifdef MOZ_MEMORY_DARWIN
-#define _pthread_self pthread_self
 #define _pthread_mutex_init pthread_mutex_init
 #define _pthread_mutex_trylock pthread_mutex_trylock
 #define _pthread_mutex_lock pthread_mutex_lock
@@ -1017,11 +1006,6 @@ struct arena_s {
  * Data.
  */
 
-#ifndef MOZ_MEMORY_NARENAS_DEFAULT_ONE
-/* Number of CPUs. */
-static unsigned		ncpus;
-#endif
-
 #ifdef JEMALLOC_MUNMAP
 static const bool config_munmap = true;
 #else
@@ -1223,9 +1207,6 @@ static size_t		base_committed;
  */
 static arena_t		**arenas;
 static unsigned		narenas;
-#ifndef NO_TLS
-static unsigned		next_arena;
-#endif
 #ifdef MOZ_MEMORY
 static malloc_spinlock_t arenas_lock; /* Protects arenas initialization. */
 #else
@@ -1285,7 +1266,6 @@ static bool	opt_sysv = false;
 #ifdef MALLOC_XMALLOC
 static bool	opt_xmalloc = false;
 #endif
-static int	opt_narenas_lshift = 0;
 
 #ifdef MALLOC_UTRACE
 typedef struct {
@@ -1342,9 +1322,6 @@ static void	chunk_record(extent_tree_t *chunks_szad,
 	extent_tree_t *chunks_ad, void *chunk, size_t size);
 static bool	chunk_dalloc_mmap(void *chunk, size_t size);
 static void	chunk_dealloc(void *chunk, size_t size);
-#ifndef NO_TLS
-static arena_t	*choose_arena_hard(void);
-#endif
 static void	arena_run_split(arena_t *arena, arena_run_t *run, size_t size,
     bool large, bool zero);
 static void arena_chunk_init(arena_t *arena, arena_chunk_t *chunk);
@@ -2950,8 +2927,7 @@ jemalloc_thread_local_arena_impl(bool enabled)
 }
 
 /*
- * Choose an arena based on a per-thread value (fast-path code, calls slow-path
- * code if necessary).
+ * Choose an arena based on a per-thread value.
  */
 static inline arena_t *
 choose_arena(void)
@@ -2973,88 +2949,14 @@ choose_arena(void)
 	ret = arenas_map;
 #  endif
 
-	if (ret == NULL) {
-		ret = choose_arena_hard();
+	if (ret == NULL)
+#endif
+	{
+		ret = arenas[0];
 		RELEASE_ASSERT(ret != NULL);
 	}
-#else
-	if (narenas > 1) {
-		unsigned long ind;
-
-		/*
-		 * Hash _pthread_self() to one of the arenas.  There is a prime
-		 * number of arenas, so this has a reasonable chance of
-		 * working.  Even so, the hashing can be easily thwarted by
-		 * inconvenient _pthread_self() values.  Without specific
-		 * knowledge of how _pthread_self() calculates values, we can't
-		 * easily do much better than this.
-		 */
-		ind = (unsigned long) _pthread_self() % narenas;
-
-		/*
-		 * Optimistially assume that arenas[ind] has been initialized.
-		 * At worst, we find out that some other thread has already
-		 * done so, after acquiring the lock in preparation.  Note that
-		 * this lazy locking also has the effect of lazily forcing
-		 * cache coherency; without the lock acquisition, there's no
-		 * guarantee that modification of arenas[ind] by another thread
-		 * would be seen on this CPU for an arbitrary amount of time.
-		 *
-		 * In general, this approach to modifying a synchronized value
-		 * isn't a good idea, but in this case we only ever modify the
-		 * value once, so things work out well.
-		 */
-		ret = arenas[ind];
-		if (ret == NULL) {
-			/*
-			 * Avoid races with another thread that may have already
-			 * initialized arenas[ind].
-			 */
-			malloc_spin_lock(&arenas_lock);
-			if (arenas[ind] == NULL)
-				ret = arenas_extend((unsigned)ind);
-			else
-				ret = arenas[ind];
-			malloc_spin_unlock(&arenas_lock);
-		}
-	} else
-		ret = arenas[0];
-#endif
-
-	RELEASE_ASSERT(ret != NULL);
 	return (ret);
 }
-
-#ifndef NO_TLS
-/*
- * Choose an arena based on a per-thread value (slow-path code only, called
- * only by choose_arena()).
- */
-static arena_t *
-choose_arena_hard(void)
-{
-	arena_t *ret;
-
-	if (narenas > 1) {
-		malloc_spin_lock(&arenas_lock);
-		if ((ret = arenas[next_arena]) == NULL)
-			ret = arenas_extend(next_arena);
-		next_arena = (next_arena + 1) % narenas;
-		malloc_spin_unlock(&arenas_lock);
-	} else
-		ret = arenas[0];
-
-#ifdef MOZ_MEMORY_WINDOWS
-	TlsSetValue(tlsIndex, ret);
-#elif defined(MOZ_MEMORY_DARWIN)
-	pthread_setspecific(tlsIndex, ret);
-#else
-	arenas_map = ret;
-#endif
-
-	return (ret);
-}
-#endif
 
 static inline int
 arena_chunk_comp(arena_chunk_t *a, arena_chunk_t *b)
@@ -5048,118 +4950,6 @@ huge_dalloc(void *ptr)
 	base_node_dealloc(node);
 }
 
-#ifndef MOZ_MEMORY_NARENAS_DEFAULT_ONE
-#ifdef MOZ_MEMORY_BSD
-static inline unsigned
-malloc_ncpus(void)
-{
-	unsigned ret;
-	int mib[2];
-	size_t len;
-
-	mib[0] = CTL_HW;
-	mib[1] = HW_NCPU;
-	len = sizeof(ret);
-	if (sysctl(mib, 2, &ret, &len, (void *) 0, 0) == -1) {
-		/* Error. */
-		return (1);
-	}
-
-	return (ret);
-}
-#elif (defined(MOZ_MEMORY_LINUX))
-#include <fcntl.h>
-
-static inline unsigned
-malloc_ncpus(void)
-{
-	unsigned ret;
-	int fd, nread, column;
-	char buf[1024];
-	static const char matchstr[] = "processor\t:";
-	int i;
-
-	/*
-	 * sysconf(3) would be the preferred method for determining the number
-	 * of CPUs, but it uses malloc internally, which causes untennable
-	 * recursion during malloc initialization.
-	 */
-	fd = open("/proc/cpuinfo", O_RDONLY);
-	if (fd == -1)
-		return (1); /* Error. */
-	/*
-	 * Count the number of occurrences of matchstr at the beginnings of
-	 * lines.  This treats hyperthreaded CPUs as multiple processors.
-	 */
-	column = 0;
-	ret = 0;
-	while (true) {
-		nread = read(fd, &buf, sizeof(buf));
-		if (nread <= 0)
-			break; /* EOF or error. */
-		for (i = 0;i < nread;i++) {
-			char c = buf[i];
-			if (c == '\n')
-				column = 0;
-			else if (column != -1) {
-				if (c == matchstr[column]) {
-					column++;
-					if (column == sizeof(matchstr) - 1) {
-						column = -1;
-						ret++;
-					}
-				} else
-					column = -1;
-			}
-		}
-	}
-
-	if (ret == 0)
-		ret = 1; /* Something went wrong in the parser. */
-	close(fd);
-
-	return (ret);
-}
-#elif (defined(MOZ_MEMORY_DARWIN))
-#include <mach/mach_init.h>
-#include <mach/mach_host.h>
-
-static inline unsigned
-malloc_ncpus(void)
-{
-	kern_return_t error;
-	natural_t n;
-	processor_info_array_t pinfo;
-	mach_msg_type_number_t pinfocnt;
-
-	error = host_processor_info(mach_host_self(), PROCESSOR_BASIC_INFO,
-				    &n, &pinfo, &pinfocnt);
-	if (error != KERN_SUCCESS)
-		return (1); /* Error. */
-	else
-		return (n);
-}
-#elif (defined(MOZ_MEMORY_SOLARIS))
-
-static inline unsigned
-malloc_ncpus(void)
-{
-	return sysconf(_SC_NPROCESSORS_ONLN);
-}
-#else
-static inline unsigned
-malloc_ncpus(void)
-{
-
-	/*
-	 * We lack a way to determine the number of CPUs on this platform, so
-	 * assume 1 CPU.
-	 */
-	return (1);
-}
-#endif
-#endif
-
 static void
 malloc_print_stats(void)
 {
@@ -5196,9 +4986,6 @@ malloc_print_stats(void)
 #endif
 		_malloc_message("\n", "", "", "");
 
-#ifndef MOZ_MEMORY_NARENAS_DEFAULT_ONE
-		_malloc_message("CPUs: ", umax2s(ncpus, 10, s), "\n", "");
-#endif
 		_malloc_message("Max arenas: ", umax2s(narenas, 10, s), "\n",
 		    "");
 		_malloc_message("Pointer size: ", umax2s(sizeof(void *), 10, s),
@@ -5348,15 +5135,8 @@ malloc_init_hard(void)
 		GetSystemInfo(&info);
 		result = info.dwPageSize;
 
-#ifndef MOZ_MEMORY_NARENAS_DEFAULT_ONE
-		ncpus = info.dwNumberOfProcessors;
-#endif
 	}
 #else
-#ifndef MOZ_MEMORY_NARENAS_DEFAULT_ONE
-	ncpus = malloc_ncpus();
-#endif
-
 	result = sysconf(_SC_PAGESIZE);
 	assert(result != -1);
 #endif
@@ -5506,12 +5286,6 @@ MALLOC_OUT:
 						opt_chunk_2pow++;
 					break;
 #endif
-				case 'n':
-					opt_narenas_lshift--;
-					break;
-				case 'N':
-					opt_narenas_lshift++;
-					break;
 				case 'p':
 					opt_print_stats = false;
 					break;
@@ -5672,67 +5446,7 @@ MALLOC_OUT:
 	base_nodes = NULL;
 	malloc_mutex_init(&base_mtx);
 
-#ifdef MOZ_MEMORY_NARENAS_DEFAULT_ONE
 	narenas = 1;
-#else
-	if (ncpus > 1) {
-		/*
-		 * For SMP systems, create four times as many arenas as there
-		 * are CPUs by default.
-		 */
-		opt_narenas_lshift += 2;
-	}
-
-	/* Determine how many arenas to use. */
-	narenas = ncpus;
-#endif
-	if (opt_narenas_lshift > 0) {
-		if ((narenas << opt_narenas_lshift) > narenas)
-			narenas <<= opt_narenas_lshift;
-		/*
-		 * Make sure not to exceed the limits of what base_alloc() can
-		 * handle.
-		 */
-		if (narenas * sizeof(arena_t *) > chunksize)
-			narenas = chunksize / sizeof(arena_t *);
-	} else if (opt_narenas_lshift < 0) {
-		if ((narenas >> -opt_narenas_lshift) < narenas)
-			narenas >>= -opt_narenas_lshift;
-		/* Make sure there is at least one arena. */
-		if (narenas == 0)
-			narenas = 1;
-	}
-
-#ifdef NO_TLS
-	if (narenas > 1) {
-		static const unsigned primes[] = {1, 3, 5, 7, 11, 13, 17, 19,
-		    23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83,
-		    89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149,
-		    151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199, 211,
-		    223, 227, 229, 233, 239, 241, 251, 257, 263};
-		unsigned nprimes, parenas;
-
-		/*
-		 * Pick a prime number of hash arenas that is more than narenas
-		 * so that direct hashing of pthread_self() pointers tends to
-		 * spread allocations evenly among the arenas.
-		 */
-		assert((narenas & 1) == 0); /* narenas must be even. */
-		nprimes = (sizeof(primes) >> SIZEOF_INT_2POW);
-		parenas = primes[nprimes - 1]; /* In case not enough primes. */
-		for (i = 1; i < nprimes; i++) {
-			if (primes[i] > narenas) {
-				parenas = primes[i];
-				break;
-			}
-		}
-		narenas = parenas;
-	}
-#endif
-
-#ifndef NO_TLS
-	next_arena = 0;
-#endif
 
 	/* Allocate and initialize arenas. */
 	arenas = (arena_t **)base_alloc(sizeof(arena_t *) * narenas);
@@ -5749,8 +5463,7 @@ MALLOC_OUT:
 	memset(arenas, 0, sizeof(arena_t *) * narenas);
 
 	/*
-	 * Initialize one arena here.  The rest are lazily created in
-	 * choose_arena_hard().
+	 * Initialize one arena here.
 	 */
 	arenas_extend(0);
 	if (arenas[0] == NULL) {
