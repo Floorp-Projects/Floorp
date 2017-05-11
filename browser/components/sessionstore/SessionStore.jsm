@@ -3786,6 +3786,7 @@ var SessionStoreInternal = {
     browser.__SS_restoreState = TAB_STATE_RESTORING;
     browser.removeAttribute("pending");
     aTab.removeAttribute("pending");
+    aTab._suppressTransientLabel = true;
   },
 
   /**
