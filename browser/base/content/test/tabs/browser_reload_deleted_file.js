@@ -26,7 +26,7 @@ add_task(function* () {
   // Delete the page, simulate a click of the reload button and check that we
   // get a neterror page.
   disappearingPage.remove(false);
-  document.getElementById("urlbar-reload-button").doCommand();
+  document.getElementById("reload-button").doCommand();
   yield BrowserTestUtils.waitForErrorPage(tab.linkedBrowser);
   yield ContentTask.spawn(tab.linkedBrowser, null, function() {
     ok(content.document.documentURI.startsWith("about:neterror"),

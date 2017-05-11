@@ -9,7 +9,7 @@ add_task(function* testTempPermissionOnReload() {
   let id = "geo";
 
   yield BrowserTestUtils.withNewTab(uri.spec, function*(browser) {
-    let reloadButton = document.getElementById("urlbar-reload-button");
+    let reloadButton = document.getElementById("reload-button");
 
     SitePermissions.set(uri, id, SitePermissions.BLOCK, SitePermissions.SCOPE_TEMPORARY, browser);
 

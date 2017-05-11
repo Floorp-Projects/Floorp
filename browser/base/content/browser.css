@@ -433,8 +433,8 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   display: -moz-box;
 }
 
-#urlbar-reload-button:not([displaystop]) + #urlbar-stop-button,
-#urlbar-reload-button[displaystop] {
+#reload-button:not([displaystop]) + #stop-button,
+#reload-button[displaystop] {
   visibility: collapse;
 }
 
@@ -612,12 +612,14 @@ html|input.urlbar-input[textoverflow]:not([focused]) {
 }
 
 #urlbar[pageproxystate="invalid"] > #urlbar-icons > .urlbar-icon,
+%ifdef MOZ_PHOTON_THEME
+.urlbar-go-button[pageproxystate="valid"],
+.urlbar-go-button:not([parentfocused="true"]),
+%else
 #urlbar[pageproxystate="invalid"][focused="true"] > #urlbar-go-button ~ toolbarbutton,
 #urlbar[pageproxystate="valid"] > #urlbar-go-button,
-#urlbar:not([focused="true"]) > #urlbar-go-button {
-  visibility: collapse;
-}
-
+#urlbar:not([focused="true"]) > #urlbar-go-button,
+%endif
 #urlbar[pageproxystate="invalid"] > #identity-box > #blocked-permissions-container,
 #urlbar[pageproxystate="invalid"] > #identity-box > #notification-popup-box,
 #urlbar[pageproxystate="invalid"] > #identity-box > #identity-icon-labels {
