@@ -181,7 +181,7 @@ fuzzy-if(skiaContent&&winWidget,105,56) HTTP(../..) == clipPath-content.svg clip
 fuzzy-if(skiaContent&&winWidget,53,112) HTTP(../..) == clipPath-content-2.svg clipPath-content-2-ref.svg
 
 # text and patterns
-fuzzy-if(cocoaWidget,1,6) == pattern-content.svg pattern-content-ref.svg
+fuzzy-if(cocoaWidget,1,6) fuzzy-if(skiaContent,65,313)  == pattern-content.svg pattern-content-ref.svg
 
 # text and filters
 fuzzy-if(skiaContent&&winWidget,126,336) HTTP(../..) == filter-applied.svg filter-applied-ref.svg
