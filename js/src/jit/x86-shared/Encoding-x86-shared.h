@@ -266,6 +266,7 @@ enum TwoByteOpcodeID {
     OP2_PSRLD_VdqWdq    = 0xD2,
     OP2_PMULLW_VdqWdq   = 0xD5,
     OP2_MOVQ_WdVd       = 0xD6,
+    OP2_PMOVMSKB_EdVd   = 0xD7,
     OP2_PSUBUSB_VdqWdq  = 0xD8,
     OP2_PSUBUSW_VdqWdq  = 0xD9,
     OP2_PANDDQ_VdqWdq   = 0xDB,
