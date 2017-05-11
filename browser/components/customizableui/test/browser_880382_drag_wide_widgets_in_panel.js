@@ -8,6 +8,7 @@ requestLongerTimeout(5);
 
 // Dragging the zoom controls to be before the print button should not move any controls.
 add_task(function*() {
+  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   yield startCustomizing();
   let zoomControls = document.getElementById("zoom-controls");
   let printButton = document.getElementById("print-button");

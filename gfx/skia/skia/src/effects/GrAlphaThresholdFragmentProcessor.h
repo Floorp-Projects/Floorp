@@ -20,21 +20,12 @@
 class GrAlphaThresholdFragmentProcessor : public GrFragmentProcessor {
 
 public:
-    static sk_sp<GrFragmentProcessor> Make(GrResourceProvider* resourceProvider,
-                                           sk_sp<GrTextureProxy> proxy,
+    static sk_sp<GrFragmentProcessor> Make(GrTexture* texture,
                                            sk_sp<GrColorSpaceXform> colorSpaceXform,
-                                           sk_sp<GrTextureProxy> maskProxy,
+                                           GrTexture* maskTexture,
                                            float innerThreshold,
                                            float outerThreshold,
-                                           const SkIRect& bounds) {
-        return sk_sp<GrFragmentProcessor>(new GrAlphaThresholdFragmentProcessor(
-                                                                    resourceProvider,
-                                                                    std::move(proxy),
-                                                                    std::move(colorSpaceXform),
-                                                                    std::move(maskProxy),
-                                                                    innerThreshold, outerThreshold,
-                                                                    bounds));
-    }
+                                           const SkIRect& bounds);
 
     const char* name() const override { return "Alpha Threshold"; }
 
@@ -44,32 +35,31 @@ public:
     GrColorSpaceXform* colorSpaceXform() const { return fColorSpaceXform.get(); }
 
 private:
-    static OptimizationFlags OptFlags(float outerThreshold);
-
-    GrAlphaThresholdFragmentProcessor(GrResourceProvider*,
-                                      sk_sp<GrTextureProxy> proxy,
+    GrAlphaThresholdFragmentProcessor(GrTexture* texture,
                                       sk_sp<GrColorSpaceXform> colorSpaceXform,
-                                      sk_sp<GrTextureProxy> maskProxy,
+                                      GrTexture* maskTexture,
                                       float innerThreshold,
                                       float outerThreshold,
                                       const SkIRect& bounds);
 
     GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
 
-    void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+    void onGetGLSLProcessorKey(const GrGLSLCaps&, GrProcessorKeyBuilder*) const override;
 
     bool onIsEqual(const GrFragmentProcessor&) const override;
+
+    void onComputeInvariantOutput(GrInvariantOutput* inout) const override;
 
     GR_DECLARE_FRAGMENT_PROCESSOR_TEST;
 
     float fInnerThreshold;
     float fOuterThreshold;
     GrCoordTransform fImageCoordTransform;
-    TextureSampler   fImageTextureSampler;
+    GrTextureAccess  fImageTextureAccess;
     // Color space transform is for the image (not the mask)
     sk_sp<GrColorSpaceXform> fColorSpaceXform;
     GrCoordTransform fMaskCoordTransform;
-    TextureSampler   fMaskTextureSampler;
+    GrTextureAccess  fMaskTextureAccess;
 
     typedef GrFragmentProcessor INHERITED;
 };

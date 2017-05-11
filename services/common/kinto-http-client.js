@@ -22,7 +22,7 @@ const global = this;
 this.EXPORTED_SYMBOLS = ["KintoHttpClient"];
 
 /*
- * Version 4.0.0 - d750ae1
+ * Version 4.3.4 - 1294207
  */
 
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.KintoHttpClient = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
@@ -389,21 +389,11 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
     }
     this._backoffReleaseTime = null;
 
-    /**
-     * Default request options container.
-     * @private
-     * @type {Object}
-     */
-    this.defaultReqOptions = {
-      bucket: options.bucket || "default",
-      headers: options.headers || {},
-      retry: options.retry || 0,
-      safe: !!options.safe
-    };
-
-    this._options = options;
     this._requests = [];
     this._isBatch = !!options.batch;
+    this._retry = options.retry || 0;
+    this._safe = !!options.safe;
+    this._headers = options.headers || {};
 
     // public properties
     /**
@@ -502,34 +492,73 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
    * @param  {String}  name              The bucket name.
    * @param  {Object}  [options={}]      The request options.
    * @param  {Boolean} [options.safe]    The resulting safe option.
-   * @param  {String}  [options.bucket]  The resulting bucket name option.
+   * @param  {Number}  [options.retry]   The resulting retry option.
    * @param  {Object}  [options.headers] The extended headers object option.
    * @return {Bucket}
    */
   bucket(name, options = {}) {
-    const bucketOptions = (0, _utils.omit)(this._getRequestOptions(options), "bucket");
-    return new _bucket2.default(this, name, bucketOptions);
+    return new _bucket2.default(this, name, {
+      batch: this._isBatch,
+      headers: this._getHeaders(options),
+      safe: this._getSafe(options),
+      retry: this._getRetry(options)
+    });
   }
 
   /**
-   * Generates a request options object, deeply merging the client configured
-   * defaults with the ones provided as argument.
+   * Get the value of "headers" for a given request, merging the
+   * per-request headers with our own "default" headers.
    *
-   * Note: Headers won't be overriden but merged with instance default ones.
+   * Note that unlike other options, headers aren't overridden, but
+   * merged instead.
    *
    * @private
-   * @param    {Object}  [options={}]      The request options.
-   * @property {Boolean} [options.safe]    The resulting safe option.
-   * @property {String}  [options.bucket]  The resulting bucket name option.
-   * @property {Object}  [options.headers] The extended headers object option.
-   * @return   {Object}
+   * @param {Object} options The options for a request.
+   * @returns {Object}
    */
-  _getRequestOptions(options = {}) {
-    return _extends({}, this.defaultReqOptions, options, {
-      batch: this._isBatch,
-      // Note: headers should never be overriden but extended
-      headers: _extends({}, this.defaultReqOptions.headers, options.headers)
-    });
+  _getHeaders(options) {
+    return _extends({}, this._headers, options.headers);
+  }
+
+  /**
+   * Get the value of "safe" for a given request, using the
+   * per-request option if present or falling back to our default
+   * otherwise.
+   *
+   * @private
+   * @param {Object} options The options for a request.
+   * @returns {Boolean}
+   */
+  _getSafe(options) {
+    return _extends({ safe: this._safe }, options).safe;
+  }
+
+  /**
+   * As _getSafe, but for "retry".
+   *
+   * @private
+   */
+  _getRetry(options) {
+    return _extends({ retry: this._retry }, options).retry;
+  }
+
+  /**
+   * Retrieves the server's "hello" endpoint. This endpoint reveals
+   * server capabilities and settings as well as telling the client
+   * "who they are" according to their given authorization headers.
+   *
+   * @private
+   * @param  {Object}  [options={}] The request options.
+   * @param  {Object}  [options.headers={}] Headers to use when making
+   *     this request.
+   * @param  {Number}  [options.retry=0]    Number of retries to make
+   *     when faced with transient errors.
+   * @return {Promise<Object, Error>}
+   */
+  async _getHello(options = {}) {
+    const path = this.remote + (0, _endpoint2.default)("root");
+    const { json } = await this.http.request(path, { headers: this._getHeaders(options) }, { retry: this._getRetry(options) });
+    return json;
   }
 
   /**
@@ -537,63 +566,74 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
    * usually performed a single time during the instance lifecycle.
    *
    * @param  {Object}  [options={}] The request options.
+   * @param  {Number}  [options.retry=0]    Number of retries to make
+   *     when faced with transient errors.
    * @return {Promise<Object, Error>}
    */
-  fetchServerInfo(options = {}) {
+  async fetchServerInfo(options = {}) {
     if (this.serverInfo) {
-      return Promise.resolve(this.serverInfo);
-    }
-    const reqOptions = this._getRequestOptions(options);
-    return this.http.request(this.remote + (0, _endpoint2.default)("root"), reqOptions).then(({ json }) => {
-      this.serverInfo = json;
       return this.serverInfo;
-    });
+    }
+    this.serverInfo = await this._getHello({ retry: this._getRetry(options) });
+    return this.serverInfo;
   }
 
   /**
    * Retrieves Kinto server settings.
    *
    * @param  {Object}  [options={}] The request options.
+   * @param  {Number}  [options.retry=0]    Number of retries to make
+   *     when faced with transient errors.
    * @return {Promise<Object, Error>}
    */
 
-  fetchServerSettings(options = {}) {
-    return this.fetchServerInfo(options).then(({ settings }) => settings);
+  async fetchServerSettings(options) {
+    const { settings } = await this.fetchServerInfo(options);
+    return settings;
   }
 
   /**
    * Retrieve server capabilities information.
    *
    * @param  {Object}  [options={}] The request options.
+   * @param  {Number}  [options.retry=0]    Number of retries to make
+   *     when faced with transient errors.
    * @return {Promise<Object, Error>}
    */
 
-  fetchServerCapabilities(options = {}) {
-    return this.fetchServerInfo(options).then(({ capabilities }) => capabilities);
+  async fetchServerCapabilities(options = {}) {
+    const { capabilities } = await this.fetchServerInfo(options);
+    return capabilities;
   }
 
   /**
    * Retrieve authenticated user information.
    *
    * @param  {Object}  [options={}] The request options.
+   * @param  {Object}  [options.headers={}] Headers to use when making
+   *     this request.
+   * @param  {Number}  [options.retry=0]    Number of retries to make
+   *     when faced with transient errors.
    * @return {Promise<Object, Error>}
    */
 
-  fetchUser(options = {}) {
-    return this.fetchServerInfo(options).then(({ user }) => user);
+  async fetchUser(options = {}) {
+    const { user } = await this._getHello(options);
+    return user;
   }
 
   /**
    * Retrieve authenticated user information.
    *
    * @param  {Object}  [options={}] The request options.
+   * @param  {Number}  [options.retry=0]    Number of retries to make
+   *     when faced with transient errors.
    * @return {Promise<Object, Error>}
    */
 
-  fetchHTTPApiVersion(options = {}) {
-    return this.fetchServerInfo(options).then(({ http_api_version }) => {
-      return http_api_version;
-    });
+  async fetchHTTPApiVersion(options = {}) {
+    const { http_api_version } = await this.fetchServerInfo(options);
+    return http_api_version;
   }
 
   /**
@@ -604,29 +644,31 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
    * @param  {Object} [options={}] The options object.
    * @return {Promise<Object, Error>}
    */
-  _batchRequests(requests, options = {}) {
-    const reqOptions = this._getRequestOptions(options);
-    const { headers } = reqOptions;
+  async _batchRequests(requests, options = {}) {
+    const headers = this._getHeaders(options);
     if (!requests.length) {
-      return Promise.resolve([]);
+      return [];
     }
-    return this.fetchServerSettings().then(serverSettings => {
-      const maxRequests = serverSettings["batch_max_requests"];
-      if (maxRequests && requests.length > maxRequests) {
-        const chunks = (0, _utils.partition)(requests, maxRequests);
-        return (0, _utils.pMap)(chunks, chunk => this._batchRequests(chunk, options));
-      }
-      return this.execute(_extends({}, reqOptions, {
-        path: (0, _endpoint2.default)("batch"),
-        method: "POST",
-        body: {
-          defaults: { headers },
-          requests: requests
-        }
-      }))
-      // we only care about the responses
-      .then(({ responses }) => responses);
+    const serverSettings = await this.fetchServerSettings({
+      retry: this._getRetry(options)
     });
+    const maxRequests = serverSettings["batch_max_requests"];
+    if (maxRequests && requests.length > maxRequests) {
+      const chunks = (0, _utils.partition)(requests, maxRequests);
+      return (0, _utils.pMap)(chunks, chunk => this._batchRequests(chunk, options));
+    }
+    const { responses } = await this.execute({
+      // FIXME: is this really necessary, since it's also present in
+      // the "defaults"?
+      headers,
+      path: (0, _endpoint2.default)("batch"),
+      method: "POST",
+      body: {
+        defaults: { headers },
+        requests
+      }
+    }, { retry: this._getRetry(options) });
+    return responses;
   }
 
   /**
@@ -638,6 +680,7 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
    * @param  {Function} fn                        The function to use for describing batch ops.
    * @param  {Object}   [options={}]              The options object.
    * @param  {Boolean}  [options.safe]            The safe option.
+   * @param  {Number}   [options.retry]           The retry option.
    * @param  {String}   [options.bucket]          The bucket name option.
    * @param  {String}   [options.collection]      The collection name option.
    * @param  {Object}   [options.headers]         The headers object option.
@@ -645,10 +688,13 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
    * @return {Promise<Object, Error>}
    */
 
-  batch(fn, options = {}) {
-    const rootBatch = new KintoClientBase(this.remote, _extends({}, this._options, this._getRequestOptions(options), {
-      batch: true
-    }));
+  async batch(fn, options = {}) {
+    const rootBatch = new KintoClientBase(this.remote, {
+      events: this.events,
+      batch: true,
+      safe: this._getSafe(options),
+      retry: this._getRetry(options)
+    });
     let bucketBatch, collBatch;
     if (options.bucket) {
       bucketBatch = rootBatch.bucket(options.bucket);
@@ -657,17 +703,13 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
       }
     }
     const batchClient = collBatch || bucketBatch || rootBatch;
-    try {
-      fn(batchClient);
-    } catch (err) {
-      return Promise.reject(err);
-    }
-    return this._batchRequests(rootBatch._requests, options).then(responses => {
-      if (options.aggregate) {
-        return (0, _batch.aggregate)(responses, rootBatch._requests);
-      }
+    fn(batchClient);
+    const responses = await this._batchRequests(rootBatch._requests, options);
+    if (options.aggregate) {
+      return (0, _batch.aggregate)(responses, rootBatch._requests);
+    } else {
       return responses;
-    });
+    }
   }
 
   /**
@@ -675,31 +717,77 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
    *
    * @private
    * @param  {Object}  request             The request object.
+   * @param  {String}  request.path        The path to fetch, relative
+   *     to the Kinto server root.
+   * @param  {String}  [request.method="GET"] The method to use in the
+   *     request.
+   * @param  {Body}    [request.body]      The request body.
+   * @param  {Object}  [request.headers={}] The request headers.
    * @param  {Object}  [options={}]        The options object.
    * @param  {Boolean} [options.raw=false] If true, resolve with full response
    * @param  {Boolean} [options.stringify=true] If true, serialize body data to
+   * @param  {Number}  [options.retry=0]   The number of times to
+   *     retry a request if the server responds with Retry-After.
    * JSON.
    * @return {Promise<Object, Error>}
    */
-  execute(request, options = { raw: false, stringify: true }) {
-    const { raw, stringify } = options;
+  async execute(request, options = {}) {
+    const { raw = false, stringify = true } = options;
     // If we're within a batch, add the request to the stack to send at once.
     if (this._isBatch) {
       this._requests.push(request);
       // Resolve with a message in case people attempt at consuming the result
       // from within a batch operation.
       const msg = "This result is generated from within a batch " + "operation and should not be consumed.";
-      return Promise.resolve(raw ? { json: msg, headers: { get() {} } } : msg);
+      return raw ? { json: msg, headers: { get() {} } } : msg;
     }
-    const promise = this.fetchServerSettings().then(_ => {
-      return this.http.request(this.remote + request.path, _extends({}, request, {
-        body: stringify ? JSON.stringify(request.body) : request.body
-      }));
-    });
-    return raw ? promise : promise.then(({ json }) => json);
+    const result = await this.http.request(this.remote + request.path, (0, _utils.cleanUndefinedProperties)({
+      // Limit requests to only those parts that would be allowed in
+      // a batch request -- don't pass through other fancy fetch()
+      // options like integrity, redirect, mode because they will
+      // break on a batch request.  A batch request only allows
+      // headers, method, path (above), and body.
+      method: request.method,
+      headers: request.headers,
+      body: stringify ? JSON.stringify(request.body) : request.body
+    }), { retry: this._getRetry(options) });
+    return raw ? result : result.json;
   }
 
-  paginatedList(path, params, options = {}) {
+  /**
+   * Fetch some pages from a paginated list, following the `next-page`
+   * header automatically until we have fetched the requested number
+   * of pages. Return a response with a `.next()` method that can be
+   * called to fetch more results.
+   *
+   * @private
+   * @param  {String}  path
+   *     The path to make the request to.
+   * @param  {Object}  params
+   *     The parameters to use when making the request.
+   * @param  {String}  [params.sort="-last_modified"]
+   *     The sorting order to use when fetching.
+   * @param  {Object}  [params.filters={}]
+   *     The filters to send in the request.
+   * @param  {Number}  [params.limit=undefined]
+   *     The limit to send in the request. Undefined means no limit.
+   * @param  {Number}  [params.pages=undefined]
+   *     The number of pages to fetch. Undefined means one page. Pass
+   *     Infinity to fetch everything.
+   * @param  {String}  [params.since=undefined]
+   *     The ETag from which to start fetching.
+   * @param  {Object}  [options={}]
+   *     Additional request-level parameters to use in all requests.
+   * @param  {Object}  [options.headers={}]
+   *     Headers to use during all requests.
+   * @param  {Number}  [options.retry=0]
+   *     Number of times to retry each request if the server responds
+   *     with Retry-After.
+   */
+  async paginatedList(path, params, options = {}) {
+    // FIXME: this is called even in batch requests, which doesn't
+    // make any sense (since all batch requests get a "dummy"
+    // response; see execute() above).
     const { sort, filters, limit, pages, since } = _extends({
       sort: "-last_modified"
     }, params);
@@ -716,17 +804,17 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
     let results = [],
         current = 0;
 
-    const next = function (nextPage) {
+    const next = async function (nextPage) {
       if (!nextPage) {
         throw new Error("Pagination exhausted.");
       }
       return processNextPage(nextPage);
     };
 
-    const processNextPage = nextPage => {
+    const processNextPage = async function (nextPage) {
       const { headers } = options;
-      return this.http.request(nextPage, { headers }).then(handleResponse);
-    };
+      return handleResponse((await this.http.request(nextPage, { headers })));
+    }.bind(this);
 
     const pageResults = (results, nextPage, etag, totalRecords) => {
       // ETag string is supposed to be opaque and stored «as-is».
@@ -740,7 +828,7 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
       };
     };
 
-    const handleResponse = ({ headers, json }) => {
+    const handleResponse = async function ({ headers, json }) {
       const nextPage = headers.get("Next-Page");
       const etag = headers.get("ETag");
       const totalRecords = parseInt(headers.get("Total-Records"), 10);
@@ -758,60 +846,80 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
       // Follow next page
       return processNextPage(nextPage);
     };
-    return this.execute(_extends({
-      path: path + "?" + querystring
-    }, options), { raw: true }).then(handleResponse);
+
+    return handleResponse((await this.execute(
+    // N.B.: This doesn't use _getHeaders, because all calls to
+    // `paginatedList` are assumed to come from calls that already
+    // have headers merged at e.g. the bucket or collection level.
+    { headers: options.headers, path: path + "?" + querystring },
+    // N.B. This doesn't use _getRetry, because all calls to
+    // `paginatedList` are assumed to come from calls that already
+    // used `_getRetry` at e.g. the bucket or collection level.
+    { raw: true, retry: options.retry || 0 })));
   }
 
   /**
    * Lists all permissions.
    *
    * @param  {Object} [options={}]      The options object.
-   * @param  {Object} [options.headers] The headers object option.
+   * @param  {Object} [options.headers={}] Headers to use when making
+   *     this request.
+   * @param  {Number} [options.retry=0]    Number of retries to make
+   *     when faced with transient errors.
    * @return {Promise<Object[], Error>}
    */
 
-  listPermissions(options = {}) {
-    const reqOptions = this._getRequestOptions(options);
-    return this.execute(_extends({
-      path: (0, _endpoint2.default)("permissions")
-    }, reqOptions));
+  async listPermissions(options = {}) {
+    const path = (0, _endpoint2.default)("permissions");
+    // Ensure the default sort parameter is something that exists in permissions
+    // entries, as `last_modified` doesn't; here, we pick "id".
+    const paginationOptions = _extends({ sort: "id" }, options);
+    return this.paginatedList(path, paginationOptions, {
+      headers: this._getHeaders(options),
+      retry: this._getRetry(options)
+    });
   }
 
   /**
    * Retrieves the list of buckets.
    *
    * @param  {Object} [options={}]      The options object.
-   * @param  {Object} [options.headers] The headers object option.
+   * @param  {Object} [options.headers={}] Headers to use when making
+   *     this request.
+   * @param  {Number} [options.retry=0]    Number of retries to make
+   *     when faced with transient errors.
    * @return {Promise<Object[], Error>}
    */
-  listBuckets(options = {}) {
+  async listBuckets(options = {}) {
     const path = (0, _endpoint2.default)("bucket");
-    const reqOptions = this._getRequestOptions(options);
-    return this.paginatedList(path, options, reqOptions);
+    return this.paginatedList(path, options, {
+      headers: this._getHeaders(options),
+      retry: this._getRetry(options)
+    });
   }
 
   /**
    * Creates a new bucket on the server.
    *
-   * @param  {String}   id                The bucket name.
-   * @param  {Object}   [options={}]      The options object.
-   * @param  {Boolean}  [options.data]    The bucket data option.
-   * @param  {Boolean}  [options.safe]    The safe option.
-   * @param  {Object}   [options.headers] The headers object option.
+   * @param  {String|null}  id                The bucket name (optional).
+   * @param  {Object}       [options={}]      The options object.
+   * @param  {Boolean}      [options.data]    The bucket data option.
+   * @param  {Boolean}      [options.safe]    The safe option.
+   * @param  {Object}       [options.headers] The headers object option.
+   * @param  {Number}       [options.retry=0] Number of retries to make
+   *     when faced with transient errors.
    * @return {Promise<Object, Error>}
    */
-  createBucket(id, options = {}) {
-    if (!id) {
-      throw new Error("A bucket id is required.");
+  async createBucket(id, options = {}) {
+    const { data = {}, permissions } = options;
+    if (id != null) {
+      data.id = id;
     }
-    // Note that we simply ignore any "bucket" option passed here, as the one
-    // we're interested in is the one provided as a required argument.
-    const reqOptions = this._getRequestOptions(options);
-    const { data = {}, permissions } = reqOptions;
-    data.id = id;
-    const path = (0, _endpoint2.default)("bucket", id);
-    return this.execute(requests.createRequest(path, { data, permissions }, reqOptions));
+    const path = data.id ? (0, _endpoint2.default)("bucket", data.id) : (0, _endpoint2.default)("bucket");
+    return this.execute(requests.createRequest(path, { data, permissions }, {
+      headers: this._getHeaders(options),
+      safe: this._getSafe(options)
+    }), { retry: this._getRetry(options) });
   }
 
   /**
@@ -822,18 +930,23 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
    * @param  {Object}        [options={}]            The options object.
    * @param  {Boolean}       [options.safe]          The safe option.
    * @param  {Object}        [options.headers]       The headers object option.
+   * @param  {Number}        [options.retry=0]       Number of retries to make
+   *     when faced with transient errors.
    * @param  {Number}        [options.last_modified] The last_modified option.
    * @return {Promise<Object, Error>}
    */
-  deleteBucket(bucket, options = {}) {
+  async deleteBucket(bucket, options = {}) {
     const bucketObj = (0, _utils.toDataBody)(bucket);
     if (!bucketObj.id) {
       throw new Error("A bucket id is required.");
     }
     const path = (0, _endpoint2.default)("bucket", bucketObj.id);
-    const { last_modified } = { bucketObj };
-    const reqOptions = this._getRequestOptions(_extends({ last_modified }, options));
-    return this.execute(requests.deleteRequest(path, reqOptions));
+    const { last_modified } = _extends({}, bucketObj, options);
+    return this.execute(requests.deleteRequest(path, {
+      last_modified,
+      headers: this._getHeaders(options),
+      safe: this._getSafe(options)
+    }), { retry: this._getRetry(options) });
   }
 
   /**
@@ -847,10 +960,13 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
    * @return {Promise<Object, Error>}
    */
 
-  deleteBuckets(options = {}) {
-    const reqOptions = this._getRequestOptions(options);
+  async deleteBuckets(options = {}) {
     const path = (0, _endpoint2.default)("bucket");
-    return this.execute(requests.deleteRequest(path, reqOptions));
+    return this.execute(requests.deleteRequest(path, {
+      last_modified: options.last_modified,
+      headers: this._getHeaders(options),
+      safe: this._getSafe(options)
+    }), { retry: this._getRetry(options) });
   }
 }, (_applyDecoratedDescriptor(_class.prototype, "fetchServerSettings", [_dec], Object.getOwnPropertyDescriptor(_class.prototype, "fetchServerSettings"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "fetchServerCapabilities", [_dec2], Object.getOwnPropertyDescriptor(_class.prototype, "fetchServerCapabilities"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "fetchUser", [_dec3], Object.getOwnPropertyDescriptor(_class.prototype, "fetchUser"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "fetchHTTPApiVersion", [_dec4], Object.getOwnPropertyDescriptor(_class.prototype, "fetchHTTPApiVersion"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "batch", [_dec5], Object.getOwnPropertyDescriptor(_class.prototype, "batch"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "listPermissions", [_dec6], Object.getOwnPropertyDescriptor(_class.prototype, "listPermissions"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "deleteBuckets", [_dec7], Object.getOwnPropertyDescriptor(_class.prototype, "deleteBuckets"), _class.prototype)), _class));
 exports.default = KintoClientBase;
@@ -887,7 +1003,8 @@ function aggregate(responses = [], requests = []) {
       acc.published.push(response.body);
     } else if (status === 404) {
       // Extract the id manually from request path while waiting for Kinto/kinto#818
-      const extracts = request.path.match(/(buckets|groups|collections|records)\/([^\/]+)$/);
+      const regex = /(buckets|groups|collections|records)\/([^\/]+)$/;
+      const extracts = request.path.match(regex);
       const id = extracts.length === 3 ? extracts[2] : undefined;
       acc.skipped.push({
         id,
@@ -984,6 +1101,7 @@ let Bucket = (_dec = (0, _utils.capable)(["history"]), (_class = class Bucket {
    * @param  {Object}      [options={}]      The headers object option.
    * @param  {Object}      [options.headers] The headers object option.
    * @param  {Boolean}     [options.safe]    The safe option.
+   * @param  {Number}      [options.retry]   The retry option.
    */
   constructor(client, name, options = {}) {
     /**
@@ -996,31 +1114,47 @@ let Bucket = (_dec = (0, _utils.capable)(["history"]), (_class = class Bucket {
      */
     this.name = name;
     /**
-     * The default options object.
-     * @ignore
-     * @type {Object}
-     */
-    this.options = options;
-    /**
      * @ignore
      */
     this._isBatch = !!options.batch;
+    /**
+     * @ignore
+     */
+    this._headers = options.headers || {};
+    this._retry = options.retry || 0;
+    this._safe = !!options.safe;
   }
 
   /**
-   * Merges passed request options with default bucket ones, if any.
+   * Get the value of "headers" for a given request, merging the
+   * per-request headers with our own "default" headers.
    *
    * @private
-   * @param  {Object} [options={}] The options to merge.
-   * @return {Object}              The merged options.
    */
-  _bucketOptions(options = {}) {
-    const headers = _extends({}, this.options && this.options.headers, options.headers);
-    return _extends({}, this.options, options, {
-      headers,
-      bucket: this.name,
-      batch: this._isBatch
-    });
+  _getHeaders(options) {
+    return _extends({}, this._headers, options.headers);
+  }
+
+  /**
+   * Get the value of "safe" for a given request, using the
+   * per-request option if present or falling back to our default
+   * otherwise.
+   *
+   * @private
+   * @param {Object} options The options for a request.
+   * @returns {Boolean}
+   */
+  _getSafe(options) {
+    return _extends({ safe: this._safe }, options).safe;
+  }
+
+  /**
+   * As _getSafe, but for "retry".
+   *
+   * @private
+   */
+  _getRetry(options) {
+    return _extends({ retry: this._retry }, options).retry;
   }
 
   /**
@@ -1033,7 +1167,12 @@ let Bucket = (_dec = (0, _utils.capable)(["history"]), (_class = class Bucket {
    * @return {Collection}
    */
   collection(name, options = {}) {
-    return new _collection2.default(this.client, this, name, this._bucketOptions(options));
+    return new _collection2.default(this.client, this, name, {
+      batch: this._isBatch,
+      headers: this._getHeaders(options),
+      retry: this._getRetry(options),
+      safe: this._getSafe(options)
+    });
   }
 
   /**
@@ -1041,25 +1180,34 @@ let Bucket = (_dec = (0, _utils.capable)(["history"]), (_class = class Bucket {
    *
    * @param  {Object} [options={}]      The options object.
    * @param  {Object} [options.headers] The headers object option.
+   * @param  {Number} [options.retry=0] Number of retries to make
+   *     when faced with transient errors.
    * @return {Promise<Object, Error>}
    */
-  getData(options = {}) {
-    const reqOptions = _extends({}, this._bucketOptions(options));
-    const request = _extends({}, reqOptions, { path: (0, _endpoint2.default)("bucket", this.name) });
-    return this.client.execute(request).then(res => res.data);
+  async getData(options = {}) {
+    const request = {
+      headers: this._getHeaders(options),
+      path: (0, _endpoint2.default)("bucket", this.name)
+    };
+    const { data } = await this.client.execute(request, {
+      retry: this._getRetry(options)
+    });
+    return data;
   }
 
   /**
    * Set bucket data.
    * @param  {Object}  data                    The bucket data object.
    * @param  {Object}  [options={}]            The options object.
-   * @param  {Object}  [options.headers]       The headers object option.
+   * @param  {Object}  [options.headers={}]    The headers object option.
    * @param  {Boolean} [options.safe]          The safe option.
+   * @param  {Number}  [options.retry=0]       Number of retries to make
+   *     when faced with transient errors.
    * @param  {Boolean} [options.patch]         The patch option.
    * @param  {Number}  [options.last_modified] The last_modified option.
    * @return {Promise<Object, Error>}
    */
-  setData(data, options = {}) {
+  async setData(data, options = {}) {
     if (!(0, _utils.isObject)(data)) {
       throw new Error("A bucket object is required.");
     }
@@ -1074,10 +1222,15 @@ let Bucket = (_dec = (0, _utils.capable)(["history"]), (_class = class Bucket {
     }
 
     const path = (0, _endpoint2.default)("bucket", bucketId);
-    const { permissions } = options;
-    const reqOptions = _extends({}, this._bucketOptions(options));
-    const request = requests.updateRequest(path, { data: bucket, permissions }, reqOptions);
-    return this.client.execute(request);
+    const { patch, permissions } = options;
+    const { last_modified } = _extends({}, data, options);
+    const request = requests.updateRequest(path, { data: bucket, permissions }, {
+      last_modified,
+      patch,
+      headers: this._getHeaders(options),
+      safe: this._getSafe(options)
+    });
+    return this.client.execute(request, { retry: this._getRetry(options) });
   }
 
   /**
@@ -1085,13 +1238,17 @@ let Bucket = (_dec = (0, _utils.capable)(["history"]), (_class = class Bucket {
    *
    * @param  {Object} [options={}]      The options object.
    * @param  {Object} [options.headers] The headers object option.
+   * @param  {Number} [options.retry=0] Number of retries to make
+   *     when faced with transient errors.
    * @return {Promise<Array<Object>, Error>}
    */
 
-  listHistory(options = {}) {
+  async listHistory(options = {}) {
     const path = (0, _endpoint2.default)("history", this.name);
-    const reqOptions = this._bucketOptions(options);
-    return this.client.paginatedList(path, options, reqOptions);
+    return this.client.paginatedList(path, options, {
+      headers: this._getHeaders(options),
+      retry: this._getRetry(options)
+    });
   }
 
   /**
@@ -1099,12 +1256,16 @@ let Bucket = (_dec = (0, _utils.capable)(["history"]), (_class = class Bucket {
    *
    * @param  {Object} [options={}]      The options object.
    * @param  {Object} [options.headers] The headers object option.
+   * @param  {Number} [options.retry=0] Number of retries to make
+   *     when faced with transient errors.
    * @return {Promise<Array<Object>, Error>}
    */
-  listCollections(options = {}) {
+  async listCollections(options = {}) {
     const path = (0, _endpoint2.default)("collection", this.name);
-    const reqOptions = this._bucketOptions(options);
-    return this.client.paginatedList(path, options, reqOptions);
+    return this.client.paginatedList(path, options, {
+      headers: this._getHeaders(options),
+      retry: this._getRetry(options)
+    });
   }
 
   /**
@@ -1114,17 +1275,21 @@ let Bucket = (_dec = (0, _utils.capable)(["history"]), (_class = class Bucket {
    * @param  {Object}  [options={}]          The options object.
    * @param  {Boolean} [options.safe]        The safe option.
    * @param  {Object}  [options.headers]     The headers object option.
+   * @param  {Number}  [options.retry=0]     Number of retries to make
+   *     when faced with transient errors.
    * @param  {Object}  [options.permissions] The permissions object.
    * @param  {Object}  [options.data]        The data object.
    * @return {Promise<Object, Error>}
    */
-  createCollection(id, options = {}) {
-    const reqOptions = this._bucketOptions(options);
-    const { permissions, data = {} } = reqOptions;
+  async createCollection(id, options = {}) {
+    const { permissions, data = {} } = options;
     data.id = id;
     const path = (0, _endpoint2.default)("collection", this.name, id);
-    const request = requests.createRequest(path, { data, permissions }, reqOptions);
-    return this.client.execute(request);
+    const request = requests.createRequest(path, { data, permissions }, {
+      headers: this._getHeaders(options),
+      safe: this._getSafe(options)
+    });
+    return this.client.execute(request, { retry: this._getRetry(options) });
   }
 
   /**
@@ -1133,20 +1298,26 @@ let Bucket = (_dec = (0, _utils.capable)(["history"]), (_class = class Bucket {
    * @param  {Object|String} collection              The collection to delete.
    * @param  {Object}        [options={}]            The options object.
    * @param  {Object}        [options.headers]       The headers object option.
+   * @param  {Number}        [options.retry=0]       Number of retries to make
+   *     when faced with transient errors.
    * @param  {Boolean}       [options.safe]          The safe option.
    * @param  {Number}        [options.last_modified] The last_modified option.
    * @return {Promise<Object, Error>}
    */
-  deleteCollection(collection, options = {}) {
+  async deleteCollection(collection, options = {}) {
     const collectionObj = (0, _utils.toDataBody)(collection);
     if (!collectionObj.id) {
       throw new Error("A collection id is required.");
     }
-    const { id, last_modified } = collectionObj;
-    const reqOptions = this._bucketOptions(_extends({ last_modified }, options));
+    const { id } = collectionObj;
+    const { last_modified } = _extends({}, collectionObj, options);
     const path = (0, _endpoint2.default)("collection", this.name, id);
-    const request = requests.deleteRequest(path, reqOptions);
-    return this.client.execute(request);
+    const request = requests.deleteRequest(path, {
+      last_modified,
+      headers: this._getHeaders(options),
+      safe: this._getSafe(options)
+    });
+    return this.client.execute(request, { retry: this._getRetry(options) });
   }
 
   /**
@@ -1154,12 +1325,16 @@ let Bucket = (_dec = (0, _utils.capable)(["history"]), (_class = class Bucket {
    *
    * @param  {Object} [options={}]      The options object.
    * @param  {Object} [options.headers] The headers object option.
+   * @param  {Number} [options.retry=0] Number of retries to make
+   *     when faced with transient errors.
    * @return {Promise<Array<Object>, Error>}
    */
-  listGroups(options = {}) {
+  async listGroups(options = {}) {
     const path = (0, _endpoint2.default)("group", this.name);
-    const reqOptions = this._bucketOptions(options);
-    return this.client.paginatedList(path, options, reqOptions);
+    return this.client.paginatedList(path, options, {
+      headers: this._getHeaders(options),
+      retry: this._getRetry(options)
+    });
   }
 
   /**
@@ -1168,12 +1343,16 @@ let Bucket = (_dec = (0, _utils.capable)(["history"]), (_class = class Bucket {
    * @param  {String} id                The group id.
    * @param  {Object} [options={}]      The options object.
    * @param  {Object} [options.headers] The headers object option.
+   * @param  {Number} [options.retry=0] Number of retries to make
+   *     when faced with transient errors.
    * @return {Promise<Object, Error>}
    */
-  getGroup(id, options = {}) {
-    const reqOptions = _extends({}, this._bucketOptions(options));
-    const request = _extends({}, reqOptions, { path: (0, _endpoint2.default)("group", this.name, id) });
-    return this.client.execute(request);
+  async getGroup(id, options = {}) {
+    const request = {
+      headers: this._getHeaders(options),
+      path: (0, _endpoint2.default)("group", this.name, id)
+    };
+    return this.client.execute(request, { retry: this._getRetry(options) });
   }
 
   /**
@@ -1186,18 +1365,22 @@ let Bucket = (_dec = (0, _utils.capable)(["history"]), (_class = class Bucket {
    * @param  {Object}            [options.permissions] The permissions object.
    * @param  {Boolean}           [options.safe]        The safe option.
    * @param  {Object}            [options.headers]     The headers object option.
+   * @param  {Number}            [options.retry=0]     Number of retries to make
+   *     when faced with transient errors.
    * @return {Promise<Object, Error>}
    */
-  createGroup(id, members = [], options = {}) {
-    const reqOptions = this._bucketOptions(options);
+  async createGroup(id, members = [], options = {}) {
     const data = _extends({}, options.data, {
       id,
       members
     });
     const path = (0, _endpoint2.default)("group", this.name, id);
     const { permissions } = options;
-    const request = requests.createRequest(path, { data, permissions }, reqOptions);
-    return this.client.execute(request);
+    const request = requests.createRequest(path, { data, permissions }, {
+      headers: this._getHeaders(options),
+      safe: this._getSafe(options)
+    });
+    return this.client.execute(request, { retry: this._getRetry(options) });
   }
 
   /**
@@ -1209,22 +1392,29 @@ let Bucket = (_dec = (0, _utils.capable)(["history"]), (_class = class Bucket {
    * @param  {Object}  [options.permissions]   The permissions object.
    * @param  {Boolean} [options.safe]          The safe option.
    * @param  {Object}  [options.headers]       The headers object option.
+   * @param  {Number}  [options.retry=0]       Number of retries to make
+   *     when faced with transient errors.
    * @param  {Number}  [options.last_modified] The last_modified option.
    * @return {Promise<Object, Error>}
    */
-  updateGroup(group, options = {}) {
+  async updateGroup(group, options = {}) {
     if (!(0, _utils.isObject)(group)) {
       throw new Error("A group object is required.");
     }
     if (!group.id) {
       throw new Error("A group id is required.");
     }
-    const reqOptions = this._bucketOptions(options);
     const data = _extends({}, options.data, group);
     const path = (0, _endpoint2.default)("group", this.name, group.id);
-    const { permissions } = options;
-    const request = requests.updateRequest(path, { data, permissions }, reqOptions);
-    return this.client.execute(request);
+    const { patch, permissions } = options;
+    const { last_modified } = _extends({}, data, options);
+    const request = requests.updateRequest(path, { data, permissions }, {
+      last_modified,
+      patch,
+      headers: this._getHeaders(options),
+      safe: this._getSafe(options)
+    });
+    return this.client.execute(request, { retry: this._getRetry(options) });
   }
 
   /**
@@ -1233,17 +1423,23 @@ let Bucket = (_dec = (0, _utils.capable)(["history"]), (_class = class Bucket {
    * @param  {Object|String} group                   The group to delete.
    * @param  {Object}        [options={}]            The options object.
    * @param  {Object}        [options.headers]       The headers object option.
+   * @param  {Number}        [options.retry=0]       Number of retries to make
+   *     when faced with transient errors.
    * @param  {Boolean}       [options.safe]          The safe option.
    * @param  {Number}        [options.last_modified] The last_modified option.
    * @return {Promise<Object, Error>}
    */
-  deleteGroup(group, options = {}) {
+  async deleteGroup(group, options = {}) {
     const groupObj = (0, _utils.toDataBody)(group);
-    const { id, last_modified } = groupObj;
-    const reqOptions = this._bucketOptions(_extends({ last_modified }, options));
+    const { id } = groupObj;
+    const { last_modified } = _extends({}, groupObj, options);
     const path = (0, _endpoint2.default)("group", this.name, id);
-    const request = requests.deleteRequest(path, reqOptions);
-    return this.client.execute(request);
+    const request = requests.deleteRequest(path, {
+      last_modified,
+      headers: this._getHeaders(options),
+      safe: this._getSafe(options)
+    });
+    return this.client.execute(request, { retry: this._getRetry(options) });
   }
 
   /**
@@ -1251,12 +1447,19 @@ let Bucket = (_dec = (0, _utils.capable)(["history"]), (_class = class Bucket {
    *
    * @param  {Object} [options={}]      The options object.
    * @param  {Object} [options.headers] The headers object option.
+   * @param  {Number} [options.retry=0] Number of retries to make
+   *     when faced with transient errors.
    * @return {Promise<Object, Error>}
    */
-  getPermissions(options = {}) {
-    const reqOptions = this._bucketOptions(options);
-    const request = _extends({}, reqOptions, { path: (0, _endpoint2.default)("bucket", this.name) });
-    return this.client.execute(request).then(res => res.permissions);
+  async getPermissions(options = {}) {
+    const request = {
+      headers: this._getHeaders(options),
+      path: (0, _endpoint2.default)("bucket", this.name)
+    };
+    const { permissions } = await this.client.execute(request, {
+      retry: this._getRetry(options)
+    });
+    return permissions;
   }
 
   /**
@@ -1265,20 +1468,76 @@ let Bucket = (_dec = (0, _utils.capable)(["history"]), (_class = class Bucket {
    * @param  {Object}  permissions             The permissions object.
    * @param  {Object}  [options={}]            The options object
    * @param  {Boolean} [options.safe]          The safe option.
-   * @param  {Object}  [options.headers]       The headers object option.
+   * @param  {Object}  [options.headers={}]    The headers object option.
+   * @param  {Number}  [options.retry=0]       Number of retries to make
+   *     when faced with transient errors.
    * @param  {Object}  [options.last_modified] The last_modified option.
    * @return {Promise<Object, Error>}
    */
-  setPermissions(permissions, options = {}) {
+  async setPermissions(permissions, options = {}) {
     if (!(0, _utils.isObject)(permissions)) {
       throw new Error("A permissions object is required.");
     }
     const path = (0, _endpoint2.default)("bucket", this.name);
-    const reqOptions = _extends({}, this._bucketOptions(options));
     const { last_modified } = options;
     const data = { last_modified };
-    const request = requests.updateRequest(path, { data, permissions }, reqOptions);
-    return this.client.execute(request);
+    const request = requests.updateRequest(path, { data, permissions }, {
+      headers: this._getHeaders(options),
+      safe: this._getSafe(options)
+    });
+    return this.client.execute(request, { retry: this._getRetry(options) });
+  }
+
+  /**
+   * Append principals to the bucket permissions.
+   *
+   * @param  {Object}  permissions             The permissions object.
+   * @param  {Object}  [options={}]            The options object
+   * @param  {Boolean} [options.safe]          The safe option.
+   * @param  {Object}  [options.headers]       The headers object option.
+   * @param  {Number}  [options.retry=0]       Number of retries to make
+   *     when faced with transient errors.
+   * @param  {Object}  [options.last_modified] The last_modified option.
+   * @return {Promise<Object, Error>}
+   */
+  async addPermissions(permissions, options = {}) {
+    if (!(0, _utils.isObject)(permissions)) {
+      throw new Error("A permissions object is required.");
+    }
+    const path = (0, _endpoint2.default)("bucket", this.name);
+    const { last_modified } = options;
+    const request = requests.jsonPatchPermissionsRequest(path, permissions, "add", {
+      last_modified,
+      headers: this._getHeaders(options),
+      safe: this._getSafe(options)
+    });
+    return this.client.execute(request, { retry: this._getRetry(options) });
+  }
+
+  /**
+   * Remove principals from the bucket permissions.
+   *
+   * @param  {Object}  permissions             The permissions object.
+   * @param  {Object}  [options={}]            The options object
+   * @param  {Boolean} [options.safe]          The safe option.
+   * @param  {Object}  [options.headers]       The headers object option.
+   * @param  {Number}  [options.retry=0]       Number of retries to make
+   *     when faced with transient errors.
+   * @param  {Object}  [options.last_modified] The last_modified option.
+   * @return {Promise<Object, Error>}
+   */
+  async removePermissions(permissions, options = {}) {
+    if (!(0, _utils.isObject)(permissions)) {
+      throw new Error("A permissions object is required.");
+    }
+    const path = (0, _endpoint2.default)("bucket", this.name);
+    const { last_modified } = options;
+    const request = requests.jsonPatchPermissionsRequest(path, permissions, "remove", {
+      last_modified,
+      headers: this._getHeaders(options),
+      safe: this._getSafe(options)
+    });
+    return this.client.execute(request, { retry: this._getRetry(options) });
   }
 
   /**
@@ -1288,11 +1547,18 @@ let Bucket = (_dec = (0, _utils.capable)(["history"]), (_class = class Bucket {
    * @param  {Object}   [options={}]         The options object.
    * @param  {Object}   [options.headers]    The headers object option.
    * @param  {Boolean}  [options.safe]       The safe option.
+   * @param  {Number}   [options.retry=0]    The retry option.
    * @param  {Boolean}  [options.aggregate]  Produces a grouped result object.
    * @return {Promise<Object, Error>}
    */
-  batch(fn, options = {}) {
-    return this.client.batch(fn, this._bucketOptions(options));
+  async batch(fn, options = {}) {
+    return this.client.batch(fn, {
+      bucket: this.name,
+      headers: this._getHeaders(options),
+      retry: this._getRetry(options),
+      safe: this._getSafe(options),
+      aggregate: !!options.aggregate
+    });
   }
 }, (_applyDecoratedDescriptor(_class.prototype, "listHistory", [_dec], Object.getOwnPropertyDescriptor(_class.prototype, "listHistory"), _class.prototype)), _class));
 exports.default = Bucket;
@@ -1307,7 +1573,7 @@ exports.default = undefined;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-var _dec, _dec2, _desc, _value, _class;
+var _dec, _dec2, _dec3, _desc, _value, _class;
 
 var _uuid = require("uuid");
 
@@ -1358,7 +1624,7 @@ function _applyDecoratedDescriptor(target, property, decorators, descriptor, con
  * Abstract representation of a selected collection.
  *
  */
-let Collection = (_dec = (0, _utils.capable)(["attachments"]), _dec2 = (0, _utils.capable)(["attachments"]), (_class = class Collection {
+let Collection = (_dec = (0, _utils.capable)(["attachments"]), _dec2 = (0, _utils.capable)(["attachments"]), _dec3 = (0, _utils.capable)(["history"]), (_class = class Collection {
   /**
    * Constructor.
    *
@@ -1368,6 +1634,9 @@ let Collection = (_dec = (0, _utils.capable)(["attachments"]), _dec2 = (0, _util
    * @param  {Object}       [options={}]      The options object.
    * @param  {Object}       [options.headers] The headers object option.
    * @param  {Boolean}      [options.safe]    The safe option.
+   * @param  {Number}       [options.retry]   The retry option.
+   * @param  {Boolean}      [options.batch]   (Private) Whether this
+   *     Collection is operating as part of a batch.
    */
   constructor(client, bucket, name, options = {}) {
     /**
@@ -1385,32 +1654,50 @@ let Collection = (_dec = (0, _utils.capable)(["attachments"]), _dec2 = (0, _util
     this.name = name;
 
     /**
-     * The default collection options object, embedding the default bucket ones.
-     * @ignore
-     * @type {Object}
-     */
-    this.options = _extends({}, this.bucket.options, options, {
-      headers: _extends({}, this.bucket.options && this.bucket.options.headers, options.headers)
-    });
-    /**
      * @ignore
      */
     this._isBatch = !!options.batch;
+
+    /**
+     * @ignore
+     */
+    this._retry = options.retry || 0;
+    this._safe = !!options.safe;
+    // FIXME: This is kind of ugly; shouldn't the bucket be responsible
+    // for doing the merge?
+    this._headers = _extends({}, this.bucket._headers, options.headers);
   }
 
   /**
-   * Merges passed request options with default bucket and collection ones, if
-   * any.
+   * Get the value of "headers" for a given request, merging the
+   * per-request headers with our own "default" headers.
    *
    * @private
-   * @param  {Object} [options={}] The options to merge.
-   * @return {Object}              The merged options.
    */
-  _collOptions(options = {}) {
-    const headers = _extends({}, this.options && this.options.headers, options.headers);
-    return _extends({}, this.options, options, {
-      headers
-    });
+  _getHeaders(options) {
+    return _extends({}, this._headers, options.headers);
+  }
+
+  /**
+   * Get the value of "safe" for a given request, using the
+   * per-request option if present or falling back to our default
+   * otherwise.
+   *
+   * @private
+   * @param {Object} options The options for a request.
+   * @returns {Boolean}
+   */
+  _getSafe(options) {
+    return _extends({ safe: this._safe }, options).safe;
+  }
+
+  /**
+   * As _getSafe, but for "retry".
+   *
+   * @private
+   */
+  _getRetry(options) {
+    return _extends({ retry: this._retry }, options).retry;
   }
 
   /**
@@ -1418,13 +1705,22 @@ let Collection = (_dec = (0, _utils.capable)(["attachments"]), _dec2 = (0, _util
    *
    * @param  {Object} [options={}]      The options object.
    * @param  {Object} [options.headers] The headers object option.
+   * @param  {Number} [options.retry=0] Number of retries to make
+   *     when faced with transient errors.
    * @return {Promise<Number, Error>}
    */
-  getTotalRecords(options = {}) {
+  async getTotalRecords(options = {}) {
     const path = (0, _endpoint2.default)("record", this.bucket.name, this.name);
-    const reqOptions = this._collOptions(options);
-    const request = _extends({}, reqOptions, { path, method: "HEAD" });
-    return this.client.execute(request, { raw: true }).then(({ headers }) => parseInt(headers.get("Total-Records"), 10));
+    const request = {
+      headers: this._getHeaders(options),
+      path,
+      method: "HEAD"
+    };
+    const { headers } = await this.client.execute(request, {
+      raw: true,
+      retry: this._getRetry(options)
+    });
+    return parseInt(headers.get("Total-Records"), 10);
   }
 
   /**
@@ -1432,13 +1728,17 @@ let Collection = (_dec = (0, _utils.capable)(["attachments"]), _dec2 = (0, _util
    *
    * @param  {Object} [options={}]      The options object.
    * @param  {Object} [options.headers] The headers object option.
+   * @param  {Number} [options.retry=0] Number of retries to make
+   *     when faced with transient errors.
    * @return {Promise<Object, Error>}
    */
-  getData(options = {}) {
-    const reqOptions = this._collOptions(options);
+  async getData(options = {}) {
     const path = (0, _endpoint2.default)("collection", this.bucket.name, this.name);
-    const request = _extends({}, reqOptions, { path });
-    return this.client.execute(request).then(res => res.data);
+    const request = { headers: this._getHeaders(options), path };
+    const { data } = await this.client.execute(request, {
+      retry: this._getRetry(options)
+    });
+    return data;
   }
 
   /**
@@ -1446,21 +1746,28 @@ let Collection = (_dec = (0, _utils.capable)(["attachments"]), _dec2 = (0, _util
    * @param  {Object}   data                    The collection data object.
    * @param  {Object}   [options={}]            The options object.
    * @param  {Object}   [options.headers]       The headers object option.
+   * @param  {Number}   [options.retry=0]       Number of retries to make
+   *     when faced with transient errors.
    * @param  {Boolean}  [options.safe]          The safe option.
    * @param  {Boolean}  [options.patch]         The patch option.
    * @param  {Number}   [options.last_modified] The last_modified option.
    * @return {Promise<Object, Error>}
    */
-  setData(data, options = {}) {
+  async setData(data, options = {}) {
     if (!(0, _utils.isObject)(data)) {
       throw new Error("A collection object is required.");
     }
-    const reqOptions = this._collOptions(options);
-    const { permissions } = reqOptions;
+    const { patch, permissions } = options;
+    const { last_modified } = _extends({}, data, options);
 
     const path = (0, _endpoint2.default)("collection", this.bucket.name, this.name);
-    const request = requests.updateRequest(path, { data, permissions }, reqOptions);
-    return this.client.execute(request);
+    const request = requests.updateRequest(path, { data, permissions }, {
+      last_modified,
+      patch,
+      headers: this._getHeaders(options),
+      safe: this._getSafe(options)
+    });
+    return this.client.execute(request, { retry: this._getRetry(options) });
   }
 
   /**
@@ -1468,13 +1775,17 @@ let Collection = (_dec = (0, _utils.capable)(["attachments"]), _dec2 = (0, _util
    *
    * @param  {Object} [options={}]      The options object.
    * @param  {Object} [options.headers] The headers object option.
+   * @param  {Number} [options.retry=0] Number of retries to make
+   *     when faced with transient errors.
    * @return {Promise<Object, Error>}
    */
-  getPermissions(options = {}) {
+  async getPermissions(options = {}) {
     const path = (0, _endpoint2.default)("collection", this.bucket.name, this.name);
-    const reqOptions = this._collOptions(options);
-    const request = _extends({}, reqOptions, { path });
-    return this.client.execute(request).then(res => res.permissions);
+    const request = { headers: this._getHeaders(options), path };
+    const { permissions } = await this.client.execute(request, {
+      retry: this._getRetry(options)
+    });
+    return permissions;
   }
 
   /**
@@ -1483,19 +1794,75 @@ let Collection = (_dec = (0, _utils.capable)(["attachments"]), _dec2 = (0, _util
    * @param  {Object}   permissions             The permissions object.
    * @param  {Object}   [options={}]            The options object
    * @param  {Object}   [options.headers]       The headers object option.
+   * @param  {Number}   [options.retry=0]       Number of retries to make
+   *     when faced with transient errors.
    * @param  {Boolean}  [options.safe]          The safe option.
    * @param  {Number}   [options.last_modified] The last_modified option.
    * @return {Promise<Object, Error>}
    */
-  setPermissions(permissions, options = {}) {
+  async setPermissions(permissions, options = {}) {
     if (!(0, _utils.isObject)(permissions)) {
       throw new Error("A permissions object is required.");
     }
-    const reqOptions = this._collOptions(options);
     const path = (0, _endpoint2.default)("collection", this.bucket.name, this.name);
     const data = { last_modified: options.last_modified };
-    const request = requests.updateRequest(path, { data, permissions }, reqOptions);
-    return this.client.execute(request);
+    const request = requests.updateRequest(path, { data, permissions }, {
+      headers: this._getHeaders(options),
+      safe: this._getSafe(options)
+    });
+    return this.client.execute(request, { retry: this._getRetry(options) });
+  }
+
+  /**
+   * Append principals to the collection permissions.
+   *
+   * @param  {Object}  permissions             The permissions object.
+   * @param  {Object}  [options={}]            The options object
+   * @param  {Boolean} [options.safe]          The safe option.
+   * @param  {Object}  [options.headers]       The headers object option.
+   * @param  {Number}  [options.retry=0]       Number of retries to make
+   *     when faced with transient errors.
+   * @param  {Object}  [options.last_modified] The last_modified option.
+   * @return {Promise<Object, Error>}
+   */
+  async addPermissions(permissions, options = {}) {
+    if (!(0, _utils.isObject)(permissions)) {
+      throw new Error("A permissions object is required.");
+    }
+    const path = (0, _endpoint2.default)("collection", this.bucket.name, this.name);
+    const { last_modified } = options;
+    const request = requests.jsonPatchPermissionsRequest(path, permissions, "add", {
+      last_modified,
+      headers: this._getHeaders(options),
+      safe: this._getSafe(options)
+    });
+    return this.client.execute(request, { retry: this._getRetry(options) });
+  }
+
+  /**
+   * Remove principals from the collection permissions.
+   *
+   * @param  {Object}  permissions             The permissions object.
+   * @param  {Object}  [options={}]            The options object
+   * @param  {Boolean} [options.safe]          The safe option.
+   * @param  {Object}  [options.headers]       The headers object option.
+   * @param  {Number}  [options.retry=0]       Number of retries to make
+   *     when faced with transient errors.
+   * @param  {Object}  [options.last_modified] The last_modified option.
+   * @return {Promise<Object, Error>}
+   */
+  async removePermissions(permissions, options = {}) {
+    if (!(0, _utils.isObject)(permissions)) {
+      throw new Error("A permissions object is required.");
+    }
+    const path = (0, _endpoint2.default)("collection", this.bucket.name, this.name);
+    const { last_modified } = options;
+    const request = requests.jsonPatchPermissionsRequest(path, permissions, "remove", {
+      last_modified,
+      headers: this._getHeaders(options),
+      safe: this._getSafe(options)
+    });
+    return this.client.execute(request, { retry: this._getRetry(options) });
   }
 
   /**
@@ -1504,16 +1871,20 @@ let Collection = (_dec = (0, _utils.capable)(["attachments"]), _dec2 = (0, _util
    * @param  {Object}  record                The record to create.
    * @param  {Object}  [options={}]          The options object.
    * @param  {Object}  [options.headers]     The headers object option.
+   * @param  {Number}  [options.retry=0]     Number of retries to make
+   *     when faced with transient errors.
    * @param  {Boolean} [options.safe]        The safe option.
    * @param  {Object}  [options.permissions] The permissions option.
    * @return {Promise<Object, Error>}
    */
-  createRecord(record, options = {}) {
-    const reqOptions = this._collOptions(options);
-    const { permissions } = reqOptions;
+  async createRecord(record, options = {}) {
+    const { permissions } = options;
     const path = (0, _endpoint2.default)("record", this.bucket.name, this.name, record.id);
-    const request = requests.createRequest(path, { data: record, permissions }, reqOptions);
-    return this.client.execute(request);
+    const request = requests.createRequest(path, { data: record, permissions }, {
+      headers: this._getHeaders(options),
+      safe: this._getSafe(options)
+    });
+    return this.client.execute(request, { retry: this._getRetry(options) });
   }
 
   /**
@@ -1523,6 +1894,8 @@ let Collection = (_dec = (0, _utils.capable)(["attachments"]), _dec2 = (0, _util
    * @param  {Object}  [record={}]             The record data.
    * @param  {Object}  [options={}]            The options object.
    * @param  {Object}  [options.headers]       The headers object option.
+   * @param  {Number}  [options.retry=0]       Number of retries to make
+   *     when faced with transient errors.
    * @param  {Boolean} [options.safe]          The safe option.
    * @param  {Number}  [options.last_modified] The last_modified option.
    * @param  {Object}  [options.permissions]   The permissions option.
@@ -1531,16 +1904,23 @@ let Collection = (_dec = (0, _utils.capable)(["attachments"]), _dec2 = (0, _util
    * @return {Promise<Object, Error>}
    */
 
-  addAttachment(dataURI, record = {}, options = {}) {
-    const reqOptions = this._collOptions(options);
-    const { permissions } = reqOptions;
+  async addAttachment(dataURI, record = {}, options = {}) {
+    const { permissions } = options;
     const id = record.id || _uuid.v4.v4();
     const path = (0, _endpoint2.default)("attachment", this.bucket.name, this.name, id);
-    const addAttachmentRequest = requests.addAttachmentRequest(path, dataURI, {
-      data: record,
-      permissions
-    }, reqOptions);
-    return this.client.execute(addAttachmentRequest, { stringify: false }).then(() => this.getRecord(id));
+    const { last_modified } = _extends({}, record, options);
+    const addAttachmentRequest = requests.addAttachmentRequest(path, dataURI, { data: record, permissions }, {
+      last_modified,
+      filename: options.filename,
+      gzipped: options.gzipped,
+      headers: this._getHeaders(options),
+      safe: this._getSafe(options)
+    });
+    await this.client.execute(addAttachmentRequest, {
+      stringify: false,
+      retry: this._getRetry(options)
+    });
+    return this.getRecord(id);
   }
 
   /**
@@ -1549,15 +1929,21 @@ let Collection = (_dec = (0, _utils.capable)(["attachments"]), _dec2 = (0, _util
    * @param  {Object}  recordId                The record id.
    * @param  {Object}  [options={}]            The options object.
    * @param  {Object}  [options.headers]       The headers object option.
+   * @param  {Number}  [options.retry=0]       Number of retries to make
+   *     when faced with transient errors.
    * @param  {Boolean} [options.safe]          The safe option.
    * @param  {Number}  [options.last_modified] The last_modified option.
    */
 
-  removeAttachment(recordId, options = {}) {
-    const reqOptions = this._collOptions(options);
+  async removeAttachment(recordId, options = {}) {
+    const { last_modified } = options;
     const path = (0, _endpoint2.default)("attachment", this.bucket.name, this.name, recordId);
-    const request = requests.deleteRequest(path, reqOptions);
-    return this.client.execute(request);
+    const request = requests.deleteRequest(path, {
+      last_modified,
+      headers: this._getHeaders(options),
+      safe: this._getSafe(options)
+    });
+    return this.client.execute(request, { retry: this._getRetry(options) });
   }
 
   /**
@@ -1566,23 +1952,30 @@ let Collection = (_dec = (0, _utils.capable)(["attachments"]), _dec2 = (0, _util
    * @param  {Object}  record                  The record to update.
    * @param  {Object}  [options={}]            The options object.
    * @param  {Object}  [options.headers]       The headers object option.
+   * @param  {Number}  [options.retry=0]       Number of retries to make
+   *     when faced with transient errors.
    * @param  {Boolean} [options.safe]          The safe option.
    * @param  {Number}  [options.last_modified] The last_modified option.
    * @param  {Object}  [options.permissions]   The permissions option.
    * @return {Promise<Object, Error>}
    */
-  updateRecord(record, options = {}) {
+  async updateRecord(record, options = {}) {
     if (!(0, _utils.isObject)(record)) {
       throw new Error("A record object is required.");
     }
     if (!record.id) {
       throw new Error("A record id is required.");
     }
-    const reqOptions = this._collOptions(options);
-    const { permissions } = reqOptions;
+    const { permissions } = options;
+    const { last_modified } = _extends({}, record, options);
     const path = (0, _endpoint2.default)("record", this.bucket.name, this.name, record.id);
-    const request = requests.updateRequest(path, { data: record, permissions }, reqOptions);
-    return this.client.execute(request);
+    const request = requests.updateRequest(path, { data: record, permissions }, {
+      headers: this._getHeaders(options),
+      safe: this._getSafe(options),
+      last_modified,
+      patch: !!options.patch
+    });
+    return this.client.execute(request, { retry: this._getRetry(options) });
   }
 
   /**
@@ -1591,20 +1984,26 @@ let Collection = (_dec = (0, _utils.capable)(["attachments"]), _dec2 = (0, _util
    * @param  {Object|String} record                  The record to delete.
    * @param  {Object}        [options={}]            The options object.
    * @param  {Object}        [options.headers]       The headers object option.
+   * @param  {Number}        [options.retry=0]       Number of retries to make
+   *     when faced with transient errors.
    * @param  {Boolean}       [options.safe]          The safe option.
    * @param  {Number}        [options.last_modified] The last_modified option.
    * @return {Promise<Object, Error>}
    */
-  deleteRecord(record, options = {}) {
+  async deleteRecord(record, options = {}) {
     const recordObj = (0, _utils.toDataBody)(record);
     if (!recordObj.id) {
       throw new Error("A record id is required.");
     }
-    const { id, last_modified } = recordObj;
-    const reqOptions = this._collOptions(_extends({ last_modified }, options));
+    const { id } = recordObj;
+    const { last_modified } = _extends({}, recordObj, options);
     const path = (0, _endpoint2.default)("record", this.bucket.name, this.name, id);
-    const request = requests.deleteRequest(path, reqOptions);
-    return this.client.execute(request);
+    const request = requests.deleteRequest(path, {
+      last_modified,
+      headers: this._getHeaders(options),
+      safe: this._getSafe(options)
+    });
+    return this.client.execute(request, { retry: this._getRetry(options) });
   }
 
   /**
@@ -1613,13 +2012,14 @@ let Collection = (_dec = (0, _utils.capable)(["attachments"]), _dec2 = (0, _util
    * @param  {String} id                The record id to retrieve.
    * @param  {Object} [options={}]      The options object.
    * @param  {Object} [options.headers] The headers object option.
+   * @param  {Number} [options.retry=0] Number of retries to make
+   *     when faced with transient errors.
    * @return {Promise<Object, Error>}
    */
-  getRecord(id, options = {}) {
+  async getRecord(id, options = {}) {
     const path = (0, _endpoint2.default)("record", this.bucket.name, this.name, id);
-    const reqOptions = this._collOptions(options);
-    const request = _extends({}, reqOptions, { path });
-    return this.client.execute(request);
+    const request = { headers: this._getHeaders(options), path };
+    return this.client.execute(request, { retry: this._getRetry(options) });
   }
 
   /**
@@ -1647,6 +2047,8 @@ let Collection = (_dec = (0, _utils.capable)(["attachments"]), _dec2 = (0, _util
    *
    * @param  {Object}   [options={}]                    The options object.
    * @param  {Object}   [options.headers]               The headers object option.
+   * @param  {Number}   [options.retry=0]               Number of retries to make
+   *     when faced with transient errors.
    * @param  {Object}   [options.filters=[]]            The filters object.
    * @param  {String}   [options.sort="-last_modified"] The sort field.
    * @param  {String}   [options.at]                    The timestamp to get a snapshot at.
@@ -1655,57 +2057,88 @@ let Collection = (_dec = (0, _utils.capable)(["attachments"]), _dec2 = (0, _util
    * @param  {Number}   [options.since=null]            Only retrieve records modified since the provided timestamp.
    * @return {Promise<Object, Error>}
    */
-  listRecords(options = {}) {
+  async listRecords(options = {}) {
     const path = (0, _endpoint2.default)("record", this.bucket.name, this.name);
-    const reqOptions = this._collOptions(options);
     if (options.hasOwnProperty("at")) {
-      return this._getSnapshot(options.at);
+      return this.getSnapshot(options.at);
     } else {
-      return this.client.paginatedList(path, options, reqOptions);
+      return this.client.paginatedList(path, options, {
+        headers: this._getHeaders(options),
+        retry: this._getRetry(options)
+      });
     }
   }
 
   /**
    * @private
    */
-  _getSnapshot(at) {
-    if (!Number.isInteger(at) || at <= 0) {
-      throw new Error("Invalid argument, expected a positive integer.");
+  async isHistoryComplete() {
+    // We consider that if we have the collection creation event part of the
+    // history, then all records change events have been tracked.
+    const { data: [oldestHistoryEntry] } = await this.bucket.listHistory({
+      limit: 1,
+      filters: {
+        action: "create",
+        resource_name: "collection",
+        collection_id: this.name
+      }
+    });
+    return !!oldestHistoryEntry;
+  }
+
+  /**
+   * @private
+   */
+  async listChangesBackTo(at) {
+    // Ensure we have enough history data to retrieve the complete list of
+    // changes.
+    if (!(await this.isHistoryComplete())) {
+      throw new Error("Computing a snapshot is only possible when the full history for a " + "collection is available. Here, the history plugin seems to have " + "been enabled after the creation of the collection.");
     }
-    // TODO: we process history changes forward, while it would probably be more
-    // efficient and accurate to process them backward.
-    return this.bucket.listHistory({
+    const { data: changes } = await this.bucket.listHistory({
       pages: Infinity, // all pages up to target timestamp are required
       sort: "-target.data.last_modified",
       filters: {
         resource_name: "record",
         collection_id: this.name,
-        "max_target.data.last_modified": String(at)
-      }
-    }).then(({ data: changes }) => {
-      const seenIds = new Set();
-      let snapshot = [];
-      for (const _ref of changes) {
-        const { target: { data: record } } = _ref;
-
-        if (record.deleted) {
-          seenIds.add(record.id); // ensure not reprocessing deleted entries
-          snapshot = snapshot.filter(r => r.id !== record.id);
-        } else if (!seenIds.has(record.id)) {
-          seenIds.add(record.id);
-          snapshot.push(record);
-        }
-      }
-      return {
-        last_modified: String(at),
-        data: snapshot.sort((a, b) => b.last_modified - a.last_modified),
-        next: () => {
-          throw new Error("Snapshots don't support pagination");
-        },
-        hasNextPage: false,
-        totalRecords: snapshot.length
-      };
+        "max_target.data.last_modified": String(at) }
     });
+    return changes;
+  }
+
+  /**
+   * @private
+   */
+
+  async getSnapshot(at) {
+    if (!Number.isInteger(at) || at <= 0) {
+      throw new Error("Invalid argument, expected a positive integer.");
+    }
+    // Retrieve history and check it covers the required time range.
+    const changes = await this.listChangesBackTo(at);
+    // Replay changes to compute the requested snapshot.
+    const seenIds = new Set();
+    let snapshot = [];
+    for (const _ref of changes) {
+      const { action, target: { data: record } } = _ref;
+
+      if (action == "delete") {
+        seenIds.add(record.id); // ensure not reprocessing deleted entries
+        snapshot = snapshot.filter(r => r.id !== record.id);
+      } else if (!seenIds.has(record.id)) {
+        seenIds.add(record.id);
+        snapshot.push(record);
+      }
+    }
+    return {
+      last_modified: String(at),
+      data: snapshot.sort((a, b) => b.last_modified - a.last_modified),
+      next: () => {
+        throw new Error("Snapshots don't support pagination");
+      },
+      hasNextPage: false,
+      totalRecords: snapshot.length
+    };
   }
 
   /**
@@ -1715,17 +2148,21 @@ let Collection = (_dec = (0, _utils.capable)(["attachments"]), _dec2 = (0, _util
    * @param  {Object}   [options={}]         The options object.
    * @param  {Object}   [options.headers]    The headers object option.
    * @param  {Boolean}  [options.safe]       The safe option.
+   * @param  {Number}   [options.retry]      The retry option.
    * @param  {Boolean}  [options.aggregate]  Produces a grouped result object.
    * @return {Promise<Object, Error>}
    */
-  batch(fn, options = {}) {
-    const reqOptions = this._collOptions(options);
-    return this.client.batch(fn, _extends({}, reqOptions, {
+  async batch(fn, options = {}) {
+    return this.client.batch(fn, {
       bucket: this.bucket.name,
-      collection: this.name
-    }));
+      collection: this.name,
+      headers: this._getHeaders(options),
+      retry: this._getRetry(options),
+      safe: this._getSafe(options),
+      aggregate: !!options.aggregate
+    });
   }
-}, (_applyDecoratedDescriptor(_class.prototype, "addAttachment", [_dec], Object.getOwnPropertyDescriptor(_class.prototype, "addAttachment"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "removeAttachment", [_dec2], Object.getOwnPropertyDescriptor(_class.prototype, "removeAttachment"), _class.prototype)), _class));
+}, (_applyDecoratedDescriptor(_class.prototype, "addAttachment", [_dec], Object.getOwnPropertyDescriptor(_class.prototype, "addAttachment"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "removeAttachment", [_dec2], Object.getOwnPropertyDescriptor(_class.prototype, "removeAttachment"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "getSnapshot", [_dec3], Object.getOwnPropertyDescriptor(_class.prototype, "getSnapshot"), _class.prototype)), _class));
 exports.default = Collection;
 
 },{"./endpoint":11,"./requests":14,"./utils":15,"uuid":2}],11:[function(require,module,exports){
@@ -1805,6 +2242,8 @@ exports.default = undefined;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
+var _utils = require("./utils");
+
 var _errors = require("./errors");
 
 var _errors2 = _interopRequireDefault(_errors);
@@ -1823,7 +2262,7 @@ let HTTP = class HTTP {
    */
   static get DEFAULT_REQUEST_HEADERS() {
     return {
-      "Accept": "application/json",
+      Accept: "application/json",
       "Content-Type": "application/json"
     };
   }
@@ -1871,29 +2310,10 @@ let HTTP = class HTTP {
   }
 
   /**
-   * Performs an HTTP request to the Kinto server.
-   *
-   * Resolves with an objet containing the following HTTP response properties:
-   * - `{Number}  status`  The HTTP status code.
-   * - `{Object}  json`    The JSON response body.
-   * - `{Headers} headers` The response headers object; see the ES6 fetch() spec.
-   *
-   * @param  {String} url               The URL.
-   * @param  {Object} [options={}]      The fetch() options object.
-   * @param  {Object} [options.headers] The request headers object (default: {})
-   * @param  {Object} [options.retry]   Number of retries (default: 0)
-   * @return {Promise}
+   * @private
    */
-  request(url, options = { headers: {}, retry: 0 }) {
-    let response, status, statusText, headers, hasTimedout;
-    // Ensure default request headers are always set
-    options.headers = _extends({}, HTTP.DEFAULT_REQUEST_HEADERS, options.headers);
-    // If a multipart body is provided, remove any custom Content-Type header as
-    // the fetch() implementation will add the correct one for us.
-    if (options.body && typeof options.body.append === "function") {
-      delete options.headers["Content-Type"];
-    }
-    options.mode = this.requestMode;
+  timedFetch(url, options) {
+    let hasTimedout = false;
     return new Promise((resolve, reject) => {
       // Detect if a request has timed out.
       let _timeoutId;
@@ -1903,73 +2323,113 @@ let HTTP = class HTTP {
           reject(new Error("Request timeout."));
         }, this.timeout);
       }
-      fetch(url, options).then(res => {
-        if (!hasTimedout) {
-          if (_timeoutId) {
-            clearTimeout(_timeoutId);
-          }
-          resolve(res);
-        }
-      }).catch(err => {
-        if (!hasTimedout) {
-          if (_timeoutId) {
-            clearTimeout(_timeoutId);
-          }
-          reject(err);
-        }
-      });
-    }).then(res => {
-      response = res;
-      headers = res.headers;
-      status = res.status;
-      statusText = res.statusText;
-      this._checkForDeprecationHeader(headers);
-      this._checkForBackoffHeader(status, headers);
-
-      // Check if the server summons the client to retry after a while.
-      const retryAfter = this._checkForRetryAfterHeader(status, headers);
-      // If number of allowed of retries is not exhausted, retry the same request.
-      if (retryAfter && options.retry > 0) {
-        return new Promise((resolve, reject) => {
-          setTimeout(() => {
-            resolve(this.request(url, _extends({}, options, { retry: options.retry - 1 })));
-          }, retryAfter);
-        });
-      }
-
-      return Promise.resolve(res.text())
-      // Check if we have a body; if so parse it as JSON.
-      .then(text => {
-        if (text.length === 0) {
-          return null;
-        }
-        // Note: we can't consume the response body twice.
-        return JSON.parse(text);
-      }).catch(err => {
-        const error = new Error(`HTTP ${status || 0}; ${err}`);
-        error.response = response;
-        error.stack = err.stack;
-        throw error;
-      }).then(json => {
-        if (json && status >= 400) {
-          let message = `HTTP ${status} ${json.error || ""}: `;
-          if (json.errno && json.errno in _errors2.default) {
-            const errnoMsg = _errors2.default[json.errno];
-            message += errnoMsg;
-            if (json.message && json.message !== errnoMsg) {
-              message += ` (${json.message})`;
+      function proceedWithHandler(fn) {
+        return arg => {
+          if (!hasTimedout) {
+            if (_timeoutId) {
+              clearTimeout(_timeoutId);
             }
-          } else {
-            message += statusText || "";
+            fn(arg);
           }
-          const error = new Error(message.trim());
-          error.response = response;
-          error.data = json;
-          throw error;
-        }
-        return { status, json, headers };
-      });
+        };
+      }
+      fetch(url, options).then(proceedWithHandler(resolve)).catch(proceedWithHandler(reject));
     });
+  }
+
+  /**
+   * @private
+   */
+  async processResponse(response) {
+    const { status } = response;
+    const text = await response.text();
+    // Check if we have a body; if so parse it as JSON.
+    if (text.length === 0) {
+      return this.formatResponse(response, null);
+    }
+    try {
+      return this.formatResponse(response, JSON.parse(text));
+    } catch (err) {
+      const error = new Error(`HTTP ${status || 0}; ${err}`);
+      error.response = response;
+      error.stack = err.stack;
+      throw error;
+    }
+  }
+
+  /**
+   * @private
+   */
+  formatResponse(response, json) {
+    const { status, statusText, headers } = response;
+    if (json && status >= 400) {
+      let message = `HTTP ${status} ${json.error || ""}: `;
+      if (json.errno && json.errno in _errors2.default) {
+        const errnoMsg = _errors2.default[json.errno];
+        message += errnoMsg;
+        if (json.message && json.message !== errnoMsg) {
+          message += ` (${json.message})`;
+        }
+      } else {
+        message += statusText || "";
+      }
+      const error = new Error(message.trim());
+      error.response = response;
+      error.data = json;
+      throw error;
+    }
+    return { status, json, headers };
+  }
+
+  /**
+   * @private
+   */
+  async retry(url, retryAfter, request, options) {
+    await (0, _utils.delay)(retryAfter);
+    return this.request(url, request, _extends({}, options, { retry: options.retry - 1 }));
+  }
+
+  /**
+   * Performs an HTTP request to the Kinto server.
+   *
+   * Resolves with an objet containing the following HTTP response properties:
+   * - `{Number}  status`  The HTTP status code.
+   * - `{Object}  json`    The JSON response body.
+   * - `{Headers} headers` The response headers object; see the ES6 fetch() spec.
+   *
+   * @param  {String} url               The URL.
+   * @param  {Object} [request={}]      The request object, passed to
+   *     fetch() as its options object.
+   * @param  {Object} [request.headers] The request headers object (default: {})
+   * @param  {Object} [options={}]      Options for making the
+   *     request
+   * @param  {Number} [options.retry]   Number of retries (default: 0)
+   * @return {Promise}
+   */
+  async request(url, request = { headers: {} }, options = { retry: 0 }) {
+    // Ensure default request headers are always set
+    request.headers = _extends({}, HTTP.DEFAULT_REQUEST_HEADERS, request.headers);
+    // If a multipart body is provided, remove any custom Content-Type header as
+    // the fetch() implementation will add the correct one for us.
+    if (request.body && typeof request.body.append === "function") {
+      delete request.headers["Content-Type"];
+    }
+    request.mode = this.requestMode;
+
+    const response = await this.timedFetch(url, request);
+    const { status, headers } = response;
+
+    this._checkForDeprecationHeader(headers);
+    this._checkForBackoffHeader(status, headers);
+
+    // Check if the server summons the client to retry after a while.
+    const retryAfter = this._checkForRetryAfterHeader(status, headers);
+    // If number of allowed of retries is not exhausted, retry the same request.
+    if (retryAfter && options.retry > 0) {
+      return this.retry(url, retryAfter, request, options);
+    } else {
+      return this.processResponse(response);
+    }
   }
 
   _checkForDeprecationHeader(headers) {
@@ -2012,7 +2472,7 @@ let HTTP = class HTTP {
 };
 exports.default = HTTP;
 
-},{"./errors":12}],14:[function(require,module,exports){
+},{"./errors":12,"./utils":15}],14:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2023,6 +2483,7 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 exports.createRequest = createRequest;
 exports.updateRequest = updateRequest;
+exports.jsonPatchPermissionsRequest = jsonPatchPermissionsRequest;
 exports.deleteRequest = deleteRequest;
 exports.addAttachmentRequest = addAttachmentRequest;
 
@@ -2059,10 +2520,7 @@ function createRequest(path, { data, permissions }, options = {}) {
     method: data && data.id ? "PUT" : "POST",
     path,
     headers: _extends({}, headers, safeHeader(safe)),
-    body: {
-      data,
-      permissions
-    }
+    body: { data, permissions }
   };
 }
 
@@ -2070,11 +2528,7 @@ function createRequest(path, { data, permissions }, options = {}) {
  * @private
  */
 function updateRequest(path, { data, permissions }, options = {}) {
-  const {
-    headers,
-    safe,
-    patch
-  } = _extends({}, requestDefaults, options);
+  const { headers, safe, patch } = _extends({}, requestDefaults, options);
   const { last_modified } = _extends({}, data, options);
 
   if (Object.keys((0, _utils.omit)(data, "id", "last_modified")).length === 0) {
@@ -2085,10 +2539,34 @@ function updateRequest(path, { data, permissions }, options = {}) {
     method: patch ? "PATCH" : "PUT",
     path,
     headers: _extends({}, headers, safeHeader(safe, last_modified)),
-    body: {
-      data,
-      permissions
+    body: { data, permissions }
+  };
+}
+
+/**
+ * @private
+ */
+function jsonPatchPermissionsRequest(path, permissions, opType, options = {}) {
+  const { headers, safe, last_modified } = _extends({}, requestDefaults, options);
+
+  const ops = [];
+
+  for (const [type, principals] of Object.entries(permissions)) {
+    for (const principal of principals) {
+      ops.push({
+        op: opType,
+        path: `/permissions/${type}/${principal}`
+      });
     }
+  }
+
+  return {
+    method: "PATCH",
+    path,
+    headers: _extends({}, headers, safeHeader(safe, last_modified), {
+      "Content-Type": "application/json-patch+json"
+    }),
+    body: ops
   };
 }
 
@@ -2116,13 +2594,8 @@ function addAttachmentRequest(path, dataURI, { data, permissions } = {}, options
 
   const body = { data, permissions };
   const formData = (0, _utils.createFormData)(dataURI, body, options);
-  let customPath;
 
-  if (gzipped != null) {
-    customPath = path + "?gzipped=" + (gzipped ? "true" : "false");
-  } else {
-    customPath = path;
-  }
+  let customPath = gzipped != null ? customPath = path + "?gzipped=" + (gzipped ? "true" : "false") : path;
 
   return {
     method: "POST",
@@ -2142,6 +2615,7 @@ Object.defineProperty(exports, "__esModule", {
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 exports.partition = partition;
+exports.delay = delay;
 exports.pMap = pMap;
 exports.omit = omit;
 exports.toDataBody = toDataBody;
@@ -2154,6 +2628,7 @@ exports.isObject = isObject;
 exports.parseDataURL = parseDataURL;
 exports.extractFileInfo = extractFileInfo;
 exports.createFormData = createFormData;
+exports.cleanUndefinedProperties = cleanUndefinedProperties;
 /**
  * Chunks an array into n pieces.
  *
@@ -2177,6 +2652,15 @@ function partition(array, n) {
 }
 
 /**
+ * Returns a Promise always resolving after the specified amount in milliseconds.
+ *
+ * @return Promise<void>
+ */
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
  * Maps a list to promises using the provided mapping function, executes them
  * sequentially then returns a Promise resolving with ordered results obtained.
  * Think of this as a sequential Promise.all.
@@ -2186,13 +2670,13 @@ function partition(array, n) {
  * @param  {Function} fn   The mapping function.
  * @return {Promise}
  */
-function pMap(list, fn) {
+async function pMap(list, fn) {
   let results = [];
-  return list.reduce((promise, entry) => {
-    return promise.then(() => {
-      return Promise.resolve(fn(entry)).then(result => results = results.concat(result));
-    });
-  }, Promise.resolve()).then(() => results);
+  await list.reduce(async function (promise, entry) {
+    await promise;
+    results = results.concat((await fn(entry)));
+  }, Promise.resolve());
+  return results;
 }
 
 /**
@@ -2265,7 +2749,7 @@ function checkVersion(version, minVersion, maxVersion) {
   const [maxMajor, maxMinor] = extract(maxVersion);
   const checks = [verMajor < minMajor, verMajor === minMajor && verMinor < minMinor, verMajor > maxMajor, verMajor === maxMajor && verMinor >= maxMinor];
   if (checks.some(x => x)) {
-    throw new Error(`Version ${version} doesn't satisfy ` + `${minVersion} <= x < ${maxVersion}`);
+    throw new Error(`Version ${version} doesn't satisfy ${minVersion} <= x < ${maxVersion}`);
   }
 }
 
@@ -2316,9 +2800,10 @@ function capable(capabilities) {
           // "this" is the current instance which its method is decorated.
           const client = "client" in this ? this.client : this;
           return client.fetchServerCapabilities().then(available => {
-            const missing = capabilities.filter(c => !available.hasOwnProperty(c));
+            const missing = capabilities.filter(c => !(c in available));
             if (missing.length > 0) {
-              throw new Error(`Required capabilities ${missing.join(", ")} ` + "not present on server");
+              const missingStr = missing.join(", ");
+              throw new Error(`Required capabilities ${missingStr} not present on server`);
             }
           }).then(() => fn.apply(this, args));
         };
@@ -2430,6 +2915,20 @@ function createFormData(dataURL, body, options = {}) {
     }
   }
   return formData;
+}
+
+/**
+ * Clones an object with all its undefined keys removed.
+ * @private
+ */
+function cleanUndefinedProperties(obj) {
+  const result = {};
+  for (const key in obj) {
+    if (typeof obj[key] !== "undefined") {
+      result[key] = obj[key];
+    }
+  }
+  return result;
 }
 
 },{}]},{},[1])(1)

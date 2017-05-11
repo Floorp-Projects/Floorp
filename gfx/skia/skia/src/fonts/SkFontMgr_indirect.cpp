@@ -5,6 +5,7 @@
  * found in the LICENSE file.
  */
 
+#include "SkDataTable.h"
 #include "SkFontMgr.h"
 #include "SkFontMgr_indirect.h"
 #include "SkFontStyle.h"
@@ -54,22 +55,35 @@ public:
         return this->matchStyleCSS3(pattern);
     }
 private:
-    sk_sp<const SkFontMgr_Indirect> fOwner;
+    SkAutoTUnref<const SkFontMgr_Indirect> fOwner;
     int fFamilyIndex;
-    sk_sp<SkRemotableFontIdentitySet> fData;
+    SkAutoTUnref<SkRemotableFontIdentitySet> fData;
 };
 
+void SkFontMgr_Indirect::set_up_family_names(const SkFontMgr_Indirect* self) {
+    self->fFamilyNames = self->fProxy->getFamilyNames();
+}
+
 int SkFontMgr_Indirect::onCountFamilies() const {
-    return 0;
+    fFamilyNamesInitOnce(SkFontMgr_Indirect::set_up_family_names, this);
+    return fFamilyNames->count();
 }
 
 void SkFontMgr_Indirect::onGetFamilyName(int index, SkString* familyName) const {
-    SkFAIL("Not implemented");
+    fFamilyNamesInitOnce(SkFontMgr_Indirect::set_up_family_names, this);
+    if (index >= fFamilyNames->count()) {
+        familyName->reset();
+        return;
+    }
+    familyName->set(fFamilyNames->atStr(index));
 }
 
 SkFontStyleSet* SkFontMgr_Indirect::onCreateStyleSet(int index) const {
-    SkFAIL("Not implemented");
-    return nullptr;
+    SkRemotableFontIdentitySet* set = fProxy->getIndex(index);
+    if (nullptr == set) {
+        return nullptr;
+    }
+    return new SkStyleSet_Indirect(this, index, set);
 }
 
 SkFontStyleSet* SkFontMgr_Indirect::onMatchFamily(const char familyName[]) const {
@@ -83,7 +97,7 @@ SkTypeface* SkFontMgr_Indirect::createTypefaceFromFontId(const SkFontIdentity& i
 
     SkAutoMutexAcquire ama(fDataCacheMutex);
 
-    sk_sp<SkTypeface> dataTypeface;
+    SkAutoTUnref<SkTypeface> dataTypeface;
     int dataTypefaceIndex = 0;
     for (int i = 0; i < fDataCache.count(); ++i) {
         const DataEntry& entry = fDataCache[i];
@@ -109,19 +123,19 @@ SkTypeface* SkFontMgr_Indirect::createTypefaceFromFontId(const SkFontIdentity& i
 
     // No exact match, but did find a data match.
     if (dataTypeface.get() != nullptr) {
-        std::unique_ptr<SkStreamAsset> stream(dataTypeface->openStream(nullptr));
+        SkAutoTDelete<SkStreamAsset> stream(dataTypeface->openStream(nullptr));
         if (stream.get() != nullptr) {
             return fImpl->createFromStream(stream.release(), dataTypefaceIndex);
         }
     }
 
     // No data match, request data and add entry.
-    std::unique_ptr<SkStreamAsset> stream(fProxy->getData(id.fDataId));
+    SkAutoTDelete<SkStreamAsset> stream(fProxy->getData(id.fDataId));
     if (stream.get() == nullptr) {
         return nullptr;
     }
 
-    sk_sp<SkTypeface> typeface(fImpl->createFromStream(stream.release(), id.fTtcIndex));
+    SkAutoTUnref<SkTypeface> typeface(fImpl->createFromStream(stream.release(), id.fTtcIndex));
     if (typeface.get() == nullptr) {
         return nullptr;
     }
@@ -172,7 +186,7 @@ SkTypeface* SkFontMgr_Indirect::onCreateFromData(SkData* data, int ttcIndex) con
 
 SkTypeface* SkFontMgr_Indirect::onLegacyCreateTypeface(const char familyName[],
                                                        SkFontStyle style) const {
-    sk_sp<SkTypeface> face(this->matchFamilyStyle(familyName, style));
+    SkAutoTUnref<SkTypeface> face(this->matchFamilyStyle(familyName, style));
 
     if (nullptr == face.get()) {
         face.reset(this->matchFamilyStyle(nullptr, style));

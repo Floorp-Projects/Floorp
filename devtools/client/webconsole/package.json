@@ -5,7 +5,8 @@
     "node": ">=6.9.0"
   },
   "scripts": {
-    "start": "node bin/dev-server",
+    "start": "cross-env NODE_ENV=production node bin/dev-server",
+    "dev": "node bin/dev-server",
     "test": "cross-env NODE_ENV=test NODE_PATH=../../../ mocha new-console-output/test/**/*.test.js --compilers js:babel-register -r jsdom-global/register -r ./new-console-output/test/require-helper.js"
   },
   "dependencies": {
@@ -26,6 +27,7 @@
     "mocha": "^2.5.3",
     "raw-loader": "^0.5.1",
     "react": "=15.3.2",
+    "react-addons-perf": "=15.3.2",
     "react-dom": "=15.3.2",
     "react-redux": "=5.0.3",
     "redux": "^3.6.0",

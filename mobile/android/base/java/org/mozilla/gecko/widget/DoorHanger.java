@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.TextViewCompat;
 import android.view.LayoutInflater;
@@ -18,6 +19,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.Telemetry;
@@ -40,7 +42,17 @@ public abstract class DoorHanger extends LinearLayout {
     }
 
     // Doorhanger types created from Gecko are checked against enum strings to determine type.
-    public static enum Type { DEFAULT, LOGIN, TRACKING, GEOLOCATION, DESKTOPNOTIFICATION2, WEBRTC, VIBRATION, FLYWEBPUBLISHSERVER }
+    public enum Type {
+        DEFAULT,
+        LOGIN,
+        TRACKING,
+        GEOLOCATION,
+        DESKTOPNOTIFICATION2,
+        WEBRTC,
+        VIBRATION,
+        FLYWEBPUBLISHSERVER,
+        ADDON
+    }
 
     public interface OnButtonClickListener {
         public void onButtonClick(GeckoBundle response, DoorHanger doorhanger);
@@ -142,6 +154,10 @@ public abstract class DoorHanger extends LinearLayout {
         }
    }
 
+    public Type getType() {
+        return mType;
+    }
+
     public int getTabId() {
         return mTabId;
     }
@@ -206,7 +222,7 @@ public abstract class DoorHanger extends LinearLayout {
         return true;
     }
 
-    public void showTitle(Bitmap favicon, String title) {
+    public void showTitle(@Nullable Bitmap favicon, String title) {
         mDoorhangerTitle.setText(title);
         TextViewCompat.setCompoundDrawablesRelativeWithIntrinsicBounds(mDoorhangerTitle, new BitmapDrawable(getResources(), favicon), null, null, null);
         if (favicon != null) {

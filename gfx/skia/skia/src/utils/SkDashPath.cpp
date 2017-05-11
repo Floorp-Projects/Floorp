@@ -77,7 +77,7 @@ static void outset_for_stroke(SkRect* rect, const SkStrokeRec& rec) {
         radius = SK_Scalar1;    // hairlines
     }
     if (SkPaint::kMiter_Join == rec.getJoin()) {
-        radius *= rec.getMiter();
+        radius = SkScalarMul(radius, rec.getMiter());
     }
     rect->outset(radius, radius);
 }
@@ -173,7 +173,9 @@ public:
         //     resulting segments = pathLen * intervalCount / intervalLen
         //     resulting points = 4 * segments
 
-        SkScalar ptCount = pathLength * intervalCount / (float)intervalLength;
+        SkScalar ptCount = SkScalarMulDiv(pathLength,
+                                          SkIntToScalar(intervalCount),
+                                          intervalLength);
         ptCount = SkTMin(ptCount, SkDashPath::kMaxDashCount);
         int n = SkScalarCeilToInt(ptCount) << 2;
         dst->incReserve(n);
@@ -190,10 +192,10 @@ public:
             d1 = fPathLength;
         }
 
-        SkScalar x0 = fPts[0].fX + fTangent.fX * d0;
-        SkScalar x1 = fPts[0].fX + fTangent.fX * d1;
-        SkScalar y0 = fPts[0].fY + fTangent.fY * d0;
-        SkScalar y1 = fPts[0].fY + fTangent.fY * d1;
+        SkScalar x0 = fPts[0].fX + SkScalarMul(fTangent.fX, d0);
+        SkScalar x1 = fPts[0].fX + SkScalarMul(fTangent.fX, d1);
+        SkScalar y0 = fPts[0].fY + SkScalarMul(fTangent.fY, d0);
+        SkScalar y1 = fPts[0].fY + SkScalarMul(fTangent.fY, d1);
 
         SkPoint pts[4];
         pts[0].set(x0 + fNormal.fX, y0 + fNormal.fY);   // moveTo

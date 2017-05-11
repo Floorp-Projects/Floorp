@@ -15,6 +15,7 @@
 #include "mozilla/Monitor.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/TypeTraits.h"
+#include "mozilla/Variant.h"
 
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
@@ -137,19 +138,32 @@ public:
   typedef RejectValueT RejectValueType;
   class ResolveOrRejectValue
   {
+    template <int, typename T>
+    struct Holder
+    {
+      template <typename... Args>
+      explicit Holder(Args&&... aArgs) : mData(Forward<Args>(aArgs)...) { }
+      T mData;
+    };
+
+    // Ensure Holder<0, T1> and Holder<1, T2> are different types
+    // which is required by Variant.
+    using ResolveValueHolder = Holder<0, ResolveValueType>;
+    using RejectValueHolder = Holder<1, RejectValueType>;
+
   public:
     template<typename ResolveValueType_>
     void SetResolve(ResolveValueType_&& aResolveValue)
     {
       MOZ_ASSERT(IsNothing());
-      mResolveValue.emplace(Forward<ResolveValueType_>(aResolveValue));
+      mValue = AsVariant(ResolveValueHolder(Forward<ResolveValueType_>(aResolveValue)));
     }
 
     template<typename RejectValueType_>
     void SetReject(RejectValueType_&& aRejectValue)
     {
       MOZ_ASSERT(IsNothing());
-      mRejectValue.emplace(Forward<RejectValueType_>(aRejectValue));
+      mValue = AsVariant(RejectValueHolder(Forward<RejectValueType_>(aRejectValue)));
     }
 
     template<typename ResolveValueType_>
@@ -168,16 +182,29 @@ public:
       return val;
     }
 
-    bool IsResolve() const { return mResolveValue.isSome(); }
-    bool IsReject() const { return mRejectValue.isSome(); }
-    bool IsNothing() const { return mResolveValue.isNothing() && mRejectValue.isNothing(); }
+    bool IsResolve() const { return mValue.template is<ResolveValueHolder>(); }
+    bool IsReject() const { return mValue.template is<RejectValueHolder>(); }
+    bool IsNothing() const { return mValue.template is<Nothing>(); }
 
-    const ResolveValueType& ResolveValue() const { return mResolveValue.ref(); }
-    const RejectValueType& RejectValue() const { return mRejectValue.ref(); }
+    const ResolveValueType& ResolveValue() const
+    {
+      return mValue.template as<ResolveValueHolder>().mData;
+    }
+    ResolveValueType& ResolveValue()
+    {
+      return mValue.template as<ResolveValueHolder>().mData;
+    }
+    const RejectValueType& RejectValue() const
+    {
+      return mValue.template as<RejectValueHolder>().mData;
+    }
+    RejectValueType& RejectValue()
+    {
+      return mValue.template as<RejectValueHolder>().mData;
+    }
 
   private:
-    Maybe<ResolveValueType> mResolveValue;
-    Maybe<RejectValueType> mRejectValue;
+    Variant<Nothing, ResolveValueHolder, RejectValueHolder> mValue = AsVariant(Nothing{});
   };
 
 protected:

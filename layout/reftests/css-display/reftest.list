@@ -1,10 +1,10 @@
 # Tests for CSS Display spec features.
 # http://dev.w3.org/csswg/css-display
 
-fuzzy-if(Android,8,604) fails-if(stylo) == display-contents-acid.html display-contents-acid-ref.html
-fuzzy-if(Android,8,604) fails-if(stylo) == display-contents-acid-dyn-1.html display-contents-acid-ref.html
-fuzzy-if(Android,8,604) fails-if(stylo) == display-contents-acid-dyn-2.html display-contents-acid-ref.html
-fuzzy-if(Android,8,604) fails-if(stylo) == display-contents-acid-dyn-3.html display-contents-acid-ref.html
+fuzzy-if(Android,8,604) == display-contents-acid.html display-contents-acid-ref.html
+fuzzy-if(Android,8,604) == display-contents-acid-dyn-1.html display-contents-acid-ref.html
+fuzzy-if(Android,8,604) == display-contents-acid-dyn-2.html display-contents-acid-ref.html
+fuzzy-if(Android,8,604) == display-contents-acid-dyn-3.html display-contents-acid-ref.html
 skip-if(stylo) == display-contents-generated-content.html display-contents-generated-content-ref.html
 skip-if(stylo) == display-contents-generated-content-2.html display-contents-generated-content-ref.html
 fails-if(stylo) == display-contents-style-inheritance-1.html display-contents-style-inheritance-1-ref.html

@@ -37,8 +37,6 @@ Cu.importGlobalProperties(["URL"]);
 
 var contentLog = new logging.ContentLogger();
 
-var isB2G = false;
-
 var marionetteTestName;
 var winUtil = content.QueryInterface(Ci.nsIInterfaceRequestor)
     .getInterface(Ci.nsIDOMWindowUtils);
@@ -76,8 +74,6 @@ var inactivityTimeoutId = null;
 var originalOnError;
 //timer for doc changes
 var checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-//timer for readystate
-var readyStateTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 // Send move events about this often
 var EVENT_INTERVAL = 30; // milliseconds
 // last touch for each fingerId
@@ -398,13 +394,9 @@ function registerSelf() {
 
   if (register[0]) {
     let {id, remotenessChange} = register[0][0];
-    capabilities = session.Capabilities.fromJSON(register[0][2]);
+    capabilities = session.Capabilities.fromJSON(register[0][1]);
     listenerId = id;
     if (typeof id != "undefined") {
-      // check if we're the main process
-      if (register[0][1]) {
-        addMessageListener("MarionetteMainListener:emitTouchEvent", emitTouchEventForIFrame);
-      }
       startListeners();
       let rv = {};
       if (remotenessChange) {
@@ -413,35 +405,6 @@ function registerSelf() {
       sendAsyncMessage("Marionette:listenersAttached", rv);
     }
   }
-}
-
-function emitTouchEventForIFrame(message) {
-  message = message.json;
-  let identifier = legacyactions.nextTouchId;
-
-  let domWindowUtils = curContainer.frame.
-    QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-    getInterface(Components.interfaces.nsIDOMWindowUtils);
-  var ratio = domWindowUtils.screenPixelsPerCSSPixel;
-
-  var typeForUtils;
-  switch (message.type) {
-    case 'touchstart':
-      typeForUtils = domWindowUtils.TOUCH_CONTACT;
-      break;
-    case 'touchend':
-      typeForUtils = domWindowUtils.TOUCH_REMOVE;
-      break;
-    case 'touchcancel':
-      typeForUtils = domWindowUtils.TOUCH_CANCEL;
-      break;
-    case 'touchmove':
-      typeForUtils = domWindowUtils.TOUCH_CONTACT;
-      break;
-  }
-  domWindowUtils.sendNativeTouchPoint(identifier, typeForUtils,
-    Math.round(message.screenX * ratio), Math.round(message.screenY * ratio),
-    message.force, 90);
 }
 
 // Eventually we will not have a closure for every single command, but
@@ -576,42 +539,17 @@ function startListeners() {
 }
 
 /**
- * Used during newSession and restart, called to set up the modal dialog listener in b2g
- */
-function waitForReady() {
-  if (content.document.readyState == 'complete') {
-    readyStateTimer.cancel();
-    content.addEventListener("mozbrowsershowmodalprompt", modalHandler);
-    content.addEventListener("unload", waitForReady);
-  }
-  else {
-    readyStateTimer.initWithCallback(waitForReady, 100, Ci.nsITimer.TYPE_ONE_SHOT);
-  }
-}
-
-/**
  * Called when we start a new session. It registers the
  * current environment, and resets all values
  */
 function newSession(msg) {
   capabilities = session.Capabilities.fromJSON(msg.json);
-  isB2G = capabilities.get("platformName") === "B2G";
   resetValues();
-  if (isB2G) {
-    readyStateTimer.initWithCallback(waitForReady, 100, Ci.nsITimer.TYPE_ONE_SHOT);
-    // We have to set correct mouse event source to MOZ_SOURCE_TOUCH
-    // to offer a way for event listeners to differentiate
-    // events being the result of a physical mouse action.
-    // This is especially important for the touch event shim,
-    // in order to prevent creating touch event for these fake mouse events.
-    legacyactions.inputSource = Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH;
-  }
 }
 
 /**
  * Puts the current session to sleep, so all listeners are removed except
- * for the 'restart' listener. This is used to keep the content listener
- * alive for reuse in B2G instead of reloading it each time.
+ * for the 'restart' listener.
  */
 function sleepSession(msg) {
   deleteSession();
@@ -623,9 +561,6 @@ function sleepSession(msg) {
  */
 function restart(msg) {
   removeMessageListener("Marionette:restart", restart);
-  if (isB2G) {
-    readyStateTimer.initWithCallback(waitForReady, 100, Ci.nsITimer.TYPE_ONE_SHOT);
-  }
   registerSelf();
 }
 
@@ -678,9 +613,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:getCookies", getCookiesFn);
   removeMessageListenerId("Marionette:deleteAllCookies", deleteAllCookiesFn);
   removeMessageListenerId("Marionette:deleteCookie", deleteCookieFn);
-  if (isB2G) {
-    content.removeEventListener("mozbrowsershowmodalprompt", modalHandler);
-  }
+
   seenEls.clear();
   // reset container frame to the top-most frame
   curContainer = { frame: content, shadowRoot: null };

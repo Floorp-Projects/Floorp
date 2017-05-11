@@ -8285,6 +8285,10 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
                               lastMillis);
       }
       sLastInputCreated = aEvent->mTimeStamp;
+    } else if (aEvent->mTimeStamp < sLastInputCreated) {
+      // This event was created before the last input. May be processing out
+      // of order, so coalesce backwards, too.
+      sLastInputCreated = aEvent->mTimeStamp;
     }
     sLastInputProcessed = now;
   }

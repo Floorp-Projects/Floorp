@@ -22,6 +22,15 @@
   margin: 2px 6px !important; /* !important for overriding toolbarbutton.css */
 }
 
+/* START photon adjustments */
+
+photonpanelmultiview .subviewbutton > .toolbarbutton-text,
+photonpanelmultiview .subviewbutton:-moz-any([image],[targetURI],.cui-withicon, .bookmark-item) > .toolbarbutton-text {
+  margin: 0 !important;  /* !important for overriding the rules above. */
+}
+
+/* END photon adjustments */
+
 .restoreallitem > .toolbarbutton-icon {
   display: none;
 }

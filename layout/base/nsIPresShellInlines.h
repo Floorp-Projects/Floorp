@@ -26,6 +26,13 @@ nsIPresShell::SetNeedStyleFlush()
 }
 
 void
+nsIPresShell::EnsureStyleFlush()
+{
+  SetNeedStyleFlush();
+  ObserveStyleFlushes();
+}
+
+void
 nsIPresShell::SetNeedThrottledAnimationFlush()
 {
   mNeedThrottledAnimationFlush = true;

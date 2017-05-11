@@ -215,7 +215,7 @@ fuzzy-if(skiaContent,1,800000) == filters-and-group-opacity-01.svg filters-and-g
 == foreignObject-ancestor-style-change-01.svg foreignObject-ancestor-style-change-01-ref.svg
 fails-if(stylo) == foreignObject-change-transform-01.svg pass.svg
 == foreignObject-display-01.svg pass.svg
-pref(layout.css.moz-appearance.enabled,true) fails-if(stylo) == foreignObject-form-theme.svg foreignObject-form-theme-ref.html
+pref(layout.css.moz-appearance.enabled,true) == foreignObject-form-theme.svg foreignObject-form-theme-ref.html
 == foreignObject-img-form-theme.html foreignObject-img-form-theme-ref.html
 == foreignObject-move-repaint-01.svg pass.svg
 == foreignObject-overflow-01.svg pass.svg
@@ -318,7 +318,7 @@ fuzzy-if(skiaContent,1,10000) == opacity-and-transform-01.svg opacity-and-transf
 
 fuzzy-if(Android,8,200) == outer-svg-border-and-padding-01.svg outer-svg-border-and-padding-01-ref.svg
 
-fuzzy-if(skiaContent,7,175) fails-if(stylo) == outline.html outline-ref.html
+fails-if(stylo) == outline.html outline-ref.html
 
 == overflow-on-outer-svg-01.svg overflow-on-outer-svg-01-ref.svg
 == overflow-on-outer-svg-02a.xhtml overflow-on-outer-svg-02-ref.xhtml

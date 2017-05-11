@@ -9,8 +9,6 @@
 <!ENTITY newtab.customize.cog.title2 "NEW TAB CONTROLS">
 <!ENTITY newtab.customize.cog.learn "Learn about New Tab">
 <!ENTITY newtab.customize.title "Customize your New Tab page">
-<!ENTITY newtab.customize.suggested "Show suggested and your top sites">
-<!ENTITY newtab.customize.topsites "Show your top sites">
 <!ENTITY newtab.customize.blank2 "Show blank page">
 <!ENTITY newtab.undo.removedLabel "Thumbnail removed.">
 <!ENTITY newtab.undo.undoButton "Undo.">

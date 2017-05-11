@@ -7,6 +7,7 @@
 FINAL_TARGET = 'dist/bin/gtest'
 
 USE_LIBS += [
+    'gkrust-gtest',
     'static:xul',
     # xul-gtest is an intermediate static library. It is used as FINAL_TARGET
     # for gtest code.
@@ -19,11 +20,6 @@ USE_LIBS += [
 # This needs to come after static:xul to avoid things like libfallible coming
 # before StaticXULComponentStart.
 Libxul('xul-gtest-real')
-
-if CONFIG['MOZ_RUST']:
-    USE_LIBS += [
-        'gkrust-gtest',
-    ]
 
 DIRS += [
     'static',

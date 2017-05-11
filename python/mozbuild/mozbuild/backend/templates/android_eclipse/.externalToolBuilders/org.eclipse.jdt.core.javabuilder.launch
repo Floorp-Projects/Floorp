@@ -1,8 +1,0 @@
-#filter substitution
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<launchConfiguration type="org.eclipse.ant.AntBuilderLaunchConfigurationType">
-<booleanAttribute key="org.eclipse.ui.externaltools.ATTR_BUILDER_ENABLED" value="true"/>
-<stringAttribute key="org.eclipse.ui.externaltools.ATTR_DISABLED_BUILDER" value="org.eclipse.jdt.core.javabuilder"/>
-<mapAttribute key="org.eclipse.ui.externaltools.ATTR_TOOL_ARGUMENTS"/>
-<booleanAttribute key="org.eclipse.ui.externaltools.ATTR_TRIGGERS_CONFIGURED" value="true"/>
-</launchConfiguration>

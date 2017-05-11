@@ -203,24 +203,8 @@ enum {
 
   NODE_IS_ROOT_OF_CHROME_ONLY_ACCESS =    NODE_FLAG_BIT(20),
 
-  // These two bits are shared by Gecko's and Servo's restyle systems for
-  // different purposes. They should not be accessed directly, and access to
-  // them should be properly guarded by asserts.
-  //
-  // FIXME(bholley): These should move to Element, and we only need one now.
-  NODE_SHARED_RESTYLE_BIT_1 =             NODE_FLAG_BIT(21),
-  NODE_SHARED_RESTYLE_BIT_2 =             NODE_FLAG_BIT(22),
-
-  // Whether this node has dirty descendants for Servo's style system.
-  NODE_HAS_DIRTY_DESCENDANTS_FOR_SERVO =  NODE_SHARED_RESTYLE_BIT_1,
-
-  // Whether this node has dirty descendants for animation-only restyle for
-  // Servo's style system.
-  NODE_HAS_ANIMATION_ONLY_DIRTY_DESCENDANTS_FOR_SERVO =
-    NODE_SHARED_RESTYLE_BIT_2,
-
   // Remaining bits are node type specific.
-  NODE_TYPE_SPECIFIC_BITS_OFFSET =        23
+  NODE_TYPE_SPECIFIC_BITS_OFFSET =        21
 };
 
 // Make sure we have space for our bits

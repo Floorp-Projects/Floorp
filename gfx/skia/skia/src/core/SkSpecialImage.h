@@ -16,9 +16,7 @@
 #include "SkImageInfo.h"   // for SkAlphaType
 
 class GrContext;
-class GrSurfaceProxy;
 class GrTexture;
-class GrTextureProxy;
 class SkBitmap;
 class SkCanvas;
 class SkImage;
@@ -36,7 +34,7 @@ enum {
  * This is a restricted form of SkImage solely intended for internal use. It
  * differs from SkImage in that:
  *      - it can only be backed by raster or gpu (no generators)
- *      - it can be backed by a GrTextureProxy larger than its nominal bounds
+ *      - it can be backed by a GrTexture larger than its nominal bounds
  *      - it can't be drawn tiled
  *      - it can't be drawn with MIPMAPs
  * It is similar to SkImage in that it abstracts how the pixels are stored/represented.
@@ -73,19 +71,17 @@ public:
 
     static sk_sp<SkSpecialImage> MakeFromImage(const SkIRect& subset,
                                                sk_sp<SkImage>,
-                                               SkColorSpace* dstColorSpace,
                                                const SkSurfaceProps* = nullptr);
     static sk_sp<SkSpecialImage> MakeFromRaster(const SkIRect& subset,
                                                 const SkBitmap&,
                                                 const SkSurfaceProps* = nullptr);
 #if SK_SUPPORT_GPU
-    static sk_sp<SkSpecialImage> MakeDeferredFromGpu(GrContext*,
-                                                     const SkIRect& subset,
-                                                     uint32_t uniqueID,
-                                                     sk_sp<GrTextureProxy>,
-                                                     sk_sp<SkColorSpace>,
-                                                     const SkSurfaceProps* = nullptr,
-                                                     SkAlphaType at = kPremul_SkAlphaType);
+    static sk_sp<SkSpecialImage> MakeFromGpu(const SkIRect& subset,
+                                             uint32_t uniqueID,
+                                             sk_sp<GrTexture>,
+                                             sk_sp<SkColorSpace>,
+                                             const SkSurfaceProps* = nullptr,
+                                             SkAlphaType at = kPremul_SkAlphaType);
 #endif
 
     /**
@@ -110,14 +106,11 @@ public:
     sk_sp<SkSpecialImage> makeSubset(const SkIRect& subset) const;
 
     /**
-     * Create an SkImage from the contents of this special image optionally extracting a subset.
+     * Extract a subset of this special image and return it as an SkImage.
      * It may or may not point to the same backing memory.
-     * Note: when no 'subset' parameter is specified the the entire SkSpecialImage will be
-     * returned - including whatever extra padding may have resulted from a loose fit!
-     * When the 'subset' parameter is specified the returned image will be tight even if that
-     * entails a copy!
+     * TODO: switch this to makeSurface once we resolved the naming issue
      */
-    sk_sp<SkImage> asImage(const SkIRect* subset = nullptr) const;
+    sk_sp<SkImage> makeTightSubset(const SkIRect& subset) const;
 
     // TODO: hide this when GrLayerHoister uses SkSpecialImages more fully (see skbug.com/5063)
     /**
@@ -132,10 +125,10 @@ public:
 
 #if SK_SUPPORT_GPU
     /**
-     *  Regardless of the underlying backing store, return the contents as a GrTextureProxy.
+     *  Regardless of the underlying backing store, return the contents as a GrTexture.
      *  The active portion of the texture can be retrieved via 'subset'.
      */
-    sk_sp<GrTextureProxy> asTextureProxyRef(GrContext*) const;
+    sk_sp<GrTexture> asTextureRef(GrContext*) const;
 #endif
 
     // TODO: hide this whe the imagefilter all have a consistent draw path (see skbug.com/5063)

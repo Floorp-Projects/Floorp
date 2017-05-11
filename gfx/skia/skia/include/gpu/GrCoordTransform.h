@@ -8,11 +8,11 @@
 #ifndef GrCoordTransform_DEFINED
 #define GrCoordTransform_DEFINED
 
+#include "GrProcessor.h"
 #include "SkMatrix.h"
 #include "GrTexture.h"
-
-class GrResourceProvider;
-class GrTextureProxy;
+#include "GrTypes.h"
+#include "GrShaderVar.h"
 
 /**
  * A class representing a linear transformation of local coordinates. GrFragnentProcessors
@@ -20,58 +20,52 @@ class GrTextureProxy;
  */
 class GrCoordTransform : SkNoncopyable {
 public:
-    GrCoordTransform()
-        : fTexture(nullptr)
-        , fNormalize(false)
-        , fReverseY(false) {
+    GrCoordTransform() { SkDEBUGCODE(fInProcessor = false); }
+
+    /**
+     * Create a transformation that maps [0, 1] to a texture's boundaries. The precision is inferred
+     * from the texture size and filter. The texture origin also implies whether a y-reversal should
+     * be performed.
+     */
+    GrCoordTransform(const GrTexture* texture, GrTextureParams::FilterMode filter) {
+        SkASSERT(texture);
         SkDEBUGCODE(fInProcessor = false);
+        this->reset(texture, filter);
     }
 
     /**
-     * Create a transformation that maps [0, 1] to a proxy's boundaries. The proxy origin also
-     * implies whether a y-reversal should be performed.
+     * Create a transformation from a matrix. The precision is inferred from the texture size and
+     * filter. The texture origin also implies whether a y-reversal should be performed.
      */
-    GrCoordTransform(GrResourceProvider* resourceProvider, GrTextureProxy* proxy) {
-        SkASSERT(proxy);
+    GrCoordTransform(const SkMatrix& m, const GrTexture* texture,
+                     GrTextureParams::FilterMode filter) {
         SkDEBUGCODE(fInProcessor = false);
-        this->reset(resourceProvider, SkMatrix::I(), proxy);
-    }
-
-    /**
-     * Create a transformation from a matrix. The proxy origin also implies whether a y-reversal
-     * should be performed.
-     */
-    GrCoordTransform(GrResourceProvider* resourceProvider, const SkMatrix& m,
-                     GrTextureProxy* proxy) {
-        SkASSERT(proxy);
-        SkDEBUGCODE(fInProcessor = false);
-        this->reset(resourceProvider, m, proxy);
+        SkASSERT(texture);
+        this->reset(m, texture, filter);
     }
 
     /**
      * Create a transformation that applies the matrix to a coord set.
      */
-    GrCoordTransform(const SkMatrix& m) {
+    GrCoordTransform(const SkMatrix& m, GrSLPrecision precision = kDefault_GrSLPrecision) {
         SkDEBUGCODE(fInProcessor = false);
-        this->reset(m);
+        this->reset(m, precision);
     }
 
-    void reset(GrResourceProvider*, const SkMatrix&, GrTextureProxy*, bool normalize = true);
-
-    void reset(const SkMatrix& m) {
+    void reset(const GrTexture* texture, GrTextureParams::FilterMode filter) {
         SkASSERT(!fInProcessor);
-        fMatrix = m;
-        fTexture = nullptr;
-        fNormalize = false;
-        fReverseY = false;
+        SkASSERT(texture);
+        this->reset(MakeDivByTextureWHMatrix(texture), texture, filter);
     }
+
+    void reset(const SkMatrix&, const GrTexture*, GrTextureParams::FilterMode filter);
+    void reset(const SkMatrix& m, GrSLPrecision precision = kDefault_GrSLPrecision);
 
     GrCoordTransform& operator= (const GrCoordTransform& that) {
         SkASSERT(!fInProcessor);
         fMatrix = that.fMatrix;
-        fTexture = that.fTexture;
-        fNormalize = that.fNormalize;
         fReverseY = that.fReverseY;
+        fPrecision = that.fPrecision;
         return *this;
     }
 
@@ -84,37 +78,31 @@ public:
         return &fMatrix;
     }
 
-    bool hasSameEffectAs(const GrCoordTransform& that) const {
-        if (fNormalize != that.fNormalize ||
-            fReverseY != that.fReverseY ||
-            !fMatrix.cheapEqualTo(that.fMatrix)) {
-            return false;
-        }
-
-        if (fNormalize) {
-            SkASSERT(fTexture && that.fTexture);
-            return fTexture->width() == that.fTexture->width() &&
-                   fTexture->height() == that.fTexture->height();
-        }
-
-        return true;
+    bool operator==(const GrCoordTransform& that) const {
+        return fMatrix.cheapEqualTo(that.fMatrix) &&
+               fReverseY == that.fReverseY &&
+               fPrecision == that.fPrecision;
     }
 
+    bool operator!=(const GrCoordTransform& that) const { return !(*this == that); }
+
     const SkMatrix& getMatrix() const { return fMatrix; }
-    const GrTexture* texture() const { return fTexture; }
-    bool normalize() const { return fNormalize; }
     bool reverseY() const { return fReverseY; }
+    GrSLPrecision precision() const { return fPrecision; }
+
+    /** Useful for effects that want to insert a texture matrix that is implied by the texture
+        dimensions */
+    static inline SkMatrix MakeDivByTextureWHMatrix(const GrTexture* texture) {
+        SkASSERT(texture);
+        SkMatrix mat;
+        (void)mat.setIDiv(texture->width(), texture->height());
+        return mat;
+    }
 
 private:
-    // The textures' effect is to optionally normalize the final matrix, so a blind
-    // equality check could be misleading
-    bool operator==(const GrCoordTransform& that) const;
-    bool operator!=(const GrCoordTransform& that) const;
-
     SkMatrix                fMatrix;
-    const GrTexture*        fTexture;
-    bool                    fNormalize;
     bool                    fReverseY;
+    GrSLPrecision           fPrecision;
     typedef SkNoncopyable INHERITED;
 
 #ifdef SK_DEBUG

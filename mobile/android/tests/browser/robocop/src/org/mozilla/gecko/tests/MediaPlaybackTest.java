@@ -11,6 +11,7 @@ import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.media.AudioFocusAgent;
 import org.mozilla.gecko.media.AudioFocusAgent.State;
 import org.mozilla.gecko.media.MediaControlService;
+import org.mozilla.gecko.tests.helpers.JavascriptBridge;
 
 import android.content.Intent;
 import android.content.Context;
@@ -26,6 +27,8 @@ import com.robotium.solo.Condition;
 abstract class MediaPlaybackTest extends BaseTest {
     private Context mContext;
     private int mPrevIcon = 0;
+    protected String mPrevURL = "";
+    private JavascriptBridge mJs;
 
     private static final int UI_CHANGED_WAIT_MS = 6000;
 
@@ -54,16 +57,26 @@ abstract class MediaPlaybackTest extends BaseTest {
                 NotificationManager notificationManager = (NotificationManager)
                     getContext().getSystemService(Context.NOTIFICATION_SERVICE);
                 StatusBarNotification[] sbns = notificationManager.getActiveNotifications();
-                // Ensure the UI has been changed.
+                /**
+                 * Make sure the notification content changed.
+                 * (1) icon changed :
+                 * same website, but playback state changed. eg. play -> pause
+                 * (2) title changed :
+                 * play new media from different tab, and change notification
+                 * content for the new tab.
+                 */
                 boolean findCorrectNotification = false;
                 for (int idx = 0; idx < sbns.length; idx++) {
                     if (sbns[idx].getId() != R.id.mediaControlNotification) {
                        continue;
                     }
                     findCorrectNotification = true;
-                    if (sbns[idx].getNotification().actions.length == 1 &&
-                        sbns[idx].getNotification().actions[0].icon != mPrevIcon) {
-                        mPrevIcon = sbns[idx].getNotification().actions[0].icon;
+                    final Notification notification = sbns[idx].getNotification();
+                    if ((notification.actions.length == 1 &&
+                         notification.actions[0].icon != mPrevIcon) ||
+                         notification.extras.getString(Notification.EXTRA_TEXT) != mPrevURL) {
+                        mPrevIcon = notification.actions[0].icon;
+                        mPrevURL = notification.extras.getString(Notification.EXTRA_TEXT);
                         return true;
                     }
                 }
@@ -71,6 +84,7 @@ abstract class MediaPlaybackTest extends BaseTest {
                 // The notification was cleared.
                 if (!findCorrectNotification && mPrevIcon != 0) {
                     mPrevIcon = 0;
+                    mPrevURL = "";
                     return true;
                 }
                 return false;
@@ -174,6 +188,11 @@ abstract class MediaPlaybackTest extends BaseTest {
      * This method is used to check whether notification states are correct or
      * not after notification UI changed.
      */
+    protected final void checkMediaNotificationStatesAfterChanged(final Tab tab,
+                                                                  final boolean isTabPlaying) {
+        checkMediaNotificationStatesAfterChanged(tab, isTabPlaying, false);
+    }
+
     protected final void checkMediaNotificationStatesAfterChanged(final Tab tab,
                                                                   final boolean isTabPlaying,
                                                                   final boolean clearNotification) {
@@ -298,5 +317,31 @@ abstract class MediaPlaybackTest extends BaseTest {
 
     protected final boolean isAvailableToCheckNotification() {
         return Build.VERSION.SDK_INT >= 23;
+    }
+
+     /**
+     * Can communicte with JS bey getJS(), but caller should create and destroy
+     * JSBridge manually.
+     */
+    protected JavascriptBridge getJS() {
+        mAsserter.ok(mJs != null,
+                     "JSBridege existence check",
+                     "Should connect JSBridge before using JS!");
+        return mJs;
+    }
+
+    protected void createJSBridge() {
+        mAsserter.ok(mJs == null,
+                     "JSBridege existence check",
+                     "Should not recreate the JSBridge!");
+        mJs = new JavascriptBridge(this, mActions, mAsserter);
+    }
+
+    protected void destroyJSBridge() {
+        mAsserter.ok(mJs != null,
+                     "JSBridege existence check",
+                     "Should create JSBridge before destroy it!");
+        mJs.disconnect();
+        mJs = null;
     }
 }

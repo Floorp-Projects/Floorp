@@ -316,9 +316,7 @@ public:
 
   void GetCompositorWidgetInitData(mozilla::widget::CompositorWidgetInitData* aInitData) override;
   bool IsTouchWindow() const { return mTouchWindow; }
-  bool SynchronouslyRepaintOnResize() override {
-    return false;
-  }
+  bool SynchronouslyRepaintOnResize() override;
 
 protected:
   virtual ~nsWindow();

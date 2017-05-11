@@ -523,14 +523,18 @@ RESTRequest.prototype = {
         this._converterStream = Cc["@mozilla.org/intl/converter-input-stream;1"]
                                    .createInstance(Ci.nsIConverterInputStream);
       }
-
       this._converterStream.init(stream, channel.contentCharset, 0,
                                  this._converterStream.DEFAULT_REPLACEMENT_CHARACTER);
 
       try {
-        let str = {};
-        let num = this._converterStream.readString(count, str);
-        if (num != 0) {
+        let remaining = count;
+        while (remaining > 0) {
+          let str = {};
+          let num = this._converterStream.readString(remaining, str);
+          if (!num) {
+            break;
+          }
+          remaining -= num;
           this.response.body += str.value;
         }
       } catch (ex) {

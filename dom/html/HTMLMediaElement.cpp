@@ -682,6 +682,8 @@ public:
     MOZ_ASSERT(!mIsShutDown);
     if (ShouldResetSuspend()) {
       SetSuspended(nsISuspendedTypes::NONE_SUSPENDED);
+      NotifyAudioPlaybackChanged(
+        AudioChannelService::AudibleChangedReasons::ePauseStateChanged);
     }
     UpdateAudioChannelPlayingState();
   }
@@ -1047,6 +1049,11 @@ private:
 
     // Are we paused
     if (mOwner->mPaused) {
+      return false;
+    }
+
+    // No audio track
+    if (!mOwner->HasAudio()) {
       return false;
     }
 
@@ -7078,6 +7085,7 @@ HTMLMediaElement::SetMediaInfo(const MediaInfo& aInfo)
   const bool oldHasAudio = mMediaInfo.HasAudio();
   mMediaInfo = aInfo;
   if (aInfo.HasAudio() != oldHasAudio) {
+    UpdateAudioChannelPlayingState();
     NotifyAudioPlaybackChanged(
       AudioChannelService::AudibleChangedReasons::eDataAudibleChanged);
   }

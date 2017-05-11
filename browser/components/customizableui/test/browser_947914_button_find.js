@@ -5,6 +5,7 @@
 "use strict";
 
 add_task(function*() {
+  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   info("Check find button existence and functionality");
 
   yield PanelUI.show();
