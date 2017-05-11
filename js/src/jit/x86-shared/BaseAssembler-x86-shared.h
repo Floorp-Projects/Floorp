@@ -3090,6 +3090,11 @@ public:
         twoByteOpSimdInt32("vmovmskps", VEX_PS, OP2_MOVMSKPD_EdVd, src, dst);
     }
 
+    void vpmovmskb_rr(XMMRegisterID src, RegisterID dst)
+    {
+        twoByteOpSimdInt32("vpmovmskb", VEX_PD, OP2_PMOVMSKB_EdVd, src, dst);
+    }
+
     void vptest_rr(XMMRegisterID rhs, XMMRegisterID lhs) {
         threeByteOpSimd("vptest", VEX_PD, OP3_PTEST_VdVd, ESCAPE_38, rhs, invalid_xmm, lhs);
     }
