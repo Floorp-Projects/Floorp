@@ -1047,21 +1047,6 @@ html|span.ac-emphasize-text-url {
 }
 
 @media (-moz-windows-default-theme) {
-  .autocomplete-richlistitem:hover,
-  treechildren.searchbar-treebody::-moz-tree-row(hover) {
-    background-color: hsla(0, 0%, 0%, 0.06);
-    border-color: hsla(0, 0%, 0%, 0.1);
-  }
-
-  .autocomplete-richlistitem[selected] {
-    background-color: hsl(210, 80%, 52%);
-    color: hsl(0, 0%, 100%);
-  }
-
-  treechildren.searchbar-treebody::-moz-tree-row(selected) {
-    background-color: Highlight;
-  }
-
   .ac-title:not([selected=true]) {
     color: hsl(0, 0%, 0%);
   }
@@ -1105,6 +1090,18 @@ html|span.ac-emphasize-text-url {
     background-color: HighlightText;
     color: Highlight;
   }
+}
+
+.autocomplete-richlistitem:hover,
+treechildren.searchbar-treebody::-moz-tree-row(hover) {
+  background-color: var(--arrowpanel-dimmed);
+  border-color: hsla(0, 0%, 0%, 0.1);
+}
+
+.autocomplete-richlistitem[selected],
+treechildren.searchbar-treebody::-moz-tree-row(selected) {
+  background-color: Highlight;
+  color: HighlightText;
 }
 
 .ac-type-icon[type=bookmark] {
