@@ -2885,13 +2885,6 @@
     "n_values": 5,
     "description": "HTTP Cache v2 Hit, Reval, Failed-Reval, Miss"
   },
-  "HTTP_DISK_CACHE_DISPOSITION_2": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 5,
-    "description": "HTTP Disk Cache Hit, Reval, Failed-Reval, Miss"
-  },
   "HTTP_CACHE_MISS_HALFLIFE_EXPERIMENT_2": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
@@ -2922,20 +2915,6 @@
     "high": 20,
     "n_buckets": 19,
     "description": "Reuse count of an HTTP cache entry warmed in memory"
-  },
-  "HTTP_MEMORY_CACHE_DISPOSITION_2": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 5,
-    "description": "HTTP Memory Cache Hit, Reval, Failed-Reval, Miss"
-  },
-  "HTTP_OFFLINE_CACHE_DISPOSITION_2": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 5,
-    "description": "HTTP Offline Cache Hit, Reval, Failed-Reval, Miss"
   },
   "HTTP_OFFLINE_CACHE_DOCUMENT_LOAD": {
     "record_in_processes": ["main", "content"],
