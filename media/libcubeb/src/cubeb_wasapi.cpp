@@ -1983,6 +1983,10 @@ int wasapi_stream_stop(cubeb_stream * stm)
       delete stm->emergency_bailout.load();
       stm->emergency_bailout = nullptr;
     }
+  } else {
+    // If we could not join the thread, put the stream in error.
+    stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_ERROR);
+    return CUBEB_ERROR;
   }
 
   return CUBEB_OK;
