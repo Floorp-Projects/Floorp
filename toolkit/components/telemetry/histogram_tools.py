@@ -305,6 +305,9 @@ associated with the histogram.  Returns None if no guarding is necessary."""
                               (name, pattern, ', '.join(invalid)))
 
     def check_record_in_processes(self, name, definition):
+        if not self._strict_type_checks:
+            return
+
         field = 'record_in_processes'
         rip = definition.get(field)
 
