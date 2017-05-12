@@ -17,7 +17,7 @@ const POPUP_HEADER = document.getElementById("fill-login");
  * Initialize logins needed for the tests and disable autofill
  * for login forms for easier testing of manual fill.
  */
-add_task(function* test_initialize() {
+add_task(async function test_initialize() {
   Services.prefs.setBoolPref("signon.autofillForms", false);
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("signon.autofillForms");
@@ -32,13 +32,13 @@ add_task(function* test_initialize() {
  * Check if the context menu is populated with the right
  * menuitems for the target password input field.
  */
-add_task(function* test_context_menu_populate_password_noSchemeUpgrades() {
+add_task(async function test_context_menu_populate_password_noSchemeUpgrades() {
   Services.prefs.setBoolPref("signon.schemeUpgrades", false);
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: TEST_HOSTNAME + MULTIPLE_FORMS_PAGE_PATH,
-  }, function* (browser) {
-    yield openPasswordContextMenu(browser, "#test-password-1");
+  }, async function(browser) {
+    await openPasswordContextMenu(browser, "#test-password-1");
 
     // Check the content of the password manager popup
     let popupMenu = document.getElementById("fill-login-popup");
@@ -52,13 +52,13 @@ add_task(function* test_context_menu_populate_password_noSchemeUpgrades() {
  * Check if the context menu is populated with the right
  * menuitems for the target password input field.
  */
-add_task(function* test_context_menu_populate_password_schemeUpgrades() {
+add_task(async function test_context_menu_populate_password_schemeUpgrades() {
   Services.prefs.setBoolPref("signon.schemeUpgrades", true);
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: TEST_HOSTNAME + MULTIPLE_FORMS_PAGE_PATH,
-  }, function* (browser) {
-    yield openPasswordContextMenu(browser, "#test-password-1");
+  }, async function(browser) {
+    await openPasswordContextMenu(browser, "#test-password-1");
 
     // Check the content of the password manager popup
     let popupMenu = document.getElementById("fill-login-popup");
@@ -72,14 +72,14 @@ add_task(function* test_context_menu_populate_password_schemeUpgrades() {
  * Check if the context menu is populated with the right menuitems
  * for the target username field with a password field present.
  */
-add_task(function* test_context_menu_populate_username_with_password_noSchemeUpgrades() {
+add_task(async function test_context_menu_populate_username_with_password_noSchemeUpgrades() {
   Services.prefs.setBoolPref("signon.schemeUpgrades", false);
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: TEST_HOSTNAME + "/browser/toolkit/components/" +
          "passwordmgr/test/browser/multiple_forms.html",
-  }, function* (browser) {
-    yield openPasswordContextMenu(browser, "#test-username-2");
+  }, async function(browser) {
+    await openPasswordContextMenu(browser, "#test-username-2");
 
     // Check the content of the password manager popup
     let popupMenu = document.getElementById("fill-login-popup");
@@ -92,14 +92,14 @@ add_task(function* test_context_menu_populate_username_with_password_noSchemeUpg
  * Check if the context menu is populated with the right menuitems
  * for the target username field with a password field present.
  */
-add_task(function* test_context_menu_populate_username_with_password_schemeUpgrades() {
+add_task(async function test_context_menu_populate_username_with_password_schemeUpgrades() {
   Services.prefs.setBoolPref("signon.schemeUpgrades", true);
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: TEST_HOSTNAME + "/browser/toolkit/components/" +
          "passwordmgr/test/browser/multiple_forms.html",
-  }, function* (browser) {
-    yield openPasswordContextMenu(browser, "#test-username-2");
+  }, async function(browser) {
+    await openPasswordContextMenu(browser, "#test-username-2");
 
     // Check the content of the password manager popup
     let popupMenu = document.getElementById("fill-login-popup");
@@ -113,13 +113,13 @@ add_task(function* test_context_menu_populate_username_with_password_schemeUpgra
  * Check if the password field is correctly filled when one
  * login menuitem is clicked.
  */
-add_task(function* test_context_menu_password_fill() {
+add_task(async function test_context_menu_password_fill() {
   Services.prefs.setBoolPref("signon.schemeUpgrades", true);
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: TEST_HOSTNAME + MULTIPLE_FORMS_PAGE_PATH,
-  }, function* (browser) {
-    let formDescriptions = yield ContentTask.spawn(browser, {}, function*() {
+  }, async function(browser) {
+    let formDescriptions = await ContentTask.spawn(browser, {}, async function() {
       let forms = Array.from(content.document.getElementsByClassName("test-form"));
       return forms.map((f) => f.getAttribute("description"));
     });
@@ -127,7 +127,7 @@ add_task(function* test_context_menu_password_fill() {
     for (let description of formDescriptions) {
       info("Testing form: " + description);
 
-      let passwordInputIds = yield ContentTask.spawn(browser, {description}, function*({description}) {
+      let passwordInputIds = await ContentTask.spawn(browser, {description}, async function({description}) {
         let formElement = content.document.querySelector(`[description="${description}"]`);
         let passwords = Array.from(formElement.querySelectorAll("input[type='password']"));
         return passwords.map((p) => p.id);
@@ -137,9 +137,9 @@ add_task(function* test_context_menu_password_fill() {
         info("Testing password field: " + inputId);
 
         // Synthesize a right mouse click over the username input element.
-        yield openPasswordContextMenu(browser, "#" + inputId, function*() {
-          let inputDisabled = yield ContentTask
-            .spawn(browser, {inputId}, function*({inputId}) {
+        await openPasswordContextMenu(browser, "#" + inputId, async function() {
+          let inputDisabled = await ContentTask
+            .spawn(browser, {inputId}, async function({inputId}) {
               let input = content.document.getElementById(inputId);
               return input.disabled || input.readOnly;
           });
@@ -161,8 +161,8 @@ add_task(function* test_context_menu_password_fill() {
 
         // The only field affected by the password fill
         // should be the target password field itself.
-        yield assertContextMenuFill(browser, description, null, inputId, 1);
-        yield ContentTask.spawn(browser, {inputId}, function*({inputId}) {
+        await assertContextMenuFill(browser, description, null, inputId, 1);
+        await ContentTask.spawn(browser, {inputId}, async function({inputId}) {
           let passwordField = content.document.getElementById(inputId);
           Assert.equal(passwordField.value, "password1", "Check upgraded login was actually used");
         });
@@ -177,22 +177,22 @@ add_task(function* test_context_menu_password_fill() {
  * Check if the form is correctly filled when one
  * username context menu login menuitem is clicked.
  */
-add_task(function* test_context_menu_username_login_fill() {
+add_task(async function test_context_menu_username_login_fill() {
   Services.prefs.setBoolPref("signon.schemeUpgrades", true);
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: TEST_HOSTNAME + MULTIPLE_FORMS_PAGE_PATH,
-  }, function* (browser) {
+  }, async function(browser) {
 
-    let formDescriptions = yield ContentTask.spawn(browser, {}, function*() {
+    let formDescriptions = await ContentTask.spawn(browser, {}, async function() {
       let forms = Array.from(content.document.getElementsByClassName("test-form"));
       return forms.map((f) => f.getAttribute("description"));
     });
 
     for (let description of formDescriptions) {
       info("Testing form: " + description);
-      let usernameInputIds = yield ContentTask
-        .spawn(browser, {description}, function*({description}) {
+      let usernameInputIds = await ContentTask
+        .spawn(browser, {description}, async function({description}) {
           let formElement = content.document.querySelector(`[description="${description}"]`);
           let inputs = Array.from(formElement.querySelectorAll("input[type='text']"));
           return inputs.map((p) => p.id);
@@ -202,12 +202,12 @@ add_task(function* test_context_menu_username_login_fill() {
         info("Testing username field: " + inputId);
 
         // Synthesize a right mouse click over the username input element.
-        yield openPasswordContextMenu(browser, "#" + inputId, function*() {
+        await openPasswordContextMenu(browser, "#" + inputId, async function() {
           let headerHidden = POPUP_HEADER.hidden;
           let headerDisabled = POPUP_HEADER.disabled;
 
           let data = {description, inputId, headerHidden, headerDisabled};
-          let shouldContinue = yield ContentTask.spawn(browser, data, function*(data) {
+          let shouldContinue = await ContentTask.spawn(browser, data, async function(data) {
             let {description, inputId, headerHidden, headerDisabled} = data;
             let formElement = content.document.querySelector(`[description="${description}"]`);
             let usernameField = content.document.getElementById(inputId);
@@ -241,16 +241,16 @@ add_task(function* test_context_menu_username_login_fill() {
           continue;
         }
 
-        let passwordFieldId = yield ContentTask
-          .spawn(browser, {description}, function*({description}) {
+        let passwordFieldId = await ContentTask
+          .spawn(browser, {description}, async function({description}) {
             let formElement = content.document.querySelector(`[description="${description}"]`);
             return formElement.querySelector("input[type='password']").id;
         });
 
         // We shouldn't change any field that's not the target username field or the first password field
-        yield assertContextMenuFill(browser, description, inputId, passwordFieldId, 1);
+        await assertContextMenuFill(browser, description, inputId, passwordFieldId, 1);
 
-        yield ContentTask.spawn(browser, {passwordFieldId}, function*({passwordFieldId}) {
+        await ContentTask.spawn(browser, {passwordFieldId}, async function({passwordFieldId}) {
           let passwordField = content.document.getElementById(passwordFieldId);
           if (!passwordField.hasAttribute("expectedFail")) {
             Assert.equal(passwordField.value, "password1", "Check upgraded login was actually used");
@@ -269,22 +269,22 @@ add_task(function* test_context_menu_username_login_fill() {
  *
  * assertCallback should return true if we should continue or else false.
  */
-function* openPasswordContextMenu(browser, passwordInput, assertCallback = null) {
+async function openPasswordContextMenu(browser, passwordInput, assertCallback = null) {
   let contextMenuShownPromise = BrowserTestUtils.waitForEvent(CONTEXT_MENU, "popupshown");
 
   // Synthesize a right mouse click over the password input element, we have to trigger
   // both events because formfill code relies on this event happening before the contextmenu
   // (which it does for real user input) in order to not show the password autocomplete.
   let eventDetails = {type: "mousedown", button: 2};
-  yield BrowserTestUtils.synthesizeMouseAtCenter(passwordInput, eventDetails, browser);
+  await BrowserTestUtils.synthesizeMouseAtCenter(passwordInput, eventDetails, browser);
   // Synthesize a contextmenu event to actually open the context menu.
   eventDetails = {type: "contextmenu", button: 2};
-  yield BrowserTestUtils.synthesizeMouseAtCenter(passwordInput, eventDetails, browser);
+  await BrowserTestUtils.synthesizeMouseAtCenter(passwordInput, eventDetails, browser);
 
-  yield contextMenuShownPromise;
+  await contextMenuShownPromise;
 
   if (assertCallback) {
-    let shouldContinue = yield assertCallback();
+    let shouldContinue = await assertCallback();
     if (!shouldContinue) {
       return;
     }
@@ -293,13 +293,13 @@ function* openPasswordContextMenu(browser, passwordInput, assertCallback = null)
   // Synthesize a mouse click over the fill login menu header.
   let popupShownPromise = BrowserTestUtils.waitForCondition(() => POPUP_HEADER.open);
   EventUtils.synthesizeMouseAtCenter(POPUP_HEADER, {});
-  yield popupShownPromise;
+  await popupShownPromise;
 }
 
 /**
  * Verify that only the expected form fields are filled.
  */
-function* assertContextMenuFill(browser, formId, usernameFieldId, passwordFieldId, loginIndex) {
+async function assertContextMenuFill(browser, formId, usernameFieldId, passwordFieldId, loginIndex) {
   let popupMenu = document.getElementById("fill-login-popup");
   let unchangedSelector = `[description="${formId}"] input:not(#${passwordFieldId})`;
 
@@ -307,7 +307,7 @@ function* assertContextMenuFill(browser, formId, usernameFieldId, passwordFieldI
     unchangedSelector += `:not(#${usernameFieldId})`;
   }
 
-  yield ContentTask.spawn(browser, {unchangedSelector}, function*({unchangedSelector}) {
+  await ContentTask.spawn(browser, {unchangedSelector}, async function({unchangedSelector}) {
     let unchangedFields = content.document.querySelectorAll(unchangedSelector);
 
     // Store the value of fields that should remain unchanged.
@@ -325,10 +325,10 @@ function* assertContextMenuFill(browser, formId, usernameFieldId, passwordFieldI
   let {username, password} = getLoginFromUsername(loginItem.label);
 
   let data = {username, password, usernameFieldId, passwordFieldId, formId, unchangedSelector};
-  let continuePromise = ContentTask.spawn(browser, data, function*(data) {
+  let continuePromise = ContentTask.spawn(browser, data, async function(data) {
     let {username, password, usernameFieldId, passwordFieldId, formId, unchangedSelector} = data;
     let form = content.document.querySelector(`[description="${formId}"]`);
-    yield ContentTaskUtils.waitForEvent(form, "input", "Username input value changed");
+    await ContentTaskUtils.waitForEvent(form, "input", "Username input value changed");
 
     if (usernameFieldId) {
       let usernameField = content.document.getElementById(usernameFieldId);

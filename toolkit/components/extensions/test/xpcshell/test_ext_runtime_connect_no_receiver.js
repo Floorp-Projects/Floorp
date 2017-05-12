@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* test_connect_without_listener() {
+add_task(async function test_connect_without_listener() {
   function background() {
     let port = browser.runtime.connect();
     port.onDisconnect.addListener(() => {
@@ -15,9 +15,9 @@ add_task(function* test_connect_without_listener() {
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitFinish("port.onDisconnect was called");
+  await extension.awaitFinish("port.onDisconnect was called");
 
-  yield extension.unload();
+  await extension.unload();
 });

@@ -20,20 +20,20 @@ var _tests = [{setup: null, onload(browser) { return check_clear_visible(browser
                onload(browser) { return check_clear_visible(browser, true); }}
               ];
 
-add_task(function* test() {
+add_task(async function test() {
   let appD = make_fake_appdir();
   let crD = appD.clone();
   crD.append("Crash Reports");
 
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, function* (browser) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, async function(browser) {
     for (let test of _tests) {
       // Run setup before loading about:crashes.
       if (test.setup) {
-        yield test.setup(crD);
+        await test.setup(crD);
       }
 
       BrowserTestUtils.loadURI(browser, "about:crashes");
-      yield BrowserTestUtils.browserLoaded(browser).then(() => test.onload(browser));
+      await BrowserTestUtils.browserLoaded(browser).then(() => test.onload(browser));
     }
   });
 

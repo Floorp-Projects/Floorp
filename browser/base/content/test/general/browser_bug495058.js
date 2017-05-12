@@ -9,13 +9,13 @@ const URIS = [
   "about:privatebrowsing",
 ];
 
-add_task(function*() {
+add_task(async function() {
   for (let uri of URIS) {
     let tab = gBrowser.addTab();
-    yield BrowserTestUtils.loadURI(tab.linkedBrowser, uri);
+    await BrowserTestUtils.loadURI(tab.linkedBrowser, uri);
 
     let win = gBrowser.replaceTabWithWindow(tab);
-    yield TestUtils.topicObserved("browser-delayed-startup-finished",
+    await TestUtils.topicObserved("browser-delayed-startup-finished",
                                   subject => subject == win);
     tab = win.gBrowser.selectedTab;
 
@@ -23,9 +23,9 @@ add_task(function*() {
     // MozAfterPaint won't get shimmed over if we add an event handler
     // for it in the parent.
     if (tab.linkedBrowser.isRemoteBrowser) {
-      yield BrowserTestUtils.waitForContentEvent(tab.linkedBrowser, "MozAfterPaint");
+      await BrowserTestUtils.waitForContentEvent(tab.linkedBrowser, "MozAfterPaint");
     } else {
-      yield BrowserTestUtils.waitForEvent(tab.linkedBrowser, "MozAfterPaint");
+      await BrowserTestUtils.waitForEvent(tab.linkedBrowser, "MozAfterPaint");
     }
 
     Assert.equal(win.gBrowser.currentURI.spec, uri, uri + ": uri loaded in detached tab");
@@ -33,6 +33,6 @@ add_task(function*() {
     Assert.equal(win.gURLBar.value, "", uri + ": urlbar is empty");
     Assert.ok(win.gURLBar.placeholder, uri + ": placeholder text is present");
 
-    yield BrowserTestUtils.closeWindow(win);
+    await BrowserTestUtils.closeWindow(win);
   }
 });

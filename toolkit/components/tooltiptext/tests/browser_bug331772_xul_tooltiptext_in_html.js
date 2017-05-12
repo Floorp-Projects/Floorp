@@ -1,12 +1,12 @@
 /**
  * Tests that the tooltiptext attribute is used for XUL elements in an HTML doc.
  */
-add_task(function*() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function() {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "http://mochi.test:8888/browser/toolkit/components/tooltiptext/tests/xul_tooltiptext.xhtml",
-  }, function*(browser) {
-    yield ContentTask.spawn(browser, "", function() {
+  }, async function(browser) {
+    await ContentTask.spawn(browser, "", function() {
       let textObj = {};
       let tttp = Cc["@mozilla.org/embedcomp/default-tooltiptextprovider;1"]
                  .getService(Ci.nsITooltipTextProvider);

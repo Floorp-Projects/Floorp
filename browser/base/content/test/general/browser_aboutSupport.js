@@ -6,24 +6,24 @@
 Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-add_task(function* () {
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:support" }, function* (browser) {
+add_task(async function() {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:support" }, async function(browser) {
     const strings = Services.strings.createBundle(
                       "chrome://global/locale/aboutSupport.properties");
     let allowedStates = [strings.GetStringFromName("found"),
                          strings.GetStringFromName("missing")];
 
-    let keyGoogleStatus = yield ContentTask.spawn(browser, null, function* () {
+    let keyGoogleStatus = await ContentTask.spawn(browser, null, async function() {
       let textBox = content.document.getElementById("key-google-box");
-      yield ContentTaskUtils.waitForCondition(() => textBox.textContent.trim(),
+      await ContentTaskUtils.waitForCondition(() => textBox.textContent.trim(),
         "Google API key status loaded");
       return textBox.textContent;
     });
     ok(allowedStates.includes(keyGoogleStatus), "Google API key status shown");
 
-    let keyMozillaStatus = yield ContentTask.spawn(browser, null, function* () {
+    let keyMozillaStatus = await ContentTask.spawn(browser, null, async function() {
       let textBox = content.document.getElementById("key-mozilla-box");
-      yield ContentTaskUtils.waitForCondition(() => textBox.textContent.trim(),
+      await ContentTaskUtils.waitForCondition(() => textBox.textContent.trim(),
         "Mozilla API key status loaded");
       return textBox.textContent;
     });

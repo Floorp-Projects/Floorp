@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* () {
+add_task(async function() {
   function background() {
     browser.contextMenus.create({
       title: "open_browser_action",
@@ -56,24 +56,24 @@ add_task(function* () {
     },
   });
 
-  function* testContext(id) {
-    const menu = yield openExtensionContextMenu();
+  async function testContext(id) {
+    const menu = await openExtensionContextMenu();
     const items = menu.getElementsByAttribute("label", id);
-    yield closeExtensionContextMenu(items[0]);
+    await closeExtensionContextMenu(items[0]);
     return extension.awaitMessage("test-opened");
   }
 
-  yield extension.startup();
-  yield extension.awaitMessage("ready");
+  await extension.startup();
+  await extension.awaitMessage("ready");
 
   // open a page so page action works
   const PAGE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html?test=commands";
-  const tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
+  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
 
-  ok(yield testContext("open_sidebar_action"), "_execute_sidebar_action worked");
-  ok(yield testContext("open_browser_action"), "_execute_browser_action worked");
-  ok(yield testContext("open_page_action"), "_execute_page_action worked");
+  ok(await testContext("open_sidebar_action"), "_execute_sidebar_action worked");
+  ok(await testContext("open_browser_action"), "_execute_browser_action worked");
+  ok(await testContext("open_page_action"), "_execute_page_action worked");
 
-  yield BrowserTestUtils.removeTab(tab);
-  yield extension.unload();
+  await BrowserTestUtils.removeTab(tab);
+  await extension.unload();
 });

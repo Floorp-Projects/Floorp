@@ -15,11 +15,11 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_getBookmarkedURIFor() {
+add_task(async function test_getBookmarkedURIFor() {
   let now = Date.now() * 1000;
   const sourceURI = uri("http://test.mozilla.org/");
   // Add a visit and a bookmark.
-  yield PlacesTestUtils.addVisits({ uri: sourceURI, visitDate: now });
+  await PlacesTestUtils.addVisits({ uri: sourceURI, visitDate: now });
   do_check_eq(bs.getBookmarkedURIFor(sourceURI), null);
 
   let sourceItemId = bs.insertBookmark(bs.unfiledBookmarksFolder,
@@ -30,7 +30,7 @@ add_task(function* test_getBookmarkedURIFor() {
 
   // Add a redirected visit.
   const permaURI = uri("http://perma.mozilla.org/");
-  yield PlacesTestUtils.addVisits({
+  await PlacesTestUtils.addVisits({
     uri: permaURI,
     transition: TRANSITION_REDIRECT_PERMANENT,
     visitDate: now++,
@@ -52,7 +52,7 @@ add_task(function* test_getBookmarkedURIFor() {
 
   // Add another redirected visit.
   const tempURI = uri("http://perma.mozilla.org/");
-  yield PlacesTestUtils.addVisits({
+  await PlacesTestUtils.addVisits({
     uri: tempURI,
     transition: TRANSITION_REDIRECT_TEMPORARY,
     visitDate: now++,

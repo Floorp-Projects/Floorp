@@ -16,15 +16,15 @@ function testURLBarCopy(targetValue) {
   });
 }
 
-add_task(function* () {
+add_task(async function() {
   const url = "http://mochi.test:8888/browser/browser/base/content/test/urlbar/test_wyciwyg_copying.html";
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
-  yield BrowserTestUtils.synthesizeMouseAtCenter("#btn", {}, tab.linkedBrowser);
+  await BrowserTestUtils.synthesizeMouseAtCenter("#btn", {}, tab.linkedBrowser);
   let currentURL = gBrowser.currentURI.spec;
   ok(/^wyciwyg:\/\//i.test(currentURL), currentURL + " is a wyciwyg URI");
 
-  yield testURLBarCopy(url);
+  await testURLBarCopy(url);
 
   while (gBrowser.tabs.length > 1)
     gBrowser.removeCurrentTab();

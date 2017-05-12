@@ -35,14 +35,14 @@ class Context extends BaseContext {
  *
  * @param {function} f    the function to call
  */
-function* withContext(f) {
+async function withContext(f) {
   const ssm = Services.scriptSecurityManager;
   const PRINCIPAL1 = ssm.createCodebasePrincipalFromOrigin("http://www.example.org");
   const context = new Context(PRINCIPAL1);
   try {
-    yield* f(context);
+    await f(context);
   } finally {
-    yield context.unload();
+    await context.unload();
   }
 }
 
@@ -54,13 +54,13 @@ function* withContext(f) {
  *
  * @param {function} f    the function to call
  */
-function* withSyncContext(f) {
+async function withSyncContext(f) {
   const STORAGE_SYNC_PREF = "webextensions.storage.sync.enabled";
   let prefs = Services.prefs;
 
   try {
     prefs.setBoolPref(STORAGE_SYNC_PREF, true);
-    yield* withContext(f);
+    await withContext(f);
   } finally {
     prefs.clearUserPref(STORAGE_SYNC_PREF);
   }

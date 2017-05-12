@@ -20,7 +20,6 @@ var satchelFormListener = {
 
     debug: true,
     enabled: true,
-    saveHttpsForms: true,
 
     init() {
         Services.obs.addObserver(this, "earlyformsubmit");
@@ -32,7 +31,6 @@ var satchelFormListener = {
     updatePrefs() {
         this.debug          = Services.prefs.getBoolPref("browser.formfill.debug");
         this.enabled        = Services.prefs.getBoolPref("browser.formfill.enable");
-        this.saveHttpsForms = Services.prefs.getBoolPref("browser.formfill.saveHttpsForms");
     },
 
     // Implements the Luhn checksum algorithm as described at
@@ -94,13 +92,6 @@ var satchelFormListener = {
                 return;
 
             this.log("Form submit observer notified.");
-
-            if (!this.saveHttpsForms) {
-                if (actionURI.schemeIs("https"))
-                    return;
-                if (form.ownerDocument.documentURIObject.schemeIs("https"))
-                    return;
-            }
 
             if (form.hasAttribute("autocomplete") &&
                 form.getAttribute("autocomplete").toLowerCase() == "off")

@@ -93,11 +93,11 @@ function loadNextTest()
 function test()
 {
   SimpleTest.waitForExplicitFinish();
-  Task.spawn(function* () {
-    yield PlacesTestUtils.clearHistory();
+  (async () => {
+    await PlacesTestUtils.clearHistory();
 
     info("Inserting new visit");
-    yield PlacesUtils.history.insert({
+    await PlacesUtils.history.insert({
       url: "http://example.com/favicon_annotations",
       visits: [{
         transition: PlacesUtils.history.TRANSITIONS.TYPED
@@ -127,7 +127,7 @@ function test()
 
     // And start our test process.
     loadNextTest();
-  }.bind(this));
+  })();
 }
 
   ]]>

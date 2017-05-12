@@ -675,6 +675,7 @@
                      removable="false"
                      class="chromeclass-location" overflows="false">
           <toolbarbutton id="back-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                         removable="false" overflows="false"
                          label="&backCmd.label;"
                          command="Browser:BackOrBackDuplicate"
                          onclick="checkForMiddleClick(this, event);"
@@ -682,11 +683,25 @@
                          context="backForwardMenu"/>
 #ifdef MOZ_PHOTON_THEME
           <toolbarbutton id="forward-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                         removable="false" overflows="false"
                          label="&forwardCmd.label;"
                          command="Browser:ForwardOrForwardDuplicate"
                          onclick="checkForMiddleClick(this, event);"
                          tooltip="forward-button-tooltip"
                          context="backForwardMenu"/>
+          <toolbaritem id="stop-reload-button"
+                       removable="false" overflows="false"
+                       class="chromeclass-toolbar-additional">
+            <toolbarbutton id="reload-button"
+                           class="toolbarbutton-1"
+                           command="Browser:ReloadOrDuplicate"
+                           onclick="checkForMiddleClick(this, event);"
+                           tooltip="dynamic-shortcut-tooltip"/>
+            <toolbarbutton id="stop-button"
+                           class="toolbarbutton-1"
+                           command="Browser:Stop"
+                           tooltip="dynamic-shortcut-tooltip"/>
+          </toolbaritem>
 #endif
           <hbox id="urlbar-wrapper" flex="1">
 #ifndef MOZ_PHOTON_THEME
@@ -808,24 +823,26 @@
                 <label id="userContext-label"/>
                 <image id="userContext-indicator"/>
               </hbox>
+#ifndef MOZ_PHOTON_THEME
               <toolbarbutton id="urlbar-go-button"
                              class="chromeclass-toolbar-additional"
                              onclick="gURLBar.handleCommand(event);"
                              tooltiptext="&goEndCap.tooltip;"/>
-              <toolbarbutton id="urlbar-reload-button"
+              <toolbarbutton id="reload-button"
                              class="chromeclass-toolbar-additional"
                              command="Browser:ReloadOrDuplicate"
                              onclick="checkForMiddleClick(this, event);"
                              tooltip="dynamic-shortcut-tooltip"/>
-              <toolbarbutton id="urlbar-stop-button"
+              <toolbarbutton id="stop-button"
                              class="chromeclass-toolbar-additional"
                              command="Browser:Stop"
                              tooltip="dynamic-shortcut-tooltip"/>
+#else
               <toolbarbutton id="urlbar-page-action-button"
-                             hidden="true"
                              class="chromeclass-toolbar-additional"
                              tooltiptext="&pageActionButton.tooltip;"
                              onclick="gPageActionButton.onEvent(event);"/>
+#endif
             </textbox>
           </hbox>
         </toolbaritem>

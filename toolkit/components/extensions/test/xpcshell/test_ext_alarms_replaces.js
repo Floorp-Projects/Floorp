@@ -3,7 +3,7 @@
 "use strict";
 
 
-add_task(function* test_duplicate_alarm_name_replaces_alarm() {
+add_task(async function test_duplicate_alarm_name_replaces_alarm() {
   function backgroundScript() {
     let count = 0;
 
@@ -38,7 +38,7 @@ add_task(function* test_duplicate_alarm_name_replaces_alarm() {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("alarm-duplicate");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("alarm-duplicate");
+  await extension.unload();
 });

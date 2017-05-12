@@ -2,18 +2,18 @@ const SUGGEST_URLBAR_PREF = "browser.urlbar.suggest.searches";
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
 // Must run first.
-add_task(function* prepare() {
+add_task(async function prepare() {
   Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, true);
-  let engine = yield promiseNewSearchEngine(TEST_ENGINE_BASENAME);
+  let engine = await promiseNewSearchEngine(TEST_ENGINE_BASENAME);
   let oldCurrentEngine = Services.search.currentEngine;
   Services.search.currentEngine = engine;
-  registerCleanupFunction(function* () {
+  registerCleanupFunction(async function() {
     Services.prefs.clearUserPref(SUGGEST_URLBAR_PREF);
     Services.search.currentEngine = oldCurrentEngine;
 
     // Clicking suggestions causes visits to search results pages, so clear that
     // history now.
-    yield PlacesTestUtils.clearHistory();
+    await PlacesTestUtils.clearHistory();
 
     // Make sure the popup is closed for the next test.
     gURLBar.blur();
@@ -21,11 +21,11 @@ add_task(function* prepare() {
   });
 });
 
-add_task(function* clickSuggestion() {
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser);
+add_task(async function clickSuggestion() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   gURLBar.focus();
-  yield promiseAutocompleteResultPopup("foo");
-  let [idx, suggestion, engineName] = yield promiseFirstSuggestion();
+  await promiseAutocompleteResultPopup("foo");
+  let [idx, suggestion, engineName] = await promiseFirstSuggestion();
   Assert.equal(engineName,
                "browser_searchSuggestionEngine%20searchSuggestionEngine.xml",
                "Expected suggestion engine");
@@ -35,8 +35,8 @@ add_task(function* clickSuggestion() {
   let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser,
                                                    false, uri.spec);
   item.click();
-  yield loadPromise;
-  yield BrowserTestUtils.removeTab(tab);
+  await loadPromise;
+  await BrowserTestUtils.removeTab(tab);
 });
 
 function getFirstSuggestion() {
@@ -56,9 +56,9 @@ function getFirstSuggestion() {
   return [-1, null, null];
 }
 
-function* promiseFirstSuggestion() {
+async function promiseFirstSuggestion() {
   let tuple = [-1, null, null];
-  yield BrowserTestUtils.waitForCondition(() => {
+  await BrowserTestUtils.waitForCondition(() => {
     tuple = getFirstSuggestion();
     return tuple[0] >= 0;
   });

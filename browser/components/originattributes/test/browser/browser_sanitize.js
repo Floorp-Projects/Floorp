@@ -52,7 +52,7 @@ function checkCookiesSanitized(aBrowser) {
 }
 
 function checkCacheExists(aShouldExist) {
-  return function* () {
+  return async function() {
     let loadContextInfos = [
       LoadContextInfo.default,
       LoadContextInfo.custom(false, { userContextId: 1 }),
@@ -62,14 +62,14 @@ function checkCacheExists(aShouldExist) {
     ];
     let i = 0;
     for (let loadContextInfo of loadContextInfos) {
-      let cacheURIs = yield cacheDataForContext(loadContextInfo);
+      let cacheURIs = await cacheDataForContext(loadContextInfo);
       is(cacheURIs.includes(TEST_DOMAIN), aShouldExist, TEST_DOMAIN + " should "
         + (aShouldExist ? "not " : "") + "be cached for all origin attributes." + i++);
     }
   }
 }
 
-add_task(function* setup() {
+add_task(async function setup() {
   let networkCache = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
     .getService(Ci.nsICacheStorageService);
   networkCache.clear();
@@ -80,9 +80,9 @@ IsolationTestTools.runTests(TEST_DOMAIN, setCookies, () => true);
 
 add_task(checkCacheExists(true));
 
-add_task(function* sanitize() {
+add_task(async function sanitize() {
   let sanitizer = new Sanitizer();
-  yield sanitizer.sanitize(["cookies", "cache"]);
+  await sanitizer.sanitize(["cookies", "cache"]);
 });
 
 add_task(checkCacheExists(false));

@@ -7,28 +7,28 @@
 var mDBConn = DBConn();
 
 function promiseOnClearHistoryObserved() {
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  let historyObserver = {
-    onBeginUpdateBatch() {},
-    onEndUpdateBatch() {},
-    onVisit() {},
-    onTitleChanged() {},
-    onDeleteURI(aURI) {},
-    onPageChanged() {},
-    onDeleteVisits() {},
+    let historyObserver = {
+      onBeginUpdateBatch() {},
+      onEndUpdateBatch() {},
+      onVisit() {},
+      onTitleChanged() {},
+      onDeleteURI(aURI) {},
+      onPageChanged() {},
+      onDeleteVisits() {},
 
-    onClearHistory() {
-      PlacesUtils.history.removeObserver(this, false);
-      deferred.resolve();
-    },
+      onClearHistory() {
+        PlacesUtils.history.removeObserver(this, false);
+        resolve();
+      },
 
-    QueryInterface: XPCOMUtils.generateQI([
-      Ci.nsINavHistoryObserver,
-    ])
-  }
-  PlacesUtils.history.addObserver(historyObserver);
-  return deferred.promise;
+      QueryInterface: XPCOMUtils.generateQI([
+        Ci.nsINavHistoryObserver,
+      ])
+    }
+    PlacesUtils.history.addObserver(historyObserver);
+  });
 }
 
 // This global variable is a promise object, initialized in run_test and waited
@@ -46,10 +46,10 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_history_clear() {
-  yield promiseInit;
+add_task(async function test_history_clear() {
+  await promiseInit;
 
-  yield PlacesTestUtils.addVisits([
+  await PlacesTestUtils.addVisits([
     { uri: uri("http://typed.mozilla.org/"),
       transition: TRANSITION_TYPED },
     { uri: uri("http://link.mozilla.org/"),
@@ -84,24 +84,24 @@ add_task(function* test_history_clear() {
                                        PlacesUtils.bookmarks.DEFAULT_INDEX,
                                        "bookmark");
 
-  yield PlacesTestUtils.addVisits([
+  await PlacesTestUtils.addVisits([
     { uri: uri("http://typed.mozilla.org/"),
       transition: TRANSITION_BOOKMARK },
     { uri: uri("http://frecency.mozilla.org/"),
       transition: TRANSITION_LINK },
   ]);
-  yield PlacesTestUtils.promiseAsyncUpdates();
+  await PlacesTestUtils.promiseAsyncUpdates();
 
   // Clear history and wait for the onClearHistory notification.
   let promiseWaitClearHistory = promiseOnClearHistoryObserved();
   PlacesUtils.history.clear();
-  yield promiseWaitClearHistory;
+  await promiseWaitClearHistory;
 
   // check browserHistory returns no entries
   do_check_eq(0, PlacesUtils.history.hasHistoryEntries);
 
-  yield promiseTopicObserved(PlacesUtils.TOPIC_EXPIRATION_FINISHED);
-  yield PlacesTestUtils.promiseAsyncUpdates();
+  await promiseTopicObserved(PlacesUtils.TOPIC_EXPIRATION_FINISHED);
+  await PlacesTestUtils.promiseAsyncUpdates();
 
   // Check that frecency for not cleared items (bookmarks) has been converted
   // to -1.

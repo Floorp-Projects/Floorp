@@ -24,7 +24,7 @@ function insertTempItemsIntoMenu(parentMenu) {
 }
 
 function checkSeparatorInsertion(menuId, buttonId, subviewId) {
-  return function*() {
+  return async function() {
     info("Checking for duplicate separators in " + buttonId + " widget");
     let menu = document.getElementById(menuId);
     insertTempItemsIntoMenu(menu);
@@ -35,12 +35,12 @@ function checkSeparatorInsertion(menuId, buttonId, subviewId) {
       CustomizableUI.addWidgetToArea(buttonId, CustomizableUI.AREA_PANEL);
       changedPlacement = true;
     }
-    yield PanelUI.show();
+    await PanelUI.show();
 
     let button = document.getElementById(buttonId);
     button.click();
 
-    yield waitForCondition(() => !PanelUI.multiView.hasAttribute("transitioning"));
+    await waitForCondition(() => !PanelUI.multiView.hasAttribute("transitioning"));
     let subview = document.getElementById(subviewId);
     ok(subview.firstChild, "Subview should have a kid");
     is(subview.firstChild.localName, "toolbarbutton", "There should be no separators to start with");
@@ -54,7 +54,7 @@ function checkSeparatorInsertion(menuId, buttonId, subviewId) {
 
     let panelHiddenPromise = promisePanelHidden(window);
     PanelUI.hide();
-    yield panelHiddenPromise;
+    await panelHiddenPromise;
 
     if (changedPlacement) {
       CustomizableUI.reset();

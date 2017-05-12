@@ -1,8 +1,8 @@
-add_task(function* testCompleteAndPartialPatchesWithBadSizes() {
+add_task(async function testCompleteAndPartialPatchesWithBadSizes() {
   SpecialPowers.pushPrefEnv({set: [[PREF_APP_UPDATE_DOWNLOADPROMPTMAXATTEMPTS, 2]]});
   let updateParams = "invalidPartialSize=1&invalidCompleteSize=1";
 
-  yield runUpdateTest(updateParams, 1, [
+  await runUpdateTest(updateParams, 1, [
     {
       // if we fail maxBackgroundErrors download attempts, then we want to
       // first show the user an update available prompt.
@@ -22,8 +22,8 @@ add_task(function* testCompleteAndPartialPatchesWithBadSizes() {
       beforeClick() {
         checkWhatsNewLink("update-manual-whats-new");
       },
-      *cleanup() {
-        yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+      async cleanup() {
+        await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
         is(gBrowser.selectedBrowser.currentURI.spec,
            URL_MANUAL_UPDATE, "Landed on manual update page.")
         gBrowser.removeTab(gBrowser.selectedTab);

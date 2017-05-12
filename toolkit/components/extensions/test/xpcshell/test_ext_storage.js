@@ -5,8 +5,8 @@
 const STORAGE_SYNC_PREF = "webextensions.storage.sync.enabled";
 Cu.import("resource://gre/modules/Preferences.jsm");
 
-add_task(function* setup() {
-  yield ExtensionTestUtils.startAddonManager();
+add_task(async function setup() {
+  await ExtensionTestUtils.startAddonManager();
 });
 
 /**
@@ -36,7 +36,7 @@ async function checkGetImpl(areaName, prop, value) {
   browser.test.assertEq(value, data[prop], `object getter worked for ${prop} in ${areaName}`);
 }
 
-add_task(function* test_local_cache_invalidation() {
+add_task(async function test_local_cache_invalidation() {
   function background(checkGet) {
     browser.test.onMessage.addListener(async msg => {
       if (msg === "set-initial") {
@@ -59,21 +59,21 @@ add_task(function* test_local_cache_invalidation() {
     background: `(${background})(${checkGetImpl})`,
   });
 
-  yield extension.startup();
-  yield extension.awaitMessage("ready");
+  await extension.startup();
+  await extension.awaitMessage("ready");
 
   extension.sendMessage("set-initial");
-  yield extension.awaitMessage("set-initial-done");
+  await extension.awaitMessage("set-initial-done");
 
   Services.obs.notifyObservers(null, "extension-invalidate-storage-cache");
 
   extension.sendMessage("check");
-  yield extension.awaitMessage("check-done");
+  await extension.awaitMessage("check-done");
 
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* test_config_flag_needed() {
+add_task(async function test_config_flag_needed() {
   function background() {
     let promises = [];
     let apiTests = [
@@ -101,13 +101,13 @@ add_task(function* test_config_flag_needed() {
     background: `(${background})(${checkGetImpl})`,
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("flag needed");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("flag needed");
+  await extension.unload();
   Preferences.reset(STORAGE_SYNC_PREF);
 });
 
-add_task(function* test_reloading_extensions_works() {
+add_task(async function test_reloading_extensions_works() {
   // Just some random extension ID that we can re-use
   const extensionId = "my-extension-id@1";
 
@@ -130,15 +130,15 @@ add_task(function* test_reloading_extensions_works() {
 
   let extension1 = loadExtension();
 
-  yield extension1.startup();
-  yield extension1.awaitFinish("set-works");
-  yield extension1.unload();
+  await extension1.startup();
+  await extension1.awaitFinish("set-works");
+  await extension1.unload();
 
   let extension2 = loadExtension();
 
-  yield extension2.startup();
-  yield extension2.awaitFinish("set-works");
-  yield extension2.unload();
+  await extension2.startup();
+  await extension2.awaitFinish("set-works");
+  await extension2.unload();
 
   Preferences.reset(STORAGE_SYNC_PREF);
 });
@@ -147,7 +147,7 @@ do_register_cleanup(() => {
   Preferences.reset(STORAGE_SYNC_PREF);
 });
 
-add_task(function* test_backgroundScript() {
+add_task(async function test_backgroundScript() {
   async function backgroundScript(checkGet) {
     let globalChanges, gResolve;
     function clearGlobalChanges() {
@@ -326,20 +326,20 @@ add_task(function* test_backgroundScript() {
   Preferences.set(STORAGE_SYNC_PREF, true);
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield extension.startup();
-  yield extension.awaitMessage("ready");
+  await extension.startup();
+  await extension.awaitMessage("ready");
 
   extension.sendMessage("test-local");
-  yield extension.awaitMessage("test-finished");
+  await extension.awaitMessage("test-finished");
 
   extension.sendMessage("test-sync");
-  yield extension.awaitMessage("test-finished");
+  await extension.awaitMessage("test-finished");
 
   Preferences.reset(STORAGE_SYNC_PREF);
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* test_storage_requires_real_id() {
+add_task(async function test_storage_requires_real_id() {
   async function backgroundScript() {
     const EXCEPTION_MESSAGE =
           "The storage API is not available with a temporary addon ID. " +
@@ -363,9 +363,9 @@ add_task(function* test_storage_requires_real_id() {
   Preferences.set(STORAGE_SYNC_PREF, true);
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield extension.startup();
-  yield extension.awaitFinish("exception correct");
+  await extension.startup();
+  await extension.awaitFinish("exception correct");
 
   Preferences.reset(STORAGE_SYNC_PREF);
-  yield extension.unload();
+  await extension.unload();
 });

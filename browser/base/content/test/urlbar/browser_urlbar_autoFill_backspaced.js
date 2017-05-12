@@ -2,11 +2,11 @@
  * confirm the remaining value.
  */
 
-function* test_autocomplete(data) {
+async function test_autocomplete(data) {
   let {desc, typed, autofilled, modified, keys, action, onAutoFill} = data;
   info(desc);
 
-  yield promiseAutocompleteResultPopup(typed);
+  await promiseAutocompleteResultPopup(typed);
   is(gURLBar.textValue, autofilled, "autofilled value is as expected");
   if (onAutoFill)
     onAutoFill()
@@ -15,7 +15,7 @@ function* test_autocomplete(data) {
 
   is(gURLBar.textValue, modified, "backspaced value is as expected");
 
-  yield promiseSearchComplete();
+  await promiseSearchComplete();
 
   ok(gURLBar.popup.richlistbox.children.length > 0, "Should get at least 1 result");
   let result = gURLBar.popup.richlistbox.children[0];
@@ -24,32 +24,32 @@ function* test_autocomplete(data) {
   ok(types.indexOf(action) >= 0, `The type attribute "${type}" includes the expected action "${action}"`);
 
   gURLBar.popup.hidePopup();
-  yield promisePopupHidden(gURLBar.popup);
+  await promisePopupHidden(gURLBar.popup);
   gURLBar.blur();
 }
 
-add_task(function* () {
-  registerCleanupFunction(function* () {
+add_task(async function() {
+  registerCleanupFunction(async function() {
     Services.prefs.clearUserPref("browser.urlbar.autoFill");
     gURLBar.handleRevert();
-    yield PlacesTestUtils.clearHistory();
+    await PlacesTestUtils.clearHistory();
   });
   Services.prefs.setBoolPref("browser.urlbar.autoFill", true);
 
   // Add a typed visit, so it will be autofilled.
-  yield PlacesTestUtils.addVisits({
+  await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://example.com/"),
     transition: Ci.nsINavHistoryService.TRANSITION_TYPED
   });
 
-  yield test_autocomplete({ desc: "DELETE the autofilled part should search",
+  await test_autocomplete({ desc: "DELETE the autofilled part should search",
                             typed: "exam",
                             autofilled: "example.com/",
                             modified: "exam",
                             keys: ["VK_DELETE"],
                             action: "searchengine"
                           });
-  yield test_autocomplete({ desc: "DELETE the final slash should visit",
+  await test_autocomplete({ desc: "DELETE the final slash should visit",
                             typed: "example.com",
                             autofilled: "example.com/",
                             modified: "example.com",
@@ -57,14 +57,14 @@ add_task(function* () {
                             action: "visiturl"
                           });
 
-  yield test_autocomplete({ desc: "BACK_SPACE the autofilled part should search",
+  await test_autocomplete({ desc: "BACK_SPACE the autofilled part should search",
                             typed: "exam",
                             autofilled: "example.com/",
                             modified: "exam",
                             keys: ["VK_BACK_SPACE"],
                             action: "searchengine"
                           });
-  yield test_autocomplete({ desc: "BACK_SPACE the final slash should visit",
+  await test_autocomplete({ desc: "BACK_SPACE the final slash should visit",
                             typed: "example.com",
                             autofilled: "example.com/",
                             modified: "example.com",
@@ -72,14 +72,14 @@ add_task(function* () {
                             action: "visiturl"
                           });
 
-  yield test_autocomplete({ desc: "DELETE the autofilled part, then BACK_SPACE, should search",
+  await test_autocomplete({ desc: "DELETE the autofilled part, then BACK_SPACE, should search",
                             typed: "exam",
                             autofilled: "example.com/",
                             modified: "exa",
                             keys: ["VK_DELETE", "VK_BACK_SPACE"],
                             action: "searchengine"
                           });
-  yield test_autocomplete({ desc: "DELETE the final slash, then BACK_SPACE, should search",
+  await test_autocomplete({ desc: "DELETE the final slash, then BACK_SPACE, should search",
                             typed: "example.com",
                             autofilled: "example.com/",
                             modified: "example.co",
@@ -87,14 +87,14 @@ add_task(function* () {
                             action: "visiturl"
                           });
 
-  yield test_autocomplete({ desc: "BACK_SPACE the autofilled part, then BACK_SPACE, should search",
+  await test_autocomplete({ desc: "BACK_SPACE the autofilled part, then BACK_SPACE, should search",
                             typed: "exam",
                             autofilled: "example.com/",
                             modified: "exa",
                             keys: ["VK_BACK_SPACE", "VK_BACK_SPACE"],
                             action: "searchengine"
                           });
-  yield test_autocomplete({ desc: "BACK_SPACE the final slash, then BACK_SPACE, should search",
+  await test_autocomplete({ desc: "BACK_SPACE the final slash, then BACK_SPACE, should search",
                             typed: "example.com",
                             autofilled: "example.com/",
                             modified: "example.co",
@@ -102,7 +102,7 @@ add_task(function* () {
                             action: "visiturl"
                           });
 
-  yield test_autocomplete({ desc: "BACK_SPACE after blur should search",
+  await test_autocomplete({ desc: "BACK_SPACE after blur should search",
                             typed: "ex",
                             autofilled: "example.com/",
                             modified: "e",
@@ -115,7 +115,7 @@ add_task(function* () {
                               gURLBar.selectionEnd = 12;
                             }
                          });
-  yield test_autocomplete({ desc: "DELETE after blur should search",
+  await test_autocomplete({ desc: "DELETE after blur should search",
                             typed: "ex",
                             autofilled: "example.com/",
                             modified: "e",
@@ -128,7 +128,7 @@ add_task(function* () {
                               gURLBar.selectionEnd = 12;
                             }
                           });
-  yield test_autocomplete({ desc: "double BACK_SPACE after blur should search",
+  await test_autocomplete({ desc: "double BACK_SPACE after blur should search",
                             typed: "ex",
                             autofilled: "example.com/",
                             modified: "e",
@@ -142,5 +142,5 @@ add_task(function* () {
                             }
                          });
 
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
 });

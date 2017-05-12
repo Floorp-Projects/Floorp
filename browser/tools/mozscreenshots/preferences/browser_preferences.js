@@ -6,11 +6,11 @@
 
 "use strict";
 
-add_task(function* capture() {
+add_task(async function capture() {
   if (!shouldCapture()) {
     return;
   }
   let sets = ["Preferences"];
 
-  yield TestRunner.start(sets, "preferences");
+  await TestRunner.start(sets, "preferences");
 });

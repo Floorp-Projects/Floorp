@@ -1,0 +1,129 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "command": "${workspaceRoot}/mach",
+    "isShellCommand": true,
+    "args": ["--log-no-times"],
+    "showOutput": "silent",
+    "echoCommand": true,
+    "suppressTaskName": false,
+    "tasks": [
+      {
+        "taskName": "clobber"
+      },
+      {
+        "taskName": "configure"
+      },
+      {
+        "taskName": "build",
+        "isBuildCommand": true,
+        "problemMatcher": {
+          "owner": "cpp",
+          "fileLocation": "absolute",
+          "pattern": {
+            "regexp": "^.*?tools([^\\s]*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+            "file": 1,
+            "line": 2,
+            "column": 3,
+            "severity": 4,
+            "message": 5
+          }
+        }
+      },
+      {
+        "taskName": "build binaries",
+        "problemMatcher": {
+          "owner": "cpp",
+          "fileLocation": "absolute",
+          "pattern": {
+            "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+            "file": 1,
+            "line": 2,
+            "column": 3,
+            "severity": 4,
+            "message": 5
+          }
+        }
+      },
+      {
+        "taskName": "build faster",
+        "problemMatcher": {
+          "owner": "cpp",
+          "fileLocation": "absolute",
+          "pattern": {
+            "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+            "file": 1,
+            "line": 2,
+            "column": 3,
+            "severity": 4,
+            "message": 5
+          }
+        }
+      },
+      {
+        "taskName": "run",
+        "args": ["-purgecaches"],
+        "showOutput": "always"
+      },
+      {
+        "taskName": "eslint",
+        "problemMatcher": ["$eslint-stylish"]
+      },
+      {
+        "taskName": "eslint fix",
+        "suppressTaskName": true,
+        "args": ["eslint", "--fix", "${file}"],
+        "problemMatcher": ["$eslint-stylish"]
+      },
+      {
+        "taskName": "test",
+        "args": ["${relativeFile}"],
+        "isTestCommand": true,
+        "showOutput": "always"
+      },
+      {
+        "taskName": "mochitest",
+        "args": ["${relativeFile}"],
+        "showOutput": "always",
+        "problemMatcher": {
+          "fileLocation": ["relative", "${workspaceRoot}"],
+          "pattern": {
+              "regexp": "^.*\\s+(TEST-UNEXPECTED-FAIL|TEST-UNEXPECTED-PASS)\\s+\\|\\s+([^\\s]*)\\s+\\|\\s+(.*)$",
+              "severity": 1,
+              "file": 2,
+              "message": 3
+          }
+        }
+      },
+      {
+        "taskName": "reftest",
+        "args": ["${relativeFile}"],
+        "showOutput": "always",
+        "problemMatcher": {
+          "fileLocation": ["absolute"],
+          "pattern": {
+              "regexp": "^.*\\s+(TEST-UNEXPECTED-FAIL|TEST-UNEXPECTED-PASS)\\s+\\|\\s+file:\/\/([^\\s]*)\\s+==\\s+[^\\s]*\\s+\\|\\s+(.*)$",
+              "severity": 1,
+              "file": 2,
+              "message": 3
+          }
+        }
+      },
+      {
+        "taskName": "xpcshell-test",
+        "args": ["${relativeFile}", "--sequential"],
+        "showOutput": "always",
+        "problemMatcher": {
+          "fileLocation": ["relative", "${workspaceRoot}"],
+          "pattern": {
+              "regexp": "^.*\\s+(FAIL|ERROR)\\s+\\[([^\\s]*)\\s+:\\s+(\\d+)\\]\\s+(.*)$",
+              "severity": 1,
+              "file": 2,
+              "location": 3,
+              "message": 4
+          }
+        }
+      }
+    ]
+}

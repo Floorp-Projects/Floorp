@@ -15,10 +15,11 @@ NS_IMETHODIMP_(MozExternalRefCountType) AltDataOutputStreamChild::Release()
   NS_LOG_RELEASE(this, mRefCnt, "AltDataOutputStreamChild");
 
   if (mRefCnt == 1 && mIPCOpen) {
-    // Send_delete calls NeckoChild::PAltDataOutputStreamChild, which will release
-    // again to refcount == 0
-    PAltDataOutputStreamChild::Send__delete__(this);
-    return 0;
+    // The only reference left is the IPDL one. After the parent replies back
+    // with a DeleteSelf message, the child will call Send__delete__(this),
+    // decrementing the ref count and triggering the destructor.
+    SendDeleteSelf();
+    return 1;
   }
 
   if (mRefCnt == 0) {
@@ -146,6 +147,12 @@ AltDataOutputStreamChild::RecvError(const nsresult& err)
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+AltDataOutputStreamChild::RecvDeleteSelf()
+{
+  PAltDataOutputStreamChild::Send__delete__(this);
+  return IPC_OK();
+}
 
 } // namespace net
 } // namespace mozilla

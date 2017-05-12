@@ -14,7 +14,7 @@ do_register_cleanup(() => {
 });
 
 
-add_task(function* test_i18n() {
+add_task(async function test_i18n() {
   function runTests(assertEq) {
     let _ = browser.i18n.getMessage.bind(browser.i18n);
 
@@ -149,16 +149,16 @@ add_task(function* test_i18n() {
     } + `(${runTests})`,
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  let contentPage = yield ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
-  yield extension.awaitMessage("content-script-finished");
-  yield contentPage.close();
+  let contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
+  await extension.awaitMessage("content-script-finished");
+  await contentPage.close();
 
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* test_get_accept_languages() {
+add_task(async function test_get_accept_languages() {
   function checkResults(source, results, expected) {
     browser.test.assertEq(
       expected.length,
@@ -208,28 +208,28 @@ add_task(function* test_get_accept_languages() {
     },
   });
 
-  let contentPage = yield ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
+  let contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
 
-  yield extension.startup();
+  await extension.startup();
 
   let expectedLangs = ["en-US", "en"];
   extension.sendMessage(["expect-results", expectedLangs]);
-  yield extension.awaitMessage("background-done");
-  yield extension.awaitMessage("content-done");
+  await extension.awaitMessage("background-done");
+  await extension.awaitMessage("content-done");
 
   expectedLangs = ["en-US", "en", "fr-CA", "fr"];
   Preferences.set("intl.accept_languages", expectedLangs.toString());
   extension.sendMessage(["expect-results", expectedLangs]);
-  yield extension.awaitMessage("background-done");
-  yield extension.awaitMessage("content-done");
+  await extension.awaitMessage("background-done");
+  await extension.awaitMessage("content-done");
   Preferences.reset("intl.accept_languages");
 
-  yield contentPage.close();
+  await contentPage.close();
 
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* test_get_ui_language() {
+add_task(async function test_get_ui_language() {
   function getResults() {
     return {
       getUILanguage: browser.i18n.getUILanguage(),
@@ -282,29 +282,29 @@ add_task(function* test_get_ui_language() {
     },
   });
 
-  let contentPage = yield ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
+  let contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
 
-  yield extension.startup();
+  await extension.startup();
 
   extension.sendMessage(["expect-results", "en_US"]);
 
-  yield extension.awaitMessage("background-done");
-  yield extension.awaitMessage("content-done");
+  await extension.awaitMessage("background-done");
+  await extension.awaitMessage("content-done");
 
   Preferences.set("general.useragent.locale", "he");
 
   extension.sendMessage(["expect-results", "he"]);
 
-  yield extension.awaitMessage("background-done");
-  yield extension.awaitMessage("content-done");
+  await extension.awaitMessage("background-done");
+  await extension.awaitMessage("content-done");
 
-  yield contentPage.close();
+  await contentPage.close();
 
-  yield extension.unload();
+  await extension.unload();
 });
 
 
-add_task(function* test_detect_language() {
+add_task(async function test_detect_language() {
   if (AppConstants.MOZ_BUILD_APP !== "browser") {
     // This is not supported on Android.
     return;
@@ -372,9 +372,9 @@ add_task(function* test_detect_language() {
     },
   });
 
-  let contentPage = yield ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
+  let contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
 
-  yield extension.startup();
+  await extension.startup();
 
   let expected = {
     isReliable: true,
@@ -390,8 +390,8 @@ add_task(function* test_detect_language() {
     ],
   };
   extension.sendMessage([fr_en_string, expected]);
-  yield extension.awaitMessage("background-done");
-  yield extension.awaitMessage("content-done");
+  await extension.awaitMessage("background-done");
+  await extension.awaitMessage("content-done");
 
   expected = {
     isReliable: true,
@@ -403,10 +403,10 @@ add_task(function* test_detect_language() {
     ],
   };
   extension.sendMessage([af_string, expected]);
-  yield extension.awaitMessage("background-done");
-  yield extension.awaitMessage("content-done");
+  await extension.awaitMessage("background-done");
+  await extension.awaitMessage("content-done");
 
-  yield contentPage.close();
+  await contentPage.close();
 
-  yield extension.unload();
+  await extension.unload();
 });

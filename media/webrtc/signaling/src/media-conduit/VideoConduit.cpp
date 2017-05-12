@@ -254,9 +254,13 @@ WebrtcVideoConduit::AddLocalRTPExtensions(bool aIsSend,
 {
   auto& extList = aIsSend ? mSendStreamConfig.rtp.extensions :
                   mRecvStreamConfig.rtp.extensions;
-  std::remove_if(extList.begin(), extList.end(), [&](const webrtc::RtpExtension & i) {
-    return std::find(aExtensions.begin(), aExtensions.end(),i) != aExtensions.end();
-  });
+  extList.erase(std::remove_if(extList.begin(),
+                               extList.end(),
+                               [&](const webrtc::RtpExtension & i) {
+                                 return std::find(aExtensions.begin(),
+                                                  aExtensions.end(),
+                                                  i) != aExtensions.end(); }),
+                extList.end());
   extList.insert(extList.end(), aExtensions.begin(), aExtensions.end());
 }
 

@@ -1,1 +1,1 @@
-skip-if(stylo) load 398665-1.html # bug 1361235
+load 398665-1.html

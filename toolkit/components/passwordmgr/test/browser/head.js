@@ -3,12 +3,12 @@ const DIRECTORY_PATH = "/browser/toolkit/components/passwordmgr/test/browser/";
 Cu.import("resource://testing-common/LoginTestUtils.jsm", this);
 Cu.import("resource://testing-common/ContentTaskUtils.jsm", this);
 
-add_task(function* common_initialize() {
-  yield SpecialPowers.pushPrefEnv({"set": [["signon.rememberSignons", true]]});
+add_task(async function common_initialize() {
+  await SpecialPowers.pushPrefEnv({"set": [["signon.rememberSignons", true]]});
 });
 
-registerCleanupFunction(function* cleanup_removeAllLoginsAndResetRecipes() {
-  yield SpecialPowers.popPrefEnv();
+registerCleanupFunction(async function cleanup_removeAllLoginsAndResetRecipes() {
+  await SpecialPowers.popPrefEnv();
 
   Services.logins.removeAllLogins();
 
@@ -17,7 +17,7 @@ registerCleanupFunction(function* cleanup_removeAllLoginsAndResetRecipes() {
     // No need to reset the recipes if the recipe module wasn't even loaded.
     return;
   }
-  yield recipeParent.then(recipeParentResult => recipeParentResult.reset());
+  await recipeParent.then(recipeParentResult => recipeParentResult.reset());
 });
 
 /**
@@ -33,10 +33,10 @@ function testSubmittingLoginForm(aPageFile, aTaskFn, aOrigin = "http://example.c
   return BrowserTestUtils.withNewTab({
     gBrowser,
     url: aOrigin + DIRECTORY_PATH + aPageFile,
-  }, function*(browser) {
+  }, async function(browser) {
     ok(true, "loaded " + aPageFile);
-    let fieldValues = yield ContentTask.spawn(browser, undefined, function*() {
-      yield ContentTaskUtils.waitForCondition(() => {
+    let fieldValues = await ContentTask.spawn(browser, undefined, async function() {
+      await ContentTaskUtils.waitForCondition(() => {
         return content.location.pathname.endsWith("/formsubmit.sjs") &&
           content.document.readyState == "complete";
       }, "Wait for form submission load (formsubmit.sjs)");
@@ -49,7 +49,7 @@ function testSubmittingLoginForm(aPageFile, aTaskFn, aOrigin = "http://example.c
     });
     ok(true, "form submission loaded");
     if (aTaskFn) {
-      yield* aTaskFn(fieldValues);
+      await aTaskFn(fieldValues);
     }
     return fieldValues;
   });
@@ -133,8 +133,8 @@ function clickDoorhangerButton(aPopup, aButtonIndex) {
  * @param {String} username The username.
  * @param {String} password The password.
  */
-function* checkDoorhangerUsernamePassword(username, password) {
-  yield BrowserTestUtils.waitForCondition(() => {
+async function checkDoorhangerUsernamePassword(username, password) {
+  await BrowserTestUtils.waitForCondition(() => {
     return document.getElementById("password-notification-username").value == username;
   }, "Wait for nsLoginManagerPrompter writeDataToUI()");
   is(document.getElementById("password-notification-username").value, username,

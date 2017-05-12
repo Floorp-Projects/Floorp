@@ -1,11 +1,11 @@
-add_task(function* () {
+add_task(async function() {
   Services.search.addEngineWithDetails("MozSearch", "", "", "", "GET",
                                        "http://example.com/?q={searchTerms}");
   let engine = Services.search.getEngineByName("MozSearch");
   let originalEngine = Services.search.currentEngine;
   Services.search.currentEngine = engine;
 
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
 
   registerCleanupFunction(() => {
     Services.search.currentEngine = originalEngine;
@@ -18,7 +18,7 @@ add_task(function* () {
     return PlacesTestUtils.clearHistory();
   });
 
-  yield promiseAutocompleteResultPopup("open a search");
+  await promiseAutocompleteResultPopup("open a search");
   let result = gURLBar.popup.richlistbox.firstChild;
 
   isnot(result, null, "Should have a result");
@@ -29,7 +29,7 @@ add_task(function* () {
 
   let tabPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   result.click();
-  yield tabPromise;
+  await tabPromise;
 
   is(gBrowser.selectedBrowser.currentURI.spec, "http://example.com/?q=open+a+search", "Correct URL should be loaded");
 });

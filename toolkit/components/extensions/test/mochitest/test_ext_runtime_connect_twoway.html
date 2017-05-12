@@ -13,7 +13,7 @@
 <script>
 "use strict";
 
-add_task(function* test_connect_bidirectionally_and_postMessage() {
+add_task(async function test_connect_bidirectionally_and_postMessage() {
   function background() {
     let onConnectCount = 0;
     browser.runtime.onConnect.addListener(port => {
@@ -111,16 +111,16 @@ add_task(function* test_connect_bidirectionally_and_postMessage() {
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield extension.startup();
+  await extension.startup();
   info("extension loaded");
 
-  yield extension.awaitMessage("ready");
+  await extension.awaitMessage("ready");
 
   let win = window.open("file_sample.html");
-  yield extension.awaitFinish("ping pong done");
+  await extension.awaitFinish("ping pong done");
   win.close();
 
-  yield extension.unload();
+  await extension.unload();
   info("extension unloaded");
 });
 </script>

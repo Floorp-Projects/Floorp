@@ -48,8 +48,8 @@ runInParent(function addLogins() {
 let iframe = SpecialPowers.wrap(document.getElementsByTagName("iframe")[0]);
 let iframeDoc;
 
-add_task(function* setup() {
-  yield new Promise(resolve => {
+add_task(async function setup() {
+  await new Promise(resolve => {
     iframe.addEventListener("load", function() {
       resolve();
     }, {once: true});
@@ -60,40 +60,40 @@ add_task(function* setup() {
   SimpleTest.requestFlakyTimeout("Giving a chance for the unexpected popupshown to occur");
 });
 
-add_task(function* test_initial_focus() {
-  let results = yield notifyMenuChanged(2, "name");
+add_task(async function test_initial_focus() {
+  let results = await notifyMenuChanged(2, "name");
   checkArrayValues(results, ["name", "name1"], "Two results");
   doKey("down");
   doKey("return");
-  yield promiseFormsProcessed();
+  await promiseFormsProcessed();
   is(iframeDoc.getElementById("form-basic-password").value, "pass", "Check first password filled");
-  let popupState = yield getPopupState();
+  let popupState = await getPopupState();
   is(popupState.open, false, "Check popup is now closed");
 });
 
 // This depends on the filling from the previous test.
-add_task(function* test_not_reopened_if_filled() {
+add_task(async function test_not_reopened_if_filled() {
   listenForUnexpectedPopupShown();
   let usernameField = iframeDoc.getElementById("form-basic-username");
   usernameField.focus();
   info("Waiting to see if a popupshown occurs");
-  yield new Promise(resolve => setTimeout(resolve, 1000));
+  await new Promise(resolve => setTimeout(resolve, 1000));
 
   // cleanup
   gPopupShownExpected = true;
   iframeDoc.getElementById("form-basic-submit").focus();
 });
 
-add_task(function* test_reopened_after_edit_not_matching_saved() {
+add_task(async function test_reopened_after_edit_not_matching_saved() {
   let usernameField = iframeDoc.getElementById("form-basic-username");
   usernameField.value = "nam";
   let shownPromise = promiseACShown();
   usernameField.focus();
-  yield shownPromise;
+  await shownPromise;
   iframeDoc.getElementById("form-basic-submit").focus();
 });
 
-add_task(function* test_not_reopened_after_selecting() {
+add_task(async function test_not_reopened_after_selecting() {
   let formFillController = SpecialPowers.Cc["@mozilla.org/satchel/form-fill-controller;1"].
                            getService(SpecialPowers.Ci.nsIFormFillController);
   let usernameField = iframeDoc.getElementById("form-basic-username");
@@ -102,7 +102,7 @@ add_task(function* test_not_reopened_after_selecting() {
   listenForUnexpectedPopupShown();
   formFillController.markAsLoginManagerField(usernameField);
   info("Waiting to see if a popupshown occurs");
-  yield new Promise(resolve => setTimeout(resolve, 1000));
+  await new Promise(resolve => setTimeout(resolve, 1000));
 
   // Cleanup
   gPopupShownExpected = true;

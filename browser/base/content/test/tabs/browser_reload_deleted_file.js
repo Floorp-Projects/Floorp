@@ -7,7 +7,7 @@ const uuidGenerator =
 const DUMMY_FILE = "dummy_page.html";
 
 // Test for bug 1327942.
-add_task(function* () {
+add_task(async function() {
   // Copy dummy page to unique file in TmpD, so that we can safely delete it.
   let dummyPage = getChromeDir(getResolvedURI(gTestPath));
   dummyPage.append(DUMMY_FILE);
@@ -18,17 +18,17 @@ add_task(function* () {
 
   // Get file:// URI for new page and load in a new tab.
   const uriString = Services.io.newFileURI(disappearingPage).spec;
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, uriString);
-  registerCleanupFunction(function* () {
-    yield BrowserTestUtils.removeTab(tab);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, uriString);
+  registerCleanupFunction(async function() {
+    await BrowserTestUtils.removeTab(tab);
   });
 
   // Delete the page, simulate a click of the reload button and check that we
   // get a neterror page.
   disappearingPage.remove(false);
-  document.getElementById("urlbar-reload-button").doCommand();
-  yield BrowserTestUtils.waitForErrorPage(tab.linkedBrowser);
-  yield ContentTask.spawn(tab.linkedBrowser, null, function() {
+  document.getElementById("reload-button").doCommand();
+  await BrowserTestUtils.waitForErrorPage(tab.linkedBrowser);
+  await ContentTask.spawn(tab.linkedBrowser, null, function() {
     ok(content.document.documentURI.startsWith("about:neterror"),
        "Check that a neterror page was loaded.");
   });

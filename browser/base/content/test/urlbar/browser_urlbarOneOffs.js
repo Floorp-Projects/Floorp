@@ -2,21 +2,21 @@ const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
 let gMaxResults;
 
-add_task(function* init() {
+add_task(async function init() {
   Services.prefs.setBoolPref("browser.urlbar.oneOffSearches", true);
   gMaxResults = Services.prefs.getIntPref("browser.urlbar.maxRichResults");
 
   // Add a search suggestion engine and move it to the front so that it appears
   // as the first one-off.
-  let engine = yield promiseNewSearchEngine(TEST_ENGINE_BASENAME);
+  let engine = await promiseNewSearchEngine(TEST_ENGINE_BASENAME);
   Services.search.moveEngine(engine, 0);
 
-  registerCleanupFunction(function* () {
-    yield hidePopup();
-    yield PlacesTestUtils.clearHistory();
+  registerCleanupFunction(async function() {
+    await hidePopup();
+    await PlacesTestUtils.clearHistory();
   });
 
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
 
   let visits = [];
   for (let i = 0; i < gMaxResults; i++) {
@@ -27,15 +27,15 @@ add_task(function* init() {
       transition: Ci.nsINavHistoryService.TRANSITION_TYPED,
     });
   }
-  yield PlacesTestUtils.addVisits(visits);
+  await PlacesTestUtils.addVisits(visits);
 });
 
 // Keys up and down through the history panel, i.e., the panel that's shown when
 // there's no text in the textbox.
-add_task(function* history() {
+add_task(async function history() {
   gURLBar.focus();
   EventUtils.synthesizeKey("VK_DOWN", {})
-  yield promisePopupShown(gURLBar.popup);
+  await promisePopupShown(gURLBar.popup);
 
   assertState(-1, -1, "");
 
@@ -96,16 +96,16 @@ add_task(function* history() {
   EventUtils.synthesizeKey("VK_UP", {})
   assertState(-1, -1, "");
 
-  yield hidePopup();
+  await hidePopup();
 });
 
 // Keys up and down through the non-history panel, i.e., the panel that's shown
 // when you type something in the textbox.
-add_task(function*() {
+add_task(async function() {
   // Use a typed value that returns the visits added above but that doesn't
   // trigger autofill since that would complicate the test.
   let typedValue = "browser_urlbarOneOffs";
-  yield promiseAutocompleteResultPopup(typedValue, window, true);
+  await promiseAutocompleteResultPopup(typedValue, window, true);
 
   assertState(0, -1, typedValue);
 
@@ -150,14 +150,14 @@ add_task(function*() {
   EventUtils.synthesizeKey("VK_UP", {})
   assertState(0, -1, typedValue);
 
-  yield hidePopup();
+  await hidePopup();
 });
 
 // Checks that "Search with Current Search Engine" items are updated to "Search
 // with One-Off Engine" when a one-off is selected.
-add_task(function* searchWith() {
+add_task(async function searchWith() {
   let typedValue = "foo";
-  yield promiseAutocompleteResultPopup(typedValue);
+  await promiseAutocompleteResultPopup(typedValue);
 
   assertState(0, -1, typedValue);
 
@@ -179,17 +179,17 @@ add_task(function* searchWith() {
                "Search with " + engineName,
                "First result's action text should be updated");
 
-  yield hidePopup();
+  await hidePopup();
 });
 
 // Clicks a one-off.
-add_task(function* oneOffClick() {
+add_task(async function oneOffClick() {
   gBrowser.selectedTab = gBrowser.addTab();
 
   // We are explicitly using something that looks like a url, to make the test
   // stricter. Even if it looks like a url, we should search.
   let typedValue = "foo.bar";
-  yield promiseAutocompleteResultPopup(typedValue);
+  await promiseAutocompleteResultPopup(typedValue);
 
   assertState(0, -1, typedValue);
 
@@ -198,19 +198,19 @@ add_task(function* oneOffClick() {
     BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false,
                                    "http://mochi.test:8888/");
   EventUtils.synthesizeMouseAtCenter(oneOffs[0], {});
-  yield resultsPromise;
+  await resultsPromise;
 
   gBrowser.removeTab(gBrowser.selectedTab);
 });
 
 // Presses the Return key when a one-off is selected.
-add_task(function* oneOffReturn() {
+add_task(async function oneOffReturn() {
   gBrowser.selectedTab = gBrowser.addTab();
 
   // We are explicitly using something that looks like a url, to make the test
   // stricter. Even if it looks like a url, we should search.
   let typedValue = "foo.bar";
-  yield promiseAutocompleteResultPopup(typedValue, window, true);
+  await promiseAutocompleteResultPopup(typedValue, window, true);
 
   assertState(0, -1, typedValue);
 
@@ -222,7 +222,7 @@ add_task(function* oneOffReturn() {
     BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false,
                                    "http://mochi.test:8888/");
   EventUtils.synthesizeKey("VK_RETURN", {})
-  yield resultsPromise;
+  await resultsPromise;
 
   gBrowser.removeTab(gBrowser.selectedTab);
 });
@@ -238,7 +238,7 @@ function assertState(result, oneOff, textValue = undefined) {
   }
 }
 
-function* hidePopup() {
+async function hidePopup() {
   EventUtils.synthesizeKey("VK_ESCAPE", {});
-  yield promisePopupHidden(gURLBar.popup);
+  await promisePopupHidden(gURLBar.popup);
 }

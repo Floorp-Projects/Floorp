@@ -31,8 +31,8 @@ function test_dimensions({ width, height}) {
   return BrowserTestUtils.withNewTab({
     gBrowser,
     url: SCRIPT_PAGE,
-  }, function*(browser) {
-    let win = yield newWinPromise;
+  }, async function(browser) {
+    let win = await newWinPromise;
     let rect = win.gBrowser.selectedBrowser.getBoundingClientRect();
 
     if (width) {
@@ -56,12 +56,12 @@ function test_dimensions({ width, height}) {
     Assert.ok(!persistSize.value, "Should not persist size");
     Assert.ok(!persistSizeMode.value, "Should not persist size mode");
 
-    yield BrowserTestUtils.closeWindow(win);
+    await BrowserTestUtils.closeWindow(win);
   });
 }
 
-add_task(function* test_new_sized_window() {
-  yield test_dimensions({ width: 100 });
-  yield test_dimensions({ height: 150 });
-  yield test_dimensions({ width: 300, height: 200 });
+add_task(async function test_new_sized_window() {
+  await test_dimensions({ width: 100 });
+  await test_dimensions({ height: 150 });
+  await test_dimensions({ width: 300, height: 200 });
 });

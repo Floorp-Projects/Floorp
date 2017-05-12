@@ -1349,14 +1349,14 @@ var gFinishedPage = {
   /**
    * When elevation is required and the user clicks "No Thanks" in the wizard.
    */
-  onExtra2: Task.async(function*() {
+  async onExtra2() {
     Services.obs.notifyObservers(null, "update-canceled");
     let um = CoC["@mozilla.org/updates/update-manager;1"].
                getService(CoI.nsIUpdateManager);
     um.cleanupActiveUpdate();
     gUpdates.never();
     gUpdates.wiz.cancel();
-  }),
+  },
 };
 
 /**

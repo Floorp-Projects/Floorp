@@ -2,46 +2,46 @@ const PAGE = "data:text/html,<div contenteditable>foo</div><input><textarea></te
 const DESIGNMODE_PAGE = "data:text/html,<body onload='document.designMode=\"on\";'>";
 const HOTKEYS = ["/", "'"];
 
-function* test_hotkeys(browser, expected) {
+async function test_hotkeys(browser, expected) {
   let findbar = gBrowser.getFindBar();
   for (let key of HOTKEYS) {
     is(findbar.hidden, true, "findbar is hidden");
-    yield BrowserTestUtils.sendChar(key, gBrowser.selectedBrowser);
+    await BrowserTestUtils.sendChar(key, gBrowser.selectedBrowser);
     is(findbar.hidden, expected, "findbar should" + (expected ? "" : " not") + " be hidden");
     if (!expected) {
-      yield closeFindbarAndWait(findbar);
+      await closeFindbarAndWait(findbar);
     }
   }
 }
 
-function* focus_element(browser, query) {
-  yield ContentTask.spawn(browser, query, function* focus(query) {
+async function focus_element(browser, query) {
+  await ContentTask.spawn(browser, query, async function focus(query) {
     let element = content.document.querySelector(query);
     element.focus();
   });
 }
 
-add_task(function* test_hotkey_on_editable_element() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function test_hotkey_on_editable_element() {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: PAGE
-  }, function* do_tests(browser) {
-    yield test_hotkeys(browser, false);
+  }, async function do_tests(browser) {
+    await test_hotkeys(browser, false);
     const ELEMENTS = ["div", "input", "textarea"];
     for (let elem of ELEMENTS) {
-      yield focus_element(browser, elem);
-      yield test_hotkeys(browser, true);
-      yield focus_element(browser, ":root");
-      yield test_hotkeys(browser, false);
+      await focus_element(browser, elem);
+      await test_hotkeys(browser, true);
+      await focus_element(browser, ":root");
+      await test_hotkeys(browser, false);
     }
   });
 });
 
-add_task(function* test_hotkey_on_designMode_document() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function test_hotkey_on_designMode_document() {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: DESIGNMODE_PAGE
-  }, function* do_tests(browser) {
-    yield test_hotkeys(browser, true);
+  }, async function do_tests(browser) {
+    await test_hotkeys(browser, true);
   });
 });

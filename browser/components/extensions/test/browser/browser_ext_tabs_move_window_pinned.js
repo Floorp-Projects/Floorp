@@ -2,10 +2,10 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* () {
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.net/");
-  let window1 = yield BrowserTestUtils.openNewBrowserWindow();
-  let tab1 = yield BrowserTestUtils.openNewForegroundTab(window1.gBrowser, "http://example.com/");
+add_task(async function() {
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.net/");
+  let window1 = await BrowserTestUtils.openNewBrowserWindow();
+  let tab1 = await BrowserTestUtils.openNewForegroundTab(window1.gBrowser, "http://example.com/");
   window1.gBrowser.pinTab(tab1);
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -31,12 +31,12 @@ add_task(function* () {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("tabs.move.pin");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("tabs.move.pin");
+  await extension.unload();
 
   for (let tab of window.gBrowser.tabs) {
-    yield BrowserTestUtils.removeTab(tab);
+    await BrowserTestUtils.removeTab(tab);
   }
-  yield BrowserTestUtils.closeWindow(window1);
+  await BrowserTestUtils.closeWindow(window1);
 });

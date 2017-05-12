@@ -73,8 +73,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Sqlite",
                                   "resource://gre/modules/Sqlite.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
@@ -308,14 +306,14 @@ this.History = Object.freeze({
       throw new TypeError("Invalid function: " + onResult);
     }
 
-    return Task.spawn(function* () {
+    return (async function() {
       let removedPages = false;
       let count = 0;
       while (guids.length || urls.length) {
         if (count && count % 2 == 0) {
           // Every few cycles, yield time back to the main
           // thread to avoid jank.
-          yield Promise.resolve();
+          await Promise.resolve();
         }
         count++;
         let guidsSlice = guids.splice(0, REMOVE_PAGES_CHUNKLEN);
@@ -327,13 +325,13 @@ this.History = Object.freeze({
         let pages = {guids: guidsSlice, urls: urlsSlice};
 
         let result =
-          yield PlacesUtils.withConnectionWrapper("History.jsm: remove",
+          await PlacesUtils.withConnectionWrapper("History.jsm: remove",
                                                   db => remove(db, pages, onResult));
 
         removedPages = removedPages || result;
       }
       return removedPages;
-    });
+    })();
   },
 
   /**
@@ -647,29 +645,29 @@ function sqlList(list) {
  *      The `moz_places` identifiers for the places to invalidate.
  * @return (Promise)
  */
-var invalidateFrecencies = Task.async(function*(db, idList) {
+var invalidateFrecencies = async function(db, idList) {
   if (idList.length == 0) {
     return;
   }
   let ids = sqlList(idList);
-  yield db.execute(
+  await db.execute(
     `UPDATE moz_places
      SET frecency = NOTIFY_FRECENCY(
        CALCULATE_FRECENCY(id), url, guid, hidden, last_visit_date
      ) WHERE id in (${ ids })`
   );
-  yield db.execute(
+  await db.execute(
     `UPDATE moz_places
      SET hidden = 0
      WHERE id in (${ ids })
      AND frecency <> 0`
   );
-});
+};
 
 // Inner implementation of History.clear().
-var clear = Task.async(function* (db) {
+var clear = async function(db) {
   // Remove all history.
-  yield db.execute("DELETE FROM moz_historyvisits");
+  await db.execute("DELETE FROM moz_historyvisits");
 
   // Clear the registered embed visits.
   PlacesUtils.history.clearEmbedVisits();
@@ -680,7 +678,7 @@ var clear = Task.async(function* (db) {
 
   // Invalidate frecencies for the remaining places. This must happen
   // after the notification to ensure it runs enqueued to expiration.
-  yield db.execute(
+  await db.execute(
     `UPDATE moz_places SET frecency =
      (CASE
       WHEN url_hash BETWEEN hash("place", "prefix_lo") AND
@@ -692,7 +690,7 @@ var clear = Task.async(function* (db) {
 
   // Notify frecency change observers.
   notify(observers, "onManyFrecenciesChanged");
-});
+};
 
 /**
  * Clean up pages whose history has been modified, by either
@@ -715,8 +713,8 @@ var clear = Task.async(function* (db) {
  *              be kept and its frecency updated.
  * @return (Promise)
  */
-var cleanupPages = Task.async(function*(db, pages) {
-  yield invalidateFrecencies(db, pages.filter(p => p.hasForeign || p.hasVisits).map(p => p.id));
+var cleanupPages = async function(db, pages) {
+  await invalidateFrecencies(db, pages.filter(p => p.hasForeign || p.hasVisits).map(p => p.id));
 
   let pageIdsToRemove = pages.filter(p => !p.hasForeign && !p.hasVisits).map(p => p.id);
   if (pageIdsToRemove.length > 0) {
@@ -724,23 +722,23 @@ var cleanupPages = Task.async(function*(db, pages) {
     // Note, we are already in a transaction, since callers create it.
     // Check relations regardless, to avoid creating orphans in case of
     // async race conditions.
-    yield db.execute(`DELETE FROM moz_places WHERE id IN ( ${ idsList } )
+    await db.execute(`DELETE FROM moz_places WHERE id IN ( ${ idsList } )
                       AND foreign_count = 0 AND last_visit_date ISNULL`);
     // Hosts accumulated during the places delete are updated through a trigger
     // (see nsPlacesTriggers.h).
-    yield db.executeCached(`DELETE FROM moz_updatehosts_temp`);
+    await db.executeCached(`DELETE FROM moz_updatehosts_temp`);
 
     // Expire orphans.
-    yield db.executeCached(`DELETE FROM moz_pages_w_icons
+    await db.executeCached(`DELETE FROM moz_pages_w_icons
                             WHERE page_url_hash NOT IN (SELECT url_hash FROM moz_places)`);
-    yield db.executeCached(`DELETE FROM moz_icons
+    await db.executeCached(`DELETE FROM moz_icons
                             WHERE root = 0 AND id NOT IN (SELECT icon_id FROM moz_icons_to_pages)`);
-    yield db.execute(`DELETE FROM moz_annos
+    await db.execute(`DELETE FROM moz_annos
                       WHERE place_id IN ( ${ idsList } )`);
-    yield db.execute(`DELETE FROM moz_inputhistory
+    await db.execute(`DELETE FROM moz_inputhistory
                       WHERE place_id IN ( ${ idsList } )`);
   }
-});
+};
 
 /**
  * Notify observers that pages have been removed/updated.
@@ -759,7 +757,7 @@ var cleanupPages = Task.async(function*(db, pages) {
  *              be kept and its frecency updated.
  * @return (Promise)
  */
-var notifyCleanup = Task.async(function*(db, pages) {
+var notifyCleanup = async function(db, pages) {
   let notifiedCount = 0;
   let observers = PlacesUtils.history.getObservers();
 
@@ -786,10 +784,10 @@ var notifyCleanup = Task.async(function*(db, pages) {
     if (++notifiedCount % NOTIFICATION_CHUNK_SIZE == 0) {
       // Every few notifications, yield time back to the main
       // thread to avoid jank.
-      yield Promise.resolve();
+      await Promise.resolve();
     }
   }
-});
+};
 
 /**
  * Notify an `onResult` callback of a set of operations
@@ -801,7 +799,7 @@ var notifyCleanup = Task.async(function*(db, pages) {
  *      If provided, call `onResult` with `data[0]`, `data[1]`, etc.
  *      Otherwise, do nothing.
  */
-var notifyOnResult = Task.async(function*(data, onResult) {
+var notifyOnResult = async function(data, onResult) {
   if (!onResult) {
     return;
   }
@@ -816,13 +814,13 @@ var notifyOnResult = Task.async(function*(data, onResult) {
     if (++notifiedCount % ONRESULT_CHUNK_SIZE == 0) {
       // Every few notifications, yield time back to the main
       // thread to avoid jank.
-      yield Promise.resolve();
+      await Promise.resolve();
     }
   }
-});
+};
 
 // Inner implementation of History.removeVisitsByFilter.
-var removeVisitsByFilter = Task.async(function*(db, filter, onResult = null) {
+var removeVisitsByFilter = async function(db, filter, onResult = null) {
   // 1. Determine visits that took place during the interval.  Note
   // that the database uses microseconds, while JS uses milliseconds,
   // so we need to *1000 one way and /1000 the other way.
@@ -858,7 +856,7 @@ var removeVisitsByFilter = Task.async(function*(db, filter, onResult = null) {
   let pagesToInspect = new Set();
   let onResultData = onResult ? [] : null;
 
-  yield db.executeCached(
+  await db.executeCached(
      `SELECT v.id, place_id, visit_date / 1000 AS date, visit_type FROM moz_historyvisits v
              ${optionalJoin}
              WHERE ${ conditions.join(" AND ") }${ args.limit ? " LIMIT :limit" : "" }`,
@@ -885,13 +883,13 @@ var removeVisitsByFilter = Task.async(function*(db, filter, onResult = null) {
     }
 
     let pages = [];
-    yield db.executeTransaction(function*() {
+    await db.executeTransaction(async function() {
       // 2. Remove all offending visits.
-      yield db.execute(`DELETE FROM moz_historyvisits
+      await db.execute(`DELETE FROM moz_historyvisits
                         WHERE id IN (${ sqlList(visitsToRemove) } )`);
 
       // 3. Find out which pages have been orphaned
-      yield db.execute(
+      await db.execute(
         `SELECT id, url, guid,
           (foreign_count != 0) AS has_foreign,
           (last_visit_date NOTNULL) as has_visits
@@ -910,7 +908,7 @@ var removeVisitsByFilter = Task.async(function*(db, filter, onResult = null) {
          });
 
       // 4. Clean up and notify
-      yield cleanupPages(db, pages);
+      await cleanupPages(db, pages);
     });
 
     notifyCleanup(db, pages);
@@ -921,10 +919,10 @@ var removeVisitsByFilter = Task.async(function*(db, filter, onResult = null) {
   }
 
   return visitsToRemove.length != 0;
-});
+};
 
 // Inner implementation of History.removeByFilter
-var removeByFilter = Task.async(function*(db, filter, onResult = null) {
+var removeByFilter = async function(db, filter, onResult = null) {
   // 1. Create fragment for date filtration
   let dateFilterSQLFragment = "";
   let conditions = [];
@@ -978,7 +976,7 @@ var removeByFilter = Task.async(function*(db, filter, onResult = null) {
   let pages = [];
   let hasPagesToRemove = false;
 
-  yield db.executeCached(
+  await db.executeCached(
     query,
     params,
     row => {
@@ -1013,13 +1011,13 @@ var removeByFilter = Task.async(function*(db, filter, onResult = null) {
   }
 
   try {
-    yield db.executeTransaction(Task.async(function*() {
+    await db.executeTransaction(async function() {
       // 4. Actually remove visits
-      yield db.execute(`DELETE FROM moz_historyvisits
+      await db.execute(`DELETE FROM moz_historyvisits
                         WHERE place_id IN(${ sqlList(pages.map(p => p.id)) })`);
       // 5. Clean up and notify
-      yield cleanupPages(db, pages);
-    }));
+      await cleanupPages(db, pages);
+    });
 
     notifyCleanup(db, pages);
     notifyOnResult(onResultData, onResult);
@@ -1028,10 +1026,10 @@ var removeByFilter = Task.async(function*(db, filter, onResult = null) {
   }
 
   return hasPagesToRemove;
-});
+};
 
 // Inner implementation of History.remove.
-var remove = Task.async(function*(db, {guids, urls}, onResult = null) {
+var remove = async function(db, {guids, urls}, onResult = null) {
   // 1. Find out what needs to be removed
   let query =
     `SELECT id, url, guid, foreign_count, title, frecency
@@ -1044,7 +1042,7 @@ var remove = Task.async(function*(db, {guids, urls}, onResult = null) {
   let onResultData = onResult ? [] : null;
   let pages = [];
   let hasPagesToRemove = false;
-  yield db.execute(query, null, Task.async(function*(row) {
+  await db.execute(query, null, async function(row) {
     let hasForeign = row.getResultByName("foreign_count") != 0;
     if (!hasForeign) {
       hasPagesToRemove = true;
@@ -1068,7 +1066,7 @@ var remove = Task.async(function*(db, {guids, urls}, onResult = null) {
         url: new URL(url)
       });
     }
-  }));
+  });
 
   try {
     if (pages.length == 0) {
@@ -1076,14 +1074,14 @@ var remove = Task.async(function*(db, {guids, urls}, onResult = null) {
       return false;
     }
 
-    yield db.executeTransaction(function*() {
+    await db.executeTransaction(async function() {
       // 2. Remove all visits to these pages.
-      yield db.execute(`DELETE FROM moz_historyvisits
+      await db.execute(`DELETE FROM moz_historyvisits
                         WHERE place_id IN (${ sqlList(pages.map(p => p.id)) })
                        `);
 
       // 3. Clean up and notify
-      yield cleanupPages(db, pages);
+      await cleanupPages(db, pages);
     });
 
     notifyCleanup(db, pages);
@@ -1094,7 +1092,7 @@ var remove = Task.async(function*(db, {guids, urls}, onResult = null) {
   }
 
   return hasPagesToRemove;
-});
+};
 
 /**
  * Merges an updateInfo object, as returned by asyncHistory.updatePlaces
@@ -1128,7 +1126,7 @@ function mergeUpdateInfoIntoPageInfo(updateInfo, pageInfo = {}) {
 }
 
 // Inner implementation of History.insert.
-var insert = Task.async(function*(db, pageInfo) {
+var insert = async function(db, pageInfo) {
   let info = convertForUpdatePlaces(pageInfo);
 
   return new Promise((resolve, reject) => {
@@ -1144,10 +1142,10 @@ var insert = Task.async(function*(db, pageInfo) {
       }
     });
   });
-});
+};
 
 // Inner implementation of History.insertMany.
-var insertMany = Task.async(function*(db, pageInfos, onResult, onError) {
+var insertMany = async function(db, pageInfos, onResult, onError) {
   let infos = [];
   let onResultData = [];
   let onErrorData = [];
@@ -1180,4 +1178,4 @@ var insertMany = Task.async(function*(db, pageInfos, onResult, onError) {
       }
     }, true);
   });
-});
+};

@@ -8,13 +8,13 @@
  */
 
 // Loading a toplevel frameset
-add_task(function*() {
+add_task(async function() {
   let testURL = getRootDirectory(gTestPath) + "browser_frame_history_index.html";
   let tab = gBrowser.addTab(testURL);
   gBrowser.selectedTab = tab;
 
   info("Opening a page with three frames, 4 loads should take place");
-  yield waitForLoadsInBrowser(tab.linkedBrowser, 4);
+  await waitForLoadsInBrowser(tab.linkedBrowser, 4);
 
   let browser_b = tab.linkedBrowser.contentDocument.getElementsByTagName("frame")[1];
   let document_b = browser_b.contentDocument;
@@ -24,21 +24,21 @@ add_task(function*() {
   info("Clicking on link 1, 1 load should take place");
   let promise = waitForLoadsInBrowser(tab.linkedBrowser, 1);
   EventUtils.sendMouseEvent({type: "click"}, links[0], browser_b.contentWindow);
-  yield promise;
+  await promise;
 
   info("Clicking on link 2, 1 load should take place");
   promise = waitForLoadsInBrowser(tab.linkedBrowser, 1);
   EventUtils.sendMouseEvent({type: "click"}, links[1], browser_b.contentWindow);
-  yield promise;
+  await promise;
 
   info("Close then un-close page, 4 loads should take place");
-  yield promiseRemoveTab(tab);
+  await promiseRemoveTab(tab);
   let newTab = ss.undoCloseTab(window, 0);
-  yield waitForLoadsInBrowser(newTab.linkedBrowser, 4);
+  await waitForLoadsInBrowser(newTab.linkedBrowser, 4);
 
   info("Go back in time, 1 load should take place");
   gBrowser.goBack();
-  yield waitForLoadsInBrowser(newTab.linkedBrowser, 1);
+  await waitForLoadsInBrowser(newTab.linkedBrowser, 1);
 
   let expectedURLEnds = ["a.html", "b.html", "c1.html"];
   let frames = newTab.linkedBrowser.contentDocument.getElementsByTagName("frame");
@@ -51,13 +51,13 @@ add_task(function*() {
 });
 
 // Loading the frameset inside an iframe
-add_task(function*() {
+add_task(async function() {
   let testURL = getRootDirectory(gTestPath) + "browser_frame_history_index2.html";
   let tab = gBrowser.addTab(testURL);
   gBrowser.selectedTab = tab;
 
   info("iframe: Opening a page with an iframe containing three frames, 5 loads should take place");
-  yield waitForLoadsInBrowser(tab.linkedBrowser, 5);
+  await waitForLoadsInBrowser(tab.linkedBrowser, 5);
 
   let browser_b = tab.linkedBrowser.contentDocument.
     getElementById("iframe").contentDocument.
@@ -69,21 +69,21 @@ add_task(function*() {
   info("iframe: Clicking on link 1, 1 load should take place");
   let promise = waitForLoadsInBrowser(tab.linkedBrowser, 1);
   EventUtils.sendMouseEvent({type: "click"}, links[0], browser_b.contentWindow);
-  yield promise;
+  await promise;
 
   info("iframe: Clicking on link 2, 1 load should take place");
   promise = waitForLoadsInBrowser(tab.linkedBrowser, 1);
   EventUtils.sendMouseEvent({type: "click"}, links[1], browser_b.contentWindow);
-  yield promise;
+  await promise;
 
   info("iframe: Close then un-close page, 5 loads should take place");
-  yield promiseRemoveTab(tab);
+  await promiseRemoveTab(tab);
   let newTab = ss.undoCloseTab(window, 0);
-  yield waitForLoadsInBrowser(newTab.linkedBrowser, 5);
+  await waitForLoadsInBrowser(newTab.linkedBrowser, 5);
 
   info("iframe: Go back in time, 1 load should take place");
   gBrowser.goBack();
-  yield waitForLoadsInBrowser(newTab.linkedBrowser, 1);
+  await waitForLoadsInBrowser(newTab.linkedBrowser, 1);
 
   let expectedURLEnds = ["a.html", "b.html", "c1.html"];
   let frames = newTab.linkedBrowser.contentDocument.
@@ -98,7 +98,7 @@ add_task(function*() {
 });
 
 // Now, test that we don't record history if the iframe is added dynamically
-add_task(function*() {
+add_task(async function() {
   // Start with an empty history
     let blankState = JSON.stringify({
       windows: [{
@@ -112,7 +112,7 @@ add_task(function*() {
   let testURL = getRootDirectory(gTestPath) + "browser_frame_history_index_blank.html";
   let tab = gBrowser.addTab(testURL);
   gBrowser.selectedTab = tab;
-  yield waitForLoadsInBrowser(tab.linkedBrowser, 1);
+  await waitForLoadsInBrowser(tab.linkedBrowser, 1);
 
   info("dynamic: Opening a page with an iframe containing three frames, 4 dynamic loads should take place");
   let doc = tab.linkedBrowser.contentDocument;
@@ -120,7 +120,7 @@ add_task(function*() {
   iframe.id = "iframe";
   iframe.src = "browser_frame_history_index.html";
   doc.body.appendChild(iframe);
-  yield waitForLoadsInBrowser(tab.linkedBrowser, 4);
+  await waitForLoadsInBrowser(tab.linkedBrowser, 4);
 
   let browser_b = tab.linkedBrowser.contentDocument.
     getElementById("iframe").contentDocument.
@@ -132,12 +132,12 @@ add_task(function*() {
   info("dynamic: Clicking on link 1, 1 load should take place");
   let promise = waitForLoadsInBrowser(tab.linkedBrowser, 1);
   EventUtils.sendMouseEvent({type: "click"}, links[0], browser_b.contentWindow);
-  yield promise;
+  await promise;
 
   info("dynamic: Clicking on link 2, 1 load should take place");
   promise = waitForLoadsInBrowser(tab.linkedBrowser, 1);
   EventUtils.sendMouseEvent({type: "click"}, links[1], browser_b.contentWindow);
-  yield promise;
+  await promise;
 
   info("Check in the state that we have not stored this history");
   let state = ss.getBrowserState();
@@ -148,23 +148,23 @@ add_task(function*() {
 
 // helper functions
 function waitForLoadsInBrowser(aBrowser, aLoadCount) {
-  let deferred = Promise.defer();
-  let loadCount = 0;
-  aBrowser.addEventListener("load", function(aEvent) {
-    if (++loadCount < aLoadCount) {
-      info("Got " + loadCount + " loads, waiting until we have " + aLoadCount);
-      return;
-    }
+  return new Promise(resolve => {
+    let loadCount = 0;
+    aBrowser.addEventListener("load", function(aEvent) {
+      if (++loadCount < aLoadCount) {
+        info("Got " + loadCount + " loads, waiting until we have " + aLoadCount);
+        return;
+      }
 
-    aBrowser.removeEventListener("load", arguments.callee, true);
-    deferred.resolve();
-  }, true);
-  return deferred.promise;
+      aBrowser.removeEventListener("load", arguments.callee, true);
+      resolve();
+    }, true);
+  });
 }
 
 function timeout(delay, task) {
-  let deferred = Promise.defer();
-  setTimeout(() => deferred.resolve(true), delay);
-  task.then(() => deferred.resolve(false), deferred.reject);
-  return deferred.promise;
+  return new Promise((resolve, reject) => {
+    setTimeout(() => resolve(true), delay);
+    task.then(() => resolve(false), reject);
+  });
 }

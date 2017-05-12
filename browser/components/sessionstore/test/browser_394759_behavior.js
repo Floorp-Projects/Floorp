@@ -20,7 +20,7 @@
  * @returns Promise
  */
 function testWindows(windowsToOpen, expectedResults) {
-  return Task.spawn(function*() {
+  return (async function() {
     for (let winData of windowsToOpen) {
       let features = "chrome,dialog=no," +
                      (winData.isPopup ? "all=no" : "all");
@@ -28,8 +28,8 @@ function testWindows(windowsToOpen, expectedResults) {
 
       let openWindowPromise = BrowserTestUtils.waitForNewWindow(true, url);
       openDialog(getBrowserURL(), "", features, url);
-      let win = yield openWindowPromise;
-      yield BrowserTestUtils.closeWindow(win);
+      let win = await openWindowPromise;
+      await BrowserTestUtils.closeWindow(win);
     }
 
     let closedWindowData = JSON.parse(ss.getClosedWindowData());
@@ -44,10 +44,10 @@ function testWindows(windowsToOpen, expectedResults) {
        "There were " + oResults.popup + " popup windows to reopen");
     is(numNormal, oResults.normal,
        "There were " + oResults.normal + " normal windows to repoen");
-  });
+  })();
 }
 
-add_task(function* test_closed_window_states() {
+add_task(async function test_closed_window_states() {
   // This test takes quite some time, and timeouts frequently, so we require
   // more time to run.
   // See Bug 518970.
@@ -61,7 +61,7 @@ add_task(function* test_closed_window_states() {
   let expectedResults = {mac: {popup: 3, normal: 0},
                          other: {popup: 3, normal: 1}};
 
-  yield testWindows(windowsToOpen, expectedResults);
+  await testWindows(windowsToOpen, expectedResults);
 
 
   let windowsToOpen2 = [{isPopup: false},
@@ -72,5 +72,5 @@ add_task(function* test_closed_window_states() {
   let expectedResults2 = {mac: {popup: 0, normal: 3},
                           other: {popup: 0, normal: 3}};
 
-  yield testWindows(windowsToOpen2, expectedResults2);
+  await testWindows(windowsToOpen2, expectedResults2);
 });

@@ -41,7 +41,7 @@ function run_test() {
 
 // Force a sync init and ensure the right thing happens (ie, that no xhr
 // request is made and we fall back to the timezone-only trick)
-add_task(function* test_simple() {
+add_task(async function test_simple() {
   deepEqual(getCountryCodePref(), undefined, "no countryCode pref");
   deepEqual(getIsUSPref(), undefined, "no isUS pref");
 
@@ -59,11 +59,11 @@ add_task(function* test_simple() {
   ok(Services.search.isInitialized);
 
   // a little wait to check we didn't do the xhr thang.
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     do_timeout(500, resolve);
   });
 
-  let msg = yield promiseTzMessage;
+  let msg = await promiseTzMessage;
   print("Timezone message:", msg.message);
   ok(msg.message.endsWith(isUSTimezone().toString()), "fell back to timezone and it matches our timezone");
 

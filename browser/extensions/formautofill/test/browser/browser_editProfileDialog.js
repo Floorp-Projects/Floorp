@@ -1,14 +1,14 @@
 "use strict";
 
-registerCleanupFunction(function* () {
-  let addresses = yield getAddresses();
+registerCleanupFunction(async function() {
+  let addresses = await getAddresses();
   if (addresses.length) {
-    yield removeAddresses(addresses.map(address => address.guid));
+    await removeAddresses(addresses.map(address => address.guid));
   }
 });
 
-add_task(function* test_cancelEditProfileDialog() {
-  yield new Promise(resolve => {
+add_task(async function test_cancelEditProfileDialog() {
+  await new Promise(resolve => {
     let win = window.openDialog(EDIT_PROFILE_DIALOG_URL, null, null, null);
     win.addEventListener("load", () => {
       win.addEventListener("unload", () => {
@@ -20,8 +20,8 @@ add_task(function* test_cancelEditProfileDialog() {
   });
 });
 
-add_task(function* test_saveAddress() {
-  yield new Promise(resolve => {
+add_task(async function test_saveAddress() {
+  await new Promise(resolve => {
     let win = window.openDialog(EDIT_PROFILE_DIALOG_URL, null, null, null);
     win.addEventListener("load", () => {
       win.addEventListener("unload", () => {
@@ -56,7 +56,7 @@ add_task(function* test_saveAddress() {
       EventUtils.synthesizeKey("VK_RETURN", {}, win);
     }, {once: true});
   });
-  let addresses = yield getAddresses();
+  let addresses = await getAddresses();
 
   is(addresses.length, 1, "only one address is in storage");
   is(Object.keys(TEST_ADDRESS_1).length, 11, "Sanity check number of properties");
@@ -65,9 +65,9 @@ add_task(function* test_saveAddress() {
   }
 });
 
-add_task(function* test_editProfile() {
-  let addresses = yield getAddresses();
-  yield new Promise(resolve => {
+add_task(async function test_editProfile() {
+  let addresses = await getAddresses();
+  await new Promise(resolve => {
     let win = window.openDialog(EDIT_PROFILE_DIALOG_URL, null, null, addresses[0]);
     win.addEventListener("load", () => {
       win.addEventListener("unload", () => {
@@ -79,12 +79,12 @@ add_task(function* test_editProfile() {
       win.document.querySelector("#save").click();
     }, {once: true});
   });
-  addresses = yield getAddresses();
+  addresses = await getAddresses();
 
   is(addresses.length, 1, "only one address is in storage");
   is(addresses[0]["given-name"], TEST_ADDRESS_1["given-name"] + "test", "given-name changed");
-  yield removeAddresses([addresses[0].guid]);
+  await removeAddresses([addresses[0].guid]);
 
-  addresses = yield getAddresses();
+  addresses = await getAddresses();
   is(addresses.length, 0, "Address storage is empty");
 });

@@ -253,8 +253,6 @@ impl<'a, W> fmt::Write for CssStringWriter<'a, W> where W: fmt::Write {
             let escaped = match b {
                 b'"' => Some("\\\""),
                 b'\\' => Some("\\\\"),
-                b'\n' => Some("\\A "),
-                b'\r' => Some("\\D "),
                 b'\0' => Some("\u{FFFD}"),
                 b'\x01'...b'\x1F' | b'\x7F' => None,
                 _ => continue,

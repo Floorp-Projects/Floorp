@@ -7,15 +7,15 @@
 
 // Adding the character encoding menu to the panel, exiting customize mode,
 // and moving it to the nav-bar should have it enabled, not disabled.
-add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
-  yield startCustomizing();
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+  await startCustomizing();
   CustomizableUI.addWidgetToArea("characterencoding-button", "PanelUI-contents");
-  yield endCustomizing();
-  yield PanelUI.show();
+  await endCustomizing();
+  await PanelUI.show();
   let panelHiddenPromise = promisePanelHidden(window);
   PanelUI.hide();
-  yield panelHiddenPromise;
+  await panelHiddenPromise;
   CustomizableUI.addWidgetToArea("characterencoding-button", "nav-bar");
   let button = document.getElementById("characterencoding-button");
   ok(!button.hasAttribute("disabled"), "Button shouldn't be disabled");

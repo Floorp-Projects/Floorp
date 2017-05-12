@@ -17,11 +17,11 @@ Cu.import("resource://services-sync/util.js");
  * @param {function} f
  *        The function to call.
  */
-function* throwsGen(constraint, f) {
+async function throwsGen(constraint, f) {
   let threw = false;
   let exception;
   try {
-    yield* f();
+    await f();
   } catch (e) {
     threw = true;
     exception = e;
@@ -64,7 +64,7 @@ const KEY_BUNDLE = {
 };
 const transformer = new StaticKeyEncryptionRemoteTransformer(KEY_BUNDLE);
 
-add_task(function* test_encryption_transformer_roundtrip() {
+add_task(async function test_encryption_transformer_roundtrip() {
   const POSSIBLE_DATAS = [
     "string",
     2,          // number
@@ -75,19 +75,19 @@ add_task(function* test_encryption_transformer_roundtrip() {
   for (let data of POSSIBLE_DATAS) {
     const record = {data, id: "key-some_2D_key", key: "some-key"};
 
-    deepEqual(record, yield transformer.decode(yield transformer.encode(record)));
+    deepEqual(record, await transformer.decode(await transformer.encode(record)));
   }
 });
 
-add_task(function* test_refuses_to_decrypt_tampered() {
-  const encryptedRecord = yield transformer.encode({data: [1, 2, 3], id: "key-some_2D_key", key: "some-key"});
+add_task(async function test_refuses_to_decrypt_tampered() {
+  const encryptedRecord = await transformer.encode({data: [1, 2, 3], id: "key-some_2D_key", key: "some-key"});
   const tamperedHMAC = Object.assign({}, encryptedRecord, {hmac: "0000000000000000000000000000000000000000000000000000000000000001"});
-  yield* throwsGen(Utils.isHMACMismatch, function* () {
-    yield transformer.decode(tamperedHMAC);
+  await throwsGen(Utils.isHMACMismatch, async function() {
+    await transformer.decode(tamperedHMAC);
   });
 
   const tamperedIV = Object.assign({}, encryptedRecord, {IV: "aaaaaaaaaaaaaaaaaaaaaa=="});
-  yield* throwsGen(Utils.isHMACMismatch, function* () {
-    yield transformer.decode(tamperedIV);
+  await throwsGen(Utils.isHMACMismatch, async function() {
+    await transformer.decode(tamperedIV);
   });
 });

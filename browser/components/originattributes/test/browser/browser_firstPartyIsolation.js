@@ -1,7 +1,7 @@
 const BASE_URL = "http://mochi.test:8888/browser/browser/components/originattributes/test/browser/";
 const BASE_DOMAIN = "mochi.test";
 
-add_task(function* setup() {
+add_task(async function setup() {
   Services.prefs.setBoolPref("privacy.firstparty.isolate", true);
   registerCleanupFunction(function() {
     Services.prefs.clearUserPref("privacy.firstparty.isolate");
@@ -13,13 +13,13 @@ add_task(function* setup() {
  * Test for the top-level document and child iframes should have the
  * firstPartyDomain attribute.
  */
-add_task(function* principal_test() {
+add_task(async function principal_test() {
   let tab = gBrowser.addTab(BASE_URL + "test_firstParty.html");
-  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser, true, function(url) {
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser, true, function(url) {
     return url == BASE_URL + "test_firstParty.html";
   });
 
-  yield ContentTask.spawn(tab.linkedBrowser, { firstPartyDomain: BASE_DOMAIN }, function* (attrs) {
+  await ContentTask.spawn(tab.linkedBrowser, { firstPartyDomain: BASE_DOMAIN }, async function(attrs) {
     info("document principal: " + content.document.nodePrincipal.origin);
     Assert.equal(docShell.getOriginAttributes().firstPartyDomain, "",
                  "top-level docShell shouldn't have firstPartyDomain attribute.");
@@ -43,9 +43,9 @@ add_task(function* principal_test() {
  * Test for the cookie jars of the top-level document and child iframe should be
  * isolated by firstPartyDomain.
  */
-add_task(function* cookie_test() {
+add_task(async function cookie_test() {
   let tab = gBrowser.addTab(BASE_URL + "test_firstParty_cookie.html");
-  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser, true);
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser, true);
 
   let iter = Services.cookies.enumerator;
   let count = 0;
@@ -68,10 +68,10 @@ add_task(function* cookie_test() {
  * attribute. However if the redirect is happening on the iframe, the attribute
  * should remain the same.
  */
-add_task(function* redirect_test() {
+add_task(async function redirect_test() {
   let tab = gBrowser.addTab(BASE_URL + "test_firstParty_http_redirect.html");
-  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  yield ContentTask.spawn(tab.linkedBrowser, { firstPartyDomain: "example.com" }, function* (attrs) {
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  await ContentTask.spawn(tab.linkedBrowser, { firstPartyDomain: "example.com" }, async function(attrs) {
     info("document principal: " + content.document.nodePrincipal.origin);
     info("document uri: " + content.document.documentURI);
 
@@ -83,11 +83,11 @@ add_task(function* redirect_test() {
 
   // Since this is a HTML redirect, we wait until the final page is loaded.
   let tab2 = gBrowser.addTab(BASE_URL + "test_firstParty_html_redirect.html");
-  yield BrowserTestUtils.browserLoaded(tab2.linkedBrowser, false, function(url) {
+  await BrowserTestUtils.browserLoaded(tab2.linkedBrowser, false, function(url) {
     return url == "http://example.com/";
   });
 
-  yield ContentTask.spawn(tab2.linkedBrowser, { firstPartyDomain: "example.com" }, function* (attrs) {
+  await ContentTask.spawn(tab2.linkedBrowser, { firstPartyDomain: "example.com" }, async function(attrs) {
     info("2nd tab document principal: " + content.document.nodePrincipal.origin);
     info("2nd tab document uri: " + content.document.documentURI);
     Assert.equal(content.document.documentURI, "http://example.com/",
@@ -97,14 +97,14 @@ add_task(function* redirect_test() {
   });
 
   let tab3 = gBrowser.addTab(BASE_URL + "test_firstParty_iframe_http_redirect.html");
-  yield BrowserTestUtils.browserLoaded(tab3.linkedBrowser, true, function(url) {
+  await BrowserTestUtils.browserLoaded(tab3.linkedBrowser, true, function(url) {
     return url == (BASE_URL + "test_firstParty_iframe_http_redirect.html");
   });
 
   // This redirect happens on the iframe, so unlike the two redirect tests above,
   // the firstPartyDomain should still stick to the current top-level document,
   // which is mochi.test.
-  yield ContentTask.spawn(tab3.linkedBrowser, { firstPartyDomain: "mochi.test" }, function* (attrs) {
+  await ContentTask.spawn(tab3.linkedBrowser, { firstPartyDomain: "mochi.test" }, async function(attrs) {
     let iframe = content.document.getElementById("iframe1");
     info("iframe document principal: " + iframe.contentDocument.nodePrincipal.origin);
     info("iframe document uri: " + iframe.contentDocument.documentURI);
@@ -123,18 +123,18 @@ add_task(function* redirect_test() {
 /**
  * Test for postMessage between document and iframe.
  */
-add_task(function* postMessage_test() {
+add_task(async function postMessage_test() {
   let tab = gBrowser.addTab(BASE_URL + "test_firstParty_postMessage.html");
 
   // The top-level page will post a message to its child iframe, and wait for
   // another message from the iframe, once it receives the message, it will
   // create another iframe, dummy.html.
   // So we wait until dummy.html is loaded
-  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser, true, function(url) {
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser, true, function(url) {
     return url == BASE_URL + "dummy.html";
   });
 
-  yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
     info("document principal: " + content.document.nodePrincipal.origin);
     let value = content.document.getElementById("message").textContent;
     Assert.equal(value, "OK");
@@ -147,16 +147,16 @@ add_task(function* postMessage_test() {
  * When the web page calls window.open, the new window should have the same
  * firstPartyDomain attribute.
  */
-add_task(function* openWindow_test() {
+add_task(async function openWindow_test() {
   Services.prefs.setIntPref("browser.link.open_newwindow", 2);
   registerCleanupFunction(function() {
     Services.prefs.clearUserPref("browser.link.open_newwindow");
   });
 
   let tab = gBrowser.addTab(BASE_URL + "window.html");
-  let win = yield BrowserTestUtils.waitForNewWindow();
+  let win = await BrowserTestUtils.waitForNewWindow();
 
-  yield ContentTask.spawn(win.gBrowser.selectedBrowser, { firstPartyDomain: "mochi.test" }, function* (attrs) {
+  await ContentTask.spawn(win.gBrowser.selectedBrowser, { firstPartyDomain: "mochi.test" }, async function(attrs) {
     Assert.equal(docShell.getOriginAttributes().firstPartyDomain, attrs.firstPartyDomain,
                  "window.open() should have firstPartyDomain attribute");
     Assert.equal(content.document.nodePrincipal.originAttributes.firstPartyDomain,
@@ -170,24 +170,24 @@ add_task(function* openWindow_test() {
   });
 
   gBrowser.removeTab(tab);
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 });
 
 /**
  * When the web page calls window.open, the top-level docshell in the new
  * created window will have firstPartyDomain set.
  */
-add_task(function* window_open_redirect_test() {
+add_task(async function window_open_redirect_test() {
   Services.prefs.setIntPref("browser.link.open_newwindow", 2);
   registerCleanupFunction(function() {
     Services.prefs.clearUserPref("browser.link.open_newwindow");
   });
 
   let tab = gBrowser.addTab(BASE_URL + "window_redirect.html");
-  let win = yield BrowserTestUtils.waitForNewWindow();
-  yield BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+  let win = await BrowserTestUtils.waitForNewWindow();
+  await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
 
-  yield ContentTask.spawn(win.gBrowser.selectedBrowser, { firstPartyDomain: "mochi.test" }, function* (attrs) {
+  await ContentTask.spawn(win.gBrowser.selectedBrowser, { firstPartyDomain: "mochi.test" }, async function(attrs) {
     Assert.equal(docShell.getOriginAttributes().firstPartyDomain, attrs.firstPartyDomain,
                  "window.open() should have firstPartyDomain attribute");
     Assert.equal(content.document.nodePrincipal.originAttributes.firstPartyDomain,
@@ -195,7 +195,7 @@ add_task(function* window_open_redirect_test() {
   });
 
   gBrowser.removeTab(tab);
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 });
 
 /**
@@ -204,17 +204,17 @@ add_task(function* window_open_redirect_test() {
  * However the top-level document will override the firstPartyDomain if the
  * document is from another domain.
  */
-add_task(function* window_open_iframe_test() {
+add_task(async function window_open_iframe_test() {
   Services.prefs.setIntPref("browser.link.open_newwindow", 2);
   registerCleanupFunction(function() {
     Services.prefs.clearUserPref("browser.link.open_newwindow");
   });
 
   let tab = gBrowser.addTab(BASE_URL + "window2.html");
-  let win = yield BrowserTestUtils.waitForNewWindow();
-  yield BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser, true);
+  let win = await BrowserTestUtils.waitForNewWindow();
+  await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser, true);
 
-  yield ContentTask.spawn(win.gBrowser.selectedBrowser, { firstPartyDomain: "mochi.test" }, function* (attrs) {
+  await ContentTask.spawn(win.gBrowser.selectedBrowser, { firstPartyDomain: "mochi.test" }, async function(attrs) {
     Assert.equal(docShell.getOriginAttributes().firstPartyDomain, attrs.firstPartyDomain,
                  "window.open() should have firstPartyDomain attribute");
 
@@ -231,17 +231,17 @@ add_task(function* window_open_iframe_test() {
   });
 
   gBrowser.removeTab(tab);
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 });
 
 /**
  * Test for the loadInfo->TriggeringPrincipal is the document itself.
  */
-add_task(function* form_test() {
+add_task(async function form_test() {
   let tab = gBrowser.addTab(BASE_URL + "test_form.html");
-  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
-  yield ContentTask.spawn(tab.linkedBrowser, { firstPartyDomain: "mochi.test" }, function* (attrs) {
+  await ContentTask.spawn(tab.linkedBrowser, { firstPartyDomain: "mochi.test" }, async function(attrs) {
     Assert.equal(content.document.nodePrincipal.originAttributes.firstPartyDomain,
                  attrs.firstPartyDomain, "The document should have firstPartyDomain");
 
@@ -255,17 +255,17 @@ add_task(function* form_test() {
 /**
  * Another test for loadInfo->TriggeringPrincipal in the window.open case.
  */
-add_task(function* window_open_form_test() {
+add_task(async function window_open_form_test() {
   Services.prefs.setIntPref("browser.link.open_newwindow", 2);
   registerCleanupFunction(function() {
     Services.prefs.clearUserPref("browser.link.open_newwindow");
   });
 
   let tab = gBrowser.addTab(BASE_URL + "window3.html");
-  let win = yield BrowserTestUtils.waitForNewWindow();
-  yield BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser, true);
+  let win = await BrowserTestUtils.waitForNewWindow();
+  await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser, true);
 
-  yield ContentTask.spawn(win.gBrowser.selectedBrowser, { firstPartyDomain: "mochi.test" }, function* (attrs) {
+  await ContentTask.spawn(win.gBrowser.selectedBrowser, { firstPartyDomain: "mochi.test" }, async function(attrs) {
     Assert.equal(docShell.getOriginAttributes().firstPartyDomain, attrs.firstPartyDomain,
                  "window.open() should have firstPartyDomain attribute");
     Assert.equal(content.document.nodePrincipal.originAttributes.firstPartyDomain,
@@ -276,5 +276,5 @@ add_task(function* window_open_form_test() {
   });
 
   gBrowser.removeTab(tab);
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 });

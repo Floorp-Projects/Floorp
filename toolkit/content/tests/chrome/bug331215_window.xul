@@ -18,7 +18,6 @@
 
   <script type="application/javascript"><![CDATA[
     const {interfaces: Ci, classes: Cc, results: Cr, utils: Cu} = Components;
-    Cu.import("resource://gre/modules/Task.jsm");
     Cu.import("resource://testing-common/BrowserTestUtils.jsm");
     Cu.import("resource://testing-common/ContentTask.jsm");
     ContentTask.setTestScope(window.opener.wrappedJSObject);
@@ -33,37 +32,37 @@
     SimpleTest.requestLongerTimeout(2);
 
     function startTest() {
-      Task.spawn(function* () {
+      (async function() {
         gFindBar = document.getElementById("FindToolbar");
         for (let browserId of ["content", "content-remote"]) {
-          yield startTestWithBrowser(browserId);
+          await startTestWithBrowser(browserId);
         }
-      }).then(() => {
+      })().then(() => {
         window.close();
         SimpleTest.finish();
       });
     }
 
-    function* startTestWithBrowser(browserId) {
+    async function startTestWithBrowser(browserId) {
       info("Starting test with browser '" + browserId + "'");
       gBrowser = document.getElementById(browserId);
       gFindBar.browser = gBrowser;
       let promise = BrowserTestUtils.browserLoaded(gBrowser);
       gBrowser.loadURI("data:text/plain,latest");
-      yield promise;
-      yield onDocumentLoaded();
+      await promise;
+      await onDocumentLoaded();
     }
 
-    function* onDocumentLoaded() {
+    async function onDocumentLoaded() {
       document.getElementById("cmd_find").doCommand();
-      yield promiseEnterStringIntoFindField("test");
+      await promiseEnterStringIntoFindField("test");
       document.commandDispatcher
               .getControllerForCommand("cmd_moveTop")
               .doCommand("cmd_moveTop");
-      yield promiseEnterStringIntoFindField("l");
+      await promiseEnterStringIntoFindField("l");
       ok(gFindBar._findField.getAttribute("status") == "notfound",
          "Findfield status attribute should have been 'notfound' after entering test");
-      yield promiseEnterStringIntoFindField("a");
+      await promiseEnterStringIntoFindField("a");
       ok(gFindBar._findField.getAttribute("status") != "notfound",
          "Findfield status attribute should not have been 'notfound' after entering latest");
     }

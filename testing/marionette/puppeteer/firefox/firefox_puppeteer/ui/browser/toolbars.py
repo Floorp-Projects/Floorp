@@ -248,7 +248,7 @@ class LocationBar(UIBaseLib):
 
         :returns: Reference to the reload button.
         """
-        return self.marionette.find_element(By.ID, 'urlbar-reload-button')
+        return self.marionette.find_element(By.ID, 'reload-button')
 
     def reload_url(self, trigger='button', force=False):
         """Reload the currently open page.
@@ -274,7 +274,7 @@ class LocationBar(UIBaseLib):
 
         :returns: Reference to the stop button.
         """
-        return self.marionette.find_element(By.ID, 'urlbar-stop-button')
+        return self.marionette.find_element(By.ID, 'stop-button')
 
     @property
     def urlbar(self):

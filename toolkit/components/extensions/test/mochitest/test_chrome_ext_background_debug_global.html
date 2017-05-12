@@ -43,13 +43,13 @@ let extensionData = {
   },
 };
 
-add_task(function* () {
+add_task(async function() {
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitFinish("background script ran");
+  await extension.awaitFinish("background script ran");
 
-  yield new Promise(function(resolve) {
+  await new Promise(function(resolve) {
     window.BrowserToolboxProcess.emit("connectionchange", "opened", {
       setAddonOptions(id, options) {
         if (id === ID) {
@@ -63,7 +63,7 @@ add_task(function* () {
     });
   });
 
-  let addon = yield new Promise((resolve, reject) => {
+  let addon = await new Promise((resolve, reject) => {
     AddonManager.getAddonByID(ID, addon => addon ? resolve(addon) : reject());
   });
 
@@ -136,14 +136,14 @@ add_task(function* () {
   let waitForDebugGlobalChangesOnReload = waitForDebugGlobalChanges(2);
 
   info("Addon reload...");
-  yield addon.reload();
+  await addon.reload();
 
   info("Addon completed startup after reload");
 
   let {
     counters: reloadCounters,
     lastAddonInstanceID,
-  } = yield waitForDebugGlobalChangesOnReload;
+  } = await waitForDebugGlobalChangesOnReload;
 
   isDeeply(reloadCounters, {count: 2, notNullGlobalsCount: 1, undefinedPrivateWrappersCount: 0},
            "Got the expected number of onPropertyChanged calls on reload");
@@ -152,10 +152,10 @@ add_task(function* () {
   let waitForDebugGlobalChangesOnShutdown = waitForDebugGlobalChanges(1, lastAddonInstanceID);
 
   info("extension unloading...");
-  yield extension.unload();
+  await extension.unload();
   info("extension unloaded");
 
-  let {counters: unloadCounters} = yield waitForDebugGlobalChangesOnShutdown;
+  let {counters: unloadCounters} = await waitForDebugGlobalChangesOnShutdown;
 
   isDeeply(unloadCounters, {count: 1, notNullGlobalsCount: 0, undefinedPrivateWrappersCount: 1},
            "Got the expected number of onPropertyChanged calls on shutdown");

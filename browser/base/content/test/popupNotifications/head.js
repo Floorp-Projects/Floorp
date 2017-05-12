@@ -2,8 +2,6 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
   "resource://gre/modules/Promise.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
 
@@ -18,27 +16,27 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
  * @rejects Never.
  */
 function promiseTopicObserved(topic) {
-  let deferred = Promise.defer();
-  info("Waiting for observer topic " + topic);
-  Services.obs.addObserver(function PTO_observe(obsSubject, obsTopic, obsData) {
-    Services.obs.removeObserver(PTO_observe, obsTopic);
-    deferred.resolve([obsSubject, obsData]);
-  }, topic);
-  return deferred.promise;
+  return new Promise(resolve => {
+    info("Waiting for observer topic " + topic);
+    Services.obs.addObserver(function PTO_observe(obsSubject, obsTopic, obsData) {
+      Services.obs.removeObserver(PTO_observe, obsTopic);
+      resolve([obsSubject, obsData]);
+    }, topic);
+  });
 }
 
 /**
  * Called after opening a new window or switching windows, this will wait until
  * we are sure that an attempt to display a notification will not fail.
  */
-function* waitForWindowReadyForPopupNotifications(win) {
+async function waitForWindowReadyForPopupNotifications(win) {
   // These are the same checks that PopupNotifications.jsm makes before it
   // allows a notification to open.
-  yield BrowserTestUtils.waitForCondition(
+  await BrowserTestUtils.waitForCondition(
     () => win.gBrowser.selectedBrowser.docShellIsActive,
     "The browser should be active"
   );
-  yield BrowserTestUtils.waitForCondition(
+  await BrowserTestUtils.waitForCondition(
     () => Services.focus.activeWindow == win,
     "The window should be active"
   );
@@ -81,10 +79,10 @@ function setup() {
 }
 
 function goNext() {
-  executeSoon(() => executeSoon(Task.async(runNextTest)));
+  executeSoon(() => executeSoon(runNextTest));
 }
 
-function* runNextTest() {
+async function runNextTest() {
   if (tests.length == 0) {
     executeSoon(finish);
     return;
@@ -99,19 +97,19 @@ function* runNextTest() {
     onPopupEvent("popupshown", function() {
       shownState = true;
       info("[" + nextTest.id + "] popup shown");
-      Task.spawn(() => nextTest.onShown(this))
+      (nextTest.onShown(this) || Promise.resolve())
           .then(undefined, ex => Assert.ok(false, "onShown failed: " + ex));
     });
     onPopupEvent("popuphidden", function() {
       info("[" + nextTest.id + "] popup hidden");
-      Task.spawn(() => nextTest.onHidden(this))
+      (nextTest.onHidden(this) || Promise.resolve())
           .then(() => goNext(), ex => Assert.ok(false, "onHidden failed: " + ex));
     }, () => shownState);
     info("[" + nextTest.id + "] added listeners; panel is open: " + PopupNotifications.isPanelOpen);
   }
 
   info("[" + nextTest.id + "] running test");
-  yield nextTest.run();
+  await nextTest.run();
 }
 
 function showNotification(notifyObj) {

@@ -279,13 +279,13 @@ var Scheduler = this.Scheduler = {
     let savedQueue = this.queue;
     this.queue = deferred.promise;
 
-    return this._killQueue = Task.spawn(function*() {
+    return this._killQueue = (async () => {
 
-      yield killQueue;
+      await killQueue;
       // From this point, and until the end of the Task, we are the
       // only call to `kill`, regardless of any `yield`.
 
-      yield savedQueue;
+      await savedQueue;
 
       try {
         // Enter critical section: no yield in this block
@@ -311,7 +311,7 @@ var Scheduler = this.Scheduler = {
         // Wait for result
         let resources;
         try {
-          resources = yield this._worker.post(...message);
+          resources = await this._worker.post(...message);
 
           Scheduler.latestReceived = [Date.now(), message];
         } catch (ex) {
@@ -359,7 +359,7 @@ var Scheduler = this.Scheduler = {
         deferred.resolve();
       }
 
-    }.bind(this));
+    })();
   },
 
   /**
@@ -404,7 +404,7 @@ var Scheduler = this.Scheduler = {
     }
 
     Scheduler.Debugging.messagesQueued++;
-    return this.push(Task.async(function*() {
+    return this.push(async () => {
       if (this.shutdown) {
 	LOG("OS.File is not available anymore. The following request has been rejected.",
 	  method, args);
@@ -425,7 +425,7 @@ var Scheduler = this.Scheduler = {
         try {
           Scheduler.Debugging.messagesSent++;
           Scheduler.Debugging.latestSent = Scheduler.Debugging.latestSent.slice(0, 2);
-          reply = yield this.worker.post(method, args, closure);
+          reply = await this.worker.post(method, args, closure);
           Scheduler.Debugging.latestReceived = [Date.now(), summarizeObject(reply)];
           return reply;
         } finally {
@@ -440,7 +440,7 @@ var Scheduler = this.Scheduler = {
         }
         Scheduler.restartTimer();
       }
-    }.bind(this)));
+    });
   },
 
   /**
@@ -528,13 +528,13 @@ const PREF_OSFILE_TEST_SHUTDOWN_OBSERVER =
 
 AsyncShutdown.webWorkersShutdown.addBlocker(
   "OS.File: flush pending requests, warn about unclosed files, shut down service.",
-  Task.async(function*() {
+  async function() {
     // Give clients a last chance to enqueue requests.
-    yield Barriers.shutdown.wait({crashAfterMS: null});
+    await Barriers.shutdown.wait({crashAfterMS: null});
 
     // Wait until all requests are complete and kill the worker.
-    yield Scheduler.kill({reset: false, shutdown: true});
-  }),
+    await Scheduler.kill({reset: false, shutdown: true});
+  },
   () => {
     let details = Barriers.getDetails();
     details.clients = Barriers.shutdown.state;
@@ -1412,12 +1412,12 @@ DirectoryIterator.Entry.fromMsg = function fromMsg(value) {
 };
 
 File.resetWorker = function() {
-  return Task.spawn(function*() {
-    let resources = yield Scheduler.kill({shutdown: false, reset: true});
+  return (async function() {
+    let resources = await Scheduler.kill({shutdown: false, reset: true});
     if (resources && !resources.killed) {
         throw new Error("Could not reset worker, this would leak file descriptors: " + JSON.stringify(resources));
     }
-  });
+  })();
 };
 
 // Constants
@@ -1499,13 +1499,13 @@ function setupShutdown(phaseName) {
   // clients should register using AsyncShutdown.addBlocker.
   AsyncShutdown[phaseName].addBlocker(
     `OS.File: flush I/O queued before ${phaseName}`,
-    Task.async(function*() {
+    async function() {
       // Give clients a last chance to enqueue requests.
-      yield Barriers[phaseName].wait({crashAfterMS: null});
+      await Barriers[phaseName].wait({crashAfterMS: null});
 
       // Wait until all currently enqueued requests are completed.
-      yield Scheduler.queue;
-    }),
+      await Scheduler.queue;
+    },
     () => {
       let details = Barriers.getDetails();
       details.clients = Barriers[phaseName].state;

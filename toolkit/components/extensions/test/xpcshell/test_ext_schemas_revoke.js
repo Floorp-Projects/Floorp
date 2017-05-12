@@ -182,9 +182,9 @@ function ignoreError(fn) {
   }
 }
 
-add_task(function* () {
+add_task(async function() {
   let url = "data:," + JSON.stringify(json);
-  yield Schemas.load(url);
+  await Schemas.load(url);
 
   let root = {};
   Schemas.inject(root, context);
@@ -438,7 +438,7 @@ add_task(function* () {
 });
 
 
-add_task(function* test_neuter() {
+add_task(async function test_neuter() {
   context.permissionsChanged = null;
 
   let root = {};

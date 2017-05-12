@@ -14,32 +14,32 @@ function AutoCompleteSearch(aName) {
 }
 AutoCompleteSearch.prototype = Object.create(AutoCompleteSearchBase.prototype);
 
-add_task(function *test_userContextId() {
-  let searchParam = yield doSearch("test", 1);
+add_task(async function test_userContextId() {
+  let searchParam = await doSearch("test", 1);
   Assert.equal(searchParam, " user-context-id:1");
 });
 
 function doSearch(aString, aUserContextId) {
-  let deferred = Promise.defer();
-  let search = new AutoCompleteSearch("test");
+  return new Promise(resolve => {
+    let search = new AutoCompleteSearch("test");
 
-  search.startSearch = function(aSearchString,
-                                aSearchParam,
-                                aPreviousResult,
-                                aListener) {
-    unregisterAutoCompleteSearch(search);
-    deferred.resolve(aSearchParam);
-  };
+    search.startSearch = function(aSearchString,
+                                  aSearchParam,
+                                  aPreviousResult,
+                                  aListener) {
+      unregisterAutoCompleteSearch(search);
+      resolve(aSearchParam);
+    };
 
-  registerAutoCompleteSearch(search);
+    registerAutoCompleteSearch(search);
 
-  let controller = Cc["@mozilla.org/autocomplete/controller;1"].
-                   getService(Ci.nsIAutoCompleteController);
+    let controller = Cc["@mozilla.org/autocomplete/controller;1"].
+                     getService(Ci.nsIAutoCompleteController);
 
-  let input = new AutoCompleteInput([ search.name ], aUserContextId);
-  controller.input = input;
-  controller.startSearch(aString);
+    let input = new AutoCompleteInput([ search.name ], aUserContextId);
+    controller.input = input;
+    controller.startSearch(aString);
 
-  return deferred.promise;
+  });
  }
 

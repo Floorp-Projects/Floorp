@@ -5,14 +5,14 @@ const TEST_FILE = "file_with_link_to_http.html";
 const TEST_HTTP = "http://example.org/";
 
 // Test for bug 1338375.
-add_task(function* () {
+add_task(async function() {
   // Open file:// page.
   let dir = getChromeDir(getResolvedURI(gTestPath));
   dir.append(TEST_FILE);
   const uriString = Services.io.newFileURI(dir).spec;
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, uriString);
-  registerCleanupFunction(function* () {
-    yield BrowserTestUtils.removeTab(tab);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, uriString);
+  registerCleanupFunction(async function() {
+    await BrowserTestUtils.removeTab(tab);
   });
   let browser = tab.linkedBrowser;
 
@@ -25,12 +25,12 @@ add_task(function* () {
   // Open new http window from JavaScript in file:// page and check that we get
   // a new window with the correct page and features.
   let promiseNewWindow = BrowserTestUtils.waitForNewWindow(true, TEST_HTTP);
-  yield ContentTask.spawn(browser, TEST_HTTP, uri => {
+  await ContentTask.spawn(browser, TEST_HTTP, uri => {
     content.open(uri, "_blank");
   });
-  let win = yield promiseNewWindow;
-  registerCleanupFunction(function* () {
-    yield BrowserTestUtils.closeWindow(win);
+  let win = await promiseNewWindow;
+  registerCleanupFunction(async function() {
+    await BrowserTestUtils.closeWindow(win);
   });
   ok(win, "Check that an http window loaded when using window.open.");
   ok(win.menubar.visible,
@@ -41,10 +41,10 @@ add_task(function* () {
   // Open new http window from a link in file:// page and check that we get a
   // new window with the correct page and features.
   promiseNewWindow = BrowserTestUtils.waitForNewWindow(true, TEST_HTTP);
-  yield BrowserTestUtils.synthesizeMouseAtCenter("#linkToExample", {}, browser);
-  let win2 = yield promiseNewWindow;
-  registerCleanupFunction(function* () {
-    yield BrowserTestUtils.closeWindow(win2);
+  await BrowserTestUtils.synthesizeMouseAtCenter("#linkToExample", {}, browser);
+  let win2 = await promiseNewWindow;
+  registerCleanupFunction(async function() {
+    await BrowserTestUtils.closeWindow(win2);
   });
   ok(win2, "Check that an http window loaded when using link.");
   ok(win2.menubar.visible,

@@ -14,11 +14,11 @@ Cu.import("resource:///modules/SitePermissions.jsm", this);
  * Tests the PermissionPromptForRequest prototype to ensure that a prompt
  * can be displayed. Does not test permission handling.
  */
-add_task(function* test_permission_prompt_for_request() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function test_permission_prompt_for_request() {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "http://example.com/",
-  }, function*(browser) {
+  }, async function(browser) {
     const kTestNotificationID = "test-notification";
     const kTestMessage = "Test message";
     let mainAction = {
@@ -42,7 +42,7 @@ add_task(function* test_permission_prompt_for_request() {
     let shownPromise =
       BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
     TestPrompt.prompt();
-    yield shownPromise;
+    await shownPromise;
     let notification =
       PopupNotifications.getNotification(kTestNotificationID, browser);
     Assert.ok(notification, "Should have gotten the notification");
@@ -66,7 +66,7 @@ add_task(function* test_permission_prompt_for_request() {
     let removePromise =
       BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popuphidden");
     notification.remove();
-    yield removePromise;
+    await removePromise;
   });
 });
 
@@ -74,11 +74,11 @@ add_task(function* test_permission_prompt_for_request() {
  * Tests that if the PermissionPrompt sets displayURI to false in popupOptions,
  * then there is no URI shown on the popupnotification.
  */
-add_task(function* test_permission_prompt_for_popupOptions() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function test_permission_prompt_for_popupOptions() {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "http://example.com/",
-  }, function*(browser) {
+  }, async function(browser) {
     const kTestNotificationID = "test-notification";
     const kTestMessage = "Test message";
     let mainAction = {
@@ -105,7 +105,7 @@ add_task(function* test_permission_prompt_for_popupOptions() {
     let shownPromise =
       BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
     TestPrompt.prompt();
-    yield shownPromise;
+    await shownPromise;
     let notification =
       PopupNotifications.getNotification(kTestNotificationID, browser);
 
@@ -115,7 +115,7 @@ add_task(function* test_permission_prompt_for_popupOptions() {
     let removePromise =
       BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popuphidden");
     notification.remove();
-    yield removePromise;
+    await removePromise;
   });
 });
 
@@ -124,11 +124,11 @@ add_task(function* test_permission_prompt_for_popupOptions() {
  * set that permissions can be set properly by the user. Also
  * ensures that callbacks for promptActions are properly fired.
  */
-add_task(function* test_with_permission_key() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function test_with_permission_key() {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "http://example.com",
-  }, function*(browser) {
+  }, async function(browser) {
     const kTestNotificationID = "test-notification";
     const kTestMessage = "Test message";
     const kTestPermissionKey = "test-permission-key";
@@ -178,7 +178,7 @@ add_task(function* test_with_permission_key() {
     let shownPromise =
       BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
     TestPrompt.prompt();
-    yield shownPromise;
+    await shownPromise;
     let notification =
       PopupNotifications.getNotification(kTestNotificationID, browser);
     Assert.ok(notification, "Should have gotten the notification");
@@ -193,7 +193,7 @@ add_task(function* test_with_permission_key() {
 
     Assert.equal(notification.secondaryActions.length, 1,
                  "There should only be 1 secondary action");
-    yield clickSecondaryAction();
+    await clickSecondaryAction();
     curPerm = SitePermissions.get(principal.URI, kTestPermissionKey, browser);
     Assert.deepEqual(curPerm, {
                        state: SitePermissions.BLOCK,
@@ -221,12 +221,12 @@ add_task(function* test_with_permission_key() {
     shownPromise =
       BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
     TestPrompt.prompt();
-    yield shownPromise;
+    await shownPromise;
 
     // Test denying the permission request.
     Assert.equal(notification.secondaryActions.length, 1,
                  "There should only be 1 secondary action");
-    yield clickSecondaryAction();
+    await clickSecondaryAction();
     curPerm = SitePermissions.get(principal.URI, kTestPermissionKey);
     Assert.deepEqual(curPerm, {
                        state: SitePermissions.BLOCK,
@@ -248,10 +248,10 @@ add_task(function* test_with_permission_key() {
     shownPromise =
       BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
     TestPrompt.prompt();
-    yield shownPromise;
+    await shownPromise;
 
     // Test allowing the permission request.
-    yield clickMainAction();
+    await clickMainAction();
     curPerm = SitePermissions.get(principal.URI, kTestPermissionKey);
     Assert.deepEqual(curPerm, {
                        state: SitePermissions.ALLOW,
@@ -270,11 +270,11 @@ add_task(function* test_with_permission_key() {
  * Tests that the onBeforeShow method will be called before
  * the popup appears.
  */
-add_task(function* test_on_before_show() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function test_on_before_show() {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "http://example.com",
-  }, function*(browser) {
+  }, async function(browser) {
     const kTestNotificationID = "test-notification";
     const kTestMessage = "Test message";
 
@@ -301,14 +301,14 @@ add_task(function* test_on_before_show() {
       BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
     TestPrompt.prompt();
     Assert.ok(beforeShown, "Should have called onBeforeShown");
-    yield shownPromise;
+    await shownPromise;
     let notification =
       PopupNotifications.getNotification(kTestNotificationID, browser);
 
     let removePromise =
       BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popuphidden");
     notification.remove();
-    yield removePromise;
+    await removePromise;
   });
 });
 
@@ -316,11 +316,11 @@ add_task(function* test_on_before_show() {
  * Tests that we can open a PermissionPrompt without wrapping a
  * nsIContentPermissionRequest.
  */
-add_task(function* test_no_request() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function test_no_request() {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "http://example.com",
-  }, function*(browser) {
+  }, async function(browser) {
     const kTestNotificationID = "test-notification";
     let allowed = false;
     let mainAction = {
@@ -360,7 +360,7 @@ add_task(function* test_no_request() {
       BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
     TestPrompt.prompt();
     Assert.ok(beforeShown, "Should have called onBeforeShown");
-    yield shownPromise;
+    await shownPromise;
     let notification =
       PopupNotifications.getNotification(kTestNotificationID, browser);
 
@@ -383,17 +383,17 @@ add_task(function* test_no_request() {
     // First test denying the permission request.
     Assert.equal(notification.secondaryActions.length, 1,
                  "There should only be 1 secondary action");
-    yield clickSecondaryAction();
+    await clickSecondaryAction();
     Assert.ok(denied, "The secondaryAction callback should have fired");
     Assert.ok(!allowed, "The mainAction callback should not have fired");
 
     shownPromise =
       BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
     TestPrompt.prompt();
-    yield shownPromise;
+    await shownPromise;
 
     // Next test allowing the permission request.
-    yield clickMainAction();
+    await clickMainAction();
     Assert.ok(allowed, "The mainAction callback should have fired");
   });
 });
@@ -402,11 +402,11 @@ add_task(function* test_no_request() {
  * Tests that when the tab is moved to a different window, the notification
  * is transferred to the new window.
  */
-add_task(function* test_window_swap() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function test_window_swap() {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "http://example.com",
-  }, function*(browser) {
+  }, async function(browser) {
     const kTestNotificationID = "test-notification";
     const kTestMessage = "Test message";
 
@@ -432,15 +432,15 @@ add_task(function* test_window_swap() {
     let shownPromise =
       BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
     TestPrompt.prompt();
-    yield shownPromise;
+    await shownPromise;
 
     let newWindowOpened = BrowserTestUtils.waitForNewWindow();
     gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
-    let newWindow = yield newWindowOpened;
+    let newWindow = await newWindowOpened;
     shownPromise =
       BrowserTestUtils.waitForEvent(newWindow.PopupNotifications.panel, "popupshown");
     TestPrompt.prompt();
-    yield shownPromise;
+    await shownPromise;
 
     let notification =
       newWindow.PopupNotifications.getNotification(kTestNotificationID,
@@ -463,6 +463,6 @@ add_task(function* test_window_swap() {
     Assert.ok(notification.options.displayURI.equals(mockRequest.principal.URI),
               "Should be showing the URI of the requesting page");
 
-    yield BrowserTestUtils.closeWindow(newWindow);
+    await BrowserTestUtils.closeWindow(newWindow);
   });
 });

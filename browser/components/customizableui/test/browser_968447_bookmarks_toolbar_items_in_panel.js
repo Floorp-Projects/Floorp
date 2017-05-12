@@ -6,14 +6,14 @@
 
 // Bug 968447 - The Bookmarks Toolbar Items doesn't appear as a
 // normal menu panel button in new windows.
-add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   const buttonId = "bookmarks-toolbar-placeholder";
-  yield startCustomizing();
+  await startCustomizing();
   CustomizableUI.addWidgetToArea("personal-bookmarks", CustomizableUI.AREA_PANEL);
-  yield endCustomizing();
+  await endCustomizing();
 
-  yield PanelUI.show();
+  await PanelUI.show();
 
   let bookmarksToolbarPlaceholder = document.getElementById(buttonId);
   ok(bookmarksToolbarPlaceholder.classList.contains("toolbarbutton-1"),
@@ -24,10 +24,10 @@ add_task(function*() {
   info("Waiting for panel to close");
   let panelHiddenPromise = promisePanelHidden(window);
   PanelUI.hide();
-  yield panelHiddenPromise;
+  await panelHiddenPromise;
 
   info("Waiting for window to open");
-  let newWin = yield openAndLoadWindow({}, true);
+  let newWin = await openAndLoadWindow({}, true);
 
   info("Waiting for panel in new window to open");
   let hideTrace = function() {
@@ -36,7 +36,7 @@ add_task(function*() {
   };
   newWin.PanelUI.panel.addEventListener("popuphidden", hideTrace);
 
-  yield newWin.PanelUI.show();
+  await newWin.PanelUI.show();
   let newWinBookmarksToolbarPlaceholder = newWin.document.getElementById(buttonId);
   ok(newWinBookmarksToolbarPlaceholder.classList.contains("toolbarbutton-1"),
      "Button in new window should have toolbarbutton-1 class");
@@ -50,17 +50,17 @@ add_task(function*() {
     info("Panel is still open in new window, waiting for it to close");
     panelHiddenPromise = promisePanelHidden(newWin);
     newWin.PanelUI.hide();
-    yield panelHiddenPromise;
+    await panelHiddenPromise;
   } else {
     info("panel was already closed");
   }
 
   info("Waiting for new window to close");
-  yield promiseWindowClosed(newWin);
+  await promiseWindowClosed(newWin);
 });
 
-add_task(function* asyncCleanUp() {
-  yield endCustomizing();
+add_task(async function asyncCleanUp() {
+  await endCustomizing();
   CustomizableUI.reset();
 });
 

@@ -60,13 +60,13 @@ const SCRIPTS = [
   },
 ];
 
-add_task(function* setup() {
-  yield setupHosts(SCRIPTS);
+add_task(async function setup() {
+  await setupHosts(SCRIPTS);
 });
 
 // Test the basic operation of native messaging with a simple
 // script that echoes back whatever message is sent to it.
-add_task(function* test_happy_path() {
+add_task(async function test_happy_path() {
   function background() {
     let port = browser.runtime.connectNative("echo");
     port.onMessage.addListener(msg => {
@@ -93,8 +93,8 @@ add_task(function* test_happy_path() {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitMessage("ready");
+  await extension.startup();
+  await extension.awaitMessage("ready");
   const tests = [
     {
       data: "this is a string",
@@ -129,21 +129,21 @@ add_task(function* test_happy_path() {
   ];
   for (let test of tests) {
     extension.sendMessage("send", test.data);
-    let response = yield extension.awaitMessage("message");
+    let response = await extension.awaitMessage("message");
     let expected = test.expected || test.data;
     deepEqual(response, expected, `Echoed a message of type ${test.what}`);
   }
 
-  let procCount = yield getSubprocessCount();
+  let procCount = await getSubprocessCount();
   equal(procCount, 1, "subprocess is still running");
   let exitPromise = waitForSubprocessExit();
-  yield extension.unload();
-  yield exitPromise;
+  await extension.unload();
+  await exitPromise;
 });
 
 if (AppConstants.platform == "win") {
   // "relative.echo" has a relative path in the host manifest.
-  add_task(function* test_relative_path() {
+  add_task(async function test_relative_path() {
     function background() {
       let port = browser.runtime.connectNative("relative.echo");
       let MSG = "test relative echo path";
@@ -162,19 +162,19 @@ if (AppConstants.platform == "win") {
       },
     });
 
-    yield extension.startup();
-    yield extension.awaitMessage("done");
+    await extension.startup();
+    await extension.awaitMessage("done");
 
-    let procCount = yield getSubprocessCount();
+    let procCount = await getSubprocessCount();
     equal(procCount, 1, "subprocess is still running");
     let exitPromise = waitForSubprocessExit();
-    yield extension.unload();
-    yield exitPromise;
+    await extension.unload();
+    await exitPromise;
   });
 }
 
 // Test sendNativeMessage()
-add_task(function* test_sendNativeMessage() {
+add_task(async function test_sendNativeMessage() {
   async function background() {
     let MSG = {test: "hello world"};
 
@@ -202,18 +202,18 @@ add_task(function* test_sendNativeMessage() {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitMessage("finished");
+  await extension.startup();
+  await extension.awaitMessage("finished");
 
   // With sendNativeMessage(), the subprocess should be disconnected
   // after exchanging a single message.
-  yield waitForSubprocessExit();
+  await waitForSubprocessExit();
 
-  yield extension.unload();
+  await extension.unload();
 });
 
 // Test calling Port.disconnect()
-add_task(function* test_disconnect() {
+add_task(async function test_disconnect() {
   function background() {
     let port = browser.runtime.connectNative("echo");
     port.onMessage.addListener((msg, msgPort) => {
@@ -254,34 +254,34 @@ add_task(function* test_disconnect() {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitMessage("ready");
+  await extension.startup();
+  await extension.awaitMessage("ready");
 
   extension.sendMessage("send", "test");
-  let response = yield extension.awaitMessage("message");
+  let response = await extension.awaitMessage("message");
   equal(response, "test", "Echoed a string");
 
-  let procCount = yield getSubprocessCount();
+  let procCount = await getSubprocessCount();
   equal(procCount, 1, "subprocess is running");
 
   extension.sendMessage("disconnect");
-  response = yield extension.awaitMessage("disconnect-result");
+  response = await extension.awaitMessage("disconnect-result");
   equal(response.success, true, "disconnect succeeded");
 
   do_print("waiting for subprocess to exit");
-  yield waitForSubprocessExit();
-  procCount = yield getSubprocessCount();
+  await waitForSubprocessExit();
+  procCount = await getSubprocessCount();
   equal(procCount, 0, "subprocess is no longer running");
 
   extension.sendMessage("disconnect");
-  response = yield extension.awaitMessage("disconnect-result");
+  response = await extension.awaitMessage("disconnect-result");
   equal(response.success, true, "second call to disconnect silently ignored");
 
-  yield extension.unload();
+  await extension.unload();
 });
 
 // Test the limit on message size for writing
-add_task(function* test_write_limit() {
+add_task(async function test_write_limit() {
   Services.prefs.setIntPref(PREF_MAX_WRITE, 10);
   function clearPref() {
     Services.prefs.clearUserPref(PREF_MAX_WRITE);
@@ -307,19 +307,19 @@ add_task(function* test_write_limit() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  let errmsg = yield extension.awaitMessage("result");
+  let errmsg = await extension.awaitMessage("result");
   notEqual(errmsg, null, "native postMessage() failed for overly large message");
 
-  yield extension.unload();
-  yield waitForSubprocessExit();
+  await extension.unload();
+  await waitForSubprocessExit();
 
   clearPref();
 });
 
 // Test the limit on message size for reading
-add_task(function* test_read_limit() {
+add_task(async function test_read_limit() {
   Services.prefs.setIntPref(PREF_MAX_READ, 10);
   function clearPref() {
     Services.prefs.clearUserPref(PREF_MAX_READ);
@@ -348,20 +348,20 @@ add_task(function* test_read_limit() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  let result = yield extension.awaitMessage("result");
+  let result = await extension.awaitMessage("result");
   equal(result, "disconnected", "native port disconnected on receiving large message");
 
-  yield extension.unload();
-  yield waitForSubprocessExit();
+  await extension.unload();
+  await waitForSubprocessExit();
 
   clearPref();
 });
 
 // Test that an extension without the nativeMessaging permission cannot
 // use native messaging.
-add_task(function* test_ext_permission() {
+add_task(async function test_ext_permission() {
   function background() {
     browser.test.assertEq(chrome.runtime.connectNative, undefined, "chrome.runtime.connectNative does not exist without nativeMessaging permission");
     browser.test.assertEq(browser.runtime.connectNative, undefined, "browser.runtime.connectNative does not exist without nativeMessaging permission");
@@ -375,14 +375,14 @@ add_task(function* test_ext_permission() {
     manifest: {},
   });
 
-  yield extension.startup();
-  yield extension.awaitMessage("finished");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitMessage("finished");
+  await extension.unload();
 });
 
 // Test that an extension that is not listed in allowed_extensions for
 // a native application cannot use that application.
-add_task(function* test_app_permission() {
+add_task(async function test_app_permission() {
   function background() {
     let port = browser.runtime.connectNative("echo");
     port.onDisconnect.addListener(msgPort => {
@@ -403,20 +403,20 @@ add_task(function* test_app_permission() {
     },
   }, "somethingelse@tests.mozilla.org");
 
-  yield extension.startup();
+  await extension.startup();
 
-  let result = yield extension.awaitMessage("result");
+  let result = await extension.awaitMessage("result");
   equal(result, "disconnected", "connectNative() failed without native app permission");
 
-  yield extension.unload();
+  await extension.unload();
 
-  let procCount = yield getSubprocessCount();
+  let procCount = await getSubprocessCount();
   equal(procCount, 0, "No child process was started");
 });
 
 // Test that the command-line arguments and working directory for the
 // native application are as expected.
-add_task(function* test_child_process() {
+add_task(async function test_child_process() {
   function background() {
     let port = browser.runtime.connectNative("info");
     port.onMessage.addListener(msg => {
@@ -432,20 +432,20 @@ add_task(function* test_child_process() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  let msg = yield extension.awaitMessage("result");
+  let msg = await extension.awaitMessage("result");
   equal(msg.args.length, 2, "Received one command line argument");
   equal(msg.args[1], getPath("info.json"), "Command line argument is the path to the native host manifest");
   equal(msg.cwd.replace(/^\/private\//, "/"), tmpDir.path,
         "Working directory is the directory containing the native appliation");
 
   let exitPromise = waitForSubprocessExit();
-  yield extension.unload();
-  yield exitPromise;
+  await extension.unload();
+  await exitPromise;
 });
 
-add_task(function* test_stderr() {
+add_task(async function test_stderr() {
   function background() {
     let port = browser.runtime.connectNative("stderr");
     port.onDisconnect.addListener(msgPort => {
@@ -455,7 +455,7 @@ add_task(function* test_stderr() {
     });
   }
 
-  let {messages} = yield promiseConsoleOutput(function* () {
+  let {messages} = await promiseConsoleOutput(async function() {
     let extension = ExtensionTestUtils.loadExtension({
       background,
       manifest: {
@@ -464,11 +464,11 @@ add_task(function* test_stderr() {
       },
     });
 
-    yield extension.startup();
-    yield extension.awaitMessage("finished");
-    yield extension.unload();
+    await extension.startup();
+    await extension.awaitMessage("finished");
+    await extension.unload();
 
-    yield waitForSubprocessExit();
+    await waitForSubprocessExit();
   });
 
   let lines = STDERR_LINES.map(line => messages.findIndex(msg => msg.message.includes(line)));
@@ -479,7 +479,7 @@ add_task(function* test_stderr() {
 
 // Test that calling connectNative() multiple times works
 // (bug 1313980 was a previous regression in this area)
-add_task(function* test_multiple_connects() {
+add_task(async function test_multiple_connects() {
   async function background() {
     function once() {
       return new Promise(resolve => {
@@ -508,7 +508,7 @@ add_task(function* test_multiple_connects() {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("multiple-connect");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("multiple-connect");
+  await extension.unload();
 });

@@ -36,7 +36,7 @@ let getExtension = () => {
   });
 };
 
-add_task(function* testProfilerControl() {
+add_task(async function testProfilerControl() {
   SpecialPowers.pushPrefEnv({
     set: [
       [
@@ -51,7 +51,7 @@ add_task(function* testProfilerControl() {
   });
 
   let extension = getExtension();
-  yield extension.startup();
-  yield extension.awaitMessage("symbolicated");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitMessage("symbolicated");
+  await extension.unload();
 });

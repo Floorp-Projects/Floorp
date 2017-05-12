@@ -25,39 +25,39 @@ function run_test() {
   run_next_test();
 }
 
-function* removeLoadPathHash() {
+async function removeLoadPathHash() {
   // Remove the loadPathHash and re-initialize the search service.
-  let cache = yield promiseCacheData();
+  let cache = await promiseCacheData();
   for (let engine of cache.engines) {
     if (engine._shortName == kTestEngineShortName) {
       delete engine._metaData["loadPathHash"];
       break;
     }
   }
-  yield promiseSaveCacheData(cache);
-  yield asyncReInit();
+  await promiseSaveCacheData(cache);
+  await asyncReInit();
 }
 
-add_task(function* test_no_prompt_when_valid_loadPathHash() {
-  yield asyncInit();
+add_task(async function test_no_prompt_when_valid_loadPathHash() {
+  await asyncInit();
 
   // test the engine is loaded ok.
   let engine = Services.search.getEngineByName(kTestEngineName);
   do_check_neq(engine, null);
 
-  yield promiseAfterCache();
+  await promiseAfterCache();
 
   // The test engine has been found in the profile directory and imported,
   // so it shouldn't have a loadPathHash.
-  let metadata = yield promiseEngineMetadata();
+  let metadata = await promiseEngineMetadata();
   do_check_true(kTestEngineShortName in metadata);
   do_check_false("loadPathHash" in metadata[kTestEngineShortName]);
 
   // After making it the currentEngine with the search service API,
   // the test engine should have a valid loadPathHash.
   Services.search.currentEngine = engine;
-  yield promiseAfterCache();
-  metadata = yield promiseEngineMetadata();
+  await promiseAfterCache();
+  metadata = await promiseEngineMetadata();
   do_check_true("loadPathHash" in metadata[kTestEngineShortName]);
   let loadPathHash = metadata[kTestEngineShortName].loadPathHash;
   do_check_eq(typeof loadPathHash, "string");
@@ -70,8 +70,8 @@ add_task(function* test_no_prompt_when_valid_loadPathHash() {
               "http://www.google.com/search?q=foo&ie=utf-8&oe=utf-8&aq=t");
 });
 
-add_task(function* test_promptURLs() {
-  yield removeLoadPathHash();
+add_task(async function test_promptURLs() {
+  await removeLoadPathHash();
 
   // The default should still be the test engine.
   let currentEngine = Services.search.currentEngine;
@@ -93,16 +93,16 @@ add_task(function* test_promptURLs() {
               "http://www.google.com/search?q=foo&ie=utf-8&oe=utf-8&aq=t");
 
   // And the loadPathHash should be back.
-  yield promiseAfterCache();
-  let metadata = yield promiseEngineMetadata();
+  await promiseAfterCache();
+  let metadata = await promiseEngineMetadata();
   do_check_true("loadPathHash" in metadata[kTestEngineShortName]);
   let loadPathHash = metadata[kTestEngineShortName].loadPathHash;
   do_check_eq(typeof loadPathHash, "string");
   do_check_eq(loadPathHash.length, 44);
 });
 
-add_task(function* test_whitelist() {
-  yield removeLoadPathHash();
+add_task(async function test_whitelist() {
+  await removeLoadPathHash();
 
   // The default should still be the test engine.
   let currentEngine = Services.search.currentEngine;
@@ -128,8 +128,8 @@ add_task(function* test_whitelist() {
 
   // The loadPathHash should not be back after the prompt was skipped due to the
   // whitelist.
-  yield asyncReInit();
-  let metadata = yield promiseEngineMetadata();
+  await asyncReInit();
+  let metadata = await promiseEngineMetadata();
   do_check_false("loadPathHash" in metadata[kTestEngineShortName]);
 
   branch.setCharPref(kWhiteListPrefName, initialWhiteList);

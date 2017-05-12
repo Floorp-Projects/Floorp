@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* testDisabled() {
+add_task(async function testDisabled() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "browser_action": {},
@@ -37,32 +37,32 @@ add_task(function* testDisabled() {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitMessage("ready");
+  await extension.startup();
+  await extension.awaitMessage("ready");
 
-  yield clickBrowserAction(extension);
-  yield new Promise(resolve => setTimeout(resolve, 0));
+  await clickBrowserAction(extension);
+  await new Promise(resolve => setTimeout(resolve, 0));
 
   extension.sendMessage("check-clicked", true);
-  yield extension.awaitMessage("next-test");
+  await extension.awaitMessage("next-test");
 
   extension.sendMessage("disable");
-  yield extension.awaitMessage("next-test");
+  await extension.awaitMessage("next-test");
 
-  yield clickBrowserAction(extension);
-  yield new Promise(resolve => setTimeout(resolve, 0));
+  await clickBrowserAction(extension);
+  await new Promise(resolve => setTimeout(resolve, 0));
 
   extension.sendMessage("check-clicked", false);
-  yield extension.awaitMessage("next-test");
+  await extension.awaitMessage("next-test");
 
   extension.sendMessage("enable");
-  yield extension.awaitMessage("next-test");
+  await extension.awaitMessage("next-test");
 
-  yield clickBrowserAction(extension);
-  yield new Promise(resolve => setTimeout(resolve, 0));
+  await clickBrowserAction(extension);
+  await new Promise(resolve => setTimeout(resolve, 0));
 
   extension.sendMessage("check-clicked", true);
-  yield extension.awaitMessage("next-test");
+  await extension.awaitMessage("next-test");
 
-  yield extension.unload();
+  await extension.unload();
 });
