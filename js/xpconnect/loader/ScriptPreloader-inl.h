@@ -258,7 +258,12 @@ public:
     public:
         Elem& operator*() { return *this; }
 
-        ElemType get() { return done_ ? nullptr : iter().Data(); }
+        ElemType get() {
+          if (done_) {
+            return nullptr;
+          }
+          return iter().Data();
+        }
 
         ElemType operator->() { return get(); }
 
