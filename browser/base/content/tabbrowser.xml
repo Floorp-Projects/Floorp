@@ -1409,12 +1409,33 @@
         <body/>
       </method>
 
+      <method name="setInitialTabTitle">
+        <parameter name="aTab"/>
+        <parameter name="aTitle"/>
+        <body><![CDATA[
+          if (aTitle) {
+            aTab.setAttribute("label", aTitle);
+
+            // Don't replace the set label with the empty tab label or the URL
+            // while the tab is loading.
+            aTab._suppressTransientPlaceholderLabel = true;
+          }
+        ]]></body>
+      </method>
+
       <method name="setTabTitle">
         <parameter name="aTab"/>
         <body>
           <![CDATA[
             var browser = this.getBrowserForTab(aTab);
             var title = browser.contentTitle;
+
+            if (aTab._suppressTransientPlaceholderLabel) {
+              if (!title) {
+                return false;
+              }
+              delete aTab._suppressTransientPlaceholderLabel;
+            }
 
             if (!title) {
               if (browser.currentURI.spec) {
@@ -1465,7 +1486,6 @@
         <parameter name="aPostData"/>
         <parameter name="aLoadInBackground"/>
         <parameter name="aAllowThirdPartyFixup"/>
-        <parameter name="aIsPrerendered"/>
         <body>
           <![CDATA[
             var aTriggeringPrincipal;
@@ -1481,6 +1501,7 @@
             var aSameProcessAsFrameLoader;
             var aOriginPrincipal;
             var aOpener;
+            var aIsPrerendered;
             var aCreateLazyBrowser;
             var aNextTabParentId;
             if (arguments.length == 2 &&
@@ -2219,7 +2240,6 @@
         <parameter name="aPostData"/>
         <parameter name="aOwner"/>
         <parameter name="aAllowThirdPartyFixup"/>
-        <parameter name="aIsPrerendered"/>
         <body>
           <![CDATA[
             "use strict";
@@ -2240,9 +2260,11 @@
             var aOriginPrincipal;
             var aDisallowInheritPrincipal;
             var aOpener;
+            var aIsPrerendered;
             var aCreateLazyBrowser;
             var aSkipBackgroundNotify;
             var aNextTabParentId;
+            var aNoInitialLabel;
             if (arguments.length == 2 &&
                 typeof arguments[1] == "object" &&
                 !(arguments[1] instanceof Ci.nsIURI)) {
@@ -2271,6 +2293,7 @@
               aCreateLazyBrowser        = params.createLazyBrowser;
               aSkipBackgroundNotify     = params.skipBackgroundNotify;
               aNextTabParentId          = params.nextTabParentId;
+              aNoInitialLabel           = params.noInitialLabel;
             }
 
             // if we're adding tabs, we're past interrupt mode, ditch the owner
@@ -2289,11 +2312,13 @@
 
             var uriIsAboutBlank = aURI == "about:blank";
 
-            if (isBlankPageURL(aURI)) {
-              t.setAttribute("label", this.mStringBundle.getString("tabs.emptyTabTitle"));
-            } else if (aURI.toLowerCase().startsWith("javascript:")) {
-              // This can go away when bug 672618 or bug 55696 are fixed.
-              t.setAttribute("label", aURI);
+            if (!aNoInitialLabel) {
+              if (isBlankPageURL(aURI)) {
+                t.setAttribute("label", this.mStringBundle.getString("tabs.emptyTabTitle"));
+              } else {
+                // Set URL as label so that the tab isn't empty initially.
+                this.setInitialTabTitle(t, aURI);
+              }
             }
 
             if (aIsPrerendered) {
