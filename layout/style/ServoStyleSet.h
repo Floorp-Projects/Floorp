@@ -196,10 +196,6 @@ public:
   already_AddRefed<nsStyleContext>
   ResolveNonInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag);
 
-  // Get the rule node for a (pseudo-)element, resolving it lazily if needed.
-  already_AddRefed<RawServoRuleNode>
-  ResolveRuleNode(dom::Element *aElement, nsIAtom *aPseudoTag);
-
   // manage the set of style sheets in the style set
   nsresult AppendStyleSheet(SheetType aType, ServoStyleSheet* aSheet);
   nsresult PrependStyleSheet(SheetType aType, ServoStyleSheet* aSheet);
