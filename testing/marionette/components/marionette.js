@@ -14,7 +14,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyServiceGetter(
     this, "env", "@mozilla.org/process/environment;1", "nsIEnvironment");
 
-const MARIONETTE_CONTRACT_ID = "@mozilla.org/marionette;1";
+const MARIONETTE_CONTRACT_ID = "@mozilla.org/remote/marionette;1";
 const MARIONETTE_CID = Components.ID("{786a1369-dca5-4adc-8486-33d23c88010a}");
 
 const PREF_PORT = "marionette.port";
