@@ -7,6 +7,8 @@
 const {Cu} = require("chrome");
 const Services = require("Services");
 
+const {DevToolsShim} = Cu.import("chrome://devtools-shim/content/DevToolsShim.jsm", {});
+
 // Load gDevToolsBrowser toolbox lazily as they need gDevTools to be fully initialized
 loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
 loader.lazyRequireGetter(this, "Toolbox", "devtools/client/framework/toolbox", true);
@@ -45,6 +47,11 @@ function DevTools() {
   // start registering all default tools and themes: create menuitems, keys, emit
   // related events.
   this.registerDefaults();
+
+  // Register this new DevTools instance to Firefox. DevToolsShim is part of Firefox,
+  // integrating with all Firefox codebase and making the glue between code from
+  // mozilla-central and DevTools add-on on github
+  DevToolsShim.register(this);
 }
 
 DevTools.prototype = {
@@ -507,6 +514,10 @@ DevTools.prototype = {
     JsonView.destroy();
 
     gDevTools.unregisterDefaults();
+
+    // Notify the DevToolsShim that DevTools are no longer available, particularly if the
+    // destroy was caused by disabling/removing the DevTools add-on.
+    DevToolsShim.unregister();
 
     // Cleaning down the toolboxes: i.e.
     //   for (let [target, toolbox] of this._toolboxes) toolbox.destroy();
