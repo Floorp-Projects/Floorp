@@ -8,6 +8,7 @@
 #include "gfxPrefs.h"
 #include "LayersLogging.h"
 #include "mozilla/layers/ImageClient.h"
+#include "mozilla/layers/ScrollingLayersHelper.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/TextureClientRecycleAllocator.h"
 #include "mozilla/layers/TextureWrapperImage.h"
@@ -165,6 +166,7 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     return;
   }
 
+  ScrollingLayersHelper scroller(this, aBuilder, aSc);
   StackingContextHelper sc(aSc, aBuilder, this);
 
   LayerRect rect(0, 0, size.width, size.height);

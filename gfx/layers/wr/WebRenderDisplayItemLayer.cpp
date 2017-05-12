@@ -8,6 +8,7 @@
 #include "LayersLogging.h"
 #include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/webrender/WebRenderTypes.h"
+#include "mozilla/layers/ScrollingLayersHelper.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "nsDisplayList.h"
@@ -36,6 +37,8 @@ WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
   if (mVisibleRegion.IsEmpty()) {
     return;
   }
+
+  ScrollingLayersHelper scroller(this, aBuilder, aSc);
 
   Maybe<WrImageMask> mask = BuildWrMaskLayer(nullptr);
   WrImageMask* imageMask = mask.ptrOr(nullptr);
