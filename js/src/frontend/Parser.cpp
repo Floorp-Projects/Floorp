@@ -2098,21 +2098,24 @@ Parser<FullParseHandler, char16_t>::evalBody(EvalSharedContext* evalsc)
     if (!varScope.init(pc))
         return nullptr;
 
-    // All evals have an implicit non-extensible lexical scope.
-    ParseContext::Scope lexicalScope(this);
-    if (!lexicalScope.init(pc))
-        return nullptr;
+    ParseNode* body;
+    {
+        // All evals have an implicit non-extensible lexical scope.
+        ParseContext::Scope lexicalScope(this);
+        if (!lexicalScope.init(pc))
+            return nullptr;
 
-    ParseNode* body = statementList(YieldIsName);
-    if (!body)
-        return nullptr;
+        body = statementList(YieldIsName);
+        if (!body)
+            return nullptr;
 
-    if (!checkStatementsEOF())
-        return nullptr;
+        if (!checkStatementsEOF())
+            return nullptr;
 
-    body = finishLexicalScope(lexicalScope, body);
-    if (!body)
-        return nullptr;
+        body = finishLexicalScope(lexicalScope, body);
+        if (!body)
+            return nullptr;
+    }
 
     // It's an error to use 'arguments' in a legacy generator expression.
     //
