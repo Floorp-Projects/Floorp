@@ -330,38 +330,38 @@ WebRenderBridgeParent::HandleDPEnd(const gfx::IntSize& aSize,
   UpdateAPZ();
 }
 
-void
-WebRenderBridgeParent::UpdateAPZ()
+CompositorBridgeParent*
+WebRenderBridgeParent::GetRootCompositorBridgeParent() const
 {
   if (!mCompositorBridge) {
-    return;
+    return nullptr;
   }
 
-  CompositorBridgeParent* cbp;
-  uint64_t rootLayersId;
-  WebRenderBridgeParent* rootWrbp;
   if (mWidget) {
     // This WebRenderBridgeParent is attached to the root
     // CompositorBridgeParent.
-    cbp = static_cast<CompositorBridgeParent*>(mCompositorBridge);
-    rootLayersId = wr::AsUint64(mPipelineId);
-    rootWrbp = this;
-  } else {
-    // This WebRenderBridgeParent is attached to a
-    // CrossProcessCompositorBridgeParent so we have an extra level of
-    // indirection to unravel.
-    uint64_t layersId = wr::AsUint64(mPipelineId);
-    CompositorBridgeParent::LayerTreeState* lts =
-        CompositorBridgeParent::GetIndirectShadowTree(layersId);
-    MOZ_ASSERT(lts);
-    cbp = lts->mParent;
-    rootLayersId = cbp->RootLayerTreeId();
-    lts = CompositorBridgeParent::GetIndirectShadowTree(rootLayersId);
-    MOZ_ASSERT(lts);
-    rootWrbp = lts->mWrBridge.get();
+    return static_cast<CompositorBridgeParent*>(mCompositorBridge);
   }
 
-  MOZ_ASSERT(cbp);
+  // Otherwise, this WebRenderBridgeParent is attached to a
+  // CrossProcessCompositorBridgeParent so we have an extra level of
+  // indirection to unravel.
+  uint64_t layersId = wr::AsUint64(mPipelineId);
+  CompositorBridgeParent::LayerTreeState* lts =
+      CompositorBridgeParent::GetIndirectShadowTree(layersId);
+  MOZ_ASSERT(lts);
+  return lts->mParent;
+}
+
+void
+WebRenderBridgeParent::UpdateAPZ()
+{
+  CompositorBridgeParent* cbp = GetRootCompositorBridgeParent();
+  if (!cbp) {
+    return;
+  }
+  uint64_t rootLayersId = cbp->RootLayerTreeId();
+  RefPtr<WebRenderBridgeParent> rootWrbp = cbp->GetWebRenderBridgeParent();
   if (!rootWrbp) {
     return;
   }

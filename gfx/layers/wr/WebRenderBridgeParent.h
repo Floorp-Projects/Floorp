@@ -188,6 +188,8 @@ private:
   void SampleAnimations(nsTArray<WrOpacityProperty>& aOpacityArray,
                         nsTArray<WrTransformProperty>& aTransformArray);
 
+  CompositorBridgeParent* GetRootCompositorBridgeParent() const;
+
 private:
   struct PendingTransactionId {
     PendingTransactionId(wr::Epoch aEpoch, uint64_t aId)
