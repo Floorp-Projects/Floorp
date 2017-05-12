@@ -20,9 +20,9 @@ fuzzy-if(Android,255,30) == clipPath-html-06-extref.xhtml clipPath-html-06-ref.x
 == clipPath-transformed-html-02.xhtml ../pass.svg
 == conditions-outer-svg-01.xhtml ../pass.svg
 == conditions-outer-svg-02.xhtml ../pass.svg
-fails-if(stylo) == dynamic-conditions-outer-svg-01.xhtml ../pass.svg
-fails-if(stylo) == dynamic-conditions-outer-svg-02.xhtml ../pass.svg
-fails-if(stylo) == dynamic-conditions-outer-svg-03.xhtml ../pass.svg
+== dynamic-conditions-outer-svg-01.xhtml ../pass.svg
+== dynamic-conditions-outer-svg-02.xhtml ../pass.svg
+== dynamic-conditions-outer-svg-03.xhtml ../pass.svg
 == dynamic-conditions-outer-svg-04.xhtml ../pass.svg
 == filter-html-01.xhtml filter-html-01-ref.svg
 random-if(Android) random-if(stylo) == filter-html-01-extref.xhtml filter-html-01-ref.svg # Android: bug 1198380

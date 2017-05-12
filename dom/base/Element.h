@@ -197,9 +197,7 @@ public:
 
   ~Element()
   {
-#ifdef MOZ_STYLO
     NS_ASSERTION(!HasServoData(), "expected ServoData to be cleared earlier");
-#endif
   }
 
 #endif // MOZILLA_INTERNAL_API
@@ -485,11 +483,7 @@ public:
 #endif
 
   bool HasServoData() const {
-#ifdef MOZ_STYLO
     return !!mServoData.Get();
-#else
-    MOZ_CRASH("Accessing servo node data in non-stylo build");
-#endif
   }
 
   void ClearServoData();
@@ -1564,10 +1558,8 @@ private:
 
   // Data members
   EventStates mState;
-#ifdef MOZ_STYLO
   // Per-node data managed by Servo.
   mozilla::ServoCell<ServoNodeData*> mServoData;
-#endif
 };
 
 class RemoveFromBindingManagerRunnable : public mozilla::Runnable

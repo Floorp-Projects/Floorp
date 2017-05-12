@@ -598,6 +598,7 @@ this.TelemetrySession = Object.freeze({
    * Used only for testing purposes.
    */
   testReset() {
+    Impl._newProfilePingSent = false;
     Impl._sessionId = null;
     Impl._subsessionId = null;
     Impl._previousSessionId = null;
@@ -652,6 +653,23 @@ this.TelemetrySession = Object.freeze({
    */
   observe(aSubject, aTopic, aData) {
     return Impl.observe(aSubject, aTopic, aData);
+  },
+  /**
+   * Marks the "new-profile" ping as sent in the telemetry state file.
+   * @return {Promise} A promise resolved when the new telemetry state is saved to disk.
+   */
+  markNewProfilePingSent() {
+    return Impl.markNewProfilePingSent();
+  },
+  /**
+   * Returns if the "new-profile" ping has ever been sent for this profile.
+   * Please note that the returned value is trustworthy only after the delayed setup.
+   *
+   * @return {Boolean} True if the new profile ping was sent on this profile,
+   *         false otherwise.
+   */
+  get newProfilePingSent() {
+    return Impl._newProfilePingSent;
   },
 });
 
@@ -723,7 +741,9 @@ var Impl = {
   _nextTotalMemoryId: 1,
   _USSFromChildProcesses: null,
   _lastEnvironmentChangeDate: 0,
-
+  // We save whether the "new-profile" ping was sent yet, to
+  // survive profile refresh and migrations.
+  _newProfilePingSent: false,
 
   get _log() {
     if (!this._logger) {
@@ -2134,6 +2154,9 @@ var Impl = {
     // 1 - the current subsessions.
     this._profileSubsessionCounter = data.profileSubsessionCounter +
                                      this._subsessionCounter;
+    // If we don't have this flag in the state file, it means that this is an old profile.
+    // We don't want to send the "new-profile" ping on new profile, so se this to true.
+    this._newProfilePingSent = ("newProfilePingSent" in data) ? data.newProfilePingSent : true;
     return data;
   },
 
@@ -2145,6 +2168,7 @@ var Impl = {
       sessionId: this._sessionId,
       subsessionId: this._subsessionId,
       profileSubsessionCounter: this._profileSubsessionCounter,
+      newProfilePingSent: this._newProfilePingSent,
     };
   },
 
@@ -2209,5 +2233,11 @@ var Impl = {
     }
 
     return TelemetryController.saveAbortedSessionPing(payload);
+  },
+
+  async markNewProfilePingSent() {
+    this._log.trace("markNewProfilePingSent");
+    this._newProfilePingSent = true;
+    return TelemetryStorage.saveSessionData(this._getSessionDataObject());
   },
 };

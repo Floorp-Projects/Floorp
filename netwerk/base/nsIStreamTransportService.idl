@@ -15,7 +15,7 @@ interface nsIOutputStream;
  * into a fully asynchronous stream that can be read/written without 
  * blocking the main thread.
  */
-[scriptable, uuid(5e0adf7d-9785-45c3-a193-04f25a75da8f)]
+[builtinclass, scriptable, uuid(5e0adf7d-9785-45c3-a193-04f25a75da8f)]
 interface nsIStreamTransportService : nsISupports
 {
     /**

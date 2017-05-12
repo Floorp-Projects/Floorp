@@ -60,15 +60,6 @@ module.exports = createClass({
         {
           id: "layout-grid-container",
         },
-        showGridOutline ?
-          GridOutline({
-            grids,
-            onShowGridAreaHighlight,
-            onShowGridCellHighlight,
-            onShowGridLineNamesHighlight,
-          })
-          :
-          null,
         dom.div(
           {
             className: "grid-content",
@@ -87,7 +78,16 @@ module.exports = createClass({
             onToggleShowGridLineNumbers,
             onToggleShowInfiniteLines,
           })
-        )
+        ),
+        showGridOutline ?
+          GridOutline({
+            grids,
+            onShowGridAreaHighlight,
+            onShowGridCellHighlight,
+            onShowGridLineNamesHighlight,
+          })
+          :
+          null
       )
       :
       dom.div(
