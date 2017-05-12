@@ -21,8 +21,7 @@ function makeTest(name, startURL, startProcessIsRemote, endURL, endProcessIsRemo
     is(browser.isRemoteBrowser, startProcessIsRemote, "Should be displayed in the right process");
 
     let docLoadedPromise = waitForDocLoadComplete();
-    let asyncTask = Task.async(transitionTask);
-    let expectSyncChange = await asyncTask(browser, endURL);
+    let expectSyncChange = await transitionTask(browser, endURL);
     if (expectSyncChange) {
       is(browser.isRemoteBrowser, endProcessIsRemote, "Should have switched to the right process synchronously");
     }
