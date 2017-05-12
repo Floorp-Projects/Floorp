@@ -203,6 +203,7 @@ to mochitest command.
     * ... `rect(1, ` [2]
   * test_hover_quirk.html: hover quirks bug 1355724 [6]
 * test_pseudoelement_parsing.html: support parsing some pseudo-classes on some pseudo-elements [5]
+* test_pseudoelement_state.html: Unknown failure [6516]
 * Unit should be preserved after parsing servo/servo#15346
   * test_units_time.html [1]
 * getComputedStyle style doesn't contain custom properties bug 1336891
