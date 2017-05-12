@@ -961,7 +961,7 @@ Statistics::beginSlice(const ZoneGCStats& zoneStats, JSGCInvocationKind gckind,
     bool wasFullGC = zoneStats.isCollectingAllZones();
     if (sliceCallback) {
         JSContext* cx = TlsContext.get();
-        JS::GCDescription desc(!wasFullGC, gckind, reason);
+        JS::GCDescription desc(!wasFullGC, false, gckind, reason);
         if (first)
             (*sliceCallback)(cx, JS::GC_CYCLE_BEGIN, desc);
         (*sliceCallback)(cx, JS::GC_SLICE_BEGIN, desc);
@@ -1011,7 +1011,7 @@ Statistics::endSlice()
         bool wasFullGC = zoneStats.isCollectingAllZones();
         if (sliceCallback) {
             JSContext* cx = TlsContext.get();
-            JS::GCDescription desc(!wasFullGC, gckind, slices_.back().reason);
+            JS::GCDescription desc(!wasFullGC, last, gckind, slices_.back().reason);
             (*sliceCallback)(cx, JS::GC_SLICE_END, desc);
             if (last)
                 (*sliceCallback)(cx, JS::GC_CYCLE_END, desc);
