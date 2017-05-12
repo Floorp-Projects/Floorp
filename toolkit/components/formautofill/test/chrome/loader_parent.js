@@ -47,7 +47,7 @@ function add_task_in_parent_process(taskFn, taskIdOverride) {
     (async function() {
       try {
         Output.print("Running in the parent process " + taskId);
-        await (taskFn)();
+        await taskFn();
       } catch (ex) {
         assert.ok(false, ex);
       }

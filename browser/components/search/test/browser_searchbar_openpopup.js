@@ -89,7 +89,7 @@ function add_no_popup_task(task) {
 
     info("Entering test " + task.name);
     searchPopup.addEventListener("popupshowing", listener);
-    await (task)();
+    await task();
     searchPopup.removeEventListener("popupshowing", listener);
     ok(!sawPopup, "Shouldn't have seen the suggestions popup");
     info("Leaving test " + task.name);

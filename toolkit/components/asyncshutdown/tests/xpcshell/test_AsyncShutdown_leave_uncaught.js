@@ -7,8 +7,8 @@
 // errors. If your test catches all its asynchronous errors, please
 // put it in another file.
 //
-
-Promise.Debugging.clearUncaughtErrorObservers();
+Cu.import("resource://testing-common/PromiseTestUtils.jsm");
+PromiseTestUtils.thisTestLeaksUncaughtRejectionsAndShouldBeFixed();
 
 function run_test() {
   run_next_test();

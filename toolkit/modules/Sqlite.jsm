@@ -26,6 +26,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Log",
                                   "resource://gre/modules/Log.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+                                  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "FinalizationWitnessService",
                                    "@mozilla.org/toolkit/finalizationwitness;1",
                                    "nsIFinalizationWitnessService");
@@ -588,7 +590,9 @@ ConnectionData.prototype = Object.freeze({
 
           let result;
           try {
-            result = await (func)();
+            // Keep Task.spawn here to preserve API compat; unfortunately
+            // func was a generator rather than a task here.
+            result = await Task.spawn(func);
           } catch (ex) {
             // It's possible that the exception has been caused by trying to
             // close the connection in the middle of a transaction.

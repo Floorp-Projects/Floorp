@@ -1368,9 +1368,9 @@ add_task(async function test_sort_folder_by_name() {
     folder_info.guid = await PT.NewFolder(folder_info).transact();
     for (let info of originalOrder) {
       info.parentGuid = folder_info.guid;
-      info.guid = await info == sep ?
+      info.guid = await (info == sep ?
                     PT.NewSeparator(info).transact() :
-                    PT.NewBookmark(info).transact();
+                    PT.NewBookmark(info).transact());
     }
   });
 

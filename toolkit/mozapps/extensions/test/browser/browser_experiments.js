@@ -143,34 +143,22 @@ add_task(async function testActiveExperiment() {
 });
 
 add_task(async function testExperimentLearnMore() {
-  // Actual URL is irrelevant.
-  Services.prefs.setCharPref("toolkit.telemetry.infoURL",
-                             "http://mochi.test:8888/server.js");
-
   await gCategoryUtilities.openType("experiment");
   let btn = gManagerWindow.document.getElementById("experiments-learn-more");
 
   is_element_visible(btn, "Learn more button visible.");
 
-  let deferred = Promise.defer();
-  window.addEventListener("DOMContentLoaded", function onLoad(event) {
-    info("Telemetry privacy policy window opened.");
-    window.removeEventListener("DOMContentLoaded", onLoad);
-
-    let browser = gBrowser.selectedBrowser;
-    let expected = Services.prefs.getCharPref("toolkit.telemetry.infoURL");
-    Assert.equal(browser.currentURI.spec, expected, "New tab should have loaded privacy policy.");
-    browser.contentWindow.close();
-
-    Services.prefs.clearUserPref("toolkit.telemetry.infoURL");
-
-    deferred.resolve();
-  });
+  // Actual URL is irrelevant.
+  let expected = "http://mochi.test:8888/server.js";
+  Services.prefs.setCharPref("toolkit.telemetry.infoURL", expected);
 
   info("Opening telemetry privacy policy.");
+  let loadPromise = BrowserTestUtils.waitForNewTab(gBrowser, expected);
   EventUtils.synthesizeMouseAtCenter(btn, {}, gManagerWindow);
+  await loadPromise;
 
-  await deferred.promise;
+  Services.prefs.clearUserPref("toolkit.telemetry.infoURL");
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function testOpenPreferences() {

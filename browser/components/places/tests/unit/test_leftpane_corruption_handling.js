@@ -52,7 +52,7 @@ add_task(async function() {
 
   while (gTests.length) {
     // Run current test.
-    await (gTests.shift())();
+    await gTests.shift();
 
     // Regenerate getters.
     Object.defineProperty(PlacesUIUtils, "leftPaneFolderId", gLeftPaneFolderIdGetter);

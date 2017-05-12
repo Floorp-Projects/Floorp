@@ -272,7 +272,7 @@ this.DeferredTask.prototype = {
 
     runningDeferred.resolve((async () => {
       // Execute the provided function asynchronously.
-      await (this._taskFn)().then(null, Cu.reportError);
+      await (this._taskFn() || Promise.resolve()).then(null, Cu.reportError);
 
       // Now that the task has finished, we check the state of the object to
       // determine if we should restart the task again.
@@ -284,7 +284,7 @@ this.DeferredTask.prototype = {
           // property should return false while the task is running, and should
           // remain false after the last execution terminates.
           this._armed = false;
-          await (this._taskFn)().then(null, Cu.reportError);
+          await (this._taskFn() || Promise.resolve()).then(null, Cu.reportError);
         }
       }
 

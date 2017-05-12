@@ -31,12 +31,12 @@ function add_test_pair(generator) {
   add_task(async function() {
     do_print("Executing test " + generator.name + " with native operations");
     Services.prefs.setBoolPref("toolkit.osfile.native", true);
-    return (generator)();
+    return generator();
   });
   add_task(async function() {
     do_print("Executing test " + generator.name + " without native operations");
     Services.prefs.setBoolPref("toolkit.osfile.native", false);
-    return (generator)();
+    return generator();
   });
 }
 

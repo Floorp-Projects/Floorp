@@ -79,7 +79,7 @@ function setup() {
 }
 
 function goNext() {
-  executeSoon(() => executeSoon(Task.async(runNextTest)));
+  executeSoon(() => executeSoon(runNextTest));
 }
 
 async function runNextTest() {
@@ -97,12 +97,12 @@ async function runNextTest() {
     onPopupEvent("popupshown", function() {
       shownState = true;
       info("[" + nextTest.id + "] popup shown");
-      (() => nextTest.onShown(this))()
+      (nextTest.onShown(this) || Promise.resolve())
           .then(undefined, ex => Assert.ok(false, "onShown failed: " + ex));
     });
     onPopupEvent("popuphidden", function() {
       info("[" + nextTest.id + "] popup hidden");
-      (() => nextTest.onHidden(this))()
+      (nextTest.onHidden(this) || Promise.resolve())
           .then(() => goNext(), ex => Assert.ok(false, "onHidden failed: " + ex));
     }, () => shownState);
     info("[" + nextTest.id + "] added listeners; panel is open: " + PopupNotifications.isPanelOpen);

@@ -163,7 +163,7 @@ add_task(async function test() {
 
       await ContentTask.spawn(newTabBrowser, null, contentSetUp);
 
-      await (runTests(newTabBrowser))();
+      await runTests(newTabBrowser);
 
       await ContentTask.spawn(newTabBrowser, null, async function() {
         let pageNumber = content.document.querySelector("input#pageNumber");

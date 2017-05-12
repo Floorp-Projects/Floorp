@@ -85,7 +85,7 @@ var gTerminationTasks = [];
 async function terminationTaskFn() {
   for (let taskFn of gTerminationTasks) {
     try {
-      await (taskFn)();
+      await taskFn();
     } catch (ex) {
       Output.print(ex);
       Assert.ok(false);

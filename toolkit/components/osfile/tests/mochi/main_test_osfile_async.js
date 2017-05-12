@@ -185,7 +185,7 @@ var test_stat = maketest("stat", function stat(test) {
  * Test feature detection using OS.File.Info.prototype on main thread
  */
 var test_info_features_detect = maketest("features_detect", function features_detect(test) {
-  return (function() {
+  return (async function() {
     if (OS.Constants.Win) {
       // see if winBirthDate is defined
       if ("winBirthDate" in OS.File.Info.prototype) {
