@@ -22,7 +22,7 @@
 #include "mozmemory_wrap.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Types.h"
-#include "jemalloc_types.h"
+#include "mozjemalloc_types.h"
 
 /*
  * On OSX, malloc/malloc.h contains the declaration for malloc_good_size,
