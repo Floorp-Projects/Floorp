@@ -447,6 +447,11 @@ public:
     return mOptions;
   }
 
+  TimeDuration GetVsyncInterval() const {
+    // the variable is called "rate" but really it's an interval
+    return mVsyncRate;
+  }
+
   PWebRenderBridgeParent* AllocPWebRenderBridgeParent(const wr::PipelineId& aPipelineId,
                                                       const LayoutDeviceIntSize& aSize,
                                                       TextureFactoryIdentifier* aTextureFactoryIdentifier,

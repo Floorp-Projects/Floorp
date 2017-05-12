@@ -372,6 +372,26 @@ WebRenderBridgeParent::UpdateAPZ()
   }
 }
 
+bool
+WebRenderBridgeParent::PushAPZStateToWR()
+{
+  CompositorBridgeParent* cbp = GetRootCompositorBridgeParent();
+  if (!cbp) {
+    return false;
+  }
+  if (RefPtr<APZCTreeManager> apzc = cbp->GetAPZCTreeManager()) {
+    TimeStamp animationTime = mCompositorScheduler->GetLastComposeTime();
+    TimeDuration frameInterval = cbp->GetVsyncInterval();
+    // As with the non-webrender codepath in AsyncCompositionManager, we want to
+    // use the timestamp for the next vsync when advancing animations.
+    if (frameInterval != TimeDuration::Forever()) {
+      animationTime += frameInterval;
+    }
+    return apzc->PushStateToWR(mApi, animationTime);
+  }
+  return false;
+}
+
 const WebRenderScrollData&
 WebRenderBridgeParent::GetScrollData() const
 {
@@ -712,6 +732,10 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
 {
   if (mPaused) {
     return;
+  }
+
+  if (PushAPZStateToWR()) {
+    ScheduleComposition();
   }
 
   if (gfxPrefs::WebRenderOMTAEnabled()) {

@@ -45,6 +45,10 @@ public:
 
   wr::WindowId GetId() const { return mId; }
 
+  void UpdateScrollPosition(const WrPipelineId& aPipelineId,
+                            const layers::FrameMetrics::ViewID& aScrollId,
+                            const WrPoint& aScrollPosition);
+
   void GenerateFrame();
   void GenerateFrame(const nsTArray<WrOpacityProperty>& aOpacityArray,
                      const nsTArray<WrTransformProperty>& aTransformArray);

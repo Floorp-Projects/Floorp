@@ -173,6 +173,14 @@ WebRenderAPI::~WebRenderAPI()
 }
 
 void
+WebRenderAPI::UpdateScrollPosition(const WrPipelineId& aPipelineId,
+                                   const layers::FrameMetrics::ViewID& aScrollId,
+                                   const WrPoint& aScrollPosition)
+{
+  wr_scroll_layer_with_id(mWrApi, aPipelineId, aScrollId, aScrollPosition);
+}
+
+void
 WebRenderAPI::GenerateFrame()
 {
   wr_api_generate_frame(mWrApi);

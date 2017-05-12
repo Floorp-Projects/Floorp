@@ -1317,6 +1317,16 @@ pub extern "C" fn wr_dp_pop_scroll_layer(state: &mut WrState) {
 }
 
 #[no_mangle]
+pub extern "C" fn wr_scroll_layer_with_id(api: &mut WrAPI,
+                                          pipeline_id: WrPipelineId,
+                                          scroll_id: u64,
+                                          new_scroll_origin: WrPoint) {
+    assert!(unsafe { is_in_compositor_thread() });
+    let clip_id = ClipId::new(scroll_id, pipeline_id);
+    api.scroll_node_with_id(new_scroll_origin.into(), clip_id);
+}
+
+#[no_mangle]
 pub extern "C" fn wr_dp_push_iframe(state: &mut WrState,
                                     rect: WrRect,
                                     clip: WrClipRegionToken,
