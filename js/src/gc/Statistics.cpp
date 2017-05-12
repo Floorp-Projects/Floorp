@@ -581,6 +581,7 @@ Statistics::formatJsonDescription(uint64_t timestamp, JSONPrinter& json) const
     json.property("total_compartments", zoneStats.compartmentCount);
     json.property("minor_gcs", counts[STAT_MINOR_GC]);
     json.property("store_buffer_overflows", counts[STAT_STOREBUFFER_OVERFLOW]);
+    json.property("slices", slices_.length());
 
     const double mmu20 = computeMMU(TimeDuration::FromMilliseconds(20));
     const double mmu50 = computeMMU(TimeDuration::FromMilliseconds(50));
