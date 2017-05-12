@@ -1,0 +1,94 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>BrowserAction Test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/contents/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+var {BrowserActions} = SpecialPowers.Cu.import("resource://gre/modules/BrowserActions.jsm", {});
+
+async function background() {
+  browser.test.assertTrue("browserAction" in browser, "Namespace 'browserAction' exists in browser");
+  browser.test.assertTrue("onClicked" in browser.browserAction, "API method 'onClicked' exists in browser.browserAction");
+
+  const tabs = await browser.tabs.query({active: true, currentWindow: true});
+
+  browser.browserAction.onClicked.addListener(tab => {
+    browser.test.sendMessage("browser-action-clicked", tab);
+  });
+
+  browser.test.sendMessage("ready", tabs[0]);
+}
+
+function createExtension(name) {
+  return ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      "name": name,
+      "browser_action": {
+        "default_title": "Browser Action",
+      },
+    },
+  });
+}
+
+function* checkBrowserAction(extension, id, tab) {
+  ok(BrowserActions.isShown(id), "The BrowerAction should be shown");
+  BrowserActions.synthesizeClick(id);
+  const clickedTab = yield extension.awaitMessage("browser-action-clicked");
+  is(clickedTab.id, tab.id, "Got the expected tab id in the browserAction.onClicked event");
+}
+
+add_task(function* test_browserAction() {
+  const extension = createExtension("BrowserAction Extension");
+  yield extension.startup();
+  const tab = yield extension.awaitMessage("ready");
+  let id = `{${extension.uuid}}`;
+  yield checkBrowserAction(extension, id, tab);
+  yield extension.unload();
+
+  ok(!BrowserActions.isShown(id), "The BrowserAction should be removed after the extension unloads");
+});
+
+add_task(function* test_multiple_browserActions() {
+  const ext1 = createExtension("BrowserAction Extension 1");
+  const ext2 = createExtension("BrowserAction Extension 2");
+
+  // Start the first extension and test its browser action.
+  yield ext1.startup();
+  const tab1 = yield ext1.awaitMessage("ready");
+  let id1 = `{${ext1.uuid}}`;
+  yield checkBrowserAction(ext1, id1, tab1);
+
+  // Start the second extension and test its browser action.
+  yield ext2.startup();
+  const tab2 = yield ext2.awaitMessage("ready");
+  let id2 = `{${ext2.uuid}}`;
+  yield checkBrowserAction(ext2, id2, tab2);
+
+  // Verify that the first browser action is still active.
+  yield checkBrowserAction(ext1, id1, tab1);
+
+  // Unload the first extension and verify that the browser action is removed.
+  yield ext1.unload();
+  ok(!BrowserActions.isShown(id1), "The first BrowserAction should be removed after ext1 unloads");
+
+  // Verify that the second browser action is still active.
+  yield checkBrowserAction(ext2, id2, tab2);
+
+  // Unload the second extension and verify that the browser action is removed.
+  yield ext2.unload();
+  ok(!BrowserActions.isShown(id2), "The second BrowserAction should be removed after ext2 unloads");
+});
+</script>
+
+</body>
+</html>
