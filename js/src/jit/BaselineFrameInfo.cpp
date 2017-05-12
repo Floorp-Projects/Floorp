@@ -19,7 +19,11 @@ using namespace js::jit;
 bool
 FrameInfo::init(TempAllocator& alloc)
 {
-    size_t nstack = Max(script->nslots() - script->nfixed(), size_t(MinJITStackSize));
+    // An extra slot is needed for global scopes because INITGLEXICAL (stack
+    // depth 1) is compiled as a SETPROP (stack depth 2) on the global lexical
+    // scope.
+    size_t extra = script->isGlobalCode() ? 1 : 0;
+    size_t nstack = Max(script->nslots() - script->nfixed(), size_t(MinJITStackSize)) + extra;
     if (!stack.init(alloc, nstack))
         return false;
 
