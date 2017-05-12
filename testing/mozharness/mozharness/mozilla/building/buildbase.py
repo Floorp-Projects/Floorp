@@ -1649,9 +1649,6 @@ or run without that action (ie: --no-{action})"
             self.fatal("'mach build' did not run successfully. Please check "
                        "log for errors.")
 
-        self.generate_build_props(console_output=True, halt_on_failure=True)
-        self._generate_build_stats()
-
     def multi_l10n(self):
         if not self.query_is_nightly():
             self.info("Not a nightly build, skipping multi l10n.")
@@ -1745,8 +1742,10 @@ or run without that action (ie: --no-{action})"
         self._taskcluster_upload(abs_files, self.routes_json['l10n'],
                                  locale='multi')
 
-    def postflight_build(self):
+    def postflight_build(self, console_output=True):
         """grabs properties from post build and calls ccache -s"""
+        self.generate_build_props(console_output=console_output,
+                                  halt_on_failure=True)
         if self.config.get('enable_ccache'):
             self._ccache_s()
 
@@ -1927,15 +1926,13 @@ or run without that action (ie: --no-{action})"
             'subtests': [],
         }
 
-    def _generate_build_stats(self):
+    def generate_build_stats(self):
         """grab build stats following a compile.
 
         This action handles all statistics from a build: 'count_ctors'
         and then posts to graph server the results.
         We only post to graph server for non nightly build
         """
-        self.info('Collecting build metrics')
-
         if self.config.get('forced_artifact_build'):
             self.info('Skipping due to forced artifact build.')
             return
