@@ -93,6 +93,8 @@ else:
     # anyway.
     if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
         gyp_vars['cc_is_clang'] = 1
+    if CONFIG['GCC_USE_GNU_LD']:
+        gyp_vars['cc_use_gnu_ld'] = 1
 
     GYP_DIRS += ['nss']
     GYP_DIRS['nss'].input = 'nss/nss.gyp'
@@ -113,6 +115,8 @@ else:
         if CONFIG['CPU_ARCH'] == 'x86':
             # This should really be the default.
             sandbox_vars['ASFLAGS'] = ['-safeseh']
+        if CONFIG['MOZ_FOLD_LIBS_FLAGS']:
+            sandbox_vars['CFLAGS'] = CONFIG['MOZ_FOLD_LIBS_FLAGS']
     if CONFIG['OS_TARGET'] == 'Android':
         sandbox_vars['CFLAGS'] = [
             '-include', TOPSRCDIR + '/security/manager/android_stub.h',
