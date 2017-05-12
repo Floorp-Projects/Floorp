@@ -797,6 +797,63 @@ class ResourceMonitoringMixin(PerfherderResourceOptionsMixin):
         self.info('TinderboxPrint: %s' % message)
 
 
+# This needs to be inherited only if you have already inherited ScriptMixin
+class Python3Virtualenv(object):
+    ''' Support Python3.5+ virtualenv creation.'''
+    py3_initialized_venv = False
+
+    def py3_venv_configuration(self, python_path, venv_path):
+        '''We don't use __init__ to allow integrating with other mixins.
+
+        python_path - Path to Python 3 binary.
+        venv_path - Path to virtual environment to be created.
+        '''
+        self.py3_initialized_venv = True
+        self.py3_python_path = os.path.abspath(python_path)
+        version = self.get_output_from_command(
+                    [self.py3_python_path, '--version']).split()[-1]
+        # Using -m venv is only used on 3.5+ versions
+        assert version > '3.5.0'
+        self.py3_venv_path = os.path.abspath(venv_path)
+        self.py3_pip_path = os.path.join(self.py3_path_to_executables(), 'pip')
+
+    def py3_path_to_executables(self):
+        platform = self.platform_name()
+        if platform.startswith('win'):
+            return os.path.join(self.py3_venv_path, 'Scripts')
+        else:
+            return os.path.join(self.py3_venv_path, 'bin')
+
+    def py3_venv_initialized(func):
+        def call(self, *args, **kwargs):
+            if not self.py3_initialized_venv:
+                raise Exception('You need to call py3_venv_configuration() '
+                                'before using this method.')
+            func(self, *args, **kwargs)
+        return call
+
+    @py3_venv_initialized
+    def py3_create_venv(self):
+        '''Create Python environment with python3 -m venv /path/to/venv.'''
+        if os.path.exists(self.py3_venv_path):
+            self.info("Virtualenv %s appears to already exist; skipping "
+                      "virtualenv creation." % self.py3_venv_path)
+        else:
+            self.info('Running command...')
+            self.run_command(
+                '%s -m venv %s' % (self.py3_python_path, self.py3_venv_path),
+                error_list=VirtualenvErrorList,
+                halt_on_failure=True)
+
+    @py3_venv_initialized
+    def py3_install_modules(self, modules):
+        if not os.path.exists(self.py3_venv_path):
+            raise Exception('You need to call py3_create_venv() first.')
+
+        for m in modules:
+            self.run_command('%s install %s' % (self.py3_pip_path, m))
+
+
 # __main__ {{{1
 
 if __name__ == '__main__':
