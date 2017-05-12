@@ -65,10 +65,7 @@ else
 fi
 
 echo "Applying a patch on top of $version"
-patch -p3 < ./fix-crashes.patch
-
-echo "Applying a patch on top of $version"
-patch -p3 < ./uplift-cubeb-f07ee6d-to-aurora.patch
+patch -p1 < ./bug1345147.patch
 
 echo "Applying a patch on top of $version"
 patch -p3 < ./disable-assert.patch
