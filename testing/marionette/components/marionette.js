@@ -137,6 +137,7 @@ MarionetteComponent.prototype = {
   contractID: MARIONETTE_CONTRACT_ID,
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsICommandLineHandler,
+    Ci.nsIMarionette,
   ]),
   _xpcom_categories: [
     {category: "command-line-handler", entry: "b-marionette"},
