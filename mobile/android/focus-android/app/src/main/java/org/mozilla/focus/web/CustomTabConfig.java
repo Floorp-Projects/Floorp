@@ -46,7 +46,7 @@ public class CustomTabConfig {
         this.actionButtonConfig = actionButtonConfig;
     }
 
-    /* package-private */ static boolean isCustomTabIntent(final @NonNull Intent intent) {
+    /* package-private */ static boolean isCustomTabIntent(final @NonNull SafeIntent intent) {
         return intent.hasExtra(CustomTabsIntent.EXTRA_SESSION);
     }
 

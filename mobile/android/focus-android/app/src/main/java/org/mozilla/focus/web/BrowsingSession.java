@@ -73,7 +73,7 @@ public class BrowsingSession {
     }
 
     public void loadCustomTabConfig(final @NonNull SafeIntent intent) {
-        if (!CustomTabConfig.isCustomTabIntent(intent.getUnsafe())) {
+        if (!CustomTabConfig.isCustomTabIntent(intent)) {
             customTabConfig = null;
             return;
         }
