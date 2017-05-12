@@ -69,3 +69,6 @@ patch -p1 < ./bug1345147.patch
 
 echo "Applying a patch on top of $version"
 patch -p3 < ./disable-assert.patch
+
+echo "Applying a patch on top of $version"
+patch -p1 < ./bug1358868.patch
