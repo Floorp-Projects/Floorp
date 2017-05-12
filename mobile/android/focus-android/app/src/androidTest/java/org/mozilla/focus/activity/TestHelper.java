@@ -100,6 +100,11 @@ public final class TestHelper {
     static UiObject settingsMenuItem = mDevice.findObject(new UiSelector()
             .className("android.widget.LinearLayout")
             .instance(3));
+    static UiObject blockCounterItem = mDevice.findObject(new UiSelector()
+            .resourceId("org.mozilla.focus.debug:id/trackers_count"));
+    static UiObject blockToggleSwitch = mDevice.findObject(new UiSelector()
+            .resourceId("org.mozilla.focus.debug:id/blocking_switch"));
+
 
     /********* Settings Menu Item Locators ***********/
     static UiScrollable settingsList = new UiScrollable(new UiSelector()
@@ -109,6 +114,12 @@ public final class TestHelper {
             .enabled(true));
     static UiObject navigateUp = mDevice.findObject(new UiSelector()
             .description("Navigate up"));
+    static UiObject toggleAnalyticBlock = mDevice.findObject(new UiSelector()
+            .className("android.widget.Switch")
+            .instance(1));
+    static UiObject refreshBtn = mDevice.findObject(new UiSelector()
+            .resourceId("org.mozilla.focus.debug:id/refresh")
+            .enabled(true));
 
     private TestHelper () throws UiObjectNotFoundException {
     }
