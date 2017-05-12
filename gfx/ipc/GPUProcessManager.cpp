@@ -83,7 +83,6 @@ GPUProcessManager::GPUProcessManager()
  : mTaskFactory(this),
    mNextLayerTreeId(0),
    mNextNamespace(0),
-   mNextResetSequenceNo(0),
    mNumProcessAttempts(0),
    mDeviceResetCount(0),
    mProcess(nullptr),
