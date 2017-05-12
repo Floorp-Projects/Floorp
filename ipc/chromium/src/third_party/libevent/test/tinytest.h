@@ -23,17 +23,19 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _TINYTEST_H
-#define _TINYTEST_H
+#ifndef TINYTEST_H_INCLUDED_
+#define TINYTEST_H_INCLUDED_
 
 /** Flag for a test that needs to run in a subprocess. */
 #define TT_FORK  (1<<0)
 /** Runtime flag for a test we've decided to skip. */
 #define TT_SKIP  (1<<1)
 /** Internal runtime flag for a test we've decided to run. */
-#define _TT_ENABLED  (1<<2)
+#define TT_ENABLED_  (1<<2)
+/** Flag for a test that's off by default. */
+#define TT_OFF_BY_DEFAULT  (1<<3)
 /** If you add your own flags, make them start at this point. */
-#define TT_FIRST_USER_FLAG (1<<3)
+#define TT_FIRST_USER_FLAG (1<<4)
 
 typedef void (*testcase_fn)(void *);
 
@@ -64,22 +66,33 @@ struct testgroup_t {
 };
 #define END_OF_GROUPS { NULL, NULL}
 
+struct testlist_alias_t {
+	const char *name;
+	const char **tests;
+};
+#define END_OF_ALIASES { NULL, NULL }
+
 /** Implementation: called from a test to indicate failure, before logging. */
-void _tinytest_set_test_failed(void);
+void tinytest_set_test_failed_(void);
 /** Implementation: called from a test to indicate that we're skipping. */
-void _tinytest_set_test_skipped(void);
+void tinytest_set_test_skipped_(void);
 /** Implementation: return 0 for quiet, 1 for normal, 2 for loud. */
-int _tinytest_get_verbosity(void);
+int tinytest_get_verbosity_(void);
 /** Implementation: Set a flag on tests matching a name; returns number
  * of tests that matched. */
-int _tinytest_set_flag(struct testgroup_t *, const char *, unsigned long);
+int tinytest_set_flag_(struct testgroup_t *, const char *, int set, unsigned long);
+/** Implementation: Put a chunk of memory into hex. */
+char *tinytest_format_hex_(const void *, unsigned long);
 
 /** Set all tests in 'groups' matching the name 'named' to be skipped. */
 #define tinytest_skip(groups, named) \
-	_tinytest_set_flag(groups, named, TT_SKIP)
+	tinytest_set_flag_(groups, named, 1, TT_SKIP)
 
 /** Run a single testcase in a single group. */
 int testcase_run_one(const struct testgroup_t *,const struct testcase_t *);
+
+void tinytest_set_aliases(const struct testlist_alias_t *aliases);
+
 /** Run a set of testcases from an END_OF_GROUPS-terminated array of groups,
     as selected from the command line. */
 int tinytest_main(int argc, const char **argv, struct testgroup_t *groups);

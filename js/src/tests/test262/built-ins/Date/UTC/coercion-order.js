@@ -26,7 +26,7 @@ var minutes = { toString: function() { log += 'minutes'; return 0; } };
 var seconds = { toString: function() { log += 'seconds'; return 0; } };
 var ms = { toString: function() { log += 'ms'; return 0; } };
 
-new Date(year, month, date, hours,minutes, seconds, ms);
+Date.UTC(year, month, date, hours,minutes, seconds, ms);
 
 assert.sameValue(log, 'yearmonthdatehoursminutessecondsms');
 

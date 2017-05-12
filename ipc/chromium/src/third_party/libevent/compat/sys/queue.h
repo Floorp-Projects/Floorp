@@ -32,8 +32,8 @@
  *	@(#)queue.h	8.5 (Berkeley) 8/20/94
  */
 
-#ifndef	_SYS_QUEUE_H_
-#define	_SYS_QUEUE_H_
+#ifndef	SYS_QUEUE_H__
+#define	SYS_QUEUE_H__
 
 /*
  * This file defines five types of data structures: singly-linked lists,
@@ -93,7 +93,7 @@ struct name {								\
 #define	SLIST_HEAD_INITIALIZER(head)					\
 	{ NULL }
 
-#ifndef WIN32
+#ifndef _WIN32
 #define SLIST_ENTRY(type)						\
 struct {								\
 	struct type *sle_next;	/* next element */			\
@@ -485,4 +485,4 @@ struct {								\
 		(elm2)->field.cqe_prev->field.cqe_next = (elm2);	\
 } while (0)
 
-#endif	/* !_SYS_QUEUE_H_ */
+#endif	/* !SYS_QUEUE_H__ */

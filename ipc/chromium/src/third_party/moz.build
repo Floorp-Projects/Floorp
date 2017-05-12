@@ -18,6 +18,7 @@ UNIFIED_SOURCES += [
     'libevent/bufferevent.c',
     'libevent/bufferevent_ratelim.c',
     'libevent/bufferevent_sock.c',
+    'libevent/evdns.c',
     'libevent/event.c',
     'libevent/event_tagging.c',
     'libevent/evmap.c',
@@ -26,6 +27,7 @@ UNIFIED_SOURCES += [
     'libevent/evthread_pthread.c',
     'libevent/evutil.c',
     'libevent/evutil_rand.c',
+    'libevent/evutil_time.c',
     'libevent/http.c',
     'libevent/listener.c',
     'libevent/log.c',
@@ -34,11 +36,6 @@ UNIFIED_SOURCES += [
     'libevent/signal.c',
     'libevent/strlcpy.c',
 ]
-SOURCES += [
-    # This file cannot be built in unified mode because of strtotimeval
-    # symbol clash.
-    'libevent/evdns.c',
-]
 
 if os_macosx or os_bsd:
     UNIFIED_SOURCES += [
@@ -46,11 +43,11 @@ if os_macosx or os_bsd:
     ]
 
 if os_linux:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'libevent/epoll.c',
     ]
     if CONFIG['OS_TARGET'] != 'Android':
-        SOURCES += [
+        UNIFIED_SOURCES += [
             'libevent/epoll_sub.c',
         ]
 

@@ -1504,15 +1504,7 @@ PT.Tag.prototype = {
   *execute(aURIs, aTags) {
     let onUndo = [], onRedo = [];
     for (let uri of aURIs) {
-
-      let promiseIsBookmarked = function* () {
-        let deferred = Promise.defer();
-        PlacesUtils.asyncGetBookmarkIds(
-          uri, ids => { deferred.resolve(ids.length > 0); });
-        return deferred.promise;
-      };
-
-      if (yield promiseIsBookmarked(uri)) {
+      if (!(yield PlacesUtils.bookmarks.fetch({ url: uri }))) {
         // Tagging is only allowed for bookmarked URIs (but see 424160).
         let createTxn = TransactionsHistory.getRawTransaction(
           PT.NewBookmark({ url: uri

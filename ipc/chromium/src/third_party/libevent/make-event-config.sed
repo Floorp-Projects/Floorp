@@ -11,13 +11,13 @@
  * Do not rely on macros in this file existing in later versions.\
  */\
 \
-#ifndef _EVENT2_EVENT_CONFIG_H_\
-#define _EVENT2_EVENT_CONFIG_H_\
+#ifndef EVENT2_EVENT_CONFIG_H_INCLUDED_\
+#define EVENT2_EVENT_CONFIG_H_INCLUDED_\
 
 $a\
 \
 #endif /* event2/event-config.h */
 
-s/#define /#define _EVENT_/
-s/#undef /#undef _EVENT_/
-s/#ifndef /#ifndef _EVENT_/
+s/#\( *\)define /#\1define EVENT__/
+s/#\( *\)undef /#\1undef EVENT__/
+s/#\( *\)if\(n*\)def /#\1if\2def EVENT__/

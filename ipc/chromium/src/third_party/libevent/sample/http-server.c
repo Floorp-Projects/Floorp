@@ -6,6 +6,9 @@
 
  */
 
+/* Compatibility for possible missing IPv6 declarations */
+#include "../util-internal.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,7 +16,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <windows.h>
@@ -37,22 +40,29 @@
 #include <event2/util.h>
 #include <event2/keyvalq_struct.h>
 
-#ifdef _EVENT_HAVE_NETINET_IN_H
+#ifdef EVENT__HAVE_NETINET_IN_H
 #include <netinet/in.h>
 # ifdef _XOPEN_SOURCE_EXTENDED
 #  include <arpa/inet.h>
 # endif
 #endif
 
-/* Compatibility for possible missing IPv6 declarations */
-#include "../util-internal.h"
-
-#ifdef WIN32
+#ifdef _WIN32
+#ifndef stat
 #define stat _stat
+#endif
+#ifndef fstat
 #define fstat _fstat
+#endif
+#ifndef open
 #define open _open
+#endif
+#ifndef close
 #define close _close
+#endif
+#ifndef O_RDONLY
 #define O_RDONLY _O_RDONLY
+#endif
 #endif
 
 char uri_root[512];
@@ -72,7 +82,7 @@ static const struct table_entry {
 	{ "jpeg", "image/jpeg" },
 	{ "png", "image/png" },
 	{ "pdf", "application/pdf" },
-	{ "ps", "application/postsript" },
+	{ "ps", "application/postscript" },
 	{ NULL, NULL },
 };
 
@@ -206,7 +216,7 @@ send_document_cb(struct evhttp_request *req, void *arg)
 	if (S_ISDIR(st.st_mode)) {
 		/* If it's a directory, read the comments and make a little
 		 * index page */
-#ifdef WIN32
+#ifdef _WIN32
 		HANDLE d;
 		WIN32_FIND_DATAA ent;
 		char *pattern;
@@ -220,7 +230,7 @@ send_document_cb(struct evhttp_request *req, void *arg)
 		if (!strlen(path) || path[strlen(path)-1] != '/')
 			trailing_slash = "/";
 
-#ifdef WIN32
+#ifdef _WIN32
 		dirlen = strlen(whole_path);
 		pattern = malloc(dirlen+3);
 		memcpy(pattern, whole_path, dirlen);
@@ -236,18 +246,21 @@ send_document_cb(struct evhttp_request *req, void *arg)
 			goto err;
 #endif
 
-		evbuffer_add_printf(evb, "<html>\n <head>\n"
+		evbuffer_add_printf(evb,
+                    "<!DOCTYPE html>\n"
+                    "<html>\n <head>\n"
+                    "  <meta charset='utf-8'>\n"
 		    "  <title>%s</title>\n"
-		    "  <base href='%s%s%s'>\n"
+		    "  <base href='%s%s'>\n"
 		    " </head>\n"
 		    " <body>\n"
 		    "  <h1>%s</h1>\n"
 		    "  <ul>\n",
 		    decoded_path, /* XXX html-escape this. */
-		    uri_root, path, /* XXX html-escape this? */
+		    path, /* XXX html-escape this? */
 		    trailing_slash,
 		    decoded_path /* XXX html-escape this */);
-#ifdef WIN32
+#ifdef _WIN32
 		do {
 			const char *name = ent.cFileName;
 #else
@@ -257,13 +270,13 @@ send_document_cb(struct evhttp_request *req, void *arg)
 			evbuffer_add_printf(evb,
 			    "    <li><a href=\"%s\">%s</a>\n",
 			    name, name);/* XXX escape this */
-#ifdef WIN32
+#ifdef _WIN32
 		} while (FindNextFileA(d, &ent));
 #else
 		}
 #endif
 		evbuffer_add_printf(evb, "</ul></body></html>\n");
-#ifdef WIN32
+#ifdef _WIN32
 		FindClose(d);
 #else
 		closedir(d);
@@ -320,8 +333,8 @@ main(int argc, char **argv)
 	struct evhttp *http;
 	struct evhttp_bound_socket *handle;
 
-	unsigned short port = 0;
-#ifdef WIN32
+	ev_uint16_t port = 0;
+#ifdef _WIN32
 	WSADATA WSAData;
 	WSAStartup(0x101, &WSAData);
 #else

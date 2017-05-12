@@ -1120,14 +1120,6 @@ add_task(function* test_tag_uri() {
                   , parentGuid: rootGuid };
   let unbookmarked_uri = NetUtil.newURI("http://un.bookmarked.uri");
 
-  function* promiseIsBookmarked(aURI) {
-    let deferred = Promise.defer();
-    PlacesUtils.asyncGetBookmarkIds(aURI, ids => {
-                                            deferred.resolve(ids.length > 0);
-                                          });
-    return deferred.promise;
-  }
-
   yield PT.batch(function* () {
     bm_info_a.guid = yield PT.NewBookmark(bm_info_a).transact();
     bm_info_b.guid = yield PT.NewBookmark(bm_info_b).transact();
@@ -1142,7 +1134,7 @@ add_task(function* test_tag_uri() {
 
     let tagWillAlsoBookmark = new Set();
     for (let url of urls) {
-      if (!(yield promiseIsBookmarked(url))) {
+      if (!(yield bmsvc.fetch({ url }))) {
         tagWillAlsoBookmark.add(url);
       }
     }
@@ -1150,16 +1142,16 @@ add_task(function* test_tag_uri() {
     function* ensureTagsSet() {
       for (let url of urls) {
         ensureTagsForURI(url, tags);
-        Assert.ok(yield promiseIsBookmarked(url));
+        Assert.ok(yield bmsvc.fetch({ url }));
       }
     }
     function* ensureTagsUnset() {
       for (let url of urls) {
         ensureTagsForURI(url, []);
         if (tagWillAlsoBookmark.has(url))
-          Assert.ok(!(yield promiseIsBookmarked(url)));
+          Assert.ok(!(yield bmsvc.fetch({ url })));
         else
-          Assert.ok(yield promiseIsBookmarked(url));
+          Assert.ok(yield bmsvc.fetch({ url }));
       }
     }
 

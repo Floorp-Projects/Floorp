@@ -28,7 +28,7 @@
 /* The old tests here need assertions to work. */
 #undef NDEBUG
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <winsock2.h>
 #include <windows.h>
 #endif
@@ -37,11 +37,11 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#ifdef _EVENT_HAVE_SYS_TIME_H
+#ifdef EVENT__HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
 #include <sys/queue.h>
-#ifndef WIN32
+#ifndef _WIN32
 #include <sys/socket.h>
 #include <signal.h>
 #include <unistd.h>
@@ -463,12 +463,14 @@ rpc_basic_client(void)
 	    != NULL);
 
 	pool = rpc_pool_with_connection(port);
+	tt_assert(pool);
 
 	assert(evrpc_add_hook(pool, EVRPC_OUTPUT, rpc_hook_add_meta, NULL));
 	assert(evrpc_add_hook(pool, EVRPC_INPUT, rpc_hook_remove_header, (void*)"output"));
 
 	/* set up the basic message */
 	msg = msg_new();
+	tt_assert(msg);
 	EVTAG_ASSIGN(msg, from_name, "niels");
 	EVTAG_ASSIGN(msg, to_name, "tester");
 
@@ -539,9 +541,11 @@ rpc_basic_queued_client(void)
 	rpc_setup(&http, &port, &base);
 
 	pool = rpc_pool_with_connection(port);
+	tt_assert(pool);
 
 	/* set up the basic message */
 	msg = msg_new();
+	tt_assert(msg);
 	EVTAG_ASSIGN(msg, from_name, "niels");
 	EVTAG_ASSIGN(msg, to_name, "tester");
 
@@ -592,7 +596,7 @@ done:
 
 /* we just pause the rpc and continue it in the next callback */
 
-struct _rpc_hook_ctx {
+struct rpc_hook_ctx_ {
 	void *vbase;
 	void *ctx;
 };
@@ -602,7 +606,7 @@ static int hook_pause_cb_called=0;
 static void
 rpc_hook_pause_cb(evutil_socket_t fd, short what, void *arg)
 {
-	struct _rpc_hook_ctx *ctx = arg;
+	struct rpc_hook_ctx_ *ctx = arg;
 	++hook_pause_cb_called;
 	evrpc_resume_request(ctx->vbase, ctx->ctx, EVRPC_CONTINUE);
 	free(arg);
@@ -612,7 +616,7 @@ static int
 rpc_hook_pause(void *ctx, struct evhttp_request *req, struct evbuffer *evbuf,
     void *arg)
 {
-	struct _rpc_hook_ctx *tmp = malloc(sizeof(*tmp));
+	struct rpc_hook_ctx_ *tmp = malloc(sizeof(*tmp));
 	struct timeval tv;
 
 	assert(tmp != NULL);
@@ -640,12 +644,13 @@ rpc_basic_client_with_pause(void)
 	assert(evrpc_add_hook(base, EVRPC_OUTPUT, rpc_hook_pause, base));
 
 	pool = rpc_pool_with_connection(port);
-
+	tt_assert(pool);
 	assert(evrpc_add_hook(pool, EVRPC_INPUT, rpc_hook_pause, pool));
 	assert(evrpc_add_hook(pool, EVRPC_OUTPUT, rpc_hook_pause, pool));
 
 	/* set up the basic message */
 	msg = msg_new();
+	tt_assert(msg);
 	EVTAG_ASSIGN(msg, from_name, "niels");
 	EVTAG_ASSIGN(msg, to_name, "tester");
 
@@ -688,12 +693,14 @@ rpc_client_timeout(void)
 	rpc_setup(&http, &port, &base);
 
 	pool = rpc_pool_with_connection(port);
+	tt_assert(pool);
 
-	/* set the timeout to 5 seconds */
-	evrpc_pool_set_timeout(pool, 5);
+	/* set the timeout to 1 second. */
+	evrpc_pool_set_timeout(pool, 1);
 
 	/* set up the basic message */
 	msg = msg_new();
+	tt_assert(msg);
 	EVTAG_ASSIGN(msg, from_name, "niels");
 	EVTAG_ASSIGN(msg, to_name, "tester");
 

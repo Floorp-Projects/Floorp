@@ -7,8 +7,10 @@ package org.mozilla.gecko;
 import android.app.Application;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.os.Process;
 import android.os.SystemClock;
 import android.util.Log;
 
@@ -76,6 +78,29 @@ public class GeckoApplication extends Application
      */
     public static String getSessionUUID() {
         return sSessionUUID;
+    }
+
+    public static void shutdown(final Intent restartIntent) {
+        ThreadUtils.assertOnUiThread();
+
+        // Wait for Gecko to handle any pause events.
+        if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+            GeckoThread.waitOnGecko();
+        }
+
+        if (restartIntent == null) {
+            // Exiting, so kill our own process.
+            Process.killProcess(Process.myPid());
+            return;
+        }
+
+        // Restarting, so let Restarter kill us.
+        final Context context = GeckoAppShell.getApplicationContext();
+        final Intent intent = new Intent();
+        intent.setClass(context, Restarter.class)
+              .putExtra("pid", Process.myPid())
+              .putExtra(Intent.EXTRA_INTENT, restartIntent);
+        context.startService(intent);
     }
 
     @Override
@@ -200,8 +225,13 @@ public class GeckoApplication extends Application
 
         GeckoService.register();
 
-        EventDispatcher.getInstance().registerBackgroundThreadListener(new EventListener(),
-                "Profile:Create");
+        final EventListener listener = new EventListener();
+        EventDispatcher.getInstance().registerUiThreadListener(listener,
+                "Gecko:Exited",
+                null);
+        EventDispatcher.getInstance().registerBackgroundThreadListener(listener,
+                "Profile:Create",
+                null);
 
         super.onCreate();
     }
@@ -320,6 +350,18 @@ public class GeckoApplication extends Application
             if ("Profile:Create".equals(event)) {
                 onProfileCreate(message.getString("name"),
                                 message.getString("path"));
+
+            } else if ("Gecko:Exited".equals(event)) {
+                // Gecko thread exited first; shutdown the application.
+                final Intent restartIntent;
+                if (message.getBoolean("restart")) {
+                    restartIntent = new Intent(Intent.ACTION_MAIN);
+                    restartIntent.setClassName(GeckoAppShell.getApplicationContext(),
+                                               AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
+                } else {
+                    restartIntent = null;
+                }
+                shutdown(restartIntent);
             }
         }
     }

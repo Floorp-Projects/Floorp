@@ -16,6 +16,7 @@ import org.mozilla.gecko.annotation.ReflectionTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.mozglue.JNIObject;
+import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
@@ -146,7 +147,6 @@ public class GeckoView extends LayerView
             view.mNativeQueue.setState(mNativeQueue.getState());
             mNativeQueue = view.mNativeQueue;
         }
-
     }
 
     // Object to hold onto our nsWindow connection when GeckoView gets destroyed.
@@ -197,6 +197,8 @@ public class GeckoView extends LayerView
         /* package */ void registerListeners() {
             getEventDispatcher().registerUiThreadListener(this,
                 "GeckoView:DOMTitleChanged",
+                "GeckoView:FullScreenEnter",
+                "GeckoView:FullScreenExit",
                 "GeckoView:LocationChange",
                 "GeckoView:PageStart",
                 "GeckoView:PageStop",
@@ -215,6 +217,14 @@ public class GeckoView extends LayerView
             if ("GeckoView:DOMTitleChanged".equals(event)) {
                 if (mContentListener != null) {
                     mContentListener.onTitleChange(GeckoView.this, message.getString("title"));
+                }
+            } else if ("GeckoView:FullScreenEnter".equals(event)) {
+                if (mContentListener != null) {
+                    mContentListener.onFullScreen(GeckoView.this, true);
+                }
+            } else if ("GeckoView:FullScreenExit".equals(event)) {
+                if (mContentListener != null) {
+                    mContentListener.onFullScreen(GeckoView.this, false);
                 }
             } else if ("GeckoView:LocationChange".equals(event)) {
                 if (mNavigationListener == null) {
@@ -1064,6 +1074,16 @@ public class GeckoView extends LayerView
         * @param title The title sent from the content.
         */
         void onTitleChange(GeckoView view, String title);
+
+        /**
+         * A page has entered or exited full screen mode. Typically, the implementation
+         * would set the Activity containing the GeckoView to full screen when the page is
+         * in full screen mode.
+         *
+         * @param view The GeckoView that initiated the callback.
+         * @param fullScreen True if the page is in full screen mode.
+         */
+        void onFullScreen(GeckoView view, boolean fullScreen);
     }
 
     public interface NavigationListener {
