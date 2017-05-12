@@ -46,7 +46,8 @@ public:
 
   void MarkInCCGeneration(uint32_t aGeneration);
 
-  static nsresult ReadPrototypeBindings(nsIURI* aURI, nsXBLDocumentInfo** aDocInfo);
+  static nsresult ReadPrototypeBindings(nsIURI* aURI, nsXBLDocumentInfo** aDocInfo,
+                                        nsIDocument* aBoundDocument);
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsXBLDocumentInfo)
 
