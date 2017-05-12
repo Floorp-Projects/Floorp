@@ -318,25 +318,25 @@ BingRequest.prototype = {
         "</TranslateArrayRequest>";
 
       // Set up request options.
-      let deferred = Promise.defer();
-      let options = {
-        onLoad: (responseText, xhr) => {
-          deferred.resolve(this);
-        },
-        onError(e, responseText, xhr) {
-          deferred.reject(xhr);
-        },
-        postData: requestString,
-        headers
-      };
+      return new Promise((resolve, reject) => {
+        let options = {
+          onLoad: (responseText, xhr) => {
+            resolve(this);
+          },
+          onError(e, responseText, xhr) {
+            reject(xhr);
+          },
+          postData: requestString,
+          headers
+        };
 
-      // Fire the request.
-      let request = httpRequest(url, options);
+        // Fire the request.
+        let request = httpRequest(url, options);
 
-      // Override the response MIME type.
-      request.overrideMimeType("text/xml");
-      this.networkRequest = request;
-      return deferred.promise;
+        // Override the response MIME type.
+        request.overrideMimeType("text/xml");
+        this.networkRequest = request;
+      });
     })();
   }
 };

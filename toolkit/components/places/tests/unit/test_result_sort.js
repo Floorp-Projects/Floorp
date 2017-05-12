@@ -10,17 +10,17 @@ const NHQO = Ci.nsINavHistoryQueryOptions;
  * Waits for onItemVisited notifications to be received.
  */
 function promiseOnItemVisited() {
-  let defer = Promise.defer();
-  let bookmarksObserver = {
-    __proto__: NavBookmarkObserver.prototype,
-    onItemVisited: function BO_onItemVisited() {
-      PlacesUtils.bookmarks.removeObserver(this);
-      // Enqueue to be sure that all onItemVisited notifications ran.
-      do_execute_soon(defer.resolve);
-    }
-  };
-  PlacesUtils.bookmarks.addObserver(bookmarksObserver);
-  return defer.promise;
+  return new Promise(resolve => {
+    let bookmarksObserver = {
+      __proto__: NavBookmarkObserver.prototype,
+      onItemVisited: function BO_onItemVisited() {
+        PlacesUtils.bookmarks.removeObserver(this);
+        // Enqueue to be sure that all onItemVisited notifications ran.
+        do_execute_soon(resolve);
+      }
+    };
+    PlacesUtils.bookmarks.addObserver(bookmarksObserver);
+  });
 }
 
 function run_test() {

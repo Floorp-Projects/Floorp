@@ -148,23 +148,23 @@ add_task(async function() {
 
 // helper functions
 function waitForLoadsInBrowser(aBrowser, aLoadCount) {
-  let deferred = Promise.defer();
-  let loadCount = 0;
-  aBrowser.addEventListener("load", function(aEvent) {
-    if (++loadCount < aLoadCount) {
-      info("Got " + loadCount + " loads, waiting until we have " + aLoadCount);
-      return;
-    }
+  return new Promise(resolve => {
+    let loadCount = 0;
+    aBrowser.addEventListener("load", function(aEvent) {
+      if (++loadCount < aLoadCount) {
+        info("Got " + loadCount + " loads, waiting until we have " + aLoadCount);
+        return;
+      }
 
-    aBrowser.removeEventListener("load", arguments.callee, true);
-    deferred.resolve();
-  }, true);
-  return deferred.promise;
+      aBrowser.removeEventListener("load", arguments.callee, true);
+      resolve();
+    }, true);
+  });
 }
 
 function timeout(delay, task) {
-  let deferred = Promise.defer();
-  setTimeout(() => deferred.resolve(true), delay);
-  task.then(() => deferred.resolve(false), deferred.reject);
-  return deferred.promise;
+  return new Promise((resolve, reject) => {
+    setTimeout(() => resolve(true), delay);
+    task.then(() => resolve(false), reject);
+  });
 }

@@ -37,19 +37,19 @@ add_task(async function test_star_redirect() {
  * Waits for the star to reflect the expected state.
  */
 function promiseStarState(aValue) {
-  let deferred = Promise.defer();
-  let expectedStatus = aValue ? BookmarkingUI.STATUS_STARRED
-                              : BookmarkingUI.STATUS_UNSTARRED;
-  (function checkState() {
-    if (BookmarkingUI.status == BookmarkingUI.STATUS_UPDATING ||
-        BookmarkingUI.status != expectedStatus) {
-      info("Waiting for star button change.");
-      setTimeout(checkState, 1000);
-    } else {
-      deferred.resolve();
-    }
-  })();
-  return deferred.promise;
+  return new Promise(resolve => {
+    let expectedStatus = aValue ? BookmarkingUI.STATUS_STARRED
+                                : BookmarkingUI.STATUS_UNSTARRED;
+    (function checkState() {
+      if (BookmarkingUI.status == BookmarkingUI.STATUS_UPDATING ||
+          BookmarkingUI.status != expectedStatus) {
+        info("Waiting for star button change.");
+        setTimeout(checkState, 1000);
+      } else {
+        resolve();
+      }
+    })();
+  });
 }
 
 /**
@@ -66,19 +66,19 @@ function promiseStarState(aValue) {
 function promiseTabLoadEvent(aTab, aURL, aFinalURL) {
   if (!aFinalURL)
     aFinalURL = aURL;
-  let deferred = Promise.defer();
-  info("Wait for load tab event");
-  aTab.linkedBrowser.addEventListener("load", function load(event) {
-    if (event.originalTarget != aTab.linkedBrowser.contentDocument ||
-        event.target.location.href == "about:blank" ||
-        event.target.location.href != aFinalURL) {
-      info("skipping spurious load event");
-      return;
-    }
-    aTab.linkedBrowser.removeEventListener("load", load, true);
-    info("Tab load event received");
-    deferred.resolve();
-  }, true, true);
-  aTab.linkedBrowser.loadURI(aURL);
-  return deferred.promise;
+  return new Promise(resolve => {
+    info("Wait for load tab event");
+    aTab.linkedBrowser.addEventListener("load", function load(event) {
+      if (event.originalTarget != aTab.linkedBrowser.contentDocument ||
+          event.target.location.href == "about:blank" ||
+          event.target.location.href != aFinalURL) {
+        info("skipping spurious load event");
+        return;
+      }
+      aTab.linkedBrowser.removeEventListener("load", load, true);
+      info("Tab load event received");
+      resolve();
+    }, true, true);
+    aTab.linkedBrowser.loadURI(aURL);
+  });
 }

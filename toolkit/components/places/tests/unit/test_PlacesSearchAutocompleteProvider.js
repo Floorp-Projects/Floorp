@@ -113,21 +113,21 @@ add_task(async function test_parseSubmissionURL_basic() {
 });
 
 function promiseDefaultSearchEngine() {
-  let deferred = Promise.defer();
-  Services.search.init( () => {
-    deferred.resolve(Services.search.defaultEngine);
+  return new Promise(resolve => {
+    Services.search.init( () => {
+      resolve(Services.search.defaultEngine);
+    });
   });
-  return deferred.promise;
 }
 
 function promiseSearchTopic(expectedVerb) {
-  let deferred = Promise.defer();
-  Services.obs.addObserver( function observe(subject, topic, verb) {
-    do_print("browser-search-engine-modified: " + verb);
-    if (verb == expectedVerb) {
-      Services.obs.removeObserver(observe, "browser-search-engine-modified");
-      deferred.resolve();
-    }
-  }, "browser-search-engine-modified");
-  return deferred.promise;
+  return new Promise(resolve => {
+    Services.obs.addObserver( function observe(subject, topic, verb) {
+      do_print("browser-search-engine-modified: " + verb);
+      if (verb == expectedVerb) {
+        Services.obs.removeObserver(observe, "browser-search-engine-modified");
+        resolve();
+      }
+    }, "browser-search-engine-modified");
+  });
 }

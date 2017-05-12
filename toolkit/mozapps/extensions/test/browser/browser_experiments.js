@@ -19,11 +19,11 @@ const SEC_IN_ONE_DAY = 24 * 60 * 60;
 const MS_IN_ONE_DAY  = SEC_IN_ONE_DAY * 1000;
 
 function getExperimentAddons() {
-  let deferred = Promise.defer();
-  AddonManager.getAddonsByTypes(["experiment"], (addons) => {
-    deferred.resolve(addons);
+  return new Promise(resolve => {
+    AddonManager.getAddonsByTypes(["experiment"], (addons) => {
+      resolve(addons);
+    });
   });
-  return deferred.promise;
 }
 
 function patchPolicy(policy, data) {
@@ -47,9 +47,9 @@ function openDetailsView(aId) {
   EventUtils.synthesizeMouseAtCenter(item, { clickCount: 1 }, gManagerWindow);
   EventUtils.synthesizeMouseAtCenter(item, { clickCount: 2 }, gManagerWindow);
 
-  let deferred = Promise.defer();
-  wait_for_view_load(gManagerWindow, deferred.resolve);
-  return deferred.promise;
+  return new Promise(resolve => {
+    wait_for_view_load(gManagerWindow, resolve);
+  });
 }
 
 function clickRemoveButton(addonElement) {
@@ -279,19 +279,19 @@ add_task(async function testActivateExperiment() {
   await gExperiments.updateManifest();
   info("Experiments update complete.");
 
-  let deferred = Promise.defer();
-  gHttpServer.stop(() => {
-    gHttpServer = null;
+  await new Promise(resolve => {
+    gHttpServer.stop(() => {
+      gHttpServer = null;
 
-    info("getting experiment by ID");
-    AddonManager.getAddonByID("test-experiment1@experiments.mozilla.org", (addon) => {
-      Assert.ok(addon, "Add-on installed via Experiments manager.");
+      info("getting experiment by ID");
+      AddonManager.getAddonByID("test-experiment1@experiments.mozilla.org", (addon) => {
+        Assert.ok(addon, "Add-on installed via Experiments manager.");
 
-      deferred.resolve();
+        resolve();
+      });
     });
-  });
 
-  await deferred.promise;
+  });
 
   Assert.ok(gCategoryUtilities.isTypeVisible, "experiment", "Experiment tab visible.");
   await gCategoryUtilities.openType("experiment");
@@ -318,11 +318,11 @@ add_task(async function testDeactivateExperiment() {
   Assert.equal(experiments[0].active, false, "Experiment is not active.");
 
   // We should have a previous experiment in the add-ons manager.
-  let deferred = Promise.defer();
-  AddonManager.getAddonsByTypes(["experiment"], (addons) => {
-    deferred.resolve(addons);
+  let addons = await new Promise(resolve => {
+    AddonManager.getAddonsByTypes(["experiment"], (addons) => {
+      resolve(addons);
+    });
   });
-  let addons = await deferred.promise;
   Assert.equal(addons.length, 1, "1 experiment add-on known.");
   Assert.ok(addons[0].appDisabled, "It is a previous experiment.");
   Assert.equal(addons[0].id, "experiment-1", "Add-on ID matches expected.");

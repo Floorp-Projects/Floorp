@@ -28,19 +28,19 @@ function test() {
     var zoomLevel = ZoomManager.zoom;
 
     // Start the sub-document load.
-    let deferred = Promise.defer();
-    executeSoon(function() {
-      BrowserTestUtils.browserLoaded(testBrowser, true).then(url => {
-        is(url, TEST_IFRAME_URL, "got the load event for the iframe");
-        is(ZoomManager.zoom, zoomLevel, "zoom is retained after sub-document load");
+    await new Promise(resolve => {
+      executeSoon(function() {
+        BrowserTestUtils.browserLoaded(testBrowser, true).then(url => {
+          is(url, TEST_IFRAME_URL, "got the load event for the iframe");
+          is(ZoomManager.zoom, zoomLevel, "zoom is retained after sub-document load");
 
-        FullZoomHelper.removeTabAndWaitForLocationChange().
-          then(() => deferred.resolve());
-      });
-      ContentTask.spawn(testBrowser, TEST_IFRAME_URL, url => {
-        content.document.querySelector("iframe").src = url;
+          FullZoomHelper.removeTabAndWaitForLocationChange().
+            then(() => resolve());
+        });
+        ContentTask.spawn(testBrowser, TEST_IFRAME_URL, url => {
+          content.document.querySelector("iframe").src = url;
+        });
       });
     });
-    await deferred.promise;
   })().then(finish, FullZoomHelper.failAndContinue(finish));
 }

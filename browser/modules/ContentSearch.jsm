@@ -518,24 +518,24 @@ this.ContentSearch = {
     if (!uri) {
       return Promise.resolve(null);
     }
-    let deferred = Promise.defer();
-    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
-              createInstance(Ci.nsIXMLHttpRequest);
-    xhr.open("GET", uri, true);
-    xhr.responseType = "arraybuffer";
-    xhr.onload = () => {
-      deferred.resolve(xhr.response);
-    };
-    xhr.onerror = xhr.onabort = xhr.ontimeout = () => {
-      deferred.resolve(null);
-    };
-    try {
-      // This throws if the URI is erroneously encoded.
-      xhr.send();
-    } catch (err) {
-      return Promise.resolve(null);
-    }
-    return deferred.promise;
+    return new Promise(resolve => {
+      let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
+                createInstance(Ci.nsIXMLHttpRequest);
+      xhr.open("GET", uri, true);
+      xhr.responseType = "arraybuffer";
+      xhr.onload = () => {
+        resolve(xhr.response);
+      };
+      xhr.onerror = xhr.onabort = xhr.ontimeout = () => {
+        resolve(null);
+      };
+      try {
+        // This throws if the URI is erroneously encoded.
+        xhr.send();
+      } catch (err) {
+        return Promise.resolve(null);
+      }
+    });
   },
 
   _ensureDataHasProperties(data, requiredProperties) {

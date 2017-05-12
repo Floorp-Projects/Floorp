@@ -90,12 +90,12 @@ function isIdentical(actual, expected) {
 }
 
 function fetchData() {
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  DirectoryLinksProvider.getLinks(linkData => {
-    deferred.resolve(linkData);
+    DirectoryLinksProvider.getLinks(linkData => {
+      resolve(linkData);
+    });
   });
-  return deferred.promise;
 }
 
 function readJsonFile(jsonFile = DIRECTORY_LINKS_FILE) {

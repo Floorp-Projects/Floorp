@@ -161,22 +161,22 @@ add_task(async function init() {
                               "theme2@tests.mozilla.org"]);
 
   // Set up the initial state
-  let deferredUpdateFinished = Promise.defer();
+  await new Promise(resolve => {
 
-  a2.userDisabled = true;
-  a4.userDisabled = true;
-  a7.userDisabled = true;
-  t2.userDisabled = false;
-  a3.findUpdates({
-    onUpdateFinished() {
-      a4.findUpdates({
-        onUpdateFinished() {
-          deferredUpdateFinished.resolve();
-        }
-      }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
-    }
-  }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
-  await deferredUpdateFinished.promise;
+    a2.userDisabled = true;
+    a4.userDisabled = true;
+    a7.userDisabled = true;
+    t2.userDisabled = false;
+    a3.findUpdates({
+      onUpdateFinished() {
+        a4.findUpdates({
+          onUpdateFinished() {
+            resolve();
+          }
+        }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
+      }
+    }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
+  });
 });
 
 add_task(async function run_test_1() {

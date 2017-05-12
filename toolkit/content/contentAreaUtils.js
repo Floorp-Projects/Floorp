@@ -685,18 +685,18 @@ function promiseTargetFile(aFpP, /* optional */ aSkipPrompt, /* optional */ aRel
 
     // We must prompt for the file name explicitly.
     // If we must prompt because we were asked to...
-    let deferred = Promise.defer();
-    if (useDownloadDir) {
-      // Keep async behavior in both branches
-      Services.tm.dispatchToMainThread(function() {
-        deferred.resolve(null);
-      });
-    } else {
-      downloadLastDir.getFileAsync(aRelatedURI, function getFileAsyncCB(aFile) {
-        deferred.resolve(aFile);
-      });
-    }
-    let file = await deferred.promise;
+    let file = await new Promise(resolve => {
+      if (useDownloadDir) {
+        // Keep async behavior in both branches
+        Services.tm.dispatchToMainThread(function() {
+          resolve(null);
+        });
+      } else {
+        downloadLastDir.getFileAsync(aRelatedURI, function getFileAsyncCB(aFile) {
+          resolve(aFile);
+        });
+      }
+    });
     if (file && (await OS.File.exists(file.path))) {
       dir = file;
       dirExists = true;
@@ -729,11 +729,11 @@ function promiseTargetFile(aFpP, /* optional */ aSkipPrompt, /* optional */ aRel
       }
     }
 
-    let deferComplete = Promise.defer();
-    fp.open(function(aResult) {
-      deferComplete.resolve(aResult);
+    let result = await new Promise(resolve => {
+      fp.open(function(aResult) {
+        resolve(aResult);
+      });
     });
-    let result = await deferComplete.promise;
     if (result == Components.interfaces.nsIFilePicker.returnCancel || !fp.file) {
       return false;
     }

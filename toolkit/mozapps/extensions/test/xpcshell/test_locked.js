@@ -159,24 +159,24 @@ add_task(async function init() {
                                "addon4@tests.mozilla.org",
                                "addon7@tests.mozilla.org",
                                "theme2@tests.mozilla.org"]);
-  let deferredUpdateFinished = Promise.defer();
-  // Set up the initial state
-  a2.userDisabled = true;
-  a4.userDisabled = true;
-  a7.userDisabled = true;
-  t2.userDisabled = false;
-  a3.findUpdates({
-    onUpdateFinished() {
-      a4.findUpdates({
-        onUpdateFinished() {
-          // Let the updates finish before restarting the manager
-          deferredUpdateFinished.resolve();
-        }
-      }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
-    }
-  }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
+  await new Promise(resolve => {
+    // Set up the initial state
+    a2.userDisabled = true;
+    a4.userDisabled = true;
+    a7.userDisabled = true;
+    t2.userDisabled = false;
+    a3.findUpdates({
+      onUpdateFinished() {
+        a4.findUpdates({
+          onUpdateFinished() {
+            // Let the updates finish before restarting the manager
+            resolve();
+          }
+        }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
+      }
+    }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
 
-  await deferredUpdateFinished.promise;
+  });
 });
 
 

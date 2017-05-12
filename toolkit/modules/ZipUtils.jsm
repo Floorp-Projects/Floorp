@@ -38,54 +38,54 @@ const EXTRACTION_BUFFER               = 1024 * 512;
  *         The open OS.File instance to write to.
  */
 function saveStreamAsync(aPath, aStream, aFile) {
-  let deferred = Promise.defer();
+  return new Promise((resolve, reject) => {
 
-  // Read the input stream on a background thread
-  let sts = Cc["@mozilla.org/network/stream-transport-service;1"].
-            getService(Ci.nsIStreamTransportService);
-  let transport = sts.createInputTransport(aStream, -1, -1, true);
-  let input = transport.openInputStream(0, 0, 0)
-                       .QueryInterface(Ci.nsIAsyncInputStream);
-  let source = Cc["@mozilla.org/binaryinputstream;1"].
-               createInstance(Ci.nsIBinaryInputStream);
-  source.setInputStream(input);
+    // Read the input stream on a background thread
+    let sts = Cc["@mozilla.org/network/stream-transport-service;1"].
+              getService(Ci.nsIStreamTransportService);
+    let transport = sts.createInputTransport(aStream, -1, -1, true);
+    let input = transport.openInputStream(0, 0, 0)
+                         .QueryInterface(Ci.nsIAsyncInputStream);
+    let source = Cc["@mozilla.org/binaryinputstream;1"].
+                 createInstance(Ci.nsIBinaryInputStream);
+    source.setInputStream(input);
 
 
-  function readFailed(error) {
-    try {
-      aStream.close();
-    } catch (e) {
-      Cu.reportError("Failed to close JAR stream for " + aPath);
+    function readFailed(error) {
+      try {
+        aStream.close();
+      } catch (e) {
+        Cu.reportError("Failed to close JAR stream for " + aPath);
+      }
+
+      aFile.close().then(function() {
+        reject(error);
+      }, function(e) {
+        Cu.reportError("Failed to close file for " + aPath);
+        reject(error);
+      });
     }
 
-    aFile.close().then(function() {
-      deferred.reject(error);
-    }, function(e) {
-      Cu.reportError("Failed to close file for " + aPath);
-      deferred.reject(error);
-    });
-  }
+    function readData() {
+      try {
+        let count = Math.min(source.available(), EXTRACTION_BUFFER);
+        let data = new Uint8Array(count);
+        source.readArrayBuffer(count, data.buffer);
 
-  function readData() {
-    try {
-      let count = Math.min(source.available(), EXTRACTION_BUFFER);
-      let data = new Uint8Array(count);
-      source.readArrayBuffer(count, data.buffer);
-
-      aFile.write(data, { bytes: count }).then(function() {
-        input.asyncWait(readData, 0, 0, Services.tm.currentThread);
-      }, readFailed);
-    } catch (e) {
-      if (e.result == Cr.NS_BASE_STREAM_CLOSED)
-        deferred.resolve(aFile.close());
-      else
-        readFailed(e);
+        aFile.write(data, { bytes: count }).then(function() {
+          input.asyncWait(readData, 0, 0, Services.tm.currentThread);
+        }, readFailed);
+      } catch (e) {
+        if (e.result == Cr.NS_BASE_STREAM_CLOSED)
+          resolve(aFile.close());
+        else
+          readFailed(e);
+      }
     }
-  }
 
-  input.asyncWait(readData, 0, 0, Services.tm.currentThread);
+    input.asyncWait(readData, 0, 0, Services.tm.currentThread);
 
-  return deferred.promise;
+  });
 }
 
 

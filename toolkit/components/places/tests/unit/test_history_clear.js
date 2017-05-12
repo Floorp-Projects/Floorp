@@ -7,28 +7,28 @@
 var mDBConn = DBConn();
 
 function promiseOnClearHistoryObserved() {
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  let historyObserver = {
-    onBeginUpdateBatch() {},
-    onEndUpdateBatch() {},
-    onVisit() {},
-    onTitleChanged() {},
-    onDeleteURI(aURI) {},
-    onPageChanged() {},
-    onDeleteVisits() {},
+    let historyObserver = {
+      onBeginUpdateBatch() {},
+      onEndUpdateBatch() {},
+      onVisit() {},
+      onTitleChanged() {},
+      onDeleteURI(aURI) {},
+      onPageChanged() {},
+      onDeleteVisits() {},
 
-    onClearHistory() {
-      PlacesUtils.history.removeObserver(this, false);
-      deferred.resolve();
-    },
+      onClearHistory() {
+        PlacesUtils.history.removeObserver(this, false);
+        resolve();
+      },
 
-    QueryInterface: XPCOMUtils.generateQI([
-      Ci.nsINavHistoryObserver,
-    ])
-  }
-  PlacesUtils.history.addObserver(historyObserver);
-  return deferred.promise;
+      QueryInterface: XPCOMUtils.generateQI([
+        Ci.nsINavHistoryObserver,
+      ])
+    }
+    PlacesUtils.history.addObserver(historyObserver);
+  });
 }
 
 // This global variable is a promise object, initialized in run_test and waited

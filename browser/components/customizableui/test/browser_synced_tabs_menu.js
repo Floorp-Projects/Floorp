@@ -88,19 +88,19 @@ async function openPrefsFromMenuPanel(expectedPanelId, entryPoint) {
   let setupButton = subpanel.querySelector(".PanelUI-remotetabs-prefs-button");
   setupButton.click();
 
-  let deferred = Promise.defer();
-  let handler = (e) => {
-    if (e.originalTarget != gBrowser.selectedBrowser.contentDocument ||
-        e.target.location.href == "about:blank") {
-      info("Skipping spurious 'load' event for " + e.target.location.href);
-      return;
+  await new Promise(resolve => {
+    let handler = (e) => {
+      if (e.originalTarget != gBrowser.selectedBrowser.contentDocument ||
+          e.target.location.href == "about:blank") {
+        info("Skipping spurious 'load' event for " + e.target.location.href);
+        return;
+      }
+      gBrowser.selectedBrowser.removeEventListener("load", handler, true);
+      resolve();
     }
-    gBrowser.selectedBrowser.removeEventListener("load", handler, true);
-    deferred.resolve();
-  }
-  gBrowser.selectedBrowser.addEventListener("load", handler, true);
+    gBrowser.selectedBrowser.addEventListener("load", handler, true);
 
-  await deferred.promise;
+  });
   newTab = gBrowser.selectedTab;
 
   is(gBrowser.currentURI.spec, "about:preferences?entrypoint=" + entryPoint + "#sync",

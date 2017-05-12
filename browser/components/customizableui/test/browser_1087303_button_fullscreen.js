@@ -28,20 +28,20 @@ add_task(async function() {
 });
 
 function promiseFullscreenChange() {
-  let deferred = Promise.defer();
-  info("Wait for fullscreen change");
+  return new Promise((resolve, reject) => {
+    info("Wait for fullscreen change");
 
-  let timeoutId = setTimeout(() => {
-    window.removeEventListener("fullscreen", onFullscreenChange, true);
-    deferred.reject("Fullscreen change did not happen within " + 20000 + "ms");
-  }, 20000);
+    let timeoutId = setTimeout(() => {
+      window.removeEventListener("fullscreen", onFullscreenChange, true);
+      reject("Fullscreen change did not happen within " + 20000 + "ms");
+    }, 20000);
 
-  function onFullscreenChange(event) {
-    clearTimeout(timeoutId);
-    window.removeEventListener("fullscreen", onFullscreenChange, true);
-    info("Fullscreen event received");
-    deferred.resolve();
-  }
-  window.addEventListener("fullscreen", onFullscreenChange, true);
-  return deferred.promise;
+    function onFullscreenChange(event) {
+      clearTimeout(timeoutId);
+      window.removeEventListener("fullscreen", onFullscreenChange, true);
+      info("Fullscreen event received");
+      resolve();
+    }
+    window.addEventListener("fullscreen", onFullscreenChange, true);
+  });
 }

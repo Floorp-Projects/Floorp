@@ -138,12 +138,12 @@ function promisePopupEvent(popup, eventSuffix) {
     return Promise.resolve();
 
   let eventType = "popup" + eventSuffix;
-  let deferred = Promise.defer();
-  popup.addEventListener(eventType, function(event) {
-    deferred.resolve();
-  }, {once: true});
+  return new Promise(resolve => {
+    popup.addEventListener(eventType, function(event) {
+      resolve();
+    }, {once: true});
 
-  return deferred.promise;
+  });
 }
 
 function promisePopupShown(popup) {
