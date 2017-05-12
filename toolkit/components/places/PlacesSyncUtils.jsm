@@ -1070,7 +1070,7 @@ var insertBookmarkMetadata = Task.async(function* (bookmarkItem, insertInfo) {
   }
 
   try {
-    newItem.tags = yield tagItem(bookmarkItem, insertInfo.tags);
+    newItem.tags = tagItem(bookmarkItem, insertInfo.tags);
   } catch (ex) {
     BookmarkSyncLog.warn(`insertBookmarkMetadata: Error tagging item ${
       insertInfo.syncId}`, ex);
@@ -1295,7 +1295,7 @@ var updateBookmarkMetadata = Task.async(function* (oldBookmarkItem,
   let newItem = yield placesBookmarkToSyncBookmark(newBookmarkItem);
 
   try {
-    newItem.tags = yield tagItem(newBookmarkItem, updateInfo.tags);
+    newItem.tags = tagItem(newBookmarkItem, updateInfo.tags);
   } catch (ex) {
     BookmarkSyncLog.warn(`updateBookmarkMetadata: Error tagging item ${
       updateInfo.syncId}`, ex);
@@ -1410,7 +1410,7 @@ var getAnno = Task.async(function* (guid, anno) {
   return rows.length ? rows[0].getResultByName("content") : null;
 });
 
-var tagItem = Task.async(function(item, tags) {
+function tagItem(item, tags) {
   if (!item.url) {
     return [];
   }
@@ -1428,7 +1428,7 @@ var tagItem = Task.async(function(item, tags) {
   PlacesUtils.tagging.untagURI(dummyURI, null, SOURCE_SYNC);
 
   return newTags;
-});
+}
 
 // `PlacesUtils.bookmarks.update` checks if we've supplied enough properties,
 // but doesn't know about additional livemark properties. We check this to avoid

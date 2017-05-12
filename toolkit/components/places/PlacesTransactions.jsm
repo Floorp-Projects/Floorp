@@ -450,12 +450,12 @@ Enqueuer.prototype = {
    * and all promises passed to alsoWaitFor are no longer pending.
    *
    * @param   aFunc
-   *          @see Task.spawn.
+   *          a function returning a promise.
    * @return  a promise that resolves once aFunc is done running. The promise
    *          "mirrors" the promise returned by aFunc.
    */
   enqueue(aFunc) {
-    let promise = this._promise.then(Task.async(aFunc));
+    let promise = this._promise.then(aFunc);
 
     // Propagate exceptions to the caller, but dismiss them internally.
     this._promise = promise.catch(console.error);

@@ -337,37 +337,37 @@ ConnectionData.prototype = Object.freeze({
     // concurrently.
     let loggedDb = Object.create(parent, {
       execute: {
-        value: Task.async(function*(sql, ...rest) {
+        value: async (sql, ...rest) => {
           status.isPending = true;
           status.command = sql;
           try {
-            return (yield this.execute(sql, ...rest));
+            return (await this.execute(sql, ...rest));
           } finally {
             status.isPending = false;
           }
-        }.bind(this))
+        }
       },
       close: {
-        value: Task.async(function*() {
+        value: async () => {
           status.isPending = false;
           status.command = "<close>";
           try {
-            return (yield this.close());
+            return (await this.close());
           } finally {
             status.isPending = false;
           }
-        }.bind(this))
+        }
       },
       executeCached: {
-        value: Task.async(function*(sql, ...rest) {
+        value: async (sql, ...rest) => {
           status.isPending = false;
           status.command = sql;
           try {
-            return (yield this.executeCached(sql, ...rest));
+            return (await this.executeCached(sql, ...rest));
           } finally {
             status.isPending = false;
           }
-        }.bind(this))
+        }
       },
     });
 
