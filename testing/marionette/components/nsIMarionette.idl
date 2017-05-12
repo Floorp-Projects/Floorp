@@ -1,0 +1,13 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/** Interface for accessing the Marionette server instance. */
+[scriptable, uuid(13fa7d76-f976-4711-a00c-29ac9c1881e1)]
+interface nsIMarionette : nsISupports
+{
+  /** Indicates whether the remote protocol is enabled. */
+  readonly attribute boolean running;
+};
