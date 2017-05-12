@@ -1,8 +1,8 @@
 // This file was procedurally generated from the following sources:
 // - src/generators/yield-spread-obj.case
-// - src/generators/default/statement.template
+// - src/generators/default/declaration.template
 /*---
-description: Use yield value in a object spread position (Generator function declaration)
+description: Use yield value in a object spread position (Generator Function declaration)
 esid: prod-GeneratorDeclaration
 features: [object-spread]
 flags: [generated]
@@ -10,8 +10,8 @@ includes: [compareArray.js]
 info: |
     14.4 Generator Function Definitions
 
-    GeneratorDeclaration[Yield, Await, Default]:
-      function * BindingIdentifier[?Yield, ?Await] ( FormalParameters[+Yield, ~Await] ) { GeneratorBody }
+    GeneratorDeclaration :
+      function * BindingIdentifier ( FormalParameters ) { GeneratorBody }
 
     Spread Properties
 

@@ -5,7 +5,7 @@
 description: When DestructuringAssignmentTarget is an object literal, it should be parsed parsed as a DestructuringAssignmentPattern and evaluated as a destructuring assignment. (try statement)
 esid: sec-runtime-semantics-catchclauseevaluation
 es6id: 13.15.7
-features: [destructuring-binding]
+features: [object-rest, destructuring-binding]
 flags: [generated]
 info: |
     Catch : catch ( CatchParameter ) Block

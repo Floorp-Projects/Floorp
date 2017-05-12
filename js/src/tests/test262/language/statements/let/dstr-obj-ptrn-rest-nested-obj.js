@@ -5,7 +5,7 @@
 description: When DestructuringAssignmentTarget is an object literal, it should be parsed parsed as a DestructuringAssignmentPattern and evaluated as a destructuring assignment. (`let` statement)
 esid: sec-let-and-const-declarations-runtime-semantics-evaluation
 es6id: 13.3.1.4
-features: [destructuring-binding]
+features: [object-rest, destructuring-binding]
 flags: [generated]
 info: |
     LexicalBinding : BindingPattern Initializer

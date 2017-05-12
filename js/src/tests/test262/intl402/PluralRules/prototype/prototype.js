@@ -4,16 +4,15 @@
 /*---
 esid: sec-properties-of-intl-pluralrules-prototype-object
 description: >
-    Tests that Intl.PluralRules.prototype is an object that  has been
+    Tests that Intl.PluralRules.prototype is not an object that has been
     initialized as an Intl.PluralRules.
 author: Zibi Braniecki
 ---*/
 
-// test by calling a function that would fail if "this" were not an object
+// test by calling a function that fails if "this" is not an object
 // initialized as an Intl.PluralRules
-if (typeof Intl.PluralRules.prototype.select(0) !== "string") {
-    $ERROR("Intl.PluralRules's prototype is not an object that has been " +
-        "initialized as an Intl.PluralRules");
-}
+assert.throws(TypeError, function() {
+    Intl.PluralRules.prototype.select(0);
+}, "Intl.PluralRules.prototype is not an object that has been initialized as an Intl.PluralRules");
 
 reportCompare(0, 0);

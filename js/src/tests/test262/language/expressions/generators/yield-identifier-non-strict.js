@@ -9,7 +9,7 @@ info: |
     14.4 Generator Function Definitions
 
     GeneratorExpression:
-      function * BindingIdentifier[+Yield, ~Await]opt ( FormalParameters[+Yield, ~Await] ) { GeneratorBody }
+      function * BindingIdentifier opt ( FormalParameters ) { GeneratorBody }
 ---*/
 
 var callCount = 0;

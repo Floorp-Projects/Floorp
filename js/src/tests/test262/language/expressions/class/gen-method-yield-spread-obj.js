@@ -1,23 +1,23 @@
 // This file was procedurally generated from the following sources:
 // - src/generators/yield-spread-obj.case
-// - src/generators/default/class-method-definition.template
+// - src/generators/default/class-expr-method.template
 /*---
-description: Use yield value in a object spread position (Generator method as a ClassElement)
+description: Use yield value in a object spread position (Generator method as a ClassExpression element)
 esid: prod-GeneratorMethod
 features: [object-spread]
 flags: [generated]
 includes: [compareArray.js]
 info: |
-    ClassElement[Yield, Await]:
-      MethodDefinition[?Yield, ?Await]
+    ClassElement :
+      MethodDefinition
 
-    MethodDefinition[Yield, Await]:
-      GeneratorMethod[?Yield, ?Await]
+    MethodDefinition :
+      GeneratorMethod
 
     14.4 Generator Function Definitions
 
-    GeneratorMethod[Yield, Await]:
-      * PropertyName[?Yield, ?Await] ( UniqueFormalParameters[+Yield, ~Await] ) { GeneratorBody }
+    GeneratorMethod :
+      * PropertyName ( UniqueFormalParameters ) { GeneratorBody }
 
     Spread Properties
 
@@ -29,7 +29,7 @@ info: |
 
 var callCount = 0;
 
-class C { *gen() {
+var C = class {*gen() {
     callCount += 1;
     yield {
         ...yield,

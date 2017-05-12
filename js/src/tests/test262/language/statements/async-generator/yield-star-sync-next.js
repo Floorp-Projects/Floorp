@@ -1,8 +1,19 @@
+// This file was procedurally generated from the following sources:
+// - src/async-generators/yield-star-sync-next.case
+// - src/async-generators/default/async-declaration.template
 /*---
- author: Tooru Fujisawa [:arai] <arai_a@mac.com>
- esid: pending
- description: execution order for yield* with sync iterator and next()
- info: >
+description: execution order for yield* with sync iterator and next() (Async generator Function declaration)
+esid: prod-AsyncGeneratorDeclaration
+features: [async-iteration, Symbol.asyncIterator, async-iteration]
+flags: [generated, async]
+info: |
+    Async Generator Function Definitions
+
+    AsyncGeneratorDeclaration:
+      async [no LineTerminator here] function * BindingIdentifier ( FormalParameters ) {
+        AsyncGeneratorBody }
+
+
     YieldExpression: yield * AssignmentExpression
 
     ...
@@ -56,11 +67,9 @@
 
     1. Return ! CreateIterResultObject(value, F.[[Done]]).
 
- flags: [async]
 ---*/
-
 var log = [];
-var iter = {
+var obj = {
   get [Symbol.iterator]() {
     log.push({
       name: "get [Symbol.iterator]",
@@ -135,28 +144,37 @@ var iter = {
     return null;
   }
 };
-var asyncIterator = (async function*() {
+
+
+
+var callCount = 0;
+
+async function *gen() {
+  callCount += 1;
   log.push({ name: "before yield*" });
-  var v = yield* iter;
-  log.push({
-    name: "after yield*",
-    value: v
-  });
-  return "return-value";
-})();
+    var v = yield* obj;
+    log.push({
+      name: "after yield*",
+      value: v
+    });
+    return "return-value";
+
+}
+
+var iter = gen();
 
 assert.sameValue(log.length, 0, "log.length");
 
-asyncIterator.next("next-arg-1").then(v => {
+iter.next("next-arg-1").then(v => {
   assert.sameValue(log[0].name, "before yield*");
 
   assert.sameValue(log[1].name, "get [Symbol.asyncIterator]");
 
   assert.sameValue(log[2].name, "get [Symbol.iterator]");
-  assert.sameValue(log[2].thisValue, iter, "get [Symbol.iterator] thisValue");
+  assert.sameValue(log[2].thisValue, obj, "get [Symbol.iterator] thisValue");
 
   assert.sameValue(log[3].name, "call [Symbol.iterator]");
-  assert.sameValue(log[3].thisValue, iter, "[Symbol.iterator] thisValue");
+  assert.sameValue(log[3].thisValue, obj, "[Symbol.iterator] thisValue");
   assert.sameValue(log[3].args.length, 0, "[Symbol.iterator] args.length");
 
   assert.sameValue(log[4].name, "get next");
@@ -167,18 +185,18 @@ asyncIterator.next("next-arg-1").then(v => {
   assert.sameValue(log[5].args.length, 1, "next args.length");
   assert.sameValue(log[5].args[0], undefined, "next args[0]");
 
-  assert.sameValue(log[6].name, "get next value (1)");
-  assert.sameValue(log[6].thisValue.name, "next-result-1", "get next value thisValue");
+  assert.sameValue(log[6].name, "get next done (1)");
+  assert.sameValue(log[6].thisValue.name, "next-result-1", "get next done thisValue");
 
-  assert.sameValue(log[7].name, "get next done (1)");
-  assert.sameValue(log[7].thisValue.name, "next-result-1", "get next done thisValue");
+  assert.sameValue(log[7].name, "get next value (1)");
+  assert.sameValue(log[7].thisValue.name, "next-result-1", "get next value thisValue");
 
   assert.sameValue(v.value, "next-value-1");
   assert.sameValue(v.done, false);
 
   assert.sameValue(log.length, 8, "log.length");
 
-  asyncIterator.next("next-arg-2").then(v => {
+  iter.next("next-arg-2").then(v => {
     assert.sameValue(log[8].name, "get next");
     assert.sameValue(log[8].thisValue.name, "syncIterator", "get next thisValue");
 
@@ -187,11 +205,11 @@ asyncIterator.next("next-arg-1").then(v => {
     assert.sameValue(log[9].args.length, 1, "next args.length");
     assert.sameValue(log[9].args[0], "next-arg-2", "next args[0]");
 
-    assert.sameValue(log[10].name, "get next value (2)");
-    assert.sameValue(log[10].thisValue.name, "next-result-2", "get next value thisValue");
+    assert.sameValue(log[10].name, "get next done (2)");
+    assert.sameValue(log[10].thisValue.name, "next-result-2", "get next done thisValue");
 
-    assert.sameValue(log[11].name, "get next done (2)");
-    assert.sameValue(log[11].thisValue.name, "next-result-2", "get next done thisValue");
+    assert.sameValue(log[11].name, "get next value (2)");
+    assert.sameValue(log[11].thisValue.name, "next-result-2", "get next value thisValue");
 
     assert.sameValue(log[12].name, "after yield*");
     assert.sameValue(log[12].value, "next-value-2");
@@ -202,3 +220,5 @@ asyncIterator.next("next-arg-1").then(v => {
     assert.sameValue(log.length, 13, "log.length");
   }).then($DONE, $DONE);
 }).catch($DONE);
+
+assert.sameValue(callCount, 1);
