@@ -505,10 +505,10 @@ associated with the histogram.  Returns None if no guarding is necessary."""
 
 # This hook function loads the histograms into an OrderedDict.
 # It will raise a ParserError if duplicate keys are found.
-def load_histograms_into_dict(ordered_pairs):
+def load_histograms_into_dict(ordered_pairs, strict_type_checks):
     d = collections.OrderedDict()
     for key, value in ordered_pairs:
-        if key in d:
+        if strict_type_checks and key in d:
             raise ParserError("Found duplicate key in Histograms file: %s" % key)
         d[key] = value
     return d
@@ -518,20 +518,22 @@ def load_histograms_into_dict(ordered_pairs):
 # just Histograms.json.  For each file's basename, we have a specific
 # routine to parse that file, and return a dictionary mapping histogram
 # names to histogram parameters.
-def from_Histograms_json(filename):
+def from_Histograms_json(filename, strict_type_checks):
     with open(filename, 'r') as f:
         try:
-            histograms = json.load(f, object_pairs_hook=load_histograms_into_dict)
+            def hook(ps):
+                return load_histograms_into_dict(ps, strict_type_checks)
+            histograms = json.load(f, object_pairs_hook=hook)
         except ValueError, e:
             raise ParserError("error parsing histograms in %s: %s" % (filename, e.message))
     return histograms
 
 
-def from_UseCounters_conf(filename):
+def from_UseCounters_conf(filename, strict_type_checks):
     return usecounters.generate_histograms(filename)
 
 
-def from_nsDeprecatedOperationList(filename):
+def from_nsDeprecatedOperationList(filename, strict_type_checks):
     operation_regex = re.compile('^DEPRECATED_OPERATION\\(([^)]+)\\)')
     histograms = collections.OrderedDict()
 
@@ -570,14 +572,14 @@ except ImportError:
     pass
 
 
-def from_files(filenames):
+def from_files(filenames, strict_type_checks=True):
     """Return an iterator that provides a sequence of Histograms for
 the histograms defined in filenames.
     """
     all_histograms = OrderedDict()
     for filename in filenames:
         parser = FILENAME_PARSERS[os.path.basename(filename)]
-        histograms = parser(filename)
+        histograms = parser(filename, strict_type_checks)
 
         # OrderedDicts are important, because then the iteration order over
         # the parsed histograms is stable, which makes the insertion into
@@ -613,4 +615,4 @@ the histograms defined in filenames.
             raise ParserError(msg % (', '.join(sorted(orphaned))))
 
     for (name, definition) in all_histograms.iteritems():
-        yield Histogram(name, definition, strict_type_checks=True)
+        yield Histogram(name, definition, strict_type_checks=strict_type_checks)
