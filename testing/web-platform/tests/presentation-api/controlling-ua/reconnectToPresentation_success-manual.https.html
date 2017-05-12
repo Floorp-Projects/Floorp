@@ -7,48 +7,101 @@
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script src="common.js"></script>
+<style>iframe { display: none; }</style>
 
 <p>Click the button below to start the manual test. Select a presentation device after the selection dialog is prompted.
     The test assumes that at least one presentation device is available. The test passes if a "PASS" result appears.</p>
 <button id="startBtn">Start Test</button>
+<iframe id="childFrame" src="support/iframe.html"></iframe>
 
 <script>
     // disable timeout for manual tests
     setup({explicit_timeout: true});
-    var startBtn = document.getElementById("startBtn");
-    startBtn.onclick = function () {
-        startBtn.disabled = true;
-        promise_test(function (t) {
-            var request = new PresentationRequest(presentationUrls);
-            var presentationId = null;
-            var connection;
+    const startBtn = document.getElementById('startBtn');
+    const childFrame = document.getElementById('childFrame');
 
-            t.add_cleanup(function() {
-                if(connection)
+    promise_test(t => {
+        const startWatcher = new EventWatcher(t, startBtn, 'click');
+        let messageWatcher = new EventWatcher(t, window, 'message');
+        const request = new PresentationRequest(presentationUrls);
+        let connection, eventWatcher;
+
+        t.add_cleanup(function() {
+            if (connection) {
+                connection.onconnect = () => { connection.terminate(); }
+                if (connection.state === 'closed')
+                    request.reconnect(connection.id);
+                else
                     connection.terminate();
-            });
-
-            return request.start().then(function (c) {
-                connection = c;
-                presentationId = connection.id;
-
-                // No more user input needed, re-enable test timeout
-                t.step_timeout(function () {
-                    t.force_timeout();
-                    t.done();
-                }, 5000);
-                // Close connection and wait for "close" event
-                connection.close();
-                var eventWatcher = new EventWatcher(t, connection, 'close');
-                return eventWatcher.wait_for('close');
-            }).then(function () {
-                // Connection now closed, let's reconnect to it
-                return request.reconnect(presentationId);
-            }).then(function (c) {
-                connection = c;
-                assert_equals(connection.state, "connecting", "connection should be in 'connecting' state");
-                assert_equals(connection.id, presentationId, "Ids of old and new connections must be equal");
-            });
+            }
         });
-    };
+
+        return Promise.all([
+            startWatcher.wait_for('click'),
+            messageWatcher.wait_for('message')
+        ]).then(() => {
+            startBtn.disabled = true;
+            let presentationId = null;
+            return request.start();
+        }).then(c => {
+            connection = c;
+            presentationId = connection.id;
+
+            // No more user input needed, re-enable test timeout
+            t.step_timeout(() => {
+                t.force_timeout();
+                t.done();
+            }, 5000);
+
+            eventWatcher = new EventWatcher(t, connection, ['connect', 'close', 'terminate']);
+
+            return Promise.all([
+                // Wait for "connect" event
+                eventWatcher.wait_for('connect'),
+                // Try to reconnect when the connection state is "connecting"
+                request.reconnect(presentationId).then(c => {
+                    assert_equals(c, connection, 'The promise is resolved with the existing presentation connection.');
+                    assert_equals(c.state, "connecting", "The connection state remains 'connecting'.");
+                    assert_equals(c.id, presentationId, "The presentation ID is not changed.");
+                })
+            ]);
+        }).then(() => {
+            // Try to reconnect when the connection state is "connected"
+            return request.reconnect(presentationId);
+        }).then(c => {
+            assert_equals(c, connection, 'The promise is resolved with the existing presentation connection.');
+            assert_equals(c.state, "connected", "The connection state remains 'connected'.");
+            assert_equals(c.id, presentationId, "The presentation ID is not changed.");
+
+            // Close connection and wait for "close" event
+            connection.close();
+            return eventWatcher.wait_for('close');
+        }).then(() => {
+            // Connection now closed, let's reconnect to it
+            return request.reconnect(presentationId);
+        }).then(c => {
+            assert_equals(c, connection, 'The promise is resolved with the existing presentation connection.');
+            connection = c;
+            assert_equals(connection.state, "connecting", "The connection state is set to 'connecting'.");
+            assert_equals(connection.id, presentationId, "Ids of old and new connections must be equal.");
+            // Avoid an error caused by the EventWatcher (not expected event "connect")
+            return eventWatcher.wait_for('connect');
+        }).then(() => {
+            // Request an iframe to reconnect the presentation with the current presentation ID
+            childFrame.contentWindow.postMessage('reconnect?id=' + presentationId, '*');
+            return messageWatcher.wait_for('message');
+        }).then(evt => {
+            if (!(evt.data instanceof Object))
+                assert_unreached('An error occured when a nested browsing context tried to reconnect the existing presentation.');
+            assert_equals(evt.data.state, "connecting", "The connection state is set to 'connecting'.");
+            assert_equals(evt.data.id, presentationId, "Presentation connections in both top and nested browsing contexts share the same presentation ID.");
+            // Wait until state of each presentation connection is set to "terminated"
+            connection.terminate();
+            return Promise.all([ eventWatcher.wait_for('terminate'), messageWatcher.wait_for('message') ]);
+        }).then(() => {
+            // Try to reconnect to the presentation, while all presentation connection have already been terminated
+            return promise_rejects(t, 'NotFoundError', request.reconnect(presentationId),
+                'Reconnecting to a terminated presentation rejects a promise with a "NotFoundError" exception.');
+        })
+    });
 </script>

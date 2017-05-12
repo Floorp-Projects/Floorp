@@ -20,8 +20,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
                                   "resource://gre/modules/Deprecated.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
@@ -664,7 +662,7 @@ function initFileInfo(aFI, aURL, aURLCharset, aDocument,
  *          is accepted.
  */
 function promiseTargetFile(aFpP, /* optional */ aSkipPrompt, /* optional */ aRelatedURI) {
-  return Task.spawn(function*() {
+  return (async function() {
     let downloadLastDir = new DownloadLastDir(window);
     let prefBranch = Services.prefs.getBranch("browser.download.");
     let useDownloadDir = prefBranch.getBoolPref("useDownloadDir");
@@ -674,8 +672,8 @@ function promiseTargetFile(aFpP, /* optional */ aSkipPrompt, /* optional */ aRel
 
     // Default to the user's default downloads directory configured
     // through download prefs.
-    let dirPath = yield Downloads.getPreferredDownloadsDirectory();
-    let dirExists = yield OS.File.exists(dirPath);
+    let dirPath = await Downloads.getPreferredDownloadsDirectory();
+    let dirExists = await OS.File.exists(dirPath);
     let dir = new FileUtils.File(dirPath);
 
     if (useDownloadDir && dirExists) {
@@ -687,19 +685,19 @@ function promiseTargetFile(aFpP, /* optional */ aSkipPrompt, /* optional */ aRel
 
     // We must prompt for the file name explicitly.
     // If we must prompt because we were asked to...
-    let deferred = Promise.defer();
-    if (useDownloadDir) {
-      // Keep async behavior in both branches
-      Services.tm.dispatchToMainThread(function() {
-        deferred.resolve(null);
-      });
-    } else {
-      downloadLastDir.getFileAsync(aRelatedURI, function getFileAsyncCB(aFile) {
-        deferred.resolve(aFile);
-      });
-    }
-    let file = yield deferred.promise;
-    if (file && (yield OS.File.exists(file.path))) {
+    let file = await new Promise(resolve => {
+      if (useDownloadDir) {
+        // Keep async behavior in both branches
+        Services.tm.dispatchToMainThread(function() {
+          resolve(null);
+        });
+      } else {
+        downloadLastDir.getFileAsync(aRelatedURI, function getFileAsyncCB(aFile) {
+          resolve(aFile);
+        });
+      }
+    });
+    if (file && (await OS.File.exists(file.path))) {
       dir = file;
       dirExists = true;
     }
@@ -731,11 +729,11 @@ function promiseTargetFile(aFpP, /* optional */ aSkipPrompt, /* optional */ aRel
       }
     }
 
-    let deferComplete = Promise.defer();
-    fp.open(function(aResult) {
-      deferComplete.resolve(aResult);
+    let result = await new Promise(resolve => {
+      fp.open(function(aResult) {
+        resolve(aResult);
+      });
     });
-    let result = yield deferComplete.promise;
     if (result == Components.interfaces.nsIFilePicker.returnCancel || !fp.file) {
       return false;
     }
@@ -753,7 +751,7 @@ function promiseTargetFile(aFpP, /* optional */ aSkipPrompt, /* optional */ aRel
     aFpP.fileURL = fp.fileURL;
 
     return true;
-  });
+  })();
 }
 
 // Since we're automatically downloading, we don't get the file picker's
@@ -809,13 +807,13 @@ function DownloadURL(aURL, aFileName, aInitiatingDocument) {
     saveMode: SAVEMODE_FILEONLY
   };
 
-  Task.spawn(function* () {
-    let accepted = yield promiseTargetFile(filepickerParams, true, fileInfo.uri);
+  (async function() {
+    let accepted = await promiseTargetFile(filepickerParams, true, fileInfo.uri);
     if (!accepted)
       return;
 
     let file = filepickerParams.file;
-    let download = yield Downloads.createDownload({
+    let download = await Downloads.createDownload({
       source: { url: aURL, isPrivate },
       target: { path: file.path, partFilePath: file.path + ".part" }
     });
@@ -825,9 +823,9 @@ function DownloadURL(aURL, aFileName, aInitiatingDocument) {
     download.start().catch(() => {});
 
     // Add the download to the list, allowing it to be managed.
-    let list = yield Downloads.getList(Downloads.ALL);
+    let list = await Downloads.getList(Downloads.ALL);
     list.add(download);
-  }).then(null, Components.utils.reportError);
+  })().then(null, Components.utils.reportError);
 }
 
 // We have no DOM, and can only save the URL as is.

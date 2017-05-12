@@ -29,11 +29,11 @@ function makeUUID() {
   return uuidGen.generateUUID().toString();
 }
 
-function* check_installed(conditions) {
+async function check_installed(conditions) {
   for (let i = 0; i < conditions.length; i++) {
     let condition = conditions[i];
     let id = "system" + (i + 1) + "@tests.mozilla.org";
-    let addon = yield promiseAddonByID(id);
+    let addon = await promiseAddonByID(id);
 
     if (!("isUpgrade" in condition) || !("version" in condition)) {
       throw Error("condition must contain isUpgrade and version");
@@ -94,7 +94,7 @@ function* check_installed(conditions) {
 }
 
 // Test with a missing features directory
-add_task(function* test_missing_app_dir() {
+add_task(async function test_missing_app_dir() {
   startupManager();
 
   let conditions = [
@@ -103,15 +103,15 @@ add_task(function* test_missing_app_dir() {
       { isUpgrade: false, version: null },
   ];
 
-  yield check_installed(conditions);
+  await check_installed(conditions);
 
   do_check_false(updatesDir.exists());
 
-  yield promiseShutdownManager();
+  await promiseShutdownManager();
 });
 
 // Add some features in a new version
-add_task(function* test_new_version() {
+add_task(async function test_new_version() {
   gAppInfo.version = "1";
   distroDir.leafName = "app1";
   startupManager();
@@ -122,15 +122,15 @@ add_task(function* test_new_version() {
       { isUpgrade: false, version: null },
   ];
 
-  yield check_installed(conditions);
+  await check_installed(conditions);
 
   do_check_false(updatesDir.exists());
 
-  yield promiseShutdownManager();
+  await promiseShutdownManager();
 });
 
 // Another new version swaps one feature and upgrades another
-add_task(function* test_upgrade() {
+add_task(async function test_upgrade() {
   gAppInfo.version = "2";
   distroDir.leafName = "app2";
   startupManager();
@@ -141,15 +141,15 @@ add_task(function* test_upgrade() {
       { isUpgrade: false, version: "1.0" },
   ];
 
-  yield check_installed(conditions);
+  await check_installed(conditions);
 
   do_check_false(updatesDir.exists());
 
-  yield promiseShutdownManager();
+  await promiseShutdownManager();
 });
 
 // Downgrade
-add_task(function* test_downgrade() {
+add_task(async function test_downgrade() {
   gAppInfo.version = "1";
   distroDir.leafName = "app1";
   startupManager();
@@ -160,15 +160,15 @@ add_task(function* test_downgrade() {
       { isUpgrade: false, version: null },
   ];
 
-  yield check_installed(conditions);
+  await check_installed(conditions);
 
   do_check_false(updatesDir.exists());
 
-  yield promiseShutdownManager();
+  await promiseShutdownManager();
 });
 
 // Fake a mid-cycle install
-add_task(function* test_updated() {
+add_task(async function test_updated() {
   // Create a random dir to install into
   let dirname = makeUUID();
   FileUtils.getDir("ProfD", ["features", dirname], true);
@@ -203,14 +203,14 @@ add_task(function* test_updated() {
       { isUpgrade: true, version: "2.0" },
   ];
 
-  yield check_installed(conditions);
+  await check_installed(conditions);
 
-  yield promiseShutdownManager();
+  await promiseShutdownManager();
 });
 
 // Entering safe mode should disable the updated system add-ons and use the
 // default system add-ons
-add_task(function* safe_mode_disabled() {
+add_task(async function safe_mode_disabled() {
   gAppInfo.inSafeMode = true;
   startupManager(false);
 
@@ -220,13 +220,13 @@ add_task(function* safe_mode_disabled() {
       { isUpgrade: false, version: null },
   ];
 
-  yield check_installed(conditions);
+  await check_installed(conditions);
 
-  yield promiseShutdownManager();
+  await promiseShutdownManager();
 });
 
 // Leaving safe mode should re-enable the updated system add-ons
-add_task(function* normal_mode_enabled() {
+add_task(async function normal_mode_enabled() {
   gAppInfo.inSafeMode = false;
   startupManager(false);
 
@@ -236,13 +236,13 @@ add_task(function* normal_mode_enabled() {
       { isUpgrade: true, version: "2.0" },
   ];
 
-  yield check_installed(conditions);
+  await check_installed(conditions);
 
-  yield promiseShutdownManager();
+  await promiseShutdownManager();
 });
 
 // An additional add-on in the directory should be ignored
-add_task(function* test_skips_additional() {
+add_task(async function test_skips_additional() {
   // Copy in the system add-ons
   let file = do_get_file("data/system_addons/system4_1.xpi");
   file.copyTo(updatesDir, "system4@tests.mozilla.org.xpi");
@@ -255,13 +255,13 @@ add_task(function* test_skips_additional() {
       { isUpgrade: true, version: "2.0" },
   ];
 
-  yield check_installed(conditions);
+  await check_installed(conditions);
 
-  yield promiseShutdownManager();
+  await promiseShutdownManager();
 });
 
 // Missing add-on should revert to the default set
-add_task(function* test_revert() {
+add_task(async function test_revert() {
   manuallyUninstall(updatesDir, "system2@tests.mozilla.org");
 
   // With the add-on physically gone from disk we won't see uninstall events
@@ -277,13 +277,13 @@ add_task(function* test_revert() {
       { isUpgrade: false, version: null },
   ];
 
-  yield check_installed(conditions);
+  await check_installed(conditions);
 
-  yield promiseShutdownManager();
+  await promiseShutdownManager();
 });
 
 // Putting it back will make the set work again
-add_task(function* test_reuse() {
+add_task(async function test_reuse() {
   let file = do_get_file("data/system_addons/system2_2.xpi");
   file.copyTo(updatesDir, "system2@tests.mozilla.org.xpi");
 
@@ -295,13 +295,13 @@ add_task(function* test_reuse() {
       { isUpgrade: true, version: "2.0" },
   ];
 
-  yield check_installed(conditions);
+  await check_installed(conditions);
 
-  yield promiseShutdownManager();
+  await promiseShutdownManager();
 });
 
 // Making the pref corrupt should revert to the default set
-add_task(function* test_corrupt_pref() {
+add_task(async function test_corrupt_pref() {
   Services.prefs.setCharPref(PREF_SYSTEM_ADDON_SET, "foo");
 
   startupManager(false);
@@ -312,13 +312,13 @@ add_task(function* test_corrupt_pref() {
       { isUpgrade: false, version: null },
   ];
 
-  yield check_installed(conditions);
+  await check_installed(conditions);
 
-  yield promiseShutdownManager();
+  await promiseShutdownManager();
 });
 
 // An add-on with a bad certificate should cause us to use the default set
-add_task(function* test_bad_profile_cert() {
+add_task(async function test_bad_profile_cert() {
   let file = do_get_file("data/system_addons/system1_1_badcert.xpi");
   file.copyTo(updatesDir, "system1@tests.mozilla.org.xpi");
 
@@ -348,13 +348,13 @@ add_task(function* test_bad_profile_cert() {
       { isUpgrade: false, version: null },
   ];
 
-  yield check_installed(conditions);
+  await check_installed(conditions);
 
-  yield promiseShutdownManager();
+  await promiseShutdownManager();
 });
 
 // Switching to app defaults that contain a bad certificate should still work
-add_task(function* test_bad_app_cert() {
+add_task(async function test_bad_app_cert() {
   gAppInfo.version = "3";
   distroDir.leafName = "app3";
   startupManager();
@@ -364,7 +364,7 @@ add_task(function* test_bad_app_cert() {
   do_check_eq(addonSet, `{"schema":1,"addons":{}}`);
 
   // Add-on will still be present
-  let addon = yield promiseAddonByID("system1@tests.mozilla.org");
+  let addon = await promiseAddonByID("system1@tests.mozilla.org");
   do_check_neq(addon, null);
   do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
@@ -374,13 +374,13 @@ add_task(function* test_bad_app_cert() {
       { isUpgrade: false, version: "1.0" },
   ];
 
-  yield check_installed(conditions);
+  await check_installed(conditions);
 
-  yield promiseShutdownManager();
+  await promiseShutdownManager();
 });
 
 // A failed upgrade should revert to the default set.
-add_task(function* test_updated_bad_update_set() {
+add_task(async function test_updated_bad_update_set() {
   // Create a random dir to install into
   let dirname = makeUUID();
   FileUtils.getDir("ProfD", ["features", dirname], true);
@@ -413,8 +413,8 @@ add_task(function* test_updated_bad_update_set() {
       { isUpgrade: false, version: "1.0" },
   ];
 
-  yield check_installed(conditions);
+  await check_installed(conditions);
 
-  yield promiseShutdownManager();
+  await promiseShutdownManager();
 });
 

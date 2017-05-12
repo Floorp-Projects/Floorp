@@ -1,8 +1,8 @@
-add_task(function* test() {
+add_task(async function test() {
   let testPath = getRootDirectory(gTestPath);
 
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" },
-    function* (tabBrowser) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" },
+    async function(tabBrowser) {
       const URI = testPath + "file_with_favicon.html";
       const expectedIcon = testPath + "file_generic_favicon.ico";
 
@@ -19,12 +19,12 @@ add_task(function* test() {
 
       BrowserTestUtils.loadURI(tabBrowser, URI);
 
-      let iconURI = yield got_favicon.promise;
+      let iconURI = await got_favicon.promise;
       is(iconURI, expectedIcon, "Correct icon before pushState.");
 
       got_favicon = Promise.defer();
       got_favicon.promise.then(() => { ok(false, "shouldn't be called"); }, (e) => e);
-      yield ContentTask.spawn(tabBrowser, null, function() {
+      await ContentTask.spawn(tabBrowser, null, function() {
         content.history.pushState("page2", "page2", "page2");
       });
 
@@ -33,7 +33,7 @@ add_task(function* test() {
         got_favicon.reject(gBrowser.getIcon(gBrowser.getTabForBrowser(tabBrowser)));
       });
       try {
-        yield got_favicon.promise;
+        await got_favicon.promise;
       } catch (e) {
         iconURI = e;
       }

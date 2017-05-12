@@ -12,24 +12,24 @@ const URL = "data:text/html;charset=utf-8," +
             "<script>document.body.firstChild.focus()</script></body>";
 
 function getFocusedLocalName(browser) {
-  return ContentTask.spawn(browser, null, function* () {
+  return ContentTask.spawn(browser, null, async function() {
     return content.document.activeElement.localName;
   });
 }
 
-add_task(function* () {
-  let testTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, URL);
+add_task(async function() {
+  let testTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URL);
 
   let browser = testTab.linkedBrowser;
 
-  is((yield getFocusedLocalName(browser)), "button", "button is focused");
+  is((await getFocusedLocalName(browser)), "button", "button is focused");
 
-  let blankTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
+  let blankTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
 
-  yield BrowserTestUtils.switchTab(gBrowser, testTab);
+  await BrowserTestUtils.switchTab(gBrowser, testTab);
 
   // Make sure focus is given to the window because the element is now gone.
-  is((yield getFocusedLocalName(browser)), "body", "body is focused");
+  is((await getFocusedLocalName(browser)), "body", "body is focused");
 
   // Cleanup.
   gBrowser.removeTab(blankTab);

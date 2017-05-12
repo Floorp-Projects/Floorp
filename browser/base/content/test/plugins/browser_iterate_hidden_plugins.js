@@ -11,7 +11,7 @@ const HIDDEN_CTP_PLUGIN_PREF = "plugins.navigator.hidden_ctp_plugin";
  * notification bar.
  */
 
-add_task(function* setup() {
+add_task(async function setup() {
   // We'll make the Test Plugin click-to-play.
   let originalPluginState = getTestPluginEnabledState();
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
@@ -20,7 +20,7 @@ add_task(function* setup() {
   });
 
   // And then make the plugin hidden.
-  yield SpecialPowers.pushPrefEnv({
+  await SpecialPowers.pushPrefEnv({
     set: [[HIDDEN_CTP_PLUGIN_PREF, TEST_PLUGIN_NAME]],
   })
 });
@@ -30,14 +30,14 @@ add_task(function* setup() {
  * HIDDEN_CTP_PLUGIN_PREF list, then it shouldn't be visible
  * when iterating navigator.plugins.
  */
-add_task(function* test_plugin_is_hidden_on_iteration() {
+add_task(async function test_plugin_is_hidden_on_iteration() {
   // The plugin should not be visible when we iterate
   // navigator.plugins.
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "http://example.com"
-  }, function*(browser) {
-    yield ContentTask.spawn(browser, TEST_PLUGIN_NAME, function*(pluginName) {
+  }, async function(browser) {
+    await ContentTask.spawn(browser, TEST_PLUGIN_NAME, async function(pluginName) {
       let plugins = Array.from(content.navigator.plugins);
       Assert.ok(plugins.every(p => p.name != pluginName),
                 "Should not find Test Plugin");
@@ -46,24 +46,24 @@ add_task(function* test_plugin_is_hidden_on_iteration() {
 
   // Now clear the HIDDEN_CTP_PLUGIN_PREF temporarily and
   // make sure we can see the plugin again.
-  yield SpecialPowers.pushPrefEnv({
+  await SpecialPowers.pushPrefEnv({
     set: [[HIDDEN_CTP_PLUGIN_PREF, ""]],
   });
 
   // Note that I have to do this in a new tab since navigator
   // caches navigator.plugins after an initial read.
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "http://example.com"
-  }, function*(browser) {
-    yield ContentTask.spawn(browser, TEST_PLUGIN_NAME, function*(pluginName) {
+  }, async function(browser) {
+    await ContentTask.spawn(browser, TEST_PLUGIN_NAME, async function(pluginName) {
       let plugins = Array.from(content.navigator.plugins);
       Assert.ok(plugins.some(p => p.name == pluginName),
                 "Should have found the Test Plugin");
     });
   });
 
-  yield SpecialPowers.popPrefEnv();
+  await SpecialPowers.popPrefEnv();
 });
 
 /**
@@ -71,14 +71,14 @@ add_task(function* test_plugin_is_hidden_on_iteration() {
  * Hidden Plugin notification bar when accessed directly by name
  * via navigator.plugins.
  */
-add_task(function* test_plugin_shows_hidden_notification_on_access() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function test_plugin_shows_hidden_notification_on_access() {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "http://example.com"
-  }, function*(browser) {
+  }, async function(browser) {
     let notificationPromise = waitForNotificationBar("plugin-hidden", gBrowser.selectedBrowser);
 
-    yield ContentTask.spawn(browser, TEST_PLUGIN_NAME, function*(pluginName) {
+    await ContentTask.spawn(browser, TEST_PLUGIN_NAME, async function(pluginName) {
       let plugins = content.navigator.plugins;
       // Just accessing the plugin should be enough to trigger the notification.
       // We'll also do a sanity check and make sure that the HiddenPlugin event
@@ -92,21 +92,21 @@ add_task(function* test_plugin_shows_hidden_notification_on_access() {
       Assert.ok(sawEvent, "Should have seen the HiddenPlugin event.");
     });
 
-    let notification = yield notificationPromise;
+    let notification = await notificationPromise;
     notification.close();
   });
 
   // Make sure that if the plugin wasn't hidden that touching it
   // does _NOT_ show the notification bar.
-  yield SpecialPowers.pushPrefEnv({
+  await SpecialPowers.pushPrefEnv({
     set: [[HIDDEN_CTP_PLUGIN_PREF, ""]],
   });
 
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "http://example.com"
-  }, function*(browser) {
-    yield ContentTask.spawn(browser, TEST_PLUGIN_NAME, function*(pluginName) {
+  }, async function(browser) {
+    await ContentTask.spawn(browser, TEST_PLUGIN_NAME, async function(pluginName) {
       let plugins = content.navigator.plugins;
       // Instead of waiting for a notification bar that should never come,
       // we'll make sure that the HiddenPlugin event never fires in content
@@ -121,5 +121,5 @@ add_task(function* test_plugin_shows_hidden_notification_on_access() {
     });
   });
 
-  yield SpecialPowers.popPrefEnv();
+  await SpecialPowers.popPrefEnv();
 });

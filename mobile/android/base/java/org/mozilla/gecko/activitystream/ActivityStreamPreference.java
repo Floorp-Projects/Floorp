@@ -6,10 +6,12 @@
 package org.mozilla.gecko.activitystream;
 
 import android.content.Context;
+import android.content.Intent;
 import android.preference.SwitchPreference;
 import android.util.AttributeSet;
 
-import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.util.ThreadUtils;
 
 /**
@@ -65,7 +67,10 @@ public class ActivityStreamPreference extends SwitchPreference {
         ThreadUtils.postDelayedToUiThread(new Runnable() {
             @Override
             public void run() {
-                GeckoAppShell.scheduleRestart();
+                final Intent restartIntent = new Intent(Intent.ACTION_MAIN);
+                restartIntent.setClassName(getContext().getApplicationContext(),
+                                           AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
+                GeckoApplication.shutdown(restartIntent);
             }
         }, 1000);
     }

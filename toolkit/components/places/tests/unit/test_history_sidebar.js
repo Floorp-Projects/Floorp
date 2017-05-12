@@ -23,7 +23,7 @@ var ps = Cc["@mozilla.org/preferences-service;1"].
  * @param aDayOffset
  *        number of days to add, pass a negative value to subtract them.
  */
-function* task_add_normalized_visit(aURI, aTime, aDayOffset) {
+async function task_add_normalized_visit(aURI, aTime, aDayOffset) {
   var dateObj = new Date(aTime);
   // Normalize to midnight
   dateObj.setHours(0);
@@ -38,7 +38,7 @@ function* task_add_normalized_visit(aURI, aTime, aDayOffset) {
   var PRTimeWithOffset = (previousDateObj.getTime() - DSTCorrection) * 1000;
   var timeInMs = new Date(PRTimeWithOffset / 1000);
   print("Adding visit to " + aURI.spec + " at " + timeInMs);
-  yield PlacesTestUtils.addVisits({
+  await PlacesTestUtils.addVisits({
     uri: aURI,
     visitDate: PRTimeWithOffset
   });
@@ -81,20 +81,20 @@ var visibleContainers = containers.filter(
 /**
  * Asynchronous task that fills history and checks containers' labels.
  */
-function* task_fill_history() {
+async function task_fill_history() {
   print("\n\n*** TEST Fill History\n");
   // We can't use "now" because our hardcoded offsets would be invalid for some
   // date.  So we hardcode a date.
   for (let i = 0; i < containers.length; i++) {
     let container = containers[i];
     var testURI = uri("http://mirror" + i + ".mozilla.com/b");
-    yield task_add_normalized_visit(testURI, nowObj.getTime(), container.offset);
+    await task_add_normalized_visit(testURI, nowObj.getTime(), container.offset);
     testURI = uri("http://mirror" + i + ".mozilla.com/a");
-    yield task_add_normalized_visit(testURI, nowObj.getTime(), container.offset);
+    await task_add_normalized_visit(testURI, nowObj.getTime(), container.offset);
     testURI = uri("http://mirror" + i + ".google.com/b");
-    yield task_add_normalized_visit(testURI, nowObj.getTime(), container.offset);
+    await task_add_normalized_visit(testURI, nowObj.getTime(), container.offset);
     testURI = uri("http://mirror" + i + ".google.com/a");
-    yield task_add_normalized_visit(testURI, nowObj.getTime(), container.offset);
+    await task_add_normalized_visit(testURI, nowObj.getTime(), container.offset);
     // Bug 485703 - Hide date containers not containing additional entries
     //              compared to previous ones.
     // Check after every new container is added.
@@ -354,7 +354,7 @@ function test_RESULTS_AS_SITE_QUERY() {
 /**
  * Checks that queries grouped by date do liveupdate correctly.
  */
-function* task_test_date_liveupdate(aResultType) {
+async function task_test_date_liveupdate(aResultType) {
   var midnight = nowObj;
   midnight.setHours(0);
   midnight.setMinutes(0);
@@ -382,7 +382,7 @@ function* task_test_date_liveupdate(aResultType) {
 
   // Add a visit for "Today".  This should add back the missing "Today"
   // container.
-  yield task_add_normalized_visit(uri("http://www.mozilla.org/"), nowObj.getTime(), 0);
+  await task_add_normalized_visit(uri("http://www.mozilla.org/"), nowObj.getTime(), 0);
   do_check_eq(root.childCount, visibleContainers.length);
 
   last7Days.containerOpen = false;
@@ -409,7 +409,7 @@ function* task_test_date_liveupdate(aResultType) {
   hs.removePagesByTimeframe(midnight.getTime() * 1000, Date.now() * 1000);
   do_check_eq(dateContainer.childCount, visibleContainers.length - 1);
   // Add a visit for "Today".
-  yield task_add_normalized_visit(uri("http://www.mozilla.org/"), nowObj.getTime(), 0);
+  await task_add_normalized_visit(uri("http://www.mozilla.org/"), nowObj.getTime(), 0);
   do_check_eq(dateContainer.childCount, visibleContainers.length);
 
   dateContainer.containerOpen = false;
@@ -423,19 +423,19 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_history_sidebar() {
+add_task(async function test_history_sidebar() {
   // If we're dangerously close to a date change, just bail out.
   if (nowObj.getHours() == 23 && nowObj.getMinutes() >= 50) {
     return;
   }
 
-  yield task_fill_history();
+  await task_fill_history();
   test_RESULTS_AS_DATE_SITE_QUERY();
   test_RESULTS_AS_DATE_QUERY();
   test_RESULTS_AS_SITE_QUERY();
 
-  yield task_test_date_liveupdate(Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY);
-  yield task_test_date_liveupdate(Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_QUERY);
+  await task_test_date_liveupdate(Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY);
+  await task_test_date_liveupdate(Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_QUERY);
 
   // The remaining views are
   //   RESULTS_AS_URI + SORT_BY_VISITCOUNT_DESCENDING

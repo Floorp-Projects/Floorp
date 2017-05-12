@@ -174,7 +174,8 @@
 
     <vbox class="main-content" flex="1">
       <hbox pack="end">
-        <textbox type="search" id="searchInput" placeholder="&searchInput.label;" hidden="true"/>
+        <textbox type="search" id="searchInput" placeholder="&searchInput.label;" hidden="true"
+                 clickSelectsAll="true"/>
       </hbox>
       <prefpane id="mainPrefPane">
 #include searchResults.xul

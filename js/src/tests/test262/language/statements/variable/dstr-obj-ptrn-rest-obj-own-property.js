@@ -5,7 +5,7 @@
 description: Rest object contains just soruce object's own properties (`var` statement)
 esid: sec-variable-statement-runtime-semantics-evaluation
 es6id: 13.3.2.4
-features: [destructuring-binding]
+features: [object-rest, destructuring-binding]
 flags: [generated]
 includes: [propertyHelper.js]
 info: |

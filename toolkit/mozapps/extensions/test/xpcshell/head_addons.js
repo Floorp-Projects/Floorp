@@ -43,7 +43,6 @@ Components.utils.import("resource://gre/modules/FileUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 Components.utils.import("resource://gre/modules/Promise.jsm");
-Components.utils.import("resource://gre/modules/Task.jsm");
 const { OS } = Components.utils.import("resource://gre/modules/osfile.jsm", {});
 Components.utils.import("resource://gre/modules/AsyncShutdown.jsm");
 
@@ -1305,13 +1304,13 @@ function writeProxyFileToDir(aDir, aAddon, aId) {
   return file
 }
 
-function* serveSystemUpdate(xml, perform_update, testserver) {
+async function serveSystemUpdate(xml, perform_update, testserver) {
   testserver.registerPathHandler("/data/update.xml", (request, response) => {
     response.write(xml);
   });
 
   try {
-    yield perform_update();
+    await perform_update();
   } finally {
     testserver.registerPathHandler("/data/update.xml", null);
   }
@@ -1319,21 +1318,21 @@ function* serveSystemUpdate(xml, perform_update, testserver) {
 
 // Runs an update check making it use the passed in xml string. Uses the direct
 // call to the update function so we get rejections on failure.
-function* installSystemAddons(xml, testserver) {
+async function installSystemAddons(xml, testserver) {
   do_print("Triggering system add-on update check.");
 
-  yield serveSystemUpdate(xml, function*() {
+  await serveSystemUpdate(xml, async function() {
     let { XPIProvider } = Components.utils.import("resource://gre/modules/addons/XPIProvider.jsm", {});
-    yield XPIProvider.updateSystemAddons();
+    await XPIProvider.updateSystemAddons();
   }, testserver);
 }
 
 // Runs a full add-on update check which will in some cases do a system add-on
 // update check. Always succeeds.
-function* updateAllSystemAddons(xml, testserver) {
+async function updateAllSystemAddons(xml, testserver) {
   do_print("Triggering full add-on update check.");
 
-  yield serveSystemUpdate(xml, function() {
+  await serveSystemUpdate(xml, function() {
     return new Promise(resolve => {
       Services.obs.addObserver(function() {
         Services.obs.removeObserver(arguments.callee, "addons-background-update-complete");
@@ -1348,7 +1347,7 @@ function* updateAllSystemAddons(xml, testserver) {
 }
 
 // Builds an update.xml file for an update check based on the data passed.
-function* buildSystemAddonUpdates(addons, root) {
+function buildSystemAddonUpdates(addons, root) {
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n\n<updates>\n`;
   if (addons) {
     xml += `  <addons>\n`;
@@ -1438,11 +1437,11 @@ function buildPrefilledUpdatesDir() {
  * @param {Array<Object>} conditions - an array of objects of the form { isUpgrade: false, version: null}
  * @param {nsIFile} distroDir - the system add-on distribution directory (the "features" dir in the app directory)
  */
-function* checkInstalledSystemAddons(conditions, distroDir) {
+async function checkInstalledSystemAddons(conditions, distroDir) {
   for (let i = 0; i < conditions.length; i++) {
     let condition = conditions[i];
     let id = "system" + (i + 1) + "@tests.mozilla.org";
-    let addon = yield promiseAddonByID(id);
+    let addon = await promiseAddonByID(id);
 
     if (!("isUpgrade" in condition) || !("version" in condition)) {
       throw Error("condition must contain isUpgrade and version");
@@ -1500,13 +1499,13 @@ function* checkInstalledSystemAddons(conditions, distroDir) {
 /**
  * Returns all system add-on updates directories.
  */
-function* getSystemAddonDirectories() {
+async function getSystemAddonDirectories() {
   const updatesDir = FileUtils.getDir("ProfD", ["features"], false);
   let subdirs = [];
 
-  if (yield OS.File.exists(updatesDir.path)) {
+  if (await OS.File.exists(updatesDir.path)) {
     let iterator = new OS.File.DirectoryIterator(updatesDir.path);
-    yield iterator.forEach(entry => {
+    await iterator.forEach(entry => {
       if (entry.isDir) {
         subdirs.push(entry);
       }
@@ -1525,21 +1524,21 @@ function* getSystemAddonDirectories() {
  *
  * @param {nsIFile} distroDir - the system add-on distribution directory (the "features" dir in the app directory)
  */
-function* setupSystemAddonConditions(setup, distroDir) {
+async function setupSystemAddonConditions(setup, distroDir) {
   do_print("Clearing existing database.");
   Services.prefs.clearUserPref(PREF_SYSTEM_ADDON_SET);
   distroDir.leafName = "empty";
   startupManager(false);
-  yield promiseShutdownManager();
+  await promiseShutdownManager();
 
   do_print("Setting up conditions.");
-  yield setup.setup();
+  await setup.setup();
 
   startupManager(false);
 
   // Make sure the initial state is correct
   do_print("Checking initial state.");
-  yield checkInstalledSystemAddons(setup.initialState, distroDir);
+  await checkInstalledSystemAddons(setup.initialState, distroDir);
 }
 
 /**
@@ -1550,7 +1549,7 @@ function* setupSystemAddonConditions(setup, distroDir) {
  * @param {Boolean} alreadyUpgraded - whether a restartless upgrade has already been performed.
  * @param {nsIFile} distroDir - the system add-on distribution directory (the "features" dir in the app directory)
  */
-function* verifySystemAddonState(initialState, finalState = undefined, alreadyUpgraded = false, distroDir) {
+async function verifySystemAddonState(initialState, finalState = undefined, alreadyUpgraded = false, distroDir) {
   let expectedDirs = 0;
 
   // If the initial state was using the profile set then that directory will
@@ -1574,14 +1573,14 @@ function* verifySystemAddonState(initialState, finalState = undefined, alreadyUp
 
   do_print("Checking final state.");
 
-  let dirs = yield getSystemAddonDirectories();
+  let dirs = await getSystemAddonDirectories();
   do_check_eq(dirs.length, expectedDirs);
 
-  yield checkInstalledSystemAddons(...finalState, distroDir);
+  await checkInstalledSystemAddons(...finalState, distroDir);
 
   // Check that the new state is active after a restart
-  yield promiseRestartManager();
-  yield checkInstalledSystemAddons(finalState, distroDir);
+  await promiseRestartManager();
+  await checkInstalledSystemAddons(finalState, distroDir);
 }
 
 /**
@@ -1606,14 +1605,14 @@ function* verifySystemAddonState(initialState, finalState = undefined, alreadyUp
  * @param {HttpServer} testserver - existing HTTP test server to use
  */
 
-function* execSystemAddonTest(setupName, setup, test, distroDir, root, testserver) {
-  yield setupSystemAddonConditions(setup, distroDir);
+async function execSystemAddonTest(setupName, setup, test, distroDir, root, testserver) {
+  await setupSystemAddonConditions(setup, distroDir);
 
   try {
     if ("test" in test) {
-      yield test.test();
+      await test.test();
     } else {
-      yield installSystemAddons(yield buildSystemAddonUpdates(test.updateList, root), testserver);
+      await installSystemAddons(await buildSystemAddonUpdates(test.updateList, root), testserver);
     }
 
     if (test.fails) {
@@ -1628,10 +1627,10 @@ function* execSystemAddonTest(setupName, setup, test, distroDir, root, testserve
   // some tests have a different expected combination of default
   // and updated add-ons.
   if (test.finalState && setupName in test.finalState) {
-    yield verifySystemAddonState(setup.initialState, test.finalState[setupName], false, distroDir);
+    await verifySystemAddonState(setup.initialState, test.finalState[setupName], false, distroDir);
   } else {
-    yield verifySystemAddonState(setup.initialState, undefined, false, distroDir);
+    await verifySystemAddonState(setup.initialState, undefined, false, distroDir);
   }
 
-  yield promiseShutdownManager();
+  await promiseShutdownManager();
 }

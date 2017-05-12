@@ -1,4 +1,4 @@
-add_task(function* () {
+add_task(async function() {
   gPrefService.setBoolPref("browser.ctrlTab.previews", true);
 
   gBrowser.addTab();
@@ -7,52 +7,52 @@ add_task(function* () {
 
   checkTabs(4);
 
-  yield ctrlTabTest([2], 1, 0);
-  yield ctrlTabTest([2, 3, 1], 2, 2);
-  yield ctrlTabTest([], 4, 2);
+  await ctrlTabTest([2], 1, 0);
+  await ctrlTabTest([2, 3, 1], 2, 2);
+  await ctrlTabTest([], 4, 2);
 
   {
     let selectedIndex = gBrowser.tabContainer.selectedIndex;
-    yield pressCtrlTab();
-    yield pressCtrlTab(true);
-    yield releaseCtrl();
+    await pressCtrlTab();
+    await pressCtrlTab(true);
+    await releaseCtrl();
     is(gBrowser.tabContainer.selectedIndex, selectedIndex,
        "Ctrl+Tab -> Ctrl+Shift+Tab keeps the selected tab");
   }
 
   { // test for bug 445369
     let tabs = gBrowser.tabs.length;
-    yield pressCtrlTab();
-    yield synthesizeCtrlW();
+    await pressCtrlTab();
+    await synthesizeCtrlW();
     is(gBrowser.tabs.length, tabs - 1, "Ctrl+Tab -> Ctrl+W removes one tab");
-    yield releaseCtrl();
+    await releaseCtrl();
   }
 
   { // test for bug 667314
     let tabs = gBrowser.tabs.length;
-    yield pressCtrlTab();
-    yield pressCtrlTab(true);
-    yield synthesizeCtrlW();
+    await pressCtrlTab();
+    await pressCtrlTab(true);
+    await synthesizeCtrlW();
     is(gBrowser.tabs.length, tabs - 1, "Ctrl+Tab -> Ctrl+W removes the selected tab");
-    yield releaseCtrl();
+    await releaseCtrl();
   }
 
   gBrowser.addTab();
   checkTabs(3);
-  yield ctrlTabTest([2, 1, 0], 7, 1);
+  await ctrlTabTest([2, 1, 0], 7, 1);
 
   { // test for bug 1292049
-    let tabToClose = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:buildconfig");
+    let tabToClose = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:buildconfig");
     checkTabs(4);
     selectTabs([0, 1, 2, 3]);
 
-    yield BrowserTestUtils.removeTab(tabToClose);
+    await BrowserTestUtils.removeTab(tabToClose);
     checkTabs(3);
     undoCloseTab();
     checkTabs(4);
     is(gBrowser.tabContainer.selectedIndex, 3, "tab is selected after closing and restoring it");
 
-    yield ctrlTabTest([], 1, 2);
+    await ctrlTabTest([], 1, 2);
   }
 
   { // test for bug 445369
@@ -62,22 +62,22 @@ add_task(function* () {
     let selectedTab = gBrowser.selectedTab;
     let tabToRemove = gBrowser.tabs[1];
 
-    yield pressCtrlTab();
-    yield pressCtrlTab();
-    yield synthesizeCtrlW();
+    await pressCtrlTab();
+    await pressCtrlTab();
+    await synthesizeCtrlW();
     ok(!tabToRemove.parentNode,
        "Ctrl+Tab*2 -> Ctrl+W removes the second most recently selected tab");
 
-    yield pressCtrlTab(true);
-    yield pressCtrlTab(true);
-    yield releaseCtrl();
+    await pressCtrlTab(true);
+    await pressCtrlTab(true);
+    await releaseCtrl();
     ok(selectedTab.selected,
        "Ctrl+Tab*2 -> Ctrl+W -> Ctrl+Shift+Tab*2 keeps the selected tab");
   }
   gBrowser.removeTab(gBrowser.tabContainer.lastChild);
   checkTabs(2);
 
-  yield ctrlTabTest([1], 1, 0);
+  await ctrlTabTest([1], 1, 0);
 
   gBrowser.removeTab(gBrowser.tabContainer.lastChild);
   checkTabs(1);
@@ -89,7 +89,7 @@ add_task(function* () {
       eventConsumed = event.defaultPrevented;
     };
     document.addEventListener("keypress", detectKeyEvent);
-    yield pressCtrlTab();
+    await pressCtrlTab();
     document.removeEventListener("keypress", detectKeyEvent);
     ok(eventConsumed, "Ctrl+Tab consumed by the tabbed browser if one tab is open");
     is(focusedWindow, document.commandDispatcher.focusedWindow,
@@ -102,7 +102,7 @@ add_task(function* () {
 
   /* private utility functions */
 
-  function* pressCtrlTab(aShiftKey) {
+  function pressCtrlTab(aShiftKey) {
     let promise;
     if (!isOpen() && canOpen()) {
       promise = BrowserTestUtils.waitForEvent(ctrlTab.panel, "popupshown");
@@ -113,7 +113,7 @@ add_task(function* () {
     return promise;
   }
 
-  function* releaseCtrl() {
+  function releaseCtrl() {
     let promise;
     if (isOpen()) {
       promise = BrowserTestUtils.waitForEvent(ctrlTab.panel, "popuphidden");
@@ -124,7 +124,7 @@ add_task(function* () {
     return promise;
   }
 
-  function* synthesizeCtrlW() {
+  function synthesizeCtrlW() {
     let promise = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabClose");
     EventUtils.synthesizeKey("w", { ctrlKey: true });
     return promise;
@@ -148,7 +148,7 @@ add_task(function* () {
     });
   }
 
-  function* ctrlTabTest(tabsToSelect, tabTimes, expectedIndex) {
+  async function ctrlTabTest(tabsToSelect, tabTimes, expectedIndex) {
     selectTabs(tabsToSelect);
 
     var indexStart = gBrowser.tabContainer.selectedIndex;
@@ -158,7 +158,7 @@ add_task(function* () {
                 normalized + " tabs back in most-recently-selected order";
 
     for (let i = 0; i < tabTimes; i++) {
-      yield pressCtrlTab();
+      await pressCtrlTab();
 
       if (tabCount > 2)
        is(gBrowser.tabContainer.selectedIndex, indexStart,
@@ -169,7 +169,7 @@ add_task(function* () {
       ok(isOpen(),
          "With " + tabCount + " tabs open, Ctrl+Tab opens the preview panel");
 
-      yield releaseCtrl();
+      await releaseCtrl();
 
       ok(!isOpen(),
          "Releasing Ctrl closes the preview panel");

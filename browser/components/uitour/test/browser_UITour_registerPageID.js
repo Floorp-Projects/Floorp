@@ -7,7 +7,7 @@ var gContentWindow;
 Components.utils.import("resource://gre/modules/UITelemetry.jsm");
 Components.utils.import("resource:///modules/BrowserUITelemetry.jsm");
 
-add_task(function* setup_telemetry() {
+add_task(async function setup_telemetry() {
   UITelemetry._enabled = true;
 
   registerCleanupFunction(function() {
@@ -62,10 +62,10 @@ add_UITour_task(function test_seenPageIDs_restore() {
   checkExpectedSeenPageIDs(["savedID1", "savedID2"]);
 });
 
-add_UITour_task(function* test_seenPageIDs_set_1() {
-  yield gContentAPI.registerPageID("testpage1");
+add_UITour_task(async function test_seenPageIDs_set_1() {
+  await gContentAPI.registerPageID("testpage1");
 
-  yield waitForConditionPromise(() => UITour.seenPageIDs.size == 3, "Waiting for page to be registered.");
+  await waitForConditionPromise(() => UITour.seenPageIDs.size == 3, "Waiting for page to be registered.");
 
   checkExpectedSeenPageIDs(["savedID1", "savedID2", "testpage1"]);
 
@@ -85,10 +85,10 @@ add_UITour_task(function* test_seenPageIDs_set_1() {
   BrowserUITelemetry.setBucket(null);
 });
 
-add_UITour_task(function* test_seenPageIDs_set_2() {
-  yield gContentAPI.registerPageID("testpage2");
+add_UITour_task(async function test_seenPageIDs_set_2() {
+  await gContentAPI.registerPageID("testpage2");
 
-  yield waitForConditionPromise(() => UITour.seenPageIDs.size == 4, "Waiting for page to be registered.");
+  await waitForConditionPromise(() => UITour.seenPageIDs.size == 4, "Waiting for page to be registered.");
 
   checkExpectedSeenPageIDs(["savedID1", "savedID2", "testpage1", "testpage2"]);
 

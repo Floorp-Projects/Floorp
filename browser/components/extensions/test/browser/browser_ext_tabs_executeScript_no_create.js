@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* testExecuteScriptAtOnUpdated() {
+add_task(async function testExecuteScriptAtOnUpdated() {
   const BASE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/";
   const URL = BASE + "file_iframe_document.html";
   // This is a regression test for bug 1325830.
@@ -54,14 +54,14 @@ add_task(function* testExecuteScriptAtOnUpdated() {
     background,
   });
 
-  yield extension.startup();
+  await extension.startup();
   extension.sendMessage(URL);
-  yield extension.awaitMessage("open-test-tab");
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, URL, true);
+  await extension.awaitMessage("open-test-tab");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URL, true);
 
-  yield extension.awaitFinish("executeScript-at-onUpdated");
+  await extension.awaitFinish("executeScript-at-onUpdated");
 
-  yield extension.unload();
+  await extension.unload();
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });

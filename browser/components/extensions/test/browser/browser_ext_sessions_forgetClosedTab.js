@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* test_sessions_forget_closed_tab() {
+add_task(async function test_sessions_forget_closed_tab() {
   function background() {
     browser.test.onMessage.addListener((msg, windowId, sessionId) => {
       if (msg === "check-sessions") {
@@ -31,25 +31,25 @@ add_task(function* test_sessions_forget_closed_tab() {
     background,
   });
 
-  yield extension.startup();
+  await extension.startup();
 
   let tabUrl = "http://example.com";
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl);
-  yield BrowserTestUtils.removeTab(tab);
-  tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl);
-  yield BrowserTestUtils.removeTab(tab);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl);
+  await BrowserTestUtils.removeTab(tab);
+  tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl);
+  await BrowserTestUtils.removeTab(tab);
 
   extension.sendMessage("check-sessions");
-  let recentlyClosed = yield extension.awaitMessage("recentlyClosed");
+  let recentlyClosed = await extension.awaitMessage("recentlyClosed");
   let recentlyClosedLength = recentlyClosed.length;
   let recentlyClosedTab = recentlyClosed[0].tab;
 
   // Check that forgetting a tab works properly
   extension.sendMessage("forget-tab", recentlyClosedTab.windowId,
                                       recentlyClosedTab.sessionId);
-  yield extension.awaitMessage("forgot-tab");
+  await extension.awaitMessage("forgot-tab");
   extension.sendMessage("check-sessions");
-  let remainingClosed = yield extension.awaitMessage("recentlyClosed");
+  let remainingClosed = await extension.awaitMessage("recentlyClosed");
   is(remainingClosed.length, recentlyClosedLength - 1,
      "One tab was forgotten.");
   is(remainingClosed[0].tab.sessionId, recentlyClosed[1].tab.sessionId,
@@ -58,13 +58,13 @@ add_task(function* test_sessions_forget_closed_tab() {
   // Check that re-forgetting the same tab fails properly
   extension.sendMessage("forget-tab", recentlyClosedTab.windowId,
                                       recentlyClosedTab.sessionId);
-  yield extension.awaitMessage("forget-reject");
+  await extension.awaitMessage("forget-reject");
   extension.sendMessage("check-sessions");
-  remainingClosed = yield extension.awaitMessage("recentlyClosed");
+  remainingClosed = await extension.awaitMessage("recentlyClosed");
   is(remainingClosed.length, recentlyClosedLength - 1,
      "No extra tab was forgotten.");
   is(remainingClosed[0].tab.sessionId, recentlyClosed[1].tab.sessionId,
      "The correct tab remains.");
 
-  yield extension.unload();
+  await extension.unload();
 });

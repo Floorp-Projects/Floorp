@@ -15,7 +15,6 @@ Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
-Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/DeferredTask.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
@@ -35,6 +34,8 @@ const PREF_LOG_DUMP = PREF_BRANCH_LOG + "dump";
 const PREF_CACHED_CLIENTID = PREF_BRANCH + "cachedClientID";
 const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 const PREF_UNIFIED = PREF_BRANCH + "unified";
+const PREF_NEWPROFILE_PING_ENABLED = PREF_BRANCH + "newProfilePing.enabled";
+const PREF_NEWPROFILE_PING_DELAY = PREF_BRANCH + "newProfilePing.delay";
 
 // Whether the FHR/Telemetry unification features are enabled.
 // Changing this pref requires a restart.
@@ -46,6 +47,10 @@ const PING_FORMAT_VERSION = 4;
 const TELEMETRY_DELAY = Preferences.get("toolkit.telemetry.initDelay", 60) * 1000;
 // Delay before initializing telemetry if we're testing (ms)
 const TELEMETRY_TEST_DELAY = 1;
+
+// How long to wait (ms) before sending the new profile ping on the first
+// run of a new profile.
+const NEWPROFILE_PING_DEFAULT_DELAY = 30 * 60 * 1000;
 
 // Ping types.
 const PING_TYPE_MAIN = "main";
@@ -311,6 +316,7 @@ var Impl = {
   _initialized: false,
   _initStarted: false, // Whether we started setting up TelemetryController.
   _shuttingDown: false, // Whether the browser is shutting down.
+  _shutDown: false, // Whether the browser has shut down.
   _logger: null,
   _prevValues: {},
   // The previous build ID, if this is the first run with a new build.
@@ -330,6 +336,8 @@ var Impl = {
   _connectionsBarrier: new AsyncShutdown.Barrier("TelemetryController: Waiting for pending ping activity"),
   // This is true when running in the test infrastructure.
   _testMode: false,
+  // The task performing the delayed sending of the "new-profile" ping.
+  _delayedNewPingTask: null,
 
   get _log() {
     if (!this._logger) {
@@ -485,7 +493,7 @@ var Impl = {
     this._log.trace("submitExternalPing - type: " + aType + ", aOptions: " + JSON.stringify(aOptions));
 
     // Reject pings sent after shutdown.
-    if (this._shuttingDown) {
+    if (this._shutDown) {
       const errorMessage = "submitExternalPing - Submission is not allowed after shutdown, discarding ping of type: " + aType;
       this._log.error(errorMessage);
       return Promise.reject(new Error(errorMessage));
@@ -657,6 +665,7 @@ var Impl = {
   setupTelemetry: function setupTelemetry(testing) {
     this._initStarted = true;
     this._shuttingDown = false;
+    this._shutDown = false;
     this._testMode = testing;
 
     this._log.trace("setupTelemetry");
@@ -698,19 +707,26 @@ var Impl = {
     // run various late initializers. Otherwise our gathered memory
     // footprint and other numbers would be too optimistic.
     this._delayedInitTaskDeferred = Promise.defer();
-    this._delayedInitTask = new DeferredTask(function* () {
+    this._delayedInitTask = new DeferredTask(async () => {
       try {
         // TODO: This should probably happen after all the delayed init here.
         this._initialized = true;
         TelemetryEnvironment.delayedInit();
 
         // Load the ClientID.
-        this._clientID = yield ClientID.getClientID();
+        this._clientID = await ClientID.getClientID();
 
-        yield TelemetrySend.setup(this._testMode);
+        await TelemetrySend.setup(this._testMode);
 
         // Perform TelemetrySession delayed init.
-        yield TelemetrySession.delayedInit();
+        await TelemetrySession.delayedInit();
+
+        if (Preferences.get(PREF_NEWPROFILE_PING_ENABLED, false) &&
+            !TelemetrySession.newProfilePingSent) {
+          // Kick off the scheduling of the new-profile ping.
+          this.scheduleNewProfilePing();
+        }
+
         // Purge the pings archive by removing outdated pings. We don't wait for
         // this task to complete, but TelemetryStorage blocks on it during
         // shutdown.
@@ -730,7 +746,7 @@ var Impl = {
       } finally {
         this._delayedInitTask = null;
       }
-    }.bind(this), this._testMode ? TELEMETRY_TEST_DELAY : TELEMETRY_DELAY);
+    }, this._testMode ? TELEMETRY_TEST_DELAY : TELEMETRY_DELAY);
 
     AsyncShutdown.sendTelemetry.addBlocker("TelemetryController: shutting down",
                                            () => this.shutdown(),
@@ -762,11 +778,17 @@ var Impl = {
       return;
     }
 
+    this._shuttingDown = true;
+
     Preferences.ignore(PREF_BRANCH_LOG, configureLogging);
     this._detachObservers();
 
     // Now do an orderly shutdown.
     try {
+      if (this._delayedNewPingTask) {
+        await this._delayedNewPingTask.finalize();
+      }
+
       // Stop the datachoices infobar display.
       TelemetryReportingPolicy.shutdown();
       TelemetryEnvironment.shutdown();
@@ -788,7 +810,7 @@ var Impl = {
       // Reset state.
       this._initialized = false;
       this._initStarted = false;
-      this._shuttingDown = true;
+      this._shutDown = true;
     }
   },
 
@@ -805,6 +827,7 @@ var Impl = {
     // This handles 1).
     if (!this._initStarted) {
       this._shuttingDown = true;
+      this._shutDown = true;
       return Promise.resolve();
     }
 
@@ -853,6 +876,7 @@ var Impl = {
       shutdownBarrier: this._shutdownBarrier.state,
       connectionsBarrier: this._connectionsBarrier.state,
       sendModule: TelemetrySend.getShutdownState(),
+      haveDelayedNewProfileTask: !!this._delayedNewPingTask,
     };
   },
 
@@ -867,13 +891,13 @@ var Impl = {
       return;
     }
 
-    let p = Task.spawn(function*() {
+    let p = (async () => {
       try {
         // Clear the current pings.
-        yield TelemetrySend.clearCurrentPings();
+        await TelemetrySend.clearCurrentPings();
 
         // Remove all the pending pings, but not the deletion ping.
-        yield TelemetryStorage.runRemovePendingPingsTask();
+        await TelemetryStorage.runRemovePendingPingsTask();
       } catch (e) {
         this._log.error("_onUploadPrefChange - error clearing pending pings", e);
       } finally {
@@ -881,7 +905,7 @@ var Impl = {
         this._log.trace("_onUploadPrefChange - Sending deletion ping.");
         this.submitExternalPing(PING_TYPE_DELETION, {}, { addClientId: true });
       }
-    }.bind(this));
+    })();
 
     this._shutdownBarrier.client.addBlocker(
       "TelemetryController: removing pending pings after data upload was disabled", p);
@@ -952,5 +976,51 @@ var Impl = {
     await TelemetryEnvironment.testReset();
 
     await controllerSetup;
+  },
+
+  /**
+   * Schedule sending the "new-profile" ping.
+   */
+  scheduleNewProfilePing() {
+    this._log.trace("scheduleNewProfilePing");
+
+    const sendDelay =
+      Preferences.get(PREF_NEWPROFILE_PING_DELAY, NEWPROFILE_PING_DEFAULT_DELAY);
+
+    this._delayedNewPingTask = new DeferredTask(async () => {
+      try {
+        await this.sendNewProfilePing();
+      } finally {
+        this._delayedNewPingTask = null;
+      }
+    }, sendDelay);
+
+    this._delayedNewPingTask.arm();
+  },
+
+  /**
+   * Generate and send the new-profile ping
+   */
+  async sendNewProfilePing() {
+    this._log.trace("sendNewProfilePing - shutting down: " + this._shuttingDown);
+
+    // Generate the payload.
+    const payload = {
+      "reason": this._shuttingDown ? "shutdown" : "startup",
+    };
+
+    // Generate and send the "new-profile" ping. This uses the
+    // pingsender if we're shutting down.
+    let options = {
+      addClientId: true,
+      addEnvironment: true,
+      usePingSender: this._shuttingDown,
+    };
+    // TODO: we need to be smarter about when to send the ping (and save the
+    // state to file). |requestIdleCallback| is currently only accessible
+    // through DOM. See bug 1361996.
+    await TelemetryController.submitExternalPing("new-profile", payload, options)
+                             .then(() => TelemetrySession.markNewProfilePingSent(),
+                                   e => this._log.error("sendNewProfilePing - failed to submit new-profile ping", e));
   },
 };

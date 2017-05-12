@@ -100,46 +100,46 @@ function setQuickMockTimer() {
  *         is called
  */
 function setPromiseMockTimer() {
-  let waiter = Promise.defer();
-  let mockTimer = {
-    callback: null,
-    delay: null,
-    type: null,
-    isCancelled: false,
+  return new Promise(resolve => {
+    let mockTimer = {
+      callback: null,
+      delay: null,
+      type: null,
+      isCancelled: false,
 
-    initWithCallback(aFunction, aDelay, aType) {
-      do_print("Starting timer, delay = " + aDelay);
-      this.callback = aFunction;
-      this.delay = aDelay;
-      this.type = aType;
-      // cancelled timers can be re-used
-      this.isCancelled = false;
-      waiter.resolve(this);
-    },
-    cancel() {
-      do_print("Cancelled mock timer");
-      this.callback = null;
-      this.delay = null;
-      this.type = null;
-      this.isCancelled = true;
-      // If initWithCallback was never called, resolve to let tests check for cancel
-      waiter.resolve(this);
-    }
-  };
-  DSContext.MakeTimer = () => {
-    do_print("Creating mock timer");
-    return mockTimer;
-  };
-  return waiter.promise;
+      initWithCallback(aFunction, aDelay, aType) {
+        do_print("Starting timer, delay = " + aDelay);
+        this.callback = aFunction;
+        this.delay = aDelay;
+        this.type = aType;
+        // cancelled timers can be re-used
+        this.isCancelled = false;
+        resolve(this);
+      },
+      cancel() {
+        do_print("Cancelled mock timer");
+        this.callback = null;
+        this.delay = null;
+        this.type = null;
+        this.isCancelled = true;
+        // If initWithCallback was never called, resolve to let tests check for cancel
+        resolve(this);
+      }
+    };
+    DSContext.MakeTimer = () => {
+      do_print("Creating mock timer");
+      return mockTimer;
+    };
+  });
 }
 
 /**
  * Return a Promise<null> that resolves after the specified number of milliseconds
  */
 function delay(aDelayMS) {
-  let deferred = Promise.defer();
-  do_timeout(aDelayMS, () => deferred.resolve(null));
-  return deferred.promise;
+  return new Promise(resolve => {
+    do_timeout(aDelayMS, () => resolve(null));
+  });
 }
 
 function run_test() {
@@ -147,19 +147,19 @@ function run_test() {
 }
 
 // Modify set data once, ask for save, make sure it saves cleanly
-add_task(function* test_basic_save_succeeds() {
+add_task(async function test_basic_save_succeeds() {
   setQuickMockTimer();
   let tester = DeferredSaveTester();
   let data = "Test 1 Data";
 
-  yield tester.save(data);
+  await tester.save(data);
   do_check_eq(tester.writtenData, data);
   do_check_eq(1, tester.saver.totalSaves);
 });
 
 // Two saves called during the same event loop, both with callbacks
 // Make sure we save only the second version of the data
-add_task(function* test_two_saves() {
+add_task(async function test_two_saves() {
   setQuickMockTimer();
   let tester = DeferredSaveTester();
   let firstCallback_happened = false;
@@ -174,7 +174,7 @@ add_task(function* test_two_saves() {
     firstCallback_happened = true;
   }, do_report_unexpected_exception);
 
-  yield tester.save(secondData);
+  await tester.save(secondData);
   do_check_true(firstCallback_happened);
   do_check_eq(secondData, tester.writtenData);
   do_check_eq(1, tester.saver.totalSaves);
@@ -182,7 +182,7 @@ add_task(function* test_two_saves() {
 
 // Two saves called with a delay in between, both with callbacks
 // Make sure we save the second version of the data
-add_task(function* test_two_saves_delay() {
+add_task(async function test_two_saves_delay() {
   let timerPromise = setPromiseMockTimer();
   let tester = DeferredSaveTester();
   let firstCallback_happened = false;
@@ -200,16 +200,16 @@ add_task(function* test_two_saves_delay() {
 
   // Wait a short time to let async events possibly spawned by the
   // first tester.save() to run
-  yield delay(2);
+  await delay(2);
   delayDone = true;
   // request to save modified data
   let saving = tester.save(secondData);
   // Yield to wait for client code to set the timer
-  let activeTimer = yield timerPromise;
+  let activeTimer = await timerPromise;
   // and then trigger it
   activeTimer.callback();
   // now wait for the DeferredSave to finish saving
-  yield saving;
+  await saving;
   do_check_true(firstCallback_happened);
   do_check_eq(secondData, tester.writtenData);
   do_check_eq(1, tester.saver.totalSaves);
@@ -219,7 +219,7 @@ add_task(function* test_two_saves_delay() {
 // Test case where OS.File immediately reports an error when the write begins
 // Also check that the "error" getter correctly returns the error
 // Then do a write that succeeds, and make sure the error is cleared
-add_task(function* test_error_immediate() {
+add_task(async function test_error_immediate() {
   let tester = DeferredSaveTester();
   let testError = new Error("Forced failure");
   function writeFail(aTester) {
@@ -227,14 +227,14 @@ add_task(function* test_error_immediate() {
   }
 
   setQuickMockTimer();
-  yield tester.save("test_error_immediate", writeFail).then(
+  await tester.save("test_error_immediate", writeFail).then(
     count => do_throw("Did not get expected error"),
     error => do_check_eq(testError.message, error.message)
     );
   do_check_eq(testError, tester.lastError);
 
   // This write should succeed and clear the error
-  yield tester.save("test_error_immediate succeeds");
+  await tester.save("test_error_immediate succeeds");
   do_check_eq(null, tester.lastError);
   // The failed save attempt counts in our total
   do_check_eq(2, tester.saver.totalSaves);
@@ -243,37 +243,37 @@ add_task(function* test_error_immediate() {
 // Save one set of changes, then while the write is in progress, modify the
 // data two more times. Test that we re-write the dirty data exactly once
 // after the first write succeeds
-add_task(function* dirty_while_writing() {
+add_task(async function dirty_while_writing() {
   let tester = DeferredSaveTester();
   let firstData = "First data";
   let secondData = "Second data";
   let thirdData = "Third data";
   let firstCallback_happened = false;
   let secondCallback_happened = false;
-  let writeStarted = Promise.defer();
+  let writer = await new Promise(resolve => {
 
-  function writeCallback(aTester) {
-    writeStarted.resolve(aTester.waDeferred);
-  }
+    function writeCallback(aTester) {
+      resolve(aTester.waDeferred);
+    }
 
-  setQuickMockTimer();
-  do_print("First save");
-  tester.save(firstData, writeCallback).then(
-    count => {
-      do_check_false(firstCallback_happened);
-      do_check_false(secondCallback_happened);
-      do_check_eq(tester.writtenData, firstData);
-      firstCallback_happened = true;
-    }, do_report_unexpected_exception);
+    setQuickMockTimer();
+    do_print("First save");
+    tester.save(firstData, writeCallback).then(
+      count => {
+        do_check_false(firstCallback_happened);
+        do_check_false(secondCallback_happened);
+        do_check_eq(tester.writtenData, firstData);
+        firstCallback_happened = true;
+      }, do_report_unexpected_exception);
 
-  do_print("waiting for writer");
-  let writer = yield writeStarted.promise;
+    do_print("waiting for writer");
+  });
   do_print("Write started");
 
   // Delay a bit, modify the data and call saveChanges, delay a bit more,
   // modify the data and call saveChanges again, another delay,
   // then complete the in-progress write
-  yield delay(1);
+  await delay(1);
 
   tester.save(secondData).then(
     count => {
@@ -284,15 +284,15 @@ add_task(function* dirty_while_writing() {
     }, do_report_unexpected_exception);
 
   // wait and then do the third change
-  yield delay(1);
+  await delay(1);
   let thirdWrite = tester.save(thirdData);
 
   // wait a bit more and then finally finish the first write
-  yield delay(1);
+  await delay(1);
   writer.resolve(firstData.length);
 
   // Now let everything else finish
-  yield thirdWrite;
+  await thirdWrite;
   do_check_true(firstCallback_happened);
   do_check_true(secondCallback_happened);
   do_check_eq(tester.writtenData, thirdData);
@@ -316,43 +316,43 @@ function write_then_disable(aTester) {
 
 // Flush tests. First, do an ordinary clean save and then call flush;
 // there should not be another save
-add_task(function* flush_after_save() {
+add_task(async function flush_after_save() {
   setQuickMockTimer();
   let tester = DeferredSaveTester();
   let dataToSave = "Flush after save";
 
-  yield tester.save(dataToSave);
-  yield tester.flush(disabled_write_callback);
+  await tester.save(dataToSave);
+  await tester.flush(disabled_write_callback);
   do_check_eq(1, tester.saver.totalSaves);
 });
 
 // Flush while a write is in progress, but the in-memory data is clean
-add_task(function* flush_during_write() {
+add_task(async function flush_during_write() {
   let tester = DeferredSaveTester();
   let dataToSave = "Flush during write";
   let firstCallback_happened = false;
-  let writeStarted = Promise.defer();
+  let writer = await new Promise(resolve => {
 
-  function writeCallback(aTester) {
-    writeStarted.resolve(aTester.waDeferred);
-  }
+    function writeCallback(aTester) {
+      resolve(aTester.waDeferred);
+    }
 
-  setQuickMockTimer();
-  tester.save(dataToSave, writeCallback).then(
-    count => {
-      do_check_false(firstCallback_happened);
-      firstCallback_happened = true;
-    }, do_report_unexpected_exception);
+    setQuickMockTimer();
+    tester.save(dataToSave, writeCallback).then(
+      count => {
+        do_check_false(firstCallback_happened);
+        firstCallback_happened = true;
+      }, do_report_unexpected_exception);
 
-  let writer = yield writeStarted.promise;
+  });
 
   // call flush with the write callback disabled, delay a bit more, complete in-progress write
   let flushing = tester.flush(disabled_write_callback);
-  yield delay(2);
+  await delay(2);
   writer.resolve(dataToSave.length);
 
   // now wait for the flush to finish
-  yield flushing;
+  await flushing;
   do_check_true(firstCallback_happened);
   do_check_eq(1, tester.saver.totalSaves);
 });
@@ -360,7 +360,7 @@ add_task(function* flush_during_write() {
 // Flush while dirty but write not in progress
 // The data written should be the value at the time
 // flush() is called, even if it is changed later
-add_task(function* flush_while_dirty() {
+add_task(async function flush_while_dirty() {
   let timerPromise = setPromiseMockTimer();
   let tester = DeferredSaveTester();
   let firstData = "Flush while dirty, valid data";
@@ -374,7 +374,7 @@ add_task(function* flush_while_dirty() {
     }, do_report_unexpected_exception);
 
   // Wait for the timer to be set, but don't trigger it so the write won't start
-  let activeTimer = yield timerPromise;
+  let activeTimer = await timerPromise;
 
   let flushing = tester.flush();
 
@@ -385,7 +385,7 @@ add_task(function* flush_while_dirty() {
   // (even without a saveChanges() call) doesn't get written
   tester.dataToSave = "Flush while dirty, invalid data";
 
-  yield flushing;
+  await flushing;
   do_check_true(firstCallback_happened);
   do_check_eq(tester.writtenData, firstData);
   do_check_eq(1, tester.saver.totalSaves);
@@ -396,7 +396,7 @@ add_task(function* flush_while_dirty() {
 // then flush, then modify the data again
 // Data for the second write should be taken at the time
 // flush() is called, even if it is modified later
-add_task(function* flush_writing_dirty() {
+add_task(async function flush_writing_dirty() {
   let timerPromise = setPromiseMockTimer();
   let tester = DeferredSaveTester();
   let firstData = "Flush first pass data";
@@ -417,9 +417,9 @@ add_task(function* flush_writing_dirty() {
     }, do_report_unexpected_exception);
 
   // Trigger the timer callback as soon as the DeferredSave sets it
-  let activeTimer = yield timerPromise;
+  let activeTimer = await timerPromise;
   activeTimer.callback();
-  let writer = yield writeStarted.promise;
+  let writer = await writeStarted.promise;
   // the first write has started
 
   // dirty the data and request another save
@@ -439,7 +439,7 @@ add_task(function* flush_writing_dirty() {
   // complete the first write
   writer.resolve(firstData.length);
   // now wait for the second write / flush to complete
-  yield flushing;
+  await flushing;
   do_check_true(firstCallback_happened);
   do_check_true(secondCallback_happened);
   do_check_eq(tester.writtenData, secondData);
@@ -462,17 +462,17 @@ function badDataProvider() {
 
 // Handle cases where data provider throws
 // First, throws during a normal save
-add_task(function* data_throw() {
+add_task(async function data_throw() {
   setQuickMockTimer();
   badDataError = expectedDataError;
   let tester = DeferredSaveTester(badDataProvider);
-  yield tester.save("data_throw").then(
+  await tester.save("data_throw").then(
     count => do_throw("Expected serialization failure"),
     error => do_check_eq(error.message, expectedDataError));
 });
 
 // Now, throws during flush
-add_task(function* data_throw_during_flush() {
+add_task(async function data_throw_during_flush() {
   badDataError = expectedDataError;
   let tester = DeferredSaveTester(badDataProvider);
   let firstCallback_happened = false;
@@ -488,7 +488,7 @@ add_task(function* data_throw_during_flush() {
     });
 
   // flush() will cancel the timer
-  yield tester.flush(disabled_write_callback).then(
+  await tester.flush(disabled_write_callback).then(
     count => do_throw("Expected serialization failure"),
     error => do_check_eq(error.message, expectedDataError)
     );
@@ -507,7 +507,7 @@ add_task(function* data_throw_during_flush() {
 // actually restart timer for delayed write
 // write completes
 // delayed timer goes off, throws error because DeferredSave has been torn down
-add_task(function* delay_flush_race() {
+add_task(async function delay_flush_race() {
   let timerPromise = setPromiseMockTimer();
   let tester = DeferredSaveTester();
   let firstData = "First save";
@@ -521,9 +521,9 @@ add_task(function* delay_flush_race() {
 
   // This promise won't resolve until after writeStarted
   let firstSave = tester.save(firstData, writeCallback);
-  (yield timerPromise).callback();
+  (await timerPromise).callback();
 
-  let writer = yield writeStarted.promise;
+  let writer = await writeStarted.promise;
   // the first write has started
 
   // dirty the data and request another save
@@ -531,16 +531,16 @@ add_task(function* delay_flush_race() {
 
   // complete the first write
   writer.resolve(firstData.length);
-  yield firstSave;
+  await firstSave;
   do_check_eq(tester.writtenData, firstData);
 
   tester.save(thirdData);
   let flushing = tester.flush();
 
-  yield secondSave;
+  await secondSave;
   do_check_eq(tester.writtenData, thirdData);
 
-  yield flushing;
+  await flushing;
   do_check_eq(tester.writtenData, thirdData);
 
   // Our DeferredSave should not have a _timer here; if it

@@ -8,7 +8,6 @@ this.EXPORTED_SYMBOLS = ["ClientID"];
 
 const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
@@ -97,7 +96,7 @@ var ClientIDImpl = {
     return this._loadClientIdTask;
   },
 
-  _doLoadClientID: Task.async(function* () {
+  async _doLoadClientID() {
     // As we want to correlate FHR and telemetry data (and move towards unifying the two),
     // we first moved the ID management from the FHR implementation to the datareporting
     // service, then to a common shared module.
@@ -105,7 +104,7 @@ var ClientIDImpl = {
 
     // Try to load the client id from the DRS state file first.
     try {
-      let state = yield CommonUtils.readJSON(gStateFilePath);
+      let state = await CommonUtils.readJSON(gStateFilePath);
       if (state && this.updateClientID(state.clientID)) {
         return this._clientID;
       }
@@ -116,7 +115,7 @@ var ClientIDImpl = {
     // If we dont have DRS state yet, try to import from the FHR state.
     try {
       let fhrStatePath = OS.Path.join(OS.Constants.Path.profileDir, "healthreport", "state.json");
-      let state = yield CommonUtils.readJSON(fhrStatePath);
+      let state = await CommonUtils.readJSON(fhrStatePath);
       if (state && this.updateClientID(state.clientID)) {
         this._saveClientID();
         return this._clientID;
@@ -133,22 +132,22 @@ var ClientIDImpl = {
     // the client creating and subsequently sending multiple IDs to the server.
     // This would appear as multiple clients submitting similar data, which would
     // result in orphaning.
-    yield this._saveClientIdTask;
+    await this._saveClientIdTask;
 
     return this._clientID;
-  }),
+  },
 
   /**
    * Save the client ID to the client ID file.
    *
    * @return {Promise} A promise resolved when the client ID is saved to disk.
    */
-  _saveClientID: Task.async(function* () {
+  async _saveClientID() {
     let obj = { clientID: this._clientID };
-    yield OS.File.makeDir(gDatareportingPath);
-    yield CommonUtils.writeJSON(obj, gStateFilePath);
+    await OS.File.makeDir(gDatareportingPath);
+    await CommonUtils.writeJSON(obj, gStateFilePath);
     this._saveClientIdTask = null;
-  }),
+  },
 
   /**
    * This returns a promise resolving to the the stable client ID we use for
@@ -194,11 +193,11 @@ var ClientIDImpl = {
   /*
    * Resets the provider. This is for testing only.
    */
-  _reset: Task.async(function* () {
-    yield this._loadClientIdTask;
-    yield this._saveClientIdTask;
+  async _reset() {
+    await this._loadClientIdTask;
+    await this._saveClientIdTask;
     this._clientID = null;
-  }),
+  },
 
   /**
    * Sets the client id to the given value and updates the value cached in

@@ -15,7 +15,7 @@ this.FormAutofillUtils = {
     XPCOMUtils.defineLazyGetter(scope, "log", () => {
       let ConsoleAPI = Cu.import("resource://gre/modules/Console.jsm", {}).ConsoleAPI;
       return new ConsoleAPI({
-        maxLogLevelPref: "browser.formautofill.loglevel",
+        maxLogLevelPref: "extensions.formautofill.loglevel",
         prefix: logPrefix,
       });
     });

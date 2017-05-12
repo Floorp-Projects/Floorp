@@ -5,17 +5,17 @@
  * These tests ensure that the drop preview correctly arranges sites when
  * dragging them around.
  */
-add_task(function* () {
-  yield* addNewTabPageTab();
+add_task(async function() {
+  await addNewTabPageTab();
 
   // the first three sites are pinned - make sure they're re-arranged correctly
-  yield setLinks("0,1,2,3,4,5,6,7,8");
+  await setLinks("0,1,2,3,4,5,6,7,8");
   setPinnedLinks("0,1,2,,,5");
 
-  yield* addNewTabPageTab();
-  yield* checkGrid("0p,1p,2p,3,4,5p,6,7,8");
+  await addNewTabPageTab();
+  await checkGrid("0p,1p,2p,3,4,5p,6,7,8");
 
-  let foundSites = yield ContentTask.spawn(gWindow.gBrowser.selectedBrowser, {}, function*() {
+  let foundSites = await ContentTask.spawn(gWindow.gBrowser.selectedBrowser, {}, async function() {
     let cells = content.gGrid.cells;
     content.gDrag._draggedSite = cells[0].site;
     let sites = content.gDropPreview.rearrange(cells[4]);

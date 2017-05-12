@@ -26,9 +26,9 @@ function test() {
     "//input[@type='file']":      filePath
   };
 
-  registerCleanupFunction(function* () {
+  registerCleanupFunction(async function() {
     for (let win of windowsToClose) {
-      yield BrowserTestUtils.closeWindow(win);
+      await BrowserTestUtils.closeWindow(win);
     }
   });
 

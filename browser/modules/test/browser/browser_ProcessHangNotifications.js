@@ -89,10 +89,10 @@ let buttonCount = (UpdateUtils.UpdateChannel == "aurora" ? 3 : 2);
  * stop in response to a script hang.
  */
 
-add_task(function* terminateScriptTest() {
+add_task(async function terminateScriptTest() {
   let promise = promiseNotificationShown(window, "process-hang");
   Services.obs.notifyObservers(gTestHangReport, "process-hang-report");
-  let notification = yield promise;
+  let notification = await promise;
 
   let buttons = notification.currentNotification.getElementsByTagName("button");
   // Fails on aurora on-push builds, bug 1232204
@@ -102,7 +102,7 @@ add_task(function* terminateScriptTest() {
   gTestHangReport.hangType = gTestHangReport.SLOW_SCRIPT;
   promise = promiseReportCallMade(gTestHangReport.TEST_CALLBACK_TERMSCRIPT);
   buttons[0].click();
-  yield promise;
+  await promise;
 });
 
 /**
@@ -110,16 +110,16 @@ add_task(function* terminateScriptTest() {
  * and the browser frees up from a script hang on its own.
  */
 
-add_task(function* waitForScriptTest() {
+add_task(async function waitForScriptTest() {
   let promise = promiseNotificationShown(window, "process-hang");
   Services.obs.notifyObservers(gTestHangReport, "process-hang-report");
-  let notification = yield promise;
+  let notification = await promise;
 
   let buttons = notification.currentNotification.getElementsByTagName("button");
   // Fails on aurora on-push builds, bug 1232204
   // is(buttons.length, buttonCount, "proper number of buttons");
 
-  yield pushPrefs(["browser.hangNotification.waitPeriod", 1000]);
+  await pushPrefs(["browser.hangNotification.waitPeriod", 1000]);
 
   function nocbcheck() {
     ok(false, "received a callback?");
@@ -138,7 +138,7 @@ add_task(function* waitForScriptTest() {
   Services.obs.notifyObservers(gTestHangReport, "clear-hang-report");
   gTestHangReport.testCallback = oldcb;
 
-  yield popPrefs();
+  await popPrefs();
 });
 
 /**
@@ -146,18 +146,18 @@ add_task(function* waitForScriptTest() {
  * process stops sending hang notifications.
  */
 
-add_task(function* hangGoesAwayTest() {
-  yield pushPrefs(["browser.hangNotification.expiration", 1000]);
+add_task(async function hangGoesAwayTest() {
+  await pushPrefs(["browser.hangNotification.expiration", 1000]);
 
   let promise = promiseNotificationShown(window, "process-hang");
   Services.obs.notifyObservers(gTestHangReport, "process-hang-report");
-  yield promise;
+  await promise;
 
   promise = promiseReportCallMade(gTestHangReport.TEST_CALLBACK_CANCELED);
   Services.obs.notifyObservers(gTestHangReport, "clear-hang-report");
-  yield promise;
+  await promise;
 
-  yield popPrefs();
+  await popPrefs();
 });
 
 /**
@@ -165,10 +165,10 @@ add_task(function* hangGoesAwayTest() {
  * stop in response to a plugin hang.
  */
 
-add_task(function* terminatePluginTest() {
+add_task(async function terminatePluginTest() {
   let promise = promiseNotificationShown(window, "process-hang");
   Services.obs.notifyObservers(gTestHangReport, "process-hang-report");
-  let notification = yield promise;
+  let notification = await promise;
 
   let buttons = notification.currentNotification.getElementsByTagName("button");
   // Fails on aurora on-push builds, bug 1232204
@@ -178,5 +178,5 @@ add_task(function* terminatePluginTest() {
   gTestHangReport.hangType = gTestHangReport.PLUGIN_HANG;
   promise = promiseReportCallMade(gTestHangReport.TEST_CALLBACK_TERMPLUGIN);
   buttons[0].click();
-  yield promise;
+  await promise;
 });

@@ -9,7 +9,7 @@ const kButtonId = "test-registerToolbarNode-button";
 registerCleanupFunction(cleanup);
 
 // Registering a toolbar with defaultset attribute should work
-add_task(function*() {
+add_task(async function() {
   ok(CustomizableUI.inDefaultState, "Everything should be in its default state.");
   let btn = createDummyXULButton(kButtonId);
   let toolbar = document.createElement("toolbar");
@@ -31,7 +31,7 @@ add_task(function*() {
 
 // Registering a toolbar without a defaultset attribute should
 // wait for the registerArea call
-add_task(function*() {
+add_task(async function() {
   ok(CustomizableUI.inDefaultState, "Everything should be in its default state.");
   let btn = createDummyXULButton(kButtonId);
   let toolbar = document.createElement("toolbar");
@@ -53,8 +53,8 @@ add_task(function*() {
   btn.remove();
 });
 
-add_task(function* asyncCleanup() {
-  yield resetCustomization();
+add_task(async function asyncCleanup() {
+  await resetCustomization();
 });
 
 function cleanup() {

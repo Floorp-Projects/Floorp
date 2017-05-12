@@ -24,11 +24,6 @@ MessageRepeat.propTypes = {
 
 function MessageRepeat(props) {
   const { repeat } = props;
-
-  if (!repeat || repeat < 2) {
-    return null;
-  }
-
   return dom.span({
     className: "message-repeats",
     title: PluralForm.get(repeat, messageRepeatsTooltip).replace("#1", repeat)

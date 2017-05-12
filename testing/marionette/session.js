@@ -245,7 +245,7 @@ session.Capabilities = class extends Map {
       throw new TypeError();
     }
 
-    return super.set(key, value);  
+    return super.set(key, value);
   }
 
   toString() { return "[object session.Capabilities]"; }
@@ -357,11 +357,18 @@ session.Capabilities = class extends Map {
           break;
 
         case "pageLoadStrategy":
-          if (Object.values(session.PageLoadStrategy).includes(v)) {
-            matched.set("pageLoadStrategy", v);
+          if (v === null) {
+            matched.set("pageLoadStrategy", session.PageLoadStrategy.Normal);
           } else {
-            throw new TypeError("Unknown page load strategy: " + v);
+            assert.string(v);
+
+            if (Object.values(session.PageLoadStrategy).includes(v)) {
+              matched.set("pageLoadStrategy", v);
+            } else {
+              throw new InvalidArgumentError("Unknown page load strategy: " + v);
+            }
           }
+
           break;
 
         case "proxy":

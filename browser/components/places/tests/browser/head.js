@@ -151,13 +151,13 @@ function synthesizeClickOnSelectedTreeCell(aTree, aOptions) {
  * @rejects JavaScript exception.
  */
 function promiseIsURIVisited(aURI) {
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  PlacesUtils.asyncHistory.isURIVisited(aURI, function(unused, aIsVisited) {
-    deferred.resolve(aIsVisited);
+    PlacesUtils.asyncHistory.isURIVisited(aURI, function(unused, aIsVisited) {
+      resolve(aIsVisited);
+    });
+
   });
-
-  return deferred.promise;
 }
 
 function promiseBookmarksNotification(notification, conditionFn) {
@@ -281,7 +281,7 @@ function isToolbarVisible(aToolbar) {
  * @param task
  *        the task to execute once the dialog is open
  */
-var withBookmarksDialog = Task.async(function* (autoCancel, openFn, taskFn) {
+var withBookmarksDialog = async function(autoCancel, openFn, taskFn) {
   let closed = false;
   let dialogPromise = new Promise(resolve => {
     Services.ww.registerNotification(function winObserver(subject, topic, data) {
@@ -307,11 +307,11 @@ var withBookmarksDialog = Task.async(function* (autoCancel, openFn, taskFn) {
   executeSoon(openFn);
 
   info("withBookmarksDialog: waiting for the dialog");
-  let dialogWin = yield dialogPromise;
+  let dialogWin = await dialogPromise;
 
   // Ensure overlay is loaded
   info("waiting for the overlay to be loaded");
-  yield waitForCondition(() => dialogWin.gEditItemOverlay.initialized,
+  await waitForCondition(() => dialogWin.gEditItemOverlay.initialized,
                          "EditItemOverlay should be initialized");
 
   // Check the first textbox is focused.
@@ -319,13 +319,13 @@ var withBookmarksDialog = Task.async(function* (autoCancel, openFn, taskFn) {
   let elt = doc.querySelector("textbox:not([collapsed=true])");
   if (elt) {
     info("waiting for focus on the first textfield");
-    yield waitForCondition(() => doc.activeElement == elt.inputField,
+    await waitForCondition(() => doc.activeElement == elt.inputField,
                            "The first non collapsed textbox should have been focused");
   }
 
   info("withBookmarksDialog: executing the task");
   try {
-    yield taskFn(dialogWin);
+    await taskFn(dialogWin);
   } finally {
     if (!closed) {
       if (!autoCancel) {
@@ -335,7 +335,7 @@ var withBookmarksDialog = Task.async(function* (autoCancel, openFn, taskFn) {
       doc.documentElement.cancelDialog();
     }
   }
-});
+};
 
 /**
  * Opens the contextual menu on the element pointed by the given selector.
@@ -346,11 +346,11 @@ var withBookmarksDialog = Task.async(function* (autoCancel, openFn, taskFn) {
  *         Returns a Promise that resolves once the context menu has been
  *         opened.
  */
-var openContextMenuForContentSelector = Task.async(function* (browser, selector) {
+var openContextMenuForContentSelector = async function(browser, selector) {
   info("wait for the context menu");
   let contextPromise = BrowserTestUtils.waitForEvent(document.getElementById("contentAreaContextMenu"),
                                                      "popupshown");
-  yield ContentTask.spawn(browser, { selector }, function* (args) {
+  await ContentTask.spawn(browser, { selector }, async function(args) {
     let doc = content.document;
     let elt = doc.querySelector(args.selector)
     dump(`openContextMenuForContentSelector: found ${elt}\n`);
@@ -365,8 +365,8 @@ var openContextMenuForContentSelector = Task.async(function* (browser, selector)
     domWindowUtils.sendMouseEvent("contextmenu", left, top, 2,
                                   1, 0, false, 0, 0, true);
   });
-  yield contextPromise;
-});
+  await contextPromise;
+};
 
 /**
  * Waits for a specified condition to happen.
@@ -378,11 +378,11 @@ var openContextMenuForContentSelector = Task.async(function* (browser, selector)
  *        Error message to use if the condition has not been satisfied after a
  *        meaningful amount of tries.
  */
-var waitForCondition = Task.async(function* (conditionFn, errorMsg) {
+var waitForCondition = async function(conditionFn, errorMsg) {
   for (let tries = 0; tries < 100; ++tries) {
-    if ((yield conditionFn()))
+    if ((await conditionFn()))
       return;
-    yield new Promise(resolve => {
+    await new Promise(resolve => {
       if (!waitForCondition._timers) {
         waitForCondition._timers = new Set();
         registerCleanupFunction(() => {
@@ -399,7 +399,7 @@ var waitForCondition = Task.async(function* (conditionFn, errorMsg) {
     });
   }
   ok(false, errorMsg);
-});
+};
 
 /**
  * Fills a bookmarks dialog text field ensuring to cause expected edit events.
@@ -434,7 +434,7 @@ function fillBookmarkTextField(id, text, win, blur = true) {
  *        The task to execute once the sidebar is ready. Will get the Places
  *        tree view as input.
  */
-var withSidebarTree = Task.async(function* (type, taskFn) {
+var withSidebarTree = async function(type, taskFn) {
   let sidebar = document.getElementById("sidebar");
   info("withSidebarTree: waiting sidebar load");
   let sidebarLoadedPromise = new Promise(resolve => {
@@ -445,7 +445,7 @@ var withSidebarTree = Task.async(function* (type, taskFn) {
   let sidebarId = type == "bookmarks" ? "viewBookmarksSidebar"
                                       : "viewHistorySidebar";
   SidebarUI.show(sidebarId);
-  yield sidebarLoadedPromise;
+  await sidebarLoadedPromise;
 
   let treeId = type == "bookmarks" ? "bookmarks-view"
                                    : "historyTree";
@@ -454,8 +454,8 @@ var withSidebarTree = Task.async(function* (type, taskFn) {
   // Need to executeSoon since the tree is initialized on sidebar load.
   info("withSidebarTree: executing the task");
   try {
-    yield taskFn(tree);
+    await taskFn(tree);
   } finally {
     SidebarUI.hide();
   }
-});
+};

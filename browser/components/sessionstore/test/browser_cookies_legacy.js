@@ -40,7 +40,7 @@ function waitForNewCookie({host, name, value}) {
 }
 
 // Setup and cleanup.
-add_task(function* test_setup() {
+add_task(async function test_setup() {
   Services.cookies.removeAll();
 
   registerCleanupFunction(() => {
@@ -50,22 +50,22 @@ add_task(function* test_setup() {
 
 // Test that calling ss.setWindowState() with a legacy state object that
 // contains cookies in the window state restores session cookies properly.
-add_task(function* test_window() {
+add_task(async function test_window() {
   let [state, cookie] = createTestState();
-  let win = yield promiseNewWindowLoaded();
+  let win = await promiseNewWindowLoaded();
 
   let promiseCookie = waitForNewCookie(cookie);
   ss.setWindowState(win, JSON.stringify(state), true);
-  yield promiseCookie;
+  await promiseCookie;
 
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 });
 
 // Test that calling ss.setBrowserState() with a legacy state object that
 // contains cookies in the window state restores session cookies properly.
-add_task(function* test_browser() {
+add_task(async function test_browser() {
   let backupState = ss.getBrowserState();
   let [state, cookie] = createTestState();
-  yield Promise.all([waitForNewCookie(cookie), promiseBrowserState(state)]);
-  yield promiseBrowserState(backupState);
+  await Promise.all([waitForNewCookie(cookie), promiseBrowserState(state)]);
+  await promiseBrowserState(backupState);
 });

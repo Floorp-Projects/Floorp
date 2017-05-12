@@ -8,13 +8,14 @@
 #ifndef SkBlitter_DEFINED
 #define SkBlitter_DEFINED
 
+#include "SkAutoMalloc.h"
 #include "SkBitmapProcShader.h"
 #include "SkColor.h"
 #include "SkRect.h"
 #include "SkRegion.h"
 #include "SkShader.h"
-#include "SkTypes.h"
 
+class SkArenaAlloc;
 class SkMatrix;
 class SkPaint;
 class SkPixmap;
@@ -108,12 +109,6 @@ public:
     virtual bool isNullBlitter() const;
 
     /**
-     *  Special methods for SkShaderBlitter. On all other classes this is a no-op.
-     */
-    virtual bool resetShaderContext(const SkShader::ContextRec&);
-    virtual SkShader::Context* getShaderContext() const;
-
-    /**
      * Special methods for blitters that can blit more than one row at a time.
      * This function returns the number of rows that this blitter could optimally
      * process at a time. It is still required to support blitting one scanline
@@ -143,14 +138,14 @@ public:
     static SkBlitter* Choose(const SkPixmap& dst,
                              const SkMatrix& matrix,
                              const SkPaint& paint,
-                             SkTBlitterAllocator*,
+                             SkArenaAlloc*,
                              bool drawCoverage = false);
 
     static SkBlitter* ChooseSprite(const SkPixmap& dst,
                                    const SkPaint&,
                                    const SkPixmap& src,
                                    int left, int top,
-                                   SkTBlitterAllocator*);
+                                   SkArenaAlloc*);
     ///@}
 
     static SkShader::ContextRec::DstType PreferredShaderDest(const SkImageInfo&);
@@ -239,6 +234,41 @@ private:
     SkBlitter*      fBlitter;
     const SkRegion* fRgn;
 };
+
+#ifdef SK_DEBUG
+class SkRectClipCheckBlitter : public SkBlitter {
+public:
+    void init(SkBlitter* blitter, const SkIRect& clipRect) {
+        SkASSERT(blitter);
+        SkASSERT(!clipRect.isEmpty());
+        fBlitter = blitter;
+        fClipRect = clipRect;
+    }
+
+    void blitH(int x, int y, int width) override;
+    void blitAntiH(int x, int y, const SkAlpha[], const int16_t runs[]) override;
+    void blitV(int x, int y, int height, SkAlpha alpha) override;
+    void blitRect(int x, int y, int width, int height) override;
+    void blitAntiRect(int x, int y, int width, int height,
+                              SkAlpha leftAlpha, SkAlpha rightAlpha) override;
+    void blitMask(const SkMask&, const SkIRect& clip) override;
+    const SkPixmap* justAnOpaqueColor(uint32_t* value) override;
+    void blitAntiH2(int x, int y, U8CPU a0, U8CPU a1) override;
+    void blitAntiV2(int x, int y, U8CPU a0, U8CPU a1) override;
+
+    int requestRowsPreserved() const override {
+        return fBlitter->requestRowsPreserved();
+    }
+
+    void* allocBlitMemory(size_t sz) override {
+        return fBlitter->allocBlitMemory(sz);
+    }
+
+private:
+    SkBlitter*  fBlitter;
+    SkIRect     fClipRect;
+};
+#endif
 
 /** Factory to set up the appropriate most-efficient wrapper blitter
     to apply a clip. Returns a pointer to a member, so lifetime must

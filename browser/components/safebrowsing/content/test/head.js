@@ -2,8 +2,6 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
   "resource://gre/modules/Promise.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-  "resource://gre/modules/Task.jsm");
 
 // This url must sync with the table, url in SafeBrowsing.jsm addMozEntries
 const PHISH_TABLE = "test-phish-simple";

@@ -37,6 +37,7 @@ class DebugFrame;
 class DebugState;
 class Instance;
 class SigIdDesc;
+struct Frame;
 struct FuncOffsets;
 struct CallableOffsets;
 
@@ -58,8 +59,9 @@ class FrameIterator
     const Code* code_;
     const CallSite* callsite_;
     const CodeRange* codeRange_;
-    uint8_t* fp_;
+    Frame* fp_;
     Unwind unwind_;
+    void** unwoundAddressOfReturnAddress_;
 
     void popFrame();
 
@@ -75,6 +77,7 @@ class FrameIterator
     unsigned lineOrBytecode() const;
     const CodeRange* codeRange() const { return codeRange_; }
     Instance* instance() const;
+    void** unwoundAddressOfReturnAddress() const;
     bool debugEnabled() const;
     DebugFrame* debugFrame() const;
     const CallSite* debugTrapCallsite() const;
@@ -140,7 +143,7 @@ class ProfilingFrameIterator
     const WasmActivation* activation_;
     const Code* code_;
     const CodeRange* codeRange_;
-    void* callerFP_;
+    Frame* callerFP_;
     void* callerPC_;
     void* stackAddress_;
     ExitReason exitReason_;
@@ -183,6 +186,16 @@ TraceActivations(JSContext* cx, const CooperatingContext& target, JSTracer* trc)
 
 Instance*
 LookupFaultingInstance(WasmActivation* activation, void* pc, void* fp);
+
+// If the innermost (active) Activation is a WasmActivation, return it.
+
+WasmActivation*
+MaybeActiveActivation(JSContext* cx);
+
+// Return whether the given PC is in wasm code.
+
+bool
+InCompiledCode(void* pc);
 
 } // namespace wasm
 } // namespace js

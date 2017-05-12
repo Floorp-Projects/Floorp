@@ -30,13 +30,13 @@ function validateTheme(backgroundImage, accentColor, textColor) {
     "Expected correct text color");
 }
 
-add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
     set: [["extensions.webextensions.themes.enabled", true]],
   });
 });
 
-add_task(function* test_dynamic_theme_updates() {
+add_task(async function test_dynamic_theme_updates() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["theme"],
@@ -57,7 +57,7 @@ add_task(function* test_dynamic_theme_updates() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
   extension.sendMessage("update-theme", {
     "images": {
@@ -69,7 +69,7 @@ add_task(function* test_dynamic_theme_updates() {
     },
   });
 
-  yield extension.awaitMessage("theme-updated");
+  await extension.awaitMessage("theme-updated");
 
   validateTheme("image1.png", ACCENT_COLOR_1, TEXT_COLOR_1);
 
@@ -83,11 +83,11 @@ add_task(function* test_dynamic_theme_updates() {
     },
   });
 
-  yield extension.awaitMessage("theme-updated");
+  await extension.awaitMessage("theme-updated");
 
   validateTheme("image2.png", ACCENT_COLOR_2, TEXT_COLOR_2);
 
-  yield extension.unload();
+  await extension.unload();
 
   let docEl = window.document.documentElement;
   Assert.ok(!docEl.hasAttribute("lwtheme"), "LWT attribute should not be set");

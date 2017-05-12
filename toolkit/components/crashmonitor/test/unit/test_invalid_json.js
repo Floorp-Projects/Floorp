@@ -6,13 +6,13 @@
 /**
  * Test with sessionCheckpoints.json containing invalid JSON data
  */
-add_task(function* test_invalid_file() {
+add_task(async function test_invalid_file() {
   // Write bogus data to checkpoint file
   let data = "[}";
-  yield OS.File.writeAtomic(sessionCheckpointsPath, data,
+  await OS.File.writeAtomic(sessionCheckpointsPath, data,
                             {tmpPath: sessionCheckpointsPath + ".tmp"});
 
   CrashMonitor.init();
-  let checkpoints = yield CrashMonitor.previousCheckpoints;
+  let checkpoints = await CrashMonitor.previousCheckpoints;
   do_check_eq(checkpoints, null);
 });

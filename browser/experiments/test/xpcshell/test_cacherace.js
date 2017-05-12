@@ -22,9 +22,9 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_setup() {
+add_task(async function test_setup() {
   loadAddonManager();
-  yield removeCacheFile();
+  await removeCacheFile();
 
   gHttpServer = new HttpServer();
   gHttpServer.start(-1);
@@ -94,7 +94,7 @@ add_task(function* test_setup() {
   Assert.strictEqual(ExperimentsScope.gExperiments, null);
   ExperimentsScope.gExperiments = experiments;
 
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   let active = experiments._getActiveExperiment();
   Assert.ok(active);
   Assert.equal(active.branch, "racy-set");

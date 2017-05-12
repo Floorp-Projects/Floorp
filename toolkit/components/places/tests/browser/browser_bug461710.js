@@ -3,19 +3,19 @@ const kBlue = "rgb(0, 0, 255)";
 
 const prefix = "http://example.com/tests/toolkit/components/places/tests/browser/461710_";
 
-add_task(function* () {
+add_task(async function() {
   let contentPage = prefix + "iframe.html";
-  let normalWindow = yield BrowserTestUtils.openNewBrowserWindow();
+  let normalWindow = await BrowserTestUtils.openNewBrowserWindow();
 
   let browser = normalWindow.gBrowser.selectedBrowser;
   BrowserTestUtils.loadURI(browser, contentPage);
-  yield BrowserTestUtils.browserLoaded(browser, contentPage);
+  await BrowserTestUtils.browserLoaded(browser, contentPage);
 
-  let privateWindow = yield BrowserTestUtils.openNewBrowserWindow({private: true});
+  let privateWindow = await BrowserTestUtils.openNewBrowserWindow({private: true});
 
   browser = privateWindow.gBrowser.selectedBrowser;
   BrowserTestUtils.loadURI(browser, contentPage);
-  yield BrowserTestUtils.browserLoaded(browser, contentPage);
+  await BrowserTestUtils.browserLoaded(browser, contentPage);
 
   let tests = [{
     win: normalWindow,
@@ -52,17 +52,17 @@ add_task(function* () {
         }
       }, test.topic);
     });
-    ContentTask.spawn(test.win.gBrowser.selectedBrowser, prefix + test.subtest, function* (aSrc) {
+    ContentTask.spawn(test.win.gBrowser.selectedBrowser, prefix + test.subtest, async function(aSrc) {
       content.document.getElementById("iframe").src = aSrc;
     });
-    yield promise;
+    await promise;
 
     if (test.color) {
       // In e10s waiting for visited-status-resolution is not enough to ensure links
       // have been updated, because it only tells us that messages to update links
       // have been dispatched. We must still wait for the actual links to update.
-      yield BrowserTestUtils.waitForCondition(function* () {
-        let color = yield ContentTask.spawn(test.win.gBrowser.selectedBrowser, null, function* () {
+      await BrowserTestUtils.waitForCondition(async function() {
+        let color = await ContentTask.spawn(test.win.gBrowser.selectedBrowser, null, async function() {
           let iframe = content.document.getElementById("iframe");
           let elem = iframe.contentDocument.getElementById("link");
           return content.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -77,6 +77,6 @@ add_task(function* () {
     }
   }
 
-  yield BrowserTestUtils.closeWindow(normalWindow);
-  yield BrowserTestUtils.closeWindow(privateWindow);
+  await BrowserTestUtils.closeWindow(normalWindow);
+  await BrowserTestUtils.closeWindow(privateWindow);
 });

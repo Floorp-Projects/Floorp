@@ -120,13 +120,13 @@ try {
   do_throw("Could not get history service\n");
 }
 
-function* task_setCountDate(aURI, aCount, aDate) {
+async function task_setCountDate(aURI, aCount, aDate) {
   // We need visits so that frecency can be computed over multiple visits
   let visits = [];
   for (let i = 0; i < aCount; i++) {
     visits.push({ uri: aURI, visitDate: aDate, transition: TRANSITION_TYPED });
   }
-  yield PlacesTestUtils.addVisits(visits);
+  await PlacesTestUtils.addVisits(visits);
 }
 
 function setBookmark(aURI) {
@@ -154,103 +154,103 @@ var c2 = 1;
 
 var tests = [
 // test things without a search term
-function*() {
+async function() {
   print("TEST-INFO | Test 0: same count, different date");
-  yield task_setCountDate(uri1, c1, d1);
-  yield task_setCountDate(uri2, c1, d2);
+  await task_setCountDate(uri1, c1, d1);
+  await task_setCountDate(uri2, c1, d2);
   tagURI(uri1, ["site"]);
   ensure_results([uri1, uri2], "");
 },
-function*() {
+async function() {
   print("TEST-INFO | Test 1: same count, different date");
-  yield task_setCountDate(uri1, c1, d2);
-  yield task_setCountDate(uri2, c1, d1);
+  await task_setCountDate(uri1, c1, d2);
+  await task_setCountDate(uri2, c1, d1);
   tagURI(uri1, ["site"]);
   ensure_results([uri2, uri1], "");
 },
-function*() {
+async function() {
   print("TEST-INFO | Test 2: different count, same date");
-  yield task_setCountDate(uri1, c1, d1);
-  yield task_setCountDate(uri2, c2, d1);
+  await task_setCountDate(uri1, c1, d1);
+  await task_setCountDate(uri2, c2, d1);
   tagURI(uri1, ["site"]);
   ensure_results([uri1, uri2], "");
 },
-function*() {
+async function() {
   print("TEST-INFO | Test 3: different count, same date");
-  yield task_setCountDate(uri1, c2, d1);
-  yield task_setCountDate(uri2, c1, d1);
+  await task_setCountDate(uri1, c2, d1);
+  await task_setCountDate(uri2, c1, d1);
   tagURI(uri1, ["site"]);
   ensure_results([uri2, uri1], "");
 },
 
 // test things with a search term
-function*() {
+async function() {
   print("TEST-INFO | Test 4: same count, different date");
-  yield task_setCountDate(uri1, c1, d1);
-  yield task_setCountDate(uri2, c1, d2);
+  await task_setCountDate(uri1, c1, d1);
+  await task_setCountDate(uri2, c1, d2);
   tagURI(uri1, ["site"]);
   ensure_results([uri1, uri2], "site");
 },
-function*() {
+async function() {
   print("TEST-INFO | Test 5: same count, different date");
-  yield task_setCountDate(uri1, c1, d2);
-  yield task_setCountDate(uri2, c1, d1);
+  await task_setCountDate(uri1, c1, d2);
+  await task_setCountDate(uri2, c1, d1);
   tagURI(uri1, ["site"]);
   ensure_results([uri2, uri1], "site");
 },
-function*() {
+async function() {
   print("TEST-INFO | Test 6: different count, same date");
-  yield task_setCountDate(uri1, c1, d1);
-  yield task_setCountDate(uri2, c2, d1);
+  await task_setCountDate(uri1, c1, d1);
+  await task_setCountDate(uri2, c2, d1);
   tagURI(uri1, ["site"]);
   ensure_results([uri1, uri2], "site");
 },
-function*() {
+async function() {
   print("TEST-INFO | Test 7: different count, same date");
-  yield task_setCountDate(uri1, c2, d1);
-  yield task_setCountDate(uri2, c1, d1);
+  await task_setCountDate(uri1, c2, d1);
+  await task_setCountDate(uri2, c1, d1);
   tagURI(uri1, ["site"]);
   ensure_results([uri2, uri1], "site");
 },
 // There are multiple tests for 8, hence the multiple functions
 // Bug 426166 section
-function*() {
+function() {
   print("TEST-INFO | Test 8.1a: same count, same date");
   setBookmark(uri3);
   setBookmark(uri4);
   ensure_results([uri4, uri3], "a");
 },
-function*() {
+function() {
   print("TEST-INFO | Test 8.1b: same count, same date");
   setBookmark(uri3);
   setBookmark(uri4);
   ensure_results([uri4, uri3], "aa");
 },
-function*() {
+function() {
   print("TEST-INFO | Test 8.2: same count, same date");
   setBookmark(uri3);
   setBookmark(uri4);
   ensure_results([uri4, uri3], "aaa");
 },
-function*() {
+function() {
   print("TEST-INFO | Test 8.3: same count, same date");
   setBookmark(uri3);
   setBookmark(uri4);
   ensure_results([uri4, uri3], "aaaa");
 },
-function*() {
+function() {
   print("TEST-INFO | Test 8.4: same count, same date");
   setBookmark(uri3);
   setBookmark(uri4);
   ensure_results([uri4, uri3], "aaa");
 },
-function*() {
+function() {
   print("TEST-INFO | Test 8.5: same count, same date");
   setBookmark(uri3);
   setBookmark(uri4);
   ensure_results([uri4, uri3], "aa");
 },
-function*() {
+function() {
   print("TEST-INFO | Test 8.6: same count, same date");
   setBookmark(uri3);
   setBookmark(uri4);
@@ -264,7 +264,7 @@ function*() {
  */
 var deferEnsureResults;
 
-add_task(function* test_frecency() {
+add_task(async function test_frecency() {
   // Disable autoFill for this test.
   Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
   do_register_cleanup(() => Services.prefs.clearUserPref("browser.urlbar.autoFill"));
@@ -276,12 +276,12 @@ add_task(function* test_frecency() {
   prefs.setBoolPref("browser.urlbar.suggest.bookmark", true);
   prefs.setBoolPref("browser.urlbar.suggest.openpage", false);
   for (let test of tests) {
-    yield PlacesUtils.bookmarks.eraseEverything();
-    yield PlacesTestUtils.clearHistory();
+    await PlacesUtils.bookmarks.eraseEverything();
+    await PlacesTestUtils.clearHistory();
 
     deferEnsureResults = Promise.defer();
-    yield test();
-    yield deferEnsureResults.promise;
+    await test();
+    await deferEnsureResults.promise;
   }
   for (let type of ["history", "bookmark", "openpage"]) {
     prefs.clearUserPref("browser.urlbar.suggest." + type);

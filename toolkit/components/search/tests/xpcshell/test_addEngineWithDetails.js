@@ -7,13 +7,13 @@ const kSearchEngineID = "addEngineWithDetails_test_engine";
 const kSearchEngineURL = "http://example.com/?search={searchTerms}";
 const kSearchTerm = "foo";
 
-add_task(function* test_addEngineWithDetails() {
+add_task(async function test_addEngineWithDetails() {
   do_check_false(Services.search.isInitialized);
 
   Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF)
           .setBoolPref("reset.enabled", true);
 
-  yield asyncInit();
+  await asyncInit();
 
   Services.search.addEngineWithDetails(kSearchEngineID, "", "", "", "get",
                                        kSearchEngineURL);

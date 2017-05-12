@@ -11,12 +11,12 @@
 <script>
 "use strict";
 
-add_task(function* test_geolocation_nopermission() {
+add_task(async function test_geolocation_nopermission() {
   let GEO_URL = "http://mochi.test:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs";
-  yield SpecialPowers.pushPrefEnv({"set": [["geo.wifi.uri", GEO_URL]]});
+  await SpecialPowers.pushPrefEnv({"set": [["geo.wifi.uri", GEO_URL]]});
 });
 
-add_task(function* test_geolocation() {
+add_task(async function test_geolocation() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: [
@@ -32,12 +32,12 @@ add_task(function* test_geolocation() {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish();
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish();
+  await extension.unload();
 });
 
-add_task(function* test_geolocation_nopermission() {
+add_task(async function test_geolocation_nopermission() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
       navigator.geolocation.getCurrentPosition(() => {
@@ -48,12 +48,12 @@ add_task(function* test_geolocation_nopermission() {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish();
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish();
+  await extension.unload();
 });
 
-add_task(function* test_geolocation_prompt() {
+add_task(async function test_geolocation_prompt() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
       browser.tabs.create({url: "tab.html"});
@@ -74,10 +74,10 @@ add_task(function* test_geolocation_prompt() {
   });
 
   // Bypass the actual prompt, but the prompt result is to allow access.
-  yield SpecialPowers.pushPrefEnv({"set": [["geo.prompt.testing", true], ["geo.prompt.testing.allow", true]]});
-  yield extension.startup();
-  yield extension.awaitFinish();
-  yield extension.unload();
+  await SpecialPowers.pushPrefEnv({"set": [["geo.prompt.testing", true], ["geo.prompt.testing.allow", true]]});
+  await extension.startup();
+  await extension.awaitFinish();
+  await extension.unload();
 });
 </script>
 </head>

@@ -222,6 +222,22 @@ GridInspector.prototype = {
     dispatch(updateShowInfiniteLines(showInfinteLines));
   },
 
+  showGridHighlighter(node, settings) {
+    this.lastHighlighterColor = settings.color;
+    this.lastHighlighterNode = node;
+    this.lastHighlighterState = true;
+
+    this.highlighters.showGridHighlighter(node, settings);
+  },
+
+  toggleGridHighlighter(node, settings) {
+    this.lastHighlighterColor = settings.color;
+    this.lastHighlighterNode = node;
+    this.lastHighlighterState = node !== this.highlighters.gridHighlighterShown;
+
+    this.highlighters.toggleGridHighlighter(node, settings);
+  },
+
   /**
    * Updates the grid panel by dispatching the new grid data. This is called when the
    * layout view becomes visible or the view needs to be updated with new grid data.
@@ -287,8 +303,22 @@ GridInspector.prototype = {
   onHighlighterChange(event, nodeFront, options) {
     let highlighted = event === "grid-highlighter-shown";
     let { color } = options;
-    this.store.dispatch(updateGridHighlighted(nodeFront, highlighted));
-    this.store.dispatch(updateGridColor(nodeFront, color));
+
+    // Only tell the store that the highlighter changed if it did change.
+    // If we're still highlighting the same node, with the same color, no need to force
+    // a refresh.
+    if (this.lastHighlighterState !== highlighted ||
+        this.lastHighlighterNode !== nodeFront) {
+      this.store.dispatch(updateGridHighlighted(nodeFront, highlighted));
+    }
+
+    if (this.lastHighlighterColor !== color || this.lastHighlighterNode !== nodeFront) {
+      this.store.dispatch(updateGridColor(nodeFront, color));
+    }
+
+    this.lastHighlighterColor = null;
+    this.lastHighlighterNode = null;
+    this.lastHighlighterState = null;
   },
 
   /**
@@ -325,7 +355,7 @@ GridInspector.prototype = {
     for (let grid of grids) {
       if (grid.nodeFront === node && grid.highlighted) {
         let highlighterSettings = this.getGridHighlighterSettings(node);
-        this.highlighters.showGridHighlighter(node, highlighterSettings);
+        this.showGridHighlighter(node, highlighterSettings);
       }
     }
   },
@@ -349,7 +379,9 @@ GridInspector.prototype = {
     highlighterSettings.showGridArea = gridAreaName;
     highlighterSettings.color = color;
 
-    this.highlighters.showGridHighlighter(node, highlighterSettings);
+    this.showGridHighlighter(node, highlighterSettings);
+
+    this.store.dispatch(updateGridHighlighted(node, true));
   },
 
   /**
@@ -377,7 +409,9 @@ GridInspector.prototype = {
     highlighterSettings.showGridCell = { gridFragmentIndex, rowNumber, columnNumber };
     highlighterSettings.color = color;
 
-    this.highlighters.showGridHighlighter(node, highlighterSettings);
+    this.showGridHighlighter(node, highlighterSettings);
+
+    this.store.dispatch(updateGridHighlighted(node, true));
   },
 
   /**
@@ -406,10 +440,11 @@ GridInspector.prototype = {
       lineNumber,
       type
     };
-
     highlighterSettings.color = color;
 
-    this.highlighters.showGridHighlighter(node, highlighterSettings);
+    this.showGridHighlighter(node, highlighterSettings);
+
+    this.store.dispatch(updateGridHighlighted(node, true));
   },
 
   /**
@@ -440,7 +475,10 @@ GridInspector.prototype = {
    */
   onToggleGridHighlighter(node) {
     let highlighterSettings = this.getGridHighlighterSettings(node);
-    this.highlighters.toggleGridHighlighter(node, highlighterSettings);
+    this.toggleGridHighlighter(node, highlighterSettings);
+
+    this.store.dispatch(updateGridHighlighted(node,
+      node !== this.highlighters.gridHighlighterShown));
   },
 
   /**
@@ -461,7 +499,7 @@ GridInspector.prototype = {
     for (let grid of grids) {
       if (grid.highlighted) {
         let highlighterSettings = this.getGridHighlighterSettings(grid.nodeFront);
-        this.highlighters.showGridHighlighter(grid.nodeFront, highlighterSettings);
+        this.showGridHighlighter(grid.nodeFront, highlighterSettings);
       }
     }
   },
@@ -484,7 +522,7 @@ GridInspector.prototype = {
     for (let grid of grids) {
       if (grid.highlighted) {
         let highlighterSettings = this.getGridHighlighterSettings(grid.nodeFront);
-        this.highlighters.showGridHighlighter(grid.nodeFront, highlighterSettings);
+        this.showGridHighlighter(grid.nodeFront, highlighterSettings);
       }
     }
   },

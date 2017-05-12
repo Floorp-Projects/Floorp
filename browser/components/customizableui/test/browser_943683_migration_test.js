@@ -14,7 +14,7 @@ var btn;
 var btn2;
 
 // Check we migrate normal stuff to the navbar
-add_task(function*() {
+add_task(async function() {
   btn = createDummyXULButton(kWidgetId, "Test");
   btn2 = createDummyXULButton(kWidgetId2, "Test2");
   addonbar.insertItem(btn.id);
@@ -29,7 +29,7 @@ add_task(function*() {
   is(migrationArray.length, 2, "Should have migrated 2 items");
   isnot(migrationArray.indexOf(kWidgetId2), -1, "Should have migrated our second item");
 
-  let otherWindow = yield openAndLoadWindow(undefined, true);
+  let otherWindow = await openAndLoadWindow(undefined, true);
   try {
     let addonBar = otherWindow.document.getElementById("addon-bar");
     let otherMigrationArray = addonBar.getMigratedItems();
@@ -42,7 +42,7 @@ add_task(function*() {
       }
     }
   } finally {
-    yield promiseWindowClosed(otherWindow);
+    await promiseWindowClosed(otherWindow);
   }
   btn.remove();
   btn2.remove();

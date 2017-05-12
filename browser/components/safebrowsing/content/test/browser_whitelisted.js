@@ -25,17 +25,17 @@ function testWhitelistedPage(window) {
   ok(!ignorewarning_button, "IgnoreWarning button not present");
 }
 
-add_task(function* testNormalBrowsing() {
+add_task(async function testNormalBrowsing() {
   tabbrowser = gBrowser;
   let tab = tabbrowser.selectedTab = tabbrowser.addTab();
 
   info("Load a test page that's whitelisted");
   Services.prefs.setCharPref(PREF_WHITELISTED_HOSTNAMES, "example.com,www.ItIsaTrap.org,example.net");
-  yield promiseTabLoadEvent(tab, TEST_PAGE, "load");
+  await promiseTabLoadEvent(tab, TEST_PAGE, "load");
   testWhitelistedPage(tab.ownerGlobal);
 
   info("Load a test page that's no longer whitelisted");
   Services.prefs.setCharPref(PREF_WHITELISTED_HOSTNAMES, "");
-  yield promiseTabLoadEvent(tab, TEST_PAGE, "AboutBlockedLoaded");
+  await promiseTabLoadEvent(tab, TEST_PAGE, "AboutBlockedLoaded");
   testBlockedPage(tab.ownerGlobal);
 });

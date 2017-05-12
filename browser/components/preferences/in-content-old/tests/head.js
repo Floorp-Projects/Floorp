@@ -129,24 +129,24 @@ function waitForEvent(aSubject, aEventName, aTimeoutMs, aTarget) {
 }
 
 function openPreferencesViaOpenPreferencesAPI(aPane, aAdvancedTab, aOptions) {
-  let deferred = Promise.defer();
-  gBrowser.selectedTab = gBrowser.addTab("about:blank");
-  openPreferences(aPane, aAdvancedTab ? {advancedTab: aAdvancedTab} : undefined);
-  let newTabBrowser = gBrowser.selectedBrowser;
+  return new Promise(resolve => {
+    gBrowser.selectedTab = gBrowser.addTab("about:blank");
+    openPreferences(aPane, aAdvancedTab ? {advancedTab: aAdvancedTab} : undefined);
+    let newTabBrowser = gBrowser.selectedBrowser;
 
-  newTabBrowser.addEventListener("Initialized", function() {
-    newTabBrowser.contentWindow.addEventListener("load", function() {
-      let win = gBrowser.contentWindow;
-      let selectedPane = win.history.state;
-      let doc = win.document;
-      let selectedAdvancedTab = aAdvancedTab && doc.getElementById("advancedPrefs").selectedTab.id;
-      if (!aOptions || !aOptions.leaveOpen)
-        gBrowser.removeCurrentTab();
-      deferred.resolve({selectedPane, selectedAdvancedTab});
-    }, {once: true});
-  }, {capture: true, once: true});
+    newTabBrowser.addEventListener("Initialized", function() {
+      newTabBrowser.contentWindow.addEventListener("load", function() {
+        let win = gBrowser.contentWindow;
+        let selectedPane = win.history.state;
+        let doc = win.document;
+        let selectedAdvancedTab = aAdvancedTab && doc.getElementById("advancedPrefs").selectedTab.id;
+        if (!aOptions || !aOptions.leaveOpen)
+          gBrowser.removeCurrentTab();
+        resolve({selectedPane, selectedAdvancedTab});
+      }, {once: true});
+    }, {capture: true, once: true});
 
-  return deferred.promise;
+  });
 }
 
 function waitForCondition(aConditionFn, aMaxTries = 50, aCheckInterval = 100) {

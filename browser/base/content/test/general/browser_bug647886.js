@@ -1,10 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-add_task(function* () {
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com");
+add_task(async function() {
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com");
 
-  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
+  await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
     content.history.pushState({}, "2", "2.html");
   });
 
@@ -16,12 +16,12 @@ add_task(function* () {
   let popupShownPromise = BrowserTestUtils.waitForEvent(backButton, "popupshown");
   EventUtils.synthesizeMouseAtCenter(backButton, {type: "mousedown"});
   EventUtils.synthesizeMouse(backButton, rect.width / 2, rect.height, {type: "mouseup"});
-  let event = yield popupShownPromise;
+  let event = await popupShownPromise;
 
   ok(true, "history menu opened");
 
   // Wait for the session data to be flushed before continuing the test
-  yield new Promise(resolve => SessionStore.getSessionHistory(gBrowser.selectedTab, resolve));
+  await new Promise(resolve => SessionStore.getSessionHistory(gBrowser.selectedTab, resolve));
 
   is(event.target.children.length, 2, "Two history items");
 

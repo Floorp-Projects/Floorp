@@ -32,9 +32,9 @@ function run_test() {
 }
 
 // Test that a basic update check returns the expected available updates
-add_task(function* () {
+add_task(async function() {
   for (let file of ["test_updatecheck.rdf", "test_updatecheck.json"]) {
-    let updates = yield checkUpdates("updatecheck1@tests.mozilla.org", null, file);
+    let updates = await checkUpdates("updatecheck1@tests.mozilla.org", null, file);
 
     equal(updates.length, 5);
     let update = AddonUpdateChecker.getNewestCompatibleUpdate(updates);
@@ -68,20 +68,20 @@ var updateKey = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDK426erD/H3XtsjvaB5+PJqbh
                 "NyeP6i4LuUYjTURnn7Yw/IgzyIJ2oKsYa32RuxAyteqAWqPT/J63wBixIeCxmysf" +
                 "awB/zH4KaPiY3vnrzQIDAQAB";
 
-add_task(function* () {
+add_task(async function() {
   for (let file of ["test_updatecheck.rdf", "test_updatecheck.json"]) {
     try {
-      yield checkUpdates("test_bug378216_5@tests.mozilla.org",
+      await checkUpdates("test_bug378216_5@tests.mozilla.org",
                          updateKey, file);
       throw "Expected the update check to fail";
     } catch (e) {}
   }
 });
 
-add_task(function* () {
+add_task(async function() {
   for (let file of ["test_updatecheck.rdf", "test_updatecheck.json"]) {
     try {
-      yield checkUpdates("test_bug378216_7@tests.mozilla.org",
+      await checkUpdates("test_bug378216_7@tests.mozilla.org",
                          updateKey, file);
 
       throw "Expected the update check to fail";
@@ -89,13 +89,13 @@ add_task(function* () {
   }
 });
 
-add_task(function* () {
+add_task(async function() {
   // Make sure that the JSON manifest is rejected when an update key is
   // required, but perform the remaining tests which aren't expected to fail
   // because of the update key, without requiring one for the JSON variant.
 
   try {
-    yield checkUpdates("test_bug378216_8@tests.mozilla.org",
+    await checkUpdates("test_bug378216_8@tests.mozilla.org",
                        updateKey, "test_updatecheck.json");
 
     throw "Expected the update check to fail";
@@ -103,17 +103,17 @@ add_task(function* () {
 
   for (let [file, key] of [["test_updatecheck.rdf", updateKey],
                            ["test_updatecheck.json", null]]) {
-    let updates = yield checkUpdates("test_bug378216_8@tests.mozilla.org",
+    let updates = await checkUpdates("test_bug378216_8@tests.mozilla.org",
                                      key, file);
     equal(updates.length, 1);
     ok(!("updateURL" in updates[0]));
   }
 });
 
-add_task(function* () {
+add_task(async function() {
   for (let [file, key] of [["test_updatecheck.rdf", updateKey],
                            ["test_updatecheck.json", null]]) {
-    let updates = yield checkUpdates("test_bug378216_9@tests.mozilla.org",
+    let updates = await checkUpdates("test_bug378216_9@tests.mozilla.org",
                                      key, file);
     equal(updates.length, 1);
     equal(updates[0].version, "2.0");
@@ -121,10 +121,10 @@ add_task(function* () {
   }
 });
 
-add_task(function* () {
+add_task(async function() {
   for (let [file, key] of [["test_updatecheck.rdf", updateKey],
                            ["test_updatecheck.json", null]]) {
-    let updates = yield checkUpdates("test_bug378216_10@tests.mozilla.org",
+    let updates = await checkUpdates("test_bug378216_10@tests.mozilla.org",
                                      key, file);
     equal(updates.length, 1);
     equal(updates[0].version, "2.0");
@@ -132,10 +132,10 @@ add_task(function* () {
   }
 });
 
-add_task(function* () {
+add_task(async function() {
   for (let [file, key] of [["test_updatecheck.rdf", updateKey],
                            ["test_updatecheck.json", null]]) {
-    let updates = yield checkUpdates("test_bug378216_11@tests.mozilla.org",
+    let updates = await checkUpdates("test_bug378216_11@tests.mozilla.org",
                                      key, file);
     equal(updates.length, 1);
     equal(updates[0].version, "2.0");
@@ -143,20 +143,20 @@ add_task(function* () {
   }
 });
 
-add_task(function* () {
+add_task(async function() {
   for (let [file, key] of [["test_updatecheck.rdf", updateKey],
                            ["test_updatecheck.json", null]]) {
-    let updates = yield checkUpdates("test_bug378216_12@tests.mozilla.org",
+    let updates = await checkUpdates("test_bug378216_12@tests.mozilla.org",
                                      key, file);
     equal(updates.length, 1);
     do_check_false("updateURL" in updates[0]);
   }
 });
 
-add_task(function* () {
+add_task(async function() {
   for (let [file, key] of [["test_updatecheck.rdf", updateKey],
                            ["test_updatecheck.json", null]]) {
-    let updates = yield checkUpdates("test_bug378216_13@tests.mozilla.org",
+    let updates = await checkUpdates("test_bug378216_13@tests.mozilla.org",
                                      key, file);
     equal(updates.length, 1);
     equal(updates[0].version, "2.0");
@@ -164,18 +164,18 @@ add_task(function* () {
   }
 });
 
-add_task(function* () {
+add_task(async function() {
   for (let file of ["test_updatecheck.rdf", "test_updatecheck.json"]) {
-    let updates = yield checkUpdates("test_bug378216_14@tests.mozilla.org",
+    let updates = await checkUpdates("test_bug378216_14@tests.mozilla.org",
                                      null, file);
     equal(updates.length, 0);
   }
 });
 
-add_task(function* () {
+add_task(async function() {
   for (let file of ["test_updatecheck.rdf", "test_updatecheck.json"]) {
     try {
-      yield checkUpdates("test_bug378216_15@tests.mozilla.org",
+      await checkUpdates("test_bug378216_15@tests.mozilla.org",
                          null, file);
 
       throw "Update check should have failed";
@@ -185,9 +185,9 @@ add_task(function* () {
   }
 });
 
-add_task(function* () {
+add_task(async function() {
   for (let file of ["test_updatecheck.rdf", "test_updatecheck.json"]) {
-    let updates = yield checkUpdates("ignore-compat@tests.mozilla.org",
+    let updates = await checkUpdates("ignore-compat@tests.mozilla.org",
                                      null, file);
     equal(updates.length, 3);
     let update = AddonUpdateChecker.getNewestCompatibleUpdate(
@@ -197,9 +197,9 @@ add_task(function* () {
   }
 });
 
-add_task(function* () {
+add_task(async function() {
   for (let file of ["test_updatecheck.rdf", "test_updatecheck.json"]) {
-    let updates = yield checkUpdates("compat-override@tests.mozilla.org",
+    let updates = await checkUpdates("compat-override@tests.mozilla.org",
                                      null, file);
     equal(updates.length, 3);
     let overrides = [{
@@ -224,9 +224,9 @@ add_task(function* () {
   }
 });
 
-add_task(function* () {
+add_task(async function() {
   for (let file of ["test_updatecheck.rdf", "test_updatecheck.json"]) {
-    let updates = yield checkUpdates("compat-strict-optin@tests.mozilla.org",
+    let updates = await checkUpdates("compat-strict-optin@tests.mozilla.org",
                                      null, file);
     equal(updates.length, 1);
     let update = AddonUpdateChecker.getNewestCompatibleUpdate(

@@ -27,11 +27,12 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "event2/event-config.h"
+#include "evconfig-private.h"
 
-#define _GNU_SOURCE
+#ifdef EVENT__HAVE_KQUEUE
 
 #include <sys/types.h>
-#ifdef _EVENT_HAVE_SYS_TIME_H
+#ifdef EVENT__HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
 #include <sys/queue.h>
@@ -42,14 +43,14 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
-#ifdef _EVENT_HAVE_INTTYPES_H
+#ifdef EVENT__HAVE_INTTYPES_H
 #include <inttypes.h>
 #endif
 
 /* Some platforms apparently define the udata field of struct kevent as
  * intptr_t, whereas others define it as void*.  There doesn't seem to be an
  * easy way to tell them apart via autoconf, so we need to use OS macros. */
-#if defined(_EVENT_HAVE_INTTYPES_H) && !defined(__OpenBSD__) && !defined(__FreeBSD__) && !defined(__darwin__) && !defined(__APPLE__)
+#if defined(EVENT__HAVE_INTTYPES_H) && !defined(__OpenBSD__) && !defined(__FreeBSD__) && !defined(__darwin__) && !defined(__APPLE__) && !defined(__CloudABI__)
 #define PTR_TO_UDATA(x)	((intptr_t)(x))
 #define INT_TO_UDATA(x) ((intptr_t)(x))
 #else
@@ -64,6 +65,8 @@
 #include "evthread-internal.h"
 #include "changelist-internal.h"
 
+#include "kqueue-internal.h"
+
 #define NEVENT		64
 
 struct kqop {
@@ -73,6 +76,7 @@ struct kqop {
 	struct kevent *events;
 	int events_size;
 	int kq;
+	int notify_event_added;
 	pid_t pid;
 };
 
@@ -87,8 +91,8 @@ static void kq_dealloc(struct event_base *);
 const struct eventop kqops = {
 	"kqueue",
 	kq_init,
-	event_changelist_add,
-	event_changelist_del,
+	event_changelist_add_,
+	event_changelist_del_,
 	kq_dispatch,
 	kq_dealloc,
 	1 /* need reinit */,
@@ -256,7 +260,8 @@ kq_dispatch(struct event_base *base, struct timeval *tv)
 	int i, n_changes, res;
 
 	if (tv != NULL) {
-		TIMEVAL_TO_TIMESPEC(tv, &ts);
+		ts.tv_sec = tv->tv_sec;
+		ts.tv_nsec = tv->tv_usec * 1000;
 		ts_p = &ts;
 	}
 
@@ -266,7 +271,7 @@ kq_dispatch(struct event_base *base, struct timeval *tv)
 	if (n_changes < 0)
 		return -1;
 
-	event_changelist_remove_all(&base->changelist, base);
+	event_changelist_remove_all_(&base->changelist, base);
 
 	/* steal the changes array in case some broken code tries to call
 	 * dispatch twice at once. */
@@ -328,6 +333,23 @@ kq_dispatch(struct event_base *base, struct timeval *tv)
 			 * on FreeBSD. */
 			case EINVAL:
 				continue;
+#if defined(__FreeBSD__)
+			/*
+			 * This currently occurs if an FD is closed
+			 * before the EV_DELETE makes it out via kevent().
+			 * The FreeBSD capabilities code sees the blank
+			 * capability set and rejects the request to
+			 * modify an event.
+			 *
+			 * To be strictly correct - when an FD is closed,
+			 * all the registered events are also removed.
+			 * Queuing EV_DELETE to a closed FD is wrong.
+			 * The event(s) should just be deleted from
+			 * the pending changelist.
+			 */
+			case ENOTCAPABLE:
+				continue;
+#endif
 
 			/* Can occur on a delete if the fd is closed. */
 			case EBADF:
@@ -368,15 +390,19 @@ kq_dispatch(struct event_base *base, struct timeval *tv)
 			which |= EV_WRITE;
 		} else if (events[i].filter == EVFILT_SIGNAL) {
 			which |= EV_SIGNAL;
+#ifdef EVFILT_USER
+		} else if (events[i].filter == EVFILT_USER) {
+			base->is_notify_pending = 0;
+#endif
 		}
 
 		if (!which)
 			continue;
 
 		if (events[i].filter == EVFILT_SIGNAL) {
-			evmap_signal_active(base, events[i].ident, 1);
+			evmap_signal_active_(base, events[i].ident, 1);
 		} else {
-			evmap_io_active(base, events[i].ident, which | EV_ET);
+			evmap_io_active_(base, events[i].ident, which | EV_ET);
 		}
 	}
 
@@ -406,7 +432,7 @@ static void
 kq_dealloc(struct event_base *base)
 {
 	struct kqop *kqop = base->evbase;
-	evsig_dealloc(base);
+	evsig_dealloc_(base);
 	kqop_free(kqop);
 }
 
@@ -432,17 +458,14 @@ kq_sig_add(struct event_base *base, int nsignal, short old, short events, void *
 	if (kevent(kqop->kq, &kev, 1, NULL, 0, &timeout) == -1)
 		return (-1);
 
-	/* Backported from
-	 * https://github.com/nmathewson/Libevent/commit/148458e0a1fd25e167aa2ef229d1c9a70b27c3e9 */
-	/* We can set the handler for most signals to SIG_IGN and
-	 * still have them reported to us in the queue.  However,
-	 * if the handler for SIGCHLD is SIG_IGN, the system reaps
-	 * zombie processes for us, and we don't get any notification.
-	 * This appears to be the only signal with this quirk. */
-	if (_evsig_set_handler(base, nsignal,
-	                       nsignal == SIGCHLD ? SIG_DFL : SIG_IGN) == -1) {
+        /* We can set the handler for most signals to SIG_IGN and
+         * still have them reported to us in the queue.  However,
+         * if the handler for SIGCHLD is SIG_IGN, the system reaps
+         * zombie processes for us, and we don't get any notification.
+         * This appears to be the only signal with this quirk. */
+	if (evsig_set_handler_(base, nsignal,
+                               nsignal == SIGCHLD ? SIG_DFL : SIG_IGN) == -1)
 		return (-1);
-	}
 
 	return (0);
 }
@@ -469,8 +492,76 @@ kq_sig_del(struct event_base *base, int nsignal, short old, short events, void *
 	if (kevent(kqop->kq, &kev, 1, NULL, 0, &timeout) == -1)
 		return (-1);
 
-	if (_evsig_restore_handler(base, nsignal) == -1)
+	if (evsig_restore_handler_(base, nsignal) == -1)
 		return (-1);
 
 	return (0);
 }
+
+
+/* OSX 10.6 and FreeBSD 8.1 add support for EVFILT_USER, which we can use
+ * to wake up the event loop from another thread. */
+
+/* Magic number we use for our filter ID. */
+#define NOTIFY_IDENT 42
+
+int
+event_kq_add_notify_event_(struct event_base *base)
+{
+	struct kqop *kqop = base->evbase;
+#if defined(EVFILT_USER) && defined(NOTE_TRIGGER)
+	struct kevent kev;
+	struct timespec timeout = { 0, 0 };
+#endif
+
+	if (kqop->notify_event_added)
+		return 0;
+
+#if defined(EVFILT_USER) && defined(NOTE_TRIGGER)
+	memset(&kev, 0, sizeof(kev));
+	kev.ident = NOTIFY_IDENT;
+	kev.filter = EVFILT_USER;
+	kev.flags = EV_ADD | EV_CLEAR;
+
+	if (kevent(kqop->kq, &kev, 1, NULL, 0, &timeout) == -1) {
+		event_warn("kevent: adding EVFILT_USER event");
+		return -1;
+	}
+
+	kqop->notify_event_added = 1;
+
+	return 0;
+#else
+	return -1;
+#endif
+}
+
+int
+event_kq_notify_base_(struct event_base *base)
+{
+	struct kqop *kqop = base->evbase;
+#if defined(EVFILT_USER) && defined(NOTE_TRIGGER)
+	struct kevent kev;
+	struct timespec timeout = { 0, 0 };
+#endif
+	if (! kqop->notify_event_added)
+		return -1;
+
+#if defined(EVFILT_USER) && defined(NOTE_TRIGGER)
+	memset(&kev, 0, sizeof(kev));
+	kev.ident = NOTIFY_IDENT;
+	kev.filter = EVFILT_USER;
+	kev.fflags = NOTE_TRIGGER;
+
+	if (kevent(kqop->kq, &kev, 1, NULL, 0, &timeout) == -1) {
+		event_warn("kevent: triggering EVFILT_USER event");
+		return -1;
+	}
+
+	return 0;
+#else
+	return -1;
+#endif
+}
+
+#endif /* EVENT__HAVE_KQUEUE */

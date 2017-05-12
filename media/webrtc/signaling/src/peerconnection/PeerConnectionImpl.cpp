@@ -2368,17 +2368,6 @@ PeerConnectionImpl::GetMediaPipelineForTrack(MediaStreamTrack& aRecvTrack)
 }
 
 nsresult
-PeerConnectionImpl::SelectSsrc(MediaStreamTrack& aRecvTrack,
-                               unsigned short aSsrcIndex)
-{
-  RefPtr<MediaPipeline> pipeline = GetMediaPipelineForTrack(aRecvTrack);
-  if (pipeline) {
-    pipeline->SelectSsrc_m(aSsrcIndex);
-  }
-  return NS_OK;
-}
-
-nsresult
 PeerConnectionImpl::AddRIDExtension(MediaStreamTrack& aRecvTrack,
                                     unsigned short aExtensionId)
 {

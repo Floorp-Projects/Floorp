@@ -28,14 +28,14 @@ function resetEngine() {
 
 registerCleanupFunction(resetEngine);
 
-add_task(function* init() {
-  yield promiseNewEngine(TEST_ENGINE_BASENAME, {
+add_task(async function init() {
+  await promiseNewEngine(TEST_ENGINE_BASENAME, {
     setAsCurrent: false,
   });
 });
 
-add_task(function* test_searchBarChangeEngine() {
-  let oneOffButton = yield openPopupAndGetEngineButton(true, searchPopup,
+add_task(async function test_searchBarChangeEngine() {
+  let oneOffButton = await openPopupAndGetEngineButton(true, searchPopup,
                                                        searchOneOffBinding,
                                                        SEARCHBAR_BASE_ID);
 
@@ -48,7 +48,7 @@ add_task(function* test_searchBarChangeEngine() {
   EventUtils.synthesizeMouseAtCenter(setDefaultEngineMenuItem, {});
 
   // This also checks the engine correctly changed.
-  yield promise;
+  await promise;
 
   Assert.equal(oneOffButton.id, SEARCHBAR_BASE_ID + originalEngine.name,
                "Should now have the original engine's id for the button");
@@ -57,19 +57,19 @@ add_task(function* test_searchBarChangeEngine() {
   Assert.equal(oneOffButton.image, originalEngine.iconURI.spec,
                "Should now have the original engine's uri for the image");
 
-  yield promiseClosePopup(searchPopup);
+  await promiseClosePopup(searchPopup);
 });
 
-add_task(function* test_urlBarChangeEngine() {
+add_task(async function test_urlBarChangeEngine() {
   Services.prefs.setBoolPref(ONEOFF_URLBAR_PREF, true);
-  registerCleanupFunction(function* () {
+  registerCleanupFunction(function() {
     Services.prefs.clearUserPref(ONEOFF_URLBAR_PREF);
   });
 
   // Ensure the engine is reset.
   resetEngine();
 
-  let oneOffButton = yield openPopupAndGetEngineButton(false, urlbarPopup,
+  let oneOffButton = await openPopupAndGetEngineButton(false, urlbarPopup,
                                                        urlBarOneOffBinding,
                                                        URLBAR_BASE_ID);
 
@@ -82,7 +82,7 @@ add_task(function* test_urlBarChangeEngine() {
   EventUtils.synthesizeMouseAtCenter(setDefaultEngineMenuItem, {});
 
   // This also checks the engine correctly changed.
-  yield promise;
+  await promise;
 
   let currentEngine = Services.search.currentEngine;
 
@@ -94,7 +94,7 @@ add_task(function* test_urlBarChangeEngine() {
   Assert.equal(oneOffButton.image, currentEngine.iconURI.spec,
                "Should now have the original engine's uri for the image");
 
-  yield promiseClosePopup(urlbarPopup);
+  await promiseClosePopup(urlbarPopup);
 });
 
 /**
@@ -130,7 +130,7 @@ function promiseCurrentEngineChanged() {
  * @return {Object} Returns an object that represents the one off button for the
  *                          test engine.
  */
-function* openPopupAndGetEngineButton(isSearch, popup, oneOffBinding, baseId) {
+async function openPopupAndGetEngineButton(isSearch, popup, oneOffBinding, baseId) {
   // Open the popup.
   let promise = promiseEvent(popup, "popupshown");
   info("Opening panel");
@@ -144,7 +144,7 @@ function* openPopupAndGetEngineButton(isSearch, popup, oneOffBinding, baseId) {
     urlbar.focus();
     EventUtils.synthesizeKey("a", {});
   }
-  yield promise;
+  await promise;
 
   const contextMenu = document.getAnonymousElementByAttribute(
     oneOffBinding, "anonid", "search-one-offs-context-menu"
@@ -174,7 +174,7 @@ function* openPopupAndGetEngineButton(isSearch, popup, oneOffBinding, baseId) {
     type: "contextmenu",
     button: 2,
   });
-  yield promise;
+  await promise;
 
   return oneOffButton;
 }
@@ -184,12 +184,12 @@ function* openPopupAndGetEngineButton(isSearch, popup, oneOffBinding, baseId) {
  *
  * @param {Button} popup The popup to close.
  */
-function* promiseClosePopup(popup) {
+async function promiseClosePopup(popup) {
   // close the panel using the escape key.
   let promise = promiseEvent(popup, "popuphidden");
   EventUtils.synthesizeKey("VK_ESCAPE", {});
-  yield promise;
+  await promise;
 
   // Move the cursor out of the panel area to avoid messing with other tests.
-  yield EventUtils.synthesizeNativeMouseMove(popup);
+  await EventUtils.synthesizeNativeMouseMove(popup);
 }

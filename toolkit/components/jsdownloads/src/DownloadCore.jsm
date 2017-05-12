@@ -70,8 +70,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
@@ -430,14 +428,14 @@ this.Download.prototype = {
 
     // Now that we stored the promise in the download object, we can start the
     // task that will actually execute the download.
-    deferAttempt.resolve(Task.spawn(function* task_D_start() {
+    deferAttempt.resolve((async () => {
       // Wait upon any pending operation before restarting.
       if (this._promiseCanceled) {
-        yield this._promiseCanceled;
+        await this._promiseCanceled;
       }
       if (this._promiseRemovePartialData) {
         try {
-          yield this._promiseRemovePartialData;
+          await this._promiseRemovePartialData;
         } catch (ex) {
           // Ignore any errors, which are already reported by the original
           // caller of the removePartialData method.
@@ -453,13 +451,13 @@ this.Download.prototype = {
 
       try {
         // Disallow download if parental controls service restricts it.
-        if (yield DownloadIntegration.shouldBlockForParentalControls(this)) {
+        if (await DownloadIntegration.shouldBlockForParentalControls(this)) {
           throw new DownloadError({ becauseBlockedByParentalControls: true });
         }
 
         // Disallow download if needed runtime permissions have not been granted
         // by user.
-        if (yield DownloadIntegration.shouldBlockForRuntimePermissions()) {
+        if (await DownloadIntegration.shouldBlockForRuntimePermissions()) {
           throw new DownloadError({ becauseBlockedByRuntimePermissions: true });
         }
 
@@ -473,12 +471,12 @@ this.Download.prototype = {
 
         // Execute the actual download through the saver object.
         this._saverExecuting = true;
-        yield this.saver.execute(DS_setProgressBytes.bind(this),
+        await this.saver.execute(DS_setProgressBytes.bind(this),
                                  DS_setProperties.bind(this));
 
         // Now that the actual saving finished, read the actual file size on
         // disk, that may be different from the amount of data transferred.
-        yield this.target.refresh();
+        await this.target.refresh();
 
         // Check for the last time if the download has been canceled. This must
         // be done right before setting the "stopped" property of the download,
@@ -486,7 +484,7 @@ this.Download.prototype = {
         // cancellation request cannot start in the meantime and stay unhandled.
         if (this._promiseCanceled) {
           try {
-            yield OS.File.remove(this.target.path);
+            await OS.File.remove(this.target.path);
           } catch (ex) {
             Cu.reportError(ex);
           }
@@ -552,11 +550,11 @@ this.Download.prototype = {
           this.speed = 0;
           this._notifyChange();
           if (this.succeeded) {
-            yield this._succeed();
+            await this._succeed();
           }
         }
       }
-    }.bind(this)));
+    })());
 
     // Notify the new download state before returning.
     this._notifyChange();
@@ -570,8 +568,8 @@ this.Download.prototype = {
    * @resolves When the steps to take after success have completed.
    * @rejects  JavaScript exception if any of the operations failed.
    */
-  _succeed: Task.async(function* () {
-    yield DownloadIntegration.downloadDone(this);
+  async _succeed() {
+    await DownloadIntegration.downloadDone(this);
 
     this._deferSucceeded.resolve();
 
@@ -589,7 +587,7 @@ this.Download.prototype = {
                              new FileUtils.File(this.target.path));
       }
     }
-  }),
+  },
 
   /**
    * When a request to unblock the download is received, contains a promise
@@ -631,12 +629,12 @@ this.Download.prototype = {
         "unblock may only be called on Downloads with blocked data."));
     }
 
-    this._promiseUnblock = Task.spawn(function* () {
+    this._promiseUnblock = (async () => {
       try {
-        yield OS.File.move(this.target.partFilePath, this.target.path);
-        yield this.target.refresh();
+        await OS.File.move(this.target.partFilePath, this.target.path);
+        await this.target.refresh();
       } catch (ex) {
-        yield this.refresh();
+        await this.refresh();
         this._promiseUnblock = null;
         throw ex;
       }
@@ -644,8 +642,8 @@ this.Download.prototype = {
       this.succeeded = true;
       this.hasBlockedData = false;
       this._notifyChange();
-      yield this._succeed();
-    }.bind(this));
+      await this._succeed();
+    })();
 
     return this._promiseUnblock;
   },
@@ -675,18 +673,18 @@ this.Download.prototype = {
         "confirmBlock may only be called on Downloads with blocked data."));
     }
 
-    this._promiseConfirmBlock = Task.spawn(function* () {
+    this._promiseConfirmBlock = (async () => {
       try {
-        yield OS.File.remove(this.target.partFilePath);
+        await OS.File.remove(this.target.partFilePath);
       } catch (ex) {
-        yield this.refresh();
+        await this.refresh();
         this._promiseConfirmBlock = null;
         throw ex;
       }
 
       this.hasBlockedData = false;
       this._notifyChange();
-    }.bind(this));
+    })();
 
     return this._promiseConfirmBlock;
   },
@@ -851,14 +849,14 @@ this.Download.prototype = {
       this._promiseRemovePartialData = promiseRemovePartialData;
 
       deferRemovePartialData.resolve(
-        Task.spawn(function* task_D_removePartialData() {
+        (async () => {
           try {
             // Wait upon any pending cancellation request.
             if (this._promiseCanceled) {
-              yield this._promiseCanceled;
+              await this._promiseCanceled;
             }
             // Ask the saver object to remove any partial data.
-            yield this.saver.removePartialData();
+            await this.saver.removePartialData();
             // For completeness, clear the number of bytes transferred.
             if (this.currentBytes != 0 || this.hasPartialData) {
               this.currentBytes = 0;
@@ -868,7 +866,7 @@ this.Download.prototype = {
           } finally {
             this._promiseRemovePartialData = null;
           }
-        }.bind(this)));
+        })());
     }
 
     return promiseRemovePartialData;
@@ -912,7 +910,7 @@ this.Download.prototype = {
    * @rejects Never.
    */
   refresh() {
-    return Task.spawn(function* () {
+    return (async () => {
       if (!this.stopped || this._finalized) {
         return;
       }
@@ -920,7 +918,7 @@ this.Download.prototype = {
       if (this.succeeded) {
         let oldExists = this.target.exists;
         let oldSize = this.target.size;
-        yield this.target.refresh();
+        await this.target.refresh();
         if (oldExists != this.target.exists || oldSize != this.target.size) {
           this._notifyChange();
         }
@@ -932,7 +930,7 @@ this.Download.prototype = {
           this.target.partFilePath) {
 
         try {
-          let stat = yield OS.File.stat(this.target.partFilePath);
+          let stat = await OS.File.stat(this.target.partFilePath);
 
           // Ignore the result if the state has changed meanwhile.
           if (!this.stopped || this._finalized) {
@@ -961,7 +959,7 @@ this.Download.prototype = {
 
         this._notifyChange();
       }
-    }.bind(this)).then(null, Cu.reportError);
+    })().then(null, Cu.reportError);
   },
 
   /**
@@ -1419,9 +1417,9 @@ this.DownloadTarget.prototype = {
    * @resolves When the operation has finished successfully.
    * @rejects JavaScript exception.
    */
-  refresh: Task.async(function* () {
+  async refresh() {
     try {
-      this.size = (yield OS.File.stat(this.path)).size;
+      this.size = (await OS.File.stat(this.path)).size;
       this.exists = true;
     } catch (ex) {
       // Report any error not caused by the file not being there. In any case,
@@ -1431,7 +1429,7 @@ this.DownloadTarget.prototype = {
       }
       this.exists = false;
     }
-  }),
+  },
 
   /**
    * Returns a static representation of the current object state.
@@ -1894,7 +1892,7 @@ this.DownloadCopySaver.prototype = {
     let partFilePath = download.target.partFilePath;
     let keepPartialData = download.tryToKeepPartialData;
 
-    return Task.spawn(function* task_DCS_execute() {
+    return (async () => {
       // Add the download to history the first time it is started in this
       // session.  If the download is restarted in a different session, a new
       // history visit will be added.  We do this just to avoid the complexity
@@ -1912,8 +1910,8 @@ this.DownloadCopySaver.prototype = {
       // download is in progress.
       try {
         // If the file already exists, don't delete its contents yet.
-        let file = yield OS.File.open(targetPath, { write: true });
-        yield file.close();
+        let file = await OS.File.open(targetPath, { write: true });
+        await file.close();
       } catch (ex) {
         if (!(ex instanceof OS.File.Error)) {
           throw ex;
@@ -1989,7 +1987,7 @@ this.DownloadCopySaver.prototype = {
           if (channel instanceof Ci.nsIResumableChannel && this.entityID &&
               partFilePath && keepPartialData) {
             try {
-              let stat = yield OS.File.stat(partFilePath);
+              let stat = await OS.File.stat(partFilePath);
               channel.resumeAt(stat.size, this.entityID);
               resumeAttempted = true;
               resumeFromBytes = stat.size;
@@ -2016,7 +2014,7 @@ this.DownloadCopySaver.prototype = {
 
           // If the callback was set, handle it now before opening the channel.
           if (download.source.adjustChannel) {
-            yield download.source.adjustChannel(channel);
+            await download.source.adjustChannel(channel);
           }
 
           // Open the channel, directing output to the background file saver.
@@ -2146,15 +2144,15 @@ this.DownloadCopySaver.prototype = {
 
         // We will wait on this promise in case no error occurred while setting
         // up the chain of objects for the download.
-        yield deferSaveComplete.promise;
+        await deferSaveComplete.promise;
 
-        yield this._checkReputationAndMove(aSetPropertiesFn);
+        await this._checkReputationAndMove(aSetPropertiesFn);
       } catch (ex) {
         // Ensure we always remove the placeholder for the final target file on
         // failure, independently of which code path failed.  In some cases, the
         // background file saver may have already removed the file.
         try {
-          yield OS.File.remove(targetPath);
+          await OS.File.remove(targetPath);
         } catch (e2) {
           // If we failed during the operation, we report the error but use the
           // original one as the failure reason of the download.  Note that on
@@ -2167,7 +2165,7 @@ this.DownloadCopySaver.prototype = {
         }
         throw ex;
       }
-    }.bind(this));
+    })();
   },
 
   /**
@@ -2183,13 +2181,13 @@ this.DownloadCopySaver.prototype = {
    * @resolves When the reputation check and cleanup is complete.
    * @rejects DownloadError if the download should be blocked.
    */
-  _checkReputationAndMove: Task.async(function* (aSetPropertiesFn) {
+  async _checkReputationAndMove(aSetPropertiesFn) {
     let download = this.download;
     let targetPath = this.download.target.path;
     let partFilePath = this.download.target.partFilePath;
 
     let { shouldBlock, verdict } =
-        yield DownloadIntegration.shouldBlockForReputationCheck(download);
+        await DownloadIntegration.shouldBlockForReputationCheck(download);
     if (shouldBlock) {
       let newProperties = { progress: 100, hasPartialData: false };
 
@@ -2199,7 +2197,7 @@ this.DownloadCopySaver.prototype = {
       // currently has its final filename.
       if (!DownloadIntegration.shouldKeepBlockedData() || !partFilePath) {
         try {
-          yield OS.File.remove(partFilePath || targetPath);
+          await OS.File.remove(partFilePath || targetPath);
         } catch (ex) {
           Cu.reportError(ex);
         }
@@ -2216,9 +2214,9 @@ this.DownloadCopySaver.prototype = {
     }
 
     if (partFilePath) {
-      yield OS.File.move(partFilePath, targetPath);
+      await OS.File.move(partFilePath, targetPath);
     }
-  }),
+  },
 
   /**
    * Implements "DownloadSaver.cancel".
@@ -2235,17 +2233,17 @@ this.DownloadCopySaver.prototype = {
    * Implements "DownloadSaver.removePartialData".
    */
   removePartialData() {
-    return Task.spawn(function* task_DCS_removePartialData() {
+    return (async () => {
       if (this.download.target.partFilePath) {
         try {
-          yield OS.File.remove(this.download.target.partFilePath);
+          await OS.File.remove(this.download.target.partFilePath);
         } catch (ex) {
           if (!(ex instanceof OS.File.Error) || !ex.becauseNoSuchFile) {
             throw ex;
           }
         }
       }
-    }.bind(this));
+    })();
   },
 
   /**
@@ -2498,10 +2496,10 @@ this.DownloadLegacySaver.prototype = {
       this.onProgressBytes(this.currentBytes, this.totalBytes);
     }
 
-    return Task.spawn(function* task_DLS_execute() {
+    return (async () => {
       try {
         // Wait for the component that executes the download to finish.
-        yield this.deferExecuted.promise;
+        await this.deferExecuted.promise;
 
         // At this point, the "request" property has been populated.  Ensure we
         // report the value of "Content-Length", if available, even if the
@@ -2525,9 +2523,9 @@ this.DownloadLegacySaver.prototype = {
         if (!this.download.target.partFilePath) {
           try {
             // This atomic operation is more efficient than an existence check.
-            let file = yield OS.File.open(this.download.target.path,
+            let file = await OS.File.open(this.download.target.path,
                                           { create: true });
-            yield file.close();
+            await file.close();
           } catch (ex) {
             if (!(ex instanceof OS.File.Error) || !ex.becauseExists) {
               throw ex;
@@ -2535,14 +2533,14 @@ this.DownloadLegacySaver.prototype = {
           }
         }
 
-        yield this._checkReputationAndMove(aSetPropertiesFn);
+        await this._checkReputationAndMove(aSetPropertiesFn);
 
       } catch (ex) {
         // Ensure we always remove the final target file on failure,
         // independently of which code path failed.  In some cases, the
         // component executing the download may have already removed the file.
         try {
-          yield OS.File.remove(this.download.target.path);
+          await OS.File.remove(this.download.target.path);
         } catch (e2) {
           // If we failed during the operation, we report the error but use the
           // original one as the failure reason of the download.  Note that on
@@ -2566,7 +2564,7 @@ this.DownloadLegacySaver.prototype = {
         // Allow the download to restart through a DownloadCopySaver.
         this.firstExecutionFinished = true;
       }
-    }.bind(this));
+    })();
   },
 
   _checkReputationAndMove() {
@@ -2704,7 +2702,7 @@ this.DownloadPDFSaver.prototype = {
    * Implements "DownloadSaver.execute".
    */
   execute(aSetProgressBytesFn, aSetPropertiesFn) {
-    return Task.spawn(function* task_DCS_execute() {
+    return (async () => {
       if (!this.download.source.windowRef) {
         throw new DownloadError({
           message: "PDF saver must be passed an open window, and cannot be restarted.",
@@ -2729,8 +2727,8 @@ this.DownloadPDFSaver.prototype = {
       let targetPath = this.download.target.path;
 
       // An empty target file must exist for the PDF printer to work correctly.
-      let file = yield OS.File.open(targetPath, { truncate: true });
-      yield file.close();
+      let file = await OS.File.open(targetPath, { truncate: true });
+      await file.close();
 
       let printSettings = gPrintSettingsService.newPrintSettings;
 
@@ -2755,7 +2753,7 @@ this.DownloadPDFSaver.prototype = {
                                  .getInterface(Ci.nsIWebBrowserPrint);
 
       try {
-        yield new Promise((resolve, reject) => {
+        await new Promise((resolve, reject) => {
           this._webBrowserPrint.print(printSettings, {
             onStateChange(webProgress, request, stateFlags, status) {
               if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
@@ -2782,9 +2780,9 @@ this.DownloadPDFSaver.prototype = {
         this._webBrowserPrint = null;
       }
 
-      let fileInfo = yield OS.File.stat(targetPath);
+      let fileInfo = await OS.File.stat(targetPath);
       aSetProgressBytesFn(fileInfo.size, fileInfo.size, false);
-    }.bind(this));
+    })();
   },
 
   /**

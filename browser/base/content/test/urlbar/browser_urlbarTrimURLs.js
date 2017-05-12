@@ -1,10 +1,10 @@
-add_task(function* () {
+add_task(async function() {
   const PREF_TRIMURLS = "browser.urlbar.trimURLs";
 
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
 
-  registerCleanupFunction(function*() {
-    yield BrowserTestUtils.removeTab(tab);
+  registerCleanupFunction(async function() {
+    await BrowserTestUtils.removeTab(tab);
     Services.prefs.clearUserPref(PREF_TRIMURLS);
     URLBarSetURI();
   });
@@ -70,13 +70,13 @@ add_task(function* () {
   let promiseLoaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser,
                                                      false, "http://example.com/");
   gBrowser.loadURI("http://example.com/");
-  yield promiseLoaded;
+  await promiseLoaded;
 
-  yield testCopy("example.com", "http://example.com/")
+  await testCopy("example.com", "http://example.com/")
 
   SetPageProxyState("invalid");
   gURLBar.valueIsTyped = true;
-  yield testCopy("example.com", "example.com");
+  await testCopy("example.com", "example.com");
 });
 
 function testVal(originalValue, targetValue) {

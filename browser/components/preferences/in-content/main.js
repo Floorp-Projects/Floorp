@@ -7,7 +7,6 @@
 
 Components.utils.import("resource://gre/modules/Downloads.jsm");
 Components.utils.import("resource://gre/modules/FileUtils.jsm");
-Components.utils.import("resource://gre/modules/Task.jsm");
 Components.utils.import("resource:///modules/ShellService.jsm");
 Components.utils.import("resource:///modules/TransientPrefs.jsm");
 
@@ -1035,14 +1034,14 @@ var gMainPane = {
     document.getElementById("engineList").focus();
   },
 
-  editKeyword: Task.async(function* (aEngine, aNewKeyword) {
+  async editKeyword(aEngine, aNewKeyword) {
     let keyword = aNewKeyword.trim();
     if (keyword) {
       let eduplicate = false;
       let dupName = "";
 
       // Check for duplicates in Places keywords.
-      let bduplicate = !!(yield PlacesUtils.keywords.fetch(keyword));
+      let bduplicate = !!(await PlacesUtils.keywords.fetch(keyword));
 
       // Check for duplicates in changes we haven't committed yet
       let engines = gEngineView._engineStore.engines;
@@ -1070,7 +1069,7 @@ var gMainPane = {
     gEngineView._engineStore.changeEngine(aEngine, "alias", keyword);
     gEngineView.invalidate();
     return true;
-  }),
+  },
 
   saveOneClickEnginesList() {
     let hiddenList = [];

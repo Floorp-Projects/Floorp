@@ -968,7 +968,8 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
    *   1. The scale given by the display pixel ratio.
    *   2. The translation to the top left corner of the element.
    *   3. The scale given by the current zoom.
-   *   4. Any CSS transformation applied directly to the element (only 2D
+   *   4. The translation given by the top and left padding of the element.
+   *   5. Any CSS transformation applied directly to the element (only 2D
    *      transformation; the 3D transformation are flattened, see `dom-matrix-2d` module
    *      for further details.)
    *
@@ -979,9 +980,14 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     let origin = getNodeTransformOrigin(this.currentNode);
     let bounds = getNodeBounds(this.win, this.currentNode);
     let nodeMatrix = getNodeTransformationMatrix(this.currentNode);
+    let computedStyle = this.currentNode.ownerGlobal.getComputedStyle(this.currentNode);
 
-    let ox = origin[0];
-    let oy = origin[1];
+    let paddingTop = parseFloat(computedStyle.paddingTop);
+    let paddingLeft = parseFloat(computedStyle.paddingLeft);
+
+    // Subtract padding values to compensate for top/left being moved by padding.
+    let ox = origin[0] - paddingLeft;
+    let oy = origin[1] - paddingTop;
 
     let m = identity();
 
@@ -991,8 +997,10 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     m = multiply(m, translate(bounds.p1.x, bounds.p1.y));
     // And scale based on the current zoom factor.
     m = multiply(m, scale(getCurrentZoom(this.win)));
+    // Then translate the origin based on the node's padding values.
+    m = multiply(m, translate(paddingLeft, paddingTop));
     // Finally, we can apply the current node's transformation matrix, taking in account
-    // the `transform-origin` property.
+    // the `transform-origin` property and the node's top and left padding.
     if (nodeMatrix) {
       m = multiply(m, translate(ox, oy));
       m = multiply(m, nodeMatrix);

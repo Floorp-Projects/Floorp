@@ -2,12 +2,12 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* test_sessions_forget_closed_window() {
-  function* openAndCloseWindow(url = "http://example.com") {
-    let win = yield BrowserTestUtils.openNewBrowserWindow();
-    yield BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, url);
-    yield BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
-    yield BrowserTestUtils.closeWindow(win);
+add_task(async function test_sessions_forget_closed_window() {
+  async function openAndCloseWindow(url = "http://example.com") {
+    let win = await BrowserTestUtils.openNewBrowserWindow();
+    await BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, url);
+    await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    await BrowserTestUtils.closeWindow(win);
   }
 
   function background() {
@@ -38,21 +38,21 @@ add_task(function* test_sessions_forget_closed_window() {
     background,
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield openAndCloseWindow("about:config");
-  yield openAndCloseWindow("about:robots");
+  await openAndCloseWindow("about:config");
+  await openAndCloseWindow("about:robots");
 
   extension.sendMessage("check-sessions");
-  let recentlyClosed = yield extension.awaitMessage("recentlyClosed");
+  let recentlyClosed = await extension.awaitMessage("recentlyClosed");
   let recentlyClosedLength = recentlyClosed.length;
   let recentlyClosedWindow = recentlyClosed[0].window;
 
   // Check that forgetting a window works properly
   extension.sendMessage("forget-window", recentlyClosedWindow.sessionId);
-  yield extension.awaitMessage("forgot-window");
+  await extension.awaitMessage("forgot-window");
   extension.sendMessage("check-sessions");
-  let remainingClosed = yield extension.awaitMessage("recentlyClosed");
+  let remainingClosed = await extension.awaitMessage("recentlyClosed");
   is(remainingClosed.length, recentlyClosedLength - 1,
      "One window was forgotten.");
   is(remainingClosed[0].window.sessionId, recentlyClosed[1].window.sessionId,
@@ -60,13 +60,13 @@ add_task(function* test_sessions_forget_closed_window() {
 
   // Check that re-forgetting the same window fails properly
   extension.sendMessage("forget-window", recentlyClosedWindow.sessionId);
-  yield extension.awaitMessage("forget-reject");
+  await extension.awaitMessage("forget-reject");
   extension.sendMessage("check-sessions");
-  remainingClosed = yield extension.awaitMessage("recentlyClosed");
+  remainingClosed = await extension.awaitMessage("recentlyClosed");
   is(remainingClosed.length, recentlyClosedLength - 1,
      "No extra window was forgotten.");
   is(remainingClosed[0].window.sessionId, recentlyClosed[1].window.sessionId,
      "The correct window remains.");
 
-  yield extension.unload();
+  await extension.unload();
 });

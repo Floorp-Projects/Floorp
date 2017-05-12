@@ -1,7 +1,7 @@
 // Test that result node for folder shortcuts get the target folder title if
 // the shortcut itself has no title set.
-add_task(function* () {
-  let shortcutInfo = yield PlacesUtils.bookmarks.insert({
+add_task(async function() {
+  let shortcutInfo = await PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: "place:folder=TOOLBAR"
@@ -13,7 +13,7 @@ add_task(function* () {
   Assert.equal(shortcutNode.bookmarkGuid, shortcutInfo.guid);
 
   let toolbarInfo =
-    yield PlacesUtils.bookmarks.fetch(PlacesUtils.bookmarks.toolbarGuid);
+    await PlacesUtils.bookmarks.fetch(PlacesUtils.bookmarks.toolbarGuid);
   Assert.equal(shortcutNode.title, toolbarInfo.title);
 
   unfiledRoot.containerOpen = false;

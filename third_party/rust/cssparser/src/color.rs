@@ -386,18 +386,25 @@ fn parse_color_hash(value: &str) -> Result<Color, ()> {
 }
 
 fn clamp_unit_f32(val: f32) -> u8 {
-    // Scale by 256, not 255, so that each of the 256 u8 values has an equal range
-    // of f32 values mapping to it. Floor before clamping.
+    // Whilst scaling by 256 and flooring would provide
+    // an equal distribution of integers to percentage inputs,
+    // this is not what Gecko does so we instead multiply by 255
+    // and round (adding 0.5 and flooring is equivalent to rounding)
     //
-    // Clamping to 256 and flooring after would let 1.0 map to 256, and
+    // Chrome does something similar for the alpha value, but not
+    // the rgb values.
+    //
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1340484
+    //
+    // Clamping to 256 and rounding after would let 1.0 map to 256, and
     // `256.0_f32 as u8` is undefined behavior:
     //
     // https://github.com/rust-lang/rust/issues/10184
-    clamp_256_f32(val * 256.)
+    clamp_floor_256_f32(val * 255.)
 }
 
-fn clamp_256_f32(val: f32) -> u8 {
-    val.floor().max(0.).min(255.) as u8
+fn clamp_floor_256_f32(val: f32) -> u8 {
+    val.round().max(0.).min(255.) as u8
 }
 
 #[inline]
@@ -449,8 +456,8 @@ fn parse_rgb_components_rgb(arguments: &mut Parser) -> Result<(u8, u8, u8, bool)
     // https://drafts.csswg.org/css-color/#rgb-functions
     match try!(arguments.next()) {
         Token::Number(NumericValue { value: v, .. }) => {
-            red = clamp_256_f32(v);
-            green = clamp_256_f32(match try!(arguments.next()) {
+            red = clamp_floor_256_f32(v);
+            green = clamp_floor_256_f32(match try!(arguments.next()) {
                 Token::Number(NumericValue { value: v, .. }) => v,
                 Token::Comma => {
                     uses_commas = true;
@@ -461,7 +468,7 @@ fn parse_rgb_components_rgb(arguments: &mut Parser) -> Result<(u8, u8, u8, bool)
             if uses_commas {
                 try!(arguments.expect_comma());
             }
-            blue = clamp_256_f32(try!(arguments.expect_number()));
+            blue = clamp_floor_256_f32(try!(arguments.expect_number()));
         }
         Token::Percentage(ref v) => {
             red = clamp_unit_f32(v.unit_value);

@@ -17,7 +17,7 @@
  - validate folder B's contents
 */
 
-add_task(function* () {
+add_task(async function() {
   // sanity check
   ok(PlacesUtils, "checking PlacesUtils, running in chrome context?");
   ok(PlacesUIUtils, "checking PlacesUIUtils, running in chrome context?");
@@ -26,7 +26,7 @@ add_task(function* () {
   let toolbarNode = PlacesUtils.getFolderContents(toolbarId).root;
 
   let oldCount = toolbarNode.childCount;
-  let testRoot = yield PlacesUtils.bookmarks.insert({
+  let testRoot = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     title: "test root"
@@ -39,15 +39,15 @@ add_task(function* () {
   is(testRootNode.childCount, 0, "confirm test root node is a container, and is empty");
 
   // create folder A, fill it, validate its contents
-  let folderA = yield PlacesUtils.bookmarks.insert({
+  let folderA = await PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     parentGuid: testRoot.guid,
     title: "A"
   });
 
-  yield populate(folderA);
+  await populate(folderA);
 
-  let folderAId = yield PlacesUtils.promiseItemId(folderA.guid);
+  let folderAId = await PlacesUtils.promiseItemId(folderA.guid);
   let folderANode = PlacesUtils.getFolderContents(folderAId).root;
   validate(folderANode);
   is(testRootNode.childCount, 1, "create test folder");
@@ -59,7 +59,7 @@ add_task(function* () {
   ok(rawNode.type, "confirm json node");
   folderANode.containerOpen = false;
 
-  let testRootId = yield PlacesUtils.promiseItemId(testRoot.guid);
+  let testRootId = await PlacesUtils.promiseItemId(testRoot.guid);
   let transaction = PlacesUIUtils.makeTransaction(rawNode,
                                                   PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER,
                                                   testRootId,
@@ -90,28 +90,28 @@ add_task(function* () {
 
   // clean up
   PlacesUtils.transactionManager.undoTransaction();
-  yield PlacesUtils.bookmarks.remove(folderA.guid);
+  await PlacesUtils.bookmarks.remove(folderA.guid);
 });
 
-var populate = Task.async(function* (parentFolder) {
-  let folder = yield PlacesUtils.bookmarks.insert({
+var populate = async function(parentFolder) {
+  let folder = await PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     parentGuid: parentFolder.guid,
     title: "test folder"
   });
 
-  yield PlacesUtils.bookmarks.insert({
+  await PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
     parentGuid: folder.guid,
     title: "test bookmark",
     url: "http://foo"
   });
 
-  yield PlacesUtils.bookmarks.insert({
+  await PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
     parentGuid: folder.guid
   });
-});
+};
 
 function validate(aNode) {
   PlacesUtils.asContainer(aNode);

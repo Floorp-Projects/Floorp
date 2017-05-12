@@ -57,7 +57,6 @@ function updateAddress(guid, address) {
 function formAutoFillCommonSetup() {
   let chromeURL = SimpleTest.getTestFileURL("formautofill_parent_utils.js");
   formFillChromeScript = SpecialPowers.loadChromeScript(chromeURL);
-  SpecialPowers.setBoolPref("dom.forms.autocomplete.experimental", true);
   formFillChromeScript.addMessageListener("onpopupshown", ({results}) => {
     gLastAutoCompleteResults = results;
     if (gPopupShownListener) {
@@ -66,7 +65,6 @@ function formAutoFillCommonSetup() {
   });
 
   SimpleTest.registerCleanupFunction(() => {
-    SpecialPowers.clearUserPref("dom.forms.autocomplete.experimental");
     formFillChromeScript.sendAsyncMessage("cleanup");
     formFillChromeScript.destroy();
   });

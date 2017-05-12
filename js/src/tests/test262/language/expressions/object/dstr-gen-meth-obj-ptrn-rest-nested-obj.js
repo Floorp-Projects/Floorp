@@ -5,7 +5,7 @@
 description: When DestructuringAssignmentTarget is an object literal, it should be parsed parsed as a DestructuringAssignmentPattern and evaluated as a destructuring assignment. (generator method)
 esid: sec-generator-function-definitions-runtime-semantics-propertydefinitionevaluation
 es6id: 14.4.13
-features: [destructuring-binding]
+features: [object-rest, destructuring-binding]
 flags: [generated]
 info: |
     GeneratorMethod :

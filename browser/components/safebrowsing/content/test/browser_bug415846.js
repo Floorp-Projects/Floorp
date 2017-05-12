@@ -26,14 +26,14 @@ function check_menu_at_page(url, testFn) {
   return BrowserTestUtils.withNewTab({
     gBrowser,
     url: "about:blank",
-  }, function*(browser) {
+  }, async function(browser) {
     // We don't get load events when the DocShell redirects to error
     // pages, but we do get DOMContentLoaded, so we'll wait for that.
-    let dclPromise = ContentTask.spawn(browser, null, function*() {
-      yield ContentTaskUtils.waitForEvent(this, "DOMContentLoaded", false);
+    let dclPromise = ContentTask.spawn(browser, null, async function() {
+      await ContentTaskUtils.waitForEvent(this, "DOMContentLoaded", false);
     });
     browser.loadURI(url);
-    yield dclPromise;
+    await dclPromise;
 
     let menu = document.getElementById("menu_HelpPopup");
     ok(menu, "Help menu should exist");
@@ -48,13 +48,13 @@ function check_menu_at_page(url, testFn) {
 
     let menuOpen = BrowserTestUtils.waitForEvent(menu, "popupshown");
     menu.openPopup(null, "", 0, 0, false, null);
-    yield menuOpen;
+    await menuOpen;
 
     testFn(reportMenu, errorMenu);
 
     let menuClose = BrowserTestUtils.waitForEvent(menu, "popuphidden");
     menu.hidePopup();
-    yield menuClose;
+    await menuClose;
   });
 }
 
@@ -62,8 +62,8 @@ function check_menu_at_page(url, testFn) {
  * Tests that we show the "Report this page" menu item at a normal
  * page.
  */
-add_task(function*() {
-  yield check_menu_at_page(NORMAL_PAGE, (reportMenu, errorMenu) => {
+add_task(async function() {
+  await check_menu_at_page(NORMAL_PAGE, (reportMenu, errorMenu) => {
     ok(!reportMenu.hidden,
        "Report phishing menu should be visible on normal sites");
     ok(errorMenu.hidden,
@@ -75,8 +75,8 @@ add_task(function*() {
  * Tests that we show the "Report this page is okay" menu item at
  * a reported attack site.
  */
-add_task(function*() {
-  yield check_menu_at_page(PHISH_PAGE, (reportMenu, errorMenu) => {
+add_task(async function() {
+  await check_menu_at_page(PHISH_PAGE, (reportMenu, errorMenu) => {
     ok(reportMenu.hidden,
        "Report phishing menu should be hidden on phishing sites");
     ok(!errorMenu.hidden,

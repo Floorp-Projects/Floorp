@@ -49,8 +49,8 @@ var gTests = [
 
 {
   desc: "Test the 'Keep Current Settings' button.",
-  *run() {
-    let engine = yield promiseNewEngine(kTestEngine, {setAsCurrent: true});
+  async run() {
+    let engine = await promiseNewEngine(kTestEngine, {setAsCurrent: true});
 
     let expectedURL = engine.
                       getSubmission(kSearchStr, null, kSearchPurpose).
@@ -62,7 +62,7 @@ var gTests = [
 
     let loadPromise = promiseStoppedLoad(expectedURL);
     gBrowser.contentDocument.getElementById("searchResetKeepCurrent").click();
-    yield loadPromise;
+    await loadPromise;
 
     is(engine, Services.search.currentEngine,
        "the custom engine is still default");
@@ -75,7 +75,7 @@ var gTests = [
 
 {
   desc: "Test the 'Restore Search Defaults' button.",
-  *run() {
+  async run() {
     let currentEngine = Services.search.currentEngine;
     let originalEngine = Services.search.originalDefaultEngine;
     let doc = gBrowser.contentDocument;
@@ -91,7 +91,7 @@ var gTests = [
     is(doc.activeElement, button,
        "the 'Change Search Engine' button is focused");
     button.click();
-    yield loadPromise;
+    await loadPromise;
 
     is(originalEngine, Services.search.currentEngine,
        "the default engine is back to the original one");
@@ -103,12 +103,12 @@ var gTests = [
 
 {
   desc: "Click the settings link.",
-  *run() {
+  async run() {
     let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser,
                                                      false,
                                                      "about:preferences")
     gBrowser.contentDocument.getElementById("linkSettingsPage").click();
-    yield loadPromise;
+    await loadPromise;
 
     checkTelemetryRecords(TELEMETRY_RESULT_ENUM.OPENED_SETTINGS);
   }
@@ -116,8 +116,8 @@ var gTests = [
 
 {
   desc: "Load another page without clicking any of the buttons.",
-  *run() {
-    yield promiseTabLoadEvent(gBrowser.selectedTab, "about:mozilla");
+  async run() {
+    await promiseTabLoadEvent(gBrowser.selectedTab, "about:mozilla");
 
     checkTelemetryRecords(TELEMETRY_RESULT_ENUM.CLOSED_PAGE);
   }
@@ -127,7 +127,7 @@ var gTests = [
 
 function test() {
   waitForExplicitFinish();
-  Task.spawn(function* () {
+  (async function() {
     let oldCanRecord = Services.telemetry.canRecordExtended;
     Services.telemetry.canRecordExtended = true;
     checkTelemetryRecords();
@@ -141,17 +141,17 @@ function test() {
       // Start loading about:searchreset and wait for it to complete.
       let url = "about:searchreset?data=" + encodeURIComponent(kSearchStr) +
                 "&purpose=" + kSearchPurpose;
-      yield promiseTabLoadEvent(tab, url);
+      await promiseTabLoadEvent(tab, url);
 
       info("Running test");
-      yield testCase.run();
+      await testCase.run();
 
       info("Cleanup");
       gBrowser.removeCurrentTab();
     }
 
     Services.telemetry.canRecordExtended = oldCanRecord;
-  }).then(finish, ex => {
+  })().then(finish, ex => {
     ok(false, "Unexpected Exception: " + ex);
     finish();
   });

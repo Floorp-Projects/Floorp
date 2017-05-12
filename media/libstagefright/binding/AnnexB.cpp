@@ -22,12 +22,12 @@ AnnexB::ConvertSampleToAnnexB(mozilla::MediaRawData* aSample, bool aAddSPS)
 {
   MOZ_ASSERT(aSample);
 
-  if (!IsAVCC(aSample)) {
+  if (IsAnnexB(aSample)) {
     return true;
   }
   MOZ_ASSERT(aSample->Data());
 
-  if (!ConvertSampleTo4BytesAVCC(aSample)) {
+  if (IsAVCC(aSample) && !ConvertSampleTo4BytesAVCC(aSample)) {
     return false;
   }
 
@@ -63,7 +63,7 @@ AnnexB::ConvertSampleToAnnexB(mozilla::MediaRawData* aSample, bool aAddSPS)
   }
 
   // Prepend the Annex B NAL with SPS and PPS tables to keyframes.
-  if (aAddSPS && aSample->mKeyframe) {
+  if (aAddSPS && aSample->mKeyframe && IsAVCC(aSample)) {
     RefPtr<MediaByteBuffer> annexB =
       ConvertExtraDataToAnnexB(aSample->mExtraData);
     if (!samplewriter->Prepend(annexB->Elements(), annexB->Length())) {

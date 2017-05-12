@@ -7,9 +7,9 @@
 requestLongerTimeout(5);
 
 // Dragging the zoom controls to be before the print button should not move any controls.
-add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
-  yield startCustomizing();
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+  await startCustomizing();
   let zoomControls = document.getElementById("zoom-controls");
   let printButton = document.getElementById("print-button");
   let placementsAfterMove = ["edit-controls",
@@ -37,8 +37,8 @@ add_task(function*() {
 });
 
 // Dragging the zoom controls to be before the save button should not move any controls.
-add_task(function*() {
-  yield startCustomizing();
+add_task(async function() {
+  await startCustomizing();
   let zoomControls = document.getElementById("zoom-controls");
   let savePageButton = document.getElementById("save-page-button");
   let placementsAfterMove = ["edit-controls",
@@ -64,8 +64,8 @@ add_task(function*() {
 
 
 // Dragging the zoom controls to be before the new-window button should not move any widgets.
-add_task(function*() {
-  yield startCustomizing();
+add_task(async function() {
+  await startCustomizing();
   let zoomControls = document.getElementById("zoom-controls");
   let newWindowButton = document.getElementById("new-window-button");
   let placementsAfterMove = ["edit-controls",
@@ -90,8 +90,8 @@ add_task(function*() {
 });
 
 // Dragging the zoom controls to be before the history-panelmenu should move the zoom-controls in to the row higher than the history-panelmenu.
-add_task(function*() {
-  yield startCustomizing();
+add_task(async function() {
+  await startCustomizing();
   let zoomControls = document.getElementById("zoom-controls");
   let historyPanelMenu = document.getElementById("history-panelmenu");
   let placementsAfterMove = ["edit-controls",
@@ -120,8 +120,8 @@ add_task(function*() {
 
 // Dragging the zoom controls to be before the preferences-button should move the zoom-controls
 // in to the row higher than the preferences-button.
-add_task(function*() {
-  yield startCustomizing();
+add_task(async function() {
+  await startCustomizing();
   let zoomControls = document.getElementById("zoom-controls");
   let preferencesButton = document.getElementById("preferences-button");
   let placementsAfterMove = ["edit-controls",
@@ -149,8 +149,8 @@ add_task(function*() {
 });
 
 // Dragging an item from the palette to before the zoom-controls should move it and two other buttons before the zoom controls.
-add_task(function*() {
-  yield startCustomizing();
+add_task(async function() {
+  await startCustomizing();
   let openFileButton = document.getElementById("open-file-button");
   let zoomControls = document.getElementById("zoom-controls");
   let placementsAfterInsert = ["edit-controls",
@@ -191,8 +191,8 @@ add_task(function*() {
 
 // Dragging an item from the palette to before the edit-controls
 // should move it and two other buttons before the edit and zoom controls.
-add_task(function*() {
-  yield startCustomizing();
+add_task(async function() {
+  await startCustomizing();
   let openFileButton = document.getElementById("open-file-button");
   let editControls = document.getElementById("edit-controls");
   let placementsAfterInsert = ["open-file-button",
@@ -231,8 +231,8 @@ add_task(function*() {
 
 // Dragging the edit-controls to be before the zoom-controls button
 // should not move any widgets.
-add_task(function*() {
-  yield startCustomizing();
+add_task(async function() {
+  await startCustomizing();
   let editControls = document.getElementById("edit-controls");
   let zoomControls = document.getElementById("zoom-controls");
   let placementsAfterMove = ["edit-controls",
@@ -258,8 +258,8 @@ add_task(function*() {
 
 // Dragging the edit-controls to be before the new-window-button should
 // move the zoom-controls before the edit-controls.
-add_task(function*() {
-  yield startCustomizing();
+add_task(async function() {
+  await startCustomizing();
   let editControls = document.getElementById("edit-controls");
   let newWindowButton = document.getElementById("new-window-button");
   let placementsAfterMove = ["zoom-controls",
@@ -288,8 +288,8 @@ add_task(function*() {
 // Dragging the edit-controls to be before the privatebrowsing-button
 // should move the edit-controls in to the row higher than the
 // privatebrowsing-button.
-add_task(function*() {
-  yield startCustomizing();
+add_task(async function() {
+  await startCustomizing();
   let editControls = document.getElementById("edit-controls");
   let privateBrowsingButton = document.getElementById("privatebrowsing-button");
   let placementsAfterMove = ["zoom-controls",
@@ -318,8 +318,8 @@ add_task(function*() {
 // Dragging the edit-controls to be before the save-page-button
 // should move the edit-controls in to the row higher than the
 // save-page-button.
-add_task(function*() {
-  yield startCustomizing();
+add_task(async function() {
+  await startCustomizing();
   let editControls = document.getElementById("edit-controls");
   let savePageButton = document.getElementById("save-page-button");
   let placementsAfterMove = ["zoom-controls",
@@ -347,8 +347,8 @@ add_task(function*() {
 
 // Dragging the edit-controls to the panel itself should append
 // the edit controls to the bottom of the panel.
-add_task(function* editControlsToPanelEmptySpace() {
-  yield startCustomizing();
+add_task(async function editControlsToPanelEmptySpace() {
+  await startCustomizing();
   let editControls = document.getElementById("edit-controls");
   let panel = document.getElementById(CustomizableUI.AREA_PANEL);
   let placementsAfterMove = ["zoom-controls",
@@ -381,8 +381,8 @@ add_task(function* editControlsToPanelEmptySpace() {
 
 // Dragging the edit-controls to the customization-palette and
 // back should work.
-add_task(function*() {
-  yield startCustomizing();
+add_task(async function() {
+  await startCustomizing();
   let editControls = document.getElementById("edit-controls");
   let palette = document.getElementById("customization-palette");
   let placementsAfterMove = ["zoom-controls",
@@ -418,8 +418,8 @@ add_task(function*() {
 
 // Dragging the edit-controls to each of the panel placeholders
 // should append the edit-controls to the bottom of the panel.
-add_task(function* editControlsToPanelPlaceholders() {
-  yield startCustomizing();
+add_task(async function editControlsToPanelPlaceholders() {
+  await startCustomizing();
   let editControls = document.getElementById("edit-controls");
   let panel = document.getElementById(CustomizableUI.AREA_PANEL);
   let numPlaceholders = 2;
@@ -458,8 +458,8 @@ add_task(function* editControlsToPanelPlaceholders() {
 });
 
 // Dragging the open-file-button back on to itself should work.
-add_task(function*() {
-  yield startCustomizing();
+add_task(async function() {
+  await startCustomizing();
   let openFileButton = document.getElementById("open-file-button");
   is(openFileButton.parentNode.tagName, "toolbarpaletteitem",
      "open-file-button should be wrapped by a toolbarpaletteitem");
@@ -473,13 +473,13 @@ add_task(function*() {
 });
 
 // Dragging a small button onto the last big button should work.
-add_task(function*() {
+add_task(async function() {
   // Bug 1007910 requires there be a placeholder on the final row for this
   // test to work as written. The addition of sync-button and
   // webcompat-reporter-button meant that's not true so we remove them from
   // here. Bug 1229236 is for these tests to be smarter.
   removeNonOriginalButtons();
-  yield startCustomizing();
+  await startCustomizing();
   let editControls = document.getElementById("edit-controls");
   let panel = document.getElementById(CustomizableUI.AREA_PANEL);
   let target = panel.getElementsByClassName("panel-customization-placeholder")[0];
@@ -514,7 +514,7 @@ add_task(function*() {
   ok(CustomizableUI.inDefaultState, "Should be in default state again.");
 });
 
-add_task(function* asyncCleanup() {
-  yield endCustomizing();
-  yield resetCustomization();
+add_task(async function asyncCleanup() {
+  await endCustomizing();
+  await resetCustomization();
 });

@@ -25,7 +25,6 @@ const kNotificationId = "automigration-undo";
 Cu.import("resource:///modules/MigrationUtils.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
                                   "resource://gre/modules/AsyncShutdown.jsm");
@@ -188,28 +187,28 @@ const AutoMigrate = {
   },
 
   _pendingUndoTasks: false,
-  canUndo: Task.async(function* () {
+  async canUndo() {
     if (this._savingPromise) {
-      yield this._savingPromise;
+      await this._savingPromise;
     }
     if (this._pendingUndoTasks) {
       return false;
     }
     let fileExists = false;
     try {
-      fileExists = yield OS.File.exists(kUndoStateFullPath);
+      fileExists = await OS.File.exists(kUndoStateFullPath);
     } catch (ex) {
       Cu.reportError(ex);
     }
     return fileExists;
-  }),
+  },
 
-  undo: Task.async(function* () {
+  async undo() {
     let browserId = Preferences.get(kAutoMigrateBrowserPref, "unknown");
     TelemetryStopwatch.startKeyed("FX_STARTUP_MIGRATION_UNDO_TOTAL_MS", browserId);
     let histogram = Services.telemetry.getHistogramById("FX_STARTUP_MIGRATION_AUTOMATED_IMPORT_UNDO");
     histogram.add(0);
-    if (!(yield this.canUndo())) {
+    if (!(await this.canUndo())) {
       histogram.add(5);
       throw new Error("Can't undo!");
     }
@@ -222,7 +221,7 @@ const AutoMigrate = {
       encoding: "utf-8",
       compression: "lz4",
     });
-    let stateData = this._dejsonifyUndoState(yield readPromise);
+    let stateData = this._dejsonifyUndoState(await readPromise);
     histogram.add(12);
 
     this._errorMap = {bookmarks: 0, visits: 0, logins: 0};
@@ -240,7 +239,7 @@ const AutoMigrate = {
       TelemetryStopwatch.finishKeyed(histogramId, browserId);
     };
     startTelemetryStopwatch("bookmarks");
-    yield this._removeUnchangedBookmarks(stateData.get("bookmarks")).catch(ex => {
+    await this._removeUnchangedBookmarks(stateData.get("bookmarks")).catch(ex => {
       Cu.reportError("Uncaught exception when removing unchanged bookmarks!");
       Cu.reportError(ex);
     });
@@ -249,7 +248,7 @@ const AutoMigrate = {
     histogram.add(15);
 
     startTelemetryStopwatch("visits");
-    yield this._removeSomeVisits(stateData.get("visits")).catch(ex => {
+    await this._removeSomeVisits(stateData.get("visits")).catch(ex => {
       Cu.reportError("Uncaught exception when removing history visits!");
       Cu.reportError(ex);
     });
@@ -258,7 +257,7 @@ const AutoMigrate = {
     histogram.add(20);
 
     startTelemetryStopwatch("logins");
-    yield this._removeUnchangedLogins(stateData.get("logins")).catch(ex => {
+    await this._removeUnchangedLogins(stateData.get("logins")).catch(ex => {
       Cu.reportError("Uncaught exception when removing unchanged logins!");
       Cu.reportError(ex);
     });
@@ -274,7 +273,7 @@ const AutoMigrate = {
     this._purgeUndoState(this.UNDO_REMOVED_REASON_UNDO_USED);
     histogram.add(30);
     TelemetryStopwatch.finishKeyed("FX_STARTUP_MIGRATION_UNDO_TOTAL_MS", browserId);
-  }),
+  },
 
   _removeNotificationBars() {
     let browserWindows = Services.wm.getEnumerator("navigator:browser");
@@ -321,8 +320,8 @@ const AutoMigrate = {
    * @param target (xul:browser)
    *        The browser in which we should show the notification.
    */
-  maybeShowUndoNotification: Task.async(function* (target) {
-    if (!(yield this.canUndo())) {
+  async maybeShowUndoNotification(target) {
+    if (!(await this.canUndo())) {
       return;
     }
 
@@ -381,7 +380,7 @@ const AutoMigrate = {
     );
     let remainingDays = Preferences.get(kAutoMigrateDaysToOfferUndoPref, 0);
     Services.telemetry.getHistogramById("FX_STARTUP_MIGRATION_UNDO_OFFERED").add(4 - remainingDays);
-  }),
+  },
 
   shouldStillShowUndoPrompt() {
     let today = new Date();
@@ -477,11 +476,11 @@ const AutoMigrate = {
    * Store the information required for using 'undo' of the automatic
    * migration in the user's profile.
    */
-  saveUndoState: Task.async(function* () {
+  async saveUndoState() {
     let resolveSavingPromise;
     this._saveUndoStateTrackerForShutdown = "processing undo history";
     this._savingPromise = new Promise(resolve => { resolveSavingPromise = resolve });
-    let state = yield MigrationUtils.stopAndRetrieveUndoData();
+    let state = await MigrationUtils.stopAndRetrieveUndoData();
 
     if (!state || ![...state.values()].some(ary => ary.length > 0)) {
       // If we didn't import anything, abort now.
@@ -509,9 +508,9 @@ const AutoMigrate = {
         throw e;
       });
     return this._undoSavePromise;
-  }),
+  },
 
-  _removeUnchangedBookmarks: Task.async(function* (bookmarks) {
+  async _removeUnchangedBookmarks(bookmarks) {
     if (!bookmarks.length) {
       return;
     }
@@ -530,7 +529,7 @@ const AutoMigrate = {
     });
     // We can't use the result of Promise.all because that would include nulls
     // for bookmarks that no longer exist (which we're catching above).
-    yield Promise.all(bmPromises);
+    await Promise.all(bmPromises);
     let unchangedBookmarks = bookmarksFromDB.filter(bm => {
       return bm.lastModified.getTime() == guidToLMMap.get(bm.guid).getTime();
     });
@@ -558,7 +557,7 @@ const AutoMigrate = {
       // Can't just use a .catch() because Bookmarks.remove() can throw (rather
       // than returning rejected promises).
       try {
-        yield PlacesUtils.bookmarks.remove(guid, {preventRemovalOfNonEmptyFolders: true});
+        await PlacesUtils.bookmarks.remove(guid, {preventRemovalOfNonEmptyFolders: true});
       } catch (err) {
         if (err && err.message != "Cannot remove a non-empty folder.") {
           this._errorMap.bookmarks++;
@@ -566,9 +565,9 @@ const AutoMigrate = {
         }
       }
     }
-  }),
+  },
 
-  _removeUnchangedLogins: Task.async(function* (logins) {
+  async _removeUnchangedLogins(logins) {
     for (let login of logins) {
       let foundLogins = LoginHelper.searchLoginsWithObject({guid: login.guid});
       if (foundLogins.length) {
@@ -585,9 +584,9 @@ const AutoMigrate = {
         }
       }
     }
-  }),
+  },
 
-  _removeSomeVisits: Task.async(function* (visits) {
+  async _removeSomeVisits(visits) {
     for (let urlVisits of visits) {
       let urlObj;
       try {
@@ -602,7 +601,7 @@ const AutoMigrate = {
         limit: urlVisits.visitCount,
       };
       try {
-        yield PlacesUtils.history.removeVisitsByFilter(visitData);
+        await PlacesUtils.history.removeVisitsByFilter(visitData);
       } catch (ex) {
         this._errorMap.visits++;
         try {
@@ -612,7 +611,7 @@ const AutoMigrate = {
         Cu.reportError(ex);
       }
     }
-  }),
+  },
 
   /**
    * Maybe open a new tab with a survey. The tab will only be opened if all of

@@ -84,7 +84,7 @@ function task(contentConsts) {
   return promise;
 }
 
-add_task(function* () {
+add_task(async function() {
   let tab = gBrowser.selectedTab = gBrowser.addTab();
   let promise = ContentTask.spawn(tab.linkedBrowser, consts, task);
   tab.linkedBrowser.loadURI("data:text/html;charset=utf-8," +
@@ -93,7 +93,7 @@ add_task(function* () {
                             "<input id='" + consts.CHANGE_INPUT_ID + "'></form>" +
 			    "<form id='" + consts.FORM2_ID + "'></form>" +
 			    "</body></html>");
-  yield promise;
+  await promise;
   gBrowser.removeCurrentTab();
 });
 

@@ -4,19 +4,19 @@
 
 Cu.import("resource://testing-common/PlacesTestUtils.jsm");
 
-add_task(function* test_global_history() {
+add_task(async function test_global_history() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
       browser.test.sendMessage("background-loaded", location.href);
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  let backgroundURL = yield extension.awaitMessage("background-loaded");
+  let backgroundURL = await extension.awaitMessage("background-loaded");
 
-  yield extension.unload();
+  await extension.unload();
 
-  let exists = yield PlacesTestUtils.isPageInDB(backgroundURL);
+  let exists = await PlacesTestUtils.isPageInDB(backgroundURL);
   ok(!exists, "Background URL should not be in history database");
 });

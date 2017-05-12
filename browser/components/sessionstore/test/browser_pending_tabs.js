@@ -7,11 +7,11 @@ const TAB_STATE = {
   index: 1,
 };
 
-add_task(function* () {
+add_task(async function() {
   // Create a background tab.
   let tab = gBrowser.addTab("about:blank");
   let browser = tab.linkedBrowser;
-  yield promiseBrowserLoaded(browser);
+  await promiseBrowserLoaded(browser);
 
   // The tab shouldn't be restored right away.
   Services.prefs.setBoolPref("browser.sessionstore.restore_on_demand", true);
@@ -20,10 +20,10 @@ add_task(function* () {
   let promise = promiseTabRestoring(tab);
   ss.setTabState(tab, JSON.stringify(TAB_STATE));
   ok(tab.hasAttribute("pending"), "tab is pending");
-  yield promise;
+  await promise;
 
   // Flush to ensure the parent has all data.
-  yield TabStateFlusher.flush(browser);
+  await TabStateFlusher.flush(browser);
 
   // Check that the shistory index is the one we restored.
   let tabState = TabState.collect(tab);

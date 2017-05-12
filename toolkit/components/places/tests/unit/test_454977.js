@@ -8,7 +8,7 @@
 var visit_count = 0;
 
 // Returns the Place ID corresponding to an added visit.
-function* task_add_visit(aURI, aVisitType) {
+async function task_add_visit(aURI, aVisitType) {
   // Add the visit asynchronously, and save its visit ID.
   let deferUpdatePlaces = new Promise((resolve, reject) => {
     PlacesUtils.asyncHistory.updatePlaces({
@@ -27,7 +27,7 @@ function* task_add_visit(aURI, aVisitType) {
     });
   });
 
-  let visitId = yield deferUpdatePlaces;
+  let visitId = await deferUpdatePlaces;
 
   // Increase visit_count if applicable
   if (aVisitType != 0 &&
@@ -87,33 +87,33 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_execute() {
+add_task(async function test_execute() {
   const TEST_URI = uri("http://test.mozilla.org/");
 
   // Add a visit that force hidden
-  yield task_add_visit(TEST_URI, TRANSITION_EMBED);
+  await task_add_visit(TEST_URI, TRANSITION_EMBED);
   check_results(0, 0);
 
-  let placeId = yield task_add_visit(TEST_URI, TRANSITION_FRAMED_LINK);
+  let placeId = await task_add_visit(TEST_URI, TRANSITION_FRAMED_LINK);
   check_results(0, 1);
 
   // Add a visit that force unhide and check the place id.
   // - We expect that the place gets hidden = 0 while retaining the same
   //   place id and a correct visit_count.
-  do_check_eq((yield task_add_visit(TEST_URI, TRANSITION_TYPED)), placeId);
+  do_check_eq((await task_add_visit(TEST_URI, TRANSITION_TYPED)), placeId);
   check_results(1, 1);
 
   // Add a visit that should not increase visit_count
-  do_check_eq((yield task_add_visit(TEST_URI, TRANSITION_RELOAD)), placeId);
+  do_check_eq((await task_add_visit(TEST_URI, TRANSITION_RELOAD)), placeId);
   check_results(1, 1);
 
   // Add a visit that should not increase visit_count
-  do_check_eq((yield task_add_visit(TEST_URI, TRANSITION_DOWNLOAD)), placeId);
+  do_check_eq((await task_add_visit(TEST_URI, TRANSITION_DOWNLOAD)), placeId);
   check_results(1, 1);
 
   // Add a visit, check that hidden is not overwritten
   // - We expect that the place has still hidden = 0, while retaining
   //   correct visit_count.
-  yield task_add_visit(TEST_URI, TRANSITION_EMBED);
+  await task_add_visit(TEST_URI, TRANSITION_EMBED);
   check_results(1, 1);
 });

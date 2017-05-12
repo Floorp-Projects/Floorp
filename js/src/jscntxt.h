@@ -68,6 +68,25 @@ struct AutoResolving;
 
 struct HelperThread;
 
+using JobQueue = GCVector<JSObject*, 0, SystemAllocPolicy>;
+
+class AutoLockForExclusiveAccess;
+
+/*
+ * Used for engine-internal handling of async tasks, as currently
+ * enabled in the js shell and jsapi tests.
+ */
+struct InternalAsyncTasks
+{
+    explicit InternalAsyncTasks()
+      : outstanding(0),
+        finished()
+    {}
+
+    size_t outstanding;
+    Vector<JS::AsyncTask*, 0, SystemAllocPolicy> finished;
+};
+
 void ReportOverRecursed(JSContext* cx, unsigned errorNumber);
 
 /* Thread Local Storage slot for storing the context for a thread. */
@@ -293,9 +312,6 @@ struct JSContext : public JS::RootingContext,
     static size_t offsetOfActivation() {
         return offsetof(JSContext, activation_);
     }
-    static size_t offsetOfWasmActivation() {
-        return offsetof(JSContext, wasmActivationStack_);
-    }
     static size_t offsetOfProfilingActivation() {
         return offsetof(JSContext, profilingActivation_);
      }
@@ -369,16 +385,6 @@ struct JSContext : public JS::RootingContext,
     js::Activation* volatile profilingActivation_;
 
   public:
-    /* See WasmActivation comment. */
-    js::WasmActivation* volatile wasmActivationStack_;
-
-    js::WasmActivation* wasmActivationStack() const {
-        return wasmActivationStack_;
-    }
-    static js::WasmActivation* innermostWasmActivation() {
-        return js::TlsContext.get()->wasmActivationStack_;
-    }
-
     js::Activation* activation() const {
         return activation_;
     }
@@ -919,6 +925,14 @@ struct JSContext : public JS::RootingContext,
     js::ThreadLocalData<JSGetIncumbentGlobalCallback> getIncumbentGlobalCallback;
     js::ThreadLocalData<JSEnqueuePromiseJobCallback> enqueuePromiseJobCallback;
     js::ThreadLocalData<void*> enqueuePromiseJobCallbackData;
+
+    // Queue of pending jobs as described in ES2016 section 8.4.
+    // Only used if internal job queue handling was activated using
+    // `js::UseInternalJobQueues`.
+    js::ThreadLocalData<JS::PersistentRooted<js::JobQueue>*> jobQueue;
+    js::ThreadLocalData<bool> drainingJobQueue;
+    js::ThreadLocalData<bool> stopDrainingJobQueue;
+    js::ExclusiveData<js::InternalAsyncTasks> asyncTasks;
 
     js::ThreadLocalData<JSPromiseRejectionTrackerCallback> promiseRejectionTrackerCallback;
     js::ThreadLocalData<void*> promiseRejectionTrackerCallbackData;

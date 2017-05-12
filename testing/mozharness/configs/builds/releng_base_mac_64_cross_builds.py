@@ -11,12 +11,10 @@ config = {
         'clone-tools',
         'checkout-sources',
         'build',
-        'generate-build-stats',
         'update',  # decided by query_is_nightly()
     ],
     "buildbot_json_path": "buildprops.json",
     'exes': {
-        'python2.7': sys.executable,
         "buildbot": "/tools/buildbot/bin/buildbot",
     },
     'app_ini_path': '%(obj_dir)s/dist/bin/application.ini',
@@ -30,7 +28,6 @@ config = {
          'secret_name': 'project/releng/gecko/build/level-%(scm-level)s/mozilla-desktop-geoloc-api.key',
          'min_scm_level': 2, 'default': 'try-build-has-no-secrets'},
     ],
-    'enable_ccache': True,
     'enable_check_test': False,
     'vcs_share_base': '/builds/hg-shared',
     'objdir': 'obj-firefox/',

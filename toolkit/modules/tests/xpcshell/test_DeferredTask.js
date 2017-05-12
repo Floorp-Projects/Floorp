@@ -28,9 +28,9 @@ const T = 100;
  * Waits for the specified timeout before resolving the returned promise.
  */
 function promiseTimeout(aTimeoutMs) {
-  let deferred = Promise.defer();
-  do_timeout(aTimeoutMs, deferred.resolve);
-  return deferred.promise;
+  return new Promise(resolve => {
+    do_timeout(aTimeoutMs, resolve);
+  });
 }
 
 function run_test() {
@@ -145,8 +145,8 @@ add_test(function test_arm_async() {
   let finishedExecutionAgain = false;
 
   // Create a task that will run later.
-  let deferredTask = new DeferredTask(function* () {
-    yield promiseTimeout(4 * T);
+  let deferredTask = new DeferredTask(async function() {
+    await promiseTimeout(4 * T);
     if (!finishedExecution) {
       finishedExecution = true;
     } else if (!finishedExecutionAgain) {
@@ -233,9 +233,9 @@ add_test(function test_disarm_delay_restarted() {
 add_test(function test_disarm_async() {
   let finishedExecution = false;
 
-  let deferredTask = new DeferredTask(function* () {
+  let deferredTask = new DeferredTask(async function() {
     deferredTask.arm();
-    yield promiseTimeout(2 * T);
+    await promiseTimeout(2 * T);
     finishedExecution = true;
   }, 1 * T);
   deferredTask.arm();
@@ -262,10 +262,10 @@ add_test(function test_disarm_async() {
 add_test(function test_disarm_immediate_async() {
   let executed = false;
 
-  let deferredTask = new DeferredTask(function* () {
+  let deferredTask = new DeferredTask(async function() {
     do_check_false(executed);
     executed = true;
-    yield promiseTimeout(2 * T);
+    await promiseTimeout(2 * T);
   }, 1 * T);
   deferredTask.arm();
 
@@ -335,7 +335,7 @@ add_test(function test_finalize_executes_entirely() {
   let executedAgain = false;
   let timePassed = false;
 
-  let deferredTask = new DeferredTask(function* () {
+  let deferredTask = new DeferredTask(async function() {
     // The first time, we arm the timer again and set up the finalization.
     if (!executed) {
       deferredTask.arm();
@@ -359,7 +359,7 @@ add_test(function test_finalize_executes_entirely() {
       do_timeout(3 * T, () => { timePassed = true; });
     }
 
-    yield promiseTimeout(1 * T);
+    await promiseTimeout(1 * T);
 
     // Just before finishing, indicate if we completed the second execution.
     if (executed) {

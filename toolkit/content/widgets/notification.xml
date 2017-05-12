@@ -42,23 +42,35 @@
       <field name="_blockingCanvas">null</field>
       <field name="_animating">false</field>
 
+      <property name="_allowAnimation">
+        <getter>
+          <![CDATA[
+            var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                                  .getService(Components.interfaces.nsIPrefBranch);
+            return prefs.getBoolPref("toolkit.cosmeticAnimations.enabled");
+          ]]>
+        </getter>
+      </property>
+
       <property name="notificationsHidden"
                 onget="return this.getAttribute('notificationshidden') == 'true';">
         <setter>
-          if (val)
-            this.setAttribute("notificationshidden", true);
-          else this.removeAttribute("notificationshidden");
-          return val;
+          <![CDATA[
+            if (val)
+              this.setAttribute("notificationshidden", true);
+            else this.removeAttribute("notificationshidden");
+            return val;
+          ]]>
         </setter>
       </property>
 
       <property name="allNotifications" readonly="true">
         <getter>
-        <![CDATA[
-          var closedNotification = this._closedNotification;
-          var notifications = this.getElementsByTagName("notification");
-          return Array.filter(notifications, n => n != closedNotification);
-        ]]>
+          <![CDATA[
+            var closedNotification = this._closedNotification;
+            var notifications = this.getElementsByTagName("notification");
+            return Array.filter(notifications, n => n != closedNotification);
+          ]]>
         </getter>
       </property>
 
@@ -236,8 +248,13 @@
             }
             this.currentNotification = null;
 
-            // Must clear up any currently animating notification
-            if (aImmediate)
+            // Clean up any currently-animating notification; this is necessary
+            // if a notification was just opened and is still animating, but we
+            // want to close it *without* animating.  This can even happen if
+            // the user toggled `toolkit.cosmeticAnimations.enabled` to false
+            // and called this method immediately after an animated notification
+            // displayed (although this case isn't very likely).
+            if (aImmediate || !this._allowAnimation)
               this._finishAnimation();
           ]]>
         </body>
@@ -267,7 +284,9 @@
             this._finishAnimation();
 
             var height = aNotification.boxObject.height;
-            var skipAnimation = aSkipAnimation || (height == 0);
+            var skipAnimation = aSkipAnimation || height == 0 ||
+                                !this._allowAnimation;
+            aNotification.classList.toggle("animated", !skipAnimation);
 
             if (aSlideIn) {
               this.currentNotification = aNotification;

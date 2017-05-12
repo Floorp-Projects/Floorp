@@ -9,7 +9,7 @@ var browserAreas = {
   "personaltoolbar": CustomizableUI.AREA_BOOKMARKS,
 };
 
-function* testInArea(area) {
+async function testInArea(area) {
   let manifest = {
     "browser_action": {
       "browser_style": true,
@@ -21,29 +21,29 @@ function* testInArea(area) {
   let extension = ExtensionTestUtils.loadExtension({
     manifest,
   });
-  yield extension.startup();
+  await extension.startup();
   let widget = getBrowserActionWidget(extension);
   let placement = CustomizableUI.getPlacementOfWidget(widget.id);
   is(placement && placement.area, browserAreas[area || "navbar"], `widget located in correct area`);
-  yield extension.unload();
+  await extension.unload();
 }
 
-add_task(function* testBrowserActionDefaultArea() {
-  yield testInArea();
+add_task(async function testBrowserActionDefaultArea() {
+  await testInArea();
 });
 
-add_task(function* testBrowserActionInToolbar() {
-  yield testInArea("navbar");
+add_task(async function testBrowserActionInToolbar() {
+  await testInArea("navbar");
 });
 
-add_task(function* testBrowserActionInMenuPanel() {
-  yield testInArea("menupanel");
+add_task(async function testBrowserActionInMenuPanel() {
+  await testInArea("menupanel");
 });
 
-add_task(function* testBrowserActionInTabStrip() {
-  yield testInArea("tabstrip");
+add_task(async function testBrowserActionInTabStrip() {
+  await testInArea("tabstrip");
 });
 
-add_task(function* testBrowserActionInPersonalToolbar() {
-  yield testInArea("personaltoolbar");
+add_task(async function testBrowserActionInPersonalToolbar() {
+  await testInArea("personaltoolbar");
 });

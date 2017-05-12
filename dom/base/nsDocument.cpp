@@ -233,7 +233,6 @@
 #include "nsIEditor.h"
 #include "nsIDOMCSSStyleRule.h"
 #include "mozilla/css/StyleRule.h"
-#include "nsIDOMLocation.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsISecurityConsoleMessage.h"
 #include "nsCharSeparatedTokenizer.h"
@@ -2150,10 +2149,17 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
         mFirstChild = content->GetNextSibling();
       }
       mChildren.RemoveChildAt(i);
+      if (content == mCachedRootElement) {
+        // Immediately clear mCachedRootElement, now that it's been removed
+        // from mChildren, so that GetRootElement() will stop returning this
+        // now-stale value.
+        mCachedRootElement = nullptr;
+      }
       nsNodeUtils::ContentRemoved(this, content, i, previousSibling);
       content->UnbindFromTree();
     }
-    mCachedRootElement = nullptr;
+    MOZ_ASSERT(!mCachedRootElement,
+               "After removing all children, there should be no root elem");
   }
   mInUnlinkOrDeletion = oldVal;
 
@@ -6854,13 +6860,6 @@ nsDocument::GetDefaultView(mozIDOMWindowProxy** aDefaultView)
   *aDefaultView = nullptr;
   nsCOMPtr<nsPIDOMWindowOuter> win = GetWindow();
   win.forget(aDefaultView);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetLocation(nsIDOMLocation **_retval)
-{
-  *_retval = nsIDocument::GetLocation().take();
   return NS_OK;
 }
 

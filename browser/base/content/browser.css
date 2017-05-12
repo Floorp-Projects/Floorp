@@ -12,7 +12,6 @@
   --lwt-additional-images: none;
   --lwt-background-alignment: right top;
   --lwt-background-tiling: no-repeat;
-  --animation-easing-function: cubic-bezier(.07, .95, 0, 1);
 }
 
 :root:-moz-lwtheme {
@@ -225,6 +224,20 @@ toolbar[customizing] > .overflow-button {
   display: none;
 }
 
+#nav-bar[nonemptyoverflow] > .overflow-button,
+#nav-bar[customizing][photon-structure] > .overflow-button {
+  display: -moz-box;
+}
+
+/* The ids are ugly, but this should be reasonably performant, and
+ * using a tagname as the last item would be less so.
+ */
+#widget-overflow:not([hasdynamicitems]) #widget-overflow-fixed-separator,
+#widget-overflow-fixed-list:empty + #widget-overflow-fixed-separator {
+  display: none;
+}
+
+
 %ifdef CAN_DRAW_IN_TITLEBAR
 #main-window:not([chromemargin]) > #titlebar,
 #main-window[inFullscreen] > #titlebar,
@@ -419,8 +432,8 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   display: -moz-box;
 }
 
-#urlbar-reload-button:not([displaystop]) + #urlbar-stop-button,
-#urlbar-reload-button[displaystop] {
+#reload-button:not([displaystop]) + #stop-button,
+#reload-button[displaystop] {
   visibility: collapse;
 }
 
@@ -598,12 +611,14 @@ html|input.urlbar-input[textoverflow]:not([focused]) {
 }
 
 #urlbar[pageproxystate="invalid"] > #urlbar-icons > .urlbar-icon,
+%ifdef MOZ_PHOTON_THEME
+.urlbar-go-button[pageproxystate="valid"],
+.urlbar-go-button:not([parentfocused="true"]),
+%else
 #urlbar[pageproxystate="invalid"][focused="true"] > #urlbar-go-button ~ toolbarbutton,
 #urlbar[pageproxystate="valid"] > #urlbar-go-button,
-#urlbar:not([focused="true"]) > #urlbar-go-button {
-  visibility: collapse;
-}
-
+#urlbar:not([focused="true"]) > #urlbar-go-button,
+%endif
 #urlbar[pageproxystate="invalid"] > #identity-box > #blocked-permissions-container,
 #urlbar[pageproxystate="invalid"] > #identity-box > #notification-popup-box,
 #urlbar[pageproxystate="invalid"] > #identity-box > #identity-icon-labels {

@@ -32,7 +32,8 @@ void
 XDRState<mode>::postProcessContextErrors(JSContext* cx)
 {
     if (!cx->helperThread() && cx->isExceptionPending()) {
-        MOZ_ASSERT(resultCode_ == JS::TranscodeResult_Ok);
+        MOZ_ASSERT(resultCode_ == JS::TranscodeResult_Ok ||
+                   resultCode_ == JS::TranscodeResult_Throw);
         resultCode_ = JS::TranscodeResult_Throw;
     }
 }

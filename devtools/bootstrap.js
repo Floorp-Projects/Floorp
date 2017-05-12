@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global content */
+/* global content, APP_SHUTDOWN */
 /* exported startup, shutdown, install, uninstall */
 
 "use strict";
@@ -12,18 +12,6 @@ const Ci = Components.interfaces;
 const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 const {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 
-let prefs = {
-  // Enable dump as some errors are only printed on the stdout
-  "browser.dom.window.dump.enabled": true,
-  // Enable the browser toolbox and various chrome-only features
-  "devtools.chrome.enabled": true,
-  "devtools.debugger.remote-enabled": true,
-  // Disable the prompt to ease usage of the browser toolbox
-  "devtools.debugger.prompt-connection": false,
-};
-
-// Values of debug pref before overriding them
-let originalPrefValues = {};
 // MultiWindowKeyListener instance for Ctrl+Alt+R key
 let listener;
 // nsIURI to the addon root folder
@@ -53,7 +41,7 @@ function readURI(uri) {
 }
 
 // Read a preference file and set all of its defined pref as default values
-// (This replicate the behavior of preferences files from mozilla-central)
+// (This replicates the behavior of preferences files from mozilla-central)
 function processPrefFile(url) {
   let content = readURI(url);
   content.match(/pref\("[^"]+",\s*.+\s*\)/g).forEach(item => {
@@ -140,6 +128,42 @@ let getTopLevelWindow = function (window) {
                .getInterface(Ci.nsIDOMWindow);
 };
 
+function unload(reason) {
+  // This frame script is going to be executed in all processes:
+  // parent and child
+  Services.ppmm.loadProcessScript("data:,(" + function (scriptReason) {
+    /* Flush message manager cached frame scripts as well as chrome locales */
+    let obs = Components.classes["@mozilla.org/observer-service;1"]
+                        .getService(Components.interfaces.nsIObserverService);
+    obs.notifyObservers(null, "message-manager-flush-caches");
+
+    /* Also purge cached modules in child processes, we do it a few lines after
+       in the parent process */
+    if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
+      Services.obs.notifyObservers(null, "devtools-unload", scriptReason);
+    }
+  } + ")(\"" + reason.replace(/"/g, '\\"') + "\")", false);
+
+  // As we can't get a reference to existing Loader.jsm instances, we send them
+  // an observer service notification to unload them.
+  Services.obs.notifyObservers(null, "devtools-unload", reason);
+
+  // Then spawn a brand new Loader.jsm instance and start the main module
+  Cu.unload("resource://devtools/shared/Loader.jsm");
+  // Also unload all resources loaded as jsm, hopefully all of them are going
+  // to be converted into regular modules
+  Cu.unload("resource://devtools/client/shared/browser-loader.js");
+  Cu.unload("resource://devtools/client/framework/ToolboxProcess.jsm");
+  Cu.unload("resource://devtools/shared/apps/Devices.jsm");
+  Cu.unload("resource://devtools/client/scratchpad/scratchpad-manager.jsm");
+  Cu.unload("resource://devtools/shared/Parser.jsm");
+  Cu.unload("resource://devtools/client/shared/DOMHelpers.jsm");
+  Cu.unload("resource://devtools/client/shared/widgets/VariablesView.jsm");
+  Cu.unload("resource://devtools/client/responsivedesign/responsivedesign.jsm");
+  Cu.unload("resource://devtools/client/shared/widgets/AbstractTreeItem.jsm");
+  Cu.unload("resource://devtools/shared/deprecated-sync-thenables.js");
+}
+
 function reload(event) {
   // We automatically reload the toolbox if we are on a browser tab
   // with a toolbox already opened
@@ -172,39 +196,7 @@ function reload(event) {
   // Invalidate xul cache in order to see changes made to chrome:// files
   Services.obs.notifyObservers(null, "startupcache-invalidate");
 
-  // This frame script is going to be executed in all processes:
-  // parent and child
-  Services.ppmm.loadProcessScript("data:,new " + function () {
-    /* Flush message manager cached frame scripts as well as chrome locales */
-    let obs = Components.classes["@mozilla.org/observer-service;1"]
-                        .getService(Components.interfaces.nsIObserverService);
-    obs.notifyObservers(null, "message-manager-flush-caches");
-
-    /* Also purge cached modules in child processes, we do it a few lines after
-       in the parent process */
-    if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
-      Services.obs.notifyObservers(null, "devtools-unload", "reload");
-    }
-  }, false);
-
-  // As we can't get a reference to existing Loader.jsm instances, we send them
-  // an observer service notification to unload them.
-  Services.obs.notifyObservers(null, "devtools-unload", "reload");
-
-  // Then spawn a brand new Loader.jsm instance and start the main module
-  Cu.unload("resource://devtools/shared/Loader.jsm");
-  // Also unload all resources loaded as jsm, hopefully all of them are going
-  // to be converted into regular modules
-  Cu.unload("resource://devtools/client/shared/browser-loader.js");
-  Cu.unload("resource://devtools/client/framework/ToolboxProcess.jsm");
-  Cu.unload("resource://devtools/shared/apps/Devices.jsm");
-  Cu.unload("resource://devtools/client/scratchpad/scratchpad-manager.jsm");
-  Cu.unload("resource://devtools/shared/Parser.jsm");
-  Cu.unload("resource://devtools/client/shared/DOMHelpers.jsm");
-  Cu.unload("resource://devtools/client/shared/widgets/VariablesView.jsm");
-  Cu.unload("resource://devtools/client/responsivedesign/responsivedesign.jsm");
-  Cu.unload("resource://devtools/client/shared/widgets/AbstractTreeItem.jsm");
-  Cu.unload("resource://devtools/shared/deprecated-sync-thenables.js");
+  unload("reload");
 
   // Update the preferences before starting new code
   setPrefs();
@@ -279,32 +271,18 @@ function startup(data) {
   });
   listener.start();
 
-  // Toggle development prefs and save original values
-  originalPrefValues = {};
-  for (let name in prefs) {
-    let value = prefs[name];
-    let userValue = Services.prefs.getBoolPref(name);
-    // Only toggle if the pref isn't already set to the right value
-    if (userValue != value) {
-      Services.prefs.setBoolPref(name, value);
-      originalPrefValues[name] = userValue;
-    }
-  }
-
   reload();
 }
-function shutdown() {
+function shutdown(data, reason) {
+  // On browser shutdown, do not try to cleanup anything
+  if (reason == APP_SHUTDOWN) {
+    return;
+  }
+
   listener.stop();
   listener = null;
 
-  // Restore preferences that used to be before the addon was installed
-  for (let name in originalPrefValues) {
-    let userValue = Services.prefs.getBoolPref(name);
-    // Only reset the pref if it hasn't changed
-    if (userValue == prefs[name]) {
-      Services.prefs.setBoolPref(name, originalPrefValues[name]);
-    }
-  }
+  unload("disable");
 }
 function install() {
   try {

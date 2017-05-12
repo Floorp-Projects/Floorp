@@ -40,22 +40,22 @@ const STATES = [{
     }
   }];
 
-add_task(function* test_bug_490040() {
+add_task(async function test_bug_490040() {
   for (let state of STATES) {
     // Ensure we can store the window if needed.
     let startingClosedWindowCount = ss.getClosedWindowCount();
-    yield pushPrefs(["browser.sessionstore.max_windows_undo",
+    await pushPrefs(["browser.sessionstore.max_windows_undo",
                      startingClosedWindowCount + 1]);
 
     let curClosedWindowCount = ss.getClosedWindowCount();
-    let win = yield BrowserTestUtils.openNewBrowserWindow();
+    let win = await BrowserTestUtils.openNewBrowserWindow();
 
     ss.setWindowState(win, JSON.stringify(state.windowState), true);
     if (state.windowState.windows[0].tabs.length) {
-      yield BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+      await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     }
 
-    yield BrowserTestUtils.closeWindow(win);
+    await BrowserTestUtils.closeWindow(win);
 
     is(ss.getClosedWindowCount(),
        curClosedWindowCount + (state.shouldBeAdded ? 1 : 0),

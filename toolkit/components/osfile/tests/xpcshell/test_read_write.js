@@ -9,46 +9,46 @@ var SHARED_PATH;
 
 var EXISTING_FILE = do_get_file("xpcshell.ini").path;
 
-add_task(function* init() {
+add_task(async function init() {
   do_get_profile();
   SHARED_PATH = OS.Path.join(OS.Constants.Path.profileDir, "test_osfile_read.tmp");
 });
 
 
 // Check that OS.File.read() is executed after the previous operation
-add_test_pair(function* ordering() {
+add_test_pair(async function ordering() {
   let string1 = "Initial state " + Math.random();
   let string2 = "After writing " + Math.random();
-  yield OS.File.writeAtomic(SHARED_PATH, string1);
+  await OS.File.writeAtomic(SHARED_PATH, string1);
   OS.File.writeAtomic(SHARED_PATH, string2);
-  let string3 = yield OS.File.read(SHARED_PATH, { encoding: "utf-8" });
+  let string3 = await OS.File.read(SHARED_PATH, { encoding: "utf-8" });
   do_check_eq(string3, string2);
 });
 
-add_test_pair(function* read_write_all() {
+add_test_pair(async function read_write_all() {
   let DEST_PATH = SHARED_PATH + Math.random();
   let TMP_PATH = DEST_PATH + ".tmp";
 
   let test_with_options = function(options, suffix) {
-    return Task.spawn(function*() {
+    return (async function() {
       do_print("Running test read_write_all with options " + JSON.stringify(options));
       let TEST = "read_write_all " + suffix;
 
       let optionsBackup = JSON.parse(JSON.stringify(options));
 
       // Check that read + writeAtomic performs a correct copy
-      let currentDir = yield OS.File.getCurrentDirectory();
+      let currentDir = await OS.File.getCurrentDirectory();
       let pathSource = OS.Path.join(currentDir, EXISTING_FILE);
-      let contents = yield OS.File.read(pathSource);
+      let contents = await OS.File.read(pathSource);
       do_check_true(!!contents); // Content is not empty
       let bytesRead = contents.byteLength;
 
-      let bytesWritten = yield OS.File.writeAtomic(DEST_PATH, contents, options);
+      let bytesWritten = await OS.File.writeAtomic(DEST_PATH, contents, options);
       do_check_eq(bytesRead, bytesWritten); // Correct number of bytes written
 
       // Check that options are not altered
       do_check_eq(JSON.stringify(options), JSON.stringify(optionsBackup));
-      yield reference_compare_files(pathSource, DEST_PATH, TEST);
+      await reference_compare_files(pathSource, DEST_PATH, TEST);
 
       // Check that temporary file was removed or never created exist
       do_check_false(new FileUtils.File(TMP_PATH).exists());
@@ -60,12 +60,12 @@ add_test_pair(function* read_write_all() {
       try {
         let opt = JSON.parse(JSON.stringify(options));
         opt.noOverwrite = true;
-        yield OS.File.writeAtomic(DEST_PATH, view, opt);
+        await OS.File.writeAtomic(DEST_PATH, view, opt);
         do_throw("With noOverwrite, writeAtomic should have refused to overwrite file (" + suffix + ")");
       } catch (err if err instanceof OS.File.Error && err.becauseExists) {
         do_print("With noOverwrite, writeAtomic correctly failed (" + suffix + ")");
       }
-      yield reference_compare_files(pathSource, DEST_PATH, TEST);
+      await reference_compare_files(pathSource, DEST_PATH, TEST);
 
       // Check that temporary file was removed or never created
       do_check_false(new FileUtils.File(TMP_PATH).exists());
@@ -77,24 +77,24 @@ add_test_pair(function* read_write_all() {
       for (var i = 0; i < contents.byteLength; i++)
         contents[i] = i % 256;
       view = new Uint8Array(contents.buffer, START, LENGTH);
-      bytesWritten = yield OS.File.writeAtomic(DEST_PATH, view, options);
+      bytesWritten = await OS.File.writeAtomic(DEST_PATH, view, options);
       do_check_eq(bytesWritten, LENGTH);
 
-      let array2 = yield OS.File.read(DEST_PATH);
+      let array2 = await OS.File.read(DEST_PATH);
       do_check_eq(LENGTH, array2.length);
       for (var i = 0; i < LENGTH; i++)
         do_check_eq(array2[i], (i + START) % 256);
 
       // Cleanup.
-      yield OS.File.remove(DEST_PATH);
-      yield OS.File.remove(TMP_PATH);
-    });
+      await OS.File.remove(DEST_PATH);
+      await OS.File.remove(TMP_PATH);
+    })();
   };
 
-  yield test_with_options({tmpPath: TMP_PATH}, "Renaming, not flushing");
-  yield test_with_options({tmpPath: TMP_PATH, flush: true}, "Renaming, flushing");
-  yield test_with_options({}, "Not renaming, not flushing");
-  yield test_with_options({flush: true}, "Not renaming, flushing");
+  await test_with_options({tmpPath: TMP_PATH}, "Renaming, not flushing");
+  await test_with_options({tmpPath: TMP_PATH, flush: true}, "Renaming, flushing");
+  await test_with_options({}, "Not renaming, not flushing");
+  await test_with_options({flush: true}, "Not renaming, flushing");
 });
 
 

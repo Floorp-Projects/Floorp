@@ -66,15 +66,15 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* installAddon() {
-  let olda1 = yield promiseAddonByID("addon1@tests.mozilla.org");
+add_task(async function installAddon() {
+  let olda1 = await promiseAddonByID("addon1@tests.mozilla.org");
 
   do_check_eq(olda1, null);
 
   writeInstallRDFForExtension(addon1, profileDir);
-  yield promiseRestartManager();
+  await promiseRestartManager();
 
-  let a1 = yield promiseAddonByID("addon1@tests.mozilla.org");
+  let a1 = await promiseAddonByID("addon1@tests.mozilla.org");
 
   do_check_neq(a1, null);
   do_check_true(a1.isActive);
@@ -85,14 +85,14 @@ add_task(function* installAddon() {
 });
 
 // Uninstalling an add-on should work.
-add_task(function* uninstallAddon() {
+add_task(async function uninstallAddon() {
   prepare_test({
     "addon1@tests.mozilla.org": [
       "onUninstalling"
     ]
   });
 
-  let a1 = yield promiseAddonByID("addon1@tests.mozilla.org");
+  let a1 = await promiseAddonByID("addon1@tests.mozilla.org");
 
   do_check_eq(a1.pendingOperations, 0);
   do_check_neq(a1.operationsRequiringRestart &
@@ -103,14 +103,14 @@ add_task(function* uninstallAddon() {
 
   ensure_test_completed();
 
-  let list = yield promiseAddonsWithOperationsByTypes(null);
+  let list = await promiseAddonsWithOperationsByTypes(null);
 
   do_check_eq(list.length, 1);
   do_check_eq(list[0].id, "addon1@tests.mozilla.org");
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
 
-  a1 = yield promiseAddonByID("addon1@tests.mozilla.org");
+  a1 = await promiseAddonByID("addon1@tests.mozilla.org");
 
   do_check_eq(a1, null);
   do_check_false(isExtensionInAddonsList(profileDir, "addon1@tests.mozilla.org"));
@@ -120,18 +120,18 @@ add_task(function* uninstallAddon() {
   dest.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
   do_check_false(dest.exists());
   writeInstallRDFForExtension(addon1, profileDir);
-  yield promiseRestartManager();
+  await promiseRestartManager();
 });
 
 // Cancelling the uninstall should send onOperationCancelled
-add_task(function* cancelUninstall() {
+add_task(async function cancelUninstall() {
   prepare_test({
     "addon1@tests.mozilla.org": [
       "onUninstalling"
     ]
   });
 
-  let a1 = yield promiseAddonByID("addon1@tests.mozilla.org");
+  let a1 = await promiseAddonByID("addon1@tests.mozilla.org");
 
   do_check_neq(a1, null);
   do_check_true(a1.isActive);
@@ -152,9 +152,9 @@ add_task(function* cancelUninstall() {
   do_check_eq(a1.pendingOperations, 0);
 
   ensure_test_completed();
-  yield promiseRestartManager();
+  await promiseRestartManager();
 
-  a1 = yield promiseAddonByID("addon1@tests.mozilla.org");
+  a1 = await promiseAddonByID("addon1@tests.mozilla.org");
 
   do_check_neq(a1, null);
   do_check_true(a1.isActive);
@@ -163,8 +163,8 @@ add_task(function* cancelUninstall() {
 });
 
 // Uninstalling an item pending disable should still require a restart
-add_task(function* pendingDisableRequestRestart() {
-  let a1 = yield promiseAddonByID("addon1@tests.mozilla.org");
+add_task(async function pendingDisableRequestRestart() {
+  let a1 = await promiseAddonByID("addon1@tests.mozilla.org");
 
   prepare_test({
     "addon1@tests.mozilla.org": [
@@ -186,7 +186,7 @@ add_task(function* pendingDisableRequestRestart() {
 
   ensure_test_completed();
 
-  a1 = yield promiseAddonByID("addon1@tests.mozilla.org");
+  a1 = await promiseAddonByID("addon1@tests.mozilla.org");
 
   do_check_neq(a1, null);
   do_check_true(hasFlag(AddonManager.PENDING_UNINSTALL, a1.pendingOperations));
@@ -200,12 +200,12 @@ add_task(function* pendingDisableRequestRestart() {
   ensure_test_completed();
   do_check_true(hasFlag(AddonManager.PENDING_DISABLE, a1.pendingOperations));
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
 });
 
 // Test that uninstalling an inactive item should still allow cancelling
-add_task(function* uninstallInactiveIsCancellable() {
-  let a1 = yield promiseAddonByID("addon1@tests.mozilla.org");
+add_task(async function uninstallInactiveIsCancellable() {
+  let a1 = await promiseAddonByID("addon1@tests.mozilla.org");
 
   do_check_neq(a1, null);
   do_check_false(a1.isActive);
@@ -220,7 +220,7 @@ add_task(function* uninstallInactiveIsCancellable() {
   a1.uninstall(true);
   ensure_test_completed();
 
-  a1 = yield promiseAddonByID("addon1@tests.mozilla.org");
+  a1 = await promiseAddonByID("addon1@tests.mozilla.org");
 
   do_check_neq(a1, null);
   do_check_true(hasFlag(AddonManager.PENDING_UNINSTALL, a1.pendingOperations));
@@ -233,12 +233,12 @@ add_task(function* uninstallInactiveIsCancellable() {
   a1.cancelUninstall();
   ensure_test_completed();
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
 });
 
 // Test that an inactive item can be uninstalled
-add_task(function* uninstallInactive() {
-  let a1 = yield promiseAddonByID("addon1@tests.mozilla.org");
+add_task(async function uninstallInactive() {
+  let a1 = await promiseAddonByID("addon1@tests.mozilla.org");
 
   do_check_neq(a1, null);
   do_check_false(a1.isActive);
@@ -254,13 +254,13 @@ add_task(function* uninstallInactive() {
   a1.uninstall();
   ensure_test_completed();
 
-  a1 = yield promiseAddonByID("addon1@tests.mozilla.org");
+  a1 = await promiseAddonByID("addon1@tests.mozilla.org");
   do_check_eq(a1, null);
 });
 
 // Tests that an enabled restartless add-on can be uninstalled and goes away
 // when the uninstall is committed
-add_task(function* uninstallRestartless() {
+add_task(async function uninstallRestartless() {
   prepare_test({
     "undouninstall1@tests.mozilla.org": [
       ["onInstalling", false],
@@ -271,10 +271,10 @@ add_task(function* uninstallRestartless() {
     "onInstallStarted",
     "onInstallEnded"
   ]);
-  yield promiseInstallAllFiles([do_get_addon("test_undouninstall1")]);
+  await promiseInstallAllFiles([do_get_addon("test_undouninstall1")]);
   ensure_test_completed();
 
-  let a1 = yield promiseAddonByID(ID);
+  let a1 = await promiseAddonByID(ID);
 
   do_check_neq(a1, null);
   BootstrapMonitor.checkAddonInstalled(ID, "1.0");
@@ -293,7 +293,7 @@ add_task(function* uninstallRestartless() {
   a1.uninstall(true);
   ensure_test_completed();
 
-  a1 = yield promiseAddonByID(ID);
+  a1 = await promiseAddonByID(ID);
 
   do_check_neq(a1, null);
   BootstrapMonitor.checkAddonInstalled(ID);
@@ -312,14 +312,14 @@ add_task(function* uninstallRestartless() {
   a1.uninstall();
   ensure_test_completed();
 
-  a1 = yield promiseAddonByID(ID);
+  a1 = await promiseAddonByID(ID);
 
   do_check_eq(a1, null);
   BootstrapMonitor.checkAddonNotStarted(ID);
 });
 
 // Tests that an enabled restartless add-on can be uninstalled and then cancelled
-add_task(function* cancelUninstallOfRestartless() {
+add_task(async function cancelUninstallOfRestartless() {
   prepare_test({
     "undouninstall1@tests.mozilla.org": [
       ["onInstalling", false],
@@ -330,10 +330,10 @@ add_task(function* cancelUninstallOfRestartless() {
     "onInstallStarted",
     "onInstallEnded"
   ]);
-  yield promiseInstallAllFiles([do_get_addon("test_undouninstall1")]);
+  await promiseInstallAllFiles([do_get_addon("test_undouninstall1")]);
   ensure_test_completed();
 
-  let a1 = yield promiseAddonByID(ID);
+  let a1 = await promiseAddonByID(ID);
 
   do_check_neq(a1, null);
   BootstrapMonitor.checkAddonInstalled(ID, "1.0");
@@ -352,7 +352,7 @@ add_task(function* cancelUninstallOfRestartless() {
   a1.uninstall(true);
   ensure_test_completed();
 
-  a1 = yield promiseAddonByID("undouninstall1@tests.mozilla.org");
+  a1 = await promiseAddonByID("undouninstall1@tests.mozilla.org");
 
   do_check_neq(a1, null);
   BootstrapMonitor.checkAddonInstalled(ID);
@@ -384,7 +384,7 @@ add_task(function* cancelUninstallOfRestartless() {
 
   startupManager(false);
 
-  a1 = yield promiseAddonByID("undouninstall1@tests.mozilla.org");
+  a1 = await promiseAddonByID("undouninstall1@tests.mozilla.org");
 
   do_check_neq(a1, null);
   BootstrapMonitor.checkAddonStarted(ID, "1.0");
@@ -398,10 +398,10 @@ add_task(function* cancelUninstallOfRestartless() {
 
 // Tests that reinstalling an enabled restartless add-on waiting to be
 // uninstalled aborts the uninstall and leaves the add-on enabled
-add_task(function* reinstallAddonAwaitingUninstall() {
-  yield promiseInstallAllFiles([do_get_addon("test_undouninstall1")]);
+add_task(async function reinstallAddonAwaitingUninstall() {
+  await promiseInstallAllFiles([do_get_addon("test_undouninstall1")]);
 
-  let a1 = yield promiseAddonByID("undouninstall1@tests.mozilla.org");
+  let a1 = await promiseAddonByID("undouninstall1@tests.mozilla.org");
 
   do_check_neq(a1, null);
   BootstrapMonitor.checkAddonInstalled(ID, "1.0");
@@ -420,7 +420,7 @@ add_task(function* reinstallAddonAwaitingUninstall() {
   a1.uninstall(true);
   ensure_test_completed();
 
-  a1 = yield promiseAddonByID("undouninstall1@tests.mozilla.org");
+  a1 = await promiseAddonByID("undouninstall1@tests.mozilla.org");
 
   do_check_neq(a1, null);
   BootstrapMonitor.checkAddonInstalled(ID);
@@ -441,9 +441,9 @@ add_task(function* reinstallAddonAwaitingUninstall() {
     "onInstallEnded"
   ]);
 
-  yield promiseInstallAllFiles([do_get_addon("test_undouninstall1")]);
+  await promiseInstallAllFiles([do_get_addon("test_undouninstall1")]);
 
-  a1 = yield promiseAddonByID("undouninstall1@tests.mozilla.org");
+  a1 = await promiseAddonByID("undouninstall1@tests.mozilla.org");
 
   ensure_test_completed();
 
@@ -462,7 +462,7 @@ add_task(function* reinstallAddonAwaitingUninstall() {
 
   startupManager(false);
 
-  a1 = yield promiseAddonByID("undouninstall1@tests.mozilla.org");
+  a1 = await promiseAddonByID("undouninstall1@tests.mozilla.org");
 
   do_check_neq(a1, null);
   BootstrapMonitor.checkAddonStarted(ID, "1.0");
@@ -476,10 +476,10 @@ add_task(function* reinstallAddonAwaitingUninstall() {
 
 // Tests that a disabled restartless add-on can be uninstalled and goes away
 // when the uninstall is committed
-add_task(function* uninstallDisabledRestartless() {
-  yield promiseInstallAllFiles([do_get_addon("test_undouninstall1")]);
+add_task(async function uninstallDisabledRestartless() {
+  await promiseInstallAllFiles([do_get_addon("test_undouninstall1")]);
 
-  let a1 = yield promiseAddonByID("undouninstall1@tests.mozilla.org");
+  let a1 = await promiseAddonByID("undouninstall1@tests.mozilla.org");
 
   do_check_neq(a1, null);
   BootstrapMonitor.checkAddonInstalled(ID, "1.0");
@@ -505,7 +505,7 @@ add_task(function* uninstallDisabledRestartless() {
   a1.uninstall(true);
   ensure_test_completed();
 
-  a1 = yield promiseAddonByID("undouninstall1@tests.mozilla.org");
+  a1 = await promiseAddonByID("undouninstall1@tests.mozilla.org");
 
   do_check_neq(a1, null);
   BootstrapMonitor.checkAddonNotStarted(ID);
@@ -522,7 +522,7 @@ add_task(function* uninstallDisabledRestartless() {
   a1.uninstall();
   ensure_test_completed();
 
-  a1 = yield promiseAddonByID("undouninstall1@tests.mozilla.org");
+  a1 = await promiseAddonByID("undouninstall1@tests.mozilla.org");
 
   do_check_eq(a1, null);
   BootstrapMonitor.checkAddonNotStarted(ID);
@@ -531,7 +531,7 @@ add_task(function* uninstallDisabledRestartless() {
 });
 
 // Tests that a disabled restartless add-on can be uninstalled and then cancelled
-add_task(function* cancelUninstallDisabledRestartless() {
+add_task(async function cancelUninstallDisabledRestartless() {
   prepare_test({
     "undouninstall1@tests.mozilla.org": [
       ["onInstalling", false],
@@ -542,10 +542,10 @@ add_task(function* cancelUninstallDisabledRestartless() {
     "onInstallStarted",
     "onInstallEnded"
   ]);
-  yield promiseInstallAllFiles([do_get_addon("test_undouninstall1")]);
+  await promiseInstallAllFiles([do_get_addon("test_undouninstall1")]);
   ensure_test_completed();
 
-  let a1 = yield promiseAddonByID("undouninstall1@tests.mozilla.org");
+  let a1 = await promiseAddonByID("undouninstall1@tests.mozilla.org");
 
   do_check_neq(a1, null);
   BootstrapMonitor.checkAddonInstalled(ID, "1.0");
@@ -579,7 +579,7 @@ add_task(function* cancelUninstallDisabledRestartless() {
   a1.uninstall(true);
   ensure_test_completed();
 
-  a1 = yield promiseAddonByID("undouninstall1@tests.mozilla.org");
+  a1 = await promiseAddonByID("undouninstall1@tests.mozilla.org");
 
   do_check_neq(a1, null);
   BootstrapMonitor.checkAddonNotStarted(ID);
@@ -602,9 +602,9 @@ add_task(function* cancelUninstallDisabledRestartless() {
   do_check_false(a1.isActive);
   do_check_true(a1.userDisabled);
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
 
-  a1 = yield promiseAddonByID("undouninstall1@tests.mozilla.org");
+  a1 = await promiseAddonByID("undouninstall1@tests.mozilla.org");
 
   do_check_neq(a1, null);
   BootstrapMonitor.checkAddonNotStarted(ID);
@@ -618,10 +618,10 @@ add_task(function* cancelUninstallDisabledRestartless() {
 
 // Tests that reinstalling a disabled restartless add-on waiting to be
 // uninstalled aborts the uninstall and leaves the add-on disabled
-add_task(function* reinstallDisabledAddonAwaitingUninstall() {
-  yield promiseInstallAllFiles([do_get_addon("test_undouninstall1")]);
+add_task(async function reinstallDisabledAddonAwaitingUninstall() {
+  await promiseInstallAllFiles([do_get_addon("test_undouninstall1")]);
 
-  let a1 = yield promiseAddonByID("undouninstall1@tests.mozilla.org");
+  let a1 = await promiseAddonByID("undouninstall1@tests.mozilla.org");
 
   do_check_neq(a1, null);
   BootstrapMonitor.checkAddonInstalled(ID, "1.0");
@@ -647,7 +647,7 @@ add_task(function* reinstallDisabledAddonAwaitingUninstall() {
   a1.uninstall(true);
   ensure_test_completed();
 
-  a1 = yield promiseAddonByID("undouninstall1@tests.mozilla.org");
+  a1 = await promiseAddonByID("undouninstall1@tests.mozilla.org");
 
   do_check_neq(a1, null);
   BootstrapMonitor.checkAddonNotStarted(ID);
@@ -666,9 +666,9 @@ add_task(function* reinstallDisabledAddonAwaitingUninstall() {
     "onInstallEnded"
   ]);
 
-  yield promiseInstallAllFiles([do_get_addon("test_undouninstall1")]);
+  await promiseInstallAllFiles([do_get_addon("test_undouninstall1")]);
 
-  a1 = yield promiseAddonByID("undouninstall1@tests.mozilla.org");
+  a1 = await promiseAddonByID("undouninstall1@tests.mozilla.org");
 
   ensure_test_completed();
 
@@ -680,9 +680,9 @@ add_task(function* reinstallDisabledAddonAwaitingUninstall() {
   do_check_false(a1.isActive);
   do_check_true(a1.userDisabled);
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
 
-  a1 = yield promiseAddonByID("undouninstall1@tests.mozilla.org");
+  a1 = await promiseAddonByID("undouninstall1@tests.mozilla.org");
 
   do_check_neq(a1, null);
   BootstrapMonitor.checkAddonNotStarted(ID, "1.0");
@@ -695,10 +695,10 @@ add_task(function* reinstallDisabledAddonAwaitingUninstall() {
 
 
 // Test that uninstalling a temporary addon can be canceled
-add_task(function* cancelUninstallTemporary() {
-  yield AddonManager.installTemporaryAddon(do_get_addon("test_undouninstall1"));
+add_task(async function cancelUninstallTemporary() {
+  await AddonManager.installTemporaryAddon(do_get_addon("test_undouninstall1"));
 
-  let a1 = yield promiseAddonByID("undouninstall1@tests.mozilla.org");
+  let a1 = await promiseAddonByID("undouninstall1@tests.mozilla.org");
   do_check_neq(a1, null);
   BootstrapMonitor.checkAddonInstalled(ID, "1.0");
   BootstrapMonitor.checkAddonStarted(ID, "1.0");
@@ -727,21 +727,21 @@ add_task(function* cancelUninstallTemporary() {
   a1.cancelUninstall();
   ensure_test_completed();
 
-  a1 = yield promiseAddonByID("undouninstall1@tests.mozilla.org");
+  a1 = await promiseAddonByID("undouninstall1@tests.mozilla.org");
 
   do_check_neq(a1, null);
   BootstrapMonitor.checkAddonStarted(ID, "1.0");
   do_check_eq(a1.pendingOperations, 0);
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
 });
 
 // Tests that cancelling the uninstall of an incompatible restartless addon
 // does not start the addon
-add_task(function* cancelUninstallIncompatibleRestartless() {
-  yield promiseInstallAllFiles([do_get_addon("test_undoincompatible")]);
+add_task(async function cancelUninstallIncompatibleRestartless() {
+  await promiseInstallAllFiles([do_get_addon("test_undoincompatible")]);
 
-  let a1 = yield promiseAddonByID(INCOMPAT_ID);
+  let a1 = await promiseAddonByID(INCOMPAT_ID);
   do_check_neq(a1, null);
   BootstrapMonitor.checkAddonNotStarted(INCOMPAT_ID);
   do_check_false(a1.isActive);
@@ -754,7 +754,7 @@ add_task(function* cancelUninstallIncompatibleRestartless() {
   a1.uninstall(true);
   ensure_test_completed();
 
-  a1 = yield promiseAddonByID(INCOMPAT_ID);
+  a1 = await promiseAddonByID(INCOMPAT_ID);
   do_check_neq(a1, null);
   do_check_true(hasFlag(AddonManager.PENDING_UNINSTALL, a1.pendingOperations));
   do_check_false(a1.isActive);
@@ -767,7 +767,7 @@ add_task(function* cancelUninstallIncompatibleRestartless() {
   a1.cancelUninstall();
   ensure_test_completed();
 
-  a1 = yield promiseAddonByID(INCOMPAT_ID);
+  a1 = await promiseAddonByID(INCOMPAT_ID);
   do_check_neq(a1, null);
   BootstrapMonitor.checkAddonNotStarted(INCOMPAT_ID);
   do_check_eq(a1.pendingOperations, 0);

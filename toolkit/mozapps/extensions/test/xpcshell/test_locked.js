@@ -134,7 +134,7 @@ var theme2 = {
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
-add_task(function* init() {
+add_task(async function init() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2", "2");
 
   writeInstallRDFForExtension(addon1, profileDir);
@@ -154,36 +154,36 @@ add_task(function* init() {
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
 
   let [a2, a3, a4, a7, t2] =
-    yield promiseAddonsByIDs(["addon2@tests.mozilla.org",
+    await promiseAddonsByIDs(["addon2@tests.mozilla.org",
                                "addon3@tests.mozilla.org",
                                "addon4@tests.mozilla.org",
                                "addon7@tests.mozilla.org",
                                "theme2@tests.mozilla.org"]);
-  let deferredUpdateFinished = Promise.defer();
-  // Set up the initial state
-  a2.userDisabled = true;
-  a4.userDisabled = true;
-  a7.userDisabled = true;
-  t2.userDisabled = false;
-  a3.findUpdates({
-    onUpdateFinished() {
-      a4.findUpdates({
-        onUpdateFinished() {
-          // Let the updates finish before restarting the manager
-          deferredUpdateFinished.resolve();
-        }
-      }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
-    }
-  }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
+  await new Promise(resolve => {
+    // Set up the initial state
+    a2.userDisabled = true;
+    a4.userDisabled = true;
+    a7.userDisabled = true;
+    t2.userDisabled = false;
+    a3.findUpdates({
+      onUpdateFinished() {
+        a4.findUpdates({
+          onUpdateFinished() {
+            // Let the updates finish before restarting the manager
+            resolve();
+          }
+        }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
+      }
+    }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
 
-  yield deferredUpdateFinished.promise;
+  });
 });
 
 
-add_task(function* run_test_1() {
+add_task(async function run_test_1() {
   restartManager();
   let [a1, a2, a3, a4, a5, a6, a7, t1, t2] =
-    yield promiseAddonsByIDs(["addon1@tests.mozilla.org",
+    await promiseAddonsByIDs(["addon1@tests.mozilla.org",
                               "addon2@tests.mozilla.org",
                               "addon3@tests.mozilla.org",
                               "addon4@tests.mozilla.org",
@@ -264,7 +264,7 @@ add_task(function* run_test_1() {
   if (OS.Constants.libc.O_EXLOCK)
     options.unixFlags = OS.Constants.libc.O_EXLOCK;
 
-  let file = yield OS.File.open(gExtensionsJSON.path, {read: true, write: true, existing: true}, options);
+  let file = await OS.File.open(gExtensionsJSON.path, {read: true, write: true, existing: true}, options);
 
   let filePermissions = gExtensionsJSON.permissions;
   if (!OS.Constants.Win) {
@@ -277,7 +277,7 @@ add_task(function* run_test_1() {
 
   // Accessing the add-ons should open and recover the database
   [a1, a2, a3, a4, a5, a6, a7, t1, t2] =
-    yield promiseAddonsByIDs(["addon1@tests.mozilla.org",
+    await promiseAddonsByIDs(["addon1@tests.mozilla.org",
                               "addon2@tests.mozilla.org",
                               "addon3@tests.mozilla.org",
                               "addon4@tests.mozilla.org",
@@ -372,7 +372,7 @@ add_task(function* run_test_1() {
    check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
 
    [a1, a2, a3, a4, a5, a6, a7, t1, t2] =
-     yield promiseAddonsByIDs(["addon1@tests.mozilla.org",
+     await promiseAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
                                "addon3@tests.mozilla.org",
                                "addon4@tests.mozilla.org",
@@ -451,7 +451,7 @@ add_task(function* run_test_1() {
      // We're expecting an error here.
    }
    do_print("Unlocking " + gExtensionsJSON.path);
-   yield file.close();
+   await file.close();
    gExtensionsJSON.permissions = filePermissions;
    startupManager();
 
@@ -460,7 +460,7 @@ add_task(function* run_test_1() {
    check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
 
    [a1, a2, a3, a4, a5, a6, a7, t1, t2] =
-     yield promiseAddonsByIDs(["addon1@tests.mozilla.org",
+     await promiseAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
                                "addon3@tests.mozilla.org",
                                "addon4@tests.mozilla.org",

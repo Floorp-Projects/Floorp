@@ -1,4 +1,4 @@
-add_task(function*() {
+add_task(async function() {
   is(gBrowser.tabs.length, 1, "one tab is open");
 
   gBrowser.selectedBrowser.focus();
@@ -9,7 +9,7 @@ add_task(function*() {
 
   let tabClosedPromise = BrowserTestUtils.tabRemoved(tab);
   EventUtils.synthesizeKey("w", { accelKey: true });
-  yield tabClosedPromise;
+  await tabClosedPromise;
 
   is(tab.parentNode, null, "ctrl+w removes the tab");
   is(gBrowser.tabs.length, 1, "a new tab has been opened");

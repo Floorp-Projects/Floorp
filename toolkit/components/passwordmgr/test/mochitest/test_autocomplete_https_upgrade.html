@@ -78,10 +78,10 @@ function checkACForm(expectedUsername, expectedPassword) {
   is(pword.value, expectedPassword, "Checking " + formID + " password");
 }
 
-add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({"set": [["signon.schemeUpgrades", true]]});
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({"set": [["signon.schemeUpgrades", true]]});
 
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     iframe.addEventListener("load", function() {
       resolve();
     }, {once: true});
@@ -92,43 +92,43 @@ add_task(function* setup() {
   pword = iframeDoc.getElementById("form-basic-password");
 });
 
-add_task(function* test_empty_first_entry() {
+add_task(async function test_empty_first_entry() {
   // Make sure initial form is empty.
   checkACForm("", "");
   // Trigger autocomplete popup
   restoreForm();
-  let popupState = yield getPopupState();
+  let popupState = await getPopupState();
   is(popupState.open, false, "Check popup is initially closed");
   let shownPromise = promiseACShown();
   doKey("down");
-  let results = yield shownPromise;
-  popupState = yield getPopupState();
+  let results = await shownPromise;
+  popupState = await getPopupState();
   is(popupState.selectedIndex, -1, "Check no entries are selected");
   checkArrayValues(results, ["name", "name1", "name2"], "initial");
 
   // Check first entry
   let index0Promise = notifySelectedIndex(0);
   doKey("down");
-  yield index0Promise;
+  await index0Promise;
   checkACForm("", ""); // value shouldn't update
   doKey("return"); // not "enter"!
-  yield promiseFormsProcessed();
+  await promiseFormsProcessed();
   checkACForm("name", "pass");
 });
 
-add_task(function* test_empty_second_entry() {
+add_task(async function test_empty_second_entry() {
   restoreForm();
   let shownPromise = promiseACShown();
   doKey("down"); // open
-  yield shownPromise;
+  await shownPromise;
   doKey("down"); // first
   doKey("down"); // second
   doKey("return"); // not "enter"!
-  yield promiseFormsProcessed();
+  await promiseFormsProcessed();
   checkACForm("name1", "pass1");
 });
 
-add_task(function* test_search() {
+add_task(async function test_search() {
   restoreForm();
   let shownPromise = promiseACShown();
   // We need to blur for the autocomplete controller to notice the forced value below.
@@ -137,61 +137,61 @@ add_task(function* test_search() {
   uname.focus();
   sendChar("1");
   doKey("down"); // open
-  let results = yield shownPromise;
+  let results = await shownPromise;
   checkArrayValues(results, ["name1"], "check result deduping for 'name1'");
   doKey("down"); // first
   doKey("return"); // not "enter"!
-  yield promiseFormsProcessed();
+  await promiseFormsProcessed();
   checkACForm("name1", "pass1");
 
-  let popupState = yield getPopupState();
+  let popupState = await getPopupState();
   is(popupState.open, false, "Check popup is now closed");
 });
 
-add_task(function* test_delete_first_entry() {
+add_task(async function test_delete_first_entry() {
   restoreForm();
   uname.focus();
   let shownPromise = promiseACShown();
   doKey("down");
-  yield shownPromise;
+  await shownPromise;
 
   let index0Promise = notifySelectedIndex(0);
   doKey("down");
-  yield index0Promise;
+  await index0Promise;
 
   let deletionPromise = promiseStorageChanged(["removeLogin"]);
   // On OS X, shift-backspace and shift-delete work, just delete does not.
   // On Win/Linux, shift-backspace does not work, delete and shift-delete do.
   doKey("delete", shiftModifier);
-  yield deletionPromise;
+  await deletionPromise;
   checkACForm("", "");
 
-  let results = yield notifyMenuChanged(2, "name1");
+  let results = await notifyMenuChanged(2, "name1");
 
   checkArrayValues(results, ["name1", "name2"], "two should remain after deleting the first");
-  let popupState = yield getPopupState();
+  let popupState = await getPopupState();
   is(popupState.open, true, "Check popup stays open after deleting");
   doKey("escape");
-  popupState = yield getPopupState();
+  popupState = await getPopupState();
   is(popupState.open, false, "Check popup closed upon ESC");
 });
 
-add_task(function* test_delete_duplicate_entry() {
+add_task(async function test_delete_duplicate_entry() {
   restoreForm();
   uname.focus();
   let shownPromise = promiseACShown();
   doKey("down");
-  yield shownPromise;
+  await shownPromise;
 
   let index0Promise = notifySelectedIndex(0);
   doKey("down");
-  yield index0Promise;
+  await index0Promise;
 
   let deletionPromise = promiseStorageChanged(["removeLogin"]);
   // On OS X, shift-backspace and shift-delete work, just delete does not.
   // On Win/Linux, shift-backspace does not work, delete and shift-delete do.
   doKey("delete", shiftModifier);
-  yield deletionPromise;
+  await deletionPromise;
   checkACForm("", "");
 
   is(LoginManager.countLogins("http://example.org", "http://example.org", null), 1,
@@ -201,13 +201,13 @@ add_task(function* test_delete_duplicate_entry() {
 
   // Two menu items should remain as the HTTPS login should have been deleted but
   // the HTTP would remain.
-  let results = yield notifyMenuChanged(1, "name2");
+  let results = await notifyMenuChanged(1, "name2");
 
   checkArrayValues(results, ["name2"], "one should remain after deleting the HTTPS name1");
-  let popupState = yield getPopupState();
+  let popupState = await getPopupState();
   is(popupState.open, true, "Check popup stays open after deleting");
   doKey("escape");
-  popupState = yield getPopupState();
+  popupState = await getPopupState();
   is(popupState.open, false, "Check popup closed upon ESC");
 });
 

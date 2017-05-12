@@ -5,19 +5,19 @@
 var FormHistory = (Components.utils.import("resource://gre/modules/FormHistory.jsm", {})).FormHistory;
 
 /** Test for Bug 472396 **/
-add_task(function* test() {
+add_task(async function test() {
   // initialization
   let windowsToClose = [];
   let testURI =
     "http://example.com/tests/toolkit/components/satchel/test/subtst_privbrowsing.html";
 
-  function* doTest(aShouldValueExist, aWindow) {
+  async function doTest(aShouldValueExist, aWindow) {
     let browser = aWindow.gBrowser.selectedBrowser;
     BrowserTestUtils.loadURI(browser, testURI);
-    yield BrowserTestUtils.browserLoaded(browser);
+    await BrowserTestUtils.browserLoaded(browser);
 
     // Wait for the page to reload itself.
-    yield BrowserTestUtils.browserLoaded(browser);
+    await BrowserTestUtils.browserLoaded(browser);
 
     let count = 0;
     let doneCounting = {};
@@ -40,7 +40,7 @@ add_task(function* test() {
                           doneCounting.resolve();
                         }
                       });
-    yield doneCounting.promise;
+    await doneCounting.promise;
   }
 
   function testOnWindow(aOptions, aCallback) {
@@ -49,15 +49,11 @@ add_task(function* test() {
   }
 
 
-  yield testOnWindow({private: true}).then((aWin) => {
-    return Task.spawn(doTest(false, aWin));
-  });
+  await testOnWindow({private: true}).then(aWin => doTest(false, aWin));
 
   // Test when not on private mode after visiting a site on private
   // mode. The form history should not exist.
-  yield testOnWindow({}).then((aWin) => {
-    return Task.spawn(doTest(true, aWin));
-  });
+  await testOnWindow({}).then(aWin => doTest(true, aWin));
 
-  yield Promise.all(windowsToClose.map(win => BrowserTestUtils.closeWindow(win)));
+  await Promise.all(windowsToClose.map(win => BrowserTestUtils.closeWindow(win)));
 });

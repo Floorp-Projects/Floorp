@@ -55,8 +55,8 @@ function canvasTest(width, height, paintCanvasFunc, expected, message) {
 }
 
 // simple test - draw a red box in the center, make sure we get red back
-add_task(function* test_redSquare() {
-  yield canvasTest(16, 16, function(ctx) {
+add_task(async function test_redSquare() {
+  await canvasTest(16, 16, function(ctx) {
     ctx.fillStyle = "red";
     ctx.fillRect(2, 2, 12, 12);
   }, 0xFF0000, "redSquare analysis returns red");
@@ -65,8 +65,8 @@ add_task(function* test_redSquare() {
 
 // draw a blue square in one corner, red in the other, such that blue overlaps
 // red by one pixel, making it the dominant color
-add_task(function* test_blueOverlappingRed() {
-  yield canvasTest(16, 16, function(ctx) {
+add_task(async function test_blueOverlappingRed() {
+  await canvasTest(16, 16, function(ctx) {
     ctx.fillStyle = "red";
     ctx.fillRect(0, 0, 8, 8);
     ctx.fillStyle = "blue";
@@ -76,8 +76,8 @@ add_task(function* test_blueOverlappingRed() {
 
 // draw a red gradient next to a solid blue rectangle to ensure that a large
 // block of similar colors beats out a smaller block of one color
-add_task(function* test_redGradientBlueSolid() {
-  yield canvasTest(16, 16, function(ctx) {
+add_task(async function test_redGradientBlueSolid() {
+  await canvasTest(16, 16, function(ctx) {
     let gradient = ctx.createLinearGradient(0, 0, 1, 15);
     gradient.addColorStop(0, "#FF0000");
     gradient.addColorStop(1, "#FF0808");
@@ -92,30 +92,30 @@ add_task(function* test_redGradientBlueSolid() {
 });
 
 // try a transparent image, should fail
-add_task(function* test_transparent() {
-  yield canvasTest(16, 16, function(ctx) {
+add_task(async function test_transparent() {
+  await canvasTest(16, 16, function(ctx) {
     // do nothing!
   }, null, "transparent analysis fails");
 });
 
-add_task(function* test_invalidURI() {
-  yield frcTest("data:blah,Imnotavaliddatauri", null, "invalid URI analysis fails");
+add_task(async function test_invalidURI() {
+  await frcTest("data:blah,Imnotavaliddatauri", null, "invalid URI analysis fails");
 });
 
-add_task(function* test_malformedPNGURI() {
-  yield frcTest("data:image/png;base64,iVBORblahblahblah", null,
+add_task(async function test_malformedPNGURI() {
+  await frcTest("data:image/png;base64,iVBORblahblahblah", null,
                 "malformed PNG URI analysis fails");
 });
 
-add_task(function* test_unresolvableURI() {
-  yield frcTest("http://www.example.com/blah/idontexist.png", null,
+add_task(async function test_unresolvableURI() {
+  await frcTest("http://www.example.com/blah/idontexist.png", null,
                 "unresolvable URI analysis fails");
 });
 
 // draw a small blue box on a red background to make sure the algorithm avoids
 // using the background color
-add_task(function* test_blueOnRedBackground() {
-  yield canvasTest(16, 16, function(ctx) {
+add_task(async function test_blueOnRedBackground() {
+  await canvasTest(16, 16, function(ctx) {
     ctx.fillStyle = "red";
     ctx.fillRect(0, 0, 16, 16);
     ctx.fillStyle = "blue";
@@ -125,8 +125,8 @@ add_task(function* test_blueOnRedBackground() {
 
 // draw a slightly different color in the corners to make sure the corner colors
 // don't have to be exactly equal to be considered the background color
-add_task(function* test_variableBackground() {
-  yield canvasTest(16, 16, function(ctx) {
+add_task(async function test_variableBackground() {
+  await canvasTest(16, 16, function(ctx) {
     ctx.fillStyle = "white";
     ctx.fillRect(0, 0, 16, 16);
     ctx.fillStyle = "#FEFEFE";
@@ -142,8 +142,8 @@ add_task(function* test_variableBackground() {
 
 // like the above test, but make the colors different enough that they aren't
 // considered the background color
-add_task(function* test_tooVariableBackground() {
-  yield canvasTest(16, 16, function(ctx) {
+add_task(async function test_tooVariableBackground() {
+  await canvasTest(16, 16, function(ctx) {
     ctx.fillStyle = "white";
     ctx.fillRect(0, 0, 16, 16);
     ctx.fillStyle = "#EEDDCC";
@@ -161,8 +161,8 @@ add_task(function* test_tooVariableBackground() {
 
 // draw a small black/white box over transparent background to make sure the
 // algorithm doesn't think rgb(0,0,0) == rgba(0,0,0,0)
-add_task(function* test_transparentBackgroundConflation() {
-  yield canvasTest(16, 16, function(ctx) {
+add_task(async function test_transparentBackgroundConflation() {
+  await canvasTest(16, 16, function(ctx) {
     ctx.fillStyle = "black";
     ctx.fillRect(2, 2, 12, 12);
     ctx.fillStyle = "white";
@@ -173,8 +173,8 @@ add_task(function* test_transparentBackgroundConflation() {
 
 // make sure we fall back to the background color if we have no other choice
 // (instead of failing as if there were no colors)
-add_task(function* test_backgroundFallback() {
-  yield canvasTest(16, 16, function(ctx) {
+add_task(async function test_backgroundFallback() {
+  await canvasTest(16, 16, function(ctx) {
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, 16, 16);
   }, 0x000000, "backgroundFallback analysis returns black");
@@ -182,8 +182,8 @@ add_task(function* test_backgroundFallback() {
 
 // draw red rectangle next to a pink one to make sure the algorithm picks the
 // more interesting color
-add_task(function* test_interestingColorPreference() {
-  yield canvasTest(16, 16, function(ctx) {
+add_task(async function test_interestingColorPreference() {
+  await canvasTest(16, 16, function(ctx) {
     ctx.fillStyle = "#FFDDDD";
     ctx.fillRect(0, 0, 16, 16);
     ctx.fillStyle = "red";
@@ -194,19 +194,19 @@ add_task(function* test_interestingColorPreference() {
 // draw high saturation but dark red next to slightly less saturated color but
 // much lighter, to make sure the algorithm doesn't pick colors that are
 // nearly black just because of high saturation (in HSL terms)
-add_task(function* test_saturationDependence() {
-  yield canvasTest(16, 16, function(ctx) {
+add_task(async function test_saturationDependence() {
+  await canvasTest(16, 16, function(ctx) {
     ctx.fillStyle = "hsl(0, 100%, 5%)";
     ctx.fillRect(0, 0, 16, 16);
     ctx.fillStyle = "hsl(0, 90%, 35%)";
     ctx.fillRect(0, 0, 8, 16);
-  }, 0xA90808, "saturationDependence analysis returns lighter red");
+  }, 0xAA0909, "saturationDependence analysis returns lighter red");
 });
 
 // make sure the preference for interesting colors won't stupidly pick 1 pixel
 // of red over 169 black pixels
-add_task(function* test_interestingColorPreferenceLenient() {
-  yield canvasTest(16, 16, function(ctx) {
+add_task(async function test_interestingColorPreferenceLenient() {
+  await canvasTest(16, 16, function(ctx) {
     ctx.fillStyle = "black";
     ctx.fillRect(1, 1, 13, 13);
     ctx.fillStyle = "red";
@@ -215,8 +215,8 @@ add_task(function* test_interestingColorPreferenceLenient() {
 });
 
 // ...but 6 pixels of red is more reasonable
-add_task(function* test_interestingColorPreferenceNotTooLenient() {
-  yield canvasTest(16, 16, function(ctx) {
+add_task(async function test_interestingColorPreferenceNotTooLenient() {
+  await canvasTest(16, 16, function(ctx) {
     ctx.fillStyle = "black";
     ctx.fillRect(1, 1, 13, 13);
     ctx.fillStyle = "red";
@@ -227,8 +227,8 @@ add_task(function* test_interestingColorPreferenceNotTooLenient() {
 var maxPixels = 144; // see ColorAnalyzer MAXIMUM_PIXELS const
 
 // make sure that images larger than maxPixels*maxPixels fail
-add_task(function* test_imageTooLarge() {
-  yield canvasTest(1 + maxPixels, 1 + maxPixels, function(ctx) {
+add_task(async function test_imageTooLarge() {
+  await canvasTest(1 + maxPixels, 1 + maxPixels, function(ctx) {
     ctx.fillStyle = "red";
     ctx.fillRect(0, 0, 1 + maxPixels, 1 + maxPixels);
   }, null, "imageTooLarge analysis fails");
@@ -238,22 +238,22 @@ add_task(function* test_imageTooLarge() {
 // exact color isn't terribly important, just make sure it's reasonable
 const filePrefix = getRootDirectory(gTestPath) + "colorAnalyzer/";
 
-add_task(function* test_categoryDiscover() {
-  yield frcTest(filePrefix + "category-discover.png", 0xB28D3A,
+add_task(async function test_categoryDiscover() {
+  await frcTest(filePrefix + "category-discover.png", 0xB28D3A,
                 "category-discover analysis returns red");
 });
 
-add_task(function* test_localeGeneric() {
-  yield frcTest(filePrefix + "localeGeneric.png", 0x3EC23E,
+add_task(async function test_localeGeneric() {
+  await frcTest(filePrefix + "localeGeneric.png", 0x3EC23E,
                 "localeGeneric analysis returns green");
 });
 
-add_task(function* test_dictionaryGeneric() {
-  yield frcTest(filePrefix + "dictionaryGeneric-16.png", 0x854C30,
+add_task(async function test_dictionaryGeneric() {
+  await frcTest(filePrefix + "dictionaryGeneric-16.png", 0x854C30,
                 "dictionaryGeneric-16 analysis returns brown");
 });
 
-add_task(function* test_extensionGeneric() {
-  yield frcTest(filePrefix + "extensionGeneric-16.png", 0x53BA3F,
+add_task(async function test_extensionGeneric() {
+  await frcTest(filePrefix + "extensionGeneric-16.png", 0x53BA3F,
                 "extensionGeneric-16 analysis returns green");
 });

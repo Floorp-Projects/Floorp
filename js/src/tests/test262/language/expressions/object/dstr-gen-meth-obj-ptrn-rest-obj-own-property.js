@@ -5,7 +5,7 @@
 description: Rest object contains just soruce object's own properties (generator method)
 esid: sec-generator-function-definitions-runtime-semantics-propertydefinitionevaluation
 es6id: 14.4.13
-features: [destructuring-binding]
+features: [object-rest, destructuring-binding]
 flags: [generated]
 includes: [propertyHelper.js]
 info: |

@@ -143,6 +143,12 @@ describe("ConsoleAPICall component:", () => {
 
       expect(wrapper.find(".message-body").text()).toBe("");
     });
+    it("shows an error if called again", () => {
+      const message = stubPreparedMessages.get("timerAlreadyExists");
+      const wrapper = render(ConsoleApiCall({ message, serviceContainer }));
+
+      expect(wrapper.find(".message-body").text()).toBe("Timer “bar” already exists.");
+    });
   });
 
   describe("console.timeEnd", () => {
@@ -152,6 +158,12 @@ describe("ConsoleAPICall component:", () => {
 
       expect(wrapper.find(".message-body").text()).toBe(message.messageText);
       expect(wrapper.find(".message-body").text()).toMatch(/^bar: \d+(\.\d+)?ms$/);
+    });
+    it("shows an error if the timer doesn't exist", () => {
+      const message = stubPreparedMessages.get("timerDoesntExist");
+      const wrapper = render(ConsoleApiCall({ message, serviceContainer }));
+
+      expect(wrapper.find(".message-body").text()).toBe("Timer “bar” doesn’t exist.");
     });
   });
 

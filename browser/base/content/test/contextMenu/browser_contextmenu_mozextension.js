@@ -14,10 +14,10 @@ let manifest = {
   shareURL: "https://example.com/browser/browser/base/content/test/social/share.html"
 };
 
-add_task(function* test_setup() {
+add_task(async function test_setup() {
   const example_base = "http://example.com/browser/browser/base/content/test/contextMenu/";
   const url = example_base + "subtst_contextmenu_webext.html";
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
   const chrome_base = "chrome://mochitests/content/browser/browser/base/content/test/general/";
   const contextmenu_common = chrome_base + "contextmenu_common.js";
@@ -27,13 +27,13 @@ add_task(function* test_setup() {
   // Enable social sharing functions in the browser, so the context menu item is shown.
   CustomizableUI.addWidgetToArea("social-share-button", CustomizableUI.AREA_NAVBAR);
 
-  yield new Promise((resolve) => SocialService.addProvider(manifest, resolve));
+  await new Promise((resolve) => SocialService.addProvider(manifest, resolve));
   ok(SocialShare.shareButton && !SocialShare.shareButton.disabled, "Sharing is enabled");
 });
 
-add_task(function* test_link() {
+add_task(async function test_link() {
   // gets hidden for this case.
-  yield test_contextmenu("#link",
+  await test_contextmenu("#link",
     ["context-openlinkintab", true,
        ...(hasContainers ? ["context-openlinkinusercontext-menu", true] : []),
        // We need a blank entry here because the containers submenu is
@@ -47,8 +47,8 @@ add_task(function* test_link() {
        "context-searchselect",  true]);
 });
 
-add_task(function* test_video() {
-  yield test_contextmenu("#video",
+add_task(async function test_video() {
+  await test_contextmenu("#video",
   ["context-media-play",         null,
    "context-media-mute",         null,
    "context-media-playbackrate", null,
@@ -73,10 +73,10 @@ add_task(function* test_video() {
   ]);
 });
 
-add_task(function* test_cleanup() {
+add_task(async function test_cleanup() {
   lastElementSelector = null;
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  yield new Promise((resolve) => {
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await new Promise((resolve) => {
     return SocialService.disableProvider(manifest.origin, resolve);
   });
 });

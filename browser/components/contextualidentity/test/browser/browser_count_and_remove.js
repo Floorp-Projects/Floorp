@@ -10,14 +10,14 @@ function openTabInUserContext(userContextId) {
   gBrowser.selectedTab = tab;
 }
 
-add_task(function* setup() {
+add_task(async function setup() {
   // make sure userContext is enabled.
-  yield SpecialPowers.pushPrefEnv({"set": [
+  await SpecialPowers.pushPrefEnv({"set": [
           ["privacy.userContext.enabled", true]
         ]});
 });
 
-add_task(function* test() {
+add_task(async function test() {
   is(ContextualIdentityService.countContainerTabs(), 0, "0 container tabs by default.");
 
   openTabInUserContext(1);

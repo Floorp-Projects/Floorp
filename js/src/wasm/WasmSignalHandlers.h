@@ -72,10 +72,6 @@ class MachExceptionHandler
 };
 #endif
 
-// Test whether the given PC is within the innermost wasm activation. Return
-// false if it is not, or it cannot be determined.
-bool IsPCInWasmCode(void *pc);
-
 } // namespace wasm
 } // namespace js
 

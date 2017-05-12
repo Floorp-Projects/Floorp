@@ -64,11 +64,11 @@ var tests = [
   },
   // The anchor icon should be shown for notifications in background windows.
   { id: "Test#3",
-    *run() {
+    async run() {
       let notifyObj = new BasicNotification(this.id);
       notifyObj.options.dismissed = true;
 
-      let win = yield BrowserTestUtils.openNewBrowserWindow();
+      let win = await BrowserTestUtils.openNewBrowserWindow();
 
       // Open the notification in the original window, now in the background.
       let notification = showNotification(notifyObj);
@@ -76,8 +76,8 @@ var tests = [
       is(anchor.getAttribute("showing"), "true", "the anchor is shown");
       notification.remove();
 
-      yield BrowserTestUtils.closeWindow(win);
-      yield waitForWindowReadyForPopupNotifications(window);
+      await BrowserTestUtils.closeWindow(win);
+      await waitForWindowReadyForPopupNotifications(window);
 
       goNext();
     }
@@ -85,20 +85,20 @@ var tests = [
   // Test that persistent doesn't allow the notification to persist after
   // navigation.
   { id: "Test#4",
-    *run() {
+    async run() {
       this.oldSelectedTab = gBrowser.selectedTab;
-      yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+      await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.addOptions({
         persistent: true
       });
       this.notification = showNotification(this.notifyObj);
     },
-    *onShown(popup) {
+    async onShown(popup) {
       this.complete = false;
 
-      yield promiseTabLoadEvent(gBrowser.selectedTab, "http://example.org/");
-      yield promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/");
+      await promiseTabLoadEvent(gBrowser.selectedTab, "http://example.org/");
+      await promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/");
 
       // This code should not be executed.
       ok(false, "Should have removed the notification after navigation");
@@ -116,22 +116,22 @@ var tests = [
   // Test that persistent allows the notification to persist until explicitly
   // dismissed.
   { id: "Test#5",
-    *run() {
+    async run() {
       this.oldSelectedTab = gBrowser.selectedTab;
-      yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+      await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.addOptions({
         persistent: true
       });
       this.notification = showNotification(this.notifyObj);
     },
-    *onShown(popup) {
+    async onShown(popup) {
       this.complete = false;
 
       // Notification should persist after attempt to dismiss by clicking on the
       // content area.
       let browser = gBrowser.selectedBrowser;
-      yield BrowserTestUtils.synthesizeMouseAtCenter("body", {}, browser)
+      await BrowserTestUtils.synthesizeMouseAtCenter("body", {}, browser)
 
       // Notification should be hidden after dismissal via Don't Allow.
       this.complete = true;
@@ -147,14 +147,14 @@ var tests = [
   // Test that persistent panels are still open after switching to another tab
   // and back.
   { id: "Test#6a",
-    *run() {
+    run() {
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.options.persistent = true;
       gNotification = showNotification(this.notifyObj);
     },
-    *onShown(popup) {
+    async onShown(popup) {
       this.oldSelectedTab = gBrowser.selectedTab;
-      yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+      await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
     },
     onHidden(popup) {
       ok(true, "Should have hidden the notification after tab switch");
@@ -165,7 +165,7 @@ var tests = [
   // Second part of the previous test that compensates for the limitation in
   // runNextTest that expects a single onShown/onHidden invocation per test.
   { id: "Test#6b",
-    *run() {
+    run() {
       let id = PopupNotifications.panel.firstChild.getAttribute("popupid");
       ok(id.endsWith("Test#6a"), "Should have found the notification from Test6a");
       ok(PopupNotifications.isPanelOpen, "Should have shown the popup again after getting back to the tab");
@@ -177,18 +177,18 @@ var tests = [
   // Test that persistent panels are still open after switching to another
   // window and back.
   { id: "Test#7",
-    *run() {
+    async run() {
       this.oldSelectedTab = gBrowser.selectedTab;
-      yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+      await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
       let firstTab = gBrowser.selectedTab;
 
-      yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+      await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
 
       let shown = waitForNotificationPanel();
       let notifyObj = new BasicNotification(this.id);
       notifyObj.options.persistent = true;
       this.notification = showNotification(notifyObj);
-      yield shown;
+      await shown;
 
       ok(notifyObj.shownCallbackTriggered, "Should have triggered the shown event");
       ok(notifyObj.showingCallbackTriggered, "Should have triggered the showing event");
@@ -199,15 +199,15 @@ var tests = [
 
       let promiseWin = BrowserTestUtils.waitForNewWindow();
       gBrowser.replaceTabWithWindow(firstTab);
-      let win = yield promiseWin;
+      let win = await promiseWin;
 
       let anchor = win.document.getElementById("default-notification-icon");
       win.PopupNotifications._reshowNotifications(anchor);
       ok(win.PopupNotifications.panel.childNodes.length == 0,
          "no notification displayed in new window");
 
-      yield BrowserTestUtils.closeWindow(win);
-      yield waitForWindowReadyForPopupNotifications(window);
+      await BrowserTestUtils.closeWindow(win);
+      await waitForWindowReadyForPopupNotifications(window);
 
       let id = PopupNotifications.panel.firstChild.getAttribute("popupid");
       ok(id.endsWith("Test#7"), "Should have found the notification from Test7");
@@ -341,8 +341,8 @@ var tests = [
   // Clicking the anchor of a dismissed notification should show it, even when
   // the currently displayed notification is a persistent one.
   { id: "Test#11",
-    *run() {
-      yield SpecialPowers.pushPrefEnv({"set": [["accessibility.tabfocus", 7]]});
+    async run() {
+      await SpecialPowers.pushPrefEnv({"set": [["accessibility.tabfocus", 7]]});
 
       function clickAnchor(notifyObj) {
         let anchor = document.getElementById(notifyObj.anchorID);
@@ -357,7 +357,7 @@ var tests = [
       notifyObj1.options.persistent = true;
       let shown = waitForNotificationPanel();
       let notification1 = showNotification(notifyObj1);
-      yield shown;
+      await shown;
       checkPopup(popup, notifyObj1);
       ok(!notifyObj1.dismissalCallbackTriggered,
          "Should not have dismissed the notification");
@@ -387,7 +387,7 @@ var tests = [
       // first notification.
       shown = waitForNotificationPanel();
       clickAnchor(notifyObj2);
-      yield shown;
+      await shown;
       checkPopup(popup, notifyObj2);
       ok(notifyObj1.dismissalCallbackTriggered,
          "Should have dismissed the first notification");
@@ -395,7 +395,7 @@ var tests = [
       // Click the anchor of the first notification, it should be shown again.
       shown = waitForNotificationPanel();
       clickAnchor(notifyObj1);
-      yield shown;
+      await shown;
       checkPopup(popup, notifyObj1);
       ok(notifyObj2.dismissalCallbackTriggered,
          "Should have dismissed the second notification");

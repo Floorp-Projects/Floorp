@@ -1,13 +1,13 @@
 const SAVE_PER_SITE_PREF = "browser.download.lastDir.savePerSite";
 
 function test_deleted_iframe(perSitePref, windowOptions = {}) {
-  return function*() {
+  return async function() {
     Services.prefs.setBoolPref(SAVE_PER_SITE_PREF, perSitePref);
     let {DownloadLastDir} = Cu.import("resource://gre/modules/DownloadLastDir.jsm", {});
 
-    let win = yield promiseOpenAndLoadWindow(windowOptions);
+    let win = await promiseOpenAndLoadWindow(windowOptions);
     let tab = win.gBrowser.addTab();
-    yield promiseTabLoadEvent(tab, "about:mozilla");
+    await promiseTabLoadEvent(tab, "about:mozilla");
 
     let doc = tab.linkedBrowser.contentDocument;
     let iframe = doc.createElement("iframe");
@@ -25,13 +25,13 @@ function test_deleted_iframe(perSitePref, windowOptions = {}) {
       }, "dom-window-destroyed");
     });
     iframe.remove();
-    yield promiseIframeWindowGone;
+    await promiseIframeWindowGone;
     cw = null;
     ok(!iframe.contentWindow, "Managed to destroy iframe");
 
     let someDir = "blah";
     try {
-      someDir = yield new Promise((resolve, reject) => {
+      someDir = await new Promise((resolve, reject) => {
         gDownloadLastDir.getFileAsync("http://www.mozilla.org/", function(dir) {
           resolve(dir);
         });
@@ -50,7 +50,7 @@ function test_deleted_iframe(perSitePref, windowOptions = {}) {
       Cu.reportError(ex);
     }
 
-    yield promiseWindowClosed(win);
+    await promiseWindowClosed(win);
     Services.prefs.clearUserPref(SAVE_PER_SITE_PREF);
   };
 }

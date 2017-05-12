@@ -21,21 +21,21 @@ function getSimpleMeasurementsFromTelemetryController() {
   return TelemetrySession.getPayload().simpleMeasurements;
 }
 
-add_task(function* test_setup() {
+add_task(async function test_setup() {
   // Telemetry needs the AddonManager.
   loadAddonManager();
   // Make profile available for |TelemetryController.testShutdown()|.
   do_get_profile();
 
   // Make sure we don't generate unexpected pings due to pref changes.
-  yield setEmptyPrefWatchlist();
+  await setEmptyPrefWatchlist();
 
-  yield new Promise(resolve =>
+  await new Promise(resolve =>
     Services.telemetry.asyncFetchTelemetryData(resolve));
 });
 
-add_task(function* actualTest() {
-  yield TelemetryController.testSetup();
+add_task(async function actualTest() {
+  await TelemetryController.testSetup();
 
   // Test the module logic
   let tmp = {};
@@ -73,5 +73,5 @@ add_task(function* actualTest() {
   do_check_true(simpleMeasurements.bar > 1); // bar was included
   do_check_eq(undefined, simpleMeasurements.baz); // baz wasn't included since it wasn't added
 
-  yield TelemetryController.testShutdown();
+  await TelemetryController.testShutdown();
 });

@@ -12,22 +12,22 @@ function test() {
 
   let uri = "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
 
-  Task.spawn(function* () {
+  (async function() {
     tab = gBrowser.addTab();
-    yield FullZoomHelper.load(tab, uri);
+    await FullZoomHelper.load(tab, uri);
 
     // -------------------------------------------------------------------
     // Test - Trigger a tab switch that should update the zoom level
-    yield FullZoomHelper.selectTabAndWaitForLocationChange(tab);
+    await FullZoomHelper.selectTabAndWaitForLocationChange(tab);
     ok(true, "applyPrefToSetting was called");
-  }).then(endTest, FullZoomHelper.failAndContinue(endTest));
+  })().then(endTest, FullZoomHelper.failAndContinue(endTest));
 }
 
 // -------------
 // Test clean-up
 function endTest() {
-  Task.spawn(function* () {
-    yield FullZoomHelper.removeTabAndWaitForLocationChange(tab);
+  (async function() {
+    await FullZoomHelper.removeTabAndWaitForLocationChange(tab);
 
     tab = null;
 
@@ -38,5 +38,5 @@ function endTest() {
       gPrefService.clearUserPref("browser.zoom.siteSpecific");
 
     finish();
-  });
+  })();
 }

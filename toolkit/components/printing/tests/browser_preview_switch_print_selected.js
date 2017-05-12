@@ -6,9 +6,9 @@
 const TEST_PATH = getRootDirectory(gTestPath)
                     .replace("chrome://mochitests/content", "http://example.com");
 
-add_task(function* set_simplify_and_reader_pref() {
+add_task(async function set_simplify_and_reader_pref() {
   // Ensure we have the simplify page preference set
-  yield SpecialPowers.pushPrefEnv({
+  await SpecialPowers.pushPrefEnv({
     set: [
       ["print.use_simplify_page", true],
       ["reader.parse-on-load.enabled", true]
@@ -16,7 +16,7 @@ add_task(function* set_simplify_and_reader_pref() {
   });
 });
 
-add_task(function* switch_print_preview_browsers() {
+add_task(async function switch_print_preview_browsers() {
   let url = TEST_PATH + "simplifyArticleSample.html";
 
   // Can only do something if we have a print preview UI:
@@ -26,10 +26,10 @@ add_task(function* switch_print_preview_browsers() {
   }
 
   // Ensure we get a browserStopped for this browser
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, url, false, true);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url, false, true);
 
   // Wait for Reader Mode to parse and set property of loaded tab
-  yield BrowserTestUtils.waitForCondition(() => {
+  await BrowserTestUtils.waitForCondition(() => {
     return tab.linkedBrowser.isArticle;
   });
 
@@ -39,10 +39,10 @@ add_task(function* switch_print_preview_browsers() {
                           .waitForMessage(defaultPPBrowser.messageManager,
                                           "Printing:Preview:Entered");
   document.getElementById("cmd_printPreview").doCommand();
-  yield defaultPPEntered;
+  await defaultPPEntered;
 
   // Assert that we are showing the initial content on default print preview browser
-  yield ContentTask.spawn(defaultPPBrowser, null, function* () {
+  await ContentTask.spawn(defaultPPBrowser, null, async function() {
     is(content.document.title, "Article title", "Should have initial content.");
   });
 
@@ -54,19 +54,19 @@ add_task(function* switch_print_preview_browsers() {
   let printPreviewToolbar = document.getElementById("print-preview-toolbar");
 
   // Wait for simplify page option enablement
-  yield BrowserTestUtils.waitForCondition(() => {
+  await BrowserTestUtils.waitForCondition(() => {
     return !printPreviewToolbar.mSimplifyPageCheckbox.disabled;
   });
 
   printPreviewToolbar.mSimplifyPageCheckbox.click();
-  yield simplifiedPPEntered;
+  await simplifiedPPEntered;
 
   // Assert that simplify page option is checked
   is(printPreviewToolbar.mSimplifyPageCheckbox.checked, true,
      "Should have simplify page option checked");
 
   // Assert that we are showing custom content on simplified print preview browser
-  yield ContentTask.spawn(simplifiedPPBrowser, null, function* () {
+  await ContentTask.spawn(simplifiedPPBrowser, null, async function() {
     is(content.document.title, "Article title", "Should have custom content.");
   });
 
@@ -81,14 +81,14 @@ add_task(function* switch_print_preview_browsers() {
                       .waitForMessage(defaultPPBrowser.messageManager,
                                       "Printing:Preview:Entered");
   printPreviewToolbar.mSimplifyPageCheckbox.click();
-  yield defaultPPEntered;
+  await defaultPPEntered;
 
   // Assert that simplify page option is not checked
   isnot(printPreviewToolbar.mSimplifyPageCheckbox.checked, true,
      "Should not have simplify page option checked");
 
   // Assert that we are showing the initial content on default print preview browser
-  yield ContentTask.spawn(defaultPPBrowser, null, function* () {
+  await ContentTask.spawn(defaultPPBrowser, null, async function() {
     is(content.document.title, "Article title", "Should have initial content.");
   });
 
@@ -100,5 +100,5 @@ add_task(function* switch_print_preview_browsers() {
 
   PrintUtils.exitPrintPreview();
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });

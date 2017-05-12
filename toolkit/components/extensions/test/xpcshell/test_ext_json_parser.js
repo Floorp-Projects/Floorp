@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* test_json_parser() {
+add_task(async function test_json_parser() {
   const ID = "json@test.web.extension";
 
   let xpi = Extension.generateXPI({
@@ -27,7 +27,7 @@ add_task(function* test_json_parser() {
 
   let extension = new ExtensionData(uri);
 
-  yield extension.parseManifest();
+  await extension.parseManifest();
 
   Assert.deepEqual(extension.rawManifest, expectedManifest,
                    "Manifest with correctly-filtered comments");

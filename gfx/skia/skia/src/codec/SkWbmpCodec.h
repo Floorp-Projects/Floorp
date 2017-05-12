@@ -24,7 +24,7 @@ public:
     static SkCodec* NewFromStream(SkStream*);
 
 protected:
-    SkEncodedFormat onGetEncodedFormat() const override;
+    SkEncodedImageFormat onGetEncodedFormat() const override;
     Result onGetPixels(const SkImageInfo&, void*, size_t,
                        const Options&, SkPMColor[], int*, int*) override;
     bool onRewind() override;
@@ -36,7 +36,7 @@ private:
                                    const Options& opts);
     SkSampler* getSampler(bool createIfNecessary) override {
         SkASSERT(fSwizzler || !createIfNecessary);
-        return fSwizzler;
+        return fSwizzler.get();
     }
 
     /*
@@ -46,12 +46,12 @@ private:
 
     SkWbmpCodec(int width, int height, const SkEncodedInfo&, SkStream*);
 
-    const size_t                 fSrcRowBytes;
+    const size_t                fSrcRowBytes;
 
     // Used for scanline decodes:
-    SkAutoTDelete<SkSwizzler>    fSwizzler;
-    SkAutoTUnref<SkColorTable>   fColorTable;
-    SkAutoTMalloc<uint8_t>       fSrcBuffer;
+    std::unique_ptr<SkSwizzler> fSwizzler;
+    sk_sp<SkColorTable>         fColorTable;
+    SkAutoTMalloc<uint8_t>      fSrcBuffer;
 
     int onGetScanlines(void* dst, int count, size_t dstRowBytes) override;
     bool onSkipScanlines(int count) override;

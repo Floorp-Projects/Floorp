@@ -9,10 +9,11 @@ import subprocess
 import sys
 import tarfile
 import zipfile
+from ConfigParser import RawConfigParser, SafeConfigParser
 from abc import ABCMeta, abstractmethod
 from cStringIO import StringIO as CStringIO
 from collections import defaultdict, OrderedDict
-from ConfigParser import RawConfigParser
+from distutils.spawn import find_executable
 from io import BytesIO, StringIO
 
 import requests
@@ -171,6 +172,12 @@ class Browser(object):
     def wptrunner_args(self):
         return NotImplemented
 
+    def prepare_environment(self):
+        """Do any additional setup of the environment required to start the
+           browser successfully
+        """
+        pass
+
 
 class Firefox(Browser):
     """Firefox-specific interface.
@@ -282,6 +289,26 @@ class Chrome(Browser):
             "test_types": ["testharness", "reftest"]
         }
 
+    def prepare_environment(self):
+        # https://bugs.chromium.org/p/chromium/issues/detail?id=713947
+        logger.debug("DBUS_SESSION_BUS_ADDRESS %s" % os.environ.get("DBUS_SESSION_BUS_ADDRESS"))
+        if "DBUS_SESSION_BUS_ADDRESS" not in os.environ:
+            if find_executable("dbus-launch"):
+                logger.debug("Attempting to start dbus")
+                dbus_conf = subprocess.check_output(["dbus-launch"])
+                logger.debug(dbus_conf)
+
+                # From dbus-launch(1):
+                #
+                # > When dbus-launch prints bus information to standard output,
+                # > by default it is in a simple key-value pairs format.
+                for line in dbus_conf.strip().split("\n"):
+                    key, _, value = line.partition("=")
+                    os.environ[key] = value
+            else:
+                logger.critical("dbus not running and can't be started")
+                sys.exit(1)
+
 
 def get(url):
     """Issue GET request to a given URL and return the response."""
@@ -383,10 +410,7 @@ def build_manifest():
 
 
 def install_wptrunner():
-    """Clone and install wptrunner."""
-    call("git", "clone", "--depth=1", "https://github.com/w3c/wptrunner.git", wptrunner_root)
-    git = get_git_cmd(wptrunner_root)
-    git("submodule", "update", "--init", "--recursive")
+    """Install wptrunner."""
     call("pip", "install", wptrunner_root)
 
 
@@ -394,27 +418,42 @@ def get_branch_point(user):
     git = get_git_cmd(wpt_root)
     if os.environ.get("TRAVIS_PULL_REQUEST", "false") != "false":
         # This is a PR, so the base branch is in TRAVIS_BRANCH
-        branch_point = os.environ.get("TRAVIS_COMMIT_RANGE").split(".", 1)[0]
-        branch_point = git("rev-parse", branch_point)
+        travis_branch = os.environ.get("TRAVIS_BRANCH")
+        assert travis_branch, "TRAVIS_BRANCH environment variable is defined"
+        branch_point = git("rev-parse", travis_branch)
     else:
         # Otherwise we aren't on a PR, so we try to find commits that are only in the
         # current branch c.f.
         # http://stackoverflow.com/questions/13460152/find-first-ancestor-commit-in-another-branch
         head = git("rev-parse", "HEAD")
         # To do this we need all the commits in the local copy
-        fetch_wpt(user, "--unshallow", "+refs/heads/*:refs/remotes/origin/*")
+        fetch_args = [user, "+refs/heads/*:refs/remotes/origin/*"]
+        if os.path.exists(os.path.join(wpt_root, ".git", "shallow")):
+            fetch_args.insert(1, "--unshallow")
+        fetch_wpt(*fetch_args)
         not_heads = [item for item in git("rev-parse", "--not", "--all").split("\n")
-                     if not head in item]
+                     if item.strip() and not head in item]
         commits = git("rev-list", "HEAD", *not_heads).split("\n")
-        first_commit = commits[-1]
-        branch_point = git("rev-parse", first_commit + "^")
-        # The above can produce a too-early commit if we are e.g. on master and there are
-        # preceding changes that were rebased and so aren't on any other branch. To avoid
-        # this issue we check for the later of the above branch point and the merge-base
-        # with master
+        branch_point = None
+        if len(commits):
+            first_commit = commits[-1]
+            if first_commit:
+                branch_point = git("rev-parse", first_commit + "^")
+
+        # The above heuristic will fail in the following cases:
+        #
+        # - The current branch has fallen behind the version retrieved via the above
+        #   `fetch` invocation
+        # - Changes on the current branch were rebased and therefore do not exist on any
+        #   other branch. This will result in the selection of a commit that is earlier
+        #   in the history than desired (as determined by calculating the later of the
+        #   branch point and the merge base)
+        #
+        # In either case, fall back to using the merge base as the branch point.
         merge_base = git("merge-base", "HEAD", "origin/master")
-        if (branch_point != merge_base and
-            not git("log", "--oneline", "%s..%s" % (merge_base, branch_point)).strip()):
+        if (branch_point is None or
+            (branch_point != merge_base and
+             not git("log", "--oneline", "%s..%s" % (merge_base, branch_point)).strip())):
             logger.debug("Using merge-base as the branch point")
             branch_point = merge_base
         else:
@@ -424,24 +463,34 @@ def get_branch_point(user):
     return branch_point
 
 
-def get_files_changed(branch_point):
-    """Get and return files changed since current branch diverged from master."""
+def get_files_changed(branch_point, ignore_changes):
+    """Get and return files changed since current branch diverged from master,
+    excluding those that are located within any directory specifed by
+    `ignore_changes`."""
     root = os.path.abspath(os.curdir)
     git = get_git_cmd(wpt_root)
-    files = git("diff", "--name-only", "-z", "%s.." % branch_point)
+    files = git("diff", "--name-only", "-z", "%s..." % branch_point)
     if not files:
-        return []
+        return [], []
     assert files[-1] == "\0"
-    return [os.path.join(wpt_root, item)
-            for item in files[:-1].split("\0")]
 
+    changed = []
+    ignored = []
+    for item in files[:-1].split("\0"):
+        fullpath = os.path.join(wpt_root, item)
+        topmost_dir = item.split(os.sep, 1)[0]
+        if topmost_dir in ignore_changes:
+            ignored.append(fullpath)
+        else:
+            changed.append(fullpath)
 
-def get_affected_testfiles(files_changed):
+    return changed, ignored
+
+def get_affected_testfiles(files_changed, skip_tests):
     """Determine and return list of test files that reference changed files."""
     affected_testfiles = set()
     nontests_changed = set(files_changed)
     manifest_file = os.path.join(wpt_root, "MANIFEST.json")
-    skip_dirs = ["conformance-checkers", "docs", "tools"]
     test_types = ["testharness", "reftest", "wdspec"]
 
     wpt_manifest = manifest.load(wpt_root, manifest_file)
@@ -462,7 +511,7 @@ def get_affected_testfiles(files_changed):
             # (because it's not part of any test).
             continue
         top_level_subdir = path_components[0]
-        if top_level_subdir in skip_dirs:
+        if top_level_subdir in skip_tests:
             continue
         repo_path = "/" + os.path.relpath(full_path, wpt_root).replace(os.path.sep, "/")
         nontest_changed_paths.add((full_path, repo_path))
@@ -471,7 +520,7 @@ def get_affected_testfiles(files_changed):
         # Walk top_level_subdir looking for test files containing either the
         # relative filepath or absolute filepatch to the changed files.
         if root == wpt_root:
-            for dir_name in skip_dirs:
+            for dir_name in skip_tests:
                 dirs.remove(dir_name)
         for fname in fnames:
             test_full_path = os.path.join(root, fname)
@@ -617,6 +666,7 @@ def markdown_adjust(s):
     s = s.replace('\n', u'\\n')
     s = s.replace('\r', u'\\r')
     s = s.replace('`',  u'')
+    s = s.replace('|', u'\\|')
     return s
 
 
@@ -691,7 +741,9 @@ def write_results(results, iterations, comment_pr):
 
 def get_parser():
     """Create and return script-specific argument parser."""
-    parser = argparse.ArgumentParser()
+    description = """Detect instabilities in new tests by executing tests
+    repeatedly and comparing results between executions."""
+    parser = argparse.ArgumentParser(description=description)
     parser.add_argument("--root",
                         action="store",
                         default=os.path.join(os.path.expanduser("~"), "build"),
@@ -709,12 +761,17 @@ def get_parser():
                         action="store",
                         # Travis docs say do not depend on USER env variable.
                         # This is a workaround to get what should be the same value
-                        default=os.environ.get("TRAVIS_REPO_SLUG").split('/')[0],
+                        default=os.environ.get("TRAVIS_REPO_SLUG", "w3c").split('/')[0],
                         help="Travis user name")
     parser.add_argument("--output-bytes",
                         action="store",
                         type=int,
                         help="Maximum number of bytes to write to standard output/error")
+    parser.add_argument("--config-file",
+                        action="store",
+                        type=str,
+                        help="Location of ini-formatted configuration file",
+                        default="check_stability.ini")
     parser.add_argument("product",
                         action="store",
                         help="Product to run against (`browser-name` or 'browser-name:channel')")
@@ -731,6 +788,12 @@ def main():
     parser = get_parser()
     args = parser.parse_args()
 
+    with open(args.config_file, 'r') as config_fp:
+        config = SafeConfigParser()
+        config.readfp(config_fp)
+        skip_tests = config.get("file detection", "skip_tests").split()
+        ignore_changes = set(config.get("file detection", "ignore_changes").split())
+
     if args.output_bytes is not None:
         replace_streams(args.output_bytes,
                         "Log reached capacity (%s bytes); output disabled." % args.output_bytes)
@@ -739,7 +802,7 @@ def main():
     setup_logging()
 
     wpt_root = os.path.abspath(os.curdir)
-    wptrunner_root = os.path.normpath(os.path.join(wpt_root, "..", "wptrunner"))
+    wptrunner_root = os.path.normpath(os.path.join(wpt_root, "tools", "wptrunner"))
 
     if not os.path.exists(args.root):
         logger.critical("Root directory %s does not exist" % args.root)
@@ -767,7 +830,11 @@ def main():
 
         # For now just pass the whole list of changed files to wptrunner and
         # assume that it will run everything that's actually a test
-        files_changed = get_files_changed(branch_point)
+        files_changed, files_ignored = get_files_changed(branch_point, ignore_changes)
+
+        if files_ignored:
+            logger.info("Ignoring %s changed files:\n%s" % (len(files_ignored),
+                                                            "".join(" * %s\n" % item for item in files_ignored)))
 
         if not files_changed:
             logger.info("No files changed")
@@ -789,7 +856,7 @@ def main():
 
         logger.debug("Files changed:\n%s" % "".join(" * %s\n" % item for item in files_changed))
 
-        affected_testfiles = get_affected_testfiles(files_changed)
+        affected_testfiles = get_affected_testfiles(files_changed, skip_tests)
 
         logger.debug("Affected tests:\n%s" % "".join(" * %s\n" % item for item in affected_testfiles))
 
@@ -799,6 +866,8 @@ def main():
                                 files_changed,
                                 args.iterations,
                                 browser)
+
+        browser.prepare_environment()
 
     with TravisFold("running_tests"):
         logger.info("Starting %i test iterations" % args.iterations)
@@ -840,6 +909,8 @@ if __name__ == "__main__":
     try:
         retcode = main()
     except:
-        raise
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
     else:
         sys.exit(retcode)
