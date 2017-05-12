@@ -229,10 +229,13 @@
 #include "mozilla/dom/SpeechSynthesisParent.h"
 #endif
 
-#if defined(MOZ_CONTENT_SANDBOX) && defined(XP_LINUX)
+#if defined(MOZ_CONTENT_SANDBOX)
+#include "mozilla/SandboxSettings.h"
+#if defined(XP_LINUX)
 #include "mozilla/SandboxInfo.h"
 #include "mozilla/SandboxBroker.h"
 #include "mozilla/SandboxBrokerPolicyFactory.h"
+#endif
 #endif
 
 #ifdef MOZ_TOOLKIT_SEARCH
@@ -2339,7 +2342,7 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
   // purpose. If the decision is made to permanently rely on the pref, this
   // should be changed so that it is required to restart firefox for the change
   // of value to take effect.
-  shouldSandbox = (Preferences::GetInt("security.sandbox.content.level") > 0) &&
+  shouldSandbox = (GetEffectiveContentSandboxLevel() > 0) &&
     !PR_GetEnv("MOZ_DISABLE_CONTENT_SANDBOX");
 
   if (shouldSandbox) {

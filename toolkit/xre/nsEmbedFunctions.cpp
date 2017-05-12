@@ -87,8 +87,11 @@
 #include "mozilla/sandboxing/loggingCallbacks.h"
 #endif
 
-#if defined(MOZ_CONTENT_SANDBOX) && !defined(MOZ_WIDGET_GONK)
+#if defined(MOZ_CONTENT_SANDBOX)
+#include "mozilla/SandboxSettings.h"
+#if !defined(MOZ_WIDGET_GONK)
 #include "mozilla/Preferences.h"
+#endif
 #endif
 
 #if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
@@ -311,7 +314,7 @@ void
 AddContentSandboxLevelAnnotation()
 {
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    int level = Preferences::GetInt("security.sandbox.content.level");
+    int level = GetEffectiveContentSandboxLevel();
     nsAutoCString levelString;
     levelString.AppendInt(level);
     CrashReporter::AnnotateCrashReport(
