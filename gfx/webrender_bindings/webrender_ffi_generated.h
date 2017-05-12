@@ -856,6 +856,13 @@ void wr_renderer_update(WrRenderer* aRenderer)
 WR_FUNC;
 
 WR_INLINE
+void wr_scroll_layer_with_id(WrAPI* aApi,
+                             WrPipelineId aPipelineId,
+                             uint64_t aScrollId,
+                             WrPoint aNewScrollOrigin)
+WR_FUNC;
+
+WR_INLINE
 void wr_state_delete(WrState* aState)
 WR_DESTRUCTOR_SAFE_FUNC;
 
