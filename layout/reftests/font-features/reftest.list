@@ -60,7 +60,7 @@ HTTP(..) == annotations.html annotations-ref.html
 # test for specific features being on and others off, based on prop values
 # (debug problems with font-variant-debug.html which displays all props)
 fails-if(stylo) HTTP(..) == font-variant-alternates.html font-variant-alternates-ref.html
-fails-if(stylo) HTTP(..) == font-variant-caps.html font-variant-caps-ref.html
+HTTP(..) == font-variant-caps.html font-variant-caps-ref.html
 HTTP(..) == font-variant-east-asian.html font-variant-east-asian-ref.html
 HTTP(..) == font-variant-ligatures.html font-variant-ligatures-ref.html
 HTTP(..) == font-variant-numeric.html font-variant-numeric-ref.html
@@ -99,14 +99,14 @@ random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) HTTP(..) ==
 HTTP(..) != caps-fallback-smallcaps1.html caps-fallback-default.html
 HTTP(..) != caps-fallback-smallcaps2.html caps-fallback-default.html
 HTTP(..) != caps-fallback-petitecaps.html caps-fallback-default.html
-fails-if(stylo) HTTP(..) != caps-fallback-allsmallcaps.html caps-fallback-default.html
-fails-if(stylo) HTTP(..) != caps-fallback-allpetitecaps.html caps-fallback-default.html
+HTTP(..) != caps-fallback-allsmallcaps.html caps-fallback-default.html
+HTTP(..) != caps-fallback-allpetitecaps.html caps-fallback-default.html
 # -- normal or fallback rendering
 HTTP(..) == caps-fallback-smallcaps1.html caps-fallback-smcp.html
 HTTP(..) == caps-fallback-smallcaps2.html caps-fallback-smcp.html
 HTTP(..) == caps-fallback-petitecaps.html caps-fallback-smcp.html
-fails-if(stylo) HTTP(..) == caps-fallback-allsmallcaps.html caps-fallback-smcpc2sc.html
-fails-if(stylo) HTTP(..) == caps-fallback-allpetitecaps.html caps-fallback-smcpc2sc.html
+HTTP(..) == caps-fallback-allsmallcaps.html caps-fallback-smcpc2sc.html
+HTTP(..) == caps-fallback-allpetitecaps.html caps-fallback-smcpc2sc.html
 
 # font-variant-position fallback
 random-if(cocoaWidget||Android) HTTP(..) == subsuper-fallback.html subsuper-fallback-ref.html # bug 1139269
