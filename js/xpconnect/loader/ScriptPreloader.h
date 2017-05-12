@@ -183,7 +183,7 @@ private:
 
         struct StatusMatcher final : public Matcher<CachedScript*>
         {
-            StatusMatcher(ScriptStatus status) : mStatus(status) {}
+            explicit StatusMatcher(ScriptStatus status) : mStatus(status) {}
 
             virtual bool Matches(CachedScript* script)
             {
