@@ -76,7 +76,7 @@ this.YandexTranslator.prototype = {
    *                             task is finished.
    */
   translate() {
-    return (async function() {
+    return (async () => {
       let currentIndex = 0;
       this._onFinishedDeferred = Promise.defer();
 
@@ -108,7 +108,7 @@ this.YandexTranslator.prototype = {
       }
 
       return this._onFinishedDeferred.promise;
-    }.bind(this))();
+    })();
   },
 
   /**
@@ -292,7 +292,7 @@ YandexRequest.prototype = {
    * Initiates the request
    */
   fireRequest() {
-    return (async function() {
+    return (async () => {
       // Prepare URL.
       let url = getUrlParam("https://translate.yandex.net/api/v1.5/tr.json/translate",
                             "browser.translation.yandex.translateURLOverride");
@@ -326,7 +326,7 @@ YandexRequest.prototype = {
       this.networkRequest = httpRequest(url, options);
 
       return deferred.promise;
-    }.bind(this))();
+    })();
   }
 };
 

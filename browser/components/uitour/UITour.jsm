@@ -1881,7 +1881,7 @@ this.UITour = {
   },
 
   getAvailableTargets(aMessageManager, aChromeWindow, aCallbackID) {
-    (async function() {
+    (async () => {
       let window = aChromeWindow;
       let data = this.availableTargetsCache.get(window);
       if (data) {
@@ -1907,7 +1907,7 @@ this.UITour = {
       };
       this.availableTargetsCache.set(window, data);
       this.sendPageCallback(aMessageManager, aCallbackID, data);
-    }.bind(this))().catch(err => {
+    })().catch(err => {
       log.error(err);
       this.sendPageCallback(aMessageManager, aCallbackID, {
         targets: [],

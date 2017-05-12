@@ -360,7 +360,7 @@ this.PanelMultiView = class {
 
   showSubView(aViewId, aAnchor, aPreviousView, aAdopted = false) {
     const {document, window} = this;
-    return (async function() {
+    return (async () => {
       // Support passing in the node directly.
       let viewNode = typeof aViewId == "string" ? this.node.querySelector("#" + aViewId) : aViewId;
       if (!viewNode) {
@@ -577,7 +577,7 @@ this.PanelMultiView = class {
           subtree: true
         });
       }
-    }.bind(this))();
+    })();
   }
 
   _setViewContainerHeight(aHeight) {

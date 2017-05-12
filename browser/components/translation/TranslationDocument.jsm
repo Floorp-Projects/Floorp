@@ -208,7 +208,7 @@ this.TranslationDocument.prototype = {
    *                 or "original".
    */
   _swapDocumentContent(target) {
-    (async function() {
+    (async () => {
       // Let the event loop breath on every 100 nodes
       // that are replaced.
       const YIELD_INTERVAL = 100;
@@ -221,7 +221,7 @@ this.TranslationDocument.prototype = {
           await CommonUtils.laterTickResolvingPromise();
         }
       }
-    }.bind(this))();
+    })();
   }
 };
 

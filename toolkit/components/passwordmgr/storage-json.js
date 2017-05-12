@@ -51,7 +51,7 @@ this.LoginManagerStorage_json.prototype = {
                                   "logins.json");
       this._store = new LoginStore(jsonPath);
 
-      return (async function() {
+      return (async () => {
         // Load the data asynchronously.
         this.log("Opening database at", this._store.path);
         await this._store.load();
@@ -83,7 +83,7 @@ this.LoginManagerStorage_json.prototype = {
 
         // We won't attempt import again on next startup.
         Services.prefs.setBoolPref("signon.importedFromSqlite", true);
-      }.bind(this))().catch(Cu.reportError);
+      })().catch(Cu.reportError);
     } catch (e) {
       this.log("Initialization failed:", e);
       throw new Error("Initialization failed");

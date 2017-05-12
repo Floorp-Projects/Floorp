@@ -444,7 +444,7 @@ var AddonTestUtils = {
     let realCertDB = factory.createInstance(null, Ci.nsIX509CertDB);
 
 
-    let verifyCert = async function(file, result, cert, callback) {
+    let verifyCert = async (file, result, cert, callback) => {
       if (result == Cr.NS_ERROR_SIGNED_JAR_NOT_SIGNED &&
           !this.useRealCertChecks && callback.wrappedJSObject) {
         // Bypassing XPConnect allows us to create a fake x509 certificate from JS
@@ -468,7 +468,7 @@ var AddonTestUtils = {
       }
 
       return [callback, result, cert];
-    }.bind(this);
+    };
 
 
     function FakeCertDB() {

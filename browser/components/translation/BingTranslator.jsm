@@ -58,7 +58,7 @@ this.BingTranslator.prototype = {
    *                             task is finished.
    */
   translate() {
-    return (async function() {
+    return (async () => {
       let currentIndex = 0;
       this._onFinishedDeferred = Promise.defer();
 
@@ -90,7 +90,7 @@ this.BingTranslator.prototype = {
       }
 
       return this._onFinishedDeferred.promise;
-    }.bind(this))();
+    })();
   },
 
   /**
@@ -285,7 +285,7 @@ BingRequest.prototype = {
    * Initiates the request
    */
   fireRequest() {
-    return (async function() {
+    return (async () => {
       // Prepare authentication.
       let token = await BingTokenManager.getToken();
       let auth = "Bearer " + token;
@@ -337,7 +337,7 @@ BingRequest.prototype = {
       request.overrideMimeType("text/xml");
       this.networkRequest = request;
       return deferred.promise;
-    }.bind(this))();
+    })();
   }
 };
 

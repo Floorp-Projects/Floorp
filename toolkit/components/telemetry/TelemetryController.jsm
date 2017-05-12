@@ -707,7 +707,7 @@ var Impl = {
     // run various late initializers. Otherwise our gathered memory
     // footprint and other numbers would be too optimistic.
     this._delayedInitTaskDeferred = Promise.defer();
-    this._delayedInitTask = new DeferredTask(async function() {
+    this._delayedInitTask = new DeferredTask(async () => {
       try {
         // TODO: This should probably happen after all the delayed init here.
         this._initialized = true;
@@ -746,7 +746,7 @@ var Impl = {
       } finally {
         this._delayedInitTask = null;
       }
-    }.bind(this), this._testMode ? TELEMETRY_TEST_DELAY : TELEMETRY_DELAY);
+    }, this._testMode ? TELEMETRY_TEST_DELAY : TELEMETRY_DELAY);
 
     AsyncShutdown.sendTelemetry.addBlocker("TelemetryController: shutting down",
                                            () => this.shutdown(),
@@ -891,7 +891,7 @@ var Impl = {
       return;
     }
 
-    let p = (async function() {
+    let p = (async () => {
       try {
         // Clear the current pings.
         await TelemetrySend.clearCurrentPings();
@@ -905,7 +905,7 @@ var Impl = {
         this._log.trace("_onUploadPrefChange - Sending deletion ping.");
         this.submitExternalPing(PING_TYPE_DELETION, {}, { addClientId: true });
       }
-    }.bind(this))();
+    })();
 
     this._shutdownBarrier.client.addBlocker(
       "TelemetryController: removing pending pings after data upload was disabled", p);
@@ -987,13 +987,13 @@ var Impl = {
     const sendDelay =
       Preferences.get(PREF_NEWPROFILE_PING_DELAY, NEWPROFILE_PING_DEFAULT_DELAY);
 
-    this._delayedNewPingTask = new DeferredTask(async function() {
+    this._delayedNewPingTask = new DeferredTask(async () => {
       try {
         await this.sendNewProfilePing();
       } finally {
         this._delayedNewPingTask = null;
       }
-    }.bind(this), sendDelay);
+    }, sendDelay);
 
     this._delayedNewPingTask.arm();
   },

@@ -248,7 +248,7 @@ nsUnknownContentTypeDialog.prototype = {
       }
     }
 
-    (async function() {
+    (async () => {
       if (!aForcePrompt) {
         // Check to see if the user wishes to auto save to the default download
         // folder without prompting. Note that preference might not be set.
@@ -362,7 +362,7 @@ nsUnknownContentTypeDialog.prototype = {
           aLauncher.saveDestinationAvailable(result);
         });
       });
-    }.bind(this))().then(null, Components.utils.reportError);
+    })().then(null, Components.utils.reportError);
   },
 
   getFinalLeafName: function (aLeafName, aFileExt)

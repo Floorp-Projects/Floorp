@@ -276,7 +276,7 @@ GMPWrapper.prototype = {
       return this._updateTask;
     }
 
-    this._updateTask = (async function() {
+    this._updateTask = (async () => {
       this._log.trace("findUpdates() - updateTask");
       try {
         let installManager = new GMPInstallManager();
@@ -299,7 +299,7 @@ GMPWrapper.prototype = {
         this._updateTask = null;
       }
       return true;
-    }.bind(this))();
+    })();
 
     return this._updateTask;
   },
@@ -582,7 +582,7 @@ var GMPProvider = {
     this._log.trace("shutdown");
     Services.prefs.removeObserver(GMPPrefs.KEY_LOG_BASE, configureLogging);
 
-    let shutdownTask = (async function() {
+    let shutdownTask = (async () => {
       this._log.trace("shutdown - shutdownTask");
       let shutdownSucceeded = true;
 
@@ -599,7 +599,7 @@ var GMPProvider = {
       if (!shutdownSucceeded) {
         throw new Error("Shutdown failed");
       }
-    }.bind(this))();
+    })();
 
     return shutdownTask;
   },

@@ -350,7 +350,7 @@ this.ContentSearch = {
 
     let event = this._eventQueue.shift();
 
-    this._currentEventPromise = (async function() {
+    this._currentEventPromise = (async () => {
       try {
         await this["_on" + event.type](event.data);
       } catch (err) {
@@ -359,7 +359,7 @@ this.ContentSearch = {
         this._currentEventPromise = null;
         this._processEventQueue();
       }
-    }.bind(this))();
+    })();
   },
 
   _cancelSuggestions(msg) {

@@ -515,7 +515,7 @@ var TransactionsManager = {
     // sameTxn.transact(); sameTxn.transact();
     this._executedTransactions.add(rawTxn);
 
-    let promise = this._transactEnqueuer.enqueue(async function() {
+    let promise = this._transactEnqueuer.enqueue(async () => {
       // Don't try to catch exceptions. If execute fails, we better not add the
       // transaction to the undo stack.
       let retval = await rawTxn.execute();
@@ -527,13 +527,13 @@ var TransactionsManager = {
 
       this._updateCommandsOnActiveWindow();
       return retval;
-    }.bind(this));
+    });
     this._mainEnqueuer.alsoWaitFor(promise);
     return promise;
   },
 
   batch(aTask) {
-    return this._mainEnqueuer.enqueue(async function() {
+    return this._mainEnqueuer.enqueue(async () => {
       this._batching = true;
       this._createdBatchEntry = false;
       let rv;
@@ -545,14 +545,14 @@ var TransactionsManager = {
         this._createdBatchEntry = false;
       }
       return rv;
-    }.bind(this));
+    });
   },
 
   /**
    * Undo the top undo entry, if any, and update the undo position accordingly.
    */
   undo() {
-    let promise = this._mainEnqueuer.enqueue(async function() {
+    let promise = this._mainEnqueuer.enqueue(async () => {
       let entry = TransactionsHistory.topUndoEntry;
       if (!entry)
         return;
@@ -571,7 +571,7 @@ var TransactionsManager = {
       }
       TransactionsHistory._undoPosition++;
       this._updateCommandsOnActiveWindow();
-    }.bind(this));
+    });
     this._transactEnqueuer.alsoWaitFor(promise);
     return promise;
   },
@@ -580,7 +580,7 @@ var TransactionsManager = {
    * Redo the top redo entry, if any, and update the undo position accordingly.
    */
   redo() {
-    let promise = this._mainEnqueuer.enqueue(async function() {
+    let promise = this._mainEnqueuer.enqueue(async () => {
       let entry = TransactionsHistory.topRedoEntry;
       if (!entry)
         return;
@@ -603,7 +603,7 @@ var TransactionsManager = {
       }
       TransactionsHistory._undoPosition--;
       this._updateCommandsOnActiveWindow();
-    }.bind(this));
+    });
 
     this._transactEnqueuer.alsoWaitFor(promise);
     return promise;

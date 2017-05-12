@@ -93,7 +93,7 @@ function loadNextTest()
 function test()
 {
   SimpleTest.waitForExplicitFinish();
-  (async function() {
+  (async () => {
     await PlacesTestUtils.clearHistory();
 
     info("Inserting new visit");
@@ -127,7 +127,7 @@ function test()
 
     // And start our test process.
     loadNextTest();
-  }.bind(this))();
+  })();
 }
 
   ]]>

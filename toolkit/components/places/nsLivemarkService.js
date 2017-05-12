@@ -181,7 +181,7 @@ LivemarkService.prototype = {
       throw new Components.Exception("Invalid arguments", Cr.NS_ERROR_INVALID_ARG);
     }
 
-    return (async function() {
+    return (async () => {
       if (!aLivemarkInfo.parentGuid)
         aLivemarkInfo.parentGuid = await PlacesUtils.promiseItemGuid(aLivemarkInfo.parentId);
 
@@ -234,7 +234,7 @@ LivemarkService.prototype = {
       livemarksMap.set(folder.guid, livemark);
 
       return livemark;
-    }.bind(this))();
+    })();
   },
 
   removeLivemark(aLivemarkInfo) {
@@ -250,7 +250,7 @@ LivemarkService.prototype = {
       throw new Components.Exception("Invalid arguments", Cr.NS_ERROR_INVALID_ARG);
     }
 
-    return (async function() {
+    return (async () => {
       if (!aLivemarkInfo.guid)
         aLivemarkInfo.guid = await PlacesUtils.promiseItemGuid(aLivemarkInfo.id);
 
@@ -260,7 +260,7 @@ LivemarkService.prototype = {
 
       await PlacesUtils.bookmarks.remove(aLivemarkInfo.guid,
                                          { source: aLivemarkInfo.source });
-    }.bind(this))();
+    })();
   },
 
   reloadLivemarks(aForceUpdate) {
@@ -293,7 +293,7 @@ LivemarkService.prototype = {
       throw new Components.Exception("Invalid arguments", Cr.NS_ERROR_INVALID_ARG);
     }
 
-    return (async function() {
+    return (async () => {
       if (!aLivemarkInfo.guid)
         aLivemarkInfo.guid = await PlacesUtils.promiseItemGuid(aLivemarkInfo.id);
 
@@ -302,7 +302,7 @@ LivemarkService.prototype = {
         throw new Components.Exception("Invalid livemark", Cr.NS_ERROR_INVALID_ARG);
 
       return livemarksMap.get(aLivemarkInfo.guid);
-    }.bind(this))();
+    })();
   },
 
   // nsINavBookmarkObserver

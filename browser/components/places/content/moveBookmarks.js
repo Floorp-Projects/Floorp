@@ -45,7 +45,7 @@ var gMoveBookmarksDialog = {
       return;
     }
 
-    PlacesTransactions.batch(async function() {
+    PlacesTransactions.batch(async () => {
       let newParentGuid = await PlacesUtils.promiseItemGuid(selectedFolderId);
       for (let node of this._nodes) {
         // Nothing to do if the node is already under the selected folder.
@@ -54,7 +54,7 @@ var gMoveBookmarksDialog = {
         await PlacesTransactions.Move({ guid: node.bookmarkGuid
                                       , newParentGuid }).transact();
       }
-    }.bind(this)).then(null, Components.utils.reportError);
+    }).then(null, Components.utils.reportError);
   },
 
   newFolder: function MBD_newFolder() {

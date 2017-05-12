@@ -66,7 +66,7 @@ this.DownloadImport.prototype = {
    *           the DownloadList)
    */
   import() {
-    return (async function task_DI_import() {
+    return (async () => {
       let connection = await Sqlite.openConnection({ path: this.path });
 
       try {
@@ -184,7 +184,7 @@ this.DownloadImport.prototype = {
       } finally {
         await connection.close();
       }
-    }.bind(this))();
+    })();
   }
 }
 
