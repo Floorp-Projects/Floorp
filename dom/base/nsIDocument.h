@@ -1257,6 +1257,23 @@ public:
     return mStyleBackendType;
   }
 
+  /**
+   * Documents generally decide their style backend type themselves, and
+   * this is only used for XBL documents to set their style backend type to
+   * their bounding document's.
+   */
+  void SetStyleBackendType(mozilla::StyleBackendType aStyleBackendType) {
+    // We cannot assert mStyleBackendType == mozilla::StyleBackendType::None
+    // because NS_NewXBLDocument() might result GetStyleBackendType() being
+    // called.
+    MOZ_ASSERT(aStyleBackendType != mozilla::StyleBackendType::None,
+               "The StyleBackendType should be set to either Gecko or Servo!");
+    mStyleBackendType = aStyleBackendType;
+  }
+
+  /**
+   * Decide this document's own style backend type.
+   */
   void UpdateStyleBackendType();
 
   bool IsStyledByServo() const {

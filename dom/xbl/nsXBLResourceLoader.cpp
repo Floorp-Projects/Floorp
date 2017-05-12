@@ -180,7 +180,9 @@ nsXBLResourceLoader::StyleSheetLoaded(StyleSheet* aSheet,
 
   if (mPendingSheets == 0) {
     // All stylesheets are loaded.
-    mResources->GatherRuleProcessor();
+    if (aSheet->IsGecko()) {
+      mResources->GatherRuleProcessor();
+    }
 
     // XXX Check for mPendingScripts when scripts also come online.
     if (!mInLoadResourcesFunc)

@@ -968,7 +968,8 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
   if (!info) {
     // Next, look in the startup cache
     if (!info && useStartupCache) {
-      rv = nsXBLDocumentInfo::ReadPrototypeBindings(documentURI, getter_AddRefs(info));
+      rv = nsXBLDocumentInfo::ReadPrototypeBindings(documentURI, getter_AddRefs(info),
+                                                    aBoundDocument);
       if (NS_SUCCEEDED(rv)) {
         cache->PutXBLDocumentInfo(info);
       }
@@ -1059,6 +1060,11 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
   nsCOMPtr<nsIDocument> doc;
   rv = NS_NewXMLDocument(getter_AddRefs(doc));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Set the style backend type before loading the XBL document. Assume
+  // gecko if there's no bound document.
+  doc->SetStyleBackendType(aBoundDocument ? aBoundDocument->GetStyleBackendType()
+                                          : StyleBackendType::Gecko);
 
   nsCOMPtr<nsIXMLContentSink> xblSink;
   rv = NS_NewXBLContentSink(getter_AddRefs(xblSink), doc, aDocumentURI, nullptr);
