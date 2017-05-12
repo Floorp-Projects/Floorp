@@ -23,8 +23,6 @@ if CONFIG['OS_ARCH'] == 'SunOS' and not CONFIG['GNU_CC'] \
 if CONFIG['MOZ_UPDATE_CHANNEL'] not in ('release', 'esr'):
     DEFINES['MOZ_JEMALLOC_HARD_ASSERTS'] = True
 
-DEFINES['abort'] = 'moz_abort'
-
 DEFINES['MOZ_JEMALLOC_IMPL'] = True
 
 LOCAL_INCLUDES += [
