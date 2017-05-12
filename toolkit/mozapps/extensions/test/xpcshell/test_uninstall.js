@@ -25,12 +25,12 @@ function run_test() {
   do_test_pending();
   startupManager();
 
-  AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(olda1) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(async function(olda1) {
     do_check_eq(olda1, null);
 
     writeInstallRDFForExtension(addon1, profileDir);
 
-    restartManager();
+    await promiseRestartManager();
 
     AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
       do_check_neq(a1, null);
@@ -92,8 +92,8 @@ function check_test_1() {
 }
 
 // Cancelling the uninstall should send onOperationCancelled
-function run_test_2() {
-  restartManager();
+async function run_test_2() {
+  await promiseRestartManager();
 
   prepare_test({
     "addon1@tests.mozilla.org": [
@@ -126,8 +126,8 @@ function run_test_2() {
   });
 }
 
-function check_test_2() {
-  restartManager();
+async function check_test_2() {
+  await promiseRestartManager();
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
     do_check_neq(a1, null);

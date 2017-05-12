@@ -261,7 +261,7 @@ add_task(async function() {
   // detection but the periodic scan will catch that
   await promiseSetExtensionModifiedTime(file.path, Date.now() - 60000);
 
-  startupManager();
+  await promiseStartupManager();
   let addon = await promiseAddonByID(ID);
   do_check_neq(addon, null);
   do_check_false(addon.appDisabled);
@@ -274,7 +274,7 @@ add_task(async function() {
   clearCache(file);
   breakAddon(file);
 
-  startupManager();
+  await promiseStartupManager();
 
   addon = await promiseAddonByID(ID);
   do_check_neq(addon, null);
