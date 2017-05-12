@@ -631,8 +631,8 @@ class TestPageLoadStrategy(BaseNavigationTestCase):
         self.marionette.start_session({"desiredCapabilities": {"pageLoadStrategy": "eager"}})
 
         self.marionette.navigate(self.test_page_slow_resource)
-        self.assertEqual(self.test_page_slow_resource, self.marionette.get_url())
         self.assertEqual("interactive", self.ready_state)
+        self.assertEqual(self.test_page_slow_resource, self.marionette.get_url())
         self.marionette.find_element(By.ID, "slow")
 
     def test_normal(self):
