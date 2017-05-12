@@ -10,6 +10,7 @@
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/SandboxSettings.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
@@ -162,7 +163,7 @@ SandboxBrokerPolicyFactory::GetContentPolicy(int aPid)
 
   MOZ_ASSERT(NS_IsMainThread());
   // File broker usage is controlled through a pref.
-  if (Preferences::GetInt("security.sandbox.content.level") <= 1) {
+  if (GetEffectiveContentSandboxLevel() <= 1) {
     return nullptr;
   }
 
