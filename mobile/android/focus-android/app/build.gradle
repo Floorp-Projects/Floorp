@@ -135,7 +135,7 @@ dependencies {
         transitive = false
     }
 
-    compile(name: 'telemetry-b4d7c57', ext: 'aar')
+    compile(name: 'telemetry-2b0baee', ext: 'aar')
 
     focusCompile 'com.adjust.sdk:adjust-android:4.11.1'
     focusCompile 'com.google.android.gms:play-services-analytics:10.2.0' // Required by Adjust
