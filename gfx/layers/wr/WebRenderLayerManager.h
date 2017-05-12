@@ -100,6 +100,8 @@ public:
   virtual bool NeedsComposite() const override { return mNeedsComposite; }
   virtual void SetIsFirstPaint() override { mIsFirstPaint = true; }
 
+  bool AsyncPanZoomEnabled() const override;
+
   DrawPaintedLayerCallback GetPaintedLayerCallback() const
   { return mPaintedLayerCallback; }
 
