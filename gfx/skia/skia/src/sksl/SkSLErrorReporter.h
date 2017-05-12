@@ -4,7 +4,7 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
- 
+
 #ifndef SKSL_ERRORREPORTER
 #define SKSL_ERRORREPORTER
 
@@ -19,7 +19,13 @@ class ErrorReporter {
 public:
     virtual ~ErrorReporter() {}
 
-    virtual void error(Position position, std::string msg) = 0;
+    void error(Position position, const char* msg) {
+        this->error(position, String(msg));
+    }
+
+    virtual void error(Position position, String msg) = 0;
+
+    virtual int errorCount() = 0;
 };
 
 } // namespace

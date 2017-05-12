@@ -132,12 +132,12 @@ promise_test(t => {
   const writePromise = writer.write('a');
   const closePromise = writer.close();
   controller.error(error1);
+  resolveStart();
   return Promise.all([
     promise_rejects(t, error1, writePromise, 'write() should fail'),
     promise_rejects(t, error1, closePromise, 'close() should fail')
   ]).then(() => {
     assert_array_equals(ws.events, [], 'sink write() and close() should not have been called');
-    resolveStart();
   });
 }, 'controller.error() during async start should cause existing writes to fail');
 

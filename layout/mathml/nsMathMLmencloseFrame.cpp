@@ -49,6 +49,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmencloseFrame)
 
 nsMathMLmencloseFrame::nsMathMLmencloseFrame(nsStyleContext* aContext) :
   nsMathMLContainerFrame(aContext), mNotationsToDraw(0),
+  mRuleThickness(0), mRadicalRuleThickness(0),
   mLongDivCharIndex(-1), mRadicalCharIndex(-1), mContentWidth(0)
 {
 }

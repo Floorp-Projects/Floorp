@@ -22,7 +22,7 @@
                                       \
   _(GlobalHelperThreadState,     300) \
                                       \
-  _(ShellAsyncTasks,             350) \
+  _(InternalAsyncTasks,          350) \
                                       \
   _(GCLock,                      400) \
                                       \

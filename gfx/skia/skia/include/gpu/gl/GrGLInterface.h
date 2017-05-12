@@ -55,10 +55,6 @@ typedef intptr_t GrGLInterfaceCallbackData;
  */
 const SK_API GrGLInterface* GrGLCreateNullInterface(bool enableNVPR = false);
 
-/** Function that returns a new interface identical to "interface" but without support for
-    GL_NV_path_rendering. */
-const GrGLInterface* GrGLInterfaceRemoveNVPR(const GrGLInterface*);
-
 /** Function that returns a new interface identical to "interface" but with support for
     test version of GL_EXT_debug_marker. */
 const GrGLInterface* GrGLInterfaceAddTestDebugMarker(const GrGLInterface*,
@@ -116,6 +112,7 @@ public:
         GrGLFunction<GrGLBindFramebufferProc> fBindFramebuffer;
         GrGLFunction<GrGLBindRenderbufferProc> fBindRenderbuffer;
         GrGLFunction<GrGLBindTextureProc> fBindTexture;
+        GrGLFunction<GrGLBindImageTextureProc> fBindImageTexture;
         GrGLFunction<GrGLBindVertexArrayProc> fBindVertexArray;
         GrGLFunction<GrGLBlendBarrierProc> fBlendBarrier;
         GrGLFunction<GrGLBlendColorProc> fBlendColor;
@@ -207,9 +204,12 @@ public:
         GrGLFunction<GrGLMapBufferRangeProc> fMapBufferRange;
         GrGLFunction<GrGLMapBufferSubDataProc> fMapBufferSubData;
         GrGLFunction<GrGLMapTexSubImage2DProc> fMapTexSubImage2D;
+        GrGLFunction<GrGLMemoryBarrierProc> fMemoryBarrier;
+        GrGLFunction<GrGLMemoryBarrierByRegionProc> fMemoryBarrierByRegion;
         GrGLFunction<GrGLMultiDrawArraysIndirectProc> fMultiDrawArraysIndirect;
         GrGLFunction<GrGLMultiDrawElementsIndirectProc> fMultiDrawElementsIndirect;
         GrGLFunction<GrGLPixelStoreiProc> fPixelStorei;
+        GrGLFunction<GrGLPolygonModeProc> fPolygonMode;
         GrGLFunction<GrGLPopGroupMarkerProc> fPopGroupMarker;
         GrGLFunction<GrGLPushGroupMarkerProc> fPushGroupMarker;
         GrGLFunction<GrGLQueryCounterProc> fQueryCounter;
@@ -455,6 +455,7 @@ public:
         /* ARB_sync */
         GrGLFunction<GrGLFenceSyncProc> fFenceSync;
         GrGLFunction<GrGLClientWaitSyncProc> fClientWaitSync;
+        GrGLFunction<GrGLWaitSyncProc> fWaitSync;
         GrGLFunction<GrGLDeleteSyncProc> fDeleteSync;
 
         /* KHR_debug */

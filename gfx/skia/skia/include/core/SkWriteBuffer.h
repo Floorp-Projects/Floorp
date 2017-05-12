@@ -81,7 +81,7 @@ public:
 
     SkBinaryWriteBuffer(uint32_t flags = 0);
     SkBinaryWriteBuffer(void* initialStorage, size_t storageSize, uint32_t flags = 0);
-    ~SkBinaryWriteBuffer();
+    ~SkBinaryWriteBuffer() override;
 
     bool isCrossProcess() const override {
         return SkToBool(fFlags & kCrossProcess_Flag);
@@ -134,12 +134,10 @@ public:
      * Set an SkPixelSerializer to store an encoded representation of pixels,
      * e.g. SkBitmaps.
      *
-     * Calls ref() on the serializer.
-     *
      * TODO: Encode SkImage pixels as well.
      */
-    void setPixelSerializer(SkPixelSerializer*);
-    SkPixelSerializer* getPixelSerializer() const { return fPixelSerializer; }
+    void setPixelSerializer(sk_sp<SkPixelSerializer>);
+    SkPixelSerializer* getPixelSerializer() const { return fPixelSerializer.get(); }
 
 private:
     const uint32_t fFlags;
@@ -148,7 +146,7 @@ private:
 
     SkRefCntSet* fTFSet;
 
-    SkAutoTUnref<SkPixelSerializer> fPixelSerializer;
+    sk_sp<SkPixelSerializer> fPixelSerializer;
 
     // Only used if we do not have an fFactorySet
     SkTHashMap<SkString, uint32_t> fFlattenableDict;
