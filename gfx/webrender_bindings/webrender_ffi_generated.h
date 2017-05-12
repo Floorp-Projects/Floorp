@@ -388,16 +388,6 @@ struct WrNinePatchDescriptor {
   }
 };
 
-struct WrComplexClipRegion {
-  WrRect rect;
-  WrBorderRadius radii;
-
-  bool operator==(const WrComplexClipRegion& aOther) const {
-    return rect == aOther.rect &&
-           radii == aOther.radii;
-  }
-};
-
 struct WrImageMask {
   WrImageKey image;
   WrRect rect;
@@ -407,6 +397,16 @@ struct WrImageMask {
     return image == aOther.image &&
            rect == aOther.rect &&
            repeat == aOther.repeat;
+  }
+};
+
+struct WrComplexClipRegion {
+  WrRect rect;
+  WrBorderRadius radii;
+
+  bool operator==(const WrComplexClipRegion& aOther) const {
+    return rect == aOther.rect &&
+           radii == aOther.radii;
   }
 };
 
@@ -613,6 +613,10 @@ void wr_dp_end(WrState* aState)
 WR_FUNC;
 
 WR_INLINE
+void wr_dp_pop_clip(WrState* aState)
+WR_FUNC;
+
+WR_INLINE
 void wr_dp_pop_scroll_layer(WrState* aState)
 WR_FUNC;
 
@@ -690,6 +694,12 @@ void wr_dp_push_built_display_list(WrState* aState,
 WR_FUNC;
 
 WR_INLINE
+void wr_dp_push_clip(WrState* aState,
+                     WrRect aClipRect,
+                     const WrImageMask* aMask)
+WR_FUNC;
+
+WR_INLINE
 WrClipRegionToken wr_dp_push_clip_region(WrState* aState,
                                          WrRect aMain,
                                          const WrComplexClipRegion* aComplex,
@@ -749,9 +759,9 @@ WR_FUNC;
 
 WR_INLINE
 void wr_dp_push_scroll_layer(WrState* aState,
+                             uint64_t aScrollId,
                              WrRect aContentRect,
-                             WrRect aClipRect,
-                             const WrImageMask* aMask)
+                             WrRect aClipRect)
 WR_FUNC;
 
 WR_INLINE

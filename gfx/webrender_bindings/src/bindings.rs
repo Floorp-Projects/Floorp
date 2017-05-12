@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::ffi::CString;
 use std::{mem, slice};
 use std::path::PathBuf;
@@ -1143,6 +1144,7 @@ pub unsafe extern "C" fn wr_api_get_namespace(api: &mut WrAPI) -> WrIdNamespace 
 pub struct WebRenderFrameBuilder {
     pub root_pipeline_id: WrPipelineId,
     pub dl_builder: webrender_traits::DisplayListBuilder,
+    pub scroll_clips_defined: HashSet<ClipId>,
 }
 
 impl WebRenderFrameBuilder {
@@ -1150,6 +1152,7 @@ impl WebRenderFrameBuilder {
         WebRenderFrameBuilder {
             root_pipeline_id: root_pipeline_id,
             dl_builder: webrender_traits::DisplayListBuilder::new(root_pipeline_id),
+            scroll_clips_defined: HashSet::new(),
         }
     }
 }
@@ -1272,21 +1275,45 @@ pub extern "C" fn wr_dp_pop_stacking_context(state: &mut WrState) {
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dp_push_scroll_layer(state: &mut WrState,
-                                          content_rect: WrRect,
-                                          clip_rect: WrRect,
-                                          mask: *const WrImageMask) {
-    let content_rect = content_rect.into();
+pub extern "C" fn wr_dp_push_clip(state: &mut WrState,
+                                  clip_rect: WrRect,
+                                  mask: *const WrImageMask) {
+    assert!(unsafe { is_in_main_thread() });
     let clip_rect = clip_rect.into();
     let mask = unsafe { mask.as_ref() }.map(|x| x.into());
     let clip_region = state.frame_builder.dl_builder.push_clip_region(&clip_rect, vec![], mask);
-    state.frame_builder.dl_builder.push_clip_node(content_rect, clip_region, None);
+    state.frame_builder.dl_builder.push_clip_node(clip_rect, clip_region, None);
+}
+
+#[no_mangle]
+pub extern "C" fn wr_dp_pop_clip(state: &mut WrState) {
+    assert!(unsafe { is_in_main_thread() });
+    state.frame_builder.dl_builder.pop_clip_node();
+}
+
+#[no_mangle]
+pub extern "C" fn wr_dp_push_scroll_layer(state: &mut WrState,
+                                          scroll_id: u64,
+                                          content_rect: WrRect,
+                                          clip_rect: WrRect) {
+    assert!(unsafe { is_in_main_thread() });
+    let clip_id = ClipId::new(scroll_id, state.pipeline_id);
+    // Avoid defining multiple scroll clips with the same clip id, as that
+    // results in undefined behaviour or assertion failures.
+    if !state.frame_builder.scroll_clips_defined.contains(&clip_id) {
+        let content_rect = content_rect.into();
+        let clip_rect = clip_rect.into();
+        let clip_region = state.frame_builder.dl_builder.push_clip_region(&clip_rect, vec![], None);
+        state.frame_builder.dl_builder.define_clip(content_rect, clip_region, Some(clip_id));
+        state.frame_builder.scroll_clips_defined.insert(clip_id);
+    }
+    state.frame_builder.dl_builder.push_clip_id(clip_id);
 }
 
 #[no_mangle]
 pub extern "C" fn wr_dp_pop_scroll_layer(state: &mut WrState) {
     assert!(unsafe { is_in_main_thread() });
-    state.frame_builder.dl_builder.pop_clip_node();
+    state.frame_builder.dl_builder.pop_clip_id();
 }
 
 #[no_mangle]
