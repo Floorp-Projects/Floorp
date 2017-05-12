@@ -865,10 +865,26 @@ class Python3Virtualenv(object):
         if c.get('find_links') and not c["pip_index"]:
             pip_args += ['--no-index']
 
-        # XXX: Look at the code from https://dxr.mozilla.org/mozilla-central/source/testing/mozharness/mozharness/base/python.py#264-281
-        #      and evaluate what we need from it
-        for find_link in c.get('find_links'):
-            pip_args += ['--find-links', find_link]
+        # Add --find-links pages to look at. Add --trusted-host automatically if
+        # the host isn't secure. This allows modern versions of pip to connect
+        # without requiring an override.
+        trusted_hosts = set()
+        for link in c.get('find_links', []):
+            parsed = urlparse.urlparse(link)
+
+            try:
+                socket.gethostbyname(parsed.hostname)
+            except socket.gaierror as e:
+                self.info('error resolving %s (ignoring): %s' %
+                          (parsed.hostname, e.message))
+                continue
+
+            pip_args += ["--find-links", link]
+            if parsed.scheme != 'https':
+                trusted_hosts.add(parsed.hostname)
+
+        for host in sorted(trusted_hosts):
+            pip_args += ['--trusted-host', host]
 
         return pip_args
 
@@ -876,17 +892,16 @@ class Python3Virtualenv(object):
     def py3_install_requirement_files(self, requirements, pip_args=[],
                                       use_mozharness_pip_config=True):
         '''
-        requirements - You can specify multiple requiments paths
+        requirements - You can specify multiple requirements paths
         '''
-        cmd = ['%s install' % self.py3_pip_path]
-        for arg in pip_args:
-            cmd += [' ' + arg]
+        cmd = [self.py3_pip_path, 'install']
+        cmd += pip_args
 
         if use_mozharness_pip_config:
             cmd += self._mozharness_pip_args()
 
         for requirement_path in requirements:
-            cmd += ['-r %s' % requirement_path]
+            cmd += ['-r', requirement_path]
 
         self.run_command(cmd, env=self.query_env())
 
