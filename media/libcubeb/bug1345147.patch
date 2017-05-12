@@ -1,0 +1,25 @@
+commit 7b082450d2b57a4f2c541cb69558ae28682163f2
+Author: Paul Adenot <paul@paul.cx>
+Date:   Tue Mar 7 06:08:56 2017 -0800
+
+    Make `stop_and_join_render_thread` more idempotent, and add a test.
+    
+    This fixes Gecko bug #1345147.
+
+diff --git a/src/cubeb_wasapi.cpp b/src/cubeb_wasapi.cpp
+index 99677ee..e22dcdd 100644
+--- a/src/cubeb_wasapi.cpp
++++ b/src/cubeb_wasapi.cpp
+@@ -1166,6 +1166,12 @@ bool stop_and_join_render_thread(cubeb_stream * stm)
+     return true;
+   }
+ 
++  // If we've already leaked the thread, just return,
++  // there is not much we can do.
++  if (!stm->emergency_bailout.load()) {
++    return false;
++  }
++
+   BOOL ok = SetEvent(stm->shutdown_event);
+   if (!ok) {
+     LOG("Destroy SetEvent failed: %lx", GetLastError());
