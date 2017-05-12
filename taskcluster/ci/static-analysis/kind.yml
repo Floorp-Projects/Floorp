@@ -31,7 +31,7 @@ jobs:
             max-run-time: 36000
         run:
             using: mozharness
-            actions: [build update]
+            actions: [build generate-build-stats update]
             config:
                 - builds/releng_base_mac_64_cross_builds.py
                 - balrog/production.py
@@ -54,7 +54,7 @@ jobs:
             max-run-time: 36000
         run:
             using: mozharness
-            actions: [build update]
+            actions: [build generate-build-stats update]
             config:
                 - builds/releng_base_mac_64_cross_builds.py
                 - balrog/production.py
@@ -77,7 +77,7 @@ jobs:
             max-run-time: 36000
         run:
             using: mozharness
-            actions: [build]
+            actions: [build generate-build-stats]
             config:
                 - builds/releng_sub_linux_configs/64_stat_and_debug.py
                 - balrog/production.py
@@ -98,7 +98,7 @@ jobs:
             max-run-time: 36000
         run:
             using: mozharness
-            actions: [build]
+            actions: [build generate-build-stats]
             config:
                 - builds/releng_sub_linux_configs/64_stat_and_opt.py
                 - balrog/production.py
