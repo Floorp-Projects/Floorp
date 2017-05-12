@@ -75,7 +75,7 @@ GrVkPipelineState::GrVkPipelineState(GrVkGpu* gpu,
 }
 
 GrVkPipelineState::~GrVkPipelineState() {
-    // Must of freed all GPU resources before this is destroyed
+    // Must have freed all GPU resources before this is destroyed
     SkASSERT(!fPipeline);
     SkASSERT(!fPipelineLayout);
     SkASSERT(!fSamplers.count());
@@ -172,14 +172,18 @@ void GrVkPipelineState::abandonGPUResources() {
     }
 }
 
-static void append_texture_bindings(const GrProcessor& processor,
-                                    SkTArray<const GrTextureAccess*>* textureBindings) {
-    if (int numTextures = processor.numTextures()) {
-        const GrTextureAccess** bindings = textureBindings->push_back_n(numTextures);
+static void append_texture_bindings(
+        const GrResourceIOProcessor& processor,
+        SkTArray<const GrResourceIOProcessor::TextureSampler*>* textureBindings) {
+    // We don't support image storages in VK.
+    SkASSERT(!processor.numImageStorages());
+    if (int numTextureSamplers = processor.numTextureSamplers()) {
+        const GrResourceIOProcessor::TextureSampler** bindings =
+                textureBindings->push_back_n(numTextureSamplers);
         int i = 0;
         do {
-            bindings[i] = &processor.textureAccess(i);
-        } while (++i < numTextures);
+            bindings[i] = &processor.textureSampler(i);
+        } while (++i < numTextureSamplers);
     }
 }
 
@@ -190,9 +194,9 @@ void GrVkPipelineState::setData(GrVkGpu* gpu,
     // freeing the tempData between calls.
     this->freeTempResources(gpu);
 
-    this->setRenderTargetState(pipeline);
+    this->setRenderTargetState(pipeline.getRenderTarget());
 
-    SkSTArray<8, const GrTextureAccess*> textureBindings;
+    SkSTArray<8, const GrResourceIOProcessor::TextureSampler*> textureBindings;
 
     fGeometryProcessor->setData(fDataManager, primProc,
                                 GrFragmentProcessor::CoordTransformIter(pipeline));
@@ -211,8 +215,14 @@ void GrVkPipelineState::setData(GrVkGpu* gpu,
     }
     SkASSERT(!fp && !glslFP);
 
-    fXferProcessor->setData(fDataManager, pipeline.getXferProcessor());
-    append_texture_bindings(pipeline.getXferProcessor(), &textureBindings);
+    SkIPoint offset;
+    GrTexture* dstTexture = pipeline.dstTexture(&offset);
+    fXferProcessor->setData(fDataManager, pipeline.getXferProcessor(), dstTexture, offset);
+    GrResourceIOProcessor::TextureSampler dstTextureSampler;
+    if (dstTexture) {
+        dstTextureSampler.reset(dstTexture);
+        textureBindings.push_back(&dstTextureSampler);
+    }
 
     // Get new descriptor sets
     if (fNumSamplers) {
@@ -226,8 +236,11 @@ void GrVkPipelineState::setData(GrVkGpu* gpu,
     }
 
     if (fVertexUniformBuffer.get() || fFragmentUniformBuffer.get()) {
-        if (fDataManager.uploadUniformBuffers(gpu, fVertexUniformBuffer, fFragmentUniformBuffer) ||
-            !fUniformDescriptorSet) {
+        if (fDataManager.uploadUniformBuffers(gpu,
+                                              fVertexUniformBuffer.get(),
+                                              fFragmentUniformBuffer.get())
+            || !fUniformDescriptorSet)
+        {
             if (fUniformDescriptorSet) {
                 fUniformDescriptorSet->recycle(gpu);
             }
@@ -299,15 +312,16 @@ void GrVkPipelineState::writeUniformBuffers(const GrVkGpu* gpu) {
     }
 }
 
-void GrVkPipelineState::writeSamplers(GrVkGpu* gpu,
-                                      const SkTArray<const GrTextureAccess*>& textureBindings,
-                                      bool allowSRGBInputs) {
+void GrVkPipelineState::writeSamplers(
+        GrVkGpu* gpu,
+        const SkTArray<const GrResourceIOProcessor::TextureSampler*>& textureBindings,
+        bool allowSRGBInputs) {
     SkASSERT(fNumSamplers == textureBindings.count());
 
     for (int i = 0; i < textureBindings.count(); ++i) {
-        const GrTextureParams& params = textureBindings[i]->getParams();
+        const GrSamplerParams& params = textureBindings[i]->params();
 
-        GrVkTexture* texture = static_cast<GrVkTexture*>(textureBindings[i]->getTexture());
+        GrVkTexture* texture = static_cast<GrVkTexture*>(textureBindings[i]->texture());
 
         fSamplers.push(gpu->resourceProvider().findOrCreateCompatibleSampler(params,
                                                           texture->texturePriv().maxMipMapLevel()));
@@ -347,16 +361,14 @@ void GrVkPipelineState::writeSamplers(GrVkGpu* gpu,
     }
 }
 
-void GrVkPipelineState::setRenderTargetState(const GrPipeline& pipeline) {
+void GrVkPipelineState::setRenderTargetState(const GrRenderTarget* rt) {
     // Load the RT height uniform if it is needed to y-flip gl_FragCoord.
     if (fBuiltinUniformHandles.fRTHeightUni.isValid() &&
-        fRenderTargetState.fRenderTargetSize.fHeight != pipeline.getRenderTarget()->height()) {
-        fDataManager.set1f(fBuiltinUniformHandles.fRTHeightUni,
-                                  SkIntToScalar(pipeline.getRenderTarget()->height()));
+        fRenderTargetState.fRenderTargetSize.fHeight != rt->height()) {
+        fDataManager.set1f(fBuiltinUniformHandles.fRTHeightUni, SkIntToScalar(rt->height()));
     }
 
     // set RT adjustment
-    const GrRenderTarget* rt = pipeline.getRenderTarget();
     SkISize size;
     size.set(rt->width(), rt->height());
     SkASSERT(fBuiltinUniformHandles.fRTAdjustmentUni.isValid());
@@ -492,8 +504,9 @@ uint32_t get_blend_info_key(const GrPipeline& pipeline) {
 bool GrVkPipelineState::Desc::Build(Desc* desc,
                                     const GrPrimitiveProcessor& primProc,
                                     const GrPipeline& pipeline,
+                                    const GrStencilSettings& stencil,
                                     GrPrimitiveType primitiveType,
-                                    const GrGLSLCaps& caps) {
+                                    const GrShaderCaps& caps) {
     if (!INHERITED::Build(desc, primProc, primitiveType == kPoints_GrPrimitiveType, pipeline,
                           caps)) {
         return false;
@@ -503,7 +516,7 @@ bool GrVkPipelineState::Desc::Build(Desc* desc,
     GrVkRenderTarget* vkRT = (GrVkRenderTarget*)pipeline.getRenderTarget();
     vkRT->simpleRenderPass()->genKey(&b);
 
-    pipeline.getStencil().genKey(&b);
+    stencil.genKey(&b);
 
     SkASSERT(sizeof(GrDrawFace) <= sizeof(uint32_t));
     b.add32((int32_t)pipeline.getDrawFace());

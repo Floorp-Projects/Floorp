@@ -18,6 +18,7 @@ bool JSAPITest::init()
     cx = createContext();
     if (!cx)
         return false;
+    js::UseInternalJobQueues(cx);
     if (!JS::InitSelfHostedCode(cx))
         return false;
     JS_BeginRequest(cx);

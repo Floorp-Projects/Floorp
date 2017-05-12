@@ -15,6 +15,7 @@
 #include "SkTArray.h"
 #include "SkTDArray.h"
 #include "SkTHash.h"
+#include "SkVertices.h"
 #include "SkWriter32.h"
 
 // These macros help with packing and unpacking a single byte value and
@@ -29,7 +30,7 @@
 class SkPictureRecord : public SkCanvas {
 public:
     SkPictureRecord(const SkISize& dimensions, uint32_t recordFlags);
-    virtual ~SkPictureRecord();
+    ~SkPictureRecord() override;
 
     const SkTDArray<const SkPicture* >& getPictureRefs() const {
         return fPictureRefs;
@@ -43,7 +44,11 @@ public:
         return fTextBlobRefs;
     }
 
-    const SkTDArray<const SkImage* >& getImageRefs() const {
+    const SkTDArray<const SkVertices* >& getVerticesRefs() const {
+        return fVerticesRefs;
+    }
+
+   const SkTDArray<const SkImage* >& getImageRefs() const {
         return fImageRefs;
     }
 
@@ -76,7 +81,7 @@ protected:
 
 private:
     void handleOptimization(int opt);
-    size_t recordRestoreOffsetPlaceholder(SkCanvas::ClipOp);
+    size_t recordRestoreOffsetPlaceholder(SkClipOp);
     void fillRestoreOffsetPlaceholdersForCurrentStackLevel(uint32_t restoreOffset);
 
     SkTDArray<int32_t> fRestoreOffsetStack;
@@ -140,6 +145,7 @@ private:
     void addRegion(const SkRegion& region);
     void addText(const void* text, size_t byteLength);
     void addTextBlob(const SkTextBlob* blob);
+    void addVertices(const SkVertices*);
 
     int find(const SkBitmap& bitmap);
 
@@ -178,10 +184,9 @@ protected:
                                 const SkPaint& paint) override;
 
     void onDrawPatch(const SkPoint cubics[12], const SkColor colors[4],
-                             const SkPoint texCoords[4], SkXfermode* xmode,
-                             const SkPaint& paint) override;
+                     const SkPoint texCoords[4], SkBlendMode, const SkPaint& paint) override;
     void onDrawAtlas(const SkImage*, const SkRSXform[], const SkRect[], const SkColor[], int,
-                     SkXfermode::Mode, const SkRect*, const SkPaint*) override;
+                     SkBlendMode, const SkRect*, const SkPaint*) override;
 
     void onDrawPaint(const SkPaint&) override;
     void onDrawPoints(PointMode, size_t count, const SkPoint pts[], const SkPaint&) override;
@@ -198,17 +203,12 @@ protected:
                          const SkPaint*) override;
     void onDrawImageLattice(const SkImage*, const SkCanvas::Lattice& lattice, const SkRect& dst,
                             const SkPaint*) override;
+    void onDrawVerticesObject(const SkVertices*, SkBlendMode, const SkPaint&) override;
 
-    void onDrawVertices(VertexMode vmode, int vertexCount,
-                        const SkPoint vertices[], const SkPoint texs[],
-                        const SkColor colors[], SkXfermode* xmode,
-                        const uint16_t indices[], int indexCount,
-                        const SkPaint&) override;
-
-    void onClipRect(const SkRect&, ClipOp, ClipEdgeStyle) override;
-    void onClipRRect(const SkRRect&, ClipOp, ClipEdgeStyle) override;
-    void onClipPath(const SkPath&, ClipOp, ClipEdgeStyle) override;
-    void onClipRegion(const SkRegion&, ClipOp) override;
+    void onClipRect(const SkRect&, SkClipOp, ClipEdgeStyle) override;
+    void onClipRRect(const SkRRect&, SkClipOp, ClipEdgeStyle) override;
+    void onClipPath(const SkPath&, SkClipOp, ClipEdgeStyle) override;
+    void onClipRegion(const SkRegion&, SkClipOp) override;
 
     void onDrawPicture(const SkPicture*, const SkMatrix*, const SkPaint*) override;
 
@@ -231,10 +231,10 @@ protected:
     void recordConcat(const SkMatrix& matrix);
     void recordTranslate(const SkMatrix& matrix);
     void recordScale(const SkMatrix& matrix);
-    size_t recordClipRect(const SkRect& rect, SkCanvas::ClipOp op, bool doAA);
-    size_t recordClipRRect(const SkRRect& rrect, SkCanvas::ClipOp op, bool doAA);
-    size_t recordClipPath(int pathID, SkCanvas::ClipOp op, bool doAA);
-    size_t recordClipRegion(const SkRegion& region, SkCanvas::ClipOp op);
+    size_t recordClipRect(const SkRect& rect, SkClipOp op, bool doAA);
+    size_t recordClipRRect(const SkRRect& rrect, SkClipOp op, bool doAA);
+    size_t recordClipPath(int pathID, SkClipOp op, bool doAA);
+    size_t recordClipRegion(const SkRegion& region, SkClipOp op);
     void recordSave();
     void recordSaveLayer(const SaveLayerRec&);
     void recordRestore(bool fillInSkips = true);
@@ -273,6 +273,7 @@ private:
     SkTDArray<const SkPicture*>  fPictureRefs;
     SkTDArray<SkDrawable*>       fDrawableRefs;
     SkTDArray<const SkTextBlob*> fTextBlobRefs;
+    SkTDArray<const SkVertices*> fVerticesRefs;
 
     uint32_t fRecordFlags;
     int      fInitialSaveCount;

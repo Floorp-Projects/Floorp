@@ -1,0 +1,22 @@
+<!--
+This test case caught a crash bug in Chrome, due to a logic bug in the spec when
+a second <script> element tried to load a previously-failed module. As such, the
+test passes as long as nothing crashes.
+
+See https://github.com/whatwg/html/pull/2559 for background.
+-->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>html-script-module-instantiation-error-1</title>
+    <script src="/resources/testharness.js"></script>
+    <script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+    <h1>html-script-module-instantiation-error-1</h1>
+    <script> setup({allow_uncaught_exception: true}) </script>
+    <script type="module" src="./instantiation-error-1.js"></script>
+    <script type="module" src="./instantiation-error-1.js"></script>
+</body>
+</html>

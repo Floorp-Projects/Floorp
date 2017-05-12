@@ -33,7 +33,7 @@ private:
   virtual ~PaintCounter();
 
   SurfaceFormat mFormat;
-  sk_sp<SkCanvas> mCanvas;
+  std::unique_ptr<SkCanvas> mCanvas;
   IntSize mSize;
   int mStride;
 

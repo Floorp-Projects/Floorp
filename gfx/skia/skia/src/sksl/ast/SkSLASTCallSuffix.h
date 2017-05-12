@@ -4,27 +4,26 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
- 
+
 #ifndef SKSL_ASTCALLSUFFIX
 #define SKSL_ASTCALLSUFFIX
 
-#include <sstream>
 #include <vector>
 #include "SkSLASTSuffix.h"
 
 namespace SkSL {
 
 /**
- * A parenthesized list of arguments following an expression, indicating a function call. 
+ * A parenthesized list of arguments following an expression, indicating a function call.
  */
 struct ASTCallSuffix : public ASTSuffix {
-    ASTCallSuffix(Position position, std::vector<std::unique_ptr<ASTExpression>> arguments) 
+    ASTCallSuffix(Position position, std::vector<std::unique_ptr<ASTExpression>> arguments)
     : INHERITED(position, ASTSuffix::kCall_Kind)
     , fArguments(std::move(arguments)) {}
 
-    std::string description() const override {
-        std::string result("(");
-        std::string separator = "";
+    String description() const override {
+        String result("(");
+        String separator;
         for (size_t i = 0; i < fArguments.size(); ++i) {
             result += separator;
             separator = ", ";

@@ -1972,6 +1972,13 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     channel->SetContentType(NS_ConvertUTF16toUTF8(mOverrideMimeType));
   }
 
+  // Fallback to 'application/octet-stream'
+  nsAutoCString type;
+  channel->GetContentType(type);
+  if (type.Equals(UNKNOWN_CONTENT_TYPE)) {
+    channel->SetContentType(NS_LITERAL_CSTRING(APPLICATION_OCTET_STREAM));
+  }
+
   DetectCharset();
 
   // Set up arraybuffer
@@ -2696,12 +2703,13 @@ XMLHttpRequestMainThread::InitiateFetch(nsIInputStream* aUploadStream,
   // Since we expect XML data, set the type hint accordingly
   // if the channel doesn't know any content type.
   // This means that we always try to parse local files as XML
-  // ignoring return value, as this is not critical
+  // ignoring return value, as this is not critical. Use text/xml as fallback
+  // MIME type.
   nsAutoCString contentType;
   if (NS_FAILED(mChannel->GetContentType(contentType)) ||
       contentType.IsEmpty() ||
       contentType.Equals(UNKNOWN_CONTENT_TYPE)) {
-    mChannel->SetContentType(NS_LITERAL_CSTRING("application/xml"));
+    mChannel->SetContentType(NS_LITERAL_CSTRING("text/xml"));
   }
 
   // Set up the preflight if needed

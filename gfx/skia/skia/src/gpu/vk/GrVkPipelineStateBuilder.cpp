@@ -7,16 +7,19 @@
 
 #include "vk/GrVkPipelineStateBuilder.h"
 
+#include "GrShaderCaps.h"
 #include "vk/GrVkDescriptorSetManager.h"
 #include "vk/GrVkGpu.h"
 #include "vk/GrVkRenderPass.h"
 
+
 GrVkPipelineState* GrVkPipelineStateBuilder::CreatePipelineState(
                                                                GrVkGpu* gpu,
                                                                const GrPipeline& pipeline,
+                                                               const GrStencilSettings& stencil,
                                                                const GrPrimitiveProcessor& primProc,
                                                                GrPrimitiveType primitiveType,
-                                                               const GrVkPipelineState::Desc& desc,
+                                                               GrVkPipelineState::Desc* desc,
                                                                const GrVkRenderPass& renderPass) {
     // create a builder.  This will be handed off to effects so they can use it to add
     // uniforms, varyings, textures, etc
@@ -30,13 +33,13 @@ GrVkPipelineState* GrVkPipelineStateBuilder::CreatePipelineState(
         return nullptr;
     }
 
-    return builder.finalize(primitiveType, renderPass, desc);
+    return builder.finalize(stencil, primitiveType, renderPass, desc);
 }
 
 GrVkPipelineStateBuilder::GrVkPipelineStateBuilder(GrVkGpu* gpu,
                                                    const GrPipeline& pipeline,
                                                    const GrPrimitiveProcessor& primProc,
-                                                   const GrProgramDesc& desc)
+                                                   GrProgramDesc* desc)
     : INHERITED(pipeline, primProc, desc)
     , fGpu(gpu)
     , fVaryingHandler(this)
@@ -46,23 +49,21 @@ GrVkPipelineStateBuilder::GrVkPipelineStateBuilder(GrVkGpu* gpu,
 const GrCaps* GrVkPipelineStateBuilder::caps() const {
     return fGpu->caps();
 }
-const GrGLSLCaps* GrVkPipelineStateBuilder::glslCaps() const {
-    return fGpu->vkCaps().glslCaps();
+
+void GrVkPipelineStateBuilder::finalizeFragmentOutputColor(GrShaderVar& outputColor) {
+    outputColor.addLayoutQualifier("location = 0, index = 0");
 }
 
-void GrVkPipelineStateBuilder::finalizeFragmentOutputColor(GrGLSLShaderVar& outputColor) {
-    outputColor.setLayoutQualifier("location = 0, index = 0");
+void GrVkPipelineStateBuilder::finalizeFragmentSecondaryColor(GrShaderVar& outputColor) {
+    outputColor.addLayoutQualifier("location = 0, index = 1");
 }
 
-void GrVkPipelineStateBuilder::finalizeFragmentSecondaryColor(GrGLSLShaderVar& outputColor) {
-    outputColor.setLayoutQualifier("location = 0, index = 1");
-}
-
-bool GrVkPipelineStateBuilder::CreateVkShaderModule(const GrVkGpu* gpu,
-                                                    VkShaderStageFlagBits stage,
+bool GrVkPipelineStateBuilder::createVkShaderModule(VkShaderStageFlagBits stage,
                                                     const GrGLSLShaderBuilder& builder,
                                                     VkShaderModule* shaderModule,
-                                                    VkPipelineShaderStageCreateInfo* stageInfo) {
+                                                    VkPipelineShaderStageCreateInfo* stageInfo,
+                                                    const SkSL::Program::Settings& settings,
+                                                    GrVkPipelineState::Desc* desc) {
     SkString shaderString;
     for (int i = 0; i < builder.fCompilerStrings.count(); ++i) {
         if (builder.fCompilerStrings[i]) {
@@ -70,19 +71,35 @@ bool GrVkPipelineStateBuilder::CreateVkShaderModule(const GrVkGpu* gpu,
             shaderString.append("\n");
         }
     }
-    return GrCompileVkShaderModule(gpu, shaderString.c_str(), stage, shaderModule, stageInfo);
+
+    SkSL::Program::Inputs inputs;
+    bool result = GrCompileVkShaderModule(fGpu, shaderString.c_str(), stage, shaderModule,
+                                          stageInfo, settings, &inputs);
+    if (!result) {
+        return false;
+    }
+    if (inputs.fRTHeight) {
+        this->addRTHeightUniform(SKSL_RTHEIGHT_NAME);
+    }
+    if (inputs.fFlipY) {
+        desc->setSurfaceOriginKey(GrGLSLFragmentShaderBuilder::KeyForSurfaceOrigin(
+                                                     this->pipeline().getRenderTarget()->origin()));
+        desc->finalize();
+    }
+    return result;
 }
 
-GrVkPipelineState* GrVkPipelineStateBuilder::finalize(GrPrimitiveType primitiveType,
+GrVkPipelineState* GrVkPipelineStateBuilder::finalize(const GrStencilSettings& stencil,
+                                                      GrPrimitiveType primitiveType,
                                                       const GrVkRenderPass& renderPass,
-                                                      const GrVkPipelineState::Desc& desc) {
+                                                      GrVkPipelineState::Desc* desc) {
     VkDescriptorSetLayout dsLayout[2];
     VkPipelineLayout pipelineLayout;
     VkShaderModule vertShaderModule;
     VkShaderModule fragShaderModule;
 
     GrVkResourceProvider& resourceProvider = fGpu->resourceProvider();
-    // This layout is not owned by the PipelineStateBuilder and thus should no be destroyed
+    // These layouts are not owned by the PipelineStateBuilder and thus should not be destroyed
     dsLayout[GrVkUniformHandler::kUniformBufferDescSet] = resourceProvider.getUniformDSLayout();
 
     GrVkDescriptorSetManager::Handle samplerDSHandle;
@@ -116,19 +133,27 @@ GrVkPipelineState* GrVkPipelineStateBuilder::finalize(GrPrimitiveType primitiveT
     this->finalizeShaders();
 
     VkPipelineShaderStageCreateInfo shaderStageInfo[2];
-    SkAssertResult(CreateVkShaderModule(fGpu,
-                                        VK_SHADER_STAGE_VERTEX_BIT,
-                                        fVS,
-                                        &vertShaderModule,
-                                        &shaderStageInfo[0]));
+    SkSL::Program::Settings settings;
+    settings.fFlipY = this->pipeline().getRenderTarget()->origin() != kTopLeft_GrSurfaceOrigin;
+    SkAssertResult(this->createVkShaderModule(VK_SHADER_STAGE_VERTEX_BIT,
+                                              fVS,
+                                              &vertShaderModule,
+                                              &shaderStageInfo[0],
+                                              settings,
+                                              desc));
 
-    SkAssertResult(CreateVkShaderModule(fGpu,
-                                        VK_SHADER_STAGE_FRAGMENT_BIT,
-                                        fFS,
-                                        &fragShaderModule,
-                                        &shaderStageInfo[1]));
+    // TODO: geometry shader support.
+    SkASSERT(!this->primitiveProcessor().willUseGeoShader());
+
+    SkAssertResult(this->createVkShaderModule(VK_SHADER_STAGE_FRAGMENT_BIT,
+                                              fFS,
+                                              &fragShaderModule,
+                                              &shaderStageInfo[1],
+                                              settings,
+                                              desc));
 
     GrVkPipeline* pipeline = resourceProvider.createPipeline(fPipeline,
+                                                             stencil,
                                                              fPrimProc,
                                                              shaderStageInfo,
                                                              2,
@@ -143,17 +168,12 @@ GrVkPipelineState* GrVkPipelineStateBuilder::finalize(GrPrimitiveType primitiveT
     if (!pipeline) {
         GR_VK_CALL(fGpu->vkInterface(), DestroyPipelineLayout(fGpu->device(), pipelineLayout,
                                                               nullptr));
-        GR_VK_CALL(fGpu->vkInterface(),
-                   DestroyDescriptorSetLayout(fGpu->device(),
-                                              dsLayout[GrVkUniformHandler::kSamplerDescSet],
-                                              nullptr));
-
         this->cleanupFragmentProcessors();
         return nullptr;
     }
 
     return new GrVkPipelineState(fGpu,
-                                 desc,
+                                 *desc,
                                  pipeline,
                                  pipelineLayout,
                                  samplerDSHandle,

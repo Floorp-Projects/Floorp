@@ -4,11 +4,12 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
- 
+
 #ifndef SKSL_ASTINTERFACEBLOCK
 #define SKSL_ASTINTERFACEBLOCK
 
 #include "SkSLASTVarDeclaration.h"
+#include "../ir/SkSLModifiers.h"
 
 namespace SkSL {
 
@@ -23,32 +24,42 @@ namespace SkSL {
 struct ASTInterfaceBlock : public ASTDeclaration {
     // valueName is empty when it was not present in the source
     ASTInterfaceBlock(Position position,
-                      ASTModifiers modifiers, 
-                      std::string interfaceName, 
-                      std::string valueName, 
-                      std::vector<std::unique_ptr<ASTVarDeclarations>> declarations)
+                      Modifiers modifiers,
+                      String typeName,
+                      std::vector<std::unique_ptr<ASTVarDeclarations>> declarations,
+                      String instanceName,
+                      std::vector<std::unique_ptr<ASTExpression>> sizes)
     : INHERITED(position, kInterfaceBlock_Kind)
     , fModifiers(modifiers)
-    , fInterfaceName(std::move(interfaceName))
-    , fValueName(std::move(valueName))
-    , fDeclarations(std::move(declarations)) {}
+    , fTypeName(std::move(typeName))
+    , fDeclarations(std::move(declarations))
+    , fInstanceName(std::move(instanceName))
+    , fSizes(std::move(sizes)) {}
 
-    std::string description() const override {
-        std::string result = fModifiers.description() + fInterfaceName + " {\n";
+    String description() const override {
+        String result = fModifiers.description() + fTypeName + " {\n";
         for (size_t i = 0; i < fDeclarations.size(); i++) {
             result += fDeclarations[i]->description() + "\n";
         }
         result += "}";
-        if (fValueName.length()) {
-            result += " " + fValueName;
+        if (fInstanceName.size()) {
+            result += " " + fInstanceName;
+            for (const auto& size : fSizes) {
+                result += "[";
+                if (size) {
+                    result += size->description();
+                }
+                result += "]";
+            }
         }
         return result + ";";
     }
 
-    const ASTModifiers fModifiers;
-    const std::string fInterfaceName;
-    const std::string fValueName;
+    const Modifiers fModifiers;
+    const String fTypeName;
     const std::vector<std::unique_ptr<ASTVarDeclarations>> fDeclarations;
+    const String fInstanceName;
+    const std::vector<std::unique_ptr<ASTExpression>> fSizes;
 
     typedef ASTDeclaration INHERITED;
 };

@@ -39,7 +39,7 @@ pref(layout.css.moz-appearance.enabled,true) skip-if(Android) == number-max-heig
 fuzzy-if(skiaContent,2,5) needs-focus skip-if(stylo) == focus-handling.html focus-handling-ref.html
 
 # select
-skip-if(stylo) == number-selected.html number-selected-ref.html
+fuzzy-if(skiaContent,1,1) skip-if(stylo) == number-selected.html number-selected-ref.html
 
 # pseudo-elements not usable from content:
 fails-if(stylo) == number-pseudo-elements.html number-pseudo-elements-ref.html

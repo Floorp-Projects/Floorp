@@ -57,6 +57,21 @@
               parent.window.postMessage(err.name, '*');
             });
         }
+        else if (ev.data.match(/^reconnect\?id=(.*)$/)) {
+          var presentationId = RegExp.$1;
+          request = new PresentationRequest(urls);
+          request.reconnect(presentationId)
+            .then(function (c) {
+              var result = { state: c.state, id: c.id };
+              parent.window.postMessage(result, '*');
+              c.onterminate = function() {
+                parent.window.postMessage('terminated', '*');
+              };
+            })
+            .catch(function (err) {
+              parent.window.postMessage(err.name, '*');
+            });
+        }
         else if (ev.data === 'getAvailability') {
           request = new PresentationRequest(urls);
           request.getAvailability()

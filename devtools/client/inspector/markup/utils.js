@@ -4,6 +4,33 @@
 
 "use strict";
 
+const getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
+
+function* getNames(x) {
+  yield* Object.getOwnPropertyNames(x);
+  yield* Object.getOwnPropertySymbols(x);
+}
+
+// Utility function to get own properties descriptor map.
+function getOwnPropertyDescriptors(...objects) {
+  let descriptors = {};
+  for (let object of objects) {
+    for (let name of getNames(object)) {
+      descriptors[name] = getOwnPropertyDescriptor(object, name);
+    }
+  }
+  return descriptors;
+}
+
+/**
+ * Returns a frozen object with that inherits from the given `prototype` and
+ * implements all own properties of the given `properties` object.
+ */
+function extend(prototype, properties) {
+  return Object.create(prototype,
+                       getOwnPropertyDescriptors(properties));
+}
+
 /**
  * Apply a 'flashed' background and foreground color to elements. Intended
  * to be used with flashElementOff as a way of drawing attention to an element.
@@ -127,6 +154,7 @@ function truncateString(str, maxLength) {
 }
 
 module.exports = {
+  extend,
   flashElementOn,
   flashElementOff,
   getAutocompleteMaxWidth,

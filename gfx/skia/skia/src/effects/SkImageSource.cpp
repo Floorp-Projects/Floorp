@@ -8,6 +8,7 @@
 #include "SkImageSource.h"
 
 #include "SkCanvas.h"
+#include "SkColorSpaceXformer.h"
 #include "SkImage.h"
 #include "SkReadBuffer.h"
 #include "SkSpecialImage.h"
@@ -27,7 +28,7 @@ sk_sp<SkImageFilter> SkImageSource::Make(sk_sp<SkImage> image,
                                          const SkRect& srcRect,
                                          const SkRect& dstRect,
                                          SkFilterQuality filterQuality) {
-    if (!image) {
+    if (!image || srcRect.width() <= 0.0f || srcRect.height() <= 0.0f) {
         return nullptr;
     }
 
@@ -83,12 +84,21 @@ sk_sp<SkSpecialImage> SkImageSource::onFilterImage(SkSpecialImage* source, const
     ctx.ctm().mapRect(&dstRect, fDstRect);
 
     SkRect bounds = SkRect::MakeIWH(fImage->width(), fImage->height());
-    if (fSrcRect == bounds && dstRect == bounds) {
-        // No regions cropped out or resized; return entire image.
-        offset->fX = offset->fY = 0;
-        return SkSpecialImage::MakeFromImage(SkIRect::MakeWH(fImage->width(), fImage->height()),
-                                             fImage,
-                                             &source->props());
+    if (fSrcRect == bounds) {
+        int iLeft = dstRect.fLeft;
+        int iTop = dstRect.fTop;
+        // TODO: this seems to be a very noise-prone way to determine this (esp. the floating-point
+        // widths & heights).
+        if (dstRect.width() == bounds.width() && dstRect.height() == bounds.height() &&
+            iLeft == dstRect.fLeft && iTop == dstRect.fTop) {
+            // The dest is just an un-scaled integer translation of the entire image; return it
+            offset->fX = iLeft;
+            offset->fY = iTop;
+
+            return SkSpecialImage::MakeFromImage(SkIRect::MakeWH(fImage->width(), fImage->height()),
+                                                 fImage, ctx.outputProperties().colorSpace(),
+                                                 &source->props());
+        }
     }
 
     const SkIRect dstIRect = dstRect.roundOut();
@@ -120,6 +130,12 @@ sk_sp<SkSpecialImage> SkImageSource::onFilterImage(SkSpecialImage* source, const
     offset->fX = dstIRect.fLeft;
     offset->fY = dstIRect.fTop;
     return surf->makeImageSnapshot();
+}
+
+sk_sp<SkImageFilter> SkImageSource::onMakeColorSpace(SkColorSpaceXformer* xformer) const {
+    SkASSERT(0 == this->countInputs());
+
+    return SkImageSource::Make(xformer->apply(fImage.get()), fSrcRect, fDstRect, fFilterQuality);
 }
 
 SkRect SkImageSource::computeFastBounds(const SkRect& src) const {

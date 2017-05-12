@@ -28,6 +28,7 @@ void GrStencilSettings::reset(const GrUserStencilSettings& user, bool hasStencil
                               int numStencilBits) {
     uint16_t frontFlags = user.fFrontFlags[hasStencilClip];
     if (frontFlags & kSingleSided_StencilFlag) {
+        SkASSERT(frontFlags == user.fBackFlags[hasStencilClip]);
         fFlags = frontFlags;
         if (!this->isDisabled()) {
             fFront.reset(user.fFront, hasStencilClip, numStencilBits);
@@ -77,6 +78,8 @@ bool GrStencilSettings::operator==(const GrStencilSettings& that) const {
     }
     if (kSingleSided_StencilFlag & (fFlags & that.fFlags)) {
         return 0 == memcmp(&fFront, &that.fFront, sizeof(Face)); // Both are single sided.
+    } else if (kSingleSided_StencilFlag & (fFlags | that.fFlags)) {
+        return false;
     } else {
         return 0 == memcmp(&fFront, &that.fFront, 2 * sizeof(Face));
         GR_STATIC_ASSERT(sizeof(Face) ==

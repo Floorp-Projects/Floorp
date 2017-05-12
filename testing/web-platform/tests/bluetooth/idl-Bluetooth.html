@@ -6,9 +6,9 @@
 'use strict';
 
 test(() => {
-  assert_throws(null, () => new Bluetooth(),
+  assert_throws(new TypeError(), () => new Bluetooth(),
                 'the constructor should not be callable with "new"');
-  assert_throws(null, () => Bluetooth(),
+  assert_throws(new TypeError(), () => Bluetooth(),
                 'the constructor should not be callable');
 
   // Bluetooth implements BluetoothDiscovery;

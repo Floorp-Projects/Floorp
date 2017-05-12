@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2016 Google Inc.
  *
@@ -10,12 +9,22 @@
 #define SkDeferredCanvas_DEFINED
 
 #include "../private/SkTDArray.h"
-#include "SkCanvas.h"
+#include "SkNoDrawCanvas.h"
 
-class SK_API SkDeferredCanvas : public SkCanvas {
+class SK_API SkDeferredCanvas : public SkNoDrawCanvas {
 public:
-    SkDeferredCanvas(SkCanvas*);
+    enum EvalType {kEager, kLazy};
+    // There are two strategies for evaluating of sub-drawings (pictures and drawables).
+    // * kEager - a sub-drawing is expanded using the using the SkDeferredCanvas. This has
+    //            the advantage of optimizing the sub drawing, and is used when the underlying
+    //            SkCanvas is drawing and not recording.
+    // * kLazy  - a sub-drawing is not expanded, but passed directly to the underlying SkCanvas.
+    //            This has the advantage of not expanding the sub drawing and then immediately
+    //            re-encoding it, and is used for recording canvases.
+    SkDeferredCanvas(SkCanvas*, EvalType);
     ~SkDeferredCanvas() override;
+
+    void reset(SkCanvas*);
 
 #ifdef SK_SUPPORT_LEGACY_DRAWFILTER
     SkDrawFilter* setDrawFilter(SkDrawFilter*) override;
@@ -24,8 +33,8 @@ public:
 protected:
     sk_sp<SkSurface> onNewSurface(const SkImageInfo&, const SkSurfaceProps&) override;
     SkISize getBaseLayerSize() const override;
-    bool getClipBounds(SkRect* bounds) const override;
-    bool getClipDeviceBounds(SkIRect* bounds) const override;
+    SkRect onGetLocalClipBounds() const override;
+    SkIRect onGetDeviceClipBounds() const override;
     bool isClipEmpty() const override;
     bool isClipRect() const override;
     bool onPeekPixels(SkPixmap*) override;
@@ -33,7 +42,6 @@ protected:
     SkImageInfo onImageInfo() const override;
     bool onGetProps(SkSurfaceProps*) const override;
     void onFlush() override;
-//    SkCanvas* canvasForDrawIter() override;
 
     void willSave() override;
     SaveLayerStrategy getSaveLayerStrategy(const SaveLayerRec&) override;
@@ -56,7 +64,7 @@ protected:
     virtual void onDrawTextBlob(const SkTextBlob* blob, SkScalar x, SkScalar y,
                                 const SkPaint& paint) override;
     virtual void onDrawPatch(const SkPoint cubics[12], const SkColor colors[4],
-                             const SkPoint texCoords[4], SkXfermode* xmode,
+                             const SkPoint texCoords[4], SkBlendMode,
                              const SkPaint& paint) override;
 
     void onDrawPaint(const SkPaint&) override;
@@ -84,20 +92,15 @@ protected:
     void onDrawImageRect(const SkImage*, const SkRect* src, const SkRect& dst,
                          const SkPaint*, SrcRectConstraint) override;
 
-    void onDrawVertices(VertexMode vmode, int vertexCount,
-                              const SkPoint vertices[], const SkPoint texs[],
-                              const SkColor colors[], SkXfermode* xmode,
-                              const uint16_t indices[], int indexCount,
-                              const SkPaint&) override;
+    void onDrawVerticesObject(const SkVertices*, SkBlendMode, const SkPaint&) override;
     void onDrawAtlas(const SkImage* image, const SkRSXform xform[],
                      const SkRect rects[], const SkColor colors[],
-                     int count, SkXfermode::Mode mode,
-                     const SkRect* cull, const SkPaint* paint) override;
+                     int count, SkBlendMode, const SkRect* cull, const SkPaint* paint) override;
 
-    void onClipRect(const SkRect&, ClipOp, ClipEdgeStyle) override;
-    void onClipRRect(const SkRRect&, ClipOp, ClipEdgeStyle) override;
-    void onClipPath(const SkPath&, ClipOp, ClipEdgeStyle) override;
-    void onClipRegion(const SkRegion&, ClipOp) override;
+    void onClipRect(const SkRect&, SkClipOp, ClipEdgeStyle) override;
+    void onClipRRect(const SkRRect&, SkClipOp, ClipEdgeStyle) override;
+    void onClipPath(const SkPath&, SkClipOp, ClipEdgeStyle) override;
+    void onClipRegion(const SkRegion&, SkClipOp) override;
 
     void onDrawDrawable(SkDrawable*, const SkMatrix*) override;
     void onDrawPicture(const SkPicture*, const SkMatrix*, const SkPaint*) override;
@@ -106,8 +109,6 @@ protected:
     class Iter;
 
 private:
-    SkCanvas* fCanvas;
-
     enum Type {
         kSave_Type,
         kClipRect_Type,
@@ -132,12 +133,11 @@ private:
         }
         void setConcat(const SkMatrix&);
     };
-    SkTDArray<Rec>  fRecs;
 
     void push_save();
     void push_cliprect(const SkRect&);
     bool push_concat(const SkMatrix&);
-    
+
     void emit(const Rec& rec);
 
     void flush_all();
@@ -149,7 +149,11 @@ private:
 
     void internal_flush_translate(SkScalar* x, SkScalar* y, const SkRect* boundsOrNull);
 
-    typedef SkCanvas INHERITED;
+    SkTDArray<Rec> fRecs;
+    SkCanvas*      fCanvas;
+    const EvalType fEvalType;
+
+    typedef SkNoDrawCanvas INHERITED;
 };
 
 

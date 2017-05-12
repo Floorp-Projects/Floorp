@@ -13,7 +13,7 @@
 #include "vk/GrVkDefines.h"
 
 struct GrVkInterface;
-class GrGLSLCaps;
+class GrShaderCaps;
 
 /**
  * Stores some capabilities of a Vk backend.
@@ -37,6 +37,8 @@ public:
         return SkToBool(ConfigInfo::kRenderable_Flag & fConfigTable[config].fOptimalFlags);
     }
 
+    bool canConfigBeImageStorage(GrPixelConfig) const override { return false; }
+
     bool isConfigTexturableLinearly(GrPixelConfig config) const {
         return SkToBool(ConfigInfo::kTextureable_Flag & fConfigTable[config].fLinearFlags);
     }
@@ -58,24 +60,41 @@ public:
         return SkToBool(ConfigInfo::kBlitSrc_Flag & flags);
     }
 
+    // Tells of if we can pass in straight GLSL string into vkCreateShaderModule
     bool canUseGLSLForShaderModule() const {
         return fCanUseGLSLForShaderModule;
     }
 
+    // On Adreno vulkan, they do not respect the imageOffset parameter at least in
+    // copyImageToBuffer. This flag says that we must do the copy starting from the origin always.
     bool mustDoCopiesFromOrigin() const {
         return fMustDoCopiesFromOrigin;
     }
 
-    bool allowInitializationErrorOnTearDown() const {
-        return fAllowInitializationErrorOnTearDown;
-    }
-
+    // Check whether we support using draws for copies.
     bool supportsCopiesAsDraws() const {
         return fSupportsCopiesAsDraws;
     }
 
+    // On Nvidia there is a current bug where we must the current command buffer before copy
+    // operations or else the copy will not happen. This includes copies, blits, resolves, and copy
+    // as draws.
     bool mustSubmitCommandsBeforeCopyOp() const {
         return fMustSubmitCommandsBeforeCopyOp;
+    }
+
+    // Sometimes calls to QueueWaitIdle return before actually signalling the fences
+    // on the command buffers even though they have completed. This causes an assert to fire when
+    // destroying the command buffers. Therefore we add a sleep to make sure the fence signals.
+    bool mustSleepOnTearDown() const {
+        return fMustSleepOnTearDown;
+    }
+
+    // Returns true if while adding commands to secondary command buffers, we must make a new
+    // secondary command buffer everytime we want to bind a new VkPipeline. This is to work around a
+    // driver bug specifically on AMD.
+    bool newSecondaryCBOnPipelineChange() const {
+        return fNewSecondaryCBOnPipelineChange;
     }
 
     /**
@@ -85,12 +104,15 @@ public:
         return fPreferedStencilFormat;
     }
 
-    GrGLSLCaps* glslCaps() const { return reinterpret_cast<GrGLSLCaps*>(fShaderCaps.get()); }
+    bool initDescForDstCopy(const GrRenderTargetProxy* src, GrSurfaceDesc* desc,
+                            bool* rectsMustMatch, bool* disallowSubrect) const override;
 
 private:
     enum VkVendor {
-        kQualcomm_VkVendor = 20803,
+        kAMD_VkVendor = 4098,
+        kImagination_VkVendor = 4112,
         kNvidia_VkVendor = 4318,
+        kQualcomm_VkVendor = 20803,
     };
 
     void init(const GrContextOptions& contextOptions, const GrVkInterface* vkInterface,
@@ -98,7 +120,7 @@ private:
     void initGrCaps(const VkPhysicalDeviceProperties&,
                     const VkPhysicalDeviceMemoryProperties&,
                     uint32_t featureFlags);
-    void initGLSLCaps(const VkPhysicalDeviceProperties&, uint32_t featureFlags);
+    void initShaderCaps(const VkPhysicalDeviceProperties&, uint32_t featureFlags);
     void initSampleCount(const VkPhysicalDeviceProperties& properties);
 
 
@@ -125,25 +147,17 @@ private:
 
     StencilFormat fPreferedStencilFormat;
 
-    // Tells of if we can pass in straight GLSL string into vkCreateShaderModule
     bool fCanUseGLSLForShaderModule;
 
-    // On Adreno vulkan, they do not respect the imageOffset parameter at least in
-    // copyImageToBuffer. This flag says that we must do the copy starting from the origin always.
     bool fMustDoCopiesFromOrigin;
 
-    // On Adreno, there is a bug where vkQueueWaitIdle will once in a while return
-    // VK_ERROR_INITIALIZATION_FAILED instead of the required VK_SUCCESS or VK_DEVICE_LOST. This
-    // flag says we will accept VK_ERROR_INITIALIZATION_FAILED as well.
-    bool fAllowInitializationErrorOnTearDown;
-
-    // Check whether we support using draws for copies.
     bool fSupportsCopiesAsDraws;
 
-    // On Nvidia there is a current bug where we must the current command buffer before copy
-    // operations or else the copy will not happen. This includes copies, blits, resolves, and copy
-    // as draws.
     bool fMustSubmitCommandsBeforeCopyOp;
+
+    bool fMustSleepOnTearDown;
+
+    bool fNewSecondaryCBOnPipelineChange;
 
     typedef GrCaps INHERITED;
 };

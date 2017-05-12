@@ -4,7 +4,7 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
- 
+
 #ifndef SKSL_SYMBOLTABLE
 #define SKSL_SYMBOLTABLE
 
@@ -24,20 +24,22 @@ struct FunctionDeclaration;
  */
 class SymbolTable {
 public:
-    SymbolTable(ErrorReporter& errorReporter)
-    : fErrorReporter(errorReporter) {}
+    SymbolTable(ErrorReporter* errorReporter)
+    : fErrorReporter(*errorReporter) {}
 
-    SymbolTable(std::shared_ptr<SymbolTable> parent, ErrorReporter& errorReporter)
+    SymbolTable(std::shared_ptr<SymbolTable> parent, ErrorReporter* errorReporter)
     : fParent(parent)
-    , fErrorReporter(errorReporter) {}
+    , fErrorReporter(*errorReporter) {}
 
-    const Symbol* operator[](const std::string& name);
+    const Symbol* operator[](const String& name);
 
-    void add(const std::string& name, std::unique_ptr<Symbol> symbol);
+    void add(const String& name, std::unique_ptr<Symbol> symbol);
 
-    void addWithoutOwnership(const std::string& name, const Symbol* symbol);
+    void addWithoutOwnership(const String& name, const Symbol* symbol);
 
     Symbol* takeOwnership(Symbol* s);
+
+    void markAllFunctionsBuiltin();
 
     const std::shared_ptr<SymbolTable> fParent;
 
@@ -46,7 +48,7 @@ private:
 
     std::vector<std::unique_ptr<Symbol>> fOwnedPointers;
 
-    std::unordered_map<std::string, const Symbol*> fSymbols;
+    std::unordered_map<String, const Symbol*> fSymbols;
 
     ErrorReporter& fErrorReporter;
 };

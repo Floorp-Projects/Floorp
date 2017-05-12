@@ -791,6 +791,11 @@ js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
     header->initializedLength = Min(header->initializedLength, newLen);
 
     if (attrs & JSPROP_READONLY) {
+        if (header->numShiftedElements() > 0) {
+            arr->unshiftElements();
+            header = arr->getElementsHeader();
+        }
+
         header->setNonwritableArrayLength();
 
         // When an array's length becomes non-writable, writes to indexes
@@ -2229,18 +2234,16 @@ ShiftMoveBoxedOrUnboxedDenseElements(JSObject* obj)
 {
     MOZ_ASSERT(HasBoxedOrUnboxedDenseElements<Type>(obj));
 
-    /*
-     * At this point the length and initialized length have already been
-     * decremented and the result fetched, so just shift the array elements
-     * themselves.
-     */
     size_t initlen = GetBoxedOrUnboxedInitializedLength<Type>(obj);
+    MOZ_ASSERT(initlen > 0);
+
     if (Type == JSVAL_TYPE_MAGIC) {
-        obj->as<NativeObject>().moveDenseElementsNoPreBarrier(0, 1, initlen);
+        if (!obj->as<NativeObject>().tryShiftDenseElements(1))
+            obj->as<NativeObject>().moveDenseElementsNoPreBarrier(0, 1, initlen - 1);
     } else {
         uint8_t* data = obj->as<UnboxedArrayObject>().elements();
         size_t elementSize = UnboxedTypeSize(Type);
-        memmove(data, data + elementSize, initlen * elementSize);
+        memmove(data, data + elementSize, (initlen - 1) * elementSize);
     }
 
     return DenseElementResult::Success;
@@ -2274,6 +2277,11 @@ ArrayShiftDenseKernel(JSContext* cx, HandleObject obj, MutableHandleValue rval)
     rval.set(GetBoxedOrUnboxedDenseElement<Type>(obj, 0));
     if (rval.isMagic(JS_ELEMENTS_HOLE))
         rval.setUndefined();
+
+    if (Type == JSVAL_TYPE_MAGIC) {
+        if (obj->as<NativeObject>().tryShiftDenseElements(1))
+            return DenseElementResult::Success;
+    }
 
     DenseElementResult result = MoveBoxedOrUnboxedDenseElements<Type>(cx, obj, 0, 1, initlen - 1);
     if (result != DenseElementResult::Success)

@@ -8,36 +8,36 @@ var scope = 'resources/clients-matchall-client-types';
 var iframe_url = scope + '-iframe.html';
 var shared_worker_url = scope + '-shared-worker.js';
 
-/* visibilityState, focused, url, frameType */
+/* visibilityState, focused, url, type, frameType */
 var expected_only_window = [
     ['visible', true, new URL(iframe_url, location).href, 'window', 'nested']
 ];
 var expected_only_shared_worker = [
-    [,,new URL(shared_worker_url, location).href, 'sharedworker', 'none']
+    [undefined, undefined, new URL(shared_worker_url, location).href, 'sharedworker', 'none']
 ];
 var expected_window_and_shared_worker = [
-    ['visible', true, new URL(iframe_url, location).href, 'window', 'nested'],
-    [,,new URL(shared_worker_url, location).href, 'sharedworker', 'none']
+    expected_only_window[0], expected_only_shared_worker[0]
 ];
 
 function test_matchall(frame, expected, query_options) {
   // Make sure the frame gets focus.
   frame.focus();
-  expected.sort(function(a, b) { return a[2] > b[2] ? 1 : -1; });
   return new Promise(function(resolve, reject) {
     var channel = new MessageChannel();
-    channel.port1.onmessage = function(e) {
-      if (typeof e.data === 'string') {
-        return reject(e.data);
-      }
-      assert_equals(e.data.length, expected.length);
-      for (var i = 0; i < e.data.length; i++)
-        assert_array_equals(e.data[i], expected[i]);
-      resolve();
-    };
+    channel.port1.onmessage = function(e) { resolve(e.data); };
     frame.contentWindow.navigator.serviceWorker.controller.postMessage(
         {port:channel.port2, options:query_options},
         [channel.port2]);
+  }).then(function(data) {
+    if (typeof data === 'string') {
+      throw new Error(data);
+    }
+
+    assert_equals(data.length, expected.length, 'result count');
+
+    for (var i = 0; i < data.length; ++i) {
+      assert_array_equals(data[i], expected[i]);
+    }
   });
 }
 

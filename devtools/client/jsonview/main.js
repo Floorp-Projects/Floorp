@@ -7,10 +7,16 @@
 
 "use strict";
 
-const { Cu } = require("chrome");
+const { Cu, Cc, Ci } = require("chrome");
 const Services = require("Services");
 
 const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
+
+XPCOMUtils.defineLazyGetter(this, "chrome", function () {
+  return Cc["@mozilla.org/appshell/window-mediator;1"]
+    .getService(Ci.nsIWindowMediator)
+    .getMostRecentWindow("navigator:browser");
+});
 
 XPCOMUtils.defineLazyGetter(this, "JsonViewUtils", function () {
   return require("devtools/client/jsonview/utils");
@@ -50,9 +56,28 @@ var JsonView = {
    * in the parent process.
    */
   onSave: function (message) {
-    JsonViewUtils.getTargetFile().then(file => {
-      JsonViewUtils.saveToFile(file, message.data);
-    }, () => {});
+    let browser = chrome.gBrowser.selectedBrowser;
+    if (message.data.url === null) {
+      // Save original contents
+      chrome.saveBrowser(browser, false, message.data.windowID);
+    } else {
+      // The following code emulates saveBrowser, but:
+      // - Uses the given blob URL containing the custom contents to save.
+      // - Obtains the file name from the URL of the document, not the blob.
+      let persistable = browser.QueryInterface(Ci.nsIFrameLoaderOwner)
+        .frameLoader.QueryInterface(Ci.nsIWebBrowserPersistable);
+      persistable.startPersistence(message.data.windowID, {
+        onDocumentReady(doc) {
+          let uri = chrome.makeURI(doc.documentURI, doc.characterSet);
+          let filename = chrome.getDefaultFileName(undefined, uri, doc, null);
+          chrome.internalSave(message.data.url, doc, filename, null, doc.contentType,
+            false, null, null, null, doc, false, null, undefined);
+        },
+        onError(status) {
+          throw new Error("JSON Viewer's onSave failed in startPersistence");
+        }
+      });
+    }
   }
 };
 

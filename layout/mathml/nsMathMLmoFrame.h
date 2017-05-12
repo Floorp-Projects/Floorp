@@ -80,7 +80,8 @@ public:
   }
 
 protected:
-  explicit nsMathMLmoFrame(nsStyleContext* aContext) : nsMathMLTokenFrame(aContext) {}
+  explicit nsMathMLmoFrame(nsStyleContext* aContext) :
+    nsMathMLTokenFrame(aContext), mFlags(0), mMinSize(0), mMaxSize(0) {}
   virtual ~nsMathMLmoFrame();
   
   nsMathMLChar     mMathMLChar; // Here is the MathMLChar that will deal with the operator.
