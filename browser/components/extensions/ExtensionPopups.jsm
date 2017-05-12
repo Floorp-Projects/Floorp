@@ -447,7 +447,7 @@ class ViewPopup extends BasePopup {
    *        should be closed, or `true` otherwise.
    */
   attach(viewNode) {
-    return (async function() {
+    return (async () => {
       this.viewNode = viewNode;
       this.viewNode.addEventListener(this.DESTROY_EVENT, this);
 
@@ -529,7 +529,7 @@ class ViewPopup extends BasePopup {
       this.browser.dispatchEvent(event);
 
       return true;
-    }.bind(this))();
+    })();
   }
 
   destroy() {

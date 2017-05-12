@@ -123,7 +123,7 @@ this.PlacesBackups = {
    * @resolve the folder (the folder string path).
    */
   getBackupFolder: function PB_getBackupFolder() {
-    return (async function() {
+    return (async () => {
       if (this._backupFolder) {
         return this._backupFolder;
       }
@@ -131,7 +131,7 @@ this.PlacesBackups = {
       let backupsDirPath = OS.Path.join(profileDir, this.profileRelativeFolderPath);
       await OS.File.makeDir(backupsDirPath, { ignoreExisting: true });
       return this._backupFolder = backupsDirPath;
-    }.bind(this))();
+    })();
   },
 
   get profileRelativeFolderPath() {
@@ -183,7 +183,7 @@ this.PlacesBackups = {
    * @resolve a sorted array of string paths.
    */
   getBackupFiles: function PB_getBackupFiles() {
-    return (async function() {
+    return (async () => {
       if (this._backupFiles)
         return this._backupFiles;
 
@@ -219,7 +219,7 @@ this.PlacesBackups = {
       });
 
       return this._backupFiles;
-    }.bind(this))();
+    })();
   },
 
   /**
@@ -301,7 +301,7 @@ this.PlacesBackups = {
     * @result the path to the file.
     */
    getMostRecentBackup: function PB_getMostRecentBackup() {
-     return (async function() {
+     return (async () => {
        let entries = await this.getBackupFiles();
        for (let entry of entries) {
          let rx = /\.json(lz4)?$/;
@@ -310,7 +310,7 @@ this.PlacesBackups = {
          }
        }
        return null;
-    }.bind(this))();
+    })();
   },
 
   /**
@@ -331,7 +331,7 @@ this.PlacesBackups = {
                          "https://developer.mozilla.org/docs/JavaScript_OS.File");
       aFilePath = aFilePath.path;
     }
-    return (async function() {
+    return (async () => {
       let { count: nodeCount, hash: hash } =
         await BookmarkJSONUtils.exportToFile(aFilePath);
 
@@ -379,7 +379,7 @@ this.PlacesBackups = {
       }
 
       return nodeCount;
-    }.bind(this))();
+    })();
   },
 
   /**
@@ -398,7 +398,7 @@ this.PlacesBackups = {
    * @return {Promise}
    */
   create: function PB_create(aMaxBackups, aForceBackup) {
-    let limitBackups = async function() {
+    let limitBackups = async () => {
       let backupFiles = await this.getBackupFiles();
       if (typeof aMaxBackups == "number" && aMaxBackups > -1 &&
           backupFiles.length >= aMaxBackups) {
@@ -409,9 +409,9 @@ this.PlacesBackups = {
           await OS.File.remove(oldestBackup);
         }
       }
-    }.bind(this);
+    };
 
-    return (async function() {
+    return (async () => {
       if (aMaxBackups === 0) {
         // Backups are disabled, delete any existing one and bail out.
         await limitBackups(0);
@@ -480,7 +480,7 @@ this.PlacesBackups = {
 
       // Limit the number of backups.
       await limitBackups(aMaxBackups);
-    }.bind(this))();
+    })();
   },
 
   /**

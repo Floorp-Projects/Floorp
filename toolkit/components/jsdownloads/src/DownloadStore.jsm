@@ -97,7 +97,7 @@ this.DownloadStore.prototype = {
    * @rejects JavaScript exception.
    */
   load: function DS_load() {
-    return (async function task_DS_load() {
+    return (async () => {
       let bytes;
       try {
         bytes = await OS.File.read(this.path);
@@ -136,7 +136,7 @@ this.DownloadStore.prototype = {
           Cu.reportError(ex);
         }
       }
-    }.bind(this))();
+    })();
   },
 
   /**
@@ -149,7 +149,7 @@ this.DownloadStore.prototype = {
    * @rejects JavaScript exception.
    */
   save: function DS_save() {
-    return (async function task_DS_save() {
+    return (async () => {
       let downloads = await this.list.getAll();
 
       // Take a static snapshot of the current state of all the downloads.
@@ -193,6 +193,6 @@ this.DownloadStore.prototype = {
           // file error if the file existed before, and was recently deleted.
         }
       }
-    }.bind(this))();
+    })();
   },
 };

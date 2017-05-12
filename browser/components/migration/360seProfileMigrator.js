@@ -109,7 +109,7 @@ Bookmarks.prototype = {
   },
 
   migrate(aCallback) {
-    return (async function() {
+    return (async () => {
       let idToGuid = new Map();
       let folderGuid = PlacesUtils.bookmarks.toolbarGuid;
       if (!MigrationUtils.isStartupMigration) {
@@ -175,7 +175,7 @@ Bookmarks.prototype = {
       } finally {
         await connection.close();
       }
-    }.bind(this))().then(() => aCallback(true),
+    })().then(() => aCallback(true),
                         e => { Cu.reportError(e); aCallback(false) });
   }
 };

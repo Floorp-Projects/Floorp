@@ -380,9 +380,9 @@ var BookmarkPropertiesPanel = {
       return;
     if (PlacesUIUtils.useAsyncTransactions) {
       this._batchBlockingDeferred = PromiseUtils.defer();
-      PlacesTransactions.batch(async function() {
+      PlacesTransactions.batch(async () => {
         await this._batchBlockingDeferred.promise;
-      }.bind(this));
+      });
     } else {
       PlacesUtils.transactionManager.beginBatch(null);
     }

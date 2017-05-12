@@ -3099,7 +3099,7 @@ SearchService.prototype = {
     // Start by clearing the initialized state, so we don't abort early.
     gInitialized = false;
 
-    (async function() {
+    (async () => {
       try {
         if (this._batchTask) {
           LOG("finalizing batch task");
@@ -3143,7 +3143,7 @@ SearchService.prototype = {
       } finally {
         Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "reinit-complete");
       }
-    }.bind(this))();
+    })();
   },
 
   /**
@@ -4670,7 +4670,7 @@ SearchService.prototype = {
     };
     OS.File.profileBeforeChange.addBlocker(
       "Search service: shutting down",
-      () => (async function() {
+      () => (async () => {
         if (this._batchTask) {
           shutdownState.step = "Finalizing batched task";
           try {
@@ -4689,7 +4689,7 @@ SearchService.prototype = {
             Promise.reject(ex);
           }
         }
-      }.bind(this))(),
+      })(),
 
       () => shutdownState
     );

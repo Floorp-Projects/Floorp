@@ -317,7 +317,7 @@ this.ExtensionData = class {
   }
 
   readDirectory(path) {
-    return (async function() {
+    return (async () => {
       if (this.rootURI instanceof Ci.nsIFileURL) {
         let uri = NetUtil.newURI(this.rootURI.resolve("./" + path));
         let fullPath = uri.QueryInterface(Ci.nsIFileURL).file.path;
@@ -378,7 +378,7 @@ this.ExtensionData = class {
       } finally {
         zipReader.close();
       }
-    }.bind(this))();
+    })();
   }
 
   readJSON(path) {
@@ -570,7 +570,7 @@ this.ExtensionData = class {
   // Reads the locale file for the given Gecko-compatible locale code, and
   // stores its parsed contents in |this.localeMessages.get(locale)|.
   readLocaleFile(locale) {
-    return (async function() {
+    return (async () => {
       let locales = await this.promiseLocales();
       let dir = locales.get(locale) || locale;
       let file = `_locales/${dir}/messages.json`;
@@ -582,7 +582,7 @@ this.ExtensionData = class {
         this.packagingError(`Loading locale file ${file}: ${e}`);
         return new Map();
       }
-    }.bind(this))();
+    })();
   }
 
   // Reads the list of locales available in the extension, and returns a
@@ -593,7 +593,7 @@ this.ExtensionData = class {
   // Map(gecko-locale-code -> locale-directory-name)
   promiseLocales() {
     if (!this._promiseLocales) {
-      this._promiseLocales = (async function() {
+      this._promiseLocales = (async () => {
         let locales = new Map();
 
         let entries = await this.readDirectory("_locales");
@@ -611,7 +611,7 @@ this.ExtensionData = class {
         });
 
         return locales;
-      }.bind(this))();
+      })();
     }
 
     return this._promiseLocales;
@@ -622,7 +622,7 @@ this.ExtensionData = class {
   // is a Gecko-compatible locale code, and each value is a locale data object
   // as returned by |readLocaleFile|.
   initAllLocales() {
-    return (async function() {
+    return (async () => {
       let locales = await this.promiseLocales();
 
       await Promise.all(Array.from(locales.keys(),
@@ -641,7 +641,7 @@ this.ExtensionData = class {
       }
 
       return this.localeData.messages;
-    }.bind(this))();
+    })();
   }
 
   // Reads the locale file for the given Gecko-compatible locale code, or the
@@ -653,7 +653,7 @@ this.ExtensionData = class {
   //
   // If no locales are unavailable, resolves to |null|.
   initLocale(locale = this.defaultLocale) {
-    return (async function() {
+    return (async () => {
       if (locale == null) {
         return null;
       }
@@ -669,7 +669,7 @@ this.ExtensionData = class {
 
       this.localeData.selectedLocale = locale;
       return results[0];
-    }.bind(this))();
+    })();
   }
 };
 

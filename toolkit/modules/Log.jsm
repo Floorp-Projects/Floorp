@@ -864,7 +864,7 @@ FileAppender.prototype = {
   __proto__: Appender.prototype,
 
   _openFile() {
-    return (async function _openFile() {
+    return (async () => {
       try {
         this._file = await OS.File.open(this._path,
                                         {truncate: true});
@@ -875,7 +875,7 @@ FileAppender.prototype = {
           throw err;
         }
       }
-    }.bind(this))();
+    })();
   },
 
   _getFile() {

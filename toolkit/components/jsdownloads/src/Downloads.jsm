@@ -169,7 +169,7 @@ this.Downloads = {
    */
   getList(aType) {
     if (!this._promiseListsInitialized) {
-      this._promiseListsInitialized = (async function() {
+      this._promiseListsInitialized = (async () => {
         let publicList = new DownloadList();
         let privateList = new DownloadList();
         let combinedList = new DownloadCombinedList(publicList, privateList);
@@ -193,7 +193,7 @@ this.Downloads = {
         this._lists[Downloads.PUBLIC] = publicList;
         this._lists[Downloads.PRIVATE] = privateList;
         this._lists[Downloads.ALL] = combinedList;
-      }.bind(this))();
+      })();
     }
 
     return this._promiseListsInitialized.then(() => this._lists[aType]);

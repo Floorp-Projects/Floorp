@@ -35,7 +35,7 @@ Bookmarks.prototype = {
   type: MigrationUtils.resourceTypes.BOOKMARKS,
 
   migrate: function B_migrate(aCallback) {
-    return (async function() {
+    return (async () => {
       let dict = await new Promise(resolve =>
         PropertyListUtils.read(this._file, resolve)
       );
@@ -48,7 +48,7 @@ Bookmarks.prototype = {
       let collection = dict.get("Title") == "com.apple.ReadingList" ?
         this.READING_LIST_COLLECTION : this.ROOT_COLLECTION;
       await this._migrateCollection(children, collection);
-    }.bind(this))().then(() => aCallback(true),
+    })().then(() => aCallback(true),
                         e => { Cu.reportError(e); aCallback(false) });
   },
 

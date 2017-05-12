@@ -118,7 +118,7 @@ class DevToolsPage extends HiddenExtensionPage {
   }
 
   build() {
-    return (async function() {
+    return (async () => {
       await this.createBrowserElement();
 
       // Listening to new proxy contexts.
@@ -147,7 +147,7 @@ class DevToolsPage extends HiddenExtensionPage {
       this.browser.loadURI(this.url);
 
       await this.waitForTopLevelContext;
-    }.bind(this))();
+    })();
   }
 
   close() {

@@ -2558,7 +2558,7 @@ var GuidHelper = {
     let uncachedGuids = aGuids.filter(guid => !this.idsForGuids.has(guid));
     if (uncachedGuids.length) {
       await PlacesUtils.withConnectionWrapper("GuidHelper.getItemId",
-                                              async function(db) {
+                                              async db => {
         while (uncachedGuids.length) {
           let chunk = uncachedGuids.splice(0, 100);
           let rows = await db.executeCached(
@@ -2571,7 +2571,7 @@ var GuidHelper = {
             this.updateCache(row.getResultByIndex(0), row.getResultByIndex(1));
           }
         }
-      }.bind(this));
+      });
     }
     return new Map(aGuids.map(guid => [guid, this.idsForGuids.get(guid)]));
   },
@@ -3544,7 +3544,7 @@ PlacesEditBookmarkKeywordTransaction.prototype = {
 
   doTransaction: function EBKTXN_doTransaction() {
     let done = false;
-    (async function() {
+    (async () => {
       if (this.item.keyword) {
         let oldEntry = await PlacesUtils.keywords.fetch(this.item.keyword);
         this.item.postData = oldEntry.postData;
@@ -3558,7 +3558,7 @@ PlacesEditBookmarkKeywordTransaction.prototype = {
           postData: this.new.postData || this.item.postData
         });
       }
-    }.bind(this))().catch(Cu.reportError)
+    })().catch(Cu.reportError)
                  .then(() => done = true);
     // TODO: Until we can move to PlacesTransactions.jsm, we must spin the
     // events loop :(
@@ -3571,7 +3571,7 @@ PlacesEditBookmarkKeywordTransaction.prototype = {
   undoTransaction: function EBKTXN_undoTransaction() {
 
     let done = false;
-    (async function() {
+    (async () => {
       if (this.new.keyword) {
         await PlacesUtils.keywords.remove(this.new.keyword);
       }
@@ -3583,7 +3583,7 @@ PlacesEditBookmarkKeywordTransaction.prototype = {
           postData: this.item.postData
         });
       }
-    }.bind(this))().catch(Cu.reportError)
+    })().catch(Cu.reportError)
                  .then(() => done = true);
     // TODO: Until we can move to PlacesTransactions.jsm, we must spin the
     // events loop :(

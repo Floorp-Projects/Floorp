@@ -29,7 +29,7 @@ SearchProvider.prototype = {
     // all other topics are not relevant to content searches and can be
     // ignored by NewTabSearchProvider
     if (data === "engine-current" && topic === CURRENT_ENGINE) {
-      (async function() {
+      (async () => {
         try {
           let state = await ContentSearch.currentStateObj(true);
           let engine = state.currentEngine;
@@ -37,7 +37,7 @@ SearchProvider.prototype = {
         } catch (e) {
           Cu.reportError(e);
         }
-      }.bind(this))();
+      })();
     }
   },
 

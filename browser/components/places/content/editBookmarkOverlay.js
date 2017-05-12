@@ -799,11 +799,11 @@ var gEditItemOverlay = {
     if (PlacesUtils.bookmarks.getFolderIdForItem(this._paneInfo.itemId) != containerId &&
         this._paneInfo.itemId != containerId) {
       if (PlacesUIUtils.useAsyncTransactions) {
-        (async function() {
+        (async () => {
           let newParentGuid = await PlacesUtils.promiseItemGuid(containerId);
           let guid = this._paneInfo.itemGuid;
           await PlacesTransactions.Move({ guid, newParentGuid }).transact();
-        }.bind(this))();
+        })();
       } else {
         let txn = new PlacesMoveItemTransaction(this._paneInfo.itemId,
                                                 containerId,

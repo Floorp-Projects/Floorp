@@ -1003,7 +1003,7 @@ function BookmarkExporter(aBookmarksTree) {
 
 BookmarkExporter.prototype = {
   exportToFile: function exportToFile(aFilePath) {
-    return (async function() {
+    return (async () => {
       // Create a file that can be accessed by the current user only.
       let out = FileUtils.openAtomicFileOutputStream(new FileUtils.File(aFilePath));
       try {
@@ -1031,7 +1031,7 @@ BookmarkExporter.prototype = {
       } finally {
         out.close();
       }
-    }.bind(this))();
+    })();
   },
 
   _converterOut: null,
