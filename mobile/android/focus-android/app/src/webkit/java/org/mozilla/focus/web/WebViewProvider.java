@@ -35,13 +35,7 @@ public class WebViewProvider {
     }
 
     public static void performCleanup(final Context context) {
-        // Although most of the (cookie/cache/etc) data isn't instance specific, the cleanup methods
-        // aren't static, hence we need to grab a WebView instance:
-        final WebkitView webView = new WebkitView(context, null);
-        // Calls our data cleanup code:
-        webView.cleanup();
-        // Calls the system webview cleanup/deinit code:
-        webView.destroy();
+        WebkitView.deleteContentFromKnownLocations(context);
     }
 
     public static View create(Context context, AttributeSet attrs) {
