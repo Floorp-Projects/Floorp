@@ -13,6 +13,7 @@ const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                           "resource://gre/modules/NetUtil.jsm");
@@ -157,8 +158,7 @@ mm.addMessageListener("ppapipdf.js:getPrintSettings", () => {
 });
 
 mm.addMessageListener("ppapipdf.js:printPDF", ({ data }) => {
-  let file = Services.dirsvc.get(data.contentTempKey, Ci.nsIFile);
-  file.append(data.fileName);
+  let file = new FileUtils.File(data.filePath);
   if (!file.exists()) {
     return;
   }
