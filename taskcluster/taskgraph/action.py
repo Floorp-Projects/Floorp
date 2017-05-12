@@ -98,10 +98,7 @@ def add_talos(decision_task_id, times=1):
      * Adding all talos jobs to a push.
     """
     full_task_json = get_artifact(decision_task_id, "public/full-task-graph.json")
-    task_labels = [
-        label for label, task in full_task_json.iteritems()
-        if "talos_try_name" in task['attributes']
-    ]
+    task_labels = [label for label in full_task_json if "talos" in label]
     for time in xrange(times):
         add_tasks(decision_task_id, task_labels, '{}-'.format(time))
 
