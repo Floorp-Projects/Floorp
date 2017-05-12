@@ -12,6 +12,7 @@
 #include "GLScreenBuffer.h"
 #include "LayersLogging.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/layers/ScrollingLayersHelper.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/TextureClientSharedSurface.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
@@ -62,6 +63,7 @@ WebRenderCanvasLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     transform = Some(GetTransform().PreTranslate(0, mBounds.height, 0).PreScale(1, -1, 1));
   }
 
+  ScrollingLayersHelper scroller(this, aBuilder, aSc);
   StackingContextHelper sc(aSc, aBuilder, this, transform);
 
   LayerRect rect(0, 0, mBounds.width, mBounds.height);
