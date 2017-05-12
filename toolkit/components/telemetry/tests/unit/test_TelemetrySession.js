@@ -1365,11 +1365,34 @@ add_task(async function test_sendShutdownPing() {
     return;
   }
 
+  const OSSHUTDOWN_SCALAR = "telemetry.os_shutting_down";
+
+  let checkPendingShutdownPing = async function() {
+    let pendingPings = await TelemetryStorage.loadPendingPingList();
+    Assert.equal(pendingPings.length, 2,
+                 "We expect 2 pending pings: shutdown and saved-session.");
+    // Load the pings off the disk.
+    const pings = [
+      await TelemetryStorage.loadPendingPing(pendingPings[0].id),
+      await TelemetryStorage.loadPendingPing(pendingPings[1].id)
+    ];
+    // Find the shutdown main ping and check that it contains the right data.
+    const shutdownPing = pings.find(p => p.type == "main");
+    Assert.ok(shutdownPing, "The 'shutdown' ping must be saved to disk.");
+    Assert.ok(pings.find(p => p.type == "saved-session"),
+              "The 'saved-session' ping must be saved to disk.");
+    Assert.equal("shutdown", shutdownPing.payload.info.reason,
+                 "The 'shutdown' ping must be saved to disk.");
+    Assert.ok(shutdownPing.payload.processes.parent.scalars[OSSHUTDOWN_SCALAR],
+              "The OS shutdown scalar must be set to true.");
+  };
+
   Preferences.set(PREF_SHUTDOWN_PINGSENDER, true);
   Preferences.set(PREF_POLICY_FIRSTRUN, false);
   // Make sure the reporting policy picks up the updated pref.
   TelemetryReportingPolicy.testUpdateFirstRun();
   PingServer.clearRequests();
+  Telemetry.clearScalars();
 
   // Shutdown telemetry and wait for an incoming ping.
   let nextPing = PingServer.promiseNextPing();
@@ -1380,7 +1403,8 @@ add_task(async function test_sendShutdownPing() {
   checkPingFormat(ping, ping.type, true, true);
   Assert.equal(ping.payload.info.reason, REASON_SHUTDOWN);
   Assert.equal(ping.clientId, gClientID);
-
+  Assert.ok(!(OSSHUTDOWN_SCALAR in ping.payload.processes.parent.scalars),
+            "The OS shutdown scalar must not be set.");
   // Try again, this time disable ping upload. The PingSender
   // should not be sending any ping!
   PingServer.registerPingHandler(() => Assert.ok(false, "Telemetry must not send pings if not allowed to."));
@@ -1391,9 +1415,29 @@ add_task(async function test_sendShutdownPing() {
   // Make sure we have no pending pings between the runs.
   await TelemetryStorage.testClearPendingPings();
 
-  // Enable ping upload and disable the "submission policy".
-  // The shutdown ping must not be sent.
+  // Enable ping upload and signal an OS shutdown. The pingsender
+  // will not be spawned and no ping will be sent.
   Preferences.set(PREF_FHR_UPLOAD_ENABLED, true);
+  yield TelemetryController.testReset();
+  Services.obs.notifyObservers(null, "quit-application-forced");
+  yield TelemetryController.testShutdown();
+
+  // Check that the "shutdown" ping was correctly saved to disk.
+  yield checkPendingShutdownPing();
+
+  // Make sure we have no pending pings between the runs.
+  yield TelemetryStorage.testClearPendingPings();
+  Telemetry.clearScalars();
+
+  yield TelemetryController.testReset();
+  Services.obs.notifyObservers(null, "quit-application-granted", "syncShutdown");
+  yield TelemetryController.testShutdown();
+  yield checkPendingShutdownPing();
+
+  // Make sure we have no pending pings between the runs.
+  yield TelemetryStorage.testClearPendingPings();
+
+  // Disable the "submission policy". The shutdown ping must not be sent.
   Preferences.set(PREF_BYPASS_NOTIFICATION, false);
   await TelemetryController.testReset();
   await TelemetryController.testShutdown();
