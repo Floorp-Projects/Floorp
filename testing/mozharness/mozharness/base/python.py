@@ -853,6 +853,42 @@ class Python3Virtualenv(object):
         for m in modules:
             self.run_command('%s install %s' % (self.py3_pip_path, m))
 
+    def _mozharness_pip_args(self):
+        '''We have information in Mozharness configs that apply to pip'''
+        c = self.config
+        pip_args = []
+        # To avoid timeouts with our pypi server, increase default timeout:
+        # https://bugzilla.mozilla.org/show_bug.cgi?id=1007230#c802
+        pip_args += ['--timeout', str(c.get('pip_timeout', 120))]
+
+        if c.get('find_links') and not c["pip_index"]:
+            pip_args += ['--no-index']
+
+        # XXX: Look at the code from https://dxr.mozilla.org/mozilla-central/source/testing/mozharness/mozharness/base/python.py#264-281
+        #      and evaluate what we need from it
+        for find_link in c.get('find_links'):
+            pip_args += ['--find-links', find_link]
+
+        return pip_args
+
+    @py3_venv_initialized
+    def py3_install_requirement_files(self, requirements, pip_args=[],
+                                      use_mozharness_pip_config=True):
+        '''
+        requirements - You can specify multiple requiments paths
+        '''
+        cmd = ['%s install' % self.py3_pip_path]
+        for arg in pip_args:
+            cmd += [' ' + arg]
+
+        if use_mozharness_pip_config:
+            cmd += self._mozharness_pip_args()
+
+        for requirement_path in requirements:
+            cmd += ['-r %s' % requirement_path]
+
+        self.run_command(' '.join(cmd))
+
 
 # __main__ {{{1
 
