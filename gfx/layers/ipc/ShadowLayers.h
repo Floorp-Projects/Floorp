@@ -319,6 +319,10 @@ public:
   bool HasShadowManager() const { return !!mShadowManager; }
   LayerTransactionChild* GetShadowManager() const { return mShadowManager.get(); }
 
+  // Send a synchronous message asking the LayerTransactionParent in the
+  // compositor to shutdown.
+  void SynchronouslyShutdown();
+
   virtual void WindowOverlayChanged() { mWindowOverlayChanged = true; }
 
   /**

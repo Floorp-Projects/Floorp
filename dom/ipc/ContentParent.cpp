@@ -2480,6 +2480,12 @@ ContentParent::OnCompositorUnexpectedShutdown()
 }
 
 void
+ContentParent::OnCompositorDeviceReset()
+{
+  Unused << SendReinitRenderingForDeviceReset();
+}
+
+void
 ContentParent::OnVarChanged(const GfxVarUpdate& aVar)
 {
   if (!mIPCOpen) {

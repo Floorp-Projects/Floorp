@@ -1096,6 +1096,15 @@ ShadowLayerForwarder::ReleaseCompositable(const CompositableHandle& aHandle)
   mCompositables.Remove(aHandle.Value());
 }
 
+void
+ShadowLayerForwarder::SynchronouslyShutdown()
+{
+  if (IPCOpen()) {
+    mShadowManager->SendShutdownSync();
+    mShadowManager->MarkDestroyed();
+  }
+}
+
 ShadowableLayer::~ShadowableLayer()
 {
   if (mShadow) {
