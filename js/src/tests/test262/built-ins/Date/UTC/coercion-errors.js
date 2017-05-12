@@ -22,41 +22,41 @@ var counter = { toString: function() { callCount += 1; } };
 var callCount = 0;
 
 assert.throws(Test262Error, function() {
-  new Date(thrower, counter);
+  Date.UTC(thrower, counter);
 }, 'year');
 assert.sameValue(callCount, 0, 'coercion halts following error from "year"');
 
 assert.throws(Test262Error, function() {
-  new Date(0, thrower, counter);
+  Date.UTC(0, thrower, counter);
 }, 'month');
 assert.sameValue(callCount, 0, 'coercion halts following error from "month"');
 
 assert.throws(Test262Error, function() {
-  new Date(0, 0, thrower, counter);
+  Date.UTC(0, 0, thrower, counter);
 }, 'date');
 assert.sameValue(callCount, 0, 'coercion halts following error from "date"');
 
 assert.throws(Test262Error, function() {
-  new Date(0, 0, 1, thrower, counter);
+  Date.UTC(0, 0, 1, thrower, counter);
 }, 'hours');
 assert.sameValue(callCount, 0, 'coercion halts following error from "hours"');
 
 assert.throws(Test262Error, function() {
-  new Date(0, 0, 1, 0, thrower, counter);
+  Date.UTC(0, 0, 1, 0, thrower, counter);
 }, 'minutes');
 assert.sameValue(
   callCount, 0, 'coercion halts following error from "minutes"'
 );
 
 assert.throws(Test262Error, function() {
-  new Date(0, 0, 1, 0, 0, thrower, counter);
+  Date.UTC(0, 0, 1, 0, 0, thrower, counter);
 }, 'seconds');
 assert.sameValue(
   callCount, 0, 'coercion halts following error from "seconds"'
 );
 
 assert.throws(Test262Error, function() {
-  new Date(0, 0, 1, 0, 0, 0, thrower);
+  Date.UTC(0, 0, 1, 0, 0, 0, thrower);
 }, 'ms');
 
 reportCompare(0, 0);

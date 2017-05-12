@@ -58,7 +58,7 @@ public:
   // Returns nsEventStatus_eIgnore when the event is not consumed and
   // nsEventStatus_eConsumeNoDefault when the event was used to translate the
   // toolbar.
-  nsEventStatus ReceiveInputEvent(InputData& aEvent);
+  nsEventStatus ReceiveInputEvent(InputData& aEvent, const ScreenPoint& aScrollOffset);
   void SetMaxToolbarHeight(ScreenIntCoord aHeight);
   // When a pinned reason is set to true, the animator will prevent
   // touch events from altering the height of the toolbar. All pinned
@@ -69,8 +69,10 @@ public:
   void SetPinned(bool aPinned, int32_t aReason);
   // returns maximum number of Y device pixels the toolbar will cover when fully visible.
   ScreenIntCoord GetMaxToolbarHeight() const;
-  // returns the current number of Y device pixels the toolbar is currently showing.
+  // returns the current number of Y screen pixels the toolbar is currently showing.
   ScreenIntCoord GetCurrentToolbarHeight() const;
+  // returns the current number of Y screen pixels the content should be offset from the top of the surface.
+  ScreenIntCoord GetCurrentContentOffset() const;
   // returns the height in device pixels of the current Android surface used to display content and the toolbar.
   // This will only change when the surface provided by the system actually changes size such as when
   // the device is rotated or the virtual keyboard is made visible.
@@ -137,7 +139,7 @@ protected:
   void UpdateControllerCompositionHeight(ScreenIntCoord aHeight);
   void UpdateFixedLayerMargins();
   void NotifyControllerPendingAnimation(int32_t aDirection, AnimationStyle aStyle);
-  void StartCompositorAnimation(int32_t aDirection, AnimationStyle aStyle, ScreenIntCoord aHeight);
+  void StartCompositorAnimation(int32_t aDirection, AnimationStyle aStyle, ScreenIntCoord aHeight, bool aWaitForPageResize);
   void NotifyControllerAnimationStarted();
   void StopCompositorAnimation();
   void NotifyControllerAnimationStopped(ScreenIntCoord aHeight);
@@ -146,12 +148,18 @@ protected:
   void UpdateFrameMetrics(ScreenPoint aScrollOffset,
                           CSSToScreenScale aScale,
                           CSSRect aCssPageRect);
-  bool IsEnoughPageToHideToolbar(ScreenIntCoord delta);
+  // Returns true if the page is too small to animate the toolbar
+  // Also ensures the toolbar is visible.
+  bool PageTooSmallEnsureToolbarVisible();
   void ShowToolbarIfNotVisible(StaticToolbarState aCurrentToolbarState);
   void TranslateTouchEvent(MultiTouchInput& aTouchEvent);
   ScreenIntCoord GetFixedLayerMarginsBottom();
   void NotifyControllerSnapshotFailed();
   void CheckForResetOnNextMove(ScreenIntCoord aCurrentTouch);
+  // Returns true if the page scroll offset is near the bottom.
+  bool ScrollOffsetNearBottom() const;
+  // Returns true if toolbar is not completely visible nor completely hidden.
+  bool ToolbarInTransition();
   void QueueMessage(int32_t aMessage);
 
   // Read only Compositor and Controller threads after Initialize()
@@ -162,13 +170,13 @@ protected:
   Atomic<uint32_t> mPinnedFlags;            // The toolbar should not be moved or animated unless no flags are set
 
   // Controller thread only
-  bool    mControllerScrollingRootContent;     // Set to true when the root content is being scrolled
-  bool    mControllerDragThresholdReached;     // Set to true when the drag threshold has been passed in a single drag
-  bool    mControllerCancelTouchTracking;      // Set to true when the UI thread requests the toolbar be made visible
-  bool    mControllerDragChangedDirection;     // Set to true if the drag ever goes in more than one direction
-  bool    mControllerResetOnNextMove;          // Set to true if transitioning from multiple touches to a single touch source
-                                               // Causes mControllerStartTouch, mControllerPreviousTouch, mControllerTotalDistance,
-                                               // mControllerDragThresholdReached, and mControllerLastDragDirection to be reset on next move
+  bool mControllerScrollingRootContent; // Set to true when the root content is being scrolled
+  bool mControllerDragThresholdReached; // Set to true when the drag threshold has been passed in a single drag
+  bool mControllerCancelTouchTracking;  // Set to true when the UI thread requests the toolbar be made visible
+  bool mControllerDragChangedDirection; // Set to true if the drag ever goes in more than one direction
+  bool mControllerResetOnNextMove;      // Set to true if transitioning from multiple touches to a single touch source
+                                        // Causes mControllerStartTouch, mControllerPreviousTouch, mControllerTotalDistance,
+                                        // mControllerDragThresholdReached, and mControllerLastDragDirection to be reset on next move
   ScreenIntCoord mControllerStartTouch;        // The Y position where the touch started
   ScreenIntCoord mControllerPreviousTouch;     // The previous Y position of the touch
   ScreenIntCoord mControllerTotalDistance;     // Total distance travel during the current touch
@@ -176,6 +184,7 @@ protected:
   ScreenIntCoord mControllerToolbarHeight;     // Current height of the toolbar
   ScreenIntCoord mControllerSurfaceHeight;     // Current height of the render surface
   ScreenIntCoord mControllerCompositionHeight; // Current height of the visible page
+  ScreenCoord mControllerRootScrollY;          // Current scroll Y value of the root scroll frame
   int32_t mControllerLastDragDirection;        // Direction of movement of the previous touch move event
   int32_t mControllerTouchCount;               // Counts the number of current touches.
   uint32_t mControllerLastEventTimeStamp;      // Time stamp for the previous touch event received
@@ -195,7 +204,7 @@ protected:
   };
 
   // Controller thread only
-  FrameMetricsState mControllerFrameMetrics;
+  FrameMetricsState mControllerFrameMetrics; // Updated when frame metrics are in a steady state.
 
   class QueuedMessage : public LinkedListElement<QueuedMessage> {
   public:
@@ -209,9 +218,13 @@ protected:
   };
 
   // Compositor thread only
-  bool    mCompositorShutdown;
-  bool    mCompositorAnimationDeferred;           // An animation has been deferred until the toolbar is unlocked
-  bool    mCompositorLayersUpdateEnabled;         // Flag set to true when the UI thread is expecting to be notified when a layer has been updated
+  bool mCompositorShutdown;             // Set to true when the compositor has been shutdown
+  bool mCompositorAnimationDeferred;    // An animation has been deferred until the toolbar is unlocked
+  bool mCompositorLayersUpdateEnabled;  // Flag set to true when the UI thread is expecting to be notified when a layer has been updated
+  bool mCompositorAnimationStarted;     // Set to true when the compositor has actually started animating the static snapshot.
+  bool mCompositorReceivedFirstPaint;   // Set to true when a first paint occurs. Used by toolbar animator to detect a new page load.
+  bool mCompositorWaitForPageResize;    // Set to true if the bottom of the page has been reached and the toolbar animator should wait for the page to resize before ending animation.
+  bool mCompositorToolbarShowRequested; // Set to true if the animator has already requested the real toolbar chrome be shown
   AnimationStyle mCompositorAnimationStyle;       // Set to true when the snap should be immediately hidden or shown in the animation update
   ScreenIntCoord mCompositorMaxToolbarHeight;     // Should contain the same value as mControllerMaxToolbarHeight
   ScreenIntCoord mCompositorToolbarHeight;        // This value is only updated by the compositor thread when the mToolbarState == ToolbarAnimating

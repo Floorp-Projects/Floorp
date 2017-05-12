@@ -660,6 +660,8 @@ public:
 
   nsresult TransmitPermissionsForPrincipal(nsIPrincipal* aPrincipal);
 
+  void OnCompositorDeviceReset() override;
+
 protected:
   void OnChannelConnected(int32_t pid) override;
 

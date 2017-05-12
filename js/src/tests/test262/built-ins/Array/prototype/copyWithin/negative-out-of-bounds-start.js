@@ -24,11 +24,28 @@ assert(
 
 assert(
   compareArray(
+    [1, 2, 3, 4, 5].copyWithin(0, -Infinity),
+    [1, 2, 3, 4, 5]
+  ),
+  '[1, 2, 3, 4, 5].copyWithin(0, -Infinity) -> [1, 2, 3, 4, 5]'
+);
+
+assert(
+  compareArray(
     [0, 1, 2, 3, 4].copyWithin(2, -10),
     [0, 1, 0, 1, 2]
   ),
   '[0, 1, 2, 3, 4].copyWithin(2, -2) -> [0, 1, 0, 1, 2]'
 );
+
+assert(
+  compareArray(
+    [1, 2, 3, 4, 5].copyWithin(2, -Infinity),
+    [1, 2, 1, 2, 3]
+  ),
+  '[1, 2, 3, 4, 5].copyWithin(2, -Infinity) -> [1, 2, 1, 2, 3]'
+);
+
 
 assert(
   compareArray(
@@ -40,10 +57,27 @@ assert(
 
 assert(
   compareArray(
+    [1, 2, 3, 4, 5].copyWithin(10, -Infinity),
+    [1, 2, 3, 4, 5]
+  ),
+  '[1, 2, 3, 4, 5].copyWithin(10, -Infinity) -> [1, 2, 3, 4, 5]'
+);
+
+
+assert(
+  compareArray(
     [0, 1, 2, 3].copyWithin(-9, -10),
     [0, 1, 2, 3]
   ),
   '[0, 1, 2, 3].copyWithin(-9, -10) -> [0, 1, 2, 3]'
+);
+
+assert(
+  compareArray(
+    [1, 2, 3, 4, 5].copyWithin(-9, -Infinity),
+    [1, 2, 3, 4, 5]
+  ),
+  '[1, 2, 3, 4, 5].copyWithin(-9, -Infinity) -> [1, 2, 3, 4, 5]'
 );
 
 reportCompare(0, 0);

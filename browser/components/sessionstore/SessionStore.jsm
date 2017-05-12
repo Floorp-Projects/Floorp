@@ -3278,10 +3278,21 @@ var SessionStoreInternal = {
       this._prefBranch.getBoolPref("sessionstore.restore_on_demand");
 
     for (var t = 0; t < newTabCount; t++) {
-      let userContextId = winData.tabs[t].userContextId;
+      let tabData = winData.tabs[t];
+
+      let userContextId = tabData.userContextId;
       let select = t == selectTab - 1;
-      let createLazyBrowser = restoreTabsLazily && !select && !winData.tabs[t].pinned;
-      let tab = tabbrowser.addTab("about:blank",
+      let createLazyBrowser = restoreTabsLazily && !select && !tabData.pinned;
+
+      let url = "about:blank";
+      if (createLazyBrowser) {
+        // Let tabbrowser know the future URI because progress listeners won't
+        // get onLocationChange notification before the browser is inserted.
+        let activeIndex = (tabData.index || tabData.entries.length) - 1;
+        url = tabData.entries[activeIndex].url;
+      }
+
+      let tab = tabbrowser.addTab(url,
                                   { createLazyBrowser,
                                     skipAnimation: true,
                                     userContextId,
@@ -3301,7 +3312,7 @@ var SessionStoreInternal = {
 
       tabs.push(tab);
 
-      if (winData.tabs[t].hidden) {
+      if (tabData.hidden) {
         tabbrowser.hideTab(tabs[t]);
       }
     }

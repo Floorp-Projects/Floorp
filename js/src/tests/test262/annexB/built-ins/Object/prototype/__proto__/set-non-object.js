@@ -12,10 +12,26 @@ features: [Symbol]
 ---*/
 
 var set = Object.getOwnPropertyDescriptor(Object.prototype, '__proto__').set;
+var subject = {};
 
 assert.sameValue(set.call(true), undefined, 'boolean');
+assert.sameValue(
+  Object.getPrototypeOf(subject), Object.prototype, 'following boolean'
+);
+
 assert.sameValue(set.call(1), undefined, 'number');
+assert.sameValue(
+  Object.getPrototypeOf(subject), Object.prototype, 'following number'
+);
+
 assert.sameValue(set.call('string'), undefined, 'string');
+assert.sameValue(
+  Object.getPrototypeOf(subject), Object.prototype, 'following string'
+);
+
 assert.sameValue(set.call(Symbol('')), undefined, 'symbol');
+assert.sameValue(
+  Object.getPrototypeOf(subject), Object.prototype, 'following symbol'
+);
 
 reportCompare(0, 0);
