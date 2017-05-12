@@ -155,7 +155,3 @@ locale
 For jobs that operate on only one locale, we set the attribute ``locale`` to the
 specific locale involved. Currently this is only in l10n versions of the
 ``beetmover`` and ``balrog`` kinds.
-
-signed
-======
-Signals that the output of this task contains signed artifacts.
