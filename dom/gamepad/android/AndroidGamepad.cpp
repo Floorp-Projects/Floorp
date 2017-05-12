@@ -65,7 +65,9 @@ public:
     MOZ_ASSERT(valid.Length() == values.Length());
 
     for (size_t i = 0; i < values.Length(); i++) {
-      service->NewAxisMoveEvent(aID, i, values[i]);
+      if (valid[i]) {
+        service->NewAxisMoveEvent(aID, i, values[i]);
+      }
     }
   }
 };
