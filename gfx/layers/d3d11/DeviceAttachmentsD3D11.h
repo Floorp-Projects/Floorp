@@ -73,6 +73,13 @@ public:
   RefPtr<IDXGIResource> mSyncTexture;
   HANDLE mSyncHandle;
 
+  void SetDeviceReset() {
+    mDeviceReset = true;
+  }
+  bool IsDeviceReset() const {
+    return mDeviceReset;
+  }
+
 private:
   explicit DeviceAttachmentsD3D11(ID3D11Device* device);
   ~DeviceAttachmentsD3D11();
@@ -100,6 +107,7 @@ private:
   RefPtr<ID3D11Device> mDevice;
   bool mContinueInit;
   bool mInitialized;
+  bool mDeviceReset;
   nsCString mInitFailureId;
 };
 
