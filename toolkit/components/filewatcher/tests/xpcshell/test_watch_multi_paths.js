@@ -20,7 +20,7 @@ function run_test() {
  * The test keeps track of the number of times the changes callback is
  * called in order to verify the success of the test.
  */
-add_task(function* test_watch_multi_paths() {
+add_task(async function test_watch_multi_paths() {
 
   // The number of resources to watch. We expect changes for
   // creating a file within each directory.
@@ -86,22 +86,22 @@ add_task(function* test_watch_multi_paths() {
   for (let i = 0; i < resourcesToWatch; i++) {
     let tmpSubDirPath = OS.Path.join(watchedDir, tempDirNameBase + i);
     do_print("Creating the " + tmpSubDirPath + " directory.");
-    yield OS.File.makeDir(tmpSubDirPath);
+    await OS.File.makeDir(tmpSubDirPath);
     watcher.addPath(tmpSubDirPath, changeCallback, deferredChanges.reject, watchSuccessCallback);
   }
 
   // Wait until the watcher informs us that all the desired resources
   // are being watched.
-  yield deferredSuccesses.promise;
+  await deferredSuccesses.promise;
 
   // Create a file within each watched directory.
   for (let i = 0; i < resourcesToWatch; i++) {
     let tmpFilePath = OS.Path.join(watchedDir, tempDirNameBase + i, tempFileName);
-    yield OS.File.writeAtomic(tmpFilePath, "test content");
+    await OS.File.writeAtomic(tmpFilePath, "test content");
   }
 
   // Wait until the watcher informs us that all the files were created.
-  yield deferredChanges.promise;
+  await deferredChanges.promise;
 
   // Remove the directories we have created.
   for (let i = 0; i < resourcesToWatch; i++) {
@@ -110,5 +110,5 @@ add_task(function* test_watch_multi_paths() {
   }
 
   // Wait until the watcher un-watches the resources.
-  yield deferredShutdown.promise;
+  await deferredShutdown.promise;
 });

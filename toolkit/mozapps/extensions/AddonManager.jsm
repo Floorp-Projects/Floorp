@@ -77,8 +77,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/AsyncShutdown.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
                                   "resource://gre/modules/Preferences.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
@@ -1107,7 +1105,7 @@ var AddonManagerInternal = {
    * @return Promise{null} that resolves when all providers and dependent modules
    *                       have finished shutting down
    */
-  shutdownManager: Task.async(function*() {
+  async shutdownManager() {
     logger.debug("shutdown");
     this.callManagerListeners("onShutdown");
 
@@ -1127,7 +1125,7 @@ var AddonManagerInternal = {
     // Only shut down providers if they've been started.
     if (gStarted) {
       try {
-        yield gShutdownBarrier.wait();
+        await gShutdownBarrier.wait();
       } catch (err) {
         savedError = err;
         logger.error("Failure during wait for shutdown barrier", err);
@@ -1138,7 +1136,7 @@ var AddonManagerInternal = {
     // Shut down AddonRepository after providers (if any).
     try {
       gRepoShutdownState = "in progress";
-      yield AddonRepository.shutdown();
+      await AddonRepository.shutdown();
       gRepoShutdownState = "done";
     } catch (err) {
       savedError = err;
@@ -1161,7 +1159,7 @@ var AddonManagerInternal = {
     if (savedError) {
       throw savedError;
     }
-  }),
+  },
 
   requestPlugins({ target: port }) {
     // Lists all the properties that plugins.html needs
@@ -1356,7 +1354,7 @@ var AddonManagerInternal = {
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
 
-    let buPromise = Task.spawn(function*() {
+    let buPromise = (async () => {
       let hotfixID = this.hotfixID;
 
       let appUpdateEnabled = Services.prefs.getBoolPref(PREF_APP_UPDATE_ENABLED) &&
@@ -1372,11 +1370,11 @@ var AddonManagerInternal = {
         Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm", scope);
         scope.LightweightThemeManager.updateCurrentTheme();
 
-        let allAddons = yield this.getAllAddons();
+        let allAddons = await this.getAllAddons();
 
         // Repopulate repository cache first, to ensure compatibility overrides
         // are up to date before checking for addon updates.
-        yield AddonRepository.backgroundUpdateCheck();
+        await AddonRepository.backgroundUpdateCheck();
 
         // Keep track of all the async add-on updates happening in parallel
         let updates = [];
@@ -1410,7 +1408,7 @@ var AddonManagerInternal = {
             }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
           }));
         }
-        yield Promise.all(updates);
+        await Promise.all(updates);
       }
 
       if (checkHotfix) {
@@ -1433,7 +1431,7 @@ var AddonManagerInternal = {
         Components.utils.import("resource://gre/modules/addons/AddonUpdateChecker.jsm");
         let update = null;
         try {
-          let foundUpdates = yield new Promise((resolve, reject) => {
+          let foundUpdates = await new Promise((resolve, reject) => {
             AddonUpdateChecker.checkForUpdates(hotfixID, null, url, {
               onUpdateCheckComplete: resolve,
               onUpdateCheckError: reject
@@ -1449,7 +1447,7 @@ var AddonManagerInternal = {
         if (update) {
           if (Services.vc.compare(hotfixVersion, update.version) < 0) {
             logger.debug("Downloading hotfix version " + update.version);
-            let aInstall = yield AddonManagerInternal.getInstallForURL(
+            let aInstall = await AddonManagerInternal.getInstallForURL(
                 update.updateURL, "application/x-xpinstall", update.updateHash,
                 null, null, update.version);
 
@@ -1506,7 +1504,7 @@ var AddonManagerInternal = {
 
       if (appUpdateEnabled) {
         try {
-          yield AddonManagerInternal._getProviderByName("XPIProvider").updateSystemAddons();
+          await AddonManagerInternal._getProviderByName("XPIProvider").updateSystemAddons();
         } catch (e) {
           logger.warn("Failed to update system addons", e);
         }
@@ -1515,7 +1513,7 @@ var AddonManagerInternal = {
       logger.debug("Background update check complete");
       Services.obs.notifyObservers(null,
                                    "addons-background-update-complete");
-    }.bind(this));
+    })();
     // Fork the promise chain so we can log the error and let our caller see it too.
     buPromise.then(null, e => logger.warn("Error in background update", e));
     return buPromise;
@@ -1746,14 +1744,14 @@ var AddonManagerInternal = {
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
 
-    return Task.spawn(function*() {
+    return (async () => {
       for (let provider of this.providers) {
-        yield promiseCallProvider(provider, "updateAddonRepositoryData");
+        await promiseCallProvider(provider, "updateAddonRepositoryData");
       }
 
       // only tests should care about this
       Services.obs.notifyObservers(null, "TEST:addon-repository-data-updated");
-    }.bind(this));
+    })();
   },
 
   /**
@@ -1848,9 +1846,9 @@ var AddonManagerInternal = {
       throw Components.Exception("aMimetype must be a string or null",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-    return Task.spawn(function*() {
+    return (async () => {
       for (let provider of this.providers) {
-        let install = yield promiseCallProvider(
+        let install = await promiseCallProvider(
           provider, "getInstallForFile", aFile);
 
         if (install)
@@ -1858,7 +1856,7 @@ var AddonManagerInternal = {
       }
 
       return null;
-    }.bind(this));
+    })();
   },
 
   /**
@@ -1878,11 +1876,11 @@ var AddonManagerInternal = {
       throw Components.Exception("aTypes must be an array or null",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-    return Task.spawn(function*() {
+    return (async () => {
       let installs = [];
 
       for (let provider of this.providers) {
-        let providerInstalls = yield promiseCallProvider(
+        let providerInstalls = await promiseCallProvider(
           provider, "getInstallsByTypes", aTypes);
 
         if (providerInstalls)
@@ -1890,7 +1888,7 @@ var AddonManagerInternal = {
       }
 
       return installs;
-    }.bind(this));
+    })();
   },
 
   /**
@@ -2434,9 +2432,9 @@ var AddonManagerInternal = {
       throw Components.Exception("aGUID must be a non-empty string",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-    return Task.spawn(function*() {
+    return (async () => {
       for (let provider of this.providers) {
-        let addon = yield promiseCallProvider(
+        let addon = await promiseCallProvider(
           provider, "getAddonBySyncGUID", aGUID);
 
         if (addon)
@@ -2444,7 +2442,7 @@ var AddonManagerInternal = {
       }
 
       return null;
-    }.bind(this));
+    })();
   },
 
   /**
@@ -2485,11 +2483,11 @@ var AddonManagerInternal = {
       throw Components.Exception("aTypes must be an array or null",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-    return Task.spawn(function*() {
+    return (async () => {
       let addons = [];
 
       for (let provider of this.providers) {
-        let providerAddons = yield promiseCallProvider(
+        let providerAddons = await promiseCallProvider(
           provider, "getAddonsByTypes", aTypes);
 
         if (providerAddons)
@@ -2497,7 +2495,7 @@ var AddonManagerInternal = {
       }
 
       return addons;
-    }.bind(this));
+    })();
   },
 
   /**
@@ -2527,11 +2525,11 @@ var AddonManagerInternal = {
       throw Components.Exception("aTypes must be an array or null",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-    return Task.spawn(function*() {
+    return (async () => {
       let addons = [];
 
       for (let provider of this.providers) {
-        let providerAddons = yield promiseCallProvider(
+        let providerAddons = await promiseCallProvider(
           provider, "getAddonsWithOperationsByTypes", aTypes);
 
         if (providerAddons)
@@ -2539,7 +2537,7 @@ var AddonManagerInternal = {
       }
 
       return addons;
-    }.bind(this));
+    })();
   },
 
   /**

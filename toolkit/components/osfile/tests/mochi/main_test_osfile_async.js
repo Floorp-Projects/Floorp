@@ -2,7 +2,6 @@
 
 Components.utils.import("resource://gre/modules/osfile.jsm");
 Components.utils.import("resource://gre/modules/Promise.jsm");
-Components.utils.import("resource://gre/modules/Task.jsm");
 Components.utils.import("resource://gre/modules/AsyncShutdown.jsm");
 
 // The following are used to compare against a well-tested reference
@@ -87,31 +86,31 @@ var maketest = function(prefix, test) {
  */
 var reference_fetch_file = function reference_fetch_file(path, test) {
   test.info("Fetching file " + path);
-  let promise = Promise.defer();
-  let file = new FileUtils.File(path);
-  NetUtil.asyncFetch({
-    uri: NetUtil.newURI(file),
-    loadUsingSystemPrincipal: true
-  }, function(stream, status) {
-      if (!Components.isSuccessCode(status)) {
-        promise.reject(status);
-        return;
-      }
-      let result, reject;
-      try {
-        result = NetUtil.readInputStreamToString(stream, stream.available());
-      } catch (x) {
-        reject = x;
-      }
-      stream.close();
-      if (reject) {
-        promise.reject(reject);
-      } else {
-        promise.resolve(result);
-      }
-    });
+  return new Promise((resolve, reject) => {
+    let file = new FileUtils.File(path);
+    NetUtil.asyncFetch({
+      uri: NetUtil.newURI(file),
+      loadUsingSystemPrincipal: true
+    }, function(stream, status) {
+        if (!Components.isSuccessCode(status)) {
+          reject(status);
+          return;
+        }
+        let result, reject;
+        try {
+          result = NetUtil.readInputStreamToString(stream, stream.available());
+        } catch (x) {
+          reject = x;
+        }
+        stream.close();
+        if (reject) {
+          reject(reject);
+        } else {
+          resolve(result);
+        }
+      });
 
-  return promise.promise;
+  });
 };
 
 var reference_dir_contents = function reference_dir_contents(path) {
@@ -133,18 +132,18 @@ function toggleDebugTest (pref, consoleListener) {
 }
 
 var test = maketest("Main", function main(test) {
-  return Task.spawn(function*() {
+  return (async function() {
     SimpleTest.waitForExplicitFinish();
-    yield test_stat();
-    yield test_debug();
-    yield test_info_features_detect();
-    yield test_position();
-    yield test_iter();
-    yield test_exists();
-    yield test_debug_test();
+    await test_stat();
+    await test_debug();
+    await test_info_features_detect();
+    await test_position();
+    await test_iter();
+    await test_exists();
+    await test_debug_test();
     info("Test is over");
     SimpleTest.finish();
-  });
+  })();
 });
 
 /**
@@ -157,36 +156,36 @@ var EXISTING_FILE = OS.Path.join("chrome", "toolkit", "components",
  * Test OS.File.stat and OS.File.prototype.stat
  */
 var test_stat = maketest("stat", function stat(test) {
-  return Task.spawn(function*() {
+  return (async function() {
     // Open a file and stat it
-    let file = yield OS.File.open(EXISTING_FILE);
+    let file = await OS.File.open(EXISTING_FILE);
     let stat1;
 
     try {
       test.info("Stating file");
-      stat1 = yield file.stat();
+      stat1 = await file.stat();
       test.ok(true, "stat has worked " + stat1);
       test.ok(stat1, "stat is not empty");
     } finally {
-      yield file.close();
+      await file.close();
     }
 
     // Stat the same file without opening it
     test.info("Stating a file without opening it");
-    let stat2 = yield OS.File.stat(EXISTING_FILE);
+    let stat2 = await OS.File.stat(EXISTING_FILE);
     test.ok(true, "stat 2 has worked " + stat2);
     test.ok(stat2, "stat 2 is not empty");
     for (let key in stat2) {
       test.is("" + stat1[key], "" + stat2[key], "Stat field " + key + "is the same");
     }
-  });
+  })();
 });
 
 /**
  * Test feature detection using OS.File.Info.prototype on main thread
  */
 var test_info_features_detect = maketest("features_detect", function features_detect(test) {
-  return Task.spawn(function() {
+  return (async function() {
     if (OS.Constants.Win) {
       // see if winBirthDate is defined
       if ("winBirthDate" in OS.File.Info.prototype) {
@@ -202,28 +201,28 @@ var test_info_features_detect = maketest("features_detect", function features_de
         test.fail("unixGroup is not defined though we are under Unix");
       }
     }
-  });
+  })();
 });
 
 /**
  * Test file.{getPosition, setPosition}
  */
 var test_position = maketest("position", function position(test) {
-  return Task.spawn(function*() {
-    let file = yield OS.File.open(EXISTING_FILE);
+  return (async function() {
+    let file = await OS.File.open(EXISTING_FILE);
 
     try {
-      let view = yield file.read();
+      let view = await file.read();
       test.info("First batch of content read");
       let CHUNK_SIZE = 178;// An arbitrary number of bytes to read from the file
-      let pos = yield file.getPosition();
+      let pos = await file.getPosition();
       test.info("Obtained position");
       test.is(pos, view.byteLength, "getPosition returned the end of the file");
-      pos = yield file.setPosition(-CHUNK_SIZE, OS.File.POS_END);
+      pos = await file.setPosition(-CHUNK_SIZE, OS.File.POS_END);
       test.info("Changed position");
       test.is(pos, view.byteLength - CHUNK_SIZE, "setPosition returned the correct position");
 
-      let view2 = yield file.read();
+      let view2 = await file.read();
       test.info("Read the end of the file");
       for (let i = 0; i < CHUNK_SIZE; ++i) {
         if (view2[i] != view[i + view.byteLength - CHUNK_SIZE]) {
@@ -231,28 +230,28 @@ var test_position = maketest("position", function position(test) {
         }
       }
     } finally {
-      yield file.close();
+      await file.close();
     }
-  });
+  })();
 });
 
 /**
  * Test OS.File.prototype.{DirectoryIterator}
  */
 var test_iter = maketest("iter", function iter(test) {
-  return Task.spawn(function*() {
-    let currentDir = yield OS.File.getCurrentDirectory();
+  return (async function() {
+    let currentDir = await OS.File.getCurrentDirectory();
 
     // Trivial walks through the directory
     test.info("Preparing iteration");
     let iterator = new OS.File.DirectoryIterator(currentDir);
     let temporary_file_name = OS.Path.join(currentDir, "empty-temporary-file.tmp");
     try {
-      yield OS.File.remove(temporary_file_name);
+      await OS.File.remove(temporary_file_name);
     } catch (err) {
       // Ignore errors removing file
     }
-    let allFiles1 = yield iterator.nextBatch();
+    let allFiles1 = await iterator.nextBatch();
     test.info("Obtained all files through nextBatch");
     test.isnot(allFiles1.length, 0, "There is at least one file");
     test.isnot(allFiles1[0].path, null, "Files have a path");
@@ -272,19 +271,19 @@ var test_iter = maketest("iter", function iter(test) {
       test.is(entry.isSymLink, f.isSymlink(), "Get file " + entry.path + " isSymLink correctly");
     }
 
-    yield iterator.close();
+    await iterator.close();
     test.info("Closed iterator");
 
     test.info("Double closing DirectoryIterator");
     iterator = new OS.File.DirectoryIterator(currentDir);
-    yield iterator.close();
-    yield iterator.close(); //double closing |DirectoryIterator|
+    await iterator.close();
+    await iterator.close(); //double closing |DirectoryIterator|
     test.ok(true, "|DirectoryIterator| was closed twice successfully");
 
     let allFiles2 = [];
     let i = 0;
     iterator = new OS.File.DirectoryIterator(currentDir);
-    yield iterator.forEach(function(entry, index) {
+    await iterator.forEach(function(entry, index) {
       test.is(i++, index, "Getting the correct index");
       allFiles2.push(entry);
     });
@@ -300,15 +299,15 @@ var test_iter = maketest("iter", function iter(test) {
     // Testing batch iteration + whether an iteration can be stopped early
     let BATCH_LENGTH = 10;
     test.info("Getting some files through nextBatch");
-    yield iterator.close();
+    await iterator.close();
 
     iterator = new OS.File.DirectoryIterator(currentDir);
-    let someFiles1 = yield iterator.nextBatch(BATCH_LENGTH);
-    let someFiles2 = yield iterator.nextBatch(BATCH_LENGTH);
-    yield iterator.close();
+    let someFiles1 = await iterator.nextBatch(BATCH_LENGTH);
+    let someFiles2 = await iterator.nextBatch(BATCH_LENGTH);
+    await iterator.close();
 
     iterator = new OS.File.DirectoryIterator(currentDir);
-    yield iterator.forEach(function cb(entry, index, iterator) {
+    await iterator.forEach(function cb(entry, index, iterator) {
       if (index < BATCH_LENGTH) {
         test.is(entry.path, someFiles1[index].path, "Both runs return the same files (part 1)");
       } else if (index < 2*BATCH_LENGTH) {
@@ -321,19 +320,19 @@ var test_iter = maketest("iter", function iter(test) {
       }
       return null;
     });
-    yield iterator.close();
+    await iterator.close();
 
     // Ensuring that we find new files if they appear
-    let file = yield OS.File.open(temporary_file_name, { write: true } );
+    let file = await OS.File.open(temporary_file_name, { write: true } );
     file.close();
     iterator = new OS.File.DirectoryIterator(currentDir);
     try {
-      let files = yield iterator.nextBatch();
+      let files = await iterator.nextBatch();
       is(files.length, allFiles1.length + 1, "The directory iterator has noticed the new file");
-      let exists = yield iterator.exists();
+      let exists = await iterator.exists();
       test.ok(exists, "After nextBatch, iterator detects that the directory exists");
     } finally {
-      yield iterator.close();
+      await iterator.close();
     }
 
     // Ensuring that opening a non-existing directory fails consistently
@@ -341,14 +340,14 @@ var test_iter = maketest("iter", function iter(test) {
     try {
       iterator = null;
       iterator = new OS.File.DirectoryIterator("/I do not exist");
-      let exists = yield iterator.exists();
+      let exists = await iterator.exists();
       test.ok(!exists, "Before any iteration, iterator detects that the directory doesn't exist");
       let exn = null;
       try {
-        yield iterator.next();
+        await iterator.next();
       } catch (ex if ex instanceof OS.File.Error && ex.becauseNoSuchFile) {
         exn = ex;
-        let exists = yield iterator.exists();
+        let exists = await iterator.exists();
         test.ok(!exists, "After one iteration, iterator detects that the directory doesn't exist");
       }
       test.ok(exn, "Iterating through a directory that does not exist has failed with becauseNoSuchFile");
@@ -358,26 +357,26 @@ var test_iter = maketest("iter", function iter(test) {
       }
     }
     test.ok(!!iterator, "The directory iterator for a non-existing directory was correctly created");
-  });
+  })();
 });
 
 /**
  * Test OS.File.prototype.{exists}
  */
 var test_exists = maketest("exists", function exists(test) {
-  return Task.spawn(function*() {
-    let fileExists = yield OS.File.exists(EXISTING_FILE);
+  return (async function() {
+    let fileExists = await OS.File.exists(EXISTING_FILE);
     test.ok(fileExists, "file exists");
-    fileExists = yield OS.File.exists(EXISTING_FILE + ".tmp");
+    fileExists = await OS.File.exists(EXISTING_FILE + ".tmp");
     test.ok(!fileExists, "file does not exists");
-  });
+  })();
 });
 
 /**
  * Test changes to OS.Shared.DEBUG flag.
  */
 var test_debug = maketest("debug", function debug(test) {
-  return Task.spawn(function*() {
+  return (async function() {
     function testSetDebugPref (pref) {
       try {
         Services.prefs.setBoolPref("toolkit.osfile.log", pref);
@@ -389,12 +388,12 @@ var test_debug = maketest("debug", function debug(test) {
       }
     }
     testSetDebugPref(true);
-    let workerDEBUG = yield OS.File.GET_DEBUG();
+    let workerDEBUG = await OS.File.GET_DEBUG();
     test.is(workerDEBUG, true, "Worker's DEBUG is set.");
     testSetDebugPref(false);
-    workerDEBUG = yield OS.File.GET_DEBUG();
+    workerDEBUG = await OS.File.GET_DEBUG();
     test.is(workerDEBUG, false, "Worker's DEBUG is unset.");
-  });
+  })();
 });
 
 /**
@@ -402,7 +401,7 @@ var test_debug = maketest("debug", function debug(test) {
  * OS.Shared.TEST flags.
  */
 var test_debug_test = maketest("debug_test", function debug_test(test) {
-  return Task.spawn(function* () {
+  return (async function() {
     // Create a console listener.
     let consoleListener = {
       observe: function (aMessage) {
@@ -418,9 +417,9 @@ var test_debug_test = maketest("debug_test", function debug_test(test) {
     };
     toggleDebugTest(true, consoleListener);
     // Execution of OS.File.exist method will trigger OS.File.LOG several times.
-    let fileExists = yield OS.File.exists(EXISTING_FILE);
+    let fileExists = await OS.File.exists(EXISTING_FILE);
     toggleDebugTest(false, consoleListener);
-  });
+  })();
 });
 
 

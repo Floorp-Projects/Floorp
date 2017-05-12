@@ -26,17 +26,17 @@ function removeProvider(provider) {
 }
 
 function postTestCleanup(callback) {
-  Task.spawn(function* () {
+  (async function() {
     // any tabs opened by the test.
     for (let tab of tabsToRemove) {
-      yield BrowserTestUtils.removeTab(tab);
+      await BrowserTestUtils.removeTab(tab);
     }
     tabsToRemove = [];
     // all the providers may have been added.
     while (Social.providers.length > 0) {
-      yield removeProvider(Social.providers[0]);
+      await removeProvider(Social.providers[0]);
     }
-  }).then(callback);
+  })().then(callback);
 }
 
 function newTab(url) {
@@ -111,14 +111,14 @@ function clickAddonRemoveButton(tab, aCallback) {
 }
 
 function activateOneProvider(manifest, finishActivation, aCallback) {
-  Task.spawn(function* () {
+  (async function() {
     info("activating provider " + manifest.name);
 
     // Wait for the helper callback and the popup shown event in any order.
     let popupShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
                                                    "popupshown");
-    yield new Promise(resolve => activateProvider(manifest.origin, resolve));
-    yield popupShown;
+    await new Promise(resolve => activateProvider(manifest.origin, resolve));
+    await popupShown;
 
     info("servicesInstall-notification panel opened");
 
@@ -130,7 +130,7 @@ function activateOneProvider(manifest, finishActivation, aCallback) {
 
     // We need to wait for PopupNotifications.jsm to place the element.
     let notification;
-    yield BrowserTestUtils.waitForCondition(
+    await BrowserTestUtils.waitForCondition(
           () => (notification = PopupNotifications.panel.childNodes[0]));
     is(notification.id, "servicesInstall-notification");
 
@@ -140,15 +140,15 @@ function activateOneProvider(manifest, finishActivation, aCallback) {
       notification.closebutton.click();
     }
 
-    yield providerLoaded;
-    yield popupHidden;
+    await providerLoaded;
+    await popupHidden;
 
     info("servicesInstall-notification panel hidden");
 
     if (finishActivation) {
       checkSocialUI();
     }
-  }).then(() => executeSoon(aCallback)).catch(ex => ok(false, ex));
+  })().then(() => executeSoon(aCallback)).catch(ex => ok(false, ex));
 }
 
 var gTestDomains = ["https://example.com", "https://test1.example.com", "https://test2.example.com"];

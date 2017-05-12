@@ -1,16 +1,16 @@
 /*
  * This test checks that keyboard navigation for tabs isn't blocked by content
  */
-add_task(function* test() {
+add_task(async function test() {
 
   let testPage1 = "data:text/html,<html id='tab1'><body><button id='button1'>Tab 1</button></body></html>";
   let testPage2 = "data:text/html,<html id='tab2'><body><button id='button2'>Tab 2</button><script>function preventDefault(event) { event.preventDefault(); event.stopImmediatePropagation(); } window.addEventListener('keydown', preventDefault, true); window.addEventListener('keypress', preventDefault, true);</script></body></html>";
   let testPage3 = "data:text/html,<html id='tab3'><body><button id='button3'>Tab 3</button></body></html>";
 
-  let tab1 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, testPage1);
+  let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, testPage1);
   let browser1 = gBrowser.getBrowserForTab(tab1);
-  let tab2 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, testPage2);
-  let tab3 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, testPage3);
+  let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, testPage2);
+  let tab3 = await BrowserTestUtils.openNewForegroundTab(gBrowser, testPage3);
 
   // Kill the animation for simpler test.
   Services.prefs.setBoolPref("toolkit.cosmeticAnimations.enabled", false);

@@ -2,8 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* testDuplicateTab() {
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.net/");
+add_task(async function testDuplicateTab() {
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.net/");
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -31,16 +31,16 @@ add_task(function* testDuplicateTab() {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("tabs.duplicate");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("tabs.duplicate");
+  await extension.unload();
 
   while (gBrowser.tabs[0].linkedBrowser.currentURI.spec === "http://example.net/") {
-    yield BrowserTestUtils.removeTab(gBrowser.tabs[0]);
+    await BrowserTestUtils.removeTab(gBrowser.tabs[0]);
   }
 });
 
-add_task(function* testDuplicateTabLazily() {
+add_task(async function testDuplicateTabLazily() {
   async function background() {
     let tabLoadComplete = new Promise(resolve => {
       browser.test.onMessage.addListener((message, tabId, result) => {
@@ -105,13 +105,13 @@ add_task(function* testDuplicateTabLazily() {
     });
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("tabs.hasCorrectTabTitle");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("tabs.hasCorrectTabTitle");
+  await extension.unload();
 });
 
-add_task(function* testDuplicatePinnedTab() {
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.net/");
+add_task(async function testDuplicatePinnedTab() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.net/");
   gBrowser.pinTab(tab);
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -136,11 +136,11 @@ add_task(function* testDuplicatePinnedTab() {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("tabs.duplicate.pinned");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("tabs.duplicate.pinned");
+  await extension.unload();
 
   while (gBrowser.tabs[0].linkedBrowser.currentURI.spec === "http://example.net/") {
-    yield BrowserTestUtils.removeTab(gBrowser.tabs[0]);
+    await BrowserTestUtils.removeTab(gBrowser.tabs[0]);
   }
 });

@@ -5,7 +5,6 @@
 
 var {OS} = Cu.import("resource://gre/modules/osfile.jsm", {});
 var {XPCOMUtils} = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
-var {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 var {SessionWorker} = Cu.import("resource:///modules/sessionstore/SessionWorker.jsm", {});
 
 var File = OS.File;
@@ -25,7 +24,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* init() {
+add_task(async function init() {
   // Make sure that we have a profile before initializing SessionFile
   let profd = do_get_profile();
   SessionFile = Cu.import("resource:///modules/sessionstore/SessionFile.jsm", {}).SessionFile;
@@ -36,7 +35,7 @@ add_task(function* init() {
   source.copyTo(profd, "sessionstore.js");
 
   // Finish initialization of SessionFile
-  yield SessionFile.read();
+  await SessionFile.read();
 });
 
 var pathStore;
@@ -44,20 +43,20 @@ var pathBackup;
 var decoder;
 
 function promise_check_exist(path, shouldExist) {
-  return Task.spawn(function*() {
+  return (async function() {
     do_print("Ensuring that " + path + (shouldExist ? " exists" : " does not exist"));
-    if ((yield OS.File.exists(path)) != shouldExist) {
+    if ((await OS.File.exists(path)) != shouldExist) {
       throw new Error("File " + path + " should " + (shouldExist ? "exist" : "not exist"));
     }
-  });
+  })();
 }
 
 function promise_check_contents(path, expect) {
-  return Task.spawn(function*() {
+  return (async function() {
     do_print("Checking whether " + path + " has the right contents");
-    let actual = yield OS.File.read(path, { encoding: "utf-8"});
+    let actual = await OS.File.read(path, { encoding: "utf-8"});
     Assert.deepEqual(JSON.parse(actual), expect, `File ${path} contains the expected data.`);
-  });
+  })();
 }
 
 function generateFileContents(id) {
@@ -68,63 +67,63 @@ function generateFileContents(id) {
 // Write to the store, and check that it creates:
 // - $Path.recovery with the new data
 // - $Path.nextUpgradeBackup with the old data
-add_task(function* test_first_write_backup() {
+add_task(async function test_first_write_backup() {
   let initial_content = generateFileContents("initial");
   let new_content = generateFileContents("test_1");
 
   do_print("Before the first write, none of the files should exist");
-  yield promise_check_exist(Paths.backups, false);
+  await promise_check_exist(Paths.backups, false);
 
-  yield File.makeDir(Paths.backups);
-  yield File.writeAtomic(Paths.clean, JSON.stringify(initial_content), { encoding: "utf-8" });
-  yield SessionFile.write(new_content);
+  await File.makeDir(Paths.backups);
+  await File.writeAtomic(Paths.clean, JSON.stringify(initial_content), { encoding: "utf-8" });
+  await SessionFile.write(new_content);
 
   do_print("After first write, a few files should have been created");
-  yield promise_check_exist(Paths.backups, true);
-  yield promise_check_exist(Paths.clean, false);
-  yield promise_check_exist(Paths.cleanBackup, true);
-  yield promise_check_exist(Paths.recovery, true);
-  yield promise_check_exist(Paths.recoveryBackup, false);
-  yield promise_check_exist(Paths.nextUpgradeBackup, true);
+  await promise_check_exist(Paths.backups, true);
+  await promise_check_exist(Paths.clean, false);
+  await promise_check_exist(Paths.cleanBackup, true);
+  await promise_check_exist(Paths.recovery, true);
+  await promise_check_exist(Paths.recoveryBackup, false);
+  await promise_check_exist(Paths.nextUpgradeBackup, true);
 
-  yield promise_check_contents(Paths.recovery, new_content);
-  yield promise_check_contents(Paths.nextUpgradeBackup, initial_content);
+  await promise_check_contents(Paths.recovery, new_content);
+  await promise_check_contents(Paths.nextUpgradeBackup, initial_content);
 });
 
 // Write to the store again, and check that
 // - $Path.clean is not written
 // - $Path.recovery contains the new data
 // - $Path.recoveryBackup contains the previous data
-add_task(function* test_second_write_no_backup() {
+add_task(async function test_second_write_no_backup() {
   let new_content = generateFileContents("test_2");
-  let previous_backup_content = yield File.read(Paths.recovery, { encoding: "utf-8" });
+  let previous_backup_content = await File.read(Paths.recovery, { encoding: "utf-8" });
   previous_backup_content = JSON.parse(previous_backup_content);
 
-  yield OS.File.remove(Paths.cleanBackup);
+  await OS.File.remove(Paths.cleanBackup);
 
-  yield SessionFile.write(new_content);
+  await SessionFile.write(new_content);
 
-  yield promise_check_exist(Paths.backups, true);
-  yield promise_check_exist(Paths.clean, false);
-  yield promise_check_exist(Paths.cleanBackup, false);
-  yield promise_check_exist(Paths.recovery, true);
-  yield promise_check_exist(Paths.nextUpgradeBackup, true);
+  await promise_check_exist(Paths.backups, true);
+  await promise_check_exist(Paths.clean, false);
+  await promise_check_exist(Paths.cleanBackup, false);
+  await promise_check_exist(Paths.recovery, true);
+  await promise_check_exist(Paths.nextUpgradeBackup, true);
 
-  yield promise_check_contents(Paths.recovery, new_content);
-  yield promise_check_contents(Paths.recoveryBackup, previous_backup_content);
+  await promise_check_contents(Paths.recovery, new_content);
+  await promise_check_contents(Paths.recoveryBackup, previous_backup_content);
 });
 
 // Make sure that we create $Paths.clean and remove $Paths.recovery*
 // upon shutdown
-add_task(function* test_shutdown() {
+add_task(async function test_shutdown() {
   let output = generateFileContents("test_3");
 
-  yield File.writeAtomic(Paths.recovery, "I should disappear");
-  yield File.writeAtomic(Paths.recoveryBackup, "I should also disappear");
+  await File.writeAtomic(Paths.recovery, "I should disappear");
+  await File.writeAtomic(Paths.recoveryBackup, "I should also disappear");
 
-  yield SessionWorker.post("write", [output, { isFinalWrite: true, performShutdownCleanup: true}]);
+  await SessionWorker.post("write", [output, { isFinalWrite: true, performShutdownCleanup: true}]);
 
-  do_check_false((yield File.exists(Paths.recovery)));
-  do_check_false((yield File.exists(Paths.recoveryBackup)));
-  yield promise_check_contents(Paths.clean, output);
+  do_check_false((await File.exists(Paths.recovery)));
+  do_check_false((await File.exists(Paths.recoveryBackup)));
+  await promise_check_contents(Paths.clean, output);
 });

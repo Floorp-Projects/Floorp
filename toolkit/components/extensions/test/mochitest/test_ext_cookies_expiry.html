@@ -14,7 +14,7 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* test_cookies_expiry() {
+add_task(async function test_cookies_expiry() {
   function background() {
     let expectedEvents = [];
 
@@ -57,13 +57,13 @@ add_task(function* test_cookies_expiry() {
     cookieSvc.add(cookie.host, cookie.path, cookie.name, "one", false, false, false, Date.now() / 1000 + 1);
   } while (!cookieSvc.cookieExists(cookie));
 
-  yield extension.startup();
-  yield extension.awaitMessage("change-cookies");
+  await extension.startup();
+  await extension.awaitMessage("change-cookies");
 
   cookieSvc.add(cookie.host, cookie.path, cookie.name, "one-again", false, false, false, Date.now() / 1000 + 10);
 
-  yield extension.awaitFinish("cookie-expiry");
-  yield extension.unload();
+  await extension.awaitFinish("cookie-expiry");
+  await extension.unload();
 });
 
 </script>

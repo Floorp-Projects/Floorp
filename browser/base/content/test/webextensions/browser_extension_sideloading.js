@@ -80,7 +80,7 @@ function promiseSetDisabled(addon) {
 
 let cleanup;
 
-add_task(function* () {
+add_task(async function() {
   // ICON_URL wouldn't ever appear as an actual webextension icon, but
   // we're just mocking out the addon here, so all we care about is that
   // that it propagates correctly to the popup.
@@ -159,12 +159,12 @@ add_task(function* () {
   // Navigate away from the starting page to force about:addons to load
   // in a new tab during the tests below.
   gBrowser.selectedBrowser.loadURI("about:robots");
-  yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
-  registerCleanupFunction(function*() {
+  registerCleanupFunction(async function() {
     // Return to about:blank when we're done
     gBrowser.selectedBrowser.loadURI("about:blank");
-    yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   });
 
   hookExtensionsTelemetry();
@@ -176,14 +176,14 @@ add_task(function* () {
     });
   });
   ExtensionsUI._checkForSideloaded();
-  yield changePromise;
+  await changePromise;
 
   // Check for the addons badge on the hamburger menu
   let menuButton = document.getElementById("PanelUI-menu-button");
   is(menuButton.getAttribute("badge-status"), "addon-alert", "Should have addon alert badge");
 
   // Find the menu entries for sideloaded extensions
-  yield PanelUI.show();
+  await PanelUI.show();
 
   let addons = PanelUI.addonNotificationContainer;
   is(addons.children.length, 4, "Have 4 menu entries for sideloaded extensions");
@@ -194,7 +194,7 @@ add_task(function* () {
 
   // When we get the permissions prompt, we should be at the extensions
   // list in about:addons
-  let panel = yield popupPromise;
+  let panel = await popupPromise;
   is(gBrowser.currentURI.spec, "about:addons", "Foreground tab is at about:addons");
 
   const VIEW = "addons://list/extension";
@@ -211,20 +211,20 @@ add_task(function* () {
   let disablePromise = promiseSetDisabled(mock1);
   panel.secondaryButton.click();
 
-  let value = yield disablePromise;
+  let value = await disablePromise;
   is(value, true, "Addon should remain disabled");
 
-  let [addon1, addon2, addon3, addon4] = yield AddonManager.getAddonsByIDs([ID1, ID2, ID3, ID4]);
+  let [addon1, addon2, addon3, addon4] = await AddonManager.getAddonsByIDs([ID1, ID2, ID3, ID4]);
   ok(addon1.seen, "Addon should be marked as seen");
   is(addon1.userDisabled, true, "Addon 1 should still be disabled");
   is(addon2.userDisabled, true, "Addon 2 should still be disabled");
   is(addon3.userDisabled, true, "Addon 3 should still be disabled");
   is(addon4.userDisabled, true, "Addon 4 should still be disabled");
 
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   // Should still have 3 entries in the hamburger menu
-  yield PanelUI.show();
+  await PanelUI.show();
 
   addons = PanelUI.addonNotificationContainer;
   is(addons.children.length, 3, "Have 3 menu entries for sideloaded extensions");
@@ -232,7 +232,7 @@ add_task(function* () {
   // Click the second sideloaded extension and wait for the notification
   popupPromise = promisePopupNotificationShown("addon-webext-permissions");
   addons.children[0].click();
-  panel = yield popupPromise;
+  panel = await popupPromise;
 
   // Again we should be at the extentions list in about:addons
   is(gBrowser.currentURI.spec, "about:addons", "Foreground tab is at about:addons");
@@ -248,25 +248,25 @@ add_task(function* () {
   disablePromise = promiseSetDisabled(mock2);
   panel.button.click();
 
-  value = yield disablePromise;
+  value = await disablePromise;
   is(value, false, "Addon should be set to enabled");
 
-  [addon1, addon2, addon3, addon4] = yield AddonManager.getAddonsByIDs([ID1, ID2, ID3, ID4]);
+  [addon1, addon2, addon3, addon4] = await AddonManager.getAddonsByIDs([ID1, ID2, ID3, ID4]);
   is(addon1.userDisabled, true, "Addon 1 should still be disabled");
   is(addon2.userDisabled, false, "Addon 2 should now be enabled");
   is(addon3.userDisabled, true, "Addon 3 should still be disabled");
   is(addon4.userDisabled, true, "Addon 4 should still be disabled");
 
   // Should still have 2 entries in the hamburger menu
-  yield PanelUI.show();
+  await PanelUI.show();
 
   addons = PanelUI.addonNotificationContainer;
   is(addons.children.length, 2, "Have 2 menu entries for sideloaded extensions");
 
   // Close the hamburger menu and go directly to the addons manager
-  yield PanelUI.hide();
+  await PanelUI.hide();
 
-  win = yield BrowserOpenAddonsMgr(VIEW);
+  win = await BrowserOpenAddonsMgr(VIEW);
 
   let list = win.document.getElementById("addon-list");
 
@@ -284,44 +284,44 @@ add_task(function* () {
   popupPromise = promisePopupNotificationShown("addon-webext-permissions");
   BrowserTestUtils.synthesizeMouseAtCenter(item._enableBtn, {},
                                            gBrowser.selectedBrowser);
-  panel = yield popupPromise;
+  panel = await popupPromise;
   checkNotification(panel, DEFAULT_ICON_URL, [["webextPerms.hostDescription.allUrls"]]);
 
   // Accept the permissions
   disablePromise = promiseSetDisabled(mock3);
   panel.button.click();
-  value = yield disablePromise;
+  value = await disablePromise;
   is(value, false, "userDisabled should be set on addon 3");
 
-  addon3 = yield AddonManager.getAddonByID(ID3);
+  addon3 = await AddonManager.getAddonByID(ID3);
   is(addon3.userDisabled, false, "Addon 3 should be enabled");
 
   // Should still have 1 entry in the hamburger menu
-  yield PanelUI.show();
+  await PanelUI.show();
 
   addons = PanelUI.addonNotificationContainer;
   is(addons.children.length, 1, "Have 1 menu entry for sideloaded extensions");
 
   // Close the hamburger menu and go to the detail page for this addon
-  yield PanelUI.hide();
+  await PanelUI.hide();
 
-  win = yield BrowserOpenAddonsMgr(`addons://detail/${encodeURIComponent(ID4)}`);
+  win = await BrowserOpenAddonsMgr(`addons://detail/${encodeURIComponent(ID4)}`);
   let button = win.document.getElementById("detail-enable-btn");
 
   // When clicking enable we should see the permissions notification
   popupPromise = promisePopupNotificationShown("addon-webext-permissions");
   BrowserTestUtils.synthesizeMouseAtCenter(button, {},
                                            gBrowser.selectedBrowser);
-  panel = yield popupPromise;
+  panel = await popupPromise;
   checkNotification(panel, DEFAULT_ICON_URL, [["webextPerms.hostDescription.allUrls"]]);
 
   // Accept the permissions
   disablePromise = promiseSetDisabled(mock4);
   panel.button.click();
-  value = yield disablePromise;
+  value = await disablePromise;
   is(value, false, "userDisabled should be set on addon 4");
 
-  addon4 = yield AddonManager.getAddonByID(ID4);
+  addon4 = await AddonManager.getAddonByID(ID4);
   is(addon4.userDisabled, false, "Addon 4 should be enabled");
 
   // We should have recorded 1 cancelled followed by 3 accepted sideloads.
@@ -329,5 +329,5 @@ add_task(function* () {
 
   isnot(menuButton.getAttribute("badge-status"), "addon-alert", "Should no longer have addon alert badge");
 
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

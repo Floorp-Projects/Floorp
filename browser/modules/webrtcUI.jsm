@@ -20,8 +20,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SitePermissions",
                                   "resource:///modules/SitePermissions.jsm");
 
@@ -214,10 +212,10 @@ this.webrtcUI = {
 
         let blockers = Array.from(this.peerConnectionBlockers);
 
-        Task.spawn(function*() {
+        (async function() {
           for (let blocker of blockers) {
             try {
-              let result = yield blocker(params);
+              let result = await blocker(params);
               if (result == "deny") {
                 return false;
               }
@@ -226,7 +224,7 @@ this.webrtcUI = {
             }
           }
           return true;
-        }).then(decision => {
+        })().then(decision => {
           let message;
           if (decision) {
             this.emitter.emit("peer-request-allowed", params);

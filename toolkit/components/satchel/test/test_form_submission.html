@@ -142,29 +142,21 @@
     <button type="submit">Submit</button>
   </form>
 
-  <!-- form data submitted through HTTPS, when browser.formfill.saveHttpsForms is false -->
-  <form id="form20" action="https://www.example.com/" onsubmit="return checkSubmit(20)">
-    <input type="text" name="test1">
-    <button type="submit">Submit</button>
-  </form>
-
-  <!-- Form 21 is submitted into an iframe, not declared here. -->
-
   <!-- Don't save values if the form is invalid. -->
-  <form id="form22" onsubmit="return checkSubmit(22);">
-    <input type='email' name='test1' oninvalid="return checkSubmit(22);">
+  <form id="form20" onsubmit="return checkSubmit(20);">
+    <input type='email' name='test1' oninvalid="return checkSubmit(20);">
     <button type='submit'>Submit</button>
   </form>
 
   <!-- Don't save values if the form is invalid. -->
-  <form id="form23" onsubmit="return checkSubmit(23);">
-    <input type='email' value='foo' oninvalid="return checkSubmit(23);">
+  <form id="form21" onsubmit="return checkSubmit(21);">
+    <input type='email' value='foo' oninvalid="return checkSubmit(21);">
     <input type='text' name='test1'>
     <button type='submit'>Submit</button>
   </form>
 
   <!-- Don't save values if the input name is 'searchbar-history' -->
-  <form id="form24" onsubmit="return checkSubmit(24);">
+  <form id="form22" onsubmit="return checkSubmit(22);">
     <input type='text' name='searchbar-history'>
     <button type='submit'>Submit</button>
   </form>
@@ -243,12 +235,6 @@
   <!-- form data submitted through HTTPS, when browser.formfill.saveHttpsForms is true -->
   <form id="form109" action="https://www.example.com/" onsubmit="return checkSubmit(109)">
     <input type="text" name="test9">
-    <button type="submit">Submit</button>
-  </form>
-
-  <!-- regular form data, when browser.formfill.saveHttpsForms is false -->
-  <form id="form110" onsubmit="return checkSubmit(110)">
-    <input type="text" name="test10">
     <button type="submit">Submit</button>
   </form>
 
@@ -333,9 +319,8 @@ function startTest() {
   $_(18, "test1").value = "0000-0000-0080-4609";
   $_(19, "test1").value = "0000 0000 0222 331";
   $_(20, "test1").value = "dontSaveThis";
-  $_(22, "test1").value = "dontSaveThis";
-  $_(23, "test1").value = "dontSaveThis";
-  $_(24, "searchbar-history").value = "dontSaveThis";
+  $_(21, "test1").value = "dontSaveThis";
+  $_(22, "searchbar-history").value = "dontSaveThis";
 
   $_(101, "test1").value = "savedValue";
   $_(102, "test2").value = "savedValue";
@@ -355,7 +340,6 @@ function startTest() {
   }
 
   $_(109, "test9").value = "savedValue";
-  $_(110, "test10").value = "savedValue";
 
   // submit the first form.
   var button = getFormSubmitButton(1);
@@ -394,8 +378,6 @@ function checkSubmit(formNum) {
     case 20:
     case 21:
     case 22:
-    case 23:
-    case 24:
       countEntries(null, null,
         function(num) {
           ok(!num, "checking for empty storage");
@@ -436,9 +418,6 @@ function checkSubmit(formNum) {
     case 109:
         checkForSave("test9", "savedValue", "checking saved value");
         break;
-    case 110:
-        checkForSave("test10", "savedValue", "checking saved value");
-        break;
     default:
         ok(false, "Unexpected form submission");
         break;
@@ -448,17 +427,10 @@ function checkSubmit(formNum) {
 }
 
 function submitForm(formNum) {
-  // Forms 20 and 21 requires browser.formfill.saveHttpsForms to be false
-  if (formNum == 19)
-    SpecialPowers.setBoolPref("browser.formfill.saveHttpsForms", false);
-  // Reset preference now that 20 and 21 are over
-  if (formNum == 21)
-    SpecialPowers.clearUserPref("browser.formfill.saveHttpsForms");
-
   // End the test now on SeaMonkey.
-  if (formNum == 21 && navigator.userAgent.match(/ SeaMonkey\//)) {
+  if (formNum == 20 && navigator.userAgent.match(/ SeaMonkey\//)) {
     checkObserver.uninit();
-    is(numSubmittedForms, 21, "Ensuring all forms were submitted.");
+    is(numSubmittedForms, 20, "Ensuring all forms were submitted.");
 
     todo(false, "Skipping remaining checks on SeaMonkey ftb. (Bug 589471)");
     // finish(), yet let the test actually end first, to be safe.
@@ -467,20 +439,11 @@ function submitForm(formNum) {
     return false; // return false to cancel current form submission
   }
 
-  // Form 109 requires browser.formfill.save_https_forms to be true;
-  // Form 110 requires it to be false.
-  if (formNum == 108)
-    SpecialPowers.setBoolPref("browser.formfill.saveHttpsForms", true);
-  if (formNum == 109)
-    SpecialPowers.setBoolPref("browser.formfill.saveHttpsForms", false);
-  if (formNum == 110)
-    SpecialPowers.clearUserPref("browser.formfill.saveHttpsForms");
-
   // End the test at the last form.
-  if (formNum == 110) {
-    is(numSubmittedForms, 35, "Ensuring all forms were submitted.");
+  if (formNum == 109) {
+    is(numSubmittedForms, 32, "Ensuring all forms were submitted.");
     checkObserver.uninit();
-    SimpleTest.finish();
+    SimpleTest.executeSoon(SimpleTest.finish);
     return false; // return false to cancel current form submission
   }
 
@@ -494,11 +457,11 @@ function submitForm(formNum) {
   //
   setTimeout(function() {
     checkObserver.waitForChecks(function() {
-      var nextFormNum = formNum == 24 ? 100 : (formNum + 1);
+      var nextFormNum = formNum == 22 ? 100 : (formNum + 1);
 
       // Submit the next form. Special cases are Forms 21 and 100, which happen
       // from an HTTPS domain in an iframe.
-      if (nextFormNum == 21 || nextFormNum == 100) {
+      if (nextFormNum == 100) {
         ok(true, "submitting iframe test " + nextFormNum);
         SpecialPowers.wrap(document.getElementById("iframe").contentWindow).wrappedJSObject.clickButton(nextFormNum);
       } else {

@@ -11,7 +11,7 @@ const NON_MPC_PREF = "extensions.allow-non-mpc-extensions";
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 
 function build_test(multiprocessCompatible, bootstrap, updateMultiprocessCompatible) {
-  return function* () {
+  return async function() {
     dump("Running test" +
       " multiprocessCompatible: " + multiprocessCompatible +
       " bootstrap: " + bootstrap +
@@ -56,29 +56,29 @@ function build_test(multiprocessCompatible, bootstrap, updateMultiprocessCompati
                       updateMultiprocessCompatible;
 
     let xpifile = createTempXPIFile(addonData);
-    let install = yield AddonManager.getInstallForFile(xpifile);
+    let install = await AddonManager.getInstallForFile(xpifile);
     do_check_eq(install.addon.multiprocessCompatible, !!multiprocessCompatible);
     do_check_eq(install.addon.mpcOptedOut, multiprocessCompatible === false)
-    yield promiseCompleteAllInstalls([install]);
+    await promiseCompleteAllInstalls([install]);
 
     if (!bootstrap) {
-      yield promiseRestartManager();
+      await promiseRestartManager();
       do_check_true(isExtensionInAddonsList(profileDir, addonData.id));
       do_check_eq(isItemMarkedMPIncompatible(addonData.id), !multiprocessCompatible);
     }
 
-    let addon = yield promiseAddonByID(addonData.id);
+    let addon = await promiseAddonByID(addonData.id);
     do_check_neq(addon, null);
     do_check_eq(addon.multiprocessCompatible, !!multiprocessCompatible);
     do_check_eq(addon.mpcOptedOut, multiprocessCompatible === false);
 
-    yield promiseFindAddonUpdates(addon);
+    await promiseFindAddonUpdates(addon);
 
     // Should have applied the compatibility change
     do_check_eq(addon.multiprocessCompatible, !!expectedMPC);
-    yield promiseRestartManager();
+    await promiseRestartManager();
 
-    addon = yield promiseAddonByID(addonData.id);
+    addon = await promiseAddonByID(addonData.id);
     // Should have persisted the compatibility change
     do_check_eq(addon.multiprocessCompatible, !!expectedMPC);
     if (!bootstrap) {
@@ -87,7 +87,7 @@ function build_test(multiprocessCompatible, bootstrap, updateMultiprocessCompati
     }
 
     addon.uninstall();
-    yield promiseRestartManager();
+    await promiseRestartManager();
 
     gServer.registerPathHandler("/updaterdf", null);
   }

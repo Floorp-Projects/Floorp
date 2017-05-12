@@ -23,8 +23,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
                                   "resource://gre/modules/Downloads.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm")
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Sqlite",
                                   "resource://gre/modules/Sqlite.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
@@ -68,11 +66,11 @@ this.DownloadImport.prototype = {
    *           the DownloadList)
    */
   import() {
-    return Task.spawn(function* task_DI_import() {
-      let connection = yield Sqlite.openConnection({ path: this.path });
+    return (async () => {
+      let connection = await Sqlite.openConnection({ path: this.path });
 
       try {
-        let schemaVersion = yield connection.getSchemaVersion();
+        let schemaVersion = await connection.getSchemaVersion();
         // We don't support schemas older than version 7 (from 2007)
         // - Version 7 added the columns mimeType, preferredApplication
         //   and preferredAction in 2007
@@ -85,7 +83,7 @@ this.DownloadImport.prototype = {
                           + "the existing profile is too old.");
         }
 
-        let rows = yield connection.execute("SELECT * FROM moz_downloads");
+        let rows = await connection.execute("SELECT * FROM moz_downloads");
 
         for (let row of rows) {
           try {
@@ -166,14 +164,14 @@ this.DownloadImport.prototype = {
               downloadOptions.canceled = true;
             }
 
-            let download = yield Downloads.createDownload(downloadOptions);
+            let download = await Downloads.createDownload(downloadOptions);
 
-            yield this.list.add(download);
+            await this.list.add(download);
 
             if (resumeDownload) {
               download.start().catch(() => {});
             } else {
-              yield download.refresh();
+              await download.refresh();
             }
 
           } catch (ex) {
@@ -184,9 +182,9 @@ this.DownloadImport.prototype = {
       } catch (ex) {
         Cu.reportError(ex);
       } finally {
-        yield connection.close();
+        await connection.close();
       }
-    }.bind(this));
+    })();
   }
 }
 

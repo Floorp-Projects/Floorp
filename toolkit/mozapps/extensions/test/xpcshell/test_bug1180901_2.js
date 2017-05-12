@@ -8,21 +8,21 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* () {
+add_task(async function() {
   let profileDir = OS.Constants.Path.profileDir;
   let trashDir = OS.Path.join(profileDir, "extensions", "trash");
   let testFile = OS.Path.join(trashDir, "test.txt");
 
-  yield OS.File.makeDir(trashDir, {
+  await OS.File.makeDir(trashDir, {
     from: profileDir,
     ignoreExisting: true
   });
 
-  let trashDirExists = yield OS.File.exists(trashDir);
+  let trashDirExists = await OS.File.exists(trashDir);
   ok(trashDirExists, "trash directory should have been created");
 
-  let file = yield OS.File.open(testFile, {create: true}, {winShare: 0});
-  let fileExists = yield OS.File.exists(testFile);
+  let file = await OS.File.open(testFile, {create: true}, {winShare: 0});
+  let fileExists = await OS.File.exists(testFile);
   ok(fileExists, "test.txt should have been created in " + trashDir);
 
   let promiseInstallStatus = new Promise((resolve, reject) => {
@@ -41,20 +41,20 @@ add_task(function* () {
     AddonManager.addInstallListener(listener);
   });
 
-  yield promiseInstallAllFiles([do_get_addon("test_bootstrap1_1")]);
+  await promiseInstallAllFiles([do_get_addon("test_bootstrap1_1")]);
 
   // The testFile should still exist at this point because we have not
   // yet closed the file handle and as a result, Windows cannot remove it.
-  fileExists = yield OS.File.exists(testFile);
+  fileExists = await OS.File.exists(testFile);
   ok(fileExists, "test.txt should still exist");
 
   // Wait for the AddonManager to tell us if the installation of the extension
   // succeeded or not.
-  yield promiseInstallStatus;
+  await promiseInstallStatus;
 
   // Cleanup
-  yield promiseShutdownManager();
-  yield file.close();
-  yield OS.File.remove(testFile);
-  yield OS.File.removeDir(trashDir);
+  await promiseShutdownManager();
+  await file.close();
+  await OS.File.remove(testFile);
+  await OS.File.removeDir(trashDir);
 });

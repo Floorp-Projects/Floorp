@@ -43,8 +43,8 @@ function play_audio() {
   });
 }
 
-add_task(function* setup_test_preference() {
-  yield SpecialPowers.pushPrefEnv({"set": [
+add_task(async function setup_test_preference() {
+  await SpecialPowers.pushPrefEnv({"set": [
     ["media.useAudioChannelService.testing", true],
     ["media.block-autoplay-until-in-foreground", true]
   ]});
@@ -56,29 +56,29 @@ add_task(function* setup_test_preference() {
  * If the tab doesn't have any media component, it won't be resumed even it
  * has already gone to foreground until we start audio.
  */
-add_task(function* media_should_be_able_to_play_in_visible_tab() {
+add_task(async function media_should_be_able_to_play_in_visible_tab() {
   info("- open new background tab, and check tab's media pause state -");
   let tab = window.gBrowser.addTab("about:blank");
   tab.linkedBrowser.loadURI(PAGE);
-  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  yield ContentTask.spawn(tab.linkedBrowser, true,
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  await ContentTask.spawn(tab.linkedBrowser, true,
                           check_audio_pause_state);
 
   info("- select tab as foreground tab, and tab's media should still be paused -");
-  yield BrowserTestUtils.switchTab(window.gBrowser, tab);
-  yield ContentTask.spawn(tab.linkedBrowser, true,
+  await BrowserTestUtils.switchTab(window.gBrowser, tab);
+  await ContentTask.spawn(tab.linkedBrowser, true,
                           check_audio_pause_state);
 
   info("- start audio in tab -");
-  yield ContentTask.spawn(tab.linkedBrowser, null,
+  await ContentTask.spawn(tab.linkedBrowser, null,
                           play_audio);
 
   info("- audio should be playing -");
-  yield ContentTask.spawn(tab.linkedBrowser, false,
+  await ContentTask.spawn(tab.linkedBrowser, false,
                           check_audio_pause_state);
-  yield ContentTask.spawn(tab.linkedBrowser, SuspendedType.NONE_SUSPENDED,
+  await ContentTask.spawn(tab.linkedBrowser, SuspendedType.NONE_SUSPENDED,
                           check_audio_suspended);
 
   info("- remove tab -");
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });

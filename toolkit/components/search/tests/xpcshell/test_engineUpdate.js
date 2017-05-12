@@ -11,15 +11,15 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_engineUpdate() {
+add_task(async function test_engineUpdate() {
   const KEYWORD = "keyword";
   const FILENAME = "engine.xml"
   const TOPIC = "browser-search-engine-modified";
   const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
 
-  yield asyncInit();
+  await asyncInit();
 
-  let [engine] = yield addTestEngines([
+  let [engine] = await addTestEngines([
     { name: "Test search engine", xmlFileName: FILENAME },
   ]);
 
@@ -29,7 +29,7 @@ add_task(function* test_engineUpdate() {
   // server origin, so manually set it
   engine.wrappedJSObject._updateURL = gDataUrl + FILENAME;
 
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     Services.obs.addObserver(function obs(subject, topic, data) {
       if (data == "engine-loaded") {
         let loadedEngine = subject.QueryInterface(Ci.nsISearchEngine);

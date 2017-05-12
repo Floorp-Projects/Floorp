@@ -1,11 +1,11 @@
-add_task(function* testPartialPatchApplyFailure() {
+add_task(async function testPartialPatchApplyFailure() {
   let patches = getLocalPatchString("partial", null, null, null, null, null,
                                     STATE_PENDING);
   let updates = getLocalUpdateString(patches, null, null, null,
                                      Services.appinfo.version, null,
                                      null, null, null, null, "false");
 
-  yield runUpdateProcessingTest(updates, [
+  await runUpdateProcessingTest(updates, [
     {
       // if we have only an invalid patch, then something's wrong and we don't
       // have an automatic way to fix it, so show the manual update
@@ -15,8 +15,8 @@ add_task(function* testPartialPatchApplyFailure() {
       beforeClick() {
         checkWhatsNewLink("update-manual-whats-new");
       },
-      *cleanup() {
-        yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+      async cleanup() {
+        await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
         is(gBrowser.selectedBrowser.currentURI.spec,
            URL_MANUAL_UPDATE, "Landed on manual update page.")
         gBrowser.removeTab(gBrowser.selectedTab);

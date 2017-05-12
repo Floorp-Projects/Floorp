@@ -44,27 +44,27 @@ let contextMenuItems = {
   "context-sharepage": "hidden",
 };
 
-add_task(function* browseraction_popup_contextmenu() {
+add_task(async function browseraction_popup_contextmenu() {
   let extension = ExtensionTestUtils.loadExtension(extData);
-  yield extension.startup();
+  await extension.startup();
 
-  yield clickBrowserAction(extension, window);
+  await clickBrowserAction(extension, window);
 
-  let contentAreaContextMenu = yield openContextMenuInPopup(extension);
+  let contentAreaContextMenu = await openContextMenuInPopup(extension);
   let item = contentAreaContextMenu.getElementsByAttribute("label", "Click me!");
   is(item.length, 1, "contextMenu item for page was found");
-  yield closeContextMenu(contentAreaContextMenu);
+  await closeContextMenu(contentAreaContextMenu);
 
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* browseraction_popup_contextmenu_hidden_items() {
+add_task(async function browseraction_popup_contextmenu_hidden_items() {
   let extension = ExtensionTestUtils.loadExtension(extData);
-  yield extension.startup();
+  await extension.startup();
 
-  yield clickBrowserAction(extension);
+  await clickBrowserAction(extension);
 
-  let contentAreaContextMenu = yield openContextMenuInPopup(extension, "#text");
+  let contentAreaContextMenu = await openContextMenuInPopup(extension, "#text");
 
   let item, state;
   for (const itemID in contextMenuItems) {
@@ -83,24 +83,24 @@ add_task(function* browseraction_popup_contextmenu_hidden_items() {
     }
   }
 
-  yield closeContextMenu(contentAreaContextMenu);
+  await closeContextMenu(contentAreaContextMenu);
 
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* browseraction_popup_image_contextmenu() {
+add_task(async function browseraction_popup_image_contextmenu() {
   let extension = ExtensionTestUtils.loadExtension(extData);
-  yield extension.startup();
+  await extension.startup();
 
-  yield clickBrowserAction(extension);
+  await clickBrowserAction(extension);
 
-  let contentAreaContextMenu = yield openContextMenuInPopup(extension, "#testimg");
+  let contentAreaContextMenu = await openContextMenuInPopup(extension, "#testimg");
 
   let item = contentAreaContextMenu.querySelector("#context-viewimageinfo");
   ok(!item.hidden);
   ok(item.disabled);
 
-  yield closeContextMenu(contentAreaContextMenu);
+  await closeContextMenu(contentAreaContextMenu);
 
-  yield extension.unload();
+  await extension.unload();
 });

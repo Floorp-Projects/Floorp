@@ -184,8 +184,8 @@ function run_test() {
  * We will generate visit-chains like:
  *   visit -> redirect_temp -> redirect_perm
  */
-add_task(function* test_add_visits_to_database() {
-  yield PlacesUtils.bookmarks.eraseEverything();
+add_task(async function test_add_visits_to_database() {
+  await PlacesUtils.bookmarks.eraseEverything();
 
   // We don't really bother on this, but we need a time to add visits.
   let timeInMicroseconds = Date.now() * 1000;
@@ -280,12 +280,12 @@ add_task(function* test_add_visits_to_database() {
     isInQuery: false });
 
   // Put visits in the database.
-  yield task_populateDB(visits);
+  await task_populateDB(visits);
 });
 
-add_task(function* test_redirects() {
+add_task(async function test_redirects() {
   // Frecency and hidden are updated asynchronously, wait for them.
-  yield PlacesTestUtils.promiseAsyncUpdates();
+  await PlacesTestUtils.promiseAsyncUpdates();
 
   // This array will be used by cartProd to generate a matrix of all possible
   // combinations.
@@ -300,7 +300,7 @@ add_task(function* test_redirects() {
   cartProd([includeHidden_options, maxResults_options, sorting_options],
            check_results_callback);
 
-  yield PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.bookmarks.eraseEverything();
 
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
 });

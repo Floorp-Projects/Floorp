@@ -17,17 +17,17 @@ function waitForSecurityChange(numChanges = 1) {
   });
 }
 
-add_task(function* test_fetch() {
-  yield SpecialPowers.pushPrefEnv({ set: [["privacy.trackingprotection.enabled", true]] });
+add_task(async function test_fetch() {
+  await SpecialPowers.pushPrefEnv({ set: [["privacy.trackingprotection.enabled", true]] });
 
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: URL }, function* (newTabBrowser) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function(newTabBrowser) {
     let securityChange = waitForSecurityChange();
-    yield ContentTask.spawn(newTabBrowser, null, function* () {
-      yield content.wrappedJSObject.test_fetch()
+    await ContentTask.spawn(newTabBrowser, null, async function() {
+      await content.wrappedJSObject.test_fetch()
                    .then(response => Assert.ok(false, "should have denied the request"))
                    .catch(e => Assert.ok(true, `Caught exception: ${e}`));
     });
-    yield securityChange;
+    await securityChange;
 
     var TrackingProtection = newTabBrowser.ownerGlobal.TrackingProtection;
     ok(TrackingProtection, "got TP object");

@@ -54,7 +54,7 @@ async function testImageLoading(src, expectedAction) {
   browser.runtime.sendMessage({name: "image-loading", expectedAction, success});
 }
 
-add_task(function* test_web_accessible_resources() {
+add_task(async function test_web_accessible_resources() {
   function background() {
     let gotURL;
     let tabId;
@@ -169,20 +169,20 @@ add_task(function* test_web_accessible_resources() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitMessage("ready");
+  await extension.awaitMessage("ready");
 
   let win = window.open("http://example.com/");
 
-  yield extension.awaitFinish("web-accessible-resources");
+  await extension.awaitFinish("web-accessible-resources");
 
   win.close();
 
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* test_web_accessible_resources_csp() {
+add_task(async function test_web_accessible_resources_csp() {
   function background() {
     browser.runtime.onMessage.addListener((msg, sender) => {
       if (msg.name === "image-loading") {
@@ -259,11 +259,11 @@ add_task(function* test_web_accessible_resources_csp() {
 
   let observer = new examiner();
 
-  yield Promise.all([extension.startup(), extension.awaitMessage("background-ready")]);
+  await Promise.all([extension.startup(), extension.awaitMessage("background-ready")]);
 
   let win = window.open("http://example.com/tests/toolkit/components/extensions/test/mochitest/file_csp.html");
 
-  yield Promise.all([
+  await Promise.all([
     extension.awaitMessage("image-loaded"),
     extension.awaitMessage("script-loaded"),
     extension.awaitMessage("script-ran"),
@@ -272,10 +272,10 @@ add_task(function* test_web_accessible_resources_csp() {
   win.close();
 
   observer.remove();
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* test_web_accessible_resources_mixed_content() {
+add_task(async function test_web_accessible_resources_mixed_content() {
   function background() {
     browser.runtime.onMessage.addListener(msg => {
       if (msg.name === "image-loading") {
@@ -332,19 +332,19 @@ add_task(function* test_web_accessible_resources_mixed_content() {
 
   SpecialPowers.setBoolPref("security.mixed_content.block_display_content", true);
 
-  yield Promise.all([extension.startup(), extension.awaitMessage("background-ready")]);
+  await Promise.all([extension.startup(), extension.awaitMessage("background-ready")]);
 
   let win = window.open("https://example.com/tests/toolkit/components/extensions/test/mochitest/file_mixed.html");
 
-  yield Promise.all([
+  await Promise.all([
     extension.awaitMessage("image-blocked"),
     extension.awaitMessage("image-loaded"),
     extension.awaitMessage("accessible-script-loaded"),
   ]);
-  yield extension.awaitFinish("mixed-test");
+  await extension.awaitFinish("mixed-test");
   win.close();
 
-  yield extension.unload();
+  await extension.unload();
 });
 
 </script>

@@ -17,55 +17,55 @@ function check_audio_suspended(suspendedType) {
      "The suspeded state of autoplay audio is correct.");
 }
 
-add_task(function* setup_test_preference() {
-  yield SpecialPowers.pushPrefEnv({"set": [
+add_task(async function setup_test_preference() {
+  await SpecialPowers.pushPrefEnv({"set": [
     ["media.useAudioChannelService.testing", true],
     ["media.block-autoplay-until-in-foreground", true]
   ]});
 });
 
-add_task(function* block_autoplay_media() {
+add_task(async function block_autoplay_media() {
   info("- open new background tab1 -");
   let tab1 = window.gBrowser.addTab("about:blank");
   tab1.linkedBrowser.loadURI(PAGE);
-  yield BrowserTestUtils.browserLoaded(tab1.linkedBrowser);
+  await BrowserTestUtils.browserLoaded(tab1.linkedBrowser);
 
   info("- should block autoplay media for non-visited tab1 -");
-  yield ContentTask.spawn(tab1.linkedBrowser, SuspendedType.SUSPENDED_BLOCK,
+  await ContentTask.spawn(tab1.linkedBrowser, SuspendedType.SUSPENDED_BLOCK,
                           check_audio_suspended);
 
   info("- open new background tab2 -");
   let tab2 = window.gBrowser.addTab("about:blank");
   tab2.linkedBrowser.loadURI(PAGE);
-  yield BrowserTestUtils.browserLoaded(tab2.linkedBrowser);
+  await BrowserTestUtils.browserLoaded(tab2.linkedBrowser);
 
   info("- should block autoplay for non-visited tab2 -");
-  yield ContentTask.spawn(tab2.linkedBrowser, SuspendedType.SUSPENDED_BLOCK,
+  await ContentTask.spawn(tab2.linkedBrowser, SuspendedType.SUSPENDED_BLOCK,
                           check_audio_suspended);
 
   info("- select tab1 as foreground tab -");
-  yield BrowserTestUtils.switchTab(window.gBrowser, tab1);
+  await BrowserTestUtils.switchTab(window.gBrowser, tab1);
 
   info("- media should be unblocked because the tab was visited -");
-  yield waitForTabPlayingEvent(tab1, true);
-  yield ContentTask.spawn(tab1.linkedBrowser, SuspendedType.NONE_SUSPENDED,
+  await waitForTabPlayingEvent(tab1, true);
+  await ContentTask.spawn(tab1.linkedBrowser, SuspendedType.NONE_SUSPENDED,
                           check_audio_suspended);
 
   info("- open another new foreground tab3 -");
-  let tab3 = yield BrowserTestUtils.openNewForegroundTab(window.gBrowser,
+  let tab3 = await BrowserTestUtils.openNewForegroundTab(window.gBrowser,
                                                          "about:blank");
   info("- should still play media from tab1 -");
-  yield waitForTabPlayingEvent(tab1, true);
-  yield ContentTask.spawn(tab1.linkedBrowser, SuspendedType.NONE_SUSPENDED,
+  await waitForTabPlayingEvent(tab1, true);
+  await ContentTask.spawn(tab1.linkedBrowser, SuspendedType.NONE_SUSPENDED,
                           check_audio_suspended);
 
   info("- should still block media from tab2 -");
-  yield waitForTabPlayingEvent(tab2, false);
-  yield ContentTask.spawn(tab2.linkedBrowser, SuspendedType.SUSPENDED_BLOCK,
+  await waitForTabPlayingEvent(tab2, false);
+  await ContentTask.spawn(tab2.linkedBrowser, SuspendedType.SUSPENDED_BLOCK,
                           check_audio_suspended);
 
   info("- remove tabs -");
-  yield BrowserTestUtils.removeTab(tab1);
-  yield BrowserTestUtils.removeTab(tab2);
-  yield BrowserTestUtils.removeTab(tab3);
+  await BrowserTestUtils.removeTab(tab1);
+  await BrowserTestUtils.removeTab(tab2);
+  await BrowserTestUtils.removeTab(tab3);
 });

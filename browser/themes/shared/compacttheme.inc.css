@@ -234,17 +234,6 @@ toolbar:-moz-lwtheme-darktext {
   padding-bottom: 2px;
 }
 
-#back-button:hover:active:not([disabled="true"]) {
-  -moz-image-region: rect(18px, 54px, 36px, 36px);
-}
-
-/* Use smaller back button icon */
-@media (min-resolution: 2dppx) {
-  #back-button:hover:active:not([disabled="true"]) {
-    -moz-image-region: rect(36px, 108px, 72px, 72px);
-  }
-}
-
 /* URL bar and search bar*/
 #urlbar,
 #navigator-toolbox .searchbar-textbox {

@@ -19,16 +19,16 @@ var bookmarkData = [
   - Check that all bookmarks are successfully imported with tags
 */
 
-add_task(function* test_import_tags() {
+add_task(async function test_import_tags() {
   // Removes bookmarks.html if the file already exists.
   let HTMLFile = OS.Path.join(OS.Constants.Path.profileDir, "bookmarks.html");
-  if ((yield OS.File.exists(HTMLFile)))
-    yield OS.File.remove(HTMLFile);
+  if ((await OS.File.exists(HTMLFile)))
+    await OS.File.remove(HTMLFile);
 
   // Adds bookmarks and tags to the database.
   let bookmarkList = new Set();
   for (let { uri, title, tags } of bookmarkData) {
-    bookmarkList.add(yield PlacesUtils.bookmarks.insert({
+    bookmarkList.add(await PlacesUtils.bookmarks.insert({
                                 parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                 url: uri,
                                 title }));
@@ -36,15 +36,15 @@ add_task(function* test_import_tags() {
   }
 
   // Exports the bookmarks as a HTML file.
-  yield BookmarkHTMLUtils.exportToFile(HTMLFile);
+  await BookmarkHTMLUtils.exportToFile(HTMLFile);
 
   // Deletes bookmarks and tags from the database.
   for (let bookmark of bookmarkList) {
-    yield PlacesUtils.bookmarks.remove(bookmark.guid);
+    await PlacesUtils.bookmarks.remove(bookmark.guid);
   }
 
   // Re-imports the bookmarks from the HTML file.
-  yield BookmarkHTMLUtils.importFromFile(HTMLFile, true);
+  await BookmarkHTMLUtils.importFromFile(HTMLFile, true);
 
   // Tests to ensure that the tags are still present for each bookmark URI.
   for (let { uri, tags } of bookmarkData) {

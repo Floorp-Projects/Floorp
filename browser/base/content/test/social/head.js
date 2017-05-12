@@ -4,8 +4,6 @@
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
 
@@ -61,17 +59,17 @@ function runSocialTestWithProvider(manifest, callback, finishcallback) {
   let manifests = Array.isArray(manifest) ? manifest : [manifest];
 
   // Check that none of the provider's content ends up in history.
-  function* finishCleanUp() {
+  async function finishCleanUp() {
     for (let i = 0; i < manifests.length; i++) {
       let m = manifests[i];
       for (let what of ["iconURL", "shareURL"]) {
         if (m[what]) {
-          yield promiseSocialUrlNotRemembered(m[what]);
+          await promiseSocialUrlNotRemembered(m[what]);
         }
       }
     }
     for (let i = 0; i < gURLsNotRemembered.length; i++) {
-      yield promiseSocialUrlNotRemembered(gURLsNotRemembered[i]);
+      await promiseSocialUrlNotRemembered(gURLsNotRemembered[i]);
     }
     gURLsNotRemembered = [];
   }
@@ -82,7 +80,7 @@ function runSocialTestWithProvider(manifest, callback, finishcallback) {
   function finishIfDone(callFinish) {
     finishCount++;
     if (finishCount == manifests.length)
-      Task.spawn(finishCleanUp).then(finishcallback || defaultFinishChecks);
+      finishCleanUp().then(finishcallback || defaultFinishChecks);
   }
   function removeAddedProviders(cleanup) {
     manifests.forEach(function(m) {

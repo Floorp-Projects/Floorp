@@ -14,8 +14,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
   "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-  "resource://gre/modules/Task.jsm");
 
 const ATTR_CODE_MAX_LENGTH = 200;
 const ATTR_CODE_KEYS_REGEX = /^source|medium|campaign|content$/;
@@ -71,14 +69,14 @@ var AttributionCode = {
    * or an empty object otherwise.
    */
   getAttrDataAsync() {
-    return Task.spawn(function*() {
+    return (async function() {
       if (gCachedAttrData != null) {
         return gCachedAttrData;
       }
 
       let code = "";
       try {
-        let bytes = yield OS.File.read(getAttributionFile().path);
+        let bytes = await OS.File.read(getAttributionFile().path);
         let decoder = new TextDecoder();
         code = decoder.decode(bytes);
       } catch (ex) {
@@ -89,7 +87,7 @@ var AttributionCode = {
 
       gCachedAttrData = parseAttributionCode(code);
       return gCachedAttrData;
-    });
+    })();
   },
 
   /**
@@ -98,15 +96,15 @@ var AttributionCode = {
    * or if the file couldn't be deleted (the promise is never rejected).
    */
   deleteFileAsync() {
-    return Task.spawn(function*() {
+    return (async function() {
       try {
-        yield OS.File.remove(getAttributionFile().path);
+        await OS.File.remove(getAttributionFile().path);
       } catch (ex) {
         // The attribution file may already have been deleted,
         // or it may have never been installed at all;
         // failure to delete it isn't an error.
       }
-    });
+    })();
   },
 
   /**

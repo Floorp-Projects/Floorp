@@ -22,7 +22,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonManager", "resource://gre/modules/
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManagerPrivate", "resource://gre/modules/AddonManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services", "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository", "resource://gre/modules/addons/AddonRepository.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise", "resource://gre/modules/Promise.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Log", "resource://gre/modules/Log.jsm");
 var logger = null;
@@ -168,7 +167,7 @@ var gVersionInfoPage = {
   _completeCount: 0,
   _totalCount: 0,
   _versionInfoDone: false,
-  onPageShow: Task.async(function*() {
+  async onPageShow() {
     gUpdateWizard.setButtonLabels(null, true,
                                   "nextButtonText", true,
                                   "cancelButtonText", false);
@@ -180,7 +179,7 @@ var gVersionInfoPage = {
     AddonManager.addAddonListener(listener);
     if (AddonRepository.isMetadataStale()) {
       // Do the metadata ping, listening for any newly enabled/disabled add-ons.
-      yield AddonRepository.repopulateCache(METADATA_TIMEOUT);
+      await AddonRepository.repopulateCache(METADATA_TIMEOUT);
       if (gUpdateWizard.shuttingDown) {
         logger.debug("repopulateCache completed after dialog closed");
       }
@@ -195,7 +194,7 @@ var gVersionInfoPage = {
     }
 
     logger.debug("Fetching affected addons " + idlist.toSource());
-    let fetchedAddons = yield AddonManager.getAddonsByIDs(idlist);
+    let fetchedAddons = await AddonManager.getAddonsByIDs(idlist);
     // We shouldn't get nulls here, but let's be paranoid...
     gUpdateWizard.addons = fetchedAddons.filter(a => a);
     if (gUpdateWizard.addons.length < 1) {
@@ -209,7 +208,7 @@ var gVersionInfoPage = {
       logger.debug("VersionInfo Finding updates for ${id}", addon);
       addon.findUpdates(gVersionInfoPage, AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED);
     }
-  }),
+  },
 
   onAllUpdatesFinished() {
     AddonManager.removeAddonListener(listener);

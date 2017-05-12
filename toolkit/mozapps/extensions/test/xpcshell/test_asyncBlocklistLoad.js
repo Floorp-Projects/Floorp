@@ -6,7 +6,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* () {
+add_task(async function() {
   let blocklist = AM_Cc["@mozilla.org/extensions/blocklist;1"].
                   getService().wrappedJSObject;
   let scope = Components.utils.import("resource://gre/modules/osfile.jsm", {});
@@ -14,12 +14,12 @@ add_task(function* () {
   // sync -> async
   blocklist._loadBlocklist();
   do_check_true(blocklist._isBlocklistLoaded());
-  yield blocklist._preloadBlocklist();
+  await blocklist._preloadBlocklist();
   do_check_false(blocklist._isBlocklistPreloaded());
   blocklist._clear();
 
   // async -> sync
-  yield blocklist._preloadBlocklist();
+  await blocklist._preloadBlocklist();
   do_check_false(blocklist._isBlocklistLoaded());
   do_check_true(blocklist._isBlocklistPreloaded());
   blocklist._loadBlocklist();
@@ -38,7 +38,7 @@ add_task(function* () {
     });
   }
 
-  yield blocklist._preloadBlocklist();
+  await blocklist._preloadBlocklist();
   do_check_true(blocklist._isBlocklistLoaded());
   do_check_false(blocklist._isBlocklistPreloaded());
 });

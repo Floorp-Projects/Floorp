@@ -11,7 +11,6 @@
 
 :root {
   --toolbarbutton-vertical-inner-padding: 3px;
-  --toolbarbutton-disabled-opacity: 0.4;
 
 %ifndef MOZ_PHOTON_THEME
   --backbutton-urlbar-overlap: 6px;
@@ -44,7 +43,7 @@ toolbar:-moz-lwtheme {
 #main-window:not([customizing]) .toolbarbutton-1[disabled=true] > .toolbarbutton-menubutton-dropmarker,
 #main-window:not([customizing]) .toolbarbutton-1[disabled=true] > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
 #main-window:not([customizing]) .toolbarbutton-1 > .toolbarbutton-menubutton-button[disabled=true] > .toolbarbutton-icon {
-  opacity: var(--toolbarbutton-disabled-opacity);
+  opacity: 0.4;
 }
 
 .toolbarbutton-1 > .toolbarbutton-menu-dropmarker,

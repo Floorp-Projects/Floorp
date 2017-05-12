@@ -49,16 +49,16 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* init_tests() {
+add_task(async function init_tests() {
   const TEST_URI = NetUtil.newURI("http://mozilla.org/");
   const TEST_TITLE = "This is a test";
 
-  yield PlacesUtils.bookmarks.insert({
+  await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     title: TEST_TITLE,
     url: TEST_URI
   });
-  yield PlacesTestUtils.addVisits(TEST_URI);
+  await PlacesTestUtils.addVisits(TEST_URI);
   let thing = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteInput,
                                            Ci.nsIAutoCompletePopup,
@@ -73,13 +73,13 @@ add_task(function* init_tests() {
   Services.obs.notifyObservers(thing, TOPIC_AUTOCOMPLETE_FEEDBACK_INCOMING);
 });
 
-add_task(function* test_timed() {
+add_task(async function test_timed() {
   clearAnalyzeData();
 
   // Set a low interval and wait for the timed expiration to start.
   let promise = promiseTopicObserved(PlacesUtils.TOPIC_EXPIRATION_FINISHED);
   setInterval(3);
-  yield promise;
+  await promise;
   setInterval(3600);
 
   do_check_analyze_ran("moz_places", false);
@@ -88,10 +88,10 @@ add_task(function* test_timed() {
   do_check_analyze_ran("moz_inputhistory", true);
 });
 
-add_task(function* test_debug() {
+add_task(async function test_debug() {
   clearAnalyzeData();
 
-  yield promiseForceExpirationStep(1);
+  await promiseForceExpirationStep(1);
 
   do_check_analyze_ran("moz_places", true);
   do_check_analyze_ran("moz_bookmarks", true);
@@ -99,14 +99,14 @@ add_task(function* test_debug() {
   do_check_analyze_ran("moz_inputhistory", true);
 });
 
-add_task(function* test_clear_history() {
+add_task(async function test_clear_history() {
   clearAnalyzeData();
 
   let promise = promiseTopicObserved(PlacesUtils.TOPIC_EXPIRATION_FINISHED);
   let listener = Cc["@mozilla.org/places/expiration;1"]
                  .getService(Ci.nsINavHistoryObserver);
   listener.onClearHistory();
-  yield promise;
+  await promise;
 
   do_check_analyze_ran("moz_places", true);
   do_check_analyze_ran("moz_bookmarks", false);

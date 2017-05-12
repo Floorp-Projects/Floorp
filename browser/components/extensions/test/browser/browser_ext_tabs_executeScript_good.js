@@ -4,7 +4,7 @@
 
 requestLongerTimeout(2);
 
-function* testHasPermission(params) {
+async function testHasPermission(params) {
   let contentSetup = params.contentSetup || (() => Promise.resolve());
 
   async function background(contentSetup) {
@@ -38,44 +38,44 @@ function* testHasPermission(params) {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitMessage("ready");
+  await extension.startup();
+  await extension.awaitMessage("ready");
 
   if (params.setup) {
-    yield params.setup(extension);
+    await params.setup(extension);
   }
 
   extension.sendMessage("execute-script");
 
-  yield extension.awaitFinish("executeScript");
+  await extension.awaitFinish("executeScript");
 
   if (params.tearDown) {
-    yield params.tearDown(extension);
+    await params.tearDown(extension);
   }
 
-  yield extension.unload();
+  await extension.unload();
 }
 
-add_task(function* testGoodPermissions() {
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/", true);
+add_task(async function testGoodPermissions() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/", true);
 
   info("Test explicit host permission");
-  yield testHasPermission({
+  await testHasPermission({
     manifest: {"permissions": ["http://mochi.test/"]},
   });
 
   info("Test explicit host subdomain permission");
-  yield testHasPermission({
+  await testHasPermission({
     manifest: {"permissions": ["http://*.mochi.test/"]},
   });
 
   info("Test explicit <all_urls> permission");
-  yield testHasPermission({
+  await testHasPermission({
     manifest: {"permissions": ["<all_urls>"]},
   });
 
   info("Test activeTab permission with a command key press");
-  yield testHasPermission({
+  await testHasPermission({
     manifest: {
       "permissions": ["activeTab"],
       "commands": {
@@ -94,14 +94,14 @@ add_task(function* testGoodPermissions() {
       });
       return Promise.resolve();
     },
-    setup: function* (extension) {
-      yield EventUtils.synthesizeKey("k", {altKey: true, shiftKey: true});
-      yield extension.awaitMessage("tabs-command-key-pressed");
+    setup: async function(extension) {
+      await EventUtils.synthesizeKey("k", {altKey: true, shiftKey: true});
+      await extension.awaitMessage("tabs-command-key-pressed");
     },
   });
 
   info("Test activeTab permission with a browser action click");
-  yield testHasPermission({
+  await testHasPermission({
     manifest: {
       "permissions": ["activeTab"],
       "browser_action": {},
@@ -117,7 +117,7 @@ add_task(function* testGoodPermissions() {
   });
 
   info("Test activeTab permission with a page action click");
-  yield testHasPermission({
+  await testHasPermission({
     manifest: {
       "permissions": ["activeTab"],
       "page_action": {},
@@ -131,7 +131,7 @@ add_task(function* testGoodPermissions() {
   });
 
   info("Test activeTab permission with a browser action w/popup click");
-  yield testHasPermission({
+  await testHasPermission({
     manifest: {
       "permissions": ["activeTab"],
       "browser_action": {"default_popup": "_blank.html"},
@@ -144,7 +144,7 @@ add_task(function* testGoodPermissions() {
   });
 
   info("Test activeTab permission with a page action w/popup click");
-  yield testHasPermission({
+  await testHasPermission({
     manifest: {
       "permissions": ["activeTab"],
       "page_action": {"default_popup": "_blank.html"},
@@ -158,7 +158,7 @@ add_task(function* testGoodPermissions() {
   });
 
   info("Test activeTab permission with a context menu click");
-  yield testHasPermission({
+  await testHasPermission({
     manifest: {
       "permissions": ["activeTab", "contextMenus"],
     },
@@ -166,24 +166,24 @@ add_task(function* testGoodPermissions() {
       browser.contextMenus.create({title: "activeTab", contexts: ["all"]});
       return Promise.resolve();
     },
-    setup: function* (extension) {
+    setup: async function(extension) {
       let contextMenu = document.getElementById("contentAreaContextMenu");
       let awaitPopupShown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
       let awaitPopupHidden = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
 
-      yield BrowserTestUtils.synthesizeMouseAtCenter("a[href]", {type: "contextmenu", button: 2},
+      await BrowserTestUtils.synthesizeMouseAtCenter("a[href]", {type: "contextmenu", button: 2},
                                                      gBrowser.selectedBrowser);
-      yield awaitPopupShown;
+      await awaitPopupShown;
 
       let item = contextMenu.querySelector("[label=activeTab]");
 
-      yield EventUtils.synthesizeMouseAtCenter(item, {}, window);
+      await EventUtils.synthesizeMouseAtCenter(item, {}, window);
 
-      yield awaitPopupHidden;
+      await awaitPopupHidden;
     },
   });
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });
 
 add_task(forceGC);

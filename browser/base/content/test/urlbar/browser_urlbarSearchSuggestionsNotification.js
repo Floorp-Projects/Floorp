@@ -4,18 +4,18 @@ const CHOICE_PREF = "browser.urlbar.userMadeSearchSuggestionsChoice";
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
 // Must run first.
-add_task(function* prepare() {
-  let engine = yield promiseNewSearchEngine(TEST_ENGINE_BASENAME);
+add_task(async function prepare() {
+  let engine = await promiseNewSearchEngine(TEST_ENGINE_BASENAME);
   let oldCurrentEngine = Services.search.currentEngine;
   Services.search.currentEngine = engine;
-  registerCleanupFunction(function* () {
+  registerCleanupFunction(async function() {
     Services.search.currentEngine = oldCurrentEngine;
     Services.prefs.clearUserPref(SUGGEST_ALL_PREF);
     Services.prefs.clearUserPref(SUGGEST_URLBAR_PREF);
 
     // Disable the notification for future tests so it doesn't interfere with
     // them.  clearUserPref() won't work because by default the pref is false.
-    yield setUserMadeChoicePref(true);
+    await setUserMadeChoicePref(true);
 
     // Make sure the popup is closed for the next test.
     gURLBar.blur();
@@ -23,24 +23,24 @@ add_task(function* prepare() {
   });
 });
 
-add_task(function* focus() {
+add_task(async function focus() {
   // Focusing the urlbar used to open the popup in order to show the
   // notification, but it doesn't anymore.  Make sure it does not.
   Services.prefs.setBoolPref(SUGGEST_ALL_PREF, true);
-  yield setUserMadeChoicePref(false);
+  await setUserMadeChoicePref(false);
   gURLBar.blur();
   gURLBar.focus();
   Assert.ok(!gURLBar.popup.popupOpen, "popup should remain closed");
 });
 
-add_task(function* dismissWithoutResults() {
+add_task(async function dismissWithoutResults() {
   Services.prefs.setBoolPref(SUGGEST_ALL_PREF, true);
-  yield setUserMadeChoicePref(false);
+  await setUserMadeChoicePref(false);
   gURLBar.blur();
   gURLBar.focus();
   let popupPromise = promisePopupShown(gURLBar.popup);
   gURLBar.openPopup();
-  yield popupPromise;
+  await popupPromise;
   Assert.ok(gURLBar.popup.popupOpen, "popup should be open");
   assertVisible(true);
   Assert.equal(gURLBar.popup._matchCount, 0, "popup should have no results");
@@ -49,22 +49,22 @@ add_task(function* dismissWithoutResults() {
   );
   let transitionPromise = promiseTransition();
   disableButton.click();
-  yield transitionPromise;
+  await transitionPromise;
   Assert.ok(!gURLBar.popup.popupOpen, "popup should be closed");
   gURLBar.blur();
   gURLBar.focus();
   Assert.ok(!gURLBar.popup.popupOpen, "popup should remain closed");
-  yield promiseAutocompleteResultPopup("foo");
+  await promiseAutocompleteResultPopup("foo");
   Assert.ok(gURLBar.popup.popupOpen, "popup should be open");
   assertVisible(false);
 });
 
-add_task(function* dismissWithResults() {
+add_task(async function dismissWithResults() {
   Services.prefs.setBoolPref(SUGGEST_ALL_PREF, true);
-  yield setUserMadeChoicePref(false);
+  await setUserMadeChoicePref(false);
   gURLBar.blur();
   gURLBar.focus();
-  yield promiseAutocompleteResultPopup("foo");
+  await promiseAutocompleteResultPopup("foo");
   Assert.ok(gURLBar.popup.popupOpen, "popup should be open");
   assertVisible(true);
   Assert.ok(gURLBar.popup._matchCount > 0, "popup should have results");
@@ -73,22 +73,22 @@ add_task(function* dismissWithResults() {
   );
   let transitionPromise = promiseTransition();
   disableButton.click();
-  yield transitionPromise;
+  await transitionPromise;
   Assert.ok(gURLBar.popup.popupOpen, "popup should remain open");
   gURLBar.blur();
   gURLBar.focus();
   Assert.ok(!gURLBar.popup.popupOpen, "popup should remain closed");
-  yield promiseAutocompleteResultPopup("foo");
+  await promiseAutocompleteResultPopup("foo");
   Assert.ok(gURLBar.popup.popupOpen, "popup should be open");
   assertVisible(false);
 });
 
-add_task(function* disable() {
+add_task(async function disable() {
   Services.prefs.setBoolPref(SUGGEST_ALL_PREF, true);
-  yield setUserMadeChoicePref(false);
+  await setUserMadeChoicePref(false);
   gURLBar.blur();
   gURLBar.focus();
-  yield promiseAutocompleteResultPopup("foo");
+  await promiseAutocompleteResultPopup("foo");
   Assert.ok(gURLBar.popup.popupOpen, "popup should be open");
   assertVisible(true);
   let disableButton = document.getAnonymousElementByAttribute(
@@ -96,19 +96,19 @@ add_task(function* disable() {
   );
   let transitionPromise = promiseTransition();
   disableButton.click();
-  yield transitionPromise;
+  await transitionPromise;
   gURLBar.blur();
-  yield promiseAutocompleteResultPopup("foo");
+  await promiseAutocompleteResultPopup("foo");
   Assert.ok(!suggestionsPresent());
 });
 
-add_task(function* enable() {
+add_task(async function enable() {
   Services.prefs.setBoolPref(SUGGEST_ALL_PREF, true);
   Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, false);
-  yield setUserMadeChoicePref(false);
+  await setUserMadeChoicePref(false);
   gURLBar.blur();
   gURLBar.focus();
-  yield promiseAutocompleteResultPopup("foo");
+  await promiseAutocompleteResultPopup("foo");
   assertVisible(true);
   Assert.ok(!suggestionsPresent());
   let enableButton = document.getAnonymousElementByAttribute(
@@ -117,48 +117,48 @@ add_task(function* enable() {
   let searchPromise = BrowserTestUtils.waitForCondition(suggestionsPresent,
                                                         "waiting for suggestions");
   enableButton.click();
-  yield searchPromise;
+  await searchPromise;
   // Clicking Yes should trigger a new search so that suggestions appear
   // immediately.
   Assert.ok(suggestionsPresent());
   gURLBar.blur();
   gURLBar.focus();
   // Suggestions should still be present in a new search of course.
-  yield promiseAutocompleteResultPopup("bar");
+  await promiseAutocompleteResultPopup("bar");
   Assert.ok(suggestionsPresent());
 });
 
-add_task(function* privateWindow() {
+add_task(async function privateWindow() {
   // Since suggestions are disabled in private windows, the notification should
   // not appear even when suggestions are otherwise enabled.
-  let win = yield BrowserTestUtils.openNewBrowserWindow({ private: true });
+  let win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
   win.gURLBar.blur();
   win.gURLBar.focus();
-  yield promiseAutocompleteResultPopup("foo", win);
+  await promiseAutocompleteResultPopup("foo", win);
   assertVisible(false, win);
   win.gURLBar.blur();
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 });
 
-add_task(function* multipleWindows() {
+add_task(async function multipleWindows() {
   // Opening multiple windows, using their urlbars, and then dismissing the
   // notification in one should dismiss the notification in all.
   Services.prefs.setBoolPref(SUGGEST_ALL_PREF, true);
   Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, false);
-  yield setUserMadeChoicePref(false);
+  await setUserMadeChoicePref(false);
 
   gURLBar.focus();
-  yield promiseAutocompleteResultPopup("win1");
+  await promiseAutocompleteResultPopup("win1");
   assertVisible(true);
 
-  let win2 = yield BrowserTestUtils.openNewBrowserWindow();
+  let win2 = await BrowserTestUtils.openNewBrowserWindow();
   win2.gURLBar.focus();
-  yield promiseAutocompleteResultPopup("win2", win2);
+  await promiseAutocompleteResultPopup("win2", win2);
   assertVisible(true, win2);
 
-  let win3 = yield BrowserTestUtils.openNewBrowserWindow();
+  let win3 = await BrowserTestUtils.openNewBrowserWindow();
   win3.gURLBar.focus();
-  yield promiseAutocompleteResultPopup("win3", win3);
+  await promiseAutocompleteResultPopup("win3", win3);
   assertVisible(true, win3);
 
   let enableButton = win3.document.getAnonymousElementByAttribute(
@@ -166,31 +166,31 @@ add_task(function* multipleWindows() {
   );
   let transitionPromise = promiseTransition(win3);
   enableButton.click();
-  yield transitionPromise;
+  await transitionPromise;
   assertVisible(false, win3);
 
   win2.gURLBar.focus();
-  yield promiseAutocompleteResultPopup("win2done", win2);
+  await promiseAutocompleteResultPopup("win2done", win2);
   assertVisible(false, win2);
 
   gURLBar.focus();
-  yield promiseAutocompleteResultPopup("win1done");
+  await promiseAutocompleteResultPopup("win1done");
   assertVisible(false);
 
-  yield BrowserTestUtils.closeWindow(win2);
-  yield BrowserTestUtils.closeWindow(win3);
+  await BrowserTestUtils.closeWindow(win2);
+  await BrowserTestUtils.closeWindow(win3);
 });
 
-add_task(function* enableOutsideNotification() {
+add_task(async function enableOutsideNotification() {
   // Setting the suggest.searches pref outside the notification (e.g., by
   // ticking the checkbox in the preferences window) should hide it.
   Services.prefs.setBoolPref(SUGGEST_ALL_PREF, true);
   Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, false);
-  yield setUserMadeChoicePref(false);
+  await setUserMadeChoicePref(false);
 
   Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, true);
   gURLBar.focus();
-  yield promiseAutocompleteResultPopup("foo");
+  await promiseAutocompleteResultPopup("foo");
   assertVisible(false);
 });
 

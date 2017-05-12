@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <title>
+    Testcase with body and html *independently* scrollable,
+    with body's "overflow" set dynamically.
+  </title>
+  <style>
+    html {
+      overflow: scroll;
+    }
+  </style>
+  <script>
+    function doTest() {
+      document.body.style.overflow = "scroll";
+      document.documentElement.removeAttribute("class");
+    }
+    window.addEventListener("MozReftestInvalidate", doTest);
+  </script>
+</head>
+<body>
+</body>
+</html>

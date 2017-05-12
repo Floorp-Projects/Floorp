@@ -7,7 +7,7 @@
 const BUTTONID = "test-API-created-widget-toolbar-gone";
 const TOOLBARID = "test-API-created-extra-toolbar";
 
-add_task(function*() {
+add_task(async function() {
   let toolbar = createToolbarWithPlacements(TOOLBARID, []);
   CustomizableUI.addWidgetToArea(BUTTONID, TOOLBARID);
   is(CustomizableUI.getPlacementOfWidget(BUTTONID).area, TOOLBARID, "Should be on toolbar");
@@ -18,7 +18,7 @@ add_task(function*() {
 
   let currentWidget = CustomizableUI.getWidget(BUTTONID);
 
-  yield startCustomizing();
+  await startCustomizing();
   let buttonNode = document.getElementById(BUTTONID);
   ok(buttonNode, "Should find button in window");
   if (buttonNode) {
@@ -27,7 +27,7 @@ add_task(function*() {
     is(buttonNode, gNavToolbox.palette.querySelector("#" + BUTTONID), "Node should really be in palette.");
   }
   is(currentWidget.forWindow(window).node, buttonNode, "Should have the same node for customize mode");
-  yield endCustomizing();
+  await endCustomizing();
 
   CustomizableUI.destroyWidget(BUTTONID);
   CustomizableUI.unregisterArea(TOOLBARID, true);

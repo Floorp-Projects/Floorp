@@ -11,7 +11,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_addBookmarksAndCheckGuids() {
+add_task(async function test_addBookmarksAndCheckGuids() {
   let folder = bmsvc.createFolder(bmsvc.placesRoot, "test folder", bmsvc.DEFAULT_INDEX);
   bmsvc.insertBookmark(folder, uri("http://test1.com/"),
                        bmsvc.DEFAULT_INDEX, "1 title");
@@ -56,10 +56,10 @@ add_task(function* test_addBookmarksAndCheckGuids() {
 
   root.containerOpen = false;
 
-  yield PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.bookmarks.eraseEverything();
 });
 
-add_task(function* test_updateBookmarksAndCheckGuids() {
+add_task(async function test_updateBookmarksAndCheckGuids() {
   let folder = bmsvc.createFolder(bmsvc.placesRoot, "test folder", bmsvc.DEFAULT_INDEX);
   let b1 = bmsvc.insertBookmark(folder, uri("http://test1.com/"),
                                 bmsvc.DEFAULT_INDEX, "1 title");
@@ -85,13 +85,13 @@ add_task(function* test_updateBookmarksAndCheckGuids() {
 
   root.containerOpen = false;
 
-  yield PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.bookmarks.eraseEverything();
 });
 
-add_task(function* test_addVisitAndCheckGuid() {
+add_task(async function test_addVisitAndCheckGuid() {
   // add a visit and test page guid and non-existing bookmark guids.
   let sourceURI = uri("http://test4.com/");
-  yield PlacesTestUtils.addVisits({ uri: sourceURI });
+  await PlacesTestUtils.addVisits({ uri: sourceURI });
   do_check_eq(bmsvc.getBookmarkedURIFor(sourceURI), null);
 
   let options = histsvc.getNewQueryOptions();
@@ -105,10 +105,10 @@ add_task(function* test_addVisitAndCheckGuid() {
   do_check_eq(root.getChild(0).bookmarkGuid, "");
   root.containerOpen = false;
 
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
 });
 
-add_task(function* test_addItemsWithInvalidGUIDsFails() {
+add_task(async function test_addItemsWithInvalidGUIDsFails() {
   const INVALID_GUID = "XYZ";
   try {
     bmsvc.createFolder(bmsvc.placesRoot, "XYZ folder",
@@ -129,10 +129,10 @@ add_task(function* test_addItemsWithInvalidGUIDsFails() {
     do_throw("Adding a separator with an invalid guid should fail");
   } catch (ex) { }
 
-  yield PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.bookmarks.eraseEverything();
 });
 
-add_task(function* test_addItemsWithGUIDs() {
+add_task(async function test_addItemsWithGUIDs() {
   const FOLDER_GUID     = "FOLDER--GUID";
   const BOOKMARK_GUID   = "BM------GUID";
   const SEPARATOR_GUID  = "SEP-----GUID";
@@ -150,18 +150,18 @@ add_task(function* test_addItemsWithGUIDs() {
   do_check_eq(root.getChild(1).bookmarkGuid, SEPARATOR_GUID);
 
   root.containerOpen = false;
-  yield PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.bookmarks.eraseEverything();
 });
 
-add_task(function* test_emptyGUIDIgnored() {
+add_task(async function test_emptyGUIDIgnored() {
   let folder = bmsvc.createFolder(bmsvc.placesRoot, "test folder",
                                   bmsvc.DEFAULT_INDEX, "");
   do_check_valid_places_guid(PlacesUtils.getFolderContents(folder)
                                         .root.bookmarkGuid);
-  yield PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.bookmarks.eraseEverything();
 });
 
-add_task(function* test_usingSameGUIDFails() {
+add_task(async function test_usingSameGUIDFails() {
   const GUID = "XYZXYZXYZXYZ";
   bmsvc.createFolder(bmsvc.placesRoot, "test folder",
                      bmsvc.DEFAULT_INDEX, GUID);
@@ -171,5 +171,5 @@ add_task(function* test_usingSameGUIDFails() {
     do_throw("Using the same guid twice should fail");
   } catch (ex) { }
 
-  yield PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.bookmarks.eraseEverything();
 });

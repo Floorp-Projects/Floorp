@@ -220,6 +220,7 @@
 #include "nsIWebNavigationInfo.h"
 #include "nsPluginHost.h"
 #include "mozilla/HangAnnotations.h"
+#include "mozilla/ServoRestyleManager.h"
 
 #include "nsIBidiKeyboard.h"
 
@@ -5304,6 +5305,12 @@ void
 nsContentUtils::DestroyAnonymousContent(nsCOMPtr<nsIContent>* aContent)
 {
   if (*aContent) {
+    // Don't wait until UnbindFromTree to clear ServoElementData, since
+    // leak checking at shutdown can run before the AnonymousContentDestroyer
+    // runs.
+    if ((*aContent)->IsStyledByServo() && (*aContent)->IsElement()) {
+      ServoRestyleManager::ClearServoDataFromSubtree((*aContent)->AsElement());
+    }
     AddScriptRunner(new AnonymousContentDestroyer(aContent));
   }
 }
@@ -5313,6 +5320,12 @@ void
 nsContentUtils::DestroyAnonymousContent(nsCOMPtr<Element>* aElement)
 {
   if (*aElement) {
+    // Don't wait until UnbindFromTree to clear ServoElementData, since
+    // leak checking at shutdown can run before the AnonymousContentDestroyer
+    // runs.
+    if ((*aElement)->IsStyledByServo()) {
+      ServoRestyleManager::ClearServoDataFromSubtree(*aElement);
+    }
     AddScriptRunner(new AnonymousContentDestroyer(aElement));
   }
 }

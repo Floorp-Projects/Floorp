@@ -10,7 +10,6 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource:///modules/CustomizableUI.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 
 this.Buttons = {
 
@@ -20,21 +19,21 @@ this.Buttons = {
 
   configurations: {
     navBarButtons: {
-      applyConfig: Task.async(() => {
+      applyConfig: async () => {
         CustomizableUI.addWidgetToArea("screenshot-widget", CustomizableUI.AREA_NAVBAR);
-      }),
+      },
     },
 
     tabsToolbarButtons: {
-      applyConfig: Task.async(() => {
+      applyConfig: async () => {
         CustomizableUI.addWidgetToArea("screenshot-widget", CustomizableUI.AREA_TABSTRIP);
-      }),
+      },
     },
 
     menuPanelButtons: {
-      applyConfig: Task.async(() => {
+      applyConfig: async () => {
         CustomizableUI.addWidgetToArea("screenshot-widget", CustomizableUI.AREA_PANEL);
-      }),
+      },
 
       verifyConfig() {
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
@@ -46,9 +45,9 @@ this.Buttons = {
     },
 
     custPaletteButtons: {
-      applyConfig: Task.async(() => {
+      applyConfig: async () => {
         CustomizableUI.removeWidgetFromArea("screenshot-widget");
-      }),
+      },
 
       verifyConfig() {
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");

@@ -9,7 +9,7 @@ const EMAIL = "foo@privacy.com";
  * Sets up the browser to send crash reports to the local crash report
  * testing server.
  */
-add_task(function* setup() {
+add_task(async function setup() {
   // The test harness sets MOZ_CRASHREPORTER_NO_REPORT, which disables crash
   // reports.  This test needs them enabled.  The test also needs a mock
   // report server, and fortunately one is already set up by toolkit/
@@ -69,7 +69,7 @@ function crashTabTestHelper(fieldValues, expectedExtra) {
   return BrowserTestUtils.withNewTab({
     gBrowser,
     url: PAGE,
-  }, function*(browser) {
+  }, async function(browser) {
     let prefs = TabCrashHandler.prefs;
     let originalSendReport = prefs.getBoolPref("sendReport");
     let originalEmailMe = prefs.getBoolPref("emailMe");
@@ -77,7 +77,7 @@ function crashTabTestHelper(fieldValues, expectedExtra) {
     let originalEmail = prefs.getCharPref("email");
 
     let tab = gBrowser.getTabForBrowser(browser);
-    yield BrowserTestUtils.crashBrowser(browser);
+    await BrowserTestUtils.crashBrowser(browser);
     let doc = browser.contentDocument;
 
     // Since about:tabcrashed will run in the parent process, we can safely
@@ -106,8 +106,8 @@ function crashTabTestHelper(fieldValues, expectedExtra) {
     let crashReport = promiseCrashReport(expectedExtra);
     let restoreTab = browser.contentDocument.getElementById("restoreTab");
     restoreTab.click();
-    yield BrowserTestUtils.waitForEvent(tab, "SSTabRestored");
-    yield crashReport;
+    await BrowserTestUtils.waitForEvent(tab, "SSTabRestored");
+    await crashReport;
 
     // Submitting the crash report may have set some prefs regarding how to
     // send tab crash reports. Let's reset them for the next test.
@@ -123,8 +123,8 @@ function crashTabTestHelper(fieldValues, expectedExtra) {
  * send any comments, the URL of the crashing page, or the email address of
  * the user.
  */
-add_task(function* test_default() {
-  yield crashTabTestHelper({}, {
+add_task(async function test_default() {
+  await crashTabTestHelper({}, {
     "Comments": null,
     "URL": "",
     "Email": null,
@@ -134,8 +134,8 @@ add_task(function* test_default() {
 /**
  * Test just sending a comment.
  */
-add_task(function* test_just_a_comment() {
-  yield crashTabTestHelper({
+add_task(async function test_just_a_comment() {
+  await crashTabTestHelper({
     comments: COMMENTS,
   }, {
     "Comments": COMMENTS,
@@ -147,8 +147,8 @@ add_task(function* test_just_a_comment() {
 /**
  * Test that we don't send email if emailMe is unchecked
  */
-add_task(function* test_no_email() {
-  yield crashTabTestHelper({
+add_task(async function test_no_email() {
+  await crashTabTestHelper({
     email: EMAIL,
     emailMe: false,
   }, {
@@ -161,8 +161,8 @@ add_task(function* test_no_email() {
 /**
  * Test that we can send an email address if emailMe is checked
  */
-add_task(function* test_yes_email() {
-  yield crashTabTestHelper({
+add_task(async function test_yes_email() {
+  await crashTabTestHelper({
     email: EMAIL,
     emailMe: true,
   }, {
@@ -175,8 +175,8 @@ add_task(function* test_yes_email() {
 /**
  * Test that we will send the URL of the page if includeURL is checked.
  */
-add_task(function* test_send_URL() {
-  yield crashTabTestHelper({
+add_task(async function test_send_URL() {
+  await crashTabTestHelper({
     includeURL: true,
   }, {
     "Comments": null,
@@ -188,8 +188,8 @@ add_task(function* test_send_URL() {
 /**
  * Test that we can send comments, the email address, and the URL
  */
-add_task(function* test_send_all() {
-  yield crashTabTestHelper({
+add_task(async function test_send_all() {
+  await crashTabTestHelper({
     includeURL: true,
     emailMe: true,
     email: EMAIL,

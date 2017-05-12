@@ -181,6 +181,8 @@ private:
   DECL_MEDIA_PREF("media.rust.mp4parser",                     EnableRustMP4Parser, bool, false);
 #endif
 
+  DECL_MEDIA_PREF("media.mp4.enabled",                        MP4Enabled, bool, false);
+
   // Error/warning handling, Decoder Doctor
   DECL_MEDIA_PREF("media.playback.warnings-as-errors",        MediaWarningsAsErrors, bool, false);
   DECL_MEDIA_PREF("media.playback.warnings-as-errors.stagefright-vs-rust",

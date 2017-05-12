@@ -24,5 +24,6 @@
     <em:creator>Jonathan Griffin</em:creator>
     <em:contributor>Henrik Skupin</em:contributor>
     <em:homepageURL>https://developer.mozilla.org/en-US/docs/TPS</em:homepageURL>
+    <em:multiprocessCompatible>true</em:multiprocessCompatible>
   </Description>
 </RDF>

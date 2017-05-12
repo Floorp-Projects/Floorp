@@ -21,7 +21,6 @@ Cu.import("resource://gre/modules/AsyncShutdown.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const {EventEmitter} = Cu.import("resource://gre/modules/EventEmitter.jsm", {});
@@ -409,11 +408,11 @@ var AddonTestUtils = {
     }
   },
 
-  getIDFromManifest: Task.async(function*(manifestURI) {
-    let body = yield fetch(manifestURI.spec);
+  async getIDFromManifest(manifestURI) {
+    let body = await fetch(manifestURI.spec);
 
     if (manifestURI.spec.endsWith(".rdf")) {
-      let data = yield body.text();
+      let data = await body.text();
 
       let ds = new RDFDataSource();
       new RDFXMLParser(ds, manifestURI, data);
@@ -424,7 +423,7 @@ var AddonTestUtils = {
       return rdfID.QueryInterface(Ci.nsIRDFLiteral).Value;
     }
 
-    let manifest = yield body.json();
+    let manifest = await body.json();
     try {
       return manifest.applications.gecko.id;
     } catch (e) {
@@ -432,7 +431,7 @@ var AddonTestUtils = {
       // not present in the manifest, so just generate a random one.
       return uuidGen.generateUUID().number;
     }
-  }),
+  },
 
   overrideCertDB() {
     // Unregister the real database. This only works because the add-ons manager
@@ -445,7 +444,7 @@ var AddonTestUtils = {
     let realCertDB = factory.createInstance(null, Ci.nsIX509CertDB);
 
 
-    let verifyCert = Task.async(function*(file, result, cert, callback) {
+    let verifyCert = async (file, result, cert, callback) => {
       if (result == Cr.NS_ERROR_SIGNED_JAR_NOT_SIGNED &&
           !this.useRealCertChecks && callback.wrappedJSObject) {
         // Bypassing XPConnect allows us to create a fake x509 certificate from JS
@@ -454,7 +453,7 @@ var AddonTestUtils = {
         try {
           let manifestURI = this.getManifestURI(file);
 
-          let id = yield this.getIDFromManifest(manifestURI);
+          let id = await this.getIDFromManifest(manifestURI);
 
           let fakeCert = {commonName: id};
 
@@ -469,7 +468,7 @@ var AddonTestUtils = {
       }
 
       return [callback, result, cert];
-    }).bind(this);
+    };
 
 
     function FakeCertDB() {
@@ -738,16 +737,16 @@ var AddonTestUtils = {
     zipW.close();
   },
 
-  promiseWriteFilesToZip: Task.async(function*(zip, files, flags) {
-    yield this.recursiveMakeDir(OS.Path.dirname(zip));
+  async promiseWriteFilesToZip(zip, files, flags) {
+    await this.recursiveMakeDir(OS.Path.dirname(zip));
 
     this.writeFilesToZip(zip, files, flags);
 
     return Promise.resolve(nsFile(zip));
-  }),
+  },
 
-  promiseWriteFilesToDir: Task.async(function*(dir, files) {
-    yield this.recursiveMakeDir(dir);
+  async promiseWriteFilesToDir(dir, files) {
+    await this.recursiveMakeDir(dir);
 
     for (let [path, data] of Object.entries(files)) {
       path = path.split("/");
@@ -757,17 +756,17 @@ var AddonTestUtils = {
       let dirPath = dir;
       for (let subDir of path) {
         dirPath = OS.Path.join(dirPath, subDir);
-        yield OS.Path.makeDir(dirPath, {ignoreExisting: true});
+        await OS.Path.makeDir(dirPath, {ignoreExisting: true});
       }
 
       if (typeof data == "string")
         data = new TextEncoder("utf-8").encode(data);
 
-      yield OS.File.writeAtomic(OS.Path.join(dirPath, leafName), data);
+      await OS.File.writeAtomic(OS.Path.join(dirPath, leafName), data);
     }
 
     return nsFile(dir);
-  }),
+  },
 
   promiseWriteFilesToExtension(dir, id, files, unpacked = this.testUnpacked) {
     if (typeof files["install.rdf"] === "object")
@@ -955,12 +954,12 @@ var AddonTestUtils = {
     }
   },
 
-  promiseSetExtensionModifiedTime: Task.async(function*(path, time) {
-    yield OS.File.setDates(path, time, time);
+  async promiseSetExtensionModifiedTime(path, time) {
+    await OS.File.setDates(path, time, time);
 
     let iterator = new OS.File.DirectoryIterator(path);
     try {
-      yield iterator.forEach(entry => {
+      await iterator.forEach(entry => {
         return this.promiseSetExtensionModifiedTime(entry.path, time);
       });
     } catch (ex) {
@@ -970,7 +969,7 @@ var AddonTestUtils = {
     } finally {
       iterator.close().catch(() => {});
     }
-  }),
+  },
 
   registerDirectory(key, dir) {
     var dirProvider = {
@@ -1160,7 +1159,7 @@ var AddonTestUtils = {
    *        of the task, and a `result` property, containing the task's
    *        return value.
    */
-  promiseConsoleOutput: Task.async(function*(task) {
+  async promiseConsoleOutput(task) {
     const DONE = "=== xpcshell test console listener done ===";
 
     let listener, messages = [];
@@ -1177,16 +1176,16 @@ var AddonTestUtils = {
 
     Services.console.registerListener(listener);
     try {
-      let result = yield task();
+      let result = await task();
 
       Services.console.logStringMessage(DONE);
-      yield awaitListener;
+      await awaitListener;
 
       return {messages, result};
     } finally {
       Services.console.unregisterListener(listener);
     }
-  }),
+  },
 };
 
 for (let [key, val] of Object.entries(AddonTestUtils)) {

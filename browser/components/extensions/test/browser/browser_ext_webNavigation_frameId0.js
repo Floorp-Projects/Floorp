@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* webNavigation_getFrameId_of_existing_main_frame() {
+add_task(async function webNavigation_getFrameId_of_existing_main_frame() {
   // Whether the frame ID in the extension API is 0 is determined by a map that
   // is maintained by |Frames| in ExtensionManagement.jsm. This map is filled
   // using data from content processes. But if ExtensionManagement.jsm is not
@@ -18,7 +18,7 @@ add_task(function* webNavigation_getFrameId_of_existing_main_frame() {
   // Or simply run the test again.
   const BASE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/";
   const DUMMY_URL = BASE + "file_dummy.html";
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, DUMMY_URL, true);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, DUMMY_URL, true);
 
   async function background(DUMMY_URL) {
     let tabs = await browser.tabs.query({active: true, currentWindow: true});
@@ -37,9 +37,9 @@ add_task(function* webNavigation_getFrameId_of_existing_main_frame() {
     background: `(${background})(${JSON.stringify(DUMMY_URL)});`,
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("frameId checked");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("frameId checked");
+  await extension.unload();
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });

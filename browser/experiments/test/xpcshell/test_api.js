@@ -23,27 +23,27 @@ var gManifestHandlerURI  = null;
 var gTimerScheduleOffset = -1;
 
 function uninstallExperimentAddons() {
-  return Task.spawn(function* () {
-    let addons = yield getExperimentAddons();
+  return (async function() {
+    let addons = await getExperimentAddons();
     for (let a of addons) {
-      yield AddonManagerTesting.uninstallAddonByID(a.id);
+      await AddonManagerTesting.uninstallAddonByID(a.id);
     }
-  });
+  })();
 }
 
 function testCleanup(experimentsInstance) {
-  return Task.spawn(function* () {
-    yield promiseRestartManager();
-    yield uninstallExperimentAddons();
-    yield removeCacheFile();
-  });
+  return (async function() {
+    await promiseRestartManager();
+    await uninstallExperimentAddons();
+    await removeCacheFile();
+  })();
 }
 
 function run_test() {
   run_next_test();
 }
 
-add_task(function* test_setup() {
+add_task(async function test_setup() {
   loadAddonManager();
 
   gHttpServer = new HttpServer();
@@ -74,13 +74,13 @@ add_task(function* test_setup() {
   });
 });
 
-add_task(function* test_contract() {
+add_task(async function test_contract() {
   Cc["@mozilla.org/browser/experiments-service;1"].getService();
 });
 
 // Test basic starting and stopping of experiments.
 
-add_task(function* test_getExperiments() {
+add_task(async function test_getExperiments() {
   const OBSERVER_TOPIC = "experiments-changed";
   let observerFireCount = 0;
   let expectedObserverFireCount = 0;
@@ -147,19 +147,19 @@ add_task(function* test_getExperiments() {
   gTimerScheduleOffset = -1;
   defineNow(gPolicy, now);
 
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
                "Experiments observer should have been called.");
   Assert.equal(experiments.getActiveExperimentID(), null,
                "getActiveExperimentID should return null");
 
-  let list = yield experiments.getExperiments();
+  let list = await experiments.getExperiments();
   Assert.equal(list.length, 0, "Experiment list should be empty.");
-  let addons = yield getExperimentAddons();
+  let addons = await getExperimentAddons();
   Assert.equal(addons.length, 0, "Precondition: No experiment add-ons are installed.");
 
   try {
-    yield experiments.getExperimentBranch();
+    await experiments.getExperimentBranch();
     Assert.ok(false, "getExperimentBranch should fail with no experiment");
   } catch (e) {
     Assert.ok(true, "getExperimentBranch correctly threw");
@@ -171,16 +171,16 @@ add_task(function* test_getExperiments() {
   gTimerScheduleOffset = -1;
   defineNow(gPolicy, now);
 
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
                "Experiments observer should have been called.");
 
   Assert.equal(experiments.getActiveExperimentID(), EXPERIMENT1_ID,
                "getActiveExperimentID should return the active experiment1");
 
-  list = yield experiments.getExperiments();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
-  addons = yield getExperimentAddons();
+  addons = await getExperimentAddons();
   Assert.equal(addons.length, 1, "An experiment add-on was installed.");
 
   experimentListData[1].active = true;
@@ -190,14 +190,14 @@ add_task(function* test_getExperiments() {
                  "Property " + k + " should match reference data.");
   }
 
-  let b = yield experiments.getExperimentBranch();
+  let b = await experiments.getExperimentBranch();
   Assert.strictEqual(b, null, "getExperimentBranch should return null by default");
 
-  b = yield experiments.getExperimentBranch(EXPERIMENT1_ID);
+  b = await experiments.getExperimentBranch(EXPERIMENT1_ID);
   Assert.strictEqual(b, null, "getExperimentsBranch should return null (with id)");
 
-  yield experiments.setExperimentBranch(EXPERIMENT1_ID, "foo");
-  b = yield experiments.getExperimentBranch();
+  await experiments.setExperimentBranch(EXPERIMENT1_ID, "foo");
+  b = await experiments.getExperimentBranch();
   Assert.strictEqual(b, "foo", "getExperimentsBranch should return the set value");
 
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
@@ -212,16 +212,16 @@ add_task(function* test_getExperiments() {
   gTimerScheduleOffset = -1;
   defineNow(gPolicy, now);
 
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
                "Experiments observer should have been called.");
 
   Assert.equal(experiments.getActiveExperimentID(), null,
                "getActiveExperimentID should return null again");
 
-  list = yield experiments.getExperiments();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should have 1 entry.");
-  addons = yield getExperimentAddons();
+  addons = await getExperimentAddons();
   Assert.equal(addons.length, 0, "The experiment add-on should be uninstalled.");
 
   experimentListData[1].active = false;
@@ -241,16 +241,16 @@ add_task(function* test_getExperiments() {
   gTimerScheduleOffset = -1;
   defineNow(gPolicy, now);
 
-  yield experiments.notify();
+  await experiments.notify();
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
                "Experiments observer should have been called.");
 
   Assert.equal(experiments.getActiveExperimentID(), EXPERIMENT2_ID,
                "getActiveExperimentID should return the active experiment2");
 
-  list = yield experiments.getExperiments();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 2, "Experiment list should have 2 entries now.");
-  addons = yield getExperimentAddons();
+  addons = await getExperimentAddons();
   Assert.equal(addons.length, 1, "An experiment add-on is installed.");
 
   experimentListData[0].active = true;
@@ -271,16 +271,16 @@ add_task(function* test_getExperiments() {
   now = futureDate(startDate2, 10 * MS_IN_ONE_DAY + 1000);
   gTimerScheduleOffset = -1;
   defineNow(gPolicy, now);
-  yield experiments.notify();
+  await experiments.notify();
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
                "Experiments observer should have been called.");
 
   Assert.equal(experiments.getActiveExperimentID(), null,
                "getActiveExperimentID should return null again2");
 
-  list = yield experiments.getExperiments();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 2, "Experiment list should have 2 entries now.");
-  addons = yield getExperimentAddons();
+  addons = await getExperimentAddons();
   Assert.equal(addons.length, 0, "No experiments add-ons are installed.");
 
   experimentListData[0].active = false;
@@ -296,10 +296,10 @@ add_task(function* test_getExperiments() {
   // Cleanup.
 
   Services.obs.removeObserver(observer, OBSERVER_TOPIC);
-  yield testCleanup(experiments);
+  await testCleanup(experiments);
 });
 
-add_task(function* test_getActiveExperimentID() {
+add_task(async function test_getActiveExperimentID() {
   // Check that getActiveExperimentID returns the correct result even
   // after .uninit()
 
@@ -330,23 +330,23 @@ add_task(function* test_getActiveExperimentID() {
   defineNow(gPolicy, now);
 
   let experiments = new Experiments.Experiments(gPolicy);
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
 
   Assert.equal(experiments.getActiveExperimentID(), EXPERIMENT1_ID,
                "getActiveExperimentID should return the active experiment1");
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
   Assert.equal(experiments.getActiveExperimentID(), EXPERIMENT1_ID,
                "getActiveExperimentID should return the active experiment1 after uninit()");
 
-  yield testCleanup(experiments);
+  await testCleanup(experiments);
 });
 
 // Test that we handle the experiments addon already being
 // installed properly.
 // We should just pave over them.
 
-add_task(function* test_addonAlreadyInstalled() {
+add_task(async function test_addonAlreadyInstalled() {
   const OBSERVER_TOPIC = "experiments-changed";
   let observerFireCount = 0;
   let expectedObserverFireCount = 0;
@@ -383,35 +383,35 @@ add_task(function* test_addonAlreadyInstalled() {
 
   let now = baseDate;
   defineNow(gPolicy, now);
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
                "Experiments observer should have been called.");
-  let list = yield experiments.getExperiments();
+  let list = await experiments.getExperiments();
   Assert.equal(list.length, 0, "Experiment list should be empty.");
 
   // Trigger update, clock set for the experiment to start.
 
   now = futureDate(startDate, 10 * MS_IN_ONE_DAY);
   defineNow(gPolicy, now);
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
                "Experiments observer should have been called.");
 
-  list = yield experiments.getExperiments();
-  list = yield experiments.getExperiments();
+  list = await experiments.getExperiments();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
   Assert.equal(list[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
   Assert.equal(list[0].active, true, "Experiment 1 should be active.");
 
-  let addons = yield getExperimentAddons();
+  let addons = await getExperimentAddons();
   Assert.equal(addons.length, 1, "1 add-on is installed.");
 
   // Install conflicting addon.
 
-  yield AddonManagerTesting.installXPIFromURL(gDataRoot + EXPERIMENT1_XPI_NAME, EXPERIMENT1_XPI_SHA1);
-  addons = yield getExperimentAddons();
+  await AddonManagerTesting.installXPIFromURL(gDataRoot + EXPERIMENT1_XPI_NAME, EXPERIMENT1_XPI_SHA1);
+  addons = await getExperimentAddons();
   Assert.equal(addons.length, 1, "1 add-on is installed.");
-  list = yield experiments.getExperiments();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should still have 1 entry.");
   Assert.equal(list[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
   Assert.equal(list[0].active, true, "Experiment 1 should be active.");
@@ -419,38 +419,38 @@ add_task(function* test_addonAlreadyInstalled() {
   // Cleanup.
 
   Services.obs.removeObserver(observer, OBSERVER_TOPIC);
-  yield testCleanup(experiments);
+  await testCleanup(experiments);
 });
 
-add_task(function* test_lastActiveToday() {
+add_task(async function test_lastActiveToday() {
   let experiments = new Experiments.Experiments(gPolicy);
 
   replaceExperiments(experiments, FAKE_EXPERIMENTS_1);
 
-  let e = yield experiments.getExperiments();
+  let e = await experiments.getExperiments();
   Assert.equal(e.length, 1, "Monkeypatch successful.");
   Assert.equal(e[0].id, "id1", "ID looks sane");
   Assert.ok(e[0].active, "Experiment is active.");
 
-  let lastActive = yield experiments.lastActiveToday();
+  let lastActive = await experiments.lastActiveToday();
   Assert.equal(e[0], lastActive, "Last active object is expected.");
 
   replaceExperiments(experiments, FAKE_EXPERIMENTS_2);
-  e = yield experiments.getExperiments();
+  e = await experiments.getExperiments();
   Assert.equal(e.length, 2, "Monkeypatch successful.");
 
   defineNow(gPolicy, e[0].endDate);
 
-  lastActive = yield experiments.lastActiveToday();
+  lastActive = await experiments.lastActiveToday();
   Assert.ok(lastActive, "Have a last active experiment");
   Assert.equal(lastActive, e[0], "Last active object is expected.");
 
-  yield testCleanup(experiments);
+  await testCleanup(experiments);
 });
 
 // Test explicitly disabling experiments.
 
-add_task(function* test_disableExperiment() {
+add_task(async function test_disableExperiment() {
   // Dates this test is based on.
 
   let startDate = new Date(2004, 10, 9, 12);
@@ -488,9 +488,9 @@ add_task(function* test_disableExperiment() {
 
   let now = futureDate(startDate, 5 * MS_IN_ONE_DAY);
   defineNow(gPolicy, now);
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
 
-  let list = yield experiments.getExperiments();
+  let list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
 
   experimentInfo.active = true;
@@ -504,9 +504,9 @@ add_task(function* test_disableExperiment() {
 
   now = futureDate(now, 1 * MS_IN_ONE_DAY);
   defineNow(gPolicy, now);
-  yield experiments.disableExperiment("foo");
+  await experiments.disableExperiment("foo");
 
-  list = yield experiments.getExperiments();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should have 1 entry.");
 
   experimentInfo.active = false;
@@ -520,9 +520,9 @@ add_task(function* test_disableExperiment() {
 
   now = futureDate(now, 1 * MS_IN_ONE_DAY);
   defineNow(gPolicy, now);
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
 
-  list = yield experiments.getExperiments();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should have 1 entry.");
 
   for (let k of Object.keys(experimentInfo)) {
@@ -530,10 +530,10 @@ add_task(function* test_disableExperiment() {
                  "Property " + k + " should match reference data.");
   }
 
-  yield testCleanup(experiments);
+  await testCleanup(experiments);
 });
 
-add_task(function* test_disableExperimentsFeature() {
+add_task(async function test_disableExperimentsFeature() {
   // Dates this test is based on.
 
   let startDate = new Date(2004, 10, 9, 12);
@@ -572,9 +572,9 @@ add_task(function* test_disableExperimentsFeature() {
 
   let now = futureDate(startDate, 5 * MS_IN_ONE_DAY);
   defineNow(gPolicy, now);
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
 
-  let list = yield experiments.getExperiments();
+  let list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
 
   experimentInfo.active = true;
@@ -587,10 +587,10 @@ add_task(function* test_disableExperimentsFeature() {
   // Test disabling experiments.
 
   experiments._toggleExperimentsEnabled(false);
-  yield experiments.notify();
+  await experiments.notify();
   Assert.equal(experiments.enabled, false, "Experiments feature should be disabled now.");
 
-  list = yield experiments.getExperiments();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should have 1 entry.");
 
   experimentInfo.active = false;
@@ -605,12 +605,12 @@ add_task(function* test_disableExperimentsFeature() {
   now = futureDate(now, 1 * MS_IN_ONE_DAY);
   defineNow(gPolicy, now);
   try {
-    yield experiments.updateManifest();
+    await experiments.updateManifest();
   } catch (e) {
     // Exception expected, the feature is disabled.
   }
 
-  list = yield experiments.getExperiments();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should have 1 entry.");
 
   for (let k of Object.keys(experimentInfo)) {
@@ -618,14 +618,14 @@ add_task(function* test_disableExperimentsFeature() {
                  "Property " + k + " should match reference data.");
   }
 
-  yield testCleanup(experiments);
+  await testCleanup(experiments);
 });
 
 // Test that after a failed experiment install:
 // * the next applicable experiment gets installed
 // * changing the experiments data later triggers re-evaluation
 
-add_task(function* test_installFailure() {
+add_task(async function test_installFailure() {
   const OBSERVER_TOPIC = "experiments-changed";
   let observerFireCount = 0;
   let expectedObserverFireCount = 0;
@@ -687,10 +687,10 @@ add_task(function* test_installFailure() {
 
   let now = baseDate;
   defineNow(gPolicy, now);
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
                "Experiments observer should have been called.");
-  let list = yield experiments.getExperiments();
+  let list = await experiments.getExperiments();
   Assert.equal(list.length, 0, "Experiment list should be empty.");
 
   // Trigger update, clock set for experiment 1 & 2 to start,
@@ -701,11 +701,11 @@ add_task(function* test_installFailure() {
   now = futureDate(startDate, 10 * MS_IN_ONE_DAY);
   defineNow(gPolicy, now);
   gManifestObject.experiments[0].xpiHash = "sha1:0000000000000000000000000000000000000000";
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
                "Experiments observer should have been called.");
 
-  list = yield experiments.getExperiments();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
   Assert.equal(list[0].id, EXPERIMENT2_ID, "Experiment 2 should be the sole entry.");
   Assert.equal(list[0].active, true, "Experiment 2 should be active.");
@@ -714,14 +714,14 @@ add_task(function* test_installFailure() {
 
   now = futureDate(now, 20 * MS_IN_ONE_DAY);
   defineNow(gPolicy, now);
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
                "Experiments observer should have been called.");
 
   experimentListData[0].active = false;
   experimentListData[0].endDate = now;
 
-  list = yield experiments.getExperiments();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
   Assert.equal(list[0].id, EXPERIMENT2_ID, "Experiment 2 should be the sole entry.");
   Assert.equal(list[0].active, false, "Experiment should not be active.");
@@ -732,14 +732,14 @@ add_task(function* test_installFailure() {
   now = futureDate(now, 20 * MS_IN_ONE_DAY);
   defineNow(gPolicy, now);
   gManifestObject.experiments[0].xpiHash = EXPERIMENT1_XPI_SHA1;
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
                "Experiments observer should have been called.");
 
   experimentListData[0].active = true;
   experimentListData[0].endDate = now.getTime() + 10 * MS_IN_ONE_DAY;
 
-  list = yield experiments.getExperiments();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 2, "Experiment list should have 2 entries now.");
 
   for (let i = 0; i < experimentListData.length; ++i) {
@@ -750,13 +750,13 @@ add_task(function* test_installFailure() {
     }
   }
 
-  yield testCleanup(experiments);
+  await testCleanup(experiments);
 });
 
 // Test that after an experiment was disabled by user action,
 // the experiment is not activated again if manifest data changes.
 
-add_task(function* test_userDisabledAndUpdated() {
+add_task(async function test_userDisabledAndUpdated() {
   const OBSERVER_TOPIC = "experiments-changed";
   let observerFireCount = 0;
   let expectedObserverFireCount = 0;
@@ -793,25 +793,25 @@ add_task(function* test_userDisabledAndUpdated() {
 
   let now = baseDate;
   defineNow(gPolicy, now);
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
                "Experiments observer should have been called.");
-  let list = yield experiments.getExperiments();
+  let list = await experiments.getExperiments();
   Assert.equal(list.length, 0, "Experiment list should be empty.");
 
   // Trigger update, clock set for experiment 1 to start.
 
   now = futureDate(startDate, 10 * MS_IN_ONE_DAY);
   defineNow(gPolicy, now);
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
                "Experiments observer should have been called.");
 
-  list = yield experiments.getExperiments();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
   Assert.equal(list[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
   Assert.equal(list[0].active, true, "Experiment 1 should be active.");
-  let todayActive = yield experiments.lastActiveToday();
+  let todayActive = await experiments.lastActiveToday();
   Assert.ok(todayActive, "Last active for today reports a value.");
   Assert.equal(todayActive.id, list[0].id, "The entry is what we expect.");
 
@@ -819,15 +819,15 @@ add_task(function* test_userDisabledAndUpdated() {
 
   now = futureDate(now, 20 * MS_IN_ONE_DAY);
   defineNow(gPolicy, now);
-  yield experiments.disableExperiment("foo");
+  await experiments.disableExperiment("foo");
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
                "Experiments observer should have been called.");
 
-  list = yield experiments.getExperiments();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
   Assert.equal(list[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
   Assert.equal(list[0].active, false, "Experiment should not be active anymore.");
-  todayActive = yield experiments.lastActiveToday();
+  todayActive = await experiments.lastActiveToday();
   Assert.ok(todayActive, "Last active for today still returns a value.");
   Assert.equal(todayActive.id, list[0].id, "The ID is still the same.");
 
@@ -837,11 +837,11 @@ add_task(function* test_userDisabledAndUpdated() {
   defineNow(gPolicy, now);
   experiments._experiments.get(EXPERIMENT1_ID)._manifestData.xpiHash =
     "sha1:0000000000000000000000000000000000000000";
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.equal(observerFireCount, expectedObserverFireCount,
                "Experiments observer should not have been called.");
 
-  list = yield experiments.getExperiments();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
   Assert.equal(list[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
   Assert.equal(list[0].active, false, "Experiment should still be inactive.");
@@ -849,13 +849,13 @@ add_task(function* test_userDisabledAndUpdated() {
   // Cleanup.
 
   Services.obs.removeObserver(observer, OBSERVER_TOPIC);
-  yield testCleanup(experiments);
+  await testCleanup(experiments);
 });
 
 // Test that changing the hash for an active experiments triggers an
 // update for it.
 
-add_task(function* test_updateActiveExperiment() {
+add_task(async function test_updateActiveExperiment() {
   const OBSERVER_TOPIC = "experiments-changed";
   let observerFireCount = 0;
   let expectedObserverFireCount = 0;
@@ -892,29 +892,29 @@ add_task(function* test_updateActiveExperiment() {
 
   let now = baseDate;
   defineNow(gPolicy, now);
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
                "Experiments observer should have been called.");
-  let list = yield experiments.getExperiments();
+  let list = await experiments.getExperiments();
   Assert.equal(list.length, 0, "Experiment list should be empty.");
 
-  let todayActive = yield experiments.lastActiveToday();
+  let todayActive = await experiments.lastActiveToday();
   Assert.equal(todayActive, null, "No experiment active today.");
 
   // Trigger update, clock set for the experiment to start.
 
   now = futureDate(startDate, 10 * MS_IN_ONE_DAY);
   defineNow(gPolicy, now);
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
                "Experiments observer should have been called.");
 
-  list = yield experiments.getExperiments();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
   Assert.equal(list[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
   Assert.equal(list[0].active, true, "Experiment 1 should be active.");
   Assert.equal(list[0].name, EXPERIMENT1_NAME, "Experiments name should match.");
-  todayActive = yield experiments.lastActiveToday();
+  todayActive = await experiments.lastActiveToday();
   Assert.ok(todayActive, "todayActive() returns a value.");
   Assert.equal(todayActive.id, list[0].id, "It returns the active experiment.");
 
@@ -925,28 +925,28 @@ add_task(function* test_updateActiveExperiment() {
   defineNow(gPolicy, now);
   gManifestObject.experiments[0].xpiHash = EXPERIMENT1A_XPI_SHA1;
   gManifestObject.experiments[0].xpiURL = gDataRoot + EXPERIMENT1A_XPI_NAME;
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
                "Experiments observer should have been called.");
 
-  list = yield experiments.getExperiments();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
   Assert.equal(list[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
   Assert.equal(list[0].active, true, "Experiment 1 should still be active.");
   Assert.equal(list[0].name, EXPERIMENT1A_NAME, "Experiments name should have been updated.");
-  todayActive = yield experiments.lastActiveToday();
+  todayActive = await experiments.lastActiveToday();
   Assert.equal(todayActive.id, list[0].id, "last active today is still sane.");
 
   // Cleanup.
 
   Services.obs.removeObserver(observer, OBSERVER_TOPIC);
-  yield testCleanup(experiments);
+  await testCleanup(experiments);
 });
 
 // Tests that setting the disable flag for an active experiment
 // stops it.
 
-add_task(function* test_disableActiveExperiment() {
+add_task(async function test_disableActiveExperiment() {
   const OBSERVER_TOPIC = "experiments-changed";
   let observerFireCount = 0;
   let expectedObserverFireCount = 0;
@@ -983,21 +983,21 @@ add_task(function* test_disableActiveExperiment() {
 
   let now = baseDate;
   defineNow(gPolicy, now);
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
                "Experiments observer should have been called.");
-  let list = yield experiments.getExperiments();
+  let list = await experiments.getExperiments();
   Assert.equal(list.length, 0, "Experiment list should be empty.");
 
   // Trigger update, clock set for the experiment to start.
 
   now = futureDate(startDate, 10 * MS_IN_ONE_DAY);
   defineNow(gPolicy, now);
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
                "Experiments observer should have been called.");
 
-  list = yield experiments.getExperiments();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
   Assert.equal(list[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
   Assert.equal(list[0].active, true, "Experiment 1 should be active.");
@@ -1007,11 +1007,11 @@ add_task(function* test_disableActiveExperiment() {
   now = futureDate(now, 1 * MS_IN_ONE_DAY);
   defineNow(gPolicy, now);
   gManifestObject.experiments[0].disabled = true;
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
                "Experiments observer should have been called.");
 
-  list = yield experiments.getExperiments();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
   Assert.equal(list[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
   Assert.equal(list[0].active, false, "Experiment 1 should be disabled.");
@@ -1021,9 +1021,9 @@ add_task(function* test_disableActiveExperiment() {
   now = futureDate(now, 1 * MS_IN_ONE_DAY);
   defineNow(gPolicy, now);
   delete gManifestObject.experiments[0].disabled;
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
 
-  list = yield experiments.getExperiments();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
   Assert.equal(list[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
   Assert.equal(list[0].active, false, "Experiment 1 should still be disabled.");
@@ -1031,7 +1031,7 @@ add_task(function* test_disableActiveExperiment() {
   // Cleanup.
 
   Services.obs.removeObserver(observer, OBSERVER_TOPIC);
-  yield testCleanup(experiments);
+  await testCleanup(experiments);
 });
 
 // Test that:
@@ -1039,7 +1039,7 @@ add_task(function* test_disableActiveExperiment() {
 //   it from starting
 // * after a removing the frozen flag, the experiment can still start
 
-add_task(function* test_freezePendingExperiment() {
+add_task(async function test_freezePendingExperiment() {
   const OBSERVER_TOPIC = "experiments-changed";
   let observerFireCount = 0;
   let expectedObserverFireCount = 0;
@@ -1076,10 +1076,10 @@ add_task(function* test_freezePendingExperiment() {
 
   let now = baseDate;
   defineNow(gPolicy, now);
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
                "Experiments observer should have been called.");
-  let list = yield experiments.getExperiments();
+  let list = await experiments.getExperiments();
   Assert.equal(list.length, 0, "Experiment list should be empty.");
 
   // Trigger update, clock set for the experiment to start but frozen.
@@ -1087,11 +1087,11 @@ add_task(function* test_freezePendingExperiment() {
   now = futureDate(startDate, 10 * MS_IN_ONE_DAY);
   defineNow(gPolicy, now);
   gManifestObject.experiments[0].frozen = true;
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.equal(observerFireCount, expectedObserverFireCount,
                "Experiments observer should have not been called.");
 
-  list = yield experiments.getExperiments();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 0, "Experiment list should have no entries yet.");
 
   // Trigger an update with the experiment not being frozen anymore.
@@ -1099,11 +1099,11 @@ add_task(function* test_freezePendingExperiment() {
   now = futureDate(now, 1 * MS_IN_ONE_DAY);
   defineNow(gPolicy, now);
   delete gManifestObject.experiments[0].frozen;
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
                "Experiments observer should have been called.");
 
-  list = yield experiments.getExperiments();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
   Assert.equal(list[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
   Assert.equal(list[0].active, true, "Experiment 1 should be active now.");
@@ -1111,13 +1111,13 @@ add_task(function* test_freezePendingExperiment() {
   // Cleanup.
 
   Services.obs.removeObserver(observer, OBSERVER_TOPIC);
-  yield testCleanup(experiments);
+  await testCleanup(experiments);
 });
 
 // Test that setting the frozen flag for an active experiment doesn't
 // stop it.
 
-add_task(function* test_freezeActiveExperiment() {
+add_task(async function test_freezeActiveExperiment() {
   const OBSERVER_TOPIC = "experiments-changed";
   let observerFireCount = 0;
   let expectedObserverFireCount = 0;
@@ -1154,21 +1154,21 @@ add_task(function* test_freezeActiveExperiment() {
 
   let now = baseDate;
   defineNow(gPolicy, now);
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
                "Experiments observer should have been called.");
-  let list = yield experiments.getExperiments();
+  let list = await experiments.getExperiments();
   Assert.equal(list.length, 0, "Experiment list should be empty.");
 
   // Trigger update, clock set for the experiment to start.
 
   now = futureDate(startDate, 10 * MS_IN_ONE_DAY);
   defineNow(gPolicy, now);
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
                "Experiments observer should have been called.");
 
-  list = yield experiments.getExperiments();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
   Assert.equal(list[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
   Assert.equal(list[0].active, true, "Experiment 1 should be active.");
@@ -1179,11 +1179,11 @@ add_task(function* test_freezeActiveExperiment() {
   now = futureDate(now, 1 * MS_IN_ONE_DAY);
   defineNow(gPolicy, now);
   gManifestObject.experiments[0].frozen = true;
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.equal(observerFireCount, expectedObserverFireCount,
                "Experiments observer should have been called.");
 
-  list = yield experiments.getExperiments();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
   Assert.equal(list[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
   Assert.equal(list[0].active, true, "Experiment 1 should still be active.");
@@ -1191,13 +1191,13 @@ add_task(function* test_freezeActiveExperiment() {
   // Cleanup.
 
   Services.obs.removeObserver(observer, OBSERVER_TOPIC);
-  yield testCleanup(experiments);
+  await testCleanup(experiments);
 });
 
 // Test that removing an active experiment from the manifest doesn't
 // stop it.
 
-add_task(function* test_removeActiveExperiment() {
+add_task(async function test_removeActiveExperiment() {
   const OBSERVER_TOPIC = "experiments-changed";
   let observerFireCount = 0;
   let expectedObserverFireCount = 0;
@@ -1246,21 +1246,21 @@ add_task(function* test_removeActiveExperiment() {
 
   let now = baseDate;
   defineNow(gPolicy, now);
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
                "Experiments observer should have been called.");
-  let list = yield experiments.getExperiments();
+  let list = await experiments.getExperiments();
   Assert.equal(list.length, 0, "Experiment list should be empty.");
 
   // Trigger update, clock set for the experiment to start.
 
   now = futureDate(startDate, 10 * MS_IN_ONE_DAY);
   defineNow(gPolicy, now);
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
                "Experiments observer should have been called.");
 
-  list = yield experiments.getExperiments();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
   Assert.equal(list[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
   Assert.equal(list[0].active, true, "Experiment 1 should be active.");
@@ -1271,11 +1271,11 @@ add_task(function* test_removeActiveExperiment() {
   now = futureDate(now, 1 * MS_IN_ONE_DAY);
   defineNow(gPolicy, now);
   gManifestObject.experiments[0].frozen = true;
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.equal(observerFireCount, expectedObserverFireCount,
                "Experiments observer should have been called.");
 
-  list = yield experiments.getExperiments();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
   Assert.equal(list[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
   Assert.equal(list[0].active, true, "Experiment 1 should still be active.");
@@ -1283,12 +1283,12 @@ add_task(function* test_removeActiveExperiment() {
   // Cleanup.
 
   Services.obs.removeObserver(observer, OBSERVER_TOPIC);
-  yield testCleanup(experiments);
+  await testCleanup(experiments);
 });
 
 // Test that we correctly handle experiment start & install failures.
 
-add_task(function* test_invalidUrl() {
+add_task(async function test_invalidUrl() {
   const OBSERVER_TOPIC = "experiments-changed";
   let observerFireCount = 0;
   let expectedObserverFireCount = 0;
@@ -1327,24 +1327,24 @@ add_task(function* test_invalidUrl() {
   defineNow(gPolicy, now);
   gTimerScheduleOffset = null;
 
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
                "Experiments observer should have been called.");
   Assert.equal(gTimerScheduleOffset, null, "No new timer should have been scheduled.");
 
-  let list = yield experiments.getExperiments();
+  let list = await experiments.getExperiments();
   Assert.equal(list.length, 0, "Experiment list should be empty.");
 
   // Cleanup.
 
   Services.obs.removeObserver(observer, OBSERVER_TOPIC);
-  yield testCleanup(experiments);
+  await testCleanup(experiments);
 });
 
 // Test that we handle it properly when active experiment addons are being
 // uninstalled.
 
-add_task(function* test_unexpectedUninstall() {
+add_task(async function test_unexpectedUninstall() {
   const OBSERVER_TOPIC = "experiments-changed";
   let observerFireCount = 0;
   let expectedObserverFireCount = 0;
@@ -1381,21 +1381,21 @@ add_task(function* test_unexpectedUninstall() {
 
   let now = baseDate;
   defineNow(gPolicy, now);
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
                "Experiments observer should have been called.");
-  let list = yield experiments.getExperiments();
+  let list = await experiments.getExperiments();
   Assert.equal(list.length, 0, "Experiment list should be empty.");
 
   // Trigger update, clock set for the experiment to start.
 
   now = futureDate(startDate, 10 * MS_IN_ONE_DAY);
   defineNow(gPolicy, now);
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
                "Experiments observer should have been called.");
 
-  list = yield experiments.getExperiments();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
   Assert.equal(list[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
   Assert.equal(list[0].active, true, "Experiment 1 should be active.");
@@ -1403,12 +1403,12 @@ add_task(function* test_unexpectedUninstall() {
   // Uninstall the addon through the addon manager instead of stopping it through
   // the experiments API.
 
-  yield AddonManagerTesting.uninstallAddonByID(EXPERIMENT1_ID);
-  yield experiments._mainTask;
+  await AddonManagerTesting.uninstallAddonByID(EXPERIMENT1_ID);
+  await experiments._mainTask;
 
-  yield experiments.notify();
+  await experiments.notify();
 
-  list = yield experiments.getExperiments();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
   Assert.equal(list[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
   Assert.equal(list[0].active, false, "Experiment 1 should not be active anymore.");
@@ -1416,23 +1416,23 @@ add_task(function* test_unexpectedUninstall() {
   // Cleanup.
 
   Services.obs.removeObserver(observer, OBSERVER_TOPIC);
-  yield testCleanup(experiments);
+  await testCleanup(experiments);
 });
 
 // If the Addon Manager knows of an experiment that we don't, it should get
 // uninstalled.
-add_task(function* testUnknownExperimentsUninstalled() {
+add_task(async function testUnknownExperimentsUninstalled() {
   let experiments = new Experiments.Experiments(gPolicy);
 
-  let addons = yield getExperimentAddons();
+  let addons = await getExperimentAddons();
   Assert.equal(addons.length, 0, "Precondition: No experiment add-ons are present.");
 
   // Simulate us not listening.
   experiments._unregisterWithAddonManager();
-  yield AddonManagerTesting.installXPIFromURL(gDataRoot + EXPERIMENT1_XPI_NAME, EXPERIMENT1_XPI_SHA1);
+  await AddonManagerTesting.installXPIFromURL(gDataRoot + EXPERIMENT1_XPI_NAME, EXPERIMENT1_XPI_SHA1);
   experiments._registerWithAddonManager();
 
-  addons = yield getExperimentAddons();
+  addons = await getExperimentAddons();
   Assert.equal(addons.length, 1, "Experiment 1 installed via AddonManager");
 
   // Simulate no known experiments.
@@ -1441,19 +1441,19 @@ add_task(function* testUnknownExperimentsUninstalled() {
     experiments: [],
   };
 
-  yield experiments.updateManifest();
-  let fromManifest = yield experiments.getExperiments();
+  await experiments.updateManifest();
+  let fromManifest = await experiments.getExperiments();
   Assert.equal(fromManifest.length, 0, "No experiments known in manifest.");
 
   // And the unknown add-on should be gone.
-  addons = yield getExperimentAddons();
+  addons = await getExperimentAddons();
   Assert.equal(addons.length, 0, "Experiment 1 was uninstalled.");
 
-  yield testCleanup(experiments);
+  await testCleanup(experiments);
 });
 
 // If someone else installs an experiment add-on, we detect and stop that.
-add_task(function* testForeignExperimentInstall() {
+add_task(async function testForeignExperimentInstall() {
   let experiments = new Experiments.Experiments(gPolicy);
 
   gManifestObject = {
@@ -1461,27 +1461,27 @@ add_task(function* testForeignExperimentInstall() {
     experiments: [],
   };
 
-  yield experiments.init();
+  await experiments.init();
 
-  let addons = yield getExperimentAddons();
+  let addons = await getExperimentAddons();
   Assert.equal(addons.length, 0, "Precondition: No experiment add-ons present.");
 
   let failed = false;
   try {
-    yield AddonManagerTesting.installXPIFromURL(gDataRoot + EXPERIMENT1_XPI_NAME, EXPERIMENT1_XPI_SHA1);
+    await AddonManagerTesting.installXPIFromURL(gDataRoot + EXPERIMENT1_XPI_NAME, EXPERIMENT1_XPI_SHA1);
   } catch (ex) {
     failed = true;
   }
   Assert.ok(failed, "Add-on install should not have completed successfully");
-  addons = yield getExperimentAddons();
+  addons = await getExperimentAddons();
   Assert.equal(addons.length, 0, "Add-on install should have been cancelled.");
 
-  yield testCleanup(experiments);
+  await testCleanup(experiments);
 });
 
 // Experiment add-ons will be disabled after Addon Manager restarts. Ensure
 // we enable them automatically.
-add_task(function* testEnabledAfterRestart() {
+add_task(async function testEnabledAfterRestart() {
   let experiments = new Experiments.Experiments(gPolicy);
 
   gManifestObject = {
@@ -1500,37 +1500,37 @@ add_task(function* testEnabledAfterRestart() {
     ],
   };
 
-  let addons = yield getExperimentAddons();
+  let addons = await getExperimentAddons();
   Assert.equal(addons.length, 0, "Precondition: No experiment add-ons installed.");
 
-  yield experiments.updateManifest();
-  let fromManifest = yield experiments.getExperiments();
+  await experiments.updateManifest();
+  let fromManifest = await experiments.getExperiments();
   Assert.equal(fromManifest.length, 1, "A single experiment is known.");
 
-  addons = yield getExperimentAddons();
+  addons = await getExperimentAddons();
   Assert.equal(addons.length, 1, "A single experiment add-on is installed.");
   Assert.ok(addons[0].isActive, "That experiment is active.");
 
   dump("Restarting Addon Manager\n");
-  yield promiseRestartManager();
+  await promiseRestartManager();
   experiments = new Experiments.Experiments(gPolicy);
 
-  addons = yield getExperimentAddons();
+  addons = await getExperimentAddons();
   Assert.equal(addons.length, 1, "The experiment is still there after restart.");
   Assert.ok(addons[0].userDisabled, "But it is disabled.");
   Assert.equal(addons[0].isActive, false, "And not active.");
 
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.ok(addons[0].isActive, "It activates when the manifest is evaluated.");
 
-  yield testCleanup(experiments);
+  await testCleanup(experiments);
 });
 
 // If experiment add-ons were ever started, maxStartTime shouldn't be evaluated
 // anymore. Ensure that if maxStartTime is passed but experiment has started
 // already, maxStartTime does not cause deactivation.
 
-add_task(function* testMaxStartTimeEvaluation() {
+add_task(async function testMaxStartTimeEvaluation() {
 
   // Dates the following tests are based on.
 
@@ -1563,32 +1563,32 @@ add_task(function* testMaxStartTimeEvaluation() {
 
   let experiments = new Experiments.Experiments(gPolicy);
 
-  let addons = yield getExperimentAddons();
+  let addons = await getExperimentAddons();
   Assert.equal(addons.length, 0, "Precondition: No experiment add-ons installed.");
 
-  yield experiments.updateManifest();
-  let fromManifest = yield experiments.getExperiments();
+  await experiments.updateManifest();
+  let fromManifest = await experiments.getExperiments();
   Assert.equal(fromManifest.length, 1, "A single experiment is known.");
 
-  addons = yield getExperimentAddons();
+  addons = await getExperimentAddons();
   Assert.equal(addons.length, 1, "A single experiment add-on is installed.");
   Assert.ok(addons[0].isActive, "That experiment is active.");
 
   dump("Setting current time to maxStartTime + 100 days and reloading manifest\n");
   now = futureDate(maxStartDate, 100 * MS_IN_ONE_DAY);
   defineNow(gPolicy, now);
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
 
-  addons = yield getExperimentAddons();
+  addons = await getExperimentAddons();
   Assert.equal(addons.length, 1, "The experiment is still there.");
   Assert.ok(addons[0].isActive, "It is still active.");
 
-  yield testCleanup(experiments);
+  await testCleanup(experiments);
 });
 
 // Test coverage for an add-on uninstall disabling the experiment and that it stays
 // disabled over restarts.
-add_task(function* test_foreignUninstallAndRestart() {
+add_task(async function test_foreignUninstallAndRestart() {
   let experiments = new Experiments.Experiments(gPolicy);
 
   gManifestObject = {
@@ -1607,40 +1607,40 @@ add_task(function* test_foreignUninstallAndRestart() {
     ],
   };
 
-  let addons = yield getExperimentAddons();
+  let addons = await getExperimentAddons();
   Assert.equal(addons.length, 0, "Precondition: No experiment add-ons installed.");
 
-  yield experiments.updateManifest();
-  let experimentList = yield experiments.getExperiments();
+  await experiments.updateManifest();
+  let experimentList = await experiments.getExperiments();
   Assert.equal(experimentList.length, 1, "A single experiment is known.");
 
-  addons = yield getExperimentAddons();
+  addons = await getExperimentAddons();
   Assert.equal(addons.length, 1, "A single experiment add-on is installed.");
   Assert.ok(addons[0].isActive, "That experiment is active.");
 
-  yield AddonManagerTesting.uninstallAddonByID(EXPERIMENT1_ID);
-  yield experiments._mainTask;
+  await AddonManagerTesting.uninstallAddonByID(EXPERIMENT1_ID);
+  await experiments._mainTask;
 
-  addons = yield getExperimentAddons();
+  addons = await getExperimentAddons();
   Assert.equal(addons.length, 0, "Experiment add-on should have been removed.");
 
-  experimentList = yield experiments.getExperiments();
+  experimentList = await experiments.getExperiments();
   Assert.equal(experimentList.length, 1, "A single experiment is known.");
   Assert.equal(experimentList[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
   Assert.ok(!experimentList[0].active, "Experiment 1 should not be active anymore.");
 
   // Fake restart behaviour.
-  yield promiseRestartManager();
+  await promiseRestartManager();
   experiments = new Experiments.Experiments(gPolicy);
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
 
-  addons = yield getExperimentAddons();
+  addons = await getExperimentAddons();
   Assert.equal(addons.length, 0, "No experiment add-ons installed.");
 
-  experimentList = yield experiments.getExperiments();
+  experimentList = await experiments.getExperiments();
   Assert.equal(experimentList.length, 1, "A single experiment is known.");
   Assert.equal(experimentList[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
   Assert.ok(!experimentList[0].active, "Experiment 1 should not be active.");
 
-  yield testCleanup(experiments);
+  await testCleanup(experiments);
 });

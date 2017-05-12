@@ -11,8 +11,8 @@ const TIMEOUT_MS = 500;
 
 // Test that temporary permissions can be re-requested after they expired
 // and that the identity block is updated accordingly.
-add_task(function* testTempPermissionRequestAfterExpiry() {
-  yield SpecialPowers.pushPrefEnv({set: [
+add_task(async function testTempPermissionRequestAfterExpiry() {
+  await SpecialPowers.pushPrefEnv({set: [
         ["privacy.temporary_permission_expire_time_ms", EXPIRE_TIME_MS],
         ["media.navigator.permission.fake", true],
   ]});
@@ -21,7 +21,7 @@ add_task(function* testTempPermissionRequestAfterExpiry() {
   let ids = ["geo", "camera"];
 
   for (let id of ids) {
-    yield BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, function*(browser) {
+    await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function(browser) {
       let blockedIcon = gIdentityHandler._identityBox
         .querySelector(`.blocked-permission-icon[data-permission-id='${id}']`);
 
@@ -34,7 +34,7 @@ add_task(function* testTempPermissionRequestAfterExpiry() {
 
       ok(blockedIcon.hasAttribute("showing"), "blocked permission icon is shown");
 
-      yield new Promise((c) => setTimeout(c, TIMEOUT_MS));
+      await new Promise((c) => setTimeout(c, TIMEOUT_MS));
 
       Assert.deepEqual(SitePermissions.get(uri, id, browser), {
         state: SitePermissions.UNKNOWN,
@@ -44,9 +44,9 @@ add_task(function* testTempPermissionRequestAfterExpiry() {
       let popupshown = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
 
       // Request a permission;
-      yield BrowserTestUtils.synthesizeMouseAtCenter(`#${id}`, {}, browser);
+      await BrowserTestUtils.synthesizeMouseAtCenter(`#${id}`, {}, browser);
 
-      yield popupshown;
+      await popupshown;
 
       ok(!blockedIcon.hasAttribute("showing"), "blocked permission icon is not shown");
 
@@ -55,7 +55,7 @@ add_task(function* testTempPermissionRequestAfterExpiry() {
       let notification = PopupNotifications.panel.firstChild;
       EventUtils.synthesizeMouseAtCenter(notification.secondaryButton, {});
 
-      yield popuphidden;
+      await popuphidden;
 
       SitePermissions.remove(uri, id, browser);
     });

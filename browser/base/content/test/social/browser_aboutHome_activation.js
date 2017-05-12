@@ -4,8 +4,6 @@
 
 var SocialService = Cu.import("resource:///modules/SocialService.jsm", {}).SocialService;
 
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AboutHomeUtils",
   "resource:///modules/AboutHome.jsm");
 
@@ -77,28 +75,28 @@ function test() {
     PopupNotifications.panel.removeAttribute("animate");
   });
 
-  Task.spawn(function* () {
+  (async function() {
     for (let testCase of gTests) {
       info(testCase.desc);
 
       // Create a tab to run the test.
-      let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser);
+      let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
 
       // Add an event handler to modify the snippets map once it's ready.
       let snippetsPromise = promiseSetupSnippetsMap(tab, testCase.snippet);
 
       // Start loading about:home and wait for it to complete, snippets should be loaded
-      yield promiseTabLoadEvent(tab, "about:home", "AboutHomeLoadSnippetsCompleted");
+      await promiseTabLoadEvent(tab, "about:home", "AboutHomeLoadSnippetsCompleted");
 
-      yield snippetsPromise;
+      await snippetsPromise;
 
       // ensure our activation snippet is indeed available
-      yield ContentTask.spawn(tab.linkedBrowser, {}, function*(arg) {
+      await ContentTask.spawn(tab.linkedBrowser, {}, async function(arg) {
         ok(!!content.document.getElementById("snippets"), "Found snippets element");
         ok(!!content.document.getElementById("activationSnippet"), "The snippet is present.");
       });
 
-      yield new Promise(resolve => {
+      await new Promise(resolve => {
         activateProvider(tab, testCase.panel).then(() => {
           checkSocialUI();
           SocialService.uninstallProvider("https://example.com", function() {
@@ -109,10 +107,10 @@ function test() {
       });
 
       // activation opened a post-activation info tab, close it.
-      yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
-      yield BrowserTestUtils.removeTab(tab);
+      await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+      await BrowserTestUtils.removeTab(tab);
     }
-  }).then(finish, ex => {
+  })().then(finish, ex => {
     ok(false, "Unexpected Exception: " + ex);
     finish();
   });
@@ -162,7 +160,7 @@ function promiseSetupSnippetsMap(aTab, aSnippet) {
   return ContentTask.spawn(aTab.linkedBrowser,
                     {snippetsVersion: AboutHomeUtils.snippetsVersion,
                      snippet: aSnippet},
-                    function*(arg) {
+                    async function(arg) {
     return new Promise(resolve => {
       addEventListener("AboutHomeLoadSnippets", function load(event) {
         removeEventListener("AboutHomeLoadSnippets", load, true);

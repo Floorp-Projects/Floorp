@@ -35,7 +35,7 @@ function countFolderChildren(aFolderItemId) {
   return cc;
 }
 
-add_task(function* setup() {
+add_task(async function setup() {
   // Initialize browserGlue, but remove it's listener to places-init-complete.
   Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsIObserver);
 
@@ -43,7 +43,7 @@ add_task(function* setup() {
   PlacesUtils.history;
 
   // Wait for Places init notification.
-  yield promiseTopicObserved("places-browser-init-complete");
+  await promiseTopicObserved("places-browser-init-complete");
 
   // Ensure preferences status.
   Assert.ok(!Services.prefs.getBoolPref(PREF_AUTO_EXPORT_HTML));
@@ -51,16 +51,16 @@ add_task(function* setup() {
   Assert.throws(() => Services.prefs.getBoolPref(PREF_IMPORT_BOOKMARKS_HTML));
 });
 
-add_task(function* test_version_0() {
+add_task(async function test_version_0() {
   do_print("All smart bookmarks are created if smart bookmarks version is 0.");
 
   // Sanity check: we should have default bookmark.
-  Assert.ok(yield PlacesUtils.bookmarks.fetch({
+  Assert.ok(await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     index: 0
   }));
 
-  Assert.ok(yield PlacesUtils.bookmarks.fetch({
+  Assert.ok(await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
     index: 0
   }));
@@ -68,7 +68,7 @@ add_task(function* test_version_0() {
   // Set preferences.
   Services.prefs.setIntPref(PREF_SMART_BOOKMARKS_VERSION, 0);
 
-  yield rebuildSmartBookmarks();
+  await rebuildSmartBookmarks();
 
   // Count items.
   Assert.equal(countFolderChildren(PlacesUtils.toolbarFolderId),
@@ -81,19 +81,19 @@ add_task(function* test_version_0() {
                SMART_BOOKMARKS_VERSION);
 });
 
-add_task(function* test_version_change() {
+add_task(async function test_version_change() {
   do_print("An existing smart bookmark is replaced when version changes.");
 
   // Sanity check: we have a smart bookmark on the toolbar.
-  let bm = yield PlacesUtils.bookmarks.fetch({
+  let bm = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     index: 0
   });
-  yield checkItemHasAnnotation(bm.guid, SMART_BOOKMARKS_ANNO);
+  await checkItemHasAnnotation(bm.guid, SMART_BOOKMARKS_ANNO);
 
   // Change its title.
-  yield PlacesUtils.bookmarks.update({guid: bm.guid, title: "new title"});
-  bm = yield PlacesUtils.bookmarks.fetch({guid: bm.guid});
+  await PlacesUtils.bookmarks.update({guid: bm.guid, title: "new title"});
+  bm = await PlacesUtils.bookmarks.fetch({guid: bm.guid});
   Assert.equal(bm.title, "new title");
 
   // Sanity check items.
@@ -105,7 +105,7 @@ add_task(function* test_version_change() {
   // Set preferences.
   Services.prefs.setIntPref(PREF_SMART_BOOKMARKS_VERSION, 1);
 
-  yield rebuildSmartBookmarks();
+  await rebuildSmartBookmarks();
 
   // Count items.
   Assert.equal(countFolderChildren(PlacesUtils.toolbarFolderId),
@@ -114,11 +114,11 @@ add_task(function* test_version_change() {
                SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
 
   // Check smart bookmark has been replaced, itemId has changed.
-  bm = yield PlacesUtils.bookmarks.fetch({
+  bm = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     index: 0
   });
-  yield checkItemHasAnnotation(bm.guid, SMART_BOOKMARKS_ANNO);
+  await checkItemHasAnnotation(bm.guid, SMART_BOOKMARKS_ANNO);
   Assert.notEqual(bm.title, "new title");
 
   // Check version has been updated.
@@ -126,7 +126,7 @@ add_task(function* test_version_change() {
                SMART_BOOKMARKS_VERSION);
 });
 
-add_task(function* test_version_change_pos() {
+add_task(async function test_version_change_pos() {
   do_print("bookmarks position is retained when version changes.");
 
   // Sanity check items.
@@ -135,17 +135,17 @@ add_task(function* test_version_change_pos() {
   Assert.equal(countFolderChildren(PlacesUtils.bookmarksMenuFolderId),
                SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
 
-  let bm = yield PlacesUtils.bookmarks.fetch({
+  let bm = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
     index: 0
   });
-  yield checkItemHasAnnotation(bm.guid, SMART_BOOKMARKS_ANNO);
+  await checkItemHasAnnotation(bm.guid, SMART_BOOKMARKS_ANNO);
   let firstItemTitle = bm.title;
 
   // Set preferences.
   Services.prefs.setIntPref(PREF_SMART_BOOKMARKS_VERSION, 1);
 
-  yield rebuildSmartBookmarks();
+  await rebuildSmartBookmarks();
 
   // Count items.
   Assert.equal(countFolderChildren(PlacesUtils.toolbarFolderId),
@@ -154,11 +154,11 @@ add_task(function* test_version_change_pos() {
                SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
 
   // Check smart bookmarks are still in correct position.
-  bm = yield PlacesUtils.bookmarks.fetch({
+  bm = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
     index: 0
   });
-  yield checkItemHasAnnotation(bm.guid, SMART_BOOKMARKS_ANNO);
+  await checkItemHasAnnotation(bm.guid, SMART_BOOKMARKS_ANNO);
   Assert.equal(bm.title, firstItemTitle);
 
   // Check version has been updated.
@@ -166,7 +166,7 @@ add_task(function* test_version_change_pos() {
                SMART_BOOKMARKS_VERSION);
 });
 
-add_task(function* test_version_change_pos_moved() {
+add_task(async function test_version_change_pos_moved() {
   do_print("moved bookmarks position is retained when version changes.");
 
   // Sanity check items.
@@ -175,21 +175,21 @@ add_task(function* test_version_change_pos_moved() {
   Assert.equal(countFolderChildren(PlacesUtils.bookmarksMenuFolderId),
                SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
 
-  let bm1 = yield PlacesUtils.bookmarks.fetch({
+  let bm1 = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
     index: 0
   });
-  yield checkItemHasAnnotation(bm1.guid, SMART_BOOKMARKS_ANNO);
+  await checkItemHasAnnotation(bm1.guid, SMART_BOOKMARKS_ANNO);
   let firstItemTitle = bm1.title;
 
   // Move the first smart bookmark to the end of the menu.
-  yield PlacesUtils.bookmarks.update({
+  await PlacesUtils.bookmarks.update({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
     guid: bm1.guid,
     index: PlacesUtils.bookmarks.DEFAULT_INDEX
   });
 
-  let bm = yield PlacesUtils.bookmarks.fetch({
+  let bm = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
     index: PlacesUtils.bookmarks.DEFAULT_INDEX
   });
@@ -198,7 +198,7 @@ add_task(function* test_version_change_pos_moved() {
   // Set preferences.
   Services.prefs.setIntPref(PREF_SMART_BOOKMARKS_VERSION, 1);
 
-  yield rebuildSmartBookmarks();
+  await rebuildSmartBookmarks();
 
   // Count items.
   Assert.equal(countFolderChildren(PlacesUtils.toolbarFolderId),
@@ -206,15 +206,15 @@ add_task(function* test_version_change_pos_moved() {
   Assert.equal(countFolderChildren(PlacesUtils.bookmarksMenuFolderId),
                SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
 
-  bm1 = yield PlacesUtils.bookmarks.fetch({
+  bm1 = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
     index: PlacesUtils.bookmarks.DEFAULT_INDEX
   });
-  yield checkItemHasAnnotation(bm1.guid, SMART_BOOKMARKS_ANNO);
+  await checkItemHasAnnotation(bm1.guid, SMART_BOOKMARKS_ANNO);
   Assert.equal(bm1.title, firstItemTitle);
 
   // Move back the smart bookmark to the original position.
-  yield PlacesUtils.bookmarks.update({
+  await PlacesUtils.bookmarks.update({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
     guid: bm1.guid,
     index: 1
@@ -225,15 +225,15 @@ add_task(function* test_version_change_pos_moved() {
               SMART_BOOKMARKS_VERSION);
 });
 
-add_task(function* test_recreation() {
+add_task(async function test_recreation() {
   do_print("An explicitly removed smart bookmark should not be recreated.");
 
   // Remove toolbar's smart bookmarks
-  let bm = yield PlacesUtils.bookmarks.fetch({
+  let bm = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     index: 0
   });
-  yield PlacesUtils.bookmarks.remove(bm.guid);
+  await PlacesUtils.bookmarks.remove(bm.guid);
 
   // Sanity check items.
   Assert.equal(countFolderChildren(PlacesUtils.toolbarFolderId),
@@ -244,7 +244,7 @@ add_task(function* test_recreation() {
   // Set preferences.
   Services.prefs.setIntPref(PREF_SMART_BOOKMARKS_VERSION, 1);
 
-  yield rebuildSmartBookmarks();
+  await rebuildSmartBookmarks();
 
   // Count items.
   // We should not have recreated the smart bookmark on toolbar.
@@ -258,7 +258,7 @@ add_task(function* test_recreation() {
                SMART_BOOKMARKS_VERSION);
 });
 
-add_task(function* test_recreation_version_0() {
+add_task(async function test_recreation_version_0() {
   do_print("Even if a smart bookmark has been removed recreate it if version is 0.");
 
   // Sanity check items.
@@ -270,7 +270,7 @@ add_task(function* test_recreation_version_0() {
   // Set preferences.
   Services.prefs.setIntPref(PREF_SMART_BOOKMARKS_VERSION, 0);
 
-  yield rebuildSmartBookmarks();
+  await rebuildSmartBookmarks();
 
   // Count items.
   // We should not have recreated the smart bookmark on toolbar.

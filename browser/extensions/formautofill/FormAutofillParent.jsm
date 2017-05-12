@@ -47,7 +47,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillPreferences",
 this.log = null;
 FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
 
-const ENABLED_PREF = "browser.formautofill.enabled";
+const ENABLED_PREF = "extensions.formautofill.addresses.enabled";
 
 function FormAutofillParent() {
 }

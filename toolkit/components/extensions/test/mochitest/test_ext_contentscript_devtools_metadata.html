@@ -13,7 +13,7 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* test_contentscript_devtools_sandbox_metadata() {
+add_task(async function test_contentscript_devtools_sandbox_metadata() {
   function contentScript() {
     browser.runtime.sendMessage("contentScript.executed");
   }
@@ -45,7 +45,7 @@ add_task(function* test_contentscript_devtools_sandbox_metadata() {
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
 
-  yield extension.startup();
+  await extension.startup();
 
   let win = window.open("file_sample.html");
 
@@ -54,7 +54,7 @@ add_task(function* test_contentscript_devtools_sandbox_metadata() {
                                    .getInterface(SpecialPowers.Ci.nsIDOMWindowUtils)
                                    .currentInnerWindowID;
 
-  yield extension.awaitFinish("contentScript.executed");
+  await extension.awaitFinish("contentScript.executed");
 
   const {ExtensionContent} = SpecialPowers.Cu.import(
     "resource://gre/modules/ExtensionContent.jsm", {}
@@ -67,7 +67,7 @@ add_task(function* test_contentscript_devtools_sandbox_metadata() {
   is(metadata.addonId, extension.id, "Got the expected addonId");
   is(metadata["inner-window-id"], innerWindowID, "Got the expected inner-window-id");
 
-  yield extension.unload();
+  await extension.unload();
   info("extension unloaded");
 
   res = ExtensionContent.getContentScriptGlobals(win);

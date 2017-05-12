@@ -33,7 +33,7 @@ var gLWTheme = {
                 iconURL: "http://mochi.test:8888/data/icon.png"
               };
 
-add_task(function*() {
+add_task(async function() {
   gProvider = new MockProvider();
 
   gProvider.createAddons([{
@@ -121,7 +121,7 @@ add_task(function*() {
     hidden: true,
   }]);
 
-  gManagerWindow = yield open_manager(null);
+  gManagerWindow = await open_manager(null);
   gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 });
 
@@ -151,15 +151,15 @@ function get_class_node(parent, cls) {
 
 // Check that the list appears to have displayed correctly and trigger some
 // changes
-add_task(function*() {
-  yield gCategoryUtilities.openType("extension");
+add_task(async function() {
+  await gCategoryUtilities.openType("extension");
   let items = get_test_items();
   is(Object.keys(items).length, EXPECTED_ADDONS, "Should be the right number of add-ons installed");
 
   info("Addon 1");
   let addon = items["Test add-on"];
   addon.parentNode.ensureElementIsVisible(addon);
-  let { name, version } = yield get_tooltip_info(addon);
+  let { name, version } = await get_tooltip_info(addon);
   is(get_node(addon, "name").value, "Test add-on", "Name should be correct");
   is(name, "Test add-on", "Tooltip name should be correct");
   is(version, "1.0", "Tooltip version should be correct");
@@ -196,7 +196,7 @@ add_task(function*() {
   info("Addon 2");
   addon = items["Test add-on 2"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version } = yield get_tooltip_info(addon));
+  ({ name, version } = await get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 2", "Name should be correct");
   is(name, "Test add-on 2", "Tooltip name should be correct");
   is(version, "2.0", "Tooltip version should be correct");
@@ -233,7 +233,7 @@ add_task(function*() {
   info("Addon 3");
   addon = items["Test add-on 3"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version } = yield get_tooltip_info(addon));
+  ({ name, version } = await get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 3", "Name should be correct");
   is(name, "Test add-on 3", "Tooltip name should be correct");
   is(version, undefined, "Tooltip version should be hidden");
@@ -253,7 +253,7 @@ add_task(function*() {
   info("Addon 4");
   addon = items["Test add-on 4"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version } = yield get_tooltip_info(addon));
+  ({ name, version } = await get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 4", "Name should be correct");
   is(name, "Test add-on 4", "Tooltip name should be correct");
 
@@ -288,7 +288,7 @@ add_task(function*() {
   info("Addon 5");
   addon = items["Test add-on 5"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version } = yield get_tooltip_info(addon));
+  ({ name, version } = await get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 5", "Name should be correct");
   is(name, "Test add-on 5", "Tooltip name should be correct");
 
@@ -309,7 +309,7 @@ add_task(function*() {
   info("Addon 6");
   addon = items["Test add-on 6"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version } = yield get_tooltip_info(addon));
+  ({ name, version } = await get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 6", "Name should be correct");
   is(name, "Test add-on 6", "Tooltip name should be correct");
   is_element_hidden(get_class_node(addon, "disabled-postfix"), "Disabled postfix should be hidden");
@@ -343,7 +343,7 @@ add_task(function*() {
   info("Addon 7");
   addon = items["Test add-on 7"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version } = yield get_tooltip_info(addon));
+  ({ name, version } = await get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 7", "Name should be correct");
   is(name, "Test add-on 7", "Tooltip name should be correct");
 
@@ -378,7 +378,7 @@ add_task(function*() {
   info("Addon 8");
   addon = items["Test add-on 8"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version } = yield get_tooltip_info(addon));
+  ({ name, version } = await get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 8", "Name should be correct");
   is(name, "Test add-on 8", "Tooltip name should be correct");
 
@@ -399,7 +399,7 @@ add_task(function*() {
   info("Addon 9");
   addon = items["Test add-on 9"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version } = yield get_tooltip_info(addon));
+  ({ name, version } = await get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 9", "Name should be correct");
   is(name, "Test add-on 9", "Tooltip name should be correct");
 
@@ -422,7 +422,7 @@ add_task(function*() {
     info("Addon 10");
     addon = items["Test add-on 10"];
     addon.parentNode.ensureElementIsVisible(addon);
-    ({ name, version } = yield get_tooltip_info(addon));
+    ({ name, version } = await get_tooltip_info(addon));
     is(get_node(addon, "name").value, "Test add-on 10", "Name should be correct");
     is(name, "Test add-on 10", "Tooltip name should be correct");
 
@@ -443,7 +443,7 @@ add_task(function*() {
     info("Addon 11");
     addon = items["Test add-on 11"];
     addon.parentNode.ensureElementIsVisible(addon);
-    ({ name, version } = yield get_tooltip_info(addon));
+    ({ name, version } = await get_tooltip_info(addon));
     is(get_node(addon, "name").value, "Test add-on 11", "Name should be correct");
     is(name, "Test add-on 11", "Tooltip name should be correct");
 
@@ -470,8 +470,8 @@ add_task(function*() {
 });
 
 // Check the add-ons are now in the right state
-add_task(function*() {
-  let [a1, a2, a4] = yield promiseAddonsByIDs(["addon1@tests.mozilla.org",
+add_task(async function() {
+  let [a1, a2, a4] = await promiseAddonsByIDs(["addon1@tests.mozilla.org",
                                                "addon2@tests.mozilla.org",
                                                "addon4@tests.mozilla.org"]);
 
@@ -482,9 +482,9 @@ add_task(function*() {
 
 // Reload the list to make sure the changes are still pending and that undoing
 // works
-add_task(function*() {
-  yield gCategoryUtilities.openType("plugin");
-  yield gCategoryUtilities.openType("extension");
+add_task(async function() {
+  await gCategoryUtilities.openType("plugin");
+  await gCategoryUtilities.openType("extension");
 
   let items = get_test_items();
   is(Object.keys(items).length, EXPECTED_ADDONS, "Should be the right number of add-ons installed");
@@ -492,7 +492,7 @@ add_task(function*() {
   info("Addon 1");
   let addon = items["Test add-on"];
   addon.parentNode.ensureElementIsVisible(addon);
-  let { name, version } = yield get_tooltip_info(addon);
+  let { name, version } = await get_tooltip_info(addon);
   is(get_node(addon, "name").value, "Test add-on", "Name should be correct");
   is(name, "Test add-on", "Tooltip name should be correct");
   is(version, "1.0", "Tooltip version should be correct");
@@ -530,7 +530,7 @@ add_task(function*() {
   info("Addon 2");
   addon = items["Test add-on 2"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version } = yield get_tooltip_info(addon));
+  ({ name, version } = await get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 2", "Name should be correct");
   is(name, "Test add-on 2", "Tooltip name should be correct");
   is(version, "2.0", "Tooltip version should be correct");
@@ -567,7 +567,7 @@ add_task(function*() {
   info("Addon 4");
   addon = items["Test add-on 4"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version } = yield get_tooltip_info(addon));
+  ({ name, version } = await get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 4", "Name should be correct");
   is(name, "Test add-on 4", "Tooltip name should be correct");
 
@@ -602,7 +602,7 @@ add_task(function*() {
   info("Addon 6");
   addon = items["Test add-on 6"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version } = yield get_tooltip_info(addon));
+  ({ name, version } = await get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 6", "Name should be correct");
   is(name, "Test add-on 6", "Tooltip name should be correct");
   is_element_visible(get_class_node(addon, "disabled-postfix"), "Disabled postfix should be visible");
@@ -636,7 +636,7 @@ add_task(function*() {
   info("Addon 7");
   addon = items["Test add-on 7"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version } = yield get_tooltip_info(addon));
+  ({ name, version } = await get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 7", "Name should be correct");
   is(name, "Test add-on 7", "Tooltip name should be correct");
 
@@ -670,8 +670,8 @@ add_task(function*() {
 });
 
 // Check the add-ons are now in the right state
-add_task(function*() {
-  let [a1, a2, a4] = yield promiseAddonsByIDs(["addon1@tests.mozilla.org",
+add_task(async function() {
+  let [a1, a2, a4] = await promiseAddonsByIDs(["addon1@tests.mozilla.org",
                                                "addon2@tests.mozilla.org",
                                                "addon4@tests.mozilla.org"]);
 
@@ -681,7 +681,7 @@ add_task(function*() {
 });
 
 // Check that upgrades with onExternalInstall take effect immediately
-add_task(function*() {
+add_task(async function() {
   gProvider.createAddons([{
     id: "addon1@tests.mozilla.org",
     name: "Test add-on replacement",
@@ -700,7 +700,7 @@ add_task(function*() {
 
   let addon = items["Test add-on replacement"];
   addon.parentNode.ensureElementIsVisible(addon);
-  let { name, version } = yield get_tooltip_info(addon);
+  let { name, version } = await get_tooltip_info(addon);
   is(get_node(addon, "name").value, "Test add-on replacement", "Name should be correct");
   is(name, "Test add-on replacement", "Tooltip name should be correct");
   is(version, "2.0", "Tooltip version should be correct");
@@ -723,7 +723,7 @@ add_task(function*() {
 });
 
 // Check that focus changes correctly move around the selected list item
-add_task(function*() {
+add_task(async function() {
   function is_node_in_list(aNode) {
     var list = gManagerWindow.document.getElementById("addon-list");
 
@@ -779,12 +779,12 @@ add_task(function*() {
 });
 
 
-add_task(function*() {
+add_task(async function() {
   info("Enabling lightweight theme");
   LightweightThemeManager.currentTheme = gLWTheme;
 
   gManagerWindow.loadView("addons://list/theme");
-  yield new Promise(resolve => wait_for_view_load(gManagerWindow, resolve));
+  await new Promise(resolve => wait_for_view_load(gManagerWindow, resolve));
 
   var addon = get_addon_element(gManagerWindow, "4@personas.mozilla.org");
 
@@ -801,21 +801,21 @@ add_task(function*() {
   is_element_hidden(get_node(addon, "disable-btn"), "Disable button should be visible");
   is_element_visible(get_node(addon, "remove-btn"), "Remove button should be visible");
 
-  let [aAddon] = yield promiseAddonsByIDs(["4@personas.mozilla.org"]);
+  let [aAddon] = await promiseAddonsByIDs(["4@personas.mozilla.org"]);
   aAddon.uninstall();
 });
 
 // Check that onPropertyChanges for appDisabled updates the UI
-add_task(function*() {
+add_task(async function() {
   info("Checking that onPropertyChanges for appDisabled updates the UI");
 
-  let [aAddon] = yield promiseAddonsByIDs(["addon2@tests.mozilla.org"]);
+  let [aAddon] = await promiseAddonsByIDs(["addon2@tests.mozilla.org"]);
   aAddon.userDisabled = true;
   aAddon.isCompatible = true;
   aAddon.appDisabled = false;
 
   gManagerWindow.loadView("addons://list/extension");
-  yield new Promise(resolve => wait_for_view_load(gManagerWindow, resolve));
+  await new Promise(resolve => wait_for_view_load(gManagerWindow, resolve));
   var el = get_addon_element(gManagerWindow, "addon2@tests.mozilla.org");
 
   is(el.getAttribute("active"), "false", "Addon should not be marked as active");
@@ -831,20 +831,20 @@ add_task(function*() {
 });
 
 // Check that the list displays correctly when signing is required
-add_task(function*() {
-  yield close_manager(gManagerWindow);
+add_task(async function() {
+  await close_manager(gManagerWindow);
   Services.prefs.setBoolPref("xpinstall.signatures.required", true);
-  gManagerWindow = yield open_manager(null);
+  gManagerWindow = await open_manager(null);
   gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
-  yield gCategoryUtilities.openType("extension");
+  await gCategoryUtilities.openType("extension");
   let items = get_test_items();
   is(Object.keys(items).length, EXPECTED_ADDONS, "Should be the right number of add-ons installed");
 
   info("Addon 10");
   let addon = items["Test add-on 10"];
   addon.parentNode.ensureElementIsVisible(addon);
-  let { name } = yield get_tooltip_info(addon);
+  let { name } = await get_tooltip_info(addon);
   is(get_node(addon, "name").value, "Test add-on 10", "Name should be correct");
   is(name, "Test add-on 10", "Tooltip name should be correct");
 
@@ -864,7 +864,7 @@ add_task(function*() {
   info("Addon 11");
   addon = items["Test add-on 11"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name } = yield get_tooltip_info(addon));
+  ({ name } = await get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 11", "Name should be correct");
   is(name, "Test add-on 11", "Tooltip name should be correct");
 
@@ -884,7 +884,7 @@ add_task(function*() {
   info("Addon 12");
   addon = items["Test add-on 12"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name } = yield get_tooltip_info(addon))
+  ({ name } = await get_tooltip_info(addon))
   is(get_node(addon, "name").value, "Test add-on 12", "Name should be correct");
   is(name, "Test add-on 12", "Tooltip name should be correct");
 
@@ -901,7 +901,7 @@ add_task(function*() {
   info("Addon 13");
   addon = items["Test add-on 13"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name } = yield get_tooltip_info(addon));
+  ({ name } = await get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 13", "Name should be correct");
   is(name, "Test add-on 13", "Tooltip name should be correct");
 
@@ -924,7 +924,7 @@ add_task(function*() {
 
   filterButton.click();
 
-  yield new Promise(resolve => wait_for_view_load(gManagerWindow, resolve));
+  await new Promise(resolve => wait_for_view_load(gManagerWindow, resolve));
 
   is_element_hidden(filterButton, "Button for showing disabled unsigned extensions should be hidden");
   is_element_visible(showAllButton, "Button for showing all extensions should be visible");
@@ -937,7 +937,7 @@ add_task(function*() {
 
   showAllButton.click();
 
-  yield new Promise(resolve => wait_for_view_load(gManagerWindow, resolve));
+  await new Promise(resolve => wait_for_view_load(gManagerWindow, resolve));
 
   items = get_test_items();
   is(Object.keys(items).length, EXPECTED_ADDONS, "All add-ons should be shown again");
@@ -948,6 +948,6 @@ add_task(function*() {
   Services.prefs.setBoolPref("xpinstall.signatures.required", false);
 });
 
-add_task(function*() {
+add_task(async function() {
   return close_manager(gManagerWindow);
 });

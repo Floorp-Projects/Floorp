@@ -3,25 +3,25 @@
  * a different GUID, and passes the GUID to the observers.
  */
 
-add_task(function* test_removeFolderTransaction_reinsert() {
-  let folder = yield PlacesUtils.bookmarks.insert({
+add_task(async function test_removeFolderTransaction_reinsert() {
+  let folder = await PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     parentGuid: PlacesUtils.bookmarks.menuGuid,
     title: "Test folder",
   });
-  let folderId = yield PlacesUtils.promiseItemId(folder.guid);
-  let fx = yield PlacesUtils.bookmarks.insert({
+  let folderId = await PlacesUtils.promiseItemId(folder.guid);
+  let fx = await PlacesUtils.bookmarks.insert({
     parentGuid: folder.guid,
     title: "Get Firefox!",
     url: "http://getfirefox.com",
   });
-  let fxId = yield PlacesUtils.promiseItemId(fx.guid);
-  let tb = yield PlacesUtils.bookmarks.insert({
+  let fxId = await PlacesUtils.promiseItemId(fx.guid);
+  let tb = await PlacesUtils.bookmarks.insert({
     parentGuid: folder.guid,
     title: "Get Thunderbird!",
     url: "http://getthunderbird.com",
   });
-  let tbId = yield PlacesUtils.promiseItemId(tb.guid);
+  let tbId = await PlacesUtils.promiseItemId(tb.guid);
 
   let notifications = [];
   function checkNotifications(expected, message) {
@@ -56,7 +56,7 @@ add_task(function* test_removeFolderTransaction_reinsert() {
 
   transaction.undoTransaction();
   // At this point, the restored folder has the same ID, but a different GUID.
-  let newFolderGuid = yield PlacesUtils.promiseItemGuid(folderId);
+  let newFolderGuid = await PlacesUtils.promiseItemGuid(folderId);
   checkNotifications([
     ["onItemAdded", folderId, PlacesUtils.bookmarksMenuFolderId, newFolderGuid,
       PlacesUtils.bookmarks.menuGuid],

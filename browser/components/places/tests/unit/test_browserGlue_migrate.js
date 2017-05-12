@@ -21,7 +21,7 @@ function run_test() {
 
 do_register_cleanup(remove_bookmarks_html);
 
-add_task(function* test_migrate_bookmarks() {
+add_task(async function test_migrate_bookmarks() {
   // Initialize Places through the History Service and check that a new
   // database has been created.
   Assert.equal(PlacesUtils.history.databaseStatus,
@@ -32,7 +32,7 @@ add_task(function* test_migrate_bookmarks() {
   let bg = Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsIObserver);
   bg.observe(null, "initial-migration-will-import-default-bookmarks", null);
 
-  yield PlacesUtils.bookmarks.insert({
+  await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
     index: PlacesUtils.bookmarks.DEFAULT_INDEX,
     type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -42,28 +42,28 @@ add_task(function* test_migrate_bookmarks() {
 
   let promise = promiseTopicObserved("places-browser-init-complete");
   bg.observe(null, "initial-migration-did-import-default-bookmarks", null);
-  yield promise;
+  await promise;
 
-  let bm = yield PlacesUtils.bookmarks.fetch({
+  let bm = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     index: 0
   });
-  yield checkItemHasAnnotation(bm.guid, SMART_BOOKMARKS_ANNO);
+  await checkItemHasAnnotation(bm.guid, SMART_BOOKMARKS_ANNO);
 
   // Check the created bookmark still exists.
-  bm = yield PlacesUtils.bookmarks.fetch({
+  bm = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
     index: SMART_BOOKMARKS_ON_MENU
   });
   Assert.equal(bm.title, "migrated");
 
   // Check that we have not imported any new bookmark.
-  Assert.ok(!(yield PlacesUtils.bookmarks.fetch({
+  Assert.ok(!(await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
     index: SMART_BOOKMARKS_ON_MENU + 1
   })));
 
-  Assert.ok(!(yield PlacesUtils.bookmarks.fetch({
+  Assert.ok(!(await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     index: SMART_BOOKMARKS_ON_MENU
   })));

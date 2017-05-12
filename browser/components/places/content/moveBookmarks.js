@@ -45,16 +45,16 @@ var gMoveBookmarksDialog = {
       return;
     }
 
-    PlacesTransactions.batch(function* () {
-      let newParentGuid = yield PlacesUtils.promiseItemGuid(selectedFolderId);
+    PlacesTransactions.batch(async () => {
+      let newParentGuid = await PlacesUtils.promiseItemGuid(selectedFolderId);
       for (let node of this._nodes) {
         // Nothing to do if the node is already under the selected folder.
         if (node.parent.itemId == selectedFolderId)
           continue;
-        yield PlacesTransactions.Move({ guid: node.bookmarkGuid
+        await PlacesTransactions.Move({ guid: node.bookmarkGuid
                                       , newParentGuid }).transact();
       }
-    }.bind(this)).then(null, Components.utils.reportError);
+    }).then(null, Components.utils.reportError);
   },
 
   newFolder: function MBD_newFolder() {

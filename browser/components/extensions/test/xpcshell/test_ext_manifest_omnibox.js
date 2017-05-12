@@ -2,8 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-function* testKeyword(params) {
-  let normalized = yield ExtensionTestUtils.normalizeManifest({
+async function testKeyword(params) {
+  let normalized = await ExtensionTestUtils.normalizeManifest({
     "omnibox": {
       "keyword": params.keyword,
     },
@@ -23,39 +23,39 @@ function* testKeyword(params) {
   }
 }
 
-add_task(function* test_manifest_commands() {
+add_task(async function test_manifest_commands() {
   // accepted single character keywords
-  yield testKeyword({keyword: "a", expectError: false});
-  yield testKeyword({keyword: "-", expectError: false});
-  yield testKeyword({keyword: "嗨", expectError: false});
-  yield testKeyword({keyword: "*", expectError: false});
-  yield testKeyword({keyword: "/", expectError: false});
+  await testKeyword({keyword: "a", expectError: false});
+  await testKeyword({keyword: "-", expectError: false});
+  await testKeyword({keyword: "嗨", expectError: false});
+  await testKeyword({keyword: "*", expectError: false});
+  await testKeyword({keyword: "/", expectError: false});
 
   // rejected single character keywords
-  yield testKeyword({keyword: "?", expectError: true});
-  yield testKeyword({keyword: " ", expectError: true});
-  yield testKeyword({keyword: ":", expectError: true});
+  await testKeyword({keyword: "?", expectError: true});
+  await testKeyword({keyword: " ", expectError: true});
+  await testKeyword({keyword: ":", expectError: true});
 
   // accepted multi-character keywords
-  yield testKeyword({keyword: "aa", expectError: false});
-  yield testKeyword({keyword: "http", expectError: false});
-  yield testKeyword({keyword: "f?a", expectError: false});
-  yield testKeyword({keyword: "fa?", expectError: false});
-  yield testKeyword({keyword: "f/x", expectError: false});
-  yield testKeyword({keyword: "/fx", expectError: false});
+  await testKeyword({keyword: "aa", expectError: false});
+  await testKeyword({keyword: "http", expectError: false});
+  await testKeyword({keyword: "f?a", expectError: false});
+  await testKeyword({keyword: "fa?", expectError: false});
+  await testKeyword({keyword: "f/x", expectError: false});
+  await testKeyword({keyword: "/fx", expectError: false});
 
   // rejected multi-character keywords
-  yield testKeyword({keyword: " a", expectError: true});
-  yield testKeyword({keyword: "a ", expectError: true});
-  yield testKeyword({keyword: "  ", expectError: true});
-  yield testKeyword({keyword: " a ", expectError: true});
-  yield testKeyword({keyword: "?fx", expectError: true});
-  yield testKeyword({keyword: "fx/", expectError: true});
-  yield testKeyword({keyword: "f:x", expectError: true});
-  yield testKeyword({keyword: "fx:", expectError: true});
-  yield testKeyword({keyword: "f x", expectError: true});
+  await testKeyword({keyword: " a", expectError: true});
+  await testKeyword({keyword: "a ", expectError: true});
+  await testKeyword({keyword: "  ", expectError: true});
+  await testKeyword({keyword: " a ", expectError: true});
+  await testKeyword({keyword: "?fx", expectError: true});
+  await testKeyword({keyword: "fx/", expectError: true});
+  await testKeyword({keyword: "f:x", expectError: true});
+  await testKeyword({keyword: "fx:", expectError: true});
+  await testKeyword({keyword: "f x", expectError: true});
 
   // miscellaneous tests
-  yield testKeyword({keyword: "こんにちは", expectError: false});
-  yield testKeyword({keyword: "http://", expectError: true});
+  await testKeyword({keyword: "こんにちは", expectError: false});
+  await testKeyword({keyword: "http://", expectError: true});
 });

@@ -63,8 +63,8 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_results_as_tag_contents_query() {
-  yield task_populateDB(testData);
+add_task(async function test_results_as_tag_contents_query() {
+  await task_populateDB(testData);
 
   // Get tag id.
   let tagId = getIdForTag("bugzilla");
@@ -96,7 +96,7 @@ add_task(function* test_results_as_tag_contents_query() {
                   isTag: true,
                   tagArray: ["moz", "bugzilla"] };
   do_print("Adding item to query");
-  yield task_populateDB([change1]);
+  await task_populateDB([change1]);
   do_print("These results should have been LIVE UPDATED with the new addition");
   displayResultSet(root);
   do_check_true(isInResult(change1, root));
@@ -112,7 +112,7 @@ add_task(function* test_results_as_tag_contents_query() {
                    isBookmark: true,
                    isTag: true,
                    tagArray: ["bugzilla", "moz"] }];
-  yield task_populateDB(change2);
+  await task_populateDB(change2);
   do_check_false(isInResult({uri: "http://fooz.com/"}, root));
   do_check_true(isInResult({uri: "http://foo.com/changeme2.html"}, root));
 

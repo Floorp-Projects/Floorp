@@ -34,7 +34,6 @@
 #include "mozilla/Preferences.h"
 #include "nsIResProtocolHandler.h"
 #include "nsIScriptError.h"
-#include "nsIXPConnect.h"
 #include "nsIXULRuntime.h"
 
 #define SELECTED_SKIN_PREF   "general.skins.selectedSkin"
@@ -617,15 +616,6 @@ nsChromeRegistry::ManifestProcessingContext::GetManifestURI()
     NS_NewURI(getter_AddRefs(mManifestURI), uri);
   }
   return mManifestURI;
-}
-
-nsIXPConnect*
-nsChromeRegistry::ManifestProcessingContext::GetXPConnect()
-{
-  if (!mXPConnect)
-    mXPConnect = do_GetService("@mozilla.org/js/xpc/XPConnect;1");
-
-  return mXPConnect;
 }
 
 already_AddRefed<nsIURI>

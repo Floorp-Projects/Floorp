@@ -1,32 +1,32 @@
 // The order of these tests matters!
 
-add_task(function* setup() {
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser);
-  let bm = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+add_task(async function setup() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+  let bm = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                 url: "http://example.com/?q=%s",
                                                 title: "test" });
-  registerCleanupFunction(function* () {
-    yield PlacesUtils.bookmarks.remove(bm);
-    yield BrowserTestUtils.removeTab(tab);
+  registerCleanupFunction(async function() {
+    await PlacesUtils.bookmarks.remove(bm);
+    await BrowserTestUtils.removeTab(tab);
   });
-  yield PlacesUtils.keywords.insert({ keyword: "keyword",
+  await PlacesUtils.keywords.insert({ keyword: "keyword",
                                       url: "http://example.com/?q=%s" });
   // Needs at least one success.
   ok(true, "Setup complete");
 });
 
-add_task(function* test_keyword() {
-  yield promiseAutocompleteResultPopup("keyword bear");
+add_task(async function test_keyword() {
+  await promiseAutocompleteResultPopup("keyword bear");
   gURLBar.focus();
   EventUtils.synthesizeKey("d", {});
   EventUtils.synthesizeKey("VK_RETURN", {});
   info("wait for the page to load");
-  yield BrowserTestUtils.browserLoaded(gBrowser.selectedTab.linkedBrowser,
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedTab.linkedBrowser,
                                       false, "http://example.com/?q=beard");
 });
 
-add_task(function* test_sametext() {
-  yield promiseAutocompleteResultPopup("example.com", window, true);
+add_task(async function test_sametext() {
+  await promiseAutocompleteResultPopup("example.com", window, true);
 
   // Simulate re-entering the same text searched the last time. This may happen
   // through a copy paste, but clipboard handling is not much reliable, so just
@@ -38,23 +38,23 @@ add_task(function* test_sametext() {
   EventUtils.synthesizeKey("VK_RETURN", {});
 
   info("wait for the page to load");
-  yield BrowserTestUtils.browserLoaded(gBrowser.selectedTab.linkedBrowser,
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedTab.linkedBrowser,
                                        false, "http://example.com/");
 });
 
-add_task(function* test_after_empty_search() {
-  yield promiseAutocompleteResultPopup("");
+add_task(async function test_after_empty_search() {
+  await promiseAutocompleteResultPopup("");
   gURLBar.focus();
   gURLBar.value = "e";
   EventUtils.synthesizeKey("x", {});
   EventUtils.synthesizeKey("VK_RETURN", {});
 
   info("wait for the page to load");
-  yield BrowserTestUtils.browserLoaded(gBrowser.selectedTab.linkedBrowser,
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedTab.linkedBrowser,
                                        false, "http://example.com/");
 });
 
-add_task(function* test_disabled_ac() {
+add_task(async function test_disabled_ac() {
   // Disable autocomplete.
   let suggestHistory = Preferences.get("browser.urlbar.suggest.history");
   Preferences.set("browser.urlbar.suggest.history", false);
@@ -69,7 +69,7 @@ add_task(function* test_disabled_ac() {
   let originalEngine = Services.search.currentEngine;
   Services.search.currentEngine = engine;
 
-  function* cleanup() {
+  function cleanup() {
     Preferences.set("browser.urlbar.suggest.history", suggestHistory);
     Preferences.set("browser.urlbar.suggest.bookmark", suggestBookmarks);
     Preferences.set("browser.urlbar.suggest.openpage", suggestOpenPages);
@@ -88,25 +88,25 @@ add_task(function* test_disabled_ac() {
   EventUtils.synthesizeKey("VK_RETURN", {});
 
   info("wait for the page to load");
-  yield BrowserTestUtils.browserLoaded(gBrowser.selectedTab.linkedBrowser,
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedTab.linkedBrowser,
                                        false, "http://example.com/?q=ex");
-  yield cleanup();
+  await cleanup();
 });
 
-add_task(function* test_delay() {
+add_task(async function test_delay() {
   const TIMEOUT = 10000;
   // Set a large delay.
   let delay = Preferences.get("browser.urlbar.delay");
   Preferences.set("browser.urlbar.delay", TIMEOUT);
 
-  registerCleanupFunction(function* () {
+  registerCleanupFunction(function() {
     Preferences.set("browser.urlbar.delay", delay);
   });
 
   // This is needed to clear the current value, otherwise autocomplete may think
   // the user removed text from the end.
   let start = Date.now();
-  yield promiseAutocompleteResultPopup("");
+  await promiseAutocompleteResultPopup("");
   Assert.ok((Date.now() - start) < TIMEOUT);
 
   start = Date.now();
@@ -116,7 +116,7 @@ add_task(function* test_delay() {
   EventUtils.synthesizeKey("x", {});
   EventUtils.synthesizeKey("VK_RETURN", {});
   info("wait for the page to load");
-  yield BrowserTestUtils.browserLoaded(gBrowser.selectedTab.linkedBrowser,
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedTab.linkedBrowser,
                                        false, "http://example.com/");
   Assert.ok((Date.now() - start) < TIMEOUT);
 });

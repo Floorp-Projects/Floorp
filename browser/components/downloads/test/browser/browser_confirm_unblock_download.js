@@ -7,27 +7,27 @@
 
 registerCleanupFunction(() => {});
 
-function* assertDialogResult({ args, buttonToClick, expectedResult }) {
+async function assertDialogResult({ args, buttonToClick, expectedResult }) {
   promiseAlertDialogOpen(buttonToClick);
-  is(yield DownloadsCommon.confirmUnblockDownload(args), expectedResult);
+  is(await DownloadsCommon.confirmUnblockDownload(args), expectedResult);
 }
 
 /**
  * Tests the "unblock" dialog, for each of the possible verdicts.
  */
-add_task(function* test_unblock_dialog_unblock() {
+add_task(async function test_unblock_dialog_unblock() {
   for (let verdict of [Downloads.Error.BLOCK_VERDICT_MALWARE,
                        Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED,
                        Downloads.Error.BLOCK_VERDICT_UNCOMMON]) {
     let args = { verdict, window, dialogType: "unblock" };
 
     // Test both buttons.
-    yield assertDialogResult({
+    await assertDialogResult({
       args,
       buttonToClick: "accept",
       expectedResult: "unblock",
     });
-    yield assertDialogResult({
+    await assertDialogResult({
       args,
       buttonToClick: "cancel",
       expectedResult: "cancel",
@@ -38,7 +38,7 @@ add_task(function* test_unblock_dialog_unblock() {
 /**
  * Tests the "chooseUnblock" dialog for potentially unwanted downloads.
  */
-add_task(function* test_chooseUnblock_dialog() {
+add_task(async function test_chooseUnblock_dialog() {
   let args = {
     verdict: Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED,
     window,
@@ -46,17 +46,17 @@ add_task(function* test_chooseUnblock_dialog() {
   };
 
   // Test each of the three buttons.
-  yield assertDialogResult({
+  await assertDialogResult({
     args,
     buttonToClick: "accept",
     expectedResult: "unblock",
   });
-  yield assertDialogResult({
+  await assertDialogResult({
     args,
     buttonToClick: "cancel",
     expectedResult: "cancel",
   });
-  yield assertDialogResult({
+  await assertDialogResult({
     args,
     buttonToClick: "extra1",
     expectedResult: "confirmBlock",
@@ -66,7 +66,7 @@ add_task(function* test_chooseUnblock_dialog() {
 /**
  * Tests the "chooseOpen" dialog for uncommon downloads.
  */
-add_task(function* test_chooseOpen_dialog() {
+add_task(async function test_chooseOpen_dialog() {
   let args = {
     verdict: Downloads.Error.BLOCK_VERDICT_UNCOMMON,
     window,
@@ -74,17 +74,17 @@ add_task(function* test_chooseOpen_dialog() {
   };
 
   // Test each of the three buttons.
-  yield assertDialogResult({
+  await assertDialogResult({
     args,
     buttonToClick: "accept",
     expectedResult: "open",
   });
-  yield assertDialogResult({
+  await assertDialogResult({
     args,
     buttonToClick: "cancel",
     expectedResult: "cancel",
   });
-  yield assertDialogResult({
+  await assertDialogResult({
     args,
     buttonToClick: "extra1",
     expectedResult: "confirmBlock",

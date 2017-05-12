@@ -119,10 +119,10 @@ function runHeuristicsTest(patterns, fixturePathPrefix) {
 }
 
 add_task(function* head_initialize() {
-  Services.prefs.setBoolPref("browser.formautofill.experimental", true);
+  Services.prefs.setBoolPref("extensions.formautofill.experimental", true);
 
   // Clean up after every test.
   do_register_cleanup(function head_cleanup() {
-    Services.prefs.clearUserPref("browser.formautofill.experimental");
+    Services.prefs.clearUserPref("extensions.formautofill.experimental");
   });
 });

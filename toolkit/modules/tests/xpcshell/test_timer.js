@@ -12,14 +12,14 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_setTimeout() {
+add_task(async function test_setTimeout() {
   let timeout1 = imported.setTimeout(() => do_throw("Should not be called"), 100);
   do_check_eq(typeof timeout1, "number", "setTimeout returns a number");
   do_check_true(timeout1 > 0, "setTimeout returns a positive number");
 
   imported.clearTimeout(timeout1);
 
-  yield new Promise((resolve) => {
+  await new Promise((resolve) => {
     let timeout2 = imported.setTimeout((param1, param2) => {
       do_check_true(true, "Should be called");
       do_check_eq(param1, 5, "first parameter is correct");
@@ -33,7 +33,7 @@ add_task(function* test_setTimeout() {
   });
 });
 
-add_task(function* test_setInterval() {
+add_task(async function test_setInterval() {
   let interval1 = imported.setInterval(() => do_throw("Should not be called!"), 100);
   do_check_eq(typeof interval1, "number", "setInterval returns a number");
   do_check_true(interval1 > 0, "setTimeout returns a positive number");
@@ -43,7 +43,7 @@ add_task(function* test_setInterval() {
   const EXPECTED_CALLS = 5;
   let calls = 0;
 
-  yield new Promise((resolve) => {
+  await new Promise((resolve) => {
     imported.setInterval((param1, param2) => {
       do_check_true(true, "Should be called");
       do_check_eq(param1, 15, "first parameter is correct");

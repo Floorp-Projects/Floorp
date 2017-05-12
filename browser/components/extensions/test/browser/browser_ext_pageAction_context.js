@@ -7,8 +7,8 @@
 Services.scriptloader.loadSubScript(new URL("head_pageAction.js", gTestPath).href,
                                     this);
 
-add_task(function* testTabSwitchContext() {
-  yield runTests({
+add_task(async function testTabSwitchContext() {
+  await runTests({
     manifest: {
       "name": "Foo Extension",
 

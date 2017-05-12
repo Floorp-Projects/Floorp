@@ -372,10 +372,14 @@ nsresult
 nsIOService::RecheckCaptivePortal()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be called on the main thread");
-  if (mCaptivePortalService) {
-    mCaptivePortalService->RecheckCaptivePortal();
+  if (!mCaptivePortalService) {
+    return NS_OK;
   }
-  return NS_OK;
+  nsCOMPtr<nsIRunnable> task =
+    NewRunnableMethod("nsIOService::RecheckCaptivePortal",
+                      mCaptivePortalService,
+                      &nsICaptivePortalService::RecheckCaptivePortal);
+  return NS_DispatchToMainThread(task);
 }
 
 nsresult
@@ -410,7 +414,7 @@ nsIOService::RecheckCaptivePortalIfLocalRedirect(nsIChannel* newChan)
     PRNetAddrToNetAddr(&prAddr, &netAddr);
     if (IsIPAddrLocal(&netAddr)) {
         // Redirects to local IP addresses are probably captive portals
-        mCaptivePortalService->RecheckCaptivePortal();
+        RecheckCaptivePortal();
     }
 
     return NS_OK;

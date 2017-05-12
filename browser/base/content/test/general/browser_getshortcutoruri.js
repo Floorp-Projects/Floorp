@@ -70,11 +70,11 @@ var testData = [
 
   // Test escaping (%s = escaped, %S = raw)
   // UTF-8 default
-  [new bmKeywordData("bmget-escaping", "http://bmget/?esc=%s&raw=%S", null, "foé"),
-   new keywordResult("http://bmget/?esc=fo%C3%A9&raw=foé", null)],
+  [new bmKeywordData("bmget-escaping", "http://bmget/?esc=%s&raw=%S", null, "fo\xE9"),
+   new keywordResult("http://bmget/?esc=fo%C3%A9&raw=fo\xE9", null)],
   // Explicitly-defined ISO-8859-1
-  [new bmKeywordData("bmget-escaping2", "http://bmget/?esc=%s&raw=%S&mozcharset=ISO-8859-1", null, "foé"),
-   new keywordResult("http://bmget/?esc=fo%E9&raw=foé", null)],
+  [new bmKeywordData("bmget-escaping2", "http://bmget/?esc=%s&raw=%S&mozcharset=ISO-8859-1", null, "fo\xE9"),
+   new keywordResult("http://bmget/?esc=fo%E9&raw=fo\xE9", null)],
 
   // Bug 359809: Test escaping +, /, and @
   // UTF-8 default
@@ -91,8 +91,8 @@ var testData = [
    new keywordResult(null, null, true)]
 ];
 
-add_task(function* test_getshortcutoruri() {
-  yield setupKeywords();
+add_task(async function test_getshortcutoruri() {
+  await setupKeywords();
 
   for (let item of testData) {
     let [data, result] = item;
@@ -100,7 +100,7 @@ add_task(function* test_getshortcutoruri() {
     let query = data.keyword;
     if (data.searchWord)
       query += " " + data.searchWord;
-    let returnedData = yield getShortcutOrURIAndPostData(query);
+    let returnedData = await getShortcutOrURIAndPostData(query);
     // null result.url means we should expect the same query we sent in
     let expected = result.url || query;
     is(returnedData.url, expected, "got correct URL for " + data.keyword);
@@ -108,21 +108,21 @@ add_task(function* test_getshortcutoruri() {
     is(returnedData.mayInheritPrincipal, !result.isUnsafe, "got correct mayInheritPrincipal for " + data.keyword);
   }
 
-  yield cleanupKeywords();
+  await cleanupKeywords();
 });
 
 var folder = null;
 var gAddedEngines = [];
 
-function* setupKeywords() {
-  folder = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+async function setupKeywords() {
+  folder = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                 type: PlacesUtils.bookmarks.TYPE_FOLDER,
                                                 title: "keyword-test" });
   for (let item of testData) {
     let data = item[0];
     if (data instanceof bmKeywordData) {
-      yield PlacesUtils.bookmarks.insert({ url: data.uri, parentGuid: folder.guid });
-      yield PlacesUtils.keywords.insert({ keyword: data.keyword, url: data.uri.spec, postData: data.postData });
+      await PlacesUtils.bookmarks.insert({ url: data.uri, parentGuid: folder.guid });
+      await PlacesUtils.keywords.insert({ keyword: data.keyword, url: data.uri.spec, postData: data.postData });
     }
 
     if (data instanceof searchKeywordData) {
@@ -137,7 +137,7 @@ function* setupKeywords() {
   }
 }
 
-function* cleanupKeywords() {
-  PlacesUtils.bookmarks.remove(folder);
+async function cleanupKeywords() {
+  await PlacesUtils.bookmarks.remove(folder);
   gAddedEngines.map(Services.search.removeEngine);
 }

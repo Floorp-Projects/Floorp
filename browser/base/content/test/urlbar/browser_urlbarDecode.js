@@ -5,7 +5,7 @@
 // the urlbar also shows the URLs embedded in action URIs unescaped.  See bug
 // 1233672.
 
-add_task(function* injectJSON() {
+add_task(async function injectJSON() {
   let inputStrs = [
     'http://example.com/ ", "url": "bar',
     "http://example.com/\\",
@@ -17,7 +17,7 @@ add_task(function* injectJSON() {
     'http://www.mozilla.org/","url":["foo","bar"],"some-key":"foo',
   ];
   for (let inputStr of inputStrs) {
-    yield checkInput(inputStr);
+    await checkInput(inputStr);
   }
   gURLBar.value = "";
   gURLBar.handleRevert();
@@ -36,10 +36,10 @@ add_task(function losslessDecode() {
   gURLBar.blur();
 });
 
-add_task(function* actionURILosslessDecode() {
+add_task(async function actionURILosslessDecode() {
   let urlNoScheme = "example.com/\u30a2\u30a4\u30a6\u30a8\u30aa";
   let url = "http://" + urlNoScheme;
-  yield promiseAutocompleteResultPopup(url);
+  await promiseAutocompleteResultPopup(url);
 
   // At this point the heuristic result is selected but the urlbar's value is
   // simply `url`.  Key down and back around until the heuristic result is
@@ -62,8 +62,8 @@ add_task(function* actionURILosslessDecode() {
   gURLBar.blur();
 });
 
-function* checkInput(inputStr) {
-  yield promiseAutocompleteResultPopup(inputStr);
+async function checkInput(inputStr) {
+  await promiseAutocompleteResultPopup(inputStr);
 
   let item = gURLBar.popup.richlistbox.firstChild;
   Assert.ok(item, "Should have a result");

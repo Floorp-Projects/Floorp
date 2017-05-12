@@ -30,11 +30,11 @@ let extData = {
   },
 };
 
-add_task(function* sidebar_windows() {
+add_task(async function sidebar_windows() {
   let extension = ExtensionTestUtils.loadExtension(extData);
-  yield extension.startup();
+  await extension.startup();
   // Test sidebar is opened on install
-  yield extension.awaitMessage("sidebar");
+  await extension.awaitMessage("sidebar");
   ok(!document.getElementById("sidebar-box").hidden, "sidebar box is visible in first window");
   // Check that the menuitem has our image styling.
   let elements = document.getElementsByClassName("webextension-menuitem");
@@ -46,9 +46,9 @@ add_task(function* sidebar_windows() {
 
   // SidebarUI relies on window.opener being set, which is normal behavior when
   // using menu or key commands to open a new browser window.
-  let win = yield BrowserTestUtils.openNewBrowserWindow({opener: window});
+  let win = await BrowserTestUtils.openNewBrowserWindow({opener: window});
 
-  yield secondSidebar;
+  await secondSidebar;
   ok(!win.document.getElementById("sidebar-box").hidden, "sidebar box is visible in second window");
   // Check that the menuitem has our image styling.
   elements = win.document.getElementsByClassName("webextension-menuitem");
@@ -56,8 +56,8 @@ add_task(function* sidebar_windows() {
   style = elements[0].getAttribute("style");
   ok(style.includes("webextension-menuitem-image"), "this menu has style");
 
-  yield extension.unload();
-  yield BrowserTestUtils.closeWindow(win);
+  await extension.unload();
+  await BrowserTestUtils.closeWindow(win);
 
   // Move toolbar button back to customization.
   CustomizableUI.removeWidgetFromArea("sidebar-button", CustomizableUI.AREA_NAVBAR);

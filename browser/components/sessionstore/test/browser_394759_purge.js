@@ -16,7 +16,7 @@ function promiseClearHistory() {
   });
 }
 
-add_task(function* () {
+add_task(async function() {
   // utility functions
   function countClosedTabsByTitle(aClosedTabList, aTitle) {
     return aClosedTabList.filter(aData => aData.title == aTitle).length;
@@ -94,8 +94,8 @@ add_task(function* () {
 
   // purge domain & check that we purged correctly for closed windows
   let clearHistoryPromise = promiseClearHistory();
-  yield ForgetAboutSite.removeDataFromDomain("mozilla.org");
-  yield clearHistoryPromise;
+  await ForgetAboutSite.removeDataFromDomain("mozilla.org");
+  await clearHistoryPromise;
 
   let closedWindowData = JSON.parse(ss.getClosedWindowData());
 

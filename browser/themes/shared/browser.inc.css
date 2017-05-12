@@ -2,6 +2,46 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+%ifdef MOZ_PHOTON_THEME
+/* Go button */
+.urlbar-go-button {
+  padding: 0 3px;
+  list-style-image: url("chrome://browser/skin/reload-stop-go.png");
+}
+
+.urlbar-go-button {
+  -moz-image-region: rect(0, 42px, 14px, 28px);
+}
+
+.urlbar-go-button:hover {
+  -moz-image-region: rect(14px, 42px, 28px, 28px);
+}
+
+.urlbar-go-button:hover:active {
+  -moz-image-region: rect(28px, 42px, 42px, 28px);
+}
+
+.urlbar-go-button:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
+}
+
+@media (min-resolution: 1.1dppx) {
+  .urlbar-go-button {
+    list-style-image: url("chrome://browser/skin/reload-stop-go@2x.png");
+    -moz-image-region: rect(0, 84px, 28px, 56px);
+    width: 20px;
+  }
+
+  .urlbar-go-button:hover {
+    -moz-image-region: rect(28px, 84px, 56px, 56px);
+  }
+
+  .urlbar-go-button:hover:active {
+    -moz-image-region: rect(56px, 84px, 84px, 56px);
+  }
+}
+%endif
+
 /* Zoom button */
 #urlbar-zoom-button {
   margin: 0 3px;

@@ -23,7 +23,6 @@ const Cu = Components.utils;
 const Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
@@ -62,7 +61,7 @@ this.LoginImport.prototype = {
   /**
    * Imports login-related data from the previous SQLite storage format.
    */
-  import: Task.async(function* () {
+  async import() {
     // We currently migrate data directly from the database to the JSON store at
     // first run, then we set a preference to prevent repeating the import.
     // Thus, merging with existing data is not a use case we support.  This
@@ -77,9 +76,9 @@ this.LoginImport.prototype = {
     // When a timestamp is not specified, we will use the same reference time.
     let referenceTimeMs = Date.now();
 
-    let connection = yield Sqlite.openConnection({ path: this.path });
+    let connection = await Sqlite.openConnection({ path: this.path });
     try {
-      let schemaVersion = yield connection.getSchemaVersion();
+      let schemaVersion = await connection.getSchemaVersion();
 
       // We support importing database schema versions from 3 onwards.
       // Version 3 was implemented in bug 316084 (Firefox 3.6, March 2009).
@@ -90,7 +89,7 @@ this.LoginImport.prototype = {
                         "the existing profile is too old.");
       }
 
-      let rows = yield connection.execute("SELECT * FROM moz_logins");
+      let rows = await connection.execute("SELECT * FROM moz_logins");
       for (let row of rows) {
         try {
           let hostname = row.getResultByName("hostname");
@@ -156,7 +155,7 @@ this.LoginImport.prototype = {
         }
       }
 
-      rows = yield connection.execute("SELECT * FROM moz_disabledHosts");
+      rows = await connection.execute("SELECT * FROM moz_disabledHosts");
       for (let row of rows) {
         try {
           let hostname = row.getResultByName("hostname");
@@ -167,7 +166,7 @@ this.LoginImport.prototype = {
         }
       }
     } finally {
-      yield connection.close();
+      await connection.close();
     }
-  }),
+  },
 };

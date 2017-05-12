@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-function* testTabsCreateInvalidURL(tabsCreateURL) {
+async function testTabsCreateInvalidURL(tabsCreateURL) {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
@@ -26,19 +26,19 @@ function* testTabsCreateInvalidURL(tabsCreateURL) {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitMessage("ready");
+  await extension.awaitMessage("ready");
 
   info(`test tab.create on invalid URL "${tabsCreateURL}"`);
 
   extension.sendMessage("start", tabsCreateURL);
-  yield extension.awaitMessage("done");
+  await extension.awaitMessage("done");
 
-  yield extension.unload();
+  await extension.unload();
 }
 
-add_task(function* () {
+add_task(async function() {
   info("Start testing tabs.create on invalid URLs");
 
   let dataURLPage = `data:text/html,
@@ -59,7 +59,7 @@ add_task(function* () {
   ];
 
   for (let {tabsCreateURL} of testCases) {
-    yield* testTabsCreateInvalidURL(tabsCreateURL);
+    await testTabsCreateInvalidURL(tabsCreateURL);
   }
 
   info("done");

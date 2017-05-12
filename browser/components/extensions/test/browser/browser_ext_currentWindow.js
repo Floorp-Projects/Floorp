@@ -44,17 +44,17 @@ function genericChecker() {
   browser.test.sendMessage(kind + "-ready");
 }
 
-add_task(function* () {
-  let win1 = yield BrowserTestUtils.openNewBrowserWindow();
-  let win2 = yield BrowserTestUtils.openNewBrowserWindow();
+add_task(async function() {
+  let win1 = await BrowserTestUtils.openNewBrowserWindow();
+  let win2 = await BrowserTestUtils.openNewBrowserWindow();
 
-  yield focusWindow(win2);
+  await focusWindow(win2);
 
-  yield BrowserTestUtils.loadURI(win1.gBrowser.selectedBrowser, "about:robots");
-  yield BrowserTestUtils.browserLoaded(win1.gBrowser.selectedBrowser);
+  await BrowserTestUtils.loadURI(win1.gBrowser.selectedBrowser, "about:robots");
+  await BrowserTestUtils.browserLoaded(win1.gBrowser.selectedBrowser);
 
-  yield BrowserTestUtils.loadURI(win2.gBrowser.selectedBrowser, "about:config");
-  yield BrowserTestUtils.browserLoaded(win2.gBrowser.selectedBrowser);
+  await BrowserTestUtils.loadURI(win2.gBrowser.selectedBrowser, "about:config");
+  await BrowserTestUtils.browserLoaded(win2.gBrowser.selectedBrowser);
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -88,62 +88,62 @@ add_task(function* () {
     background: genericChecker,
   });
 
-  yield Promise.all([extension.startup(), extension.awaitMessage("background-ready")]);
+  await Promise.all([extension.startup(), extension.awaitMessage("background-ready")]);
 
   let {Management: {global: {windowTracker}}} = Cu.import("resource://gre/modules/Extension.jsm", {});
 
   let winId1 = windowTracker.getId(win1);
   let winId2 = windowTracker.getId(win2);
 
-  function* checkWindow(kind, winId, name) {
+  async function checkWindow(kind, winId, name) {
     extension.sendMessage(kind + "-check-current1");
-    is((yield extension.awaitMessage("result")), winId, `${name} is on top (check 1) [${kind}]`);
+    is((await extension.awaitMessage("result")), winId, `${name} is on top (check 1) [${kind}]`);
     extension.sendMessage(kind + "-check-current2");
-    is((yield extension.awaitMessage("result")), winId, `${name} is on top (check 2) [${kind}]`);
+    is((await extension.awaitMessage("result")), winId, `${name} is on top (check 2) [${kind}]`);
     extension.sendMessage(kind + "-check-current3");
-    is((yield extension.awaitMessage("result")), winId, `${name} is on top (check 3) [${kind}]`);
+    is((await extension.awaitMessage("result")), winId, `${name} is on top (check 3) [${kind}]`);
   }
 
-  yield focusWindow(win1);
-  yield checkWindow("background", winId1, "win1");
-  yield focusWindow(win2);
-  yield checkWindow("background", winId2, "win2");
+  await focusWindow(win1);
+  await checkWindow("background", winId1, "win1");
+  await focusWindow(win2);
+  await checkWindow("background", winId2, "win2");
 
-  function* triggerPopup(win, callback) {
-    yield clickBrowserAction(extension, win);
-    yield awaitExtensionPanel(extension, win);
+  async function triggerPopup(win, callback) {
+    await clickBrowserAction(extension, win);
+    await awaitExtensionPanel(extension, win);
 
-    yield extension.awaitMessage("popup-ready");
+    await extension.awaitMessage("popup-ready");
 
-    yield callback();
+    await callback();
 
     closeBrowserAction(extension, win);
   }
 
   // Set focus to some other window.
-  yield focusWindow(window);
+  await focusWindow(window);
 
-  yield triggerPopup(win1, function* () {
-    yield checkWindow("popup", winId1, "win1");
+  await triggerPopup(win1, async function() {
+    await checkWindow("popup", winId1, "win1");
   });
 
-  yield triggerPopup(win2, function* () {
-    yield checkWindow("popup", winId2, "win2");
+  await triggerPopup(win2, async function() {
+    await checkWindow("popup", winId2, "win2");
   });
 
-  function* triggerPage(winId, name) {
+  async function triggerPage(winId, name) {
     extension.sendMessage("background-open-page", winId);
-    yield extension.awaitMessage("page-ready");
-    yield checkWindow("page", winId, name);
+    await extension.awaitMessage("page-ready");
+    await checkWindow("page", winId, name);
     extension.sendMessage("background-close-page", winId);
-    yield extension.awaitMessage("closed");
+    await extension.awaitMessage("closed");
   }
 
-  yield triggerPage(winId1, "win1");
-  yield triggerPage(winId2, "win2");
+  await triggerPage(winId1, "win1");
+  await triggerPage(winId2, "win2");
 
-  yield extension.unload();
+  await extension.unload();
 
-  yield BrowserTestUtils.closeWindow(win1);
-  yield BrowserTestUtils.closeWindow(win2);
+  await BrowserTestUtils.closeWindow(win1);
+  await BrowserTestUtils.closeWindow(win2);
 });

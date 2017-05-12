@@ -51,28 +51,28 @@ let contextMenuItems = {
   "context-sharepage": "hidden",
 };
 
-add_task(function* sidebar_contextmenu() {
+add_task(async function sidebar_contextmenu() {
   let extension = ExtensionTestUtils.loadExtension(extData);
-  yield extension.startup();
+  await extension.startup();
   // Test sidebar is opened on install
-  yield extension.awaitMessage("sidebar");
+  await extension.awaitMessage("sidebar");
 
-  let contentAreaContextMenu = yield openContextMenuInSidebar();
+  let contentAreaContextMenu = await openContextMenuInSidebar();
   let item = contentAreaContextMenu.getElementsByAttribute("label", "Click me!");
   is(item.length, 1, "contextMenu item for page was found");
-  yield closeContextMenu(contentAreaContextMenu);
+  await closeContextMenu(contentAreaContextMenu);
 
-  yield extension.unload();
+  await extension.unload();
 });
 
 
-add_task(function* sidebar_contextmenu_hidden_items() {
+add_task(async function sidebar_contextmenu_hidden_items() {
   let extension = ExtensionTestUtils.loadExtension(extData);
-  yield extension.startup();
+  await extension.startup();
   // Test sidebar is opened on install
-  yield extension.awaitMessage("sidebar");
+  await extension.awaitMessage("sidebar");
 
-  let contentAreaContextMenu = yield openContextMenuInSidebar("#text");
+  let contentAreaContextMenu = await openContextMenuInSidebar("#text");
 
   let item, state;
   for (const itemID in contextMenuItems) {
@@ -91,29 +91,29 @@ add_task(function* sidebar_contextmenu_hidden_items() {
     }
   }
 
-  yield closeContextMenu(contentAreaContextMenu);
+  await closeContextMenu(contentAreaContextMenu);
 
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* sidebar_image_contextmenu() {
+add_task(async function sidebar_image_contextmenu() {
   let extension = ExtensionTestUtils.loadExtension(extData);
-  yield extension.startup();
+  await extension.startup();
   // Test sidebar is opened on install
-  yield extension.awaitMessage("sidebar");
+  await extension.awaitMessage("sidebar");
 
-  let contentAreaContextMenu = yield openContextMenuInSidebar("#testimg");
+  let contentAreaContextMenu = await openContextMenuInSidebar("#testimg");
 
   let item = contentAreaContextMenu.querySelector("#context-viewimageinfo");
   ok(!item.hidden);
   ok(!item.disabled);
 
-  yield closeContextMenu(contentAreaContextMenu);
+  await closeContextMenu(contentAreaContextMenu);
 
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* cleanup() {
+add_task(async function cleanup() {
   // This is set on initial sidebar install.
   Services.prefs.clearUserPref("extensions.sidebar-button.shown");
 });

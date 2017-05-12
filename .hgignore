@@ -141,7 +141,7 @@ GPATH
 ^\.tup
 
 # Ignore Visual Studio Code workspace files.
-\.vscode/(?!extensions.json$)
+\.vscode/(?!extensions\.json|tasks\.json)
 
 subinclude:servo/.hgignore
 

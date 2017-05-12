@@ -2,11 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-add_task(function* test_switchtab_override() {
+add_task(async function test_switchtab_override() {
   let testURL = "http://example.org/browser/browser/base/content/test/urlbar/dummy_page.html";
 
   info("Opening first tab");
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, testURL);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, testURL);
 
   info("Opening and selecting second tab");
   let secondTab = gBrowser.selectedTab = gBrowser.addTab();
@@ -32,7 +32,7 @@ add_task(function* test_switchtab_override() {
   gURLBar.focus();
   gURLBar.value = "dummy_pag";
   EventUtils.synthesizeKey("e", {});
-  yield deferred.promise;
+  await deferred.promise;
 
   info("Select second autocomplete popup entry");
   EventUtils.synthesizeKey("VK_DOWN", {});
@@ -55,7 +55,7 @@ add_task(function* test_switchtab_override() {
   EventUtils.synthesizeKey("VK_RETURN", { });
   info(`gURLBar.value = ${gURLBar.value}`);
   EventUtils.synthesizeKey("VK_SHIFT", { type: "keyup" });
-  yield deferred.promise;
+  await deferred.promise;
 
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
 });

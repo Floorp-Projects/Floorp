@@ -3,7 +3,6 @@
  */
 
 Cu.import("resource://gre/modules/Promise.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function() {
   return Components.utils.import("resource://gre/modules/FxAccountsCommon.js", {});
@@ -23,7 +22,7 @@ const TEST_CHANNEL_ID = "account_updates_test";
 var gTests = [
   {
     desc: "FxA Web Channel - should receive message about profile changes",
-    *run() {
+    async run() {
       let client = new FxAccountsWebChannel({
         content_uri: TEST_HTTP_PATH,
         channel_id: TEST_CHANNEL_ID,
@@ -36,17 +35,17 @@ var gTests = [
         });
       });
 
-      yield BrowserTestUtils.withNewTab({
+      await BrowserTestUtils.withNewTab({
         gBrowser,
         url: TEST_BASE_URL + "?profile_change"
-      }, function* () {
-        yield promiseObserver;
+      }, async function() {
+        await promiseObserver;
       });
     }
   },
   {
     desc: "fxa web channel - login messages should notify the fxAccounts object",
-    *run() {
+    async run() {
 
       let promiseLogin = new Promise((resolve, reject) => {
         let login = (accountData) => {
@@ -71,17 +70,17 @@ var gTests = [
         });
       });
 
-      yield BrowserTestUtils.withNewTab({
+      await BrowserTestUtils.withNewTab({
         gBrowser,
         url: TEST_BASE_URL + "?login"
-      }, function* () {
-        yield promiseLogin;
+      }, async function() {
+        await promiseLogin;
       });
     }
   },
   {
     desc: "fxa web channel - can_link_account messages should respond",
-    *run() {
+    async run() {
       let properUrl = TEST_BASE_URL + "?can_link_account";
 
       let promiseEcho = new Promise((resolve, reject) => {
@@ -113,17 +112,17 @@ var gTests = [
         });
       });
 
-      yield BrowserTestUtils.withNewTab({
+      await BrowserTestUtils.withNewTab({
         gBrowser,
         url: properUrl
-      }, function* () {
-        yield promiseEcho;
+      }, async function() {
+        await promiseEcho;
       });
     }
   },
   {
     desc: "fxa web channel - logout messages should notify the fxAccounts object",
-    *run() {
+    async run() {
       let promiseLogout = new Promise((resolve, reject) => {
         let logout = (uid) => {
           Assert.equal(uid, "uid");
@@ -141,17 +140,17 @@ var gTests = [
         });
       });
 
-      yield BrowserTestUtils.withNewTab({
+      await BrowserTestUtils.withNewTab({
         gBrowser,
         url: TEST_BASE_URL + "?logout"
-      }, function* () {
-        yield promiseLogout;
+      }, async function() {
+        await promiseLogout;
       });
     }
   },
   {
     desc: "fxa web channel - delete messages should notify the fxAccounts object",
-    *run() {
+    async run() {
       let promiseDelete = new Promise((resolve, reject) => {
         let logout = (uid) => {
           Assert.equal(uid, "uid");
@@ -169,11 +168,11 @@ var gTests = [
         });
       });
 
-      yield BrowserTestUtils.withNewTab({
+      await BrowserTestUtils.withNewTab({
         gBrowser,
         url: TEST_BASE_URL + "?delete"
-      }, function* () {
-        yield promiseDelete;
+      }, async function() {
+        await promiseDelete;
       });
     }
   }
@@ -198,12 +197,12 @@ function makeObserver(aObserveTopic, aObserveFunc) {
 function test() {
   waitForExplicitFinish();
 
-  Task.spawn(function* () {
+  (async function() {
     for (let testCase of gTests) {
       info("Running: " + testCase.desc);
-      yield testCase.run();
+      await testCase.run();
     }
-  }).then(finish, ex => {
+  })().then(finish, ex => {
     Assert.ok(false, "Unexpected Exception: " + ex);
     finish();
   });

@@ -10,25 +10,24 @@ Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Sqlite.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 // To spin the event loop in test.
 Cu.import("resource://services-common/async.js");
 
 function sleep(ms) {
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  let timer = Cc["@mozilla.org/timer;1"]
-                .createInstance(Ci.nsITimer);
+    let timer = Cc["@mozilla.org/timer;1"]
+                  .createInstance(Ci.nsITimer);
 
-  timer.initWithCallback({
-    notify() {
-      deferred.resolve();
-    },
-  }, ms, timer.TYPE_ONE_SHOT);
+    timer.initWithCallback({
+      notify() {
+        resolve();
+      },
+    }, ms, timer.TYPE_ONE_SHOT);
 
-  return deferred.promise;
+  });
 }
 
 // When testing finalization, use this to tell Sqlite.jsm to not throw
@@ -47,78 +46,78 @@ function getConnection(dbName, extraOptions = {}) {
   return Sqlite.openConnection(options);
 }
 
-function* getDummyDatabase(name, extraOptions = {}) {
+async function getDummyDatabase(name, extraOptions = {}) {
   const TABLES = {
     dirs: "id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT",
     files: "id INTEGER PRIMARY KEY AUTOINCREMENT, dir_id INTEGER, path TEXT",
   };
 
-  let c = yield getConnection(name, extraOptions);
+  let c = await getConnection(name, extraOptions);
   c._initialStatementCount = 0;
 
   for (let [k, v] of Object.entries(TABLES)) {
-    yield c.execute("CREATE TABLE " + k + "(" + v + ")");
+    await c.execute("CREATE TABLE " + k + "(" + v + ")");
     c._initialStatementCount++;
   }
 
   return c;
 }
 
-function* getDummyTempDatabase(name, extraOptions = {}) {
+async function getDummyTempDatabase(name, extraOptions = {}) {
   const TABLES = {
     dirs: "id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT",
     files: "id INTEGER PRIMARY KEY AUTOINCREMENT, dir_id INTEGER, path TEXT",
   };
 
-  let c = yield getConnection(name, extraOptions);
+  let c = await getConnection(name, extraOptions);
   c._initialStatementCount = 0;
 
   for (let [k, v] of Object.entries(TABLES)) {
-    yield c.execute("CREATE TEMP TABLE " + k + "(" + v + ")");
+    await c.execute("CREATE TEMP TABLE " + k + "(" + v + ")");
     c._initialStatementCount++;
   }
 
   return c;
 }
 
-add_task(function* test_setup() {
+add_task(async function test_setup() {
   Cu.import("resource://testing-common/services/common/logging.js");
   initTestLogging("Trace");
 });
 
-add_task(function* test_open_normal() {
-  let c = yield Sqlite.openConnection({path: "test_open_normal.sqlite"});
-  yield c.close();
+add_task(async function test_open_normal() {
+  let c = await Sqlite.openConnection({path: "test_open_normal.sqlite"});
+  await c.close();
 });
 
-add_task(function* test_open_unshared() {
+add_task(async function test_open_unshared() {
   let path = OS.Path.join(OS.Constants.Path.profileDir, "test_open_unshared.sqlite");
 
-  let c = yield Sqlite.openConnection({path, sharedMemoryCache: false});
-  yield c.close();
+  let c = await Sqlite.openConnection({path, sharedMemoryCache: false});
+  await c.close();
 });
 
-add_task(function* test_get_dummy_database() {
-  let db = yield getDummyDatabase("get_dummy_database");
+add_task(async function test_get_dummy_database() {
+  let db = await getDummyDatabase("get_dummy_database");
 
   do_check_eq(typeof(db), "object");
-  yield db.close();
+  await db.close();
 });
 
-add_task(function* test_schema_version() {
-  let db = yield getDummyDatabase("schema_version");
+add_task(async function test_schema_version() {
+  let db = await getDummyDatabase("schema_version");
 
-  let version = yield db.getSchemaVersion();
+  let version = await db.getSchemaVersion();
   do_check_eq(version, 0);
 
   db.setSchemaVersion(14);
-  version = yield db.getSchemaVersion();
+  version = await db.getSchemaVersion();
   do_check_eq(version, 14);
 
   for (let v of [0.5, "foobar", NaN]) {
     let success;
     try {
-      yield db.setSchemaVersion(v);
+      await db.setSchemaVersion(v);
       do_print("Schema version " + v + " should have been rejected");
       success = false;
     } catch (ex) {
@@ -128,50 +127,50 @@ add_task(function* test_schema_version() {
     }
     do_check_true(success);
 
-    version = yield db.getSchemaVersion();
+    version = await db.getSchemaVersion();
     do_check_eq(version, 14);
   }
 
-  yield db.close();
+  await db.close();
 });
 
-add_task(function* test_simple_insert() {
-  let c = yield getDummyDatabase("simple_insert");
+add_task(async function test_simple_insert() {
+  let c = await getDummyDatabase("simple_insert");
 
-  let result = yield c.execute("INSERT INTO dirs VALUES (NULL, 'foo')");
+  let result = await c.execute("INSERT INTO dirs VALUES (NULL, 'foo')");
   do_check_true(Array.isArray(result));
   do_check_eq(result.length, 0);
-  yield c.close();
+  await c.close();
 });
 
-add_task(function* test_simple_bound_array() {
-  let c = yield getDummyDatabase("simple_bound_array");
+add_task(async function test_simple_bound_array() {
+  let c = await getDummyDatabase("simple_bound_array");
 
-  let result = yield c.execute("INSERT INTO dirs VALUES (?, ?)", [1, "foo"]);
+  let result = await c.execute("INSERT INTO dirs VALUES (?, ?)", [1, "foo"]);
   do_check_eq(result.length, 0);
-  yield c.close();
+  await c.close();
 });
 
-add_task(function* test_simple_bound_object() {
-  let c = yield getDummyDatabase("simple_bound_object");
-  let result = yield c.execute("INSERT INTO dirs VALUES (:id, :path)",
+add_task(async function test_simple_bound_object() {
+  let c = await getDummyDatabase("simple_bound_object");
+  let result = await c.execute("INSERT INTO dirs VALUES (:id, :path)",
                                {id: 1, path: "foo"});
   do_check_eq(result.length, 0);
-  result = yield c.execute("SELECT id, path FROM dirs");
+  result = await c.execute("SELECT id, path FROM dirs");
   do_check_eq(result.length, 1);
   do_check_eq(result[0].getResultByName("id"), 1);
   do_check_eq(result[0].getResultByName("path"), "foo");
-  yield c.close();
+  await c.close();
 });
 
 // This is mostly a sanity test to ensure simple executions work.
-add_task(function* test_simple_insert_then_select() {
-  let c = yield getDummyDatabase("simple_insert_then_select");
+add_task(async function test_simple_insert_then_select() {
+  let c = await getDummyDatabase("simple_insert_then_select");
 
-  yield c.execute("INSERT INTO dirs VALUES (NULL, 'foo')");
-  yield c.execute("INSERT INTO dirs (path) VALUES (?)", ["bar"]);
+  await c.execute("INSERT INTO dirs VALUES (NULL, 'foo')");
+  await c.execute("INSERT INTO dirs (path) VALUES (?)", ["bar"]);
 
-  let result = yield c.execute("SELECT * FROM dirs");
+  let result = await c.execute("SELECT * FROM dirs");
   do_check_eq(result.length, 2);
 
   let i = 0;
@@ -185,112 +184,112 @@ add_task(function* test_simple_insert_then_select() {
     do_check_eq(row.getResultByName("path"), expected);
   }
 
-  yield c.close();
+  await c.close();
 });
 
-add_task(function* test_repeat_execution() {
-  let c = yield getDummyDatabase("repeat_execution");
+add_task(async function test_repeat_execution() {
+  let c = await getDummyDatabase("repeat_execution");
 
   let sql = "INSERT INTO dirs (path) VALUES (:path)";
-  yield c.executeCached(sql, {path: "foo"});
-  yield c.executeCached(sql);
+  await c.executeCached(sql, {path: "foo"});
+  await c.executeCached(sql);
 
-  let result = yield c.execute("SELECT * FROM dirs");
+  let result = await c.execute("SELECT * FROM dirs");
 
   do_check_eq(result.length, 2);
 
-  yield c.close();
+  await c.close();
 });
 
-add_task(function* test_table_exists() {
-  let c = yield getDummyDatabase("table_exists");
+add_task(async function test_table_exists() {
+  let c = await getDummyDatabase("table_exists");
 
-  do_check_false(yield c.tableExists("does_not_exist"));
-  do_check_true(yield c.tableExists("dirs"));
-  do_check_true(yield c.tableExists("files"));
+  do_check_false(await c.tableExists("does_not_exist"));
+  do_check_true(await c.tableExists("dirs"));
+  do_check_true(await c.tableExists("files"));
 
-  yield c.close();
+  await c.close();
 });
 
-add_task(function* test_index_exists() {
-  let c = yield getDummyDatabase("index_exists");
+add_task(async function test_index_exists() {
+  let c = await getDummyDatabase("index_exists");
 
-  do_check_false(yield c.indexExists("does_not_exist"));
+  do_check_false(await c.indexExists("does_not_exist"));
 
-  yield c.execute("CREATE INDEX my_index ON dirs (path)");
-  do_check_true(yield c.indexExists("my_index"));
+  await c.execute("CREATE INDEX my_index ON dirs (path)");
+  do_check_true(await c.indexExists("my_index"));
 
-  yield c.close();
+  await c.close();
 });
 
-add_task(function* test_temp_table_exists() {
-  let c = yield getDummyTempDatabase("temp_table_exists");
+add_task(async function test_temp_table_exists() {
+  let c = await getDummyTempDatabase("temp_table_exists");
 
-  do_check_false(yield c.tableExists("temp_does_not_exist"));
-  do_check_true(yield c.tableExists("dirs"));
-  do_check_true(yield c.tableExists("files"));
+  do_check_false(await c.tableExists("temp_does_not_exist"));
+  do_check_true(await c.tableExists("dirs"));
+  do_check_true(await c.tableExists("files"));
 
-  yield c.close();
+  await c.close();
 });
 
-add_task(function* test_temp_index_exists() {
-  let c = yield getDummyTempDatabase("temp_index_exists");
+add_task(async function test_temp_index_exists() {
+  let c = await getDummyTempDatabase("temp_index_exists");
 
-  do_check_false(yield c.indexExists("temp_does_not_exist"));
+  do_check_false(await c.indexExists("temp_does_not_exist"));
 
-  yield c.execute("CREATE INDEX my_index ON dirs (path)");
-  do_check_true(yield c.indexExists("my_index"));
+  await c.execute("CREATE INDEX my_index ON dirs (path)");
+  do_check_true(await c.indexExists("my_index"));
 
-  yield c.close();
+  await c.close();
 });
 
-add_task(function* test_close_cached() {
-  let c = yield getDummyDatabase("close_cached");
+add_task(async function test_close_cached() {
+  let c = await getDummyDatabase("close_cached");
 
-  yield c.executeCached("SELECT * FROM dirs");
-  yield c.executeCached("SELECT * FROM files");
+  await c.executeCached("SELECT * FROM dirs");
+  await c.executeCached("SELECT * FROM files");
 
-  yield c.close();
+  await c.close();
 });
 
-add_task(function* test_execute_invalid_statement() {
-  let c = yield getDummyDatabase("invalid_statement");
+add_task(async function test_execute_invalid_statement() {
+  let c = await getDummyDatabase("invalid_statement");
 
-  let deferred = Promise.defer();
+  await new Promise(resolve => {
 
-  do_check_eq(c._connectionData._anonymousStatements.size, 0);
+    do_check_eq(c._connectionData._anonymousStatements.size, 0);
 
-  c.execute("SELECT invalid FROM unknown").then(do_throw, function onError(error) {
-    deferred.resolve();
+    c.execute("SELECT invalid FROM unknown").then(do_throw, function onError(error) {
+      resolve();
+    });
+
   });
-
-  yield deferred.promise;
 
   // Ensure we don't leak the statement instance.
   do_check_eq(c._connectionData._anonymousStatements.size, 0);
 
-  yield c.close();
+  await c.close();
 });
 
-add_task(function* test_incorrect_like_bindings() {
-  let c = yield getDummyDatabase("incorrect_like_bindings");
+add_task(async function test_incorrect_like_bindings() {
+  let c = await getDummyDatabase("incorrect_like_bindings");
 
   let sql = "select * from dirs where path LIKE 'non%'";
   Assert.throws(() => c.execute(sql), /Please enter a LIKE clause/);
   Assert.throws(() => c.executeCached(sql), /Please enter a LIKE clause/);
 
-  yield c.close();
+  await c.close();
 });
-add_task(function* test_on_row_exception_ignored() {
-  let c = yield getDummyDatabase("on_row_exception_ignored");
+add_task(async function test_on_row_exception_ignored() {
+  let c = await getDummyDatabase("on_row_exception_ignored");
 
   let sql = "INSERT INTO dirs (path) VALUES (?)";
   for (let i = 0; i < 10; i++) {
-    yield c.executeCached(sql, ["dir" + i]);
+    await c.executeCached(sql, ["dir" + i]);
   }
 
   let i = 0;
-  let hasResult = yield c.execute("SELECT * FROM DIRS", null, function onRow(row) {
+  let hasResult = await c.execute("SELECT * FROM DIRS", null, function onRow(row) {
     i++;
 
     throw new Error("Some silly error.");
@@ -299,20 +298,20 @@ add_task(function* test_on_row_exception_ignored() {
   do_check_eq(hasResult, true);
   do_check_eq(i, 10);
 
-  yield c.close();
+  await c.close();
 });
 
 // Ensure StopIteration during onRow causes processing to stop.
-add_task(function* test_on_row_stop_iteration() {
-  let c = yield getDummyDatabase("on_row_stop_iteration");
+add_task(async function test_on_row_stop_iteration() {
+  let c = await getDummyDatabase("on_row_stop_iteration");
 
   let sql = "INSERT INTO dirs (path) VALUES (?)";
   for (let i = 0; i < 10; i++) {
-    yield c.executeCached(sql, ["dir" + i]);
+    await c.executeCached(sql, ["dir" + i]);
   }
 
   let i = 0;
-  let hasResult = yield c.execute("SELECT * FROM dirs", null, function onRow(row) {
+  let hasResult = await c.execute("SELECT * FROM dirs", null, function onRow(row) {
     i++;
 
     if (i == 5) {
@@ -323,63 +322,63 @@ add_task(function* test_on_row_stop_iteration() {
   do_check_eq(hasResult, true);
   do_check_eq(i, 5);
 
-  yield c.close();
+  await c.close();
 });
 
 // Ensure execute resolves to false when no rows are selected.
-add_task(function* test_on_row_stop_iteration() {
-  let c = yield getDummyDatabase("no_on_row");
+add_task(async function test_on_row_stop_iteration() {
+  let c = await getDummyDatabase("no_on_row");
 
   let i = 0;
-  let hasResult = yield c.execute(`SELECT * FROM dirs WHERE path="nonexistent"`, null, function onRow(row) {
+  let hasResult = await c.execute(`SELECT * FROM dirs WHERE path="nonexistent"`, null, function onRow(row) {
     i++;
   });
 
   do_check_eq(hasResult, false);
   do_check_eq(i, 0);
 
-  yield c.close();
+  await c.close();
 });
 
-add_task(function* test_invalid_transaction_type() {
-  let c = yield getDummyDatabase("invalid_transaction_type");
+add_task(async function test_invalid_transaction_type() {
+  let c = await getDummyDatabase("invalid_transaction_type");
 
-  Assert.throws(() => c.executeTransaction(function* () {}, "foobar"),
+  Assert.throws(() => c.executeTransaction(function() {}, "foobar"),
                 /Unknown transaction type/,
                 "Unknown transaction type should throw");
 
-  yield c.close();
+  await c.close();
 });
 
-add_task(function* test_execute_transaction_success() {
-  let c = yield getDummyDatabase("execute_transaction_success");
+add_task(async function test_execute_transaction_success() {
+  let c = await getDummyDatabase("execute_transaction_success");
 
   do_check_false(c.transactionInProgress);
 
-  yield c.executeTransaction(function* transaction(conn) {
+  await c.executeTransaction(async function transaction(conn) {
     do_check_eq(c, conn);
     do_check_true(conn.transactionInProgress);
 
-    yield conn.execute("INSERT INTO dirs (path) VALUES ('foo')");
+    await conn.execute("INSERT INTO dirs (path) VALUES ('foo')");
   });
 
   do_check_false(c.transactionInProgress);
-  let rows = yield c.execute("SELECT * FROM dirs");
+  let rows = await c.execute("SELECT * FROM dirs");
   do_check_true(Array.isArray(rows));
   do_check_eq(rows.length, 1);
 
-  yield c.close();
+  await c.close();
 });
 
-add_task(function* test_execute_transaction_rollback() {
-  let c = yield getDummyDatabase("execute_transaction_rollback");
+add_task(async function test_execute_transaction_rollback() {
+  let c = await getDummyDatabase("execute_transaction_rollback");
 
   let deferred = Promise.defer();
 
-  c.executeTransaction(function* transaction(conn) {
-    yield conn.execute("INSERT INTO dirs (path) VALUES ('foo')");
+  c.executeTransaction(async function transaction(conn) {
+    await conn.execute("INSERT INTO dirs (path) VALUES ('foo')");
     print("Expecting error with next statement.");
-    yield conn.execute("INSERT INTO invalid VALUES ('foo')");
+    await conn.execute("INSERT INTO invalid VALUES ('foo')");
 
     // We should never get here.
     do_throw();
@@ -387,67 +386,67 @@ add_task(function* test_execute_transaction_rollback() {
     deferred.resolve();
   });
 
-  yield deferred.promise;
+  await deferred.promise;
 
-  let rows = yield c.execute("SELECT * FROM dirs");
+  let rows = await c.execute("SELECT * FROM dirs");
   do_check_eq(rows.length, 0);
 
-  yield c.close();
+  await c.close();
 });
 
-add_task(function* test_close_during_transaction() {
-  let c = yield getDummyDatabase("close_during_transaction");
+add_task(async function test_close_during_transaction() {
+  let c = await getDummyDatabase("close_during_transaction");
 
-  yield c.execute("INSERT INTO dirs (path) VALUES ('foo')");
+  await c.execute("INSERT INTO dirs (path) VALUES ('foo')");
 
-  let promise = c.executeTransaction(function* transaction(conn) {
-    yield c.execute("INSERT INTO dirs (path) VALUES ('bar')");
+  let promise = c.executeTransaction(async function transaction(conn) {
+    await c.execute("INSERT INTO dirs (path) VALUES ('bar')");
   });
-  yield c.close();
+  await c.close();
 
-  yield Assert.rejects(promise,
+  await Assert.rejects(promise,
                        /Transaction canceled due to a closed connection/,
                        "closing a connection in the middle of a transaction should reject it");
 
-  let c2 = yield getConnection("close_during_transaction");
-  let rows = yield c2.execute("SELECT * FROM dirs");
+  let c2 = await getConnection("close_during_transaction");
+  let rows = await c2.execute("SELECT * FROM dirs");
   do_check_eq(rows.length, 1);
 
-  yield c2.close();
+  await c2.close();
 });
 
 // Verify that we support concurrent transactions.
-add_task(function* test_multiple_transactions() {
-  let c = yield getDummyDatabase("detect_multiple_transactions");
+add_task(async function test_multiple_transactions() {
+  let c = await getDummyDatabase("detect_multiple_transactions");
 
   for (let i = 0; i < 10; ++i) {
     // We don't wait for these transactions.
-    c.executeTransaction(function* () {
-      yield c.execute("INSERT INTO dirs (path) VALUES (:path)",
+    c.executeTransaction(async function() {
+      await c.execute("INSERT INTO dirs (path) VALUES (:path)",
                       { path: `foo${i}` });
-      yield c.execute("SELECT * FROM dirs");
+      await c.execute("SELECT * FROM dirs");
     });
   }
   for (let i = 0; i < 10; ++i) {
-    yield c.executeTransaction(function* () {
-      yield c.execute("INSERT INTO dirs (path) VALUES (:path)",
+    await c.executeTransaction(async function() {
+      await c.execute("INSERT INTO dirs (path) VALUES (:path)",
                       { path: `bar${i}` });
-      yield c.execute("SELECT * FROM dirs");
+      await c.execute("SELECT * FROM dirs");
     });
   }
 
-  let rows = yield c.execute("SELECT * FROM dirs");
+  let rows = await c.execute("SELECT * FROM dirs");
   do_check_eq(rows.length, 20);
 
-  yield c.close();
+  await c.close();
 });
 
 // Verify that wrapped transactions ignore a BEGIN TRANSACTION failure, when
 // an externally opened transaction exists.
-add_task(function* test_wrapped_connection_transaction() {
+add_task(async function test_wrapped_connection_transaction() {
   let file = new FileUtils.File(OS.Path.join(OS.Constants.Path.profileDir,
                                              "test_wrapStorageConnection.sqlite"));
-  let c = yield new Promise((resolve, reject) => {
+  let c = await new Promise((resolve, reject) => {
     Services.storage.openAsyncDatabase(file, null, (status, db) => {
       if (Components.isSuccessCode(status)) {
         resolve(db.QueryInterface(Ci.mozIStorageAsyncConnection));
@@ -457,36 +456,36 @@ add_task(function* test_wrapped_connection_transaction() {
     });
   });
 
-  let wrapper = yield Sqlite.wrapStorageConnection({ connection: c });
+  let wrapper = await Sqlite.wrapStorageConnection({ connection: c });
   // Start a transaction on the raw connection.
-  yield c.executeSimpleSQLAsync("BEGIN");
+  await c.executeSimpleSQLAsync("BEGIN");
   // Now use executeTransaction, it will be executed, but not in a transaction.
-  yield wrapper.executeTransaction(function* () {
-    yield wrapper.execute("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT)");
+  await wrapper.executeTransaction(async function() {
+    await wrapper.execute("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT)");
   });
   // This should not fail cause the internal transaction has not been created.
-  yield c.executeSimpleSQLAsync("COMMIT");
+  await c.executeSimpleSQLAsync("COMMIT");
 
-  yield wrapper.execute("SELECT * FROM test");
+  await wrapper.execute("SELECT * FROM test");
 
   // Closing the wrapper should just finalize statements but not close the
   // database.
-  yield wrapper.close();
-  yield c.asyncClose();
+  await wrapper.close();
+  await c.asyncClose();
 });
 
-add_task(function* test_shrink_memory() {
-  let c = yield getDummyDatabase("shrink_memory");
+add_task(async function test_shrink_memory() {
+  let c = await getDummyDatabase("shrink_memory");
 
   // It's just a simple sanity test. We have no way of measuring whether this
   // actually does anything.
 
-  yield c.shrinkMemory();
-  yield c.close();
+  await c.shrinkMemory();
+  await c.close();
 });
 
-add_task(function* test_no_shrink_on_init() {
-  let c = yield getConnection("no_shrink_on_init",
+add_task(async function test_no_shrink_on_init() {
+  let c = await getConnection("no_shrink_on_init",
                               {shrinkMemoryOnConnectionIdleMS: 200});
 
   let count = 0;
@@ -497,18 +496,18 @@ add_task(function* test_no_shrink_on_init() {
   });
 
   // We should not shrink until a statement has been executed.
-  yield sleep(220);
+  await sleep(220);
   do_check_eq(count, 0);
 
-  yield c.execute("SELECT 1");
-  yield sleep(220);
+  await c.execute("SELECT 1");
+  await sleep(220);
   do_check_eq(count, 1);
 
-  yield c.close();
+  await c.close();
 });
 
-add_task(function* test_idle_shrink_fires() {
-  let c = yield getDummyDatabase("idle_shrink_fires",
+add_task(async function test_idle_shrink_fires() {
+  let c = await getDummyDatabase("idle_shrink_fires",
                                  {shrinkMemoryOnConnectionIdleMS: 200});
   c._connectionData._clearIdleShrinkTimer();
 
@@ -529,29 +528,29 @@ add_task(function* test_idle_shrink_fires() {
   // installed timer callback will reference the non-monkeypatched function.
   c._connectionData._startIdleShrinkTimer();
 
-  yield sleep(220);
+  await sleep(220);
   do_check_eq(count, 1);
   do_check_eq(shrinkPromises.length, 1);
-  yield shrinkPromises[0];
+  await shrinkPromises[0];
   shrinkPromises.shift();
 
   // We shouldn't shrink again unless a statement was executed.
-  yield sleep(300);
+  await sleep(300);
   do_check_eq(count, 1);
 
-  yield c.execute("SELECT 1");
-  yield sleep(300);
+  await c.execute("SELECT 1");
+  await sleep(300);
 
   do_check_eq(count, 2);
   do_check_eq(shrinkPromises.length, 1);
-  yield shrinkPromises[0];
+  await shrinkPromises[0];
 
-  yield c.close();
+  await c.close();
 });
 
-add_task(function* test_idle_shrink_reset_on_operation() {
+add_task(async function test_idle_shrink_reset_on_operation() {
   const INTERVAL = 500;
-  let c = yield getDummyDatabase("idle_shrink_reset_on_operation",
+  let c = await getDummyDatabase("idle_shrink_reset_on_operation",
                                  {shrinkMemoryOnConnectionIdleMS: INTERVAL});
 
   c._connectionData._clearIdleShrinkTimer();
@@ -577,7 +576,7 @@ add_task(function* test_idle_shrink_reset_on_operation() {
   // Perform database operations until initial scheduled time has been passed.
   let i = 0;
   while (new Date() < initialIdle) {
-    yield c.execute("INSERT INTO dirs (path) VALUES (?)", ["" + i]);
+    await c.execute("INSERT INTO dirs (path) VALUES (?)", ["" + i]);
     i++;
   }
 
@@ -587,21 +586,21 @@ add_task(function* test_idle_shrink_reset_on_operation() {
   do_check_eq(count, 0);
 
   // Wait for idle timer.
-  yield sleep(INTERVAL);
+  await sleep(INTERVAL);
 
   // Ensure we fired.
   do_check_eq(count, 1);
   do_check_eq(shrinkPromises.length, 1);
-  yield shrinkPromises[0];
+  await shrinkPromises[0];
 
-  yield c.close();
+  await c.close();
 });
 
-add_task(function* test_in_progress_counts() {
-  let c = yield getDummyDatabase("in_progress_counts");
+add_task(async function test_in_progress_counts() {
+  let c = await getDummyDatabase("in_progress_counts");
   do_check_eq(c._connectionData._statementCounter, c._initialStatementCount);
   do_check_eq(c._connectionData._pendingStatements.size, 0);
-  yield c.executeCached("INSERT INTO dirs (path) VALUES ('foo')");
+  await c.executeCached("INSERT INTO dirs (path) VALUES ('foo')");
   do_check_eq(c._connectionData._statementCounter, c._initialStatementCount + 1);
   do_check_eq(c._connectionData._pendingStatements.size, 0);
 
@@ -618,7 +617,7 @@ add_task(function* test_in_progress_counts() {
   // To do so, we kick off a second statement within the row handler
   // of the first, then wait for both to finish.
 
-  yield c.executeCached("SELECT * from dirs", null, function onRow() {
+  await c.executeCached("SELECT * from dirs", null, function onRow() {
     // In the onRow handler, we're still an outstanding query.
     // Expect a single in-progress entry.
     expectOne = c._connectionData._pendingStatements.size;
@@ -647,19 +646,19 @@ add_task(function* test_in_progress_counts() {
   do_check_eq(c._connectionData._statementCounter, c._initialStatementCount + 3);
   do_check_eq(c._connectionData._pendingStatements.size, 0);
 
-  yield c.close();
+  await c.close();
 });
 
-add_task(function* test_discard_while_active() {
-  let c = yield getDummyDatabase("discard_while_active");
+add_task(async function test_discard_while_active() {
+  let c = await getDummyDatabase("discard_while_active");
 
-  yield c.executeCached("INSERT INTO dirs (path) VALUES ('foo')");
-  yield c.executeCached("INSERT INTO dirs (path) VALUES ('bar')");
+  await c.executeCached("INSERT INTO dirs (path) VALUES ('foo')");
+  await c.executeCached("INSERT INTO dirs (path) VALUES ('bar')");
 
   let discarded = -1;
   let first = true;
   let sql = "SELECT * FROM dirs";
-  yield c.executeCached(sql, null, function onRow(row) {
+  await c.executeCached(sql, null, function onRow(row) {
     if (!first) {
       return;
     }
@@ -673,29 +672,29 @@ add_task(function* test_discard_while_active() {
   // And again is safe.
   do_check_eq(0, c.discardCachedStatements());
 
-  yield c.close();
+  await c.close();
 });
 
-add_task(function* test_discard_cached() {
-  let c = yield getDummyDatabase("discard_cached");
+add_task(async function test_discard_cached() {
+  let c = await getDummyDatabase("discard_cached");
 
-  yield c.executeCached("SELECT * from dirs");
+  await c.executeCached("SELECT * from dirs");
   do_check_eq(1, c._connectionData._cachedStatements.size);
 
-  yield c.executeCached("SELECT * from files");
+  await c.executeCached("SELECT * from files");
   do_check_eq(2, c._connectionData._cachedStatements.size);
 
-  yield c.executeCached("SELECT * from dirs");
+  await c.executeCached("SELECT * from dirs");
   do_check_eq(2, c._connectionData._cachedStatements.size);
 
   c.discardCachedStatements();
   do_check_eq(0, c._connectionData._cachedStatements.size);
 
-  yield c.close();
+  await c.close();
 });
 
-add_task(function* test_programmatic_binding() {
-  let c = yield getDummyDatabase("programmatic_binding");
+add_task(async function test_programmatic_binding() {
+  let c = await getDummyDatabase("programmatic_binding");
 
   let bindings = [
     {id: 1,    path: "foobar"},
@@ -704,16 +703,16 @@ add_task(function* test_programmatic_binding() {
   ];
 
   let sql = "INSERT INTO dirs VALUES (:id, :path)";
-  let result = yield c.execute(sql, bindings);
+  let result = await c.execute(sql, bindings);
   do_check_eq(result.length, 0);
 
-  let rows = yield c.executeCached("SELECT * from dirs");
+  let rows = await c.executeCached("SELECT * from dirs");
   do_check_eq(rows.length, 3);
-  yield c.close();
+  await c.close();
 });
 
-add_task(function* test_programmatic_binding_transaction() {
-  let c = yield getDummyDatabase("programmatic_binding_transaction");
+add_task(async function test_programmatic_binding_transaction() {
+  let c = await getDummyDatabase("programmatic_binding_transaction");
 
   let bindings = [
     {id: 1,    path: "foobar"},
@@ -722,22 +721,22 @@ add_task(function* test_programmatic_binding_transaction() {
   ];
 
   let sql = "INSERT INTO dirs VALUES (:id, :path)";
-  yield c.executeTransaction(function* transaction() {
-    let result = yield c.execute(sql, bindings);
+  await c.executeTransaction(async function transaction() {
+    let result = await c.execute(sql, bindings);
     do_check_eq(result.length, 0);
 
-    let rows = yield c.executeCached("SELECT * from dirs");
+    let rows = await c.executeCached("SELECT * from dirs");
     do_check_eq(rows.length, 3);
   });
 
   // Transaction committed.
-  let rows = yield c.executeCached("SELECT * from dirs");
+  let rows = await c.executeCached("SELECT * from dirs");
   do_check_eq(rows.length, 3);
-  yield c.close();
+  await c.close();
 });
 
-add_task(function* test_programmatic_binding_transaction_partial_rollback() {
-  let c = yield getDummyDatabase("programmatic_binding_transaction_partial_rollback");
+add_task(async function test_programmatic_binding_transaction_partial_rollback() {
+  let c = await getDummyDatabase("programmatic_binding_transaction_partial_rollback");
 
   let bindings = [
     {id: 2, path: "foobar"},
@@ -747,17 +746,17 @@ add_task(function* test_programmatic_binding_transaction_partial_rollback() {
   let sql = "INSERT INTO dirs VALUES (:id, :path)";
 
   // Add some data in an implicit transaction before beginning the batch insert.
-  yield c.execute(sql, {id: 1, path: "works"});
+  await c.execute(sql, {id: 1, path: "works"});
 
   let secondSucceeded = false;
   try {
-    yield c.executeTransaction(function* transaction() {
+    await c.executeTransaction(async function transaction() {
       // Insert one row. This won't implicitly start a transaction.
-      yield c.execute(sql, bindings[0]);
+      await c.execute(sql, bindings[0]);
 
       // Insert multiple rows. mozStorage will want to start a transaction.
       // One of the inserts will fail, so the transaction should be rolled back.
-      yield c.execute(sql, bindings);
+      await c.execute(sql, bindings);
       secondSucceeded = true;
     });
   } catch (ex) {
@@ -769,16 +768,16 @@ add_task(function* test_programmatic_binding_transaction_partial_rollback() {
 
   // Everything that happened in *our* transaction, not mozStorage's, got
   // rolled back, but the first row still exists.
-  let rows = yield c.executeCached("SELECT * from dirs");
+  let rows = await c.executeCached("SELECT * from dirs");
   do_check_eq(rows.length, 1);
   do_check_eq(rows[0].getResultByName("path"), "works");
-  yield c.close();
+  await c.close();
 });
 
 // Just like the previous test, but relying on the implicit
 // transaction established by mozStorage.
-add_task(function* test_programmatic_binding_implicit_transaction() {
-  let c = yield getDummyDatabase("programmatic_binding_implicit_transaction");
+add_task(async function test_programmatic_binding_implicit_transaction() {
+  let c = await getDummyDatabase("programmatic_binding_implicit_transaction");
 
   let bindings = [
     {id: 2, path: "foobar"},
@@ -787,9 +786,9 @@ add_task(function* test_programmatic_binding_implicit_transaction() {
 
   let sql = "INSERT INTO dirs VALUES (:id, :path)";
   let secondSucceeded = false;
-  yield c.execute(sql, {id: 1, path: "works"});
+  await c.execute(sql, {id: 1, path: "works"});
   try {
-    yield c.execute(sql, bindings);
+    await c.execute(sql, bindings);
     secondSucceeded = true;
   } catch (ex) {
     print("Caught expected exception: " + ex);
@@ -798,15 +797,15 @@ add_task(function* test_programmatic_binding_implicit_transaction() {
   do_check_false(secondSucceeded);
 
   // The entire batch failed.
-  let rows = yield c.executeCached("SELECT * from dirs");
+  let rows = await c.executeCached("SELECT * from dirs");
   do_check_eq(rows.length, 1);
   do_check_eq(rows[0].getResultByName("path"), "works");
-  yield c.close();
+  await c.close();
 });
 
 // Test that direct binding of params and execution through mozStorage doesn't
 // error when we manually create a transaction. See Bug 856925.
-add_task(function* test_direct() {
+add_task(async function test_direct() {
   let file = FileUtils.getFile("TmpD", ["test_direct.sqlite"]);
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
   print("Opening " + file.path);
@@ -836,7 +835,7 @@ add_task(function* test_direct() {
       deferred.resolve();
     }
   });
-  yield deferred.promise;
+  await deferred.promise;
 
   statement.bindParameters(params);
 
@@ -859,7 +858,7 @@ add_task(function* test_direct() {
     }
   });
 
-  yield deferred.promise;
+  await deferred.promise;
 
   deferred = Promise.defer();
   end.executeAsync({
@@ -867,7 +866,7 @@ add_task(function* test_direct() {
       deferred.resolve();
     }
   });
-  yield deferred.promise;
+  await deferred.promise;
 
   statement.finalize();
   begin.finalize();
@@ -877,14 +876,14 @@ add_task(function* test_direct() {
   db.asyncClose(function() {
     deferred.resolve()
   });
-  yield deferred.promise;
+  await deferred.promise;
 });
 
 // Test Sqlite.cloneStorageConnection.
-add_task(function* test_cloneStorageConnection() {
+add_task(async function test_cloneStorageConnection() {
   let file = new FileUtils.File(OS.Path.join(OS.Constants.Path.profileDir,
                                              "test_cloneStorageConnection.sqlite"));
-  let c = yield new Promise((resolve, reject) => {
+  let c = await new Promise((resolve, reject) => {
     Services.storage.openAsyncDatabase(file, null, (status, db) => {
       if (Components.isSuccessCode(status)) {
         resolve(db.QueryInterface(Ci.mozIStorageAsyncConnection));
@@ -894,24 +893,24 @@ add_task(function* test_cloneStorageConnection() {
     });
   });
 
-  let clone = yield Sqlite.cloneStorageConnection({ connection: c, readOnly: true });
+  let clone = await Sqlite.cloneStorageConnection({ connection: c, readOnly: true });
   // Just check that it works.
-  yield clone.execute("SELECT 1");
+  await clone.execute("SELECT 1");
 
-  let clone2 = yield Sqlite.cloneStorageConnection({ connection: c, readOnly: false });
+  let clone2 = await Sqlite.cloneStorageConnection({ connection: c, readOnly: false });
   // Just check that it works.
-  yield clone2.execute("CREATE TABLE test (id INTEGER PRIMARY KEY)");
+  await clone2.execute("CREATE TABLE test (id INTEGER PRIMARY KEY)");
 
   // Closing order should not matter.
-  yield c.asyncClose();
-  yield clone2.close();
-  yield clone.close();
+  await c.asyncClose();
+  await clone2.close();
+  await clone.close();
 });
 
 // Test Sqlite.cloneStorageConnection invalid argument.
-add_task(function* test_cloneStorageConnection() {
+add_task(async function test_cloneStorageConnection() {
   try {
-    yield Sqlite.cloneStorageConnection({ connection: null });
+    await Sqlite.cloneStorageConnection({ connection: null });
     do_throw(new Error("Should throw on invalid connection"));
   } catch (ex) {
     if (ex.name != "TypeError") {
@@ -921,39 +920,39 @@ add_task(function* test_cloneStorageConnection() {
 });
 
 // Test clone() method.
-add_task(function* test_clone() {
-  let c = yield getDummyDatabase("clone");
+add_task(async function test_clone() {
+  let c = await getDummyDatabase("clone");
 
-  let clone = yield c.clone();
+  let clone = await c.clone();
   // Just check that it works.
-  yield clone.execute("SELECT 1");
+  await clone.execute("SELECT 1");
   // Closing order should not matter.
-  yield c.close();
-  yield clone.close();
+  await c.close();
+  await clone.close();
 });
 
 // Test clone(readOnly) method.
-add_task(function* test_readOnly_clone() {
+add_task(async function test_readOnly_clone() {
   let path = OS.Path.join(OS.Constants.Path.profileDir, "test_readOnly_clone.sqlite");
-  let c = yield Sqlite.openConnection({path, sharedMemoryCache: false});
+  let c = await Sqlite.openConnection({path, sharedMemoryCache: false});
 
-  let clone = yield c.clone(true);
+  let clone = await c.clone(true);
   // Just check that it works.
-  yield clone.execute("SELECT 1");
+  await clone.execute("SELECT 1");
   // But should not be able to write.
 
-  yield Assert.rejects(clone.execute("CREATE TABLE test (id INTEGER PRIMARY KEY)"),
+  await Assert.rejects(clone.execute("CREATE TABLE test (id INTEGER PRIMARY KEY)"),
                        /readonly/);
   // Closing order should not matter.
-  yield c.close();
-  yield clone.close();
+  await c.close();
+  await clone.close();
 });
 
 // Test Sqlite.wrapStorageConnection.
-add_task(function* test_wrapStorageConnection() {
+add_task(async function test_wrapStorageConnection() {
   let file = new FileUtils.File(OS.Path.join(OS.Constants.Path.profileDir,
                                              "test_wrapStorageConnection.sqlite"));
-  let c = yield new Promise((resolve, reject) => {
+  let c = await new Promise((resolve, reject) => {
     Services.storage.openAsyncDatabase(file, null, (status, db) => {
       if (Components.isSuccessCode(status)) {
         resolve(db.QueryInterface(Ci.mozIStorageAsyncConnection));
@@ -963,35 +962,35 @@ add_task(function* test_wrapStorageConnection() {
     });
   });
 
-  let wrapper = yield Sqlite.wrapStorageConnection({ connection: c });
+  let wrapper = await Sqlite.wrapStorageConnection({ connection: c });
   // Just check that it works.
-  yield wrapper.execute("SELECT 1");
-  yield wrapper.executeCached("SELECT 1");
+  await wrapper.execute("SELECT 1");
+  await wrapper.executeCached("SELECT 1");
 
   // Closing the wrapper should just finalize statements but not close the
   // database.
-  yield wrapper.close();
-  yield c.asyncClose();
+  await wrapper.close();
+  await c.asyncClose();
 });
 
 // Test finalization
-add_task(function* test_closed_by_witness() {
+add_task(async function test_closed_by_witness() {
   failTestsOnAutoClose(false);
-  let c = yield getDummyDatabase("closed_by_witness");
+  let c = await getDummyDatabase("closed_by_witness");
 
   Services.obs.notifyObservers(null, "sqlite-finalization-witness",
                                c._connectionData._identifier);
   // Since we triggered finalization ourselves, tell the witness to
   // forget the connection so it does not trigger a finalization again
   c._witness.forget();
-  yield c._connectionData._deferredClose.promise;
+  await c._connectionData._deferredClose.promise;
   do_check_false(c._connectionData._open);
   failTestsOnAutoClose(true);
 });
 
-add_task(function* test_warning_message_on_finalization() {
+add_task(async function test_warning_message_on_finalization() {
   failTestsOnAutoClose(false);
-  let c = yield getDummyDatabase("warning_message_on_finalization");
+  let c = await getDummyDatabase("warning_message_on_finalization");
   let identifier = c._connectionData._identifier;
   let deferred = Promise.defer();
 
@@ -1012,12 +1011,12 @@ add_task(function* test_warning_message_on_finalization() {
   // forget the connection so it does not trigger a finalization again
   c._witness.forget();
 
-  yield deferred.promise;
+  await deferred.promise;
   Services.console.unregisterListener(listener);
   failTestsOnAutoClose(true);
 });
 
-add_task(function* test_error_message_on_unknown_finalization() {
+add_task(async function test_error_message_on_unknown_finalization() {
   failTestsOnAutoClose(false);
   let deferred = Promise.defer();
 
@@ -1033,13 +1032,13 @@ add_task(function* test_error_message_on_unknown_finalization() {
   Services.console.registerListener(listener);
   Services.obs.notifyObservers(null, "sqlite-finalization-witness", "foo");
 
-  yield deferred.promise;
+  await deferred.promise;
   Services.console.unregisterListener(listener);
   failTestsOnAutoClose(true);
 });
 
-add_task(function* test_forget_witness_on_close() {
-  let c = yield getDummyDatabase("forget_witness_on_close");
+add_task(async function test_forget_witness_on_close() {
+  let c = await getDummyDatabase("forget_witness_on_close");
 
   let forgetCalled = false;
   let oldWitness = c._witness;
@@ -1050,12 +1049,12 @@ add_task(function* test_forget_witness_on_close() {
     },
   };
 
-  yield c.close();
+  await c.close();
   // After close, witness should have forgotten the connection
   do_check_true(forgetCalled);
 });
 
-add_task(function* test_close_database_on_gc() {
+add_task(async function test_close_database_on_gc() {
   failTestsOnAutoClose(false);
   let finalPromise;
 
@@ -1063,7 +1062,7 @@ add_task(function* test_close_database_on_gc() {
     let collectedPromises = [];
     for (let i = 0; i < 100; ++i) {
       let deferred = PromiseUtils.defer();
-      let c = yield getDummyDatabase("gc_" + i);
+      let c = await getDummyDatabase("gc_" + i);
       c._connectionData._deferredClose.promise.then(deferred.resolve);
       collectedPromises.push(deferred.promise);
     }
@@ -1075,22 +1074,22 @@ add_task(function* test_close_database_on_gc() {
   // garbage-collection takes place after the shutdown barrier and the
   // test will timeout. Once that is fixed, we can remove this line
   // and be fine as long as the connections are garbage-collected.
-  let last = yield getDummyDatabase("gc_last");
-  yield last.close();
+  let last = await getDummyDatabase("gc_last");
+  await last.close();
 
   Components.utils.forceGC();
   Components.utils.forceCC();
   Components.utils.forceShrinkingGC();
 
-  yield finalPromise;
+  await finalPromise;
   failTestsOnAutoClose(true);
 });
 
 // Test all supported datatypes
-add_task(function* test_datatypes() {
-  let c = yield getConnection("datatypes");
-  yield c.execute("DROP TABLE IF EXISTS datatypes");
-  yield c.execute(`CREATE TABLE datatypes (
+add_task(async function test_datatypes() {
+  let c = await getConnection("datatypes");
+  await c.execute("DROP TABLE IF EXISTS datatypes");
+  await c.execute(`CREATE TABLE datatypes (
                      null_col    NULL,
                      integer_col INTEGER NOT NULL,
                      text_col    TEXT    NOT NULL,
@@ -1117,7 +1116,7 @@ add_task(function* test_datatypes() {
     }
   ];
 
-  yield c.execute(`INSERT INTO datatypes VALUES (
+  await c.execute(`INSERT INTO datatypes VALUES (
                      :null_col,
                      :integer_col,
                      :text_col,
@@ -1126,7 +1125,7 @@ add_task(function* test_datatypes() {
                      :numeric_col
                    )`, bindings);
 
-  let rows = yield c.execute("SELECT * FROM datatypes");
+  let rows = await c.execute("SELECT * FROM datatypes");
   Assert.ok(Array.isArray(rows));
   Assert.equal(rows.length, bindings.length);
   for (let i = 0 ; i < bindings.length; ++i) {
@@ -1139,5 +1138,5 @@ add_task(function* test_datatypes() {
       Assert.deepEqual(val, row.getResultByName(colName));
     }
   }
-  yield c.close();
+  await c.close();
 });

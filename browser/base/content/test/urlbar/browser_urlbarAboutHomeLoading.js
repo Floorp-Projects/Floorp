@@ -7,8 +7,8 @@ const {TabStateFlusher} = Cu.import("resource:///modules/sessionstore/TabStateFl
  * Test what happens if loading a URL that should clear the
  * location bar after a parent process URL.
  */
-add_task(function* clearURLBarAfterParentProcessURL() {
-  let tab = yield new Promise(resolve => {
+add_task(async function clearURLBarAfterParentProcessURL() {
+  let tab = await new Promise(resolve => {
     gBrowser.selectedTab = gBrowser.addTab("about:preferences");
     let newTabBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
     newTabBrowser.addEventListener("Initialized", function() {
@@ -16,18 +16,18 @@ add_task(function* clearURLBarAfterParentProcessURL() {
     }, {capture: true, once: true});
   });
   document.getElementById("home-button").click();
-  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   is(gURLBar.value, "", "URL bar should be empty");
   is(tab.linkedBrowser.userTypedValue, null, "The browser should have no recorded userTypedValue");
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });
 
 /**
  * Same as above, but open the tab without passing the URL immediately
  * which changes behaviour in tabbrowser.xml.
  */
-add_task(function* clearURLBarAfterParentProcessURLInExistingTab() {
-  let tab = yield new Promise(resolve => {
+add_task(async function clearURLBarAfterParentProcessURLInExistingTab() {
+  let tab = await new Promise(resolve => {
     gBrowser.selectedTab = gBrowser.addTab();
     let newTabBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
     newTabBrowser.addEventListener("Initialized", function() {
@@ -36,10 +36,10 @@ add_task(function* clearURLBarAfterParentProcessURLInExistingTab() {
     newTabBrowser.loadURI("about:preferences");
   });
   document.getElementById("home-button").click();
-  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   is(gURLBar.value, "", "URL bar should be empty");
   is(tab.linkedBrowser.userTypedValue, null, "The browser should have no recorded userTypedValue");
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });
 
 /**
@@ -47,11 +47,11 @@ add_task(function* clearURLBarAfterParentProcessURLInExistingTab() {
  * 'initial' page, we need to treat this specially if the user actually
  * loads a page like this from the URL bar.
  */
-add_task(function* clearURLBarAfterManuallyLoadingAboutHome() {
+add_task(async function clearURLBarAfterManuallyLoadingAboutHome() {
   let promiseTabOpenedAndSwitchedTo = BrowserTestUtils.switchTab(gBrowser, () => {});
   // This opens about:newtab:
   BrowserOpenTab();
-  let tab = yield promiseTabOpenedAndSwitchedTo;
+  let tab = await promiseTabOpenedAndSwitchedTo;
   is(gURLBar.value, "", "URL bar should be empty");
   is(tab.linkedBrowser.userTypedValue, null, "userTypedValue should be null");
 
@@ -59,11 +59,11 @@ add_task(function* clearURLBarAfterManuallyLoadingAboutHome() {
   gURLBar.select();
   let aboutHomeLoaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, "about:home");
   EventUtils.sendKey("return");
-  yield aboutHomeLoaded;
+  await aboutHomeLoaded;
 
   is(gURLBar.value, "", "URL bar should be empty");
   is(tab.linkedBrowser.userTypedValue, null, "userTypedValue should be null");
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });
 
 /**
@@ -71,23 +71,23 @@ add_task(function* clearURLBarAfterManuallyLoadingAboutHome() {
  * while we're switching remoteness (when the URL we're loading and the
  * default content principal are different).
  */
-add_task(function* dontTemporarilyShowAboutHome() {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.startup.page", 1]]});
+add_task(async function dontTemporarilyShowAboutHome() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.startup.page", 1]]});
   let windowOpenedPromise = BrowserTestUtils.waitForNewWindow();
   let win = OpenBrowserWindow();
-  yield windowOpenedPromise;
+  await windowOpenedPromise;
   let promiseTabSwitch = BrowserTestUtils.switchTab(win.gBrowser, () => {});
   win.BrowserOpenTab();
-  yield promiseTabSwitch;
-  yield TabStateFlusher.flush(win.gBrowser.selectedBrowser);
-  yield BrowserTestUtils.closeWindow(win);
+  await promiseTabSwitch;
+  await TabStateFlusher.flush(win.gBrowser.selectedBrowser);
+  await BrowserTestUtils.closeWindow(win);
   ok(SessionStore.getClosedWindowCount(), "Should have a closed window");
 
-  yield SessionSaver.run();
+  await SessionSaver.run();
 
   windowOpenedPromise = BrowserTestUtils.waitForNewWindow();
   win = SessionStore.undoCloseWindow(0);
-  yield windowOpenedPromise;
+  await windowOpenedPromise;
   let wpl = {
     onLocationChange() {
       is(win.gURLBar.value, "", "URL bar value should stay empty.");
@@ -96,10 +96,10 @@ add_task(function* dontTemporarilyShowAboutHome() {
   win.gBrowser.addProgressListener(wpl);
   let otherTab = win.gBrowser.selectedTab.previousSibling;
   let tabLoaded = BrowserTestUtils.browserLoaded(otherTab.linkedBrowser, false, "about:home");
-  yield BrowserTestUtils.switchTab(win.gBrowser, otherTab);
-  yield tabLoaded;
+  await BrowserTestUtils.switchTab(win.gBrowser, otherTab);
+  await tabLoaded;
   win.gBrowser.removeProgressListener(wpl);
   is(win.gURLBar.value, "", "URL bar value should be empty.");
 
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 });

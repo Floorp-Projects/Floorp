@@ -13,7 +13,7 @@ const TAB_STATE = {
 };
 
 function checkTabContents(browser) {
-  return ContentTask.spawn(browser, null, function* () {
+  return ContentTask.spawn(browser, null, async function() {
     let Ci = Components.interfaces;
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
     let history = webNavigation.sessionHistory.QueryInterface(Ci.nsISHistoryInternal);
@@ -22,17 +22,17 @@ function checkTabContents(browser) {
   });
 }
 
-add_task(function* () {
+add_task(async function() {
   // Create a new tab.
   let tab = gBrowser.addTab("about:blank");
   let browser = tab.linkedBrowser;
-  yield promiseBrowserLoaded(browser);
-  yield promiseTabState(tab, TAB_STATE);
+  await promiseBrowserLoaded(browser);
+  await promiseTabState(tab, TAB_STATE);
 
   // Create another new tab.
   let tab2 = gBrowser.addTab("about:blank");
   let browser2 = tab2.linkedBrowser;
-  yield promiseBrowserLoaded(browser2);
+  await promiseBrowserLoaded(browser2);
 
   // The tab shouldn't be restored right away.
   Services.prefs.setBoolPref("browser.sessionstore.restore_on_demand", true);
@@ -41,17 +41,17 @@ add_task(function* () {
   let promise = promiseTabRestoring(tab2);
   ss.setTabState(tab2, JSON.stringify(TAB_STATE));
   ok(tab2.hasAttribute("pending"), "tab is pending");
-  yield promise;
+  await promise;
 
   // Purge session history.
   Services.obs.notifyObservers(null, "browser:purge-session-history");
-  yield checkTabContents(browser);
+  await checkTabContents(browser);
   ok(tab2.hasAttribute("pending"), "tab is still pending");
 
   // Kick off tab restoration.
   gBrowser.selectedTab = tab2;
-  yield promiseTabRestored(tab2);
-  yield checkTabContents(browser2);
+  await promiseTabRestored(tab2);
+  await checkTabContents(browser2);
   ok(!tab2.hasAttribute("pending"), "tab is not pending anymore");
 
   // Cleanup.

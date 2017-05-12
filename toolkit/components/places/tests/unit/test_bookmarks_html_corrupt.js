@@ -13,39 +13,39 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_corrupt_file() {
+add_task(async function test_corrupt_file() {
   // avoid creating the places smart folder during tests
   Services.prefs.setIntPref("browser.places.smartBookmarksVersion", -1);
 
   // Import bookmarks from the corrupt file.
   let corruptHtml = OS.Path.join(do_get_cwd().path, "bookmarks.corrupt.html");
-  yield BookmarkHTMLUtils.importFromFile(corruptHtml, true);
+  await BookmarkHTMLUtils.importFromFile(corruptHtml, true);
 
   // Check that bookmarks that are not corrupt have been imported.
-  yield PlacesTestUtils.promiseAsyncUpdates();
-  yield database_check();
+  await PlacesTestUtils.promiseAsyncUpdates();
+  await database_check();
 });
 
-add_task(function* test_corrupt_database() {
+add_task(async function test_corrupt_database() {
   // Create corruption in the database, then export.
-  let corruptBookmark = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+  let corruptBookmark = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.toolbarGuid,
                                                              url: "http://test.mozilla.org",
                                                              title: "We love belugas" });
-  yield PlacesUtils.withConnectionWrapper("test", Task.async(function*(db) {
-    yield db.execute("UPDATE moz_bookmarks SET fk = NULL WHERE guid = :guid",
+  await PlacesUtils.withConnectionWrapper("test", async function(db) {
+    await db.execute("UPDATE moz_bookmarks SET fk = NULL WHERE guid = :guid",
                      { guid: corruptBookmark.guid });
-  }));
+  });
 
   let bookmarksFile = OS.Path.join(OS.Constants.Path.profileDir, "bookmarks.exported.html");
-  if ((yield OS.File.exists(bookmarksFile)))
-    yield OS.File.remove(bookmarksFile);
-  yield BookmarkHTMLUtils.exportToFile(bookmarksFile);
+  if ((await OS.File.exists(bookmarksFile)))
+    await OS.File.remove(bookmarksFile);
+  await BookmarkHTMLUtils.exportToFile(bookmarksFile);
 
   // Import again and check for correctness.
-  yield PlacesUtils.bookmarks.eraseEverything();
-  yield BookmarkHTMLUtils.importFromFile(bookmarksFile, true);
-  yield PlacesTestUtils.promiseAsyncUpdates();
-  yield database_check();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await BookmarkHTMLUtils.importFromFile(bookmarksFile, true);
+  await PlacesTestUtils.promiseAsyncUpdates();
+  await database_check();
 });
 
 /*
@@ -55,7 +55,7 @@ add_task(function* test_corrupt_database() {
  * @resolves When the checks are finished.
  * @rejects Never.
  */
-var database_check = Task.async(function* () {
+var database_check = async function() {
   // BOOKMARKS MENU
   let root = PlacesUtils.getFolderContents(PlacesUtils.bookmarksMenuFolderId).root;
   Assert.equal(root.childCount, 2);
@@ -78,7 +78,7 @@ var database_check = Task.async(function* () {
   Assert.equal("http://test/post", bookmarkNode.uri);
   Assert.equal("test post keyword", bookmarkNode.title);
 
-  let entry = yield PlacesUtils.keywords.fetch({ url: bookmarkNode.uri });
+  let entry = await PlacesUtils.keywords.fetch({ url: bookmarkNode.uri });
   Assert.equal("test", entry.keyword);
   Assert.equal("hidden1%3Dbar&text1%3D%25s", entry.postData);
 
@@ -87,7 +87,7 @@ var database_check = Task.async(function* () {
   Assert.equal(bookmarkNode.dateAdded, 1177375336000000);
   Assert.equal(bookmarkNode.lastModified, 1177375423000000);
 
-  Assert.equal((yield PlacesUtils.getCharsetForURI(NetUtil.newURI(bookmarkNode.uri))),
+  Assert.equal((await PlacesUtils.getCharsetForURI(NetUtil.newURI(bookmarkNode.uri))),
                "ISO-8859-1");
 
   Assert.equal("item description",
@@ -110,7 +110,7 @@ var database_check = Task.async(function* () {
       foundLivemark = true;
       Assert.equal("Latest Headlines", node.title);
 
-      let livemark = yield PlacesUtils.livemarks.getLivemark({ guid: node.bookmarkGuid });
+      let livemark = await PlacesUtils.livemarks.getLivemark({ guid: node.bookmarkGuid });
       Assert.equal("http://en-us.fxfeeds.mozilla.com/en-US/firefox/livebookmarks/",
                    livemark.siteURI.spec);
       Assert.equal("http://en-us.fxfeeds.mozilla.com/en-US/firefox/headlines.xml",
@@ -128,7 +128,7 @@ var database_check = Task.async(function* () {
   root.containerOpen = false;
 
   // favicons
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     PlacesUtils.favicons.getFaviconDataForPage(uri(TEST_FAVICON_PAGE_URL),
       (aURI, aDataLen, aData, aMimeType) => {
         // aURI should never be null when aDataLen > 0.
@@ -140,4 +140,4 @@ var database_check = Task.async(function* () {
         resolve();
       });
   });
-});
+};

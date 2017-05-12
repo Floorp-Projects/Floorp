@@ -15,7 +15,6 @@ Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
-Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/DeferredTask.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
@@ -708,19 +707,19 @@ var Impl = {
     // run various late initializers. Otherwise our gathered memory
     // footprint and other numbers would be too optimistic.
     this._delayedInitTaskDeferred = Promise.defer();
-    this._delayedInitTask = new DeferredTask(function* () {
+    this._delayedInitTask = new DeferredTask(async () => {
       try {
         // TODO: This should probably happen after all the delayed init here.
         this._initialized = true;
         TelemetryEnvironment.delayedInit();
 
         // Load the ClientID.
-        this._clientID = yield ClientID.getClientID();
+        this._clientID = await ClientID.getClientID();
 
-        yield TelemetrySend.setup(this._testMode);
+        await TelemetrySend.setup(this._testMode);
 
         // Perform TelemetrySession delayed init.
-        yield TelemetrySession.delayedInit();
+        await TelemetrySession.delayedInit();
 
         if (Preferences.get(PREF_NEWPROFILE_PING_ENABLED, false) &&
             !TelemetrySession.newProfilePingSent) {
@@ -747,7 +746,7 @@ var Impl = {
       } finally {
         this._delayedInitTask = null;
       }
-    }.bind(this), this._testMode ? TELEMETRY_TEST_DELAY : TELEMETRY_DELAY);
+    }, this._testMode ? TELEMETRY_TEST_DELAY : TELEMETRY_DELAY);
 
     AsyncShutdown.sendTelemetry.addBlocker("TelemetryController: shutting down",
                                            () => this.shutdown(),
@@ -892,13 +891,13 @@ var Impl = {
       return;
     }
 
-    let p = Task.spawn(function*() {
+    let p = (async () => {
       try {
         // Clear the current pings.
-        yield TelemetrySend.clearCurrentPings();
+        await TelemetrySend.clearCurrentPings();
 
         // Remove all the pending pings, but not the deletion ping.
-        yield TelemetryStorage.runRemovePendingPingsTask();
+        await TelemetryStorage.runRemovePendingPingsTask();
       } catch (e) {
         this._log.error("_onUploadPrefChange - error clearing pending pings", e);
       } finally {
@@ -906,7 +905,7 @@ var Impl = {
         this._log.trace("_onUploadPrefChange - Sending deletion ping.");
         this.submitExternalPing(PING_TYPE_DELETION, {}, { addClientId: true });
       }
-    }.bind(this));
+    })();
 
     this._shutdownBarrier.client.addBlocker(
       "TelemetryController: removing pending pings after data upload was disabled", p);
@@ -988,13 +987,13 @@ var Impl = {
     const sendDelay =
       Preferences.get(PREF_NEWPROFILE_PING_DELAY, NEWPROFILE_PING_DEFAULT_DELAY);
 
-    this._delayedNewPingTask = new DeferredTask(function* () {
+    this._delayedNewPingTask = new DeferredTask(async () => {
       try {
-        yield this.sendNewProfilePing();
+        await this.sendNewProfilePing();
       } finally {
         this._delayedNewPingTask = null;
       }
-    }.bind(this), sendDelay);
+    }, sendDelay);
 
     this._delayedNewPingTask.arm();
   },

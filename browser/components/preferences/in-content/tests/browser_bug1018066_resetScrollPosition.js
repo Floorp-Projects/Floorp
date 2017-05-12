@@ -8,10 +8,10 @@ registerCleanupFunction(function() {
     gBrowser.removeTab(gBrowser.tabs[1]);
 });
 
-add_task(function*() {
+add_task(async function() {
   originalWindowHeight = window.outerHeight;
   window.resizeTo(window.outerWidth, 300);
-  let prefs = yield openPreferencesViaOpenPreferencesAPI("paneApplications", {leaveOpen: true});
+  let prefs = await openPreferencesViaOpenPreferencesAPI("paneApplications", {leaveOpen: true});
   is(prefs.selectedPane, "paneApplications", "Applications pane was selected");
   let mainContent = gBrowser.contentDocument.querySelector(".main-content");
   mainContent.scrollTop = 50;

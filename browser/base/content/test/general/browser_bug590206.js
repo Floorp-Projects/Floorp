@@ -22,10 +22,10 @@ function getConnectionState() {
 // This test is slow on Linux debug e10s
 requestLongerTimeout(2);
 
-add_task(function* test_webpage() {
+add_task(async function test_webpage() {
   let oldTab = gBrowser.selectedTab;
 
-  let newTab = yield loadNewTab("http://example.com/" + DUMMY);
+  let newTab = await loadNewTab("http://example.com/" + DUMMY);
   is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
 
   gBrowser.selectedTab = oldTab;
@@ -37,10 +37,10 @@ add_task(function* test_webpage() {
   gBrowser.removeTab(newTab);
 });
 
-add_task(function* test_blank() {
+add_task(async function test_blank() {
   let oldTab = gBrowser.selectedTab;
 
-  let newTab = yield loadNewTab("about:blank");
+  let newTab = await loadNewTab("about:blank");
   is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
 
   gBrowser.selectedTab = oldTab;
@@ -52,10 +52,10 @@ add_task(function* test_blank() {
   gBrowser.removeTab(newTab);
 });
 
-add_task(function* test_chrome() {
+add_task(async function test_chrome() {
   let oldTab = gBrowser.selectedTab;
 
-  let newTab = yield loadNewTab("chrome://mozapps/content/extensions/extensions.xul");
+  let newTab = await loadNewTab("chrome://mozapps/content/extensions/extensions.xul");
   is(getConnectionState(), "file", "Connection should be file");
 
   gBrowser.selectedTab = oldTab;
@@ -67,10 +67,10 @@ add_task(function* test_chrome() {
   gBrowser.removeTab(newTab);
 });
 
-add_task(function* test_https() {
+add_task(async function test_https() {
   let oldTab = gBrowser.selectedTab;
 
-  let newTab = yield loadNewTab("https://example.com/" + DUMMY);
+  let newTab = await loadNewTab("https://example.com/" + DUMMY);
   is(getIdentityMode(), "verifiedDomain", "Identity should be verified");
 
   gBrowser.selectedTab = oldTab;
@@ -82,10 +82,10 @@ add_task(function* test_https() {
   gBrowser.removeTab(newTab);
 });
 
-add_task(function* test_addons() {
+add_task(async function test_addons() {
   let oldTab = gBrowser.selectedTab;
 
-  let newTab = yield loadNewTab("about:addons");
+  let newTab = await loadNewTab("about:addons");
   is(getIdentityMode(), "chromeUI", "Identity should be chrome");
 
   gBrowser.selectedTab = oldTab;
@@ -97,11 +97,11 @@ add_task(function* test_addons() {
   gBrowser.removeTab(newTab);
 });
 
-add_task(function* test_file() {
+add_task(async function test_file() {
   let oldTab = gBrowser.selectedTab;
   let fileURI = getTestFilePath("");
 
-  let newTab = yield loadNewTab(fileURI);
+  let newTab = await loadNewTab(fileURI);
   is(getConnectionState(), "file", "Connection should be file");
 
   gBrowser.selectedTab = oldTab;
@@ -113,11 +113,11 @@ add_task(function* test_file() {
   gBrowser.removeTab(newTab);
 });
 
-add_task(function* test_resource_uri() {
+add_task(async function test_resource_uri() {
   let oldTab = gBrowser.selectedTab;
   let dataURI = "resource://gre/modules/Services.jsm";
 
-  let newTab = yield loadNewTab(dataURI);
+  let newTab = await loadNewTab(dataURI);
 
   is(getConnectionState(), "file", "Connection should be file");
 
@@ -130,11 +130,11 @@ add_task(function* test_resource_uri() {
   gBrowser.removeTab(newTab);
 });
 
-add_task(function* test_data_uri() {
+add_task(async function test_data_uri() {
   let oldTab = gBrowser.selectedTab;
   let dataURI = "data:text/html,hi"
 
-  let newTab = yield loadNewTab(dataURI);
+  let newTab = await loadNewTab(dataURI);
   is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
 
   gBrowser.selectedTab = oldTab;
@@ -146,11 +146,11 @@ add_task(function* test_data_uri() {
   gBrowser.removeTab(newTab);
 });
 
-add_task(function* test_about_uri() {
+add_task(async function test_about_uri() {
   let oldTab = gBrowser.selectedTab;
   let aboutURI = "about:robots"
 
-  let newTab = yield loadNewTab(aboutURI);
+  let newTab = await loadNewTab(aboutURI);
   is(getConnectionState(), "file", "Connection should be file");
 
   gBrowser.selectedTab = oldTab;

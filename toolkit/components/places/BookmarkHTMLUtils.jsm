@@ -68,7 +68,6 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesBackups",
   "resource://gre/modules/PlacesBackups.jsm");
@@ -140,11 +139,11 @@ this.BookmarkHTMLUtils = Object.freeze({
    * @rejects JavaScript exception.
    */
   importFromURL: function BHU_importFromURL(aSpec, aInitialImport) {
-    return Task.spawn(function* () {
+    return (async function() {
       notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_BEGIN, aInitialImport);
       try {
         let importer = new BookmarkImporter(aInitialImport);
-        yield importer.importFromURL(aSpec);
+        await importer.importFromURL(aSpec);
 
         notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_SUCCESS, aInitialImport);
       } catch (ex) {
@@ -152,7 +151,7 @@ this.BookmarkHTMLUtils = Object.freeze({
         notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_FAILED, aInitialImport);
         throw ex;
       }
-    });
+    })();
   },
 
   /**
@@ -176,14 +175,14 @@ this.BookmarkHTMLUtils = Object.freeze({
       aFilePath = aFilePath.path;
     }
 
-    return Task.spawn(function* () {
+    return (async function() {
       notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_BEGIN, aInitialImport);
       try {
-        if (!(yield OS.File.exists(aFilePath))) {
+        if (!(await OS.File.exists(aFilePath))) {
           throw new Error("Cannot import from nonexisting html file: " + aFilePath);
         }
         let importer = new BookmarkImporter(aInitialImport);
-        yield importer.importFromURL(OS.Path.toFileURI(aFilePath));
+        await importer.importFromURL(OS.Path.toFileURI(aFilePath));
 
         notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_SUCCESS, aInitialImport);
       } catch (ex) {
@@ -191,7 +190,7 @@ this.BookmarkHTMLUtils = Object.freeze({
         notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_FAILED, aInitialImport);
         throw ex;
       }
-    });
+    })();
   },
 
   /**
@@ -212,13 +211,13 @@ this.BookmarkHTMLUtils = Object.freeze({
                          "https://developer.mozilla.org/docs/JavaScript_OS.File");
       aFilePath = aFilePath.path;
     }
-    return Task.spawn(function* () {
-      let [bookmarks, count] = yield PlacesBackups.getBookmarksTree();
+    return (async function() {
+      let [bookmarks, count] = await PlacesBackups.getBookmarksTree();
       let startTime = Date.now();
 
       // Report the time taken to convert the tree to HTML.
       let exporter = new BookmarkExporter(bookmarks);
-      yield exporter.exportToFile(aFilePath);
+      await exporter.exportToFile(aFilePath);
 
       try {
         Services.telemetry
@@ -229,7 +228,7 @@ this.BookmarkHTMLUtils = Object.freeze({
       }
 
       return count;
-    });
+    })();
   },
 
   get defaultPath() {
@@ -949,9 +948,9 @@ BookmarkImporter.prototype = {
     PlacesUtils.bookmarks.runInBatchMode(this, aDoc);
   },
 
-  importFromURL: Task.async(function* (href) {
+  async importFromURL(href) {
     this._importPromises = [];
-    yield new Promise((resolve, reject) => {
+    await new Promise((resolve, reject) => {
       let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                   .createInstance(Ci.nsIXMLHttpRequest);
       xhr.onload = () => {
@@ -973,11 +972,11 @@ BookmarkImporter.prototype = {
     // TODO (bug 1095427) once converted to the new bookmarks API, methods will
     // yield, so this hack should not be needed anymore.
     try {
-      yield Promise.all(this._importPromises);
+      await Promise.all(this._importPromises);
     } finally {
       delete this._importPromises;
     }
-  }),
+  },
 };
 
 function BookmarkExporter(aBookmarksTree) {
@@ -1004,7 +1003,7 @@ function BookmarkExporter(aBookmarksTree) {
 
 BookmarkExporter.prototype = {
   exportToFile: function exportToFile(aFilePath) {
-    return Task.spawn(function* () {
+    return (async () => {
       // Create a file that can be accessed by the current user only.
       let out = FileUtils.openAtomicFileOutputStream(new FileUtils.File(aFilePath));
       try {
@@ -1019,7 +1018,7 @@ BookmarkExporter.prototype = {
           this._converterOut.init(bufferedOut, "utf-8", 0, 0);
           try {
             this._writeHeader();
-            yield this._writeContainer(this._root);
+            await this._writeContainer(this._root);
             // Retain the target file on success only.
             bufferedOut.QueryInterface(Ci.nsISafeOutputStream).finish();
           } finally {
@@ -1032,7 +1031,7 @@ BookmarkExporter.prototype = {
       } finally {
         out.close();
       }
-    }.bind(this));
+    })();
   },
 
   _converterOut: null,
@@ -1059,7 +1058,7 @@ BookmarkExporter.prototype = {
     this._writeLine("<TITLE>Bookmarks</TITLE>");
   },
 
-  *_writeContainer(aItem, aIndent = "") {
+  async _writeContainer(aItem, aIndent = "") {
     if (aItem == this._root) {
       this._writeLine("<H1>" + escapeHtmlEntities(this._root.title) + "</H1>");
       this._writeLine("");
@@ -1078,25 +1077,25 @@ BookmarkExporter.prototype = {
 
     this._writeLine(aIndent + "<DL><p>");
     if (aItem.children)
-      yield this._writeContainerContents(aItem, aIndent);
+      await this._writeContainerContents(aItem, aIndent);
     if (aItem == this._root)
       this._writeLine(aIndent + "</DL>");
     else
       this._writeLine(aIndent + "</DL><p>");
   },
 
-  *_writeContainerContents(aItem, aIndent) {
+  async _writeContainerContents(aItem, aIndent) {
     let localIndent = aIndent + EXPORT_INDENT;
 
     for (let child of aItem.children) {
       if (child.annos && child.annos.some(anno => anno.name == PlacesUtils.LMANNO_FEEDURI)) {
         this._writeLivemark(child, localIndent);
       } else if (child.type == PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER) {
-        yield this._writeContainer(child, localIndent);
+        await this._writeContainer(child, localIndent);
       } else if (child.type == PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR) {
         this._writeSeparator(child, localIndent);
       } else {
-        yield this._writeItem(child, localIndent);
+        await this._writeItem(child, localIndent);
       }
     }
   },
@@ -1120,7 +1119,7 @@ BookmarkExporter.prototype = {
     this._writeDescription(aItem, aIndent);
   },
 
-  *_writeItem(aItem, aIndent) {
+  async _writeItem(aItem, aIndent) {
     try {
       NetUtil.newURI(aItem.uri);
     } catch (ex) {
@@ -1131,7 +1130,7 @@ BookmarkExporter.prototype = {
     this._write(aIndent + "<DT><A");
     this._writeAttribute("HREF", escapeUrl(aItem.uri));
     this._writeDateAttributes(aItem);
-    yield this._writeFaviconAttribute(aItem);
+    await this._writeFaviconAttribute(aItem);
 
     if (aItem.keyword) {
       this._writeAttribute("SHORTCUTURL", escapeHtmlEntities(aItem.keyword));
@@ -1158,12 +1157,12 @@ BookmarkExporter.prototype = {
                            Math.floor(aItem.lastModified / MICROSEC_PER_SEC));
   },
 
-  *_writeFaviconAttribute(aItem) {
+  async _writeFaviconAttribute(aItem) {
     if (!aItem.iconuri)
       return;
     let favicon;
     try {
-      favicon  = yield PlacesUtils.promiseFaviconData(aItem.uri);
+      favicon  = await PlacesUtils.promiseFaviconData(aItem.uri);
     } catch (ex) {
       Components.utils.reportError("Unexpected Error trying to fetch icon data");
       return;

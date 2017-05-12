@@ -67,13 +67,13 @@ function add_task_in_both_processes(taskFn) {
 var add_task_in_child_process = add_task;
 
 window.addEventListener("load", function() {
-  Task.spawn(function* () {
+  (async function() {
     try {
       for (let [taskFn, taskType, taskId] of gTestTasks) {
         if (taskType == "content") {
           // This is a normal task executed in the current process.
           info("Running " + taskFn.name);
-          yield Task.spawn(taskFn);
+          await taskFn();
         } else {
           // This is a task executed in the parent process.
           info("Running task in parent process: " + taskFn.name);
@@ -81,7 +81,7 @@ window.addEventListener("load", function() {
             parentScript.addMessageListener("finish_task_" + taskId, resolve);
           });
           parentScript.sendAsyncMessage("start_task_" + taskId);
-          yield promiseFinished;
+          await promiseFinished;
           info("Finished task in parent process: " + taskFn.name);
         }
       }
@@ -90,13 +90,13 @@ window.addEventListener("load", function() {
     }
 
     SimpleTest.finish();
-  });
+  })();
 }, {once: true});
 
 // Wait for the test script to be loaded in the parent process.  This means that
 // test tasks are registered and ready, but have not been executed yet.
-add_task(function* wait_loading_in_parent_process() {
-  yield promiseParentInitFinished;
+add_task(async function wait_loading_in_parent_process() {
+  await promiseParentInitFinished;
 });
 
 /* import-globals-from ../head_common.js */

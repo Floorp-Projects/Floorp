@@ -96,11 +96,18 @@
 #include "DecoderDoctorDiagnostics.h"
 #include "DecoderTraits.h"
 #include "MediaContainerType.h"
+#include "MP4Decoder.h"
 
 #include "ImageContainer.h"
 #include "nsRange.h"
 #include <algorithm>
 #include <cmath>
+#ifdef XP_WIN
+#include "Objbase.h"
+// Some Windows header defines this, so undef it as it conflicts with our
+// function of the same name.
+#undef GetCurrentTime
+#endif
 
 static mozilla::LazyLogModule gMediaElementLog("nsMediaElement");
 static mozilla::LazyLogModule gMediaElementEventsLog("nsMediaElementEvents");
@@ -7479,6 +7486,44 @@ HTMLMediaElement::AsyncRejectSeekDOMPromiseIfExists()
     mAbstractMainThread->Dispatch(r.forget());
     mSeekDOMPromise = nullptr;
   }
+}
+
+void
+HTMLMediaElement::ReportCanPlayTelemetry()
+{
+  LOG(LogLevel::Debug, ("%s", __func__));
+
+  RefPtr<nsIThread> thread;
+  nsresult rv = NS_NewNamedThread("MediaTelemetry", getter_AddRefs(thread));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  thread->Dispatch(
+    NS_NewRunnableFunction([thread]() {
+#if XP_WIN
+      // Windows Media Foundation requires MSCOM to be inited.
+      HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
+      MOZ_ASSERT(hr == S_OK);
+#endif
+      bool aac = MP4Decoder::IsSupportedType(
+        MediaContainerType(MEDIAMIMETYPE("audio/mp4")), nullptr);
+      bool h264 = MP4Decoder::IsSupportedType(
+        MediaContainerType(MEDIAMIMETYPE("video/mp4")), nullptr);
+#if XP_WIN
+      CoUninitialize();
+#endif
+      AbstractThread::MainThread()->Dispatch(
+        NS_NewRunnableFunction([thread, aac, h264]() {
+          LOG(LogLevel::Debug, ("MediaTelemetry aac=%d h264=%d", aac, h264));
+          Telemetry::Accumulate(
+            Telemetry::HistogramID::VIDEO_CAN_CREATE_AAC_DECODER, aac);
+          Telemetry::Accumulate(
+            Telemetry::HistogramID::VIDEO_CAN_CREATE_H264_DECODER, h264);
+          thread->AsyncShutdown();
+        }));
+    }),
+    NS_DISPATCH_NORMAL);
 }
 
 } // namespace dom

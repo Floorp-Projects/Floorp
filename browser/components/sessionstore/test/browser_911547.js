@@ -5,21 +5,21 @@
 // security policy with the document.
 // The policy being tested disallows inline scripts
 
-add_task(function* test() {
+add_task(async function test() {
   // create a tab that has a CSP
   let testURL = "http://mochi.test:8888/browser/browser/components/sessionstore/test/browser_911547_sample.html";
   let tab = gBrowser.selectedTab = gBrowser.addTab(testURL);
   gBrowser.selectedTab = tab;
 
   let browser = tab.linkedBrowser;
-  yield promiseBrowserLoaded(browser);
+  await promiseBrowserLoaded(browser);
 
   // this is a baseline to ensure CSP is active
   // attempt to inject and run a script via inline (pre-restore, allowed)
-  yield injectInlineScript(browser, `document.getElementById("test_id").value = "fail";`);
+  await injectInlineScript(browser, `document.getElementById("test_id").value = "fail";`);
 
   let loadedPromise = promiseBrowserLoaded(browser);
-  yield ContentTask.spawn(browser, null, function() {
+  await ContentTask.spawn(browser, null, function() {
     is(content.document.getElementById("test_id").value, "ok",
        "CSP should block the inline script that modifies test_id");
 
@@ -28,22 +28,22 @@ add_task(function* test() {
     content.document.getElementById("test_data_link").click();
   });
 
-  yield loadedPromise;
+  await loadedPromise;
 
-  yield ContentTask.spawn(browser, null, function() {
+  await ContentTask.spawn(browser, null, function() {
     is(content.document.getElementById("test_id2").value, "ok",
        "CSP should block the script loaded by the clicked data URI");
   });
 
   // close the tab
-  yield promiseRemoveTab(tab);
+  await promiseRemoveTab(tab);
 
   // open new tab and recover the state
   tab = ss.undoCloseTab(window, 0);
-  yield promiseTabRestored(tab);
+  await promiseTabRestored(tab);
   browser = tab.linkedBrowser;
 
-  yield ContentTask.spawn(browser, null, function() {
+  await ContentTask.spawn(browser, null, function() {
     is(content.document.getElementById("test_id2").value, "ok",
        "CSP should block the script loaded by the clicked data URI after restore");
   });
