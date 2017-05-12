@@ -969,7 +969,7 @@ Experiments.Experiments.prototype = {
         xhr.send(null);
       } catch (e) {
         this._log.error("httpGetRequest() - Error opening request to " + url + ": " + e);
-        return Promise.reject(new Error("Experiments - Error opening XHR for " + url));
+        reject(new Error("Experiments - Error opening XHR for " + url));
       }
     });
   },

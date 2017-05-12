@@ -410,7 +410,7 @@ function arrayBufferFromDataURI(uri) {
     try {
       xhr.send();
     } catch (err) {
-      return Promise.resolve(null);
+      resolve(null);
     }
   });
 }
