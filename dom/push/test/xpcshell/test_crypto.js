@@ -5,6 +5,8 @@ const {
   PushCrypto,
 } = Cu.import('resource://gre/modules/PushCrypto.jsm', {});
 
+const REJECT_PADDING = { padding: 'reject' };
+
 function run_test() {
   run_next_test();
 }
@@ -74,12 +76,9 @@ add_task(async function test_crypto_getCryptoParamsFromHeaders() {
   }];
   for (let test of shouldParse) {
     let params = getCryptoParamsFromHeaders(test.headers);
-    let senderKey = ChromeUtils.base64URLDecode(test.params.senderKey, {
-      padding: 'reject',
-    });
-    let salt = ChromeUtils.base64URLDecode(test.params.salt, {
-      padding: 'reject',
-    });
+    let senderKey = ChromeUtils.base64URLDecode(test.params.senderKey,
+                                                REJECT_PADDING);
+    let salt = ChromeUtils.base64URLDecode(test.params.salt, REJECT_PADDING);
     deepEqual(new Uint8Array(params.senderKey), new Uint8Array(senderKey),
       "Sender key should match for " + test.desc);
     deepEqual(new Uint8Array(params.salt), new Uint8Array(salt),
@@ -244,5 +243,48 @@ add_task(function* test_crypto_decodeMsg() {
                          test.headers, data),
       test.desc
     );
+  }
+});
+
+add_task(async function test_aes128gcm() {
+  let expectedSuccesses = [{
+    desc: 'Example from draft-ietf-webpush-encryption-latest',
+    result: 'When I grow up, I want to be a watermelon',
+    data: 'DGv6ra1nlYgDCS1FRnbzlwAAEABBBP4z9KsN6nGRTbVYI_c7VJSPQTBtkgcy27mlmlMoZIIgDll6e3vCYLocInmYWAmS6TlzAC8wEqKK6PBru3jl7A_yl95bQpu6cVPTpK4Mqgkf1CXztLVBSt2Ks3oZwbuwXPXLWyouBWLVWGNWQexSgSxsj_Qulcy4a-fN',
+    authSecret: 'BTBZMqHH6r4Tts7J_aSIgg',
+    privateKey: {
+      kty: 'EC',
+      crv: 'P-256',
+      d: 'q1dXpw3UpT5VOmu_cf_v6ih07Aems3njxI-JWgLcM94',
+      x: 'JXGyvs3942BVGq8e0PTNNmwRzr5VX4m8t7GGpTM5FzE',
+      y: 'aOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4',
+      ext: true,
+    },
+    publicKey: 'BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4',
+  }, {
+    desc: 'rs = 24',
+    result: "I am the very model of a modern Major-General; I've information vegetable, animal, and mineral",
+    data: 'goagSH7PP0ZGwUsgShmdkwAAABhBBDJVyIuUJbOSVMeWHP8VNPnxY-dZSw86doqOkEzZZZY1ALBWVXTVf0rUDH3oi68I9Hrp-01zA-mr8XKWl5kcH8cX0KiV2PtCwdkEyaQ73YF5fsDxgoWDiaTA3wPqMvuLDqGsZWHnE9Psnfoy7UMEqKlh2a1nE7ZOXiXcOBHLNj260jYzSJnEPV2eXixSXfyWpaSJHAwfj4wVdAAocmViIg6ywk8wFB1hgJpnX2UVEU_qIOcaP6AOIOr1UUQPfosQqC2MEHe5u9gHXF5pi-E267LAlkoYefq01KV_xK_vjbxpw8GAYfSjQEm0L8FG-CN37c8pnQ2Yf61MkihaXac9OctfNeWq_22cN6hn4qsOq0F7QoWIiZqWhB1vS9cJ3KUlyPQvKI9cvevDxw0fJHWeTFzhuwT9BjdILjjb2Vkqc0-qTDOawqD4c8WXsvdGDQCec5Y1x3UhdQXdjR_mhXypxFM37OZTvKJBr1vPCpRXl-bI6iOd7KScgtMM1x5luKhGzZyz25HyuFyj1ec82A',
+    authSecret: '_tK2LDGoIt6be6agJ_nvGA',
+    privateKey: {
+      kty: 'EC',
+      crv: 'P-256',
+      d: 'bGViEe3PvjjFJg8lcnLsqu71b2yqWGnZN9J2MTed-9s',
+      x: 'auB0GHF0AZ2LAocFnvOXDS7EeCMopnzbg-tS21FMHrU',
+      y: 'GpbhrW-_xKj3XhhXA-kDZSicKZ0kn0BuVhqzhLOB-Cc',
+      ext: true,
+    },
+    publicKey: 'BGrgdBhxdAGdiwKHBZ7zlw0uxHgjKKZ824PrUttRTB61GpbhrW-_xKj3XhhXA-kDZSicKZ0kn0BuVhqzhLOB-Cc',
+  }];
+  for (let test of expectedSuccesses) {
+    let publicKey = ChromeUtils.base64URLDecode(test.publicKey, REJECT_PADDING);
+    let authSecret = ChromeUtils.base64URLDecode(test.authSecret,
+                                                 REJECT_PADDING);
+    let payload = ChromeUtils.base64URLDecode(test.data, REJECT_PADDING);
+    let result = await PushCrypto.decrypt(test.privateKey, publicKey,
+                                          authSecret,
+                                          { encoding: 'aes128gcm' }, payload);
+    let decoder = new TextDecoder('utf-8');
+    equal(decoder.decode(new Uint8Array(result)), test.result, test.desc);
   }
 });
