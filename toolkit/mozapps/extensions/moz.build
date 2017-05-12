@@ -14,7 +14,6 @@ TEST_DIRS += ['test']
 
 XPIDL_SOURCES += [
     'amIAddonManager.idl',
-    'amIAddonManagerStartup.idl',
     'amIAddonPathService.idl',
     'amIWebInstallPrompt.idl',
 ]
@@ -45,14 +44,12 @@ JAR_MANIFESTS += ['jar.mn']
 
 EXPORTS.mozilla += [
     'AddonContentPolicy.h',
-    'AddonManagerStartup.h',
     'AddonManagerWebAPI.h',
     'AddonPathService.h',
 ]
 
 UNIFIED_SOURCES += [
     'AddonContentPolicy.cpp',
-    'AddonManagerStartup.cpp',
     'AddonManagerWebAPI.cpp',
     'AddonPathService.cpp',
 ]

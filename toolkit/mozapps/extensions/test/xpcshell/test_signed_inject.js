@@ -25,13 +25,8 @@ profileDir.append("extensions");
 // Deletes a file from the test add-on in the profile
 function breakAddon(file) {
   if (TEST_UNPACKED) {
-    let f = file.clone();
-    f.append("test.txt");
-    f.remove(true);
-
-    f = file.clone();
-    f.append("install.rdf");
-    f.lastModifiedTime = Date.now();
+    file.append("test.txt");
+    file.remove(true);
   } else {
     var zipW = AM_Cc["@mozilla.org/zipwriter;1"].
                createInstance(AM_Ci.nsIZipWriter);
@@ -261,7 +256,7 @@ add_task(function*() {
   // detection but the periodic scan will catch that
   yield promiseSetExtensionModifiedTime(file.path, Date.now() - 60000);
 
-  yield promiseStartupManager();
+  startupManager();
   let addon = yield promiseAddonByID(ID);
   do_check_neq(addon, null);
   do_check_false(addon.appDisabled);
@@ -274,7 +269,7 @@ add_task(function*() {
   clearCache(file);
   breakAddon(file);
 
-  yield promiseStartupManager();
+  startupManager();
 
   addon = yield promiseAddonByID(ID);
   do_check_neq(addon, null);

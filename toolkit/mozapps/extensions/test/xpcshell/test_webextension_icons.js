@@ -27,10 +27,9 @@ function promiseAddonStartup() {
 function* testSimpleIconsetParsing(manifest) {
   yield promiseWriteWebManifestForExtension(manifest, profileDir);
 
-  yield Promise.all([
-    promiseRestartManager(),
-    manifest.theme || promiseAddonStartup(),
-  ]);
+  yield promiseRestartManager();
+  if (!manifest.theme)
+    yield promiseAddonStartup();
 
   let uri = do_get_addon_root_uri(profileDir, ID);
 
@@ -61,10 +60,9 @@ function* testSimpleIconsetParsing(manifest) {
   check_icons(addon);
 
   // check if icons are persisted through a restart
-  yield Promise.all([
-    promiseRestartManager(),
-    manifest.theme || promiseAddonStartup(),
-  ]);
+  yield promiseRestartManager();
+  if (!manifest.theme)
+    yield promiseAddonStartup();
 
   addon = yield promiseAddonByID(ID);
   do_check_neq(addon, null);
@@ -72,15 +70,16 @@ function* testSimpleIconsetParsing(manifest) {
   check_icons(addon);
 
   addon.uninstall();
+
+  yield promiseRestartManager();
 }
 
 function* testRetinaIconsetParsing(manifest) {
   yield promiseWriteWebManifestForExtension(manifest, profileDir);
 
-  yield Promise.all([
-    promiseRestartManager(),
-    manifest.theme || promiseAddonStartup(),
-  ]);
+  yield promiseRestartManager();
+  if (!manifest.theme)
+    yield promiseAddonStartup();
 
   let addon = yield promiseAddonByID(ID);
   do_check_neq(addon, null);
@@ -101,15 +100,16 @@ function* testRetinaIconsetParsing(manifest) {
   }), uri + "icon128.png");
 
   addon.uninstall();
+
+  yield promiseRestartManager();
 }
 
 function* testNoIconsParsing(manifest) {
   yield promiseWriteWebManifestForExtension(manifest, profileDir);
 
-  yield Promise.all([
-    promiseRestartManager(),
-    manifest.theme || promiseAddonStartup(),
-  ]);
+  yield promiseRestartManager();
+  if (!manifest.theme)
+    yield promiseAddonStartup();
 
   let addon = yield promiseAddonByID(ID);
   do_check_neq(addon, null);
@@ -122,6 +122,8 @@ function* testNoIconsParsing(manifest) {
   equal(AddonManager.getPreferredIconURL(addon, 128), null);
 
   addon.uninstall();
+
+  yield promiseRestartManager();
 }
 
 // Test simple icon set parsing
