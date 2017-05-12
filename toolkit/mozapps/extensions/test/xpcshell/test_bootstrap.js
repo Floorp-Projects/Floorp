@@ -81,12 +81,8 @@ function getUninstallNewVersion() {
 }
 
 function do_check_bootstrappedPref(aCallback) {
-  let XPIScope = AM_Cu.import("resource://gre/modules/addons/XPIProvider.jsm", {});
-
-  let data = {};
-  for (let entry of XPIScope.XPIStates.bootstrappedAddons()) {
-    data[entry.id] = entry;
-  }
+  let data = Services.prefs.getCharPref("extensions.bootstrappedAddons");
+  data = JSON.parse(data);
 
   AddonManager.getAddonsByTypes(["extension"], function(aAddons) {
     for (let addon of aAddons) {
@@ -104,7 +100,7 @@ function do_check_bootstrappedPref(aCallback) {
       do_check_eq(addonData.version, addon.version);
       do_check_eq(addonData.type, addon.type);
       let file = addon.getResourceURI().QueryInterface(Components.interfaces.nsIFileURL).file;
-      do_check_eq(addonData.path, file.path);
+      do_check_eq(addonData.descriptor, file.persistentDescriptor);
     }
     do_check_eq(Object.keys(data).length, 0);
 
@@ -120,7 +116,7 @@ function run_test() {
 
   do_check_false(gExtensionsJSON.exists());
 
-  do_check_false(gAddonStartup.exists());
+  do_check_false(gExtensionsINI.exists());
 
   run_test_1();
 }
@@ -174,6 +170,8 @@ function run_test_1() {
 }
 
 function check_test_1(installSyncGUID) {
+  do_check_false(gExtensionsINI.exists());
+
   AddonManager.getAllInstalls(function(installs) {
     // There should be no active installs now since the install completed and
     // doesn't require a restart.
@@ -261,7 +259,7 @@ function run_test_3() {
   do_check_eq(getShutdownNewVersion(), undefined);
   do_check_not_in_crash_annotation(ID1, "1.0");
 
-  do_check_true(gAddonStartup.exists());
+  do_check_false(gExtensionsINI.exists());
 
   AddonManager.getAddonByID(ID1, function(b1) {
     do_check_neq(b1, null);
@@ -1055,8 +1053,6 @@ function run_test_22() {
 
   let file = manuallyInstall(do_get_addon("test_bootstrap1_1"), profileDir,
                              ID1);
-  if (file.isDirectory())
-    file.append("install.rdf");
 
   // Make it look old so changes are detected
   setExtensionModifiedTime(file, file.lastModifiedTime - 5000);
@@ -1206,7 +1202,7 @@ function run_test_24() {
 
   Promise.all([BootstrapMonitor.promiseAddonStartup(ID2),
               promiseInstallAllFiles([do_get_addon("test_bootstrap1_1"), do_get_addon("test_bootstrap2_1")])])
-         .then(async function test_24_pref() {
+         .then(function test_24_pref() {
     do_print("test 24 got prefs");
     BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
     BootstrapMonitor.checkAddonStarted(ID1, "1.0");
@@ -1227,13 +1223,10 @@ function run_test_24() {
     BootstrapMonitor.checkAddonInstalled(ID2, "1.0");
     BootstrapMonitor.checkAddonNotStarted(ID2);
 
-    // Break the JSON.
-    let data = aomStartup.readStartupData();
-    data["app-profile"].addons[ID1].path += "foo";
-
-    await OS.File.writeAtomic(gAddonStartup.path,
-                              new TextEncoder().encode(JSON.stringify(data)),
-                              {compression: "lz4"});
+    // Break the preference
+    let bootstrappedAddons = JSON.parse(Services.prefs.getCharPref("extensions.bootstrappedAddons"));
+    bootstrappedAddons[ID1].descriptor += "foo";
+    Services.prefs.setCharPref("extensions.bootstrappedAddons", JSON.stringify(bootstrappedAddons));
 
     startupManager(false);
 
@@ -1336,8 +1329,6 @@ function run_test_27() {
     do_check_eq(b1.pendingOperations, AddonManager.PENDING_NONE);
     BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
     BootstrapMonitor.checkAddonNotStarted(ID1);
-
-    BootstrapMonitor.restartfulIds.add(ID1);
 
     installAllFiles([do_get_addon("test_bootstrap1_4")], function() {
       // Updating disabled things happens immediately

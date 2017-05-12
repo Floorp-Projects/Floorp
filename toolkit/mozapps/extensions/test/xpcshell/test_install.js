@@ -117,7 +117,7 @@ function check_test_1(installSyncGUID) {
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(olda1) {
     do_check_eq(olda1, null);
 
-    AddonManager.getAddonsWithOperationsByTypes(null, callback_soon(async function(pendingAddons) {
+    AddonManager.getAddonsWithOperationsByTypes(null, callback_soon(function(pendingAddons) {
       do_check_eq(pendingAddons.length, 1);
       do_check_eq(pendingAddons[0].id, "addon1@tests.mozilla.org");
       let uri = NetUtil.newURI(pendingAddons[0].iconURL);
@@ -150,7 +150,7 @@ function check_test_1(installSyncGUID) {
       do_check_false(hasFlag(pendingAddons[0].permissions, AddonManager.PERM_CAN_ENABLE));
       do_check_false(hasFlag(pendingAddons[0].permissions, AddonManager.PERM_CAN_DISABLE));
 
-      await promiseRestartManager();
+      restartManager();
 
       AddonManager.getAllInstalls(function(activeInstalls) {
         do_check_eq(activeInstalls, 0);
@@ -276,9 +276,9 @@ function check_test_3(aInstall) {
   setExtensionModifiedTime(ext, updateDate);
 
   ensure_test_completed();
-  AddonManager.getAddonByID("addon2@tests.mozilla.org", callback_soon(async function(olda2) {
+  AddonManager.getAddonByID("addon2@tests.mozilla.org", callback_soon(function(olda2) {
     do_check_eq(olda2, null);
-    await promiseRestartManager();
+    restartManager();
 
     AddonManager.getAllInstalls(function(installs) {
       do_check_eq(installs, 0);
@@ -465,9 +465,9 @@ function run_test_7() {
 
 function check_test_7() {
   ensure_test_completed();
-  AddonManager.getAddonByID("addon3@tests.mozilla.org", callback_soon(async function(olda3) {
+  AddonManager.getAddonByID("addon3@tests.mozilla.org", callback_soon(function(olda3) {
     do_check_eq(olda3, null);
-    await promiseRestartManager();
+    restartManager();
 
     AddonManager.getAllInstalls(function(installs) {
       do_check_eq(installs, 0);
@@ -514,8 +514,8 @@ function run_test_8() {
   });
 }
 
-async function check_test_8() {
-  await promiseRestartManager();
+function check_test_8() {
+  restartManager();
 
   AddonManager.getAddonByID("addon3@tests.mozilla.org", function(a3) {
     do_check_neq(a3, null);

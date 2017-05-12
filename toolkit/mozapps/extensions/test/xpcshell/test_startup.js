@@ -134,7 +134,7 @@ function run_test() {
 
   do_check_false(gExtensionsJSON.exists());
 
-  do_check_false(gAddonStartup.exists());
+  do_check_false(gExtensionsINI.exists());
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
@@ -163,7 +163,7 @@ function end_test() {
 }
 
 // Try to install all the items into the profile
-async function run_test_1() {
+function run_test_1() {
   writeInstallRDFForExtension(addon1, profileDir);
   var dest = writeInstallRDFForExtension(addon2, profileDir);
   // Attempt to make this look like it was added some time in the past so
@@ -177,7 +177,7 @@ async function run_test_1() {
   writeInstallRDFForExtension(addon7, profileDir);
 
   gCachePurged = false;
-  await promiseRestartManager();
+  restartManager();
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, ["addon1@tests.mozilla.org",
                                       "addon2@tests.mozilla.org",
                                       "addon3@tests.mozilla.org"]);
@@ -187,8 +187,8 @@ async function run_test_1() {
   check_startup_changes(AddonManager.STARTUP_CHANGE_ENABLED, []);
   do_check_true(gCachePurged);
 
-  do_print("Checking for " + gAddonStartup.path);
-  do_check_true(gAddonStartup.exists());
+  do_print("Checking for " + gExtensionsINI.path);
+  do_check_true(gExtensionsINI.exists());
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
@@ -281,7 +281,7 @@ async function run_test_1() {
 
 // Test that modified items are detected and items in other install locations
 // are ignored
-async function run_test_2() {
+function run_test_2() {
   addon1.version = "1.1";
   writeInstallRDFForExtension(addon1, userDir);
   addon2.version = "2.1";
@@ -295,8 +295,7 @@ async function run_test_2() {
   dest.remove(true);
 
   gCachePurged = false;
-  await promiseRestartManager();
-
+  restartManager();
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, ["addon2@tests.mozilla.org"]);
   check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED, ["addon3@tests.mozilla.org"]);
@@ -304,7 +303,7 @@ async function run_test_2() {
   check_startup_changes(AddonManager.STARTUP_CHANGE_ENABLED, []);
   do_check_true(gCachePurged);
 
-  do_check_true(gAddonStartup.exists());
+  do_check_true(gExtensionsINI.exists());
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
@@ -351,7 +350,7 @@ async function run_test_2() {
 }
 
 // Check that removing items from the profile reveals their hidden versions.
-async function run_test_3() {
+function run_test_3() {
   var dest = profileDir.clone();
   dest.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
   dest.remove(true);
@@ -361,8 +360,7 @@ async function run_test_3() {
   writeInstallRDFForExtension(addon3, profileDir, "addon4@tests.mozilla.org");
 
   gCachePurged = false;
-  await promiseRestartManager();
-
+  restartManager();
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, ["addon1@tests.mozilla.org",
                                     "addon2@tests.mozilla.org"]);
@@ -417,12 +415,11 @@ async function run_test_3() {
 }
 
 // Test that disabling an install location works
-async function run_test_4() {
+function run_test_4() {
   Services.prefs.setIntPref("extensions.enabledScopes", AddonManager.SCOPE_SYSTEM);
 
   gCachePurged = false;
-  await promiseRestartManager();
-
+  restartManager();
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, ["addon2@tests.mozilla.org"]);
   check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED, ["addon1@tests.mozilla.org"]);
@@ -457,12 +454,11 @@ async function run_test_4() {
 }
 
 // Switching disabled locations works
-async function run_test_5() {
+function run_test_5() {
   Services.prefs.setIntPref("extensions.enabledScopes", AddonManager.SCOPE_USER);
 
   gCachePurged = false;
-  await promiseRestartManager();
-
+  restartManager();
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, ["addon1@tests.mozilla.org"]);
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, ["addon2@tests.mozilla.org"]);
   check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED, []);
@@ -503,12 +499,11 @@ async function run_test_5() {
 }
 
 // Resetting the pref makes everything visible again
-async function run_test_6() {
+function run_test_6() {
   Services.prefs.clearUserPref("extensions.enabledScopes");
 
   gCachePurged = false;
-  await promiseRestartManager();
-
+  restartManager();
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED, []);
@@ -549,7 +544,7 @@ async function run_test_6() {
 }
 
 // Check that items in the profile hide the others again.
-async function run_test_7() {
+function run_test_7() {
   addon1.version = "1.2";
   writeInstallRDFForExtension(addon1, profileDir);
   var dest = userDir.clone();
@@ -557,8 +552,7 @@ async function run_test_7() {
   dest.remove(true);
 
   gCachePurged = false;
-  await promiseRestartManager();
-
+  restartManager();
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, ["addon1@tests.mozilla.org",
                                     "addon2@tests.mozilla.org"]);
@@ -609,12 +603,11 @@ async function run_test_7() {
 }
 
 // Disabling all locations still leaves the profile working
-async function run_test_8() {
+function run_test_8() {
   Services.prefs.setIntPref("extensions.enabledScopes", 0);
 
   gCachePurged = false;
-  await promiseRestartManager();
-
+  restartManager();
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED, ["addon2@tests.mozilla.org"]);
@@ -649,7 +642,7 @@ async function run_test_8() {
 }
 
 // More hiding and revealing
-async function run_test_9() {
+function run_test_9() {
   Services.prefs.clearUserPref("extensions.enabledScopes");
 
   var dest = userDir.clone();
@@ -662,8 +655,7 @@ async function run_test_9() {
   writeInstallRDFForExtension(addon2, profileDir);
 
   gCachePurged = false;
-  await promiseRestartManager();
-
+  restartManager();
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, ["addon2@tests.mozilla.org"]);
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED, []);
@@ -712,7 +704,7 @@ async function run_test_9() {
 
 // Checks that a removal from one location and an addition in another location
 // for the same item is handled
-async function run_test_10() {
+function run_test_10() {
   var dest = profileDir.clone();
   dest.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
   dest.remove(true);
@@ -720,8 +712,7 @@ async function run_test_10() {
   writeInstallRDFForExtension(addon1, userDir);
 
   gCachePurged = false;
-  await promiseRestartManager();
-
+  restartManager();
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, ["addon1@tests.mozilla.org"]);
   check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED, []);
@@ -769,7 +760,7 @@ async function run_test_10() {
 }
 
 // This should remove any remaining items
-async function run_test_11() {
+function run_test_11() {
   var dest = userDir.clone();
   dest.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
   dest.remove(true);
@@ -778,8 +769,7 @@ async function run_test_11() {
   dest.remove(true);
 
   gCachePurged = false;
-  await promiseRestartManager();
-
+  restartManager();
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED, ["addon1@tests.mozilla.org",

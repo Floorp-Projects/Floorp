@@ -1,0 +1,125 @@
+<?xml version="1.0"?>
+
+<!-- This is a copy of extensions.rdf from Firefox 3.5 including four
+     test extensions. Addon1 was user enabled, addon2 was user disabled, addon3
+     was pending user disable at the next restart and addon4 was pending user 
+     enable at the next restart. Additionally addon1 and 2 have had
+     compatibility updates applies to make them compatible with the app and
+     toolkit respectively, addon3 and 4 have not. addon5 is disabled however
+     at the same time as the migration a new version should be detected. addon6
+     is pending install and needs a compatibility update to be compatible.
+     It also contains two themes in the profile -->
+
+<RDF:RDF xmlns:NS1="http://www.mozilla.org/2004/em-rdf#"
+         xmlns:NC="http://home.netscape.com/NC-rdf#"
+         xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <RDF:Description RDF:about="rdf:#$w8dNC3"
+                   NS1:id="xpcshell@tests.mozilla.org"
+                   NS1:minVersion="1"
+                   NS1:maxVersion="1" />
+  <RDF:Description RDF:about="rdf:#$w8dNC4"
+                   NS1:id="xpcshell@tests.mozilla.org"
+                   NS1:minVersion="1"
+                   NS1:maxVersion="2" />
+  <RDF:Description RDF:about="rdf:#$w8dNC5"
+                   NS1:id="xpcshell@tests.mozilla.org"
+                   NS1:minVersion="1"
+                   NS1:maxVersion="2" />
+  <RDF:Description RDF:about="rdf:#$w8dNC6"
+                   NS1:id="xpcshell@tests.mozilla.org"
+                   NS1:minVersion="1"
+                   NS1:maxVersion="2" />
+  <RDF:Description RDF:about="rdf:#$w8dNC2"
+                   NS1:id="toolkit@mozilla.org"
+                   NS1:minVersion="1"
+                   NS1:maxVersion="1" />
+  <RDF:Description RDF:about="rdf:#$w8dNC1"
+                   NS1:id="toolkit@mozilla.org"
+                   NS1:minVersion="1"
+                   NS1:maxVersion="2" />
+  <RDF:Description RDF:about="rdf:#$w8dNC7"
+                   NS1:id="toolkit@mozilla.org"
+                   NS1:minVersion="1"
+                   NS1:maxVersion="2" />
+  <RDF:Description RDF:about="rdf:#$oadNC1"
+                   NS1:id="xpcshell@tests.mozilla.org"
+                   NS1:minVersion="1"
+                   NS1:maxVersion="2" />
+  <RDF:Description RDF:about="rdf:#$TpnM4"
+                   NS1:id="xpcshell@tests.mozilla.org"
+                   NS1:updatedMinVersion="1"
+                   NS1:updatedMaxVersion="2" />
+  <RDF:Description RDF:about="urn:mozilla:item:addon1@tests.mozilla.org"
+                   NS1:installLocation="app-profile"
+                   NS1:version="1.0"
+                   NS1:name="Test 1">
+    <NS1:type NC:parseType="Integer">2</NS1:type>
+    <NS1:targetApplication RDF:resource="rdf:#$oadNC1"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="urn:mozilla:item:addon2@tests.mozilla.org"
+                   NS1:installLocation="app-profile"
+                   NS1:version="2.0"
+                   NS1:name="Test 2"
+                   NS1:userDisabled="true">
+    <NS1:type NC:parseType="Integer">2</NS1:type>
+    <NS1:targetApplication RDF:resource="rdf:#$w8dNC1"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="urn:mozilla:item:addon3@tests.mozilla.org"
+                   NS1:installLocation="app-profile"
+                   NS1:version="2.0"
+                   NS1:name="Test 3"
+                   NS1:userDisabled="needs-disable">
+    <NS1:type NC:parseType="Integer">2</NS1:type>
+    <NS1:targetApplication RDF:resource="rdf:#$w8dNC3"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="urn:mozilla:item:addon4@tests.mozilla.org"
+                   NS1:installLocation="app-profile"
+                   NS1:version="2.0"
+                   NS1:name="Test 4"
+                   NS1:userDisabled="needs-enable">
+    <NS1:type NC:parseType="Integer">2</NS1:type>
+    <NS1:targetApplication RDF:resource="rdf:#$w8dNC2"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="urn:mozilla:item:addon5@tests.mozilla.org"
+                   NS1:installLocation="app-profile"
+                   NS1:version="1.0"
+                   NS1:name="Test 5"
+                   NS1:userDisabled="true">
+    <NS1:type NC:parseType="Integer">2</NS1:type>
+    <NS1:targetApplication RDF:resource="rdf:#$w8dNC7"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="urn:mozilla:item:addon6@tests.mozilla.org"
+                   NS1:name="Test 6"
+                   NS1:version="1.0"
+                   NS1:newVersion="1.0"
+                   NS1:installLocation="app-profile">
+    <NS1:type NC:parseType="Integer">2</NS1:type>
+    <NS1:targetApplication RDF:resource="rdf:#$TpnM4"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="urn:mozilla:item:theme1@tests.mozilla.org"
+                   NS1:installLocation="app-profile"
+                   NS1:version="1.0"
+                   NS1:name="Theme 2"
+                   NS1:internalName="theme1/1.0">
+    <NS1:type NC:parseType="Integer">4</NS1:type>
+    <NS1:targetApplication RDF:resource="rdf:#$w8dNC5"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="urn:mozilla:item:theme2@tests.mozilla.org"
+                   NS1:installLocation="app-profile"
+                   NS1:version="2.0"
+                   NS1:name="Theme 2"
+                   NS1:internalName="theme2/1.0">
+    <NS1:type NC:parseType="Integer">4</NS1:type>
+    <NS1:targetApplication RDF:resource="rdf:#$w8dNC6"/>
+  </RDF:Description>
+  <RDF:Seq RDF:about="urn:mozilla:item:root">
+    <RDF:li RDF:resource="urn:mozilla:item:addon1@tests.mozilla.org"/>
+    <RDF:li RDF:resource="urn:mozilla:item:addon2@tests.mozilla.org"/>
+    <RDF:li RDF:resource="urn:mozilla:item:addon3@tests.mozilla.org"/>
+    <RDF:li RDF:resource="urn:mozilla:item:addon4@tests.mozilla.org"/>
+    <RDF:li RDF:resource="urn:mozilla:item:addon5@tests.mozilla.org"/>
+    <RDF:li RDF:resource="urn:mozilla:item:addon6@tests.mozilla.org"/>
+    <RDF:li RDF:resource="urn:mozilla:item:theme1@tests.mozilla.org"/>
+    <RDF:li RDF:resource="urn:mozilla:item:theme2@tests.mozilla.org"/>
+  </RDF:Seq>
+</RDF:RDF>

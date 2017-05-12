@@ -9,7 +9,7 @@ const PREF_GENERAL_SKINS_SELECTEDSKIN = "general.skins.selectedSkin";
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
-async function run_test() {
+function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
@@ -38,7 +38,7 @@ async function run_test() {
     }]
   }, profileDir);
 
-  await promiseStartupManager();
+  startupManager();
 
   do_check_eq(Services.prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN), "classic/1.0");
 

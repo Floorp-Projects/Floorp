@@ -12,8 +12,6 @@ Cu.import("resource://gre/modules/EventEmitter.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AddonManagerPrivate",
-                                  "resource://gre/modules/AddonManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
@@ -37,7 +35,7 @@ this.ExtensionsUI = {
   sideloadListener: null,
   histogram: null,
 
-  async init() {
+  init() {
     this.histogram = Services.telemetry.getHistogramById("EXTENSION_INSTALL_PROMPT_RESULT");
 
     Services.obs.addObserver(this, "webextension-permission-prompt");
@@ -45,55 +43,53 @@ this.ExtensionsUI = {
     Services.obs.addObserver(this, "webextension-install-notify");
     Services.obs.addObserver(this, "webextension-optional-permission-prompt");
 
-    await RecentWindow.getMostRecentBrowserWindow().delayedStartupPromise;
-
     this._checkForSideloaded();
   },
 
-  async _checkForSideloaded() {
-    let sideloaded = await AddonManagerPrivate.getNewSideloads();
+  _checkForSideloaded() {
+    AddonManager.getAllAddons(addons => {
+      // Check for any side-loaded addons that the user is allowed
+      // to enable.
+      let sideloaded = addons.filter(
+        addon => addon.seen === false && (addon.permissions & AddonManager.PERM_CAN_ENABLE));
 
-    if (!sideloaded.length) {
-      // No new side-loads. We're done.
-      return;
-    }
-
-    // The ordering shouldn't matter, but tests depend on notifications
-    // happening in a specific order.
-    sideloaded.sort((a, b) => a.id.localeCompare(b.id));
-
-    if (WEBEXT_PERMISSION_PROMPTS) {
-      if (!this.sideloadListener) {
-        this.sideloadListener = {
-          onEnabled: addon => {
-            if (!this.sideloaded.has(addon)) {
-              return;
-            }
-
-            this.sideloaded.delete(addon);
-            this.emit("change");
-
-            if (this.sideloaded.size == 0) {
-              AddonManager.removeAddonListener(this.sideloadListener);
-              this.sideloadListener = null;
-            }
-          },
-        };
-        AddonManager.addAddonListener(this.sideloadListener);
+      if (!sideloaded.length) {
+        return;
       }
 
-      for (let addon of sideloaded) {
-        this.sideloaded.add(addon);
+      if (WEBEXT_PERMISSION_PROMPTS) {
+        if (!this.sideloadListener) {
+          this.sideloadListener = {
+            onEnabled: addon => {
+              if (!this.sideloaded.has(addon)) {
+                return;
+              }
+
+              this.sideloaded.delete(addon);
+              this.emit("change");
+
+              if (this.sideloaded.size == 0) {
+                AddonManager.removeAddonListener(this.sideloadListener);
+                this.sideloadListener = null;
+              }
+            },
+          };
+          AddonManager.addAddonListener(this.sideloadListener);
+        }
+
+        for (let addon of sideloaded) {
+          this.sideloaded.add(addon);
+        }
+        this.emit("change");
+      } else {
+        // This and all the accompanying about:newaddon code can eventually
+        // be removed.  See bug 1331521.
+        let win = RecentWindow.getMostRecentBrowserWindow();
+        for (let addon of sideloaded) {
+          win.openUILinkIn(`about:newaddon?id=${addon.id}`, "tab");
+        }
       }
-      this.emit("change");
-    } else {
-      // This and all the accompanying about:newaddon code can eventually
-      // be removed.  See bug 1331521.
-      let win = RecentWindow.getMostRecentBrowserWindow();
-      for (let addon of sideloaded) {
-        win.openUILinkIn(`about:newaddon?id=${addon.id}`, "tab");
-      }
-    }
+    });
   },
 
   showAddonsManager(browser, strings, icon, histkey) {
@@ -150,11 +146,6 @@ this.ExtensionsUI = {
       }
 
       info.unsigned = info.addon.signedState <= AddonManager.SIGNEDSTATE_MISSING;
-      if (info.unsigned && Cu.isInAutomation &&
-          Services.prefs.getBoolPref("extensions.ui.ignoreUnsigned", false)) {
-        info.unsigned = false;
-      }
-
       let strings = this._buildStrings(info);
 
       // If this is an update with no promptable permissions, just apply it

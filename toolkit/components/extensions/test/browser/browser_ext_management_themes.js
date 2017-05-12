@@ -129,7 +129,5 @@ add_task(async function test_management_themes() {
     theme.unload(),
     extension.awaitMessage("onUninstalled"),
   ]);
-
-  is(await extension.awaitMessage("onEnabled"), "Default", "default enabled");
   await extension.unload();
 });
