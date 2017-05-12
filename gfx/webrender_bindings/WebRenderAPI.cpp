@@ -565,13 +565,13 @@ void
 DisplayListBuilder::PushClip(const WrRect& aClipRect,
                              const WrImageMask* aMask)
 {
-  wr_dp_push_scroll_layer(mWrState, aClipRect, aClipRect, aMask);
+  wr_dp_push_clip(mWrState, aClipRect, aMask);
 }
 
 void
 DisplayListBuilder::PopClip()
 {
-  wr_dp_pop_scroll_layer(mWrState);
+  wr_dp_pop_clip(mWrState);
 }
 
 void
@@ -583,11 +583,11 @@ DisplayListBuilder::PushBuiltDisplayList(BuiltDisplayList dl)
 }
 
 void
-DisplayListBuilder::PushScrollLayer(const WrRect& aContentRect,
-                                    const WrRect& aClipRect,
-                                    const WrImageMask* aMask)
+DisplayListBuilder::PushScrollLayer(const layers::FrameMetrics::ViewID& aScrollId,
+                                    const WrRect& aContentRect,
+                                    const WrRect& aClipRect)
 {
-  wr_dp_push_scroll_layer(mWrState, aContentRect, aClipRect, aMask);
+  wr_dp_push_scroll_layer(mWrState, aScrollId, aContentRect, aClipRect);
 }
 
 void
