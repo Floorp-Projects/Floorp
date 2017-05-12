@@ -4,7 +4,7 @@ const PAGE_PREFS = "about:preferences";
 const PAGE_PRIVACY = PAGE_PREFS + "#privacy";
 const GROUP_AUTOFILL = "#passwordsGroup";
 const CHECKBOX_AUTOFILL = "#profileAutofill checkbox";
-const PREF_AUTOFILL_ENABLED = "browser.formautofill.enabled";
+const PREF_AUTOFILL_ENABLED = "extensions.formautofill.addresses.enabled";
 const TEST_SELECTORS = {
   group: GROUP_AUTOFILL,
   checkbox: CHECKBOX_AUTOFILL,
