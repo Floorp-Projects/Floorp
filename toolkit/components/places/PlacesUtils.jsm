@@ -1505,8 +1505,8 @@ this.PlacesUtils = {
    * Your custom queries can - and will - break overtime.
    *
    * Example:
-   * let db = yield PlacesUtils.promiseDBConnection();
-   * let rows = yield db.executeCached(sql, params);
+   * let db = await PlacesUtils.promiseDBConnection();
+   * let rows = await db.executeCached(sql, params);
    */
   promiseDBConnection: () => gAsyncDBConnPromised,
 
@@ -1526,7 +1526,7 @@ this.PlacesUtils = {
    * operations are complete before proceeding.
    *
    * Example:
-   * yield withConnectionWrapper("Bookmarks: Remove a bookmark", Task.async(function*(db) {
+   * await withConnectionWrapper("Bookmarks: Remove a bookmark", Task.async(function*(db) {
    *    // Proceed with the db, asynchronously.
    *    // Shutdown will not interrupt operations that take place here.
    * }));
@@ -2408,12 +2408,25 @@ XPCOMUtils.defineLazyGetter(this, "gKeywordsCachePromise", () =>
          FROM moz_keywords k
          JOIN moz_places h ON h.id = k.place_id
         `);
+      let brokenKeywords = [];
       for (let row of rows) {
         let keyword = row.getResultByName("keyword");
-        let entry = { keyword,
-                      url: new URL(row.getResultByName("url")),
-                      postData: row.getResultByName("post_data") };
-        cache.set(keyword, entry);
+        try {
+          let entry = { keyword,
+                        url: new URL(row.getResultByName("url")),
+                        postData: row.getResultByName("post_data") };
+          cache.set(keyword, entry);
+        } catch (ex) {
+          // The url is invalid, don't load the keyword and remove it, or it
+          // would break the whole keywords API.
+          brokenKeywords.push(keyword);
+        }
+      }
+      if (brokenKeywords.length) {
+        await db.execute(
+          `DELETE FROM moz_keywords
+           WHERE keyword IN (${brokenKeywords.map(JSON.stringify).join(",")})
+          `);
       }
 
       // Helper to get a keyword from an href.
