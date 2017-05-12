@@ -1,7 +1,7 @@
 "use strict";
 
-add_task(function* test_enabled() {
-  let addons = yield new Promise(resolved => AddonManager.getAllAddons(resolved));
+add_task(async function test_enabled() {
+  let addons = await new Promise(resolved => AddonManager.getAllAddons(resolved));
   for (let addon of addons) {
     if (addon.isSystem) {
       ok(addon.multiprocessCompatible,

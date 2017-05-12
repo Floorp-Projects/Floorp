@@ -1,4 +1,4 @@
-add_task(function* setup() {
+add_task(async function setup() {
   Services.prefs.setBoolPref("privacy.firstparty.isolate", true);
 
   registerCleanupFunction(function() {
@@ -14,19 +14,19 @@ add_task(function* setup() {
  * Later we create an iframe on this Blob: document, and we test that the iframe
  * has correct firstPartyDomain.
  */
-add_task(function* test_blob_uri_inherit_oa_from_content() {
+add_task(async function test_blob_uri_inherit_oa_from_content() {
   const BASE_URI = "http://mochi.test:8888/browser/browser/components/" +
                    "originattributes/test/browser/dummy.html";
   const BASE_DOMAIN = "mochi.test";
 
   // First we load a normal web page.
-  let win = yield BrowserTestUtils.openNewBrowserWindow({ remote: true });
+  let win = await BrowserTestUtils.openNewBrowserWindow({ remote: true });
   let browser = win.gBrowser.selectedBrowser;
   browser.loadURI(BASE_URI);
-  yield BrowserTestUtils.browserLoaded(browser);
+  await BrowserTestUtils.browserLoaded(browser);
 
   // Then navigate to the blob: URI.
-  yield ContentTask.spawn(browser, { firstPartyDomain: BASE_DOMAIN }, function* (attrs) {
+  await ContentTask.spawn(browser, { firstPartyDomain: BASE_DOMAIN }, async function(attrs) {
     info("origin " + content.document.nodePrincipal.origin);
     Assert.equal(content.document.nodePrincipal.originAttributes.firstPartyDomain,
                  attrs.firstPartyDomain, "The document should have firstPartyDomain");
@@ -39,14 +39,14 @@ add_task(function* test_blob_uri_inherit_oa_from_content() {
   });
 
   // Wait for the Blob: URI to be loaded.
-  yield BrowserTestUtils.browserLoaded(browser, false, function(url) {
+  await BrowserTestUtils.browserLoaded(browser, false, function(url) {
     info("BrowserTestUtils.browserLoaded url=" + url);
     return url.startsWith("blob:http://mochi.test:8888/");
   });
 
   // We verify the blob document has correct origin attributes.
   // Then we inject an iframe to it.
-  yield ContentTask.spawn(browser, { firstPartyDomain: BASE_DOMAIN }, function* (attrs) {
+  await ContentTask.spawn(browser, { firstPartyDomain: BASE_DOMAIN }, async function(attrs) {
     Assert.ok(content.document.documentURI.startsWith("blob:http://mochi.test:8888/"),
               "the document URI should be a blob URI.");
     info("origin " + content.document.nodePrincipal.origin);
@@ -66,7 +66,7 @@ add_task(function* test_blob_uri_inherit_oa_from_content() {
 //  });
 
   // Finally we verify the iframe has correct origin attributes.
-  yield ContentTask.spawn(browser, { firstPartyDomain: BASE_DOMAIN }, function* (attrs) {
+  await ContentTask.spawn(browser, { firstPartyDomain: BASE_DOMAIN }, async function(attrs) {
     let iframe = content.document.getElementById("iframe1");
     Assert.equal(iframe.contentDocument.nodePrincipal.originAttributes.firstPartyDomain,
                  attrs.firstPartyDomain, "iframe should inherit firstPartyDomain from blob: URI");

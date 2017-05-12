@@ -342,9 +342,11 @@ NS_HSL2RGB(float h, float s, float l)
     m2 = l + s - l*s;
   }
   m1 = l*2 - m2;
-  r = uint8_t(255 * HSL_HueToRGB(m1, m2, h + 1.0f/3.0f));
-  g = uint8_t(255 * HSL_HueToRGB(m1, m2, h));
-  b = uint8_t(255 * HSL_HueToRGB(m1, m2, h - 1.0f/3.0f));
+  // We round, not floor, because that's how we handle
+  // percentage RGB values.
+  r = ClampColor(255 * HSL_HueToRGB(m1, m2, h + 1.0f/3.0f));
+  g = ClampColor(255 * HSL_HueToRGB(m1, m2, h));
+  b = ClampColor(255 * HSL_HueToRGB(m1, m2, h - 1.0f/3.0f));
   return NS_RGB(r, g, b);  
 }
 

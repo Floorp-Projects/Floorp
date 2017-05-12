@@ -6,14 +6,14 @@ const DATA_URI = "data:text/html,Hi";
 const DATA_URI_SOURCE = "view-source:" + DATA_URI;
 
 // Test for bug 1345807.
-add_task(function* () {
+add_task(async function() {
   // Open file:// page.
   let dir = getChromeDir(getResolvedURI(gTestPath));
   dir.append(DUMMY_FILE);
   const uriString = Services.io.newFileURI(dir).spec;
 
-  yield BrowserTestUtils.withNewTab(uriString, function*(fileBrowser) {
-    let filePid = yield ContentTask.spawn(fileBrowser, null, () => {
+  await BrowserTestUtils.withNewTab(uriString, async function(fileBrowser) {
+    let filePid = await ContentTask.spawn(fileBrowser, null, () => {
       return Services.appinfo.processID;
     });
 
@@ -21,9 +21,9 @@ add_task(function* () {
     let promiseLoad = BrowserTestUtils.browserLoaded(fileBrowser, false,
                                                      DATA_URI);
     fileBrowser.loadURI(DATA_URI);
-    let href = yield promiseLoad;
+    let href = await promiseLoad;
     is(href, DATA_URI, "Check data URI loaded.");
-    let dataPid = yield ContentTask.spawn(fileBrowser, null, () => {
+    let dataPid = await ContentTask.spawn(fileBrowser, null, () => {
       return Services.appinfo.processID;
     });
     is(dataPid, filePid, "Check that data URI loaded in file content process.");
@@ -31,11 +31,11 @@ add_task(function* () {
     // Make sure we can view-source on the data URI page.
     let promiseTab = BrowserTestUtils.waitForNewTab(gBrowser, DATA_URI_SOURCE);
     BrowserViewSource(fileBrowser);
-    let viewSourceTab = yield promiseTab;
-    registerCleanupFunction(function* () {
-      yield BrowserTestUtils.removeTab(viewSourceTab);
+    let viewSourceTab = await promiseTab;
+    registerCleanupFunction(async function() {
+      await BrowserTestUtils.removeTab(viewSourceTab);
     });
-    yield ContentTask.spawn(viewSourceTab.linkedBrowser, DATA_URI_SOURCE, uri => {
+    await ContentTask.spawn(viewSourceTab.linkedBrowser, DATA_URI_SOURCE, uri => {
       is(content.document.documentURI, uri,
          "Check that a view-source page was loaded.");
     });

@@ -29,49 +29,49 @@ let getExtension = () => {
   });
 };
 
-add_task(function* testStandaloneBrowserAction() {
+add_task(async function testStandaloneBrowserAction() {
   info("Test stand-alone browserAction popup");
 
   let extension = getExtension();
-  yield extension.startup();
-  yield extension.awaitMessage("pageAction ready");
+  await extension.startup();
+  await extension.awaitMessage("pageAction ready");
 
   clickBrowserAction(extension);
-  let browser = yield awaitExtensionPanel(extension);
+  let browser = await awaitExtensionPanel(extension);
   let panel = getPanelForNode(browser);
 
-  yield extension.unload();
+  await extension.unload();
 
   is(panel.parentNode, null, "Panel should be removed from the document");
 });
 
-add_task(function* testMenuPanelBrowserAction() {
+add_task(async function testMenuPanelBrowserAction() {
   let extension = getExtension();
-  yield extension.startup();
-  yield extension.awaitMessage("pageAction ready");
+  await extension.startup();
+  await extension.awaitMessage("pageAction ready");
 
   let widget = getBrowserActionWidget(extension);
   CustomizableUI.addWidgetToArea(widget.id, CustomizableUI.AREA_PANEL);
 
   clickBrowserAction(extension);
-  let browser = yield awaitExtensionPanel(extension);
+  let browser = await awaitExtensionPanel(extension);
   let panel = getPanelForNode(browser);
 
-  yield extension.unload();
+  await extension.unload();
 
   is(panel.state, "closed", "Panel should be closed");
 });
 
-add_task(function* testPageAction() {
+add_task(async function testPageAction() {
   let extension = getExtension();
-  yield extension.startup();
-  yield extension.awaitMessage("pageAction ready");
+  await extension.startup();
+  await extension.awaitMessage("pageAction ready");
 
   clickPageAction(extension);
-  let browser = yield awaitExtensionPanel(extension);
+  let browser = await awaitExtensionPanel(extension);
   let panel = getPanelForNode(browser);
 
-  yield extension.unload();
+  await extension.unload();
 
   is(panel.parentNode, null, "Panel should be removed from the document");
 });

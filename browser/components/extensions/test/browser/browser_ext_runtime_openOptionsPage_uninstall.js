@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-function* loadExtension(options) {
+async function loadExtension(options) {
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "temporary",
 
@@ -32,15 +32,15 @@ function* loadExtension(options) {
     background: options.background,
   });
 
-  yield extension.startup();
+  await extension.startup();
 
   return extension;
 }
 
-add_task(function* test_inline_options_uninstall() {
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+add_task(async function test_inline_options_uninstall() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
 
-  let extension = yield loadExtension({
+  let extension = await loadExtension({
     manifest: {
       applications: {gecko: {id: "inline_options_uninstall@tests.mozilla.org"}},
       "options_ui": {
@@ -89,13 +89,13 @@ add_task(function* test_inline_options_uninstall() {
     },
   });
 
-  yield extension.awaitMessage("options-ui-open");
-  yield extension.unload();
+  await extension.awaitMessage("options-ui-open");
+  await extension.unload();
 
   is(gBrowser.selectedBrowser.currentURI.spec, "about:addons",
      "Add-on manager tab should still be open");
 
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });

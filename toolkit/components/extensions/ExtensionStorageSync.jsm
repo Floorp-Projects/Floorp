@@ -77,8 +77,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Sqlite",
                                   "resource://gre/modules/Sqlite.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Svc",
                                   "resource://services-sync/util.js");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Utils",
                                   "resource://services-sync/util.js");
 XPCOMUtils.defineLazyPreferenceGetter(this, "prefPermitsStorageSync",
@@ -151,8 +149,8 @@ function ciphertextHMAC(keyBundle, id, IV, ciphertext) {
  *     current user.
  * @returns {string} sha256 of the user's kB as a hex string
  */
-const getKBHash = Task.async(function* (fxaService) {
-  const signedInUser = yield fxaService.getSignedInUser();
+const getKBHash = async function(fxaService) {
+  const signedInUser = await fxaService.getSignedInUser();
   if (!signedInUser) {
     throw new Error("User isn't signed in!");
   }
@@ -166,7 +164,7 @@ const getKBHash = Task.async(function* (fxaService) {
       .createInstance(Ci.nsICryptoHash);
   hasher.init(hasher.SHA256);
   return CommonUtils.bytesAsHex(CryptoUtils.digestBytes(signedInUser.uid + kBbytes, hasher));
-});
+};
 
 /**
  * A "remote transformer" that the Kinto library will use to
@@ -178,12 +176,12 @@ const getKBHash = Task.async(function* (fxaService) {
 class EncryptionRemoteTransformer {
   encode(record) {
     const self = this;
-    return Task.spawn(function* () {
-      const keyBundle = yield self.getKeys();
+    return (async function() {
+      const keyBundle = await self.getKeys();
       if (record.ciphertext) {
         throw new Error("Attempt to reencrypt??");
       }
-      let id = yield self.getEncodedRecordId(record);
+      let id = await self.getEncodedRecordId(record);
       if (!id) {
         throw new Error("Record ID is missing or invalid");
       }
@@ -204,12 +202,12 @@ class EncryptionRemoteTransformer {
       }
 
       return encryptedResult;
-    });
+    })();
   }
 
   decode(record) {
     const self = this;
-    return Task.spawn(function* () {
+    return (async function() {
       if (!record.ciphertext) {
         // This can happen for tombstones if a record is deleted.
         if (record.deleted) {
@@ -217,7 +215,7 @@ class EncryptionRemoteTransformer {
         }
         throw new Error("No ciphertext: nothing to decrypt?");
       }
-      const keyBundle = yield self.getKeys();
+      const keyBundle = await self.getKeys();
       // Authenticate the encrypted blob with the expected HMAC
       let computedHMAC = ciphertextHMAC(keyBundle, record.id, record.IV, record.ciphertext);
 
@@ -245,7 +243,7 @@ class EncryptionRemoteTransformer {
       }
 
       return jsonResult;
-    });
+    })();
   }
 
   /**
@@ -285,8 +283,8 @@ class KeyRingEncryptionRemoteTransformer extends EncryptionRemoteTransformer {
   getKeys() {
     throwIfNoFxA(this._fxaService, "encrypting chrome.storage.sync records");
     const self = this;
-    return Task.spawn(function* () {
-      const user = yield self._fxaService.getSignedInUser();
+    return (async function() {
+      const user = await self._fxaService.getSignedInUser();
       // FIXME: we should permit this if the user is self-hosting
       // their storage
       if (!user) {
@@ -305,7 +303,7 @@ class KeyRingEncryptionRemoteTransformer extends EncryptionRemoteTransformer {
       // [encryptionKey, hmacKey]
       bundle.keyPair = [keyMaterial.slice(0, 32), keyMaterial.slice(32, 64)];
       return bundle;
-    });
+    })();
   }
   // Pass through the kbHash field from the unencrypted record. If
   // encryption fails, we can use this to try to detect whether we are
@@ -313,11 +311,11 @@ class KeyRingEncryptionRemoteTransformer extends EncryptionRemoteTransformer {
   // different kB.
   encode(record) {
     const encodePromise = super.encode(record);
-    return Task.spawn(function* () {
-      const encoded = yield encodePromise;
+    return (async function() {
+      const encoded = await encodePromise;
       encoded.kbHash = record.kbHash;
       return encoded;
-    });
+    })();
   }
 
   async decode(record) {
@@ -383,11 +381,11 @@ global.KeyRingEncryptionRemoteTransformer = KeyRingEncryptionRemoteTransformer;
  * - kinto: a KintoBase object, suitable for using in Firefox. All
  *   collections in this database will use the same Sqlite connection.
  */
-const storageSyncInit = Task.spawn(function* () {
+const storageSyncInit = (async function() {
   const path = "storage-sync.sqlite";
   const opts = {path, sharedMemoryCache: false};
-  const connection = yield Sqlite.openConnection(opts);
-  yield FirefoxAdapter._init(connection);
+  const connection = await Sqlite.openConnection(opts);
+  await FirefoxAdapter._init(connection);
   return {
     connection,
     kinto: new Kinto({
@@ -396,15 +394,15 @@ const storageSyncInit = Task.spawn(function* () {
       timeout: KINTO_REQUEST_TIMEOUT,
     }),
   };
-});
+})();
 
 AsyncShutdown.profileBeforeChange.addBlocker(
   "ExtensionStorageSync: close Sqlite handle",
-  Task.async(function* () {
-    const ret = yield storageSyncInit;
+  async function() {
+    const ret = await storageSyncInit;
     const {connection} = ret;
-    yield connection.close();
-  })
+    await connection.close();
+  }
 );
 // Kinto record IDs have two condtions:
 //
@@ -684,16 +682,16 @@ let CollectionKeyEncryptionRemoteTransformer = class extends EncryptionRemoteTra
 
   getKeys() {
     const self = this;
-    return Task.spawn(function* () {
+    return (async function() {
       // FIXME: cache the crypto record for the duration of a sync cycle?
-      const collectionKeys = yield self.cryptoCollection.getKeyRing();
+      const collectionKeys = await self.cryptoCollection.getKeyRing();
       if (!collectionKeys.hasKeysFor([self.extensionId])) {
         // This should never happen. Keys should be created (and
         // synced) at the beginning of the sync cycle.
         throw new Error(`tried to encrypt records for ${this.extensionId}, but key is not present`);
       }
       return collectionKeys.keyForCollection(self.extensionId);
-    });
+    })();
   }
 
   getEncodedRecordId(record) {
@@ -734,6 +732,7 @@ function cleanUpForContext(extension, context) {
 /**
  * Generate a promise that produces the Collection for an extension.
  *
+ * @param {CryptoCollection} cryptoCollection
  * @param {Extension} extension
  *                    The extension whose collection needs to
  *                    be opened.
@@ -743,16 +742,16 @@ function cleanUpForContext(extension, context) {
  *                  close.
  * @returns {Promise<Collection>}
  */
-const openCollection = Task.async(function* (cryptoCollection, extension, context) {
+const openCollection = async function(cryptoCollection, extension, context) {
   let collectionId = extension.id;
-  const {kinto} = yield storageSyncInit;
+  const {kinto} = await storageSyncInit;
   const remoteTransformers = [new CollectionKeyEncryptionRemoteTransformer(cryptoCollection, extension.id)];
   const coll = kinto.collection(collectionId, {
     idSchema: storageSyncIdSchema,
     remoteTransformers,
   });
   return coll;
-});
+};
 
 class ExtensionStorageSync {
   /**

@@ -169,12 +169,12 @@ function check_uri_nodes(aQuery, aOptions, aExpectedURINodes) {
   root.containerOpen = false;
 }
 
-add_task(function* () {
+add_task(async function() {
   for (let test of tests) {
-    yield PlacesUtils.bookmarks.eraseEverything();
+    await PlacesUtils.bookmarks.eraseEverything();
     test();
   }
 
   // Cleanup.
-  yield PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.bookmarks.eraseEverything();
 });

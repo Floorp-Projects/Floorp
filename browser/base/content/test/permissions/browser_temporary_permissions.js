@@ -10,11 +10,11 @@ const PERMISSIONS_PAGE = getRootDirectory(gTestPath).replace("chrome://mochitest
 const SUBFRAME_PAGE = getRootDirectory(gTestPath).replace("chrome://mochitests/content", ORIGIN) + "temporary_permissions_subframe.html";
 
 // Test that setting temp permissions triggers a change in the identity block.
-add_task(function* testTempPermissionChangeEvents() {
+add_task(async function testTempPermissionChangeEvents() {
   let uri = NetUtil.newURI(ORIGIN);
   let id = "geo";
 
-  yield BrowserTestUtils.withNewTab(uri.spec, function*(browser) {
+  await BrowserTestUtils.withNewTab(uri.spec, function(browser) {
     SitePermissions.set(uri, id, SitePermissions.BLOCK, SitePermissions.SCOPE_TEMPORARY, browser);
 
     Assert.deepEqual(SitePermissions.get(uri, id, browser), {
@@ -33,15 +33,15 @@ add_task(function* testTempPermissionChangeEvents() {
 });
 
 // Test that temp blocked permissions requested by subframes (with a different URI) affect the whole page.
-add_task(function* testTempPermissionSubframes() {
+add_task(async function testTempPermissionSubframes() {
   let uri = NetUtil.newURI(ORIGIN);
   let id = "geo";
 
-  yield BrowserTestUtils.withNewTab(SUBFRAME_PAGE, function*(browser) {
+  await BrowserTestUtils.withNewTab(SUBFRAME_PAGE, async function(browser) {
     let popupshown = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
 
     // Request a permission.
-    yield ContentTask.spawn(browser, uri.host, function(host) {
+    await ContentTask.spawn(browser, uri.host, function(host) {
       E10SUtils.wrapHandlingUserInput(content, true, function() {
         let frame = content.document.getElementById("frame");
         let frameDoc = frame.contentWindow.document;
@@ -53,14 +53,14 @@ add_task(function* testTempPermissionSubframes() {
       });
     });
 
-    yield popupshown;
+    await popupshown;
 
     let popuphidden = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popuphidden");
 
     let notification = PopupNotifications.panel.firstChild;
     EventUtils.synthesizeMouseAtCenter(notification.secondaryButton, {});
 
-    yield popuphidden;
+    await popuphidden;
 
     Assert.deepEqual(SitePermissions.get(uri, id, browser), {
       state: SitePermissions.BLOCK,

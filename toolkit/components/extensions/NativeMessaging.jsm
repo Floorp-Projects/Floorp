@@ -27,8 +27,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Subprocess",
                                   "resource://gre/modules/Subprocess.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "clearTimeout",
                                   "resource://gre/modules/Timer.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
@@ -133,16 +131,16 @@ this.HostManifestManager = {
       });
   },
 
-  _tryPaths: Task.async(function* (application, dirs, context) {
+  async _tryPaths(application, dirs, context) {
     for (let dir of dirs) {
       let path = OS.Path.join(dir, `${application}.json`);
-      let manifest = yield this._tryPath(path, application, context);
+      let manifest = await this._tryPath(path, application, context);
       if (manifest) {
         return {path, manifest};
       }
     }
     return null;
-  }),
+  },
 
   /**
    * Search for a valid native host manifest for the given application name.
@@ -313,10 +311,10 @@ this.NativeApp = class extends EventEmitter {
   _startStderrRead() {
     let proc = this.proc;
     let app = this.name;
-    Task.spawn(function* () {
+    (async function() {
       let partial = "";
       while (true) {
-        let data = yield proc.stderr.readString();
+        let data = await proc.stderr.readString();
         if (data.length == 0) {
           // We have hit EOF, just stop reading
           if (partial) {
@@ -333,7 +331,7 @@ this.NativeApp = class extends EventEmitter {
           Services.console.logStringMessage(`stderr output from native app ${app}: ${line}`);
         }
       }
-    });
+    })();
   }
 
   send(msg) {

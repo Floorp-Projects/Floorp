@@ -7,16 +7,16 @@
  * using nsIWebNavigation's canGoBack, as well as actually going back and then checking
  * canGoForward.
  */
-add_task(function* checkBackFromInvalidURI() {
-  yield pushPrefs(["keyword.enabled", false]);
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:robots", true);
+add_task(async function checkBackFromInvalidURI() {
+  await pushPrefs(["keyword.enabled", false]);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:robots", true);
   info("Loaded about:robots");
 
   gURLBar.value = "::2600";
 
   let promiseErrorPageLoaded = BrowserTestUtils.waitForErrorPage(tab.linkedBrowser);
   gURLBar.handleCommand();
-  yield promiseErrorPageLoaded;
+  await promiseErrorPageLoaded;
 
   ok(gBrowser.webNavigation.canGoBack, "Should be able to go back");
   if (gBrowser.webNavigation.canGoBack) {
@@ -28,8 +28,8 @@ add_task(function* checkBackFromInvalidURI() {
       function(e) { return gBrowser.currentURI.spec == "about:robots" }
     );
     gBrowser.goBack();
-    yield promiseOtherPageLoaded;
+    await promiseOtherPageLoaded;
     ok(gBrowser.webNavigation.canGoForward, "Should be able to go forward from previous page.");
   }
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });

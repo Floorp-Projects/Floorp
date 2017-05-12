@@ -4,11 +4,11 @@ function repeat(limit, func) {
   }
 }
 
-function* promiseAutoComplete(inputText) {
+async function promiseAutoComplete(inputText) {
   gURLBar.focus();
   gURLBar.value = inputText.slice(0, -1);
   EventUtils.synthesizeKey(inputText.slice(-1), {});
-  yield promiseSearchComplete();
+  await promiseSearchComplete();
 }
 
 function is_selected(index) {
@@ -17,12 +17,12 @@ function is_selected(index) {
 
 let gMaxResults;
 
-add_task(function*() {
-  registerCleanupFunction(function* () {
-    yield PlacesTestUtils.clearHistory();
+add_task(async function() {
+  registerCleanupFunction(async function() {
+    await PlacesTestUtils.clearHistory();
   });
 
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
 
   gMaxResults = Services.prefs.getIntPref("browser.urlbar.maxRichResults");
 
@@ -32,10 +32,10 @@ add_task(function*() {
       uri: makeURI("http://example.com/autocomplete/?" + i),
     });
   });
-  yield PlacesTestUtils.addVisits(visits);
+  await PlacesTestUtils.addVisits(visits);
 
   gBrowser.selectedTab = gBrowser.addTab("about:blank");
-  yield promiseAutoComplete("http://example.com/autocomplete/");
+  await promiseAutoComplete("http://example.com/autocomplete/");
 
   let popup = gURLBar.popup;
   let results = popup.richlistbox.children;
@@ -63,7 +63,7 @@ add_task(function*() {
   let autocompletePopupHidden = promisePopupHidden(gURLBar.popup);
   let openedExpectedPage = waitForDocLoadAndStopIt(expectedURL);
   EventUtils.synthesizeKey("VK_RETURN", {});
-  yield Promise.all([autocompletePopupHidden, openedExpectedPage]);
+  await Promise.all([autocompletePopupHidden, openedExpectedPage]);
 
   gBrowser.removeCurrentTab();
 });

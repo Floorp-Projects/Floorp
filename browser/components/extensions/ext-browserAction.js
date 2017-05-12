@@ -16,7 +16,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "DOMUtils",
                                    "inIDOMUtils");
 
 Cu.import("resource://gre/modules/EventEmitter.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 
 var {
   DefaultWeakMap,

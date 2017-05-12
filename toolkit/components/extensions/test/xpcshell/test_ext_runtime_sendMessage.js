@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* tabsSendMessageReply() {
+add_task(async function tabsSendMessageReply() {
   function background() {
     browser.runtime.onMessage.addListener((msg, sender, respond) => {
       if (msg == "respond-now") {
@@ -73,7 +73,7 @@ add_task(function* tabsSendMessageReply() {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("sendMessage");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("sendMessage");
+  await extension.unload();
 });

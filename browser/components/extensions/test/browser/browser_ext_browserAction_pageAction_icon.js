@@ -5,7 +5,7 @@
 // Test that various combinations of icon details specs, for both paths
 // and ImageData objects, result in the correct image being displayed in
 // all display resolutions.
-add_task(function* testDetailsObjects() {
+add_task(async function testDetailsObjects() {
   function background() {
     function getImageData(color) {
       let canvas = document.createElement("canvas");
@@ -258,17 +258,17 @@ add_task(function* testDetailsObjects() {
 
   const RESOLUTION_PREF = "layout.css.devPixelsPerPx";
 
-  yield extension.startup();
+  await extension.startup();
 
   let pageActionId = `${makeWidgetId(extension.id)}-page-action`;
   let browserActionWidget = getBrowserActionWidget(extension);
 
-  let tests = yield extension.awaitMessage("ready");
+  let tests = await extension.awaitMessage("ready");
   for (let test of tests) {
     extension.sendMessage("setIcon", test);
-    yield extension.awaitMessage("iconSet");
+    await extension.awaitMessage("iconSet");
 
-    yield promiseAnimationFrame();
+    await promiseAnimationFrame();
 
     let browserActionButton = browserActionWidget.forWindow(window).node;
     let pageActionImage = document.getElementById(pageActionId);
@@ -276,7 +276,7 @@ add_task(function* testDetailsObjects() {
 
     // Test icon sizes in the toolbar/urlbar.
     for (let resolution of Object.keys(test.resolutions)) {
-      yield SpecialPowers.pushPrefEnv({set: [[RESOLUTION_PREF, resolution]]});
+      await SpecialPowers.pushPrefEnv({set: [[RESOLUTION_PREF, resolution]]});
 
       is(window.devicePixelRatio, +resolution, "window has the required resolution");
 
@@ -287,7 +287,7 @@ add_task(function* testDetailsObjects() {
       let isLegacy = browserActionButton.classList.contains("toolbarbutton-legacy-addon");
       is(isLegacy, test.legacy, "Legacy class should be present?");
 
-      yield SpecialPowers.popPrefEnv();
+      await SpecialPowers.popPrefEnv();
     }
 
     if (!test.menuResolutions) {
@@ -299,25 +299,25 @@ add_task(function* testDetailsObjects() {
     CustomizableUI.addWidgetToArea(browserActionWidget.id,
                                    CustomizableUI.AREA_PANEL);
 
-    yield showBrowserAction(extension);
+    await showBrowserAction(extension);
     browserActionButton = browserActionWidget.forWindow(window).node;
 
     for (let resolution of Object.keys(test.menuResolutions)) {
-      yield SpecialPowers.pushPrefEnv({set: [[RESOLUTION_PREF, resolution]]});
+      await SpecialPowers.pushPrefEnv({set: [[RESOLUTION_PREF, resolution]]});
 
       is(window.devicePixelRatio, +resolution, "window has the required resolution");
 
       let imageURL = test.menuResolutions[resolution];
       is(getListStyleImage(browserActionButton), imageURL, `browser action has the correct menu image at ${resolution}x resolution`);
 
-      yield SpecialPowers.popPrefEnv();
+      await SpecialPowers.popPrefEnv();
     }
 
-    yield closeBrowserAction(extension);
+    await closeBrowserAction(extension);
 
     CustomizableUI.addWidgetToArea(browserActionWidget.id,
                                    CustomizableUI.AREA_NAVBAR);
   }
 
-  yield extension.unload();
+  await extension.unload();
 });

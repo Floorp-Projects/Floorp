@@ -2,21 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-add_task(function* test_ignoreFragment() {
+add_task(async function test_ignoreFragment() {
   let tabRefAboutHome =
-    yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:home#1");
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
+    await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:home#1");
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
   let numTabsAtStart = gBrowser.tabs.length;
 
   switchTab("about:home#1", true);
   switchTab("about:mozilla", true);
 
-  let hashChangePromise = ContentTask.spawn(tabRefAboutHome.linkedBrowser, null, function* () {
-    yield ContentTaskUtils.waitForEvent(this, "hashchange", false);
+  let hashChangePromise = ContentTask.spawn(tabRefAboutHome.linkedBrowser, null, async function() {
+    await ContentTaskUtils.waitForEvent(this, "hashchange", false);
   });
   switchTab("about:home#2", true, { ignoreFragment: "whenComparingAndReplace" });
   is(tabRefAboutHome, gBrowser.selectedTab, "The same about:home tab should be switched to");
-  yield hashChangePromise;
+  await hashChangePromise;
   is(gBrowser.currentURI.ref, "2", "The ref should be updated to the new ref");
   switchTab("about:mozilla", true);
   switchTab("about:home#3", true, { ignoreFragment: "whenComparing" });
@@ -28,7 +28,7 @@ add_task(function* test_ignoreFragment() {
   is(gBrowser.tabs.length, numTabsAtStart + 1, "Should have one new tab opened");
   switchTab("about:mozilla", true);
   switchTab("about:home", true, {ignoreFragment: "whenComparingAndReplace"});
-  yield BrowserTestUtils.waitForCondition(function() {
+  await BrowserTestUtils.waitForCondition(function() {
     return tabRefAboutHome.linkedBrowser.currentURI.spec == "about:home";
   });
   is(tabRefAboutHome.linkedBrowser.currentURI.spec, "about:home", "about:home shouldn't have hash");
@@ -36,10 +36,10 @@ add_task(function* test_ignoreFragment() {
   cleanupTestTabs();
 });
 
-add_task(function* test_ignoreQueryString() {
+add_task(async function test_ignoreQueryString() {
   let tabRefAboutHome =
-    yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:home?hello=firefox");
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
+    await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:home?hello=firefox");
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
 
   switchTab("about:home?hello=firefox", true);
   switchTab("about:home?hello=firefoxos", false);
@@ -51,10 +51,10 @@ add_task(function* test_ignoreQueryString() {
   cleanupTestTabs();
 });
 
-add_task(function* test_replaceQueryString() {
+add_task(async function test_replaceQueryString() {
   let tabRefAboutHome =
-    yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:home?hello=firefox");
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
+    await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:home?hello=firefox");
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
 
   switchTab("about:home", false);
   switchTab("about:home?hello=firefox", true);
@@ -64,16 +64,16 @@ add_task(function* test_replaceQueryString() {
   switchTab("about:home?hello=firefoxos", true, { replaceQueryString: true });
   is(tabRefAboutHome, gBrowser.selectedTab, "Selected tab should be the initial about:home tab");
   // Wait for the tab to load the new URI spec.
-  yield BrowserTestUtils.browserLoaded(tabRefAboutHome.linkedBrowser);
+  await BrowserTestUtils.browserLoaded(tabRefAboutHome.linkedBrowser);
   is(gBrowser.currentURI.spec, "about:home?hello=firefoxos", "The spec should be updated to the new spec");
   cleanupTestTabs();
 });
 
-add_task(function* test_replaceQueryStringAndFragment() {
+add_task(async function test_replaceQueryStringAndFragment() {
   let tabRefAboutHome =
-    yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:home?hello=firefox#aaa");
+    await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:home?hello=firefox#aaa");
   let tabRefAboutMozilla =
-    yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla?hello=firefoxos#aaa");
+    await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla?hello=firefoxos#aaa");
 
   switchTab("about:home", false);
   gBrowser.removeCurrentTab();
@@ -86,10 +86,10 @@ add_task(function* test_replaceQueryStringAndFragment() {
   cleanupTestTabs();
 });
 
-add_task(function* test_ignoreQueryStringIgnoresFragment() {
+add_task(async function test_ignoreQueryStringIgnoresFragment() {
   let tabRefAboutHome =
-    yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:home?hello=firefox#aaa");
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla?hello=firefoxos#aaa");
+    await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:home?hello=firefox#aaa");
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla?hello=firefoxos#aaa");
 
   switchTab("about:home?hello=firefox#bbb", false, { ignoreQueryString: true });
   gBrowser.removeCurrentTab();

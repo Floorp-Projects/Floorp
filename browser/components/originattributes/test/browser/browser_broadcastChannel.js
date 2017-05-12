@@ -6,8 +6,8 @@ const TEST_DOMAIN = "http://example.net/";
 const TEST_PATH = TEST_DOMAIN + "browser/browser/components/originattributes/test/browser/";
 const TEST_PAGE = TEST_PATH + "file_broadcastChannel.html";
 
-function* doTest(aBrowser) {
-  let response = yield ContentTask.spawn(aBrowser, null, function* () {
+async function doTest(aBrowser) {
+  let response = await ContentTask.spawn(aBrowser, null, async function() {
 
     let displayItem = content.document.getElementById("display");
 
@@ -21,7 +21,7 @@ function* doTest(aBrowser) {
     if (displayItem.innerHTML === "") {
       let data = Math.random().toString();
 
-      let receivedData = yield new Promise(resolve => {
+      let receivedData = await new Promise(resolve => {
         let listenFunc = event => {
           content.removeEventListener("message", listenFunc);
           resolve(event.data);

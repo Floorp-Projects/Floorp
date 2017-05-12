@@ -7,7 +7,7 @@
 var initialPageZoom = ZoomManager.zoom;
 const kTimeoutInMS = 20000;
 
-add_task(function* () {
+add_task(async function() {
   info("Confirm whether the browser zoom is set to the default level");
   is(initialPageZoom, 1, "Page zoom is set to default (100%)");
   let zoomResetButton = document.getElementById("urlbar-zoom-button");
@@ -16,7 +16,7 @@ add_task(function* () {
   info("Change zoom and confirm zoom button appears");
   let labelUpdatePromise = BrowserTestUtils.waitForAttribute("label", zoomResetButton);
   FullZoom.enlarge();
-  yield labelUpdatePromise;
+  await labelUpdatePromise;
   info("Zoom increased to " + Math.floor(ZoomManager.zoom * 100) + "%");
   is(zoomResetButton.hidden, false, "Zoom reset button is now visible");
   let pageZoomLevel = Math.floor(ZoomManager.zoom * 100);
@@ -26,26 +26,26 @@ add_task(function* () {
 
   let zoomResetPromise = BrowserTestUtils.waitForEvent(window, "FullZoomChange");
   zoomResetButton.click();
-  yield zoomResetPromise;
+  await zoomResetPromise;
   pageZoomLevel = Math.floor(ZoomManager.zoom * 100);
   expectedZoomLevel = 100;
   is(pageZoomLevel, expectedZoomLevel, "Clicking zoom button successfully resets browser zoom to 100%");
   is(zoomResetButton.hidden, true, "Zoom reset button returns to being hidden");
 });
 
-add_task(function* () {
+add_task(async function() {
   info("Confirm that URL bar zoom button doesn't appear when customizable zoom widget is added to toolbar");
   CustomizableUI.addWidgetToArea("zoom-controls", CustomizableUI.AREA_NAVBAR);
   let zoomCustomizableWidget = document.getElementById("zoom-reset-button");
   let zoomResetButton = document.getElementById("urlbar-zoom-button");
   let zoomChangePromise = BrowserTestUtils.waitForEvent(window, "FullZoomChange");
   FullZoom.enlarge();
-  yield zoomChangePromise;
+  await zoomChangePromise;
   is(zoomResetButton.hidden, true, "URL zoom button remains hidden despite zoom increase");
   is(parseInt(zoomCustomizableWidget.label, 10), 110, "Customizable zoom widget's label has updated to " + zoomCustomizableWidget.label);
 });
 
-add_task(function* asyncCleanup() {
+add_task(async function asyncCleanup() {
   // reset zoom level and customizable widget
   ZoomManager.zoom = initialPageZoom;
   is(ZoomManager.zoom, 1, "Zoom level was restored");

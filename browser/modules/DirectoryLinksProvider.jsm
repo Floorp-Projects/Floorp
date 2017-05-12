@@ -11,7 +11,6 @@ Cu.importGlobalProperties(["XMLHttpRequest"]);
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
   "resource://gre/modules/osfile.jsm")
@@ -154,33 +153,33 @@ var DirectoryLinksProvider = {
    * @return promise resolved to json string, "{}" returned if status != 200
    */
   _downloadJsonData: function DirectoryLinksProvider__downloadJsonData(uri) {
-    let deferred = Promise.defer();
-    let xmlHttp = this._newXHR();
+    return new Promise((resolve, reject) => {
+      let xmlHttp = this._newXHR();
 
-    xmlHttp.onload = function(aResponse) {
-      let json = this.responseText;
-      if (this.status && this.status != 200) {
-        json = "{}";
+      xmlHttp.onload = function(aResponse) {
+        let json = this.responseText;
+        if (this.status && this.status != 200) {
+          json = "{}";
+        }
+        resolve(json);
+      };
+
+      xmlHttp.onerror = function(e) {
+        reject("Fetching " + uri + " results in error code: " + e.target.status);
+      };
+
+      try {
+        xmlHttp.open("GET", uri);
+        // Override the type so XHR doesn't complain about not well-formed XML
+        xmlHttp.overrideMimeType(DIRECTORY_LINKS_TYPE);
+        // Set the appropriate request type for servers that require correct types
+        xmlHttp.setRequestHeader("Content-Type", DIRECTORY_LINKS_TYPE);
+        xmlHttp.send();
+      } catch (e) {
+        reject("Error fetching " + uri);
+        Cu.reportError(e);
       }
-      deferred.resolve(json);
-    };
-
-    xmlHttp.onerror = function(e) {
-      deferred.reject("Fetching " + uri + " results in error code: " + e.target.status);
-    };
-
-    try {
-      xmlHttp.open("GET", uri);
-      // Override the type so XHR doesn't complain about not well-formed XML
-      xmlHttp.overrideMimeType(DIRECTORY_LINKS_TYPE);
-      // Set the appropriate request type for servers that require correct types
-      xmlHttp.setRequestHeader("Content-Type", DIRECTORY_LINKS_TYPE);
-      xmlHttp.send();
-    } catch (e) {
-      deferred.reject("Error fetching " + uri);
-      Cu.reportError(e);
-    }
-    return deferred.promise;
+    });
   },
 
   /**
@@ -331,16 +330,16 @@ var DirectoryLinksProvider = {
     this._directoryFilePath = OS.Path.join(OS.Constants.Path.localProfileDir, DIRECTORY_LINKS_FILE);
     this._lastDownloadMS = 0;
 
-    return Task.spawn(function*() {
+    return (async () => {
       // get the last modified time of the links file if it exists
-      let doesFileExists = yield OS.File.exists(this._directoryFilePath);
+      let doesFileExists = await OS.File.exists(this._directoryFilePath);
       if (doesFileExists) {
-        let fileInfo = yield OS.File.stat(this._directoryFilePath);
+        let fileInfo = await OS.File.stat(this._directoryFilePath);
         this._lastDownloadMS = Date.parse(fileInfo.lastModificationDate);
       }
       // fetch directory on startup without force
-      yield this._fetchAndCacheLinksIfNecessary();
-    }.bind(this));
+      await this._fetchAndCacheLinksIfNecessary();
+    })();
   },
 
   /**

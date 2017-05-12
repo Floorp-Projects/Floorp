@@ -6,9 +6,9 @@
 
 // Create a new window, then move the home button to the menu and check both windows have
 // customizationchange events fire on the toolbox:
-add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
-  let newWindow = yield openAndLoadWindow();
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+  let newWindow = await openAndLoadWindow();
   let otherToolbox = newWindow.gNavToolbox;
 
   let handlerCalledCount = 0;
@@ -28,7 +28,7 @@ add_task(function*() {
   // If the test is run in isolation and the panel has never been open,
   // the button will be in the palette. Deal with this case:
   if (homeButton.parentNode.id == "BrowserToolbarPalette") {
-    yield PanelUI.ensureReady();
+    await PanelUI.ensureReady();
     isnot(homeButton.parentNode.id, "BrowserToolbarPalette", "Home button should now be in panel");
   }
 
@@ -39,9 +39,9 @@ add_task(function*() {
   gNavToolbox.removeEventListener("customizationchange", handler);
   otherToolbox.removeEventListener("customizationchange", handler);
 
-  yield promiseWindowClosed(newWindow);
+  await promiseWindowClosed(newWindow);
 });
 
-add_task(function* asyncCleanup() {
-  yield resetCustomization();
+add_task(async function asyncCleanup() {
+  await resetCustomization();
 });

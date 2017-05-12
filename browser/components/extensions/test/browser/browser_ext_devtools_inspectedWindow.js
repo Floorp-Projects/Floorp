@@ -22,8 +22,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "devtools",
  *   - returns the expected exception when an exception has been raised from the evaluated
  *     javascript code.
  */
-add_task(function* test_devtools_inspectedWindow_tabId() {
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/");
+add_task(async function test_devtools_inspectedWindow_tabId() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/");
 
   async function background() {
     browser.test.assertEq(undefined, browser.devtools,
@@ -87,37 +87,37 @@ add_task(function* test_devtools_inspectedWindow_tabId() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  let backgroundPageCurrentTabId = yield extension.awaitMessage("current-tab-id");
+  let backgroundPageCurrentTabId = await extension.awaitMessage("current-tab-id");
 
   let target = devtools.TargetFactory.forTab(tab);
 
-  yield gDevTools.showToolbox(target, "webconsole");
+  await gDevTools.showToolbox(target, "webconsole");
   info("developer toolbox opened");
 
-  let devtoolsInspectedWindowTabId = yield extension.awaitMessage("inspectedWindow-tab-id");
+  let devtoolsInspectedWindowTabId = await extension.awaitMessage("inspectedWindow-tab-id");
 
   is(devtoolsInspectedWindowTabId, backgroundPageCurrentTabId,
      "Got the expected tabId from devtool.inspectedWindow.tabId");
 
-  let devtoolsPageIframeTabId = yield extension.awaitMessage("devtools_page_iframe.inspectedWindow-tab-id");
+  let devtoolsPageIframeTabId = await extension.awaitMessage("devtools_page_iframe.inspectedWindow-tab-id");
 
   is(devtoolsPageIframeTabId, backgroundPageCurrentTabId,
      "Got the expected tabId from devtool.inspectedWindow.tabId called in a devtool_page iframe");
 
-  yield gDevTools.closeToolbox(target);
+  await gDevTools.closeToolbox(target);
 
-  yield target.destroy();
+  await target.destroy();
 
-  yield extension.unload();
+  await extension.unload();
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });
 
-add_task(function* test_devtools_inspectedWindow_eval() {
+add_task(async function test_devtools_inspectedWindow_eval() {
   const TEST_TARGET_URL = "http://mochi.test:8888/";
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_TARGET_URL);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_TARGET_URL);
 
   function devtools_page() {
     browser.test.onMessage.addListener(async (msg, ...args) => {
@@ -157,11 +157,11 @@ add_task(function* test_devtools_inspectedWindow_eval() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
   let target = devtools.TargetFactory.forTab(tab);
 
-  yield gDevTools.showToolbox(target, "webconsole");
+  await gDevTools.showToolbox(target, "webconsole");
   info("developer toolbox opened");
 
   const evalTestCases = [
@@ -208,7 +208,7 @@ add_task(function* test_devtools_inspectedWindow_eval() {
 
     extension.sendMessage(`inspectedWindow-eval-request`, ...args);
 
-    const {evalResult, errorResult} = yield extension.awaitMessage(`inspectedWindow-eval-result`);
+    const {evalResult, errorResult} = await extension.awaitMessage(`inspectedWindow-eval-result`);
 
     Assert.deepEqual(evalResult, expectedResults.evalResult, "Got the expected eval result");
 
@@ -228,11 +228,11 @@ add_task(function* test_devtools_inspectedWindow_eval() {
     }
   }
 
-  yield gDevTools.closeToolbox(target);
+  await gDevTools.closeToolbox(target);
 
-  yield target.destroy();
+  await target.destroy();
 
-  yield extension.unload();
+  await extension.unload();
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });

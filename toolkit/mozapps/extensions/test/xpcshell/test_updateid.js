@@ -42,21 +42,21 @@ function run_test() {
 }
 
 // Verify that an update to an add-on with a new ID fails
-add_task(function* test_update_new_id() {
-  yield promiseInstallFile(do_get_addon("test_updateid1"));
+add_task(async function test_update_new_id() {
+  await promiseInstallFile(do_get_addon("test_updateid1"));
 
-  let addon = yield promiseAddonByID("addon1@tests.mozilla.org");
+  let addon = await promiseAddonByID("addon1@tests.mozilla.org");
   do_check_neq(addon, null);
   do_check_eq(addon.version, "1.0");
 
-  let update = yield promiseFindAddonUpdates(addon, AddonManager.UPDATE_WHEN_USER_REQUESTED);
+  let update = await promiseFindAddonUpdates(addon, AddonManager.UPDATE_WHEN_USER_REQUESTED);
   let install = update.updateAvailable;
   do_check_eq(install.name, addon.name);
   do_check_eq(install.version, "2.0");
   do_check_eq(install.state, AddonManager.STATE_AVAILABLE);
   do_check_eq(install.existingAddon, addon);
 
-  yield Assert.rejects(promiseInstallUpdate(install),
+  await Assert.rejects(promiseInstallUpdate(install),
                        function(err) { return err.code == AddonManager.ERROR_INCORRECT_ID },
                        "Upgrade to a different ID fails");
 

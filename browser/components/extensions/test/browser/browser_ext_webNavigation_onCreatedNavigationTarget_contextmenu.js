@@ -60,8 +60,8 @@ async function clickContextMenuItem({pageElementSelector, contextMenuItemLabel})
   await closeContextMenu();
 }
 
-add_task(function* test_on_created_navigation_target_from_context_menu() {
-  const tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, SOURCE_PAGE);
+add_task(async function test_on_created_navigation_target_from_context_menu() {
+  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, SOURCE_PAGE);
 
   const extension = ExtensionTestUtils.loadExtension({
     background,
@@ -70,13 +70,13 @@ add_task(function* test_on_created_navigation_target_from_context_menu() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  const expectedSourceTab = yield extension.awaitMessage("expectedSourceTab");
+  const expectedSourceTab = await extension.awaitMessage("expectedSourceTab");
 
   info("Open link in a new tab from the context menu");
 
-  yield runTestCase({
+  await runTestCase({
     extension,
     async openNavTarget() {
       await clickContextMenuItem({
@@ -93,7 +93,7 @@ add_task(function* test_on_created_navigation_target_from_context_menu() {
 
   info("Open link in a new window from the context menu");
 
-  yield runTestCase({
+  await runTestCase({
     extension,
     async openNavTarget() {
       await clickContextMenuItem({
@@ -108,13 +108,13 @@ add_task(function* test_on_created_navigation_target_from_context_menu() {
     },
   });
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* test_on_created_navigation_target_from_context_menu_subframe() {
-  const tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, SOURCE_PAGE);
+add_task(async function test_on_created_navigation_target_from_context_menu_subframe() {
+  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, SOURCE_PAGE);
 
   const extension = ExtensionTestUtils.loadExtension({
     background,
@@ -123,13 +123,13 @@ add_task(function* test_on_created_navigation_target_from_context_menu_subframe(
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  const expectedSourceTab = yield extension.awaitMessage("expectedSourceTab");
+  const expectedSourceTab = await extension.awaitMessage("expectedSourceTab");
 
   info("Open a subframe link in a new tab from the context menu");
 
-  yield runTestCase({
+  await runTestCase({
     extension,
     async openNavTarget() {
       await clickContextMenuItem({
@@ -151,7 +151,7 @@ add_task(function* test_on_created_navigation_target_from_context_menu_subframe(
 
   info("Open a subframe link in a new window from the context menu");
 
-  yield runTestCase({
+  await runTestCase({
     extension,
     async openNavTarget() {
       await clickContextMenuItem({
@@ -171,7 +171,7 @@ add_task(function* test_on_created_navigation_target_from_context_menu_subframe(
     },
   });
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 
-  yield extension.unload();
+  await extension.unload();
 });

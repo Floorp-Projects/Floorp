@@ -1,16 +1,16 @@
-add_task(function*() {
+add_task(async function() {
   const childContent = "<div style='position: absolute; left: 2200px; background: green; width: 200px; height: 200px;'>" +
                        "div</div><div  style='position: absolute; left: 0px; background: red; width: 200px; height: 200px;'>" +
                        "<span id='s'>div</span></div>";
 
   let tab = gBrowser.selectedTab = gBrowser.addTab();
 
-  yield promiseTabLoadEvent(tab, "data:text/html," + escape(childContent));
-  yield SimpleTest.promiseFocus(gBrowser.selectedBrowser.contentWindowAsCPOW);
+  await promiseTabLoadEvent(tab, "data:text/html," + escape(childContent));
+  await SimpleTest.promiseFocus(gBrowser.selectedBrowser.contentWindowAsCPOW);
 
   let findBarOpenPromise = promiseWaitForEvent(gBrowser, "findbaropen");
   EventUtils.synthesizeKey("f", { accelKey: true });
-  yield findBarOpenPromise;
+  await findBarOpenPromise;
 
   ok(gFindBarInitialized, "find bar is now initialized");
 
@@ -19,10 +19,10 @@ add_task(function*() {
   EventUtils.synthesizeKey("d", {});
   EventUtils.synthesizeKey("i", {});
   EventUtils.synthesizeKey("v", {});
-  yield scrollPromise;
+  await scrollPromise;
 
   // Wait for one paint to ensure we've processed the previous key events and scrolling.
-  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     return new Promise(
       resolve => {
         content.requestAnimationFrame(() => {
@@ -35,9 +35,9 @@ add_task(function*() {
   // Finds the div in the red box.
   scrollPromise = promiseWaitForEvent(gBrowser, "scroll");
   EventUtils.synthesizeKey("g", { accelKey: true });
-  yield scrollPromise;
+  await scrollPromise;
 
-  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     Assert.ok(content.document.getElementById("s").getBoundingClientRect().left >= 0,
       "scroll should include find result");
   });

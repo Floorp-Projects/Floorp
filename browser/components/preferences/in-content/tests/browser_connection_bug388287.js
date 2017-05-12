@@ -3,7 +3,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/Task.jsm");
 
 function test() {
   waitForExplicitFinish();
@@ -33,14 +32,14 @@ function test() {
    so it has to be opened as a sub dialog of the main pref tab.
    Open the main tab here.
    */
-  open_preferences(Task.async(function* tabOpened(aContentWindow) {
+  open_preferences(async function tabOpened(aContentWindow) {
     let dialog, dialogClosingPromise;
     let doc, proxyTypePref, sharePref, httpPref, httpPortPref, ftpPref, ftpPortPref;
 
     // Convenient function to reset the variables for the new window
-    function* setDoc() {
+    async function setDoc() {
       if (closeable) {
-        let dialogClosingEvent = yield dialogClosingPromise;
+        let dialogClosingEvent = await dialogClosingPromise;
         ok(dialogClosingEvent, "Connection dialog closed");
       }
 
@@ -50,7 +49,7 @@ function test() {
         return;
       }
 
-      dialog = yield openAndLoadSubDialog(connectionURL);
+      dialog = await openAndLoadSubDialog(connectionURL);
       dialogClosingPromise = waitForEvent(dialog.document.documentElement, "dialogclosing");
 
       doc = dialog.document;
@@ -63,7 +62,7 @@ function test() {
     }
 
     // This batch of tests should not close the dialog
-    yield setDoc();
+    await setDoc();
 
     // Testing HTTP port 0 with share on
     proxyTypePref.value = 1;
@@ -93,7 +92,7 @@ function test() {
     doc.documentElement.acceptDialog();
 
     // HTTP 80, FTP 0, with share on
-    yield setDoc();
+    await setDoc();
     proxyTypePref.value = 1;
     sharePref.value = true;
     ftpPref.value = "localhost";
@@ -103,7 +102,7 @@ function test() {
     doc.documentElement.acceptDialog();
 
     // HTTP host empty, port 0 with share on
-    yield setDoc();
+    await setDoc();
     proxyTypePref.value = 1;
     sharePref.value = true;
     httpPref.value = "";
@@ -111,7 +110,7 @@ function test() {
     doc.documentElement.acceptDialog();
 
     // HTTP 0, but in no proxy mode
-    yield setDoc();
+    await setDoc();
     proxyTypePref.value = 0;
     sharePref.value = true;
     httpPref.value = "localhost";
@@ -120,6 +119,6 @@ function test() {
     // This is the final test, don't spawn another connection window
     finalTest = true;
     doc.documentElement.acceptDialog();
-    yield setDoc();
-  }));
+    await setDoc();
+  });
 }

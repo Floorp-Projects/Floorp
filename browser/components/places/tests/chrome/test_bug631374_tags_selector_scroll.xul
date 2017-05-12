@@ -43,7 +43,7 @@
     function runTest() {
       SimpleTest.waitForExplicitFinish();
 
-      Task.spawn(function* () {
+      (async function() {
         let bs = PlacesUtils.bookmarks;
 
         let tags = ["a", "b", "c", "d", "e", "f", "g",
@@ -51,7 +51,7 @@
 
         // Add a bookmark and tag it.
         let uri1 = Services.io.newURI("http://www1.mozilla.org/");
-        let bm1 = yield bs.insert({
+        let bm1 = await bs.insert({
           parentGuid: bs.toolbarGuid,
           index: bs.DEFAULT_INDEX,
           type: bs.TYPE_BOOKMARK,
@@ -62,7 +62,7 @@
 
         // Add a second bookmark so that tags won't disappear when unchecked.
         let uri2 = Services.io.newURI("http://www2.mozilla.org/");
-        let bm2 = yield bs.insert({
+        let bm2 = await bs.insert({
           parentGuid: bs.toolbarGuid,
           index: bs.DEFAULT_INDEX,
           type: bs.TYPE_BOOKMARK,
@@ -73,11 +73,11 @@
 
         // Init panel.
         ok(gEditItemOverlay, "gEditItemOverlay is in context");
-        let node1 = yield PlacesUIUtils.promiseNodeLikeFromFetchInfo(bm1);
+        let node1 = await PlacesUIUtils.promiseNodeLikeFromFetchInfo(bm1);
         gEditItemOverlay.initPanel({ node: node1 });
         ok(gEditItemOverlay.initialized, "gEditItemOverlay is initialized");
 
-        yield openTagSelector();
+        await openTagSelector();
         let tagsSelector = document.getElementById("editBMPanel_tagsSelector");
 
         // Go by two so there is some untouched tag in the middle.
@@ -110,7 +110,7 @@
         }
 
         // Remove the second bookmark, then nuke some of the tags.
-        yield bs.remove(bm2.guid);
+        await bs.remove(bm2.guid);
 
         // Doing this backwords tests more interesting paths.
         for (let i = tags.length - 1; i >= 0 ; i -= 2) {
@@ -145,8 +145,8 @@
         }
 
         // Cleanup.
-        yield bs.remove(bm1.guid);
-      }).then(SimpleTest.finish).catch(alert);
+        await bs.remove(bm1.guid);
+      })().then(SimpleTest.finish).catch(alert);
     }
 
     function openTagSelector() {

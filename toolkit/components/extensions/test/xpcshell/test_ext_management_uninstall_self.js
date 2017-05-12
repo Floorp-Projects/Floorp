@@ -41,15 +41,15 @@ let promptService = {
   },
 };
 
-add_task(function* setup() {
+add_task(async function setup() {
   let fakePromptService = MockRegistrar.register("@mozilla.org/embedcomp/prompt-service;1", promptService);
   do_register_cleanup(() => {
     MockRegistrar.unregister(fakePromptService);
   });
-  yield ExtensionTestUtils.startAddonManager();
+  await ExtensionTestUtils.startAddonManager();
 });
 
-add_task(function* test_management_uninstall_no_prompt() {
+add_task(async function test_management_uninstall_no_prompt() {
   function background() {
     browser.test.onMessage.addListener(msg => {
       browser.management.uninstallSelf();
@@ -62,15 +62,15 @@ add_task(function* test_management_uninstall_no_prompt() {
     useAddonManager: "temporary",
   });
 
-  yield extension.startup();
-  let addon = yield AddonManager.getAddonByID(id);
+  await extension.startup();
+  let addon = await AddonManager.getAddonByID(id);
   notEqual(addon, null, "Add-on is installed");
   extension.sendMessage("uninstall");
-  yield waitForUninstalled();
+  await waitForUninstalled();
   Services.obs.notifyObservers(extension.extension.file, "flush-cache-entry");
 });
 
-add_task(function* test_management_uninstall_prompt_uninstall() {
+add_task(async function test_management_uninstall_prompt_uninstall() {
   promptService._response = 0;
 
   function background() {
@@ -85,11 +85,11 @@ add_task(function* test_management_uninstall_prompt_uninstall() {
     useAddonManager: "temporary",
   });
 
-  yield extension.startup();
-  let addon = yield AddonManager.getAddonByID(id);
+  await extension.startup();
+  let addon = await AddonManager.getAddonByID(id);
   notEqual(addon, null, "Add-on is installed");
   extension.sendMessage("uninstall");
-  yield waitForUninstalled();
+  await waitForUninstalled();
 
   // Test localization strings
   equal(promptService._confirmExArgs[1], `Uninstall ${manifest.name}`);
@@ -100,7 +100,7 @@ add_task(function* test_management_uninstall_prompt_uninstall() {
   Services.obs.notifyObservers(extension.extension.file, "flush-cache-entry");
 });
 
-add_task(function* test_management_uninstall_prompt_keep() {
+add_task(async function test_management_uninstall_prompt_keep() {
   promptService._response = 1;
 
   function background() {
@@ -120,16 +120,16 @@ add_task(function* test_management_uninstall_prompt_keep() {
     useAddonManager: "temporary",
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  let addon = yield AddonManager.getAddonByID(id);
+  let addon = await AddonManager.getAddonByID(id);
   notEqual(addon, null, "Add-on is installed");
 
   extension.sendMessage("uninstall");
-  yield extension.awaitMessage("uninstall-rejected");
+  await extension.awaitMessage("uninstall-rejected");
 
-  addon = yield AddonManager.getAddonByID(id);
+  addon = await AddonManager.getAddonByID(id);
   notEqual(addon, null, "Add-on remains installed");
 
-  yield extension.unload();
+  await extension.unload();
 });

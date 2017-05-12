@@ -2,11 +2,11 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-add_task(function* () {
+add_task(async function() {
   let firstLocation = "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, firstLocation);
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, firstLocation);
 
-  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
+  await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
     // Push the state before maximizing the window and clicking below.
     content.history.pushState("page2", "page2", "page2");
 
@@ -25,7 +25,7 @@ add_task(function* () {
   var yPixel = boundingRect.top + Math.floor(boundingRect.height / 2);
   var xPixel = 0; // Use the first pixel of the screen since it is maximized.
 
-  let resultLocation = yield new Promise(resolve => {
+  let resultLocation = await new Promise(resolve => {
     window.messageManager.addMessageListener("Test:PopStateOccurred", function statePopped(message) {
       window.messageManager.removeMessageListener("Test:PopStateOccurred", statePopped);
       resolve(message.data.location);

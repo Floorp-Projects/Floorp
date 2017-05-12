@@ -52,7 +52,7 @@ function makeWidgetId(id) {
   return id.replace(/[^a-z0-9_-]/g, "_");
 }
 
-var focusWindow = Task.async(function* focusWindow(win) {
+var focusWindow = async function focusWindow(win) {
   let fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
   if (fm.activeWindow == win) {
     return;
@@ -65,8 +65,8 @@ var focusWindow = Task.async(function* focusWindow(win) {
   });
 
   win.focus();
-  yield promise;
-});
+  await promise;
+};
 
 function imageBufferFromDataURI(encodedImageData) {
   let decodedImageData = atob(encodedImageData);
@@ -116,7 +116,7 @@ function promisePopupHidden(popup) {
 }
 
 function promisePossiblyInaccurateContentDimensions(browser) {
-  return ContentTask.spawn(browser, null, function* () {
+  return ContentTask.spawn(browser, null, async function() {
     function copyProps(obj, props) {
       let res = {};
       for (let prop of props) {
@@ -186,19 +186,19 @@ var awaitBrowserLoaded = browser => ContentTask.spawn(browser, null, () => {
   }
 });
 
-var awaitExtensionPanel = Task.async(function* (extension, win = window, awaitLoad = true) {
-  let {originalTarget: browser} = yield BrowserTestUtils.waitForEvent(
+var awaitExtensionPanel = async function(extension, win = window, awaitLoad = true) {
+  let {originalTarget: browser} = await BrowserTestUtils.waitForEvent(
     win.document, "WebExtPopupLoaded", true,
     event => event.detail.extension.id === extension.id);
 
-  yield Promise.all([
+  await Promise.all([
     promisePopupShown(getPanelForNode(browser)),
 
     awaitLoad && awaitBrowserLoaded(browser, awaitLoad),
   ]);
 
   return browser;
-});
+};
 
 function getBrowserActionWidget(extension) {
   return CustomizableUI.getWidget(makeWidgetId(extension.id) + "-browser-action");
@@ -213,25 +213,25 @@ function getBrowserActionPopup(extension, win = window) {
   return win.PanelUI.panel;
 }
 
-var showBrowserAction = Task.async(function* (extension, win = window) {
+var showBrowserAction = async function(extension, win = window) {
   let group = getBrowserActionWidget(extension);
   let widget = group.forWindow(win);
 
   if (group.areaType == CustomizableUI.TYPE_TOOLBAR) {
     ok(!widget.overflowed, "Expect widget not to be overflowed");
   } else if (group.areaType == CustomizableUI.TYPE_MENU_PANEL) {
-    yield win.PanelUI.show();
+    await win.PanelUI.show();
   }
-});
+};
 
-var clickBrowserAction = Task.async(function* (extension, win = window) {
-  yield promiseAnimationFrame(win);
-  yield showBrowserAction(extension, win);
+var clickBrowserAction = async function(extension, win = window) {
+  await promiseAnimationFrame(win);
+  await showBrowserAction(extension, win);
 
   let widget = getBrowserActionWidget(extension).forWindow(win);
 
   EventUtils.synthesizeMouseAtCenter(widget.node, {}, win);
-});
+};
 
 function closeBrowserAction(extension, win = window) {
   let group = getBrowserActionWidget(extension);
@@ -320,11 +320,11 @@ async function openChromeContextMenu(menuId, target, win = window) {
   return menu;
 }
 
-function* openSubmenu(submenuItem, win = window) {
+async function openSubmenu(submenuItem, win = window) {
   const submenu = submenuItem.firstChild;
   const shown = BrowserTestUtils.waitForEvent(submenu, "popupshown");
   EventUtils.synthesizeMouseAtCenter(submenuItem, {}, win);
-  yield shown;
+  await shown;
   return submenu;
 }
 

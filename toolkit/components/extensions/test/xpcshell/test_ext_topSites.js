@@ -45,7 +45,7 @@ function makeLinks(links) {
   return places;
 }
 
-add_task(function* test_topSites() {
+add_task(async function test_topSites() {
   let expect = [{url: "http://example.com/", title: "site#-1"},
                 {url: "http://example0.com/", title: "site#0"},
                 {url: "http://example1.com/", title: "site#1"},
@@ -72,14 +72,14 @@ add_task(function* test_topSites() {
   NewTabUtils.initWithoutProviders();
   NewTabUtils.links.addProvider(provider);
 
-  yield NewTabUtils.links.populateCache();
+  await NewTabUtils.links.populateCache();
 
-  yield extension.startup();
+  await extension.startup();
 
-  let result = yield extension.awaitMessage("done");
+  let result = await extension.awaitMessage("done");
   Assert.deepEqual(expect, result, "got topSites");
 
-  yield extension.unload();
+  await extension.unload();
 
   NewTabUtils.links.removeProvider(provider);
 });

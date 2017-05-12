@@ -47,9 +47,9 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_onlyBookmarked() {
+add_task(async function test_onlyBookmarked() {
   // This function in head_queries.js creates our database with the above data
-  yield task_populateDB(testData);
+  await task_populateDB(testData);
 
   // Query
   var query = PlacesUtils.history.getNewQuery();
@@ -89,7 +89,7 @@ add_task(function* test_onlyBookmarked() {
       isInQuery: false }
   ];
 
-  yield task_populateDB(liveUpdateTestData); // add to the db
+  await task_populateDB(liveUpdateTestData); // add to the db
 
   // add to the test data
   testData.push(liveUpdateTestData[0]);

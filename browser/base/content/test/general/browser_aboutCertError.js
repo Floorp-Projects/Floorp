@@ -12,103 +12,103 @@ const BAD_STS_CERT = "https://badchain.include-subdomains.pinning.example.com:44
 const {TabStateFlusher} = Cu.import("resource:///modules/sessionstore/TabStateFlusher.jsm", {});
 const ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
 
-add_task(function* checkReturnToAboutHome() {
+add_task(async function checkReturnToAboutHome() {
   info("Loading a bad cert page directly and making sure 'return to previous page' goes to about:home");
   let browser;
   let certErrorLoaded;
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
     gBrowser.selectedTab = gBrowser.addTab(BAD_CERT);
     browser = gBrowser.selectedBrowser;
     certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
   }, false);
 
   info("Loading and waiting for the cert error");
-  yield certErrorLoaded;
+  await certErrorLoaded;
 
   is(browser.webNavigation.canGoBack, false, "!webNavigation.canGoBack");
   is(browser.webNavigation.canGoForward, false, "!webNavigation.canGoForward");
 
   // Populate the shistory entries manually, since it happens asynchronously
   // and the following tests will be too soon otherwise.
-  yield TabStateFlusher.flush(browser);
+  await TabStateFlusher.flush(browser);
   let {entries} = JSON.parse(ss.getTabState(tab));
   is(entries.length, 1, "there is one shistory entry");
 
   info("Clicking the go back button on about:certerror");
-  yield ContentTask.spawn(browser, null, function* () {
+  await ContentTask.spawn(browser, null, async function() {
     let doc = content.document;
     let returnButton = doc.getElementById("returnButton");
     is(returnButton.getAttribute("autofocus"), "true", "returnButton has autofocus");
     returnButton.click();
 
-    yield ContentTaskUtils.waitForEvent(this, "pageshow", true);
+    await ContentTaskUtils.waitForEvent(this, "pageshow", true);
   });
 
   is(browser.webNavigation.canGoBack, true, "webNavigation.canGoBack");
   is(browser.webNavigation.canGoForward, false, "!webNavigation.canGoForward");
   is(gBrowser.currentURI.spec, "about:home", "Went back");
 
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
-add_task(function* checkReturnToPreviousPage() {
+add_task(async function checkReturnToPreviousPage() {
   info("Loading a bad cert page and making sure 'return to previous page' goes back");
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, GOOD_PAGE);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, GOOD_PAGE);
   let browser = gBrowser.selectedBrowser;
 
   info("Loading and waiting for the cert error");
   let certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
   BrowserTestUtils.loadURI(browser, BAD_CERT);
-  yield certErrorLoaded;
+  await certErrorLoaded;
 
   is(browser.webNavigation.canGoBack, true, "webNavigation.canGoBack");
   is(browser.webNavigation.canGoForward, false, "!webNavigation.canGoForward");
 
   // Populate the shistory entries manually, since it happens asynchronously
   // and the following tests will be too soon otherwise.
-  yield TabStateFlusher.flush(browser);
+  await TabStateFlusher.flush(browser);
   let {entries} = JSON.parse(ss.getTabState(tab));
   is(entries.length, 2, "there are two shistory entries");
 
   info("Clicking the go back button on about:certerror");
-  yield ContentTask.spawn(browser, null, function* () {
+  await ContentTask.spawn(browser, null, async function() {
     let doc = content.document;
     let returnButton = doc.getElementById("returnButton");
     returnButton.click();
 
-    yield ContentTaskUtils.waitForEvent(this, "pageshow", true);
+    await ContentTaskUtils.waitForEvent(this, "pageshow", true);
   });
 
   is(browser.webNavigation.canGoBack, false, "!webNavigation.canGoBack");
   is(browser.webNavigation.canGoForward, true, "webNavigation.canGoForward");
   is(gBrowser.currentURI.spec, GOOD_PAGE, "Went back");
 
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
-add_task(function* checkBadStsCert() {
+add_task(async function checkBadStsCert() {
   info("Loading a badStsCert and making sure exception button doesn't show up");
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, GOOD_PAGE);
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, GOOD_PAGE);
   let browser = gBrowser.selectedBrowser;
 
   info("Loading and waiting for the cert error");
   let certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
   BrowserTestUtils.loadURI(browser, BAD_STS_CERT);
-  yield certErrorLoaded;
+  await certErrorLoaded;
 
-  let exceptionButtonHidden = yield ContentTask.spawn(browser, null, function* () {
+  let exceptionButtonHidden = await ContentTask.spawn(browser, null, async function() {
     let doc = content.document;
     let exceptionButton = doc.getElementById("exceptionDialogButton");
     return exceptionButton.hidden;
   });
   ok(exceptionButtonHidden, "Exception button is hidden");
 
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 // This checks that the appinfo.appBuildID starts with a date string,
 // which is required for the misconfigured system time check.
-add_task(function* checkAppBuildIDIsDate() {
+add_task(async function checkAppBuildIDIsDate() {
   let appBuildID = Services.appinfo.appBuildID;
   let year = parseInt(appBuildID.substr(0, 4), 10);
   let month = parseInt(appBuildID.substr(4, 2), 10);
@@ -121,20 +121,20 @@ add_task(function* checkAppBuildIDIsDate() {
 
 const PREF_BLOCKLIST_CLOCK_SKEW_SECONDS = "services.blocklist.clock_skew_seconds";
 
-add_task(function* checkWrongSystemTimeWarning() {
-  function* setUpPage() {
+add_task(async function checkWrongSystemTimeWarning() {
+  async function setUpPage() {
     let browser;
     let certErrorLoaded;
-    yield BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
+    await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
       gBrowser.selectedTab = gBrowser.addTab(BAD_CERT);
       browser = gBrowser.selectedBrowser;
       certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
     }, false);
 
     info("Loading and waiting for the cert error");
-    yield certErrorLoaded;
+    await certErrorLoaded;
 
-    return yield ContentTask.spawn(browser, null, function* () {
+    return await ContentTask.spawn(browser, null, async function() {
       let doc = content.document;
       let div = doc.getElementById("wrongSystemTimePanel");
       let systemDateDiv = doc.getElementById("wrongSystemTime_systemDate");
@@ -161,10 +161,10 @@ add_task(function* checkWrongSystemTimeWarning() {
   let localDateFmt = formatter.format(new Date());
 
   let skew = Math.floor((Date.now() - serverDate.getTime()) / 1000);
-  yield SpecialPowers.pushPrefEnv({set: [[PREF_BLOCKLIST_CLOCK_SKEW_SECONDS, skew]]});
+  await SpecialPowers.pushPrefEnv({set: [[PREF_BLOCKLIST_CLOCK_SKEW_SECONDS, skew]]});
 
   info("Loading a bad cert page with a skewed clock");
-  let message = yield Task.spawn(setUpPage);
+  let message = await setUpPage();
 
   isnot(message.divDisplay, "none", "Wrong time message information is visible");
   ok(message.text.includes("clock appears to show the wrong time"),
@@ -174,7 +174,7 @@ add_task(function* checkWrongSystemTimeWarning() {
   ok(message.actualDate.includes(serverDateFmt), "correct server date displayed");
   ok(message.learnMoreLink.includes("time-errors"), "time-errors in the Learn More URL");
 
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   // pretend we have a negatively skewed (behind) system time
   serverDate = new Date();
@@ -182,10 +182,10 @@ add_task(function* checkWrongSystemTimeWarning() {
   serverDateFmt = formatter.format(serverDate);
 
   skew = Math.floor((Date.now() - serverDate.getTime()) / 1000);
-  yield SpecialPowers.pushPrefEnv({set: [[PREF_BLOCKLIST_CLOCK_SKEW_SECONDS, skew]]});
+  await SpecialPowers.pushPrefEnv({set: [[PREF_BLOCKLIST_CLOCK_SKEW_SECONDS, skew]]});
 
   info("Loading a bad cert page with a skewed clock");
-  message = yield Task.spawn(setUpPage);
+  message = await setUpPage();
 
   isnot(message.divDisplay, "none", "Wrong time message information is visible");
   ok(message.text.includes("clock appears to show the wrong time"),
@@ -194,45 +194,45 @@ add_task(function* checkWrongSystemTimeWarning() {
   ok(message.systemDate.includes(localDateFmt), "correct local date displayed");
   ok(message.actualDate.includes(serverDateFmt), "correct server date displayed");
 
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   // pretend we only have a slightly skewed system time, four hours
   skew = 60 * 60 * 4;
-  yield SpecialPowers.pushPrefEnv({set: [[PREF_BLOCKLIST_CLOCK_SKEW_SECONDS, skew]]});
+  await SpecialPowers.pushPrefEnv({set: [[PREF_BLOCKLIST_CLOCK_SKEW_SECONDS, skew]]});
 
   info("Loading a bad cert page with an only slightly skewed clock");
-  message = yield Task.spawn(setUpPage);
+  message = await setUpPage();
 
   is(message.divDisplay, "none", "Wrong time message information is not visible");
 
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   // now pretend we have no skewed system time
   skew = 0;
-  yield SpecialPowers.pushPrefEnv({set: [[PREF_BLOCKLIST_CLOCK_SKEW_SECONDS, skew]]});
+  await SpecialPowers.pushPrefEnv({set: [[PREF_BLOCKLIST_CLOCK_SKEW_SECONDS, skew]]});
 
   info("Loading a bad cert page with no skewed clock");
-  message = yield Task.spawn(setUpPage);
+  message = await setUpPage();
 
   is(message.divDisplay, "none", "Wrong time message information is not visible");
 
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
-add_task(function* checkAdvancedDetails() {
+add_task(async function checkAdvancedDetails() {
   info("Loading a bad cert page and verifying the main error and advanced details section");
   let browser;
   let certErrorLoaded;
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
     gBrowser.selectedTab = gBrowser.addTab(BAD_CERT);
     browser = gBrowser.selectedBrowser;
     certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
   }, false);
 
   info("Loading and waiting for the cert error");
-  yield certErrorLoaded;
+  await certErrorLoaded;
 
-  let message = yield ContentTask.spawn(browser, null, function* () {
+  let message = await ContentTask.spawn(browser, null, async function() {
     let doc = content.document;
     let shortDescText = doc.getElementById("errorShortDescText");
     info("Main error text: " + shortDescText.textContent);
@@ -248,7 +248,7 @@ add_task(function* checkAdvancedDetails() {
      "Correct error message found");
   is(message.tagName, "a", "Error message is a link");
 
-  message = yield ContentTask.spawn(browser, null, function* () {
+  message = await ContentTask.spawn(browser, null, async function() {
     let doc = content.document;
     let errorCode = doc.getElementById("errorCode");
     errorCode.click();
@@ -278,23 +278,23 @@ add_task(function* checkAdvancedDetails() {
   let certChain = getCertChain(message.securityInfoAsString);
   ok(message.text.includes(certChain), "Found certificate chain");
 
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
-add_task(function* checkAdvancedDetailsForHSTS() {
+add_task(async function checkAdvancedDetailsForHSTS() {
   info("Loading a bad STS cert page and verifying the advanced details section");
   let browser;
   let certErrorLoaded;
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
     gBrowser.selectedTab = gBrowser.addTab(BAD_STS_CERT);
     browser = gBrowser.selectedBrowser;
     certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
   }, false);
 
   info("Loading and waiting for the cert error");
-  yield certErrorLoaded;
+  await certErrorLoaded;
 
-  let message = yield ContentTask.spawn(browser, null, function* () {
+  let message = await ContentTask.spawn(browser, null, async function() {
     let doc = content.document;
     let advancedButton = doc.getElementById("advancedButton");
     advancedButton.click();
@@ -317,7 +317,7 @@ add_task(function* checkAdvancedDetailsForHSTS() {
      "Correct cert_domain_link contents found");
   is(message.cdlTagName, "a", "cert_domain_link is a link");
 
-  message = yield ContentTask.spawn(browser, null, function* () {
+  message = await ContentTask.spawn(browser, null, async function() {
     let doc = content.document;
     let errorCode = doc.getElementById("errorCode");
     errorCode.click();
@@ -347,29 +347,29 @@ add_task(function* checkAdvancedDetailsForHSTS() {
   let certChain = getCertChain(message.securityInfoAsString);
   ok(message.text.includes(certChain), "Found certificate chain");
 
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
-add_task(function* checkUnknownIssuerLearnMoreLink() {
+add_task(async function checkUnknownIssuerLearnMoreLink() {
   info("Loading a cert error for self-signed pages and checking the correct link is shown");
   let browser;
   let certErrorLoaded;
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
     gBrowser.selectedTab = gBrowser.addTab(UNKNOWN_ISSUER);
     browser = gBrowser.selectedBrowser;
     certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
   }, false);
 
   info("Loading and waiting for the cert error");
-  yield certErrorLoaded;
+  await certErrorLoaded;
 
-  let href = yield ContentTask.spawn(browser, null, function* () {
+  let href = await ContentTask.spawn(browser, null, async function() {
     let learnMoreLink = content.document.getElementById("learnMoreLink");
     return learnMoreLink.href;
   });
   ok(href.endsWith("security-error"), "security-error in the Learn More URL");
 
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 function getCertChain(securityInfoAsString) {

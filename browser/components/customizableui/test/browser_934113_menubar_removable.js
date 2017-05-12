@@ -5,8 +5,8 @@
 "use strict";
 
 // Attempting to drag the menubar to the navbar shouldn't work.
-add_task(function*() {
-  yield startCustomizing();
+add_task(async function() {
+  await startCustomizing();
   let menuItems = document.getElementById("menubar-items");
   let navbar = document.getElementById("nav-bar");
   let menubar = document.getElementById("toolbar-menubar");
@@ -21,10 +21,10 @@ add_task(function*() {
   isnot(getAreaWidgetIds("toolbar-menubar").indexOf("menubar-items"), -1,
         "Menubar items shouldn't be missing from the navbar.");
   menubar.setAttribute("autohide", kAutohide);
-  yield endCustomizing();
+  await endCustomizing();
 });
 
-add_task(function* asyncCleanup() {
-  yield endCustomizing();
-  yield resetCustomization();
+add_task(async function asyncCleanup() {
+  await endCustomizing();
+  await resetCustomization();
 });

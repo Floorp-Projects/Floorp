@@ -34,13 +34,13 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_execute() {
+add_task(async function test_execute() {
   // we have a new profile, so we should have imported bookmarks
   do_check_eq(histsvc.databaseStatus, histsvc.DATABASE_STATUS_CREATE);
 
   // add a visit
   var testURI = uri("http://mozilla.com");
-  yield PlacesTestUtils.addVisits(testURI);
+  await PlacesTestUtils.addVisits(testURI);
 
   // now query for the visit, setting sorting and limit such that
   // we should retrieve only the visit we just added
@@ -67,8 +67,8 @@ add_task(function* test_execute() {
 
   // add another visit for the same URI, and a third visit for a different URI
   var testURI2 = uri("http://google.com/");
-  yield PlacesTestUtils.addVisits(testURI);
-  yield PlacesTestUtils.addVisits(testURI2);
+  await PlacesTestUtils.addVisits(testURI);
+  await PlacesTestUtils.addVisits(testURI2);
 
   options.maxResults = 5;
   options.resultType = options.RESULTS_AS_URI;
@@ -147,8 +147,8 @@ add_task(function* test_execute() {
   do_check_true(!histsvc.historyDisabled);
 
   // test getPageTitle
-  yield PlacesTestUtils.addVisits({ uri: uri("http://example.com"), title: "title" });
-  let placeInfo = yield PlacesUtils.promisePlaceInfo(uri("http://example.com"));
+  await PlacesTestUtils.addVisits({ uri: uri("http://example.com"), title: "title" });
+  let placeInfo = await PlacesUtils.promisePlaceInfo(uri("http://example.com"));
   do_check_eq(placeInfo.title, "title");
 
   // query for the visit
@@ -168,7 +168,7 @@ add_task(function* test_execute() {
   }
 
   // bug 394741 - regressed history text searches
-  yield PlacesTestUtils.addVisits(uri("http://mozilla.com"));
+  await PlacesTestUtils.addVisits(uri("http://mozilla.com"));
   options = histsvc.getNewQueryOptions();
   // options.resultType = options.RESULTS_AS_VISIT;
   query = histsvc.getNewQuery();

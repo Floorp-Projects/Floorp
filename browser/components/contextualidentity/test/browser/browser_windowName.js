@@ -11,35 +11,35 @@ const USER_CONTEXTS = [
 const BASE_URI = "http://mochi.test:8888/browser/browser/components/"
   + "contextualidentity/test/browser/empty_file.html";
 
-add_task(function* setup() {
+add_task(async function setup() {
   // make sure userContext is enabled.
-  yield SpecialPowers.pushPrefEnv({"set": [
+  await SpecialPowers.pushPrefEnv({"set": [
     ["privacy.userContext.enabled", true],
     ["browser.link.open_newwindow", 3],
   ]});
 });
 
-add_task(function* test() {
+add_task(async function test() {
   info("Creating first tab...");
   let tab1 = gBrowser.addTab(BASE_URI + "?old", {userContextId: 1});
   let browser1 = gBrowser.getBrowserForTab(tab1);
-  yield BrowserTestUtils.browserLoaded(browser1);
-  yield ContentTask.spawn(browser1, null, function(opts) {
+  await BrowserTestUtils.browserLoaded(browser1);
+  await ContentTask.spawn(browser1, null, function(opts) {
     content.window.name = "tab-1";
   });
 
   info("Creating second tab...");
   let tab2 = gBrowser.addTab(BASE_URI + "?old", {userContextId: 2});
   let browser2 = gBrowser.getBrowserForTab(tab2);
-  yield BrowserTestUtils.browserLoaded(browser2);
-  yield ContentTask.spawn(browser2, null, function(opts) {
+  await BrowserTestUtils.browserLoaded(browser2);
+  await ContentTask.spawn(browser2, null, function(opts) {
     content.window.name = "tab-2";
   });
 
   // Let's try to open a window from tab1 with a name 'tab-2'.
   info("Opening a window from the first tab...");
-  yield ContentTask.spawn(browser1, { url: BASE_URI + "?new" }, function* (opts) {
-    yield (new content.window.wrappedJSObject.Promise(resolve => {
+  await ContentTask.spawn(browser1, { url: BASE_URI + "?new" }, async function(opts) {
+    await (new content.window.wrappedJSObject.Promise(resolve => {
       let w = content.window.wrappedJSObject.open(opts.url, "tab-2");
       w.onload = function() { resolve(); }
     }));

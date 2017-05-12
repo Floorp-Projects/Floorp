@@ -21,9 +21,9 @@ autocompleteObject.populatePreloadedSiteStorage([
   [gooogleURI.spec, "Gooogle"],
 ]);
 
-function *assert_feature_works(condition) {
+async function assert_feature_works(condition) {
   do_print("List Results do appear " + condition);
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "ooo",
     matches: [
       { uri: yahoooURI, title: "Yahooo",  style: ["preloaded-top-site"] },
@@ -32,16 +32,16 @@ function *assert_feature_works(condition) {
   });
 
   do_print("Autofill does appear " + condition);
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "gooo",
     autofilled: "gooogle.com/", // Will fail without trailing slash
     completed: "https://gooogle.com/",
   });
 }
 
-function *assert_feature_does_not_appear(condition) {
+async function assert_feature_does_not_appear(condition) {
   do_print("List Results don't appear " + condition);
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "ooo",
     matches: [],
   });
@@ -52,39 +52,39 @@ function *assert_feature_does_not_appear(condition) {
   // "completed" is what you get there when you hit enter.
   // So if they are all equal - it's the proof there was no autofill
   // (knowing we have a suitable preloaded top site).
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "gooo",
     autofilled: "gooo",
     completed: "gooo",
   });
 }
 
-add_task(function* test_it_works() {
+add_task(async function test_it_works() {
   // Not expired but OFF
   Services.prefs.setIntPref(PREF_FEATURE_EXPIRE_DAYS, 14);
   Services.prefs.setBoolPref(PREF_FEATURE_ENABLED, false);
-  yield assert_feature_does_not_appear("when OFF by prefs");
+  await assert_feature_does_not_appear("when OFF by prefs");
 
   // Now turn it ON
   Services.prefs.setBoolPref(PREF_FEATURE_ENABLED, true);
-  yield assert_feature_works("when ON by prefs");
+  await assert_feature_works("when ON by prefs");
 
   // And expire
   Services.prefs.setIntPref(PREF_FEATURE_EXPIRE_DAYS, 0);
-  yield assert_feature_does_not_appear("when expired");
+  await assert_feature_does_not_appear("when expired");
 
-  yield cleanup();
+  await cleanup();
 });
 
-add_task(function* test_sorting_against_bookmark() {
+add_task(async function test_sorting_against_bookmark() {
   let boookmarkURI = NetUtil.newURI("https://boookmark.com");
-  yield addBookmark( { uri: boookmarkURI, title: "Boookmark" } );
+  await addBookmark( { uri: boookmarkURI, title: "Boookmark" } );
 
   Services.prefs.setBoolPref(PREF_FEATURE_ENABLED, true);
   Services.prefs.setIntPref(PREF_FEATURE_EXPIRE_DAYS, 14);
 
   do_print("Preloaded Top Sites are placed lower than Bookmarks");
-  yield check_autocomplete({
+  await check_autocomplete({
     checkSorting: true,
     search: "ooo",
     matches: [
@@ -94,18 +94,18 @@ add_task(function* test_sorting_against_bookmark() {
     ],
   });
 
-  yield cleanup();
+  await cleanup();
 });
 
-add_task(function* test_sorting_against_history() {
+add_task(async function test_sorting_against_history() {
   let histoooryURI = NetUtil.newURI("https://histooory.com");
-  yield PlacesTestUtils.addVisits( { uri: histoooryURI, title: "Histooory" } );
+  await PlacesTestUtils.addVisits( { uri: histoooryURI, title: "Histooory" } );
 
   Services.prefs.setBoolPref(PREF_FEATURE_ENABLED, true);
   Services.prefs.setIntPref(PREF_FEATURE_EXPIRE_DAYS, 14);
 
   do_print("Preloaded Top Sites are placed lower than History entries");
-  yield check_autocomplete({
+  await check_autocomplete({
     checkSorting: true,
     search: "ooo",
     matches: [
@@ -115,10 +115,10 @@ add_task(function* test_sorting_against_history() {
     ],
   });
 
-  yield cleanup();
+  await cleanup();
 });
 
-add_task(function* test_scheme_and_www() {
+add_task(async function test_scheme_and_www() {
   // Order is important to check sorting
   let sites = [
     ["https://www.ooops-https-www.com/", "Ooops"],
@@ -282,7 +282,7 @@ add_task(function* test_scheme_and_www() {
   for (let test of tests) {
     let matches = test[3] ? test[3].map(toMatch) : null;
     do_print("User types: " + test[0]);
-    yield check_autocomplete({
+    await check_autocomplete({
       checkSorting: true,
       search: test[0],
       autofilled: test[1].toLowerCase(),
@@ -291,17 +291,17 @@ add_task(function* test_scheme_and_www() {
     });
   }
 
-  yield cleanup();
+  await cleanup();
 });
 
-add_task(function* test_data_file() {
-  let response = yield fetch("chrome://global/content/unifiedcomplete-top-urls.json");
+add_task(async function test_data_file() {
+  let response = await fetch("chrome://global/content/unifiedcomplete-top-urls.json");
 
   do_print("Source file is supplied and fetched OK");
   Assert.ok(response.ok);
 
   do_print("The JSON is parsed");
-  let sites = yield response.json();
+  let sites = await response.json();
 
   do_print("Storage is populated");
   autocompleteObject.populatePreloadedSiteStorage(sites);
@@ -310,11 +310,11 @@ add_task(function* test_data_file() {
   let uri = NetUtil.newURI(lastSite[0]);
 
   do_print("Storage is populated from JSON correctly");
-  yield check_autocomplete({
+  await check_autocomplete({
     search: uri.host,
     autofilled: uri.host + "/",
     completed: uri.spec,
   });
 
-  yield cleanup();
+  await cleanup();
 });

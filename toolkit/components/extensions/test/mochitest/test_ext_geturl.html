@@ -52,17 +52,17 @@ let extensionData = {
   },
 };
 
-add_task(function* test_contentscript() {
+add_task(async function test_contentscript() {
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield extension.startup();
+  await extension.startup();
 
   let win = window.open("file_sample.html");
 
-  yield Promise.all([waitForLoad(win), extension.awaitFinish("geturl")]);
+  await Promise.all([waitForLoad(win), extension.awaitFinish("geturl")]);
 
   win.close();
 
-  yield extension.unload();
+  await extension.unload();
   info("extension unloaded");
 });
 

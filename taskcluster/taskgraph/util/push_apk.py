@@ -9,7 +9,10 @@ import re
 
 from taskgraph.util.schema import validate_schema
 
-REQUIRED_ARCHITECTURES = ('android-x86', 'android-api-15')
+REQUIRED_ARCHITECTURES = {
+    'android-x86-nightly',
+    'android-api-15-nightly',
+}
 PLATFORM_REGEX = re.compile(r'signing-android-(\S+)-nightly')
 
 
@@ -36,15 +39,9 @@ def validate_dependent_tasks_transform(_, jobs):
 
 
 def check_every_architecture_is_present_in_dependent_tasks(dependent_tasks):
-    dependencies_labels = [task.label for task in dependent_tasks]
-
-    is_this_required_architecture_present = {
-        architecture: any(architecture in label for label in dependencies_labels)
-        for architecture in REQUIRED_ARCHITECTURES
-    }
-    are_all_required_achitectures_present = all(is_this_required_architecture_present.values())
-
-    if not are_all_required_achitectures_present:
+    dep_platforms = set(t.attributes.get('build_platform') for t in dependent_tasks)
+    missed_architectures = REQUIRED_ARCHITECTURES - dep_platforms
+    if missed_architectures:
         raise Exception('''One or many required architectures are missing.
 
 Required architectures: {}.

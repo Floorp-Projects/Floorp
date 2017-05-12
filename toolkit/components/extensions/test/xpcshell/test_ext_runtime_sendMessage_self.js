@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(function* test_sendMessage_to_self_should_not_trigger_onMessage() {
+add_task(async function test_sendMessage_to_self_should_not_trigger_onMessage() {
   async function background() {
     browser.runtime.onMessage.addListener(msg => {
       browser.test.assertEq("msg from child", msg);
@@ -41,11 +41,11 @@ add_task(function* test_sendMessage_to_self_should_not_trigger_onMessage() {
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitMessage("sendMessage callback called");
+  await extension.awaitMessage("sendMessage callback called");
   extension.sendMessage("sendMessage with a listener in another frame");
-  yield extension.awaitFinish("sendMessage did not call same-frame onMessage");
+  await extension.awaitFinish("sendMessage did not call same-frame onMessage");
 
-  yield extension.unload();
+  await extension.unload();
 });

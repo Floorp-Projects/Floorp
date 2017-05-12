@@ -36,7 +36,7 @@ let gFirstPartyBasicPage = TEST_URL_PATH + "file_firstPartyBasic.html";
  * @return tab     - The tab object of this tab.
  *         browser - The browser object of this tab.
  */
-function* openTabInUserContext(aURL, aUserContextId) {
+async function openTabInUserContext(aURL, aUserContextId) {
   // Open the tab in the correct userContextId.
   let tab = gBrowser.addTab(aURL, {userContextId: aUserContextId});
 
@@ -45,7 +45,7 @@ function* openTabInUserContext(aURL, aUserContextId) {
   tab.ownerGlobal.focus();
 
   let browser = gBrowser.getBrowserForTab(tab);
-  yield BrowserTestUtils.browserLoaded(browser);
+  await BrowserTestUtils.browserLoaded(browser);
   return {tab, browser};
 }
 
@@ -69,7 +69,7 @@ function* openTabInUserContext(aURL, aUserContextId) {
  * @return tab     - The tab object of this tab.
  *         browser - The browser object of this tab.
  */
-function* openTabInFirstParty(aURL, aFirstPartyDomain,
+async function openTabInFirstParty(aURL, aFirstPartyDomain,
                               aFrameSetting = DEFAULT_FRAME_SETTING) {
 
   // If the first party domain ends with '/', we remove it.
@@ -87,7 +87,7 @@ function* openTabInFirstParty(aURL, aFirstPartyDomain,
   tab.ownerGlobal.focus();
 
   let browser = gBrowser.getBrowserForTab(tab);
-  yield BrowserTestUtils.browserLoaded(browser);
+  await BrowserTestUtils.browserLoaded(browser);
 
   let pageArgs = { url: aURL,
                    frames: aFrameSetting,
@@ -96,7 +96,7 @@ function* openTabInFirstParty(aURL, aFirstPartyDomain,
                    basicFrameSrc: basicPageURL};
 
   // Create the frame structure.
-  yield ContentTask.spawn(browser, pageArgs, function* (arg) {
+  await ContentTask.spawn(browser, pageArgs, async function(arg) {
     let typeFrame = arg.typeFrame;
     let typeIFrame = arg.typeIFrame;
 
@@ -141,7 +141,7 @@ function* openTabInFirstParty(aURL, aFirstPartyDomain,
       }
 
       // Wait for the frame to be loaded.
-      yield new Promise(done => {
+      await new Promise(done => {
         frameElement.addEventListener("load", function() {
           done();
         }, {capture: true, once: true});
@@ -201,18 +201,18 @@ this.IsolationTestTools = {
       return;
     }
 
-    add_task(function* () {
+    add_task(async function() {
       info("Starting the test for " + TEST_MODE_NAMES[aMode]);
 
       // Before run this task, reset the preferences first.
-      yield SpecialPowers.flushPrefEnv();
+      await SpecialPowers.flushPrefEnv();
 
       // Make sure preferences are set properly.
-      yield SpecialPowers.pushPrefEnv({"set": aPref});
+      await SpecialPowers.pushPrefEnv({"set": aPref});
 
-      yield SpecialPowers.pushPrefEnv({"set": [["dom.ipc.processCount", 1]]});
+      await SpecialPowers.pushPrefEnv({"set": [["dom.ipc.processCount", 1]]});
 
-      yield aTask(aMode);
+      await aTask(aMode);
     });
   },
 
@@ -306,27 +306,27 @@ this.IsolationTestTools = {
                         { firstPartyDomain: "http://example.org", userContextId: 2}
                       ];
 
-    this._add_task(function* (aMode) {
+    this._add_task(async function(aMode) {
       let tabSettingA = 0;
 
       for (let tabSettingB of [0, 1]) {
         // Give the test a chance to set up before each case is run.
         if (aBeforeFunc) {
-          yield aBeforeFunc(aMode);
+          await aBeforeFunc(aMode);
         }
 
         // Create Tabs.
-        let tabInfoA = yield IsolationTestTools._addTab(aMode,
+        let tabInfoA = await IsolationTestTools._addTab(aMode,
                                                         pageURL,
                                                         tabSettings[tabSettingA],
                                                         firstFrameSetting);
         let resultsA = [];
         if (aGetResultImmediately) {
           for (let getResultFunc of aGetResultFuncs) {
-            resultsA.push(yield getResultFunc(tabInfoA.browser));
+            resultsA.push(await getResultFunc(tabInfoA.browser));
           }
         }
-        let tabInfoB = yield IsolationTestTools._addTab(aMode,
+        let tabInfoB = await IsolationTestTools._addTab(aMode,
                                                         pageURL,
                                                         tabSettings[tabSettingB],
                                                         secondFrameSetting);
@@ -334,15 +334,15 @@ this.IsolationTestTools = {
         for (let getResultFunc of aGetResultFuncs) {
           // Fetch results from tabs.
           let resultA = aGetResultImmediately ? resultsA[i++] :
-                        yield getResultFunc(tabInfoA.browser);
-          let resultB = yield getResultFunc(tabInfoB.browser);
+                        await getResultFunc(tabInfoA.browser);
+          let resultB = await getResultFunc(tabInfoB.browser);
 
           // Compare results.
           let result = false;
           let shouldIsolate = (aMode !== TEST_MODE_NO_ISOLATION) &&
                               tabSettingA !== tabSettingB;
           if (aCompareResultFunc) {
-            result = yield aCompareResultFunc(shouldIsolate, resultA, resultB);
+            result = await aCompareResultFunc(shouldIsolate, resultA, resultB);
           } else {
             result = shouldIsolate ? resultA !== resultB :
                                      resultA === resultB;
@@ -357,8 +357,8 @@ this.IsolationTestTools = {
         }
 
         // Close Tabs.
-        yield BrowserTestUtils.removeTab(tabInfoA.tab);
-        yield BrowserTestUtils.removeTab(tabInfoB.tab);
+        await BrowserTestUtils.removeTab(tabInfoA.tab);
+        await BrowserTestUtils.removeTab(tabInfoB.tab);
       }
     });
   }

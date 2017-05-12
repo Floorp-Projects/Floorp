@@ -2,9 +2,9 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* () {
-  let tab1 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:robots");
-  let tab2 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:config");
+add_task(async function() {
+  let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:robots");
+  let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:config");
 
   gBrowser.selectedTab = tab1;
 
@@ -24,9 +24,9 @@ add_task(function* () {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("tabs.move.single");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("tabs.move.single");
+  await extension.unload();
 
   extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -50,9 +50,9 @@ add_task(function* () {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("tabs.move.multiple");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("tabs.move.multiple");
+  await extension.unload();
 
   extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -74,9 +74,9 @@ add_task(function* () {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("tabs.move.invalid");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("tabs.move.invalid");
+  await extension.unload();
 
   extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -94,10 +94,10 @@ add_task(function* () {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("tabs.move.last");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("tabs.move.last");
+  await extension.unload();
 
-  yield BrowserTestUtils.removeTab(tab1);
-  yield BrowserTestUtils.removeTab(tab2);
+  await BrowserTestUtils.removeTab(tab1);
+  await BrowserTestUtils.removeTab(tab2);
 });

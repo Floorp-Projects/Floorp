@@ -5,7 +5,6 @@
 XPCOMUtils.defineLazyModuleGetter(this, "PanelPopup",
                                   "resource:///modules/ExtensionPopups.jsm");
 
-Cu.import("resource://gre/modules/Task.jsm");
 
 var {
   DefaultWeakMap,

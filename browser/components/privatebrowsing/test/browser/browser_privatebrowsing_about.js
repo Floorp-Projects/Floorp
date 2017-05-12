@@ -5,25 +5,25 @@
 /**
  * Opens a new private window and loads "about:privatebrowsing" there.
  */
-function* openAboutPrivateBrowsing() {
-  let win = yield BrowserTestUtils.openNewBrowserWindow({ private: true });
+async function openAboutPrivateBrowsing() {
+  let win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
   let tab = win.gBrowser.selectedBrowser;
   tab.loadURI("about:privatebrowsing");
-  yield BrowserTestUtils.browserLoaded(tab);
+  await BrowserTestUtils.browserLoaded(tab);
   return { win, tab };
 }
 
 /**
  * Clicks the given link and checks this opens a new tab with the given URI.
  */
-function* testLinkOpensTab({ win, tab, elementId, expectedUrl }) {
+async function testLinkOpensTab({ win, tab, elementId, expectedUrl }) {
   let newTabPromise = BrowserTestUtils.waitForNewTab(win.gBrowser, expectedUrl);
-  yield ContentTask.spawn(tab, elementId, function* (elemId) {
+  await ContentTask.spawn(tab, elementId, async function(elemId) {
     content.document.getElementById(elemId).click();
   });
-  let newTab = yield newTabPromise;
+  let newTab = await newTabPromise;
   ok(true, `Clicking ${elementId} opened ${expectedUrl} in a new tab.`);
-  yield BrowserTestUtils.removeTab(newTab);
+  await BrowserTestUtils.removeTab(newTab);
 }
 
 /**
@@ -31,12 +31,12 @@ function* testLinkOpensTab({ win, tab, elementId, expectedUrl }) {
  *
  * This function does not return to the previous page.
  */
-function* testLinkOpensUrl({ win, tab, elementId, expectedUrl }) {
+async function testLinkOpensUrl({ win, tab, elementId, expectedUrl }) {
   let loadedPromise = BrowserTestUtils.browserLoaded(tab);
-  yield ContentTask.spawn(tab, elementId, function* (elemId) {
+  await ContentTask.spawn(tab, elementId, async function(elemId) {
     content.document.getElementById(elemId).click();
   });
-  yield loadedPromise;
+  await loadedPromise;
   is(tab.currentURI.spec, expectedUrl,
      `Clicking ${elementId} opened ${expectedUrl} in the same tab.`);
 }
@@ -44,7 +44,7 @@ function* testLinkOpensUrl({ win, tab, elementId, expectedUrl }) {
 /**
  * Tests the links in "about:privatebrowsing".
  */
-add_task(function* test_links() {
+add_task(async function test_links() {
   // Use full version and change the remote URLs to prevent network access.
   Services.prefs.setCharPref("app.support.baseURL", "https://example.com/");
   Services.prefs.setCharPref("privacy.trackingprotection.introURL",
@@ -54,26 +54,26 @@ add_task(function* test_links() {
     Services.prefs.clearUserPref("app.support.baseURL");
   });
 
-  let { win, tab } = yield openAboutPrivateBrowsing();
+  let { win, tab } = await openAboutPrivateBrowsing();
 
-  yield testLinkOpensTab({ win, tab,
+  await testLinkOpensTab({ win, tab,
     elementId: "learnMore",
     expectedUrl: "https://example.com/private-browsing",
   });
 
-  yield testLinkOpensUrl({ win, tab,
+  await testLinkOpensUrl({ win, tab,
     elementId: "startTour",
     expectedUrl: "https://example.com/tour",
   });
 
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 });
 
 /**
  * Tests the action to disable and re-enable Tracking Protection in
  * "about:privatebrowsing".
  */
-add_task(function* test_toggleTrackingProtection() {
+add_task(async function test_toggleTrackingProtection() {
   // Use tour version but disable Tracking Protection.
   Services.prefs.setBoolPref("privacy.trackingprotection.pbmode.enabled",
                              true);
@@ -81,7 +81,7 @@ add_task(function* test_toggleTrackingProtection() {
     Services.prefs.clearUserPref("privacy.trackingprotection.pbmode.enabled");
   });
 
-  let { win, tab } = yield openAboutPrivateBrowsing();
+  let { win, tab } = await openAboutPrivateBrowsing();
 
   // Set up the observer for the preference change before triggering the action.
   let prefBranch =
@@ -98,18 +98,18 @@ add_task(function* test_toggleTrackingProtection() {
   });
 
   let promisePrefChanged = waitForPrefChanged();
-  yield ContentTask.spawn(tab, {}, function* () {
+  await ContentTask.spawn(tab, {}, async function() {
     content.document.getElementById("tpButton").click();
   });
-  yield promisePrefChanged;
+  await promisePrefChanged;
   ok(!prefBranch.getBoolPref("enabled"), "Tracking Protection is disabled.");
 
   promisePrefChanged = waitForPrefChanged();
-  yield ContentTask.spawn(tab, {}, function* () {
+  await ContentTask.spawn(tab, {}, async function() {
     content.document.getElementById("tpButton").click();
   });
-  yield promisePrefChanged;
+  await promisePrefChanged;
   ok(prefBranch.getBoolPref("enabled"), "Tracking Protection is enabled.");
 
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 });

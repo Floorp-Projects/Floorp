@@ -1,40 +1,40 @@
 let testURL = "http://example.org/browser/browser/base/content/test/urlbar/dummy_page.html";
 
-add_task(function*() {
-  let normalWindow = yield BrowserTestUtils.openNewBrowserWindow();
-  let privateWindow = yield BrowserTestUtils.openNewBrowserWindow({private: true});
-  yield runTest(normalWindow, privateWindow, false);
-  yield BrowserTestUtils.closeWindow(normalWindow);
-  yield BrowserTestUtils.closeWindow(privateWindow);
+add_task(async function() {
+  let normalWindow = await BrowserTestUtils.openNewBrowserWindow();
+  let privateWindow = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  await runTest(normalWindow, privateWindow, false);
+  await BrowserTestUtils.closeWindow(normalWindow);
+  await BrowserTestUtils.closeWindow(privateWindow);
 
-  normalWindow = yield BrowserTestUtils.openNewBrowserWindow();
-  privateWindow = yield BrowserTestUtils.openNewBrowserWindow({private: true});
-  yield runTest(privateWindow, normalWindow, false);
-  yield BrowserTestUtils.closeWindow(normalWindow);
-  yield BrowserTestUtils.closeWindow(privateWindow);
+  normalWindow = await BrowserTestUtils.openNewBrowserWindow();
+  privateWindow = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  await runTest(privateWindow, normalWindow, false);
+  await BrowserTestUtils.closeWindow(normalWindow);
+  await BrowserTestUtils.closeWindow(privateWindow);
 
-  privateWindow = yield BrowserTestUtils.openNewBrowserWindow({private: true});
-  yield runTest(privateWindow, privateWindow, false);
-  yield BrowserTestUtils.closeWindow(privateWindow);
+  privateWindow = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  await runTest(privateWindow, privateWindow, false);
+  await BrowserTestUtils.closeWindow(privateWindow);
 
-  normalWindow = yield BrowserTestUtils.openNewBrowserWindow();
-  yield runTest(normalWindow, normalWindow, true);
-  yield BrowserTestUtils.closeWindow(normalWindow);
+  normalWindow = await BrowserTestUtils.openNewBrowserWindow();
+  await runTest(normalWindow, normalWindow, true);
+  await BrowserTestUtils.closeWindow(normalWindow);
 });
 
-function* runTest(aSourceWindow, aDestWindow, aExpectSwitch, aCallback) {
-  yield BrowserTestUtils.openNewForegroundTab(aSourceWindow.gBrowser, testURL);
-  let testTab = yield BrowserTestUtils.openNewForegroundTab(aDestWindow.gBrowser);
+async function runTest(aSourceWindow, aDestWindow, aExpectSwitch, aCallback) {
+  await BrowserTestUtils.openNewForegroundTab(aSourceWindow.gBrowser, testURL);
+  let testTab = await BrowserTestUtils.openNewForegroundTab(aDestWindow.gBrowser);
 
   info("waiting for focus on the window");
-  yield SimpleTest.promiseFocus(aDestWindow);
+  await SimpleTest.promiseFocus(aDestWindow);
   info("got focus on the window");
 
   // Select the testTab
   aDestWindow.gBrowser.selectedTab = testTab;
 
   // Ensure that this tab has no history entries
-  let sessionHistoryCount = yield new Promise(resolve => {
+  let sessionHistoryCount = await new Promise(resolve => {
     SessionStore.getSessionHistory(gBrowser.selectedTab, function(sessionHistory) {
       resolve(sessionHistory.entries.length);
     });
@@ -46,7 +46,7 @@ function* runTest(aSourceWindow, aDestWindow, aExpectSwitch, aCallback) {
   is(testTab.linkedBrowser.currentURI.spec, "about:blank",
      "The test tab is on about:blank");
   // Ensure that this tab's document has no child nodes
-  yield ContentTask.spawn(testTab.linkedBrowser, null, function*() {
+  await ContentTask.spawn(testTab.linkedBrowser, null, async function() {
     ok(!content.document.body.hasChildNodes(),
        "The test tab has no child nodes");
   });
@@ -54,7 +54,7 @@ function* runTest(aSourceWindow, aDestWindow, aExpectSwitch, aCallback) {
      "The test tab doesn't have the busy attribute");
 
   // Wait for the Awesomebar popup to appear.
-  yield promiseAutocompleteResultPopup(testURL, aDestWindow);
+  await promiseAutocompleteResultPopup(testURL, aDestWindow);
 
   info(`awesomebar popup appeared. aExpectSwitch: ${aExpectSwitch}`);
   // Make sure the last match is selected.
@@ -76,9 +76,9 @@ function* runTest(aSourceWindow, aDestWindow, aExpectSwitch, aCallback) {
   if (aExpectSwitch) {
     // If we expect a tab switch then the current tab
     // will be closed and we switch to the other tab.
-    yield awaitTabSwitch;
+    await awaitTabSwitch;
   } else {
     // If we don't expect a tab switch then wait for the tab to load.
-    yield BrowserTestUtils.browserLoaded(testTab.linkedBrowser);
+    await BrowserTestUtils.browserLoaded(testTab.linkedBrowser);
   }
 }

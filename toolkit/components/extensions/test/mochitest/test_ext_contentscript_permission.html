@@ -13,7 +13,7 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* test_contentscript() {
+add_task(async function test_contentscript() {
   function background() {
     browser.test.onMessage.addListener(async url => {
       let tab = await browser.tabs.create({url});
@@ -38,21 +38,21 @@ add_task(function* test_contentscript() {
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield extension.startup();
+  await extension.startup();
 
   extension.sendMessage("https://example.com");
-  let result = yield extension.awaitMessage("executed");
+  let result = await extension.awaitMessage("executed");
   is(result, true, "Content script can be run in a page without mozAddonManager");
 
-  yield SpecialPowers.pushPrefEnv({
+  await SpecialPowers.pushPrefEnv({
     set: [["extensions.webapi.testing", true]],
   });
 
   extension.sendMessage("https://example.com");
-  result = yield extension.awaitMessage("executed");
+  result = await extension.awaitMessage("executed");
   is(result, false, "Content script cannot be run in a page with mozAddonManager");
 
-  yield extension.unload();
+  await extension.unload();
 });
 </script>
 

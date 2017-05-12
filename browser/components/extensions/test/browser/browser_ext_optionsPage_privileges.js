@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* test_tab_options_privileges() {
+add_task(async function test_tab_options_privileges() {
   function backgroundScript() {
     browser.runtime.onMessage.addListener(({msgName, tabId}) => {
       if (msgName == "removeTabId") {
@@ -54,13 +54,13 @@ add_task(function* test_tab_options_privileges() {
     background: backgroundScript,
   });
 
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitFinish("options-ui-privileges");
+  await extension.awaitFinish("options-ui-privileges");
 
-  yield extension.unload();
+  await extension.unload();
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });

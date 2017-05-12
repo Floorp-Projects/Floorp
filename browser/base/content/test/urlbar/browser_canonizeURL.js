@@ -1,4 +1,4 @@
-add_task(function*() {
+add_task(async function() {
   let testcases = [
     ["example", "http://www.example.net/", { shiftKey: true }],
     // Check that a direct load is not overwritten by a previous canonization.
@@ -37,6 +37,6 @@ add_task(function*() {
       gURLBar.textValue = inputValue;
     }
     EventUtils.synthesizeKey("VK_RETURN", options);
-    yield promiseLoad;
+    await promiseLoad;
   }
 });

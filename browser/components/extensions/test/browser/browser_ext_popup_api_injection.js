@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* testPageActionPopup() {
+add_task(async function testPageActionPopup() {
   const BASE = "http://example.com/browser/browser/components/extensions/test/browser";
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -52,50 +52,50 @@ add_task(function* testPageActionPopup() {
     });
   });
 
-  yield extension.startup();
-  yield extension.awaitMessage("ready");
+  await extension.startup();
+  await extension.awaitMessage("ready");
 
 
   // Check that unprivileged documents don't get the API.
   // BrowserAction:
   let awaitMessage = promiseConsoleMessage(/WebExt Privilege Escalation: BrowserAction/);
   SimpleTest.expectUncaughtException();
-  yield clickBrowserAction(extension);
-  yield awaitExtensionPanel(extension);
+  await clickBrowserAction(extension);
+  await awaitExtensionPanel(extension);
 
-  let message = yield awaitMessage;
+  let message = await awaitMessage;
   ok(message.includes("WebExt Privilege Escalation: BrowserAction: typeof(browser) = undefined"),
      `No BrowserAction API injection`);
 
-  yield closeBrowserAction(extension);
+  await closeBrowserAction(extension);
 
   // PageAction
   awaitMessage = promiseConsoleMessage(/WebExt Privilege Escalation: PageAction/);
   SimpleTest.expectUncaughtException();
-  yield clickPageAction(extension);
+  await clickPageAction(extension);
 
-  message = yield awaitMessage;
+  message = await awaitMessage;
   ok(message.includes("WebExt Privilege Escalation: PageAction: typeof(browser) = undefined"),
      `No PageAction API injection: ${message}`);
 
-  yield closePageAction(extension);
+  await closePageAction(extension);
 
   SimpleTest.expectUncaughtException(false);
 
 
   // Check that privileged documents *do* get the API.
   extension.sendMessage("next");
-  yield extension.awaitMessage("ok");
+  await extension.awaitMessage("ok");
 
 
-  yield clickBrowserAction(extension);
-  yield awaitExtensionPanel(extension);
-  yield extension.awaitMessage("from-popup-a");
-  yield closeBrowserAction(extension);
+  await clickBrowserAction(extension);
+  await awaitExtensionPanel(extension);
+  await extension.awaitMessage("from-popup-a");
+  await closeBrowserAction(extension);
 
-  yield clickPageAction(extension);
-  yield extension.awaitMessage("from-popup-b");
-  yield closePageAction(extension);
+  await clickPageAction(extension);
+  await extension.awaitMessage("from-popup-b");
+  await closePageAction(extension);
 
-  yield extension.unload();
+  await extension.unload();
 });

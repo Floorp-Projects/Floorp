@@ -12,15 +12,15 @@ const kAboutPagesRegistered = Promise.all([
     Ci.nsIAboutModule.ALLOW_SCRIPT)
 ]);
 
-add_task(function* test_principal_click() {
-  yield kAboutPagesRegistered;
-  yield BrowserTestUtils.withNewTab("about:test-about-principal-parent", function*(browser) {
+add_task(async function test_principal_click() {
+  await kAboutPagesRegistered;
+  await BrowserTestUtils.withNewTab("about:test-about-principal-parent", async function(browser) {
     let loadPromise = BrowserTestUtils.browserLoaded(browser, false, "about:test-about-principal-child");
     let myLink = browser.contentDocument.getElementById("aboutchildprincipal");
     myLink.click();
-    yield loadPromise;
+    await loadPromise;
 
-    yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function*() {
+    await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
       let channel = content.document.docShell.currentDocumentChannel;
       is(channel.originalURI.asciiSpec,
          "about:test-about-principal-child",
@@ -41,22 +41,22 @@ add_task(function* test_principal_click() {
   });
 });
 
-add_task(function* test_principal_ctrl_click() {
-  yield kAboutPagesRegistered;
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function test_principal_ctrl_click() {
+  await kAboutPagesRegistered;
+  await SpecialPowers.pushPrefEnv({
     "set": [["security.sandbox.content.level", 1]],
   });
 
-  yield BrowserTestUtils.withNewTab("about:test-about-principal-parent", function*(browser) {
+  await BrowserTestUtils.withNewTab("about:test-about-principal-parent", async function(browser) {
     let loadPromise = BrowserTestUtils.waitForNewTab(gBrowser, "about:test-about-principal-child");
     // simulate ctrl+click
     BrowserTestUtils.synthesizeMouseAtCenter("#aboutchildprincipal",
                                              { ctrlKey: true, metaKey: true },
                                              gBrowser.selectedBrowser);
-    let tab = yield loadPromise;
+    let tab = await loadPromise;
     gBrowser.selectTabAtIndex(2);
 
-    yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function*() {
+    await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
       let channel = content.document.docShell.currentDocumentChannel;
       is(channel.originalURI.asciiSpec,
          "about:test-about-principal-child",
@@ -74,17 +74,17 @@ add_task(function* test_principal_ctrl_click() {
       is(loadingPrincipal, null,
          "sanity check - load of TYPE_DOCUMENT must have a null loadingPrincipal");
     });
-    yield BrowserTestUtils.removeTab(tab);
+    await BrowserTestUtils.removeTab(tab);
   });
 });
 
-add_task(function* test_principal_right_click_open_link_in_new_tab() {
-  yield kAboutPagesRegistered;
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function test_principal_right_click_open_link_in_new_tab() {
+  await kAboutPagesRegistered;
+  await SpecialPowers.pushPrefEnv({
     "set": [["security.sandbox.content.level", 1]],
   });
 
-  yield BrowserTestUtils.withNewTab("about:test-about-principal-parent", function*(browser) {
+  await BrowserTestUtils.withNewTab("about:test-about-principal-parent", async function(browser) {
     let loadPromise = BrowserTestUtils.waitForNewTab(gBrowser, "about:test-about-principal-child");
 
     // simulate right-click open link in tab
@@ -98,10 +98,10 @@ add_task(function* test_principal_right_click_open_link_in_new_tab() {
                                              { type: "contextmenu", button: 2 },
                                              gBrowser.selectedBrowser);
 
-    let tab = yield loadPromise;
+    let tab = await loadPromise;
     gBrowser.selectTabAtIndex(2);
 
-    yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function*() {
+    await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
       let channel = content.document.docShell.currentDocumentChannel;
       is(channel.originalURI.asciiSpec,
          "about:test-about-principal-child",
@@ -119,6 +119,6 @@ add_task(function* test_principal_right_click_open_link_in_new_tab() {
       is(loadingPrincipal, null,
          "sanity check - load of TYPE_DOCUMENT must have a null loadingPrincipal");
     });
-    yield BrowserTestUtils.removeTab(tab);
+    await BrowserTestUtils.removeTab(tab);
   });
 });

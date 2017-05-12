@@ -91,7 +91,7 @@ function generateClassicExtensionFiles({id, files}) {
   return files;
 }
 
-add_task(function* test_sdk_hybrid_addon_with_jpm_module_loader() {
+add_task(async function test_sdk_hybrid_addon_with_jpm_module_loader() {
   function backgroundScript() {
     browser.runtime.sendMessage("background message", (reply) => {
       browser.test.assertEq("sdk received message: background message", reply,
@@ -131,9 +131,9 @@ add_task(function* test_sdk_hybrid_addon_with_jpm_module_loader() {
 
   extension.startup();
 
-  yield extension.awaitFinish("sdk.webext-api.onmessage");
+  await extension.awaitFinish("sdk.webext-api.onmessage");
 
-  yield extension.unload();
+  await extension.unload();
 });
 </script>
 

@@ -16,11 +16,11 @@ name result in new windows being opened.
 <body>
   <script type="application/javascript">
     "use strict";
-    add_task(function*() {
+    add_task(async function() {
       // This magic value of 2 means that by default, when content tries
       // to open a new window, it'll actually open in a new window instead
       // of a new tab.
-      yield SpecialPowers.pushPrefEnv({"set": [
+      await SpecialPowers.pushPrefEnv({"set": [
         ["browser.link.open_newwindow", 2],
       ]});
 

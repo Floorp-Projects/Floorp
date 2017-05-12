@@ -19,7 +19,6 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/AppConstants.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
-Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/ClientID.jsm");
 Cu.import("resource://gre/modules/Log.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm");
@@ -861,7 +860,7 @@ var TelemetrySendImpl = {
   /**
    * Clear out unpersisted, yet to be sent, pings and cancel outgoing ping requests.
    */
-  clearCurrentPings: Task.async(function*() {
+  async clearCurrentPings() {
     if (this._shutdown) {
       this._log.trace("clearCurrentPings - in shutdown, bailing out");
       return;
@@ -869,7 +868,7 @@ var TelemetrySendImpl = {
 
     // Temporarily disable the scheduler. It must not try to reschedule ping sending
     // while we're deleting them.
-    yield SendScheduler.shutdown();
+    await SendScheduler.shutdown();
 
     // Now that the ping activity has settled, abort outstanding ping requests.
     this._cancelOutgoingRequests();
@@ -888,7 +887,7 @@ var TelemetrySendImpl = {
     // Enable the scheduler again and spin the send task.
     SendScheduler.start();
     SendScheduler.triggerSendingPings(true);
-  }),
+  },
 
   _cancelOutgoingRequests() {
     // Abort any pending ping XHRs.
@@ -908,17 +907,17 @@ var TelemetrySendImpl = {
 
     for (let current of currentPings) {
       let ping = current;
-      let p = Task.spawn(function*() {
+      let p = (async () => {
         try {
-          yield this._doPing(ping, ping.id, false);
+          await this._doPing(ping, ping.id, false);
         } catch (ex) {
           this._log.info("sendPings - ping " + ping.id + " not sent, saving to disk", ex);
           // Deletion pings must be saved to a special location.
-          yield savePing(ping);
+          await savePing(ping);
         } finally {
           this._currentPings.delete(ping.id);
         }
-      }.bind(this));
+      })();
 
       this._trackPendingPingTask(p);
       pingSends.push(p);

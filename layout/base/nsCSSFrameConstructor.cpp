@@ -8488,11 +8488,19 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*  aContainer,
     ServoRestyleManager::ClearServoDataFromSubtree(aChild->AsElement());
   }
 
+  nsPresContext* presContext = mPresShell->GetPresContext();
+  MOZ_ASSERT(presContext, "Our presShell should have a valid presContext");
+
   if (aChild->IsHTMLElement(nsGkAtoms::body) ||
       (!aContainer && aChild->IsElement())) {
-    // This might be the element we propagated viewport scrollbar
-    // styles from.  Recompute those.
-    mPresShell->GetPresContext()->UpdateViewportScrollbarStylesOverride();
+    // We might be removing the element that we propagated viewport scrollbar
+    // styles from.  Recompute those. (This clause covers two of the three
+    // possible scrollbar-propagation sources: the <body> [as aChild or a
+    // descendant] and the root node. The other possible scrollbar-propagation
+    // source is a fullscreen element, and we have code elsewhere to update
+    // scrollbars after fullscreen elements are removed -- specifically, it's
+    // part of the fullscreen cleanup code called by Element::UnbindFromTree.)
+    presContext->UpdateViewportScrollbarStylesOverride();
   }
 
   // XXXldb Do we need to re-resolve style to handle the CSS2 + combinator and
@@ -8554,7 +8562,6 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*  aContainer,
     ClearDisplayContentsIn(aChild, aContainer);
   }
 
-  nsPresContext* presContext = mPresShell->GetPresContext();
 #ifdef MOZ_XUL
   if (NotifyListBoxBody(presContext, aContainer, aChild, aOldNextSibling,
                         childFrame, CONTENT_REMOVED)) {

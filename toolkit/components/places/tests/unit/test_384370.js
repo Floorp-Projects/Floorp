@@ -26,60 +26,60 @@ function run_test() {
   - tag multiple URIs with multiple tags
   - export as json, import, test
 */
-add_task(function* () {
+add_task(async function() {
   // Remove eventual bookmarks.exported.json.
   let jsonFile = OS.Path.join(OS.Constants.Path.profileDir, "bookmarks.exported.json");
-  if ((yield OS.File.exists(jsonFile)))
-    yield OS.File.remove(jsonFile);
+  if ((await OS.File.exists(jsonFile)))
+    await OS.File.remove(jsonFile);
 
   // Test importing a pre-Places canonical bookmarks file.
   // Note: we do not empty the db before this import to catch bugs like 380999
   let htmlFile = OS.Path.join(do_get_cwd().path, "bookmarks.preplaces.html");
-  yield BookmarkHTMLUtils.importFromFile(htmlFile, true);
+  await BookmarkHTMLUtils.importFromFile(htmlFile, true);
 
   // Populate the database.
   for (let { uri, tags } of tagData) {
     PlacesUtils.tagging.tagURI(uri, tags);
   }
   for (let { uri, title } of bookmarkData) {
-    yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                          url: uri,
                                          title });
   }
   for (let { uri, title } of bookmarkData) {
-    yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.toolbarGuid,
                                          url: uri,
                                          title });
   }
 
-  yield validate();
+  await validate();
 
   // Test exporting a Places canonical json file.
   // 1. export to bookmarks.exported.json
-  yield BookmarkJSONUtils.exportToFile(jsonFile);
+  await BookmarkJSONUtils.exportToFile(jsonFile);
   do_print("exported json");
 
   // 2. empty bookmarks db
   // 3. import bookmarks.exported.json
-  yield BookmarkJSONUtils.importFromFile(jsonFile, true);
+  await BookmarkJSONUtils.importFromFile(jsonFile, true);
   do_print("imported json");
 
   // 4. run the test-suite
-  yield validate();
+  await validate();
   do_print("validated import");
 });
 
-function* validate() {
-  yield testMenuBookmarks();
-  yield testToolbarBookmarks();
+async function validate() {
+  await testMenuBookmarks();
+  await testToolbarBookmarks();
   testUnfiledBookmarks();
   testTags();
-  yield PlacesTestUtils.promiseAsyncUpdates();
+  await PlacesTestUtils.promiseAsyncUpdates();
 }
 
 // Tests a bookmarks datastore that has a set of bookmarks, etc
 // that flex each supported field and feature.
-function* testMenuBookmarks() {
+async function testMenuBookmarks() {
   let root = PlacesUtils.getFolderContents(PlacesUtils.bookmarksMenuFolderId).root;
   Assert.equal(root.childCount, 3);
 
@@ -89,7 +89,7 @@ function* testMenuBookmarks() {
   let folderNode = root.getChild(2);
   Assert.equal(folderNode.type, folderNode.RESULT_TYPE_FOLDER);
   Assert.equal(folderNode.title, "test");
-  let folder = yield PlacesUtils.bookmarks.fetch(folderNode.bookmarkGuid);
+  let folder = await PlacesUtils.bookmarks.fetch(folderNode.bookmarkGuid);
   Assert.equal(folder.dateAdded.getTime(), 1177541020000);
 
   Assert.equal(PlacesUtils.asQuery(folderNode).hasChildren, true);
@@ -109,12 +109,12 @@ function* testMenuBookmarks() {
                                                       LOAD_IN_SIDEBAR_ANNO));
   Assert.equal(bookmarkNode.dateAdded, 1177375336000000);
 
-  let entry = yield PlacesUtils.keywords.fetch({ url: bookmarkNode.uri });
+  let entry = await PlacesUtils.keywords.fetch({ url: bookmarkNode.uri });
   Assert.equal("test", entry.keyword);
   Assert.equal("hidden1%3Dbar&text1%3D%25s", entry.postData);
 
   Assert.equal("ISO-8859-1",
-               (yield PlacesUtils.getCharsetForURI(NetUtil.newURI(bookmarkNode.uri))));
+               (await PlacesUtils.getCharsetForURI(NetUtil.newURI(bookmarkNode.uri))));
   Assert.equal("item description",
               PlacesUtils.annotations.getItemAnnotation(bookmarkNode.itemId,
                                                         DESCRIPTION_ANNO));
@@ -123,7 +123,7 @@ function* testMenuBookmarks() {
   root.containerOpen = false;
 }
 
-function* testToolbarBookmarks() {
+async function testToolbarBookmarks() {
   let root = PlacesUtils.getFolderContents(PlacesUtils.toolbarFolderId).root;
 
   // child count (add 2 for pre-existing items)
@@ -132,7 +132,7 @@ function* testToolbarBookmarks() {
   let livemarkNode = root.getChild(1);
   Assert.equal("Latest Headlines", livemarkNode.title);
 
-  let livemark = yield PlacesUtils.livemarks.getLivemark({ id: livemarkNode.itemId });
+  let livemark = await PlacesUtils.livemarks.getLivemark({ id: livemarkNode.itemId });
   Assert.equal("http://en-us.fxfeeds.mozilla.com/en-US/firefox/livebookmarks/",
                livemark.siteURI.spec);
   Assert.equal("http://en-us.fxfeeds.mozilla.com/en-US/firefox/headlines.xml",

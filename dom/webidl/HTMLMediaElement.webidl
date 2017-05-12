@@ -138,6 +138,9 @@ partial interface HTMLMediaElement {
   // the media element has a fragment URI for the currentSrc, otherwise
   // it is equal to the media duration.
   readonly attribute double mozFragmentEnd;
+
+  [ChromeOnly]
+  void reportCanPlayTelemetry();
 };
 
 // Encrypted Media Extensions

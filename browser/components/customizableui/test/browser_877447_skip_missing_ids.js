@@ -20,6 +20,6 @@ add_task(function skipMissingIDS() {
                                     "despite unknown button ID in placements.");
 });
 
-add_task(function* asyncCleanup() {
-  yield resetCustomization();
+add_task(async function asyncCleanup() {
+  await resetCustomization();
 });

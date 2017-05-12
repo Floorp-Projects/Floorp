@@ -11,7 +11,7 @@ var gNavBar = document.getElementById(CustomizableUI.AREA_NAVBAR);
 var gLazyArea;
 
 // Removable nodes shouldn't be moved by buildArea
-add_task(function*() {
+add_task(async function() {
   let dummyBtn = createDummyXULButton(kButtonId, "Dummy");
   dummyBtn.setAttribute("removable", "true");
   gNavBar.customizationTarget.appendChild(dummyBtn);
@@ -41,6 +41,6 @@ add_task(function*() {
   gLazyArea.remove();
 });
 
-add_task(function* asyncCleanup() {
-  yield resetCustomization();
+add_task(async function asyncCleanup() {
+  await resetCustomization();
 });

@@ -64,8 +64,8 @@
     function runTest() {
       SimpleTest.waitForExplicitFinish();
 
-      Task.spawn(function* () {
-        yield PlacesTestUtils.clearHistory();
+      (async function() {
+        await PlacesTestUtils.clearHistory();
 
         // Add some visits.
         let timeInMicroseconds = PlacesUtils.toPRTime(Date.now() - 10000);
@@ -85,7 +85,7 @@
            { uri: Services.io.newURI("http://example3.tld/"),
              visitDate: newTimeInMicroseconds(), transition: ttype }];
 
-        yield PlacesTestUtils.addVisits(places);
+        await PlacesTestUtils.addVisits(places);
 
         // Make a history query.
         let query = PlacesUtils.history.getNewQuery();
@@ -113,7 +113,7 @@
 
         // First check live-update of the view when adding visits.
         places.forEach(place => place.visitDate = newTimeInMicroseconds());
-        yield PlacesTestUtils.addVisits(places);
+        await PlacesTestUtils.addVisits(places);
 
         for (let i = 0; i < rc; i++) {
           selection.select(i);
@@ -128,15 +128,15 @@
           let node = tree.selectedNode;
           let promiseDeleted = promiseURIDeleted();
           tree.controller.remove("Removing page");
-          yield promiseDeleted;
+          await promiseDeleted;
           ok(treeView.treeIndexForNode(node) == Ci.nsINavHistoryResultTreeViewer.INDEX_INVISIBLE,
             node.uri + " removed.");
           is(treeView.rowCount, rc - i - 1, "Rows count decreased");
         }
 
         // Cleanup.
-        yield PlacesTestUtils.clearHistory();
-      }).then(() => SimpleTest.finish());
+        await PlacesTestUtils.clearHistory();
+      })().then(() => SimpleTest.finish());
     }
   ]]></script>
 </window>

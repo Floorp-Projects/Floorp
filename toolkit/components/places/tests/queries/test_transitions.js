@@ -92,10 +92,10 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_transitions() {
+add_task(async function test_transitions() {
   let timeNow = Date.now();
   for (let item of testData) {
-    yield PlacesTestUtils.addVisits({
+    await PlacesTestUtils.addVisits({
       uri: uri(item.uri),
       transition: item.transType,
       visitDate: timeNow++ * 1000,
@@ -148,7 +148,7 @@ add_task(function* test_transitions() {
   var root = result.root;
   root.containerOpen = true;
   do_check_eq(testDataDownload.length, root.childCount);
-  yield PlacesTestUtils.addVisits({
+  await PlacesTestUtils.addVisits({
     uri: uri("http://getfirefox.com"),
     transition: TRANSITION_DOWNLOAD
   });

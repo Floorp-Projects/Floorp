@@ -18,7 +18,7 @@ if (AppConstants.platform === "android") {
 
 let windowData, testWindow;
 
-add_task(function* setup() {
+add_task(async function setup() {
   let chromeScript = SpecialPowers.loadChromeScript(function() {
     let cache = Components.classes["@mozilla.org/netwerk/cache-storage-service;1"]
                           .getService(Components.interfaces.nsICacheStorageService);
@@ -27,7 +27,7 @@ add_task(function* setup() {
   chromeScript.destroy();
 
   testWindow = window.open("about:blank", "_blank", "width=100,height=100");
-  yield waitForLoad(testWindow);
+  await waitForLoad(testWindow);
 
   // Fetch the windowId and tabId we need to filter with WebRequest.
   let extension = ExtensionTestUtils.loadExtension({
@@ -46,19 +46,19 @@ add_task(function* setup() {
       });
     },
   });
-  yield extension.startup();
-  windowData = yield extension.awaitMessage("windowData");
+  await extension.startup();
+  windowData = await extension.awaitMessage("windowData");
   info(`window is ${JSON.stringify(windowData)}`);
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* test_webRequest_filter_window() {
+add_task(async function test_webRequest_filter_window() {
   if (AppConstants.MOZ_BUILD_APP !== "browser") {
     // Android does not support multiple windows.
     return;
   }
 
-  yield SpecialPowers.pushPrefEnv({
+  await SpecialPowers.pushPrefEnv({
     set: [["dom.serviceWorkers.testing.enabled", true]],
   });
 
@@ -80,28 +80,28 @@ add_task(function* test_webRequest_filter_window() {
   };
 
   let extension = makeExtension(events);
-  yield extension.startup();
+  await extension.startup();
   extension.sendMessage("set-expected", {expect, origin: location.href});
-  yield extension.awaitMessage("continue");
+  await extension.awaitMessage("continue");
 
   // We should not get events for a new window load.
   let newWindow = window.open("file_image_good.png", "_blank", "width=100,height=100");
-  yield waitForLoad(newWindow);
+  await waitForLoad(newWindow);
   newWindow.close();
 
   // We should not get background events.
-  let registration = yield navigator.serviceWorker.register("webrequest_worker.js?test0", {scope: "."});
+  let registration = await navigator.serviceWorker.register("webrequest_worker.js?test0", {scope: "."});
 
   // We should get events for the reload.
   testWindow.location = "file_image_bad.png";
-  yield extension.awaitMessage("done");
+  await extension.awaitMessage("done");
 
-  yield registration.unregister();
-  yield extension.unload();
+  await registration.unregister();
+  await extension.unload();
 });
 
-add_task(function* test_webRequest_filter_tab() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function test_webRequest_filter_tab() {
+  await SpecialPowers.pushPrefEnv({
     set: [["dom.serviceWorkers.testing.enabled", true]],
   });
 
@@ -126,31 +126,31 @@ add_task(function* test_webRequest_filter_tab() {
   };
 
   let extension = makeExtension(events);
-  yield extension.startup();
+  await extension.startup();
   extension.sendMessage("set-expected", {expect, origin: location.href});
-  yield extension.awaitMessage("continue");
+  await extension.awaitMessage("continue");
 
   if (AppConstants.MOZ_BUILD_APP === "browser") {
     // We should not get events for a new window load.
     let newWindow = window.open(img, "_blank", "width=100,height=100");
-    yield waitForLoad(newWindow);
+    await waitForLoad(newWindow);
     newWindow.close();
   }
 
   // We should not get background events.
-  let registration = yield navigator.serviceWorker.register("webrequest_worker.js?test1", {scope: "."});
+  let registration = await navigator.serviceWorker.register("webrequest_worker.js?test1", {scope: "."});
 
   // We should get events for the reload.
   testWindow.location = img;
-  yield extension.awaitMessage("done");
+  await extension.awaitMessage("done");
 
-  yield registration.unregister();
-  yield extension.unload();
+  await registration.unregister();
+  await extension.unload();
 });
 
 
-add_task(function* test_webRequest_filter_background() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function test_webRequest_filter_background() {
+  await SpecialPowers.pushPrefEnv({
     set: [["dom.serviceWorkers.testing.enabled", true]],
   });
 
@@ -178,22 +178,22 @@ add_task(function* test_webRequest_filter_background() {
   };
 
   let extension = makeExtension(events);
-  yield extension.startup();
+  await extension.startup();
   extension.sendMessage("set-expected", {expect, origin: location.href});
-  yield extension.awaitMessage("continue");
+  await extension.awaitMessage("continue");
 
   // We should not get events for a window.
   testWindow.location = "file_image_bad.png";
 
   // We should get events for the background page.
-  let registration = yield navigator.serviceWorker.register(SimpleTest.getTestFileURL("webrequest_worker.js?test2"), {scope: "."});
-  yield extension.awaitMessage("done");
-  yield registration.unregister();
+  let registration = await navigator.serviceWorker.register(SimpleTest.getTestFileURL("webrequest_worker.js?test2"), {scope: "."});
+  await extension.awaitMessage("done");
+  await registration.unregister();
 
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* teardown() {
+add_task(async function teardown() {
   testWindow.close();
 });
 </script>

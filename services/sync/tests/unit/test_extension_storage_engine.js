@@ -50,11 +50,11 @@ add_task(function* test_calling_sync_calls_ext_storage_sync() {
   let oldSync = extensionStorageSync.syncAll;
   let syncMock = extensionStorageSync.syncAll = mock({returns: Promise.resolve()});
   try {
-    yield* withSyncContext(function* (context) {
+    yield withSyncContext(async function(context) {
       // Set something so that everyone knows that we're using storage.sync
-      yield extensionStorageSync.set(extension, {"a": "b"}, context);
+      await extensionStorageSync.set(extension, {"a": "b"}, context);
 
-      yield engine._sync();
+      await engine._sync();
     });
   } finally {
     extensionStorageSync.syncAll = oldSync;

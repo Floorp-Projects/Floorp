@@ -39,13 +39,13 @@
     function runTest() {
       SimpleTest.waitForExplicitFinish();
 
-      Task.spawn(function* () {
+      (async function() {
         let testTag = "foo";
         let testTagUpper = "Foo";
         let testURI = Services.io.newURI("http://www.example.com/");
 
         // Add a bookmark.
-        let bm = yield PlacesUtils.bookmarks.insert({
+        let bm = await PlacesUtils.bookmarks.insert({
           parentGuid: PlacesUtils.bookmarks.toolbarGuid,
           index: PlacesUtils.bookmarks.DEFAULT_INDEX,
           type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -55,7 +55,7 @@
 
         // Init panel
         ok(gEditItemOverlay, "gEditItemOverlay is in context");
-        let node = yield PlacesUIUtils.promiseNodeLikeFromFetchInfo(bm);
+        let node = await PlacesUIUtils.promiseNodeLikeFromFetchInfo(bm);
         gEditItemOverlay.initPanel({ node });
 
         // add a tag
@@ -74,8 +74,8 @@
 
         // Cleanup.
         PlacesUtils.tagging.untagURI(testURI, [testTag]);
-        yield PlacesUtils.bookmarks.remove(bm.guid);
-      }).then(() => SimpleTest.finish());
+        await PlacesUtils.bookmarks.remove(bm.guid);
+      })().then(() => SimpleTest.finish());
     }
   ]]>
   </script>

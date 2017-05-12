@@ -15,7 +15,7 @@
 
 /* eslint-disable mozilla/balanced-listeners */
 
-add_task(function* test_postMessage() {
+add_task(async function test_postMessage() {
   let extensionData = {
     manifest: {
       content_scripts: [
@@ -78,26 +78,26 @@ add_task(function* test_postMessage() {
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield extension.startup();
+  await extension.startup();
 
-  let iframeURL = yield extension.awaitMessage("iframe-url");
+  let iframeURL = await extension.awaitMessage("iframe-url");
   let testURL = SimpleTest.getTestFileURL("file_sample.html");
 
   for (let url of [iframeURL, testURL]) {
     info(`Testing URL ${url}`);
 
-    let iframe = yield createIframe(url);
+    let iframe = await createIframe(url);
 
     iframe.contentWindow.postMessage(
       "ping", url);
 
-    let pong = yield awaitMessage();
+    let pong = await awaitMessage();
     is(pong.pong, url, "Got expected pong");
 
     iframe.remove();
   }
 
-  yield extension.unload();
+  await extension.unload();
 });
 </script>
 

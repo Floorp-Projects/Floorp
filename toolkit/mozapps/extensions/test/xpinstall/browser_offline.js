@@ -34,8 +34,8 @@ function finish_test(count) {
     info("Checking if the browser is still offline...");
 
     let tab = gBrowser.selectedTab;
-    ContentTask.spawn(tab.linkedBrowser, null, function*() {
-      yield ContentTaskUtils.waitForEvent(this, "DOMContentLoaded", true);
+    ContentTask.spawn(tab.linkedBrowser, null, async function() {
+      await ContentTaskUtils.waitForEvent(this, "DOMContentLoaded", true);
       return content.document.documentURI;
     }).then(url => {
       info("loaded: " + url);
