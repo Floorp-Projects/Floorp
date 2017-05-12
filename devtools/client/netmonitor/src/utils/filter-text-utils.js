@@ -30,8 +30,23 @@
 
 "use strict";
 
-const { FILTER_FLAGS } = require("../constants");
+const { HEADERS } = require("../constants");
 const { getFormattedIPAndPort } = require("./format-utils");
+const HEADER_FILTERS = HEADERS
+  .filter(h => h.canFilter)
+  .map(h => h.filterKey || h.name);
+
+const FILTER_FLAGS = [
+  ...HEADER_FILTERS,
+  "set-cookie-domain",
+  "set-cookie-name",
+  "set-cookie-value",
+  "mime-type",
+  "larger-than",
+  "is",
+  "has-response-header",
+  "regexp",
+];
 
 /*
   The function `parseFilters` is from:
