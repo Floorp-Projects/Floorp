@@ -2279,9 +2279,17 @@
 
             var t = document.createElementNS(NS_XUL, "tab");
 
-            var uriIsAboutBlank = !aURI || aURI == "about:blank";
+            aURI = aURI || "about:blank";
 
-            if (!aURI || isBlankPageURL(aURI)) {
+            let lazyBrowserURI;
+            if (aCreateLazyBrowser && aURI != "about:blank") {
+              lazyBrowserURI = Services.io.newURI(aURI);
+              aURI = "about:blank";
+            }
+
+            var uriIsAboutBlank = aURI == "about:blank";
+
+            if (isBlankPageURL(aURI)) {
               t.setAttribute("label", this.mStringBundle.getString("tabs.emptyTabTitle"));
             } else if (aURI.toLowerCase().startsWith("javascript:")) {
               // This can go away when bug 672618 or bug 55696 are fixed.
@@ -2393,6 +2401,13 @@
             // If the caller opts in, create a lazy browser.
             if (aCreateLazyBrowser) {
               this._createLazyBrowser(t);
+
+              if (lazyBrowserURI) {
+                // Lazy browser must be explicitly registered so tab will appear as
+                // a switch-to-tab candidate in autocomplete.
+                this._unifiedComplete.registerOpenPage(lazyBrowserURI, aUserContextId);
+                b.registeredOpenURI = lazyBrowserURI;
+              }
             } else {
               this._insertBrowser(t);
             }
