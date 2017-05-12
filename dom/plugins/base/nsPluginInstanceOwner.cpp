@@ -165,23 +165,22 @@ nsPluginInstanceOwner::NotifyPaintWaiter(nsDisplayListBuilder* aBuilder)
 
 #if MOZ_WIDGET_ANDROID
 static void
-AttachToContainerAsSurface(ImageContainer* container,
-                           nsNPAPIPluginInstance* instance,
-                           const LayoutDeviceRect& rect,
-                           RefPtr<Image>* out_image)
+AttachToContainerAsSurfaceTexture(ImageContainer* container,
+                                  nsNPAPIPluginInstance* instance,
+                                  const LayoutDeviceRect& rect,
+                                  RefPtr<Image>* out_image)
 {
   MOZ_ASSERT(out_image);
   MOZ_ASSERT(!*out_image);
 
-  java::GeckoSurface::LocalRef surface = instance->AsSurface();
-  if (!surface) {
+  mozilla::gl::AndroidSurfaceTexture* surfTex = instance->AsSurfaceTexture();
+  if (!surfTex) {
     return;
   }
 
   RefPtr<Image> img = new SurfaceTextureImage(
-    surface->GetHandle(),
+    surfTex,
     gfx::IntSize::Truncate(rect.width, rect.height),
-    true, // continuously update without a transaction
     instance->OriginPos());
   *out_image = img;
 }
@@ -224,7 +223,7 @@ nsPluginInstanceOwner::GetImageContainer()
   if (r.width && r.height) {
     // Try to get it as an EGLImage first.
     RefPtr<Image> img;
-    AttachToContainerAsSurface(container, mInstance, r, &img);
+    AttachToContainerAsSurfaceTexture(container, mInstance, r, &img);
 
     if (img) {
       container->SetCurrentImageInTransaction(img);
@@ -1586,9 +1585,8 @@ nsPluginInstanceOwner::GetImageContainerForVideo(nsNPAPIPluginInstance::VideoInf
 
   if (aVideoInfo->mDimensions.width && aVideoInfo->mDimensions.height) {
     RefPtr<Image> img = new SurfaceTextureImage(
-      aVideoInfo->mSurface->GetHandle(),
+      aVideoInfo->mSurfaceTexture,
       gfx::IntSize::Truncate(aVideoInfo->mDimensions.width, aVideoInfo->mDimensions.height),
-      true, /* continuous */
       gl::OriginPos::BottomLeft);
     container->SetCurrentImageInTransaction(img);
   }

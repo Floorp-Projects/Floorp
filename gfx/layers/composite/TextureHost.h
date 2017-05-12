@@ -601,7 +601,7 @@ protected:
   /**
    * Called when mCompositableCount becomes 0.
    */
-  virtual void NotifyNotUsed();
+  void NotifyNotUsed();
 
   // for Compositor.
   void CallNotifyNotUsed();

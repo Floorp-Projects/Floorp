@@ -7,7 +7,6 @@
 
 #include "GLBlitHelper.h"
 #include "GLContextEGL.h"
-#include "GLContextProvider.h"
 #include "GLLibraryEGL.h"
 #include "GLReadTexImageHelper.h"
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
@@ -101,6 +100,12 @@ SharedSurface_EGLImage::~SharedSurface_EGLImage()
     mProdTex = 0;
 }
 
+layers::TextureFlags
+SharedSurface_EGLImage::GetTextureFlags() const
+{
+    return layers::TextureFlags::DEALLOCATE_CLIENT;
+}
+
 void
 SharedSurface_EGLImage::ProducerReleaseImpl()
 {
@@ -179,136 +184,6 @@ SurfaceFactory_EGLImage::Create(GLContext* prodGL, const SurfaceCaps& caps,
 
     return Move(ret);
 }
-
-////////////////////////////////////////////////////////////////////////
-
-#ifdef MOZ_WIDGET_ANDROID
-
-/*static*/ UniquePtr<SharedSurface_SurfaceTexture>
-SharedSurface_SurfaceTexture::Create(GLContext* prodGL,
-                                     const GLFormats& formats,
-                                     const gfx::IntSize& size,
-                                     bool hasAlpha,
-                                     java::GeckoSurface::Param surface)
-{
-    MOZ_ASSERT(surface);
-
-    UniquePtr<SharedSurface_SurfaceTexture> ret;
-
-    AndroidNativeWindow window(surface);
-    EGLSurface eglSurface = GLContextProviderEGL::CreateEGLSurface(window.NativeWindow());
-    if (!eglSurface) {
-        return Move(ret);
-    }
-
-    ret.reset(new SharedSurface_SurfaceTexture(prodGL, size, hasAlpha,
-                                               formats, surface, eglSurface));
-    return Move(ret);
-}
-
-SharedSurface_SurfaceTexture::SharedSurface_SurfaceTexture(GLContext* gl,
-                                                           const gfx::IntSize& size,
-                                                           bool hasAlpha,
-                                                           const GLFormats& formats,
-                                                           java::GeckoSurface::Param surface,
-                                                           EGLSurface eglSurface)
-    : SharedSurface(SharedSurfaceType::AndroidSurfaceTexture,
-                    AttachmentType::Screen,
-                    gl,
-                    size,
-                    hasAlpha,
-                    true)
-    , mSurface(surface)
-    , mEglSurface(eglSurface)
-{
-}
-
-SharedSurface_SurfaceTexture::~SharedSurface_SurfaceTexture()
-{
-    GLContextProviderEGL::DestroyEGLSurface(mEglSurface);
-    java::SurfaceAllocator::DisposeSurface(mSurface);
-}
-
-void
-SharedSurface_SurfaceTexture::LockProdImpl()
-{
-    MOZ_RELEASE_ASSERT(mSurface->GetAvailable());
-
-    GLContextEGL *gl = GLContextEGL::Cast(mGL);
-    mOrigEglSurface = gl->GetEGLSurfaceOverride();
-    gl->SetEGLSurfaceOverride(mEglSurface);
-}
-
-void
-SharedSurface_SurfaceTexture::UnlockProdImpl()
-{
-    MOZ_RELEASE_ASSERT(mSurface->GetAvailable());
-
-    GLContextEGL *gl = GLContextEGL::Cast(mGL);
-    MOZ_ASSERT(gl->GetEGLSurfaceOverride() == mEglSurface);
-
-    gl->SetEGLSurfaceOverride(mOrigEglSurface);
-    mOrigEglSurface = nullptr;
-}
-
-void
-SharedSurface_SurfaceTexture::Commit()
-{
-    MOZ_RELEASE_ASSERT(mSurface->GetAvailable());
-
-    LockProdImpl();
-    mGL->SwapBuffers();
-    UnlockProdImpl();
-    mSurface->SetAvailable(false);
-}
-
-void
-SharedSurface_SurfaceTexture::WaitForBufferOwnership()
-{
-    MOZ_RELEASE_ASSERT(!mSurface->GetAvailable());
-    mSurface->SetAvailable(true);
-}
-
-bool
-SharedSurface_SurfaceTexture::ToSurfaceDescriptor(layers::SurfaceDescriptor* const out_descriptor)
-{
-    *out_descriptor = layers::SurfaceTextureDescriptor(mSurface->GetHandle(), mSize, false /* NOT continuous */);
-    return true;
-}
-
-////////////////////////////////////////////////////////////////////////
-
-/*static*/ UniquePtr<SurfaceFactory_SurfaceTexture>
-SurfaceFactory_SurfaceTexture::Create(GLContext* prodGL, const SurfaceCaps& caps,
-                                      const RefPtr<layers::LayersIPCChannel>& allocator,
-                                      const layers::TextureFlags& flags)
-{
-    UniquePtr<SurfaceFactory_SurfaceTexture> ret(
-        new SurfaceFactory_SurfaceTexture(prodGL, caps, allocator, flags));
-    return Move(ret);
-}
-
-UniquePtr<SharedSurface>
-SurfaceFactory_SurfaceTexture::CreateShared(const gfx::IntSize& size)
-{
-    bool hasAlpha = mReadCaps.alpha;
-
-    jni::Object::LocalRef surface = java::SurfaceAllocator::AcquireSurface(size.width, size.height, true);
-    if (!surface) {
-        // Try multi-buffer mode
-        surface = java::SurfaceAllocator::AcquireSurface(size.width, size.height, false);
-        if (!surface) {
-            // Give up
-            NS_WARNING("Failed to allocate SurfaceTexture!");
-            return nullptr;
-        }
-    }
-
-    return SharedSurface_SurfaceTexture::Create(mGL, mFormats, size, hasAlpha,
-                                                java::GeckoSurface::Ref::From(surface));
-}
-
-#endif // MOZ_WIDGET_ANDROID
 
 } // namespace gl
 

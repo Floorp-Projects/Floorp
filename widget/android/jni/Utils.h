@@ -146,8 +146,6 @@ void DispatchToGeckoPriorityQueue(UniquePtr<AbstractCall>&& aCall);
  */
 bool IsFennec();
 
-int GetAPIVersion();
-
 } // jni
 } // mozilla
 

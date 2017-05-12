@@ -473,12 +473,5 @@
             android:isolatedProcess="false">
         </service>
 
-        <service
-            android:name="org.mozilla.gecko.gfx.SurfaceAllocatorService"
-            android:enabled="true"
-            android:exported="false"
-            android:isolatedProcess="false">
-        </service>
-
     </application>
 </manifest>

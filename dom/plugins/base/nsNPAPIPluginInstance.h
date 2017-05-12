@@ -21,7 +21,7 @@
 #ifdef MOZ_WIDGET_ANDROID
 #include "nsIRunnable.h"
 #include "GLContextTypes.h"
-#include "AndroidNativeWindow.h"
+#include "AndroidSurfaceTexture.h"
 #include "AndroidBridge.h"
 #include <map>
 class PluginEventRunnable;
@@ -215,24 +215,22 @@ public:
   // For ANPNativeWindow
   void* AcquireContentWindow();
 
-  mozilla::java::GeckoSurface::Param AsSurface();
+  mozilla::gl::AndroidSurfaceTexture* AsSurfaceTexture();
 
   // For ANPVideo
   class VideoInfo {
   public:
-    VideoInfo(mozilla::java::GeckoSurface::Param aSurface)
-      : mSurface(aSurface)
-      , mNativeWindow(aSurface)
+    VideoInfo(mozilla::gl::AndroidSurfaceTexture* aSurfaceTexture) :
+      mSurfaceTexture(aSurfaceTexture)
     {
     }
 
     ~VideoInfo()
     {
-      mozilla::java::SurfaceAllocator::DisposeSurface(mSurface);
+      mSurfaceTexture = nullptr;
     }
 
-    mozilla::java::GeckoSurface::GlobalRef mSurface;
-    mozilla::gl::AndroidNativeWindow mNativeWindow;
+    RefPtr<mozilla::gl::AndroidSurfaceTexture> mSurfaceTexture;
     gfxRect mDimensions;
   };
 
@@ -361,8 +359,7 @@ protected:
   bool mFullScreen;
   mozilla::gl::OriginPos mOriginPos;
 
-  mozilla::java::GeckoSurface::GlobalRef mContentSurface;
-  mozilla::gl::AndroidNativeWindow mContentWindow;
+  RefPtr<mozilla::gl::AndroidSurfaceTexture> mContentSurface;
 #endif
 
   enum {
@@ -412,7 +409,8 @@ private:
   mozilla::TimeStamp mStopTime;
 
 #ifdef MOZ_WIDGET_ANDROID
-  mozilla::java::GeckoSurface::LocalRef CreateSurface();
+  already_AddRefed<mozilla::gl::AndroidSurfaceTexture> CreateSurfaceTexture();
+
   std::map<void*, VideoInfo*> mVideos;
   bool mOnScreen;
 
