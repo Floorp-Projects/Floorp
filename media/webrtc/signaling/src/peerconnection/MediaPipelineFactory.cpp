@@ -845,7 +845,7 @@ MediaPipelineFactory::GetOrCreateVideoConduit(
     }
 
     if (!extmaps.empty()) {
-      conduit->AddLocalRTPExtensions(false, extmaps);
+      conduit->SetLocalRTPExtensions(false, extmaps);
     }
     auto error = conduit->ConfigureRecvMediaCodecs(configs.values);
     if (error) {
@@ -873,7 +873,7 @@ MediaPipelineFactory::GetOrCreateVideoConduit(
     }
 
     if (!extmaps.empty()) {
-      conduit->AddLocalRTPExtensions(true, extmaps);
+      conduit->SetLocalRTPExtensions(true, extmaps);
     }
     auto error = conduit->ConfigureSendMediaCodec(configs.values[0]);
     if (error) {
