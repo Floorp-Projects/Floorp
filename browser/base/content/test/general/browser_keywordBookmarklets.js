@@ -5,9 +5,9 @@ add_task(async function test_keyword_bookmarklet() {
                                                 title: "bookmarklet",
                                                 url: "javascript:'1';" });
   let tab = gBrowser.selectedTab = gBrowser.addTab();
-  registerCleanupFunction(function* () {
+  registerCleanupFunction(async function() {
     gBrowser.removeTab(tab);
-    yield PlacesUtils.bookmarks.remove(bm);
+    await PlacesUtils.bookmarks.remove(bm);
   });
   await promisePageShow();
   let originalPrincipal = gBrowser.contentPrincipal;

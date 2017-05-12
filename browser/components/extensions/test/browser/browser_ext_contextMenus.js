@@ -317,15 +317,15 @@ add_task(async function testRemoveAllWithTwoExtensions() {
   await first.startup();
   await second.startup();
 
-  function* confirmMenuItems(...items) {
+  async function confirmMenuItems(...items) {
     // Round-trip to extension to make sure that the context menu state has been
     // updated by the async contextMenus.create / contextMenus.removeAll calls.
     first.sendMessage("ping");
     second.sendMessage("ping");
-    yield first.awaitMessage("pong-alpha");
-    yield second.awaitMessage("pong-beta");
+    await first.awaitMessage("pong-alpha");
+    await second.awaitMessage("pong-beta");
 
-    const menu = yield openContextMenu();
+    const menu = await openContextMenu();
     for (const id of ["alpha", "beta", "gamma"]) {
       const expected = items.includes(id);
       const found = menu.getElementsByAttribute("label", id);

@@ -11,10 +11,10 @@ registerCleanupFunction(teardown);
 add_task(async function testVoiceselectDropdownAutoclose() {
   setup();
 
-  await spawnInNewReaderTab(TEST_ARTICLE, function* () {
+  await spawnInNewReaderTab(TEST_ARTICLE, async function() {
     let $ = content.document.querySelector.bind(content.document);
 
-    yield NarrateTestUtils.waitForNarrateToggle(content);
+    await NarrateTestUtils.waitForNarrateToggle(content);
 
     $(NarrateTestUtils.TOGGLE).click();
     ok(NarrateTestUtils.isVisible($(NarrateTestUtils.POPUP)),
@@ -46,10 +46,10 @@ add_task(async function testVoiceselectDropdownAutoclose() {
 add_task(async function testVoiceselectLabelChange() {
   setup();
 
-  await spawnInNewReaderTab(TEST_ARTICLE, function* () {
+  await spawnInNewReaderTab(TEST_ARTICLE, async function() {
     let $ = content.document.querySelector.bind(content.document);
 
-    yield NarrateTestUtils.waitForNarrateToggle(content);
+    await NarrateTestUtils.waitForNarrateToggle(content);
 
     $(NarrateTestUtils.TOGGLE).click();
     ok(NarrateTestUtils.isVisible($(NarrateTestUtils.POPUP)),
@@ -69,10 +69,10 @@ add_task(async function testVoiceselectLabelChange() {
 add_task(async function testVoiceselectKeyboard() {
   setup();
 
-  await spawnInNewReaderTab(TEST_ARTICLE, function* () {
+  await spawnInNewReaderTab(TEST_ARTICLE, async function() {
     let $ = content.document.querySelector.bind(content.document);
 
-    yield NarrateTestUtils.waitForNarrateToggle(content);
+    await NarrateTestUtils.waitForNarrateToggle(content);
 
     $(NarrateTestUtils.TOGGLE).click();
     ok(NarrateTestUtils.isVisible($(NarrateTestUtils.POPUP)),
@@ -89,7 +89,7 @@ add_task(async function testVoiceselectKeyboard() {
 
     eventUtils.sendKey("DOWN", content);
 
-    yield ContentTaskUtils.waitForCondition(
+    await ContentTaskUtils.waitForCondition(
       () => $(NarrateTestUtils.VOICE_SELECTED).dataset.value != firstValue,
       "value changed after pressing DOWN key");
 
@@ -105,7 +105,7 @@ add_task(async function testVoiceselectKeyboard() {
     ok(!NarrateTestUtils.isVisible($(NarrateTestUtils.VOICE_OPTIONS)),
       "voice options hidden after pressing RETURN");
 
-    yield ContentTaskUtils.waitForCondition(
+    await ContentTaskUtils.waitForCondition(
       () => $(NarrateTestUtils.VOICE_SELECTED).dataset.value == firstValue,
       "value changed back to original after pressing RETURN");
   });

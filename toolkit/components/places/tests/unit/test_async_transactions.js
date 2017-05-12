@@ -250,15 +250,15 @@ function isLivemarkTree(aTree) {
          aTree.annos.some( a => a.name == PlacesUtils.LMANNO_FEEDURI );
 }
 
-function* ensureLivemarkCreatedByAddLivemark(aLivemarkGuid) {
+async function ensureLivemarkCreatedByAddLivemark(aLivemarkGuid) {
   // This throws otherwise.
-  yield PlacesUtils.livemarks.getLivemark({ guid: aLivemarkGuid });
+  await PlacesUtils.livemarks.getLivemark({ guid: aLivemarkGuid });
 }
 
 // Checks if two bookmark trees (as returned by promiseBookmarksTree) are the
 // same.
 // false value for aCheckParentAndPosition is ignored if aIsRestoredItem is set.
-function* ensureEqualBookmarksTrees(aOriginal,
+async function ensureEqualBookmarksTrees(aOriginal,
                                     aNew,
                                     aIsRestoredItem = true,
                                     aCheckParentAndPosition = false) {
@@ -268,7 +268,7 @@ function* ensureEqualBookmarksTrees(aOriginal,
   if (aIsRestoredItem) {
     Assert.deepEqual(aOriginal, aNew);
     if (isLivemarkTree(aNew))
-      yield ensureLivemarkCreatedByAddLivemark(aNew.guid);
+      await ensureLivemarkCreatedByAddLivemark(aNew.guid);
     return;
   }
 
@@ -276,7 +276,7 @@ function* ensureEqualBookmarksTrees(aOriginal,
     if (property == "children") {
       Assert.equal(aOriginal.children.length, aNew.children.length);
       for (let i = 0; i < aOriginal.children.length; i++) {
-        yield ensureEqualBookmarksTrees(aOriginal.children[i],
+        await ensureEqualBookmarksTrees(aOriginal.children[i],
                                         aNew.children[i],
                                         false,
                                         true);
@@ -300,7 +300,7 @@ function* ensureEqualBookmarksTrees(aOriginal,
   }
 
   if (isLivemarkTree(aNew))
-    yield ensureLivemarkCreatedByAddLivemark(aNew.guid);
+    await ensureLivemarkCreatedByAddLivemark(aNew.guid);
 }
 
 async function ensureBookmarksTreeRestoredCorrectly(...aOriginalBookmarksTrees) {
@@ -318,10 +318,10 @@ async function ensureNonExistent(...aGuids) {
 }
 
 add_task(async function test_recycled_transactions() {
-  function* ensureTransactThrowsFor(aTransaction) {
+  async function ensureTransactThrowsFor(aTransaction) {
     let [txns, undoPosition] = getTransactionsHistoryState();
     try {
-      yield aTransaction.transact();
+      await aTransaction.transact();
       do_throw("Shouldn't be able to use the same transaction twice");
     } catch (ex) { }
     ensureUndoState(txns, undoPosition);
@@ -341,13 +341,13 @@ add_task(async function test_recycled_transactions() {
   ensureTransactThrowsFor(txn_a);
 
   let txn_b = PT.NewFolder(createTestFolderInfo());
-  await PT.batch(function* () {
+  await PT.batch(async function() {
     try {
-      yield txn_a.transact();
+      await txn_a.transact();
       do_throw("Shouldn't be able to use the same transaction twice");
     } catch (ex) { }
     ensureUndoState();
-    yield txn_b.transact();
+    await txn_b.transact();
   });
   ensureUndoState([[txn_b]], 0);
 
@@ -369,9 +369,9 @@ add_task(async function test_new_folder_with_annotation() {
   ensureUndoState();
   let txn = PT.NewFolder(folder_info);
   folder_info.guid = await txn.transact();
-  let ensureDo = function* (aRedo = false) {
+  let ensureDo = async function(aRedo = false) {
     ensureUndoState([[txn]], 0);
-    yield ensureItemsAdded(folder_info);
+    await ensureItemsAdded(folder_info);
     ensureAnnotationsSet(folder_info.guid, [ANNO]);
     if (aRedo)
       ensureTimestampsUpdated(folder_info.guid, true);
@@ -407,9 +407,9 @@ add_task(async function test_new_bookmark() {
   let txn = PT.NewBookmark(bm_info);
   bm_info.guid = await txn.transact();
 
-  let ensureDo = function* (aRedo = false) {
+  let ensureDo = async function(aRedo = false) {
     ensureUndoState([[txn]], 0);
-    yield ensureItemsAdded(bm_info);
+    await ensureItemsAdded(bm_info);
     if (aRedo)
       ensureTimestampsUpdated(bm_info.guid, true);
     observer.reset();
@@ -440,17 +440,17 @@ add_task(async function test_merge_create_folder_and_item() {
                 , title: "Test Bookmark"
                 , index: bmStartIndex };
 
-  let [folderTxnResult, bkmTxnResult] = await PT.batch(function* () {
+  let [folderTxnResult, bkmTxnResult] = await PT.batch(async function() {
     let folderTxn = PT.NewFolder(folder_info);
-    folder_info.guid = bm_info.parentGuid = yield folderTxn.transact();
+    folder_info.guid = bm_info.parentGuid = await folderTxn.transact();
     let bkmTxn = PT.NewBookmark(bm_info);
-    bm_info.guid = yield bkmTxn.transact();
+    bm_info.guid = await bkmTxn.transact();
     return [folderTxn, bkmTxn];
   });
 
-  let ensureDo = function* () {
+  let ensureDo = async function() {
     ensureUndoState([[bkmTxnResult, folderTxnResult]], 0);
-    yield ensureItemsAdded(folder_info, bm_info);
+    await ensureItemsAdded(folder_info, bm_info);
     observer.reset();
   };
 
@@ -480,15 +480,15 @@ add_task(async function test_move_items_to_folder() {
                    , title: "Bookmark B" };
 
   // Test moving items within the same folder.
-  let [folder_a_txn_result, bkm_a_txn_result, bkm_b_txn_result] = await PT.batch(function* () {
+  let [folder_a_txn_result, bkm_a_txn_result, bkm_b_txn_result] = await PT.batch(async function() {
     let folder_a_txn = PT.NewFolder(folder_a_info);
 
     folder_a_info.guid = bkm_a_info.parentGuid = bkm_b_info.parentGuid =
-      yield folder_a_txn.transact();
+      await folder_a_txn.transact();
     let bkm_a_txn = PT.NewBookmark(bkm_a_info);
-    bkm_a_info.guid = yield bkm_a_txn.transact();
+    bkm_a_info.guid = await bkm_a_txn.transact();
     let bkm_b_txn = PT.NewBookmark(bkm_b_info);
-    bkm_b_info.guid = yield bkm_b_txn.transact();
+    bkm_b_info.guid = await bkm_b_txn.transact();
     return [folder_a_txn, bkm_a_txn, bkm_b_txn];
   });
 
@@ -586,12 +586,12 @@ add_task(async function test_remove_folder() {
   let folder_level_1_info = createTestFolderInfo("Folder Level 1");
   let folder_level_2_info = { title: "Folder Level 2" };
   let [folder_level_1_txn_result,
-       folder_level_2_txn_result] = await PT.batch(function* () {
+       folder_level_2_txn_result] = await PT.batch(async function() {
     let folder_level_1_txn  = PT.NewFolder(folder_level_1_info);
-    folder_level_1_info.guid = yield folder_level_1_txn.transact();
+    folder_level_1_info.guid = await folder_level_1_txn.transact();
     folder_level_2_info.parentGuid = folder_level_1_info.guid;
     let folder_level_2_txn = PT.NewFolder(folder_level_2_info);
-    folder_level_2_info.guid = yield folder_level_2_txn.transact();
+    folder_level_2_info.guid = await folder_level_2_txn.transact();
     return [folder_level_1_txn, folder_level_2_txn];
   });
 
@@ -802,11 +802,11 @@ add_task(async function test_creating_and_removing_a_separator() {
   let undoEntries = [];
 
   observer.reset();
-  let create_txns = await PT.batch(function* () {
+  let create_txns = await PT.batch(async function() {
     let folder_txn = PT.NewFolder(folder_info);
-    folder_info.guid = separator_info.parentGuid = yield folder_txn.transact();
+    folder_info.guid = separator_info.parentGuid = await folder_txn.transact();
     let separator_txn = PT.NewSeparator(separator_info);
-    separator_info.guid = yield separator_txn.transact();
+    separator_info.guid = await separator_txn.transact();
     return [separator_txn, folder_txn];
   });
   undoEntries.unshift(create_txns);
@@ -876,23 +876,23 @@ add_task(async function test_add_and_remove_livemark() {
   let removeTxn = PT.Remove(guid);
   await removeTxn.transact();
   await ensureNonExistent(guid);
-  function* undo() {
+  async function undo() {
     ensureUndoState([[removeTxn], [createLivemarkTxn]], 0);
-    yield PT.undo();
+    await PT.undo();
     ensureUndoState([[removeTxn], [createLivemarkTxn]], 1);
-    yield ensureBookmarksTreeRestoredCorrectly(originalInfo);
-    yield PT.undo();
+    await ensureBookmarksTreeRestoredCorrectly(originalInfo);
+    await PT.undo();
     ensureUndoState([[removeTxn], [createLivemarkTxn]], 2);
-    yield ensureNonExistent(guid);
+    await ensureNonExistent(guid);
   }
-  function* redo() {
+  async function redo() {
     ensureUndoState([[removeTxn], [createLivemarkTxn]], 2);
-    yield PT.redo();
+    await PT.redo();
     ensureUndoState([[removeTxn], [createLivemarkTxn]], 1);
-    yield ensureBookmarksTreeRestoredCorrectly(originalInfo);
-    yield PT.redo();
+    await ensureBookmarksTreeRestoredCorrectly(originalInfo);
+    await PT.redo();
     ensureUndoState([[removeTxn], [createLivemarkTxn]], 0);
-    yield ensureNonExistent(guid);
+    await ensureNonExistent(guid);
   }
 
   await undo();
@@ -1120,12 +1120,12 @@ add_task(async function test_tag_uri() {
                   , parentGuid: rootGuid };
   let unbookmarked_uri = NetUtil.newURI("http://un.bookmarked.uri");
 
-  await PT.batch(function* () {
-    bm_info_a.guid = yield PT.NewBookmark(bm_info_a).transact();
-    bm_info_b.guid = yield PT.NewBookmark(bm_info_b).transact();
+  await PT.batch(async function() {
+    bm_info_a.guid = await PT.NewBookmark(bm_info_a).transact();
+    bm_info_b.guid = await PT.NewBookmark(bm_info_b).transact();
   });
 
-  function* doTest(aInfo) {
+  async function doTest(aInfo) {
     let urls = "url" in aInfo ? [aInfo.url] : aInfo.urls;
     let tags = "tag" in aInfo ? [aInfo.tag] : aInfo.tags;
 
@@ -1134,35 +1134,35 @@ add_task(async function test_tag_uri() {
 
     let tagWillAlsoBookmark = new Set();
     for (let url of urls) {
-      if (!(yield bmsvc.fetch({ url }))) {
+      if (!(await bmsvc.fetch({ url }))) {
         tagWillAlsoBookmark.add(url);
       }
     }
 
-    function* ensureTagsSet() {
+    async function ensureTagsSet() {
       for (let url of urls) {
         ensureTagsForURI(url, tags);
-        Assert.ok(yield bmsvc.fetch({ url }));
+        Assert.ok(await bmsvc.fetch({ url }));
       }
     }
-    function* ensureTagsUnset() {
+    async function ensureTagsUnset() {
       for (let url of urls) {
         ensureTagsForURI(url, []);
         if (tagWillAlsoBookmark.has(url))
-          Assert.ok(!(yield bmsvc.fetch({ url })));
+          Assert.ok(!(await bmsvc.fetch({ url })));
         else
-          Assert.ok(yield bmsvc.fetch({ url }));
+          Assert.ok(await bmsvc.fetch({ url }));
       }
     }
 
-    yield PT.Tag(aInfo).transact();
-    yield ensureTagsSet();
-    yield PT.undo();
-    yield ensureTagsUnset();
-    yield PT.redo();
-    yield ensureTagsSet();
-    yield PT.undo();
-    yield ensureTagsUnset();
+    await PT.Tag(aInfo).transact();
+    await ensureTagsSet();
+    await PT.undo();
+    await ensureTagsUnset();
+    await PT.redo();
+    await ensureTagsSet();
+    await PT.undo();
+    await ensureTagsUnset();
   }
 
   await doTest({ url: bm_info_a.url, tags: ["MyTag"] });
@@ -1187,14 +1187,14 @@ add_task(async function test_untag_uri() {
                   , parentGuid: rootGuid
                   , tag: "B" };
 
-  await PT.batch(function* () {
-    bm_info_a.guid = yield PT.NewBookmark(bm_info_a).transact();
+  await PT.batch(async function() {
+    bm_info_a.guid = await PT.NewBookmark(bm_info_a).transact();
     ensureTagsForURI(bm_info_a.url, bm_info_a.tags);
-    bm_info_b.guid = yield PT.NewBookmark(bm_info_b).transact();
+    bm_info_b.guid = await PT.NewBookmark(bm_info_b).transact();
     ensureTagsForURI(bm_info_b.url, [bm_info_b.tag]);
   });
 
-  function* doTest(aInfo) {
+  async function doTest(aInfo) {
     let urls, tagsRemoved;
     if (aInfo instanceof Ci.nsIURI) {
       urls = [aInfo];
@@ -1225,14 +1225,14 @@ add_task(async function test_untag_uri() {
       }
     }
 
-    yield PT.Untag(aInfo).transact();
-    yield ensureTagsUnset();
-    yield PT.undo();
-    yield ensureTagsSet();
-    yield PT.redo();
-    yield ensureTagsUnset();
-    yield PT.undo();
-    yield ensureTagsSet();
+    await PT.Untag(aInfo).transact();
+    await ensureTagsUnset();
+    await PT.undo();
+    await ensureTagsSet();
+    await PT.redo();
+    await ensureTagsUnset();
+    await PT.undo();
+    await ensureTagsSet();
   }
 
   await doTest(bm_info_a);
@@ -1364,11 +1364,11 @@ add_task(async function test_sort_folder_by_name() {
   let sortedOrder = [...preSep.slice(0).reverse(),
                      sep,
                      ...postSep.slice(0).reverse()];
-  await PT.batch(function* () {
-    folder_info.guid = yield PT.NewFolder(folder_info).transact();
+  await PT.batch(async function() {
+    folder_info.guid = await PT.NewFolder(folder_info).transact();
     for (let info of originalOrder) {
       info.parentGuid = folder_info.guid;
-      info.guid = yield info == sep ?
+      info.guid = await info == sep ?
                     PT.NewSeparator(info).transact() :
                     PT.NewBookmark(info).transact();
     }
@@ -1421,20 +1421,20 @@ add_task(async function test_livemark_txns() {
                        , parentGuid: livemark_info.parentGuid });
   }
 
-  function* _testDoUndoRedoUndo() {
+  async function _testDoUndoRedoUndo() {
     observer.reset();
-    livemark_info.guid = yield PT.NewLivemark(livemark_info).transact();
+    livemark_info.guid = await PT.NewLivemark(livemark_info).transact();
     ensureLivemarkAdded();
 
     observer.reset();
-    yield PT.undo();
+    await PT.undo();
     ensureLivemarkRemoved();
 
     observer.reset();
-    yield PT.redo();
+    await PT.redo();
     ensureLivemarkAdded();
 
-    yield PT.undo();
+    await PT.undo();
     ensureLivemarkRemoved();
   }
 
@@ -1455,17 +1455,17 @@ add_task(async function test_copy() {
     let duplicateInfo = await PlacesUtils.promiseBookmarksTree(duplicateGuid);
     await ensureEqualBookmarksTrees(originalInfo, duplicateInfo, false);
 
-    function* redo() {
-      yield PT.redo();
-      yield ensureBookmarksTreeRestoredCorrectly(originalInfo);
-      yield PT.redo();
-      yield ensureBookmarksTreeRestoredCorrectly(duplicateInfo);
+    async function redo() {
+      await PT.redo();
+      await ensureBookmarksTreeRestoredCorrectly(originalInfo);
+      await PT.redo();
+      await ensureBookmarksTreeRestoredCorrectly(duplicateInfo);
     }
-    function* undo() {
-      yield PT.undo();
+    async function undo() {
+      await PT.undo();
       // also undo the original item addition.
-      yield PT.undo();
-      yield ensureNonExistent(aOriginalGuid, duplicateGuid);
+      await PT.undo();
+      await ensureNonExistent(aOriginalGuid, duplicateGuid);
     }
 
     await undo();
@@ -1495,18 +1495,18 @@ add_task(async function test_copy() {
   }
 
   // Test duplicating a folder having some contents.
-  let filledFolderGuid = await PT.batch(function *() {
-    let folderGuid = yield PT.NewFolder(createTestFolderInfo()).transact();
+  let filledFolderGuid = await PT.batch(async function() {
+    let folderGuid = await PT.NewFolder(createTestFolderInfo()).transact();
     let nestedFolderGuid =
-      yield PT.NewFolder({ parentGuid: folderGuid
+      await PT.NewFolder({ parentGuid: folderGuid
                          , title: "Nested Folder" }).transact();
     // Insert a bookmark under the nested folder.
-    yield PT.NewBookmark({ url: new URL("http://nested.nested.bookmark")
+    await PT.NewBookmark({ url: new URL("http://nested.nested.bookmark")
                          , parentGuid: nestedFolderGuid }).transact();
     // Insert a separator below the nested folder
-    yield PT.NewSeparator({ parentGuid: folderGuid }).transact();
+    await PT.NewSeparator({ parentGuid: folderGuid }).transact();
     // And another bookmark.
-    yield PT.NewBookmark({ url: new URL("http://nested.bookmark")
+    await PT.NewBookmark({ url: new URL("http://nested.bookmark")
                          , parentGuid: folderGuid }).transact();
     return folderGuid;
   });
@@ -1637,18 +1637,18 @@ add_task(async function test_annotate_multiple_items() {
 
 add_task(async function test_remove_multiple() {
   let guids = [];
-  await PT.batch(function* () {
-    let folderGuid = yield PT.NewFolder({ title: "Test Folder"
+  await PT.batch(async function() {
+    let folderGuid = await PT.NewFolder({ title: "Test Folder"
                                         , parentGuid: rootGuid }).transact();
     let nestedFolderGuid =
-      yield PT.NewFolder({ title: "Nested Test Folder"
+      await PT.NewFolder({ title: "Nested Test Folder"
                          , parentGuid: folderGuid }).transact();
-    yield PT.NewSeparator(nestedFolderGuid).transact();
+    await PT.NewSeparator(nestedFolderGuid).transact();
 
     guids.push(folderGuid);
 
     let bmGuid =
-      yield PT.NewBookmark({ url: new URL("http://test.bookmark.removed")
+      await PT.NewBookmark({ url: new URL("http://test.bookmark.removed")
                            , parentGuid: rootGuid }).transact();
     guids.push(bmGuid);
   });
@@ -1687,11 +1687,11 @@ add_task(async function test_remove_multiple() {
 add_task(async function test_remove_bookmarks_for_urls() {
   let urls = [new URL("http://test.url.1"), new URL("http://test.url.2")];
   let guids = [];
-  await PT.batch(function* () {
+  await PT.batch(async function() {
     for (let url of urls) {
       for (let title of ["test title a", "test title b"]) {
         let txn = PT.NewBookmark({ url, title, parentGuid: rootGuid });
-        guids.push(yield txn.transact());
+        guids.push(await txn.transact());
       }
     }
   });

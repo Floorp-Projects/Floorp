@@ -81,11 +81,11 @@ const PROBE_TESTS = [
       await BrowserTestUtils.browserLoaded(browser);
     },
 
-    * doAction(browser) {
+    async doAction(browser) {
       let pageShow =
         BrowserTestUtils.waitForContentEvent(browser, "pageshow");
       document.getElementById("Browser:Back").doCommand();
-      yield pageShow;
+      await pageShow;
     },
   },
 
@@ -104,11 +104,11 @@ const PROBE_TESTS = [
       await pageShow;
     },
 
-    * doAction(browser) {
+    async doAction(browser) {
       let pageShow =
         BrowserTestUtils.waitForContentEvent(browser, "pageshow");
       document.getElementById("Browser:Forward").doCommand();
-      yield pageShow;
+      await pageShow;
     },
   },
 
@@ -126,11 +126,11 @@ const PROBE_TESTS = [
       await TabStateFlusher.flush(browser);
     },
 
-    * doAction(browser) {
+    async doAction(browser) {
       let pageShow =
         BrowserTestUtils.waitForContentEvent(browser, "pageshow");
       synthesizeHistoryNavigationToIndex(0);
-      yield pageShow;
+      await pageShow;
     },
   },
 
@@ -152,11 +152,11 @@ const PROBE_TESTS = [
       await TabStateFlusher.flush(browser);
     },
 
-    * doAction(browser) {
+    async doAction(browser) {
       let pageShow =
         BrowserTestUtils.waitForContentEvent(browser, "pageshow");
       synthesizeHistoryNavigationToIndex(2);
-      yield pageShow;
+      await pageShow;
     },
   },
 
@@ -264,11 +264,11 @@ add_task(async function test_probes() {
     await BrowserTestUtils.withNewTab({
       gBrowser,
       url: "http://example.com",
-    }, function*(browser) {
+    }, async function(browser) {
       let tab = gBrowser.getTabForBrowser(browser);
       info(`Test: "${probeTest.name}"`);
 
-      yield* probeTest.prepare(browser);
+      await probeTest.prepare(browser);
       // Instead of trying to fiddle with network state or
       // anything, we'll just set this attribute to fool our
       // telemetry probes into thinking the browser is in the
@@ -276,7 +276,7 @@ add_task(async function test_probes() {
       tab.setAttribute("busy", true);
 
       histogram.clear();
-      yield* probeTest.doAction(browser);
+      await probeTest.doAction(browser);
       let snapshot = histogram.snapshot();
       assertOnlyOneTypeSet(snapshot, probeTest.category);
     });

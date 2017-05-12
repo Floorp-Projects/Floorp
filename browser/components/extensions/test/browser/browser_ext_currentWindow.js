@@ -95,13 +95,13 @@ add_task(async function() {
   let winId1 = windowTracker.getId(win1);
   let winId2 = windowTracker.getId(win2);
 
-  function* checkWindow(kind, winId, name) {
+  async function checkWindow(kind, winId, name) {
     extension.sendMessage(kind + "-check-current1");
-    is((yield extension.awaitMessage("result")), winId, `${name} is on top (check 1) [${kind}]`);
+    is((await extension.awaitMessage("result")), winId, `${name} is on top (check 1) [${kind}]`);
     extension.sendMessage(kind + "-check-current2");
-    is((yield extension.awaitMessage("result")), winId, `${name} is on top (check 2) [${kind}]`);
+    is((await extension.awaitMessage("result")), winId, `${name} is on top (check 2) [${kind}]`);
     extension.sendMessage(kind + "-check-current3");
-    is((yield extension.awaitMessage("result")), winId, `${name} is on top (check 3) [${kind}]`);
+    is((await extension.awaitMessage("result")), winId, `${name} is on top (check 3) [${kind}]`);
   }
 
   await focusWindow(win1);
@@ -109,13 +109,13 @@ add_task(async function() {
   await focusWindow(win2);
   await checkWindow("background", winId2, "win2");
 
-  function* triggerPopup(win, callback) {
-    yield clickBrowserAction(extension, win);
-    yield awaitExtensionPanel(extension, win);
+  async function triggerPopup(win, callback) {
+    await clickBrowserAction(extension, win);
+    await awaitExtensionPanel(extension, win);
 
-    yield extension.awaitMessage("popup-ready");
+    await extension.awaitMessage("popup-ready");
 
-    yield callback();
+    await callback();
 
     closeBrowserAction(extension, win);
   }
@@ -123,20 +123,20 @@ add_task(async function() {
   // Set focus to some other window.
   await focusWindow(window);
 
-  await triggerPopup(win1, function* () {
-    yield checkWindow("popup", winId1, "win1");
+  await triggerPopup(win1, async function() {
+    await checkWindow("popup", winId1, "win1");
   });
 
-  await triggerPopup(win2, function* () {
-    yield checkWindow("popup", winId2, "win2");
+  await triggerPopup(win2, async function() {
+    await checkWindow("popup", winId2, "win2");
   });
 
-  function* triggerPage(winId, name) {
+  async function triggerPage(winId, name) {
     extension.sendMessage("background-open-page", winId);
-    yield extension.awaitMessage("page-ready");
-    yield checkWindow("page", winId, name);
+    await extension.awaitMessage("page-ready");
+    await checkWindow("page", winId, name);
     extension.sendMessage("background-close-page", winId);
-    yield extension.awaitMessage("closed");
+    await extension.awaitMessage("closed");
   }
 
   await triggerPage(winId1, "win1");

@@ -54,14 +54,14 @@
       await onDocumentLoaded();
     }
 
-    function* onDocumentLoaded() {
+    async function onDocumentLoaded() {
       gFindBar.open();
       gFindBar.onFindCommand();
 
-      yield testFind();
-      yield* testFindAgain();
-      yield testCaseSensitivity();
-      yield testHighlight();
+      await testFind();
+      await testFindAgain();
+      await testCaseSensitivity();
+      await testHighlight();
     }
 
     function checkSelection() {

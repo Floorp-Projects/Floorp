@@ -25,7 +25,7 @@ add_test_pair(async function ordering() {
   do_check_eq(string3, string2);
 });
 
-add_test_pair(function* read_write_all() {
+add_test_pair(async function read_write_all() {
   let DEST_PATH = SHARED_PATH + Math.random();
   let TMP_PATH = DEST_PATH + ".tmp";
 
@@ -91,10 +91,10 @@ add_test_pair(function* read_write_all() {
     })();
   };
 
-  yield test_with_options({tmpPath: TMP_PATH}, "Renaming, not flushing");
-  yield test_with_options({tmpPath: TMP_PATH, flush: true}, "Renaming, flushing");
-  yield test_with_options({}, "Not renaming, not flushing");
-  yield test_with_options({flush: true}, "Not renaming, flushing");
+  await test_with_options({tmpPath: TMP_PATH}, "Renaming, not flushing");
+  await test_with_options({tmpPath: TMP_PATH, flush: true}, "Renaming, flushing");
+  await test_with_options({}, "Not renaming, not flushing");
+  await test_with_options({flush: true}, "Not renaming, flushing");
 });
 
 

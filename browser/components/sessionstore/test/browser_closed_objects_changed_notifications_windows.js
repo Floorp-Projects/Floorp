@@ -19,13 +19,13 @@ async function openWindow(url) {
   return win;
 }
 
-function* closeWindow(win) {
-  yield awaitNotification(() => BrowserTestUtils.closeWindow(win));
+async function closeWindow(win) {
+  await awaitNotification(() => BrowserTestUtils.closeWindow(win));
 }
 
-function* openAndCloseWindow(url) {
-  let win = yield openWindow(url);
-  yield closeWindow(win);
+async function openAndCloseWindow(url) {
+  let win = await openWindow(url);
+  await closeWindow(win);
 }
 
 function countingObserver() {
@@ -36,10 +36,10 @@ function assertNotificationCount(count) {
   is(notificationsCount, count, "The expected number of notifications was received.");
 }
 
-function* awaitNotification(callback) {
+async function awaitNotification(callback) {
   let notification = TestUtils.topicObserved(TOPIC);
   executeSoon(callback);
-  yield notification;
+  await notification;
 }
 
 add_task(async function test_closedObjectsChangedNotifications() {

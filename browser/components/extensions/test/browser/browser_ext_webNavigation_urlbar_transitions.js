@@ -21,22 +21,22 @@ async function promiseAutocompleteResultPopup(inputText) {
   });
 }
 
-function* addBookmark(bookmark) {
+async function addBookmark(bookmark) {
   if (bookmark.keyword) {
-    yield PlacesUtils.keywords.insert({
+    await PlacesUtils.keywords.insert({
       keyword: bookmark.keyword,
       url: bookmark.url,
     });
   }
 
-  yield PlacesUtils.bookmarks.insert({
+  await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: bookmark.url,
     title: bookmark.title,
   });
 
-  registerCleanupFunction(function* () {
-    yield PlacesUtils.bookmarks.eraseEverything();
+  registerCleanupFunction(async function() {
+    await PlacesUtils.bookmarks.eraseEverything();
   });
 }
 
@@ -58,10 +58,10 @@ function addSearchEngine(basename) {
   });
 }
 
-function* prepareSearchEngine() {
+async function prepareSearchEngine() {
   let oldCurrentEngine = Services.search.currentEngine;
   Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, true);
-  let engine = yield addSearchEngine(TEST_ENGINE_BASENAME);
+  let engine = await addSearchEngine(TEST_ENGINE_BASENAME);
   Services.search.currentEngine = engine;
 
   registerCleanupFunction(async function() {

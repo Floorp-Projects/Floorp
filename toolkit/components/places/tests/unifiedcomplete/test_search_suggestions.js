@@ -14,8 +14,8 @@ function setSuggestionsFn(fn) {
   suggestionsFn = fn;
 }
 
-function* cleanUpSuggestions() {
-  yield cleanup();
+async function cleanUpSuggestions() {
+  await cleanup();
   if (previousSuggestionsFn) {
     suggestionsFn = previousSuggestionsFn;
     previousSuggestionsFn = null;

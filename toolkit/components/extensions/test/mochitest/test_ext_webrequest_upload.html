@@ -140,11 +140,11 @@ add_task(async function test_xhr_forms() {
 
   await extension.startup();
 
-  function* doneAndTabClosed() {
-    yield extension.awaitMessage("done");
+  async function doneAndTabClosed() {
+    await extension.awaitMessage("done");
     let closed = extension.awaitMessage("tab-closed");
     extension.sendMessage("close-tab");
-    yield closed;
+    await closed;
   }
 
   for (let form of document.forms) {

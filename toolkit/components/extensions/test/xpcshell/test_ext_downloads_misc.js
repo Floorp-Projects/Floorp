@@ -737,12 +737,12 @@ add_task(async function test_erase() {
 
   await runInExtension("clearEvents");
 
-  function* download() {
-    let msg = yield runInExtension("download", {url: TXT_URL});
+  async function download() {
+    let msg = await runInExtension("download", {url: TXT_URL});
     equal(msg.status, "success", "download succeeded");
     let id = msg.result;
 
-    msg = yield runInExtension("waitForEvents", [{
+    msg = await runInExtension("waitForEvents", [{
       type: "onChanged", data: {id, state: {current: "complete"}},
     }], {exact: false});
     equal(msg.status, "success", "download finished");

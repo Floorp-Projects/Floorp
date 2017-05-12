@@ -17,13 +17,13 @@ let testCasesForBothSuccessAndAbort = [
    * The captive portal notification should be shown when the window is
    * opened, and closed automatically when the success event is fired.
    */
-  function* test_detectedWithNoBrowserWindow_Open(aSuccess) {
-    yield portalDetected();
-    let win = yield focusWindowAndWaitForPortalUI();
-    yield freePortal(aSuccess);
+  async function test_detectedWithNoBrowserWindow_Open(aSuccess) {
+    await portalDetected();
+    let win = await focusWindowAndWaitForPortalUI();
+    await freePortal(aSuccess);
     ensureNoPortalTab(win);
     ensureNoPortalNotification(win);
-    yield closeWindowAndWaitForXulWindowVisible(win);
+    await closeWindowAndWaitForXulWindowVisible(win);
   },
 
   /**
@@ -70,13 +70,13 @@ let testCasesForBothSuccessAndAbort = [
    * The captive portal notification should be shown when the window is
    * opened, and closed automatically when the success event is fired.
    */
-  function* test_detectedWithNoBrowserWindow_LongRecheck(aSuccess) {
-    yield portalDetected();
-    let win = yield focusWindowAndWaitForPortalUI(true);
-    yield freePortal(aSuccess);
+  async function test_detectedWithNoBrowserWindow_LongRecheck(aSuccess) {
+    await portalDetected();
+    let win = await focusWindowAndWaitForPortalUI(true);
+    await freePortal(aSuccess);
     ensureNoPortalTab(win);
     ensureNoPortalNotification(win);
-    yield closeWindowAndWaitForXulWindowVisible(win);
+    await closeWindowAndWaitForXulWindowVisible(win);
   },
 
   /**
@@ -101,19 +101,19 @@ let testCasesForBothSuccessAndAbort = [
    * A portal is detected when a browser window has focus. No portal tab should
    * be opened. A notification bar should be displayed in all browser windows.
    */
-  function* test_detectedWithFocus(aSuccess) {
-    let win1 = yield openWindowAndWaitForFocus();
-    let win2 = yield openWindowAndWaitForFocus();
-    yield portalDetected();
+  async function test_detectedWithFocus(aSuccess) {
+    let win1 = await openWindowAndWaitForFocus();
+    let win2 = await openWindowAndWaitForFocus();
+    await portalDetected();
     ensureNoPortalTab(win1);
     ensureNoPortalTab(win2);
     ensurePortalNotification(win1);
     ensurePortalNotification(win2);
-    yield freePortal(aSuccess);
+    await freePortal(aSuccess);
     ensureNoPortalNotification(win1);
     ensureNoPortalNotification(win2);
-    yield closeWindowAndWaitForXulWindowVisible(win2);
-    yield closeWindowAndWaitForXulWindowVisible(win1);
+    await closeWindowAndWaitForXulWindowVisible(win2);
+    await closeWindowAndWaitForXulWindowVisible(win1);
   },
 ];
 

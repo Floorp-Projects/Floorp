@@ -233,8 +233,8 @@ this.PlacesTestUtils = Object.freeze({
    */
   markBookmarksAsSynced() {
     return PlacesUtils.withConnectionWrapper("PlacesTestUtils: markBookmarksAsSynced", function(db) {
-      return db.executeTransaction(function* () {
-        yield db.executeCached(
+      return db.executeTransaction(async function() {
+        await db.executeCached(
           `WITH RECURSIVE
            syncedItems(id) AS (
              SELECT b.id FROM moz_bookmarks b
@@ -249,7 +249,7 @@ this.PlacesTestUtils = Object.freeze({
                syncStatus = :syncStatus
            WHERE id IN syncedItems`,
           { syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL });
-        yield db.executeCached("DELETE FROM moz_bookmarks_deleted");
+        await db.executeCached("DELETE FROM moz_bookmarks_deleted");
       });
     });
   },
@@ -270,12 +270,12 @@ this.PlacesTestUtils = Object.freeze({
    */
   setBookmarkSyncFields(...aFieldInfos) {
     return PlacesUtils.withConnectionWrapper("PlacesTestUtils: setBookmarkSyncFields", function(db) {
-      return db.executeTransaction(function* () {
+      return db.executeTransaction(async function() {
         for (let info of aFieldInfos) {
           if (!PlacesUtils.isValidGuid(info.guid)) {
             throw new Error(`Invalid GUID: ${info.guid}`);
           }
-          yield db.executeCached(
+          await db.executeCached(
             `UPDATE moz_bookmarks
              SET syncStatus = IFNULL(:syncStatus, syncStatus),
                  syncChangeCounter = IFNULL(:syncChangeCounter, syncChangeCounter),

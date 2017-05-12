@@ -5,7 +5,7 @@ var gTests = [
 
 {
   desc: "device sharing animation on background tabs",
-  run: function* checkAudioVideo() {
+  run: async function checkAudioVideo() {
     async function getStreamAndCheckBackgroundAnim(aAudio, aVideo, aSharing) {
       // Get a stream
       let popupPromise = promisePopupNotificationShown("webRTC-shareDevices");
@@ -64,9 +64,9 @@ var gTests = [
          "the tab no longer has the 'sharing' attribute after closing the stream");
     }
 
-    yield getStreamAndCheckBackgroundAnim(true, true, "camera");
-    yield getStreamAndCheckBackgroundAnim(false, true, "camera");
-    yield getStreamAndCheckBackgroundAnim(true, false, "microphone");
+    await getStreamAndCheckBackgroundAnim(true, true, "camera");
+    await getStreamAndCheckBackgroundAnim(false, true, "camera");
+    await getStreamAndCheckBackgroundAnim(true, false, "microphone");
   }
 }
 

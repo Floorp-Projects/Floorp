@@ -883,13 +883,13 @@ var removeVisitsByFilter = async function(db, filter, onResult = null) {
     }
 
     let pages = [];
-    await db.executeTransaction(function*() {
+    await db.executeTransaction(async function() {
       // 2. Remove all offending visits.
-      yield db.execute(`DELETE FROM moz_historyvisits
+      await db.execute(`DELETE FROM moz_historyvisits
                         WHERE id IN (${ sqlList(visitsToRemove) } )`);
 
       // 3. Find out which pages have been orphaned
-      yield db.execute(
+      await db.execute(
         `SELECT id, url, guid,
           (foreign_count != 0) AS has_foreign,
           (last_visit_date NOTNULL) as has_visits
@@ -908,7 +908,7 @@ var removeVisitsByFilter = async function(db, filter, onResult = null) {
          });
 
       // 4. Clean up and notify
-      yield cleanupPages(db, pages);
+      await cleanupPages(db, pages);
     });
 
     notifyCleanup(db, pages);
@@ -1074,14 +1074,14 @@ var remove = async function(db, {guids, urls}, onResult = null) {
       return false;
     }
 
-    await db.executeTransaction(function*() {
+    await db.executeTransaction(async function() {
       // 2. Remove all visits to these pages.
-      yield db.execute(`DELETE FROM moz_historyvisits
+      await db.execute(`DELETE FROM moz_historyvisits
                         WHERE place_id IN (${ sqlList(pages.map(p => p.id)) })
                        `);
 
       // 3. Clean up and notify
-      yield cleanupPages(db, pages);
+      await cleanupPages(db, pages);
     });
 
     notifyCleanup(db, pages);

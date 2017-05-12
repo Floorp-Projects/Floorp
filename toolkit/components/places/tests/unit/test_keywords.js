@@ -1,25 +1,25 @@
 "use strict"
 
-function* check_keyword(aExpectExists, aHref, aKeyword, aPostData = null) {
+async function check_keyword(aExpectExists, aHref, aKeyword, aPostData = null) {
   // Check case-insensitivity.
   aKeyword = aKeyword.toUpperCase();
 
-  let entry = yield PlacesUtils.keywords.fetch(aKeyword);
+  let entry = await PlacesUtils.keywords.fetch(aKeyword);
 
-  Assert.deepEqual(entry, yield PlacesUtils.keywords.fetch({ keyword: aKeyword }));
+  Assert.deepEqual(entry, await PlacesUtils.keywords.fetch({ keyword: aKeyword }));
 
   if (aExpectExists) {
     Assert.ok(!!entry, "A keyword should exist");
     Assert.equal(entry.url.href, aHref);
     Assert.equal(entry.postData, aPostData);
-    Assert.deepEqual(entry, yield PlacesUtils.keywords.fetch({ keyword: aKeyword, url: aHref }));
+    Assert.deepEqual(entry, await PlacesUtils.keywords.fetch({ keyword: aKeyword, url: aHref }));
     let entries = [];
-    yield PlacesUtils.keywords.fetch({ url: aHref }, e => entries.push(e));
+    await PlacesUtils.keywords.fetch({ url: aHref }, e => entries.push(e));
     Assert.ok(entries.some(e => e.url.href == aHref && e.keyword == aKeyword.toLowerCase()));
   } else {
     Assert.ok(!entry || entry.url.href != aHref,
               "The given keyword entry should not exist");
-    Assert.equal(null, yield PlacesUtils.keywords.fetch({ keyword: aKeyword, url: aHref }));
+    Assert.equal(null, await PlacesUtils.keywords.fetch({ keyword: aKeyword, url: aHref }));
   }
 }
 

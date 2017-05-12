@@ -23,8 +23,8 @@ add_task(async function test() {
     // Check the send tab to device menu item
     await ensureSyncReady();
     const oldGetter = setupRemoteClientsFixture(remoteClientsFixture);
-    await updateTabContextMenu(origTab, function* () {
-      yield openMenuItemSubmenu("context_sendTabToDevice");
+    await updateTabContextMenu(origTab, async function() {
+      await openMenuItemSubmenu("context_sendTabToDevice");
     });
     is(document.getElementById("context_sendTabToDevice").hidden, false, "Send tab to device is shown");
     let targets = document.getElementById("context_sendTabToDevicePopupMenu").childNodes;

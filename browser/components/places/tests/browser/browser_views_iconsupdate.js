@@ -37,8 +37,8 @@ add_task(async function() {
     title: "test icon",
     parentGuid: PlacesUtils.bookmarks.toolbarGuid
   });
-  registerCleanupFunction(function* () {
-    yield PlacesUtils.bookmarks.remove(bm);
+  registerCleanupFunction(async function() {
+    await PlacesUtils.bookmarks.remove(bm);
   });
 
   // The icon is read asynchronously from the network, we don't have an easy way

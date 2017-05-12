@@ -28,8 +28,8 @@ add_task(async function test_context_menu_username() {
   await BrowserTestUtils.withNewTab({
     gBrowser,
     url: TEST_HOSTNAME + BASIC_FORM_PAGE_PATH,
-  }, function* (browser) {
-    yield openContextMenu(browser, "#form-basic-username");
+  }, async function(browser) {
+    await openContextMenu(browser, "#form-basic-username");
 
     let contextMenu = document.getElementById("contentAreaContextMenu");
     Assert.equal(contextMenu.state, "open", "Context menu opened");
@@ -41,8 +41,8 @@ add_task(async function test_context_menu_password() {
   await BrowserTestUtils.withNewTab({
     gBrowser,
     url: TEST_HOSTNAME + BASIC_FORM_PAGE_PATH,
-  }, function* (browser) {
-    yield openContextMenu(browser, "#form-basic-password");
+  }, async function(browser) {
+    await openContextMenu(browser, "#form-basic-password");
 
     let contextMenu = document.getElementById("contentAreaContextMenu");
     Assert.equal(contextMenu.state, "open", "Context menu opened");

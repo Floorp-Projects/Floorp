@@ -781,20 +781,20 @@ Experiments.Experiments.prototype = {
     return this._mainTask;
   },
 
-  *_main() {
+  async _main() {
     do {
       this._log.trace("_main iteration");
-      yield this._loadTask;
+      await this._loadTask;
       if (!gExperimentsEnabled) {
         this._refresh = false;
       }
 
       if (this._refresh) {
-        yield this._loadManifest();
+        await this._loadManifest();
       }
-      yield this._evaluateExperiments();
+      await this._evaluateExperiments();
       if (this._dirty) {
-        yield this._saveToCache();
+        await this._saveToCache();
       }
       // If somebody called .updateManifest() or disableExperiment()
       // while we were running, go again right now.
@@ -802,7 +802,7 @@ Experiments.Experiments.prototype = {
     while (this._refresh || this._terminateReason || this._dirty);
   },
 
-  *_loadManifest() {
+  async _loadManifest() {
     this._log.trace("_loadManifest");
     let uri = Services.urlFormatter.formatURLPref(PREF_BRANCH + PREF_MANIFEST_URI);
 
@@ -810,7 +810,7 @@ Experiments.Experiments.prototype = {
 
     this._refresh = false;
     try {
-      let responseText = yield this._httpGetRequest(uri);
+      let responseText = await this._httpGetRequest(uri);
       this._log.trace("_loadManifest() - responseText=\"" + responseText + "\"");
 
       if (this._shutdown) {
@@ -984,7 +984,7 @@ Experiments.Experiments.prototype = {
   /*
    * Part of the main task to save the cache to disk, called from _main.
    */
-  *_saveToCache() {
+  async _saveToCache() {
     this._log.trace("_saveToCache");
     let path = this._cacheFilePath;
     this._dirty = false;
@@ -997,7 +997,7 @@ Experiments.Experiments.prototype = {
       let encoder = new TextEncoder();
       let data = encoder.encode(textData);
       let options = { tmpPath: path + ".tmp", compression: "lz4" };
-      yield this._policy.delayCacheWrite(OS.File.writeAtomic(path, data, options));
+      await this._policy.delayCacheWrite(OS.File.writeAtomic(path, data, options));
     } catch (e) {
       // We failed to write the cache, it's still dirty.
       this._dirty = true;
@@ -1178,7 +1178,7 @@ Experiments.Experiments.prototype = {
    * Task function to check applicability of experiments, disable the active
    * experiment if needed and activate the first applicable candidate.
    */
-  *_evaluateExperiments() {
+  async _evaluateExperiments() {
     this._log.trace("_evaluateExperiments");
 
     this._checkForShutdown();
@@ -1197,14 +1197,14 @@ Experiments.Experiments.prototype = {
     // to not try. Furthermore, if an experiment really did come from us, we
     // should have some record of it. In the end, we decide to discard all
     // knowledge for these unknown experiment add-ons.
-    let installedExperiments = yield installedExperimentAddons();
+    let installedExperiments = await installedExperimentAddons();
     let expectedAddonIds = this._trackedAddonIds;
     let unknownAddons = installedExperiments.filter(a => !expectedAddonIds.has(a.id));
     if (unknownAddons.length) {
       this._log.warn("_evaluateExperiments() - unknown add-ons in AddonManager: " +
                      unknownAddons.map(a => a.id).join(", "));
 
-      yield uninstallAddons(unknownAddons);
+      await uninstallAddons(unknownAddons);
     }
 
     let activeExperiment = this._getActiveExperiment();
@@ -1220,7 +1220,7 @@ Experiments.Experiments.prototype = {
     // abstracted away from us by design.
     if (activeExperiment) {
       let changes;
-      let shouldStopResult = yield activeExperiment.shouldStop();
+      let shouldStopResult = await activeExperiment.shouldStop();
       if (shouldStopResult.shouldStop) {
         let expireReasons = ["endTime", "maxActiveSeconds"];
         let kind, reason;
@@ -1232,11 +1232,11 @@ Experiments.Experiments.prototype = {
           kind = TELEMETRY_LOG.TERMINATION.RECHECK;
           reason = shouldStopResult.reason;
         }
-        changes = yield activeExperiment.stop(kind, reason);
+        changes = await activeExperiment.stop(kind, reason);
       } else if (this._terminateReason) {
-        changes = yield activeExperiment.stop(this._terminateReason);
+        changes = await activeExperiment.stop(this._terminateReason);
       } else {
-        changes = yield activeExperiment.reconcileAddonState();
+        changes = await activeExperiment.reconcileAddonState();
       }
 
       if (changes) {
@@ -1257,7 +1257,7 @@ Experiments.Experiments.prototype = {
         let applicable;
         let reason = null;
         try {
-          applicable = yield experiment.isApplicable();
+          applicable = await experiment.isApplicable();
         } catch (e) {
           applicable = false;
           reason = e;
@@ -1278,7 +1278,7 @@ Experiments.Experiments.prototype = {
 
         this._log.debug("evaluateExperiments() - activating experiment " + id);
         try {
-          yield experiment.start();
+          await experiment.start();
           activeChanged = true;
           activeExperiment = experiment;
           this._dirty = true;
@@ -1287,7 +1287,7 @@ Experiments.Experiments.prototype = {
           // On failure, clean up the best we can and try the next experiment.
           this._log.error("evaluateExperiments() - Unable to start experiment: " + e.message);
           experiment._enabled = false;
-          yield experiment.reconcileAddonState();
+          await experiment.reconcileAddonState();
         }
       }
     }

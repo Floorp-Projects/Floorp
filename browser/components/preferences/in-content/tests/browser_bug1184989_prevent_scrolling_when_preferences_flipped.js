@@ -8,7 +8,7 @@ add_task(async function() {
 
   const tabURL = getRootDirectory(gTestPath) + "browser_bug1184989_prevent_scrolling_when_preferences_flipped.xul";
 
-  await BrowserTestUtils.withNewTab({ gBrowser, url: tabURL }, function* (browser) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: tabURL }, async function(browser) {
     let doc = browser.contentDocument;
     let container = doc.getElementById("container");
 
@@ -16,14 +16,14 @@ add_task(async function() {
     let button = doc.getElementById("button");
     button.focus();
     EventUtils.synthesizeKey(" ", {});
-    yield checkPageScrolling(container, "button");
+    await checkPageScrolling(container, "button");
 
     // Test checkbox
     let checkbox = doc.getElementById("checkbox");
     checkbox.focus();
     EventUtils.synthesizeKey(" ", {});
     ok(checkbox.checked, "Checkbox is checked");
-    yield checkPageScrolling(container, "checkbox");
+    await checkPageScrolling(container, "checkbox");
 
     // Test listbox
     let listbox = doc.getElementById("listbox");
@@ -31,16 +31,16 @@ add_task(async function() {
     listbox.focus();
     EventUtils.synthesizeKey(" ", {});
     ok(listitem.selected, "Listitem is selected");
-    yield checkPageScrolling(container, "listbox");
+    await checkPageScrolling(container, "listbox");
 
     // Test radio
     let radiogroup = doc.getElementById("radiogroup");
     radiogroup.focus();
     EventUtils.synthesizeKey(" ", {});
-    yield checkPageScrolling(container, "radio");
+    await checkPageScrolling(container, "radio");
   });
 
-  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:preferences" }, function* (browser) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:preferences" }, async function(browser) {
     let doc = browser.contentDocument;
     let container = doc.getElementsByClassName("main-content")[0];
 
@@ -50,7 +50,7 @@ add_task(async function() {
     EventUtils.synthesizeKey(" ", {});
     is(engineList.view.selection.currentIndex, 0, "Search engineList is selected");
     EventUtils.synthesizeKey(" ", {});
-    yield checkPageScrolling(container, "search engineList");
+    await checkPageScrolling(container, "search engineList");
   });
 
   // Test session restore

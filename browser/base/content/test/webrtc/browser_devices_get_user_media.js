@@ -237,7 +237,7 @@ var gTests = [
 
 {
   desc: "getUserMedia prompt: Always/Never Share",
-  run: function* checkRememberCheckbox() {
+  run: async function checkRememberCheckbox() {
     let elt = id => document.getElementById(id);
 
     async function checkPerm(aRequestAudio, aRequestVideo,
@@ -294,25 +294,25 @@ var gTests = [
 
     // 3 cases where the user accepts the device prompt.
     info("audio+video, user grants, expect both perms set to allow");
-    yield checkPerm(true, true, true, true);
+    await checkPerm(true, true, true, true);
     info("audio only, user grants, check audio perm set to allow, video perm not set");
-    yield checkPerm(true, false, true, undefined);
+    await checkPerm(true, false, true, undefined);
     info("video only, user grants, check video perm set to allow, audio perm not set");
-    yield checkPerm(false, true, undefined, true);
+    await checkPerm(false, true, undefined, true);
 
     // 3 cases where the user rejects the device request by using 'Never Share'.
     info("audio only, user denies, expect audio perm set to deny, video not set");
-    yield checkPerm(true, false, false, undefined, true);
+    await checkPerm(true, false, false, undefined, true);
     info("video only, user denies, expect video perm set to deny, audio perm not set");
-    yield checkPerm(false, true, undefined, false, true);
+    await checkPerm(false, true, undefined, false, true);
     info("audio+video, user denies, expect both perms set to deny");
-    yield checkPerm(true, true, false, false, true);
+    await checkPerm(true, true, false, false, true);
   }
 },
 
 {
   desc: "getUserMedia without prompt: use persistent permissions",
-  run: function* checkUsePersistentPermissions() {
+  run: async function checkUsePersistentPermissions() {
     async function usePerm(aAllowAudio, aAllowVideo, aRequestAudio, aRequestVideo,
                      aExpectStream) {
       let Perms = Services.perms;
@@ -377,63 +377,63 @@ var gTests = [
 
     // Set both permissions identically
     info("allow audio+video, request audio+video, expect ok (audio+video)");
-    yield usePerm(true, true, true, true, true);
+    await usePerm(true, true, true, true, true);
     info("deny audio+video, request audio+video, expect denied");
-    yield usePerm(false, false, true, true, false);
+    await usePerm(false, false, true, true, false);
 
     // Allow audio, deny video.
     info("allow audio, deny video, request audio+video, expect denied");
-    yield usePerm(true, false, true, true, false);
+    await usePerm(true, false, true, true, false);
     info("allow audio, deny video, request audio, expect ok (audio)");
-    yield usePerm(true, false, true, false, true);
+    await usePerm(true, false, true, false, true);
     info("allow audio, deny video, request video, expect denied");
-    yield usePerm(true, false, false, true, false);
+    await usePerm(true, false, false, true, false);
 
     // Deny audio, allow video.
     info("deny audio, allow video, request audio+video, expect denied");
-    yield usePerm(false, true, true, true, false);
+    await usePerm(false, true, true, true, false);
     info("deny audio, allow video, request audio, expect denied");
-    yield usePerm(false, true, true, false, false);
+    await usePerm(false, true, true, false, false);
     info("deny audio, allow video, request video, expect ok (video)");
-    yield usePerm(false, true, false, true, true);
+    await usePerm(false, true, false, true, true);
 
     // Allow audio, video not set.
     info("allow audio, request audio+video, expect prompt");
-    yield usePerm(true, undefined, true, true, undefined);
+    await usePerm(true, undefined, true, true, undefined);
     info("allow audio, request audio, expect ok (audio)");
-    yield usePerm(true, undefined, true, false, true);
+    await usePerm(true, undefined, true, false, true);
     info("allow audio, request video, expect prompt");
-    yield usePerm(true, undefined, false, true, undefined);
+    await usePerm(true, undefined, false, true, undefined);
 
     // Deny audio, video not set.
     info("deny audio, request audio+video, expect denied");
-    yield usePerm(false, undefined, true, true, false);
+    await usePerm(false, undefined, true, true, false);
     info("deny audio, request audio, expect denied");
-    yield usePerm(false, undefined, true, false, false);
+    await usePerm(false, undefined, true, false, false);
     info("deny audio, request video, expect prompt");
-    yield usePerm(false, undefined, false, true, undefined);
+    await usePerm(false, undefined, false, true, undefined);
 
     // Allow video, audio not set.
     info("allow video, request audio+video, expect prompt");
-    yield usePerm(undefined, true, true, true, undefined);
+    await usePerm(undefined, true, true, true, undefined);
     info("allow video, request audio, expect prompt");
-    yield usePerm(undefined, true, true, false, undefined);
+    await usePerm(undefined, true, true, false, undefined);
     info("allow video, request video, expect ok (video)");
-    yield usePerm(undefined, true, false, true, true);
+    await usePerm(undefined, true, false, true, true);
 
     // Deny video, audio not set.
     info("deny video, request audio+video, expect denied");
-    yield usePerm(undefined, false, true, true, false);
+    await usePerm(undefined, false, true, true, false);
     info("deny video, request audio, expect prompt");
-    yield usePerm(undefined, false, true, false, undefined);
+    await usePerm(undefined, false, true, false, undefined);
     info("deny video, request video, expect denied");
-    yield usePerm(undefined, false, false, true, false);
+    await usePerm(undefined, false, false, true, false);
   }
 },
 
 {
   desc: "Stop Sharing removes persistent permissions",
-  run: function* checkStopSharingRemovesPersistentPermissions() {
+  run: async function checkStopSharingRemovesPersistentPermissions() {
     async function stopAndCheckPerm(aRequestAudio, aRequestVideo) {
       let Perms = Services.perms;
       let uri = gBrowser.selectedBrowser.documentURI;
@@ -477,11 +477,11 @@ var gTests = [
     }
 
     info("request audio+video, stop sharing resets both");
-    yield stopAndCheckPerm(true, true);
+    await stopAndCheckPerm(true, true);
     info("request audio, stop sharing resets audio only");
-    yield stopAndCheckPerm(true, false);
+    await stopAndCheckPerm(true, false);
     info("request video, stop sharing resets video only");
-    yield stopAndCheckPerm(false, true);
+    await stopAndCheckPerm(false, true);
   }
 },
 

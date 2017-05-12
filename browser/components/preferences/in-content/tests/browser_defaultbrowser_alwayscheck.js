@@ -5,7 +5,7 @@ const CHECK_DEFAULT_INITIAL = Services.prefs.getBoolPref("browser.shell.checkDef
 add_task(async function clicking_make_default_checks_alwaysCheck_checkbox() {
   await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:preferences");
 
-  await test_with_mock_shellservice({isDefault: false}, function*() {
+  await test_with_mock_shellservice({isDefault: false}, async function() {
     let setDefaultPane = content.document.getElementById("setDefaultPane");
     Assert.equal(setDefaultPane.selectedIndex, "0",
       "The 'make default' pane should be visible when not default");
@@ -18,7 +18,7 @@ add_task(async function clicking_make_default_checks_alwaysCheck_checkbox() {
     setDefaultButton.click();
     content.window.gMainPane.updateSetDefaultBrowser();
 
-    yield ContentTaskUtils.waitForCondition(() => alwaysCheck.checked,
+    await ContentTaskUtils.waitForCondition(() => alwaysCheck.checked,
       "'Always Check' checkbox should get checked after clicking the 'Set Default' button");
 
     Assert.ok(alwaysCheck.checked,
@@ -41,7 +41,7 @@ add_task(async function clicking_make_default_checks_alwaysCheck_checkbox() {
   Services.prefs.lockPref("browser.shell.checkDefaultBrowser");
   await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:preferences");
 
-  await test_with_mock_shellservice({isDefault: false}, function*() {
+  await test_with_mock_shellservice({isDefault: false}, async function() {
     let setDefaultPane = content.document.getElementById("setDefaultPane");
     Assert.equal(setDefaultPane.selectedIndex, "0",
       "The 'make default' pane should be visible when not default");
@@ -56,7 +56,7 @@ add_task(async function clicking_make_default_checks_alwaysCheck_checkbox() {
     setDefaultButton.click();
     content.window.gMainPane.updateSetDefaultBrowser();
 
-    yield ContentTaskUtils.waitForCondition(() => setDefaultPane.selectedIndex == "1",
+    await ContentTaskUtils.waitForCondition(() => setDefaultPane.selectedIndex == "1",
       "Browser is now default");
 
     Assert.ok(alwaysCheck.checked,

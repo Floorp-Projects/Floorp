@@ -70,8 +70,8 @@ const TEST_STACK_KEYS = ["TEST-KEY1", "TEST-KEY2"];
  */
 add_task({
   skip_if: () => !ENABLE_TESTS
-}, function* test_capturedStacksAppearInPings() {
-  yield TelemetryController.testSetup();
+}, async function test_capturedStacksAppearInPings() {
+  await TelemetryController.testSetup();
   captureStacks("DOES-NOT-MATTER", false);
 
   let ping = TelemetryController.getCurrentPingData();

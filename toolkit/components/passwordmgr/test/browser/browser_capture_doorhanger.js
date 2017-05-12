@@ -41,7 +41,7 @@ add_task(async function test_remember_opens() {
 });
 
 add_task(async function test_clickNever() {
-  await testSubmittingLoginForm("subtst_notifications_1.html", function*(fieldValues) {
+  await testSubmittingLoginForm("subtst_notifications_1.html", async function(fieldValues) {
     is(fieldValues.username, "notifyu1", "Checking submitted username");
     is(fieldValues.password, "notifyp1", "Checking submitted password");
     let notif = getCaptureDoorhanger("password-save");
@@ -49,7 +49,7 @@ add_task(async function test_clickNever() {
     is(true, Services.logins.getLoginSavingEnabled("http://example.com"),
        "Checking for login saving enabled");
 
-    yield* checkDoorhangerUsernamePassword("notifyu1", "notifyp1");
+    await checkDoorhangerUsernamePassword("notifyu1", "notifyp1");
     clickDoorhangerButton(notif, NEVER_BUTTON);
   });
 
@@ -70,7 +70,7 @@ add_task(async function test_clickNever() {
 });
 
 add_task(async function test_clickRemember() {
-  await testSubmittingLoginForm("subtst_notifications_1.html", function*(fieldValues) {
+  await testSubmittingLoginForm("subtst_notifications_1.html", async function(fieldValues) {
     is(fieldValues.username, "notifyu1", "Checking submitted username");
     is(fieldValues.password, "notifyp1", "Checking submitted password");
     let notif = getCaptureDoorhanger("password-save");
@@ -78,7 +78,7 @@ add_task(async function test_clickRemember() {
 
     is(Services.logins.getAllLogins().length, 0, "Should not have any logins yet");
 
-    yield* checkDoorhangerUsernamePassword("notifyu1", "notifyp1");
+    await checkDoorhangerUsernamePassword("notifyu1", "notifyp1");
     clickDoorhangerButton(notif, REMEMBER_BUTTON);
   });
 
@@ -268,13 +268,13 @@ add_task(async function test_changeUPLoginOnUPForm_dont() {
   info("Check for change-password popup, u+p login on u+p form. (not changed)");
   Services.logins.addLogin(login1);
 
-  await testSubmittingLoginForm("subtst_notifications_8.html", function*(fieldValues) {
+  await testSubmittingLoginForm("subtst_notifications_8.html", async function(fieldValues) {
     is(fieldValues.username, "notifyu1", "Checking submitted username");
     is(fieldValues.password, "pass2", "Checking submitted password");
     let notif = getCaptureDoorhanger("password-change");
     ok(notif, "got notification popup");
 
-    yield* checkDoorhangerUsernamePassword("notifyu1", "pass2");
+    await checkDoorhangerUsernamePassword("notifyu1", "pass2");
     clickDoorhangerButton(notif, DONT_CHANGE_BUTTON);
   });
 
@@ -292,13 +292,13 @@ add_task(async function test_changeUPLoginOnUPForm_change() {
   info("Check for change-password popup, u+p login on u+p form.");
   Services.logins.addLogin(login1);
 
-  await testSubmittingLoginForm("subtst_notifications_8.html", function*(fieldValues) {
+  await testSubmittingLoginForm("subtst_notifications_8.html", async function(fieldValues) {
     is(fieldValues.username, "notifyu1", "Checking submitted username");
     is(fieldValues.password, "pass2", "Checking submitted password");
     let notif = getCaptureDoorhanger("password-change");
     ok(notif, "got notification popup");
 
-    yield* checkDoorhangerUsernamePassword("notifyu1", "pass2");
+    await checkDoorhangerUsernamePassword("notifyu1", "pass2");
     clickDoorhangerButton(notif, CHANGE_BUTTON);
 
     ok(!getCaptureDoorhanger("password-change"), "popup should be gone");
@@ -323,13 +323,13 @@ add_task(async function test_changePLoginOnUPForm() {
   info("Check for change-password popup, p-only login on u+p form.");
   Services.logins.addLogin(login2);
 
-  await testSubmittingLoginForm("subtst_notifications_9.html", function*(fieldValues) {
+  await testSubmittingLoginForm("subtst_notifications_9.html", async function(fieldValues) {
     is(fieldValues.username, "", "Checking submitted username");
     is(fieldValues.password, "pass2", "Checking submitted password");
     let notif = getCaptureDoorhanger("password-change");
     ok(notif, "got notification popup");
 
-    yield* checkDoorhangerUsernamePassword("", "pass2");
+    await checkDoorhangerUsernamePassword("", "pass2");
     clickDoorhangerButton(notif, CHANGE_BUTTON);
 
     ok(!getCaptureDoorhanger("password-change"), "popup should be gone");
@@ -348,13 +348,13 @@ add_task(async function test_changePLoginOnUPForm() {
 add_task(async function test_changePLoginOnPForm() {
   info("Check for change-password popup, p-only login on p-only form.");
 
-  await testSubmittingLoginForm("subtst_notifications_10.html", function*(fieldValues) {
+  await testSubmittingLoginForm("subtst_notifications_10.html", async function(fieldValues) {
     is(fieldValues.username, "null", "Checking submitted username");
     is(fieldValues.password, "notifyp1", "Checking submitted password");
     let notif = getCaptureDoorhanger("password-change");
     ok(notif, "got notification popup");
 
-    yield* checkDoorhangerUsernamePassword("", "notifyp1");
+    await checkDoorhangerUsernamePassword("", "notifyp1");
     clickDoorhangerButton(notif, CHANGE_BUTTON);
 
     ok(!getCaptureDoorhanger("password-change"), "popup should be gone");
@@ -498,13 +498,13 @@ add_task(async function test_changeUPLoginOnPUpdateForm() {
   info("Check for change-password popup, u+p login on password update form.");
   Services.logins.addLogin(login1);
 
-  await testSubmittingLoginForm("subtst_notifications_change_p.html", function*(fieldValues) {
+  await testSubmittingLoginForm("subtst_notifications_change_p.html", async function(fieldValues) {
     is(fieldValues.username, "null", "Checking submitted username");
     is(fieldValues.password, "pass2", "Checking submitted password");
     let notif = getCaptureDoorhanger("password-change");
     ok(notif, "got notification popup");
 
-    yield* checkDoorhangerUsernamePassword("notifyu1", "pass2");
+    await checkDoorhangerUsernamePassword("notifyu1", "pass2");
     clickDoorhangerButton(notif, CHANGE_BUTTON);
 
     ok(!getCaptureDoorhanger("password-change"), "popup should be gone");
@@ -528,7 +528,7 @@ add_task(async function test_changeUPLoginOnPUpdateForm() {
 add_task(async function test_recipeCaptureFields_NewLogin() {
   info("Check that we capture the proper fields when a field recipe is in use.");
 
-  await testSubmittingLoginForm("subtst_notifications_2pw_1un_1text.html", function*(fieldValues) {
+  await testSubmittingLoginForm("subtst_notifications_2pw_1un_1text.html", async function(fieldValues) {
     is(fieldValues.username, "notifyu1", "Checking submitted username");
     is(fieldValues.password, "notifyp1", "Checking submitted password");
     let notif = getCaptureDoorhanger("password-save");
@@ -538,7 +538,7 @@ add_task(async function test_recipeCaptureFields_NewLogin() {
     let logins = Services.logins.getAllLogins();
     is(logins.length, 0, "Should not have any logins yet");
 
-    yield* checkDoorhangerUsernamePassword("notifyu1", "notifyp1");
+    await checkDoorhangerUsernamePassword("notifyu1", "notifyp1");
     clickDoorhangerButton(notif, REMEMBER_BUTTON);
 
   }, "http://example.org"); // The recipe is for example.org

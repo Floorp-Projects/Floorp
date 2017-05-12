@@ -49,11 +49,11 @@ add_task(async function test_changeUPLoginOnPUpdateForm_accept() {
   Services.logins.addLogin(login1);
   Services.logins.addLogin(login1B);
 
-  await testSubmittingLoginForm("subtst_notifications_change_p.html", function*(fieldValues) {
+  await testSubmittingLoginForm("subtst_notifications_change_p.html", async function(fieldValues) {
     is(fieldValues.username, "null", "Checking submitted username");
     is(fieldValues.password, "pass2", "Checking submitted password");
 
-    yield ContentTaskUtils.waitForCondition(() => {
+    await ContentTaskUtils.waitForCondition(() => {
       return getSelectDialogDoc();
     }, "Wait for selection dialog to be accessible.");
 
@@ -69,7 +69,7 @@ add_task(async function test_changeUPLoginOnPUpdateForm_accept() {
 
     dialog.acceptDialog();
 
-    yield ContentTaskUtils.waitForCondition(() => {
+    await ContentTaskUtils.waitForCondition(() => {
       return !getSelectDialogDoc();
     }, "Wait for selection dialog to disappear.");
   });
@@ -100,11 +100,11 @@ add_task(async function test_changeUPLoginOnPUpdateForm_cancel() {
   Services.logins.addLogin(login1);
   Services.logins.addLogin(login1B);
 
-  await testSubmittingLoginForm("subtst_notifications_change_p.html", function*(fieldValues) {
+  await testSubmittingLoginForm("subtst_notifications_change_p.html", async function(fieldValues) {
     is(fieldValues.username, "null", "Checking submitted username");
     is(fieldValues.password, "pass2", "Checking submitted password");
 
-    yield ContentTaskUtils.waitForCondition(() => {
+    await ContentTaskUtils.waitForCondition(() => {
       return getSelectDialogDoc();
     }, "Wait for selection dialog to be accessible.");
 
@@ -120,7 +120,7 @@ add_task(async function test_changeUPLoginOnPUpdateForm_cancel() {
 
     dialog.cancelDialog();
 
-    yield ContentTaskUtils.waitForCondition(() => {
+    await ContentTaskUtils.waitForCondition(() => {
       return !getSelectDialogDoc();
     }, "Wait for selection dialog to disappear.");
   });

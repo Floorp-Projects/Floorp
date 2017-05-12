@@ -155,8 +155,8 @@ add_task(async function test_search() {
 
   // Search for each individual download and check
   // the corresponding DownloadItem.
-  function* checkDownloadItem(id, expect) {
-    let item = yield search({id});
+  async function checkDownloadItem(id, expect) {
+    let item = await search({id});
     equal(item.status, "success", "search() succeeded");
     equal(item.downloads.length, 1, "search() found exactly 1 download");
 
@@ -208,8 +208,8 @@ add_task(async function test_search() {
     exists: true,
   });
 
-  function* checkSearch(query, expected, description, exact) {
-    let item = yield search(query);
+  async function checkSearch(query, expected, description, exact) {
+    let item = await search(query);
     equal(item.status, "success", "search() succeeded");
     equal(item.downloads.length, expected.length, `search() for ${description} found exactly ${expected.length} downloads`);
 
@@ -273,7 +273,7 @@ add_task(async function test_search() {
   // Check that positive and negative search terms together work.
   await checkSearch({query: ["html", "-renamed"]}, ["html1"], "postive and negative terms");
 
-  function* checkSearchWithDate(query, expected, description) {
+  async function checkSearchWithDate(query, expected, description) {
     const fields = Object.keys(query);
     if (fields.length != 1 || !(query[fields[0]] instanceof Date)) {
       throw new Error("checkSearchWithDate expects exactly one Date field");
@@ -285,19 +285,19 @@ add_task(async function test_search() {
 
     // Check as a Date
     newquery[field] = date;
-    yield checkSearch(newquery, expected, `${description} as Date`);
+    await checkSearch(newquery, expected, `${description} as Date`);
 
     // Check as numeric milliseconds
     newquery[field] = date.valueOf();
-    yield checkSearch(newquery, expected, `${description} as numeric ms`);
+    await checkSearch(newquery, expected, `${description} as numeric ms`);
 
     // Check as stringified milliseconds
     newquery[field] = date.valueOf().toString();
-    yield checkSearch(newquery, expected, `${description} as string ms`);
+    await checkSearch(newquery, expected, `${description} as string ms`);
 
     // Check as ISO string
     newquery[field] = date.toISOString();
-    yield checkSearch(newquery, expected, `${description} as iso string`);
+    await checkSearch(newquery, expected, `${description} as iso string`);
   }
 
   // Check startedBefore
@@ -380,8 +380,8 @@ add_task(async function test_search() {
   await checkSearch({orderBy: ["url"], limit: 1}, ["html1"], "orderBy with limit", true);
 
   // Check bad arguments.
-  function* checkBadSearch(query, pattern, description) {
-    let item = yield search(query);
+  async function checkBadSearch(query, pattern, description) {
+    let item = await search(query);
     equal(item.status, "error", "search() failed");
     ok(pattern.test(item.errmsg), `error message for ${description} was correct (${item.errmsg}).`);
   }

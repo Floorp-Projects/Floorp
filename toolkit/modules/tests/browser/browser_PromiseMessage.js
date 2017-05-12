@@ -15,7 +15,7 @@ add_task(async function() {
   await BrowserTestUtils.withNewTab({gBrowser, url}, testPromiseMessageAPI)
 });
 
-function* testPromiseMessageAPI(aBrowser) {
+async function testPromiseMessageAPI(aBrowser) {
   // Reusing an existing message.
   const msgKey = "DOM:WebManifest:hasManifestLink";
   const mm = aBrowser.messageManager;
@@ -24,7 +24,7 @@ function* testPromiseMessageAPI(aBrowser) {
   const data = {id, foo};
 
   // This just returns false, and it doesn't matter for this test.
-  yield PromiseMessage.send(mm, msgKey, data);
+  await PromiseMessage.send(mm, msgKey, data);
 
   // Check that no new props were added
   const props = Object.getOwnPropertyNames(data);

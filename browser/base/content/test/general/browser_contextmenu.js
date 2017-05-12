@@ -662,8 +662,8 @@ add_task(async function test_select_text() {
     {
       offsetX: 6,
       offsetY: 6,
-      *preCheckContextMenuFn() {
-        yield selectText("#test-select-text");
+      async preCheckContextMenuFn() {
+        await selectText("#test-select-text");
       }
     }
   );
@@ -691,8 +691,8 @@ add_task(async function test_select_text_link() {
     {
       offsetX: 6,
       offsetY: 6,
-      *preCheckContextMenuFn() {
-        yield selectText("#test-select-text-link");
+      async preCheckContextMenuFn() {
+        await selectText("#test-select-text-link");
       },
       async postCheckContextMenuFn() {
         await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
@@ -933,8 +933,8 @@ add_task(async function test_plaintext_sendpagetodevice() {
                    ];
   await test_contextmenu("#test-text", plainTextItemsWithSendPage, {
       maybeScreenshotsPresent: true,
-      *onContextMenuShown() {
-        yield openMenuItemSubmenu("context-sendpagetodevice");
+      async onContextMenuShown() {
+        await openMenuItemSubmenu("context-sendpagetodevice");
       }
     });
 
@@ -970,8 +970,8 @@ add_task(async function test_link_sendlinktodevice() {
        "*All Devices", true], null,
     ],
     {
-      *onContextMenuShown() {
-        yield openMenuItemSubmenu("context-sendlinktodevice");
+      async onContextMenuShown() {
+        await openMenuItemSubmenu("context-sendlinktodevice");
       }
     });
 

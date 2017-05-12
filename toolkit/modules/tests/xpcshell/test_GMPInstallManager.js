@@ -402,7 +402,7 @@ add_task(async function test_checkForAddons_updatesWithAddons() {
 /**
  * Tests that installing found addons works as expected
  */
-function* test_checkForAddons_installAddon(id, includeSize, wantInstallReject) {
+async function test_checkForAddons_installAddon(id, includeSize, wantInstallReject) {
   do_print("Running installAddon for id: " + id +
            ", includeSize: " + includeSize +
            " and wantInstallReject: " + wantInstallReject);
@@ -419,7 +419,7 @@ function* test_checkForAddons_installAddon(id, includeSize, wantInstallReject) {
   let data = "e~=0.5772156649";
   let zipFile = createNewZipFile(zipFileName, data);
   let hashFunc = "sha256";
-  let expectedDigest = yield ProductAddonCheckerScope.computeHash(hashFunc, zipFile.path);
+  let expectedDigest = await ProductAddonCheckerScope.computeHash(hashFunc, zipFile.path);
   let fileSize = zipFile.fileSize;
   if (wantInstallReject) {
     fileSize = 1;
@@ -440,13 +440,13 @@ function* test_checkForAddons_installAddon(id, includeSize, wantInstallReject) {
 
   overrideXHR(200, responseXML);
   let installManager = new GMPInstallManager();
-  let res = yield installManager.checkForAddons();
+  let res = await installManager.checkForAddons();
   do_check_eq(res.gmpAddons.length, 1);
   let gmpAddon = res.gmpAddons[0];
   do_check_false(gmpAddon.isInstalled);
 
   try {
-    let extractedPaths = yield installManager.installAddon(gmpAddon);
+    let extractedPaths = await installManager.installAddon(gmpAddon);
     if (wantInstallReject) {
       do_check_true(false); // installAddon() should have thrown.
     }

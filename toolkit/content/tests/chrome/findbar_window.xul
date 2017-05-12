@@ -101,57 +101,57 @@
       await onDocumentLoaded();
     }
 
-    function* onDocumentLoaded() {
-      yield testNormalFind();
+    async function onDocumentLoaded() {
+      await testNormalFind();
       gFindBar.close();
       ok(gFindBar.hidden, "Failed to close findbar after testNormalFind");
-      yield openFindbar();
-      yield testNormalFindWithComposition();
+      await openFindbar();
+      await testNormalFindWithComposition();
       gFindBar.close();
       ok(gFindBar.hidden, "findbar should be hidden after testNormalFindWithComposition");
-      yield openFindbar();
-      yield testAutoCaseSensitivityUI();
-      yield testQuickFindText();
+      await openFindbar();
+      await testAutoCaseSensitivityUI();
+      await testQuickFindText();
       gFindBar.close();
       ok(gFindBar.hidden, "Failed to close findbar after testQuickFindText");
       // TODO: `testFindWithHighlight` tests fastFind integrity, which can not
       //       be accessed with RemoteFinder. We're skipping it for now.
       if (gFindBar._browser.finder._fastFind) {
-        yield testFindWithHighlight();
+        await testFindWithHighlight();
         gFindBar.close();
         ok(gFindBar.hidden, "Failed to close findbar after testFindWithHighlight");
       }
-      yield testFindbarSelection();
+      await testFindbarSelection();
       ok(gFindBar.hidden, "Failed to close findbar after testFindbarSelection");
       // TODO: I don't know how to drop a content element on a chrome input.
       if (!gBrowser.hasAttribute("remote"))
         testDrop();
-      yield testQuickFindLink();
+      await testQuickFindLink();
       if (gHasFindClipboard) {
-        yield testStatusText();
+        await testStatusText();
       }
 
       if (!AppConstants.DEBUG) {
-        yield testFindCountUI();
+        await testFindCountUI();
         gFindBar.close();
         ok(gFindBar.hidden, "Failed to close findbar after testFindCountUI");
-        yield testFindCountUI(true);
+        await testFindCountUI(true);
         gFindBar.close();
         ok(gFindBar.hidden, "Failed to close findbar after testFindCountUI - linksOnly");
       }
 
-      yield openFindbar();
-      yield testFindAfterCaseChanged();
+      await openFindbar();
+      await testFindAfterCaseChanged();
       gFindBar.close();
-      yield openFindbar();
-      yield testFailedStringReset();
+      await openFindbar();
+      await testFailedStringReset();
       gFindBar.close();
-      yield testQuickFindClose();
+      await testQuickFindClose();
       // TODO: This doesn't seem to work when the findbar is connected to a
       //       remote browser element.
       if (!gBrowser.hasAttribute("remote"))
-        yield testFindAgainNotFound();
-      yield testToggleEntireWord();
+        await testFindAgainNotFound();
+      await testToggleEntireWord();
     }
 
     function testFindButtonsState(enabled = null) {
@@ -406,7 +406,7 @@
       }
     }
 
-    function* testAutoCaseSensitivityUI() {
+    async function testAutoCaseSensitivityUI() {
       var matchCaseCheckbox = gFindBar.getElement("find-case-sensitive");
       var matchCaseLabel = gFindBar.getElement("match-case-status");
       ok(!matchCaseCheckbox.hidden, "match case box is hidden in manual mode");
@@ -419,9 +419,9 @@
       ok(!matchCaseLabel.hidden,
          "match case label is hidden in automatic mode");
 
-      yield enterStringIntoFindField("a");
+      await enterStringIntoFindField("a");
       var insensitiveLabel = matchCaseLabel.value;
-      yield enterStringIntoFindField("A");
+      await enterStringIntoFindField("A");
       var sensitiveLabel = matchCaseLabel.value;
       ok(insensitiveLabel != sensitiveLabel,
          "Case Sensitive label was not correctly updated");

@@ -56,10 +56,10 @@ add_task(async function() {
     },
   });
 
-  function* testContext(id) {
-    const menu = yield openExtensionContextMenu();
+  async function testContext(id) {
+    const menu = await openExtensionContextMenu();
     const items = menu.getElementsByAttribute("label", id);
-    yield closeExtensionContextMenu(items[0]);
+    await closeExtensionContextMenu(items[0]);
     return extension.awaitMessage("test-opened");
   }
 

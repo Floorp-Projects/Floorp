@@ -576,12 +576,12 @@ function checkQueryURI(aTags, aTagsAreNot) {
  * @param aCallback
  *        A task function that will be called after the bookmark has been tagged
  */
-function* task_doWithBookmark(aTags, aCallback) {
-  yield addBookmark(TEST_URI);
+async function task_doWithBookmark(aTags, aCallback) {
+  await addBookmark(TEST_URI);
   PlacesUtils.tagging.tagURI(TEST_URI, aTags);
-  yield aCallback(TEST_URI);
+  await aCallback(TEST_URI);
   PlacesUtils.tagging.untagURI(TEST_URI, aTags);
-  yield task_cleanDatabase();
+  await task_cleanDatabase();
 }
 
 /**

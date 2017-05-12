@@ -75,13 +75,13 @@ let worker_deblobify = (browser, blobURL) => workerIO(browser, SCRIPT_WORKER_DEB
 
 function doTest(blobify, deblobify) {
   let blobURL = null;
-  return function* (browser) {
+  return async function(browser) {
     if (blobURL === null) {
       let input = Math.random().toString();
-      blobURL = yield blobify(browser, input);
+      blobURL = await blobify(browser, input);
       return input;
     }
-    let result = yield deblobify(browser, blobURL);
+    let result = await deblobify(browser, blobURL);
     blobURL = null;
     return result;
   }

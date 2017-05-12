@@ -536,13 +536,13 @@ var gEditItemOverlay = {
       return true;
     }
 
-    let setTags = function* () {
+    let setTags = async function() {
       if (newTags.length > 0) {
-        yield PlacesTransactions.Tag({ urls: aURIs, tags: newTags })
+        await PlacesTransactions.Tag({ urls: aURIs, tags: newTags })
                                 .transact();
       }
       if (removedTags.length > 0) {
-        yield PlacesTransactions.Untag({ urls: aURIs, tags: removedTags })
+        await PlacesTransactions.Untag({ urls: aURIs, tags: removedTags })
                           .transact();
       }
     };

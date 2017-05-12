@@ -70,10 +70,10 @@ const Events = {
 var gTests = [
   {
     desc: "Basic peer-request-allowed event",
-    run: function* testPeerRequestEvent(browser) {
+    run: async function testPeerRequestEvent(browser) {
       Events.on();
 
-      yield tryPeerConnection(browser);
+      await tryPeerConnection(browser);
 
       let details = Events.expect("peer-request-allowed");
       isnot(details.callID, undefined, "peer-request-allowed event includes callID");
@@ -85,7 +85,7 @@ var gTests = [
 
   {
     desc: "Immediate peer connection blocker can allow",
-    run: function* testBlocker(browser) {
+    run: async function testBlocker(browser) {
       Events.on();
 
       let blockerCalled = false;
@@ -97,7 +97,7 @@ var gTests = [
 
       webrtcUI.addPeerConnectionBlocker(blocker);
 
-      yield tryPeerConnection(browser);
+      await tryPeerConnection(browser);
       is(blockerCalled, true, "Blocker was called");
       Events.expect("peer-request-allowed");
 
@@ -108,13 +108,13 @@ var gTests = [
 
   {
     desc: "Deferred peer connection blocker can allow",
-    run: function* testDeferredBlocker(browser) {
+    run: async function testDeferredBlocker(browser) {
       Events.on();
 
       let blocker = params => Promise.resolve("allow");
       webrtcUI.addPeerConnectionBlocker(blocker);
 
-      yield tryPeerConnection(browser);
+      await tryPeerConnection(browser);
       Events.expect("peer-request-allowed");
 
       webrtcUI.removePeerConnectionBlocker(blocker);
@@ -124,13 +124,13 @@ var gTests = [
 
   {
     desc: "Immediate peer connection blocker can deny",
-    run: function* testBlockerDeny(browser) {
+    run: async function testBlockerDeny(browser) {
       Events.on();
 
       let blocker = params => "deny";
       webrtcUI.addPeerConnectionBlocker(blocker);
 
-      yield tryPeerConnection(browser, "NotAllowedError");
+      await tryPeerConnection(browser, "NotAllowedError");
 
       Events.expect("peer-request-blocked");
 
@@ -141,7 +141,7 @@ var gTests = [
 
   {
     desc: "Multiple blockers work (both allow)",
-    run: function* testMultipleAllowBlockers(browser) {
+    run: async function testMultipleAllowBlockers(browser) {
       Events.on();
 
       let blocker1Called = false, blocker1 = params => {
@@ -156,7 +156,7 @@ var gTests = [
       };
       webrtcUI.addPeerConnectionBlocker(blocker2);
 
-      yield tryPeerConnection(browser);
+      await tryPeerConnection(browser);
 
       Events.expect("peer-request-allowed");
       ok(blocker1Called, "First blocker was called");
@@ -170,7 +170,7 @@ var gTests = [
 
   {
     desc: "Multiple blockers work (allow then deny)",
-    run: function* testAllowDenyBlockers(browser) {
+    run: async function testAllowDenyBlockers(browser) {
       Events.on();
 
       let blocker1Called = false, blocker1 = params => {
@@ -185,7 +185,7 @@ var gTests = [
       };
       webrtcUI.addPeerConnectionBlocker(blocker2);
 
-      yield tryPeerConnection(browser, "NotAllowedError");
+      await tryPeerConnection(browser, "NotAllowedError");
 
       Events.expect("peer-request-blocked");
       ok(blocker1Called, "First blocker was called");
@@ -199,7 +199,7 @@ var gTests = [
 
   {
     desc: "Multiple blockers work (deny first)",
-    run: function* testDenyAllowBlockers(browser) {
+    run: async function testDenyAllowBlockers(browser) {
       Events.on();
 
       let blocker1Called = false, blocker1 = params => {
@@ -214,7 +214,7 @@ var gTests = [
       }
       webrtcUI.addPeerConnectionBlocker(blocker2);
 
-      yield tryPeerConnection(browser, "NotAllowedError");
+      await tryPeerConnection(browser, "NotAllowedError");
 
       Events.expect("peer-request-blocked");
       ok(blocker1Called, "First blocker was called");
@@ -228,7 +228,7 @@ var gTests = [
 
   {
     desc: "Blockers may be removed",
-    run: function* testRemoveBlocker(browser) {
+    run: async function testRemoveBlocker(browser) {
       Events.on();
 
       let blocker1Called = false, blocker1 = params => {
@@ -244,7 +244,7 @@ var gTests = [
       webrtcUI.addPeerConnectionBlocker(blocker2);
       webrtcUI.removePeerConnectionBlocker(blocker1);
 
-      yield tryPeerConnection(browser);
+      await tryPeerConnection(browser);
 
       Events.expect("peer-request-allowed");
 
@@ -258,7 +258,7 @@ var gTests = [
 
   {
     desc: "Blocker that throws is ignored",
-    run: function* testBlockerThrows(browser) {
+    run: async function testBlockerThrows(browser) {
       Events.on();
       let blocker1Called = false, blocker1 = params => {
         blocker1Called = true;
@@ -272,7 +272,7 @@ var gTests = [
       };
       webrtcUI.addPeerConnectionBlocker(blocker2);
 
-      yield tryPeerConnection(browser);
+      await tryPeerConnection(browser);
 
       Events.expect("peer-request-allowed");
       ok(blocker1Called, "First blocker was invoked");

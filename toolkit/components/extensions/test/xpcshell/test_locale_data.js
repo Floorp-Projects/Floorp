@@ -6,7 +6,7 @@ Cu.import("resource://gre/modules/Extension.jsm");
 
 const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
 
-function* generateAddon(data) {
+async function generateAddon(data) {
   let id = uuidGenerator.generateUUID().number;
 
   data = Object.assign({embedded: true}, data);
@@ -22,7 +22,7 @@ function* generateAddon(data) {
   let jarURI = NetUtil.newURI(`jar:${fileURI.spec}!/webextension/`);
 
   let extension = new ExtensionData(jarURI);
-  yield extension.loadManifest();
+  await extension.loadManifest();
 
   return extension;
 }

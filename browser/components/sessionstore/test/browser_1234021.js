@@ -11,8 +11,8 @@ add_task(async function test() {
   await BrowserTestUtils.withNewTab({
     gBrowser,
     url: PAGE_URL
-  }, function* handler(aBrowser) {
-    yield TabStateFlusher.flush(aBrowser);
+  }, async function handler(aBrowser) {
+    await TabStateFlusher.flush(aBrowser);
     ok(true, "Flush didn't time out");
   });
 });

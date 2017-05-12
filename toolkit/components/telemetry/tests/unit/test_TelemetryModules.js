@@ -144,10 +144,10 @@ do_register_cleanup(function() {
 
 add_task({
   skip_if: () => !AppConstants.MOZ_GECKO_PROFILER,
-}, function* test_send_ping() {
-  yield TelemetryController.testSetup();
+}, async function test_send_ping() {
+  await TelemetryController.testSetup();
 
-  let found = yield PingServer.promiseNextPing();
+  let found = await PingServer.promiseNextPing();
   Assert.ok(!!found, "Telemetry ping submitted.");
   Assert.strictEqual(found.type, "modules", "Ping type is 'modules'");
   Assert.ok(found.environment, "'modules' ping has an environment.");

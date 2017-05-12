@@ -457,10 +457,10 @@ add_task(async function test_mac_notifications() {
     return;
   }
 
-  await setupTest({ denyFirst: true }, function*(newWin, obs) {
-    let closed = yield closeWindowForRestoration(newWin);
+  await setupTest({ denyFirst: true }, async function(newWin, obs) {
+    let closed = await closeWindowForRestoration(newWin);
     ok(!closed, "First close attempt should be denied");
-    closed = yield closeWindowForRestoration(newWin);
+    closed = await closeWindowForRestoration(newWin);
     ok(closed, "Second close attempt should be granted");
 
     // We tried closing once, and got denied. Then we tried again and

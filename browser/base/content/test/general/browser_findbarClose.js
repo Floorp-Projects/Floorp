@@ -18,11 +18,11 @@ add_task(async function findbar_test() {
 
   gFindBar.open();
 
-  await new ContentTask.spawn(newTab.linkedBrowser, null, function* () {
+  await new ContentTask.spawn(newTab.linkedBrowser, null, async function() {
     let iframe = content.document.getElementById("iframe");
     let awaitLoad = ContentTaskUtils.waitForEvent(iframe, "load", false);
     iframe.src = "http://example.org/";
-    yield awaitLoad;
+    await awaitLoad;
   });
 
   ok(!gFindBar.hidden, "the Find bar isn't hidden after the location of a " +

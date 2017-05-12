@@ -54,15 +54,15 @@ function createSessionState(index) {
   return {windows: [{tabs: [tabState]}]};
 }
 
-function* setMaxBackForward(back, fwd) {
+async function setMaxBackForward(back, fwd) {
   Services.prefs.setIntPref("browser.sessionstore.max_serialize_back", back);
   Services.prefs.setIntPref("browser.sessionstore.max_serialize_forward", fwd);
-  yield SessionFile.read();
+  await SessionFile.read();
 }
 
-function* writeAndParse(state, path, options = {}) {
-  yield SessionWorker.post("write", [state, options]);
-  return JSON.parse(yield File.read(path, {encoding: "utf-8"}));
+async function writeAndParse(state, path, options = {}) {
+  await SessionWorker.post("write", [state, options]);
+  return JSON.parse(await File.read(path, {encoding: "utf-8"}));
 }
 
 add_task(async function test_shistory_cap_none() {

@@ -1141,7 +1141,7 @@ Search.prototype = {
     return false;
   },
 
-  *_matchFirstHeuristicResult(conn) {
+  async _matchFirstHeuristicResult(conn) {
     // We always try to make the first result a special "heuristic" result.  The
     // heuristics below determine what type of result it will be, if any.
 
@@ -1149,7 +1149,7 @@ Search.prototype = {
 
     if (hasSearchTerms) {
       // It may be a keyword registered by an extension.
-      let matched = yield this._matchExtensionHeuristicResult();
+      let matched = await this._matchExtensionHeuristicResult();
       if (matched) {
         return true;
       }
@@ -1157,7 +1157,7 @@ Search.prototype = {
 
     if (this._enableActions && hasSearchTerms) {
       // It may be a search engine with an alias - which works like a keyword.
-      let matched = yield this._matchSearchEngineAlias();
+      let matched = await this._matchSearchEngineAlias();
       if (matched) {
         return true;
       }
@@ -1165,7 +1165,7 @@ Search.prototype = {
 
     if (this.pending && hasSearchTerms) {
       // It may be a Places keyword.
-      let matched = yield this._matchPlacesKeyword();
+      let matched = await this._matchPlacesKeyword();
       if (matched) {
         return true;
       }
@@ -1174,7 +1174,7 @@ Search.prototype = {
     let shouldAutofill = this._shouldAutofill;
     if (this.pending && shouldAutofill) {
       // It may also look like a URL we know from the database.
-      let matched = yield this._matchKnownUrl(conn);
+      let matched = await this._matchKnownUrl(conn);
       if (matched) {
         return true;
       }
@@ -1182,7 +1182,7 @@ Search.prototype = {
 
     if (this.pending && shouldAutofill) {
       // Or it may look like a URL we know about from search engines.
-      let matched = yield this._matchSearchEngineUrl();
+      let matched = await this._matchSearchEngineUrl();
       if (matched) {
         return true;
       }
@@ -1203,7 +1203,7 @@ Search.prototype = {
       // However, even if the input is a valid URL, we may not want to use
       // it as such. This can happen if the host would require whitelisting,
       // but isn't in the whitelist.
-      let matched = yield this._matchUnknownUrl();
+      let matched = await this._matchUnknownUrl();
       if (matched) {
         // Since we can't tell if this is a real URL and
         // whether the user wants to visit or search for it,
@@ -1213,7 +1213,7 @@ Search.prototype = {
         } catch (ex) {
           if (Prefs.keywordEnabled && !looksLikeUrl(this._originalSearchString, true)) {
             this._addingHeuristicFirstMatch = false;
-            yield this._matchCurrentSearchEngine();
+            await this._matchCurrentSearchEngine();
             this._addingHeuristicFirstMatch = true;
           }
         }
@@ -1224,7 +1224,7 @@ Search.prototype = {
     if (this.pending && this._enableActions && this._originalSearchString) {
       // When all else fails, and the search string is non-empty, we search
       // using the current search engine.
-      let matched = yield this._matchCurrentSearchEngine();
+      let matched = await this._matchCurrentSearchEngine();
       if (matched) {
         return true;
       }
@@ -1302,7 +1302,7 @@ Search.prototype = {
     return this._searchTokens.some(looksLikeUrl);
   },
 
-  *_matchKnownUrl(conn) {
+  async _matchKnownUrl(conn) {
     // Hosts have no "/" in them.
     let lastSlashIndex = this._searchString.lastIndexOf("/");
     // Search only URLs if there's a slash in the search string...
@@ -1316,7 +1316,7 @@ Search.prototype = {
         // like a URL, then we'll probably have a result.
         let gotResult = false;
         let [ query, params ] = this._urlQuery;
-        yield conn.executeCached(query, params, row => {
+        await conn.executeCached(query, params, row => {
           gotResult = true;
           this._onResultRow(row);
         });
@@ -1327,7 +1327,7 @@ Search.prototype = {
 
     let gotResult = false;
     let [ query, params ] = this._hostQuery;
-    yield conn.executeCached(query, params, row => {
+    await conn.executeCached(query, params, row => {
       gotResult = true;
       this._onResultRow(row);
     });
@@ -1344,10 +1344,10 @@ Search.prototype = {
     return false;
   },
 
-  *_matchPlacesKeyword() {
+  async _matchPlacesKeyword() {
     // The first word could be a keyword, so that's what we'll search.
     let keyword = this._searchTokens[0];
-    let entry = yield PlacesUtils.keywords.fetch(this._searchTokens[0]);
+    let entry = await PlacesUtils.keywords.fetch(this._searchTokens[0]);
     if (!entry)
       return false;
 
@@ -1356,7 +1356,7 @@ Search.prototype = {
     let url = null, postData = null;
     try {
       [url, postData] =
-        yield BrowserUtils.parseUrlAndPostData(entry.url.href,
+        await BrowserUtils.parseUrlAndPostData(entry.url.href,
                                                entry.postData,
                                                searchString);
     } catch (ex) {
@@ -1388,11 +1388,11 @@ Search.prototype = {
     return true;
   },
 
-  *_matchSearchEngineUrl() {
+  async _matchSearchEngineUrl() {
     if (!Prefs.autofillSearchEngines)
       return false;
 
-    let match = yield PlacesSearchAutocompleteProvider.findMatchByToken(
+    let match = await PlacesSearchAutocompleteProvider.findMatchByToken(
                                                            this._searchString);
     if (!match)
       return false;
@@ -1440,12 +1440,12 @@ Search.prototype = {
     return true;
   },
 
-  *_matchSearchEngineAlias() {
+  async _matchSearchEngineAlias() {
     if (this._searchTokens.length < 1)
       return false;
 
     let alias = this._searchTokens[0];
-    let match = yield PlacesSearchAutocompleteProvider.findMatchByAlias(alias);
+    let match = await PlacesSearchAutocompleteProvider.findMatchByAlias(alias);
     if (!match)
       return false;
 
@@ -1456,8 +1456,8 @@ Search.prototype = {
     return true;
   },
 
-  *_matchCurrentSearchEngine() {
-    let match = yield PlacesSearchAutocompleteProvider.getDefaultMatch();
+  async _matchCurrentSearchEngine() {
+    let match = await PlacesSearchAutocompleteProvider.getDefaultMatch();
     if (!match)
       return false;
 
@@ -1519,8 +1519,8 @@ Search.prototype = {
     this._remoteMatchesPromises.push(promise);
   },
 
-  *_matchRemoteTabs() {
-    let matches = yield PlacesRemoteTabsAutocompleteProvider.getMatches(this._originalSearchString);
+  async _matchRemoteTabs() {
+    let matches = await PlacesRemoteTabsAutocompleteProvider.getMatches(this._originalSearchString);
     for (let {url, title, icon, deviceName} of matches) {
       // It's rare that Sync supplies the icon for the page (but if it does, it
       // is a string URL)

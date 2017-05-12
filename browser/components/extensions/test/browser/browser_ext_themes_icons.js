@@ -85,7 +85,7 @@ function checkButtons(icons, iconInfo, area) {
   }
 }
 
-function* runTestWithIcons(icons) {
+async function runTestWithIcons(icons) {
   const FRAME_COLOR = [71, 105, 91];
   const TAB_TEXT_COLOR = [207, 221, 192, .9];
   let manifest = {
@@ -159,7 +159,7 @@ function* runTestWithIcons(icons) {
 
   let extension = ExtensionTestUtils.loadExtension({manifest, files});
 
-  yield extension.startup();
+  await extension.startup();
 
   checkButtons(icons, ICON_INFO, "toolbar");
 
@@ -169,13 +169,13 @@ function* runTestWithIcons(icons) {
     }
   }
 
-  yield PanelUI.show();
+  await PanelUI.show();
 
   checkButtons(icons, ICON_INFO, "panel");
 
-  yield PanelUI.hide();
+  await PanelUI.hide();
 
-  yield extension.unload();
+  await extension.unload();
 
   for (let button of ICON_INFO) {
     verifyButtonWithoutCustomStyling(button[1],

@@ -1,9 +1,9 @@
 "use strict";
 
-registerCleanupFunction(function* () {
-  let addresses = yield getAddresses();
+registerCleanupFunction(async function() {
+  let addresses = await getAddresses();
   if (addresses.length) {
-    yield removeAddresses(addresses.map(address => address.guid));
+    await removeAddresses(addresses.map(address => address.guid));
   }
 });
 

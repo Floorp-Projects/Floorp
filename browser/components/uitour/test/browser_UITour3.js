@@ -8,7 +8,7 @@ requestLongerTimeout(2);
 
 add_task(setup_UITourTest);
 
-add_UITour_task(function* test_info_icon() {
+add_UITour_task(async function test_info_icon() {
   let popup = document.getElementById("UITourTooltip");
   let title = document.getElementById("UITourTooltipTitle");
   let desc = document.getElementById("UITourTooltipDescription");
@@ -19,7 +19,7 @@ add_UITour_task(function* test_info_icon() {
   // window during the transition instead of the buttons in the popup.
   popup.setAttribute("animate", "false");
 
-  yield showInfoPromise("urlbar", "a title", "some text", "image.png");
+  await showInfoPromise("urlbar", "a title", "some text", "image.png");
 
   is(title.textContent, "a title", "Popup should have correct title");
   is(desc.textContent, "some text", "Popup should have correct description text");

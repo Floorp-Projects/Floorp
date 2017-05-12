@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-function* runTests(options) {
+async function runTests(options) {
   async function background(getTests) {
     async function checkDetails(expecting, tabId) {
       let title = await browser.browserAction.getTitle({tabId});
@@ -137,11 +137,11 @@ function* runTests(options) {
     });
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield awaitFinish;
+  await awaitFinish;
 
-  yield extension.unload();
+  await extension.unload();
 }
 
 add_task(async function testTabSwitchContext() {

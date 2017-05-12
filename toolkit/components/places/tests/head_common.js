@@ -905,7 +905,7 @@ function getFaviconDataForPage(page, width = 0) {
 /**
  * Asynchronously compares contents from 2 favicon urls.
  */
-function* compareFavicons(icon1, icon2, msg) {
+async function compareFavicons(icon1, icon2, msg) {
   icon1 = new URL(icon1 instanceof Ci.nsIURI ? icon1.spec : icon1);
   icon2 = new URL(icon2 instanceof Ci.nsIURI ? icon2.spec : icon2);
 
@@ -923,9 +923,9 @@ function* compareFavicons(icon1, icon2, msg) {
     });
   }
 
-  let data1 = yield getIconData(icon1);
+  let data1 = await getIconData(icon1);
   Assert.ok(data1.length > 0, "Should fetch icon data");
-  let data2 = yield getIconData(icon2);
+  let data2 = await getIconData(icon2);
   Assert.ok(data2.length > 0, "Should fetch icon data");
   Assert.deepEqual(data1, data2, msg);
 }

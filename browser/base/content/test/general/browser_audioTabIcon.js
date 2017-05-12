@@ -109,10 +109,10 @@ function leave_icon(icon) {
   disable_non_test_mouse(false);
 }
 
-function* test_tooltip(icon, expectedTooltip, isActiveTab) {
+async function test_tooltip(icon, expectedTooltip, isActiveTab) {
   let tooltip = document.getElementById("tabbrowser-tab-tooltip");
 
-  yield hover_icon(icon, tooltip);
+  await hover_icon(icon, tooltip);
   if (isActiveTab) {
     // The active tab should have the keybinding shortcut in the tooltip.
     // We check this by ensuring that the strings are not equal but the expected
@@ -147,14 +147,14 @@ function get_wait_for_mute_promise(tab, expectMuted) {
   });
 }
 
-function* test_mute_tab(tab, icon, expectMuted) {
+async function test_mute_tab(tab, icon, expectMuted) {
   let mutedPromise = test_mute_keybinding(tab, expectMuted);
 
   let activeTab = gBrowser.selectedTab;
 
   let tooltip = document.getElementById("tabbrowser-tab-tooltip");
 
-  yield hover_icon(icon, tooltip);
+  await hover_icon(icon, tooltip);
   EventUtils.synthesizeMouseAtCenter(icon, {button: 0});
   leave_icon(icon);
 
@@ -162,9 +162,9 @@ function* test_mute_tab(tab, icon, expectMuted) {
 
   // If the audio is playing, we should check whether clicking on icon affects
   // the media element's playing state.
-  let isAudioPlaying = yield is_audio_playing(tab);
+  let isAudioPlaying = await is_audio_playing(tab);
   if (isAudioPlaying) {
-    yield wait_for_tab_playing_event(tab, !expectMuted);
+    await wait_for_tab_playing_event(tab, !expectMuted);
   }
 
   return mutedPromise;
@@ -210,53 +210,53 @@ async function test_muting_using_menu(tab, expectMuted) {
   await mutedPromise;
 }
 
-function* test_playing_icon_on_tab(tab, browser, isPinned) {
+async function test_playing_icon_on_tab(tab, browser, isPinned) {
   let icon = document.getAnonymousElementByAttribute(tab, "anonid",
                                                      isPinned ? "overlay-icon" : "soundplaying-icon");
   let isActiveTab = tab === gBrowser.selectedTab;
 
-  yield play(tab);
+  await play(tab);
 
-  yield test_tooltip(icon, "Mute tab", isActiveTab);
+  await test_tooltip(icon, "Mute tab", isActiveTab);
 
   ok(!("muted" in get_tab_state(tab)), "No muted attribute should be persisted");
   ok(!("muteReason" in get_tab_state(tab)), "No muteReason property should be persisted");
 
-  yield test_mute_tab(tab, icon, true);
+  await test_mute_tab(tab, icon, true);
 
   ok("muted" in get_tab_state(tab), "Muted attribute should be persisted");
   ok("muteReason" in get_tab_state(tab), "muteReason property should be persisted");
 
-  yield test_tooltip(icon, "Unmute tab", isActiveTab);
+  await test_tooltip(icon, "Unmute tab", isActiveTab);
 
-  yield test_mute_tab(tab, icon, false);
+  await test_mute_tab(tab, icon, false);
 
   ok(!("muted" in get_tab_state(tab)), "No muted attribute should be persisted");
   ok(!("muteReason" in get_tab_state(tab)), "No muteReason property should be persisted");
 
-  yield test_tooltip(icon, "Mute tab", isActiveTab);
+  await test_tooltip(icon, "Mute tab", isActiveTab);
 
-  yield test_mute_tab(tab, icon, true);
+  await test_mute_tab(tab, icon, true);
 
-  yield pause(tab);
+  await pause(tab);
 
   ok(tab.hasAttribute("muted") &&
      !tab.hasAttribute("soundplaying"), "Tab should still be muted but not playing");
   ok(tab.muted && !tab.soundPlaying, "Tab should still be muted but not playing");
 
-  yield test_tooltip(icon, "Unmute tab", isActiveTab);
+  await test_tooltip(icon, "Unmute tab", isActiveTab);
 
-  yield test_mute_tab(tab, icon, false);
+  await test_mute_tab(tab, icon, false);
 
   ok(!tab.hasAttribute("muted") &&
      !tab.hasAttribute("soundplaying"), "Tab should not be be muted or playing");
   ok(!tab.muted && !tab.soundPlaying, "Tab should not be be muted or playing");
 
   // Make sure it's possible to mute using the context menu.
-  yield test_muting_using_menu(tab, false);
+  await test_muting_using_menu(tab, false);
 
   // Make sure it's possible to unmute using the context menu.
-  yield test_muting_using_menu(tab, true);
+  await test_muting_using_menu(tab, true);
 }
 
 async function test_swapped_browser_while_playing(oldTab, newBrowser) {
@@ -349,7 +349,7 @@ async function test_browser_swapping(tab, browser) {
 }
 
 async function test_click_on_pinned_tab_after_mute() {
-  function* taskFn(browser) {
+  async function taskFn(browser) {
     let tab = gBrowser.getTabForBrowser(browser);
 
     gBrowser.selectedTab = originallySelectedTab;
@@ -360,17 +360,17 @@ async function test_click_on_pinned_tab_after_mute() {
     gBrowser.pinTab(tab);
 
     //   Start playback and wait for it to finish.
-    yield play(tab);
+    await play(tab);
 
     //   Mute the tab.
     let icon = document.getAnonymousElementByAttribute(tab, "anonid", "overlay-icon");
-    yield test_mute_tab(tab, icon, true);
+    await test_mute_tab(tab, icon, true);
 
     // Pause playback and wait for it to finish.
-    yield pause(tab);
+    await pause(tab);
 
     // Unmute tab.
-    yield test_mute_tab(tab, icon, false);
+    await test_mute_tab(tab, icon, false);
 
     // Now click on the tab.
     let image = document.getAnonymousElementByAttribute(tab, "anonid", "tab-icon-image");
@@ -428,32 +428,32 @@ async function test_mute_keybinding() {
     EventUtils.synthesizeKey("m", {ctrlKey: true});
     await mutedPromise;
   }
-  function* taskFn(browser) {
+  async function taskFn(browser) {
     let tab = gBrowser.getTabForBrowser(browser);
 
     // Make sure it's possible to mute before the tab is playing.
-    yield test_muting_using_keyboard(tab);
+    await test_muting_using_keyboard(tab);
 
     //   Start playback and wait for it to finish.
-    yield play(tab);
+    await play(tab);
 
     // Make sure it's possible to mute after the tab is playing.
-    yield test_muting_using_keyboard(tab);
+    await test_muting_using_keyboard(tab);
 
     // Pause playback and wait for it to finish.
-    yield pause(tab);
+    await pause(tab);
 
     // Make sure things work if the tab is pinned.
     gBrowser.pinTab(tab);
 
     // Make sure it's possible to mute before the tab is playing.
-    yield test_muting_using_keyboard(tab);
+    await test_muting_using_keyboard(tab);
 
     //   Start playback and wait for it to finish.
-    yield play(tab);
+    await play(tab);
 
     // Make sure it's possible to mute after the tab is playing.
-    yield test_muting_using_keyboard(tab);
+    await test_muting_using_keyboard(tab);
 
     gBrowser.unpinTab(tab);
   }
@@ -489,15 +489,15 @@ async function test_on_browser(browser) {
 }
 
 async function test_delayed_tabattr_removal() {
-  function* taskFn(browser) {
+  async function taskFn(browser) {
     let tab = gBrowser.getTabForBrowser(browser);
-    yield play(tab);
+    await play(tab);
 
     // Extend the delay to guarantee the soundplaying attribute
     // is not removed from the tab when audio is stopped. Without
     // the extended delay the attribute could be removed in the
     // same tick and the test wouldn't catch that this broke.
-    yield pause(tab, {extendedDelay: true});
+    await pause(tab, {extendedDelay: true});
   }
 
   await BrowserTestUtils.withNewTab({

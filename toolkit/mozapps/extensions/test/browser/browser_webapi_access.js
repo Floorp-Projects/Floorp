@@ -22,8 +22,8 @@ function check_availability(browser) {
 // Test that initially the API isn't available in the test domain
 add_task(async function test_not_available() {
   await BrowserTestUtils.withNewTab(`${SECURE_TESTROOT}webapi_checkavailable.html`,
-    function* test_not_available(browser) {
-      let available = yield check_availability(browser);
+    async function test_not_available(browser) {
+      let available = await check_availability(browser);
       ok(!available, "API should not be available.");
     })
 });
@@ -33,8 +33,8 @@ add_task(async function test_available() {
   Services.prefs.setBoolPref("extensions.webapi.testing", true);
 
   await BrowserTestUtils.withNewTab(`${SECURE_TESTROOT}webapi_checkavailable.html`,
-    function* test_not_available(browser) {
-      let available = yield check_availability(browser);
+    async function test_not_available(browser) {
+      let available = await check_availability(browser);
       ok(available, "API should be available.");
     })
 });
@@ -42,8 +42,8 @@ add_task(async function test_available() {
 // Test that the API is not available in a bad domain
 add_task(async function test_bad_domain() {
   await BrowserTestUtils.withNewTab(`${SECURE_TESTROOT2}webapi_checkavailable.html`,
-    function* test_not_available(browser) {
-      let available = yield check_availability(browser);
+    async function test_not_available(browser) {
+      let available = await check_availability(browser);
       ok(!available, "API should not be available.");
     })
 });
@@ -51,8 +51,8 @@ add_task(async function test_bad_domain() {
 // Test that the API is only available in https sites
 add_task(async function test_not_available_http() {
   await BrowserTestUtils.withNewTab(`${TESTROOT}webapi_checkavailable.html`,
-    function* test_not_available(browser) {
-      let available = yield check_availability(browser);
+    async function test_not_available(browser) {
+      let available = await check_availability(browser);
       ok(!available, "API should not be available.");
     })
 });
@@ -60,8 +60,8 @@ add_task(async function test_not_available_http() {
 // Test that the API is available when in a frame of the test domain
 add_task(async function test_available_framed() {
   await BrowserTestUtils.withNewTab(`${SECURE_TESTROOT}webapi_checkframed.html`,
-    function* test_available(browser) {
-      let available = yield check_frame_availability(browser);
+    async function test_available(browser) {
+      let available = await check_frame_availability(browser);
       ok(available, "API should be available.");
     })
 });
@@ -70,8 +70,8 @@ add_task(async function test_available_framed() {
 // the API
 add_task(async function test_not_available_http_framed() {
   await BrowserTestUtils.withNewTab(`${TESTROOT}webapi_checkframed.html`,
-    function* test_not_available(browser) {
-      let available = yield check_frame_availability(browser);
+    async function test_not_available(browser) {
+      let available = await check_frame_availability(browser);
       ok(!available, "API should not be available.");
     })
 });
@@ -80,8 +80,8 @@ add_task(async function test_not_available_http_framed() {
 // have the API
 add_task(async function test_not_available_framed() {
   await BrowserTestUtils.withNewTab(`${SECURE_TESTROOT2}webapi_checkframed.html`,
-    function* test_not_available(browser) {
-      let available = yield check_frame_availability(browser);
+    async function test_not_available(browser) {
+      let available = await check_frame_availability(browser);
       ok(!available, "API should not be available.");
     })
 });
@@ -120,8 +120,8 @@ add_task(async function test_navigated_window() {
 // access the API.
 add_task(async function test_chrome_frame() {
   await BrowserTestUtils.withNewTab(`${CHROMEROOT}webapi_checkchromeframe.xul`,
-    function* test_available(browser) {
-      let available = yield check_frame_availability(browser);
+    async function test_available(browser) {
+      let available = await check_frame_availability(browser);
       ok(available, "API should be available.");
     })
 });

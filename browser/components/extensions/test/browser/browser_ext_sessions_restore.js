@@ -48,8 +48,8 @@ add_task(async function test_sessions_restore() {
     background,
   });
 
-  function* assertNotificationCount(expected) {
-    let notificationCount = yield extension.awaitMessage("notificationCount");
+  async function assertNotificationCount(expected) {
+    let notificationCount = await extension.awaitMessage("notificationCount");
     is(notificationCount, expected, "the expected number of notifications was fired");
   }
 

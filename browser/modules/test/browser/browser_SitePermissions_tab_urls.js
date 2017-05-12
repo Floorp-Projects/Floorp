@@ -23,18 +23,18 @@ add_task(async function testTemporaryPermissionTabURLs() {
 
   let id = "microphone";
 
-  await BrowserTestUtils.withNewTab("about:blank", function*(browser) {
+  await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
     for (let uri of same) {
         let loaded = BrowserTestUtils.browserLoaded(browser, false, uri.spec);
         browser.loadURI(uri.spec);
-        yield loaded;
+        await loaded;
 
         SitePermissions.set(uri, id, SitePermissions.BLOCK, SitePermissions.SCOPE_TEMPORARY, browser);
 
         for (let uri2 of same) {
           let loaded2 = BrowserTestUtils.browserLoaded(browser, false, uri2.spec);
           browser.loadURI(uri2.spec);
-          yield loaded2;
+          await loaded2;
 
           Assert.deepEqual(SitePermissions.get(uri2, id, browser), {
             state: SitePermissions.BLOCK,
@@ -48,7 +48,7 @@ add_task(async function testTemporaryPermissionTabURLs() {
     for (let uri of different) {
       let loaded = BrowserTestUtils.browserLoaded(browser, false, uri.spec);
       browser.loadURI(uri.spec);
-      yield loaded;
+      await loaded;
 
       SitePermissions.set(uri, id, SitePermissions.BLOCK, SitePermissions.SCOPE_TEMPORARY, browser);
 
@@ -60,7 +60,7 @@ add_task(async function testTemporaryPermissionTabURLs() {
       for (let uri2 of different) {
         loaded = BrowserTestUtils.browserLoaded(browser, false, uri2.spec);
         browser.loadURI(uri2.spec);
-        yield loaded;
+        await loaded;
 
         if (uri2 != uri) {
           Assert.deepEqual(SitePermissions.get(uri2, id, browser), {

@@ -107,7 +107,7 @@ AutoCompleteInput.prototype = {
 
 // A helper for check_autocomplete to check a specific match against data from
 // the controller.
-function* _check_autocomplete_matches(match, result) {
+async function _check_autocomplete_matches(match, result) {
   let { uri, title, tags, style } = match;
   if (tags)
     title += " \u2013 " + tags.sort().join(", ");
@@ -130,7 +130,7 @@ function* _check_autocomplete_matches(match, result) {
   }
 
   if (match.icon) {
-    yield compareFavicons(result.image, match.icon, "Match should have the expected icon");
+    await compareFavicons(result.image, match.icon, "Match should have the expected icon");
   }
 
   return true;
