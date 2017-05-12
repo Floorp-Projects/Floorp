@@ -364,12 +364,11 @@ GPUProcessManager::OnProcessDeviceReset(GPUProcessHost* aHost)
     HandleProcessLost();
     return;
   }
-  
-  uint64_t seqNo = GetNextDeviceResetSequenceNumber();
 
-  // We're good, do a reset like normal
-  for (auto& session : mRemoteSessions) {
-    session->NotifyDeviceReset(seqNo);
+  RebuildRemoteSessions();
+
+  for (const auto& listener : mListeners) {
+    listener->OnCompositorDeviceReset();
   }
 }
 
@@ -469,7 +468,19 @@ GPUProcessManager::HandleProcessLost()
   //      applied, and the window will not have a new compositor just yet.
   //      The next refresh tick and paint will ensure that one exists, again
   //      via nsIWidget::GetLayerManager.
+  RebuildRemoteSessions();
 
+  // Notify content. This will ensure that each content process re-establishes
+  // a connection to the compositor thread (whether it's in-process or in a
+  // newly launched GPU process).
+  for (const auto& listener : mListeners) {
+    listener->OnCompositorUnexpectedShutdown();
+  }
+}
+
+void
+GPUProcessManager::RebuildRemoteSessions()
+{
   // Build a list of sessions to notify, since notification might delete
   // entries from the list.
   nsTArray<RefPtr<RemoteCompositorSession>> sessions;
@@ -481,13 +492,6 @@ GPUProcessManager::HandleProcessLost()
   // that each widget destroys its layer manager and CompositorBridgeChild.
   for (const auto& session : sessions) {
     session->NotifySessionLost();
-  }
-
-  // Notify content. This will ensure that each content process re-establishes
-  // a connection to the compositor thread (whether it's in-process or in a
-  // newly launched GPU process).
-  for (const auto& listener : mListeners) {
-    listener->OnCompositorUnexpectedShutdown();
   }
 }
 

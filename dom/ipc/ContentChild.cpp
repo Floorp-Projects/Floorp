@@ -1192,6 +1192,20 @@ ContentChild::RecvReinitRendering(Endpoint<PCompositorBridgeChild>&& aCompositor
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+ContentChild::RecvReinitRenderingForDeviceReset()
+{
+  gfxPlatform::GetPlatform()->CompositorUpdated();
+
+  nsTArray<RefPtr<TabChild>> tabs = TabChild::GetAll();
+  for (const auto& tabChild : tabs) {
+    if (tabChild->LayersId()) {
+      tabChild->ReinitRenderingForDeviceReset();
+    }
+  }
+  return IPC_OK();
+}
+
 #if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
 
 #include <stdlib.h>

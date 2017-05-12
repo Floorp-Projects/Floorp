@@ -373,6 +373,9 @@ child:
       Endpoint<PVideoDecoderManagerChild> video,
       uint32_t[] namespaces);
 
+    // Re-create the rendering stack for a device reset.
+    async ReinitRenderingForDeviceReset();
+
     /**
      * Enable system-level sandboxing features, if available.  Can
      * usually only be performed zero or one times.  The child may
