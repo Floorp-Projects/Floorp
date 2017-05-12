@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<bindings id="xbltestBindings" xmlns="http://www.mozilla.org/xbl">
+  <binding id="xbltest">
+    <content>PASS</content>
+    <implementation>
+      <constructor>
+        var win = XPCNativeWrapper.unwrap(window);
+        win.document.bindingConstructorRan = true;
+        win.ok(true, "binding URI with no fragment applied");
+        win.SimpleTest.finish();
+      </constructor>
+    </implementation>
+  </binding>
+</bindings>
