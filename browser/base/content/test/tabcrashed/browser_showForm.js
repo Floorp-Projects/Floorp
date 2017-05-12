@@ -11,20 +11,20 @@ requestLongerTimeout(2);
  * Tests that we show the about:tabcrashed additional details form
  * if the "submit a crash report" checkbox was checked by default.
  */
-add_task(function* test_show_form() {
+add_task(async function test_show_form() {
   return BrowserTestUtils.withNewTab({
     gBrowser,
     url: PAGE,
-  }, function*(browser) {
+  }, async function(browser) {
     // Flip the pref so that the checkbox should be checked
     // by default.
     let pref = TabCrashHandler.prefs.root + "sendReport";
-    yield SpecialPowers.pushPrefEnv({
+    await SpecialPowers.pushPrefEnv({
       set: [[pref, true]]
     });
 
     // Now crash the browser.
-    yield BrowserTestUtils.crashBrowser(browser);
+    await BrowserTestUtils.crashBrowser(browser);
 
     let doc = browser.contentDocument;
 

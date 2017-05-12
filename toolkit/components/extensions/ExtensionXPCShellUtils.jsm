@@ -9,7 +9,6 @@ this.EXPORTED_SYMBOLS = ["ExtensionTestUtils"];
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Components.utils.import("resource://gre/modules/ExtensionUtils.jsm");
-Components.utils.import("resource://gre/modules/Task.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
@@ -557,8 +556,8 @@ class AOMExtensionWrapper extends ExtensionWrapper {
 var ExtensionTestUtils = {
   BASE_MANIFEST,
 
-  normalizeManifest: Task.async(function* (manifest, baseManifest = BASE_MANIFEST) {
-    yield Management.lazyInit();
+  async normalizeManifest(manifest, baseManifest = BASE_MANIFEST) {
+    await Management.lazyInit();
 
     let errors = [];
     let context = {
@@ -577,7 +576,7 @@ var ExtensionTestUtils = {
     normalized.errors = errors;
 
     return normalized;
-  }),
+  },
 
   currentScope: null,
 

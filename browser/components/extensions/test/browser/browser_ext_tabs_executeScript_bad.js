@@ -2,7 +2,7 @@
 
 // This is a pretty terrible hack, but it's the best we can do until we
 // support |executeScript| callbacks and |lastError|.
-function* testHasNoPermission(params) {
+async function testHasNoPermission(params) {
   let contentSetup = params.contentSetup || (() => Promise.resolve());
 
   async function background(contentSetup) {
@@ -51,35 +51,35 @@ function* testHasNoPermission(params) {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitMessage("ready");
+  await extension.startup();
+  await extension.awaitMessage("ready");
 
   if (params.setup) {
-    yield params.setup(extension);
+    await params.setup(extension);
   }
 
   extension.sendMessage("execute-script");
 
-  yield extension.awaitFinish("executeScript");
-  yield extension.unload();
+  await extension.awaitFinish("executeScript");
+  await extension.unload();
 }
 
-add_task(function* testBadPermissions() {
-  let tab1 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
-  let tab2 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/");
+add_task(async function testBadPermissions() {
+  let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+  let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/");
 
   info("Test no special permissions");
-  yield testHasNoPermission({
+  await testHasNoPermission({
     manifest: {"permissions": ["http://example.com/"]},
   });
 
   info("Test tabs permissions");
-  yield testHasNoPermission({
+  await testHasNoPermission({
     manifest: {"permissions": ["http://example.com/", "tabs"]},
   });
 
   info("Test no special permissions, commands, key press");
-  yield testHasNoPermission({
+  await testHasNoPermission({
     manifest: {
       "permissions": ["http://example.com/"],
       "commands": {
@@ -98,14 +98,14 @@ add_task(function* testBadPermissions() {
       });
       return Promise.resolve();
     },
-    setup: function* (extension) {
-      yield EventUtils.synthesizeKey("k", {altKey: true, shiftKey: true});
-      yield extension.awaitMessage("tabs-command-key-pressed");
+    setup: async function(extension) {
+      await EventUtils.synthesizeKey("k", {altKey: true, shiftKey: true});
+      await extension.awaitMessage("tabs-command-key-pressed");
     },
   });
 
   info("Test active tab, commands, no key press");
-  yield testHasNoPermission({
+  await testHasNoPermission({
     manifest: {
       "permissions": ["http://example.com/", "activeTab"],
       "commands": {
@@ -119,7 +119,7 @@ add_task(function* testBadPermissions() {
   });
 
   info("Test active tab, browser action, no click");
-  yield testHasNoPermission({
+  await testHasNoPermission({
     manifest: {
       "permissions": ["http://example.com/", "activeTab"],
       "browser_action": {},
@@ -127,7 +127,7 @@ add_task(function* testBadPermissions() {
   });
 
   info("Test active tab, page action, no click");
-  yield testHasNoPermission({
+  await testHasNoPermission({
     manifest: {
       "permissions": ["http://example.com/", "activeTab"],
       "page_action": {},
@@ -138,11 +138,11 @@ add_task(function* testBadPermissions() {
     },
   });
 
-  yield BrowserTestUtils.removeTab(tab2);
-  yield BrowserTestUtils.removeTab(tab1);
+  await BrowserTestUtils.removeTab(tab2);
+  await BrowserTestUtils.removeTab(tab1);
 });
 
-add_task(function* testMatchDataURI() {
+add_task(async function testMatchDataURI() {
   const target = ExtensionTestUtils.loadExtension({
     files: {
       "page.html": `<!DOCTYPE html>
@@ -187,32 +187,32 @@ add_task(function* testMatchDataURI() {
     },
   });
 
-  yield scripts.startup();
-  yield target.startup();
+  await scripts.startup();
+  await target.startup();
 
   // Test extension page with a data: iframe.
-  const page = yield scripts.awaitMessage("tab-ready");
+  const page = await scripts.awaitMessage("tab-ready");
   ok(page.endsWith("page.html"), "Extension page loaded into a tab");
 
   scripts.sendMessage("execute");
-  yield scripts.awaitMessage("done");
+  await scripts.awaitMessage("done");
 
   // Test extension tab navigated to a data: URI.
   const data = "data:text/html;charset=utf-8,also-inherits";
   target.sendMessage("navigate", data);
 
-  const url = yield scripts.awaitMessage("tab-ready");
+  const url = await scripts.awaitMessage("tab-ready");
   is(url, data, "Extension tab navigated to a data: URI");
 
   scripts.sendMessage("execute");
-  yield scripts.awaitMessage("done");
+  await scripts.awaitMessage("done");
 
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  yield scripts.unload();
-  yield target.unload();
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await scripts.unload();
+  await target.unload();
 });
 
-add_task(function* testBadURL() {
+add_task(async function testBadURL() {
   async function background() {
     let promises = [
       new Promise(resolve => {
@@ -272,11 +272,11 @@ add_task(function* testBadURL() {
     background,
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitFinish("executeScript-lastError");
+  await extension.awaitFinish("executeScript-lastError");
 
-  yield extension.unload();
+  await extension.unload();
 });
 
 // TODO: Test that |executeScript| fails if the tab has navigated to a

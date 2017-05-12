@@ -4,11 +4,11 @@
 
 "use strict";
 
-add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   info("Check history button existence and functionality");
 
-  yield PanelUI.show();
+  await PanelUI.show();
   info("Menu panel was opened");
 
   let historyButton = document.getElementById("history-panelmenu");
@@ -20,6 +20,6 @@ add_task(function*() {
 
   let panelHiddenPromise = promisePanelHidden(window);
   PanelUI.hide();
-  yield panelHiddenPromise
+  await panelHiddenPromise
   info("Menu panel was closed");
 });

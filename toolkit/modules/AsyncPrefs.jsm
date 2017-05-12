@@ -8,7 +8,6 @@ this.EXPORTED_SYMBOLS = ["AsyncPrefs"];
 
 const {interfaces: Ci, utils: Cu, classes: Cc} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 
 const kInChildProcess = Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
 
@@ -65,7 +64,7 @@ if (kInChildProcess) {
   let gMsgMap = new Map();
 
   AsyncPrefs = {
-    set: Task.async(function(pref, value) {
+    set(pref, value) {
       let error = maybeReturnErrorForSet(pref, value);
       if (error) {
         return Promise.reject(error);
@@ -76,9 +75,9 @@ if (kInChildProcess) {
         gMsgMap.set(msgId, {resolve, reject});
         Services.cpmm.sendAsyncMessage("AsyncPrefs:SetPref", {pref, value, msgId});
       });
-    }),
+    },
 
-    reset: Task.async(function(pref) {
+    reset(pref) {
       let error = maybeReturnErrorForReset(pref);
       if (error) {
         return Promise.reject(error);
@@ -89,7 +88,7 @@ if (kInChildProcess) {
         gMsgMap.set(msgId, {resolve, reject});
         Services.cpmm.sendAsyncMessage("AsyncPrefs:ResetPref", {pref, msgId});
       });
-    }),
+    },
 
     receiveMessage(msg) {
       let promiseRef = gMsgMap.get(msg.data.msgId);
@@ -116,7 +115,7 @@ if (kInChildProcess) {
       string: "setCharPref",
     },
 
-    set: Task.async(function(pref, value) {
+    set(pref, value) {
       let error = maybeReturnErrorForSet(pref, value);
       if (error) {
         return Promise.reject(error);
@@ -129,9 +128,9 @@ if (kInChildProcess) {
         Cu.reportError(ex);
         return Promise.reject(ex.message);
       }
-    }),
+    },
 
-    reset: Task.async(function(pref) {
+    reset(pref) {
       let error = maybeReturnErrorForReset(pref);
       if (error) {
         return Promise.reject(error);
@@ -144,7 +143,7 @@ if (kInChildProcess) {
         Cu.reportError(ex);
         return Promise.reject(ex.message);
       }
-    }),
+    },
 
     receiveMessage(msg) {
       if (msg.name == "AsyncPrefs:SetPref") {

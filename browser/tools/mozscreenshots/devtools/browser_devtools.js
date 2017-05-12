@@ -6,11 +6,11 @@
 
 "use strict";
 
-add_task(function* capture() {
+add_task(async function capture() {
   if (!shouldCapture()) {
     return;
   }
   let sets = ["DevTools"];
 
-  yield TestRunner.start(sets, "devtools");
+  await TestRunner.start(sets, "devtools");
 });

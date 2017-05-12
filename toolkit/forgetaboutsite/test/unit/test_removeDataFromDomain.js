@@ -61,12 +61,12 @@ function uri(aURIString) {
  * @rejects JavaScript exception.
  */
 function promiseIsURIVisited(aURI) {
-  let deferred = Promise.defer();
-  PlacesUtils.asyncHistory.isURIVisited(aURI, function(unused, aIsVisited) {
-    deferred.resolve(aIsVisited);
-  });
+  return new Promise(resolve => {
+    PlacesUtils.asyncHistory.isURIVisited(aURI, function(unused, aIsVisited) {
+      resolve(aIsVisited);
+    });
 
-  return deferred.promise;
+  });
 }
 
 /**
@@ -209,13 +209,13 @@ function check_permission_exists(aURI, aExists) {
  *        The URI to add a preference for.
  */
 function add_preference(aURI) {
-  let deferred = Promise.defer();
-  let cp = Cc["@mozilla.org/content-pref/service;1"].
-             getService(Ci.nsIContentPrefService2);
-  cp.set(aURI.spec, PREFERENCE_NAME, "foo", null, {
-    handleCompletion: () => deferred.resolve()
+  return new Promise(resolve => {
+    let cp = Cc["@mozilla.org/content-pref/service;1"].
+               getService(Ci.nsIContentPrefService2);
+    cp.set(aURI.spec, PREFERENCE_NAME, "foo", null, {
+      handleCompletion: () => resolve()
+    });
   });
-  return deferred.promise;
 }
 
 /**
@@ -225,91 +225,91 @@ function add_preference(aURI) {
  *        The URI to check if a preference exists.
  */
 function preference_exists(aURI) {
-  let deferred = Promise.defer();
-  let cp = Cc["@mozilla.org/content-pref/service;1"].
-             getService(Ci.nsIContentPrefService2);
-  let exists = false;
-  cp.getByDomainAndName(aURI.spec, PREFERENCE_NAME, null, {
-    handleResult: () => exists = true,
-    handleCompletion: () => deferred.resolve(exists)
+  return new Promise(resolve => {
+    let cp = Cc["@mozilla.org/content-pref/service;1"].
+               getService(Ci.nsIContentPrefService2);
+    let exists = false;
+    cp.getByDomainAndName(aURI.spec, PREFERENCE_NAME, null, {
+      handleResult: () => exists = true,
+      handleCompletion: () => resolve(exists)
+    });
   });
-  return deferred.promise;
 }
 
 // Test Functions
 
 // History
-function* test_history_cleared_with_direct_match() {
+async function test_history_cleared_with_direct_match() {
   const TEST_URI = uri("http://mozilla.org/foo");
-  do_check_false(yield promiseIsURIVisited(TEST_URI));
-  yield PlacesTestUtils.addVisits(TEST_URI);
-  do_check_true(yield promiseIsURIVisited(TEST_URI));
-  yield ForgetAboutSite.removeDataFromDomain("mozilla.org");
-  do_check_false(yield promiseIsURIVisited(TEST_URI));
+  do_check_false(await promiseIsURIVisited(TEST_URI));
+  await PlacesTestUtils.addVisits(TEST_URI);
+  do_check_true(await promiseIsURIVisited(TEST_URI));
+  await ForgetAboutSite.removeDataFromDomain("mozilla.org");
+  do_check_false(await promiseIsURIVisited(TEST_URI));
 }
 
-function* test_history_cleared_with_subdomain() {
+async function test_history_cleared_with_subdomain() {
   const TEST_URI = uri("http://www.mozilla.org/foo");
-  do_check_false(yield promiseIsURIVisited(TEST_URI));
-  yield PlacesTestUtils.addVisits(TEST_URI);
-  do_check_true(yield promiseIsURIVisited(TEST_URI));
-  yield ForgetAboutSite.removeDataFromDomain("mozilla.org");
-  do_check_false(yield promiseIsURIVisited(TEST_URI));
+  do_check_false(await promiseIsURIVisited(TEST_URI));
+  await PlacesTestUtils.addVisits(TEST_URI);
+  do_check_true(await promiseIsURIVisited(TEST_URI));
+  await ForgetAboutSite.removeDataFromDomain("mozilla.org");
+  do_check_false(await promiseIsURIVisited(TEST_URI));
 }
 
-function* test_history_not_cleared_with_uri_contains_domain() {
+async function test_history_not_cleared_with_uri_contains_domain() {
   const TEST_URI = uri("http://ilovemozilla.org/foo");
-  do_check_false(yield promiseIsURIVisited(TEST_URI));
-  yield PlacesTestUtils.addVisits(TEST_URI);
-  do_check_true(yield promiseIsURIVisited(TEST_URI));
-  yield ForgetAboutSite.removeDataFromDomain("mozilla.org");
-  do_check_true(yield promiseIsURIVisited(TEST_URI));
+  do_check_false(await promiseIsURIVisited(TEST_URI));
+  await PlacesTestUtils.addVisits(TEST_URI);
+  do_check_true(await promiseIsURIVisited(TEST_URI));
+  await ForgetAboutSite.removeDataFromDomain("mozilla.org");
+  do_check_true(await promiseIsURIVisited(TEST_URI));
 
   // Clear history since we left something there from this test.
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
 }
 
 // Cookie Service
-function* test_cookie_cleared_with_direct_match() {
+async function test_cookie_cleared_with_direct_match() {
   const TEST_DOMAIN = "mozilla.org";
   add_cookie(TEST_DOMAIN);
-  yield ForgetAboutSite.removeDataFromDomain("mozilla.org");
+  await ForgetAboutSite.removeDataFromDomain("mozilla.org");
   check_cookie_exists(TEST_DOMAIN, false);
 }
 
-function* test_cookie_cleared_with_subdomain() {
+async function test_cookie_cleared_with_subdomain() {
   const TEST_DOMAIN = "www.mozilla.org";
   add_cookie(TEST_DOMAIN);
-  yield ForgetAboutSite.removeDataFromDomain("mozilla.org");
+  await ForgetAboutSite.removeDataFromDomain("mozilla.org");
   check_cookie_exists(TEST_DOMAIN, false);
 }
 
-function* test_cookie_not_cleared_with_uri_contains_domain() {
+async function test_cookie_not_cleared_with_uri_contains_domain() {
   const TEST_DOMAIN = "ilovemozilla.org";
   add_cookie(TEST_DOMAIN);
-  yield ForgetAboutSite.removeDataFromDomain("mozilla.org");
+  await ForgetAboutSite.removeDataFromDomain("mozilla.org");
   check_cookie_exists(TEST_DOMAIN, true);
 }
 
 // Login Manager
-function* test_login_manager_disabled_hosts_cleared_with_direct_match() {
+async function test_login_manager_disabled_hosts_cleared_with_direct_match() {
   const TEST_HOST = "http://mozilla.org";
   add_disabled_host(TEST_HOST);
-  yield ForgetAboutSite.removeDataFromDomain("mozilla.org");
+  await ForgetAboutSite.removeDataFromDomain("mozilla.org");
   check_disabled_host(TEST_HOST, false);
 }
 
-function* test_login_manager_disabled_hosts_cleared_with_subdomain() {
+async function test_login_manager_disabled_hosts_cleared_with_subdomain() {
   const TEST_HOST = "http://www.mozilla.org";
   add_disabled_host(TEST_HOST);
-  yield ForgetAboutSite.removeDataFromDomain("mozilla.org");
+  await ForgetAboutSite.removeDataFromDomain("mozilla.org");
   check_disabled_host(TEST_HOST, false);
 }
 
-function* test_login_manager_disabled_hosts_not_cleared_with_uri_contains_domain() {
+async function test_login_manager_disabled_hosts_not_cleared_with_uri_contains_domain() {
   const TEST_HOST = "http://ilovemozilla.org";
   add_disabled_host(TEST_HOST);
-  yield ForgetAboutSite.removeDataFromDomain("mozilla.org");
+  await ForgetAboutSite.removeDataFromDomain("mozilla.org");
   check_disabled_host(TEST_HOST, true);
 
   // Reset state
@@ -319,24 +319,24 @@ function* test_login_manager_disabled_hosts_not_cleared_with_uri_contains_domain
   check_disabled_host(TEST_HOST, false);
 }
 
-function* test_login_manager_logins_cleared_with_direct_match() {
+async function test_login_manager_logins_cleared_with_direct_match() {
   const TEST_HOST = "http://mozilla.org";
   add_login(TEST_HOST);
-  yield ForgetAboutSite.removeDataFromDomain("mozilla.org");
+  await ForgetAboutSite.removeDataFromDomain("mozilla.org");
   check_login_exists(TEST_HOST, false);
 }
 
-function* test_login_manager_logins_cleared_with_subdomain() {
+async function test_login_manager_logins_cleared_with_subdomain() {
   const TEST_HOST = "http://www.mozilla.org";
   add_login(TEST_HOST);
-  yield ForgetAboutSite.removeDataFromDomain("mozilla.org");
+  await ForgetAboutSite.removeDataFromDomain("mozilla.org");
   check_login_exists(TEST_HOST, false);
 }
 
-function* test_login_manager_logins_not_cleared_with_uri_contains_domain() {
+async function test_login_manager_logins_not_cleared_with_uri_contains_domain() {
   const TEST_HOST = "http://ilovemozilla.org";
   add_login(TEST_HOST);
-  yield ForgetAboutSite.removeDataFromDomain("mozilla.org");
+  await ForgetAboutSite.removeDataFromDomain("mozilla.org");
   check_login_exists(TEST_HOST, true);
 
   let lm = Cc["@mozilla.org/login-manager;1"].
@@ -346,24 +346,24 @@ function* test_login_manager_logins_not_cleared_with_uri_contains_domain() {
 }
 
 // Permission Manager
-function* test_permission_manager_cleared_with_direct_match() {
+async function test_permission_manager_cleared_with_direct_match() {
   const TEST_URI = uri("http://mozilla.org");
   add_permission(TEST_URI);
-  yield ForgetAboutSite.removeDataFromDomain("mozilla.org");
+  await ForgetAboutSite.removeDataFromDomain("mozilla.org");
   check_permission_exists(TEST_URI, false);
 }
 
-function* test_permission_manager_cleared_with_subdomain() {
+async function test_permission_manager_cleared_with_subdomain() {
   const TEST_URI = uri("http://www.mozilla.org");
   add_permission(TEST_URI);
-  yield ForgetAboutSite.removeDataFromDomain("mozilla.org");
+  await ForgetAboutSite.removeDataFromDomain("mozilla.org");
   check_permission_exists(TEST_URI, false);
 }
 
-function* test_permission_manager_not_cleared_with_uri_contains_domain() {
+async function test_permission_manager_not_cleared_with_uri_contains_domain() {
   const TEST_URI = uri("http://ilovemozilla.org");
   add_permission(TEST_URI);
-  yield ForgetAboutSite.removeDataFromDomain("mozilla.org");
+  await ForgetAboutSite.removeDataFromDomain("mozilla.org");
   check_permission_exists(TEST_URI, true);
 
   // Reset state
@@ -374,58 +374,58 @@ function* test_permission_manager_not_cleared_with_uri_contains_domain() {
 }
 
 function waitForPurgeNotification() {
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  let observer = {
-    observe(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(observer, "browser:purge-domain-data");
-      // test_storage_cleared needs this extra executeSoon because
-      // the DOMStorage clean-up is also listening to this same observer
-      // which is run synchronously.
-      Services.tm.dispatchToMainThread(function() {
-        deferred.resolve();
-      });
-    }
-  };
-  Services.obs.addObserver(observer, "browser:purge-domain-data");
+    let observer = {
+      observe(aSubject, aTopic, aData) {
+        Services.obs.removeObserver(observer, "browser:purge-domain-data");
+        // test_storage_cleared needs this extra executeSoon because
+        // the DOMStorage clean-up is also listening to this same observer
+        // which is run synchronously.
+        Services.tm.dispatchToMainThread(function() {
+          resolve();
+        });
+      }
+    };
+    Services.obs.addObserver(observer, "browser:purge-domain-data");
 
-  return deferred.promise;
+  });
 }
 
 // Content Preferences
-function* test_content_preferences_cleared_with_direct_match() {
+async function test_content_preferences_cleared_with_direct_match() {
   const TEST_URI = uri("http://mozilla.org");
-  do_check_false(yield preference_exists(TEST_URI));
-  yield add_preference(TEST_URI);
-  do_check_true(yield preference_exists(TEST_URI));
-  yield ForgetAboutSite.removeDataFromDomain("mozilla.org");
-  yield waitForPurgeNotification();
-  do_check_false(yield preference_exists(TEST_URI));
+  do_check_false(await preference_exists(TEST_URI));
+  await add_preference(TEST_URI);
+  do_check_true(await preference_exists(TEST_URI));
+  await ForgetAboutSite.removeDataFromDomain("mozilla.org");
+  await waitForPurgeNotification();
+  do_check_false(await preference_exists(TEST_URI));
 }
 
-function* test_content_preferences_cleared_with_subdomain() {
+async function test_content_preferences_cleared_with_subdomain() {
   const TEST_URI = uri("http://www.mozilla.org");
-  do_check_false(yield preference_exists(TEST_URI));
-  yield add_preference(TEST_URI);
-  do_check_true(yield preference_exists(TEST_URI));
-  yield ForgetAboutSite.removeDataFromDomain("mozilla.org");
-  yield waitForPurgeNotification();
-  do_check_false(yield preference_exists(TEST_URI));
+  do_check_false(await preference_exists(TEST_URI));
+  await add_preference(TEST_URI);
+  do_check_true(await preference_exists(TEST_URI));
+  await ForgetAboutSite.removeDataFromDomain("mozilla.org");
+  await waitForPurgeNotification();
+  do_check_false(await preference_exists(TEST_URI));
 }
 
-function* test_content_preferences_not_cleared_with_uri_contains_domain() {
+async function test_content_preferences_not_cleared_with_uri_contains_domain() {
   const TEST_URI = uri("http://ilovemozilla.org");
-  do_check_false(yield preference_exists(TEST_URI));
-  yield add_preference(TEST_URI);
-  do_check_true(yield preference_exists(TEST_URI));
-  yield ForgetAboutSite.removeDataFromDomain("mozilla.org");
-  yield waitForPurgeNotification();
-  do_check_true(yield preference_exists(TEST_URI));
+  do_check_false(await preference_exists(TEST_URI));
+  await add_preference(TEST_URI);
+  do_check_true(await preference_exists(TEST_URI));
+  await ForgetAboutSite.removeDataFromDomain("mozilla.org");
+  await waitForPurgeNotification();
+  do_check_true(await preference_exists(TEST_URI));
 
   // Reset state
-  yield ForgetAboutSite.removeDataFromDomain("ilovemozilla.org");
-  yield waitForPurgeNotification();
-  do_check_false(yield preference_exists(TEST_URI));
+  await ForgetAboutSite.removeDataFromDomain("ilovemozilla.org");
+  await waitForPurgeNotification();
+  do_check_false(await preference_exists(TEST_URI));
 }
 
 function push_registration_exists(aURL, ps) {
@@ -444,7 +444,7 @@ function push_registration_exists(aURL, ps) {
 }
 
 // Push
-function* test_push_cleared() {
+async function test_push_cleared() {
   let ps;
   try {
     ps = Cc["@mozilla.org/push/Service;1"].
@@ -480,8 +480,8 @@ function* test_push_cleared() {
     });
 
     const TEST_URL = "https://www.mozilla.org/scope/";
-    do_check_false(yield push_registration_exists(TEST_URL, ps));
-    yield db.put({
+    do_check_false(await push_registration_exists(TEST_URL, ps));
+    await db.put({
       channelID,
       pushEndpoint: "https://example.org/update/clear-success",
       scope: TEST_URL,
@@ -489,20 +489,20 @@ function* test_push_cleared() {
       originAttributes: "",
       quota: Infinity,
     });
-    do_check_true(yield push_registration_exists(TEST_URL, ps));
+    do_check_true(await push_registration_exists(TEST_URL, ps));
 
     let promisePurgeNotification = waitForPurgeNotification();
-    yield ForgetAboutSite.removeDataFromDomain("mozilla.org");
-    yield promisePurgeNotification;
+    await ForgetAboutSite.removeDataFromDomain("mozilla.org");
+    await promisePurgeNotification;
 
-    do_check_false(yield push_registration_exists(TEST_URL, ps));
+    do_check_false(await push_registration_exists(TEST_URL, ps));
   } finally {
-    yield PushService._shutdownService();
+    await PushService._shutdownService();
   }
 }
 
 // Cache
-function* test_cache_cleared() {
+async function test_cache_cleared() {
   // Because this test is asynchronous, it should be the last test
   do_check_true(tests[tests.length - 1] == arguments.callee);
 
@@ -522,11 +522,11 @@ function* test_cache_cleared() {
     }
   };
   os.addObserver(observer, "cacheservice:empty-cache");
-  yield ForgetAboutSite.removeDataFromDomain("mozilla.org");
+  await ForgetAboutSite.removeDataFromDomain("mozilla.org");
   do_test_pending();
 }
 
-function* test_storage_cleared() {
+async function test_storage_cleared() {
   function getStorageForURI(aURI) {
     let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
               .getService(Ci.nsIScriptSecurityManager);
@@ -551,8 +551,8 @@ function* test_storage_cleared() {
     do_check_eq(storage.getItem("test"), "value" + i);
   }
 
-  yield ForgetAboutSite.removeDataFromDomain("mozilla.org");
-  yield waitForPurgeNotification();
+  await ForgetAboutSite.removeDataFromDomain("mozilla.org");
+  await waitForPurgeNotification();
 
   do_check_eq(s[0].getItem("test"), null);
   do_check_eq(s[0].length, 0);

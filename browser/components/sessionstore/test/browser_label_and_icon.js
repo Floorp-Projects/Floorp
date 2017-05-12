@@ -20,22 +20,22 @@ add_task(function setup() {
 /**
  * Ensure that a pending tab has label and icon correctly set.
  */
-add_task(function* test_label_and_icon() {
+add_task(async function test_label_and_icon() {
   // Create a new tab.
   let tab = gBrowser.addTab("about:robots");
   let browser = tab.linkedBrowser;
-  yield promiseBrowserLoaded(browser);
+  await promiseBrowserLoaded(browser);
 
   // Retrieve the tab state.
-  yield TabStateFlusher.flush(browser);
+  await TabStateFlusher.flush(browser);
   let state = ss.getTabState(tab);
-  yield promiseRemoveTab(tab);
+  await promiseRemoveTab(tab);
   browser = null;
 
   // Open a new tab to restore into.
   tab = gBrowser.addTab("about:blank");
   ss.setTabState(tab, state);
-  yield promiseTabRestoring(tab);
+  await promiseTabRestoring(tab);
 
   // Check that label and icon are set for the restoring tab.
   ok(gBrowser.getIcon(tab).startsWith("data:image/png;"), "icon is set");
@@ -49,5 +49,5 @@ add_task(function* test_label_and_icon() {
   is(iconLoadingPrincipal.origin, "about:robots", "correct loadingPrincipal used");
 
   // Cleanup.
-  yield promiseRemoveTab(tab);
+  await promiseRemoveTab(tab);
 });

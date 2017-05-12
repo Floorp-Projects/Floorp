@@ -15,16 +15,16 @@ const PAGE_URL = `data:text/html,
  * Tests that if a background tab crashes that it doesn't
  * lose the favicon in the tab.
  */
-add_task(function* test_tabicon_after_bg_tab_crash() {
+add_task(async function test_tabicon_after_bg_tab_crash() {
   let originalTab = gBrowser.selectedTab;
 
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: PAGE_URL,
-  }, function*(browser) {
+  }, async function(browser) {
     Assert.equal(browser.mIconURL, FAVICON, "Favicon is correctly set.");
-    yield BrowserTestUtils.switchTab(gBrowser, originalTab);
-    yield BrowserTestUtils.crashBrowser(browser,
+    await BrowserTestUtils.switchTab(gBrowser, originalTab);
+    await BrowserTestUtils.crashBrowser(browser,
                                         false /* shouldShowTabCrashPage */);
     Assert.equal(browser.mIconURL, FAVICON,
                  "Favicon is still set after crash.");

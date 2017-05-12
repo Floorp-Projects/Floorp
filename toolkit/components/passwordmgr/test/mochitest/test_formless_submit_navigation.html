@@ -23,17 +23,17 @@ let loadPromise = new Promise(resolve => {
   });
 });
 
-add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
     set: [
       ["signon.formlessCapture.enabled", true],
     ],
   });
 
   info("Waiting for page and frame loads");
-  yield loadPromise;
+  await loadPromise;
 
-  yield loadRecipes({
+  await loadRecipes({
     siteRecipes: [{
       hosts: ["test1.mochi.test:8888"],
       usernameSelector: "input[name='recipeuname']",
@@ -133,7 +133,7 @@ function getSubmitMessage() {
   });
 }
 
-add_task(function* test() {
+add_task(async function test() {
   let loginFrame = document.getElementById("loginFrame");
 
   for (let tc of TESTCASES) {
@@ -145,17 +145,17 @@ add_task(function* test() {
         }, {once: true});
       });
       loginFrame.src = DEFAULT_ORIGIN + "/tests/toolkit/components/passwordmgr/test/mochitest/blank.html";
-      yield loadedPromise;
+      await loadedPromise;
 
       let frameDoc = SpecialPowers.wrap(loginFrame.contentWindow).document;
       frameDoc.documentElement.innerHTML = tc.document;
       // Wait for the form to be processed before trying to submit.
-      yield promiseFormsProcessed();
+      await promiseFormsProcessed();
       let processedPromise = getSubmitMessage();
       info("Running " + scriptName + " script to cause a submission");
       frameDoc.defaultView.eval(SCRIPTS[scriptName]);
 
-      let submittedResult = yield processedPromise;
+      let submittedResult = await processedPromise;
 
       // Check data sent via RemoteLogins:onFormSubmit
       is(submittedResult.hostname, tc.hostname, "Check hostname");

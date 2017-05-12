@@ -1,10 +1,10 @@
-add_task(function*() {
+add_task(async function() {
   SpecialPowers.pushPrefEnv({set: [
     ["gfx.direct2d.disabled", false],
     ["layers.acceleration.disabled", false]
   ]});
 
-  let prefs = yield openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
+  let prefs = await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
   is(prefs.selectedPane, "paneGeneral", "General pane was selected");
 
   let doc = gBrowser.contentDocument;
@@ -26,5 +26,5 @@ add_task(function*() {
     is(Services.prefs.getBoolPref("gfx.direct2d.disabled"), true, "direct2d pref should be set to true");
   }
 
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

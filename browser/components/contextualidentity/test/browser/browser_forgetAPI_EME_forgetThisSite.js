@@ -24,7 +24,7 @@ const TEST_EME_KEY = {
 // Support functions.
 //
 
-function* openTabInUserContext(uri, userContextId) {
+async function openTabInUserContext(uri, userContextId) {
   // Open the tab in the correct userContextId.
   let tab = gBrowser.addTab(uri, {userContextId});
 
@@ -33,7 +33,7 @@ function* openTabInUserContext(uri, userContextId) {
   tab.ownerGlobal.focus();
 
   let browser = gBrowser.getBrowserForTab(tab);
-  yield BrowserTestUtils.browserLoaded(browser);
+  await BrowserTestUtils.browserLoaded(browser);
   return {tab, browser};
 }
 
@@ -89,25 +89,25 @@ function generateKeyInfo(aData) {
 }
 
 // Setup a EME key for the given browser, and return the sessionId.
-function* setupEMEKey(browser) {
+async function setupEMEKey(browser) {
   // Generate the key info.
   let keyInfo = generateKeyInfo(TEST_EME_KEY);
 
   // Setup the EME key.
-  let result = yield ContentTask.spawn(browser, keyInfo, function* (aKeyInfo) {
-    let access = yield content.navigator.requestMediaKeySystemAccess("org.w3.clearkey",
+  let result = await ContentTask.spawn(browser, keyInfo, async function(aKeyInfo) {
+    let access = await content.navigator.requestMediaKeySystemAccess("org.w3.clearkey",
                                                                      [{
                                                                        initDataTypes: [aKeyInfo.initDataType],
                                                                        videoCapabilities: [{contentType: "video/webm"}],
                                                                        sessionTypes: ["persistent-license"],
                                                                        persistentState: "required",
                                                                      }]);
-    let mediaKeys = yield access.createMediaKeys();
+    let mediaKeys = await access.createMediaKeys();
     let session = mediaKeys.createSession(aKeyInfo.sessionType);
     let res = {};
 
     // Insert the EME key.
-    yield new Promise(resolve => {
+    await new Promise(resolve => {
       session.addEventListener("message", function(event) {
         session.update(aKeyInfo.keyObj).then(
           () => { resolve(); }
@@ -133,7 +133,7 @@ function* setupEMEKey(browser) {
 
     // Close the session.
     session.close();
-    yield session.closed;
+    await session.closed;
 
     return res;
   });
@@ -144,24 +144,24 @@ function* setupEMEKey(browser) {
 }
 
 // Check whether the EME key has been cleared.
-function* checkEMEKey(browser, emeSessionId) {
+async function checkEMEKey(browser, emeSessionId) {
   // Generate the key info.
   let keyInfo = generateKeyInfo(TEST_EME_KEY);
   keyInfo.sessionId = emeSessionId;
 
-  yield ContentTask.spawn(browser, keyInfo, function* (aKeyInfo) {
-    let access = yield content.navigator.requestMediaKeySystemAccess("org.w3.clearkey",
+  await ContentTask.spawn(browser, keyInfo, async function(aKeyInfo) {
+    let access = await content.navigator.requestMediaKeySystemAccess("org.w3.clearkey",
                                                                      [{
                                                                        initDataTypes: [aKeyInfo.initDataType],
                                                                        videoCapabilities: [{contentType: "video/webm"}],
                                                                        sessionTypes: ["persistent-license"],
                                                                        persistentState: "required",
                                                                      }]);
-    let mediaKeys = yield access.createMediaKeys();
+    let mediaKeys = await access.createMediaKeys();
     let session = mediaKeys.createSession(aKeyInfo.sessionType);
 
     // First, load the session with the sessionId.
-    yield session.load(aKeyInfo.sessionId);
+    await session.load(aKeyInfo.sessionId);
 
     let map = session.keyStatuses;
 
@@ -174,9 +174,9 @@ function* checkEMEKey(browser, emeSessionId) {
 // Test functions.
 //
 
-add_task(function* setup() {
+add_task(async function setup() {
   // Make sure userContext is enabled.
-  yield SpecialPowers.pushPrefEnv({"set": [
+  await SpecialPowers.pushPrefEnv({"set": [
       [ "privacy.userContext.enabled", true ],
       [ "media.mediasource.enabled", true ],
       [ "media.mediasource.webm.enabled", true ],
@@ -184,19 +184,19 @@ add_task(function* setup() {
   ]});
 });
 
-add_task(function* test_EME_forgetThisSite() {
+add_task(async function test_EME_forgetThisSite() {
   let tabs = [];
   let emeSessionIds = [];
 
   for (let userContextId of Object.keys(USER_CONTEXTS)) {
     // Open our tab in the given user context.
-    tabs[userContextId] = yield* openTabInUserContext(TEST_URL + "empty_file.html", userContextId);
+    tabs[userContextId] = await openTabInUserContext(TEST_URL + "empty_file.html", userContextId);
 
     // Setup EME Key.
-    emeSessionIds[userContextId] = yield setupEMEKey(tabs[userContextId].browser);
+    emeSessionIds[userContextId] = await setupEMEKey(tabs[userContextId].browser);
 
     // Close this tab.
-    yield BrowserTestUtils.removeTab(tabs[userContextId].tab);
+    await BrowserTestUtils.removeTab(tabs[userContextId].tab);
   }
 
   // Clear all EME data for a given domain with originAttributes pattern.
@@ -207,12 +207,12 @@ add_task(function* test_EME_forgetThisSite() {
   // Open tabs again to check EME keys have been cleared.
   for (let userContextId of Object.keys(USER_CONTEXTS)) {
     // Open our tab in the given user context.
-    tabs[userContextId] = yield* openTabInUserContext(TEST_URL + "empty_file.html", userContextId);
+    tabs[userContextId] = await openTabInUserContext(TEST_URL + "empty_file.html", userContextId);
 
     // Check whether EME Key has been cleared.
-    yield checkEMEKey(tabs[userContextId].browser, emeSessionIds[userContextId]);
+    await checkEMEKey(tabs[userContextId].browser, emeSessionIds[userContextId]);
 
     // Close this tab.
-    yield BrowserTestUtils.removeTab(tabs[userContextId].tab);
+    await BrowserTestUtils.removeTab(tabs[userContextId].tab);
   }
 });

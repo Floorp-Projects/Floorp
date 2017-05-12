@@ -1,8 +1,8 @@
 /* Make sure context menu includes option to search hyperlink text on search engine */
 
-add_task(function *() {
+add_task(async function() {
   const url = "http://mochi.test:8888/browser/browser/base/content/test/general/browser_bug970746.xhtml";
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
   const ellipsis = "\u2026";
 
@@ -86,9 +86,9 @@ add_task(function *() {
   ];
 
   for (let test of tests) {
-    yield ContentTask.spawn(gBrowser.selectedBrowser,
+    await ContentTask.spawn(gBrowser.selectedBrowser,
                             { selectElement: test.isSelected ? test.id : null },
-                            function* (arg) {
+                            async function(arg) {
       let selection = content.getSelection();
       selection.removeAllRanges();
 
@@ -98,9 +98,9 @@ add_task(function *() {
     });
 
     let popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
-    yield BrowserTestUtils.synthesizeMouseAtCenter("#" + test.id,
+    await BrowserTestUtils.synthesizeMouseAtCenter("#" + test.id,
           { type: "contextmenu", button: 2}, gBrowser.selectedBrowser);
-    yield popupShownPromise;
+    await popupShownPromise;
 
     let menuItem = document.getElementById("context-searchselect");
     is(menuItem.hidden, !test.shouldBeShown,
@@ -113,7 +113,7 @@ add_task(function *() {
 
     let popupHiddenPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popuphidden");
     contentAreaContextMenu.hidePopup();
-    yield popupHiddenPromise;
+    await popupHiddenPromise;
   }
 
   // cleanup

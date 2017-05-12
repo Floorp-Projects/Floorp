@@ -16,21 +16,21 @@ requestLongerTimeout(2);
  * backlogged crash reports, that we offer to do that, and
  * that the user can accept that offer.
  */
-add_task(function* test_show_form() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function test_show_form() {
+  await SpecialPowers.pushPrefEnv({
     set: [[AUTOSUBMIT_PREF, false]],
   })
 
   return BrowserTestUtils.withNewTab({
     gBrowser,
     url: PAGE,
-  }, function*(browser) {
+  }, async function(browser) {
     // Make sure we've flushed the browser messages so that
     // we can restore it.
-    yield TabStateFlusher.flush(browser);
+    await TabStateFlusher.flush(browser);
 
     // Now crash the browser.
-    yield BrowserTestUtils.crashBrowser(browser);
+    await BrowserTestUtils.crashBrowser(browser);
 
     let doc = browser.contentDocument;
 
@@ -51,7 +51,7 @@ add_task(function* test_show_form() {
     let restoreButton = doc.getElementById("restoreTab");
     restoreButton.click();
 
-    yield BrowserTestUtils.browserLoaded(browser, false, PAGE);
+    await BrowserTestUtils.browserLoaded(browser, false, PAGE);
 
     // The autosubmission pref should now be set.
     Assert.ok(Services.prefs.getBoolPref(AUTOSUBMIT_PREF),
@@ -63,18 +63,18 @@ add_task(function* test_show_form() {
  * Tests that if the user is autosubmitting backlogged crash reports
  * that we don't make the offer again.
  */
-add_task(function* test_show_form() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function test_show_form() {
+  await SpecialPowers.pushPrefEnv({
     set: [[AUTOSUBMIT_PREF, true]],
   })
 
   return BrowserTestUtils.withNewTab({
     gBrowser,
     url: PAGE,
-  }, function*(browser) {
-    yield TabStateFlusher.flush(browser);
+  }, async function(browser) {
+    await TabStateFlusher.flush(browser);
     // Now crash the browser.
-    yield BrowserTestUtils.crashBrowser(browser);
+    await BrowserTestUtils.crashBrowser(browser);
 
     let doc = browser.contentDocument;
 
@@ -88,7 +88,7 @@ add_task(function* test_show_form() {
     let restoreButton = doc.getElementById("restoreTab");
     restoreButton.click();
 
-    yield BrowserTestUtils.browserLoaded(browser, false, PAGE);
+    await BrowserTestUtils.browserLoaded(browser, false, PAGE);
 
     // The autosubmission pref should still be set to true.
     Assert.ok(Services.prefs.getBoolPref(AUTOSUBMIT_PREF),

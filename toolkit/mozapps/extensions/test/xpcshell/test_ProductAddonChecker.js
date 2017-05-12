@@ -61,39 +61,39 @@ function compareFiles(file1, file2) {
   return compareBinaryData(getBinaryFileData(file1), getBinaryFileData(file2));
 }
 
-add_task(function* test_404() {
-  let res = yield ProductAddonChecker.getProductAddonList(root + "404.xml");
+add_task(async function test_404() {
+  let res = await ProductAddonChecker.getProductAddonList(root + "404.xml");
   do_check_true(res.usedFallback);
 });
 
-add_task(function* test_not_xml() {
-  let res = yield ProductAddonChecker.getProductAddonList(root + "bad.txt");
+add_task(async function test_not_xml() {
+  let res = await ProductAddonChecker.getProductAddonList(root + "bad.txt");
   do_check_true(res.usedFallback);
 });
 
-add_task(function* test_invalid_xml() {
-  let res = yield ProductAddonChecker.getProductAddonList(root + "bad.xml");
+add_task(async function test_invalid_xml() {
+  let res = await ProductAddonChecker.getProductAddonList(root + "bad.xml");
   do_check_true(res.usedFallback);
 });
 
-add_task(function* test_wrong_xml() {
-  let res = yield ProductAddonChecker.getProductAddonList(root + "bad2.xml");
+add_task(async function test_wrong_xml() {
+  let res = await ProductAddonChecker.getProductAddonList(root + "bad2.xml");
   do_check_true(res.usedFallback);
 });
 
-add_task(function* test_missing() {
-  let addons = yield ProductAddonChecker.getProductAddonList(root + "missing.xml");
+add_task(async function test_missing() {
+  let addons = await ProductAddonChecker.getProductAddonList(root + "missing.xml");
   do_check_eq(addons, null);
 });
 
-add_task(function* test_empty() {
-  let res = yield ProductAddonChecker.getProductAddonList(root + "empty.xml");
+add_task(async function test_empty() {
+  let res = await ProductAddonChecker.getProductAddonList(root + "empty.xml");
   do_check_true(Array.isArray(res.gmpAddons));
   do_check_eq(res.gmpAddons.length, 0);
 });
 
-add_task(function* test_good_xml() {
-  let res = yield ProductAddonChecker.getProductAddonList(root + "good.xml");
+add_task(async function test_good_xml() {
+  let res = await ProductAddonChecker.getProductAddonList(root + "good.xml");
   do_check_true(Array.isArray(res.gmpAddons));
 
   // There are three valid entries in the XML
@@ -140,100 +140,100 @@ add_task(function* test_good_xml() {
   do_check_eq(addon.size, undefined);
 });
 
-add_task(function* test_download_nourl() {
+add_task(async function test_download_nourl() {
   try {
-    let path = yield ProductAddonChecker.downloadAddon({});
+    let path = await ProductAddonChecker.downloadAddon({});
 
-    yield OS.File.remove(path);
+    await OS.File.remove(path);
     do_throw("Should not have downloaded a file with a missing url");
   } catch (e) {
     do_check_true(true, "Should have thrown when downloading a file with a missing url.");
   }
 });
 
-add_task(function* test_download_missing() {
+add_task(async function test_download_missing() {
   try {
-    let path = yield ProductAddonChecker.downloadAddon({
+    let path = await ProductAddonChecker.downloadAddon({
       URL: root + "nofile.xpi",
     });
 
-    yield OS.File.remove(path);
+    await OS.File.remove(path);
     do_throw("Should not have downloaded a missing file");
   } catch (e) {
     do_check_true(true, "Should have thrown when downloading a missing file.");
   }
 });
 
-add_task(function* test_download_noverify() {
-  let path = yield ProductAddonChecker.downloadAddon({
+add_task(async function test_download_noverify() {
+  let path = await ProductAddonChecker.downloadAddon({
     URL: root + "unsigned.xpi",
   });
 
-  let stat = yield OS.File.stat(path);
+  let stat = await OS.File.stat(path);
   do_check_false(stat.isDir);
   do_check_eq(stat.size, 452)
 
   do_check_true(compareFiles(do_get_file("data/productaddons/unsigned.xpi"), new LocalFile(path)));
 
-  yield OS.File.remove(path);
+  await OS.File.remove(path);
 });
 
-add_task(function* test_download_badsize() {
+add_task(async function test_download_badsize() {
   try {
-    let path = yield ProductAddonChecker.downloadAddon({
+    let path = await ProductAddonChecker.downloadAddon({
       URL: root + "unsigned.xpi",
       size: 400,
     });
 
-    yield OS.File.remove(path);
+    await OS.File.remove(path);
     do_throw("Should not have downloaded a file with a bad size");
   } catch (e) {
     do_check_true(true, "Should have thrown when downloading a file with a bad size.");
   }
 });
 
-add_task(function* test_download_badhashfn() {
+add_task(async function test_download_badhashfn() {
   try {
-    let path = yield ProductAddonChecker.downloadAddon({
+    let path = await ProductAddonChecker.downloadAddon({
       URL: root + "unsigned.xpi",
       hashFunction: "sha2567",
       hashValue: "9b9abf7ddfc1a6d7ffc7e0247481dcc202363e4445ad3494fb22036f1698c7f3",
     });
 
-    yield OS.File.remove(path);
+    await OS.File.remove(path);
     do_throw("Should not have downloaded a file with a bad hash function");
   } catch (e) {
     do_check_true(true, "Should have thrown when downloading a file with a bad hash function.");
   }
 });
 
-add_task(function* test_download_badhash() {
+add_task(async function test_download_badhash() {
   try {
-    let path = yield ProductAddonChecker.downloadAddon({
+    let path = await ProductAddonChecker.downloadAddon({
       URL: root + "unsigned.xpi",
       hashFunction: "sha256",
       hashValue: "8b9abf7ddfc1a6d7ffc7e0247481dcc202363e4445ad3494fb22036f1698c7f3",
     });
 
-    yield OS.File.remove(path);
+    await OS.File.remove(path);
     do_throw("Should not have downloaded a file with a bad hash");
   } catch (e) {
     do_check_true(true, "Should have thrown when downloading a file with a bad hash.");
   }
 });
 
-add_task(function* test_download_works() {
-  let path = yield ProductAddonChecker.downloadAddon({
+add_task(async function test_download_works() {
+  let path = await ProductAddonChecker.downloadAddon({
     URL: root + "unsigned.xpi",
     size: 452,
     hashFunction: "sha256",
     hashValue: "9b9abf7ddfc1a6d7ffc7e0247481dcc202363e4445ad3494fb22036f1698c7f3",
   });
 
-  let stat = yield OS.File.stat(path);
+  let stat = await OS.File.stat(path);
   do_check_false(stat.isDir);
 
   do_check_true(compareFiles(do_get_file("data/productaddons/unsigned.xpi"), new LocalFile(path)));
 
-  yield OS.File.remove(path);
+  await OS.File.remove(path);
 });

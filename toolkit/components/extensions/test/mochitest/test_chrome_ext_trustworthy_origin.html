@@ -24,7 +24,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gContentSecurityManager",
                                    "@mozilla.org/contentsecuritymanager;1",
                                    "nsIContentSecurityManager");
 
-add_task(function* () {
+add_task(async function() {
   function background() {
     browser.test.sendMessage("ready", browser.runtime.getURL("/test.html"));
   }
@@ -37,15 +37,15 @@ add_task(function* () {
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield extension.startup();
+  await extension.startup();
 
-  let url = yield extension.awaitMessage("ready");
+  let url = await extension.awaitMessage("ready");
 
   let uri = NetUtil.newURI(url);
   let principal = Services.scriptSecurityManager.getCodebasePrincipal(uri);
   is(gContentSecurityManager.isOriginPotentiallyTrustworthy(principal), true);
 
-  yield extension.unload();
+  await extension.unload();
 });
 </script>
 

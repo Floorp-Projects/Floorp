@@ -29,25 +29,25 @@ function setup() {
   return BrowserTestUtils.openNewForegroundTab(gBrowser, testPage);
 }
 
-function* clean_up() {
+async function clean_up() {
   // Remove downloads.
-  let downloadList = yield Downloads.getList(Downloads.ALL);
-  let downloads = yield downloadList.getAll();
+  let downloadList = await Downloads.getList(Downloads.ALL);
+  let downloads = await downloadList.getAll();
   for (let download of downloads) {
-    yield downloadList.remove(download);
-    yield download.finalize(true);
+    await downloadList.remove(download);
+    await download.finalize(true);
   }
   // Remove download history.
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
 
   gPrefService.clearUserPref("browser.altClickSave");
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 }
 
-add_task(function* test_alt_click() {
-  yield setup();
+add_task(async function test_alt_click() {
+  await setup();
 
-  let downloadList = yield Downloads.getList(Downloads.ALL);
+  let downloadList = await Downloads.getList(Downloads.ALL);
   let downloads = [];
   let downloadView;
   // When 1 download has been attempted then resolve the promise.
@@ -59,23 +59,23 @@ add_task(function* test_alt_click() {
       },
     };
   });
-  yield downloadList.addView(downloadView);
-  yield BrowserTestUtils.synthesizeMouseAtCenter("#commonlink", {altKey: true}, gBrowser.selectedBrowser);
+  await downloadList.addView(downloadView);
+  await BrowserTestUtils.synthesizeMouseAtCenter("#commonlink", {altKey: true}, gBrowser.selectedBrowser);
 
   // Wait for all downloads to be added to the download list.
-  yield finishedAllDownloads;
-  yield downloadList.removeView(downloadView);
+  await finishedAllDownloads;
+  await downloadList.removeView(downloadView);
 
   is(downloads.length, 1, "1 downloads");
   is(downloads[0].source.url, "http://mochi.test/moz/", "Downloaded #commonlink element");
 
-  yield* clean_up();
+  await clean_up();
 });
 
-add_task(function* test_alt_click_on_xlinks() {
-  yield setup();
+add_task(async function test_alt_click_on_xlinks() {
+  await setup();
 
-  let downloadList = yield Downloads.getList(Downloads.ALL);
+  let downloadList = await Downloads.getList(Downloads.ALL);
   let downloads = [];
   let downloadView;
   // When all 2 downloads have been attempted then resolve the promise.
@@ -89,17 +89,17 @@ add_task(function* test_alt_click_on_xlinks() {
       },
     };
   });
-  yield downloadList.addView(downloadView);
-  yield BrowserTestUtils.synthesizeMouseAtCenter("#mathxlink", {altKey: true}, gBrowser.selectedBrowser);
-  yield BrowserTestUtils.synthesizeMouseAtCenter("#svgxlink", {altKey: true}, gBrowser.selectedBrowser);
+  await downloadList.addView(downloadView);
+  await BrowserTestUtils.synthesizeMouseAtCenter("#mathxlink", {altKey: true}, gBrowser.selectedBrowser);
+  await BrowserTestUtils.synthesizeMouseAtCenter("#svgxlink", {altKey: true}, gBrowser.selectedBrowser);
 
   // Wait for all downloads to be added to the download list.
-  yield finishedAllDownloads;
-  yield downloadList.removeView(downloadView);
+  await finishedAllDownloads;
+  await downloadList.removeView(downloadView);
 
   is(downloads.length, 2, "2 downloads");
   is(downloads[0].source.url, "http://mochi.test/moz/", "Downloaded #mathxlink element");
   is(downloads[1].source.url, "http://mochi.test/moz/", "Downloaded #svgxlink element");
 
-  yield* clean_up();
+  await clean_up();
 });

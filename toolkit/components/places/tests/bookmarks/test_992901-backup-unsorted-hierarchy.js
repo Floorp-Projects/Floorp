@@ -11,7 +11,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function*() {
+add_task(async function() {
   let bm = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
                                                 NetUtil.newURI("http://mozilla.org/"),
                                                 PlacesUtils.bookmarks.DEFAULT_INDEX,
@@ -24,11 +24,11 @@ add_task(function*() {
   PlacesUtils.bookmarks.moveItem(f2, f1, PlacesUtils.bookmarks.DEFAULT_INDEX);
 
   // Create a backup.
-  yield PlacesBackups.create();
+  await PlacesBackups.create();
 
   // Remove the bookmarks, then restore the backup.
   PlacesUtils.bookmarks.removeItem(f1);
-  yield BookmarkJSONUtils.importFromFile((yield PlacesBackups.getMostRecentBackup()), true);
+  await BookmarkJSONUtils.importFromFile((await PlacesBackups.getMostRecentBackup()), true);
 
   do_print("Checking first level");
   let root = PlacesUtils.getFolderContents(PlacesUtils.unfiledBookmarksFolderId).root;

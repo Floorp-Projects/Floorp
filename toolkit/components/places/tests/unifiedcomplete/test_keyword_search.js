@@ -12,62 +12,62 @@
  * same keyword appear in the list.
  */
 
-add_task(function* test_keyword_searc() {
+add_task(async function test_keyword_searc() {
   let uri1 = NetUtil.newURI("http://abc/?search=%s");
   let uri2 = NetUtil.newURI("http://abc/?search=ThisPageIsInHistory");
-  yield PlacesTestUtils.addVisits([
+  await PlacesTestUtils.addVisits([
     { uri: uri1, title: "Generic page title" },
     { uri: uri2, title: "Generic page title" }
   ]);
-  yield addBookmark({ uri: uri1, title: "Bookmark title", keyword: "key"});
+  await addBookmark({ uri: uri1, title: "Bookmark title", keyword: "key"});
 
   do_print("Plain keyword query");
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "key term",
     matches: [ { uri: NetUtil.newURI("http://abc/?search=term"), title: "abc", style: ["keyword", "heuristic"] } ]
   });
 
   do_print("Plain keyword UC");
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "key TERM",
     matches: [ { uri: NetUtil.newURI("http://abc/?search=TERM"), title: "abc", style: ["keyword", "heuristic"] } ]
   });
 
   do_print("Multi-word keyword query");
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "key multi word",
     matches: [ { uri: NetUtil.newURI("http://abc/?search=multi%20word"), title: "abc", style: ["keyword", "heuristic"] } ]
   });
 
   do_print("Keyword query with +");
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "key blocking+",
     matches: [ { uri: NetUtil.newURI("http://abc/?search=blocking%2B"), title: "abc", style: ["keyword", "heuristic"] } ]
   });
 
   do_print("Unescaped term in query");
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "key ユニコード",
     matches: [ { uri: NetUtil.newURI("http://abc/?search=ユニコード"), title: "abc", style: ["keyword", "heuristic"] } ]
   });
 
   do_print("Keyword that happens to match a page");
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "key ThisPageIsInHistory",
     matches: [ { uri: NetUtil.newURI("http://abc/?search=ThisPageIsInHistory"), title: "abc", style: ["keyword", "heuristic"] } ]
   });
 
   do_print("Keyword without query (without space)");
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "key",
     matches: [ { uri: NetUtil.newURI("http://abc/?search="), title: "abc", style: ["keyword", "heuristic"] } ]
   });
 
   do_print("Keyword without query (with space)");
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "key ",
     matches: [ { uri: NetUtil.newURI("http://abc/?search="), title: "abc", style: ["keyword", "heuristic"] } ]
   });
 
-  yield cleanup();
+  await cleanup();
 });

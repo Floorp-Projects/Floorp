@@ -35,8 +35,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "DownloadUIHelper",
                                   "resource://gre/modules/DownloadUIHelper.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 
 /* global DownloadIntegration */
 Integration.downloads.defineModuleGetter(this, "DownloadIntegration",
@@ -171,31 +169,31 @@ this.Downloads = {
    */
   getList(aType) {
     if (!this._promiseListsInitialized) {
-      this._promiseListsInitialized = Task.spawn(function* () {
+      this._promiseListsInitialized = (async () => {
         let publicList = new DownloadList();
         let privateList = new DownloadList();
         let combinedList = new DownloadCombinedList(publicList, privateList);
 
         try {
-          yield DownloadIntegration.addListObservers(publicList, false);
-          yield DownloadIntegration.addListObservers(privateList, true);
-          yield DownloadIntegration.initializePublicDownloadList(publicList);
+          await DownloadIntegration.addListObservers(publicList, false);
+          await DownloadIntegration.addListObservers(privateList, true);
+          await DownloadIntegration.initializePublicDownloadList(publicList);
         } catch (ex) {
           Cu.reportError(ex);
         }
 
-        let publicSummary = yield this.getSummary(Downloads.PUBLIC);
-        let privateSummary = yield this.getSummary(Downloads.PRIVATE);
-        let combinedSummary = yield this.getSummary(Downloads.ALL);
+        let publicSummary = await this.getSummary(Downloads.PUBLIC);
+        let privateSummary = await this.getSummary(Downloads.PRIVATE);
+        let combinedSummary = await this.getSummary(Downloads.ALL);
 
-        yield publicSummary.bindToList(publicList);
-        yield privateSummary.bindToList(privateList);
-        yield combinedSummary.bindToList(combinedList);
+        await publicSummary.bindToList(publicList);
+        await privateSummary.bindToList(privateList);
+        await combinedSummary.bindToList(combinedList);
 
         this._lists[Downloads.PUBLIC] = publicList;
         this._lists[Downloads.PRIVATE] = privateList;
         this._lists[Downloads.ALL] = combinedList;
-      }.bind(this));
+      })();
     }
 
     return this._promiseListsInitialized.then(() => this._lists[aType]);

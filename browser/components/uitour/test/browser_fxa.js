@@ -16,28 +16,28 @@ function test() {
   UITourTest();
 }
 
-registerCleanupFunction(function*() {
-  yield signOut();
+registerCleanupFunction(async function() {
+  await signOut();
   gSync.updateAllUI(UIState.get());
 });
 
 var tests = [
-  taskify(function* test_highlight_accountStatus_loggedOut() {
-    let userData = yield fxAccounts.getSignedInUser();
+  taskify(async function test_highlight_accountStatus_loggedOut() {
+    let userData = await fxAccounts.getSignedInUser();
     is(userData, null, "Not logged in initially");
-    yield showMenuPromise("appMenu");
-    yield showHighlightPromise("accountStatus");
+    await showMenuPromise("appMenu");
+    await showHighlightPromise("accountStatus");
     let highlight = document.getElementById("UITourHighlightContainer");
     is(highlight.getAttribute("targetName"), "accountStatus", "Correct highlight target");
   }),
 
-  taskify(function* test_highlight_accountStatus_loggedIn() {
-    yield setSignedInUser();
-    let userData = yield fxAccounts.getSignedInUser();
+  taskify(async function test_highlight_accountStatus_loggedIn() {
+    await setSignedInUser();
+    let userData = await fxAccounts.getSignedInUser();
     isnot(userData, null, "Logged in now");
     gSync.updateAllUI(UIState.get());
-    yield showMenuPromise("appMenu");
-    yield showHighlightPromise("accountStatus");
+    await showMenuPromise("appMenu");
+    await showHighlightPromise("accountStatus");
     let highlight = document.getElementById("UITourHighlightContainer");
     is(highlight.popupBoxObject.anchorNode.id, "PanelUI-fxa-avatar", "Anchored on avatar");
     is(highlight.getAttribute("targetName"), "accountStatus", "Correct highlight target");

@@ -46,6 +46,7 @@ module.exports = {
     "no-single-arg-cu-import": require("../lib/rules/no-single-arg-cu-import"),
     "no-import-into-var-and-global":
       require("../lib/rules/no-import-into-var-and-global.js"),
+    "no-task": require("../lib/rules/no-task"),
     "no-useless-parameters": require("../lib/rules/no-useless-parameters"),
     "no-useless-removeEventListener":
       require("../lib/rules/no-useless-removeEventListener"),
@@ -70,6 +71,7 @@ module.exports = {
     "no-cpows-in-tests": "off",
     "no-single-arg-cu-import": "off",
     "no-import-into-var-and-global": "off",
+    "no-task": "off",
     "no-useless-parameters": "off",
     "no-useless-removeEventListener": "off",
     "reject-importGlobalProperties": "off",

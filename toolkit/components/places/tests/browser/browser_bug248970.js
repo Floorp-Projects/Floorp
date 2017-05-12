@@ -17,7 +17,7 @@ var visitedURIs = [
   "http://www.test-download.com/"
 ].map(NetUtil.newURI.bind(NetUtil));
 
-add_task(function* () {
+add_task(async function() {
   let windowsToClose = [];
   let placeItemsCount = 0;
 
@@ -27,10 +27,10 @@ add_task(function* () {
     });
   });
 
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
 
    // Ensure we wait for the default bookmarks import.
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     waitForCondition(() => {
       placeItemsCount = getPlacesItemsCount();
       return placeItemsCount > 0
@@ -38,7 +38,7 @@ add_task(function* () {
   });
 
   // Create a handful of history items with various visit types
-  yield PlacesTestUtils.addVisits([
+  await PlacesTestUtils.addVisits([
     { uri: visitedURIs[0], transition: TRANSITION_LINK },
     { uri: visitedURIs[1], transition: TRANSITION_TYPED },
     { uri: visitedURIs[2], transition: TRANSITION_BOOKMARK },
@@ -54,14 +54,14 @@ add_task(function* () {
   is(getPlacesItemsCount(), placeItemsCount,
      "Check the total items count");
 
-  function* testOnWindow(aIsPrivate, aCount) {
-    let win = yield new Promise(resolve => {
+  async function testOnWindow(aIsPrivate, aCount) {
+    let win = await new Promise(resolve => {
       whenNewWindowLoaded({ private: aIsPrivate }, resolve);
     });
     windowsToClose.push(win);
 
     // History items should be retrievable by query
-    yield checkHistoryItems();
+    await checkHistoryItems();
 
     // Updates the place items count
     let count = getPlacesItemsCount();
@@ -71,12 +71,12 @@ add_task(function* () {
     let keyword = "keyword " + windowsToClose.length;
     let url = "http://test-a-" + windowsToClose.length + ".com/";
 
-    yield PlacesUtils.bookmarks.insert({ url, title,
+    await PlacesUtils.bookmarks.insert({ url, title,
                                          parentGuid: PlacesUtils.bookmarks.menuGuid });
-    yield PlacesUtils.keywords.insert({ url, keyword });
+    await PlacesUtils.keywords.insert({ url, keyword });
     count++;
 
-    ok((yield PlacesUtils.bookmarks.fetch({ url })),
+    ok((await PlacesUtils.bookmarks.fetch({ url })),
        "Bookmark should be bookmarked, data should be retrievable");
     is(getPlacesItemsCount(), count,
        "Check the new bookmark items count");
@@ -84,9 +84,9 @@ add_task(function* () {
   }
 
   // Test on windows.
-  yield testOnWindow(false);
-  yield testOnWindow(true);
-  yield testOnWindow(false);
+  await testOnWindow(false);
+  await testOnWindow(true);
+  await testOnWindow(false);
 });
 
 /**
@@ -115,14 +115,14 @@ function getPlacesItemsCount() {
   return cc;
 }
 
-function* checkHistoryItems() {
+async function checkHistoryItems() {
   for (let i = 0; i < visitedURIs.length; i++) {
     let visitedUri = visitedURIs[i];
-    ok((yield promiseIsURIVisited(visitedUri)), "");
+    ok((await promiseIsURIVisited(visitedUri)), "");
     if (/embed/.test(visitedUri.spec)) {
-      is((yield PlacesTestUtils.isPageInDB(visitedUri)), false, "Check if URI is in database");
+      is((await PlacesTestUtils.isPageInDB(visitedUri)), false, "Check if URI is in database");
     } else {
-      ok((yield PlacesTestUtils.isPageInDB(visitedUri)), "Check if URI is in database");
+      ok((await PlacesTestUtils.isPageInDB(visitedUri)), "Check if URI is in database");
     }
   }
 }

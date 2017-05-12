@@ -7,20 +7,20 @@
 var navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
 
 // Resize to a small window, resize back, shouldn't affect currentSet
-add_task(function*() {
+add_task(async function() {
   let originalWindowWidth = window.outerWidth;
   let oldCurrentSet = navbar.currentSet;
   ok(!navbar.hasAttribute("overflowing"), "Should start with a non-overflowing toolbar.");
   ok(CustomizableUI.inDefaultState, "Should start in default state.");
   let oldChildCount = navbar.customizationTarget.childElementCount;
   window.resizeTo(400, window.outerHeight);
-  yield waitForCondition(() => navbar.hasAttribute("overflowing"));
+  await waitForCondition(() => navbar.hasAttribute("overflowing"));
   ok(navbar.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
   is(navbar.currentSet, oldCurrentSet, "Currentset should be the same when overflowing.");
   ok(CustomizableUI.inDefaultState, "Should still be in default state when overflowing.");
   ok(navbar.customizationTarget.childElementCount < oldChildCount, "Should have fewer children.");
   window.resizeTo(originalWindowWidth, window.outerHeight);
-  yield waitForCondition(() => !navbar.hasAttribute("overflowing"));
+  await waitForCondition(() => !navbar.hasAttribute("overflowing"));
   ok(!navbar.hasAttribute("overflowing"), "Should no longer have an overflowing toolbar.");
   is(navbar.currentSet, oldCurrentSet, "Currentset should still be the same now we're no longer overflowing.");
   ok(CustomizableUI.inDefaultState, "Should still be in default state now we're no longer overflowing.");
@@ -39,17 +39,17 @@ add_task(function*() {
 });
 
 // Enter and exit customization mode, check that currentSet works
-add_task(function*() {
+add_task(async function() {
   let oldCurrentSet = navbar.currentSet;
   ok(CustomizableUI.inDefaultState, "Should start in default state.");
-  yield startCustomizing();
+  await startCustomizing();
   ok(CustomizableUI.inDefaultState, "Should be in default state in customization mode.");
   is(navbar.currentSet, oldCurrentSet, "Currentset should be the same in customization mode.");
-  yield endCustomizing();
+  await endCustomizing();
   ok(CustomizableUI.inDefaultState, "Should be in default state after customization mode.");
   is(navbar.currentSet, oldCurrentSet, "Currentset should be the same after customization mode.");
 });
 
-add_task(function* asyncCleanup() {
-  yield resetCustomization();
+add_task(async function asyncCleanup() {
+  await resetCustomization();
 });

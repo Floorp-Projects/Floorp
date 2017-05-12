@@ -9,11 +9,11 @@ registerCleanupFunction(() => {
   return PlacesTestUtils.clearHistory();
 });
 
-add_task(function*() {
+add_task(async function() {
   Services.prefs.setBoolPref(gRestyleSearchesPref, true);
 });
 
-add_task(function*() {
+add_task(async function() {
 
   Services.search.addEngineWithDetails("SearchEngine", "", "", "",
                                        "GET", "http://s.example.com/search");
@@ -23,13 +23,13 @@ add_task(function*() {
   Services.search.currentEngine = gEngine;
 
   let uri = NetUtil.newURI("http://s.example.com/search?q=foo&client=1");
-  yield PlacesTestUtils.addVisits({ uri, title: "Foo - SearchEngine Search" });
+  await PlacesTestUtils.addVisits({ uri, title: "Foo - SearchEngine Search" });
 
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
 
   // The first autocomplete result has the action searchengine, while
   // the second result is the "search favicon" element.
-  yield promiseAutocompleteResultPopup("foo");
+  await promiseAutocompleteResultPopup("foo");
   let result = gURLBar.popup.richlistbox.children[1];
 
   isnot(result, null, "Expect a search result");

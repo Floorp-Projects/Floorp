@@ -1,16 +1,16 @@
-add_task(function* testBackgroundWindowFailures() {
+add_task(async function testBackgroundWindowFailures() {
   const maxBackgroundErrors = 5;
   SpecialPowers.pushPrefEnv({set: [
     [PREF_APP_UPDATE_BACKGROUNDMAXERRORS, maxBackgroundErrors],
     [PREF_APP_UPDATE_DOWNLOADPROMPTMAXATTEMPTS, 2]
   ]});
   let updateParams = "badURL=1";
-  let extraWindow = yield BrowserTestUtils.openNewBrowserWindow();
-  yield SimpleTest.promiseFocus(extraWindow);
+  let extraWindow = await BrowserTestUtils.openNewBrowserWindow();
+  await SimpleTest.promiseFocus(extraWindow);
 
   function getBackgroundWindowHandler(destroyWindow) {
-    return function*() {
-      yield BrowserTestUtils.waitForCondition(() => PanelUI.menuButton.hasAttribute("badge-status"),
+    return async function() {
+      await BrowserTestUtils.waitForCondition(() => PanelUI.menuButton.hasAttribute("badge-status"),
                                               "Background window has a badge.");
 
       is(PanelUI.notificationPanel.state, "closed",
@@ -23,20 +23,20 @@ add_task(function* testBackgroundWindowFailures() {
       buttonEl.click();
 
       if (destroyWindow) {
-        yield BrowserTestUtils.closeWindow(extraWindow);
-        yield SimpleTest.promiseFocus(window);
+        await BrowserTestUtils.closeWindow(extraWindow);
+        await SimpleTest.promiseFocus(window);
       }
     };
   }
 
-  yield runUpdateTest(updateParams, 1, [
+  await runUpdateTest(updateParams, 1, [
     getBackgroundWindowHandler(false),
     getBackgroundWindowHandler(true),
     {
       notificationId: "update-manual",
       button: "button",
-      *cleanup() {
-        yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+      async cleanup() {
+        await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
         is(gBrowser.selectedBrowser.currentURI.spec,
            URL_MANUAL_UPDATE, "Landed on manual update page.");
         gBrowser.removeTab(gBrowser.selectedTab);

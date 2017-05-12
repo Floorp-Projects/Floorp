@@ -13,24 +13,24 @@ registerCleanupFunction(() => {
   teardown();
 });
 
-add_task(function* testNarratePref() {
+add_task(async function testNarratePref() {
   setup();
 
-  yield spawnInNewReaderTab(TEST_ARTICLE, function() {
+  await spawnInNewReaderTab(TEST_ARTICLE, function() {
     is(content.document.querySelectorAll(NarrateTestUtils.TOGGLE).length, 1,
       "narrate is inserted by default");
   });
 
   setBoolPref(ENABLE_PREF, false);
 
-  yield spawnInNewReaderTab(TEST_ARTICLE, function() {
+  await spawnInNewReaderTab(TEST_ARTICLE, function() {
     ok(!content.document.querySelector(NarrateTestUtils.TOGGLE),
       "narrate is disabled and is not in reader mode");
   });
 
   setBoolPref(ENABLE_PREF, true);
 
-  yield spawnInNewReaderTab(TEST_ARTICLE, function() {
+  await spawnInNewReaderTab(TEST_ARTICLE, function() {
     is(content.document.querySelectorAll(NarrateTestUtils.TOGGLE).length, 1,
       "narrate is re-enabled and appears only once");
   });

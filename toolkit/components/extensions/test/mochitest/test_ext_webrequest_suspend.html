@@ -13,7 +13,7 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* test_suspend() {
+add_task(async function test_suspend() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: [
@@ -54,21 +54,21 @@ add_task(function* test_suspend() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  let result = yield fetch(SimpleTest.getTestFileURL("return_headers.sjs"));
+  let result = await fetch(SimpleTest.getTestFileURL("return_headers.sjs"));
 
-  let headers = JSON.parse(yield result.text());
+  let headers = JSON.parse(await result.text());
 
   is(headers.foo, "Bar", "Request header was correctly set on suspended request");
 
-  yield extension.unload();
+  await extension.unload();
 });
 
 
 // Test that requests that were canceled while suspended for a blocking
 // listener are correctly resumed.
-add_task(function* test_error_resume() {
+add_task(async function test_error_resume() {
   let chromeScript = SpecialPowers.loadChromeScript(() => {
     const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
     Cu.import("resource://gre/modules/Services.jsm");
@@ -121,25 +121,25 @@ add_task(function* test_error_resume() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
   try {
-    yield fetch("http://example.com/");
+    await fetch("http://example.com/");
     ok(false, "Fetch should have failed.");
   } catch (e) {
     ok(true, "Got expected error.");
   }
 
-  yield extension.awaitMessage("got-before-send-headers");
-  yield extension.awaitMessage("got-error-occurred");
+  await extension.awaitMessage("got-before-send-headers");
+  await extension.awaitMessage("got-error-occurred");
 
-  yield extension.unload();
+  await extension.unload();
   chromeScript.destroy();
 });
 
 
 // Test that response header modifications take effect before onStartRequest fires.
-add_task(function* test_set_responseHeaders() {
+add_task(async function test_set_responseHeaders() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: [
@@ -163,9 +163,9 @@ add_task(function* test_set_responseHeaders() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield new Promise(resolve => setTimeout(resolve, 0));
+  await new Promise(resolve => setTimeout(resolve, 0));
 
   let chromeScript = SpecialPowers.loadChromeScript(() => {
     const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
@@ -206,10 +206,10 @@ add_task(function* test_set_responseHeaders() {
     });
   });
 
-  let headerValue = yield chromeScript.promiseOneMessage("response-header-foo");
+  let headerValue = await chromeScript.promiseOneMessage("response-header-foo");
   is(headerValue, "bar", "Expected Foo header value");
 
-  yield extension.unload();
+  await extension.unload();
   chromeScript.destroy();
 });
 

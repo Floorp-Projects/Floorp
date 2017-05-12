@@ -18,8 +18,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "FormAutofill",
                                   "resource://gre/modules/FormAutofill.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 
 /**
  * Handles requestAutocomplete for a DOM Form element.
@@ -60,13 +58,13 @@ FormHandler.prototype = {
   /**
    * Handles requestAutocomplete and generates the DOM events when finished.
    */
-  handleRequestAutocomplete: Task.async(function* () {
+  async handleRequestAutocomplete() {
     // Start processing the request asynchronously.  At the end, the "reason"
     // variable will contain the outcome of the operation, where an empty
     // string indicates that an unexpected exception occurred.
     let reason = "";
     try {
-      reason = yield this.promiseRequestAutocomplete();
+      reason = await this.promiseRequestAutocomplete();
     } catch (ex) {
       Cu.reportError(ex);
     }
@@ -77,9 +75,9 @@ FormHandler.prototype = {
                 : new this.window.AutocompleteErrorEvent("autocompleteerror",
                                                          { bubbles: true,
                                                            reason });
-    yield this.waitForTick();
+    await this.waitForTick();
     this.form.dispatchEvent(event);
-  }),
+  },
 
   /**
    * Handles requestAutocomplete and returns the outcome when finished.
@@ -89,7 +87,7 @@ FormHandler.prototype = {
    *           requestAutocomplete operation, including "success" if the
    *           operation completed successfully.
    */
-  promiseRequestAutocomplete: Task.async(function* () {
+  async promiseRequestAutocomplete() {
     let data = this.collectFormFields();
     if (!data) {
       return "disabled";
@@ -125,7 +123,7 @@ FormHandler.prototype = {
     // Send the message to the parent process, and wait for the result.  This
     // will throw an exception if one occurred in the parent process.
     frameMM.sendAsyncMessage("FormAutofill:RequestAutocomplete", data);
-    let result = yield promiseRequestAutocompleteResult;
+    let result = await promiseRequestAutocompleteResult;
     if (result.canceled) {
       return "cancel";
     }
@@ -133,7 +131,7 @@ FormHandler.prototype = {
     this.autofillFormFields(result);
 
     return "success";
-  }),
+  },
 
   /**
    * Returns information from the form about fields that can be autofilled, and

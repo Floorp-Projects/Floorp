@@ -9,7 +9,6 @@ var reportURL;
 Cu.import("resource://gre/modules/CrashReports.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "CrashSubmit",
@@ -131,7 +130,7 @@ function populateReportList() {
   }
 }
 
-var clearReports = Task.async(function*() {
+var clearReports = async function() {
   let bundle = Services.strings.createBundle("chrome://global/locale/crashes.properties");
 
   if (!Services.
@@ -141,14 +140,14 @@ var clearReports = Task.async(function*() {
     return;
   }
 
-  let cleanupFolder = Task.async(function*(path, filter) {
+  let cleanupFolder = async function(path, filter) {
     let iterator = new OS.File.DirectoryIterator(path);
     try {
-      yield iterator.forEach(Task.async(function*(aEntry) {
-        if (!filter || (yield filter(aEntry))) {
-          yield OS.File.remove(aEntry.path);
+      await iterator.forEach(async function(aEntry) {
+        if (!filter || (await filter(aEntry))) {
+          await OS.File.remove(aEntry.path);
         }
-      }));
+      });
     } catch (e) {
       if (!(e instanceof OS.File.Error) || !e.becauseNoSuchFile) {
         throw e;
@@ -156,14 +155,14 @@ var clearReports = Task.async(function*() {
     } finally {
       iterator.close();
     }
-  });
+  };
 
-  yield cleanupFolder(CrashReports.submittedDir.path, function*(aEntry) {
+  await cleanupFolder(CrashReports.submittedDir.path, function(aEntry) {
     return aEntry.name.startsWith("bp-") && aEntry.name.endsWith(".txt");
   });
 
   let oneYearAgo = Date.now() - 31586000000;
-  yield cleanupFolder(CrashReports.reportsDir.path, function*(aEntry) {
+  await cleanupFolder(CrashReports.reportsDir.path, async function(aEntry) {
     if (!aEntry.name.startsWith("InstallTime") ||
         aEntry.name == "InstallTime" + buildID) {
       return false;
@@ -171,16 +170,16 @@ var clearReports = Task.async(function*() {
 
     let date = aEntry.winLastWriteDate;
     if (!date) {
-      let stat = yield OS.File.stat(aEntry.path);
+      let stat = await OS.File.stat(aEntry.path);
       date = stat.lastModificationDate;
     }
 
     return (date < oneYearAgo);
   });
 
-  yield cleanupFolder(CrashReports.pendingDir.path);
+  await cleanupFolder(CrashReports.pendingDir.path);
 
   document.getElementById("clear-reports").style.display = "none";
   document.getElementById("reportList").style.display = "none";
   document.getElementById("noReports").style.display = "block";
-});
+};

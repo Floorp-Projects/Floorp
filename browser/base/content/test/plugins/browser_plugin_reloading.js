@@ -7,21 +7,21 @@ function updateAllTestPlugins(aState) {
   setTestPluginEnabledState(aState, "Second Test Plug-in");
 }
 
-add_task(function* () {
-  registerCleanupFunction(Task.async(function*() {
+add_task(async function() {
+  registerCleanupFunction(async function() {
     clearAllPluginPermissions();
     Services.prefs.clearUserPref("plugins.click_to_play");
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
-    yield asyncSetAndUpdateBlocklist(gTestRoot + "blockNoPlugins.xml", gTestBrowser);
+    await asyncSetAndUpdateBlocklist(gTestRoot + "blockNoPlugins.xml", gTestBrowser);
     resetBlocklist();
     gTestBrowser = null;
     gBrowser.removeCurrentTab();
     window.focus();
-  }));
+  });
 });
 
-add_task(function* () {
+add_task(async function() {
   gBrowser.selectedTab = gBrowser.addTab();
   gTestBrowser = gBrowser.selectedBrowser;
 
@@ -31,41 +31,41 @@ add_task(function* () {
   updateAllTestPlugins(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
 
   // Prime the blocklist service, the remote service doesn't launch on startup.
-  yield promiseTabLoadEvent(gBrowser.selectedTab, "data:text/html,<html></html>");
-  let exmsg = yield promiseInitContentBlocklistSvc(gBrowser.selectedBrowser);
+  await promiseTabLoadEvent(gBrowser.selectedTab, "data:text/html,<html></html>");
+  let exmsg = await promiseInitContentBlocklistSvc(gBrowser.selectedBrowser);
   ok(!exmsg, "exception: " + exmsg);
 
-  yield asyncSetAndUpdateBlocklist(gTestRoot + "blockNoPlugins.xml", gTestBrowser);
+  await asyncSetAndUpdateBlocklist(gTestRoot + "blockNoPlugins.xml", gTestBrowser);
 });
 
 // Tests that a click-to-play plugin retains its activated state upon reloading
-add_task(function* () {
+add_task(async function() {
   clearAllPluginPermissions();
 
   updateAllTestPlugins(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
 
-  yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_test.html");
+  await promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_test.html");
 
   // Work around for delayed PluginBindingAttached
-  yield promiseUpdatePluginBindings(gTestBrowser);
+  await promiseUpdatePluginBindings(gTestBrowser);
 
   let notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
   ok(notification, "Test 1, Should have a click-to-play notification");
 
-  let pluginInfo = yield promiseForPluginInfo("test");
+  let pluginInfo = await promiseForPluginInfo("test");
   is(pluginInfo.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
      "Test 2, plugin fallback type should be PLUGIN_CLICK_TO_PLAY");
 
   // run the plugin
-  yield promisePlayObject("test");
+  await promisePlayObject("test");
 
-  yield promiseUpdatePluginBindings(gTestBrowser);
+  await promiseUpdatePluginBindings(gTestBrowser);
 
-  pluginInfo = yield promiseForPluginInfo("test");
+  pluginInfo = await promiseForPluginInfo("test");
   is(pluginInfo.displayedType, Ci.nsIObjectLoadingContent.TYPE_PLUGIN, "Test 3, plugin should have started");
   ok(pluginInfo.activated, "Test 4, plugin node should not be activated");
 
-  yield ContentTask.spawn(gTestBrowser, null, function* () {
+  await ContentTask.spawn(gTestBrowser, null, async function() {
     let plugin = content.document.getElementById("test");
     let npobj1 = Components.utils.waiveXrays(plugin).getObjectValue();
     plugin.src = plugin.src;
@@ -79,7 +79,7 @@ add_task(function* () {
      Assert.ok(pluginsDiffer, "Test 5, plugins differ.");
   });
 
-  pluginInfo = yield promiseForPluginInfo("test");
+  pluginInfo = await promiseForPluginInfo("test");
   ok(pluginInfo.activated, "Test 6, Plugin should have retained activated state.");
   is(pluginInfo.displayedType, Ci.nsIObjectLoadingContent.TYPE_PLUGIN, "Test 7, plugin should have started");
 });

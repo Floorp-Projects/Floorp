@@ -25,5 +25,7 @@ module.exports = {
 
     "no-mixed-spaces-and-tabs": "error",
     "no-shadow": "error",
+
+    "mozilla/no-task": "error",
   }
 };

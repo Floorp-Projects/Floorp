@@ -12,7 +12,7 @@ linux64/opt:
         max-run-time: 36000
     run:
         using: mozharness
-        actions: [get-secrets build check-test update]
+        actions: [get-secrets build generate-build-stats check-test update]
         config:
             - builds/releng_base_linux_64_builds.py
             - balrog/production.py
@@ -36,7 +36,7 @@ linux64/pgo:
     coalesce-name: linux64-pgo
     run:
         using: mozharness
-        actions: [get-secrets build check-test update]
+        actions: [get-secrets build generate-build-stats check-test update]
         options: [enable-pgo]
         config:
             - builds/releng_base_linux_64_builds.py
@@ -60,7 +60,7 @@ linux64/debug:
         max-run-time: 36000
     run:
         using: mozharness
-        actions: [get-secrets build check-test update]
+        actions: [get-secrets build generate-build-stats check-test update]
         config:
             - builds/releng_base_linux_64_builds.py
             - balrog/production.py
@@ -87,7 +87,7 @@ linux64-devedition-nightly/opt:
         max-run-time: 36000
     run:
         using: mozharness
-        actions: [get-secrets build check-test update]
+        actions: [get-secrets build generate-build-stats check-test update]
         config:
             - builds/releng_base_linux_64_builds.py
             - disable_signing.py
@@ -114,7 +114,7 @@ linux/opt:
     coalesce-name: opt_linux32
     run:
         using: mozharness
-        actions: [get-secrets build check-test update]
+        actions: [get-secrets build generate-build-stats check-test update]
         config:
             - builds/releng_base_linux_32_builds.py
             - balrog/production.py
@@ -138,7 +138,7 @@ linux/debug:
     coalesce-name: dbg_linux32
     run:
         using: mozharness
-        actions: [get-secrets build check-test update]
+        actions: [get-secrets build generate-build-stats check-test update]
         config:
             - builds/releng_base_linux_32_builds.py
             - balrog/production.py
@@ -163,7 +163,7 @@ linux/pgo:
     coalesce-name: linux32-pgo
     run:
         using: mozharness
-        actions: [get-secrets build check-test update]
+        actions: [get-secrets build generate-build-stats check-test update]
         options: [enable-pgo]
         config:
             - builds/releng_base_linux_32_builds.py
@@ -190,7 +190,7 @@ linux-devedition-nightly/opt:
         max-run-time: 36000
     run:
         using: mozharness
-        actions: [get-secrets build check-test update]
+        actions: [get-secrets build generate-build-stats check-test update]
         config:
             - builds/releng_base_linux_32_builds.py
             - disable_signing.py
@@ -219,7 +219,7 @@ linux-nightly/opt:
         max-run-time: 36000
     run:
         using: mozharness
-        actions: [get-secrets build check-test update]
+        actions: [get-secrets build generate-build-stats check-test update]
         config:
             - builds/releng_base_linux_32_builds.py
             - disable_signing.py
@@ -244,7 +244,7 @@ linux64-asan/opt:
         max-run-time: 36000
     run:
         using: mozharness
-        actions: [get-secrets build check-test update]
+        actions: [get-secrets build generate-build-stats check-test update]
         config:
             - builds/releng_base_linux_64_builds.py
             - balrog/production.py
@@ -268,7 +268,7 @@ linux64-asan/debug:
         max-run-time: 36000
     run:
         using: mozharness
-        actions: [get-secrets build check-test update]
+        actions: [get-secrets build generate-build-stats check-test update]
         config:
             - builds/releng_base_linux_64_builds.py
             - balrog/production.py
@@ -295,7 +295,7 @@ linux64-nightly/opt:
         max-run-time: 36000
     run:
         using: mozharness
-        actions: [get-secrets build check-test update]
+        actions: [get-secrets build generate-build-stats check-test update]
         config:
             - builds/releng_base_linux_64_builds.py
             - disable_signing.py
@@ -320,7 +320,7 @@ linux64-stylo/opt:
         max-run-time: 3600
     run:
         using: mozharness
-        actions: [get-secrets build check-test update]
+        actions: [get-secrets build generate-build-stats check-test update]
         config:
             - builds/releng_base_linux_64_builds.py
             - balrog/production.py
@@ -345,7 +345,7 @@ linux64-stylo/debug:
         max-run-time: 3600
     run:
         using: mozharness
-        actions: [get-secrets build check-test update]
+        actions: [get-secrets build generate-build-stats check-test update]
         config:
             - builds/releng_base_linux_64_builds.py
             - balrog/production.py
@@ -371,7 +371,7 @@ linux64-jsdcov/opt:
         max-run-time: 36000
     run:
         using: mozharness
-        actions: [get-secrets build check-test update]
+        actions: [get-secrets build generate-build-stats check-test update]
         config:
             - builds/releng_base_linux_64_builds.py
             - balrog/production.py
@@ -397,7 +397,7 @@ linux64-ccov/opt:
         max-run-time: 36000
     run:
         using: mozharness
-        actions: [get-secrets build check-test update]
+        actions: [get-secrets build generate-build-stats check-test update]
         config:
             - builds/releng_base_linux_64_builds.py
             - balrog/production.py
@@ -422,7 +422,7 @@ linux64-add-on-devel/opt:
         max-run-time: 36000
     run:
         using: mozharness
-        actions: [get-secrets build check-test update]
+        actions: [get-secrets build generate-build-stats check-test update]
         config:
             - builds/releng_base_linux_64_builds.py
             - balrog/production.py
@@ -448,7 +448,7 @@ linux64-qr/debug:
         max-run-time: 36000
     run:
         using: mozharness
-        actions: [get-secrets build check-test update]
+        actions: [get-secrets build generate-build-stats check-test update]
         config:
             - builds/releng_base_linux_64_builds.py
             - balrog/production.py
@@ -474,7 +474,7 @@ linux64-qr/opt:
         max-run-time: 36000
     run:
         using: mozharness
-        actions: [get-secrets build check-test update]
+        actions: [get-secrets build generate-build-stats check-test update]
         config:
             - builds/releng_base_linux_64_builds.py
             - balrog/production.py
@@ -500,7 +500,7 @@ linux-qr/opt:
         max-run-time: 36000
     run:
         using: mozharness
-        actions: [get-secrets build check-test update]
+        actions: [get-secrets build generate-build-stats check-test update]
         config:
             - builds/releng_base_linux_32_builds.py
             - balrog/production.py
@@ -527,7 +527,7 @@ linux-qr/debug:
     coalesce-name: dbg_linux32
     run:
         using: mozharness
-        actions: [get-secrets build check-test update]
+        actions: [get-secrets build generate-build-stats check-test update]
         config:
             - builds/releng_base_linux_32_builds.py
             - balrog/production.py

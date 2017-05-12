@@ -57,8 +57,8 @@
         return Services.io.newURI(spec);
       }
 
-      Task.spawn(function* () {
-        yield PlacesTestUtils.clearHistory();
+      (async function() {
+        await PlacesTestUtils.clearHistory();
 
         let midnight = new Date();
         midnight.setHours(0);
@@ -68,7 +68,7 @@
 
         // Add a visit 1ms before midnight, a visit at midnight, and
         // a visit 1ms after midnight.
-        yield PlacesTestUtils.addVisits([
+        await PlacesTestUtils.addVisits([
           {uri: uri("http://before.midnight.com/"),
            visitDate: (midnight.getTime() - 1) * 1000,
            transition: PlacesUtils.history.TRANSITION_TYPED},
@@ -81,7 +81,7 @@
         ]);
 
         // add a bookmark to the midnight visit
-        let bm = yield PlacesUtils.bookmarks.insert({
+        let bm = await PlacesUtils.bookmarks.insert({
           parentGuid: PlacesUtils.bookmarks.toolbarGuid,
           index: PlacesUtils.bookmarks.DEFAULT_INDEX,
           url: "http://at.midnight.com/",
@@ -150,9 +150,9 @@
         }
 
         // Cleanup.
-        yield PlacesUtils.bookmarks.remove(bm.guid);
-        yield PlacesTestUtils.clearHistory();
-      }).then(SimpleTest.finish);
+        await PlacesUtils.bookmarks.remove(bm.guid);
+        await PlacesTestUtils.clearHistory();
+      })().then(SimpleTest.finish);
     }
   ]]>
   </script>

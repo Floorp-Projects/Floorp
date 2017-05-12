@@ -53,10 +53,10 @@ let testExtension = {
   },
 };
 
-add_task(function* test_webRequest_chromeworker_events() {
+add_task(async function test_webRequest_chromeworker_events() {
   let extension = ExtensionTestUtils.loadExtension(testExtension);
-  yield extension.startup();
-  yield new Promise(resolve => {
+  await extension.startup();
+  await new Promise(resolve => {
     let worker = new ChromeWorker("webrequest_chromeworker.js");
     worker.onmessage = event => {
       ok("chrome worker fetch finished");
@@ -64,31 +64,31 @@ add_task(function* test_webRequest_chromeworker_events() {
     };
     worker.postMessage("go");
   });
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* test_webRequest_chromepage_events() {
+add_task(async function test_webRequest_chromepage_events() {
   let extension = ExtensionTestUtils.loadExtension(testExtension);
-  yield extension.startup();
-  yield new Promise(resolve => {
+  await extension.startup();
+  await new Promise(resolve => {
     fetch("https://example.com/example.txt").then(() => {
       ok("test page loaded");
       resolve();
     });
   });
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* test_webRequest_jsm_events() {
+add_task(async function test_webRequest_jsm_events() {
   let extension = ExtensionTestUtils.loadExtension(testExtension);
-  yield extension.startup();
-  yield testFetch("https://example.com/example.txt").then(() => {
+  await extension.startup();
+  await testFetch("https://example.com/example.txt").then(() => {
     ok("fetch page loaded");
   });
-  yield testXHR("https://example.com/example.txt").then(() => {
+  await testXHR("https://example.com/example.txt").then(() => {
     ok("xhr page loaded");
   });
-  yield extension.unload();
+  await extension.unload();
 });
 </script>
 

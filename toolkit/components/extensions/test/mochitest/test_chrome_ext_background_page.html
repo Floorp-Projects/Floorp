@@ -18,7 +18,7 @@ Cu.import("resource://testing-common/TestUtils.jsm");
 
 /* eslint-disable mozilla/balanced-listeners */
 
-add_task(function* testAlertNotShownInBackgroundWindow() {
+add_task(async function testAlertNotShownInBackgroundWindow() {
   ok(!Services.wm.getEnumerator("alert:alert").hasMoreElements(),
      "Alerts should not be present at the start of the test.");
 
@@ -35,11 +35,11 @@ add_task(function* testAlertNotShownInBackgroundWindow() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
   info("startup complete loaded");
 
-  yield extension.awaitFinish("alertCalled");
+  await extension.awaitFinish("alertCalled");
 
 
   let alertWindows = Services.wm.getEnumerator("alert:alert");
@@ -62,7 +62,7 @@ add_task(function* testAlertNotShownInBackgroundWindow() {
 
 
   // Wait for the browser console window to open.
-  yield consoleOpened;
+  await consoleOpened;
 
   let {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
   require("devtools/client/framework/devtools-browser");
@@ -73,10 +73,10 @@ add_task(function* testAlertNotShownInBackgroundWindow() {
   ok(haveConsole, "Expected browser console to be open");
 
   if (haveConsole) {
-    yield hudservice.toggleBrowserConsole();
+    await hudservice.toggleBrowserConsole();
   }
 
-  yield extension.unload();
+  await extension.unload();
 });
 </script>
 

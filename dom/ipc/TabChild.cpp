@@ -3118,10 +3118,36 @@ TabChild::ReinitRendering()
     lf->IdentifyTextureHost(mTextureFactoryIdentifier);
   }
 
+  ImageBridgeChild::IdentifyCompositorTextureHost(mTextureFactoryIdentifier);
+  gfx::VRManagerChild::IdentifyTextureHost(mTextureFactoryIdentifier);
+
   InitAPZState();
 
   nsCOMPtr<nsIDocument> doc(GetDocument());
   doc->NotifyLayerManagerRecreated();
+}
+
+void
+TabChild::ReinitRenderingForDeviceReset()
+{
+  InvalidateLayers();
+
+  RefPtr<LayerManager> lm = mPuppetWidget->GetLayerManager();
+  ClientLayerManager* clm = lm->AsClientLayerManager();
+  if (!clm) {
+    return;
+  }
+
+  if (ShadowLayerForwarder* fwd = clm->AsShadowForwarder()) {
+    // Force the LayerTransactionChild to synchronously shutdown. It is
+    // okay to do this early, we'll simply stop sending messages. This
+    // step is necessary since otherwise the compositor will think we
+    // are trying to attach two layer trees to the same ID.
+    fwd->SynchronouslyShutdown();
+  }
+
+  // Proceed with destroying and recreating the layer manager.
+  ReinitRendering();
 }
 
 void

@@ -25,7 +25,7 @@ info: |
        b. Throw a SyntaxError exception.
        c. NOTE A default export cannot be provided by an export *.
 negative:
-  phase: early
+  phase: runtime
   type: SyntaxError
 flags: [module]
 ---*/

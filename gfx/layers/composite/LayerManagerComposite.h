@@ -123,12 +123,6 @@ public:
                               EndTransactionFlags aFlags = END_DEFAULT) = 0;
   virtual void UpdateRenderBounds(const gfx::IntRect& aRect) {}
 
-  // Called by CompositorBridgeParent when a new compositor has been created due
-  // to a device reset. The layer manager must clear any cached resources
-  // attached to the old compositor, and make a best effort at ignoring
-  // layer or texture updates against the old compositor.
-  virtual void ChangeCompositor(Compositor* aNewCompositor) = 0;
-
   virtual HostLayerManager* AsHostLayerManager() override {
     return this;
   }
@@ -378,12 +372,6 @@ public:
     return mCompositor;
   }
 
-  // Called by CompositorBridgeParent when a new compositor has been created due
-  // to a device reset. The layer manager must clear any cached resources
-  // attached to the old compositor, and make a best effort at ignoring
-  // layer or texture updates against the old compositor.
-  void ChangeCompositor(Compositor* aNewCompositor) override;
-
   void NotifyShadowTreeTransaction() override;
 
   TextRenderer* GetTextRenderer() { return mTextRenderer; }
@@ -437,8 +425,11 @@ private:
   void Render(const nsIntRegion& aInvalidRegion, const nsIntRegion& aOpaqueRegion);
 #if defined(MOZ_WIDGET_ANDROID)
   void RenderToPresentationSurface();
-  // Returns the height of the toolbar in screen pixels.
-  int32_t RenderToolbar();
+  // Shifts the content down so the toolbar does not cover it.
+  // Returns the Y shift of the content in screen pixels
+  ScreenCoord GetContentShiftForToolbar();
+  // Renders the static snapshot after the content has been rendered.
+  void RenderToolbar();
   // Used by robocop tests to get a snapshot of the frame buffer.
   void HandlePixelsTarget();
 #endif
@@ -460,8 +451,6 @@ private:
                                bool aGrayscaleEffect,
                                bool aInvertEffect,
                                float aContrastEffect);
-
-  void ChangeCompositorInternal(Compositor* aNewCompositor);
 
   bool mUnusedApzTransformWarning;
   bool mDisabledApzWarning;

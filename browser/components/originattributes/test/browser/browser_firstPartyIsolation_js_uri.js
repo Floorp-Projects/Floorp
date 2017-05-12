@@ -1,4 +1,4 @@
-add_task(function* setup() {
+add_task(async function setup() {
   Services.prefs.setBoolPref("privacy.firstparty.isolate", true);
 
   registerCleanupFunction(function() {
@@ -6,14 +6,14 @@ add_task(function* setup() {
   });
 });
 
-add_task(function* test_remote_window_open_js_uri() {
-  let win = yield BrowserTestUtils.openNewBrowserWindow({ remote: true });
+add_task(async function test_remote_window_open_js_uri() {
+  let win = await BrowserTestUtils.openNewBrowserWindow({ remote: true });
   let browser = win.gBrowser.selectedBrowser;
 
   Assert.ok(browser.isRemoteBrowser, "should be a remote browser");
 
   browser.loadURI(`javascript:1;`);
-  yield ContentTask.spawn(browser, {}, function* () {
+  await ContentTask.spawn(browser, {}, async function() {
     info("origin " + content.document.nodePrincipal.origin);
 
     Assert.ok(content.document.nodePrincipal.isNullPrincipal,
@@ -29,8 +29,8 @@ add_task(function* test_remote_window_open_js_uri() {
   win.close();
 });
 
-add_task(function* test_remote_window_open_js_uri2() {
-  let win = yield BrowserTestUtils.openNewBrowserWindow({ remote: true });
+add_task(async function test_remote_window_open_js_uri2() {
+  let win = await BrowserTestUtils.openNewBrowserWindow({ remote: true });
   let browser = win.gBrowser.selectedBrowser;
 
   Assert.ok(browser.isRemoteBrowser, "should be a remote browser");
@@ -43,12 +43,12 @@ add_task(function* test_remote_window_open_js_uri2() {
     alert("connect to http://example.com");
  `);
 
-  yield BrowserTestUtils.browserLoaded(browser, true, function(url) {
+  await BrowserTestUtils.browserLoaded(browser, true, function(url) {
     info("URL:" + url);
     return url == "http://example.com/";
   });
 
-  yield ContentTask.spawn(browser, {}, function* () {
+  await ContentTask.spawn(browser, {}, async function() {
     info("origin " + content.document.nodePrincipal.origin);
 
     Assert.ok(content.document.nodePrincipal.isNullPrincipal,

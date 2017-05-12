@@ -114,62 +114,62 @@ function stop_audio1_from_page() {
   });
 }
 
-function* audio_competing_for_active_agent(url, browser) {
+async function audio_competing_for_active_agent(url, browser) {
   browser.loadURI(url);
 
   info("- page should have playing audio -");
-  yield wait_for_event(browser, "DOMAudioPlaybackStarted");
+  await wait_for_event(browser, "DOMAudioPlaybackStarted");
 
   info("- the default suspended state of all audio should be non-suspened -");
-  yield ContentTask.spawn(browser, SuspendedType.NONE_SUSPENDED,
+  await ContentTask.spawn(browser, SuspendedType.NONE_SUSPENDED,
                                    check_all_audio_suspended);
 
   info("- only pause playing audio in the page -");
   browser.pauseMedia(true /* disposable */);
 
   info("- page shouldn't have any playing audio -");
-  yield wait_for_event(browser, "DOMAudioPlaybackStopped");
-  yield ContentTask.spawn(browser, true /* expect for pause */,
+  await wait_for_event(browser, "DOMAudioPlaybackStopped");
+  await ContentTask.spawn(browser, true /* expect for pause */,
                                    check_all_audio_pause_state);
-  yield ContentTask.spawn(browser, SuspendedType.SUSPENDED_PAUSE_DISPOSABLE,
+  await ContentTask.spawn(browser, SuspendedType.SUSPENDED_PAUSE_DISPOSABLE,
                                    check_all_audio_suspended);
 
   info("- resume audio1 from page -");
-  yield ContentTask.spawn(browser, null,
+  await ContentTask.spawn(browser, null,
                                    play_audio1_from_page);
-  yield ContentTask.spawn(browser, SuspendedType.NONE_SUSPENDED,
+  await ContentTask.spawn(browser, SuspendedType.NONE_SUSPENDED,
                                    check_audio1_suspended);
 
   info("- audio2 should still be suspended -");
-  yield ContentTask.spawn(browser, SuspendedType.SUSPENDED_PAUSE_DISPOSABLE,
+  await ContentTask.spawn(browser, SuspendedType.SUSPENDED_PAUSE_DISPOSABLE,
                                    check_audio2_suspended);
-  yield ContentTask.spawn(browser, true /* expect for pause */,
+  await ContentTask.spawn(browser, true /* expect for pause */,
                                    check_audio2_pause_state);
 
   info("- stop audio1 from page -");
-  yield ContentTask.spawn(browser, null,
+  await ContentTask.spawn(browser, null,
                                    stop_audio1_from_page);
-  yield ContentTask.spawn(browser, SuspendedType.NONE_SUSPENDED,
+  await ContentTask.spawn(browser, SuspendedType.NONE_SUSPENDED,
                                    check_audio1_suspended);
 
   info("- audio2 should still be suspended -");
-  yield ContentTask.spawn(browser, SuspendedType.SUSPENDED_PAUSE_DISPOSABLE,
+  await ContentTask.spawn(browser, SuspendedType.SUSPENDED_PAUSE_DISPOSABLE,
                                    check_audio2_suspended);
-  yield ContentTask.spawn(browser, true /* expect for pause */,
+  await ContentTask.spawn(browser, true /* expect for pause */,
                                    check_audio2_pause_state);
 
 }
 
-add_task(function* setup_test_preference() {
-  yield SpecialPowers.pushPrefEnv({"set": [
+add_task(async function setup_test_preference() {
+  await SpecialPowers.pushPrefEnv({"set": [
     ["media.useAudioChannelService.testing", true],
     ["dom.audiochannel.audioCompeting", true],
     ["dom.audiochannel.audioCompeting.allAgents", true]
   ]});
 });
 
-add_task(function* test_suspended_pause_disposable() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function test_suspended_pause_disposable() {
+  await BrowserTestUtils.withNewTab({
       gBrowser,
       url: "about:blank"
     }, audio_competing_for_active_agent.bind(this, PAGE));

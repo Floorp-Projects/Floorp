@@ -29,19 +29,19 @@ var testSequence = [
 ];
 
 // Test application to paths.
-add_task(function* test_path_setPermissions() {
+add_task(async function test_path_setPermissions() {
   let path = OS.Path.join(OS.Constants.Path.tmpDir,
                           "test_osfile_win_async_setPermissions_path.tmp");
-  yield OS.File.writeAtomic(path, new Uint8Array(1));
+  await OS.File.writeAtomic(path, new Uint8Array(1));
 
   try {
     for (let [options, attributesExpected] of testSequence) {
       if (options !== null) {
         do_print("Setting permissions to " + JSON.stringify(options));
-        yield OS.File.setPermissions(path, options);
+        await OS.File.setPermissions(path, options);
       }
 
-      let stat = yield OS.File.stat(path);
+      let stat = await OS.File.stat(path);
       do_print("Got stat winAttributes: " + JSON.stringify(stat.winAttributes));
 
       do_check_eq(stat.winAttributes.readOnly, attributesExpected.readOnly);
@@ -50,41 +50,41 @@ add_task(function* test_path_setPermissions() {
 
     }
   } finally {
-    yield OS.File.remove(path);
+    await OS.File.remove(path);
   }
 });
 
 // Test application to open files.
-add_task(function* test_file_setPermissions() {
+add_task(async function test_file_setPermissions() {
   let path = OS.Path.join(OS.Constants.Path.tmpDir,
                               "test_osfile_win_async_setPermissions_file.tmp");
-  yield OS.File.writeAtomic(path, new Uint8Array(1));
+  await OS.File.writeAtomic(path, new Uint8Array(1));
 
   try {
-    let fd = yield OS.File.open(path, { write: true });
+    let fd = await OS.File.open(path, { write: true });
     try {
       for (let [options, attributesExpected] of testSequence) {
         if (options !== null) {
           do_print("Setting permissions to " + JSON.stringify(options));
-          yield fd.setPermissions(options);
+          await fd.setPermissions(options);
         }
 
-        let stat = yield fd.stat();
+        let stat = await fd.stat();
         do_print("Got stat winAttributes: " + JSON.stringify(stat.winAttributes));
         do_check_eq(stat.winAttributes.readOnly, attributesExpected.readOnly);
         do_check_eq(stat.winAttributes.system, attributesExpected.system);
         do_check_eq(stat.winAttributes.hidden, attributesExpected.hidden);
       }
     } finally {
-      yield fd.close();
+      await fd.close();
     }
   } finally {
-    yield OS.File.remove(path);
+    await OS.File.remove(path);
   }
 });
 
 // Test application to Check setPermissions on a non-existant file path.
-add_task(function* test_non_existant_file_path_setPermissions() {
+add_task(async function test_non_existant_file_path_setPermissions() {
   let path = OS.Path.join(OS.Constants.Path.tmpDir,
                           "test_osfile_win_async_setPermissions_path.tmp");
   Assert.rejects(OS.File.setPermissions(path, {winAttributes: {readOnly: true}}),
@@ -93,19 +93,19 @@ add_task(function* test_non_existant_file_path_setPermissions() {
 });
 
 // Test application to Check setPermissions on a invalid file handle.
-add_task(function* test_closed_file_handle_setPermissions() {
+add_task(async function test_closed_file_handle_setPermissions() {
   let path = OS.Path.join(OS.Constants.Path.tmpDir,
                           "test_osfile_win_async_setPermissions_path.tmp");
-  yield OS.File.writeAtomic(path, new Uint8Array(1));
+  await OS.File.writeAtomic(path, new Uint8Array(1));
 
   try {
-    let fd = yield OS.File.open(path, { write: true });
-    yield fd.close();
+    let fd = await OS.File.open(path, { write: true });
+    await fd.close();
     Assert.rejects(fd.setPermissions(path, {winAttributes: {readOnly: true}}),
                    /The handle is invalid/,
                    "setPermissions failed as expected on a invalid file handle");
   } finally {
-    yield OS.File.remove(path);
+    await OS.File.remove(path);
   }
 });
 

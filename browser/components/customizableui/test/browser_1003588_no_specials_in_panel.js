@@ -19,7 +19,7 @@ function simulateItemDragAndEnd(aToDrag, aTarget) {
   }
 }
 
-add_task(function* checkNoAddingToPanel() {
+add_task(async function checkNoAddingToPanel() {
   let area = gPhotonStructure ? CustomizableUI.AREA_FIXED_OVERFLOW_PANEL : CustomizableUI.AREA_PANEL;
   let previousPlacements = getAreaWidgetIds(area);
   CustomizableUI.addWidgetToArea("separator", area);
@@ -33,7 +33,7 @@ add_task(function* checkNoAddingToPanel() {
   }
 });
 
-add_task(function* checkAddingToToolbar() {
+add_task(async function checkAddingToToolbar() {
   let area = CustomizableUI.AREA_NAVBAR;
   let previousPlacements = getAreaWidgetIds(area);
   CustomizableUI.addWidgetToArea("separator", area);
@@ -60,8 +60,8 @@ add_task(function* checkAddingToToolbar() {
 });
 
 
-add_task(function* checkDragging() {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+add_task(async function checkDragging() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   let startArea = CustomizableUI.AREA_NAVBAR;
   let targetArea = CustomizableUI.AREA_PANEL;
   let startingToolbarPlacements = getAreaWidgetIds(startArea);
@@ -80,7 +80,7 @@ add_task(function* checkDragging() {
   }
   is(elementsToMove.length, 3, "Should have 3 elements to try and drag.");
 
-  yield startCustomizing();
+  await startCustomizing();
   for (let id of elementsToMove) {
     simulateItemDragAndEnd(document.getElementById(id), PanelUI.contents);
   }
@@ -97,12 +97,12 @@ add_task(function* checkDragging() {
 
   ok(!gCustomizeMode.visiblePalette.querySelector("toolbarspring,toolbarseparator,toolbarspacer"),
      "No specials should make it to the palette alive.");
-  yield endCustomizing();
+  await endCustomizing();
 });
 
 
-add_task(function* asyncCleanup() {
-  yield endCustomizing();
+add_task(async function asyncCleanup() {
+  await endCustomizing();
   CustomizableUI.reset();
 });
 

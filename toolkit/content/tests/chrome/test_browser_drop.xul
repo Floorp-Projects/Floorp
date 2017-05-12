@@ -14,13 +14,13 @@
         <script><![CDATA[
 SimpleTest.waitForExplicitFinish();
 function runTest() {
-  add_task(function*() {
+  add_task(async function() {
     let win = window.open("window_browser_drop.xul", "_blank", "chrome,width=200,height=200");
-    yield SimpleTest.promiseFocus(win);
+    await SimpleTest.promiseFocus(win);
     for (let browserType of ["content", "remote-content"]) {
-      yield win.dropLinksOnBrowser(win.document.getElementById(browserType + "child"), browserType);
+      await win.dropLinksOnBrowser(win.document.getElementById(browserType + "child"), browserType);
     }
-    yield win.dropLinksOnBrowser(win.document.getElementById("chromechild"), "chrome");
+    await win.dropLinksOnBrowser(win.document.getElementById("chromechild"), "chrome");
   });
 }
 //]]>

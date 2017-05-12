@@ -20,7 +20,7 @@ info: |
         [...]
     11. Return starResolution.
 negative:
-  phase: early
+  phase: runtime
   type: SyntaxError
 flags: [module]
 ---*/

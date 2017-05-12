@@ -13,7 +13,6 @@ const Cc = Components.classes;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 
@@ -72,14 +71,14 @@ function isFilenameWithSameDate(aSourceName, aTargetName) {
  * @return OS.File path string or null.
  */
 function getBackupFileForSameDate(aFilename) {
-  return Task.spawn(function* () {
-    let backupFiles = yield PlacesBackups.getBackupFiles();
+  return (async function() {
+    let backupFiles = await PlacesBackups.getBackupFiles();
     for (let backupFile of backupFiles) {
       if (isFilenameWithSameDate(OS.Path.basename(backupFile), aFilename))
         return backupFile;
     }
     return null;
-  });
+  })();
 }
 
 this.PlacesBackups = {
@@ -124,15 +123,15 @@ this.PlacesBackups = {
    * @resolve the folder (the folder string path).
    */
   getBackupFolder: function PB_getBackupFolder() {
-    return Task.spawn(function* () {
+    return (async () => {
       if (this._backupFolder) {
         return this._backupFolder;
       }
       let profileDir = OS.Constants.Path.profileDir;
       let backupsDirPath = OS.Path.join(profileDir, this.profileRelativeFolderPath);
-      yield OS.File.makeDir(backupsDirPath, { ignoreExisting: true });
+      await OS.File.makeDir(backupsDirPath, { ignoreExisting: true });
       return this._backupFolder = backupsDirPath;
-    }.bind(this));
+    })();
   },
 
   get profileRelativeFolderPath() {
@@ -184,15 +183,15 @@ this.PlacesBackups = {
    * @resolve a sorted array of string paths.
    */
   getBackupFiles: function PB_getBackupFiles() {
-    return Task.spawn(function* () {
+    return (async () => {
       if (this._backupFiles)
         return this._backupFiles;
 
       this._backupFiles = [];
 
-      let backupFolderPath = yield this.getBackupFolder();
+      let backupFolderPath = await this.getBackupFolder();
       let iterator = new OS.File.DirectoryIterator(backupFolderPath);
-      yield iterator.forEach(aEntry => {
+      await iterator.forEach(aEntry => {
         // Since this is a lazy getter and OS.File I/O is serialized, we can
         // safely remove .tmp files without risking to remove ongoing backups.
         if (aEntry.name.endsWith(".tmp")) {
@@ -220,7 +219,7 @@ this.PlacesBackups = {
       });
 
       return this._backupFiles;
-    }.bind(this));
+    })();
   },
 
   /**
@@ -302,8 +301,8 @@ this.PlacesBackups = {
     * @result the path to the file.
     */
    getMostRecentBackup: function PB_getMostRecentBackup() {
-     return Task.spawn(function* () {
-       let entries = yield this.getBackupFiles();
+     return (async () => {
+       let entries = await this.getBackupFiles();
        for (let entry of entries) {
          let rx = /\.json(lz4)?$/;
          if (OS.Path.basename(entry).match(rx)) {
@@ -311,7 +310,7 @@ this.PlacesBackups = {
          }
        }
        return null;
-    }.bind(this));
+    })();
   },
 
   /**
@@ -332,17 +331,17 @@ this.PlacesBackups = {
                          "https://developer.mozilla.org/docs/JavaScript_OS.File");
       aFilePath = aFilePath.path;
     }
-    return Task.spawn(function* () {
+    return (async () => {
       let { count: nodeCount, hash: hash } =
-        yield BookmarkJSONUtils.exportToFile(aFilePath);
+        await BookmarkJSONUtils.exportToFile(aFilePath);
 
-      let backupFolderPath = yield this.getBackupFolder();
+      let backupFolderPath = await this.getBackupFolder();
       if (OS.Path.dirname(aFilePath) == backupFolderPath) {
         // We are creating a backup in the default backups folder,
         // so just update the internal cache.
         this._entries.unshift(new localFileCtor(aFilePath));
         if (!this._backupFiles) {
-          yield this.getBackupFiles();
+          await this.getBackupFiles();
         }
         this._backupFiles.unshift(aFilePath);
       } else {
@@ -350,7 +349,7 @@ this.PlacesBackups = {
         // we also want to create a new compressed version in it.
         // This way we ensure the latest valid backup is the same saved by the
         // user.  See bug 424389.
-        let mostRecentBackupFile = yield this.getMostRecentBackup();
+        let mostRecentBackupFile = await this.getMostRecentBackup();
         if (!mostRecentBackupFile ||
             hash != getHashFromFilename(OS.Path.basename(mostRecentBackupFile))) {
           let name = this.getFilenameForDate(undefined, true);
@@ -358,12 +357,12 @@ this.PlacesBackups = {
                                                      { count: nodeCount,
                                                        hash });
           let newFilePath = OS.Path.join(backupFolderPath, newFilename);
-          let backupFile = yield getBackupFileForSameDate(name);
+          let backupFile = await getBackupFileForSameDate(name);
           if (backupFile) {
             // There is already a backup for today, replace it.
-            yield OS.File.remove(backupFile, { ignoreAbsent: true });
+            await OS.File.remove(backupFile, { ignoreAbsent: true });
             if (!this._backupFiles)
-              yield this.getBackupFiles();
+              await this.getBackupFiles();
             else
               this._backupFiles.shift();
             this._backupFiles.unshift(newFilePath);
@@ -371,16 +370,16 @@ this.PlacesBackups = {
             // There is no backup for today, add the new one.
             this._entries.unshift(new localFileCtor(newFilePath));
             if (!this._backupFiles)
-              yield this.getBackupFiles();
+              await this.getBackupFiles();
             this._backupFiles.unshift(newFilePath);
           }
-          let jsonString = yield OS.File.read(aFilePath);
-          yield OS.File.writeAtomic(newFilePath, jsonString, { compression: "lz4" });
+          let jsonString = await OS.File.read(aFilePath);
+          await OS.File.writeAtomic(newFilePath, jsonString, { compression: "lz4" });
         }
       }
 
       return nodeCount;
-    }.bind(this));
+    })();
   },
 
   /**
@@ -399,33 +398,33 @@ this.PlacesBackups = {
    * @return {Promise}
    */
   create: function PB_create(aMaxBackups, aForceBackup) {
-    let limitBackups = function* () {
-      let backupFiles = yield this.getBackupFiles();
+    let limitBackups = async () => {
+      let backupFiles = await this.getBackupFiles();
       if (typeof aMaxBackups == "number" && aMaxBackups > -1 &&
           backupFiles.length >= aMaxBackups) {
         let numberOfBackupsToDelete = backupFiles.length - aMaxBackups;
         while (numberOfBackupsToDelete--) {
           this._entries.pop();
           let oldestBackup = this._backupFiles.pop();
-          yield OS.File.remove(oldestBackup);
+          await OS.File.remove(oldestBackup);
         }
       }
-    }.bind(this);
+    };
 
-    return Task.spawn(function* () {
+    return (async () => {
       if (aMaxBackups === 0) {
         // Backups are disabled, delete any existing one and bail out.
-        yield limitBackups(0);
+        await limitBackups(0);
         return;
       }
 
       // Ensure to initialize _backupFiles
       if (!this._backupFiles)
-        yield this.getBackupFiles();
+        await this.getBackupFiles();
       let newBackupFilename = this.getFilenameForDate(undefined, true);
       // If we already have a backup for today we should do nothing, unless we
       // were required to enforce a new backup.
-      let backupFile = yield getBackupFileForSameDate(newBackupFilename);
+      let backupFile = await getBackupFileForSameDate(newBackupFilename);
       if (backupFile && !aForceBackup)
         return;
 
@@ -433,22 +432,22 @@ this.PlacesBackups = {
         // In case there is a backup for today we should recreate it.
         this._backupFiles.shift();
         this._entries.shift();
-        yield OS.File.remove(backupFile, { ignoreAbsent: true });
+        await OS.File.remove(backupFile, { ignoreAbsent: true });
       }
 
       // Now check the hash of the most recent backup, and try to create a new
       // backup, if that fails due to hash conflict, just rename the old backup.
-      let mostRecentBackupFile = yield this.getMostRecentBackup();
+      let mostRecentBackupFile = await this.getMostRecentBackup();
       let mostRecentHash = mostRecentBackupFile &&
                            getHashFromFilename(OS.Path.basename(mostRecentBackupFile));
 
       // Save bookmarks to a backup file.
-      let backupFolder = yield this.getBackupFolder();
+      let backupFolder = await this.getBackupFolder();
       let newBackupFile = OS.Path.join(backupFolder, newBackupFilename);
       let newFilenameWithMetaData;
       try {
         let { count: nodeCount, hash: hash } =
-          yield BookmarkJSONUtils.exportToFile(newBackupFile,
+          await BookmarkJSONUtils.exportToFile(newBackupFile,
                                                { compress: true,
                                                  failIfHashIs: mostRecentHash });
         newFilenameWithMetaData = appendMetaDataToFilename(newBackupFilename,
@@ -475,13 +474,13 @@ this.PlacesBackups = {
 
       // Append metadata to the backup filename.
       let newBackupFileWithMetadata = OS.Path.join(backupFolder, newFilenameWithMetaData);
-      yield OS.File.move(newBackupFile, newBackupFileWithMetadata);
+      await OS.File.move(newBackupFile, newBackupFileWithMetadata);
       this._entries.unshift(new localFileCtor(newBackupFileWithMetadata));
       this._backupFiles.unshift(newBackupFileWithMetadata);
 
       // Limit the number of backups.
-      yield limitBackups(aMaxBackups);
-    }.bind(this));
+      await limitBackups(aMaxBackups);
+    })();
   },
 
   /**
@@ -527,9 +526,9 @@ this.PlacesBackups = {
    *         * root: string describing whether this represents a root
    *         * children: array of child items in a folder
    */
-  getBookmarksTree: Task.async(function* () {
+  async getBookmarksTree() {
     let startTime = Date.now();
-    let root = yield PlacesUtils.promiseBookmarksTree(PlacesUtils.bookmarks.rootGuid, {
+    let root = await PlacesUtils.promiseBookmarksTree(PlacesUtils.bookmarks.rootGuid, {
       excludeItemsCallback: aItem => {
         return aItem.annos &&
           aItem.annos.find(a => a.name == PlacesUtils.EXCLUDE_FROM_BACKUP_ANNO);
@@ -545,6 +544,6 @@ this.PlacesBackups = {
       Components.utils.reportError("Unable to report telemetry.");
     }
     return [root, root.itemsCount];
-  })
+  }
 }
 

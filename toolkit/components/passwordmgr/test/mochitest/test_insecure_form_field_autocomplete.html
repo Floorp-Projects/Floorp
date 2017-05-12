@@ -209,30 +209,30 @@ function spinEventLoop() {
   return Promise.resolve();
 }
 
-add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({"set": [["security.insecure_field_warning.contextual.enabled", true],
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({"set": [["security.insecure_field_warning.contextual.enabled", true],
                                            ["signon.autofillForms.http", true]]});
   listenForUnexpectedPopupShown();
 });
 
-add_task(function* test_form1_initial_empty() {
-  yield SimpleTest.promiseFocus(window);
+add_task(async function test_form1_initial_empty() {
+  await SimpleTest.promiseFocus(window);
 
   // Make sure initial form is empty.
   checkACForm("", "");
-  let popupState = yield getPopupState();
+  let popupState = await getPopupState();
   is(popupState.open, false, "Check popup is initially closed");
 });
 
-add_task(function* test_form1_warning_entry() {
-  yield SimpleTest.promiseFocus(window);
+add_task(async function test_form1_warning_entry() {
+  await SimpleTest.promiseFocus(window);
   // Trigger autocomplete popup
   restoreForm();
   let shownPromise = promiseACShown();
   doKey("down"); // open
-  let results = yield shownPromise;
+  let results = await shownPromise;
 
-  let popupState = yield getPopupState();
+  let popupState = await getPopupState();
   is(popupState.selectedIndex, -1, "Check no entries are selected upon opening");
 
   let expectedMenuItems = ["This connection is not secure. Logins entered here could be compromised. Learn More",
@@ -245,66 +245,66 @@ add_task(function* test_form1_warning_entry() {
   doKey("down"); // select insecure warning
   checkACForm("", ""); // value shouldn't update just by selecting
   doKey("return"); // not "enter"!
-  yield spinEventLoop(); // let focus happen
+  await spinEventLoop(); // let focus happen
   checkACForm("", "");
 });
 
-add_task(function* test_form1_first_entry() {
-  yield SimpleTest.promiseFocus(window);
+add_task(async function test_form1_first_entry() {
+  await SimpleTest.promiseFocus(window);
   // Trigger autocomplete popup
   restoreForm();
   let shownPromise = promiseACShown();
   doKey("down"); // open
-  yield shownPromise;
+  await shownPromise;
 
-  let popupState = yield getPopupState();
+  let popupState = await getPopupState();
   is(popupState.selectedIndex, -1, "Check no entries are selected upon opening");
 
   doKey("down"); // skip insecure warning
   doKey("down"); // first
   checkACForm("", ""); // value shouldn't update just by selecting
   doKey("return"); // not "enter"!
-  yield promiseFormsProcessed();
+  await promiseFormsProcessed();
   checkACForm("tempuser1", "temppass1");
 });
 
-add_task(function* test_form1_second_entry() {
+add_task(async function test_form1_second_entry() {
   // Trigger autocomplete popup
   restoreForm();
   let shownPromise = promiseACShown();
   doKey("down"); // open
-  yield shownPromise;
+  await shownPromise;
 
   doKey("down"); // skip insecure warning
   doKey("down"); // first
   doKey("down"); // second
   doKey("return"); // not "enter"!
-  yield promiseFormsProcessed();
+  await promiseFormsProcessed();
   checkACForm("testuser2", "testpass2");
 });
 
-add_task(function* test_form1_third_entry() {
+add_task(async function test_form1_third_entry() {
   // Trigger autocomplete popup
   restoreForm();
   let shownPromise = promiseACShown();
   doKey("down"); // open
-  yield shownPromise;
+  await shownPromise;
 
   doKey("down"); // skip insecure warning
   doKey("down"); // first
   doKey("down"); // second
   doKey("down"); // third
   doKey("return");
-  yield promiseFormsProcessed();
+  await promiseFormsProcessed();
   checkACForm("testuser3", "testpass3");
 });
 
-add_task(function* test_form1_fourth_entry() {
+add_task(async function test_form1_fourth_entry() {
   // Trigger autocomplete popup
   restoreForm();
   let shownPromise = promiseACShown();
   doKey("down"); // open
-  yield shownPromise;
+  await shownPromise;
 
   doKey("down"); // skip insecure warning
   doKey("down"); // first
@@ -312,17 +312,17 @@ add_task(function* test_form1_fourth_entry() {
   doKey("down"); // third
   doKey("down"); // fourth
   doKey("return");
-  yield promiseFormsProcessed();
+  await promiseFormsProcessed();
   checkACForm("zzzuser4", "zzzpass4");
 });
 
-add_task(function* test_form1_wraparound_first_entry() {
+add_task(async function test_form1_wraparound_first_entry() {
   // Trigger autocomplete popup
   restoreForm();
-  yield spinEventLoop(); // let focus happen
+  await spinEventLoop(); // let focus happen
   let shownPromise = promiseACShown();
   doKey("down"); // open
-  yield shownPromise;
+  await shownPromise;
 
   doKey("down"); // skip insecure warning
   doKey("down"); // first
@@ -333,43 +333,43 @@ add_task(function* test_form1_wraparound_first_entry() {
   doKey("down"); // skip insecure warning
   doKey("down"); // first
   doKey("return");
-  yield promiseFormsProcessed();
+  await promiseFormsProcessed();
   checkACForm("tempuser1", "temppass1");
 });
 
-add_task(function* test_form1_wraparound_up_last_entry() {
+add_task(async function test_form1_wraparound_up_last_entry() {
   // Trigger autocomplete popup
   restoreForm();
   let shownPromise = promiseACShown();
   doKey("down"); // open
-  yield shownPromise;
+  await shownPromise;
 
   doKey("up"); // last (fourth)
   doKey("return");
-  yield promiseFormsProcessed();
+  await promiseFormsProcessed();
   checkACForm("zzzuser4", "zzzpass4");
 });
 
-add_task(function* test_form1_wraparound_down_up_up() {
+add_task(async function test_form1_wraparound_down_up_up() {
   // Trigger autocomplete popup
   restoreForm();
   let shownPromise = promiseACShown();
   doKey("down"); // open
-  yield shownPromise;
+  await shownPromise;
 
   doKey("down"); // select first entry
   doKey("up");   // selects nothing!
   doKey("up");   // select last entry
   doKey("return");
-  yield promiseFormsProcessed();
+  await promiseFormsProcessed();
   checkACForm("zzzuser4", "zzzpass4");
 });
 
-add_task(function* test_form1_wraparound_up_last() {
+add_task(async function test_form1_wraparound_up_last() {
   restoreForm();
   let shownPromise = promiseACShown();
   doKey("down"); // open
-  yield shownPromise;
+  await shownPromise;
 
   doKey("down");
   doKey("up"); // deselects
@@ -381,29 +381,29 @@ add_task(function* test_form1_wraparound_up_last() {
   doKey("up"); // deselects
   doKey("up"); // last entry
   doKey("return");
-  yield promiseFormsProcessed();
+  await promiseFormsProcessed();
   checkACForm("zzzuser4", "zzzpass4");
 });
 
-add_task(function* test_form1_fill_username_without_autofill_right() {
+add_task(async function test_form1_fill_username_without_autofill_right() {
   restoreForm();
   let shownPromise = promiseACShown();
   doKey("down"); // open
-  yield shownPromise;
+  await shownPromise;
 
   // Set first entry w/o triggering autocomplete
   doKey("down"); // skip insecure warning
   doKey("down"); // first
   doKey("right");
-  yield spinEventLoop();
+  await spinEventLoop();
   checkACForm("tempuser1", ""); // empty password
 });
 
-add_task(function* test_form1_fill_username_without_autofill_left() {
+add_task(async function test_form1_fill_username_without_autofill_left() {
   restoreForm();
   let shownPromise = promiseACShown();
   doKey("down"); // open
-  yield shownPromise;
+  await shownPromise;
 
   // Set first entry w/o triggering autocomplete
   doKey("down"); // skip insecure warning
@@ -412,11 +412,11 @@ add_task(function* test_form1_fill_username_without_autofill_left() {
   checkACForm("tempuser1", ""); // empty password
 });
 
-add_task(function* test_form1_pageup_first() {
+add_task(async function test_form1_pageup_first() {
   restoreForm();
   let shownPromise = promiseACShown();
   doKey("down"); // open
-  yield shownPromise;
+  await shownPromise;
 
   // Check first entry (page up)
   doKey("down"); // first
@@ -424,42 +424,42 @@ add_task(function* test_form1_pageup_first() {
   doKey("page_up"); // first
   doKey("down"); // skip insecure warning
   doKey("return");
-  yield promiseFormsProcessed();
+  await promiseFormsProcessed();
   checkACForm("tempuser1", "temppass1");
 });
 
-add_task(function* test_form1_pagedown_last() {
+add_task(async function test_form1_pagedown_last() {
   restoreForm();
   let shownPromise = promiseACShown();
   doKey("down"); // open
-  yield shownPromise;
+  await shownPromise;
 
   // test 13
   // Check last entry (page down)
   doKey("down"); // first
   doKey("page_down"); // last
   doKey("return");
-  yield promiseFormsProcessed();
+  await promiseFormsProcessed();
   checkACForm("zzzuser4", "zzzpass4");
 });
 
-add_task(function* test_form1_untrusted_event() {
+add_task(async function test_form1_untrusted_event() {
   restoreForm();
-  yield spinEventLoop();
+  await spinEventLoop();
 
   // Send a fake (untrusted) event.
   checkACForm("", "");
   uname.value = "zzzuser4";
   sendFakeAutocompleteEvent(uname);
-  yield spinEventLoop();
+  await spinEventLoop();
   checkACForm("zzzuser4", "");
 });
 
-add_task(function* test_form1_delete() {
+add_task(async function test_form1_delete() {
   restoreForm();
   let shownPromise = promiseACShown();
   doKey("down"); // open
-  yield shownPromise;
+  await shownPromise;
 
   // XXX tried sending character "t" before/during dropdown to test
   // filtering, but had no luck. Seemed like the character was getting lost.
@@ -478,36 +478,36 @@ add_task(function* test_form1_delete() {
   // On OS X, shift-backspace and shift-delete work, just delete does not.
   // On Win/Linux, shift-backspace does not work, delete and shift-delete do.
   doKey("delete", shiftModifier);
-  yield deletionPromise;
+  await deletionPromise;
 
   checkACForm("", "");
   numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
   is(numLogins, 4, "Correct number of logins after deleting one");
-  yield countChangedPromise;
+  await countChangedPromise;
   doKey("return");
-  yield promiseFormsProcessed();
+  await promiseFormsProcessed();
   checkACForm("testuser2", "testpass2");
 });
 
-add_task(function* test_form1_first_after_deletion() {
+add_task(async function test_form1_first_after_deletion() {
   restoreForm();
   let shownPromise = promiseACShown();
   doKey("down"); // open
-  yield shownPromise;
+  await shownPromise;
 
   doKey("down"); // skip insecure warning
   // Check the new first entry (of 3)
   doKey("down");
   doKey("return");
-  yield promiseFormsProcessed();
+  await promiseFormsProcessed();
   checkACForm("testuser2", "testpass2");
 });
 
-add_task(function* test_form1_delete_second() {
+add_task(async function test_form1_delete_second() {
   restoreForm();
   let shownPromise = promiseACShown();
   doKey("down"); // open
-  yield shownPromise;
+  await shownPromise;
 
   doKey("down"); // skip insecure warning
   // Delete the second entry (of 3), "testuser3"
@@ -518,29 +518,29 @@ add_task(function* test_form1_delete_second() {
   numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
   is(numLogins, 3, "Correct number of logins after deleting one");
   doKey("return");
-  yield promiseFormsProcessed();
+  await promiseFormsProcessed();
   checkACForm("zzzuser4", "zzzpass4");
 });
 
-add_task(function* test_form1_first_after_deletion2() {
+add_task(async function test_form1_first_after_deletion2() {
   restoreForm();
   let shownPromise = promiseACShown();
   doKey("down"); // open
-  yield shownPromise;
+  await shownPromise;
 
   doKey("down"); // skip insecure warning
   // Check the new first entry (of 2)
   doKey("down");
   doKey("return");
-  yield promiseFormsProcessed();
+  await promiseFormsProcessed();
   checkACForm("testuser2", "testpass2");
 });
 
-add_task(function* test_form1_delete_last() {
+add_task(async function test_form1_delete_last() {
   restoreForm();
   let shownPromise = promiseACShown();
   doKey("down"); // open
-  yield shownPromise;
+  await shownPromise;
 
   doKey("down"); // skip insecure warning
   // test 54
@@ -552,29 +552,29 @@ add_task(function* test_form1_delete_last() {
   numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
   is(numLogins, 2, "Correct number of logins after deleting one");
   doKey("return");
-  yield promiseFormsProcessed();
+  await promiseFormsProcessed();
   checkACForm("testuser2", "testpass2");
 });
 
-add_task(function* test_form1_first_after_3_deletions() {
+add_task(async function test_form1_first_after_3_deletions() {
   restoreForm();
   let shownPromise = promiseACShown();
   doKey("down"); // open
-  yield shownPromise;
+  await shownPromise;
 
   doKey("down"); // skip insecure warning
   // Check the only remaining entry
   doKey("down");
   doKey("return");
-  yield promiseFormsProcessed();
+  await promiseFormsProcessed();
   checkACForm("testuser2", "testpass2");
 });
 
-add_task(function* test_form1_check_only_entry_remaining() {
+add_task(async function test_form1_check_only_entry_remaining() {
   restoreForm();
   let shownPromise = promiseACShown();
   doKey("down"); // open
-  yield shownPromise;
+  await shownPromise;
 
   doKey("down"); // skip insecure warning
   // test 56
@@ -590,7 +590,7 @@ add_task(function* test_form1_check_only_entry_remaining() {
 });
 
 // Tests for single-user forms for ignoring autocomplete=off
-add_task(function* test_form2() {
+add_task(async function test_form2() {
   // Turn our attention to form2
   uname = $_(2, "uname");
   pword = $_(2, "pword");
@@ -599,72 +599,72 @@ add_task(function* test_form2() {
   restoreForm();
   let shownPromise = promiseACShown();
   doKey("down"); // open
-  yield shownPromise;
+  await shownPromise;
 
   doKey("down"); // skip insecure warning
   // Check first entry
   doKey("down");
   checkACForm("", ""); // value shouldn't update
   doKey("return"); // not "enter"!
-  yield promiseFormsProcessed();
+  await promiseFormsProcessed();
   checkACForm("singleuser5", "singlepass5");
 });
 
-add_task(function* test_form3() {
+add_task(async function test_form3() {
   uname = $_(3, "uname");
   pword = $_(3, "pword");
   checkACForm("singleuser5", "singlepass5");
   restoreForm();
   let shownPromise = promiseACShown();
   doKey("down"); // open
-  yield shownPromise;
+  await shownPromise;
 
   doKey("down"); // skip insecure warning
   // Check first entry
   doKey("down");
   checkACForm("", ""); // value shouldn't update
   doKey("return"); // not "enter"!
-  yield promiseFormsProcessed();
+  await promiseFormsProcessed();
   checkACForm("singleuser5", "singlepass5");
 });
 
-add_task(function* test_form4() {
+add_task(async function test_form4() {
   uname = $_(4, "uname");
   pword = $_(4, "pword");
   checkACForm("singleuser5", "singlepass5");
   restoreForm();
   let shownPromise = promiseACShown();
   doKey("down"); // open
-  yield shownPromise;
+  await shownPromise;
 
   doKey("down"); // skip insecure warning
   // Check first entry
   doKey("down");
   checkACForm("", ""); // value shouldn't update
   doKey("return"); // not "enter"!
-  yield promiseFormsProcessed();
+  await promiseFormsProcessed();
   checkACForm("singleuser5", "singlepass5");
 });
 
-add_task(function* test_form5() {
+add_task(async function test_form5() {
   uname = $_(5, "uname");
   pword = $_(5, "pword");
   checkACForm("singleuser5", "singlepass5");
   restoreForm();
   let shownPromise = promiseACShown();
   doKey("down"); // open
-  yield shownPromise;
+  await shownPromise;
 
   doKey("down"); // skip insecure warning
   // Check first entry
   doKey("down");
   checkACForm("", ""); // value shouldn't update
   doKey("return"); // not "enter"!
-  yield promiseFormsProcessed();
+  await promiseFormsProcessed();
   checkACForm("singleuser5", "singlepass5");
 });
 
-add_task(function* test_form6() {
+add_task(async function test_form6() {
   // (this is a control, w/o autocomplete=off, to ensure the login
   // that was being suppressed would have been filled in otherwise)
   uname = $_(6, "uname");
@@ -672,7 +672,7 @@ add_task(function* test_form6() {
   checkACForm("singleuser5", "singlepass5");
 });
 
-add_task(function* test_form6_changeUsername() {
+add_task(async function test_form6_changeUsername() {
   // Test that the password field remains filled in after changing
   // the username.
   uname.focus();
@@ -680,13 +680,13 @@ add_task(function* test_form6_changeUsername() {
   sendChar("X");
   // Trigger the 'blur' event on uname
   pword.focus();
-  yield spinEventLoop();
+  await spinEventLoop();
   checkACForm("singleuser5X", "singlepass5");
 
   setupScript.sendSyncMessage("removeLogin", "login5");
 });
 
-add_task(function* test_form7() {
+add_task(async function test_form7() {
   uname = $_(7, "uname");
   pword = $_(7, "pword");
   checkACForm("", "");
@@ -705,11 +705,11 @@ add_task(function* test_form7() {
   setupScript.sendSyncMessage("removeLogin", "login6B");
 });
 
-add_task(function* test_form7_2() {
+add_task(async function test_form7_2() {
   restoreForm();
   let shownPromise = promiseACShown();
   doKey("down"); // open
-  yield shownPromise;
+  await shownPromise;
 
   doKey("down"); // skip insecure warning
   // Check first entry
@@ -719,7 +719,7 @@ add_task(function* test_form7_2() {
   // The form changes, so we expect the old username field to get the
   // selected autocomplete value, but neither the new username field nor
   // the password field should have any values filled in.
-  yield spinEventLoop();
+  await spinEventLoop();
   checkACForm("form7user1", "");
   is($_(7, "uname2").value, "", "Verifying empty uname2");
   restoreForm(); // clear field, so reloading test doesn't fail
@@ -727,44 +727,44 @@ add_task(function* test_form7_2() {
   setupScript.sendSyncMessage("removeLogin", "login6A");
 });
 
-add_task(function* test_form8() {
+add_task(async function test_form8() {
   uname = $_(8, "uname");
   pword = $_(8, "pword");
   checkACForm("form8user", "form8pass");
   restoreForm();
 });
 
-add_task(function* test_form8_blur() {
+add_task(async function test_form8_blur() {
   checkACForm("", "");
   // Focus the previous form to trigger a blur.
   $_(7, "uname").focus();
 });
 
-add_task(function* test_form8_2() {
+add_task(async function test_form8_2() {
   checkACForm("", "");
   restoreForm();
 });
 
-add_task(function* test_form8_3() {
+add_task(async function test_form8_3() {
   checkACForm("", "");
   setupScript.sendSyncMessage("removeLogin", "login7");
 });
 
-add_task(function* test_form9_filtering() {
+add_task(async function test_form9_filtering() {
   // Turn our attention to form9 to test the dropdown - bug 497541
   uname = $_(9, "uname");
   pword = $_(9, "pword");
   uname.focus();
   let shownPromise = promiseACShown();
   sendString("form9userAB");
-  yield shownPromise;
+  await shownPromise;
 
   checkACForm("form9userAB", "");
   uname.focus();
   doKey("left");
   shownPromise = promiseACShown();
   sendChar("A");
-  let results = yield shownPromise;
+  let results = await shownPromise;
 
   checkACForm("form9userAAB", "");
   checkArrayValues(results, ["This connection is not secure. Logins entered here could be compromised. Learn More", "form9userAAB"],
@@ -772,11 +772,11 @@ add_task(function* test_form9_filtering() {
   doKey("down"); // skip insecure warning
   doKey("down");
   doKey("return");
-  yield promiseFormsProcessed();
+  await promiseFormsProcessed();
   checkACForm("form9userAAB", "form9pass");
 });
 
-add_task(function* test_form9_autocomplete_cache() {
+add_task(async function test_form9_autocomplete_cache() {
   // Note that this addLogin call will only be seen by the autocomplete
   // attempt for the sendChar if we do not successfully cache the
   // autocomplete results.
@@ -785,21 +785,21 @@ add_task(function* test_form9_autocomplete_cache() {
   let promise0 = notifyMenuChanged(1);
   let shownPromise = promiseACShown();
   sendChar("z");
-  yield promise0;
-  yield shownPromise;
-  let popupState = yield getPopupState();
+  await promise0;
+  await shownPromise;
+  let popupState = await getPopupState();
   is(popupState.open, true, "Check popup should open");
 
   // check that empty results are cached - bug 496466
   promise0 = notifyMenuChanged(1);
   sendChar("z");
-  yield promise0;
-  popupState = yield getPopupState();
+  await promise0;
+  popupState = await getPopupState();
   is(popupState.open, true, "Check popup stays opened due to cached empty result");
 });
 
-add_task(function* test_form11_recipes() {
-  yield loadRecipes({
+add_task(async function test_form11_recipes() {
+  await loadRecipes({
     siteRecipes: [{
       "hosts": ["mochi.test:8888"],
       "usernameSelector": "input[name='1']",
@@ -813,18 +813,18 @@ add_task(function* test_form11_recipes() {
   // Switch the password field to type=password so _fillForm marks the username
   // field for autocomplete.
   pword.type = "password";
-  yield promiseFormsProcessed();
+  await promiseFormsProcessed();
   restoreForm();
   checkACForm("", "");
   let shownPromise = promiseACShown();
   doKey("down"); // open
-  yield shownPromise;
+  await shownPromise;
 
   doKey("down"); // skip insecure warning
   doKey("down");
   checkACForm("", ""); // value shouldn't update
   doKey("return"); // not "enter"!
-  yield promiseFormsProcessed();
+  await promiseFormsProcessed();
   checkACForm("testuser10", "testpass10");
 
   // Now test recipes with blur on the username field.
@@ -833,12 +833,12 @@ add_task(function* test_form11_recipes() {
   uname.value = "testuser10";
   checkACForm("testuser10", "");
   doKey("tab");
-  yield promiseFormsProcessed();
+  await promiseFormsProcessed();
   checkACForm("testuser10", "testpass10");
-  yield resetRecipes();
+  await resetRecipes();
 });
 
-add_task(function* test_form12_formless() {
+add_task(async function test_form12_formless() {
   // Test form-less autocomplete
   uname = $_(12, "uname");
   pword = $_(12, "pword");
@@ -846,7 +846,7 @@ add_task(function* test_form12_formless() {
   checkACForm("", "");
   let shownPromise = promiseACShown();
   doKey("down"); // open
-  yield shownPromise;
+  await shownPromise;
 
   doKey("down"); // skip insecure warning
   // Trigger autocomplete
@@ -854,7 +854,7 @@ add_task(function* test_form12_formless() {
   checkACForm("", ""); // value shouldn't update
   let processedPromise = promiseFormsProcessed();
   doKey("return"); // not "enter"!
-  yield processedPromise;
+  await processedPromise;
   checkACForm("testuser", "testpass");
 });
 </script>

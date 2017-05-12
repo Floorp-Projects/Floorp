@@ -3,24 +3,24 @@
 
 const gBaseURL = "https://example.com/browser/browser/base/content/test/general/";
 
-add_task(function *() {
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, gBaseURL + "subtst_contextmenu.html");
+add_task(async function() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, gBaseURL + "subtst_contextmenu.html");
 
   let contextMenu = document.getElementById("contentAreaContextMenu");
 
   // Get the point of the element with the page menu (test-pagemenu) and
   // synthesize a right mouse click there.
   let popupShownPromise = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
-  yield BrowserTestUtils.synthesizeMouse("#test-pagemenu", 5, 5, { type: "contextmenu", button: 2 }, tab.linkedBrowser);
-  yield popupShownPromise;
+  await BrowserTestUtils.synthesizeMouse("#test-pagemenu", 5, 5, { type: "contextmenu", button: 2 }, tab.linkedBrowser);
+  await popupShownPromise;
 
   checkMenu(contextMenu);
 
   let popupHiddenPromise = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
   contextMenu.hidePopup();
-  yield popupHiddenPromise;
+  await popupHiddenPromise;
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });
 
 function checkItems(menuitem, arr) {

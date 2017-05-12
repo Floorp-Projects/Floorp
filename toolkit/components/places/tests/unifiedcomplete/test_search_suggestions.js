@@ -15,15 +15,15 @@ function setSuggestionsFn(fn) {
   suggestionsFn = fn;
 }
 
-function* cleanUpSuggestions() {
-  yield cleanup();
+async function cleanUpSuggestions() {
+  await cleanup();
   if (previousSuggestionsFn) {
     suggestionsFn = previousSuggestionsFn;
     previousSuggestionsFn = null;
   }
 }
 
-add_task(function* setUp() {
+add_task(async function setUp() {
   // Set up a server that provides some suggestions by appending strings onto
   // the search query.
   let server = makeTestServer(SERVER_PORT);
@@ -44,54 +44,54 @@ add_task(function* setUp() {
   // Install the test engine.
   let oldCurrentEngine = Services.search.currentEngine;
   do_register_cleanup(() => Services.search.currentEngine = oldCurrentEngine);
-  let engine = yield addTestEngine(ENGINE_NAME, server);
+  let engine = await addTestEngine(ENGINE_NAME, server);
   Services.search.currentEngine = engine;
 });
 
-add_task(function* disabled_urlbarSuggestions() {
+add_task(async function disabled_urlbarSuggestions() {
   Services.prefs.setBoolPref(SUGGEST_PREF, false);
   Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "hello",
     searchParam: "enable-actions",
     matches: [
       makeSearchMatch("hello", { engineName: ENGINE_NAME, heuristic: true }),
     ],
   });
-  yield cleanUpSuggestions();
+  await cleanUpSuggestions();
 });
 
-add_task(function* disabled_allSuggestions() {
+add_task(async function disabled_allSuggestions() {
   Services.prefs.setBoolPref(SUGGEST_PREF, true);
   Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, false);
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "hello",
     searchParam: "enable-actions",
     matches: [
       makeSearchMatch("hello", { engineName: ENGINE_NAME, heuristic: true }),
     ],
   });
-  yield cleanUpSuggestions();
+  await cleanUpSuggestions();
 });
 
-add_task(function* disabled_privateWindow() {
+add_task(async function disabled_privateWindow() {
   Services.prefs.setBoolPref(SUGGEST_PREF, true);
   Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "hello",
     searchParam: "private-window enable-actions",
     matches: [
       makeSearchMatch("hello", { engineName: ENGINE_NAME, heuristic: true }),
     ],
   });
-  yield cleanUpSuggestions();
+  await cleanUpSuggestions();
 });
 
-add_task(function* singleWordQuery() {
+add_task(async function singleWordQuery() {
   Services.prefs.setBoolPref(SUGGEST_PREF, true);
   Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
 
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "hello",
     searchParam: "enable-actions",
     matches: [
@@ -118,14 +118,14 @@ add_task(function* singleWordQuery() {
     }],
   });
 
-  yield cleanUpSuggestions();
+  await cleanUpSuggestions();
 });
 
-add_task(function* multiWordQuery() {
+add_task(async function multiWordQuery() {
   Services.prefs.setBoolPref(SUGGEST_PREF, true);
   Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
 
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "hello world",
     searchParam: "enable-actions",
     matches: [
@@ -152,10 +152,10 @@ add_task(function* multiWordQuery() {
     }],
   });
 
-  yield cleanUpSuggestions();
+  await cleanUpSuggestions();
 });
 
-add_task(function* suffixMatch() {
+add_task(async function suffixMatch() {
   Services.prefs.setBoolPref(SUGGEST_PREF, true);
   Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
 
@@ -164,7 +164,7 @@ add_task(function* suffixMatch() {
     return prefixes.map(p => p + " " + searchStr);
   });
 
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "hello",
     searchParam: "enable-actions",
     matches: [
@@ -191,17 +191,17 @@ add_task(function* suffixMatch() {
     }],
   });
 
-  yield cleanUpSuggestions();
+  await cleanUpSuggestions();
 });
 
-add_task(function* queryIsNotASubstring() {
+add_task(async function queryIsNotASubstring() {
   Services.prefs.setBoolPref(SUGGEST_PREF, true);
 
   setSuggestionsFn(searchStr => {
     return ["aaa", "bbb"];
   });
 
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "hello",
     searchParam: "enable-actions",
     matches: [
@@ -228,17 +228,17 @@ add_task(function* queryIsNotASubstring() {
     }],
   });
 
-  yield cleanUpSuggestions();
+  await cleanUpSuggestions();
 });
 
-add_task(function* restrictToken() {
+add_task(async function restrictToken() {
   Services.prefs.setBoolPref(SUGGEST_PREF, true);
   Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
 
   // Add a visit and a bookmark.  Actually, make the bookmark visited too so
   // that it's guaranteed, with its higher frecency, to appear above the search
   // suggestions.
-  yield PlacesTestUtils.addVisits([
+  await PlacesTestUtils.addVisits([
     {
       uri: NetUtil.newURI("http://example.com/hello-visit"),
       title: "hello visit",
@@ -249,14 +249,14 @@ add_task(function* restrictToken() {
     },
   ]);
 
-  yield addBookmark({
+  await addBookmark({
     uri: NetUtil.newURI("http://example.com/hello-bookmark"),
     title: "hello bookmark",
   });
 
   // Do an unrestricted search to make sure everything appears in it, including
   // the visit and bookmark.
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "hello",
     searchParam: "enable-actions",
     matches: [
@@ -296,7 +296,7 @@ add_task(function* restrictToken() {
   });
 
   // Now do a restricted search to make sure only suggestions appear.
-  yield check_autocomplete({
+  await check_autocomplete({
     search: SUGGEST_RESTRICT_TOKEN + " hello",
     searchParam: "enable-actions",
     matches: [
@@ -327,16 +327,16 @@ add_task(function* restrictToken() {
     ],
   });
 
-  yield cleanUpSuggestions();
+  await cleanUpSuggestions();
 });
 
-add_task(function* mixup_frecency() {
+add_task(async function mixup_frecency() {
   Services.prefs.setBoolPref(SUGGEST_PREF, true);
 
   // Add a visit and a bookmark.  Actually, make the bookmark visited too so
   // that it's guaranteed, with its higher frecency, to appear above the search
   // suggestions.
-  yield PlacesTestUtils.addVisits([
+  await PlacesTestUtils.addVisits([
     { uri: NetUtil.newURI("http://example.com/lo0"),
       title: "low frecency 0" },
     { uri: NetUtil.newURI("http://example.com/lo1"),
@@ -357,7 +357,7 @@ add_task(function* mixup_frecency() {
   }
 
   for (let i = 0; i < 5; i++) {
-    yield PlacesTestUtils.addVisits([
+    await PlacesTestUtils.addVisits([
       { uri: NetUtil.newURI("http://example.com/hi0"),
         title: "high frecency 0",
         transition: TRANSITION_TYPED },
@@ -375,7 +375,7 @@ add_task(function* mixup_frecency() {
 
   for (let i = 0; i < 4; i++) {
     let href = `http://example.com/hi${i}`;
-    yield addBookmark({ uri: href, title: `high frecency ${i}` });
+    await addBookmark({ uri: href, title: `high frecency ${i}` });
     let frecency = frecencyForUrl(href);
     Assert.ok(frecency > FRECENCY_DEFAULT,
               `frecency for ${href}: ${frecency}, should be higher than ${FRECENCY_DEFAULT}`);
@@ -383,7 +383,7 @@ add_task(function* mixup_frecency() {
 
   // Do an unrestricted search to make sure everything appears in it, including
   // the visit and bookmark.
-  yield check_autocomplete({
+  await check_autocomplete({
     checkSorting: true,
     search: "frecency",
     searchParam: "enable-actions",
@@ -436,13 +436,13 @@ add_task(function* mixup_frecency() {
     ],
   });
 
-  yield cleanUpSuggestions();
+  await cleanUpSuggestions();
 });
 
-add_task(function* prohibit_suggestions() {
+add_task(async function prohibit_suggestions() {
   Services.prefs.setBoolPref(SUGGEST_PREF, true);
 
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "localhost",
     searchParam: "enable-actions",
     matches: [
@@ -475,7 +475,7 @@ add_task(function* prohibit_suggestions() {
   do_register_cleanup(() => {
     Services.prefs.clearUserPref("browser.fixup.domainwhitelist.localhost");
   });
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "localhost",
     searchParam: "enable-actions",
     matches: [
@@ -485,7 +485,7 @@ add_task(function* prohibit_suggestions() {
   });
 
   // When using multiple words, we should still get suggestions:
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "localhost other",
     searchParam: "enable-actions",
     matches: [
@@ -523,7 +523,7 @@ add_task(function* prohibit_suggestions() {
     Services.prefs.clearUserPref("browser.fixup.dns_first_for_single_words");
   });
 
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "localhost",
     searchParam: "enable-actions",
     matches: [
@@ -532,7 +532,7 @@ add_task(function* prohibit_suggestions() {
     ],
   });
 
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "somethingelse",
     searchParam: "enable-actions",
     matches: [
@@ -542,7 +542,7 @@ add_task(function* prohibit_suggestions() {
   });
 
   // When using multiple words, we should still get suggestions:
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "localhost other",
     searchParam: "enable-actions",
     matches: [
@@ -574,35 +574,35 @@ add_task(function* prohibit_suggestions() {
 
   Services.prefs.clearUserPref("browser.fixup.dns_first_for_single_words");
 
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "1.2.3.4",
     searchParam: "enable-actions",
     matches: [
       makeVisitMatch("1.2.3.4", "http://1.2.3.4/", { heuristic: true }),
     ],
   });
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "[2001::1]:30",
     searchParam: "enable-actions",
     matches: [
       makeVisitMatch("[2001::1]:30", "http://[2001::1]:30/", { heuristic: true }),
     ],
   });
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "user:pass@test",
     searchParam: "enable-actions",
     matches: [
       makeVisitMatch("user:pass@test", "http://user:pass@test/", { heuristic: true }),
     ],
   });
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "test/test",
     searchParam: "enable-actions",
     matches: [
       makeVisitMatch("test/test", "http://test/test", { heuristic: true }),
     ],
   });
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "data:text/plain,Content",
     searchParam: "enable-actions",
     matches: [
@@ -610,7 +610,7 @@ add_task(function* prohibit_suggestions() {
     ],
   });
 
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "a",
     searchParam: "enable-actions",
     matches: [
@@ -618,10 +618,10 @@ add_task(function* prohibit_suggestions() {
     ],
   });
 
-  yield cleanUpSuggestions();
+  await cleanUpSuggestions();
 });
 
-add_task(function* avoid_url_suggestions() {
+add_task(async function avoid_url_suggestions() {
   Services.prefs.setBoolPref(SUGGEST_PREF, true);
 
   setSuggestionsFn(searchStr => {
@@ -629,7 +629,7 @@ add_task(function* avoid_url_suggestions() {
     return suffixes.map(s => searchStr + s);
   });
 
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "test",
     searchParam: "enable-actions",
     matches: [
@@ -648,7 +648,7 @@ add_task(function* avoid_url_suggestions() {
     ],
   });
 
-  yield cleanUpSuggestions();
+  await cleanUpSuggestions();
 });
 
 add_task(function* avoid_http_url_suggestions() {

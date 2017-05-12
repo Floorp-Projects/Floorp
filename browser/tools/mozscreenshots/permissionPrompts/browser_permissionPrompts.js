@@ -6,11 +6,11 @@
 
 "use strict";
 
-add_task(function* capture() {
+add_task(async function capture() {
   if (!shouldCapture()) {
     return;
   }
   let sets = ["LightweightThemes", "PermissionPrompts"];
 
-  yield TestRunner.start(sets, "permissionPrompts");
+  await TestRunner.start(sets, "permissionPrompts");
 });

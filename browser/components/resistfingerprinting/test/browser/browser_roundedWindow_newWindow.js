@@ -11,28 +11,28 @@ const TEST_PATH = TEST_DOMAIN + "browser/browser/components/resistFingerprinting
 let gMaxAvailWidth;
 let gMaxAvailHeight;
 
-add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({"set":
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({"set":
     [["privacy.resistFingerprinting", true]]
   });
 
   // Calculate the maximum available size.
-  let maxAvailSize = yield calcMaximumAvailSize();
+  let maxAvailSize = await calcMaximumAvailSize();
 
   gMaxAvailWidth = maxAvailSize.maxAvailWidth;
   gMaxAvailHeight = maxAvailSize.maxAvailHeight;
 });
 
-add_task(function* test_new_window() {
+add_task(async function test_new_window() {
   // Open a new window.
-  let win = yield BrowserTestUtils.openNewBrowserWindow();
+  let win = await BrowserTestUtils.openNewBrowserWindow();
 
   // Load a page and verify its window size.
-  let tab = yield BrowserTestUtils.openNewForegroundTab(
+  let tab = await BrowserTestUtils.openNewForegroundTab(
     win.gBrowser, TEST_PATH + "file_dummy.html");
 
-  yield ContentTask.spawn(tab.linkedBrowser, {gMaxAvailWidth, gMaxAvailHeight},
-    function* (input) {
+  await ContentTask.spawn(tab.linkedBrowser, {gMaxAvailWidth, gMaxAvailHeight},
+    async function(input) {
       is(content.screen.width, input.gMaxAvailWidth,
         "The screen.width has a correct rounded value");
       is(content.screen.height, input.gMaxAvailHeight,
@@ -44,6 +44,6 @@ add_task(function* test_new_window() {
     }
   );
 
-  yield BrowserTestUtils.removeTab(tab);
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.closeWindow(win);
 });

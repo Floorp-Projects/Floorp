@@ -5,7 +5,7 @@
 
 "use strict"
 
-add_task(function* test_embed_visit() {
+add_task(async function test_embed_visit() {
   let place = {
     uri: NetUtil.newURI("http://places.test/"),
     visits: [
@@ -15,7 +15,7 @@ add_task(function* test_embed_visit() {
   };
   let errors = 0;
   let results = 0;
-  let updated = yield new Promise(resolve => {
+  let updated = await new Promise(resolve => {
     PlacesUtils.asyncHistory.updatePlaces(place, {
       ignoreErrors: true,
       ignoreResults: true,
@@ -35,7 +35,7 @@ add_task(function* test_embed_visit() {
   Assert.equal(updated, 1, "The visit should have been added");
 });
 
-add_task(function* test_misc_visits() {
+add_task(async function test_misc_visits() {
   let place = {
     uri: NetUtil.newURI("http://places.test/"),
     visits: [
@@ -47,7 +47,7 @@ add_task(function* test_misc_visits() {
   };
   let errors = 0;
   let results = 0;
-  let updated = yield new Promise(resolve => {
+  let updated = await new Promise(resolve => {
     PlacesUtils.asyncHistory.updatePlaces(place, {
       ignoreErrors: true,
       ignoreResults: true,

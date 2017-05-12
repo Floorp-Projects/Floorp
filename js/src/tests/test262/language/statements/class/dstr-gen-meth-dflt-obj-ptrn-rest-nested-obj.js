@@ -5,7 +5,7 @@
 description: When DestructuringAssignmentTarget is an object literal, it should be parsed parsed as a DestructuringAssignmentPattern and evaluated as a destructuring assignment. (class expression method (default parameters))
 esid: sec-class-definitions-runtime-semantics-evaluation
 es6id: 14.5.16
-features: [destructuring-binding, default-parameters]
+features: [object-rest, destructuring-binding, default-parameters]
 flags: [generated]
 info: |
     ClassDeclaration : class BindingIdentifier ClassTail

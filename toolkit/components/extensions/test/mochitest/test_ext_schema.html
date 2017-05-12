@@ -14,7 +14,7 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* testEmptySchema() {
+add_task(async function testEmptySchema() {
   function background() {
     browser.test.assertEq(undefined, browser.manifest, "browser.manifest is not defined");
     browser.test.assertTrue(!!browser.storage, "browser.storage should be defined");
@@ -29,12 +29,12 @@ add_task(function* testEmptySchema() {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("schema");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("schema");
+  await extension.unload();
 });
 
-add_task(function* testUnknownProperties() {
+add_task(async function testUnknownProperties() {
   function background() {
     browser.test.notifyPass("loaded");
   }
@@ -58,14 +58,14 @@ add_task(function* testUnknownProperties() {
     SimpleTest.monitorConsole(resolve, messages);
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitFinish("loaded");
+  await extension.awaitFinish("loaded");
 
-  yield extension.unload();
+  await extension.unload();
 
   SimpleTest.endMonitorConsole();
-  yield waitForConsole;
+  await waitForConsole;
 });
 </script>
 

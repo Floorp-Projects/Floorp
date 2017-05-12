@@ -10,16 +10,16 @@
 
 const TEST_URI = NetUtil.newURI("http://www.mozilla.org/");
 
-registerCleanupFunction(function* () {
-  yield PlacesUtils.bookmarks.eraseEverything();
-  yield PlacesTestUtils.clearHistory();
+registerCleanupFunction(async function() {
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesTestUtils.clearHistory();
 });
 
-add_task(function* test_date_container() {
-  let library = yield promiseLibrary();
+add_task(async function test_date_container() {
+  let library = await promiseLibrary();
   info("Ensure date containers under History cannot be cut but can be deleted");
 
-  yield PlacesTestUtils.addVisits(TEST_URI);
+  await PlacesTestUtils.addVisits(TEST_URI);
 
   // Select and open the left pane "History" query.
   let PO = library.PlacesOrganizer;
@@ -62,20 +62,20 @@ add_task(function* test_date_container() {
   let promiseURIRemoved = promiseHistoryNotification("onDeleteURI",
                                                      v => TEST_URI.equals(v));
   PO._places.controller.doCommand("cmd_delete");
-  yield promiseURIRemoved;
+  await promiseURIRemoved;
 
   // Test live update of "History" query.
   is(historyNode.childCount, 0, "History node has no more children");
 
   historyNode.containerOpen = false;
 
-  ok(!(yield promiseIsURIVisited(TEST_URI)), "Visit has been removed");
+  ok(!(await promiseIsURIVisited(TEST_URI)), "Visit has been removed");
 
   library.close();
 });
 
-add_task(function* test_query_on_toolbar() {
-  let library = yield promiseLibrary();
+add_task(async function test_query_on_toolbar() {
+  let library = await promiseLibrary();
   info("Ensure queries can be cut or deleted");
 
   // Select and open the left pane "Bookmarks Toolbar" folder.
@@ -100,7 +100,7 @@ add_task(function* test_query_on_toolbar() {
   toolbarNode.containerOpen = true;
 
   // Add an History query to the toolbar.
-  let query = yield PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+  let query = await PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                                    url: "place:sort=4",
                                                    title: "special_query",
                                                    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
@@ -127,9 +127,9 @@ add_task(function* test_query_on_toolbar() {
   let promiseItemRemoved = promiseBookmarksNotification("onItemRemoved",
                                                         (...args) => query.guid == args[5]);
   PO._places.controller.doCommand("cmd_delete");
-  yield promiseItemRemoved;
+  await promiseItemRemoved;
 
-  is((yield PlacesUtils.bookmarks.fetch(query.guid)), null,
+  is((await PlacesUtils.bookmarks.fetch(query.guid)), null,
      "Query node bookmark has been correctly removed");
 
   toolbarNode.containerOpen = false;
@@ -137,14 +137,14 @@ add_task(function* test_query_on_toolbar() {
   library.close();
 });
 
-add_task(function* test_search_contents() {
-  yield PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+add_task(async function test_search_contents() {
+  await PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                        url: "http://example.com/",
                                        title: "example page",
                                        parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                        index: 0 });
 
-  let library = yield promiseLibrary();
+  let library = await promiseLibrary();
   info("Ensure query contents can be cut or deleted");
 
   // Select and open the left pane "Bookmarks Toolbar" folder.
@@ -174,15 +174,15 @@ add_task(function* test_search_contents() {
   library.close();
 });
 
-add_task(function* test_tags() {
-  yield PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+add_task(async function test_tags() {
+  await PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                        url: "http://example.com/",
                                        title: "example page",
                                        parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                        index: 0 });
   PlacesUtils.tagging.tagURI(NetUtil.newURI("http://example.com/"), ["test"]);
 
-  let library = yield promiseLibrary();
+  let library = await promiseLibrary();
   info("Ensure query contents can be cut or deleted");
 
   // Select and open the left pane "Bookmarks Toolbar" folder.

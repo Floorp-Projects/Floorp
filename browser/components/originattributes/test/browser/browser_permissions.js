@@ -13,7 +13,7 @@ function disableCookies() {
 }
 
 function ensureCookieNotSet(aBrowser) {
-  ContentTask.spawn(aBrowser, null, function*() {
+  ContentTask.spawn(aBrowser, null, async function() {
     content.document.cookie = "key=value";
     is(content.document.cookie, "", "Setting/reading cookies should be disabled"
       + " for this domain for all origin attribute combinations.");

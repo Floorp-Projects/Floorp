@@ -10,7 +10,7 @@ function add_tasks(task) {
   add_task(task.bind(null, {embedded: true}));
 }
 
-function* loadExtension(options) {
+async function loadExtension(options) {
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "temporary",
 
@@ -43,17 +43,17 @@ function* loadExtension(options) {
     background: options.background,
   });
 
-  yield extension.startup();
+  await extension.startup();
 
   return extension;
 }
 
-add_tasks(function* test_inline_options(extraOptions) {
+add_tasks(async function test_inline_options(extraOptions) {
   info(`Test options opened inline (${JSON.stringify(extraOptions)})`);
 
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
 
-  let extension = yield loadExtension(Object.assign({}, extraOptions, {
+  let extension = await loadExtension(Object.assign({}, extraOptions, {
     manifest: {
       applications: {gecko: {id: "inline_options@tests.mozilla.org"}},
       "options_ui": {
@@ -142,18 +142,18 @@ add_tasks(function* test_inline_options(extraOptions) {
     },
   }));
 
-  yield extension.awaitFinish("options-ui");
-  yield extension.unload();
+  await extension.awaitFinish("options-ui");
+  await extension.unload();
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });
 
-add_tasks(function* test_tab_options(extraOptions) {
+add_tasks(async function test_tab_options(extraOptions) {
   info(`Test options opened in a tab (${JSON.stringify(extraOptions)})`);
 
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
 
-  let extension = yield loadExtension(Object.assign({}, extraOptions, {
+  let extension = await loadExtension(Object.assign({}, extraOptions, {
     manifest: {
       applications: {gecko: {id: "tab_options@tests.mozilla.org"}},
       "options_ui": {
@@ -245,16 +245,16 @@ add_tasks(function* test_tab_options(extraOptions) {
     },
   }));
 
-  yield extension.awaitFinish("options-ui-tab");
-  yield extension.unload();
+  await extension.awaitFinish("options-ui-tab");
+  await extension.unload();
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });
 
-add_tasks(function* test_options_no_manifest(extraOptions) {
+add_tasks(async function test_options_no_manifest(extraOptions) {
   info(`Test with no manifest key (${JSON.stringify(extraOptions)})`);
 
-  let extension = yield loadExtension(Object.assign({}, extraOptions, {
+  let extension = await loadExtension(Object.assign({}, extraOptions, {
     manifest: {
       applications: {gecko: {id: "no_options@tests.mozilla.org"}},
     },
@@ -271,6 +271,6 @@ add_tasks(function* test_options_no_manifest(extraOptions) {
     },
   }));
 
-  yield extension.awaitFinish("options-no-manifest");
-  yield extension.unload();
+  await extension.awaitFinish("options-no-manifest");
+  await extension.unload();
 });

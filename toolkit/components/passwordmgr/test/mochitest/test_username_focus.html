@@ -115,58 +115,58 @@ function removeFocus() {
   $_("-autofilled", "submit").focus();
 }
 
-add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({"set": [
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({"set": [
     ["security.insecure_field_warning.contextual.enabled", false],
   ]});
 
   ok(readyPromise, "check promise is available");
-  yield readyPromise;
+  await readyPromise;
 });
 
-add_task(function* test_autofilled() {
+add_task(async function test_autofilled() {
   let usernameField = $_("-autofilled", "uname");
   info("Username and password already filled so don't show autocomplete");
   let noPopupPromise = promiseNoUnexpectedPopupShown();
   usernameField.focus();
-  yield noPopupPromise;
+  await noPopupPromise;
 
   removeFocus();
   usernameField.value = "testuser";
   info("Focus when we don't have an exact match");
   shownPromise = promiseACShown();
   usernameField.focus();
-  yield shownPromise;
+  await shownPromise;
 });
 
-add_task(function* test_autofilled_prefilled_un() {
+add_task(async function test_autofilled_prefilled_un() {
   let usernameField = $_("-autofilled-prefilled-un", "uname");
   info("Username and password already filled so don't show autocomplete");
   let noPopupPromise = promiseNoUnexpectedPopupShown();
   usernameField.focus();
-  yield noPopupPromise;
+  await noPopupPromise;
 
   removeFocus();
   usernameField.value = "testuser";
   info("Focus when we don't have an exact match");
   shownPromise = promiseACShown();
   usernameField.focus();
-  yield shownPromise;
+  await shownPromise;
 });
 
-add_task(function* test_autofilled_focused_dynamic() {
+add_task(async function test_autofilled_focused_dynamic() {
   let usernameField = $_("-autofilled-focused-dynamic", "uname");
   let passwordField = $_("-autofilled-focused-dynamic", "pword");
   info("Username and password will be filled while username focused");
   let noPopupPromise = promiseNoUnexpectedPopupShown();
   usernameField.focus();
-  yield noPopupPromise;
+  await noPopupPromise;
   info("triggering autofill");
   noPopupPromise = promiseNoUnexpectedPopupShown();
   passwordField.type = "password";
-  yield noPopupPromise;
+  await noPopupPromise;
 
-  let popupState = yield getPopupState();
+  let popupState = await getPopupState();
   is(popupState.open, false, "Check popup is closed");
 
   removeFocus();
@@ -174,76 +174,76 @@ add_task(function* test_autofilled_focused_dynamic() {
   info("Focus when we don't have an exact match");
   shownPromise = promiseACShown();
   usernameField.focus();
-  yield shownPromise;
+  await shownPromise;
 });
 
 // Begin testing forms that have multiple saved logins
 
-add_task(function* test_multiple() {
+add_task(async function test_multiple() {
   let usernameField = $_("-multiple", "uname");
   info("Fields not filled due to multiple so autocomplete upon focus");
   shownPromise = promiseACShown();
   usernameField.focus();
-  yield shownPromise;
+  await shownPromise;
 });
 
-add_task(function* test_multiple_dynamic() {
+add_task(async function test_multiple_dynamic() {
   let usernameField = $_("-multiple-dynamic", "uname");
   let passwordField = $_("-multiple-dynamic", "pword");
   info("Fields not filled but username is focused upon marking so open");
   let noPopupPromise = promiseNoUnexpectedPopupShown();
   usernameField.focus();
-  yield noPopupPromise;
+  await noPopupPromise;
 
   info("triggering _fillForm code");
   let shownPromise = promiseACShown();
   passwordField.type = "password";
-  yield shownPromise;
+  await shownPromise;
 });
 
-add_task(function* test_multiple_prefilled_un1() {
+add_task(async function test_multiple_prefilled_un1() {
   let usernameField = $_("-multiple-prefilled-un1", "uname");
   info("Username and password already filled so don't show autocomplete");
   let noPopupPromise = promiseNoUnexpectedPopupShown();
   usernameField.focus();
-  yield noPopupPromise;
+  await noPopupPromise;
 
   removeFocus();
   usernameField.value = "testuser";
   info("Focus when we don't have an exact match");
   shownPromise = promiseACShown();
   usernameField.focus();
-  yield shownPromise;
+  await shownPromise;
 });
 
-add_task(function* test_multiple_prefilled_un2() {
+add_task(async function test_multiple_prefilled_un2() {
   let usernameField = $_("-multiple-prefilled-un2", "uname");
   info("Username and password already filled so don't show autocomplete");
   let noPopupPromise = promiseNoUnexpectedPopupShown();
   usernameField.focus();
-  yield noPopupPromise;
+  await noPopupPromise;
 
   removeFocus();
   usernameField.value = "testuser";
   info("Focus when we don't have an exact match");
   shownPromise = promiseACShown();
   usernameField.focus();
-  yield shownPromise;
+  await shownPromise;
 });
 
-add_task(function* test_multiple_prefilled_focused_dynamic() {
+add_task(async function test_multiple_prefilled_focused_dynamic() {
   let usernameField = $_("-multiple-prefilled-focused-dynamic", "uname");
   let passwordField = $_("-multiple-prefilled-focused-dynamic", "pword");
   info("Username and password will be filled while username focused");
   let noPopupPromise = promiseNoUnexpectedPopupShown();
   usernameField.focus();
-  yield noPopupPromise;
+  await noPopupPromise;
   info("triggering autofill");
   noPopupPromise = promiseNoUnexpectedPopupShown();
   passwordField.type = "password";
-  yield noPopupPromise;
+  await noPopupPromise;
 
-  let popupState = yield getPopupState();
+  let popupState = await getPopupState();
   is(popupState.open, false, "Check popup is closed");
 
   removeFocus();
@@ -251,10 +251,10 @@ add_task(function* test_multiple_prefilled_focused_dynamic() {
   info("Focus when we don't have an exact match");
   shownPromise = promiseACShown();
   usernameField.focus();
-  yield shownPromise;
+  await shownPromise;
 });
 
-add_task(function* cleanup() {
+add_task(async function cleanup() {
   removeFocus();
 });
 </script>

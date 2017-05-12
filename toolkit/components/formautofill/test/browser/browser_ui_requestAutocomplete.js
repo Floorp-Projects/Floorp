@@ -7,8 +7,8 @@
 
 "use strict";
 
-add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
     set: [["dom.ipc.processCount", 1]]
   });
 });
@@ -17,16 +17,16 @@ add_task(function* setup() {
  * Open the requestAutocomplete UI and test that selecting a profile results in
  * the correct data being sent back to the opener.
  */
-add_task(function* test_select_profile() {
+add_task(async function test_select_profile() {
   // Request an e-mail address.
-  let { uiWindow, promiseResult } = yield FormAutofillTest.showUI(
+  let { uiWindow, promiseResult } = await FormAutofillTest.showUI(
                                           TestData.requestEmailOnly);
 
   // Accept the dialog.
   let acceptButton = uiWindow.document.getElementById("accept");
   EventUtils.synthesizeMouseAtCenter(acceptButton, {}, uiWindow);
 
-  let result = yield promiseResult;
+  let result = await promiseResult;
   Assert.equal(result.fields.length, 1);
   Assert.equal(result.fields[0].section, "");
   Assert.equal(result.fields[0].addressType, "");
@@ -38,16 +38,16 @@ add_task(function* test_select_profile() {
 /**
  * Open the requestAutocomplete UI and cancel the dialog.
  */
-add_task(function* test_cancel() {
+add_task(async function test_cancel() {
   // Request an e-mail address.
-  let { uiWindow, promiseResult } = yield FormAutofillTest.showUI(
+  let { uiWindow, promiseResult } = await FormAutofillTest.showUI(
                                           TestData.requestEmailOnly);
 
   // Cancel the dialog.
   let acceptButton = uiWindow.document.getElementById("cancel");
   EventUtils.synthesizeMouseAtCenter(acceptButton, {}, uiWindow);
 
-  let result = yield promiseResult;
+  let result = await promiseResult;
   Assert.ok(result.canceled);
 });
 

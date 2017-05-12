@@ -37,8 +37,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 
 // DownloadList
 
@@ -228,8 +226,8 @@ this.DownloadList.prototype = {
    *        additional filter.
    */
   removeFinished: function DL_removeFinished(aFilterFn) {
-    Task.spawn(function* () {
-      let list = yield this.getAll();
+    (async () => {
+      let list = await this.getAll();
       for (let download of list) {
         // Remove downloads that have been canceled, even if the cancellation
         // operation hasn't completed yet so we don't check "stopped" here.
@@ -238,7 +236,7 @@ this.DownloadList.prototype = {
             (!aFilterFn || aFilterFn(download))) {
           // Remove the download first, so that the views don't get the change
           // notifications that may occur during finalization.
-          yield this.remove(download);
+          await this.remove(download);
           // Ensure that the download is stopped and no partial data is kept.
           // This works even if the download state has changed meanwhile.  We
           // don't need to wait for the procedure to be complete before
@@ -246,7 +244,7 @@ this.DownloadList.prototype = {
           download.finalize(true).then(null, Cu.reportError);
         }
       }
-    }.bind(this)).then(null, Cu.reportError);
+    })().then(null, Cu.reportError);
   },
 };
 

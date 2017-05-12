@@ -6,19 +6,19 @@
 const TEST_DOMAIN = "http://example.net/";
 const TEST_PATH = TEST_DOMAIN + "browser/browser/components/resistFingerprinting/test/browser/";
 
-add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({"set":
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({"set":
     [["privacy.resistFingerprinting", true]]
   });
 });
 
-add_task(function* test_timezone() {
+add_task(async function test_timezone() {
   // Load a page and verify the timezone.
-  let tab = yield BrowserTestUtils.openNewForegroundTab(
+  let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser, TEST_PATH + "file_dummy.html");
 
-  yield ContentTask.spawn(tab.linkedBrowser, null,
-    function* () {
+  await ContentTask.spawn(tab.linkedBrowser, null,
+    async function() {
       let dateObj = new Date();
       let dateString = dateObj.toString();
 
@@ -34,5 +34,5 @@ add_task(function* test_timezone() {
     }
   );
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });

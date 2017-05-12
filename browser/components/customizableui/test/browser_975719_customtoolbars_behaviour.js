@@ -13,7 +13,7 @@ add_task(function setup() {
   createDummyXULButton(kXULWidgetId, "test-button");
 });
 
-add_task(function* customizeToolbarAndKeepIt() {
+add_task(async function customizeToolbarAndKeepIt() {
   ok(gNavToolbox.toolbarset, "There should be a toolbarset");
   let toolbarID = "testAustralisCustomToolbar";
   gNavToolbox.appendCustomToolbar(toolbarID, "");
@@ -42,9 +42,9 @@ add_task(function* customizeToolbarAndKeepIt() {
   gNavToolbox.toolbarset.setAttribute("toolbar1", toolbarID + ":open-file-button");
   document.persist(gNavToolbox.toolbarset.id, "toolbar1");
 
-  yield startCustomizing();
+  await startCustomizing();
   // First, exit customize mode without doing anything, and verify the toolbar doesn't get removed.
-  yield endCustomizing();
+  await endCustomizing();
   ok(!CustomizableUI.inDefaultState, "Shouldn't be in default state, the toolbar should still be there.");
   cuiAreaType = CustomizableUI.getAreaType(toolbarDOMID);
   is(cuiAreaType, CustomizableUI.TYPE_TOOLBAR,
@@ -53,14 +53,14 @@ add_task(function* customizeToolbarAndKeepIt() {
   ok(toolbarElement.hasChildNodes(), "Toolbar should still have items in it.");
   assertAreaPlacements(toolbarDOMID, ["open-file-button"]);
 
-  let newWindow = yield openAndLoadWindow({}, true);
+  let newWindow = await openAndLoadWindow({}, true);
   is(newWindow.gNavToolbox.toolbarset.getAttribute("toolbar1"),
      gNavToolbox.toolbarset.getAttribute("toolbar1"),
      "Attribute should be the same in new window");
-  yield promiseWindowClosed(newWindow);
+  await promiseWindowClosed(newWindow);
 
   // Then customize again, and this time empty out the toolbar and verify it *does* get removed.
-  yield startCustomizing();
+  await startCustomizing();
   let openFileButton = document.getElementById("open-file-button");
   let palette = document.getElementById("customization-palette");
   simulateItemDrag(openFileButton, palette);
@@ -71,20 +71,20 @@ add_task(function* customizeToolbarAndKeepIt() {
   ok(CustomizableUI.inDefaultState, "Should be in default state because there's now just a collapsed toolbar.");
   toolbarElement.collapsed = false;
   ok(!CustomizableUI.inDefaultState, "Shouldn't be in default state because there's a non-collapsed toolbar again.");
-  yield endCustomizing();
+  await endCustomizing();
   ok(CustomizableUI.inDefaultState, "Should be in default state because the toolbar should have been removed.");
 
-  newWindow = yield openAndLoadWindow({}, true);
+  newWindow = await openAndLoadWindow({}, true);
   ok(!newWindow.gNavToolbox.toolbarset.hasAttribute("toolbar1"),
      "Attribute should be gone in new window");
-  yield promiseWindowClosed(newWindow);
+  await promiseWindowClosed(newWindow);
 
   ok(!toolbarElement.parentNode, "Toolbar should no longer be in the DOM.");
   cuiAreaType = CustomizableUI.getAreaType(toolbarDOMID);
   is(cuiAreaType, null, "CustomizableUI should have forgotten all about the area");
 });
 
-add_task(function* resetShouldDealWithCustomToolbars() {
+add_task(async function resetShouldDealWithCustomToolbars() {
   ok(gNavToolbox.toolbarset, "There should be a toolbarset");
   let toolbarID = "testAustralisCustomToolbar";
   gNavToolbox.appendCustomToolbar(toolbarID, "");
@@ -113,18 +113,18 @@ add_task(function* resetShouldDealWithCustomToolbars() {
   gNavToolbox.toolbarset.setAttribute("toolbar2", `${toolbarID}:${kXULWidgetId}`);
   document.persist(gNavToolbox.toolbarset.id, "toolbar2");
 
-  let newWindow = yield openAndLoadWindow({}, true);
+  let newWindow = await openAndLoadWindow({}, true);
   is(newWindow.gNavToolbox.toolbarset.getAttribute("toolbar2"),
      gNavToolbox.toolbarset.getAttribute("toolbar2"),
      "Attribute should be the same in new window");
-  yield promiseWindowClosed(newWindow);
+  await promiseWindowClosed(newWindow);
 
   CustomizableUI.reset();
 
-  newWindow = yield openAndLoadWindow({}, true);
+  newWindow = await openAndLoadWindow({}, true);
   ok(!newWindow.gNavToolbox.toolbarset.hasAttribute("toolbar2"),
      "Attribute should be gone in new window");
-  yield promiseWindowClosed(newWindow);
+  await promiseWindowClosed(newWindow);
 
   ok(CustomizableUI.inDefaultState, "Should be in default state after reset.");
   let xulButton = document.getElementById(kXULWidgetId);
@@ -137,9 +137,9 @@ add_task(function* resetShouldDealWithCustomToolbars() {
 });
 
 
-add_task(function*() {
-  let newWin = yield openAndLoadWindow({}, true);
+add_task(async function() {
+  let newWin = await openAndLoadWindow({}, true);
   ok(!newWin.gNavToolbox.toolbarset.hasAttribute("toolbar1"), "New window shouldn't have attribute toolbar1");
   ok(!newWin.gNavToolbox.toolbarset.hasAttribute("toolbar2"), "New window shouldn't have attribute toolbar2");
-  yield promiseWindowClosed(newWin);
+  await promiseWindowClosed(newWin);
 });

@@ -109,7 +109,7 @@ function loadAndWait(win, event, url, script) {
   return new Promise(resolve => { completedResolve = resolve; });
 }
 
-add_task(function* webnav_transitions_props() {
+add_task(async function webnav_transitions_props() {
   function backgroundScriptTransitions() {
     const EVENTS = [
       "onCommitted",
@@ -152,16 +152,16 @@ add_task(function* webnav_transitions_props() {
     }
   });
 
-  yield Promise.all([extension.startup(), extension.awaitMessage("ready")]);
+  await Promise.all([extension.startup(), extension.awaitMessage("ready")]);
   info("webnavigation extension loaded");
 
   let win = window.open();
 
-  yield loadAndWait(win, "onCompleted", URL, () => { win.location = URL; });
+  await loadAndWait(win, "onCompleted", URL, () => { win.location = URL; });
 
   // transitionType: reload
   received = [];
-  yield loadAndWait(win, "onCompleted", URL, () => { win.location.reload(); });
+  await loadAndWait(win, "onCompleted", URL, () => { win.location.reload(); });
 
   let found = received.find((data) => (data.event == "onCommitted" && data.url == URL));
 
@@ -188,7 +188,7 @@ add_task(function* webnav_transitions_props() {
 
   // transitionType: form_submit
   received = [];
-  yield loadAndWait(win, "onCompleted", URL, () => {
+  await loadAndWait(win, "onCompleted", URL, () => {
     win.document.querySelector("form").submit();
   });
 
@@ -205,7 +205,7 @@ add_task(function* webnav_transitions_props() {
 
   // transitionQualifier: server_redirect
   received = [];
-  yield loadAndWait(win, "onCompleted", REDIRECTED, () => { win.location = REDIRECT; });
+  await loadAndWait(win, "onCompleted", REDIRECTED, () => { win.location = REDIRECT; });
 
   found = received.find((data) => (data.event == "onCommitted" && data.url == REDIRECTED));
 
@@ -221,7 +221,7 @@ add_task(function* webnav_transitions_props() {
 
   // transitionQualifier: forward_back
   received = [];
-  yield loadAndWait(win, "onCompleted", URL, () => { win.history.back(); });
+  await loadAndWait(win, "onCompleted", URL, () => { win.history.back(); });
 
   found = received.find((data) => (data.event == "onCommitted" && data.url == URL));
 
@@ -238,7 +238,7 @@ add_task(function* webnav_transitions_props() {
   // transitionQualifier: client_redirect
   // (from meta http-equiv tag)
   received = [];
-  yield loadAndWait(win, "onCompleted", REDIRECTED, () => {
+  await loadAndWait(win, "onCompleted", REDIRECTED, () => {
     win.location = CLIENT_REDIRECT;
   });
 
@@ -257,7 +257,7 @@ add_task(function* webnav_transitions_props() {
   // transitionQualifier: client_redirect
   // (from http headers)
   received = [];
-  yield loadAndWait(win, "onCompleted", REDIRECTED, () => {
+  await loadAndWait(win, "onCompleted", REDIRECTED, () => {
     win.location = CLIENT_REDIRECT_HTTPHEADER;
   });
 
@@ -277,7 +277,7 @@ add_task(function* webnav_transitions_props() {
   // transitionQualifier: client_redirect (sub-frame)
   // (from meta http-equiv tag)
   received = [];
-  yield loadAndWait(win, "onCompleted", REDIRECTED, () => {
+  await loadAndWait(win, "onCompleted", REDIRECTED, () => {
     win.location = FRAME_CLIENT_REDIRECT;
   });
 
@@ -295,7 +295,7 @@ add_task(function* webnav_transitions_props() {
 
   // transitionQualifier: server_redirect (sub-frame)
   received = [];
-  yield loadAndWait(win, "onCompleted", REDIRECTED, () => { win.location = FRAME_REDIRECT; });
+  await loadAndWait(win, "onCompleted", REDIRECTED, () => { win.location = FRAME_REDIRECT; });
 
   found = received.find((data) => (data.event == "onCommitted" && data.url == REDIRECT));
 
@@ -314,7 +314,7 @@ add_task(function* webnav_transitions_props() {
 
   // transitionType: manual_subframe
   received = [];
-  yield loadAndWait(win, "onCompleted", FRAME_MANUAL, () => { win.location = FRAME_MANUAL; });
+  await loadAndWait(win, "onCompleted", FRAME_MANUAL, () => { win.location = FRAME_MANUAL; });
   found = received.find((data) => (data.event == "onCommitted" &&
                                    data.url == FRAME_MANUAL_PAGE1));
 
@@ -326,7 +326,7 @@ add_task(function* webnav_transitions_props() {
   }
 
   received = [];
-  yield loadAndWait(win, "onCompleted", FRAME_MANUAL_PAGE2, () => {
+  await loadAndWait(win, "onCompleted", FRAME_MANUAL_PAGE2, () => {
     let el = win.document.querySelector("iframe")
                 .contentDocument.querySelector("a");
     sendMouseEvent({type: "click"}, el, win);
@@ -350,10 +350,10 @@ add_task(function* webnav_transitions_props() {
   // Test transitions properties on onHistoryStateUpdated events.
 
   received = [];
-  yield loadAndWait(win, "onCompleted", FRAME2, () => { win.location = FRAME2; });
+  await loadAndWait(win, "onCompleted", FRAME2, () => { win.location = FRAME2; });
 
   received = [];
-  yield loadAndWait(win, "onHistoryStateUpdated", `${FRAME2}/pushState`, () => {
+  await loadAndWait(win, "onHistoryStateUpdated", `${FRAME2}/pushState`, () => {
     win.history.pushState({}, "History PushState", `${FRAME2}/pushState`);
   });
 
@@ -372,7 +372,7 @@ add_task(function* webnav_transitions_props() {
    // Test transitions properties on onReferenceFragmentUpdated events.
 
   received = [];
-  yield loadAndWait(win, "onReferenceFragmentUpdated", `${FRAME2}/pushState#ref2`, () => {
+  await loadAndWait(win, "onReferenceFragmentUpdated", `${FRAME2}/pushState#ref2`, () => {
     win.history.pushState({}, "ReferenceFragment Update", `${FRAME2}/pushState#ref2`);
   });
 
@@ -391,11 +391,11 @@ add_task(function* webnav_transitions_props() {
   // cleanup phase
   win.close();
 
-  yield extension.unload();
+  await extension.unload();
   info("webnavigation extension unloaded");
 });
 
-add_task(function* webnav_ordering() {
+add_task(async function webnav_ordering() {
   let extensionData = {
     manifest: {
       permissions: [
@@ -415,13 +415,13 @@ add_task(function* webnav_ordering() {
     }
   });
 
-  yield extension.startup();
-  yield extension.awaitMessage("ready");
+  await extension.startup();
+  await extension.awaitMessage("ready");
   info("webnavigation extension loaded");
 
   let win = window.open();
 
-  yield loadAndWait(win, "onCompleted", URL, () => { win.location = URL; });
+  await loadAndWait(win, "onCompleted", URL, () => { win.location = URL; });
 
   function checkRequired(url) {
     for (let event of REQUIRED) {
@@ -475,7 +475,7 @@ add_task(function* webnav_ordering() {
     checkBefore({url: FRAME, event: before}, {url: FRAME, event: after});
   }
 
-  yield loadAndWait(win, "onCompleted", FRAME2, () => { win.frames[0].location = FRAME2; });
+  await loadAndWait(win, "onCompleted", FRAME2, () => { win.frames[0].location = FRAME2; });
 
   checkRequired(FRAME2);
 
@@ -525,7 +525,7 @@ add_task(function* webnav_ordering() {
   for (let navigation of navigationSequence) {
     let {expectedEvent, waitURL, action, description} = navigation;
     info(`Waiting ${expectedEvent} from ${waitURL} - ${description}`);
-    yield loadAndWait(win, expectedEvent, waitURL, action);
+    await loadAndWait(win, expectedEvent, waitURL, action);
     info(`Received ${expectedEvent} from ${waitURL} - ${description}`);
   }
 
@@ -533,7 +533,7 @@ add_task(function* webnav_ordering() {
     let {waitURL: fromURL, expectedEvent} = navigationSequence[i];
     let {waitURL} = navigationSequence[i - 1];
     info(`Waiting ${expectedEvent} from ${waitURL} - history.back() from ${fromURL} to ${waitURL}`);
-    yield loadAndWait(win, expectedEvent, waitURL, () => { win.frames[0].history.back(); });
+    await loadAndWait(win, expectedEvent, waitURL, () => { win.frames[0].history.back(); });
     info(`Received ${expectedEvent} from ${waitURL} - history.back() from ${fromURL} to ${waitURL}`);
   }
 
@@ -541,17 +541,17 @@ add_task(function* webnav_ordering() {
     let {waitURL: fromURL} = navigationSequence[i];
     let {waitURL, expectedEvent} = navigationSequence[i + 1];
     info(`Waiting ${expectedEvent} from ${waitURL} - history.forward() from ${fromURL} to ${waitURL}`);
-    yield loadAndWait(win, expectedEvent, waitURL, () => { win.frames[0].history.forward(); });
+    await loadAndWait(win, expectedEvent, waitURL, () => { win.frames[0].history.forward(); });
     info(`Received ${expectedEvent} from ${waitURL} - history.forward() from ${fromURL} to ${waitURL}`);
   }
 
   win.close();
 
-  yield extension.unload();
+  await extension.unload();
   info("webnavigation extension unloaded");
 });
 
-add_task(function* webnav_error_event() {
+add_task(async function webnav_error_event() {
   function backgroundScriptErrorEvent() {
     browser.webNavigation.onErrorOccurred.addListener((details) => {
       browser.test.log(`Got onErrorOccurred ${details.url} ${details.error}`);
@@ -581,13 +581,13 @@ add_task(function* webnav_error_event() {
     }
   });
 
-  yield Promise.all([extension.startup(), extension.awaitMessage("ready")]);
+  await Promise.all([extension.startup(), extension.awaitMessage("ready")]);
   info("webnavigation extension loaded");
 
   let win = window.open();
 
   received = [];
-  yield loadAndWait(win, "onErrorOccurred", INVALID_PAGE, () => { win.location = INVALID_PAGE; });
+  await loadAndWait(win, "onErrorOccurred", INVALID_PAGE, () => { win.location = INVALID_PAGE; });
 
   let found = received.find((data) => (data.event == "onErrorOccurred" &&
                                    data.url == INVALID_PAGE));
@@ -602,7 +602,7 @@ add_task(function* webnav_error_event() {
   // cleanup phase
   win.close();
 
-  yield extension.unload();
+  await extension.unload();
   info("webnavigation extension unloaded");
 });
 </script>

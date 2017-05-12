@@ -1,19 +1,19 @@
-add_task(function*() {
-  yield PlacesTestUtils.clearHistory();
+add_task(async function() {
+  await PlacesTestUtils.clearHistory();
 
-  yield PlacesTestUtils.addVisits([
+  await PlacesTestUtils.addVisits([
     { uri: makeURI("http://example.com/foo") },
     { uri: makeURI("http://example.com/foo/bar") },
   ]);
 
-  registerCleanupFunction(function* () {
-    yield PlacesTestUtils.clearHistory();
+  registerCleanupFunction(async function() {
+    await PlacesTestUtils.clearHistory();
   });
 
   gBrowser.selectedTab = gBrowser.addTab("about:blank");
   gURLBar.focus();
 
-  yield promiseAutocompleteResultPopup("http://example.com");
+  await promiseAutocompleteResultPopup("http://example.com");
 
   let popup = gURLBar.popup;
   let list = popup.richlistbox;
@@ -29,7 +29,7 @@ add_task(function*() {
 
   info("Press backspace");
   EventUtils.synthesizeKey("VK_BACK_SPACE", {});
-  yield promiseSearchComplete();
+  await promiseSearchComplete();
 
   let editedValue = gURLBar.textValue;
   is(list.selectedIndex, initialIndex, "The initial index is selected again.");
@@ -39,7 +39,7 @@ add_task(function*() {
 
   info("Press return to load edited URL.");
   EventUtils.synthesizeKey("VK_RETURN", {});
-  yield Promise.all([
+  await Promise.all([
     promisePopupHidden(gURLBar.popup),
     docLoad,
   ]);

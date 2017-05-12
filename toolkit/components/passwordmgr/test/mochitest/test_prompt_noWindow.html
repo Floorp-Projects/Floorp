@@ -34,7 +34,7 @@ runInParent(() => {
   Services.logins.addLogin(login);
 });
 
-add_task(function* test_sandbox_xhr() {
+add_task(async function test_sandbox_xhr() {
   let state = {
     msg: "http://mochi.test:8888 is requesting your username and password. The site says: “mochitest”",
     title: "Authentication Required",
@@ -70,10 +70,10 @@ add_task(function* test_sandbox_xhr() {
   info("send the XHR request in the sandbox");
   SpecialPowers.Cu.evalInSandbox("sandboxedRequest;", sandbox);
 
-  yield promptDone;
+  await promptDone;
   info("prompt shown, waiting for metadata updates");
   // Ensure the timeLastUsed and timesUsed metadata are updated.
-  yield loginModifiedPromise;
+  await loginModifiedPromise;
 });
 </script>
 </pre>

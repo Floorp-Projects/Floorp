@@ -23,11 +23,11 @@ let loadPromise = new Promise(resolve => {
   });
 });
 
-add_task(function* setup() {
+add_task(async function setup() {
   info("Waiting for page and frame loads");
-  yield loadPromise;
+  await loadPromise;
 
-  yield loadRecipes({
+  await loadRecipes({
     siteRecipes: [{
       hosts: ["mochi.test:8888"],
       usernameSelector: "input[name='recipeuname']",
@@ -134,7 +134,7 @@ function getSubmitMessage() {
   });
 }
 
-add_task(function* test() {
+add_task(async function test() {
   let loginFrame = document.getElementById("loginFrame");
   let frameDoc = loginFrame.contentWindow.document;
 
@@ -149,7 +149,7 @@ add_task(function* test() {
     let processedPromise = getSubmitMessage();
     LoginManagerContent._onFormSubmit(formLike);
 
-    let submittedResult = yield processedPromise;
+    let submittedResult = await processedPromise;
 
     // Check data sent via RemoteLogins:onFormSubmit
     is(submittedResult.hostname, tc.hostname, "Check hostname");

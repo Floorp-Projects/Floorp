@@ -19,6 +19,7 @@ OS_LDFLAGS += \
   -Wl,-U,_replace_jemalloc_stats \
   -Wl,-U,_replace_jemalloc_purge_freed_pages \
   -Wl,-U,_replace_jemalloc_free_dirty_pages \
+  -Wl,-U,_replace_jemalloc_thread_local_arena \
   $(NULL)
 
 ifneq ($(MOZ_REPLACE_MALLOC_LINKAGE),compiler support)

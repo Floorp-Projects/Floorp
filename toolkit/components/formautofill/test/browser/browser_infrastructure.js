@@ -10,39 +10,39 @@
 /**
  * Tests the truth assertion function.
  */
-add_task(function* test_assert_truth() {
+add_task(async function test_assert_truth() {
   Assert.ok(1 != 2);
 });
 
 /**
  * Tests the equality assertion function.
  */
-add_task(function* test_assert_equality() {
+add_task(async function test_assert_equality() {
   Assert.equal(1 + 1, 2);
 });
 
 /**
  * Uses some of the utility functions provided by the framework.
  */
-add_task(function* test_utility_functions() {
+add_task(async function test_utility_functions() {
   // The "print" function is useful to log information that is not known before.
   let randomString = "R" + Math.floor(Math.random() * 10);
   Output.print("The random contents will be '" + randomString + "'.");
 
   // Create the text file with the random contents.
-  let path = yield TestUtils.getTempFile("test-infrastructure.txt");
-  yield OS.File.writeAtomic(path, new TextEncoder().encode(randomString));
+  let path = await TestUtils.getTempFile("test-infrastructure.txt");
+  await OS.File.writeAtomic(path, new TextEncoder().encode(randomString));
 
   // Test a few utility functions.
-  yield TestUtils.waitForTick();
-  yield TestUtils.waitMs(50);
+  await TestUtils.waitForTick();
+  await TestUtils.waitMs(50);
 
   let promiseMyNotification = TestUtils.waitForNotification("my-topic");
   Services.obs.notifyObservers(null, "my-topic");
-  yield promiseMyNotification;
+  await promiseMyNotification;
 
   // Check the file size.  The file will be deleted automatically later.
-  Assert.equal((yield OS.File.stat(path)).size, randomString.length);
+  Assert.equal((await OS.File.stat(path)).size, randomString.length);
 });
 
 add_task(terminationTaskFn);

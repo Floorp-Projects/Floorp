@@ -36,6 +36,6 @@ add_task(function testAddbrokenViewWidget() {
   ok(noError, "Should not throw an exception trying to remove the broken view widget.");
 });
 
-add_task(function* asyncCleanup() {
-  yield resetCustomization();
+add_task(async function asyncCleanup() {
+  await resetCustomization();
 });

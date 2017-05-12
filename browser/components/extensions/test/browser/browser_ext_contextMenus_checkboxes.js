@@ -2,8 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* () {
-  let tab1 = yield BrowserTestUtils.openNewForegroundTab(gBrowser,
+add_task(async function() {
+  let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser,
     "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html");
 
   gBrowser.selectedTab = tab1;
@@ -43,8 +43,8 @@ add_task(function* () {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("contextmenus-checkboxes");
+  await extension.startup();
+  await extension.awaitFinish("contextmenus-checkboxes");
 
   function confirmCheckboxStates(extensionMenuRoot, expectedStates) {
     let checkboxItems = extensionMenuRoot.getElementsByAttribute("type", "checkbox");
@@ -63,34 +63,34 @@ add_task(function* () {
     is(onClickData.checked, checked, `checkbox item ${id} is ${checked ? "" : "not "}checked after the click`);
   }
 
-  let extensionMenuRoot = yield openExtensionContextMenu();
+  let extensionMenuRoot = await openExtensionContextMenu();
   let items = confirmCheckboxStates(extensionMenuRoot, [false, true, false]);
-  yield closeExtensionContextMenu(items[0]);
+  await closeExtensionContextMenu(items[0]);
 
-  let result = yield extension.awaitMessage("contextmenus-click");
+  let result = await extension.awaitMessage("contextmenus-click");
   confirmOnClickData(result, 1, false, true);
 
-  extensionMenuRoot = yield openExtensionContextMenu();
+  extensionMenuRoot = await openExtensionContextMenu();
   items = confirmCheckboxStates(extensionMenuRoot, [true, true, false]);
-  yield closeExtensionContextMenu(items[2]);
+  await closeExtensionContextMenu(items[2]);
 
-  result = yield extension.awaitMessage("contextmenus-click");
+  result = await extension.awaitMessage("contextmenus-click");
   confirmOnClickData(result, 3, false, true);
 
-  extensionMenuRoot = yield openExtensionContextMenu();
+  extensionMenuRoot = await openExtensionContextMenu();
   items = confirmCheckboxStates(extensionMenuRoot, [true, true, true]);
-  yield closeExtensionContextMenu(items[0]);
+  await closeExtensionContextMenu(items[0]);
 
-  result = yield extension.awaitMessage("contextmenus-click");
+  result = await extension.awaitMessage("contextmenus-click");
   confirmOnClickData(result, 1, true, false);
 
-  extensionMenuRoot = yield openExtensionContextMenu();
+  extensionMenuRoot = await openExtensionContextMenu();
   items = confirmCheckboxStates(extensionMenuRoot, [false, true, true]);
-  yield closeExtensionContextMenu(items[2]);
+  await closeExtensionContextMenu(items[2]);
 
-  result = yield extension.awaitMessage("contextmenus-click");
+  result = await extension.awaitMessage("contextmenus-click");
   confirmOnClickData(result, 3, true, false);
 
-  yield extension.unload();
-  yield BrowserTestUtils.removeTab(tab1);
+  await extension.unload();
+  await BrowserTestUtils.removeTab(tab1);
 });

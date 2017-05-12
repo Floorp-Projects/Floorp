@@ -8,23 +8,23 @@ const kURL =
  * Check that when manually opening content JS links in new tabs/windows,
  * we use the correct principal, and we don't clear the URL bar.
  */
-add_task(function* () {
- yield BrowserTestUtils.withNewTab(kURL, function* (browser) {
+add_task(async function() {
+ await BrowserTestUtils.withNewTab(kURL, async function(browser) {
    let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
-   yield ContentTask.spawn(browser, null, function* () {
+   await ContentTask.spawn(browser, null, async function() {
      let a = content.document.createElement("a");
      a.href = "javascript:document.write('spoof'); void(0);";
      a.textContent = "Some link";
      content.document.body.appendChild(a);
    });
    info("Added element");
-   yield BrowserTestUtils.synthesizeMouseAtCenter("a", {button: 1}, browser);
-   let newTab = yield newTabPromise;
+   await BrowserTestUtils.synthesizeMouseAtCenter("a", {button: 1}, browser);
+   let newTab = await newTabPromise;
    is(newTab.linkedBrowser.contentPrincipal.origin, "http://example.com",
       "Principal should be for example.com");
-   yield BrowserTestUtils.switchTab(gBrowser, newTab);
+   await BrowserTestUtils.switchTab(gBrowser, newTab);
    info(gURLBar.value);
    isnot(gURLBar.value, "", "URL bar should not be empty.");
-   yield BrowserTestUtils.removeTab(newTab);
+   await BrowserTestUtils.removeTab(newTab);
  });
 });

@@ -4,10 +4,10 @@
 
 "use strict";
 
-add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   info("Check new window button existence and functionality");
-  yield PanelUI.show();
+  await PanelUI.show();
   info("Menu panel was opened");
 
   let windowWasHandled = false;
@@ -34,8 +34,8 @@ add_task(function*() {
   newWindowButton.click();
 
   try {
-    yield waitForCondition(() => windowWasHandled);
-    yield promiseWindowClosed(newWindow);
+    await waitForCondition(() => windowWasHandled);
+    await promiseWindowClosed(newWindow);
     info("The new window was closed");
   } catch (e) {
     ok(false, "The new browser window was not properly handled");

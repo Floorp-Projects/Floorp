@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* test_alarm_without_permissions() {
+add_task(async function test_alarm_without_permissions() {
   function backgroundScript() {
     browser.test.assertTrue(!browser.alarms,
                             "alarm API is not available when the alarm permission is not required");
@@ -16,13 +16,13 @@ add_task(function* test_alarm_without_permissions() {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("alarms_permission");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("alarms_permission");
+  await extension.unload();
 });
 
 
-add_task(function* test_alarm_fires() {
+add_task(async function test_alarm_fires() {
   function backgroundScript() {
     let ALARM_NAME = "test_ext_alarms";
     let timer;
@@ -50,16 +50,16 @@ add_task(function* test_alarm_fires() {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("alarm-fires");
+  await extension.startup();
+  await extension.awaitFinish("alarm-fires");
 
   // Defer unloading the extension so the asynchronous event listener
   // reply finishes.
-  yield new Promise(resolve => setTimeout(resolve, 0));
-  yield extension.unload();
+  await new Promise(resolve => setTimeout(resolve, 0));
+  await extension.unload();
 });
 
-add_task(function* test_alarm_fires_with_when() {
+add_task(async function test_alarm_fires_with_when() {
   function backgroundScript() {
     let ALARM_NAME = "test_ext_alarms";
     let timer;
@@ -87,16 +87,16 @@ add_task(function* test_alarm_fires_with_when() {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("alarm-when");
+  await extension.startup();
+  await extension.awaitFinish("alarm-when");
 
   // Defer unloading the extension so the asynchronous event listener
   // reply finishes.
-  yield new Promise(resolve => setTimeout(resolve, 0));
-  yield extension.unload();
+  await new Promise(resolve => setTimeout(resolve, 0));
+  await extension.unload();
 });
 
-add_task(function* test_alarm_clear_non_matching_name() {
+add_task(async function test_alarm_clear_non_matching_name() {
   async function backgroundScript() {
     let ALARM_NAME = "test_ext_alarms";
 
@@ -117,12 +117,12 @@ add_task(function* test_alarm_clear_non_matching_name() {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("alarm-clear");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("alarm-clear");
+  await extension.unload();
 });
 
-add_task(function* test_alarm_get_and_clear_single_argument() {
+add_task(async function test_alarm_get_and_clear_single_argument() {
   async function backgroundScript() {
     browser.alarms.create({when: Date.now() + 2000});
 
@@ -145,13 +145,13 @@ add_task(function* test_alarm_get_and_clear_single_argument() {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("alarm-single-arg");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("alarm-single-arg");
+  await extension.unload();
 });
 
 
-add_task(function* test_get_get_all_clear_all_alarms() {
+add_task(async function test_get_get_all_clear_all_alarms() {
   async function backgroundScript() {
     const ALARM_NAME = "test_alarm";
 
@@ -201,7 +201,7 @@ add_task(function* test_get_get_all_clear_all_alarms() {
     },
   });
 
-  yield Promise.all([
+  await Promise.all([
     extension.startup(),
     extension.awaitMessage("getAll"),
     extension.awaitMessage("get-0"),
@@ -211,5 +211,5 @@ add_task(function* test_get_get_all_clear_all_alarms() {
     extension.awaitMessage("get-invalid"),
     extension.awaitMessage("clearAll"),
   ]);
-  yield extension.unload();
+  await extension.unload();
 });

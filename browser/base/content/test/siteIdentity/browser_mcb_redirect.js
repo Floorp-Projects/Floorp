@@ -90,9 +90,9 @@ function test1() {
 function checkUIForTest1() {
   assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
 
-  ContentTask.spawn(gTestBrowser, null, function* () {
+  ContentTask.spawn(gTestBrowser, null, async function() {
     var expected = "script blocked";
-    yield ContentTaskUtils.waitForCondition(
+    await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("mctestdiv").innerHTML == expected,
       "OK: Expected result in innerHTML for Test1!");
   }).then(test2);
@@ -109,9 +109,9 @@ function test2() {
 function checkUIForTest2() {
   assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: false, passiveLoaded: false});
 
-  ContentTask.spawn(gTestBrowser, null, function* () {
+  ContentTask.spawn(gTestBrowser, null, async function() {
     var expected = "script executed";
-    yield ContentTaskUtils.waitForCondition(
+    await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("mctestdiv").innerHTML == expected,
       "OK: Expected result in innerHTML for Test2!");
   }).then(test3);
@@ -127,9 +127,9 @@ function test3() {
 }
 
 function checkLoadEventForTest3() {
-  ContentTask.spawn(gTestBrowser, null, function* () {
+  ContentTask.spawn(gTestBrowser, null, async function() {
     var expected = "image blocked"
-    yield ContentTaskUtils.waitForCondition(
+    await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("mctestdiv").innerHTML == expected,
       "OK: Expected result in innerHTML for Test3!");
   }).then(test4);
@@ -145,9 +145,9 @@ function test4() {
 }
 
 function checkLoadEventForTest4() {
-  ContentTask.spawn(gTestBrowser, null, function* () {
+  ContentTask.spawn(gTestBrowser, null, async function() {
     var expected = "image loaded"
-    yield ContentTaskUtils.waitForCondition(
+    await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("mctestdiv").innerHTML == expected,
       "OK: Expected result in innerHTML for Test4!");
   }).then(test5);
@@ -168,9 +168,9 @@ function test5() {
 }
 
 function checkLoadEventForTest5() {
-  ContentTask.spawn(gTestBrowser, null, function* () {
+  ContentTask.spawn(gTestBrowser, null, async function() {
     var expected = "image loaded"
-    yield ContentTaskUtils.waitForCondition(
+    await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("mctestdiv").innerHTML == expected,
       "OK: Expected result in innerHTML for Test5!");
   }).then(() => {
@@ -195,9 +195,9 @@ function test6() {
 }
 
 function checkLoadEventForTest6() {
-  ContentTask.spawn(gTestBrowser, null, function* () {
+  ContentTask.spawn(gTestBrowser, null, async function() {
     var expected = "image blocked"
-    yield ContentTaskUtils.waitForCondition(
+    await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("mctestdiv").innerHTML == expected,
       "OK: Expected result in innerHTML for Test6!");
   }).then(() => {
@@ -216,9 +216,9 @@ function test7() {
 }
 
 function checkLoadEventForTest7() {
-  ContentTask.spawn(gTestBrowser, null, function* () {
+  ContentTask.spawn(gTestBrowser, null, async function() {
     var expected = "image loaded"
-    yield ContentTaskUtils.waitForCondition(
+    await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("mctestdiv").innerHTML == expected,
       "OK: Expected result in innerHTML for Test7!");
   }).then(test8);
@@ -238,9 +238,9 @@ function test8() {
 }
 
 function checkLoadEventForTest8() {
-  ContentTask.spawn(gTestBrowser, null, function* () {
+  ContentTask.spawn(gTestBrowser, null, async function() {
     var expected = "image loaded"
-    yield ContentTaskUtils.waitForCondition(
+    await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("mctestdiv").innerHTML == expected,
       "OK: Expected result in innerHTML for Test8!");
   }).then(() => {
@@ -264,9 +264,9 @@ function test9() {
 }
 
 function checkLoadEventForTest9() {
-  ContentTask.spawn(gTestBrowser, null, function* () {
+  ContentTask.spawn(gTestBrowser, null, async function() {
     var expected = "image blocked"
-    yield ContentTaskUtils.waitForCondition(
+    await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("mctestdiv").innerHTML == expected,
       "OK: Expected result in innerHTML for Test9!");
   }).then(() => {

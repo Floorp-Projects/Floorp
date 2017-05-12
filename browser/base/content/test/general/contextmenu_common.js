@@ -257,7 +257,7 @@ let lastElementSelector = null;
  *        postCheckContextMenuFn: callback to run after opening menu
  * @return {Promise} resolved after the test finishes
  */
-function* test_contextmenu(selector, menuItems, options = {}) {
+async function test_contextmenu(selector, menuItems, options = {}) {
   contextMenu = document.getElementById("contentAreaContextMenu");
   is(contextMenu.state, "closed", "checking if popup is closed");
 
@@ -267,9 +267,9 @@ function* test_contextmenu(selector, menuItems, options = {}) {
   }
 
   if (!options.skipFocusChange) {
-    yield ContentTask.spawn(gBrowser.selectedBrowser,
+    await ContentTask.spawn(gBrowser.selectedBrowser,
                             [lastElementSelector, selector],
-                            function*([contentLastElementSelector, contentSelector]) {
+                            async function([contentLastElementSelector, contentSelector]) {
       if (contentLastElementSelector) {
         let contentLastElement = content.document.querySelector(contentLastElementSelector);
         contentLastElement.blur();
@@ -282,35 +282,35 @@ function* test_contextmenu(selector, menuItems, options = {}) {
   }
 
   if (options.preCheckContextMenuFn) {
-    yield options.preCheckContextMenuFn();
+    await options.preCheckContextMenuFn();
     info("Completed preCheckContextMenuFn");
   }
 
   if (options.waitForSpellCheck) {
     info("Waiting for spell check");
-    yield ContentTask.spawn(gBrowser.selectedBrowser, selector, function*(contentSelector) {
+    await ContentTask.spawn(gBrowser.selectedBrowser, selector, async function(contentSelector) {
       let {onSpellCheck} =
         Cu.import("resource://testing-common/AsyncSpellCheckTestHelper.jsm",
                   {});
       let element = content.document.querySelector(contentSelector);
-      yield new Promise(resolve => onSpellCheck(element, resolve));
+      await new Promise(resolve => onSpellCheck(element, resolve));
       info("Spell check running");
     });
   }
 
   let awaitPopupShown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
-  yield BrowserTestUtils.synthesizeMouse(selector, options.offsetX || 0, options.offsetY || 0, {
+  await BrowserTestUtils.synthesizeMouse(selector, options.offsetX || 0, options.offsetY || 0, {
       type: "contextmenu",
       button: 2,
       shiftkey: options.shiftkey,
       centered: options.centered
     },
     gBrowser.selectedBrowser);
-  yield awaitPopupShown;
+  await awaitPopupShown;
   info("Popup Shown");
 
   if (options.onContextMenuShown) {
-    yield options.onContextMenuShown();
+    await options.onContextMenuShown();
     info("Completed onContextMenuShown");
   }
 
@@ -338,10 +338,10 @@ function* test_contextmenu(selector, menuItems, options = {}) {
   let awaitPopupHidden = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
 
   if (options.postCheckContextMenuFn) {
-    yield options.postCheckContextMenuFn();
+    await options.postCheckContextMenuFn();
     info("Completed postCheckContextMenuFn");
   }
 
   contextMenu.hidePopup();
-  yield awaitPopupHidden;
+  await awaitPopupHidden;
 }

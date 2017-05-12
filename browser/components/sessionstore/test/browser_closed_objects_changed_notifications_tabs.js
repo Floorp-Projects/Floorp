@@ -9,32 +9,32 @@ const TOPIC = "sessionstore-closed-objects-changed";
 
 let notificationsCount = 0;
 
-function* openWindow(url) {
-  let win = yield promiseNewWindowLoaded();
+async function openWindow(url) {
+  let win = await promiseNewWindowLoaded();
   let flags = Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY;
   win.gBrowser.selectedBrowser.loadURIWithFlags(url, flags);
-  yield promiseBrowserLoaded(win.gBrowser.selectedBrowser, true, url);
+  await promiseBrowserLoaded(win.gBrowser.selectedBrowser, true, url);
   return win;
 }
 
-function* closeWindow(win) {
-  yield awaitNotification(() => BrowserTestUtils.closeWindow(win));
+async function closeWindow(win) {
+  await awaitNotification(() => BrowserTestUtils.closeWindow(win));
 }
 
-function* openAndCloseWindow(url) {
-  let win = yield openWindow(url);
-  yield closeWindow(win);
+async function openAndCloseWindow(url) {
+  let win = await openWindow(url);
+  await closeWindow(win);
 }
 
-function* openTab(window, url) {
-  let tab = yield BrowserTestUtils.openNewForegroundTab(window.gBrowser, url);
-  yield TabStateFlusher.flush(tab.linkedBrowser);
+async function openTab(window, url) {
+  let tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser, url);
+  await TabStateFlusher.flush(tab.linkedBrowser);
   return tab;
 }
 
-function* openAndCloseTab(window, url) {
-  let tab = yield openTab(window, url);
-  yield promiseRemoveTab(tab);
+async function openAndCloseTab(window, url) {
+  let tab = await openTab(window, url);
+  await promiseRemoveTab(tab);
 }
 
 function countingObserver() {
@@ -45,56 +45,56 @@ function assertNotificationCount(count) {
   is(notificationsCount, count, "The expected number of notifications was received.");
 }
 
-function* awaitNotification(callback) {
+async function awaitNotification(callback) {
   let notification = TestUtils.topicObserved(TOPIC);
   executeSoon(callback);
-  yield notification;
+  await notification;
 }
 
-add_task(function* test_closedObjectsChangedNotifications() {
+add_task(async function test_closedObjectsChangedNotifications() {
   // Create a closed window so that when we do the purge we can expect a notification.
-  yield openAndCloseWindow("about:robots");
+  await openAndCloseWindow("about:robots");
 
   // Forget any previous closed windows or tabs from other tests that may have
   // run in the same session.
-  yield awaitNotification(() => Services.obs.notifyObservers(null, "browser:purge-session-history"));
+  await awaitNotification(() => Services.obs.notifyObservers(null, "browser:purge-session-history"));
 
   // Add an observer to count the number of notifications.
   Services.obs.addObserver(countingObserver, TOPIC);
 
   // Open a new window.
-  let win = yield openWindow("about:robots");
+  let win = await openWindow("about:robots");
 
   info("Opening and closing a tab.");
-  yield openAndCloseTab(win, "about:mozilla");
+  await openAndCloseTab(win, "about:mozilla");
   assertNotificationCount(1);
 
   info("Opening and closing a second tab.");
-  yield openAndCloseTab(win, "about:mozilla");
+  await openAndCloseTab(win, "about:mozilla");
   assertNotificationCount(2);
 
   info(`Changing the ${MAX_TABS_UNDO_PREF} pref.`);
   registerCleanupFunction(function() {
     Services.prefs.clearUserPref(MAX_TABS_UNDO_PREF);
   });
-  yield awaitNotification(() => Services.prefs.setIntPref(MAX_TABS_UNDO_PREF, 1));
+  await awaitNotification(() => Services.prefs.setIntPref(MAX_TABS_UNDO_PREF, 1));
   assertNotificationCount(3);
 
   info("Undoing close of remaining closed tab.");
   let tab = SessionStore.undoCloseTab(win, 0);
-  yield promiseTabRestored(tab);
+  await promiseTabRestored(tab);
   assertNotificationCount(4);
 
   info("Closing tab again.");
-  yield promiseRemoveTab(tab);
+  await promiseRemoveTab(tab);
   assertNotificationCount(5);
 
   info("Purging session history.");
-  yield awaitNotification(() => Services.obs.notifyObservers(null, "browser:purge-session-history"));
+  await awaitNotification(() => Services.obs.notifyObservers(null, "browser:purge-session-history"));
   assertNotificationCount(6);
 
   info("Opening and closing another tab.");
-  yield openAndCloseTab(win, "http://example.com/");
+  await openAndCloseTab(win, "http://example.com/");
   assertNotificationCount(7);
 
   info("Purging domain data with no matches.")
@@ -102,14 +102,14 @@ add_task(function* test_closedObjectsChangedNotifications() {
   assertNotificationCount(7);
 
   info("Purging domain data with matches.")
-  yield awaitNotification(() => Services.obs.notifyObservers(null, "browser:purge-domain-data", "example.com"));
+  await awaitNotification(() => Services.obs.notifyObservers(null, "browser:purge-domain-data", "example.com"));
   assertNotificationCount(8);
 
   info("Opening and closing another tab.");
-  yield openAndCloseTab(win, "http://example.com/");
+  await openAndCloseTab(win, "http://example.com/");
   assertNotificationCount(9);
 
-  yield closeWindow(win);
+  await closeWindow(win);
   assertNotificationCount(10);
 
   Services.obs.removeObserver(countingObserver, TOPIC);

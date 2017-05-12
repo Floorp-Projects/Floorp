@@ -13,11 +13,11 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_instantiation() {
+add_task(async function test_instantiation() {
   Assert.ok(!bsp.gCrashManager, "CrashManager global instance not initially defined.");
 
   do_get_profile();
-  yield makeFakeAppDir();
+  await makeFakeAppDir();
 
   // Fake profile creation.
   Cc["@mozilla.org/crashservice;1"]

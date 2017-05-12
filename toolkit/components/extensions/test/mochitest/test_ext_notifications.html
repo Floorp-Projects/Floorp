@@ -18,7 +18,7 @@ let image = atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAA" +
                  "ACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=");
 const IMAGE_ARRAYBUFFER = Uint8Array.from(image, byte => byte.charCodeAt(0)).buffer;
 
-add_task(function* test_notification() {
+add_task(async function test_notification() {
   async function background() {
     let opts = {
       type: "basic",
@@ -38,14 +38,14 @@ add_task(function* test_notification() {
     },
     background,
   });
-  yield extension.startup();
-  let x = yield extension.awaitMessage("running");
+  await extension.startup();
+  let x = await extension.awaitMessage("running");
   is(x, "0", "got correct id from notifications.create");
-  yield extension.awaitFinish();
-  yield extension.unload();
+  await extension.awaitFinish();
+  await extension.unload();
 });
 
-add_task(function* test_notification_events() {
+add_task(async function test_notification_events() {
   async function background() {
     let opts = {
       type: "basic",
@@ -77,16 +77,16 @@ add_task(function* test_notification_events() {
     },
     background,
   });
-  yield extension.startup();
-  let x = yield extension.awaitMessage("closed");
+  await extension.startup();
+  let x = await extension.awaitMessage("closed");
   is(x, "5", "got correct id from onClosed listener");
-  x = yield extension.awaitMessage("running");
+  x = await extension.awaitMessage("running");
   is(x, "5", "got correct id from notifications.create");
-  yield extension.awaitFinish();
-  yield extension.unload();
+  await extension.awaitFinish();
+  await extension.unload();
 });
 
-add_task(function* test_notification_clear() {
+add_task(async function test_notification_clear() {
   async function background() {
     let opts = {
       type: "basic",
@@ -112,16 +112,16 @@ add_task(function* test_notification_clear() {
     },
     background,
   });
-  yield extension.startup();
-  let x = yield extension.awaitMessage("closed");
+  await extension.startup();
+  let x = await extension.awaitMessage("closed");
   is(x, "99", "got correct id from onClosed listener");
-  x = yield extension.awaitMessage("cleared");
+  x = await extension.awaitMessage("cleared");
   is(x, true, "got correct boolean from notifications.clear");
-  yield extension.awaitFinish();
-  yield extension.unload();
+  await extension.awaitFinish();
+  await extension.unload();
 });
 
-add_task(function* test_notifications_empty_getAll() {
+add_task(async function test_notifications_empty_getAll() {
   async function background() {
     let notifications = await browser.notifications.getAll();
 
@@ -136,12 +136,12 @@ add_task(function* test_notifications_empty_getAll() {
     },
     background,
   });
-  yield extension.startup();
-  yield extension.awaitFinish("getAll empty");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("getAll empty");
+  await extension.unload();
 });
 
-add_task(function* test_notifications_populated_getAll() {
+add_task(async function test_notifications_populated_getAll() {
   async function background() {
     let opts = {
       type: "basic",
@@ -179,12 +179,12 @@ add_task(function* test_notifications_populated_getAll() {
       "a.png": IMAGE_ARRAYBUFFER,
     },
   });
-  yield extension.startup();
-  yield extension.awaitFinish("getAll populated");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("getAll populated");
+  await extension.unload();
 });
 
-add_task(function* test_buttons_unsupported() {
+add_task(async function test_buttons_unsupported() {
   function background() {
     let opts = {
       type: "basic",
@@ -213,9 +213,9 @@ add_task(function* test_buttons_unsupported() {
     },
     background,
   });
-  yield extension.startup();
-  yield extension.awaitFinish("buttons-unsupported");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("buttons-unsupported");
+  await extension.unload();
 });
 
 </script>

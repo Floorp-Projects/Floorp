@@ -531,11 +531,11 @@ function findChromeUrlsFromArray(array, prefix) {
   }
 }
 
-add_task(function* checkAllTheFiles() {
+add_task(async function checkAllTheFiles() {
   let libxulPath = OS.Constants.Path.libxul;
   if (AppConstants.platform != "macosx")
     libxulPath = OS.Constants.Path.libDir + "/" + libxulPath;
-  let libxul = yield OS.File.read(libxulPath);
+  let libxul = await OS.File.read(libxulPath);
   findChromeUrlsFromArray(libxul, "chrome://");
   findChromeUrlsFromArray(libxul, "resource://");
   // Handle NS_LITERAL_STRING.
@@ -549,7 +549,7 @@ add_task(function* checkAllTheFiles() {
   // This asynchronously produces a list of URLs (sadly, mostly sync on our
   // test infrastructure because it runs against jarfiles there, and
   // our zipreader APIs are all sync)
-  let uris = yield generateURIsFromDirTree(appDir, [".css", ".manifest", ".json", ".jpg", ".png", ".gif", ".svg",  ".dtd", ".properties"].concat(kCodeExtensions));
+  let uris = await generateURIsFromDirTree(appDir, [".css", ".manifest", ".json", ".jpg", ".png", ".gif", ".svg",  ".dtd", ".properties"].concat(kCodeExtensions));
 
   // Parse and remove all manifests from the list.
   // NOTE that this must be done before filtering out devtools paths
@@ -566,7 +566,7 @@ add_task(function* checkAllTheFiles() {
   });
 
   // Wait for all manifest to be parsed
-  yield Promise.all(manifestPromises);
+  await Promise.all(manifestPromises);
 
   // We build a list of promises that get resolved when their respective
   // files have loaded and produced no errors.
@@ -581,7 +581,7 @@ add_task(function* checkAllTheFiles() {
   }
 
   // Wait for all the files to have actually loaded:
-  yield Promise.all(allPromises);
+  await Promise.all(allPromises);
 
   // Keep only chrome:// files, and filter out either the devtools paths or
   // the non-devtools paths:

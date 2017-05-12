@@ -1,23 +1,23 @@
 /* eslint-env mozilla/frame-script */
 
-add_task(function *() {
-  yield pushPrefs(["ui.key.contentAccess", 5], ["ui.key.chromeAccess", 5]);
+add_task(async function() {
+  await pushPrefs(["ui.key.contentAccess", 5], ["ui.key.chromeAccess", 5]);
 
   const gPageURL1 = "data:text/html,<body><p>" +
                     "<button id='button' accesskey='y'>Button</button>" +
                     "<input id='checkbox' type='checkbox' accesskey='z'>Checkbox" +
                     "</p></body>";
-  let tab1 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, gPageURL1);
+  let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, gPageURL1);
   tab1.linkedBrowser.messageManager.loadFrameScript("data:,(" + childHandleFocus.toString() + ")();", false);
 
   Services.focus.clearFocus(window);
 
   // Press an accesskey in the child document while the chrome is focused.
-  let focusedId = yield performAccessKey("y");
+  let focusedId = await performAccessKey("y");
   is(focusedId, "button", "button accesskey");
 
   // Press an accesskey in the child document while the content document is focused.
-  focusedId = yield performAccessKey("z");
+  focusedId = await performAccessKey("z");
   is(focusedId, "checkbox", "checkbox accesskey");
 
   // Add an element with an accesskey to the chrome and press its accesskey while the chrome is focused.
@@ -28,23 +28,23 @@ add_task(function *() {
 
   Services.focus.clearFocus(window);
 
-  focusedId = yield performAccessKeyForChrome("z");
+  focusedId = await performAccessKeyForChrome("z");
   is(focusedId, "chromebutton", "chromebutton accesskey");
 
   // Add a second tab and ensure that accesskey from the first tab is not used.
   const gPageURL2 = "data:text/html,<body>" +
                     "<button id='tab2button' accesskey='y'>Button in Tab 2</button>" +
                     "</body>";
-  let tab2 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, gPageURL2);
+  let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, gPageURL2);
   tab2.linkedBrowser.messageManager.loadFrameScript("data:,(" + childHandleFocus.toString() + ")();", false);
 
   Services.focus.clearFocus(window);
 
-  focusedId = yield performAccessKey("y");
+  focusedId = await performAccessKey("y");
   is(focusedId, "tab2button", "button accesskey in tab2");
 
   // Press the accesskey for the chrome element while the content document is focused.
-  focusedId = yield performAccessKeyForChrome("z");
+  focusedId = await performAccessKeyForChrome("z");
   is(focusedId, "chromebutton", "chromebutton accesskey");
 
   newButton.remove();
@@ -74,9 +74,9 @@ function performAccessKey(key) {
 }
 
 // This version is used when a chrome elemnt is expected to be found for an accesskey.
-function* performAccessKeyForChrome(key, inChild) {
+async function performAccessKeyForChrome(key, inChild) {
   let waitFocusChangePromise = BrowserTestUtils.waitForEvent(document, "focus", true);
   EventUtils.synthesizeKey(key, { altKey: true, shiftKey: true });
-  yield waitFocusChangePromise;
+  await waitFocusChangePromise;
   return document.activeElement.id;
 }

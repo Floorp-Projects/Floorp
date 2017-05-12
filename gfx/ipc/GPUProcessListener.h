@@ -19,6 +19,11 @@ class GPUProcessListener
   // recreated.
   virtual void OnCompositorUnexpectedShutdown()
   {}
+
+  // Called when devices have been reset and tabs must throw away their
+  // layer managers.
+  virtual void OnCompositorDeviceReset()
+  {}
 };
 
 } // namespace gfx

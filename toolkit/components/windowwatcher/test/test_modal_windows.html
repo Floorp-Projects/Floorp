@@ -18,7 +18,7 @@ that is opened reports itself as being modal.
   Cu.import("resource://gre/modules/Services.jsm");
   Cu.import("resource://testing-common/BrowserTestUtils.jsm");
 
-  add_task(function*() {
+  add_task(async function() {
     BrowserTestUtils.domWindowOpened().then((win) => {
       let treeOwner = win.QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIWebNavigation)
@@ -41,7 +41,7 @@ that is opened reports itself as being modal.
                       "_blank", "modal", null);
     // Since the modal runs a nested event loop, just to be on the safe side,
     // we'll wait a tick of the main event loop before resolving the task.
-    yield new Promise(resolve => setTimeout(resolve, 0));
+    await new Promise(resolve => setTimeout(resolve, 0));
   });
 
   </script>

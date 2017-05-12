@@ -2,12 +2,12 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* () {
-  let window1 = yield BrowserTestUtils.openNewBrowserWindow();
-  yield BrowserTestUtils.openNewForegroundTab(window.gBrowser, "http://example.net/");
-  yield BrowserTestUtils.openNewForegroundTab(window.gBrowser, "http://example.com/");
-  yield BrowserTestUtils.openNewForegroundTab(window1.gBrowser, "http://example.net/");
-  yield BrowserTestUtils.openNewForegroundTab(window1.gBrowser, "http://example.com/");
+add_task(async function() {
+  let window1 = await BrowserTestUtils.openNewBrowserWindow();
+  await BrowserTestUtils.openNewForegroundTab(window.gBrowser, "http://example.net/");
+  await BrowserTestUtils.openNewForegroundTab(window.gBrowser, "http://example.com/");
+  await BrowserTestUtils.openNewForegroundTab(window1.gBrowser, "http://example.net/");
+  await BrowserTestUtils.openNewForegroundTab(window1.gBrowser, "http://example.com/");
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -32,12 +32,12 @@ add_task(function* () {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("tabs.move.multiple");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("tabs.move.multiple");
+  await extension.unload();
 
   for (let tab of window.gBrowser.tabs) {
-    yield BrowserTestUtils.removeTab(tab);
+    await BrowserTestUtils.removeTab(tab);
   }
-  yield BrowserTestUtils.closeWindow(window1);
+  await BrowserTestUtils.closeWindow(window1);
 });

@@ -11,8 +11,6 @@
 
 XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",
                                   "resource://devtools/client/framework/gDevTools.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 
 Cu.import("resource://gre/modules/ExtensionParent.jsm");
 
@@ -38,9 +36,9 @@ let initDevTools;
  *   The cloned devtools target associated to the context.
  */
 global.getDevToolsTargetForContext = (context) => {
-  return Task.spawn(function* asyncGetTabTarget() {
+  return (async function asyncGetTabTarget() {
     if (context.devToolsTarget) {
-      yield context.devToolsTarget.makeRemote();
+      await context.devToolsTarget.makeRemote();
       return context.devToolsTarget;
     }
 
@@ -55,10 +53,10 @@ global.getDevToolsTargetForContext = (context) => {
     const {TabTarget} = require("devtools/client/framework/target");
 
     context.devToolsTarget = new TabTarget(context.devToolsToolbox.target.tab);
-    yield context.devToolsTarget.makeRemote();
+    await context.devToolsTarget.makeRemote();
 
     return context.devToolsTarget;
-  });
+  })();
 };
 
 /**
@@ -120,8 +118,8 @@ class DevToolsPage extends HiddenExtensionPage {
   }
 
   build() {
-    return Task.spawn(function* () {
-      yield this.createBrowserElement();
+    return (async () => {
+      await this.createBrowserElement();
 
       // Listening to new proxy contexts.
       this.unwatchExtensionProxyContextLoad = watchExtensionProxyContextLoad(this, context => {
@@ -148,8 +146,8 @@ class DevToolsPage extends HiddenExtensionPage {
 
       this.browser.loadURI(this.url);
 
-      yield this.waitForTopLevelContext;
-    }.bind(this));
+      await this.waitForTopLevelContext;
+    })();
   }
 
   close() {

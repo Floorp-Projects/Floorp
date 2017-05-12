@@ -9,7 +9,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gProxyService",
                                    "@mozilla.org/network/protocol-proxy-service;1",
                                    "nsIProtocolProxyService");
 
-function* testProxyScript(options, expected = {}) {
+async function testProxyScript(options, expected = {}) {
   let scriptData = String(options.scriptData).replace(/^.*?\{([^]*)\}$/, "$1");
   let extensionData = {
     background() {
@@ -37,29 +37,29 @@ function* testProxyScript(options, expected = {}) {
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   let extension_internal = extension.extension;
 
-  yield extension.startup();
+  await extension.startup();
 
   let script = new ProxyScriptContext(extension_internal, extension_internal.getURL("proxy.js"));
 
   try {
-    yield script.load();
+    await script.load();
   } catch (error) {
     equal(error, expected.error, "Expected error received");
     script.unload();
-    yield extension.unload();
+    await extension.unload();
     return;
   }
 
   if (options.runtimeMessage) {
     extension.sendMessage("runtime-message", options.runtimeMessage);
-    yield extension.awaitMessage("runtime-message-sent");
+    await extension.awaitMessage("runtime-message-sent");
   } else {
     extension.sendMessage("finish-from-xpcshell-test");
   }
 
-  yield extension.awaitFinish("proxy");
+  await extension.awaitFinish("proxy");
 
-  let proxyInfo = yield new Promise((resolve, reject) => {
+  let proxyInfo = await new Promise((resolve, reject) => {
     let channel = NetUtil.newChannel({
       uri: "http://www.mozilla.org/",
       loadUsingSystemPrincipal: true,
@@ -84,20 +84,20 @@ function* testProxyScript(options, expected = {}) {
     }
   }
 
-  yield extension.unload();
+  await extension.unload();
   script.unload();
 }
 
-add_task(function* testUndefinedFindProxyForURL() {
-  yield testProxyScript({
+add_task(async function testUndefinedFindProxyForURL() {
+  await testProxyScript({
     scriptData() { },
   }, {
     proxyInfo: null,
   });
 });
 
-add_task(function* testWrongTypeForFindProxyForURL() {
-  yield testProxyScript({
+add_task(async function testWrongTypeForFindProxyForURL() {
+  await testProxyScript({
     scriptData() {
       let FindProxyForURL = "foo";
     },
@@ -106,8 +106,8 @@ add_task(function* testWrongTypeForFindProxyForURL() {
   });
 });
 
-add_task(function* testInvalidReturnTypeForFindProxyForURL() {
-  yield testProxyScript({
+add_task(async function testInvalidReturnTypeForFindProxyForURL() {
+  await testProxyScript({
     scriptData() {
       function FindProxyForURL(url, host) {
         return -1;
@@ -118,8 +118,8 @@ add_task(function* testInvalidReturnTypeForFindProxyForURL() {
   });
 });
 
-add_task(function* testSimpleProxyScript() {
-  yield testProxyScript({
+add_task(async function testSimpleProxyScript() {
+  await testProxyScript({
     scriptData() {
       function FindProxyForURL(url, host) {
         if (host === "www.mozilla.org") {
@@ -132,8 +132,8 @@ add_task(function* testSimpleProxyScript() {
   });
 });
 
-add_task(function* testRuntimeErrorInProxyScript() {
-  yield testProxyScript({
+add_task(async function testRuntimeErrorInProxyScript() {
+  await testProxyScript({
     scriptData() {
       function FindProxyForURL(url, host) {
         return RUNTIME_ERROR; // eslint-disable-line no-undef
@@ -144,8 +144,8 @@ add_task(function* testRuntimeErrorInProxyScript() {
   });
 });
 
-add_task(function* testProxyScriptWithUnexpectedReturnType() {
-  yield testProxyScript({
+add_task(async function testProxyScriptWithUnexpectedReturnType() {
+  await testProxyScript({
     scriptData() {
       function FindProxyForURL(url, host) {
         return "UNEXPECTED 1.2.3.4:8080";
@@ -156,8 +156,8 @@ add_task(function* testProxyScriptWithUnexpectedReturnType() {
   });
 });
 
-add_task(function* testSocksReturnType() {
-  yield testProxyScript({
+add_task(async function testSocksReturnType() {
+  await testProxyScript({
     scriptData() {
       function FindProxyForURL(url, host) {
         if (host === "www.mozilla.org") {
@@ -175,8 +175,8 @@ add_task(function* testSocksReturnType() {
   });
 });
 
-add_task(function* testProxyReturnType() {
-  yield testProxyScript({
+add_task(async function testProxyReturnType() {
+  await testProxyScript({
     scriptData() {
       function FindProxyForURL(url, host) {
         return "PROXY 1.2.3.4:8080";
@@ -192,8 +192,8 @@ add_task(function* testProxyReturnType() {
   });
 });
 
-add_task(function* testUnusualWhitespaceForFindProxyForURL() {
-  yield testProxyScript({
+add_task(async function testUnusualWhitespaceForFindProxyForURL() {
+  await testProxyScript({
     scriptData() {
       function FindProxyForURL(url, host) {
         return "   PROXY    1.2.3.4:8080      ";
@@ -209,8 +209,8 @@ add_task(function* testUnusualWhitespaceForFindProxyForURL() {
   });
 });
 
-add_task(function* testInvalidProxyScriptIgnoresFailover() {
-  yield testProxyScript({
+add_task(async function testInvalidProxyScriptIgnoresFailover() {
+  await testProxyScript({
     scriptData() {
       function FindProxyForURL(url, host) {
         return "PROXY 1.2.3.4:8080; UNEXPECTED; SOCKS 1.2.3.4:8080";
@@ -226,8 +226,8 @@ add_task(function* testInvalidProxyScriptIgnoresFailover() {
   });
 });
 
-add_task(function* testProxyScriptWithValidFailovers() {
-  yield testProxyScript({
+add_task(async function testProxyScriptWithValidFailovers() {
+  await testProxyScript({
     scriptData() {
       function FindProxyForURL(url, host) {
         return "PROXY 1.2.3.4:8080; SOCKS 4.4.4.4:9000; DIRECT";
@@ -248,8 +248,8 @@ add_task(function* testProxyScriptWithValidFailovers() {
   });
 });
 
-add_task(function* testProxyScriptWithAnInvalidFailover() {
-  yield testProxyScript({
+add_task(async function testProxyScriptWithAnInvalidFailover() {
+  await testProxyScript({
     scriptData() {
       function FindProxyForURL(url, host) {
         return "PROXY 1.2.3.4:8080; INVALID 1.2.3.4:9090; SOCKS 4.4.4.4:9000; DIRECT";
@@ -265,8 +265,8 @@ add_task(function* testProxyScriptWithAnInvalidFailover() {
   });
 });
 
-add_task(function* testProxyScriptWithEmptyFailovers() {
-  yield testProxyScript({
+add_task(async function testProxyScriptWithEmptyFailovers() {
+  await testProxyScript({
     scriptData() {
       function FindProxyForURL(url, host) {
         return ";;;;;PROXY 1.2.3.4:8080";
@@ -277,8 +277,8 @@ add_task(function* testProxyScriptWithEmptyFailovers() {
   });
 });
 
-add_task(function* testProxyScriptWithInvalidReturn() {
-  yield testProxyScript({
+add_task(async function testProxyScriptWithInvalidReturn() {
+  await testProxyScript({
     scriptData() {
       function FindProxyForURL(url, host) {
         return "SOCKS :8080;";
@@ -289,8 +289,8 @@ add_task(function* testProxyScriptWithInvalidReturn() {
   });
 });
 
-add_task(function* testProxyScriptWithRuntimeUpdate() {
-  yield testProxyScript({
+add_task(async function testProxyScriptWithRuntimeUpdate() {
+  await testProxyScript({
     scriptData() {
       let settings = {};
       function FindProxyForURL(url, host) {

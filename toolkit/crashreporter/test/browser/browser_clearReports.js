@@ -53,7 +53,7 @@ registerCleanupFunction(function() {
   Services.prompt = oldPrompt;
 });
 
-add_task(function* test() {
+add_task(async function test() {
   let appD = make_fake_appdir();
   let crD = appD.clone();
   crD.append("Crash Reports");
@@ -97,13 +97,13 @@ add_task(function* test() {
     cleanup_fake_appdir();
   });
 
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:crashes" },
-    function* (browser) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:crashes" },
+    async function(browser) {
       let dirs = [ submitdir, pendingdir, crD ];
       let existing = [ file1.path, file2.path, report1.path, report2.path,
                        report3.path, submitdir.path, pendingdir.path ];
 
-      yield ContentTask.spawn(browser, null, clickClearReports);
+      await ContentTask.spawn(browser, null, clickClearReports);
 
       for (let dir of dirs) {
         let entries = dir.directoryEntries;

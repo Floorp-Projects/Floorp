@@ -7,12 +7,12 @@
 const DEFAULT_THEME_ID = "{972ce4c6-7e08-4474-a285-3208198ce6fd}";
 const {LightweightThemeManager} = Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm", {});
 
-add_task(function* () {
+add_task(async function() {
   Services.prefs.clearUserPref("lightweightThemes.usedThemes");
   Services.prefs.clearUserPref("lightweightThemes.recommendedThemes");
   LightweightThemeManager.clearBuiltInThemes();
 
-  yield startCustomizing();
+  await startCustomizing();
 
   let themesButton = document.getElementById("customization-lwtheme-button");
   let popup = document.getElementById("customization-lwtheme-menu");
@@ -20,17 +20,17 @@ add_task(function* () {
   let popupShownPromise = popupShown(popup);
   EventUtils.synthesizeMouseAtCenter(themesButton, {});
   info("Clicked on themes button");
-  yield popupShownPromise;
+  await popupShownPromise;
 
   // close current tab and re-open Customize menu to confirm correct number of Themes
-  yield endCustomizing();
+  await endCustomizing();
   info("Exited customize mode");
-  yield startCustomizing();
+  await startCustomizing();
   info("Started customizing a second time");
   popupShownPromise = popupShown(popup);
   EventUtils.synthesizeMouseAtCenter(themesButton, {});
   info("Clicked on themes button a second time");
-  yield popupShownPromise;
+  await popupShownPromise;
 
   let header = document.getElementById("customization-lwtheme-menu-header");
   let recommendedHeader = document.getElementById("customization-lwtheme-menu-recommended");
@@ -44,12 +44,12 @@ add_task(function* () {
   let themeChangedPromise = promiseObserverNotified("lightweight-theme-changed");
   firstLWTheme.doCommand();
   info("Clicked on first theme");
-  yield themeChangedPromise;
+  await themeChangedPromise;
 
   popupShownPromise = popupShown(popup);
   EventUtils.synthesizeMouseAtCenter(themesButton, {});
   info("Clicked on themes button");
-  yield popupShownPromise;
+  await popupShownPromise;
 
   is(header.nextSibling.theme.id, DEFAULT_THEME_ID, "The first theme should be the Default theme");
   let installedThemeId = header.nextSibling.nextSibling.theme.id;
@@ -67,27 +67,27 @@ add_task(function* () {
   popupShownPromise = popupShown(popup);
   EventUtils.synthesizeMouseAtCenter(themesButton, {});
   info("Clicked on themes button a second time");
-  yield popupShownPromise;
+  await popupShownPromise;
 
   firstLWTheme = recommendedHeader.nextSibling;
   themeChangedPromise = promiseObserverNotified("lightweight-theme-changed");
   firstLWTheme.doCommand();
   info("Clicked on first theme again");
-  yield themeChangedPromise;
+  await themeChangedPromise;
 
   // check that "Restore Defaults" button resets theme
-  yield gCustomizeMode.reset();
+  await gCustomizeMode.reset();
   is(LightweightThemeManager.currentTheme, null, "Current theme reset to default");
 
-  yield endCustomizing();
+  await endCustomizing();
   Services.prefs.setCharPref("lightweightThemes.usedThemes", "[]");
   Services.prefs.setCharPref("lightweightThemes.recommendedThemes", "[]");
   info("Removed all recommended themes");
-  yield startCustomizing();
+  await startCustomizing();
   popupShownPromise = popupShown(popup);
   EventUtils.synthesizeMouseAtCenter(themesButton, {});
   info("Clicked on themes button a second time");
-  yield popupShownPromise;
+  await popupShownPromise;
   header = document.getElementById("customization-lwtheme-menu-header");
   is(header.hidden, false, "Header should never be hidden");
   is(header.nextSibling.theme.id, DEFAULT_THEME_ID, "The first theme should be the Default theme");
@@ -100,8 +100,8 @@ add_task(function* () {
   is(recommendedHeader.hidden, true, "The recommendedHeader should be hidden since there are no recommended themes");
 });
 
-add_task(function* asyncCleanup() {
-  yield endCustomizing();
+add_task(async function asyncCleanup() {
+  await endCustomizing();
 
   Services.prefs.clearUserPref("lightweightThemes.usedThemes");
   Services.prefs.clearUserPref("lightweightThemes.recommendedThemes");

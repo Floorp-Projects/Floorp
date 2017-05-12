@@ -8,16 +8,16 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_no_condition() {
+add_task(async function test_no_condition() {
   for (let kind of ["phase", "barrier", "xpcom-barrier", "xpcom-barrier-unwrapped"]) {
     do_print("Testing a barrier with no condition (" + kind + ")");
     let lock = makeLock(kind);
-    yield lock.wait();
+    await lock.wait();
     do_print("Barrier with no condition didn't lock");
   }
 });
 
-add_task(function* test_phase_various_failures() {
+add_task(async function test_phase_various_failures() {
   for (let kind of ["phase", "barrier", "xpcom-barrier", "xpcom-barrier-unwrapped"]) {
     do_print("Kind: " + kind);
     // Testing with wrong arguments
@@ -32,12 +32,12 @@ add_task(function* test_phase_various_failures() {
     }
 
     // Attempting to add a blocker after we are done waiting
-    yield lock.wait();
+    await lock.wait();
     Assert.throws(() => lock.addBlocker("Test 3", () => true), /is finished/);
   }
 });
 
-add_task(function* test_reentrant() {
+add_task(async function test_reentrant() {
   do_print("Ensure that we can call addBlocker from within a blocker");
 
   for (let kind of ["phase", "barrier", "xpcom-barrier", "xpcom-barrier-unwrapped"]) {
@@ -64,29 +64,29 @@ add_task(function* test_reentrant() {
     // event loop before calling `lock.wait()`, which we do by forcing
     // a Promise.resolve().
     //
-    let promiseSteps = Task.spawn(function* () {
-      yield Promise.resolve();
+    let promiseSteps = (async function() {
+      await Promise.resolve();
 
       do_print("Waiting until we have entered the outer blocker");
-      yield deferredOuter.promise;
+      await deferredOuter.promise;
 
       do_print("Waiting until we have entered the inner blocker");
-      yield deferredInner.promise;
+      await deferredInner.promise;
 
       do_print("Allowing the lock to resolve")
       deferredBlockInner.resolve();
-    });
+    })();
 
     do_print("Starting wait");
-    yield lock.wait();
+    await lock.wait();
 
     do_print("Waiting until all steps have been walked");
-    yield promiseSteps;
+    await promiseSteps;
   }
 });
 
 
-add_task(function* test_phase_removeBlocker() {
+add_task(async function test_phase_removeBlocker() {
   do_print("Testing that we can call removeBlocker before, during and after the call to wait()");
 
   for (let kind of ["phase", "barrier", "xpcom-barrier", "xpcom-barrier-unwrapped"]) {
@@ -116,7 +116,7 @@ add_task(function* test_phase_removeBlocker() {
     do_remove_blocker(lock, "foo", false);
     do_remove_blocker(lock, null, false);
     do_print("Waiting (should lift immediately)");
-    yield lock.wait();
+    await lock.wait();
 
     do_print("Attempt to add a blocker then remove it during wait()");
     lock = makeLock(kind);
@@ -142,14 +142,14 @@ add_task(function* test_phase_removeBlocker() {
       lock.addBlocker("Wait forever again: " + i, blockers[i]);
     }
     do_print("Waiting (should lift very quickly)");
-    yield lock.wait();
+    await lock.wait();
     do_remove_blocker(lock, blockers[0], false);
 
 
     do_print("Attempt to remove a blocker after wait");
     lock = makeLock(kind);
     blocker = Promise.resolve.bind(Promise);
-    yield lock.wait();
+    await lock.wait();
     do_remove_blocker(lock, blocker, false);
 
     do_print("Attempt to remove non-registered blocker after wait()");
@@ -159,7 +159,7 @@ add_task(function* test_phase_removeBlocker() {
 
 });
 
-add_task(function* test_state() {
+add_task(async function test_state() {
   do_print("Testing information contained in `state`");
 
   let BLOCKER_NAME = "test_state blocker " + Math.random();
@@ -186,9 +186,9 @@ add_task(function* test_state() {
   Assert.ok(state.stack.some(x => x.includes(filename)), "The stack contains the calling file's name");
 
   deferred.resolve();
-  yield promiseDone;
+  await promiseDone;
 });
 
-add_task(function*() {
+add_task(async function() {
   Services.prefs.clearUserPref("toolkit.asyncshutdown.testing");
 });

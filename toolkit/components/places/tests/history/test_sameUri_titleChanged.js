@@ -1,7 +1,7 @@
 // Test that repeated additions of the same URI through updatePlaces, properly
 // update from_visit and notify titleChanged.
 
-add_task(function* test() {
+add_task(async function test() {
   let uri = "http://test.com/";
 
   let promiseTitleChangedNotifications = new Promise(resolve => {
@@ -20,7 +20,7 @@ add_task(function* test() {
   });
 
   // This repeats the url on purpose, don't merge it into a single place entry.
-  yield PlacesTestUtils.addVisits([
+  await PlacesTestUtils.addVisits([
     { uri, title: "test" },
     { uri, referrer: uri, title: "test2" },
   ]);
@@ -48,5 +48,5 @@ add_task(function* test() {
 
   root.containerOpen = false;
 
-  yield promiseTitleChangedNotifications;
+  await promiseTitleChangedNotifications;
 });

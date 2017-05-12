@@ -6,11 +6,11 @@
 
 "use strict";
 
-add_task(function* capture() {
+add_task(async function capture() {
   if (!shouldCapture()) {
     return;
   }
 
   let sets = ["TabsInTitlebar", "Tabs", "WindowSize", "Toolbars", "LightweightThemes"];
-  yield TestRunner.start(sets, "primaryUI");
+  await TestRunner.start(sets, "primaryUI");
 });

@@ -30,6 +30,7 @@
 #include "nsNPAPIPlugin.h"
 #include "nsPrintfCString.h"
 #include "prsystem.h"
+#include "prclist.h"
 #include "PluginQuirks.h"
 #include "gfxPlatform.h"
 #ifdef MOZ_GECKO_PROFILER

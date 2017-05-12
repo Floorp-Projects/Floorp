@@ -748,7 +748,12 @@ DXGITextureHostD3D11::GetDevice()
   if (mFlags & TextureFlags::INVALID_COMPOSITOR) {
     return nullptr;
   }
-  return mDevice;
+
+  if (mProvider) {
+    return mProvider->GetD3D11Device();
+  } else {
+    return mDevice;
+  }
 }
 
 void
@@ -821,6 +826,7 @@ DXGITextureHostD3D11::LockInternal()
     }
 
     if (mProvider) {
+      MOZ_RELEASE_ASSERT(mProvider->IsValid());
       mTextureSource = new DataTextureSourceD3D11(mFormat, mProvider, mTexture);
     } else {
       mTextureSource = new DataTextureSourceD3D11(mDevice, mFormat, mTexture);

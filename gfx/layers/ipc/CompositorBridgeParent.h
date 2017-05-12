@@ -187,10 +187,6 @@ public:
   bool Bind(Endpoint<PCompositorBridgeParent>&& aEndpoint);
 
   virtual mozilla::ipc::IPCResult RecvInitialize(const uint64_t& aRootLayerTreeId) override;
-  virtual mozilla::ipc::IPCResult RecvReset(nsTArray<LayersBackend>&& aBackendHints,
-                         const uint64_t& aSeqNo,
-                         bool* aResult,
-                         TextureFactoryIdentifier* aOutIdentifier) override;
   virtual mozilla::ipc::IPCResult RecvGetFrameUniformity(FrameUniformityData* aOutData) override;
   virtual mozilla::ipc::IPCResult RecvWillClose() override;
   virtual mozilla::ipc::IPCResult RecvPause() override;
@@ -204,11 +200,6 @@ public:
   virtual mozilla::ipc::IPCResult RecvFlushRendering() override;
   virtual mozilla::ipc::IPCResult RecvFlushRenderingAsync() override;
   virtual mozilla::ipc::IPCResult RecvForcePresent() override;
-
-  virtual mozilla::ipc::IPCResult RecvAcknowledgeCompositorUpdate(const uint64_t&, const uint64_t&) override {
-    MOZ_ASSERT_UNREACHABLE("This message is only sent cross-process");
-    return IPC_OK();
-  }
 
   virtual mozilla::ipc::IPCResult RecvNotifyRegionInvalidated(const nsIntRegion& aRegion) override;
   virtual mozilla::ipc::IPCResult RecvStartFrameTimeRecording(const int32_t& aBufferSize, uint32_t* aOutStartIndex) override;
@@ -378,12 +369,6 @@ public:
     nsTArray<PluginWindowData> mPluginData;
     bool mUpdatedPluginDataAvailable;
 
-    // Most recent device reset sequence number that has not been acknowledged;
-    // this is needed in case a device reset occurs in between allocating a
-    // RefLayer id on the parent, and allocating a PLayerTransaction on the
-    // child.
-    Maybe<uint64_t> mPendingCompositorUpdate;
-
     CompositorController* GetCompositorController() const;
     MetricsSharingController* CrossProcessSharingController() const;
     MetricsSharingController* InProcessSharingController() const;
@@ -535,10 +520,6 @@ protected:
   void CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr) override;
 
   RefPtr<Compositor> NewCompositor(const nsTArray<LayersBackend>& aBackendHints);
-  void ResetCompositorTask(const nsTArray<LayersBackend>& aBackendHints,
-                           uint64_t aSeqNo,
-                           Maybe<TextureFactoryIdentifier>* aOutNewIdentifier);
-  Maybe<TextureFactoryIdentifier> ResetCompositorImpl(const nsTArray<LayersBackend>& aBackendHints);
 
   /**
    * Add a compositor to the global compositor map.
@@ -602,7 +583,6 @@ protected:
 
   mozilla::Monitor mPauseCompositionMonitor;
   mozilla::Monitor mResumeCompositionMonitor;
-  mozilla::Monitor mResetCompositorMonitor;
 
   uint64_t mCompositorID;
   uint64_t mRootLayerTreeID;

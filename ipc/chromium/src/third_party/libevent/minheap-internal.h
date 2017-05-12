@@ -25,10 +25,11 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef _MIN_HEAP_H_
-#define _MIN_HEAP_H_
+#ifndef MINHEAP_INTERNAL_H_INCLUDED_
+#define MINHEAP_INTERNAL_H_INCLUDED_
 
 #include "event2/event-config.h"
+#include "evconfig-private.h"
 #include "event2/event.h"
 #include "event2/event_struct.h"
 #include "event2/util.h"
@@ -41,42 +42,41 @@ typedef struct min_heap
 	unsigned n, a;
 } min_heap_t;
 
-static inline void	     min_heap_ctor(min_heap_t* s);
-static inline void	     min_heap_dtor(min_heap_t* s);
-static inline void	     min_heap_elem_init(struct event* e);
-static inline int	     min_heap_elt_is_top(const struct event *e);
-static inline int	     min_heap_elem_greater(struct event *a, struct event *b);
-static inline int	     min_heap_empty(min_heap_t* s);
-static inline unsigned	     min_heap_size(min_heap_t* s);
-static inline struct event*  min_heap_top(min_heap_t* s);
-static inline int	     min_heap_reserve(min_heap_t* s, unsigned n);
-static inline int	     min_heap_push(min_heap_t* s, struct event* e);
-static inline struct event*  min_heap_pop(min_heap_t* s);
-static inline int	     min_heap_erase(min_heap_t* s, struct event* e);
+static inline void	     min_heap_ctor_(min_heap_t* s);
+static inline void	     min_heap_dtor_(min_heap_t* s);
+static inline void	     min_heap_elem_init_(struct event* e);
+static inline int	     min_heap_elt_is_top_(const struct event *e);
+static inline int	     min_heap_empty_(min_heap_t* s);
+static inline unsigned	     min_heap_size_(min_heap_t* s);
+static inline struct event*  min_heap_top_(min_heap_t* s);
+static inline int	     min_heap_reserve_(min_heap_t* s, unsigned n);
+static inline int	     min_heap_push_(min_heap_t* s, struct event* e);
+static inline struct event*  min_heap_pop_(min_heap_t* s);
+static inline int	     min_heap_adjust_(min_heap_t *s, struct event* e);
+static inline int	     min_heap_erase_(min_heap_t* s, struct event* e);
 static inline void	     min_heap_shift_up_(min_heap_t* s, unsigned hole_index, struct event* e);
+static inline void	     min_heap_shift_up_unconditional_(min_heap_t* s, unsigned hole_index, struct event* e);
 static inline void	     min_heap_shift_down_(min_heap_t* s, unsigned hole_index, struct event* e);
 
-int min_heap_elem_greater(struct event *a, struct event *b)
-{
-	return evutil_timercmp(&a->ev_timeout, &b->ev_timeout, >);
-}
+#define min_heap_elem_greater(a, b) \
+	(evutil_timercmp(&(a)->ev_timeout, &(b)->ev_timeout, >))
 
-void min_heap_ctor(min_heap_t* s) { s->p = 0; s->n = 0; s->a = 0; }
-void min_heap_dtor(min_heap_t* s) { if (s->p) mm_free(s->p); }
-void min_heap_elem_init(struct event* e) { e->ev_timeout_pos.min_heap_idx = -1; }
-int min_heap_empty(min_heap_t* s) { return 0u == s->n; }
-unsigned min_heap_size(min_heap_t* s) { return s->n; }
-struct event* min_heap_top(min_heap_t* s) { return s->n ? *s->p : 0; }
+void min_heap_ctor_(min_heap_t* s) { s->p = 0; s->n = 0; s->a = 0; }
+void min_heap_dtor_(min_heap_t* s) { if (s->p) mm_free(s->p); }
+void min_heap_elem_init_(struct event* e) { e->ev_timeout_pos.min_heap_idx = -1; }
+int min_heap_empty_(min_heap_t* s) { return 0u == s->n; }
+unsigned min_heap_size_(min_heap_t* s) { return s->n; }
+struct event* min_heap_top_(min_heap_t* s) { return s->n ? *s->p : 0; }
 
-int min_heap_push(min_heap_t* s, struct event* e)
+int min_heap_push_(min_heap_t* s, struct event* e)
 {
-	if (min_heap_reserve(s, s->n + 1))
+	if (min_heap_reserve_(s, s->n + 1))
 		return -1;
 	min_heap_shift_up_(s, s->n++, e);
 	return 0;
 }
 
-struct event* min_heap_pop(min_heap_t* s)
+struct event* min_heap_pop_(min_heap_t* s)
 {
 	if (s->n)
 	{
@@ -88,12 +88,12 @@ struct event* min_heap_pop(min_heap_t* s)
 	return 0;
 }
 
-int min_heap_elt_is_top(const struct event *e)
+int min_heap_elt_is_top_(const struct event *e)
 {
 	return e->ev_timeout_pos.min_heap_idx == 0;
 }
 
-int min_heap_erase(min_heap_t* s, struct event* e)
+int min_heap_erase_(min_heap_t* s, struct event* e)
 {
 	if (-1 != e->ev_timeout_pos.min_heap_idx)
 	{
@@ -105,7 +105,7 @@ int min_heap_erase(min_heap_t* s, struct event* e)
 		   to be less than the parent, it can't need to shift both up and
 		   down. */
 		if (e->ev_timeout_pos.min_heap_idx > 0 && min_heap_elem_greater(s->p[parent], last))
-			min_heap_shift_up_(s, e->ev_timeout_pos.min_heap_idx, last);
+			min_heap_shift_up_unconditional_(s, e->ev_timeout_pos.min_heap_idx, last);
 		else
 			min_heap_shift_down_(s, e->ev_timeout_pos.min_heap_idx, last);
 		e->ev_timeout_pos.min_heap_idx = -1;
@@ -114,7 +114,23 @@ int min_heap_erase(min_heap_t* s, struct event* e)
 	return -1;
 }
 
-int min_heap_reserve(min_heap_t* s, unsigned n)
+int min_heap_adjust_(min_heap_t *s, struct event *e)
+{
+	if (-1 == e->ev_timeout_pos.min_heap_idx) {
+		return min_heap_push_(s, e);
+	} else {
+		unsigned parent = (e->ev_timeout_pos.min_heap_idx - 1) / 2;
+		/* The position of e has changed; we shift it up or down
+		 * as needed.  We can't need to do both. */
+		if (e->ev_timeout_pos.min_heap_idx > 0 && min_heap_elem_greater(s->p[parent], e))
+			min_heap_shift_up_unconditional_(s, e->ev_timeout_pos.min_heap_idx, e);
+		else
+			min_heap_shift_down_(s, e->ev_timeout_pos.min_heap_idx, e);
+		return 0;
+	}
+}
+
+int min_heap_reserve_(min_heap_t* s, unsigned n)
 {
 	if (s->a < n)
 	{
@@ -128,6 +144,18 @@ int min_heap_reserve(min_heap_t* s, unsigned n)
 		s->a = a;
 	}
 	return 0;
+}
+
+void min_heap_shift_up_unconditional_(min_heap_t* s, unsigned hole_index, struct event* e)
+{
+    unsigned parent = (hole_index - 1) / 2;
+    do
+    {
+	(s->p[hole_index] = s->p[parent])->ev_timeout_pos.min_heap_idx = hole_index;
+	hole_index = parent;
+	parent = (hole_index - 1) / 2;
+    } while (hole_index && min_heap_elem_greater(s->p[parent], e));
+    (s->p[hole_index] = e)->ev_timeout_pos.min_heap_idx = hole_index;
 }
 
 void min_heap_shift_up_(min_heap_t* s, unsigned hole_index, struct event* e)
@@ -157,4 +185,4 @@ void min_heap_shift_down_(min_heap_t* s, unsigned hole_index, struct event* e)
     (s->p[hole_index] = e)->ev_timeout_pos.min_heap_idx = hole_index;
 }
 
-#endif /* _MIN_HEAP_H_ */
+#endif /* MINHEAP_INTERNAL_H_INCLUDED_ */

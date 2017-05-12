@@ -1,5 +1,5 @@
-add_task(function*() {
-  let prefs = yield openPreferencesViaOpenPreferencesAPI("panePrivacy", {leaveOpen: true});
+add_task(async function() {
+  let prefs = await openPreferencesViaOpenPreferencesAPI("panePrivacy", {leaveOpen: true});
   is(prefs.selectedPane, "panePrivacy", "Privacy pane was selected");
 
   let doc = gBrowser.contentDocument;
@@ -50,5 +50,5 @@ add_task(function*() {
   ok(button.disabled, "master password button should now be disabled");
   ok(!checkbox.checked, "master password checkbox should now be unchecked");
 
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

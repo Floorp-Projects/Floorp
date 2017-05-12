@@ -590,22 +590,6 @@ auto GeckoAppShell::RemoveFullScreenPluginView(mozilla::jni::Object::Param a0) -
 constexpr char GeckoAppShell::ReportJavaCrash_t::name[];
 constexpr char GeckoAppShell::ReportJavaCrash_t::signature[];
 
-constexpr char GeckoAppShell::ScheduleRestart_t::name[];
-constexpr char GeckoAppShell::ScheduleRestart_t::signature[];
-
-auto GeckoAppShell::ScheduleRestart() -> void
-{
-    return mozilla::jni::Method<ScheduleRestart_t>::Call(GeckoAppShell::Context(), nullptr);
-}
-
-constexpr char GeckoAppShell::SetFullScreen_t::name[];
-constexpr char GeckoAppShell::SetFullScreen_t::signature[];
-
-auto GeckoAppShell::SetFullScreen(bool a0) -> void
-{
-    return mozilla::jni::Method<SetFullScreen_t>::Call(GeckoAppShell::Context(), nullptr, a0);
-}
-
 constexpr char GeckoAppShell::SetScreenDepthOverride_t::name[];
 constexpr char GeckoAppShell::SetScreenDepthOverride_t::signature[];
 
@@ -954,6 +938,14 @@ constexpr char GeckoThread::State::PROFILE_READY_t::signature[];
 auto GeckoThread::State::PROFILE_READY() -> State::LocalRef
 {
     return mozilla::jni::Field<PROFILE_READY_t>::Get(State::Context(), nullptr);
+}
+
+constexpr char GeckoThread::State::RESTARTING_t::name[];
+constexpr char GeckoThread::State::RESTARTING_t::signature[];
+
+auto GeckoThread::State::RESTARTING() -> State::LocalRef
+{
+    return mozilla::jni::Field<RESTARTING_t>::Get(State::Context(), nullptr);
 }
 
 constexpr char GeckoThread::State::RUNNING_t::name[];

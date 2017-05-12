@@ -7,7 +7,7 @@
  * left pane is closed.
  */
 
-add_task(function* () {
+add_task(async function() {
   let folder = PlacesUtils.bookmarks
                           .createFolder(PlacesUtils.unfiledBookmarksFolderId,
                                         "Folder",
@@ -17,7 +17,7 @@ add_task(function* () {
                                             PlacesUtils.bookmarks.DEFAULT_INDEX,
                                             "Bookmark");
 
-  let library = yield promiseLibrary("AllBookmarks");
+  let library = await promiseLibrary("AllBookmarks");
   registerCleanupFunction(function() {
     library.close();
     PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);

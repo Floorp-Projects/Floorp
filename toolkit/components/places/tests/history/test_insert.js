@@ -5,7 +5,7 @@
 
 "use strict";
 
-add_task(function* test_insert_error_cases() {
+add_task(async function test_insert_error_cases() {
   const TEST_URL = "http://mozilla.com";
 
   Assert.throws(
@@ -95,10 +95,10 @@ add_task(function* test_insert_error_cases() {
   );
 });
 
-add_task(function* test_history_insert() {
+add_task(async function test_history_insert() {
   const TEST_URL = "http://mozilla.com/";
 
-  let inserter = Task.async(function*(name, filter, referrer, date, transition) {
+  let inserter = async function(name, filter, referrer, date, transition) {
     do_print(name);
     do_print(`filter: ${filter}, referrer: ${referrer}, date: ${date}, transition: ${transition}`);
 
@@ -112,9 +112,9 @@ add_task(function* test_history_insert() {
       ]
     };
 
-    pageInfo.url = yield filter(uri);
+    pageInfo.url = await filter(uri);
 
-    let result = yield PlacesUtils.history.insert(pageInfo);
+    let result = await PlacesUtils.history.insert(pageInfo);
 
     Assert.ok(PlacesUtils.isValidGuid(result.guid), "guid for pageInfo object is valid");
     Assert.equal(uri.spec, result.url.href, "url is correct for pageInfo object");
@@ -131,21 +131,21 @@ add_task(function* test_history_insert() {
                    "date of visit is correct");
     }
 
-    Assert.ok(yield PlacesTestUtils.isPageInDB(uri), "Page was added");
-    Assert.ok(yield PlacesTestUtils.visitsInDB(uri), "Visit was added");
-  });
+    Assert.ok(await PlacesTestUtils.isPageInDB(uri), "Page was added");
+    Assert.ok(await PlacesTestUtils.visitsInDB(uri), "Visit was added");
+  };
 
   try {
     for (let referrer of [TEST_URL, null]) {
       for (let date of [new Date(), null]) {
         for (let transition of [TRANSITION_LINK, null]) {
-          yield inserter("Testing History.insert() with an nsIURI", x => x, referrer, date, transition);
-          yield inserter("Testing History.insert() with a string url", x => x.spec, referrer, date, transition);
-          yield inserter("Testing History.insert() with a URL object", x => new URL(x.spec), referrer, date, transition);
+          await inserter("Testing History.insert() with an nsIURI", x => x, referrer, date, transition);
+          await inserter("Testing History.insert() with a string url", x => x.spec, referrer, date, transition);
+          await inserter("Testing History.insert() with a URL object", x => new URL(x.spec), referrer, date, transition);
         }
       }
     }
   } finally {
-    yield PlacesTestUtils.clearHistory();
+    await PlacesTestUtils.clearHistory();
   }
 });

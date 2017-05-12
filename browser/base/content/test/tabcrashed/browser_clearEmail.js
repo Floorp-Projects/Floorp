@@ -8,7 +8,7 @@ const EMAIL = "foo@privacy.com";
  * Sets up the browser to send crash reports to the local crash report
  * testing server.
  */
-add_task(function* setup() {
+add_task(async function setup() {
   // The test harness sets MOZ_CRASHREPORTER_NO_REPORT, which disables crash
   // reports.  This test needs them enabled.  The test also needs a mock
   // report server, and fortunately one is already set up by toolkit/
@@ -23,7 +23,7 @@ add_task(function* setup() {
 
   // By default, requesting the email address of the user is disabled.
   // For the purposes of this test, we turn it back on.
-  yield SpecialPowers.pushPrefEnv({
+  await SpecialPowers.pushPrefEnv({
     set: [["browser.tabs.crashReporting.requestEmail", true]],
   });
 
@@ -38,11 +38,11 @@ add_task(function* setup() {
  * not to submit the email address in the next crash report, that we
  * clear the email address.
  */
-add_task(function* test_clear_email() {
+add_task(async function test_clear_email() {
   return BrowserTestUtils.withNewTab({
     gBrowser,
     url: PAGE,
-  }, function*(browser) {
+  }, async function(browser) {
     let prefs = TabCrashHandler.prefs;
     let originalSendReport = prefs.getBoolPref("sendReport");
     let originalEmailMe = prefs.getBoolPref("emailMe");
@@ -55,7 +55,7 @@ add_task(function* test_clear_email() {
     prefs.setBoolPref("emailMe", true);
 
     let tab = gBrowser.getTabForBrowser(browser);
-    yield BrowserTestUtils.crashBrowser(browser);
+    await BrowserTestUtils.crashBrowser(browser);
     let doc = browser.contentDocument;
 
     // Since about:tabcrashed will run in the parent process, we can safely
@@ -69,8 +69,8 @@ add_task(function* test_clear_email() {
 
     let restoreTab = browser.contentDocument.getElementById("restoreTab");
     restoreTab.click();
-    yield BrowserTestUtils.waitForEvent(tab, "SSTabRestored");
-    yield crashReport;
+    await BrowserTestUtils.waitForEvent(tab, "SSTabRestored");
+    await crashReport;
 
     is(prefs.getCharPref("email"), "", "No email address should be stored");
 

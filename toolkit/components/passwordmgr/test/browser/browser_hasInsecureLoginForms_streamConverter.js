@@ -3,7 +3,7 @@
 
 Cu.import("resource://gre/modules/LoginManagerParent.jsm", this);
 
-function* registerConverter() {
+function registerConverter() {
   Cu.import("resource://gre/modules/Services.jsm", this);
   Cu.import("resource://gre/modules/NetUtil.jsm", this);
 
@@ -77,16 +77,16 @@ function waitForInsecureLoginFormsStateChange(browser, count) {
  * Checks that hasInsecureLoginForms is false for a viewer served internally
  * using a "resource:" URI.
  */
-add_task(function* test_streamConverter() {
+add_task(async function test_streamConverter() {
   let originalBrowser = gBrowser.selectedTab.linkedBrowser;
 
-  yield ContentTask.spawn(originalBrowser, null, registerConverter);
+  await ContentTask.spawn(originalBrowser, null, registerConverter);
 
   let tab = gBrowser.addTab("http://example.com/browser/toolkit/components/" +
                             "passwordmgr/test/browser/streamConverter_content.sjs",
                             { sameProcessAsFrameLoader: originalBrowser.frameLoader });
   let browser = tab.linkedBrowser;
-  yield Promise.all([
+  await Promise.all([
     BrowserTestUtils.switchTab(gBrowser, tab),
     BrowserTestUtils.browserLoaded(browser),
     // One event is triggered by pageshow and one by DOMFormHasPassword.
@@ -95,9 +95,9 @@ add_task(function* test_streamConverter() {
 
   Assert.ok(!LoginManagerParent.hasInsecureLoginForms(browser));
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 
-  yield ContentTask.spawn(originalBrowser, null, function* () {
+  await ContentTask.spawn(originalBrowser, null, async function() {
     this.cleanupFunction();
   });
 });

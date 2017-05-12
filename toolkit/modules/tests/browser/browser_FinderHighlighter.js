@@ -4,7 +4,6 @@ Cu.import("resource://testing-common/BrowserTestUtils.jsm", this);
 Cu.import("resource://testing-common/ContentTask.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
-Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/Timer.jsm", this);
 Cu.import("resource://gre/modules/AppConstants.jsm");
 
@@ -59,7 +58,7 @@ function promiseEnterStringIntoFindField(findbar, str) {
 
 function promiseTestHighlighterOutput(browser, word, expectedResult, extraTest = () => {}) {
   return ContentTask.spawn(browser, { word, expectedResult, extraTest: extraTest.toSource() },
-    function* ({ word, expectedResult, extraTest }) {
+    async function({ word, expectedResult, extraTest }) {
     Cu.import("resource://gre/modules/Timer.jsm", this);
 
     return new Promise((resolve, reject) => {
@@ -186,15 +185,15 @@ function promiseTestHighlighterOutput(browser, word, expectedResult, extraTest =
   });
 }
 
-add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({ set: [
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({ set: [
     [kHighlightAllPref, true],
     [kPrefModalHighlight, true]
   ]});
 });
 
 // Test the results of modal highlighting, which is on by default.
-add_task(function* testModalResults() {
+add_task(async function testModalResults() {
   let tests = new Map([
     ["Roland", {
       rectCount: 2,
@@ -228,11 +227,11 @@ add_task(function* testModalResults() {
     }]
   ]);
   let url = kFixtureBaseURL + "file_FinderSample.html";
-  yield BrowserTestUtils.withNewTab(url, function* (browser) {
+  await BrowserTestUtils.withNewTab(url, async function(browser) {
     let findbar = gBrowser.getFindBar();
 
     for (let [word, expectedResult] of tests) {
-      yield promiseOpenFindbar(findbar);
+      await promiseOpenFindbar(findbar);
       Assert.ok(!findbar.hidden, "Findbar should be open now.");
 
       let timeout = kIteratorTimeout;
@@ -240,11 +239,11 @@ add_task(function* testModalResults() {
         timeout *= 4;
       else if (word.length == 2)
         timeout *= 2;
-      yield new Promise(resolve => setTimeout(resolve, timeout));
+      await new Promise(resolve => setTimeout(resolve, timeout));
       let promise = promiseTestHighlighterOutput(browser, word, expectedResult,
         expectedResult.extraTest);
-      yield promiseEnterStringIntoFindField(findbar, word);
-      yield promise;
+      await promiseEnterStringIntoFindField(findbar, word);
+      await promise;
 
       findbar.close(true);
     }
@@ -253,12 +252,12 @@ add_task(function* testModalResults() {
 
 // Test if runtime switching of highlight modes between modal and non-modal works
 // as expected.
-add_task(function* testModalSwitching() {
+add_task(async function testModalSwitching() {
   let url = kFixtureBaseURL + "file_FinderSample.html";
-  yield BrowserTestUtils.withNewTab(url, function* (browser) {
+  await BrowserTestUtils.withNewTab(url, async function(browser) {
     let findbar = gBrowser.getFindBar();
 
-    yield promiseOpenFindbar(findbar);
+    await promiseOpenFindbar(findbar);
     Assert.ok(!findbar.hidden, "Findbar should be open now.");
 
     let word = "Roland";
@@ -268,10 +267,10 @@ add_task(function* testModalSwitching() {
       removeCalls: [0, 1]
     };
     let promise = promiseTestHighlighterOutput(browser, word, expectedResult);
-    yield promiseEnterStringIntoFindField(findbar, word);
-    yield promise;
+    await promiseEnterStringIntoFindField(findbar, word);
+    await promise;
 
-    yield SpecialPowers.pushPrefEnv({ "set": [[ kPrefModalHighlight, false ]] });
+    await SpecialPowers.pushPrefEnv({ "set": [[ kPrefModalHighlight, false ]] });
 
     expectedResult = {
       rectCount: 0,
@@ -280,22 +279,22 @@ add_task(function* testModalSwitching() {
     };
     promise = promiseTestHighlighterOutput(browser, word, expectedResult);
     findbar.clear();
-    yield promiseEnterStringIntoFindField(findbar, word);
-    yield promise;
+    await promiseEnterStringIntoFindField(findbar, word);
+    await promise;
 
     findbar.close(true);
   });
 
-  yield SpecialPowers.pushPrefEnv({ "set": [[ kPrefModalHighlight, true ]] });
+  await SpecialPowers.pushPrefEnv({ "set": [[ kPrefModalHighlight, true ]] });
 });
 
 // Test if highlighting a dark page is detected properly.
-add_task(function* testDarkPageDetection() {
+add_task(async function testDarkPageDetection() {
   let url = kFixtureBaseURL + "file_FinderSample.html";
-  yield BrowserTestUtils.withNewTab(url, function* (browser) {
+  await BrowserTestUtils.withNewTab(url, async function(browser) {
     let findbar = gBrowser.getFindBar();
 
-    yield promiseOpenFindbar(findbar);
+    await promiseOpenFindbar(findbar);
 
     let word = "Roland";
     let expectedResult = {
@@ -307,16 +306,16 @@ add_task(function* testDarkPageDetection() {
       Assert.ok(node.style.background.startsWith("rgba(0, 0, 0"),
         "White HTML page should have a black background color set for the mask");
     });
-    yield promiseEnterStringIntoFindField(findbar, word);
-    yield promise;
+    await promiseEnterStringIntoFindField(findbar, word);
+    await promise;
 
     findbar.close(true);
   });
 
-  yield BrowserTestUtils.withNewTab(url, function* (browser) {
+  await BrowserTestUtils.withNewTab(url, async function(browser) {
     let findbar = gBrowser.getFindBar();
 
-    yield promiseOpenFindbar(findbar);
+    await promiseOpenFindbar(findbar);
 
     let word = "Roland";
     let expectedResult = {
@@ -325,7 +324,7 @@ add_task(function* testDarkPageDetection() {
       removeCalls: [0, 1]
     };
 
-    yield ContentTask.spawn(browser, null, function* () {
+    await ContentTask.spawn(browser, null, async function() {
       let dwu = content.QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(Ci.nsIDOMWindowUtils);
       let uri = "data:text/css;charset=utf-8," + encodeURIComponent(`
@@ -342,19 +341,19 @@ add_task(function* testDarkPageDetection() {
       Assert.ok(node.style.background.startsWith("rgba(255, 255, 255"),
         "Dark HTML page should have a white background color set for the mask");
     });
-    yield promiseEnterStringIntoFindField(findbar, word);
-    yield promise;
+    await promiseEnterStringIntoFindField(findbar, word);
+    await promise;
 
     findbar.close(true);
   });
 });
 
-add_task(function* testHighlightAllToggle() {
+add_task(async function testHighlightAllToggle() {
   let url = kFixtureBaseURL + "file_FinderSample.html";
-  yield BrowserTestUtils.withNewTab(url, function* (browser) {
+  await BrowserTestUtils.withNewTab(url, async function(browser) {
     let findbar = gBrowser.getFindBar();
 
-    yield promiseOpenFindbar(findbar);
+    await promiseOpenFindbar(findbar);
 
     let word = "Roland";
     let expectedResult = {
@@ -363,8 +362,8 @@ add_task(function* testHighlightAllToggle() {
       removeCalls: [0, 1]
     };
     let promise = promiseTestHighlighterOutput(browser, word, expectedResult);
-    yield promiseEnterStringIntoFindField(findbar, word);
-    yield promise;
+    await promiseEnterStringIntoFindField(findbar, word);
+    await promise;
 
     // We now know we have multiple rectangles highlighted, so it's a good time
     // to flip the pref.
@@ -374,8 +373,8 @@ add_task(function* testHighlightAllToggle() {
       removeCalls: [1, 2]
     };
     promise = promiseTestHighlighterOutput(browser, word, expectedResult);
-    yield SpecialPowers.pushPrefEnv({ "set": [[ kHighlightAllPref, false ]] });
-    yield promise;
+    await SpecialPowers.pushPrefEnv({ "set": [[ kHighlightAllPref, false ]] });
+    await promise;
 
     // For posterity, let's switch back.
     expectedResult = {
@@ -384,21 +383,21 @@ add_task(function* testHighlightAllToggle() {
       removeCalls: [0, 1]
     };
     promise = promiseTestHighlighterOutput(browser, word, expectedResult);
-    yield SpecialPowers.pushPrefEnv({ "set": [[ kHighlightAllPref, true ]] });
-    yield promise;
+    await SpecialPowers.pushPrefEnv({ "set": [[ kHighlightAllPref, true ]] });
+    await promise;
   });
 });
 
-add_task(function* testXMLDocument() {
+add_task(async function testXMLDocument() {
   let url = "data:text/xml;charset=utf-8," + encodeURIComponent(`<?xml version="1.0"?>
 <result>
   <Title>Example</Title>
   <Error>Error</Error>
 </result>`);
-  yield BrowserTestUtils.withNewTab(url, function* (browser) {
+  await BrowserTestUtils.withNewTab(url, async function(browser) {
     let findbar = gBrowser.getFindBar();
 
-    yield promiseOpenFindbar(findbar);
+    await promiseOpenFindbar(findbar);
 
     let word = "Example";
     let expectedResult = {
@@ -407,20 +406,20 @@ add_task(function* testXMLDocument() {
       removeCalls: [0, 1]
     };
     let promise = promiseTestHighlighterOutput(browser, word, expectedResult);
-    yield promiseEnterStringIntoFindField(findbar, word);
-    yield promise;
+    await promiseEnterStringIntoFindField(findbar, word);
+    await promise;
 
     findbar.close(true);
   });
 });
 
-add_task(function* testHideOnLocationChange() {
+add_task(async function testHideOnLocationChange() {
   let url = kFixtureBaseURL + "file_FinderSample.html";
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
   let browser = tab.linkedBrowser;
   let findbar = gBrowser.getFindBar();
 
-  yield promiseOpenFindbar(findbar);
+  await promiseOpenFindbar(findbar);
 
   let word = "Roland";
   let expectedResult = {
@@ -429,8 +428,8 @@ add_task(function* testHideOnLocationChange() {
     removeCalls: [0, 1]
   };
   let promise = promiseTestHighlighterOutput(browser, word, expectedResult);
-  yield promiseEnterStringIntoFindField(findbar, word);
-  yield promise;
+  await promiseEnterStringIntoFindField(findbar, word);
+  await promise;
 
   // Now we try to navigate away! (Using the same page)
   promise = promiseTestHighlighterOutput(browser, word, {
@@ -438,17 +437,17 @@ add_task(function* testHideOnLocationChange() {
     insertCalls: [0, 0],
     removeCalls: [1, 2]
   });
-  yield BrowserTestUtils.loadURI(browser, url);
-  yield promise;
+  await BrowserTestUtils.loadURI(browser, url);
+  await promise;
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });
 
-add_task(function* testHideOnClear() {
+add_task(async function testHideOnClear() {
   let url = kFixtureBaseURL + "file_FinderSample.html";
-  yield BrowserTestUtils.withNewTab(url, function* (browser) {
+  await BrowserTestUtils.withNewTab(url, async function(browser) {
     let findbar = gBrowser.getFindBar();
-    yield promiseOpenFindbar(findbar);
+    await promiseOpenFindbar(findbar);
 
     let word = "Roland";
     let expectedResult = {
@@ -457,30 +456,30 @@ add_task(function* testHideOnClear() {
       removeCalls: [0, 2]
     };
     let promise = promiseTestHighlighterOutput(browser, word, expectedResult);
-    yield promiseEnterStringIntoFindField(findbar, word);
-    yield promise;
+    await promiseEnterStringIntoFindField(findbar, word);
+    await promise;
 
-    yield new Promise(resolve => setTimeout(resolve, kIteratorTimeout));
+    await new Promise(resolve => setTimeout(resolve, kIteratorTimeout));
     promise = promiseTestHighlighterOutput(browser, "", {
       rectCount: 0,
       insertCalls: [0, 0],
       removeCalls: [1, 2]
     });
     findbar.clear();
-    yield promise;
+    await promise;
 
     findbar.close(true);
   });
 });
 
-add_task(function* testRectsAndTexts() {
+add_task(async function testRectsAndTexts() {
   let url = "data:text/html;charset=utf-8," +
     encodeURIComponent("<div style=\"width: 150px; border: 1px solid black\">" +
     "Here are a lot of words Please use find to highlight some words that wrap" +
     " across a line boundary and see what happens.</div>");
-  yield BrowserTestUtils.withNewTab(url, function* (browser) {
+  await BrowserTestUtils.withNewTab(url, async function(browser) {
     let findbar = gBrowser.getFindBar();
-    yield promiseOpenFindbar(findbar);
+    await promiseOpenFindbar(findbar);
 
     let word = "words please use find to";
     let expectedResult = {
@@ -494,18 +493,18 @@ add_task(function* testRectsAndTexts() {
       Assert.equal(boxes[0].textContent.trim(), "words", "First text should match");
       Assert.equal(boxes[1].textContent.trim(), "Please use find to", "Second word should match");
     });
-    yield promiseEnterStringIntoFindField(findbar, word);
-    yield promise;
+    await promiseEnterStringIntoFindField(findbar, word);
+    await promise;
   });
 });
 
-add_task(function* testTooLargeToggle() {
+add_task(async function testTooLargeToggle() {
   let url = kFixtureBaseURL + "file_FinderSample.html";
-  yield BrowserTestUtils.withNewTab(url, function* (browser) {
+  await BrowserTestUtils.withNewTab(url, async function(browser) {
     let findbar = gBrowser.getFindBar();
-    yield promiseOpenFindbar(findbar);
+    await promiseOpenFindbar(findbar);
 
-    yield ContentTask.spawn(browser, null, function* () {
+    await ContentTask.spawn(browser, null, async function() {
       let dwu = content.QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(Ci.nsIDOMWindowUtils);
       let uri = "data:text/css;charset=utf-8," + encodeURIComponent(`
@@ -526,7 +525,7 @@ add_task(function* testTooLargeToggle() {
       animationCalls: [0, 0]
     };
     let promise = promiseTestHighlighterOutput(browser, word, expectedResult);
-    yield promiseEnterStringIntoFindField(findbar, word);
-    yield promise;
+    await promiseEnterStringIntoFindField(findbar, word);
+    await promise;
   });
 });

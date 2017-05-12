@@ -30,16 +30,16 @@ let extensionData = {
   background,
 };
 
-add_task(function* test_background() {
+add_task(async function test_background() {
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   info("load complete");
-  let [, x] = yield Promise.all([extension.startup(), extension.awaitMessage("running")]);
+  let [, x] = await Promise.all([extension.startup(), extension.awaitMessage("running")]);
   is(x, 1, "got correct value from extension");
   info("startup complete");
   extension.sendMessage(10, 20);
-  yield extension.awaitFinish();
+  await extension.awaitFinish();
   info("test complete");
-  yield extension.unload();
+  await extension.unload();
   info("extension unloaded successfully");
 });
 

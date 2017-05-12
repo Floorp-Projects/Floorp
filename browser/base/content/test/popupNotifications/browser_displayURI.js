@@ -3,18 +3,18 @@
  * consumers e.g. geolocation.
 */
 
-add_task(function* test_displayURI() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function test_displayURI() {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "https://test1.example.com/",
-  }, function*(browser) {
+  }, async function(browser) {
     let popupShownPromise = waitForNotificationPanel();
-    yield ContentTask.spawn(browser, null, function*() {
+    await ContentTask.spawn(browser, null, async function() {
       content.navigator.geolocation.getCurrentPosition(function(pos) {
         // Do nothing
       });
     });
-    let panel = yield popupShownPromise;
+    let panel = await popupShownPromise;
     let notification = panel.children[0];
     let body = document.getAnonymousElementByAttribute(notification,
                                                        "class",

@@ -7,11 +7,11 @@ var {Ci: interfaces, Cc: classes} = Components;
 var Clipboard = Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
 var HasFindClipboard = Clipboard.supportsFindClipboard();
 
-add_task(function* () {
-  let newwindow = yield BrowserTestUtils.openNewBrowserWindow();
+add_task(async function() {
+  let newwindow = await BrowserTestUtils.openNewBrowserWindow();
 
   let selectedBrowser = newwindow.gBrowser.selectedBrowser;
-  yield new Promise((resolve, reject) => {
+  await new Promise((resolve, reject) => {
     selectedBrowser.addEventListener("pageshow", function pageshowListener() {
       if (selectedBrowser.currentURI.spec == "about:blank")
         return;
@@ -23,12 +23,12 @@ add_task(function* () {
     selectedBrowser.loadURI("data:text/html,<h1 id='h1'>Select Me</h1>");
   });
 
-  yield SimpleTest.promiseFocus(newwindow);
+  await SimpleTest.promiseFocus(newwindow);
 
   ok(!newwindow.gFindBarInitialized, "find bar is not yet initialized");
   let findBar = newwindow.gFindBar;
 
-  yield ContentTask.spawn(selectedBrowser, { }, function* () {
+  await ContentTask.spawn(selectedBrowser, { }, async function() {
     let elt = content.document.getElementById("h1");
     let selection = content.getSelection();
     let range = content.document.createRange();
@@ -38,13 +38,13 @@ add_task(function* () {
     selection.addRange(range);
   });
 
-  yield findBar.onFindCommand();
+  await findBar.onFindCommand();
 
   // When the OS supports the Find Clipboard (OSX), the find field value is
   // persisted across Fx sessions, thus not useful to test.
   if (!HasFindClipboard)
     is(findBar._findField.value, "Select Me", "Findbar is initialized with selection");
   findBar.close();
-  yield promiseWindowClosed(newwindow);
+  await promiseWindowClosed(newwindow);
 });
 

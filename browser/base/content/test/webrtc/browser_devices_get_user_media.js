@@ -11,11 +11,11 @@ var gTests = [
 
 {
   desc: "getUserMedia audio+video",
-  run: function* checkAudioVideo() {
+  run: async function checkAudioVideo() {
     let promise = promisePopupNotificationShown("webRTC-shareDevices");
-    yield promiseRequestDevice(true, true);
-    yield promise;
-    yield expectObserverCalled("getUserMedia:request");
+    await promiseRequestDevice(true, true);
+    await promise;
+    await expectObserverCalled("getUserMedia:request");
 
     is(PopupNotifications.getNotification("webRTC-shareDevices").anchorID,
        "webRTC-shareDevices-notification-icon", "anchored to device icon");
@@ -25,27 +25,27 @@ var gTests = [
     ok(iconclass.includes("camera-icon"), "panel using devices icon");
 
     let indicator = promiseIndicatorWindow();
-    yield promiseMessage("ok", () => {
+    await promiseMessage("ok", () => {
       PopupNotifications.panel.firstChild.button.click();
     });
-    yield expectObserverCalled("getUserMedia:response:allow");
-    yield expectObserverCalled("recording-device-events");
-    Assert.deepEqual((yield getMediaCaptureState()), {audio: true, video: true},
+    await expectObserverCalled("getUserMedia:response:allow");
+    await expectObserverCalled("recording-device-events");
+    Assert.deepEqual((await getMediaCaptureState()), {audio: true, video: true},
                      "expected camera and microphone to be shared");
 
-    yield indicator;
-    yield checkSharingUI({audio: true, video: true});
-    yield closeStream();
+    await indicator;
+    await checkSharingUI({audio: true, video: true});
+    await closeStream();
   }
 },
 
 {
   desc: "getUserMedia audio only",
-  run: function* checkAudioOnly() {
+  run: async function checkAudioOnly() {
     let promise = promisePopupNotificationShown("webRTC-shareDevices");
-    yield promiseRequestDevice(true);
-    yield promise;
-    yield expectObserverCalled("getUserMedia:request");
+    await promiseRequestDevice(true);
+    await promise;
+    await expectObserverCalled("getUserMedia:request");
 
     is(PopupNotifications.getNotification("webRTC-shareDevices").anchorID,
        "webRTC-shareMicrophone-notification-icon", "anchored to mic icon");
@@ -55,27 +55,27 @@ var gTests = [
     ok(iconclass.includes("microphone-icon"), "panel using microphone icon");
 
     let indicator = promiseIndicatorWindow();
-    yield promiseMessage("ok", () => {
+    await promiseMessage("ok", () => {
       PopupNotifications.panel.firstChild.button.click();
     });
-    yield expectObserverCalled("getUserMedia:response:allow");
-    yield expectObserverCalled("recording-device-events");
-    Assert.deepEqual((yield getMediaCaptureState()), {audio: true},
+    await expectObserverCalled("getUserMedia:response:allow");
+    await expectObserverCalled("recording-device-events");
+    Assert.deepEqual((await getMediaCaptureState()), {audio: true},
                      "expected microphone to be shared");
 
-    yield indicator;
-    yield checkSharingUI({audio: true});
-    yield closeStream();
+    await indicator;
+    await checkSharingUI({audio: true});
+    await closeStream();
   }
 },
 
 {
   desc: "getUserMedia video only",
-  run: function* checkVideoOnly() {
+  run: async function checkVideoOnly() {
     let promise = promisePopupNotificationShown("webRTC-shareDevices");
-    yield promiseRequestDevice(false, true);
-    yield promise;
-    yield expectObserverCalled("getUserMedia:request");
+    await promiseRequestDevice(false, true);
+    await promise;
+    await expectObserverCalled("getUserMedia:request");
 
     is(PopupNotifications.getNotification("webRTC-shareDevices").anchorID,
        "webRTC-shareDevices-notification-icon", "anchored to device icon");
@@ -85,36 +85,36 @@ var gTests = [
     ok(iconclass.includes("camera-icon"), "panel using devices icon");
 
     let indicator = promiseIndicatorWindow();
-    yield promiseMessage("ok", () => {
+    await promiseMessage("ok", () => {
       PopupNotifications.panel.firstChild.button.click();
     });
-    yield expectObserverCalled("getUserMedia:response:allow");
-    yield expectObserverCalled("recording-device-events");
-    Assert.deepEqual((yield getMediaCaptureState()), {video: true},
+    await expectObserverCalled("getUserMedia:response:allow");
+    await expectObserverCalled("recording-device-events");
+    Assert.deepEqual((await getMediaCaptureState()), {video: true},
                      "expected camera to be shared");
 
-    yield indicator;
-    yield checkSharingUI({video: true});
-    yield closeStream();
+    await indicator;
+    await checkSharingUI({video: true});
+    await closeStream();
   }
 },
 
 {
   desc: "getUserMedia audio+video, user clicks \"Don't Share\"",
-  run: function* checkDontShare() {
+  run: async function checkDontShare() {
     let promise = promisePopupNotificationShown("webRTC-shareDevices");
-    yield promiseRequestDevice(true, true);
-    yield promise;
-    yield expectObserverCalled("getUserMedia:request");
+    await promiseRequestDevice(true, true);
+    await promise;
+    await expectObserverCalled("getUserMedia:request");
     checkDeviceSelectors(true, true);
 
-    yield promiseMessage(permissionError, () => {
+    await promiseMessage(permissionError, () => {
       activateSecondaryAction(kActionDeny);
     });
 
-    yield expectObserverCalled("getUserMedia:response:deny");
-    yield expectObserverCalled("recording-window-ended");
-    yield checkNotSharing();
+    await expectObserverCalled("getUserMedia:response:deny");
+    await expectObserverCalled("recording-window-ended");
+    await checkNotSharing();
 
     // Verify that we set 'Temporarily blocked' permissions.
     let browser = gBrowser.selectedBrowser;
@@ -134,12 +134,12 @@ var gTests = [
 
     info("requesting devices again to check temporarily blocked permissions");
     promise = promiseMessage(permissionError);
-    yield promiseRequestDevice(true, true);
-    yield promise;
-    yield expectObserverCalled("getUserMedia:request");
-    yield expectObserverCalled("getUserMedia:response:deny");
-    yield expectObserverCalled("recording-window-ended");
-    yield checkNotSharing();
+    await promiseRequestDevice(true, true);
+    await promise;
+    await expectObserverCalled("getUserMedia:request");
+    await expectObserverCalled("getUserMedia:response:deny");
+    await expectObserverCalled("recording-window-ended");
+    await checkNotSharing();
 
     SitePermissions.remove(browser.currentURI, "camera", browser);
     SitePermissions.remove(browser.currentURI, "microphone", browser);
@@ -148,44 +148,44 @@ var gTests = [
 
 {
   desc: "getUserMedia audio+video: stop sharing",
-  run: function* checkStopSharing() {
+  run: async function checkStopSharing() {
     let promise = promisePopupNotificationShown("webRTC-shareDevices");
-    yield promiseRequestDevice(true, true);
-    yield promise;
-    yield expectObserverCalled("getUserMedia:request");
+    await promiseRequestDevice(true, true);
+    await promise;
+    await expectObserverCalled("getUserMedia:request");
     checkDeviceSelectors(true, true);
 
     let indicator = promiseIndicatorWindow();
-    yield promiseMessage("ok", () => {
+    await promiseMessage("ok", () => {
       PopupNotifications.panel.firstChild.button.click();
     });
-    yield expectObserverCalled("getUserMedia:response:allow");
-    yield expectObserverCalled("recording-device-events");
-    Assert.deepEqual((yield getMediaCaptureState()), {audio: true, video: true},
+    await expectObserverCalled("getUserMedia:response:allow");
+    await expectObserverCalled("recording-device-events");
+    Assert.deepEqual((await getMediaCaptureState()), {audio: true, video: true},
                      "expected camera and microphone to be shared");
 
-    yield indicator;
-    yield checkSharingUI({video: true, audio: true});
+    await indicator;
+    await checkSharingUI({video: true, audio: true});
 
-    yield stopSharing();
+    await stopSharing();
 
     // the stream is already closed, but this will do some cleanup anyway
-    yield closeStream(true);
+    await closeStream(true);
 
     // After stop sharing, gUM(audio+camera) causes a prompt.
     promise = promisePopupNotificationShown("webRTC-shareDevices");
-    yield promiseRequestDevice(true, true);
-    yield promise;
-    yield expectObserverCalled("getUserMedia:request");
+    await promiseRequestDevice(true, true);
+    await promise;
+    await expectObserverCalled("getUserMedia:request");
     checkDeviceSelectors(true, true);
 
-    yield promiseMessage(permissionError, () => {
+    await promiseMessage(permissionError, () => {
       activateSecondaryAction(kActionDeny);
     });
 
-    yield expectObserverCalled("getUserMedia:response:deny");
-    yield expectObserverCalled("recording-window-ended");
-    yield checkNotSharing();
+    await expectObserverCalled("getUserMedia:response:deny");
+    await expectObserverCalled("recording-window-ended");
+    await checkNotSharing();
     SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
     SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
     SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
@@ -194,41 +194,41 @@ var gTests = [
 
 {
   desc: "getUserMedia audio+video: reloading the page removes all gUM UI",
-  run: function* checkReloading() {
+  run: async function checkReloading() {
     let promise = promisePopupNotificationShown("webRTC-shareDevices");
-    yield promiseRequestDevice(true, true);
-    yield promise;
-    yield expectObserverCalled("getUserMedia:request");
+    await promiseRequestDevice(true, true);
+    await promise;
+    await expectObserverCalled("getUserMedia:request");
     checkDeviceSelectors(true, true);
 
     let indicator = promiseIndicatorWindow();
-    yield promiseMessage("ok", () => {
+    await promiseMessage("ok", () => {
       PopupNotifications.panel.firstChild.button.click();
     });
-    yield expectObserverCalled("getUserMedia:response:allow");
-    yield expectObserverCalled("recording-device-events");
-    Assert.deepEqual((yield getMediaCaptureState()), {audio: true, video: true},
+    await expectObserverCalled("getUserMedia:response:allow");
+    await expectObserverCalled("recording-device-events");
+    Assert.deepEqual((await getMediaCaptureState()), {audio: true, video: true},
                      "expected camera and microphone to be shared");
 
-    yield indicator;
-    yield checkSharingUI({video: true, audio: true});
+    await indicator;
+    await checkSharingUI({video: true, audio: true});
 
-    yield reloadAndAssertClosedStreams();
+    await reloadAndAssertClosedStreams();
 
     // After the reload, gUM(audio+camera) causes a prompt.
     promise = promisePopupNotificationShown("webRTC-shareDevices");
-    yield promiseRequestDevice(true, true);
-    yield promise;
-    yield expectObserverCalled("getUserMedia:request");
+    await promiseRequestDevice(true, true);
+    await promise;
+    await expectObserverCalled("getUserMedia:request");
     checkDeviceSelectors(true, true);
 
-    yield promiseMessage(permissionError, () => {
+    await promiseMessage(permissionError, () => {
       activateSecondaryAction(kActionDeny);
     });
 
-    yield expectObserverCalled("getUserMedia:response:deny");
-    yield expectObserverCalled("recording-window-ended");
-    yield checkNotSharing();
+    await expectObserverCalled("getUserMedia:response:deny");
+    await expectObserverCalled("recording-window-ended");
+    await checkNotSharing();
     SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
     SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
     SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
@@ -237,15 +237,15 @@ var gTests = [
 
 {
   desc: "getUserMedia prompt: Always/Never Share",
-  run: function* checkRememberCheckbox() {
+  run: async function checkRememberCheckbox() {
     let elt = id => document.getElementById(id);
 
-    function* checkPerm(aRequestAudio, aRequestVideo,
+    async function checkPerm(aRequestAudio, aRequestVideo,
                         aExpectedAudioPerm, aExpectedVideoPerm, aNever) {
       let promise = promisePopupNotificationShown("webRTC-shareDevices");
-      yield promiseRequestDevice(aRequestAudio, aRequestVideo);
-      yield promise;
-      yield expectObserverCalled("getUserMedia:request");
+      await promiseRequestDevice(aRequestAudio, aRequestVideo);
+      await promise;
+      await expectObserverCalled("getUserMedia:request");
 
       is(elt("webRTC-selectMicrophone").hidden, !aRequestAudio,
          "microphone selector expected to be " + (aRequestAudio ? "visible" : "hidden"));
@@ -254,22 +254,22 @@ var gTests = [
          "camera selector expected to be " + (aRequestVideo ? "visible" : "hidden"));
 
       let expectedMessage = aNever ? permissionError : "ok";
-      yield promiseMessage(expectedMessage, () => {
+      await promiseMessage(expectedMessage, () => {
         activateSecondaryAction(aNever ? kActionNever : kActionAlways);
       });
       let expected = {};
       if (expectedMessage == "ok") {
-        yield expectObserverCalled("getUserMedia:response:allow");
-        yield expectObserverCalled("recording-device-events");
+        await expectObserverCalled("getUserMedia:response:allow");
+        await expectObserverCalled("recording-device-events");
         if (aRequestVideo)
           expected.video = true;
         if (aRequestAudio)
           expected.audio = true;
       } else {
-        yield expectObserverCalled("getUserMedia:response:deny");
-        yield expectObserverCalled("recording-window-ended");
+        await expectObserverCalled("getUserMedia:response:deny");
+        await expectObserverCalled("recording-window-ended");
       }
-      Assert.deepEqual((yield getMediaCaptureState()), expected,
+      Assert.deepEqual((await getMediaCaptureState()), expected,
                        "expected " + Object.keys(expected).join(" and ") +
                        " to be shared");
 
@@ -289,31 +289,31 @@ var gTests = [
       checkDevicePermissions("camera", aExpectedVideoPerm);
 
       if (expectedMessage == "ok")
-        yield closeStream();
+        await closeStream();
     }
 
     // 3 cases where the user accepts the device prompt.
     info("audio+video, user grants, expect both perms set to allow");
-    yield checkPerm(true, true, true, true);
+    await checkPerm(true, true, true, true);
     info("audio only, user grants, check audio perm set to allow, video perm not set");
-    yield checkPerm(true, false, true, undefined);
+    await checkPerm(true, false, true, undefined);
     info("video only, user grants, check video perm set to allow, audio perm not set");
-    yield checkPerm(false, true, undefined, true);
+    await checkPerm(false, true, undefined, true);
 
     // 3 cases where the user rejects the device request by using 'Never Share'.
     info("audio only, user denies, expect audio perm set to deny, video not set");
-    yield checkPerm(true, false, false, undefined, true);
+    await checkPerm(true, false, false, undefined, true);
     info("video only, user denies, expect video perm set to deny, audio perm not set");
-    yield checkPerm(false, true, undefined, false, true);
+    await checkPerm(false, true, undefined, false, true);
     info("audio+video, user denies, expect both perms set to deny");
-    yield checkPerm(true, true, false, false, true);
+    await checkPerm(true, true, false, false, true);
   }
 },
 
 {
   desc: "getUserMedia without prompt: use persistent permissions",
-  run: function* checkUsePersistentPermissions() {
-    function* usePerm(aAllowAudio, aAllowVideo, aRequestAudio, aRequestVideo,
+  run: async function checkUsePersistentPermissions() {
+    async function usePerm(aAllowAudio, aAllowVideo, aRequestAudio, aRequestVideo,
                      aExpectStream) {
       let Perms = Services.perms;
       let uri = gBrowser.selectedBrowser.documentURI;
@@ -330,30 +330,30 @@ var gTests = [
       if (aExpectStream === undefined) {
         // Check that we get a prompt.
         let promise = promisePopupNotificationShown("webRTC-shareDevices");
-        yield promiseRequestDevice(aRequestAudio, aRequestVideo);
-        yield promise;
-        yield expectObserverCalled("getUserMedia:request");
+        await promiseRequestDevice(aRequestAudio, aRequestVideo);
+        await promise;
+        await expectObserverCalled("getUserMedia:request");
 
         // Deny the request to cleanup...
-        yield promiseMessage(permissionError, () => {
+        await promiseMessage(permissionError, () => {
           activateSecondaryAction(kActionDeny);
         });
-        yield expectObserverCalled("getUserMedia:response:deny");
-        yield expectObserverCalled("recording-window-ended");
+        await expectObserverCalled("getUserMedia:response:deny");
+        await expectObserverCalled("recording-window-ended");
         let browser = gBrowser.selectedBrowser;
         SitePermissions.remove(null, "camera", browser);
         SitePermissions.remove(null, "microphone", browser);
       } else {
         let expectedMessage = aExpectStream ? "ok" : permissionError;
         let promise = promiseMessage(expectedMessage);
-        yield promiseRequestDevice(aRequestAudio, aRequestVideo);
-        yield promise;
+        await promiseRequestDevice(aRequestAudio, aRequestVideo);
+        await promise;
 
         if (expectedMessage == "ok") {
-          yield expectObserverCalled("getUserMedia:request");
-          yield promiseNoPopupNotification("webRTC-shareDevices");
-          yield expectObserverCalled("getUserMedia:response:allow");
-          yield expectObserverCalled("recording-device-events");
+          await expectObserverCalled("getUserMedia:request");
+          await promiseNoPopupNotification("webRTC-shareDevices");
+          await expectObserverCalled("getUserMedia:response:allow");
+          await expectObserverCalled("recording-device-events");
 
           // Check what's actually shared.
           let expected = {};
@@ -361,13 +361,13 @@ var gTests = [
             expected.video = true;
           if (aAllowAudio && aRequestAudio)
             expected.audio = true;
-          Assert.deepEqual((yield getMediaCaptureState()), expected,
+          Assert.deepEqual((await getMediaCaptureState()), expected,
                            "expected " + Object.keys(expected).join(" and ") +
                            " to be shared");
 
-          yield closeStream();
+          await closeStream();
         } else {
-          yield expectObserverCalled("recording-window-ended");
+          await expectObserverCalled("recording-window-ended");
         }
       }
 
@@ -377,64 +377,64 @@ var gTests = [
 
     // Set both permissions identically
     info("allow audio+video, request audio+video, expect ok (audio+video)");
-    yield usePerm(true, true, true, true, true);
+    await usePerm(true, true, true, true, true);
     info("deny audio+video, request audio+video, expect denied");
-    yield usePerm(false, false, true, true, false);
+    await usePerm(false, false, true, true, false);
 
     // Allow audio, deny video.
     info("allow audio, deny video, request audio+video, expect denied");
-    yield usePerm(true, false, true, true, false);
+    await usePerm(true, false, true, true, false);
     info("allow audio, deny video, request audio, expect ok (audio)");
-    yield usePerm(true, false, true, false, true);
+    await usePerm(true, false, true, false, true);
     info("allow audio, deny video, request video, expect denied");
-    yield usePerm(true, false, false, true, false);
+    await usePerm(true, false, false, true, false);
 
     // Deny audio, allow video.
     info("deny audio, allow video, request audio+video, expect denied");
-    yield usePerm(false, true, true, true, false);
+    await usePerm(false, true, true, true, false);
     info("deny audio, allow video, request audio, expect denied");
-    yield usePerm(false, true, true, false, false);
+    await usePerm(false, true, true, false, false);
     info("deny audio, allow video, request video, expect ok (video)");
-    yield usePerm(false, true, false, true, true);
+    await usePerm(false, true, false, true, true);
 
     // Allow audio, video not set.
     info("allow audio, request audio+video, expect prompt");
-    yield usePerm(true, undefined, true, true, undefined);
+    await usePerm(true, undefined, true, true, undefined);
     info("allow audio, request audio, expect ok (audio)");
-    yield usePerm(true, undefined, true, false, true);
+    await usePerm(true, undefined, true, false, true);
     info("allow audio, request video, expect prompt");
-    yield usePerm(true, undefined, false, true, undefined);
+    await usePerm(true, undefined, false, true, undefined);
 
     // Deny audio, video not set.
     info("deny audio, request audio+video, expect denied");
-    yield usePerm(false, undefined, true, true, false);
+    await usePerm(false, undefined, true, true, false);
     info("deny audio, request audio, expect denied");
-    yield usePerm(false, undefined, true, false, false);
+    await usePerm(false, undefined, true, false, false);
     info("deny audio, request video, expect prompt");
-    yield usePerm(false, undefined, false, true, undefined);
+    await usePerm(false, undefined, false, true, undefined);
 
     // Allow video, audio not set.
     info("allow video, request audio+video, expect prompt");
-    yield usePerm(undefined, true, true, true, undefined);
+    await usePerm(undefined, true, true, true, undefined);
     info("allow video, request audio, expect prompt");
-    yield usePerm(undefined, true, true, false, undefined);
+    await usePerm(undefined, true, true, false, undefined);
     info("allow video, request video, expect ok (video)");
-    yield usePerm(undefined, true, false, true, true);
+    await usePerm(undefined, true, false, true, true);
 
     // Deny video, audio not set.
     info("deny video, request audio+video, expect denied");
-    yield usePerm(undefined, false, true, true, false);
+    await usePerm(undefined, false, true, true, false);
     info("deny video, request audio, expect prompt");
-    yield usePerm(undefined, false, true, false, undefined);
+    await usePerm(undefined, false, true, false, undefined);
     info("deny video, request video, expect denied");
-    yield usePerm(undefined, false, false, true, false);
+    await usePerm(undefined, false, false, true, false);
   }
 },
 
 {
   desc: "Stop Sharing removes persistent permissions",
-  run: function* checkStopSharingRemovesPersistentPermissions() {
-    function* stopAndCheckPerm(aRequestAudio, aRequestVideo) {
+  run: async function checkStopSharingRemovesPersistentPermissions() {
+    async function stopAndCheckPerm(aRequestAudio, aRequestVideo) {
       let Perms = Services.perms;
       let uri = gBrowser.selectedBrowser.documentURI;
 
@@ -445,16 +445,16 @@ var gTests = [
       let indicator = promiseIndicatorWindow();
       // Start sharing what's been requested.
       let promise = promiseMessage("ok");
-      yield promiseRequestDevice(aRequestAudio, aRequestVideo);
-      yield promise;
+      await promiseRequestDevice(aRequestAudio, aRequestVideo);
+      await promise;
 
-      yield expectObserverCalled("getUserMedia:request");
-      yield expectObserverCalled("getUserMedia:response:allow");
-      yield expectObserverCalled("recording-device-events");
-      yield indicator;
-      yield checkSharingUI({video: aRequestVideo, audio: aRequestAudio});
+      await expectObserverCalled("getUserMedia:request");
+      await expectObserverCalled("getUserMedia:response:allow");
+      await expectObserverCalled("recording-device-events");
+      await indicator;
+      await checkSharingUI({video: aRequestVideo, audio: aRequestAudio});
 
-      yield stopSharing(aRequestVideo ? "camera" : "microphone");
+      await stopSharing(aRequestVideo ? "camera" : "microphone");
 
       // Check that permissions have been removed as expected.
       let audioPerm = Perms.testExactPermission(uri, "microphone");
@@ -470,41 +470,41 @@ var gTests = [
         is(videoPerm, Perms.ALLOW_ACTION, "camera permissions untouched");
 
       // Cleanup.
-      yield closeStream(true);
+      await closeStream(true);
 
       Perms.remove(uri, "camera");
       Perms.remove(uri, "microphone");
     }
 
     info("request audio+video, stop sharing resets both");
-    yield stopAndCheckPerm(true, true);
+    await stopAndCheckPerm(true, true);
     info("request audio, stop sharing resets audio only");
-    yield stopAndCheckPerm(true, false);
+    await stopAndCheckPerm(true, false);
     info("request video, stop sharing resets video only");
-    yield stopAndCheckPerm(false, true);
+    await stopAndCheckPerm(false, true);
   }
 },
 
 {
   desc: "test showControlCenter",
-  run: function* checkShowControlCenter() {
+  run: async function checkShowControlCenter() {
     let promise = promisePopupNotificationShown("webRTC-shareDevices");
-    yield promiseRequestDevice(false, true);
-    yield promise;
-    yield expectObserverCalled("getUserMedia:request");
+    await promiseRequestDevice(false, true);
+    await promise;
+    await expectObserverCalled("getUserMedia:request");
     checkDeviceSelectors(false, true);
 
     let indicator = promiseIndicatorWindow();
-    yield promiseMessage("ok", () => {
+    await promiseMessage("ok", () => {
       PopupNotifications.panel.firstChild.button.click();
     });
-    yield expectObserverCalled("getUserMedia:response:allow");
-    yield expectObserverCalled("recording-device-events");
-    Assert.deepEqual((yield getMediaCaptureState()), {video: true},
+    await expectObserverCalled("getUserMedia:response:allow");
+    await expectObserverCalled("recording-device-events");
+    Assert.deepEqual((await getMediaCaptureState()), {video: true},
                      "expected camera to be shared");
 
-    yield indicator;
-    yield checkSharingUI({video: true});
+    await indicator;
+    await checkSharingUI({video: true});
 
     ok(gIdentityHandler._identityPopup.hidden, "control center should be hidden");
     if ("nsISystemStatusBar" in Ci) {
@@ -515,24 +515,24 @@ var gTests = [
         Services.wm.getMostRecentWindow("Browser:WebRTCGlobalIndicator");
       let elt = win.document.getElementById("audioVideoButton");
       EventUtils.synthesizeMouseAtCenter(elt, {}, win);
-      yield promiseWaitForCondition(() => !gIdentityHandler._identityPopup.hidden);
+      await promiseWaitForCondition(() => !gIdentityHandler._identityPopup.hidden);
     }
     ok(!gIdentityHandler._identityPopup.hidden, "control center should be open");
 
     gIdentityHandler._identityPopup.hidden = true;
-    yield expectNoObserverCalled();
+    await expectNoObserverCalled();
 
-    yield closeStream();
+    await closeStream();
   }
 },
 
 {
   desc: "'Always Allow' disabled on http pages",
-  run: function* checkNoAlwaysOnHttp() {
+  run: async function checkNoAlwaysOnHttp() {
     // Load an http page instead of the https version.
     let browser = gBrowser.selectedBrowser;
     browser.loadURI(browser.documentURI.spec.replace("https://", "http://"));
-    yield BrowserTestUtils.browserLoaded(browser);
+    await BrowserTestUtils.browserLoaded(browser);
 
     // Initially set both permissions to 'allow'.
     let Perms = Services.perms;
@@ -543,9 +543,9 @@ var gTests = [
     // Request devices and expect a prompt despite the saved 'Allow' permission,
     // because the connection isn't secure.
     let promise = promisePopupNotificationShown("webRTC-shareDevices");
-    yield promiseRequestDevice(true, true);
-    yield promise;
-    yield expectObserverCalled("getUserMedia:request");
+    await promiseRequestDevice(true, true);
+    await promise;
+    await expectObserverCalled("getUserMedia:request");
 
     // Ensure that checking the 'Remember this decision' checkbox disables
     // 'Allow'.
@@ -559,7 +559,7 @@ var gTests = [
     ok(!notification.hasAttribute("warninghidden"), "warning message is shown");
 
     // Cleanup.
-    yield closeStream(true);
+    await closeStream(true);
     Perms.remove(uri, "camera");
     Perms.remove(uri, "microphone");
   }

@@ -4,7 +4,7 @@
 const RELATIVE_DIR = "browser/extensions/pdfjs/test/";
 const TESTROOT = "http://example.com/browser/" + RELATIVE_DIR;
 
-add_task(function* test() {
+add_task(async function test() {
   let mimeService = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
   let handlerInfo = mimeService.getFromTypeAndExtension("application/pdf", "pdf");
 
@@ -14,13 +14,13 @@ add_task(function* test() {
 
   info("Pref action: " + handlerInfo.preferredAction);
 
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" },
-    function* (newTabBrowser) {
-      yield waitForPdfJS(newTabBrowser, TESTROOT + "file_pdfjs_test.pdf");
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" },
+    async function(newTabBrowser) {
+      await waitForPdfJS(newTabBrowser, TESTROOT + "file_pdfjs_test.pdf");
 
       ok(gBrowser.isFindBarInitialized(), "Browser FindBar initialized!");
 
-      yield ContentTask.spawn(newTabBrowser, null, function* () {
+      await ContentTask.spawn(newTabBrowser, null, async function() {
         // Overall sanity tests
         Assert.ok(content.document.querySelector("div#viewer"), "document content has viewer UI");
         Assert.ok("PDFJS" in content.wrappedJSObject, "window content has PDFJS object");
@@ -47,7 +47,7 @@ add_task(function* test() {
         Assert.ok(viewBookmark.href.length > 0, "viewBookmark button has href");
 
         var viewer = content.wrappedJSObject.PDFViewerApplication;
-        yield viewer.close();
+        await viewer.close();
       });
     });
 });

@@ -7,18 +7,18 @@ const PAGE_URL = BASE_URL + "/framedPage.html";
 const LEFT_URL = BASE_URL + "/frameLeft.html";
 const RIGHT_URL = BASE_URL + "/frameRight.html";
 
-function* withAddBookmarkForFrame(taskFn) {
+async function withAddBookmarkForFrame(taskFn) {
   // Open a tab and wait for all the subframes to load.
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE_URL);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE_URL);
 
   let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
 
   let popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
-  yield BrowserTestUtils.synthesizeMouseAtCenter("#left",
+  await BrowserTestUtils.synthesizeMouseAtCenter("#left",
     { type: "contextmenu", button: 2}, gBrowser.selectedBrowser);
-  yield popupShownPromise;
+  await popupShownPromise;
 
-  yield withBookmarksDialog(true, function() {
+  await withBookmarksDialog(true, function() {
     let frameMenuItem = document.getElementById("frame");
     frameMenuItem.click();
 
@@ -26,12 +26,12 @@ function* withAddBookmarkForFrame(taskFn) {
     bookmarkFrame.click();
   }, taskFn);
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 }
 
-add_task(function* test_open_add_bookmark_for_frame() {
+add_task(async function test_open_add_bookmark_for_frame() {
   info("Test basic opening of the add bookmark for frame dialog.");
-  yield withAddBookmarkForFrame(function* test(dialogWin) {
+  await withAddBookmarkForFrame(function test(dialogWin) {
     let namepicker = dialogWin.document.getElementById("editBMPanel_namePicker");
     Assert.ok(!namepicker.readOnly, "Name field is writable");
     Assert.equal(namepicker.value, "Left frame", "Name field is correct.");
@@ -49,9 +49,9 @@ add_task(function* test_open_add_bookmark_for_frame() {
   });
 });
 
-add_task(function* test_move_bookmark_whilst_add_bookmark_open() {
+add_task(async function test_move_bookmark_whilst_add_bookmark_open() {
   info("Test moving a bookmark whilst the add bookmark for frame dialog is open.");
-  yield withAddBookmarkForFrame(function* test(dialogWin) {
+  await withAddBookmarkForFrame(async function test(dialogWin) {
     let bookmarksMenuFolderName = PlacesUtils.getString("BookmarksMenuFolderTitle");
     let toolbarFolderName = PlacesUtils.getString("BookmarksToolbarFolderTitle");
 
@@ -63,7 +63,7 @@ add_task(function* test_move_bookmark_whilst_add_bookmark_open() {
                  bookmarksMenuFolderName, "The folder is the expected one.");
 
     // Check the bookmark has been created as expected.
-    let bookmark = yield PlacesUtils.bookmarks.fetch({url});
+    let bookmark = await PlacesUtils.bookmarks.fetch({url});
 
     Assert.equal(bookmark.parentGuid,
                  PlacesUtils.bookmarks.menuGuid,
@@ -73,7 +73,7 @@ add_task(function* test_move_bookmark_whilst_add_bookmark_open() {
     bookmark.parentGuid = PlacesUtils.bookmarks.toolbarGuid;
     bookmark.index = PlacesUtils.bookmarks.DEFAULT_INDEX;
 
-    yield PlacesUtils.bookmarks.update(bookmark);
+    await PlacesUtils.bookmarks.update(bookmark);
 
     Assert.equal(folderPicker.selectedItem.label,
                  toolbarFolderName, "The folder picker has changed to the new folder");

@@ -57,11 +57,10 @@
         };
 
       var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-      Cu.import("resource://gre/modules/Task.jsm");
       var cps = Cc["@mozilla.org/content-pref/service;1"]
                   .getService(Ci.nsIContentPrefService2);
 
-      function* test1(mm) {
+      async function test1(mm) {
         let tester = new Tester(mm);
 
         tester.ok(cps !== null, "got the content pref service");
@@ -74,7 +73,7 @@
           }
         });
 
-        yield setPref.promise;
+        await setPref.promise;
 
         let numResults = 0;
         let gotGlobal = Defer();
@@ -92,10 +91,10 @@
           }
         });
 
-        yield gotGlobal.promise;
+        await gotGlobal.promise;
       }
 
-      function* test2(mm) {
+      async function test2(mm) {
         let tester = new Tester(mm);
 
         let observer;
@@ -131,13 +130,13 @@
         });
 
         mm.sendAsyncMessage("testRemoteContentPrefs:test2poke", {});
-        yield gotSet.promise;
+        await gotSet.promise;
 
         mm.sendAsyncMessage("testRemoteContentPrefs:test2poke2", {});
-        yield gotRemoved.promise;
+        await gotRemoved.promise;
       }
 
-      function* test3(mm) {
+      async function test3(mm) {
         let tester = new Tester(mm);
 
         let setGlobalDone = Defer();
@@ -154,7 +153,7 @@
           }
         });
 
-        yield setGlobalDone.promise;
+        await setGlobalDone.promise;
 
         let removeDone = Defer();
         cps.removeByDomain("http://mochi.test", null, {
@@ -176,10 +175,10 @@
           }
         });
 
-        yield removeDone.promise;
+        await removeDone.promise;
       }
 
-      function* test4(mm) {
+      async function test4(mm) {
         let tester = new Tester(mm);
 
         let observed = Defer();
@@ -197,14 +196,14 @@
         let privateLoadContext = Cc["@mozilla.org/privateloadcontext;1"].
                             createInstance(Ci.nsILoadContext);
         cps.set("http://mochi.test", "test", 42, privateLoadContext);
-        let event = yield observed.promise;
+        let event = await observed.promise;
         tester.is(event.name, "test", "got the right event");
         tester.is(event.isPrivate, true, "the event was for an isPrivate pref");
 
         mm.sendAsyncMessage("testRemoteContentPrefs:getPref",
                             { group: "http://mochi.test", name: "test" });
 
-        let results = yield new Promise(resolve => {
+        let results = await new Promise(resolve => {
           addMessageListener("testRemoteContentPrefs:prefResults",
                              (msg) => { resolve(msg.data.results); });
         });
@@ -213,8 +212,7 @@
 
       var tests = { test1, test2, test3, test4 };
       function testHandler(mm, testName) {
-        let test = tests[testName];
-        Task.spawn(test(mm)).then(() => {
+        tests[testName](mm).then(() => {
           mm.sendAsyncMessage(`testRemoteContentPrefs:${testName}Finished`, {});
         }).catch((e) => {
           mm.sendAsyncMessage("testRemoteContentPrefs:fail", { reason: e });
@@ -238,7 +236,7 @@
       return d;
     }
 
-    function* testStructure(mm, isPrivate) {
+    async function testStructure(mm, isPrivate) {
       var curTest;
       function testDone(msg) {
         info(`in testDone ${msg.name}`);
@@ -265,7 +263,7 @@
 
       curTest = Defer();
       mm.sendAsyncMessage("testRemoteContentPrefs:test1", {});
-      yield curTest.promise;
+      await curTest.promise;
 
       curTest = Defer();
       var cps = SpecialPowers.Cc["@mozilla.org/content-pref/service;1"]
@@ -279,11 +277,11 @@
         cps.removeGlobal("testName", isPrivate ? privateLoadContext : loadContext);
       });
       mm.sendAsyncMessage("testRemoteContentPrefs:test2", {});
-      yield curTest.promise;
+      await curTest.promise;
 
       curTest = Defer();
       mm.sendAsyncMessage("testRemoteContentPrefs:test3", {});
-      yield curTest.promise;
+      await curTest.promise;
 
       curTest = Defer();
       mm.addMessageListener("testRemoteContentPrefs:getPref", function(msg) {
@@ -305,7 +303,7 @@
       });
 
       mm.sendAsyncMessage("testRemoteContentPrefs:test4", {});
-      yield curTest.promise;
+      await curTest.promise;
 
       document.getElementById("iframe").remove();
     }

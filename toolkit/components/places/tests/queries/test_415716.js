@@ -35,7 +35,7 @@ function run_test() {
  * Builds a test database by hand using various times, annotations and
  * visit numbers for this test
  */
-add_task(function* test_buildTestDatabase() {
+add_task(async function test_buildTestDatabase() {
   // This is the set of visits that we will match - our min visit is 2 so that's
   // why we add more visits to the same URIs.
   let testURI = uri("http://www.foo.com");
@@ -60,7 +60,7 @@ add_task(function* test_buildTestDatabase() {
     });
   }
 
-  yield PlacesTestUtils.addVisits(places);
+  await PlacesTestUtils.addVisits(places);
 
   PlacesUtils.annotations.setPageAnnotation(testURI, testAnnoName,
                                             testAnnoVal, 0, 0);

@@ -8,43 +8,43 @@
  * mode.
  */
 
-add_task(function* () {
+add_task(async function() {
   // prepare the grid
-  yield testOnWindow(undefined);
-  yield setLinks("0,1,2,3,4,5,6,7,8,9");
+  await testOnWindow(undefined);
+  await setLinks("0,1,2,3,4,5,6,7,8,9");
 
-  yield* addNewTabPageTab();
-  yield pinCell(0);
-  yield* checkGrid("0p,1,2,3,4,5,6,7,8");
+  await addNewTabPageTab();
+  await pinCell(0);
+  await checkGrid("0p,1,2,3,4,5,6,7,8");
 
   // open private window
-  yield testOnWindow({private: true});
+  await testOnWindow({private: true});
 
-  yield* addNewTabPageTab();
-  yield* checkGrid("0p,1,2,3,4,5,6,7,8");
+  await addNewTabPageTab();
+  await checkGrid("0p,1,2,3,4,5,6,7,8");
 
   // modify the grid while we're in pb mode
-  yield blockCell(1);
-  yield* checkGrid("0p,2,3,4,5,6,7,8");
+  await blockCell(1);
+  await checkGrid("0p,2,3,4,5,6,7,8");
 
-  yield unpinCell(0);
-  yield* checkGrid("0,2,3,4,5,6,7,8");
+  await unpinCell(0);
+  await checkGrid("0,2,3,4,5,6,7,8");
 
   // open normal window
-  yield testOnWindow(undefined);
+  await testOnWindow(undefined);
 
   // check that the grid is the same as before entering pb mode
-  yield* addNewTabPageTab();
-  yield* checkGrid("0,2,3,4,5,6,7,8")
+  await addNewTabPageTab();
+  await checkGrid("0,2,3,4,5,6,7,8")
 });
 
 var windowsToClose = [];
-function* testOnWindow(options) {
+async function testOnWindow(options) {
   let newWindowPromise = BrowserTestUtils.waitForNewWindow();
   var win = OpenBrowserWindow(options);
   windowsToClose.push(win);
   gWindow = win;
-  yield newWindowPromise;
+  await newWindowPromise;
 }
 
 registerCleanupFunction(function() {

@@ -377,40 +377,6 @@ CompositorBridgeChild::RecvInvalidateLayers(const uint64_t& aLayersId)
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-CompositorBridgeChild::RecvCompositorUpdated(const uint64_t& aLayersId,
-                                             const TextureFactoryIdentifier& aNewIdentifier,
-                                             const uint64_t& aSeqNo)
-{
-  if (mLayerManager) {
-    // This case is handled directly by nsBaseWidget.
-    MOZ_ASSERT(aLayersId == 0);
-  } else if (aLayersId != 0) {
-    // Update gfxPlatform if this is the first time we're seeing this compositor
-    // update (we will get an update for each connected tab).
-    if (mDeviceResetSequenceNumber != aSeqNo) {
-      gfxPlatform::GetPlatform()->CompositorUpdated();
-      mDeviceResetSequenceNumber = aSeqNo;
-
-      // If we still get device reset here, something must wrong when creating
-      // d3d11 devices.
-      if (gfxPlatform::GetPlatform()->DidRenderingDeviceReset()) {
-        gfxCriticalError() << "Unexpected reset device processing when \
-                               updating compositor.";
-      }
-    }
-
-    if (dom::TabChild* child = dom::TabChild::GetFrom(aLayersId)) {
-      child->CompositorUpdated(aNewIdentifier, aSeqNo);
-    }
-    if (!mCanSend) {
-      return IPC_OK();
-    }
-    SendAcknowledgeCompositorUpdate(aLayersId, aSeqNo);
-  }
-  return IPC_OK();
-}
-
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
 static void CalculatePluginClip(const LayoutDeviceIntRect& aBounds,
                                 const nsTArray<LayoutDeviceIntRect>& aPluginClipRects,

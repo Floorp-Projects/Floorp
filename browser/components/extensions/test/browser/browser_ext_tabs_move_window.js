@@ -2,10 +2,10 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* () {
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.net/");
-  let window1 = yield BrowserTestUtils.openNewBrowserWindow();
-  yield BrowserTestUtils.openNewForegroundTab(window1.gBrowser, "http://example.com/");
+add_task(async function() {
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.net/");
+  let window1 = await BrowserTestUtils.openNewBrowserWindow();
+  await BrowserTestUtils.openNewForegroundTab(window1.gBrowser, "http://example.com/");
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -32,17 +32,17 @@ add_task(function* () {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("tabs.move.window");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("tabs.move.window");
+  await extension.unload();
 
   for (let tab of window.gBrowser.tabs) {
-    yield BrowserTestUtils.removeTab(tab);
+    await BrowserTestUtils.removeTab(tab);
   }
-  yield BrowserTestUtils.closeWindow(window1);
+  await BrowserTestUtils.closeWindow(window1);
 });
 
-add_task(function* test_currentWindowAfterTabMoved() {
+add_task(async function test_currentWindowAfterTabMoved() {
   const files = {
     "current.html": "<meta charset=utf-8><script src=current.js></script>",
     "current.js": function() {
@@ -78,21 +78,21 @@ add_task(function* test_currentWindowAfterTabMoved() {
 
   const extension = ExtensionTestUtils.loadExtension({files, background});
 
-  yield extension.startup();
-  yield extension.awaitMessage("ready");
+  await extension.startup();
+  await extension.awaitMessage("ready");
 
   extension.sendMessage("current");
-  const first = yield extension.awaitMessage("id");
+  const first = await extension.awaitMessage("id");
 
   extension.sendMessage("move");
-  yield extension.awaitMessage("moved");
+  await extension.awaitMessage("moved");
 
   extension.sendMessage("current");
-  const second = yield extension.awaitMessage("id");
+  const second = await extension.awaitMessage("id");
 
   isnot(first, second, "current window id is different after moving the tab");
 
   extension.sendMessage("close");
-  yield extension.awaitMessage("done");
-  yield extension.unload();
+  await extension.awaitMessage("done");
+  await extension.unload();
 });

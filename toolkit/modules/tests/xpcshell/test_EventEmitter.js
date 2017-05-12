@@ -5,14 +5,14 @@ var {classes: Cc, interfaces: Ci, results: Cr, utils: Cu, manager: Cm} = Compone
 
 Cu.import("resource://gre/modules/EventEmitter.jsm");
 
-add_task(function* test_extractFiles() {
+add_task(async function test_extractFiles() {
   testEmitter(new EventEmitter());
 
   let decorated = {};
   EventEmitter.decorate(decorated);
   testEmitter(decorated);
 
-  yield testPromise();
+  await testPromise();
 })
 
 
@@ -107,7 +107,7 @@ function testEmitter(emitter) {
   }
 }
 
-function* testPromise() {
+function testPromise() {
   let emitter = new EventEmitter();
   let p = emitter.once("thing");
 

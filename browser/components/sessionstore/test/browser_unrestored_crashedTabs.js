@@ -13,14 +13,14 @@
 const PREF = "browser.sessionstore.restore_on_demand";
 const PAGE = "data:text/html,<html><body>A%20regular,%20everyday,%20normal%20page.";
 
-add_task(function* test() {
-  yield pushPrefs([PREF, true]);
+add_task(async function test() {
+  await pushPrefs([PREF, true]);
 
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: PAGE,
-  }, function*(browser) {
-    yield TabStateFlusher.flush(browser);
+  }, async function(browser) {
+    await TabStateFlusher.flush(browser);
 
     // We'll create a second "pending" tab. This is the one we'll
     // ensure doesn't go to about:tabcrashed. We start it non-remote
@@ -41,14 +41,14 @@ add_task(function* test() {
     ok(unrestoredTab.hasAttribute("pending"), "tab is pending");
 
     // Now crash the selected browser.
-    yield BrowserTestUtils.crashBrowser(browser);
+    await BrowserTestUtils.crashBrowser(browser);
 
     ok(!unrestoredTab.hasAttribute("crashed"), "tab is still not crashed");
     ok(unrestoredTab.hasAttribute("pending"), "tab is still pending");
 
     // Selecting the tab should now restore it.
     gBrowser.selectedTab = unrestoredTab;
-    yield promiseTabRestored(unrestoredTab);
+    await promiseTabRestored(unrestoredTab);
 
     ok(!unrestoredTab.hasAttribute("crashed"), "tab is still not crashed");
     ok(!unrestoredTab.hasAttribute("pending"), "tab is no longer pending");
@@ -61,9 +61,9 @@ add_task(function* test() {
     // We'd better be able to restore it still.
     gBrowser.selectedTab = originalTab;
     SessionStore.reviveCrashedTab(originalTab);
-    yield promiseTabRestored(originalTab);
+    await promiseTabRestored(originalTab);
 
     // Clean up.
-    yield BrowserTestUtils.removeTab(unrestoredTab);
+    await BrowserTestUtils.removeTab(unrestoredTab);
   });
 });

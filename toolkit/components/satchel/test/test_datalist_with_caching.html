@@ -99,11 +99,11 @@ function checkMenuEntries(expectedValues) {
     is(actualValues[i], expectedValues[i], testNum + " Checking menu entry #" + i);
 }
 
-function* runTests() {
+async function runTests() {
   testNum++;
   restoreForm();
   doKey("down");
-  yield expectPopup();
+  await expectPopup();
 
   checkMenuEntries(["Sec", "First", "Second", "Secomundo"]);
   doKey("down");
@@ -114,12 +114,12 @@ function* runTests() {
   restoreForm();
   sendString("Sec");
   doKey("down");
-  yield expectPopup();
+  await expectPopup();
 
   testNum++;
   checkMenuEntries(["Sec", "Second", "Secomundo"]);
   sendString("o");
-  yield waitForMenuChange(2);
+  await waitForMenuChange(2);
 
   testNum++;
   checkMenuEntries(["Second", "Secomundo"]);

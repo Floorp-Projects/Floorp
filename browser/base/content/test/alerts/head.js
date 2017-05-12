@@ -22,11 +22,11 @@ function promiseWindowClosed(window) {
  * rejected after the requested number of miliseconds.
  */
 function openNotification(aBrowser, fn, timeout) {
-  return ContentTask.spawn(aBrowser, [fn, timeout], function* ([contentFn, contentTimeout]) {
+  return ContentTask.spawn(aBrowser, [fn, timeout], async function([contentFn, contentTimeout]) {
     let win = content.wrappedJSObject;
     let notification = win[contentFn]();
     win._notification = notification;
-    yield new Promise((resolve, reject) => {
+    await new Promise((resolve, reject) => {
       function listener() {
         notification.removeEventListener("show", listener);
         resolve();

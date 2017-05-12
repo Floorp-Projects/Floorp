@@ -18,7 +18,6 @@ find-menu appears in editor element which has had makeEditable() called but desi
 
   <script type="application/javascript"><![CDATA[
     const {interfaces: Ci, classes: Cc, results: Cr, utils: Cu} = Components;
-    Cu.import("resource://gre/modules/Task.jsm");
     Cu.import("resource://testing-common/ContentTask.jsm");
     ContentTask.setTestScope(window.opener.wrappedJSObject);
 
@@ -31,22 +30,22 @@ find-menu appears in editor element which has had makeEditable() called but desi
     }
 
     function onLoad() {
-      Task.spawn(function* () {
+      (async function() {
         gFindBar = document.getElementById("FindToolbar");
         for (let browserId of ["content", "content-remote"]) {
-          yield startTestWithBrowser(browserId);
+          await startTestWithBrowser(browserId);
         }
-      }).then(() => {
+      })().then(() => {
         window.close();
         SimpleTest.finish();
       });
     }
 
-    function* startTestWithBrowser(browserId) {
+    async function startTestWithBrowser(browserId) {
       info("Starting test with browser '" + browserId + "'");
       gBrowser = document.getElementById(browserId);
       gFindBar.browser = gBrowser;
-      let promise = ContentTask.spawn(gBrowser, null, function* () {
+      let promise = ContentTask.spawn(gBrowser, null, async function() {
         return new Promise(resolve => {
           addEventListener("DOMContentLoaded", function listener() {
             removeEventListener("DOMContentLoaded", listener);
@@ -55,12 +54,12 @@ find-menu appears in editor element which has had makeEditable() called but desi
         });
       });
       gBrowser.loadURI("data:text/html;charset=utf-8,some%20random%20text");
-      yield promise;
-      yield onDocumentLoaded();
+      await promise;
+      await onDocumentLoaded();
     }
 
-    function* onDocumentLoaded() {
-      yield ContentTask.spawn(gBrowser, null, function* () {
+    async function onDocumentLoaded() {
+      await ContentTask.spawn(gBrowser, null, async function() {
         var edsession = content.QueryInterface(Ci.nsIInterfaceRequestor)
                                .getInterface(Ci.nsIWebNavigation)
                                .QueryInterface(Ci.nsIInterfaceRequestor)
@@ -69,16 +68,16 @@ find-menu appears in editor element which has had makeEditable() called but desi
         content.focus();
       });
       
-      yield enterStringIntoEditor("'");
-      yield enterStringIntoEditor("/");
+      await enterStringIntoEditor("'");
+      await enterStringIntoEditor("/");
 
       ok(gFindBar.hidden,
          "Findfield should have stayed hidden after entering editor test");
     }
 
-    function* enterStringIntoEditor(aString) {
+    async function enterStringIntoEditor(aString) {
       for (let i = 0; i < aString.length; i++) {
-        yield ContentTask.spawn(gBrowser, { charCode: aString.charCodeAt(i) }, function* (args) {
+        await ContentTask.spawn(gBrowser, { charCode: aString.charCodeAt(i) }, async function(args) {
           let event = content.document.createEvent("KeyboardEvent");
           event.initKeyEvent("keypress", true, true, null, false, false,
                              false, false, 0, args.charCode);

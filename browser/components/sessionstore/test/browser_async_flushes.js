@@ -2,21 +2,21 @@
 
 const URL = "data:text/html;charset=utf-8,<a href=%23>clickme</a>";
 
-add_task(function* test_flush() {
+add_task(async function test_flush() {
   // Create new tab.
   let tab = gBrowser.addTab(URL);
   let browser = tab.linkedBrowser;
-  yield promiseBrowserLoaded(browser);
+  await promiseBrowserLoaded(browser);
 
   // Flush to empty any queued update messages.
-  yield TabStateFlusher.flush(browser);
+  await TabStateFlusher.flush(browser);
 
   // There should be one history entry.
   let {entries} = JSON.parse(ss.getTabState(tab));
   is(entries.length, 1, "there is a single history entry");
 
   // Click the link to navigate, this will add second shistory entry.
-  yield ContentTask.spawn(browser, null, function* () {
+  await ContentTask.spawn(browser, null, async function() {
     return new Promise(resolve => {
       addEventListener("hashchange", function onHashChange() {
         removeEventListener("hashchange", onHashChange);
@@ -29,7 +29,7 @@ add_task(function* test_flush() {
   });
 
   // Flush to empty any queued update messages.
-  yield TabStateFlusher.flush(browser);
+  await TabStateFlusher.flush(browser);
 
   // There should be two history entries now.
   ({entries} = JSON.parse(ss.getTabState(tab)));
@@ -39,22 +39,22 @@ add_task(function* test_flush() {
   gBrowser.removeTab(tab);
 });
 
-add_task(function* test_crash() {
+add_task(async function test_crash() {
   // Create new tab.
   let tab = gBrowser.addTab(URL);
   gBrowser.selectedTab = tab;
   let browser = tab.linkedBrowser;
-  yield promiseBrowserLoaded(browser);
+  await promiseBrowserLoaded(browser);
 
   // Flush to empty any queued update messages.
-  yield TabStateFlusher.flush(browser);
+  await TabStateFlusher.flush(browser);
 
   // There should be one history entry.
   let {entries} = JSON.parse(ss.getTabState(tab));
   is(entries.length, 1, "there is a single history entry");
 
   // Click the link to navigate.
-  yield ContentTask.spawn(browser, null, function* () {
+  await ContentTask.spawn(browser, null, async function() {
     return new Promise(resolve => {
       addEventListener("hashchange", function onHashChange() {
         removeEventListener("hashchange", onHashChange);
@@ -72,7 +72,7 @@ add_task(function* test_crash() {
   // notified so that the flush still completes.
   let promise1 = BrowserTestUtils.crashBrowser(browser);
   let promise2 = TabStateFlusher.flush(browser);
-  yield Promise.all([promise1, promise2]);
+  await Promise.all([promise1, promise2]);
 
   // The pending update should be lost.
   ({entries} = JSON.parse(ss.getTabState(tab)));
@@ -82,21 +82,21 @@ add_task(function* test_crash() {
   gBrowser.removeTab(tab);
 });
 
-add_task(function* test_remove() {
+add_task(async function test_remove() {
   // Create new tab.
   let tab = gBrowser.addTab(URL);
   let browser = tab.linkedBrowser;
-  yield promiseBrowserLoaded(browser);
+  await promiseBrowserLoaded(browser);
 
   // Flush to empty any queued update messages.
-  yield TabStateFlusher.flush(browser);
+  await TabStateFlusher.flush(browser);
 
   // There should be one history entry.
   let {entries} = JSON.parse(ss.getTabState(tab));
   is(entries.length, 1, "there is a single history entry");
 
   // Click the link to navigate.
-  yield ContentTask.spawn(browser, null, function* () {
+  await ContentTask.spawn(browser, null, async function() {
     return new Promise(resolve => {
       addEventListener("hashchange", function onHashChange() {
         removeEventListener("hashchange", onHashChange);
@@ -109,5 +109,5 @@ add_task(function* test_remove() {
   });
 
   // Request a flush and remove the tab. The flush should still complete.
-  yield Promise.all([TabStateFlusher.flush(browser), promiseRemoveTab(tab)]);
+  await Promise.all([TabStateFlusher.flush(browser), promiseRemoveTab(tab)]);
 })

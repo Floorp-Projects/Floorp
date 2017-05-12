@@ -120,22 +120,22 @@ function waitForEvent(aSubject, aEventName, aTimeoutMs, aTarget) {
 }
 
 function openPreferencesViaOpenPreferencesAPI(aPane, aOptions) {
-  let deferred = Promise.defer();
-  gBrowser.selectedTab = gBrowser.addTab("about:blank");
-  openPreferences(aPane);
-  let newTabBrowser = gBrowser.selectedBrowser;
+  return new Promise(resolve => {
+    gBrowser.selectedTab = gBrowser.addTab("about:blank");
+    openPreferences(aPane);
+    let newTabBrowser = gBrowser.selectedBrowser;
 
-  newTabBrowser.addEventListener("Initialized", function() {
-    newTabBrowser.contentWindow.addEventListener("load", function() {
-      let win = gBrowser.contentWindow;
-      let selectedPane = win.history.state;
-      if (!aOptions || !aOptions.leaveOpen)
-        gBrowser.removeCurrentTab();
-      deferred.resolve({selectedPane});
-    }, {once: true});
-  }, {capture: true, once: true});
+    newTabBrowser.addEventListener("Initialized", function() {
+      newTabBrowser.contentWindow.addEventListener("load", function() {
+        let win = gBrowser.contentWindow;
+        let selectedPane = win.history.state;
+        if (!aOptions || !aOptions.leaveOpen)
+          gBrowser.removeCurrentTab();
+        resolve({selectedPane});
+      }, {once: true});
+    }, {capture: true, once: true});
 
-  return deferred.promise;
+  });
 }
 
 function waitForCondition(aConditionFn, aMaxTries = 50, aCheckInterval = 100) {

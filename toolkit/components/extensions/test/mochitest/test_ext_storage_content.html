@@ -228,24 +228,24 @@ let extensionData = {
   },
 };
 
-add_task(function* test_contentscript() {
+add_task(async function test_contentscript() {
   let win = window.open("file_sample.html");
-  yield waitForLoad(win);
+  await waitForLoad(win);
 
-  yield SpecialPowers.pushPrefEnv({
+  await SpecialPowers.pushPrefEnv({
     set: [[STORAGE_SYNC_PREF, true]],
   });
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield Promise.all([extension.startup(), extension.awaitMessage("ready")]);
+  await Promise.all([extension.startup(), extension.awaitMessage("ready")]);
   extension.sendMessage("test-local");
-  yield extension.awaitMessage("test-finished");
+  await extension.awaitMessage("test-finished");
 
   extension.sendMessage("test-sync");
-  yield extension.awaitMessage("test-finished");
+  await extension.awaitMessage("test-finished");
 
-  yield SpecialPowers.popPrefEnv();
-  yield extension.unload();
+  await SpecialPowers.popPrefEnv();
+  await extension.unload();
 
   win.close();
 });

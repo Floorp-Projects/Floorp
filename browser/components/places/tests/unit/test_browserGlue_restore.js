@@ -30,7 +30,7 @@ do_register_cleanup(function() {
   return PlacesUtils.bookmarks.eraseEverything();
 });
 
-add_task(function* test_main() {
+add_task(async function test_main() {
   // Initialize nsBrowserGlue before Places.
   Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsISupports);
 
@@ -44,17 +44,17 @@ add_task(function* test_main() {
 
   // The test will continue once restore has finished and smart bookmarks
   // have been created.
-  yield promiseTopicObserved("places-browser-init-complete");
+  await promiseTopicObserved("places-browser-init-complete");
 
-  let bm = yield PlacesUtils.bookmarks.fetch({
+  let bm = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     index: 0
   });
-  yield checkItemHasAnnotation(bm.guid, SMART_BOOKMARKS_ANNO);
+  await checkItemHasAnnotation(bm.guid, SMART_BOOKMARKS_ANNO);
 
   // Check that JSON backup has been restored.
   // Notice restore from JSON notification is fired before smart bookmarks creation.
-  bm = yield PlacesUtils.bookmarks.fetch({
+  bm = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     index: SMART_BOOKMARKS_ON_TOOLBAR
   });

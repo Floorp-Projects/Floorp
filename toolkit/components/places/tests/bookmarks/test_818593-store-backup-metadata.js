@@ -10,7 +10,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_saveBookmarksToJSONFile_and_create() {
+add_task(async function test_saveBookmarksToJSONFile_and_create() {
   // Add a bookmark
   let uri = NetUtil.newURI("http://getfirefox.com/");
   let bookmarkId =
@@ -22,27 +22,27 @@ add_task(function* test_saveBookmarksToJSONFile_and_create() {
   let backupFile = FileUtils.getFile("TmpD", ["bookmarks.json"]);
   backupFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, parseInt("0600", 8));
 
-  let nodeCount = yield PlacesBackups.saveBookmarksToJSONFile(backupFile, true);
+  let nodeCount = await PlacesBackups.saveBookmarksToJSONFile(backupFile, true);
   do_check_true(nodeCount > 0);
   do_check_true(backupFile.exists());
   do_check_eq(backupFile.leafName, "bookmarks.json");
 
   // Ensure the backup would be copied to our backups folder when the original
   // backup is saved somewhere else.
-  let recentBackup = yield PlacesBackups.getMostRecentBackup();
+  let recentBackup = await PlacesBackups.getMostRecentBackup();
   let matches = OS.Path.basename(recentBackup).match(PlacesBackups.filenamesRegex);
   do_check_eq(matches[2], nodeCount);
   do_check_eq(matches[3].length, 24);
 
   // Clear all backups in our backups folder.
-  yield PlacesBackups.create(0);
-  do_check_eq((yield PlacesBackups.getBackupFiles()).length, 0);
+  await PlacesBackups.create(0);
+  do_check_eq((await PlacesBackups.getBackupFiles()).length, 0);
 
   // Test create() which saves bookmarks with metadata on the filename.
-  yield PlacesBackups.create();
-  do_check_eq((yield PlacesBackups.getBackupFiles()).length, 1);
+  await PlacesBackups.create();
+  do_check_eq((await PlacesBackups.getBackupFiles()).length, 1);
 
-  let mostRecentBackupFile = yield PlacesBackups.getMostRecentBackup();
+  let mostRecentBackupFile = await PlacesBackups.getMostRecentBackup();
   do_check_neq(mostRecentBackupFile, null);
   matches = OS.Path.basename(recentBackup).match(PlacesBackups.filenamesRegex);
   do_check_eq(matches[2], nodeCount);
@@ -50,6 +50,6 @@ add_task(function* test_saveBookmarksToJSONFile_and_create() {
 
   // Cleanup
   backupFile.remove(false);
-  yield PlacesBackups.create(0);
+  await PlacesBackups.create(0);
   PlacesUtils.bookmarks.removeItem(bookmarkId);
 });

@@ -22,17 +22,18 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#ifdef TINYTEST_LOCAL
+#include "tinytest_local.h"
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 
-#ifdef TINYTEST_LOCAL
-#include "tinytest_local.h"
-#endif
+#ifndef NO_FORKING
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h>
 #else
 #include <sys/types.h>
@@ -48,6 +49,8 @@
 #include <vproc.h>
 #endif
 #endif
+
+#endif /* !NO_FORKING */
 
 #ifndef __GNUC__
 #define __attribute__(x)
@@ -68,22 +71,25 @@ static int opt_nofork = 0; /**< Suppress calls to fork() for debugging. */
 static int opt_verbosity = 1; /**< -==quiet,0==terse,1==normal,2==verbose */
 const char *verbosity_flag = "";
 
+const struct testlist_alias_t *cfg_aliases=NULL;
+
 enum outcome { SKIP=2, OK=1, FAIL=0 };
 static enum outcome cur_test_outcome = 0;
 const char *cur_test_prefix = NULL; /**< prefix of the current test group */
 /** Name of the current test, if we haven't logged is yet. Used for --quiet */
 const char *cur_test_name = NULL;
 
-#ifdef WIN32
+#ifdef _WIN32
 /* Copy of argv[0] for win32. */
 static char commandname[MAX_PATH+1];
 #endif
 
 static void usage(struct testgroup_t *groups, int list_groups)
   __attribute__((noreturn));
+static int process_test_option(struct testgroup_t *groups, const char *test);
 
 static enum outcome
-_testcase_run_bare(const struct testcase_t *testcase)
+testcase_run_bare_(const struct testcase_t *testcase)
 {
 	void *env = NULL;
 	int outcome;
@@ -109,11 +115,13 @@ _testcase_run_bare(const struct testcase_t *testcase)
 
 #define MAGIC_EXITCODE 42
 
+#ifndef NO_FORKING
+
 static enum outcome
-_testcase_run_forked(const struct testgroup_t *group,
+testcase_run_forked_(const struct testgroup_t *group,
 		     const struct testcase_t *testcase)
 {
-#ifdef WIN32
+#ifdef _WIN32
 	/* Fork? On Win32?  How primitive!  We'll do what the smart kids do:
 	   we'll invoke our own exe (whose name we recall from the command
 	   line) with a command line that tells it to run just the test we
@@ -129,7 +137,7 @@ _testcase_run_forked(const struct testgroup_t *group,
 	DWORD exitcode;
 
 	if (!in_tinytest_main) {
-		printf("\nERROR.  On Windows, _testcase_run_forked must be"
+		printf("\nERROR.  On Windows, testcase_run_forked_ must be"
 		       " called from within tinytest_main.\n");
 		abort();
 	}
@@ -178,7 +186,7 @@ _testcase_run_forked(const struct testgroup_t *group,
 		int test_r, write_r;
 		char b[1];
 		close(outcome_pipe[0]);
-		test_r = _testcase_run_bare(testcase);
+		test_r = testcase_run_bare_(testcase);
 		assert(0<=(int)test_r && (int)test_r<=2);
 		b[0] = "NYS"[test_r];
 		write_r = (int)write(outcome_pipe[1], b, 1);
@@ -209,16 +217,19 @@ _testcase_run_forked(const struct testgroup_t *group,
 #endif
 }
 
+#endif /* !NO_FORKING */
+
 int
 testcase_run_one(const struct testgroup_t *group,
 		 const struct testcase_t *testcase)
 {
 	enum outcome outcome;
 
-	if (testcase->flags & TT_SKIP) {
+	if (testcase->flags & (TT_SKIP|TT_OFF_BY_DEFAULT)) {
 		if (opt_verbosity>0)
-			printf("%s%s: SKIPPED\n",
-			    group->prefix, testcase->name);
+			printf("%s%s: %s\n",
+			   group->prefix, testcase->name,
+			   (testcase->flags & TT_SKIP) ? "SKIPPED" : "DISABLED");
 		++n_skipped;
 		return SKIP;
 	}
@@ -231,10 +242,14 @@ testcase_run_one(const struct testgroup_t *group,
 		cur_test_name = testcase->name;
 	}
 
+#ifndef NO_FORKING
 	if ((testcase->flags & TT_FORK) && !(opt_forked||opt_nofork)) {
-		outcome = _testcase_run_forked(group, testcase);
+		outcome = testcase_run_forked_(group, testcase);
 	} else {
-		outcome = _testcase_run_bare(testcase);
+#else
+	{
+#endif
+		outcome = testcase_run_bare_(testcase);
 	}
 
 	if (outcome == OK) {
@@ -260,7 +275,7 @@ testcase_run_one(const struct testgroup_t *group,
 }
 
 int
-_tinytest_set_flag(struct testgroup_t *groups, const char *arg, unsigned long flag)
+tinytest_set_flag_(struct testgroup_t *groups, const char *arg, int set, unsigned long flag)
 {
 	int i, j;
 	size_t length = LONGEST_TEST_NAME;
@@ -270,12 +285,23 @@ _tinytest_set_flag(struct testgroup_t *groups, const char *arg, unsigned long fl
 		length = strstr(arg,"..")-arg;
 	for (i=0; groups[i].prefix; ++i) {
 		for (j=0; groups[i].cases[j].name; ++j) {
+			struct testcase_t *testcase = &groups[i].cases[j];
 			snprintf(fullname, sizeof(fullname), "%s%s",
-				 groups[i].prefix, groups[i].cases[j].name);
-			if (!flag) /* Hack! */
-				printf("    %s\n", fullname);
+				 groups[i].prefix, testcase->name);
+			if (!flag) { /* Hack! */
+				printf("    %s", fullname);
+				if (testcase->flags & TT_OFF_BY_DEFAULT)
+					puts("   (Off by default)");
+				else if (testcase->flags & TT_SKIP)
+					puts("  (DISABLED)");
+				else
+					puts("");
+			}
 			if (!strncmp(fullname, arg, length)) {
-				groups[i].cases[j].flags |= flag;
+				if (set)
+					testcase->flags |= flag;
+				else
+					testcase->flags &= ~flag;
 				++found;
 			}
 		}
@@ -288,13 +314,67 @@ usage(struct testgroup_t *groups, int list_groups)
 {
 	puts("Options are: [--verbose|--quiet|--terse] [--no-fork]");
 	puts("  Specify tests by name, or using a prefix ending with '..'");
-	puts("  To skip a test, list give its name prefixed with a colon.");
+	puts("  To skip a test, prefix its name with a colon.");
+	puts("  To enable a disabled test, prefix its name with a plus.");
 	puts("  Use --list-tests for a list of tests.");
 	if (list_groups) {
 		puts("Known tests are:");
-		_tinytest_set_flag(groups, "..", 0);
+		tinytest_set_flag_(groups, "..", 1, 0);
 	}
 	exit(0);
+}
+
+static int
+process_test_alias(struct testgroup_t *groups, const char *test)
+{
+	int i, j, n, r;
+	for (i=0; cfg_aliases && cfg_aliases[i].name; ++i) {
+		if (!strcmp(cfg_aliases[i].name, test)) {
+			n = 0;
+			for (j = 0; cfg_aliases[i].tests[j]; ++j) {
+				r = process_test_option(groups, cfg_aliases[i].tests[j]);
+				if (r<0)
+					return -1;
+				n += r;
+			}
+			return n;
+		}
+	}
+	printf("No such test alias as @%s!",test);
+	return -1;
+}
+
+static int
+process_test_option(struct testgroup_t *groups, const char *test)
+{
+	int flag = TT_ENABLED_;
+	int n = 0;
+	if (test[0] == '@') {
+		return process_test_alias(groups, test + 1);
+	} else if (test[0] == ':') {
+		++test;
+		flag = TT_SKIP;
+	} else if (test[0] == '+') {
+		++test;
+		++n;
+		if (!tinytest_set_flag_(groups, test, 0, TT_OFF_BY_DEFAULT)) {
+			printf("No such test as %s!\n", test);
+			return -1;
+		}
+	} else {
+		++n;
+	}
+	if (!tinytest_set_flag_(groups, test, 1, flag)) {
+		printf("No such test as %s!\n", test);
+		return -1;
+	}
+	return n;
+}
+
+void
+tinytest_set_aliases(const struct testlist_alias_t *aliases)
+{
+	cfg_aliases = aliases;
 }
 
 int
@@ -302,7 +382,7 @@ tinytest_main(int c, const char **v, struct testgroup_t *groups)
 {
 	int i, j, n=0;
 
-#ifdef WIN32
+#ifdef _WIN32
 	const char *sp = strrchr(v[0], '.');
 	const char *extension = "";
 	if (!sp || stricmp(sp, ".exe"))
@@ -334,29 +414,23 @@ tinytest_main(int c, const char **v, struct testgroup_t *groups)
 				return -1;
 			}
 		} else {
-			const char *test = v[i];
-			int flag = _TT_ENABLED;
-			if (test[0] == ':') {
-				++test;
-				flag = TT_SKIP;
-			} else {
-				++n;
-			}
-			if (!_tinytest_set_flag(groups, test, flag)) {
-				printf("No such test as %s!\n", v[i]);
+			int r = process_test_option(groups, v[i]);
+			if (r<0)
 				return -1;
-			}
+			n += r;
 		}
 	}
 	if (!n)
-		_tinytest_set_flag(groups, "..", _TT_ENABLED);
+		tinytest_set_flag_(groups, "..", 1, TT_ENABLED_);
 
+#ifdef _IONBF
 	setvbuf(stdout, NULL, _IONBF, 0);
+#endif
 
 	++in_tinytest_main;
 	for (i=0; groups[i].prefix; ++i)
 		for (j=0; groups[i].cases[j].name; ++j)
-			if (groups[i].cases[j].flags & _TT_ENABLED)
+			if (groups[i].cases[j].flags & TT_ENABLED_)
 				testcase_run_one(&groups[i],
 						 &groups[i].cases[j]);
 
@@ -375,13 +449,13 @@ tinytest_main(int c, const char **v, struct testgroup_t *groups)
 }
 
 int
-_tinytest_get_verbosity(void)
+tinytest_get_verbosity_(void)
 {
 	return opt_verbosity;
 }
 
 void
-_tinytest_set_test_failed(void)
+tinytest_set_test_failed_(void)
 {
 	if (opt_verbosity <= 0 && cur_test_name) {
 		if (opt_verbosity==0) puts("");
@@ -392,9 +466,28 @@ _tinytest_set_test_failed(void)
 }
 
 void
-_tinytest_set_test_skipped(void)
+tinytest_set_test_skipped_(void)
 {
 	if (cur_test_outcome==OK)
 		cur_test_outcome = SKIP;
 }
 
+char *
+tinytest_format_hex_(const void *val_, unsigned long len)
+{
+	const unsigned char *val = val_;
+	char *result, *cp;
+	size_t i;
+
+	if (!val)
+		return strdup("null");
+	if (!(result = malloc(len*2+1)))
+		return strdup("<allocation failure>");
+	cp = result;
+	for (i=0;i<len;++i) {
+		*cp++ = "0123456789ABCDEF"[val[i] >> 4];
+		*cp++ = "0123456789ABCDEF"[val[i] & 0x0f];
+	}
+	*cp = 0;
+	return result;
+}

@@ -16,7 +16,7 @@
   target="_blank"
   enctype="multipart/form-data"
   >
-<input type="text" name="&quot;special&quot; chˆrs" value="spÛcial">
+<input type="text" name="&quot;special&quot; chï¿½rs" value="spï¿½cial">
 <input type="file" name="testFile">
 <input type="file" name="emptyFile">
 <input type="text" name="textInput1" value="value1">
@@ -44,8 +44,8 @@
 "use strict";
 
 let files, testFile, blob, file, uploads;
-add_task(function* test_setup() {
-  files = yield new Promise(resolve => {
+add_task(async function test_setup() {
+  files = await new Promise(resolve => {
     SpecialPowers.createFiles([{name: "testFile.pdf", data: "Not really a PDF file :)", "type": "application/x-pdf"}], (result) => {
       resolve(result);
     });
@@ -125,7 +125,7 @@ function background() {
   });
 }
 
-add_task(function* test_xhr_forms() {
+add_task(async function test_xhr_forms() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: [
@@ -138,13 +138,13 @@ add_task(function* test_xhr_forms() {
     background,
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  function* doneAndTabClosed() {
-    yield extension.awaitMessage("done");
+  async function doneAndTabClosed() {
+    await extension.awaitMessage("done");
     let closed = extension.awaitMessage("tab-closed");
     extension.sendMessage("close-tab");
-    yield closed;
+    await closed;
   }
 
   for (let form of document.forms) {
@@ -167,7 +167,7 @@ add_task(function* test_xhr_forms() {
 
     form.action = action;
     form.submit();
-    yield doneAndTabClosed();
+    await doneAndTabClosed();
 
     if (form.enctype !== "multipart/form-data") {
       continue;
@@ -185,20 +185,20 @@ add_task(function* test_xhr_forms() {
     formData.append(blob.name, blob.content, blob.fileName);
     formData.append("formDataField", "some value");
     updateActionURL();
-    yield post(formData);
+    await post(formData);
 
     action.searchParams.set("upload", JSON.stringify([{file: "<file>"}]));
-    yield post(testFile);
+    await post(testFile);
 
     action.searchParams.set("upload", `${blob.content.size} bytes`);
-    yield post(blob.content);
+    await post(blob.content);
 
     let byteLength = 16;
     action.searchParams.set("upload", `${byteLength} bytes`);
-    yield post(new ArrayBuffer(byteLength));
+    await post(new ArrayBuffer(byteLength));
   }
 
-  yield extension.unload();
+  await extension.unload();
 });
 </script>
 </body>

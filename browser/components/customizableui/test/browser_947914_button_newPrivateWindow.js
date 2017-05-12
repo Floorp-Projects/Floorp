@@ -4,11 +4,11 @@
 
 "use strict";
 
-add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   info("Check private browsing button existence and functionality");
 
-  yield PanelUI.show();
+  await PanelUI.show();
   info("Menu panel was opened");
 
   let windowWasHandled = false;
@@ -35,8 +35,8 @@ add_task(function*() {
   privateBrowsingButton.click();
 
   try {
-    yield waitForCondition(() => windowWasHandled);
-    yield promiseWindowClosed(privateWindow);
+    await waitForCondition(() => windowWasHandled);
+    await promiseWindowClosed(privateWindow);
     info("The new private window was closed");
   } catch (e) {
     ok(false, "The new private browser window was not properly handled");

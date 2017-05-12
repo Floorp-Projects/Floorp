@@ -1037,6 +1037,21 @@ or run without that action (ie: --no-{action})"
 
         return post_upload_cmd
 
+    def _ccache_z(self):
+        """clear ccache stats."""
+        dirs = self.query_abs_dirs()
+        env = self.query_build_env()
+        self.run_command(command=['ccache', '-z'],
+                         cwd=dirs['base_work_dir'],
+                         env=env)
+
+    def _ccache_s(self):
+        """print ccache stats. only done for unix like platforms"""
+        dirs = self.query_abs_dirs()
+        env = self.query_build_env()
+        cmd = ['ccache', '-s']
+        self.run_command(cmd, cwd=dirs['abs_src_dir'], env=env)
+
     def _rm_old_package(self):
         """rm the old package."""
         c = self.config
@@ -1585,6 +1600,9 @@ or run without that action (ie: --no-{action})"
 
     def preflight_build(self):
         """set up machine state for a complete build."""
+        c = self.config
+        if c.get('enable_ccache'):
+            self._ccache_z()
         if not self.query_is_nightly():
             # the old package should live in source dir so we don't need to do
             # this for nighties since we clobber the whole work_dir in
@@ -1630,9 +1648,6 @@ or run without that action (ie: --no-{action})"
             )
             self.fatal("'mach build' did not run successfully. Please check "
                        "log for errors.")
-
-        self.generate_build_props(console_output=True, halt_on_failure=True)
-        self._generate_build_stats()
 
     def multi_l10n(self):
         if not self.query_is_nightly():
@@ -1727,8 +1742,13 @@ or run without that action (ie: --no-{action})"
         self._taskcluster_upload(abs_files, self.routes_json['l10n'],
                                  locale='multi')
 
-    def postflight_build(self):
+    def postflight_build(self, console_output=True):
         """grabs properties from post build and calls ccache -s"""
+        self.generate_build_props(console_output=console_output,
+                                  halt_on_failure=True)
+        if self.config.get('enable_ccache'):
+            self._ccache_s()
+
         # A list of argument lists.  Better names gratefully accepted!
         mach_commands = self.config.get('postflight_build_mach_commands', [])
         for mach_command in mach_commands:
@@ -1906,15 +1926,13 @@ or run without that action (ie: --no-{action})"
             'subtests': [],
         }
 
-    def _generate_build_stats(self):
+    def generate_build_stats(self):
         """grab build stats following a compile.
 
         This action handles all statistics from a build: 'count_ctors'
         and then posts to graph server the results.
         We only post to graph server for non nightly build
         """
-        self.info('Collecting build metrics')
-
         if self.config.get('forced_artifact_build'):
             self.info('Skipping due to forced artifact build.')
             return

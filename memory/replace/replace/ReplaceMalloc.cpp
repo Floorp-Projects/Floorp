@@ -251,3 +251,13 @@ replace_jemalloc_free_dirty_pages(void)
     hook_table->jemalloc_free_dirty_pages_hook();
   }
 }
+
+void
+replace_jemalloc_thread_local_arena(jemalloc_bool aEnabled)
+{
+  gFuncs->jemalloc_thread_local_arena(aEnabled);
+  const malloc_hook_table_t* hook_table = gHookTable;
+  if (hook_table && hook_table->jemalloc_thread_local_arena_hook) {
+    hook_table->jemalloc_thread_local_arena_hook(aEnabled);
+  }
+}

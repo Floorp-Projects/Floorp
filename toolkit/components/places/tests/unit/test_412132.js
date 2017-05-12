@@ -11,7 +11,7 @@
  * https://bugzilla.mozilla.org/show_bug.cgi?id=412132
  */
 
-add_task(function* changeuri_unvisited_bookmark() {
+add_task(async function changeuri_unvisited_bookmark() {
   do_print("After changing URI of bookmark, frecency of bookmark's " +
            "original URI should be zero if original URI is unvisited and " +
            "no longer bookmarked.");
@@ -20,23 +20,23 @@ add_task(function* changeuri_unvisited_bookmark() {
                                                 TEST_URI,
                                                 PlacesUtils.bookmarks.DEFAULT_INDEX,
                                                 "bookmark title");
-  yield PlacesTestUtils.promiseAsyncUpdates();
+  await PlacesTestUtils.promiseAsyncUpdates();
 
   do_print("Bookmarked => frecency of URI should be != 0");
   do_check_neq(frecencyForUrl(TEST_URI), 0);
 
   PlacesUtils.bookmarks.changeBookmarkURI(id, uri("http://example.com/2"));
 
-  yield PlacesTestUtils.promiseAsyncUpdates();
+  await PlacesTestUtils.promiseAsyncUpdates();
 
   do_print("Unvisited URI no longer bookmarked => frecency should = 0");
   do_check_eq(frecencyForUrl(TEST_URI), 0);
 
-  yield PlacesUtils.bookmarks.eraseEverything();
-  yield PlacesTestUtils.clearHistory();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesTestUtils.clearHistory();
 });
 
-add_task(function* changeuri_visited_bookmark() {
+add_task(async function changeuri_visited_bookmark() {
   do_print("After changing URI of bookmark, frecency of bookmark's " +
            "original URI should not be zero if original URI is visited.");
   const TEST_URI = NetUtil.newURI("http://example.com/1");
@@ -45,27 +45,27 @@ add_task(function* changeuri_visited_bookmark() {
                                                 PlacesUtils.bookmarks.DEFAULT_INDEX,
                                                 "bookmark title");
 
-  yield PlacesTestUtils.promiseAsyncUpdates();
+  await PlacesTestUtils.promiseAsyncUpdates();
 
   do_print("Bookmarked => frecency of URI should be != 0");
   do_check_neq(frecencyForUrl(TEST_URI), 0);
 
-  yield PlacesTestUtils.addVisits(TEST_URI);
+  await PlacesTestUtils.addVisits(TEST_URI);
 
-  yield PlacesTestUtils.promiseAsyncUpdates();
+  await PlacesTestUtils.promiseAsyncUpdates();
 
   PlacesUtils.bookmarks.changeBookmarkURI(id, uri("http://example.com/2"));
 
-  yield PlacesTestUtils.promiseAsyncUpdates();
+  await PlacesTestUtils.promiseAsyncUpdates();
 
   do_print("*Visited* URI no longer bookmarked => frecency should != 0");
   do_check_neq(frecencyForUrl(TEST_URI), 0);
 
-  yield PlacesUtils.bookmarks.eraseEverything();
-  yield PlacesTestUtils.clearHistory();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesTestUtils.clearHistory();
 });
 
-add_task(function* changeuri_bookmark_still_bookmarked() {
+add_task(async function changeuri_bookmark_still_bookmarked() {
   do_print("After changing URI of bookmark, frecency of bookmark's " +
            "original URI should not be zero if original URI is still " +
            "bookmarked.");
@@ -79,23 +79,23 @@ add_task(function* changeuri_bookmark_still_bookmarked() {
                                        PlacesUtils.bookmarks.DEFAULT_INDEX,
                                        "bookmark 2 title");
 
-  yield PlacesTestUtils.promiseAsyncUpdates();
+  await PlacesTestUtils.promiseAsyncUpdates();
 
   do_print("Bookmarked => frecency of URI should be != 0");
   do_check_neq(frecencyForUrl(TEST_URI), 0);
 
   PlacesUtils.bookmarks.changeBookmarkURI(id1, uri("http://example.com/2"));
 
-  yield PlacesTestUtils.promiseAsyncUpdates();
+  await PlacesTestUtils.promiseAsyncUpdates();
 
   do_print("URI still bookmarked => frecency should != 0");
   do_check_neq(frecencyForUrl(TEST_URI), 0);
 
-  yield PlacesUtils.bookmarks.eraseEverything();
-  yield PlacesTestUtils.clearHistory();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesTestUtils.clearHistory();
 });
 
-add_task(function* changeuri_nonexistent_bookmark() {
+add_task(async function changeuri_nonexistent_bookmark() {
   do_print("Changing the URI of a nonexistent bookmark should fail.");
   function tryChange(itemId) {
     try {
@@ -120,8 +120,8 @@ add_task(function* changeuri_nonexistent_bookmark() {
   PlacesUtils.bookmarks.removeItem(id);
   tryChange(id);
 
-  yield PlacesUtils.bookmarks.eraseEverything();
-  yield PlacesTestUtils.clearHistory();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesTestUtils.clearHistory();
 });
 
 function run_test() {

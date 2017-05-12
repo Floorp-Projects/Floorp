@@ -6,13 +6,13 @@
 
 const TEST_PATH = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "http://example.com");
 
-add_task(function* () {
-  yield BrowserTestUtils.withNewTab(TEST_PATH + "readerModeArticle.html#foo", function* (browser) {
+add_task(async function() {
+  await BrowserTestUtils.withNewTab(TEST_PATH + "readerModeArticle.html#foo", async function(browser) {
     let pageShownPromise = BrowserTestUtils.waitForContentEvent(browser, "AboutReaderContentReady");
     let readerButton = document.getElementById("reader-mode-button");
     readerButton.click();
-    yield pageShownPromise;
-    yield ContentTask.spawn(browser, null, function* () {
+    await pageShownPromise;
+    await ContentTask.spawn(browser, null, async function() {
       let foo = content.document.getElementById("foo");
       ok(foo, "foo element should be in document");
       let {scrollTop} = content.document.documentElement;
@@ -23,15 +23,15 @@ add_task(function* () {
   });
 });
 
-add_task(function* () {
-  yield BrowserTestUtils.withNewTab(TEST_PATH + "readerModeArticle.html", function* (browser) {
+add_task(async function() {
+  await BrowserTestUtils.withNewTab(TEST_PATH + "readerModeArticle.html", async function(browser) {
     let pageShownPromise = BrowserTestUtils.waitForContentEvent(browser, "AboutReaderContentReady");
     let readerButton = document.getElementById("reader-mode-button");
     readerButton.click();
-    yield pageShownPromise;
+    await pageShownPromise;
     is(content.document.documentElement.scrollTop, 0, "scrollTop should be 0");
-    yield BrowserTestUtils.synthesizeMouseAtCenter("#foo-anchor", {}, browser);
-    yield ContentTask.spawn(browser, null, function* () {
+    await BrowserTestUtils.synthesizeMouseAtCenter("#foo-anchor", {}, browser);
+    await ContentTask.spawn(browser, null, async function() {
       let foo = content.document.getElementById("foo");
       ok(foo, "foo element should be in document");
       let {scrollTop} = content.document.documentElement;

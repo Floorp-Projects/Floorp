@@ -19,7 +19,6 @@
     const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
     Cu.import("resource://gre/modules/Services.jsm");
-    Cu.import("resource://gre/modules/Task.jsm");
     Cu.import("resource://gre/modules/Promise.jsm");
 
     const UCT_URI = "chrome://mozapps/content/downloads/unknownContentType.xul";
@@ -66,42 +65,42 @@
     }
 
     function doTest() {
-      Task.spawn(function* test_aboutCrashed() {
+      (async function test_aboutCrashed() {
         let frame = document.getElementById("testframe");
         frame.setAttribute("src", LOAD_URI);
 
-        let uctWindow = yield UCTObserver.opened.promise;
+        let uctWindow = await UCTObserver.opened.promise;
         let ok = uctWindow.document.documentElement.getButton("accept");
 
         SimpleTest.is(ok.disabled, true, "button started disabled");
 
-        yield waitDelay(DIALOG_DELAY);
+        await waitDelay(DIALOG_DELAY);
 
         SimpleTest.is(ok.disabled, false, "button was enabled");
 
         focusOutOfDialog = SimpleTest.promiseFocus(window);
         window.focus();
-        yield focusOutOfDialog;
+        await focusOutOfDialog;
 
         SimpleTest.is(ok.disabled, true, "button was disabled");
 
         focusOnDialog = SimpleTest.promiseFocus(uctWindow);
         uctWindow.focus();
-        yield focusOnDialog;
+        await focusOnDialog;
 
         SimpleTest.is(ok.disabled, true, "button remained disabled");
 
-        yield waitDelay(DIALOG_DELAY);
+        await waitDelay(DIALOG_DELAY);
         SimpleTest.is(ok.disabled, false, "button re-enabled after delay");
 
         uctWindow.document.documentElement.cancelDialog();
-        yield UCTObserver.closed.promise;
+        await UCTObserver.closed.promise;
 
         Services.ww.unregisterNotification(UCTObserver);
         uctWindow = null;
         UCTObserver = null;
         SimpleTest.finish();
-      });
+      })();
     }
   ]]></script>
 

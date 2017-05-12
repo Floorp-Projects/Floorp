@@ -24,9 +24,9 @@ function waitForFills(fillCount) {
   return Promise.all(promises);
 }
 
-add_task(function* setup() {
+add_task(async function setup() {
   if (document.readyState !== "complete") {
-    yield new Promise((resolve) => {
+    await new Promise((resolve) => {
       document.onreadystatechange = () => {
         if (document.readyState !== "complete") {
           return;
@@ -49,8 +49,8 @@ add_task(function* setup() {
   });
 });
 
-add_task(function* loadUsernamePasswordSelectorRecipes() {
-  yield loadRecipes({
+add_task(async function loadUsernamePasswordSelectorRecipes() {
+  await loadRecipes({
     siteRecipes: [{
       hosts: ["mochi.test:8888"],
       usernameSelector: "input[name='uname1']",
@@ -59,7 +59,7 @@ add_task(function* loadUsernamePasswordSelectorRecipes() {
   });
 });
 
-add_task(function* testOverriddingFields() {
+add_task(async function testOverriddingFields() {
   // Insert the form dynamically so autofill is triggered after setup above.
   document.getElementById("content").innerHTML = `
     <!-- form with recipe for the username and password -->
@@ -70,13 +70,13 @@ add_task(function* testOverriddingFields() {
         <input type="password" name="pword2" data-expected="true">
       </form>`;
 
-  let elements = yield waitForFills(2);
+  let elements = await waitForFills(2);
   for (let element of elements) {
     is(element.dataset.expected, "true", `${element.name} was filled`);
   }
 });
 
-add_task(function* testDefaultHeuristics() {
+add_task(async function testDefaultHeuristics() {
   // Insert the form dynamically so autofill is triggered after setup above.
   document.getElementById("content").innerHTML = `
     <!-- Fallback to the default heuristics since the selectors don't match -->
@@ -87,15 +87,15 @@ add_task(function* testDefaultHeuristics() {
       <input type="password" name="pword4" data-expected="false">
     </form>`;
 
-  let elements = yield waitForFills(2);
+  let elements = await waitForFills(2);
   for (let element of elements) {
     is(element.dataset.expected, "true", `${element.name} was filled`);
   }
 });
 
-add_task(function* loadNotUsernameSelectorRecipes() {
-  yield resetRecipes();
-  yield loadRecipes({
+add_task(async function loadNotUsernameSelectorRecipes() {
+  await resetRecipes();
+  await loadRecipes({
     siteRecipes: [{
       hosts: ["mochi.test:8888"],
       notUsernameSelector: "input[name='not_uname1']"
@@ -103,7 +103,7 @@ add_task(function* loadNotUsernameSelectorRecipes() {
   });
 });
 
-add_task(function* testNotUsernameField() {
+add_task(async function testNotUsernameField() {
   document.getElementById("content").innerHTML = `
     <!-- The field matching notUsernameSelector should be skipped -->
     <form id="form3">
@@ -112,13 +112,13 @@ add_task(function* testNotUsernameField() {
       <input type="password" name="pword5" data-expected="true">
     </form>`;
 
-  let elements = yield waitForFills(2);
+  let elements = await waitForFills(2);
   for (let element of elements) {
     is(element.dataset.expected, "true", `${element.name} was filled`);
   }
 });
 
-add_task(function* testNotUsernameFieldNoUsername() {
+add_task(async function testNotUsernameFieldNoUsername() {
   document.getElementById("content").innerHTML = `
     <!-- The field matching notUsernameSelector should be skipped.
          No username field should be found and filled in this case -->
@@ -127,15 +127,15 @@ add_task(function* testNotUsernameFieldNoUsername() {
       <input type="password" name="pword6" data-expected="true">
     </form>`;
 
-  let elements = yield waitForFills(1);
+  let elements = await waitForFills(1);
   for (let element of elements) {
     is(element.dataset.expected, "true", `${element.name} was filled`);
   }
 });
 
-add_task(function* loadNotPasswordSelectorRecipes() {
-  yield resetRecipes();
-  yield loadRecipes({
+add_task(async function loadNotPasswordSelectorRecipes() {
+  await resetRecipes();
+  await loadRecipes({
     siteRecipes: [{
       hosts: ["mochi.test:8888"],
       notPasswordSelector: "input[name='not_pword'], input[name='not_pword2']",
@@ -143,7 +143,7 @@ add_task(function* loadNotPasswordSelectorRecipes() {
   });
 });
 
-add_task(function* testNotPasswordField() {
+add_task(async function testNotPasswordField() {
   document.getElementById("content").innerHTML = `
     <!-- The field matching notPasswordSelector should be skipped -->
     <form id="form5">
@@ -152,13 +152,13 @@ add_task(function* testNotPasswordField() {
       <input type="password" name="pword7" data-expected="true">
     </form>`;
 
-  let elements = yield waitForFills(2);
+  let elements = await waitForFills(2);
   for (let element of elements) {
     is(element.dataset.expected, "true", `${element.name} was filled`);
   }
 });
 
-add_task(function* testNotPasswordFieldNoPassword() {
+add_task(async function testNotPasswordFieldNoPassword() {
   document.getElementById("content").innerHTML = `
     <!-- The field matching notPasswordSelector should be skipped.
          No username or password field should be found and filled in this case.
@@ -172,13 +172,13 @@ add_task(function* testNotPasswordFieldNoPassword() {
       <input type="password" name="pword9" data-expected="true">
     </form>`;
 
-  let elements = yield waitForFills(1);
+  let elements = await waitForFills(1);
   for (let element of elements) {
     is(element.dataset.expected, "true", `${element.name} was filled`);
   }
 });
 
-add_task(function* testNotPasswordField_tooManyToOkay() {
+add_task(async function testNotPasswordField_tooManyToOkay() {
   document.getElementById("content").innerHTML = `
     <!-- The field matching notPasswordSelector should be skipped so we won't
          have too many pw fields to handle (3). -->
@@ -191,7 +191,7 @@ add_task(function* testNotPasswordField_tooManyToOkay() {
       <input type="password" name="pword12" data-expected="false">
     </form>`;
 
-  let elements = yield waitForFills(2);
+  let elements = await waitForFills(2);
   for (let element of elements) {
     is(element.dataset.expected, "true", `${element.name} was filled`);
   }

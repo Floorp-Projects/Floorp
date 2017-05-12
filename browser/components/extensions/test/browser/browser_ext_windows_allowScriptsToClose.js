@@ -3,7 +3,7 @@
 "use strict";
 
 // Tests allowScriptsToClose option
-add_task(function* test_allowScriptsToClose() {
+add_task(async function test_allowScriptsToClose() {
   const files = {
     "dummy.html": "<meta charset=utf-8><script src=close.js></script>",
     "close.js": function() {
@@ -35,27 +35,27 @@ add_task(function* test_allowScriptsToClose() {
   const manifest = {permissions: ["tabs", example]};
 
   const extension = ExtensionTestUtils.loadExtension({files, background, manifest});
-  yield SpecialPowers.pushPrefEnv({set: [["dom.allow_scripts_to_close_windows", false]]});
+  await SpecialPowers.pushPrefEnv({set: [["dom.allow_scripts_to_close_windows", false]]});
 
-  yield extension.startup();
-  yield extension.awaitFinish();
+  await extension.startup();
+  await extension.awaitFinish();
 
   extension.sendMessage("create", {url: "dummy.html"});
-  let win = yield BrowserTestUtils.waitForNewWindow();
-  yield BrowserTestUtils.windowClosed(win);
+  let win = await BrowserTestUtils.waitForNewWindow();
+  await BrowserTestUtils.windowClosed(win);
   info("script allowed to close the window");
 
   extension.sendMessage("create+execute", {url: example});
-  win = yield BrowserTestUtils.waitForNewWindow();
-  yield extension.awaitMessage("close-failed");
+  win = await BrowserTestUtils.waitForNewWindow();
+  await extension.awaitMessage("close-failed");
   info("script prevented from closing the window");
   win.close();
 
   extension.sendMessage("create+execute", {url: example, allowScriptsToClose: true});
-  win = yield BrowserTestUtils.waitForNewWindow();
-  yield BrowserTestUtils.windowClosed(win);
+  win = await BrowserTestUtils.waitForNewWindow();
+  await BrowserTestUtils.windowClosed(win);
   info("script allowed to close the window");
 
-  yield SpecialPowers.popPrefEnv();
-  yield extension.unload();
+  await SpecialPowers.popPrefEnv();
+  await extension.unload();
 });

@@ -24,8 +24,9 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "event2/event-config.h"
+#include "evconfig-private.h"
 
-#ifdef WIN32
+#ifdef _WIN32
 #ifndef _WIN32_WINNT
 /* Minimum required for InitializeCriticalSectionAndSpinCount */
 #define _WIN32_WINNT 0x0403
@@ -42,6 +43,7 @@ struct event_base;
 
 #include "mm-internal.h"
 #include "evthread-internal.h"
+#include "time-internal.h"
 
 #define SPIN_COUNT 2000
 
@@ -59,17 +61,17 @@ evthread_win32_lock_create(unsigned locktype)
 }
 
 static void
-evthread_win32_lock_free(void *_lock, unsigned locktype)
+evthread_win32_lock_free(void *lock_, unsigned locktype)
 {
-	CRITICAL_SECTION *lock = _lock;
+	CRITICAL_SECTION *lock = lock_;
 	DeleteCriticalSection(lock);
 	mm_free(lock);
 }
 
 static int
-evthread_win32_lock(unsigned mode, void *_lock)
+evthread_win32_lock(unsigned mode, void *lock_)
 {
-	CRITICAL_SECTION *lock = _lock;
+	CRITICAL_SECTION *lock = lock_;
 	if ((mode & EVTHREAD_TRY)) {
 		return ! TryEnterCriticalSection(lock);
 	} else {
@@ -79,9 +81,9 @@ evthread_win32_lock(unsigned mode, void *_lock)
 }
 
 static int
-evthread_win32_unlock(unsigned mode, void *_lock)
+evthread_win32_unlock(unsigned mode, void *lock_)
 {
-	CRITICAL_SECTION *lock = _lock;
+	CRITICAL_SECTION *lock = lock_;
 	LeaveCriticalSection(lock);
 	return 0;
 }
@@ -133,17 +135,17 @@ evthread_win32_condvar_alloc(unsigned condflags)
 }
 
 static void
-evthread_win32_condvar_free(void *_cond)
+evthread_win32_condvar_free(void *cond_)
 {
-	CONDITION_VARIABLE *cond = _cond;
+	CONDITION_VARIABLE *cond = cond_;
 	/* There doesn't _seem_ to be a cleaup fn here... */
 	mm_free(cond);
 }
 
 static int
-evthread_win32_condvar_signal(void *_cond, int broadcast)
+evthread_win32_condvar_signal(void *cond, int broadcast)
 {
-	CONDITION_VARIABLE *cond = _cond;
+	CONDITION_VARIABLE *cond = cond_;
 	if (broadcast)
 		WakeAllConditionVariable_fn(cond);
 	else
@@ -152,15 +154,15 @@ evthread_win32_condvar_signal(void *_cond, int broadcast)
 }
 
 static int
-evthread_win32_condvar_wait(void *_cond, void *_lock, const struct timeval *tv)
+evthread_win32_condvar_wait(void *cond_, void *lock_, const struct timeval *tv)
 {
-	CONDITION_VARIABLE *cond = _cond;
-	CRITICAL_SECTION *lock = _lock;
+	CONDITION_VARIABLE *cond = cond_;
+	CRITICAL_SECTION *lock = lock_;
 	DWORD ms, err;
 	BOOL result;
 
 	if (tv)
-		ms = evutil_tv_to_msec(tv);
+		ms = evutil_tv_to_msec_(tv);
 	else
 		ms = INFINITE;
 	result = SleepConditionVariableCS_fn(cond, lock, ms);
@@ -204,18 +206,18 @@ evthread_win32_cond_alloc(unsigned flags)
 }
 
 static void
-evthread_win32_cond_free(void *_cond)
+evthread_win32_cond_free(void *cond_)
 {
-	struct evthread_win32_cond *cond = _cond;
+	struct evthread_win32_cond *cond = cond_;
 	DeleteCriticalSection(&cond->lock);
 	CloseHandle(cond->event);
 	mm_free(cond);
 }
 
 static int
-evthread_win32_cond_signal(void *_cond, int broadcast)
+evthread_win32_cond_signal(void *cond_, int broadcast)
 {
-	struct evthread_win32_cond *cond = _cond;
+	struct evthread_win32_cond *cond = cond_;
 	EnterCriticalSection(&cond->lock);
 	if (broadcast)
 		cond->n_to_wake = cond->n_waiting;
@@ -228,16 +230,16 @@ evthread_win32_cond_signal(void *_cond, int broadcast)
 }
 
 static int
-evthread_win32_cond_wait(void *_cond, void *_lock, const struct timeval *tv)
+evthread_win32_cond_wait(void *cond_, void *lock_, const struct timeval *tv)
 {
-	struct evthread_win32_cond *cond = _cond;
-	CRITICAL_SECTION *lock = _lock;
+	struct evthread_win32_cond *cond = cond_;
+	CRITICAL_SECTION *lock = lock_;
 	int generation_at_start;
 	int waiting = 1;
 	int result = -1;
 	DWORD ms = INFINITE, ms_orig = INFINITE, startTime, endTime;
 	if (tv)
-		ms_orig = ms = evutil_tv_to_msec(tv);
+		ms_orig = ms = evutil_tv_to_msec_(tv);
 
 	EnterCriticalSection(&cond->lock);
 	++cond->n_waiting;

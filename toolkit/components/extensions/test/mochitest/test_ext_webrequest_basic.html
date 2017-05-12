@@ -17,10 +17,10 @@ if (AppConstants.platform === "android") {
 }
 
 let extension;
-add_task(function* setup() {
+add_task(async function setup() {
   // SelfSupport has a tendency to fire when running this test alone, without
   // a good way to turn it off we just set the url to ""
-  yield SpecialPowers.pushPrefEnv({
+  await SpecialPowers.pushPrefEnv({
     set: [["browser.selfsupport.url", ""]],
   });
 
@@ -30,7 +30,7 @@ add_task(function* setup() {
   cache.clearCache(false);
 
   extension = makeExtension();
-  yield extension.startup();
+  await extension.startup();
 });
 
 // expect is a set of test values used by the background script.
@@ -45,7 +45,7 @@ add_task(function* setup() {
 // cached: expected fromCache value, default is false, checked in onCompletion
 // headers: request or response headers to modify
 
-add_task(function* test_webRequest_links() {
+add_task(async function test_webRequest_links() {
   let expect = {
     "file_style_bad.css": {
       type: "stylesheet",
@@ -63,18 +63,18 @@ add_task(function* test_webRequest_links() {
     },
   };
   extension.sendMessage("set-expected", {expect, origin: location.href});
-  yield extension.awaitMessage("continue");
+  await extension.awaitMessage("continue");
   addStylesheet("file_style_bad.css");
-  yield extension.awaitMessage("cancelled");
+  await extension.awaitMessage("cancelled");
   // we redirect to style_good which completes the test
   addStylesheet("file_style_redirect.css");
-  yield extension.awaitMessage("done");
+  await extension.awaitMessage("done");
 
   let style = window.getComputedStyle(document.getElementById("test"));
   is(style.getPropertyValue("color"), "rgb(255, 0, 0)", "Good CSS loaded");
 });
 
-add_task(function* test_webRequest_images() {
+add_task(async function test_webRequest_images() {
   let expect = {
     "file_image_bad.png": {
       type: "image",
@@ -92,15 +92,15 @@ add_task(function* test_webRequest_images() {
     },
   };
   extension.sendMessage("set-expected", {expect, origin: location.href});
-  yield extension.awaitMessage("continue");
+  await extension.awaitMessage("continue");
   addImage("file_image_bad.png");
-  yield extension.awaitMessage("cancelled");
+  await extension.awaitMessage("cancelled");
   // we redirect to image_good which completes the test
   addImage("file_image_redirect.png");
-  yield extension.awaitMessage("done");
+  await extension.awaitMessage("done");
 });
 
-add_task(function* test_webRequest_scripts() {
+add_task(async function test_webRequest_scripts() {
   let expect = {
     "file_script_bad.js": {
       type: "script",
@@ -118,18 +118,18 @@ add_task(function* test_webRequest_scripts() {
     },
   };
   extension.sendMessage("set-expected", {expect, origin: location.href});
-  yield extension.awaitMessage("continue");
+  await extension.awaitMessage("continue");
   addScript("file_script_bad.js");
-  yield extension.awaitMessage("cancelled");
+  await extension.awaitMessage("cancelled");
   // we redirect to script_good which completes the test
   addScript("file_script_redirect.js");
-  yield extension.awaitMessage("done");
+  await extension.awaitMessage("done");
 
   is(window.success, 1, "Good script ran");
   is(window.failure, undefined, "Failure script didn't run");
 });
 
-add_task(function* test_webRequest_xhr_get() {
+add_task(async function test_webRequest_xhr_get() {
   let expect = {
     "file_script_xhr.js": {
       type: "script",
@@ -140,12 +140,12 @@ add_task(function* test_webRequest_xhr_get() {
     },
   };
   extension.sendMessage("set-expected", {expect, origin: location.href});
-  yield extension.awaitMessage("continue");
+  await extension.awaitMessage("continue");
   addScript("file_script_xhr.js");
-  yield extension.awaitMessage("done");
+  await extension.awaitMessage("done");
 });
 
-add_task(function* test_webRequest_nonexistent() {
+add_task(async function test_webRequest_nonexistent() {
   let expect = {
     "nonexistent_script_url.js": {
       status: 404,
@@ -153,12 +153,12 @@ add_task(function* test_webRequest_nonexistent() {
     },
   };
   extension.sendMessage("set-expected", {expect, origin: location.href});
-  yield extension.awaitMessage("continue");
+  await extension.awaitMessage("continue");
   addScript("nonexistent_script_url.js");
-  yield extension.awaitMessage("done");
+  await extension.awaitMessage("done");
 });
 
-add_task(function* test_webRequest_checkCached() {
+add_task(async function test_webRequest_checkCached() {
   let expect = {
     "file_image_good.png": {
       type: "image",
@@ -179,18 +179,18 @@ add_task(function* test_webRequest_checkCached() {
     },
   };
   extension.sendMessage("set-expected", {expect, origin: location.href});
-  yield extension.awaitMessage("continue");
+  await extension.awaitMessage("continue");
   addImage("file_image_good.png");
   addScript("file_script_good.js");
   addStylesheet("file_style_good.css");
   addScript("nonexistent_script_url.js");
-  yield extension.awaitMessage("done");
+  await extension.awaitMessage("done");
 
   is(window.success, 2, "Good script ran");
   is(window.failure, undefined, "Failure script didn't run");
 });
 
-add_task(function* test_webRequest_headers() {
+add_task(async function test_webRequest_headers() {
   let expect = {
     "file_script_nonexistent.js": {
       type: "script",
@@ -226,12 +226,12 @@ add_task(function* test_webRequest_headers() {
     },
   };
   extension.sendMessage("set-expected", {expect, origin: location.href});
-  yield extension.awaitMessage("continue");
+  await extension.awaitMessage("continue");
   addScript("file_script_nonexistent.js");
-  yield extension.awaitMessage("done");
+  await extension.awaitMessage("done");
 });
 
-add_task(function* test_webRequest_tabId() {
+add_task(async function test_webRequest_tabId() {
   function background() {
     let tab;
     browser.tabs.onCreated.addListener(newTab => {
@@ -254,7 +254,7 @@ add_task(function* test_webRequest_tabId() {
     },
     background,
   });
-  yield tabExt.startup();
+  await tabExt.startup();
 
   let expect = {
     "file_WebRequest_page3.html": {
@@ -262,19 +262,19 @@ add_task(function* test_webRequest_tabId() {
     },
   };
   extension.sendMessage("set-expected", {expect, origin: location.href});
-  yield extension.awaitMessage("continue");
+  await extension.awaitMessage("continue");
   let a = addLink(`file_WebRequest_page3.html?trigger=a&nocache=${Math.random()}`);
   a.click();
-  yield extension.awaitMessage("done");
+  await extension.awaitMessage("done");
 
   let closed = tabExt.awaitMessage("tab-closed");
   tabExt.sendMessage("close-tab");
-  yield closed;
+  await closed;
 
-  yield tabExt.unload();
+  await tabExt.unload();
 });
 
-add_task(function* test_webRequest_tabId_browser() {
+add_task(async function test_webRequest_tabId_browser() {
   async function background(url) {
     let tabId;
     browser.test.onMessage.addListener(async (msg, expected) => {
@@ -302,18 +302,18 @@ add_task(function* test_webRequest_tabId_browser() {
   };
   // expecting origin == undefined
   extension.sendMessage("set-expected", {expect});
-  yield extension.awaitMessage("continue");
+  await extension.awaitMessage("continue");
 
   // open a tab from a system principal
-  yield tabExt.startup();
+  await tabExt.startup();
 
-  yield extension.awaitMessage("done");
+  await extension.awaitMessage("done");
   tabExt.sendMessage("done");
-  yield tabExt.awaitMessage("done");
-  yield tabExt.unload();
+  await tabExt.awaitMessage("done");
+  await tabExt.unload();
 });
 
-add_task(function* test_webRequest_frames() {
+add_task(async function test_webRequest_frames() {
   let expect = {
     "text/plain,webRequestTest": {
       type: "sub_frame",
@@ -340,17 +340,17 @@ add_task(function* test_webRequest_frames() {
     },
   };
   extension.sendMessage("set-expected", {expect, origin: location.href});
-  yield extension.awaitMessage("continue");
+  await extension.awaitMessage("continue");
   addFrame("data:text/plain,webRequestTest");
   addFrame("data:text/plain,webRequestTest_bad");
-  yield extension.awaitMessage("cancelled");
+  await extension.awaitMessage("cancelled");
   addFrame("redirection.sjs");
   addFrame("https://invalid.localhost/badrobot");
-  yield extension.awaitMessage("done");
+  await extension.awaitMessage("done");
 });
 
-add_task(function* teardown() {
-  yield extension.unload();
+add_task(async function teardown() {
+  await extension.unload();
 });
 
 add_task(async function test_case_preserving() {

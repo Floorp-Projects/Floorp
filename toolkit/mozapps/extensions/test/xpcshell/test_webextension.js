@@ -16,10 +16,10 @@ startupManager();
 
 const { GlobalManager } = Components.utils.import("resource://gre/modules/Extension.jsm", {});
 
-add_task(function*() {
+add_task(async function() {
   equal(GlobalManager.extensionMap.size, 0);
 
-  yield Promise.all([
+  await Promise.all([
     promiseInstallAllFiles([do_get_addon("webextension_1")], true),
     promiseWebExtensionStartup()
   ]);
@@ -36,7 +36,7 @@ add_task(function*() {
     // Expected the chrome url to not be registered
   }
 
-  let addon = yield promiseAddonByID(ID);
+  let addon = await promiseAddonByID(ID);
   do_check_neq(addon, null);
   do_check_eq(addon.version, "1.0");
   do_check_eq(addon.name, "Web Extension Name");
@@ -54,17 +54,17 @@ add_task(function*() {
   do_check_eq(addon.icon64URL, uri + "icon64.png");
 
   // Should persist through a restart
-  yield promiseShutdownManager();
+  await promiseShutdownManager();
 
   equal(GlobalManager.extensionMap.size, 0);
 
   startupManager();
-  yield promiseWebExtensionStartup();
+  await promiseWebExtensionStartup();
 
   equal(GlobalManager.extensionMap.size, 1);
   ok(GlobalManager.extensionMap.has(ID));
 
-  addon = yield promiseAddonByID(ID);
+  addon = await promiseAddonByID(ID);
   do_check_neq(addon, null);
   do_check_eq(addon.version, "1.0");
   do_check_eq(addon.name, "Web Extension Name");
@@ -88,7 +88,7 @@ add_task(function*() {
   equal(GlobalManager.extensionMap.size, 0);
 
   addon.userDisabled = false;
-  yield promiseWebExtensionStartup();
+  await promiseWebExtensionStartup();
 
   equal(GlobalManager.extensionMap.size, 1);
   ok(GlobalManager.extensionMap.has(ID));
@@ -98,12 +98,12 @@ add_task(function*() {
   equal(GlobalManager.extensionMap.size, 0);
   do_check_false(GlobalManager.extensionMap.has(ID));
 
-  yield promiseShutdownManager();
+  await promiseShutdownManager();
 });
 
 // Writing the manifest direct to the profile should work
-add_task(function*() {
-  yield promiseWriteWebManifestForExtension({
+add_task(async function() {
+  await promiseWriteWebManifestForExtension({
     name: "Web Extension Name",
     version: "1.0",
     manifest_version: 2,
@@ -115,9 +115,9 @@ add_task(function*() {
   }, profileDir);
 
   startupManager();
-  yield promiseWebExtensionStartup();
+  await promiseWebExtensionStartup();
 
-  let addon = yield promiseAddonByID(ID);
+  let addon = await promiseAddonByID(ID);
   do_check_neq(addon, null);
   do_check_eq(addon.version, "1.0");
   do_check_eq(addon.name, "Web Extension Name");
@@ -133,33 +133,33 @@ add_task(function*() {
 
   addon.uninstall();
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
 });
 
-add_task(function* test_manifest_localization() {
+add_task(async function test_manifest_localization() {
   const extensionId = "webextension3@tests.mozilla.org";
 
-  yield promiseInstallAllFiles([do_get_addon("webextension_3")], true);
-  yield promiseWebExtensionStartup();
+  await promiseInstallAllFiles([do_get_addon("webextension_3")], true);
+  await promiseWebExtensionStartup();
 
-  let addon = yield promiseAddonByID(extensionId);
+  let addon = await promiseAddonByID(extensionId);
   addon.userDisabled = true;
 
   equal(addon.name, "Web Extensiøn foo ☹");
   equal(addon.description, "Descriptïon bar ☹ of add-on");
 
   Services.prefs.setCharPref(PREF_SELECTED_LOCALE, "fr-FR");
-  yield promiseRestartManager();
+  await promiseRestartManager();
 
-  addon = yield promiseAddonByID(extensionId);
+  addon = await promiseAddonByID(extensionId);
 
   equal(addon.name, "Web Extensiøn le foo ☺");
   equal(addon.description, "Descriptïon le bar ☺ of add-on");
 
   Services.prefs.setCharPref(PREF_SELECTED_LOCALE, "de");
-  yield promiseRestartManager();
+  await promiseRestartManager();
 
-  addon = yield promiseAddonByID(extensionId);
+  addon = await promiseAddonByID(extensionId);
 
   equal(addon.name, "Web Extensiøn foo ☹");
   equal(addon.description, "Descriptïon bar ☹ of add-on");
@@ -168,8 +168,8 @@ add_task(function* test_manifest_localization() {
 });
 
 // Missing version should cause a failure
-add_task(function*() {
-  yield promiseWriteWebManifestForExtension({
+add_task(async function() {
+  await promiseWriteWebManifestForExtension({
     name: "Web Extension Name",
     manifest_version: 2,
     applications: {
@@ -179,20 +179,20 @@ add_task(function*() {
     }
   }, profileDir);
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
 
-  let addon = yield promiseAddonByID(ID);
+  let addon = await promiseAddonByID(ID);
   do_check_eq(addon, null);
 
   let file = getFileForAddon(profileDir, ID);
   do_check_false(file.exists());
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
 });
 
 // Incorrect manifest version should cause a failure
-add_task(function*() {
-  yield promiseWriteWebManifestForExtension({
+add_task(async function() {
+  await promiseWriteWebManifestForExtension({
     name: "Web Extension Name",
     version: "1.0",
     manifest_version: 1,
@@ -203,46 +203,46 @@ add_task(function*() {
     }
   }, profileDir);
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
 
-  let addon = yield promiseAddonByID(ID);
+  let addon = await promiseAddonByID(ID);
   do_check_eq(addon, null);
 
   let file = getFileForAddon(profileDir, ID);
   do_check_false(file.exists());
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
 });
 
 // install.rdf should be read before manifest.json
-add_task(function*() {
+add_task(async function() {
 
-  yield Promise.all([
+  await Promise.all([
     promiseInstallAllFiles([do_get_addon("webextension_2")], true)
   ]);
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
 
   let installrdf_id = "first-webextension2@tests.mozilla.org";
-  let first_addon = yield promiseAddonByID(installrdf_id);
+  let first_addon = await promiseAddonByID(installrdf_id);
   do_check_neq(first_addon, null);
   do_check_false(first_addon.appDisabled);
   do_check_true(first_addon.isActive);
   do_check_false(first_addon.isSystem);
 
   let manifestjson_id = "last-webextension2@tests.mozilla.org";
-  let last_addon = yield promiseAddonByID(manifestjson_id);
+  let last_addon = await promiseAddonByID(manifestjson_id);
   do_check_eq(last_addon, null);
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
 });
 
 // Test that the "options_ui" manifest section is processed correctly.
-add_task(function* test_options_ui() {
+add_task(async function test_options_ui() {
   let OPTIONS_RE = /^moz-extension:\/\/[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}\/options\.html$/;
 
   const extensionId = "webextension@tests.mozilla.org";
-  yield promiseInstallWebExtension({
+  await promiseInstallWebExtension({
     manifest: {
       applications: {gecko: {id: extensionId}},
       "options_ui": {
@@ -251,7 +251,7 @@ add_task(function* test_options_ui() {
     },
   });
 
-  let addon = yield promiseAddonByID(extensionId);
+  let addon = await promiseAddonByID(extensionId);
   equal(addon.optionsType, AddonManager.OPTIONS_TYPE_INLINE_BROWSER,
         "Addon should have an INLINE_BROWSER options type");
 
@@ -261,7 +261,7 @@ add_task(function* test_options_ui() {
   addon.uninstall();
 
   const ID2 = "webextension2@tests.mozilla.org";
-  yield promiseInstallWebExtension({
+  await promiseInstallWebExtension({
     manifest: {
       applications: {gecko: {id: ID2}},
       "options_ui": {
@@ -271,7 +271,7 @@ add_task(function* test_options_ui() {
     },
   });
 
-  addon = yield promiseAddonByID(ID2);
+  addon = await promiseAddonByID(ID2);
   equal(addon.optionsType, AddonManager.OPTIONS_TYPE_TAB,
         "Addon should have a TAB options type");
 
@@ -282,7 +282,7 @@ add_task(function* test_options_ui() {
 });
 
 // Test that experiments permissions add the appropriate dependencies.
-add_task(function* test_experiments_dependencies() {
+add_task(async function test_experiments_dependencies() {
   if (AppConstants.RELEASE_OR_BETA)
     // Experiments are not enabled on release builds.
     return;
@@ -294,9 +294,9 @@ add_task(function* test_experiments_dependencies() {
     },
   });
 
-  yield promiseInstallAllFiles([addonFile]);
+  await promiseInstallAllFiles([addonFile]);
 
-  let addon = yield AddonManager.getAddonByID("meh@experiment");
+  let addon = await AddonManager.getAddonByID("meh@experiment");
 
   deepEqual(addon.dependencies, ["meh@experiments.addons.mozilla.org"],
             "Addon should have the expected dependencies");
@@ -307,7 +307,7 @@ add_task(function* test_experiments_dependencies() {
 });
 
 // Test that experiments API extensions install correctly.
-add_task(function* test_experiments_api() {
+add_task(async function test_experiments_api() {
   if (AppConstants.RELEASE_OR_BETA)
     // Experiments are not enabled on release builds.
     return;
@@ -321,20 +321,20 @@ add_task(function* test_experiments_api() {
     name: "Meh API",
   });
 
-  yield promiseInstallAllFiles([addonFile]);
+  await promiseInstallAllFiles([addonFile]);
 
-  let addons = yield AddonManager.getAddonsByTypes(["apiextension"]);
+  let addons = await AddonManager.getAddonsByTypes(["apiextension"]);
   let addon = addons.pop();
   equal(addon.id, extensionId, "Add-on should be installed as an API extension");
 
-  addons = yield AddonManager.getAddonsByTypes(["extension"]);
+  addons = await AddonManager.getAddonsByTypes(["extension"]);
   equal(addons.pop().id, extensionId, "Add-on type should be aliased to extension");
 
   addon.uninstall();
 });
 
-add_task(function* developerShouldOverride() {
-  let addon = yield promiseInstallWebExtension({
+add_task(async function developerShouldOverride() {
+  let addon = await promiseInstallWebExtension({
     manifest: {
       default_locale: "en",
       developer: {
@@ -356,15 +356,15 @@ add_task(function* developerShouldOverride() {
     }
   });
 
-  addon = yield promiseAddonByID(addon.id);
+  addon = await promiseAddonByID(addon.id);
   equal(addon.creator, "en name");
   equal(addon.homepageURL, "https://example.net/en");
   addon.uninstall();
 });
 
-add_task(function* developerEmpty() {
+add_task(async function developerEmpty() {
   for (let developer of [{}, null, {name: null, url: null}]) {
-    let addon = yield promiseInstallWebExtension({
+    let addon = await promiseInstallWebExtension({
       manifest: {
         author: "Some author",
         developer,
@@ -375,16 +375,16 @@ add_task(function* developerEmpty() {
       }
     });
 
-    addon = yield promiseAddonByID(addon.id);
+    addon = await promiseAddonByID(addon.id);
     equal(addon.creator, "Some author");
     equal(addon.homepageURL, "https://example.net");
     addon.uninstall();
   }
 });
 
-add_task(function* authorNotString() {
+add_task(async function authorNotString() {
   for (let author of [{}, [], 42]) {
-    let addon = yield promiseInstallWebExtension({
+    let addon = await promiseInstallWebExtension({
       manifest: {
         author,
         manifest_version: 2,
@@ -393,14 +393,14 @@ add_task(function* authorNotString() {
       }
     });
 
-    addon = yield promiseAddonByID(addon.id);
+    addon = await promiseAddonByID(addon.id);
     equal(addon.creator, null);
     addon.uninstall();
   }
 });
 
-add_task(function* testThemeExtension() {
-  let addon = yield promiseInstallWebExtension({
+add_task(async function testThemeExtension() {
+  let addon = await promiseInstallWebExtension({
     manifest: {
       "author": "Some author",
       manifest_version: 2,
@@ -410,7 +410,7 @@ add_task(function* testThemeExtension() {
     }
   });
 
-  addon = yield promiseAddonByID(addon.id);
+  addon = await promiseAddonByID(addon.id);
   do_check_neq(addon, null);
   do_check_eq(addon.creator, "Some author");
   do_check_eq(addon.version, "1.0");
@@ -427,7 +427,7 @@ add_task(function* testThemeExtension() {
   addon.uninstall();
 
   // Also test one without a proper 'theme' section.
-  addon = yield promiseInstallWebExtension({
+  addon = await promiseInstallWebExtension({
     manifest: {
       "author": "Some author",
       manifest_version: 2,
@@ -437,7 +437,7 @@ add_task(function* testThemeExtension() {
     }
   });
 
-  addon = yield promiseAddonByID(addon.id);
+  addon = await promiseAddonByID(addon.id);
   do_check_eq(addon.type, "extension");
   do_check_true(addon.isWebExtension);
 

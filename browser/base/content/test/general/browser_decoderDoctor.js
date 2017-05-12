@@ -13,7 +13,7 @@
 // 'accessKey': Expected access key for the button.
 // 'tabChecker': function(openedTab) called with the opened tab that resulted
 //   from clicking the button.
-function* test_decoder_doctor_notification(data, notificationMessage,
+async function test_decoder_doctor_notification(data, notificationMessage,
                                            label, accessKey, tabChecker) {
   if (typeof data.type === "undefined") {
     ok(false, "Test implementation error: data.type must be provided");
@@ -23,11 +23,11 @@ function* test_decoder_doctor_notification(data, notificationMessage,
   if (typeof data.decoderDoctorReportId === "undefined") {
     data.decoderDoctorReportId = "testReportId";
   }
-  yield BrowserTestUtils.withNewTab({ gBrowser }, function*(browser) {
+  await BrowserTestUtils.withNewTab({ gBrowser }, async function(browser) {
     let awaitNotificationBar =
       BrowserTestUtils.waitForNotificationBar(gBrowser, browser, "decoder-doctor-notification");
 
-    yield ContentTask.spawn(browser, data, function*(aData) {
+    await ContentTask.spawn(browser, data, async function(aData) {
       Services.obs.notifyObservers(content.window,
                                    "decoder-doctor-notification",
                                    JSON.stringify(aData));
@@ -40,7 +40,7 @@ function* test_decoder_doctor_notification(data, notificationMessage,
 
     let notification;
     try {
-      notification = yield awaitNotificationBar;
+      notification = await awaitNotificationBar;
     } catch (ex) {
       ok(false, ex);
       return;
@@ -69,9 +69,9 @@ function* test_decoder_doctor_notification(data, notificationMessage,
     }
     let awaitNewTab = BrowserTestUtils.waitForNewTab(gBrowser);
     button.click();
-    let openedTab = yield awaitNewTab;
+    let openedTab = await awaitNewTab;
     tabChecker(openedTab);
-    yield BrowserTestUtils.removeTab(openedTab);
+    await BrowserTestUtils.removeTab(openedTab);
   });
 }
 
@@ -102,7 +102,7 @@ function tab_checker_for_webcompat(expectedParams) {
   };
 }
 
-add_task(function* test_platform_decoder_not_found() {
+add_task(async function test_platform_decoder_not_found() {
   let message = "";
   let isLinux = AppConstants.platform == "linux";
   if (isLinux) {
@@ -111,7 +111,7 @@ add_task(function* test_platform_decoder_not_found() {
     message = gNavigatorBundle.getString("decoder.noHWAcceleration.message");
   }
 
-  yield test_decoder_doctor_notification(
+  await test_decoder_doctor_notification(
     {type: "platform-decoder-not-found", formats: "testFormat"},
     message,
     isLinux ? "" : gNavigatorBundle.getString("decoder.noCodecs.button"),
@@ -119,14 +119,14 @@ add_task(function* test_platform_decoder_not_found() {
     tab_checker_for_sumo("fix-video-audio-problems-firefox-windows"));
 });
 
-add_task(function* test_cannot_initialize_pulseaudio() {
+add_task(async function test_cannot_initialize_pulseaudio() {
   let message = "";
   // This is only sent on Linux.
   if (AppConstants.platform == "linux") {
     message = gNavigatorBundle.getString("decoder.noPulseAudio.message");
   }
 
-  yield test_decoder_doctor_notification(
+  await test_decoder_doctor_notification(
     {type: "cannot-initialize-pulseaudio", formats: "testFormat"},
     message,
     gNavigatorBundle.getString("decoder.noCodecs.button"),
@@ -134,7 +134,7 @@ add_task(function* test_cannot_initialize_pulseaudio() {
     tab_checker_for_sumo("fix-common-audio-and-video-issues"));
 });
 
-add_task(function* test_unsupported_libavcodec() {
+add_task(async function test_unsupported_libavcodec() {
   let message = "";
   // This is only sent on Linux.
   if (AppConstants.platform == "linux") {
@@ -142,16 +142,16 @@ add_task(function* test_unsupported_libavcodec() {
       gNavigatorBundle.getString("decoder.unsupportedLibavcodec.message");
   }
 
-  yield test_decoder_doctor_notification(
+  await test_decoder_doctor_notification(
     {type: "unsupported-libavcodec", formats: "testFormat"}, message);
 });
 
-add_task(function* test_decode_error() {
-  yield SpecialPowers.pushPrefEnv(
+add_task(async function test_decode_error() {
+  await SpecialPowers.pushPrefEnv(
     { set: [["media.decoder-doctor.new-issue-endpoint",
              "http://127.0.0.1/webcompat"]] });
   let message = gNavigatorBundle.getString("decoder.decodeError.message");
-  yield test_decoder_doctor_notification(
+  await test_decoder_doctor_notification(
     {type: "decode-error", decodeIssue: "DecodeIssue",
      docURL: "DocURL", resourceURL: "ResURL"},
     message,
@@ -162,12 +162,12 @@ add_task(function* test_decode_error() {
        details: "Technical Information:\nDecodeIssue\nResource: ResURL"}));
 });
 
-add_task(function* test_decode_warning() {
-  yield SpecialPowers.pushPrefEnv(
+add_task(async function test_decode_warning() {
+  await SpecialPowers.pushPrefEnv(
     { set: [["media.decoder-doctor.new-issue-endpoint",
              "http://127.0.0.1/webcompat"]] });
   let message = gNavigatorBundle.getString("decoder.decodeWarning.message");
-  yield test_decoder_doctor_notification(
+  await test_decoder_doctor_notification(
     {type: "decode-warning", decodeIssue: "DecodeIssue",
      docURL: "DocURL", resourceURL: "ResURL"},
     message,

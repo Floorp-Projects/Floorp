@@ -28,7 +28,7 @@ function loadContentScriptExtension(contentScript) {
   return ExtensionTestUtils.loadExtension(extensionData);
 }
 
-add_task(function* test_content_script_sendMessage_without_listener() {
+add_task(async function test_content_script_sendMessage_without_listener() {
   async function contentScript() {
     await browser.test.assertRejects(
       browser.runtime.sendMessage("msg"),
@@ -38,16 +38,16 @@ add_task(function* test_content_script_sendMessage_without_listener() {
   }
 
   let extension = loadContentScriptExtension(contentScript);
-  yield extension.startup();
+  await extension.startup();
 
   let win = window.open("file_sample.html");
-  yield extension.awaitFinish("sendMessage callback was invoked");
+  await extension.awaitFinish("sendMessage callback was invoked");
   win.close();
 
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* test_content_script_chrome_sendMessage_without_listener() {
+add_task(async function test_content_script_chrome_sendMessage_without_listener() {
   function contentScript() {
     /* globals chrome */
     browser.test.assertEq(null, chrome.runtime.lastError, "no lastError before call");
@@ -70,13 +70,13 @@ add_task(function* test_content_script_chrome_sendMessage_without_listener() {
   }
 
   let extension = loadContentScriptExtension(contentScript);
-  yield extension.startup();
+  await extension.startup();
 
   let win = window.open("file_sample.html");
-  yield extension.awaitFinish("finished chrome.runtime.sendMessage");
+  await extension.awaitFinish("finished chrome.runtime.sendMessage");
   win.close();
 
-  yield extension.unload();
+  await extension.unload();
 });
 </script>
 </body>

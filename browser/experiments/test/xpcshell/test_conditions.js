@@ -42,11 +42,11 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_setup() {
+add_task(async function test_setup() {
   createAppInfo();
   do_get_profile();
   startAddonManagerOnly();
-  yield TelemetryController.testSetup();
+  await TelemetryController.testSetup();
   gPolicy = new Experiments.Policy();
 
   patchPolicy(gPolicy, {
@@ -112,7 +112,7 @@ function nextDate(buildId) {
   return addDate(buildId, 1);
 }
 
-add_task(function* test_simpleFields() {
+add_task(async function test_simpleFields() {
   let testData = [
     // "expected applicable?", failure reason or null, manifest data
 
@@ -205,7 +205,7 @@ add_task(function* test_simpleFields() {
     let applicable;
     let reason = null;
 
-    yield applicableFromManifestData(entry[2], gPolicy).then(
+    await applicableFromManifestData(entry[2], gPolicy).then(
       value => applicable = value,
       value => {
         applicable = false;
@@ -227,7 +227,7 @@ add_task(function* test_simpleFields() {
   }
 });
 
-add_task(function* test_times() {
+add_task(async function test_times() {
   let now = new Date(2014, 5, 6, 12);
   let nowSec = now.getTime() / 1000;
   let testData = [
@@ -303,7 +303,7 @@ add_task(function* test_times() {
     let reason = null;
     defineNow(gPolicy, entry[2]);
 
-    yield applicableFromManifestData(entry[3], gPolicy).then(
+    await applicableFromManifestData(entry[3], gPolicy).then(
       value => applicable = value,
       value => {
         applicable = false;
@@ -320,6 +320,6 @@ add_task(function* test_times() {
   }
 });
 
-add_task(function* test_shutdown() {
-  yield TelemetryController.testShutdown();
+add_task(async function test_shutdown() {
+  await TelemetryController.testShutdown();
 });

@@ -58,8 +58,8 @@ async function runTestCase({extension, openNavTarget, expectedWebNavProps}) {
   is(completedNavMsg.url, url, "Got the expected webNavigation.onCompleted url property");
 }
 
-add_task(function* test_on_created_navigation_target_from_window_open() {
-  const tab1 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, SOURCE_PAGE);
+add_task(async function test_on_created_navigation_target_from_window_open() {
+  const tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, SOURCE_PAGE);
 
   gBrowser.selectedTab = tab1;
 
@@ -70,13 +70,13 @@ add_task(function* test_on_created_navigation_target_from_window_open() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  const expectedSourceTab = yield extension.awaitMessage("expectedSourceTab");
+  const expectedSourceTab = await extension.awaitMessage("expectedSourceTab");
 
   info("open an url in a new tab from a window.open call");
 
-  yield runTestCase({
+  await runTestCase({
     extension,
     openNavTarget() {
       extension.sendMessage({
@@ -93,7 +93,7 @@ add_task(function* test_on_created_navigation_target_from_window_open() {
 
   info("open an url in a new window from a window.open call");
 
-  yield runTestCase({
+  await runTestCase({
     extension,
     openNavTarget() {
       extension.sendMessage({
@@ -108,13 +108,13 @@ add_task(function* test_on_created_navigation_target_from_window_open() {
     },
   });
 
-  yield BrowserTestUtils.removeTab(tab1);
+  await BrowserTestUtils.removeTab(tab1);
 
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* test_on_created_navigation_target_from_window_open_subframe() {
-  const tab1 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, SOURCE_PAGE);
+add_task(async function test_on_created_navigation_target_from_window_open_subframe() {
+  const tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, SOURCE_PAGE);
 
   gBrowser.selectedTab = tab1;
 
@@ -125,13 +125,13 @@ add_task(function* test_on_created_navigation_target_from_window_open_subframe()
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  const expectedSourceTab = yield extension.awaitMessage("expectedSourceTab");
+  const expectedSourceTab = await extension.awaitMessage("expectedSourceTab");
 
   info("open an url in a new tab from subframe window.open call");
 
-  yield runTestCase({
+  await runTestCase({
     extension,
     openNavTarget() {
       extension.sendMessage({
@@ -148,7 +148,7 @@ add_task(function* test_on_created_navigation_target_from_window_open_subframe()
 
   info("open an url in a new window from subframe window.open call");
 
-  yield runTestCase({
+  await runTestCase({
     extension,
     openNavTarget() {
       extension.sendMessage({
@@ -163,7 +163,7 @@ add_task(function* test_on_created_navigation_target_from_window_open_subframe()
     },
   });
 
-  yield BrowserTestUtils.removeTab(tab1);
+  await BrowserTestUtils.removeTab(tab1);
 
-  yield extension.unload();
+  await extension.unload();
 });

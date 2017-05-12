@@ -85,39 +85,39 @@ function checkStateMenuDetail(locked) {
   });
 }
 
-add_task(function* initializeState() {
+add_task(async function initializeState() {
   Services.prefs.setIntPref(getTestPluginPref(), Ci.nsIPluginTag.STATE_ENABLED);
   Services.prefs.unlockPref(getTestPluginPref());
-  gManagerWindow = yield open_manager();
+  gManagerWindow = await open_manager();
   gCategoryUtilities = new CategoryUtilities(gManagerWindow);
-  yield gCategoryUtilities.openType("plugin");
+  await gCategoryUtilities.openType("plugin");
 
-  let plugins = yield getPlugins();
+  let plugins = await getPlugins();
   gPluginElement = getTestPlugin(plugins);
 });
 
 // Tests that plugin state menu is enabled if the preference is unlocked
-add_task(function* taskCheckStateMenuIsEnabled() {
+add_task(async function taskCheckStateMenuIsEnabled() {
   checkStateMenu(false);
-  yield checkStateMenuDetail(false);
+  await checkStateMenuDetail(false);
 });
 
 // Lock the preference and then reload the plugin category
-add_task(function* reinitializeState() {
+add_task(async function reinitializeState() {
   // lock the preference
   Services.prefs.lockPref(getTestPluginPref());
-  yield gCategoryUtilities.openType("plugin");
+  await gCategoryUtilities.openType("plugin");
   // Retrieve the test plugin element
-  let plugins = yield getPlugins();
+  let plugins = await getPlugins();
   gPluginElement = getTestPlugin(plugins);
 });
 
 // Tests that plugin state menu is disabled if the preference is locked
-add_task(function* taskCheckStateMenuIsDisabled() {
+add_task(async function taskCheckStateMenuIsDisabled() {
   checkStateMenu(true);
-  yield checkStateMenuDetail(true);
+  await checkStateMenuDetail(true);
 });
 
-add_task(function* testCleanup() {
-  yield close_manager(gManagerWindow);
+add_task(async function testCleanup() {
+  await close_manager(gManagerWindow);
 });

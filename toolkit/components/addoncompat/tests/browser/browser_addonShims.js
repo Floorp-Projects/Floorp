@@ -47,16 +47,16 @@ function removeAddon(addon) {
   });
 }
 
-add_task(function* test_addon_shims() {
-  yield SpecialPowers.pushPrefEnv({set: [["dom.ipc.shims.enabledWarnings", true]]});
+add_task(async function test_addon_shims() {
+  await SpecialPowers.pushPrefEnv({set: [["dom.ipc.shims.enabledWarnings", true]]});
 
-  let addon = yield addAddon(ADDON_URL);
-  yield window.runAddonShimTests({ok, is, info});
-  yield removeAddon(addon);
+  let addon = await addAddon(ADDON_URL);
+  await window.runAddonShimTests({ok, is, info});
+  await removeAddon(addon);
 
   if (Services.appinfo.browserTabsRemoteAutostart) {
-    addon = yield addAddon(COMPAT_ADDON_URL);
-    yield window.runAddonTests({ok, is, info});
-    yield removeAddon(addon);
+    addon = await addAddon(COMPAT_ADDON_URL);
+    await window.runAddonTests({ok, is, info});
+    await removeAddon(addon);
   }
 });

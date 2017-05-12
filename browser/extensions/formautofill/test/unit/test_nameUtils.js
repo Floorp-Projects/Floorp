@@ -4,7 +4,6 @@
 
 "use strict";
 
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://formautofill/FormAutofillNameUtils.jsm");
 
 // Test cases initially copied from
@@ -266,7 +265,7 @@ const TESTCASES = [
   },
 ];
 
-add_task(function* test_splitName() {
+add_task(async function test_splitName() {
   TESTCASES.forEach(testcase => {
     if (testcase.fullName) {
       do_print("Starting testcase: " + testcase.description);
@@ -276,7 +275,7 @@ add_task(function* test_splitName() {
   });
 });
 
-add_task(function* test_joinName() {
+add_task(async function test_joinName() {
   TESTCASES.forEach(testcase => {
     do_print("Starting testcase: " + testcase.description);
     let name = FormAutofillNameUtils.joinNameParts(testcase.nameParts);

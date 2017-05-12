@@ -41,7 +41,7 @@ var tests = [
 
 ];
 
-add_task(function* test() {
+add_task(async function test() {
   // The pref should not exist by default.
   Assert.throws(() => getInterval());
 
@@ -52,7 +52,7 @@ add_task(function* test() {
     print(currentTest.desc);
     let promise = promiseTopicObserved("test-interval-changed");
     setInterval(currentTest.interval);
-    let [, data] = yield promise;
+    let [, data] = await promise;
     Assert.equal(data, currentTest.expectedTimerDelay * EXPIRE_AGGRESSIVITY_MULTIPLIER);
   }
 

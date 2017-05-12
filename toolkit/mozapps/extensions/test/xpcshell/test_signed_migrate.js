@@ -84,16 +84,16 @@ function stripDB() {
   saveJSON(jData, gExtensionsJSON);
 }
 
-function* test_breaking_migrate(addons, test, expectedSignedState) {
+async function test_breaking_migrate(addons, test, expectedSignedState) {
   // Startup as the old version
   gAppInfo.version = "4";
   startupManager(true);
 
   // Install the signed add-on
-  yield promiseInstallAllFiles([do_get_file(DATA + addons.signed)]);
+  await promiseInstallAllFiles([do_get_file(DATA + addons.signed)]);
   // Restart to let non-restartless add-ons install fully
-  yield promiseRestartManager();
-  yield promiseShutdownManager();
+  await promiseRestartManager();
+  await promiseShutdownManager();
   resetPrefs();
   stripDB();
 
@@ -106,7 +106,7 @@ function* test_breaking_migrate(addons, test, expectedSignedState) {
   gAppInfo.version = "5";
   startupManager(true);
 
-  let addon = yield promiseAddonByID(ID);
+  let addon = await promiseAddonByID(ID);
   do_check_neq(addon, null);
   do_check_true(addon.appDisabled);
   do_check_false(addon.isActive);
@@ -129,21 +129,21 @@ function* test_breaking_migrate(addons, test, expectedSignedState) {
 
   addon.uninstall();
   // Restart to let non-restartless add-ons uninstall fully
-  yield promiseRestartManager();
-  yield shutdownManager();
+  await promiseRestartManager();
+  await shutdownManager();
   resetPrefs();
 }
 
-function* test_working_migrate(addons, test, expectedSignedState) {
+async function test_working_migrate(addons, test, expectedSignedState) {
   // Startup as the old version
   gAppInfo.version = "4";
   startupManager(true);
 
   // Install the signed add-on
-  yield promiseInstallAllFiles([do_get_file(DATA + addons.signed)]);
+  await promiseInstallAllFiles([do_get_file(DATA + addons.signed)]);
   // Restart to let non-restartless add-ons install fully
-  yield promiseRestartManager();
-  yield promiseShutdownManager();
+  await promiseRestartManager();
+  await promiseShutdownManager();
   resetPrefs();
   stripDB();
 
@@ -156,7 +156,7 @@ function* test_working_migrate(addons, test, expectedSignedState) {
   gAppInfo.version = "5";
   startupManager(true);
 
-  let addon = yield promiseAddonByID(ID);
+  let addon = await promiseAddonByID(ID);
   do_check_neq(addon, null);
   do_check_false(addon.appDisabled);
   do_check_true(addon.isActive);
@@ -173,22 +173,22 @@ function* test_working_migrate(addons, test, expectedSignedState) {
 
   addon.uninstall();
   // Restart to let non-restartless add-ons uninstall fully
-  yield promiseRestartManager();
-  yield shutdownManager();
+  await promiseRestartManager();
+  await shutdownManager();
   resetPrefs();
 }
 
-add_task(function*() {
-  yield test_breaking_migrate(ADDONS.bootstrap, "unsigned", AddonManager.SIGNEDSTATE_MISSING);
-  yield test_breaking_migrate(ADDONS.nonbootstrap, "unsigned", AddonManager.SIGNEDSTATE_MISSING);
+add_task(async function() {
+  await test_breaking_migrate(ADDONS.bootstrap, "unsigned", AddonManager.SIGNEDSTATE_MISSING);
+  await test_breaking_migrate(ADDONS.nonbootstrap, "unsigned", AddonManager.SIGNEDSTATE_MISSING);
 });
 
-add_task(function*() {
-  yield test_breaking_migrate(ADDONS.bootstrap, "badid", AddonManager.SIGNEDSTATE_BROKEN);
-  yield test_breaking_migrate(ADDONS.nonbootstrap, "badid", AddonManager.SIGNEDSTATE_BROKEN);
+add_task(async function() {
+  await test_breaking_migrate(ADDONS.bootstrap, "badid", AddonManager.SIGNEDSTATE_BROKEN);
+  await test_breaking_migrate(ADDONS.nonbootstrap, "badid", AddonManager.SIGNEDSTATE_BROKEN);
 });
 
-add_task(function*() {
-  yield test_working_migrate(ADDONS.bootstrap, "signed", AddonManager.SIGNEDSTATE_SIGNED);
-  yield test_working_migrate(ADDONS.nonbootstrap, "signed", AddonManager.SIGNEDSTATE_SIGNED);
+add_task(async function() {
+  await test_working_migrate(ADDONS.bootstrap, "signed", AddonManager.SIGNEDSTATE_SIGNED);
+  await test_working_migrate(ADDONS.nonbootstrap, "signed", AddonManager.SIGNEDSTATE_SIGNED);
 });

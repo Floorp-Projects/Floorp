@@ -7,8 +7,8 @@
 const kButton = "test_button_for_addon";
 var initialLocation = gBrowser.currentURI.spec;
 
-add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
 
   info("Check addon button functionality");
 
@@ -28,7 +28,7 @@ add_task(function*() {
   let navBar = document.getElementById("nav-bar");
   ok(addonButton, "Addon button exists");
   ok(navBar.contains(addonButton), "Addon button is in the navbar");
-  yield checkButtonFunctionality(addonButton);
+  await checkButtonFunctionality(addonButton);
 
   resetTabs();
 
@@ -37,18 +37,18 @@ add_task(function*() {
   ok(!navBar.contains(addonButton), "Addon button was removed from the browser bar");
 
   // check the addon button's functionality in the Panel Menu
-  yield PanelUI.show();
+  await PanelUI.show();
   var panelMenu = document.getElementById("PanelUI-mainView");
   let addonButtonInPanel = panelMenu.getElementsByAttribute("id", kButton);
   ok(panelMenu.contains(addonButton), "Addon button was added to the Panel Menu");
-  yield checkButtonFunctionality(addonButtonInPanel[0]);
+  await checkButtonFunctionality(addonButtonInPanel[0]);
 });
 
-add_task(function* asyncCleanup() {
+add_task(async function asyncCleanup() {
   resetTabs();
 
   // reset the UI to the default state
-  yield resetCustomization();
+  await resetCustomization();
   ok(CustomizableUI.inDefaultState, "The UI is in default state again.");
 
   // destroy the widget
@@ -66,8 +66,8 @@ function resetTabs() {
   gBrowser.removeTab(gBrowser.selectedTab);
 }
 
-function* checkButtonFunctionality(aButton) {
+async function checkButtonFunctionality(aButton) {
   aButton.click();
-  yield waitForCondition(() => gBrowser.currentURI &&
+  await waitForCondition(() => gBrowser.currentURI &&
                                gBrowser.currentURI.spec == "about:addons");
 }

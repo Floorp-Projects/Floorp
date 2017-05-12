@@ -54,9 +54,9 @@ let TestAboutPage = {
  * Test that switching from a remote to a parent process browser
  * correctly clears the userTypedValue
  */
-add_task(function* () {
+add_task(async function() {
   TestAboutPage.register();
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/", true, true);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/", true, true);
   ok(tab.linkedBrowser.isRemoteBrowser, "Browser should be remote");
 
   let resolveLocationChangePromise;
@@ -80,7 +80,7 @@ add_task(function* () {
   gURLBar.select();
   EventUtils.sendKey("return");
 
-  yield locationChangePromise;
+  await locationChangePromise;
 
   ok(!tab.linkedBrowser.isRemoteBrowser, "Browser should no longer be remote");
 
@@ -90,7 +90,7 @@ add_task(function* () {
 
   ok(!tab.linkedBrowser.userTypedValue, "No userTypedValue should be on the browser.");
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
   gBrowser.removeProgressListener(wpl);
   TestAboutPage.unregister();
 });

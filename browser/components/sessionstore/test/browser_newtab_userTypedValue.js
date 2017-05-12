@@ -7,32 +7,32 @@ requestLongerTimeout(4);
  * produces an empty URL bar, rather than leaving its URL explicitly
  * there as a 'user typed value'.
  */
-add_task(function* () {
-  let win = yield BrowserTestUtils.openNewBrowserWindow();
-  yield BrowserTestUtils.openNewForegroundTab(win.gBrowser, "about:logo");
+add_task(async function() {
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  await BrowserTestUtils.openNewForegroundTab(win.gBrowser, "about:logo");
   let tabOpenedAndSwitchedTo = BrowserTestUtils.switchTab(win.gBrowser, () => {});
 
   // This opens about:newtab:
   win.BrowserOpenTab();
-  let tab = yield tabOpenedAndSwitchedTo;
+  let tab = await tabOpenedAndSwitchedTo;
   is(win.gURLBar.value, "", "URL bar should be empty");
   is(tab.linkedBrowser.userTypedValue, null, "userTypedValue should be null");
   let state = JSON.parse(SessionStore.getTabState(tab));
   ok(!state.userTypedValue, "userTypedValue should be undefined on the tab's state");
   tab = null;
 
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 
   ok(SessionStore.getClosedWindowCount(), "Should have a closed window");
 
-  yield forceSaveState();
+  await forceSaveState();
 
   win = SessionStore.undoCloseWindow(0);
-  yield TestUtils.topicObserved("sessionstore-single-window-restored",
+  await TestUtils.topicObserved("sessionstore-single-window-restored",
                                 subject => subject == win);
   // Don't wait for load here because it's about:newtab and we may have swapped in
   // a preloaded browser.
-  yield TabStateFlusher.flush(win.gBrowser.selectedBrowser);
+  await TabStateFlusher.flush(win.gBrowser.selectedBrowser);
 
   is(win.gURLBar.value, "", "URL bar should be empty");
   tab = win.gBrowser.selectedTab;
@@ -40,25 +40,25 @@ add_task(function* () {
   state = JSON.parse(SessionStore.getTabState(tab));
   ok(!state.userTypedValue, "userTypedValue should be undefined on the tab's state");
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 
   for (let url of gInitialPages) {
     if (url == BROWSER_NEW_TAB_URL) {
       continue; // We tested about:newtab using BrowserOpenTab() above.
     }
     info("Testing " + url + " - " + new Date());
-    yield BrowserTestUtils.openNewForegroundTab(win.gBrowser, url);
-    yield BrowserTestUtils.closeWindow(win);
+    await BrowserTestUtils.openNewForegroundTab(win.gBrowser, url);
+    await BrowserTestUtils.closeWindow(win);
 
     ok(SessionStore.getClosedWindowCount(), "Should have a closed window");
 
-    yield forceSaveState();
+    await forceSaveState();
 
     win = SessionStore.undoCloseWindow(0);
-    yield TestUtils.topicObserved("sessionstore-single-window-restored",
+    await TestUtils.topicObserved("sessionstore-single-window-restored",
                                   subject => subject == win);
-    yield BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
-    yield TabStateFlusher.flush(win.gBrowser.selectedBrowser);
+    await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    await TabStateFlusher.flush(win.gBrowser.selectedBrowser);
 
     is(win.gURLBar.value, "", "URL bar should be empty");
     tab = win.gBrowser.selectedTab;
@@ -67,10 +67,10 @@ add_task(function* () {
     ok(!state.userTypedValue, "userTypedValue should be undefined on the tab's state");
 
     info("Removing tab - " + new Date());
-    yield BrowserTestUtils.removeTab(tab);
+    await BrowserTestUtils.removeTab(tab);
     info("Finished removing tab - " + new Date());
   }
   info("Removing window - " + new Date());
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
   info("Finished removing window - " + new Date());
 });

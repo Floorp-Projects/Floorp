@@ -2280,7 +2280,7 @@ function getShortcutOrURIAndPostData(url, callback = null) {
                        "callback",
                        "https://bugzilla.mozilla.org/show_bug.cgi?id=1100294");
   }
-  return Task.spawn(function* () {
+  return (async function() {
     let mayInheritPrincipal = false;
     let postData = null;
     // Split on the first whitespace.
@@ -2302,7 +2302,7 @@ function getShortcutOrURIAndPostData(url, callback = null) {
     // from the location bar.
     let entry = null;
     try {
-      entry = yield PlacesUtils.keywords.fetch(keyword);
+      entry = await PlacesUtils.keywords.fetch(keyword);
     } catch (ex) {
       Cu.reportError(`Unable to fetch Places keyword "${keyword}": ${ex}`);
     }
@@ -2313,7 +2313,7 @@ function getShortcutOrURIAndPostData(url, callback = null) {
 
     try {
       [url, postData] =
-        yield BrowserUtils.parseUrlAndPostData(entry.url.href,
+        await BrowserUtils.parseUrlAndPostData(entry.url.href,
                                                entry.postData,
                                                param);
       if (postData) {
@@ -2328,7 +2328,7 @@ function getShortcutOrURIAndPostData(url, callback = null) {
     }
 
     return { url, postData, mayInheritPrincipal };
-  }).then(data => {
+  })().then(data => {
     if (callback) {
       callback(data);
     }
@@ -3694,16 +3694,16 @@ var newTabButtonObserver = {
     browserDragAndDrop.dragOver(aEvent);
   },
   onDragExit(aEvent) {},
-  onDrop: Task.async(function* (aEvent) {
+  async onDrop(aEvent) {
     let links = browserDragAndDrop.dropLinks(aEvent);
     for (let link of links) {
       if (link.url) {
-        let data = yield getShortcutOrURIAndPostData(link.url);
+        let data = await getShortcutOrURIAndPostData(link.url);
         // Allow third-party services to fixup this URL.
         openNewTabWith(data.url, null, data.postData, aEvent, true);
       }
     }
-  })
+  }
 }
 
 var newWindowButtonObserver = {
@@ -3711,16 +3711,16 @@ var newWindowButtonObserver = {
     browserDragAndDrop.dragOver(aEvent);
   },
   onDragExit(aEvent) {},
-  onDrop: Task.async(function* (aEvent) {
+  async onDrop(aEvent) {
     let links = browserDragAndDrop.dropLinks(aEvent);
     for (let link of links) {
       if (link.url) {
-        let data = yield getShortcutOrURIAndPostData(link.url);
+        let data = await getShortcutOrURIAndPostData(link.url);
         // Allow third-party services to fixup this URL.
         openNewWindowWith(data.url, null, data.postData, true);
       }
     }
-  })
+  }
 }
 
 const DOMLinkHandler = {
@@ -5951,11 +5951,11 @@ function handleDroppedLink(event, urlOrLinks, name) {
       inBackground = !inBackground;
   }
 
-  Task.spawn(function*() {
+  (async function() {
     let urls = [];
     let postDatas = [];
     for (let link of links) {
-      let data = yield getShortcutOrURIAndPostData(link.url);
+      let data = await getShortcutOrURIAndPostData(link.url);
       urls.push(data.url);
       postDatas.push(data.postData);
     }
@@ -5968,7 +5968,7 @@ function handleDroppedLink(event, urlOrLinks, name) {
         userContextId,
       });
     }
-  });
+  })();
 
   // If links are dropped in content process, event.preventDefault() should be
   // called in content process.

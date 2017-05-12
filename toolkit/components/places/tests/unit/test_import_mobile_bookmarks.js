@@ -1,14 +1,14 @@
-function* importFromFixture(fixture, replace) {
-  let cwd = yield OS.File.getCurrentDirectory();
+async function importFromFixture(fixture, replace) {
+  let cwd = await OS.File.getCurrentDirectory();
   let path = OS.Path.join(cwd, fixture);
 
   do_print(`Importing from ${path}`);
-  yield BookmarkJSONUtils.importFromFile(path, replace);
-  yield PlacesTestUtils.promiseAsyncUpdates();
+  await BookmarkJSONUtils.importFromFile(path, replace);
+  await PlacesTestUtils.promiseAsyncUpdates();
 }
 
-function* treeEquals(guid, expected, message) {
-  let root = yield PlacesUtils.promiseBookmarksTree(guid);
+async function treeEquals(guid, expected, message) {
+  let root = await PlacesUtils.promiseBookmarksTree(guid);
   let bookmarks = (function nodeToEntry(node) {
     let entry = { guid: node.guid, index: node.index }
     if (node.children) {
@@ -26,11 +26,11 @@ function* treeEquals(guid, expected, message) {
   deepEqual(bookmarks, expected, message);
 }
 
-add_task(function* test_restore_mobile_bookmarks_root() {
-  yield* importFromFixture("mobile_bookmarks_root_import.json",
+add_task(async function test_restore_mobile_bookmarks_root() {
+  await importFromFixture("mobile_bookmarks_root_import.json",
                            /* replace */ true);
 
-  yield* treeEquals(PlacesUtils.bookmarks.rootGuid, {
+  await treeEquals(PlacesUtils.bookmarks.rootGuid, {
     guid: PlacesUtils.bookmarks.rootGuid,
     index: 0,
     children: [{
@@ -61,16 +61,16 @@ add_task(function* test_restore_mobile_bookmarks_root() {
     }],
   }, "Should restore mobile bookmarks from root");
 
-  yield PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.bookmarks.eraseEverything();
 });
 
-add_task(function* test_import_mobile_bookmarks_root() {
-  yield* importFromFixture("mobile_bookmarks_root_import.json",
+add_task(async function test_import_mobile_bookmarks_root() {
+  await importFromFixture("mobile_bookmarks_root_import.json",
                            /* replace */ false);
-  yield* importFromFixture("mobile_bookmarks_root_merge.json",
+  await importFromFixture("mobile_bookmarks_root_merge.json",
                            /* replace */ false);
 
-  yield* treeEquals(PlacesUtils.bookmarks.rootGuid, {
+  await treeEquals(PlacesUtils.bookmarks.rootGuid, {
     guid: PlacesUtils.bookmarks.rootGuid,
     index: 0,
     children: [{
@@ -104,14 +104,14 @@ add_task(function* test_import_mobile_bookmarks_root() {
     }],
   }, "Should merge bookmarks root contents");
 
-  yield PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.bookmarks.eraseEverything();
 });
 
-add_task(function* test_restore_mobile_bookmarks_folder() {
-  yield* importFromFixture("mobile_bookmarks_folder_import.json",
+add_task(async function test_restore_mobile_bookmarks_folder() {
+  await importFromFixture("mobile_bookmarks_folder_import.json",
                            /* replace */ true);
 
-  yield* treeEquals(PlacesUtils.bookmarks.rootGuid, {
+  await treeEquals(PlacesUtils.bookmarks.rootGuid, {
     guid: PlacesUtils.bookmarks.rootGuid,
     index: 0,
     children: [{
@@ -149,20 +149,20 @@ add_task(function* test_restore_mobile_bookmarks_folder() {
   // ("MOBILE_BOOKMARKS") so that we don't break them if the user downgrades
   // to an earlier release channel. This can be removed along with the anno in
   // bug 1306445.
-  let queryById = yield PlacesUtils.bookmarks.fetch("XF4yRP6bTuil");
+  let queryById = await PlacesUtils.bookmarks.fetch("XF4yRP6bTuil");
   equal(queryById.url.href, "place:folder=" + PlacesUtils.mobileFolderId,
     "Should rewrite mobile query to point to root ID");
 
-  yield PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.bookmarks.eraseEverything();
 });
 
-add_task(function* test_import_mobile_bookmarks_folder() {
-  yield* importFromFixture("mobile_bookmarks_folder_import.json",
+add_task(async function test_import_mobile_bookmarks_folder() {
+  await importFromFixture("mobile_bookmarks_folder_import.json",
                            /* replace */ false);
-  yield* importFromFixture("mobile_bookmarks_folder_merge.json",
+  await importFromFixture("mobile_bookmarks_folder_merge.json",
                            /* replace */ false);
 
-  yield* treeEquals(PlacesUtils.bookmarks.rootGuid, {
+  await treeEquals(PlacesUtils.bookmarks.rootGuid, {
     guid: PlacesUtils.bookmarks.rootGuid,
     index: 0,
     children: [{
@@ -199,14 +199,14 @@ add_task(function* test_import_mobile_bookmarks_folder() {
     }],
   }, "Should merge bookmarks folder contents into mobile root");
 
-  yield PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.bookmarks.eraseEverything();
 });
 
-add_task(function* test_restore_multiple_bookmarks_folders() {
-  yield* importFromFixture("mobile_bookmarks_multiple_folders.json",
+add_task(async function test_restore_multiple_bookmarks_folders() {
+  await importFromFixture("mobile_bookmarks_multiple_folders.json",
                            /* replace */ true);
 
-  yield* treeEquals(PlacesUtils.bookmarks.rootGuid, {
+  await treeEquals(PlacesUtils.bookmarks.rootGuid, {
     guid: PlacesUtils.bookmarks.rootGuid,
     index: 0,
     children: [{
@@ -241,16 +241,16 @@ add_task(function* test_restore_multiple_bookmarks_folders() {
     }],
   }, "Should restore multiple bookmarks folder contents into root");
 
-  yield PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.bookmarks.eraseEverything();
 });
 
-add_task(function* test_import_multiple_bookmarks_folders() {
-  yield* importFromFixture("mobile_bookmarks_root_import.json",
+add_task(async function test_import_multiple_bookmarks_folders() {
+  await importFromFixture("mobile_bookmarks_root_import.json",
                            /* replace */ false);
-  yield* importFromFixture("mobile_bookmarks_multiple_folders.json",
+  await importFromFixture("mobile_bookmarks_multiple_folders.json",
                            /* replace */ false);
 
-  yield* treeEquals(PlacesUtils.bookmarks.rootGuid, {
+  await treeEquals(PlacesUtils.bookmarks.rootGuid, {
     guid: PlacesUtils.bookmarks.rootGuid,
     index: 0,
     children: [{
@@ -288,5 +288,5 @@ add_task(function* test_import_multiple_bookmarks_folders() {
     }],
   }, "Should merge multiple mobile folders into root");
 
-  yield PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.bookmarks.eraseEverything();
 });

@@ -201,7 +201,7 @@ var StarUI = {
 
   _overlayLoaded: false,
   _overlayLoading: false,
-  showEditBookmarkPopup: Task.async(function* (aNode, aAnchorElement, aPosition, aIsNewBookmark) {
+  async showEditBookmarkPopup(aNode, aAnchorElement, aPosition, aIsNewBookmark) {
     // Slow double-clicks (not true double-clicks) shouldn't
     // cause the panel to flicker.
     if (this.panel.state == "showing" ||
@@ -218,11 +218,11 @@ var StarUI = {
     if (typeof(aNode) == "number") {
       let itemId = aNode;
       if (PlacesUIUtils.useAsyncTransactions) {
-        let guid = yield PlacesUtils.promiseItemGuid(itemId);
-        aNode = yield PlacesUIUtils.promiseNodeLike(guid);
+        let guid = await PlacesUtils.promiseItemGuid(itemId);
+        aNode = await PlacesUIUtils.promiseNodeLike(guid);
       } else {
         aNode = { itemId };
-        yield PlacesUIUtils.completeNodeLikeObjectForItemId(aNode);
+        await PlacesUIUtils.completeNodeLikeObjectForItemId(aNode);
       }
     }
 
@@ -252,9 +252,9 @@ var StarUI = {
         this._doShowEditBookmarkPanel(aNode, aAnchorElement, aPosition);
       }
     );
-  }),
+  },
 
-  _doShowEditBookmarkPanel: Task.async(function* (aNode, aAnchorElement, aPosition) {
+  async _doShowEditBookmarkPanel(aNode, aAnchorElement, aPosition) {
     if (this.panel.state != "closed")
       return;
 
@@ -317,7 +317,7 @@ var StarUI = {
                                , focusedElement: "preferred"});
 
     this.panel.openPopup(aAnchorElement, aPosition);
-  }),
+  },
 
   panelShown:
   function SU_panelShown(aEvent) {
@@ -357,9 +357,9 @@ var StarUI = {
       return;
     if (PlacesUIUtils.useAsyncTransactions) {
       this._batchBlockingDeferred = PromiseUtils.defer();
-      PlacesTransactions.batch(function* () {
-        yield this._batchBlockingDeferred.promise;
-      }.bind(this));
+      PlacesTransactions.batch(async () => {
+        await this._batchBlockingDeferred.promise;
+      });
     } else {
       PlacesUtils.transactionManager.beginBatch(null);
     }
@@ -392,9 +392,9 @@ var PlacesCommandHook = {
    * @param [optional] aShowEditUI
    *        whether or not to show the edit-bookmark UI for the bookmark item
    */
-  bookmarkPage: Task.async(function* (aBrowser, aParent, aShowEditUI) {
+  async bookmarkPage(aBrowser, aParent, aShowEditUI) {
     if (PlacesUIUtils.useAsyncTransactions) {
-      yield this._bookmarkPagePT(aBrowser, aParent, aShowEditUI);
+      await this._bookmarkPagePT(aBrowser, aParent, aShowEditUI);
       return;
     }
 
@@ -407,7 +407,7 @@ var PlacesCommandHook = {
       var description;
       var charset;
 
-      let docInfo = yield this._getPageDetails(aBrowser);
+      let docInfo = await this._getPageDetails(aBrowser);
 
       try {
         title = docInfo.isErrorPage ? PlacesUtils.history.getPageTitle(uri)
@@ -461,28 +461,28 @@ var PlacesCommandHook = {
     } else {
       StarUI.showEditBookmarkPopup(itemId, aBrowser, "overlap", isNewBookmark);
     }
-  }),
+  },
 
   // TODO: Replace bookmarkPage code with this function once legacy
   // transactions are removed.
-  _bookmarkPagePT: Task.async(function* (aBrowser, aParentId, aShowEditUI) {
+  async _bookmarkPagePT(aBrowser, aParentId, aShowEditUI) {
     let url = new URL(aBrowser.currentURI.spec);
-    let info = yield PlacesUtils.bookmarks.fetch({ url });
+    let info = await PlacesUtils.bookmarks.fetch({ url });
     let isNewBookmark = !info;
     if (!info) {
       let parentGuid = aParentId !== undefined ?
-                         yield PlacesUtils.promiseItemGuid(aParentId) :
+                         await PlacesUtils.promiseItemGuid(aParentId) :
                          PlacesUtils.bookmarks.unfiledGuid;
       info = { url, parentGuid };
       // Bug 1148838 - Make this code work for full page plugins.
       let description = null;
       let charset = null;
 
-      let docInfo = yield this._getPageDetails(aBrowser);
+      let docInfo = await this._getPageDetails(aBrowser);
 
       try {
         info.title = docInfo.isErrorPage ?
-          (yield PlacesUtils.promisePlaceInfo(aBrowser.currentURI)).title :
+          (await PlacesUtils.promisePlaceInfo(aBrowser.currentURI)).title :
           aBrowser.contentTitle;
         info.title = info.title || url.href;
         description = docInfo.description;
@@ -503,7 +503,7 @@ var PlacesCommandHook = {
                             , value: description }];
       }
 
-      info.guid = yield PlacesTransactions.NewBookmark(info).transact();
+      info.guid = await PlacesTransactions.NewBookmark(info).transact();
 
       // Set the character-set
       if (charset && !PrivateBrowsingUtils.isBrowserPrivate(aBrowser))
@@ -517,7 +517,7 @@ var PlacesCommandHook = {
     if (!aShowEditUI)
       return;
 
-    let node = yield PlacesUIUtils.promiseNodeLikeFromFetchInfo(info);
+    let node = await PlacesUIUtils.promiseNodeLikeFromFetchInfo(info);
 
     // Try to dock the panel to:
     // 1. the bookmarks menu button
@@ -536,7 +536,7 @@ var PlacesCommandHook = {
     } else {
       StarUI.showEditBookmarkPopup(node, aBrowser, "overlap", isNewBookmark);
     }
-  }),
+  },
 
   _getPageDetails(browser) {
     return new Promise(resolve => {
@@ -569,8 +569,8 @@ var PlacesCommandHook = {
    * @param [optional] aDescription
    *        The linked page description, if available
    */
-  bookmarkLink: Task.async(function* (aParentId, aURL, aTitle, aDescription = "") {
-    let node = yield PlacesUIUtils.fetchNodeLike({ url: aURL });
+  async bookmarkLink(aParentId, aURL, aTitle, aDescription = "") {
+    let node = await PlacesUIUtils.fetchNodeLike({ url: aURL });
     if (node) {
       PlacesUIUtils.showBookmarkDialog({ action: "edit"
                                        , node
@@ -592,7 +592,7 @@ var PlacesCommandHook = {
                                                    , "loadInSidebar"
                                                    , "keyword" ]
                                      }, window.top);
-  }),
+  },
 
   /**
    * List of nsIURI objects characterizing the tabs currently open in the
@@ -655,7 +655,7 @@ var PlacesCommandHook = {
    * @subtitle  subtitle
    *            A short description of the feed. Optional.
    */
-  addLiveBookmark: Task.async(function *(url, feedTitle, feedSubtitle) {
+  async addLiveBookmark(url, feedTitle, feedSubtitle) {
     let toolbarIP = new InsertionPoint(PlacesUtils.toolbarFolderId,
                                        PlacesUtils.bookmarks.DEFAULT_INDEX,
                                        Components.interfaces.nsITreeView.DROP_ON);
@@ -664,7 +664,7 @@ var PlacesCommandHook = {
     let title = feedTitle || gBrowser.contentTitle;
     let description = feedSubtitle;
     if (!description) {
-      description = (yield this._getPageDetails(gBrowser.selectedBrowser)).description;
+      description = (await this._getPageDetails(gBrowser.selectedBrowser)).description;
     }
 
     PlacesUIUtils.showBookmarkDialog({ action: "add"
@@ -678,7 +678,7 @@ var PlacesCommandHook = {
                                                    , "siteLocation"
                                                    , "description" ]
                                      }, window);
-  }),
+  },
 
   /**
    * Opens the Places Organizer.
@@ -1287,7 +1287,7 @@ var BookmarkingUI = {
     if (!this._shouldUpdateStarState()) {
       return this.STATUS_UNSTARRED;
     }
-    if (this._pendingStmt)
+    if (this._pendingUpdate)
       return this.STATUS_UPDATING;
     return this.button.hasAttribute("starred") ? this.STATUS_STARRED
                                                : this.STATUS_UNSTARRED;
@@ -1642,7 +1642,7 @@ var BookmarkingUI = {
   },
 
   _hasBookmarksObserver: false,
-  _itemIds: [],
+  _itemGuids: [],
   uninit: function BUI_uninit() {
     this._updateBookmarkPageMenuItem(true);
     CustomizableUI.removeListener(this);
@@ -1653,9 +1653,8 @@ var BookmarkingUI = {
       PlacesUtils.removeLazyBookmarkObserver(this);
     }
 
-    if (this._pendingStmt) {
-      this._pendingStmt.cancel();
-      delete this._pendingStmt;
+    if (this._pendingUpdate) {
+      delete this._pendingUpdate;
     }
   },
 
@@ -1667,43 +1666,42 @@ var BookmarkingUI = {
   },
 
   updateStarState: function BUI_updateStarState() {
-    // Reset tracked values.
     this._uri = gBrowser.currentURI;
-    this._itemIds = [];
+    this._itemGuids = [];
+    let aItemGuids = [];
 
-    if (this._pendingStmt) {
-      this._pendingStmt.cancel();
-      delete this._pendingStmt;
-    }
+    // those objects are use to check if we are in the current iteration before
+    // returning any result.
+    let pendingUpdate = this._pendingUpdate = {};
 
-    this._pendingStmt = PlacesUtils.asyncGetBookmarkIds(this._uri, (aItemIds, aURI) => {
-      // Safety check that the bookmarked URI equals the tracked one.
-      if (!aURI.equals(this._uri)) {
-        Components.utils.reportError("BookmarkingUI did not receive current URI");
-        return;
-      }
+    PlacesUtils.bookmarks.fetch({url: this._uri}, b => aItemGuids.push(b.guid))
+      .catch(Components.utils.reportError)
+      .then(() => {
+         if (pendingUpdate != this._pendingUpdate) {
+           return;
+         }
 
-      // It's possible that onItemAdded gets called before the async statement
-      // calls back.  For such an edge case, retain all unique entries from both
-      // arrays.
-      this._itemIds = this._itemIds.filter(
-        id => !aItemIds.includes(id)
-      ).concat(aItemIds);
+         // It's possible that onItemAdded gets called before the async statement
+         // calls back.  For such an edge case, retain all unique entries from the
+         // array.
+         this._itemGuids = this._itemGuids.filter(
+           guid => !aItemGuids.includes(guid)
+         ).concat(aItemGuids);
 
-      this._updateStar();
+         this._updateStar();
 
-      // Start observing bookmarks if needed.
-      if (!this._hasBookmarksObserver) {
-        try {
-          PlacesUtils.addLazyBookmarkObserver(this);
-          this._hasBookmarksObserver = true;
-        } catch (ex) {
-          Components.utils.reportError("BookmarkingUI failed adding a bookmarks observer: " + ex);
-        }
-      }
+         // Start observing bookmarks if needed.
+         if (!this._hasBookmarksObserver) {
+           try {
+             PlacesUtils.addLazyBookmarkObserver(this);
+             this._hasBookmarksObserver = true;
+           } catch (ex) {
+             Components.utils.reportError("BookmarkingUI failed adding a bookmarks observer: " + ex);
+           }
+         }
 
-      delete this._pendingStmt;
-    });
+         delete this._pendingUpdate;
+       });
   },
 
   _updateStar: function BUI__updateStar() {
@@ -1715,7 +1713,7 @@ var BookmarkingUI = {
       return;
     }
 
-    if (this._itemIds.length > 0) {
+    if (this._itemGuids.length > 0) {
       this.broadcaster.setAttribute("starred", "true");
       this.broadcaster.setAttribute("buttontooltiptext", this._starredTooltip);
       if (this.button.getAttribute("overflowedItem") == "true") {
@@ -1735,7 +1733,7 @@ var BookmarkingUI = {
    * to the default (Bookmark This Page) for OS X.
    */
   _updateBookmarkPageMenuItem: function BUI__updateBookmarkPageMenuItem(forceReset) {
-    let isStarred = !forceReset && this._itemIds.length > 0;
+    let isStarred = !forceReset && this._itemGuids.length > 0;
     let label = isStarred ? "editlabel" : "bookmarklabel";
     if (this.broadcaster) {
       this.broadcaster.setAttribute("label", this.broadcaster.getAttribute(label));
@@ -1832,7 +1830,7 @@ var BookmarkingUI = {
     }
 
     // Handle special case when the button is in the panel.
-    let isBookmarked = this._itemIds.length > 0;
+    let isBookmarked = this._itemGuids.length > 0;
 
     if (this._currentAreaType == CustomizableUI.TYPE_MENU_PANEL) {
       this._showSubview();
@@ -1846,7 +1844,7 @@ var BookmarkingUI = {
     }
 
     // Ignore clicks on the star if we are updating its state.
-    if (!this._pendingStmt) {
+    if (!this._pendingUpdate) {
       if (!isBookmarked)
         this._showBookmarkedNotification();
       PlacesCommandHook.bookmarkCurrentPage(true);
@@ -1911,49 +1909,48 @@ var BookmarkingUI = {
   },
 
   // nsINavBookmarkObserver
-  onItemAdded: function BUI_onItemAdded(aItemId, aParentId, aIndex, aItemType,
-                                        aURI) {
+  onItemAdded(aItemId, aParentId, aIndex, aItemType, aURI, aTitle, aDateAdded, aGuid) {
     if (aURI && aURI.equals(this._uri)) {
       // If a new bookmark has been added to the tracked uri, register it.
-      if (!this._itemIds.includes(aItemId)) {
-        this._itemIds.push(aItemId);
+      if (!this._itemGuids.includes(aGuid)) {
+        this._itemGuids.push(aGuid);
         // Only need to update the UI if it wasn't marked as starred before:
-        if (this._itemIds.length == 1) {
+        if (this._itemGuids.length == 1) {
           this._updateStar();
         }
       }
     }
   },
 
-  onItemRemoved: function BUI_onItemRemoved(aItemId) {
-    let index = this._itemIds.indexOf(aItemId);
+  onItemRemoved(aItemId, aParentId, aIndex, aItemType, aURI, aGuid) {
+    let index = this._itemGuids.indexOf(aGuid);
     // If one of the tracked bookmarks has been removed, unregister it.
     if (index != -1) {
-      this._itemIds.splice(index, 1);
+      this._itemGuids.splice(index, 1);
       // Only need to update the UI if the page is no longer starred
-      if (this._itemIds.length == 0) {
+      if (this._itemGuids.length == 0) {
         this._updateStar();
       }
     }
   },
 
-  onItemChanged: function BUI_onItemChanged(aItemId, aProperty,
-                                            aIsAnnotationProperty, aNewValue) {
+  onItemChanged(aItemId, aProperty, aIsAnnotationProperty, aNewValue, aLastModified,
+                aItemType, aParentId, aGuid) {
     if (aProperty == "uri") {
-      let index = this._itemIds.indexOf(aItemId);
+      let index = this._itemGuids.indexOf(aGuid);
       // If the changed bookmark was tracked, check if it is now pointing to
       // a different uri and unregister it.
       if (index != -1 && aNewValue != this._uri.spec) {
-        this._itemIds.splice(index, 1);
+        this._itemGuids.splice(index, 1);
         // Only need to update the UI if the page is no longer starred
-        if (this._itemIds.length == 0) {
+        if (this._itemGuids.length == 0) {
           this._updateStar();
         }
       } else if (index == -1 && aNewValue == this._uri.spec) {
         // If another bookmark is now pointing to the tracked uri, register it.
-        this._itemIds.push(aItemId);
+        this._itemGuids.push(aGuid);
         // Only need to update the UI if it wasn't marked as starred before:
-        if (this._itemIds.length == 1) {
+        if (this._itemGuids.length == 1) {
           this._updateStar();
         }
       }
@@ -1988,8 +1985,8 @@ var BookmarkingUI = {
       this._starButtonLabel = currentLabel;
 
     if (currentLabel == this._starButtonLabel) {
-      let desiredLabel = this._itemIds.length > 0 ? this._starButtonOverflowedStarredLabel
-                                                 : this._starButtonOverflowedLabel;
+      let desiredLabel = this._itemGuids.length > 0 ? this._starButtonOverflowedStarredLabel
+                                                    : this._starButtonOverflowedLabel;
       aNode.setAttribute("label", desiredLabel);
     }
   },

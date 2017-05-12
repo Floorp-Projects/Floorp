@@ -1,4 +1,4 @@
-This is a clean copy of libevent-2.0.22-stable with the following modifications.
+This is a clean copy of libevent-2.1.8-stable with the following modifications.
 
 1. Add the following files:
 
@@ -6,13 +6,15 @@ This is a clean copy of libevent-2.0.22-stable with the following modifications.
 - bsd/event2/event-config.h
 - linux/event2/event-config.h
 - mac/event2/event-config.h
+- evconfig-private.h
 
-These files are taken from libevent-2.0.22-stable built on the development
+These files are taken from libevent-2.1.8-stable built on the development
 environment indicated by the first path component. You have to run
-"./configure" and "make" to get all of the pre-processing done. The file can
-then be found in "include/event2/".
+"./configure" and "make" to get all of the pre-processing done. The
+event-config.h header can then be found in include/event2/ sub-directory and
+evconfig-private.h can be found in the root source directory.
 
-You then need to modify the _EVENT_SIZEOF_* constants in the generated Linux,
+You then need to modify the EVENT__SIZEOF_* constants in the generated Linux,
 Android, and BSD headers to be appropriate for both 32-bit and 64-bit platforms.
 Mac doesn't need this since only 64-bit is supported. Use __LP64__ to
 distinguish the two cases. If you get something wrong, the CHECK_EVENT_SIZEOF
@@ -21,9 +23,6 @@ added, also add a static assertion for it to message_pump_libevent.cc.
 
 2. Apply the following patches from
 ipc/chromium/src/third_party/libevent/patches/:
-
-- "avoid-empty-sighandler.patch". Fixes OSX "code -20" crashes.
-  See bug 884471.
 
 - "openbsd-no-arc4random_addrandom.patch". Fixes the build on OpenBSD
   and Android (which don't provide arc4random_addrandom anymore).
@@ -37,9 +36,3 @@ ipc/chromium/src/third_party/libevent/patches/:
 
 - "android-arc4random-buf.patch". Fixes the build for clang/android builds.
   See bug 1281596 and bug 1282141.
-
-- "fix-kqueue-workaround.patch". Fixes a broken check for an OSX kqueue bug
-  that caused problems on newer OSX releases. See bug 1304266.
-
-- "backport-upstream-fixes.patch". Backports a few upstream fixes from 2.1.x
-  to our in-tree copy of 2.0.22.

@@ -6,40 +6,40 @@
 const TEST_VALUE = "example.com/\xF7?\xF7";
 const START_VALUE = "example.com/%C3%B7?%C3%B7";
 
-add_task(function* () {
+add_task(async function() {
   info("Simple return keypress");
   let tab = gBrowser.selectedTab = gBrowser.addTab(START_VALUE);
 
   gURLBar.focus();
   EventUtils.synthesizeKey("VK_RETURN", {});
-  yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   // Check url bar and selected tab.
   is(gURLBar.textValue, TEST_VALUE, "Urlbar should preserve the value on return keypress");
   is(gBrowser.selectedTab, tab, "New URL was loaded in the current tab");
 
   // Cleanup.
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
-add_task(function* () {
+add_task(async function() {
   info("Alt+Return keypress");
   // due to bug 691608, we must wait for the load event, else isTabEmpty() will
   // return true on e10s for this tab, so it will be reused even with altKey.
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, START_VALUE);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, START_VALUE);
 
   let tabOpenPromise = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabOpen");
   gURLBar.focus();
   EventUtils.synthesizeKey("VK_RETURN", {altKey: true});
 
   // wait for the new tab to appear.
-  yield tabOpenPromise;
+  await tabOpenPromise;
 
   // Check url bar and selected tab.
   is(gURLBar.textValue, TEST_VALUE, "Urlbar should preserve the value on return keypress");
   isnot(gBrowser.selectedTab, tab, "New URL was loaded in a new tab");
 
   // Cleanup.
-  yield BrowserTestUtils.removeTab(tab);
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* testPopupBackground() {
+add_task(async function testPopupBackground() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
       browser.tabs.query({active: true, currentWindow: true}, tabs => {
@@ -34,9 +34,9 @@ add_task(function* testPopupBackground() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  function* testPanel(browser, standAlone) {
+  async function testPanel(browser, standAlone) {
     let panel = getPanelForNode(browser);
     let arrowContent = document.getAnonymousElementByAttribute(panel, "class", "panel-arrowcontent");
     let arrow = document.getAnonymousElementByAttribute(panel, "anonid", "arrow");
@@ -68,7 +68,7 @@ add_task(function* testPopupBackground() {
     };
 
     function getBackground(browser) {
-      return ContentTask.spawn(browser, null, function* () {
+      return ContentTask.spawn(browser, null, async function() {
         return content.getComputedStyle(content.document.body)
                       .backgroundColor;
       });
@@ -80,21 +80,21 @@ add_task(function* testPopupBackground() {
     };
     /* eslint-enable mozilla/no-cpows-in-tests */
 
-    yield new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     info("Test that initial background color is applied");
 
-    checkArrow(yield getBackground(browser));
+    checkArrow(await getBackground(browser));
 
     info("Test that dynamically-changed background color is applied");
 
-    yield alterContent(browser, setBackground, "black");
+    await alterContent(browser, setBackground, "black");
 
-    checkArrow(yield getBackground(browser));
+    checkArrow(await getBackground(browser));
 
     info("Test that non-opaque background color results in default styling");
 
-    yield alterContent(browser, setBackground, "rgba(1, 2, 3, .9)");
+    await alterContent(browser, setBackground, "rgba(1, 2, 3, .9)");
 
     checkArrow(null);
   }
@@ -103,9 +103,9 @@ add_task(function* testPopupBackground() {
     info("Test stand-alone browserAction popup");
 
     clickBrowserAction(extension);
-    let browser = yield awaitExtensionPanel(extension);
-    yield testPanel(browser, true);
-    yield closeBrowserAction(extension);
+    let browser = await awaitExtensionPanel(extension);
+    await testPanel(browser, true);
+    await closeBrowserAction(extension);
   }
 
   {
@@ -115,19 +115,19 @@ add_task(function* testPopupBackground() {
     CustomizableUI.addWidgetToArea(widget.id, CustomizableUI.AREA_PANEL);
 
     clickBrowserAction(extension);
-    let browser = yield awaitExtensionPanel(extension);
-    yield testPanel(browser, false);
-    yield closeBrowserAction(extension);
+    let browser = await awaitExtensionPanel(extension);
+    await testPanel(browser, false);
+    await closeBrowserAction(extension);
   }
 
   {
     info("Test pageAction popup");
 
     clickPageAction(extension);
-    let browser = yield awaitExtensionPanel(extension);
-    yield testPanel(browser, true);
-    yield closePageAction(extension);
+    let browser = await awaitExtensionPanel(extension);
+    await testPanel(browser, true);
+    await closePageAction(extension);
   }
 
-  yield extension.unload();
+  await extension.unload();
 });

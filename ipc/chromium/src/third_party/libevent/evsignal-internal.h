@@ -24,8 +24,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef _EVSIGNAL_H_
-#define _EVSIGNAL_H_
+#ifndef EVSIGNAL_INTERNAL_H_INCLUDED_
+#define EVSIGNAL_INTERNAL_H_INCLUDED_
 
 #ifndef evutil_socket_t
 #include "event2/util.h"
@@ -48,7 +48,7 @@ struct evsig_info {
 
 	/* Array of previous signal handler objects before Libevent started
 	 * messing with them.  Used to restore old signal handlers. */
-#ifdef _EVENT_HAVE_SIGACTION
+#ifdef EVENT__HAVE_SIGACTION
 	struct sigaction **sh_old;
 #else
 	ev_sighandler_t **sh_old;
@@ -56,9 +56,10 @@ struct evsig_info {
 	/* Size of sh_old. */
 	int sh_old_max;
 };
-int evsig_init(struct event_base *);
-void evsig_dealloc(struct event_base *);
+int evsig_init_(struct event_base *);
+void evsig_dealloc_(struct event_base *);
 
-void evsig_set_base(struct event_base *base);
+void evsig_set_base_(struct event_base *base);
+void evsig_free_globals_(void);
 
-#endif /* _EVSIGNAL_H_ */
+#endif /* EVSIGNAL_INTERNAL_H_INCLUDED_ */

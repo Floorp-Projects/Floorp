@@ -6,22 +6,22 @@
  * expiration, will be properly expired when fetching new ones.
  */
 
-add_task(function* test_storing_a_normal_16x16_icon() {
+add_task(async function test_storing_a_normal_16x16_icon() {
   const PAGE_URL = "http://places.test";
-  yield PlacesTestUtils.addVisits(PAGE_URL);
-  yield setFaviconForPage(PAGE_URL, SMALLPNG_DATA_URI);
+  await PlacesTestUtils.addVisits(PAGE_URL);
+  await setFaviconForPage(PAGE_URL, SMALLPNG_DATA_URI);
 
   // Now set expiration to 0 and change the payload.
   do_print("Set expiration to 0 and replace favicon data");
-  yield PlacesUtils.withConnectionWrapper("Change favicons payload", db => {
+  await PlacesUtils.withConnectionWrapper("Change favicons payload", db => {
     return db.execute(`UPDATE moz_icons SET expire_ms = 0, data = "test"`);
   });
 
-  let {data, mimeType} = yield getFaviconDataForPage(PAGE_URL);
+  let {data, mimeType} = await getFaviconDataForPage(PAGE_URL);
   Assert.equal(mimeType, "image/png");
   Assert.deepEqual(data, "test".split("").map(c => c.charCodeAt(0)));
 
   do_print("Refresh favicon");
-  yield setFaviconForPage(PAGE_URL, SMALLPNG_DATA_URI, false);
-  yield compareFavicons("page-icon:" + PAGE_URL, SMALLPNG_DATA_URI);
+  await setFaviconForPage(PAGE_URL, SMALLPNG_DATA_URI, false);
+  await compareFavicons("page-icon:" + PAGE_URL, SMALLPNG_DATA_URI);
 });

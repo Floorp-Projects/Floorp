@@ -18,12 +18,12 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_pref() {
+add_task(async function test_pref() {
   let defaultBranch = Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF);
   defaultBranch.setCharPref("param.code", "good&id=unique");
   Services.prefs.setCharPref(BROWSER_SEARCH_PREF + "param.code", "bad");
 
-  yield asyncInit();
+  await asyncInit();
 
   let engine = Services.search.getEngineByName("engine-pref");
   let base = "http://www.google.com/search?q=foo&code=";

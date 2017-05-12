@@ -10,7 +10,7 @@ startupManager();
 BootstrapMonitor.init();
 
 // Ensure that a proxy file to an add-on with a valid manifest works.
-add_task(function*() {
+add_task(async function() {
   let tempdir = gTmpD.clone();
   writeInstallRDFToDir({
     id: ID,
@@ -35,12 +35,12 @@ add_task(function*() {
   extensionsDir.append("extensions");
   let proxyFile = writeProxyFileToDir(extensionsDir, unpackedAddon, ID);
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
 
   BootstrapMonitor.checkAddonInstalled(ID, "1.0");
   BootstrapMonitor.checkAddonStarted(ID, "1.0");
 
-  let addon = yield promiseAddonByID(ID);
+  let addon = await promiseAddonByID(ID);
 
   do_check_neq(addon, null);
   do_check_eq(addon.version, "1.0");
@@ -56,13 +56,13 @@ add_task(function*() {
   addon.uninstall();
   unpackedAddon.remove(true);
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
 });
 
 
 // Ensure that a proxy file to an add-on is not removed even
 // if the manifest file is invalid. See bug 1195353.
-add_task(function*() {
+add_task(async function() {
   let tempdir = gTmpD.clone();
 
   // use a mismatched ID to make this install.rdf invalid
@@ -89,12 +89,12 @@ add_task(function*() {
   extensionsDir.append("extensions");
   let proxyFile = writeProxyFileToDir(extensionsDir, unpackedAddon, ID);
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
 
   BootstrapMonitor.checkAddonNotInstalled(ID, "1.0");
   BootstrapMonitor.checkAddonNotStarted(ID, "1.0");
 
-  let addon = yield promiseAddonByID(ID);
+  let addon = await promiseAddonByID(ID);
   do_check_eq(addon, null);
 
   do_check_true(proxyFile.exists());
@@ -102,5 +102,5 @@ add_task(function*() {
   unpackedAddon.remove(true);
   proxyFile.remove(true);
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
 });

@@ -13,7 +13,6 @@ var Ci = Components.interfaces;
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/Timer.jsm", this);
-Cu.import("resource://gre/modules/Task.jsm", this);
 
 var {Path, File, Constants} = OS;
 
@@ -26,12 +25,12 @@ var HISTOGRAMS = {
   "xpcom-will-shutdown": "SHUTDOWN_PHASE_DURATION_TICKS_XPCOM_WILL_SHUTDOWN",
 };
 
-add_task(function* init() {
+add_task(async function init() {
   do_get_profile();
   PATH = Path.join(Constants.Path.localProfileDir, "ShutdownDuration.json");
 });
 
-add_task(function* test_reload() {
+add_task(async function test_reload() {
   do_print("Forging data");
   let data = {};
   let telemetrySnapshots = Services.telemetry.histogramSnapshots;
@@ -43,7 +42,7 @@ add_task(function* test_reload() {
   }
 
 
-  yield OS.File.writeAtomic(PATH, JSON.stringify(data));
+  await OS.File.writeAtomic(PATH, JSON.stringify(data));
 
   const TOPIC = "shutdown-terminator-telemetry-updated";
 
@@ -63,7 +62,7 @@ add_task(function* test_reload() {
 
   do_print("Waiting until telemetry is updated");
   // Now wait until Telemetry is updated
-  yield wait;
+  await wait;
 
   telemetrySnapshots = Services.telemetry.histogramSnapshots;
   for (let k of Object.keys(HISTOGRAMS)) {

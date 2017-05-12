@@ -6,7 +6,7 @@ Cu.import("resource://gre/modules/DownloadLastDir.jsm");
  * from download to download, with a particular emphasis
  * on how it behaves when private browsing windows open.
  */
-add_task(function* test_downloads_last_dir_toggle() {
+add_task(async function test_downloads_last_dir_toggle() {
   let tmpDir = FileUtils.getDir("TmpD", [], true);
   let dir1 = newDirectory();
 
@@ -15,7 +15,7 @@ add_task(function* test_downloads_last_dir_toggle() {
     dir1.remove(true);
   });
 
-  let win = yield BrowserTestUtils.openNewBrowserWindow();
+  let win = await BrowserTestUtils.openNewBrowserWindow();
   let gDownloadLastDir = new DownloadLastDir(win);
   is(typeof gDownloadLastDir, "object",
      "gDownloadLastDir should be a valid object");
@@ -36,20 +36,20 @@ add_task(function* test_downloads_last_dir_toggle() {
   is(gDownloadLastDir.file, null, "gDownloadLastDir.file should be null");
 
   gDownloadLastDir.file = tmpDir;
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 
   info("Opening the first private window");
-  yield testHelper({ private: true, expectedDir: tmpDir });
+  await testHelper({ private: true, expectedDir: tmpDir });
   info("Opening a non-private window");
-  yield testHelper({ private: false, expectedDir: tmpDir });
+  await testHelper({ private: false, expectedDir: tmpDir });
   info("Opening a private window and setting download directory");
-  yield testHelper({ private: true, setDir: dir1, expectedDir: dir1 });
+  await testHelper({ private: true, setDir: dir1, expectedDir: dir1 });
   info("Opening a non-private window and checking download directory");
-  yield testHelper({ private: false, expectedDir: tmpDir });
+  await testHelper({ private: false, expectedDir: tmpDir });
   info("Opening private window and clearing history");
-  yield testHelper({ private: true, clearHistory: true, expectedDir: null });
+  await testHelper({ private: true, clearHistory: true, expectedDir: null });
   info("Opening a non-private window and checking download directory");
-  yield testHelper({ private: true, expectedDir: null });
+  await testHelper({ private: true, expectedDir: null });
 });
 
 /**

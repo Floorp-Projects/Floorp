@@ -18,14 +18,14 @@ const kStarBtn = "bookmarks-menu-button";
 var originalWindowWidth;
 
 // Adding a widget should add it next to the widget it's being inserted next to.
-add_task(function*() {
+add_task(async function() {
   originalWindowWidth = window.outerWidth;
   createDummyXULButton(kTestBtn1, "Test");
   ok(!navbar.hasAttribute("overflowing"), "Should start with a non-overflowing toolbar.");
   ok(CustomizableUI.inDefaultState, "Should start in default state.");
 
   window.resizeTo(400, window.outerHeight);
-  yield waitForCondition(() => navbar.hasAttribute("overflowing"));
+  await waitForCondition(() => navbar.hasAttribute("overflowing"));
   ok(navbar.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
   ok(!navbar.querySelector("#" + kHomeBtn), "Home button should no longer be in the navbar");
   let homeBtnNode = overflowList.querySelector("#" + kHomeBtn);
@@ -42,7 +42,7 @@ add_task(function*() {
   is(nextEl && nextEl.id, kHomeBtn, "Test button should be next to home button.");
 
   window.resizeTo(originalWindowWidth, window.outerHeight);
-  yield waitForCondition(() => !navbar.hasAttribute("overflowing"));
+  await waitForCondition(() => !navbar.hasAttribute("overflowing"));
   ok(!navbar.hasAttribute("overflowing"), "Should not have an overflowing toolbar.");
   ok(navbar.querySelector("#" + kHomeBtn), "Home button should be in the navbar");
   ok(homeBtnNode && (homeBtnNode.getAttribute("overflowedItem") != "true"), "Home button should no longer have overflowedItem attribute");
@@ -59,7 +59,7 @@ add_task(function*() {
 });
 
 // Removing a widget should remove it from the overflow list if that is where it is, and update it accordingly.
-add_task(function*() {
+add_task(async function() {
   createDummyXULButton(kTestBtn2, "Test");
   ok(!navbar.hasAttribute("overflowing"), "Should start with a non-overflowing toolbar.");
   ok(CustomizableUI.inDefaultState, "Should start in default state.");
@@ -67,7 +67,7 @@ add_task(function*() {
   ok(!navbar.hasAttribute("overflowing"), "Should still have a non-overflowing toolbar.");
 
   window.resizeTo(400, window.outerHeight);
-  yield waitForCondition(() => navbar.hasAttribute("overflowing"));
+  await waitForCondition(() => navbar.hasAttribute("overflowing"));
   ok(navbar.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
   ok(!navbar.querySelector("#" + kTestBtn2), "Test button should not be in the navbar");
   ok(overflowList.querySelector("#" + kTestBtn2), "Test button should be overflowing");
@@ -79,7 +79,7 @@ add_task(function*() {
   ok(gNavToolbox.palette.querySelector("#" + kTestBtn2), "Test button should be in the palette");
 
   window.resizeTo(originalWindowWidth, window.outerHeight);
-  yield waitForCondition(() => !navbar.hasAttribute("overflowing"));
+  await waitForCondition(() => !navbar.hasAttribute("overflowing"));
   ok(!navbar.hasAttribute("overflowing"), "Should not have an overflowing toolbar.");
   let el = document.getElementById(kTestBtn2);
   if (el) {
@@ -90,13 +90,13 @@ add_task(function*() {
 });
 
 // Constructing a widget while overflown should set the right class on it.
-add_task(function*() {
+add_task(async function() {
   originalWindowWidth = window.outerWidth;
   ok(!navbar.hasAttribute("overflowing"), "Should start with a non-overflowing toolbar.");
   ok(CustomizableUI.inDefaultState, "Should start in default state.");
 
   window.resizeTo(400, window.outerHeight);
-  yield waitForCondition(() => navbar.hasAttribute("overflowing"));
+  await waitForCondition(() => navbar.hasAttribute("overflowing"));
   ok(navbar.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
   ok(!navbar.querySelector("#" + kHomeBtn), "Home button should no longer be in the navbar");
   let homeBtnNode = overflowList.querySelector("#" + kHomeBtn);
@@ -125,7 +125,7 @@ add_task(function*() {
   window.resizeTo(originalWindowWidth, window.outerHeight);
 });
 
-add_task(function* asyncCleanup() {
+add_task(async function asyncCleanup() {
   window.resizeTo(originalWindowWidth, window.outerHeight);
-  yield resetCustomization();
+  await resetCustomization();
 });

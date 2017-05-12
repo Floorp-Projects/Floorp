@@ -10,22 +10,22 @@ const URL = ROOT + "browser_463205_sample.html";
  * website can't modify frame URLs and make us inject form data into the wrong
  * web pages.
  */
-add_task(function* test_check_urls_before_restoring() {
+add_task(async function test_check_urls_before_restoring() {
   // Add a blank tab.
   let tab = gBrowser.addTab("about:blank");
   let browser = tab.linkedBrowser;
-  yield promiseBrowserLoaded(browser);
+  await promiseBrowserLoaded(browser);
 
   // Restore form data with a valid URL.
-  yield promiseTabState(tab, getState(URL));
+  await promiseTabState(tab, getState(URL));
 
-  let value = yield getInputValue(browser, {id: "text"});
+  let value = await getInputValue(browser, {id: "text"});
   is(value, "foobar", "value was restored");
 
   // Restore form data with an invalid URL.
-  yield promiseTabState(tab, getState("http://example.com/"));
+  await promiseTabState(tab, getState("http://example.com/"));
 
-  value = yield getInputValue(browser, {id: "text"});
+  value = await getInputValue(browser, {id: "text"});
   is(value, "", "value was not restored");
 
   // Cleanup.

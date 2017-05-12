@@ -46,55 +46,55 @@ function play_non_autoplay_audio() {
   });
 }
 
-add_task(function* setup_test_preference() {
-  yield
+add_task(async function setup_test_preference() {
+  await
     SpecialPowers.pushPrefEnv({"set": [
       ["dom.audiochannel.audioCompeting", true],
       ["dom.ipc.processCount", 1]
     ]});
 });
 
-add_task(function* cross_tabs_audio_competing() {
+add_task(async function cross_tabs_audio_competing() {
   info("- open tab 1 in foreground -");
-  let tab1 = yield BrowserTestUtils.openNewForegroundTab(window.gBrowser,
+  let tab1 = await BrowserTestUtils.openNewForegroundTab(window.gBrowser,
                                                          "about:blank");
   tab1.linkedBrowser.loadURI(PAGE);
-  yield waitForTabPlayingEvent(tab1, true);
+  await waitForTabPlayingEvent(tab1, true);
 
   info("- open tab 2 in foreground -");
-  let tab2 = yield BrowserTestUtils.openNewForegroundTab(window.gBrowser,
+  let tab2 = await BrowserTestUtils.openNewForegroundTab(window.gBrowser,
                                                         "about:blank");
   tab2.linkedBrowser.loadURI(PAGE);
-  yield waitForTabPlayingEvent(tab1, false);
+  await waitForTabPlayingEvent(tab1, false);
 
   info("- open tab 3 in foreground -");
-  let tab3 = yield BrowserTestUtils.openNewForegroundTab(window.gBrowser,
+  let tab3 = await BrowserTestUtils.openNewForegroundTab(window.gBrowser,
                                                          "about:blank");
-  yield ContentTask.spawn(tab2.linkedBrowser, null,
+  await ContentTask.spawn(tab2.linkedBrowser, null,
                           audio_should_keep_playing_even_go_to_background);
 
   info("- play audio from background tab 1 -");
-  yield ContentTask.spawn(tab1.linkedBrowser, null,
+  await ContentTask.spawn(tab1.linkedBrowser, null,
                           play_audio_from_invisible_tab);
 
   info("- remove tabs -");
-  yield BrowserTestUtils.removeTab(tab1);
-  yield BrowserTestUtils.removeTab(tab2);
-  yield BrowserTestUtils.removeTab(tab3);
+  await BrowserTestUtils.removeTab(tab1);
+  await BrowserTestUtils.removeTab(tab2);
+  await BrowserTestUtils.removeTab(tab3);
 });
 
-add_task(function* within_one_tab_audio_competing() {
+add_task(async function within_one_tab_audio_competing() {
   info("- open tab and play audio1 -");
-  let tab = yield BrowserTestUtils.openNewForegroundTab(window.gBrowser,
+  let tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser,
                                                         "about:blank");
   tab.linkedBrowser.loadURI(PAGE);
-  yield waitForTabPlayingEvent(tab, true);
+  await waitForTabPlayingEvent(tab, true);
 
   info("- play audio2 in the same tab -");
-  yield ContentTask.spawn(tab.linkedBrowser, null,
+  await ContentTask.spawn(tab.linkedBrowser, null,
                           play_non_autoplay_audio);
 
   info("- remove tab -");
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });
 

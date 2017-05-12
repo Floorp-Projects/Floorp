@@ -16,12 +16,12 @@ function run_test() {
  * Tests that the watcher correctly notifies of a directory creation when watching
  * a single path.
  */
-add_task(function* test_watch_single_path_directory_creation() {
+add_task(async function test_watch_single_path_directory_creation() {
 
   // Create and watch a sub-directory of the profile directory so we don't
   // catch notifications we're not interested in (i.e. "startupCache").
   let watchedDir = OS.Path.join(OS.Constants.Path.profileDir, "filewatcher_playground");
-  yield OS.File.makeDir(watchedDir);
+  await OS.File.makeDir(watchedDir);
 
   let tmpDirPath = OS.Path.join(watchedDir, "testdir");
 
@@ -31,19 +31,19 @@ add_task(function* test_watch_single_path_directory_creation() {
 
   // Add the profile directory to the watch list and wait for the file watcher
   // to start watching.
-  yield promiseAddPath(watcher, watchedDir, deferred.resolve, deferred.reject);
+  await promiseAddPath(watcher, watchedDir, deferred.resolve, deferred.reject);
 
   // Once ready, create a directory within the watched directory.
-  yield OS.File.makeDir(tmpDirPath);
+  await OS.File.makeDir(tmpDirPath);
 
   // Wait until the watcher informs us that the file has changed.
-  let changed = yield deferred.promise;
+  let changed = await deferred.promise;
   do_check_eq(changed, tmpDirPath);
 
   // Remove the watch and free the associated memory (we need to
   // reuse 'deferred.resolve' and 'deferred.reject' to unregister).
-  yield promiseRemovePath(watcher, watchedDir, deferred.resolve, deferred.reject);
+  await promiseRemovePath(watcher, watchedDir, deferred.resolve, deferred.reject);
 
   // Clean up the test directory.
-  yield OS.File.removeDir(watchedDir);
+  await OS.File.removeDir(watchedDir);
 });

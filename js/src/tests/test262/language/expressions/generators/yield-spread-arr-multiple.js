@@ -2,7 +2,7 @@
 // - src/generators/yield-spread-arr-multiple.case
 // - src/generators/default/expression.template
 /*---
-description: Use yield value in a array spread position (Generator expression)
+description: Use yield value in a array spread position (Unnamed generator expression)
 esid: prod-GeneratorExpression
 flags: [generated]
 includes: [compareArray.js]
@@ -10,7 +10,7 @@ info: |
     14.4 Generator Function Definitions
 
     GeneratorExpression:
-      function * BindingIdentifier[+Yield, ~Await]opt ( FormalParameters[+Yield, ~Await] ) { GeneratorBody }
+      function * BindingIdentifier opt ( FormalParameters ) { GeneratorBody }
 
     Array Initializer
 

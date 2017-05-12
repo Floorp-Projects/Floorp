@@ -20,7 +20,7 @@ function run_test() {
 /**
  * Test OS.File.getAvailableFreeSpace
  */
-add_task(function*() {
+add_task(async function() {
   // Set up profile. We will use profile path to query for available free
   // space.
   do_get_profile();
@@ -28,10 +28,10 @@ add_task(function*() {
   let dir = OS.Constants.Path.profileDir;
 
   // Sanity checking for the test
-  do_check_true((yield OS.File.exists(dir)));
+  do_check_true((await OS.File.exists(dir)));
 
   // Query for available bytes for user
-  let availableBytes = yield OS.File.getAvailableFreeSpace(dir);
+  let availableBytes = await OS.File.getAvailableFreeSpace(dir);
 
   do_check_true(!!availableBytes);
   do_check_true(availableBytes > 0);

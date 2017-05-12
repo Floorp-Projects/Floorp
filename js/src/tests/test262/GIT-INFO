@@ -1,8 +1,5 @@
-commit 1327925dafa2fffea089131f71e3d455a1064999
-Merge: 0cc55bb e54c471
-Author: Leo Balter <leonardo.balter@gmail.com>
-Date:   Thu Mar 9 10:30:58 2017 -0500
+commit 19eb1d2e02c31ba813fe0ff5d10ea2c09a911fb5
+Author: Joseph Pecoraro <joepeck02@gmail.com>
+Date:   Thu May 4 08:22:28 2017 -0700
 
-    Merge pull request #892 from leobalter/generator-spread
-    
-    Add tests for object spread on yield value
+    Add tests for completion value of function / class declaration statements (#1012)

@@ -37,13 +37,13 @@ const SCRIPTS = [
   },
 ];
 
-add_task(function* setup() {
-  yield setupHosts(SCRIPTS);
+add_task(async function setup() {
+  await setupHosts(SCRIPTS);
 });
 
 
 // Test that an unresponsive native application still gets killed eventually
-add_task(function* test_unresponsive_native_app() {
+add_task(async function test_unresponsive_native_app() {
   // XXX expose GRACEFUL_SHUTDOWN_TIME as a pref and reduce it
   // just for this test?
 
@@ -67,16 +67,16 @@ add_task(function* test_unresponsive_native_app() {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitMessage("ready");
+  await extension.startup();
+  await extension.awaitMessage("ready");
 
-  let procCount = yield getSubprocessCount();
+  let procCount = await getSubprocessCount();
   equal(procCount, 1, "subprocess is running");
 
   let exitPromise = waitForSubprocessExit();
-  yield extension.unload();
-  yield exitPromise;
+  await extension.unload();
+  await exitPromise;
 
-  procCount = yield getSubprocessCount();
+  procCount = await getSubprocessCount();
   equal(procCount, 0, "subprocess was succesfully killed");
 });

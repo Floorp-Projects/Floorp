@@ -1,7 +1,7 @@
-add_task(function*() {
+add_task(async function() {
   is(gBrowser.currentURI.spec, "about:blank", "Test starts with about:blank open");
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:home");
-  yield openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:home");
+  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
   let doc = gBrowser.contentDocument;
   is(gBrowser.currentURI.spec, "about:preferences#general",
      "#general should be in the URI for about:preferences");
@@ -15,6 +15,6 @@ add_task(function*() {
      "about:blank and about:home should be the only homepages set");
 
   Services.prefs.setCharPref("browser.startup.homepage", oldHomepagePref);
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

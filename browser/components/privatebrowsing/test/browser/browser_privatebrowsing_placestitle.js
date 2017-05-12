@@ -5,7 +5,7 @@
 // This test makes sure that the title of existing history entries does not
 // change inside a private window.
 
-add_task(function* test() {
+add_task(async function test() {
   const TEST_URL = "http://mochi.test:8888/browser/browser/components/" +
                    "privatebrowsing/test/browser/title.sjs";
   let cm = Services.cookies;
@@ -17,7 +17,7 @@ add_task(function* test() {
     return PlacesTestUtils.clearHistory();
   }
 
-  yield cleanup();
+  await cleanup();
 
   let deferredFirst = PromiseUtils.defer();
   let deferredSecond = PromiseUtils.defer();
@@ -60,36 +60,36 @@ add_task(function* test() {
   PlacesUtils.history.addObserver(historyObserver);
 
 
-  let win = yield BrowserTestUtils.openNewBrowserWindow();
+  let win = await BrowserTestUtils.openNewBrowserWindow();
   win.gBrowser.selectedTab = win.gBrowser.addTab(TEST_URL);
-  let aPageTitle = yield deferredFirst.promise;
+  let aPageTitle = await deferredFirst.promise;
   // The first time that the page is loaded
   is(aPageTitle, "No Cookie",
      "The page should be loaded without any cookie for the first time");
 
   win.gBrowser.selectedTab = win.gBrowser.addTab(TEST_URL);
-  aPageTitle = yield deferredSecond.promise;
+  aPageTitle = await deferredSecond.promise;
   // The second time that the page is loaded
   is(aPageTitle, "Cookie",
      "The page should be loaded with a cookie for the second time");
 
-  yield cleanup();
+  await cleanup();
 
   win.gBrowser.selectedTab = win.gBrowser.addTab(TEST_URL);
-  aPageTitle = yield deferredThird.promise;
+  aPageTitle = await deferredThird.promise;
   // After clean up
   is(aPageTitle, "No Cookie",
      "The page should be loaded without any cookie again");
 
-  let win2 = yield BrowserTestUtils.openNewBrowserWindow({private: true});
+  let win2 = await BrowserTestUtils.openNewBrowserWindow({private: true});
 
   let private_tab = win2.gBrowser.addTab(TEST_URL);
   win2.gBrowser.selectedTab = private_tab;
-  yield BrowserTestUtils.browserLoaded(private_tab.linkedBrowser);
+  await BrowserTestUtils.browserLoaded(private_tab.linkedBrowser);
 
   // Cleanup
-  yield cleanup();
+  await cleanup();
   PlacesUtils.history.removeObserver(historyObserver);
-  yield BrowserTestUtils.closeWindow(win);
-  yield BrowserTestUtils.closeWindow(win2);
+  await BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win2);
 });

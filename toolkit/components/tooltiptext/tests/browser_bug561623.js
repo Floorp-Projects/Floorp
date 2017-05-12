@@ -1,9 +1,9 @@
-add_task(function*() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function() {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "data:text/html,<!DOCTYPE html><html><body><input id='i'></body></html>",
-  }, function*(browser) {
-    yield ContentTask.spawn(browser, "", function() {
+  }, async function(browser) {
+    await ContentTask.spawn(browser, "", function() {
       let tttp = Cc["@mozilla.org/embedcomp/default-tooltiptextprovider;1"]
                  .getService(Ci.nsITooltipTextProvider);
       let i = content.document.getElementById("i");

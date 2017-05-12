@@ -7,8 +7,8 @@ const BAD_CERT_PAGE = "https://expired.example.com/";
 
 // This tests the alternate cert error UI when we are behind a captive portal.
 
-add_task(function* checkCaptivePortalCertErrorUI() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function checkCaptivePortalCertErrorUI() {
+  await SpecialPowers.pushPrefEnv({
     set: [["captivedetect.canonicalURL", CANONICAL_URL],
           ["captivedetect.canonicalContent", CANONICAL_CONTENT]],
   });
@@ -19,12 +19,12 @@ add_task(function* checkCaptivePortalCertErrorUI() {
   Services.obs.notifyObservers(null, "captive-portal-login");
 
   info("Waiting for captive portal state to be propagated to the content process.");
-  yield captivePortalStatePropagated;
+  await captivePortalStatePropagated;
 
   // Open a page with a cert error.
   let browser;
   let certErrorLoaded;
-  let errorTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
+  let errorTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
     let tab = gBrowser.addTab(BAD_CERT_PAGE);
     gBrowser.selectedTab = tab;
     browser = gBrowser.selectedBrowser;
@@ -33,11 +33,11 @@ add_task(function* checkCaptivePortalCertErrorUI() {
   }, false);
 
   info("Waiting for cert error page to load.")
-  yield certErrorLoaded;
+  await certErrorLoaded;
 
   let portalTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, CANONICAL_URL);
 
-  yield ContentTask.spawn(browser, null, () => {
+  await ContentTask.spawn(browser, null, () => {
     let doc = content.document;
     ok(doc.body.classList.contains("captiveportal"),
        "Captive portal error page UI is visible.");
@@ -48,35 +48,35 @@ add_task(function* checkCaptivePortalCertErrorUI() {
     loginButton.click();
   });
 
-  let portalTab = yield portalTabPromise;
+  let portalTab = await portalTabPromise;
   is(gBrowser.selectedTab, portalTab, "Login page should be open in a new foreground tab.");
 
   // Make sure clicking the "Open Login Page" button again focuses the existing portal tab.
-  yield BrowserTestUtils.switchTab(gBrowser, errorTab);
+  await BrowserTestUtils.switchTab(gBrowser, errorTab);
   // Passing an empty function to BrowserTestUtils.switchTab lets us wait for an arbitrary
   // tab switch.
   portalTabPromise = BrowserTestUtils.switchTab(gBrowser, () => {});
-  yield ContentTask.spawn(browser, null, () => {
+  await ContentTask.spawn(browser, null, () => {
     info("Clicking the Open Login Page button.");
     content.document.getElementById("openPortalLoginPageButton").click();
   });
 
-  let portalTab2 = yield portalTabPromise;
+  let portalTab2 = await portalTabPromise;
   is(portalTab2, portalTab, "The existing portal tab should be focused.");
 
   let portalTabRemoved = BrowserTestUtils.tabRemoved(portalTab);
   let errorTabReloaded = BrowserTestUtils.waitForErrorPage(browser);
 
   Services.obs.notifyObservers(null, "captive-portal-login-success");
-  yield portalTabRemoved;
+  await portalTabRemoved;
 
   info("Waiting for error tab to be reloaded after the captive portal was freed.");
-  yield errorTabReloaded;
-  yield ContentTask.spawn(browser, null, () => {
+  await errorTabReloaded;
+  await ContentTask.spawn(browser, null, () => {
     let doc = content.document;
     ok(!doc.body.classList.contains("captiveportal"),
        "Captive portal error page UI is not visible.");
   });
 
-  yield BrowserTestUtils.removeTab(errorTab);
+  await BrowserTestUtils.removeTab(errorTab);
 });

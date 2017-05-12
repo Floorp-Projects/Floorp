@@ -6,6 +6,8 @@
 
 "use strict";
 
+/* eslint-disable mozilla/no-task */
+
 this.EXPORTED_SYMBOLS = [
   "Task"
 ];

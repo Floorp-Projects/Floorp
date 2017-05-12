@@ -5,10 +5,10 @@ const SUGGEST_ALL_PREF = "browser.search.suggest.enabled";
 const SUGGEST_URLBAR_PREF = "browser.urlbar.suggest.searches";
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
-add_task(function* switchToTab() {
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:about");
+add_task(async function switchToTab() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:about");
 
-  yield promiseAutocompleteResultPopup("% about");
+  await promiseAutocompleteResultPopup("% about");
 
   ok(gURLBar.popup.richlistbox.children.length > 1, "Should get at least 2 results");
   let result = gURLBar.popup.richlistbox.children[1];
@@ -16,12 +16,12 @@ add_task(function* switchToTab() {
   is(result.label, "about:about about:about Tab", "Result a11y label should be: <title> <url> Tab");
 
   gURLBar.popup.hidePopup();
-  yield promisePopupHidden(gURLBar.popup);
+  await promisePopupHidden(gURLBar.popup);
   gBrowser.removeTab(tab);
 });
 
-add_task(function* searchSuggestions() {
-  let engine = yield promiseNewSearchEngine(TEST_ENGINE_BASENAME);
+add_task(async function searchSuggestions() {
+  let engine = await promiseNewSearchEngine(TEST_ENGINE_BASENAME);
   let oldCurrentEngine = Services.search.currentEngine;
   Services.search.currentEngine = engine;
   Services.prefs.setBoolPref(SUGGEST_ALL_PREF, true);
@@ -32,7 +32,7 @@ add_task(function* searchSuggestions() {
     Services.prefs.clearUserPref(SUGGEST_URLBAR_PREF);
   });
 
-  yield promiseAutocompleteResultPopup("foo");
+  await promiseAutocompleteResultPopup("foo");
   // Don't assume that the search doesn't match history or bookmarks left around
   // by earlier tests.
   Assert.ok(gURLBar.popup.richlistbox.children.length >= 3,

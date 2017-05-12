@@ -2,15 +2,15 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
     set: [["dom.serviceWorkers.exemptFromPerDomainMax", true],
          ["dom.serviceWorkers.enabled", true],
          ["dom.serviceWorkers.testing.enabled", true]],
   });
 });
 
-add_task(function* testServiceWorkers() {
+add_task(async function testServiceWorkers() {
   function background() {
     const PAGE = "/browser/browser/components/extensions/test/browser/file_serviceWorker.html";
 
@@ -57,33 +57,33 @@ add_task(function* testServiceWorkers() {
   let serviceWorkerManager = SpecialPowers.Cc["@mozilla.org/serviceworkers/manager;1"]
     .getService(SpecialPowers.Ci.nsIServiceWorkerManager);
 
-  let win = yield BrowserTestUtils.openNewBrowserWindow();
-  yield focusWindow(win);
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  await focusWindow(win);
 
-  yield extension.startup();
-  yield extension.awaitMessage("serviceWorkerRegistered");
-  yield extension.awaitMessage("serviceWorkerRegistered");
+  await extension.startup();
+  await extension.awaitMessage("serviceWorkerRegistered");
+  await extension.awaitMessage("serviceWorkerRegistered");
 
   let serviceWorkers = [];
   // Even though we await the registrations by waiting for the messages,
   // sometimes the serviceWorkers are still not registered at this point.
   while (serviceWorkers.length < 2) {
     serviceWorkers = serviceWorkerManager.getAllRegistrations();
-    yield new Promise(resolve => setTimeout(resolve, 1));
+    await new Promise(resolve => setTimeout(resolve, 1));
   }
   is(serviceWorkers.length, 2, "ServiceWorkers have been registered.");
 
   extension.sendMessage();
 
-  yield extension.awaitMessage("serviceWorkersRemoved");
+  await extension.awaitMessage("serviceWorkersRemoved");
 
   // The serviceWorkers and not necessarily removed immediately.
   while (serviceWorkers.length > 0) {
     serviceWorkers = serviceWorkerManager.getAllRegistrations();
-    yield new Promise(resolve => setTimeout(resolve, 1));
+    await new Promise(resolve => setTimeout(resolve, 1));
   }
   is(serviceWorkers.length, 0, "ServiceWorkers have been removed.");
 
-  yield extension.unload();
-  yield BrowserTestUtils.closeWindow(win);
+  await extension.unload();
+  await BrowserTestUtils.closeWindow(win);
 });

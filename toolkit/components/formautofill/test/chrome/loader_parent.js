@@ -44,16 +44,16 @@ function add_task_in_parent_process(taskFn, taskIdOverride) {
   let taskId = taskIdOverride || getTaskId(Components.stack.caller);
   Output.print("Registering in the parent process: " + taskId);
   addMessageListener("start_task_" + taskId, function() {
-    Task.spawn(function* () {
+    (async function() {
       try {
         Output.print("Running in the parent process " + taskId);
-        yield Task.spawn(taskFn);
+        await taskFn();
       } catch (ex) {
         assert.ok(false, ex);
       }
 
       sendAsyncMessage("finish_task_" + taskId, {});
-    });
+    })();
   });
 }
 var add_task = function() {};

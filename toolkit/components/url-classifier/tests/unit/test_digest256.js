@@ -29,31 +29,31 @@ function readFileToString(aFilename) {
 // Registers a table for which to serve update chunks. Returns a promise that
 // resolves when that chunk has been downloaded.
 function registerTableUpdate(aTable, aFilename) {
-  let deferred = Promise.defer();
-  // If we haven't been given an update for this table yet, add it to the map
-  if (!(aTable in gTables)) {
-    gTables[aTable] = [];
-  }
+  return new Promise(resolve => {
+    // If we haven't been given an update for this table yet, add it to the map
+    if (!(aTable in gTables)) {
+      gTables[aTable] = [];
+    }
 
-  // The number of chunks associated with this table.
-  let numChunks = gTables[aTable].length + 1;
-  let redirectPath = "/" + aTable + "-" + numChunks;
-  let redirectUrl = "localhost:4444" + redirectPath;
+    // The number of chunks associated with this table.
+    let numChunks = gTables[aTable].length + 1;
+    let redirectPath = "/" + aTable + "-" + numChunks;
+    let redirectUrl = "localhost:4444" + redirectPath;
 
-  // Store redirect url for that table so we can return it later when we
-  // process an update request.
-  gTables[aTable].push(redirectUrl);
+    // Store redirect url for that table so we can return it later when we
+    // process an update request.
+    gTables[aTable].push(redirectUrl);
 
-  gHttpServ.registerPathHandler(redirectPath, function(request, response) {
-    do_print("Mock safebrowsing server handling request for " + redirectPath);
-    let contents = readFileToString(aFilename);
-    response.setHeader("Content-Type",
-                       "application/vnd.google.safebrowsing-update", false);
-    response.setStatusLine(request.httpVersion, 200, "OK");
-    response.bodyOutputStream.write(contents, contents.length);
-    deferred.resolve(contents);
+    gHttpServ.registerPathHandler(redirectPath, function(request, response) {
+      do_print("Mock safebrowsing server handling request for " + redirectPath);
+      let contents = readFileToString(aFilename);
+      response.setHeader("Content-Type",
+                         "application/vnd.google.safebrowsing-update", false);
+      response.setStatusLine(request.httpVersion, 200, "OK");
+      response.bodyOutputStream.write(contents, contents.length);
+      resolve(contents);
+    });
   });
-  return deferred.promise;
 }
 
 // Construct a response with redirect urls.

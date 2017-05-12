@@ -14,7 +14,13 @@
 
 #define HAS_DLL_BLOCKLIST
 
-MFBT_API void DllBlocklist_Initialize();
+enum DllBlocklistInitFlags
+{
+  eDllBlocklistInitFlagDefault = 0,
+  eDllBlocklistInitFlagIsChildProcess = 1
+};
+
+MFBT_API void DllBlocklist_Initialize(uint32_t aInitFlags = eDllBlocklistInitFlagDefault);
 MFBT_API void DllBlocklist_WriteNotes(HANDLE file);
 MFBT_API bool DllBlocklist_CheckStatus();
 

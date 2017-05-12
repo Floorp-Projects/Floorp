@@ -12,7 +12,6 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
@@ -142,8 +141,8 @@ function configureLogging() {
 // Returns a Promise resolved with the json payload or rejected with
 // OS.File.Error or JSON.parse() errors.
 function loadJSONAsync(file, options) {
-  return Task.spawn(function*() {
-    let rawData = yield OS.File.read(file, options);
+  return (async function() {
+    let rawData = await OS.File.read(file, options);
     // Read json file into a string
     let data;
     try {
@@ -155,7 +154,7 @@ function loadJSONAsync(file, options) {
       throw ex;
     }
     return data;
-  });
+  })();
 }
 
 // Returns a promise that is resolved with the AddonInstall for that URL.
@@ -175,32 +174,32 @@ function installedExperimentAddons() {
 // addons are uninstalled.
 function uninstallAddons(addons) {
   let ids = new Set(addons.map(addon => addon.id));
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  let listener = {};
-  listener.onUninstalled = addon => {
-    if (!ids.has(addon.id)) {
-      return;
+    let listener = {};
+    listener.onUninstalled = addon => {
+      if (!ids.has(addon.id)) {
+        return;
+      }
+
+      ids.delete(addon.id);
+      if (ids.size == 0) {
+        AddonManager.removeAddonListener(listener);
+        resolve();
+      }
+    };
+
+    AddonManager.addAddonListener(listener);
+
+    for (let addon of addons) {
+      // Disabling the add-on before uninstalling is necessary to cause tests to
+      // pass. This might be indicative of a bug in XPIProvider.
+      // TODO follow up in bug 992396.
+      addon.userDisabled = true;
+      addon.uninstall();
     }
 
-    ids.delete(addon.id);
-    if (ids.size == 0) {
-      AddonManager.removeAddonListener(listener);
-      deferred.resolve();
-    }
-  };
-
-  AddonManager.addAddonListener(listener);
-
-  for (let addon of addons) {
-    // Disabling the add-on before uninstalling is necessary to cause tests to
-    // pass. This might be indicative of a bug in XPIProvider.
-    // TODO follow up in bug 992396.
-    addon.userDisabled = true;
-    addon.uninstall();
-  }
-
-  return deferred.promise;
+  });
 }
 
 /**
@@ -419,9 +418,9 @@ Experiments.Experiments.prototype = {
    * @return Promise<>
    *         The promise is fulfilled when all pending tasks are finished.
    */
-  uninit: Task.async(function* () {
+  async uninit() {
     this._log.trace("uninit: started");
-    yield this._loadTask;
+    await this._loadTask;
     this._log.trace("uninit: finished with _loadTask");
 
     if (!this._shutdown) {
@@ -451,7 +450,7 @@ Experiments.Experiments.prototype = {
       }
       try {
         this._log.trace("uninit: waiting on _mainTask");
-        yield this._mainTask;
+        await this._mainTask;
       } catch (e) {
         // We error out of tasks after shutdown via this exception.
         this._log.trace(`uninit: caught error - ${e}`);
@@ -463,7 +462,7 @@ Experiments.Experiments.prototype = {
     }
 
     this._log.info("Completed uninitialization.");
-  }),
+  },
 
   // Return state information, for debugging purposes.
   _getState() {
@@ -574,7 +573,7 @@ Experiments.Experiments.prototype = {
     gPrefs.set(PREF_ENABLED, enabled);
   },
 
-  _toggleExperimentsEnabled: Task.async(function* (enabled) {
+  async _toggleExperimentsEnabled(enabled) {
     this._log.trace("_toggleExperimentsEnabled(" + enabled + ")");
     let wasEnabled = gExperimentsEnabled;
     gExperimentsEnabled = enabled && TelemetryUtils.isTelemetryEnabled;
@@ -584,14 +583,14 @@ Experiments.Experiments.prototype = {
     }
 
     if (gExperimentsEnabled) {
-      yield this.updateManifest();
+      await this.updateManifest();
     } else {
-      yield this.disableExperiment(TELEMETRY_LOG.TERMINATION.SERVICE_DISABLED);
+      await this.disableExperiment(TELEMETRY_LOG.TERMINATION.SERVICE_DISABLED);
       if (this._timer) {
         this._timer.clear();
       }
     }
-  }),
+  },
 
   _telemetryStatusChanged() {
     this._toggleExperimentsEnabled(gPrefs.get(PREF_ENABLED, false));
@@ -616,8 +615,8 @@ Experiments.Experiments.prototype = {
    * @return Promise<Array<ExperimentInfo>> Array of experiment info objects.
    */
   getExperiments() {
-    return Task.spawn(function*() {
-      yield this._loadTask;
+    return (async () => {
+      await this._loadTask;
       let list = [];
 
       for (let [id, experiment] of this._experiments) {
@@ -640,7 +639,7 @@ Experiments.Experiments.prototype = {
       // Sort chronologically, descending.
       list.sort((a, b) => b.endDate - a.endDate);
       return list;
-    }.bind(this));
+    })();
   },
 
   /**
@@ -675,8 +674,8 @@ Experiments.Experiments.prototype = {
    * Set the experiment branch for the specified experiment ID.
    * @returns Promise<>
    */
-  setExperimentBranch: Task.async(function*(id, branchstr) {
-    yield this._loadTask;
+  async setExperimentBranch(id, branchstr) {
+    await this._loadTask;
     let e = this._experiments.get(id);
     if (!e) {
       throw new Error("Experiment not found");
@@ -685,8 +684,8 @@ Experiments.Experiments.prototype = {
     this._log.trace("setExperimentBranch(" + id + ", " + e.branch + ") _dirty=" + this._dirty);
     this._dirty = true;
     Services.obs.notifyObservers(null, EXPERIMENTS_CHANGED_TOPIC);
-    yield this._run();
-  }),
+    await this._run();
+  },
   /**
    * Get the branch of the specified experiment. If the experiment is unknown,
    * throws an error.
@@ -697,8 +696,8 @@ Experiments.Experiments.prototype = {
    * @throws Error if the specified experiment ID is unknown, or if there is no
    *         current experiment.
    */
-  getExperimentBranch: Task.async(function*(id = null) {
-    yield this._loadTask;
+  async getExperimentBranch(id = null) {
+    await this._loadTask;
     let e;
     if (id) {
       e = this._experiments.get(id);
@@ -712,7 +711,7 @@ Experiments.Experiments.prototype = {
       }
     }
     return e.branch;
-  }),
+  },
 
   /**
    * Determine whether another date has the same UTC day as now().
@@ -734,8 +733,8 @@ Experiments.Experiments.prototype = {
    * @return Promise<object>
    */
   lastActiveToday() {
-    return Task.spawn(function* getMostRecentActiveExperimentTask() {
-      let experiments = yield this.getExperiments();
+    return (async () => {
+      let experiments = await this.getExperiments();
 
       // Assumption: Ordered chronologically, descending, with active always
       // first.
@@ -749,16 +748,16 @@ Experiments.Experiments.prototype = {
         }
       }
       return null;
-    }.bind(this));
+    })();
   },
 
   _run() {
     this._log.trace("_run");
     this._checkForShutdown();
     if (!this._mainTask) {
-      this._mainTask = Task.spawn(function*() {
+      this._mainTask = (async () => {
         try {
-          yield this._main();
+          await this._main();
         } catch (e) {
           // In the CacheWriteError case we want to reschedule
           if (!(e instanceof CacheWriteError)) {
@@ -770,32 +769,32 @@ Experiments.Experiments.prototype = {
         }
         this._log.trace("_main finished, scheduling next run");
         try {
-          yield this._scheduleNextRun();
+          await this._scheduleNextRun();
         } catch (ex) {
           // We error out of tasks after shutdown via this exception.
           if (!(ex instanceof AlreadyShutdownError)) {
             throw ex;
           }
         }
-      }.bind(this));
+      })();
     }
     return this._mainTask;
   },
 
-  *_main() {
+  async _main() {
     do {
       this._log.trace("_main iteration");
-      yield this._loadTask;
+      await this._loadTask;
       if (!gExperimentsEnabled) {
         this._refresh = false;
       }
 
       if (this._refresh) {
-        yield this._loadManifest();
+        await this._loadManifest();
       }
-      yield this._evaluateExperiments();
+      await this._evaluateExperiments();
       if (this._dirty) {
-        yield this._saveToCache();
+        await this._saveToCache();
       }
       // If somebody called .updateManifest() or disableExperiment()
       // while we were running, go again right now.
@@ -803,7 +802,7 @@ Experiments.Experiments.prototype = {
     while (this._refresh || this._terminateReason || this._dirty);
   },
 
-  *_loadManifest() {
+  async _loadManifest() {
     this._log.trace("_loadManifest");
     let uri = Services.urlFormatter.formatURLPref(PREF_BRANCH + PREF_MANIFEST_URI);
 
@@ -811,7 +810,7 @@ Experiments.Experiments.prototype = {
 
     this._refresh = false;
     try {
-      let responseText = yield this._httpGetRequest(uri);
+      let responseText = await this._httpGetRequest(uri);
       this._log.trace("_loadManifest() - responseText=\"" + responseText + "\"");
 
       if (this._shutdown) {
@@ -935,44 +934,44 @@ Experiments.Experiments.prototype = {
     let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
 
     this._networkRequest = xhr;
-    let deferred = Promise.defer();
+    return new Promise((resolve, reject) => {
 
-    let log = this._log;
-    let errorhandler = (evt) => {
-      log.error("httpGetRequest::onError() - Error making request to " + url + ": " + evt.type);
-      deferred.reject(new Error("Experiments - XHR error for " + url + " - " + evt.type));
-      this._networkRequest = null;
-    };
-    xhr.onerror = errorhandler;
-    xhr.ontimeout = errorhandler;
-    xhr.onabort = errorhandler;
-
-    xhr.onload = (event) => {
-      if (xhr.status !== 200 && xhr.state !== 0) {
-        log.error("httpGetRequest::onLoad() - Request to " + url + " returned status " + xhr.status);
-        deferred.reject(new Error("Experiments - XHR status for " + url + " is " + xhr.status));
+      let log = this._log;
+      let errorhandler = (evt) => {
+        log.error("httpGetRequest::onError() - Error making request to " + url + ": " + evt.type);
+        reject(new Error("Experiments - XHR error for " + url + " - " + evt.type));
         this._networkRequest = null;
-        return;
+      };
+      xhr.onerror = errorhandler;
+      xhr.ontimeout = errorhandler;
+      xhr.onabort = errorhandler;
+
+      xhr.onload = (event) => {
+        if (xhr.status !== 200 && xhr.state !== 0) {
+          log.error("httpGetRequest::onLoad() - Request to " + url + " returned status " + xhr.status);
+          reject(new Error("Experiments - XHR status for " + url + " is " + xhr.status));
+          this._networkRequest = null;
+          return;
+        }
+
+        resolve(xhr.responseText);
+        this._networkRequest = null;
+      };
+
+      try {
+        xhr.open("GET", url);
+
+        if (xhr.channel instanceof Ci.nsISupportsPriority) {
+          xhr.channel.priority = Ci.nsISupportsPriority.PRIORITY_LOWEST;
+        }
+
+        xhr.timeout = MANIFEST_FETCH_TIMEOUT_MSEC;
+        xhr.send(null);
+      } catch (e) {
+        this._log.error("httpGetRequest() - Error opening request to " + url + ": " + e);
+        reject(new Error("Experiments - Error opening XHR for " + url));
       }
-
-      deferred.resolve(xhr.responseText);
-      this._networkRequest = null;
-    };
-
-    try {
-      xhr.open("GET", url);
-
-      if (xhr.channel instanceof Ci.nsISupportsPriority) {
-        xhr.channel.priority = Ci.nsISupportsPriority.PRIORITY_LOWEST;
-      }
-
-      xhr.timeout = MANIFEST_FETCH_TIMEOUT_MSEC;
-      xhr.send(null);
-    } catch (e) {
-      this._log.error("httpGetRequest() - Error opening request to " + url + ": " + e);
-      return Promise.reject(new Error("Experiments - Error opening XHR for " + url));
-    }
-    return deferred.promise;
+    });
   },
 
   /*
@@ -985,7 +984,7 @@ Experiments.Experiments.prototype = {
   /*
    * Part of the main task to save the cache to disk, called from _main.
    */
-  *_saveToCache() {
+  async _saveToCache() {
     this._log.trace("_saveToCache");
     let path = this._cacheFilePath;
     this._dirty = false;
@@ -998,7 +997,7 @@ Experiments.Experiments.prototype = {
       let encoder = new TextEncoder();
       let data = encoder.encode(textData);
       let options = { tmpPath: path + ".tmp", compression: "lz4" };
-      yield this._policy.delayCacheWrite(OS.File.writeAtomic(path, data, options));
+      await this._policy.delayCacheWrite(OS.File.writeAtomic(path, data, options));
     } catch (e) {
       // We failed to write the cache, it's still dirty.
       this._dirty = true;
@@ -1012,11 +1011,11 @@ Experiments.Experiments.prototype = {
   /*
    * Task function, load the cached experiments manifest file from disk.
    */
-  _loadFromCache: Task.async(function* () {
+  async _loadFromCache() {
     this._log.trace("_loadFromCache");
     let path = this._cacheFilePath;
     try {
-      let result = yield loadJSONAsync(path, { compression: "lz4" });
+      let result = await loadJSONAsync(path, { compression: "lz4" });
       this._populateFromCache(result);
     } catch (e) {
       if (e instanceof OS.File.Error && e.becauseNoSuchFile) {
@@ -1026,7 +1025,7 @@ Experiments.Experiments.prototype = {
         throw e;
       }
     }
-  }),
+  },
 
   _populateFromCache(data) {
     this._log.trace("populateFromCache() - data: " + JSON.stringify(data));
@@ -1179,7 +1178,7 @@ Experiments.Experiments.prototype = {
    * Task function to check applicability of experiments, disable the active
    * experiment if needed and activate the first applicable candidate.
    */
-  *_evaluateExperiments() {
+  async _evaluateExperiments() {
     this._log.trace("_evaluateExperiments");
 
     this._checkForShutdown();
@@ -1198,14 +1197,14 @@ Experiments.Experiments.prototype = {
     // to not try. Furthermore, if an experiment really did come from us, we
     // should have some record of it. In the end, we decide to discard all
     // knowledge for these unknown experiment add-ons.
-    let installedExperiments = yield installedExperimentAddons();
+    let installedExperiments = await installedExperimentAddons();
     let expectedAddonIds = this._trackedAddonIds;
     let unknownAddons = installedExperiments.filter(a => !expectedAddonIds.has(a.id));
     if (unknownAddons.length) {
       this._log.warn("_evaluateExperiments() - unknown add-ons in AddonManager: " +
                      unknownAddons.map(a => a.id).join(", "));
 
-      yield uninstallAddons(unknownAddons);
+      await uninstallAddons(unknownAddons);
     }
 
     let activeExperiment = this._getActiveExperiment();
@@ -1221,7 +1220,7 @@ Experiments.Experiments.prototype = {
     // abstracted away from us by design.
     if (activeExperiment) {
       let changes;
-      let shouldStopResult = yield activeExperiment.shouldStop();
+      let shouldStopResult = await activeExperiment.shouldStop();
       if (shouldStopResult.shouldStop) {
         let expireReasons = ["endTime", "maxActiveSeconds"];
         let kind, reason;
@@ -1233,11 +1232,11 @@ Experiments.Experiments.prototype = {
           kind = TELEMETRY_LOG.TERMINATION.RECHECK;
           reason = shouldStopResult.reason;
         }
-        changes = yield activeExperiment.stop(kind, reason);
+        changes = await activeExperiment.stop(kind, reason);
       } else if (this._terminateReason) {
-        changes = yield activeExperiment.stop(this._terminateReason);
+        changes = await activeExperiment.stop(this._terminateReason);
       } else {
-        changes = yield activeExperiment.reconcileAddonState();
+        changes = await activeExperiment.reconcileAddonState();
       }
 
       if (changes) {
@@ -1258,7 +1257,7 @@ Experiments.Experiments.prototype = {
         let applicable;
         let reason = null;
         try {
-          applicable = yield experiment.isApplicable();
+          applicable = await experiment.isApplicable();
         } catch (e) {
           applicable = false;
           reason = e;
@@ -1279,7 +1278,7 @@ Experiments.Experiments.prototype = {
 
         this._log.debug("evaluateExperiments() - activating experiment " + id);
         try {
-          yield experiment.start();
+          await experiment.start();
           activeChanged = true;
           activeExperiment = experiment;
           this._dirty = true;
@@ -1288,7 +1287,7 @@ Experiments.Experiments.prototype = {
           // On failure, clean up the best we can and try the next experiment.
           this._log.error("evaluateExperiments() - Unable to start experiment: " + e.message);
           experiment._enabled = false;
-          yield experiment.reconcileAddonState();
+          await experiment.reconcileAddonState();
         }
       }
     }
@@ -1705,7 +1704,7 @@ Experiments.ExperimentEntry.prototype = {
    * Run the jsfilter function from the manifest in a sandbox and return the
    * result (forced to boolean).
    */
-  _runFilterFunction: Task.async(function* (jsfilter) {
+  async _runFilterFunction(jsfilter) {
     this._log.trace("runFilterFunction() - filter: " + jsfilter);
 
     let ssm = Services.scriptSecurityManager;
@@ -1723,7 +1722,7 @@ Experiments.ExperimentEntry.prototype = {
       throw ["jsfilter-evalfailed"];
     }
 
-    let currentEnvironment = yield TelemetryEnvironment.onInitialized();
+    let currentEnvironment = await TelemetryEnvironment.onInitialized();
 
     Object.defineProperty(sandbox, "_e",
       { get: () => Cu.cloneInto(currentEnvironment, sandbox) });
@@ -1744,27 +1743,27 @@ Experiments.ExperimentEntry.prototype = {
     }
 
     return true;
-  }),
+  },
 
   /*
    * Start running the experiment.
    *
    * @return Promise<> Resolved when the operation is complete.
    */
-  start: Task.async(function* () {
+  async start() {
     this._log.trace("start() for " + this.id);
 
     this._enabled = true;
-    return yield this.reconcileAddonState();
-  }),
+    return await this.reconcileAddonState();
+  },
 
   // Async install of the addon for this experiment, part of the start task above.
-  _installAddon: Task.async(function* () {
+  async _installAddon() {
     let deferred = Promise.defer();
 
     let hash = this._policy.ignoreHashes ? null : this._manifestData.xpiHash;
 
-    let install = yield addonInstallForURL(this._manifestData.xpiURL, hash);
+    let install = await addonInstallForURL(this._manifestData.xpiURL, hash);
     gActiveInstallURLs.add(install.sourceURI.spec);
 
     let failureHandler = (failureInstall, handler) => {
@@ -1859,8 +1858,8 @@ Experiments.ExperimentEntry.prototype = {
     install.addListener(listener);
     install.install();
 
-    return yield deferred.promise;
-  }),
+    return await deferred.promise;
+  },
 
   /**
    * Stop running the experiment if it is active.
@@ -1871,7 +1870,7 @@ Experiments.ExperimentEntry.prototype = {
    *        The termination reason details for termination kind RECHECK.
    * @return Promise<> Resolved when the operation is complete.
    */
-  stop: Task.async(function* (terminationKind, terminationReason) {
+  async stop(terminationKind, terminationReason) {
     this._log.trace("stop() - id=" + this.id + ", terminationKind=" + terminationKind);
     if (!this._enabled) {
       throw new Error("Must not call stop() on an inactive experiment.");
@@ -1882,7 +1881,7 @@ Experiments.ExperimentEntry.prototype = {
     this._lastChangedDate = now;
     this._endDate = now;
 
-    let changes = yield this.reconcileAddonState();
+    let changes = await this.reconcileAddonState();
     this._logTermination(terminationKind, terminationReason);
 
     if (terminationKind == TELEMETRY_LOG.TERMINATION.ADDON_UNINSTALLED) {
@@ -1890,7 +1889,7 @@ Experiments.ExperimentEntry.prototype = {
     }
 
     return changes;
-  }),
+  },
 
   /**
    * Reconcile the state of the add-on against what it's supposed to be.
@@ -1899,7 +1898,7 @@ Experiments.ExperimentEntry.prototype = {
    *
    * If we are inactive, ensure the add-on is not installed.
    */
-  reconcileAddonState: Task.async(function* () {
+  async reconcileAddonState() {
     this._log.trace("reconcileAddonState()");
 
     if (!this._enabled) {
@@ -1909,7 +1908,7 @@ Experiments.ExperimentEntry.prototype = {
         return this.ADDON_CHANGE_NONE;
       }
 
-      let addon = yield this._getAddon();
+      let addon = await this._getAddon();
       if (!addon) {
         this._log.trace("reconcileAddonState() - Inactive experiment has no " +
                         "add-on. Doing nothing.");
@@ -1919,7 +1918,7 @@ Experiments.ExperimentEntry.prototype = {
       this._log.info("reconcileAddonState() - Uninstalling add-on for inactive " +
                      "experiment: " + addon.id);
       gActiveUninstallAddonIDs.add(addon.id);
-      yield uninstallAddons([addon]);
+      await uninstallAddons([addon]);
       gActiveUninstallAddonIDs.delete(addon.id);
       return this.ADDON_CHANGE_UNINSTALL;
     }
@@ -1929,7 +1928,7 @@ Experiments.ExperimentEntry.prototype = {
     let changes = 0;
 
     // That requires an add-on.
-    let currentAddon = yield this._getAddon();
+    let currentAddon = await this._getAddon();
 
     // If we have an add-on but it isn't up to date, uninstall it
     // (to prepare for reinstall).
@@ -1937,18 +1936,18 @@ Experiments.ExperimentEntry.prototype = {
       this._log.info("reconcileAddonState() - Uninstalling add-on because update " +
                      "needed: " + currentAddon.id);
       gActiveUninstallAddonIDs.add(currentAddon.id);
-      yield uninstallAddons([currentAddon]);
+      await uninstallAddons([currentAddon]);
       gActiveUninstallAddonIDs.delete(currentAddon.id);
       changes |= this.ADDON_CHANGE_UNINSTALL;
     }
 
     if (!currentAddon || this._needsUpdate) {
       this._log.info("reconcileAddonState() - Installing add-on.");
-      yield this._installAddon();
+      await this._installAddon();
       changes |= this.ADDON_CHANGE_INSTALL;
     }
 
-    let addon = yield this._getAddon();
+    let addon = await this._getAddon();
     if (!addon) {
       throw new Error("Could not obtain add-on for experiment that should be " +
                       "enabled.");
@@ -1969,40 +1968,40 @@ Experiments.ExperimentEntry.prototype = {
       throw new Error("Experiment addon requires a restart: " + addon.id);
     }
 
-    let deferred = Promise.defer();
+    await new Promise((resolve, reject) => {
 
-    // Else we need to enable it.
-    let listener = {
-      onEnabled: enabledAddon => {
-        if (enabledAddon.id != addon.id) {
-          return;
-        }
+      // Else we need to enable it.
+      let listener = {
+        onEnabled: enabledAddon => {
+          if (enabledAddon.id != addon.id) {
+            return;
+          }
 
-        AddonManager.removeAddonListener(listener);
-        deferred.resolve();
-      },
-    };
-
-    for (let handler of ["onDisabled", "onOperationCancelled", "onUninstalled"]) {
-      listener[handler] = (evtAddon) => {
-        if (evtAddon.id != addon.id) {
-          return;
-        }
-
-        AddonManager.removeAddonListener(listener);
-        deferred.reject("Failed to enable addon " + addon.id + " due to: " + handler);
+          AddonManager.removeAddonListener(listener);
+          resolve();
+        },
       };
-    }
 
-    this._log.info("reconcileAddonState() - Activating add-on: " + addon.id);
-    AddonManager.addAddonListener(listener);
-    addon.userDisabled = false;
-    yield deferred.promise;
+      for (let handler of ["onDisabled", "onOperationCancelled", "onUninstalled"]) {
+        listener[handler] = (evtAddon) => {
+          if (evtAddon.id != addon.id) {
+            return;
+          }
+
+          AddonManager.removeAddonListener(listener);
+          reject("Failed to enable addon " + addon.id + " due to: " + handler);
+        };
+      }
+
+      this._log.info("reconcileAddonState() - Activating add-on: " + addon.id);
+      AddonManager.addAddonListener(listener);
+      addon.userDisabled = false;
+    });
     changes |= this.ADDON_CHANGE_ENABLE;
 
     this._log.info("reconcileAddonState() - Add-on has been enabled: " + addon.id);
     return changes;
-   }),
+   },
 
   /**
    * Obtain the underlying Addon from the Addon Manager.
@@ -2050,13 +2049,13 @@ Experiments.ExperimentEntry.prototype = {
       throw new Error("shouldStop must not be called on disabled experiments.");
     }
 
-    let deferred = Promise.defer();
-    this.isApplicable().then(
-      () => deferred.resolve({shouldStop: false}),
-      reason => deferred.resolve({shouldStop: true, reason})
-    );
+    return new Promise(resolve => {
+      this.isApplicable().then(
+        () => resolve({shouldStop: false}),
+        reason => resolve({shouldStop: true, reason})
+      );
 
-    return deferred.promise;
+    });
   },
 
   /*

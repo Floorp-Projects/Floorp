@@ -5,7 +5,7 @@
 description: Rest object contains just soruce object's own properties (method)
 esid: sec-runtime-semantics-definemethod
 es6id: 14.3.8
-features: [destructuring-binding]
+features: [object-rest, destructuring-binding]
 flags: [generated]
 includes: [propertyHelper.js]
 info: |

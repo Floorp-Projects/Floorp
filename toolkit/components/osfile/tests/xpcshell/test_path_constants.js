@@ -29,7 +29,7 @@ function compare_paths(ospath, key) {
 
 // Some path constants aren't set up until the profile is available. This
 // test verifies that behavior.
-add_task(function* test_before_after_profile() {
+add_task(async function test_before_after_profile() {
   do_check_null(OS.Constants.Path.profileDir);
   do_check_null(OS.Constants.Path.localProfileDir);
   do_check_null(OS.Constants.Path.userApplicationDataDir);
@@ -43,21 +43,21 @@ add_task(function* test_before_after_profile() {
   // changes. We want to know if our assumptions no longer hold!
   do_check_null(OS.Constants.Path.userApplicationDataDir);
 
-  yield makeFakeAppDir();
+  await makeFakeAppDir();
   do_check_true(!!OS.Constants.Path.userApplicationDataDir);
 
   // FUTURE: verify AppData too (bug 964291).
 });
 
 // Test simple paths
-add_task(function* test_simple_paths() {
+add_task(async function test_simple_paths() {
   do_check_true(!!OS.Constants.Path.tmpDir);
   compare_paths(OS.Constants.Path.tmpDir, "TmpD");
 
 });
 
 // Test presence of paths that only exist on Desktop platforms
-add_task(function* test_desktop_paths() {
+add_task(async function test_desktop_paths() {
   if (OS.Constants.Sys.Name == "Android" || OS.Constants.Sys.Name == "Gonk") {
     return;
   }
@@ -77,7 +77,7 @@ add_task(function* test_desktop_paths() {
 });
 
 // Open libxul
-add_task(function* test_libxul() {
+add_task(async function test_libxul() {
   ctypes.open(OS.Constants.Path.libxul);
   do_print("Linked to libxul");
 });

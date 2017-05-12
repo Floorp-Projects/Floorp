@@ -15,7 +15,6 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/PromiseUtils.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesBackups",
   "resource://gre/modules/PlacesBackups.jsm");
@@ -57,18 +56,18 @@ this.BookmarkJSONUtils = Object.freeze({
    * @rejects JavaScript exception.
    */
   importFromURL: function BJU_importFromURL(aSpec, aReplace) {
-    return Task.spawn(function* () {
+    return (async function() {
       notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_BEGIN);
       try {
         let importer = new BookmarkImporter(aReplace);
-        yield importer.importFromURL(aSpec);
+        await importer.importFromURL(aSpec);
 
         notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_SUCCESS);
       } catch (ex) {
         Cu.reportError("Failed to restore bookmarks from " + aSpec + ": " + ex);
         notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_FAILED);
       }
-    });
+    })();
   },
 
   /**
@@ -94,17 +93,17 @@ this.BookmarkJSONUtils = Object.freeze({
       aFilePath = aFilePath.path;
     }
 
-    return Task.spawn(function* () {
+    return (async function() {
       notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_BEGIN);
       try {
-        if (!(yield OS.File.exists(aFilePath)))
+        if (!(await OS.File.exists(aFilePath)))
           throw new Error("Cannot restore from nonexisting json file");
 
         let importer = new BookmarkImporter(aReplace);
         if (aFilePath.endsWith("jsonlz4")) {
-          yield importer.importFromCompressedFile(aFilePath);
+          await importer.importFromCompressedFile(aFilePath);
         } else {
-          yield importer.importFromURL(OS.Path.toFileURI(aFilePath));
+          await importer.importFromURL(OS.Path.toFileURI(aFilePath));
         }
         notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_SUCCESS);
       } catch (ex) {
@@ -112,7 +111,7 @@ this.BookmarkJSONUtils = Object.freeze({
         notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_FAILED);
         throw ex;
       }
-    });
+    })();
   },
 
   /**
@@ -140,8 +139,8 @@ this.BookmarkJSONUtils = Object.freeze({
                          "https://developer.mozilla.org/docs/JavaScript_OS.File");
       aFilePath = aFilePath.path;
     }
-    return Task.spawn(function* () {
-      let [bookmarks, count] = yield PlacesBackups.getBookmarksTree();
+    return (async function() {
+      let [bookmarks, count] = await PlacesBackups.getBookmarksTree();
       let startTime = Date.now();
       let jsonString = JSON.stringify(bookmarks);
       // Report the time taken to convert the tree to JSON.
@@ -168,9 +167,9 @@ this.BookmarkJSONUtils = Object.freeze({
       if (aOptions.compress)
         writeOptions.compression = "lz4";
 
-      yield OS.File.writeAtomic(aFilePath, jsonString, writeOptions);
+      await OS.File.writeAtomic(aFilePath, jsonString, writeOptions);
       return { count, hash };
-    });
+    })();
   }
 });
 
@@ -232,13 +231,13 @@ BookmarkImporter.prototype = {
    * @resolves When the new bookmarks have been created.
    * @rejects JavaScript exception.
    */
-  importFromCompressedFile: function* BI_importFromCompressedFile(aFilePath) {
-      let aResult = yield OS.File.read(aFilePath, { compression: "lz4" });
+  importFromCompressedFile: async function BI_importFromCompressedFile(aFilePath) {
+      let aResult = await OS.File.read(aFilePath, { compression: "lz4" });
       let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
                         createInstance(Ci.nsIScriptableUnicodeConverter);
       converter.charset = "UTF-8";
       let jsonString = converter.convertFromByteArray(aResult, aResult.length);
-      yield this.importFromJSON(jsonString);
+      await this.importFromJSON(jsonString);
   },
 
   /**
@@ -247,7 +246,7 @@ BookmarkImporter.prototype = {
    * @param aString
    *        JSON string of serialized bookmark data.
    */
-  importFromJSON: Task.async(function* (aString) {
+  async importFromJSON(aString) {
     this._importPromises = [];
     let deferred = PromiseUtils.defer();
     let nodes =
@@ -364,15 +363,15 @@ BookmarkImporter.prototype = {
 
       PlacesUtils.bookmarks.runInBatchMode(batch, null);
     }
-    yield deferred.promise;
+    await deferred.promise;
     // TODO (bug 1095426) once converted to the new bookmarks API, methods will
     // yield, so this hack should not be needed anymore.
     try {
-      yield Promise.all(this._importPromises);
+      await Promise.all(this._importPromises);
     } finally {
       delete this._importPromises;
     }
-  }),
+  },
 
   /**
    * Takes a JSON-serialized node and inserts it into the db.

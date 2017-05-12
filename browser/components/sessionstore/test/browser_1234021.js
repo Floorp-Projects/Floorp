@@ -5,14 +5,14 @@ const PAGE_URL = "http://mochi.test:8888/browser/" +
         "browser/components/sessionstore/test/browser_1234021_page.html";
 const BEHAVIOR_REJECT = 2;
 
-add_task(function* test() {
-  yield pushPrefs([PREF, BEHAVIOR_REJECT]);
+add_task(async function test() {
+  await pushPrefs([PREF, BEHAVIOR_REJECT]);
 
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: PAGE_URL
-  }, function* handler(aBrowser) {
-    yield TabStateFlusher.flush(aBrowser);
+  }, async function handler(aBrowser) {
+    await TabStateFlusher.flush(aBrowser);
     ok(true, "Flush didn't time out");
   });
 });

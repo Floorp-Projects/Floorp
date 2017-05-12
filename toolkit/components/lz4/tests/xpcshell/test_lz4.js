@@ -13,31 +13,31 @@ function run_test() {
 
 add_task(function() {
   let worker = new ChromeWorker(WORKER_SOURCE_URI);
-  let deferred = Promise.defer();
-  worker.onmessage = function(event) {
-    let data = event.data;
-    switch (data.kind) {
-      case "do_check_true":
-        try {
-          do_check_true(data.args[0]);
-        } catch (ex) {
-          // Ignore errors
-        }
-        return;
-      case "do_test_complete":
-        deferred.resolve();
-        worker.terminate();
-        break;
-      case "do_print":
-        do_print(data.args[0]);
-    }
-  };
-  worker.onerror = function(event) {
-    let error = new Error(event.message, event.filename, event.lineno);
-    worker.terminate();
-    deferred.reject(error);
-  };
-  worker.postMessage("START");
-  return deferred.promise;
+  return new Promise((resolve, reject) => {
+    worker.onmessage = function(event) {
+      let data = event.data;
+      switch (data.kind) {
+        case "do_check_true":
+          try {
+            do_check_true(data.args[0]);
+          } catch (ex) {
+            // Ignore errors
+          }
+          return;
+        case "do_test_complete":
+          resolve();
+          worker.terminate();
+          break;
+        case "do_print":
+          do_print(data.args[0]);
+      }
+    };
+    worker.onerror = function(event) {
+      let error = new Error(event.message, event.filename, event.lineno);
+      worker.terminate();
+      reject(error);
+    };
+    worker.postMessage("START");
+  });
 });
 

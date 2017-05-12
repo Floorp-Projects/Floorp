@@ -17,7 +17,7 @@ const TESTKEY = {
 const USER_ID_DEFAULT = 0;
 const USER_ID_PERSONAL = 1;
 
-function* openTabInUserContext(uri, userContextId) {
+async function openTabInUserContext(uri, userContextId) {
   // Open the tab in the correct userContextId.
   let tab = gBrowser.addTab(uri, {userContextId});
 
@@ -26,7 +26,7 @@ function* openTabInUserContext(uri, userContextId) {
   tab.ownerGlobal.focus();
 
   let browser = gBrowser.getBrowserForTab(tab);
-  yield BrowserTestUtils.browserLoaded(browser);
+  await BrowserTestUtils.browserLoaded(browser);
   return {tab, browser};
 }
 
@@ -81,9 +81,9 @@ function generateKeyInfo(aData) {
   return keyInfo;
 }
 
-add_task(function* setup() {
+add_task(async function setup() {
   // Make sure userContext is enabled.
-  yield SpecialPowers.pushPrefEnv({"set": [
+  await SpecialPowers.pushPrefEnv({"set": [
     [ "privacy.userContext.enabled", true ],
     [ "media.mediasource.enabled", true ],
     [ "media.mediasource.webm.enabled", true ],
@@ -91,28 +91,28 @@ add_task(function* setup() {
   ]});
 });
 
-add_task(function* test() {
+add_task(async function test() {
   // Open a tab with the default container.
-  let defaultContainer = yield openTabInUserContext(TEST_URL + "empty_file.html", USER_ID_DEFAULT);
+  let defaultContainer = await openTabInUserContext(TEST_URL + "empty_file.html", USER_ID_DEFAULT);
 
   // Generate the key info for the default container.
   let keyInfo = generateKeyInfo(TESTKEY);
 
   // Update the media key for the default container.
-  let result = yield ContentTask.spawn(defaultContainer.browser, keyInfo, function* (aKeyInfo) {
-    let access = yield content.navigator.requestMediaKeySystemAccess("org.w3.clearkey",
+  let result = await ContentTask.spawn(defaultContainer.browser, keyInfo, async function(aKeyInfo) {
+    let access = await content.navigator.requestMediaKeySystemAccess("org.w3.clearkey",
                                                                      [{
                                                                        initDataTypes: [aKeyInfo.initDataType],
                                                                        videoCapabilities: [{contentType: "video/webm"}],
                                                                        sessionTypes: ["persistent-license"],
                                                                        persistentState: "required",
                                                                      }]);
-    let mediaKeys = yield access.createMediaKeys();
+    let mediaKeys = await access.createMediaKeys();
     let session = mediaKeys.createSession(aKeyInfo.sessionType);
     let res = {};
 
     // Insert the media key.
-    yield new Promise(resolve => {
+    await new Promise(resolve => {
       session.addEventListener("message", function(event) {
         session.update(aKeyInfo.keyObj).then(
           () => { resolve(); }
@@ -138,7 +138,7 @@ add_task(function* test() {
 
     // Close the session.
     session.close();
-    yield session.closed;
+    await session.closed;
 
     return res;
   });
@@ -150,22 +150,22 @@ add_task(function* test() {
   keyInfo.sessionId = result.sessionId;
 
   // Open a tab with personal container.
-  let personalContainer = yield openTabInUserContext(TEST_URL + "empty_file.html", USER_ID_PERSONAL);
+  let personalContainer = await openTabInUserContext(TEST_URL + "empty_file.html", USER_ID_PERSONAL);
 
-  yield ContentTask.spawn(personalContainer.browser, keyInfo, function* (aKeyInfo) {
-    let access = yield content.navigator.requestMediaKeySystemAccess("org.w3.clearkey",
+  await ContentTask.spawn(personalContainer.browser, keyInfo, async function(aKeyInfo) {
+    let access = await content.navigator.requestMediaKeySystemAccess("org.w3.clearkey",
                                                                      [{
                                                                        initDataTypes: [aKeyInfo.initDataType],
                                                                        videoCapabilities: [{contentType: "video/webm"}],
                                                                        sessionTypes: ["persistent-license"],
                                                                        persistentState: "required",
                                                                      }]);
-    let mediaKeys = yield access.createMediaKeys();
+    let mediaKeys = await access.createMediaKeys();
     let session = mediaKeys.createSession(aKeyInfo.sessionType);
 
     // First, load the session to check that mediakeys do not share with
     // default container.
-    yield session.load(aKeyInfo.sessionId);
+    await session.load(aKeyInfo.sessionId);
 
     let map = session.keyStatuses;
 
@@ -174,8 +174,8 @@ add_task(function* test() {
   });
 
   // Close default container tab.
-  yield BrowserTestUtils.removeTab(defaultContainer.tab);
+  await BrowserTestUtils.removeTab(defaultContainer.tab);
 
   // Close personal container tab.
-  yield BrowserTestUtils.removeTab(personalContainer.tab);
+  await BrowserTestUtils.removeTab(personalContainer.tab);
 });

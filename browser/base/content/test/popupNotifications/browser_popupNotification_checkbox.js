@@ -82,12 +82,12 @@ var tests = [
       };
       gNotification = showNotification(this.notifyObj);
     },
-    *onShown(popup) {
+    async onShown(popup) {
       checkPopup(popup, this.notifyObj);
       let notification = popup.childNodes[0];
       let checkbox = notification.checkbox;
       checkCheckbox(checkbox, "This is a checkbox");
-      yield promiseElementVisible(checkbox);
+      await promiseElementVisible(checkbox);
       EventUtils.synthesizeMouseAtCenter(checkbox, {});
       checkCheckbox(checkbox, "This is a checkbox", true);
       triggerMainCommand(popup);
@@ -111,12 +111,12 @@ var tests = [
       };
       gNotification = showNotification(this.notifyObj);
     },
-    *onShown(popup) {
+    async onShown(popup) {
       checkPopup(popup, this.notifyObj);
       let notification = popup.childNodes[0];
       let checkbox = notification.checkbox;
       checkCheckbox(checkbox, "This is a checkbox");
-      yield promiseElementVisible(checkbox);
+      await promiseElementVisible(checkbox);
       EventUtils.synthesizeMouseAtCenter(checkbox, {});
       checkCheckbox(checkbox, "This is a checkbox", true);
       triggerSecondaryCommand(popup, 0);
@@ -139,20 +139,20 @@ var tests = [
       };
       gNotification = showNotification(this.notifyObj);
     },
-    *onShown(popup) {
+    async onShown(popup) {
       checkPopup(popup, this.notifyObj);
       let notification = popup.childNodes[0];
       let checkbox = notification.checkbox;
       checkCheckbox(checkbox, "This is a checkbox");
-      yield promiseElementVisible(checkbox);
+      await promiseElementVisible(checkbox);
       EventUtils.synthesizeMouseAtCenter(checkbox, {});
       dismissNotification(popup);
     },
-    *onHidden(popup) {
+    async onHidden(popup) {
       let icon = document.getElementById("default-notification-icon");
       let shown = waitForNotificationPanel();
       EventUtils.synthesizeMouseAtCenter(icon, {});
-      yield shown;
+      await shown;
       let notification = popup.childNodes[0];
       let checkbox = notification.checkbox;
       checkCheckbox(checkbox, "This is a checkbox", true);
@@ -196,7 +196,7 @@ var tests = [
           };
           gNotification = showNotification(this.notifyObj);
         },
-        *onShown(popup) {
+        async onShown(popup) {
           checkPopup(popup, this.notifyObj);
           let notification = popup.childNodes[0];
           let checkbox = notification.checkbox;
@@ -205,7 +205,7 @@ var tests = [
 
           checkCheckbox(checkbox, "This is a checkbox", checked);
           checkMainAction(notification, disabled);
-          yield promiseElementVisible(checkbox);
+          await promiseElementVisible(checkbox);
           EventUtils.synthesizeMouseAtCenter(checkbox, {});
           checkCheckbox(checkbox, "This is a checkbox", !checked);
           checkMainAction(notification, !disabled);

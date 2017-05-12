@@ -6,7 +6,7 @@ Cu.import("resource://gre/modules/Extension.jsm");
 
 const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
 
-function* generateAddon(data) {
+async function generateAddon(data) {
   let id = uuidGenerator.generateUUID().number;
 
   data = Object.assign({embedded: true}, data);
@@ -22,13 +22,13 @@ function* generateAddon(data) {
   let jarURI = NetUtil.newURI(`jar:${fileURI.spec}!/webextension/`);
 
   let extension = new ExtensionData(jarURI);
-  yield extension.loadManifest();
+  await extension.loadManifest();
 
   return extension;
 }
 
-add_task(function* testMissingDefaultLocale() {
-  let extension = yield generateAddon({
+add_task(async function testMissingDefaultLocale() {
+  let extension = await generateAddon({
     "files": {
       "_locales/en_US/messages.json": {},
     },
@@ -36,7 +36,7 @@ add_task(function* testMissingDefaultLocale() {
 
   equal(extension.errors.length, 0, "No errors reported");
 
-  yield extension.initAllLocales();
+  await extension.initAllLocales();
 
   equal(extension.errors.length, 1, "One error reported");
 
@@ -47,8 +47,8 @@ add_task(function* testMissingDefaultLocale() {
 });
 
 
-add_task(function* testInvalidDefaultLocale() {
-  let extension = yield generateAddon({
+add_task(async function testInvalidDefaultLocale() {
+  let extension = await generateAddon({
     "manifest": {
       "default_locale": "en",
     },
@@ -65,7 +65,7 @@ add_task(function* testInvalidDefaultLocale() {
   ok(extension.errors[0].includes("Loading locale file _locales/en/messages.json"),
      "Got invalid default_locale error");
 
-  yield extension.initAllLocales();
+  await extension.initAllLocales();
 
   equal(extension.errors.length, 2, "Two errors reported");
 
@@ -76,8 +76,8 @@ add_task(function* testInvalidDefaultLocale() {
 });
 
 
-add_task(function* testUnexpectedDefaultLocale() {
-  let extension = yield generateAddon({
+add_task(async function testUnexpectedDefaultLocale() {
+  let extension = await generateAddon({
     "manifest": {
       "default_locale": "en_US",
     },
@@ -90,7 +90,7 @@ add_task(function* testUnexpectedDefaultLocale() {
   ok(extension.errors[0].includes("Loading locale file _locales/en-US/messages.json"),
      "Got invalid default_locale error");
 
-  yield extension.initAllLocales();
+  await extension.initAllLocales();
 
   equal(extension.errors.length, 2, "One error reported");
 
@@ -101,8 +101,8 @@ add_task(function* testUnexpectedDefaultLocale() {
 });
 
 
-add_task(function* testInvalidSyntax() {
-  let extension = yield generateAddon({
+add_task(async function testInvalidSyntax() {
+  let extension = await generateAddon({
     "manifest": {
       "default_locale": "en_US",
     },
@@ -119,7 +119,7 @@ add_task(function* testInvalidSyntax() {
   ok(extension.errors[0].includes("Loading locale file _locales\/en_US\/messages\.json: SyntaxError"),
      "Got syntax error");
 
-  yield extension.initAllLocales();
+  await extension.initAllLocales();
 
   equal(extension.errors.length, 2, "One error reported");
 

@@ -10,5 +10,6 @@
 	<!-- This page could eventually request permissions from content
 	     and make sure that chrome responds appropriately -->
   <button id="geo" onclick="navigator.geolocation.getCurrentPosition(() => {})">Geolocation</button>
+  <button id="camera" onclick="navigator.mediaDevices.getUserMedia({video: true, fake: true})">Camera</button>
   </body>
 </html>

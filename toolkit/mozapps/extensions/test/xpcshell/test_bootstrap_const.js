@@ -5,13 +5,13 @@
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
 startupManager();
 
-add_task(function*() {
+add_task(async function() {
   let sawInstall = false;
   Services.obs.addObserver(function() {
     sawInstall = true;
   }, "addon-install");
 
-  yield promiseInstallAllFiles([do_get_addon("test_bootstrap_const")]);
+  await promiseInstallAllFiles([do_get_addon("test_bootstrap_const")]);
 
   ok(sawInstall);
 });

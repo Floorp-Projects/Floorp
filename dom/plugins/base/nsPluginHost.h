@@ -6,11 +6,12 @@
 #ifndef nsPluginHost_h_
 #define nsPluginHost_h_
 
+#include "mozilla/LinkedList.h"
+
 #include "nsIPluginHost.h"
 #include "nsIObserver.h"
 #include "nsCOMPtr.h"
 #include "prlink.h"
-#include "prclist.h"
 #include "nsIPluginTag.h"
 #include "nsPluginsDir.h"
 #include "nsPluginDirServiceProvider.h"
@@ -414,7 +415,7 @@ private:
   static nsPluginHost* sInst;
 };
 
-class PluginDestructionGuard : protected PRCList
+class PluginDestructionGuard : public mozilla::LinkedListElement<PluginDestructionGuard>
 {
 public:
   explicit PluginDestructionGuard(nsNPAPIPluginInstance *aInstance);
@@ -432,8 +433,7 @@ protected:
 
     mDelayedDestroy = false;
 
-    PR_INIT_CLIST(this);
-    PR_INSERT_BEFORE(this, &sListHead);
+    sList.insertBack(this);
   }
 
   void InitAsync()
@@ -442,16 +442,15 @@ protected:
 
     mDelayedDestroy = false;
 
-    PR_INIT_CLIST(this);
-    // Instances with active surrogates must be inserted *after* sListHead so
+    // Instances with active surrogates must be inserted *in front of* sList so
     // that they appear to be at the bottom of the stack
-    PR_INSERT_AFTER(this, &sListHead);
+    sList.insertFront(this);
   }
 
   RefPtr<nsNPAPIPluginInstance> mInstance;
   bool mDelayedDestroy;
 
-  static PRCList sListHead;
+  static mozilla::LinkedList<PluginDestructionGuard> sList;
 };
 
 #endif // nsPluginHost_h_

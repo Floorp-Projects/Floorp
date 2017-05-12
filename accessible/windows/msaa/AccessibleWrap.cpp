@@ -15,6 +15,7 @@
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
 #include "nsIAccessibleEvent.h"
+#include "nsWindowsHelpers.h"
 #include "nsWinUtils.h"
 #include "mozilla/a11y/ProxyAccessible.h"
 #include "ProxyWrappers.h"
@@ -1565,13 +1566,12 @@ AccessibleWrap::UpdateSystemCaretFor(Accessible* aAccessible)
 
   // Create invisible bitmap for caret, otherwise its appearance interferes
   // with Gecko caret
-  HBITMAP caretBitMap = CreateBitmap(1, caretRect.height, 1, 1, nullptr);
+  nsAutoBitmap caretBitMap(CreateBitmap(1, caretRect.height, 1, 1, nullptr));
   if (::CreateCaret(caretWnd, caretBitMap, 1, caretRect.height)) {  // Also destroys the last caret
     ::ShowCaret(caretWnd);
     RECT windowRect;
     ::GetWindowRect(caretWnd, &windowRect);
     ::SetCaretPos(caretRect.x - windowRect.left, caretRect.y - windowRect.top);
-    ::DeleteObject(caretBitMap);
   }
 }
 

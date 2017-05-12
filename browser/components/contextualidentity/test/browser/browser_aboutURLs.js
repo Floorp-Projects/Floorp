@@ -4,7 +4,7 @@
 // See Bug 1270998.
 requestLongerTimeout(2);
 
-add_task(function* () {
+add_task(async function() {
   let aboutURLs = [];
 
   // List of about: URLs that will initiate network requests.
@@ -40,10 +40,10 @@ add_task(function* () {
   for (let url of aboutURLs) {
     info("Loading about:" + url);
     let tab = gBrowser.addTab("about:" + url, {userContextId: 1});
-    yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+    await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
     ok(true, "Done loading about:" + url);
 
-    yield BrowserTestUtils.removeTab(tab);
+    await BrowserTestUtils.removeTab(tab);
   }
 });

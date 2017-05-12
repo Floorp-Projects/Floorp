@@ -227,7 +227,7 @@ private:
 
 #ifdef MOZ_WIDGET_ANDROID
 public:
-  void SetFixedLayerMarginsBottom(ScreenIntCoord aBottom);
+  void SetFixedLayerMargins(ScreenIntCoord aTop, ScreenIntCoord aBottom);
 private:
   // The following two fields are only needed on Fennec with C++ APZ, because
   // then we need to reposition the gecko scrollbar to deal with the

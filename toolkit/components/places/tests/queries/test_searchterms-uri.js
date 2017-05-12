@@ -45,8 +45,8 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_searchterms_uri() {
-  yield task_populateDB(testData);
+add_task(async function test_searchterms_uri() {
+  await task_populateDB(testData);
    var query = PlacesUtils.history.getNewQuery();
    query.searchTerms = "moz";
    query.uri = uri("http://foo.com");
@@ -73,12 +73,12 @@ add_task(function* test_searchterms_uri() {
    do_print("change title");
    var change1 = [{isDetails: true, uri: "http://foo.com/",
                    title: "mo"}, ];
-   yield task_populateDB(change1);
+   await task_populateDB(change1);
 
    do_check_false(isInResult({uri: "http://foo.com/"}, root));
    var change2 = [{isDetails: true, uri: "http://foo.com/",
                    title: "moz"}, ];
-   yield task_populateDB(change2);
+   await task_populateDB(change2);
    do_check_true(isInResult({uri: "http://foo.com/"}, root));
 
    root.containerOpen = false;

@@ -14,21 +14,21 @@ registerCleanupFunction(function() {
  * the user to enable this automatically re-selecting. We then check that
  * checking the checkbox does actually enable that behaviour.
  */
-add_task(function*() {
+add_task(async function() {
   let firstTab = gBrowser.selectedTab;
   // load page that opens prompt when page is hidden
-  let openedTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, pageWithAlert, true);
+  let openedTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageWithAlert, true);
   let openedTabGotAttentionPromise = BrowserTestUtils.waitForAttribute("attention", openedTab, "true");
   // switch away from that tab again - this triggers the alert.
-  yield BrowserTestUtils.switchTab(gBrowser, firstTab);
+  await BrowserTestUtils.switchTab(gBrowser, firstTab);
   // ... but that's async on e10s...
-  yield openedTabGotAttentionPromise;
+  await openedTabGotAttentionPromise;
   // check for attention attribute
   is(openedTab.getAttribute("attention"), "true", "Tab with alert should have 'attention' attribute.");
   ok(!openedTab.selected, "Tab with alert should not be selected");
 
   // switch tab back, and check the checkbox is displayed:
-  yield BrowserTestUtils.switchTab(gBrowser, openedTab);
+  await BrowserTestUtils.switchTab(gBrowser, openedTab);
   // check the prompt is there, and the extra row is present
   let prompts = openedTab.linkedBrowser.parentNode.querySelectorAll("tabmodalprompt");
   is(prompts.length, 1, "There should be 1 prompt");
@@ -42,7 +42,7 @@ add_task(function*() {
   checkbox.checked = true;
   ourPrompt.onButtonClick(0);
   // Wait for that click to actually be handled completely.
-  yield new Promise(function(resolve) {
+  await new Promise(function(resolve) {
     Services.tm.dispatchToMainThread(resolve);
   });
   // check permission is set
@@ -53,7 +53,7 @@ add_task(function*() {
   // Check if the control center shows the correct permission.
   let shown = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "popupshown");
   gIdentityHandler._identityBox.click();
-  yield shown;
+  await shown;
   let labelText = SitePermissions.getPermissionLabel("focus-tab-by-prompt");
   let permissionsList = document.getElementById("identity-popup-permission-list");
   let label = permissionsList.querySelector(".identity-popup-permission-label");
@@ -66,14 +66,14 @@ add_task(function*() {
 
   let openedTabSelectedPromise = BrowserTestUtils.waitForAttribute("selected", openedTab, "true");
   // switch to other tab again
-  yield BrowserTestUtils.switchTab(gBrowser, firstTab);
+  await BrowserTestUtils.switchTab(gBrowser, firstTab);
 
   // This is sync in non-e10s, but in e10s we need to wait for this, so yield anyway.
   // Note that the switchTab promise doesn't actually guarantee anything about *which*
   // tab ends up as selected when its event fires, so using that here wouldn't work.
-  yield openedTabSelectedPromise;
+  await openedTabSelectedPromise;
   // should be switched back
   ok(openedTab.selected, "Ta-dah, the other tab should now be selected again!");
 
-  yield BrowserTestUtils.removeTab(openedTab);
+  await BrowserTestUtils.removeTab(openedTab);
 });

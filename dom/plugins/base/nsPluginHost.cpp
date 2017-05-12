@@ -3851,20 +3851,19 @@ nsPluginHost::CanUsePluginForMIMEType(const nsACString& aMIMEType)
 // Runnable that does an async destroy of a plugin.
 
 class nsPluginDestroyRunnable : public Runnable,
-                                public PRCList
+                                public mozilla::LinkedListElement<nsPluginDestroyRunnable>
 {
 public:
   explicit nsPluginDestroyRunnable(nsNPAPIPluginInstance *aInstance)
     : Runnable("nsPluginDestroyRunnable"),
       mInstance(aInstance)
   {
-    PR_INIT_CLIST(this);
-    PR_APPEND_LINK(this, &sRunnableListHead);
+    sRunnableList.insertBack(this);
   }
 
   ~nsPluginDestroyRunnable() override
   {
-    PR_REMOVE_LINK(this);
+    this->remove();
   }
 
   NS_IMETHOD Run() override
@@ -3882,16 +3881,12 @@ public:
       return NS_OK;
     }
 
-    nsPluginDestroyRunnable *r =
-      static_cast<nsPluginDestroyRunnable*>(PR_NEXT_LINK(&sRunnableListHead));
-
-    while (r != &sRunnableListHead) {
+    for (auto r : sRunnableList) {
       if (r != this && r->mInstance == instance) {
         // There's another runnable scheduled to tear down
         // instance. Let it do the job.
         return NS_OK;
       }
-      r = static_cast<nsPluginDestroyRunnable*>(PR_NEXT_LINK(r));
     }
 
     PLUGIN_LOG(PLUGIN_LOG_NORMAL,
@@ -3910,14 +3905,12 @@ public:
 protected:
   RefPtr<nsNPAPIPluginInstance> mInstance;
 
-  static PRCList sRunnableListHead;
+  static mozilla::LinkedList<nsPluginDestroyRunnable> sRunnableList;
 };
 
-PRCList nsPluginDestroyRunnable::sRunnableListHead =
-  PR_INIT_STATIC_CLIST(&nsPluginDestroyRunnable::sRunnableListHead);
+mozilla::LinkedList<nsPluginDestroyRunnable> nsPluginDestroyRunnable::sRunnableList;
 
-PRCList PluginDestructionGuard::sListHead =
-  PR_INIT_STATIC_CLIST(&PluginDestructionGuard::sListHead);
+mozilla::LinkedList<PluginDestructionGuard> PluginDestructionGuard::sList;
 
 PluginDestructionGuard::PluginDestructionGuard(nsNPAPIPluginInstance *aInstance)
   : mInstance(aInstance)
@@ -3941,7 +3934,7 @@ PluginDestructionGuard::~PluginDestructionGuard()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on the main thread");
 
-  PR_REMOVE_LINK(this);
+  this->remove();
 
   if (mDelayedDestroy) {
     // We've attempted to destroy the plugin instance we're holding on
@@ -3964,16 +3957,12 @@ PluginDestructionGuard::DelayDestroy(nsNPAPIPluginInstance *aInstance)
   // Find the first guard on the stack and make it do a delayed
   // destroy upon destruction.
 
-  PluginDestructionGuard *g =
-    static_cast<PluginDestructionGuard*>(PR_LIST_HEAD(&sListHead));
-
-  while (g != &sListHead) {
+  for (auto g : sList) {
     if (g->mInstance == aInstance) {
       g->mDelayedDestroy = true;
 
       return true;
     }
-    g = static_cast<PluginDestructionGuard*>(PR_NEXT_LINK(g));
   }
 
   return false;

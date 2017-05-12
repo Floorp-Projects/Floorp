@@ -5,7 +5,7 @@
 
 const {GlobalManager} = Cu.import("resource://gre/modules/Extension.jsm", {});
 
-add_task(function* test_global_manager_shutdown_cleanup() {
+add_task(async function test_global_manager_shutdown_cleanup() {
   equal(GlobalManager.initialized, false,
         "GlobalManager start as not initialized");
 
@@ -17,13 +17,13 @@ add_task(function* test_global_manager_shutdown_cleanup() {
     background,
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("background page loaded");
+  await extension.startup();
+  await extension.awaitFinish("background page loaded");
 
   equal(GlobalManager.initialized, true,
         "GlobalManager has been initialized once an extension is started");
 
-  yield extension.unload();
+  await extension.unload();
 
   equal(GlobalManager.initialized, false,
         "GlobalManager has been uninitialized once all the webextensions have been stopped");

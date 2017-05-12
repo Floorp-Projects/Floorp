@@ -165,21 +165,21 @@ function compareLists(list1, list2, kind) {
   is(String(list1), String(list2), `${kind} URLs correct`);
 }
 
-function* test_once() {
+async function test_once() {
   WebRequest.onBeforeRequest.addListener(onBeforeRequest, null, ["blocking"]);
   WebRequest.onBeforeSendHeaders.addListener(onBeforeSendHeaders, null, ["blocking"]);
   WebRequest.onBeforeRedirect.addListener(onBeforeRedirect);
   WebRequest.onResponseStarted.addListener(onResponseStarted);
 
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" },
-    function* (browser) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" },
+    async function(browser) {
       expected_browser = browser;
       BrowserTestUtils.loadURI(browser, URL);
-      yield BrowserTestUtils.browserLoaded(expected_browser);
+      await BrowserTestUtils.browserLoaded(expected_browser);
 
       expected_browser = null;
 
-      yield ContentTask.spawn(browser, null, function() {
+      await ContentTask.spawn(browser, null, function() {
         let win = content.wrappedJSObject;
         is(win.success, 2, "Good script ran");
         is(win.failure, undefined, "Failure script didn't run");

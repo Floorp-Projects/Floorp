@@ -5,11 +5,11 @@
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
 
-add_task(function* setup() {
-  yield ExtensionTestUtils.startAddonManager();
+add_task(async function setup() {
+  await ExtensionTestUtils.startAddonManager();
 });
 
-add_task(function* test_management_schema() {
+add_task(async function test_management_schema() {
   async function background() {
     browser.test.assertTrue(browser.management, "browser.management API exists");
     let self = await browser.management.getSelf();
@@ -24,7 +24,7 @@ add_task(function* test_management_schema() {
     background: `(${background})()`,
     useAddonManager: "temporary",
   });
-  yield extension.startup();
-  yield extension.awaitFinish("management-schema");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("management-schema");
+  await extension.unload();
 });

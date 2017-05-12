@@ -9,7 +9,6 @@ this.EXPORTED_SYMBOLS = ["Screenshot"];
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
@@ -91,7 +90,7 @@ this.Screenshot = {
     });
   },
 
-  _screenshotOSX: Task.async(function*(filename) {
+  async _screenshotOSX(filename) {
     let screencapture = (windowID = null) => {
       return new Promise((resolve, reject) => {
         // Get the screencapture executable
@@ -135,10 +134,10 @@ this.Screenshot = {
       });
     };
 
-    yield promiseWindowID();
-    let windowID = yield readWindowID();
-    yield screencapture(windowID);
-  }),
+    await promiseWindowID();
+    let windowID = await readWindowID();
+    await screencapture(windowID);
+  },
 
   _screenshotLinux(filename) {
     return new Promise((resolve, reject) => {

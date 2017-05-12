@@ -1,18 +1,18 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-add_task(function* () {
-  yield setLinks("0,1,2,3,4,5,6,7,8");
+add_task(async function() {
+  await setLinks("0,1,2,3,4,5,6,7,8");
   setPinnedLinks([
     {url: "http://example7.com/", title: ""},
     {url: "http://example8.com/", title: "title"},
     {url: "http://example9.com/", title: "http://example9.com/"}
   ]);
 
-  yield* addNewTabPageTab();
-  yield* checkGrid("7p,8p,9p,0,1,2,3,4,5");
+  await addNewTabPageTab();
+  await checkGrid("7p,8p,9p,0,1,2,3,4,5");
 
-  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
+  await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
     function checkTooltip(aIndex, aExpected, aMessage) {
       let cell = content.gGrid.cells[aIndex];
 

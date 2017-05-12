@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* test_simple() {
+add_task(async function test_simple() {
   let extensionData = {
     manifest: {
       "name": "Simple extension test",
@@ -13,11 +13,11 @@ add_task(function* test_simple() {
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield extension.startup();
-  yield extension.unload();
+  await extension.startup();
+  await extension.unload();
 });
 
-add_task(function* test_background() {
+add_task(async function test_background() {
   function background() {
     browser.test.log("running background script");
 
@@ -43,15 +43,15 @@ add_task(function* test_background() {
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
 
-  let [, x] = yield Promise.all([extension.startup(), extension.awaitMessage("running")]);
+  let [, x] = await Promise.all([extension.startup(), extension.awaitMessage("running")]);
   equal(x, 1, "got correct value from extension");
 
   extension.sendMessage(10, 20);
-  yield extension.awaitFinish();
-  yield extension.unload();
+  await extension.awaitFinish();
+  await extension.unload();
 });
 
-add_task(function* test_extensionTypes() {
+add_task(async function test_extensionTypes() {
   let extensionData = {
     background: function() {
       browser.test.assertEq(typeof browser.extensionTypes, "object", "browser.extensionTypes exists");
@@ -62,8 +62,8 @@ add_task(function* test_extensionTypes() {
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
 
-  yield extension.startup();
-  yield extension.awaitFinish();
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish();
+  await extension.unload();
 });
 

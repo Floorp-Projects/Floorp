@@ -919,7 +919,7 @@ class WindowBase {
    *
    * @returns {Iterator<TabBase>}
    */
-  * getTabs() {
+  getTabs() {
     throw new Error("Not implemented");
   }
   /* eslint-enable valid-jsdoc */
@@ -1815,7 +1815,7 @@ class WindowManagerBase {
    * @returns {Iterator<WindowBase>}
    * @abstract
    */
-  * getAll() {
+  getAll() {
     throw new Error("Not implemented");
   }
 

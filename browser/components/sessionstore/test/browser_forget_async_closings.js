@@ -15,10 +15,10 @@ const PAGE = "http://example.com/";
  *        to be forgotten.
  * @returns Promise
  */
-let forgetTabHelper = Task.async(function*(forgetFn) {
+let forgetTabHelper = async function(forgetFn) {
   // We want to suppress all non-final updates from the browser tabs
   // so as to eliminate any racy-ness with this test.
-  yield pushPrefs(["browser.sessionstore.debug.no_auto_updates", true]);
+  await pushPrefs(["browser.sessionstore.debug.no_auto_updates", true]);
 
   // Forget any previous closed tabs from other tests that may have
   // run in the same session.
@@ -30,8 +30,8 @@ let forgetTabHelper = Task.async(function*(forgetFn) {
   // Create a tab worth remembering.
   let tab = gBrowser.addTab(PAGE);
   let browser = tab.linkedBrowser;
-  yield BrowserTestUtils.browserLoaded(browser, false, PAGE);
-  yield TabStateFlusher.flush(browser);
+  await BrowserTestUtils.browserLoaded(browser, false, PAGE);
+  await TabStateFlusher.flush(browser);
 
   // Now close the tab, and immediately choose to forget it.
   let promise = BrowserTestUtils.removeTab(tab);
@@ -44,11 +44,11 @@ let forgetTabHelper = Task.async(function*(forgetFn) {
   is(ss.getClosedTabCount(window), 0, "Should have forgotten the closed tab");
 
   // Now wait for the final update to come up.
-  yield promise;
+  await promise;
 
   is(ss.getClosedTabCount(window), 0,
      "Should not have stored the forgotten closed tab");
-});
+};
 
 /**
  * Creates a new window worth storing in the closeWIndows array,
@@ -62,10 +62,10 @@ let forgetTabHelper = Task.async(function*(forgetFn) {
  *        to be forgotten.
  * @returns Promise
  */
-let forgetWinHelper = Task.async(function*(forgetFn) {
+let forgetWinHelper = async function(forgetFn) {
   // We want to suppress all non-final updates from the browser tabs
   // so as to eliminate any racy-ness with this test.
-  yield pushPrefs(["browser.sessionstore.debug.no_auto_updates", true]);
+  await pushPrefs(["browser.sessionstore.debug.no_auto_updates", true]);
 
   // Forget any previous closed windows from other tests that may have
   // run in the same session.
@@ -73,21 +73,21 @@ let forgetWinHelper = Task.async(function*(forgetFn) {
 
   is(ss.getClosedWindowCount(), 0, "We should have 0 closed windows being stored.");
 
-  let newWin = yield BrowserTestUtils.openNewBrowserWindow();
+  let newWin = await BrowserTestUtils.openNewBrowserWindow();
 
   // Create a tab worth remembering.
   let tab = newWin.gBrowser.selectedTab;
   let browser = tab.linkedBrowser;
   browser.loadURI(PAGE);
-  yield BrowserTestUtils.browserLoaded(browser, false, PAGE);
-  yield TabStateFlusher.flush(browser);
+  await BrowserTestUtils.browserLoaded(browser, false, PAGE);
+  await TabStateFlusher.flush(browser);
 
   // Now close the window and immediately choose to forget it.
   let windowClosed = BrowserTestUtils.windowClosed(newWin);
   let domWindowClosed = BrowserTestUtils.domWindowClosed(newWin);
 
   newWin.close();
-  yield domWindowClosed;
+  await domWindowClosed;
 
   // At this point, the window will have closed and the onClose handler
   // has run, but the final update  to SessionStore hasn't come up yet.
@@ -97,17 +97,17 @@ let forgetWinHelper = Task.async(function*(forgetFn) {
   is(ss.getClosedWindowCount(), 0, "Should have forgotten the closed window");
 
   // Now wait for the final update to come up.
-  yield windowClosed;
+  await windowClosed;
 
   is(ss.getClosedWindowCount(), 0, "Should not have stored the closed window");
-});
+};
 
 /**
  * Tests that if we choose to forget a tab while waiting for its
  * final flush to complete, we don't accidentally store it.
  */
-add_task(function* test_forget_closed_tab() {
-  yield forgetTabHelper(() => {
+add_task(async function test_forget_closed_tab() {
+  await forgetTabHelper(() => {
     ss.forgetClosedTab(window, 0);
   });
 });
@@ -116,8 +116,8 @@ add_task(function* test_forget_closed_tab() {
  * Tests that if we choose to forget a tab while waiting for its
  * final flush to complete, we don't accidentally store it.
  */
-add_task(function* test_forget_closed_window() {
-  yield forgetWinHelper(() => {
+add_task(async function test_forget_closed_window() {
+  await forgetWinHelper(() => {
     ss.forgetClosedWindow(0);
   });
 });
@@ -126,8 +126,8 @@ add_task(function* test_forget_closed_window() {
  * Tests that if we choose to purge history while waiting for a
  * final flush of a tab to complete, we don't accidentally store it.
  */
-add_task(function* test_forget_purged_tab() {
-  yield forgetTabHelper(() => {
+add_task(async function test_forget_purged_tab() {
+  await forgetTabHelper(() => {
     Services.obs.notifyObservers(null, "browser:purge-session-history");
   });
 });
@@ -137,8 +137,8 @@ add_task(function* test_forget_purged_tab() {
  * final flush of a window to complete, we don't accidentally
  * store it.
  */
-add_task(function* test_forget_purged_window() {
-  yield forgetWinHelper(() => {
+add_task(async function test_forget_purged_window() {
+  await forgetWinHelper(() => {
     Services.obs.notifyObservers(null, "browser:purge-session-history");
   });
 });

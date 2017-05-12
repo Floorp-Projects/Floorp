@@ -18,11 +18,11 @@ function promiseAddonStartup() {
   });
 }
 
-add_task(function* setup() {
-  yield ExtensionTestUtils.startAddonManager();
+add_task(async function setup() {
+  await ExtensionTestUtils.startAddonManager();
 });
 
-add_task(function* test_experiments_api() {
+add_task(async function test_experiments_api() {
   let apiAddonFile = Extension.generateZipFile({
     "install.rdf": `<?xml version="1.0" encoding="UTF-8"?>
       <RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -140,15 +140,15 @@ add_task(function* test_experiments_api() {
 
 
   // Install API add-on.
-  let apiAddon = yield AddonManager.installTemporaryAddon(apiAddonFile);
+  let apiAddon = await AddonManager.installTemporaryAddon(apiAddonFile);
 
   let {APIs} = Cu.import("resource://gre/modules/ExtensionManagement.jsm", {});
   ok(APIs.apis.has("meh"), "Should have meh API.");
 
 
   // Install boring WebExtension add-on.
-  let boringAddon = yield AddonManager.installTemporaryAddon(boringAddonFile);
-  yield promiseAddonStartup();
+  let boringAddon = await AddonManager.installTemporaryAddon(boringAddonFile);
+  await promiseAddonStartup();
 
 
   // Install interesting WebExtension add-on.
@@ -156,17 +156,17 @@ add_task(function* test_experiments_api() {
     resolveHello = resolve;
   });
 
-  let addon = yield AddonManager.installTemporaryAddon(addonFile);
-  yield promiseAddonStartup();
+  let addon = await AddonManager.installTemporaryAddon(addonFile);
+  await promiseAddonStartup();
 
-  let hello = yield promise;
+  let hello = await promise;
   equal(hello, "Here I am", "Should get hello from add-on");
 
   // Cleanup.
   apiAddon.uninstall();
 
   boringAddon.userDisabled = true;
-  yield new Promise(do_execute_soon);
+  await new Promise(do_execute_soon);
 
   equal(addon.appDisabled, true, "Add-on should be app-disabled after its dependency is removed.");
 

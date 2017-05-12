@@ -71,7 +71,7 @@ var successfulPinningPageListener = {
 // The browser should load about:neterror, when this happens, proceed
 // to load the pinning domain again, this time removing the pinning information
 function errorPageLoaded() {
-  ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
+  ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let textElement = content.document.getElementById("errorShortDescText");
     let text = textElement.innerHTML;
     ok(text.indexOf("MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE") > 0,

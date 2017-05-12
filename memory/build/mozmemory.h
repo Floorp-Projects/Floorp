@@ -12,6 +12,7 @@
  *   - jemalloc_stats
  *   - jemalloc_purge_freed_pages
  *   - jemalloc_free_dirty_pages
+ *   - jemalloc_thread_local_arena
  */
 
 #ifndef MOZ_MEMORY
@@ -85,6 +86,8 @@ MOZ_JEMALLOC_API void jemalloc_purge_freed_pages();
  * provides functionality similar to mallctl("arenas.purge") in jemalloc 3.
  */
 MOZ_JEMALLOC_API void jemalloc_free_dirty_pages();
+
+MOZ_JEMALLOC_API void jemalloc_thread_local_arena(jemalloc_bool enabled);
 
 MOZ_END_EXTERN_C
 

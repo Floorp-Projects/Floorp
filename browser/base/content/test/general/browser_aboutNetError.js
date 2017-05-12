@@ -11,23 +11,23 @@ const LOW_TLS_VERSION = "https://tls1.example.com/";
 const {TabStateFlusher} = Cu.import("resource:///modules/sessionstore/TabStateFlusher.jsm", {});
 const ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
 
-add_task(function* checkReturnToPreviousPage() {
+add_task(async function checkReturnToPreviousPage() {
   info("Loading a TLS page that isn't supported, ensure we have a fix button and clicking it then loads the page");
   let browser;
   let pageLoaded;
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
     gBrowser.selectedTab = gBrowser.addTab(LOW_TLS_VERSION);
     browser = gBrowser.selectedBrowser;
     pageLoaded = BrowserTestUtils.waitForErrorPage(browser);
   }, false);
 
   info("Loading and waiting for the net error");
-  yield pageLoaded;
+  await pageLoaded;
 
   // NB: This code assumes that the error page and the test page load in the
   // same process. If this test starts to fail, it could be because they load
   // in different processes.
-  yield ContentTask.spawn(browser, LOW_TLS_VERSION, function* (LOW_TLS_VERSION_) {
+  await ContentTask.spawn(browser, LOW_TLS_VERSION, async function(LOW_TLS_VERSION_) {
     ok(content.document.getElementById("prefResetButton").getBoundingClientRect().left >= 0,
       "Should have a visible button");
 
@@ -38,10 +38,10 @@ add_task(function* checkReturnToPreviousPage() {
     is(prefResetButton.getAttribute("autofocus"), "true", "prefResetButton has autofocus");
     prefResetButton.click();
 
-    yield ContentTaskUtils.waitForEvent(this, "pageshow", true);
+    await ContentTaskUtils.waitForEvent(this, "pageshow", true);
 
     is(content.document.documentURI, LOW_TLS_VERSION_, "Should not be showing page");
   });
 
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

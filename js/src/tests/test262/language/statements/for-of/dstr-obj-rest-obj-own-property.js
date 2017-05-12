@@ -2,12 +2,11 @@
 // - src/dstr-assignment/obj-rest-obj-own-property.case
 // - src/dstr-assignment/default/for-of.template
 /*---
-description: Rest object contains just soruce object's own properties (For..of statement)
+description: Rest object contains just source object's own properties (For..of statement)
 esid: sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation
 es6id: 13.7.5.11
-features: [destructuring-binding]
+features: [object-rest, destructuring-binding]
 flags: [generated]
-includes: [propertyHelper.js]
 info: |
     IterationStatement :
       for ( LeftHandSideExpression of AssignmentExpression ) Statement

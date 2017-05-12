@@ -34,7 +34,6 @@ var gIgnoreKeys = false;
 var gIgnoreAttrChange = false;
 var gKeyPressCount = 0;
 
-let {Task} = Components.utils.import("resource://gre/modules/Task.jsm", {});
 
 function waitForEvent(target, eventName) {
   return new Promise(resolve => {
@@ -47,7 +46,7 @@ function waitForEvent(target, eventName) {
 
 function runTests()
 {
-  Task.async(function* () {
+  (async function() {
     var popup = $("popup");
     popup.enableKeyboardNavigator(false);
     is(popup.getAttribute("ignorekeys"), "true", "keys disabled");
@@ -56,11 +55,11 @@ function runTests()
 
     let popupShownPromise = waitForEvent(popup, "popupshown");
     popup.openPopup(null, "after_start");
-    yield popupShownPromise;
+    await popupShownPromise;
 
     let popupHiddenPromise = waitForEvent(popup, "popuphidden");
     synthesizeKey("VK_DOWN", { });
-    yield popupHiddenPromise;
+    await popupHiddenPromise;
 
     is(gKeyPressCount, 0, "keypresses with ignorekeys='false'");
 
@@ -73,14 +72,14 @@ function runTests()
 
     popupShownPromise = waitForEvent(popup, "popupshown");
     popup.openPopup(null, "after_start");
-    yield popupShownPromise;
+    await popupShownPromise;
 
     synthesizeKey("VK_DOWN", { });
 
-    yield new Promise(resolve => setTimeout(() => resolve(), 1000));
+    await new Promise(resolve => setTimeout(() => resolve(), 1000));
     popupHiddenPromise = waitForEvent(popup, "popuphidden");
     popup.hidePopup();
-    yield popupHiddenPromise;
+    await popupHiddenPromise;
 
     is(gKeyPressCount, 1, "keypresses with ignorekeys='true'");
 
@@ -92,7 +91,7 @@ function runTests()
 
     popupShownPromise = waitForEvent(popup, "popupshown");
     popup.openPopup(null, "after_start");
-    yield popupShownPromise;
+    await popupShownPromise;
 
     // When ignorekeys="shortcuts", T should be handled but accel+T should propagate. 
     synthesizeKey("t", { });
@@ -103,7 +102,7 @@ function runTests()
 
     popupHiddenPromise = waitForEvent(popup, "popuphidden");
     popup.hidePopup();
-    yield popupHiddenPromise;
+    await popupHiddenPromise;
 
     SimpleTest.finish();
   })();

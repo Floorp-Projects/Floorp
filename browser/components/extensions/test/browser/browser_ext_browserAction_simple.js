@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* () {
+add_task(async function() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "browser_action": {
@@ -41,19 +41,19 @@ add_task(function* () {
     }]);
   });
 
-  yield extension.startup();
+  await extension.startup();
 
   // Do this a few times to make sure the pop-up is reloaded each time.
   for (let i = 0; i < 3; i++) {
     clickBrowserAction(extension);
 
-    yield extension.awaitMessage("popup");
+    await extension.awaitMessage("popup");
 
     closeBrowserAction(extension);
   }
 
-  yield extension.unload();
+  await extension.unload();
 
   SimpleTest.endMonitorConsole();
-  yield waitForConsole;
+  await waitForConsole;
 });

@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* test_sendMessage_without_listener() {
+add_task(async function test_sendMessage_without_listener() {
   async function background() {
     await browser.test.assertRejects(
       browser.runtime.sendMessage("msg"),
@@ -16,14 +16,14 @@ add_task(function* test_sendMessage_without_listener() {
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitFinish("sendMessage callback was invoked");
+  await extension.awaitFinish("sendMessage callback was invoked");
 
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* test_chrome_sendMessage_without_listener() {
+add_task(async function test_chrome_sendMessage_without_listener() {
   function background() {
     /* globals chrome */
     browser.test.assertEq(null, chrome.runtime.lastError, "no lastError before call");
@@ -46,9 +46,9 @@ add_task(function* test_chrome_sendMessage_without_listener() {
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitFinish("finished chrome.runtime.sendMessage");
+  await extension.awaitFinish("finished chrome.runtime.sendMessage");
 
-  yield extension.unload();
+  await extension.unload();
 });

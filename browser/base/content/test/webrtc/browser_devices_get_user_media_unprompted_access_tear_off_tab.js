@@ -6,46 +6,46 @@ var gTests = [
 
 {
   desc: "getUserMedia: tearing-off a tab",
-  run: function* checkAudioVideoWhileLiveTracksExist_TearingOff() {
+  run: async function checkAudioVideoWhileLiveTracksExist_TearingOff() {
     let promise = promisePopupNotificationShown("webRTC-shareDevices");
-    yield promiseRequestDevice(true, true);
-    yield promise;
-    yield expectObserverCalled("getUserMedia:request");
+    await promiseRequestDevice(true, true);
+    await promise;
+    await expectObserverCalled("getUserMedia:request");
     checkDeviceSelectors(true, true);
 
     let indicator = promiseIndicatorWindow();
-    yield promiseMessage("ok", () => {
+    await promiseMessage("ok", () => {
       PopupNotifications.panel.firstChild.button.click();
     });
-    yield expectObserverCalled("getUserMedia:response:allow");
-    yield expectObserverCalled("recording-device-events");
-    Assert.deepEqual((yield getMediaCaptureState()), {audio: true, video: true},
+    await expectObserverCalled("getUserMedia:response:allow");
+    await expectObserverCalled("recording-device-events");
+    Assert.deepEqual((await getMediaCaptureState()), {audio: true, video: true},
                      "expected camera and microphone to be shared");
 
-    yield indicator;
-    yield checkSharingUI({video: true, audio: true});
+    await indicator;
+    await checkSharingUI({video: true, audio: true});
 
     info("tearing off the tab");
     let win = gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
-    yield whenDelayedStartupFinished(win);
-    yield checkSharingUI({audio: true, video: true}, win);
+    await whenDelayedStartupFinished(win);
+    await checkSharingUI({audio: true, video: true}, win);
 
     gBrowser.selectedBrowser.messageManager.loadFrameScript(CONTENT_SCRIPT_HELPER, true);
 
     info("request audio+video and check if there is no prompt");
-    yield promiseRequestDevice(true, true, null, null, win.gBrowser.selectedBrowser);
-    yield promiseObserverCalled("getUserMedia:request");
+    await promiseRequestDevice(true, true, null, null, win.gBrowser.selectedBrowser);
+    await promiseObserverCalled("getUserMedia:request");
     let promises = [promiseNoPopupNotification("webRTC-shareDevices"),
                     promiseObserverCalled("getUserMedia:response:allow"),
                     promiseObserverCalled("recording-device-events")];
-    yield Promise.all(promises);
+    await Promise.all(promises);
 
     promises = [promiseObserverCalled("recording-device-events"),
                 promiseObserverCalled("recording-window-ended")];
-    yield BrowserTestUtils.closeWindow(win);
-    yield Promise.all(promises);
+    await BrowserTestUtils.closeWindow(win);
+    await Promise.all(promises);
 
-    yield checkNotSharing();
+    await checkNotSharing();
   }
 }
 

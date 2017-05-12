@@ -14,26 +14,26 @@
  * - make sure the url is decoded
  */
 
-add_task(function* test_tag_match_url() {
+add_task(async function test_tag_match_url() {
   do_print("Make sure tag matches return the right url as well as '+' remain escaped");
   let uri1 = NetUtil.newURI("http://escaped/ユニコード");
   let uri2 = NetUtil.newURI("http://asciiescaped/blocking-firefox3%2B");
-  yield PlacesTestUtils.addVisits([
+  await PlacesTestUtils.addVisits([
     { uri: uri1, title: "title" },
     { uri: uri2, title: "title" }
   ]);
-  yield addBookmark({ uri: uri1,
+  await addBookmark({ uri: uri1,
                       title: "title",
                       tags: [ "superTag" ],
                       style: [ "bookmark-tag" ] });
-  yield addBookmark({ uri: uri2,
+  await addBookmark({ uri: uri2,
                       title: "title",
                       tags: [ "superTag" ],
                       style: [ "bookmark-tag" ] });
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "superTag",
     matches: [ { uri: uri1, title: "title", tags: [ "superTag" ], style: [ "bookmark-tag" ] },
                { uri: uri2, title: "title", tags: [ "superTag" ], style: [ "bookmark-tag" ] } ]
   });
-  yield cleanup();
+  await cleanup();
 });

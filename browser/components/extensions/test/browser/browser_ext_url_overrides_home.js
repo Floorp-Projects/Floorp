@@ -13,7 +13,7 @@ const HOME_URI_2 = "http://example.com/";
 const HOME_URI_3 = "http://example.org/";
 const HOME_URI_4 = "http://example.net/";
 
-add_task(function* test_multiple_extensions_overriding_home_page() {
+add_task(async function test_multiple_extensions_overriding_home_page() {
   let defaultHomePage = Preferences.get("browser.startup.homepage");
 
   let ext1 = ExtensionTestUtils.loadExtension({
@@ -36,7 +36,7 @@ add_task(function* test_multiple_extensions_overriding_home_page() {
     useAddonManager: "temporary",
   });
 
-  yield ext1.startup();
+  await ext1.startup();
 
   is(Preferences.get("browser.startup.homepage"), defaultHomePage,
      "Home url should be the default");
@@ -45,49 +45,49 @@ add_task(function* test_multiple_extensions_overriding_home_page() {
   // need to wait on a pref change.  This is because the pref management is
   // async and can happen after the startup/unload is finished.
   let prefPromise = promisePrefChangeObserved("browser.startup.homepage");
-  yield ext2.startup();
-  yield prefPromise;
+  await ext2.startup();
+  await prefPromise;
 
   ok(Preferences.get("browser.startup.homepage").endsWith(HOME_URI_2),
      "Home url should be overridden by the second extension.");
 
   // Because we are unloading an earlier extension, browser.startup.homepage won't change
-  yield ext1.unload();
+  await ext1.unload();
 
   ok(Preferences.get("browser.startup.homepage").endsWith(HOME_URI_2),
      "Home url should be overridden by the second extension.");
 
   prefPromise = promisePrefChangeObserved("browser.startup.homepage");
-  yield ext3.startup();
-  yield prefPromise;
+  await ext3.startup();
+  await prefPromise;
 
   ok(Preferences.get("browser.startup.homepage").endsWith(HOME_URI_3),
      "Home url should be overridden by the third extension.");
 
   // Because we are unloading an earlier extension, browser.startup.homepage won't change
-  yield ext2.unload();
+  await ext2.unload();
 
   ok(Preferences.get("browser.startup.homepage").endsWith(HOME_URI_3),
      "Home url should be overridden by the third extension.");
 
   prefPromise = promisePrefChangeObserved("browser.startup.homepage");
-  yield ext4.startup();
-  yield prefPromise;
+  await ext4.startup();
+  await prefPromise;
 
   ok(Preferences.get("browser.startup.homepage").endsWith(HOME_URI_4),
      "Home url should be overridden by the third extension.");
 
 
   prefPromise = promisePrefChangeObserved("browser.startup.homepage");
-  yield ext4.unload();
-  yield prefPromise;
+  await ext4.unload();
+  await prefPromise;
 
   ok(Preferences.get("browser.startup.homepage").endsWith(HOME_URI_3),
      "Home url should be overridden by the third extension.");
 
   prefPromise = promisePrefChangeObserved("browser.startup.homepage");
-  yield ext3.unload();
-  yield prefPromise;
+  await ext3.unload();
+  await prefPromise;
 
   is(Preferences.get("browser.startup.homepage"), defaultHomePage,
      "Home url should be reset to default");
@@ -96,7 +96,7 @@ add_task(function* test_multiple_extensions_overriding_home_page() {
 const HOME_URI_1 = "http://example.com/";
 const USER_URI = "http://example.edu/";
 
-add_task(function* test_extension_setting_home_page_back() {
+add_task(async function test_extension_setting_home_page_back() {
   let defaultHomePage = Preferences.get("browser.startup.homepage");
 
   Preferences.set("browser.startup.homepage", USER_URI);
@@ -113,15 +113,15 @@ add_task(function* test_extension_setting_home_page_back() {
   // need to wait on a pref change.  This is because the pref management is
   // async and can happen after the startup/unload is finished.
   let prefPromise = promisePrefChangeObserved("browser.startup.homepage");
-  yield ext1.startup();
-  yield prefPromise;
+  await ext1.startup();
+  await prefPromise;
 
   ok(Preferences.get("browser.startup.homepage").endsWith(HOME_URI_1),
      "Home url should be overridden by the second extension.");
 
   prefPromise = promisePrefChangeObserved("browser.startup.homepage");
-  yield ext1.unload();
-  yield prefPromise;
+  await ext1.unload();
+  await prefPromise;
 
   is(Preferences.get("browser.startup.homepage"), USER_URI,
      "Home url should be the user set value");
@@ -132,7 +132,7 @@ add_task(function* test_extension_setting_home_page_back() {
      "Home url should be the default");
 });
 
-add_task(function* test_disable() {
+add_task(async function test_disable() {
   let defaultHomePage = Preferences.get("browser.startup.homepage");
 
   const ID = "id@tests.mozilla.org";
@@ -152,50 +152,50 @@ add_task(function* test_disable() {
   });
 
   let prefPromise = promisePrefChangeObserved("browser.startup.homepage");
-  yield ext1.startup();
-  yield prefPromise;
+  await ext1.startup();
+  await prefPromise;
 
   ok(Preferences.get("browser.startup.homepage").endsWith(HOME_URI_1),
      "Home url should be overridden by the extension.");
 
-  let addon = yield AddonManager.getAddonByID(ID);
+  let addon = await AddonManager.getAddonByID(ID);
   is(addon.id, ID);
 
   prefPromise = promisePrefChangeObserved("browser.startup.homepage");
   addon.userDisabled = true;
-  yield prefPromise;
+  await prefPromise;
 
   is(Preferences.get("browser.startup.homepage"), defaultHomePage,
      "Home url should be the default");
 
   prefPromise = promisePrefChangeObserved("browser.startup.homepage");
   addon.userDisabled = false;
-  yield prefPromise;
+  await prefPromise;
 
   ok(Preferences.get("browser.startup.homepage").endsWith(HOME_URI_1),
      "Home url should be overridden by the extension.");
 
   prefPromise = promisePrefChangeObserved("browser.startup.homepage");
-  yield ext1.unload();
-  yield prefPromise;
+  await ext1.unload();
+  await prefPromise;
 
   is(Preferences.get("browser.startup.homepage"), defaultHomePage,
      "Home url should be the default");
 });
 
-add_task(function* test_local() {
+add_task(async function test_local() {
   let ext1 = ExtensionTestUtils.loadExtension({
     manifest: {"chrome_settings_overrides": {"homepage": "home.html"}},
     useAddonManager: "temporary",
   });
 
   let prefPromise = promisePrefChangeObserved("browser.startup.homepage");
-  yield ext1.startup();
-  yield prefPromise;
+  await ext1.startup();
+  await prefPromise;
 
   let homepage = Preferences.get("browser.startup.homepage");
   ok((homepage.startsWith("moz-extension") && homepage.endsWith("home.html")),
      "Home url should be relative to extension.");
 
-  yield ext1.unload();
+  await ext1.unload();
 });

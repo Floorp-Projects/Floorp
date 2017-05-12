@@ -11,7 +11,6 @@ var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 var {CrashManager, CrashStore, dateToDays} = Cu.import("resource://gre/modules/CrashManager.jsm", {});
 Cu.import("resource://gre/modules/osfile.jsm", this);
-Cu.import("resource://gre/modules/Task.jsm", this);
 
 const DUMMY_DATE = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
 DUMMY_DATE.setMilliseconds(0);
@@ -34,30 +33,30 @@ const {
 var STORE_DIR_COUNT = 0;
 
 function getStore() {
-  return Task.spawn(function* () {
+  return (async function() {
     let storeDir = do_get_tempdir().path;
     storeDir = OS.Path.join(storeDir, "store-" + STORE_DIR_COUNT++);
 
-    yield OS.File.makeDir(storeDir, {unixMode: OS.Constants.libc.S_IRWXU});
+    await OS.File.makeDir(storeDir, {unixMode: OS.Constants.libc.S_IRWXU});
 
     let s = new CrashStore(storeDir);
-    yield s.load();
+    await s.load();
 
     return s;
-  });
+  })();
 }
 
 function run_test() {
   run_next_test();
 }
 
-add_task(function* test_constructor() {
+add_task(async function test_constructor() {
   let s = new CrashStore("/some/path");
   Assert.ok(s instanceof CrashStore);
 });
 
-add_task(function* test_add_crash() {
-  let s = yield getStore();
+add_task(async function test_add_crash() {
+  let s = await getStore();
 
   Assert.equal(s.crashesCount, 0);
   let d = new Date(Date.now() - 5000);
@@ -78,8 +77,8 @@ add_task(function* test_add_crash() {
   Assert.equal(s.crashesCount, 2);
 });
 
-add_task(function* test_reset() {
-  let s = yield getStore();
+add_task(async function test_reset() {
+  let s = await getStore();
 
   Assert.ok(s.addCrash(PROCESS_TYPE_MAIN, CRASH_TYPE_CRASH, "id1", DUMMY_DATE));
   Assert.equal(s.crashes.length, 1);
@@ -87,10 +86,10 @@ add_task(function* test_reset() {
   Assert.equal(s.crashes.length, 0);
 });
 
-add_task(function* test_save_load() {
-  let s = yield getStore();
+add_task(async function test_save_load() {
+  let s = await getStore();
 
-  yield s.save();
+  await s.save();
 
   let d1 = new Date();
   let d2 = new Date(d1.getTime() - 10000);
@@ -100,9 +99,9 @@ add_task(function* test_save_load() {
   Assert.ok(s.addSubmissionResult("id1", "sub1", d2, SUBMISSION_RESULT_OK));
   Assert.ok(s.setRemoteCrashID("id1", "bp-1"));
 
-  yield s.save();
+  await s.save();
 
-  yield s.load();
+  await s.load();
   Assert.ok(!s.corruptDate);
   let crashes = s.crashes;
 
@@ -119,25 +118,25 @@ add_task(function* test_save_load() {
   Assert.equal(submission.result, SUBMISSION_RESULT_OK);
 });
 
-add_task(function* test_corrupt_json() {
-  let s = yield getStore();
+add_task(async function test_corrupt_json() {
+  let s = await getStore();
 
   let buffer = new TextEncoder().encode("{bad: json-file");
-  yield OS.File.writeAtomic(s._storePath, buffer, {compression: "lz4"});
+  await OS.File.writeAtomic(s._storePath, buffer, {compression: "lz4"});
 
-  yield s.load();
+  await s.load();
   Assert.ok(s.corruptDate, "Corrupt date is defined.");
 
   let date = s.corruptDate;
-  yield s.save();
+  await s.save();
   s._data = null;
-  yield s.load();
+  await s.load();
   Assert.ok(s.corruptDate);
   Assert.equal(date.getTime(), s.corruptDate.getTime());
 });
 
-add_task(function* test_add_main_crash() {
-  let s = yield getStore();
+add_task(async function test_add_main_crash() {
+  let s = await getStore();
 
   Assert.ok(
     s.addCrash(PROCESS_TYPE_MAIN, CRASH_TYPE_CRASH, "id1", new Date())
@@ -171,8 +170,8 @@ add_task(function* test_add_main_crash() {
   Assert.equal(crashes.length, 3);
 });
 
-add_task(function* test_add_main_hang() {
-  let s = yield getStore();
+add_task(async function test_add_main_hang() {
+  let s = await getStore();
 
   Assert.ok(
     s.addCrash(PROCESS_TYPE_MAIN, CRASH_TYPE_HANG, "id1", new Date())
@@ -198,8 +197,8 @@ add_task(function* test_add_main_hang() {
   Assert.equal(crashes.length, 2);
 });
 
-add_task(function* test_add_content_crash() {
-  let s = yield getStore();
+add_task(async function test_add_content_crash() {
+  let s = await getStore();
 
   Assert.ok(
     s.addCrash(PROCESS_TYPE_CONTENT, CRASH_TYPE_CRASH, "id1", new Date())
@@ -225,8 +224,8 @@ add_task(function* test_add_content_crash() {
   Assert.equal(crashes.length, 2);
 });
 
-add_task(function* test_add_content_hang() {
-  let s = yield getStore();
+add_task(async function test_add_content_hang() {
+  let s = await getStore();
 
   Assert.ok(
     s.addCrash(PROCESS_TYPE_CONTENT, CRASH_TYPE_HANG, "id1", new Date())
@@ -252,8 +251,8 @@ add_task(function* test_add_content_hang() {
   Assert.equal(crashes.length, 2);
 });
 
-add_task(function* test_add_plugin_crash() {
-  let s = yield getStore();
+add_task(async function test_add_plugin_crash() {
+  let s = await getStore();
 
   Assert.ok(
     s.addCrash(PROCESS_TYPE_PLUGIN, CRASH_TYPE_CRASH, "id1", new Date())
@@ -279,8 +278,8 @@ add_task(function* test_add_plugin_crash() {
   Assert.equal(crashes.length, 2);
 });
 
-add_task(function* test_add_plugin_hang() {
-  let s = yield getStore();
+add_task(async function test_add_plugin_hang() {
+  let s = await getStore();
 
   Assert.ok(
     s.addCrash(PROCESS_TYPE_PLUGIN, CRASH_TYPE_HANG, "id1", new Date())
@@ -306,8 +305,8 @@ add_task(function* test_add_plugin_hang() {
   Assert.equal(crashes.length, 2);
 });
 
-add_task(function* test_add_gmplugin_crash() {
-  let s = yield getStore();
+add_task(async function test_add_gmplugin_crash() {
+  let s = await getStore();
 
   Assert.ok(
     s.addCrash(PROCESS_TYPE_GMPLUGIN, CRASH_TYPE_CRASH, "id1", new Date())
@@ -333,8 +332,8 @@ add_task(function* test_add_gmplugin_crash() {
   Assert.equal(crashes.length, 2);
 });
 
-add_task(function* test_add_gpu_crash() {
-  let s = yield getStore();
+add_task(async function test_add_gpu_crash() {
+  let s = await getStore();
 
   Assert.ok(
     s.addCrash(PROCESS_TYPE_GPU, CRASH_TYPE_CRASH, "id1", new Date())
@@ -360,8 +359,8 @@ add_task(function* test_add_gpu_crash() {
   Assert.equal(crashes.length, 2);
 });
 
-add_task(function* test_add_mixed_types() {
-  let s = yield getStore();
+add_task(async function test_add_mixed_types() {
+  let s = await getStore();
 
   Assert.ok(
     s.addCrash(PROCESS_TYPE_MAIN, CRASH_TYPE_CRASH, "mcrash", new Date()) &&
@@ -376,12 +375,12 @@ add_task(function* test_add_mixed_types() {
 
   Assert.equal(s.crashesCount, 8);
 
-  yield s.save();
+  await s.save();
 
   s._data.crashes.clear();
   Assert.equal(s.crashesCount, 0);
 
-  yield s.load();
+  await s.load();
 
   Assert.equal(s.crashesCount, 8);
 
@@ -404,8 +403,8 @@ add_task(function* test_add_mixed_types() {
 });
 
 // Crashes added beyond the high water mark behave properly.
-add_task(function* test_high_water() {
-  let s = yield getStore();
+add_task(async function test_high_water() {
+  let s = await getStore();
 
   let d1 = new Date(2014, 0, 1, 0, 0, 0);
   let d2 = new Date(2014, 0, 2, 0, 0, 0);
@@ -493,8 +492,8 @@ add_task(function* test_high_water() {
                  get(PROCESS_TYPE_PLUGIN + "-" + CRASH_TYPE_HANG),
                s.HIGH_WATER_DAILY_THRESHOLD + 1);
 
-  yield s.save();
-  yield s.load();
+  await s.save();
+  await s.load();
 
   Assert.ok(s._countsByDay.has(day1));
   Assert.ok(s._countsByDay.has(day2));
@@ -521,8 +520,8 @@ add_task(function* test_high_water() {
                s.HIGH_WATER_DAILY_THRESHOLD + 1);
 });
 
-add_task(function* test_addSubmission() {
-  let s = yield getStore();
+add_task(async function test_addSubmission() {
+  let s = await getStore();
 
   Assert.ok(s.addCrash(PROCESS_TYPE_MAIN, CRASH_TYPE_CRASH, "crash1",
                        DUMMY_DATE));
@@ -557,8 +556,8 @@ add_task(function* test_addSubmission() {
   Assert.equal(submission.result, SUBMISSION_RESULT_OK);
 });
 
-add_task(function* test_setCrashClassification() {
-  let s = yield getStore();
+add_task(async function test_setCrashClassification() {
+  let s = await getStore();
 
   Assert.ok(s.addCrash(PROCESS_TYPE_MAIN, CRASH_TYPE_CRASH, "crash1",
                        new Date()));
@@ -573,8 +572,8 @@ add_task(function* test_setCrashClassification() {
   Assert.ok(classifications.indexOf("bar") != -1);
 });
 
-add_task(function* test_setRemoteCrashID() {
-  let s = yield getStore();
+add_task(async function test_setRemoteCrashID() {
+  let s = await getStore();
 
   Assert.ok(s.addCrash(PROCESS_TYPE_MAIN, CRASH_TYPE_CRASH, "crash1",
                        new Date()));

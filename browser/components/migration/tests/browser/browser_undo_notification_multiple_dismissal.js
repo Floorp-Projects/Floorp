@@ -7,8 +7,8 @@ const kExpectedNotificationId = "automigration-undo";
  * Pretend we can undo something, trigger a notification, pick the undo option,
  * and verify that the notifications are all dismissed immediately.
  */
-add_task(function* checkNotificationsDismissed() {
-  yield SpecialPowers.pushPrefEnv({set: [
+add_task(async function checkNotificationsDismissed() {
+  await SpecialPowers.pushPrefEnv({set: [
     ["browser.migrate.automigrate.enabled", true],
     ["browser.migrate.automigrate.ui.enabled", true],
   ]});
@@ -17,7 +17,7 @@ add_task(function* checkNotificationsDismissed() {
 
   Services.prefs.setCharPref("browser.migrate.automigrate.browser", "someunknownbrowser");
 
-  let {guid, lastModified} = yield PlacesUtils.bookmarks.insert(
+  let {guid, lastModified} = await PlacesUtils.bookmarks.insert(
     {title: "Some imported bookmark", parentGuid: PlacesUtils.bookmarks.toolbarGuid, url: "http://www.example.com"}
   );
 
@@ -30,21 +30,21 @@ add_task(function* checkNotificationsDismissed() {
   registerCleanupFunction(() => {
     return OS.File.remove(path, {ignoreAbsent: true});
   });
-  yield OS.File.writeAtomic(path, JSON.stringify(testUndoData), {
+  await OS.File.writeAtomic(path, JSON.stringify(testUndoData), {
     encoding: "utf-8",
     compression: "lz4",
     tmpPath: path + ".tmp",
   });
 
-  let firstTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:home", false);
+  let firstTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:home", false);
   if (!getNotification(firstTab.linkedBrowser)) {
     info(`Notification not immediately present on first tab, waiting for it.`);
-    yield BrowserTestUtils.waitForNotificationBar(gBrowser, firstTab.linkedBrowser, kExpectedNotificationId);
+    await BrowserTestUtils.waitForNotificationBar(gBrowser, firstTab.linkedBrowser, kExpectedNotificationId);
   }
-  let secondTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:home", false);
+  let secondTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:home", false);
   if (!getNotification(secondTab.linkedBrowser)) {
     info(`Notification not immediately present on second tab, waiting for it.`);
-    yield BrowserTestUtils.waitForNotificationBar(gBrowser, secondTab.linkedBrowser, kExpectedNotificationId);
+    await BrowserTestUtils.waitForNotificationBar(gBrowser, secondTab.linkedBrowser, kExpectedNotificationId);
   }
 
   // Create a listener for the removal in the first tab, and a listener for bookmarks removal,
@@ -110,13 +110,13 @@ add_task(function* checkNotificationsDismissed() {
   let notificationToActivate = getNotification(secondTab.linkedBrowser);
   notificationToActivate.querySelector("button:not(.notification-button-default)").click();
   info("Waiting for notification to be removed in first (background) tab");
-  yield firstTabNotificationRemovedPromise;
+  await firstTabNotificationRemovedPromise;
   info("Waiting for bookmark to be removed");
-  yield bookmarkRemovedPromise;
+  await bookmarkRemovedPromise;
   info("Waiting for prefs to be reset");
-  yield prefResetPromise;
+  await prefResetPromise;
 
   info("Removing spare tabs");
-  yield BrowserTestUtils.removeTab(firstTab);
-  yield BrowserTestUtils.removeTab(secondTab);
+  await BrowserTestUtils.removeTab(firstTab);
+  await BrowserTestUtils.removeTab(secondTab);
 });

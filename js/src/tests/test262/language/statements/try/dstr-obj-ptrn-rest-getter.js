@@ -5,7 +5,7 @@
 description: Getter is called when obj is being deconstructed to a rest Object (try statement)
 esid: sec-runtime-semantics-catchclauseevaluation
 es6id: 13.15.7
-features: [destructuring-binding]
+features: [object-rest, destructuring-binding]
 flags: [generated]
 includes: [propertyHelper.js]
 info: |

@@ -6,11 +6,11 @@
 
 "use strict";
 
-add_task(function* capture() {
+add_task(async function capture() {
   if (!shouldCapture()) {
     return;
   }
   let sets = ["LightweightThemes", "ControlCenter"];
 
-  yield TestRunner.start(sets, "controlCenter");
+  await TestRunner.start(sets, "controlCenter");
 });

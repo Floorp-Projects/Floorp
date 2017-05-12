@@ -6,8 +6,8 @@
  * bug 1340719.
  */
 
-add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
     set: [
       ["extensions.throw_on_docgroup_mismatch.enabled", true],
     ],
@@ -17,55 +17,55 @@ add_task(function* setup() {
 /**
  * Tests that we can open View Source in a tab.
  */
-add_task(function* test_view_source_in_tab() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function test_view_source_in_tab() {
+  await SpecialPowers.pushPrefEnv({
     set: [
       ["view_source.tab", true],
     ],
   });
 
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "http://example.com",
-  }, function* (browser) {
-    let sourceTab = yield openViewSource(browser);
+  }, async function(browser) {
+    let sourceTab = await openViewSource(browser);
     let sourceBrowser = sourceTab.linkedBrowser;
-    yield waitForSourceLoaded(sourceBrowser);
+    await waitForSourceLoaded(sourceBrowser);
 
-    yield ContentTask.spawn(sourceBrowser, null, function*() {
+    await ContentTask.spawn(sourceBrowser, null, async function() {
       Assert.equal(content.document.body.id, "viewsource",
                    "View source mode enabled");
     });
 
-    yield BrowserTestUtils.removeTab(sourceTab);
+    await BrowserTestUtils.removeTab(sourceTab);
   });
 
-  yield SpecialPowers.popPrefEnv();
+  await SpecialPowers.popPrefEnv();
 });
 
 /**
  * Tests that we can open View Source in a window.
  */
-add_task(function* test_view_source_in_window() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function test_view_source_in_window() {
+  await SpecialPowers.pushPrefEnv({
     set: [
       ["view_source.tab", false],
     ],
   });
 
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "http://example.com",
-  }, function* (browser) {
-    let sourceWin = yield openViewSource(browser);
-    yield waitForSourceLoaded(sourceWin);
-    yield ContentTask.spawn(sourceWin.gBrowser, null, function*() {
+  }, async function(browser) {
+    let sourceWin = await openViewSource(browser);
+    await waitForSourceLoaded(sourceWin);
+    await ContentTask.spawn(sourceWin.gBrowser, null, async function() {
       Assert.equal(content.document.body.id, "viewsource",
                    "View source mode enabled");
     });
 
-    yield closeViewSourceWindow(sourceWin);
+    await closeViewSourceWindow(sourceWin);
   });
 
-  yield SpecialPowers.popPrefEnv();
+  await SpecialPowers.popPrefEnv();
 });

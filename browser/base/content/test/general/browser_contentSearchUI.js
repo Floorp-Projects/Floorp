@@ -11,326 +11,326 @@ const TEST_MSG = "ContentSearchUIControllerTest";
 
 requestLongerTimeout(2);
 
-add_task(function* emptyInput() {
-  yield setUp();
+add_task(async function emptyInput() {
+  await setUp();
 
-  let state = yield msg("key", { key: "x", waitForSuggestions: true });
+  let state = await msg("key", { key: "x", waitForSuggestions: true });
   checkState(state, "x", ["xfoo", "xbar"], -1);
 
-  state = yield msg("key", "VK_BACK_SPACE");
+  state = await msg("key", "VK_BACK_SPACE");
   checkState(state, "", [], -1);
 
-  yield msg("reset");
+  await msg("reset");
 });
 
-add_task(function* blur() {
-  yield setUp();
+add_task(async function blur() {
+  await setUp();
 
-  let state = yield msg("key", { key: "x", waitForSuggestions: true });
+  let state = await msg("key", { key: "x", waitForSuggestions: true });
   checkState(state, "x", ["xfoo", "xbar"], -1);
 
-  state = yield msg("blur");
+  state = await msg("blur");
   checkState(state, "x", [], -1);
 
-  yield msg("reset");
+  await msg("reset");
 });
 
-add_task(function* upDownKeys() {
-  yield setUp();
+add_task(async function upDownKeys() {
+  await setUp();
 
-  let state = yield msg("key", { key: "x", waitForSuggestions: true });
+  let state = await msg("key", { key: "x", waitForSuggestions: true });
   checkState(state, "x", ["xfoo", "xbar"], -1);
 
   // Cycle down the suggestions starting from no selection.
-  state = yield msg("key", "VK_DOWN");
+  state = await msg("key", "VK_DOWN");
   checkState(state, "xfoo", ["xfoo", "xbar"], 0);
 
-  state = yield msg("key", "VK_DOWN");
+  state = await msg("key", "VK_DOWN");
   checkState(state, "xbar", ["xfoo", "xbar"], 1);
 
-  state = yield msg("key", "VK_DOWN");
+  state = await msg("key", "VK_DOWN");
   checkState(state, "x", ["xfoo", "xbar"], 2);
 
-  state = yield msg("key", "VK_DOWN");
+  state = await msg("key", "VK_DOWN");
   checkState(state, "x", ["xfoo", "xbar"], 3);
 
-  state = yield msg("key", "VK_DOWN");
+  state = await msg("key", "VK_DOWN");
   checkState(state, "x", ["xfoo", "xbar"], -1);
 
   // Cycle up starting from no selection.
-  state = yield msg("key", "VK_UP");
+  state = await msg("key", "VK_UP");
   checkState(state, "x", ["xfoo", "xbar"], 3);
 
-  state = yield msg("key", "VK_UP");
+  state = await msg("key", "VK_UP");
   checkState(state, "x", ["xfoo", "xbar"], 2);
 
-  state = yield msg("key", "VK_UP");
+  state = await msg("key", "VK_UP");
   checkState(state, "xbar", ["xfoo", "xbar"], 1);
 
-  state = yield msg("key", "VK_UP");
+  state = await msg("key", "VK_UP");
   checkState(state, "xfoo", ["xfoo", "xbar"], 0);
 
-  state = yield msg("key", "VK_UP");
+  state = await msg("key", "VK_UP");
   checkState(state, "x", ["xfoo", "xbar"], -1);
 
-  yield msg("reset");
+  await msg("reset");
 });
 
-add_task(function* rightLeftKeys() {
-  yield setUp();
+add_task(async function rightLeftKeys() {
+  await setUp();
 
-  let state = yield msg("key", { key: "x", waitForSuggestions: true });
+  let state = await msg("key", { key: "x", waitForSuggestions: true });
   checkState(state, "x", ["xfoo", "xbar"], -1);
 
-  state = yield msg("key", "VK_LEFT");
+  state = await msg("key", "VK_LEFT");
   checkState(state, "x", ["xfoo", "xbar"], -1);
 
-  state = yield msg("key", "VK_LEFT");
+  state = await msg("key", "VK_LEFT");
   checkState(state, "x", ["xfoo", "xbar"], -1);
 
-  state = yield msg("key", "VK_RIGHT");
+  state = await msg("key", "VK_RIGHT");
   checkState(state, "x", ["xfoo", "xbar"], -1);
 
-  state = yield msg("key", "VK_RIGHT");
+  state = await msg("key", "VK_RIGHT");
   checkState(state, "x", [], -1);
 
-  state = yield msg("key", { key: "VK_DOWN", waitForSuggestions: true });
+  state = await msg("key", { key: "VK_DOWN", waitForSuggestions: true });
   checkState(state, "x", ["xfoo", "xbar"], -1);
 
-  state = yield msg("key", "VK_DOWN");
+  state = await msg("key", "VK_DOWN");
   checkState(state, "xfoo", ["xfoo", "xbar"], 0);
 
   // This should make the xfoo suggestion sticky.  To make sure it sticks,
   // trigger suggestions again and cycle through them by pressing Down until
   // nothing is selected again.
-  state = yield msg("key", "VK_RIGHT");
+  state = await msg("key", "VK_RIGHT");
   checkState(state, "xfoo", [], -1);
 
-  state = yield msg("key", { key: "VK_DOWN", waitForSuggestions: true });
+  state = await msg("key", { key: "VK_DOWN", waitForSuggestions: true });
   checkState(state, "xfoo", ["xfoofoo", "xfoobar"], -1);
 
-  state = yield msg("key", "VK_DOWN");
+  state = await msg("key", "VK_DOWN");
   checkState(state, "xfoofoo", ["xfoofoo", "xfoobar"], 0);
 
-  state = yield msg("key", "VK_DOWN");
+  state = await msg("key", "VK_DOWN");
   checkState(state, "xfoobar", ["xfoofoo", "xfoobar"], 1);
 
-  state = yield msg("key", "VK_DOWN");
+  state = await msg("key", "VK_DOWN");
   checkState(state, "xfoo", ["xfoofoo", "xfoobar"], 2);
 
-  state = yield msg("key", "VK_DOWN");
+  state = await msg("key", "VK_DOWN");
   checkState(state, "xfoo", ["xfoofoo", "xfoobar"], 3);
 
-  state = yield msg("key", "VK_DOWN");
+  state = await msg("key", "VK_DOWN");
   checkState(state, "xfoo", ["xfoofoo", "xfoobar"], -1);
 
-  yield msg("reset");
+  await msg("reset");
 });
 
-add_task(function* tabKey() {
-  yield setUp();
-  yield msg("key", { key: "x", waitForSuggestions: true });
+add_task(async function tabKey() {
+  await setUp();
+  await msg("key", { key: "x", waitForSuggestions: true });
 
-  let state = yield msg("key", "VK_TAB");
+  let state = await msg("key", "VK_TAB");
   checkState(state, "x", ["xfoo", "xbar"], 2);
 
-  state = yield msg("key", "VK_TAB");
+  state = await msg("key", "VK_TAB");
   checkState(state, "x", ["xfoo", "xbar"], 3);
 
-  state = yield msg("key", { key: "VK_TAB", modifiers: { shiftKey: true }});
+  state = await msg("key", { key: "VK_TAB", modifiers: { shiftKey: true }});
   checkState(state, "x", ["xfoo", "xbar"], 2);
 
-  state = yield msg("key", { key: "VK_TAB", modifiers: { shiftKey: true }});
+  state = await msg("key", { key: "VK_TAB", modifiers: { shiftKey: true }});
   checkState(state, "x", [], -1);
 
-  yield setUp();
+  await setUp();
 
-  yield msg("key", { key: "VK_DOWN", waitForSuggestions: true });
+  await msg("key", { key: "VK_DOWN", waitForSuggestions: true });
 
   for (let i = 0; i < 3; ++i) {
-    state = yield msg("key", "VK_TAB");
+    state = await msg("key", "VK_TAB");
   }
   checkState(state, "x", [], -1);
 
-  yield setUp();
+  await setUp();
 
-  yield msg("key", { key: "VK_DOWN", waitForSuggestions: true });
-  state = yield msg("key", "VK_DOWN");
+  await msg("key", { key: "VK_DOWN", waitForSuggestions: true });
+  state = await msg("key", "VK_DOWN");
   checkState(state, "xfoo", ["xfoo", "xbar"], 0);
 
-  state = yield msg("key", "VK_TAB");
+  state = await msg("key", "VK_TAB");
   checkState(state, "xfoo", ["xfoo", "xbar"], 0, 0);
 
-  state = yield msg("key", "VK_TAB");
+  state = await msg("key", "VK_TAB");
   checkState(state, "xfoo", ["xfoo", "xbar"], 0, 1);
 
-  state = yield msg("key", "VK_DOWN");
+  state = await msg("key", "VK_DOWN");
   checkState(state, "xbar", ["xfoo", "xbar"], 1, 1);
 
-  state = yield msg("key", "VK_DOWN");
+  state = await msg("key", "VK_DOWN");
   checkState(state, "x", ["xfoo", "xbar"], 2);
 
-  state = yield msg("key", "VK_UP");
+  state = await msg("key", "VK_UP");
   checkState(state, "xbar", ["xfoo", "xbar"], 1);
 
-  state = yield msg("key", "VK_TAB");
+  state = await msg("key", "VK_TAB");
   checkState(state, "xbar", ["xfoo", "xbar"], 1, 0);
 
-  state = yield msg("key", "VK_TAB");
+  state = await msg("key", "VK_TAB");
   checkState(state, "xbar", ["xfoo", "xbar"], 1, 1);
 
-  state = yield msg("key", "VK_TAB");
+  state = await msg("key", "VK_TAB");
   checkState(state, "xbar", [], -1);
 
-  yield msg("reset");
+  await msg("reset");
 });
 
-add_task(function* cycleSuggestions() {
-  yield setUp();
-  yield msg("key", { key: "x", waitForSuggestions: true });
+add_task(async function cycleSuggestions() {
+  await setUp();
+  await msg("key", { key: "x", waitForSuggestions: true });
 
-  let cycle = Task.async(function* (aSelectedButtonIndex) {
+  let cycle = async function(aSelectedButtonIndex) {
     let modifiers = {
       shiftKey: true,
       accelKey: true,
     };
 
-    let state = yield msg("key", { key: "VK_DOWN", modifiers });
+    let state = await msg("key", { key: "VK_DOWN", modifiers });
     checkState(state, "xfoo", ["xfoo", "xbar"], 0, aSelectedButtonIndex);
 
-    state = yield msg("key", { key: "VK_DOWN", modifiers });
+    state = await msg("key", { key: "VK_DOWN", modifiers });
     checkState(state, "xbar", ["xfoo", "xbar"], 1, aSelectedButtonIndex);
 
-    state = yield msg("key", { key: "VK_DOWN", modifiers });
+    state = await msg("key", { key: "VK_DOWN", modifiers });
     checkState(state, "x", ["xfoo", "xbar"], -1, aSelectedButtonIndex);
 
-    state = yield msg("key", { key: "VK_DOWN", modifiers });
+    state = await msg("key", { key: "VK_DOWN", modifiers });
     checkState(state, "xfoo", ["xfoo", "xbar"], 0, aSelectedButtonIndex);
 
-    state = yield msg("key", { key: "VK_UP", modifiers });
+    state = await msg("key", { key: "VK_UP", modifiers });
     checkState(state, "x", ["xfoo", "xbar"], -1, aSelectedButtonIndex);
 
-    state = yield msg("key", { key: "VK_UP", modifiers });
+    state = await msg("key", { key: "VK_UP", modifiers });
     checkState(state, "xbar", ["xfoo", "xbar"], 1, aSelectedButtonIndex);
 
-    state = yield msg("key", { key: "VK_UP", modifiers });
+    state = await msg("key", { key: "VK_UP", modifiers });
     checkState(state, "xfoo", ["xfoo", "xbar"], 0, aSelectedButtonIndex);
 
-    state = yield msg("key", { key: "VK_UP", modifiers });
+    state = await msg("key", { key: "VK_UP", modifiers });
     checkState(state, "x", ["xfoo", "xbar"], -1, aSelectedButtonIndex);
-  });
+  };
 
-  yield cycle();
+  await cycle();
 
   // Repeat with a one-off selected.
-  let state = yield msg("key", "VK_TAB");
+  let state = await msg("key", "VK_TAB");
   checkState(state, "x", ["xfoo", "xbar"], 2);
-  yield cycle(0);
+  await cycle(0);
 
   // Repeat with the settings button selected.
-  state = yield msg("key", "VK_TAB");
+  state = await msg("key", "VK_TAB");
   checkState(state, "x", ["xfoo", "xbar"], 3);
-  yield cycle(1);
+  await cycle(1);
 
-  yield msg("reset");
+  await msg("reset");
 });
 
-add_task(function* cycleOneOffs() {
-  yield setUp();
-  yield msg("key", { key: "x", waitForSuggestions: true });
+add_task(async function cycleOneOffs() {
+  await setUp();
+  await msg("key", { key: "x", waitForSuggestions: true });
 
-  yield msg("addDuplicateOneOff");
+  await msg("addDuplicateOneOff");
 
-  let state = yield msg("key", "VK_DOWN");
-  state = yield msg("key", "VK_DOWN");
+  let state = await msg("key", "VK_DOWN");
+  state = await msg("key", "VK_DOWN");
   checkState(state, "xbar", ["xfoo", "xbar"], 1);
 
   let modifiers = {
     altKey: true,
   };
 
-  state = yield msg("key", { key: "VK_DOWN", modifiers });
+  state = await msg("key", { key: "VK_DOWN", modifiers });
   checkState(state, "xbar", ["xfoo", "xbar"], 1, 0);
 
-  state = yield msg("key", { key: "VK_DOWN", modifiers });
+  state = await msg("key", { key: "VK_DOWN", modifiers });
   checkState(state, "xbar", ["xfoo", "xbar"], 1, 1);
 
-  state = yield msg("key", { key: "VK_DOWN", modifiers });
+  state = await msg("key", { key: "VK_DOWN", modifiers });
   checkState(state, "xbar", ["xfoo", "xbar"], 1);
 
-  state = yield msg("key", { key: "VK_UP", modifiers });
+  state = await msg("key", { key: "VK_UP", modifiers });
   checkState(state, "xbar", ["xfoo", "xbar"], 1, 1);
 
-  state = yield msg("key", { key: "VK_UP", modifiers });
+  state = await msg("key", { key: "VK_UP", modifiers });
   checkState(state, "xbar", ["xfoo", "xbar"], 1, 0);
 
-  state = yield msg("key", { key: "VK_UP", modifiers });
+  state = await msg("key", { key: "VK_UP", modifiers });
   checkState(state, "xbar", ["xfoo", "xbar"], 1);
 
   // If the settings button is selected, pressing alt+up/down should select the
   // last/first one-off respectively (and deselect the settings button).
-  yield msg("key", "VK_TAB");
-  yield msg("key", "VK_TAB");
-  state = yield msg("key", "VK_TAB"); // Settings button selected.
+  await msg("key", "VK_TAB");
+  await msg("key", "VK_TAB");
+  state = await msg("key", "VK_TAB"); // Settings button selected.
   checkState(state, "xbar", ["xfoo", "xbar"], 1, 2);
 
-  state = yield msg("key", { key: "VK_UP", modifiers });
+  state = await msg("key", { key: "VK_UP", modifiers });
   checkState(state, "xbar", ["xfoo", "xbar"], 1, 1);
 
-  state = yield msg("key", "VK_TAB");
+  state = await msg("key", "VK_TAB");
   checkState(state, "xbar", ["xfoo", "xbar"], 1, 2);
 
-  state = yield msg("key", { key: "VK_DOWN", modifiers });
+  state = await msg("key", { key: "VK_DOWN", modifiers });
   checkState(state, "xbar", ["xfoo", "xbar"], 1, 0);
 
-  yield msg("removeLastOneOff");
-  yield msg("reset");
+  await msg("removeLastOneOff");
+  await msg("reset");
 });
 
-add_task(function* mouse() {
-  yield setUp();
+add_task(async function mouse() {
+  await setUp();
 
-  let state = yield msg("key", { key: "x", waitForSuggestions: true });
+  let state = await msg("key", { key: "x", waitForSuggestions: true });
   checkState(state, "x", ["xfoo", "xbar"], -1);
 
-  state = yield msg("mousemove", 0);
+  state = await msg("mousemove", 0);
   checkState(state, "x", ["xfoo", "xbar"], 0);
 
-  state = yield msg("mousemove", 1);
+  state = await msg("mousemove", 1);
   checkState(state, "x", ["xfoo", "xbar"], 1);
 
-  state = yield msg("mousemove", 2);
+  state = await msg("mousemove", 2);
   checkState(state, "x", ["xfoo", "xbar"], 1, 0);
 
-  state = yield msg("mousemove", 3);
+  state = await msg("mousemove", 3);
   checkState(state, "x", ["xfoo", "xbar"], 1, 1);
 
-  state = yield msg("mousemove", -1);
+  state = await msg("mousemove", -1);
   checkState(state, "x", ["xfoo", "xbar"], 1);
 
-  yield msg("reset");
-  yield setUp();
+  await msg("reset");
+  await setUp();
 
-  state = yield msg("key", { key: "x", waitForSuggestions: true });
+  state = await msg("key", { key: "x", waitForSuggestions: true });
   checkState(state, "x", ["xfoo", "xbar"], -1);
 
-  state = yield msg("mousemove", 0);
+  state = await msg("mousemove", 0);
   checkState(state, "x", ["xfoo", "xbar"], 0);
 
-  state = yield msg("mousemove", 2);
+  state = await msg("mousemove", 2);
   checkState(state, "x", ["xfoo", "xbar"], 0, 0);
 
-  state = yield msg("mousemove", -1);
+  state = await msg("mousemove", -1);
   checkState(state, "x", ["xfoo", "xbar"], 0);
 
-  yield msg("reset");
+  await msg("reset");
 });
 
-add_task(function* formHistory() {
-  yield setUp();
+add_task(async function formHistory() {
+  await setUp();
 
   // Type an X and add it to form history.
-  let state = yield msg("key", { key: "x", waitForSuggestions: true });
+  let state = await msg("key", { key: "x", waitForSuggestions: true });
   checkState(state, "x", ["xfoo", "xbar"], -1);
   // Wait for Satchel to say it's been added to form history.
   let deferred = Promise.defer();
@@ -340,19 +340,19 @@ add_task(function* formHistory() {
       executeSoon(() => deferred.resolve());
     }
   }, "satchel-storage-changed");
-  yield Promise.all([msg("addInputValueToFormHistory"), deferred.promise]);
+  await Promise.all([msg("addInputValueToFormHistory"), deferred.promise]);
 
   // Reset the input.
-  state = yield msg("reset");
+  state = await msg("reset");
   checkState(state, "", [], -1);
 
   // Type an X again.  The form history entry should appear.
-  state = yield msg("key", { key: "x", waitForSuggestions: true });
+  state = await msg("key", { key: "x", waitForSuggestions: true });
   checkState(state, "x", [{ str: "x", type: "formHistory" }, "xfoo", "xbar"],
              -1);
 
   // Select the form history entry and delete it.
-  state = yield msg("key", "VK_DOWN");
+  state = await msg("key", "VK_DOWN");
   checkState(state, "x", [{ str: "x", type: "formHistory" }, "xfoo", "xbar"],
              0);
 
@@ -365,61 +365,61 @@ add_task(function* formHistory() {
     }
   }, "satchel-storage-changed");
 
-  state = yield msg("key", "VK_DELETE");
+  state = await msg("key", "VK_DELETE");
   checkState(state, "x", ["xfoo", "xbar"], -1);
 
-  yield deferred.promise;
+  await deferred.promise;
 
   // Reset the input.
-  state = yield msg("reset");
+  state = await msg("reset");
   checkState(state, "", [], -1);
 
   // Type an X again.  The form history entry should still be gone.
-  state = yield msg("key", { key: "x", waitForSuggestions: true });
+  state = await msg("key", { key: "x", waitForSuggestions: true });
   checkState(state, "x", ["xfoo", "xbar"], -1);
 
-  yield msg("reset");
+  await msg("reset");
 });
 
-add_task(function* cycleEngines() {
-  yield setUp();
-  yield msg("key", { key: "VK_DOWN", waitForSuggestions: true });
+add_task(async function cycleEngines() {
+  await setUp();
+  await msg("key", { key: "VK_DOWN", waitForSuggestions: true });
 
   let promiseEngineChange = function(newEngineName) {
-    let deferred = Promise.defer();
-    Services.obs.addObserver(function resolver(subj, topic, data) {
-      if (data != "engine-current") {
-        return;
-      }
-      SimpleTest.is(subj.name, newEngineName, "Engine cycled correctly");
-      Services.obs.removeObserver(resolver, "browser-search-engine-modified");
-      deferred.resolve();
-    }, "browser-search-engine-modified");
-    return deferred.promise;
+    return new Promise(resolve => {
+      Services.obs.addObserver(function resolver(subj, topic, data) {
+        if (data != "engine-current") {
+          return;
+        }
+        SimpleTest.is(subj.name, newEngineName, "Engine cycled correctly");
+        Services.obs.removeObserver(resolver, "browser-search-engine-modified");
+        resolve();
+      }, "browser-search-engine-modified");
+    });
   }
 
   let p = promiseEngineChange(TEST_ENGINE_PREFIX + " " + TEST_ENGINE_2_BASENAME);
-  yield msg("key", { key: "VK_DOWN", modifiers: { accelKey: true }});
-  yield p;
+  await msg("key", { key: "VK_DOWN", modifiers: { accelKey: true }});
+  await p;
 
   p = promiseEngineChange(TEST_ENGINE_PREFIX + " " + TEST_ENGINE_BASENAME);
-  yield msg("key", { key: "VK_UP", modifiers: { accelKey: true }});
-  yield p;
+  await msg("key", { key: "VK_UP", modifiers: { accelKey: true }});
+  await p;
 
-  yield msg("reset");
+  await msg("reset");
 });
 
-add_task(function* search() {
-  yield setUp();
+add_task(async function search() {
+  await setUp();
 
   let modifiers = {};
   ["altKey", "ctrlKey", "metaKey", "shiftKey"].forEach(k => modifiers[k] = true);
 
   // Test typing a query and pressing enter.
   let p = msg("waitForSearch");
-  yield msg("key", { key: "x", waitForSuggestions: true });
-  yield msg("key", { key: "VK_RETURN", modifiers });
-  let mesg = yield p;
+  await msg("key", { key: "x", waitForSuggestions: true });
+  await msg("key", { key: "VK_RETURN", modifiers });
+  let mesg = await p;
   let eventData = {
     engineName: TEST_ENGINE_PREFIX + " " + TEST_ENGINE_BASENAME,
     searchString: "x",
@@ -429,16 +429,16 @@ add_task(function* search() {
   };
   SimpleTest.isDeeply(eventData, mesg, "Search event data");
 
-  yield promiseTab();
-  yield setUp();
+  await promiseTab();
+  await setUp();
 
   // Test typing a query, then selecting a suggestion and pressing enter.
   p = msg("waitForSearch");
-  yield msg("key", { key: "x", waitForSuggestions: true });
-  yield msg("key", "VK_DOWN");
-  yield msg("key", "VK_DOWN");
-  yield msg("key", { key: "VK_RETURN", modifiers });
-  mesg = yield p;
+  await msg("key", { key: "x", waitForSuggestions: true });
+  await msg("key", "VK_DOWN");
+  await msg("key", "VK_DOWN");
+  await msg("key", { key: "VK_RETURN", modifiers });
+  mesg = await p;
   eventData.searchString = "xfoo";
   eventData.engineName = TEST_ENGINE_PREFIX + " " + TEST_ENGINE_BASENAME;
   eventData.selection = {
@@ -447,44 +447,44 @@ add_task(function* search() {
   }
   SimpleTest.isDeeply(eventData, mesg, "Search event data");
 
-  yield promiseTab();
-  yield setUp();
+  await promiseTab();
+  await setUp();
 
   // Test typing a query, then selecting a one-off button and pressing enter.
   p = msg("waitForSearch");
-  yield msg("key", { key: "x", waitForSuggestions: true });
-  yield msg("key", "VK_UP");
-  yield msg("key", "VK_UP");
-  yield msg("key", { key: "VK_RETURN", modifiers });
-  mesg = yield p;
+  await msg("key", { key: "x", waitForSuggestions: true });
+  await msg("key", "VK_UP");
+  await msg("key", "VK_UP");
+  await msg("key", { key: "VK_RETURN", modifiers });
+  mesg = await p;
   delete eventData.selection;
   eventData.searchString = "x";
   eventData.engineName = TEST_ENGINE_PREFIX + " " + TEST_ENGINE_2_BASENAME;
   SimpleTest.isDeeply(eventData, mesg, "Search event data");
 
-  yield promiseTab();
-  yield setUp();
+  await promiseTab();
+  await setUp();
 
   // Test typing a query and clicking the search engine header.
   p = msg("waitForSearch");
   modifiers.button = 0;
-  yield msg("key", { key: "x", waitForSuggestions: true });
-  yield msg("mousemove", -1);
-  yield msg("click", { eltIdx: -1, modifiers });
-  mesg = yield p;
+  await msg("key", { key: "x", waitForSuggestions: true });
+  await msg("mousemove", -1);
+  await msg("click", { eltIdx: -1, modifiers });
+  mesg = await p;
   eventData.originalEvent = modifiers;
   eventData.engineName = TEST_ENGINE_PREFIX + " " + TEST_ENGINE_BASENAME;
   SimpleTest.isDeeply(eventData, mesg, "Search event data");
 
-  yield promiseTab();
-  yield setUp();
+  await promiseTab();
+  await setUp();
 
   // Test typing a query and then clicking a suggestion.
-  yield msg("key", { key: "x", waitForSuggestions: true });
+  await msg("key", { key: "x", waitForSuggestions: true });
   p = msg("waitForSearch");
-  yield msg("mousemove", 1);
-  yield msg("click", { eltIdx: 1, modifiers });
-  mesg = yield p;
+  await msg("mousemove", 1);
+  await msg("click", { eltIdx: 1, modifiers });
+  mesg = await p;
   eventData.searchString = "xfoo";
   eventData.selection = {
     index: 1,
@@ -492,31 +492,31 @@ add_task(function* search() {
   };
   SimpleTest.isDeeply(eventData, mesg, "Search event data");
 
-  yield promiseTab();
-  yield setUp();
+  await promiseTab();
+  await setUp();
 
   // Test typing a query and then clicking a one-off button.
-  yield msg("key", { key: "x", waitForSuggestions: true });
+  await msg("key", { key: "x", waitForSuggestions: true });
   p = msg("waitForSearch");
-  yield msg("mousemove", 3);
-  yield msg("click", { eltIdx: 3, modifiers });
-  mesg = yield p;
+  await msg("mousemove", 3);
+  await msg("click", { eltIdx: 3, modifiers });
+  mesg = await p;
   eventData.searchString = "x";
   eventData.engineName = TEST_ENGINE_PREFIX + " " + TEST_ENGINE_2_BASENAME;
   delete eventData.selection;
   SimpleTest.isDeeply(eventData, mesg, "Search event data");
 
-  yield promiseTab();
-  yield setUp();
+  await promiseTab();
+  await setUp();
 
   // Test selecting a suggestion, then clicking a one-off without deselecting the
   // suggestion.
-  yield msg("key", { key: "x", waitForSuggestions: true });
+  await msg("key", { key: "x", waitForSuggestions: true });
   p = msg("waitForSearch");
-  yield msg("mousemove", 1);
-  yield msg("mousemove", 3);
-  yield msg("click", { eltIdx: 3, modifiers });
-  mesg = yield p;
+  await msg("mousemove", 1);
+  await msg("mousemove", 3);
+  await msg("click", { eltIdx: 3, modifiers });
+  mesg = await p;
   eventData.searchString = "xfoo"
   eventData.selection = {
     index: 1,
@@ -524,67 +524,67 @@ add_task(function* search() {
   };
   SimpleTest.isDeeply(eventData, mesg, "Search event data");
 
-  yield promiseTab();
-  yield setUp();
+  await promiseTab();
+  await setUp();
 
   // Same as above, but with the keyboard.
   delete modifiers.button;
-  yield msg("key", { key: "x", waitForSuggestions: true });
+  await msg("key", { key: "x", waitForSuggestions: true });
   p = msg("waitForSearch");
-  yield msg("key", "VK_DOWN");
-  yield msg("key", "VK_DOWN");
-  yield msg("key", "VK_TAB");
-  yield msg("key", { key: "VK_RETURN", modifiers });
-  mesg = yield p;
+  await msg("key", "VK_DOWN");
+  await msg("key", "VK_DOWN");
+  await msg("key", "VK_TAB");
+  await msg("key", { key: "VK_RETURN", modifiers });
+  mesg = await p;
   eventData.selection = {
     index: 1,
     kind: "key",
   };
   SimpleTest.isDeeply(eventData, mesg, "Search event data");
 
-  yield promiseTab();
-  yield setUp();
+  await promiseTab();
+  await setUp();
 
   // Test searching when using IME composition.
-  let state = yield msg("startComposition", { data: "" });
+  let state = await msg("startComposition", { data: "" });
   checkState(state, "", [], -1);
-  state = yield msg("changeComposition", { data: "x", waitForSuggestions: true });
+  state = await msg("changeComposition", { data: "x", waitForSuggestions: true });
   checkState(state, "x", [{ str: "x", type: "formHistory" },
                           { str: "xfoo", type: "formHistory" }, "xbar"], -1);
-  yield msg("commitComposition");
+  await msg("commitComposition");
   delete modifiers.button;
   p = msg("waitForSearch");
-  yield msg("key", { key: "VK_RETURN", modifiers });
-  mesg = yield p;
+  await msg("key", { key: "VK_RETURN", modifiers });
+  mesg = await p;
   eventData.searchString = "x"
   eventData.originalEvent = modifiers;
   eventData.engineName = TEST_ENGINE_PREFIX + " " + TEST_ENGINE_BASENAME;
   delete eventData.selection;
   SimpleTest.isDeeply(eventData, mesg, "Search event data");
 
-  yield promiseTab();
-  yield setUp();
+  await promiseTab();
+  await setUp();
 
-  state = yield msg("startComposition", { data: "" });
+  state = await msg("startComposition", { data: "" });
   checkState(state, "", [], -1);
-  state = yield msg("changeComposition", { data: "x", waitForSuggestions: true });
+  state = await msg("changeComposition", { data: "x", waitForSuggestions: true });
   checkState(state, "x", [{ str: "x", type: "formHistory" },
                           { str: "xfoo", type: "formHistory" }, "xbar"], -1);
 
   // Mouse over the first suggestion.
-  state = yield msg("mousemove", 0);
+  state = await msg("mousemove", 0);
   checkState(state, "x", [{ str: "x", type: "formHistory" },
                           { str: "xfoo", type: "formHistory" }, "xbar"], 0);
 
   // Mouse over the second suggestion.
-  state = yield msg("mousemove", 1);
+  state = await msg("mousemove", 1);
   checkState(state, "x", [{ str: "x", type: "formHistory" },
                           { str: "xfoo", type: "formHistory" }, "xbar"], 1);
 
   modifiers.button = 0;
   p = msg("waitForSearch");
-  yield msg("click", { eltIdx: 1, modifiers });
-  mesg = yield p;
+  await msg("click", { eltIdx: 1, modifiers });
+  mesg = await p;
   eventData.searchString = "xfoo";
   eventData.originalEvent = modifiers;
   eventData.selection = {
@@ -593,8 +593,8 @@ add_task(function* search() {
   };
   SimpleTest.isDeeply(eventData, mesg, "Search event data");
 
-  yield promiseTab();
-  yield setUp();
+  await promiseTab();
+  await setUp();
 
   // Remove form history entries.
   // Wait for Satchel.
@@ -610,38 +610,38 @@ add_task(function* search() {
     }
   }, "satchel-storage-changed");
 
-  yield msg("key", { key: "x", waitForSuggestions: true });
-  yield msg("key", "VK_DOWN");
-  yield msg("key", "VK_DOWN");
-  yield msg("key", "VK_DELETE");
-  yield msg("key", "VK_DOWN");
-  yield msg("key", "VK_DELETE");
-  yield deferred.promise;
+  await msg("key", { key: "x", waitForSuggestions: true });
+  await msg("key", "VK_DOWN");
+  await msg("key", "VK_DOWN");
+  await msg("key", "VK_DELETE");
+  await msg("key", "VK_DOWN");
+  await msg("key", "VK_DELETE");
+  await deferred.promise;
 
-  yield msg("reset");
-  state = yield msg("key", { key: "x", waitForSuggestions: true });
+  await msg("reset");
+  state = await msg("key", { key: "x", waitForSuggestions: true });
   checkState(state, "x", ["xfoo", "xbar"], -1);
 
-  yield promiseTab();
-  yield setUp();
-  yield msg("reset");
+  await promiseTab();
+  await setUp();
+  await msg("reset");
 });
 
-add_task(function* settings() {
-  yield setUp();
-  yield msg("key", { key: "VK_DOWN", waitForSuggestions: true });
-  yield msg("key", "VK_UP");
+add_task(async function settings() {
+  await setUp();
+  await msg("key", { key: "VK_DOWN", waitForSuggestions: true });
+  await msg("key", "VK_UP");
   let p = msg("waitForSearchSettings");
-  yield msg("key", "VK_RETURN");
-  yield p;
+  await msg("key", "VK_RETURN");
+  await p;
 
-  yield msg("reset");
+  await msg("reset");
 });
 
 var gDidInitialSetUp = false;
 
 function setUp(aNoEngine) {
-  return Task.spawn(function* () {
+  return (async function() {
     if (!gDidInitialSetUp) {
       Cu.import("resource:///modules/ContentSearch.jsm");
       let originalOnMessageSearch = ContentSearch._onMessageSearch;
@@ -652,12 +652,12 @@ function setUp(aNoEngine) {
         ContentSearch._onMessageSearch = originalOnMessageSearch;
         ContentSearch._onMessageManageEngines = originalOnMessageManageEngines;
       });
-      yield setUpEngines();
-      yield promiseTab();
+      await setUpEngines();
+      await promiseTab();
       gDidInitialSetUp = true;
     }
-    yield msg("focus");
-  });
+    await msg("focus");
+  })();
 }
 
 function msg(type, data = null) {
@@ -665,15 +665,15 @@ function msg(type, data = null) {
     type,
     data,
   });
-  let deferred = Promise.defer();
-  gMsgMan.addMessageListener(TEST_MSG, function onMsg(msgObj) {
-    if (msgObj.data.type != type) {
-      return;
-    }
-    gMsgMan.removeMessageListener(TEST_MSG, onMsg);
-    deferred.resolve(msgObj.data.data);
+  return new Promise(resolve => {
+    gMsgMan.addMessageListener(TEST_MSG, function onMsg(msgObj) {
+      if (msgObj.data.type != type) {
+        return;
+      }
+      gMsgMan.removeMessageListener(TEST_MSG, onMsg);
+      resolve(msgObj.data.data);
+    });
   });
-  return deferred.promise;
 }
 
 function checkState(actualState, expectedInputVal, expectedSuggestions,
@@ -714,9 +714,9 @@ function checkState(actualState, expectedInputVal, expectedSuggestions,
 
 var gMsgMan;
 
-function* promiseTab() {
+async function promiseTab() {
   let deferred = Promise.defer();
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   registerCleanupFunction(() => BrowserTestUtils.removeTab(tab));
   let pageURL = getRootDirectory(gTestPath) + TEST_PAGE_BASENAME;
   tab.linkedBrowser.addEventListener("load", function onLoad(event) {
@@ -737,26 +737,26 @@ function* promiseTab() {
 }
 
 function promiseMsg(name, type, msgMan) {
-  let deferred = Promise.defer();
-  info("Waiting for " + name + " message " + type + "...");
-  msgMan.addMessageListener(name, function onMsg(msgObj) {
-    info("Received " + name + " message " + msgObj.data.type + "\n");
-    if (msgObj.data.type == type) {
-      msgMan.removeMessageListener(name, onMsg);
-      deferred.resolve(msgObj);
-    }
+  return new Promise(resolve => {
+    info("Waiting for " + name + " message " + type + "...");
+    msgMan.addMessageListener(name, function onMsg(msgObj) {
+      info("Received " + name + " message " + msgObj.data.type + "\n");
+      if (msgObj.data.type == type) {
+        msgMan.removeMessageListener(name, onMsg);
+        resolve(msgObj);
+      }
+    });
   });
-  return deferred.promise;
 }
 
 function setUpEngines() {
-  return Task.spawn(function* () {
+  return (async function() {
     info("Removing default search engines");
     let currentEngineName = Services.search.currentEngine.name;
     let currentEngines = Services.search.getVisibleEngines();
     info("Adding test search engines");
-    let engine1 = yield promiseNewSearchEngine(TEST_ENGINE_BASENAME);
-    yield promiseNewSearchEngine(TEST_ENGINE_2_BASENAME);
+    let engine1 = await promiseNewSearchEngine(TEST_ENGINE_BASENAME);
+    await promiseNewSearchEngine(TEST_ENGINE_2_BASENAME);
     Services.search.currentEngine = engine1;
     for (let engine of currentEngines) {
       Services.search.removeEngine(engine);
@@ -765,5 +765,5 @@ function setUpEngines() {
       Services.search.restoreDefaultEngines();
       Services.search.currentEngine = Services.search.getEngineByName(currentEngineName);
     });
-  });
+  })();
 }

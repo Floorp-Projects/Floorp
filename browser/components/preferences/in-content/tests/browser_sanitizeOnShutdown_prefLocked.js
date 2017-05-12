@@ -27,13 +27,13 @@ add_task(function setup() {
   });
 });
 
-add_task(function* test_preference_enabled_when_unlocked() {
-  yield openPreferencesViaOpenPreferencesAPI("panePrivacy", {leaveOpen: true});
+add_task(async function test_preference_enabled_when_unlocked() {
+  await openPreferencesViaOpenPreferencesAPI("panePrivacy", {leaveOpen: true});
   testPrefStateMatchesLockedState();
 });
 
-add_task(function* test_preference_disabled_when_locked() {
+add_task(async function test_preference_disabled_when_locked() {
   Services.prefs.lockPref("privacy.sanitize.sanitizeOnShutdown");
-  yield openPreferencesViaOpenPreferencesAPI("panePrivacy", {leaveOpen: true});
+  await openPreferencesViaOpenPreferencesAPI("panePrivacy", {leaveOpen: true});
   testPrefStateMatchesLockedState();
 });

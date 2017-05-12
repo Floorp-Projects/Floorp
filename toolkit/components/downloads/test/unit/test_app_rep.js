@@ -59,7 +59,7 @@ function registerTableUpdate(aTable, aFilename) {
   });
 }
 
-add_task(function* test_setup() {
+add_task(async function test_setup() {
   // Set up a local HTTP server to return bad verdicts.
   Services.prefs.setCharPref(appRepURLPref,
                              "http://localhost:4444/download");
@@ -91,11 +91,11 @@ add_task(function* test_setup() {
   gHttpServ.start(4444);
 
   do_register_cleanup(function() {
-    return Task.spawn(function* () {
-      yield new Promise(resolve => {
+    return (async function() {
+      await new Promise(resolve => {
         gHttpServ.stop(resolve);
       });
-    });
+    })();
   });
 });
 

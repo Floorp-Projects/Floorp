@@ -1,28 +1,28 @@
-add_task(function* () {
-  let newWindow = yield BrowserTestUtils.openNewBrowserWindow();
+add_task(async function() {
+  let newWindow = await BrowserTestUtils.openNewBrowserWindow();
 
   let resizedPromise = BrowserTestUtils.waitForEvent(newWindow, "resize");
   newWindow.resizeTo(300, 300);
-  yield resizedPromise;
+  await resizedPromise;
 
-  yield BrowserTestUtils.openNewForegroundTab(newWindow.gBrowser, "about:home");
+  await BrowserTestUtils.openNewForegroundTab(newWindow.gBrowser, "about:home");
 
-  yield ContentTask.spawn(newWindow.gBrowser.selectedBrowser, {}, function* () {
+  await ContentTask.spawn(newWindow.gBrowser.selectedBrowser, {}, async function() {
     Assert.equal(content.document.body.getAttribute("narrow"), "true", "narrow mode");
   });
 
   resizedPromise = BrowserTestUtils.waitForContentEvent(newWindow.gBrowser.selectedBrowser, "resize");
 
 
-  yield ContentTask.spawn(newWindow.gBrowser.selectedBrowser, {}, function* () {
+  await ContentTask.spawn(newWindow.gBrowser.selectedBrowser, {}, async function() {
     content.window.resizeTo(800, 800);
   });
 
-  yield resizedPromise;
+  await resizedPromise;
 
-  yield ContentTask.spawn(newWindow.gBrowser.selectedBrowser, {}, function* () {
+  await ContentTask.spawn(newWindow.gBrowser.selectedBrowser, {}, async function() {
     Assert.equal(content.document.body.hasAttribute("narrow"), false, "non-narrow mode");
   });
 
-  yield BrowserTestUtils.closeWindow(newWindow);
+  await BrowserTestUtils.closeWindow(newWindow);
 });
