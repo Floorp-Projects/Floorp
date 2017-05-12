@@ -31,15 +31,14 @@
 #include "nsRegionFwd.h"                // for nsIntRegion
 #include "OGLShaderProgram.h"           // for ShaderProgramType, etc
 
-#ifdef MOZ_WIDGET_ANDROID
-#include "GeneratedJNIWrappers.h"
-#include "AndroidSurfaceTexture.h"
-#endif
-
 namespace mozilla {
 namespace gfx {
 class DataSourceSurface;
 } // namespace gfx
+
+namespace gl {
+class AndroidSurfaceTexture;
+} // namespace gl
 
 namespace layers {
 
@@ -342,7 +341,7 @@ class SurfaceTextureSource : public TextureSource
 {
 public:
   SurfaceTextureSource(TextureSourceProvider* aProvider,
-                       java::GeckoSurfaceTexture::Ref& aSurfTex,
+                       mozilla::gl::AndroidSurfaceTexture* aSurfTex,
                        gfx::SurfaceFormat aFormat,
                        GLenum aTarget,
                        GLenum aWrapMode,
@@ -377,7 +376,7 @@ public:
 
 protected:
   RefPtr<gl::GLContext> mGL;
-  mozilla::java::GeckoSurfaceTexture::GlobalRef mSurfTex;
+  RefPtr<gl::AndroidSurfaceTexture> mSurfTex;
   const gfx::SurfaceFormat mFormat;
   const GLenum mTextureTarget;
   const GLenum mWrapMode;
@@ -388,13 +387,10 @@ class SurfaceTextureHost : public TextureHost
 {
 public:
   SurfaceTextureHost(TextureFlags aFlags,
-                     mozilla::java::GeckoSurfaceTexture::Ref& aSurfTex,
-                     gfx::IntSize aSize,
-                     bool aContinuousUpdate);
+                     mozilla::gl::AndroidSurfaceTexture* aSurfTex,
+                     gfx::IntSize aSize);
 
   virtual ~SurfaceTextureHost();
-
-  virtual void PrepareTextureSource(CompositableTextureSourceRef& aTexture) override;
 
   virtual void DeallocateDeviceData() override;
 
@@ -402,9 +398,9 @@ public:
 
   virtual bool Lock() override;
 
-  virtual gfx::SurfaceFormat GetFormat() const override;
+  virtual void Unlock() override;
 
-  virtual void NotifyNotUsed() override;
+  virtual gfx::SurfaceFormat GetFormat() const override;
 
   virtual bool BindTextureSource(CompositableTextureSourceRef& aTexture) override
   {
@@ -424,9 +420,8 @@ public:
   virtual const char* Name() override { return "SurfaceTextureHost"; }
 
 protected:
-  mozilla::java::GeckoSurfaceTexture::GlobalRef mSurfTex;
+  RefPtr<gl::AndroidSurfaceTexture> mSurfTex;
   const gfx::IntSize mSize;
-  bool mContinuousUpdate;
   RefPtr<CompositorOGL> mCompositor;
   RefPtr<SurfaceTextureSource> mTextureSource;
 };

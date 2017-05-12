@@ -10,10 +10,6 @@
 #include "nsDebug.h"                    // for NS_ASSERTION, NS_ERROR, etc
 #include "nsDeque.h"                    // for nsDeque
 
-#ifdef MOZ_WIDGET_ANDROID
-#include "GeneratedJNINatives.h"
-#endif
-
 #define TEXTURE_POOL_SIZE 10
 
 namespace mozilla {
@@ -23,19 +19,6 @@ static GLContext* sActiveContext = nullptr;
 
 static Monitor* sMonitor = nullptr;
 static nsDeque* sTextures = nullptr;
-
-#ifdef MOZ_WIDGET_ANDROID
-
-class GeckoSurfaceTextureSupport final
-    : public java::GeckoSurfaceTexture::Natives<GeckoSurfaceTextureSupport>
-{
-public:
-  static int32_t NativeAcquireTexture() {
-    return TexturePoolOGL::AcquireTexture();
-  }
-};
-
-#endif // MOZ_WIDGET_ANDROID
 
 GLuint TexturePoolOGL::AcquireTexture()
 {
@@ -128,12 +111,6 @@ void TexturePoolOGL::Init()
 {
   sMonitor = new Monitor("TexturePoolOGL.sMonitor");
   sTextures = new nsDeque();
-
-#ifdef MOZ_WIDGET_ANDROID
-  if (jni::IsAvailable()) {
-    GeckoSurfaceTextureSupport::Init();
-  }
-#endif
 }
 
 void TexturePoolOGL::Shutdown()
