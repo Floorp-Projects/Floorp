@@ -1,0 +1,21 @@
+commit 45c7ffca19f0bd43ee03e84a6d641a1b2a410793
+Author: Paul Adenot <paul@paul.cx>
+Date:   Thu May 4 14:22:09 2017 +0200
+
+    Return an error if stopping a WASAPI stream fails.
+
+diff --git a/src/cubeb_wasapi.cpp b/src/cubeb_wasapi.cpp
+index 1f106c9..e6cf687 100644
+--- a/src/cubeb_wasapi.cpp
++++ b/src/cubeb_wasapi.cpp
+@@ -1993,6 +1993,10 @@ int wasapi_stream_stop(cubeb_stream * stm)
+       delete stm->emergency_bailout.load();
+       stm->emergency_bailout = nullptr;
+     }
++  } else {
++    // If we could not join the thread, put the stream in error.
++    stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_ERROR);
++    return CUBEB_ERROR;
+   }
+ 
+   return CUBEB_OK;
