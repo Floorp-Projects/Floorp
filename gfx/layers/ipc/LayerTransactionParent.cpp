@@ -89,6 +89,12 @@ LayerTransactionParent::RecvShutdown()
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+LayerTransactionParent::RecvShutdownSync()
+{
+  return RecvShutdown();
+}
+
 void
 LayerTransactionParent::Destroy()
 {

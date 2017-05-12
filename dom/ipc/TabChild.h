@@ -568,6 +568,7 @@ public:
   void ClearCachedResources();
   void InvalidateLayers();
   void ReinitRendering();
+  void ReinitRenderingForDeviceReset();
   void CompositorUpdated(const TextureFactoryIdentifier& aNewIdentifier,
                          uint64_t aDeviceResetSeqNo);
 

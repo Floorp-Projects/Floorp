@@ -669,6 +669,7 @@ protected:
 
   void OnVarChanged(const GfxVarUpdate& aVar) override;
   void OnCompositorUnexpectedShutdown() override;
+  void OnCompositorDeviceReset() override;
 
 private:
   /**

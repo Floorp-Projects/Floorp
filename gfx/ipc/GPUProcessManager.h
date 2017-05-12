@@ -198,6 +198,8 @@ private:
   void RegisterSession(RemoteCompositorSession* aSession);
   void UnregisterSession(RemoteCompositorSession* aSession);
 
+  void RebuildRemoteSessions();
+
 private:
   GPUProcessManager();
 
