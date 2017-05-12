@@ -8,14 +8,14 @@
 #ifndef SkLiteRecorder_DEFINED
 #define SkLiteRecorder_DEFINED
 
-#include "SkCanvas.h"
+#include "SkNoDrawCanvas.h"
 
 class SkLiteDL;
 
-class SkLiteRecorder final : public SkCanvas {
+class SkLiteRecorder final : public SkNoDrawCanvas {
 public:
     SkLiteRecorder();
-    void reset(SkLiteDL*);
+    void reset(SkLiteDL*, const SkIRect& bounds);
 
     sk_sp<SkSurface> onNewSurface(const SkImageInfo&, const SkSurfaceProps&) override;
 
@@ -31,10 +31,10 @@ public:
     void didSetMatrix(const SkMatrix&) override;
     void didTranslate(SkScalar, SkScalar) override;
 
-    void onClipRect  (const   SkRect&, ClipOp, ClipEdgeStyle) override;
-    void onClipRRect (const  SkRRect&, ClipOp, ClipEdgeStyle) override;
-    void onClipPath  (const   SkPath&, ClipOp, ClipEdgeStyle) override;
-    void onClipRegion(const SkRegion&, ClipOp) override;
+    void onClipRect  (const   SkRect&, SkClipOp, ClipEdgeStyle) override;
+    void onClipRRect (const  SkRRect&, SkClipOp, ClipEdgeStyle) override;
+    void onClipPath  (const   SkPath&, SkClipOp, ClipEdgeStyle) override;
+    void onClipRegion(const SkRegion&, SkClipOp) override;
 
     void onDrawPaint (const SkPaint&) override;
     void onDrawPath  (const SkPath&, const SkPaint&) override;
@@ -72,12 +72,11 @@ public:
                          SrcRectConstraint) override;
 
     void onDrawPatch(const SkPoint[12], const SkColor[4],
-                     const SkPoint[4], SkXfermode*, const SkPaint&) override;
+                     const SkPoint[4], SkBlendMode, const SkPaint&) override;
     void onDrawPoints(PointMode, size_t count, const SkPoint pts[], const SkPaint&) override;
-    void onDrawVertices(VertexMode, int, const SkPoint[], const SkPoint[], const SkColor[],
-                        SkXfermode*, const uint16_t[], int, const SkPaint&) override;
+    void onDrawVerticesObject(const SkVertices*, SkBlendMode, const SkPaint&) override;
     void onDrawAtlas(const SkImage*, const SkRSXform[], const SkRect[], const SkColor[],
-                     int, SkXfermode::Mode, const SkRect*, const SkPaint*) override;
+                     int, SkBlendMode, const SkRect*, const SkPaint*) override;
 
 #ifdef SK_EXPERIMENTAL_SHADOWING
     void didTranslateZ(SkScalar) override;
@@ -90,6 +89,8 @@ public:
 #endif
 
 private:
+    typedef SkNoDrawCanvas INHERITED;
+
     SkLiteDL* fDL;
 };
 

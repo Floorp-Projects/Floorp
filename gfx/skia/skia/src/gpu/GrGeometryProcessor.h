@@ -51,6 +51,7 @@ protected:
      */
     const Attribute& addVertexAttrib(const char* name, GrVertexAttribType type,
                                      GrSLPrecision precision = kDefault_GrSLPrecision) {
+        precision = (kDefault_GrSLPrecision == precision) ? kMedium_GrSLPrecision : precision;
         fAttribs.emplace_back(name, type, precision);
         fVertexStride += fAttribs.back().fOffset;
         return fAttribs.back();
@@ -64,7 +65,6 @@ protected:
      * 1) LocalCoordTransform * Position - in Shader
      * 2) LocalCoordTransform * ExplicitLocalCoords- in Shader
      * 3) A transformation on the CPU uploaded via vertex attribute
-     * TODO make this GrBatches responsibility
      */
     enum LocalCoordsType {
         kUnused_LocalCoordsType,

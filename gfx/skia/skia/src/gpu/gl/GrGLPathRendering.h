@@ -10,12 +10,12 @@
 
 #include "SkRefCnt.h"
 #include "GrPathRendering.h"
+#include "GrStencilSettings.h"
 #include "gl/GrGLTypes.h"
 #include "glsl/GrGLSLUtil.h"
 
 class GrGLNameAllocator;
 class GrGLGpu;
-class GrStencilSettings;
 class GrStyle;
 
 /**
@@ -31,7 +31,7 @@ public:
      * Create a new GrGLPathRendering object from a given GrGLGpu.
      */
     GrGLPathRendering(GrGLGpu* gpu);
-    virtual ~GrGLPathRendering();
+    ~GrGLPathRendering() override;
 
     // GrPathRendering implementations.
     GrPath* createPath(const SkPath&, const GrStyle&) override;

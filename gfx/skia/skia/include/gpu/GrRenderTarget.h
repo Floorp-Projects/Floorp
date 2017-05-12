@@ -12,9 +12,9 @@
 #include "SkRect.h"
 
 class GrCaps;
-class GrDrawTarget;
-class GrStencilAttachment;
+class GrRenderTargetOpList;
 class GrRenderTargetPriv;
+class GrStencilAttachment;
 
 /**
  * GrRenderTarget represents a 2D buffer of pixels that can be rendered to.
@@ -86,12 +86,6 @@ public:
      */
     const SkIRect& getResolveRect() const { return fResolveRect; }
 
-    /**
-     * Provide a performance hint that the render target's contents are allowed
-     * to become undefined.
-     */
-    void discard();
-
     // a MSAA RT may require explicit resolving , it may auto-resolve (e.g. FBO
     // 0 in GL), or be unresolvable because the client didn't give us the
     // resolve destination.
@@ -115,9 +109,6 @@ public:
     GrRenderTargetPriv renderTargetPriv();
     const GrRenderTargetPriv renderTargetPriv() const;
 
-    void setLastDrawTarget(GrDrawTarget* dt);
-    GrDrawTarget* getLastDrawTarget() { return fLastDrawTarget; }
-
 protected:
     enum class Flags {
         kNone                = 0,
@@ -129,7 +120,6 @@ protected:
 
     GrRenderTarget(GrGpu*, const GrSurfaceDesc&, Flags = Flags::kNone,
                    GrStencilAttachment* = nullptr);
-    ~GrRenderTarget() override;
 
     // override of GrResource
     void onAbandon() override;
@@ -143,20 +133,13 @@ private:
     virtual bool completeStencilAttachment() = 0;
 
     friend class GrRenderTargetPriv;
+    friend class GrRenderTargetProxy; // for Flags
 
     GrStencilAttachment*  fStencilAttachment;
     uint8_t               fMultisampleSpecsID;
     Flags                 fFlags;
 
     SkIRect               fResolveRect;
-
-    // The last drawTarget that wrote to or is currently going to write to this renderTarget
-    // The drawTarget can be closed (e.g., no draw context is currently bound
-    // to this renderTarget).
-    // This back-pointer is required so that we can add a dependancy between
-    // the drawTarget used to create the current contents of this renderTarget
-    // and the drawTarget of a destination renderTarget to which this one is being drawn.
-    GrDrawTarget* fLastDrawTarget;
 
     typedef GrSurface INHERITED;
 };

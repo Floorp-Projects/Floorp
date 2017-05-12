@@ -9,57 +9,47 @@
 
 #if SK_SUPPORT_GPU
 
-#include "GrInvariantOutput.h"
-#include "GrTextureAccess.h"
+#include "GrContext.h"
 #include "SkRefCnt.h"
-
 #include "glsl/GrGLSLColorSpaceXformHelper.h"
 #include "glsl/GrGLSLFragmentProcessor.h"
 #include "glsl/GrGLSLFragmentShaderBuilder.h"
 #include "glsl/GrGLSLUniformHandler.h"
+#include "../private/GrGLSL.h"
 
-sk_sp<GrFragmentProcessor> GrAlphaThresholdFragmentProcessor::Make(
-                                                           GrTexture* texture,
-                                                           sk_sp<GrColorSpaceXform> colorSpaceXform,
-                                                           GrTexture* maskTexture,
-                                                           float innerThreshold,
-                                                           float outerThreshold,
-                                                           const SkIRect& bounds) {
-    return sk_sp<GrFragmentProcessor>(new GrAlphaThresholdFragmentProcessor(
-                                                                texture, std::move(colorSpaceXform),
-                                                                maskTexture,
-                                                                innerThreshold, outerThreshold,
-                                                                bounds));
-}
-
-static SkMatrix make_div_and_translate_matrix(GrTexture* texture, int x, int y) {
-    SkMatrix matrix = GrCoordTransform::MakeDivByTextureWHMatrix(texture);
-    matrix.preTranslate(SkIntToScalar(x), SkIntToScalar(y));
-    return matrix;
+inline GrFragmentProcessor::OptimizationFlags GrAlphaThresholdFragmentProcessor::OptFlags(float outerThreshold) {
+    if (outerThreshold >= 1.f) {
+        return kPreservesOpaqueInput_OptimizationFlag |
+               kCompatibleWithCoverageAsAlpha_OptimizationFlag;
+    } else {
+        return kCompatibleWithCoverageAsAlpha_OptimizationFlag;
+    }
 }
 
 GrAlphaThresholdFragmentProcessor::GrAlphaThresholdFragmentProcessor(
-                                                           GrTexture* texture,
+                                                           GrResourceProvider* resourceProvider,
+                                                           sk_sp<GrTextureProxy> proxy,
                                                            sk_sp<GrColorSpaceXform> colorSpaceXform,
-                                                           GrTexture* maskTexture,
+                                                           sk_sp<GrTextureProxy> maskProxy,
                                                            float innerThreshold,
                                                            float outerThreshold,
                                                            const SkIRect& bounds)
-    : fInnerThreshold(innerThreshold)
-    , fOuterThreshold(outerThreshold)
-    , fImageCoordTransform(GrCoordTransform::MakeDivByTextureWHMatrix(texture), texture,
-                           GrTextureParams::kNone_FilterMode)
-    , fImageTextureAccess(texture)
-    , fColorSpaceXform(std::move(colorSpaceXform))
-    , fMaskCoordTransform(make_div_and_translate_matrix(maskTexture, -bounds.x(), -bounds.y()),
-                          maskTexture,
-                          GrTextureParams::kNone_FilterMode)
-    , fMaskTextureAccess(maskTexture) {
+        : INHERITED(OptFlags(outerThreshold))
+        , fInnerThreshold(innerThreshold)
+        , fOuterThreshold(outerThreshold)
+        , fImageCoordTransform(resourceProvider, SkMatrix::I(), proxy.get())
+        , fImageTextureSampler(resourceProvider, std::move(proxy))
+        , fColorSpaceXform(std::move(colorSpaceXform))
+        , fMaskCoordTransform(
+                  resourceProvider,
+                  SkMatrix::MakeTrans(SkIntToScalar(-bounds.x()), SkIntToScalar(-bounds.y())),
+                  maskProxy.get())
+        , fMaskTextureSampler(resourceProvider, maskProxy) {
     this->initClassID<GrAlphaThresholdFragmentProcessor>();
     this->addCoordTransform(&fImageCoordTransform);
-    this->addTextureAccess(&fImageTextureAccess);
+    this->addTextureSampler(&fImageTextureSampler);
     this->addCoordTransform(&fMaskCoordTransform);
-    this->addTextureAccess(&fMaskTextureAccess);
+    this->addTextureSampler(&fMaskTextureSampler);
 }
 
 bool GrAlphaThresholdFragmentProcessor::onIsEqual(const GrFragmentProcessor& sBase) const {
@@ -68,23 +58,13 @@ bool GrAlphaThresholdFragmentProcessor::onIsEqual(const GrFragmentProcessor& sBa
             this->fOuterThreshold == s.fOuterThreshold);
 }
 
-void GrAlphaThresholdFragmentProcessor::onComputeInvariantOutput(GrInvariantOutput* inout) const {
-    if (GrPixelConfigIsAlphaOnly(this->texture(0)->config())) {
-        inout->mulByUnknownSingleComponent();
-    } else if (GrPixelConfigIsOpaque(this->texture(0)->config()) && fOuterThreshold >= 1.f) {
-        inout->mulByUnknownOpaqueFourComponents();
-    } else {
-        inout->mulByUnknownFourComponents();
-    }
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
 class GrGLAlphaThresholdFragmentProcessor : public GrGLSLFragmentProcessor {
 public:
     void emitCode(EmitArgs&) override;
 
-    static inline void GenKey(const GrProcessor& effect, const GrGLSLCaps&,
+    static inline void GenKey(const GrProcessor& effect, const GrShaderCaps&,
                               GrProcessorKeyBuilder* b) {
         const GrAlphaThresholdFragmentProcessor& atfp =
             effect.cast<GrAlphaThresholdFragmentProcessor>();
@@ -92,12 +72,12 @@ public:
     }
 
 protected:
-    void onSetData(const GrGLSLProgramDataManager&, const GrProcessor&) override;
+    void onSetData(const GrGLSLProgramDataManager&, const GrFragmentProcessor&) override;
 
 private:
     GrGLSLProgramDataManager::UniformHandle fInnerThresholdVar;
     GrGLSLProgramDataManager::UniformHandle fOuterThresholdVar;
-    GrGLSLProgramDataManager::UniformHandle fColorSpaceXformVar;
+    GrGLSLColorSpaceXformHelper fColorSpaceHelper;
     typedef GrGLSLFragmentProcessor INHERITED;
 };
 
@@ -112,8 +92,7 @@ void GrGLAlphaThresholdFragmentProcessor::emitCode(EmitArgs& args) {
 
     const GrAlphaThresholdFragmentProcessor& atfp =
         args.fFp.cast<GrAlphaThresholdFragmentProcessor>();
-    GrGLSLColorSpaceXformHelper colorSpaceHelper(uniformHandler, atfp.colorSpaceXform(),
-                                                 &fColorSpaceXformVar);
+    fColorSpaceHelper.emitCode(uniformHandler, atfp.colorSpaceXform());
 
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     SkString coords2D = fragBuilder->ensureCoords2D(args.fTransformedCoords[0]);
@@ -123,7 +102,7 @@ void GrGLAlphaThresholdFragmentProcessor::emitCode(EmitArgs& args) {
     fragBuilder->codeAppendf("vec2 mask_coord = %s;", maskCoords2D.c_str());
     fragBuilder->codeAppend("vec4 input_color = ");
     fragBuilder->appendTextureLookup(args.fTexSamplers[0], "coord", kVec2f_GrSLType,
-                                     &colorSpaceHelper);
+                                     &fColorSpaceHelper);
     fragBuilder->codeAppend(";");
     fragBuilder->codeAppend("vec4 mask_color = ");
     fragBuilder->appendTextureLookup(args.fTexSamplers[1], "mask_coord");
@@ -153,12 +132,12 @@ void GrGLAlphaThresholdFragmentProcessor::emitCode(EmitArgs& args) {
 }
 
 void GrGLAlphaThresholdFragmentProcessor::onSetData(const GrGLSLProgramDataManager& pdman,
-                                                    const GrProcessor& proc) {
+                                                    const GrFragmentProcessor& proc) {
     const GrAlphaThresholdFragmentProcessor& atfp = proc.cast<GrAlphaThresholdFragmentProcessor>();
     pdman.set1f(fInnerThresholdVar, atfp.innerThreshold());
     pdman.set1f(fOuterThresholdVar, atfp.outerThreshold());
     if (SkToBool(atfp.colorSpaceXform())) {
-        pdman.setSkMatrix44(fColorSpaceXformVar, atfp.colorSpaceXform()->srcToDst());
+        fColorSpaceHelper.setData(pdman, atfp.colorSpaceXform());
     }
 }
 
@@ -166,11 +145,13 @@ void GrGLAlphaThresholdFragmentProcessor::onSetData(const GrGLSLProgramDataManag
 
 GR_DEFINE_FRAGMENT_PROCESSOR_TEST(GrAlphaThresholdFragmentProcessor);
 
+#if GR_TEST_UTILS
 sk_sp<GrFragmentProcessor> GrAlphaThresholdFragmentProcessor::TestCreate(GrProcessorTestData* d) {
-    GrTexture* bmpTex = d->fTextures[GrProcessorUnitTest::kSkiaPMTextureIdx];
-    GrTexture* maskTex = d->fTextures[GrProcessorUnitTest::kAlphaTextureIdx];
-    float innerThresh = d->fRandom->nextUScalar1();
-    float outerThresh = d->fRandom->nextUScalar1();
+    sk_sp<GrTextureProxy> bmpProxy = d->textureProxy(GrProcessorUnitTest::kSkiaPMTextureIdx);
+    sk_sp<GrTextureProxy> maskProxy = d->textureProxy(GrProcessorUnitTest::kAlphaTextureIdx);
+    // Make the inner and outer thresholds be in (0, 1) exclusive and be sorted correctly.
+    float innerThresh = d->fRandom->nextUScalar1() * .99f + 0.005f;
+    float outerThresh = d->fRandom->nextUScalar1() * .99f + 0.005f;
     const int kMaxWidth = 1000;
     const int kMaxHeight = 1000;
     uint32_t width = d->fRandom->nextULessThan(kMaxWidth);
@@ -178,15 +159,19 @@ sk_sp<GrFragmentProcessor> GrAlphaThresholdFragmentProcessor::TestCreate(GrProce
     uint32_t x = d->fRandom->nextULessThan(kMaxWidth - width);
     uint32_t y = d->fRandom->nextULessThan(kMaxHeight - height);
     SkIRect bounds = SkIRect::MakeXYWH(x, y, width, height);
-    auto colorSpaceXform = GrTest::TestColorXform(d->fRandom);
-    return GrAlphaThresholdFragmentProcessor::Make(bmpTex, colorSpaceXform, maskTex,
+    sk_sp<GrColorSpaceXform> colorSpaceXform = GrTest::TestColorXform(d->fRandom);
+    return GrAlphaThresholdFragmentProcessor::Make(d->resourceProvider(),
+                                                   std::move(bmpProxy),
+                                                   std::move(colorSpaceXform),
+                                                   std::move(maskProxy),
                                                    innerThresh, outerThresh,
                                                    bounds);
 }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void GrAlphaThresholdFragmentProcessor::onGetGLSLProcessorKey(const GrGLSLCaps& caps,
+void GrAlphaThresholdFragmentProcessor::onGetGLSLProcessorKey(const GrShaderCaps& caps,
                                                               GrProcessorKeyBuilder* b) const {
     GrGLAlphaThresholdFragmentProcessor::GenKey(*this, caps, b);
 }

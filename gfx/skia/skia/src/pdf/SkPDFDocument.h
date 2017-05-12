@@ -50,7 +50,7 @@ public:
                   const SkDocument::PDFMetadata&,
                   sk_sp<SkPixelSerializer>,
                   bool);
-    virtual ~SkPDFDocument();
+    ~SkPDFDocument() override;
     SkCanvas* onBeginPage(SkScalar, SkScalar, const SkRect&) override;
     void onEndPage() override;
     void onClose(SkWStream*) override;
@@ -76,7 +76,7 @@ private:
     SkTHashSet<SkPDFFont*> fFonts;
     sk_sp<SkPDFDict> fDests;
     sk_sp<SkPDFDevice> fPageDevice;
-    sk_sp<SkCanvas> fCanvas;
+    std::unique_ptr<SkCanvas> fCanvas;
     sk_sp<SkPDFObject> fID;
     sk_sp<SkPDFObject> fXMP;
     SkScalar fRasterDpi;

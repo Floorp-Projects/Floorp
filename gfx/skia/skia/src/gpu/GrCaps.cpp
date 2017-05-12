@@ -9,78 +9,27 @@
 #include "GrContextOptions.h"
 #include "GrWindowRectangles.h"
 
-GrShaderCaps::GrShaderCaps() {
-    fShaderDerivativeSupport = false;
-    fGeometryShaderSupport = false;
-    fPathRenderingSupport = false;
-    fDstReadInShaderSupport = false;
-    fDualSourceBlendingSupport = false;
-    fIntegerSupport = false;
-    fTexelBufferSupport = false;
-    fShaderPrecisionVaries = false;
-}
-
-static const char* shader_type_to_string(GrShaderType type) {
-    switch (type) {
-    case kVertex_GrShaderType:
-        return "vertex";
-    case kGeometry_GrShaderType:
-        return "geometry";
-    case kFragment_GrShaderType:
-        return "fragment";
+static const char* pixel_config_name(GrPixelConfig config) {
+    switch (config) {
+        case kUnknown_GrPixelConfig: return "Unknown";
+        case kAlpha_8_GrPixelConfig: return "Alpha8";
+        case kGray_8_GrPixelConfig: return "Gray8";
+        case kRGB_565_GrPixelConfig: return "RGB565";
+        case kRGBA_4444_GrPixelConfig: return "RGBA444";
+        case kRGBA_8888_GrPixelConfig: return "RGBA8888";
+        case kBGRA_8888_GrPixelConfig: return "BGRA8888";
+        case kSRGBA_8888_GrPixelConfig: return "SRGBA8888";
+        case kSBGRA_8888_GrPixelConfig: return "SBGRA8888";
+        case kRGBA_8888_sint_GrPixelConfig: return "RGBA8888_sint";
+        case kETC1_GrPixelConfig: return "ETC1";
+        case kRGBA_float_GrPixelConfig: return "RGBAFloat";
+        case kRG_float_GrPixelConfig: return "RGFloat";
+        case kAlpha_half_GrPixelConfig: return "AlphaHalf";
+        case kRGBA_half_GrPixelConfig: return "RGBAHalf";
     }
-    return "";
+    SkFAIL("Invalid pixel config");
+    return "<invalid>";
 }
-
-static const char* precision_to_string(GrSLPrecision p) {
-    switch (p) {
-    case kLow_GrSLPrecision:
-        return "low";
-    case kMedium_GrSLPrecision:
-        return "medium";
-    case kHigh_GrSLPrecision:
-        return "high";
-    }
-    return "";
-}
-
-SkString GrShaderCaps::dump() const {
-    SkString r;
-    static const char* gNY[] = { "NO", "YES" };
-    r.appendf("Shader Derivative Support          : %s\n", gNY[fShaderDerivativeSupport]);
-    r.appendf("Geometry Shader Support            : %s\n", gNY[fGeometryShaderSupport]);
-    r.appendf("Path Rendering Support             : %s\n", gNY[fPathRenderingSupport]);
-    r.appendf("Dst Read In Shader Support         : %s\n", gNY[fDstReadInShaderSupport]);
-    r.appendf("Dual Source Blending Support       : %s\n", gNY[fDualSourceBlendingSupport]);
-    r.appendf("Integer Support                    : %s\n", gNY[fIntegerSupport]);
-    r.appendf("Texel Buffer Support               : %s\n", gNY[fTexelBufferSupport]);
-
-    r.appendf("Shader Float Precisions (varies: %s):\n", gNY[fShaderPrecisionVaries]);
-
-    for (int s = 0; s < kGrShaderTypeCount; ++s) {
-        GrShaderType shaderType = static_cast<GrShaderType>(s);
-        r.appendf("\t%s:\n", shader_type_to_string(shaderType));
-        for (int p = 0; p < kGrSLPrecisionCount; ++p) {
-            if (fFloatPrecisions[s][p].supported()) {
-                GrSLPrecision precision = static_cast<GrSLPrecision>(p);
-                r.appendf("\t\t%s: log_low: %d log_high: %d bits: %d\n",
-                    precision_to_string(precision),
-                    fFloatPrecisions[s][p].fLogRangeLow,
-                    fFloatPrecisions[s][p].fLogRangeHigh,
-                    fFloatPrecisions[s][p].fBits);
-            }
-        }
-    }
-
-    return r;
-}
-
-void GrShaderCaps::applyOptionsOverrides(const GrContextOptions& options) {
-    fDualSourceBlendingSupport = fDualSourceBlendingSupport && !options.fSuppressDualSourceBlending;
-    this->onApplyOptionsOverrides(options);
-}
-
-///////////////////////////////////////////////////////////////////////////////
 
 GrCaps::GrCaps(const GrContextOptions& options) {
     fMipMapSupport = false;
@@ -104,6 +53,7 @@ GrCaps::GrCaps(const GrContextOptions& options) {
     fMustClearUploadedBufferData = false;
     fSampleShadingSupport = false;
     fFenceSyncSupport = false;
+    fCrossContextTextureSupport = false;
 
     fUseDrawInsteadOfClear = false;
 
@@ -192,6 +142,7 @@ SkString GrCaps::dump() const {
     r.appendf("Must clear buffer memory           : %s\n", gNY[fMustClearUploadedBufferData]);
     r.appendf("Sample shading support             : %s\n", gNY[fSampleShadingSupport]);
     r.appendf("Fence sync support                 : %s\n", gNY[fFenceSyncSupport]);
+    r.appendf("Cross context texture support      : %s\n", gNY[fCrossContextTextureSupport]);
 
     r.appendf("Draw Instead of Clear [workaround] : %s\n", gNY[fUseDrawInsteadOfClear]);
     r.appendf("Draw Instead of TexSubImage [workaround] : %s\n",
@@ -240,59 +191,23 @@ SkString GrCaps::dump() const {
     r.appendf("Map Buffer Support                 : %s\n",
               map_flags_to_string(fMapBufferFlags).c_str());
 
-    static const char* kConfigNames[] = {
-        "Unknown",  // kUnknown_GrPixelConfig
-        "Alpha8",   // kAlpha_8_GrPixelConfig,
-        "Index8",   // kIndex_8_GrPixelConfig,
-        "RGB565",   // kRGB_565_GrPixelConfig,
-        "RGBA444",  // kRGBA_4444_GrPixelConfig,
-        "RGBA8888", // kRGBA_8888_GrPixelConfig,
-        "BGRA8888", // kBGRA_8888_GrPixelConfig,
-        "SRGBA8888",// kSRGBA_8888_GrPixelConfig,
-        "SBGRA8888",// kSBGRA_8888_GrPixelConfig,
-        "ETC1",     // kETC1_GrPixelConfig,
-        "LATC",     // kLATC_GrPixelConfig,
-        "R11EAC",   // kR11_EAC_GrPixelConfig,
-        "ASTC12x12",// kASTC_12x12_GrPixelConfig,
-        "RGBAFloat",// kRGBA_float_GrPixelConfig
-        "AlphaHalf",// kAlpha_half_GrPixelConfig
-        "RGBAHalf", // kRGBA_half_GrPixelConfig
-    };
-    GR_STATIC_ASSERT(0  == kUnknown_GrPixelConfig);
-    GR_STATIC_ASSERT(1  == kAlpha_8_GrPixelConfig);
-    GR_STATIC_ASSERT(2  == kIndex_8_GrPixelConfig);
-    GR_STATIC_ASSERT(3  == kRGB_565_GrPixelConfig);
-    GR_STATIC_ASSERT(4  == kRGBA_4444_GrPixelConfig);
-    GR_STATIC_ASSERT(5  == kRGBA_8888_GrPixelConfig);
-    GR_STATIC_ASSERT(6  == kBGRA_8888_GrPixelConfig);
-    GR_STATIC_ASSERT(7  == kSRGBA_8888_GrPixelConfig);
-    GR_STATIC_ASSERT(8  == kSBGRA_8888_GrPixelConfig);
-    GR_STATIC_ASSERT(9  == kETC1_GrPixelConfig);
-    GR_STATIC_ASSERT(10  == kLATC_GrPixelConfig);
-    GR_STATIC_ASSERT(11  == kR11_EAC_GrPixelConfig);
-    GR_STATIC_ASSERT(12 == kASTC_12x12_GrPixelConfig);
-    GR_STATIC_ASSERT(13 == kRGBA_float_GrPixelConfig);
-    GR_STATIC_ASSERT(14 == kAlpha_half_GrPixelConfig);
-    GR_STATIC_ASSERT(15 == kRGBA_half_GrPixelConfig);
-    GR_STATIC_ASSERT(SK_ARRAY_COUNT(kConfigNames) == kGrPixelConfigCnt);
-
     SkASSERT(!this->isConfigRenderable(kUnknown_GrPixelConfig, false));
     SkASSERT(!this->isConfigRenderable(kUnknown_GrPixelConfig, true));
 
-    for (size_t i = 1; i < SK_ARRAY_COUNT(kConfigNames); ++i)  {
+    for (size_t i = 1; i < kGrPixelConfigCnt; ++i)  {
         GrPixelConfig config = static_cast<GrPixelConfig>(i);
         r.appendf("%s is renderable: %s, with MSAA: %s\n",
-                  kConfigNames[i],
+                  pixel_config_name(config),
                   gNY[this->isConfigRenderable(config, false)],
                   gNY[this->isConfigRenderable(config, true)]);
     }
 
     SkASSERT(!this->isConfigTexturable(kUnknown_GrPixelConfig));
 
-    for (size_t i = 1; i < SK_ARRAY_COUNT(kConfigNames); ++i)  {
+    for (size_t i = 1; i < kGrPixelConfigCnt; ++i)  {
         GrPixelConfig config = static_cast<GrPixelConfig>(i);
         r.appendf("%s is uploadable to a texture: %s\n",
-                  kConfigNames[i],
+                  pixel_config_name(config),
                   gNY[this->isConfigTexturable(config)]);
     }
 

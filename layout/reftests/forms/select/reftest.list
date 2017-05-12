@@ -6,7 +6,7 @@ fuzzy-if(Android,4,11) == out-of-bounds-selectedindex.html out-of-bounds-selecte
 fuzzy(1,4) == padding-button-placement.html padding-button-placement-ref.html
 HTTP(../..) == vertical-centering.html vertical-centering-ref.html
 == 997709-2.html 997709-2-ref.html
-needs-focus == focusring-1.html focusring-1-ref.html
+fuzzy-if(skiaContent,4,1) needs-focus == focusring-1.html focusring-1-ref.html
 needs-focus == focusring-2.html focusring-2-ref.html
 needs-focus == focusring-3.html focusring-3-ref.html
 == dynamic-text-indent-1.html dynamic-text-indent-1-ref.html

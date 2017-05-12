@@ -6,8 +6,9 @@
 
 "use strict";
 
-const { DOM: dom, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
+const { DOM: dom, createClass, PropTypes, createFactory } = require("devtools/client/shared/vendor/react");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
+const AutocompletePopup = createFactory(require("devtools/client/shared/components/autocomplete-popup"));
 
 /**
  * A generic search box component for use across devtools
@@ -20,12 +21,20 @@ module.exports = createClass({
     keyShortcut: PropTypes.string,
     onChange: PropTypes.func,
     placeholder: PropTypes.string,
-    type: PropTypes.string
+    type: PropTypes.string,
+    autocompleteList: PropTypes.array,
+  },
+
+  getDefaultProps() {
+    return {
+      autocompleteList: [],
+    };
   },
 
   getInitialState() {
     return {
-      value: ""
+      value: "",
+      focused: false,
     };
   },
 
@@ -56,7 +65,9 @@ module.exports = createClass({
 
   onChange() {
     if (this.state.value !== this.refs.input.value) {
-      this.setState({ value: this.refs.input.value });
+      this.setState({
+        value: this.refs.input.value,
+      });
     }
 
     if (!this.props.delay) {
@@ -82,8 +93,59 @@ module.exports = createClass({
     this.onChange();
   },
 
+  onFocus() {
+    this.setState({ focused: true });
+  },
+
+  onBlur() {
+    this.setState({ focused: false });
+  },
+
+  onKeyDown(e) {
+    let { autocompleteList } = this.props;
+    let { autocomplete } = this.refs;
+
+    if (autocompleteList.length == 0) {
+      return;
+    }
+
+    switch (e.key) {
+      case "ArrowDown":
+        autocomplete.jumpBy(1);
+        break;
+      case "ArrowUp":
+        autocomplete.jumpBy(-1);
+        break;
+      case "PageDown":
+        autocomplete.jumpBy(5);
+        break;
+      case "PageUp":
+        autocomplete.jumpBy(-5);
+        break;
+      case "Enter":
+      case "Tab":
+        e.preventDefault();
+        autocomplete.select();
+        break;
+      case "Escape":
+        e.preventDefault();
+        this.onBlur();
+        break;
+      case "Home":
+        autocomplete.jumpToTop();
+        break;
+      case "End":
+        autocomplete.jumpToBottom();
+        break;
+    }
+  },
+
   render() {
-    let { type = "search", placeholder } = this.props;
+    let {
+      type = "search",
+      placeholder,
+      autocompleteList
+    } = this.props;
     let { value } = this.state;
     let divClassList = ["devtools-searchbox", "has-clear-btn"];
     let inputClassList = [`devtools-${type}input`];
@@ -96,14 +158,27 @@ module.exports = createClass({
       dom.input({
         className: inputClassList.join(" "),
         onChange: this.onChange,
+        onFocus: this.onFocus,
+        onBlur: this.onBlur,
+        onKeyDown: this.onKeyDown,
         placeholder,
         ref: "input",
-        value
+        value,
       }),
       dom.button({
         className: "devtools-searchinput-clear",
         hidden: value == "",
         onClick: this.onClearButtonClick
+      }),
+      autocompleteList.length > 0 && this.state.focused &&
+      AutocompletePopup({
+        list: autocompleteList,
+        filter: value,
+        ref: "autocomplete",
+        onItemSelected: (itemValue) => {
+          this.setState({ value: itemValue });
+          this.onChange();
+        }
       })
     );
   }

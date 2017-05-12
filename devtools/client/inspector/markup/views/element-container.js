@@ -8,7 +8,6 @@ const PREVIEW_MAX_DIM_PREF = "devtools.inspector.imagePreviewTooltipSize";
 
 const promise = require("promise");
 const Services = require("Services");
-const Heritage = require("sdk/core/heritage");
 const {Task} = require("devtools/shared/task");
 const nodeConstants = require("devtools/shared/dom-node-constants");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
@@ -16,6 +15,7 @@ const {setImageTooltip, setBrokenImageTooltip} =
       require("devtools/client/shared/widgets/tooltip/ImageTooltipHelper");
 const MarkupContainer = require("devtools/client/inspector/markup/views/markup-container");
 const ElementEditor = require("devtools/client/inspector/markup/views/element-editor");
+const {extend} = require("devtools/client/inspector/markup/utils");
 
 // Lazy load this module as _buildEventTooltipContent is only called on click
 loader.lazyRequireGetter(this, "setEventTooltip",
@@ -44,7 +44,7 @@ function MarkupElementContainer(markupView, node) {
   this.tagLine.appendChild(this.editor.elt);
 }
 
-MarkupElementContainer.prototype = Heritage.extend(MarkupContainer.prototype, {
+MarkupElementContainer.prototype = extend(MarkupContainer.prototype, {
   _buildEventTooltipContent: Task.async(function* (target, tooltip) {
     if (target.hasAttribute("data-event")) {
       yield tooltip.hide();

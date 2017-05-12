@@ -2037,8 +2037,19 @@ public:
    * Returns the widget for this document if there is one. Looks at all ancestor
    * documents to try to find a widget, so for example this can still find a
    * widget for documents in display:none frames that have no presentation.
+   *
+   * You should probably use WidgetForContent() instead of this, unless you have
+   * a good reason to do otherwise.
    */
   static nsIWidget* WidgetForDocument(const nsIDocument* aDoc);
+
+  /**
+   * Returns the appropriate widget for this element, if there is one. Unlike
+   * WidgetForDocument(), this returns the correct widget for content in popups.
+   *
+   * You should probably use this instead of WidgetForDocument().
+   */
+  static nsIWidget* WidgetForContent(const nsIContent* aContent);
 
   /**
    * Returns a layer manager to use for the given document. Basically we
@@ -2046,12 +2057,25 @@ public:
    * a presentation with an associated widget, and use that widget's
    * layer manager.
    *
+   * You should probably use LayerManagerForContent() instead of this, unless
+   * you have a good reason to do otherwise.
+   *
    * @param aDoc the document for which to return a layer manager.
    * @param aAllowRetaining an outparam that states whether the returned
    * layer manager should be used for retained layers
    */
   static already_AddRefed<mozilla::layers::LayerManager>
   LayerManagerForDocument(const nsIDocument *aDoc);
+
+  /**
+   * Returns a layer manager to use for the given content. Unlike
+   * LayerManagerForDocument(), this returns the correct layer manager for
+   * content in popups.
+   *
+   * You should probably use this instead of LayerManagerForDocument().
+   */
+  static already_AddRefed<mozilla::layers::LayerManager>
+  LayerManagerForContent(const nsIContent *aContent);
 
   /**
    * Returns a layer manager to use for the given document. Basically we

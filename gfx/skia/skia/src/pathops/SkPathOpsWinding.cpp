@@ -101,7 +101,7 @@ struct SkOpRayHit {
 };
 
 void SkOpContour::rayCheck(const SkOpRayHit& base, SkOpRayDir dir, SkOpRayHit** hits,
-        SkChunkAlloc* allocator) {
+                           SkArenaAlloc* allocator) {
     // if the bounds extreme is outside the best, we're done
     SkScalar baseXY = pt_xy(base.fPt, dir);
     SkScalar boundsXY = rect_side(fBounds, dir);
@@ -116,7 +116,7 @@ void SkOpContour::rayCheck(const SkOpRayHit& base, SkOpRayDir dir, SkOpRayHit** 
 }
 
 void SkOpSegment::rayCheck(const SkOpRayHit& base, SkOpRayDir dir, SkOpRayHit** hits,
-        SkChunkAlloc* allocator) {
+                           SkArenaAlloc* allocator) {
     if (!sideways_overlap(fBounds, base.fPt, dir)) {
         return;
     }
@@ -233,7 +233,8 @@ static double get_t_guess(int tTry, int* dirOffset) {
 }
 
 bool SkOpSpan::sortableTop(SkOpContour* contourHead) {
-    SkChunkAlloc allocator(1024);
+    char storage[1024];
+    SkArenaAlloc allocator(storage);
     int dirOffset;
     double t = get_t_guess(fTopTTry++, &dirOffset);
     SkOpRayHit hitBase;
@@ -249,6 +250,9 @@ bool SkOpSpan::sortableTop(SkOpContour* contourHead) {
     }
     SkOpContour* contour = contourHead;
     do {
+        if (!contour->count()) {
+            continue;
+        }
         contour->rayCheck(hitBase, dir, &hitHead, &allocator);
     } while ((contour = contour->next()));
     // sort hits
@@ -381,18 +385,20 @@ SkOpSpan* SkOpSegment::findSortableTop(SkOpContour* contourHead) {
 }
 
 SkOpSpan* SkOpContour::findSortableTop(SkOpContour* contourHead) {
-    SkOpSegment* testSegment = &fHead;
     bool allDone = true;
-    do {
-        if (testSegment->done()) {
-            continue;
-        }
-        allDone = false;
-        SkOpSpan* result = testSegment->findSortableTop(contourHead);
-        if (result) {
-            return result;
-        }
-    } while ((testSegment = testSegment->next()));
+    if (fCount) {
+        SkOpSegment* testSegment = &fHead;
+        do {
+            if (testSegment->done()) {
+                continue;
+            }
+            allDone = false;
+            SkOpSpan* result = testSegment->findSortableTop(contourHead);
+            if (result) {
+                return result;
+            }
+        } while ((testSegment = testSegment->next()));
+    }
     if (allDone) {
       fDone = true;
     }
