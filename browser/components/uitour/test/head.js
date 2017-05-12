@@ -48,7 +48,7 @@ function taskify(fun) {
   return (doneFn) => {
     // Output the inner function name otherwise no name will be output.
     info("\t" + fun.name);
-    return (fun)().then(doneFn, (reason) => {
+    return fun().then(doneFn, (reason) => {
       ok(false, reason);
       doneFn();
     });
@@ -435,7 +435,7 @@ function add_UITour_task(func) {
     await new Promise((resolve) => {
       waitForFocus(function() {
         loadUITourTestPage(function() {
-          let funcPromise = (func)()
+          let funcPromise = (func() || Promise.resolve())
                                 .then(() => done(true),
                                       (reason) => {
                                         ok(false, reason);

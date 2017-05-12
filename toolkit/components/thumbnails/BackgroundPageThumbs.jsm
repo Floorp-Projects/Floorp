@@ -105,22 +105,28 @@ const BackgroundPageThumbs = {
       return url;
     }
     let thumbPromise = new Promise((resolve, reject) => {
-      function observe(subject, topic, data) { // jshint ignore:line
-        if (data === url) {
-          switch (topic) {
-            case "page-thumbnail:create":
-              resolve();
-              break;
-            case "page-thumbnail:error":
-              reject(new Error("page-thumbnail:error"));
-              break;
+      let observer = {
+        observe(subject, topic, data) { // jshint ignore:line
+          if (data === url) {
+            switch (topic) {
+              case "page-thumbnail:create":
+                resolve();
+                break;
+              case "page-thumbnail:error":
+                reject(new Error("page-thumbnail:error"));
+                break;
+            }
+            Services.obs.removeObserver(observer, "page-thumbnail:create");
+            Services.obs.removeObserver(observer, "page-thumbnail:error");
           }
-          Services.obs.removeObserver(observe, "page-thumbnail:create");
-          Services.obs.removeObserver(observe, "page-thumbnail:error");
-        }
-      }
-      Services.obs.addObserver(observe, "page-thumbnail:create");
-      Services.obs.addObserver(observe, "page-thumbnail:error");
+        },
+        QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                               Ci.nsISupportsWeakReference])
+      };
+      // Use weak references to avoid leaking in tests where the promise we
+      // return is GC'ed before it has resolved.
+      Services.obs.addObserver(observer, "page-thumbnail:create", true);
+      Services.obs.addObserver(observer, "page-thumbnail:error", true);
     });
     try {
       this.capture(url, options);

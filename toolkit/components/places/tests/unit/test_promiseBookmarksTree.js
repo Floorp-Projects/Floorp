@@ -134,7 +134,12 @@ async function compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
         compare_prop_to_value("tags", aNode.tags.replace(/, /g, ","), false);
 
       if (aNode.icon) {
-        compareFavicons(aNode.icon, aItem.iconuri);
+        try {
+          await compareFavicons(aNode.icon, aItem.iconuri);
+        } catch (ex) {
+          do_print(ex);
+          todo_check_true(false);
+        }
       } else {
         check_unset(aItem.iconuri);
       }

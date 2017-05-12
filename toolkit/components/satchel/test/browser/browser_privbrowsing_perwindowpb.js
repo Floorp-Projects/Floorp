@@ -49,15 +49,11 @@ add_task(async function test() {
   }
 
 
-  await testOnWindow({private: true}).then((aWin) => {
-    return (doTest(false, aWin))();
-  });
+  await testOnWindow({private: true}).then(aWin => doTest(false, aWin));
 
   // Test when not on private mode after visiting a site on private
   // mode. The form history should not exist.
-  await testOnWindow({}).then((aWin) => {
-    return (doTest(true, aWin))();
-  });
+  await testOnWindow({}).then(aWin => doTest(true, aWin));
 
   await Promise.all(windowsToClose.map(win => BrowserTestUtils.closeWindow(win)));
 });

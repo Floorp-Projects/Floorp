@@ -73,7 +73,7 @@ window.addEventListener("load", function() {
         if (taskType == "content") {
           // This is a normal task executed in the current process.
           info("Running " + taskFn.name);
-          await (taskFn)();
+          await taskFn();
         } else {
           // This is a task executed in the parent process.
           info("Running task in parent process: " + taskFn.name);

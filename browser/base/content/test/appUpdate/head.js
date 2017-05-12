@@ -196,7 +196,7 @@ function runUpdateProcessingTest(updates, steps) {
 
 function processStep(step) {
   if (typeof(step) == "function") {
-    return (step)();
+    return step();
   }
 
   const {notificationId, button, beforeClick, cleanup} = step;

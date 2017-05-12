@@ -148,7 +148,7 @@ function get_wait_for_mute_promise(tab, expectMuted) {
 }
 
 async function test_mute_tab(tab, icon, expectMuted) {
-  let mutedPromise = test_mute_keybinding(tab, expectMuted);
+  let mutedPromise = get_wait_for_mute_promise(tab, expectMuted);
 
   let activeTab = gBrowser.selectedTab;
 

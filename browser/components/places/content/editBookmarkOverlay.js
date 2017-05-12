@@ -553,7 +553,7 @@ var gEditItemOverlay = {
     if (window.document.documentElement.id == "places")
       PlacesTransactions.batch(setTags).catch(Components.utils.reportError);
     else
-      (setTags)().catch(Components.utils.reportError);
+      setTags().catch(Components.utils.reportError);
     return true;
   },
 
