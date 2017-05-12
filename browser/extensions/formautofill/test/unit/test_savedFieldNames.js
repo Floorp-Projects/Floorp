@@ -42,7 +42,7 @@ add_task(async function test_profileSavedFieldNames_update() {
   let formAutofillParent = new FormAutofillParent();
   await formAutofillParent.init();
   do_register_cleanup(function cleanup() {
-    Services.prefs.clearUserPref("browser.formautofill.enabled");
+    Services.prefs.clearUserPref("extensions.formautofill.addresses.enabled");
   });
 
   sinon.stub(profileStorage, "getAll");
