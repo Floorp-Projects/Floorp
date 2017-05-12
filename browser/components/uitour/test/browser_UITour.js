@@ -254,14 +254,14 @@ var tests = [
 
     gContentAPI.showInfo("urlbar", "test title", "test text");
   },
-  taskify(function* test_info_2() {
+  taskify(async function test_info_2() {
     let popup = document.getElementById("UITourTooltip");
     let title = document.getElementById("UITourTooltipTitle");
     let desc = document.getElementById("UITourTooltipDescription");
     let icon = document.getElementById("UITourTooltipIcon");
     let buttons = document.getElementById("UITourTooltipButtons");
 
-    yield showInfoPromise("urlbar", "urlbar title", "urlbar text");
+    await showInfoPromise("urlbar", "urlbar title", "urlbar text");
 
     is(popup.popupBoxObject.anchorNode, document.getElementById("urlbar"), "Popup should be anchored to the urlbar");
     is(title.textContent, "urlbar title", "Popup should have correct title");
@@ -269,7 +269,7 @@ var tests = [
     is(icon.src, "", "Popup should have no icon");
     is(buttons.hasChildNodes(), false, "Popup should have no buttons");
 
-    yield showInfoPromise("search", "search title", "search text");
+    await showInfoPromise("search", "search title", "search text");
 
     is(popup.popupBoxObject.anchorNode, document.getElementById("searchbar"), "Popup should be anchored to the searchbar");
     is(title.textContent, "search title", "Popup should have correct title");

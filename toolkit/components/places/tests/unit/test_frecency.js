@@ -154,61 +154,61 @@ var c2 = 1;
 
 var tests = [
 // test things without a search term
-function*() {
+async function() {
   print("TEST-INFO | Test 0: same count, different date");
-  yield task_setCountDate(uri1, c1, d1);
-  yield task_setCountDate(uri2, c1, d2);
+  await task_setCountDate(uri1, c1, d1);
+  await task_setCountDate(uri2, c1, d2);
   tagURI(uri1, ["site"]);
   ensure_results([uri1, uri2], "");
 },
-function*() {
+async function() {
   print("TEST-INFO | Test 1: same count, different date");
-  yield task_setCountDate(uri1, c1, d2);
-  yield task_setCountDate(uri2, c1, d1);
+  await task_setCountDate(uri1, c1, d2);
+  await task_setCountDate(uri2, c1, d1);
   tagURI(uri1, ["site"]);
   ensure_results([uri2, uri1], "");
 },
-function*() {
+async function() {
   print("TEST-INFO | Test 2: different count, same date");
-  yield task_setCountDate(uri1, c1, d1);
-  yield task_setCountDate(uri2, c2, d1);
+  await task_setCountDate(uri1, c1, d1);
+  await task_setCountDate(uri2, c2, d1);
   tagURI(uri1, ["site"]);
   ensure_results([uri1, uri2], "");
 },
-function*() {
+async function() {
   print("TEST-INFO | Test 3: different count, same date");
-  yield task_setCountDate(uri1, c2, d1);
-  yield task_setCountDate(uri2, c1, d1);
+  await task_setCountDate(uri1, c2, d1);
+  await task_setCountDate(uri2, c1, d1);
   tagURI(uri1, ["site"]);
   ensure_results([uri2, uri1], "");
 },
 
 // test things with a search term
-function*() {
+async function() {
   print("TEST-INFO | Test 4: same count, different date");
-  yield task_setCountDate(uri1, c1, d1);
-  yield task_setCountDate(uri2, c1, d2);
+  await task_setCountDate(uri1, c1, d1);
+  await task_setCountDate(uri2, c1, d2);
   tagURI(uri1, ["site"]);
   ensure_results([uri1, uri2], "site");
 },
-function*() {
+async function() {
   print("TEST-INFO | Test 5: same count, different date");
-  yield task_setCountDate(uri1, c1, d2);
-  yield task_setCountDate(uri2, c1, d1);
+  await task_setCountDate(uri1, c1, d2);
+  await task_setCountDate(uri2, c1, d1);
   tagURI(uri1, ["site"]);
   ensure_results([uri2, uri1], "site");
 },
-function*() {
+async function() {
   print("TEST-INFO | Test 6: different count, same date");
-  yield task_setCountDate(uri1, c1, d1);
-  yield task_setCountDate(uri2, c2, d1);
+  await task_setCountDate(uri1, c1, d1);
+  await task_setCountDate(uri2, c2, d1);
   tagURI(uri1, ["site"]);
   ensure_results([uri1, uri2], "site");
 },
-function*() {
+async function() {
   print("TEST-INFO | Test 7: different count, same date");
-  yield task_setCountDate(uri1, c2, d1);
-  yield task_setCountDate(uri2, c1, d1);
+  await task_setCountDate(uri1, c2, d1);
+  await task_setCountDate(uri2, c1, d1);
   tagURI(uri1, ["site"]);
   ensure_results([uri2, uri1], "site");
 },

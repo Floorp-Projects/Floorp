@@ -4,7 +4,7 @@
 
 requestLongerTimeout(2);
 
-function* testHasPermission(params) {
+async function testHasPermission(params) {
   let contentSetup = params.contentSetup || (() => Promise.resolve());
 
   async function background(contentSetup) {
@@ -38,22 +38,22 @@ function* testHasPermission(params) {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitMessage("ready");
+  await extension.startup();
+  await extension.awaitMessage("ready");
 
   if (params.setup) {
-    yield params.setup(extension);
+    await params.setup(extension);
   }
 
   extension.sendMessage("execute-script");
 
-  yield extension.awaitFinish("executeScript");
+  await extension.awaitFinish("executeScript");
 
   if (params.tearDown) {
-    yield params.tearDown(extension);
+    await params.tearDown(extension);
   }
 
-  yield extension.unload();
+  await extension.unload();
 }
 
 add_task(async function testGoodPermissions() {
@@ -94,9 +94,9 @@ add_task(async function testGoodPermissions() {
       });
       return Promise.resolve();
     },
-    setup: function* (extension) {
-      yield EventUtils.synthesizeKey("k", {altKey: true, shiftKey: true});
-      yield extension.awaitMessage("tabs-command-key-pressed");
+    setup: async function(extension) {
+      await EventUtils.synthesizeKey("k", {altKey: true, shiftKey: true});
+      await extension.awaitMessage("tabs-command-key-pressed");
     },
   });
 

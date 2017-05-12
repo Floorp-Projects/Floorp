@@ -114,15 +114,15 @@ add_task(async function test_getshortcutoruri() {
 var folder = null;
 var gAddedEngines = [];
 
-function* setupKeywords() {
-  folder = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+async function setupKeywords() {
+  folder = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                 type: PlacesUtils.bookmarks.TYPE_FOLDER,
                                                 title: "keyword-test" });
   for (let item of testData) {
     let data = item[0];
     if (data instanceof bmKeywordData) {
-      yield PlacesUtils.bookmarks.insert({ url: data.uri, parentGuid: folder.guid });
-      yield PlacesUtils.keywords.insert({ keyword: data.keyword, url: data.uri.spec, postData: data.postData });
+      await PlacesUtils.bookmarks.insert({ url: data.uri, parentGuid: folder.guid });
+      await PlacesUtils.keywords.insert({ keyword: data.keyword, url: data.uri.spec, postData: data.postData });
     }
 
     if (data instanceof searchKeywordData) {

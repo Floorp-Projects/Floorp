@@ -1848,7 +1848,7 @@ this.PlacesUtils = {
    * resolved to null.
    */
   async promiseBookmarksTree(aItemGuid = "", aOptions = {}) {
-    let createItemInfoObject = function* (aRow, aIncludeParentGuid) {
+    let createItemInfoObject = async function(aRow, aIncludeParentGuid) {
       let item = {};
       let copyProps = (...props) => {
         for (let prop of props) {
@@ -1887,7 +1887,7 @@ this.PlacesUtils = {
           // If this throws due to an invalid url, the item will be skipped.
           item.uri = NetUtil.newURI(aRow.getResultByName("url")).spec;
           // Keywords are cached, so this should be decently fast.
-          let entry = yield PlacesUtils.keywords.fetch({ url: item.uri });
+          let entry = await PlacesUtils.keywords.fetch({ url: item.uri });
           if (entry) {
             item.keyword = entry.keyword;
             item.postData = entry.postData;

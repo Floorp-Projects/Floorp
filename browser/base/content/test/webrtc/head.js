@@ -441,7 +441,7 @@ function checkDeviceSelectors(aAudio, aVideo, aScreen) {
 
 // aExpected is for the current tab,
 // aExpectedGlobal is for all tabs.
-function* checkSharingUI(aExpected, aWin = window, aExpectedGlobal = null) {
+async function checkSharingUI(aExpected, aWin = window, aExpectedGlobal = null) {
   let doc = aWin.document;
   // First check the icon above the control center (i) icon.
   let identityBox = doc.getElementById("identity-box");
@@ -485,17 +485,17 @@ function* checkSharingUI(aExpected, aWin = window, aExpectedGlobal = null) {
   aWin.gIdentityHandler._identityPopup.hidden = true;
 
   // Check the global indicators.
-  yield* assertWebRTCIndicatorStatus(aExpectedGlobal || aExpected);
+  await assertWebRTCIndicatorStatus(aExpectedGlobal || aExpected);
 }
 
-function* checkNotSharing() {
-  Assert.deepEqual((yield getMediaCaptureState()), {},
+async function checkNotSharing() {
+  Assert.deepEqual((await getMediaCaptureState()), {},
                    "expected nothing to be shared");
 
   ok(!document.getElementById("identity-box").hasAttribute("sharing"),
      "no sharing indicator on the control center icon");
 
-  yield* assertWebRTCIndicatorStatus(null);
+  await assertWebRTCIndicatorStatus(null);
 }
 
 function promiseReloadFrame(aFrameId) {

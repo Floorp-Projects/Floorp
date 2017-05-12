@@ -265,7 +265,7 @@ add_task(async function test_import_ontop() {
   await PlacesUtils.bookmarks.eraseEverything();
 });
 
-function* testImportedBookmarks() {
+async function testImportedBookmarks() {
   for (let group in test_bookmarks) {
     do_print("[testImportedBookmarks()] Checking group '" + group + "'");
 
@@ -286,7 +286,7 @@ function* testImportedBookmarks() {
     do_check_eq(root.childCount, items.length);
 
     for (let key in items) {
-      yield checkItem(items[key], root.getChild(key));
+      await checkItem(items[key], root.getChild(key));
     }
 
     root.containerOpen = false;

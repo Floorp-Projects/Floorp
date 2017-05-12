@@ -123,7 +123,7 @@ async function testMenuBookmarks() {
   root.containerOpen = false;
 }
 
-function* testToolbarBookmarks() {
+async function testToolbarBookmarks() {
   let root = PlacesUtils.getFolderContents(PlacesUtils.toolbarFolderId).root;
 
   // child count (add 2 for pre-existing items)
@@ -132,7 +132,7 @@ function* testToolbarBookmarks() {
   let livemarkNode = root.getChild(1);
   Assert.equal("Latest Headlines", livemarkNode.title);
 
-  let livemark = yield PlacesUtils.livemarks.getLivemark({ id: livemarkNode.itemId });
+  let livemark = await PlacesUtils.livemarks.getLivemark({ id: livemarkNode.itemId });
   Assert.equal("http://en-us.fxfeeds.mozilla.com/en-US/firefox/livebookmarks/",
                livemark.siteURI.spec);
   Assert.equal("http://en-us.fxfeeds.mozilla.com/en-US/firefox/headlines.xml",

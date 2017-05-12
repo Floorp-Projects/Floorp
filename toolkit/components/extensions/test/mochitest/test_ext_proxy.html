@@ -15,7 +15,7 @@
 
 "use strict";
 
-function* testProxyScript(script, expected) {
+async function testProxyScript(script, expected) {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
       let errorReceived = false;
@@ -36,10 +36,10 @@ function* testProxyScript(script, expected) {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
   let win = window.open("http://example.com/");
-  let error = yield extension.awaitMessage("proxy-error-received");
+  let error = await extension.awaitMessage("proxy-error-received");
   is(error.message, expected.message, "Correct error message received");
 
   if (expected.errorInfo) {
@@ -48,7 +48,7 @@ function* testProxyScript(script, expected) {
     ok(error.stack.includes("proxy_script.js:3:9"), "Error should include stack trace");
   }
 
-  yield extension.unload();
+  await extension.unload();
 
   win.close();
 }

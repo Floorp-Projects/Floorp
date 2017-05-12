@@ -189,10 +189,10 @@ add_task(async function test_telemetry() {
 });
 
 add_task(async function test_deny_translation_metric() {
-  function* offerAndDeny(elementAnonid) {
-    let tab = yield offerTranslationFor("<h1>Hallo Welt!</h1>", "de", "en");
+  async function offerAndDeny(elementAnonid) {
+    let tab = await offerTranslationFor("<h1>Hallo Welt!</h1>", "de", "en");
     getInfobarElement(tab.linkedBrowser, elementAnonid).doCommand();
-    yield MetricsChecker.checkAdditions({ deniedOffers: 1 });
+    await MetricsChecker.checkAdditions({ deniedOffers: 1 });
     gBrowser.removeTab(tab);
   }
 

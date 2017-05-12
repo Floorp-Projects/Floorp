@@ -14,9 +14,9 @@ add_task(async function test_first_download_panel() {
   let oldPrefValue = Services.prefs.getBoolPref("browser.download.panel.shown");
   Services.prefs.setBoolPref("browser.download.panel.shown", false);
 
-  registerCleanupFunction(function*() {
+  registerCleanupFunction(async function() {
     // Clean up when the test finishes.
-    yield task_resetState();
+    await task_resetState();
 
     // Set the preference instead of clearing it afterwards to ensure the
     // right value is used no matter what the default was. This ensures the

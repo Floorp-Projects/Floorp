@@ -13,9 +13,9 @@
 
 // Globals
 
-function* reloadAndCheckLoginsGen(aExpectedLogins)
+async function reloadAndCheckLoginsGen(aExpectedLogins)
 {
-  yield LoginTestUtils.reloadData();
+  await LoginTestUtils.reloadData();
   LoginTestUtils.checkLogins(aExpectedLogins);
   LoginTestUtils.clearData();
 }

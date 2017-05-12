@@ -12,8 +12,8 @@ function makeGuid() {
 // These queries are more or less copied directly from Bookmarks.jsm, but
 // operate on the old, pre-migration DB. We can't use any of the Places SQL
 // functions yet, because those are only registered for the main connection.
-function* insertItem(db, info) {
-  let [parentInfo] = yield db.execute(`
+async function insertItem(db, info) {
+  let [parentInfo] = await db.execute(`
     SELECT b.id, (SELECT count(*) FROM moz_bookmarks
                   WHERE parent = b.id) AS childCount
     FROM moz_bookmarks b
@@ -21,7 +21,7 @@ function* insertItem(db, info) {
     { parentGuid: info.parentGuid });
 
   let guid = makeGuid();
-  yield db.execute(`
+  await db.execute(`
     INSERT INTO moz_bookmarks (fk, type, parent, position, guid)
     VALUES ((SELECT id FROM moz_places WHERE url = :url),
             :type, :parent, :position, :guid)`,
@@ -30,7 +30,7 @@ function* insertItem(db, info) {
       position: parentInfo.getResultByName("childCount"),
       parent: parentInfo.getResultByName("id") });
 
-  let id = (yield db.execute(`
+  let id = (await db.execute(`
     SELECT id FROM moz_bookmarks WHERE guid = :guid LIMIT 1`,
     { guid }))[0].getResultByName("id");
 
@@ -38,27 +38,27 @@ function* insertItem(db, info) {
 }
 
 function insertBookmark(db, info) {
-  return db.executeTransaction(function* () {
+  return db.executeTransaction(async function() {
     if (info.type == TYPE_BOOKMARK) {
       // We don't have access to the hash function here, so we omit the
       // `url_hash` column. These will be fixed up automatically during
       // migration.
       let url = new URL(info.url);
       let placeGuid = makeGuid();
-      yield db.execute(`
+      await db.execute(`
         INSERT INTO moz_places (url, rev_host, hidden, frecency, guid)
         VALUES (:url, :rev_host, 0, -1, :guid)`,
         { url: url.href, guid: placeGuid,
           rev_host: PlacesUtils.getReversedHost(url) });
     }
-    return yield* insertItem(db, info);
+    return await insertItem(db, info);
   });
 }
 
-function* insertAnno(db, itemId, name, value) {
-  yield db.execute(`INSERT OR IGNORE INTO moz_anno_attributes (name)
+async function insertAnno(db, itemId, name, value) {
+  await db.execute(`INSERT OR IGNORE INTO moz_anno_attributes (name)
                     VALUES (:name)`, { name });
-  yield db.execute(`
+  await db.execute(`
     INSERT INTO moz_items_annos
            (item_id, anno_attribute_id, content, flags,
             expiration, type, dateAdded, lastModified)
@@ -70,12 +70,12 @@ function* insertAnno(db, itemId, name, value) {
 }
 
 function insertMobileFolder(db) {
-  return db.executeTransaction(function* () {
-    let item = yield* insertItem(db, {
+  return db.executeTransaction(async function() {
+    let item = await insertItem(db, {
       type: TYPE_FOLDER,
       parentGuid: "root________",
     });
-    yield* insertAnno(db, item.id, "mobile/bookmarksRoot", 1);
+    await insertAnno(db, item.id, "mobile/bookmarksRoot", 1);
     return item;
   });
 }

@@ -24,12 +24,12 @@ function withTestTabUntilStorageChange(aPageFile, aTaskFn) {
   return BrowserTestUtils.withNewTab({
     gBrowser,
     url: "http://mochi.test:8888" + DIRECTORY_PATH + aPageFile,
-  }, function*(browser) {
+  }, async function(browser) {
     ok(true, "loaded " + aPageFile);
     info("running test case task");
-    yield* aTaskFn();
+    await aTaskFn();
     info("waiting for storage change");
-    yield storageChangedPromised;
+    await storageChangedPromised;
   });
 }
 

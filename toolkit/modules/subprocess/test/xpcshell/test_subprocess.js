@@ -532,15 +532,15 @@ add_task(async function test_subprocess_workdir() {
   notEqual(procDir, tmpDir,
            "Current process directory must not be the current temp directory");
 
-  function* pwd(options) {
-    let proc = yield Subprocess.call(Object.assign({
+  async function pwd(options) {
+    let proc = await Subprocess.call(Object.assign({
       command: PYTHON,
       arguments: ["-u", TEST_SCRIPT, "pwd"],
     }, options));
 
     let pwdOutput = read(proc.stdout);
 
-    let {exitCode} = yield proc.wait();
+    let {exitCode} = await proc.wait();
     equal(exitCode, 0, "Got expected exit code");
 
     return pwdOutput;

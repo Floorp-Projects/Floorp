@@ -42,10 +42,10 @@ let testcases = [
     }
 
     let button = notification.querySelector("button.notification-button");
-    function* clickButtonAndExpectNewPortalTab() {
+    async function clickButtonAndExpectNewPortalTab() {
       let p = BrowserTestUtils.waitForNewTab(win.gBrowser, CANONICAL_URL);
       button.click();
-      let tab = yield p;
+      let tab = await p;
       is(win.gBrowser.selectedTab, tab, "The captive portal tab should be selected.");
       return tab;
     }

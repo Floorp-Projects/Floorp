@@ -34,9 +34,9 @@ registerCleanupFunction(function() {
 var gTests = [
 {
   desc: "Test the remote commands",
-  *teardown() {
+  async teardown() {
     gBrowser.removeCurrentTab();
-    yield signOut();
+    await signOut();
   },
   async run() {
     setPref("identity.fxaccounts.remote.signup.uri",
@@ -91,9 +91,9 @@ var gTests = [
 },
 {
   desc: "Test action=signin - user logged in",
-  *teardown() {
+  async teardown() {
     gBrowser.removeCurrentTab();
-    yield signOut();
+    await signOut();
   },
   async run() {
     // When this loads with a user logged-in, we expect the normal URL to
@@ -193,9 +193,9 @@ var gTests = [
 },
 {
   desc: "Test action=reauth",
-  *teardown() {
+  async teardown() {
     gBrowser.removeCurrentTab();
-    yield signOut();
+    await signOut();
   },
   async run() {
     const expected_url = "https://example.com/force_auth";
@@ -210,9 +210,9 @@ var gTests = [
 },
 {
   desc: "Test with migrateToDevEdition enabled (success)",
-  *teardown() {
+  async teardown() {
     gBrowser.removeCurrentTab();
-    yield signOut();
+    await signOut();
   },
   async run() {
     let fxAccountsCommon = {};
@@ -270,9 +270,9 @@ var gTests = [
 },
 {
   desc: "Test with migrateToDevEdition enabled (no user to migrate)",
-  *teardown() {
+  async teardown() {
     gBrowser.removeCurrentTab();
-    yield signOut();
+    await signOut();
   },
   async run() {
     const pref = "identity.fxaccounts.migrateToDevEdition";

@@ -1,9 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-registerCleanupFunction(function*() {
+registerCleanupFunction(async function() {
   // Clean up when the test finishes.
-  yield task_resetState();
+  await task_resetState();
 });
 
 /**

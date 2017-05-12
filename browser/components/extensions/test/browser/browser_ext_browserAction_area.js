@@ -9,7 +9,7 @@ var browserAreas = {
   "personaltoolbar": CustomizableUI.AREA_BOOKMARKS,
 };
 
-function* testInArea(area) {
+async function testInArea(area) {
   let manifest = {
     "browser_action": {
       "browser_style": true,
@@ -21,11 +21,11 @@ function* testInArea(area) {
   let extension = ExtensionTestUtils.loadExtension({
     manifest,
   });
-  yield extension.startup();
+  await extension.startup();
   let widget = getBrowserActionWidget(extension);
   let placement = CustomizableUI.getPlacementOfWidget(widget.id);
   is(placement && placement.area, browserAreas[area || "navbar"], `widget located in correct area`);
-  yield extension.unload();
+  await extension.unload();
 }
 
 add_task(async function testBrowserActionDefaultArea() {

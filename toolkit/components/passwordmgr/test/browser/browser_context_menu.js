@@ -37,8 +37,8 @@ add_task(async function test_context_menu_populate_password_noSchemeUpgrades() {
   await BrowserTestUtils.withNewTab({
     gBrowser,
     url: TEST_HOSTNAME + MULTIPLE_FORMS_PAGE_PATH,
-  }, function* (browser) {
-    yield openPasswordContextMenu(browser, "#test-password-1");
+  }, async function(browser) {
+    await openPasswordContextMenu(browser, "#test-password-1");
 
     // Check the content of the password manager popup
     let popupMenu = document.getElementById("fill-login-popup");
@@ -57,8 +57,8 @@ add_task(async function test_context_menu_populate_password_schemeUpgrades() {
   await BrowserTestUtils.withNewTab({
     gBrowser,
     url: TEST_HOSTNAME + MULTIPLE_FORMS_PAGE_PATH,
-  }, function* (browser) {
-    yield openPasswordContextMenu(browser, "#test-password-1");
+  }, async function(browser) {
+    await openPasswordContextMenu(browser, "#test-password-1");
 
     // Check the content of the password manager popup
     let popupMenu = document.getElementById("fill-login-popup");
@@ -78,8 +78,8 @@ add_task(async function test_context_menu_populate_username_with_password_noSche
     gBrowser,
     url: TEST_HOSTNAME + "/browser/toolkit/components/" +
          "passwordmgr/test/browser/multiple_forms.html",
-  }, function* (browser) {
-    yield openPasswordContextMenu(browser, "#test-username-2");
+  }, async function(browser) {
+    await openPasswordContextMenu(browser, "#test-username-2");
 
     // Check the content of the password manager popup
     let popupMenu = document.getElementById("fill-login-popup");
@@ -98,8 +98,8 @@ add_task(async function test_context_menu_populate_username_with_password_scheme
     gBrowser,
     url: TEST_HOSTNAME + "/browser/toolkit/components/" +
          "passwordmgr/test/browser/multiple_forms.html",
-  }, function* (browser) {
-    yield openPasswordContextMenu(browser, "#test-username-2");
+  }, async function(browser) {
+    await openPasswordContextMenu(browser, "#test-username-2");
 
     // Check the content of the password manager popup
     let popupMenu = document.getElementById("fill-login-popup");

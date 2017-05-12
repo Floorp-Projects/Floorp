@@ -148,11 +148,11 @@ var tests = [
       EventUtils.synthesizeMouseAtCenter(checkbox, {});
       dismissNotification(popup);
     },
-    *onHidden(popup) {
+    async onHidden(popup) {
       let icon = document.getElementById("default-notification-icon");
       let shown = waitForNotificationPanel();
       EventUtils.synthesizeMouseAtCenter(icon, {});
-      yield shown;
+      await shown;
       let notification = popup.childNodes[0];
       let checkbox = notification.checkbox;
       checkCheckbox(checkbox, "This is a checkbox", true);

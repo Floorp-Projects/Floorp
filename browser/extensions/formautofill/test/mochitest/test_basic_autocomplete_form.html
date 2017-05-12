@@ -77,13 +77,13 @@ function checkFormFilled(address) {
   return Promise.all(promises);
 }
 
-function* setupAddressStorage() {
-  yield addAddress(MOCK_STORAGE[0]);
-  yield addAddress(MOCK_STORAGE[1]);
+async function setupAddressStorage() {
+  await addAddress(MOCK_STORAGE[0]);
+  await addAddress(MOCK_STORAGE[1]);
 }
 
-function* setupFormHistory() {
-  yield updateFormHistory([
+async function setupFormHistory() {
+  await updateFormHistory([
     {op: "add", fieldname: "tel", value: "1-234-567-890"},
     {op: "add", fieldname: "country", value: "US"},
   ]);

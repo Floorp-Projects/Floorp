@@ -3,8 +3,8 @@ add_task(async function() {
                                                 url: "http://bug1105244.example.com/",
                                                 title: "test" });
 
-  registerCleanupFunction(function* () {
-    yield PlacesUtils.bookmarks.remove(bm);
+  registerCleanupFunction(async function() {
+    await PlacesUtils.bookmarks.remove(bm);
   });
 
   await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, testDelete);

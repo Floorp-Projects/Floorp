@@ -160,15 +160,15 @@ async function test_cookie_cleared() {
 }
 
 // Cache
-function* test_cache_cleared() {
+async function test_cache_cleared() {
   // First, add some caches.
   for (let userContextId of Object.keys(USER_CONTEXTS)) {
-    yield OpenCacheEntry("http://" + TEST_HOST + "/",
+    await OpenCacheEntry("http://" + TEST_HOST + "/",
                          "disk",
                          Ci.nsICacheStorage.OPEN_NORMALLY,
                          LoadContextInfo.custom(false, {userContextId}));
 
-    yield OpenCacheEntry("http://" + TEST_HOST + "/",
+    await OpenCacheEntry("http://" + TEST_HOST + "/",
                          "memory",
                          Ci.nsICacheStorage.OPEN_NORMALLY,
                          LoadContextInfo.custom(false, {userContextId}));
@@ -185,7 +185,7 @@ function* test_cache_cleared() {
   }
 
   // Forget the site.
-  yield ForgetAboutSite.removeDataFromDomain(TEST_HOST);
+  await ForgetAboutSite.removeDataFromDomain(TEST_HOST);
 
   // Check that do caches be removed or not?
   for (let userContextId of Object.keys(USER_CONTEXTS)) {

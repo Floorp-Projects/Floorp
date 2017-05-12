@@ -4,7 +4,7 @@
 
 /* globals chrome */
 
-function* testPermission(options) {
+async function testPermission(options) {
   function background(bgOptions) {
     browser.test.sendMessage("typeof-namespace", {
       browser: typeof browser[bgOptions.namespace],
@@ -18,24 +18,24 @@ function* testPermission(options) {
 
   let extension = ExtensionTestUtils.loadExtension(extensionDetails);
 
-  yield extension.startup();
+  await extension.startup();
 
-  let types = yield extension.awaitMessage("typeof-namespace");
+  let types = await extension.awaitMessage("typeof-namespace");
   equal(types.browser, "undefined", `Type of browser.${options.namespace} without manifest entry`);
   equal(types.chrome, "undefined", `Type of chrome.${options.namespace} without manifest entry`);
 
-  yield extension.unload();
+  await extension.unload();
 
   extensionDetails.manifest = options.manifest;
   extension = ExtensionTestUtils.loadExtension(extensionDetails);
 
-  yield extension.startup();
+  await extension.startup();
 
-  types = yield extension.awaitMessage("typeof-namespace");
+  types = await extension.awaitMessage("typeof-namespace");
   equal(types.browser, "object", `Type of browser.${options.namespace} with manifest entry`);
   equal(types.chrome, "object", `Type of chrome.${options.namespace} with manifest entry`);
 
-  yield extension.unload();
+  await extension.unload();
 }
 
 add_task(async function test_browserAction() {

@@ -1443,7 +1443,7 @@ var loadManifestFromDir = async function(aDir, aInstallLocation) {
     return size;
   }
 
-  function* loadFromRDF(aUri) {
+  async function loadFromRDF(aUri) {
     let fis = Cc["@mozilla.org/network/file-input-stream;1"].
               createInstance(Ci.nsIFileInputStream);
     fis.init(aUri.file, -1, -1, false);
@@ -1451,7 +1451,7 @@ var loadManifestFromDir = async function(aDir, aInstallLocation) {
               createInstance(Ci.nsIBufferedInputStream);
     bis.init(fis, 4096);
     try {
-      var addon = yield loadManifestFromRDF(aUri, bis);
+      var addon = await loadManifestFromRDF(aUri, bis);
     } finally {
       bis.close();
       fis.close();
@@ -1523,13 +1523,13 @@ var loadManifestFromDir = async function(aDir, aInstallLocation) {
  * @throws if the XPI file does not contain a valid install manifest
  */
 var loadManifestFromZipReader = async function(aZipReader, aInstallLocation) {
-  function* loadFromRDF(aUri) {
+  async function loadFromRDF(aUri) {
     let zis = aZipReader.getInputStream(entry);
     let bis = Cc["@mozilla.org/network/buffered-input-stream;1"].
               createInstance(Ci.nsIBufferedInputStream);
     bis.init(zis, 4096);
     try {
-      var addon = yield loadManifestFromRDF(aUri, bis);
+      var addon = await loadManifestFromRDF(aUri, bis);
     } finally {
       bis.close();
       zis.close();

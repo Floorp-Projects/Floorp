@@ -10,7 +10,7 @@ SpecialPowers.pushPrefEnv({
   set: [["extensions.sidebar-button.shown", true]],
 });
 
-function* runTests(options) {
+async function runTests(options) {
   async function background(getTests) {
     async function checkDetails(expecting, tabId) {
       let title = await browser.sidebarAction.getTitle({tabId});
@@ -120,9 +120,9 @@ function* runTests(options) {
     extension.sendMessage("runNextTest");
   }, {capture: true, once: true});
 
-  yield extension.startup();
-  yield awaitFinish;
-  yield extension.unload();
+  await extension.startup();
+  await awaitFinish;
+  await extension.unload();
 }
 
 let sidebar = `

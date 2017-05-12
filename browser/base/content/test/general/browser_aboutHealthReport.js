@@ -43,7 +43,7 @@ function fakeTelemetryNow(...args) {
   return date;
 }
 
-function* setupPingArchive() {
+async function setupPingArchive() {
   let scope = {};
   Cu.import("resource://gre/modules/TelemetryController.jsm", scope);
   Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader)
@@ -51,7 +51,7 @@ function* setupPingArchive() {
 
   for (let p of scope.TEST_PINGS) {
     fakeTelemetryNow(p.date);
-    p.id = yield scope.TelemetryController.submitExternalPing(p.type, p.payload);
+    p.id = await scope.TelemetryController.submitExternalPing(p.type, p.payload);
   }
 }
 

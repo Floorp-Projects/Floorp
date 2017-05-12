@@ -7,8 +7,8 @@ add_task(async function() {
     url: uri.spec,
     parentGuid: PlacesUtils.bookmarks.unfiledGuid
   });
-  registerCleanupFunction(function* () {
-    yield PlacesUtils.bookmarks.remove(bm);
+  registerCleanupFunction(async function() {
+    await PlacesUtils.bookmarks.remove(bm);
   });
 
   PlacesUtils.tagging.tagURI(uri, ["tag1"]);

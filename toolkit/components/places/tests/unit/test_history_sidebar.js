@@ -81,20 +81,20 @@ var visibleContainers = containers.filter(
 /**
  * Asynchronous task that fills history and checks containers' labels.
  */
-function* task_fill_history() {
+async function task_fill_history() {
   print("\n\n*** TEST Fill History\n");
   // We can't use "now" because our hardcoded offsets would be invalid for some
   // date.  So we hardcode a date.
   for (let i = 0; i < containers.length; i++) {
     let container = containers[i];
     var testURI = uri("http://mirror" + i + ".mozilla.com/b");
-    yield task_add_normalized_visit(testURI, nowObj.getTime(), container.offset);
+    await task_add_normalized_visit(testURI, nowObj.getTime(), container.offset);
     testURI = uri("http://mirror" + i + ".mozilla.com/a");
-    yield task_add_normalized_visit(testURI, nowObj.getTime(), container.offset);
+    await task_add_normalized_visit(testURI, nowObj.getTime(), container.offset);
     testURI = uri("http://mirror" + i + ".google.com/b");
-    yield task_add_normalized_visit(testURI, nowObj.getTime(), container.offset);
+    await task_add_normalized_visit(testURI, nowObj.getTime(), container.offset);
     testURI = uri("http://mirror" + i + ".google.com/a");
-    yield task_add_normalized_visit(testURI, nowObj.getTime(), container.offset);
+    await task_add_normalized_visit(testURI, nowObj.getTime(), container.offset);
     // Bug 485703 - Hide date containers not containing additional entries
     //              compared to previous ones.
     // Check after every new container is added.
@@ -354,7 +354,7 @@ function test_RESULTS_AS_SITE_QUERY() {
 /**
  * Checks that queries grouped by date do liveupdate correctly.
  */
-function* task_test_date_liveupdate(aResultType) {
+async function task_test_date_liveupdate(aResultType) {
   var midnight = nowObj;
   midnight.setHours(0);
   midnight.setMinutes(0);
@@ -382,7 +382,7 @@ function* task_test_date_liveupdate(aResultType) {
 
   // Add a visit for "Today".  This should add back the missing "Today"
   // container.
-  yield task_add_normalized_visit(uri("http://www.mozilla.org/"), nowObj.getTime(), 0);
+  await task_add_normalized_visit(uri("http://www.mozilla.org/"), nowObj.getTime(), 0);
   do_check_eq(root.childCount, visibleContainers.length);
 
   last7Days.containerOpen = false;
@@ -409,7 +409,7 @@ function* task_test_date_liveupdate(aResultType) {
   hs.removePagesByTimeframe(midnight.getTime() * 1000, Date.now() * 1000);
   do_check_eq(dateContainer.childCount, visibleContainers.length - 1);
   // Add a visit for "Today".
-  yield task_add_normalized_visit(uri("http://www.mozilla.org/"), nowObj.getTime(), 0);
+  await task_add_normalized_visit(uri("http://www.mozilla.org/"), nowObj.getTime(), 0);
   do_check_eq(dateContainer.childCount, visibleContainers.length);
 
   dateContainer.containerOpen = false;

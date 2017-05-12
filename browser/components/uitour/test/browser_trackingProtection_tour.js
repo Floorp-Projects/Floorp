@@ -20,8 +20,8 @@ add_task(async function test_setup() {
   });
 });
 
-add_UITour_task(function* test_unblock_target() {
-  yield* checkToggleTarget("controlCenter-trackingUnblock");
+add_UITour_task(async function test_unblock_target() {
+  await checkToggleTarget("controlCenter-trackingUnblock");
 });
 
 add_UITour_task(function setup_block_target() {
@@ -32,8 +32,8 @@ add_UITour_task(function setup_block_target() {
   TrackingProtection.disableForCurrentPage();
 });
 
-add_UITour_task(function* test_block_target() {
-  yield* checkToggleTarget("controlCenter-trackingBlock");
+add_UITour_task(async function test_block_target() {
+  await checkToggleTarget("controlCenter-trackingBlock");
   TrackingProtection.enableForCurrentPage();
 });
 
@@ -49,8 +49,8 @@ async function checkToggleTarget(targetID) {
     doc.body.insertBefore(iframe, doc.body.firstChild);
   });
 
-  let testTargetAvailability = function* (expectedAvailable) {
-    let data = yield getConfigurationPromise("availableTargets");
+  let testTargetAvailability = async function(expectedAvailable) {
+    let data = await getConfigurationPromise("availableTargets");
     let available = (data.targets.indexOf(targetID) != -1);
     is(available, expectedAvailable, "Target has expected availability.");
   };

@@ -149,7 +149,7 @@ this.TestRunner = {
 
   // helpers
 
-  *_performCombo(combo) {
+  async _performCombo(combo) {
     let paddedComboIndex = padLeft(this.currentComboIndex + 1, String(this.combos.length).length);
     log.info("Combination " + paddedComboIndex + "/" + this.combos.length + ": " +
              this._comboName(combo).substring(1));
@@ -176,7 +176,7 @@ this.TestRunner = {
         let config = combo[i];
         if (!this._lastCombo || config !== this._lastCombo[i]) {
           log.debug("promising", config.name);
-          yield changeConfig(config);
+          await changeConfig(config);
         }
       }
 
@@ -195,7 +195,7 @@ this.TestRunner = {
         // have invalidated it.
         if (config.verifyConfig) {
           log.debug("checking if the combo is valid with", config.name);
-          yield config.verifyConfig();
+          await config.verifyConfig();
         }
       }
     } catch (ex) {
@@ -207,7 +207,7 @@ this.TestRunner = {
       return;
     }
 
-    yield this._onConfigurationReady(combo);
+    await this._onConfigurationReady(combo);
   },
 
   _onConfigurationReady(combo) {

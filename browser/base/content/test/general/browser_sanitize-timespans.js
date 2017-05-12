@@ -486,7 +486,7 @@ function setupHistory() {
   return deferred.promise;
 }
 
-function* setupFormHistory() {
+async function setupFormHistory() {
 
   function searchEntries(terms, params) {
     let deferred = Promise.defer();
@@ -514,7 +514,7 @@ function* setupFormHistory() {
   }
 
   // Make sure we've got a clean DB to start with, then add the entries we'll be testing.
-  yield update(
+  await update(
     [{
         op: "remove"
      },
@@ -558,122 +558,122 @@ function* setupFormHistory() {
 
   // Artifically age the entries to the proper vintage.
   let timestamp = now_uSec - 10 * kUsecPerMin;
-  let results = yield searchEntries(["guid"], { fieldname: "10minutes" });
-  yield update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
+  let results = await searchEntries(["guid"], { fieldname: "10minutes" });
+  await update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
 
   timestamp = now_uSec - 45 * kUsecPerMin;
-  results = yield searchEntries(["guid"], { fieldname: "1hour" });
-  yield update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
+  results = await searchEntries(["guid"], { fieldname: "1hour" });
+  await update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
 
   timestamp = now_uSec - 70 * kUsecPerMin;
-  results = yield searchEntries(["guid"], { fieldname: "1hour10minutes" });
-  yield update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
+  results = await searchEntries(["guid"], { fieldname: "1hour10minutes" });
+  await update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
 
   timestamp = now_uSec - 90 * kUsecPerMin;
-  results = yield searchEntries(["guid"], { fieldname: "2hour" });
-  yield update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
+  results = await searchEntries(["guid"], { fieldname: "2hour" });
+  await update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
 
   timestamp = now_uSec - 130 * kUsecPerMin;
-  results = yield searchEntries(["guid"], { fieldname: "2hour10minutes" });
-  yield update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
+  results = await searchEntries(["guid"], { fieldname: "2hour10minutes" });
+  await update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
 
   timestamp = now_uSec - 180 * kUsecPerMin;
-  results = yield searchEntries(["guid"], { fieldname: "4hour" });
-  yield update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
+  results = await searchEntries(["guid"], { fieldname: "4hour" });
+  await update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
 
   timestamp = now_uSec - 250 * kUsecPerMin;
-  results = yield searchEntries(["guid"], { fieldname: "4hour10minutes" });
-  yield update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
+  results = await searchEntries(["guid"], { fieldname: "4hour10minutes" });
+  await update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
 
   let today = new Date();
   today.setHours(0);
   today.setMinutes(0);
   today.setSeconds(1);
   timestamp = today.getTime() * 1000;
-  results = yield searchEntries(["guid"], { fieldname: "today" });
-  yield update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
+  results = await searchEntries(["guid"], { fieldname: "today" });
+  await update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
 
   let lastYear = new Date();
   lastYear.setFullYear(lastYear.getFullYear() - 1);
   timestamp = lastYear.getTime() * 1000;
-  results = yield searchEntries(["guid"], { fieldname: "b4today" });
-  yield update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
+  results = await searchEntries(["guid"], { fieldname: "b4today" });
+  await update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
 
   var checks = 0;
   let checkOne = function(num, message) { is(num, 1, message); checks++; }
 
   // Sanity check.
-  yield countEntries("10minutes", "Checking for 10minutes form history entry creation", checkOne);
-  yield countEntries("1hour", "Checking for 1hour form history entry creation", checkOne);
-  yield countEntries("1hour10minutes", "Checking for 1hour10minutes form history entry creation", checkOne);
-  yield countEntries("2hour", "Checking for 2hour form history entry creation", checkOne);
-  yield countEntries("2hour10minutes", "Checking for 2hour10minutes form history entry creation", checkOne);
-  yield countEntries("4hour", "Checking for 4hour form history entry creation", checkOne);
-  yield countEntries("4hour10minutes", "Checking for 4hour10minutes form history entry creation", checkOne);
-  yield countEntries("today", "Checking for today form history entry creation", checkOne);
-  yield countEntries("b4today", "Checking for b4today form history entry creation", checkOne);
+  await countEntries("10minutes", "Checking for 10minutes form history entry creation", checkOne);
+  await countEntries("1hour", "Checking for 1hour form history entry creation", checkOne);
+  await countEntries("1hour10minutes", "Checking for 1hour10minutes form history entry creation", checkOne);
+  await countEntries("2hour", "Checking for 2hour form history entry creation", checkOne);
+  await countEntries("2hour10minutes", "Checking for 2hour10minutes form history entry creation", checkOne);
+  await countEntries("4hour", "Checking for 4hour form history entry creation", checkOne);
+  await countEntries("4hour10minutes", "Checking for 4hour10minutes form history entry creation", checkOne);
+  await countEntries("today", "Checking for today form history entry creation", checkOne);
+  await countEntries("b4today", "Checking for b4today form history entry creation", checkOne);
   is(checks, 9, "9 checks made");
 }
 
-function* setupDownloads() {
+async function setupDownloads() {
 
-  let publicList = yield Downloads.getList(Downloads.PUBLIC);
+  let publicList = await Downloads.getList(Downloads.PUBLIC);
 
-  let download = yield Downloads.createDownload({
+  let download = await Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
     target: "fakefile-10-minutes"
   });
   download.startTime = new Date(now_mSec - 10 * kMsecPerMin), // 10 minutes ago
   download.canceled = true;
-  yield publicList.add(download);
+  await publicList.add(download);
 
-  download = yield Downloads.createDownload({
+  download = await Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=453440",
     target: "fakefile-1-hour"
   });
   download.startTime = new Date(now_mSec - 45 * kMsecPerMin), // 45 minutes ago
   download.canceled = true;
-  yield publicList.add(download);
+  await publicList.add(download);
 
-  download = yield Downloads.createDownload({
+  download = await Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
     target: "fakefile-1-hour-10-minutes"
   });
   download.startTime = new Date(now_mSec - 70 * kMsecPerMin), // 70 minutes ago
   download.canceled = true;
-  yield publicList.add(download);
+  await publicList.add(download);
 
-  download = yield Downloads.createDownload({
+  download = await Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=453440",
     target: "fakefile-2-hour"
   });
   download.startTime = new Date(now_mSec - 90 * kMsecPerMin), // 90 minutes ago
   download.canceled = true;
-  yield publicList.add(download);
+  await publicList.add(download);
 
-  download = yield Downloads.createDownload({
+  download = await Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
     target: "fakefile-2-hour-10-minutes"
   });
   download.startTime = new Date(now_mSec - 130 * kMsecPerMin), // 130 minutes ago
   download.canceled = true;
-  yield publicList.add(download);
+  await publicList.add(download);
 
-  download = yield Downloads.createDownload({
+  download = await Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=453440",
     target: "fakefile-4-hour"
   });
   download.startTime = new Date(now_mSec - 180 * kMsecPerMin), // 180 minutes ago
   download.canceled = true;
-  yield publicList.add(download);
+  await publicList.add(download);
 
-  download = yield Downloads.createDownload({
+  download = await Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
     target: "fakefile-4-hour-10-minutes"
   });
   download.startTime = new Date(now_mSec - 250 * kMsecPerMin), // 250 minutes ago
   download.canceled = true;
-  yield publicList.add(download);
+  await publicList.add(download);
 
   // Add "today" download
   let today = new Date();
@@ -681,39 +681,39 @@ function* setupDownloads() {
   today.setMinutes(0);
   today.setSeconds(1);
 
-  download = yield Downloads.createDownload({
+  download = await Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=453440",
     target: "fakefile-today"
   });
   download.startTime = today, // 12:00:01 AM this morning
   download.canceled = true;
-  yield publicList.add(download);
+  await publicList.add(download);
 
   // Add "before today" download
   let lastYear = new Date();
   lastYear.setFullYear(lastYear.getFullYear() - 1);
 
-  download = yield Downloads.createDownload({
+  download = await Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=453440",
     target: "fakefile-old"
   });
   download.startTime = lastYear,
   download.canceled = true;
-  yield publicList.add(download);
+  await publicList.add(download);
 
   // Confirm everything worked
-  let downloads = yield publicList.getAll();
+  let downloads = await publicList.getAll();
   is(downloads.length, 9, "9 Pretend downloads added");
 
-  ok((yield downloadExists(publicList, "fakefile-old")), "Pretend download for everything case should exist");
-  ok((yield downloadExists(publicList, "fakefile-10-minutes")), "Pretend download for 10-minutes case should exist");
-  ok((yield downloadExists(publicList, "fakefile-1-hour")), "Pretend download for 1-hour case should exist");
-  ok((yield downloadExists(publicList, "fakefile-1-hour-10-minutes")), "Pretend download for 1-hour-10-minutes case should exist");
-  ok((yield downloadExists(publicList, "fakefile-2-hour")), "Pretend download for 2-hour case should exist");
-  ok((yield downloadExists(publicList, "fakefile-2-hour-10-minutes")), "Pretend download for 2-hour-10-minutes case should exist");
-  ok((yield downloadExists(publicList, "fakefile-4-hour")), "Pretend download for 4-hour case should exist");
-  ok((yield downloadExists(publicList, "fakefile-4-hour-10-minutes")), "Pretend download for 4-hour-10-minutes case should exist");
-  ok((yield downloadExists(publicList, "fakefile-today")), "Pretend download for Today case should exist");
+  ok((await downloadExists(publicList, "fakefile-old")), "Pretend download for everything case should exist");
+  ok((await downloadExists(publicList, "fakefile-10-minutes")), "Pretend download for 10-minutes case should exist");
+  ok((await downloadExists(publicList, "fakefile-1-hour")), "Pretend download for 1-hour case should exist");
+  ok((await downloadExists(publicList, "fakefile-1-hour-10-minutes")), "Pretend download for 1-hour-10-minutes case should exist");
+  ok((await downloadExists(publicList, "fakefile-2-hour")), "Pretend download for 2-hour case should exist");
+  ok((await downloadExists(publicList, "fakefile-2-hour-10-minutes")), "Pretend download for 2-hour-10-minutes case should exist");
+  ok((await downloadExists(publicList, "fakefile-4-hour")), "Pretend download for 4-hour case should exist");
+  ok((await downloadExists(publicList, "fakefile-4-hour-10-minutes")), "Pretend download for 4-hour-10-minutes case should exist");
+  ok((await downloadExists(publicList, "fakefile-today")), "Pretend download for Today case should exist");
 }
 
 /**

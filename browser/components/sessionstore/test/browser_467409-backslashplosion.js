@@ -52,9 +52,9 @@ add_task(async function test_nested_about_sessionrestore() {
   gBrowser.removeTab(tab);
 });
 
-function* checkState(prefix, tab) {
+async function checkState(prefix, tab) {
   // Flush and query tab state.
-  yield TabStateFlusher.flush(tab.linkedBrowser);
+  await TabStateFlusher.flush(tab.linkedBrowser);
   let {formdata} = JSON.parse(ss.getTabState(tab));
 
   ok(formdata.id["sessionData"], prefix + ": we have form data for about:sessionrestore");

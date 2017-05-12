@@ -87,7 +87,7 @@ let superOverrideFn = base => ({
  *        Zero if the root object is not overridden, or a higher value to test
  *        the presence of one or more integration overrides.
  */
-function* assertCombinedResults(combined, overridesCount) {
+async function assertCombinedResults(combined, overridesCount) {
   let expectedValue = overridesCount > 0 ? "overridden-value" : "value";
   let prefix = "overridden-".repeat(overridesCount);
 
@@ -102,7 +102,7 @@ function* assertCombinedResults(combined, overridesCount) {
   Assert.equal(combined.methodArgument, "-argument");
 
   combined.asyncMethodArgument = "";
-  Assert.equal(yield combined.asyncMethod("-argument"),
+  Assert.equal(await combined.asyncMethod("-argument"),
                prefix + "asyncMethod-argument");
   Assert.equal(combined.asyncMethodArgument, "-argument");
 }
@@ -116,9 +116,9 @@ function* assertCombinedResults(combined, overridesCount) {
  *        Zero if the root object is not overridden, or a higher value to test
  *        the presence of one or more integration overrides.
  */
-function* assertCurrentCombinedResults(overridesCount) {
+async function assertCurrentCombinedResults(overridesCount) {
   let combined = Integration.testModule.getCombined(TestIntegration);
-  yield assertCombinedResults(combined, overridesCount);
+  await assertCombinedResults(combined, overridesCount);
 }
 
 /**

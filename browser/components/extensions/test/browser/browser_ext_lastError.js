@@ -1,6 +1,6 @@
 "use strict";
 
-function* sendMessage(options) {
+async function sendMessage(options) {
   function background(options) {
     browser.runtime.sendMessage(result => {
       browser.test.assertEq(undefined, result, "Argument value");
@@ -18,11 +18,11 @@ function* sendMessage(options) {
     background: `(${background})(${JSON.stringify(options)})`,
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitMessage("done");
+  await extension.awaitMessage("done");
 
-  yield extension.unload();
+  await extension.unload();
 }
 
 add_task(async function testLastError() {

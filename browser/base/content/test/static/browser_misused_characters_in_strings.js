@@ -148,17 +148,17 @@ function testForErrors(filepath, key, str) {
   testForError(filepath, key, str, /\.\.\./, "ellipsis", "Strings with an ellipsis should use the Unicode \u2026 character instead of three periods.");
 }
 
-function* getAllTheFiles(extension) {
+async function getAllTheFiles(extension) {
   let appDirGreD = Services.dirsvc.get("GreD", Ci.nsIFile);
   let appDirXCurProcD = Services.dirsvc.get("XCurProcD", Ci.nsIFile);
   if (appDirGreD.contains(appDirXCurProcD)) {
-    return yield generateURIsFromDirTree(appDirGreD, [extension]);
+    return await generateURIsFromDirTree(appDirGreD, [extension]);
   }
   if (appDirXCurProcD.contains(appDirGreD)) {
-    return yield generateURIsFromDirTree(appDirXCurProcD, [extension]);
+    return await generateURIsFromDirTree(appDirXCurProcD, [extension]);
   }
-  let urisGreD = yield generateURIsFromDirTree(appDirGreD, [extension]);
-  let urisXCurProcD = yield generateURIsFromDirTree(appDirXCurProcD, [extension]);
+  let urisGreD = await generateURIsFromDirTree(appDirGreD, [extension]);
+  let urisXCurProcD = await generateURIsFromDirTree(appDirXCurProcD, [extension]);
   return Array.from(new Set(urisGreD.concat(appDirXCurProcD)));
 }
 

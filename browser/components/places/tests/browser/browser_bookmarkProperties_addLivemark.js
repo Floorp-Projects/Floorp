@@ -3,11 +3,11 @@
 add_task(async function() {
   info("Add a live bookmark editing its data");
 
-  await withSidebarTree("bookmarks", function* (tree) {
+  await withSidebarTree("bookmarks", async function(tree) {
     let itemId = PlacesUIUtils.leftPaneQueries["UnfiledBookmarks"];
     tree.selectItems([itemId]);
 
-    yield withBookmarksDialog(
+    await withBookmarksDialog(
       true,
       function openDialog() {
         PlacesCommandHook.addLiveBookmark("http://livemark.com/",

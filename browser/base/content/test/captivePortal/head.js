@@ -12,8 +12,8 @@ const CANONICAL_URL = "data:text/plain;charset=utf-8," + CANONICAL_CONTENT;
 const CANONICAL_URL_REDIRECTED = "data:text/plain;charset=utf-8,redirected";
 const PORTAL_NOTIFICATION_VALUE = "captive-portal-detected";
 
-function* setupPrefsAndRecentWindowBehavior() {
-  yield SpecialPowers.pushPrefEnv({
+async function setupPrefsAndRecentWindowBehavior() {
+  await SpecialPowers.pushPrefEnv({
     set: [["captivedetect.canonicalURL", CANONICAL_URL],
           ["captivedetect.canonicalContent", CANONICAL_CONTENT]],
   });

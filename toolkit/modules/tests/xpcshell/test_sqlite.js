@@ -46,34 +46,34 @@ function getConnection(dbName, extraOptions = {}) {
   return Sqlite.openConnection(options);
 }
 
-function* getDummyDatabase(name, extraOptions = {}) {
+async function getDummyDatabase(name, extraOptions = {}) {
   const TABLES = {
     dirs: "id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT",
     files: "id INTEGER PRIMARY KEY AUTOINCREMENT, dir_id INTEGER, path TEXT",
   };
 
-  let c = yield getConnection(name, extraOptions);
+  let c = await getConnection(name, extraOptions);
   c._initialStatementCount = 0;
 
   for (let [k, v] of Object.entries(TABLES)) {
-    yield c.execute("CREATE TABLE " + k + "(" + v + ")");
+    await c.execute("CREATE TABLE " + k + "(" + v + ")");
     c._initialStatementCount++;
   }
 
   return c;
 }
 
-function* getDummyTempDatabase(name, extraOptions = {}) {
+async function getDummyTempDatabase(name, extraOptions = {}) {
   const TABLES = {
     dirs: "id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT",
     files: "id INTEGER PRIMARY KEY AUTOINCREMENT, dir_id INTEGER, path TEXT",
   };
 
-  let c = yield getConnection(name, extraOptions);
+  let c = await getConnection(name, extraOptions);
   c._initialStatementCount = 0;
 
   for (let [k, v] of Object.entries(TABLES)) {
-    yield c.execute("CREATE TEMP TABLE " + k + "(" + v + ")");
+    await c.execute("CREATE TEMP TABLE " + k + "(" + v + ")");
     c._initialStatementCount++;
   }
 
@@ -355,11 +355,11 @@ add_task(async function test_execute_transaction_success() {
 
   do_check_false(c.transactionInProgress);
 
-  await c.executeTransaction(function* transaction(conn) {
+  await c.executeTransaction(async function transaction(conn) {
     do_check_eq(c, conn);
     do_check_true(conn.transactionInProgress);
 
-    yield conn.execute("INSERT INTO dirs (path) VALUES ('foo')");
+    await conn.execute("INSERT INTO dirs (path) VALUES ('foo')");
   });
 
   do_check_false(c.transactionInProgress);
@@ -375,10 +375,10 @@ add_task(async function test_execute_transaction_rollback() {
 
   let deferred = Promise.defer();
 
-  c.executeTransaction(function* transaction(conn) {
-    yield conn.execute("INSERT INTO dirs (path) VALUES ('foo')");
+  c.executeTransaction(async function transaction(conn) {
+    await conn.execute("INSERT INTO dirs (path) VALUES ('foo')");
     print("Expecting error with next statement.");
-    yield conn.execute("INSERT INTO invalid VALUES ('foo')");
+    await conn.execute("INSERT INTO invalid VALUES ('foo')");
 
     // We should never get here.
     do_throw();
@@ -399,8 +399,8 @@ add_task(async function test_close_during_transaction() {
 
   await c.execute("INSERT INTO dirs (path) VALUES ('foo')");
 
-  let promise = c.executeTransaction(function* transaction(conn) {
-    yield c.execute("INSERT INTO dirs (path) VALUES ('bar')");
+  let promise = c.executeTransaction(async function transaction(conn) {
+    await c.execute("INSERT INTO dirs (path) VALUES ('bar')");
   });
   await c.close();
 
@@ -421,17 +421,17 @@ add_task(async function test_multiple_transactions() {
 
   for (let i = 0; i < 10; ++i) {
     // We don't wait for these transactions.
-    c.executeTransaction(function* () {
-      yield c.execute("INSERT INTO dirs (path) VALUES (:path)",
+    c.executeTransaction(async function() {
+      await c.execute("INSERT INTO dirs (path) VALUES (:path)",
                       { path: `foo${i}` });
-      yield c.execute("SELECT * FROM dirs");
+      await c.execute("SELECT * FROM dirs");
     });
   }
   for (let i = 0; i < 10; ++i) {
-    await c.executeTransaction(function* () {
-      yield c.execute("INSERT INTO dirs (path) VALUES (:path)",
+    await c.executeTransaction(async function() {
+      await c.execute("INSERT INTO dirs (path) VALUES (:path)",
                       { path: `bar${i}` });
-      yield c.execute("SELECT * FROM dirs");
+      await c.execute("SELECT * FROM dirs");
     });
   }
 
@@ -460,8 +460,8 @@ add_task(async function test_wrapped_connection_transaction() {
   // Start a transaction on the raw connection.
   await c.executeSimpleSQLAsync("BEGIN");
   // Now use executeTransaction, it will be executed, but not in a transaction.
-  await wrapper.executeTransaction(function* () {
-    yield wrapper.execute("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT)");
+  await wrapper.executeTransaction(async function() {
+    await wrapper.execute("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT)");
   });
   // This should not fail cause the internal transaction has not been created.
   await c.executeSimpleSQLAsync("COMMIT");
@@ -721,11 +721,11 @@ add_task(async function test_programmatic_binding_transaction() {
   ];
 
   let sql = "INSERT INTO dirs VALUES (:id, :path)";
-  await c.executeTransaction(function* transaction() {
-    let result = yield c.execute(sql, bindings);
+  await c.executeTransaction(async function transaction() {
+    let result = await c.execute(sql, bindings);
     do_check_eq(result.length, 0);
 
-    let rows = yield c.executeCached("SELECT * from dirs");
+    let rows = await c.executeCached("SELECT * from dirs");
     do_check_eq(rows.length, 3);
   });
 
@@ -750,13 +750,13 @@ add_task(async function test_programmatic_binding_transaction_partial_rollback()
 
   let secondSucceeded = false;
   try {
-    await c.executeTransaction(function* transaction() {
+    await c.executeTransaction(async function transaction() {
       // Insert one row. This won't implicitly start a transaction.
-      yield c.execute(sql, bindings[0]);
+      await c.execute(sql, bindings[0]);
 
       // Insert multiple rows. mozStorage will want to start a transaction.
       // One of the inserts will fail, so the transaction should be rolled back.
-      yield c.execute(sql, bindings);
+      await c.execute(sql, bindings);
       secondSucceeded = true;
     });
   } catch (ex) {

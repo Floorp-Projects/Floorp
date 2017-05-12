@@ -26,7 +26,7 @@ function tp_background(expectFail = true) {
   });
 }
 
-function* test_permission(permissions, expectFail) {
+async function test_permission(permissions, expectFail) {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions,
@@ -34,9 +34,9 @@ function* test_permission(permissions, expectFail) {
     background: `(${tp_background})(${expectFail})`,
   });
 
-  yield extension.startup();
-  yield extension.awaitMessage("done");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
 }
 
 add_task(async function setup() {

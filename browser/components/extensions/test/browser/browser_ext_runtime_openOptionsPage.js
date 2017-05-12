@@ -10,7 +10,7 @@ function add_tasks(task) {
   add_task(task.bind(null, {embedded: true}));
 }
 
-function* loadExtension(options) {
+async function loadExtension(options) {
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "temporary",
 
@@ -43,7 +43,7 @@ function* loadExtension(options) {
     background: options.background,
   });
 
-  yield extension.startup();
+  await extension.startup();
 
   return extension;
 }
@@ -251,10 +251,10 @@ add_tasks(async function test_tab_options(extraOptions) {
   await BrowserTestUtils.removeTab(tab);
 });
 
-add_tasks(function* test_options_no_manifest(extraOptions) {
+add_tasks(async function test_options_no_manifest(extraOptions) {
   info(`Test with no manifest key (${JSON.stringify(extraOptions)})`);
 
-  let extension = yield loadExtension(Object.assign({}, extraOptions, {
+  let extension = await loadExtension(Object.assign({}, extraOptions, {
     manifest: {
       applications: {gecko: {id: "no_options@tests.mozilla.org"}},
     },
@@ -271,6 +271,6 @@ add_tasks(function* test_options_no_manifest(extraOptions) {
     },
   }));
 
-  yield extension.awaitFinish("options-no-manifest");
-  yield extension.unload();
+  await extension.awaitFinish("options-no-manifest");
+  await extension.unload();
 });

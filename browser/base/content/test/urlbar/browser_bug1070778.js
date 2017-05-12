@@ -21,9 +21,9 @@ add_task(async function() {
                                              url: "http://example.com/keyword",
                                              title: "keyword abc" })));
 
-  registerCleanupFunction(function* () {
+  registerCleanupFunction(async function() {
     for (let bm of bookmarks) {
-      yield PlacesUtils.bookmarks.remove(bm);
+      await PlacesUtils.bookmarks.remove(bm);
     }
   });
 

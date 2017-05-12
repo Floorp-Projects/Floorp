@@ -318,10 +318,10 @@ var PlacesTransactions = {
            o => !TransactionsHistory.isProxifiedTransactionObject(o))) {
         throw new Error("aToBatch contains non-transaction element");
       }
-      return TransactionsManager.batch(function* () {
+      return TransactionsManager.batch(async function() {
         for (let txn of aToBatch) {
           try {
-            yield txn.transact();
+            await txn.transact();
           } catch (ex) {
             console.error(ex);
           }
@@ -515,10 +515,10 @@ var TransactionsManager = {
     // sameTxn.transact(); sameTxn.transact();
     this._executedTransactions.add(rawTxn);
 
-    let promise = this._transactEnqueuer.enqueue(function* () {
+    let promise = this._transactEnqueuer.enqueue(async function() {
       // Don't try to catch exceptions. If execute fails, we better not add the
       // transaction to the undo stack.
-      let retval = yield rawTxn.execute();
+      let retval = await rawTxn.execute();
 
       let forceNewEntry = !this._batching || !this._createdBatchEntry;
       TransactionsHistory.add(aTxnProxy, forceNewEntry);
@@ -552,14 +552,14 @@ var TransactionsManager = {
    * Undo the top undo entry, if any, and update the undo position accordingly.
    */
   undo() {
-    let promise = this._mainEnqueuer.enqueue(function* () {
+    let promise = this._mainEnqueuer.enqueue(async function() {
       let entry = TransactionsHistory.topUndoEntry;
       if (!entry)
         return;
 
       for (let txnProxy of entry) {
         try {
-          yield TransactionsHistory.getRawTransaction(txnProxy).undo();
+          await TransactionsHistory.getRawTransaction(txnProxy).undo();
         } catch (ex) {
           // If one transaction is broken, it's not safe to work with any other
           // undo entry.  Report the error and clear the undo history.
@@ -580,7 +580,7 @@ var TransactionsManager = {
    * Redo the top redo entry, if any, and update the undo position accordingly.
    */
   redo() {
-    let promise = this._mainEnqueuer.enqueue(function* () {
+    let promise = this._mainEnqueuer.enqueue(async function() {
       let entry = TransactionsHistory.topRedoEntry;
       if (!entry)
         return;
@@ -589,9 +589,9 @@ var TransactionsManager = {
         let transaction = TransactionsHistory.getRawTransaction(entry[i]);
         try {
           if (transaction.redo)
-            yield transaction.redo();
+            await transaction.redo();
           else
-            yield transaction.execute();
+            await transaction.execute();
         } catch (ex) {
           // If one transaction is broken, it's not safe to work with any other
           // redo entry. Report the error and clear the undo history.
@@ -913,14 +913,14 @@ async function ExecuteCreateItem(aTransaction, aParentGuid, aCreateItemFunction,
 
   // On redo, we'll restore the date-added and last-modified properties.
   let dateAdded = 0, lastModified = 0;
-  aTransaction.undo = function* () {
+  aTransaction.undo = async function() {
     if (dateAdded == 0) {
       dateAdded = PlacesUtils.bookmarks.getItemDateAdded(itemId);
       lastModified = PlacesUtils.bookmarks.getItemLastModified(itemId);
     }
     PlacesUtils.bookmarks.removeItem(itemId);
     if (aOnUndo) {
-      yield aOnUndo();
+      await aOnUndo();
     }
   };
   aTransaction.redo = async function() {
@@ -956,7 +956,7 @@ async function ExecuteCreateItem(aTransaction, aParentGuid, aCreateItemFunction,
  *       root one.
  * @return {Promise}
  */
-function* createItemsFromBookmarksTree(aBookmarksTree, aRestoring = false,
+async function createItemsFromBookmarksTree(aBookmarksTree, aRestoring = false,
                                        aExcludingAnnotations = []) {
   function extractLivemarkDetails(aAnnos) {
     let feedURI = null, siteURI = null;
@@ -1046,7 +1046,7 @@ function* createItemsFromBookmarksTree(aBookmarksTree, aRestoring = false,
     }
     return itemId;
   }
-  return yield createItem(aBookmarksTree,
+  return await createItem(aBookmarksTree,
                           aBookmarksTree.parentGuid,
                           aBookmarksTree.index);
 }
@@ -1075,12 +1075,12 @@ PT.NewBookmark.prototype = Object.seal({
   execute(aParentGuid, aURI, aIndex, aTitle,
                     aKeyword, aPostData, aAnnos, aTags) {
     return ExecuteCreateItem(this, aParentGuid,
-      function* (parentId, guidToRestore = "") {
+      async function(parentId, guidToRestore = "") {
         let itemId = PlacesUtils.bookmarks.insertBookmark(
           parentId, aURI, aIndex, aTitle, guidToRestore);
 
         if (aKeyword) {
-          yield PlacesUtils.keywords.insert({
+          await PlacesUtils.keywords.insert({
             url: aURI.spec,
             keyword: aKeyword,
             postData: aPostData
@@ -1162,7 +1162,7 @@ PT.NewSeparator.prototype = Object.seal({
 PT.NewLivemark = DefineTransaction(["feedUrl", "title", "parentGuid"],
                                    ["siteUrl", "index", "annotations"]);
 PT.NewLivemark.prototype = Object.seal({
-  *execute(aFeedURI, aTitle, aParentGuid, aSiteURI, aIndex, aAnnos) {
+  async execute(aFeedURI, aTitle, aParentGuid, aSiteURI, aIndex, aAnnos) {
     let livemarkInfo = { title: aTitle
                        , feedURI: aFeedURI
                        , siteURI: aSiteURI
@@ -1182,8 +1182,8 @@ PT.NewLivemark.prototype = Object.seal({
       return livemark;
     };
 
-    let livemark = yield createItem();
-    this.undo = function* () {
+    let livemark = await createItem();
+    this.undo = async function() {
       livemarkInfo.guid = livemark.guid;
       if (!("dateAdded" in livemarkInfo)) {
         livemarkInfo.dateAdded =
@@ -1191,10 +1191,10 @@ PT.NewLivemark.prototype = Object.seal({
         livemarkInfo.lastModified =
           PlacesUtils.bookmarks.getItemLastModified(livemark.id);
       }
-      yield PlacesUtils.livemarks.removeLivemark(livemark);
+      await PlacesUtils.livemarks.removeLivemark(livemark);
     };
-    this.redo = function* () {
-      livemark = yield createItem();
+    this.redo = async function() {
+      livemark = await createItem();
     };
     return livemark.guid;
   }
@@ -1335,32 +1335,32 @@ PT.Annotate.prototype = {
 PT.EditKeyword = DefineTransaction(["guid", "keyword"],
                                    ["postData", "oldKeyword"]);
 PT.EditKeyword.prototype = Object.seal({
-  *execute(aGuid, aKeyword, aPostData, aOldKeyword) {
+  async execute(aGuid, aKeyword, aPostData, aOldKeyword) {
     let url;
     let oldKeywordEntry;
     if (aOldKeyword) {
-      oldKeywordEntry = yield PlacesUtils.keywords.fetch(aOldKeyword);
+      oldKeywordEntry = await PlacesUtils.keywords.fetch(aOldKeyword);
       url = oldKeywordEntry.url;
-      yield PlacesUtils.keywords.remove(aOldKeyword);
+      await PlacesUtils.keywords.remove(aOldKeyword);
     }
 
     if (aKeyword) {
       if (!url) {
-        url = (yield PlacesUtils.bookmarks.fetch(aGuid)).url;
+        url = (await PlacesUtils.bookmarks.fetch(aGuid)).url;
       }
-      yield PlacesUtils.keywords.insert({
+      await PlacesUtils.keywords.insert({
         url,
         keyword: aKeyword,
         postData: aPostData || (oldKeywordEntry ? oldKeywordEntry.postData : "")
       });
     }
 
-    this.undo = function* () {
+    this.undo = async function() {
       if (aKeyword) {
-        yield PlacesUtils.keywords.remove(aKeyword);
+        await PlacesUtils.keywords.remove(aKeyword);
       }
       if (oldKeywordEntry) {
-        yield PlacesUtils.keywords.insert(oldKeywordEntry);
+        await PlacesUtils.keywords.insert(oldKeywordEntry);
       }
     };
   }
@@ -1478,15 +1478,15 @@ PT.Remove.prototype = {
  */
 PT.RemoveBookmarksForUrls = DefineTransaction(["urls"]);
 PT.RemoveBookmarksForUrls.prototype = {
-  *execute(aUrls) {
+  async execute(aUrls) {
     let guids = [];
     for (let url of aUrls) {
-      yield PlacesUtils.bookmarks.fetch({ url }, info => {
+      await PlacesUtils.bookmarks.fetch({ url }, info => {
         guids.push(info.guid);
       });
     }
     let removeTxn = TransactionsHistory.getRawTransaction(PT.Remove(guids));
-    yield removeTxn.execute();
+    await removeTxn.execute();
     this.undo = removeTxn.undo.bind(removeTxn);
     this.redo = removeTxn.redo.bind(removeTxn);
   }
@@ -1499,16 +1499,16 @@ PT.RemoveBookmarksForUrls.prototype = {
  */
 PT.Tag = DefineTransaction(["urls", "tags"]);
 PT.Tag.prototype = {
-  *execute(aURIs, aTags) {
+  async execute(aURIs, aTags) {
     let onUndo = [], onRedo = [];
     for (let uri of aURIs) {
-      if (!(yield PlacesUtils.bookmarks.fetch({ url: uri }))) {
+      if (!(await PlacesUtils.bookmarks.fetch({ url: uri }))) {
         // Tagging is only allowed for bookmarked URIs (but see 424160).
         let createTxn = TransactionsHistory.getRawTransaction(
           PT.NewBookmark({ url: uri
                          , tags: aTags
                          , parentGuid: PlacesUtils.bookmarks.unfiledGuid }));
-        yield createTxn.execute();
+        await createTxn.execute();
         onUndo.unshift(createTxn.undo.bind(createTxn));
         onRedo.push(createTxn.redo.bind(createTxn));
       } else {
@@ -1523,14 +1523,14 @@ PT.Tag.prototype = {
         });
       }
     }
-    this.undo = function* () {
+    this.undo = async function() {
       for (let f of onUndo) {
-        yield f();
+        await f();
       }
     };
-    this.redo = function* () {
+    this.redo = async function() {
       for (let f of onRedo) {
-        yield f();
+        await f();
       }
     };
   }
@@ -1563,14 +1563,14 @@ PT.Untag.prototype = {
         PlacesUtils.tagging.untagURI(uri, tagsToRemove);
       });
     }
-    this.undo = function* () {
+    this.undo = async function() {
       for (let f of onUndo) {
-        yield f();
+        await f();
       }
     };
-    this.redo = function* () {
+    this.redo = async function() {
       for (let f of onRedo) {
-        yield f();
+        await f();
       }
     };
   }
@@ -1607,8 +1607,8 @@ PT.Copy.prototype = {
       }
       PlacesUtils.bookmarks.removeItem(newItemId);
     };
-    this.redo = function* () {
-      newItemId = yield createItemsFromBookmarksTree(newItemInfo, true);
+    this.redo = async function() {
+      newItemId = await createItemsFromBookmarksTree(newItemInfo, true);
     }
 
     return await PlacesUtils.promiseItemGuid(newItemId);

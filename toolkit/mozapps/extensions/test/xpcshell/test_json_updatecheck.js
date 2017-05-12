@@ -281,8 +281,8 @@ add_task(async function test_update_url_security() {
 add_task(async function test_no_update_key() {
   // Checks that updates fail when an update key has been specified.
 
-  let { messages } = await promiseConsoleOutput(function* () {
-    yield Assert.rejects(
+  let { messages } = await promiseConsoleOutput(async function() {
+    await Assert.rejects(
       checkUpdates({
         id: "updatecheck-updatekey@tests.mozilla.org",
         version: "0.1",
@@ -338,11 +338,11 @@ add_task(async function test_type_detection() {
   ];
 
   for (let [i, test] of tests.entries()) {
-    let { messages } = await promiseConsoleOutput(function *() {
+    let { messages } = await promiseConsoleOutput(async function() {
       let id = `updatecheck-typedetection-${i}@tests.mozilla.org`;
       let updates;
       try {
-        updates = yield checkUpdates({
+        updates = await checkUpdates({
           id,
           version: "0.1",
           contentType: test.contentType,

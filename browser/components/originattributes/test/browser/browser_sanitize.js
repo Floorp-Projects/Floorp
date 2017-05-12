@@ -52,7 +52,7 @@ function checkCookiesSanitized(aBrowser) {
 }
 
 function checkCacheExists(aShouldExist) {
-  return function* () {
+  return async function() {
     let loadContextInfos = [
       LoadContextInfo.default,
       LoadContextInfo.custom(false, { userContextId: 1 }),
@@ -62,7 +62,7 @@ function checkCacheExists(aShouldExist) {
     ];
     let i = 0;
     for (let loadContextInfo of loadContextInfos) {
-      let cacheURIs = yield cacheDataForContext(loadContextInfo);
+      let cacheURIs = await cacheDataForContext(loadContextInfo);
       is(cacheURIs.includes(TEST_DOMAIN), aShouldExist, TEST_DOMAIN + " should "
         + (aShouldExist ? "not " : "") + "be cached for all origin attributes." + i++);
     }

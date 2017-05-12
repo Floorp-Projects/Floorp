@@ -161,7 +161,7 @@ async function compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
 }
 
 var itemsCount = 0;
-function* new_bookmark(aInfo) {
+async function new_bookmark(aInfo) {
   ++itemsCount;
   if (!("url" in aInfo))
     aInfo.url = uri("http://test.item." + itemsCount);
@@ -169,13 +169,13 @@ function* new_bookmark(aInfo) {
   if (!("title" in aInfo))
     aInfo.title = "Test Item (bookmark) " + itemsCount;
 
-  yield PlacesTransactions.NewBookmark(aInfo).transact();
+  await PlacesTransactions.NewBookmark(aInfo).transact();
 }
 
-function* new_folder(aInfo) {
+async function new_folder(aInfo) {
   if (!("title" in aInfo))
     aInfo.title = "Test Item (folder) " + itemsCount;
-  return yield PlacesTransactions.NewFolder(aInfo).transact();
+  return await PlacesTransactions.NewFolder(aInfo).transact();
 }
 
 // Walks a result nodes tree and test promiseBookmarksTree for each node.

@@ -31,9 +31,9 @@ var uris = [
 /**
  * Adds some bookmarks for the URIs in |uris|.
  */
-function* addBookmarks() {
+async function addBookmarks() {
   for (let url of uris) {
-    yield PlacesUtils.bookmarks.insert({
+    await PlacesUtils.bookmarks.insert({
       url, parentGuid: PlacesUtils.bookmarks.menuGuid
     })
   }

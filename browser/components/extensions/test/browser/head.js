@@ -320,11 +320,11 @@ async function openChromeContextMenu(menuId, target, win = window) {
   return menu;
 }
 
-function* openSubmenu(submenuItem, win = window) {
+async function openSubmenu(submenuItem, win = window) {
   const submenu = submenuItem.firstChild;
   const shown = BrowserTestUtils.waitForEvent(submenu, "popupshown");
   EventUtils.synthesizeMouseAtCenter(submenuItem, {}, win);
-  yield shown;
+  await shown;
   return submenu;
 }
 
