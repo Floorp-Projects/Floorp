@@ -98,11 +98,11 @@ function unlockWidth(aItemIDs) {
  * @param aIsOverflowed if we're waiting for the item to be overflowed.
  */
 function waitForOverflowed(aItem, aIsOverflowed) {
-  return new Promise(resolve => {
-    if (aItem.overflowed == aIsOverflowed) {
-      return resolve();
-    }
+  if (aItem.overflowed == aIsOverflowed) {
+    return Promise.resolve();
+  }
 
+  return new Promise(resolve => {
     let observer = new MutationObserver(function(aMutations) {
       if (aItem.overflowed == aIsOverflowed) {
         observer.disconnect();
@@ -110,6 +110,5 @@ function waitForOverflowed(aItem, aIsOverflowed) {
       }
     });
     observer.observe(aItem.node, {attributes: true});
-
   });
 }

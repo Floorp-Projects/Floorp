@@ -113,11 +113,11 @@ function promiseFocus() {
 }
 
 function promisePanelOpened() {
-  return new Promise(resolve => {
+  if (DownloadsPanel.panel && DownloadsPanel.panel.state == "open") {
+    return Promise.resolve();
+  }
 
-    if (DownloadsPanel.panel && DownloadsPanel.panel.state == "open") {
-      return resolve();
-    }
+  return new Promise(resolve => {
 
     // Hook to wait until the panel is shown.
     let originalOnPopupShown = DownloadsPanel.onPopupShown;
