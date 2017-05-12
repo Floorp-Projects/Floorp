@@ -508,8 +508,12 @@ FOR_EACH_NURSERY_PROFILE_TIME(EXTRACT_NAME)
     "" };
 
     size_t i = 0;
-    for (auto time : profileDurations_)
-        json.property(names[i++], time, json.MICROSECONDS);
+    if (trackTimings_) {
+        for (auto time : profileDurations_)
+            json.property(names[i++], time, json.MICROSECONDS);
+    } else {
+        json.property(names[0], *profileDurations_.begin(), json.MICROSECONDS);
+    }
 
     json.endObject();
 }
