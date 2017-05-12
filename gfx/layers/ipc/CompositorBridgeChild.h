@@ -104,11 +104,6 @@ public:
   RecvInvalidateLayers(const uint64_t& aLayersId) override;
 
   virtual mozilla::ipc::IPCResult
-  RecvCompositorUpdated(const uint64_t& aLayersId,
-                        const TextureFactoryIdentifier& aNewIdentifier,
-                        const uint64_t& aSeqNo) override;
-
-  virtual mozilla::ipc::IPCResult
   RecvUpdatePluginConfigurations(const LayoutDeviceIntPoint& aContentOffset,
                                  const LayoutDeviceIntRegion& aVisibleRegion,
                                  nsTArray<PluginWindowData>&& aPlugins) override;

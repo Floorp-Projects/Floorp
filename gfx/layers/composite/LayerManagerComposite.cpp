@@ -1403,16 +1403,6 @@ LayerManagerComposite::AutoAddMaskEffect::~AutoAddMaskEffect()
   mCompositable->RemoveMaskEffect();
 }
 
-void
-LayerManagerComposite::ChangeCompositor(Compositor* aNewCompositor)
-{
-  if (mCompositor) {
-    mCompositor->CancelFrame(false);
-  }
-  mCompositor = aNewCompositor;
-  mTwoPassTmpTarget = nullptr;
-}
-
 LayerComposite::LayerComposite(LayerManagerComposite *aManager)
   : HostLayer(aManager)
   , mCompositeManager(aManager)

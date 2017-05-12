@@ -85,16 +85,6 @@ RemoteCompositorSession::GetAPZCTreeManager() const
   return mAPZ;
 }
 
-bool
-RemoteCompositorSession::Reset(const nsTArray<LayersBackend>& aBackendHints,
-                               uint64_t aSeqNo,
-                               TextureFactoryIdentifier* aOutIdentifier)
-{
-  bool didReset;
-  Unused << mCompositorBridgeChild->SendReset(aBackendHints, aSeqNo, &didReset, aOutIdentifier);
-  return didReset;
-}
-
 void
 RemoteCompositorSession::Shutdown()
 {

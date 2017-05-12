@@ -172,14 +172,6 @@ public:
     return mNumProcessAttempts > 0;
   }
 
-  // Returns the next compositor reset sequence number, a monotonic counter
-  // for when the compositing device resets. Since content processes are
-  // notified of resets through each individual tab, this allows content to
-  // only re-acquire devices once for each reset.
-  uint64_t GetNextDeviceResetSequenceNumber() {
-    return ++mNextResetSequenceNo;
-  }
-
 private:
   // Called from our xpcom-shutdown observer.
   void OnXPCOMShutdown();
@@ -254,7 +246,6 @@ private:
   RefPtr<VsyncIOThreadHolder> mVsyncIOThread;
   uint64_t mNextLayerTreeId;
   uint32_t mNextNamespace;
-  uint64_t mNextResetSequenceNo;
   uint32_t mNumProcessAttempts;
 
   nsTArray<RefPtr<RemoteCompositorSession>> mRemoteSessions;
