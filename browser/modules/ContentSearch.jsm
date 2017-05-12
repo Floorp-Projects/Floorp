@@ -533,7 +533,7 @@ this.ContentSearch = {
         // This throws if the URI is erroneously encoded.
         xhr.send();
       } catch (err) {
-        return Promise.resolve(null);
+        resolve(null);
       }
     });
   },
