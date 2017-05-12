@@ -2030,7 +2030,7 @@ or run without that action (ie: --no-{action})"
             "suites": [],
         }
 
-        if not c.get('debug_build'):
+        if not c.get('debug_build') or c.get('disable_package_metrics'):
             perfherder_data['suites'].extend(self._get_package_metrics())
 
         # Extract compiler warnings count.
