@@ -616,6 +616,16 @@ TLSFilterTransaction::SetDNSWasRefreshed()
   mTransaction->SetDNSWasRefreshed();
 }
 
+uint64_t
+TLSFilterTransaction::Available()
+{
+  if (!mTransaction) {
+    return 0;
+  }
+
+  return mTransaction->Available();
+}
+
 void
 TLSFilterTransaction::SetProxyConnectFailed()
 {

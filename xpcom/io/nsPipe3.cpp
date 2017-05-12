@@ -1265,14 +1265,6 @@ nsPipeInputStream::Init(nsIInputStream*, uint32_t)
             "nsIBufferedInputStream::Init!\n");
 }
 
-NS_IMETHODIMP
-nsPipeInputStream::GetData(nsIInputStream **aResult)
-{
-  // as this was not created with init() we are not
-  // wrapping anything
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 uint32_t
 nsPipeInputStream::Available()
 {
