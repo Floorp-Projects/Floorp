@@ -1,8 +1,19 @@
+// This file was procedurally generated from the following sources:
+// - src/async-generators/yield-star-sync-throw.case
+// - src/async-generators/default/async-declaration.template
 /*---
- author: Tooru Fujisawa [:arai] <arai_a@mac.com>
- esid: pending
- description: execution order for yield* with sync iterator and throw()
- info: >
+description: execution order for yield* with sync iterator and throw() (Async generator Function declaration)
+esid: prod-AsyncGeneratorDeclaration
+features: [async-iteration, async-iteration]
+flags: [generated, async]
+info: |
+    Async Generator Function Definitions
+
+    AsyncGeneratorDeclaration:
+      async [no LineTerminator here] function * BindingIdentifier ( FormalParameters ) {
+        AsyncGeneratorBody }
+
+
     YieldExpression: yield * AssignmentExpression
 
     ...
@@ -40,11 +51,9 @@
         onFulfilled, undefined, promiseCapability).
     ...
 
- flags: [async]
 ---*/
-
 var log = [];
-var iter = {
+var obj = {
   [Symbol.iterator]() {
     var throwCount = 0;
     return {
@@ -113,19 +122,28 @@ var iter = {
     };
   }
 };
-var asyncIterator = (async function*() {
+
+
+
+var callCount = 0;
+
+async function *gen() {
+  callCount += 1;
   log.push({ name: "before yield*" });
-  var v = yield* iter;
-  log.push({
-    name: "after yield*",
-    value: v
-  });
-  return "return-value";
-})();
+    var v = yield* obj;
+    log.push({
+      name: "after yield*",
+      value: v
+    });
+    return "return-value";
+
+}
+
+var iter = gen();
 
 assert.sameValue(log.length, 0, "log.length");
 
-asyncIterator.next().then(v => {
+iter.next().then(v => {
   assert.sameValue(log[0].name, "before yield*");
 
   assert.sameValue(log[1].name, "get next");
@@ -135,7 +153,7 @@ asyncIterator.next().then(v => {
 
   assert.sameValue(log.length, 2, "log.length");
 
-  asyncIterator.throw("throw-arg-1").then(v => {
+  iter.throw("throw-arg-1").then(v => {
     assert.sameValue(log[2].name, "get throw");
     assert.sameValue(log[2].thisValue.name, "syncIterator", "get throw thisValue");
 
@@ -144,18 +162,18 @@ asyncIterator.next().then(v => {
     assert.sameValue(log[3].args.length, 1, "throw args.length");
     assert.sameValue(log[3].args[0], "throw-arg-1", "throw args[0]");
 
-    assert.sameValue(log[4].name, "get throw value (1)");
-    assert.sameValue(log[4].thisValue.name, "throw-result-1", "get throw value thisValue");
+    assert.sameValue(log[4].name, "get throw done (1)");
+    assert.sameValue(log[4].thisValue.name, "throw-result-1", "get throw done thisValue");
 
-    assert.sameValue(log[5].name, "get throw done (1)");
-    assert.sameValue(log[5].thisValue.name, "throw-result-1", "get throw done thisValue");
+    assert.sameValue(log[5].name, "get throw value (1)");
+    assert.sameValue(log[5].thisValue.name, "throw-result-1", "get throw value thisValue");
 
     assert.sameValue(v.value, "throw-value-1");
     assert.sameValue(v.done, false);
 
     assert.sameValue(log.length, 6, "log.length");
 
-    asyncIterator.throw("throw-arg-2").then(v => {
+    iter.throw("throw-arg-2").then(v => {
       assert.sameValue(log[6].name, "get throw");
       assert.sameValue(log[6].thisValue.name, "syncIterator", "get throw thisValue");
 
@@ -164,11 +182,11 @@ asyncIterator.next().then(v => {
       assert.sameValue(log[7].args.length, 1, "throw args.length");
       assert.sameValue(log[7].args[0], "throw-arg-2", "throw args[0]");
 
-      assert.sameValue(log[8].name, "get throw value (2)");
-      assert.sameValue(log[8].thisValue.name, "throw-result-2", "get throw value thisValue");
+      assert.sameValue(log[8].name, "get throw done (2)");
+      assert.sameValue(log[8].thisValue.name, "throw-result-2", "get throw done thisValue");
 
-      assert.sameValue(log[9].name, "get throw done (2)");
-      assert.sameValue(log[9].thisValue.name, "throw-result-2", "get throw done thisValue");
+      assert.sameValue(log[9].name, "get throw value (2)");
+      assert.sameValue(log[9].thisValue.name, "throw-result-2", "get throw value thisValue");
 
       assert.sameValue(log[10].name, "after yield*");
       assert.sameValue(log[10].value, "throw-value-2");
@@ -180,3 +198,5 @@ asyncIterator.next().then(v => {
     }).then($DONE, $DONE);
   }).catch($DONE);
 }).catch($DONE);
+
+assert.sameValue(callCount, 1);

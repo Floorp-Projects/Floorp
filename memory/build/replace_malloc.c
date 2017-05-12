@@ -276,6 +276,17 @@ jemalloc_free_dirty_pages_impl()
     replace_jemalloc_free_dirty_pages();
 }
 
+void
+jemalloc_thread_local_arena_impl(jemalloc_bool enabled)
+{
+  if (MOZ_UNLIKELY(!replace_malloc_initialized))
+    init();
+  if (MOZ_LIKELY(!replace_jemalloc_thread_local_arena))
+    je_jemalloc_thread_local_arena(enabled);
+  else
+    replace_jemalloc_thread_local_arena(enabled);
+}
+
 /* The following comment and definitions are from jemalloc.c: */
 #if defined(__GLIBC__) && !defined(__UCLIBC__)
 

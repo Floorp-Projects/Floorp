@@ -7,6 +7,7 @@ info: >
     yyzzzzzz -> 1110xxxx 10yyyyyy 10zzzzzz)
 es5id: 15.1.3.3_A2.3_T1
 description: Complex tests, use RFC 3629
+includes: [decimalToHexString.js]
 ---*/
 
 var errorCount = 0;
@@ -15,13 +16,12 @@ var indexP;
 var indexO = 0; 
 for (var index = 0x0800; index <= 0xD7FF; index++) {
   count++; 
-  var hex1 = decimalToHexString(0x0080 + (index & 0x003F)).substring(2);
-  var hex2 = decimalToHexString(0x0080 + (index & 0x0FC0) / 0x0040).substring(2);
-  var hex3 = decimalToHexString(0x00E0 + (index & 0xF000) / 0x1000).substring(2);
+  var hex1 = decimalToPercentHexString(0x0080 + (index & 0x003F));
+  var hex2 = decimalToPercentHexString(0x0080 + (index & 0x0FC0) / 0x0040);
+  var hex3 = decimalToPercentHexString(0x00E0 + (index & 0xF000) / 0x1000);
   var str = String.fromCharCode(index);
-  try {
-    if (encodeURI(str).toUpperCase() === "%" + hex3 + "%" + hex2 + "%" + hex1) continue;
-  } catch(e) {}      
+  if (encodeURI(str).toUpperCase() === hex3 + hex2 + hex1) continue;
+
   if (indexO === 0) { 
     indexO = index;
   } else {
@@ -52,30 +52,6 @@ if (errorCount > 0) {
     $ERROR('#' + hexP + ' ');
   }     
   $ERROR('Total error: ' + errorCount + ' bad Unicode character in ' + count + ' ');
-}
-
-function decimalToHexString(n) {
-  n = Number(n);
-  var h = "";
-  for (var i = 3; i >= 0; i--) {
-    if (n >= Math.pow(16, i)) {
-      var t = Math.floor(n / Math.pow(16, i));
-      n -= t * Math.pow(16, i);
-      if ( t >= 10 ) {
-        if ( t == 10 ) { h += "A"; }
-        if ( t == 11 ) { h += "B"; }
-        if ( t == 12 ) { h += "C"; }
-        if ( t == 13 ) { h += "D"; }
-        if ( t == 14 ) { h += "E"; }
-        if ( t == 15 ) { h += "F"; }
-      } else {
-        h += String(t);
-      }
-    } else {
-      h += "0";
-    }
-  }
-  return h;
 }
 
 reportCompare(0, 0);

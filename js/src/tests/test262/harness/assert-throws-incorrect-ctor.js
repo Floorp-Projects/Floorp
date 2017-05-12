@@ -3,8 +3,8 @@
 
 /*---
 description: >
-    Functions that throw values whose constructor does not match the specified
-    constructor do not satisfy the assertion.
+  Functions that throw values whose constructor does not match the specified
+  constructor do not satisfy the assertion.
 ---*/
 
 var threw = false;

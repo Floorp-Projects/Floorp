@@ -23,6 +23,8 @@ module.exports = envConfig => {
       publicPath: "/"
     },
     module: {
+      noParse: /(debugger\/new)|netmonitor\/panel\.js/i,
+
       // Disable handling of unknown requires
       unknownContextRegExp: /$^/,
       unknownContextCritical: false,
