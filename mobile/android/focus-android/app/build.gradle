@@ -40,6 +40,14 @@ android {
         }
         debug {
             applicationIdSuffix ".debug"
+        }
+        // Use a separate buildType for coverage: testCoverageEnabled produces slower code (4-5x slower
+        // in places that I've benchmarked), and more importantly seems to break debugging with Android Studio
+        // for some developers (i.e. variables can't be inspected or seen).
+        coverage {
+            initWith debug
+
+            applicationIdSuffix ".coverage"
             testCoverageEnabled true
         }
     }
