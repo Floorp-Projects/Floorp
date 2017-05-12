@@ -76,12 +76,10 @@ public:
 
   /**
   * Add rtp extensions to the the VideoSendStream
-  * Note: upon a name collision the old extension is removed and the new one
-  *   takes its place.
   * TODO(@@NG) promote this the MediaConduitInterface when the VoE rework
   * hits Webrtc.org.
   */
-  void AddLocalRTPExtensions(bool aIsSend,
+  void SetLocalRTPExtensions(bool aIsSend,
                              const std::vector<webrtc::RtpExtension>& extensions) override;
   std::vector<webrtc::RtpExtension> GetLocalRTPExtensions(bool aIsSend) const override;
 
