@@ -592,7 +592,7 @@ ConnectionData.prototype = Object.freeze({
           try {
             // Keep Task.spawn here to preserve API compat; unfortunately
             // func was a generator rather than a task here.
-            result = await Task.spawn(func);
+            result = await Task.spawn(func); // eslint-disable-line mozilla/no-task
           } catch (ex) {
             // It's possible that the exception has been caused by trying to
             // close the connection in the middle of a transaction.
