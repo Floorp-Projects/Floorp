@@ -55,7 +55,10 @@ fi
 if [[ -z ${MOZHARNESS_SCRIPT} ]]; then fail "MOZHARNESS_SCRIPT is not set"; fi
 if [[ -z ${MOZHARNESS_CONFIG} ]]; then fail "MOZHARNESS_CONFIG is not set"; fi
 
+# make sure artifact directories exist
+mkdir -p $WORKSPACE/build/upload/logs
 mkdir -p ~/artifacts/public
+mkdir -p $WORKSPACE/build/blobber_upload_dir
 
 cleanup() {
     local rv=$?
