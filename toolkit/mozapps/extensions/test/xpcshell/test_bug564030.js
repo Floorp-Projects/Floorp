@@ -8,7 +8,7 @@
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
-async function run_test() {
+function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2", "1.9.2");
 
@@ -26,9 +26,9 @@ async function run_test() {
   // the update makes the last modified time change.
   setExtensionModifiedTime(dest, dest.lastModifiedTime - 5000);
 
-  await promiseStartupManager();
+  startupManager();
 
-  AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(async function(a) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a) {
     do_check_neq(a, null);
     do_check_eq(a.version, "1.0");
     do_check_false(a.userDisabled);
@@ -47,7 +47,7 @@ async function run_test() {
       }]
     }, profileDir);
 
-    await promiseRestartManager();
+    restartManager();
 
     AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a2) {
       do_check_neq(a2, null);

@@ -1,89 +1,155 @@
 const {AddonManagerPrivate} = Cu.import("resource://gre/modules/AddonManager.jsm", {});
 
-const {AddonTestUtils} = Cu.import("resource://testing-common/AddonTestUtils.jsm", {});
+// MockAddon mimics the AddonInternal interface and MockProvider implements
+// just enough of the AddonManager provider interface to make it look like
+// we have sideloaded webextensions so the sideloading flow can be tested.
 
-AddonTestUtils.initMochitest(this);
+// MockAddon -> callback
+let setCallbacks = new Map();
 
-async function createWebExtension(details) {
-  let options = {
-    manifest: {
-      applications: {gecko: {id: details.id}},
+class MockAddon {
+  constructor(props) {
+    this._userDisabled = false;
+    this.pendingOperations = 0;
+    this.type = "extension";
 
-      name: details.name,
-
-      permissions: details.permissions,
-    },
-  };
-
-  if (details.iconURL) {
-    options.manifest.icons = {"64": details.iconURL};
+    for (let name in props) {
+      if (name == "userDisabled") {
+        this._userDisabled = props[name];
+      }
+      this[name] = props[name];
+    }
   }
 
-  let xpi = AddonTestUtils.createTempWebExtensionFile(options);
+  markAsSeen() {
+    this.seen = true;
+  }
 
-  await AddonTestUtils.manuallyInstall(xpi);
+  get userDisabled() {
+    return this._userDisabled;
+  }
+
+  set userDisabled(val) {
+    this._userDisabled = val;
+    AddonManagerPrivate.callAddonListeners(val ? "onDisabled" : "onEnabled", this);
+    let fn = setCallbacks.get(this);
+    if (fn) {
+      setCallbacks.delete(this);
+      fn(val);
+    }
+    return val;
+  }
+
+  get permissions() {
+    return this._userDisabled ? AddonManager.PERM_CAN_ENABLE : AddonManager.PERM_CAN_DISABLE;
+  }
 }
 
-async function createXULExtension(details) {
-  let xpi = AddonTestUtils.createTempXPIFile({
-    "install.rdf": {
-      id: details.id,
-      name: details.name,
-      version: "0.1",
-      targetApplications: [{
-        id: "toolkit@mozilla.org",
-        minVersion: "0",
-        maxVersion: "*",
-      }],
-    },
-  });
+class MockProvider {
+  constructor(...addons) {
+    this.addons = new Set(addons);
+  }
 
-  await AddonTestUtils.manuallyInstall(xpi);
+  startup() { }
+  shutdown() { }
+
+  getAddonByID(id, callback) {
+    for (let addon of this.addons) {
+      if (addon.id == id) {
+        callback(addon);
+        return;
+      }
+    }
+    callback(null);
+  }
+
+  getAddonsByTypes(types, callback) {
+    let addons = [];
+    if (!types || types.includes("extension")) {
+      addons = [...this.addons];
+    }
+    callback(addons);
+  }
+}
+
+function promiseSetDisabled(addon) {
+  return new Promise(resolve => {
+    setCallbacks.set(addon, resolve);
+  });
 }
 
 let cleanup;
 
-add_task(function* test_sideloading() {
+add_task(function* () {
+  // ICON_URL wouldn't ever appear as an actual webextension icon, but
+  // we're just mocking out the addon here, so all we care about is that
+  // that it propagates correctly to the popup.
+  const ICON_URL = "chrome://mozapps/skin/extensions/category-extensions.svg";
   const DEFAULT_ICON_URL = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
 
-  yield SpecialPowers.pushPrefEnv({
-    set: [
-      ["xpinstall.signatures.required", false],
-      ["extensions.autoDisableScopes", 15],
-      ["extensions.ui.ignoreUnsigned", true],
-    ],
-  });
-
   const ID1 = "addon1@tests.mozilla.org";
-  yield createWebExtension({
+  let mock1 = new MockAddon({
     id: ID1,
     name: "Test 1",
     userDisabled: true,
-    permissions: ["history", "https://*/*"],
-    iconURL: "foo-icon.png",
+    seen: false,
+    userPermissions: {
+      permissions: ["history"],
+      origins: ["https://*/*"],
+    },
+    iconURL: ICON_URL,
   });
 
   const ID2 = "addon2@tests.mozilla.org";
-  yield createXULExtension({
+  let mock2 = new MockAddon({
     id: ID2,
     name: "Test 2",
+    userDisabled: true,
+    seen: false,
+    userPermissions: {
+      permissions: [],
+      origins: [],
+    },
   });
 
   const ID3 = "addon3@tests.mozilla.org";
-  yield createWebExtension({
+  let mock3 = new MockAddon({
     id: ID3,
     name: "Test 3",
-    permissions: ["<all_urls>"],
+    isWebExtension: true,
+    userDisabled: true,
+    seen: false,
+    userPermissions: {
+      permissions: [],
+      origins: ["<all_urls>"],
+    }
   });
 
   const ID4 = "addon4@tests.mozilla.org";
-  yield createWebExtension({
+  let mock4 = new MockAddon({
     id: ID4,
     name: "Test 4",
-    permissions: ["<all_urls>"],
+    isWebExtension: true,
+    userDisabled: true,
+    seen: false,
+    userPermissions: {
+      permissions: [],
+      origins: ["<all_urls>"],
+    }
   });
 
+  let provider = new MockProvider(mock1, mock2, mock3, mock4);
+  AddonManagerPrivate.registerProvider(provider, [{
+    id: "extension",
+    name: "Extensions",
+    uiPriority: 4000,
+    flags: AddonManager.TYPE_UI_VIEW_LIST |
+           AddonManager.TYPE_SUPPORTS_UNDO_RESTARTLESS_UNINSTALL,
+  }]);
+
   testCleanup = async function() {
+    AddonManagerPrivate.unregisterProvider(provider);
+
     // clear out ExtensionsUI state about sideloaded extensions so
     // subsequent tests don't get confused.
     ExtensionsUI.sideloaded.clear();
@@ -137,12 +203,16 @@ add_task(function* test_sideloading() {
   is(win.gViewController.currentViewId, VIEW, "about:addons is at extensions list");
 
   // Check the contents of the notification, then choose "Cancel"
-  checkNotification(panel, /\/foo-icon\.png$/, [
+  checkNotification(panel, ICON_URL, [
     ["webextPerms.hostDescription.allUrls"],
     ["webextPerms.description.history"],
   ]);
 
+  let disablePromise = promiseSetDisabled(mock1);
   panel.secondaryButton.click();
+
+  let value = yield disablePromise;
+  is(value, true, "Addon should remain disabled");
 
   let [addon1, addon2, addon3, addon4] = yield AddonManager.getAddonsByIDs([ID1, ID2, ID3, ID4]);
   ok(addon1.seen, "Addon should be marked as seen");
@@ -175,7 +245,11 @@ add_task(function* test_sideloading() {
   checkNotification(panel, DEFAULT_ICON_URL, []);
 
   // This time accept the install.
+  disablePromise = promiseSetDisabled(mock2);
   panel.button.click();
+
+  value = yield disablePromise;
+  is(value, false, "Addon should be set to enabled");
 
   [addon1, addon2, addon3, addon4] = yield AddonManager.getAddonsByIDs([ID1, ID2, ID3, ID4]);
   is(addon1.userDisabled, true, "Addon 1 should still be disabled");
@@ -214,7 +288,10 @@ add_task(function* test_sideloading() {
   checkNotification(panel, DEFAULT_ICON_URL, [["webextPerms.hostDescription.allUrls"]]);
 
   // Accept the permissions
+  disablePromise = promiseSetDisabled(mock3);
   panel.button.click();
+  value = yield disablePromise;
+  is(value, false, "userDisabled should be set on addon 3");
 
   addon3 = yield AddonManager.getAddonByID(ID3);
   is(addon3.userDisabled, false, "Addon 3 should be enabled");
@@ -239,7 +316,10 @@ add_task(function* test_sideloading() {
   checkNotification(panel, DEFAULT_ICON_URL, [["webextPerms.hostDescription.allUrls"]]);
 
   // Accept the permissions
+  disablePromise = promiseSetDisabled(mock4);
   panel.button.click();
+  value = yield disablePromise;
+  is(value, false, "userDisabled should be set on addon 4");
 
   addon4 = yield AddonManager.getAddonByID(ID4);
   is(addon4.userDisabled, false, "Addon 4 should be enabled");
@@ -248,12 +328,6 @@ add_task(function* test_sideloading() {
   expectTelemetry(["sideloadRejected", "sideloadAccepted", "sideloadAccepted", "sideloadAccepted"]);
 
   isnot(menuButton.getAttribute("badge-status"), "addon-alert", "Should no longer have addon alert badge");
-
-  yield new Promise(resolve => setTimeout(resolve, 100));
-
-  for (let addon of [addon1, addon2, addon3, addon4]) {
-    addon.uninstall();
-  }
 
   yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
