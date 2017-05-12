@@ -177,7 +177,7 @@ var Bookmarks = Object.freeze({
       , source: { defaultValue: this.SOURCES.DEFAULT }
       });
 
-    return (async function() {
+    return (async () => {
       // Ensure the parent exists.
       let parent = await fetchBookmark({ guid: insertInfo.parentGuid });
       if (!parent)
@@ -221,7 +221,7 @@ var Bookmarks = Object.freeze({
       // Remove non-enumerable properties.
       delete item.source;
       return Object.assign({}, item);
-    }.bind(this))();
+    })();
   },
 
 
@@ -455,7 +455,7 @@ var Bookmarks = Object.freeze({
     if (Object.keys(updateInfo).length < 3)
       throw new Error("Not enough properties to update");
 
-    return (async function() {
+    return (async () => {
       // Ensure the item exists.
       let item = await fetchBookmark(updateInfo);
       if (!item)
@@ -482,7 +482,7 @@ var Bookmarks = Object.freeze({
         });
 
       return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: update",
-        async function(db) {
+        async db => {
         let parent;
         if (updateInfo.hasOwnProperty("parentGuid")) {
           if (item.type == this.TYPE_FOLDER) {
@@ -586,8 +586,8 @@ var Bookmarks = Object.freeze({
         // Remove non-enumerable properties.
         delete updatedItem.source;
         return Object.assign({}, updatedItem);
-      }.bind(this));
-    }.bind(this))();
+      });
+    })();
   },
 
   /**
@@ -914,7 +914,7 @@ var Bookmarks = Object.freeze({
       throw new Error("Invalid GUID found in the sorted children array.");
     }
 
-    return (async function() {
+    return (async () => {
       let parent = await fetchBookmark(info);
       if (!parent || parent.type != this.TYPE_FOLDER)
         throw new Error("No folder found for the provided GUID.");
@@ -934,7 +934,7 @@ var Bookmarks = Object.freeze({
                                            child.parentGuid,
                                            source ]);
       }
-    }.bind(this))();
+    })();
   },
 
   /**

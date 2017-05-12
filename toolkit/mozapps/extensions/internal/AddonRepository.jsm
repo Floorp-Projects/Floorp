@@ -1548,7 +1548,7 @@ var AddonDatabase = {
    */
   openConnection() {
     if (!this.connectionPromise) {
-     this.connectionPromise = (async function() {
+     this.connectionPromise = (async () => {
        this.DB = BLANK_DB();
 
        let inputDB, schema;
@@ -1609,7 +1609,7 @@ var AddonDatabase = {
        }
 
        return this.DB;
-     }.bind(this))();
+     })();
     }
 
     return this.connectionPromise;

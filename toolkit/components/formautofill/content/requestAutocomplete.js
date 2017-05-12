@@ -21,7 +21,7 @@ const RequestAutocompleteDialog = {
   autofillData: null,
 
   onLoad() {
-    (async function() {
+    (async () => {
       let args = window.arguments[0].wrappedJSObject;
       this.resolveFn = args.resolveFn;
       this.autofillData = args.autofillData;
@@ -30,7 +30,7 @@ const RequestAutocompleteDialog = {
 
       Services.obs.notifyObservers(window,
                                    "formautofill-window-initialized");
-    }.bind(this))().catch(Cu.reportError);
+    })().catch(Cu.reportError);
   },
 
   onAccept() {

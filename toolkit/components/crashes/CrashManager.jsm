@@ -326,7 +326,7 @@ this.CrashManager.prototype = Object.freeze({
       return this._aggregatePromise;
     }
 
-    return this._aggregatePromise = (async function() {
+    return this._aggregatePromise = (async () => {
       if (this._aggregatePromise) {
         return this._aggregatePromise;
       }
@@ -394,7 +394,7 @@ this.CrashManager.prototype = Object.freeze({
         this._aggregatePromise = false;
         this._storeProtectedCount--;
       }
-    }.bind(this))();
+    })();
   },
 
   /**
@@ -405,23 +405,23 @@ this.CrashManager.prototype = Object.freeze({
    *        than this will be pruned.
    */
   pruneOldCrashes(date) {
-    return (async function() {
+    return (async () => {
       let store = await this._getStore();
       store.pruneOldCrashes(date);
       await store.save();
-    }.bind(this))();
+    })();
   },
 
   /**
    * Run tasks that should be periodically performed.
    */
   runMaintenanceTasks() {
-    return (async function() {
+    return (async () => {
       await this.aggregateEventsFiles();
 
       let offset = this.PURGE_OLDER_THAN_DAYS * MILLISECONDS_IN_DAY;
       await this.pruneOldCrashes(new Date(Date.now() - offset));
-    }.bind(this))();
+    })();
   },
 
   /**
@@ -455,7 +455,7 @@ this.CrashManager.prototype = Object.freeze({
    * @return promise<null> Resolved when the store has been saved.
    */
   addCrash(processType, crashType, id, date, metadata) {
-    let promise = (async function() {
+    let promise = (async () => {
       let store = await this._getStore();
       if (store.addCrash(processType, crashType, id, date, metadata)) {
         await store.save();
@@ -473,7 +473,7 @@ this.CrashManager.prototype = Object.freeze({
           processType === this.PROCESS_TYPE_GPU) {
         this._sendCrashPing(id, processType, date, metadata);
       }
-    }.bind(this))();
+    })();
 
     return promise;
   },
@@ -578,7 +578,7 @@ this.CrashManager.prototype = Object.freeze({
    * The promise-resolved array is sorted by file mtime, oldest to newest.
    */
   _getUnprocessedEventsFiles() {
-    return (async function() {
+    return (async () => {
       let entries = [];
 
       for (let dir of this._eventsDirs) {
@@ -590,12 +590,12 @@ this.CrashManager.prototype = Object.freeze({
       entries.sort((a, b) => { return a.date - b.date; });
 
       return entries;
-    }.bind(this))();
+    })();
   },
 
   // See docs/crash-events.rst for the file format specification.
   _processEventFile(entry) {
-    return (async function() {
+    return (async () => {
       let data = await OS.File.read(entry.path);
       let store = await this._getStore();
 
@@ -630,7 +630,7 @@ this.CrashManager.prototype = Object.freeze({
       let payload = data.substring(start);
 
       return this._handleEventFilePayload(store, entry, type, date, payload);
-    }.bind(this))();
+    })();
   },
 
   _filterAnnotations(annotations) {
@@ -793,7 +793,7 @@ this.CrashManager.prototype = Object.freeze({
       return this._getStoreTask;
     }
 
-    return this._getStoreTask = (async function() {
+    return this._getStoreTask = (async () => {
       try {
         if (!this._store) {
           await OS.File.makeDir(this._storeDir, {
@@ -840,7 +840,7 @@ this.CrashManager.prototype = Object.freeze({
       } finally {
         this._getStoreTask = null;
       }
-    }.bind(this))();
+    })();
   },
 
   /**
@@ -849,19 +849,19 @@ this.CrashManager.prototype = Object.freeze({
    * Returns an array of CrashRecord instances. Instances are read-only.
    */
   getCrashes() {
-    return (async function() {
+    return (async () => {
       let store = await this._getStore();
 
       return store.crashes;
-    }.bind(this))();
+    })();
   },
 
   getCrashCountsByDay() {
-    return (async function() {
+    return (async () => {
       let store = await this._getStore();
 
       return store._countsByDay;
-    }.bind(this))();
+    })();
   },
 });
 
@@ -934,7 +934,7 @@ CrashStore.prototype = Object.freeze({
    * @return Promise
    */
   load() {
-    return (async function() {
+    return (async () => {
       // Loading replaces data.
       this.reset();
 
@@ -1025,7 +1025,7 @@ CrashStore.prototype = Object.freeze({
           this._data.corruptDate = new Date();
         }
       }
-    }.bind(this))();
+    })();
   },
 
   /**
@@ -1034,7 +1034,7 @@ CrashStore.prototype = Object.freeze({
    * @return Promise<null>
    */
   save() {
-    return (async function() {
+    return (async () => {
       if (!this._data) {
         return;
       }
@@ -1089,7 +1089,7 @@ CrashStore.prototype = Object.freeze({
       if (this._telemetrySizeKey) {
         Services.telemetry.getHistogramById(this._telemetrySizeKey).add(size);
       }
-    }.bind(this))();
+    })();
   },
 
   /**

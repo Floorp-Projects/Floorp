@@ -407,7 +407,7 @@ const PanelUI = {
       this._isReady = true;
       return this._readyPromise;
     }
-    this._readyPromise = (async function() {
+    this._readyPromise = (async () => {
       if (!this._initialized) {
         await new Promise(resolve => {
           let delayedStartupObserver = (aSubject, aTopic, aData) => {
@@ -455,7 +455,7 @@ const PanelUI = {
       this._updateQuitTooltip();
       this.panel.hidden = false;
       this._isReady = true;
-    }.bind(this))().then(null, Cu.reportError);
+    })().then(null, Cu.reportError);
 
     return this._readyPromise;
   },

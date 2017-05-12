@@ -1496,7 +1496,7 @@ BrowserGlue.prototype = {
         () => BookmarkHTMLUtils.exportToFile(BookmarkHTMLUtils.defaultPath));
     }
 
-    (async function() {
+    (async () => {
       // Check if Safe Mode or the user has required to restore bookmarks from
       // default profile's bookmarks.html
       let restoreDefaultBookmarks = false;
@@ -1631,7 +1631,7 @@ BrowserGlue.prototype = {
         this._idleService.addIdleObserver(this, this._bookmarksBackupIdleTime);
       }
 
-    }.bind(this))().catch(ex => {
+    })().catch(ex => {
       Cu.reportError(ex);
     }).then(() => {
       // NB: deliberately after the catch so that we always do this, even if

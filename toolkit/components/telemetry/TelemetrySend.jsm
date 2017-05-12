@@ -907,7 +907,7 @@ var TelemetrySendImpl = {
 
     for (let current of currentPings) {
       let ping = current;
-      let p = (async function() {
+      let p = (async () => {
         try {
           await this._doPing(ping, ping.id, false);
         } catch (ex) {
@@ -917,7 +917,7 @@ var TelemetrySendImpl = {
         } finally {
           this._currentPings.delete(ping.id);
         }
-      }.bind(this))();
+      })();
 
       this._trackPendingPingTask(p);
       pingSends.push(p);

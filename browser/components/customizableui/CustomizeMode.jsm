@@ -245,7 +245,7 @@ CustomizeMode.prototype = {
     let resetButton = this.document.getElementById("customization-reset-button");
     resetButton.setAttribute("disabled", "true");
 
-    (async function() {
+    (async () => {
       // We shouldn't start customize mode until after browser-delayed-startup has finished:
       if (!this.window.gBrowserInit.delayedStartupFinished) {
         await new Promise(resolve => {
@@ -404,7 +404,7 @@ CustomizeMode.prototype = {
       if (!this._wantToBeInCustomizeMode) {
         this.exit();
       }
-    }.bind(this))().then(null, e => {
+    })().then(null, e => {
       log.error("Error entering customize mode", e);
       // We should ensure this has been called, and calling it again doesn't hurt:
       window.PanelUI.endBatchUpdate();
@@ -481,7 +481,7 @@ CustomizeMode.prototype = {
 
     this._transitioning = true;
 
-    (async function() {
+    (async () => {
       await this.depopulatePalette();
 
       await this._doTransition(false);
@@ -574,7 +574,7 @@ CustomizeMode.prototype = {
       if (this._wantToBeInCustomizeMode) {
         this.enter();
       }
-    }.bind(this))().then(null, e => {
+    })().then(null, e => {
       log.error("Error exiting customize mode", e);
       if (!gPhotonStructure) {
         // We should ensure this has been called, and calling it again doesn't hurt:
@@ -816,7 +816,7 @@ CustomizeMode.prototype = {
   },
 
   depopulatePalette() {
-    return (async function() {
+    return (async () => {
       this.visiblePalette.hidden = true;
       let paletteChild = this.visiblePalette.firstChild;
       let nextChild;
@@ -842,7 +842,7 @@ CustomizeMode.prototype = {
       }
       this.visiblePalette.hidden = false;
       this.window.gNavToolbox.palette = this._stowedPalette;
-    }.bind(this))().then(null, log.error);
+    })().then(null, log.error);
   },
 
   isCustomizableItem(aNode) {
@@ -1115,7 +1115,7 @@ CustomizeMode.prototype = {
   },
 
   _unwrapToolbarItems() {
-    return (async function() {
+    return (async () => {
       for (let target of this.areas) {
         for (let toolbarItem of target.children) {
           if (this.isWrappedToolbarItem(toolbarItem)) {
@@ -1125,7 +1125,7 @@ CustomizeMode.prototype = {
         this._removeDragHandlers(target);
       }
       this.areas.clear();
-    }.bind(this))().then(null, log.error);
+    })().then(null, log.error);
   },
 
   _removeExtraToolbarsIfEmpty() {
@@ -1159,7 +1159,7 @@ CustomizeMode.prototype = {
     let btn = this.document.getElementById("customization-reset-button");
     BrowserUITelemetry.countCustomizationEvent("reset");
     btn.disabled = true;
-    return (async function() {
+    return (async () => {
       this._removePanelCustomizationPlaceholders();
       await this.depopulatePalette();
       await this._unwrapToolbarItems();
@@ -1181,13 +1181,13 @@ CustomizeMode.prototype = {
       if (!this._wantToBeInCustomizeMode) {
         this.exit();
       }
-    }.bind(this))().then(null, log.error);
+    })().then(null, log.error);
   },
 
   undoReset() {
     this.resetting = true;
 
-    return (async function() {
+    return (async () => {
       this._removePanelCustomizationPlaceholders();
       await this.depopulatePalette();
       await this._unwrapToolbarItems();
@@ -1205,7 +1205,7 @@ CustomizeMode.prototype = {
       this._updateUndoResetButton();
       this._updateEmptyPaletteNotice();
       this.resetting = false;
-    }.bind(this))().then(null, log.error);
+    })().then(null, log.error);
   },
 
   _onToolbarVisibilityChange(aEvent) {

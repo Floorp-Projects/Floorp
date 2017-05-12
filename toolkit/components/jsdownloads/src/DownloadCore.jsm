@@ -428,7 +428,7 @@ this.Download.prototype = {
 
     // Now that we stored the promise in the download object, we can start the
     // task that will actually execute the download.
-    deferAttempt.resolve((async function task_D_start() {
+    deferAttempt.resolve((async () => {
       // Wait upon any pending operation before restarting.
       if (this._promiseCanceled) {
         await this._promiseCanceled;
@@ -554,7 +554,7 @@ this.Download.prototype = {
           }
         }
       }
-    }.bind(this))());
+    })());
 
     // Notify the new download state before returning.
     this._notifyChange();
@@ -629,7 +629,7 @@ this.Download.prototype = {
         "unblock may only be called on Downloads with blocked data."));
     }
 
-    this._promiseUnblock = (async function() {
+    this._promiseUnblock = (async () => {
       try {
         await OS.File.move(this.target.partFilePath, this.target.path);
         await this.target.refresh();
@@ -643,7 +643,7 @@ this.Download.prototype = {
       this.hasBlockedData = false;
       this._notifyChange();
       await this._succeed();
-    }.bind(this))();
+    })();
 
     return this._promiseUnblock;
   },
@@ -673,7 +673,7 @@ this.Download.prototype = {
         "confirmBlock may only be called on Downloads with blocked data."));
     }
 
-    this._promiseConfirmBlock = (async function() {
+    this._promiseConfirmBlock = (async () => {
       try {
         await OS.File.remove(this.target.partFilePath);
       } catch (ex) {
@@ -684,7 +684,7 @@ this.Download.prototype = {
 
       this.hasBlockedData = false;
       this._notifyChange();
-    }.bind(this))();
+    })();
 
     return this._promiseConfirmBlock;
   },
@@ -849,7 +849,7 @@ this.Download.prototype = {
       this._promiseRemovePartialData = promiseRemovePartialData;
 
       deferRemovePartialData.resolve(
-        (async function task_D_removePartialData() {
+        (async () => {
           try {
             // Wait upon any pending cancellation request.
             if (this._promiseCanceled) {
@@ -866,7 +866,7 @@ this.Download.prototype = {
           } finally {
             this._promiseRemovePartialData = null;
           }
-        }.bind(this))());
+        })());
     }
 
     return promiseRemovePartialData;
@@ -910,7 +910,7 @@ this.Download.prototype = {
    * @rejects Never.
    */
   refresh() {
-    return (async function() {
+    return (async () => {
       if (!this.stopped || this._finalized) {
         return;
       }
@@ -959,7 +959,7 @@ this.Download.prototype = {
 
         this._notifyChange();
       }
-    }.bind(this))().then(null, Cu.reportError);
+    })().then(null, Cu.reportError);
   },
 
   /**
@@ -1892,7 +1892,7 @@ this.DownloadCopySaver.prototype = {
     let partFilePath = download.target.partFilePath;
     let keepPartialData = download.tryToKeepPartialData;
 
-    return (async function task_DCS_execute() {
+    return (async () => {
       // Add the download to history the first time it is started in this
       // session.  If the download is restarted in a different session, a new
       // history visit will be added.  We do this just to avoid the complexity
@@ -2165,7 +2165,7 @@ this.DownloadCopySaver.prototype = {
         }
         throw ex;
       }
-    }.bind(this))();
+    })();
   },
 
   /**
@@ -2233,7 +2233,7 @@ this.DownloadCopySaver.prototype = {
    * Implements "DownloadSaver.removePartialData".
    */
   removePartialData() {
-    return (async function task_DCS_removePartialData() {
+    return (async () => {
       if (this.download.target.partFilePath) {
         try {
           await OS.File.remove(this.download.target.partFilePath);
@@ -2243,7 +2243,7 @@ this.DownloadCopySaver.prototype = {
           }
         }
       }
-    }.bind(this))();
+    })();
   },
 
   /**
@@ -2496,7 +2496,7 @@ this.DownloadLegacySaver.prototype = {
       this.onProgressBytes(this.currentBytes, this.totalBytes);
     }
 
-    return (async function task_DLS_execute() {
+    return (async () => {
       try {
         // Wait for the component that executes the download to finish.
         await this.deferExecuted.promise;
@@ -2564,7 +2564,7 @@ this.DownloadLegacySaver.prototype = {
         // Allow the download to restart through a DownloadCopySaver.
         this.firstExecutionFinished = true;
       }
-    }.bind(this))();
+    })();
   },
 
   _checkReputationAndMove() {
@@ -2702,7 +2702,7 @@ this.DownloadPDFSaver.prototype = {
    * Implements "DownloadSaver.execute".
    */
   execute(aSetProgressBytesFn, aSetPropertiesFn) {
-    return (async function task_DCS_execute() {
+    return (async () => {
       if (!this.download.source.windowRef) {
         throw new DownloadError({
           message: "PDF saver must be passed an open window, and cannot be restarted.",
@@ -2782,7 +2782,7 @@ this.DownloadPDFSaver.prototype = {
 
       let fileInfo = await OS.File.stat(targetPath);
       aSetProgressBytesFn(fileInfo.size, fileInfo.size, false);
-    }.bind(this))();
+    })();
   },
 
   /**

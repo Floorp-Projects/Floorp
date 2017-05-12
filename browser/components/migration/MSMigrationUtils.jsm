@@ -363,7 +363,7 @@ Bookmarks.prototype = {
   },
 
   migrate: function B_migrate(aCallback) {
-    return (async function() {
+    return (async () => {
       // Import to the bookmarks menu.
       let folderGuid = PlacesUtils.bookmarks.menuGuid;
       if (!MigrationUtils.isStartupMigration) {
@@ -371,7 +371,7 @@ Bookmarks.prototype = {
           await MigrationUtils.createImportedBookmarksFolder(this.importedAppLabel, folderGuid);
       }
       await this._migrateFolder(this._favoritesFolder, folderGuid);
-    }.bind(this))().then(() => aCallback(true),
+    })().then(() => aCallback(true),
                        e => { Cu.reportError(e); aCallback(false) });
   },
 

@@ -226,7 +226,7 @@ this.DownloadList.prototype = {
    *        additional filter.
    */
   removeFinished: function DL_removeFinished(aFilterFn) {
-    (async function() {
+    (async () => {
       let list = await this.getAll();
       for (let download of list) {
         // Remove downloads that have been canceled, even if the cancellation
@@ -244,7 +244,7 @@ this.DownloadList.prototype = {
           download.finalize(true).then(null, Cu.reportError);
         }
       }
-    }.bind(this))().then(null, Cu.reportError);
+    })().then(null, Cu.reportError);
   },
 };
 

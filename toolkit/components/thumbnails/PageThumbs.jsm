@@ -270,7 +270,7 @@ this.PageThumbs = {
   // participate in this service's telemetry, which is why this method exists.
   _captureToCanvas(aBrowser, aCanvas, aArgs, aCallback) {
     if (aBrowser.isRemoteBrowser) {
-      (async function() {
+      (async () => {
         let data =
           await this._captureRemoteThumbnail(aBrowser, aCanvas.width,
                                              aCanvas.height, aArgs);
@@ -283,7 +283,7 @@ this.PageThumbs = {
         if (aCallback) {
           aCallback(aCanvas);
         }
-      }.bind(this))();
+      })();
       return;
     }
     // The content is a local page, grab a thumbnail sync.
@@ -372,7 +372,7 @@ this.PageThumbs = {
     let originalURL;
     let channelError = false;
 
-    ((async function task() {
+    (async () => {
       if (!aBrowser.isRemoteBrowser) {
         let channel = aBrowser.docShell.currentDocumentChannel;
         originalURL = channel.originalURI.spec;
@@ -404,7 +404,7 @@ this.PageThumbs = {
       if (aCallback) {
         aCallback(isSuccess);
       }
-    }).bind(this))();
+    })();
   },
 
   /**

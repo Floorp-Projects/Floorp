@@ -270,7 +270,7 @@ this.DeferredTask.prototype = {
     this._armed = false;
     this._runningPromise = runningDeferred.promise;
 
-    runningDeferred.resolve((async function() {
+    runningDeferred.resolve((async () => {
       // Execute the provided function asynchronously.
       await (this._taskFn)().then(null, Cu.reportError);
 
@@ -291,6 +291,6 @@ this.DeferredTask.prototype = {
       // Indicate that the execution of the task has finished.  This happens
       // synchronously with the previous state changes in the function.
       this._runningPromise = null;
-    }.bind(this))().then(null, Cu.reportError));
+    })().then(null, Cu.reportError));
   },
 };

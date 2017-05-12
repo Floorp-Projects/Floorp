@@ -5651,7 +5651,7 @@ class AddonInstall {
    *         XPI is incorrectly signed
    */
   loadManifest(file) {
-    return ((async function() {
+    return (async () => {
       let zipreader = Cc["@mozilla.org/libjar/zip-reader;1"].
           createInstance(Ci.nsIZipReader);
       try {
@@ -5753,7 +5753,7 @@ class AddonInstall {
         null;
       this.addon.appDisabled = !isUsableAddon(this.addon);
       return undefined;
-    }).bind(this))();
+    })();
   }
 
   getIcon(desiredSize = 64) {
@@ -5776,7 +5776,7 @@ class AddonInstall {
    * and has been verified).
    */
   checkPrompt() {
-    ((async function() {
+    (async () => {
       if (this.promptHandler) {
         let info = {
           existingAddon: this.existingAddon ? this.existingAddon.wrapper : null,
@@ -5797,7 +5797,7 @@ class AddonInstall {
       }
       this.state = AddonManager.STATE_PROMPTS_DONE;
       this.install();
-    }).bind(this))();
+    })();
   }
 
   /**
@@ -5863,7 +5863,7 @@ class AddonInstall {
 
     let stagedAddon = this.installLocation.getStagingDir();
 
-    ((async function() {
+    (async () => {
       let installedUnpacked = 0;
 
       await this.installLocation.requestStagingDir();
@@ -5979,7 +5979,7 @@ class AddonInstall {
         if (isTheme(this.addon.type) && this.addon.active)
           AddonManagerPrivate.notifyAddonChanged(this.addon.id, this.addon.type, requiresRestart);
       }
-    }).bind(this))().then(null, (e) => {
+    })().then(null, (e) => {
       logger.warn(`Failed to install ${this.file.path} from ${this.sourceURI.spec} to ${stagedAddon.path}`, e);
 
       if (stagedAddon.exists())
@@ -6002,7 +6002,7 @@ class AddonInstall {
    * Stages an upgrade for next application restart.
    */
   stageInstall(restartRequired, stagedAddon, isUpgrade) {
-    return ((async function() {
+    return (async () => {
       let stagedJSON = stagedAddon.clone();
       stagedJSON.leafName = this.addon.id + ".json";
 
@@ -6038,14 +6038,14 @@ class AddonInstall {
       }
 
       return installedUnpacked;
-    }).bind(this))();
+    })();
   }
 
   /**
    * Removes any previously staged upgrade.
    */
   unstageInstall(stagedAddon) {
-    return ((async function() {
+    return (async () => {
       let stagedJSON = stagedAddon.clone();
       let removedAddon = stagedAddon.clone();
 
@@ -6059,7 +6059,7 @@ class AddonInstall {
       await removeAsync(removedAddon);
       removedAddon.leafName = this.addon.id + ".xpi";
       await removeAsync(removedAddon);
-    }).bind(this))();
+    })();
   }
 
   /**
@@ -6069,7 +6069,7 @@ class AddonInstall {
     *                                    when resuming.
     */
   postpone(resumeFn) {
-    return ((async function() {
+    return (async () => {
       this.state = AddonManager.STATE_POSTPONED;
 
       let stagingDir = this.installLocation.getStagingDir();
@@ -6110,7 +6110,7 @@ class AddonInstall {
       // it will not be removed until resumed or installed by restart.
       // See also cleanStagingDir()
       this.installLocation.releaseStagingDir();
-    }).bind(this))();
+    })();
   }
 }
 
@@ -6122,7 +6122,7 @@ class LocalAddonInstall extends AddonInstall {
    *          A Promise that resolves when the object is ready to use.
    */
   init() {
-    return ((async function() {
+    return (async () => {
       this.file = this.sourceURI.QueryInterface(Ci.nsIFileURL).file;
 
       if (!this.file.exists()) {
@@ -6208,7 +6208,7 @@ class LocalAddonInstall extends AddonInstall {
                                                  this.wrapper);
 
       }
-    }).bind(this))();
+    })();
   }
 
   install() {

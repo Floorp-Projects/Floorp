@@ -1354,7 +1354,7 @@ var AddonManagerInternal = {
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
 
-    let buPromise = (async function() {
+    let buPromise = (async () => {
       let hotfixID = this.hotfixID;
 
       let appUpdateEnabled = Services.prefs.getBoolPref(PREF_APP_UPDATE_ENABLED) &&
@@ -1513,7 +1513,7 @@ var AddonManagerInternal = {
       logger.debug("Background update check complete");
       Services.obs.notifyObservers(null,
                                    "addons-background-update-complete");
-    }.bind(this))();
+    })();
     // Fork the promise chain so we can log the error and let our caller see it too.
     buPromise.then(null, e => logger.warn("Error in background update", e));
     return buPromise;
@@ -1744,14 +1744,14 @@ var AddonManagerInternal = {
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
 
-    return (async function() {
+    return (async () => {
       for (let provider of this.providers) {
         await promiseCallProvider(provider, "updateAddonRepositoryData");
       }
 
       // only tests should care about this
       Services.obs.notifyObservers(null, "TEST:addon-repository-data-updated");
-    }.bind(this))();
+    })();
   },
 
   /**
@@ -1846,7 +1846,7 @@ var AddonManagerInternal = {
       throw Components.Exception("aMimetype must be a string or null",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-    return (async function() {
+    return (async () => {
       for (let provider of this.providers) {
         let install = await promiseCallProvider(
           provider, "getInstallForFile", aFile);
@@ -1856,7 +1856,7 @@ var AddonManagerInternal = {
       }
 
       return null;
-    }.bind(this))();
+    })();
   },
 
   /**
@@ -1876,7 +1876,7 @@ var AddonManagerInternal = {
       throw Components.Exception("aTypes must be an array or null",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-    return (async function() {
+    return (async () => {
       let installs = [];
 
       for (let provider of this.providers) {
@@ -1888,7 +1888,7 @@ var AddonManagerInternal = {
       }
 
       return installs;
-    }.bind(this))();
+    })();
   },
 
   /**
@@ -2432,7 +2432,7 @@ var AddonManagerInternal = {
       throw Components.Exception("aGUID must be a non-empty string",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-    return (async function() {
+    return (async () => {
       for (let provider of this.providers) {
         let addon = await promiseCallProvider(
           provider, "getAddonBySyncGUID", aGUID);
@@ -2442,7 +2442,7 @@ var AddonManagerInternal = {
       }
 
       return null;
-    }.bind(this))();
+    })();
   },
 
   /**
@@ -2483,7 +2483,7 @@ var AddonManagerInternal = {
       throw Components.Exception("aTypes must be an array or null",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-    return (async function() {
+    return (async () => {
       let addons = [];
 
       for (let provider of this.providers) {
@@ -2495,7 +2495,7 @@ var AddonManagerInternal = {
       }
 
       return addons;
-    }.bind(this))();
+    })();
   },
 
   /**
@@ -2525,7 +2525,7 @@ var AddonManagerInternal = {
       throw Components.Exception("aTypes must be an array or null",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-    return (async function() {
+    return (async () => {
       let addons = [];
 
       for (let provider of this.providers) {
@@ -2537,7 +2537,7 @@ var AddonManagerInternal = {
       }
 
       return addons;
-    }.bind(this))();
+    })();
   },
 
   /**

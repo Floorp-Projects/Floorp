@@ -379,13 +379,13 @@ ConnectionData.prototype = Object.freeze({
       fetchState: () => status
     });
 
-    return (async function() {
+    return (async () => {
       try {
         return (await promiseResult);
       } finally {
         this._barrier.client.removeBlocker(key, promiseComplete)
       }
-    }.bind(this))();
+    })();
   },
   close() {
     this._closeRequested = true;
@@ -558,7 +558,7 @@ ConnectionData.prototype = Object.freeze({
         throw new Error("Transaction canceled due to a closed connection.");
       }
 
-      let transactionPromise = (async function() {
+      let transactionPromise = (async () => {
         // At this point we should never have an in progress transaction, since
         // they are enqueued.
         if (this._hasInProgressTransaction) {
@@ -629,7 +629,7 @@ ConnectionData.prototype = Object.freeze({
         } finally {
           this._hasInProgressTransaction = false;
         }
-      }.bind(this))();
+      })();
 
       // If a transaction yields on a never resolved promise, or is mistakenly
       // nested, it could hang the transactions queue forever.  Thus we timeout

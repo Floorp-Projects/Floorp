@@ -922,7 +922,7 @@ nsPlacesExpiration.prototype = {
    */
   _expireWithActionAndLimit:
   function PEX__expireWithActionAndLimit(aAction, aLimit) {
-    (async function() {
+    (async () => {
       // Ensure that we'll run statements with the most up-to-date pref values.
       // On shutdown we cannot do this, since we must enqueue the expiration
       // statements synchronously before the connection goes away.
@@ -947,7 +947,7 @@ nsPlacesExpiration.prototype = {
 
       // Execute statements asynchronously in a transaction.
       this._db.executeAsync(boundStatements, boundStatements.length, this);
-    }.bind(this))().catch(Cu.reportError);
+    })().catch(Cu.reportError);
   },
 
   /**

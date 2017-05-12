@@ -279,7 +279,7 @@ var Scheduler = this.Scheduler = {
     let savedQueue = this.queue;
     this.queue = deferred.promise;
 
-    return this._killQueue = (async function() {
+    return this._killQueue = (async () => {
 
       await killQueue;
       // From this point, and until the end of the Task, we are the
@@ -359,7 +359,7 @@ var Scheduler = this.Scheduler = {
         deferred.resolve();
       }
 
-    }.bind(this))();
+    })();
   },
 
   /**
@@ -404,7 +404,7 @@ var Scheduler = this.Scheduler = {
     }
 
     Scheduler.Debugging.messagesQueued++;
-    return this.push(async function() {
+    return this.push(async () => {
       if (this.shutdown) {
 	LOG("OS.File is not available anymore. The following request has been rejected.",
 	  method, args);
@@ -440,7 +440,7 @@ var Scheduler = this.Scheduler = {
         }
         Scheduler.restartTimer();
       }
-    }.bind(this));
+    });
   },
 
   /**

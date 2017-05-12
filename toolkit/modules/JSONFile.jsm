@@ -312,11 +312,11 @@ JSONFile.prototype = {
       // possible if `finalize` is called concurrently with shutdown.
       return this._finalizePromise;
     }
-    this._finalizePromise = (async function() {
+    this._finalizePromise = (async () => {
       await this._saver.finalize();
       this._data = null;
       this.dataReady = false;
-    }.bind(this))();
+    })();
     return this._finalizePromise;
   },
 
