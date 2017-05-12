@@ -269,14 +269,6 @@ nsBufferedStream::SetEOF()
     return rv;
 }
 
-nsresult
-nsBufferedStream::GetData(nsISupports **aResult)
-{
-    nsCOMPtr<nsISupports> rv(mStream);
-    *aResult = rv.forget().take();
-    return NS_OK;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsBufferedInputStream
 
@@ -687,16 +679,6 @@ nsBufferedInputStream::OnInputStreamReady(nsIAsyncInputStream* aStream)
     return callback->OnInputStreamReady(this);
 }
 
-NS_IMETHODIMP
-nsBufferedInputStream::GetData(nsIInputStream **aResult)
-{
-    nsCOMPtr<nsISupports> stream;
-    nsBufferedStream::GetData(getter_AddRefs(stream));
-    nsCOMPtr<nsIInputStream> inputStream = do_QueryInterface(stream);
-    *aResult = inputStream.forget().take();
-    return NS_OK;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsBufferedOutputStream
 
@@ -1051,15 +1033,6 @@ nsBufferedOutputStream::GetUnbufferedStream(nsISupports* *aStream)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsBufferedOutputStream::GetData(nsIOutputStream **aResult)
-{
-    nsCOMPtr<nsISupports> stream;
-    nsBufferedStream::GetData(getter_AddRefs(stream));
-    nsCOMPtr<nsIOutputStream> outputStream = do_QueryInterface(stream);
-    *aResult = outputStream.forget().take();
-    return NS_OK;
-}
 #undef METER
 
 ////////////////////////////////////////////////////////////////////////////////

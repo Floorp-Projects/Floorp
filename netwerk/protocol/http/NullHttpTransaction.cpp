@@ -208,6 +208,12 @@ NullHttpTransaction::SetDNSWasRefreshed()
   mCapsToClear |= NS_HTTP_REFRESH_DNS;
 }
 
+uint64_t
+NullHttpTransaction::Available()
+{
+  return 0;
+}
+
 nsresult
 NullHttpTransaction::ReadSegments(nsAHttpSegmentReader *reader,
                                   uint32_t count, uint32_t *countRead)
