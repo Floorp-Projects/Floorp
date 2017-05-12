@@ -1686,12 +1686,16 @@ TabChild::MaybeCoalesceWheelEvent(const WidgetWheelEvent& aEvent,
     // 1. It's eWheel (we don't coalesce eOperationStart and eWheelOperationEnd)
     // 2. It's not the first wheel event.
     // 3. It's not the last wheel event.
-    // 4. It's dispatched before the last wheel event was processed.
+    // 4. It's dispatched before the last wheel event was processed +
+    //    the processing time of the last event.
+    //    This way pages spending lots of time in wheel listeners get wheel
+    //    events coalesced more aggressively.
     // 5. It has same attributes as the coalesced wheel event which is not yet
     //    fired.
     if (!mLastWheelProcessedTimeFromParent.IsNull() &&
         *aIsNextWheelEvent &&
-        aEvent.mTimeStamp < mLastWheelProcessedTimeFromParent &&
+        aEvent.mTimeStamp < (mLastWheelProcessedTimeFromParent +
+                             mLastWheelProcessingDuration) &&
         (mCoalescedWheelData.IsEmpty() ||
          mCoalescedWheelData.CanCoalesce(aEvent, aGuid, aInputBlockId))) {
       mCoalescedWheelData.Coalesce(aEvent, aGuid, aInputBlockId);
@@ -1759,8 +1763,8 @@ TabChild::RecvMouseWheelEvent(const WidgetWheelEvent& aEvent,
     mozilla::TimeStamp beforeDispatchingTime = TimeStamp::Now();
     MaybeDispatchCoalescedWheelEvent();
     DispatchWheelEvent(aEvent, aGuid, aInputBlockId);
-    mLastWheelProcessedTimeFromParent +=
-      (TimeStamp::Now() - beforeDispatchingTime);
+    mLastWheelProcessingDuration = (TimeStamp::Now() - beforeDispatchingTime);
+    mLastWheelProcessedTimeFromParent += mLastWheelProcessingDuration;
   } else {
     // This is the last wheel event. Set mLastWheelProcessedTimeFromParent to
     // null moment to avoid coalesce the next incoming wheel event.
