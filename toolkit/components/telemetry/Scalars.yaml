@@ -267,6 +267,197 @@ storage.sync.api.usage:
     record_in_processes:
       - main
 
+# The following section contains WebRTC nICEr scalars
+# For more info on ICE, see https://tools.ietf.org/html/rfc5245
+# For more info on STUN, see https://tools.ietf.org/html/rfc5389
+# For more info on TURN, see https://tools.ietf.org/html/rfc5766
+webrtc.nicer:
+  stun_retransmits:
+    bug_numbers:
+      - 1325536
+    description: >
+      The count of STUN message retransmissions during a WebRTC call.
+      When sending STUN request messages over UDP, messages may be
+      dropped by the network. Retransmissions are the mechanism used to
+      accomplish reliability of the STUN request/response transaction.
+      This can happen during both successful and unsuccessful WebRTC
+      calls.
+      For more info on ICE, see https://tools.ietf.org/html/rfc5245
+      For more info on STUN, see https://tools.ietf.org/html/rfc5389
+      For more info on TURN, see https://tools.ietf.org/html/rfc5766
+    expires: "57"
+    kind: uint
+    notification_emails:
+      - webrtc-ice-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - 'main'
+      - 'content'
+
+  turn_401s:
+    bug_numbers:
+      - 1325536
+    description: >
+      The count of TURN 401 (Unauthorized) responses to allocation
+      requests. Only 401 responses beyond the first, expected 401 are
+      counted. More than one 401 repsonse indicates the client is
+      experiencing difficulty authenticating with the TURN server. This
+      can happen during both successful and unsuccessful WebRTC calls.
+      For more info on ICE, see https://tools.ietf.org/html/rfc5245
+      For more info on STUN, see https://tools.ietf.org/html/rfc5389
+      For more info on TURN, see https://tools.ietf.org/html/rfc5766
+    expires: "57"
+    kind: uint
+    notification_emails:
+      - webrtc-ice-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - 'main'
+      - 'content'
+
+  turn_403s:
+    bug_numbers:
+      - 1325536
+    description: >
+      The count of TURN 403 (Forbidden) responses to CreatePermission or
+      ChannelBind requests.  This indicates that the TURN server is
+      refusing the request for an IP address or IP address/port
+      combination, likely due to administrative restrictions.
+      For more info on ICE, see https://tools.ietf.org/html/rfc5245
+      For more info on STUN, see https://tools.ietf.org/html/rfc5389
+      For more info on TURN, see https://tools.ietf.org/html/rfc5766
+    expires: "57"
+    kind: uint
+    notification_emails:
+      - webrtc-ice-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - 'main'
+      - 'content'
+
+  turn_438s:
+    bug_numbers:
+      - 1325536
+    description: >
+      The count of TURN 438 (Stale Nonce) responses to allocation
+      requests. This can happen during both successful and unsuccessful
+      WebRTC calls.
+      For more info on ICE, see https://tools.ietf.org/html/rfc5245
+      For more info on STUN, see https://tools.ietf.org/html/rfc5389
+      For more info on TURN, see https://tools.ietf.org/html/rfc5766
+    expires: "57"
+    kind: uint
+    notification_emails:
+      - webrtc-ice-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - 'main'
+      - 'content'
+
+# The following section contains content process base counters.
+dom.contentprocess:
+  troubled_due_to_memory:
+    bug_numbers:
+      - 1305091
+    description: >
+      The number of content processes that were marked as troubled because
+      it was running low on virtual memory.
+    expires: "58"
+    kind: uint
+    notification_emails:
+      - benjamin@smedbergs.us
+      - mconley@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - 'main'
+
+devtools.toolbar.eyedropper:
+  opened:
+    bug_numbers:
+      - 1247985
+      - 1352115
+    description: Number of times the DevTools Eyedropper has been opened via the inspector toolbar.
+    expires: never
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
+devtools.copy.unique.css.selector:
+  opened:
+    bug_numbers:
+      - 1323700
+      - 1352115
+    description: Number of times the DevTools copy unique CSS selector has been used.
+    expires: "57"
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
+devtools.copy.full.css.selector:
+  opened:
+    bug_numbers:
+      - 1323700
+      - 1352115
+    description: Number of times the DevTools copy full CSS selector has been used.
+    expires: "57"
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
+navigator.storage:
+  estimate_count:
+    bug_numbers:
+      - 1359708
+    description: >
+      Number of times navigator.storage.estimate has been used.
+    expires: "60"
+    kind: uint
+    notification_emails:
+      - shuang@mozilla.com
+      - ttung@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - 'main'
+      - 'content'
+
+  persist_count:
+    bug_numbers:
+      - 1359708
+    description: >
+      Number of times navigator.storage.persist has been used.
+    expires: "60"
+    kind: uint
+    notification_emails:
+      - shuang@mozilla.com
+      - ttung@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - 'main'
+      - 'content'
+
+telemetry:
+  os_shutting_down:
+    bug_numbers:
+      - 1363345
+    description: >
+      Records true if there is a signal that Firefox was quitting because
+      the OS was shutting down. Only available on Windows.
+    expires: "58"
+    kind: boolean
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
 
 # The following section is for probes testing the Telemetry system. They will not be
 # submitted in pings and are only used for testing.
@@ -448,179 +639,6 @@ telemetry.test:
     record_in_processes:
       - 'all_childs'
 
-# The following section contains WebRTC nICEr scalars
-# For more info on ICE, see https://tools.ietf.org/html/rfc5245
-# For more info on STUN, see https://tools.ietf.org/html/rfc5389
-# For more info on TURN, see https://tools.ietf.org/html/rfc5766
-webrtc.nicer:
-  stun_retransmits:
-    bug_numbers:
-      - 1325536
-    description: >
-      The count of STUN message retransmissions during a WebRTC call.
-      When sending STUN request messages over UDP, messages may be
-      dropped by the network. Retransmissions are the mechanism used to
-      accomplish reliability of the STUN request/response transaction.
-      This can happen during both successful and unsuccessful WebRTC
-      calls.
-      For more info on ICE, see https://tools.ietf.org/html/rfc5245
-      For more info on STUN, see https://tools.ietf.org/html/rfc5389
-      For more info on TURN, see https://tools.ietf.org/html/rfc5766
-    expires: "57"
-    kind: uint
-    notification_emails:
-      - webrtc-ice-telemetry-alerts@mozilla.com
-    release_channel_collection: opt-in
-    record_in_processes:
-      - 'main'
-      - 'content'
-
-  turn_401s:
-    bug_numbers:
-      - 1325536
-    description: >
-      The count of TURN 401 (Unauthorized) responses to allocation
-      requests. Only 401 responses beyond the first, expected 401 are
-      counted. More than one 401 repsonse indicates the client is
-      experiencing difficulty authenticating with the TURN server. This
-      can happen during both successful and unsuccessful WebRTC calls.
-      For more info on ICE, see https://tools.ietf.org/html/rfc5245
-      For more info on STUN, see https://tools.ietf.org/html/rfc5389
-      For more info on TURN, see https://tools.ietf.org/html/rfc5766
-    expires: "57"
-    kind: uint
-    notification_emails:
-      - webrtc-ice-telemetry-alerts@mozilla.com
-    release_channel_collection: opt-in
-    record_in_processes:
-      - 'main'
-      - 'content'
-
-  turn_403s:
-    bug_numbers:
-      - 1325536
-    description: >
-      The count of TURN 403 (Forbidden) responses to CreatePermission or
-      ChannelBind requests.  This indicates that the TURN server is
-      refusing the request for an IP address or IP address/port
-      combination, likely due to administrative restrictions.
-      For more info on ICE, see https://tools.ietf.org/html/rfc5245
-      For more info on STUN, see https://tools.ietf.org/html/rfc5389
-      For more info on TURN, see https://tools.ietf.org/html/rfc5766
-    expires: "57"
-    kind: uint
-    notification_emails:
-      - webrtc-ice-telemetry-alerts@mozilla.com
-    release_channel_collection: opt-in
-    record_in_processes:
-      - 'main'
-      - 'content'
-
-  turn_438s:
-    bug_numbers:
-      - 1325536
-    description: >
-      The count of TURN 438 (Stale Nonce) responses to allocation
-      requests. This can happen during both successful and unsuccessful
-      WebRTC calls.
-      For more info on ICE, see https://tools.ietf.org/html/rfc5245
-      For more info on STUN, see https://tools.ietf.org/html/rfc5389
-      For more info on TURN, see https://tools.ietf.org/html/rfc5766
-    expires: "57"
-    kind: uint
-    notification_emails:
-      - webrtc-ice-telemetry-alerts@mozilla.com
-    release_channel_collection: opt-in
-    record_in_processes:
-      - 'main'
-      - 'content'
-
-# The following section contains content process base counters.
-dom.contentprocess:
-  troubled_due_to_memory:
-    bug_numbers:
-      - 1305091
-    description: >
-      The number of content processes that were marked as troubled because
-      it was running low on virtual memory.
-    expires: "58"
-    kind: uint
-    notification_emails:
-      - benjamin@smedbergs.us
-      - mconley@mozilla.com
-    release_channel_collection: opt-in
-    record_in_processes:
-      - 'main'
-
-devtools.toolbar.eyedropper:
-  opened:
-    bug_numbers:
-      - 1247985
-      - 1352115
-    description: Number of times the DevTools Eyedropper has been opened via the inspector toolbar.
-    expires: never
-    kind: uint
-    notification_emails:
-      - dev-developer-tools@lists.mozilla.org
-    release_channel_collection: opt-out
-    record_in_processes:
-      - 'main'
-
-devtools.copy.unique.css.selector:
-  opened:
-    bug_numbers:
-      - 1323700
-      - 1352115
-    description: Number of times the DevTools copy unique CSS selector has been used.
-    expires: "57"
-    kind: uint
-    notification_emails:
-      - dev-developer-tools@lists.mozilla.org
-    release_channel_collection: opt-out
-    record_in_processes:
-      - 'main'
-
-devtools.copy.full.css.selector:
-  opened:
-    bug_numbers:
-      - 1323700
-      - 1352115
-    description: Number of times the DevTools copy full CSS selector has been used.
-    expires: "57"
-    kind: uint
-    notification_emails:
-      - dev-developer-tools@lists.mozilla.org
-    release_channel_collection: opt-out
-    record_in_processes:
-      - 'main'
-
-navigator.storage:
-  estimate_count:
-    bug_numbers:
-      - 1359708
-    description: >
-      Number of times navigator.storage.estimate has been used.
-    expires: "60"
-    kind: uint
-    notification_emails:
-      - shuang@mozilla.com
-      - ttung@mozilla.com
-    release_channel_collection: opt-in
-    record_in_processes:
-      - 'main'
-      - 'content'
-
-  persist_count:
-    bug_numbers:
-      - 1359708
-    description: >
-      Number of times navigator.storage.persist has been used.
-    expires: "60"
-    kind: uint
-    notification_emails:
-      - shuang@mozilla.com
-      - ttung@mozilla.com
-    release_channel_collection: opt-in
-    record_in_processes:
-      - 'main'
-      - 'content'
+# NOTE: Please don't add new definitions below this point. Consider adding
+# them earlier in the file and leave the telemetry.test group as the last
+# one for readability.
