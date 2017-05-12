@@ -51,8 +51,6 @@ to mochitest command.
     * test_animations_reverse.html [1]
   * SMIL Animation
     * test_restyles_in_smil_animation.html [2]
-  * Property parsing and computation:
-    * test_property_syntax_errors.html `animation` [20]
 * CSSOM support:
   * \@import bug 1352968
     * test_bug221428.html [1]
@@ -183,8 +181,6 @@ to mochitest command.
 * clamp negative value from calc() servo/servo#15296
   * test_value_storage.html `font-size: calc(` [3]
   * ... `font-size: var(--a)` [3]
-* Negative value should be rejected
-  * test_property_syntax_errors.html `transition-duration`: servo/servo#15343 [20]
 * Quirks mode support
   * hashless color servo/servo#15341
     * test_property_syntax_errors.html `color: 000000` [22]
