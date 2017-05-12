@@ -112,7 +112,7 @@ to mochitest command.
 * Unimplemented CSS properties:
   * font-variant-{alternates,east-asian,ligatures,numeric} properties servo/servo#15957
     * test_property_syntax_errors.html `font-variant-alternates` [2]
-    * test_value_storage.html `font-variant` [176]
+    * test_value_storage.html `font-variant` [167]
     * test_specified_value_serialization.html `bug-721136` [1]
 * font-feature-settings should be a subproperty of font shorthand bug 1363984
   * test_inherit_storage.html `font-feature-settings` [2]
