@@ -2374,7 +2374,8 @@ MediaFormatReader::Update(TrackType aTrack)
     TimeUnit nextKeyframe;
     if (aTrack == TrackType::kVideoTrack &&
         NS_SUCCEEDED(
-          decoder.mTrackDemuxer->GetNextRandomAccessPoint(&nextKeyframe))) {
+          decoder.mTrackDemuxer->GetNextRandomAccessPoint(&nextKeyframe)) &&
+        !nextKeyframe.IsInfinite()) {
       SkipVideoDemuxToNextKeyFrame(
         decoder.mLastDecodedSampleTime.refOr(TimeInterval()).Length());
     } else if (aTrack == TrackType::kAudioTrack) {
