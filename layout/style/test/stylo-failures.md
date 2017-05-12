@@ -75,7 +75,6 @@ to mochitest command.
 * test_computed_style.html `gradient`: -moz- and -webkit-prefixed gradient values [35]
 * ... `mask`: mask-image isn't set properly bug 1341667 [10]
 * character not properly escaped servo/servo#15947
-  * test_parse_url.html [1]
   * test_bug829816.html [8]
 * \@counter-style support bug 1328319
   * test_counter_descriptor_storage.html [1]
@@ -153,8 +152,6 @@ to mochitest command.
   * -webkit-{flex,inline-flex} for display servo/servo#15400
     * test_webkit_flex_display.html [4]
 * Unsupported values
-  * new syntax of rgba?() and hsla?() functions servo/rust-cssparser#113
-    * test_computed_style.html `css-color-4` [2]
   * SVG-in-OpenType values not supported servo/servo#15211 bug 1355412
     * test_value_storage.html `context-` [7]
     * test_bug798843_pref.html [7]
