@@ -2328,9 +2328,6 @@ if test -n "$MOZ_MULET"; then
 fi
 
 # Propagate feature switches for code written in rust from confvars.sh
-if test -n "$MOZ_RUST_MP4PARSE"; then
-    AC_DEFINE(MOZ_RUST_MP4PARSE)
-fi
 if test -n "$MOZ_RUST_URLPARSE"; then
     AC_DEFINE(MOZ_RUST_URLPARSE)
     AC_SUBST(MOZ_RUST_URLPARSE)
