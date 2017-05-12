@@ -366,7 +366,7 @@ WifiGeoPositionProvider.prototype = {
 
     if (useCached) {
       gCachedRequest.location.timestamp = Date.now();
-      this.notifyListener("update", [gCachedRequest.location]);
+      this.listener.update(gCachedRequest.location);
       return;
     }
 
@@ -377,14 +377,11 @@ WifiGeoPositionProvider.prototype = {
     let xhr = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
                         .createInstance(Ci.nsIXMLHttpRequest);
 
-    this.notifyListener("locationUpdatePending");
-
     try {
       xhr.open("POST", url, true);
       xhr.channel.loadFlags = Ci.nsIChannel.LOAD_ANONYMOUS;
     } catch (e) {
-      this.notifyListener("notifyError",
-                          [POSITION_UNAVAILABLE]);
+      this.listener.notifyError(POSITION_UNAVAILABLE);
       return;
     }
     xhr.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
@@ -393,19 +390,16 @@ WifiGeoPositionProvider.prototype = {
     xhr.timeout = Services.prefs.getIntPref("geo.wifi.xhr.timeout");
     xhr.ontimeout = () => {
       LOG("Location request XHR timed out.")
-      this.notifyListener("notifyError",
-                          [POSITION_UNAVAILABLE]);
+      this.listener.notifyError(POSITION_UNAVAILABLE);
     };
     xhr.onerror = () => {
-      this.notifyListener("notifyError",
-                          [POSITION_UNAVAILABLE]);
+      this.listener.notifyError(POSITION_UNAVAILABLE);
     };
     xhr.onload = () => {
       LOG("server returned status: " + xhr.status + " --> " +  JSON.stringify(xhr.response));
       if ((xhr.channel instanceof Ci.nsIHttpChannel && xhr.status != 200) ||
           !xhr.response || !xhr.response.location) {
-        this.notifyListener("notifyError",
-                            [POSITION_UNAVAILABLE]);
+        this.listener.notifyError(POSITION_UNAVAILABLE);
         return;
       }
 
@@ -413,7 +407,7 @@ WifiGeoPositionProvider.prototype = {
                                                   xhr.response.location.lng,
                                                   xhr.response.accuracy);
 
-      this.notifyListener("update", [newLocation]);
+      this.listener.update(newLocation);
       gCachedRequest = new CachedRequest(newLocation, data.cellTowers, data.wifiAccessPoints);
     };
 
@@ -422,13 +416,6 @@ WifiGeoPositionProvider.prototype = {
     xhr.send(requestData);
   },
 
-  notifyListener: function(listenerFunc, args) {
-    args = args || [];
-    try {
-      this.listener[listenerFunc].apply(this.listener, args);
-    } catch(e) {
-      Cu.reportError(e);
-    }
   }
 };
 
