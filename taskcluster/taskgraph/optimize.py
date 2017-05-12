@@ -206,14 +206,14 @@ def opt_index_search(task, params, index_path):
 def opt_seta(task, params):
     bbb_task = False
 
-    # disable SETA - bug 1364421
-    return False, None
 
-    """
     # for bbb tasks we need to send in the buildbot buildername
     if task.task.get('provisionerId', '') == 'buildbot-bridge':
         label = task.task.get('payload').get('buildername')
         bbb_task = True
+
+        # disable SETA - bug 1364421
+        return True, None
     else:
         label = task.label
 
@@ -228,7 +228,6 @@ def opt_seta(task, params):
         return True, None
     else:
         return False, None
-    """
 
 
 @optimization('files-changed')
