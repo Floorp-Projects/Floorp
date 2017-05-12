@@ -153,30 +153,15 @@ void SkBinaryWriteBuffer::writeBitmap(const SkBitmap& bitmap) {
     // Write a bool to indicate that we did not use an SkBitmapHeap. That feature is deprecated.
     this->writeBool(false);
 
-    SkPixelRef* pixelRef = bitmap.pixelRef();
-    if (pixelRef) {
-        // see if the pixelref already has an encoded version
-        sk_sp<SkData> existingData(pixelRef->refEncodedData());
-        if (existingData) {
-            // Assumes that if the client did not set a serializer, they are
-            // happy to get the encoded data.
-            if (!fPixelSerializer || fPixelSerializer->useEncodedData(existingData->data(),
-                                                                      existingData->size())) {
-                write_encoded_bitmap(this, existingData.get(), bitmap.pixelRefOrigin());
-                return;
-            }
-        }
-
-        // see if the caller wants to manually encode
-        SkAutoPixmapUnlock result;
-        if (fPixelSerializer && bitmap.requestLock(&result)) {
-            sk_sp<SkData> data(fPixelSerializer->encode(result.pixmap()));
-            if (data) {
-                // if we have to "encode" the bitmap, then we assume there is no
-                // offset to share, since we are effectively creating a new pixelref
-                write_encoded_bitmap(this, data.get(), SkIPoint::Make(0, 0));
-                return;
-            }
+    // see if the caller wants to manually encode
+    SkAutoPixmapUnlock result;
+    if (fPixelSerializer && bitmap.requestLock(&result)) {
+        sk_sp<SkData> data(fPixelSerializer->encode(result.pixmap()));
+        if (data) {
+            // if we have to "encode" the bitmap, then we assume there is no
+            // offset to share, since we are effectively creating a new pixelref
+            write_encoded_bitmap(this, data.get(), SkIPoint::Make(0, 0));
+            return;
         }
     }
 
@@ -236,11 +221,8 @@ SkRefCntSet* SkBinaryWriteBuffer::setTypefaceRecorder(SkRefCntSet* rec) {
     return rec;
 }
 
-void SkBinaryWriteBuffer::setPixelSerializer(SkPixelSerializer* serializer) {
-    fPixelSerializer.reset(serializer);
-    if (serializer) {
-        serializer->ref();
-    }
+void SkBinaryWriteBuffer::setPixelSerializer(sk_sp<SkPixelSerializer> serializer) {
+    fPixelSerializer = std::move(serializer);
 }
 
 void SkBinaryWriteBuffer::writeFlattenable(const SkFlattenable* flattenable) {

@@ -48,7 +48,7 @@ function nextMessageTest() {
 
 window.onmessage = function(e) {
   var testData = messageTests[curTest++];
-  testData[3].step_func(function() {
+  testData[3].step(function() {
     assert_equals(e.data, testData[2])
   });
   testData[3].done();

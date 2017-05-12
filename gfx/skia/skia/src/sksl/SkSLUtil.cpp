@@ -7,27 +7,27 @@
 
 #include "SkSLUtil.h"
 
+#ifndef __STDC_FORMAT_MACROS
+#define __STDC_FORMAT_MACROS
+#endif
+
 namespace SkSL {
 
-int stoi(std::string s) {
-    return atoi(s.c_str());
-}
-
-double stod(std::string s) {
-    return atof(s.c_str());
-}
-
-long stol(std::string s) {
-    return atol(s.c_str());
-}
+#ifdef SKSL_STANDALONE
+StandaloneShaderCaps standaloneCaps;
+#endif
 
 void sksl_abort() {
-#ifdef SKIA
+#ifdef SKSL_STANDALONE
+    abort();
+#else
     sk_abort_no_print();
     exit(1);
-#else
-    abort();
 #endif
+}
+
+void write_stringstream(const StringStream& s, OutputStream& out) {
+    out.write(s.data(), s.size());
 }
 
 } // namespace

@@ -226,7 +226,7 @@ promise_test(() => {
   return writer2.ready;
 }, 'redundant releaseLock() is no-op');
 
-promise_test(t => {
+promise_test(() => {
   const events = [];
   const ws = new WritableStream();
   const writer = ws.getWriter();

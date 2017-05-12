@@ -8,15 +8,18 @@
 #ifndef SkArithmeticModePriv_DEFINED
 #define SkArithmeticModePriv_DEFINED
 
-#include "SkArithmeticMode.h"
+#include "SkScalar.h"
+#include "SkXfermodePriv.h"
+
+class SkXfermode;
 
 struct SkArithmeticParams {
     float fK[4];
     bool fEnforcePMColor;
 };
 
-#ifndef SK_SUPPORT_LEGACY_ARITHMETICMODE
-
+// This only exists to unflatten instances that were serialized into old pictures as part of
+// SkXfermodeImageFilter before the advent of SkBlendMode.
 class SK_API SkArithmeticMode {
 public:
     /**
@@ -28,20 +31,10 @@ public:
      */
     static sk_sp<SkXfermode> Make(SkScalar k1, SkScalar k2, SkScalar k3, SkScalar k4,
                                   bool enforcePMColor = true);
-#ifdef SK_SUPPORT_LEGACY_XFERMODE_PTR
-    static SkXfermode* Create(SkScalar k1, SkScalar k2,
-                              SkScalar k3, SkScalar k4,
-                              bool enforcePMColor = true) {
-        return Make(k1, k2, k3, k4, enforcePMColor).release();
-    }
-#endif
-
     SK_DECLARE_FLATTENABLE_REGISTRAR_GROUP();
 
 private:
     SkArithmeticMode(); // can't be instantiated
 };
-
-#endif
 
 #endif

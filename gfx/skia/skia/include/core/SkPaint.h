@@ -12,9 +12,7 @@
 #include "SkColor.h"
 #include "SkFilterQuality.h"
 #include "SkMatrix.h"
-#include "SkXfermode.h"
-
-//#define SK_SUPPORT_LEGACY_XFERMODE_OBJECT
+#include "SkRefCnt.h"
 
 class SkAutoDescriptor;
 class SkAutoGlyphCache;
@@ -38,8 +36,6 @@ class SkShader;
 class SkSurfaceProps;
 class SkTextBlob;
 class SkTypeface;
-
-#define kBicubicFilterBitmap_Flag kHighQualityFilterBitmap_Flag
 
 /** \class SkPaint
 
@@ -105,8 +101,6 @@ public:
     enum Flags {
         kAntiAlias_Flag       = 0x01,   //!< mask to enable antialiasing
         kDither_Flag          = 0x04,   //!< mask to enable dithering
-        kUnderlineText_Flag   = 0x08,   //!< mask to enable underline text
-        kStrikeThruText_Flag  = 0x10,   //!< mask to enable strike-thru text
         kFakeBoldText_Flag    = 0x20,   //!< mask to enable fake-bold text
         kLinearText_Flag      = 0x40,   //!< mask to enable linear-text
         kSubpixelText_Flag    = 0x80,   //!< mask to enable subpixel text positioning
@@ -119,8 +113,17 @@ public:
         // when adding extra flags, note that the fFlags member is specified
         // with a bit-width and you'll have to expand it.
 
-        kAllFlags = 0xFFFF
+        kAllFlags = 0xFFFF,
     };
+
+#ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
+    enum ReserveFlags {
+        // These are not used by paint, but the bits are reserved for private use by the
+        // android framework.
+        kUnderlineText_ReserveFlag   = 0x08,   //!< mask to enable underline text
+        kStrikeThruText_ReserveFlag  = 0x10,   //!< mask to enable strike-thru text
+    };
+#endif
 
     /** Return the paint's flags. Use the Flag enum to test flag values.
         @return the paint's flags (see enums ending in _Flag for bit masks)
@@ -229,32 +232,6 @@ public:
      *  horizontally.
      */
     void setVerticalText(bool);
-
-    /** Helper for getFlags(), returning true if kUnderlineText_Flag bit is set
-        @return true if the underlineText bit is set in the paint's flags.
-    */
-    bool isUnderlineText() const {
-        return SkToBool(this->getFlags() & kUnderlineText_Flag);
-    }
-
-    /** Helper for setFlags(), setting or clearing the kUnderlineText_Flag bit
-        @param underlineText true to set the underlineText bit in the paint's
-                             flags, false to clear it.
-    */
-    void setUnderlineText(bool underlineText);
-
-    /** Helper for getFlags(), returns true if kStrikeThruText_Flag bit is set
-        @return true if the strikeThruText bit is set in the paint's flags.
-    */
-    bool isStrikeThruText() const {
-        return SkToBool(this->getFlags() & kStrikeThruText_Flag);
-    }
-
-    /** Helper for setFlags(), setting or clearing the kStrikeThruText_Flag bit
-        @param strikeThruText   true to set the strikeThruText bit in the
-                                paint's flags, false to clear it.
-    */
-    void setStrikeThruText(bool strikeThruText);
 
     /** Helper for getFlags(), returns true if kFakeBoldText_Flag bit is set
         @return true if the kFakeBoldText_Flag bit is set in the paint's flags.
@@ -483,6 +460,7 @@ public:
         @return the paint's shader (or NULL)
     */
     SkShader* getShader() const { return fShader.get(); }
+    sk_sp<SkShader> refShader() const;
 
     /** Set or clear the shader object.
      *  Shaders specify the source color(s) for what is being drawn. If a paint
@@ -503,60 +481,23 @@ public:
      *  If a previous shader exists, its reference count is decremented.
      *  If shader is not NULL, its reference count is incremented.
      *  @param shader   May be NULL. The shader to be installed in the paint
-     *  @return         shader
      */
     void setShader(sk_sp<SkShader>);
-#ifdef SK_SUPPORT_LEGACY_CREATESHADER_PTR
-    SkShader* setShader(SkShader* shader);
-#endif
 
     /** Get the paint's colorfilter. If there is a colorfilter, its reference
         count is not changed.
         @return the paint's colorfilter (or NULL)
     */
     SkColorFilter* getColorFilter() const { return fColorFilter.get(); }
+    sk_sp<SkColorFilter> refColorFilter() const;
 
-    /** Set or clear the paint's colorfilter, returning the parameter.
+    /** Set or clear the paint's colorfilter.
         <p />
         If the paint already has a filter, its reference count is decremented.
         If filter is not NULL, its reference count is incremented.
         @param filter   May be NULL. The filter to be installed in the paint
-        @return         filter
     */
-#ifdef SK_SUPPORT_LEGACY_COLORFILTER_PTR
-    SkColorFilter* setColorFilter(SkColorFilter* filter);
-#endif
     void setColorFilter(sk_sp<SkColorFilter>);
-
-#ifdef SK_SUPPORT_LEGACY_XFERMODE_OBJECT
-    /** Get the paint's xfermode object.
-        <p />
-      The xfermode's reference count is not affected.
-        @return the paint's xfermode (or NULL)
-    */
-    SkXfermode* getXfermode() const;
-
-    /** Set or clear the xfermode object.
-        <p />
-        Pass NULL to clear any previous xfermode.
-        As a convenience, the parameter passed is also returned.
-        If a previous xfermode exists, its reference count is decremented.
-        If xfermode is not NULL, its reference count is incremented.
-        @param xfermode May be NULL. The new xfermode to be installed in the
-                        paint
-        @return         xfermode
-    */
-    void setXfermode(sk_sp<SkXfermode>);
-#ifdef SK_SUPPORT_LEGACY_XFERMODE_PTR
-    SkXfermode* setXfermode(SkXfermode* xfermode);
-#endif
-
-    /** Create an xfermode based on the specified Mode, and assign it into the
-        paint, returning the mode that was set. If the Mode is SrcOver, then
-        the paint's xfermode is set to null.
-     */
-    SkXfermode* setXfermodeMode(SkXfermode::Mode);
-#endif
 
     SkBlendMode getBlendMode() const { return (SkBlendMode)fBlendMode; }
     bool isSrcOver() const { return (SkBlendMode)fBlendMode == SkBlendMode::kSrcOver; }
@@ -568,6 +509,7 @@ public:
         @return the paint's patheffect (or NULL)
     */
     SkPathEffect* getPathEffect() const { return fPathEffect.get(); }
+    sk_sp<SkPathEffect> refPathEffect() const;
 
     /** Set or clear the patheffect object.
         <p />
@@ -580,9 +522,6 @@ public:
         @return         effect
     */
     void setPathEffect(sk_sp<SkPathEffect>);
-#ifdef SK_SUPPORT_LEGACY_PATHEFFECT_PTR
-    SkPathEffect* setPathEffect(SkPathEffect* effect);
-#endif
 
     /** Get the paint's maskfilter object.
         <p />
@@ -590,6 +529,7 @@ public:
         @return the paint's maskfilter (or NULL)
     */
     SkMaskFilter* getMaskFilter() const { return fMaskFilter.get(); }
+    sk_sp<SkMaskFilter> refMaskFilter() const;
 
     /** Set or clear the maskfilter object.
         <p />
@@ -601,9 +541,6 @@ public:
                             the paint
         @return             maskfilter
     */
-#ifdef SK_SUPPORT_LEGACY_MASKFILTER_PTR
-    SkMaskFilter* setMaskFilter(SkMaskFilter* maskfilter);
-#endif
     void setMaskFilter(sk_sp<SkMaskFilter>);
 
     // These attributes are for text/fonts
@@ -615,6 +552,7 @@ public:
         @return the paint's typeface (or NULL)
     */
     SkTypeface* getTypeface() const { return fTypeface.get(); }
+    sk_sp<SkTypeface> refTypeface() const;
 
     /** Set or clear the typeface object.
         <p />
@@ -627,9 +565,6 @@ public:
         @return         typeface
     */
     void setTypeface(sk_sp<SkTypeface>);
-#ifdef SK_SUPPORT_LEGACY_TYPEFACE_PTR
-    SkTypeface* setTypeface(SkTypeface* typeface);
-#endif
 
     /** Get the paint's rasterizer (or NULL).
         <p />
@@ -637,6 +572,7 @@ public:
         @return the paint's rasterizer (or NULL)
     */
     SkRasterizer* getRasterizer() const { return fRasterizer.get(); }
+    sk_sp<SkRasterizer> refRasterizer() const;
 
     /** Set or clear the rasterizer object.
         <p />
@@ -649,13 +585,10 @@ public:
                           the paint.
         @return           rasterizer
     */
-#ifdef SK_SUPPORT_LEGACY_MINOR_EFFECT_PTR
-    SkRasterizer* setRasterizer(SkRasterizer* rasterizer);
-#endif
     void setRasterizer(sk_sp<SkRasterizer>);
 
     SkImageFilter* getImageFilter() const { return fImageFilter.get(); }
-    SkImageFilter* setImageFilter(SkImageFilter*);
+    sk_sp<SkImageFilter> refImageFilter() const;
     void setImageFilter(sk_sp<SkImageFilter>);
 
     /**
@@ -663,6 +596,8 @@ public:
      *  reference count.
      */
     SkDrawLooper* getDrawLooper() const { return fDrawLooper.get(); }
+    sk_sp<SkDrawLooper> refDrawLooper() const;
+
     SkDrawLooper* getLooper() const { return fDrawLooper.get(); }
     /**
      *  Set or clear the looper object.
@@ -674,9 +609,7 @@ public:
      *  @param looper May be NULL. The new looper to be installed in the paint.
      */
     void setDrawLooper(sk_sp<SkDrawLooper>);
-#ifdef SK_SUPPORT_LEGACY_MINOR_EFFECT_PTR
-    SkDrawLooper* setLooper(SkDrawLooper* looper);
-#endif
+
     void setLooper(sk_sp<SkDrawLooper>);
 
     enum Align {
@@ -755,7 +688,7 @@ public:
             A set flag indicates that the metric may be trusted.
         */
         enum FontMetricsFlags {
-            kUnderlineThinknessIsValid_Flag = 1 << 0,
+            kUnderlineThicknessIsValid_Flag = 1 << 0,
             kUnderlinePositionIsValid_Flag = 1 << 1,
         };
 
@@ -781,21 +714,21 @@ public:
          */
         SkScalar    fUnderlinePosition; //!< underline position, or 0 if cannot be determined
 
-        /**  If the fontmetrics has a valid underlinethickness, return true, and set the
+        /**  If the fontmetrics has a valid underline thickness, return true, and set the
                 thickness param to that value. If it doesn't return false and ignore the
                 thickness param.
         */
         bool hasUnderlineThickness(SkScalar* thickness) const {
-            if (SkToBool(fFlags & kUnderlineThinknessIsValid_Flag)) {
+            if (SkToBool(fFlags & kUnderlineThicknessIsValid_Flag)) {
                 *thickness = fUnderlineThickness;
                 return true;
             }
             return false;
         }
 
-        /**  If the fontmetrics has a valid underlineposition, return true, and set the
-                thickness param to that value. If it doesn't return false and ignore the
-                thickness param.
+        /**  If the fontmetrics has a valid underline position, return true, and set the
+                position param to that value. If it doesn't return false and ignore the
+                position param.
         */
         bool hasUnderlinePosition(SkScalar* position) const {
             if (SkToBool(fFlags & kUnderlinePositionIsValid_Flag)) {
@@ -1111,7 +1044,7 @@ private:
     SkColor         fColor;
     SkScalar        fWidth;
     SkScalar        fMiterLimit;
-    uint32_t        fBlendMode; // just need 5-6 bits for SkXfermode::Mode
+    uint32_t        fBlendMode; // just need 5-6 bits
     union {
         struct {
             // all of these bitfields should add up to 32

@@ -705,7 +705,9 @@ PostWriteElementBarrier(JSRuntime* rt, JSObject* obj, int32_t index)
 #endif
         )
     {
-        rt->gc.storeBuffer().putSlot(nobj, HeapSlot::Element, index, 1);
+        rt->gc.storeBuffer().putSlot(nobj, HeapSlot::Element,
+                                     nobj->unshiftedIndex(index),
+                                     1);
         return;
     }
 

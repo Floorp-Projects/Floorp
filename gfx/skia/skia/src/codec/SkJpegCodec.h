@@ -51,17 +51,20 @@ protected:
 
     Result onGetYUV8Planes(const SkYUVSizeInfo& sizeInfo, void* planes[3]) override;
 
-    SkEncodedFormat onGetEncodedFormat() const override {
-        return kJPEG_SkEncodedFormat;
+    SkEncodedImageFormat onGetEncodedFormat() const override {
+        return SkEncodedImageFormat::kJPEG;
     }
 
     bool onRewind() override;
 
     bool onDimensionsSupported(const SkISize&) override;
 
-    sk_sp<SkData> getICCData() const override { return fICCData; }
-
 private:
+
+    /*
+     * Allows SkRawCodec to communicate the color space from the exif data.
+     */
+    static SkCodec* NewFromStream(SkStream*, sk_sp<SkColorSpace> defaultColorSpace);
 
     /*
      * Read enough of the stream to initialize the SkJpegCodec.
@@ -81,9 +84,12 @@ private:
      * codecOut will take ownership of it in the case where we created a codec.
      * Ownership is unchanged when we set decoderMgrOut.
      *
+     * @param defaultColorSpace
+     * If the jpeg does not have an embedded color space, the image data should
+     * be tagged with this color space.
      */
     static bool ReadHeader(SkStream* stream, SkCodec** codecOut,
-            JpegDecoderMgr** decoderMgrOut);
+            JpegDecoderMgr** decoderMgrOut, sk_sp<SkColorSpace> defaultColorSpace);
 
     /*
      * Creates an instance of the decoder
@@ -95,8 +101,7 @@ private:
      *                   takes ownership
      */
     SkJpegCodec(int width, int height, const SkEncodedInfo& info, SkStream* stream,
-            JpegDecoderMgr* decoderMgr, sk_sp<SkColorSpace> colorSpace, Origin origin,
-            sk_sp<SkData> iccData);
+            JpegDecoderMgr* decoderMgr, sk_sp<SkColorSpace> colorSpace, Origin origin);
 
     /*
      * Checks if the conversion between the input image and the requested output
@@ -106,10 +111,10 @@ private:
      */
     bool setOutputColorSpace(const SkImageInfo& dst);
 
-    void initializeSwizzler(const SkImageInfo& dstInfo, const Options& options);
-    void initializeColorXform(const SkImageInfo& dstInfo);
+    void initializeSwizzler(const SkImageInfo& dstInfo, const Options& options,
+                            bool needsCMYKToRGB);
     void allocateStorage(const SkImageInfo& dstInfo);
-    int readRows(const SkImageInfo& dstInfo, void* dst, size_t rowBytes, int count);
+    int readRows(const SkImageInfo& dstInfo, void* dst, size_t rowBytes, int count, const Options&);
 
     /*
      * Scanline decoding.
@@ -120,7 +125,7 @@ private:
     int onGetScanlines(void* dst, int count, size_t rowBytes) override;
     bool onSkipScanlines(int count) override;
 
-    SkAutoTDelete<JpegDecoderMgr>      fDecoderMgr;
+    std::unique_ptr<JpegDecoderMgr>    fDecoderMgr;
 
     // We will save the state of the decompress struct after reading the header.
     // This allows us to safely call onGetScaledDimensions() at any time.
@@ -136,10 +141,9 @@ private:
     // to further subset the output from libjpeg-turbo.
     SkIRect                            fSwizzlerSubset;
 
-    SkAutoTDelete<SkSwizzler>          fSwizzler;
-    std::unique_ptr<SkColorSpaceXform> fColorXform;
+    std::unique_ptr<SkSwizzler>        fSwizzler;
 
-    sk_sp<SkData>                      fICCData;
+    friend class SkRawCodec;
 
     typedef SkCodec INHERITED;
 };

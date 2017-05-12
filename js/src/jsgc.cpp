@@ -1971,8 +1971,10 @@ RelocateCell(Zone* zone, TenuredCell* src, AllocKind thingKind, size_t thingSize
             NativeObject* dstNative = &dstObj->as<NativeObject>();
 
             // Fixup the pointer to inline object elements if necessary.
-            if (srcNative->hasFixedElements())
-                dstNative->setFixedElements();
+            if (srcNative->hasFixedElements()) {
+                uint32_t numShifted = srcNative->getElementsHeader()->numShiftedElements();
+                dstNative->setFixedElements(numShifted);
+            }
 
             // For copy-on-write objects that own their elements, fix up the
             // owner pointer to point to the relocated object.

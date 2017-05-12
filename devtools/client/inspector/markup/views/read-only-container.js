@@ -4,9 +4,9 @@
 
 "use strict";
 
-const Heritage = require("sdk/core/heritage");
 const ReadOnlyEditor = require("devtools/client/inspector/markup/views/read-only-editor");
 const MarkupContainer = require("devtools/client/inspector/markup/views/markup-container");
+const {extend} = require("devtools/client/inspector/markup/utils");
 
 /**
  * An implementation of MarkupContainer for Pseudo Elements,
@@ -28,6 +28,6 @@ function MarkupReadOnlyContainer(markupView, node) {
 }
 
 MarkupReadOnlyContainer.prototype =
-  Heritage.extend(MarkupContainer.prototype, {});
+  extend(MarkupContainer.prototype, {});
 
 module.exports = MarkupReadOnlyContainer;

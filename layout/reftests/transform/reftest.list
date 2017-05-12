@@ -140,4 +140,4 @@ pref(svg.transform-box.enabled,true) == transform-box-svg-3a.svg pass.svg
 == animate-layer-scale-inherit-3.html animate-layer-scale-inherit-1-ref.html
 # Bug 1301500
 == dynamic-add-without-change-cb-1.html dynamic-add-without-change-cb-1-ref.html
-fuzzy-if(d2d,1,5) == table-overflowed-by-animation.html table-overflowed-by-animation-ref.html
+fuzzy-if(d2d,1,5) fuzzy-if(skiaContent,22,180) == table-overflowed-by-animation.html table-overflowed-by-animation-ref.html

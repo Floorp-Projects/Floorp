@@ -12,14 +12,13 @@
 #include "GrProgramDesc.h"
 #include "GrSwizzle.h"
 #include "GrAllocator.h"
-#include "GrTextureParamsAdjuster.h"
+#include "GrTextureProducer.h"
 #include "GrTypes.h"
 #include "GrXferProcessor.h"
 #include "SkPath.h"
 #include "SkTArray.h"
 #include <map>
 
-class GrBatchTracker;
 class GrBuffer;
 class GrContext;
 struct GrContextOptions;
@@ -34,6 +33,7 @@ class GrPathRendering;
 class GrPipeline;
 class GrPrimitiveProcessor;
 class GrRenderTarget;
+class GrSemaphore;
 class GrStencilAttachment;
 class GrStencilSettings;
 class GrSurface;
@@ -122,19 +122,19 @@ public:
     }
 
     /**
-     * Implements GrTextureProvider::wrapBackendTexture
+     * Implements GrResourceProvider::wrapBackendTexture
      */
-    GrTexture* wrapBackendTexture(const GrBackendTextureDesc&, GrWrapOwnership);
+    sk_sp<GrTexture> wrapBackendTexture(const GrBackendTextureDesc&, GrWrapOwnership);
 
     /**
-     * Implements GrTextureProvider::wrapBackendRenderTarget
+     * Implements GrResourceProvider::wrapBackendRenderTarget
      */
-    GrRenderTarget* wrapBackendRenderTarget(const GrBackendRenderTargetDesc&, GrWrapOwnership);
+    sk_sp<GrRenderTarget> wrapBackendRenderTarget(const GrBackendRenderTargetDesc&);
 
     /**
-     * Implements GrTextureProvider::wrapBackendTextureAsRenderTarget
+     * Implements GrResourceProvider::wrapBackendTextureAsRenderTarget
      */
-    GrRenderTarget* wrapBackendTextureAsRenderTarget(const GrBackendTextureDesc&);
+    sk_sp<GrRenderTarget> wrapBackendTextureAsRenderTarget(const GrBackendTextureDesc&);
 
     /**
      * Creates a buffer in GPU memory. For a client-side buffer use GrBuffer::CreateCPUBacked.
@@ -307,14 +307,6 @@ public:
                         GrPixelConfig config, GrBuffer* transferBuffer,
                         size_t offset, size_t rowBytes, GrFence* fence);
 
-    /**
-     * This is can be called before allocating a texture to be a dst for copySurface. This is only
-     * used for doing dst copies needed in blends, thus the src is always a GrRenderTarget. It will
-     * populate the origin, config, and flags fields of the desc such that copySurface can
-     * efficiently succeed.
-     */
-    virtual bool initDescForDstCopy(const GrRenderTarget* src, GrSurfaceDesc* desc) const = 0;
-
     // After the client interacts directly with the 3D context state the GrGpu
     // must resync its internal state and assumptions about 3D context state.
     // Each time this occurs the GrGpu bumps a timestamp.
@@ -331,7 +323,7 @@ public:
     ResetTimestamp getResetTimestamp() const { return fResetTimestamp; }
 
     // Called to perform a surface to surface copy. Fallbacks to issuing a draw from the src to dst
-    // take place at the GrDrawTarget level and this function implement faster copy paths. The rect
+    // take place at the GrOpList level and this function implement faster copy paths. The rect
     // and point are pre-clipped. The src rect and implied dst rect are guaranteed to be within the
     // src/dst bounds and non-empty.
     bool copySurface(GrSurface* dst,
@@ -355,25 +347,41 @@ public:
         const SkPoint*   fSampleLocations;
     };
 
-    // Finds a render target's multisample specs. The stencil settings are only needed to flush the
-    // draw state prior to querying multisample information; they should not have any effect on the
-    // multisample information itself.
-    const MultisampleSpecs& getMultisampleSpecs(GrRenderTarget*, const GrStencilSettings&);
+    // Finds a render target's multisample specs. The pipeline is only needed in case we need to
+    // flush the draw state prior to querying multisample info. The pipeline is not expected to
+    // affect the multisample information itself.
+    const MultisampleSpecs& queryMultisampleSpecs(const GrPipeline&);
 
-    // Creates a GrGpuCommandBuffer in which the GrDrawTarget can send draw commands to instead of
-    // directly to the Gpu object.
+    // Finds the multisample specs with a given unique id.
+    const MultisampleSpecs& getMultisampleSpecs(uint8_t uniqueID) {
+        SkASSERT(uniqueID > 0 && uniqueID < fMultisampleSpecs.count());
+        return fMultisampleSpecs[uniqueID];
+    }
+
+    // Creates a GrGpuCommandBuffer in which the GrOpList can send draw commands to instead of
+    // directly to the Gpu object. This currently does not take a GrRenderTarget. The command buffer
+    // is expected to infer the render target from the first draw, clear, or discard. This is an
+    // awkward workaround that goes away after MDB is complete and the render target is known from
+    // the GrRenderTargetOpList.
     virtual GrGpuCommandBuffer* createCommandBuffer(
-            GrRenderTarget* target,
             const GrGpuCommandBuffer::LoadAndStoreInfo& colorInfo,
             const GrGpuCommandBuffer::LoadAndStoreInfo& stencilInfo) = 0;
 
-    // Called by drawtarget when flushing.
-    // Provides a hook for post-flush actions (e.g. PLS reset and Vulkan command buffer submits).
-    virtual void finishDrawTarget() {}
+    // Called by GrOpList when flushing.
+    // Provides a hook for post-flush actions (e.g. Vulkan command buffer submits).
+    virtual void finishOpList() {}
 
-    virtual GrFence SK_WARN_UNUSED_RESULT insertFence() const = 0;
-    virtual bool waitFence(GrFence, uint64_t timeout = 1000) const = 0;
+    virtual GrFence SK_WARN_UNUSED_RESULT insertFence() = 0;
+    virtual bool waitFence(GrFence, uint64_t timeout = 1000) = 0;
     virtual void deleteFence(GrFence) const = 0;
+
+    virtual sk_sp<GrSemaphore> SK_WARN_UNUSED_RESULT makeSemaphore() = 0;
+    virtual void insertSemaphore(sk_sp<GrSemaphore> semaphore) = 0;
+    virtual void waitSemaphore(sk_sp<GrSemaphore> semaphore) = 0;
+
+    // Ensures that all queued up driver-level commands have been sent to the GPU. For example, on
+    // OpenGL, this calls glFlush.
+    virtual void flush() = 0;
 
     ///////////////////////////////////////////////////////////////////////////
     // Debugging and Stats
@@ -463,22 +471,24 @@ public:
     virtual void drawDebugWireRect(GrRenderTarget*, const SkIRect&, GrColor) = 0;
 
     // Determines whether a texture will need to be rescaled in order to be used with the
-    // GrTextureParams. This variation is called when the caller will create a new texture using the
-    // texture provider from a non-texture src (cpu-backed image, ...).
-    bool makeCopyForTextureParams(int width, int height, const GrTextureParams&,
-                                 GrTextureProducer::CopyParams*) const;
+    // GrSamplerParams. This variation is called when the caller will create a new texture using the
+    // resource provider from a non-texture src (cpu-backed image, ...).
+    bool isACopyNeededForTextureParams(int width, int height, const GrSamplerParams&,
+                                       GrTextureProducer::CopyParams*,
+                                       SkScalar scaleAdjust[2]) const;
 
     // Like the above but this variation should be called when the caller is not creating the
     // original texture but rather was handed the original texture. It adds additional checks
     // relevant to original textures that were created external to Skia via
-    // GrTextureProvider::wrap methods.
-    bool makeCopyForTextureParams(GrTexture* texture, const GrTextureParams& params,
-                                  GrTextureProducer::CopyParams* copyParams) const {
-        if (this->makeCopyForTextureParams(texture->width(), texture->height(), params,
-                                           copyParams)) {
+    // GrResourceProvider::wrap methods.
+    bool isACopyNeededForTextureParams(GrTextureProxy* proxy, const GrSamplerParams& params,
+                                       GrTextureProducer::CopyParams* copyParams,
+                                       SkScalar scaleAdjust[2]) const {
+        if (this->isACopyNeededForTextureParams(proxy->width(), proxy->height(), params,
+                                                copyParams, scaleAdjust)) {
             return true;
         }
-        return this->onMakeCopyForTextureParams(texture, params, copyParams);
+        return this->onIsACopyNeededForTextureParams(proxy, params, copyParams, scaleAdjust);
     }
 
     // This is only to be used in GL-specific tests.
@@ -507,10 +517,10 @@ protected:
     // Handles cases where a surface will be updated without a call to flushRenderTarget
     void didWriteToSurface(GrSurface* surface, const SkIRect* bounds, uint32_t mipLevels = 1) const;
 
-    Stats                                   fStats;
-    SkAutoTDelete<GrPathRendering>          fPathRendering;
+    Stats                            fStats;
+    std::unique_ptr<GrPathRendering> fPathRendering;
     // Subclass must initialize this in its constructor.
-    SkAutoTUnref<const GrCaps>    fCaps;
+    sk_sp<const GrCaps>              fCaps;
 
     typedef SkTArray<SkPoint, true> SamplePattern;
 
@@ -532,17 +542,19 @@ private:
                                                  SkBudgeted budgeted,
                                                  const SkTArray<GrMipLevel>& texels) = 0;
 
-    virtual GrTexture* onWrapBackendTexture(const GrBackendTextureDesc&, GrWrapOwnership) = 0;
-    virtual GrRenderTarget* onWrapBackendRenderTarget(const GrBackendRenderTargetDesc&,
-                                                      GrWrapOwnership) = 0;
-    virtual GrRenderTarget* onWrapBackendTextureAsRenderTarget(const GrBackendTextureDesc&) = 0;
+    virtual sk_sp<GrTexture> onWrapBackendTexture(const GrBackendTextureDesc&, GrWrapOwnership) = 0;
+    virtual sk_sp<GrRenderTarget> onWrapBackendRenderTarget(const GrBackendRenderTargetDesc&) = 0;
+    virtual sk_sp<GrRenderTarget> onWrapBackendTextureAsRenderTarget(const GrBackendTextureDesc&)=0;
     virtual GrBuffer* onCreateBuffer(size_t size, GrBufferType intendedType, GrAccessPattern,
                                      const void* data) = 0;
 
     virtual gr_instanced::InstancedRendering* onCreateInstancedRendering() = 0;
 
-    virtual bool onMakeCopyForTextureParams(GrTexture* texture, const GrTextureParams&,
-                                            GrTextureProducer::CopyParams*) const { return false; }
+    virtual bool onIsACopyNeededForTextureParams(GrTextureProxy* proxy, const GrSamplerParams&,
+                                                 GrTextureProducer::CopyParams*,
+                                                 SkScalar scaleAdjust[2]) const {
+        return false;
+    }
 
     virtual bool onGetReadPixelsInfo(GrSurface* srcSurface, int readWidth, int readHeight,
                                      size_t rowBytes, GrPixelConfig readConfig, DrawPreference*,
@@ -581,8 +593,8 @@ private:
                                const SkIPoint& dstPoint) = 0;
 
     // overridden by backend specific derived class to perform the multisample queries
-    virtual void onGetMultisampleSpecs(GrRenderTarget*, const GrStencilSettings&,
-                                       int* effectiveSampleCnt, SamplePattern*) = 0;
+    virtual void onQueryMultisampleSpecs(GrRenderTarget*, const GrStencilSettings&,
+                                         int* effectiveSampleCnt, SamplePattern*) = 0;
 
     void resetContext() {
         this->onResetContext(fResetBits);

@@ -8,12 +8,12 @@
 #define SkPathOpsTypes_DEFINED
 
 #include <float.h>  // for FLT_EPSILON
-#include <math.h>   // for fabs, sqrt
 
 #include "SkFloatingPoint.h"
 #include "SkPath.h"
 #include "SkPathOps.h"
 #include "SkPathOpsDebug.h"
+#include "SkSafe_math.h"  // for fabs, sqrt
 #include "SkScalar.h"
 
 enum SkPathOpsMask {
@@ -22,7 +22,7 @@ enum SkPathOpsMask {
     kEvenOdd_PathOpsMask = 1
 };
 
-class SkChunkAlloc;
+class SkArenaAlloc;
 class SkOpCoincidence;
 class SkOpContour;
 class SkOpContourHead;
@@ -39,7 +39,7 @@ enum class SkOpPhase : char {
 class SkOpGlobalState {
 public:
     SkOpGlobalState(SkOpContourHead* head,
-                    SkChunkAlloc* allocator  SkDEBUGPARAMS(bool debugSkipAssert)
+                    SkArenaAlloc* allocator SkDEBUGPARAMS(bool debugSkipAssert)
                     SkDEBUGPARAMS(const char* testName));
 
     enum {
@@ -50,7 +50,7 @@ public:
         return fAllocatedOpSpan;
     }
 
-    SkChunkAlloc* allocator() {
+    SkArenaAlloc* allocator() {
         return fAllocator;
     }
 
@@ -75,7 +75,11 @@ public:
     const SkOpCoincidence* debugCoincidence() const;
     SkOpContour* debugContour(int id) const;
     const class SkOpPtT* debugPtT(int id) const;
-    bool debugRunFail() const;
+#endif
+
+    static bool DebugRunFail();
+
+#ifdef SK_DEBUG
     const class SkOpSegment* debugSegment(int id) const;
     bool debugSkipAssert() const { return fDebugSkipAssert; }
     const class SkOpSpanBase* debugSpan(int id) const;
@@ -142,7 +146,7 @@ public:
     SkOpPhase phase() const {
         return fPhase;
     }
-    
+
     void resetAllocatedOpSpan() {
         fAllocatedOpSpan = false;
     }
@@ -154,7 +158,7 @@ public:
     void setCoincidence(SkOpCoincidence* coincidence) {
         fCoincidence = coincidence;
     }
-    
+
     void setContourHead(SkOpContourHead* contourHead) {
         fContourHead = contourHead;
     }
@@ -177,7 +181,7 @@ public:
     }
 
 private:
-    SkChunkAlloc* fAllocator;
+    SkArenaAlloc* fAllocator;
     SkOpCoincidence* fCoincidence;
     SkOpContourHead* fContourHead;
     int fNested;
@@ -221,8 +225,8 @@ private:
 #define SkOPASSERT(cond) SkASSERT((this->globalState() && \
         this->globalState()->debugSkipAssert()) || (cond))
 #endif
-#define SkOPOBJASSERT(obj, cond) SkASSERT((obj->debugGlobalState() && \
-        obj->debugGlobalState()->debugSkipAssert()) || (cond))
+#define SkOPOBJASSERT(obj, cond) SkASSERT((obj->globalState() && \
+        obj->globalState()->debugSkipAssert()) || (cond))
 #else
 #define SkOPASSERT(cond)
 #define SkOPOBJASSERT(obj, cond)
@@ -306,7 +310,9 @@ const double FLT_EPSILON_HALF = FLT_EPSILON / 2;
 const double FLT_EPSILON_DOUBLE = FLT_EPSILON * 2;
 const double FLT_EPSILON_ORDERABLE_ERR = FLT_EPSILON * 16;
 const double FLT_EPSILON_SQUARED = FLT_EPSILON * FLT_EPSILON;
-const double FLT_EPSILON_SQRT = sqrt(FLT_EPSILON);
+// Use a compile-time constant for FLT_EPSILON_SQRT to avoid initializers.
+// A 17 digit constant guarantees exact results.
+const double FLT_EPSILON_SQRT = 0.00034526697709225118; // sqrt(FLT_EPSILON);
 const double FLT_EPSILON_INVERSE = 1 / FLT_EPSILON;
 const double DBL_EPSILON_ERR = DBL_EPSILON * 4;  // FIXME: tune -- allow a few bits of error
 const double DBL_EPSILON_SUBDIVIDE_ERR = DBL_EPSILON * 16;

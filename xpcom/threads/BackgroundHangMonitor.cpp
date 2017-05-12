@@ -37,10 +37,9 @@
 // reduce the chance of a ping being discarded due to it exceeding the maximum
 // ping size.
 //
-// NOTE: 300 native hang stacks would, by a rough estimation based on stacks
-// collected from nightly on March 21, 2017, take up approximately 168kb of
-// space.
-static const uint32_t kMaximumNativeHangStacks = 300;
+// NOTE: 15 is being used to potentially avoid blowing up telemetry ping sizes
+// (see bug 1364243).
+static const uint32_t kMaximumNativeHangStacks = 15;
 
 // Maximum depth of the call stack in the reported thread hangs. This value represents
 // the 99.9th percentile of the thread hangs stack depths reported by Telemetry.
