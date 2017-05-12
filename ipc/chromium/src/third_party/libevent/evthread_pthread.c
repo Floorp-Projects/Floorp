@@ -24,9 +24,11 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "event2/event-config.h"
+#include "evconfig-private.h"
 
-/* With glibc we need to define this to get PTHREAD_MUTEX_RECURSIVE. */
-#define _GNU_SOURCE
+/* With glibc we need to define _GNU_SOURCE to get PTHREAD_MUTEX_RECURSIVE.
+ * This comes from evconfig-private.h
+ */
 #include <pthread.h>
 
 struct event_base;
@@ -56,17 +58,17 @@ evthread_posix_lock_alloc(unsigned locktype)
 }
 
 static void
-evthread_posix_lock_free(void *_lock, unsigned locktype)
+evthread_posix_lock_free(void *lock_, unsigned locktype)
 {
-	pthread_mutex_t *lock = _lock;
+	pthread_mutex_t *lock = lock_;
 	pthread_mutex_destroy(lock);
 	mm_free(lock);
 }
 
 static int
-evthread_posix_lock(unsigned mode, void *_lock)
+evthread_posix_lock(unsigned mode, void *lock_)
 {
-	pthread_mutex_t *lock = _lock;
+	pthread_mutex_t *lock = lock_;
 	if (mode & EVTHREAD_TRY)
 		return pthread_mutex_trylock(lock);
 	else
@@ -74,9 +76,9 @@ evthread_posix_lock(unsigned mode, void *_lock)
 }
 
 static int
-evthread_posix_unlock(unsigned mode, void *_lock)
+evthread_posix_unlock(unsigned mode, void *lock_)
 {
-	pthread_mutex_t *lock = _lock;
+	pthread_mutex_t *lock = lock_;
 	return pthread_mutex_unlock(lock);
 }
 
@@ -85,13 +87,13 @@ evthread_posix_get_id(void)
 {
 	union {
 		pthread_t thr;
-#if _EVENT_SIZEOF_PTHREAD_T > _EVENT_SIZEOF_LONG
+#if EVENT__SIZEOF_PTHREAD_T > EVENT__SIZEOF_LONG
 		ev_uint64_t id;
 #else
 		unsigned long id;
 #endif
 	} r;
-#if _EVENT_SIZEOF_PTHREAD_T < _EVENT_SIZEOF_LONG
+#if EVENT__SIZEOF_PTHREAD_T < EVENT__SIZEOF_LONG
 	memset(&r, 0, sizeof(r));
 #endif
 	r.thr = pthread_self();
@@ -112,17 +114,17 @@ evthread_posix_cond_alloc(unsigned condflags)
 }
 
 static void
-evthread_posix_cond_free(void *_cond)
+evthread_posix_cond_free(void *cond_)
 {
-	pthread_cond_t *cond = _cond;
+	pthread_cond_t *cond = cond_;
 	pthread_cond_destroy(cond);
 	mm_free(cond);
 }
 
 static int
-evthread_posix_cond_signal(void *_cond, int broadcast)
+evthread_posix_cond_signal(void *cond_, int broadcast)
 {
-	pthread_cond_t *cond = _cond;
+	pthread_cond_t *cond = cond_;
 	int r;
 	if (broadcast)
 		r = pthread_cond_broadcast(cond);
@@ -132,11 +134,11 @@ evthread_posix_cond_signal(void *_cond, int broadcast)
 }
 
 static int
-evthread_posix_cond_wait(void *_cond, void *_lock, const struct timeval *tv)
+evthread_posix_cond_wait(void *cond_, void *lock_, const struct timeval *tv)
 {
 	int r;
-	pthread_cond_t *cond = _cond;
-	pthread_mutex_t *lock = _lock;
+	pthread_cond_t *cond = cond_;
+	pthread_mutex_t *lock = lock_;
 
 	if (tv) {
 		struct timeval now, abstime;

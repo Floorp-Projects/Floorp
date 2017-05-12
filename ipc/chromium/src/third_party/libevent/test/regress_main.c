@@ -24,8 +24,9 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include "util-internal.h"
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <winsock2.h>
 #include <windows.h>
 #include <io.h>
@@ -42,14 +43,10 @@
 
 #include "event2/event-config.h"
 
-#ifdef _EVENT___func__
-#define __func__ _EVENT___func__
-#endif
-
 #if 0
 #include <sys/types.h>
 #include <sys/stat.h>
-#ifdef _EVENT_HAVE_SYS_TIME_H
+#ifdef EVENT__HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
 #include <sys/queue.h>
@@ -58,11 +55,11 @@
 #endif
 
 #include <sys/types.h>
-#ifdef _EVENT_HAVE_SYS_STAT_H
+#ifdef EVENT__HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif
 
-#ifndef WIN32
+#ifndef _WIN32
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <signal.h>
@@ -89,6 +86,8 @@
 #include "../iocp-internal.h"
 #include "../event-internal.h"
 
+struct evutil_weakrand_state test_weakrand_state;
+
 long
 timeval_msec_diff(const struct timeval *start, const struct timeval *end)
 {
@@ -96,7 +95,6 @@ timeval_msec_diff(const struct timeval *start, const struct timeval *end)
 	ms *= 1000;
 	ms += ((end->tv_usec - start->tv_usec)+500) / 1000;
 	return ms;
-
 }
 
 /* ============================================================ */
@@ -118,15 +116,17 @@ static void dnslogcb(int w, const char *m)
 	TT_BLATHER(("%s", m));
 }
 
-/* creates a temporary file with the data in it */
+/* creates a temporary file with the data in it.  If *filename_out gets set,
+ * the caller should try to unlink it. */
 int
-regress_make_tmpfile(const void *data, size_t datalen)
+regress_make_tmpfile(const void *data, size_t datalen, char **filename_out)
 {
-#ifndef WIN32
+#ifndef _WIN32
 	char tmpfilename[32];
 	int fd;
+	*filename_out = NULL;
 	strcpy(tmpfilename, "/tmp/eventtmp.XXXXXX");
-#ifdef _EVENT_HAVE_UMASK
+#ifdef EVENT__HAVE_UMASK
 	umask(0077);
 #endif
 	fd = mkstemp(tmpfilename);
@@ -162,6 +162,7 @@ regress_make_tmpfile(const void *data, size_t datalen)
 	if (tries == 0)
 		return (-1);
 	written = 0;
+	*filename_out = strdup(tmpfilename);
 	WriteFile(h, data, (DWORD)datalen, &written, NULL);
 	/* Closing the fd returned by this function will indeed close h. */
 	return _open_osfhandle((intptr_t)h,_O_RDONLY);
@@ -192,7 +193,7 @@ basic_test_setup(const struct testcase_t *testcase)
 	evutil_socket_t spair[2] = { -1, -1 };
 	struct basic_test_data *data = NULL;
 
-#ifndef WIN32
+#ifndef _WIN32
 	if (testcase->flags & TT_ENABLE_IOCP_FLAG)
 		return (void*)TT_SKIP;
 #endif
@@ -236,7 +237,7 @@ basic_test_setup(const struct testcase_t *testcase)
 			exit(1);
 	}
 	if (testcase->flags & TT_ENABLE_IOCP_FLAG) {
-		if (event_base_start_iocp(base, 0)<0) {
+		if (event_base_start_iocp_(base, 0)<0) {
 			event_base_free(base);
 			return (void*)TT_SKIP;
 		}
@@ -282,10 +283,13 @@ basic_test_cleanup(const struct testcase_t *testcase, void *ptr)
 
 	if (testcase->flags & TT_NEED_BASE) {
 		if (data->base) {
-			event_base_assert_ok(data->base);
+			event_base_assert_ok_(data->base);
 			event_base_free(data->base);
 		}
 	}
+
+	if (testcase->flags & TT_FORK)
+		libevent_global_shutdown();
 
 	free(data);
 
@@ -354,7 +358,7 @@ const struct testcase_setup_t legacy_setup = {
 
 /* ============================================================ */
 
-#if (!defined(_EVENT_HAVE_PTHREADS) && !defined(WIN32)) || defined(_EVENT_DISABLE_THREAD_SUPPORT)
+#if (!defined(EVENT__HAVE_PTHREADS) && !defined(_WIN32)) || defined(EVENT__DISABLE_THREAD_SUPPORT)
 struct testcase_t thread_testcases[] = {
 	{ "basic", NULL, TT_SKIP, NULL, NULL },
 	END_OF_TESTCASES
@@ -365,6 +369,7 @@ struct testgroup_t testgroups[] = {
 	{ "main/", main_testcases },
 	{ "heap/", minheap_testcases },
 	{ "et/", edgetriggered_testcases },
+	{ "finalize/", finalize_testcases },
 	{ "evbuffer/", evbuffer_testcases },
 	{ "signal/", signal_testcases },
 	{ "util/", util_testcases },
@@ -375,21 +380,45 @@ struct testgroup_t testgroups[] = {
 	{ "rpc/", rpc_testcases },
 	{ "thread/", thread_testcases },
 	{ "listener/", listener_testcases },
-#ifdef WIN32
+#ifdef _WIN32
 	{ "iocp/", iocp_testcases },
 	{ "iocp/bufferevent/", bufferevent_iocp_testcases },
 	{ "iocp/listener/", listener_iocp_testcases },
 #endif
-#ifdef _EVENT_HAVE_OPENSSL
+#ifdef EVENT__HAVE_OPENSSL
 	{ "ssl/", ssl_testcases },
 #endif
 	END_OF_GROUPS
 };
 
+const char *alltests[] = { "+..", NULL };
+const char *livenettests[] = {
+	"+util/getaddrinfo_live",
+	"+dns/gethostby..",
+	"+dns/resolve_reverse",
+	NULL
+};
+const char *finetimetests[] = {
+	"+util/monotonic_res_precise",
+	"+util/monotonic_res_fallback",
+	"+thread/deferred_cb_skew",
+	"+http/connection_retry",
+	"+http/https_connection_retry",
+	NULL
+};
+struct testlist_alias_t testaliases[] = {
+	{ "all", alltests },
+	{ "live_net", livenettests },
+	{ "fine_timing", finetimetests },
+	END_OF_ALIASES
+};
+
+int libevent_tests_running_in_debug_mode = 0;
+
 int
 main(int argc, const char **argv)
 {
-#ifdef WIN32
+#ifdef _WIN32
 	WORD wVersionRequested;
 	WSADATA wsaData;
 
@@ -398,22 +427,37 @@ main(int argc, const char **argv)
 	(void) WSAStartup(wVersionRequested, &wsaData);
 #endif
 
-#ifndef WIN32
+#ifndef _WIN32
 	if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
 		return 1;
 #endif
 
-#ifdef WIN32
+#ifdef _WIN32
 	tinytest_skip(testgroups, "http/connection_retry");
+	tinytest_skip(testgroups, "http/https_connection_retry");
 #endif
 
-#ifndef _EVENT_DISABLE_THREAD_SUPPORT
+#ifndef EVENT__DISABLE_THREAD_SUPPORT
 	if (!getenv("EVENT_NO_DEBUG_LOCKS"))
-		evthread_enable_lock_debuging();
+		evthread_enable_lock_debugging();
 #endif
+
+	if (getenv("EVENT_DEBUG_MODE")) {
+		event_enable_debug_mode();
+		libevent_tests_running_in_debug_mode = 1;
+	}
+	if (getenv("EVENT_DEBUG_LOGGING_ALL")) {
+		event_enable_debug_logging(EVENT_DBG_ALL);
+	}
+
+	tinytest_set_aliases(testaliases);
+
+	evutil_weakrand_seed_(&test_weakrand_state, 0);
 
 	if (tinytest_main(argc,argv,testgroups))
 		return 1;
+
+	libevent_global_shutdown();
 
 	return 0;
 }
