@@ -19,12 +19,16 @@ namespace mozilla {
 class MediaRawData;
 class ChromiumCDMProxy;
 
+namespace eme {
 enum DecryptStatus {
   Ok = 0,
   GenericErr = 1,
   NoKeyErr = 2,
   AbortedErr = 3,
 };
+}
+
+using eme::DecryptStatus;
 
 struct DecryptResult {
   DecryptResult(DecryptStatus aStatus, MediaRawData* aSample)
