@@ -2,9 +2,9 @@ const scrollHtml =
   "<textarea id=\"textarea1\" row=2>Firefox\n\nFirefox\n\n\n\n\n\n\n\n\n\n" +
   "</textarea><a href=\"about:blank\">blank</a>";
 
-add_task(function*() {
+add_task(async function() {
   let url = "data:text/html;base64," + btoa(scrollHtml);
-  yield BrowserTestUtils.withNewTab({gBrowser, url}, function*(browser) {
+  await BrowserTestUtils.withNewTab({gBrowser, url}, async function(browser) {
     let awaitFindResult = new Promise(resolve => {
       let listener = {
         onFindResult(aData) {
@@ -23,7 +23,7 @@ add_task(function*() {
     gFindBar.onFindCommand();
     EventUtils.sendString("F");
     info("added result listener and sent string 'F'");
-    yield awaitFindResult;
+    await awaitFindResult;
 
     let awaitScrollDone = BrowserTestUtils.waitForMessage(browser.messageManager, "ScrollDone");
     // scroll textarea to bottom
@@ -33,10 +33,10 @@ add_task(function*() {
       "sendAsyncMessage(\"ScrollDone\", { });"
     browser.messageManager.loadFrameScript("data:text/javascript;base64," +
                                            btoa(scrollTest), false);
-    yield awaitScrollDone;
+    await awaitScrollDone;
     info("got ScrollDone event");
-    yield BrowserTestUtils.loadURI(browser, "about:blank");
-    yield BrowserTestUtils.browserLoaded(browser);
+    await BrowserTestUtils.loadURI(browser, "about:blank");
+    await BrowserTestUtils.browserLoaded(browser);
 
     ok(browser.currentURI.spec == "about:blank", "got load event for about:blank");
 
@@ -65,6 +65,6 @@ add_task(function*() {
         info("got exception from onFindAgainCommand: " + e);
       }
     }, 0);
-    yield awaitFindResult2;
+    await awaitFindResult2;
   });
 });

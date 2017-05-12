@@ -39,50 +39,50 @@ this.AddonManagerTesting = {
    * @return Promise<restartRequired>
    */
   uninstallAddonByID(id) {
-    let deferred = Promise.defer();
+    return new Promise((resolve, reject) => {
 
-    AddonManager.getAddonByID(id, (addon) => {
-      if (!addon) {
-        deferred.reject(new Error("Add-on is not known: " + id));
-        return;
-      }
+      AddonManager.getAddonByID(id, (addon) => {
+        if (!addon) {
+          reject(new Error("Add-on is not known: " + id));
+          return;
+        }
 
-      let listener = {
-        onUninstalling(addon, needsRestart) {
-          if (addon.id != id) {
-            return;
-          }
+        let listener = {
+          onUninstalling(addon, needsRestart) {
+            if (addon.id != id) {
+              return;
+            }
 
-          if (needsRestart) {
+            if (needsRestart) {
+              AddonManager.removeAddonListener(listener);
+              resolve(true);
+            }
+          },
+
+          onUninstalled(addon) {
+            if (addon.id != id) {
+              return;
+            }
+
             AddonManager.removeAddonListener(listener);
-            deferred.resolve(true);
-          }
-        },
+            resolve(false);
+          },
 
-        onUninstalled(addon) {
-          if (addon.id != id) {
-            return;
-          }
+          onOperationCancelled(addon) {
+            if (addon.id != id) {
+              return;
+            }
 
-          AddonManager.removeAddonListener(listener);
-          deferred.resolve(false);
-        },
+            AddonManager.removeAddonListener(listener);
+            reject(new Error("Uninstall cancelled."));
+          },
+        };
 
-        onOperationCancelled(addon) {
-          if (addon.id != id) {
-            return;
-          }
+        AddonManager.addAddonListener(listener);
+        addon.uninstall();
+      });
 
-          AddonManager.removeAddonListener(listener);
-          deferred.reject(new Error("Uninstall cancelled."));
-        },
-      };
-
-      AddonManager.addAddonListener(listener);
-      addon.uninstall();
     });
-
-    return deferred.promise;
   },
 
   /**
@@ -91,25 +91,25 @@ this.AddonManagerTesting = {
    * @return Promise<addon>
    */
   installXPIFromURL(url, hash, name, iconURL, version) {
-    let deferred = Promise.defer();
+    return new Promise((resolve, reject) => {
 
-    AddonManager.getInstallForURL(url, (install) => {
-      let fail = () => { deferred.reject(new Error("Add-on install failed.")) };
+      AddonManager.getInstallForURL(url, (install) => {
+        let fail = () => { reject(new Error("Add-on install failed.")) };
 
-      let listener = {
-        onDownloadCancelled: fail,
-        onDownloadFailed: fail,
-        onInstallCancelled: fail,
-        onInstallFailed: fail,
-        onInstallEnded(install, addon) {
-          deferred.resolve(addon);
-        },
-      };
+        let listener = {
+          onDownloadCancelled: fail,
+          onDownloadFailed: fail,
+          onInstallCancelled: fail,
+          onInstallFailed: fail,
+          onInstallEnded(install, addon) {
+            resolve(addon);
+          },
+        };
 
-      install.addListener(listener);
-      install.install();
-    }, "application/x-xpinstall", hash, name, iconURL, version);
+        install.addListener(listener);
+        install.install();
+      }, "application/x-xpinstall", hash, name, iconURL, version);
 
-    return deferred.promise;
+    });
   },
 };

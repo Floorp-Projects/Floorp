@@ -56,13 +56,13 @@ function setMinimumPolicyVersion(aNewPolicyVersion) {
   Preferences.set(PREF_MINIMUM_POLICY_VERSION, aNewPolicyVersion);
 }
 
-add_task(function* test_setup() {
+add_task(async function test_setup() {
   // Addon manager needs a profile directory
   do_get_profile(true);
   loadAddonManager("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
   // Make sure we don't generate unexpected pings due to pref changes.
-  yield setEmptyPrefWatchlist();
+  await setEmptyPrefWatchlist();
 
   Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
   // Don't bypass the notifications in this test, we'll fake it.
@@ -71,7 +71,7 @@ add_task(function* test_setup() {
   TelemetryReportingPolicy.setup();
 });
 
-add_task(function* test_firstRun() {
+add_task(async function test_firstRun() {
   const PREF_FIRST_RUN = "toolkit.telemetry.reportingpolicy.firstRun";
   const FIRST_RUN_TIMEOUT_MSEC = 60 * 1000; // 60s
   const OTHER_RUNS_TIMEOUT_MSEC = 10 * 1000; // 10s
@@ -93,7 +93,7 @@ add_task(function* test_firstRun() {
                "The infobar display timeout should be 10s on other runs.");
 });
 
-add_task(function* test_prefs() {
+add_task(async function test_prefs() {
   TelemetryReportingPolicy.reset();
 
   let now = fakeNow(2009, 11, 18);
@@ -157,7 +157,7 @@ add_task(function* test_prefs() {
             "Accepting the policy again should let us upload data.");
 });
 
-add_task(function* test_migratePrefs() {
+add_task(async function test_migratePrefs() {
   const DEPRECATED_FHR_PREFS = {
     "datareporting.policy.dataSubmissionPolicyAccepted": true,
     "datareporting.policy.dataSubmissionPolicyBypassAcceptance": true,
@@ -177,7 +177,7 @@ add_task(function* test_migratePrefs() {
   }
 });
 
-add_task(function* test_userNotifiedOfCurrentPolicy() {
+add_task(async function test_userNotifiedOfCurrentPolicy() {
   fakeResetAcceptedPolicy();
   TelemetryReportingPolicy.reset();
 
@@ -212,13 +212,13 @@ add_task(function* test_userNotifiedOfCurrentPolicy() {
             "A previous version of the policy should fail.");
 });
 
-add_task(function* test_canSend() {
+add_task(async function test_canSend() {
   const TEST_PING_TYPE = "test-ping";
 
   PingServer.start();
   Preferences.set(PREF_SERVER, "http://localhost:" + PingServer.port);
 
-  yield TelemetryController.testReset();
+  await TelemetryController.testReset();
   TelemetryReportingPolicy.reset();
 
   // User should be reported as not notified by default.
@@ -227,42 +227,42 @@ add_task(function* test_canSend() {
 
   // Assert if we receive any ping before the policy is accepted.
   PingServer.registerPingHandler(() => Assert.ok(false, "Should not have received any pings now"));
-  yield TelemetryController.submitExternalPing(TEST_PING_TYPE, {});
+  await TelemetryController.submitExternalPing(TEST_PING_TYPE, {});
 
   // Reset the ping handler.
   PingServer.resetPingHandler();
 
   // Fake the infobar: this should also trigger the ping send task.
   TelemetryReportingPolicy.testInfobarShown();
-  let ping = yield PingServer.promiseNextPings(1);
+  let ping = await PingServer.promiseNextPings(1);
   Assert.equal(ping.length, 1, "We should have received one ping.");
   Assert.equal(ping[0].type, TEST_PING_TYPE,
                "We should have received the previous ping.");
 
   // Submit another ping, to make sure it gets sent.
-  yield TelemetryController.submitExternalPing(TEST_PING_TYPE, {});
+  await TelemetryController.submitExternalPing(TEST_PING_TYPE, {});
 
   // Get the ping and check its type.
-  ping = yield PingServer.promiseNextPings(1);
+  ping = await PingServer.promiseNextPings(1);
   Assert.equal(ping.length, 1, "We should have received one ping.");
   Assert.equal(ping[0].type, TEST_PING_TYPE, "We should have received the new ping.");
 
   // Fake a restart with a pending ping.
-  yield TelemetryController.addPendingPing(TEST_PING_TYPE, {});
-  yield TelemetryController.testReset();
+  await TelemetryController.addPendingPing(TEST_PING_TYPE, {});
+  await TelemetryController.testReset();
 
   // We should be immediately sending the ping out.
-  ping = yield PingServer.promiseNextPings(1);
+  ping = await PingServer.promiseNextPings(1);
   Assert.equal(ping.length, 1, "We should have received one ping.");
   Assert.equal(ping[0].type, TEST_PING_TYPE, "We should have received the pending ping.");
 
   // Submit another ping, to make sure it gets sent.
-  yield TelemetryController.submitExternalPing(TEST_PING_TYPE, {});
+  await TelemetryController.submitExternalPing(TEST_PING_TYPE, {});
 
   // Get the ping and check its type.
-  ping = yield PingServer.promiseNextPings(1);
+  ping = await PingServer.promiseNextPings(1);
   Assert.equal(ping.length, 1, "We should have received one ping.");
   Assert.equal(ping[0].type, TEST_PING_TYPE, "We should have received the new ping.");
 
-  yield PingServer.stop();
+  await PingServer.stop();
 });

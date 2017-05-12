@@ -1,6 +1,6 @@
 const TEST_PATH = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "http://example.com");
 
-add_task(function* checkTitleNotificationForNavigation() {
+add_task(async function checkTitleNotificationForNavigation() {
   const EXPECTED_URL = Services.io.newURI(TEST_PATH + "empty_page.html");
   let promiseTitleChanged = new Promise(resolve => {
     let obs = {
@@ -22,7 +22,7 @@ add_task(function* checkTitleNotificationForNavigation() {
     };
     PlacesUtils.history.addObserver(obs);
   });
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, EXPECTED_URL.spec);
-  yield promiseTitleChanged;
-  yield BrowserTestUtils.removeTab(tab);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, EXPECTED_URL.spec);
+  await promiseTitleChanged;
+  await BrowserTestUtils.removeTab(tab);
 });

@@ -24,7 +24,7 @@
 "use strict";
 
 
-add_task(function* testBUIT() {
+add_task(async function testBUIT() {
   let s = {};
   Components.utils.import("resource:///modules/BrowserUITelemetry.jsm", s);
   let BUIT = s.BrowserUITelemetry;
@@ -58,11 +58,11 @@ add_task(function* testBUIT() {
   is(BUIT.currentBucket, BUIT.BUCKET_PREFIX + "walrus" + BUIT.BUCKET_SEPARATOR + "1s1ms",
      "Bucket should be expiring and have time step of 1s1ms");
 
-  yield waitForConditionPromise(function() {
+  await waitForConditionPromise(function() {
     return BUIT.currentBucket == (BUIT.BUCKET_PREFIX + "walrus" + BUIT.BUCKET_SEPARATOR + "2s1ms");
   }, "Bucket should be expiring and have time step of 2s1ms");
 
-  yield waitForConditionPromise(function() {
+  await waitForConditionPromise(function() {
     return BUIT.currentBucket == (BUIT.BUCKET_PREFIX + "walrus" + BUIT.BUCKET_SEPARATOR + "3s1ms");
   }, "Bucket should be expiring and have time step of 3s1ms");
 
@@ -72,13 +72,13 @@ add_task(function* testBUIT() {
   is(BUIT.currentBucket, BUIT.BUCKET_PREFIX + "walrus2" + BUIT.BUCKET_SEPARATOR + "1s2ms",
      "Should be new expiring bucket, with time step of 1s2ms");
 
-  yield waitForConditionPromise(function() {
+  await waitForConditionPromise(function() {
     return BUIT.currentBucket == (BUIT.BUCKET_PREFIX + "walrus2" + BUIT.BUCKET_SEPARATOR + "2s2ms");
   }, "Should be new expiring bucket, with time step of 2s2ms");
 
 
   // Let expiring bucket expire
-  yield waitForConditionPromise(function() {
+  await waitForConditionPromise(function() {
     return BUIT.currentBucket == BUIT.BUCKET_DEFAULT;
   }, "Bucket should have expired, default bucket should now be active");
 
@@ -91,7 +91,7 @@ add_task(function* testBUIT() {
   BUIT.setBucket("mah-bucket");
   is(BUIT.currentBucket, BUIT.BUCKET_PREFIX + "mah-bucket", "Bucket should have correct name");
 
-  yield waitForConditionPromise(function() {
+  await waitForConditionPromise(function() {
     return BUIT.currentBucket == (BUIT.BUCKET_PREFIX + "mah-bucket");
   }, "Next step of old expiring bucket shouldn't have progressed");
 });

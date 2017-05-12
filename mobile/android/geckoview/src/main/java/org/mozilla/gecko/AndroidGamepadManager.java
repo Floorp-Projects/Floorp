@@ -407,7 +407,10 @@ public class AndroidGamepadManager {
                 public void onInputDeviceChanged(int deviceId) {
                 }
             };
-            ((InputManager) GeckoAppShell.getContext().getSystemService(Context.INPUT_SERVICE)).registerInputDeviceListener(sListener, ThreadUtils.getUiHandler());
+            final InputManager im = (InputManager)
+                    GeckoAppShell.getApplicationContext()
+                                 .getSystemService(Context.INPUT_SERVICE);
+            im.registerInputDeviceListener(sListener, ThreadUtils.getUiHandler());
         }
     }
 
@@ -418,7 +421,10 @@ public class AndroidGamepadManager {
                 sPollTimer = null;
             }
         } else {
-            ((InputManager) GeckoAppShell.getContext().getSystemService(Context.INPUT_SERVICE)).unregisterInputDeviceListener(sListener);
+            final InputManager im = (InputManager)
+                    GeckoAppShell.getApplicationContext()
+                                 .getSystemService(Context.INPUT_SERVICE);
+            im.unregisterInputDeviceListener(sListener);
             sListener = null;
         }
     }

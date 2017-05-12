@@ -15,7 +15,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AsyncPrefs", "resource://gre/modules/AsyncPrefs.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NarrateControls", "resource://gre/modules/narrate/NarrateControls.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Rect", "resource://gre/modules/Geometry.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry", "resource://gre/modules/UITelemetry.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
 
@@ -618,16 +617,16 @@ AboutReader.prototype = {
     this._mm.sendAsyncMessage("Reader:SystemUIVisibility", { visible });
   },
 
-  _loadArticle: Task.async(function* () {
+  async _loadArticle() {
     let url = this._getOriginalUrl();
     this._showProgressDelayed();
 
     let article;
     if (this._articlePromise) {
-      article = yield this._articlePromise;
+      article = await this._articlePromise;
     } else {
       try {
-        article = yield this._getArticle(url);
+        article = await this._getArticle(url);
       } catch (e) {
         if (e && e.newURL) {
           let readerURL = "about:reader?url=" + encodeURIComponent(e.newURL);
@@ -650,7 +649,7 @@ AboutReader.prototype = {
     }
 
     this._showContent(article);
-  }),
+  },
 
   _getArticle(url) {
     return new Promise((resolve, reject) => {

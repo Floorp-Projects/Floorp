@@ -4,7 +4,7 @@
 
 const remoteClientsFixture = [ { id: 1, name: "Foo"}, { id: 2, name: "Bar"} ];
 
-add_task(function* test() {
+add_task(async function test() {
   // There should be one tab when we start the test
   let [origTab] = gBrowser.visibleTabs;
   is(gBrowser.visibleTabs.length, 1, "there is one visible tab");
@@ -21,10 +21,10 @@ add_task(function* test() {
     const origIsSendableURI = gSync.isSendableURI;
     gSync.isSendableURI = () => true;
     // Check the send tab to device menu item
-    yield ensureSyncReady();
+    await ensureSyncReady();
     const oldGetter = setupRemoteClientsFixture(remoteClientsFixture);
-    yield updateTabContextMenu(origTab, function* () {
-      yield openMenuItemSubmenu("context_sendTabToDevice");
+    await updateTabContextMenu(origTab, async function() {
+      await openMenuItemSubmenu("context_sendTabToDevice");
     });
     is(document.getElementById("context_sendTabToDevice").hidden, false, "Send tab to device is shown");
     let targets = document.getElementById("context_sendTabToDevicePopupMenu").childNodes;

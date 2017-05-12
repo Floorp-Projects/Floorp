@@ -72,7 +72,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_annos_expire_policy() {
+add_task(async function test_annos_expire_policy() {
   // Set interval to a large value so we don't expire on it.
   setInterval(3600); // 1h
 
@@ -83,13 +83,13 @@ add_task(function* test_annos_expire_policy() {
   // Add some bookmarked page and timed annotations for each.
   for (let i = 0; i < 5; i++) {
     let pageURI = uri("http://item_anno." + i + ".mozilla.org/");
-    yield PlacesTestUtils.addVisits({ uri: pageURI, visitDate: now_specific_to_test++ });
-    let bm = yield PlacesUtils.bookmarks.insert({
+    await PlacesTestUtils.addVisits({ uri: pageURI, visitDate: now_specific_to_test++ });
+    let bm = await PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       url: pageURI,
       title: null
     });
-    let id = yield PlacesUtils.promiseItemId(bm.guid);
+    let id = await PlacesUtils.promiseItemId(bm.guid);
     // Add a 6 days old anno.
     add_old_anno(id, "persist_days", "test", as.EXPIRE_DAYS, 6);
     // Add a 8 days old anno, modified 5 days ago.
@@ -136,7 +136,7 @@ add_task(function* test_annos_expire_policy() {
   // Add some visited page and timed annotations for each.
   for (let i = 0; i < 5; i++) {
     let pageURI = uri("http://page_anno." + i + ".mozilla.org/");
-    yield PlacesTestUtils.addVisits({ uri: pageURI, visitDate: now_specific_to_test++ });
+    await PlacesTestUtils.addVisits({ uri: pageURI, visitDate: now_specific_to_test++ });
     // Add a 6 days old anno.
     add_old_anno(pageURI, "persist_days", "test", as.EXPIRE_DAYS, 6);
     // Add a 8 days old anno, modified 5 days ago.
@@ -160,7 +160,7 @@ add_task(function* test_annos_expire_policy() {
   }
 
   // Expire all visits for the bookmarks.
-  yield promiseForceExpirationStep(5);
+  await promiseForceExpirationStep(5);
 
   ["expire_days", "expire_weeks", "expire_months"].forEach(function(aAnno) {
     let pages = as.getPagesWithAnnotation(aAnno);

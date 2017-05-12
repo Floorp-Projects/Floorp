@@ -5,8 +5,8 @@
 "use strict";
 
 // There should be an advert to get more addons when the palette is empty.
-add_task(function*() {
-  yield startCustomizing();
+add_task(async function() {
+  await startCustomizing();
   let visiblePalette = document.getElementById("customization-palette");
   let emptyPaletteNotice = document.getElementById("customization-empty");
   is(emptyPaletteNotice.hidden, true, "The empty palette notice should not be shown when there are items in the palette.");
@@ -17,8 +17,8 @@ add_task(function*() {
   is(visiblePalette.childElementCount, 0, "There shouldn't be any items remaining in the visible palette.");
   is(emptyPaletteNotice.hidden, false, "The empty palette notice should be shown when there are no items in the palette.");
 
-  yield endCustomizing();
-  yield startCustomizing();
+  await endCustomizing();
+  await startCustomizing();
   visiblePalette = document.getElementById("customization-palette");
   emptyPaletteNotice = document.getElementById("customization-empty");
   is(emptyPaletteNotice.hidden, false,
@@ -29,7 +29,7 @@ add_task(function*() {
      "The empty palette notice should not be shown when there is at least one item in the palette.");
 });
 
-add_task(function* asyncCleanup() {
-  yield endCustomizing();
-  yield resetCustomization();
+add_task(async function asyncCleanup() {
+  await endCustomizing();
+  await resetCustomization();
 });

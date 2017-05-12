@@ -1,6 +1,6 @@
 "use strict";
 
-add_task(function* setup() {
+add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "48", "48");
   startupManager();
 });
@@ -16,7 +16,7 @@ function backgroundGetSelf() {
 }
 /* eslint-enable no-undef */
 
-add_task(function* test_management_get_self_complete() {
+add_task(async function test_management_get_self_complete() {
   const id = "get_self_test_complete@tests.mozilla.com";
   const permissions = ["management", "cookies"];
   const hostPermissions = ["*://example.org/", "https://foo.example.org/"];
@@ -48,8 +48,8 @@ add_task(function* test_management_get_self_complete() {
     background: backgroundGetSelf,
     useAddonManager: "temporary",
   });
-  yield extension.startup();
-  let extInfo = yield extension.awaitMessage("management-getSelf");
+  await extension.startup();
+  let extInfo = await extension.awaitMessage("management-getSelf");
 
   equal(extInfo.id, id, "getSelf returned the expected id");
   equal(extInfo.installType, "development", "getSelf returned the expected installType");
@@ -69,10 +69,10 @@ add_task(function* test_management_get_self_complete() {
   deepEqual(extInfo.permissions.sort(), permissions.sort(), "getSelf returned the expected permissions");
   deepEqual(extInfo.hostPermissions.sort(), hostPermissions.sort(), "getSelf returned the expected hostPermissions");
   equal(extInfo.installType, "development", "getSelf returned the expected installType");
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* test_management_get_self_minimal() {
+add_task(async function test_management_get_self_minimal() {
   const id = "get_self_test_minimal@tests.mozilla.com";
 
   let manifest = {
@@ -90,8 +90,8 @@ add_task(function* test_management_get_self_minimal() {
     background: backgroundGetSelf,
     useAddonManager: "temporary",
   });
-  yield extension.startup();
-  let extInfo = yield extension.awaitMessage("management-getSelf");
+  await extension.startup();
+  let extInfo = await extension.awaitMessage("management-getSelf");
 
   equal(extInfo.id, id, "getSelf returned the expected id");
   equal(extInfo.installType, "development", "getSelf returned the expected installType");
@@ -107,10 +107,10 @@ add_task(function* test_management_get_self_minimal() {
   for (let prop of ["permissions", "hostPermissions"]) {
     deepEqual(extInfo[prop], [], `getSelf returned the expected ${prop}`);
   }
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* test_management_get_self_permanent() {
+add_task(async function test_management_get_self_permanent() {
   const id = "get_self_test_permanent@tests.mozilla.com";
 
   let manifest = {
@@ -128,10 +128,10 @@ add_task(function* test_management_get_self_permanent() {
     background: backgroundGetSelf,
     useAddonManager: "permanent",
   });
-  yield extension.startup();
-  let extInfo = yield extension.awaitMessage("management-getSelf");
+  await extension.startup();
+  let extInfo = await extension.awaitMessage("management-getSelf");
 
   equal(extInfo.id, id, "getSelf returned the expected id");
   equal(extInfo.installType, "normal", "getSelf returned the expected installType");
-  yield extension.unload();
+  await extension.unload();
 });

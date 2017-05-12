@@ -6,9 +6,9 @@ Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader)
                                            .loadSubScript("chrome://browser/content/sanitize.js", tempScope);
 var Sanitizer = tempScope.Sanitizer;
 
-add_task(function*() {
+add_task(async function() {
   // getLoginSavingEnabled always returns false if password capture is disabled.
-  yield SpecialPowers.pushPrefEnv({"set": [["signon.rememberSignons", true]]});
+  await SpecialPowers.pushPrefEnv({"set": [["signon.rememberSignons", true]]});
 
   var pwmgr = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
 
@@ -34,11 +34,11 @@ add_task(function*() {
   itemPrefs.setBoolPref("siteSettings", true);
 
   // Clear it
-  yield s.sanitize();
+  await s.sanitize();
 
   // Make sure it's gone
   is(pwmgr.getLoginSavingEnabled("http://example.com"), true,
      "example.com should be enabled for password saving again now that we've cleared.");
 
-  yield SpecialPowers.popPrefEnv();
+  await SpecialPowers.popPrefEnv();
 });

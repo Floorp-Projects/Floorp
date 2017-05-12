@@ -12,7 +12,7 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* test_downloads_saveAs() {
+add_task(async function test_downloads_saveAs() {
   function background() {
     const url = URL.createObjectURL(new Blob(["file content"]));
     browser.test.onMessage.addListener(async () => {
@@ -35,13 +35,13 @@ add_task(function* test_downloads_saveAs() {
   const extension = ExtensionTestUtils.loadExtension(manifest);
 
   MockFilePicker.init(window);
-  const file = yield MockFilePicker.useAnyFile();
+  const file = await MockFilePicker.useAnyFile();
 
-  yield extension.startup();
-  yield extension.awaitMessage("ready");
+  await extension.startup();
+  await extension.awaitMessage("ready");
 
   extension.sendMessage("download");
-  let result = yield extension.awaitMessage("done");
+  let result = await extension.awaitMessage("done");
 
   ok(result.ok, "downloads.download() works with saveAs");
 
@@ -53,13 +53,13 @@ add_task(function* test_downloads_saveAs() {
   MockFilePicker.returnValue = MockFilePicker.returnCancel;
 
   extension.sendMessage("download");
-  result = yield extension.awaitMessage("done");
+  result = await extension.awaitMessage("done");
 
   ok(!result.ok, "download rejected if the user cancels the dialog");
   is(result.message, "Download canceled by the user", "with the correct message");
   ok(!file.exists(), "file was not downloaded");
 
-  yield extension.unload();
+  await extension.unload();
   MockFilePicker.cleanup();
 });
 

@@ -12,8 +12,8 @@ const CANONICAL_URL = "data:text/plain;charset=utf-8," + CANONICAL_CONTENT;
 const CANONICAL_URL_REDIRECTED = "data:text/plain;charset=utf-8,redirected";
 const PORTAL_NOTIFICATION_VALUE = "captive-portal-detected";
 
-function* setupPrefsAndRecentWindowBehavior() {
-  yield SpecialPowers.pushPrefEnv({
+async function setupPrefsAndRecentWindowBehavior() {
+  await SpecialPowers.pushPrefEnv({
     set: [["captivedetect.canonicalURL", CANONICAL_URL],
           ["captivedetect.canonicalContent", CANONICAL_CONTENT]],
   });
@@ -33,30 +33,30 @@ function* setupPrefsAndRecentWindowBehavior() {
     return win;
   };
 
-  registerCleanupFunction(function* cleanUp() {
+  registerCleanupFunction(function cleanUp() {
     RecentWindow.getMostRecentBrowserWindow = getMostRecentBrowserWindowCopy;
     window.CaptivePortalWatcher.init();
   });
 }
 
-function* portalDetected() {
+async function portalDetected() {
   Services.obs.notifyObservers(null, "captive-portal-login");
-  yield BrowserTestUtils.waitForCondition(() => {
+  await BrowserTestUtils.waitForCondition(() => {
     return cps.state == cps.LOCKED_PORTAL;
   }, "Waiting for Captive Portal Service to update state after portal detected.");
 }
 
-function* freePortal(aSuccess) {
+async function freePortal(aSuccess) {
   Services.obs.notifyObservers(null,
     "captive-portal-login-" + (aSuccess ? "success" : "abort"));
-  yield BrowserTestUtils.waitForCondition(() => {
+  await BrowserTestUtils.waitForCondition(() => {
     return cps.state != cps.LOCKED_PORTAL;
   }, "Waiting for Captive Portal Service to update state after portal freed.");
 }
 
 // If a window is provided, it will be focused. Otherwise, a new window
 // will be opened and focused.
-function* focusWindowAndWaitForPortalUI(aLongRecheck, win) {
+async function focusWindowAndWaitForPortalUI(aLongRecheck, win) {
   // CaptivePortalWatcher triggers a recheck when a window gains focus. If
   // the time taken for the check to complete is under PORTAL_RECHECK_DELAY_MS,
   // a tab with the login page is opened and selected. If it took longer,
@@ -67,13 +67,13 @@ function* focusWindowAndWaitForPortalUI(aLongRecheck, win) {
   Preferences.set("captivedetect.portalRecheckDelayMS", aLongRecheck ? -1 : 1000000);
 
   if (!win) {
-    win = yield BrowserTestUtils.openNewBrowserWindow();
+    win = await BrowserTestUtils.openNewBrowserWindow();
   }
-  yield SimpleTest.promiseFocus(win);
+  await SimpleTest.promiseFocus(win);
 
   // After a new window is opened, CaptivePortalWatcher asks for a recheck, and
   // waits for it to complete. We need to manually tell it a recheck completed.
-  yield BrowserTestUtils.waitForCondition(() => {
+  await BrowserTestUtils.waitForCondition(() => {
     return win.CaptivePortalWatcher._waitingForRecheck;
   }, "Waiting for CaptivePortalWatcher to trigger a recheck.");
   Services.obs.notifyObservers(null, "captive-portal-check-complete");
@@ -89,7 +89,7 @@ function* focusWindowAndWaitForPortalUI(aLongRecheck, win) {
   let tab = win.gBrowser.tabs[1];
   if (tab.linkedBrowser.currentURI.spec != CANONICAL_URL) {
     // The tab should load the canonical URL, wait for it.
-    yield BrowserTestUtils.waitForLocationChange(win.gBrowser, CANONICAL_URL);
+    await BrowserTestUtils.waitForLocationChange(win.gBrowser, CANONICAL_URL);
   }
   is(win.gBrowser.selectedTab, tab,
     "The captive portal tab should be open and selected in the new window.");
@@ -153,10 +153,10 @@ function waitForXulWindowVisible() {
   });
 }
 
-function* closeWindowAndWaitForXulWindowVisible(win) {
+async function closeWindowAndWaitForXulWindowVisible(win) {
   let p = waitForXulWindowVisible();
-  yield BrowserTestUtils.closeWindow(win);
-  yield p;
+  await BrowserTestUtils.closeWindow(win);
+  await p;
 }
 
 /**
@@ -164,8 +164,8 @@ function* closeWindowAndWaitForXulWindowVisible(win) {
  * opened window has received focus when the promise resolves, so we
  * have to manually wait every time.
  */
-function* openWindowAndWaitForFocus() {
-  let win = yield BrowserTestUtils.openNewBrowserWindow();
-  yield SimpleTest.promiseFocus(win);
+async function openWindowAndWaitForFocus() {
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  await SimpleTest.promiseFocus(win);
   return win;
 }

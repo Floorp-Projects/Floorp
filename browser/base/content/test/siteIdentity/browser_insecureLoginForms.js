@@ -16,8 +16,8 @@ function waitForInsecureLoginFormsStateChange(browser, count) {
 /**
  * Checks the insecure login forms logic for the identity block.
  */
-add_task(function* test_simple() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function test_simple() {
+  await SpecialPowers.pushPrefEnv({
     "set": [["security.insecure_password.ui.enabled", true]],
   });
 
@@ -29,7 +29,7 @@ add_task(function* test_simple() {
     let testUrlPath = origin + TEST_URL_PATH;
     let tab = gBrowser.addTab(testUrlPath + "form_basic.html");
     let browser = tab.linkedBrowser;
-    yield Promise.all([
+    await Promise.all([
       BrowserTestUtils.switchTab(gBrowser, tab),
       BrowserTestUtils.browserLoaded(browser),
       // One event is triggered by pageshow and one by DOMFormHasPassword.
@@ -81,8 +81,8 @@ add_task(function* test_simple() {
  * Checks that the insecure login forms logic does not regress mixed content
  * blocking messages when mixed active content is loaded.
  */
-add_task(function* test_mixedcontent() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function test_mixedcontent() {
+  await SpecialPowers.pushPrefEnv({
     "set": [["security.mixed_content.block_active_content", false]],
   });
 
@@ -90,7 +90,7 @@ add_task(function* test_mixedcontent() {
   let testUrlPath = "://example.com" + TEST_URL_PATH;
   let tab = gBrowser.addTab("https" + testUrlPath + "insecure_test.html");
   let browser = tab.linkedBrowser;
-  yield Promise.all([
+  await Promise.all([
     BrowserTestUtils.switchTab(gBrowser, tab),
     BrowserTestUtils.browserLoaded(browser),
     // Two events are triggered by pageshow and one by DOMFormHasPassword.
@@ -107,21 +107,21 @@ add_task(function* test_mixedcontent() {
 /**
  * Checks that insecure window.opener does not trigger a warning.
  */
-add_task(function* test_ignoring_window_opener() {
+add_task(async function test_ignoring_window_opener() {
   let newTabURL = "https://example.com" + TEST_URL_PATH + "form_basic.html";
   let path = getRootDirectory(gTestPath)
     .replace("chrome://mochitests/content", "http://example.com");
   let url = path + "insecure_opener.html";
 
-  yield BrowserTestUtils.withNewTab(url, function*(browser) {
+  await BrowserTestUtils.withNewTab(url, async function(browser) {
     // Clicking the link will spawn a new tab.
     let loaded = BrowserTestUtils.waitForNewTab(gBrowser, newTabURL);
-    yield ContentTask.spawn(browser, {}, function() {
+    await ContentTask.spawn(browser, {}, function() {
       content.document.getElementById("link").click();
     });
-    let tab = yield loaded;
+    let tab = await loaded;
     browser = tab.linkedBrowser;
-    yield waitForInsecureLoginFormsStateChange(browser, 2);
+    await waitForInsecureLoginFormsStateChange(browser, 2);
 
     // Open the identity popup.
     let { gIdentityHandler } = gBrowser.ownerGlobal;
@@ -157,6 +157,6 @@ add_task(function* test_ignoring_window_opener() {
 
     gIdentityHandler._identityPopup.hidden = true;
 
-    yield BrowserTestUtils.removeTab(tab);
+    await BrowserTestUtils.removeTab(tab);
   });
 });

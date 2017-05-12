@@ -1,4 +1,4 @@
-add_task(function* testBasicPrompt() {
+add_task(async function testBasicPrompt() {
   SpecialPowers.pushPrefEnv({set: [
     [PREF_APP_UPDATE_SERVICE_ENABLED, false],
   ]});
@@ -9,12 +9,12 @@ add_task(function* testBasicPrompt() {
   file.fileAttributesWin |= file.WFA_READONLY;
   file.fileAttributesWin &= ~file.WFA_READWRITE;
 
-  yield runUpdateTest(updateParams, 1, [
+  await runUpdateTest(updateParams, 1, [
     {
       notificationId: "update-manual",
       button: "button",
-      *cleanup() {
-        yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+      async cleanup() {
+        await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
         is(gBrowser.selectedBrowser.currentURI.spec,
            URL_MANUAL_UPDATE, "Landed on manual update page.")
         gBrowser.removeTab(gBrowser.selectedTab);

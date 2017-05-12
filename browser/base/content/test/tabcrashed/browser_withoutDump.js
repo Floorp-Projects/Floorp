@@ -6,7 +6,7 @@ const PAGE = "data:text/html,<html><body>A%20regular,%20everyday,%20normal%20pag
  * Monkey patches TabCrashHandler.getDumpID to return null in order to test
  * about:tabcrashed when a dump is not available.
  */
-add_task(function* setup() {
+add_task(async function setup() {
   let originalGetDumpID = TabCrashHandler.getDumpID;
   TabCrashHandler.getDumpID = function(browser) { return null; };
   registerCleanupFunction(() => {
@@ -17,17 +17,17 @@ add_task(function* setup() {
 /**
  * Tests tab crash page when a dump is not available.
  */
-add_task(function* test_without_dump() {
+add_task(async function test_without_dump() {
   return BrowserTestUtils.withNewTab({
     gBrowser,
     url: PAGE,
-  }, function*(browser) {
+  }, async function(browser) {
     let tab = gBrowser.getTabForBrowser(browser);
-    yield BrowserTestUtils.crashBrowser(browser);
+    await BrowserTestUtils.crashBrowser(browser);
 
     let tabRemovedPromise = BrowserTestUtils.tabRemoved(tab);
 
-    yield ContentTask.spawn(browser, null, function*() {
+    await ContentTask.spawn(browser, null, async function() {
       let doc = content.document;
       Assert.ok(!doc.documentElement.classList.contains("crashDumpAvailable"),
          "doesn't have crash dump");
@@ -39,6 +39,6 @@ add_task(function* test_without_dump() {
       doc.getElementById("closeTab").click();
     });
 
-    yield tabRemovedPromise;
+    await tabRemovedPromise;
   });
 });

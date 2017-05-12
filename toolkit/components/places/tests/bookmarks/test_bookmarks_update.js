@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-add_task(function* invalid_input_throws() {
+add_task(async function invalid_input_throws() {
   Assert.throws(() => PlacesUtils.bookmarks.update(),
                 /Input should be a valid object/);
   Assert.throws(() => PlacesUtils.bookmarks.update(null),
@@ -78,9 +78,9 @@ add_task(function* invalid_input_throws() {
                 /The following properties were expected: index/);
 });
 
-add_task(function* nonexisting_bookmark_throws() {
+add_task(async function nonexisting_bookmark_throws() {
   try {
-    yield PlacesUtils.bookmarks.update({ guid: "123456789012",
+    await PlacesUtils.bookmarks.update({ guid: "123456789012",
                                          title: "test" });
     Assert.ok(false, "Should have thrown");
   } catch (ex) {
@@ -88,13 +88,13 @@ add_task(function* nonexisting_bookmark_throws() {
   }
 });
 
-add_task(function* invalid_properties_for_existing_bookmark() {
-  let bm = yield PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+add_task(async function invalid_properties_for_existing_bookmark() {
+  let bm = await PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                                 parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                 url: "http://example.com/" });
 
   try {
-    yield PlacesUtils.bookmarks.update({ guid: bm.guid,
+    await PlacesUtils.bookmarks.update({ guid: bm.guid,
                                          type: PlacesUtils.bookmarks.TYPE_FOLDER });
     Assert.ok(false, "Should have thrown");
   } catch (ex) {
@@ -102,7 +102,7 @@ add_task(function* invalid_properties_for_existing_bookmark() {
   }
 
   try {
-    yield PlacesUtils.bookmarks.update({ guid: bm.guid,
+    await PlacesUtils.bookmarks.update({ guid: bm.guid,
                                          parentGuid: "123456789012",
                                          index: 1 });
     Assert.ok(false, "Should have thrown");
@@ -112,34 +112,34 @@ add_task(function* invalid_properties_for_existing_bookmark() {
 
   let past = new Date(Date.now() - 86400000);
   try {
-    yield PlacesUtils.bookmarks.update({ guid: bm.guid,
+    await PlacesUtils.bookmarks.update({ guid: bm.guid,
                                          lastModified: past });
     Assert.ok(false, "Should have thrown");
   } catch (ex) {
     Assert.ok(/Invalid value for property 'lastModified'/.test(ex));
   }
 
-  let folder = yield PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_FOLDER,
+  let folder = await PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_FOLDER,
                                                     parentGuid: PlacesUtils.bookmarks.unfiledGuid });
   try {
-    yield PlacesUtils.bookmarks.update({ guid: folder.guid,
+    await PlacesUtils.bookmarks.update({ guid: folder.guid,
                                          url: "http://example.com/" });
     Assert.ok(false, "Should have thrown");
   } catch (ex) {
     Assert.ok(/Invalid value for property 'url'/.test(ex));
   }
 
-  let separator = yield PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
+  let separator = await PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
                                                        parentGuid: PlacesUtils.bookmarks.unfiledGuid });
   try {
-    yield PlacesUtils.bookmarks.update({ guid: separator.guid,
+    await PlacesUtils.bookmarks.update({ guid: separator.guid,
                                          url: "http://example.com/" });
     Assert.ok(false, "Should have thrown");
   } catch (ex) {
     Assert.ok(/Invalid value for property 'url'/.test(ex));
   }
   try {
-    yield PlacesUtils.bookmarks.update({ guid: separator.guid,
+    await PlacesUtils.bookmarks.update({ guid: separator.guid,
                                          title: "test" });
     Assert.ok(false, "Should have thrown");
   } catch (ex) {
@@ -147,28 +147,28 @@ add_task(function* invalid_properties_for_existing_bookmark() {
   }
 });
 
-add_task(function* long_title_trim() {
+add_task(async function long_title_trim() {
   let longtitle = "a";
   for (let i = 0; i < 4096; i++) {
     longtitle += "a";
   }
-  let bm = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+  let bm = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                 type: PlacesUtils.bookmarks.TYPE_FOLDER,
                                                 title: "title" });
   checkBookmarkObject(bm);
 
-  bm = yield PlacesUtils.bookmarks.update({ guid: bm.guid,
+  bm = await PlacesUtils.bookmarks.update({ guid: bm.guid,
                                             title: longtitle });
   let newTitle = bm.title;
   Assert.equal(newTitle.length, 4096, "title should have been trimmed");
 
-  bm = yield PlacesUtils.bookmarks.fetch(bm.guid);
+  bm = await PlacesUtils.bookmarks.fetch(bm.guid);
   Assert.equal(bm.title, newTitle);
 });
 
-add_task(function* update_lastModified() {
+add_task(async function update_lastModified() {
   let yesterday = new Date(Date.now() - 86400000);
-  let bm = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+  let bm = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                 type: PlacesUtils.bookmarks.TYPE_FOLDER,
                                                 title: "title",
                                                 dateAdded: yesterday });
@@ -176,32 +176,32 @@ add_task(function* update_lastModified() {
   Assert.deepEqual(bm.lastModified, yesterday);
 
   let time = new Date();
-  bm = yield PlacesUtils.bookmarks.update({ guid: bm.guid,
+  bm = await PlacesUtils.bookmarks.update({ guid: bm.guid,
                                             lastModified: time });
   checkBookmarkObject(bm);
   Assert.deepEqual(bm.lastModified, time);
 
-  bm = yield PlacesUtils.bookmarks.fetch(bm.guid);
+  bm = await PlacesUtils.bookmarks.fetch(bm.guid);
   Assert.deepEqual(bm.lastModified, time);
 
-  bm = yield PlacesUtils.bookmarks.update({ guid: bm.guid,
+  bm = await PlacesUtils.bookmarks.update({ guid: bm.guid,
                                             lastModified: yesterday });
   Assert.deepEqual(bm.lastModified, yesterday);
 
-  bm = yield PlacesUtils.bookmarks.update({ guid: bm.guid,
+  bm = await PlacesUtils.bookmarks.update({ guid: bm.guid,
                                             title: "title2" });
   Assert.ok(bm.lastModified >= time);
 
-  bm = yield PlacesUtils.bookmarks.update({ guid: bm.guid,
+  bm = await PlacesUtils.bookmarks.update({ guid: bm.guid,
                                             title: "" });
   Assert.ok(!("title" in bm));
 
-  bm = yield PlacesUtils.bookmarks.fetch(bm.guid);
+  bm = await PlacesUtils.bookmarks.fetch(bm.guid);
   Assert.ok(!("title" in bm));
 });
 
-add_task(function* update_url() {
-  let bm = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+add_task(async function update_url() {
+  let bm = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                 type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                                 url: "http://example.com/",
                                                 title: "title" });
@@ -210,13 +210,13 @@ add_task(function* update_url() {
   let frecency = frecencyForUrl(bm.url);
   Assert.ok(frecency > 0, "Check frecency has been updated");
 
-  bm = yield PlacesUtils.bookmarks.update({ guid: bm.guid,
+  bm = await PlacesUtils.bookmarks.update({ guid: bm.guid,
                                             url: "http://mozilla.org/" });
   checkBookmarkObject(bm);
   Assert.ok(bm.lastModified >= lastModified);
   Assert.equal(bm.url.href, "http://mozilla.org/");
 
-  bm = yield PlacesUtils.bookmarks.fetch(bm.guid);
+  bm = await PlacesUtils.bookmarks.fetch(bm.guid);
   Assert.equal(bm.url.href, "http://mozilla.org/");
   Assert.ok(bm.lastModified >= lastModified);
 
@@ -224,53 +224,53 @@ add_task(function* update_url() {
   Assert.equal(frecencyForUrl("http://mozilla.org/"), frecency, "Check frecency for mozilla.org");
 });
 
-add_task(function* update_index() {
-  let parent = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+add_task(async function update_index() {
+  let parent = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                     type: PlacesUtils.bookmarks.TYPE_FOLDER }) ;
-  let f1 = yield PlacesUtils.bookmarks.insert({ parentGuid: parent.guid,
+  let f1 = await PlacesUtils.bookmarks.insert({ parentGuid: parent.guid,
                                                 type: PlacesUtils.bookmarks.TYPE_FOLDER });
   Assert.equal(f1.index, 0);
-  let f2 = yield PlacesUtils.bookmarks.insert({ parentGuid: parent.guid,
+  let f2 = await PlacesUtils.bookmarks.insert({ parentGuid: parent.guid,
                                                 type: PlacesUtils.bookmarks.TYPE_FOLDER });
   Assert.equal(f2.index, 1);
-  let f3 = yield PlacesUtils.bookmarks.insert({ parentGuid: parent.guid,
+  let f3 = await PlacesUtils.bookmarks.insert({ parentGuid: parent.guid,
                                                 type: PlacesUtils.bookmarks.TYPE_FOLDER });
   Assert.equal(f3.index, 2);
   let lastModified = f1.lastModified;
 
-  f1 = yield PlacesUtils.bookmarks.update({ guid: f1.guid,
+  f1 = await PlacesUtils.bookmarks.update({ guid: f1.guid,
                                             parentGuid: f1.parentGuid,
                                             index: 1});
   checkBookmarkObject(f1);
   Assert.equal(f1.index, 1);
   Assert.ok(f1.lastModified >= lastModified);
 
-  parent = yield PlacesUtils.bookmarks.fetch(f1.parentGuid);
+  parent = await PlacesUtils.bookmarks.fetch(f1.parentGuid);
   Assert.deepEqual(parent.lastModified, f1.lastModified);
 
-  f2 = yield PlacesUtils.bookmarks.fetch(f2.guid);
+  f2 = await PlacesUtils.bookmarks.fetch(f2.guid);
   Assert.equal(f2.index, 0);
 
-  f3 = yield PlacesUtils.bookmarks.fetch(f3.guid);
+  f3 = await PlacesUtils.bookmarks.fetch(f3.guid);
   Assert.equal(f3.index, 2);
 
-  f3 = yield PlacesUtils.bookmarks.update({ guid: f3.guid,
+  f3 = await PlacesUtils.bookmarks.update({ guid: f3.guid,
                                             index: 0 });
-  f1 = yield PlacesUtils.bookmarks.fetch(f1.guid);
+  f1 = await PlacesUtils.bookmarks.fetch(f1.guid);
   Assert.equal(f1.index, 2);
 
-  f2 = yield PlacesUtils.bookmarks.fetch(f2.guid);
+  f2 = await PlacesUtils.bookmarks.fetch(f2.guid);
   Assert.equal(f2.index, 1);
 });
 
-add_task(function* update_move_folder_into_descendant_throws() {
-  let parent = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+add_task(async function update_move_folder_into_descendant_throws() {
+  let parent = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                     type: PlacesUtils.bookmarks.TYPE_FOLDER }) ;
-  let descendant = yield PlacesUtils.bookmarks.insert({ parentGuid: parent.guid,
+  let descendant = await PlacesUtils.bookmarks.insert({ parentGuid: parent.guid,
                                                         type: PlacesUtils.bookmarks.TYPE_FOLDER });
 
   try {
-    yield PlacesUtils.bookmarks.update({ guid: parent.guid,
+    await PlacesUtils.bookmarks.update({ guid: parent.guid,
                                          parentGuid: parent.guid,
                                          index: 0 });
     Assert.ok(false, "Should have thrown");
@@ -279,7 +279,7 @@ add_task(function* update_move_folder_into_descendant_throws() {
   }
 
   try {
-    yield PlacesUtils.bookmarks.update({ guid: parent.guid,
+    await PlacesUtils.bookmarks.update({ guid: parent.guid,
                                          parentGuid: descendant.guid,
                                          index: 0 });
     Assert.ok(false, "Should have thrown");
@@ -288,19 +288,19 @@ add_task(function* update_move_folder_into_descendant_throws() {
   }
 });
 
-add_task(function* update_move() {
-  let parent = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+add_task(async function update_move() {
+  let parent = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                     type: PlacesUtils.bookmarks.TYPE_FOLDER }) ;
-  let bm = yield PlacesUtils.bookmarks.insert({ parentGuid: parent.guid,
+  let bm = await PlacesUtils.bookmarks.insert({ parentGuid: parent.guid,
                                                 url: "http://example.com/",
                                                 type: PlacesUtils.bookmarks.TYPE_BOOKMARK }) ;
-  let descendant = yield PlacesUtils.bookmarks.insert({ parentGuid: parent.guid,
+  let descendant = await PlacesUtils.bookmarks.insert({ parentGuid: parent.guid,
                                                         type: PlacesUtils.bookmarks.TYPE_FOLDER });
   Assert.equal(descendant.index, 1);
   let lastModified = bm.lastModified;
 
   // This is moving to a nonexisting index by purpose, it will be appended.
-  bm = yield PlacesUtils.bookmarks.update({ guid: bm.guid,
+  bm = await PlacesUtils.bookmarks.update({ guid: bm.guid,
                                             parentGuid: descendant.guid,
                                             index: 1 });
   checkBookmarkObject(bm);
@@ -308,44 +308,44 @@ add_task(function* update_move() {
   Assert.equal(bm.index, 0);
   Assert.ok(bm.lastModified >= lastModified);
 
-  parent = yield PlacesUtils.bookmarks.fetch(parent.guid);
-  descendant = yield PlacesUtils.bookmarks.fetch(descendant.guid);
+  parent = await PlacesUtils.bookmarks.fetch(parent.guid);
+  descendant = await PlacesUtils.bookmarks.fetch(descendant.guid);
   Assert.deepEqual(parent.lastModified, bm.lastModified);
   Assert.deepEqual(descendant.lastModified, bm.lastModified);
   Assert.equal(descendant.index, 0);
 
-  bm = yield PlacesUtils.bookmarks.fetch(bm.guid);
+  bm = await PlacesUtils.bookmarks.fetch(bm.guid);
   Assert.equal(bm.parentGuid, descendant.guid);
   Assert.equal(bm.index, 0);
 
-  bm = yield PlacesUtils.bookmarks.update({ guid: bm.guid,
+  bm = await PlacesUtils.bookmarks.update({ guid: bm.guid,
                                             parentGuid: parent.guid,
                                             index: 0 });
   Assert.equal(bm.parentGuid, parent.guid);
   Assert.equal(bm.index, 0);
 
-  descendant = yield PlacesUtils.bookmarks.fetch(descendant.guid);
+  descendant = await PlacesUtils.bookmarks.fetch(descendant.guid);
   Assert.equal(descendant.index, 1);
 });
 
-add_task(function* update_move_append() {
+add_task(async function update_move_append() {
   let folder_a =
-    yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                          type: PlacesUtils.bookmarks.TYPE_FOLDER });
   checkBookmarkObject(folder_a);
   let folder_b =
-    yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                          type: PlacesUtils.bookmarks.TYPE_FOLDER });
   checkBookmarkObject(folder_b);
 
   /* folder_a: [sep_1, sep_2, sep_3], folder_b: [] */
-  let sep_1 = yield PlacesUtils.bookmarks.insert({ parentGuid: folder_a.guid,
+  let sep_1 = await PlacesUtils.bookmarks.insert({ parentGuid: folder_a.guid,
                                                    type: PlacesUtils.bookmarks.TYPE_SEPARATOR });
   checkBookmarkObject(sep_1);
-  let sep_2 = yield PlacesUtils.bookmarks.insert({ parentGuid: folder_a.guid,
+  let sep_2 = await PlacesUtils.bookmarks.insert({ parentGuid: folder_a.guid,
                                                    type: PlacesUtils.bookmarks.TYPE_SEPARATOR });
   checkBookmarkObject(sep_2);
-  let sep_3 = yield PlacesUtils.bookmarks.insert({ parentGuid: folder_a.guid,
+  let sep_3 = await PlacesUtils.bookmarks.insert({ parentGuid: folder_a.guid,
                                                    type: PlacesUtils.bookmarks.TYPE_SEPARATOR });
   checkBookmarkObject(sep_3);
 
@@ -359,37 +359,37 @@ add_task(function* update_move_append() {
   sep_1.index = PlacesUtils.bookmarks.DEFAULT_INDEX;
   // Note sep_1 includes parentGuid even though we're not moving the item to
   // another folder
-  sep_1 = yield PlacesUtils.bookmarks.update(sep_1);
+  sep_1 = await PlacesUtils.bookmarks.update(sep_1);
   ensurePosition(sep_1, folder_a.guid, 2);
-  sep_2 = yield PlacesUtils.bookmarks.fetch(sep_2.guid);
+  sep_2 = await PlacesUtils.bookmarks.fetch(sep_2.guid);
   ensurePosition(sep_2, folder_a.guid, 0);
-  sep_3 = yield PlacesUtils.bookmarks.fetch(sep_3.guid);
+  sep_3 = await PlacesUtils.bookmarks.fetch(sep_3.guid);
   ensurePosition(sep_3, folder_a.guid, 1);
-  sep_1 = yield PlacesUtils.bookmarks.fetch(sep_1.guid);
+  sep_1 = await PlacesUtils.bookmarks.fetch(sep_1.guid);
   ensurePosition(sep_1, folder_a.guid, 2);
 
   // folder_a: [sep_2, sep_1], folder_b: [sep_3]
   sep_3.index = PlacesUtils.bookmarks.DEFAULT_INDEX;
   sep_3.parentGuid = folder_b.guid;
-  sep_3 = yield PlacesUtils.bookmarks.update(sep_3);
+  sep_3 = await PlacesUtils.bookmarks.update(sep_3);
   ensurePosition(sep_3, folder_b.guid, 0);
-  sep_2 = yield PlacesUtils.bookmarks.fetch(sep_2.guid);
+  sep_2 = await PlacesUtils.bookmarks.fetch(sep_2.guid);
   ensurePosition(sep_2, folder_a.guid, 0);
-  sep_1 = yield PlacesUtils.bookmarks.fetch(sep_1.guid);
+  sep_1 = await PlacesUtils.bookmarks.fetch(sep_1.guid);
   ensurePosition(sep_1, folder_a.guid, 1);
-  sep_3 = yield PlacesUtils.bookmarks.fetch(sep_3.guid);
+  sep_3 = await PlacesUtils.bookmarks.fetch(sep_3.guid);
   ensurePosition(sep_3, folder_b.guid, 0);
 
   // folder_a: [sep_1], folder_b: [sep_3, sep_2]
   sep_2.index = Number.MAX_SAFE_INTEGER;
   sep_2.parentGuid = folder_b.guid;
-  sep_2 = yield PlacesUtils.bookmarks.update(sep_2);
+  sep_2 = await PlacesUtils.bookmarks.update(sep_2);
   ensurePosition(sep_2, folder_b.guid, 1);
-  sep_1 = yield PlacesUtils.bookmarks.fetch(sep_1.guid);
+  sep_1 = await PlacesUtils.bookmarks.fetch(sep_1.guid);
   ensurePosition(sep_1, folder_a.guid, 0);
-  sep_3 = yield PlacesUtils.bookmarks.fetch(sep_3.guid);
+  sep_3 = await PlacesUtils.bookmarks.fetch(sep_3.guid);
   ensurePosition(sep_3, folder_b.guid, 0);
-  sep_2 = yield PlacesUtils.bookmarks.fetch(sep_2.guid);
+  sep_2 = await PlacesUtils.bookmarks.fetch(sep_2.guid);
   ensurePosition(sep_2, folder_b.guid, 1);
 });
 

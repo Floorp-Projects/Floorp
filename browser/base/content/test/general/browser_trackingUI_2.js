@@ -32,8 +32,8 @@ function hidden(el) {
   return display === "none" || opacity === "0";
 }
 
-add_task(function* testNormalBrowsing() {
-  yield UrlClassifierTestUtils.addTestTrackers();
+add_task(async function testNormalBrowsing() {
+  await UrlClassifierTestUtils.addTestTrackers();
 
   tabbrowser = gBrowser;
   let {gIdentityHandler} = tabbrowser.ownerGlobal;
@@ -51,20 +51,20 @@ add_task(function* testNormalBrowsing() {
   ok(!TrackingProtection.enabled, "TP is disabled after setting the pref");
 
   info("Load a test page containing tracking elements");
-  yield promiseTabLoadEvent(tab, TRACKING_PAGE);
+  await promiseTabLoadEvent(tab, TRACKING_PAGE);
   gIdentityHandler._identityBox.click();
   ok(hidden(TrackingProtection.container), "The container is hidden");
   gIdentityHandler._identityPopup.hidden = true;
 
   info("Load a test page not containing tracking elements");
-  yield promiseTabLoadEvent(tab, BENIGN_PAGE);
+  await promiseTabLoadEvent(tab, BENIGN_PAGE);
   gIdentityHandler._identityBox.click();
   ok(hidden(TrackingProtection.container), "The container is hidden");
   gIdentityHandler._identityPopup.hidden = true;
 });
 
-add_task(function* testPrivateBrowsing() {
-  let privateWin = yield promiseOpenAndLoadWindow({private: true}, true);
+add_task(async function testPrivateBrowsing() {
+  let privateWin = await promiseOpenAndLoadWindow({private: true}, true);
   tabbrowser = privateWin.gBrowser;
   let {gIdentityHandler} = tabbrowser.ownerGlobal;
   let tab = tabbrowser.selectedTab = tabbrowser.addTab();
@@ -81,14 +81,14 @@ add_task(function* testPrivateBrowsing() {
   ok(!TrackingProtection.enabled, "TP is disabled after setting the pref");
 
   info("Load a test page containing tracking elements");
-  yield promiseTabLoadEvent(tab, TRACKING_PAGE);
+  await promiseTabLoadEvent(tab, TRACKING_PAGE);
   gIdentityHandler._identityBox.click();
   ok(hidden(TrackingProtection.container), "The container is hidden");
   gIdentityHandler._identityPopup.hidden = true;
 
   info("Load a test page not containing tracking elements");
   gIdentityHandler._identityBox.click();
-  yield promiseTabLoadEvent(tab, BENIGN_PAGE);
+  await promiseTabLoadEvent(tab, BENIGN_PAGE);
   ok(hidden(TrackingProtection.container), "The container is hidden");
   gIdentityHandler._identityPopup.hidden = true;
 

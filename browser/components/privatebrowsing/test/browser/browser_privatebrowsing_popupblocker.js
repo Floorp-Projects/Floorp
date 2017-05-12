@@ -4,7 +4,7 @@
 
 // This test makes sure that private browsing mode disables the remember option
 // for the popup blocker menu.
-add_task(function* test() {
+add_task(async function test() {
   let testURI = "http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/popup.html";
   let oldPopupPolicy = gPrefService.getBoolPref("dom.disable_open_during_load");
   gPrefService.setBoolPref("dom.disable_open_during_load", true);
@@ -49,20 +49,20 @@ add_task(function* test() {
     aWindow.gBrowser.selectedBrowser.loadURI(testURI);
   }
 
-  let win1 = yield BrowserTestUtils.openNewBrowserWindow();
-  yield new Promise(resolve => waitForFocus(resolve, win1));
-  yield new Promise(resolve => testPopupBlockerMenuItem(false, win1, resolve));
+  let win1 = await BrowserTestUtils.openNewBrowserWindow();
+  await new Promise(resolve => waitForFocus(resolve, win1));
+  await new Promise(resolve => testPopupBlockerMenuItem(false, win1, resolve));
 
-  let win2 = yield BrowserTestUtils.openNewBrowserWindow({private: true});
-  yield new Promise(resolve => waitForFocus(resolve, win2));
-  yield new Promise(resolve => testPopupBlockerMenuItem(true, win2, resolve));
+  let win2 = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  await new Promise(resolve => waitForFocus(resolve, win2));
+  await new Promise(resolve => testPopupBlockerMenuItem(true, win2, resolve));
 
-  let win3 = yield BrowserTestUtils.openNewBrowserWindow();
-  yield new Promise(resolve => waitForFocus(resolve, win3));
-  yield new Promise(resolve => testPopupBlockerMenuItem(false, win3, resolve));
+  let win3 = await BrowserTestUtils.openNewBrowserWindow();
+  await new Promise(resolve => waitForFocus(resolve, win3));
+  await new Promise(resolve => testPopupBlockerMenuItem(false, win3, resolve));
 
   // Cleanup
-  yield BrowserTestUtils.closeWindow(win1);
-  yield BrowserTestUtils.closeWindow(win2);
-  yield BrowserTestUtils.closeWindow(win3);
+  await BrowserTestUtils.closeWindow(win1);
+  await BrowserTestUtils.closeWindow(win2);
+  await BrowserTestUtils.closeWindow(win3);
 });

@@ -18,7 +18,6 @@ SimpleTest.waitForExplicitFinish();
 var {utils: Cu, interfaces: Ci} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
 
@@ -44,14 +43,14 @@ function promiseOnItemChanged() {
   });
 }
 
-Task.spawn(function* () {
+(async function() {
   // add 2 bookmarks to the toolbar, same URI, different titles (set later)
-  let bm1 = yield PlacesUtils.bookmarks.insert({
+  let bm1 = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     url: TEST_URI
   });
 
-  let bm2 = yield PlacesUtils.bookmarks.insert({
+  let bm2 = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     url: TEST_URI
   });
@@ -63,12 +62,12 @@ Task.spawn(function* () {
   let promiseObserved = promiseOnItemChanged();
 
   // modify the bookmark's title
-  yield PlacesUtils.bookmarks.update({
+  await PlacesUtils.bookmarks.update({
     guid: bm2.guid, title: "foo"
   });
 
   // wait for notification
-  yield promiseObserved;
+  await promiseObserved;
 
   // Continue after our observer gets notified of onItemChanged
   // which is triggered by updating the item's title.
@@ -88,9 +87,9 @@ Task.spawn(function* () {
   rootNode.containerOpen = false;
 
   // clean up
-  yield PlacesUtils.bookmarks.remove(bm1);
-  yield PlacesUtils.bookmarks.remove(bm2);
-}).catch(err => {
+  await PlacesUtils.bookmarks.remove(bm1);
+  await PlacesUtils.bookmarks.remove(bm2);
+})().catch(err => {
   ok(false, `uncaught error: ${err}`);
 }).then(() => {
   SimpleTest.finish();

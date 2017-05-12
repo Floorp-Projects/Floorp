@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* () {
+add_task(async function() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
@@ -55,16 +55,16 @@ add_task(function* () {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitMessage("background-finished");
-  yield extension.awaitMessage("tab-finished");
+  await extension.awaitMessage("background-finished");
+  await extension.awaitMessage("tab-finished");
 
   clickBrowserAction(extension);
-  yield awaitExtensionPanel(extension);
-  yield extension.awaitMessage("popup-finished");
-  yield closeBrowserAction(extension);
+  await awaitExtensionPanel(extension);
+  await extension.awaitMessage("popup-finished");
+  await closeBrowserAction(extension);
 
   // The extension tab is automatically closed when the extension unloads.
-  yield extension.unload();
+  await extension.unload();
 });

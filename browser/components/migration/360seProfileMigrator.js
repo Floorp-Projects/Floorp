@@ -10,7 +10,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/osfile.jsm"); /* globals OS */
 Cu.import("resource:///modules/MigrationUtils.jsm"); /* globals MigratorPrototype */
 
@@ -110,21 +109,21 @@ Bookmarks.prototype = {
   },
 
   migrate(aCallback) {
-    return Task.spawn(function* () {
+    return (async () => {
       let idToGuid = new Map();
       let folderGuid = PlacesUtils.bookmarks.toolbarGuid;
       if (!MigrationUtils.isStartupMigration) {
         folderGuid =
-          yield MigrationUtils.createImportedBookmarksFolder("360se", folderGuid);
+          await MigrationUtils.createImportedBookmarksFolder("360se", folderGuid);
       }
       idToGuid.set(0, folderGuid);
 
-      let connection = yield Sqlite.openConnection({
+      let connection = await Sqlite.openConnection({
         path: this._file.path
       });
 
       try {
-        let rows = yield connection.execute(
+        let rows = await connection.execute(
           `WITH RECURSIVE
            bookmark(id, parent_id, is_folder, title, url, pos) AS (
              VALUES(0, -1, 1, '', '', 0)
@@ -148,14 +147,14 @@ Bookmarks.prototype = {
             parentGuid = PlacesUtils.bookmarks.unfiledGuid;
             if (!MigrationUtils.isStartupMigration) {
               parentGuid =
-                yield MigrationUtils.createImportedBookmarksFolder("360se", parentGuid);
+                await MigrationUtils.createImportedBookmarksFolder("360se", parentGuid);
             }
             idToGuid.set("fallback", parentGuid);
           }
 
           try {
             if (is_folder == 1) {
-              let newFolderGuid = (yield MigrationUtils.insertBookmarkWrapper({
+              let newFolderGuid = (await MigrationUtils.insertBookmarkWrapper({
                 parentGuid,
                 type: PlacesUtils.bookmarks.TYPE_FOLDER,
                 title
@@ -163,7 +162,7 @@ Bookmarks.prototype = {
 
               idToGuid.set(id, newFolderGuid);
             } else {
-              yield MigrationUtils.insertBookmarkWrapper({
+              await MigrationUtils.insertBookmarkWrapper({
                 parentGuid,
                 url,
                 title
@@ -174,9 +173,9 @@ Bookmarks.prototype = {
           }
         }
       } finally {
-        yield connection.close();
+        await connection.close();
       }
-    }.bind(this)).then(() => aCallback(true),
+    })().then(() => aCallback(true),
                         e => { Cu.reportError(e); aCallback(false) });
   }
 };

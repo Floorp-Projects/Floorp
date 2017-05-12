@@ -28,7 +28,7 @@ initSystemAddonDirs();
 const TEST_CONDITIONS = {
   // Runs tests with no updated or default system add-ons initially installed
   blank: {
-    *setup() {
+    setup() {
       clearSystemAddonUpdatesDir();
       distroDir.leafName = "empty";
     },
@@ -42,7 +42,7 @@ const TEST_CONDITIONS = {
   },
   // Runs tests with default system add-ons installed
   withAppSet: {
-    *setup() {
+    setup() {
       clearSystemAddonUpdatesDir();
       distroDir.leafName = "prefilled";
     },
@@ -57,7 +57,7 @@ const TEST_CONDITIONS = {
 
   // Runs tests with updated system add-ons installed
   withProfileSet: {
-    *setup() {
+    setup() {
       buildPrefilledUpdatesDir();
       distroDir.leafName = "empty";
     },
@@ -72,7 +72,7 @@ const TEST_CONDITIONS = {
 
   // Runs tests with both default and updated system add-ons installed
   withBothSets: {
-    *setup() {
+    setup() {
       buildPrefilledUpdatesDir();
       distroDir.leafName = "hidden";
     },
@@ -164,13 +164,13 @@ const TESTS = {
   }
 }
 
-add_task(function* setup() {
+add_task(async function setup() {
   // Initialise the profile
   startupManager();
-  yield promiseShutdownManager();
+  await promiseShutdownManager();
 });
 
-add_task(function*() {
+add_task(async function() {
   for (let setupName of Object.keys(TEST_CONDITIONS)) {
     for (let testName of Object.keys(TESTS)) {
         do_print("Running test " + setupName + " " + testName);
@@ -178,7 +178,7 @@ add_task(function*() {
         let setup = TEST_CONDITIONS[setupName];
         let test = TESTS[testName];
 
-        yield execSystemAddonTest(setupName, setup, test, distroDir);
+        await execSystemAddonTest(setupName, setup, test, distroDir);
     }
   }
 });

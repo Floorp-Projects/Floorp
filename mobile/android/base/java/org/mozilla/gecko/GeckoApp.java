@@ -131,18 +131,17 @@ import java.util.concurrent.TimeUnit;
 
 import static org.mozilla.gecko.Tabs.INVALID_TAB_ID;
 
-public abstract class GeckoApp
-    extends GeckoActivity
-    implements
-    BundleEventListener,
-    ContextGetter,
-    GeckoAppShell.GeckoInterface,
-    ScreenOrientationDelegate,
-    GeckoMenu.Callback,
-    GeckoMenu.MenuPresenter,
-    Tabs.OnTabsChangedListener,
-    ViewTreeObserver.OnGlobalLayoutListener,
-    AnchoredPopup.OnVisibilityChangeListener {
+public abstract class GeckoApp extends GeckoActivity
+                               implements AnchoredPopup.OnVisibilityChangeListener,
+                                          BundleEventListener,
+                                          ContextGetter,
+                                          GeckoAppShell.GeckoInterface,
+                                          GeckoMenu.Callback,
+                                          GeckoMenu.MenuPresenter,
+                                          GeckoView.ContentListener,
+                                          ScreenOrientationDelegate,
+                                          Tabs.OnTabsChangedListener,
+                                          ViewTreeObserver.OnGlobalLayoutListener {
 
     private static final String LOGTAG = "GeckoApp";
     private static final long ONE_DAY_MS = TimeUnit.MILLISECONDS.convert(1, TimeUnit.DAYS);
@@ -378,7 +377,8 @@ public abstract class GeckoApp
     private volatile HealthRecorder mHealthRecorder;
     private volatile Locale mLastLocale;
 
-    protected Intent mRestartIntent;
+    private boolean mShutdownOnDestroy;
+    private boolean mRestartOnShutdown;
 
     private boolean mWasFirstTabShownAfterActivityUnhidden;
 
@@ -672,7 +672,7 @@ public abstract class GeckoApp
 
             EventDispatcher.getInstance().dispatch("Browser:Quit", res);
 
-            // We don't call doShutdown() here because this creates a race condition which
+            // We don't call shutdown here because this creates a race condition which
             // can cause the clearing of private data to fail. Instead, we shut down the
             // UI only after we're done sanitizing.
             return true;
@@ -755,17 +755,6 @@ public abstract class GeckoApp
                     getSharedPreferences().edit().putInt(PREFS_CRASHED_COUNT, 0).apply();
                 }
             }, STARTUP_PHASE_DURATION_MS);
-
-        } else if ("Gecko:Exited".equals(event)) {
-            // Gecko thread exited first; let GeckoApp die too.
-            doShutdown();
-
-        } else if ("Sanitize:Finished".equals(event)) {
-            if (message.getBoolean("shutdown", false)) {
-                // Gecko is shutting down and has called our sanitize handlers,
-                // so we can start exiting, too.
-                doShutdown();
-            }
 
         } else if ("Accessibility:Ready".equals(event)) {
             GeckoAccessibility.updateAccessibilitySettings(this);
@@ -1204,12 +1193,21 @@ public abstract class GeckoApp
         mLayerView.requestRender();
     }
 
-    @Override
-    public void setFullScreen(final boolean fullscreen) {
+    @Override // GeckoView.ContentListener
+    public void onTitleChange(final GeckoView view, final String title) {
+    }
+
+    @Override // GeckoView.ContentListener
+    public void onFullScreen(final GeckoView view, final boolean fullScreen) {
+        ThreadUtils.assertOnUiThread();
+        ActivityUtils.setFullScreen(this, fullScreen);
+    }
+
+    protected void setFullScreen(final boolean fullscreen) {
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
-                ActivityUtils.setFullScreen(GeckoApp.this, fullscreen);
+                onFullScreen(mLayerView, fullscreen);
             }
         });
     }
@@ -1311,7 +1309,7 @@ public abstract class GeckoApp
         // no need to touch that here.
         if (BrowserLocaleManager.getInstance().systemLocaleDidChange()) {
             Log.i(LOGTAG, "System locale changed. Restarting.");
-            doRestart();
+            finishAndShutdown(/* restart */ true);
             return;
         }
 
@@ -1352,13 +1350,11 @@ public abstract class GeckoApp
         // To prevent races, register startup events before launching the Gecko thread.
         EventDispatcher.getInstance().registerGeckoThreadListener(this,
             "Accessibility:Ready",
-            "Gecko:Exited",
             "Gecko:Ready",
             "PluginHelper:playFlash",
             null);
 
         EventDispatcher.getInstance().registerUiThreadListener(this,
-            "Sanitize:Finished",
             "Update:Check",
             "Update:Download",
             "Update:Install",
@@ -1393,6 +1389,8 @@ public abstract class GeckoApp
         mGeckoLayout = (RelativeLayout) findViewById(R.id.gecko_layout);
         mMainLayout = (RelativeLayout) findViewById(R.id.main_layout);
         mLayerView = (GeckoView) findViewById(R.id.layer_view);
+
+        mLayerView.setContentListener(this);
 
         getAppEventDispatcher().registerGeckoThreadListener(this,
             "Accessibility:Event",
@@ -2592,13 +2590,11 @@ public abstract class GeckoApp
 
         EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
             "Accessibility:Ready",
-            "Gecko:Exited",
             "Gecko:Ready",
             "PluginHelper:playFlash",
             null);
 
         EventDispatcher.getInstance().unregisterUiThreadListener(this,
-            "Sanitize:Finished",
             "Update:Check",
             "Update:Download",
             "Update:Install",
@@ -2649,6 +2645,11 @@ public abstract class GeckoApp
         super.onDestroy();
 
         Tabs.unregisterOnTabsChangedListener(this);
+
+        if (mShutdownOnDestroy) {
+            GeckoApplication.shutdown(!mRestartOnShutdown ? null : new Intent(
+                    Intent.ACTION_MAIN, /* uri */ null, getApplicationContext(), getClass()));
+        }
     }
 
     public void showSDKVersionError() {
@@ -2713,44 +2714,17 @@ public abstract class GeckoApp
         }
     }
 
-    @Override
-    public void doRestart() {
-        doRestart(null, null);
-    }
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
+    protected void finishAndShutdown(final boolean restart) {
+        ThreadUtils.assertOnUiThread();
 
-    public void doRestart(String args) {
-        doRestart(args, null);
-    }
+        mShutdownOnDestroy = true;
+        mRestartOnShutdown = restart;
 
-    public void doRestart(Intent intent) {
-        doRestart(null, intent);
-    }
-
-    public void doRestart(String args, Intent restartIntent) {
-        if (restartIntent == null) {
-            restartIntent = new Intent(Intent.ACTION_MAIN);
+        // Shut down the activity and then Gecko.
+        if (!isFinishing() && (Versions.preJBMR1 || !isDestroyed())) {
+            finish();
         }
-
-        if (args != null) {
-            restartIntent.putExtra("args", args);
-        }
-
-        mRestartIntent = restartIntent;
-        Log.d(LOGTAG, "doRestart(\"" + restartIntent + "\")");
-
-        doShutdown();
-    }
-
-    private void doShutdown() {
-        // Shut down GeckoApp activity.
-        runOnUiThread(new Runnable() {
-            @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
-            @Override public void run() {
-                if (!isFinishing() && (Versions.preJBMR1 || !isDestroyed())) {
-                    finish();
-                }
-            }
-        });
     }
 
     private void checkMigrateProfile() {
@@ -3109,24 +3083,28 @@ public abstract class GeckoApp
             rec.onEnvironmentChanged(startNewSession, SESSION_END_LOCALE_CHANGED);
         }
 
-        if (!shouldRestart) {
-            ThreadUtils.postToUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    GeckoApp.this.onLocaleReady(locale);
-                }
-            });
-            return;
-        }
-
-        // Do this in the background so that the health recorder has its
-        // time to finish.
-        ThreadUtils.postToBackgroundThread(new Runnable() {
+        final Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                GeckoApp.this.doRestart();
+                if (!ThreadUtils.isOnUiThread()) {
+                    ThreadUtils.postToUiThread(this);
+                    return;
+                }
+                if (!shouldRestart) {
+                    GeckoApp.this.onLocaleReady(locale);
+                } else {
+                    finishAndShutdown(/* restart */ true);
+                }
             }
-        });
+        };
+
+        if (!shouldRestart) {
+            ThreadUtils.postToUiThread(runnable);
+        } else {
+            // Do this in the background so that the health recorder has its
+            // time to finish.
+            ThreadUtils.postToBackgroundThread(runnable);
+        }
     }
 
     /**

@@ -2,7 +2,6 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
@@ -44,7 +43,7 @@ function clearCache() {
   return sanitizer.items.cache.clear();
 }
 
-let clearCookies = Task.async(function* (options) {
+let clearCookies = async function(options) {
   let cookieMgr = Services.cookies;
   // This code has been borrowed from sanitize.js.
   let yieldCounter = 0;
@@ -61,7 +60,7 @@ let clearCookies = Task.async(function* (options) {
                          false, cookie.originAttributes);
 
         if (++yieldCounter % YIELD_PERIOD == 0) {
-          yield new Promise(resolve => setTimeout(resolve, 0)); // Don't block the main thread too long.
+          await new Promise(resolve => setTimeout(resolve, 0)); // Don't block the main thread too long.
         }
       }
     }
@@ -69,7 +68,7 @@ let clearCookies = Task.async(function* (options) {
     // Remove everything.
     cookieMgr.removeAll();
   }
-});
+};
 
 function clearDownloads(options) {
   return sanitizer.items.downloads.clear(makeRange(options));
@@ -83,7 +82,7 @@ function clearHistory(options) {
   return sanitizer.items.history.clear(makeRange(options));
 }
 
-let clearPasswords = Task.async(function* (options) {
+let clearPasswords = async function(options) {
   let loginManager = Services.logins;
   let yieldCounter = 0;
 
@@ -95,7 +94,7 @@ let clearPasswords = Task.async(function* (options) {
       if (login.timePasswordChanged >= options.since) {
         loginManager.removeLogin(login);
         if (++yieldCounter % YIELD_PERIOD == 0) {
-          yield new Promise(resolve => setTimeout(resolve, 0)); // Don't block the main thread too long.
+          await new Promise(resolve => setTimeout(resolve, 0)); // Don't block the main thread too long.
         }
       }
     }
@@ -103,13 +102,13 @@ let clearPasswords = Task.async(function* (options) {
     // Remove everything.
     loginManager.removeAllLogins();
   }
-});
+};
 
 function clearPluginData(options) {
   return sanitizer.items.pluginData.clear(makeRange(options));
 }
 
-let clearServiceWorkers = Task.async(function* () {
+let clearServiceWorkers = async function() {
   // Clearing service workers does not support timestamps.
   let yieldCounter = 0;
 
@@ -120,10 +119,10 @@ let clearServiceWorkers = Task.async(function* () {
     let host = sw.principal.URI.host;
     serviceWorkerManager.removeAndPropagate(host);
     if (++yieldCounter % YIELD_PERIOD == 0) {
-      yield new Promise(resolve => setTimeout(resolve, 0)); // Don't block the main thread too long.
+      await new Promise(resolve => setTimeout(resolve, 0)); // Don't block the main thread too long.
     }
   }
-});
+};
 
 function doRemoval(options, dataToRemove, extension) {
   if (options.originTypes &&

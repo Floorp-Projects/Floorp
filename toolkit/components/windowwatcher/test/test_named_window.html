@@ -44,16 +44,16 @@ window.
       });
     }
 
-    add_task(function*() {
+    add_task(async function() {
       // This magic value of 2 means that by default, when content tries
       // to open a new window, it'll actually open in a new window instead
       // of a new tab.
-      yield SpecialPowers.pushPrefEnv({"set": [
+      await SpecialPowers.pushPrefEnv({"set": [
         ["browser.link.open_newwindow", 2],
       ]});
 
       let win1 = window.open(TARGET_URL, "my_window");
-      yield promiseEvent(win1, "load");
+      await promiseEvent(win1, "load");
 
       let name = SpecialPowers.wrap(win1)
                  .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
@@ -67,7 +67,7 @@ window.
 
       let hashChange = promiseEvent(win1, "hashchange");
       let win2 = window.open(TARGET_URL_2, "my_window");
-      yield hashChange;
+      await hashChange;
 
       is(win1, win2, "Should have gotten back the same window");
       is(win1.location.href, new URL(TARGET_URL_2).href,
@@ -79,7 +79,7 @@ window.
       link.setAttribute("href", TARGET_URL_3);
       link.click();
 
-      yield hashChange;
+      await hashChange;
 
       is(win1.location.href, new URL(TARGET_URL_3).href,
          "Should have re-targeted pre-existing window");

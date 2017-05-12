@@ -72,12 +72,12 @@ function checkUpdates(aData) {
 }
 
 
-add_task(function* test_default_values() {
+add_task(async function test_default_values() {
   // Checks that the appropriate defaults are used for omitted values.
 
   startupManager();
 
-  let updates = yield checkUpdates({
+  let updates = await checkUpdates({
     id: "updatecheck-defaults@tests.mozilla.org",
     version: "0.1",
     updates: [{
@@ -105,7 +105,7 @@ add_task(function* test_default_values() {
   // If there's no applications property, we default to using one
   // containing "gecko". If there is an applications property, but
   // it doesn't contain "gecko", the update is skipped.
-  updates = yield checkUpdates({
+  updates = await checkUpdates({
     id: "updatecheck-defaults@tests.mozilla.org",
     version: "0.1",
     updates: [{
@@ -117,7 +117,7 @@ add_task(function* test_default_values() {
   equal(updates.length, 0);
 
   // Updates property is also optional. No updates, but also no error.
-  updates = yield checkUpdates({
+  updates = await checkUpdates({
     id: "updatecheck-defaults@tests.mozilla.org",
     version: "0.1",
   });
@@ -126,11 +126,11 @@ add_task(function* test_default_values() {
 });
 
 
-add_task(function* test_explicit_values() {
+add_task(async function test_explicit_values() {
   // Checks that the appropriate explicit values are used when
   // provided.
 
-  let updates = yield checkUpdates({
+  let updates = await checkUpdates({
     id: "updatecheck-explicit@tests.mozilla.org",
     version: "0.1",
     updates: [{
@@ -167,7 +167,7 @@ add_task(function* test_explicit_values() {
 });
 
 
-add_task(function* test_secure_hashes() {
+add_task(async function test_secure_hashes() {
   // Checks that only secure hash functions are accepted for
   // non-secure update URLs.
 
@@ -184,7 +184,7 @@ add_task(function* test_secure_hashes() {
     update_hash: `${hash}:08ac852190ecd81f40a514ea9299fe9143d9ab5e296b97e73fb2a314de49648a`,
   }));
 
-  let { messages, result: updates } = yield promiseConsoleOutput(() => {
+  let { messages, result: updates } = await promiseConsoleOutput(() => {
     return checkUpdates({
       id: "updatecheck-hashes@tests.mozilla.org",
       version: "0.1",
@@ -208,13 +208,13 @@ add_task(function* test_secure_hashes() {
 });
 
 
-add_task(function* test_strict_compat() {
+add_task(async function test_strict_compat() {
   // Checks that strict compatibility is enabled for strict max
   // versions other than "*", but not for advisory max versions.
   // Also, ensure that strict max versions take precedence over
   // advisory versions.
 
-  let { messages, result: updates } = yield promiseConsoleOutput(() => {
+  let { messages, result: updates } = await promiseConsoleOutput(() => {
     return checkUpdates({
       id: "updatecheck-strict@tests.mozilla.org",
       version: "0.1",
@@ -251,10 +251,10 @@ add_task(function* test_strict_compat() {
 });
 
 
-add_task(function* test_update_url_security() {
+add_task(async function test_update_url_security() {
   // Checks that update links to privileged URLs are not accepted.
 
-  let { messages, result: updates } = yield promiseConsoleOutput(() => {
+  let { messages, result: updates } = await promiseConsoleOutput(() => {
     return checkUpdates({
       id: "updatecheck-security@tests.mozilla.org",
       version: "0.1",
@@ -278,11 +278,11 @@ add_task(function* test_update_url_security() {
 });
 
 
-add_task(function* test_no_update_key() {
+add_task(async function test_no_update_key() {
   // Checks that updates fail when an update key has been specified.
 
-  let { messages } = yield promiseConsoleOutput(function* () {
-    yield Assert.rejects(
+  let { messages } = await promiseConsoleOutput(async function() {
+    await Assert.rejects(
       checkUpdates({
         id: "updatecheck-updatekey@tests.mozilla.org",
         version: "0.1",
@@ -300,7 +300,7 @@ add_task(function* test_no_update_key() {
 });
 
 
-add_task(function* test_type_detection() {
+add_task(async function test_type_detection() {
   // Checks that JSON update manifests are detected correctly
   // regardless of extension or MIME type.
 
@@ -338,11 +338,11 @@ add_task(function* test_type_detection() {
   ];
 
   for (let [i, test] of tests.entries()) {
-    let { messages } = yield promiseConsoleOutput(function *() {
+    let { messages } = await promiseConsoleOutput(async function() {
       let id = `updatecheck-typedetection-${i}@tests.mozilla.org`;
       let updates;
       try {
-        updates = yield checkUpdates({
+        updates = await checkUpdates({
           id,
           version: "0.1",
           contentType: test.contentType,

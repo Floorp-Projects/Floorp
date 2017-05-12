@@ -11,7 +11,6 @@ Cu.import("resource://gre/modules/KeyValueParser.jsm");
 Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
-Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
 /**
@@ -27,10 +26,10 @@ function computeMinidumpHash(id) {
   let cr = Cc["@mozilla.org/toolkit/crash-reporter;1"]
              .getService(Components.interfaces.nsICrashReporter);
 
-  return Task.spawn(function* () {
+  return (async function() {
     try {
       let minidumpFile = cr.getMinidumpForID(id);
-      let minidumpData = yield OS.File.read(minidumpFile.path);
+      let minidumpData = await OS.File.read(minidumpFile.path);
       let hasher = Cc["@mozilla.org/security/hash;1"]
                      .createInstance(Ci.nsICryptoHash);
       hasher.init(hasher.SHA256);
@@ -49,7 +48,7 @@ function computeMinidumpHash(id) {
       Cu.reportError(e);
       return null;
     }
-  });
+  })();
 }
 
 /**
@@ -65,18 +64,18 @@ function processExtraFile(id) {
   let cr = Cc["@mozilla.org/toolkit/crash-reporter;1"]
              .getService(Components.interfaces.nsICrashReporter);
 
-  return Task.spawn(function* () {
+  return (async function() {
     try {
       let extraFile = cr.getExtraFileForID(id);
       let decoder = new TextDecoder();
-      let extraData = yield OS.File.read(extraFile.path);
+      let extraData = await OS.File.read(extraFile.path);
 
       return parseKeyValuePairs(decoder.decode(extraData));
     } catch (e) {
       Cu.reportError(e);
       return {};
     }
-  });
+  })();
 }
 
 /**
@@ -125,17 +124,17 @@ CrashService.prototype = Object.freeze({
       throw new Error("Unrecognized CRASH_TYPE: " + crashType);
     }
 
-    let blocker = Task.spawn(function* () {
-      let metadata = yield processExtraFile(id);
-      let hash = yield computeMinidumpHash(id);
+    let blocker = (async function() {
+      let metadata = await processExtraFile(id);
+      let hash = await computeMinidumpHash(id);
 
       if (hash) {
         metadata.MinidumpSha256Hash = hash;
       }
 
-      yield Services.crashmanager.addCrash(processType, crashType, id,
+      await Services.crashmanager.addCrash(processType, crashType, id,
                                            new Date(), metadata);
-    });
+    })();
 
     AsyncShutdown.profileBeforeChange.addBlocker(
       "CrashService waiting for content crash ping to be sent", blocker

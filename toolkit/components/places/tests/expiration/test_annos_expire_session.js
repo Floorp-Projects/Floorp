@@ -17,7 +17,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_annos_expire_session() {
+add_task(async function test_annos_expire_session() {
   // Set interval to a large value so we don't expire on it.
   setInterval(3600); // 1h
 
@@ -25,7 +25,7 @@ add_task(function* test_annos_expire_session() {
   let now = Date.now() * 1000;
   for (let i = 0; i < 10; i++) {
     let pageURI = uri("http://session_page_anno." + i + ".mozilla.org/");
-    yield PlacesTestUtils.addVisits({ uri: pageURI, visitDate: now++ });
+    await PlacesTestUtils.addVisits({ uri: pageURI, visitDate: now++ });
     as.setPageAnnotation(pageURI, "test1", "test", 0, as.EXPIRE_SESSION);
     as.setPageAnnotation(pageURI, "test2", "test", 0, as.EXPIRE_SESSION);
   }
@@ -33,12 +33,12 @@ add_task(function* test_annos_expire_session() {
   // Add some bookmarked page and a couple session annotations for each.
   for (let i = 0; i < 10; i++) {
     let pageURI = uri("http://session_item_anno." + i + ".mozilla.org/");
-    let bm = yield PlacesUtils.bookmarks.insert({
+    let bm = await PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       url: pageURI,
       title: null
     });
-    let id = yield PlacesUtils.promiseItemId(bm.guid);
+    let id = await PlacesUtils.promiseItemId(bm.guid);
     as.setItemAnnotation(id, "test1", "test", 0, as.EXPIRE_SESSION);
     as.setItemAnnotation(id, "test2", "test", 0, as.EXPIRE_SESSION);
   }
@@ -53,31 +53,31 @@ add_task(function* test_annos_expire_session() {
   items = as.getItemsWithAnnotation("test2");
   do_check_eq(items.length, 10);
 
-  let deferred = Promise.defer();
-  waitForConnectionClosed(function() {
-    let stmt = DBConn(true).createAsyncStatement(
-      `SELECT id FROM moz_annos
-       UNION ALL
-       SELECT id FROM moz_items_annos
-       WHERE expiration = :expiration`
-    );
-    stmt.params.expiration = as.EXPIRE_SESSION;
-    stmt.executeAsync({
-      handleResult(aResultSet) {
-        dump_table("moz_annos");
-        dump_table("moz_items_annos");
-        do_throw("Should not find any leftover session annotations");
-      },
-      handleError(aError) {
-        do_throw("Error code " + aError.result + " with message '" +
-                 aError.message + "' returned.");
-      },
-      handleCompletion(aReason) {
-        do_check_eq(aReason, Ci.mozIStorageStatementCallback.REASON_FINISHED);
-        deferred.resolve();
-      }
+  await new Promise(resolve => {
+    waitForConnectionClosed(function() {
+      let stmt = DBConn(true).createAsyncStatement(
+        `SELECT id FROM moz_annos
+         UNION ALL
+         SELECT id FROM moz_items_annos
+         WHERE expiration = :expiration`
+      );
+      stmt.params.expiration = as.EXPIRE_SESSION;
+      stmt.executeAsync({
+        handleResult(aResultSet) {
+          dump_table("moz_annos");
+          dump_table("moz_items_annos");
+          do_throw("Should not find any leftover session annotations");
+        },
+        handleError(aError) {
+          do_throw("Error code " + aError.result + " with message '" +
+                   aError.message + "' returned.");
+        },
+        handleCompletion(aReason) {
+          do_check_eq(aReason, Ci.mozIStorageStatementCallback.REASON_FINISHED);
+          resolve();
+        }
+      });
+      stmt.finalize();
     });
-    stmt.finalize();
   });
-  yield deferred.promise;
 });

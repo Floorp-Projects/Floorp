@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* () {
+add_task(async function() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
@@ -48,7 +48,7 @@ add_task(function* () {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("tabs.reload");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("tabs.reload");
+  await extension.unload();
 });

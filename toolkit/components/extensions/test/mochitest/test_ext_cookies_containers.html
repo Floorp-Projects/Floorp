@@ -14,14 +14,14 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* setup() {
+add_task(async function setup() {
   // make sure userContext is enabled.
   return SpecialPowers.pushPrefEnv({"set": [
     ["privacy.userContext.enabled", true],
   ]});
 });
 
-add_task(function* test_cookie_containers() {
+add_task(async function test_cookie_containers() {
   async function background() {
     function assertExpected(expected, cookie) {
       for (let key of Object.keys(cookie)) {
@@ -82,9 +82,9 @@ add_task(function* test_cookie_containers() {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("cookies");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("cookies");
+  await extension.unload();
 });
 
 </script>

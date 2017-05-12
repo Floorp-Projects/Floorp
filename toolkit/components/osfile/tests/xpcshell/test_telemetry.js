@@ -4,9 +4,9 @@ var {OS: {File, Path, Constants}} = Components.utils.import("resource://gre/modu
 var {Services} = Components.utils.import("resource://gre/modules/Services.jsm", {});
 
 // Ensure that we have a profile but that the OS.File worker is not launched
-add_task(function* init() {
+add_task(async function init() {
   do_get_profile();
-  yield File.resetWorker();
+  await File.resetWorker();
 });
 
 function getCount(histogram) {
@@ -23,14 +23,14 @@ function getCount(histogram) {
 
 // Ensure that launching the OS.File worker adds data to the relevant
 // histograms
-add_task(function* test_startup() {
+add_task(async function test_startup() {
   let LAUNCH = "OSFILE_WORKER_LAUNCH_MS";
   let READY = "OSFILE_WORKER_READY_MS";
 
   let before = Services.telemetry.histogramSnapshots;
 
   // Launch the OS.File worker
-  yield File.getCurrentDirectory();
+  await File.getCurrentDirectory();
 
   let after = Services.telemetry.histogramSnapshots;
 
@@ -44,14 +44,14 @@ add_task(function* test_startup() {
 });
 
 // Ensure that calling writeAtomic adds data to the relevant histograms
-add_task(function* test_writeAtomic() {
+add_task(async function test_writeAtomic() {
   let LABEL = "OSFILE_WRITEATOMIC_JANK_MS";
 
   let before = Services.telemetry.histogramSnapshots;
 
   // Perform a write.
   let path = Path.join(Constants.Path.profileDir, "test_osfile_telemetry.tmp");
-  yield File.writeAtomic(path, LABEL, { tmpPath: path + ".tmp" } );
+  await File.writeAtomic(path, LABEL, { tmpPath: path + ".tmp" } );
 
   let after = Services.telemetry.histogramSnapshots;
 

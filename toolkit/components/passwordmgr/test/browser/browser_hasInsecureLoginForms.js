@@ -19,11 +19,11 @@ function waitForInsecureLoginFormsStateChange(browser, count) {
  * Checks that hasInsecureLoginForms is true for a simple HTTP page and false
  * for a simple HTTPS page.
  */
-add_task(function* test_simple() {
+add_task(async function test_simple() {
   for (let scheme of ["http", "https"]) {
     let tab = gBrowser.addTab(scheme + testUrlPath + "form_basic.html");
     let browser = tab.linkedBrowser;
-    yield Promise.all([
+    await Promise.all([
       BrowserTestUtils.switchTab(gBrowser, tab),
       BrowserTestUtils.browserLoaded(browser),
       // One event is triggered by pageshow and one by DOMFormHasPassword.
@@ -47,15 +47,15 @@ add_task(function* test_simple() {
  *
  * Moving back in history should set hasInsecureLoginForms to true again.
  */
-add_task(function* test_subframe_navigation() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function test_subframe_navigation() {
+  await SpecialPowers.pushPrefEnv({
     "set": [["security.mixed_content.block_active_content", false]],
   });
 
   // Load the page with the subframe in a new tab.
   let tab = gBrowser.addTab("https" + testUrlPath + "insecure_test.html");
   let browser = tab.linkedBrowser;
-  yield Promise.all([
+  await Promise.all([
     BrowserTestUtils.switchTab(gBrowser, tab),
     BrowserTestUtils.browserLoaded(browser),
     // Two events are triggered by pageshow and one by DOMFormHasPassword.
@@ -70,22 +70,22 @@ add_task(function* test_subframe_navigation() {
     // One event is triggered by pageshow and one by DOMFormHasPassword.
     waitForInsecureLoginFormsStateChange(browser, 2),
   ]);
-  yield ContentTask.spawn(browser, null, function* () {
+  await ContentTask.spawn(browser, null, async function() {
     content.document.getElementById("test-iframe")
            .contentDocument.getElementById("test-link").click();
   });
-  yield promiseSubframeReady;
+  await promiseSubframeReady;
 
   Assert.ok(!LoginManagerParent.hasInsecureLoginForms(browser));
 
   // Navigate back to the insecure page. We only have to wait for the
   // InsecureLoginFormsStateChange event that is triggered by pageshow.
   let promise = waitForInsecureLoginFormsStateChange(browser, 1);
-  yield ContentTask.spawn(browser, null, function* () {
+  await ContentTask.spawn(browser, null, async function() {
     content.document.getElementById("test-iframe")
            .contentWindow.history.back();
   });
-  yield promise;
+  await promise;
 
   Assert.ok(LoginManagerParent.hasInsecureLoginForms(browser));
 

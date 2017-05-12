@@ -3,8 +3,8 @@
 "use strict";
 
 
-add_task(function* test_manifest_commands() {
-  let normalized = yield ExtensionTestUtils.normalizeManifest({
+add_task(async function test_manifest_commands() {
+  let normalized = await ExtensionTestUtils.normalizeManifest({
     "commands": {
       "toggle-feature": {
         "suggested_key": {"default": "Shifty+Y"},

@@ -48,6 +48,10 @@ public:
 
   uint64_t GetId() const { return mId; }
 
+  void MarkDestroyed() {
+    mDestroyed = true;
+  }
+
 protected:
   explicit LayerTransactionChild(const uint64_t& aId)
     : mForwarder(nullptr)

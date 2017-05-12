@@ -62,7 +62,7 @@ function promiseCreateXULAlert(alertService, listener, name) {
   });
 }
 
-add_task(function* test_require_interaction() {
+add_task(async function test_require_interaction() {
   if (!("@mozilla.org/alerts-service;1" in Cc)) {
     todo(false, "Alerts service does not exist in this application.");
     return;
@@ -79,7 +79,7 @@ add_task(function* test_require_interaction() {
     return;
   }
 
-  yield SpecialPowers.pushPrefEnv({"set": [
+  await SpecialPowers.pushPrefEnv({"set": [
       [ "dom.webnotifications.requireinteraction.enabled", true ],
       [ "dom.webnotifications.requireinteraction.count", 2 ]
   ]});
@@ -114,7 +114,7 @@ add_task(function* test_require_interaction() {
     }
   }
 
-  var xulAlertCreated = yield promiseCreateXULAlert(alertService,
+  var xulAlertCreated = await promiseCreateXULAlert(alertService,
     createAlertListener("first"), "first");
   if (!xulAlertCreated) {
     ok(true, "Platform does not use XUL alerts.");
@@ -122,24 +122,24 @@ add_task(function* test_require_interaction() {
     return;
   }
 
-  xulAlertCreated = yield promiseCreateXULAlert(alertService,
+  xulAlertCreated = await promiseCreateXULAlert(alertService,
     createAlertListener("second"), "second");
   ok(xulAlertCreated, "Create XUL alert");
 
   // Replace second alert
-  xulAlertCreated = yield promiseCreateXULAlert(alertService,
+  xulAlertCreated = await promiseCreateXULAlert(alertService,
     createAlertListener("second replacement"), "second");
   ok(xulAlertCreated, "Create XUL alert");
 
   var testFinishResolve;
   var testFinishPromise = new Promise((resolve) => { testFinishResolve = resolve; });
 
-  xulAlertCreated = yield promiseCreateXULAlert(alertService,
+  xulAlertCreated = await promiseCreateXULAlert(alertService,
     createAlertListener("third"), "third"),
   ok(!xulAlertCreated, "XUL alert should not be visible");
 
   // Replace the not-yet-visible third alert.
-  xulAlertCreated = yield promiseCreateXULAlert(alertService,
+  xulAlertCreated = await promiseCreateXULAlert(alertService,
     createAlertListener("third replacement",
     function showCallback() {
       alertService.closeAlert("second");
@@ -159,7 +159,7 @@ add_task(function* test_require_interaction() {
 
   alertService.closeAlert("first");
 
-  yield testFinishPromise;
+  await testFinishPromise;
 });
 
 </script>

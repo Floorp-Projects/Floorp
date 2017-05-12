@@ -7,8 +7,8 @@
  * history.pushState, the history service has a title stored for the new URI.
  **/
 
-add_task(function* () {
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com");
+add_task(async function() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com");
 
   let newTitlePromise = new Promise(resolve => {
     let observer = {
@@ -34,18 +34,18 @@ add_task(function* () {
     PlacesUtils.history.addObserver(observer);
   });
 
-  yield ContentTask.spawn(tab.linkedBrowser, null, function* () {
+  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
     let title =  content.document.title;
     content.history.pushState("", "", "new_page");
     Assert.ok(title, "Content window should initially have a title.");
   });
 
-  let newtitle = yield newTitlePromise;
+  let newtitle = await newTitlePromise;
 
-  yield ContentTask.spawn(tab.linkedBrowser, { newtitle }, function* (args) {
+  await ContentTask.spawn(tab.linkedBrowser, { newtitle }, async function(args) {
     Assert.equal(args.newtitle, content.document.title, "Title after pushstate.");
   });
 
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
   gBrowser.removeTab(tab);
 });

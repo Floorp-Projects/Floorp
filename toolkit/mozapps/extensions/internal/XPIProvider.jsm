@@ -42,8 +42,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PermissionsUtils",
                                   "resource://gre/modules/PermissionsUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserToolboxProcess",
@@ -970,19 +968,19 @@ function getRDFProperty(aDs, aResource, aProperty) {
  * @throws if the install manifest in the stream is corrupt or could not
  *         be read
  */
-var loadManifestFromWebManifest = Task.async(function*(aUri) {
+var loadManifestFromWebManifest = async function(aUri) {
   // We're passed the URI for the manifest file. Get the URI for its
   // parent directory.
   let uri = Services.io.newURI("./", null, aUri);
 
   let extension = new ExtensionData(uri);
 
-  let manifest = yield extension.loadManifest();
+  let manifest = await extension.loadManifest();
 
   // Read the list of available locales, and pre-load messages for
   // all locales.
   let locales = (extension.errors.length == 0) ?
-                yield extension.initAllLocales() : null;
+                await extension.initAllLocales() : null;
 
   if (extension.errors.length > 0) {
     throw new Error("Extension is invalid");
@@ -1093,7 +1091,7 @@ var loadManifestFromWebManifest = Task.async(function*(aUri) {
   addon.softDisabled = addon.blocklistState == nsIBlocklistService.STATE_SOFTBLOCKED;
 
   return addon;
-});
+};
 
 /**
  * Reads an AddonInternal object from an RDF stream.
@@ -1106,7 +1104,7 @@ var loadManifestFromWebManifest = Task.async(function*(aUri) {
  * @throws if the install manifest in the RDF stream is corrupt or could not
  *         be read
  */
-let loadManifestFromRDF = Task.async(function*(aUri, aStream) {
+let loadManifestFromRDF = async function(aUri, aStream) {
   function getPropertyArray(aDs, aSource, aProperty) {
     let values = [];
     let targets = aDs.GetTargets(aSource, EM_R(aProperty), true);
@@ -1254,7 +1252,7 @@ let loadManifestFromRDF = Task.async(function*(aUri, aStream) {
 
     if (addon.hasEmbeddedWebExtension) {
       let uri = Services.io.newURI("webextension/manifest.json", null, aUri);
-      let embeddedAddon = yield loadManifestFromWebManifest(uri);
+      let embeddedAddon = await loadManifestFromWebManifest(uri);
       if (embeddedAddon.optionsURL) {
         if (addon.optionsType || addon.optionsURL)
           logger.warn(`Addon ${addon.id} specifies optionsType or optionsURL ` +
@@ -1379,7 +1377,7 @@ let loadManifestFromRDF = Task.async(function*(aUri, aStream) {
   addon.userPermissions = null;
 
   return addon;
-});
+};
 
 function defineSyncGUID(aAddon) {
   // Define .syncGUID as a lazy property which is also settable
@@ -1428,7 +1426,7 @@ function generateTemporaryInstallID(aFile) {
  * @return an AddonInternal object
  * @throws if the directory does not contain a valid install manifest
  */
-var loadManifestFromDir = Task.async(function*(aDir, aInstallLocation) {
+var loadManifestFromDir = async function(aDir, aInstallLocation) {
   function getFileSize(aFile) {
     if (aFile.isSymlink())
       return 0;
@@ -1445,7 +1443,7 @@ var loadManifestFromDir = Task.async(function*(aDir, aInstallLocation) {
     return size;
   }
 
-  function* loadFromRDF(aUri) {
+  async function loadFromRDF(aUri) {
     let fis = Cc["@mozilla.org/network/file-input-stream;1"].
               createInstance(Ci.nsIFileInputStream);
     fis.init(aUri.file, -1, -1, false);
@@ -1453,7 +1451,7 @@ var loadManifestFromDir = Task.async(function*(aDir, aInstallLocation) {
               createInstance(Ci.nsIBufferedInputStream);
     bis.init(fis, 4096);
     try {
-      var addon = yield loadManifestFromRDF(aUri, bis);
+      var addon = await loadManifestFromRDF(aUri, bis);
     } finally {
       bis.close();
       fis.close();
@@ -1492,7 +1490,7 @@ var loadManifestFromDir = Task.async(function*(aDir, aInstallLocation) {
 
   let addon;
   if (file.leafName == FILE_WEB_MANIFEST) {
-    addon = yield loadManifestFromWebManifest(uri);
+    addon = await loadManifestFromWebManifest(uri);
     if (!addon.id) {
       if (aInstallLocation == TemporaryInstallLocation) {
         addon.id = generateTemporaryInstallID(aDir);
@@ -1501,20 +1499,20 @@ var loadManifestFromDir = Task.async(function*(aDir, aInstallLocation) {
       }
     }
   } else {
-    addon = yield loadFromRDF(uri);
+    addon = await loadFromRDF(uri);
   }
 
   addon._sourceBundle = aDir.clone();
   addon._installLocation = aInstallLocation;
   addon.size = getFileSize(aDir);
-  addon.signedState = yield verifyDirSignedState(aDir, addon)
+  addon.signedState = await verifyDirSignedState(aDir, addon)
     .then(({signedState}) => signedState);
   addon.appDisabled = !isUsableAddon(addon);
 
   defineSyncGUID(addon);
 
   return addon;
-});
+};
 
 /**
  * Loads an AddonInternal object from an nsIZipReader for an add-on.
@@ -1524,14 +1522,14 @@ var loadManifestFromDir = Task.async(function*(aDir, aInstallLocation) {
  * @return an AddonInternal object
  * @throws if the XPI file does not contain a valid install manifest
  */
-var loadManifestFromZipReader = Task.async(function*(aZipReader, aInstallLocation) {
-  function* loadFromRDF(aUri) {
+var loadManifestFromZipReader = async function(aZipReader, aInstallLocation) {
+  async function loadFromRDF(aUri) {
     let zis = aZipReader.getInputStream(entry);
     let bis = Cc["@mozilla.org/network/buffered-input-stream;1"].
               createInstance(Ci.nsIBufferedInputStream);
     bis.init(zis, 4096);
     try {
-      var addon = yield loadManifestFromRDF(aUri, bis);
+      var addon = await loadManifestFromRDF(aUri, bis);
     } finally {
       bis.close();
       zis.close();
@@ -1570,8 +1568,8 @@ var loadManifestFromZipReader = Task.async(function*(aZipReader, aInstallLocatio
   let isWebExtension = (entry == FILE_WEB_MANIFEST);
 
   let addon = isWebExtension ?
-              yield loadManifestFromWebManifest(uri) :
-              yield loadFromRDF(uri);
+              await loadManifestFromWebManifest(uri) :
+              await loadFromRDF(uri);
 
   addon._sourceBundle = aZipReader.file;
   addon._installLocation = aInstallLocation;
@@ -1581,7 +1579,7 @@ var loadManifestFromZipReader = Task.async(function*(aZipReader, aInstallLocatio
   while (entries.hasMore())
     addon.size += aZipReader.getEntry(entries.getNext()).realSize;
 
-  let {signedState, cert} = yield verifyZipSignedState(aZipReader.file, addon);
+  let {signedState, cert} = await verifyZipSignedState(aZipReader.file, addon);
   addon.signedState = signedState;
   if (isWebExtension && !addon.id) {
     if (cert) {
@@ -1599,7 +1597,7 @@ var loadManifestFromZipReader = Task.async(function*(aZipReader, aInstallLocatio
   defineSyncGUID(addon);
 
   return addon;
-});
+};
 
 /**
  * Loads an AddonInternal object from an add-on in an XPI file.
@@ -1609,7 +1607,7 @@ var loadManifestFromZipReader = Task.async(function*(aZipReader, aInstallLocatio
  * @return an AddonInternal object
  * @throws if the XPI file does not contain a valid install manifest
  */
-var loadManifestFromZipFile = Task.async(function*(aXPIFile, aInstallLocation) {
+var loadManifestFromZipFile = async function(aXPIFile, aInstallLocation) {
   let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].
                   createInstance(Ci.nsIZipReader);
   try {
@@ -1618,12 +1616,12 @@ var loadManifestFromZipFile = Task.async(function*(aXPIFile, aInstallLocation) {
     // Can't return this promise because that will make us close the zip reader
     // before it has finished loading the manifest. Wait for the result and then
     // return.
-    let manifest = yield loadManifestFromZipReader(zipReader, aInstallLocation);
+    let manifest = await loadManifestFromZipReader(zipReader, aInstallLocation);
     return manifest;
   } finally {
     zipReader.close();
   }
-});
+};
 
 function loadManifestFromFile(aFile, aInstallLocation) {
   if (aFile.isFile())
@@ -1991,20 +1989,20 @@ function escapeAddonURI(aAddon, aUri, aUpdateType, aAppVersion) {
 }
 
 function removeAsync(aFile) {
-  return Task.spawn(function*() {
+  return (async function() {
     let info = null;
     try {
-      info = yield OS.File.stat(aFile.path);
+      info = await OS.File.stat(aFile.path);
       if (info.isDir)
-        yield OS.File.removeDir(aFile.path);
+        await OS.File.removeDir(aFile.path);
       else
-        yield OS.File.remove(aFile.path);
+        await OS.File.remove(aFile.path);
     } catch (e) {
       if (!(e instanceof OS.File.Error) || !e.becauseNoSuchFile)
         throw e;
       // The file has already gone away
     }
-  });
+  })();
 }
 
 /**
@@ -3306,7 +3304,7 @@ this.XPIProvider = {
    */
   verifySignatures() {
     XPIDatabase.getAddonList(a => true, (addons) => {
-      Task.spawn(function*() {
+      (async function() {
         let changes = {
           enabled: [],
           disabled: []
@@ -3317,7 +3315,7 @@ this.XPIProvider = {
           if (!addon._sourceBundle.exists())
             continue;
 
-          let signedState = yield verifyBundleSignedState(addon._sourceBundle, addon);
+          let signedState = await verifyBundleSignedState(addon._sourceBundle, addon);
 
           if (signedState != addon.signedState) {
             addon.signedState = signedState;
@@ -3334,7 +3332,7 @@ this.XPIProvider = {
         XPIDatabase.saveChanges();
 
         Services.obs.notifyObservers(null, "xpi-signature-changed", JSON.stringify(changes));
-      }).then(null, err => {
+      })().then(null, err => {
         logger.error("XPI_verifySignature: " + err);
       })
     });
@@ -4091,10 +4089,10 @@ this.XPIProvider = {
    *
    * @return See installAddonFromLocation return value.
    */
-  installAddonFromSources: Task.async(function*(aFile) {
+  async installAddonFromSources(aFile) {
     let location = XPIProvider.installLocationsByName[KEY_APP_PROFILE];
     return this.installAddonFromLocation(aFile, location, "proxy");
-  }),
+  },
 
   /**
    * Installs add-on from a local XPI file or directory.
@@ -4111,11 +4109,11 @@ this.XPIProvider = {
    *         if the add-on is not a valid restartless add-on or if the
    *         same ID is already installed.
    */
-  installAddonFromLocation: Task.async(function*(aFile, aInstallLocation, aInstallAction) {
+  async installAddonFromLocation(aFile, aInstallLocation, aInstallAction) {
     if (aFile.exists() && aFile.isFile()) {
       flushJarCache(aFile);
     }
-    let addon = yield loadManifestFromFile(aFile, aInstallLocation);
+    let addon = await loadManifestFromFile(aFile, aInstallLocation);
 
     aInstallLocation.installAddon({ id: addon.id, source: aFile, action: aInstallAction });
 
@@ -4139,7 +4137,7 @@ this.XPIProvider = {
                     + " can be installed from sources:", addon.id);
     }
     let installReason = BOOTSTRAP_REASONS.ADDON_INSTALL;
-    let oldAddon = yield new Promise(
+    let oldAddon = await new Promise(
                    resolve => XPIDatabase.getVisibleAddonForID(addon.id, resolve));
 
     let extraParams = {};
@@ -4216,7 +4214,7 @@ this.XPIProvider = {
       AddonManagerPrivate.notifyAddonChanged(addon.id, addon.type, false);
 
     return addon.wrapper;
-  }),
+  },
 
   /**
    * Returns an Addon corresponding to an instance ID.
@@ -5653,7 +5651,7 @@ class AddonInstall {
    *         XPI is incorrectly signed
    */
   loadManifest(file) {
-    return Task.spawn((function*() {
+    return (async () => {
       let zipreader = Cc["@mozilla.org/libjar/zip-reader;1"].
           createInstance(Ci.nsIZipReader);
       try {
@@ -5665,7 +5663,7 @@ class AddonInstall {
 
       try {
         // loadManifestFromZipReader performs the certificate verification for us
-        this.addon = yield loadManifestFromZipReader(zipreader, this.installLocation);
+        this.addon = await loadManifestFromZipReader(zipreader, this.installLocation);
       } catch (e) {
         zipreader.close();
         return Promise.reject([AddonManager.ERROR_CORRUPT_FILE, e]);
@@ -5740,12 +5738,12 @@ class AddonInstall {
       // makes it impossible to delete on Windows.
 
       // Try to load from the existing cache first
-      let repoAddon = yield new Promise(resolve => AddonRepository.getCachedAddonByID(this.addon.id, resolve));
+      let repoAddon = await new Promise(resolve => AddonRepository.getCachedAddonByID(this.addon.id, resolve));
 
       // It wasn't there so try to re-download it
       if (!repoAddon) {
-        yield new Promise(resolve => AddonRepository.cacheAddons([this.addon.id], resolve));
-        repoAddon = yield new Promise(resolve => AddonRepository.getCachedAddonByID(this.addon.id, resolve));
+        await new Promise(resolve => AddonRepository.cacheAddons([this.addon.id], resolve));
+        repoAddon = await new Promise(resolve => AddonRepository.getCachedAddonByID(this.addon.id, resolve));
       }
 
       this.addon._repositoryAddon = repoAddon;
@@ -5755,7 +5753,7 @@ class AddonInstall {
         null;
       this.addon.appDisabled = !isUsableAddon(this.addon);
       return undefined;
-    }).bind(this));
+    })();
   }
 
   getIcon(desiredSize = 64) {
@@ -5778,7 +5776,7 @@ class AddonInstall {
    * and has been verified).
    */
   checkPrompt() {
-    Task.spawn((function*() {
+    (async () => {
       if (this.promptHandler) {
         let info = {
           existingAddon: this.existingAddon ? this.existingAddon.wrapper : null,
@@ -5787,7 +5785,7 @@ class AddonInstall {
         };
 
         try {
-          yield this.promptHandler(info);
+          await this.promptHandler(info);
         } catch (err) {
           logger.info(`Install of ${this.addon.id} cancelled by user`);
           this.state = AddonManager.STATE_CANCELLED;
@@ -5799,7 +5797,7 @@ class AddonInstall {
       }
       this.state = AddonManager.STATE_PROMPTS_DONE;
       this.install();
-    }).bind(this));
+    })();
   }
 
   /**
@@ -5865,18 +5863,18 @@ class AddonInstall {
 
     let stagedAddon = this.installLocation.getStagingDir();
 
-    Task.spawn((function*() {
+    (async () => {
       let installedUnpacked = 0;
 
-      yield this.installLocation.requestStagingDir();
+      await this.installLocation.requestStagingDir();
 
       // remove any previously staged files
-      yield this.unstageInstall(stagedAddon);
+      await this.unstageInstall(stagedAddon);
 
       stagedAddon.append(this.addon.id);
       stagedAddon.leafName = this.addon.id + ".xpi";
 
-      installedUnpacked = yield this.stageInstall(requiresRestart, stagedAddon, isUpgrade);
+      installedUnpacked = await this.stageInstall(requiresRestart, stagedAddon, isUpgrade);
 
       if (requiresRestart) {
         this.state = AddonManager.STATE_INSTALLED;
@@ -5981,7 +5979,7 @@ class AddonInstall {
         if (isTheme(this.addon.type) && this.addon.active)
           AddonManagerPrivate.notifyAddonChanged(this.addon.id, this.addon.type, requiresRestart);
       }
-    }).bind(this)).then(null, (e) => {
+    })().then(null, (e) => {
       logger.warn(`Failed to install ${this.file.path} from ${this.sourceURI.spec} to ${stagedAddon.path}`, e);
 
       if (stagedAddon.exists())
@@ -6004,7 +6002,7 @@ class AddonInstall {
    * Stages an upgrade for next application restart.
    */
   stageInstall(restartRequired, stagedAddon, isUpgrade) {
-    return Task.spawn((function*() {
+    return (async () => {
       let stagedJSON = stagedAddon.clone();
       stagedJSON.leafName = this.addon.id + ".json";
 
@@ -6015,14 +6013,14 @@ class AddonInstall {
         logger.debug("Addon " + this.addon.id + " will be installed as " +
                      "an unpacked directory");
         stagedAddon.leafName = this.addon.id;
-        yield OS.File.makeDir(stagedAddon.path);
-        yield ZipUtils.extractFilesAsync(this.file, stagedAddon);
+        await OS.File.makeDir(stagedAddon.path);
+        await ZipUtils.extractFilesAsync(this.file, stagedAddon);
         installedUnpacked = 1;
       } else {
         logger.debug(`Addon ${this.addon.id} will be installed as a packed xpi`);
         stagedAddon.leafName = this.addon.id + ".xpi";
 
-        yield OS.File.copy(this.file.path, stagedAddon.path);
+        await OS.File.copy(this.file.path, stagedAddon.path);
       }
 
       if (restartRequired) {
@@ -6040,14 +6038,14 @@ class AddonInstall {
       }
 
       return installedUnpacked;
-    }).bind(this));
+    })();
   }
 
   /**
    * Removes any previously staged upgrade.
    */
   unstageInstall(stagedAddon) {
-    return Task.spawn((function*() {
+    return (async () => {
       let stagedJSON = stagedAddon.clone();
       let removedAddon = stagedAddon.clone();
 
@@ -6058,10 +6056,10 @@ class AddonInstall {
       }
 
       removedAddon.append(this.addon.id);
-      yield removeAsync(removedAddon);
+      await removeAsync(removedAddon);
       removedAddon.leafName = this.addon.id + ".xpi";
-      yield removeAsync(removedAddon);
-    }).bind(this));
+      await removeAsync(removedAddon);
+    })();
   }
 
   /**
@@ -6071,19 +6069,19 @@ class AddonInstall {
     *                                    when resuming.
     */
   postpone(resumeFn) {
-    return Task.spawn((function*() {
+    return (async () => {
       this.state = AddonManager.STATE_POSTPONED;
 
       let stagingDir = this.installLocation.getStagingDir();
       let stagedAddon = stagingDir.clone();
 
-      yield this.installLocation.requestStagingDir();
-      yield this.unstageInstall(stagedAddon);
+      await this.installLocation.requestStagingDir();
+      await this.unstageInstall(stagedAddon);
 
       stagedAddon.append(this.addon.id);
       stagedAddon.leafName = this.addon.id + ".xpi";
 
-      yield this.stageInstall(true, stagedAddon, true);
+      await this.stageInstall(true, stagedAddon, true);
 
       AddonManagerPrivate.callInstallListeners("onInstallPostponed",
                                                this.listeners, this.wrapper)
@@ -6112,7 +6110,7 @@ class AddonInstall {
       // it will not be removed until resumed or installed by restart.
       // See also cleanStagingDir()
       this.installLocation.releaseStagingDir();
-    }).bind(this));
+    })();
   }
 }
 
@@ -6124,7 +6122,7 @@ class LocalAddonInstall extends AddonInstall {
    *          A Promise that resolves when the object is ready to use.
    */
   init() {
-    return Task.spawn((function*() {
+    return (async () => {
       this.file = this.sourceURI.QueryInterface(Ci.nsIFileURL).file;
 
       if (!this.file.exists()) {
@@ -6168,7 +6166,7 @@ class LocalAddonInstall extends AddonInstall {
       }
 
       try {
-        yield this.loadManifest(this.file);
+        await this.loadManifest(this.file);
       } catch ([error, message]) {
         logger.warn("Invalid XPI", message);
         this.state = AddonManager.STATE_DOWNLOAD_FAILED;
@@ -6180,7 +6178,7 @@ class LocalAddonInstall extends AddonInstall {
         return;
       }
 
-      let addon = yield new Promise(resolve => {
+      let addon = await new Promise(resolve => {
         XPIDatabase.getVisibleAddonForID(this.addon.id, resolve);
       });
 
@@ -6193,7 +6191,7 @@ class LocalAddonInstall extends AddonInstall {
       if (!this.addon.isCompatible) {
         this.state = AddonManager.STATE_CHECKING;
 
-        yield new Promise(resolve => {
+        await new Promise(resolve => {
           new UpdateChecker(this.addon, {
             onUpdateFinished: aAddon => {
               this.state = AddonManager.STATE_DOWNLOADED;
@@ -6210,7 +6208,7 @@ class LocalAddonInstall extends AddonInstall {
                                                  this.wrapper);
 
       }
-    }).bind(this));
+    })();
   }
 
   install() {
@@ -6700,7 +6698,7 @@ function createLocalInstall(file, location) {
 function createUpdate(aCallback, aAddon, aUpdate) {
   let url = Services.io.newURI(aUpdate.updateURL);
 
-  Task.spawn(function*() {
+  (async function() {
     let opts = {
       hash: aUpdate.updateHash,
       existingAddon: aAddon,
@@ -6712,7 +6710,7 @@ function createUpdate(aCallback, aAddon, aUpdate) {
     let install;
     if (url instanceof Ci.nsIFileURL) {
       install = new LocalAddonInstall(aAddon._installLocation, url, opts);
-      yield install.init();
+      await install.init();
     } else {
       install = new DownloadAddonInstall(aAddon._installLocation, url, opts);
     }
@@ -6724,7 +6722,7 @@ function createUpdate(aCallback, aAddon, aUpdate) {
     }
 
     aCallback(install);
-  });
+  })();
 }
 
 // This map is shared between AddonInstallWrapper and AddonWrapper
@@ -7236,10 +7234,10 @@ AddonInternal.prototype = {
     let parentPath = OS.Path.join(OS.Constants.Path.profileDir, "extension-data");
     let dirPath = OS.Path.join(parentPath, this.id);
 
-    Task.spawn(function*() {
-      yield OS.File.makeDir(parentPath, {ignoreExisting: true});
-      yield OS.File.makeDir(dirPath, {ignoreExisting: true});
-    }).then(() => callback(dirPath, null),
+    (async function() {
+      await OS.File.makeDir(parentPath, {ignoreExisting: true});
+      await OS.File.makeDir(dirPath, {ignoreExisting: true});
+    })().then(() => callback(dirPath, null),
             e => callback(dirPath, e));
   },
 

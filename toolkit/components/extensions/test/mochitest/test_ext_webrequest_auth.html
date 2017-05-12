@@ -56,7 +56,7 @@ function getAuthHandler(result, blocking = true) {
   });
 }
 
-add_task(function* test_webRequest_auth() {
+add_task(async function test_webRequest_auth() {
   // Make use of head_webrequest to ensure event sequence.
   let events = {
     "onBeforeRequest":     [{urls: ["*://mochi.test/*"]}, ["blocking"]],
@@ -71,7 +71,7 @@ add_task(function* test_webRequest_auth() {
   };
 
   let extension = makeExtension(events);
-  yield extension.startup();
+  await extension.startup();
   let authInfo = {
     username: "testuser",
     password: "testpass",
@@ -86,17 +86,17 @@ add_task(function* test_webRequest_auth() {
   };
   // expecting origin == undefined
   extension.sendMessage("set-expected", {expect, origin: location.href});
-  yield extension.awaitMessage("continue");
+  await extension.awaitMessage("continue");
 
-  yield testXHR(`${baseUrl}?realm=webRequest_auth&user=${authInfo.username}&pass=${authInfo.password}`);
+  await testXHR(`${baseUrl}?realm=webRequest_auth&user=${authInfo.username}&pass=${authInfo.password}`);
 
-  yield extension.awaitMessage("done");
-  yield extension.unload();
+  await extension.awaitMessage("done");
+  await extension.unload();
 });
 
 // This test is the same as above, however we shouldn't receive onAuthRequired
 // since those credentials are now cached (thus optional_events is not set).
-add_task(function* test_webRequest_cached_credentials() {
+add_task(async function test_webRequest_cached_credentials() {
   // Make use of head_webrequest to ensure event sequence.
   let events = {
     "onBeforeRequest":     [{urls: ["*://mochi.test/*"]}, ["blocking"]],
@@ -111,7 +111,7 @@ add_task(function* test_webRequest_cached_credentials() {
   };
 
   let extension = makeExtension(events);
-  yield extension.startup();
+  await extension.startup();
   let authInfo = {
     username: "testuser",
     password: "testpass",
@@ -124,66 +124,66 @@ add_task(function* test_webRequest_cached_credentials() {
   };
   // expecting origin == undefined
   extension.sendMessage("set-expected", {expect, origin: location.href});
-  yield extension.awaitMessage("continue");
+  await extension.awaitMessage("continue");
 
-  yield testXHR(`${baseUrl}?realm=webRequest_auth&user=${authInfo.username}&pass=${authInfo.password}`);
+  await testXHR(`${baseUrl}?realm=webRequest_auth&user=${authInfo.username}&pass=${authInfo.password}`);
 
-  yield extension.awaitMessage("done");
-  yield extension.unload();
+  await extension.awaitMessage("done");
+  await extension.unload();
 });
 
-add_task(function* test_webRequest_cached_credentials2() {
+add_task(async function test_webRequest_cached_credentials2() {
   let authCredentials = {
     username: "testuser",
     password: "testpass",
   };
   let ex1 = getAuthHandler();
-  yield ex1.startup();
+  await ex1.startup();
 
-  yield testXHR(`${baseUrl}?realm=webRequest_auth&user=${authCredentials.username}&pass=${authCredentials.password}`);
+  await testXHR(`${baseUrl}?realm=webRequest_auth&user=${authCredentials.username}&pass=${authCredentials.password}`);
 
-  yield ex1.awaitMessage("onCompleted");
-  yield ex1.unload();
+  await ex1.awaitMessage("onCompleted");
+  await ex1.unload();
 });
 
-add_task(function* test_webRequest_window() {
+add_task(async function test_webRequest_window() {
   let authCredentials = {
     username: "testuser",
     password: "testpass",
   };
   let ex1 = getAuthHandler();
-  yield ex1.startup();
+  await ex1.startup();
 
   let win = window.open(`${baseUrl}?realm=test_webRequest_window&user=${authCredentials.username}&pass=${authCredentials.password}`);
 
-  yield ex1.awaitMessage("onCompleted");
-  yield ex1.unload();
+  await ex1.awaitMessage("onCompleted");
+  await ex1.unload();
   win.close();
 });
 
-add_task(function* test_webRequest_auth_cancelled() {
+add_task(async function test_webRequest_auth_cancelled() {
   let authCredentials = {
     username: "testuser_canceled",
     password: "testpass_canceled",
   };
   let ex1 = getAuthHandler({authCredentials});
-  yield ex1.startup();
+  await ex1.startup();
   let ex2 = getAuthHandler({cancel: true});
-  yield ex2.startup();
+  await ex2.startup();
 
-  yield Assert.rejects(testXHR(`${baseUrl}?realm=test_webRequest_auth_cancelled&user=${authCredentials.username}&pass=${authCredentials.password}`), "caught rejected xhr");
+  await Assert.rejects(testXHR(`${baseUrl}?realm=test_webRequest_auth_cancelled&user=${authCredentials.username}&pass=${authCredentials.password}`), "caught rejected xhr");
 
-  yield Promise.all([
+  await Promise.all([
     ex1.awaitMessage("onAuthRequired"),
     ex2.awaitMessage("onAuthRequired"),
     ex1.awaitMessage("onErrorOccurred"),
     ex2.awaitMessage("onErrorOccurred"),
   ]);
-  yield ex1.unload();
-  yield ex2.unload();
+  await ex1.unload();
+  await ex2.unload();
 });
 
-add_task(function* test_webRequest_auth_nonblocking() {
+add_task(async function test_webRequest_auth_nonblocking() {
   // The first listener handles the auth request, the second listener
   // is a non-blocking listener and cannot respond but will get the call.
   let authCredentials = {
@@ -191,44 +191,44 @@ add_task(function* test_webRequest_auth_nonblocking() {
     password: "testpass",
   };
   let handlingExt = getAuthHandler({authCredentials});
-  yield handlingExt.startup();
+  await handlingExt.startup();
   let extension = getAuthHandler({}, false);
-  yield extension.startup();
+  await extension.startup();
 
-  yield testXHR(`${baseUrl}?realm=webRequest_auth_nonblocking&user=${authCredentials.username}&pass=${authCredentials.password}`);
+  await testXHR(`${baseUrl}?realm=webRequest_auth_nonblocking&user=${authCredentials.username}&pass=${authCredentials.password}`);
 
-  yield Promise.all([
+  await Promise.all([
     extension.awaitMessage("onAuthRequired"),
     extension.awaitMessage("onCompleted"),
     handlingExt.awaitMessage("onAuthRequired"),
     handlingExt.awaitMessage("onCompleted"),
   ]);
-  yield extension.unload();
-  yield handlingExt.unload();
+  await extension.unload();
+  await handlingExt.unload();
 });
 
 
-add_task(function* test_webRequest_auth_blocking_noreturn() {
+add_task(async function test_webRequest_auth_blocking_noreturn() {
   // The first listener is blocking but doesn't return anything.  The second
   // listener cancels the request.
   let ext = getAuthHandler();
-  yield ext.startup();
+  await ext.startup();
   let canceler = getAuthHandler({cancel: true});
-  yield canceler.startup();
+  await canceler.startup();
 
-  yield Assert.rejects(testXHR(`${baseUrl}?realm=auth_blocking_noreturn&user=auth_blocking_noreturn&pass=auth_blocking_noreturn`), "caught rejected xhr");
+  await Assert.rejects(testXHR(`${baseUrl}?realm=auth_blocking_noreturn&user=auth_blocking_noreturn&pass=auth_blocking_noreturn`), "caught rejected xhr");
 
-  yield Promise.all([
+  await Promise.all([
     ext.awaitMessage("onAuthRequired"),
     ext.awaitMessage("onErrorOccurred"),
     canceler.awaitMessage("onAuthRequired"),
     canceler.awaitMessage("onErrorOccurred"),
   ]);
-  yield ext.unload();
-  yield canceler.unload();
+  await ext.unload();
+  await canceler.unload();
 });
 
-add_task(function* test_webRequest_auth_nonblocking_forwardAuthProvider() {
+add_task(async function test_webRequest_auth_nonblocking_forwardAuthProvider() {
   // The chrome script sets up a default auth handler on the channel, the
   // extension does not return anything in the authRequred call.  We should
   // get the call in the extension first, then in the chrome code where we
@@ -272,24 +272,24 @@ add_task(function* test_webRequest_auth_nonblocking_forwardAuthProvider() {
     Services.obs.addObserver(observer, "http-on-modify-request");
     sendAsyncMessage("chrome-ready");
   });
-  yield chromeScript.promiseOneMessage("chrome-ready");
+  await chromeScript.promiseOneMessage("chrome-ready");
   let callbackComplete = chromeScript.promiseOneMessage("callback-complete");
 
   let handlingExt = getAuthHandler();
-  yield handlingExt.startup();
+  await handlingExt.startup();
 
-  yield Assert.rejects(testXHR(`${baseUrl}?realm=auth_nonblocking_forwardAuth&user=auth_nonblocking_forwardAuth&pass=auth_nonblocking_forwardAuth`), "caught rejected xhr");
+  await Assert.rejects(testXHR(`${baseUrl}?realm=auth_nonblocking_forwardAuth&user=auth_nonblocking_forwardAuth&pass=auth_nonblocking_forwardAuth`), "caught rejected xhr");
 
-  yield callbackComplete;
-  yield handlingExt.awaitMessage("onAuthRequired");
+  await callbackComplete;
+  await handlingExt.awaitMessage("onAuthRequired");
   // We expect onErrorOccurred because the "default" authprompt above cancelled
   // the auth request to avoid a dialog.
-  yield handlingExt.awaitMessage("onErrorOccurred");
-  yield handlingExt.unload();
+  await handlingExt.awaitMessage("onErrorOccurred");
+  await handlingExt.unload();
   chromeScript.destroy();
 });
 
-add_task(function* test_webRequest_auth_nonblocking_forwardAuthPrompt2() {
+add_task(async function test_webRequest_auth_nonblocking_forwardAuthPrompt2() {
   // The chrome script sets up a default auth handler on the channel, the
   // extension does not return anything in the authRequred call.  We should
   // get the call in the extension first, then in the chrome code where we
@@ -327,44 +327,44 @@ add_task(function* test_webRequest_auth_nonblocking_forwardAuthPrompt2() {
     Services.obs.addObserver(observer, "http-on-modify-request");
     sendAsyncMessage("chrome-ready");
   });
-  yield chromeScript.promiseOneMessage("chrome-ready");
+  await chromeScript.promiseOneMessage("chrome-ready");
   let callbackComplete = chromeScript.promiseOneMessage("callback-complete");
 
   let handlingExt = getAuthHandler();
-  yield handlingExt.startup();
+  await handlingExt.startup();
 
-  yield Assert.rejects(testXHR(`${baseUrl}?realm=auth_nonblocking_forwardAuthPromptProvider&user=auth_nonblocking_forwardAuth&pass=auth_nonblocking_forwardAuth`), "caught rejected xhr");
+  await Assert.rejects(testXHR(`${baseUrl}?realm=auth_nonblocking_forwardAuthPromptProvider&user=auth_nonblocking_forwardAuth&pass=auth_nonblocking_forwardAuth`), "caught rejected xhr");
 
-  yield callbackComplete;
-  yield handlingExt.awaitMessage("onAuthRequired");
+  await callbackComplete;
+  await handlingExt.awaitMessage("onAuthRequired");
   // We expect onErrorOccurred because the "default" authprompt above cancelled
   // the auth request to avoid a dialog.
-  yield handlingExt.awaitMessage("onErrorOccurred");
-  yield handlingExt.unload();
+  await handlingExt.awaitMessage("onErrorOccurred");
+  await handlingExt.unload();
   chromeScript.destroy();
 });
 
-add_task(function* test_webRequest_duelingAuth() {
+add_task(async function test_webRequest_duelingAuth() {
   let exNone = getAuthHandler();
-  yield exNone.startup();
+  await exNone.startup();
   let authCredentials = {
     username: "testuser_da1",
     password: "testpass_da1",
   };
   let ex1 = getAuthHandler({authCredentials});
-  yield ex1.startup();
+  await ex1.startup();
   let exEmpty = getAuthHandler({});
-  yield exEmpty.startup();
+  await exEmpty.startup();
   let ex2 = getAuthHandler({authCredentials: {
     username: "testuser_da2",
     password: "testpass_da2",
   }});
-  yield ex2.startup();
+  await ex2.startup();
 
   // XHR should succeed since the first credentials win, and they are correct.
-  yield testXHR(`${baseUrl}?realm=test_webRequest_duelingAuth&user=${authCredentials.username}&pass=${authCredentials.password}`);
+  await testXHR(`${baseUrl}?realm=test_webRequest_duelingAuth&user=${authCredentials.username}&pass=${authCredentials.password}`);
 
-  yield Promise.all([
+  await Promise.all([
     exNone.awaitMessage("onAuthRequired"),
     exNone.awaitMessage("onCompleted"),
     exEmpty.awaitMessage("onAuthRequired"),
@@ -374,7 +374,7 @@ add_task(function* test_webRequest_duelingAuth() {
     ex2.awaitMessage("onAuthRequired"),
     ex2.awaitMessage("onCompleted"),
   ]);
-  yield Promise.all([
+  await Promise.all([
     exNone.unload(),
     exEmpty.unload(),
     ex1.unload(),
@@ -382,7 +382,7 @@ add_task(function* test_webRequest_duelingAuth() {
   ]);
 });
 
-add_task(function* test_webRequest_auth_proxy() {
+add_task(async function test_webRequest_auth_proxy() {
   function background() {
     let proxyOk = false;
     browser.webRequest.onAuthRequired.addListener((details) => {
@@ -409,12 +409,12 @@ add_task(function* test_webRequest_auth_proxy() {
     background,
   });
 
-  yield handlingExt.startup();
+  await handlingExt.startup();
 
-  yield testXHR(`${baseUrl}?realm=auth_proxy&user=auser&pass=apass&proxy_user=puser&proxy_pass=ppass`);
+  await testXHR(`${baseUrl}?realm=auth_proxy&user=auser&pass=apass&proxy_user=puser&proxy_pass=ppass`);
 
-  yield handlingExt.awaitMessage("done");
-  yield handlingExt.unload();
+  await handlingExt.awaitMessage("done");
+  await handlingExt.unload();
 });
 </script>
 </head>

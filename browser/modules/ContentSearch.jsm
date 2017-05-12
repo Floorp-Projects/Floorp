@@ -12,7 +12,6 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "FormHistory",
@@ -253,7 +252,7 @@ this.ContentSearch = {
                                               { selection: data.selection });
   },
 
-  getSuggestions: Task.async(function* (engineName, searchString, browser) {
+  async getSuggestions(engineName, searchString, browser) {
     let engine = Services.search.getEngineByName(engineName);
     if (!engine) {
       throw new Error("Unknown engine name: " + engineName);
@@ -268,7 +267,7 @@ this.ContentSearch = {
     // fetch() rejects its promise if there's a pending request, but since we
     // process our event queue serially, there's never a pending request.
     this._currentSuggestion = { controller, target: browser };
-    let suggestions = yield controller.fetch(searchString, priv, engine);
+    let suggestions = await controller.fetch(searchString, priv, engine);
     this._currentSuggestion = null;
 
     // suggestions will be null if the request was cancelled
@@ -290,9 +289,9 @@ this.ContentSearch = {
       remote: suggestions.remote,
     };
     return result;
-  }),
+  },
 
-  addFormHistoryEntry: Task.async(function* (browser, entry = "") {
+  async addFormHistoryEntry(browser, entry = "") {
     let isPrivate = false;
     try {
       // isBrowserPrivate assumes that the passed-in browser has all the normal
@@ -317,12 +316,12 @@ this.ContentSearch = {
       },
     });
     return true;
-  }),
+  },
 
-  currentStateObj: Task.async(function* (uriFlag = false) {
+  async currentStateObj(uriFlag = false) {
     let state = {
       engines: [],
-      currentEngine: yield this._currentEngineObj(),
+      currentEngine: await this._currentEngineObj(),
     };
     if (uriFlag) {
       state.currentEngine.iconBuffer = Services.search.currentEngine.getIconURLBySize(16, 16);
@@ -333,7 +332,7 @@ this.ContentSearch = {
       let uri = engine.getIconURLBySize(16, 16);
       let iconBuffer = uri;
       if (!uriFlag) {
-        iconBuffer = yield this._arrayBufferFromDataURI(uri);
+        iconBuffer = await this._arrayBufferFromDataURI(uri);
       }
       state.engines.push({
         name: engine.name,
@@ -342,7 +341,7 @@ this.ContentSearch = {
       });
     }
     return state;
-  }),
+  },
 
   _processEventQueue() {
     if (this._currentEventPromise || !this._eventQueue.length) {
@@ -351,16 +350,16 @@ this.ContentSearch = {
 
     let event = this._eventQueue.shift();
 
-    this._currentEventPromise = Task.spawn(function* () {
+    this._currentEventPromise = (async () => {
       try {
-        yield this["_on" + event.type](event.data);
+        await this["_on" + event.type](event.data);
       } catch (err) {
         Cu.reportError(err);
       } finally {
         this._currentEventPromise = null;
         this._processEventQueue();
       }
-    }.bind(this));
+    })();
   },
 
   _cancelSuggestions(msg) {
@@ -384,16 +383,16 @@ this.ContentSearch = {
     }
   },
 
-  _onMessage: Task.async(function* (msg) {
+  async _onMessage(msg) {
     let methodName = "_onMessage" + msg.data.type;
     if (methodName in this) {
-      yield this._initService();
-      yield this[methodName](msg, msg.data.data);
+      await this._initService();
+      await this[methodName](msg, msg.data.data);
       if (!Cu.isDeadWrapper(msg.target)) {
         msg.target.removeEventListener("SwapDocShells", msg, true);
       }
     }
-  }),
+  },
 
   _onMessageGetState(msg, data) {
     return this.currentStateObj().then(state => {
@@ -418,13 +417,13 @@ this.ContentSearch = {
     browserWin.openPreferences("paneGeneral");
   },
 
-  _onMessageGetSuggestions: Task.async(function* (msg, data) {
+  async _onMessageGetSuggestions(msg, data) {
     this._ensureDataHasProperties(data, [
       "engineName",
       "searchString",
     ]);
     let {engineName, searchString} = data;
-    let suggestions = yield this.getSuggestions(engineName, searchString, msg.target);
+    let suggestions = await this.getSuggestions(engineName, searchString, msg.target);
 
     this._reply(msg, "Suggestions", {
       engineName: data.engineName,
@@ -432,11 +431,11 @@ this.ContentSearch = {
       formHistory: suggestions.local,
       remote: suggestions.remote,
     });
-  }),
+  },
 
-  _onMessageAddFormHistoryEntry: Task.async(function* (msg, entry) {
-    yield this.addFormHistoryEntry(msg, entry);
-  }),
+  async _onMessageAddFormHistoryEntry(msg, entry) {
+    await this.addFormHistoryEntry(msg, entry);
+  },
 
   _onMessageRemoveFormHistoryEntry(msg, entry) {
     this.removeFormHistoryEntry(msg, entry);
@@ -455,17 +454,17 @@ this.ContentSearch = {
     }
   },
 
-  _onObserve: Task.async(function* (data) {
+  async _onObserve(data) {
     if (data === "engine-current") {
-      let engine = yield this._currentEngineObj();
+      let engine = await this._currentEngineObj();
       this._broadcast("CurrentEngine", engine);
     } else if (data !== "engine-default") {
       // engine-default is always sent with engine-current and isn't otherwise
       // relevant to content searches.
-      let state = yield this.currentStateObj();
+      let state = await this.currentStateObj();
       this._broadcast("CurrentState", state);
     }
-  }),
+  },
 
   _suggestionDataForBrowser(browser, create = false) {
     let data = this._suggestionMap.get(browser);
@@ -502,7 +501,7 @@ this.ContentSearch = {
     }];
   },
 
-  _currentEngineObj: Task.async(function* () {
+  async _currentEngineObj() {
     let engine = Services.search.currentEngine;
     let favicon = engine.getIconURLBySize(16, 16);
     let placeholder = this._stringBundle.formatStringFromName(
@@ -510,33 +509,33 @@ this.ContentSearch = {
     let obj = {
       name: engine.name,
       placeholder,
-      iconBuffer: yield this._arrayBufferFromDataURI(favicon),
+      iconBuffer: await this._arrayBufferFromDataURI(favicon),
     };
     return obj;
-  }),
+  },
 
   _arrayBufferFromDataURI(uri) {
     if (!uri) {
       return Promise.resolve(null);
     }
-    let deferred = Promise.defer();
-    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
-              createInstance(Ci.nsIXMLHttpRequest);
-    xhr.open("GET", uri, true);
-    xhr.responseType = "arraybuffer";
-    xhr.onload = () => {
-      deferred.resolve(xhr.response);
-    };
-    xhr.onerror = xhr.onabort = xhr.ontimeout = () => {
-      deferred.resolve(null);
-    };
-    try {
-      // This throws if the URI is erroneously encoded.
-      xhr.send();
-    } catch (err) {
-      return Promise.resolve(null);
-    }
-    return deferred.promise;
+    return new Promise(resolve => {
+      let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
+                createInstance(Ci.nsIXMLHttpRequest);
+      xhr.open("GET", uri, true);
+      xhr.responseType = "arraybuffer";
+      xhr.onload = () => {
+        resolve(xhr.response);
+      };
+      xhr.onerror = xhr.onabort = xhr.ontimeout = () => {
+        resolve(null);
+      };
+      try {
+        // This throws if the URI is erroneously encoded.
+        xhr.send();
+      } catch (err) {
+        resolve(null);
+      }
+    });
   },
 
   _ensureDataHasProperties(data, requiredProperties) {

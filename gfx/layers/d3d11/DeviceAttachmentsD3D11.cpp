@@ -22,7 +22,8 @@ DeviceAttachmentsD3D11::DeviceAttachmentsD3D11(ID3D11Device* device)
    mMaximumTriangles(kInitialMaximumTriangles),
    mDevice(device),
    mContinueInit(true),
-   mInitialized(false)
+   mInitialized(false),
+   mDeviceReset(false)
 {
 }
 

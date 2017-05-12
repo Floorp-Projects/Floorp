@@ -234,7 +234,6 @@ android-common-tests:
     - mochitest-clipboard
     - mochitest-gpu
     - mochitest-media
-    - mochitest-webgl
     - reftest
     - xpcshell
 

@@ -40,8 +40,8 @@
     function runTest() {
       SimpleTest.waitForExplicitFinish();
 
-      Task.spawn(function* () {
-        yield PlacesUtils.bookmarks.insert({
+      (async function() {
+        await PlacesUtils.bookmarks.insert({
           parentGuid: PlacesUtils.bookmarks.unfiledGuid,
           index: PlacesUtils.bookmarks.DEFAULT_INDEX,
           type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -49,7 +49,7 @@
           title: "shortcut"
         });
 
-        yield PlacesUtils.bookmarks.insert({
+        await PlacesUtils.bookmarks.insert({
           parentGuid: PlacesUtils.bookmarks.unfiledGuid,
           index: PlacesUtils.bookmarks.DEFAULT_INDEX,
           type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -57,14 +57,14 @@
           title: "query"
         });
 
-        let folder = yield PlacesUtils.bookmarks.insert({
+        let folder = await PlacesUtils.bookmarks.insert({
           parentGuid: PlacesUtils.bookmarks.unfiledGuid,
           index: PlacesUtils.bookmarks.DEFAULT_INDEX,
           type: PlacesUtils.bookmarks.TYPE_FOLDER,
           title: "folder"
         });
 
-        let bm = yield PlacesUtils.bookmarks.insert({
+        let bm = await PlacesUtils.bookmarks.insert({
           parentGuid: folder.guid,
           index: PlacesUtils.bookmarks.DEFAULT_INDEX,
           type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -77,10 +77,10 @@
         tree.place = "place:folder=UNFILED_BOOKMARKS";
 
         // Select the last bookmark.
-        let itemId = yield PlacesUtils.promiseItemId(bm.guid);
+        let itemId = await PlacesUtils.promiseItemId(bm.guid);
         tree.selectItems([itemId]);
         is (tree.selectedNode.itemId, itemId, "The right node was selected");
-      }).then(SimpleTest.finish);
+      })().then(SimpleTest.finish);
     }
   ]]></script>
 </window>

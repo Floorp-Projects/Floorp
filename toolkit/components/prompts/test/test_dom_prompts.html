@@ -17,7 +17,7 @@
 var rv;
 var state, action;
 
-add_task(function* test_alert_ok() {
+add_task(async function test_alert_ok() {
     info("Starting test: Alert");
     state = {
         msg: "This is the alert text.",
@@ -41,11 +41,11 @@ add_task(function* test_alert_ok() {
 
     alert("This is the alert text.");
 
-    yield promptDone;
+    await promptDone;
 });
 
 // bug 861605 made the arguments to alert/confirm optional (prompt already was).
-add_task(function* test_alert_noargs() {
+add_task(async function test_alert_noargs() {
     info("Starting test: Alert with no args");
     state = {
         msg: "",
@@ -74,11 +74,11 @@ add_task(function* test_alert_noargs() {
         ok(false, "alert() without arguments should not throw!");
     }
 
-    yield promptDone;
+    await promptDone;
 });
 
 
-add_task(function* test_confirm_ok() {
+add_task(async function test_confirm_ok() {
     info("Starting test: Confirm");
     state = {
         msg: "This is the confirm text.",
@@ -103,11 +103,11 @@ add_task(function* test_confirm_ok() {
     rv = confirm("This is the confirm text.");
     is(rv, true, "check prompt return value");
 
-    yield promptDone;
+    await promptDone;
 });
 
 // bug 861605 made the arguments to alert/confirm optional (prompt already was).
-add_task(function* test_confirm_noargs() {
+add_task(async function test_confirm_noargs() {
     info("Starting test: Confirm with no args");
     state = {
         msg: "",
@@ -137,11 +137,11 @@ add_task(function* test_confirm_noargs() {
     }
     is(rv, true, "check prompt return value");
 
-    yield promptDone;
+    await promptDone;
 });
 
 
-add_task(function* test_prompt_ok() {
+add_task(async function test_prompt_ok() {
     info("Starting test: Prompt");
     state = {
         msg: "This is the Prompt text.",
@@ -166,11 +166,11 @@ add_task(function* test_prompt_ok() {
     rv = prompt("This is the Prompt text.");
     is(rv, "", "check prompt return value");
 
-    yield promptDone;
+    await promptDone;
 });
 
 // bug 861605 made the arguments to alert/confirm optional (prompt already was).
-add_task(function* test_prompt_noargs() {
+add_task(async function test_prompt_noargs() {
     info("Starting test: Prompt with no args");
     state = {
         msg: "",
@@ -200,7 +200,7 @@ add_task(function* test_prompt_noargs() {
     }
     is(rv, "", "check prompt return value");
 
-    yield promptDone;
+    await promptDone;
 });
 
 </script>

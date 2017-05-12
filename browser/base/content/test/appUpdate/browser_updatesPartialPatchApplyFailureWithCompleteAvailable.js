@@ -1,4 +1,4 @@
-add_task(function* testPartialPatchApplyFailureWithCompleteAvailable() {
+add_task(async function testPartialPatchApplyFailureWithCompleteAvailable() {
   let patches = getLocalPatchString("partial", null, null, null, null, null,
                                     STATE_PENDING) +
                 getLocalPatchString("complete", null, null, null,
@@ -10,7 +10,7 @@ add_task(function* testPartialPatchApplyFailureWithCompleteAvailable() {
                                      null, null, null, null, "false",
                                      null, null, null, null, promptWaitTime);
 
-  yield runUpdateProcessingTest(updates, [
+  await runUpdateProcessingTest(updates, [
     {
       notificationId: "update-restart",
       button: "secondarybutton",

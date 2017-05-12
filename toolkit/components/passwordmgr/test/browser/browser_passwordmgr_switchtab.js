@@ -5,8 +5,8 @@
 const PROMPT_URL = "chrome://global/content/commonDialog.xul";
 var { interfaces: Ci } = Components;
 
-add_task(function* test() {
-  yield new Promise(resolve => {
+add_task(async function test() {
+  await new Promise(resolve => {
 
   let tab = gBrowser.addTab();
   isnot(tab, gBrowser.selectedTab, "New tab shouldn't be selected");

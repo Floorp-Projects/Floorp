@@ -31,10 +31,10 @@ function waitForNextPopup() {
   return new Promise(resolve => { resolvePopupShownListener = resolve; });
 }
 
-add_task(function* test_popup_direction() {
+add_task(async function test_popup_direction() {
   var input = $_(1, "field1");
 
-  yield new Promise(resolve => updateFormHistory([
+  await new Promise(resolve => updateFormHistory([
     { op: "remove" },
     { op: "add", fieldname: "field1", value: "value1" },
     { op: "add", fieldname: "field1", value: "value2" },
@@ -46,9 +46,9 @@ add_task(function* test_popup_direction() {
     let popupShown = waitForNextPopup();
     input.focus();
     doKey("down");
-    yield popupShown;
+    await popupShown;
 
-    let popupState = yield new Promise(resolve => getPopupState(resolve));
+    let popupState = await new Promise(resolve => getPopupState(resolve));
     is(popupState.direction, direction, "Direction should match.");
 
     // Close the popup.

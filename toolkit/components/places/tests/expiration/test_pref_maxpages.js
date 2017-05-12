@@ -57,7 +57,7 @@ var tests = [
   },
 ];
 
-add_task(function* test_pref_maxpages() {
+add_task(async function test_pref_maxpages() {
   // The pref should not exist by default.
   try {
     getMaxPages();
@@ -76,7 +76,7 @@ add_task(function* test_pref_maxpages() {
     let now = getExpirablePRTime();
     for (let i = 0; i < currentTest.addPages; i++) {
       let page = "http://" + testIndex + "." + i + ".mozilla.org/";
-      yield PlacesTestUtils.addVisits({ uri: uri(page), visitDate: now-- });
+      await PlacesTestUtils.addVisits({ uri: uri(page), visitDate: now-- });
     }
 
     // Observe history.
@@ -93,7 +93,7 @@ add_task(function* test_pref_maxpages() {
     setMaxPages(currentTest.maxPages);
 
     // Expire now.
-    yield promiseForceExpirationStep(-1);
+    await promiseForceExpirationStep(-1);
 
     PlacesUtils.history.removeObserver(historyObserver, false);
 
@@ -101,9 +101,9 @@ add_task(function* test_pref_maxpages() {
                 currentTest.expectedNotifications);
 
     // Clean up.
-    yield PlacesTestUtils.clearHistory();
+    await PlacesTestUtils.clearHistory();
   }
 
   clearMaxPages();
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
 });

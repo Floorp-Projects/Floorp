@@ -9,11 +9,11 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_paramSubstitution() {
-  yield asyncInit();
+add_task(async function test_paramSubstitution() {
+  await asyncInit();
 
   let prefix = "http://test.moz/search?q=";
-  let [engine] = yield addTestEngines([
+  let [engine] = await addTestEngines([
     { name: "test", details: ["", "test", "Search Test", "GET",
                               prefix + "{searchTerms}"] },
   ]);

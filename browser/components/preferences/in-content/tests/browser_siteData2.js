@@ -19,8 +19,8 @@ function promiseSettingsDialogClose() {
 }
 
 // Test selecting and removing all sites one by one
-add_task(function* () {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
   mockSiteDataManager.register(SiteDataManager);
   mockSiteDataManager.fakeSites = [
     {
@@ -51,9 +51,9 @@ add_task(function* () {
   let fakeHosts = mockSiteDataManager.fakeSites.map(site => site.principal.URI.host);
 
   let updatePromise = promiseSiteDataManagerSitesUpdated();
-  yield openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
-  yield updatePromise;
-  yield openSiteDataSettingsDialog();
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  await updatePromise;
+  await openSiteDataSettingsDialog();
 
   let doc = gBrowser.selectedBrowser.contentDocument;
   let frameDoc = null;
@@ -71,8 +71,8 @@ add_task(function* () {
   removeAllSitesOneByOne();
   assertAllSitesNotListed();
   cancelBtn.doCommand();
-  yield settingsDialogClosePromise;
-  yield openSiteDataSettingsDialog();
+  await settingsDialogClosePromise;
+  await openSiteDataSettingsDialog();
   assertSitesListed(doc, fakeHosts);
 
   // Test the "Save Changes" button but cancelling save
@@ -83,9 +83,9 @@ add_task(function* () {
   removeAllSitesOneByOne();
   assertAllSitesNotListed();
   saveBtn.doCommand();
-  yield cancelPromise;
-  yield settingsDialogClosePromise;
-  yield openSiteDataSettingsDialog();
+  await cancelPromise;
+  await settingsDialogClosePromise;
+  await openSiteDataSettingsDialog();
   assertSitesListed(doc, fakeHosts);
 
   // Test the "Save Changes" button and accepting save
@@ -97,14 +97,14 @@ add_task(function* () {
   removeAllSitesOneByOne();
   assertAllSitesNotListed();
   saveBtn.doCommand();
-  yield acceptPromise;
-  yield settingsDialogClosePromise;
-  yield updatePromise;
-  yield openSiteDataSettingsDialog();
+  await acceptPromise;
+  await settingsDialogClosePromise;
+  await updatePromise;
+  await openSiteDataSettingsDialog();
   assertAllSitesNotListed();
 
   mockSiteDataManager.unregister();
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   function removeAllSitesOneByOne() {
     frameDoc = doc.getElementById("dialogFrame").contentDocument;
@@ -130,8 +130,8 @@ add_task(function* () {
 });
 
 // Test selecting and removing partial sites
-add_task(function* () {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
   mockSiteDataManager.register(SiteDataManager);
   mockSiteDataManager.fakeSites = [
     {
@@ -162,9 +162,9 @@ add_task(function* () {
   let fakeHosts = mockSiteDataManager.fakeSites.map(site => site.principal.URI.host);
 
   let updatePromise = promiseSiteDataManagerSitesUpdated();
-  yield openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
-  yield updatePromise;
-  yield openSiteDataSettingsDialog();
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  await updatePromise;
+  await openSiteDataSettingsDialog();
 
   let doc = gBrowser.selectedBrowser.contentDocument;
   let frameDoc = null;
@@ -183,8 +183,8 @@ add_task(function* () {
   removeSelectedSite(fakeHosts.slice(0, 2));
   assertSitesListed(doc, fakeHosts.slice(2));
   cancelBtn.doCommand();
-  yield settingsDialogClosePromise;
-  yield openSiteDataSettingsDialog();
+  await settingsDialogClosePromise;
+  await openSiteDataSettingsDialog();
   assertSitesListed(doc, fakeHosts);
 
   // Test the "Save Changes" button but canceling save
@@ -195,9 +195,9 @@ add_task(function* () {
   removeSelectedSite(fakeHosts.slice(0, 2));
   assertSitesListed(doc, fakeHosts.slice(2));
   saveBtn.doCommand();
-  yield removeDialogOpenPromise;
-  yield settingsDialogClosePromise;
-  yield openSiteDataSettingsDialog();
+  await removeDialogOpenPromise;
+  await settingsDialogClosePromise;
+  await openSiteDataSettingsDialog();
   assertSitesListed(doc, fakeHosts);
 
   // Test the "Save Changes" button and accepting save
@@ -208,13 +208,13 @@ add_task(function* () {
   removeSelectedSite(fakeHosts.slice(0, 2));
   assertSitesListed(doc, fakeHosts.slice(2));
   saveBtn.doCommand();
-  yield removeDialogOpenPromise;
-  yield settingsDialogClosePromise;
-  yield openSiteDataSettingsDialog();
+  await removeDialogOpenPromise;
+  await settingsDialogClosePromise;
+  await openSiteDataSettingsDialog();
   assertSitesListed(doc, fakeHosts.slice(2));
 
   mockSiteDataManager.unregister();
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   function removeSelectedSite(hosts) {
     frameDoc = doc.getElementById("dialogFrame").contentDocument;
@@ -233,8 +233,8 @@ add_task(function* () {
 });
 
 // Test searching and then removing only visible sites
-add_task(function* () {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
   mockSiteDataManager.register(SiteDataManager);
   mockSiteDataManager.fakeSites = [
     {
@@ -265,9 +265,9 @@ add_task(function* () {
   let fakeHosts = mockSiteDataManager.fakeSites.map(site => site.principal.URI.host);
 
   let updatePromise = promiseSiteDataManagerSitesUpdated();
-  yield openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
-  yield updatePromise;
-  yield openSiteDataSettingsDialog();
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  await updatePromise;
+  await openSiteDataSettingsDialog();
 
   // Search "foo" to only list foo.com sites
   let doc = gBrowser.selectedBrowser.contentDocument;
@@ -285,19 +285,19 @@ add_task(function* () {
   let saveBtn = frameDoc.getElementById("save");
   removeAllBtn.doCommand();
   saveBtn.doCommand();
-  yield acceptRemovePromise;
-  yield settingsDialogClosePromise;
-  yield updatePromise;
-  yield openSiteDataSettingsDialog();
+  await acceptRemovePromise;
+  await settingsDialogClosePromise;
+  await updatePromise;
+  await openSiteDataSettingsDialog();
   assertSitesListed(doc, fakeHosts.filter(host => !host.includes("xyz")));
 
   mockSiteDataManager.unregister();
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 // Test grouping and listing sites across scheme, port and origin attributes by host
-add_task(function *() {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
   const quotaUsage = 1024;
   mockSiteDataManager.register(SiteDataManager);
   mockSiteDataManager.fakeSites = [
@@ -328,9 +328,9 @@ add_task(function *() {
   ];
 
   let updatedPromise = promiseSiteDataManagerSitesUpdated();
-  yield openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
-  yield updatedPromise;
-  yield openSiteDataSettingsDialog();
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  await updatedPromise;
+  await openSiteDataSettingsDialog();
   let dialogFrame = gBrowser.selectedBrowser.contentDocument.getElementById("dialogFrame");
   let frameDoc = dialogFrame.contentDocument;
 
@@ -352,5 +352,5 @@ add_task(function *() {
   is(status, expected, "Should mark persisted status across scheme, port and origin attributes");
 
   mockSiteDataManager.unregister();
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

@@ -38,9 +38,9 @@ function addEngineWithParams(engine) {
 }
 
 // Main test.
-add_task(function* test_hasEngineWithURL() {
+add_task(async function test_hasEngineWithURL() {
   // Avoid deprecated synchronous initialization.
-  yield asyncInit();
+  await asyncInit();
 
   // Setup various Engine definitions for method tests.
   let UNSORTED_ENGINE = {

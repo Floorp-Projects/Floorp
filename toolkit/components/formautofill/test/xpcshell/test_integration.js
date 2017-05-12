@@ -10,27 +10,27 @@
 /**
  * The requestAutocomplete UI will not be displayed during these tests.
  */
-add_task_in_parent_process(function* test_initialize() {
+add_task_in_parent_process(function test_initialize() {
   FormAutofillTest.requestAutocompleteResponse = { canceled: true };
 });
 
 /**
  * Registers and unregisters an integration override function.
  */
-add_task(function* test_integration_override() {
+add_task(async function test_integration_override() {
   let overrideCalled = false;
 
   let newIntegrationFn = base => ({
-    createRequestAutocompleteUI: Task.async(function* () {
+    async createRequestAutocompleteUI() {
       overrideCalled = true;
-      return yield base.createRequestAutocompleteUI.apply(this, arguments);
-    }),
+      return await base.createRequestAutocompleteUI.apply(this, arguments);
+    },
   });
 
   FormAutofill.registerIntegration(newIntegrationFn);
   try {
-    let ui = yield FormAutofill.integration.createRequestAutocompleteUI({});
-    let result = yield ui.show();
+    let ui = await FormAutofill.integration.createRequestAutocompleteUI({});
+    let result = await ui.show();
     Assert.ok(result.canceled);
   } finally {
     FormAutofill.unregisterIntegration(newIntegrationFn);
@@ -43,23 +43,23 @@ add_task(function* test_integration_override() {
  * Registers an integration override function that throws an exception, and
  * ensures that this does not block other functions from being registered.
  */
-add_task(function* test_integration_override_error() {
+add_task(async function test_integration_override_error() {
   let overrideCalled = false;
 
   let errorIntegrationFn = base => { throw "Expected error." };
 
   let newIntegrationFn = base => ({
-    createRequestAutocompleteUI: Task.async(function* () {
+    async createRequestAutocompleteUI() {
       overrideCalled = true;
-      return yield base.createRequestAutocompleteUI.apply(this, arguments);
-    }),
+      return await base.createRequestAutocompleteUI.apply(this, arguments);
+    },
   });
 
   FormAutofill.registerIntegration(errorIntegrationFn);
   FormAutofill.registerIntegration(newIntegrationFn);
   try {
-    let ui = yield FormAutofill.integration.createRequestAutocompleteUI({});
-    let result = yield ui.show();
+    let ui = await FormAutofill.integration.createRequestAutocompleteUI({});
+    let result = await ui.show();
     Assert.ok(result.canceled);
   } finally {
     FormAutofill.unregisterIntegration(errorIntegrationFn);

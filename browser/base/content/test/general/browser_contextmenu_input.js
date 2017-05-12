@@ -3,10 +3,10 @@
 let contextMenu;
 let hasPocket = Services.prefs.getBoolPref("extensions.pocket.enabled");
 
-add_task(function* test_setup() {
+add_task(async function test_setup() {
   const example_base = "http://example.com/browser/browser/base/content/test/general/";
   const url = example_base + "subtst_contextmenu_input.html";
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
   const chrome_base = "chrome://mochitests/content/browser/browser/base/content/test/general/";
   const contextmenu_common = chrome_base + "contextmenu_common.js";
@@ -14,8 +14,8 @@ add_task(function* test_setup() {
   Services.scriptloader.loadSubScript(contextmenu_common, this);
 });
 
-add_task(function* test_text_input() {
-  yield test_contextmenu("#input_text",
+add_task(async function test_text_input() {
+  await test_contextmenu("#input_text",
     ["context-undo",        false,
      "---",                 null,
      "context-cut",         true,
@@ -28,8 +28,8 @@ add_task(function* test_text_input() {
      "spell-check-enabled", true]);
 });
 
-add_task(function* test_text_input_spellcheck() {
-  yield test_contextmenu("#input_spellcheck_no_value",
+add_task(async function test_text_input_spellcheck() {
+  await test_contextmenu("#input_spellcheck_no_value",
     ["context-undo",        false,
      "---",                 null,
      "context-cut",         true,
@@ -49,8 +49,8 @@ add_task(function* test_text_input_spellcheck() {
       // Need to dynamically add/remove the "password" type or LoginManager
       // will think that the form inputs on the page are part of a login
       // and will add fill-login context menu items.
-      *preCheckContextMenuFn() {
-        yield ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
+      async preCheckContextMenuFn() {
+        await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
           let doc = content.document;
           let input = doc.getElementById("input_spellcheck_no_value");
           input.setAttribute("spellcheck", "true");
@@ -61,8 +61,8 @@ add_task(function* test_text_input_spellcheck() {
   );
 });
 
-add_task(function* test_text_input_spellcheckwrong() {
-  yield test_contextmenu("#input_spellcheck_incorrect",
+add_task(async function test_text_input_spellcheckwrong() {
+  await test_contextmenu("#input_spellcheck_incorrect",
     ["*prodigality",        true, // spelling suggestion
      "spell-add-to-dictionary", true,
      "---",                 null,
@@ -84,8 +84,8 @@ add_task(function* test_text_input_spellcheckwrong() {
    );
 });
 
-add_task(function* test_text_input_spellcheckcorrect() {
-  yield test_contextmenu("#input_spellcheck_correct",
+add_task(async function test_text_input_spellcheckcorrect() {
+  await test_contextmenu("#input_spellcheck_correct",
     ["context-undo",        false,
      "---",                 null,
      "context-cut",         true,
@@ -104,8 +104,8 @@ add_task(function* test_text_input_spellcheckcorrect() {
   );
 });
 
-add_task(function* test_text_input_disabled() {
-  yield test_contextmenu("#input_disabled",
+add_task(async function test_text_input_disabled() {
+  await test_contextmenu("#input_disabled",
     ["context-undo",        false,
      "---",                 null,
      "context-cut",         true,
@@ -120,10 +120,10 @@ add_task(function* test_text_input_disabled() {
   );
 });
 
-add_task(function* test_password_input() {
+add_task(async function test_password_input() {
   todo(false, "context-selectall is enabled on osx-e10s, and windows when" +
               " it should be disabled");
-  yield test_contextmenu("#input_password",
+  await test_contextmenu("#input_password",
     ["context-undo",        false,
      "---",                 null,
      "context-cut",         true,
@@ -142,16 +142,16 @@ add_task(function* test_password_input() {
       // Need to dynamically add/remove the "password" type or LoginManager
       // will think that the form inputs on the page are part of a login
       // and will add fill-login context menu items.
-      *preCheckContextMenuFn() {
-        yield ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
+      async preCheckContextMenuFn() {
+        await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
           let doc = content.document;
           let input = doc.getElementById("input_password");
           input.type = "password";
           input.clientTop; // force layout flush
         });
       },
-      *postCheckContextMenuFn() {
-        yield ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
+      async postCheckContextMenuFn() {
+        await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
           let doc = content.document;
           let input = doc.getElementById("input_password");
           input.type = "text";
@@ -162,11 +162,11 @@ add_task(function* test_password_input() {
   );
 });
 
-add_task(function* test_tel_email_url_number_input() {
+add_task(async function test_tel_email_url_number_input() {
   todo(false, "context-selectall is enabled on osx-e10s, and windows when" +
               " it should be disabled");
   for (let selector of ["#input_email", "#input_url", "#input_tel", "#input_number"]) {
-    yield test_contextmenu(selector,
+    await test_contextmenu(selector,
       ["context-undo",        false,
        "---",                 null,
        "context-cut",         true,
@@ -184,11 +184,11 @@ add_task(function* test_tel_email_url_number_input() {
   }
 });
 
-add_task(function* test_date_time_color_range_month_week_datetimelocal_input() {
+add_task(async function test_date_time_color_range_month_week_datetimelocal_input() {
   for (let selector of ["#input_date", "#input_time", "#input_color",
                         "#input_range", "#input_month", "#input_week",
                         "#input_datetime-local"]) {
-    yield test_contextmenu(selector,
+    await test_contextmenu(selector,
       ["context-navigation", null,
            ["context-back",         false,
             "context-forward",      false,
@@ -212,10 +212,10 @@ add_task(function* test_date_time_color_range_month_week_datetimelocal_input() {
   }
 });
 
-add_task(function* test_search_input() {
+add_task(async function test_search_input() {
   todo(false, "context-selectall is enabled on osx-e10s, and windows when" +
               " it should be disabled");
-  yield test_contextmenu("#input_search",
+  await test_contextmenu("#input_search",
     ["context-undo",        false,
      "---",                 null,
      "context-cut",         true,
@@ -230,11 +230,11 @@ add_task(function* test_search_input() {
   );
 });
 
-add_task(function* test_text_input_readonly() {
+add_task(async function test_text_input_readonly() {
   todo(false, "context-selectall is enabled on osx-e10s, and windows when" +
               " it should be disabled");
   todo(false, "spell-check should not be enabled for input[readonly]. see bug 1246296");
-  yield test_contextmenu("#input_readonly",
+  await test_contextmenu("#input_readonly",
     ["context-undo",        false,
      "---",                 null,
      "context-cut",         true,
@@ -251,6 +251,6 @@ add_task(function* test_text_input_readonly() {
   });
 });
 
-add_task(function* test_cleanup() {
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+add_task(async function test_cleanup() {
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

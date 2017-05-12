@@ -129,6 +129,8 @@ parent:
   async RecordPaintTimes(PaintTiming timing);
 
   async Shutdown();
+  sync ShutdownSync();
+
 child:
   async __delete__();
 };

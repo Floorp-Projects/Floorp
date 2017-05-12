@@ -1,14 +1,14 @@
 "use strict";
 
-add_task(function* sameCaseAsMatch() {
-  yield runTest("moz");
+add_task(async function sameCaseAsMatch() {
+  await runTest("moz");
 });
 
-add_task(function* differentCaseFromMatch() {
-  yield runTest("MOZ");
+add_task(async function differentCaseFromMatch() {
+  await runTest("MOZ");
 });
 
-function* runTest(searchStr) {
+async function runTest(searchStr) {
   let matches = [
     "mozilla.org",
     "example.com",
@@ -38,7 +38,7 @@ function* runTest(searchStr) {
   input.controller = controller;
 
   // Start a search.
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     controller.startSearch(searchStr);
     input.onSearchComplete = () => {
       // The first match should have autofilled, but the case of the search

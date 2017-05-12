@@ -23,15 +23,15 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* async_init() {
+add_task(async function async_init() {
   let commitPromise = promiseAfterCache()
-  yield asyncInit();
+  await asyncInit();
 
   let engine = Services.search.getEngineByName("bug645970");
   do_check_neq(engine, null);
   do_check_eq(engine.wrappedJSObject._id, "[app]/bug645970.xml");
 
-  yield commitPromise;
-  let metadata = yield promiseEngineMetadata();
+  await commitPromise;
+  let metadata = await promiseEngineMetadata();
   do_check_eq(metadata["bug645970"].alias, "lp");
 });

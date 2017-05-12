@@ -114,12 +114,12 @@ function promiseRemoveEngine() {
 
 var preSelectedBrowser;
 var preTabNo;
-function* prepareTest() {
+async function prepareTest() {
   preSelectedBrowser = gBrowser.selectedBrowser;
   preTabNo = gBrowser.tabs.length;
   searchBar = BrowserSearch.searchBar;
 
-  yield SimpleTest.promiseFocus();
+  await SimpleTest.promiseFocus();
 
   if (document.activeElement == searchBar)
     return;
@@ -127,25 +127,25 @@ function* prepareTest() {
   let focusPromise = BrowserTestUtils.waitForEvent(searchBar, "focus");
   gURLBar.focus();
   searchBar.focus();
-  yield focusPromise;
+  await focusPromise;
 }
 
-add_task(function* testSetupEngine() {
-  yield promiseSetEngine();
+add_task(async function testSetupEngine() {
+  await promiseSetEngine();
 });
 
-add_task(function* testReturn() {
-  yield* prepareTest();
+add_task(async function testReturn() {
+  await prepareTest();
   EventUtils.synthesizeKey("VK_RETURN", {});
-  yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   is(gBrowser.tabs.length, preTabNo, "Return key did not open new tab");
   is(gBrowser.currentURI.spec, expectedURL(searchBar.value), "testReturn opened correct search page");
 });
 
-add_task(function* testAltReturn() {
-  yield* prepareTest();
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
+add_task(async function testAltReturn() {
+  await prepareTest();
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
     EventUtils.synthesizeKey("VK_RETURN", { altKey: true });
   });
 
@@ -154,7 +154,7 @@ add_task(function* testAltReturn() {
 });
 
 // Shift key has no effect for now, so skip it
-add_task(function* testShiftAltReturn() {
+add_task(async function testShiftAltReturn() {
   /*
   yield* prepareTest();
 
@@ -169,40 +169,40 @@ add_task(function* testShiftAltReturn() {
   */
 });
 
-add_task(function* testLeftClick() {
-  yield* prepareTest();
+add_task(async function testLeftClick() {
+  await prepareTest();
   simulateClick({ button: 0 }, searchButton);
-  yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   is(gBrowser.tabs.length, preTabNo, "LeftClick did not open new tab");
   is(gBrowser.currentURI.spec, expectedURL(searchBar.value), "testLeftClick opened correct search page");
 });
 
-add_task(function* testMiddleClick() {
-  yield* prepareTest();
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
+add_task(async function testMiddleClick() {
+  await prepareTest();
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
     simulateClick({ button: 1 }, searchButton);
   });
   is(gBrowser.tabs.length, preTabNo + 1, "MiddleClick added new tab");
   is(gBrowser.currentURI.spec, expectedURL(searchBar.value), "testMiddleClick opened correct search page");
 });
 
-add_task(function* testShiftMiddleClick() {
-  yield* prepareTest();
+add_task(async function testShiftMiddleClick() {
+  await prepareTest();
 
   let url = expectedURL(searchBar.value);
 
   let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, url);
   simulateClick({ button: 1, shiftKey: true }, searchButton);
-  let newTab = yield newTabPromise;
+  let newTab = await newTabPromise;
 
   is(gBrowser.tabs.length, preTabNo + 1, "Shift+MiddleClick added new tab");
   is(newTab.linkedBrowser.currentURI.spec, url, "testShiftMiddleClick opened correct search page");
 });
 
-add_task(function* testRightClick() {
+add_task(async function testRightClick() {
   preTabNo = gBrowser.tabs.length;
   gBrowser.selectedBrowser.loadURI("about:blank");
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     setTimeout(function() {
       is(gBrowser.tabs.length, preTabNo, "RightClick did not open new tab");
       is(gBrowser.currentURI.spec, "about:blank", "RightClick did nothing");
@@ -215,35 +215,35 @@ add_task(function* testRightClick() {
   searchBar.textbox.popup.hidePopup();
 });
 
-add_task(function* testSearchHistory() {
+add_task(async function testSearchHistory() {
   var textbox = searchBar._textbox;
   for (var i = 0; i < searchEntries.length; i++) {
-    let count = yield countEntries(textbox.getAttribute("autocompletesearchparam"), searchEntries[i]);
+    let count = await countEntries(textbox.getAttribute("autocompletesearchparam"), searchEntries[i]);
     ok(count > 0, "form history entry '" + searchEntries[i] + "' should exist");
   }
 });
 
-add_task(function* testAutocomplete() {
+add_task(async function testAutocomplete() {
   var popup = searchBar.textbox.popup;
   let popupShownPromise = BrowserTestUtils.waitForEvent(popup, "popupshown");
   searchBar.textbox.showHistoryPopup();
-  yield popupShownPromise;
+  await popupShownPromise;
   checkMenuEntries(searchEntries);
 });
 
-add_task(function* testClearHistory() {
+add_task(async function testClearHistory() {
   let controller = searchBar.textbox.controllers.getControllerForCommand("cmd_clearhistory")
   ok(controller.isCommandEnabled("cmd_clearhistory"), "Clear history command enabled");
   controller.doCommand("cmd_clearhistory");
-  let count = yield countEntries();
+  let count = await countEntries();
   ok(count == 0, "History cleared");
 });
 
-add_task(function* asyncCleanup() {
+add_task(async function asyncCleanup() {
   searchBar.value = "";
   while (gBrowser.tabs.length != 1) {
     gBrowser.removeTab(gBrowser.tabs[0], {animate: false});
   }
   gBrowser.selectedBrowser.loadURI("about:blank");
-  yield promiseRemoveEngine();
+  await promiseRemoveEngine();
 });

@@ -23,7 +23,7 @@ add_task(function() {
 });
 
 // Test non-removable widget with defaultArea
-add_task(function*() {
+add_task(async function() {
   // Non-removable widget with defaultArea should work:
   let spec = {id: kWidgetId + (widgetCounter++), removable: false,
               defaultArea: kNavBar};
@@ -44,7 +44,7 @@ add_task(function*() {
   let expectedParent = CustomizableUI.getCustomizeTargetForArea(kNavBar, window);
   is(singleWrapper.node.parentNode, expectedParent, "Widget should be in navbar.");
 
-  let otherWin = yield openAndLoadWindow(true);
+  let otherWin = await openAndLoadWindow(true);
   placement = CustomizableUI.getPlacementOfWidget(spec.id);
   ok(placement, "Widget should be placed.");
   is(placement && placement.area, kNavBar, "Widget should be in navbar");
@@ -60,9 +60,9 @@ add_task(function*() {
     }
   }
   CustomizableUI.destroyWidget(spec.id);
-  yield promiseWindowClosed(otherWin);
+  await promiseWindowClosed(otherWin);
 });
 
-add_task(function* asyncCleanup() {
-  yield resetCustomization();
+add_task(async function asyncCleanup() {
+  await resetCustomization();
 });

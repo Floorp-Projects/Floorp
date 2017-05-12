@@ -7,7 +7,7 @@ const BASE_URL = `http://localhost:${server.identity.primaryPort}/data`;
 
 ExtensionTestUtils.mockAppInfo();
 
-add_task(function* test_contentscript() {
+add_task(async function test_contentscript() {
   function background() {
     browser.runtime.onMessage.addListener(([msg, expectedStates, readyState], sender) => {
       if (msg == "chrome-namespace-ok") {
@@ -88,17 +88,17 @@ add_task(function* test_contentscript() {
 
   let chromeNamespacePromise = extension.awaitMessage("chrome-namespace-ok");
 
-  yield extension.startup();
+  await extension.startup();
 
-  let contentPage = yield ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
+  let contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
 
-  yield Promise.all([completePromise, chromeNamespacePromise]);
+  await Promise.all([completePromise, chromeNamespacePromise]);
 
-  yield contentPage.close();
+  await contentPage.close();
 
   equal(loadingCount, 1, "document_start script ran exactly once");
   equal(interactiveCount, 1, "document_end script ran exactly once");
   equal(completeCount, 1, "document_idle script ran exactly once");
 
-  yield extension.unload();
+  await extension.unload();
 });

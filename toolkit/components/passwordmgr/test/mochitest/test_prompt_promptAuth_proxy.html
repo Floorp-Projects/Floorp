@@ -134,12 +134,12 @@ function startup() {
 
 startup();
 
-add_task(function* setup() {
+add_task(async function setup() {
   info("Waiting for startup to complete...");
-  yield startupComplete;
+  await startupComplete;
 });
 
-add_task(function* test_noAutologin() {
+add_task(async function test_noAutologin() {
   // test proxy login (default = no autologin), make sure it prompts.
   state = {
     msg: "The proxy moz-proxy://127.0.0.1:8888 is requesting a username and password. The site says: “Proxy Realm”",
@@ -167,7 +167,7 @@ add_task(function* test_noAutologin() {
   var time1 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
   promptDone = handlePrompt(state, action);
   isOk = prompter2.promptAuth(proxyChannel, level, proxyAuthinfo);
-  yield promptDone;
+  await promptDone;
   var time2 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
 
   ok(isOk, "Checking dialog return value (accept)");
@@ -176,7 +176,7 @@ add_task(function* test_noAutologin() {
   is(proxyAuthinfo.password, "proxpass", "Checking returned password");
 });
 
-add_task(function* test_autologin() {
+add_task(async function test_autologin() {
   // test proxy login (with autologin)
 
   // Enable the autologin pref.
@@ -197,7 +197,7 @@ add_task(function* test_autologin() {
   is(proxyAuthinfo.password, "proxpass", "Checking returned password");
 });
 
-add_task(function* test_autologin_incorrect() {
+add_task(async function test_autologin_incorrect() {
   // test proxy login (with autologin), ensure it prompts after a failed auth.
   state = {
     msg: "The proxy moz-proxy://127.0.0.1:8888 is requesting a username and password. The site says: “Proxy Realm”",
@@ -226,7 +226,7 @@ add_task(function* test_autologin_incorrect() {
   time1 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
   promptDone = handlePrompt(state, action);
   isOk = prompter2.promptAuth(proxyChannel, level, proxyAuthinfo);
-  yield promptDone;
+  await promptDone;
   time2 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
 
   ok(isOk, "Checking dialog return value (accept)");
@@ -235,7 +235,7 @@ add_task(function* test_autologin_incorrect() {
   is(proxyAuthinfo.password, "proxpass", "Checking returned password");
 });
 
-add_task(function* test_autologin_private() {
+add_task(async function test_autologin_private() {
   // test proxy login (with autologin), ensure it prompts in Private Browsing mode.
   state = {
     msg: "the message",

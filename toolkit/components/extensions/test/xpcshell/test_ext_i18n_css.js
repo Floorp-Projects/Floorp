@@ -10,7 +10,7 @@ const BASE_URL = `http://localhost:${server.identity.primaryPort}/data`;
 
 const XMLHttpRequest = Components.Constructor("@mozilla.org/xmlextras/xmlhttprequest;1", "nsIXMLHttpRequest");
 
-add_task(function* test_i18n_css() {
+add_task(async function test_i18n_css() {
   let extension = ExtensionTestUtils.loadExtension({
     background: function() {
       function backgroundFetch(url) {
@@ -62,8 +62,8 @@ add_task(function* test_i18n_css() {
     },
   });
 
-  yield extension.startup();
-  let cssURL = yield extension.awaitMessage("ready");
+  await extension.startup();
+  let cssURL = await extension.awaitMessage("ready");
 
   function fetch(url) {
     return new Promise((resolve, reject) => {
@@ -76,13 +76,13 @@ add_task(function* test_i18n_css() {
     });
   }
 
-  let css = yield fetch(cssURL);
+  let css = await fetch(cssURL);
 
   equal(css, "body { max-width: 42px; }", "CSS file localized in mochitest scope");
 
-  let contentPage = yield ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
+  let contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
 
-  let maxWidth = yield ContentTask.spawn(contentPage.browser, {}, function* () {
+  let maxWidth = await ContentTask.spawn(contentPage.browser, {}, async function() {
     /* globals content */
     let style = content.getComputedStyle(content.document.body);
 
@@ -91,11 +91,11 @@ add_task(function* test_i18n_css() {
 
   equal(maxWidth, "42px", "stylesheet correctly applied");
 
-  yield contentPage.close();
+  await contentPage.close();
 
   cssURL = cssURL.replace(/foo.css$/, "locale.css");
 
-  css = yield fetch(cssURL);
+  css = await fetch(cssURL);
   equal(css, '* { content: "en_US ltr rtl left right" }', "CSS file localized in mochitest scope");
 
   const LOCALE = "general.useragent.locale";
@@ -109,13 +109,13 @@ add_task(function* test_i18n_css() {
   Preferences.set(DIR, 1);
   Preferences.set(DIR_LEGACY, "rtl");
 
-  css = yield fetch(cssURL);
+  css = await fetch(cssURL);
   equal(css, '* { content: "he rtl ltr right left" }', "CSS file localized in mochitest scope");
 
   Preferences.reset(LOCALE);
   Preferences.reset(DIR);
   Preferences.reset(DIR_LEGACY);
 
-  yield extension.awaitFinish("i18n-css");
-  yield extension.unload();
+  await extension.awaitFinish("i18n-css");
+  await extension.unload();
 });

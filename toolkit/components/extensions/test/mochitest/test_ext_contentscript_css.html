@@ -17,7 +17,7 @@ function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-add_task(function* test_content_script_css() {
+add_task(async function test_content_script_css() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "content_scripts": [{
@@ -31,10 +31,10 @@ add_task(function* test_content_script_css() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
   let win = window.open("file_sample.html");
-  yield waitForLoad(win);
+  await waitForLoad(win);
 
   let style;
   for (let i = 0; i < 1000; i++) {
@@ -42,12 +42,12 @@ add_task(function* test_content_script_css() {
     if (style.maxWidth == "42px") {
       break;
     }
-    yield delay(0);
+    await delay(0);
   }
 
   is(style.maxWidth, "42px", "Stylesheet correctly applied");
 
-  yield extension.unload();
+  await extension.unload();
 
   style = win.getComputedStyle(win.document.body);
   is(style.maxWidth, "none", "Stylesheet correctly removed");

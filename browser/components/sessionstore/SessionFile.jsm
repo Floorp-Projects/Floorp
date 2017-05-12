@@ -45,8 +45,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "RunState",
   "resource:///modules/sessionstore/RunState.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
   "resource://gre/modules/TelemetryStopwatch.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
   "@mozilla.org/base/telemetry;1", "nsITelemetry");
 XPCOMUtils.defineLazyServiceGetter(this, "sessionStartup",
@@ -210,7 +208,7 @@ var SessionFileInternal = {
   },
 
   // Find the correct session file, read it and setup the worker.
-  read: Task.async(function* () {
+  async read() {
     this._initializationStarted = true;
 
     let result;
@@ -223,7 +221,7 @@ var SessionFileInternal = {
         let path = this.Paths[key];
         let startMs = Date.now();
 
-        let source = yield OS.File.read(path, { encoding: "utf-8" });
+        let source = await OS.File.read(path, { encoding: "utf-8" });
         let parsed = JSON.parse(source);
 
         if (!SessionStore.isFormatVersionCompatible(parsed.version || ["sessionrestore", 0] /* fallback for old versions*/)) {
@@ -293,11 +291,11 @@ var SessionFileInternal = {
     }).then(() => this._deferredInitialized.resolve());
 
     return result;
-  }),
+  },
 
   // Post a message to the worker, making sure that it has been initialized
   // first.
-  _postToWorker: Task.async(function*(...args) {
+  async _postToWorker(...args) {
     if (!this._initializationStarted) {
       // Initializing the worker is somewhat complex, as proper handling of
       // backups requires us to first read and check the session. Consequently,
@@ -308,9 +306,9 @@ var SessionFileInternal = {
       // resolves.
       this.read();
     }
-    yield this._deferredInitialized.promise;
+    await this._deferredInitialized.promise;
     return SessionWorker.post(...args)
-  }),
+  },
 
   write(aData) {
     if (RunState.isClosed) {

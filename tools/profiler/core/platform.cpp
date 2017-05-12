@@ -17,6 +17,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 #include "GeckoProfiler.h"
+#include "GeckoProfilerReporter.h"
 #include "ProfilerIOInterposeObserver.h"
 #include "mozilla/StackWalk.h"
 #include "mozilla/StaticPtr.h"

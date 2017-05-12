@@ -11,7 +11,6 @@
 
 // Globals
 
-Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
                                   "resource://gre/modules/LoginHelper.jsm");
@@ -35,9 +34,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
  */
 function promiseCreateDatabaseSchema(aConnection)
 {
-  return Task.spawn(function* () {
-    yield aConnection.setSchemaVersion(5);
-    yield aConnection.execute("CREATE TABLE moz_logins (" +
+  return (async function() {
+    await aConnection.setSchemaVersion(5);
+    await aConnection.execute("CREATE TABLE moz_logins (" +
                               "id                  INTEGER PRIMARY KEY," +
                               "hostname            TEXT NOT NULL," +
                               "httpRealm           TEXT," +
@@ -52,14 +51,14 @@ function promiseCreateDatabaseSchema(aConnection)
                               "timeLastUsed        INTEGER," +
                               "timePasswordChanged INTEGER," +
                               "timesUsed           INTEGER)");
-    yield aConnection.execute("CREATE TABLE moz_disabledHosts (" +
+    await aConnection.execute("CREATE TABLE moz_disabledHosts (" +
                               "id                  INTEGER PRIMARY KEY," +
                               "hostname            TEXT UNIQUE)");
-    yield aConnection.execute("CREATE TABLE moz_deleted_logins (" +
+    await aConnection.execute("CREATE TABLE moz_deleted_logins (" +
                               "id                  INTEGER PRIMARY KEY," +
                               "guid                TEXT," +
                               "timeDeleted         INTEGER)");
-  });
+  })();
 }
 
 /**
@@ -111,7 +110,7 @@ function promiseInsertDisabledHost(aConnection, aHostname)
 /**
  * Imports login data from a SQLite file constructed using the test data.
  */
-add_task(function* test_import()
+add_task(async function test_import()
 {
   let store = new LoginStore(getTempFile("test-import.json").path);
   let loginsSqlite = getTempFile("test-logins.sqlite").path;
@@ -128,21 +127,21 @@ add_task(function* test_import()
   }
 
   // Create and populate the SQLite database first.
-  let connection = yield Sqlite.openConnection({ path: loginsSqlite });
+  let connection = await Sqlite.openConnection({ path: loginsSqlite });
   try {
-    yield promiseCreateDatabaseSchema(connection);
+    await promiseCreateDatabaseSchema(connection);
     for (let loginInfo of loginList) {
-      yield promiseInsertLoginInfo(connection, loginInfo);
+      await promiseInsertLoginInfo(connection, loginInfo);
     }
-    yield promiseInsertDisabledHost(connection, "http://www.example.com");
-    yield promiseInsertDisabledHost(connection, "https://www.example.org");
+    await promiseInsertDisabledHost(connection, "http://www.example.com");
+    await promiseInsertDisabledHost(connection, "https://www.example.org");
   } finally {
-    yield connection.close();
+    await connection.close();
   }
 
   // The "load" method must be called before importing data.
-  yield store.load();
-  yield new LoginImport(store, loginsSqlite).import();
+  await store.load();
+  await new LoginImport(store, loginsSqlite).import();
 
   // Verify that every login in the test data has a matching imported row.
   do_check_eq(loginList.length, store.data.logins.length);
@@ -175,17 +174,17 @@ add_task(function* test_import()
 /**
  * Tests imports of NULL values due to a downgraded database.
  */
-add_task(function* test_import_downgraded()
+add_task(async function test_import_downgraded()
 {
   let store = new LoginStore(getTempFile("test-import-downgraded.json").path);
   let loginsSqlite = getTempFile("test-logins-downgraded.sqlite").path;
 
   // Create and populate the SQLite database first.
-  let connection = yield Sqlite.openConnection({ path: loginsSqlite });
+  let connection = await Sqlite.openConnection({ path: loginsSqlite });
   try {
-    yield promiseCreateDatabaseSchema(connection);
-    yield connection.setSchemaVersion(3);
-    yield promiseInsertLoginInfo(connection, TestData.formLogin({
+    await promiseCreateDatabaseSchema(connection);
+    await connection.setSchemaVersion(3);
+    await promiseInsertLoginInfo(connection, TestData.formLogin({
       guid: gUUIDGenerator.generateUUID().toString(),
       timeCreated: null,
       timeLastUsed: null,
@@ -193,12 +192,12 @@ add_task(function* test_import_downgraded()
       timesUsed: 0,
     }));
   } finally {
-    yield connection.close();
+    await connection.close();
   }
 
   // The "load" method must be called before importing data.
-  yield store.load();
-  yield new LoginImport(store, loginsSqlite).import();
+  await store.load();
+  await new LoginImport(store, loginsSqlite).import();
 
   // Verify that the missing metadata was generated correctly.
   let loginItem = store.data.logins[0];
@@ -212,15 +211,15 @@ add_task(function* test_import_downgraded()
 /**
  * Verifies that importing from a SQLite file with database version 2 fails.
  */
-add_task(function* test_import_v2()
+add_task(async function test_import_v2()
 {
   let store = new LoginStore(getTempFile("test-import-v2.json").path);
   let loginsSqlite = do_get_file("data/signons-v2.sqlite").path;
 
   // The "load" method must be called before importing data.
-  yield store.load();
+  await store.load();
   try {
-    yield new LoginImport(store, loginsSqlite).import();
+    await new LoginImport(store, loginsSqlite).import();
     do_throw("The operation should have failed.");
   } catch (ex) { }
 });
@@ -228,14 +227,14 @@ add_task(function* test_import_v2()
 /**
  * Imports login data from a SQLite file, with database version 3.
  */
-add_task(function* test_import_v3()
+add_task(async function test_import_v3()
 {
   let store = new LoginStore(getTempFile("test-import-v3.json").path);
   let loginsSqlite = do_get_file("data/signons-v3.sqlite").path;
 
   // The "load" method must be called before importing data.
-  yield store.load();
-  yield new LoginImport(store, loginsSqlite).import();
+  await store.load();
+  await new LoginImport(store, loginsSqlite).import();
 
   // We only execute basic integrity checks.
   do_check_eq(store.data.logins[0].usernameField, "u1");

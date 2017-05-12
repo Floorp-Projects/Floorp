@@ -13,7 +13,7 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* test_cookies() {
+add_task(async function test_cookies() {
   async function background() {
     function assertExpected(expected, cookie) {
       for (let key of Object.keys(cookie)) {
@@ -226,9 +226,9 @@ add_task(function* test_cookies() {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("cookies");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("cookies");
+  await extension.unload();
 });
 
 </script>

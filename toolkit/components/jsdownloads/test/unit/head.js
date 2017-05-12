@@ -37,8 +37,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MockRegistrar",
@@ -163,9 +161,9 @@ function getTempFile(aLeafName) {
  * @rejects Never.
  */
 function promiseExecuteSoon() {
-  let deferred = Promise.defer();
-  do_execute_soon(deferred.resolve);
-  return deferred.promise;
+  return new Promise(resolve => {
+    do_execute_soon(resolve);
+  });
 }
 
 /**
@@ -176,9 +174,9 @@ function promiseExecuteSoon() {
  * @rejects Never.
  */
 function promiseTimeout(aTime) {
-  let deferred = Promise.defer();
-  do_timeout(aTime, deferred.resolve);
-  return deferred.promise;
+  return new Promise(resolve => {
+    do_timeout(aTime, resolve);
+  });
 }
 
 /**
@@ -192,29 +190,29 @@ function promiseTimeout(aTime) {
  * @rejects Never.
  */
 function promiseWaitForVisit(aUrl) {
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  let uri = NetUtil.newURI(aUrl);
+    let uri = NetUtil.newURI(aUrl);
 
-  PlacesUtils.history.addObserver({
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver]),
-    onBeginUpdateBatch() {},
-    onEndUpdateBatch() {},
-    onVisit(aURI, aVisitID, aTime, aSessionID, aReferringID,
-                      aTransitionType, aGUID, aHidden) {
-      if (aURI.equals(uri)) {
-        PlacesUtils.history.removeObserver(this);
-        deferred.resolve([aTime, aTransitionType]);
-      }
-    },
-    onTitleChanged() {},
-    onDeleteURI() {},
-    onClearHistory() {},
-    onPageChanged() {},
-    onDeleteVisits() {},
+    PlacesUtils.history.addObserver({
+      QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver]),
+      onBeginUpdateBatch() {},
+      onEndUpdateBatch() {},
+      onVisit(aURI, aVisitID, aTime, aSessionID, aReferringID,
+                        aTransitionType, aGUID, aHidden) {
+        if (aURI.equals(uri)) {
+          PlacesUtils.history.removeObserver(this);
+          resolve([aTime, aTransitionType]);
+        }
+      },
+      onTitleChanged() {},
+      onDeleteURI() {},
+      onClearHistory() {},
+      onPageChanged() {},
+      onDeleteVisits() {},
+    });
+
   });
-
-  return deferred.promise;
 }
 
 /**
@@ -228,14 +226,14 @@ function promiseWaitForVisit(aUrl) {
  * @rejects JavaScript exception.
  */
 function promiseIsURIVisited(aUrl) {
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  PlacesUtils.asyncHistory.isURIVisited(NetUtil.newURI(aUrl),
-    function(aURI, aIsVisited) {
-      deferred.resolve(aIsVisited);
-    });
+    PlacesUtils.asyncHistory.isURIVisited(NetUtil.newURI(aUrl),
+      function(aURI, aIsVisited) {
+        resolve(aIsVisited);
+      });
 
-  return deferred.promise;
+  });
 }
 
 /**
@@ -331,39 +329,39 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
 
   let transfer = Cc["@mozilla.org/transfer;1"].createInstance(Ci.nsITransfer);
 
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  Downloads.getList(Downloads.ALL).then(function(aList) {
-    // Temporarily register a view that will get notified when the download we
-    // are controlling becomes visible in the list of downloads.
-    aList.addView({
-      onDownloadAdded(aDownload) {
-        aList.removeView(this).then(null, do_report_unexpected_exception);
+    Downloads.getList(Downloads.ALL).then(function(aList) {
+      // Temporarily register a view that will get notified when the download we
+      // are controlling becomes visible in the list of downloads.
+      aList.addView({
+        onDownloadAdded(aDownload) {
+          aList.removeView(this).then(null, do_report_unexpected_exception);
 
-        // Remove the download to keep the list empty for the next test.  This
-        // also allows the caller to register the "onchange" event directly.
-        let promise = aList.remove(aDownload);
+          // Remove the download to keep the list empty for the next test.  This
+          // also allows the caller to register the "onchange" event directly.
+          let promise = aList.remove(aDownload);
 
-        // When the download object is ready, make it available to the caller.
-        promise.then(() => deferred.resolve(aDownload),
-                     do_report_unexpected_exception);
-      },
+          // When the download object is ready, make it available to the caller.
+          promise.then(() => resolve(aDownload),
+                       do_report_unexpected_exception);
+        },
+      }).then(null, do_report_unexpected_exception);
+
+      let isPrivate = aOptions && aOptions.isPrivate;
+
+      // Initialize the components so they reference each other.  This will cause
+      // the Download object to be created and added to the public downloads.
+      transfer.init(sourceURI, NetUtil.newURI(targetFile), null, mimeInfo, null,
+                    null, persist, isPrivate);
+      persist.progressListener = transfer;
+
+      // Start the actual download process.
+      persist.savePrivacyAwareURI(sourceURI, null, null, 0, null, null, targetFile,
+                                  isPrivate);
     }).then(null, do_report_unexpected_exception);
 
-    let isPrivate = aOptions && aOptions.isPrivate;
-
-    // Initialize the components so they reference each other.  This will cause
-    // the Download object to be created and added to the public downloads.
-    transfer.init(sourceURI, NetUtil.newURI(targetFile), null, mimeInfo, null,
-                  null, persist, isPrivate);
-    persist.progressListener = transfer;
-
-    // Start the actual download process.
-    persist.savePrivacyAwareURI(sourceURI, null, null, 0, null, null, targetFile,
-                                isPrivate);
-  }).then(null, do_report_unexpected_exception);
-
-  return deferred.promise;
+  });
 }
 
 /**
@@ -384,54 +382,54 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
   let sourceURI = NetUtil.newURI(aSourceUrl ||
                                  httpUrl("interruptible_resumable.txt"));
 
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  Downloads.getList(Downloads.PUBLIC).then(function(aList) {
-    // Temporarily register a view that will get notified when the download we
-    // are controlling becomes visible in the list of downloads.
-    aList.addView({
-      onDownloadAdded(aDownload) {
-        aList.removeView(this).then(null, do_report_unexpected_exception);
+    Downloads.getList(Downloads.PUBLIC).then(function(aList) {
+      // Temporarily register a view that will get notified when the download we
+      // are controlling becomes visible in the list of downloads.
+      aList.addView({
+        onDownloadAdded(aDownload) {
+          aList.removeView(this).then(null, do_report_unexpected_exception);
 
-        // Remove the download to keep the list empty for the next test.  This
-        // also allows the caller to register the "onchange" event directly.
-        let promise = aList.remove(aDownload);
+          // Remove the download to keep the list empty for the next test.  This
+          // also allows the caller to register the "onchange" event directly.
+          let promise = aList.remove(aDownload);
 
-        // When the download object is ready, make it available to the caller.
-        promise.then(() => deferred.resolve(aDownload),
-                     do_report_unexpected_exception);
-      },
+          // When the download object is ready, make it available to the caller.
+          promise.then(() => resolve(aDownload),
+                       do_report_unexpected_exception);
+        },
+      }).then(null, do_report_unexpected_exception);
+
+      let channel = NetUtil.newChannel({
+        uri: sourceURI,
+        loadUsingSystemPrincipal: true
+      });
+
+      // Start the actual download process.
+      channel.asyncOpen2({
+        contentListener: null,
+
+        onStartRequest(aRequest, aContext) {
+          let requestChannel = aRequest.QueryInterface(Ci.nsIChannel);
+          this.contentListener = gExternalHelperAppService.doContent(
+                                       requestChannel.contentType, aRequest, null, true);
+          this.contentListener.onStartRequest(aRequest, aContext);
+        },
+
+        onStopRequest(aRequest, aContext, aStatusCode) {
+          this.contentListener.onStopRequest(aRequest, aContext, aStatusCode);
+        },
+
+        onDataAvailable(aRequest, aContext, aInputStream, aOffset,
+                                  aCount) {
+          this.contentListener.onDataAvailable(aRequest, aContext, aInputStream,
+                                               aOffset, aCount);
+        },
+      });
     }).then(null, do_report_unexpected_exception);
 
-    let channel = NetUtil.newChannel({
-      uri: sourceURI,
-      loadUsingSystemPrincipal: true
-    });
-
-    // Start the actual download process.
-    channel.asyncOpen2({
-      contentListener: null,
-
-      onStartRequest(aRequest, aContext) {
-        let requestChannel = aRequest.QueryInterface(Ci.nsIChannel);
-        this.contentListener = gExternalHelperAppService.doContent(
-                                     requestChannel.contentType, aRequest, null, true);
-        this.contentListener.onStartRequest(aRequest, aContext);
-      },
-
-      onStopRequest(aRequest, aContext, aStatusCode) {
-        this.contentListener.onStopRequest(aRequest, aContext, aStatusCode);
-      },
-
-      onDataAvailable(aRequest, aContext, aInputStream, aOffset,
-                                aCount) {
-        this.contentListener.onDataAvailable(aRequest, aContext, aInputStream,
-                                             aOffset, aCount);
-      },
-    });
-  }).then(null, do_report_unexpected_exception);
-
-  return deferred.promise;
+  });
 }
 
 /**
@@ -446,22 +444,22 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
  * @rejects Never.
  */
 function promiseDownloadMidway(aDownload) {
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  // Wait for the download to reach half of its progress.
-  let onchange = function() {
-    if (!aDownload.stopped && !aDownload.canceled && aDownload.progress == 50) {
-      aDownload.onchange = null;
-      deferred.resolve();
-    }
-  };
+    // Wait for the download to reach half of its progress.
+    let onchange = function() {
+      if (!aDownload.stopped && !aDownload.canceled && aDownload.progress == 50) {
+        aDownload.onchange = null;
+        resolve();
+      }
+    };
 
-  // Register for the notification, but also call the function directly in
-  // case the download already reached the expected progress.
-  aDownload.onchange = onchange;
-  onchange();
+    // Register for the notification, but also call the function directly in
+    // case the download already reached the expected progress.
+    aDownload.onchange = onchange;
+    onchange();
 
-  return deferred.promise;
+  });
 }
 
 /**
@@ -523,38 +521,38 @@ function promiseNewList(aIsPrivate) {
  * @rejects Never.
  */
 function promiseVerifyContents(aPath, aExpectedContents) {
-  return Task.spawn(function* () {
+  return (async function() {
     let file = new FileUtils.File(aPath);
 
-    if (!(yield OS.File.exists(aPath))) {
+    if (!(await OS.File.exists(aPath))) {
       do_throw("File does not exist: " + aPath);
     }
 
-    if ((yield OS.File.stat(aPath)).size == 0) {
+    if ((await OS.File.stat(aPath)).size == 0) {
       do_throw("File is empty: " + aPath);
     }
 
-    let deferred = Promise.defer();
-    NetUtil.asyncFetch(
-      { uri: NetUtil.newURI(file), loadUsingSystemPrincipal: true },
-      function(aInputStream, aStatus) {
-        do_check_true(Components.isSuccessCode(aStatus));
-        let contents = NetUtil.readInputStreamToString(aInputStream,
-                                                       aInputStream.available());
-        if (contents.length > TEST_DATA_SHORT.length * 2 ||
-            /[^\x20-\x7E]/.test(contents)) {
-          // Do not print the entire content string to the test log.
-          do_check_eq(contents.length, aExpectedContents.length);
-          do_check_true(contents == aExpectedContents);
-        } else {
-          // Print the string if it is short and made of printable characters.
-          do_check_eq(contents, aExpectedContents);
-        }
-        deferred.resolve();
-      });
+    await new Promise(resolve => {
+      NetUtil.asyncFetch(
+        { uri: NetUtil.newURI(file), loadUsingSystemPrincipal: true },
+        function(aInputStream, aStatus) {
+          do_check_true(Components.isSuccessCode(aStatus));
+          let contents = NetUtil.readInputStreamToString(aInputStream,
+                                                         aInputStream.available());
+          if (contents.length > TEST_DATA_SHORT.length * 2 ||
+              /[^\x20-\x7E]/.test(contents)) {
+            // Do not print the entire content string to the test log.
+            do_check_eq(contents.length, aExpectedContents.length);
+            do_check_true(contents == aExpectedContents);
+          } else {
+            // Print the string if it is short and made of printable characters.
+            do_check_eq(contents, aExpectedContents);
+          }
+          resolve();
+        });
 
-    yield deferred.promise;
-  });
+    });
+  })();
 }
 
 /**

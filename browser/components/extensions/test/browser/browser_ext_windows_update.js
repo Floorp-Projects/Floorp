@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* () {
+add_task(async function() {
   function promiseWaitForFocus(window) {
     return new Promise(resolve => {
       waitForFocus(function() {
@@ -13,10 +13,10 @@ add_task(function* () {
   }
 
   let window1 = window;
-  let window2 = yield BrowserTestUtils.openNewBrowserWindow();
+  let window2 = await BrowserTestUtils.openNewBrowserWindow();
 
   Services.focus.activeWindow = window2;
-  yield promiseWaitForFocus(window2);
+  await promiseWaitForFocus(window2);
 
   let extension = ExtensionTestUtils.loadExtension({
     background: function() {
@@ -39,17 +39,17 @@ add_task(function* () {
     },
   });
 
-  yield Promise.all([extension.startup(), extension.awaitMessage("check")]);
+  await Promise.all([extension.startup(), extension.awaitMessage("check")]);
 
-  yield promiseWaitForFocus(window1);
+  await promiseWaitForFocus(window1);
 
-  yield extension.unload();
+  await extension.unload();
 
-  yield BrowserTestUtils.closeWindow(window2);
+  await BrowserTestUtils.closeWindow(window2);
 });
 
 
-add_task(function* testWindowUpdate() {
+add_task(async function testWindowUpdate() {
   let extension = ExtensionTestUtils.loadExtension({
     async background() {
       let _checkWindowPromise;
@@ -129,13 +129,13 @@ add_task(function* testWindowUpdate() {
     extension.sendMessage("checked-window");
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("window-update");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("window-update");
+  await extension.unload();
 });
 
-add_task(function* () {
-  let window2 = yield BrowserTestUtils.openNewBrowserWindow();
+add_task(async function() {
+  let window2 = await BrowserTestUtils.openNewBrowserWindow();
 
   let extension = ExtensionTestUtils.loadExtension({
     background: function() {
@@ -150,16 +150,16 @@ add_task(function* () {
     },
   });
 
-  yield Promise.all([extension.startup(), extension.awaitMessage("check")]);
+  await Promise.all([extension.startup(), extension.awaitMessage("check")]);
 
-  yield extension.unload();
+  await extension.unload();
 
-  yield BrowserTestUtils.closeWindow(window2);
+  await BrowserTestUtils.closeWindow(window2);
 });
 
 
 // Tests that incompatible parameters can't be used together.
-add_task(function* testWindowUpdateParams() {
+add_task(async function testWindowUpdateParams() {
   let extension = ExtensionTestUtils.loadExtension({
     async background() {
       try {
@@ -183,7 +183,7 @@ add_task(function* testWindowUpdateParams() {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("window-update-params");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("window-update-params");
+  await extension.unload();
 });

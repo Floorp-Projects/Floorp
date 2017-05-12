@@ -8,7 +8,7 @@ const WARNING_PATTERN = [{
   msg: 'JavaScript Warning: "Password fields present on an insecure (http://) page. This is a security risk that allows user login credentials to be stolen."'
 }];
 
-add_task(function* testInsecurePasswordWarning() {
+add_task(async function testInsecurePasswordWarning() {
   let warningPatternHandler;
 
   function messageHandler(msgObj) {
@@ -76,10 +76,10 @@ add_task(function* testInsecurePasswordWarning() {
       };
     });
 
-    yield BrowserTestUtils.withNewTab({
+    await BrowserTestUtils.withNewTab({
       gBrowser,
       url: testURL
-    }, function*() {
+    }, function() {
       if (expectWarnings.length === 0) {
         info("All warnings are shown for URL:" + testURL);
         return Promise.resolve();

@@ -21,7 +21,7 @@ const {
  *  - EmbeddedExtension.prototype.startup/shutdown methods manage the embedded
  *    webextension lifecycle as expected.
  */
-add_task(function* test_embedded_webextension_utils() {
+add_task(async function test_embedded_webextension_utils() {
   function backgroundScript() {
     let port = browser.runtime.connect();
 
@@ -72,7 +72,7 @@ add_task(function* test_embedded_webextension_utils() {
         "Got the expected number of tracked embedded extension instances");
 
   do_print("waiting embeddedExtension.startup");
-  let embeddedExtensionAPI = yield embeddedExtension.startup();
+  let embeddedExtensionAPI = await embeddedExtension.startup();
   ok(embeddedExtensionAPI, "Got the embeddedExtensionAPI object");
 
   let waitConnectPort = new Promise(resolve => {
@@ -82,7 +82,7 @@ add_task(function* test_embedded_webextension_utils() {
     });
   });
 
-  let port = yield waitConnectPort;
+  let port = await waitConnectPort;
 
   ok(port, "Got the Port API object");
 
@@ -94,7 +94,7 @@ add_task(function* test_embedded_webextension_utils() {
 
   port.postMessage("legacy_extension -> webextension");
 
-  let msg = yield waitPortMessage;
+  let msg = await waitPortMessage;
 
   equal(msg, "webextension -> legacy_extension",
      "LegacyExtensionContext received the expected message from the webextension");
@@ -104,16 +104,16 @@ add_task(function* test_embedded_webextension_utils() {
   });
 
   do_print("Wait for the disconnect port event");
-  yield waitForDisconnect;
+  await waitForDisconnect;
   do_print("Got the disconnect port event");
 
-  yield embeddedExtension.shutdown();
+  await embeddedExtension.shutdown();
 
   equal(EmbeddedExtensionManager.embeddedExtensionsByAddonId.size, 0,
         "EmbeddedExtension instances has been untracked from the EmbeddedExtensionManager");
 });
 
-function* createManifestErrorTestCase(id, xpi, expectedError) {
+async function createManifestErrorTestCase(id, xpi, expectedError) {
   // Remove the generated xpi file and flush the its jar cache
   // on cleanup.
   do_register_cleanup(() => {
@@ -128,15 +128,15 @@ function* createManifestErrorTestCase(id, xpi, expectedError) {
     id, resourceURI,
   });
 
-  yield Assert.rejects(embeddedExtension.startup(), expectedError,
+  await Assert.rejects(embeddedExtension.startup(), expectedError,
                        "embedded extension startup rejected");
 
   // Shutdown a "never-started" addon with an embedded webextension should not
   // raise any exception, and if it does this test will fail.
-  yield embeddedExtension.shutdown();
+  await embeddedExtension.shutdown();
 }
 
-add_task(function* test_startup_error_empty_manifest() {
+add_task(async function test_startup_error_empty_manifest() {
   const id = "empty-manifest@test.embedded.web.extension";
   const files = {
     "webextension/manifest.json": ``,
@@ -145,10 +145,10 @@ add_task(function* test_startup_error_empty_manifest() {
 
   let fakeHybridAddonFile = Extension.generateZipFile(files);
 
-  yield createManifestErrorTestCase(id, fakeHybridAddonFile, expectedError);
+  await createManifestErrorTestCase(id, fakeHybridAddonFile, expectedError);
 });
 
-add_task(function* test_startup_error_invalid_json_manifest() {
+add_task(async function test_startup_error_invalid_json_manifest() {
   const id = "invalid-json-manifest@test.embedded.web.extension";
   const files = {
     "webextension/manifest.json": `{ "name": }`,
@@ -157,10 +157,10 @@ add_task(function* test_startup_error_invalid_json_manifest() {
 
   let fakeHybridAddonFile = Extension.generateZipFile(files);
 
-  yield createManifestErrorTestCase(id, fakeHybridAddonFile, expectedError);
+  await createManifestErrorTestCase(id, fakeHybridAddonFile, expectedError);
 });
 
-add_task(function* test_startup_error_blocking_validation_errors() {
+add_task(async function test_startup_error_blocking_validation_errors() {
   const id = "blocking-manifest-validation-error@test.embedded.web.extension";
   const files = {
     "webextension/manifest.json": {
@@ -184,5 +184,5 @@ add_task(function* test_startup_error_blocking_validation_errors() {
 
   let fakeHybridAddonFile = Extension.generateZipFile(files);
 
-  yield createManifestErrorTestCase(id, fakeHybridAddonFile, expectedError);
+  await createManifestErrorTestCase(id, fakeHybridAddonFile, expectedError);
 });

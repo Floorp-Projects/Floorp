@@ -10,7 +10,7 @@
 
 "use strict";
 
-add_task(function* tags_getter_setter() {
+add_task(async function tags_getter_setter() {
   do_print("Tags getter/setter should work correctly");
   do_print("Without setting tags, tags getter should return empty array");
   var [query] = makeQuery();
@@ -31,7 +31,7 @@ add_task(function* tags_getter_setter() {
   setsAreEqual(query.tags, ["bar", "baz", "foo"], true);
 });
 
-add_task(function* invalid_setter_calls() {
+add_task(async function invalid_setter_calls() {
   do_print("Invalid calls to tags setter should fail");
   try {
     var query = PlacesUtils.history.getNewQuery();
@@ -90,17 +90,17 @@ add_task(function* invalid_setter_calls() {
   } catch (exc) {}
 });
 
-add_task(function* not_setting_tags() {
+add_task(async function not_setting_tags() {
   do_print("Not setting tags at all should not affect query URI");
   checkQueryURI();
 });
 
-add_task(function* empty_array_tags() {
+add_task(async function empty_array_tags() {
   do_print("Setting tags with an empty array should not affect query URI");
   checkQueryURI([]);
 });
 
-add_task(function* set_tags() {
+add_task(async function set_tags() {
   do_print("Setting some tags should result in correct query URI");
   checkQueryURI([
     "foo",
@@ -115,19 +115,19 @@ add_task(function* set_tags() {
   ]);
 });
 
-add_task(function* no_tags_tagsAreNot() {
+add_task(async function no_tags_tagsAreNot() {
   do_print("Not setting tags at all but setting tagsAreNot should " +
            "affect query URI");
   checkQueryURI(null, true);
 });
 
-add_task(function* empty_array_tags_tagsAreNot() {
+add_task(async function empty_array_tags_tagsAreNot() {
   do_print("Setting tags with an empty array and setting tagsAreNot " +
            "should affect query URI");
   checkQueryURI([], true);
 });
 
-add_task(function* () {
+add_task(async function() {
   do_print("Setting some tags and setting tagsAreNot should result in " +
            "correct query URI");
   checkQueryURI([
@@ -143,10 +143,10 @@ add_task(function* () {
   ], true);
 });
 
-add_task(function* tag_to_uri() {
+add_task(async function tag_to_uri() {
   do_print("Querying history on tag associated with a URI should return " +
            "that URI");
-  yield task_doWithVisit(["foo", "bar", "baz"], function(aURI) {
+  await task_doWithVisit(["foo", "bar", "baz"], function(aURI) {
     var [query, opts] = makeQuery(["foo"]);
     executeAndCheckQueryResults(query, opts, [aURI.spec]);
     [query, opts] = makeQuery(["bar"]);
@@ -156,10 +156,10 @@ add_task(function* tag_to_uri() {
   });
 });
 
-add_task(function* tags_to_uri() {
+add_task(async function tags_to_uri() {
   do_print("Querying history on many tags associated with a URI should " +
            "return that URI");
-  yield task_doWithVisit(["foo", "bar", "baz"], function(aURI) {
+  await task_doWithVisit(["foo", "bar", "baz"], function(aURI) {
     var [query, opts] = makeQuery(["foo", "bar"]);
     executeAndCheckQueryResults(query, opts, [aURI.spec]);
     [query, opts] = makeQuery(["foo", "baz"]);
@@ -171,10 +171,10 @@ add_task(function* tags_to_uri() {
   });
 });
 
-add_task(function* repeated_tag() {
+add_task(async function repeated_tag() {
   do_print("Specifying the same tag multiple times in a history query " +
            "should not matter");
-  yield task_doWithVisit(["foo", "bar", "baz"], function(aURI) {
+  await task_doWithVisit(["foo", "bar", "baz"], function(aURI) {
     var [query, opts] = makeQuery(["foo", "foo"]);
     executeAndCheckQueryResults(query, opts, [aURI.spec]);
     [query, opts] = makeQuery(["foo", "foo", "foo", "bar", "bar", "baz"]);
@@ -182,10 +182,10 @@ add_task(function* repeated_tag() {
   });
 });
 
-add_task(function* many_tags_no_uri() {
+add_task(async function many_tags_no_uri() {
   do_print("Querying history on many tags associated with a URI and " +
            "tags not associated with that URI should not return that URI");
-  yield task_doWithVisit(["foo", "bar", "baz"], function(aURI) {
+  await task_doWithVisit(["foo", "bar", "baz"], function(aURI) {
     var [query, opts] = makeQuery(["foo", "bogus"]);
     executeAndCheckQueryResults(query, opts, []);
     [query, opts] = makeQuery(["foo", "bar", "bogus"]);
@@ -195,9 +195,9 @@ add_task(function* many_tags_no_uri() {
   });
 });
 
-add_task(function* nonexistent_tags() {
+add_task(async function nonexistent_tags() {
   do_print("Querying history on nonexistent tags should return no results");
-  yield task_doWithVisit(["foo", "bar", "baz"], function(aURI) {
+  await task_doWithVisit(["foo", "bar", "baz"], function(aURI) {
     var [query, opts] = makeQuery(["bogus"]);
     executeAndCheckQueryResults(query, opts, []);
     [query, opts] = makeQuery(["bogus", "gnarly"]);
@@ -205,10 +205,10 @@ add_task(function* nonexistent_tags() {
   });
 });
 
-add_task(function* tag_to_bookmark() {
+add_task(async function tag_to_bookmark() {
   do_print("Querying bookmarks on tag associated with a URI should " +
            "return that URI");
-  yield task_doWithBookmark(["foo", "bar", "baz"], function(aURI) {
+  await task_doWithBookmark(["foo", "bar", "baz"], function(aURI) {
     var [query, opts] = makeQuery(["foo"]);
     opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
     executeAndCheckQueryResults(query, opts, [aURI.spec]);
@@ -221,10 +221,10 @@ add_task(function* tag_to_bookmark() {
   });
 });
 
-add_task(function* many_tags_to_bookmark() {
+add_task(async function many_tags_to_bookmark() {
   do_print("Querying bookmarks on many tags associated with a URI " +
            "should return that URI");
-  yield task_doWithBookmark(["foo", "bar", "baz"], function(aURI) {
+  await task_doWithBookmark(["foo", "bar", "baz"], function(aURI) {
     var [query, opts] = makeQuery(["foo", "bar"]);
     opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
     executeAndCheckQueryResults(query, opts, [aURI.spec]);
@@ -240,10 +240,10 @@ add_task(function* many_tags_to_bookmark() {
   });
 });
 
-add_task(function* repeated_tag_to_bookmarks() {
+add_task(async function repeated_tag_to_bookmarks() {
   do_print("Specifying the same tag multiple times in a bookmark query " +
            "should not matter");
-  yield task_doWithBookmark(["foo", "bar", "baz"], function(aURI) {
+  await task_doWithBookmark(["foo", "bar", "baz"], function(aURI) {
     var [query, opts] = makeQuery(["foo", "foo"]);
     opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
     executeAndCheckQueryResults(query, opts, [aURI.spec]);
@@ -253,10 +253,10 @@ add_task(function* repeated_tag_to_bookmarks() {
   });
 });
 
-add_task(function* many_tags_no_bookmark() {
+add_task(async function many_tags_no_bookmark() {
   do_print("Querying bookmarks on many tags associated with a URI and " +
            "tags not associated with that URI should not return that URI");
-  yield task_doWithBookmark(["foo", "bar", "baz"], function(aURI) {
+  await task_doWithBookmark(["foo", "bar", "baz"], function(aURI) {
     var [query, opts] = makeQuery(["foo", "bogus"]);
     opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
     executeAndCheckQueryResults(query, opts, []);
@@ -269,9 +269,9 @@ add_task(function* many_tags_no_bookmark() {
   });
 });
 
-add_task(function* nonexistent_tags_bookmark() {
+add_task(async function nonexistent_tags_bookmark() {
   do_print("Querying bookmarks on nonexistent tag should return no results");
-  yield task_doWithBookmark(["foo", "bar", "baz"], function(aURI) {
+  await task_doWithBookmark(["foo", "bar", "baz"], function(aURI) {
     var [query, opts] = makeQuery(["bogus"]);
     opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
     executeAndCheckQueryResults(query, opts, []);
@@ -281,7 +281,7 @@ add_task(function* nonexistent_tags_bookmark() {
   });
 });
 
-add_task(function* tagsAreNot_history() {
+add_task(async function tagsAreNot_history() {
   do_print("Querying history using tagsAreNot should work correctly");
   var urisAndTags = {
     "http://example.com/1": ["foo", "bar"],
@@ -292,7 +292,7 @@ add_task(function* tagsAreNot_history() {
   do_print("Add visits and tag the URIs");
   for (let [pURI, tags] of Object.entries(urisAndTags)) {
     let nsiuri = uri(pURI);
-    yield PlacesTestUtils.addVisits(nsiuri);
+    await PlacesTestUtils.addVisits(nsiuri);
     if (tags)
       PlacesUtils.tagging.tagURI(nsiuri, tags);
   }
@@ -330,10 +330,10 @@ add_task(function* tagsAreNot_history() {
     if (tags)
       PlacesUtils.tagging.untagURI(nsiuri, tags);
   }
-  yield task_cleanDatabase();
+  await task_cleanDatabase();
 });
 
-add_task(function* tagsAreNot_bookmarks() {
+add_task(async function tagsAreNot_bookmarks() {
   do_print("Querying bookmarks using tagsAreNot should work correctly");
   var urisAndTags = {
     "http://example.com/1": ["foo", "bar"],
@@ -344,7 +344,7 @@ add_task(function* tagsAreNot_bookmarks() {
   do_print("Add bookmarks and tag the URIs");
   for (let [pURI, tags] of Object.entries(urisAndTags)) {
     let nsiuri = uri(pURI);
-    yield addBookmark(nsiuri);
+    await addBookmark(nsiuri);
     if (tags)
       PlacesUtils.tagging.tagURI(nsiuri, tags);
   }
@@ -387,27 +387,27 @@ add_task(function* tagsAreNot_bookmarks() {
     if (tags)
       PlacesUtils.tagging.untagURI(nsiuri, tags);
   }
-  yield task_cleanDatabase();
+  await task_cleanDatabase();
 });
 
-add_task(function* duplicate_tags() {
+add_task(async function duplicate_tags() {
   do_print("Duplicate existing tags (i.e., multiple tag folders with " +
            "same name) should not throw off query results");
   var tagName = "foo";
 
   do_print("Add bookmark and tag it normally");
-  yield addBookmark(TEST_URI);
+  await addBookmark(TEST_URI);
   PlacesUtils.tagging.tagURI(TEST_URI, [tagName]);
 
   do_print("Manually create tag folder with same name as tag and insert " +
            "bookmark");
-  let dupTag = yield PlacesUtils.bookmarks.insert({
+  let dupTag = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.tagsGuid,
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     title: tagName
   });
 
-  yield PlacesUtils.bookmarks.insert({
+  await PlacesUtils.bookmarks.insert({
     parentGuid: dupTag.guid,
     title: "title",
     url: TEST_URI
@@ -419,20 +419,20 @@ add_task(function* duplicate_tags() {
   queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root, [TEST_URI.spec]);
 
   PlacesUtils.tagging.untagURI(TEST_URI, [tagName]);
-  yield task_cleanDatabase();
+  await task_cleanDatabase();
 });
 
-add_task(function* folder_named_as_tag() {
+add_task(async function folder_named_as_tag() {
   do_print("Regular folders with the same name as tag should not throw " +
            "off query results");
   var tagName = "foo";
 
   do_print("Add bookmark and tag it");
-  yield addBookmark(TEST_URI);
+  await addBookmark(TEST_URI);
   PlacesUtils.tagging.tagURI(TEST_URI, [tagName]);
 
   do_print("Create folder with same name as tag");
-  yield PlacesUtils.bookmarks.insert({
+  await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     title: tagName
@@ -444,10 +444,10 @@ add_task(function* folder_named_as_tag() {
   queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root, [TEST_URI.spec]);
 
   PlacesUtils.tagging.untagURI(TEST_URI, [tagName]);
-  yield task_cleanDatabase();
+  await task_cleanDatabase();
 });
 
-add_task(function* ORed_queries() {
+add_task(async function ORed_queries() {
   do_print("Multiple queries ORed together should work");
   var urisAndTags = {
     "http://example.com/1": [],
@@ -464,7 +464,7 @@ add_task(function* ORed_queries() {
   do_print("Add visits and tag the URIs");
   for (let [pURI, tags] of Object.entries(urisAndTags)) {
     let nsiuri = uri(pURI);
-    yield PlacesTestUtils.addVisits(nsiuri);
+    await PlacesTestUtils.addVisits(nsiuri);
     if (tags)
       PlacesUtils.tagging.tagURI(nsiuri, tags);
   }
@@ -514,7 +514,7 @@ add_task(function* ORed_queries() {
     if (tags)
       PlacesUtils.tagging.untagURI(nsiuri, tags);
   }
-  yield task_cleanDatabase();
+  await task_cleanDatabase();
 });
 
 // The tag keys in query URIs, i.e., "place:tag=foo&!tags=1"
@@ -541,9 +541,9 @@ function addBookmark(aURI) {
 /**
  * Asynchronous task that removes all pages from history and bookmarks.
  */
-function* task_cleanDatabase(aCallback) {
-  yield PlacesUtils.bookmarks.eraseEverything();
-  yield PlacesTestUtils.clearHistory();
+async function task_cleanDatabase(aCallback) {
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesTestUtils.clearHistory();
 }
 
 /**
@@ -576,12 +576,12 @@ function checkQueryURI(aTags, aTagsAreNot) {
  * @param aCallback
  *        A task function that will be called after the bookmark has been tagged
  */
-function* task_doWithBookmark(aTags, aCallback) {
-  yield addBookmark(TEST_URI);
+async function task_doWithBookmark(aTags, aCallback) {
+  await addBookmark(TEST_URI);
   PlacesUtils.tagging.tagURI(TEST_URI, aTags);
-  yield aCallback(TEST_URI);
+  await aCallback(TEST_URI);
   PlacesUtils.tagging.untagURI(TEST_URI, aTags);
-  yield task_cleanDatabase();
+  await task_cleanDatabase();
 }
 
 /**
@@ -594,12 +594,12 @@ function* task_doWithBookmark(aTags, aCallback) {
  * @param aCallback
  *        A function that will be called after the visit has been tagged
  */
-function* task_doWithVisit(aTags, aCallback) {
-  yield PlacesTestUtils.addVisits(TEST_URI);
+async function task_doWithVisit(aTags, aCallback) {
+  await PlacesTestUtils.addVisits(TEST_URI);
   PlacesUtils.tagging.tagURI(TEST_URI, aTags);
-  yield aCallback(TEST_URI);
+  await aCallback(TEST_URI);
   PlacesUtils.tagging.untagURI(TEST_URI, aTags);
-  yield task_cleanDatabase();
+  await task_cleanDatabase();
 }
 
 /**

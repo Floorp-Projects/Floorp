@@ -26,7 +26,7 @@ function tp_background(expectFail = true) {
   });
 }
 
-function* test_permission(permissions, expectFail) {
+async function test_permission(permissions, expectFail) {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions,
@@ -34,28 +34,28 @@ function* test_permission(permissions, expectFail) {
     background: `(${tp_background})(${expectFail})`,
   });
 
-  yield extension.startup();
-  yield extension.awaitMessage("done");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
 }
 
-add_task(function* setup() {
-  yield UrlClassifierTestUtils.addTestTrackers();
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function setup() {
+  await UrlClassifierTestUtils.addTestTrackers();
+  await SpecialPowers.pushPrefEnv({
     set: [["privacy.trackingprotection.enabled", true]],
   });
 });
 
 // Fetch would be blocked with these tests
-add_task(function* () { yield test_permission([], true); });
-add_task(function* () { yield test_permission(["http://*/"], true); });
-add_task(function* () { yield test_permission(["http://*.example.com/"], true); });
-add_task(function* () { yield test_permission(["http://localhost/*"], true); });
-add_task(function* () { yield test_permission(["<all_urls>"], true); });
+add_task(async function() { await test_permission([], true); });
+add_task(async function() { await test_permission(["http://*/"], true); });
+add_task(async function() { await test_permission(["http://*.example.com/"], true); });
+add_task(async function() { await test_permission(["http://localhost/*"], true); });
+add_task(async function() { await test_permission(["<all_urls>"], true); });
 // Fetch will not be blocked with explicit permissions
-add_task(function* () { yield test_permission(["*://tracking.example.com/*"], false); });
+add_task(async function() { await test_permission(["*://tracking.example.com/*"], false); });
 
-add_task(function* test_contentscript() {
+add_task(async function test_contentscript() {
   function contentScript() {
     fetch("https://tracking.example.com/example.txt").then(() => {
       browser.test.notifyPass("fetch received");
@@ -84,14 +84,14 @@ add_task(function* test_contentscript() {
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
 
-  yield extension.startup();
+  await extension.startup();
   let win = window.open(url);
-  yield extension.awaitFinish();
+  await extension.awaitFinish();
   win.close();
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* teardown() {
+add_task(async function teardown() {
   UrlClassifierTestUtils.cleanupTestTrackers();
 });
 </script>

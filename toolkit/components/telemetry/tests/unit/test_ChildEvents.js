@@ -47,15 +47,15 @@ function run_child_test() {
  * This function waits until content events are reported into the
  * events snapshot.
  */
-function* waitForContentEvents() {
-  yield ContentTaskUtils.waitForCondition(() => {
+async function waitForContentEvents() {
+  await ContentTaskUtils.waitForCondition(() => {
     const snapshot =
       Telemetry.snapshotBuiltinEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
     return Object.keys(snapshot).includes("tab");
   });
 }
 
-add_task(function*() {
+add_task(async function() {
   if (!runningInParent) {
     TelemetryController.testSetupContent();
     run_child_test();
@@ -67,9 +67,9 @@ add_task(function*() {
   do_get_profile(true);
   loadAddonManager(APP_ID, APP_NAME, APP_VERSION, PLATFORM_VERSION);
   Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
-  yield TelemetryController.testSetup();
+  await TelemetryController.testSetup();
   // Make sure we don't generate unexpected pings due to pref changes.
-  yield setEmptyPrefWatchlist();
+  await setEmptyPrefWatchlist();
   // Enable recording for the test event category.
   Telemetry.setEventRecordingEnabled("telemetry.test", true);
 
@@ -77,12 +77,12 @@ add_task(function*() {
   // MESSAGE_CHILD_TEST_DONE.
   const timestampBeforeChildEvents = Telemetry.msSinceProcessStart();
   run_test_in_child("test_ChildEvents.js");
-  yield do_await_remote_message(MESSAGE_CHILD_TEST_DONE);
+  await do_await_remote_message(MESSAGE_CHILD_TEST_DONE);
 
   // Once events are set by the content process, they don't immediately get
   // sent to the parent process. Wait for the Telemetry IPC Timer to trigger
   // and batch send the data back to the parent process.
-  yield waitForContentEvents();
+  await waitForContentEvents();
   const timestampAfterChildEvents = Telemetry.msSinceProcessStart();
 
   // Also record some events in the parent.

@@ -23,25 +23,25 @@ registerCleanupFunction(function() {
   Services.prefs.clearUserPref("browser.rights." + gRightsVersion + ".shown");
 });
 
-add_task(function* () {
+add_task(async function() {
   info("Check that clearing cookies does not clear storage");
 
-  yield withSnippetsMap(
+  await withSnippetsMap(
     () => {
       Cc["@mozilla.org/observer-service;1"]
         .getService(Ci.nsIObserverService)
         .notifyObservers(null, "cookie-changed", "cleared");
     },
-    function* () {
+    function() {
       isnot(content.gSnippetsMap.get("snippets-last-update"), null,
             "snippets-last-update should have a value");
     });
 });
 
-add_task(function* () {
+add_task(async function() {
   info("Check default snippets are shown");
 
-  yield withSnippetsMap(null, function* () {
+  await withSnippetsMap(null, function() {
     let doc = content.document;
     let snippetsElt = doc.getElementById("snippets");
     ok(snippetsElt, "Found snippets element")
@@ -50,13 +50,13 @@ add_task(function* () {
   });
 });
 
-add_task(function* () {
+add_task(async function() {
   info("Check default snippets are shown if snippets are invalid xml");
 
-  yield withSnippetsMap(
+  await withSnippetsMap(
     // This must set some incorrect xhtml code.
     snippetsMap => snippetsMap.set("snippets", "<p><b></p></b>"),
-    function* () {
+    function() {
       let doc = content.document;
       let snippetsElt = doc.getElementById("snippets");
       ok(snippetsElt, "Found snippets element");
@@ -67,21 +67,21 @@ add_task(function* () {
     });
 });
 
-add_task(function* () {
+add_task(async function() {
   info("Check that performing a search fires a search event and records to Telemetry.");
 
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:home" }, function* (browser) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:home" }, async function(browser) {
     let currEngine = Services.search.currentEngine;
-    let engine = yield promiseNewEngine("searchSuggestionEngine.xml");
+    let engine = await promiseNewEngine("searchSuggestionEngine.xml");
     // Make this actually work in healthreport by giving it an ID:
     Object.defineProperty(engine.wrappedJSObject, "identifier",
                           { value: "org.mozilla.testsearchsuggestions" });
 
     let p = promiseContentSearchChange(browser, engine.name);
     Services.search.currentEngine = engine;
-    yield p;
+    await p;
 
-    yield ContentTask.spawn(browser, { expectedName: engine.name }, function* (args) {
+    await ContentTask.spawn(browser, { expectedName: engine.name }, async function(args) {
       let engineName = content.wrappedJSObject.gContentSearchController.defaultEngine.name;
       is(engineName, args.expectedName, "Engine name in DOM should match engine we just added");
     });
@@ -105,14 +105,14 @@ add_task(function* () {
     let promise = waitForDocLoadAndStopIt(expectedURL, browser);
 
     // Perform a search to increase the SEARCH_COUNT histogram.
-    yield ContentTask.spawn(browser, { searchStr }, function* (args) {
+    await ContentTask.spawn(browser, { searchStr }, async function(args) {
       let doc = content.document;
       info("Perform a search.");
       doc.getElementById("searchText").value = args.searchStr;
       doc.getElementById("searchSubmit").click();
     });
 
-    yield promise;
+    await promise;
 
     // Make sure the SEARCH_COUNTS histogram has the right key and count.
     let hs = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS").snapshot();
@@ -127,15 +127,15 @@ add_task(function* () {
   });
 });
 
-add_task(function* () {
+add_task(async function() {
   info("Check snippets map is cleared if cached version is old");
 
-  yield withSnippetsMap(
+  await withSnippetsMap(
     snippetsMap => {
       snippetsMap.set("snippets", "test");
       snippetsMap.set("snippets-cached-version", 0);
     },
-    function* () {
+    function() {
       let snippetsMap = content.gSnippetsMap;
       ok(!snippetsMap.has("snippets"), "snippets have been properly cleared");
       ok(!snippetsMap.has("snippets-cached-version"),
@@ -143,12 +143,12 @@ add_task(function* () {
     });
 });
 
-add_task(function* () {
+add_task(async function() {
   info("Check cached snippets are shown if cached version is current");
 
-  yield withSnippetsMap(
+  await withSnippetsMap(
     snippetsMap => snippetsMap.set("snippets", "test"),
-    function* (args) {
+    function(args) {
       let doc = content.document;
       let snippetsMap = content.gSnippetsMap
 
@@ -164,7 +164,7 @@ add_task(function* () {
     }, { expectedVersion: AboutHomeUtils.snippetsVersion });
 });
 
-add_task(function* () {
+add_task(async function() {
   info("Check if the 'Know Your Rights' default snippet is shown when " +
     "'browser.rights.override' pref is set and that its link works");
 
@@ -172,18 +172,18 @@ add_task(function* () {
 
   ok(AboutHomeUtils.showKnowYourRights, "AboutHomeUtils.showKnowYourRights should be TRUE");
 
-  yield withSnippetsMap(null, function* () {
+  await withSnippetsMap(null, function() {
     let doc = content.document;
     let snippetsElt = doc.getElementById("snippets");
     ok(snippetsElt, "Found snippets element");
     let linkEl = snippetsElt.querySelector("a");
     is(linkEl.href, "about:rights", "Snippet link is present.");
-  }, null, function* () {
+  }, null, async function() {
     let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, "about:rights");
-    yield BrowserTestUtils.synthesizeMouseAtCenter("a[href='about:rights']", {
+    await BrowserTestUtils.synthesizeMouseAtCenter("a[href='about:rights']", {
       button: 0
     }, gBrowser.selectedBrowser);
-    yield loadPromise;
+    await loadPromise;
     is(gBrowser.currentURI.spec, "about:rights", "about:rights should have opened.");
   });
 
@@ -191,7 +191,7 @@ add_task(function* () {
   Services.prefs.clearUserPref("browser.rights.override");
 });
 
-add_task(function* () {
+add_task(async function() {
   info("Check if the 'Know Your Rights' default snippet is NOT shown when " +
     "'browser.rights.override' pref is NOT set");
 
@@ -200,7 +200,7 @@ add_task(function* () {
   let rightsData = AboutHomeUtils.knowYourRightsData;
   ok(!rightsData, "AboutHomeUtils.knowYourRightsData should be FALSE");
 
-  yield withSnippetsMap(null, function*() {
+  await withSnippetsMap(null, function() {
     let doc = content.document;
     let snippetsElt = doc.getElementById("snippets");
     ok(snippetsElt, "Found snippets element");
@@ -211,12 +211,12 @@ add_task(function* () {
   Services.prefs.clearUserPref("browser.rights.override");
 });
 
-add_task(function* () {
+add_task(async function() {
   info("Check POST search engine support");
 
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:home" }, function* (browser) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:home" }, function(browser) {
     return new Promise(resolve => {
-      let searchObserver = Task.async(function* search_observer(subject, topic, data) {
+      let searchObserver = async function search_observer(subject, topic, data) {
         let currEngine = Services.search.defaultEngine;
         let engine = subject.QueryInterface(Ci.nsISearchEngine);
         info("Observer: " + data + " for " + engine.name);
@@ -234,20 +234,20 @@ add_task(function* () {
 
         let p = promiseContentSearchChange(browser, engine.name);
         Services.search.defaultEngine = engine;
-        yield p;
+        await p;
 
         let promise = BrowserTestUtils.browserLoaded(browser);
 
-        yield ContentTask.spawn(browser, { needle }, function* (args) {
+        await ContentTask.spawn(browser, { needle }, async function(args) {
           let doc = content.document;
           doc.getElementById("searchText").value = args.needle;
           doc.getElementById("searchSubmit").click();
         });
 
-        yield promise;
+        await promise;
 
         // When the search results load, check them for correctness.
-        yield ContentTask.spawn(browser, { needle }, function* (args) {
+        await ContentTask.spawn(browser, { needle }, async function(args) {
           let loadedText = content.document.body.textContent;
           ok(loadedText, "search page loaded");
           is(loadedText, "searchterms=" + escape(args.needle.replace(/\s/g, "+")),
@@ -259,7 +259,7 @@ add_task(function* () {
           Services.search.removeEngine(engine);
         } catch (ex) {}
         resolve();
-      });
+      };
       Services.obs.addObserver(searchObserver, "browser-search-engine-modified");
       Services.search.addEngine("http://test:80/browser/browser/base/content/test/general/POSTSearchEngine.xml",
                                 null, null, false);
@@ -267,21 +267,21 @@ add_task(function* () {
   });
 });
 
-add_task(function* () {
+add_task(async function() {
   info("Make sure that a page can't imitate about:home");
 
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:home" }, function* (browser) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:home" }, async function(browser) {
     let promise = BrowserTestUtils.browserLoaded(browser);
     browser.loadURI("https://example.com/browser/browser/base/content/test/general/test_bug959531.html");
-    yield promise;
+    await promise;
 
-    yield ContentTask.spawn(browser, null, function* () {
+    await ContentTask.spawn(browser, null, async function() {
       let button = content.document.getElementById("settings");
       ok(button, "Found settings button in test page");
       button.click();
     });
 
-    yield new Promise(resolve => {
+    await new Promise(resolve => {
       // It may take a few turns of the event loop before the window
       // is displayed, so we wait.
       function check(n) {
@@ -303,32 +303,32 @@ add_task(function* () {
   });
 });
 
-add_task(function* () {
+add_task(async function() {
   // See browser_contentSearchUI.js for comprehensive content search UI tests.
   info("Search suggestion smoke test");
 
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:home" }, function* (browser) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:home" }, async function(browser) {
     // Add a test engine that provides suggestions and switch to it.
     let currEngine = Services.search.currentEngine;
-    let engine = yield promiseNewEngine("searchSuggestionEngine.xml");
+    let engine = await promiseNewEngine("searchSuggestionEngine.xml");
     let p = promiseContentSearchChange(browser, engine.name);
     Services.search.currentEngine = engine;
-    yield p;
+    await p;
 
-    yield ContentTask.spawn(browser, null, function* () {
+    await ContentTask.spawn(browser, null, async function() {
       // Type an X in the search input.
       let input = content.document.getElementById("searchText");
       input.focus();
     });
 
-    yield BrowserTestUtils.synthesizeKey("x", {}, browser);
+    await BrowserTestUtils.synthesizeKey("x", {}, browser);
 
-    yield ContentTask.spawn(browser, null, function* () {
+    await ContentTask.spawn(browser, null, async function() {
       // Wait for the search suggestions to become visible.
       let table = content.document.getElementById("searchSuggestionTable");
       let input = content.document.getElementById("searchText");
 
-      yield new Promise(resolve => {
+      await new Promise(resolve => {
         let observer = new content.MutationObserver(() => {
           if (input.getAttribute("aria-expanded") == "true") {
             observer.disconnect();
@@ -344,12 +344,12 @@ add_task(function* () {
     });
 
     // Empty the search input, causing the suggestions to be hidden.
-    yield BrowserTestUtils.synthesizeKey("a", { accelKey: true }, browser);
-    yield BrowserTestUtils.synthesizeKey("VK_DELETE", {}, browser);
+    await BrowserTestUtils.synthesizeKey("a", { accelKey: true }, browser);
+    await BrowserTestUtils.synthesizeKey("VK_DELETE", {}, browser);
 
-    yield ContentTask.spawn(browser, null, function* () {
+    await ContentTask.spawn(browser, null, async function() {
       let table = content.document.getElementById("searchSuggestionTable");
-      yield ContentTaskUtils.waitForCondition(() => table.hidden,
+      await ContentTaskUtils.waitForCondition(() => table.hidden,
         "Search suggestion table hidden");
     });
 
@@ -360,28 +360,28 @@ add_task(function* () {
   });
 });
 
-add_task(function* () {
+add_task(async function() {
   info("Clicking suggestion list while composing");
 
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:home" }, function* (browser) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:home" }, async function(browser) {
     // Add a test engine that provides suggestions and switch to it.
     let currEngine = Services.search.currentEngine;
-    let engine = yield promiseNewEngine("searchSuggestionEngine.xml");
+    let engine = await promiseNewEngine("searchSuggestionEngine.xml");
     let p = promiseContentSearchChange(browser, engine.name);
     Services.search.currentEngine = engine;
-    yield p;
+    await p;
 
-    yield ContentTask.spawn(browser, null, function* () {
+    await ContentTask.spawn(browser, null, async function() {
       // Start composition and type "x"
       let input = content.document.getElementById("searchText");
       input.focus();
     });
 
-    yield BrowserTestUtils.synthesizeComposition({
+    await BrowserTestUtils.synthesizeComposition({
       type: "compositionstart",
       data: ""
     }, browser);
-    yield BrowserTestUtils.synthesizeCompositionChange({
+    await BrowserTestUtils.synthesizeCompositionChange({
       composition: {
         string: "x",
         clauses: [
@@ -391,14 +391,14 @@ add_task(function* () {
       caret: { start: 1, length: 0 }
     }, browser);
 
-    yield ContentTask.spawn(browser, null, function* () {
+    await ContentTask.spawn(browser, null, async function() {
       let searchController = content.wrappedJSObject.gContentSearchController;
 
       // Wait for the search suggestions to become visible.
       let table = searchController._suggestionsList;
       let input = content.document.getElementById("searchText");
 
-      yield new Promise(resolve => {
+      await new Promise(resolve => {
         let observer = new content.MutationObserver(() => {
           if (input.getAttribute("aria-expanded") == "true") {
             observer.disconnect();
@@ -426,12 +426,12 @@ add_task(function* () {
     let expectedURL = Services.search.currentEngine
       .getSubmission("xbar", null, "homepage").uri.spec;
     let loadPromise = waitForDocLoadAndStopIt(expectedURL);
-    yield BrowserTestUtils.synthesizeMouseAtCenter("#TEMPID", {
+    await BrowserTestUtils.synthesizeMouseAtCenter("#TEMPID", {
       button: 0
     }, browser);
-    yield loadPromise;
+    await loadPromise;
 
-    yield ContentTask.spawn(browser, null, function* () {
+    await ContentTask.spawn(browser, null, async function() {
       let input = content.document.getElementById("searchText");
       ok(input.value == "x", "Input value did not change");
 
@@ -448,50 +448,50 @@ add_task(function* () {
   });
 });
 
-add_task(function* () {
+add_task(async function() {
   info("Pressing any key should focus the search box in the page, and send the key to it");
 
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:home" }, function* (browser) {
-    yield BrowserTestUtils.synthesizeMouseAtCenter("#brandLogo", {}, browser);
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:home" }, async function(browser) {
+    await BrowserTestUtils.synthesizeMouseAtCenter("#brandLogo", {}, browser);
 
-    yield ContentTask.spawn(browser, null, function* () {
+    await ContentTask.spawn(browser, null, async function() {
       let doc = content.document;
       isnot(doc.getElementById("searchText"), doc.activeElement,
         "Search input should not be the active element.");
     });
 
-    yield BrowserTestUtils.synthesizeKey("a", {}, browser);
+    await BrowserTestUtils.synthesizeKey("a", {}, browser);
 
-    yield ContentTask.spawn(browser, null, function* () {
+    await ContentTask.spawn(browser, null, async function() {
       let doc = content.document;
       let searchInput = doc.getElementById("searchText");
-      yield ContentTaskUtils.waitForCondition(() => doc.activeElement === searchInput,
+      await ContentTaskUtils.waitForCondition(() => doc.activeElement === searchInput,
         "Search input should be the active element.");
       is(searchInput.value, "a", "Search input should be 'a'.");
     });
   });
 });
 
-add_task(function* () {
+add_task(async function() {
   info("Cmd+k should focus the search box in the toolbar when it's present");
 
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:home" }, function* (browser) {
-    yield BrowserTestUtils.synthesizeMouseAtCenter("#brandLogo", {}, browser);
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:home" }, async function(browser) {
+    await BrowserTestUtils.synthesizeMouseAtCenter("#brandLogo", {}, browser);
 
     let doc = window.document;
     let searchInput = doc.getElementById("searchbar").textbox.inputField;
     isnot(searchInput, doc.activeElement, "Search bar should not be the active element.");
 
     EventUtils.synthesizeKey("k", { accelKey: true });
-    yield promiseWaitForCondition(() => doc.activeElement === searchInput);
+    await promiseWaitForCondition(() => doc.activeElement === searchInput);
     is(searchInput, doc.activeElement, "Search bar should be the active element.");
   });
 });
 
-add_task(function* () {
+add_task(async function() {
   info("Sync button should open about:preferences#sync");
 
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:home" }, function* (browser) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:home" }, async function(browser) {
     let oldOpenPrefs = window.openPreferences;
     let openPrefsPromise = new Promise(resolve => {
       window.openPreferences = function(pane, params) {
@@ -499,9 +499,9 @@ add_task(function* () {
       };
     });
 
-    yield BrowserTestUtils.synthesizeMouseAtCenter("#sync", {}, browser);
+    await BrowserTestUtils.synthesizeMouseAtCenter("#sync", {}, browser);
 
-    let result = yield openPrefsPromise;
+    let result = await openPrefsPromise;
     window.openPreferences = oldOpenPrefs;
 
     is(result.pane, "paneSync", "openPreferences should be called with paneSync");
@@ -510,7 +510,7 @@ add_task(function* () {
   });
 });
 
-add_task(function* () {
+add_task(async function() {
   info("Pressing Space while the Addons button is focused should activate it");
 
   // Skip this test on Mac, because Space doesn't activate the button there.
@@ -518,20 +518,20 @@ add_task(function* () {
     return;
   }
 
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:home" }, function* (browser) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:home" }, async function(browser) {
     info("Waiting for about:addons tab to open...");
     let promiseTabOpened = BrowserTestUtils.waitForNewTab(gBrowser, "about:addons");
 
-    yield ContentTask.spawn(browser, null, function* () {
+    await ContentTask.spawn(browser, null, async function() {
       let addOnsButton = content.document.getElementById("addons");
       addOnsButton.focus();
     });
-    yield BrowserTestUtils.synthesizeKey(" ", {}, browser);
+    await BrowserTestUtils.synthesizeKey(" ", {}, browser);
 
-    let tab = yield promiseTabOpened;
+    let tab = await promiseTabOpened;
     is(tab.linkedBrowser.currentURI.spec, "about:addons",
       "Should have seen the about:addons tab");
-    yield BrowserTestUtils.removeTab(tab);
+    await BrowserTestUtils.removeTab(tab);
   });
 });
 
@@ -549,18 +549,18 @@ add_task(function* () {
  *        the function to run in the parent after the content task has completed.
  * @return {Promise} resolved when the snippets are ready.  Gets the snippets map.
  */
-function* withSnippetsMap(setupFn, testFn, testArgs = null, parentFn = null) {
+async function withSnippetsMap(setupFn, testFn, testArgs = null, parentFn = null) {
   let setupFnSource;
   if (setupFn) {
     setupFnSource = setupFn.toSource();
   }
 
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, function* (browser) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, async function(browser) {
     let promiseAfterLocationChange = () => {
       return ContentTask.spawn(browser, {
         setupFnSource,
         version: AboutHomeUtils.snippetsVersion,
-      }, function* (args) {
+      }, async function(args) {
         return new Promise(resolve => {
           let document = content.document;
           // We're not using Promise-based listeners, because they resolve asynchronously.
@@ -618,17 +618,17 @@ function* withSnippetsMap(setupFn, testFn, testArgs = null, parentFn = null) {
     // event.
     browser.loadURI("about:home");
     // Wait for LocationChange.
-    yield promise;
+    await promise;
 
-    yield ContentTask.spawn(browser, testArgs, testFn);
+    await ContentTask.spawn(browser, testArgs, testFn);
     if (parentFn) {
-      yield parentFn();
+      await parentFn();
     }
   });
 }
 
 function promiseContentSearchChange(browser, newEngineName) {
-  return ContentTask.spawn(browser, { newEngineName }, function* (args) {
+  return ContentTask.spawn(browser, { newEngineName }, async function(args) {
     return new Promise(resolve => {
       content.addEventListener("ContentSearchService", function listener(aEvent) {
         if (aEvent.detail.type == "CurrentState" &&

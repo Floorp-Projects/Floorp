@@ -14,7 +14,7 @@ const TEST_PATH = getRootDirectory(gTestPath).replace("chrome://mochitests/conte
 
 var readerButton = document.getElementById("reader-mode-button");
 
-add_task(function* test_reader_button() {
+add_task(async function test_reader_button() {
   registerCleanupFunction(function() {
     // Reset test prefs.
     TEST_PREFS.forEach(([name, value]) => {
@@ -46,7 +46,7 @@ add_task(function* test_reader_button() {
     });
   });
   tab.linkedBrowser.loadURI(url);
-  yield paintPromise;
+  await paintPromise;
 
   is_element_hidden(readerButton, "Reader mode button is still not present on tab with unreadable content.");
 });

@@ -68,7 +68,7 @@ XPCOMUtils.defineLazyGetter(this, "gStringBundle", function() {
  * directory, this test is executed in the temporary directory so we can safely
  * delete the created folder to check whether it is created again.
  */
-add_task(function* test_getSystemDownloadsDirectory_exists_or_creates() {
+add_task(async function test_getSystemDownloadsDirectory_exists_or_creates() {
   let tempDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
   let downloadDir;
 
@@ -77,25 +77,25 @@ add_task(function* test_getSystemDownloadsDirectory_exists_or_creates() {
       Services.appinfo.OS == "Linux" ||
       (Services.appinfo.OS == "WINNT" &&
        parseFloat(Services.sysinfo.getProperty("version")) >= 6)) {
-    downloadDir = yield DownloadIntegration.getSystemDownloadsDirectory();
+    downloadDir = await DownloadIntegration.getSystemDownloadsDirectory();
     do_check_eq(downloadDir, tempDir.path);
-    do_check_true(yield OS.File.exists(downloadDir));
+    do_check_true(await OS.File.exists(downloadDir));
 
-    let info = yield OS.File.stat(downloadDir);
+    let info = await OS.File.stat(downloadDir);
     do_check_true(info.isDir);
   } else {
     let targetPath = OS.Path.join(tempDir.path,
                        gStringBundle.GetStringFromName("downloadsFolder"));
     try {
-      yield OS.File.removeEmptyDir(targetPath);
+      await OS.File.removeEmptyDir(targetPath);
     } catch (e) {}
-    downloadDir = yield DownloadIntegration.getSystemDownloadsDirectory();
+    downloadDir = await DownloadIntegration.getSystemDownloadsDirectory();
     do_check_eq(downloadDir, targetPath);
-    do_check_true(yield OS.File.exists(downloadDir));
+    do_check_true(await OS.File.exists(downloadDir));
 
-    let info = yield OS.File.stat(downloadDir);
+    let info = await OS.File.stat(downloadDir);
     do_check_true(info.isDir);
-    yield OS.File.removeEmptyDir(targetPath);
+    await OS.File.removeEmptyDir(targetPath);
   }
 });
 
@@ -104,11 +104,11 @@ add_task(function* test_getSystemDownloadsDirectory_exists_or_creates() {
  * the one that is used during unit tests. Since this is the actual downloads
  * directory of the operating system, we don't try to delete it afterwards.
  */
-add_task(function* test_getSystemDownloadsDirectory_real() {
-  let fakeDownloadDir = yield DownloadIntegration.getSystemDownloadsDirectory();
+add_task(async function test_getSystemDownloadsDirectory_real() {
+  let fakeDownloadDir = await DownloadIntegration.getSystemDownloadsDirectory();
 
   let cleanup = allowDirectoriesInTest();
-  let realDownloadDir = yield DownloadIntegration.getSystemDownloadsDirectory();
+  let realDownloadDir = await DownloadIntegration.getSystemDownloadsDirectory();
   cleanup();
 
   do_check_neq(fakeDownloadDir, realDownloadDir);
@@ -118,7 +118,7 @@ add_task(function* test_getSystemDownloadsDirectory_real() {
  * Tests that the getPreferredDownloadsDirectory returns a valid download
  * directory string path.
  */
-add_task(function* test_getPreferredDownloadsDirectory() {
+add_task(async function test_getPreferredDownloadsDirectory() {
   let cleanupDirectories = allowDirectoriesInTest();
 
   let folderListPrefName = "browser.download.folderList";
@@ -131,21 +131,21 @@ add_task(function* test_getPreferredDownloadsDirectory() {
 
   // Should return the system downloads directory.
   Services.prefs.setIntPref(folderListPrefName, 1);
-  let systemDir = yield DownloadIntegration.getSystemDownloadsDirectory();
-  let downloadDir = yield DownloadIntegration.getPreferredDownloadsDirectory();
+  let systemDir = await DownloadIntegration.getSystemDownloadsDirectory();
+  let downloadDir = await DownloadIntegration.getPreferredDownloadsDirectory();
   do_check_neq(downloadDir, "");
   do_check_eq(downloadDir, systemDir);
 
   // Should return the desktop directory.
   Services.prefs.setIntPref(folderListPrefName, 0);
-  downloadDir = yield DownloadIntegration.getPreferredDownloadsDirectory();
+  downloadDir = await DownloadIntegration.getPreferredDownloadsDirectory();
   do_check_neq(downloadDir, "");
   do_check_eq(downloadDir, Services.dirsvc.get("Desk", Ci.nsIFile).path);
 
   // Should return the system downloads directory because the dir preference
   // is not set.
   Services.prefs.setIntPref(folderListPrefName, 2);
-  downloadDir = yield DownloadIntegration.getPreferredDownloadsDirectory();
+  downloadDir = await DownloadIntegration.getPreferredDownloadsDirectory();
   do_check_neq(downloadDir, "");
   do_check_eq(downloadDir, systemDir);
 
@@ -154,11 +154,11 @@ add_task(function* test_getPreferredDownloadsDirectory() {
   let tempDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
   tempDir.append(time);
   Services.prefs.setComplexValue("browser.download.dir", Ci.nsIFile, tempDir);
-  downloadDir = yield DownloadIntegration.getPreferredDownloadsDirectory();
+  downloadDir = await DownloadIntegration.getPreferredDownloadsDirectory();
   do_check_neq(downloadDir, "");
   do_check_eq(downloadDir, tempDir.path);
-  do_check_true(yield OS.File.exists(downloadDir));
-  yield OS.File.removeEmptyDir(tempDir.path);
+  do_check_true(await OS.File.exists(downloadDir));
+  await OS.File.removeEmptyDir(tempDir.path);
 
   // Should return the system downloads directory beacause the path is invalid
   // in the dir preference.
@@ -166,13 +166,13 @@ add_task(function* test_getPreferredDownloadsDirectory() {
   tempDir.append("dir_not_exist");
   tempDir.append(time);
   Services.prefs.setComplexValue("browser.download.dir", Ci.nsIFile, tempDir);
-  downloadDir = yield DownloadIntegration.getPreferredDownloadsDirectory();
+  downloadDir = await DownloadIntegration.getPreferredDownloadsDirectory();
   do_check_eq(downloadDir, systemDir);
 
   // Should return the system downloads directory because the folderList
   // preference is invalid
   Services.prefs.setIntPref(folderListPrefName, 999);
-  downloadDir = yield DownloadIntegration.getPreferredDownloadsDirectory();
+  downloadDir = await DownloadIntegration.getPreferredDownloadsDirectory();
   do_check_eq(downloadDir, systemDir);
 
   cleanupPrefs();
@@ -183,14 +183,14 @@ add_task(function* test_getPreferredDownloadsDirectory() {
  * Tests that the getTemporaryDownloadsDirectory returns a valid download
  * directory string path.
  */
-add_task(function* test_getTemporaryDownloadsDirectory() {
+add_task(async function test_getTemporaryDownloadsDirectory() {
   let cleanup = allowDirectoriesInTest();
 
-  let downloadDir = yield DownloadIntegration.getTemporaryDownloadsDirectory();
+  let downloadDir = await DownloadIntegration.getTemporaryDownloadsDirectory();
   do_check_neq(downloadDir, "");
 
   if ("nsILocalFileMac" in Ci) {
-    let preferredDownloadDir = yield DownloadIntegration.getPreferredDownloadsDirectory();
+    let preferredDownloadDir = await DownloadIntegration.getPreferredDownloadsDirectory();
     do_check_eq(downloadDir, preferredDownloadDir);
   } else {
     let tempDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
@@ -208,7 +208,7 @@ add_task(function* test_getTemporaryDownloadsDirectory() {
  * This takes effect the first time a DownloadList object is created, and lasts
  * until this test file has completed.
  */
-add_task(function* test_observers_setup() {
+add_task(async function test_observers_setup() {
   DownloadIntegration.allowObservers = true;
   do_register_cleanup(function() {
     DownloadIntegration.allowObservers = false;
@@ -219,36 +219,36 @@ add_task(function* test_observers_setup() {
  * Tests notifications prompts when observers are notified if there are public
  * and private active downloads.
  */
-add_task(function* test_notifications() {
+add_task(async function test_notifications() {
   for (let isPrivate of [false, true]) {
     mustInterruptResponses();
 
-    let list = yield promiseNewList(isPrivate);
-    let download1 = yield promiseNewDownload(httpUrl("interruptible.txt"));
-    let download2 = yield promiseNewDownload(httpUrl("interruptible.txt"));
-    let download3 = yield promiseNewDownload(httpUrl("interruptible.txt"));
+    let list = await promiseNewList(isPrivate);
+    let download1 = await promiseNewDownload(httpUrl("interruptible.txt"));
+    let download2 = await promiseNewDownload(httpUrl("interruptible.txt"));
+    let download3 = await promiseNewDownload(httpUrl("interruptible.txt"));
     let promiseAttempt1 = download1.start();
     let promiseAttempt2 = download2.start();
     download3.start().catch(() => {});
 
     // Add downloads to list.
-    yield list.add(download1);
-    yield list.add(download2);
-    yield list.add(download3);
+    await list.add(download1);
+    await list.add(download2);
+    await list.add(download3);
     // Cancel third download
-    yield download3.cancel();
+    await download3.cancel();
 
     notifyPromptObservers(isPrivate, 2, 2);
 
     // Allow the downloads to complete.
     continueResponses();
-    yield promiseAttempt1;
-    yield promiseAttempt2;
+    await promiseAttempt1;
+    await promiseAttempt2;
 
     // Clean up.
-    yield list.remove(download1);
-    yield list.remove(download2);
-    yield list.remove(download3);
+    await list.remove(download1);
+    await list.remove(download2);
+    await list.remove(download3);
   }
 });
 
@@ -256,26 +256,26 @@ add_task(function* test_notifications() {
  * Tests that notifications prompts observers are not notified if there are no
  * public or private active downloads.
  */
-add_task(function* test_no_notifications() {
+add_task(async function test_no_notifications() {
   for (let isPrivate of [false, true]) {
-    let list = yield promiseNewList(isPrivate);
-    let download1 = yield promiseNewDownload(httpUrl("interruptible.txt"));
-    let download2 = yield promiseNewDownload(httpUrl("interruptible.txt"));
+    let list = await promiseNewList(isPrivate);
+    let download1 = await promiseNewDownload(httpUrl("interruptible.txt"));
+    let download2 = await promiseNewDownload(httpUrl("interruptible.txt"));
     download1.start().catch(() => {});
     download2.start().catch(() => {});
 
     // Add downloads to list.
-    yield list.add(download1);
-    yield list.add(download2);
+    await list.add(download1);
+    await list.add(download2);
 
-    yield download1.cancel();
-    yield download2.cancel();
+    await download1.cancel();
+    await download2.cancel();
 
     notifyPromptObservers(isPrivate, 0, 0);
 
     // Clean up.
-    yield list.remove(download1);
-    yield list.remove(download2);
+    await list.remove(download1);
+    await list.remove(download2);
   }
 });
 
@@ -283,58 +283,58 @@ add_task(function* test_no_notifications() {
  * Tests notifications prompts when observers are notified if there are public
  * and private active downloads at the same time.
  */
-add_task(function* test_mix_notifications() {
+add_task(async function test_mix_notifications() {
   mustInterruptResponses();
 
-  let publicList = yield promiseNewList();
-  let privateList = yield Downloads.getList(Downloads.PRIVATE);
-  let download1 = yield promiseNewDownload(httpUrl("interruptible.txt"));
-  let download2 = yield promiseNewDownload(httpUrl("interruptible.txt"));
+  let publicList = await promiseNewList();
+  let privateList = await Downloads.getList(Downloads.PRIVATE);
+  let download1 = await promiseNewDownload(httpUrl("interruptible.txt"));
+  let download2 = await promiseNewDownload(httpUrl("interruptible.txt"));
   let promiseAttempt1 = download1.start();
   let promiseAttempt2 = download2.start();
 
   // Add downloads to lists.
-  yield publicList.add(download1);
-  yield privateList.add(download2);
+  await publicList.add(download1);
+  await privateList.add(download2);
 
   notifyPromptObservers(true, 2, 1);
 
   // Allow the downloads to complete.
   continueResponses();
-  yield promiseAttempt1;
-  yield promiseAttempt2;
+  await promiseAttempt1;
+  await promiseAttempt2;
 
   // Clean up.
-  yield publicList.remove(download1);
-  yield privateList.remove(download2);
+  await publicList.remove(download1);
+  await privateList.remove(download2);
 });
 
 /**
  * Tests suspending and resuming as well as going offline and then online again.
  * The downloads should stop when suspending and start again when resuming.
  */
-add_task(function* test_suspend_resume() {
+add_task(async function test_suspend_resume() {
   // The default wake delay is 10 seconds, so set the wake delay to be much
   // faster for these tests.
   Services.prefs.setIntPref("browser.download.manager.resumeOnWakeDelay", 5);
 
   let addDownload = function(list) {
-    return Task.spawn(function* () {
-      let download = yield promiseNewDownload(httpUrl("interruptible.txt"));
+    return (async function() {
+      let download = await promiseNewDownload(httpUrl("interruptible.txt"));
       download.start().catch(() => {});
       list.add(download);
       return download;
-    });
+    })();
   }
 
-  let publicList = yield promiseNewList();
-  let privateList = yield promiseNewList(true);
+  let publicList = await promiseNewList();
+  let privateList = await promiseNewList(true);
 
-  let download1 = yield addDownload(publicList);
-  let download2 = yield addDownload(publicList);
-  let download3 = yield addDownload(privateList);
-  let download4 = yield addDownload(privateList);
-  let download5 = yield addDownload(publicList);
+  let download1 = await addDownload(publicList);
+  let download2 = await addDownload(publicList);
+  let download3 = await addDownload(privateList);
+  let download4 = await addDownload(privateList);
+  let download5 = await addDownload(publicList);
 
   // First, check that the downloads are all canceled when going to sleep.
   Services.obs.notifyObservers(null, "sleep_notification");
@@ -352,10 +352,10 @@ add_task(function* test_suspend_resume() {
   // more robust, don't check after a delay but instead just wait for the
   // downloads to finish.
   Services.obs.notifyObservers(null, "wake_notification");
-  yield download1.whenSucceeded();
-  yield download2.whenSucceeded();
-  yield download3.whenSucceeded();
-  yield download4.whenSucceeded();
+  await download1.whenSucceeded();
+  await download2.whenSucceeded();
+  await download3.whenSucceeded();
+  await download4.whenSucceeded();
 
   // Downloads should no longer be canceled. However, as download5 was removed
   // from the public list, it will not be restarted.
@@ -364,10 +364,10 @@ add_task(function* test_suspend_resume() {
 
   // Create four new downloads and check for going offline and then online again.
 
-  download1 = yield addDownload(publicList);
-  download2 = yield addDownload(publicList);
-  download3 = yield addDownload(privateList);
-  download4 = yield addDownload(privateList);
+  download1 = await addDownload(publicList);
+  download2 = await addDownload(publicList);
+  download3 = await addDownload(privateList);
+  download4 = await addDownload(privateList);
 
   // Going offline should cancel the downloads.
   Services.obs.notifyObservers(null, "network:offline-about-to-go-offline");
@@ -378,10 +378,10 @@ add_task(function* test_suspend_resume() {
 
   // Going back online should start the downloads again.
   Services.obs.notifyObservers(null, "network:offline-status-changed", "online");
-  yield download1.whenSucceeded();
-  yield download2.whenSucceeded();
-  yield download3.whenSucceeded();
-  yield download4.whenSucceeded();
+  await download1.whenSucceeded();
+  await download2.whenSucceeded();
+  await download3.whenSucceeded();
+  await download4.whenSucceeded();
 
   Services.prefs.clearUserPref("browser.download.manager.resumeOnWakeDelay");
 });
@@ -390,32 +390,32 @@ add_task(function* test_suspend_resume() {
  * Tests both the downloads list and the in-progress downloads are clear when
  * private browsing observer is notified.
  */
-add_task(function* test_exit_private_browsing() {
+add_task(async function test_exit_private_browsing() {
   mustInterruptResponses();
 
-  let privateList = yield promiseNewList(true);
-  let download1 = yield promiseNewDownload(httpUrl("source.txt"));
-  let download2 = yield promiseNewDownload(httpUrl("interruptible.txt"));
+  let privateList = await promiseNewList(true);
+  let download1 = await promiseNewDownload(httpUrl("source.txt"));
+  let download2 = await promiseNewDownload(httpUrl("interruptible.txt"));
   let promiseAttempt1 = download1.start();
   download2.start();
 
   // Add downloads to list.
-  yield privateList.add(download1);
-  yield privateList.add(download2);
+  await privateList.add(download1);
+  await privateList.add(download2);
 
   // Complete the download.
-  yield promiseAttempt1;
+  await promiseAttempt1;
 
-  do_check_eq((yield privateList.getAll()).length, 2);
+  do_check_eq((await privateList.getAll()).length, 2);
 
   // Simulate exiting the private browsing.
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     DownloadIntegration._testResolveClearPrivateList = resolve;
     Services.obs.notifyObservers(null, "last-pb-context-exited");
   });
   delete DownloadIntegration._testResolveClearPrivateList;
 
-  do_check_eq((yield privateList.getAll()).length, 0);
+  do_check_eq((await privateList.getAll()).length, 0);
 
   continueResponses();
 });

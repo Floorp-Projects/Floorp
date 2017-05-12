@@ -21,7 +21,7 @@
  *
  * @param {object} [customCSP]
  */
-function* testPolicy(customCSP = null) {
+async function testPolicy(customCSP = null) {
   let baseURL;
 
   let baseCSP = {
@@ -111,9 +111,9 @@ function* testPolicy(customCSP = null) {
 
   info(`Testing CSP for policy: ${content_security_policy}`);
 
-  yield extension.startup();
+  await extension.startup();
 
-  baseURL = yield extension.awaitMessage("base-url");
+  baseURL = await extension.awaitMessage("base-url");
 
 
   window.open(`${baseURL}/tab.html`);
@@ -122,15 +122,15 @@ function* testPolicy(customCSP = null) {
   frame.src = `${baseURL}/content.html`;
   document.body.appendChild(frame);
 
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     frame.onload = resolve;
   });
 
 
-  let backgroundCSP = yield extension.awaitMessage("background-csp");
+  let backgroundCSP = await extension.awaitMessage("background-csp");
   checkCSP(backgroundCSP, "background page");
 
-  let tabCSP = yield extension.awaitMessage("tab-csp");
+  let tabCSP = await extension.awaitMessage("tab-csp");
   checkCSP(tabCSP, "tab page");
 
   let contentCSP = getCSP(frame.contentWindow);
@@ -138,20 +138,20 @@ function* testPolicy(customCSP = null) {
 
   frame.remove();
 
-  yield extension.unload();
+  await extension.unload();
 }
 
-add_task(function* testCSP() {
-  yield testPolicy(null);
+add_task(async function testCSP() {
+  await testPolicy(null);
 
   let hash = "'sha256-NjZhMDQ1YjQ1MjEwMmM1OWQ4NDBlYzA5N2Q1OWQ5NDY3ZTEzYTNmMzRmNjQ5NGU1MzlmZmQzMmMxYmIzNWYxOCAgLQo='";
 
-  yield testPolicy({
+  await testPolicy({
     "object-src": "'self' https://*.example.com",
     "script-src": `'self' https://*.example.com 'unsafe-eval' ${hash}`,
   });
 
-  yield testPolicy({
+  await testPolicy({
     "object-src": "'none'",
     "script-src": `'self'`,
   });

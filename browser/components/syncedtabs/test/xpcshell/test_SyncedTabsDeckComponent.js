@@ -9,7 +9,7 @@ let { TabListView } = Cu.import("resource:///modules/syncedtabs/TabListView.js",
 let { DeckView } = Cu.import("resource:///modules/syncedtabs/SyncedTabsDeckView.js", {});
 
 
-add_task(function* testInitUninit() {
+add_task(async function testInitUninit() {
   let deckStore = new SyncedTabsDeckStore();
   let listComponent = {};
 
@@ -77,7 +77,7 @@ function waitForObserver() {
   });
 }
 
-add_task(function* testObserver() {
+add_task(async function testObserver() {
   let deckStore = new SyncedTabsDeckStore();
   let listStore = new SyncedTabsListStore(SyncedTabs);
   let listComponent = {};
@@ -130,7 +130,7 @@ add_task(function* testObserver() {
   Assert.equal(component.updatePanel.callCount, 4, "triggers panel update again");
 });
 
-add_task(function* testPanelStatus() {
+add_task(async function testPanelStatus() {
   let deckStore = new SyncedTabsDeckStore();
   let listStore = new SyncedTabsListStore();
   let listComponent = {};
@@ -153,49 +153,49 @@ add_task(function* testPanelStatus() {
 
   let isAuthed = false;
   sinon.stub(fxAccounts, "accountStatus", () => Promise.resolve(isAuthed));
-  let result = yield component.getPanelStatus();
+  let result = await component.getPanelStatus();
   Assert.equal(result, component.PANELS.NOT_AUTHED_INFO);
 
   isAuthed = true;
 
   SyncedTabsMock.loginFailed = true;
-  result = yield component.getPanelStatus();
+  result = await component.getPanelStatus();
   Assert.equal(result, component.PANELS.NOT_AUTHED_INFO);
   SyncedTabsMock.loginFailed = false;
 
   SyncedTabsMock.isConfiguredToSyncTabs = false;
-  result = yield component.getPanelStatus();
+  result = await component.getPanelStatus();
   Assert.equal(result, component.PANELS.TABS_DISABLED);
 
   SyncedTabsMock.isConfiguredToSyncTabs = true;
 
   SyncedTabsMock.hasSyncedThisSession = false;
-  result = yield component.getPanelStatus();
+  result = await component.getPanelStatus();
   Assert.equal(result, component.PANELS.TABS_FETCHING);
 
   SyncedTabsMock.hasSyncedThisSession = true;
 
   let clients = [];
   sinon.stub(SyncedTabsMock, "getTabClients", () => Promise.resolve(clients));
-  result = yield component.getPanelStatus();
+  result = await component.getPanelStatus();
   Assert.equal(result, component.PANELS.SINGLE_DEVICE_INFO);
 
   clients = ["mock-client"];
-  result = yield component.getPanelStatus();
+  result = await component.getPanelStatus();
   Assert.equal(result, component.PANELS.TABS_CONTAINER);
 
   fxAccounts.accountStatus.restore();
   sinon.stub(fxAccounts, "accountStatus", () => Promise.reject("err"));
-  result = yield component.getPanelStatus();
+  result = await component.getPanelStatus();
   Assert.equal(result, component.PANELS.NOT_AUTHED_INFO);
 
   sinon.stub(component, "getPanelStatus", () => Promise.resolve("mock-panelId"));
   sinon.spy(deckStore, "selectPanel");
-  yield component.updatePanel();
+  await component.updatePanel();
   Assert.ok(deckStore.selectPanel.calledWith("mock-panelId"));
 });
 
-add_task(function* testActions() {
+add_task(async function testActions() {
   let windowMock = {
     openUILink() {},
   };

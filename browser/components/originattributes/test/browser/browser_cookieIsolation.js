@@ -10,8 +10,8 @@ const key = "key" + Math.random().toString();
 const re = new RegExp(key + "=([0-9\.]+)");
 
 // Define the testing function
-function* doTest(aBrowser) {
-  return yield ContentTask.spawn(aBrowser, [key, re],
+async function doTest(aBrowser) {
+  return await ContentTask.spawn(aBrowser, [key, re],
                                  function([contentKey, contentRe]) {
     let result = contentRe.exec(content.document.cookie);
     if (result) {

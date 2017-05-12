@@ -17,16 +17,16 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_experiment() {
+add_task(async function test_experiment() {
   BootstrapMonitor.checkAddonNotInstalled(ID);
   BootstrapMonitor.checkAddonNotStarted(ID);
 
-  yield promiseInstallAllFiles([do_get_addon("test_experiment1")]);
+  await promiseInstallAllFiles([do_get_addon("test_experiment1")]);
 
   BootstrapMonitor.checkAddonInstalled(ID, "1.0");
   BootstrapMonitor.checkAddonNotStarted(ID);
 
-  let addon = yield promiseAddonByID(ID);
+  let addon = await promiseAddonByID(ID);
   Assert.ok(addon, "Addon is found.");
 
   Assert.ok(addon.userDisabled, "Experiments are userDisabled by default.");
@@ -64,14 +64,14 @@ add_task(function* test_experiment() {
 });
 
 // Changes to userDisabled should not be persisted to the database.
-add_task(function* test_userDisabledNotPersisted() {
-  let addon = yield promiseAddonByID(ID);
+add_task(async function test_userDisabledNotPersisted() {
+  let addon = await promiseAddonByID(ID);
   Assert.ok(addon, "Add-on is found.");
   Assert.ok(addon.userDisabled, "Add-on is user disabled.");
 
   let promise = promiseAddonEvent("onEnabled");
   addon.userDisabled = false;
-  let [addon2] = yield promise;
+  let [addon2] = await promise;
 
   BootstrapMonitor.checkAddonInstalled(ID, "1.0");
   BootstrapMonitor.checkAddonStarted(ID, "1.0");
@@ -83,7 +83,7 @@ add_task(function* test_userDisabledNotPersisted() {
   Assert.ok(ID in XPIProvider.bootstrappedAddons,
             "Experiment add-on listed in XPIProvider bootstrapped list.");
 
-  addon = yield promiseAddonByID(ID);
+  addon = await promiseAddonByID(ID);
   Assert.ok(addon, "Add-on retrieved.");
   Assert.equal(addon.userDisabled, false, "Add-on is still enabled after API retrieve.");
   Assert.ok(addon.isActive, "Add-on is still active.");
@@ -93,7 +93,7 @@ add_task(function* test_userDisabledNotPersisted() {
             "Should not be pending disable");
 
   // Now when we restart the manager the add-on should revert state.
-  yield promiseRestartManager();
+  await promiseRestartManager();
   let persisted = JSON.parse(Services.prefs.getCharPref("extensions.bootstrappedAddons"));
   Assert.ok(!(ID in persisted),
             "Experiment add-on not persisted to bootstrappedAddons.");
@@ -101,7 +101,7 @@ add_task(function* test_userDisabledNotPersisted() {
   BootstrapMonitor.checkAddonInstalled(ID, "1.0");
   BootstrapMonitor.checkAddonNotStarted(ID);
 
-  addon = yield promiseAddonByID(ID);
+  addon = await promiseAddonByID(ID);
   Assert.ok(addon, "Add-on retrieved.");
   Assert.ok(addon.userDisabled, "Add-on is disabled after restart.");
   Assert.equal(addon.isActive, false, "Add-on is not active after restart.");
@@ -111,16 +111,16 @@ add_task(function* test_userDisabledNotPersisted() {
   BootstrapMonitor.checkAddonNotStarted(ID);
 });
 
-add_task(function* test_checkCompatibility() {
+add_task(async function test_checkCompatibility() {
   if (gIsNightly)
     Services.prefs.setBoolPref("extensions.checkCompatibility.nightly", false);
   else
     Services.prefs.setBoolPref("extensions.checkCompatibility.1", false);
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
 
-  yield promiseInstallAllFiles([do_get_addon("test_experiment1")]);
-  let addon = yield promiseAddonByID(ID);
+  await promiseInstallAllFiles([do_get_addon("test_experiment1")]);
+  let addon = await promiseAddonByID(ID);
 
   BootstrapMonitor.checkAddonInstalled(ID, "1.0");
   BootstrapMonitor.checkAddonNotStarted(ID);

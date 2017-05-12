@@ -44,9 +44,9 @@
     function runTest() {
       SimpleTest.waitForExplicitFinish();
 
-      Task.spawn(function* () {
+      (async function() {
         // Add a bookmark.
-        let bm = yield PlacesUtils.bookmarks.insert({
+        let bm = await PlacesUtils.bookmarks.insert({
           parentGuid: PlacesUtils.bookmarks.toolbarGuid,
           url: "http://www.example.com/",
           index: PlacesUtils.bookmarks.DEFAULT_INDEX,
@@ -56,20 +56,20 @@
 
         // Init panel.
         ok(gEditItemOverlay, "gEditItemOverlay is in context");
-        let node = yield PlacesUIUtils.promiseNodeLikeFromFetchInfo(bm);
+        let node = await PlacesUIUtils.promiseNodeLikeFromFetchInfo(bm);
         gEditItemOverlay.initPanel({ node });
         ok(gEditItemOverlay.initialized, "gEditItemOverlay is initialized");
 
         let tree = gEditItemOverlay._element("folderTree");
-        yield openFolderTree(tree);
+        await openFolderTree(tree);
 
         tree.view.selection.clearSelection();
         ok(document.getElementById("editBMPanel_newFolderButton").disabled,
            "New folder button is disabled if there's no selection");
 
         // Cleanup.
-        yield PlacesUtils.bookmarks.remove(bm.guid);
-      }).then(() => SimpleTest.finish());
+        await PlacesUtils.bookmarks.remove(bm.guid);
+      })().then(() => SimpleTest.finish());
     }
 
     function openFolderTree(tree) {

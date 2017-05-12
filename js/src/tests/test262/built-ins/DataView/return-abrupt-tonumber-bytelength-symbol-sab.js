@@ -21,10 +21,10 @@ features: [SharedArrayBuffer]
 ---*/
 
 var buffer = new SharedArrayBuffer(8);
-var length = Symbol("1");
+var s = Symbol("1");
 
 assert.throws(TypeError, function() {
-  new DataView(buffer, 0, length);
+  new DataView(buffer, 0, s);
 });
 
 reportCompare(0, 0);

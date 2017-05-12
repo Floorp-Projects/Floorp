@@ -375,7 +375,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_containersQueries_sorting() {
+add_task(async function test_containersQueries_sorting() {
   // Add visits, bookmarks and tags to our database.
   var timeInMilliseconds = Date.now();
   var visitCount = 0;
@@ -393,7 +393,7 @@ add_task(function* test_containersQueries_sorting() {
       isTag: true,
       tagArray: tags,
       isInQuery: true }));
-  yield task_populateDB(visits);
+  await task_populateDB(visits);
 
   cartProd([resultTypes, sortingModes], test_query_callback);
 });

@@ -73,7 +73,7 @@ function promiseSelfSupportLoad(aURL) {
 /**
  * Prepare the test environment.
  */
-add_task(function* setupEnvironment() {
+add_task(async function setupEnvironment() {
   // We always run the SelfSupportBackend in tests to check for weird behaviours.
   // Disable it to test its start-up.
   SelfSupportBackend.uninit();
@@ -105,7 +105,7 @@ add_task(function* setupEnvironment() {
 /**
  * Test that the self support page can use the UITour API and close itself.
  */
-add_task(function* test_selfSupport() {
+add_task(async function test_selfSupport() {
   toggleSelfSupportTestMode(true);
   registerCleanupFunction(toggleSelfSupportTestMode.bind(null, false));
   // Initialise the SelfSupport backend and trigger the load.
@@ -120,7 +120,7 @@ add_task(function* test_selfSupport() {
 
   // Wait for the SelfSupport page to load.
   info("Waiting for the SelfSupport local page to load.");
-  let selfSupportBrowser = yield selfSupportBrowserPromise;
+  let selfSupportBrowser = await selfSupportBrowserPromise;
   Assert.ok(!!selfSupportBrowser, "SelfSupport browser must exist.");
 
   // Get a reference to the UITour API.
@@ -133,11 +133,11 @@ add_task(function* test_selfSupport() {
   let pingPromise = new Promise((resolve) => {
     uitourAPI.ping(resolve);
   });
-  yield pingPromise;
+  await pingPromise;
   info("Ping succeeded");
 
-  let observePromise = ContentTask.spawn(selfSupportBrowser, null, function* checkObserve() {
-    yield new Promise(resolve => {
+  let observePromise = ContentTask.spawn(selfSupportBrowser, null, async function checkObserve() {
+    await new Promise(resolve => {
       let win = Cu.waiveXrays(content);
       win.Mozilla.UITour.observe((event, data) => {
         if (event != "Heartbeat:Engaged") {
@@ -155,14 +155,14 @@ add_task(function* test_selfSupport() {
     flowId: "myFlowID",
     timestamp: Date.now(),
   });
-  yield observePromise;
+  await observePromise;
   info("Observed in the hidden frame");
 
   let selfSupportClosed = TestUtils.topicObserved("self-support-browser-destroyed");
   // Close SelfSupport from content.
   contentWindow.close();
 
-  yield selfSupportClosed;
+  await selfSupportClosed;
   Assert.ok(!selfSupportBrowser.parentNode, "SelfSupport browser must have been removed.");
 
   // We shouldn't need this, but let's keep it to make sure closing SelfSupport twice

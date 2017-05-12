@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* testWebNavigationGetNonExistentTab() {
+add_task(async function testWebNavigationGetNonExistentTab() {
   let extension = ExtensionTestUtils.loadExtension({
     background: async function() {
       // There is no "tabId = 0" because the id assigned by tabTracker (defined in ext-utils.js)
@@ -27,16 +27,16 @@ add_task(function* testWebNavigationGetNonExistentTab() {
   });
   info("load complete");
 
-  yield extension.startup();
+  await extension.startup();
   info("startup complete");
 
-  yield extension.awaitMessage("getNonExistentTab.done");
+  await extension.awaitMessage("getNonExistentTab.done");
 
-  yield extension.unload();
+  await extension.unload();
   info("extension unloaded");
 });
 
-add_task(function* testWebNavigationFrames() {
+add_task(async function testWebNavigationFrames() {
   let extension = ExtensionTestUtils.loadExtension({
     background: async function() {
       let tabId;
@@ -111,14 +111,14 @@ add_task(function* testWebNavigationFrames() {
   });
   info("load complete");
 
-  yield extension.startup();
+  await extension.startup();
   info("startup complete");
 
   let {
     collectedDetails,
     getAllFramesDetails,
     getFrameResults,
-  } = yield extension.awaitMessage("webNavigationFrames.done");
+  } = await extension.awaitMessage("webNavigationFrames.done");
 
   is(getAllFramesDetails.length, 3, "expected number of frames found");
   is(getAllFramesDetails.length, collectedDetails.length,
@@ -161,8 +161,8 @@ add_task(function* testWebNavigationFrames() {
 
   info("frame details content checked");
 
-  yield extension.awaitMessage("webNavigationFrames.done");
+  await extension.awaitMessage("webNavigationFrames.done");
 
-  yield extension.unload();
+  await extension.unload();
   info("extension unloaded");
 });

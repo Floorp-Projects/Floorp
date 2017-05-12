@@ -5,7 +5,7 @@
 description: Rest object contains just soruce object's own properties (function declaration)
 esid: sec-function-definitions-runtime-semantics-instantiatefunctionobject
 es6id: 14.1.19
-features: [destructuring-binding]
+features: [object-rest, destructuring-binding]
 flags: [generated]
 includes: [propertyHelper.js]
 info: |

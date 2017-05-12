@@ -2,7 +2,7 @@
 
 var stateBackup = ss.getBrowserState();
 
-add_task(function* () {
+add_task(async function() {
   /** Bug 607016 - If a tab is never restored, attributes (eg. hidden) aren't updated correctly **/
   ignoreAllUncaughtExceptions();
 
@@ -21,7 +21,7 @@ add_task(function* () {
     { entries: [{ url: "http://example.org#6", triggeringPrincipal_base64 }] } // creating
   ], selected: 1 }] };
 
-  function* progressCallback() {
+  async function progressCallback() {
     let curState = JSON.parse(ss.getBrowserState());
     for (let i = 0; i < curState.windows[0].tabs.length; i++) {
       let tabState = state.windows[0].tabs[i];
@@ -77,7 +77,7 @@ add_task(function* () {
        "(creating) new data is stored in extData where there was none");
 
     while (gBrowser.tabs.length > 1) {
-      yield promiseRemoveTab(gBrowser.tabs[1]);
+      await promiseRemoveTab(gBrowser.tabs[1]);
     }
   }
 
@@ -85,16 +85,16 @@ add_task(function* () {
   ss.setBrowserState(JSON.stringify(state));
 
   // Wait until the selected tab is restored and all others are pending.
-  yield Promise.all(Array.map(gBrowser.tabs, tab => {
+  await Promise.all(Array.map(gBrowser.tabs, tab => {
     return (tab == gBrowser.selectedTab) ?
       promiseTabRestored(tab) : promiseTabRestoring(tab)
   }));
 
   // Kick off the actual tests.
-  yield progressCallback();
+  await progressCallback();
 
   // Cleanup.
   Services.prefs.clearUserPref("browser.sessionstore.restore_on_demand");
   Services.prefs.clearUserPref("browser.sessionstore.restore_tabs_lazily");
-  yield promiseBrowserState(stateBackup);
+  await promiseBrowserState(stateBackup);
 });

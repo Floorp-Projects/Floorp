@@ -180,3 +180,8 @@ jemalloc_free_dirty_pages_impl()
   mib[1] = narenas;
   je_(mallctlbymib)(mib, miblen, NULL, NULL, NULL, 0);
 }
+
+MOZ_JEMALLOC_API void
+jemalloc_thread_local_arena_impl(jemalloc_bool enabled)
+{
+}

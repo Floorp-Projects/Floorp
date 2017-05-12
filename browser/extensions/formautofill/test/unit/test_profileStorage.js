@@ -4,7 +4,6 @@
 
 "use strict";
 
-Cu.import("resource://gre/modules/Task.jsm");
 const {ProfileStorage} = Cu.import("resource://formautofill/ProfileStorage.jsm", {});
 
 const TEST_STORE_FILE_NAME = "test-profile.json";
@@ -38,17 +37,17 @@ const TEST_ADDRESS_WITH_INVALID_FIELD = {
   invalidField: "INVALID",
 };
 
-let prepareTestRecords = Task.async(function* (path) {
+let prepareTestRecords = async function(path) {
   let profileStorage = new ProfileStorage(path);
-  yield profileStorage.initialize();
+  await profileStorage.initialize();
 
   let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                           (subject, data) => data == "add");
   profileStorage.add(TEST_ADDRESS_1);
-  yield onChanged;
+  await onChanged;
   profileStorage.add(TEST_ADDRESS_2);
-  yield profileStorage._saveImmediately();
-});
+  await profileStorage._saveImmediately();
+};
 
 let do_check_record_matches = (recordWithMeta, record) => {
   for (let key in record) {
@@ -56,30 +55,30 @@ let do_check_record_matches = (recordWithMeta, record) => {
   }
 };
 
-add_task(function* test_initialize() {
+add_task(async function test_initialize() {
   let path = getTempFile(TEST_STORE_FILE_NAME).path;
   let profileStorage = new ProfileStorage(path);
-  yield profileStorage.initialize();
+  await profileStorage.initialize();
 
   do_check_eq(profileStorage._store.data.version, 1);
   do_check_eq(profileStorage._store.data.addresses.length, 0);
 
   let data = profileStorage._store.data;
 
-  yield profileStorage._saveImmediately();
+  await profileStorage._saveImmediately();
 
   profileStorage = new ProfileStorage(path);
-  yield profileStorage.initialize();
+  await profileStorage.initialize();
 
   Assert.deepEqual(profileStorage._store.data, data);
 });
 
-add_task(function* test_getAll() {
+add_task(async function test_getAll() {
   let path = getTempFile(TEST_STORE_FILE_NAME).path;
-  yield prepareTestRecords(path);
+  await prepareTestRecords(path);
 
   let profileStorage = new ProfileStorage(path);
-  yield profileStorage.initialize();
+  await profileStorage.initialize();
 
   let addresses = profileStorage.getAll();
 
@@ -92,12 +91,12 @@ add_task(function* test_getAll() {
   do_check_record_matches(profileStorage.getAll()[0], TEST_ADDRESS_1);
 });
 
-add_task(function* test_get() {
+add_task(async function test_get() {
   let path = getTempFile(TEST_STORE_FILE_NAME).path;
-  yield prepareTestRecords(path);
+  await prepareTestRecords(path);
 
   let profileStorage = new ProfileStorage(path);
-  yield profileStorage.initialize();
+  await profileStorage.initialize();
 
   let addresses = profileStorage.getAll();
   let guid = addresses[0].guid;
@@ -113,12 +112,12 @@ add_task(function* test_get() {
     /No matching record\./);
 });
 
-add_task(function* test_getByFilter() {
+add_task(async function test_getByFilter() {
   let path = getTempFile(TEST_STORE_FILE_NAME).path;
-  yield prepareTestRecords(path);
+  await prepareTestRecords(path);
 
   let profileStorage = new ProfileStorage(path);
-  yield profileStorage.initialize();
+  await profileStorage.initialize();
 
   let filter = {info: {fieldName: "street-address"}, searchString: "Some"};
   let addresses = profileStorage.getByFilter(filter);
@@ -150,12 +149,12 @@ add_task(function* test_getByFilter() {
   do_check_eq(addresses.length, 0);
 });
 
-add_task(function* test_add() {
+add_task(async function test_add() {
   let path = getTempFile(TEST_STORE_FILE_NAME).path;
-  yield prepareTestRecords(path);
+  await prepareTestRecords(path);
 
   let profileStorage = new ProfileStorage(path);
-  yield profileStorage.initialize();
+  await profileStorage.initialize();
 
   let addresses = profileStorage.getAll();
 
@@ -174,12 +173,12 @@ add_task(function* test_add() {
     /"invalidField" is not a valid field\./);
 });
 
-add_task(function* test_update() {
+add_task(async function test_update() {
   let path = getTempFile(TEST_STORE_FILE_NAME).path;
-  yield prepareTestRecords(path);
+  await prepareTestRecords(path);
 
   let profileStorage = new ProfileStorage(path);
-  yield profileStorage.initialize();
+  await profileStorage.initialize();
 
   let addresses = profileStorage.getAll();
   let guid = addresses[1].guid;
@@ -191,11 +190,11 @@ add_task(function* test_update() {
   do_check_neq(addresses[1].country, undefined);
 
   profileStorage.update(guid, TEST_ADDRESS_3);
-  yield onChanged;
-  yield profileStorage._saveImmediately();
+  await onChanged;
+  await profileStorage._saveImmediately();
 
   profileStorage = new ProfileStorage(path);
-  yield profileStorage.initialize();
+  await profileStorage.initialize();
 
   let address = profileStorage.get(guid);
 
@@ -214,12 +213,12 @@ add_task(function* test_update() {
   );
 });
 
-add_task(function* test_notifyUsed() {
+add_task(async function test_notifyUsed() {
   let path = getTempFile(TEST_STORE_FILE_NAME).path;
-  yield prepareTestRecords(path);
+  await prepareTestRecords(path);
 
   let profileStorage = new ProfileStorage(path);
-  yield profileStorage.initialize();
+  await profileStorage.initialize();
 
   let addresses = profileStorage.getAll();
   let guid = addresses[1].guid;
@@ -230,11 +229,11 @@ add_task(function* test_notifyUsed() {
                                           (subject, data) => data == "notifyUsed");
 
   profileStorage.notifyUsed(guid);
-  yield onChanged;
-  yield profileStorage._saveImmediately();
+  await onChanged;
+  await profileStorage._saveImmediately();
 
   profileStorage = new ProfileStorage(path);
-  yield profileStorage.initialize();
+  await profileStorage.initialize();
 
   let address = profileStorage.get(guid);
 
@@ -245,12 +244,12 @@ add_task(function* test_notifyUsed() {
     /No matching record\./);
 });
 
-add_task(function* test_remove() {
+add_task(async function test_remove() {
   let path = getTempFile(TEST_STORE_FILE_NAME).path;
-  yield prepareTestRecords(path);
+  await prepareTestRecords(path);
 
   let profileStorage = new ProfileStorage(path);
-  yield profileStorage.initialize();
+  await profileStorage.initialize();
 
   let addresses = profileStorage.getAll();
   let guid = addresses[1].guid;
@@ -261,11 +260,11 @@ add_task(function* test_remove() {
   do_check_eq(addresses.length, 2);
 
   profileStorage.remove(guid);
-  yield onChanged;
-  yield profileStorage._saveImmediately();
+  await onChanged;
+  await profileStorage._saveImmediately();
 
   profileStorage = new ProfileStorage(path);
-  yield profileStorage.initialize();
+  await profileStorage.initialize();
 
   addresses = profileStorage.getAll();
 

@@ -44,7 +44,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_execute() {
+add_task(async function test_execute() {
   do_print("Initialize browserglue before Places");
 
   // Avoid default bookmarks import.
@@ -68,21 +68,21 @@ add_task(function* test_execute() {
 
   do_print("Add visits.");
   for (let aUrl of URIS) {
-    yield PlacesTestUtils.addVisits({
+    await PlacesTestUtils.addVisits({
       uri: uri(aUrl), visitDate: timeInMicroseconds++,
       transition: PlacesUtils.history.TRANSITION_TYPED
     });
   }
   do_print("Add cache.");
-  yield storeCache(FTP_URL, "testData");
+  await storeCache(FTP_URL, "testData");
   do_print("Add form history.");
-  yield addFormHistory();
-  Assert.equal((yield getFormHistoryCount()), 1, "Added form history");
+  await addFormHistory();
+  Assert.equal((await getFormHistoryCount()), 1, "Added form history");
 
   do_print("Simulate and wait shutdown.");
-  yield shutdownPlaces();
+  await shutdownPlaces();
 
-  Assert.equal((yield getFormHistoryCount()), 0, "Form history cleared");
+  Assert.equal((await getFormHistoryCount()), 0, "Form history cleared");
 
   let stmt = DBConn(true).createStatement(
     "SELECT id FROM moz_places WHERE url = :page_url "
@@ -100,7 +100,7 @@ add_task(function* test_execute() {
 
   do_print("Check cache");
   // Check cache.
-  yield checkCache(FTP_URL);
+  await checkCache(FTP_URL);
 });
 
 function addFormHistory() {

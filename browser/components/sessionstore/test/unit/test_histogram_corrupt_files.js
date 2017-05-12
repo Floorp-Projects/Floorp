@@ -43,7 +43,7 @@ function reset_session(backups = {}) {
  * it has to be registered in "toolkit/components/telemetry/Histograms.json".
  * This test ensures that the histogram is registered and empty.
  */
-add_task(function* test_ensure_histogram_exists_and_empty() {
+add_task(async function test_ensure_histogram_exists_and_empty() {
   let s = Telemetry.getHistogramById(HistogramId).snapshot();
   Assert.equal(s.sum, 0, "Initially, the sum of probes is 0");
 });
@@ -52,11 +52,11 @@ add_task(function* test_ensure_histogram_exists_and_empty() {
  * Makes sure that the histogram is negatively updated when no
  * backup files are present.
  */
-add_task(function* test_no_files_exist() {
+add_task(async function test_no_files_exist() {
   // No session files are available to SessionFile.
   reset_session();
 
-  yield SessionFile.read();
+  await SessionFile.read();
   // Checking if the histogram is updated negatively
   let h = Telemetry.getHistogramById(HistogramId);
   let s = h.snapshot();
@@ -68,7 +68,7 @@ add_task(function* test_no_files_exist() {
  * Makes sure that the histogram is negatively updated when at least one
  * backup file is not corrupted.
  */
-add_task(function* test_one_file_valid() {
+add_task(async function test_one_file_valid() {
   // Corrupting some backup files.
   let invalidSession = "data/sessionstore_invalid.js";
   let validSession = "data/sessionstore_valid.js";
@@ -79,7 +79,7 @@ add_task(function* test_one_file_valid() {
     recoveryBackup: invalidSession
   });
 
-  yield SessionFile.read();
+  await SessionFile.read();
   // Checking if the histogram is updated negatively.
   let h = Telemetry.getHistogramById(HistogramId);
   let s = h.snapshot();
@@ -91,7 +91,7 @@ add_task(function* test_one_file_valid() {
  * Makes sure that the histogram is positively updated when all
  * backup files are corrupted.
  */
-add_task(function* test_all_files_corrupt() {
+add_task(async function test_all_files_corrupt() {
   // Corrupting all backup files.
   let invalidSession = "data/sessionstore_invalid.js";
   reset_session({
@@ -101,7 +101,7 @@ add_task(function* test_all_files_corrupt() {
     recoveryBackup: invalidSession
   });
 
-  yield SessionFile.read();
+  await SessionFile.read();
   // Checking if the histogram is positively updated.
   let h = Telemetry.getHistogramById(HistogramId);
   let s = h.snapshot();

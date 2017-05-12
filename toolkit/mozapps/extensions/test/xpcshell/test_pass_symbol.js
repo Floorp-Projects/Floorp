@@ -13,13 +13,13 @@ startupManager();
 BootstrapMonitor.init();
 
 // symbol is passed when add-on is installed
-add_task(function*() {
+add_task(async function() {
   for (let pref of [PASS_PREF, FAIL_BOGUS_PREF, FAIL_ID_PREF])
     Services.prefs.clearUserPref(pref);
 
-  yield promiseInstallAllFiles([do_get_addon("test_symbol")], true);
+  await promiseInstallAllFiles([do_get_addon("test_symbol")], true);
 
-  let addon = yield promiseAddonByID(ADDON_ID);
+  let addon = await promiseAddonByID(ADDON_ID);
 
   do_check_neq(addon, null);
   do_check_eq(addon.version, "1.0");
@@ -39,5 +39,5 @@ add_task(function*() {
     do_check_true(Services.prefs.getBoolPref(FAIL_ID_PREF));
   });
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
 });

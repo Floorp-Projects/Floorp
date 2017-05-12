@@ -5,9 +5,9 @@
 "use strict";
 
 // Dragging an item from the palette to another button in the panel should work.
-add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
-  yield startCustomizing();
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+  await startCustomizing();
   let btn = document.getElementById("feed-button");
   let placements = getAreaWidgetIds(CustomizableUI.AREA_PANEL);
 
@@ -24,8 +24,8 @@ add_task(function*() {
 });
 
 // Dragging an item from the palette to the panel itself should also work.
-add_task(function*() {
-  yield startCustomizing();
+add_task(async function() {
+  await startCustomizing();
   let btn = document.getElementById("feed-button");
   let panel = document.getElementById(CustomizableUI.AREA_PANEL);
   let placements = getAreaWidgetIds(CustomizableUI.AREA_PANEL);
@@ -40,12 +40,12 @@ add_task(function*() {
 });
 
 // Dragging an item from the palette to an empty panel should also work.
-add_task(function*() {
+add_task(async function() {
   let widgetIds = getAreaWidgetIds(CustomizableUI.AREA_PANEL);
   while (widgetIds.length) {
     CustomizableUI.removeWidgetFromArea(widgetIds.shift());
   }
-  yield startCustomizing();
+  await startCustomizing();
   let btn = document.getElementById("feed-button");
   let panel = document.getElementById(CustomizableUI.AREA_PANEL);
 
@@ -60,7 +60,7 @@ add_task(function*() {
   assertAreaPlacements(panel.id, []);
 });
 
-add_task(function* asyncCleanup() {
-  yield endCustomizing();
-  yield resetCustomization();
+add_task(async function asyncCleanup() {
+  await endCustomizing();
+  await resetCustomization();
 });

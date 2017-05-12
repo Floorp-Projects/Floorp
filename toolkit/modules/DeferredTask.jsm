@@ -90,8 +90,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 
 const Timer = Components.Constructor("@mozilla.org/timer;1", "nsITimer",
                                      "initWithCallback");
@@ -272,9 +270,9 @@ this.DeferredTask.prototype = {
     this._armed = false;
     this._runningPromise = runningDeferred.promise;
 
-    runningDeferred.resolve(Task.spawn(function* () {
+    runningDeferred.resolve((async () => {
       // Execute the provided function asynchronously.
-      yield Task.spawn(this._taskFn).then(null, Cu.reportError);
+      await (this._taskFn() || Promise.resolve()).then(null, Cu.reportError);
 
       // Now that the task has finished, we check the state of the object to
       // determine if we should restart the task again.
@@ -286,13 +284,13 @@ this.DeferredTask.prototype = {
           // property should return false while the task is running, and should
           // remain false after the last execution terminates.
           this._armed = false;
-          yield Task.spawn(this._taskFn).then(null, Cu.reportError);
+          await (this._taskFn() || Promise.resolve()).then(null, Cu.reportError);
         }
       }
 
       // Indicate that the execution of the task has finished.  This happens
       // synchronously with the previous state changes in the function.
       this._runningPromise = null;
-    }.bind(this)).then(null, Cu.reportError));
+    })().then(null, Cu.reportError));
   },
 };

@@ -10,26 +10,26 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function*() {
+add_task(async function() {
   // Create a backup for yesterday in the backups folder.
-  let backupFolder = yield PlacesBackups.getBackupFolder();
+  let backupFolder = await PlacesBackups.getBackupFolder();
   let dateObj = new Date();
   dateObj.setDate(dateObj.getDate() - 1);
   let oldBackupName = PlacesBackups.getFilenameForDate(dateObj);
   let oldBackup = OS.Path.join(backupFolder, oldBackupName);
-  let {count: count, hash: hash} = yield BookmarkJSONUtils.exportToFile(oldBackup);
+  let {count: count, hash: hash} = await BookmarkJSONUtils.exportToFile(oldBackup);
   do_check_true(count > 0);
   do_check_eq(hash.length, 24);
   oldBackupName = oldBackupName.replace(/\.json/, "_" + count + "_" + hash + ".json");
-  yield OS.File.move(oldBackup, OS.Path.join(backupFolder, oldBackupName));
+  await OS.File.move(oldBackup, OS.Path.join(backupFolder, oldBackupName));
 
   // Create a backup.
   // This should just rename the existing backup, so in the end there should be
   // only one backup with today's date.
-  yield PlacesBackups.create();
+  await PlacesBackups.create();
 
   // Get the hash of the generated backup
-  let backupFiles = yield PlacesBackups.getBackupFiles();
+  let backupFiles = await PlacesBackups.getBackupFiles();
   do_check_eq(backupFiles.length, 1);
 
   let matches = OS.Path.basename(backupFiles[0]).match(PlacesBackups.filenamesRegex);
@@ -44,9 +44,9 @@ add_task(function*() {
                                                         "foo");
   // We must enforce a backup since one for today already exists.  The forced
   // backup will replace the existing one.
-  yield PlacesBackups.create(undefined, true);
+  await PlacesBackups.create(undefined, true);
   do_check_eq(backupFiles.length, 1);
-  let recentBackup = yield PlacesBackups.getMostRecentBackup();
+  let recentBackup = await PlacesBackups.getMostRecentBackup();
   do_check_neq(recentBackup, OS.Path.join(backupFolder, oldBackupName));
   matches = OS.Path.basename(recentBackup).match(PlacesBackups.filenamesRegex);
   do_check_eq(matches[1], PlacesBackups.toISODateString(new Date()));
@@ -55,5 +55,5 @@ add_task(function*() {
 
   // Clean up
   PlacesUtils.bookmarks.removeItem(bookmarkId);
-  yield PlacesBackups.create(0);
+  await PlacesBackups.create(0);
 });

@@ -9,8 +9,8 @@ const ADDITIONAL_WAIT_MS = 2000;
 /*
  * Ensure that loading about:newtab doesn't cause uninterruptible reflows.
  */
-add_task(function* () {
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
+add_task(async function() {
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
     return gBrowser.selectedTab = gBrowser.addTab("about:blank", {animate: false});
   }, false);
 
@@ -23,10 +23,10 @@ add_task(function* () {
 
   let browserLoadedPromise = BrowserTestUtils.waitForEvent(browser, "load", true);
   browser.loadURI("about:newtab");
-  yield browserLoadedPromise;
+  await browserLoadedPromise;
 
   // Wait some more to catch sync reflows after the page has loaded.
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     setTimeout(resolve, ADDITIONAL_WAIT_MS);
   });
 

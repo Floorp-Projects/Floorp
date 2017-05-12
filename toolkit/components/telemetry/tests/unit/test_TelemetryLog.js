@@ -25,11 +25,11 @@ function check_event(event, id, data) {
   }
 }
 
-add_task(function* () {
+add_task(async function() {
   do_get_profile();
   // TODO: After Bug 1254550 lands we should not need to set the pref here.
   Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
-  yield TelemetryController.testSetup();
+  await TelemetryController.testSetup();
 
   TelemetryLog.log(TEST_PREFIX + "1", ["val", 123, undefined]);
   TelemetryLog.log(TEST_PREFIX + "2", []);
@@ -56,5 +56,5 @@ add_task(function* () {
   do_check_eq(log.length, LOG_ENTRY_MAX_COUNT);
   check_event(log[0], TEST_PREFIX + "1", ["val", "123", "undefined"]);
 
-  yield TelemetryController.testShutdown();
+  await TelemetryController.testShutdown();
 });

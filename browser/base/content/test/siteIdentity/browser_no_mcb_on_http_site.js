@@ -35,22 +35,22 @@ function cleanUpAfterTests() {
   window.focus();
 }
 
-add_task(function* init() {
-  yield SpecialPowers.pushPrefEnv({ set: [[ PREF_ACTIVE, true ],
+add_task(async function init() {
+  await SpecialPowers.pushPrefEnv({ set: [[ PREF_ACTIVE, true ],
                                           [ PREF_DISPLAY, true ]] });
   let url = HTTP_TEST_ROOT + "test_no_mcb_on_http_site_img.html";
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, url)
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url)
   gTestBrowser = tab.linkedBrowser;
 });
 
 // ------------- TEST 1 -----------------------------------------
 
-add_task(function* test1() {
+add_task(async function test1() {
   let expected = "Verifying MCB does not trigger warning/error for an http page ";
   expected += "with https css that includes http image";
 
-  yield ContentTask.spawn(gTestBrowser, expected, function* (condition) {
-    yield ContentTaskUtils.waitForCondition(
+  await ContentTask.spawn(gTestBrowser, expected, async function(condition) {
+    await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("testDiv").innerHTML == condition,
       "Waited too long for status in Test 1!");
   });
@@ -61,17 +61,17 @@ add_task(function* test1() {
   // set up test 2
   let url = HTTP_TEST_ROOT + "test_no_mcb_on_http_site_font.html";
   BrowserTestUtils.loadURI(gTestBrowser, url);
-  yield BrowserTestUtils.browserLoaded(gTestBrowser);
+  await BrowserTestUtils.browserLoaded(gTestBrowser);
 });
 
 // ------------- TEST 2 -----------------------------------------
 
-add_task(function* test2() {
+add_task(async function test2() {
   let expected = "Verifying MCB does not trigger warning/error for an http page ";
   expected += "with https css that includes http font";
 
-  yield ContentTask.spawn(gTestBrowser, expected, function* (condition) {
-    yield ContentTaskUtils.waitForCondition(
+  await ContentTask.spawn(gTestBrowser, expected, async function(condition) {
+    await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("testDiv").innerHTML == condition,
       "Waited too long for status in Test 2!");
   });
@@ -81,17 +81,17 @@ add_task(function* test2() {
   // set up test 3
   let url = HTTP_TEST_ROOT + "test_no_mcb_on_http_site_font2.html";
   BrowserTestUtils.loadURI(gTestBrowser, url);
-  yield BrowserTestUtils.browserLoaded(gTestBrowser);
+  await BrowserTestUtils.browserLoaded(gTestBrowser);
 });
 
 // ------------- TEST 3 -----------------------------------------
 
-add_task(function* test3() {
+add_task(async function test3() {
   let expected = "Verifying MCB does not trigger warning/error for an http page "
   expected += "with https css that imports another http css which includes http font";
 
-  yield ContentTask.spawn(gTestBrowser, expected, function* (condition) {
-    yield ContentTaskUtils.waitForCondition(
+  await ContentTask.spawn(gTestBrowser, expected, async function(condition) {
+    await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("testDiv").innerHTML == condition,
       "Waited too long for status in Test 3!");
   });
@@ -101,6 +101,6 @@ add_task(function* test3() {
 
 // ------------------------------------------------------
 
-add_task(function* cleanup() {
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+add_task(async function cleanup() {
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

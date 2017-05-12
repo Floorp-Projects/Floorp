@@ -3,8 +3,8 @@
 "use strict";
 
 
-add_task(function* test_manifest_csp() {
-  let normalized = yield ExtensionTestUtils.normalizeManifest({
+add_task(async function test_manifest_csp() {
+  let normalized = await ExtensionTestUtils.normalizeManifest({
     "content_security_policy": "script-src 'self'; object-src 'none'",
   });
 
@@ -15,7 +15,7 @@ add_task(function* test_manifest_csp() {
         "Should have the expected poilcy string");
 
 
-  normalized = yield ExtensionTestUtils.normalizeManifest({
+  normalized = await ExtensionTestUtils.normalizeManifest({
     "content_security_policy": "object-src 'none'",
   });
 

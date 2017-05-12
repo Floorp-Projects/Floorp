@@ -24,21 +24,26 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include "util-internal.h"
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <winsock2.h>
 #include <windows.h>
+#endif
+
+#ifdef EVENT__HAVE_PTHREADS
+#include <pthread.h>
 #endif
 
 #include "event2/event-config.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#ifdef _EVENT_HAVE_SYS_TIME_H
+#ifdef EVENT__HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
 #include <sys/queue.h>
-#ifndef WIN32
+#ifndef _WIN32
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <signal.h>
@@ -63,12 +68,12 @@
 #include "event2/util.h"
 #include "event-internal.h"
 #include "evthread-internal.h"
-#include "util-internal.h"
 #include "log-internal.h"
+#include "time-internal.h"
 
 #include "regress.h"
 
-#ifndef WIN32
+#ifndef _WIN32
 #include "regress.gen.h"
 #endif
 
@@ -87,13 +92,8 @@ static struct timeval tcalled;
 
 
 #define TEST1	"this is a test"
-#define SECONDS	1
 
-#ifndef SHUT_WR
-#define SHUT_WR 1
-#endif
-
-#ifdef WIN32
+#ifdef _WIN32
 #define write(fd,buf,len) send((fd),(buf),(int)(len),0)
 #define read(fd,buf,len) recv((fd),(buf),(int)(len),0)
 #endif
@@ -196,7 +196,7 @@ multiple_write_cb(evutil_socket_t fd, short event, void *arg)
 	woff += len;
 
 	if (woff >= (int)sizeof(wbuf)) {
-		shutdown(fd, SHUT_WR);
+		shutdown(fd, EVUTIL_SHUT_WR);
 		if (usepersist)
 			event_del(ev);
 		return;
@@ -233,21 +233,7 @@ multiple_read_cb(evutil_socket_t fd, short event, void *arg)
 static void
 timeout_cb(evutil_socket_t fd, short event, void *arg)
 {
-	struct timeval tv;
-	int diff;
-
 	evutil_gettimeofday(&tcalled, NULL);
-	if (evutil_timercmp(&tcalled, &tset, >))
-		evutil_timersub(&tcalled, &tset, &tv);
-	else
-		evutil_timersub(&tset, &tcalled, &tv);
-
-	diff = tv.tv_sec*1000 + tv.tv_usec/1000 - SECONDS * 1000;
-	if (diff < 0)
-		diff = -diff;
-
-	if (diff < 100)
-		test_ok = 1;
 }
 
 struct both {
@@ -290,7 +276,7 @@ combined_write_cb(evutil_socket_t fd, short event, void *arg)
 	if (len == -1)
 		fprintf(stderr, "%s: write\n", __func__);
 	if (len <= 0) {
-		shutdown(fd, SHUT_WR);
+		shutdown(fd, EVUTIL_SHUT_WR);
 		return;
 	}
 
@@ -320,7 +306,7 @@ test_simpleread(void)
 		tt_fail_perror("write");
 	}
 
-	shutdown(pair[0], SHUT_WR);
+	shutdown(pair[0], EVUTIL_SHUT_WR);
 
 	event_set(&ev, pair[1], EV_READ, simple_read_cb, &ev);
 	if (event_add(&ev, NULL) == -1)
@@ -365,7 +351,7 @@ test_simpleread_multiple(void)
 		tt_fail_perror("write");
 	}
 
-	shutdown(pair[0], SHUT_WR);
+	shutdown(pair[0], EVUTIL_SHUT_WR);
 
 	event_set(&one, pair[1], EV_READ, simpleread_multiple_cb, NULL);
 	if (event_add(&one, NULL) == -1)
@@ -414,7 +400,7 @@ test_simpleclose(void *ptr)
 	short got_read_on_close = 0, got_write_on_close = 0;
 	char buf[1024];
 	memset(buf, 99, sizeof(buf));
-#ifdef WIN32
+#ifdef _WIN32
 #define LOCAL_SOCKETPAIR_AF AF_INET
 #else
 #define LOCAL_SOCKETPAIR_AF AF_UNIX
@@ -583,14 +569,18 @@ test_simpletimeout(void)
 
 	setup_test("Simple timeout: ");
 
-	tv.tv_usec = 0;
-	tv.tv_sec = SECONDS;
+	tv.tv_usec = 200*1000;
+	tv.tv_sec = 0;
+	evutil_timerclear(&tcalled);
 	evtimer_set(&ev, timeout_cb, NULL);
 	evtimer_add(&ev, &tv);
 
 	evutil_gettimeofday(&tset, NULL);
 	event_dispatch();
+	test_timeval_diff_eq(&tset, &tcalled, 200);
 
+	test_ok = 1;
+end:
 	cleanup_test();
 }
 
@@ -635,15 +625,12 @@ test_persistent_timeout_jump(void *ptr)
 	int count = 0;
 	struct timeval msec100 = { 0, 100 * 1000 };
 	struct timeval msec50 = { 0, 50 * 1000 };
+	struct timeval msec300 = { 0, 300 * 1000 };
 
 	event_assign(&ev, data->base, -1, EV_PERSIST, periodic_timeout_cb, &count);
 	event_add(&ev, &msec100);
 	/* Wait for a bit */
-#ifdef _WIN32
-	Sleep(1000);
-#else
-	sleep(1);
-#endif
+	evutil_usleep_(&msec300);
 	event_base_loopexit(data->base, &msec50);
 	event_base_dispatch(data->base);
 	tt_int_op(count, ==, 1);
@@ -702,11 +689,11 @@ test_persistent_active_timeout(void *ptr)
 	tv_exit.tv_usec = 600 * 1000;
 	event_base_loopexit(base, &tv_exit);
 
-	event_base_assert_ok(base);
+	event_base_assert_ok_(base);
 	evutil_gettimeofday(&start, NULL);
 
 	event_base_dispatch(base);
-	event_base_assert_ok(base);
+	event_base_assert_ok_(base);
 
 	tt_int_op(res.n, ==, 3);
 	tt_int_op(res.events[0], ==, EV_READ);
@@ -732,7 +719,7 @@ common_timeout_cb(evutil_socket_t fd, short event, void *arg)
 	struct common_timeout_info *ti = arg;
 	++ti->count;
 	evutil_gettimeofday(&ti->called_at, NULL);
-	if (ti->count >= 6)
+	if (ti->count >= 4)
 		event_del(&ti->ev);
 }
 
@@ -745,22 +732,30 @@ test_common_timeout(void *ptr)
 	int i;
 	struct common_timeout_info info[100];
 
-	struct timeval now;
+	struct timeval start;
 	struct timeval tmp_100_ms = { 0, 100*1000 };
 	struct timeval tmp_200_ms = { 0, 200*1000 };
+	struct timeval tmp_5_sec = { 5, 0 };
+	struct timeval tmp_5M_usec = { 0, 5*1000*1000 };
 
-	const struct timeval *ms_100, *ms_200;
+	const struct timeval *ms_100, *ms_200, *sec_5;
 
 	ms_100 = event_base_init_common_timeout(base, &tmp_100_ms);
 	ms_200 = event_base_init_common_timeout(base, &tmp_200_ms);
+	sec_5 = event_base_init_common_timeout(base, &tmp_5_sec);
 	tt_assert(ms_100);
 	tt_assert(ms_200);
+	tt_assert(sec_5);
 	tt_ptr_op(event_base_init_common_timeout(base, &tmp_200_ms),
 	    ==, ms_200);
+	tt_ptr_op(event_base_init_common_timeout(base, ms_200), ==, ms_200);
+	tt_ptr_op(event_base_init_common_timeout(base, &tmp_5M_usec), ==, sec_5);
 	tt_int_op(ms_100->tv_sec, ==, 0);
 	tt_int_op(ms_200->tv_sec, ==, 0);
+	tt_int_op(sec_5->tv_sec, ==, 5);
 	tt_int_op(ms_100->tv_usec, ==, 100000|0x50000000);
 	tt_int_op(ms_200->tv_usec, ==, 200000|0x50100000);
+	tt_int_op(sec_5->tv_usec, ==, 0|0x50200000);
 
 	memset(info, 0, sizeof(info));
 
@@ -769,30 +764,40 @@ test_common_timeout(void *ptr)
 		event_assign(&info[i].ev, base, -1, EV_TIMEOUT|EV_PERSIST,
 		    common_timeout_cb, &info[i]);
 		if (i % 2) {
-			event_add(&info[i].ev, ms_100);
+			if ((i%20)==1) {
+				/* Glass-box test: Make sure we survive the
+				 * transition to non-common timeouts. It's
+				 * a little tricky. */
+				event_add(&info[i].ev, ms_200);
+				event_add(&info[i].ev, &tmp_100_ms);
+			} else if ((i%20)==3) {
+				/* Check heap-to-common too. */
+				event_add(&info[i].ev, &tmp_200_ms);
+				event_add(&info[i].ev, ms_100);
+			} else if ((i%20)==5) {
+				/* Also check common-to-common. */
+				event_add(&info[i].ev, ms_200);
+				event_add(&info[i].ev, ms_100);
+			} else {
+				event_add(&info[i].ev, ms_100);
+			}
 		} else {
 			event_add(&info[i].ev, ms_200);
 		}
 	}
 
-	event_base_assert_ok(base);
+	event_base_assert_ok_(base);
+	evutil_gettimeofday(&start, NULL);
 	event_base_dispatch(base);
 
-	evutil_gettimeofday(&now, NULL);
-	event_base_assert_ok(base);
+	event_base_assert_ok_(base);
 
 	for (i=0; i<10; ++i) {
-		struct timeval tmp;
-		int ms_diff;
-		tt_int_op(info[i].count, ==, 6);
-		evutil_timersub(&now, &info[i].called_at, &tmp);
-		ms_diff = tmp.tv_usec/1000 + tmp.tv_sec*1000;
+		tt_int_op(info[i].count, ==, 4);
 		if (i % 2) {
-			tt_int_op(ms_diff, >, 500);
-			tt_int_op(ms_diff, <, 700);
+			test_timeval_diff_eq(&start, &info[i].called_at, 400);
 		} else {
-			tt_int_op(ms_diff, >, -100);
-			tt_int_op(ms_diff, <, 100);
+			test_timeval_diff_eq(&start, &info[i].called_at, 800);
 		}
 	}
 
@@ -811,33 +816,64 @@ end:
 	data->base = NULL;
 }
 
-#ifndef WIN32
-static void signal_cb(evutil_socket_t fd, short event, void *arg);
+#ifndef _WIN32
 
 #define current_base event_global_current_base_
 extern struct event_base *current_base;
 
 static void
-child_signal_cb(evutil_socket_t fd, short event, void *arg)
+fork_signal_cb(evutil_socket_t fd, short events, void *arg)
 {
-	struct timeval tv;
-	int *pint = arg;
-
-	*pint = 1;
-
-	tv.tv_usec = 500000;
-	tv.tv_sec = 0;
-	event_loopexit(&tv);
+	event_del(arg);
 }
 
+int child_pair[2] = { -1, -1 };
+static void
+simple_child_read_cb(evutil_socket_t fd, short event, void *arg)
+{
+	char buf[256];
+	int len;
+
+	len = read(fd, buf, sizeof(buf));
+	if (write(child_pair[0], "", 1) < 0)
+		tt_fail_perror("write");
+
+	if (len) {
+		if (!called) {
+			if (event_add(arg, NULL) == -1)
+				exit(1);
+		}
+	} else if (called == 1)
+		test_ok = 1;
+
+	called++;
+}
 static void
 test_fork(void)
 {
-	int status, got_sigchld = 0;
-	struct event ev, sig_ev;
+	char c;
+	int status;
+	struct event ev, sig_ev, usr_ev, existing_ev;
 	pid_t pid;
+	int wait_flags = 0;
+
+#ifdef EVENT__HAVE_WAITPID_WITH_WNOWAIT
+	wait_flags |= WNOWAIT;
+#endif
 
 	setup_test("After fork: ");
+
+	{
+		if (evutil_socketpair(AF_UNIX, SOCK_STREAM, 0, child_pair) == -1) {
+			fprintf(stderr, "%s: socketpair\n", __func__);
+			exit(1);
+		}
+
+		if (evutil_make_socket_nonblocking(child_pair[0]) == -1) {
+			fprintf(stderr, "fcntl(O_NONBLOCK)");
+			exit(1);
+		}
+	}
 
 	tt_assert(current_base);
 	evthread_make_base_notifiable(current_base);
@@ -846,28 +882,36 @@ test_fork(void)
 		tt_fail_perror("write");
 	}
 
-	event_set(&ev, pair[1], EV_READ, simple_read_cb, &ev);
+	event_set(&ev, pair[1], EV_READ, simple_child_read_cb, &ev);
 	if (event_add(&ev, NULL) == -1)
 		exit(1);
 
-	evsignal_set(&sig_ev, SIGCHLD, child_signal_cb, &got_sigchld);
+	evsignal_set(&sig_ev, SIGCHLD, fork_signal_cb, &sig_ev);
 	evsignal_add(&sig_ev, NULL);
 
-	event_base_assert_ok(current_base);
+	evsignal_set(&existing_ev, SIGUSR2, fork_signal_cb, &existing_ev);
+	evsignal_add(&existing_ev, NULL);
+
+	event_base_assert_ok_(current_base);
 	TT_BLATHER(("Before fork"));
 	if ((pid = regress_fork()) == 0) {
 		/* in the child */
 		TT_BLATHER(("In child, before reinit"));
-		event_base_assert_ok(current_base);
+		event_base_assert_ok_(current_base);
 		if (event_reinit(current_base) == -1) {
 			fprintf(stdout, "FAILED (reinit)\n");
 			exit(1);
 		}
 		TT_BLATHER(("After reinit"));
-		event_base_assert_ok(current_base);
+		event_base_assert_ok_(current_base);
 		TT_BLATHER(("After assert-ok"));
 
 		evsignal_del(&sig_ev);
+
+		evsignal_set(&usr_ev, SIGUSR1, fork_signal_cb, &usr_ev);
+		evsignal_add(&usr_ev, NULL);
+		raise(SIGUSR1);
+		raise(SIGUSR2);
 
 		called = 0;
 
@@ -881,16 +925,17 @@ test_fork(void)
 		exit(test_ok != 0 || called != 2 ? -2 : 76);
 	}
 
-	/* wait for the child to read the data */
-	sleep(1);
-
+	/** wait until client read first message */
+	if (read(child_pair[1], &c, 1) < 0) {
+		tt_fail_perror("read");
+	}
 	if (write(pair[0], TEST1, strlen(TEST1)+1) < 0) {
 		tt_fail_perror("write");
 	}
 
 	TT_BLATHER(("Before waitpid"));
-	if (waitpid(pid, &status, 0) == -1) {
-		fprintf(stdout, "FAILED (fork)\n");
+	if (waitpid(pid, &status, wait_flags) == -1) {
+		perror("waitpid");
 		exit(1);
 	}
 	TT_BLATHER(("After waitpid"));
@@ -905,20 +950,86 @@ test_fork(void)
 		fprintf(stderr, "%s: write\n", __func__);
 	}
 
-	shutdown(pair[0], SHUT_WR);
+	shutdown(pair[0], EVUTIL_SHUT_WR);
+
+	evsignal_set(&usr_ev, SIGUSR1, fork_signal_cb, &usr_ev);
+	evsignal_add(&usr_ev, NULL);
+	raise(SIGUSR1);
+	raise(SIGUSR2);
 
 	event_dispatch();
 
-	if (!got_sigchld) {
-		fprintf(stdout, "FAILED (sigchld)\n");
-		exit(1);
-	}
-
 	evsignal_del(&sig_ev);
+	tt_int_op(test_ok, ==, 1);
 
 	end:
 	cleanup_test();
+	if (child_pair[0] != -1)
+		evutil_closesocket(child_pair[0]);
+	if (child_pair[1] != -1)
+		evutil_closesocket(child_pair[1]);
 }
+
+#ifdef EVENT__HAVE_PTHREADS
+static void* del_wait_thread(void *arg)
+{
+	struct timeval tv_start, tv_end;
+
+	evutil_gettimeofday(&tv_start, NULL);
+	event_dispatch();
+	evutil_gettimeofday(&tv_end, NULL);
+
+	test_timeval_diff_eq(&tv_start, &tv_end, 300);
+
+	end:
+	return NULL;
+}
+
+static void
+del_wait_cb(evutil_socket_t fd, short event, void *arg)
+{
+	struct timeval delay = { 0, 300*1000 };
+	TT_BLATHER(("Sleeping"));
+	evutil_usleep_(&delay);
+	test_ok = 1;
+}
+
+static void
+test_del_wait(void)
+{
+	struct event ev;
+	pthread_t thread;
+
+	setup_test("event_del will wait: ");
+
+	event_set(&ev, pair[1], EV_READ, del_wait_cb, &ev);
+	event_add(&ev, NULL);
+
+	pthread_create(&thread, NULL, del_wait_thread, NULL);
+
+	if (write(pair[0], TEST1, strlen(TEST1)+1) < 0) {
+		tt_fail_perror("write");
+	}
+
+	{
+		struct timeval delay = { 0, 30*1000 };
+		evutil_usleep_(&delay);
+	}
+
+	{
+		struct timeval tv_start, tv_end;
+		evutil_gettimeofday(&tv_start, NULL);
+		event_del(&ev);
+		evutil_gettimeofday(&tv_end, NULL);
+		test_timeval_diff_eq(&tv_start, &tv_end, 270);
+	}
+
+	pthread_join(thread, NULL);
+
+	end:
+	;
+}
+#endif
 
 static void
 signal_cb_sa(int sig)
@@ -936,20 +1047,22 @@ signal_cb(evutil_socket_t fd, short event, void *arg)
 }
 
 static void
-test_simplesignal(void)
+test_simplesignal_impl(int find_reorder)
 {
 	struct event ev;
 	struct itimerval itv;
 
-	setup_test("Simple signal: ");
 	evsignal_set(&ev, SIGALRM, signal_cb, &ev);
 	evsignal_add(&ev, NULL);
 	/* find bugs in which operations are re-ordered */
-	evsignal_del(&ev);
-	evsignal_add(&ev, NULL);
+	if (find_reorder) {
+		evsignal_del(&ev);
+		evsignal_add(&ev, NULL);
+	}
 
 	memset(&itv, 0, sizeof(itv));
-	itv.it_value.tv_sec = 1;
+	itv.it_value.tv_sec = 0;
+	itv.it_value.tv_usec = 100000;
 	if (setitimer(ITIMER_REAL, &itv, NULL) == -1)
 		goto skip_simplesignal;
 
@@ -959,6 +1072,20 @@ test_simplesignal(void)
 		test_ok = 0;
 
 	cleanup_test();
+}
+
+static void
+test_simplestsignal(void)
+{
+	setup_test("Simplest one signal: ");
+	test_simplesignal_impl(0);
+}
+
+static void
+test_simplesignal(void)
+{
+	setup_test("Simple signal: ");
+	test_simplesignal_impl(1);
 }
 
 static void
@@ -976,7 +1103,8 @@ test_multiplesignal(void)
 	evsignal_add(&ev_two, NULL);
 
 	memset(&itv, 0, sizeof(itv));
-	itv.it_value.tv_sec = 1;
+	itv.it_value.tv_sec = 0;
+	itv.it_value.tv_usec = 100000;
 	if (setitimer(ITIMER_REAL, &itv, NULL) == -1)
 		goto skip_simplesignal;
 
@@ -1139,12 +1267,12 @@ test_signal_restore(void)
 {
 	struct event ev;
 	struct event_base *base = event_init();
-#ifdef _EVENT_HAVE_SIGACTION
+#ifdef EVENT__HAVE_SIGACTION
 	struct sigaction sa;
 #endif
 
 	test_ok = 0;
-#ifdef _EVENT_HAVE_SIGACTION
+#ifdef EVENT__HAVE_SIGACTION
 	sa.sa_handler = signal_cb_sa;
 	sa.sa_flags = 0x0;
 	sigemptyset(&sa.sa_mask);
@@ -1265,6 +1393,311 @@ end:
 }
 
 static void
+event_selfarg_cb(evutil_socket_t fd, short event, void *arg)
+{
+	struct event *ev = arg;
+	struct event_base *base = event_get_base(ev);
+	event_base_assert_ok_(base);
+	event_base_loopexit(base, NULL);
+	tt_want(ev == event_base_get_running_event(base));
+}
+
+static void
+test_event_new_selfarg(void *ptr)
+{
+	struct basic_test_data *data = ptr;
+	struct event_base *base = data->base;
+	struct event *ev = event_new(base, -1, EV_READ, event_selfarg_cb,
+                                     event_self_cbarg());
+
+	event_active(ev, EV_READ, 1);
+	event_base_dispatch(base);
+
+	event_free(ev);
+}
+
+static void
+test_event_assign_selfarg(void *ptr)
+{
+	struct basic_test_data *data = ptr;
+	struct event_base *base = data->base;
+	struct event ev;
+
+	event_assign(&ev, base, -1, EV_READ, event_selfarg_cb,
+                     event_self_cbarg());
+	event_active(&ev, EV_READ, 1);
+	event_base_dispatch(base);
+}
+
+static void
+test_event_base_get_num_events(void *ptr)
+{
+	struct basic_test_data *data = ptr;
+	struct event_base *base = data->base;
+	struct event ev;
+	int event_count_active;
+	int event_count_virtual;
+	int event_count_added;
+	int event_count_active_virtual;
+	int event_count_active_added;
+	int event_count_virtual_added;
+	int event_count_active_added_virtual;
+
+	struct timeval qsec = {0, 100000};
+
+	event_assign(&ev, base, -1, EV_READ, event_selfarg_cb,
+	    event_self_cbarg());
+
+	event_add(&ev, &qsec);
+	event_count_active = event_base_get_num_events(base,
+	    EVENT_BASE_COUNT_ACTIVE);
+	event_count_virtual = event_base_get_num_events(base,
+	    EVENT_BASE_COUNT_VIRTUAL);
+	event_count_added = event_base_get_num_events(base,
+	    EVENT_BASE_COUNT_ADDED);
+	event_count_active_virtual = event_base_get_num_events(base,
+	    EVENT_BASE_COUNT_ACTIVE|EVENT_BASE_COUNT_VIRTUAL);
+	event_count_active_added = event_base_get_num_events(base,
+	    EVENT_BASE_COUNT_ACTIVE|EVENT_BASE_COUNT_ADDED);
+	event_count_virtual_added = event_base_get_num_events(base,
+	    EVENT_BASE_COUNT_VIRTUAL|EVENT_BASE_COUNT_ADDED);
+	event_count_active_added_virtual = event_base_get_num_events(base,
+	    EVENT_BASE_COUNT_ACTIVE|
+	    EVENT_BASE_COUNT_ADDED|
+	    EVENT_BASE_COUNT_VIRTUAL);
+	tt_int_op(event_count_active, ==, 0);
+	tt_int_op(event_count_virtual, ==, 0);
+	/* libevent itself adds a timeout event, so the event_count is 2 here */
+	tt_int_op(event_count_added, ==, 2);
+	tt_int_op(event_count_active_virtual, ==, 0);
+	tt_int_op(event_count_active_added, ==, 2);
+	tt_int_op(event_count_virtual_added, ==, 2);
+	tt_int_op(event_count_active_added_virtual, ==, 2);
+
+	event_active(&ev, EV_READ, 1);
+	event_count_active = event_base_get_num_events(base,
+	    EVENT_BASE_COUNT_ACTIVE);
+	event_count_virtual = event_base_get_num_events(base,
+	    EVENT_BASE_COUNT_VIRTUAL);
+	event_count_added = event_base_get_num_events(base,
+	    EVENT_BASE_COUNT_ADDED);
+	event_count_active_virtual = event_base_get_num_events(base,
+	    EVENT_BASE_COUNT_ACTIVE|EVENT_BASE_COUNT_VIRTUAL);
+	event_count_active_added = event_base_get_num_events(base,
+	    EVENT_BASE_COUNT_ACTIVE|EVENT_BASE_COUNT_ADDED);
+	event_count_virtual_added = event_base_get_num_events(base,
+	    EVENT_BASE_COUNT_VIRTUAL|EVENT_BASE_COUNT_ADDED);
+	event_count_active_added_virtual = event_base_get_num_events(base,
+	    EVENT_BASE_COUNT_ACTIVE|
+	    EVENT_BASE_COUNT_ADDED|
+	    EVENT_BASE_COUNT_VIRTUAL);
+	tt_int_op(event_count_active, ==, 1);
+	tt_int_op(event_count_virtual, ==, 0);
+	tt_int_op(event_count_added, ==, 3);
+	tt_int_op(event_count_active_virtual, ==, 1);
+	tt_int_op(event_count_active_added, ==, 4);
+	tt_int_op(event_count_virtual_added, ==, 3);
+	tt_int_op(event_count_active_added_virtual, ==, 4);
+
+       event_base_loop(base, 0);
+       event_count_active = event_base_get_num_events(base,
+	   EVENT_BASE_COUNT_ACTIVE);
+       event_count_virtual = event_base_get_num_events(base,
+	   EVENT_BASE_COUNT_VIRTUAL);
+       event_count_added = event_base_get_num_events(base,
+	   EVENT_BASE_COUNT_ADDED);
+       event_count_active_virtual = event_base_get_num_events(base,
+	   EVENT_BASE_COUNT_ACTIVE|EVENT_BASE_COUNT_VIRTUAL);
+       event_count_active_added = event_base_get_num_events(base,
+	   EVENT_BASE_COUNT_ACTIVE|EVENT_BASE_COUNT_ADDED);
+       event_count_virtual_added = event_base_get_num_events(base,
+	   EVENT_BASE_COUNT_VIRTUAL|EVENT_BASE_COUNT_ADDED);
+       event_count_active_added_virtual = event_base_get_num_events(base,
+	   EVENT_BASE_COUNT_ACTIVE|
+	   EVENT_BASE_COUNT_ADDED|
+	   EVENT_BASE_COUNT_VIRTUAL);
+       tt_int_op(event_count_active, ==, 0);
+       tt_int_op(event_count_virtual, ==, 0);
+       tt_int_op(event_count_added, ==, 0);
+       tt_int_op(event_count_active_virtual, ==, 0);
+       tt_int_op(event_count_active_added, ==, 0);
+       tt_int_op(event_count_virtual_added, ==, 0);
+       tt_int_op(event_count_active_added_virtual, ==, 0);
+
+       event_base_add_virtual_(base);
+       event_count_active = event_base_get_num_events(base,
+	   EVENT_BASE_COUNT_ACTIVE);
+       event_count_virtual = event_base_get_num_events(base,
+	   EVENT_BASE_COUNT_VIRTUAL);
+       event_count_added = event_base_get_num_events(base,
+	   EVENT_BASE_COUNT_ADDED);
+       event_count_active_virtual = event_base_get_num_events(base,
+	   EVENT_BASE_COUNT_ACTIVE|EVENT_BASE_COUNT_VIRTUAL);
+       event_count_active_added = event_base_get_num_events(base,
+	   EVENT_BASE_COUNT_ACTIVE|EVENT_BASE_COUNT_ADDED);
+       event_count_virtual_added = event_base_get_num_events(base,
+	   EVENT_BASE_COUNT_VIRTUAL|EVENT_BASE_COUNT_ADDED);
+       event_count_active_added_virtual = event_base_get_num_events(base,
+	   EVENT_BASE_COUNT_ACTIVE|
+	   EVENT_BASE_COUNT_ADDED|
+	   EVENT_BASE_COUNT_VIRTUAL);
+       tt_int_op(event_count_active, ==, 0);
+       tt_int_op(event_count_virtual, ==, 1);
+       tt_int_op(event_count_added, ==, 0);
+       tt_int_op(event_count_active_virtual, ==, 1);
+       tt_int_op(event_count_active_added, ==, 0);
+       tt_int_op(event_count_virtual_added, ==, 1);
+       tt_int_op(event_count_active_added_virtual, ==, 1);
+
+end:
+       ;
+}
+
+static void
+test_event_base_get_max_events(void *ptr)
+{
+	struct basic_test_data *data = ptr;
+	struct event_base *base = data->base;
+	struct event ev;
+	struct event ev2;
+	int event_count_active;
+	int event_count_virtual;
+	int event_count_added;
+	int event_count_active_virtual;
+	int event_count_active_added;
+	int event_count_virtual_added;
+	int event_count_active_added_virtual;
+
+	struct timeval qsec = {0, 100000};
+
+	event_assign(&ev, base, -1, EV_READ, event_selfarg_cb,
+	    event_self_cbarg());
+	event_assign(&ev2, base, -1, EV_READ, event_selfarg_cb,
+	    event_self_cbarg());
+
+	event_add(&ev, &qsec);
+	event_add(&ev2, &qsec);
+	event_del(&ev2);
+
+	event_count_active = event_base_get_max_events(base,
+	    EVENT_BASE_COUNT_ACTIVE, 0);
+	event_count_virtual = event_base_get_max_events(base,
+	    EVENT_BASE_COUNT_VIRTUAL, 0);
+	event_count_added = event_base_get_max_events(base,
+	    EVENT_BASE_COUNT_ADDED, 0);
+	event_count_active_virtual = event_base_get_max_events(base,
+	    EVENT_BASE_COUNT_ACTIVE | EVENT_BASE_COUNT_VIRTUAL, 0);
+	event_count_active_added = event_base_get_max_events(base,
+	    EVENT_BASE_COUNT_ACTIVE | EVENT_BASE_COUNT_ADDED, 0);
+	event_count_virtual_added = event_base_get_max_events(base,
+	    EVENT_BASE_COUNT_VIRTUAL | EVENT_BASE_COUNT_ADDED, 0);
+	event_count_active_added_virtual = event_base_get_max_events(base,
+	    EVENT_BASE_COUNT_ACTIVE |
+	    EVENT_BASE_COUNT_ADDED |
+	    EVENT_BASE_COUNT_VIRTUAL, 0);
+
+	tt_int_op(event_count_active, ==, 0);
+	tt_int_op(event_count_virtual, ==, 0);
+	/* libevent itself adds a timeout event, so the event_count is 4 here */
+	tt_int_op(event_count_added, ==, 4);
+	tt_int_op(event_count_active_virtual, ==, 0);
+	tt_int_op(event_count_active_added, ==, 4);
+	tt_int_op(event_count_virtual_added, ==, 4);
+	tt_int_op(event_count_active_added_virtual, ==, 4);
+
+	event_active(&ev, EV_READ, 1);
+	event_count_active = event_base_get_max_events(base,
+	    EVENT_BASE_COUNT_ACTIVE, 0);
+	event_count_virtual = event_base_get_max_events(base,
+	    EVENT_BASE_COUNT_VIRTUAL, 0);
+	event_count_added = event_base_get_max_events(base,
+	    EVENT_BASE_COUNT_ADDED, 0);
+	event_count_active_virtual = event_base_get_max_events(base,
+	    EVENT_BASE_COUNT_ACTIVE | EVENT_BASE_COUNT_VIRTUAL, 0);
+	event_count_active_added = event_base_get_max_events(base,
+	    EVENT_BASE_COUNT_ACTIVE | EVENT_BASE_COUNT_ADDED, 0);
+	event_count_virtual_added = event_base_get_max_events(base,
+	    EVENT_BASE_COUNT_VIRTUAL | EVENT_BASE_COUNT_ADDED, 0);
+	event_count_active_added_virtual = event_base_get_max_events(base,
+	    EVENT_BASE_COUNT_ACTIVE |
+	    EVENT_BASE_COUNT_ADDED |
+	    EVENT_BASE_COUNT_VIRTUAL, 0);
+
+	tt_int_op(event_count_active, ==, 1);
+	tt_int_op(event_count_virtual, ==, 0);
+	tt_int_op(event_count_added, ==, 4);
+	tt_int_op(event_count_active_virtual, ==, 1);
+	tt_int_op(event_count_active_added, ==, 5);
+	tt_int_op(event_count_virtual_added, ==, 4);
+	tt_int_op(event_count_active_added_virtual, ==, 5);
+
+	event_base_loop(base, 0);
+	event_count_active = event_base_get_max_events(base,
+	    EVENT_BASE_COUNT_ACTIVE, 1);
+	event_count_virtual = event_base_get_max_events(base,
+	    EVENT_BASE_COUNT_VIRTUAL, 1);
+	event_count_added = event_base_get_max_events(base,
+	    EVENT_BASE_COUNT_ADDED, 1);
+	event_count_active_virtual = event_base_get_max_events(base,
+	    EVENT_BASE_COUNT_ACTIVE | EVENT_BASE_COUNT_VIRTUAL, 0);
+	event_count_active_added = event_base_get_max_events(base,
+	    EVENT_BASE_COUNT_ACTIVE | EVENT_BASE_COUNT_ADDED, 0);
+	event_count_virtual_added = event_base_get_max_events(base,
+	    EVENT_BASE_COUNT_VIRTUAL | EVENT_BASE_COUNT_ADDED, 0);
+	event_count_active_added_virtual = event_base_get_max_events(base,
+	    EVENT_BASE_COUNT_ACTIVE |
+	    EVENT_BASE_COUNT_ADDED |
+	    EVENT_BASE_COUNT_VIRTUAL, 1);
+
+	tt_int_op(event_count_active, ==, 1);
+	tt_int_op(event_count_virtual, ==, 0);
+	tt_int_op(event_count_added, ==, 4);
+	tt_int_op(event_count_active_virtual, ==, 0);
+	tt_int_op(event_count_active_added, ==, 0);
+	tt_int_op(event_count_virtual_added, ==, 0);
+	tt_int_op(event_count_active_added_virtual, ==, 0);
+
+	event_count_active = event_base_get_max_events(base,
+	    EVENT_BASE_COUNT_ACTIVE, 0);
+	event_count_virtual = event_base_get_max_events(base,
+	    EVENT_BASE_COUNT_VIRTUAL, 0);
+	event_count_added = event_base_get_max_events(base,
+	    EVENT_BASE_COUNT_ADDED, 0);
+	tt_int_op(event_count_active, ==, 0);
+	tt_int_op(event_count_virtual, ==, 0);
+	tt_int_op(event_count_added, ==, 0);
+
+	event_base_add_virtual_(base);
+	event_count_active = event_base_get_max_events(base,
+	    EVENT_BASE_COUNT_ACTIVE, 0);
+	event_count_virtual = event_base_get_max_events(base,
+	    EVENT_BASE_COUNT_VIRTUAL, 0);
+	event_count_added = event_base_get_max_events(base,
+	    EVENT_BASE_COUNT_ADDED, 0);
+	event_count_active_virtual = event_base_get_max_events(base,
+	    EVENT_BASE_COUNT_ACTIVE | EVENT_BASE_COUNT_VIRTUAL, 0);
+	event_count_active_added = event_base_get_max_events(base,
+	    EVENT_BASE_COUNT_ACTIVE | EVENT_BASE_COUNT_ADDED, 0);
+	event_count_virtual_added = event_base_get_max_events(base,
+	    EVENT_BASE_COUNT_VIRTUAL | EVENT_BASE_COUNT_ADDED, 0);
+	event_count_active_added_virtual = event_base_get_max_events(base,
+	    EVENT_BASE_COUNT_ACTIVE |
+	    EVENT_BASE_COUNT_ADDED |
+	    EVENT_BASE_COUNT_VIRTUAL, 0);
+
+	tt_int_op(event_count_active, ==, 0);
+	tt_int_op(event_count_virtual, ==, 1);
+	tt_int_op(event_count_added, ==, 0);
+	tt_int_op(event_count_active_virtual, ==, 1);
+	tt_int_op(event_count_active_added, ==, 0);
+	tt_int_op(event_count_virtual_added, ==, 1);
+	tt_int_op(event_count_active_added_virtual, ==, 1);
+
+end:
+       ;
+}
+
+static void
 test_bad_assign(void *ptr)
 {
 	struct event ev;
@@ -1311,6 +1744,168 @@ end:
 	;
 }
 
+static int n_write_a_byte_cb=0;
+static int n_read_and_drain_cb=0;
+static int n_activate_other_event_cb=0;
+static void
+write_a_byte_cb(evutil_socket_t fd, short what, void *arg)
+{
+	char buf[] = "x";
+	if (write(fd, buf, 1) == 1)
+		++n_write_a_byte_cb;
+}
+static void
+read_and_drain_cb(evutil_socket_t fd, short what, void *arg)
+{
+	char buf[128];
+	int n;
+	++n_read_and_drain_cb;
+	while ((n = read(fd, buf, sizeof(buf))) > 0)
+		;
+}
+
+static void
+activate_other_event_cb(evutil_socket_t fd, short what, void *other_)
+{
+	struct event *ev_activate = other_;
+	++n_activate_other_event_cb;
+	event_active_later_(ev_activate, EV_READ);
+}
+
+static void
+test_active_later(void *ptr)
+{
+	struct basic_test_data *data = ptr;
+	struct event *ev1 = NULL, *ev2 = NULL;
+	struct event ev3, ev4;
+	struct timeval qsec = {0, 100000};
+	ev1 = event_new(data->base, data->pair[0], EV_READ|EV_PERSIST, read_and_drain_cb, NULL);
+	ev2 = event_new(data->base, data->pair[1], EV_WRITE|EV_PERSIST, write_a_byte_cb, NULL);
+	event_assign(&ev3, data->base, -1, 0, activate_other_event_cb, &ev4);
+	event_assign(&ev4, data->base, -1, 0, activate_other_event_cb, &ev3);
+	event_add(ev1, NULL);
+	event_add(ev2, NULL);
+	event_active_later_(&ev3, EV_READ);
+
+	event_base_loopexit(data->base, &qsec);
+
+	event_base_loop(data->base, 0);
+
+	TT_BLATHER(("%d write calls, %d read calls, %d activate-other calls.",
+		n_write_a_byte_cb, n_read_and_drain_cb, n_activate_other_event_cb));
+	event_del(&ev3);
+	event_del(&ev4);
+
+	tt_int_op(n_write_a_byte_cb, ==, n_activate_other_event_cb);
+	tt_int_op(n_write_a_byte_cb, >, 100);
+	tt_int_op(n_read_and_drain_cb, >, 100);
+	tt_int_op(n_activate_other_event_cb, >, 100);
+
+	event_active_later_(&ev4, EV_READ);
+	event_active(&ev4, EV_READ, 1); /* This should make the event
+					   active immediately. */
+	tt_assert((ev4.ev_flags & EVLIST_ACTIVE) != 0);
+	tt_assert((ev4.ev_flags & EVLIST_ACTIVE_LATER) == 0);
+
+	/* Now leave this one around, so that event_free sees it and removes
+	 * it. */
+	event_active_later_(&ev3, EV_READ);
+	event_base_assert_ok_(data->base);
+
+end:
+	if (ev1)
+		event_free(ev1);
+	if (ev2)
+		event_free(ev2);
+
+	event_base_free(data->base);
+	data->base = NULL;
+}
+
+
+static void incr_arg_cb(evutil_socket_t fd, short what, void *arg)
+{
+	int *intptr = arg;
+	(void) fd; (void) what;
+	++*intptr;
+}
+static void remove_timers_cb(evutil_socket_t fd, short what, void *arg)
+{
+	struct event **ep = arg;
+	(void) fd; (void) what;
+	event_remove_timer(ep[0]);
+	event_remove_timer(ep[1]);
+}
+static void send_a_byte_cb(evutil_socket_t fd, short what, void *arg)
+{
+	evutil_socket_t *sockp = arg;
+	(void) fd; (void) what;
+	(void) write(*sockp, "A", 1);
+}
+struct read_not_timeout_param
+{
+	struct event **ev;
+	int events;
+	int count;
+};
+static void read_not_timeout_cb(evutil_socket_t fd, short what, void *arg)
+{
+	struct read_not_timeout_param *rntp = arg;
+	char c;
+	ev_ssize_t n;
+	(void) fd; (void) what;
+	n = read(fd, &c, 1);
+	tt_int_op(n, ==, 1);
+	rntp->events |= what;
+	++rntp->count;
+	if(2 == rntp->count) event_del(rntp->ev[0]);
+end:
+	;
+}
+
+static void
+test_event_remove_timeout(void *ptr)
+{
+	struct basic_test_data *data = ptr;
+	struct event_base *base = data->base;
+	struct event *ev[5];
+	int ev1_fired=0;
+	struct timeval ms25 = { 0, 25*1000 },
+		ms40 = { 0, 40*1000 },
+		ms75 = { 0, 75*1000 },
+		ms125 = { 0, 125*1000 };
+	struct read_not_timeout_param rntp = { ev, 0, 0 };
+
+	event_base_assert_ok_(base);
+
+	ev[0] = event_new(base, data->pair[0], EV_READ|EV_PERSIST,
+	    read_not_timeout_cb, &rntp);
+	ev[1] = evtimer_new(base, incr_arg_cb, &ev1_fired);
+	ev[2] = evtimer_new(base, remove_timers_cb, ev);
+	ev[3] = evtimer_new(base, send_a_byte_cb, &data->pair[1]);
+	ev[4] = evtimer_new(base, send_a_byte_cb, &data->pair[1]);
+	tt_assert(base);
+	event_add(ev[2], &ms25); /* remove timers */
+	event_add(ev[4], &ms40); /* write to test if timer re-activates */
+	event_add(ev[0], &ms75); /* read */
+	event_add(ev[1], &ms75); /* timer */
+	event_add(ev[3], &ms125); /* timeout. */
+	event_base_assert_ok_(base);
+
+	event_base_dispatch(base);
+
+	tt_int_op(ev1_fired, ==, 0);
+	tt_int_op(rntp.events, ==, EV_READ);
+
+	event_base_assert_ok_(base);
+end:
+	event_free(ev[0]);
+	event_free(ev[1]);
+	event_free(ev[2]);
+	event_free(ev[3]);
+	event_free(ev[4]);
+}
+
 static void
 test_event_base_new(void *ptr)
 {
@@ -1328,7 +1923,7 @@ test_event_base_new(void *ptr)
 		tt_abort_printf(("initial write fell short (%d of %d bytes)",
 				 len, towrite));
 
-	if (shutdown(data->pair[0], SHUT_WR))
+	if (shutdown(data->pair[0], EVUTIL_SHUT_WR))
 		tt_abort_perror("initial write shutdown");
 
 	base = event_base_new();
@@ -1365,23 +1960,22 @@ test_loopexit(void)
 	evtimer_set(&ev, timeout_cb, NULL);
 	evtimer_add(&ev, &tv);
 
-	tv.tv_usec = 0;
-	tv.tv_sec = 1;
+	tv.tv_usec = 300*1000;
+	tv.tv_sec = 0;
 	event_loopexit(&tv);
 
 	evutil_gettimeofday(&tv_start, NULL);
 	event_dispatch();
 	evutil_gettimeofday(&tv_end, NULL);
-	evutil_timersub(&tv_end, &tv_start, &tv_end);
 
 	evtimer_del(&ev);
 
 	tt_assert(event_base_got_exit(global_base));
 	tt_assert(!event_base_got_break(global_base));
 
-	if (tv.tv_sec < 2)
-		test_ok = 1;
+	test_timeval_diff_eq(&tv_start, &tv_end, 300);
 
+	test_ok = 1;
 end:
 	cleanup_test();
 }
@@ -1389,27 +1983,31 @@ end:
 static void
 test_loopexit_multiple(void)
 {
-	struct timeval tv;
+	struct timeval tv, tv_start, tv_end;
 	struct event_base *base;
 
 	setup_test("Loop Multiple exit: ");
 
 	base = event_base_new();
 
-	tv.tv_usec = 0;
-	tv.tv_sec = 1;
+	tv.tv_usec = 200*1000;
+	tv.tv_sec = 0;
 	event_base_loopexit(base, &tv);
 
 	tv.tv_usec = 0;
-	tv.tv_sec = 2;
+	tv.tv_sec = 3;
 	event_base_loopexit(base, &tv);
 
+	evutil_gettimeofday(&tv_start, NULL);
 	event_base_dispatch(base);
+	evutil_gettimeofday(&tv_end, NULL);
 
 	tt_assert(event_base_got_exit(base));
 	tt_assert(!event_base_got_break(base));
 
 	event_base_free(base);
+
+	test_timeval_diff_eq(&tv_start, &tv_end, 200);
 
 	test_ok = 1;
 
@@ -1463,14 +2061,20 @@ re_add_read_cb(evutil_socket_t fd, short event, void *arg)
 {
 	char buf[256];
 	struct event *ev_other = arg;
+	ev_ssize_t n_read;
+
 	readd_test_event_last_added = ev_other;
 
-	if (read(fd, buf, sizeof(buf)) < 0) {
-		tt_fail_perror("read");
-	}
+	n_read = read(fd, buf, sizeof(buf));
 
-	event_add(ev_other, NULL);
-	++test_ok;
+	if (n_read < 0) {
+		tt_fail_perror("read");
+		event_base_loopbreak(event_get_base(ev_other));
+		return;
+	} else {
+		event_add(ev_other, NULL);
+		++test_ok;
+	}
 }
 
 static void
@@ -1736,7 +2340,7 @@ test_want_only_once(void)
 
 	/* Setup the loop termination */
 	evutil_timerclear(&tv);
-	tv.tv_sec = 1;
+	tv.tv_usec = 300*1000;
 	event_loopexit(&tv);
 
 	event_set(&ev, pair[1], EV_READ, read_once_cb, &ev);
@@ -1789,7 +2393,7 @@ end:
 static void
 evtag_fuzz(void *ptr)
 {
-	u_char buffer[4096];
+	unsigned char buffer[4096];
 	struct evbuffer *tmp = evbuffer_new();
 	struct timeval tv;
 	int i, j;
@@ -1800,7 +2404,7 @@ evtag_fuzz(void *ptr)
 
 	for (j = 0; j < 100; j++) {
 		for (i = 0; i < (int)sizeof(buffer); i++)
-			buffer[i] = rand();
+			buffer[i] = test_weakrand();
 		evbuffer_drain(tmp, -1);
 		evbuffer_add(tmp, buffer, sizeof(buffer));
 
@@ -1974,10 +2578,10 @@ end:
 		event_config_free(cfg);
 }
 
-#ifdef _EVENT_HAVE_SETENV
+#ifdef EVENT__HAVE_SETENV
 #define SETENV_OK
-#elif !defined(_EVENT_HAVE_SETENV) && defined(_EVENT_HAVE_PUTENV)
-static void setenv(const char *k, const char *v, int _o)
+#elif !defined(EVENT__HAVE_SETENV) && defined(EVENT__HAVE_PUTENV)
+static void setenv(const char *k, const char *v, int o_)
 {
 	char b[256];
 	evutil_snprintf(b, sizeof(b), "%s=%s",k,v);
@@ -1986,9 +2590,9 @@ static void setenv(const char *k, const char *v, int _o)
 #define SETENV_OK
 #endif
 
-#ifdef _EVENT_HAVE_UNSETENV
+#ifdef EVENT__HAVE_UNSETENV
 #define UNSETENV_OK
-#elif !defined(_EVENT_HAVE_UNSETENV) && defined(_EVENT_HAVE_PUTENV)
+#elif !defined(EVENT__HAVE_UNSETENV) && defined(EVENT__HAVE_PUTENV)
 static void unsetenv(const char *k)
 {
 	char b[256];
@@ -2005,7 +2609,7 @@ methodname_to_envvar(const char *mname, char *buf, size_t buflen)
 	char *cp;
 	evutil_snprintf(buf, buflen, "EVENT_NO%s", mname);
 	for (cp = buf; *cp; ++cp) {
-		*cp = EVUTIL_TOUPPER(*cp);
+		*cp = EVUTIL_TOUPPER_(*cp);
 	}
 }
 #endif
@@ -2026,7 +2630,7 @@ test_base_environ(void *arg)
 	setenv("EVENT_NOWAFFLES", "1", 1);
 	unsetenv("EVENT_NOWAFFLES");
 	if (getenv("EVENT_NOWAFFLES") != NULL) {
-#ifndef _EVENT_HAVE_UNSETENV
+#ifndef EVENT__HAVE_UNSETENV
 		TT_DECLARE("NOTE", ("Can't fake unsetenv; skipping test"));
 #else
 		TT_DECLARE("NOTE", ("unsetenv doesn't work; skipping test"));
@@ -2109,6 +2713,15 @@ end:
 }
 
 static void
+immediate_called_twice_cb(evutil_socket_t fd, short event, void *arg)
+{
+	tt_int_op(event, ==, EV_TIMEOUT);
+	called += 1000;
+end:
+	;
+}
+
+static void
 test_event_once(void *ptr)
 {
 	struct basic_test_data *data = ptr;
@@ -2126,16 +2739,49 @@ test_event_once(void *ptr)
 	tt_int_op(r, ==, 0);
 	r = event_base_once(data->base, -1, 0, NULL, NULL, NULL);
 	tt_int_op(r, <, 0);
+	r = event_base_once(data->base, -1, EV_TIMEOUT,
+	    immediate_called_twice_cb, NULL, NULL);
+	tt_int_op(r, ==, 0);
+	tv.tv_sec = 0;
+	tv.tv_usec = 0;
+	r = event_base_once(data->base, -1, EV_TIMEOUT,
+	    immediate_called_twice_cb, NULL, &tv);
+	tt_int_op(r, ==, 0);
 
 	if (write(data->pair[1], TEST1, strlen(TEST1)+1) < 0) {
 		tt_fail_perror("write");
 	}
 
-	shutdown(data->pair[1], SHUT_WR);
+	shutdown(data->pair[1], EVUTIL_SHUT_WR);
 
 	event_base_dispatch(data->base);
 
-	tt_int_op(called, ==, 101);
+	tt_int_op(called, ==, 2101);
+end:
+	;
+}
+
+static void
+test_event_once_never(void *ptr)
+{
+	struct basic_test_data *data = ptr;
+	struct timeval tv;
+
+	/* Have one trigger in 10 seconds (don't worry, because) */
+	tv.tv_sec = 10;
+	tv.tv_usec = 0;
+	called = 0;
+	event_base_once(data->base, -1, EV_TIMEOUT,
+	    timeout_called_once_cb, NULL, &tv);
+
+	/* But shut down the base in 75 msec. */
+	tv.tv_sec = 0;
+	tv.tv_usec = 75*1000;
+	event_base_loopexit(data->base, &tv);
+
+	event_base_dispatch(data->base);
+
+	tt_int_op(called, ==, 0);
 end:
 	;
 }
@@ -2145,7 +2791,7 @@ test_event_pending(void *ptr)
 {
 	struct basic_test_data *data = ptr;
 	struct event *r=NULL, *w=NULL, *t=NULL;
-	struct timeval tv, now, tv2, diff;
+	struct timeval tv, now, tv2;
 
 	tv.tv_sec = 0;
 	tv.tv_usec = 500 * 1000;
@@ -2172,10 +2818,8 @@ test_event_pending(void *ptr)
 	tt_assert( event_pending(t, EV_TIMEOUT, &tv2));
 
 	tt_assert(evutil_timercmp(&tv2, &now, >));
-	evutil_timeradd(&now, &tv, &tv);
-	evutil_timersub(&tv2, &tv, &diff);
-	tt_int_op(diff.tv_sec, ==, 0);
-	tt_int_op(labs(diff.tv_usec), <, 1000);
+
+	test_timeval_diff_eq(&now, &tv2, 500);
 
 end:
 	if (r) {
@@ -2192,14 +2836,46 @@ end:
 	}
 }
 
-#ifndef WIN32
-/* You can't do this test on windows, since dup2 doesn't work on sockets */
-
 static void
 dfd_cb(evutil_socket_t fd, short e, void *data)
 {
 	*(int*)data = (int)e;
 }
+
+static void
+test_event_closed_fd_poll(void *arg)
+{
+	struct timeval tv;
+	struct event *e;
+	struct basic_test_data *data = (struct basic_test_data *)arg;
+	int i = 0;
+
+	if (strcmp(event_base_get_method(data->base), "poll")) {
+		tinytest_set_test_skipped_();
+		return;
+	}
+
+	e = event_new(data->base, data->pair[0], EV_READ, dfd_cb, &i);
+	tt_assert(e);
+
+	tv.tv_sec = 0;
+	tv.tv_usec = 500 * 1000;
+	event_add(e, &tv);
+	tt_assert(event_pending(e, EV_READ, NULL));
+	close(data->pair[0]);
+	data->pair[0] = -1; /** avoids double-close */
+	event_base_loop(data->base, EVLOOP_ONCE);
+	tt_int_op(i, ==, EV_READ);
+
+end:
+	if (e) {
+		event_del(e);
+		event_free(e);
+	}
+}
+
+#ifndef _WIN32
+/* You can't do this test on windows, since dup2 doesn't work on sockets */
 
 /* Regression test for our workaround for a fun epoll/linux related bug
  * where fd2 = dup(fd1); add(fd2); close(fd2); dup2(fd1,fd2); add(fd2)
@@ -2263,17 +2939,17 @@ end:
 }
 #endif
 
-#ifdef _EVENT_DISABLE_MM_REPLACEMENT
+#ifdef EVENT__DISABLE_MM_REPLACEMENT
 static void
 test_mm_functions(void *arg)
 {
-	_tinytest_set_test_skipped();
+	tinytest_set_test_skipped_();
 }
 #else
 static int
-check_dummy_mem_ok(void *_mem)
+check_dummy_mem_ok(void *mem_)
 {
-	char *mem = _mem;
+	char *mem = mem_;
 	mem -= 16;
 	return !memcmp(mem, "{[<guardedram>]}", 16);
 }
@@ -2287,22 +2963,22 @@ dummy_malloc(size_t len)
 }
 
 static void *
-dummy_realloc(void *_mem, size_t len)
+dummy_realloc(void *mem_, size_t len)
 {
-	char *mem = _mem;
+	char *mem = mem_;
 	if (!mem)
 		return dummy_malloc(len);
-	tt_want(check_dummy_mem_ok(_mem));
+	tt_want(check_dummy_mem_ok(mem_));
 	mem -= 16;
 	mem = realloc(mem, len+16);
 	return mem+16;
 }
 
 static void
-dummy_free(void *_mem)
+dummy_free(void *mem_)
 {
-	char *mem = _mem;
-	tt_want(check_dummy_mem_ok(_mem));
+	char *mem = mem_;
+	tt_want(check_dummy_mem_ok(mem_));
 	mem -= 16;
 	free(mem);
 }
@@ -2350,7 +3026,6 @@ test_many_events(void *arg)
 	int called[MANY];
 	int i;
 	int loopflags = EVLOOP_NONBLOCK, evflags=0;
-	const int is_evport = !strcmp(event_base_get_method(base),"evport");
 	if (one_at_a_time) {
 		loopflags |= EVLOOP_ONCE;
 		evflags = EV_PERSIST;
@@ -2359,10 +3034,6 @@ test_many_events(void *arg)
 	memset(sock, 0xff, sizeof(sock));
 	memset(ev, 0, sizeof(ev));
 	memset(called, 0, sizeof(called));
-	if (is_evport && one_at_a_time) {
-		TT_DECLARE("NOTE", ("evport can't pass this in 2.0; skipping\n"));
-		tt_skip();
-	}
 
 	for (i = 0; i < MANY; ++i) {
 		/* We need an event that will hit the backend, and that will
@@ -2405,6 +3076,292 @@ end:
 	;
 }
 
+static void
+test_get_assignment(void *arg)
+{
+	struct basic_test_data *data = arg;
+	struct event_base *base = data->base;
+	struct event *ev1 = NULL;
+	const char *str = "foo";
+
+	struct event_base *b;
+	evutil_socket_t s;
+	short what;
+	event_callback_fn cb;
+	void *cb_arg;
+
+	ev1 = event_new(base, data->pair[1], EV_READ, dummy_read_cb, (void*)str);
+	event_get_assignment(ev1, &b, &s, &what, &cb, &cb_arg);
+
+	tt_ptr_op(b, ==, base);
+	tt_int_op(s, ==, data->pair[1]);
+	tt_int_op(what, ==, EV_READ);
+	tt_ptr_op(cb, ==, dummy_read_cb);
+	tt_ptr_op(cb_arg, ==, str);
+
+	/* Now make sure this doesn't crash. */
+	event_get_assignment(ev1, NULL, NULL, NULL, NULL, NULL);
+
+end:
+	if (ev1)
+		event_free(ev1);
+}
+
+struct foreach_helper {
+	int count;
+	const struct event *ev;
+};
+
+static int
+foreach_count_cb(const struct event_base *base, const struct event *ev, void *arg)
+{
+	struct foreach_helper *h = event_get_callback_arg(ev);
+	struct timeval *tv = arg;
+	if (event_get_callback(ev) != timeout_cb)
+		return 0;
+	tt_ptr_op(event_get_base(ev), ==, base);
+	tt_int_op(tv->tv_sec, ==, 10);
+	h->ev = ev;
+	h->count++;
+	return 0;
+end:
+	return -1;
+}
+
+static int
+foreach_find_cb(const struct event_base *base, const struct event *ev, void *arg)
+{
+	const struct event **ev_out = arg;
+	struct foreach_helper *h = event_get_callback_arg(ev);
+	if (event_get_callback(ev) != timeout_cb)
+		return 0;
+	if (h->count == 99) {
+		*ev_out = ev;
+		return 101;
+	}
+	return 0;
+}
+
+static void
+test_event_foreach(void *arg)
+{
+	struct basic_test_data *data = arg;
+	struct event_base *base = data->base;
+	struct event *ev[5];
+	struct foreach_helper visited[5];
+	int i;
+	struct timeval ten_sec = {10,0};
+	const struct event *ev_found = NULL;
+
+	for (i = 0; i < 5; ++i) {
+		visited[i].count = 0;
+		visited[i].ev = NULL;
+		ev[i] = event_new(base, -1, 0, timeout_cb, &visited[i]);
+	}
+
+	tt_int_op(-1, ==, event_base_foreach_event(NULL, foreach_count_cb, NULL));
+	tt_int_op(-1, ==, event_base_foreach_event(base, NULL, NULL));
+
+	event_add(ev[0], &ten_sec);
+	event_add(ev[1], &ten_sec);
+	event_active(ev[1], EV_TIMEOUT, 1);
+	event_active(ev[2], EV_TIMEOUT, 1);
+	event_add(ev[3], &ten_sec);
+	/* Don't touch ev[4]. */
+
+	tt_int_op(0, ==, event_base_foreach_event(base, foreach_count_cb,
+		&ten_sec));
+	tt_int_op(1, ==, visited[0].count);
+	tt_int_op(1, ==, visited[1].count);
+	tt_int_op(1, ==, visited[2].count);
+	tt_int_op(1, ==, visited[3].count);
+	tt_ptr_op(ev[0], ==, visited[0].ev);
+	tt_ptr_op(ev[1], ==, visited[1].ev);
+	tt_ptr_op(ev[2], ==, visited[2].ev);
+	tt_ptr_op(ev[3], ==, visited[3].ev);
+
+	visited[2].count = 99;
+	tt_int_op(101, ==, event_base_foreach_event(base, foreach_find_cb,
+		&ev_found));
+	tt_ptr_op(ev_found, ==, ev[2]);
+
+end:
+	for (i=0; i<5; ++i) {
+		event_free(ev[i]);
+	}
+}
+
+static struct event_base *cached_time_base = NULL;
+static int cached_time_reset = 0;
+static int cached_time_sleep = 0;
+static void
+cache_time_cb(evutil_socket_t fd, short what, void *arg)
+{
+	struct timeval *tv = arg;
+	tt_int_op(0, ==, event_base_gettimeofday_cached(cached_time_base, tv));
+	if (cached_time_sleep) {
+		struct timeval delay = { 0, 30*1000 };
+		evutil_usleep_(&delay);
+	}
+	if (cached_time_reset) {
+		event_base_update_cache_time(cached_time_base);
+	}
+end:
+	;
+}
+
+static void
+test_gettimeofday_cached(void *arg)
+{
+	struct basic_test_data *data = arg;
+	struct event_config *cfg = NULL;
+	struct event_base *base = NULL;
+	struct timeval tv1, tv2, tv3, now;
+	struct event *ev1=NULL, *ev2=NULL, *ev3=NULL;
+	int cached_time_disable = strstr(data->setup_data, "disable") != NULL;
+
+	cfg = event_config_new();
+	if (cached_time_disable) {
+		event_config_set_flag(cfg, EVENT_BASE_FLAG_NO_CACHE_TIME);
+	}
+	cached_time_base = base = event_base_new_with_config(cfg);
+	tt_assert(base);
+
+	/* Try gettimeofday_cached outside of an event loop. */
+	evutil_gettimeofday(&now, NULL);
+	tt_int_op(0, ==, event_base_gettimeofday_cached(NULL, &tv1));
+	tt_int_op(0, ==, event_base_gettimeofday_cached(base, &tv2));
+	tt_int_op(timeval_msec_diff(&tv1, &tv2), <, 10);
+	tt_int_op(timeval_msec_diff(&tv1, &now), <, 10);
+
+	cached_time_reset = strstr(data->setup_data, "reset") != NULL;
+	cached_time_sleep = strstr(data->setup_data, "sleep") != NULL;
+
+	ev1 = event_new(base, -1, 0, cache_time_cb, &tv1);
+	ev2 = event_new(base, -1, 0, cache_time_cb, &tv2);
+	ev3 = event_new(base, -1, 0, cache_time_cb, &tv3);
+
+	event_active(ev1, EV_TIMEOUT, 1);
+	event_active(ev2, EV_TIMEOUT, 1);
+	event_active(ev3, EV_TIMEOUT, 1);
+
+	event_base_dispatch(base);
+
+	if (cached_time_reset && cached_time_sleep) {
+		tt_int_op(labs(timeval_msec_diff(&tv1,&tv2)), >, 10);
+		tt_int_op(labs(timeval_msec_diff(&tv2,&tv3)), >, 10);
+	} else if (cached_time_disable && cached_time_sleep) {
+		tt_int_op(labs(timeval_msec_diff(&tv1,&tv2)), >, 10);
+		tt_int_op(labs(timeval_msec_diff(&tv2,&tv3)), >, 10);
+	} else if (! cached_time_disable) {
+		tt_assert(evutil_timercmp(&tv1, &tv2, ==));
+		tt_assert(evutil_timercmp(&tv2, &tv3, ==));
+	}
+
+end:
+	if (ev1)
+		event_free(ev1);
+	if (ev2)
+		event_free(ev2);
+	if (ev3)
+		event_free(ev3);
+	if (base)
+		event_base_free(base);
+	if (cfg)
+		event_config_free(cfg);
+}
+
+static void
+tabf_cb(evutil_socket_t fd, short what, void *arg)
+{
+	int *ptr = arg;
+	*ptr = what;
+	*ptr += 0x10000;
+}
+
+static void
+test_active_by_fd(void *arg)
+{
+	struct basic_test_data *data = arg;
+	struct event_base *base = data->base;
+	struct event *ev1 = NULL, *ev2 = NULL, *ev3 = NULL, *ev4 = NULL;
+	int e1,e2,e3,e4;
+#ifndef _WIN32
+	struct event *evsig = NULL;
+	int es;
+#endif
+	struct timeval tenmin = { 600, 0 };
+
+	/* Ensure no crash on nonexistent FD. */
+	event_base_active_by_fd(base, 1000, EV_READ);
+
+	/* Ensure no crash on bogus FD. */
+	event_base_active_by_fd(base, -1, EV_READ);
+
+	/* Ensure no crash on nonexistent/bogus signal. */
+	event_base_active_by_signal(base, 1000);
+	event_base_active_by_signal(base, -1);
+
+	event_base_assert_ok_(base);
+
+	e1 = e2 = e3 = e4 = 0;
+	ev1 = event_new(base, data->pair[0], EV_READ, tabf_cb, &e1);
+	ev2 = event_new(base, data->pair[0], EV_WRITE, tabf_cb, &e2);
+	ev3 = event_new(base, data->pair[1], EV_READ, tabf_cb, &e3);
+	ev4 = event_new(base, data->pair[1], EV_READ, tabf_cb, &e4);
+	tt_assert(ev1);
+	tt_assert(ev2);
+	tt_assert(ev3);
+	tt_assert(ev4);
+#ifndef _WIN32
+	evsig = event_new(base, SIGHUP, EV_SIGNAL, tabf_cb, &es);
+	tt_assert(evsig);
+	event_add(evsig, &tenmin);
+#endif
+
+	event_add(ev1, &tenmin);
+	event_add(ev2, NULL);
+	event_add(ev3, NULL);
+	event_add(ev4, &tenmin);
+
+
+	event_base_assert_ok_(base);
+
+	/* Trigger 2, 3, 4 */
+	event_base_active_by_fd(base, data->pair[0], EV_WRITE);
+	event_base_active_by_fd(base, data->pair[1], EV_READ);
+#ifndef _WIN32
+	event_base_active_by_signal(base, SIGHUP);
+#endif
+
+	event_base_assert_ok_(base);
+
+	event_base_loop(base, EVLOOP_ONCE);
+
+	tt_int_op(e1, ==, 0);
+	tt_int_op(e2, ==, EV_WRITE | 0x10000);
+	tt_int_op(e3, ==, EV_READ | 0x10000);
+	/* Mask out EV_WRITE here, since it could be genuinely writeable. */
+	tt_int_op((e4 & ~EV_WRITE), ==, EV_READ | 0x10000);
+#ifndef _WIN32
+	tt_int_op(es, ==, EV_SIGNAL | 0x10000);
+#endif
+
+end:
+	if (ev1)
+		event_free(ev1);
+	if (ev2)
+		event_free(ev2);
+	if (ev3)
+		event_free(ev3);
+	if (ev4)
+		event_free(ev4);
+#ifndef _WIN32
+	if (evsig)
+		event_free(evsig);
+#endif
+}
+
 struct testcase_t main_testcases[] = {
 	/* Some converted-over tests */
 	{ "methods", test_methods, TT_FORK, NULL, NULL },
@@ -2416,10 +3373,17 @@ struct testcase_t main_testcases[] = {
 	BASIC(free_active_base, TT_FORK|TT_NEED_SOCKETPAIR),
 
 	BASIC(manipulate_active_events, TT_FORK|TT_NEED_BASE),
+	BASIC(event_new_selfarg, TT_FORK|TT_NEED_BASE),
+	BASIC(event_assign_selfarg, TT_FORK|TT_NEED_BASE),
+	BASIC(event_base_get_num_events, TT_FORK|TT_NEED_BASE),
+	BASIC(event_base_get_max_events, TT_FORK|TT_NEED_BASE),
 
 	BASIC(bad_assign, TT_FORK|TT_NEED_BASE|TT_NO_LOGS),
 	BASIC(bad_reentrant, TT_FORK|TT_NEED_BASE|TT_NO_LOGS),
+	BASIC(active_later, TT_FORK|TT_NEED_BASE|TT_NEED_SOCKETPAIR),
+	BASIC(event_remove_timeout, TT_FORK|TT_NEED_BASE|TT_NEED_SOCKETPAIR),
 
+	/* These are still using the old API */
 	LEGACY(persistent_timeout, TT_FORK|TT_NEED_BASE),
 	{ "persistent_timeout_jump", test_persistent_timeout_jump, TT_FORK|TT_NEED_BASE, &basic_setup, NULL },
 	{ "persistent_active_timeout", test_persistent_active_timeout,
@@ -2446,9 +3410,13 @@ struct testcase_t main_testcases[] = {
 	LEGACY(multiple_events_for_same_fd, TT_ISOLATED),
 	LEGACY(want_only_once, TT_ISOLATED),
 	{ "event_once", test_event_once, TT_ISOLATED, &basic_setup, NULL },
+	{ "event_once_never", test_event_once_never, TT_ISOLATED, &basic_setup, NULL },
 	{ "event_pending", test_event_pending, TT_ISOLATED, &basic_setup,
 	  NULL },
-#ifndef WIN32
+	{ "event_closed_fd_poll", test_event_closed_fd_poll, TT_ISOLATED, &basic_setup,
+	  NULL },
+
+#ifndef _WIN32
 	{ "dup_fd", test_dup_fd, TT_ISOLATED, &basic_setup, NULL },
 #endif
 	{ "mm_functions", test_mm_functions, TT_FORK, NULL, NULL },
@@ -2456,10 +3424,25 @@ struct testcase_t main_testcases[] = {
 	{ "many_events_slow_add", test_many_events, TT_ISOLATED, &basic_setup, (void*)1 },
 
 	{ "struct_event_size", test_struct_event_size, 0, NULL, NULL },
+	BASIC(get_assignment, TT_FORK|TT_NEED_BASE|TT_NEED_SOCKETPAIR),
 
-#ifndef WIN32
+	BASIC(event_foreach, TT_FORK|TT_NEED_BASE),
+	{ "gettimeofday_cached", test_gettimeofday_cached, TT_FORK, &basic_setup, (void*)"" },
+	{ "gettimeofday_cached_sleep", test_gettimeofday_cached, TT_FORK, &basic_setup, (void*)"sleep" },
+	{ "gettimeofday_cached_reset", test_gettimeofday_cached, TT_FORK, &basic_setup, (void*)"sleep reset" },
+	{ "gettimeofday_cached_disabled", test_gettimeofday_cached, TT_FORK, &basic_setup, (void*)"sleep disable" },
+	{ "gettimeofday_cached_disabled_nosleep", test_gettimeofday_cached, TT_FORK, &basic_setup, (void*)"disable" },
+
+	BASIC(active_by_fd, TT_FORK|TT_NEED_BASE|TT_NEED_SOCKETPAIR),
+
+#ifndef _WIN32
 	LEGACY(fork, TT_ISOLATED),
 #endif
+#ifdef EVENT__HAVE_PTHREADS
+	/** TODO: support win32 */
+	LEGACY(del_wait, TT_ISOLATED|TT_NEED_THREADS),
+#endif
+
 	END_OF_TESTCASES
 };
 
@@ -2473,7 +3456,8 @@ struct testcase_t evtag_testcases[] = {
 };
 
 struct testcase_t signal_testcases[] = {
-#ifndef WIN32
+#ifndef _WIN32
+	LEGACY(simplestsignal, TT_ISOLATED),
 	LEGACY(simplesignal, TT_ISOLATED),
 	LEGACY(multiplesignal, TT_ISOLATED),
 	LEGACY(immediatesignal, TT_ISOLATED),

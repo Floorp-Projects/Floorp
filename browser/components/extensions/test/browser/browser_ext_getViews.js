@@ -64,9 +64,9 @@ function genericChecker() {
   browser.test.sendMessage(kind + "-ready");
 }
 
-add_task(function* () {
-  let win1 = yield BrowserTestUtils.openNewBrowserWindow();
-  let win2 = yield BrowserTestUtils.openNewBrowserWindow();
+add_task(async function() {
+  let win1 = await BrowserTestUtils.openNewBrowserWindow();
+  let win2 = await BrowserTestUtils.openNewBrowserWindow();
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -100,7 +100,7 @@ add_task(function* () {
     background: genericChecker,
   });
 
-  yield Promise.all([extension.startup(), extension.awaitMessage("background-ready")]);
+  await Promise.all([extension.startup(), extension.awaitMessage("background-ready")]);
 
   info("started");
 
@@ -109,14 +109,14 @@ add_task(function* () {
   let winId1 = windowTracker.getId(win1);
   let winId2 = windowTracker.getId(win2);
 
-  function* openTab(winId) {
+  async function openTab(winId) {
     extension.sendMessage("background-open-tab", winId);
-    yield extension.awaitMessage("tab-ready");
+    await extension.awaitMessage("tab-ready");
   }
 
-  function* checkViews(kind, tabCount, popupCount, kindCount, windowId = undefined, windowCount = 0) {
+  async function checkViews(kind, tabCount, popupCount, kindCount, windowId = undefined, windowCount = 0) {
     extension.sendMessage(kind + "-check-views", windowId);
-    let counts = yield extension.awaitMessage("counts");
+    let counts = await extension.awaitMessage("counts");
     is(counts.background, 1, "background count correct");
     is(counts.tab, tabCount, "tab count correct");
     is(counts.popup, popupCount, "popup count correct");
@@ -124,24 +124,24 @@ add_task(function* () {
     is(counts.window, windowCount, "count for window correct");
   }
 
-  yield checkViews("background", 0, 0, 0);
+  await checkViews("background", 0, 0, 0);
 
-  yield openTab(winId1);
+  await openTab(winId1);
 
-  yield checkViews("background", 1, 0, 0, winId1, 1);
-  yield checkViews("tab", 1, 0, 1);
+  await checkViews("background", 1, 0, 0, winId1, 1);
+  await checkViews("tab", 1, 0, 1);
 
-  yield openTab(winId2);
+  await openTab(winId2);
 
-  yield checkViews("background", 2, 0, 0, winId2, 1);
+  await checkViews("background", 2, 0, 0, winId2, 1);
 
-  function* triggerPopup(win, callback) {
-    yield clickBrowserAction(extension, win);
-    yield awaitExtensionPanel(extension, win);
+  async function triggerPopup(win, callback) {
+    await clickBrowserAction(extension, win);
+    await awaitExtensionPanel(extension, win);
 
-    yield extension.awaitMessage("popup-ready");
+    await extension.awaitMessage("popup-ready");
 
-    yield callback();
+    await callback();
 
     closeBrowserAction(extension, win);
   }
@@ -150,49 +150,49 @@ add_task(function* () {
   // I'm not sure what causes it to close (it's something internal, and seems to
   // be focus-related, but it's not caused by JS calling hidePopup), but even a
   // short timeout seems to consistently fix it.
-  yield new Promise(resolve => win1.setTimeout(resolve, 10));
+  await new Promise(resolve => win1.setTimeout(resolve, 10));
 
-  yield triggerPopup(win1, function* () {
-    yield checkViews("background", 2, 1, 0, winId1, 2);
-    yield checkViews("popup", 2, 1, 1);
+  await triggerPopup(win1, async function() {
+    await checkViews("background", 2, 1, 0, winId1, 2);
+    await checkViews("popup", 2, 1, 1);
   });
 
-  yield triggerPopup(win2, function* () {
-    yield checkViews("background", 2, 1, 0, winId2, 2);
-    yield checkViews("popup", 2, 1, 1);
+  await triggerPopup(win2, async function() {
+    await checkViews("background", 2, 1, 0, winId2, 2);
+    await checkViews("popup", 2, 1, 1);
   });
 
   info("checking counts after popups");
 
-  yield checkViews("background", 2, 0, 0, winId1, 1);
+  await checkViews("background", 2, 0, 0, winId1, 1);
 
   info("closing one tab");
 
   extension.sendMessage("background-close-tab", winId1);
-  yield extension.awaitMessage("closed");
+  await extension.awaitMessage("closed");
 
   info("one tab closed, one remains");
 
-  yield checkViews("background", 1, 0, 0);
+  await checkViews("background", 1, 0, 0);
 
   info("opening win1 popup");
 
-  yield triggerPopup(win1, function* () {
-    yield checkViews("background", 1, 1, 0);
-    yield checkViews("tab", 1, 1, 1);
-    yield checkViews("popup", 1, 1, 1);
+  await triggerPopup(win1, async function() {
+    await checkViews("background", 1, 1, 0);
+    await checkViews("tab", 1, 1, 1);
+    await checkViews("popup", 1, 1, 1);
   });
 
   info("opening win2 popup");
 
-  yield triggerPopup(win2, function* () {
-    yield checkViews("background", 1, 1, 0);
-    yield checkViews("tab", 1, 1, 1);
-    yield checkViews("popup", 1, 1, 1);
+  await triggerPopup(win2, async function() {
+    await checkViews("background", 1, 1, 0);
+    await checkViews("tab", 1, 1, 1);
+    await checkViews("popup", 1, 1, 1);
   });
 
-  yield extension.unload();
+  await extension.unload();
 
-  yield BrowserTestUtils.closeWindow(win1);
-  yield BrowserTestUtils.closeWindow(win2);
+  await BrowserTestUtils.closeWindow(win1);
+  await BrowserTestUtils.closeWindow(win2);
 });

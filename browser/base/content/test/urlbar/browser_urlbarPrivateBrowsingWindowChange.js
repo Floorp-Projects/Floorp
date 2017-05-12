@@ -4,10 +4,10 @@
  * Test that when opening a private browsing window and typing in it before about:privatebrowsing
  * loads, we don't clear the URL bar.
  */
-add_task(function*() {
+add_task(async function() {
   let urlbarTestValue = "Mary had a little lamb";
   let win = OpenBrowserWindow({private: true});
-  yield BrowserTestUtils.waitForEvent(win, "load");
+  await BrowserTestUtils.waitForEvent(win, "load");
   let urlbar = win.document.getElementById("urlbar");
   urlbar.value = urlbarTestValue;
   // Need this so the autocomplete controller attaches:
@@ -31,11 +31,11 @@ add_task(function*() {
   };
   win.gBrowser.addProgressListener(wpl);
 
-  yield continuePromise;
+  await continuePromise;
   is(urlbar.value, urlbarTestValue,
      "URL bar value should be the same once about:privatebrowsing has loaded");
   is(win.gBrowser.selectedBrowser.userTypedValue, urlbarTestValue,
      "browser object should still know url bar value once about:privatebrowsing has loaded");
   win.gBrowser.removeProgressListener(wpl);
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 });

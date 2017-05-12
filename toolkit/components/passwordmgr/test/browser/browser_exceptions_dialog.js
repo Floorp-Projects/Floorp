@@ -33,24 +33,24 @@ function promiseStorageChanged(expectedData) {
   return TestUtils.topicObserved("passwordmgr-storage-changed", observer);
 }
 
-add_task(function* test_disable() {
+add_task(async function test_disable() {
   let dialog = openExceptionsDialog();
   let promiseChanged = promiseStorageChanged("hostSavingDisabled");
 
-  yield BrowserTestUtils.waitForEvent(dialog, "load");
+  await BrowserTestUtils.waitForEvent(dialog, "load");
   Services.logins.setLoginSavingEnabled(LOGIN_HOST, false);
-  yield promiseChanged;
+  await promiseChanged;
   is(countDisabledHosts(dialog), 1, "Verify disabled host added");
-  yield BrowserTestUtils.closeWindow(dialog);
+  await BrowserTestUtils.closeWindow(dialog);
 });
 
-add_task(function* test_enable() {
+add_task(async function test_enable() {
   let dialog = openExceptionsDialog();
   let promiseChanged = promiseStorageChanged("hostSavingEnabled");
 
-  yield BrowserTestUtils.waitForEvent(dialog, "load");
+  await BrowserTestUtils.waitForEvent(dialog, "load");
   Services.logins.setLoginSavingEnabled(LOGIN_HOST, true);
-  yield promiseChanged;
+  await promiseChanged;
   is(countDisabledHosts(dialog), 0, "Verify disabled host removed");
-  yield BrowserTestUtils.closeWindow(dialog);
+  await BrowserTestUtils.closeWindow(dialog);
 });

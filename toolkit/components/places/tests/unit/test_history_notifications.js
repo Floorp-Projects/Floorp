@@ -1,7 +1,7 @@
 const NS_PLACES_INIT_COMPLETE_TOPIC = "places-init-complete";
 const NS_PLACES_DATABASE_LOCKED_TOPIC = "places-database-locked";
 
-add_task(function* () {
+add_task(async function() {
   // Create a dummy places.sqlite and open an unshared connection on it
   let db = Services.dirsvc.get("ProfD", Ci.nsIFile);
   db.append("places.sqlite");
@@ -18,7 +18,7 @@ add_task(function* () {
   Assert.throws(() => Cc["@mozilla.org/browser/nav-history-service;1"]
                         .getService(Ci.nsINavHistoryService),
                 /NS_ERROR_XPC_GS_RETURNED_FAILURE/);
-  yield promiseLocked;
+  await promiseLocked;
 
   // Close our connection and try to cleanup the file (could fail on Windows)
   dbConn.close();
@@ -34,5 +34,5 @@ add_task(function* () {
   let promiseComplete = promiseTopicObserved(NS_PLACES_INIT_COMPLETE_TOPIC);
   Cc["@mozilla.org/browser/nav-history-service;1"]
     .getService(Ci.nsINavHistoryService);
-  yield promiseComplete;
+  await promiseComplete;
 });

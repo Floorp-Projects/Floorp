@@ -22,7 +22,6 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://testing-common/BrowserTestUtils.jsm");
 Cu.import("resource://testing-common/ContentTask.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 
 var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
                     .getInterface(Ci.nsIWebNavigation)
@@ -79,13 +78,13 @@ function testOnWindow(aTestData, aCallback, aTestCreater) {
   return new Promise(resolve  => {
     let win = mainWindow.OpenBrowserWindow();
 
-    Task.spawn(function* () {
-      yield new Promise(resolve => whenDelayedStartupFinished(win, resolve));
+    (async function() {
+      await new Promise(resolve => whenDelayedStartupFinished(win, resolve));
 
       let browser = win.gBrowser.selectedBrowser;
       aTestCreater(win, browser, aTestData.topUrl, aTestData.testUrl);
 
-      let notification = yield BrowserTestUtils.waitForNotificationBar(win.gBrowser, browser, "blocked-badware-page");
+      let notification = await BrowserTestUtils.waitForNotificationBar(win.gBrowser, browser, "blocked-badware-page");
       ok(notification, "Notification box should be displayed");
 
       let buttons = notification.getElementsByTagName("button");
@@ -100,21 +99,21 @@ function testOnWindow(aTestData, aCallback, aTestCreater) {
       button.click();
 
       let newTabBrowser = win.gBrowser.selectedTab.linkedBrowser;
-      yield BrowserTestUtils.browserLoaded(newTabBrowser);
+      await BrowserTestUtils.browserLoaded(newTabBrowser);
 
       aCallback(newTabBrowser);
       win.close();
       resolve();
-    });
+    })();
   });
 }
 
 var createBlockedIframe = function(aWindow, aBrowser, aTopUrl, aUrl) {
-  Task.spawn(function* () {
-    yield BrowserTestUtils.loadURI(aBrowser, aTopUrl);
-    yield BrowserTestUtils.browserLoaded(aBrowser);
+  (async function() {
+    await BrowserTestUtils.loadURI(aBrowser, aTopUrl);
+    await BrowserTestUtils.browserLoaded(aBrowser);
 
-    yield ContentTask.spawn(aBrowser, aUrl, function* (aUrl) {
+    await ContentTask.spawn(aBrowser, aUrl, async function(aUrl) {
       return new Promise(resolve => {
         let listener = e => {
           removeEventListener('AboutBlockedLoaded', listener, false, true);
@@ -130,19 +129,19 @@ var createBlockedIframe = function(aWindow, aBrowser, aTopUrl, aUrl) {
     let ignoreButton = doc.getElementById("ignoreWarningButton");
     ok(ignoreButton, "ignoreWarningButton should exist");
     ignoreButton.click();
-  });
+  })();
 };
 
 var createBlockedPage = function(aWindow, aBrowser, aTopUrl, aUrl) {
-  Task.spawn(function* () {
-    yield BrowserTestUtils.loadURI(aBrowser, aTopUrl);
-    yield BrowserTestUtils.waitForContentEvent(aBrowser, "DOMContentLoaded")
+  (async function() {
+    await BrowserTestUtils.loadURI(aBrowser, aTopUrl);
+    await BrowserTestUtils.waitForContentEvent(aBrowser, "DOMContentLoaded")
 
     let doc = aWindow.gBrowser.contentDocument;
     let ignoreButton = doc.getElementById("ignoreWarningButton");
     ok(ignoreButton, "ignoreWarningButton should exist");
     ignoreButton.click();
-  });
+  })();
 };
 
 function checkReportURL(aReportBrowser, aUrl) {
@@ -204,20 +203,20 @@ SpecialPowers.pushPrefEnv(
   test);
 
 function test() {
-  Task.spawn(function* () {
-    yield classifierHelper.waitForInit();
+  (async function() {
+    await classifierHelper.waitForInit();
 
     for (let testData of testDatas) {
-      yield setupTestData(testData);
-      yield testOnWindow(testData, function(browser) {
+      await setupTestData(testData);
+      await testOnWindow(testData, function(browser) {
         checkReportURL(browser, testData.expectedReportUri);
       }, testData.blockCreater);
 
-      yield classifierHelper._cleanup();
+      await classifierHelper._cleanup();
     }
 
     SimpleTest.finish();
-  });
+  })();
 }
 
 SimpleTest.waitForExplicitFinish();

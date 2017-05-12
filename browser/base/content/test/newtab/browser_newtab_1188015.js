@@ -11,14 +11,14 @@ gDirectorySource = "data:application/json," + JSON.stringify({
   }]
 });
 
-add_task(function* () {
-  yield pushPrefs(["browser.newtab.preload", false]);
+add_task(async function() {
+  await pushPrefs(["browser.newtab.preload", false]);
 
   // Make the page have a directory link
-  yield setLinks([]);
-  yield* addNewTabPageTab();
+  await setLinks([]);
+  await addNewTabPageTab();
 
-  let color = yield performOnCell(0, cell => {
+  let color = await performOnCell(0, cell => {
     return cell.node.querySelector(".newtab-title").style.backgroundColor;
   });
 

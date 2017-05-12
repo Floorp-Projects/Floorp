@@ -1,22 +1,22 @@
 "use strict"
 
-add_task(function* () {
+add_task(async function() {
   info("Bug 479348 - Properties on a root should be read-only.");
   let uri = NetUtil.newURI("http://example.com/");
-  let bm = yield PlacesUtils.bookmarks.insert({
+  let bm = await PlacesUtils.bookmarks.insert({
     url: uri.spec,
     parentGuid: PlacesUtils.bookmarks.unfiledGuid
   });
-  registerCleanupFunction(function* () {
-    yield PlacesUtils.bookmarks.remove(bm);
+  registerCleanupFunction(async function() {
+    await PlacesUtils.bookmarks.remove(bm);
   });
 
   PlacesUtils.tagging.tagURI(uri, ["tag1"]);
 
-  let library = yield promiseLibrary();
+  let library = await promiseLibrary();
   let PlacesOrganizer = library.PlacesOrganizer;
-  registerCleanupFunction(function* () {
-    yield promiseLibraryClosed(library);
+  registerCleanupFunction(async function() {
+    await promiseLibraryClosed(library);
   });
 
   PlacesOrganizer.selectLeftPaneQuery("Tags");
@@ -31,12 +31,12 @@ add_task(function* () {
   ok(tree.controller.isCommandEnabled("placesCmd_show:info"),
      "'placesCmd_show:info' on current selected node is enabled");
 
-  yield withBookmarksDialog(
+  await withBookmarksDialog(
     true,
     function openDialog() {
       tree.controller.doCommand("placesCmd_show:info");
     },
-    function* test(dialogWin) {
+    async function test(dialogWin) {
       // Check that the dialog is not read-only.
       ok(!dialogWin.gEditItemOverlay.readOnly, "Dialog should not be read-only");
 
@@ -50,7 +50,7 @@ add_task(function* () {
 
       fillBookmarkTextField("editBMPanel_namePicker", "tag2", dialogWin);
 
-      yield promiseTitleChangeNotification;
+      await promiseTitleChangeNotification;
 
       is(namepicker.value, "tag2", "Node title has been properly edited");
 

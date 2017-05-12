@@ -6,8 +6,8 @@
 /**
  * Test with non-existing sessionCheckpoints.json
  */
-add_task(function* test_missing_file() {
+add_task(async function test_missing_file() {
   CrashMonitor.init();
-  let checkpoints = yield CrashMonitor.previousCheckpoints;
+  let checkpoints = await CrashMonitor.previousCheckpoints;
   do_check_eq(checkpoints, null);
 });

@@ -2,8 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* () {
-  let tab1 = yield BrowserTestUtils.openNewForegroundTab(gBrowser,
+add_task(async function() {
+  let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser,
     "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html");
 
   // Install an extension.
@@ -19,29 +19,29 @@ add_task(function* () {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("contextmenus-icons");
+  await extension.startup();
+  await extension.awaitFinish("contextmenus-icons");
 
   // Open the context menu.
-  let contextMenu = yield openContextMenu("#img1");
+  let contextMenu = await openContextMenu("#img1");
 
   // Confirm that the extension menu item exists.
   let topLevelExtensionMenuItems = contextMenu.getElementsByAttribute("ext-type", "top-level-menu");
   is(topLevelExtensionMenuItems.length, 1, "the top level extension menu item exists");
 
-  yield closeContextMenu();
+  await closeContextMenu();
 
   // Uninstall the extension.
-  yield extension.unload();
+  await extension.unload();
 
   // Open the context menu.
-  contextMenu = yield openContextMenu("#img1");
+  contextMenu = await openContextMenu("#img1");
 
   // Confirm that the extension menu item has been removed.
   topLevelExtensionMenuItems = contextMenu.getElementsByAttribute("ext-type", "top-level-menu");
   is(topLevelExtensionMenuItems.length, 0, "no top level extension menu items should exist");
 
-  yield closeContextMenu();
+  await closeContextMenu();
 
   // Install a new extension.
   extension = ExtensionTestUtils.loadExtension({
@@ -55,30 +55,30 @@ add_task(function* () {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("contextmenus-uninstall-second-extension");
+  await extension.startup();
+  await extension.awaitFinish("contextmenus-uninstall-second-extension");
 
   // Open the context menu.
-  contextMenu = yield openContextMenu("#img1");
+  contextMenu = await openContextMenu("#img1");
 
   // Confirm that only the new extension menu item is in the context menu.
   topLevelExtensionMenuItems = contextMenu.getElementsByAttribute("ext-type", "top-level-menu");
   is(topLevelExtensionMenuItems.length, 1, "only one top level extension menu item should exist");
 
   // Close the context menu.
-  yield closeContextMenu();
+  await closeContextMenu();
 
   // Uninstall the extension.
-  yield extension.unload();
+  await extension.unload();
 
   // Open the context menu.
-  contextMenu = yield openContextMenu("#img1");
+  contextMenu = await openContextMenu("#img1");
 
   // Confirm that no extension menu items exist.
   topLevelExtensionMenuItems = contextMenu.getElementsByAttribute("ext-type", "top-level-menu");
   is(topLevelExtensionMenuItems.length, 0, "no top level extension menu items should exist");
 
-  yield closeContextMenu();
+  await closeContextMenu();
 
-  yield BrowserTestUtils.removeTab(tab1);
+  await BrowserTestUtils.removeTab(tab1);
 });

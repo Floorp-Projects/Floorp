@@ -33,13 +33,13 @@ function prepareIterator(findText, rangeCount) {
     gFindResults.push(new FakeRange(findText));
 }
 
-add_task(function* test_start() {
+add_task(async function test_start() {
   let findText = "test";
   let rangeCount = 300;
   prepareIterator(findText, rangeCount);
 
   let count = 0;
-  yield FinderIterator.start({
+  await FinderIterator.start({
     caseSensitive: false,
     entireWord: false,
     finder: gMockFinder,
@@ -59,14 +59,14 @@ add_task(function* test_start() {
   FinderIterator.reset();
 });
 
-add_task(function* test_valid_arguments() {
+add_task(async function test_valid_arguments() {
   let findText = "foo";
   let rangeCount = 20;
   prepareIterator(findText, rangeCount);
 
   let count = 0;
 
-  yield FinderIterator.start({
+  await FinderIterator.start({
     caseSensitive: false,
     entireWord: false,
     finder: gMockFinder,
@@ -121,7 +121,7 @@ add_task(function* test_valid_arguments() {
   Assert.equal(count, 0, "No ranges should've been counted");
 });
 
-add_task(function* test_stop() {
+add_task(async function test_stop() {
   let findText = "bar";
   let rangeCount = 120;
   prepareIterator(findText, rangeCount);
@@ -137,14 +137,14 @@ add_task(function* test_stop() {
 
   FinderIterator.stop();
 
-  yield whenDone;
+  await whenDone;
 
   Assert.equal(count, 0, "Number of ranges should be 0");
 
   FinderIterator.reset();
 });
 
-add_task(function* test_reset() {
+add_task(async function test_reset() {
   let findText = "tik";
   let rangeCount = 142;
   prepareIterator(findText, rangeCount);
@@ -168,12 +168,12 @@ add_task(function* test_reset() {
   Assert.equal(FinderIterator.ranges.length, 0, "No ranges after reset");
   Assert.equal(FinderIterator._previousRanges.length, 0, "No ranges after reset");
 
-  yield whenDone;
+  await whenDone;
 
   Assert.equal(count, 0, "Number of ranges should match 0");
 });
 
-add_task(function* test_parallel_starts() {
+add_task(async function test_parallel_starts() {
   let findText = "tak";
   let rangeCount = 2143;
   prepareIterator(findText, rangeCount);
@@ -188,7 +188,7 @@ add_task(function* test_parallel_starts() {
     word: findText
   });
 
-  yield new Promise(resolve => gMockWindow.setTimeout(resolve, 120));
+  await new Promise(resolve => gMockWindow.setTimeout(resolve, 120));
   Assert.ok(FinderIterator.running, "We ought to be running here");
 
   let count2 = 0;
@@ -201,13 +201,13 @@ add_task(function* test_parallel_starts() {
   });
 
   // Let the iterator run for a little while longer before we assert the world.
-  yield new Promise(resolve => gMockWindow.setTimeout(resolve, 10));
+  await new Promise(resolve => gMockWindow.setTimeout(resolve, 10));
   FinderIterator.stop();
 
   Assert.ok(!FinderIterator.running, "Stop means stop");
 
-  yield whenDone;
-  yield whenDone2;
+  await whenDone;
+  await whenDone2;
 
   Assert.greater(count, FinderIterator.kIterationSizeMax, "At least one range should've been found");
   Assert.less(count, rangeCount, "Not all ranges should've been found");
@@ -219,7 +219,7 @@ add_task(function* test_parallel_starts() {
   FinderIterator.reset();
 });
 
-add_task(function* test_allowDistance() {
+add_task(async function test_allowDistance() {
   let findText = "gup";
   let rangeCount = 20;
   prepareIterator(findText, rangeCount);
@@ -253,7 +253,7 @@ add_task(function* test_allowDistance() {
     word: "gu"
   });
 
-  yield Promise.all([whenDone, whenDone2, whenDone3]);
+  await Promise.all([whenDone, whenDone2, whenDone3]);
 
   Assert.equal(count, rangeCount, "The first iterator invocation should yield all results");
   Assert.equal(count2, 0, "The second iterator invocation should yield _no_ results");

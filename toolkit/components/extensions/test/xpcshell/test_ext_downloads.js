@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* test_downloads_api_namespace_and_permissions() {
+add_task(async function test_downloads_api_namespace_and_permissions() {
   function backgroundScript() {
     browser.test.assertTrue(!!browser.downloads, "`downloads` API is present.");
     browser.test.assertTrue(!!browser.downloads.FilenameConflictAction,
@@ -24,12 +24,12 @@ add_task(function* test_downloads_api_namespace_and_permissions() {
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield extension.startup();
-  yield extension.awaitFinish("downloads tests");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("downloads tests");
+  await extension.unload();
 });
 
-add_task(function* test_downloads_open_permission() {
+add_task(async function test_downloads_open_permission() {
   function backgroundScript() {
     browser.test.assertEq(browser.downloads.open, undefined,
                              "`downloads.open` permission is required.");
@@ -44,12 +44,12 @@ add_task(function* test_downloads_open_permission() {
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield extension.startup();
-  yield extension.awaitFinish("downloads tests");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("downloads tests");
+  await extension.unload();
 });
 
-add_task(function* test_downloads_open() {
+add_task(async function test_downloads_open() {
   async function backgroundScript() {
     await browser.test.assertRejects(
       browser.downloads.open(10),
@@ -70,7 +70,7 @@ add_task(function* test_downloads_open() {
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield extension.startup();
-  yield extension.awaitFinish("downloads tests");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("downloads tests");
+  await extension.unload();
 });

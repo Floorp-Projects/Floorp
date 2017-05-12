@@ -8,8 +8,8 @@
  * properties are (re)stored as disabled. Disallowed features must be
  * re-enabled when the tab is re-used by another tab restoration.
  */
-add_task(function* docshell_capabilities() {
-  let tab = yield createTab();
+add_task(async function docshell_capabilities() {
+  let tab = await createTab();
   let browser = tab.linkedBrowser;
   let docShell = browser.docShell;
 
@@ -28,10 +28,10 @@ add_task(function* docshell_capabilities() {
   // Now reload the document to ensure that these capabilities
   // are taken into account.
   browser.reload();
-  yield promiseBrowserLoaded(browser);
+  await promiseBrowserLoaded(browser);
 
   // Flush to make sure chrome received all data.
-  yield TabStateFlusher.flush(browser);
+  await TabStateFlusher.flush(browser);
 
   // Check that we correctly save disallowed features.
   let disallowedState = JSON.parse(ss.getTabState(tab));
@@ -41,10 +41,10 @@ add_task(function* docshell_capabilities() {
   is(disallow.size, 2, "two capabilities disallowed");
 
   // Reuse the tab to restore a new, clean state into it.
-  yield promiseTabState(tab, {entries: [{url: "about:robots", triggeringPrincipal_base64}]});
+  await promiseTabState(tab, {entries: [{url: "about:robots", triggeringPrincipal_base64}]});
 
   // Flush to make sure chrome received all data.
-  yield TabStateFlusher.flush(browser);
+  await TabStateFlusher.flush(browser);
 
   // After restoring disallowed features must be available again.
   state = JSON.parse(ss.getTabState(tab));
@@ -52,7 +52,7 @@ add_task(function* docshell_capabilities() {
   ok(flags.every(f => docShell[f]), "all flags set to true");
 
   // Restore the state with disallowed features.
-  yield promiseTabState(tab, disallowedState);
+  await promiseTabState(tab, disallowedState);
 
   // Check that docShell flags are set.
   ok(!docShell.allowImages, "images not allowed");

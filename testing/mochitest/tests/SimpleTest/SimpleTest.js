@@ -705,7 +705,7 @@ SimpleTest._pendingWaitForFocusCount = 0;
  * cannot be resolved with CPOWs). If you require the focused window,
  * you should use waitForFocus instead.
  */
-SimpleTest.promiseFocus = function *(targetWindow, expectBlankPage)
+SimpleTest.promiseFocus = function (targetWindow, expectBlankPage)
 {
     return new Promise(function (resolve, reject) {
         SimpleTest.waitForFocus(win => {

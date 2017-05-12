@@ -2,8 +2,8 @@
 // When a page redirects multiple times, from_visit should point to the
 // previous visit in the chain, not to the first visit in the chain.
 
-add_task(function* () {
-  yield PlacesTestUtils.clearHistory();
+add_task(async function() {
+  await PlacesTestUtils.clearHistory();
 
   const BASE_URL = "http://example.com/tests/toolkit/components/places/tests/browser/";
   const TEST_URI = NetUtil.newURI(BASE_URL + "begin.html");
@@ -25,10 +25,10 @@ add_task(function* () {
         is(this._notified.length, 4);
         PlacesUtils.history.removeObserver(this);
 
-        Task.spawn(function* () {
+        (async function() {
           // Get all pages visited from the original typed one
-          let db = yield PlacesUtils.promiseDBConnection();
-          let rows = yield db.execute(
+          let db = await PlacesUtils.promiseDBConnection();
+          let rows = await db.execute(
             `SELECT url FROM moz_historyvisits
              JOIN moz_places h ON h.id = place_id
              WHERE from_visit IN
@@ -43,21 +43,21 @@ add_task(function* () {
           is(visitedUrl, FIRST_REDIRECTING_URI.spec, "Check referrer for " + visitedUrl);
 
           resolve();
-        });
+        })();
       }
     });
   });
 
   PlacesUtils.history.markPageAsTyped(TEST_URI);
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: TEST_URI.spec,
-  }, function* (browser) {
+  }, async function(browser) {
     // Load begin page, click link on page to record visits.
-    yield BrowserTestUtils.synthesizeMouseAtCenter("#clickme", {}, browser);
+    await BrowserTestUtils.synthesizeMouseAtCenter("#clickme", {}, browser);
 
-    yield promiseVisits;
+    await promiseVisits;
   });
 
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
 });

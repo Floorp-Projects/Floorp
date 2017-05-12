@@ -18,7 +18,6 @@ Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 /* globals OS*/
 Cu.import("resource://gre/modules/Log.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/GMPUtils.jsm");
 /* globals GMP_PLUGIN_IDS, GMPPrefs, GMPUtils, OPEN_H264_ID, WIDEVINE_ID */
 Cu.import("resource://gre/modules/AppConstants.jsm");
@@ -277,16 +276,16 @@ GMPWrapper.prototype = {
       return this._updateTask;
     }
 
-    this._updateTask = Task.spawn(function*() {
+    this._updateTask = (async () => {
       this._log.trace("findUpdates() - updateTask");
       try {
         let installManager = new GMPInstallManager();
-        let res = yield installManager.checkForAddons();
+        let res = await installManager.checkForAddons();
         let update = res.gmpAddons.find(addon => addon.id === this._plugin.id);
         if (update && update.isValid && !update.isInstalled) {
           this._log.trace("findUpdates() - found update for " +
                           this._plugin.id + ", installing");
-          yield installManager.installAddon(update);
+          await installManager.installAddon(update);
         } else {
           this._log.trace("findUpdates() - no updates for " + this._plugin.id);
         }
@@ -300,7 +299,7 @@ GMPWrapper.prototype = {
         this._updateTask = null;
       }
       return true;
-    }.bind(this));
+    })();
 
     return this._updateTask;
   },
@@ -583,13 +582,13 @@ var GMPProvider = {
     this._log.trace("shutdown");
     Services.prefs.removeObserver(GMPPrefs.KEY_LOG_BASE, configureLogging);
 
-    let shutdownTask = Task.spawn(function*() {
+    let shutdownTask = (async () => {
       this._log.trace("shutdown - shutdownTask");
       let shutdownSucceeded = true;
 
       for (let plugin of this._plugins.values()) {
         try {
-          yield plugin.wrapper.shutdown();
+          await plugin.wrapper.shutdown();
         } catch (e) {
           shutdownSucceeded = false;
         }
@@ -600,7 +599,7 @@ var GMPProvider = {
       if (!shutdownSucceeded) {
         throw new Error("Shutdown failed");
       }
-    }.bind(this));
+    })();
 
     return shutdownTask;
   },

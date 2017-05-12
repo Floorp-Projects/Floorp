@@ -5,13 +5,13 @@
 
 const TEST_URL = "http://example.com/";
 
-add_task(function* () {
-  yield PlacesUtils.bookmarks.eraseEverything();
-  let organizer = yield promiseLibrary();
+add_task(async function() {
+  await PlacesUtils.bookmarks.eraseEverything();
+  let organizer = await promiseLibrary();
 
-  registerCleanupFunction(function* () {
-    yield promiseLibraryClosed(organizer);
-    yield PlacesUtils.bookmarks.eraseEverything();
+  registerCleanupFunction(async function() {
+    await promiseLibraryClosed(organizer);
+    await PlacesUtils.bookmarks.eraseEverything();
   });
 
   let PlacesOrganizer = organizer.PlacesOrganizer;
@@ -25,28 +25,28 @@ add_task(function* () {
 
   // Test with multiple entries to ensure they retain their order.
   let bookmarks = [];
-  bookmarks.push(yield PlacesUtils.bookmarks.insert({
+  bookmarks.push(await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
     url: TEST_URL,
     title: "0"
   }));
-  bookmarks.push(yield PlacesUtils.bookmarks.insert({
+  bookmarks.push(await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
     url: TEST_URL,
     title: "1"
   }));
-  bookmarks.push(yield PlacesUtils.bookmarks.insert({
+  bookmarks.push(await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
     url: TEST_URL,
     title: "2"
   }));
 
-  yield selectBookmarksIn(organizer, bookmarks, "BookmarksToolbar");
+  await selectBookmarksIn(organizer, bookmarks, "BookmarksToolbar");
 
-  yield promiseClipboard(() => {
+  await promiseClipboard(() => {
     info("Cutting selection");
     ContentTree.view.controller.cut();
   }, PlacesUtils.TYPE_X_MOZ_PLACE);
@@ -56,10 +56,10 @@ add_task(function* () {
   info("Pasting clipboard");
   ContentTree.view.controller.paste();
 
-  yield selectBookmarksIn(organizer, bookmarks, "UnfiledBookmarks");
+  await selectBookmarksIn(organizer, bookmarks, "UnfiledBookmarks");
 });
 
-var selectBookmarksIn = Task.async(function* (organizer, bookmarks, aLeftPaneQuery) {
+var selectBookmarksIn = async function(organizer, bookmarks, aLeftPaneQuery) {
   let PlacesOrganizer = organizer.PlacesOrganizer;
   let ContentTree = organizer.ContentTree;
   info("Selecting " + aLeftPaneQuery + " in the left pane");
@@ -67,10 +67,10 @@ var selectBookmarksIn = Task.async(function* (organizer, bookmarks, aLeftPaneQue
 
   let ids = [];
   for (let {guid} of bookmarks) {
-    let bookmark = yield PlacesUtils.bookmarks.fetch(guid);
+    let bookmark = await PlacesUtils.bookmarks.fetch(guid);
     is(bookmark.parentGuid, PlacesOrganizer._places.selectedNode.targetFolderGuid,
         "Bookmark has the right parent");
-    ids.push(yield PlacesUtils.promiseItemId(bookmark.guid));
+    ids.push(await PlacesUtils.promiseItemId(bookmark.guid));
   }
 
   info("Selecting the bookmarks in the right pane");
@@ -80,4 +80,4 @@ var selectBookmarksIn = Task.async(function* (organizer, bookmarks, aLeftPaneQue
     is(node.bookmarkIndex, node.title,
        "Found the expected bookmark in the expected position");
   }
-});
+};

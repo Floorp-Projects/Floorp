@@ -5,26 +5,25 @@
 "use strict";
 
 
-Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
                                   "resource://gre/modules/LoginHelper.jsm");
 
 
-function* createSignonFile(singon) {
+async function createSignonFile(singon) {
   let {file, pref}  = singon;
 
   if (pref) {
     Services.prefs.setCharPref(pref, file);
   }
 
-  yield OS.File.writeAtomic(
+  await OS.File.writeAtomic(
     OS.Path.join(OS.Constants.Path.profileDir, file), new Uint8Array(1));
 }
 
-function* isSignonClear(singon) {
+async function isSignonClear(singon) {
   const {file, pref} = singon;
-  const fileExists = yield OS.File.exists(
+  const fileExists = await OS.File.exists(
     OS.Path.join(OS.Constants.Path.profileDir, file));
 
   if (pref) {
@@ -37,7 +36,7 @@ function* isSignonClear(singon) {
   return !fileExists;
 }
 
-add_task(function* test_remove_lagecy_signonfile() {
+add_task(async function test_remove_lagecy_signonfile() {
   // In the last test case, signons3.txt being deleted even when
   // it doesn't exist.
   const signonsSettings = [[
@@ -57,13 +56,13 @@ add_task(function* test_remove_lagecy_signonfile() {
 
   for (let setting of signonsSettings) {
     for (let singon of setting) {
-      yield createSignonFile(singon);
+      await createSignonFile(singon);
     }
 
     LoginHelper.removeLegacySignonFiles();
 
     for (let singon of setting) {
-      equal(yield isSignonClear(singon), true);
+      equal(await isSignonClear(singon), true);
     }
   }
 });

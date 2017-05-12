@@ -4,7 +4,7 @@
 
 SimpleTest.requestCompleteLog();
 
-add_task(function* testWindowsEvents() {
+add_task(async function testWindowsEvents() {
   function background() {
     browser.windows.onCreated.addListener(window => {
       browser.test.log(`onCreated: windowId=${window.id}`);
@@ -58,8 +58,8 @@ add_task(function* testWindowsEvents() {
     background: `(${background})()`,
   });
 
-  yield extension.startup();
-  yield extension.awaitMessage("ready");
+  await extension.startup();
+  await extension.awaitMessage("ready");
 
   let {Management: {global: {windowTracker}}} = Cu.import("resource://gre/modules/Extension.jsm", {});
 
@@ -68,50 +68,50 @@ add_task(function* testWindowsEvents() {
   info(`Current window ID: ${currentWindowId}`);
 
   info(`Create browser window 1`);
-  let win1 = yield BrowserTestUtils.openNewBrowserWindow();
-  let win1Id = yield extension.awaitMessage("window-created");
+  let win1 = await BrowserTestUtils.openNewBrowserWindow();
+  let win1Id = await extension.awaitMessage("window-created");
   info(`Window 1 ID: ${win1Id}`);
 
   // This shouldn't be necessary, but tests intermittently fail, so let's give
   // it a try.
   win1.focus();
 
-  let winId = yield extension.awaitMessage(`window-focus-changed`);
+  let winId = await extension.awaitMessage(`window-focus-changed`);
   is(winId, win1Id, "Got focus change event for the correct window ID.");
 
   info(`Create browser window 2`);
-  let win2 = yield BrowserTestUtils.openNewBrowserWindow();
-  let win2Id = yield extension.awaitMessage("window-created");
+  let win2 = await BrowserTestUtils.openNewBrowserWindow();
+  let win2Id = await extension.awaitMessage("window-created");
   info(`Window 2 ID: ${win2Id}`);
 
   win2.focus();
 
-  winId = yield extension.awaitMessage(`window-focus-changed`);
+  winId = await extension.awaitMessage(`window-focus-changed`);
   is(winId, win2Id, "Got focus change event for the correct window ID.");
 
   info(`Focus browser window 1`);
-  yield focusWindow(win1);
+  await focusWindow(win1);
 
-  winId = yield extension.awaitMessage(`window-focus-changed`);
+  winId = await extension.awaitMessage(`window-focus-changed`);
   is(winId, win1Id, "Got focus change event for the correct window ID.");
 
   info(`Close browser window 2`);
-  yield BrowserTestUtils.closeWindow(win2);
+  await BrowserTestUtils.closeWindow(win2);
 
-  winId = yield extension.awaitMessage(`window-removed`);
+  winId = await extension.awaitMessage(`window-removed`);
   is(winId, win2Id, "Got removed event for the correct window ID.");
 
   info(`Close browser window 1`);
-  yield BrowserTestUtils.closeWindow(win1);
+  await BrowserTestUtils.closeWindow(win1);
 
   currentWindow.focus();
 
-  winId = yield extension.awaitMessage(`window-removed`);
+  winId = await extension.awaitMessage(`window-removed`);
   is(winId, win1Id, "Got removed event for the correct window ID.");
 
-  winId = yield extension.awaitMessage(`window-focus-changed`);
+  winId = await extension.awaitMessage(`window-focus-changed`);
   is(winId, currentWindowId, "Got focus change event for the correct window ID.");
 
-  yield extension.awaitFinish("windows.events");
-  yield extension.unload();
+  await extension.awaitFinish("windows.events");
+  await extension.unload();
 });

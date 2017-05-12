@@ -64,14 +64,14 @@ var getArchivedPingsInfo = async function() {
   return archivedPings;
 };
 
-add_task(function* test_setup() {
+add_task(async function test_setup() {
   do_get_profile(true);
   // Make sure we don't generate unexpected pings due to pref changes.
-  yield setEmptyPrefWatchlist();
+  await setEmptyPrefWatchlist();
   Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
 });
 
-add_task(function* test_archivedPings() {
+add_task(async function test_archivedPings() {
   // TelemetryController should not be fully initialized at this point.
   // Submitting pings should still work fine.
 
@@ -93,8 +93,8 @@ add_task(function* test_archivedPings() {
 
   for (let data of PINGS) {
     fakeNow(data.dateCreated);
-    data.id = yield TelemetryController.submitExternalPing(data.type, data.payload);
-    let list = yield TelemetryArchive.promiseArchivedPingList();
+    data.id = await TelemetryController.submitExternalPing(data.type, data.payload);
+    let list = await TelemetryArchive.promiseArchivedPingList();
 
     expectedPingList.push({
       id: data.id,
@@ -115,15 +115,15 @@ add_task(function* test_archivedPings() {
     }
   };
 
-  yield checkLoadingPings();
+  await checkLoadingPings();
 
   // Check that we find the archived pings again by scanning after a restart.
-  yield TelemetryController.testReset();
+  await TelemetryController.testReset();
 
-  let pingList = yield TelemetryArchive.promiseArchivedPingList();
+  let pingList = await TelemetryArchive.promiseArchivedPingList();
   Assert.deepEqual(expectedPingList, pingList,
                    "Should have submitted pings in archive list after restart");
-  yield checkLoadingPings();
+  await checkLoadingPings();
 
   // Write invalid pings into the archive with both valid and invalid names.
   let writeToArchivedDir = async function(dirname, filename, content, compressed) {
@@ -143,16 +143,16 @@ add_task(function* test_archivedPings() {
   const FAKE_TYPE = "foo";
 
   // These should get rejected.
-  yield writeToArchivedDir("xx", "foo.json", "{}");
-  yield writeToArchivedDir("2010-02", "xx.xx.xx.json", "{}");
+  await writeToArchivedDir("xx", "foo.json", "{}");
+  await writeToArchivedDir("2010-02", "xx.xx.xx.json", "{}");
   // This one should get picked up...
-  yield writeToArchivedDir("2010-02", "1." + FAKE_ID1 + "." + FAKE_TYPE + ".json", "{}");
+  await writeToArchivedDir("2010-02", "1." + FAKE_ID1 + "." + FAKE_TYPE + ".json", "{}");
   // ... but get overwritten by this one.
-  yield writeToArchivedDir("2010-02", "2." + FAKE_ID1 + "." + FAKE_TYPE + ".json", "");
+  await writeToArchivedDir("2010-02", "2." + FAKE_ID1 + "." + FAKE_TYPE + ".json", "");
   // This should get picked up fine.
-  yield writeToArchivedDir("2010-02", "3." + FAKE_ID2 + "." + FAKE_TYPE + ".json", "");
+  await writeToArchivedDir("2010-02", "3." + FAKE_ID2 + "." + FAKE_TYPE + ".json", "");
   // This compressed ping should get picked up fine as well.
-  yield writeToArchivedDir("2010-02", "4." + FAKE_ID3 + "." + FAKE_TYPE + ".jsonlz4", "");
+  await writeToArchivedDir("2010-02", "4." + FAKE_ID3 + "." + FAKE_TYPE + ".jsonlz4", "");
 
   expectedPingList.push({
     id: FAKE_ID1,
@@ -172,26 +172,26 @@ add_task(function* test_archivedPings() {
   expectedPingList.sort((a, b) => a.timestampCreated - b.timestampCreated);
 
   // Reset the TelemetryArchive so we scan the archived dir again.
-  yield TelemetryController.testReset();
+  await TelemetryController.testReset();
 
   // Check that we are still picking up the valid archived pings on disk,
   // plus the valid ones above.
-  pingList = yield TelemetryArchive.promiseArchivedPingList();
+  pingList = await TelemetryArchive.promiseArchivedPingList();
   Assert.deepEqual(expectedPingList, pingList, "Should have picked up valid archived pings");
-  yield checkLoadingPings();
+  await checkLoadingPings();
 
   // Now check that we fail to load the two invalid pings from above.
-  Assert.ok((yield promiseRejects(TelemetryArchive.promiseArchivedPingById(FAKE_ID1))),
+  Assert.ok((await promiseRejects(TelemetryArchive.promiseArchivedPingById(FAKE_ID1))),
             "Should have rejected invalid ping");
-  Assert.ok((yield promiseRejects(TelemetryArchive.promiseArchivedPingById(FAKE_ID2))),
+  Assert.ok((await promiseRejects(TelemetryArchive.promiseArchivedPingById(FAKE_ID2))),
             "Should have rejected invalid ping");
 });
 
-add_task(function* test_archiveCleanup() {
+add_task(async function test_archiveCleanup() {
   const PING_TYPE = "foo";
 
   // Empty the archive.
-  yield OS.File.removeDir(gPingsArchivePath);
+  await OS.File.removeDir(gPingsArchivePath);
 
   Telemetry.getHistogramById("TELEMETRY_ARCHIVE_SCAN_PING_COUNT").clear();
   Telemetry.getHistogramById("TELEMETRY_ARCHIVE_DIRECTORIES_COUNT").clear();
@@ -200,9 +200,9 @@ add_task(function* test_archiveCleanup() {
   Telemetry.getHistogramById("TELEMETRY_DISCARDED_ARCHIVED_PINGS_SIZE_MB").clear();
 
   // Build the cache. Nothing should be evicted as there's no ping directory.
-  yield TelemetryController.testReset();
-  yield TelemetryStorage.testCleanupTaskPromise();
-  yield TelemetryArchive.promiseArchivedPingList();
+  await TelemetryController.testReset();
+  await TelemetryStorage.testCleanupTaskPromise();
+  await TelemetryArchive.promiseArchivedPingList();
 
   let h = Telemetry.getHistogramById("TELEMETRY_ARCHIVE_SCAN_PING_COUNT").snapshot();
   Assert.equal(h.sum, 0, "Telemetry must report 0 pings scanned if no archive dir exists.");
@@ -235,12 +235,12 @@ add_task(function* test_archiveCleanup() {
   // Create a ping which should be pruned because it is past the retention period.
   let date = fakeNow(2010, 1, 1, 1, 0, 0);
   let firstDate = date;
-  let pingId = yield TelemetryController.submitExternalPing(PING_TYPE, {}, {});
+  let pingId = await TelemetryController.submitExternalPing(PING_TYPE, {}, {});
   expectedPrunedInfo.push({ id: pingId, creationDate: date });
 
   // Create a ping which should be kept because it is within the retention period.
   const oldestDirectoryDate = fakeNow(2010, 2, 1, 1, 0, 0);
-  pingId = yield TelemetryController.submitExternalPing(PING_TYPE, {}, {});
+  pingId = await TelemetryController.submitExternalPing(PING_TYPE, {}, {});
   expectedNotPrunedInfo.push({ id: pingId, creationDate: oldestDirectoryDate });
 
   // Create 20 other pings which are within the retention period, but would be affected
@@ -248,7 +248,7 @@ add_task(function* test_archiveCleanup() {
   for (let month of [3, 4]) {
     for (let minute = 0; minute < 10; minute++) {
       date = fakeNow(2010, month, 1, 1, minute, 0);
-      pingId = yield TelemetryController.submitExternalPing(PING_TYPE, {}, {});
+      pingId = await TelemetryController.submitExternalPing(PING_TYPE, {}, {});
       expectedNotPrunedInfo.push({ id: pingId, creationDate: date });
     }
   }
@@ -263,14 +263,14 @@ add_task(function* test_archiveCleanup() {
   // Move the current date 60 days ahead of the first ping.
   fakeNow(futureDate(firstDate, 60 * MILLISECONDS_PER_DAY));
   // Reset TelemetryArchive and TelemetryController to start the startup cleanup.
-  yield TelemetryController.testReset();
+  await TelemetryController.testReset();
   // Wait for the cleanup to finish.
-  yield TelemetryStorage.testCleanupTaskPromise();
+  await TelemetryStorage.testCleanupTaskPromise();
   // Then scan the archived dir.
-  yield TelemetryArchive.promiseArchivedPingList();
+  await TelemetryArchive.promiseArchivedPingList();
 
   // Check that the archive is in the correct state.
-  yield checkArchive();
+  await checkArchive();
 
   // Make sure the ping count is correct after the scan (one ping was removed).
   h = Telemetry.getHistogramById("TELEMETRY_ARCHIVE_SCAN_PING_COUNT").snapshot();
@@ -296,19 +296,19 @@ add_task(function* test_archiveCleanup() {
   // Move the current date 60 days ahead of the second ping.
   fakeNow(futureDate(oldestDirectoryDate, 60 * MILLISECONDS_PER_DAY));
   // Reset TelemetryController and TelemetryArchive.
-  yield TelemetryController.testReset();
+  await TelemetryController.testReset();
   // Wait for the cleanup to finish.
-  yield TelemetryStorage.testCleanupTaskPromise();
+  await TelemetryStorage.testCleanupTaskPromise();
   // Then scan the archived dir again.
-  yield TelemetryArchive.promiseArchivedPingList();
+  await TelemetryArchive.promiseArchivedPingList();
 
   // Move the oldest ping to the unexpected pings list.
   expectedPrunedInfo.push(expectedNotPrunedInfo.shift());
   // Check that the archive is in the correct state.
-  yield checkArchive();
+  await checkArchive();
 
   // Find how much disk space the archive takes.
-  const archivedPingsInfo = yield getArchivedPingsInfo();
+  const archivedPingsInfo = await getArchivedPingsInfo();
   let archiveSizeInBytes =
     archivedPingsInfo.reduce((lastResult, element) => lastResult + element.size, 0);
 
@@ -345,11 +345,11 @@ add_task(function* test_archiveCleanup() {
   expectedPrunedInfo = expectedPrunedInfo.concat(pingsOutsideQuota);
 
   // Reset TelemetryArchive and TelemetryController to start the startup cleanup.
-  yield TelemetryController.testReset();
-  yield TelemetryStorage.testCleanupTaskPromise();
-  yield TelemetryArchive.promiseArchivedPingList();
+  await TelemetryController.testReset();
+  await TelemetryStorage.testCleanupTaskPromise();
+  await TelemetryArchive.promiseArchivedPingList();
   // Check that the archive is in the correct state.
-  yield checkArchive();
+  await checkArchive();
 
   h = Telemetry.getHistogramById("TELEMETRY_ARCHIVE_EVICTED_OVER_QUOTA").snapshot();
   Assert.equal(h.sum, pingsOutsideQuota.length,
@@ -358,10 +358,10 @@ add_task(function* test_archiveCleanup() {
   Assert.equal(h.sum, 300, "Archive quota was hit, a special size must be reported.");
 
   // Trigger a cleanup again and make sure we're not removing anything.
-  yield TelemetryController.testReset();
-  yield TelemetryStorage.testCleanupTaskPromise();
-  yield TelemetryArchive.promiseArchivedPingList();
-  yield checkArchive();
+  await TelemetryController.testReset();
+  await TelemetryStorage.testCleanupTaskPromise();
+  await TelemetryArchive.promiseArchivedPingList();
+  await checkArchive();
 
   const OVERSIZED_PING_ID = "9b21ec8f-f762-4d28-a2c1-44e1c4694f24";
   // Create and archive an oversized, uncompressed, ping.
@@ -372,22 +372,22 @@ add_task(function* test_archiveCleanup() {
     // Generate a ~2MB string to use as the payload.
     payload: generateRandomString(2 * 1024 * 1024)
   };
-  yield TelemetryArchive.promiseArchivePing(OVERSIZED_PING);
+  await TelemetryArchive.promiseArchivePing(OVERSIZED_PING);
 
   // Get the size of the archived ping.
   const oversizedPingPath =
     TelemetryStorage._testGetArchivedPingPath(OVERSIZED_PING.id, new Date(OVERSIZED_PING.creationDate), PING_TYPE) + "lz4";
-  const archivedPingSizeMB = Math.floor((yield OS.File.stat(oversizedPingPath)).size / 1024 / 1024);
+  const archivedPingSizeMB = Math.floor((await OS.File.stat(oversizedPingPath)).size / 1024 / 1024);
 
   // We expect the oversized ping to be pruned when scanning the archive.
   expectedPrunedInfo.push({ id: OVERSIZED_PING_ID, creationDate: new Date(OVERSIZED_PING.creationDate) });
 
   // Scan the archive.
-  yield TelemetryController.testReset();
-  yield TelemetryStorage.testCleanupTaskPromise();
-  yield TelemetryArchive.promiseArchivedPingList();
+  await TelemetryController.testReset();
+  await TelemetryStorage.testCleanupTaskPromise();
+  await TelemetryArchive.promiseArchivedPingList();
   // The following also checks that non oversized pings are not removed.
-  yield checkArchive();
+  await checkArchive();
 
   // Make sure we're correctly updating the related histograms.
   h = Telemetry.getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_ARCHIVED").snapshot();
@@ -397,14 +397,14 @@ add_task(function* test_archiveCleanup() {
                "Telemetry must report the correct size for the oversized ping.");
 });
 
-add_task(function* test_clientId() {
+add_task(async function test_clientId() {
   // Check that a ping submitted after the delayed telemetry initialization completed
   // should get a valid client id.
-  yield TelemetryController.testReset();
-  const clientId = yield ClientID.getClientID();
+  await TelemetryController.testReset();
+  const clientId = await ClientID.getClientID();
 
-  let id = yield TelemetryController.submitExternalPing("test-type", {}, {addClientId: true});
-  let ping = yield TelemetryArchive.promiseArchivedPingById(id);
+  let id = await TelemetryController.submitExternalPing("test-type", {}, {addClientId: true});
+  let ping = await TelemetryArchive.promiseArchivedPingById(id);
 
   Assert.ok(!!ping, "Should have loaded the ping.");
   Assert.ok("clientId" in ping, "Ping should have a client id.");
@@ -415,15 +415,15 @@ add_task(function* test_clientId() {
   // checking the client id on a ping submitted before the async
   // controller setup is finished.
   let promiseSetup = TelemetryController.testReset();
-  id = yield TelemetryController.submitExternalPing("test-type", {}, {addClientId: true});
-  ping = yield TelemetryArchive.promiseArchivedPingById(id);
+  id = await TelemetryController.submitExternalPing("test-type", {}, {addClientId: true});
+  ping = await TelemetryArchive.promiseArchivedPingById(id);
   Assert.equal(ping.clientId, clientId);
 
   // Finish setup.
-  yield promiseSetup;
+  await promiseSetup;
 });
 
-add_task(function* test_InvalidPingType() {
+add_task(async function test_InvalidPingType() {
   const TYPES = [
     "a",
     "-",
@@ -446,7 +446,7 @@ add_task(function* test_InvalidPingType() {
   }
 });
 
-add_task(function* test_InvalidPayloadType() {
+add_task(async function test_InvalidPayloadType() {
   const PAYLOAD_TYPES = [
     19,
     "string",
@@ -460,15 +460,15 @@ add_task(function* test_InvalidPayloadType() {
     histogram.clear();
     Assert.equal(histogram.snapshot().sum, 0,
       "Should not have counted this invalid payload yet: " + JSON.stringify(PAYLOAD_TYPES[i]));
-    Assert.ok(yield promiseRejects(TelemetryController.submitExternalPing("payload-test", PAYLOAD_TYPES[i])),
+    Assert.ok(await promiseRejects(TelemetryController.submitExternalPing("payload-test", PAYLOAD_TYPES[i])),
       "Payload type should have been rejected.");
     Assert.equal(histogram.snapshot().sum, 1,
       "Should have counted this as an invalid payload type.");
   }
 });
 
-add_task(function* test_currentPingData() {
-  yield TelemetryController.testSetup();
+add_task(async function test_currentPingData() {
+  await TelemetryController.testSetup();
 
   // Setup test data.
   let h = Telemetry.getHistogramById("TELEMETRY_TEST_RELEASE_OPTOUT");
@@ -496,6 +496,6 @@ add_task(function* test_currentPingData() {
   }
 });
 
-add_task(function* test_shutdown() {
-  yield TelemetryController.testShutdown();
+add_task(async function test_shutdown() {
+  await TelemetryController.testShutdown();
 });

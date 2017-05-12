@@ -219,7 +219,7 @@ function run_next_test() {
   executeSoon(() => log_exceptions(test));
 }
 
-var get_tooltip_info = Task.async(function*(addon) {
+var get_tooltip_info = async function(addon) {
   let managerWindow = addon.ownerGlobal;
 
   // The popup code uses a triggering event's target to set the
@@ -232,13 +232,13 @@ var get_tooltip_info = Task.async(function*(addon) {
 
   let promise = BrowserTestUtils.waitForEvent(tooltip, "popupshown");
   tooltip.openPopup(nameNode, "after_start", 0, 0, false, false, event);
-  yield promise;
+  await promise;
 
   let tiptext = tooltip.label;
 
   promise = BrowserTestUtils.waitForEvent(tooltip, "popuphidden");
   tooltip.hidePopup();
-  yield promise;
+  await promise;
 
   let expectedName = addon.getAttribute("name");
   ok(tiptext.substring(0, expectedName.length), expectedName,
@@ -254,7 +254,7 @@ var get_tooltip_info = Task.async(function*(addon) {
     name: tiptext.substring(0, expectedName.length),
     version: tiptext.substring(expectedName.length + 1)
   };
-});
+};
 
 function get_addon_file_url(aFilename) {
   try {

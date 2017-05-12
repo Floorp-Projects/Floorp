@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* testIncognitoViews() {
+add_task(async function testIncognitoViews() {
   // Make sure the mouse isn't hovering over the browserAction widget.
   EventUtils.synthesizeMouseAtCenter(gURLBar, {type: "mouseover"}, window);
 
@@ -118,7 +118,7 @@ add_task(function* testIncognitoViews() {
     clickBrowserAction(extension, Services.wm.getMostRecentWindow("navigator:browser"));
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("incognito-views");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("incognito-views");
+  await extension.unload();
 });

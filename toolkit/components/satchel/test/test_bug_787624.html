@@ -61,11 +61,11 @@ function waitForNextPopup() {
   return new Promise(resolve => { resolvePopupShownListener = resolve; });
 }
 
-add_task(function* test_popup_not_move_input() {
+add_task(async function test_popup_not_move_input() {
   var input = $_(1, "field1");
   var rect = input.getBoundingClientRect();
 
-  yield new Promise(resolve => updateFormHistory([
+  await new Promise(resolve => updateFormHistory([
     { op: "remove" },
     { op: "add", fieldname: "field1", value: "value1" },
     { op: "add", fieldname: "field1", value: "value2" },
@@ -74,7 +74,7 @@ add_task(function* test_popup_not_move_input() {
   let popupShown = waitForNextPopup();
   input.focus();
   doKey("down");
-  yield popupShown;
+  await popupShown;
 
   var newRect = input.getBoundingClientRect();
   is(newRect.left, rect.left,

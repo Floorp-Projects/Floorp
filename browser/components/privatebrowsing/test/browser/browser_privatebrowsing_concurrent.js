@@ -11,13 +11,13 @@
 // Step 3: load a page in the tab from step 1 that checks the value of test2 is value2 and the total count in non-private storage is 1
 // Step 4: load a page in the tab from step 2 that checks the value of test is value and the total count in private storage is 1
 
-add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
     set: [["dom.ipc.processCount", 1]]
   });
 });
 
-add_task(function* test() {
+add_task(async function test() {
   let prefix = "http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/browser_privatebrowsing_concurrent_page.html";
 
   function getElts(browser) {
@@ -27,28 +27,28 @@ add_task(function* test() {
   // Step 1
   let non_private_browser = gBrowser.selectedBrowser;
   non_private_browser.loadURI(prefix + "?action=set&name=test&value=value&initial=true");
-  yield BrowserTestUtils.browserLoaded(non_private_browser);
+  await BrowserTestUtils.browserLoaded(non_private_browser);
 
 
   // Step 2
-  let private_window = yield BrowserTestUtils.openNewBrowserWindow({ private: true });
+  let private_window = await BrowserTestUtils.openNewBrowserWindow({ private: true });
   let private_browser = private_window.getBrowser().selectedBrowser;
   private_browser.loadURI(prefix + "?action=set&name=test2&value=value2");
-  yield BrowserTestUtils.browserLoaded(private_browser);
+  await BrowserTestUtils.browserLoaded(private_browser);
 
 
   // Step 3
   non_private_browser.loadURI(prefix + "?action=get&name=test2");
-  yield BrowserTestUtils.browserLoaded(non_private_browser);
-  let elts = yield getElts(non_private_browser);
+  await BrowserTestUtils.browserLoaded(non_private_browser);
+  let elts = await getElts(non_private_browser);
   isnot(elts[0], "value2", "public window shouldn't see private storage");
   is(elts[1], "1", "public window should only see public items");
 
 
   // Step 4
   private_browser.loadURI(prefix + "?action=get&name=test");
-  yield BrowserTestUtils.browserLoaded(private_browser);
-  elts = yield getElts(private_browser);
+  await BrowserTestUtils.browserLoaded(private_browser);
+  elts = await getElts(private_browser);
   isnot(elts[0], "value", "private window shouldn't see public storage");
   is(elts[1], "1", "private window should only see private items");
 
@@ -56,14 +56,14 @@ add_task(function* test() {
   // Reopen the private window again, without privateBrowsing, which should clear the
   // the private storage.
   private_window.close();
-  private_window = yield BrowserTestUtils.openNewBrowserWindow({ private: false });
+  private_window = await BrowserTestUtils.openNewBrowserWindow({ private: false });
   private_browser = null;
-  yield new Promise(resolve => Cu.schedulePreciseGC(resolve));
+  await new Promise(resolve => Cu.schedulePreciseGC(resolve));
   private_browser = private_window.getBrowser().selectedBrowser;
 
   private_browser.loadURI(prefix + "?action=get&name=test2");
-  yield BrowserTestUtils.browserLoaded(private_browser, false, prefix + "?action=get&name=test2");
-  elts = yield getElts(private_browser);
+  await BrowserTestUtils.browserLoaded(private_browser, false, prefix + "?action=get&name=test2");
+  elts = await getElts(private_browser);
   isnot(elts[0], "value2", "public window shouldn't see cleared private storage");
   is(elts[1], "1", "public window should only see public items");
 
@@ -71,18 +71,18 @@ add_task(function* test() {
   // Making it private again should clear the storage and it shouldn't
   // be able to see the old private storage as well.
   private_window.close();
-  private_window = yield BrowserTestUtils.openNewBrowserWindow({ private: true });
+  private_window = await BrowserTestUtils.openNewBrowserWindow({ private: true });
   private_browser = null;
-  yield new Promise(resolve => Cu.schedulePreciseGC(resolve));
+  await new Promise(resolve => Cu.schedulePreciseGC(resolve));
   private_browser = private_window.getBrowser().selectedBrowser;
 
   private_browser.loadURI(prefix + "?action=set&name=test3&value=value3");
-  yield BrowserTestUtils.browserLoaded(private_browser);
-  elts = yield getElts(private_browser);
+  await BrowserTestUtils.browserLoaded(private_browser);
+  elts = await getElts(private_browser);
   is(elts[1], "1", "private window should only see new private items");
 
   // Cleanup.
   non_private_browser.loadURI(prefix + "?final=true");
-  yield BrowserTestUtils.browserLoaded(non_private_browser);
+  await BrowserTestUtils.browserLoaded(non_private_browser);
   private_window.close();
 });

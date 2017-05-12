@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 // Test whether an install fails if the url is a local file when requested from
 // web content
-add_task(function* test() {
+add_task(async function test() {
   var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
                      .getService(Components.interfaces.nsIChromeRegistry);
 
@@ -22,13 +22,13 @@ add_task(function* test() {
     expectUncaughtException();
 
   let URI = TESTROOT + "installtrigger.html?" + triggers;
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, function* (browser) {
-    yield ContentTask.spawn(browser, URI, function* (URI) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, async function(browser) {
+    await ContentTask.spawn(browser, URI, async function(URI) {
       content.location.href = URI;
 
       let loaded = ContentTaskUtils.waitForEvent(this, "load", true);
       let installTriggered = ContentTaskUtils.waitForEvent(this, "InstallTriggered", true, null, true);
-      yield Promise.all([ loaded, installTriggered ]);
+      await Promise.all([ loaded, installTriggered ]);
 
       let doc = content.document;
       is(doc.getElementById("return").textContent, "exception", "installTrigger should have failed");

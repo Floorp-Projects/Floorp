@@ -8,22 +8,22 @@
  * some of the height changes for us. We need to verify that the height is
  * updated correctly if downloads are removed while the panel is hidden.
  */
-add_task(function* test_height_reduced_after_removal() {
-  yield task_addDownloads([
+add_task(async function test_height_reduced_after_removal() {
+  await task_addDownloads([
     { state: DownloadsCommon.DOWNLOAD_FINISHED },
   ]);
 
-  yield task_openPanel();
+  await task_openPanel();
   let panel = document.getElementById("downloadsPanel");
   let heightBeforeRemoval = panel.getBoundingClientRect().height;
 
   // We want to close the panel before we remove the download from the list.
   DownloadsPanel.hidePanel();
-  yield task_resetState();
+  await task_resetState();
 
-  yield task_openPanel();
+  await task_openPanel();
   let heightAfterRemoval = panel.getBoundingClientRect().height;
   Assert.greater(heightBeforeRemoval, heightAfterRemoval);
 
-  yield task_resetState();
+  await task_resetState();
 });

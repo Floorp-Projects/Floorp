@@ -12,6 +12,6 @@ negative:
   type: SyntaxError
 flags: [onlyStrict]
 ---*/
-!{
+({
   async foo (arguments) { }
-}
+})

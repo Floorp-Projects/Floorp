@@ -2,43 +2,43 @@ requestLongerTimeout(2);
 
 const TEST_URL = "http://example.com/browser/browser/base/content/test/general/app_bug575561.html";
 
-add_task(function*() {
+add_task(async function() {
   SimpleTest.requestCompleteLog();
 
   // Pinned: Link to the same domain should not open a new tab
   // Tests link to http://example.com/browser/browser/base/content/test/general/dummy_page.html
-  yield testLink(0, true, false);
+  await testLink(0, true, false);
   // Pinned: Link to a different subdomain should open a new tab
   // Tests link to http://test1.example.com/browser/browser/base/content/test/general/dummy_page.html
-  yield testLink(1, true, true);
+  await testLink(1, true, true);
 
   // Pinned: Link to a different domain should open a new tab
   // Tests link to http://example.org/browser/browser/base/content/test/general/dummy_page.html
-  yield testLink(2, true, true);
+  await testLink(2, true, true);
 
   // Not Pinned: Link to a different domain should not open a new tab
   // Tests link to http://example.org/browser/browser/base/content/test/general/dummy_page.html
-  yield testLink(2, false, false);
+  await testLink(2, false, false);
 
   // Pinned: Targetted link should open a new tab
   // Tests link to http://example.org/browser/browser/base/content/test/general/dummy_page.html with target="foo"
-  yield testLink(3, true, true);
+  await testLink(3, true, true);
 
   // Pinned: Link in a subframe should not open a new tab
   // Tests link to http://example.org/browser/browser/base/content/test/general/dummy_page.html in subframe
-  yield testLink(0, true, false, true);
+  await testLink(0, true, false, true);
 
   // Pinned: Link to the same domain (with www prefix) should not open a new tab
   // Tests link to http://www.example.com/browser/browser/base/content/test/general/dummy_page.html
-  yield testLink(4, true, false);
+  await testLink(4, true, false);
 
   // Pinned: Link to a data: URI should not open a new tab
   // Tests link to data:text/html,<!DOCTYPE html><html><body>Another Page</body></html>
-  yield testLink(5, true, false);
+  await testLink(5, true, false);
 
   // Pinned: Link to an about: URI should not open a new tab
   // Tests link to about:logo
-  yield testLink(function(doc) {
+  await testLink(function(doc) {
     let link = doc.createElement("a");
     link.textContent = "Link to Mozilla";
     link.href = "about:logo";
@@ -47,29 +47,29 @@ add_task(function*() {
   }, true, false, false, "about:robots");
 });
 
-var waitForPageLoad = Task.async(function*(browser, linkLocation) {
-  yield waitForDocLoadComplete();
+var waitForPageLoad = async function(browser, linkLocation) {
+  await waitForDocLoadComplete();
 
   is(browser.contentDocument.location.href, linkLocation, "Link should not open in a new tab");
-});
+};
 
-var waitForTabOpen = Task.async(function*() {
-  let event = yield promiseWaitForEvent(gBrowser.tabContainer, "TabOpen", true);
+var waitForTabOpen = async function() {
+  let event = await promiseWaitForEvent(gBrowser.tabContainer, "TabOpen", true);
   ok(true, "Link should open a new tab");
 
-  yield waitForDocLoadComplete(event.target.linkedBrowser);
-  yield Promise.resolve();
+  await waitForDocLoadComplete(event.target.linkedBrowser);
+  await Promise.resolve();
 
   gBrowser.removeCurrentTab();
-});
+};
 
-var testLink = Task.async(function*(aLinkIndexOrFunction, pinTab, expectNewTab, testSubFrame, aURL = TEST_URL) {
+var testLink = async function(aLinkIndexOrFunction, pinTab, expectNewTab, testSubFrame, aURL = TEST_URL) {
   let appTab = gBrowser.addTab(aURL, {skipAnimation: true});
   if (pinTab)
     gBrowser.pinTab(appTab);
   gBrowser.selectedTab = appTab;
 
-  yield waitForDocLoadComplete();
+  await waitForDocLoadComplete();
 
   let browser = appTab.linkedBrowser;
   if (testSubFrame)
@@ -91,7 +91,7 @@ var testLink = Task.async(function*(aLinkIndexOrFunction, pinTab, expectNewTab, 
   info("Clicking " + link.textContent);
   link.click();
 
-  yield promise;
+  await promise;
 
   gBrowser.removeTab(appTab);
-});
+};

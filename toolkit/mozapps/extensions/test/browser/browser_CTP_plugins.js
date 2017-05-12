@@ -24,15 +24,15 @@ function resetBlocklist(aCallback) {
   Services.prefs.setCharPref("extensions.blocklist.url", _originalBlocklistURL);
 }
 
-add_task(function*() {
+add_task(async function() {
   SpecialPowers.pushPrefEnv({"set": [
     ["plugins.click_to_play", true],
     ["extensions.blocklist.suppressUI", true]
   ]});
-  registerCleanupFunction(function*() {
+  registerCleanupFunction(async function() {
     let pluginTag = getTestPluginTag();
     pluginTag.enabledState = Ci.nsIPluginTag.STATE_ENABLED;
-    yield new Promise(resolve => {
+    await new Promise(resolve => {
       setAndUpdateBlocklist(gHttpTestRoot + "blockNoPlugins.xml", resolve);
     });
     resetBlocklist();
@@ -40,9 +40,9 @@ add_task(function*() {
 
   let pluginTag = getTestPluginTag();
   pluginTag.enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
-  let managerWindow = yield new Promise(resolve => open_manager("addons://list/plugin", resolve));
+  let managerWindow = await new Promise(resolve => open_manager("addons://list/plugin", resolve));
 
-  let plugins = yield new Promise(resolve => AddonManager.getAddonsByTypes(["plugin"], resolve));
+  let plugins = await new Promise(resolve => AddonManager.getAddonsByTypes(["plugin"], resolve));
 
   let testPluginId;
   for (let plugin of plugins) {
@@ -53,7 +53,7 @@ add_task(function*() {
   }
   ok(testPluginId, "part2: Test Plug-in should exist");
 
-  let testPlugin = yield new Promise(resolve => AddonManager.getAddonByID(testPluginId, resolve));
+  let testPlugin = await new Promise(resolve => AddonManager.getAddonByID(testPluginId, resolve));
   isnot(testPlugin, null, "part2.1: Test Plug-in should exist");
 
   let pluginEl = get_addon_element(managerWindow, testPluginId);
@@ -67,51 +67,51 @@ add_task(function*() {
   let askToActivateItem = managerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "ask-to-activate-menuitem");
   is(menu.selectedItem, askToActivateItem, "part3: state menu should have 'Ask To Activate' selected");
 
-  let pluginTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, gHttpTestRoot + "plugin_test.html");
+  let pluginTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, gHttpTestRoot + "plugin_test.html");
   let pluginBrowser = pluginTab.linkedBrowser;
 
   let condition = () => PopupNotifications.getNotification("click-to-play-plugins", pluginBrowser);
-  yield BrowserTestUtils.waitForCondition(condition, "part4: should have a click-to-play notification");
+  await BrowserTestUtils.waitForCondition(condition, "part4: should have a click-to-play notification");
 
-  yield BrowserTestUtils.removeTab(pluginTab);
+  await BrowserTestUtils.removeTab(pluginTab);
 
   let alwaysActivateItem = managerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "always-activate-menuitem");
   menu.selectedItem = alwaysActivateItem;
   alwaysActivateItem.doCommand();
 
-  pluginTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, gHttpTestRoot + "plugin_test.html");
+  pluginTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, gHttpTestRoot + "plugin_test.html");
 
-  yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+  await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let testPlugin = content.document.getElementById("test");
     ok(testPlugin, "part5: should have a plugin element in the page");
     let objLoadingContent = testPlugin.QueryInterface(Ci.nsIObjectLoadingContent);
     let condition = () => objLoadingContent.activated;
-    yield ContentTaskUtils.waitForCondition(condition, "part5: waited too long for plugin to activate");
+    await ContentTaskUtils.waitForCondition(condition, "part5: waited too long for plugin to activate");
     ok(objLoadingContent.activated, "part6: plugin should be activated");
   });
 
-  yield BrowserTestUtils.removeTab(pluginTab);
+  await BrowserTestUtils.removeTab(pluginTab);
 
   let neverActivateItem = managerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "never-activate-menuitem");
   menu.selectedItem = neverActivateItem;
   neverActivateItem.doCommand();
 
-  pluginTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, gHttpTestRoot + "plugin_test.html");
+  pluginTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, gHttpTestRoot + "plugin_test.html");
   pluginBrowser = pluginTab.linkedBrowser;
 
-  yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+  await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let testPlugin = content.document.getElementById("test");
     ok(testPlugin, "part7: should have a plugin element in the page");
     let objLoadingContent = testPlugin.QueryInterface(Ci.nsIObjectLoadingContent);
     ok(!objLoadingContent.activated, "part7: plugin should not be activated");
   });
 
-  yield BrowserTestUtils.removeTab(pluginTab);
+  await BrowserTestUtils.removeTab(pluginTab);
 
   let details = managerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "details-btn");
   is_element_visible(details, "part7: details link should be visible");
   EventUtils.synthesizeMouseAtCenter(details, {}, managerWindow);
-  yield BrowserTestUtils.waitForEvent(managerWindow.document, "ViewChanged");
+  await BrowserTestUtils.waitForEvent(managerWindow.document, "ViewChanged");
 
   is_element_hidden(enableButton, "part8: detail enable button should be hidden");
   is_element_hidden(disableButton, "part8: detail disable button should be hidden");
@@ -121,33 +121,33 @@ add_task(function*() {
   menu.selectedItem = alwaysActivateItem;
   alwaysActivateItem.doCommand();
 
-  pluginTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, gHttpTestRoot + "plugin_test.html");
+  pluginTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, gHttpTestRoot + "plugin_test.html");
   pluginBrowser = pluginTab.linkedBrowser;
 
-  yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+  await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let testPlugin = content.document.getElementById("test");
     ok(testPlugin, "part9: should have a plugin element in the page");
     let objLoadingContent = testPlugin.QueryInterface(Ci.nsIObjectLoadingContent);
     let condition = () => objLoadingContent.activated;
-    yield ContentTaskUtils.waitForCondition(condition, "part9: waited too long for plugin to activate");
+    await ContentTaskUtils.waitForCondition(condition, "part9: waited too long for plugin to activate");
     ok(objLoadingContent.activated, "part10: plugin should be activated");
   });
 
-  yield BrowserTestUtils.removeTab(pluginTab);
+  await BrowserTestUtils.removeTab(pluginTab);
 
   menu.selectedItem = askToActivateItem;
   askToActivateItem.doCommand();
 
-  pluginTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, gHttpTestRoot + "plugin_test.html");
+  pluginTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, gHttpTestRoot + "plugin_test.html");
   pluginBrowser = pluginTab.linkedBrowser;
 
   condition = () => PopupNotifications.getNotification("click-to-play-plugins", pluginBrowser);
-  yield BrowserTestUtils.waitForCondition(condition, "part11: should have a click-to-play notification");
+  await BrowserTestUtils.waitForCondition(condition, "part11: should have a click-to-play notification");
 
-  yield BrowserTestUtils.removeTab(pluginTab);
+  await BrowserTestUtils.removeTab(pluginTab);
 
   // causes appDisabled to be set
-  managerWindow = yield new Promise(resolve => {
+  managerWindow = await new Promise(resolve => {
     setAndUpdateBlocklist(gHttpTestRoot + "blockPluginHard.xml",
       () => {
         close_manager(managerWindow, function() {
@@ -164,7 +164,7 @@ add_task(function*() {
 
   details = managerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "details-btn");
   EventUtils.synthesizeMouseAtCenter(details, {}, managerWindow);
-  yield BrowserTestUtils.waitForEvent(managerWindow.document, "ViewChanged");
+  await BrowserTestUtils.waitForEvent(managerWindow.document, "ViewChanged");
 
   menu = managerWindow.document.getElementById("detail-state-menulist");
   is(menu.disabled, true, "part13: detail state menu should be disabled");

@@ -32,6 +32,15 @@ JITFLAGS = {
         ['--ion-eager', '--ion-offthread-compile=off'], # implies --baseline-eager
         ['--baseline-eager'],
     ],
+    # Cover cases useful for tsan. Note that tsan on try messes up the signal
+    # handler (bug 1362239), so must avoid wasm/asmjs.
+    'tsan': [
+        ['--no-asmjs', '--no-wasm'],
+        ['--no-asmjs', '--no-wasm',
+         '--ion-eager', '--ion-offthread-compile=off', '--non-writable-jitcode',
+         '--ion-check-range-analysis', '--ion-extra-checks', '--no-sse3', '--no-threads'],
+        ['--no-asmjs', '--no-wasm', '--no-baseline', '--no-ion'],
+    ],
     # Interpreter-only, for tools that cannot handle binary code generation.
     'interp': [
         ['--no-baseline', '--no-asmjs', '--no-wasm', '--no-native-regexp']

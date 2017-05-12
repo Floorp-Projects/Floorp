@@ -20,14 +20,14 @@ add_task(function* test_changing_extension_storage_changes_score() {
   const tracker = engine._tracker;
   const extension = {id: "my-extension-id"};
   Svc.Obs.notify("weave:engine:start-tracking");
-  yield* withSyncContext(function*(context) {
-    yield extensionStorageSync.set(extension, {"a": "b"}, context);
+  yield withSyncContext(async function(context) {
+    await extensionStorageSync.set(extension, {"a": "b"}, context);
   });
   do_check_eq(tracker.score, SCORE_INCREMENT_MEDIUM);
 
   tracker.resetScore();
-  yield* withSyncContext(function*(context) {
-    yield extensionStorageSync.remove(extension, "a", context);
+  yield withSyncContext(async function(context) {
+    await extensionStorageSync.remove(extension, "a", context);
   });
   do_check_eq(tracker.score, SCORE_INCREMENT_MEDIUM);
 

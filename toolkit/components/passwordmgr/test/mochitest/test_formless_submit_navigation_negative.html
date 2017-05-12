@@ -30,15 +30,15 @@ function submissionProcessed(...args) {
   info("got: " + JSON.stringify(args));
 }
 
-add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
     set: [
       ["signon.formlessCapture.enabled", true],
     ],
   });
 
   info("Waiting for page and frame loads");
-  yield loadPromise;
+  await loadPromise;
 
   chromeScript.addMessageListener("formSubmissionProcessed", submissionProcessed);
 
@@ -73,7 +73,7 @@ const TESTCASES = [
   },
 ];
 
-add_task(function* test() {
+add_task(async function test() {
   let loginFrame = document.getElementById("loginFrame");
 
   var android = navigator.appVersion.includes("Android");
@@ -98,19 +98,19 @@ add_task(function* test() {
         }, {once: true});
       });
       loginFrame.src = DEFAULT_ORIGIN + "/tests/toolkit/components/passwordmgr/test/mochitest/blank.html";
-      yield loadedPromise;
+      await loadedPromise;
 
       let frameDoc = SpecialPowers.wrap(loginFrame.contentWindow).document;
       frameDoc.documentElement.innerHTML = tc.document;
 
       // Wait for the form to be processed before trying to submit.
-      yield promiseFormsProcessed();
+      await promiseFormsProcessed();
 
       info("Running " + scriptName + " script to check for a submission");
       frameDoc.defaultView.eval(SCRIPTS[scriptName]);
 
       // Wait to see if the promise above resolves.
-      yield new Promise(resolve => setTimeout(resolve, waitTime));
+      await new Promise(resolve => setTimeout(resolve, waitTime));
       ok(true, "Done waiting for captures");
     }
   }

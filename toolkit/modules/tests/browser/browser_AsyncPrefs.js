@@ -16,7 +16,7 @@ Services.prefs.getDefaultBranch("testing.allowed-prefs.").setBoolPref("some-bool
 Services.prefs.getDefaultBranch("testing.allowed-prefs.").setCharPref("some-char-pref", "");
 Services.prefs.getDefaultBranch("testing.allowed-prefs.").setIntPref("some-int-pref", 0);
 
-function* runTest() {
+async function runTest() {
   let {AsyncPrefs} = Cu.import("resource://gre/modules/AsyncPrefs.jsm", {});
   const kInChildProcess = Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
 
@@ -62,7 +62,7 @@ function* runTest() {
   }
 
   for (let [val, ] of valueResultMap) {
-    yield doesFail(kNotWhiteListed, val);
+    await doesFail(kNotWhiteListed, val);
     is(Services.prefs.prefHasUserValue(kNotWhiteListed), false, "Pref shouldn't get changed");
   }
 
@@ -72,26 +72,26 @@ function* runTest() {
   for (let [type, pref] of prefMap) {
     for (let [val, result] of valueResultMap) {
       if (result == type) {
-        yield doesWork(pref, val);
+        await doesWork(pref, val);
         is(Services.prefs["get" + type + "Pref"](pref), val, "Pref should have been updated");
-        yield doReset(pref);
+        await doReset(pref);
       } else {
-        yield doesFail(pref, val);
+        await doesFail(pref, val);
         is(Services.prefs.prefHasUserValue(pref), false, `Pref ${pref} shouldn't get changed`);
       }
     }
   }
 }
 
-add_task(function* runInParent() {
-  yield runTest();
+add_task(async function runInParent() {
+  await runTest();
   resetPrefs();
 });
 
 if (gMultiProcessBrowser) {
-  add_task(function* runInChild() {
+  add_task(async function runInChild() {
     ok(gBrowser.selectedBrowser.isRemoteBrowser, "Should actually run this in child process");
-    yield ContentTask.spawn(gBrowser.selectedBrowser, null, runTest);
+    await ContentTask.spawn(gBrowser.selectedBrowser, null, runTest);
     resetPrefs();
   });
 }

@@ -6,18 +6,18 @@
 
 const isOSX = (Services.appinfo.OS === "Darwin");
 
-add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
-  yield BrowserTestUtils.withNewTab({
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "http://example.com/",
-  }, function* () {
+  }, async function() {
     info("Check print button existence and functionality");
 
-    yield PanelUI.show();
+    await PanelUI.show();
     info("Menu panel was opened");
 
-    yield waitForCondition(() => document.getElementById("print-button") != null);
+    await waitForCondition(() => document.getElementById("print-button") != null);
 
     let printButton = document.getElementById("print-button");
     ok(printButton, "Print button exists in Panel Menu");
@@ -25,18 +25,18 @@ add_task(function*() {
     if (isOSX) {
       let panelHiddenPromise = promisePanelHidden(window);
       PanelUI.hide();
-      yield panelHiddenPromise;
+      await panelHiddenPromise;
       info("Menu panel was closed");
     } else {
       printButton.click();
-      yield waitForCondition(() => gInPrintPreviewMode);
+      await waitForCondition(() => gInPrintPreviewMode);
 
       ok(gInPrintPreviewMode, "Entered print preview mode");
 
       // close print preview
       if (gInPrintPreviewMode) {
         PrintUtils.exitPrintPreview();
-        yield waitForCondition(() => !window.gInPrintPreviewMode);
+        await waitForCondition(() => !window.gInPrintPreviewMode);
         info("Exited print preview")
       }
     }

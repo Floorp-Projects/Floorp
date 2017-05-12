@@ -59,8 +59,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
                                   "resource:///modules/RecentWindow.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "DownloadsLogger", () => {
   let { ConsoleAPI } = Cu.import("resource://gre/modules/Console.jsm", {});
@@ -534,7 +532,7 @@ this.DownloadsCommon = {
    *            - "confirmBlock" to delete the blocked data permanently.
    *            - "cancel" to do nothing and cancel the operation.
    */
-  confirmUnblockDownload: Task.async(function* ({ verdict, window,
+  async confirmUnblockDownload({ verdict, window,
                                                   dialogType }) {
     let s = DownloadsCommon.strings;
 
@@ -610,7 +608,7 @@ this.DownloadsCommon = {
                                        firstButtonText, null,
                                        s.unblockButtonConfirmBlock, null, {});
     return [firstButtonAction, "cancel", "confirmBlock"][rv];
-  }),
+  },
 };
 
 XPCOMUtils.defineLazyGetter(this.DownloadsCommon, "log", () => {

@@ -8,7 +8,9 @@
 
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/RefPtr.h"
 
+#include "nsString.h"
 #include "GeckoProfiler.h"
 
 #include "js/Utility.h"

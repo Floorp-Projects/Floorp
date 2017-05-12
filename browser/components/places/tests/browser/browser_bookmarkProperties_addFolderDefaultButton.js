@@ -1,21 +1,21 @@
 "use strict"
 
-add_task(function* () {
+add_task(async function() {
   info("Bug 475529 - Add is the default button for the new folder dialog + " +
        "Bug 1206376 - Changing properties of a new bookmark while adding it " +
        "acts on the last bookmark in the current container");
 
   // Add a new bookmark at index 0 in the unfiled folder.
   let insertionIndex = 0;
-  let newBookmark = yield PlacesUtils.bookmarks.insert({
+  let newBookmark = await PlacesUtils.bookmarks.insert({
     index: insertionIndex,
     type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: "http://example.com/",
   });
-  let newBookmarkId = yield PlacesUtils.promiseItemId(newBookmark.guid);
+  let newBookmarkId = await PlacesUtils.promiseItemId(newBookmark.guid);
 
-  yield withSidebarTree("bookmarks", function* (tree) {
+  await withSidebarTree("bookmarks", async function(tree) {
     // Select the new bookmark in the sidebar.
     tree.selectItems([newBookmarkId]);
     ok(tree.controller.isCommandEnabled("placesCmd_new:folder"),
@@ -24,12 +24,12 @@ add_task(function* () {
     // Create a new folder.  Since the new bookmark is selected, and new items
     // are inserted at the index of the currently selected item, the new folder
     // will be inserted at index 0.
-    yield withBookmarksDialog(
+    await withBookmarksDialog(
       false,
       function openDialog() {
         tree.controller.doCommand("placesCmd_new:folder");
       },
-      function* test(dialogWin) {
+      async function test(dialogWin) {
         let promiseTitleChangeNotification = promiseBookmarksNotification(
           "onItemChanged", (itemId, prop, isAnno, val) => prop == "title" && val == "n");
 
@@ -37,16 +37,16 @@ add_task(function* () {
 
         // Confirm and close the dialog.
         EventUtils.synthesizeKey("VK_RETURN", {}, dialogWin);
-        yield promiseTitleChangeNotification;
+        await promiseTitleChangeNotification;
 
-        let newFolder = yield PlacesUtils.bookmarks.fetch({
+        let newFolder = await PlacesUtils.bookmarks.fetch({
           parentGuid: PlacesUtils.bookmarks.unfiledGuid,
           index: insertionIndex,
         });
 
         is(newFolder.title, "n", "folder name has been edited");
-        yield PlacesUtils.bookmarks.remove(newFolder);
-        yield PlacesUtils.bookmarks.remove(newBookmark);
+        await PlacesUtils.bookmarks.remove(newFolder);
+        await PlacesUtils.bookmarks.remove(newBookmark);
       }
     );
   });

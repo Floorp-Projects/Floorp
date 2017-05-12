@@ -12,8 +12,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
                                   "resource://gre/modules/Deprecated.jsm");
 
@@ -56,10 +54,10 @@ XPCOMUtils.defineLazyGetter(this, "CACHE_SQL", () => {
 });
 
 XPCOMUtils.defineLazyGetter(this, "gLivemarksCachePromised",
-  Task.async(function* () {
+  async function() {
     let livemarksMap = new Map();
-    let conn = yield PlacesUtils.promiseDBConnection();
-    let rows = yield conn.executeCached(CACHE_SQL,
+    let conn = await PlacesUtils.promiseDBConnection();
+    let rows = await conn.executeCached(CACHE_SQL,
       { folder_type: Ci.nsINavBookmarksService.TYPE_FOLDER,
         feedURI_anno: PlacesUtils.LMANNO_FEEDURI,
         siteURI_anno: PlacesUtils.LMANNO_SITEURI });
@@ -80,7 +78,7 @@ XPCOMUtils.defineLazyGetter(this, "gLivemarksCachePromised",
       livemarksMap.set(livemark.guid, livemark);
     }
     return livemarksMap;
-  })
+  }
 );
 
 /**
@@ -183,11 +181,11 @@ LivemarkService.prototype = {
       throw new Components.Exception("Invalid arguments", Cr.NS_ERROR_INVALID_ARG);
     }
 
-    return Task.spawn(function* () {
+    return (async () => {
       if (!aLivemarkInfo.parentGuid)
-        aLivemarkInfo.parentGuid = yield PlacesUtils.promiseItemGuid(aLivemarkInfo.parentId);
+        aLivemarkInfo.parentGuid = await PlacesUtils.promiseItemGuid(aLivemarkInfo.parentId);
 
-      let livemarksMap = yield this._promiseLivemarksMap();
+      let livemarksMap = await this._promiseLivemarksMap();
 
       // Disallow adding a livemark inside another livemark.
       if (livemarksMap.has(aLivemarkInfo.parentGuid)) {
@@ -195,7 +193,7 @@ LivemarkService.prototype = {
       }
 
       // Create a new livemark.
-      let folder = yield PlacesUtils.bookmarks.insert({
+      let folder = await PlacesUtils.bookmarks.insert({
         type: PlacesUtils.bookmarks.TYPE_FOLDER,
         parentGuid: aLivemarkInfo.parentGuid,
         title: aLivemarkInfo.title,
@@ -206,13 +204,13 @@ LivemarkService.prototype = {
       });
 
       // Set feed and site URI annotations.
-      let id = yield PlacesUtils.promiseItemId(folder.guid);
+      let id = await PlacesUtils.promiseItemId(folder.guid);
 
       // Create the internal Livemark object.
       let livemark = new Livemark({ id
                                   , title:        folder.title
                                   , parentGuid:   folder.parentGuid
-                                  , parentId:     yield PlacesUtils.promiseItemId(folder.parentGuid)
+                                  , parentId:     await PlacesUtils.promiseItemId(folder.parentGuid)
                                   , index:        folder.index
                                   , feedURI:      aLivemarkInfo.feedURI
                                   , siteURI:      aLivemarkInfo.siteURI
@@ -227,7 +225,7 @@ LivemarkService.prototype = {
       }
 
       if (aLivemarkInfo.lastModified) {
-        yield PlacesUtils.bookmarks.update({ guid: folder.guid,
+        await PlacesUtils.bookmarks.update({ guid: folder.guid,
                                              lastModified: toDate(aLivemarkInfo.lastModified),
                                              source: aLivemarkInfo.source });
         livemark.lastModified = aLivemarkInfo.lastModified;
@@ -236,7 +234,7 @@ LivemarkService.prototype = {
       livemarksMap.set(folder.guid, livemark);
 
       return livemark;
-    }.bind(this));
+    })();
   },
 
   removeLivemark(aLivemarkInfo) {
@@ -252,17 +250,17 @@ LivemarkService.prototype = {
       throw new Components.Exception("Invalid arguments", Cr.NS_ERROR_INVALID_ARG);
     }
 
-    return Task.spawn(function* () {
+    return (async () => {
       if (!aLivemarkInfo.guid)
-        aLivemarkInfo.guid = yield PlacesUtils.promiseItemGuid(aLivemarkInfo.id);
+        aLivemarkInfo.guid = await PlacesUtils.promiseItemGuid(aLivemarkInfo.id);
 
-      let livemarksMap = yield this._promiseLivemarksMap();
+      let livemarksMap = await this._promiseLivemarksMap();
       if (!livemarksMap.has(aLivemarkInfo.guid))
         throw new Components.Exception("Invalid livemark", Cr.NS_ERROR_INVALID_ARG);
 
-      yield PlacesUtils.bookmarks.remove(aLivemarkInfo.guid,
+      await PlacesUtils.bookmarks.remove(aLivemarkInfo.guid,
                                          { source: aLivemarkInfo.source });
-    }.bind(this));
+    })();
   },
 
   reloadLivemarks(aForceUpdate) {
@@ -295,16 +293,16 @@ LivemarkService.prototype = {
       throw new Components.Exception("Invalid arguments", Cr.NS_ERROR_INVALID_ARG);
     }
 
-    return Task.spawn(function*() {
+    return (async () => {
       if (!aLivemarkInfo.guid)
-        aLivemarkInfo.guid = yield PlacesUtils.promiseItemGuid(aLivemarkInfo.id);
+        aLivemarkInfo.guid = await PlacesUtils.promiseItemGuid(aLivemarkInfo.id);
 
-      let livemarksMap = yield this._promiseLivemarksMap();
+      let livemarksMap = await this._promiseLivemarksMap();
       if (!livemarksMap.has(aLivemarkInfo.guid))
         throw new Components.Exception("Invalid livemark", Cr.NS_ERROR_INVALID_ARG);
 
       return livemarksMap.get(aLivemarkInfo.guid);
-    }.bind(this));
+    })();
   },
 
   // nsINavBookmarkObserver

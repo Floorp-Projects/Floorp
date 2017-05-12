@@ -12,8 +12,8 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_installedresourceicon() {
-  let [engine1, engine2] = yield addTestEngines([
+add_task(async function test_installedresourceicon() {
+  let [engine1, engine2] = await addTestEngines([
     { name: "engine-resourceicon", xmlFileName: "engine-resourceicon.xml" },
     { name: "engine-chromeicon", xmlFileName: "engine-chromeicon.xml" },
   ]);

@@ -8,7 +8,7 @@ function wait_for_event(browser, event) {
   });
 }
 
-function* test_audio_in_browser() {
+function test_audio_in_browser() {
   function get_audio_element() {
     var doc = content.document;
     var list = doc.getElementsByTagName("audio");
@@ -31,11 +31,11 @@ function* test_audio_in_browser() {
   }
 }
 
-function* test_on_browser(url, browser) {
+async function test_on_browser(url, browser) {
   browser.loadURI(url);
-  yield wait_for_event(browser, "DOMAudioPlaybackStarted");
+  await wait_for_event(browser, "DOMAudioPlaybackStarted");
 
-  var result = yield ContentTask.spawn(browser, null, test_audio_in_browser);
+  var result = await ContentTask.spawn(browser, null, test_audio_in_browser);
   is(result.computedVolume, 1, "Audio volume is 1");
   is(result.computedMuted, false, "Audio is not muted");
 
@@ -43,22 +43,22 @@ function* test_on_browser(url, browser) {
   browser.mute();
   ok(browser.audioMuted, "Audio should be muted now");
 
-  yield wait_for_event(browser, "DOMAudioPlaybackStopped");
+  await wait_for_event(browser, "DOMAudioPlaybackStopped");
 
-  result = yield ContentTask.spawn(browser, null, test_audio_in_browser);
+  result = await ContentTask.spawn(browser, null, test_audio_in_browser);
   is(result.computedVolume, 0, "Audio volume is 0 when muted");
   is(result.computedMuted, true, "Audio is muted");
 }
 
-function* test_visibility(url, browser) {
+async function test_visibility(url, browser) {
   browser.loadURI(url);
-  yield wait_for_event(browser, "DOMAudioPlaybackStarted");
+  await wait_for_event(browser, "DOMAudioPlaybackStarted");
 
-  var result = yield ContentTask.spawn(browser, null, test_audio_in_browser);
+  var result = await ContentTask.spawn(browser, null, test_audio_in_browser);
   is(result.computedVolume, 1, "Audio volume is 1");
   is(result.computedMuted, false, "Audio is not muted");
 
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "about:blank",
   }, function() {});
@@ -67,35 +67,35 @@ function* test_visibility(url, browser) {
   browser.mute();
   ok(browser.audioMuted, "Audio should be muted now");
 
-  yield wait_for_event(browser, "DOMAudioPlaybackStopped");
+  await wait_for_event(browser, "DOMAudioPlaybackStopped");
 
-  result = yield ContentTask.spawn(browser, null, test_audio_in_browser);
+  result = await ContentTask.spawn(browser, null, test_audio_in_browser);
   is(result.computedVolume, 0, "Audio volume is 0 when muted");
   is(result.computedMuted, true, "Audio is muted");
 }
 
-add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({"set": [
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({"set": [
     ["media.useAudioChannelService.testing", true]
   ]});
 });
 
-add_task(function* test_page() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function test_page() {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "about:blank",
   }, test_on_browser.bind(undefined, PAGE));
 });
 
-add_task(function* test_frame() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function test_frame() {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "about:blank",
   }, test_on_browser.bind(undefined, FRAME));
 });
 
-add_task(function* test_frame() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function test_frame() {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "about:blank",
   }, test_visibility.bind(undefined, PAGE));

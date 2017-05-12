@@ -360,7 +360,7 @@ this.PanelMultiView = class {
 
   showSubView(aViewId, aAnchor, aPreviousView, aAdopted = false) {
     const {document, window} = this;
-    return window.Task.spawn(function*() {
+    return (async () => {
       // Support passing in the node directly.
       let viewNode = typeof aViewId == "string" ? this.node.querySelector("#" + aViewId) : aViewId;
       if (!viewNode) {
@@ -417,7 +417,7 @@ this.PanelMultiView = class {
       let cancel = evt.defaultPrevented;
       if (detail.blockers.size) {
         try {
-          let results = yield window.Promise.all(detail.blockers);
+          let results = await Promise.all(detail.blockers);
           cancel = cancel || results.some(val => val === false);
         } catch (e) {
           Cu.reportError(e);
@@ -577,7 +577,7 @@ this.PanelMultiView = class {
           subtree: true
         });
       }
-    }.bind(this));
+    })();
   }
 
   _setViewContainerHeight(aHeight) {

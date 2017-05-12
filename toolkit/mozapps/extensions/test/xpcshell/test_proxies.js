@@ -88,7 +88,7 @@ function run_test() {
   run_next_test();
 }
 
-function* run_proxy_tests() {
+async function run_proxy_tests() {
   if (!gHaveSymlinks) {
     ADDONS = ADDONS.filter(a => a.type != "symlink");
   }
@@ -107,7 +107,7 @@ function* run_proxy_tests() {
     if (addon.type == "proxy") {
       writeFile(addon.directory.path, addon.proxyFile)
     } else if (addon.type == "symlink") {
-      yield createSymlink(addon.directory, addon.proxyFile)
+      await createSymlink(addon.directory, addon.proxyFile)
     }
   }
 
@@ -177,7 +177,7 @@ function* run_proxy_tests() {
   });
 }
 
-function* run_symlink_tests() {
+async function run_symlink_tests() {
   // Check that symlinks are not followed out of a directory tree
   // when deleting an add-on.
 
@@ -199,7 +199,7 @@ function* run_symlink_tests() {
 
   let symlink = addonDirectory.clone();
   symlink.append(tempDirectory.leafName);
-  yield createSymlink(tempDirectory, symlink);
+  await createSymlink(tempDirectory, symlink);
 
   // Make sure that the symlink was created properly.
   let file = symlink.clone();

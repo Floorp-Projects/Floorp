@@ -84,78 +84,78 @@ function isBrowserAppTab(browser) {
 }
 
 // Restarts the child process by crashing it then reloading the tab
-var restart = Task.async(function*(browser) {
+var restart = async function(browser) {
   // If the tab isn't remote this would crash the main process so skip it
   if (!browser.isRemoteBrowser)
     return;
 
   // Make sure the main process has all of the current tab state before crashing
-  yield TabStateFlusher.flush(browser);
+  await TabStateFlusher.flush(browser);
 
   browser.messageManager.sendAsyncMessage("Test:Crash");
-  yield promiseWaitForEvent(browser, "AboutTabCrashedLoad", false, true);
+  await promiseWaitForEvent(browser, "AboutTabCrashedLoad", false, true);
 
   let tab = gBrowser.getTabForBrowser(browser);
   SessionStore.reviveCrashedTab(tab);
 
-  yield promiseTabLoaded(tab);
-});
+  await promiseTabLoaded(tab);
+};
 
-add_task(function* navigate() {
+add_task(async function navigate() {
   let tab = gBrowser.addTab("about:robots");
   let browser = tab.linkedBrowser;
   gBrowser.selectedTab = tab;
-  yield waitForDocLoadComplete();
+  await waitForDocLoadComplete();
   loadFrameScript(browser);
-  let isAppTab = yield isBrowserAppTab(browser);
+  let isAppTab = await isBrowserAppTab(browser);
   ok(!isAppTab, "Docshell shouldn't think it is an app tab");
 
   gBrowser.pinTab(tab);
-  isAppTab = yield isBrowserAppTab(browser);
+  isAppTab = await isBrowserAppTab(browser);
   ok(isAppTab, "Docshell should think it is an app tab");
 
   gBrowser.loadURI(DUMMY);
-  yield waitForDocLoadComplete();
+  await waitForDocLoadComplete();
   loadFrameScript(browser);
-  isAppTab = yield isBrowserAppTab(browser);
+  isAppTab = await isBrowserAppTab(browser);
   ok(isAppTab, "Docshell should think it is an app tab");
 
   gBrowser.unpinTab(tab);
-  isAppTab = yield isBrowserAppTab(browser);
+  isAppTab = await isBrowserAppTab(browser);
   ok(!isAppTab, "Docshell shouldn't think it is an app tab");
 
   gBrowser.pinTab(tab);
-  isAppTab = yield isBrowserAppTab(browser);
+  isAppTab = await isBrowserAppTab(browser);
   ok(isAppTab, "Docshell should think it is an app tab");
 
   gBrowser.loadURI("about:robots");
-  yield waitForDocLoadComplete();
+  await waitForDocLoadComplete();
   loadFrameScript(browser);
-  isAppTab = yield isBrowserAppTab(browser);
+  isAppTab = await isBrowserAppTab(browser);
   ok(isAppTab, "Docshell should think it is an app tab");
 
   gBrowser.removeCurrentTab();
 });
 
-add_task(function* crash() {
+add_task(async function crash() {
   if (!gMultiProcessBrowser || !("nsICrashReporter" in Ci))
     return;
 
   let tab = gBrowser.addTab(DUMMY);
   let browser = tab.linkedBrowser;
   gBrowser.selectedTab = tab;
-  yield waitForDocLoadComplete();
+  await waitForDocLoadComplete();
   loadFrameScript(browser);
-  let isAppTab = yield isBrowserAppTab(browser);
+  let isAppTab = await isBrowserAppTab(browser);
   ok(!isAppTab, "Docshell shouldn't think it is an app tab");
 
   gBrowser.pinTab(tab);
-  isAppTab = yield isBrowserAppTab(browser);
+  isAppTab = await isBrowserAppTab(browser);
   ok(isAppTab, "Docshell should think it is an app tab");
 
-  yield restart(browser);
+  await restart(browser);
   loadFrameScript(browser);
-  isAppTab = yield isBrowserAppTab(browser);
+  isAppTab = await isBrowserAppTab(browser);
   ok(isAppTab, "Docshell should think it is an app tab");
 
   gBrowser.removeCurrentTab();

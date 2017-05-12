@@ -29,7 +29,7 @@ function run_test() {
 /**
  * Tests that the helper used for preferences works correctly
  */
-add_task(function* test_prefs() {
+add_task(async function test_prefs() {
   let addon1 = "addon1", addon2 = "addon2";
 
   GMPScope.GMPPrefs.set(GMPScope.GMPPrefs.KEY_URL, "http://not-really-used");
@@ -57,7 +57,7 @@ add_task(function* test_prefs() {
 /**
  * Tests that an uninit without a check works fine
  */
-add_task(function* test_checkForAddons_uninitWithoutCheck() {
+add_task(async function test_checkForAddons_uninitWithoutCheck() {
   let installManager = new GMPInstallManager();
   installManager.uninit();
 });
@@ -93,10 +93,10 @@ add_test(function test_checkForAddons_noResponse() {
 /**
  * Tests that no addons element returned resolves with no addons
  */
-add_task(function* test_checkForAddons_noAddonsElement() {
+add_task(async function test_checkForAddons_noAddonsElement() {
   overrideXHR(200, "<updates></updates>");
   let installManager = new GMPInstallManager();
-  let res = yield installManager.checkForAddons();
+  let res = await installManager.checkForAddons();
   do_check_eq(res.gmpAddons.length, 0);
   installManager.uninit();
 });
@@ -104,10 +104,10 @@ add_task(function* test_checkForAddons_noAddonsElement() {
 /**
  * Tests that empty addons element returned resolves with no addons
  */
-add_task(function* test_checkForAddons_emptyAddonsElement() {
+add_task(async function test_checkForAddons_emptyAddonsElement() {
   overrideXHR(200, "<updates><addons/></updates>");
   let installManager = new GMPInstallManager();
-  let res = yield installManager.checkForAddons();
+  let res = await installManager.checkForAddons();
   do_check_eq(res.gmpAddons.length, 0);
   installManager.uninit();
 });
@@ -222,7 +222,7 @@ add_test(function test_checkForAddons_notXML() {
 /**
  * Tests that getting a response with a single addon works as expected
  */
-add_task(function* test_checkForAddons_singleAddon() {
+add_task(async function test_checkForAddons_singleAddon() {
   let responseXML =
     "<?xml version=\"1.0\"?>" +
     "<updates>" +
@@ -236,7 +236,7 @@ add_task(function* test_checkForAddons_singleAddon() {
     "</updates>"
   overrideXHR(200, responseXML);
   let installManager = new GMPInstallManager();
-  let res = yield installManager.checkForAddons();
+  let res = await installManager.checkForAddons();
   do_check_eq(res.gmpAddons.length, 1);
   let gmpAddon = res.gmpAddons[0];
   do_check_eq(gmpAddon.id, "gmp-gmpopenh264");
@@ -254,7 +254,7 @@ add_task(function* test_checkForAddons_singleAddon() {
  * Tests that getting a response with a single addon with the optional size
  * attribute parses as expected.
  */
-add_task(function* test_checkForAddons_singleAddonWithSize() {
+add_task(async function test_checkForAddons_singleAddonWithSize() {
   let responseXML =
     "<?xml version=\"1.0\"?>" +
     "<updates>" +
@@ -269,7 +269,7 @@ add_task(function* test_checkForAddons_singleAddonWithSize() {
     "</updates>"
   overrideXHR(200, responseXML);
   let installManager = new GMPInstallManager();
-  let res = yield installManager.checkForAddons();
+  let res = await installManager.checkForAddons();
   do_check_eq(res.gmpAddons.length, 1);
   let gmpAddon = res.gmpAddons[0];
   do_check_eq(gmpAddon.id, "openh264-plugin-no-at-symbol");
@@ -287,7 +287,7 @@ add_task(function* test_checkForAddons_singleAddonWithSize() {
  * Tests that checking for multiple addons work correctly.
  * Also tests that invalid addons work correctly.
  */
-add_task(function* test_checkForAddons_multipleAddonNoUpdatesSomeInvalid() {
+add_task(async function test_checkForAddons_multipleAddonNoUpdatesSomeInvalid() {
   let responseXML =
     "<?xml version=\"1.0\"?>" +
     "<updates>" +
@@ -338,7 +338,7 @@ add_task(function* test_checkForAddons_multipleAddonNoUpdatesSomeInvalid() {
     "</updates>"
   overrideXHR(200, responseXML);
   let installManager = new GMPInstallManager();
-  let res = yield installManager.checkForAddons();
+  let res = await installManager.checkForAddons();
   do_check_eq(res.gmpAddons.length, 7);
   let gmpAddon = res.gmpAddons[0];
   do_check_eq(gmpAddon.id, "gmp-gmpopenh264");
@@ -369,7 +369,7 @@ add_task(function* test_checkForAddons_multipleAddonNoUpdatesSomeInvalid() {
  * Tests that checking for addons when there are also updates available
  * works as expected.
  */
-add_task(function* test_checkForAddons_updatesWithAddons() {
+add_task(async function test_checkForAddons_updatesWithAddons() {
   let responseXML =
     "<?xml version=\"1.0\"?>" +
     "    <updates>" +
@@ -386,7 +386,7 @@ add_task(function* test_checkForAddons_updatesWithAddons() {
     "</updates>"
   overrideXHR(200, responseXML);
   let installManager = new GMPInstallManager();
-  let res = yield installManager.checkForAddons();
+  let res = await installManager.checkForAddons();
   do_check_eq(res.gmpAddons.length, 1);
   let gmpAddon = res.gmpAddons[0];
   do_check_eq(gmpAddon.id, "gmp-gmpopenh264");
@@ -402,7 +402,7 @@ add_task(function* test_checkForAddons_updatesWithAddons() {
 /**
  * Tests that installing found addons works as expected
  */
-function* test_checkForAddons_installAddon(id, includeSize, wantInstallReject) {
+async function test_checkForAddons_installAddon(id, includeSize, wantInstallReject) {
   do_print("Running installAddon for id: " + id +
            ", includeSize: " + includeSize +
            " and wantInstallReject: " + wantInstallReject);
@@ -419,7 +419,7 @@ function* test_checkForAddons_installAddon(id, includeSize, wantInstallReject) {
   let data = "e~=0.5772156649";
   let zipFile = createNewZipFile(zipFileName, data);
   let hashFunc = "sha256";
-  let expectedDigest = yield ProductAddonCheckerScope.computeHash(hashFunc, zipFile.path);
+  let expectedDigest = await ProductAddonCheckerScope.computeHash(hashFunc, zipFile.path);
   let fileSize = zipFile.fileSize;
   if (wantInstallReject) {
     fileSize = 1;
@@ -440,13 +440,13 @@ function* test_checkForAddons_installAddon(id, includeSize, wantInstallReject) {
 
   overrideXHR(200, responseXML);
   let installManager = new GMPInstallManager();
-  let res = yield installManager.checkForAddons();
+  let res = await installManager.checkForAddons();
   do_check_eq(res.gmpAddons.length, 1);
   let gmpAddon = res.gmpAddons[0];
   do_check_false(gmpAddon.isInstalled);
 
   try {
-    let extractedPaths = yield installManager.installAddon(gmpAddon);
+    let extractedPaths = await installManager.installAddon(gmpAddon);
     if (wantInstallReject) {
       do_check_true(false); // installAddon() should have thrown.
     }
@@ -494,7 +494,7 @@ add_task(test_checkForAddons_installAddon.bind(null, "3", true, true));
 /**
  * Tests simpleCheckAndInstall when autoupdate is disabled for a GMP
  */
-add_task(function* test_simpleCheckAndInstall_autoUpdateDisabled() {
+add_task(async function test_simpleCheckAndInstall_autoUpdateDisabled() {
   GMPScope.GMPPrefs.set(GMPScope.GMPPrefs.KEY_PLUGIN_AUTOUPDATE, false, GMPScope.OPEN_H264_ID);
   let responseXML =
     "<?xml version=\"1.0\"?>" +
@@ -511,7 +511,7 @@ add_task(function* test_simpleCheckAndInstall_autoUpdateDisabled() {
 
   overrideXHR(200, responseXML);
   let installManager = new GMPInstallManager();
-  let result = yield installManager.simpleCheckAndInstall();
+  let result = await installManager.simpleCheckAndInstall();
   do_check_eq(result.status, "nothing-new-to-install");
   Preferences.reset(GMPScope.GMPPrefs.KEY_UPDATE_LAST_CHECK);
   GMPScope.GMPPrefs.set(GMPScope.GMPPrefs.KEY_PLUGIN_AUTOUPDATE, true, GMPScope.OPEN_H264_ID);
@@ -520,7 +520,7 @@ add_task(function* test_simpleCheckAndInstall_autoUpdateDisabled() {
 /**
  * Tests simpleCheckAndInstall nothing to install
  */
-add_task(function* test_simpleCheckAndInstall_nothingToInstall() {
+add_task(async function test_simpleCheckAndInstall_nothingToInstall() {
   let responseXML =
     "<?xml version=\"1.0\"?>" +
     "<updates>" +
@@ -528,14 +528,14 @@ add_task(function* test_simpleCheckAndInstall_nothingToInstall() {
 
   overrideXHR(200, responseXML);
   let installManager = new GMPInstallManager();
-  let result = yield installManager.simpleCheckAndInstall();
+  let result = await installManager.simpleCheckAndInstall();
   do_check_eq(result.status, "nothing-new-to-install");
 });
 
 /**
  * Tests simpleCheckAndInstall too frequent
  */
-add_task(function* test_simpleCheckAndInstall_tooFrequent() {
+add_task(async function test_simpleCheckAndInstall_tooFrequent() {
   let responseXML =
     "<?xml version=\"1.0\"?>" +
     "<updates>" +
@@ -543,7 +543,7 @@ add_task(function* test_simpleCheckAndInstall_tooFrequent() {
 
   overrideXHR(200, responseXML);
   let installManager = new GMPInstallManager();
-  let result = yield installManager.simpleCheckAndInstall();
+  let result = await installManager.simpleCheckAndInstall();
   do_check_eq(result.status, "too-frequent-no-check");
 });
 

@@ -31,9 +31,9 @@ function waitForCondition(condition, nextTest, errorMsg, retryTimes) {
 }
 
 function promiseWaitForCondition(aConditionFn, retryTimes) {
-  let deferred = Promise.defer();
-  waitForCondition(aConditionFn, deferred.resolve, "Condition didn't pass.", retryTimes);
-  return deferred.promise;
+  return new Promise(resolve => {
+    waitForCondition(aConditionFn, resolve, "Condition didn't pass.", retryTimes);
+  });
 }
 
 /**
@@ -82,7 +82,7 @@ function promiseIndicatorWindow() {
   return promiseWindow("chrome://browser/content/webrtcIndicator.xul");
 }
 
-function* assertWebRTCIndicatorStatus(expected) {
+async function assertWebRTCIndicatorStatus(expected) {
   let ui = Cu.import("resource:///modules/webrtcUI.jsm", {}).webrtcUI;
   let expectedState = expected ? "visible" : "hidden";
   let msg = "WebRTC indicator " + expectedState;
@@ -90,7 +90,7 @@ function* assertWebRTCIndicatorStatus(expected) {
     // It seems the global indicator is not always removed synchronously
     // in some cases.
     info("waiting for the global indicator to be hidden");
-    yield promiseWaitForCondition(() => !ui.showGlobalIndicator);
+    await promiseWaitForCondition(() => !ui.showGlobalIndicator);
   }
   is(ui.showGlobalIndicator, !!expected, msg);
 
@@ -118,7 +118,7 @@ function* assertWebRTCIndicatorStatus(expected) {
     if (!expected) {
       let win = Services.wm.getMostRecentWindow("Browser:WebRTCGlobalIndicator");
       if (win) {
-        yield new Promise((resolve, reject) => {
+        await new Promise((resolve, reject) => {
           win.addEventListener("unload", function listener(e) {
             if (e.target == win.document) {
               win.removeEventListener("unload", listener);
@@ -137,15 +137,15 @@ function* assertWebRTCIndicatorStatus(expected) {
 
       if (document.readyState != "complete") {
         info("Waiting for the sharing indicator's document to load");
-        let deferred = Promise.defer();
-        document.addEventListener("readystatechange",
-                                  function onReadyStateChange() {
-          if (document.readyState != "complete")
-            return;
-          document.removeEventListener("readystatechange", onReadyStateChange);
-          deferred.resolve();
+        await new Promise(resolve => {
+          document.addEventListener("readystatechange",
+                                    function onReadyStateChange() {
+            if (document.readyState != "complete")
+              return;
+            document.removeEventListener("readystatechange", onReadyStateChange);
+            resolve();
+          });
         });
-        yield deferred.promise;
       }
 
       for (let item of ["video", "audio", "screen"]) {
@@ -166,12 +166,12 @@ function promisePopupEvent(popup, eventSuffix) {
     return Promise.resolve();
 
   let eventType = "popup" + eventSuffix;
-  let deferred = Promise.defer();
-  popup.addEventListener(eventType, function(event) {
-    deferred.resolve();
-  }, {once: true});
+  return new Promise(resolve => {
+    popup.addEventListener(eventType, function(event) {
+      resolve();
+    }, {once: true});
 
-  return deferred.promise;
+  });
 }
 
 function promiseNotificationShown(notification) {
@@ -274,47 +274,47 @@ function promiseMessage(aMessage, aAction) {
 }
 
 function promisePopupNotificationShown(aName, aAction) {
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  PopupNotifications.panel.addEventListener("popupshown", function() {
-    ok(!!PopupNotifications.getNotification(aName), aName + " notification shown");
-    ok(PopupNotifications.isPanelOpen, "notification panel open");
-    ok(!!PopupNotifications.panel.firstChild, "notification panel populated");
+    PopupNotifications.panel.addEventListener("popupshown", function() {
+      ok(!!PopupNotifications.getNotification(aName), aName + " notification shown");
+      ok(PopupNotifications.isPanelOpen, "notification panel open");
+      ok(!!PopupNotifications.panel.firstChild, "notification panel populated");
 
-    deferred.resolve();
-  }, {once: true});
+      resolve();
+    }, {once: true});
 
-  if (aAction)
-    aAction();
+    if (aAction)
+      aAction();
 
-  return deferred.promise;
+  });
 }
 
 function promisePopupNotification(aName) {
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  waitForCondition(() => PopupNotifications.getNotification(aName),
-                   () => {
-    ok(!!PopupNotifications.getNotification(aName),
-       aName + " notification appeared");
+    waitForCondition(() => PopupNotifications.getNotification(aName),
+                     () => {
+      ok(!!PopupNotifications.getNotification(aName),
+         aName + " notification appeared");
 
-    deferred.resolve();
-  }, "timeout waiting for popup notification " + aName);
+      resolve();
+    }, "timeout waiting for popup notification " + aName);
 
-  return deferred.promise;
+  });
 }
 
 function promiseNoPopupNotification(aName) {
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  waitForCondition(() => !PopupNotifications.getNotification(aName),
-                   () => {
-    ok(!PopupNotifications.getNotification(aName),
-       aName + " notification removed");
-    deferred.resolve();
-  }, "timeout waiting for popup notification " + aName + " to disappear");
+    waitForCondition(() => !PopupNotifications.getNotification(aName),
+                     () => {
+      ok(!PopupNotifications.getNotification(aName),
+         aName + " notification removed");
+      resolve();
+    }, "timeout waiting for popup notification " + aName + " to disappear");
 
-  return deferred.promise;
+  });
 }
 
 const kActionAlways = 1;
@@ -346,7 +346,7 @@ function getMediaCaptureState() {
   });
 }
 
-function* stopSharing(aType = "camera", aShouldKeepSharing = false) {
+async function stopSharing(aType = "camera", aShouldKeepSharing = false) {
   let promiseRecordingEvent = promiseObserverCalled("recording-device-events");
   gIdentityHandler._identityBox.click();
   let permissions = document.getElementById("identity-popup-permission-list");
@@ -355,18 +355,18 @@ function* stopSharing(aType = "camera", aShouldKeepSharing = false) {
                               ".identity-popup-permission-remove-button");
   cancelButton.click();
   gIdentityHandler._identityPopup.hidden = true;
-  yield promiseRecordingEvent;
-  yield expectObserverCalled("getUserMedia:revoke");
+  await promiseRecordingEvent;
+  await expectObserverCalled("getUserMedia:revoke");
 
   // If we are stopping screen sharing and expect to still have another stream,
   // "recording-window-ended" won't be fired.
   if (!aShouldKeepSharing)
-    yield expectObserverCalled("recording-window-ended");
+    await expectObserverCalled("recording-window-ended");
 
-  yield expectNoObserverCalled();
+  await expectNoObserverCalled();
 
   if (!aShouldKeepSharing)
-    yield* checkNotSharing();
+    await checkNotSharing();
 }
 
 function promiseRequestDevice(aRequestAudio, aRequestVideo, aFrameId, aType,
@@ -374,7 +374,7 @@ function promiseRequestDevice(aRequestAudio, aRequestVideo, aFrameId, aType,
   info("requesting devices");
   return ContentTask.spawn(aBrowser,
                            {aRequestAudio, aRequestVideo, aFrameId, aType},
-                           function*(args) {
+                           async function(args) {
     let global = content.wrappedJSObject;
     if (args.aFrameId)
       global = global.document.getElementById(args.aFrameId).contentWindow;
@@ -382,8 +382,8 @@ function promiseRequestDevice(aRequestAudio, aRequestVideo, aFrameId, aType,
   });
 }
 
-function* closeStream(aAlreadyClosed, aFrameId) {
-  yield expectNoObserverCalled();
+async function closeStream(aAlreadyClosed, aFrameId) {
+  await expectNoObserverCalled();
 
   let promises;
   if (!aAlreadyClosed) {
@@ -392,7 +392,7 @@ function* closeStream(aAlreadyClosed, aFrameId) {
   }
 
   info("closing the stream");
-  yield ContentTask.spawn(gBrowser.selectedBrowser, aFrameId, function*(contentFrameId) {
+  await ContentTask.spawn(gBrowser.selectedBrowser, aFrameId, async function(contentFrameId) {
     let global = content.wrappedJSObject;
     if (contentFrameId)
       global = global.document.getElementById(contentFrameId).contentWindow;
@@ -400,23 +400,23 @@ function* closeStream(aAlreadyClosed, aFrameId) {
   });
 
   if (promises)
-    yield Promise.all(promises);
+    await Promise.all(promises);
 
-  yield* assertWebRTCIndicatorStatus(null);
+  await assertWebRTCIndicatorStatus(null);
 }
 
-function* reloadAndAssertClosedStreams() {
+async function reloadAndAssertClosedStreams() {
   info("reloading the web page");
   let promises = [
     promiseObserverCalled("recording-device-events"),
     promiseObserverCalled("recording-window-ended")
   ];
-  yield ContentTask.spawn(gBrowser.selectedBrowser, null,
+  await ContentTask.spawn(gBrowser.selectedBrowser, null,
                           "() => content.location.reload()");
-  yield Promise.all(promises);
+  await Promise.all(promises);
 
-  yield expectNoObserverCalled();
-  yield checkNotSharing();
+  await expectNoObserverCalled();
+  await checkNotSharing();
 }
 
 function checkDeviceSelectors(aAudio, aVideo, aScreen) {
@@ -441,7 +441,7 @@ function checkDeviceSelectors(aAudio, aVideo, aScreen) {
 
 // aExpected is for the current tab,
 // aExpectedGlobal is for all tabs.
-function* checkSharingUI(aExpected, aWin = window, aExpectedGlobal = null) {
+async function checkSharingUI(aExpected, aWin = window, aExpectedGlobal = null) {
   let doc = aWin.document;
   // First check the icon above the control center (i) icon.
   let identityBox = doc.getElementById("identity-box");
@@ -485,21 +485,21 @@ function* checkSharingUI(aExpected, aWin = window, aExpectedGlobal = null) {
   aWin.gIdentityHandler._identityPopup.hidden = true;
 
   // Check the global indicators.
-  yield* assertWebRTCIndicatorStatus(aExpectedGlobal || aExpected);
+  await assertWebRTCIndicatorStatus(aExpectedGlobal || aExpected);
 }
 
-function* checkNotSharing() {
-  Assert.deepEqual((yield getMediaCaptureState()), {},
+async function checkNotSharing() {
+  Assert.deepEqual((await getMediaCaptureState()), {},
                    "expected nothing to be shared");
 
   ok(!document.getElementById("identity-box").hasAttribute("sharing"),
      "no sharing indicator on the control center icon");
 
-  yield* assertWebRTCIndicatorStatus(null);
+  await assertWebRTCIndicatorStatus(null);
 }
 
 function promiseReloadFrame(aFrameId) {
-  return ContentTask.spawn(gBrowser.selectedBrowser, aFrameId, function*(contentFrameId) {
+  return ContentTask.spawn(gBrowser.selectedBrowser, aFrameId, async function(contentFrameId) {
     content.wrappedJSObject
            .document
            .getElementById(contentFrameId)
@@ -532,7 +532,7 @@ async function runTests(tests, options = {}) {
 
   for (let testCase of tests) {
     info(testCase.desc);
-    await Task.spawn(testCase.run(browser));
+    await testCase.run(browser);
     await cleanup();
   }
 

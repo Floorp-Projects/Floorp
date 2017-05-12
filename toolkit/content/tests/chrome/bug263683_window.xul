@@ -19,7 +19,6 @@
   <script type="application/javascript"><![CDATA[
     const {interfaces: Ci, classes: Cc, results: Cr, utils: Cu} = Components;
     Cu.import("resource://gre/modules/AppConstants.jsm");
-    Cu.import("resource://gre/modules/Task.jsm");
     Cu.import("resource://testing-common/BrowserTestUtils.jsm");
     Cu.import("resource://testing-common/ContentTask.jsm");
     ContentTask.setTestScope(window.opener.wrappedJSObject);
@@ -34,20 +33,20 @@
     }
 
     function startTest() {
-      Task.spawn(function* () {
+      (async function() {
         gFindBar = document.getElementById("FindToolbar");
         // Testing on a remote browser has been disabled due to frequent
         // intermittent failures.
         for (let browserId of ["content"/*, "content-remote"*/]) {
-          yield startTestWithBrowser(browserId);
+          await startTestWithBrowser(browserId);
         }
-      }).then(() => {
+      })().then(() => {
         window.close();
         SimpleTest.finish();
       });
     }
 
-    function* startTestWithBrowser(browserId) {
+    async function startTestWithBrowser(browserId) {
       // We're bailing out when testing a remote browser on OSX 10.6, because it
       // fails permanently.
       if (browserId.endsWith("remote") && AppConstants.isPlatformAndVersionAtMost("macosx", 11)) {
@@ -59,8 +58,8 @@
       gFindBar.browser = gBrowser;
       let promise = BrowserTestUtils.browserLoaded(gBrowser);
       gBrowser.loadURI('data:text/html,<h2>Text mozilla</h2><input id="inp" type="text" />');
-      yield promise;
-      yield onDocumentLoaded();
+      await promise;
+      await onDocumentLoaded();
     }
 
     function toggleHighlightAndWait(highlight) {
@@ -76,7 +75,7 @@
       });
     }
 
-    function* onDocumentLoaded() {
+    async function onDocumentLoaded() {
       gFindBar.open();
       var search = "mozilla";
       gFindBar._findField.focus();
@@ -88,9 +87,9 @@
 
       let promise = toggleHighlightAndWait(true);
       gFindBar._find();
-      yield promise;
+      await promise;
 
-      yield ContentTask.spawn(gBrowser, { search }, function* (args) {
+      await ContentTask.spawn(gBrowser, { search }, async function(args) {
         let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                                  .getInterface(Ci.nsISelectionDisplay)
                                  .QueryInterface(Ci.nsISelectionController);
@@ -103,9 +102,9 @@
           args.search, "Added the correct match");
       });
 
-      yield toggleHighlightAndWait(false);
+      await toggleHighlightAndWait(false);
 
-      yield ContentTask.spawn(gBrowser, { search }, function* (args) {
+      await ContentTask.spawn(gBrowser, { search }, async function(args) {
         let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                                  .getInterface(Ci.nsISelectionDisplay)
                                  .QueryInterface(Ci.nsISelectionController);
@@ -116,9 +115,9 @@
         input.value = args.search;
       });
  
-      yield toggleHighlightAndWait(true);
+      await toggleHighlightAndWait(true);
 
-      yield ContentTask.spawn(gBrowser, { search }, function* (args) {
+      await ContentTask.spawn(gBrowser, { search }, async function(args) {
         let input = content.document.getElementById("inp");
         let inputController = input.editor.selectionController;
         let inputSelection = inputController.getSelection(inputController.SELECTION_FIND);
@@ -129,9 +128,9 @@
           args.search, "Added the correct match");
       });
 
-      yield toggleHighlightAndWait(false);
+      await toggleHighlightAndWait(false);
 
-      yield ContentTask.spawn(gBrowser, null, function* () {
+      await ContentTask.spawn(gBrowser, null, async function() {
         let input = content.document.getElementById("inp");
         let inputController = input.editor.selectionController;
         let inputSelection = inputController.getSelection(inputController.SELECTION_FIND);
@@ -144,11 +143,11 @@
       promise = BrowserTestUtils.browserLoaded(gBrowser);
       gBrowser.loadURI('data:text/html,<h2>Text mozilla</h2><iframe id="leframe" ' +
         'src="data:text/html,Text mozilla"></iframe>');
-      yield promise;
+      await promise;
 
-      yield toggleHighlightAndWait(true);
+      await toggleHighlightAndWait(true);
 
-      yield ContentTask.spawn(gBrowser, { search }, function* (args) {
+      await ContentTask.spawn(gBrowser, { search }, async function(args) {
         function getSelection(docShell) {
           let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                                    .getInterface(Ci.nsISelectionDisplay)
@@ -175,12 +174,12 @@
           args.search, "Added the correct match");
       });
 
-      yield toggleHighlightAndWait(false);
+      await toggleHighlightAndWait(false);
 
       let matches = gFindBar._foundMatches.value.match(/([\d]*)\sof\s([\d]*)/);
       is(matches[1], "2", "Found correct amount of matches")
 
-      yield ContentTask.spawn(gBrowser, null, function* (args) {
+      await ContentTask.spawn(gBrowser, null, async function(args) {
         function getSelection(docShell) {
           let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                                    .getInterface(Ci.nsISelectionDisplay)

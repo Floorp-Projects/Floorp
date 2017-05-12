@@ -65,7 +65,7 @@ function check_histogram_values(payload) {
                "Keyed flag test histogram should have the right value.");
 }
 
-add_task(function*() {
+add_task(async function() {
   if (!runningInParent) {
     TelemetryController.testSetupContent();
     run_child_test();
@@ -78,17 +78,17 @@ add_task(function*() {
   do_get_profile(true);
   loadAddonManager(APP_ID, APP_NAME, APP_VERSION, PLATFORM_VERSION);
   Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
-  yield TelemetryController.testSetup();
+  await TelemetryController.testSetup();
   if (runningInParent) {
     // Make sure we don't generate unexpected pings due to pref changes.
-    yield setEmptyPrefWatchlist();
+    await setEmptyPrefWatchlist();
   }
 
   // Run test in child, don't wait for it to finish.
   run_test_in_child("test_ChildHistograms.js");
-  yield do_await_remote_message(MESSAGE_CHILD_TEST_DONE);
+  await do_await_remote_message(MESSAGE_CHILD_TEST_DONE);
 
-  yield ContentTaskUtils.waitForCondition(() => {
+  await ContentTaskUtils.waitForCondition(() => {
     let payload = TelemetrySession.getPayload("test-ping");
     return payload &&
            "processes" in payload &&

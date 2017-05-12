@@ -3,7 +3,7 @@ const gTestRoot = rootDir.replace("chrome://mochitests/content/", "http://127.0.
 var gPluginHost = Components.classes["@mozilla.org/plugin/host;1"].getService(Components.interfaces.nsIPluginHost);
 var gTestBrowser = null;
 
-add_task(function* () {
+add_task(async function() {
   registerCleanupFunction(function() {
     clearAllPluginPermissions();
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
@@ -26,36 +26,36 @@ add_task(function* () {
 });
 
 // Test that the click-to-play doorhanger still works when navigating to data URLs
-add_task(function* () {
-  yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_data_url.html");
+add_task(async function() {
+  await promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_data_url.html");
 
   // Work around for delayed PluginBindingAttached
-  yield promiseUpdatePluginBindings(gTestBrowser);
+  await promiseUpdatePluginBindings(gTestBrowser);
 
   let popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
   ok(popupNotification, "Test 1a, Should have a click-to-play notification");
 
-  let pluginInfo = yield promiseForPluginInfo("test");
+  let pluginInfo = await promiseForPluginInfo("test");
   ok(!pluginInfo.activated, "Test 1a, plugin should not be activated");
 
   let loadPromise = promiseTabLoadEvent(gBrowser.selectedTab);
-  yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  await ContentTask.spawn(gTestBrowser, {}, async function() {
     // navigate forward to a page with 'test' in it
     content.document.getElementById("data-link-1").click();
   });
-  yield loadPromise;
+  await loadPromise;
 
   // Work around for delayed PluginBindingAttached
-  yield promiseUpdatePluginBindings(gTestBrowser);
+  await promiseUpdatePluginBindings(gTestBrowser);
 
   popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
   ok(popupNotification, "Test 1b, Should have a click-to-play notification");
 
-  pluginInfo = yield promiseForPluginInfo("test");
+  pluginInfo = await promiseForPluginInfo("test");
   ok(!pluginInfo.activated, "Test 1b, plugin should not be activated");
 
   let promise = promisePopupNotification("click-to-play-plugins");
-  yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  await ContentTask.spawn(gTestBrowser, {}, async function() {
     let plugin = content.document.getElementById("test");
     let bounds = plugin.getBoundingClientRect();
     let left = (bounds.left + bounds.right) / 2;
@@ -65,58 +65,58 @@ add_task(function* () {
     utils.sendMouseEvent("mousedown", left, top, 0, 1, 0, false, 0, 0);
     utils.sendMouseEvent("mouseup", left, top, 0, 1, 0, false, 0, 0);
   });
-  yield promise;
+  await promise;
 
   // Simulate clicking the "Allow Always" button.
   let condition = () => !PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser).dismissed &&
     PopupNotifications.panel.firstChild;
-  yield promiseForCondition(condition);
+  await promiseForCondition(condition);
   PopupNotifications.panel.firstChild._primaryButton.click();
 
   // check plugin state
-  pluginInfo = yield promiseForPluginInfo("test");
+  pluginInfo = await promiseForPluginInfo("test");
   ok(pluginInfo.activated, "Test 1b, plugin should be activated");
 });
 
 // Test that the click-to-play notification doesn't break when navigating
 // to data URLs with multiple plugins.
-add_task(function* () {
+add_task(async function() {
   // We click activated above
   clearAllPluginPermissions();
 
-  yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_data_url.html");
+  await promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_data_url.html");
 
   // Work around for delayed PluginBindingAttached
-  yield promiseUpdatePluginBindings(gTestBrowser);
+  await promiseUpdatePluginBindings(gTestBrowser);
 
   let notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
   ok(notification, "Test 2a, Should have a click-to-play notification");
 
-  let pluginInfo = yield promiseForPluginInfo("test");
+  let pluginInfo = await promiseForPluginInfo("test");
   ok(!pluginInfo.activated, "Test 2a, plugin should not be activated");
 
   let loadPromise = promiseTabLoadEvent(gBrowser.selectedTab);
-  yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  await ContentTask.spawn(gTestBrowser, {}, async function() {
     // navigate forward to a page with 'test1' & 'test2' in it
     content.document.getElementById("data-link-2").click();
   });
-  yield loadPromise;
+  await loadPromise;
 
   // Work around for delayed PluginBindingAttached
-  yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  await ContentTask.spawn(gTestBrowser, {}, async function() {
     content.document.getElementById("test1").clientTop;
     content.document.getElementById("test2").clientTop;
   });
 
-  pluginInfo = yield promiseForPluginInfo("test1");
+  pluginInfo = await promiseForPluginInfo("test1");
   ok(!pluginInfo.activated, "Test 2a, test1 should not be activated");
-  pluginInfo = yield promiseForPluginInfo("test2");
+  pluginInfo = await promiseForPluginInfo("test2");
   ok(!pluginInfo.activated, "Test 2a, test2 should not be activated");
 
   notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
   ok(notification, "Test 2b, Should have a click-to-play notification");
 
-  yield promiseForNotificationShown(notification);
+  await promiseForNotificationShown(notification);
 
   // Simulate choosing "Allow now" for the test plugin
   is(notification.options.pluginData.size, 2, "Test 2b, Should have two types of plugin in the notification");
@@ -145,34 +145,34 @@ add_task(function* () {
   PopupNotifications.panel.firstChild._primaryButton.click();
 
   // Work around for delayed PluginBindingAttached
-  yield promiseUpdatePluginBindings(gTestBrowser);
+  await promiseUpdatePluginBindings(gTestBrowser);
 
   // check plugin state
-  pluginInfo = yield promiseForPluginInfo("test1");
+  pluginInfo = await promiseForPluginInfo("test1");
   ok(pluginInfo.activated, "Test 2b, plugin should be activated");
 });
 
-add_task(function* () {
+add_task(async function() {
   // We click activated above
   clearAllPluginPermissions();
 
-  yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_data_url.html");
+  await promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_data_url.html");
 
   // Work around for delayed PluginBindingAttached
-  yield promiseUpdatePluginBindings(gTestBrowser);
+  await promiseUpdatePluginBindings(gTestBrowser);
 });
 
 // Test that when navigating to a data url, the plugin permission is inherited
-add_task(function* () {
+add_task(async function() {
   let notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
   ok(notification, "Test 3a, Should have a click-to-play notification");
 
   // check plugin state
-  let pluginInfo = yield promiseForPluginInfo("test");
+  let pluginInfo = await promiseForPluginInfo("test");
   ok(!pluginInfo.activated, "Test 3a, plugin should not be activated");
 
   let promise = promisePopupNotification("click-to-play-plugins");
-  yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  await ContentTask.spawn(gTestBrowser, {}, async function() {
     let plugin = content.document.getElementById("test");
     let bounds = plugin.getBoundingClientRect();
     let left = (bounds.left + bounds.right) / 2;
@@ -182,30 +182,30 @@ add_task(function* () {
     utils.sendMouseEvent("mousedown", left, top, 0, 1, 0, false, 0, 0);
     utils.sendMouseEvent("mouseup", left, top, 0, 1, 0, false, 0, 0);
   });
-  yield promise;
+  await promise;
 
   // Simulate clicking the "Allow Always" button.
   let condition = () => !PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser).dismissed &&
     PopupNotifications.panel.firstChild;
-  yield promiseForCondition(condition);
+  await promiseForCondition(condition);
   PopupNotifications.panel.firstChild._primaryButton.click();
 
   // check plugin state
-  pluginInfo = yield promiseForPluginInfo("test");
+  pluginInfo = await promiseForPluginInfo("test");
   ok(pluginInfo.activated, "Test 3a, plugin should be activated");
 
   let loadPromise = promiseTabLoadEvent(gBrowser.selectedTab);
-  yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  await ContentTask.spawn(gTestBrowser, {}, async function() {
     // navigate forward to a page with 'test' in it
     content.document.getElementById("data-link-1").click();
   });
-  yield loadPromise;
+  await loadPromise;
 
   // Work around for delayed PluginBindingAttached
-  yield promiseUpdatePluginBindings(gTestBrowser);
+  await promiseUpdatePluginBindings(gTestBrowser);
 
   // check plugin state
-  pluginInfo = yield promiseForPluginInfo("test");
+  pluginInfo = await promiseForPluginInfo("test");
   ok(pluginInfo.activated, "Test 3b, plugin should be activated");
 
   clearAllPluginPermissions();

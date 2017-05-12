@@ -13,7 +13,7 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* test_contentscript_incognito() {
+add_task(async function test_contentscript_incognito() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       content_scripts: [
@@ -71,16 +71,16 @@ add_task(function* test_contentscript_incognito() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
   extension.sendMessage(["open-window", SimpleTest.getTestFileURL("file_sample.html")]);
 
-  yield extension.awaitFinish("cookies");
+  await extension.awaitFinish("cookies");
 
   extension.sendMessage(["close-window"]);
-  yield extension.awaitMessage("done");
+  await extension.awaitMessage("done");
 
-  yield extension.unload();
+  await extension.unload();
 });
 </script>
 

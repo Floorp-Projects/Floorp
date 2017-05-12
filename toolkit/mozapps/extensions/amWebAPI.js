@@ -8,7 +8,6 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "WEBEXT_PERMISSION_PROMPTS",
                                       "extensions.webextPermissionPrompts", false);
@@ -132,8 +131,8 @@ class APIObject {
     let win = this.window;
     let broker = this.broker;
     return new win.Promise((resolve, reject) => {
-      Task.spawn(function*() {
-        let result = yield broker.sendRequest(apiRequest, ...apiArgs);
+      (async function() {
+        let result = await broker.sendRequest(apiRequest, ...apiArgs);
         if ("reject" in result) {
           let err = new win.Error(result.reject.message);
           // We don't currently put any other properties onto Errors
@@ -148,7 +147,7 @@ class APIObject {
           obj = resultConverter(obj);
         }
         resolve(obj);
-      }).catch(err => {
+      })().catch(err => {
         Cu.reportError(err);
         reject(new win.Error("Unexpected internal error"));
       });

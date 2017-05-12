@@ -29,13 +29,13 @@ var testUrls =
       "</script><body>Testing confirm during pagehide/beforeunload/unload</body>",
   ];
 
-add_task(function*() {
+add_task(async function() {
   for (let url of testUrls) {
-    let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+    let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
     ok(true, "Loaded page " + url);
     // Wait one turn of the event loop before closing, so everything settles.
-    yield new Promise(resolve => setTimeout(resolve, 0));
-    yield BrowserTestUtils.removeTab(tab);
+    await new Promise(resolve => setTimeout(resolve, 0));
+    await BrowserTestUtils.removeTab(tab);
     ok(true, "Closed page " + url + " without timeout");
   }
 });

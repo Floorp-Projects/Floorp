@@ -13,7 +13,6 @@ var Ci = Components.interfaces;
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/Timer.jsm", this);
-Cu.import("resource://gre/modules/Task.jsm", this);
 
 var {Path, File, Constants} = OS;
 
@@ -21,7 +20,7 @@ var PATH;
 var PATH_TMP;
 var terminator;
 
-add_task(function* init() {
+add_task(async function init() {
   do_get_profile();
   PATH = Path.join(Constants.Path.localProfileDir, "ShutdownDuration.json");
   PATH_TMP = PATH + ".tmp";
@@ -35,26 +34,26 @@ add_task(function* init() {
   terminator.observe(null, "profile-after-change", null);
 });
 
-var promiseShutdownDurationData = Task.async(function*() {
+var promiseShutdownDurationData = async function() {
   // Wait until PATH exists.
   // Timeout if it is never created.
   do_print("Waiting for file creation: " + PATH);
   while (true) {
-    if ((yield OS.File.exists(PATH))) {
+    if ((await OS.File.exists(PATH))) {
       break;
     }
 
     do_print("The file does not exist yet. Waiting 1 second.");
-    yield new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 1000));
   }
 
   do_print("The file has been created");
-  let raw = yield OS.File.read(PATH, { encoding: "utf-8"} );
+  let raw = await OS.File.read(PATH, { encoding: "utf-8"} );
   do_print(raw);
   return JSON.parse(raw);
-});
+};
 
-add_task(function* test_record() {
+add_task(async function test_record() {
   let PHASE0 = "profile-change-teardown";
   let PHASE1 = "profile-before-change";
   let PHASE2 = "xpcom-will-shutdown";
@@ -66,7 +65,7 @@ add_task(function* test_record() {
   do_print("Moving to next phase");
   terminator.observe(null, PHASE1, null);
 
-  let data = yield promiseShutdownDurationData();
+  let data = await promiseShutdownDurationData();
 
   let t1 = Date.now();
 
@@ -80,15 +79,15 @@ add_task(function* test_record() {
   Assert.equal(Object.keys(data).length, 1, "Data does not contain other durations");
 
   do_print("Cleaning up and moving to next phase");
-  yield File.remove(PATH);
-  yield File.remove(PATH_TMP);
+  await File.remove(PATH);
+  await File.remove(PATH_TMP);
 
   do_print("Waiting at least one tick");
   let WAIT_MS = 2000;
-  yield new Promise(resolve => setTimeout(resolve, WAIT_MS));
+  await new Promise(resolve => setTimeout(resolve, WAIT_MS));
 
   terminator.observe(null, PHASE2, null);
-  data = yield promiseShutdownDurationData();
+  data = await promiseShutdownDurationData();
 
   let t2 = Date.now();
 

@@ -8,7 +8,7 @@ var gContentWindow;
 
 add_task(setup_UITourTest);
 
-add_UITour_task(function* test_closeTab() {
+add_UITour_task(async function test_closeTab() {
   // Setting gTestTab to null indicates that the tab has already been closed,
   // and if this does not happen the test run will fail.
   let closePromise = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabClose");
@@ -18,6 +18,6 @@ add_UITour_task(function* test_closeTab() {
   // So we ignore the Promise that closeTab returns, and use the TabClose
   // event to tell us when the tab has gone away.
   gContentAPI.closeTab();
-  yield closePromise;
+  await closePromise;
   gTestTab = null;
 });

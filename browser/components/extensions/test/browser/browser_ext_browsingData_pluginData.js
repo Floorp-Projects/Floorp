@@ -27,7 +27,7 @@ const PLUGIN_TAG = getTestPlugin();
    there is some sort of plugin in the page.
  */
 function promiseUpdatePluginBindings(browser) {
-  return ContentTask.spawn(browser, {}, function* () {
+  return ContentTask.spawn(browser, {}, async function() {
     let doc = content.document;
     let elems = doc.getElementsByTagName("embed");
     if (elems && elems.length > 0) {

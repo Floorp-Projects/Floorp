@@ -25,12 +25,12 @@ function is_selected_one_off(index) {
      "A one-off is selected, so the listbox should not have a selection");
 }
 
-add_task(function*() {
+add_task(async function() {
   let maxResults = Services.prefs.getIntPref("browser.urlbar.maxRichResults");
 
   Services.prefs.setBoolPref(ONEOFF_URLBAR_PREF, true);
-  registerCleanupFunction(function* () {
-    yield PlacesTestUtils.clearHistory();
+  registerCleanupFunction(async function() {
+    await PlacesTestUtils.clearHistory();
     Services.prefs.clearUserPref(ONEOFF_URLBAR_PREF);
   });
 
@@ -40,10 +40,10 @@ add_task(function*() {
       uri: makeURI("http://example.com/autocomplete/?" + i),
     });
   });
-  yield PlacesTestUtils.addVisits(visits);
+  await PlacesTestUtils.addVisits(visits);
 
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
-  yield promiseAutocompleteResultPopup("example.com/autocomplete");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
+  await promiseAutocompleteResultPopup("example.com/autocomplete");
 
   let popup = gURLBar.popup;
   let results = popup.richlistbox.children;
@@ -87,6 +87,6 @@ add_task(function*() {
   is_selected(maxResults - 1);
 
   EventUtils.synthesizeKey("VK_ESCAPE", {});
-  yield promisePopupHidden(gURLBar.popup);
+  await promisePopupHidden(gURLBar.popup);
   gBrowser.removeTab(tab);
 });

@@ -5,7 +5,7 @@
 description: When DestructuringAssignmentTarget is an object literal, it should be parsed parsed as a DestructuringAssignmentPattern and evaluated as a destructuring assignment and object rest desconstruction is allowed in that case. (static class expression generator method)
 esid: sec-class-definitions-runtime-semantics-evaluation
 es6id: 14.5.16
-features: [destructuring-binding]
+features: [object-rest, destructuring-binding]
 flags: [generated]
 includes: [propertyHelper.js]
 info: |

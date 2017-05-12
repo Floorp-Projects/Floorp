@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(function* capture() {
+add_task(async function capture() {
   let setsEnv = env.get("MOZSCREENSHOTS_SETS");
   if (!setsEnv) {
     ok(true, "MOZSCREENSHOTS_SETS wasn't specified so there's nothing to capture");
@@ -12,5 +12,5 @@ add_task(function* capture() {
   }
 
   let sets = setsEnv.trim().split(",");
-  yield TestRunner.start(sets);
+  await TestRunner.start(sets);
 });

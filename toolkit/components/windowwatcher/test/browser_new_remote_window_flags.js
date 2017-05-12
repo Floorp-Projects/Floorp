@@ -9,8 +9,8 @@ const SCRIPT_PAGE = `data:text/html,<script>window.open("about:blank", "_blank")
 // This magic value of 2 means that by default, when content tries
 // to open a new window, it'll actually open in a new window instead
 // of a new tab.
-add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({"set": [
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({"set": [
     ["browser.link.open_newwindow", 2],
   ]});
 });
@@ -33,32 +33,32 @@ function assertFlags(win) {
 /**
  * Content can open a window using a target="_blank" link
  */
-add_task(function* test_new_remote_window_flags_target_blank() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function test_new_remote_window_flags_target_blank() {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: ANCHOR_PAGE,
-  }, function*(browser) {
+  }, async function(browser) {
     let newWinPromise = BrowserTestUtils.waitForNewWindow();
-    yield BrowserTestUtils.synthesizeMouseAtCenter("a", {}, browser);
-    let win = yield newWinPromise;
+    await BrowserTestUtils.synthesizeMouseAtCenter("a", {}, browser);
+    let win = await newWinPromise;
     assertFlags(win);
-    yield BrowserTestUtils.closeWindow(win);
+    await BrowserTestUtils.closeWindow(win);
   });
 });
 
 /**
  * Content can open a window using window.open
  */
-add_task(function* test_new_remote_window_flags_window_open() {
+add_task(async function test_new_remote_window_flags_window_open() {
   let newWinPromise = BrowserTestUtils.waitForNewWindow();
 
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: SCRIPT_PAGE,
-  }, function*(browser) {
-    let win = yield newWinPromise;
+  }, async function(browser) {
+    let win = await newWinPromise;
     assertFlags(win);
-    yield BrowserTestUtils.closeWindow(win);
+    await BrowserTestUtils.closeWindow(win);
   });
 });
 
@@ -66,13 +66,13 @@ add_task(function* test_new_remote_window_flags_window_open() {
  * Privileged content scripts can also open new windows
  * using content.open.
  */
-add_task(function* test_new_remote_window_flags_content_open() {
+add_task(async function test_new_remote_window_flags_content_open() {
   let newWinPromise = BrowserTestUtils.waitForNewWindow();
-  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     content.open("about:blank", "_blank");
   });
 
-  let win = yield newWinPromise;
+  let win = await newWinPromise;
   assertFlags(win);
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 });

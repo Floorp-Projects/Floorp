@@ -2,8 +2,8 @@
 
 const PERMISSIONS_URL = "chrome://browser/content/preferences/permissions.xul";
 
-add_task(function* urlFieldVisibleForPopupPermissions(finish) {
-  yield openPreferencesViaOpenPreferencesAPI("paneContent", null, {leaveOpen: true});
+add_task(async function urlFieldVisibleForPopupPermissions(finish) {
+  await openPreferencesViaOpenPreferencesAPI("paneContent", null, {leaveOpen: true});
   let win = gBrowser.selectedBrowser.contentWindow;
   let doc = win.document;
   let popupPolicyCheckbox = doc.getElementById("popupPolicy");
@@ -13,7 +13,7 @@ add_task(function* urlFieldVisibleForPopupPermissions(finish) {
   ok(popupPolicyButton, "popupPolicyButton found");
   let dialogPromise = promiseLoadSubDialog(PERMISSIONS_URL);
   popupPolicyButton.click();
-  let dialog = yield dialogPromise;
+  let dialog = await dialogPromise;
   ok(dialog, "dialog loaded");
 
   let urlLabel = dialog.document.getElementById("urlLabel");
@@ -25,15 +25,15 @@ add_task(function* urlFieldVisibleForPopupPermissions(finish) {
   gBrowser.removeCurrentTab();
 });
 
-add_task(function* urlFieldHiddenForNotificationPermissions() {
-  yield openPreferencesViaOpenPreferencesAPI("paneContent", null, {leaveOpen: true});
+add_task(async function urlFieldHiddenForNotificationPermissions() {
+  await openPreferencesViaOpenPreferencesAPI("paneContent", null, {leaveOpen: true});
   let win = gBrowser.selectedBrowser.contentWindow;
   let doc = win.document;
   let notificationsPolicyButton = doc.getElementById("notificationsPolicyButton");
   ok(notificationsPolicyButton, "notificationsPolicyButton found");
   let dialogPromise = promiseLoadSubDialog(PERMISSIONS_URL);
   notificationsPolicyButton.click();
-  let dialog = yield dialogPromise;
+  let dialog = await dialogPromise;
   ok(dialog, "dialog loaded");
 
   let urlLabel = dialog.document.getElementById("urlLabel");

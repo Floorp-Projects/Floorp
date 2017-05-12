@@ -50,9 +50,12 @@ foo()
 `});
 
 consoleApi.set("console.time('bar')", {
-  keys: ["console.time('bar')", "console.timeEnd('bar')"],
+  keys: ["console.time('bar')", "timerAlreadyExists",
+         "console.timeEnd('bar')", "timerDoesntExist"],
   code: `
 console.time("bar");
+console.time("bar");
+console.timeEnd("bar");
 console.timeEnd("bar");
 `});
 

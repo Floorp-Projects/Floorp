@@ -70,7 +70,7 @@ function loadViaFrameScript(url, event, script) {
   return new Promise(resolve => { completedResolve = resolve; });
 }
 
-add_task(function* webnav_ordering() {
+add_task(async function webnav_ordering() {
   let listeners = {};
   for (let event of EVENTS) {
     listeners[event] = gotEvent.bind(null, event);
@@ -81,9 +81,9 @@ add_task(function* webnav_ordering() {
   let browser = gBrowser.selectedBrowser;
   expectedBrowser = browser;
 
-  yield BrowserTestUtils.browserLoaded(browser);
+  await BrowserTestUtils.browserLoaded(browser);
 
-  yield loadViaFrameScript(URL, "onCompleted", `content.location = "${URL}";`);
+  await loadViaFrameScript(URL, "onCompleted", `content.location = "${URL}";`);
 
   function checkRequired(url) {
     for (let event of REQUIRED) {
@@ -120,11 +120,11 @@ add_task(function* webnav_ordering() {
   checkBefore({url: URL, event: "onCommitted"}, {url: FRAME, event: "onBeforeNavigate"});
   checkBefore({url: FRAME, event: "onCompleted"}, {url: URL, event: "onCompleted"});
 
-  yield loadViaFrameScript(FRAME2, "onCompleted", `content.frames[0].location = "${FRAME2}";`);
+  await loadViaFrameScript(FRAME2, "onCompleted", `content.frames[0].location = "${FRAME2}";`);
 
   checkRequired(FRAME2);
 
-  yield loadViaFrameScript(FRAME2 + "#ref", "onReferenceFragmentUpdated",
+  await loadViaFrameScript(FRAME2 + "#ref", "onReferenceFragmentUpdated",
                            "content.frames[0].document.getElementById('elt').click();");
 
   info("Received onReferenceFragmentUpdated from FRAME2");

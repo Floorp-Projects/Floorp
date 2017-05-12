@@ -5,7 +5,7 @@
 description: When DestructuringAssignmentTarget is an object literal, it should be parsed parsed as a DestructuringAssignmentPattern and evaluated as a destructuring assignment. (method)
 esid: sec-runtime-semantics-definemethod
 es6id: 14.3.8
-features: [destructuring-binding]
+features: [object-rest, destructuring-binding]
 flags: [generated]
 info: |
     MethodDefinition : PropertyName ( StrictFormalParameters ) { FunctionBody }

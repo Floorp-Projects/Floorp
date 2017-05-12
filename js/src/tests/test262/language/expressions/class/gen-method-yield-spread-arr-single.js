@@ -1,34 +1,32 @@
 // This file was procedurally generated from the following sources:
 // - src/generators/yield-spread-arr-single.case
-// - src/generators/default/class-method-definition.template
+// - src/generators/default/class-expr-method.template
 /*---
-description: Use yield value in a array spread position (Generator method as a ClassElement)
+description: Use yield value in a array spread position (Generator method as a ClassExpression element)
 esid: prod-GeneratorMethod
 flags: [generated]
-includes: [compareArray.js]
 info: |
-    ClassElement[Yield, Await]:
-      MethodDefinition[?Yield, ?Await]
+    ClassElement :
+      MethodDefinition
 
-    MethodDefinition[Yield, Await]:
-      GeneratorMethod[?Yield, ?Await]
+    MethodDefinition :
+      GeneratorMethod
 
     14.4 Generator Function Definitions
 
-    GeneratorMethod[Yield, Await]:
-      * PropertyName[?Yield, ?Await] ( UniqueFormalParameters[+Yield, ~Await] ) { GeneratorBody }
+    GeneratorMethod :
+      * PropertyName ( UniqueFormalParameters ) { GeneratorBody }
 
     Array Initializer
 
     SpreadElement[Yield, Await]:
       ...AssignmentExpression[+In, ?Yield, ?Await]
-
 ---*/
 var arr = ['a', 'b', 'c'];
 
 var callCount = 0;
 
-class C { *gen() {
+var C = class {*gen() {
     callCount += 1;
     yield [...yield];
 }}
@@ -38,9 +36,15 @@ var gen = C.prototype.gen;
 var iter = gen();
 
 iter.next(false);
-var item = iter.next(['a', 'b', 'c']);
+var item = iter.next(arr);
+var value = item.value;
 
-assert(compareArray(item.value, arr));
+assert.notSameValue(value, arr, 'value is a new array');
+assert(Array.isArray(value), 'value is an Array exotic object');
+assert.sameValue(value.length, 3)
+assert.sameValue(value[0], 'a');
+assert.sameValue(value[1], 'b');
+assert.sameValue(value[2], 'c');
 assert.sameValue(item.done, false);
 
 assert.sameValue(callCount, 1);

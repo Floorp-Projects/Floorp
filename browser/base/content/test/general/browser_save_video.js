@@ -8,21 +8,21 @@ MockFilePicker.init(window);
  * TestCase for bug 564387
  * <https://bugzilla.mozilla.org/show_bug.cgi?id=564387>
  */
-add_task(function* () {
+add_task(async function() {
   var fileName;
 
   let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   gBrowser.loadURI("http://mochi.test:8888/browser/browser/base/content/test/general/web_video.html");
-  yield loadPromise;
+  await loadPromise;
 
   let popupShownPromise = BrowserTestUtils.waitForEvent(document, "popupshown");
 
-  yield BrowserTestUtils.synthesizeMouseAtCenter("#video1",
+  await BrowserTestUtils.synthesizeMouseAtCenter("#video1",
                                                  { type: "contextmenu", button: 2 },
                                                  gBrowser.selectedBrowser);
   info("context menu click on video1");
 
-  yield popupShownPromise;
+  await popupShownPromise;
 
   info("context menu opened on video1");
 
@@ -65,9 +65,9 @@ add_task(function* () {
   let contextMenu = document.getElementById("contentAreaContextMenu");
   let popupHiddenPromise = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
   contextMenu.hidePopup();
-  yield popupHiddenPromise;
+  await popupHiddenPromise;
 
-  yield transferCompletePromise;
+  await transferCompletePromise;
 });
 
 /* import-globals-from ../../../../../toolkit/content/tests/browser/common/mockTransfer.js */

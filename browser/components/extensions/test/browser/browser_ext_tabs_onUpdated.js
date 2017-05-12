@@ -4,10 +4,10 @@
 
 requestLongerTimeout(2);
 
-add_task(function* () {
-  let win1 = yield BrowserTestUtils.openNewBrowserWindow();
+add_task(async function() {
+  let win1 = await BrowserTestUtils.openNewBrowserWindow();
 
-  yield focusWindow(win1);
+  await focusWindow(win1);
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -77,20 +77,20 @@ add_task(function* () {
     },
   });
 
-  yield Promise.all([
+  await Promise.all([
     extension.startup(),
     extension.awaitFinish("tabs.onUpdated"),
   ]);
 
-  yield extension.unload();
+  await extension.unload();
 
-  yield BrowserTestUtils.closeWindow(win1);
+  await BrowserTestUtils.closeWindow(win1);
 });
 
-function* do_test_update(background, withPermissions = true) {
-  let win1 = yield BrowserTestUtils.openNewBrowserWindow();
+async function do_test_update(background, withPermissions = true) {
+  let win1 = await BrowserTestUtils.openNewBrowserWindow();
 
-  yield focusWindow(win1);
+  await focusWindow(win1);
 
   let manifest = {};
   if (withPermissions) {
@@ -98,18 +98,18 @@ function* do_test_update(background, withPermissions = true) {
   }
   let extension = ExtensionTestUtils.loadExtension({manifest, background});
 
-  yield Promise.all([
-    yield extension.startup(),
-    yield extension.awaitFinish("finish"),
+  await Promise.all([
+    await extension.startup(),
+    await extension.awaitFinish("finish"),
   ]);
 
-  yield extension.unload();
+  await extension.unload();
 
-  yield BrowserTestUtils.closeWindow(win1);
+  await BrowserTestUtils.closeWindow(win1);
 }
 
-add_task(function* test_pinned() {
-  yield do_test_update(function background() {
+add_task(async function test_pinned() {
+  await do_test_update(function background() {
     // Create a new tab for testing update.
     browser.tabs.create({}, function(tab) {
       browser.tabs.onUpdated.addListener(function onUpdated(tabId, changeInfo) {
@@ -129,8 +129,8 @@ add_task(function* test_pinned() {
   });
 });
 
-add_task(function* test_unpinned() {
-  yield do_test_update(function background() {
+add_task(async function test_unpinned() {
+  await do_test_update(function background() {
     // Create a new tab for testing update.
     browser.tabs.create({pinned: true}, function(tab) {
       browser.tabs.onUpdated.addListener(function onUpdated(tabId, changeInfo) {
@@ -150,8 +150,8 @@ add_task(function* test_unpinned() {
   });
 });
 
-add_task(function* test_url() {
-  yield do_test_update(function background() {
+add_task(async function test_url() {
+  await do_test_update(function background() {
     // Create a new tab for testing update.
     browser.tabs.create({}, function(tab) {
       browser.tabs.onUpdated.addListener(function onUpdated(tabId, changeInfo) {
@@ -172,8 +172,8 @@ add_task(function* test_url() {
   });
 });
 
-add_task(function* test_title() {
-  yield do_test_update(async function background() {
+add_task(async function test_title() {
+  await do_test_update(async function background() {
     const url = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context_tabs_onUpdated_page.html";
     const tab = await browser.tabs.create({url});
 
@@ -192,8 +192,8 @@ add_task(function* test_title() {
   });
 });
 
-add_task(function* test_without_tabs_permission() {
-  yield do_test_update(async function background() {
+add_task(async function test_without_tabs_permission() {
+  await do_test_update(async function background() {
     const url = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context_tabs_onUpdated_page.html";
     const tab = await browser.tabs.create({url});
     let count = 0;

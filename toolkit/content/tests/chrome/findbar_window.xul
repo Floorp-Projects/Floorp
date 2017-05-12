@@ -22,7 +22,6 @@
   <script type="application/javascript"><![CDATA[
     const {interfaces: Ci, classes: Cc, results: Cr, utils: Cu} = Components;
     Cu.import("resource://gre/modules/AppConstants.jsm");
-    Cu.import("resource://gre/modules/Task.jsm");
     Cu.import("resource://testing-common/BrowserTestUtils.jsm");
     Cu.import("resource://testing-common/ContentTask.jsm");
     ContentTask.setTestScope(window.opener.wrappedJSObject);
@@ -67,7 +66,7 @@
     SimpleTest.requestLongerTimeout(2);
 
     function onLoad() {
-      Task.spawn(function* () {
+      (async function() {
         window.QueryInterface(Ci.nsIInterfaceRequestor)
               .getInterface(Ci.nsIWebNavigation)
               .QueryInterface(Ci.nsIDocShellTreeItem)
@@ -78,81 +77,81 @@
 
         gFindBar = document.getElementById("FindToolbar");
         for (let browserId of ["content", "content-remote"]) {
-          yield startTestWithBrowser(browserId);
+          await startTestWithBrowser(browserId);
         }
-      }).then(() => {
+      })().then(() => {
         window.close();
         SimpleTest.finish();
       });
     }
 
-    function* startTestWithBrowser(browserId) {
+    async function startTestWithBrowser(browserId) {
       info("Starting test with browser '" + browserId + "'");
       gBrowser = document.getElementById(browserId);
       gFindBar.browser = gBrowser;
 
       // Tests delays the loading of a document for one second.
-      yield new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       let promise = BrowserTestUtils.browserLoaded(gBrowser);
       gBrowser.loadURI("data:text/html,<h2 id='h2'>" + SEARCH_TEXT +
         "</h2><h2><a href='" + SAMPLE_URL + "'>Link Test</a></h2><input id='text' type='text' value='" +
         SAMPLE_TEXT + "'></input><input id='button' type='button'></input><img id='img' width='50' height='50'/>");
-      yield promise;
-      yield onDocumentLoaded();
+      await promise;
+      await onDocumentLoaded();
     }
 
-    function* onDocumentLoaded() {
-      yield testNormalFind();
+    async function onDocumentLoaded() {
+      await testNormalFind();
       gFindBar.close();
       ok(gFindBar.hidden, "Failed to close findbar after testNormalFind");
-      yield openFindbar();
-      yield testNormalFindWithComposition();
+      await openFindbar();
+      await testNormalFindWithComposition();
       gFindBar.close();
       ok(gFindBar.hidden, "findbar should be hidden after testNormalFindWithComposition");
-      yield openFindbar();
-      yield testAutoCaseSensitivityUI();
-      yield testQuickFindText();
+      await openFindbar();
+      await testAutoCaseSensitivityUI();
+      await testQuickFindText();
       gFindBar.close();
       ok(gFindBar.hidden, "Failed to close findbar after testQuickFindText");
       // TODO: `testFindWithHighlight` tests fastFind integrity, which can not
       //       be accessed with RemoteFinder. We're skipping it for now.
       if (gFindBar._browser.finder._fastFind) {
-        yield testFindWithHighlight();
+        await testFindWithHighlight();
         gFindBar.close();
         ok(gFindBar.hidden, "Failed to close findbar after testFindWithHighlight");
       }
-      yield testFindbarSelection();
+      await testFindbarSelection();
       ok(gFindBar.hidden, "Failed to close findbar after testFindbarSelection");
       // TODO: I don't know how to drop a content element on a chrome input.
       if (!gBrowser.hasAttribute("remote"))
         testDrop();
-      yield testQuickFindLink();
+      await testQuickFindLink();
       if (gHasFindClipboard) {
-        yield testStatusText();
+        await testStatusText();
       }
 
       if (!AppConstants.DEBUG) {
-        yield testFindCountUI();
+        await testFindCountUI();
         gFindBar.close();
         ok(gFindBar.hidden, "Failed to close findbar after testFindCountUI");
-        yield testFindCountUI(true);
+        await testFindCountUI(true);
         gFindBar.close();
         ok(gFindBar.hidden, "Failed to close findbar after testFindCountUI - linksOnly");
       }
 
-      yield openFindbar();
-      yield testFindAfterCaseChanged();
+      await openFindbar();
+      await testFindAfterCaseChanged();
       gFindBar.close();
-      yield openFindbar();
-      yield testFailedStringReset();
+      await openFindbar();
+      await testFailedStringReset();
       gFindBar.close();
-      yield testQuickFindClose();
+      await testQuickFindClose();
       // TODO: This doesn't seem to work when the findbar is connected to a
       //       remote browser element.
       if (!gBrowser.hasAttribute("remote"))
-        yield testFindAgainNotFound();
-      yield testToggleEntireWord();
+        await testFindAgainNotFound();
+      await testToggleEntireWord();
     }
 
     function testFindButtonsState(enabled = null) {
@@ -166,7 +165,7 @@
         `Expected the 'previous' button to be ${enabled ? 'enabled' : 'disabled'}`);
     }
 
-    function* testFindbarSelection() {
+    async function testFindbarSelection() {
       function checkFindbarState(aTestName, aExpSelection) {
         ok(!gFindBar.hidden, "testFindbarSelection: failed to open findbar: " + aTestName);
         ok(document.commandDispatcher.focusedElement == gFindBar._findField.inputField,
@@ -184,7 +183,7 @@
       }
 
       // Test normal selected text.
-      yield ContentTask.spawn(gBrowser, null, function* () {
+      await ContentTask.spawn(gBrowser, null, async function() {
         let document = content.document;
         let cH2 = document.getElementById("h2");
         let cSelection = content.getSelection();
@@ -194,23 +193,23 @@
         cSelection.removeAllRanges();
         cSelection.addRange(cRange);
       });
-      yield openFindbar();
+      await openFindbar();
       checkFindbarState("plain text", SEARCH_TEXT);
 
       // Test nsIDOMNSEditableElement with selection.
-      yield ContentTask.spawn(gBrowser, null, function* () {
+      await ContentTask.spawn(gBrowser, null, async function() {
         let textInput = content.document.getElementById("text");
         textInput.focus();
         textInput.select();
       });
-      yield openFindbar();
+      await openFindbar();
       checkFindbarState("text input", SAMPLE_TEXT);
 
       // Test non-editable nsIDOMNSEditableElement (button).
-      yield ContentTask.spawn(gBrowser, null, function* () {
+      await ContentTask.spawn(gBrowser, null, async function() {
         content.document.getElementById("button").focus();
       });
-      yield openFindbar();
+      await openFindbar();
       checkFindbarState("button", "");
     }
 
@@ -283,7 +282,7 @@
       });
     }
 
-    var enterStringIntoFindField = Task.async(function* (str, waitForResult = true) {
+    var enterStringIntoFindField = async function(str, waitForResult = true) {
       for (let promise, i = 0; i < str.length; i++) {
         if (waitForResult) {
           promise = promiseFindResult();
@@ -293,13 +292,13 @@
                            false, false, 0, str.charCodeAt(i));
         gFindBar._findField.inputField.dispatchEvent(event);
         if (waitForResult) {
-          yield promise;
+          await promise;
         }
       }
-    });
+    };
 
     function promiseExpectRangeCount(rangeCount) {
-      return ContentTask.spawn(gBrowser, { rangeCount }, function* (args) {
+      return ContentTask.spawn(gBrowser, { rangeCount }, async function(args) {
         let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                                  .getInterface(Ci.nsISelectionDisplay)
                                  .QueryInterface(Ci.nsISelectionController);
@@ -310,7 +309,7 @@
     }
 
     // also test match-case
-    function* testNormalFind() {
+    async function testNormalFind() {
       document.getElementById("cmd_find").doCommand();
 
       ok(!gFindBar.hidden, "testNormalFind: failed to open findbar");
@@ -322,13 +321,13 @@
       if (!matchCaseCheckbox.hidden && matchCaseCheckbox.checked) {
         promise = promiseFindResult();
         matchCaseCheckbox.click();
-        yield promise;
+        await promise;
       }
 
       var searchStr = "text tes";
-      yield enterStringIntoFindField(searchStr);
+      await enterStringIntoFindField(searchStr);
 
-      let sel = yield ContentTask.spawn(gBrowser, { searchStr }, function* (args) {
+      let sel = await ContentTask.spawn(gBrowser, { searchStr }, async function(args) {
         let sel = content.getSelection().toString();
         Assert.equal(sel.toLowerCase(), args.searchStr,
           "testNormalFind: failed to find '" + args.searchStr + "'");
@@ -340,15 +339,15 @@
       if (!matchCaseCheckbox.hidden) {
         promise = promiseFindResult();
         matchCaseCheckbox.click();
-        yield promise;
+        await promise;
         enterStringIntoFindField("t");
-        yield ContentTask.spawn(gBrowser, { searchStr }, function* (args) {
+        await ContentTask.spawn(gBrowser, { searchStr }, async function(args) {
           Assert.notEqual(content.getSelection().toString(), args.searchStr,
             "testNormalFind: Case-sensitivy is broken '" + args.searchStr + "'");
         });
         promise = promiseFindResult();
         matchCaseCheckbox.click();
-        yield promise;
+        await promise;
         testFindButtonsState();
       }
     }
@@ -358,7 +357,7 @@
       return gFindBar._startFindDeferred && gFindBar._startFindDeferred.promise;
     }
 
-    function* testNormalFindWithComposition() {
+    async function testNormalFindWithComposition() {
       ok(!gFindBar.hidden, "testNormalFindWithComposition: findbar should be open");
       ok(document.commandDispatcher.focusedElement == gFindBar._findField.inputField,
          "testNormalFindWithComposition: find field should be focused");
@@ -385,7 +384,7 @@
           "caret": { "start": searchStr.length, "length": 0 }
         });
 
-      yield ContentTask.spawn(gBrowser, { searchStr }, function* (args) {
+      await ContentTask.spawn(gBrowser, { searchStr }, async function(args) {
         Assert.notEqual(content.getSelection().toString().toLowerCase(), args.searchStr,
           "testNormalFindWithComposition: text shouldn't be found during composition");
       });
@@ -393,7 +392,7 @@
 
       synthesizeComposition({ type: "compositioncommitasis" });
 
-      let sel = yield ContentTask.spawn(gBrowser, { searchStr }, function* (args) {
+      let sel = await ContentTask.spawn(gBrowser, { searchStr }, async function(args) {
         let sel = content.getSelection().toString();
         Assert.equal(sel.toLowerCase(), args.searchStr,
           "testNormalFindWithComposition: text should be found after committing composition");
@@ -407,7 +406,7 @@
       }
     }
 
-    function* testAutoCaseSensitivityUI() {
+    async function testAutoCaseSensitivityUI() {
       var matchCaseCheckbox = gFindBar.getElement("find-case-sensitive");
       var matchCaseLabel = gFindBar.getElement("match-case-status");
       ok(!matchCaseCheckbox.hidden, "match case box is hidden in manual mode");
@@ -420,9 +419,9 @@
       ok(!matchCaseLabel.hidden,
          "match case label is hidden in automatic mode");
 
-      yield enterStringIntoFindField("a");
+      await enterStringIntoFindField("a");
       var insensitiveLabel = matchCaseLabel.value;
-      yield enterStringIntoFindField("A");
+      await enterStringIntoFindField("A");
       var sensitiveLabel = matchCaseLabel.value;
       ok(insensitiveLabel != sensitiveLabel,
          "Case Sensitive label was not correctly updated");
@@ -435,18 +434,18 @@
       gFindBar.close();
     }
 
-    function* clearFocus() {
+    async function clearFocus() {
       document.commandDispatcher.focusedElement = null;
       document.commandDispatcher.focusedWindow = null;
-      yield ContentTask.spawn(gBrowser, null, function* () {
+      await ContentTask.spawn(gBrowser, null, async function() {
         content.focus();
       });
     }
 
-    function* testQuickFindLink() {
-      yield clearFocus();
+    async function testQuickFindLink() {
+      await clearFocus();
 
-      yield ContentTask.spawn(gBrowser, null, function* () {
+      await ContentTask.spawn(gBrowser, null, async function() {
         let document = content.document;
         let event = document.createEvent("KeyboardEvent");
         event.initKeyEvent("keypress", true, true, null, false, false,
@@ -459,8 +458,8 @@
          "testQuickFindLink: find field is not focused");
 
       var searchStr = "Link Test";
-      yield enterStringIntoFindField(searchStr);
-      yield ContentTask.spawn(gBrowser, { searchStr }, function* (args) {
+      await enterStringIntoFindField(searchStr);
+      await ContentTask.spawn(gBrowser, { searchStr }, async function(args) {
         Assert.equal(content.getSelection().toString(), args.searchStr,
           "testQuickFindLink: failed to find sample link");
       });
@@ -469,7 +468,7 @@
     }
 
     // See bug 963925 for more details on this test.
-    function* testFindWithHighlight() {
+    async function testFindWithHighlight() {
       gFindBar._findField.value = "";
 
       // For this test, we want to closely control the selection. The easiest
@@ -487,7 +486,7 @@
       gFindBar.onCurrentSelection("", true);
 
       searchStr = "e";
-      yield enterStringIntoFindField(searchStr);
+      await enterStringIntoFindField(searchStr);
 
       let a = gFindBar._findField.value;
       let b = gFindBar._browser.finder._fastFind.searchString;
@@ -527,46 +526,46 @@
       // Regression test for bug 1316515.
       searchStr = "e";
       gFindBar.clear();
-      yield enterStringIntoFindField(searchStr);
-      yield promiseExpectRangeCount(0);
+      await enterStringIntoFindField(searchStr);
+      await promiseExpectRangeCount(0);
 
       highlightButton.click();
       ok(highlightButton.checked, "testFindWithHighlight: Highlight All should be checked.");
-      yield promiseHighlightFinished();
-      yield promiseExpectRangeCount(3);
+      await promiseHighlightFinished();
+      await promiseExpectRangeCount(3);
 
       synthesizeKey("VK_BACK_SPACE", {});
-      yield promiseExpectRangeCount(0);
+      await promiseExpectRangeCount(0);
 
       // Regression test for bug 1316513.
       highlightButton.click();
       ok(!highlightButton.checked, "testFindWithHighlight - 1316513: Highlight All should be unchecked.");
-      yield enterStringIntoFindField(searchStr);
+      await enterStringIntoFindField(searchStr);
 
       highlightButton.click();
       ok(highlightButton.checked, "testFindWithHighlight - 1316513: Highlight All should be checked.");
-      yield promiseHighlightFinished();
-      yield promiseExpectRangeCount(3);
+      await promiseHighlightFinished();
+      await promiseExpectRangeCount(3);
 
       let promise = BrowserTestUtils.browserLoaded(gBrowser);
       gBrowser.reload();
-      yield promise;
+      await promise;
 
       ok(highlightButton.checked, "testFindWithHighlight - 1316513: Highlight All " +
          "should still be checked after a reload.");
       synthesizeKey("VK_RETURN", {});
-      yield promiseHighlightFinished();
-      yield promiseExpectRangeCount(3);
+      await promiseHighlightFinished();
+      await promiseExpectRangeCount(3);
 
       // Uncheck at test end to not interfere with other test functions that are
       // run after this one.
       highlightButton.click();
     }
 
-    function* testQuickFindText() {
-      yield clearFocus();
+    async function testQuickFindText() {
+      await clearFocus();
 
-      yield ContentTask.spawn(gBrowser, null, function* () {
+      await ContentTask.spawn(gBrowser, null, async function() {
         let document = content.document;
         let event = document.createEvent("KeyboardEvent");
         event.initKeyEvent("keypress", true, true, null, false, false,
@@ -578,8 +577,8 @@
       ok(document.commandDispatcher.focusedElement == gFindBar._findField.inputField,
         "testQuickFindText: find field is not focused");
 
-      yield enterStringIntoFindField(SEARCH_TEXT);
-      yield ContentTask.spawn(gBrowser, { SEARCH_TEXT }, function* (args) {
+      await enterStringIntoFindField(SEARCH_TEXT);
+      await ContentTask.spawn(gBrowser, { SEARCH_TEXT }, async function(args) {
         Assert.equal(content.getSelection().toString(), args.SEARCH_TEXT,
           "testQuickFindText: failed to find '" + args.SEARCH_TEXT + "'");
       });
@@ -587,11 +586,11 @@
       testClipboardSearchString(SEARCH_TEXT);
     }
 
-    function* testFindCountUI(linksOnly = false) {
-      yield clearFocus();
+    async function testFindCountUI(linksOnly = false) {
+      await clearFocus();
 
       if (linksOnly) {
-        yield ContentTask.spawn(gBrowser, null, function* () {
+        await ContentTask.spawn(gBrowser, null, async function() {
           let document = content.document;
           let event = document.createEvent("KeyboardEvent");
           event.initKeyEvent("keypress", true, true, null, false, false,
@@ -611,8 +610,8 @@
       if (matchCase.checked) {
         promise = promiseFindResult();
         matchCase.click();
-        yield new Promise(resolve => setTimeout(resolve, ITERATOR_TIMEOUT + 20));
-        yield promise;
+        await new Promise(resolve => setTimeout(resolve, ITERATOR_TIMEOUT + 20));
+        await promise;
       }
 
       let foundMatches = gFindBar._foundMatches;
@@ -653,18 +652,18 @@
         else if (test.text.length == 2)
           timeout *= 2;
         timeout += 20;
-        yield new Promise(resolve => setTimeout(resolve, timeout));
-        yield enterStringIntoFindField(test.text, false);
-        yield promiseMatchesCountResult();
+        await new Promise(resolve => setTimeout(resolve, timeout));
+        await enterStringIntoFindField(test.text, false);
+        await promiseMatchesCountResult();
         let matches = foundMatches.value.match(regex);
         if (!test.total) {
           ok(!matches, "No message should be shown when 0 matches are expected");
         } else {
           assertMatches(test, matches);
           for (let i = 1; i < test.total; i++) {
-            yield new Promise(resolve => setTimeout(resolve, timeout));
+            await new Promise(resolve => setTimeout(resolve, timeout));
             gFindBar.onFindAgainCommand();
-            yield promiseMatchesCountResult();
+            await promiseMatchesCountResult();
             // test.current + 1, test.current + 2, ..., test.total, 1, ..., test.current
             let current = (test.current + i - 1) % test.total + 1;
             assertMatches({
@@ -678,22 +677,22 @@
     }
 
     // See bug 1051187.
-    function* testFindAfterCaseChanged() {
+    async function testFindAfterCaseChanged() {
       // Search to set focus on "Text Test" so that searching for "t" selects first
       // (upper case!) "T".
-      yield enterStringIntoFindField(SEARCH_TEXT);
+      await enterStringIntoFindField(SEARCH_TEXT);
       gFindBar.clear();
 
       gPrefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 0);
 
-      yield enterStringIntoFindField("t");
-      yield ContentTask.spawn(gBrowser, null, function* () {
+      await enterStringIntoFindField("t");
+      await ContentTask.spawn(gBrowser, null, async function() {
         Assert.equal(content.getSelection().toString(), "T", "First T should be selected.");
       });
       testFindButtonsState();
 
       gPrefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 1);
-      yield ContentTask.spawn(gBrowser, null, function* () {
+      await ContentTask.spawn(gBrowser, null, async function() {
         Assert.equal(content.getSelection().toString(), "t", "First t should be selected.");
       });
       testFindButtonsState();
@@ -702,17 +701,17 @@
     // Make sure that _findFailedString is cleared:
     // 1. Do a search that fails with case sensitivity but matches with no case sensitivity.
     // 2. Uncheck case sensitivity button to match the string.
-    function* testFailedStringReset() {
+    async function testFailedStringReset() {
       gPrefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 1);
 
-      yield enterStringIntoFindField(SEARCH_TEXT.toUpperCase(), false);
-      yield ContentTask.spawn(gBrowser, null, function* () {
+      await enterStringIntoFindField(SEARCH_TEXT.toUpperCase(), false);
+      await ContentTask.spawn(gBrowser, null, async function() {
         Assert.equal(content.getSelection().toString(), "", "Not found.");
       });
       testFindButtonsState(false);
 
       gPrefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 0);
-      yield ContentTask.spawn(gBrowser, { SEARCH_TEXT }, function* (args) {
+      await ContentTask.spawn(gBrowser, { SEARCH_TEXT }, async function(args) {
         Assert.equal(content.getSelection().toString(), args.SEARCH_TEXT,
           "Search text should be selected.");
       });
@@ -732,41 +731,41 @@
     }
 
     // See bug 967982.
-    function* testFindAgainNotFound() {
-      yield openFindbar();
-      yield enterStringIntoFindField(NOT_FOUND_TEXT, false);
+    async function testFindAgainNotFound() {
+      await openFindbar();
+      await enterStringIntoFindField(NOT_FOUND_TEXT, false);
       testFindButtonsState(false);
       gFindBar.close();
       ok(gFindBar.hidden, "The findbar is closed.");
       let promise = promiseFindResult();
       gFindBar.onFindAgainCommand();
-      yield promise;
+      await promise;
       ok(!gFindBar.hidden, "Unsuccessful Find Again opens the find bar.");
       testFindButtonsState(false);
 
-      yield enterStringIntoFindField(SEARCH_TEXT);
+      await enterStringIntoFindField(SEARCH_TEXT);
       testFindButtonsState();
       gFindBar.close();
       ok(gFindBar.hidden, "The findbar is closed.");
       promise = promiseFindResult();
       gFindBar.onFindAgainCommand();
-      yield promise;
+      await promise;
       ok(gFindBar.hidden, "Successful Find Again leaves the find bar closed.");
     }
 
-    function* testToggleEntireWord() {
-      yield openFindbar();
+    async function testToggleEntireWord() {
+      await openFindbar();
       let promise = promiseFindResult();
-      yield enterStringIntoFindField("Tex", false);
-      let result = yield promise;
+      await enterStringIntoFindField("Tex", false);
+      let result = await promise;
       is(result.result, Ci.nsITypeAheadFind.FIND_FOUND, "Text should be found");
       testFindButtonsState();
 
-      yield new Promise(resolve => setTimeout(resolve, ITERATOR_TIMEOUT + 20));
+      await new Promise(resolve => setTimeout(resolve, ITERATOR_TIMEOUT + 20));
       promise = promiseFindResult();
       let check = gFindBar.getElement("find-entire-word");
       check.click();
-      result = yield promise;
+      result = await promise;
       is(result.result, Ci.nsITypeAheadFind.FIND_NOTFOUND, "Text should NOT be found");
       testFindButtonsState(false);
 

@@ -9,17 +9,17 @@ requestLongerTimeout(2);
 Services.scriptloader.loadSubScript(new URL("head_sessions.js", gTestPath).href,
                                     this);
 
-add_task(function* test_sessions_get_recently_closed() {
-  function* openAndCloseWindow(url = "http://example.com", tabUrls) {
-    let win = yield BrowserTestUtils.openNewBrowserWindow();
-    yield BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, url);
-    yield BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+add_task(async function test_sessions_get_recently_closed() {
+  async function openAndCloseWindow(url = "http://example.com", tabUrls) {
+    let win = await BrowserTestUtils.openNewBrowserWindow();
+    await BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, url);
+    await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     if (tabUrls) {
       for (let url of tabUrls) {
-        yield BrowserTestUtils.openNewForegroundTab(win.gBrowser, url);
+        await BrowserTestUtils.openNewForegroundTab(win.gBrowser, url);
       }
     }
-    yield BrowserTestUtils.closeWindow(win);
+    await BrowserTestUtils.closeWindow(win);
   }
 
   function background() {
@@ -47,33 +47,33 @@ add_task(function* test_sessions_get_recently_closed() {
   });
 
   // Open and close a window that will be ignored, to prove that we are removing previous entries
-  yield openAndCloseWindow();
+  await openAndCloseWindow();
 
-  yield extension.startup();
+  await extension.startup();
 
-  let {recentlyClosed, currentWindowId} = yield extension.awaitMessage("initialData");
+  let {recentlyClosed, currentWindowId} = await extension.awaitMessage("initialData");
   recordInitialTimestamps(recentlyClosed.map(item => item.lastModified));
 
-  yield openAndCloseWindow();
+  await openAndCloseWindow();
   extension.sendMessage("check-sessions");
-  recentlyClosed = yield extension.awaitMessage("recentlyClosed");
+  recentlyClosed = await extension.awaitMessage("recentlyClosed");
   checkRecentlyClosed(recentlyClosed.filter(onlyNewItemsFilter), 1, currentWindowId);
 
-  yield openAndCloseWindow("about:config", ["about:robots", "about:mozilla"]);
+  await openAndCloseWindow("about:config", ["about:robots", "about:mozilla"]);
   extension.sendMessage("check-sessions");
-  recentlyClosed = yield extension.awaitMessage("recentlyClosed");
+  recentlyClosed = await extension.awaitMessage("recentlyClosed");
   // Check for multiple tabs in most recently closed window
   is(recentlyClosed[0].window.tabs.length, 3, "most recently closed window has the expected number of tabs");
 
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com");
-  yield BrowserTestUtils.removeTab(tab);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com");
+  await BrowserTestUtils.removeTab(tab);
 
-  tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com");
-  yield BrowserTestUtils.removeTab(tab);
+  tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com");
+  await BrowserTestUtils.removeTab(tab);
 
-  yield openAndCloseWindow();
+  await openAndCloseWindow();
   extension.sendMessage("check-sessions");
-  recentlyClosed = yield extension.awaitMessage("recentlyClosed");
+  recentlyClosed = await extension.awaitMessage("recentlyClosed");
   let finalResult = recentlyClosed.filter(onlyNewItemsFilter);
   checkRecentlyClosed(finalResult, 5, currentWindowId);
 
@@ -90,13 +90,13 @@ add_task(function* test_sessions_get_recently_closed() {
 
   // test with filter
   extension.sendMessage("check-sessions", {maxResults: 2});
-  recentlyClosed = yield extension.awaitMessage("recentlyClosed");
+  recentlyClosed = await extension.awaitMessage("recentlyClosed");
   checkRecentlyClosed(recentlyClosed.filter(onlyNewItemsFilter), 2, currentWindowId);
 
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* test_sessions_get_recently_closed_navigated() {
+add_task(async function test_sessions_get_recently_closed_navigated() {
   function background() {
     browser.sessions.getRecentlyClosed({maxResults: 1}).then(recentlyClosed => {
       let tab = recentlyClosed[0].window.tabs[0];
@@ -116,15 +116,15 @@ add_task(function* test_sessions_get_recently_closed_navigated() {
   });
 
   // Test with a window with navigation history.
-  let win = yield BrowserTestUtils.openNewBrowserWindow();
+  let win = await BrowserTestUtils.openNewBrowserWindow();
   for (let url of ["about:robots", "about:mozilla", "http://example.com/"]) {
-    yield BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, url);
-    yield BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    await BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, url);
+    await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
   }
 
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 
-  yield extension.startup();
-  yield extension.awaitFinish();
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish();
+  await extension.unload();
 });

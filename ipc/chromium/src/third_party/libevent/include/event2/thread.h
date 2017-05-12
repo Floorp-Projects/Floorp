@@ -23,8 +23,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef _EVENT2_THREAD_H_
-#define _EVENT2_THREAD_H_
+#ifndef EVENT2_THREAD_H_INCLUDED_
+#define EVENT2_THREAD_H_INCLUDED_
 
 /** @file event2/thread.h
 
@@ -45,6 +45,8 @@
   evthread_set_lock_callbacks() and evthread_set_condition_callbacks().
 
  */
+
+#include <event2/visibility.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -69,7 +71,7 @@ extern "C" {
 #define EVTHREAD_TRY    0x10
 /**@}*/
 
-#if !defined(_EVENT_DISABLE_THREAD_SUPPORT) || defined(_EVENT_IN_DOXYGEN)
+#if !defined(EVENT__DISABLE_THREAD_SUPPORT) || defined(EVENT_IN_DOXYGEN_)
 
 #define EVTHREAD_LOCK_API_VERSION 1
 
@@ -124,6 +126,7 @@ struct evthread_lock_callbacks {
  * probably shouldn't call this function; instead, use
  * evthread_use_windows_threads() or evthread_use_posix_threads() if you can.
  */
+EVENT2_EXPORT_SYMBOL
 int evthread_set_lock_callbacks(const struct evthread_lock_callbacks *);
 
 #define EVTHREAD_CONDITION_API_VERSION 1
@@ -174,6 +177,7 @@ struct evthread_condition_callbacks {
  * probably shouldn't call this function; instead, use
  * evthread_use_windows_threads() or evthread_use_pthreads() if you can.
  */
+EVENT2_EXPORT_SYMBOL
 int evthread_set_condition_callbacks(
 	const struct evthread_condition_callbacks *);
 
@@ -184,14 +188,16 @@ int evthread_set_condition_callbacks(
    @param id_fn the identify function Libevent should invoke to
      determine the identity of a thread.
 */
+EVENT2_EXPORT_SYMBOL
 void evthread_set_id_callback(
     unsigned long (*id_fn)(void));
 
-#if (defined(WIN32) && !defined(_EVENT_DISABLE_THREAD_SUPPORT)) || defined(_EVENT_IN_DOXYGEN)
+#if (defined(_WIN32) && !defined(EVENT__DISABLE_THREAD_SUPPORT)) || defined(EVENT_IN_DOXYGEN_)
 /** Sets up Libevent for use with Windows builtin locking and thread ID
     functions.  Unavailable if Libevent is not built for Windows.
 
     @return 0 on success, -1 on failure. */
+EVENT2_EXPORT_SYMBOL
 int evthread_use_windows_threads(void);
 /**
    Defined if Libevent was built with support for evthread_use_windows_threads()
@@ -199,12 +205,13 @@ int evthread_use_windows_threads(void);
 #define EVTHREAD_USE_WINDOWS_THREADS_IMPLEMENTED 1
 #endif
 
-#if defined(_EVENT_HAVE_PTHREADS) || defined(_EVENT_IN_DOXYGEN)
+#if defined(EVENT__HAVE_PTHREADS) || defined(EVENT_IN_DOXYGEN_)
 /** Sets up Libevent for use with Pthreads locking and thread ID functions.
     Unavailable if Libevent is not build for use with pthreads.  Requires
     libraries to link against Libevent_pthreads as well as Libevent.
 
     @return 0 on success, -1 on failure. */
+EVENT2_EXPORT_SYMBOL
 int evthread_use_pthreads(void);
 /** Defined if Libevent was built with support for evthread_use_pthreads() */
 #define EVTHREAD_USE_PTHREADS_IMPLEMENTED 1
@@ -217,20 +224,30 @@ int evthread_use_pthreads(void);
  * If you're going to call this function, you must do so before any locks are
  * allocated.
  **/
+EVENT2_EXPORT_SYMBOL
+void evthread_enable_lock_debugging(void);
+
+/* Old (misspelled) version: This is deprecated; use
+ * evthread_enable_log_debugging instead. */
+EVENT2_EXPORT_SYMBOL
 void evthread_enable_lock_debuging(void);
 
-#endif /* _EVENT_DISABLE_THREAD_SUPPORT */
+#endif /* EVENT__DISABLE_THREAD_SUPPORT */
 
 struct event_base;
 /** Make sure it's safe to tell an event base to wake up from another thread
     or a signal handler.
 
+    You shouldn't need to call this by hand; configuring the base with thread
+    support should be necessary and sufficient.
+
     @return 0 on success, -1 on failure.
  */
+EVENT2_EXPORT_SYMBOL
 int evthread_make_base_notifiable(struct event_base *base);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _EVENT2_THREAD_H_ */
+#endif /* EVENT2_THREAD_H_INCLUDED_ */

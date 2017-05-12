@@ -16,26 +16,26 @@ function checkUrlbarFocus(win) {
 }
 
 function openNewPrivateWindow() {
-  let deferred = Promise.defer();
-  whenNewWindowLoaded({private: true}, win => {
-    executeSoon(() => deferred.resolve(win));
+  return new Promise(resolve => {
+    whenNewWindowLoaded({private: true}, win => {
+      executeSoon(() => resolve(win));
+    });
   });
-  return deferred.promise;
 }
 
-add_task(function* () {
-  let win = yield openNewPrivateWindow();
+add_task(async function() {
+  let win = await openNewPrivateWindow();
   checkUrlbarFocus(win);
   win.close();
 });
 
-add_task(function* () {
+add_task(async function() {
   aboutNewTabService.newTabURL = "about:blank";
   registerCleanupFunction(() => {
     aboutNewTabService.resetNewTabURL();
   });
 
-  let win = yield openNewPrivateWindow();
+  let win = await openNewPrivateWindow();
   checkUrlbarFocus(win);
   win.close();
 

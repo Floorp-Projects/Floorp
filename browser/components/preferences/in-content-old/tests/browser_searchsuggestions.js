@@ -5,10 +5,10 @@ registerCleanupFunction(() => {
 });
 
 // Open with suggestions enabled
-add_task(function*() {
+add_task(async function() {
   Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
 
-  yield openPreferencesViaOpenPreferencesAPI("search", undefined, { leaveOpen: true });
+  await openPreferencesViaOpenPreferencesAPI("search", undefined, { leaveOpen: true });
 
   let doc = gBrowser.selectedBrowser.contentDocument;
   let urlbarBox = doc.getElementById("urlBarSuggestion");
@@ -22,10 +22,10 @@ add_task(function*() {
 });
 
 // Open with suggestions disabled
-add_task(function*() {
+add_task(async function() {
   Services.prefs.setBoolPref("browser.search.suggest.enabled", false);
 
-  yield openPreferencesViaOpenPreferencesAPI("search", undefined, { leaveOpen: true });
+  await openPreferencesViaOpenPreferencesAPI("search", undefined, { leaveOpen: true });
 
   let doc = gBrowser.selectedBrowser.contentDocument;
   let urlbarBox = doc.getElementById("urlBarSuggestion");
@@ -38,6 +38,6 @@ add_task(function*() {
   gBrowser.removeCurrentTab();
 });
 
-add_task(function*() {
+add_task(async function() {
   Services.prefs.setBoolPref("browser.search.suggest.enabled", original);
 });

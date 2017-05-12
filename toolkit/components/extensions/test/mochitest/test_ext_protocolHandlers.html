@@ -17,7 +17,7 @@
 /* eslint-disable mozilla/balanced-listeners */
 /* global addMessageListener, sendAsyncMessage */
 
-add_task(function* test_protocolHandler() {
+add_task(async function test_protocolHandler() {
   let extensionData = {
     manifest: {
       "protocol_handlers": [
@@ -48,8 +48,8 @@ add_task(function* test_protocolHandler() {
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield extension.startup();
-  let handlerUrl = yield extension.awaitMessage("test-url");
+  await extension.startup();
+  let handlerUrl = await extension.awaitMessage("test-url");
 
   // Ensure that the protocol handler is configured, and set it as default to
   // bypass the dialog.
@@ -82,7 +82,7 @@ add_task(function* test_protocolHandler() {
 
   let msg = chromeScript.promiseOneMessage("handlerData");
   chromeScript.sendAsyncMessage("setup");
-  let data = yield msg;
+  let data = await msg;
   ok(data.preferredAction, "using a helper application is the preferred action");
   ok(data.preferredApplicationHandler, "no preferred handler is set");
   is(data.handlers, 1, "one handler is set");
@@ -91,12 +91,12 @@ add_task(function* test_protocolHandler() {
   chromeScript.destroy();
 
   let win = window.open("ext+foo:test");
-  let query = yield extension.awaitMessage("test-query");
+  let query = await extension.awaitMessage("test-query");
   is(query, "?val=ext%2Bfoo%3Atest", "test query ok");
   win.close();
 
   // Shutdown the addon, then ensure the protocol was removed.
-  yield extension.unload();
+  await extension.unload();
   chromeScript = SpecialPowers.loadChromeScript(() => {
     const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
     addMessageListener("setup", () => {
@@ -115,13 +115,13 @@ add_task(function* test_protocolHandler() {
 
   msg = chromeScript.promiseOneMessage("handlerData");
   chromeScript.sendAsyncMessage("setup");
-  data = yield msg;
+  data = await msg;
   ok(data.preferredApplicationHandler, "no preferred handler is set");
   is(data.handlers, 0, "no handler is set");
   chromeScript.destroy();
 });
 
-add_task(function* test_protocolHandler_https_target() {
+add_task(async function test_protocolHandler_https_target() {
   let extensionData = {
     manifest: {
       "protocol_handlers": [
@@ -135,12 +135,12 @@ add_task(function* test_protocolHandler_https_target() {
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield extension.startup();
+  await extension.startup();
   ok(true, "https uriTemplate target works");
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* test_protocolHandler_http_target() {
+add_task(async function test_protocolHandler_http_target() {
   let extensionData = {
     manifest: {
       "protocol_handlers": [
@@ -154,12 +154,12 @@ add_task(function* test_protocolHandler_http_target() {
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield extension.startup();
+  await extension.startup();
   ok(true, "http uriTemplate target works");
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* test_protocolHandler_restricted_protocol() {
+add_task(async function test_protocolHandler_restricted_protocol() {
   let extensionData = {
     manifest: {
       "protocol_handlers": [
@@ -177,13 +177,13 @@ add_task(function* test_protocolHandler_restricted_protocol() {
   });
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield Assert.rejects(extension.startup(), "unable to register restricted handler protocol");
+  await Assert.rejects(extension.startup(), "unable to register restricted handler protocol");
 
   SimpleTest.endMonitorConsole();
-  yield waitForConsole;
+  await waitForConsole;
 });
 
-add_task(function* test_protocolHandler_restricted_uriTemplate() {
+add_task(async function test_protocolHandler_restricted_uriTemplate() {
   let extensionData = {
     manifest: {
       "protocol_handlers": [
@@ -201,13 +201,13 @@ add_task(function* test_protocolHandler_restricted_uriTemplate() {
   });
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield Assert.rejects(extension.startup(), "unable to register restricted handler uriTemplate");
+  await Assert.rejects(extension.startup(), "unable to register restricted handler uriTemplate");
 
   SimpleTest.endMonitorConsole();
-  yield waitForConsole;
+  await waitForConsole;
 });
 
-add_task(function* test_protocolHandler_duplicate() {
+add_task(async function test_protocolHandler_duplicate() {
   let extensionData = {
     manifest: {
       "protocol_handlers": [
@@ -226,7 +226,7 @@ add_task(function* test_protocolHandler_duplicate() {
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield extension.startup();
+  await extension.startup();
 
   // Get the count of handlers installed.
   let chromeScript = SpecialPowers.loadChromeScript(() => {
@@ -242,10 +242,10 @@ add_task(function* test_protocolHandler_duplicate() {
 
   let msg = chromeScript.promiseOneMessage("handlerData");
   chromeScript.sendAsyncMessage("setup");
-  let data = yield msg;
+  let data = await msg;
   is(data, 1, "cannot re-register the same handler config");
   chromeScript.destroy();
-  yield extension.unload();
+  await extension.unload();
 });
 </script>
 

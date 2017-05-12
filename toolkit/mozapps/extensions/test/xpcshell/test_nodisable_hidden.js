@@ -16,7 +16,7 @@ const SYSTEM_ID = "system@tests.mozilla.org";
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
 // normal add-ons can be user disabled.
-add_task(function*() {
+add_task(async function() {
 
   writeInstallRDFToDir({
     id: NORMAL_ID,
@@ -32,7 +32,7 @@ add_task(function*() {
 
   startupManager();
 
-  let addon = yield promiseAddonByID(NORMAL_ID);
+  let addon = await promiseAddonByID(NORMAL_ID);
   do_check_neq(addon, null);
   do_check_eq(addon.version, "1.0");
   do_check_eq(addon.name, "Test disabling hidden add-ons, non-hidden add-on case.");
@@ -60,7 +60,7 @@ add_task(function*() {
 });
 
 // system add-ons can never be user disabled.
-add_task(function*() {
+add_task(async function() {
 
   writeInstallRDFToDir({
     id: SYSTEM_ID,
@@ -76,7 +76,7 @@ add_task(function*() {
 
   startupManager();
 
-  let addon = yield promiseAddonByID(SYSTEM_ID);
+  let addon = await promiseAddonByID(SYSTEM_ID);
   do_check_neq(addon, null);
   do_check_eq(addon.version, "1.0");
   do_check_eq(addon.name, "Test disabling hidden add-ons, hidden system add-on case.");

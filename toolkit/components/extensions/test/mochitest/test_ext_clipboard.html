@@ -31,7 +31,7 @@ function shared() {
   };
 }
 
-add_task(function* test_background_clipboard_permissions() {
+add_task(async function test_background_clipboard_permissions() {
   function backgroundScript() {
     browser.test.assertEq(false, doCopy("whatever"),
       "copy should be denied without permission");
@@ -43,11 +43,11 @@ add_task(function* test_background_clipboard_permissions() {
     background: [shared, backgroundScript],
   };
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitMessage("ready");
+  await extension.awaitMessage("ready");
 
-  yield extension.unload();
+  await extension.unload();
 });
 
 /** Selecting text in a bg page is not possible, bug 1272869.
@@ -82,7 +82,7 @@ add_task(function* test_background_clipboard_copy() {
 });
 */
 
-add_task(function* test_contentscript_clipboard_permissions() {
+add_task(async function test_contentscript_clipboard_permissions() {
   function contentScript() {
     browser.test.assertEq(false, doCopy("whatever"),
       "copy should be denied without permission");
@@ -103,16 +103,16 @@ add_task(function* test_contentscript_clipboard_permissions() {
     },
   };
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield extension.startup();
+  await extension.startup();
 
   let win = window.open("file_sample.html");
-  yield extension.awaitMessage("ready");
+  await extension.awaitMessage("ready");
   win.close();
 
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* test_contentscript_clipboard_copy() {
+add_task(async function test_contentscript_clipboard_copy() {
   function contentScript() {
     browser.test.onMessage.addListener(txt => {
       browser.test.assertEq(true, doCopy(txt),
@@ -136,13 +136,13 @@ add_task(function* test_contentscript_clipboard_copy() {
     },
   };
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield extension.startup();
+  await extension.startup();
 
   let win = window.open("file_sample.html");
-  yield extension.awaitMessage("ready");
+  await extension.awaitMessage("ready");
 
   const DUMMY_STR = "dummy string to copy in content script";
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     SimpleTest.waitForClipboard(DUMMY_STR, () => {
       extension.sendMessage(DUMMY_STR);
     }, resolve, resolve);
@@ -150,10 +150,10 @@ add_task(function* test_contentscript_clipboard_copy() {
 
   win.close();
 
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* test_contentscript_clipboard_paste() {
+add_task(async function test_contentscript_clipboard_paste() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: [
@@ -175,17 +175,17 @@ add_task(function* test_contentscript_clipboard_paste() {
   const STRANGE = "A Strange Thing";
   SpecialPowers.clipboardCopyString(STRANGE);
 
-  yield extension.startup();
+  await extension.startup();
   const win = window.open("file_sample.html");
 
-  const paste = yield extension.awaitMessage("paste");
+  const paste = await extension.awaitMessage("paste");
   is(paste, STRANGE, "the correct string was pasted");
 
   win.close();
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* test_background_clipboard_paste() {
+add_task(async function test_background_clipboard_paste() {
   function background() {
     browser.test.sendMessage("paste", doPaste());
   }
@@ -200,12 +200,12 @@ add_task(function* test_background_clipboard_paste() {
   const STRANGE = "Stranger Things";
   SpecialPowers.clipboardCopyString(STRANGE);
 
-  yield extension.startup();
+  await extension.startup();
 
-  const paste = yield extension.awaitMessage("paste");
+  const paste = await extension.awaitMessage("paste");
   is(paste, STRANGE, "the correct string was pasted");
 
-  yield extension.unload();
+  await extension.unload();
 });
 
 </script>

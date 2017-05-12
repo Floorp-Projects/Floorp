@@ -22,7 +22,6 @@ Cu.importGlobalProperties(["XMLHttpRequest"]);
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/CertUtils.jsm");
 /* globals checkCert, BadCertHandler*/
@@ -301,14 +300,14 @@ function downloadFile(url) {
         reject(Components.Exception("File download failed", xhr.status));
         return;
       }
-      Task.spawn(function* () {
-        let f = yield OS.File.openUnique(OS.Path.join(OS.Constants.Path.tmpDir, "tmpaddon"));
+      (async function() {
+        let f = await OS.File.openUnique(OS.Path.join(OS.Constants.Path.tmpDir, "tmpaddon"));
         let path = f.path;
         logger.info(`Downloaded file will be saved to ${path}`);
-        yield f.file.close();
-        yield OS.File.writeAtomic(path, new Uint8Array(xhr.response));
+        await f.file.close();
+        await OS.File.writeAtomic(path, new Uint8Array(xhr.response));
         return path;
-      }).then(resolve, reject);
+      })().then(resolve, reject);
     };
 
     let fail = (event) => {
@@ -363,8 +362,8 @@ function binaryToHex(input) {
  * @return a promise that resolves to hash of the file or rejects with a JS
  *         exception in case of error.
  */
-var computeHash = Task.async(function*(hashFunction, path) {
-  let file = yield OS.File.open(path, { existing: true, read: true });
+var computeHash = async function(hashFunction, path) {
+  let file = await OS.File.open(path, { existing: true, read: true });
   try {
     let hasher = Cc["@mozilla.org/security/hash;1"].
                  createInstance(Ci.nsICryptoHash);
@@ -372,15 +371,15 @@ var computeHash = Task.async(function*(hashFunction, path) {
 
     let bytes;
     do {
-      bytes = yield file.read(HASH_CHUNK_SIZE);
+      bytes = await file.read(HASH_CHUNK_SIZE);
       hasher.update(bytes, bytes.length);
     } while (bytes.length == HASH_CHUNK_SIZE);
 
     return binaryToHex(hasher.finish(false));
   } finally {
-    yield file.close();
+    await file.close();
   }
-});
+};
 
 /**
  * Verifies that a downloaded file matches what was expected.
@@ -393,9 +392,9 @@ var computeHash = Task.async(function*(hashFunction, path) {
  * @return a promise that resolves if the file matched or rejects with a JS
  *         exception in case of error.
  */
-var verifyFile = Task.async(function*(properties, path) {
+var verifyFile = async function(properties, path) {
   if (properties.size !== undefined) {
-    let stat = yield OS.File.stat(path);
+    let stat = await OS.File.stat(path);
     if (stat.size != properties.size) {
       throw new Error("Downloaded file was " + stat.size + " bytes but expected " + properties.size + " bytes.");
     }
@@ -403,12 +402,12 @@ var verifyFile = Task.async(function*(properties, path) {
 
   if (properties.hashFunction !== undefined) {
     let expectedDigest = properties.hashValue.toLowerCase();
-    let digest = yield computeHash(properties.hashFunction, path);
+    let digest = await computeHash(properties.hashFunction, path);
     if (digest != expectedDigest) {
       throw new Error("Hash was `" + digest + "` but expected `" + expectedDigest + "`.");
     }
   }
-});
+};
 
 const ProductAddonChecker = {
   /**
@@ -446,14 +445,14 @@ const ProductAddonChecker = {
    * @return a promise that resolves to the temporary file downloaded or rejects
    *         with a JS exception in case of error.
    */
-  downloadAddon: Task.async(function*(addon) {
-    let path = yield downloadFile(addon.URL);
+  async downloadAddon(addon) {
+    let path = await downloadFile(addon.URL);
     try {
-      yield verifyFile(addon, path);
+      await verifyFile(addon, path);
       return path;
     } catch (e) {
-      yield OS.File.remove(path);
+      await OS.File.remove(path);
       throw e;
     }
-  })
+  }
 }

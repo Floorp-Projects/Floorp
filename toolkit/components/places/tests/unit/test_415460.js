@@ -32,9 +32,9 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_execute() {
+add_task(async function test_execute() {
   const SEARCH_TERM = "ユニコード";
   const TEST_URL = "http://example.com/" + SEARCH_TERM + "/";
-  yield PlacesTestUtils.addVisits(uri(TEST_URL));
+  await PlacesTestUtils.addVisits(uri(TEST_URL));
   do_check_true(search_has_result(SEARCH_TERM));
 });

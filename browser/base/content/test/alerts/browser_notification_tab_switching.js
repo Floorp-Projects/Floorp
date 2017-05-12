@@ -9,23 +9,23 @@ var notification;
 var notificationURL = "http://example.org/browser/browser/base/content/test/alerts/file_dom_notifications.html";
 var newWindowOpenedFromTab;
 
-add_task(function* test_notificationPreventDefaultAndSwitchTabs() {
+add_task(async function test_notificationPreventDefaultAndSwitchTabs() {
   let pm = Services.perms;
   pm.add(makeURI(notificationURL), "desktop-notification", pm.ALLOW_ACTION);
 
   let originalTab = gBrowser.selectedTab;
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: notificationURL
-  }, function* dummyTabTask(aBrowser) {
+  }, async function dummyTabTask(aBrowser) {
     // Put new tab in background so it is obvious when it is re-focused.
-    yield BrowserTestUtils.switchTab(gBrowser, originalTab);
+    await BrowserTestUtils.switchTab(gBrowser, originalTab);
     isnot(gBrowser.selectedBrowser, aBrowser, "Notification page loaded as a background tab");
 
     // First, show a notification that will be have the tab-switching prevented.
     function promiseNotificationEvent(evt) {
-      return ContentTask.spawn(aBrowser, evt, function* (contentEvt) {
-        return yield new Promise(resolve => {
+      return ContentTask.spawn(aBrowser, evt, async function(contentEvt) {
+        return await new Promise(resolve => {
           let contentNotification = content.wrappedJSObject._notification;
           contentNotification.addEventListener(contentEvt, function(event) {
             resolve({ defaultPrevented: event.defaultPrevented });
@@ -33,12 +33,12 @@ add_task(function* test_notificationPreventDefaultAndSwitchTabs() {
         });
       });
     }
-    yield openNotification(aBrowser, "showNotification1");
+    await openNotification(aBrowser, "showNotification1");
     info("Notification alert showing");
     let alertWindow = Services.wm.getMostRecentWindow("alert:alert");
     if (!alertWindow) {
       ok(true, "Notifications don't use XUL windows on all platforms.");
-      yield closeNotification(aBrowser);
+      await closeNotification(aBrowser);
       return;
     }
     info("Clicking on notification");
@@ -51,29 +51,29 @@ add_task(function* test_notificationPreventDefaultAndSwitchTabs() {
       EventUtils.synthesizeMouseAtCenter(alertWindow.document.getElementById("alertTitleLabel"),
                                          {}, alertWindow);
     });
-    let clickEvent = yield promiseClickEvent;
+    let clickEvent = await promiseClickEvent;
     ok(clickEvent.defaultPrevented, "The event handler for the first notification cancels the event");
     isnot(gBrowser.selectedBrowser, aBrowser, "Notification page still a background tab");
     let notificationClosed = promiseNotificationEvent("close");
-    yield closeNotification(aBrowser);
-    yield notificationClosed;
+    await closeNotification(aBrowser);
+    await notificationClosed;
 
     // Second, show a notification that will cause the tab to get switched.
-    yield openNotification(aBrowser, "showNotification2");
+    await openNotification(aBrowser, "showNotification2");
     alertWindow = Services.wm.getMostRecentWindow("alert:alert");
     let promiseTabSelect = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabSelect");
     EventUtils.synthesizeMouseAtCenter(alertWindow.document.getElementById("alertTitleLabel"),
                                        {},
                                        alertWindow);
-    yield promiseTabSelect;
+    await promiseTabSelect;
     is(gBrowser.selectedBrowser.currentURI.spec, notificationURL,
        "Clicking on the second notification should select its originating tab");
     notificationClosed = promiseNotificationEvent("close");
-    yield closeNotification(aBrowser);
-    yield notificationClosed;
+    await closeNotification(aBrowser);
+    await notificationClosed;
   });
 });
 
-add_task(function* cleanup() {
+add_task(async function cleanup() {
   Services.perms.remove(makeURI(notificationURL), "desktop-notification");
 });

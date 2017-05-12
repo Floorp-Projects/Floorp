@@ -7,7 +7,6 @@ this.EXPORTED_SYMBOLS = ["PreviewProvider"];
 
 const {utils: Cu} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/PageThumbs.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 const {OS} = Cu.import("resource://gre/modules/osfile.jsm", {});
@@ -25,19 +24,19 @@ let PreviewProvider = {
    *        a url to obtain a thumbnail for
    * @return {Promise} A Promise that resolves with a base64 encoded thumbnail
    */
-  getThumbnail: Task.async(function* PreviewProvider_getThumbnail(url) {
+  getThumbnail: async function PreviewProvider_getThumbnail(url) {
     try {
-      yield BackgroundPageThumbs.captureIfMissing(url);
+      await BackgroundPageThumbs.captureIfMissing(url);
       let imgPath = PageThumbsStorage.getFilePathForURL(url);
 
       // OS.File object used to easily read off-thread
-      let file = yield OS.File.open(imgPath, {read: true, existing: true});
+      let file = await OS.File.open(imgPath, {read: true, existing: true});
 
       // nsIFile object needed for MIMEService
       let nsFile = FileUtils.File(imgPath);
 
       let contentType = MIMEService.getTypeFromFile(nsFile);
-      let bytes = yield file.read();
+      let bytes = await file.read();
       let encodedData = btoa(String.fromCharCode.apply(null, bytes));
       file.close();
       return `data:${contentType};base64,${encodedData}`;
@@ -45,5 +44,5 @@ let PreviewProvider = {
       Cu.reportError(`PreviewProvider_getThumbnail error: ${err}`);
       throw err;
     }
-  })
+  }
 };

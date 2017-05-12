@@ -454,6 +454,11 @@ def check_output(out, err, rc, timed_out, test, options):
            and 'Assertion failure' not in err:
             return True
 
+        # Allow a zero exit code if we are running under a sanitizer that
+        # forces the exit status.
+        if test.expect_status != 0 and options.unusable_error_status:
+            return True
+
         return False
 
     return True

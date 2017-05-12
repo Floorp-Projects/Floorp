@@ -12,7 +12,6 @@ var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils",
   "resource:///modules/E10SUtils.jsm");
@@ -1193,7 +1192,7 @@ var PageInfoListener = {
   // Only called once to get the media tab's media elements from the content page.
   getMediaInfo(document, window, strings) {
     let frameList = this.goThroughFrames(document, window);
-    Task.spawn(() => this.processFrames(document, frameList, strings));
+    this.processFrames(document, frameList, strings);
   },
 
   goThroughFrames(document, window) {
@@ -1209,7 +1208,7 @@ var PageInfoListener = {
     return frameList;
   },
 
-  *processFrames(document, frameList, strings) {
+  async processFrames(document, frameList, strings) {
     let nodeCount = 0;
     for (let doc of frameList) {
       let iterator = doc.createTreeWalker(doc, content.NodeFilter.SHOW_ELEMENT);
@@ -1225,7 +1224,7 @@ var PageInfoListener = {
 
         if (++nodeCount % 500 == 0) {
           // setTimeout every 500 elements so we don't keep blocking the content process.
-          yield new Promise(resolve => setTimeout(resolve, 10));
+          await new Promise(resolve => setTimeout(resolve, 10));
         }
       }
     }

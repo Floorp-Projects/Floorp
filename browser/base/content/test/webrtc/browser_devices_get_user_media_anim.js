@@ -5,25 +5,25 @@ var gTests = [
 
 {
   desc: "device sharing animation on background tabs",
-  run: function* checkAudioVideo() {
-    function* getStreamAndCheckBackgroundAnim(aAudio, aVideo, aSharing) {
+  run: async function checkAudioVideo() {
+    async function getStreamAndCheckBackgroundAnim(aAudio, aVideo, aSharing) {
       // Get a stream
       let popupPromise = promisePopupNotificationShown("webRTC-shareDevices");
-      yield promiseRequestDevice(aAudio, aVideo);
-      yield popupPromise;
-      yield expectObserverCalled("getUserMedia:request");
+      await promiseRequestDevice(aAudio, aVideo);
+      await popupPromise;
+      await expectObserverCalled("getUserMedia:request");
 
-      yield promiseMessage("ok", () => {
+      await promiseMessage("ok", () => {
         PopupNotifications.panel.firstChild.button.click();
       });
-      yield expectObserverCalled("getUserMedia:response:allow");
-      yield expectObserverCalled("recording-device-events");
+      await expectObserverCalled("getUserMedia:response:allow");
+      await expectObserverCalled("recording-device-events");
       let expected = {};
       if (aVideo)
         expected.video = true;
       if (aAudio)
         expected.audio = true;
-      Assert.deepEqual((yield getMediaCaptureState()), expected,
+      Assert.deepEqual((await getMediaCaptureState()), expected,
                        "expected " + Object.keys(expected).join(" and ") +
                        " to be shared");
 
@@ -40,7 +40,7 @@ var gTests = [
 
       // After selecting a new tab, check the attribute is still there,
       // and the icon is now visible.
-      yield BrowserTestUtils.switchTab(gBrowser, gBrowser.addTab());
+      await BrowserTestUtils.switchTab(gBrowser, gBrowser.addTab());
       is(gBrowser.selectedTab.getAttribute("sharing"), "",
          "the new tab doesn't have the 'sharing' attribute");
       is(tab.getAttribute("sharing"), aSharing,
@@ -49,24 +49,24 @@ var gTests = [
             "the animated sharing icon of the tab is now visible");
 
       // Ensure the icon disappears when selecting the tab.
-      yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+      await BrowserTestUtils.removeTab(gBrowser.selectedTab);
       ok(tab.selected, "the tab with ongoing sharing is selected again");
       is(window.getComputedStyle(icon).display, "none",
          "the animated sharing icon is gone after selecting the tab again");
 
       // And finally verify the attribute is removed when closing the stream.
-      yield closeStream();
+      await closeStream();
 
       // TODO(Bug 1304997): Fix the race in closeStream() and remove this
       // promiseWaitForCondition().
-      yield promiseWaitForCondition(() => !tab.getAttribute("sharing"));
+      await promiseWaitForCondition(() => !tab.getAttribute("sharing"));
       is(tab.getAttribute("sharing"), "",
          "the tab no longer has the 'sharing' attribute after closing the stream");
     }
 
-    yield getStreamAndCheckBackgroundAnim(true, true, "camera");
-    yield getStreamAndCheckBackgroundAnim(false, true, "camera");
-    yield getStreamAndCheckBackgroundAnim(true, false, "microphone");
+    await getStreamAndCheckBackgroundAnim(true, true, "camera");
+    await getStreamAndCheckBackgroundAnim(false, true, "camera");
+    await getStreamAndCheckBackgroundAnim(true, false, "microphone");
   }
 }
 

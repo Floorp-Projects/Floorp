@@ -5,27 +5,27 @@
 "use strict";
 
 // Resize to a small window, open a new window, check that new window handles overflow properly
-add_task(function*() {
+add_task(async function() {
   let originalWindowWidth = window.outerWidth;
   let navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
   ok(!navbar.hasAttribute("overflowing"), "Should start with a non-overflowing toolbar.");
   let oldChildCount = navbar.customizationTarget.childElementCount;
   window.resizeTo(400, window.outerHeight);
-  yield waitForCondition(() => navbar.hasAttribute("overflowing"));
+  await waitForCondition(() => navbar.hasAttribute("overflowing"));
   ok(navbar.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
 
   ok(navbar.customizationTarget.childElementCount < oldChildCount, "Should have fewer children.");
-  let newWindow = yield openAndLoadWindow();
+  let newWindow = await openAndLoadWindow();
   let otherNavBar = newWindow.document.getElementById(CustomizableUI.AREA_NAVBAR);
-  yield waitForCondition(() => otherNavBar.hasAttribute("overflowing"));
+  await waitForCondition(() => otherNavBar.hasAttribute("overflowing"));
   ok(otherNavBar.hasAttribute("overflowing"), "Other window should have an overflowing toolbar.");
-  yield promiseWindowClosed(newWindow);
+  await promiseWindowClosed(newWindow);
 
   window.resizeTo(originalWindowWidth, window.outerHeight);
-  yield waitForCondition(() => !navbar.hasAttribute("overflowing"));
+  await waitForCondition(() => !navbar.hasAttribute("overflowing"));
   ok(!navbar.hasAttribute("overflowing"), "Should no longer have an overflowing toolbar.");
 });
 
-add_task(function* asyncCleanup() {
-  yield resetCustomization();
+add_task(async function asyncCleanup() {
+  await resetCustomization();
 });

@@ -27,8 +27,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
                                   "resource:///modules/RecentWindow.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 
 const DESTINATION_FILE_URI_ANNO  = "downloads/destinationFileURI";
 const DOWNLOAD_META_DATA_ANNO    = "downloads/metaData";
@@ -158,15 +156,15 @@ HistoryDownload.prototype = {
    * This method mimicks the "refresh" method of session downloads, except that
    * it cannot notify that the data changed to the Downloads View.
    */
-  refresh: Task.async(function* () {
+  async refresh() {
     try {
-      this.target.size = (yield OS.File.stat(this.target.path)).size;
+      this.target.size = (await OS.File.stat(this.target.path)).size;
       this.target.exists = true;
     } catch (ex) {
       // We keep the known file size from the metadata, if any.
       this.target.exists = false;
     }
-  }),
+  },
 };
 
 /**
@@ -420,9 +418,9 @@ HistoryDownloadElementShell.prototype = {
     }
   },
 
-  _checkTargetFileOnSelect: Task.async(function* () {
+  async _checkTargetFileOnSelect() {
     try {
-      yield this.download.refresh();
+      await this.download.refresh();
     } finally {
       // Do not try to check for existence again if this failed once.
       this._targetFileChecked = true;
@@ -436,7 +434,7 @@ HistoryDownloadElementShell.prototype = {
     // Ensure the interface has been updated based on the new values. We need to
     // do this because history downloads can't trigger update notifications.
     this._updateProgress();
-  }),
+  },
 };
 
 /**

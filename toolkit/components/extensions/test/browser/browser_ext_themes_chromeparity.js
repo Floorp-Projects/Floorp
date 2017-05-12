@@ -1,12 +1,12 @@
 "use strict";
 
-add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
     set: [["extensions.webextensions.themes.enabled", true]],
   });
 });
 
-add_task(function* test_support_theme_frame() {
+add_task(async function test_support_theme_frame() {
   const FRAME_COLOR = [71, 105, 91];
   const TAB_TEXT_COLOR = [207, 221, 192, .9];
   let extension = ExtensionTestUtils.loadExtension({
@@ -26,7 +26,7 @@ add_task(function* test_support_theme_frame() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
   let docEl = window.document.documentElement;
 
@@ -42,7 +42,7 @@ add_task(function* test_support_theme_frame() {
   Assert.equal(style.color, "rgba(" + TAB_TEXT_COLOR.join(", ") + ")",
     "Expected correct text color");
 
-  yield extension.unload();
+  await extension.unload();
 
   Assert.ok(!docEl.hasAttribute("lwtheme"), "LWT attribute should not be set");
 });

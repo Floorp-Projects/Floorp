@@ -4,8 +4,6 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
   "resource://gre/modules/Promise.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
@@ -140,12 +138,12 @@ function promisePopupEvent(popup, eventSuffix) {
     return Promise.resolve();
 
   let eventType = "popup" + eventSuffix;
-  let deferred = Promise.defer();
-  popup.addEventListener(eventType, function(event) {
-    deferred.resolve();
-  }, {once: true});
+  return new Promise(resolve => {
+    popup.addEventListener(eventType, function(event) {
+      resolve();
+    }, {once: true});
 
-  return deferred.promise;
+  });
 }
 
 function promisePopupShown(popup) {

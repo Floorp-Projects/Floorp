@@ -14,7 +14,6 @@ var Cu = Components.utils;
 var Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/DownloadUtils.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
@@ -3664,7 +3663,7 @@ var gDetailView = {
     }
   },
 
-  createOptionsBrowser: Task.async(function*(parentNode) {
+  async createOptionsBrowser(parentNode) {
     let browser = document.createElement("browser");
     browser.setAttribute("type", "content");
     browser.setAttribute("disableglobalhistory", "true");
@@ -3687,7 +3686,7 @@ var gDetailView = {
     // Force bindings to apply synchronously.
     browser.clientTop;
 
-    yield readyPromise;
+    await readyPromise;
     if (remote) {
       ExtensionParent.apiManager.emit("extension-browser-inserted", browser);
     }
@@ -3721,7 +3720,7 @@ var gDetailView = {
 
       browser.loadURI(optionsURL);
     });
-  }),
+  },
 
   getSelectedAddon() {
     return this._addon;

@@ -20,7 +20,6 @@ var EXPORTED_SYMBOLS = ["SubprocessImpl"];
 Cu.import("resource://gre/modules/ctypes.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/subprocess/subprocess_common.jsm");
 
 Services.scriptloader.loadSubScript("resource://gre/modules/subprocess/subprocess_shared.js", this);
@@ -132,13 +131,13 @@ var SubprocessUnix = {
     }
   },
 
-  isExecutableFile: Task.async(function* isExecutable(path) {
+  isExecutableFile: async function isExecutable(path) {
     if (!OS.Path.split(path).absolute) {
       return false;
     }
 
     try {
-      let info = yield OS.File.stat(path);
+      let info = await OS.File.stat(path);
 
       // FIXME: We really want access(path, X_OK) here, but OS.File does not
       // support it.
@@ -146,7 +145,7 @@ var SubprocessUnix = {
     } catch (e) {
       return false;
     }
-  }),
+  },
 
   /**
    * Searches for the given executable file in the system executable
@@ -164,10 +163,10 @@ var SubprocessUnix = {
    *        in the search.
    * @returns {Promise<string>}
    */
-  pathSearch: Task.async(function* (bin, environment) {
+  async pathSearch(bin, environment) {
     let split = OS.Path.split(bin);
     if (split.absolute) {
-      if (yield this.isExecutableFile(bin)) {
+      if (await this.isExecutableFile(bin)) {
         return bin;
       }
       let error = new Error(`File at path "${bin}" does not exist, or is not executable`);
@@ -183,14 +182,14 @@ var SubprocessUnix = {
     for (let dir of dirs) {
       let path = OS.Path.join(dir, bin);
 
-      if (yield this.isExecutableFile(path)) {
+      if (await this.isExecutableFile(path)) {
         return path;
       }
     }
     let error = new Error(`Executable not found: ${bin}`);
     error.errorCode = SubprocessConstants.ERROR_BAD_EXECUTABLE;
     throw error;
-  }),
+  },
 };
 
 var SubprocessImpl = SubprocessUnix;

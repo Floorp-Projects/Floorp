@@ -15,7 +15,7 @@ int
 main(int argc, char *argv[])
 {
 #ifdef HAS_DLL_BLOCKLIST
-  DllBlocklist_Initialize();
+  DllBlocklist_Initialize(eDllBlocklistInitFlagIsChildProcess);
 #endif
 
   Bootstrap::UniquePtr bootstrap = GetBootstrap();

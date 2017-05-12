@@ -24,8 +24,9 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include "../util-internal.h"
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <winsock2.h>
 #include <windows.h>
 #include <ws2tcpip.h>
@@ -35,18 +36,18 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#ifdef _EVENT_HAVE_SYS_TIME_H
+#ifdef EVENT__HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
 #include <sys/queue.h>
-#ifndef WIN32
+#ifndef _WIN32
 #include <sys/socket.h>
 #include <signal.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #endif
-#ifdef _EVENT_HAVE_NETINET_IN6_H
+#ifdef EVENT__HAVE_NETINET_IN6_H
 #include <netinet/in6.h>
 #endif
 #ifdef HAVE_NETDB_H
@@ -71,7 +72,7 @@
 #include "regress.h"
 #include "regress_testutils.h"
 
-#include "../util-internal.h"
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
 static int dns_ok = 0;
 static int dns_got_cancel = 0;
@@ -99,7 +100,7 @@ dns_gethostbyname_cb(int result, char type, int count, int ttl,
 
 	switch (type) {
 	case DNS_IPv6_AAAA: {
-#if defined(_EVENT_HAVE_STRUCT_IN6_ADDR) && defined(_EVENT_HAVE_INET_NTOP) && defined(INET6_ADDRSTRLEN)
+#if defined(EVENT__HAVE_STRUCT_IN6_ADDR) && defined(EVENT__HAVE_INET_NTOP) && defined(INET6_ADDRSTRLEN)
 		struct in6_addr *in6_addrs = addresses;
 		char buf[INET6_ADDRSTRLEN+1];
 		int i;
@@ -320,7 +321,7 @@ dns_server_gethostbyname_cb(int result, char type, int count, int ttl,
 		break;
 	}
 	case DNS_IPv6_AAAA: {
-#if defined (_EVENT_HAVE_STRUCT_IN6_ADDR) && defined(_EVENT_HAVE_INET_NTOP) && defined(INET6_ADDRSTRLEN)
+#if defined (EVENT__HAVE_STRUCT_IN6_ADDR) && defined(EVENT__HAVE_INET_NTOP) && defined(INET6_ADDRSTRLEN)
 		struct in6_addr *in6_addrs = addresses;
 		char buf[INET6_ADDRSTRLEN+1];
 		if (memcmp(&in6_addrs[0].s6_addr, "abcdefghijklmnop", 16)
@@ -407,6 +408,22 @@ dns_server(void)
 	 * the only nameserver. */
 	evdns_base_nameserver_sockaddr_add(base, (struct sockaddr*)&ss, slen, 0);
 	tt_int_op(evdns_base_count_nameservers(base), ==, 1);
+	{
+		struct sockaddr_storage ss2;
+		int slen2;
+
+		memset(&ss2, 0, sizeof(ss2));
+
+		slen2 = evdns_base_get_nameserver_addr(base, 0, (struct sockaddr *)&ss2, 3);
+		tt_int_op(slen2, ==, slen);
+		tt_int_op(ss2.ss_family, ==, 0);
+		slen2 = evdns_base_get_nameserver_addr(base, 0, (struct sockaddr *)&ss2, sizeof(ss2));
+		tt_int_op(slen2, ==, slen);
+		tt_mem_op(&ss2, ==, &ss, slen);
+
+		slen2 = evdns_base_get_nameserver_addr(base, 1, (struct sockaddr *)&ss2, sizeof(ss2));
+		tt_int_op(-1, ==, slen2);
+	}
 
 	/* Send some queries. */
 	evdns_base_resolve_ipv4(base, "zz.example.com", DNS_QUERY_NO_SEARCH,
@@ -444,6 +461,7 @@ end:
 
 static int n_replies_left;
 static struct event_base *exit_base;
+static struct evdns_server_port *exit_port;
 
 struct generic_dns_callback_result {
 	int result;
@@ -484,30 +502,36 @@ generic_dns_callback(int result, char type, int count, int ttl, void *addresses,
 		res->addrs = res->addrs_buf;
 	}
 
-	if (--n_replies_left == 0)
-		event_base_loopexit(exit_base, NULL);
+	--n_replies_left;
+	if (n_replies_left == 0) {
+		if (exit_port) {
+			evdns_close_server_port(exit_port);
+			exit_port = NULL;
+		} else
+			event_base_loopexit(exit_base, NULL);
+	}
 }
 
 static struct regress_dns_server_table search_table[] = {
-	{ "host.a.example.com", "err", "3", 0 },
-	{ "host.b.example.com", "err", "3", 0 },
-	{ "host.c.example.com", "A", "11.22.33.44", 0 },
-	{ "host2.a.example.com", "err", "3", 0 },
-	{ "host2.b.example.com", "A", "200.100.0.100", 0 },
-	{ "host2.c.example.com", "err", "3", 0 },
-	{ "hostn.a.example.com", "errsoa", "0", 0 },
-	{ "hostn.b.example.com", "errsoa", "3", 0 },
-	{ "hostn.c.example.com", "err", "0", 0 },
+	{ "host.a.example.com", "err", "3", 0, 0 },
+	{ "host.b.example.com", "err", "3", 0, 0 },
+	{ "host.c.example.com", "A", "11.22.33.44", 0, 0 },
+	{ "host2.a.example.com", "err", "3", 0, 0 },
+	{ "host2.b.example.com", "A", "200.100.0.100", 0, 0 },
+	{ "host2.c.example.com", "err", "3", 0, 0 },
+	{ "hostn.a.example.com", "errsoa", "0", 0, 0 },
+	{ "hostn.b.example.com", "errsoa", "3", 0, 0 },
+	{ "hostn.c.example.com", "err", "0", 0, 0 },
 
-	{ "host", "err", "3", 0 },
-	{ "host2", "err", "3", 0 },
-	{ "*", "err", "3", 0 },
-	{ NULL, NULL, NULL, 0 }
+	{ "host", "err", "3", 0, 0 },
+	{ "host2", "err", "3", 0, 0 },
+	{ "*", "err", "3", 0, 0 },
+	{ NULL, NULL, NULL, 0, 0 }
 };
-
 static void
-dns_search_test(void *arg)
+dns_search_test_impl(void *arg, int lower)
 {
+	struct regress_dns_server_table table[ARRAY_SIZE(search_table)];
 	struct basic_test_data *data = arg;
 	struct event_base *base = data->base;
 	struct evdns_base *dns = NULL;
@@ -515,8 +539,14 @@ dns_search_test(void *arg)
 	char buf[64];
 
 	struct generic_dns_callback_result r[8];
+	size_t i;
 
-	tt_assert(regress_dnsserver(base, &portnum, search_table));
+	for (i = 0; i < ARRAY_SIZE(table); ++i) {
+		table[i] = search_table[i];
+		table[i].lower = lower;
+	}
+
+	tt_assert(regress_dnsserver(base, &portnum, table));
 	evutil_snprintf(buf, sizeof(buf), "127.0.0.1:%d", (int)portnum);
 
 	dns = evdns_base_new(base, 0);
@@ -526,7 +556,7 @@ dns_search_test(void *arg)
 	evdns_base_search_add(dns, "b.example.com");
 	evdns_base_search_add(dns, "c.example.com");
 
-	n_replies_left = sizeof(r)/sizeof(r[0]);
+	n_replies_left = ARRAY_SIZE(r);
 	exit_base = base;
 
 	evdns_base_resolve_ipv4(dns, "host", 0, generic_dns_callback, &r[0]);
@@ -561,6 +591,36 @@ end:
 		evdns_base_free(dns, 0);
 
 	regress_clean_dnsserver();
+}
+static void
+dns_search_empty_test(void *arg)
+{
+	struct basic_test_data *data = arg;
+	struct event_base *base = data->base;
+	struct evdns_base *dns = NULL;
+
+	dns = evdns_base_new(base, 0);
+
+	evdns_base_search_add(dns, "whatever.example.com");
+
+	n_replies_left = 1;
+	exit_base = base;
+
+	tt_ptr_op(evdns_base_resolve_ipv4(dns, "", 0, generic_dns_callback, NULL), ==, NULL);
+
+end:
+	if (dns)
+		evdns_base_free(dns, 0);
+}
+static void
+dns_search_test(void *arg)
+{
+	return dns_search_test_impl(arg, 0);
+}
+static void
+dns_search_lower_test(void *arg)
+{
+	return dns_search_test_impl(arg, 1);
 }
 
 static int request_count = 0;
@@ -655,7 +715,7 @@ fail_server_cb(struct evdns_server_request *req, void *data)
 		event_base_loopexit(exit_base, NULL);
 	}
 
-	evutil_inet_pton(AF_INET, "16.32.64.128", &in);
+	tt_assert(evutil_inet_pton(AF_INET, "16.32.64.128", &in));
 	evdns_server_request_add_a_reply(req, question, 1, &in.s_addr,
 	    100);
 	tt_assert(! evdns_server_request_respond(req, 0))
@@ -665,7 +725,7 @@ end:
 }
 
 static void
-dns_retry_test(void *arg)
+dns_retry_test_impl(void *arg, int flags)
 {
 	struct basic_test_data *data = arg;
 	struct event_base *base = data->base;
@@ -682,11 +742,11 @@ dns_retry_test(void *arg)
 	tt_assert(port);
 	evutil_snprintf(buf, sizeof(buf), "127.0.0.1:%d", (int)portnum);
 
-	dns = evdns_base_new(base, 0);
+	dns = evdns_base_new(base, flags);
 	tt_assert(!evdns_base_nameserver_ip_add(dns, buf));
-	tt_assert(! evdns_base_set_option(dns, "timeout", "0.3"));
+	tt_assert(! evdns_base_set_option(dns, "timeout", "0.2"));
 	tt_assert(! evdns_base_set_option(dns, "max-timeouts:", "10"));
-	tt_assert(! evdns_base_set_option(dns, "initial-probe-timeout", "0.5"));
+	tt_assert(! evdns_base_set_option(dns, "initial-probe-timeout", "0.1"));
 
 	evdns_base_resolve_ipv4(dns, "host.example.com", 0,
 	    generic_dns_callback, &r1);
@@ -705,8 +765,8 @@ dns_retry_test(void *arg)
 	/* Now try again, but this time have the server get treated as
 	 * failed, so we can send it a test probe. */
 	drop_count = 4;
-	tt_assert(! evdns_base_set_option(dns, "max-timeouts:", "3"));
-	tt_assert(! evdns_base_set_option(dns, "attempts:", "4"));
+	tt_assert(! evdns_base_set_option(dns, "max-timeouts:", "2"));
+	tt_assert(! evdns_base_set_option(dns, "attempts:", "3"));
 	memset(&r1, 0, sizeof(r1));
 
 	evdns_base_resolve_ipv4(dns, "host.example.com", 0,
@@ -737,6 +797,16 @@ end:
 	if (port)
 		evdns_close_server_port(port);
 }
+static void
+dns_retry_test(void *arg)
+{
+	dns_retry_test_impl(arg, 0);
+}
+static void
+dns_retry_disable_when_inactive_test(void *arg)
+{
+	dns_retry_test_impl(arg, EVDNS_BASE_DISABLE_WHEN_INACTIVE);
+}
 
 static struct regress_dns_server_table internal_error_table[] = {
 	/* Error 4 (NOTIMPL) makes us reissue the request to another server
@@ -744,17 +814,17 @@ static struct regress_dns_server_table internal_error_table[] = {
 
 	   XXXX we should reissue under a much wider set of circumstances!
 	 */
-	{ "foof.example.com", "err", "4", 0 },
-	{ NULL, NULL, NULL, 0 }
+	{ "foof.example.com", "err", "4", 0, 0 },
+	{ NULL, NULL, NULL, 0, 0 }
 };
 
 static struct regress_dns_server_table reissue_table[] = {
-	{ "foof.example.com", "A", "240.15.240.15", 0 },
-	{ NULL, NULL, NULL, 0 }
+	{ "foof.example.com", "A", "240.15.240.15", 0, 0 },
+	{ NULL, NULL, NULL, 0, 0 }
 };
 
 static void
-dns_reissue_test(void *arg)
+dns_reissue_test_impl(void *arg, int flags)
 {
 	struct basic_test_data *data = arg;
 	struct event_base *base = data->base;
@@ -773,7 +843,7 @@ dns_reissue_test(void *arg)
 	evutil_snprintf(buf1, sizeof(buf1), "127.0.0.1:%d", (int)portnum1);
 	evutil_snprintf(buf2, sizeof(buf2), "127.0.0.1:%d", (int)portnum2);
 
-	dns = evdns_base_new(base, 0);
+	dns = evdns_base_new(base, flags);
 	tt_assert(!evdns_base_nameserver_ip_add(dns, buf1));
 	tt_assert(! evdns_base_set_option(dns, "timeout:", "0.3"));
 	tt_assert(! evdns_base_set_option(dns, "max-timeouts:", "2"));
@@ -806,6 +876,16 @@ end:
 	if (port2)
 		evdns_close_server_port(port2);
 }
+static void
+dns_reissue_test(void *arg)
+{
+	dns_reissue_test_impl(arg, 0);
+}
+static void
+dns_reissue_disable_when_inactive_test(void *arg)
+{
+	dns_reissue_test_impl(arg, EVDNS_BASE_DISABLE_WHEN_INACTIVE);
+}
 
 #if 0
 static void
@@ -820,21 +900,29 @@ dumb_bytes_fn(char *p, size_t n)
 #endif
 
 static void
-dns_inflight_test(void *arg)
+dns_inflight_test_impl(void *arg, int flags)
 {
 	struct basic_test_data *data = arg;
 	struct event_base *base = data->base;
 	struct evdns_base *dns = NULL;
+	struct evdns_server_port *dns_port = NULL;
 	ev_uint16_t portnum = 0;
 	char buf[64];
+	int disable_when_inactive = flags & EVDNS_BASE_DISABLE_WHEN_INACTIVE;
 
 	struct generic_dns_callback_result r[20];
 	int i;
 
-	tt_assert(regress_dnsserver(base, &portnum, reissue_table));
+	dns_port = regress_get_dnsserver(base, &portnum, NULL,
+		regress_dns_server_cb, reissue_table);
+	tt_assert(dns_port);
+	if (disable_when_inactive) {
+		exit_port = dns_port;
+	}
+
 	evutil_snprintf(buf, sizeof(buf), "127.0.0.1:%d", (int)portnum);
 
-	dns = evdns_base_new(base, 0);
+	dns = evdns_base_new(base, flags);
 	tt_assert(!evdns_base_nameserver_ip_add(dns, buf));
 	tt_assert(! evdns_base_set_option(dns, "max-inflight:", "3"));
 	tt_assert(! evdns_base_set_option(dns, "randomize-case:", "0"));
@@ -856,7 +944,65 @@ dns_inflight_test(void *arg)
 end:
 	if (dns)
 		evdns_base_free(dns, 0);
+	if (exit_port) {
+		evdns_close_server_port(exit_port);
+		exit_port = NULL;
+	} else if (! disable_when_inactive) {
+		evdns_close_server_port(dns_port);
+	}
+}
+
+static void
+dns_inflight_test(void *arg)
+{
+	dns_inflight_test_impl(arg, 0);
+}
+
+static void
+dns_disable_when_inactive_test(void *arg)
+{
+	dns_inflight_test_impl(arg, EVDNS_BASE_DISABLE_WHEN_INACTIVE);
+}
+
+static void
+dns_disable_when_inactive_no_ns_test(void *arg)
+{
+	struct basic_test_data *data = arg;
+	struct event_base *base = data->base, *inactive_base;
+	struct evdns_base *dns = NULL;
+	ev_uint16_t portnum = 0;
+	char buf[64];
+	struct generic_dns_callback_result r;
+
+	inactive_base = event_base_new();
+	tt_assert(inactive_base);
+
+	/** Create dns server with inactive base, to avoid replying to clients */
+	tt_assert(regress_dnsserver(inactive_base, &portnum, search_table));
+	evutil_snprintf(buf, sizeof(buf), "127.0.0.1:%d", (int)portnum);
+
+	dns = evdns_base_new(base, EVDNS_BASE_DISABLE_WHEN_INACTIVE);
+	tt_assert(!evdns_base_nameserver_ip_add(dns, buf));
+	tt_assert(! evdns_base_set_option(dns, "timeout:", "0.1"));
+
+	evdns_base_resolve_ipv4(dns, "foof.example.com", 0, generic_dns_callback, &r);
+	n_replies_left = 1;
+	exit_base = base;
+
+	event_base_dispatch(base);
+
+	tt_int_op(n_replies_left, ==, 0);
+
+	tt_int_op(r.result, ==, DNS_ERR_TIMEOUT);
+	tt_int_op(r.count, ==, 0);
+	tt_ptr_op(r.addrs, ==, NULL);
+
+end:
+	if (dns)
+		evdns_base_free(dns, 0);
 	regress_clean_dnsserver();
+	if (inactive_base)
+		event_base_free(inactive_base);
 }
 
 /* === Test for bufferevent_socket_connect_hostname */
@@ -882,6 +1028,8 @@ be_getaddrinfo_server_cb(struct evdns_server_request *req, void *data)
 		struct in_addr ans;
 		struct in6_addr ans6;
 		memset(&ans6, 0, sizeof(ans6));
+
+		TT_BLATHER(("Got question about %s, type=%d", qname, qtype));
 
 		if (qtype == EVDNS_TYPE_A &&
 		    qclass == EVDNS_CLASS_INET &&
@@ -983,10 +1131,13 @@ be_getaddrinfo_server_cb(struct evdns_server_request *req, void *data)
 			TT_GRIPE(("Got weird request for %s",qname));
 		}
 	}
-	if (added_any)
+	if (added_any) {
+		TT_BLATHER(("answering"));
 		evdns_server_request_respond(req, 0);
-	else
+	} else {
+		TT_BLATHER(("saying nexist."));
 		evdns_server_request_respond(req, 3);
+	}
 }
 
 /* Implements a listener for connect_hostname test. */
@@ -1099,15 +1250,6 @@ test_bufferevent_connect_hostname(void *arg)
 	bufferevent_setcb(be5, NULL, NULL, be_connect_hostname_event_cb,
 	    &be5_outcome);
 
-	/* Launch an async resolve that will fail. */
-	tt_assert(!bufferevent_socket_connect_hostname(be1, dns, AF_INET,
-		"nosuchplace.example.com", listener_port));
-	/* Connect to the IP without resolving. */
-	tt_assert(!bufferevent_socket_connect_hostname(be2, dns, AF_INET,
-		"127.0.0.1", listener_port));
-	/* Launch an async resolve that will succeed. */
-	tt_assert(!bufferevent_socket_connect_hostname(be3, dns, AF_INET,
-		"nobodaddy.example.com", listener_port));
 	/* Use the blocking resolver.  This one will fail if your resolver
 	 * can't resolve localhost to 127.0.0.1 */
 	tt_assert(!bufferevent_socket_connect_hostname(be4, NULL, AF_INET,
@@ -1127,6 +1269,15 @@ test_bufferevent_connect_hostname(void *arg)
 		expect_err5 = evutil_getaddrinfo(
 			"nonesuch.nowhere.example.com", "80", &hints, &ai);
 	}
+	/* Launch an async resolve that will fail. */
+	tt_assert(!bufferevent_socket_connect_hostname(be1, dns, AF_INET,
+		"nosuchplace.example.com", listener_port));
+	/* Connect to the IP without resolving. */
+	tt_assert(!bufferevent_socket_connect_hostname(be2, dns, AF_INET,
+		"127.0.0.1", listener_port));
+	/* Launch an async resolve that will succeed. */
+	tt_assert(!bufferevent_socket_connect_hostname(be3, dns, AF_INET,
+		"nobodaddy.example.com", listener_port));
 
 	event_base_dispatch(data->base);
 
@@ -1207,15 +1358,19 @@ test_getaddrinfo_async(void *arg)
 	struct evdns_server_port *port = NULL;
 	ev_uint16_t dns_port = 0;
 	int n_dns_questions = 0;
+	struct evdns_base *dns_base;
 
-	struct evdns_base *dns_base = evdns_base_new(data->base, 0);
+	memset(a_out, 0, sizeof(a_out));
+	memset(&local_outcome, 0, sizeof(local_outcome));
+
+	dns_base = evdns_base_new(data->base, 0);
 	tt_assert(dns_base);
 
 	/* for localhost */
 	evdns_base_load_hosts(dns_base, NULL);
 
-	memset(a_out, 0, sizeof(a_out));
-	memset(&local_outcome, 0, sizeof(local_outcome));
+	tt_assert(! evdns_base_set_option(dns_base, "timeout", "0.3"));
+	tt_assert(! evdns_base_set_option(dns_base, "getaddrinfo-allow-skew", "0.2"));
 
 	n_gai_results_pending = 10000; /* don't think about exiting yet. */
 
@@ -1555,7 +1710,7 @@ test_getaddrinfo_async(void *arg)
 end:
 	if (local_outcome.ai)
 		evutil_freeaddrinfo(local_outcome.ai);
-	for (i=0;i<10;++i) {
+	for (i=0;i<(int)ARRAY_SIZE(a_out);++i) {
 		if (a_out[i].ai)
 			evutil_freeaddrinfo(a_out[i].ai);
 	}
@@ -1686,7 +1841,14 @@ testleak_setup(const struct testcase_t *testcase)
 	struct testleak_env_t *env;
 
 	allocated_chunks = 0;
+
+	/* Reset allocation counter, to start allocations from the very beginning.
+	 * (this will avoid false-positive negative numbers for allocated_chunks)
+	 */
+	libevent_global_shutdown();
+
 	event_set_mem_functions(cnt_malloc, cnt_realloc, cnt_free);
+
 	event_enable_debug_mode();
 
 	/* not mm_calloc: we don't want to mess with the count. */
@@ -1705,11 +1867,11 @@ testleak_cleanup(const struct testcase_t *testcase, void *env_)
 	int ok = 0;
 	struct testleak_env_t *env = env_;
 	tt_assert(env);
-#ifdef _EVENT_DISABLE_DEBUG_MODE
+#ifdef EVENT__DISABLE_DEBUG_MODE
 	tt_int_op(allocated_chunks, ==, 0);
 #else
-	/* FIXME: that's `1' because of event_debug_map_HT_GROW */
-	tt_int_op(allocated_chunks, ==, 1);
+	libevent_global_shutdown();
+	tt_int_op(allocated_chunks, ==, 0);
 #endif
 	ok = 1;
 end:
@@ -1746,6 +1908,50 @@ test_dbg_leak_cancel(void *env_)
 	event_base_free(env->base);
 	env->base = 0;
 }
+
+static void
+dbg_leak_resume(void *env_, int cancel, int send_err_shutdown)
+{
+	/* cancel, loop, free/dns, free/base */
+	struct testleak_env_t *env = env_;
+	if (cancel) {
+		evdns_cancel_request(env->dns_base, env->req);
+		tt_assert(!evdns_base_resume(env->dns_base));
+	} else {
+		/* TODO: No nameservers, request can't be processed, must be errored */
+		tt_assert(!evdns_base_resume(env->dns_base));
+	}
+
+	event_base_loop(env->base, EVLOOP_NONBLOCK);
+	/**
+	 * Because we don't cancel request, and want our callback to recieve
+	 * DNS_ERR_SHUTDOWN, we use deferred callback, and there was:
+	 * - one extra malloc(),
+	 *   @see reply_schedule_callback()
+	 * - and one missing free
+	 *   @see request_finished() (req->handle->pending_cb = 1)
+	 * than we don't need to count in testleak_cleanup(), but we can clean them
+	 * if we will run loop once again, but *after* evdns base freed.
+	 */
+	evdns_base_free(env->dns_base, send_err_shutdown);
+	env->dns_base = 0;
+	event_base_loop(env->base, EVLOOP_NONBLOCK);
+
+end:
+	event_base_free(env->base);
+	env->base = 0;
+}
+
+#define IMPL_DBG_LEAK_RESUME(name, cancel, send_err_shutdown)      \
+	static void                                                    \
+	test_dbg_leak_##name##_(void *env_)                            \
+	{                                                              \
+		dbg_leak_resume(env_, cancel, send_err_shutdown);          \
+	}
+IMPL_DBG_LEAK_RESUME(resume, 0, 0)
+IMPL_DBG_LEAK_RESUME(cancel_and_resume, 1, 0)
+IMPL_DBG_LEAK_RESUME(resume_send_err, 0, 1)
+IMPL_DBG_LEAK_RESUME(cancel_and_resume_send_err, 1, 1)
 
 static void
 test_dbg_leak_shutdown(void *env_)
@@ -1816,8 +2022,95 @@ end:
 		evdns_base_free(dns_base, 1);
 	if (server)
 		evdns_close_server_port(server);
+	if (base)
+		event_base_free(base);
 	if (fd >= 0)
 		evutil_closesocket(fd);
+}
+
+static void
+dns_client_fail_requests_test(void *arg)
+{
+	struct basic_test_data *data = arg;
+	struct event_base *base = data->base;
+	struct evdns_base *dns = NULL;
+	struct evdns_server_port *dns_port = NULL;
+	ev_uint16_t portnum = 0;
+	char buf[64];
+
+	struct generic_dns_callback_result r[20];
+	int i;
+
+	dns_port = regress_get_dnsserver(base, &portnum, NULL,
+		regress_dns_server_cb, reissue_table);
+	tt_assert(dns_port);
+
+	evutil_snprintf(buf, sizeof(buf), "127.0.0.1:%d", (int)portnum);
+
+	dns = evdns_base_new(base, EVDNS_BASE_DISABLE_WHEN_INACTIVE);
+	tt_assert(!evdns_base_nameserver_ip_add(dns, buf));
+
+	for (i = 0; i < 20; ++i)
+		evdns_base_resolve_ipv4(dns, "foof.example.com", 0, generic_dns_callback, &r[i]);
+
+	n_replies_left = 20;
+	exit_base = base;
+
+	evdns_base_free(dns, 1 /** fail requests */);
+	/** run defered callbacks, to trigger UAF */
+	event_base_dispatch(base);
+
+	tt_int_op(n_replies_left, ==, 0);
+	for (i = 0; i < 20; ++i)
+		tt_int_op(r[i].result, ==, DNS_ERR_SHUTDOWN);
+
+end:
+	evdns_close_server_port(dns_port);
+}
+
+static void
+getaddrinfo_cb(int err, struct evutil_addrinfo *res, void *ptr)
+{
+	generic_dns_callback(err, 0, 0, 0, NULL, ptr);
+}
+static void
+dns_client_fail_requests_getaddrinfo_test(void *arg)
+{
+	struct basic_test_data *data = arg;
+	struct event_base *base = data->base;
+	struct evdns_base *dns = NULL;
+	struct evdns_server_port *dns_port = NULL;
+	ev_uint16_t portnum = 0;
+	char buf[64];
+
+	struct generic_dns_callback_result r[20];
+	int i;
+
+	dns_port = regress_get_dnsserver(base, &portnum, NULL,
+		regress_dns_server_cb, reissue_table);
+	tt_assert(dns_port);
+
+	evutil_snprintf(buf, sizeof(buf), "127.0.0.1:%d", (int)portnum);
+
+	dns = evdns_base_new(base, EVDNS_BASE_DISABLE_WHEN_INACTIVE);
+	tt_assert(!evdns_base_nameserver_ip_add(dns, buf));
+
+	for (i = 0; i < 20; ++i)
+		tt_assert(evdns_getaddrinfo(dns, "foof.example.com", "ssh", NULL, getaddrinfo_cb, &r[i]));
+
+	n_replies_left = 20;
+	exit_base = base;
+
+	evdns_base_free(dns, 1 /** fail requests */);
+	/** run defered callbacks, to trigger UAF */
+	event_base_dispatch(base);
+
+	tt_int_op(n_replies_left, ==, 0);
+	for (i = 0; i < 20; ++i)
+		tt_int_op(r[i].result, ==, EVUTIL_EAI_FAIL);
+
+end:
+	evdns_close_server_port(dns_port);
 }
 
 
@@ -1827,17 +2120,27 @@ end:
 
 struct testcase_t dns_testcases[] = {
 	DNS_LEGACY(server, TT_FORK|TT_NEED_BASE),
-	DNS_LEGACY(gethostbyname, TT_FORK|TT_NEED_BASE|TT_NEED_DNS),
-	DNS_LEGACY(gethostbyname6, TT_FORK|TT_NEED_BASE|TT_NEED_DNS),
-	DNS_LEGACY(gethostbyaddr, TT_FORK|TT_NEED_BASE|TT_NEED_DNS),
-	{ "resolve_reverse", dns_resolve_reverse, TT_FORK, NULL, NULL },
+	DNS_LEGACY(gethostbyname, TT_FORK|TT_NEED_BASE|TT_NEED_DNS|TT_OFF_BY_DEFAULT),
+	DNS_LEGACY(gethostbyname6, TT_FORK|TT_NEED_BASE|TT_NEED_DNS|TT_OFF_BY_DEFAULT),
+	DNS_LEGACY(gethostbyaddr, TT_FORK|TT_NEED_BASE|TT_NEED_DNS|TT_OFF_BY_DEFAULT),
+	{ "resolve_reverse", dns_resolve_reverse, TT_FORK|TT_OFF_BY_DEFAULT, NULL, NULL },
+	{ "search_empty", dns_search_empty_test, TT_FORK|TT_NEED_BASE, &basic_setup, NULL },
 	{ "search", dns_search_test, TT_FORK|TT_NEED_BASE, &basic_setup, NULL },
+	{ "search_lower", dns_search_lower_test, TT_FORK|TT_NEED_BASE, &basic_setup, NULL },
 	{ "search_cancel", dns_search_cancel_test,
 	  TT_FORK|TT_NEED_BASE, &basic_setup, NULL },
-	{ "retry", dns_retry_test, TT_FORK|TT_NEED_BASE, &basic_setup, NULL },
-	{ "reissue", dns_reissue_test, TT_FORK|TT_NEED_BASE, &basic_setup, NULL },
+	{ "retry", dns_retry_test, TT_FORK|TT_NEED_BASE|TT_NO_LOGS, &basic_setup, NULL },
+	{ "retry_disable_when_inactive", dns_retry_disable_when_inactive_test,
+	  TT_FORK|TT_NEED_BASE|TT_NO_LOGS, &basic_setup, NULL },
+	{ "reissue", dns_reissue_test, TT_FORK|TT_NEED_BASE|TT_NO_LOGS, &basic_setup, NULL },
+	{ "reissue_disable_when_inactive", dns_reissue_disable_when_inactive_test,
+	  TT_FORK|TT_NEED_BASE|TT_NO_LOGS, &basic_setup, NULL },
 	{ "inflight", dns_inflight_test, TT_FORK|TT_NEED_BASE, &basic_setup, NULL },
 	{ "bufferevent_connect_hostname", test_bufferevent_connect_hostname,
+	  TT_FORK|TT_NEED_BASE, &basic_setup, NULL },
+	{ "disable_when_inactive", dns_disable_when_inactive_test,
+	  TT_FORK|TT_NEED_BASE, &basic_setup, NULL },
+	{ "disable_when_inactive_no_ns", dns_disable_when_inactive_no_ns_test,
 	  TT_FORK|TT_NEED_BASE, &basic_setup, NULL },
 
 	{ "getaddrinfo_async", test_getaddrinfo_async,
@@ -1848,7 +2151,21 @@ struct testcase_t dns_testcases[] = {
 #ifdef EVENT_SET_MEM_FUNCTIONS_IMPLEMENTED
 	{ "leak_shutdown", test_dbg_leak_shutdown, TT_FORK, &testleak_funcs, NULL },
 	{ "leak_cancel", test_dbg_leak_cancel, TT_FORK, &testleak_funcs, NULL },
+
+	{ "leak_resume", test_dbg_leak_resume_, TT_FORK, &testleak_funcs, NULL },
+	{ "leak_cancel_and_resume", test_dbg_leak_cancel_and_resume_,
+	  TT_FORK, &testleak_funcs, NULL },
+	{ "leak_resume_send_err", test_dbg_leak_resume_send_err_,
+	  TT_FORK, &testleak_funcs, NULL },
+	{ "leak_cancel_and_resume_send_err", test_dbg_leak_cancel_and_resume_send_err_,
+	  TT_FORK, &testleak_funcs, NULL },
 #endif
+
+	{ "client_fail_requests", dns_client_fail_requests_test,
+	  TT_FORK|TT_NEED_BASE, &basic_setup, NULL },
+	{ "client_fail_requests_getaddrinfo",
+	  dns_client_fail_requests_getaddrinfo_test,
+	  TT_FORK|TT_NEED_BASE, &basic_setup, NULL },
 
 	END_OF_TESTCASES
 };

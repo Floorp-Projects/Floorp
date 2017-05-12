@@ -2,7 +2,6 @@
 "use strict";
 
 let Cu = Components.utils;
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
@@ -58,9 +57,9 @@ function* chunk_four(listData) {
   }
 }
 
-add_task(function* open_page() {
-  let dataURI = yield PreviewProvider.getThumbnail(TEST_URL);
-  let pixels = yield pixelsForDataURI(dataURI, {width: 10, height: 10});
+add_task(async function open_page() {
+  let dataURI = await PreviewProvider.getThumbnail(TEST_URL);
+  let pixels = await pixelsForDataURI(dataURI, {width: 10, height: 10});
   let rgbCount = {r: 0, g: 0, b: 0, a: 0};
   for (let [r, g, b, a] of chunk_four(pixels)) {
     if (r === 255) {
@@ -80,9 +79,9 @@ add_task(function* open_page() {
       "0,0,100,100", "there should be 100 blue-only pixels at full opacity");
 });
 
-add_task(function* invalid_url() {
+add_task(async function invalid_url() {
   try {
-    yield PreviewProvider.getThumbnail("invalid:URL");
+    await PreviewProvider.getThumbnail("invalid:URL");
   } catch (err) {
     Assert.ok(true, "URL Failed");
   }

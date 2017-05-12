@@ -20,16 +20,16 @@ function allowOneIntro() {
   Services.prefs.setIntPref(PREF_INTRO_COUNT, TrackingProtection.MAX_INTROS - 1);
 }
 
-add_task(function* setup_test() {
+add_task(async function setup_test() {
   Services.prefs.setBoolPref(PREF_TP_ENABLED, true);
-  yield UrlClassifierTestUtils.addTestTrackers();
+  await UrlClassifierTestUtils.addTestTrackers();
 });
 
-add_task(function* test_benignPage() {
+add_task(async function test_benignPage() {
   info("Load a test page not containing tracking elements");
   allowOneIntro();
-  yield BrowserTestUtils.withNewTab({gBrowser, url: BENIGN_PAGE}, function*() {
-    yield waitForConditionPromise(() => {
+  await BrowserTestUtils.withNewTab({gBrowser, url: BENIGN_PAGE}, async function() {
+    await waitForConditionPromise(() => {
       return is_visible(TOOLTIP_PANEL);
     }, "Info panel shouldn't appear on a benign page").
       then(() => ok(false, "Info panel shouldn't appear"),
@@ -40,11 +40,11 @@ add_task(function* test_benignPage() {
   });
 });
 
-add_task(function* test_trackingPages() {
+add_task(async function test_trackingPages() {
   info("Load a test page containing tracking elements");
   allowOneIntro();
-  yield BrowserTestUtils.withNewTab({gBrowser, url: TRACKING_PAGE}, function*() {
-    yield new Promise((resolve, reject) => {
+  await BrowserTestUtils.withNewTab({gBrowser, url: TRACKING_PAGE}, async function() {
+    await new Promise((resolve, reject) => {
       waitForPopupAtAnchor(TOOLTIP_PANEL, TOOLTIP_ANCHOR, resolve,
                            "Intro panel should appear");
     });
@@ -57,7 +57,7 @@ add_task(function* test_trackingPages() {
 
     info("Click the step text and nothing should happen");
     let tabCount = gBrowser.tabs.length;
-    yield EventUtils.synthesizeMouseAtCenter(buttons.children[0], {});
+    await EventUtils.synthesizeMouseAtCenter(buttons.children[0], {});
     is(gBrowser.tabs.length, tabCount, "Same number of tabs should be open");
 
     info("Resetting count to test that viewing the tour prevents future panels");
@@ -67,18 +67,18 @@ add_task(function* test_trackingPages() {
     let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, step2URL);
     info("Clicking the main button");
     EventUtils.synthesizeMouseAtCenter(buttons.children[1], {});
-    let tab = yield tabPromise;
+    let tab = await tabPromise;
     is(Services.prefs.getIntPref(PREF_INTRO_COUNT), TrackingProtection.MAX_INTROS,
        "Check intro count is at the max after opening step 2");
     is(gBrowser.tabs.length, tabCount + 1, "Tour step 2 tab opened");
-    yield panelHiddenPromise;
+    await panelHiddenPromise;
     ok(true, "Panel hid when the button was clicked");
-    yield BrowserTestUtils.removeTab(tab);
+    await BrowserTestUtils.removeTab(tab);
   });
 
   info("Open another tracking page and make sure we don't show the panel again");
-  yield BrowserTestUtils.withNewTab({gBrowser, url: TRACKING_PAGE}, function*() {
-    yield waitForConditionPromise(() => {
+  await BrowserTestUtils.withNewTab({gBrowser, url: TRACKING_PAGE}, async function() {
+    await waitForConditionPromise(() => {
       return is_visible(TOOLTIP_PANEL);
     }, "Info panel shouldn't appear more than MAX_INTROS").
       then(() => ok(false, "Info panel shouldn't appear again"),

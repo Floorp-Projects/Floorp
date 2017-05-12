@@ -6,14 +6,14 @@ var testPage = "<body style='margin: 0'>" +
                "  <div id='main' contenteditable='true'>Test <b>Bold</b> After Text</div>" +
                "</body>";
 
-add_task(function*() {
+add_task(async function() {
   let tab = gBrowser.addTab();
   let browser = gBrowser.getBrowserForTab(tab);
 
   gBrowser.selectedTab = tab;
 
-  yield promiseTabLoadEvent(tab, "data:text/html," + escape(testPage));
-  yield SimpleTest.promiseFocus(browser.contentWindowAsCPOW);
+  await promiseTabLoadEvent(tab, "data:text/html," + escape(testPage));
+  await SimpleTest.promiseFocus(browser.contentWindowAsCPOW);
 
   const modifier = (navigator.platform.indexOf("Mac") >= 0) ?
                    Components.interfaces.nsIDOMWindowUtils.MODIFIER_META :
@@ -24,7 +24,7 @@ add_task(function*() {
   const htmlPrefix = (navigator.platform.indexOf("Win") >= 0) ? "<html><body>\n<!--StartFragment-->" : "";
   const htmlPostfix = (navigator.platform.indexOf("Win") >= 0) ? "<!--EndFragment-->\n</body>\n</html>" : "";
 
-  yield ContentTask.spawn(browser, { modifier, htmlPrefix, htmlPostfix }, function* (arg) {
+  await ContentTask.spawn(browser, { modifier, htmlPrefix, htmlPostfix }, async function(arg) {
     var doc = content.document;
     var main = doc.getElementById("main");
     main.focus();
@@ -48,7 +48,7 @@ add_task(function*() {
     selection.modify("extend", "right", "word");
     selection.modify("extend", "right", "word");
 
-    yield new Promise((resolve, reject) => {
+    await new Promise((resolve, reject) => {
       addEventListener("copy", function copyEvent(event) {
         removeEventListener("copy", copyEvent, true);
         // The data is empty as the selection is copied during the event default phase.
@@ -61,7 +61,7 @@ add_task(function*() {
 
     selection.modify("move", "right", "line");
 
-    yield new Promise((resolve, reject) => {
+    await new Promise((resolve, reject) => {
       addEventListener("paste", function copyEvent(event) {
         removeEventListener("paste", copyEvent, true);
         let clipboardData = event.clipboardData;
@@ -83,7 +83,7 @@ add_task(function*() {
     selection.modify("extend", "left", "word");
     selection.modify("extend", "left", "character");
 
-    yield new Promise((resolve, reject) => {
+    await new Promise((resolve, reject) => {
       addEventListener("cut", function copyEvent(event) {
         removeEventListener("cut", copyEvent, true);
         event.clipboardData.setData("text/plain", "Some text");
@@ -97,7 +97,7 @@ add_task(function*() {
 
     selection.modify("move", "left", "line");
 
-    yield new Promise((resolve, reject) => {
+    await new Promise((resolve, reject) => {
       addEventListener("paste", function copyEvent(event) {
         removeEventListener("paste", copyEvent, true);
         let clipboardData = event.clipboardData;
@@ -124,22 +124,22 @@ add_task(function*() {
   let contextMenu = document.getElementById("contentAreaContextMenu");
   let contextMenuShown = promisePopupShown(contextMenu);
   BrowserTestUtils.synthesizeMouseAtCenter("#img", { type: "contextmenu", button: 2 }, gBrowser.selectedBrowser);
-  yield contextMenuShown;
+  await contextMenuShown;
 
   document.getElementById("context-copyimage-contents").doCommand();
 
   contextMenu.hidePopup();
-  yield promisePopupHidden(contextMenu);
+  await promisePopupHidden(contextMenu);
 
   // Focus the content again
-  yield SimpleTest.promiseFocus(browser.contentWindowAsCPOW);
+  await SimpleTest.promiseFocus(browser.contentWindowAsCPOW);
 
-  yield ContentTask.spawn(browser, { modifier, htmlPrefix, htmlPostfix }, function* (arg) {
+  await ContentTask.spawn(browser, { modifier, htmlPrefix, htmlPostfix }, async function(arg) {
     var doc = content.document;
     var main = doc.getElementById("main");
     main.focus();
 
-    yield new Promise((resolve, reject) => {
+    await new Promise((resolve, reject) => {
       addEventListener("paste", function copyEvent(event) {
         removeEventListener("paste", copyEvent, true);
         let clipboardData = event.clipboardData;

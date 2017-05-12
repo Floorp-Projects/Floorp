@@ -19,7 +19,6 @@ const XULSTORE_CID = Components.ID("{6f46b6f4-c8b1-4bd4-a4fa-9ebbed0753ea}");
 const STOREDB_FILENAME = "xulstore.json";
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
@@ -160,7 +159,7 @@ XULStore.prototype = {
     }
   },
 
-  writeFile: Task.async(function* () {
+  async writeFile() {
     if (!this._needsSaving)
       return;
 
@@ -173,13 +172,13 @@ XULStore.prototype = {
       let encoder = new TextEncoder();
 
       data = encoder.encode(data);
-      yield OS.File.writeAtomic(this._storeFile.path, data,
+      await OS.File.writeAtomic(this._storeFile.path, data,
                               { tmpPath: this._storeFile.path + ".tmp" });
     } catch (e) {
       this.log("Failed to write xulstore.json: " + e);
       throw e;
     }
-  }),
+  },
 
   markAsChanged() {
     if (this._needsSaving || !this._storeFile)

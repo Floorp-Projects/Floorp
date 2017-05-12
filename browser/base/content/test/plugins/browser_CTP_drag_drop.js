@@ -1,7 +1,7 @@
 var gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
 var gNewWindow = null;
 
-add_task(function* () {
+add_task(async function() {
   registerCleanupFunction(function() {
     clearAllPluginPermissions();
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
@@ -14,7 +14,7 @@ add_task(function* () {
   });
 });
 
-add_task(function* () {
+add_task(async function() {
   Services.prefs.setBoolPref("plugins.click_to_play", true);
   Services.prefs.setBoolPref("extensions.blocklist.suppressUI", true);
 
@@ -22,56 +22,56 @@ add_task(function* () {
 
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Test Plug-in");
 
-  yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_test.html");
+  await promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_test.html");
 
   // Work around for delayed PluginBindingAttached
-  yield promiseUpdatePluginBindings(gBrowser.selectedBrowser);
+  await promiseUpdatePluginBindings(gBrowser.selectedBrowser);
 
-  yield promisePopupNotification("click-to-play-plugins");
+  await promisePopupNotification("click-to-play-plugins");
 });
 
-add_task(function* () {
+add_task(async function() {
   gNewWindow = gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
 
   // XXX technically can't load fire before we get this call???
-  yield waitForEvent(gNewWindow, "load", null, true);
+  await waitForEvent(gNewWindow, "load", null, true);
 
-  yield promisePopupNotification("click-to-play-plugins", gNewWindow.gBrowser.selectedBrowser);
+  await promisePopupNotification("click-to-play-plugins", gNewWindow.gBrowser.selectedBrowser);
 
   ok(PopupNotifications.getNotification("click-to-play-plugins", gNewWindow.gBrowser.selectedBrowser), "Should have a click-to-play notification in the tab in the new window");
   ok(!PopupNotifications.getNotification("click-to-play-plugins", gBrowser.selectedBrowser), "Should not have a click-to-play notification in the old window now");
 });
 
-add_task(function* () {
+add_task(async function() {
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.swapBrowsersAndCloseOther(gBrowser.selectedTab, gNewWindow.gBrowser.selectedTab);
 
-  yield promisePopupNotification("click-to-play-plugins", gBrowser.selectedBrowser);
+  await promisePopupNotification("click-to-play-plugins", gBrowser.selectedBrowser);
 
   ok(PopupNotifications.getNotification("click-to-play-plugins", gBrowser.selectedBrowser), "Should have a click-to-play notification in the initial tab again");
 
   // Work around for delayed PluginBindingAttached
-  yield promiseUpdatePluginBindings(gBrowser.selectedBrowser);
+  await promiseUpdatePluginBindings(gBrowser.selectedBrowser);
 });
 
-add_task(function* () {
-  yield promisePopupNotification("click-to-play-plugins");
+add_task(async function() {
+  await promisePopupNotification("click-to-play-plugins");
 
   gNewWindow = gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
 
-  yield promiseWaitForFocus(gNewWindow);
+  await promiseWaitForFocus(gNewWindow);
 
-  yield promisePopupNotification("click-to-play-plugins", gNewWindow.gBrowser.selectedBrowser);
+  await promisePopupNotification("click-to-play-plugins", gNewWindow.gBrowser.selectedBrowser);
 });
 
-add_task(function* () {
+add_task(async function() {
   ok(PopupNotifications.getNotification("click-to-play-plugins", gNewWindow.gBrowser.selectedBrowser), "Should have a click-to-play notification in the tab in the new window");
   ok(!PopupNotifications.getNotification("click-to-play-plugins", gBrowser.selectedBrowser), "Should not have a click-to-play notification in the old window now");
 
-  let pluginInfo = yield promiseForPluginInfo("test", gNewWindow.gBrowser.selectedBrowser);
+  let pluginInfo = await promiseForPluginInfo("test", gNewWindow.gBrowser.selectedBrowser);
   ok(!pluginInfo.activated, "plugin should not be activated");
 
-  yield ContentTask.spawn(gNewWindow.gBrowser.selectedBrowser, {}, function* () {
+  await ContentTask.spawn(gNewWindow.gBrowser.selectedBrowser, {}, async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let bounds = plugin.getBoundingClientRect();
@@ -84,13 +84,13 @@ add_task(function* () {
   });
 
   let condition = () => !PopupNotifications.getNotification("click-to-play-plugins", gNewWindow.gBrowser.selectedBrowser).dismissed && gNewWindow.PopupNotifications.panel.firstChild;
-  yield promiseForCondition(condition);
+  await promiseForCondition(condition);
 });
 
-add_task(function* () {
+add_task(async function() {
   // Click the activate button on doorhanger to make sure it works
   gNewWindow.PopupNotifications.panel.firstChild._primaryButton.click();
 
-  let pluginInfo = yield promiseForPluginInfo("test", gNewWindow.gBrowser.selectedBrowser);
+  let pluginInfo = await promiseForPluginInfo("test", gNewWindow.gBrowser.selectedBrowser);
   ok(pluginInfo.activated, "plugin should be activated");
 });

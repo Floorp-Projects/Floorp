@@ -16,8 +16,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils",
                                   "resource:///modules/E10SUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionParent",
                                   "resource://gre/modules/ExtensionParent.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
                                   "resource://gre/modules/Timer.jsm");
 
@@ -449,7 +447,7 @@ class ViewPopup extends BasePopup {
    *        should be closed, or `true` otherwise.
    */
   attach(viewNode) {
-    return Task.spawn(function* () {
+    return (async () => {
       this.viewNode = viewNode;
       this.viewNode.addEventListener(this.DESTROY_EVENT, this);
 
@@ -458,7 +456,7 @@ class ViewPopup extends BasePopup {
       //
       // In practice, the browser that was created by the mousdown handler should
       // nearly always be ready by this point.
-      yield Promise.all([
+      await Promise.all([
         this.browserReady,
         Promise.race([
           // This promise may be rejected if the popup calls window.close()
@@ -502,7 +500,7 @@ class ViewPopup extends BasePopup {
 
       // Create a new browser in the real popup.
       let browser = this.browser;
-      yield this.createBrowser(this.viewNode);
+      await this.createBrowser(this.viewNode);
 
       this.ignoreResizes = false;
 
@@ -531,7 +529,7 @@ class ViewPopup extends BasePopup {
       this.browser.dispatchEvent(event);
 
       return true;
-    }.bind(this));
+    })();
   }
 
   destroy() {

@@ -1864,9 +1864,6 @@ GCMarker::restoreValueArray(const MarkStack::SavedValueArray& array,
 
     uintptr_t start = array.index;
     if (array.kind == HeapSlot::Element) {
-        if (!obj->is<ArrayObject>())
-            return false;
-
         uint32_t initlen = obj->getDenseInitializedLength();
 
         // Account for shifted elements.

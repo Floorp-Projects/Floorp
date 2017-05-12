@@ -2,10 +2,10 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* moveMultiple() {
+add_task(async function moveMultiple() {
   let tabs = [];
   for (let k of [1, 2, 3, 4]) {
-    let tab = yield BrowserTestUtils.openNewForegroundTab(window.gBrowser, `http://example.com/?${k}`);
+    let tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser, `http://example.com/?${k}`);
     tabs.push(tab);
   }
 
@@ -62,11 +62,11 @@ add_task(function* moveMultiple() {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("tabs.move");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("tabs.move");
+  await extension.unload();
 
   for (let tab of tabs) {
-    yield BrowserTestUtils.removeTab(tab);
+    await BrowserTestUtils.removeTab(tab);
   }
 });

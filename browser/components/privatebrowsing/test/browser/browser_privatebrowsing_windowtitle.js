@@ -5,7 +5,7 @@
 // This test makes sure that the window title changes correctly while switching
 // from and to private browsing mode.
 
-add_task(function* test() {
+add_task(async function test() {
   const testPageURL = "http://mochi.test:8888/browser/" +
     "browser/components/privatebrowsing/test/browser/browser_privatebrowsing_windowtitle_page.html";
   requestLongerTimeout(2);
@@ -67,10 +67,10 @@ add_task(function* test() {
   function openWin(private) {
     return BrowserTestUtils.openNewBrowserWindow({ private });
   }
-  yield testTabTitle((yield openWin(false)), "about:blank", false, page_without_title);
-  yield testTabTitle((yield openWin(false)), testPageURL, false, page_with_title);
-  yield testTabTitle((yield openWin(false)), "about:privatebrowsing", false, about_pb_title);
-  yield testTabTitle((yield openWin(true)), "about:blank", true, pb_page_without_title);
-  yield testTabTitle((yield openWin(true)), testPageURL, true, pb_page_with_title);
-  yield testTabTitle((yield openWin(true)), "about:privatebrowsing", true, pb_about_pb_title);
+  await testTabTitle((await openWin(false)), "about:blank", false, page_without_title);
+  await testTabTitle((await openWin(false)), testPageURL, false, page_with_title);
+  await testTabTitle((await openWin(false)), "about:privatebrowsing", false, about_pb_title);
+  await testTabTitle((await openWin(true)), "about:blank", true, pb_page_without_title);
+  await testTabTitle((await openWin(true)), testPageURL, true, pb_page_with_title);
+  await testTabTitle((await openWin(true)), "about:privatebrowsing", true, pb_about_pb_title);
 });

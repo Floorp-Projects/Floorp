@@ -7,16 +7,16 @@
  * title instead of the page title.
  */
 
-add_task(function* test_tag_match_has_bookmark_title() {
+add_task(async function test_tag_match_has_bookmark_title() {
   do_print("Make sure the tag match gives the bookmark title");
   let uri = NetUtil.newURI("http://theuri/");
-  yield PlacesTestUtils.addVisits({ uri, title: "Page title" });
-  yield addBookmark({ uri,
+  await PlacesTestUtils.addVisits({ uri, title: "Page title" });
+  await addBookmark({ uri,
                       title: "Bookmark title",
                       tags: [ "superTag" ]});
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "superTag",
     matches: [ { uri, title: "Bookmark title", tags: [ "superTag" ], style: [ "bookmark-tag" ] } ]
   });
-  yield cleanup();
+  await cleanup();
 });

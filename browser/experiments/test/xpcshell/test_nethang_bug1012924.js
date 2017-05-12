@@ -12,7 +12,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_setup() {
+add_task(async function test_setup() {
   loadAddonManager();
   do_get_profile();
 
@@ -43,5 +43,5 @@ add_task(function* test_setup() {
     (e) => {
       do_throw("updateManifest should not have failed: got error " + e);
     });
-  yield experiments.uninit();
+  await experiments.uninit();
 });

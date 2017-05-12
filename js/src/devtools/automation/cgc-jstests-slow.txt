@@ -59,5 +59,7 @@ js1_5/Regress/regress-360969-03.js
 js1_5/Regress/regress-360969-04.js
 js1_5/Regress/regress-360969-05.js
 js1_5/Regress/regress-360969-06.js
+js1_8_1/extensions/regress-477187.js
+js1_8_1/regress/regress-452498-052-a.js
 js1_8_5/extensions/clone-complex-object.js
 js1_8_5/extensions/clone-object-deep.js

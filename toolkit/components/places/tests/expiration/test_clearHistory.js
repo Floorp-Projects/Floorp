@@ -74,7 +74,7 @@ function add_old_anno(aIdentifier, aName, aValue, aExpirePolicy,
   }
 }
 
-add_task(function* test_historyClear() {
+add_task(async function test_historyClear() {
   // Set interval to a large value so we don't expire on it.
   setInterval(3600); // 1h
 
@@ -85,13 +85,13 @@ add_task(function* test_historyClear() {
   for (let i = 0; i < 5; i++) {
     let pageURI = uri("http://item_anno." + i + ".mozilla.org/");
     // This visit will be expired.
-    yield PlacesTestUtils.addVisits({ uri: pageURI });
-    let bm = yield PlacesUtils.bookmarks.insert({
+    await PlacesTestUtils.addVisits({ uri: pageURI });
+    let bm = await PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       url: pageURI,
       title: null
     });
-    let id = yield PlacesUtils.promiseItemId(bm.guid);
+    let id = await PlacesUtils.promiseItemId(bm.guid);
     // Will persist because it's an EXPIRE_NEVER item anno.
     as.setItemAnnotation(id, "persist", "test", 0, as.EXPIRE_NEVER);
     // Will persist because the page is bookmarked.
@@ -113,7 +113,7 @@ add_task(function* test_historyClear() {
     // All page annotations related to these expired pages are expected to
     // expire as well.
     let pageURI = uri("http://page_anno." + i + ".mozilla.org/");
-    yield PlacesTestUtils.addVisits({ uri: pageURI });
+    await PlacesTestUtils.addVisits({ uri: pageURI });
     as.setPageAnnotation(pageURI, "expire", "test", 0, as.EXPIRE_NEVER);
     as.setPageAnnotation(pageURI, "expire_session", "test", 0, as.EXPIRE_SESSION);
     add_old_anno(pageURI, "expire_days", "test", as.EXPIRE_DAYS, 8);
@@ -122,7 +122,7 @@ add_task(function* test_historyClear() {
   }
 
   // Expire all visits for the bookmarks
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
 
   ["expire_days", "expire_weeks", "expire_months", "expire_session",
    "expire"].forEach(function(aAnno) {
@@ -144,7 +144,7 @@ add_task(function* test_historyClear() {
 
   for (let itemId of items) {
     // Check item exists.
-    let guid = yield PlacesUtils.promiseItemGuid(itemId);
-    do_check_true((yield PlacesUtils.bookmarks.fetch({guid})), "item exists");
+    let guid = await PlacesUtils.promiseItemGuid(itemId);
+    do_check_true((await PlacesUtils.bookmarks.fetch({guid})), "item exists");
   }
 });

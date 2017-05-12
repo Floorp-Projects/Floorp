@@ -21,7 +21,6 @@ this.EXPORTED_SYMBOLS = [
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 
 /*
  * DateTimePickerHelper receives message from content side (input box) and
@@ -106,7 +105,7 @@ this.DateTimePickerHelper = {
   },
 
   // Get picker from browser and show it anchored to the input box.
-  showPicker: Task.async(function* (aBrowser, aData) {
+  async showPicker(aBrowser, aData) {
     let rect = aData.rect;
     let type = aData.type;
     let detail = aData.detail;
@@ -144,14 +143,14 @@ this.DateTimePickerHelper = {
                                      resolve, {once: true});
       });
       this.picker.setAttribute("active", true);
-      yield bindingPromise;
+      await bindingPromise;
     }
     // The arrow panel needs an anchor to work. The popupAnchor (this._anchor)
     // is a transparent div that the arrow can point to.
     this.picker.openPicker(type, this._anchor, detail);
 
     this.addPickerListeners();
-  }),
+  },
 
   // Picker is closed, do some cleanup.
   close() {

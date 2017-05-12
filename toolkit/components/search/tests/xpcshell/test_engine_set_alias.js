@@ -6,10 +6,10 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_engine_set_alias() {
-  yield asyncInit();
+add_task(async function test_engine_set_alias() {
+  await asyncInit();
   do_print("Set engine alias");
-  let [engine1] = yield addTestEngines([
+  let [engine1] = await addTestEngines([
     {
       name: "bacon",
       details: ["", "b", "Search Bacon", "GET", "http://www.bacon.test/find"]
@@ -21,9 +21,9 @@ add_task(function* test_engine_set_alias() {
   Services.search.removeEngine(engine1);
 });
 
-add_task(function* test_engine_set_alias_with_left_space() {
+add_task(async function test_engine_set_alias_with_left_space() {
   do_print("Set engine alias with left space");
-  let [engine2] = yield addTestEngines([
+  let [engine2] = await addTestEngines([
     {
       name: "bacon",
       details: ["", "   a", "Search Bacon", "GET", "http://www.bacon.test/find"]
@@ -35,9 +35,9 @@ add_task(function* test_engine_set_alias_with_left_space() {
   Services.search.removeEngine(engine2);
 });
 
-add_task(function* test_engine_set_alias_with_right_space() {
+add_task(async function test_engine_set_alias_with_right_space() {
   do_print("Set engine alias with right space");
-  let [engine3] = yield addTestEngines([
+  let [engine3] = await addTestEngines([
     {
       name: "bacon",
       details: ["", "c   ", "Search Bacon", "GET", "http://www.bacon.test/find"]
@@ -49,9 +49,9 @@ add_task(function* test_engine_set_alias_with_right_space() {
   Services.search.removeEngine(engine3);
 });
 
-add_task(function* test_engine_set_alias_with_right_left_space() {
+add_task(async function test_engine_set_alias_with_right_left_space() {
   do_print("Set engine alias with left and right space");
-  let [engine4] = yield addTestEngines([
+  let [engine4] = await addTestEngines([
     {
       name: "bacon",
       details: ["", " o  ", "Search Bacon", "GET", "http://www.bacon.test/find"]
@@ -63,9 +63,9 @@ add_task(function* test_engine_set_alias_with_right_left_space() {
   Services.search.removeEngine(engine4);
 });
 
-add_task(function* test_engine_set_alias_with_space() {
+add_task(async function test_engine_set_alias_with_space() {
   do_print("Set engine alias with space");
-  let [engine5] = yield addTestEngines([
+  let [engine5] = await addTestEngines([
     {
       name: "bacon",
       details: ["", " ", "Search Bacon", "GET", "http://www.bacon.test/find"]

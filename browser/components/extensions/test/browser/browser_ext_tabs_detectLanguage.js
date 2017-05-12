@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* testDetectLanguage() {
+add_task(async function testDetectLanguage() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
@@ -39,9 +39,9 @@ add_task(function* testDetectLanguage() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitFinish("detectLanguage");
+  await extension.awaitFinish("detectLanguage");
 
-  yield extension.unload();
+  await extension.unload();
 });

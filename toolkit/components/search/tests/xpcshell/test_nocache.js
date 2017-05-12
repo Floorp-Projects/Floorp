@@ -18,17 +18,17 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_nocache() {
+add_task(async function test_nocache() {
   let search = Services.search;
 
   let afterCachePromise = promiseAfterCache();
 
-  yield new Promise((resolve, reject) => search.init(rv => {
+  await new Promise((resolve, reject) => search.init(rv => {
     Components.isSuccessCode(rv) ? resolve() : reject();
   }));
 
   // Check that the cache is created at startup
-  yield afterCachePromise;
+  await afterCachePromise;
 
   // Check that search.json has been created.
   let cacheFile = gProfD.clone();
@@ -36,15 +36,15 @@ add_task(function* test_nocache() {
   do_check_true(cacheFile.exists());
 
   // Add engine and wait for cache update
-  yield addTestEngines([
+  await addTestEngines([
     { name: "Test search engine", xmlFileName: "engine.xml" },
   ]);
 
   do_print("Engine has been added, let's wait for the cache to be built");
-  yield promiseAfterCache();
+  await promiseAfterCache();
 
   do_print("Searching test engine in cache");
-  let cache = yield promiseCacheData();
+  let cache = await promiseCacheData();
   let found = false;
   for (let engine of cache.engines) {
     if (engine._shortName == "test-search-engine") {
