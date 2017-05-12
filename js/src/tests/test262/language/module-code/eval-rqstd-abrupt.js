@@ -12,7 +12,7 @@ info: |
        a. Let requiredModule be ? HostResolveImportedModule(module, required).
        b. Perform ? requiredModule.ModuleEvaluation().
 negative:
-  phase: early
+  phase: runtime
   type: TypeError
 flags: [module]
 ---*/

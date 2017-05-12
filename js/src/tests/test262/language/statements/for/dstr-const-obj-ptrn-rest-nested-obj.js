@@ -5,7 +5,7 @@
 description: When DestructuringAssignmentTarget is an object literal, it should be parsed parsed as a DestructuringAssignmentPattern and evaluated as a destructuring assignment. (for statement)
 esid: sec-for-statement-runtime-semantics-labelledevaluation
 es6id: 13.7.4.7
-features: [destructuring-binding]
+features: [object-rest, destructuring-binding]
 flags: [generated]
 info: |
     IterationStatement :

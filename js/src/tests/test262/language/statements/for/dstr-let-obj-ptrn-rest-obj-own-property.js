@@ -5,7 +5,7 @@
 description: Rest object contains just soruce object's own properties (for statement)
 esid: sec-for-statement-runtime-semantics-labelledevaluation
 es6id: 13.7.4.7
-features: [destructuring-binding]
+features: [object-rest, destructuring-binding]
 flags: [generated]
 includes: [propertyHelper.js]
 info: |
