@@ -42,10 +42,10 @@
     function runTest() {
       SimpleTest.waitForExplicitFinish();
 
-      Task.spawn(function* () {
+      (async function() {
         let bmu = PlacesUtils.bookmarks;
 
-        yield bmu.insert({
+        await bmu.insert({
           parentGuid: bmu.toolbarGuid,
           index: bmu.DEFAULT_INDEX,
           type: bmu.TYPE_BOOKMARK,
@@ -53,7 +53,7 @@
           title: "shortcut to self - causing infinite recursion if not handled properly"
         });
 
-        yield bmu.insert({
+        await bmu.insert({
           parentGuid: bmu.toolbarGuid,
           index: bmu.DEFAULT_INDEX,
           type: bmu.TYPE_BOOKMARK,
@@ -61,7 +61,7 @@
           title: "shortcut to unfiled, within toolbar"
         });
 
-        let folder = yield bmu.insert({
+        let folder = await bmu.insert({
           parentGuid: bmu.unfiledGuid,
           index: bmu.DEFAULT_INDEX,
           type: bmu.TYPE_FOLDER,
@@ -73,15 +73,15 @@
         tree.place = "place:folder=TOOLBAR";
 
         // Select the folder via the selectItems(itemId) API being tested
-        let itemId = yield PlacesUtils.promiseItemId(folder.guid);
+        let itemId = await PlacesUtils.promiseItemId(folder.guid);
         tree.selectItems([itemId]);
 
         is(tree.selectedNode && tree.selectedNode.itemId, itemId, "The node was selected through the shortcut");
 
         // Cleanup
-        yield bmu.eraseEverything();
+        await bmu.eraseEverything();
 
-      }).catch(err => {
+      })().catch(err => {
         ok(false, `Uncaught error: ${err}`);
       }).then(SimpleTest.finish);
     }

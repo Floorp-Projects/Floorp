@@ -1,10 +1,10 @@
 "use strict";
 
-function* checkURLBarValueStays(browser) {
+async function checkURLBarValueStays(browser) {
   gURLBar.select();
   EventUtils.synthesizeKey("a", {});
   is(gURLBar.value, "a", "URL bar value should match after sending a key");
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     let listener = {
       onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
         ok(aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT,
@@ -22,20 +22,20 @@ function* checkURLBarValueStays(browser) {
   is(gURLBar.value, "a", "URL bar should not have been changed by location changes.");
 }
 
-add_task(function*() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function() {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "http://example.com/browser/browser/base/content/test/urlbar/file_urlbar_edit_dos.html"
-  }, function*(browser) {
-    yield ContentTask.spawn(browser, "", function() {
+  }, async function(browser) {
+    await ContentTask.spawn(browser, "", function() {
       content.wrappedJSObject.dos_hash();
     });
-    yield checkURLBarValueStays(browser);
-    yield ContentTask.spawn(browser, "", function() {
+    await checkURLBarValueStays(browser);
+    await ContentTask.spawn(browser, "", function() {
       content.clearTimeout(content.wrappedJSObject.dos_timeout);
       content.wrappedJSObject.dos_pushState();
     });
-    yield checkURLBarValueStays(browser);
+    await checkURLBarValueStays(browser);
   });
 });
 

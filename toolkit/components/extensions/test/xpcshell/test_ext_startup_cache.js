@@ -49,9 +49,9 @@ function makeExtension(opts) {
   };
 }
 
-add_task(function* () {
+add_task(async function() {
   Preferences.set("extensions.logging.enabled", false);
-  yield AddonTestUtils.promiseStartupManager();
+  await AddonTestUtils.promiseStartupManager();
 
   let extension = ExtensionTestUtils.loadExtension(
     makeExtension({version: "1.0"}));
@@ -62,49 +62,49 @@ add_task(function* () {
   }
 
 
-  yield extension.startup();
+  await extension.startup();
 
   equal(extension.version, "1.0", "Expected extension version");
-  let manifest = yield getManifest();
+  let manifest = await getManifest();
   equal(manifest.name, "en-US 1.0", "Got expected manifest name");
 
 
   do_print("Restart and re-check");
-  yield AddonTestUtils.promiseRestartManager();
-  yield extension.awaitStartup();
+  await AddonTestUtils.promiseRestartManager();
+  await extension.awaitStartup();
 
   equal(extension.version, "1.0", "Expected extension version");
-  manifest = yield getManifest();
+  manifest = await getManifest();
   equal(manifest.name, "en-US 1.0", "Got expected manifest name");
 
 
   do_print("Change locale to 'fr' and restart");
   Preferences.set("general.useragent.locale", "fr");
-  yield AddonTestUtils.promiseRestartManager();
-  yield extension.awaitStartup();
+  await AddonTestUtils.promiseRestartManager();
+  await extension.awaitStartup();
 
   equal(extension.version, "1.0", "Expected extension version");
-  manifest = yield getManifest();
+  manifest = await getManifest();
   equal(manifest.name, "fr 1.0", "Got expected manifest name");
 
 
   do_print("Update to version 1.1");
-  yield extension.upgrade(makeExtension({version: "1.1"}));
+  await extension.upgrade(makeExtension({version: "1.1"}));
 
   equal(extension.version, "1.1", "Expected extension version");
-  manifest = yield getManifest();
+  manifest = await getManifest();
   equal(manifest.name, "fr 1.1", "Got expected manifest name");
 
 
   do_print("Change locale to 'en-US' and restart");
   Preferences.set("general.useragent.locale", "en-US");
-  yield AddonTestUtils.promiseRestartManager();
-  yield extension.awaitStartup();
+  await AddonTestUtils.promiseRestartManager();
+  await extension.awaitStartup();
 
   equal(extension.version, "1.1", "Expected extension version");
-  manifest = yield getManifest();
+  manifest = await getManifest();
   equal(manifest.name, "en-US 1.1", "Got expected manifest name");
 
 
-  yield extension.unload();
+  await extension.unload();
 });

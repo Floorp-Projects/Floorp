@@ -1067,6 +1067,12 @@ BaselineCompiler::emit_JSOP_NOP_DESTRUCTURING()
 }
 
 bool
+BaselineCompiler::emit_JSOP_TRY_DESTRUCTURING_ITERCLOSE()
+{
+    return true;
+}
+
+bool
 BaselineCompiler::emit_JSOP_LABEL()
 {
     return true;

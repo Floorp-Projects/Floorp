@@ -13,7 +13,7 @@
 <script>
 "use strict";
 
-add_task(function* test_contentscript_data_uri() {
+add_task(async function test_contentscript_data_uri() {
   const target = ExtensionTestUtils.loadExtension({
     files: {
       "page.html": `<!DOCTYPE html>
@@ -57,14 +57,14 @@ add_task(function* test_contentscript_data_uri() {
     },
   });
 
-  yield target.startup();
-  yield scripts.startup();
+  await target.startup();
+  await scripts.startup();
 
   // Test extension page with a data: iframe.
-  const page = yield target.awaitMessage("page");
+  const page = await target.awaitMessage("page");
   const win = window.open(page);
 
-  yield scripts.awaitMessage("tab-ready");
+  await scripts.awaitMessage("tab-ready");
   is(win.location.href, page, "Extension page loaded into a tab");
   is(win.document.readyState, "complete", "Page finished loading");
 
@@ -79,7 +79,7 @@ add_task(function* test_contentscript_data_uri() {
   const data = "data:text/html;charset=utf-8,also-inherits";
   win.location.href = data;
 
-  yield scripts.awaitMessage("tab-ready");
+  await scripts.awaitMessage("tab-ready");
   is(win.location.href, data, "Extension tab navigated to a data: URI");
   is(win.document.readyState, "complete", "Tab finished loading");
 
@@ -88,8 +88,8 @@ add_task(function* test_contentscript_data_uri() {
   is(style2.backgroundColor, "rgba(0, 0, 0, 0)", "Tab background unmodified");
 
   win.close();
-  yield target.unload();
-  yield scripts.unload();
+  await target.unload();
+  await scripts.unload();
 });
 
 </script>

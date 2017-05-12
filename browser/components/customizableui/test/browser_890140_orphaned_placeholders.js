@@ -7,9 +7,9 @@
 requestLongerTimeout(2);
 
 // One orphaned item should have two placeholders next to it.
-add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
-  yield startCustomizing();
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+  await startCustomizing();
 
   if (isInDevEdition()) {
     CustomizableUI.addWidgetToArea("developer-button", CustomizableUI.AREA_PANEL);
@@ -30,8 +30,8 @@ add_task(function*() {
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placements);
   is(getVisiblePlaceholderCount(panel), 2, "Should only have 2 visible placeholders before exiting");
 
-  yield endCustomizing();
-  yield startCustomizing();
+  await endCustomizing();
+  await startCustomizing();
   is(getVisiblePlaceholderCount(panel), 2, "Should only have 2 visible placeholders after re-entering");
 
   if (isInDevEdition()) {
@@ -43,8 +43,8 @@ add_task(function*() {
 });
 
 // Two orphaned items should have one placeholder next to them (case 1).
-add_task(function*() {
-  yield startCustomizing();
+add_task(async function() {
+  await startCustomizing();
 
   if (isInDevEdition()) {
     CustomizableUI.addWidgetToArea("developer-button", CustomizableUI.AREA_PANEL);
@@ -68,8 +68,8 @@ add_task(function*() {
 
   is(getVisiblePlaceholderCount(panel), 1, "Should only have 1 visible placeholder before exiting");
 
-  yield endCustomizing();
-  yield startCustomizing();
+  await endCustomizing();
+  await startCustomizing();
   is(getVisiblePlaceholderCount(panel), 1, "Should only have 1 visible placeholder after re-entering");
 
   let palette = document.getElementById("customization-palette");
@@ -87,8 +87,8 @@ add_task(function*() {
 });
 
 // Two orphaned items should have one placeholder next to them (case 2).
-add_task(function*() {
-  yield startCustomizing();
+add_task(async function() {
+  await startCustomizing();
 
   if (isInDevEdition()) {
     CustomizableUI.addWidgetToArea("developer-button", CustomizableUI.AREA_PANEL);
@@ -111,8 +111,8 @@ add_task(function*() {
   ok(!CustomizableUI.inDefaultState, "Should no longer be in default state.");
   is(getVisiblePlaceholderCount(panel), 1, "Should only have 1 visible placeholder before exiting");
 
-  yield endCustomizing();
-  yield startCustomizing();
+  await endCustomizing();
+  await startCustomizing();
   is(getVisiblePlaceholderCount(panel), 1, "Should only have 1 visible placeholder after re-entering");
 
   simulateItemDrag(btn, panel);
@@ -129,8 +129,8 @@ add_task(function*() {
 });
 
 // A wide widget at the bottom of the panel should have three placeholders after it.
-add_task(function*() {
-  yield startCustomizing();
+add_task(async function() {
+  await startCustomizing();
 
   if (isInDevEdition()) {
     CustomizableUI.addWidgetToArea("developer-button", CustomizableUI.AREA_PANEL);
@@ -155,8 +155,8 @@ add_task(function*() {
   ok(!CustomizableUI.inDefaultState, "Should no longer be in default state.");
   is(getVisiblePlaceholderCount(panel), 3, "Should have 3 visible placeholders before exiting");
 
-  yield endCustomizing();
-  yield startCustomizing();
+  await endCustomizing();
+  await startCustomizing();
   is(getVisiblePlaceholderCount(panel), 3, "Should have 3 visible placeholders after re-entering");
 
   simulateItemDrag(btn2, panel);
@@ -173,8 +173,8 @@ add_task(function*() {
 });
 
 // The default placements should have two placeholders at the bottom (or 1 in win8).
-add_task(function*() {
-  yield startCustomizing();
+add_task(async function() {
+  await startCustomizing();
   let numPlaceholders = -1;
 
   if (isInDevEdition()) {
@@ -192,17 +192,17 @@ add_task(function*() {
 
   is(getVisiblePlaceholderCount(panel), numPlaceholders, "Should have " + numPlaceholders + " visible placeholders before exiting");
 
-  yield endCustomizing();
-  yield startCustomizing();
+  await endCustomizing();
+  await startCustomizing();
   is(getVisiblePlaceholderCount(panel), numPlaceholders, "Should have " + numPlaceholders + " visible placeholders after re-entering");
 
   restoreNonOriginalButtons();
   ok(CustomizableUI.inDefaultState, "Should still be in default state.");
 });
 
-add_task(function* asyncCleanup() {
-  yield endCustomizing();
-  yield resetCustomization();
+add_task(async function asyncCleanup() {
+  await endCustomizing();
+  await resetCustomization();
 });
 
 function getVisiblePlaceholderCount(aPanel) {

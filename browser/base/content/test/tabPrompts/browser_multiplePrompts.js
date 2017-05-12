@@ -7,7 +7,7 @@
  * We assert the presentation of the multiple alerts, ensuring we show only
  * the oldest one.
  */
-add_task(function*() {
+add_task(async function() {
   const PROMPTCOUNT = 5;
 
   let contentScript = function() {
@@ -35,10 +35,10 @@ add_task(function*() {
     }, "tabmodal-dialog-loaded");
   });
 
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, url, true);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url, true);
   info("Tab loaded");
 
-  yield promptsOpenedPromise;
+  await promptsOpenedPromise;
 
   let promptsCount = PROMPTCOUNT;
   while (promptsCount--) {
@@ -59,7 +59,7 @@ add_task(function*() {
 
       // The click is handled async; wait for an event loop turn for that to
       // happen.
-      yield new Promise(function(resolve) {
+      await new Promise(function(resolve) {
         Services.tm.dispatchToMainThread(resolve);
       });
     }
@@ -68,5 +68,5 @@ add_task(function*() {
   let prompts = tab.linkedBrowser.parentNode.querySelectorAll("tabmodalprompt");
   is(prompts.length, 0, "Prompts should all be dismissed.");
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });

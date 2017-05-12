@@ -1920,9 +1920,14 @@ nsWindow::DispatchEvent(WidgetGUIEvent* aEvent)
 nsresult
 nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen*)
 {
+    if (!mAndroidView) {
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+
     mIsFullScreen = aFullScreen;
     mAwaitingFullScreen = true;
-    GeckoAppShell::SetFullScreen(aFullScreen);
+    mAndroidView->mEventDispatcher->Dispatch(aFullScreen ?
+            u"GeckoView:FullScreenEnter" : u"GeckoView:FullScreenExit");
     return NS_OK;
 }
 

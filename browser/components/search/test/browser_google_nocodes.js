@@ -69,7 +69,7 @@ function asyncReInit() {
 
 let gEngineCount;
 
-add_task(function* preparation() {
+add_task(async function preparation() {
   // ContentSearch is interferring with our async re-initializations of the
   // search service: once _initServicePromise has resolved, it will access
   // the search service, thus causing unpredictable behavior due to
@@ -82,7 +82,7 @@ add_task(function* preparation() {
     });
   });
 
-  yield asyncInit();
+  await asyncInit();
   gEngineCount = Services.search.getVisibleEngines().length;
 
   waitForSearchNotification("uninit-complete", () => {
@@ -109,14 +109,14 @@ add_task(function* preparation() {
     Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF).setCharPref(kUrlPref, geoUrl);
   });
 
-  yield asyncReInit();
+  await asyncReInit();
 
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     waitForSearchNotification("write-cache-to-disk-complete", resolve);
   });
 });
 
-add_task(function* tests() {
+add_task(async function tests() {
   let engine = Services.search.getEngineByName("Google");
   ok(engine, "Google");
 
@@ -140,7 +140,7 @@ add_task(function* tests() {
 });
 
 
-add_task(function* cleanup() {
+add_task(async function cleanup() {
   waitForSearchNotification("uninit-complete", () => {
     // Verify search service is not initialized
     is(Services.search.isInitialized, false,
@@ -158,7 +158,7 @@ add_task(function* cleanup() {
     Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF).setCharPref(kUrlPref, originalGeoURL);
   });
 
-  yield asyncReInit();
+  await asyncReInit();
   is(gEngineCount, Services.search.getVisibleEngines().length,
      "correct engine count after cleanup");
 });

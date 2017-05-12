@@ -25,7 +25,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_setup() {
+add_task(async function test_setup() {
   loadAddonManager();
 
   gHttpServer = new HttpServer();
@@ -58,7 +58,7 @@ add_task(function* test_setup() {
 
 // Test disabling the feature stops current and future experiments.
 
-add_task(function* test_disableExperiments() {
+add_task(async function test_disableExperiments() {
   const OBSERVER_TOPIC = "experiments-changed";
   let observerFireCount = 0;
   let expectedObserverFireCount = 0;
@@ -109,12 +109,12 @@ add_task(function* test_disableExperiments() {
   let now = baseDate;
   defineNow(gPolicy, now);
 
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
                "Experiments observer should have been called.");
-  let list = yield experiments.getExperiments();
+  let list = await experiments.getExperiments();
   Assert.equal(list.length, 0, "Experiment list should be empty.");
-  let addons = yield getExperimentAddons();
+  let addons = await getExperimentAddons();
   Assert.equal(addons.length, 0, "Precondition: No experiment add-ons are installed.");
 
   // Trigger update, clock set for experiment 1 to start.
@@ -122,28 +122,28 @@ add_task(function* test_disableExperiments() {
   now = futureDate(startDate1, 5 * MS_IN_ONE_DAY);
   defineNow(gPolicy, now);
 
-  yield experiments.updateManifest();
+  await experiments.updateManifest();
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
                "Experiments observer should have been called.");
 
-  list = yield experiments.getExperiments();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
   Assert.equal(list[0].active, true, "Experiment should be active.");
-  addons = yield getExperimentAddons();
+  addons = await getExperimentAddons();
   Assert.equal(addons.length, 1, "An experiment add-on was installed.");
 
   // Disable the experiments feature. Check that we stop the running experiment.
 
   Services.prefs.setBoolPref(PREF_EXPERIMENTS_ENABLED, false);
-  yield experiments._mainTask;
+  await experiments._mainTask;
 
   Assert.equal(observerFireCount, ++expectedObserverFireCount,
                "Experiments observer should have been called.");
 
-  list = yield experiments.getExperiments();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should have 1 entry.");
   Assert.equal(list[0].active, false, "Experiment entry should not be active.");
-  addons = yield getExperimentAddons();
+  addons = await getExperimentAddons();
   Assert.equal(addons.length, 0, "The experiment add-on should be uninstalled.");
 
   // Trigger update, clock set for experiment 2 to start. Verify we don't start it.
@@ -152,7 +152,7 @@ add_task(function* test_disableExperiments() {
   defineNow(gPolicy, now);
 
   try {
-    yield experiments.updateManifest();
+    await experiments.updateManifest();
   } catch (e) {
     // This exception is expected, we rethrow everything else
     if (e.message != "experiments are disabled") {
@@ -161,20 +161,20 @@ add_task(function* test_disableExperiments() {
   }
 
   experiments.notify();
-  yield experiments._mainTask;
+  await experiments._mainTask;
 
   Assert.equal(observerFireCount, expectedObserverFireCount,
                "Experiments observer should not have been called.");
 
-  list = yield experiments.getExperiments();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should still have 1 entry.");
   Assert.equal(list[0].active, false, "Experiment entry should not be active.");
-  addons = yield getExperimentAddons();
+  addons = await getExperimentAddons();
   Assert.equal(addons.length, 0, "There should still be no experiment add-on installed.");
 
   // Cleanup.
 
   Services.obs.removeObserver(observer, OBSERVER_TOPIC);
-  yield promiseRestartManager();
-  yield removeCacheFile();
+  await promiseRestartManager();
+  await removeCacheFile();
 });

@@ -20,7 +20,7 @@ profileDir.append("extensions");
 // We remember the last/ currently active theme for tracking events.
 var gActiveTheme = null;
 
-add_task(function* setup_to_default_browserish_state() {
+add_task(async function setup_to_default_browserish_state() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
   writeInstallRDFForExtension({
@@ -37,7 +37,7 @@ add_task(function* setup_to_default_browserish_state() {
     }]
   }, profileDir);
 
-  yield promiseWriteWebManifestForExtension({
+  await promiseWriteWebManifestForExtension({
     author: "Some author",
     manifest_version: 2,
     name: "Web Extension Name",
@@ -81,7 +81,7 @@ add_task(function* setup_to_default_browserish_state() {
     accentcolor: Math.random().toString()
   };
 
-  let [ t1, t2, t3, d ] = yield promiseAddonsByIDs(THEME_IDS);
+  let [ t1, t2, t3, d ] = await promiseAddonsByIDs(THEME_IDS);
   Assert.ok(t1, "Theme addon should exist");
   Assert.ok(t2, "Theme addon should exist");
   Assert.ok(t3, "Theme addon should exist");
@@ -93,9 +93,9 @@ add_task(function* setup_to_default_browserish_state() {
   Assert.ok(!t3.isActive, "Theme should be disabled");
   Assert.ok(d.isActive, "Default theme should be active");
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
 
-  [ t1, t2, t3, d ] = yield promiseAddonsByIDs(THEME_IDS);
+  [ t1, t2, t3, d ] = await promiseAddonsByIDs(THEME_IDS);
   Assert.ok(!t1.isActive, "Theme should still be disabled");
   Assert.ok(!t2.isActive, "Theme should still be disabled");
   Assert.ok(!t3.isActive, "Theme should still be disabled");
@@ -111,7 +111,7 @@ add_task(function* setup_to_default_browserish_state() {
  * @param {String}  which    ID of the addon to set the `userDisabled` property on
  * @param {Boolean} disabled Flag value to switch to
  */
-function* setDisabledStateAndCheck(which, disabled = false) {
+async function setDisabledStateAndCheck(which, disabled = false) {
   if (disabled)
     Assert.equal(which, gActiveTheme, "Only the active theme can be disabled");
 
@@ -133,12 +133,12 @@ function* setDisabledStateAndCheck(which, disabled = false) {
   }
 
   // Set the state of the theme to change.
-  let theme = yield promiseAddonByID(which);
+  let theme = await promiseAddonByID(which);
   prepare_test(expectedEvents);
   theme.userDisabled = disabled;
 
   let isDisabled;
-  for (theme of yield promiseAddonsByIDs(THEME_IDS)) {
+  for (theme of await promiseAddonsByIDs(THEME_IDS)) {
     isDisabled = (theme.id in expectedStates) ? expectedStates[theme.id] : true;
     Assert.equal(theme.userDisabled, isDisabled,
       `Theme '${theme.id}' should be ${isDisabled ? "dis" : "en"}abled`);
@@ -155,10 +155,10 @@ function* setDisabledStateAndCheck(which, disabled = false) {
     }
   }
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
 
   // All should still be good after a restart of the Addon Manager.
-  for (theme of yield promiseAddonsByIDs(THEME_IDS)) {
+  for (theme of await promiseAddonsByIDs(THEME_IDS)) {
     isDisabled = (theme.id in expectedStates) ? expectedStates[theme.id] : true;
     Assert.equal(theme.userDisabled, isDisabled,
       `Theme '${theme.id}' should be ${isDisabled ? "dis" : "en"}abled`);
@@ -173,64 +173,64 @@ function* setDisabledStateAndCheck(which, disabled = false) {
   ensure_test_completed();
 }
 
-add_task(function* test_complete_themes() {
+add_task(async function test_complete_themes() {
   // Enable the complete theme.
-  yield* setDisabledStateAndCheck(THEME_IDS[0]);
+  await setDisabledStateAndCheck(THEME_IDS[0]);
 
   // Disabling the complete theme should revert to the default theme.
-  yield* setDisabledStateAndCheck(THEME_IDS[0], true);
+  await setDisabledStateAndCheck(THEME_IDS[0], true);
 
   // Enable it again.
-  yield* setDisabledStateAndCheck(THEME_IDS[0]);
+  await setDisabledStateAndCheck(THEME_IDS[0]);
 
   // Enabling a WebExtension theme should disable the active theme.
-  yield* setDisabledStateAndCheck(THEME_IDS[1]);
+  await setDisabledStateAndCheck(THEME_IDS[1]);
 
   // Switching back should disable the WebExtension theme.
-  yield* setDisabledStateAndCheck(THEME_IDS[0]);
+  await setDisabledStateAndCheck(THEME_IDS[0]);
 });
 
-add_task(function* test_WebExtension_themes() {
+add_task(async function test_WebExtension_themes() {
   // Enable the WebExtension theme.
-  yield* setDisabledStateAndCheck(THEME_IDS[1]);
+  await setDisabledStateAndCheck(THEME_IDS[1]);
 
   // Disabling WebExtension should revert to the default theme.
-  yield* setDisabledStateAndCheck(THEME_IDS[1], true);
+  await setDisabledStateAndCheck(THEME_IDS[1], true);
 
   // Enable it again.
-  yield* setDisabledStateAndCheck(THEME_IDS[1]);
+  await setDisabledStateAndCheck(THEME_IDS[1]);
 
   // Enabling an LWT should disable the active theme.
-  yield* setDisabledStateAndCheck(THEME_IDS[2]);
+  await setDisabledStateAndCheck(THEME_IDS[2]);
 
   // Switching back should disable the LWT.
-  yield* setDisabledStateAndCheck(THEME_IDS[1]);
+  await setDisabledStateAndCheck(THEME_IDS[1]);
 });
 
-add_task(function* test_LWTs() {
+add_task(async function test_LWTs() {
   // Start with enabling an LWT.
-  yield* setDisabledStateAndCheck(THEME_IDS[2]);
+  await setDisabledStateAndCheck(THEME_IDS[2]);
 
   // Disabling LWT should revert to the default theme.
-  yield* setDisabledStateAndCheck(THEME_IDS[2], true);
+  await setDisabledStateAndCheck(THEME_IDS[2], true);
 
   // Enable it again.
-  yield* setDisabledStateAndCheck(THEME_IDS[2]);
+  await setDisabledStateAndCheck(THEME_IDS[2]);
 
   // Enabling a WebExtension theme should disable the active theme.
-  yield* setDisabledStateAndCheck(THEME_IDS[1]);
+  await setDisabledStateAndCheck(THEME_IDS[1]);
 
   // Switching back should disable the LWT.
-  yield* setDisabledStateAndCheck(THEME_IDS[2]);
+  await setDisabledStateAndCheck(THEME_IDS[2]);
 });
 
-add_task(function* test_default_theme() {
+add_task(async function test_default_theme() {
   // Explicitly enable the default theme.
-  yield* setDisabledStateAndCheck(DEFAULT_THEME);
+  await setDisabledStateAndCheck(DEFAULT_THEME);
 
   // Swith to the WebExtension theme.
-  yield* setDisabledStateAndCheck(THEME_IDS[1]);
+  await setDisabledStateAndCheck(THEME_IDS[1]);
 
   // Enable it again.
-  yield* setDisabledStateAndCheck(DEFAULT_THEME);
+  await setDisabledStateAndCheck(DEFAULT_THEME);
 });

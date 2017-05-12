@@ -26,12 +26,12 @@ var pages = [
   "http://b.mozilla.org/8/",
 ];
 
-add_task(function* test_initialize() {
+add_task(async function test_initialize() {
   // Add visits.
   let now = new Date();
   for (let pageIndex = 0; pageIndex < pages.length; ++pageIndex) {
     let page = pages[pageIndex];
-    yield PlacesTestUtils.addVisits({
+    await PlacesTestUtils.addVisits({
       uri: uri(page),
       visitDate: new Date(now - (pages.length - pageIndex))
     });

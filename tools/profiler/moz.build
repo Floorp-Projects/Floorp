@@ -117,6 +117,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 EXPORTS += [
     'public/GeckoProfiler.h',
+    'public/GeckoProfilerReporter.h',
     'public/ProfilerControllingProcess.h',
 ]
 

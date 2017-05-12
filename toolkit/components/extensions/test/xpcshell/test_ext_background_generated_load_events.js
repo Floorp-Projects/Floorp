@@ -4,7 +4,7 @@
 
 /* eslint-disable mozilla/balanced-listeners */
 
-add_task(function* test_DOMContentLoaded_in_generated_background_page() {
+add_task(async function test_DOMContentLoaded_in_generated_background_page() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
       function reportListener(event) {
@@ -15,9 +15,9 @@ add_task(function* test_DOMContentLoaded_in_generated_background_page() {
     },
   });
 
-  yield extension.startup();
-  equal("DOMContentLoaded", yield extension.awaitMessage("eventname"));
-  equal("load", yield extension.awaitMessage("eventname"));
+  await extension.startup();
+  equal("DOMContentLoaded", await extension.awaitMessage("eventname"));
+  equal("load", await extension.awaitMessage("eventname"));
 
-  yield extension.unload();
+  await extension.unload();
 });

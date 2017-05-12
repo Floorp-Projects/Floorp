@@ -2,7 +2,7 @@
 // transitionTask and waits for endURL to load, checking that the URLs were
 // loaded in the correct process.
 function makeTest(name, startURL, startProcessIsRemote, endURL, endProcessIsRemote, transitionTask) {
-  return function*() {
+  return async function() {
     info("Running test " + name + ", " + transitionTask.name);
     let browser = gBrowser.selectedBrowser;
 
@@ -15,18 +15,17 @@ function makeTest(name, startURL, startProcessIsRemote, endURL, endProcessIsRemo
     // Load the initial URL and make sure we are in the right initial process
     info("Loading initial URL");
     browser.loadURI(startURL);
-    yield waitForDocLoadComplete();
+    await waitForDocLoadComplete();
 
     is(browser.currentURI.spec, startURL, "Shouldn't have been redirected");
     is(browser.isRemoteBrowser, startProcessIsRemote, "Should be displayed in the right process");
 
     let docLoadedPromise = waitForDocLoadComplete();
-    let asyncTask = Task.async(transitionTask);
-    let expectSyncChange = yield asyncTask(browser, endURL);
+    let expectSyncChange = await transitionTask(browser, endURL);
     if (expectSyncChange) {
       is(browser.isRemoteBrowser, endProcessIsRemote, "Should have switched to the right process synchronously");
     }
-    yield docLoadedPromise;
+    await docLoadedPromise;
 
     is(browser.currentURI.spec, endURL, "Should have made it to the final URL");
     is(browser.isRemoteBrowser, endProcessIsRemote, "Should be displayed in the right process");
@@ -41,7 +40,7 @@ const CHROME = "chrome://mochitests" + PATH;
 const CANREMOTE = "chrome://mochitests-any" + PATH;
 const MUSTREMOTE = "chrome://mochitests-content" + PATH;
 
-add_task(function* init() {
+add_task(async function init() {
   gBrowser.selectedTab = gBrowser.addTab("about:blank");
 });
 
@@ -71,15 +70,15 @@ function test_url(url, chromeResult, contentResult) {
      contentResult, "Check URL with query and ref in content process.");
 }
 
-add_task(function* test_chrome() {
+add_task(async function test_chrome() {
   test_url(CHROME, true, false);
 });
 
-add_task(function* test_any() {
+add_task(async function test_any() {
   test_url(CANREMOTE, true, true);
 });
 
-add_task(function* test_remote() {
+add_task(async function test_remote() {
   test_url(MUSTREMOTE, false, true);
 });
 
@@ -120,15 +119,15 @@ var TESTS = [
 // The different ways to transition from one page to another
 var TRANSITIONS = [
 // Loads the new page by calling browser.loadURI directly
-function* loadURI(browser, uri) {
+async function loadURI(browser, uri) {
   info("Calling browser.loadURI");
-  yield BrowserTestUtils.loadURI(browser, uri);
+  await BrowserTestUtils.loadURI(browser, uri);
   return true;
 },
 
 // Loads the new page by finding a link with the right href in the document and
 // clicking it
-function* clickLink(browser, uri) {
+function clickLink(browser, uri) {
   info("Clicking link");
 
   function frame_script(frameUri) {

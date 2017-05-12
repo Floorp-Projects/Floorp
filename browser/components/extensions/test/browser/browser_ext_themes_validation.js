@@ -1,7 +1,7 @@
 "use strict";
 
-add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
     set: [["extensions.webextensions.themes.enabled", true]],
   });
 });
@@ -10,7 +10,7 @@ add_task(function* setup() {
  * Helper function for testing a theme with invalid properties.
  * @param {object} invalidProps The invalid properties to load the theme with.
  */
-function* testThemeWithInvalidProperties(invalidProps) {
+async function testThemeWithInvalidProperties(invalidProps) {
   let manifest = {
     "theme": {},
   };
@@ -41,16 +41,16 @@ function* testThemeWithInvalidProperties(invalidProps) {
     }]);
   });
 
-  yield Assert.rejects(extension.startup(), null, "Theme should fail to load if it contains invalid properties");
+  await Assert.rejects(extension.startup(), null, "Theme should fail to load if it contains invalid properties");
 
   SimpleTest.endMonitorConsole();
-  yield waitForConsole;
+  await waitForConsole;
 }
 
-add_task(function* test_that_theme_with_invalid_properties_fails_to_load() {
+add_task(async function test_that_theme_with_invalid_properties_fails_to_load() {
   let invalidProps = ["page_action", "browser_action", "background", "permissions", "omnibox", "commands"];
   for (let prop in invalidProps) {
-    yield testThemeWithInvalidProperties([prop]);
+    await testThemeWithInvalidProperties([prop]);
   }
-  yield testThemeWithInvalidProperties(invalidProps);
+  await testThemeWithInvalidProperties(invalidProps);
 });

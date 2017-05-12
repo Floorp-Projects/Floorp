@@ -61,12 +61,12 @@ function writeManifest(path, manifest) {
 }
 
 let PYTHON;
-add_task(function* setup() {
-  yield Schemas.load(BASE_SCHEMA);
+add_task(async function setup() {
+  await Schemas.load(BASE_SCHEMA);
 
-  PYTHON = yield Subprocess.pathSearch("python2.7");
+  PYTHON = await Subprocess.pathSearch("python2.7");
   if (PYTHON == null) {
-    PYTHON = yield Subprocess.pathSearch("python");
+    PYTHON = await Subprocess.pathSearch("python");
   }
   notEqual(PYTHON, null, "Found a suitable python interpreter");
 });
@@ -108,50 +108,50 @@ let templateManifest = {
   allowed_extensions: ["extension@tests.mozilla.org"],
 };
 
-add_task(function* test_nonexistent_manifest() {
-  let result = yield HostManifestManager.lookupApplication("test", context);
+add_task(async function test_nonexistent_manifest() {
+  let result = await HostManifestManager.lookupApplication("test", context);
   equal(result, null, "lookupApplication returns null for non-existent application");
 });
 
 const USER_TEST_JSON = OS.Path.join(userDir.path, "test.json");
 
-add_task(function* test_good_manifest() {
-  yield writeManifest(USER_TEST_JSON, templateManifest);
+add_task(async function test_good_manifest() {
+  await writeManifest(USER_TEST_JSON, templateManifest);
   if (registry) {
     registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
                       `${REGPATH}\\test`, "", USER_TEST_JSON);
   }
 
-  let result = yield HostManifestManager.lookupApplication("test", context);
+  let result = await HostManifestManager.lookupApplication("test", context);
   notEqual(result, null, "lookupApplication finds a good manifest");
   equal(result.path, USER_TEST_JSON, "lookupApplication returns the correct path");
   deepEqual(result.manifest, templateManifest, "lookupApplication returns the manifest contents");
 });
 
-add_task(function* test_invalid_json() {
-  yield writeManifest(USER_TEST_JSON, "this is not valid json");
-  let result = yield HostManifestManager.lookupApplication("test", context);
+add_task(async function test_invalid_json() {
+  await writeManifest(USER_TEST_JSON, "this is not valid json");
+  let result = await HostManifestManager.lookupApplication("test", context);
   equal(result, null, "lookupApplication ignores bad json");
 });
 
-add_task(function* test_invalid_name() {
+add_task(async function test_invalid_name() {
   let manifest = Object.assign({}, templateManifest);
   manifest.name = "../test";
-  yield writeManifest(USER_TEST_JSON, manifest);
-  let result = yield HostManifestManager.lookupApplication("test", context);
+  await writeManifest(USER_TEST_JSON, manifest);
+  let result = await HostManifestManager.lookupApplication("test", context);
   equal(result, null, "lookupApplication ignores an invalid name");
 });
 
-add_task(function* test_name_mismatch() {
+add_task(async function test_name_mismatch() {
   let manifest = Object.assign({}, templateManifest);
   manifest.name = "not test";
-  yield writeManifest(USER_TEST_JSON, manifest);
-  let result = yield HostManifestManager.lookupApplication("test", context);
+  await writeManifest(USER_TEST_JSON, manifest);
+  let result = await HostManifestManager.lookupApplication("test", context);
   let what = (AppConstants.platform == "win") ? "registry key" : "json filename";
   equal(result, null, `lookupApplication ignores mistmatch between ${what} and name property`);
 });
 
-add_task(function* test_missing_props() {
+add_task(async function test_missing_props() {
   const PROPS = [
     "name",
     "description",
@@ -163,25 +163,25 @@ add_task(function* test_missing_props() {
     let manifest = Object.assign({}, templateManifest);
     delete manifest[prop];
 
-    yield writeManifest(USER_TEST_JSON, manifest);
-    let result = yield HostManifestManager.lookupApplication("test", context);
+    await writeManifest(USER_TEST_JSON, manifest);
+    let result = await HostManifestManager.lookupApplication("test", context);
     equal(result, null, `lookupApplication ignores missing ${prop}`);
   }
 });
 
-add_task(function* test_invalid_type() {
+add_task(async function test_invalid_type() {
   let manifest = Object.assign({}, templateManifest);
   manifest.type = "bogus";
-  yield writeManifest(USER_TEST_JSON, manifest);
-  let result = yield HostManifestManager.lookupApplication("test", context);
+  await writeManifest(USER_TEST_JSON, manifest);
+  let result = await HostManifestManager.lookupApplication("test", context);
   equal(result, null, "lookupApplication ignores invalid type");
 });
 
-add_task(function* test_no_allowed_extensions() {
+add_task(async function test_no_allowed_extensions() {
   let manifest = Object.assign({}, templateManifest);
   manifest.allowed_extensions = [];
-  yield writeManifest(USER_TEST_JSON, manifest);
-  let result = yield HostManifestManager.lookupApplication("test", context);
+  await writeManifest(USER_TEST_JSON, manifest);
+  let result = await HostManifestManager.lookupApplication("test", context);
   equal(result, null, "lookupApplication ignores manifest with no allowed_extensions");
 });
 
@@ -189,9 +189,9 @@ const GLOBAL_TEST_JSON = OS.Path.join(globalDir.path, "test.json");
 let globalManifest = Object.assign({}, templateManifest);
 globalManifest.description = "This manifest is from the systemwide directory";
 
-add_task(function* good_manifest_system_dir() {
-  yield OS.File.remove(USER_TEST_JSON);
-  yield writeManifest(GLOBAL_TEST_JSON, globalManifest);
+add_task(async function good_manifest_system_dir() {
+  await OS.File.remove(USER_TEST_JSON);
+  await writeManifest(GLOBAL_TEST_JSON, globalManifest);
   if (registry) {
     registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
                       `${REGPATH}\\test`, "", null);
@@ -200,14 +200,14 @@ add_task(function* good_manifest_system_dir() {
   }
 
   let where = (AppConstants.platform == "win") ? "registry location" : "directory";
-  let result = yield HostManifestManager.lookupApplication("test", context);
+  let result = await HostManifestManager.lookupApplication("test", context);
   notEqual(result, null, `lookupApplication finds a manifest in the system-wide ${where}`);
   equal(result.path, GLOBAL_TEST_JSON, `lookupApplication returns path in the system-wide ${where}`);
   deepEqual(result.manifest, globalManifest, `lookupApplication returns manifest contents from the system-wide ${where}`);
 });
 
-add_task(function* test_user_dir_precedence() {
-  yield writeManifest(USER_TEST_JSON, templateManifest);
+add_task(async function test_user_dir_precedence() {
+  await writeManifest(USER_TEST_JSON, templateManifest);
   if (registry) {
     registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
                       `${REGPATH}\\test`, "", USER_TEST_JSON);
@@ -215,14 +215,14 @@ add_task(function* test_user_dir_precedence() {
   // global test.json and LOCAL_MACHINE registry key on windows are
   // still present from the previous test
 
-  let result = yield HostManifestManager.lookupApplication("test", context);
+  let result = await HostManifestManager.lookupApplication("test", context);
   notEqual(result, null, "lookupApplication finds a manifest when entries exist in both user-specific and system-wide locations");
   equal(result.path, USER_TEST_JSON, "lookupApplication returns the user-specific path when user-specific and system-wide entries both exist");
   deepEqual(result.manifest, templateManifest, "lookupApplication returns user-specific manifest contents with user-specific and system-wide entries both exist");
 });
 
 // Test shutdown handling in NativeApp
-add_task(function* test_native_app_shutdown() {
+add_task(async function test_native_app_shutdown() {
   const SCRIPT = String.raw`
 import signal
 import struct
@@ -253,23 +253,23 @@ while True:
   };
 
   if (AppConstants.platform == "win") {
-    yield OS.File.writeAtomic(scriptPath, SCRIPT);
+    await OS.File.writeAtomic(scriptPath, SCRIPT);
 
     let batPath = OS.Path.join(userDir.path, "wontdie.bat");
     let batBody = `@ECHO OFF\n${PYTHON} -u "${scriptPath}" %*\n`;
-    yield OS.File.writeAtomic(batPath, batBody);
-    yield OS.File.setPermissions(batPath, {unixMode: 0o755});
+    await OS.File.writeAtomic(batPath, batBody);
+    await OS.File.setPermissions(batPath, {unixMode: 0o755});
 
     manifest.path = batPath;
-    yield writeManifest(manifestPath, manifest);
+    await writeManifest(manifestPath, manifest);
 
     registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
                       `${REGPATH}\\wontdie`, "", manifestPath);
   } else {
-    yield OS.File.writeAtomic(scriptPath, `#!${PYTHON} -u\n${SCRIPT}`);
-    yield OS.File.setPermissions(scriptPath, {unixMode: 0o755});
+    await OS.File.writeAtomic(scriptPath, `#!${PYTHON} -u\n${SCRIPT}`);
+    await OS.File.setPermissions(scriptPath, {unixMode: 0o755});
     manifest.path = scriptPath;
-    yield writeManifest(manifestPath, manifest);
+    await writeManifest(manifestPath, manifest);
   }
 
   let mockContext = new MockContext(ID);
@@ -288,7 +288,7 @@ while True:
 
   let buffer = NativeApp.encodeMessage(mockContext, MSG);
   app.send(buffer);
-  yield recvPromise;
+  await recvPromise;
 
   app._cleanup();
 
@@ -297,6 +297,6 @@ while True:
   AsyncShutdown.profileBeforeChange._trigger();
   Services.prefs.clearUserPref("toolkit.asyncshutdown.testing");
 
-  let procs = yield SubprocessImpl.Process.getWorker().call("getProcesses", []);
+  let procs = await SubprocessImpl.Process.getWorker().call("getProcesses", []);
   equal(procs.size, 0, "native process exited");
 });

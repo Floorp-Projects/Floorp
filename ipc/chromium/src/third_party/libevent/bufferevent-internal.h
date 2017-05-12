@@ -23,20 +23,33 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef _BUFFEREVENT_INTERNAL_H_
-#define _BUFFEREVENT_INTERNAL_H_
+#ifndef BUFFEREVENT_INTERNAL_H_INCLUDED_
+#define BUFFEREVENT_INTERNAL_H_INCLUDED_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include "event2/event-config.h"
+#include "event2/event_struct.h"
+#include "evconfig-private.h"
 #include "event2/util.h"
 #include "defer-internal.h"
 #include "evthread-internal.h"
 #include "event2/thread.h"
 #include "ratelim-internal.h"
 #include "event2/bufferevent_struct.h"
+
+#include "ipv6-internal.h"
+#ifdef _WIN32
+#include <ws2tcpip.h>
+#endif
+#ifdef EVENT__HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+#ifdef EVENT__HAVE_NETINET_IN6_H
+#include <netinet/in6.h>
+#endif
 
 /* These flags are reasons that we might be declining to actually enable
    reading or writing on a bufferevent.
@@ -65,7 +78,7 @@ typedef ev_uint16_t bufferevent_suspend_flags;
 
 struct bufferevent_rate_limit_group {
 	/** List of all members in the group */
-	TAILQ_HEAD(rlim_group_member_list, bufferevent_private) members;
+	LIST_HEAD(rlim_group_member_list, bufferevent_private) members;
 	/** Current limits for the group. */
 	struct ev_token_bucket rate_limit;
 	struct ev_token_bucket_cfg rate_limit_cfg;
@@ -103,6 +116,10 @@ struct bufferevent_rate_limit_group {
 	/** Timeout event that goes off once a tick, when the bucket is ready
 	 * to refill. */
 	struct event master_refill_event;
+
+	/** Seed for weak random number generator. Protected by 'lock' */
+	struct evutil_weakrand_state weakrand_seed;
+
 	/** Lock to protect the members of this group.  This lock should nest
 	 * within every bufferevent lock: if you are holding this lock, do
 	 * not assume you can lock another bufferevent. */
@@ -116,7 +133,7 @@ struct bufferevent_rate_limit {
 	 *
 	 * Note that this field is supposed to be protected by the group
 	 * lock */
-	TAILQ_ENTRY(bufferevent_private) next_in_group;
+	LIST_ENTRY(bufferevent_private) next_in_group;
 	/** The rate-limiting group for this bufferevent, or NULL if it is
 	 * only rate-limited on its own. */
 	struct bufferevent_rate_limit_group *group;
@@ -177,7 +194,7 @@ struct bufferevent_private {
 	int dns_error;
 
 	/** Used to implement deferred callbacks */
-	struct deferred_cb deferred;
+	struct event_callback deferred;
 
 	/** The options this bufferevent was constructed with */
 	enum bufferevent_options options;
@@ -189,8 +206,30 @@ struct bufferevent_private {
 	 * If NULL, locking is disabled. */
 	void *lock;
 
+	/** No matter how big our bucket gets, don't try to read more than this
+	 * much in a single read operation. */
+	ev_ssize_t max_single_read;
+
+	/** No matter how big our bucket gets, don't try to write more than this
+	 * much in a single write operation. */
+	ev_ssize_t max_single_write;
+
 	/** Rate-limiting information for this bufferevent */
 	struct bufferevent_rate_limit *rate_limiting;
+
+	/* Saved conn_addr, to extract IP address from it.
+	 *
+	 * Because some servers may reset/close connection without waiting clients,
+	 * in that case we can't extract IP address even in close_cb.
+	 * So we need to save it, just after we connected to remote server, or
+	 * after resolving (to avoid extra dns requests during retrying, since UDP
+	 * is slow) */
+	union {
+		struct sockaddr_in6 in6;
+		struct sockaddr_in in;
+	} conn_address;
+
+	struct evdns_getaddrinfo_request *dns_request;
 };
 
 /** Possible operations for a control callback. */
@@ -238,8 +277,13 @@ struct bufferevent_ops {
 	 */
 	int (*disable)(struct bufferevent *, short);
 
+	/** Detatches the bufferevent from related data structures. Called as
+	 * soon as its reference count reaches 0. */
+	void (*unlink)(struct bufferevent *);
+
 	/** Free any storage and deallocate any extra data or structures used
-	    in this implementation.
+	    in this implementation. Called when the bufferevent is
+	    finalized.
 	 */
 	void (*destruct)(struct bufferevent *);
 
@@ -262,7 +306,7 @@ extern const struct bufferevent_ops bufferevent_ops_pair;
 #define BEV_IS_FILTER(bevp) ((bevp)->be_ops == &bufferevent_ops_filter)
 #define BEV_IS_PAIR(bevp) ((bevp)->be_ops == &bufferevent_ops_pair)
 
-#ifdef WIN32
+#ifdef _WIN32
 extern const struct bufferevent_ops bufferevent_ops_async;
 #define BEV_IS_ASYNC(bevp) ((bevp)->be_ops == &bufferevent_ops_async)
 #else
@@ -270,69 +314,92 @@ extern const struct bufferevent_ops bufferevent_ops_async;
 #endif
 
 /** Initialize the shared parts of a bufferevent. */
-int bufferevent_init_common(struct bufferevent_private *, struct event_base *, const struct bufferevent_ops *, enum bufferevent_options options);
+int bufferevent_init_common_(struct bufferevent_private *, struct event_base *, const struct bufferevent_ops *, enum bufferevent_options options);
 
 /** For internal use: temporarily stop all reads on bufev, until the conditions
  * in 'what' are over. */
-void bufferevent_suspend_read(struct bufferevent *bufev, bufferevent_suspend_flags what);
+void bufferevent_suspend_read_(struct bufferevent *bufev, bufferevent_suspend_flags what);
 /** For internal use: clear the conditions 'what' on bufev, and re-enable
  * reading if there are no conditions left. */
-void bufferevent_unsuspend_read(struct bufferevent *bufev, bufferevent_suspend_flags what);
+void bufferevent_unsuspend_read_(struct bufferevent *bufev, bufferevent_suspend_flags what);
 
 /** For internal use: temporarily stop all writes on bufev, until the conditions
  * in 'what' are over. */
-void bufferevent_suspend_write(struct bufferevent *bufev, bufferevent_suspend_flags what);
+void bufferevent_suspend_write_(struct bufferevent *bufev, bufferevent_suspend_flags what);
 /** For internal use: clear the conditions 'what' on bufev, and re-enable
  * writing if there are no conditions left. */
-void bufferevent_unsuspend_write(struct bufferevent *bufev, bufferevent_suspend_flags what);
+void bufferevent_unsuspend_write_(struct bufferevent *bufev, bufferevent_suspend_flags what);
 
 #define bufferevent_wm_suspend_read(b) \
-	bufferevent_suspend_read((b), BEV_SUSPEND_WM)
+	bufferevent_suspend_read_((b), BEV_SUSPEND_WM)
 #define bufferevent_wm_unsuspend_read(b) \
-	bufferevent_unsuspend_read((b), BEV_SUSPEND_WM)
+	bufferevent_unsuspend_read_((b), BEV_SUSPEND_WM)
 
 /*
   Disable a bufferevent.  Equivalent to bufferevent_disable(), but
   first resets 'connecting' flag to force EV_WRITE down for sure.
 
   XXXX this method will go away in the future; try not to add new users.
-    See comment in evhttp_connection_reset() for discussion.
+    See comment in evhttp_connection_reset_() for discussion.
 
   @param bufev the bufferevent to be disabled
   @param event any combination of EV_READ | EV_WRITE.
   @return 0 if successful, or -1 if an error occurred
   @see bufferevent_disable()
  */
-int bufferevent_disable_hard(struct bufferevent *bufev, short event);
+int bufferevent_disable_hard_(struct bufferevent *bufev, short event);
 
 /** Internal: Set up locking on a bufferevent.  If lock is set, use it.
  * Otherwise, use a new lock. */
-int bufferevent_enable_locking(struct bufferevent *bufev, void *lock);
-/** Internal: Increment the reference count on bufev. */
-void bufferevent_incref(struct bufferevent *bufev);
+int bufferevent_enable_locking_(struct bufferevent *bufev, void *lock);
+/** Internal: backwards compat macro for the now public function
+ * Increment the reference count on bufev. */
+#define bufferevent_incref_(bufev) bufferevent_incref(bufev)
 /** Internal: Lock bufev and increase its reference count.
  * unlocking it otherwise. */
-void _bufferevent_incref_and_lock(struct bufferevent *bufev);
-/** Internal: Decrement the reference count on bufev.  Returns 1 if it freed
+void bufferevent_incref_and_lock_(struct bufferevent *bufev);
+/** Internal: backwards compat macro for the now public function
+ * Decrement the reference count on bufev.  Returns 1 if it freed
  * the bufferevent.*/
-int bufferevent_decref(struct bufferevent *bufev);
+#define bufferevent_decref_(bufev) bufferevent_decref(bufev)
+
 /** Internal: Drop the reference count on bufev, freeing as necessary, and
  * unlocking it otherwise.  Returns 1 if it freed the bufferevent. */
-int _bufferevent_decref_and_unlock(struct bufferevent *bufev);
+int bufferevent_decref_and_unlock_(struct bufferevent *bufev);
 
 /** Internal: If callbacks are deferred and we have a read callback, schedule
- * a readcb.  Otherwise just run the readcb. */
-void _bufferevent_run_readcb(struct bufferevent *bufev);
+ * a readcb.  Otherwise just run the readcb. Ignores watermarks. */
+void bufferevent_run_readcb_(struct bufferevent *bufev, int options);
 /** Internal: If callbacks are deferred and we have a write callback, schedule
- * a writecb.  Otherwise just run the writecb. */
-void _bufferevent_run_writecb(struct bufferevent *bufev);
+ * a writecb.  Otherwise just run the writecb. Ignores watermarks. */
+void bufferevent_run_writecb_(struct bufferevent *bufev, int options);
 /** Internal: If callbacks are deferred and we have an eventcb, schedule
- * it to run with events "what".  Otherwise just run the eventcb. */
-void _bufferevent_run_eventcb(struct bufferevent *bufev, short what);
+ * it to run with events "what".  Otherwise just run the eventcb.
+ * See bufferevent_trigger_event for meaning of "options". */
+void bufferevent_run_eventcb_(struct bufferevent *bufev, short what, int options);
+
+/** Internal: Run or schedule (if deferred or options contain
+ * BEV_TRIG_DEFER_CALLBACKS) I/O callbacks specified in iotype.
+ * Must already hold the bufev lock. Honors watermarks unless
+ * BEV_TRIG_IGNORE_WATERMARKS is in options. */
+static inline void bufferevent_trigger_nolock_(struct bufferevent *bufev, short iotype, int options);
+
+/* Making this inline since all of the common-case calls to this function in
+ * libevent use constant arguments. */
+static inline void
+bufferevent_trigger_nolock_(struct bufferevent *bufev, short iotype, int options)
+{
+	if ((iotype & EV_READ) && ((options & BEV_TRIG_IGNORE_WATERMARKS) ||
+	    evbuffer_get_length(bufev->input) >= bufev->wm_read.low))
+		bufferevent_run_readcb_(bufev, options);
+	if ((iotype & EV_WRITE) && ((options & BEV_TRIG_IGNORE_WATERMARKS) ||
+	    evbuffer_get_length(bufev->output) <= bufev->wm_write.low))
+		bufferevent_run_writecb_(bufev, options);
+}
 
 /** Internal: Add the event 'ev' with timeout tv, unless tv is set to 0, in
  * which case add ev with no timeout. */
-int _bufferevent_add_event(struct event *ev, const struct timeval *tv);
+int bufferevent_add_event_(struct event *ev, const struct timeval *tv);
 
 /* =========
  * These next functions implement timeouts for bufferevents that aren't doing
@@ -341,15 +408,18 @@ int _bufferevent_add_event(struct event *ev, const struct timeval *tv);
 /** Internal use: Set up the ev_read and ev_write callbacks so that
  * the other "generic_timeout" functions will work on it.  Call this from
  * the constructor function. */
-void _bufferevent_init_generic_timeout_cbs(struct bufferevent *bev);
-/** Internal use: Delete the ev_read and ev_write callbacks if they're pending.
- * Call this from the destructor function. */
-int _bufferevent_del_generic_timeout_cbs(struct bufferevent *bev);
+void bufferevent_init_generic_timeout_cbs_(struct bufferevent *bev);
 /** Internal use: Add or delete the generic timeout events as appropriate.
  * (If an event is enabled and a timeout is set, we add the event.  Otherwise
  * we delete it.)  Call this from anything that changes the timeout values,
  * that enabled EV_READ or EV_WRITE, or that disables EV_READ or EV_WRITE. */
-int _bufferevent_generic_adj_timeouts(struct bufferevent *bev);
+int bufferevent_generic_adj_timeouts_(struct bufferevent *bev);
+int bufferevent_generic_adj_existing_timeouts_(struct bufferevent *bev);
+
+enum bufferevent_options bufferevent_get_options_(struct bufferevent *bev);
+
+const struct sockaddr*
+bufferevent_socket_get_conn_address_(struct bufferevent *bev);
 
 /** Internal use: We have just successfully read data into an inbuf, so
  * reset the read timeout (if any). */
@@ -375,9 +445,9 @@ int _bufferevent_generic_adj_timeouts(struct bufferevent *bev);
  * bufferevent_private. */
 #define BEV_UPCAST(b) EVUTIL_UPCAST((b), struct bufferevent_private, bev)
 
-#ifdef _EVENT_DISABLE_THREAD_SUPPORT
-#define BEV_LOCK(b) _EVUTIL_NIL_STMT
-#define BEV_UNLOCK(b) _EVUTIL_NIL_STMT
+#ifdef EVENT__DISABLE_THREAD_SUPPORT
+#define BEV_LOCK(b) EVUTIL_NIL_STMT_
+#define BEV_UNLOCK(b) EVUTIL_NIL_STMT_
 #else
 /** Internal: Grab the lock (if any) on a bufferevent */
 #define BEV_LOCK(b) do {						\
@@ -395,16 +465,18 @@ int _bufferevent_generic_adj_timeouts(struct bufferevent *bev);
 
 /* ==== For rate-limiting. */
 
-int _bufferevent_decrement_write_buckets(struct bufferevent_private *bev,
+int bufferevent_decrement_write_buckets_(struct bufferevent_private *bev,
     ev_ssize_t bytes);
-int _bufferevent_decrement_read_buckets(struct bufferevent_private *bev,
+int bufferevent_decrement_read_buckets_(struct bufferevent_private *bev,
     ev_ssize_t bytes);
-ev_ssize_t _bufferevent_get_read_max(struct bufferevent_private *bev);
-ev_ssize_t _bufferevent_get_write_max(struct bufferevent_private *bev);
+ev_ssize_t bufferevent_get_read_max_(struct bufferevent_private *bev);
+ev_ssize_t bufferevent_get_write_max_(struct bufferevent_private *bev);
+
+int bufferevent_ratelim_init_(struct bufferevent_private *bev);
 
 #ifdef __cplusplus
 }
 #endif
 
 
-#endif /* _BUFFEREVENT_INTERNAL_H_ */
+#endif /* BUFFEREVENT_INTERNAL_H_INCLUDED_ */

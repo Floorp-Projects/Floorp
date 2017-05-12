@@ -385,6 +385,7 @@ function ignoreContents(entry)
         "Gecko_ClearMozBorderColors",
         "Gecko_AppendMozBorderColors",
         "Gecko_CopyMozBorderColors",
+        "Gecko_SetJemallocThreadLocalArena",
 
         // Needs main thread assertions or other fixes.
         /UndisplayedMap::GetEntryFor/,

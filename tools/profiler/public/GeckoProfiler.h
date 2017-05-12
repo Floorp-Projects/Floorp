@@ -23,19 +23,21 @@
 #include <stdint.h>
 #include <stdarg.h>
 
-#include "MainThreadUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "js/TypeDecls.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/Vector.h"
-#include "nsString.h"
 
 class SpliceableJSONWriter;
 
 namespace mozilla {
+class MallocAllocPolicy;
 class TimeStamp;
+template <class T,
+          size_t MinInlineCapacity,
+          class AllocPolicy>
+class Vector;
 
 namespace dom {
 class Promise;
@@ -307,7 +309,7 @@ PROFILER_FUNC(bool profiler_stream_json_for_this_process(SpliceableJSONWriter& a
 PROFILER_FUNC_VOID(profiler_get_start_params(int* aEntrySize,
                                              double* aInterval,
                                              uint32_t* aFeatures,
-                                             mozilla::Vector<const char*>* aFilters))
+                                             mozilla::Vector<const char*, 0, mozilla::MallocAllocPolicy>* aFilters))
 
 // Get the profile and write it into a file. A no-op if the profile is
 // inactive.
@@ -390,7 +392,6 @@ PROFILER_FUNC(void* profiler_get_stack_top(), nullptr)
 #include "mozilla/Sprintf.h"
 #include "mozilla/ThreadLocal.h"
 #include "nscore.h"
-#include "nsIMemoryReporter.h"
 
 // Make sure that we can use std::min here without the Windows headers messing with us.
 #ifdef min
@@ -509,21 +510,6 @@ PseudoStack* profiler_get_pseudo_stack();
 
 void profiler_set_js_context(JSContext* aCx);
 void profiler_clear_js_context();
-
-class GeckoProfilerReporter final : public nsIMemoryReporter
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  GeckoProfilerReporter() {}
-
-  NS_IMETHOD
-  CollectReports(nsIHandleReportCallback* aHandleReport,
-                 nsISupports* aData, bool aAnonymize) override;
-
-private:
-  ~GeckoProfilerReporter() {}
-};
 
 #endif  // defined(MOZ_GECKO_PROFILER)
 

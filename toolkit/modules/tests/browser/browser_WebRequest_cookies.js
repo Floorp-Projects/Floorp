@@ -54,10 +54,10 @@ function onResponseStarted(details) {
   ok(found, "Saw cookie header");
 }
 
-add_task(function* filter_urls() {
+add_task(async function filter_urls() {
   // First load the URL so that we set cookie foopy=1.
   gBrowser.selectedTab = gBrowser.addTab(URL);
-  yield waitForLoad();
+  await waitForLoad();
   gBrowser.removeCurrentTab();
 
   // Now load with WebRequest set up.
@@ -66,7 +66,7 @@ add_task(function* filter_urls() {
 
   gBrowser.selectedTab = gBrowser.addTab(URL);
 
-  yield waitForLoad();
+  await waitForLoad();
 
   gBrowser.removeCurrentTab();
 

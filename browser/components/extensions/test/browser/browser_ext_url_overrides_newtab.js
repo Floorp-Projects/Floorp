@@ -11,7 +11,7 @@ const NEWTAB_URI_1 = "webext-newtab-1.html";
 const NEWTAB_URI_2 = "webext-newtab-2.html";
 const NEWTAB_URI_3 = "webext-newtab-3.html";
 
-add_task(function* test_multiple_extensions_overriding_newtab_page() {
+add_task(async function test_multiple_extensions_overriding_newtab_page() {
   is(aboutNewTabService.newTabURL, "about:newtab",
      "Default newtab url should be about:newtab");
 
@@ -31,48 +31,48 @@ add_task(function* test_multiple_extensions_overriding_newtab_page() {
     manifest: {"chrome_url_overrides": {newtab: NEWTAB_URI_3}},
   });
 
-  yield ext1.startup();
+  await ext1.startup();
 
   is(aboutNewTabService.newTabURL, "about:newtab",
        "Default newtab url should still be about:newtab");
 
-  yield ext2.startup();
+  await ext2.startup();
 
   ok(aboutNewTabService.newTabURL.endsWith(NEWTAB_URI_1),
      "Newtab url should be overriden by the second extension.");
 
-  yield ext1.unload();
+  await ext1.unload();
 
   ok(aboutNewTabService.newTabURL.endsWith(NEWTAB_URI_1),
      "Newtab url should still be overriden by the second extension.");
 
-  yield ext3.startup();
+  await ext3.startup();
 
   ok(aboutNewTabService.newTabURL.endsWith(NEWTAB_URI_1),
      "Newtab url should still be overriden by the second extension.");
 
-  yield ext2.unload();
+  await ext2.unload();
 
   ok(aboutNewTabService.newTabURL.endsWith(NEWTAB_URI_2),
      "Newtab url should be overriden by the third extension.");
 
-  yield ext4.startup();
+  await ext4.startup();
 
   ok(aboutNewTabService.newTabURL.endsWith(NEWTAB_URI_2),
      "Newtab url should be overriden by the third extension.");
 
-  yield ext4.unload();
+  await ext4.unload();
 
   ok(aboutNewTabService.newTabURL.endsWith(NEWTAB_URI_2),
      "Newtab url should be overriden by the third extension.");
 
-  yield ext3.unload();
+  await ext3.unload();
 
   is(aboutNewTabService.newTabURL, "about:newtab",
      "Newtab url should be reset to about:newtab");
 });
 
-add_task(function* test_sending_message_from_newtab_page() {
+add_task(async function test_sending_message_from_newtab_page() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "chrome_url_overrides": {
@@ -99,12 +99,12 @@ add_task(function* test_sending_message_from_newtab_page() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
   // Simulate opening the newtab open as a user would.
   BrowserOpenTab();
 
-  yield extension.awaitMessage("from-newtab-page");
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  yield extension.unload();
+  await extension.awaitMessage("from-newtab-page");
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await extension.unload();
 });

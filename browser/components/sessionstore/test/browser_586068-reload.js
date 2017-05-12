@@ -4,7 +4,7 @@
 
 const PREF_RESTORE_ON_DEMAND = "browser.sessionstore.restore_on_demand";
 
-add_task(function* test() {
+add_task(async function test() {
   Services.prefs.setBoolPref(PREF_RESTORE_ON_DEMAND, true);
   registerCleanupFunction(function() {
     Services.prefs.clearUserPref(PREF_RESTORE_ON_DEMAND);
@@ -47,8 +47,8 @@ add_task(function* test() {
 
   let backupState = ss.getBrowserState();
   ss.setBrowserState(JSON.stringify(state));
-  yield promiseRestoringTabs;
+  await promiseRestoringTabs;
 
   // Cleanup.
-  yield promiseBrowserState(backupState);
+  await promiseBrowserState(backupState);
 });

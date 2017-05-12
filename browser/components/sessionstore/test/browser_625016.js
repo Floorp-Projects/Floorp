@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-add_task(function* setup() {
+add_task(async function setup() {
   /** Test for Bug 625016 - Restore windows closed in succession to quit (non-OSX only) **/
 
   // We'll test this by opening a new window, waiting for the save
@@ -13,7 +13,7 @@ add_task(function* setup() {
 
   requestLongerTimeout(2);
 
-  yield forceSaveState();
+  await forceSaveState();
 
   // We'll clear all closed windows to make sure our state is clean
   // forgetClosedWindow doesn't trigger a delayed save
@@ -21,20 +21,20 @@ add_task(function* setup() {
   is(ss.getClosedWindowCount(), 0, "starting with no closed windows");
 });
 
-add_task(function* new_window() {
+add_task(async function new_window() {
   let newWin;
   try {
-    newWin = yield promiseNewWindowLoaded();
+    newWin = await promiseNewWindowLoaded();
     let tab = newWin.gBrowser.addTab("http://example.com/browser_625016.js?" + Math.random());
-    yield promiseBrowserLoaded(tab.linkedBrowser);
+    await promiseBrowserLoaded(tab.linkedBrowser);
 
     // Double check that we have no closed windows
     is(ss.getClosedWindowCount(), 0, "no closed windows on first save");
 
-    yield BrowserTestUtils.closeWindow(newWin);
+    await BrowserTestUtils.closeWindow(newWin);
     newWin = null;
 
-    let state = JSON.parse((yield promiseRecoveryFileContents()));
+    let state = JSON.parse((await promiseRecoveryFileContents()));
     is(state.windows.length, 1,
       "observe1: 1 window in data written to disk");
     is(state._closedWindows.length, 0,
@@ -45,22 +45,22 @@ add_task(function* new_window() {
       "observe1: 1 closed window according to API");
   } finally {
     if (newWin) {
-      yield BrowserTestUtils.closeWindow(newWin);
+      await BrowserTestUtils.closeWindow(newWin);
     }
-    yield forceSaveState();
+    await forceSaveState();
   }
 });
 
 // We'll open a tab, which should trigger another state save which would wipe
 // the _shouldRestore attribute from the closed window
-add_task(function* new_tab() {
+add_task(async function new_tab() {
   let newTab;
   try {
     newTab = gBrowser.addTab("about:mozilla");
-    yield promiseBrowserLoaded(newTab.linkedBrowser);
-    yield TabStateFlusher.flush(newTab.linkedBrowser);
+    await promiseBrowserLoaded(newTab.linkedBrowser);
+    await TabStateFlusher.flush(newTab.linkedBrowser);
 
-    let state = JSON.parse((yield promiseRecoveryFileContents()));
+    let state = JSON.parse((await promiseRecoveryFileContents()));
     is(state.windows.length, 1,
       "observe2: 1 window in data being written to disk");
     is(state._closedWindows.length, 1,
@@ -77,11 +77,11 @@ add_task(function* new_tab() {
 });
 
 
-add_task(function* done() {
+add_task(async function done() {
   // The API still represents the closed window as closed, so we can clear it
   // with the API, but just to make sure...
 //  is(ss.getClosedWindowCount(), 1, "1 closed window according to API");
-  yield promiseAllButPrimaryWindowClosed();
+  await promiseAllButPrimaryWindowClosed();
   forgetClosedWindows();
   Services.prefs.clearUserPref("browser.sessionstore.interval");
 });

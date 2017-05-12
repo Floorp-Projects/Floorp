@@ -1,15 +1,15 @@
 const requestURL = "https://test1.example.com";
 
 function getResult(aBrowser) {
-  return ContentTask.spawn(aBrowser, requestURL, function* (url) {
-    let cache = yield content.caches.open("TEST_CACHE");
-    let response = yield cache.match(url);
+  return ContentTask.spawn(aBrowser, requestURL, async function(url) {
+    let cache = await content.caches.open("TEST_CACHE");
+    let response = await cache.match(url);
     if (response) {
       return response.statusText;
     }
     let result = Math.random().toString();
     response = new content.Response("", { statusText: result });
-    yield cache.put(url, response);
+    await cache.put(url, response);
     return result;
   });
 }

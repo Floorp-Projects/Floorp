@@ -13,7 +13,7 @@ const {BingTranslator} = Cu.import("resource:///modules/translation/BingTranslat
 const {TranslationDocument} = Cu.import("resource:///modules/translation/TranslationDocument.jsm", {});
 const {Promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 
-add_task(function* setup() {
+add_task(async function setup() {
   Services.prefs.setCharPref(kClientIdPref, "testClient");
   Services.prefs.setCharPref(kClientSecretPref, "testSecret");
 
@@ -26,26 +26,26 @@ add_task(function* setup() {
 /**
  * Checks if the translation is happening.
  */
-add_task(function* test_bing_translation() {
+add_task(async function test_bing_translation() {
 
   // Ensure the correct client id is used for authentication.
   Services.prefs.setCharPref(kClientIdPref, "testClient");
 
   // Loading the fixture page.
   let url = constructFixtureURL("bug1022725-fr.html");
-  let tab = yield promiseTestPageLoad(url);
+  let tab = await promiseTestPageLoad(url);
 
   // Translating the contents of the loaded tab.
   gBrowser.selectedTab = tab;
   let browser = tab.linkedBrowser;
 
-  yield ContentTask.spawn(browser, null, function*() {
+  await ContentTask.spawn(browser, null, async function() {
     Cu.import("resource:///modules/translation/BingTranslator.jsm");
     Cu.import("resource:///modules/translation/TranslationDocument.jsm");
 
     let client = new BingTranslator(
       new TranslationDocument(content.document), "fr", "en");
-    let result = yield client.translate();
+    let result = await client.translate();
 
     // XXXmikedeboer; here you would continue the test/ content inspection.
     Assert.ok(result, "There should be a result");
@@ -61,20 +61,20 @@ add_task(function* test_bing_translation() {
  * should catch this error and classify it as Service Unavailable.
  *
  */
-add_task(function* test_handling_out_of_valid_key_error() {
+add_task(async function test_handling_out_of_valid_key_error() {
 
   // Simulating request from inactive subscription.
   Services.prefs.setCharPref(kClientIdPref, "testInactive");
 
   // Loading the fixture page.
   let url = constructFixtureURL("bug1022725-fr.html");
-  let tab = yield promiseTestPageLoad(url);
+  let tab = await promiseTestPageLoad(url);
 
   // Translating the contents of the loaded tab.
   gBrowser.selectedTab = tab;
   let browser = tab.linkedBrowser;
 
-  yield ContentTask.spawn(browser, null, function*() {
+  await ContentTask.spawn(browser, null, async function() {
     Cu.import("resource:///modules/translation/BingTranslator.jsm");
     Cu.import("resource:///modules/translation/TranslationDocument.jsm");
 
@@ -82,7 +82,7 @@ add_task(function* test_handling_out_of_valid_key_error() {
       new TranslationDocument(content.document), "fr", "en");
     client._resetToken();
     try {
-      yield client.translate();
+      await client.translate();
     } catch (ex) {
       // It is alright that the translation fails.
     }
@@ -119,15 +119,15 @@ function constructFixtureURL(filename) {
  * @param String url  A URL to be loaded in the new tab.
  */
 function promiseTestPageLoad(url) {
-  let deferred = Promise.defer();
-  let tab = gBrowser.selectedTab = gBrowser.addTab(url);
-  let browser = gBrowser.selectedBrowser;
-  browser.addEventListener("load", function listener() {
-    if (browser.currentURI.spec == "about:blank")
-      return;
-    info("Page loaded: " + browser.currentURI.spec);
-    browser.removeEventListener("load", listener, true);
-    deferred.resolve(tab);
-  }, true);
-  return deferred.promise;
+  return new Promise(resolve => {
+    let tab = gBrowser.selectedTab = gBrowser.addTab(url);
+    let browser = gBrowser.selectedBrowser;
+    browser.addEventListener("load", function listener() {
+      if (browser.currentURI.spec == "about:blank")
+        return;
+      info("Page loaded: " + browser.currentURI.spec);
+      browser.removeEventListener("load", listener, true);
+      resolve(tab);
+    }, true);
+  });
 }

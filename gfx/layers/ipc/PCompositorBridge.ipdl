@@ -85,15 +85,6 @@ child:
   // TextureSources are recreated.
   async InvalidateLayers(uint64_t layersId);
 
-  // The compositor type or device has changed, and a new texture factory
-  // identifier is available. Layers must be invalidated and the new identifier
-  // must be propagated. The sequence number is a generation count for the
-  // compositor.
-  async CompositorUpdated(
-    uint64_t layersId,
-    TextureFactoryIdentifier newIdentifier,
-    uint64_t seqNo);
-
   // The compositor completed a layers transaction. id is the layers id
   // of the child layer tree that was composited (or 0 when notifying
   // the root layer tree).
@@ -143,8 +134,6 @@ parent:
 
   // When out-of-process, this must be called to finish initialization.
   sync Initialize(uint64_t rootLayerTreeId);
-  sync Reset(LayersBackend[] aBackendHints, uint64_t aSeqNo)
-    returns (bool aResult, TextureFactoryIdentifier aOutIdentifier);
 
   // Must be called after Initialize(), and only succeeds if AsyncPanZoomEnabled() is true.
   async PAPZ(uint64_t layersId);
@@ -154,10 +143,6 @@ parent:
    * Confirmation callback for UpdatePluginConfigurations and HideAllPlugins.
    */
   async RemotePluginsReady();
-
-  // Confirmation that the child has invalidated all its layers, and will not
-  // request layers against an old compositor.
-  async AcknowledgeCompositorUpdate(uint64_t aLayersId, uint64_t aSeqNo);
 
   // Child requests frame uniformity measurements
   sync GetFrameUniformity() returns (FrameUniformityData data);

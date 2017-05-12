@@ -124,9 +124,9 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_abstime_annotation_domain() {
+add_task(async function test_abstime_annotation_domain() {
   // Initialize database
-  yield task_populateDB(testData);
+  await task_populateDB(testData);
 
   // Query
   var query = PlacesUtils.history.getNewQuery();
@@ -160,14 +160,14 @@ add_task(function* test_abstime_annotation_domain() {
   // Let's add something first
   var addItem = [{isInQuery: true, isVisit: true, isDetails: true, title: "moz",
                  uri: "http://www.foo.com/i-am-added.html", lastVisit: jan11_800}];
-  yield task_populateDB(addItem);
+  await task_populateDB(addItem);
   do_print("Adding item foo.com/i-am-added.html");
   do_check_eq(isInResult(addItem, root), true);
 
   // Let's update something by title
   var change1 = [{isDetails: true, uri: "http://foo.com/changeme1",
                   lastVisit: jan12_1730, title: "moz moz mozzie"}];
-  yield task_populateDB(change1);
+  await task_populateDB(change1);
   do_print("LiveUpdate by changing title");
   do_check_eq(isInResult(change1, root), true);
 
@@ -186,7 +186,7 @@ add_task(function* test_abstime_annotation_domain() {
   // Let's update by adding a visit in the time range for an existing URI
   var change3 = [{isDetails: true, uri: "http://foo.com/changeme3.htm",
                   title: "moz", lastVisit: jan15_2045}];
-  yield task_populateDB(change3);
+  await task_populateDB(change3);
   do_print("LiveUpdate by adding visit within timerange");
   do_check_eq(isInResult(change3, root), true);
 
@@ -200,7 +200,7 @@ add_task(function* test_abstime_annotation_domain() {
 
   // Delete something by changing the title
   var change5 = [{isDetails: true, uri: "http://foo.com/end.html", title: "deleted"}];
-  yield task_populateDB(change5);
+  await task_populateDB(change5);
   do_print("LiveUpdate by deleting item by changing title");
   do_check_eq(isInResult(change5, root), false);
 

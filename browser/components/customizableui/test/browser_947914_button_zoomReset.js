@@ -6,20 +6,20 @@
 
 var initialPageZoom = ZoomManager.zoom;
 
-add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   info("Check zoom reset button existence and functionality");
 
   is(initialPageZoom, 1, "Page zoom reset correctly");
   ZoomManager.zoom = 0.5;
-  yield PanelUI.show();
+  await PanelUI.show();
   info("Menu panel was opened");
 
   let zoomResetButton = document.getElementById("zoom-reset-button");
   ok(zoomResetButton, "Zoom reset button exists in Panel Menu");
 
   zoomResetButton.click();
-  yield new Promise(SimpleTest.executeSoon);
+  await new Promise(SimpleTest.executeSoon);
 
   let pageZoomLevel = Math.floor(ZoomManager.zoom * 100);
   let expectedZoomLevel = 100;
@@ -30,11 +30,11 @@ add_task(function*() {
   // close the panel
   let panelHiddenPromise = promisePanelHidden(window);
   PanelUI.hide();
-  yield panelHiddenPromise;
+  await panelHiddenPromise;
   info("Menu panel was closed");
 });
 
-add_task(function* asyncCleanup() {
+add_task(async function asyncCleanup() {
   // reset zoom level
   ZoomManager.zoom = initialPageZoom;
   info("Zoom level was restored");

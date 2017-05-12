@@ -5,7 +5,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_execute() {
+add_task(async function test_execute() {
   PlacesUtils.bookmarks.insertBookmark(
     PlacesUtils.unfiledBookmarksFolderId, NetUtil.newURI("http://1.moz.org/"),
     PlacesUtils.bookmarks.DEFAULT_INDEX, "Bookmark 1"
@@ -24,7 +24,7 @@ add_task(function* test_execute() {
   );
 
   // Add also a simple visit.
-  yield PlacesTestUtils.addVisits(uri(("http://3.moz.org/")));
+  await PlacesTestUtils.addVisits(uri(("http://3.moz.org/")));
 
   // Query containing a broken folder shortcuts among results.
   let query = PlacesUtils.history.getNewQuery();

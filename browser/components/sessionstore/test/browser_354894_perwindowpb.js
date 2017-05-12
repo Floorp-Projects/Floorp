@@ -61,7 +61,7 @@ function getBrowserWindowsCount() {
   return { open, winstates };
 }
 
-add_task(function* setup() {
+add_task(async function setup() {
   // Make sure we've only got one browser window to start with
   let { open, winstates } = getBrowserWindowsCount();
   is(open, 1, "Should only be one open window");
@@ -101,8 +101,8 @@ add_task(function* setup() {
  * @returns Promise
  *        Resolves once the test has been cleaned up.
  */
-let setupTest = Task.async(function*(options, testFunction) {
-  yield pushPrefs(["browser.startup.page", 3],
+let setupTest = async function(options, testFunction) {
+  await pushPrefs(["browser.startup.page", 3],
                   ["browser.tabs.warnOnClose", false]);
 
   // Observe these, and also use to count the number of hits
@@ -130,11 +130,11 @@ let setupTest = Task.async(function*(options, testFunction) {
   }
 
   let private = options.private || false;
-  let newWin = yield promiseNewWindowLoaded({ private });
+  let newWin = await promiseNewWindowLoaded({ private });
 
   injectTestTabs(newWin);
 
-  yield testFunction(newWin, observing);
+  await testFunction(newWin, observing);
 
   let count = getBrowserWindowsCount();
   is(count.open, 0, "Got right number of open windows");
@@ -144,8 +144,8 @@ let setupTest = Task.async(function*(options, testFunction) {
     Services.obs.removeObserver(observer, o);
   }
 
-  yield popPrefs();
-});
+  await popPrefs();
+};
 
 /**
  * Loads a TEST_URLS into a browser window.
@@ -197,25 +197,25 @@ function closeWindowForRestoration(win) {
  *  4. Opening another window
  *  5. Checks that state is restored
  */
-add_task(function* test_open_close_normal() {
+add_task(async function test_open_close_normal() {
   if (IS_MAC) {
     return;
   }
 
-  yield setupTest({ denyFirst: true }, function*(newWin, obs) {
-    let closed = yield closeWindowForRestoration(newWin);
+  await setupTest({ denyFirst: true }, async function(newWin, obs) {
+    let closed = await closeWindowForRestoration(newWin);
     ok(!closed, "First close request should have been denied");
 
-    closed = yield closeWindowForRestoration(newWin);
+    closed = await closeWindowForRestoration(newWin);
     ok(closed, "Second close request should be accepted");
 
-    newWin = yield promiseNewWindowLoaded();
+    newWin = await promiseNewWindowLoaded();
     is(newWin.gBrowser.browsers.length, TEST_URLS.length + 2,
        "Restored window in-session with otherpopup windows around");
 
     // Note that this will not result in the the browser-lastwindow-close
     // notifications firing for this other newWin.
-    yield BrowserTestUtils.closeWindow(newWin);
+    await BrowserTestUtils.closeWindow(newWin);
 
     // setupTest gave us a window which was denied for closing once, and then
     // closed.
@@ -241,29 +241,29 @@ add_task(function* test_open_close_normal() {
  *  7. Open a new window C
  *  8. Make sure that new window C has restored tabs from A
  */
-add_task(function* test_open_close_private_browsing() {
+add_task(async function test_open_close_private_browsing() {
   if (IS_MAC) {
     return;
   }
 
-  yield setupTest({}, function*(newWin, obs) {
-    let closed = yield closeWindowForRestoration(newWin);
+  await setupTest({}, async function(newWin, obs) {
+    let closed = await closeWindowForRestoration(newWin);
     ok(closed, "Should be able to close the window");
 
-    newWin = yield promiseNewWindowLoaded({private: true});
+    newWin = await promiseNewWindowLoaded({private: true});
     is(newWin.gBrowser.browsers.length, 1,
        "Did not restore in private browing mode");
 
-    closed = yield closeWindowForRestoration(newWin);
+    closed = await closeWindowForRestoration(newWin);
     ok(closed, "Should be able to close the window");
 
-    newWin = yield promiseNewWindowLoaded();
+    newWin = await promiseNewWindowLoaded();
     is(newWin.gBrowser.browsers.length, TEST_URLS.length + 2,
        "Restored tabs in a new non-private window");
 
     // Note that this will not result in the the browser-lastwindow-close
     // notifications firing for this other newWin.
-    yield BrowserTestUtils.closeWindow(newWin);
+    await BrowserTestUtils.closeWindow(newWin);
 
     // We closed two windows with closeWindowForRestoration, and both
     // should have been successful.
@@ -290,34 +290,34 @@ add_task(function* test_open_close_private_browsing() {
  *  7. Make sure that the tabs of the closed browser window, but not the popup,
  *     are restored
  */
-add_task(function* test_open_close_window_and_popup() {
+add_task(async function test_open_close_window_and_popup() {
   if (IS_MAC) {
     return;
   }
 
-  yield setupTest({}, function*(newWin, obs) {
+  await setupTest({}, async function(newWin, obs) {
     let popupPromise = BrowserTestUtils.waitForNewWindow();
     openDialog(location, "popup", POPUP_FEATURES, TEST_URLS[0]);
-    let popup = yield popupPromise;
+    let popup = await popupPromise;
 
     let popup2Promise = BrowserTestUtils.waitForNewWindow();
     openDialog(location, "popup2", POPUP_FEATURES, TEST_URLS[1]);
-    let popup2 = yield popup2Promise;
+    let popup2 = await popup2Promise;
 
     popup2.gBrowser.addTab(TEST_URLS[0]);
 
-    let closed = yield closeWindowForRestoration(newWin);
+    let closed = await closeWindowForRestoration(newWin);
     ok(closed, "Should be able to close the window");
 
-    yield BrowserTestUtils.closeWindow(popup2);
+    await BrowserTestUtils.closeWindow(popup2);
 
-    newWin = yield promiseNewWindowLoaded();
+    newWin = await promiseNewWindowLoaded();
 
     is(newWin.gBrowser.browsers.length, TEST_URLS.length + 2,
        "Restored window and associated tabs in session");
 
-    yield BrowserTestUtils.closeWindow(popup);
-    yield BrowserTestUtils.closeWindow(newWin);
+    await BrowserTestUtils.closeWindow(popup);
+    await BrowserTestUtils.closeWindow(newWin);
 
     // We closed one window with closeWindowForRestoration, and it should
     // have been successful.
@@ -344,43 +344,43 @@ add_task(function* test_open_close_window_and_popup() {
  *  7. Open another browser window
  *  8. Check that nothing at all is restored
  */
-add_task(function* test_open_close_only_popup() {
+add_task(async function test_open_close_only_popup() {
   if (IS_MAC) {
     return;
   }
 
-  yield setupTest({}, function*(newWin, obs) {
+  await setupTest({}, async function(newWin, obs) {
     // We actually don't care about the initial window in this test.
-    yield BrowserTestUtils.closeWindow(newWin);
+    await BrowserTestUtils.closeWindow(newWin);
 
     // This will cause nsSessionStore to restore a window the next time it
     // gets a chance.
     let popupPromise = BrowserTestUtils.waitForNewWindow();
     openDialog(location, "popup", POPUP_FEATURES, TEST_URLS[1]);
-    let popup = yield popupPromise;
+    let popup = await popupPromise;
 
     is(popup.gBrowser.browsers.length, 1,
        "Did not restore the popup window (1)");
 
-    let closed = yield closeWindowForRestoration(popup);
+    let closed = await closeWindowForRestoration(popup);
     ok(closed, "Should be able to close the window");
 
     popupPromise = BrowserTestUtils.waitForNewWindow();
     openDialog(location, "popup", POPUP_FEATURES, TEST_URLS[1]);
-    popup = yield popupPromise;
+    popup = await popupPromise;
 
     popup.gBrowser.addTab(TEST_URLS[0]);
     is(popup.gBrowser.browsers.length, 2,
        "Did not restore to the popup window (2)");
 
-    yield BrowserTestUtils.closeWindow(popup);
+    await BrowserTestUtils.closeWindow(popup);
 
-    newWin = yield promiseNewWindowLoaded();
+    newWin = await promiseNewWindowLoaded();
     isnot(newWin.gBrowser.browsers.length, 2,
           "Did not restore the popup window");
     is(TEST_URLS.indexOf(newWin.gBrowser.browsers[0].currentURI.spec), -1,
         "Did not restore the popup window (2)");
-    yield BrowserTestUtils.closeWindow(newWin);
+    await BrowserTestUtils.closeWindow(newWin);
 
     // We closed one popup window with closeWindowForRestoration, and popup
     // windows should never fire the browser-lastwindow notifications.
@@ -403,18 +403,18 @@ add_task(function* test_open_close_only_popup() {
  *  3. Open another browser window
  *  4. Make sure nothing at all is restored
  */
-add_task(function* test_open_close_restore_from_popup() {
+add_task(async function test_open_close_restore_from_popup() {
   if (IS_MAC) {
     return;
   }
 
-  yield setupTest({}, function*(newWin, obs) {
-    let newWin2 = yield promiseNewWindowLoaded();
-    yield injectTestTabs(newWin2);
+  await setupTest({}, async function(newWin, obs) {
+    let newWin2 = await promiseNewWindowLoaded();
+    await injectTestTabs(newWin2);
 
-    let closed = yield closeWindowForRestoration(newWin);
+    let closed = await closeWindowForRestoration(newWin);
     ok(closed, "Should be able to close the window");
-    closed = yield closeWindowForRestoration(newWin2);
+    closed = await closeWindowForRestoration(newWin2);
     ok(closed, "Should be able to close the window");
 
     let counts = getBrowserWindowsCount();
@@ -422,13 +422,13 @@ add_task(function* test_open_close_restore_from_popup() {
     is(counts.winstates, 1, "Got right number of window states");
 
     newWin = undoCloseWindow(0);
-    yield BrowserTestUtils.waitForEvent(newWin, "load");
+    await BrowserTestUtils.waitForEvent(newWin, "load");
 
     // Make sure we wait until this window is restored.
-    yield BrowserTestUtils.waitForEvent(newWin.gBrowser.tabContainer,
+    await BrowserTestUtils.waitForEvent(newWin.gBrowser.tabContainer,
                                         "SSTabRestored");
 
-    newWin2 = yield promiseNewWindowLoaded();
+    newWin2 = await promiseNewWindowLoaded();
 
     is(newWin2.gBrowser.browsers.length, 1,
        "Did not restore, as undoCloseWindow() was last called");
@@ -439,8 +439,8 @@ add_task(function* test_open_close_restore_from_popup() {
     is(counts.open, 2, "Got right number of open windows");
     is(counts.winstates, 3, "Got right number of window states");
 
-    yield BrowserTestUtils.closeWindow(newWin);
-    yield BrowserTestUtils.closeWindow(newWin2);
+    await BrowserTestUtils.closeWindow(newWin);
+    await BrowserTestUtils.closeWindow(newWin2);
 
     counts = getBrowserWindowsCount();
     is(counts.open, 0, "Got right number of open windows");
@@ -452,15 +452,15 @@ add_task(function* test_open_close_restore_from_popup() {
  * Test if closing can be denied on Mac.
  * @note: Mac only
  */
-add_task(function* test_mac_notifications() {
+add_task(async function test_mac_notifications() {
   if (!IS_MAC) {
     return;
   }
 
-  yield setupTest({ denyFirst: true }, function*(newWin, obs) {
-    let closed = yield closeWindowForRestoration(newWin);
+  await setupTest({ denyFirst: true }, async function(newWin, obs) {
+    let closed = await closeWindowForRestoration(newWin);
     ok(!closed, "First close attempt should be denied");
-    closed = yield closeWindowForRestoration(newWin);
+    closed = await closeWindowForRestoration(newWin);
     ok(closed, "Second close attempt should be granted");
 
     // We tried closing once, and got denied. Then we tried again and

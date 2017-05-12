@@ -13,15 +13,15 @@ Services.scriptloader.loadSubScript(EVENTUTILS_URL, EventUtils);
  * Tests that tabs from Private Browsing windows cannot be dragged
  * into non-private windows, and vice-versa.
  */
-add_task(function* test_dragging_private_windows() {
-  let normalWin = yield BrowserTestUtils.openNewBrowserWindow();
+add_task(async function test_dragging_private_windows() {
+  let normalWin = await BrowserTestUtils.openNewBrowserWindow();
   let privateWin =
-    yield BrowserTestUtils.openNewBrowserWindow({private: true});
+    await BrowserTestUtils.openNewBrowserWindow({private: true});
 
   let normalTab =
-    yield BrowserTestUtils.openNewForegroundTab(normalWin.gBrowser);
+    await BrowserTestUtils.openNewForegroundTab(normalWin.gBrowser);
   let privateTab =
-    yield BrowserTestUtils.openNewForegroundTab(privateWin.gBrowser);
+    await BrowserTestUtils.openNewForegroundTab(privateWin.gBrowser);
 
   let effect = EventUtils.synthesizeDrop(normalTab, privateTab,
     [[{type: TAB_DROP_TYPE, data: normalTab}]],
@@ -45,26 +45,26 @@ add_task(function* test_dragging_private_windows() {
   is(normalWin.gBrowser.tabs.length, 2,
      "Prevent accepting a private tab in a normal tabbrowser");
 
-  yield BrowserTestUtils.closeWindow(normalWin);
-  yield BrowserTestUtils.closeWindow(privateWin);
+  await BrowserTestUtils.closeWindow(normalWin);
+  await BrowserTestUtils.closeWindow(privateWin);
 });
 
 /**
  * Tests that tabs from e10s windows cannot be dragged into non-e10s
  * windows, and vice-versa.
  */
-add_task(function* test_dragging_e10s_windows() {
+add_task(async function test_dragging_e10s_windows() {
   if (!gMultiProcessBrowser) {
     return;
   }
 
-  let remoteWin = yield BrowserTestUtils.openNewBrowserWindow({remote: true});
-  let nonRemoteWin = yield BrowserTestUtils.openNewBrowserWindow({remote: false});
+  let remoteWin = await BrowserTestUtils.openNewBrowserWindow({remote: true});
+  let nonRemoteWin = await BrowserTestUtils.openNewBrowserWindow({remote: false});
 
   let remoteTab =
-    yield BrowserTestUtils.openNewForegroundTab(remoteWin.gBrowser);
+    await BrowserTestUtils.openNewForegroundTab(remoteWin.gBrowser);
   let nonRemoteTab =
-    yield BrowserTestUtils.openNewForegroundTab(nonRemoteWin.gBrowser);
+    await BrowserTestUtils.openNewForegroundTab(nonRemoteWin.gBrowser);
 
   let effect = EventUtils.synthesizeDrop(remoteTab, nonRemoteTab,
     [[{type: TAB_DROP_TYPE, data: remoteTab}]],
@@ -88,22 +88,22 @@ add_task(function* test_dragging_e10s_windows() {
   is(remoteWin.gBrowser.tabs.length, 2,
      "Prevent accepting a private tab in a normal tabbrowser");
 
-  yield BrowserTestUtils.closeWindow(remoteWin);
-  yield BrowserTestUtils.closeWindow(nonRemoteWin);
+  await BrowserTestUtils.closeWindow(remoteWin);
+  await BrowserTestUtils.closeWindow(nonRemoteWin);
 });
 
 /**
  * Tests that remoteness-blacklisted tabs from e10s windows can
  * be dragged between e10s windows.
  */
-add_task(function* test_dragging_blacklisted() {
+add_task(async function test_dragging_blacklisted() {
   if (!gMultiProcessBrowser) {
     return;
   }
 
-  let remoteWin1 = yield BrowserTestUtils.openNewBrowserWindow({remote: true});
+  let remoteWin1 = await BrowserTestUtils.openNewBrowserWindow({remote: true});
   remoteWin1.gBrowser.myID = "remoteWin1";
-  let remoteWin2 = yield BrowserTestUtils.openNewBrowserWindow({remote: true});
+  let remoteWin2 = await BrowserTestUtils.openNewBrowserWindow({remote: true});
   remoteWin2.gBrowser.myID = "remoteWin2";
 
   // Anything under chrome://mochitests/content/ will be blacklisted, and
@@ -111,7 +111,7 @@ add_task(function* test_dragging_blacklisted() {
   const BLACKLISTED_URL = getRootDirectory(gTestPath) +
                           "browser_tab_drag_drop_perwindow.js";
   let blacklistedTab =
-    yield BrowserTestUtils.openNewForegroundTab(remoteWin1.gBrowser,
+    await BrowserTestUtils.openNewForegroundTab(remoteWin1.gBrowser,
                                                 BLACKLISTED_URL);
 
   ok(blacklistedTab.linkedBrowser, "Newly created tab should have a browser.");
@@ -120,7 +120,7 @@ add_task(function* test_dragging_blacklisted() {
      `Expected a non-remote browser for URL: ${BLACKLISTED_URL}`);
 
   let otherTab =
-    yield BrowserTestUtils.openNewForegroundTab(remoteWin2.gBrowser);
+    await BrowserTestUtils.openNewForegroundTab(remoteWin2.gBrowser);
 
   let effect = EventUtils.synthesizeDrop(blacklistedTab, otherTab,
     [[{type: TAB_DROP_TYPE, data: blacklistedTab}]],
@@ -144,8 +144,8 @@ add_task(function* test_dragging_blacklisted() {
   is(draggedBrowser.currentURI.spec, BLACKLISTED_URL,
      `Expected the URL of the dragged in tab to be ${BLACKLISTED_URL}`);
 
-  yield BrowserTestUtils.closeWindow(remoteWin1);
-  yield BrowserTestUtils.closeWindow(remoteWin2);
+  await BrowserTestUtils.closeWindow(remoteWin1);
+  await BrowserTestUtils.closeWindow(remoteWin2);
 });
 
 
@@ -153,12 +153,12 @@ add_task(function* test_dragging_blacklisted() {
  * Tests that tabs dragged between windows dispatch TabOpen and TabClose
  * events with the appropriate adoption details.
  */
-add_task(function* test_dragging_adoption_events() {
-  let win1 = yield BrowserTestUtils.openNewBrowserWindow();
-  let win2 = yield BrowserTestUtils.openNewBrowserWindow();
+add_task(async function test_dragging_adoption_events() {
+  let win1 = await BrowserTestUtils.openNewBrowserWindow();
+  let win2 = await BrowserTestUtils.openNewBrowserWindow();
 
-  let tab1 = yield BrowserTestUtils.openNewForegroundTab(win1.gBrowser);
-  let tab2 = yield BrowserTestUtils.openNewForegroundTab(win2.gBrowser);
+  let tab1 = await BrowserTestUtils.openNewForegroundTab(win1.gBrowser);
+  let tab2 = await BrowserTestUtils.openNewForegroundTab(win2.gBrowser);
 
   let awaitCloseEvent = BrowserTestUtils.waitForEvent(tab1, "TabClose");
   let awaitOpenEvent = BrowserTestUtils.waitForEvent(win2, "TabOpen");
@@ -168,14 +168,14 @@ add_task(function* test_dragging_adoption_events() {
     null, win1, win2);
   is(effect, "move", "Tab should be moved from win1 to win2.");
 
-  let closeEvent = yield awaitCloseEvent;
-  let openEvent = yield awaitOpenEvent;
+  let closeEvent = await awaitCloseEvent;
+  let openEvent = await awaitOpenEvent;
 
   is(openEvent.detail.adoptedTab, tab1, "New tab adopted old tab");
   is(closeEvent.detail.adoptedBy, openEvent.target, "Old tab adopted by new tab");
 
-  yield BrowserTestUtils.closeWindow(win1);
-  yield BrowserTestUtils.closeWindow(win2);
+  await BrowserTestUtils.closeWindow(win1);
+  await BrowserTestUtils.closeWindow(win2);
 });
 
 
@@ -183,14 +183,14 @@ add_task(function* test_dragging_adoption_events() {
  * Tests that per-site zoom settings remain active after a tab is
  * dragged between windows.
  */
-add_task(function* test_dragging_zoom_handling() {
+add_task(async function test_dragging_zoom_handling() {
   const ZOOM_FACTOR = 1.62;
 
-  let win1 = yield BrowserTestUtils.openNewBrowserWindow();
-  let win2 = yield BrowserTestUtils.openNewBrowserWindow();
+  let win1 = await BrowserTestUtils.openNewBrowserWindow();
+  let win2 = await BrowserTestUtils.openNewBrowserWindow();
 
-  let tab1 = yield BrowserTestUtils.openNewForegroundTab(win1.gBrowser);
-  let tab2 = yield BrowserTestUtils.openNewForegroundTab(win2.gBrowser,
+  let tab1 = await BrowserTestUtils.openNewForegroundTab(win1.gBrowser);
+  let tab2 = await BrowserTestUtils.openNewForegroundTab(win2.gBrowser,
                                                          "http://example.com/");
 
   win2.FullZoom.setZoom(ZOOM_FACTOR);
@@ -204,13 +204,13 @@ add_task(function* test_dragging_zoom_handling() {
 
   // Delay slightly to make sure we've finished executing any promise
   // chains in the zoom code.
-  yield new Promise(resolve => setTimeout(resolve, 0));
+  await new Promise(resolve => setTimeout(resolve, 0));
 
   FullZoomHelper.zoomTest(win1.gBrowser.selectedTab, ZOOM_FACTOR,
                           "Dragged tab should have correct zoom factor");
 
   win1.FullZoom.reset();
 
-  yield BrowserTestUtils.closeWindow(win1);
-  yield BrowserTestUtils.closeWindow(win2);
+  await BrowserTestUtils.closeWindow(win1);
+  await BrowserTestUtils.closeWindow(win2);
 });

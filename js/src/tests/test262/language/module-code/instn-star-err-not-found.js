@@ -24,7 +24,7 @@ info: |
           i. Let resolution be ? module.ResolveExport(name, « », « »).
           ii. If resolution is null, throw a SyntaxError exception.
 negative:
-  phase: early
+  phase: runtime
   type: SyntaxError
 flags: [module]
 ---*/

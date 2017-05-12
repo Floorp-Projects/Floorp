@@ -108,14 +108,14 @@ var tests = [
   // test opening a notification for a background browser
   // Note: test 4 to 6 share a tab.
   { id: "Test#4",
-    *run() {
+    async run() {
       let tab = gBrowser.addTab("http://example.com/");
-      yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+      await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
       isnot(gBrowser.selectedTab, tab, "new tab isn't selected");
       wrongBrowserNotificationObject.browser = gBrowser.getBrowserForTab(tab);
       let promiseTopic = promiseTopicObserved("PopupNotifications-backgroundShow");
       wrongBrowserNotification = showNotification(wrongBrowserNotificationObject);
-      yield promiseTopic;
+      await promiseTopic;
       is(PopupNotifications.isPanelOpen, false, "panel isn't open");
       ok(!wrongBrowserNotificationObject.mainActionClicked, "main action wasn't clicked");
       ok(!wrongBrowserNotificationObject.secondaryActionClicked, "secondary action wasn't clicked");
@@ -146,10 +146,10 @@ var tests = [
   },
   // test that the removed notification isn't shown on browser re-select
   { id: "Test#6",
-    *run() {
+    async run() {
       let promiseTopic = promiseTopicObserved("PopupNotifications-updateNotShowing");
       gBrowser.selectedTab = gBrowser.tabs[gBrowser.tabs.length - 1];
-      yield promiseTopic;
+      await promiseTopic;
       is(PopupNotifications.isPanelOpen, false, "panel isn't open");
       gBrowser.removeTab(gBrowser.selectedTab);
       goNext();

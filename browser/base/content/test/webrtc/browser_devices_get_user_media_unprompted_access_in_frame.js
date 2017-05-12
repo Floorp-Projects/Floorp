@@ -9,39 +9,39 @@ var gTests = [
 
 {
   desc: "getUserMedia audio+camera in frame 1",
-  run: function* checkAudioVideoWhileLiveTracksExist_frame() {
+  run: async function checkAudioVideoWhileLiveTracksExist_frame() {
     let promise = promisePopupNotificationShown("webRTC-shareDevices");
-    yield promiseRequestDevice(true, true, "frame1");
-    yield promise;
-    yield expectObserverCalled("getUserMedia:request");
+    await promiseRequestDevice(true, true, "frame1");
+    await promise;
+    await expectObserverCalled("getUserMedia:request");
     checkDeviceSelectors(true, true);
 
     let indicator = promiseIndicatorWindow();
-    yield promiseMessage("ok", () => {
+    await promiseMessage("ok", () => {
       PopupNotifications.panel.firstChild.button.click();
     });
-    yield expectObserverCalled("getUserMedia:response:allow");
-    yield expectObserverCalled("recording-device-events");
-    Assert.deepEqual((yield getMediaCaptureState()), {audio: true, video: true},
+    await expectObserverCalled("getUserMedia:response:allow");
+    await expectObserverCalled("recording-device-events");
+    Assert.deepEqual((await getMediaCaptureState()), {audio: true, video: true},
                      "expected camera and microphone to be shared");
 
-    yield indicator;
-    yield checkSharingUI({video: true, audio: true});
-    yield expectNoObserverCalled();
+    await indicator;
+    await checkSharingUI({video: true, audio: true});
+    await expectNoObserverCalled();
 
     info("gUM(audio+camera) in frame 2 should prompt");
     promise = promisePopupNotificationShown("webRTC-shareDevices");
-    yield promiseRequestDevice(true, true, "frame2");
-    yield promise;
-    yield expectObserverCalled("getUserMedia:request");
+    await promiseRequestDevice(true, true, "frame2");
+    await promise;
+    await expectObserverCalled("getUserMedia:request");
     checkDeviceSelectors(true, true);
 
-    yield promiseMessage(permissionError, () => {
+    await promiseMessage(permissionError, () => {
       activateSecondaryAction(kActionDeny);
     });
 
-    yield expectObserverCalled("getUserMedia:response:deny");
-    yield expectObserverCalled("recording-window-ended");
+    await expectObserverCalled("getUserMedia:response:deny");
+    await expectObserverCalled("recording-window-ended");
     SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
     SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
     SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
@@ -49,57 +49,57 @@ var gTests = [
     // If there's an active audio+camera stream in frame 1,
     // gUM(audio+camera) in frame 1 returns a stream without prompting;
     promise = promiseMessage("ok");
-    yield promiseRequestDevice(true, true, "frame1");
-    yield promise;
-    yield expectObserverCalled("getUserMedia:request");
-    yield promiseNoPopupNotification("webRTC-shareDevices");
-    yield expectObserverCalled("getUserMedia:response:allow");
-    yield expectObserverCalled("recording-device-events");
+    await promiseRequestDevice(true, true, "frame1");
+    await promise;
+    await expectObserverCalled("getUserMedia:request");
+    await promiseNoPopupNotification("webRTC-shareDevices");
+    await expectObserverCalled("getUserMedia:response:allow");
+    await expectObserverCalled("recording-device-events");
 
     // close the stream
-    yield closeStream(false, "frame1");
+    await closeStream(false, "frame1");
   }
 },
 
 {
   desc: "getUserMedia audio+camera in frame 1 - part II",
-  run: function* checkAudioVideoWhileLiveTracksExist_frame_partII() {
+  run: async function checkAudioVideoWhileLiveTracksExist_frame_partII() {
     let promise = promisePopupNotificationShown("webRTC-shareDevices");
-    yield promiseRequestDevice(true, true, "frame1");
-    yield promise;
-    yield expectObserverCalled("getUserMedia:request");
+    await promiseRequestDevice(true, true, "frame1");
+    await promise;
+    await expectObserverCalled("getUserMedia:request");
     checkDeviceSelectors(true, true);
 
     let indicator = promiseIndicatorWindow();
-    yield promiseMessage("ok", () => {
+    await promiseMessage("ok", () => {
       PopupNotifications.panel.firstChild.button.click();
     });
-    yield expectObserverCalled("getUserMedia:response:allow");
-    yield expectObserverCalled("recording-device-events");
-    Assert.deepEqual((yield getMediaCaptureState()), {audio: true, video: true},
+    await expectObserverCalled("getUserMedia:response:allow");
+    await expectObserverCalled("recording-device-events");
+    Assert.deepEqual((await getMediaCaptureState()), {audio: true, video: true},
                      "expected camera and microphone to be shared");
 
-    yield indicator;
-    yield checkSharingUI({video: true, audio: true});
-    yield expectNoObserverCalled();
+    await indicator;
+    await checkSharingUI({video: true, audio: true});
+    await expectNoObserverCalled();
 
     // If there's an active audio+camera stream in frame 1,
     // gUM(audio+camera) in the top level window causes a prompt;
     promise = promisePopupNotificationShown("webRTC-shareDevices");
-    yield promiseRequestDevice(true, true);
-    yield promise;
-    yield expectObserverCalled("getUserMedia:request");
+    await promiseRequestDevice(true, true);
+    await promise;
+    await expectObserverCalled("getUserMedia:request");
     checkDeviceSelectors(true, true);
 
-    yield promiseMessage(permissionError, () => {
+    await promiseMessage(permissionError, () => {
       activateSecondaryAction(kActionDeny);
     });
 
-    yield expectObserverCalled("getUserMedia:response:deny");
-    yield expectObserverCalled("recording-window-ended");
+    await expectObserverCalled("getUserMedia:response:deny");
+    await expectObserverCalled("recording-window-ended");
 
     // close the stream
-    yield closeStream(false, "frame1");
+    await closeStream(false, "frame1");
     SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
     SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
     SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
@@ -108,50 +108,50 @@ var gTests = [
 
 {
   desc: "getUserMedia audio+camera in frame 1 - reload",
-  run: function* checkAudioVideoWhileLiveTracksExist_frame_reload() {
+  run: async function checkAudioVideoWhileLiveTracksExist_frame_reload() {
     let promise = promisePopupNotificationShown("webRTC-shareDevices");
-    yield promiseRequestDevice(true, true, "frame1");
-    yield promise;
-    yield expectObserverCalled("getUserMedia:request");
+    await promiseRequestDevice(true, true, "frame1");
+    await promise;
+    await expectObserverCalled("getUserMedia:request");
     checkDeviceSelectors(true, true);
 
     let indicator = promiseIndicatorWindow();
-    yield promiseMessage("ok", () => {
+    await promiseMessage("ok", () => {
       PopupNotifications.panel.firstChild.button.click();
     });
-    yield expectObserverCalled("getUserMedia:response:allow");
-    yield expectObserverCalled("recording-device-events");
-    Assert.deepEqual((yield getMediaCaptureState()), {audio: true, video: true},
+    await expectObserverCalled("getUserMedia:response:allow");
+    await expectObserverCalled("recording-device-events");
+    Assert.deepEqual((await getMediaCaptureState()), {audio: true, video: true},
                      "expected camera and microphone to be shared");
 
-    yield indicator;
-    yield checkSharingUI({video: true, audio: true});
-    yield expectNoObserverCalled();
+    await indicator;
+    await checkSharingUI({video: true, audio: true});
+    await expectNoObserverCalled();
 
     // reload frame 1
     promise = promiseObserverCalled("recording-device-stopped");
-    yield promiseReloadFrame("frame1");
-    yield promise;
+    await promiseReloadFrame("frame1");
+    await promise;
 
-    yield checkNotSharing();
-    yield expectObserverCalled("recording-device-events");
-    yield expectObserverCalled("recording-window-ended");
-    yield expectNoObserverCalled();
+    await checkNotSharing();
+    await expectObserverCalled("recording-device-events");
+    await expectObserverCalled("recording-window-ended");
+    await expectNoObserverCalled();
 
     // After the reload,
     // gUM(audio+camera) in frame 1 causes a prompt.
     promise = promisePopupNotificationShown("webRTC-shareDevices");
-    yield promiseRequestDevice(true, true, "frame1");
-    yield promise;
-    yield expectObserverCalled("getUserMedia:request");
+    await promiseRequestDevice(true, true, "frame1");
+    await promise;
+    await expectObserverCalled("getUserMedia:request");
     checkDeviceSelectors(true, true);
 
-    yield promiseMessage(permissionError, () => {
+    await promiseMessage(permissionError, () => {
       activateSecondaryAction(kActionDeny);
     });
 
-    yield expectObserverCalled("getUserMedia:response:deny");
-    yield expectObserverCalled("recording-window-ended");
+    await expectObserverCalled("getUserMedia:response:deny");
+    await expectObserverCalled("recording-window-ended");
     SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
     SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
     SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
@@ -160,44 +160,44 @@ var gTests = [
 
 {
   desc: "getUserMedia audio+camera at the top level window",
-  run: function* checkAudioVideoWhileLiveTracksExist_topLevel() {
+  run: async function checkAudioVideoWhileLiveTracksExist_topLevel() {
     // create an active audio+camera stream at the top level window
     let promise = promisePopupNotificationShown("webRTC-shareDevices");
-    yield promiseRequestDevice(true, true);
-    yield promise;
-    yield expectObserverCalled("getUserMedia:request");
+    await promiseRequestDevice(true, true);
+    await promise;
+    await expectObserverCalled("getUserMedia:request");
     checkDeviceSelectors(true, true);
     let indicator = promiseIndicatorWindow();
 
-    yield promiseMessage("ok", () => {
+    await promiseMessage("ok", () => {
       PopupNotifications.panel.firstChild.button.click();
     });
 
-    yield expectObserverCalled("getUserMedia:response:allow");
-    yield expectObserverCalled("recording-device-events");
-    Assert.deepEqual((yield getMediaCaptureState()), {audio: true, video: true},
+    await expectObserverCalled("getUserMedia:response:allow");
+    await expectObserverCalled("recording-device-events");
+    Assert.deepEqual((await getMediaCaptureState()), {audio: true, video: true},
                      "expected camera and microphone to be shared");
 
-    yield indicator;
-    yield checkSharingUI({audio: true, video: true});
+    await indicator;
+    await checkSharingUI({audio: true, video: true});
 
     // If there's an active audio+camera stream at the top level window,
     // gUM(audio+camera) in frame 2 causes a prompt.
     promise = promisePopupNotificationShown("webRTC-shareDevices");
-    yield promiseRequestDevice(true, true, "frame2");
-    yield promise;
-    yield expectObserverCalled("getUserMedia:request");
+    await promiseRequestDevice(true, true, "frame2");
+    await promise;
+    await expectObserverCalled("getUserMedia:request");
     checkDeviceSelectors(true, true);
 
-    yield promiseMessage(permissionError, () => {
+    await promiseMessage(permissionError, () => {
       activateSecondaryAction(kActionDeny);
     });
 
-    yield expectObserverCalled("getUserMedia:response:deny");
-    yield expectObserverCalled("recording-window-ended");
+    await expectObserverCalled("getUserMedia:response:deny");
+    await expectObserverCalled("recording-window-ended");
 
     // close the stream
-    yield closeStream();
+    await closeStream();
     SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
     SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
     SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);

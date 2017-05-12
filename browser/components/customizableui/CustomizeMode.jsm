@@ -24,7 +24,6 @@ const kPaletteItemContextMenu = "customizationPaletteItemContextMenu";
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/CustomizableUI.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/AppConstants.jsm");
@@ -246,10 +245,10 @@ CustomizeMode.prototype = {
     let resetButton = this.document.getElementById("customization-reset-button");
     resetButton.setAttribute("disabled", "true");
 
-    Task.spawn(function*() {
+    (async () => {
       // We shouldn't start customize mode until after browser-delayed-startup has finished:
       if (!this.window.gBrowserInit.delayedStartupFinished) {
-        yield new Promise(resolve => {
+        await new Promise(resolve => {
           let delayedStartupObserver = aSubject => {
             if (aSubject == this.window) {
               Services.obs.removeObserver(delayedStartupObserver, "browser-delayed-startup-finished");
@@ -299,7 +298,7 @@ CustomizeMode.prototype = {
         // indicate that we're handling calling startBatchUpdate and
         // endBatchUpdate.
         if (!window.PanelUI.isReady) {
-          yield window.PanelUI.ensureReady(true);
+          await window.PanelUI.ensureReady(true);
         }
 
         // Hide the palette before starting the transition for increased perf.
@@ -339,7 +338,7 @@ CustomizeMode.prototype = {
       for (let toolbar of customizableToolbars)
         toolbar.setAttribute("customizing", true);
 
-      yield this._doTransition(true);
+      await this._doTransition(true);
 
       Services.obs.addObserver(this, "lightweight-theme-window-updated");
 
@@ -350,7 +349,7 @@ CustomizeMode.prototype = {
         this._showPanelCustomizationPlaceholders();
       }
 
-      yield this._wrapToolbarItems();
+      await this._wrapToolbarItems();
       this.populatePalette();
 
       this._addDragHandlers(this.visiblePalette);
@@ -405,7 +404,7 @@ CustomizeMode.prototype = {
       if (!this._wantToBeInCustomizeMode) {
         this.exit();
       }
-    }.bind(this)).then(null, e => {
+    })().then(null, e => {
       log.error("Error entering customize mode", e);
       // We should ensure this has been called, and calling it again doesn't hurt:
       window.PanelUI.endBatchUpdate();
@@ -482,10 +481,10 @@ CustomizeMode.prototype = {
 
     this._transitioning = true;
 
-    Task.spawn(function*() {
-      yield this.depopulatePalette();
+    (async () => {
+      await this.depopulatePalette();
 
-      yield this._doTransition(false);
+      await this._doTransition(false);
       this.updateLWTStyling({});
 
       Services.obs.removeObserver(this, "lightweight-theme-window-updated");
@@ -507,7 +506,7 @@ CustomizeMode.prototype = {
       DragPositionManager.stop();
       this._removeDragHandlers(this.visiblePalette);
 
-      yield this._unwrapToolbarItems();
+      await this._unwrapToolbarItems();
 
       if (this._changed) {
         // XXXmconley: At first, it seems strange to also persist the old way with
@@ -575,7 +574,7 @@ CustomizeMode.prototype = {
       if (this._wantToBeInCustomizeMode) {
         this.enter();
       }
-    }.bind(this)).then(null, e => {
+    })().then(null, e => {
       log.error("Error exiting customize mode", e);
       if (!gPhotonStructure) {
         // We should ensure this has been called, and calling it again doesn't hurt:
@@ -817,7 +816,7 @@ CustomizeMode.prototype = {
   },
 
   depopulatePalette() {
-    return Task.spawn(function*() {
+    return (async () => {
       this.visiblePalette.hidden = true;
       let paletteChild = this.visiblePalette.firstChild;
       let nextChild;
@@ -826,7 +825,7 @@ CustomizeMode.prototype = {
         let provider = CustomizableUI.getWidget(paletteChild.id).provider;
         if (provider == CustomizableUI.PROVIDER_XUL) {
           let unwrappedPaletteItem =
-            yield this.deferredUnwrapToolbarItem(paletteChild);
+            await this.deferredUnwrapToolbarItem(paletteChild);
           this._stowedPalette.appendChild(unwrappedPaletteItem);
         } else if (provider == CustomizableUI.PROVIDER_API) {
           // XXXunf Currently this doesn't destroy the (now unused) node. It would
@@ -843,7 +842,7 @@ CustomizeMode.prototype = {
       }
       this.visiblePalette.hidden = false;
       this.window.gNavToolbox.palette = this._stowedPalette;
-    }.bind(this)).then(null, log.error);
+    })().then(null, log.error);
   },
 
   isCustomizableItem(aNode) {
@@ -1040,7 +1039,7 @@ CustomizeMode.prototype = {
     return toolbarItem;
   },
 
-  *_wrapToolbarItem(aArea) {
+  async _wrapToolbarItem(aArea) {
     let target = CustomizableUI.getCustomizeTargetForArea(aArea, this.window);
     if (!target || this.areas.has(target)) {
       return null;
@@ -1049,7 +1048,7 @@ CustomizeMode.prototype = {
     this._addDragHandlers(target);
     for (let child of target.children) {
       if (this.isCustomizableItem(child) && !this.isWrappedToolbarItem(child)) {
-        yield this.deferredWrapToolbarItem(child, CustomizableUI.getPlaceForItem(child)).then(null, log.error);
+        await this.deferredWrapToolbarItem(child, CustomizableUI.getPlaceForItem(child)).then(null, log.error);
       }
     }
     this.areas.add(target);
@@ -1077,9 +1076,9 @@ CustomizeMode.prototype = {
     return target;
   },
 
-  *_wrapToolbarItems() {
+  async _wrapToolbarItems() {
     for (let area of CustomizableUI.areas) {
-      yield this._wrapToolbarItem(area);
+      await this._wrapToolbarItem(area);
     }
   },
 
@@ -1116,17 +1115,17 @@ CustomizeMode.prototype = {
   },
 
   _unwrapToolbarItems() {
-    return Task.spawn(function*() {
+    return (async () => {
       for (let target of this.areas) {
         for (let toolbarItem of target.children) {
           if (this.isWrappedToolbarItem(toolbarItem)) {
-            yield this.deferredUnwrapToolbarItem(toolbarItem);
+            await this.deferredUnwrapToolbarItem(toolbarItem);
           }
         }
         this._removeDragHandlers(target);
       }
       this.areas.clear();
-    }.bind(this)).then(null, log.error);
+    })().then(null, log.error);
   },
 
   _removeExtraToolbarsIfEmpty() {
@@ -1160,16 +1159,16 @@ CustomizeMode.prototype = {
     let btn = this.document.getElementById("customization-reset-button");
     BrowserUITelemetry.countCustomizationEvent("reset");
     btn.disabled = true;
-    return Task.spawn(function*() {
+    return (async () => {
       this._removePanelCustomizationPlaceholders();
-      yield this.depopulatePalette();
-      yield this._unwrapToolbarItems();
+      await this.depopulatePalette();
+      await this._unwrapToolbarItems();
 
       CustomizableUI.reset();
 
       this._updateLWThemeButtonIcon();
 
-      yield this._wrapToolbarItems();
+      await this._wrapToolbarItems();
       this.populatePalette();
 
       this.persistCurrentSets(true);
@@ -1182,22 +1181,22 @@ CustomizeMode.prototype = {
       if (!this._wantToBeInCustomizeMode) {
         this.exit();
       }
-    }.bind(this)).then(null, log.error);
+    })().then(null, log.error);
   },
 
   undoReset() {
     this.resetting = true;
 
-    return Task.spawn(function*() {
+    return (async () => {
       this._removePanelCustomizationPlaceholders();
-      yield this.depopulatePalette();
-      yield this._unwrapToolbarItems();
+      await this.depopulatePalette();
+      await this._unwrapToolbarItems();
 
       CustomizableUI.undoReset();
 
       this._updateLWThemeButtonIcon();
 
-      yield this._wrapToolbarItems();
+      await this._wrapToolbarItems();
       this.populatePalette();
 
       this.persistCurrentSets(true);
@@ -1206,7 +1205,7 @@ CustomizeMode.prototype = {
       this._updateUndoResetButton();
       this._updateEmptyPaletteNotice();
       this.resetting = false;
-    }.bind(this)).then(null, log.error);
+    })().then(null, log.error);
   },
 
   _onToolbarVisibilityChange(aEvent) {

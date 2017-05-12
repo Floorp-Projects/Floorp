@@ -4,8 +4,6 @@
 
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
   "resource://gre/modules/Promise.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-  "resource://gre/modules/Task.jsm");
 
 const CHROME_BASE = "chrome://mochitests/content/browser/browser/base/content/test/general/";
 const HTTPS_BASE = "https://example.com/browser/browser/base/content/test/general/";
@@ -45,7 +43,7 @@ function fakeTelemetryNow(...args) {
   return date;
 }
 
-function* setupPingArchive() {
+async function setupPingArchive() {
   let scope = {};
   Cu.import("resource://gre/modules/TelemetryController.jsm", scope);
   Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader)
@@ -53,7 +51,7 @@ function* setupPingArchive() {
 
   for (let p of scope.TEST_PINGS) {
     fakeTelemetryNow(p.date);
-    p.id = yield scope.TelemetryController.submitExternalPing(p.type, p.payload);
+    p.id = await scope.TelemetryController.submitExternalPing(p.type, p.payload);
   }
 }
 
@@ -61,33 +59,33 @@ var gTests = [
 
 {
   desc: "Test the remote commands",
-  setup: Task.async(function*() {
+  async setup() {
     Preferences.set(TELEMETRY_LOG_PREF, "Trace");
-    yield setupPingArchive();
+    await setupPingArchive();
     Preferences.set("datareporting.healthreport.about.reportUrl",
                     HTTPS_BASE + "healthreport_testRemoteCommands.html");
-  }),
+  },
   run(iframe) {
-    let deferred = Promise.defer();
-    let results = 0;
-    try {
-      iframe.contentWindow.addEventListener("FirefoxHealthReportTestResponse", function evtHandler(event) {
-        let data = event.detail.data;
-        if (data.type == "testResult") {
-          ok(data.pass, data.info);
-          results++;
-        } else if (data.type == "testsComplete") {
-          is(results, data.count, "Checking number of results received matches the number of tests that should have run");
-          iframe.contentWindow.removeEventListener("FirefoxHealthReportTestResponse", evtHandler, true);
-          deferred.resolve();
-        }
-      }, true);
+    return new Promise((resolve, reject) => {
+      let results = 0;
+      try {
+        iframe.contentWindow.addEventListener("FirefoxHealthReportTestResponse", function evtHandler(event) {
+          let data = event.detail.data;
+          if (data.type == "testResult") {
+            ok(data.pass, data.info);
+            results++;
+          } else if (data.type == "testsComplete") {
+            is(results, data.count, "Checking number of results received matches the number of tests that should have run");
+            iframe.contentWindow.removeEventListener("FirefoxHealthReportTestResponse", evtHandler, true);
+            resolve();
+          }
+        }, true);
 
-    } catch (e) {
-      ok(false, "Failed to get all commands");
-      deferred.reject();
-    }
-    return deferred.promise;
+      } catch (e) {
+        ok(false, "Failed to get all commands");
+        reject();
+      }
+    });
   }
 },
 
@@ -99,35 +97,35 @@ function test() {
   // xxxmpc leaving this here until we resolve bug 854038 and bug 854060
   requestLongerTimeout(10);
 
-  Task.spawn(function* () {
+  (async function() {
     for (let testCase of gTests) {
       info(testCase.desc);
-      yield testCase.setup();
+      await testCase.setup();
 
-      let iframe = yield promiseNewTabLoadEvent("about:healthreport");
+      let iframe = await promiseNewTabLoadEvent("about:healthreport");
 
-      yield testCase.run(iframe);
+      await testCase.run(iframe);
 
       gBrowser.removeCurrentTab();
     }
 
     finish();
-  });
+  })();
 }
 
 function promiseNewTabLoadEvent(aUrl, aEventType = "load") {
-  let deferred = Promise.defer();
-  let tab = gBrowser.selectedTab = gBrowser.addTab(aUrl);
-  tab.linkedBrowser.addEventListener(aEventType, function(event) {
-    let iframe = tab.linkedBrowser.contentDocument.getElementById("remote-report");
-      iframe.addEventListener("load", function frameLoad(e) {
-        if (iframe.contentWindow.location.href == "about:blank" ||
-            e.target != iframe) {
-          return;
-        }
-        iframe.removeEventListener("load", frameLoad);
-        deferred.resolve(iframe);
-      });
-    }, {capture: true, once: true});
-  return deferred.promise;
+  return new Promise(resolve => {
+    let tab = gBrowser.selectedTab = gBrowser.addTab(aUrl);
+    tab.linkedBrowser.addEventListener(aEventType, function(event) {
+      let iframe = tab.linkedBrowser.contentDocument.getElementById("remote-report");
+        iframe.addEventListener("load", function frameLoad(e) {
+          if (iframe.contentWindow.location.href == "about:blank" ||
+              e.target != iframe) {
+            return;
+          }
+          iframe.removeEventListener("load", frameLoad);
+          resolve(iframe);
+        });
+      }, {capture: true, once: true});
+  });
 }

@@ -36,7 +36,7 @@
     function runTest() {
       SimpleTest.waitForExplicitFinish();
 
-      Task.spawn(function* () {
+      (async function() {
         // Sanity checks.
         ok(PlacesUtils, "PlacesUtils is running in chrome context");
         ok(PlacesUIUtils, "PlacesUIUtils is running in chrome context");
@@ -50,13 +50,13 @@
           let leftPaneItems = PlacesUtils.annotations.getItemsWithAnnotation(PlacesUIUtils.ORGANIZER_FOLDER_ANNO);
 
           // Create a fake left pane folder.
-          let folder = yield PlacesUtils.bookmarks.insert({
+          let folder = await PlacesUtils.bookmarks.insert({
             parentGuid: PlacesUtils.bookmarks.rootGuid,
             index: PlacesUtils.bookmarks.DEFAULT_INDEX,
             type: PlacesUtils.bookmarks.TYPE_FOLDER
           });
 
-          let fakeLeftPaneRoot = yield PlacesUtils.promiseItemId(folder.guid);
+          let fakeLeftPaneRoot = await PlacesUtils.promiseItemId(folder.guid);
           PlacesUtils.annotations.setItemAnnotation(fakeLeftPaneRoot, PlacesUIUtils.ORGANIZER_FOLDER_ANNO,
                                PlacesUIUtils.ORGANIZER_LEFTPANE_VERSION, 0,
                                PlacesUtils.annotations.EXPIRE_NEVER);
@@ -75,9 +75,9 @@
 
         // Check that all old left pane items have been removed.
         for (let guid of fakeLeftPanes) {
-          ok(!(yield PlacesUtils.bookmarks.fetch({guid})), "This folder should have been removed");
+          ok(!(await PlacesUtils.bookmarks.fetch({guid})), "This folder should have been removed");
         }
-      }).then(() => SimpleTest.finish());
+      })().then(() => SimpleTest.finish());
     }
   ]]>
   </script>

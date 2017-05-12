@@ -15,7 +15,7 @@ function getColumn(table, column, url) {
   }
 }
 
-add_task(function* () {
+add_task(async function() {
   // Make sure titles are correctly saved for a URI with the proper
   // notifications.
 
@@ -50,14 +50,14 @@ add_task(function* () {
   });
 
   const url1 = "http://example.com/tests/toolkit/components/places/tests/browser/title1.html";
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, url1);
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, url1);
 
   const url2 = "http://example.com/tests/toolkit/components/places/tests/browser/title2.html";
   let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url2);
-  yield loadPromise;
+  await loadPromise;
 
-  let data = yield titleChangedPromise;
+  let data = await titleChangedPromise;
   is(data[0].uri.spec, "http://example.com/tests/toolkit/components/places/tests/browser/title2.html");
   is(data[0].title, "Some title");
   is(data[0].guid, getColumn("moz_places", "guid", data[0].uri.spec));
@@ -68,6 +68,6 @@ add_task(function* () {
   });
 
   gBrowser.removeCurrentTab();
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
 });
 

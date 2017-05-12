@@ -3,7 +3,7 @@ const gTestRoot = rootDir.replace("chrome://mochitests/content/", "http://127.0.
 var gTestBrowser = null;
 var gPluginHost = Components.classes["@mozilla.org/plugin/host;1"].getService(Components.interfaces.nsIPluginHost);
 
-add_task(function* () {
+add_task(async function() {
   registerCleanupFunction(function() {
     clearAllPluginPermissions();
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
@@ -16,7 +16,7 @@ add_task(function* () {
   });
 });
 
-add_task(function* () {
+add_task(async function() {
   Services.prefs.setBoolPref("plugins.click_to_play", true);
   Services.prefs.setBoolPref("extensions.blocklist.suppressUI", true);
 
@@ -33,10 +33,10 @@ add_task(function* () {
 // Test that the click-to-play overlay is not hidden for elements
 // partially or fully outside the viewport.
 
-add_task(function* () {
-  yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_outsideScrollArea.html");
+add_task(async function() {
+  await promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_outsideScrollArea.html");
 
-  yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  await ContentTask.spawn(gTestBrowser, {}, async function() {
     let doc = content.document;
     let p = doc.createElement("embed");
 
@@ -49,11 +49,11 @@ add_task(function* () {
   });
 
   // Work around for delayed PluginBindingAttached
-  yield promiseUpdatePluginBindings(gTestBrowser);
+  await promiseUpdatePluginBindings(gTestBrowser);
 
-  yield promisePopupNotification("click-to-play-plugins");
+  await promisePopupNotification("click-to-play-plugins");
 
-  yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  await ContentTask.spawn(gTestBrowser, {}, async function() {
     let plugin = content.document.getElementById("test");
     let doc = content.document;
     let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
@@ -62,10 +62,10 @@ add_task(function* () {
   });
 });
 
-add_task(function* () {
-  yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_outsideScrollArea.html");
+add_task(async function() {
+  await promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_outsideScrollArea.html");
 
-  yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  await ContentTask.spawn(gTestBrowser, {}, async function() {
     let doc = content.document;
     let p = doc.createElement("embed");
 
@@ -78,11 +78,11 @@ add_task(function* () {
   });
 
   // Work around for delayed PluginBindingAttached
-  yield promiseUpdatePluginBindings(gTestBrowser);
+  await promiseUpdatePluginBindings(gTestBrowser);
 
-  yield promisePopupNotification("click-to-play-plugins");
+  await promisePopupNotification("click-to-play-plugins");
 
-  yield ContentTask.spawn(gTestBrowser, null, function* () {
+  await ContentTask.spawn(gTestBrowser, null, async function() {
     let plugin = content.document.getElementById("test");
     let doc = content.document;
     let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
@@ -91,10 +91,10 @@ add_task(function* () {
   });
 });
 
-add_task(function* () {
-  yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_outsideScrollArea.html");
+add_task(async function() {
+  await promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_outsideScrollArea.html");
 
-  yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  await ContentTask.spawn(gTestBrowser, {}, async function() {
     let doc = content.document;
     let p = doc.createElement("embed");
 
@@ -107,10 +107,10 @@ add_task(function* () {
   });
 
   // Work around for delayed PluginBindingAttached
-  yield promiseUpdatePluginBindings(gTestBrowser);
+  await promiseUpdatePluginBindings(gTestBrowser);
 
-  yield promisePopupNotification("click-to-play-plugins");
-  yield ContentTask.spawn(gTestBrowser, null, function* () {
+  await promisePopupNotification("click-to-play-plugins");
+  await ContentTask.spawn(gTestBrowser, null, async function() {
     let plugin = content.document.getElementById("test");
     let doc = content.document;
     let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");

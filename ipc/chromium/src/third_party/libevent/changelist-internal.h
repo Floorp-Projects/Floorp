@@ -23,8 +23,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef _CHANGELIST_H_
-#define _CHANGELIST_H_
+#ifndef CHANGELIST_INTERNAL_H_INCLUDED_
+#define CHANGELIST_INTERNAL_H_INCLUDED_
 
 /*
   A "changelist" is a list of all the fd status changes that should be made
@@ -62,6 +62,7 @@ struct event_change {
 	 * and write_change is unused. */
 	ev_uint8_t read_change;
 	ev_uint8_t write_change;
+	ev_uint8_t close_change;
 };
 
 /* Flags for read_change and write_change. */
@@ -82,20 +83,20 @@ struct event_change {
 #define EVENT_CHANGELIST_FDINFO_SIZE sizeof(int)
 
 /** Set up the data fields in a changelist. */
-void event_changelist_init(struct event_changelist *changelist);
+void event_changelist_init_(struct event_changelist *changelist);
 /** Remove every change in the changelist, and make corresponding changes
  * in the event maps in the base.  This function is generally used right
  * after making all the changes in the changelist. */
-void event_changelist_remove_all(struct event_changelist *changelist,
+void event_changelist_remove_all_(struct event_changelist *changelist,
     struct event_base *base);
 /** Free all memory held in a changelist. */
-void event_changelist_freemem(struct event_changelist *changelist);
+void event_changelist_freemem_(struct event_changelist *changelist);
 
 /** Implementation of eventop_add that queues the event in a changelist. */
-int event_changelist_add(struct event_base *base, evutil_socket_t fd, short old, short events,
+int event_changelist_add_(struct event_base *base, evutil_socket_t fd, short old, short events,
     void *p);
 /** Implementation of eventop_del that queues the event in a changelist. */
-int event_changelist_del(struct event_base *base, evutil_socket_t fd, short old, short events,
+int event_changelist_del_(struct event_base *base, evutil_socket_t fd, short old, short events,
     void *p);
 
 #endif

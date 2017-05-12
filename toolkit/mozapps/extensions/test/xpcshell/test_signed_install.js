@@ -101,11 +101,11 @@ function serveUpdateRDF(leafName) {
 }
 
 
-function* test_install_broken(file, expectedError) {
+async function test_install_broken(file, expectedError) {
   gServer.registerFile("/" + file.leafName, file);
 
-  let install = yield createInstall("http://localhost:4444/" + file.leafName);
-  yield promiseCompleteAllInstalls([install]);
+  let install = await createInstall("http://localhost:4444/" + file.leafName);
+  await promiseCompleteAllInstalls([install]);
 
   do_check_eq(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
   do_check_eq(install.error, expectedError);
@@ -114,11 +114,11 @@ function* test_install_broken(file, expectedError) {
   gServer.registerFile("/" + file.leafName, null);
 }
 
-function* test_install_working(file, expectedSignedState) {
+async function test_install_working(file, expectedSignedState) {
   gServer.registerFile("/" + file.leafName, file);
 
-  let install = yield createInstall("http://localhost:4444/" + file.leafName);
-  yield promiseCompleteAllInstalls([install]);
+  let install = await createInstall("http://localhost:4444/" + file.leafName);
+  await promiseCompleteAllInstalls([install]);
 
   do_check_eq(install.state, AddonManager.STATE_INSTALLED);
   do_check_neq(install.addon, null);
@@ -129,17 +129,17 @@ function* test_install_working(file, expectedSignedState) {
   install.addon.uninstall();
 }
 
-function* test_update_broken(file, expectedError) {
+async function test_update_broken(file, expectedError) {
   // First install the older version
-  yield promiseInstallAllFiles([do_get_file(DATA + WORKING)]);
+  await promiseInstallAllFiles([do_get_file(DATA + WORKING)]);
 
   gServer.registerFile("/" + file.leafName, file);
   serveUpdateRDF(file.leafName);
 
-  let addon = yield promiseAddonByID(ID);
-  let update = yield promiseFindAddonUpdates(addon);
+  let addon = await promiseAddonByID(ID);
+  let update = await promiseFindAddonUpdates(addon);
   let install = update.updateAvailable;
-  yield promiseCompleteAllInstalls([install]);
+  await promiseCompleteAllInstalls([install]);
 
   do_check_eq(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
   do_check_eq(install.error, expectedError);
@@ -151,17 +151,17 @@ function* test_update_broken(file, expectedError) {
   addon.uninstall();
 }
 
-function* test_update_working(file, expectedSignedState) {
+async function test_update_working(file, expectedSignedState) {
   // First install the older version
-  yield promiseInstallAllFiles([do_get_file(DATA + WORKING)]);
+  await promiseInstallAllFiles([do_get_file(DATA + WORKING)]);
 
   gServer.registerFile("/" + file.leafName, file);
   serveUpdateRDF(file.leafName);
 
-  let addon = yield promiseAddonByID(ID);
-  let update = yield promiseFindAddonUpdates(addon);
+  let addon = await promiseAddonByID(ID);
+  let update = await promiseFindAddonUpdates(addon);
   let install = update.updateAvailable;
-  yield promiseCompleteAllInstalls([install]);
+  await promiseCompleteAllInstalls([install]);
 
   do_check_eq(install.state, AddonManager.STATE_INSTALLED);
   do_check_neq(install.addon, null);
@@ -181,99 +181,99 @@ function run_test() {
 }
 
 // Try to install a broken add-on
-add_task(function*() {
+add_task(async function() {
   let file = createBrokenAddonModify(do_get_file(DATA + ADDONS.bootstrap.signed));
-  yield test_install_broken(file, AddonManager.ERROR_CORRUPT_FILE);
+  await test_install_broken(file, AddonManager.ERROR_CORRUPT_FILE);
   file.remove(true);
 });
 
-add_task(function*() {
+add_task(async function() {
   let file = createBrokenAddonAdd(do_get_file(DATA + ADDONS.bootstrap.signed));
-  yield test_install_broken(file, AddonManager.ERROR_CORRUPT_FILE);
+  await test_install_broken(file, AddonManager.ERROR_CORRUPT_FILE);
   file.remove(true);
 });
 
-add_task(function*() {
+add_task(async function() {
   let file = createBrokenAddonRemove(do_get_file(DATA + ADDONS.bootstrap.signed));
-  yield test_install_broken(file, AddonManager.ERROR_CORRUPT_FILE);
+  await test_install_broken(file, AddonManager.ERROR_CORRUPT_FILE);
   file.remove(true);
 });
 
 // Try to install an add-on with an incorrect ID
-add_task(function*() {
+add_task(async function() {
   let file = do_get_file(DATA + ADDONS.bootstrap.badid);
-  yield test_install_broken(file, AddonManager.ERROR_CORRUPT_FILE);
+  await test_install_broken(file, AddonManager.ERROR_CORRUPT_FILE);
 });
 
 // Try to install an unsigned add-on
-add_task(function*() {
+add_task(async function() {
   let file = do_get_file(DATA + ADDONS.bootstrap.unsigned);
-  yield test_install_broken(file, AddonManager.ERROR_SIGNEDSTATE_REQUIRED);
+  await test_install_broken(file, AddonManager.ERROR_SIGNEDSTATE_REQUIRED);
 });
 
 // Try to install a preliminarily reviewed add-on
-add_task(function*() {
+add_task(async function() {
   let file = do_get_file(DATA + ADDONS.bootstrap.preliminary);
-  yield test_install_working(file, AddonManager.SIGNEDSTATE_PRELIMINARY);
+  await test_install_working(file, AddonManager.SIGNEDSTATE_PRELIMINARY);
 });
 
 // Try to install a signed add-on
-add_task(function*() {
+add_task(async function() {
   let file = do_get_file(DATA + ADDONS.bootstrap.signed);
-  yield test_install_working(file, AddonManager.SIGNEDSTATE_SIGNED);
+  await test_install_working(file, AddonManager.SIGNEDSTATE_SIGNED);
 });
 
 // Try to install an add-on with the "Mozilla Extensions" OU
-add_task(function*() {
+add_task(async function() {
   // Remove the REQUIRE_SIGNING and DEV_ROOT stuff when bug 1357948 is fixed.
   if (REQUIRE_SIGNING) {
     return;
   }
   Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_DEV_ROOT, true);
   let file = do_get_file(DATA + ADDONS.bootstrap.privileged);
-  yield test_install_working(file, AddonManager.SIGNEDSTATE_PRIVILEGED);
+  await test_install_working(file, AddonManager.SIGNEDSTATE_PRIVILEGED);
   Services.prefs.clearUserPref(PREF_XPI_SIGNATURES_DEV_ROOT);
 });
 
 // Try to update to a broken add-on
-add_task(function*() {
+add_task(async function() {
   let file = createBrokenAddonModify(do_get_file(DATA + ADDONS.bootstrap.signed));
-  yield test_update_broken(file, AddonManager.ERROR_CORRUPT_FILE);
+  await test_update_broken(file, AddonManager.ERROR_CORRUPT_FILE);
   file.remove(true);
 });
 
-add_task(function*() {
+add_task(async function() {
   let file = createBrokenAddonAdd(do_get_file(DATA + ADDONS.bootstrap.signed));
-  yield test_update_broken(file, AddonManager.ERROR_CORRUPT_FILE);
+  await test_update_broken(file, AddonManager.ERROR_CORRUPT_FILE);
   file.remove(true);
 });
 
-add_task(function*() {
+add_task(async function() {
   let file = createBrokenAddonRemove(do_get_file(DATA + ADDONS.bootstrap.signed));
-  yield test_update_broken(file, AddonManager.ERROR_CORRUPT_FILE);
+  await test_update_broken(file, AddonManager.ERROR_CORRUPT_FILE);
   file.remove(true);
 });
 
 // Try to update to an add-on with an incorrect ID
-add_task(function*() {
+add_task(async function() {
   let file = do_get_file(DATA + ADDONS.bootstrap.badid);
-  yield test_update_broken(file, AddonManager.ERROR_CORRUPT_FILE);
+  await test_update_broken(file, AddonManager.ERROR_CORRUPT_FILE);
 });
 
 // Try to update to an unsigned add-on
-add_task(function*() {
+add_task(async function() {
   let file = do_get_file(DATA + ADDONS.bootstrap.unsigned);
-  yield test_update_broken(file, AddonManager.ERROR_SIGNEDSTATE_REQUIRED);
+  await test_update_broken(file, AddonManager.ERROR_SIGNEDSTATE_REQUIRED);
 });
 
 // Try to update to a preliminarily reviewed add-on
-add_task(function*() {
+add_task(async function() {
   let file = do_get_file(DATA + ADDONS.bootstrap.preliminary);
-  yield test_update_working(file, AddonManager.SIGNEDSTATE_PRELIMINARY);
+  await test_update_working(file, AddonManager.SIGNEDSTATE_PRELIMINARY);
 });
 
 // Try to update to a signed add-on
-add_task(function*() {
+add_task(async function() {
   let file = do_get_file(DATA + ADDONS.bootstrap.signed);
-  yield test_update_working(file, AddonManager.SIGNEDSTATE_SIGNED);
+  await test_update_working(file, AddonManager.SIGNEDSTATE_SIGNED);
 });

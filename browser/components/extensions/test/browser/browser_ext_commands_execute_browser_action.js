@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-function* testExecuteBrowserActionWithOptions(options = {}) {
+async function testExecuteBrowserActionWithOptions(options = {}) {
   // Make sure the mouse isn't hovering over the browserAction widget.
   EventUtils.synthesizeMouseAtCenter(gURLBar, {type: "mouseover"}, window);
 
@@ -74,9 +74,9 @@ function* testExecuteBrowserActionWithOptions(options = {}) {
     EventUtils.synthesizeKey("j", {altKey: true, shiftKey: true});
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield SimpleTest.promiseFocus(window);
+  await SimpleTest.promiseFocus(window);
 
   if (options.inArea) {
     let widget = getBrowserActionWidget(extension);
@@ -86,37 +86,37 @@ function* testExecuteBrowserActionWithOptions(options = {}) {
   extension.sendMessage("withPopup", options.withPopup);
 
   if (options.withPopup) {
-    yield extension.awaitFinish("execute-browser-action-popup-opened");
+    await extension.awaitFinish("execute-browser-action-popup-opened");
 
     if (!getBrowserActionPopup(extension)) {
-      yield awaitExtensionPanel(extension);
+      await awaitExtensionPanel(extension);
     }
-    yield closeBrowserAction(extension);
+    await closeBrowserAction(extension);
   } else {
-    yield extension.awaitFinish("execute-browser-action-on-clicked-fired");
+    await extension.awaitFinish("execute-browser-action-on-clicked-fired");
   }
-  yield extension.unload();
+  await extension.unload();
 }
 
-add_task(function* test_execute_browser_action_with_popup() {
-  yield testExecuteBrowserActionWithOptions({
+add_task(async function test_execute_browser_action_with_popup() {
+  await testExecuteBrowserActionWithOptions({
     withPopup: true,
   });
 });
 
-add_task(function* test_execute_browser_action_without_popup() {
-  yield testExecuteBrowserActionWithOptions();
+add_task(async function test_execute_browser_action_without_popup() {
+  await testExecuteBrowserActionWithOptions();
 });
 
-add_task(function* test_execute_browser_action_in_hamburger_menu_with_popup() {
-  yield testExecuteBrowserActionWithOptions({
+add_task(async function test_execute_browser_action_in_hamburger_menu_with_popup() {
+  await testExecuteBrowserActionWithOptions({
     withPopup: true,
     inArea: CustomizableUI.AREA_PANEL,
   });
 });
 
-add_task(function* test_execute_browser_action_in_hamburger_menu_without_popup() {
-  yield testExecuteBrowserActionWithOptions({
+add_task(async function test_execute_browser_action_in_hamburger_menu_without_popup() {
+  await testExecuteBrowserActionWithOptions({
     inArea: CustomizableUI.AREA_PANEL,
   });
 });

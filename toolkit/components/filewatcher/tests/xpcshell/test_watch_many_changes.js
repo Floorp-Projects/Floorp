@@ -16,12 +16,12 @@ function run_test() {
  * Test that we correctly handle watching directories when hundreds of files
  * change simultaneously.
  */
-add_task(function* test_fill_notification_buffer() {
+add_task(async function test_fill_notification_buffer() {
 
   // Create and watch a sub-directory of the profile directory so we don't
   // catch notifications we're not interested in (i.e. "startupCache").
   let watchedDir = OS.Path.join(OS.Constants.Path.profileDir, "filewatcher_playground");
-  yield OS.File.makeDir(watchedDir);
+  await OS.File.makeDir(watchedDir);
 
   // The number of files to create.
   let numberOfFiles = 100;
@@ -54,20 +54,20 @@ add_task(function* test_fill_notification_buffer() {
 
   // Add the profile directory to the watch list and wait for the file watcher
   // to start watching it.
-  yield promiseAddPath(watcher, watchedDir, changeCallback, deferred.reject);
+  await promiseAddPath(watcher, watchedDir, changeCallback, deferred.reject);
 
   // Create and then remove the files within the watched directory.
   for (let i = 0; i < numberOfFiles; i++) {
     let tmpFilePath = OS.Path.join(watchedDir, fileNameBase + i);
-    yield OS.File.writeAtomic(tmpFilePath, "test content");
-    yield OS.File.remove(tmpFilePath);
+    await OS.File.writeAtomic(tmpFilePath, "test content");
+    await OS.File.remove(tmpFilePath);
   }
 
   // Wait until the watcher informs us that all the files were
   // created, modified and removed.
-  yield deferred.promise;
+  await deferred.promise;
 
   // Remove the watch and free the associated memory (we need to
   // reuse 'changeCallback' and 'errorCallback' to unregister).
-  yield promiseRemovePath(watcher, watchedDir, changeCallback, deferred.reject);
+  await promiseRemovePath(watcher, watchedDir, changeCallback, deferred.reject);
 });

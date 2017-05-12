@@ -12,16 +12,16 @@ const STATE = {
  * as pending and correctly finish the instructed load while keeping the
  * restored history around.
  */
-add_task(function* () {
-  yield testSwitchToTab("about:mozilla#fooobar", {ignoreFragment: "whenComparingAndReplace"});
-  yield testSwitchToTab("about:mozilla?foo=bar", {replaceQueryString: true});
+add_task(async function() {
+  await testSwitchToTab("about:mozilla#fooobar", {ignoreFragment: "whenComparingAndReplace"});
+  await testSwitchToTab("about:mozilla?foo=bar", {replaceQueryString: true});
 });
 
-var testSwitchToTab = Task.async(function* (url, options) {
+var testSwitchToTab = async function(url, options) {
   // Create a background tab.
   let tab = gBrowser.addTab("about:blank");
   let browser = tab.linkedBrowser;
-  yield promiseBrowserLoaded(browser);
+  await promiseBrowserLoaded(browser);
 
   // The tab shouldn't be restored right away.
   Services.prefs.setBoolPref("browser.sessionstore.restore_on_demand", true);
@@ -30,17 +30,17 @@ var testSwitchToTab = Task.async(function* (url, options) {
   let promise = promiseTabRestoring(tab);
   ss.setTabState(tab, JSON.stringify(STATE));
   ok(tab.hasAttribute("pending"), "tab is pending");
-  yield promise;
+  await promise;
 
   // Switch-to-tab with a similar URI.
   switchToTabHavingURI(url, false, options);
 
   // Tab should now restore
-  yield promiseTabRestored(tab);
+  await promiseTabRestored(tab);
   is(browser.currentURI.spec, url, "correct URL loaded");
 
   // Check that we didn't lose any history entries.
-  yield ContentTask.spawn(browser, null, function* () {
+  await ContentTask.spawn(browser, null, async function() {
     let Ci = Components.interfaces;
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
     let history = webNavigation.sessionHistory.QueryInterface(Ci.nsISHistoryInternal);
@@ -49,4 +49,4 @@ var testSwitchToTab = Task.async(function* (url, options) {
 
   // Cleanup.
   gBrowser.removeTab(tab);
-});
+};

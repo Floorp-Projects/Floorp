@@ -2,12 +2,12 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* testWindowGetAll() {
+add_task(async function testWindowGetAll() {
   let raisedWin = Services.ww.openWindow(
     null, Services.prefs.getCharPref("browser.chromeURL"), "_blank",
     "chrome,dialog=no,all,alwaysRaised", null);
 
-  yield TestUtils.topicObserved("browser-delayed-startup-finished",
+  await TestUtils.topicObserved("browser-delayed-startup-finished",
                                 subject => subject == raisedWin);
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -25,14 +25,14 @@ add_task(function* testWindowGetAll() {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("alwaysOnTop");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("alwaysOnTop");
+  await extension.unload();
 
-  yield BrowserTestUtils.closeWindow(raisedWin);
+  await BrowserTestUtils.closeWindow(raisedWin);
 });
 
-add_task(function* testInvalidWindowId() {
+add_task(async function testInvalidWindowId() {
   let extension = ExtensionTestUtils.loadExtension({
     async background() {
       await browser.test.assertRejects(
@@ -44,7 +44,7 @@ add_task(function* testInvalidWindowId() {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("windows.get.invalid");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("windows.get.invalid");
+  await extension.unload();
 });

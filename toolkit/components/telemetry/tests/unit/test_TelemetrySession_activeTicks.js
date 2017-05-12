@@ -6,18 +6,18 @@ Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 
 
-add_task(function* test_setup() {
+add_task(async function test_setup() {
   // Addon manager needs a profile directory
   do_get_profile();
   loadAddonManager("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
   // Make sure we don't generate unexpected pings due to pref changes.
-  yield setEmptyPrefWatchlist();
+  await setEmptyPrefWatchlist();
 
   Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
 });
 
-add_task(function* test_record_activeTicks() {
-  yield TelemetryController.testSetup();
+add_task(async function test_record_activeTicks() {
+  await TelemetryController.testSetup();
 
   let checkActiveTicks = (expected) => {
     let payload = TelemetrySession.getPayload();
@@ -45,5 +45,5 @@ add_task(function* test_record_activeTicks() {
   Services.obs.notifyObservers(null, "user-interaction-active");
   checkActiveTicks(5);
 
-  yield TelemetryController.testShutdown();
+  await TelemetryController.testShutdown();
 });

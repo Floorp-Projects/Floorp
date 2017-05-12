@@ -13,7 +13,7 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* test_listener_proxies() {
+add_task(async function test_listener_proxies() {
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "temporary",
 
@@ -51,11 +51,11 @@ add_task(function* test_listener_proxies() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitFinish("onchanged-listeners");
+  await extension.awaitFinish("onchanged-listeners");
 
-  yield extension.unload();
+  await extension.unload();
 });
 </script>
 

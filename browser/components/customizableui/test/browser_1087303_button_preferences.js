@@ -6,11 +6,11 @@
 
 var newTab = null;
 
-add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   info("Check preferences button existence and functionality");
 
-  yield PanelUI.show();
+  await PanelUI.show();
   info("Menu panel was opened");
 
   let preferencesButton = document.getElementById("preferences-button");
@@ -18,7 +18,7 @@ add_task(function*() {
   preferencesButton.click();
 
   newTab = gBrowser.selectedTab;
-  yield waitForPageLoad(newTab);
+  await waitForPageLoad(newTab);
 
   let openedPage = gBrowser.currentURI.spec;
   is(openedPage, "about:preferences", "Preferences page was opened");
@@ -33,19 +33,19 @@ add_task(function asyncCleanup() {
 });
 
 function waitForPageLoad(aTab) {
-  let deferred = Promise.defer();
+  return new Promise((resolve, reject) => {
 
-  let timeoutId = setTimeout(() => {
-    aTab.linkedBrowser.removeEventListener("load", onTabLoad, true);
-    deferred.reject("Page didn't load within " + 20000 + "ms");
-  }, 20000);
+    let timeoutId = setTimeout(() => {
+      aTab.linkedBrowser.removeEventListener("load", onTabLoad, true);
+      reject("Page didn't load within " + 20000 + "ms");
+    }, 20000);
 
-  function onTabLoad(event) {
-    clearTimeout(timeoutId);
-    aTab.linkedBrowser.removeEventListener("load", onTabLoad, true);
-    info("Tab event received: load");
-    deferred.resolve();
- }
-  aTab.linkedBrowser.addEventListener("load", onTabLoad, true, true);
-  return deferred.promise;
+    function onTabLoad(event) {
+      clearTimeout(timeoutId);
+      aTab.linkedBrowser.removeEventListener("load", onTabLoad, true);
+      info("Tab event received: load");
+      resolve();
+   }
+    aTab.linkedBrowser.addEventListener("load", onTabLoad, true, true);
+  });
 }

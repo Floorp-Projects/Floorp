@@ -9,7 +9,7 @@ function run_test() {
 // hit all sites that update a frecency.
 
 // InsertVisitedURIs::UpdateFrecency and History::InsertPlace
-add_task(function* test_InsertVisitedURIs_UpdateFrecency_and_History_InsertPlace() {
+add_task(async function test_InsertVisitedURIs_UpdateFrecency_and_History_InsertPlace() {
   // InsertPlace is at the end of a path that UpdateFrecency is also on, so kill
   // two birds with one stone and expect two notifications.  Trigger the path by
   // adding a download.
@@ -17,20 +17,20 @@ add_task(function* test_InsertVisitedURIs_UpdateFrecency_and_History_InsertPlace
   Cc["@mozilla.org/browser/download-history;1"].
     getService(Ci.nsIDownloadHistory).
     addDownload(uri);
-  yield Promise.all([onFrecencyChanged(uri), onFrecencyChanged(uri)]);
+  await Promise.all([onFrecencyChanged(uri), onFrecencyChanged(uri)]);
 });
 
 // nsNavHistory::UpdateFrecency
-add_task(function* test_nsNavHistory_UpdateFrecency() {
+add_task(async function test_nsNavHistory_UpdateFrecency() {
   let bm = PlacesUtils.bookmarks;
   let uri = NetUtil.newURI("http://example.com/b");
   bm.insertBookmark(bm.unfiledBookmarksFolder, uri,
                     Ci.nsINavBookmarksService.DEFAULT_INDEX, "test");
-  yield onFrecencyChanged(uri);
+  await onFrecencyChanged(uri);
 });
 
 // nsNavHistory::invalidateFrecencies for particular pages
-add_task(function* test_nsNavHistory_invalidateFrecencies_somePages() {
+add_task(async function test_nsNavHistory_invalidateFrecencies_somePages() {
   let uri = NetUtil.newURI("http://test-nsNavHistory-invalidateFrecencies-somePages.com/");
   // Bookmarking the URI is enough to add it to moz_places, and importantly, it
   // means that removePagesFromHost doesn't remove it from moz_places, so its
@@ -39,46 +39,46 @@ add_task(function* test_nsNavHistory_invalidateFrecencies_somePages() {
   bm.insertBookmark(bm.unfiledBookmarksFolder, uri,
                     Ci.nsINavBookmarksService.DEFAULT_INDEX, "test");
   PlacesUtils.history.removePagesFromHost(uri.host, false);
-  yield onFrecencyChanged(uri);
+  await onFrecencyChanged(uri);
 });
 
 // nsNavHistory::invalidateFrecencies for all pages
-add_task(function* test_nsNavHistory_invalidateFrecencies_allPages() {
-  yield Promise.all([onManyFrecenciesChanged(), PlacesTestUtils.clearHistory()]);
+add_task(async function test_nsNavHistory_invalidateFrecencies_allPages() {
+  await Promise.all([onManyFrecenciesChanged(), PlacesTestUtils.clearHistory()]);
 });
 
 // nsNavHistory::DecayFrecency and nsNavHistory::FixInvalidFrecencies
-add_task(function* test_nsNavHistory_DecayFrecency_and_nsNavHistory_FixInvalidFrecencies() {
+add_task(async function test_nsNavHistory_DecayFrecency_and_nsNavHistory_FixInvalidFrecencies() {
   // FixInvalidFrecencies is at the end of a path that DecayFrecency is also on,
   // so expect two notifications.  Trigger the path by making nsNavHistory
   // observe the idle-daily notification.
   PlacesUtils.history.QueryInterface(Ci.nsIObserver).
     observe(null, "idle-daily", "");
-  yield Promise.all([onManyFrecenciesChanged(), onManyFrecenciesChanged()]);
+  await Promise.all([onManyFrecenciesChanged(), onManyFrecenciesChanged()]);
 });
 
 function onFrecencyChanged(expectedURI) {
-  let deferred = Promise.defer();
-  let obs = new NavHistoryObserver();
-  obs.onFrecencyChanged =
-    (uri, newFrecency, guid, hidden, visitDate) => {
-      PlacesUtils.history.removeObserver(obs);
-      do_check_true(!!uri);
-      do_check_true(uri.equals(expectedURI));
-      deferred.resolve();
-    };
-  PlacesUtils.history.addObserver(obs);
-  return deferred.promise;
+  return new Promise(resolve => {
+    let obs = new NavHistoryObserver();
+    obs.onFrecencyChanged =
+      (uri, newFrecency, guid, hidden, visitDate) => {
+        PlacesUtils.history.removeObserver(obs);
+        do_check_true(!!uri);
+        do_check_true(uri.equals(expectedURI));
+        resolve();
+      };
+    PlacesUtils.history.addObserver(obs);
+  });
 }
 
 function onManyFrecenciesChanged() {
-  let deferred = Promise.defer();
-  let obs = new NavHistoryObserver();
-  obs.onManyFrecenciesChanged = () => {
-    PlacesUtils.history.removeObserver(obs);
-    do_check_true(true);
-    deferred.resolve();
-  };
-  PlacesUtils.history.addObserver(obs);
-  return deferred.promise;
+  return new Promise(resolve => {
+    let obs = new NavHistoryObserver();
+    obs.onManyFrecenciesChanged = () => {
+      PlacesUtils.history.removeObserver(obs);
+      do_check_true(true);
+      resolve();
+    };
+    PlacesUtils.history.addObserver(obs);
+  });
 }

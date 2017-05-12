@@ -5,9 +5,9 @@
  * loaded in the content process, and URLs loaded in the parent process, we
  * don't set the URL for the tab to about:blank inbetween the loads.
  */
-add_task(function*() {
+add_task(async function() {
   let url = "http://www.example.com/foo.html";
-  yield BrowserTestUtils.withNewTab({gBrowser, url}, function*(browser) {
+  await BrowserTestUtils.withNewTab({gBrowser, url}, async function(browser) {
     let wpl = {
       onLocationChange(unused, unused2, location) {
         if (location.schemeIs("about")) {
@@ -22,15 +22,15 @@ add_task(function*() {
     let didLoad = BrowserTestUtils.browserLoaded(browser, null, function(loadedURL) {
       return loadedURL == "about:config";
     });
-    yield BrowserTestUtils.loadURI(browser, "about:config");
-    yield didLoad;
+    await BrowserTestUtils.loadURI(browser, "about:config");
+    await didLoad;
 
     gBrowser.goBack();
-    yield BrowserTestUtils.browserLoaded(browser, null, function(loadedURL) {
+    await BrowserTestUtils.browserLoaded(browser, null, function(loadedURL) {
       return url == loadedURL;
     });
     gBrowser.goForward();
-    yield BrowserTestUtils.browserLoaded(browser, null, function(loadedURL) {
+    await BrowserTestUtils.browserLoaded(browser, null, function(loadedURL) {
       return loadedURL == "about:config";
     });
     gBrowser.removeProgressListener(wpl);

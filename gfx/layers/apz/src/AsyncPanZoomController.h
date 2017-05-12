@@ -321,7 +321,9 @@ public:
    * that the content appears to remain visually in the same position. i.e. if
    * the surface moves up by 10 screenpixels, the scroll position should also
    * move up by 10 pixels so that what used to be at the top of the surface is
-   * now 10 pixels down the surface.
+   * now 10 pixels down the surface. Will request that content be repainted
+   * if necessary but will not request a composite. It is assumed the dynamic
+   * toolbar animator will request the composite.
    */
   void AdjustScrollForSurfaceShift(const ScreenPoint& aShift);
 

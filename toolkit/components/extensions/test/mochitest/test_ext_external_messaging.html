@@ -76,19 +76,19 @@ function makeExtension(id, otherId) {
   return ExtensionTestUtils.loadExtension(extensionData);
 }
 
-add_task(function* test_contentscript() {
+add_task(async function test_contentscript() {
   const ID1 = "foo-message@mochitest.mozilla.org";
   const ID2 = "bar-message@mochitest.mozilla.org";
 
   let extension1 = makeExtension(ID1, ID2);
   let extension2 = makeExtension(ID2, ID1);
 
-  yield Promise.all([extension1.startup(), extension2.startup()]);
+  await Promise.all([extension1.startup(), extension2.startup()]);
 
   extension1.sendMessage("go");
   extension2.sendMessage("go");
 
-  yield Promise.all([
+  await Promise.all([
     extension1.awaitMessage("sendMessage-done"),
     extension2.awaitMessage("sendMessage-done"),
 
@@ -102,8 +102,8 @@ add_task(function* test_contentscript() {
     extension2.awaitMessage("onConnect-done"),
   ]);
 
-  yield extension1.unload();
-  yield extension2.unload();
+  await extension1.unload();
+  await extension2.unload();
 });
 </script>
 

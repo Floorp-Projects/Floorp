@@ -2,8 +2,6 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
   "resource://gre/modules/Promise.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
@@ -39,17 +37,17 @@ function closeAllNotifications() {
     return Promise.resolve();
   }
 
-  let deferred = Promise.defer();
-  for (let notification of notificationBox.allNotifications) {
-    waitForNotificationClose(notification, function() {
-      if (notificationBox.allNotifications.length === 0) {
-        deferred.resolve();
-      }
-    });
-    notification.close();
-  }
+  return new Promise(resolve => {
+    for (let notification of notificationBox.allNotifications) {
+      waitForNotificationClose(notification, function() {
+        if (notificationBox.allNotifications.length === 0) {
+          resolve();
+        }
+      });
+      notification.close();
+    }
 
-  return deferred.promise;
+  });
 }
 
 function whenDelayedStartupFinished(aWindow, aCallback) {
@@ -71,10 +69,10 @@ function updateTabContextMenu(tab, onOpened) {
   is(TabContextMenu.contextTab, tab, "TabContextMenu context is the expected tab");
   const onFinished = () => menu.hidePopup();
   if (onOpened) {
-    return Task.spawn(function*() {
-      yield onOpened();
+    return (async function() {
+      await onOpened();
       onFinished();
-    });
+    })();
   }
   onFinished();
   return Promise.resolve();
@@ -125,9 +123,9 @@ function waitForCondition(condition, nextTest, errorMsg, retryTimes) {
 }
 
 function promiseWaitForCondition(aConditionFn) {
-  let deferred = Promise.defer();
-  waitForCondition(aConditionFn, deferred.resolve, "Condition didn't pass.");
-  return deferred.promise;
+  return new Promise(resolve => {
+    waitForCondition(aConditionFn, resolve, "Condition didn't pass.");
+  });
 }
 
 function promiseWaitForEvent(object, eventName, capturing = false, chrome = false) {
@@ -187,9 +185,9 @@ function setTestPluginEnabledState(newEnabledState, pluginName) {
 }
 
 function pushPrefs(...aPrefs) {
-  let deferred = Promise.defer();
-  SpecialPowers.pushPrefEnv({"set": aPrefs}, deferred.resolve);
-  return deferred.promise;
+  return new Promise(resolve => {
+    SpecialPowers.pushPrefEnv({"set": aPrefs}, resolve);
+  });
 }
 
 function updateBlocklist(aCallback) {
@@ -240,23 +238,23 @@ function promiseWindowClosed(win) {
 }
 
 function promiseOpenAndLoadWindow(aOptions, aWaitForDelayedStartup = false) {
-  let deferred = Promise.defer();
-  let win = OpenBrowserWindow(aOptions);
-  if (aWaitForDelayedStartup) {
-    Services.obs.addObserver(function onDS(aSubject, aTopic, aData) {
-      if (aSubject != win) {
-        return;
-      }
-      Services.obs.removeObserver(onDS, "browser-delayed-startup-finished");
-      deferred.resolve(win);
-    }, "browser-delayed-startup-finished");
+  return new Promise(resolve => {
+    let win = OpenBrowserWindow(aOptions);
+    if (aWaitForDelayedStartup) {
+      Services.obs.addObserver(function onDS(aSubject, aTopic, aData) {
+        if (aSubject != win) {
+          return;
+        }
+        Services.obs.removeObserver(onDS, "browser-delayed-startup-finished");
+        resolve(win);
+      }, "browser-delayed-startup-finished");
 
-  } else {
-    win.addEventListener("load", function() {
-      deferred.resolve(win);
-    }, {once: true});
-  }
-  return deferred.promise;
+    } else {
+      win.addEventListener("load", function() {
+        resolve(win);
+      }, {once: true});
+    }
+  });
 }
 
 /**
@@ -306,12 +304,12 @@ function waitForAsyncUpdates(aCallback, aScope, aArguments) {
  * @rejects JavaScript exception.
  */
 function promiseIsURIVisited(aURI, aExpectedValue) {
-  let deferred = Promise.defer();
-  PlacesUtils.asyncHistory.isURIVisited(aURI, function(unused, aIsVisited) {
-    deferred.resolve(aIsVisited);
-  });
+  return new Promise(resolve => {
+    PlacesUtils.asyncHistory.isURIVisited(aURI, function(unused, aIsVisited) {
+      resolve(aIsVisited);
+    });
 
-  return deferred.promise;
+  });
 }
 
 function whenNewTabLoaded(aWindow, aCallback) {
@@ -331,9 +329,9 @@ function whenTabLoaded(aTab, aCallback) {
 }
 
 function promiseTabLoaded(aTab) {
-  let deferred = Promise.defer();
-  whenTabLoaded(aTab, deferred.resolve);
-  return deferred.promise;
+  return new Promise(resolve => {
+    whenTabLoaded(aTab, resolve);
+  });
 }
 
 /**
@@ -345,22 +343,22 @@ function promiseTabLoaded(aTab) {
  *        True if each visit to the URI should be cleared, false otherwise
  */
 function promiseHistoryClearedState(aURIs, aShouldBeCleared) {
-  let deferred = Promise.defer();
-  let callbackCount = 0;
-  let niceStr = aShouldBeCleared ? "no longer" : "still";
-  function callbackDone() {
-    if (++callbackCount == aURIs.length)
-      deferred.resolve();
-  }
-  aURIs.forEach(function(aURI) {
-    PlacesUtils.asyncHistory.isURIVisited(aURI, function(uri, isVisited) {
-      is(isVisited, !aShouldBeCleared,
-         "history visit " + uri.spec + " should " + niceStr + " exist");
-      callbackDone();
+  return new Promise(resolve => {
+    let callbackCount = 0;
+    let niceStr = aShouldBeCleared ? "no longer" : "still";
+    function callbackDone() {
+      if (++callbackCount == aURIs.length)
+        resolve();
+    }
+    aURIs.forEach(function(aURI) {
+      PlacesUtils.asyncHistory.isURIVisited(aURI, function(uri, isVisited) {
+        is(isVisited, !aShouldBeCleared,
+           "history visit " + uri.spec + " should " + niceStr + " exist");
+        callbackDone();
+      });
     });
-  });
 
-  return deferred.promise;
+  });
 }
 
 /**
@@ -678,12 +676,12 @@ function promisePopupEvent(popup, eventSuffix) {
     return Promise.resolve();
 
   let eventType = "popup" + eventSuffix;
-  let deferred = Promise.defer();
-  popup.addEventListener(eventType, function(event) {
-    deferred.resolve();
-  }, {once: true});
+  return new Promise(resolve => {
+    popup.addEventListener(eventType, function(event) {
+      resolve();
+    }, {once: true});
 
-  return deferred.promise;
+  });
 }
 
 function promisePopupShown(popup) {
@@ -773,7 +771,7 @@ function promiseOnBookmarkItemAdded(aExpectedURI) {
   });
 }
 
-function* loadBadCertPage(url) {
+async function loadBadCertPage(url) {
   const EXCEPTION_DIALOG_URI = "chrome://pippki/content/exceptionDialog.xul";
   let exceptionDialogResolved = new Promise(function(resolve) {
     // When the certificate exception dialog has opened, click the button to add
@@ -797,14 +795,14 @@ function* loadBadCertPage(url) {
   });
 
   let loaded = BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser);
-  yield BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
-  yield loaded;
+  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
+  await loaded;
 
-  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     content.document.getElementById("exceptionDialogButton").click();
   });
-  yield exceptionDialogResolved;
-  yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  await exceptionDialogResolved;
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 }
 
 // Utility function to get a handle on the certificate exception dialog.
@@ -850,9 +848,9 @@ function restoreRemoteClients(getter) {
   });
 }
 
-function* openMenuItemSubmenu(id) {
+async function openMenuItemSubmenu(id) {
   let menuPopup = document.getElementById(id).menupopup;
   let menuPopupPromise = BrowserTestUtils.waitForEvent(menuPopup, "popupshown");
   menuPopup.showPopup();
-  yield menuPopupPromise;
+  await menuPopupPromise;
 }

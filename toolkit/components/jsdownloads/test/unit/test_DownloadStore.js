@@ -41,20 +41,20 @@ function promiseNewListAndStore(aStorePath) {
 /**
  * Saves downloads to a file, then reloads them.
  */
-add_task(function* test_save_reload() {
-  let [listForSave, storeForSave] = yield promiseNewListAndStore();
-  let [listForLoad, storeForLoad] = yield promiseNewListAndStore(
+add_task(async function test_save_reload() {
+  let [listForSave, storeForSave] = await promiseNewListAndStore();
+  let [listForLoad, storeForLoad] = await promiseNewListAndStore(
                                                  storeForSave.path);
 
-  listForSave.add(yield promiseNewDownload(httpUrl("source.txt")));
-  listForSave.add(yield Downloads.createDownload({
+  listForSave.add(await promiseNewDownload(httpUrl("source.txt")));
+  listForSave.add(await Downloads.createDownload({
     source: { url: httpUrl("empty.txt"),
               referrer: TEST_REFERRER_URL },
     target: getTempFile(TEST_TARGET_FILE_NAME),
   }));
 
   // This PDF download should not be serialized because it never succeeds.
-  let pdfDownload = yield Downloads.createDownload({
+  let pdfDownload = await Downloads.createDownload({
     source: { url: httpUrl("empty.txt"),
               referrer: TEST_REFERRER_URL },
     target: getTempFile(TEST_TARGET_FILE_NAME),
@@ -64,26 +64,26 @@ add_task(function* test_save_reload() {
 
   // If we used a callback to adjust the channel, the download should
   // not be serialized because we can't recreate it across sessions.
-  let adjustedDownload = yield Downloads.createDownload({
+  let adjustedDownload = await Downloads.createDownload({
     source: { url: httpUrl("empty.txt"),
               adjustChannel: () => Promise.resolve() },
     target: getTempFile(TEST_TARGET_FILE_NAME),
   });
   listForSave.add(adjustedDownload);
 
-  let legacyDownload = yield promiseStartLegacyDownload();
-  yield legacyDownload.cancel();
+  let legacyDownload = await promiseStartLegacyDownload();
+  await legacyDownload.cancel();
   listForSave.add(legacyDownload);
 
-  yield storeForSave.save();
-  yield storeForLoad.load();
+  await storeForSave.save();
+  await storeForLoad.load();
 
   // Remove the PDF and adjusted downloads because they should not appear here.
   listForSave.remove(adjustedDownload);
   listForSave.remove(pdfDownload);
 
-  let itemsForSave = yield listForSave.getAll();
-  let itemsForLoad = yield listForLoad.getAll();
+  let itemsForSave = await listForSave.getAll();
+  let itemsForLoad = await listForLoad.getAll();
 
   do_check_eq(itemsForSave.length, itemsForLoad.length);
 
@@ -107,31 +107,31 @@ add_task(function* test_save_reload() {
 /**
  * Checks that saving an empty list deletes any existing file.
  */
-add_task(function* test_save_empty() {
-  let [, store] = yield promiseNewListAndStore();
+add_task(async function test_save_empty() {
+  let [, store] = await promiseNewListAndStore();
 
-  let createdFile = yield OS.File.open(store.path, { create: true });
-  yield createdFile.close();
+  let createdFile = await OS.File.open(store.path, { create: true });
+  await createdFile.close();
 
-  yield store.save();
+  await store.save();
 
-  do_check_false(yield OS.File.exists(store.path));
+  do_check_false(await OS.File.exists(store.path));
 
   // If the file does not exist, saving should not generate exceptions.
-  yield store.save();
+  await store.save();
 });
 
 /**
  * Checks that loading from a missing file results in an empty list.
  */
-add_task(function* test_load_empty() {
-  let [list, store] = yield promiseNewListAndStore();
+add_task(async function test_load_empty() {
+  let [list, store] = await promiseNewListAndStore();
 
-  do_check_false(yield OS.File.exists(store.path));
+  do_check_false(await OS.File.exists(store.path));
 
-  yield store.load();
+  await store.load();
 
-  let items = yield list.getAll();
+  let items = await list.getAll();
   do_check_eq(items.length, 0);
 });
 
@@ -140,8 +140,8 @@ add_task(function* test_load_empty() {
  * test is to verify that the JSON format used in previous versions can be
  * loaded, assuming the file is reloaded on the same platform.
  */
-add_task(function* test_load_string_predefined() {
-  let [list, store] = yield promiseNewListAndStore();
+add_task(async function test_load_string_predefined() {
+  let [list, store] = await promiseNewListAndStore();
 
   // The platform-dependent file name should be generated dynamically.
   let targetPath = getTempFile(TEST_TARGET_FILE_NAME).path;
@@ -156,13 +156,13 @@ add_task(function* test_load_string_predefined() {
                 "\"referrer\":" + referrerUriLiteral + "}," +
                 "\"target\":" + filePathLiteral + "}]}";
 
-  yield OS.File.writeAtomic(store.path,
+  await OS.File.writeAtomic(store.path,
                             new TextEncoder().encode(string),
                             { tmpPath: store.path + ".tmp" });
 
-  yield store.load();
+  await store.load();
 
-  let items = yield list.getAll();
+  let items = await list.getAll();
 
   do_check_eq(items.length, 2);
 
@@ -177,8 +177,8 @@ add_task(function* test_load_string_predefined() {
 /**
  * Loads downloads from a well-formed JSON string containing unrecognized data.
  */
-add_task(function* test_load_string_unrecognized() {
-  let [list, store] = yield promiseNewListAndStore();
+add_task(async function test_load_string_unrecognized() {
+  let [list, store] = await promiseNewListAndStore();
 
   // The platform-dependent file name should be generated dynamically.
   let targetPath = getTempFile(TEST_TARGET_FILE_NAME).path;
@@ -191,13 +191,13 @@ add_task(function* test_load_string_unrecognized() {
                 "\"target\":{\"path\":" + filePathLiteral + "}," +
                 "\"saver\":{\"type\":\"copy\"}}]}";
 
-  yield OS.File.writeAtomic(store.path,
+  await OS.File.writeAtomic(store.path,
                             new TextEncoder().encode(string),
                             { tmpPath: store.path + ".tmp" });
 
-  yield store.load();
+  await store.load();
 
-  let items = yield list.getAll();
+  let items = await list.getAll();
 
   do_check_eq(items.length, 1);
 
@@ -208,17 +208,17 @@ add_task(function* test_load_string_unrecognized() {
 /**
  * Loads downloads from a malformed JSON string.
  */
-add_task(function* test_load_string_malformed() {
-  let [list, store] = yield promiseNewListAndStore();
+add_task(async function test_load_string_malformed() {
+  let [list, store] = await promiseNewListAndStore();
 
   let string = "{\"list\":[{\"source\":null,\"target\":null}," +
                 "{\"source\":{\"url\":\"about:blank\"}}}";
 
-  yield OS.File.writeAtomic(store.path, new TextEncoder().encode(string),
+  await OS.File.writeAtomic(store.path, new TextEncoder().encode(string),
                             { tmpPath: store.path + ".tmp" });
 
   try {
-    yield store.load();
+    await store.load();
     do_throw("Exception expected when JSON data is malformed.");
   } catch (ex) {
     if (ex.name != "SyntaxError") {
@@ -227,7 +227,7 @@ add_task(function* test_load_string_malformed() {
     do_print("The expected SyntaxError exception was thrown.");
   }
 
-  let items = yield list.getAll();
+  let items = await list.getAll();
 
   do_check_eq(items.length, 0);
 });
@@ -236,12 +236,12 @@ add_task(function* test_load_string_malformed() {
  * Saves downloads with unknown properties to a file and then reloads
  * them to ensure that these properties are preserved.
  */
-add_task(function* test_save_reload_unknownProperties() {
-  let [listForSave, storeForSave] = yield promiseNewListAndStore();
-  let [listForLoad, storeForLoad] = yield promiseNewListAndStore(
+add_task(async function test_save_reload_unknownProperties() {
+  let [listForSave, storeForSave] = await promiseNewListAndStore();
+  let [listForLoad, storeForLoad] = await promiseNewListAndStore(
                                                  storeForSave.path);
 
-  let download1 = yield promiseNewDownload(httpUrl("source.txt"));
+  let download1 = await promiseNewDownload(httpUrl("source.txt"));
   // startTime should be ignored as it is a known property, and error
   // is ignored by serialization
   download1._unknownProperties = { peanut: "butter",
@@ -250,12 +250,12 @@ add_task(function* test_save_reload_unknownProperties() {
                                    error: { message: "Passed" } };
   listForSave.add(download1);
 
-  let download2 = yield promiseStartLegacyDownload();
-  yield download2.cancel();
+  let download2 = await promiseStartLegacyDownload();
+  await download2.cancel();
   download2._unknownProperties = { number: 5, object: { test: "string" } };
   listForSave.add(download2);
 
-  let download3 = yield Downloads.createDownload({
+  let download3 = await Downloads.createDownload({
     source: { url: httpUrl("empty.txt"),
               referrer: TEST_REFERRER_URL,
               source1: "download3source1",
@@ -269,11 +269,11 @@ add_task(function* test_save_reload_unknownProperties() {
   });
   listForSave.add(download3);
 
-  yield storeForSave.save();
-  yield storeForLoad.load();
+  await storeForSave.save();
+  await storeForLoad.load();
 
-  let itemsForSave = yield listForSave.getAll();
-  let itemsForLoad = yield listForLoad.getAll();
+  let itemsForSave = await listForSave.getAll();
+  let itemsForLoad = await listForLoad.getAll();
 
   do_check_eq(itemsForSave.length, itemsForLoad.length);
 

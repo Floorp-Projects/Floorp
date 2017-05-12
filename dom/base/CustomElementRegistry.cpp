@@ -947,23 +947,20 @@ void
 CustomElementReactionsStack::Enqueue(Element* aElement,
                                      CustomElementReaction* aReaction)
 {
+  RefPtr<CustomElementData> elementData = aElement->GetCustomElementData();
+  MOZ_ASSERT(elementData, "CustomElementData should exist");
+
   // Add element to the current element queue.
   if (!mReactionsStack.IsEmpty()) {
     mReactionsStack.LastElement().AppendElement(do_GetWeakReference(aElement));
-    ReactionQueue* reactionQueue =
-      mElementReactionQueueMap.LookupOrAdd(aElement);
-    reactionQueue->AppendElement(aReaction);
-
+    elementData->mReactionQueue.AppendElement(aReaction);
     return;
   }
 
   // If the custom element reactions stack is empty, then:
   // Add element to the backup element queue.
   mBackupQueue.AppendElement(do_GetWeakReference(aElement));
-
-  ReactionQueue* reactionQueue =
-    mElementReactionQueueMap.LookupOrAdd(aElement);
-  reactionQueue->AppendElement(aReaction);
+  elementData->mReactionQueue.AppendElement(aReaction);
 
   if (mIsBackupQueueProcessing) {
     return;
@@ -994,16 +991,15 @@ CustomElementReactionsStack::InvokeReactions(ElementQueue& aElementQueue)
       continue;
     }
 
-    nsAutoPtr<ReactionQueue> reactions;
-    mElementReactionQueueMap.RemoveAndForget(element, reactions);
+    RefPtr<CustomElementData> elementData = element->GetCustomElementData();
+    MOZ_ASSERT(elementData, "CustomElementData should exist");
 
-    MOZ_ASSERT(reactions,
-               "Associated ReactionQueue must be found in mElementReactionQueueMap");
-
-    for (uint32_t j = 0; j < reactions->Length(); ++j) {
-      nsAutoPtr<CustomElementReaction>& reaction = reactions->ElementAt(j);
-      reaction->Invoke(element);
+    nsTArray<nsAutoPtr<CustomElementReaction>>& reactions =
+      elementData->mReactionQueue;
+    for (uint32_t j = 0; j < reactions.Length(); ++j) {
+      reactions.ElementAt(j)->Invoke(element);
     }
+    reactions.Clear();
   }
   aElementQueue.Clear();
 }

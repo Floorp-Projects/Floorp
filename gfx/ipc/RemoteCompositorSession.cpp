@@ -45,13 +45,6 @@ RemoteCompositorSession::~RemoteCompositorSession()
 }
 
 void
-RemoteCompositorSession::NotifyDeviceReset(uint64_t aSeqNo)
-{
-  MOZ_ASSERT(mWidget);
-  mWidget->OnRenderingDeviceReset(aSeqNo);
-}
-
-void
 RemoteCompositorSession::NotifySessionLost()
 {
   // Re-entrancy should be impossible: when we are being notified of a lost
@@ -90,16 +83,6 @@ RefPtr<IAPZCTreeManager>
 RemoteCompositorSession::GetAPZCTreeManager() const
 {
   return mAPZ;
-}
-
-bool
-RemoteCompositorSession::Reset(const nsTArray<LayersBackend>& aBackendHints,
-                               uint64_t aSeqNo,
-                               TextureFactoryIdentifier* aOutIdentifier)
-{
-  bool didReset;
-  Unused << mCompositorBridgeChild->SendReset(aBackendHints, aSeqNo, &didReset, aOutIdentifier);
-  return didReset;
 }
 
 void

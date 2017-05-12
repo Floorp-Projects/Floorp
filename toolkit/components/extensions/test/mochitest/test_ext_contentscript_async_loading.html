@@ -11,7 +11,7 @@
 <script>
 "use strict";
 
-add_task(function* test_async_loading() {
+add_task(async function test_async_loading() {
   const adder = `(function add(a = 1) { this.count += a; })();\n`;
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -36,10 +36,10 @@ add_task(function* test_async_loading() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
   const win = window.open("https://example.org/");
 
-  const [first, second] = yield Promise.all([
+  const [first, second] = await Promise.all([
     extension.awaitMessage("first"),
     extension.awaitMessage("second"),
   ]);
@@ -47,7 +47,7 @@ add_task(function* test_async_loading() {
   is(first, 1, "first.js finished execution first.");
   is(second, 2, "second.js finished execution second.");
 
-  yield extension.unload();
+  await extension.unload();
   win.close();
 });
 

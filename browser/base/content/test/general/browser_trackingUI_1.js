@@ -106,30 +106,30 @@ function testTrackingPageUnblocked() {
   ok(hidden("#tracking-blocked"), "labelTrackingBlocked is hidden");
 }
 
-function* testTrackingProtectionForTab(tab) {
+async function testTrackingProtectionForTab(tab) {
   info("Load a test page not containing tracking elements");
-  yield promiseTabLoadEvent(tab, BENIGN_PAGE);
+  await promiseTabLoadEvent(tab, BENIGN_PAGE);
   testBenignPage();
 
   info("Load a test page containing tracking elements");
-  yield promiseTabLoadEvent(tab, TRACKING_PAGE);
+  await promiseTabLoadEvent(tab, TRACKING_PAGE);
   testTrackingPage(tab.ownerGlobal);
 
   info("Disable TP for the page (which reloads the page)");
   let tabReloadPromise = promiseTabLoadEvent(tab);
   clickButton("#tracking-action-unblock");
-  yield tabReloadPromise;
+  await tabReloadPromise;
   testTrackingPageUnblocked();
 
   info("Re-enable TP for the page (which reloads the page)");
   tabReloadPromise = promiseTabLoadEvent(tab);
   clickButton("#tracking-action-block");
-  yield tabReloadPromise;
+  await tabReloadPromise;
   testTrackingPage(tab.ownerGlobal);
 }
 
-add_task(function* testNormalBrowsing() {
-  yield UrlClassifierTestUtils.addTestTrackers();
+add_task(async function testNormalBrowsing() {
+  await UrlClassifierTestUtils.addTestTrackers();
 
   tabbrowser = gBrowser;
   let tab = tabbrowser.selectedTab = tabbrowser.addTab();
@@ -142,14 +142,14 @@ add_task(function* testNormalBrowsing() {
   Services.prefs.setBoolPref(PREF, true);
   ok(TrackingProtection.enabled, "TP is enabled after setting the pref");
 
-  yield testTrackingProtectionForTab(tab);
+  await testTrackingProtectionForTab(tab);
 
   Services.prefs.setBoolPref(PREF, false);
   ok(!TrackingProtection.enabled, "TP is disabled after setting the pref");
 });
 
-add_task(function* testPrivateBrowsing() {
-  let privateWin = yield promiseOpenAndLoadWindow({private: true}, true);
+add_task(async function testPrivateBrowsing() {
+  let privateWin = await promiseOpenAndLoadWindow({private: true}, true);
   tabbrowser = privateWin.gBrowser;
   let tab = tabbrowser.selectedTab = tabbrowser.addTab();
 
@@ -161,7 +161,7 @@ add_task(function* testPrivateBrowsing() {
   Services.prefs.setBoolPref(PB_PREF, true);
   ok(TrackingProtection.enabled, "TP is enabled after setting the pref");
 
-  yield testTrackingProtectionForTab(tab);
+  await testTrackingProtectionForTab(tab);
 
   Services.prefs.setBoolPref(PB_PREF, false);
   ok(!TrackingProtection.enabled, "TP is disabled after setting the pref");

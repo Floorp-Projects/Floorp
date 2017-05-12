@@ -1,13 +1,13 @@
-add_task(function*() {
-  let bm = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+add_task(async function() {
+  let bm = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                 url: "http://bug1105244.example.com/",
                                                 title: "test" });
 
-  registerCleanupFunction(function* () {
-    yield PlacesUtils.bookmarks.remove(bm);
+  registerCleanupFunction(async function() {
+    await PlacesUtils.bookmarks.remove(bm);
   });
 
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, testDelete);
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, testDelete);
 });
 
 function sendHome() {
@@ -23,8 +23,8 @@ function sendDelete() {
   EventUtils.synthesizeKey("VK_DELETE", {});
 }
 
-function* testDelete() {
-  yield promiseAutocompleteResultPopup("bug1105244");
+async function testDelete() {
+  await promiseAutocompleteResultPopup("bug1105244");
 
   // move to the start.
   sendHome();
@@ -32,7 +32,7 @@ function* testDelete() {
   sendDelete();
   Assert.equal(gURLBar.inputField.value, "ug1105244");
 
-  yield promisePopupShown(gURLBar.popup);
+  await promisePopupShown(gURLBar.popup);
 
   sendDelete();
   Assert.equal(gURLBar.inputField.value, "g1105244");

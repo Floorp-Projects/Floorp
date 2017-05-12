@@ -5,7 +5,7 @@
 "use strict";
 
 // Adding, moving and removing items should update the relevant currentset attributes
-add_task(function*() {
+add_task(async function() {
   ok(CustomizableUI.inDefaultState, "Should be in the default state when we start");
   let personalbar = document.getElementById(CustomizableUI.AREA_BOOKMARKS);
   setToolbarVisibility(personalbar, true);
@@ -16,7 +16,7 @@ add_task(function*() {
   let navbarCurrentset = navbar.getAttribute("currentset") || navbar.currentSet;
   let personalbarCurrentset = personalbar.getAttribute("currentset") || personalbar.currentSet;
 
-  let otherWin = yield openAndLoadWindow();
+  let otherWin = await openAndLoadWindow();
   let otherNavbar = otherWin.document.getElementById(CustomizableUI.AREA_NAVBAR);
   let otherPersonalbar = otherWin.document.getElementById(CustomizableUI.AREA_BOOKMARKS);
 
@@ -46,12 +46,12 @@ add_task(function*() {
   is(otherPersonalbar.getAttribute("currentset"), personalbarCurrentset,
      "Should have updated other window's currentSet after remove.");
 
-  yield promiseWindowClosed(otherWin);
+  await promiseWindowClosed(otherWin);
   // Reset in asyncCleanup will put our button back for us.
 });
 
-add_task(function* asyncCleanup() {
+add_task(async function asyncCleanup() {
   let personalbar = document.getElementById(CustomizableUI.AREA_BOOKMARKS);
   setToolbarVisibility(personalbar, false);
-  yield resetCustomization();
+  await resetCustomization();
 });

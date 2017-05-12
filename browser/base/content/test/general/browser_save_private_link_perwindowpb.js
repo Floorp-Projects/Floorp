@@ -75,19 +75,19 @@ function promiseImageDownloaded() {
   });
 }
 
-add_task(function* () {
+add_task(async function() {
   let testURI = "http://mochi.test:8888/browser/browser/base/content/test/general/bug792517.html";
-  let privateWindow = yield BrowserTestUtils.openNewBrowserWindow({private: true});
-  let tab = yield BrowserTestUtils.openNewForegroundTab(privateWindow.gBrowser, testURI);
+  let privateWindow = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  let tab = await BrowserTestUtils.openNewForegroundTab(privateWindow.gBrowser, testURI);
 
   let contextMenu = privateWindow.document.getElementById("contentAreaContextMenu");
   let popupShown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
   let popupHidden = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
-  yield BrowserTestUtils.synthesizeMouseAtCenter("#img", {
+  await BrowserTestUtils.synthesizeMouseAtCenter("#img", {
     type: "contextmenu",
     button: 2
   }, tab.linkedBrowser);
-  yield popupShown;
+  await popupShown;
 
   let cache = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
               .getService(Ci.nsICacheStorageService);
@@ -98,13 +98,13 @@ add_task(function* () {
   privateWindow.document.getElementById("context-saveimage").doCommand();
 
   contextMenu.hidePopup();
-  yield popupHidden;
+  await popupHidden;
 
   // wait for image download
-  let fileName = yield imageDownloaded;
-  yield promiseNoCacheEntry(fileName);
+  let fileName = await imageDownloaded;
+  await promiseNoCacheEntry(fileName);
 
-  yield BrowserTestUtils.closeWindow(privateWindow);
+  await BrowserTestUtils.closeWindow(privateWindow);
 });
 
 /* import-globals-from ../../../../../toolkit/content/tests/browser/common/mockTransfer.js */

@@ -9,14 +9,14 @@ let login1 = new nsLoginInfo("http://example.com", "http://example.com", null,
 let login1HTTPS = new nsLoginInfo("https://example.com", "https://example.com", null,
                                   "notifyu1", "notifyp1", "user", "pass");
 
-add_task(function* test_httpsUpgradeCaptureFields_noChange() {
+add_task(async function test_httpsUpgradeCaptureFields_noChange() {
   info("Check that we don't prompt to remember when capturing an upgraded login with no change");
   Services.logins.addLogin(login1);
   // Sanity check the HTTP login exists.
   let logins = Services.logins.getAllLogins();
   is(logins.length, 1, "Should have the HTTP login");
 
-  yield testSubmittingLoginForm("subtst_notifications_1.html", function*(fieldValues) {
+  await testSubmittingLoginForm("subtst_notifications_1.html", function(fieldValues) {
     is(fieldValues.username, "notifyu1", "Checking submitted username");
     is(fieldValues.password, "notifyp1", "Checking submitted password");
     let notif = getCaptureDoorhanger("password-save");
@@ -34,20 +34,20 @@ add_task(function* test_httpsUpgradeCaptureFields_noChange() {
   Services.logins.removeLogin(login1);
 });
 
-add_task(function* test_httpsUpgradeCaptureFields_changePW() {
+add_task(async function test_httpsUpgradeCaptureFields_changePW() {
   info("Check that we prompt to change when capturing an upgraded login with a new PW");
   Services.logins.addLogin(login1);
   // Sanity check the HTTP login exists.
   let logins = Services.logins.getAllLogins();
   is(logins.length, 1, "Should have the HTTP login");
 
-  yield testSubmittingLoginForm("subtst_notifications_8.html", function*(fieldValues) {
+  await testSubmittingLoginForm("subtst_notifications_8.html", async function(fieldValues) {
     is(fieldValues.username, "notifyu1", "Checking submitted username");
     is(fieldValues.password, "pass2", "Checking submitted password");
     let notif = getCaptureDoorhanger("password-change");
     ok(notif, "checking for a change popup");
 
-    yield* checkDoorhangerUsernamePassword("notifyu1", "pass2");
+    await checkDoorhangerUsernamePassword("notifyu1", "pass2");
     clickDoorhangerButton(notif, CHANGE_BUTTON);
 
     ok(!getCaptureDoorhanger("password-change"), "popup should be gone");
@@ -66,11 +66,11 @@ add_task(function* test_httpsUpgradeCaptureFields_changePW() {
   Services.logins.removeAllLogins();
 });
 
-add_task(function* test_httpsUpgradeCaptureFields_captureMatchingHTTP() {
+add_task(async function test_httpsUpgradeCaptureFields_captureMatchingHTTP() {
   info("Capture a new HTTP login which matches a stored HTTPS one.");
   Services.logins.addLogin(login1HTTPS);
 
-  yield testSubmittingLoginForm("subtst_notifications_1.html", function*(fieldValues) {
+  await testSubmittingLoginForm("subtst_notifications_1.html", async function(fieldValues) {
     is(fieldValues.username, "notifyu1", "Checking submitted username");
     is(fieldValues.password, "notifyp1", "Checking submitted password");
     let notif = getCaptureDoorhanger("password-save");
@@ -78,7 +78,7 @@ add_task(function* test_httpsUpgradeCaptureFields_captureMatchingHTTP() {
 
     is(Services.logins.getAllLogins().length, 1, "Should only have the HTTPS login");
 
-    yield* checkDoorhangerUsernamePassword("notifyu1", "notifyp1");
+    await checkDoorhangerUsernamePassword("notifyu1", "notifyp1");
     clickDoorhangerButton(notif, REMEMBER_BUTTON);
   });
 
@@ -92,7 +92,7 @@ add_task(function* test_httpsUpgradeCaptureFields_captureMatchingHTTP() {
   }
 
   info("Make sure Remember took effect and we don't prompt for an existing HTTP login");
-  yield testSubmittingLoginForm("subtst_notifications_1.html", function*(fieldValues) {
+  await testSubmittingLoginForm("subtst_notifications_1.html", function(fieldValues) {
     is(fieldValues.username, "notifyu1", "Checking submitted username");
     is(fieldValues.password, "notifyp1", "Checking submitted password");
     let notif = getCaptureDoorhanger("password-save");

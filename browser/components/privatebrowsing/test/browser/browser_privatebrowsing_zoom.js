@@ -5,10 +5,10 @@
 // This test makes sure that private browsing turns off doesn't cause zoom
 // settings to be reset on tab switch (bug 464962)
 
-add_task(function* test() {
-  let win = (yield BrowserTestUtils.openNewBrowserWindow({ private: true }));
-  let tabAbout = (yield BrowserTestUtils.openNewForegroundTab(win.gBrowser, "about:"));
-  let tabMozilla = (yield BrowserTestUtils.openNewForegroundTab(win.gBrowser, "about:"));
+add_task(async function test() {
+  let win = (await BrowserTestUtils.openNewBrowserWindow({ private: true }));
+  let tabAbout = (await BrowserTestUtils.openNewForegroundTab(win.gBrowser, "about:"));
+  let tabMozilla = (await BrowserTestUtils.openNewForegroundTab(win.gBrowser, "about:"));
 
   let mozillaZoom = win.ZoomManager.zoom;
 
@@ -19,10 +19,10 @@ add_task(function* test() {
   mozillaZoom = win.ZoomManager.zoom;
 
   // switch to about: tab
-  yield BrowserTestUtils.switchTab(win.gBrowser, tabAbout);
+  await BrowserTestUtils.switchTab(win.gBrowser, tabAbout);
 
   // switch back to mozilla tab
-  yield BrowserTestUtils.switchTab(win.gBrowser, tabMozilla);
+  await BrowserTestUtils.switchTab(win.gBrowser, tabMozilla);
 
   // make sure the zoom level has not changed
   is(win.ZoomManager.zoom, mozillaZoom,
@@ -30,8 +30,8 @@ add_task(function* test() {
 
   // cleanup
   win.FullZoom.reset();
-  yield Promise.all([ BrowserTestUtils.removeTab(tabMozilla),
+  await Promise.all([ BrowserTestUtils.removeTab(tabMozilla),
                       BrowserTestUtils.removeTab(tabAbout) ]);
 
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 });

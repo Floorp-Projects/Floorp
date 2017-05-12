@@ -116,8 +116,8 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_sort_date_site_grouping() {
-  yield task_populateDB(testData);
+add_task(async function test_sort_date_site_grouping() {
+  await task_populateDB(testData);
 
   // On Linux, the (local files) folder is shown after sites unlike Mac/Windows.
   // Thus, we avoid running this test on Linux but this should be re-enabled
@@ -153,7 +153,7 @@ add_task(function* test_sort_date_site_grouping() {
 
   // Test live updating.
   for (let visit of testDataAddedLater) {
-    yield task_populateDB([visit]);
+    await task_populateDB([visit]);
     let oldLength = testData.length;
     let i = visit.levels[0];
     let j = visit.levels[1];

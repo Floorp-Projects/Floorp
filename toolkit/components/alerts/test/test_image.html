@@ -45,45 +45,45 @@ function promiseImage(alert, timeout = 0, userData = null) {
   });
 }
 
-add_task(function* testContext() {
+add_task(async function testContext() {
   var inUserData = Cc["@mozilla.org/supports-PRInt64;1"]
                      .createInstance(Ci.nsISupportsPRInt64);
   inUserData.data = 123;
 
   var alert = makeAlert(null, imageServerURL + "?f=image.png");
-  var [ready, , userData] = yield promiseImage(alert, 0, inUserData);
+  var [ready, , userData] = await promiseImage(alert, 0, inUserData);
   ok(ready, "Should load requested image");
   is(userData.QueryInterface(Ci.nsISupportsPRInt64).data, 123,
      "Should pass user data for loaded image");
 
   alert = makeAlert(null, imageServerURL + "?s=404");
-  [ready, userData] = yield promiseImage(alert, 0, inUserData);
+  [ready, userData] = await promiseImage(alert, 0, inUserData);
   ok(!ready, "Should not load missing image");
   is(userData.QueryInterface(Ci.nsISupportsPRInt64).data, 123,
      "Should pass user data for missing image");
 });
 
-add_task(function* testTimeout() {
+add_task(async function testTimeout() {
   var alert = makeAlert(null, imageServerURL + "?f=image.png&t=3");
-  var [ready] = yield promiseImage(alert, 1000);
+  var [ready] = await promiseImage(alert, 1000);
   ok(!ready, "Should cancel request if timeout fires");
 
-  [ready] = yield promiseImage(alert, 45000);
+  [ready] = await promiseImage(alert, 45000);
   ok(ready, "Should load image if request finishes before timeout");
 });
 
-add_task(function* testAnimatedGIF() {
+add_task(async function testAnimatedGIF() {
   var alert = makeAlert(null, imageServerURL + "?f=image.gif");
-  var [ready, request] = yield promiseImage(alert);
+  var [ready, request] = await promiseImage(alert);
   ok(ready, "Should load first animated GIF frame");
   is(request.mimeType, "image/gif", "Should report correct GIF MIME type");
   is(request.image.width, 256, "GIF width should be 256px");
   is(request.image.height, 256, "GIF height should be 256px");
 });
 
-add_task(function* testCancel() {
+add_task(async function testCancel() {
   var alert = makeAlert(null, imageServerURL + "?f=image.gif&t=180");
-  yield new Promise((resolve, reject) => {
+  await new Promise((resolve, reject) => {
     var request = alert.loadImage(0, SpecialPowers.wrapCallbackObject({
       onImageReady() {
         reject(new Error("Should not load cancelled request"));
@@ -96,7 +96,7 @@ add_task(function* testCancel() {
   });
 });
 
-add_task(function* testMixedContent() {
+add_task(async function testMixedContent() {
   // Loading principal is HTTPS; image URL is HTTP.
   var origin = "https://mochi.test:8888";
   var principal = Services.scriptSecurityManager
@@ -105,7 +105,7 @@ add_task(function* testMixedContent() {
   var alert = makeAlert(null, imageServerURL + "?f=image.png",
                         null, null, false, null, null, null,
                         null, principal);
-  var [ready, request] = yield promiseImage(alert);
+  var [ready, request] = await promiseImage(alert);
   ok(ready, "Should load cross-protocol image");
   is(request.mimeType, "image/png", "Should report correct MIME type");
   is(request.image.width, 32, "Width should be 32px");

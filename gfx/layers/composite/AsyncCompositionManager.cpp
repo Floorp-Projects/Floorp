@@ -1436,8 +1436,9 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame,
 
 #if defined(MOZ_WIDGET_ANDROID)
 void
-AsyncCompositionManager::SetFixedLayerMarginsBottom(ScreenIntCoord aBottom)
+AsyncCompositionManager::SetFixedLayerMargins(ScreenIntCoord aTop, ScreenIntCoord aBottom)
 {
+  mFixedLayerMargins.top = aTop;
   mFixedLayerMargins.bottom = aBottom;
 }
 #endif // defined(MOZ_WIDGET_ANDROID)

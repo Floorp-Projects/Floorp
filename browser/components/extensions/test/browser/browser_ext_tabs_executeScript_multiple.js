@@ -2,10 +2,10 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* testExecuteScript() {
+add_task(async function testExecuteScript() {
   const BASE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/";
   const URL = BASE + "file_dummy.html";
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, URL, true);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URL, true);
 
   async function background() {
     try {
@@ -41,10 +41,10 @@ add_task(function* testExecuteScript() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitFinish("executeScript-multiple");
+  await extension.awaitFinish("executeScript-multiple");
 
-  yield extension.unload();
-  yield BrowserTestUtils.removeTab(tab);
+  await extension.unload();
+  await BrowserTestUtils.removeTab(tab);
 });

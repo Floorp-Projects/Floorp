@@ -213,14 +213,14 @@ function assertContentFlags(chromeFlags) {
  * feature string attempts to flip every feature away from their
  * default.
  */
-add_task(function* test_new_remote_window_flags() {
+add_task(async function test_new_remote_window_flags() {
   let newWinPromise = BrowserTestUtils.waitForNewWindow();
 
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: SCRIPT_PAGE,
-  }, function*(browser) {
-    let win = yield newWinPromise;
+  }, async function(browser) {
+    let win = await newWinPromise;
     let parentChromeFlags = getParentChromeFlags(win);
     assertContentFlags(parentChromeFlags);
 
@@ -237,7 +237,7 @@ add_task(function* test_new_remote_window_flags() {
     // Confusingly, chromeFlags also exist in the content process
     // as part of the TabChild, so we have to check those too.
     let b = win.gBrowser.selectedBrowser;
-    let contentChromeFlags = yield ContentTask.spawn(b, null, function*() {
+    let contentChromeFlags = await ContentTask.spawn(b, null, async function() {
       // Content scripts provide docShell as a global.
       /* global docShell */
       docShell.QueryInterface(Ci.nsIInterfaceRequestor);
@@ -260,22 +260,22 @@ add_task(function* test_new_remote_window_flags() {
                 Ci.nsIWebBrowserChrome.CHROME_REMOTE_WINDOW),
               "Should not be remote in the content process.");
 
-    yield BrowserTestUtils.closeWindow(win);
+    await BrowserTestUtils.closeWindow(win);
   });
 
   // We check "all" manually, since that's an aggregate flag
   // and doesn't fit nicely into the ALLOWED / DISALLOWED scheme
   newWinPromise = BrowserTestUtils.waitForNewWindow();
 
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: SCRIPT_PAGE_FOR_CHROME_ALL,
-  }, function*(browser) {
-    let win = yield newWinPromise;
+  }, async function(browser) {
+    let win = await newWinPromise;
     let parentChromeFlags = getParentChromeFlags(win);
     Assert.notEqual((parentChromeFlags & Ci.nsIWebBrowserChrome.CHROME_ALL),
                     Ci.nsIWebBrowserChrome.CHROME_ALL,
                     "Should not have been able to set CHROME_ALL");
-    yield BrowserTestUtils.closeWindow(win);
+    await BrowserTestUtils.closeWindow(win);
   });
 });

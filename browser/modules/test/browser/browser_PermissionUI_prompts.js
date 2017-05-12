@@ -11,25 +11,25 @@ Cu.import("resource:///modules/PermissionUI.jsm", this);
 Cu.import("resource:///modules/SitePermissions.jsm", this);
 
 // Tests that GeolocationPermissionPrompt works as expected
-add_task(function* test_geo_permission_prompt() {
-  yield testPrompt(PermissionUI.GeolocationPermissionPrompt);
+add_task(async function test_geo_permission_prompt() {
+  await testPrompt(PermissionUI.GeolocationPermissionPrompt);
 });
 
 // Tests that DesktopNotificationPermissionPrompt works as expected
-add_task(function* test_desktop_notification_permission_prompt() {
-  yield testPrompt(PermissionUI.DesktopNotificationPermissionPrompt);
+add_task(async function test_desktop_notification_permission_prompt() {
+  await testPrompt(PermissionUI.DesktopNotificationPermissionPrompt);
 });
 
 // Tests that PersistentStoragePermissionPrompt works as expected
-add_task(function* test_persistent_storage_permission_prompt() {
-  yield testPrompt(PermissionUI.PersistentStoragePermissionPrompt);
+add_task(async function test_persistent_storage_permission_prompt() {
+  await testPrompt(PermissionUI.PersistentStoragePermissionPrompt);
 });
 
-function* testPrompt(Prompt) {
-  yield BrowserTestUtils.withNewTab({
+async function testPrompt(Prompt) {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "http://example.com",
-  }, function*(browser) {
+  }, async function(browser) {
     let mockRequest = makeMockPermissionRequest(browser);
     let principal = mockRequest.principal;
     let TestPrompt = new Prompt(mockRequest);
@@ -42,7 +42,7 @@ function* testPrompt(Prompt) {
     let shownPromise =
       BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
     TestPrompt.prompt();
-    yield shownPromise;
+    await shownPromise;
     let notification =
       PopupNotifications.getNotification(TestPrompt.notificationID, browser);
     Assert.ok(notification, "Should have gotten the notification");
@@ -60,7 +60,7 @@ function* testPrompt(Prompt) {
     let expectedSecondaryActionsCount = isNotificationPrompt ? 2 : 1;
     Assert.equal(notification.secondaryActions.length, expectedSecondaryActionsCount,
                  "There should only be " + expectedSecondaryActionsCount + " secondary action(s)");
-    yield clickSecondaryAction();
+    await clickSecondaryAction();
     curPerm = SitePermissions.get(principal.URI, permissionKey, browser);
     Assert.deepEqual(curPerm, {
                        state: SitePermissions.BLOCK,
@@ -79,7 +79,7 @@ function* testPrompt(Prompt) {
     shownPromise =
       BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
     TestPrompt.prompt();
-    yield shownPromise;
+    await shownPromise;
 
     // Test denying the permission request with the checkbox checked (for geolocation)
     // or by clicking the "never" option from the dropdown (for notifications).
@@ -93,7 +93,7 @@ function* testPrompt(Prompt) {
 
     Assert.equal(notification.secondaryActions.length, expectedSecondaryActionsCount,
                  "There should only be " + expectedSecondaryActionsCount + " secondary action(s)");
-    yield clickSecondaryAction(secondaryActionToClickIndex);
+    await clickSecondaryAction(secondaryActionToClickIndex);
     curPerm = SitePermissions.get(principal.URI, permissionKey);
     Assert.deepEqual(curPerm, {
                        state: SitePermissions.BLOCK,
@@ -111,13 +111,13 @@ function* testPrompt(Prompt) {
     shownPromise =
       BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
     TestPrompt.prompt();
-    yield shownPromise;
+    await shownPromise;
 
     // Test allowing the permission request with the checkbox checked.
     popupNotification = getPopupNotificationNode();
     popupNotification.checkbox.checked = true;
 
-    yield clickMainAction();
+    await clickMainAction();
     curPerm = SitePermissions.get(principal.URI, permissionKey);
     Assert.deepEqual(curPerm, {
                        state: SitePermissions.ALLOW,

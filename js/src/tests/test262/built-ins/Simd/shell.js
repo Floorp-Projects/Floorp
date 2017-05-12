@@ -4,14 +4,14 @@
 
 function minNum(x, y) {
   return x != x ? y :
-         y != y ? x :
-         Math.min(x, y);
+    y != y ? x :
+    Math.min(x, y);
 }
 
 function maxNum(x, y) {
   return x != x ? y :
-         y != y ? x :
-         Math.max(x, y);
+    y != y ? x :
+    Math.max(x, y);
 }
 
 function sameValue(x, y) {
@@ -27,13 +27,13 @@ if (typeof Math.imul !== "undefined") {
   binaryImul = Math.imul;
 } else {
   binaryImul = function(a, b) {
-    var ah = (a >>> 16) & 0xffff;
-    var al = a & 0xffff;
-    var bh = (b >>> 16) & 0xffff;
-    var bl = b & 0xffff;
-    // the shift by 0 fixes the sign on the high part
-    // the final |0 converts the unsigned value into a signed value
-    return ((al * bl) + (((ah * bl + al * bh) << 16) >>> 0)|0);
+  var ah = (a >>> 16) & 0xffff;
+  var al = a & 0xffff;
+  var bh = (b >>> 16) & 0xffff;
+  var bl = b & 0xffff;
+  // the shift by 0 fixes the sign on the high part
+  // the final |0 converts the unsigned value into a signed value
+  return ((al * bl) + (((ah * bl + al * bh) << 16) >>> 0)|0);
   };
 }
 
@@ -237,9 +237,9 @@ uint16x8.fromBits = [float32x4, int32x4, int16x8, int8x16, uint32x4, uint8x16];
 uint8x16.fromBits = [float32x4, int32x4, int16x8, int8x16, uint32x4, uint16x8];
 
 var simdTypes = [float32x4,
-                 int32x4, int16x8, int8x16,
-                 uint32x4, uint16x8, uint8x16,
-                 bool32x4, bool16x8, bool8x16];
+  int32x4, int16x8, int8x16,
+  uint32x4, uint16x8, uint8x16,
+  bool32x4, bool16x8, bool8x16];
 
 if (typeof simdPhase2 !== "undefined") {
   var float64x2 = {
@@ -255,7 +255,7 @@ if (typeof simdPhase2 !== "undefined") {
     view: Float64Array,
     buffer: _f64x2,
     mulFn: binaryMul,
-  }
+  };
 
   var bool64x2 = {
     name: "Bool64x2",
@@ -264,7 +264,7 @@ if (typeof simdPhase2 !== "undefined") {
     lanes: 2,
     laneSize: 8,
     interestingValues: [true, false],
-  }
+  };
 
   float64x2.boolType = bool64x2;
 
@@ -333,12 +333,12 @@ function checkValue(type, a, expect) {
       fail = true;
   }
   if (fail) {
-    var lanes = [];
-    for (var i = 0; i < type.lanes; i++){
-      lanes.push(simdConvert(type, expect(i)));
-    }
-    $ERROR("expected SIMD." + type.name + "(" + lanes +
-        ") but found " + a.toString());
+  var lanes = [];
+  for (var i = 0; i < type.lanes; i++){
+    lanes.push(simdConvert(type, expect(i)));
+  }
+  $ERROR("expected SIMD." + type.name + "(" + lanes +
+    ") but found " + a.toString());
   }
 }
 
@@ -357,13 +357,13 @@ function simdToLocaleString(type, value) {
 
 function equalInt32x4(a, b) {
   assert.sameValue(SIMD.Int32x4.extractLane(a, 0),
-      SIMD.Int32x4.extractLane(b, 0));
+    SIMD.Int32x4.extractLane(b, 0));
   assert.sameValue(SIMD.Int32x4.extractLane(a, 1),
-      SIMD.Int32x4.extractLane(b, 1));
+    SIMD.Int32x4.extractLane(b, 1));
   assert.sameValue(SIMD.Int32x4.extractLane(a, 2),
-      SIMD.Int32x4.extractLane(b, 2));
+    SIMD.Int32x4.extractLane(b, 2));
   assert.sameValue(SIMD.Int32x4.extractLane(a, 3),
-      SIMD.Int32x4.extractLane(b, 3));
+    SIMD.Int32x4.extractLane(b, 3));
 }
 
 // Compare unary op's behavior to ref op at each lane.
@@ -385,7 +385,7 @@ function testBinaryOp(type, op, refOp) {
   for (var av of type.interestingValues) {
     for (var bv of type.interestingValues) {
       var expected = simdConvert(type, refOp(simdConvert(type, av),
-            simdConvert(type, bv)));
+        simdConvert(type, bv)));
       var a = type.fn.splat(av);
       var b = type.fn.splat(bv);
       var result = type.fn[op](a, b);
@@ -417,7 +417,7 @@ var skipValueTests = false;
 function testSimdFunction(name, func) {
   currentName = name;
   if (typeof skipValueTests !== "undefined" && skipValueTests &&
-      name.indexOf("value semantics") != -1) return;
+    name.indexOf("value semantics") != -1) return;
   try {
     func();
   } catch (e) {

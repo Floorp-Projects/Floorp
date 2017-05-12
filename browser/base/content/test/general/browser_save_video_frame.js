@@ -74,7 +74,7 @@ function rightClickVideo(browser) {
  * to save a frame screenshot to the disk. Completes once we've
  * verified that the frame has been saved to disk.
  */
-add_task(function*() {
+add_task(async function() {
   let MockFilePicker = SpecialPowers.MockFilePicker;
   MockFilePicker.init(window);
 
@@ -102,7 +102,7 @@ add_task(function*() {
   gBrowser.selectedTab = tab;
   let browser = tab.linkedBrowser;
   info("Loading video tab");
-  yield promiseTabLoadEvent(tab, VIDEO_URL);
+  await promiseTabLoadEvent(tab, VIDEO_URL);
   info("Video tab loaded.");
 
   let context = document.getElementById("contentAreaContextMenu");
@@ -111,7 +111,7 @@ add_task(function*() {
   info("Synthesizing right-click on video element");
   rightClickVideo(browser);
   info("Waiting for popup to fire popupshown.");
-  yield popupPromise;
+  await popupPromise;
   info("Popup fired popupshown");
 
   let saveSnapshotCommand = document.getElementById("context-video-saveimage");
@@ -120,7 +120,7 @@ add_task(function*() {
   saveSnapshotCommand.doCommand();
   context.hidePopup();
   info("Waiting for transfer completion");
-  yield promiseTransfer;
+  await promiseTransfer;
   info("Transfer complete");
   gBrowser.removeTab(tab);
 });

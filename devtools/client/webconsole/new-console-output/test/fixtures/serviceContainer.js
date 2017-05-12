@@ -13,6 +13,11 @@ module.exports = {
   openNetworkPanel: () => {},
   sourceMapService: {
     subscribe: () => {},
+    originalPositionFor: () => {
+      return new Promise(resolve => {
+        resolve();
+      });
+    },
   },
   openLink: () => {},
   // eslint-disable-next-line react/display-name

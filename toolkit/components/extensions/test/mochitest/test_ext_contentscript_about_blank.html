@@ -12,7 +12,7 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* test_contentscript_about_blank() {
+add_task(async function test_contentscript_about_blank() {
   const manifest = {
     content_scripts: [
       {
@@ -67,7 +67,7 @@ add_task(function* test_contentscript_about_blank() {
 
   const PATH = "tests/toolkit/components/extensions/test/mochitest/file_with_about_blank.html";
   const extension = ExtensionTestUtils.loadExtension({manifest, files, background});
-  yield extension.startup();
+  await extension.startup();
 
   let count = 0;
   extension.onMessage("script", script => {
@@ -76,7 +76,7 @@ add_task(function* test_contentscript_about_blank() {
   });
 
   let win = window.open("http://example.com/" + PATH);
-  yield Promise.all([
+  await Promise.all([
     extension.awaitMessage("all:top"),
     extension.awaitMessage("all:about:blank"),
     extension.awaitMessage("all:about:srcdoc"),
@@ -85,7 +85,7 @@ add_task(function* test_contentscript_about_blank() {
   win.close();
 
   win = window.open("http://mochi.test:8888/" + PATH);
-  yield Promise.all([
+  await Promise.all([
     extension.awaitMessage("all:top"),
     extension.awaitMessage("all:about:blank"),
     extension.awaitMessage("all:about:srcdoc"),
@@ -109,7 +109,7 @@ add_task(function* test_contentscript_about_blank() {
   is(count, 10, "exactly 7 more scripts ran");
   win.close();
 
-  yield extension.unload();
+  await extension.unload();
 });
 </script>
 

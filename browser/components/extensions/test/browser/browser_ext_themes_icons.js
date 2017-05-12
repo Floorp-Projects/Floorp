@@ -85,7 +85,7 @@ function checkButtons(icons, iconInfo, area) {
   }
 }
 
-function* runTestWithIcons(icons) {
+async function runTestWithIcons(icons) {
   const FRAME_COLOR = [71, 105, 91];
   const TAB_TEXT_COLOR = [207, 221, 192, .9];
   let manifest = {
@@ -159,7 +159,7 @@ function* runTestWithIcons(icons) {
 
   let extension = ExtensionTestUtils.loadExtension({manifest, files});
 
-  yield extension.startup();
+  await extension.startup();
 
   checkButtons(icons, ICON_INFO, "toolbar");
 
@@ -169,13 +169,13 @@ function* runTestWithIcons(icons) {
     }
   }
 
-  yield PanelUI.show();
+  await PanelUI.show();
 
   checkButtons(icons, ICON_INFO, "panel");
 
-  yield PanelUI.hide();
+  await PanelUI.hide();
 
-  yield extension.unload();
+  await extension.unload();
 
   for (let button of ICON_INFO) {
     verifyButtonWithoutCustomStyling(button[1],
@@ -183,14 +183,14 @@ function* runTestWithIcons(icons) {
   }
 }
 
-add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
     set: [["extensions.webextensions.themes.enabled", true],
           ["extensions.webextensions.themes.icons.enabled", true]],
   });
 });
 
-add_task(function* test_all_icons() {
+add_task(async function test_all_icons() {
   let icons = [
     ["back", "fox.svg"],
     ["forward", "fox.svg"],
@@ -224,15 +224,15 @@ add_task(function* test_all_icons() {
     ["forget", "fox.svg"],
     ["pocket", "fox.svg"],
   ];
-  yield runTestWithIcons(icons);
+  await runTestWithIcons(icons);
 });
 
-add_task(function* teardown() {
+add_task(async function teardown() {
   CustomizableUI.reset();
   window.restore();
 });
 
-add_task(function* test_some_icons() {
+add_task(async function test_some_icons() {
   let icons = [
     ["back", ""],
     ["forward", ""],
@@ -266,10 +266,10 @@ add_task(function* test_some_icons() {
     ["forget", ""],
     ["pocket", "fox.svg"],
   ];
-  yield runTestWithIcons(icons);
+  await runTestWithIcons(icons);
 });
 
-add_task(function* teardown() {
+add_task(async function teardown() {
   CustomizableUI.reset();
   window.restore();
 });

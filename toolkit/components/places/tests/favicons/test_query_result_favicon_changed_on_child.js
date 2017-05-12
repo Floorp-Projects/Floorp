@@ -7,9 +7,9 @@
 
 const PAGE_URI = NetUtil.newURI("http://example.com/test_query_result");
 
-add_task(function* test_query_result_favicon_changed_on_child() {
+add_task(async function test_query_result_favicon_changed_on_child() {
   // Bookmark our test page, so it will appear in the query resultset.
-  yield PlacesUtils.bookmarks.insert({
+  await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
     title: "test_bookmark",
     url: PAGE_URI
@@ -56,13 +56,13 @@ add_task(function* test_query_result_favicon_changed_on_child() {
   // observer above.
   let promise = promiseFaviconChanged(PAGE_URI, SMALLPNG_DATA_URI);
   result.root.containerOpen = true;
-  yield promise;
+  await promise;
 
   // We must wait for the asynchronous database thread to finish the
   // operation, and then for the main thread to process any pending
   // notifications that came from the asynchronous thread, before we can be
   // sure that nodeIconChanged was not invoked in the meantime.
-  yield PlacesTestUtils.promiseAsyncUpdates();
+  await PlacesTestUtils.promiseAsyncUpdates();
   result.removeObserver(resultObserver);
 
   // Free the resources immediately.

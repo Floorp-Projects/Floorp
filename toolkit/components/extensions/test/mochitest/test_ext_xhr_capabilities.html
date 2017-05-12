@@ -13,7 +13,7 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* test_xhr_capabilities() {
+add_task(async function test_xhr_capabilities() {
   function backgroundScript() {
     let xhr = new XMLHttpRequest();
     xhr.open("GET", browser.extension.getURL("bad.xml"));
@@ -67,18 +67,18 @@ add_task(function* test_xhr_capabilities() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
   let win = window.open("http://example.com/");
 
   // We expect four test results from the content/background scripts.
   for (let i = 0; i < 4; ++i) {
-    let result = yield extension.awaitMessage("result");
+    let result = await extension.awaitMessage("result");
     ok(result.result, result.name);
   }
 
   win.close();
-  yield extension.unload();
+  await extension.unload();
 });
 </script>
 

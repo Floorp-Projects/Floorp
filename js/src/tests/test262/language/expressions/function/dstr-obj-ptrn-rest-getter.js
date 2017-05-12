@@ -5,7 +5,7 @@
 description: Getter is called when obj is being deconstructed to a rest Object (function expression)
 esid: sec-function-definitions-runtime-semantics-evaluation
 es6id: 14.1.20
-features: [destructuring-binding]
+features: [object-rest, destructuring-binding]
 flags: [generated]
 includes: [propertyHelper.js]
 info: |

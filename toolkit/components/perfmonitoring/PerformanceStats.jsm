@@ -26,7 +26,6 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
-Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/ObjectUtils.jsm", this);
 XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
   "resource://gre/modules/PromiseUtils.jsm");
@@ -478,8 +477,8 @@ PerformanceMonitor.prototype = {
   },
   promiseSnapshot(options = null) {
     let probes = this._checkBeforeSnapshot(options);
-    return Task.spawn(function*() {
-      let childProcesses = yield Process.broadcastAndCollect("collect", {probeNames: probes.map(p => p.name)});
+    return (async function() {
+      let childProcesses = await Process.broadcastAndCollect("collect", {probeNames: probes.map(p => p.name)});
       let xpcom = performanceStatsService.getSnapshot();
       return new ApplicationSnapshot({
         xpcom,
@@ -487,7 +486,7 @@ PerformanceMonitor.prototype = {
         probes,
         date: Cu.now()
       });
-    });
+    })();
   },
 
   /**
@@ -929,7 +928,7 @@ var Process = {
    * array of objects with a structure similar to PerformanceData. Note
    * that the array may be empty if no child process responded.
    */
-  broadcastAndCollect: Task.async(function*(topic, payload) {
+  async broadcastAndCollect(topic, payload) {
     if (!this.loader || this.loader.childCount == 1) {
       return undefined;
     }
@@ -978,9 +977,9 @@ var Process = {
       clearTimeout(timeout);
     });
 
-    yield deferred.promise;
+    await deferred.promise;
     this.loader.removeMessageListener(TOPIC, observer);
 
     return collected;
-  })
+  }
 };

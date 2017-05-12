@@ -33,7 +33,7 @@ function getColumn(table, column, fromColumnName, fromColumnValue) {
   }
 }
 
-add_task(function* () {
+add_task(async function() {
   // Make sure places visit chains are saved correctly with a redirect
   // transitions.
 
@@ -70,13 +70,13 @@ add_task(function* () {
   let visitUriPromise = promiseObserve("uri-visit-saved", checkObserver);
 
   const testUrl = "http://example.com/tests/toolkit/components/places/tests/browser/begin.html";
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, testUrl);
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, testUrl);
 
   // Load begin page, click link on page to record visits.
-  yield BrowserTestUtils.synthesizeMouseAtCenter("#clickme", { }, gBrowser.selectedBrowser);
-  yield visitUriPromise;
+  await BrowserTestUtils.synthesizeMouseAtCenter("#clickme", { }, gBrowser.selectedBrowser);
+  await visitUriPromise;
 
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
 
   gBrowser.removeCurrentTab();
 });

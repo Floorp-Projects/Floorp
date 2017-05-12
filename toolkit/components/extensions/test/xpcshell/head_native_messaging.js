@@ -31,17 +31,17 @@ function getPath(filename) {
 const ID = "native@tests.mozilla.org";
 
 
-function* setupHosts(scripts) {
+async function setupHosts(scripts) {
   const PERMS = {unixMode: 0o755};
 
   const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
-  const pythonPath = yield Subprocess.pathSearch(env.get("PYTHON"));
+  const pythonPath = await Subprocess.pathSearch(env.get("PYTHON"));
 
-  function* writeManifest(script, scriptPath, path) {
+  async function writeManifest(script, scriptPath, path) {
     let body = `#!${pythonPath} -u\n${script.script}`;
 
-    yield OS.File.writeAtomic(scriptPath, body);
-    yield OS.File.setPermissions(scriptPath, PERMS);
+    await OS.File.writeAtomic(scriptPath, body);
+    await OS.File.setPermissions(scriptPath, PERMS);
 
     let manifest = {
       name: script.name,
@@ -52,7 +52,7 @@ function* setupHosts(scripts) {
     };
 
     let manifestPath = getPath(`${script.name}.json`);
-    yield OS.File.writeAtomic(manifestPath, JSON.stringify(manifest));
+    await OS.File.writeAtomic(manifestPath, JSON.stringify(manifest));
 
     return manifestPath;
   }
@@ -79,7 +79,7 @@ function* setupHosts(scripts) {
       for (let script of scripts) {
         let path = getPath(`${script.name}.py`);
 
-        yield writeManifest(script, path, path);
+        await writeManifest(script, path, path);
       }
       break;
 
@@ -98,13 +98,13 @@ function* setupHosts(scripts) {
         let scriptPath = getPath(`${script.name}.py`);
 
         let batBody = `@ECHO OFF\n${pythonPath} -u "${scriptPath}" %*\n`;
-        yield OS.File.writeAtomic(batPath, batBody);
+        await OS.File.writeAtomic(batPath, batBody);
 
         // Create absolute and relative path versions of the entry.
         for (let [name, path] of [[script.name, batPath],
                                   [`relative.${script.name}`, OS.Path.basename(batPath)]]) {
           script.name = name;
-          let manifestPath = yield writeManifest(script, scriptPath, path);
+          let manifestPath = await writeManifest(script, scriptPath, path);
 
           registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
                             `${REGKEY}\\${script.name}`, "", manifestPath);

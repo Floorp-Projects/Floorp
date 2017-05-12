@@ -22,7 +22,6 @@ Cu.import("resource://gre/modules/CrashManager.jsm", this);
 Cu.import("resource://gre/modules/Log.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
-Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/Timer.jsm", this);
 
 var loggingConfigured = false;
@@ -41,13 +40,13 @@ this.configureLogging = function() {
 };
 
 this.sleep = function(wait) {
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  setTimeout(() => {
-    deferred.resolve();
-  }, wait);
+    setTimeout(() => {
+      resolve();
+    }, wait);
 
-  return deferred.promise;
+  });
 };
 
 this.TestingCrashManager = function(options) {
@@ -79,14 +78,14 @@ this.TestingCrashManager.prototype = {
       mode = OS.Constants.libc.S_IRUSR | OS.Constants.libc.S_IWUSR;
     }
 
-    return Task.spawn(function* () {
-      let f = yield OS.File.open(path, {create: true}, {unixMode: mode});
-      yield f.setDates(date, date);
-      yield f.close();
+    return (async function() {
+      let f = await OS.File.open(path, {create: true}, {unixMode: mode});
+      await f.setDates(date, date);
+      await f.close();
       dump("Created fake crash: " + path + "\n");
 
       return uuid;
-    });
+    })();
   },
 
   createIgnoredDumpFile(filename, submitted = false) {
@@ -97,11 +96,11 @@ this.TestingCrashManager.prototype = {
       path = OS.Path.join(this._pendingDumpsDir, filename);
     }
 
-    return Task.spawn(function* () {
+    return (async function() {
       let mode = OS.Constants.libc.S_IRUSR | OS.Constants.libc.S_IWUSR;
-      yield OS.File.open(path, {create: true}, {unixMode: mode});
+      await OS.File.open(path, {create: true}, {unixMode: mode});
       dump("Create ignored dump file: " + path + "\n");
-    });
+    })();
   },
 
   createEventsFile(filename, type, date, content, index = 0) {
@@ -113,10 +112,10 @@ this.TestingCrashManager.prototype = {
     let encoder = new TextEncoder();
     let array = encoder.encode(data);
 
-    return Task.spawn(function* () {
-      yield OS.File.writeAtomic(path, array);
-      yield OS.File.setDates(path, date, date);
-    });
+    return (async function() {
+      await OS.File.writeAtomic(path, array);
+      await OS.File.setDates(path, date, date);
+    })();
   },
 
   /**
@@ -146,12 +145,12 @@ this.TestingCrashManager.prototype = {
 var DUMMY_DIR_COUNT = 0;
 
 this.getManager = function() {
-  return Task.spawn(function* () {
+  return (async function() {
     const dirMode = OS.Constants.libc.S_IRWXU;
     let baseFile = OS.Constants.Path.profileDir;
 
     function makeDir(create = true) {
-      return Task.spawn(function* () {
+      return (async function() {
         let path = OS.Path.join(baseFile, "dummy-dir-" + DUMMY_DIR_COUNT++);
 
         if (!create) {
@@ -159,20 +158,20 @@ this.getManager = function() {
         }
 
         dump("Creating directory: " + path + "\n");
-        yield OS.File.makeDir(path, {unixMode: dirMode});
+        await OS.File.makeDir(path, {unixMode: dirMode});
 
         return path;
-      });
+      })();
     }
 
-    let pendingD = yield makeDir();
-    let submittedD = yield makeDir();
-    let eventsD1 = yield makeDir();
-    let eventsD2 = yield makeDir();
+    let pendingD = await makeDir();
+    let submittedD = await makeDir();
+    let eventsD1 = await makeDir();
+    let eventsD2 = await makeDir();
 
     // Store directory is created at run-time if needed. Ensure those code
     // paths are triggered.
-    let storeD = yield makeDir(false);
+    let storeD = await makeDir(false);
 
     let m = new TestingCrashManager({
       pendingDumpsDir: pendingD,
@@ -182,5 +181,5 @@ this.getManager = function() {
     });
 
     return m;
-  });
+  })();
 };

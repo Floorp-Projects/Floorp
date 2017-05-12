@@ -2,30 +2,30 @@
 
 const URL = "data:text/html,<title>initial title</title>";
 
-add_task(function* () {
+add_task(async function() {
   // Create a new tab.
   let tab = gBrowser.addTab(URL);
-  yield promiseBrowserLoaded(tab.linkedBrowser);
+  await promiseBrowserLoaded(tab.linkedBrowser);
 
   // Remove the tab.
-  yield promiseRemoveTab(tab);
+  await promiseRemoveTab(tab);
 
   // Check the title.
   let [{state: {entries}}] = JSON.parse(ss.getClosedTabData(window));
   is(entries[0].title, "initial title", "correct title");
 });
 
-add_task(function* () {
+add_task(async function() {
   // Create a new tab.
   let tab = gBrowser.addTab(URL);
   let browser = tab.linkedBrowser;
-  yield promiseBrowserLoaded(browser);
+  await promiseBrowserLoaded(browser);
 
   // Flush to ensure we collected the initial title.
-  yield TabStateFlusher.flush(browser);
+  await TabStateFlusher.flush(browser);
 
   // Set a new title.
-  yield ContentTask.spawn(browser, null, function* () {
+  await ContentTask.spawn(browser, null, async function() {
     return new Promise(resolve => {
       addEventListener("DOMTitleChanged", function onTitleChanged() {
         removeEventListener("DOMTitleChanged", onTitleChanged);
@@ -37,7 +37,7 @@ add_task(function* () {
   });
 
   // Remove the tab.
-  yield promiseRemoveTab(tab);
+  await promiseRemoveTab(tab);
 
   // Check the title.
   let [{state: {entries}}] = JSON.parse(ss.getClosedTabData(window));

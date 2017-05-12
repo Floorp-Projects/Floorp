@@ -12,9 +12,9 @@ const PERMISSION_SAVE_LOGINS = "login-saving";
 // kept in sync with the version there (or else the tests fail).
 const CURRENT_SCHEMA = 6;
 
-function* copyFile(aLeafName)
+async function copyFile(aLeafName)
 {
-  yield OS.File.copy(OS.Path.join(do_get_file("data").path, aLeafName),
+  await OS.File.copy(OS.Path.join(do_get_file("data").path, aLeafName),
                      OS.Path.join(OS.Constants.Path.profileDir, aLeafName));
 }
 
@@ -90,7 +90,7 @@ function setLoginSavingEnabled(origin, enabled) {
   }
 }
 
-add_task(function* test_execute()
+add_task(async function test_execute()
 {
 
 const OUTDIR = OS.Constants.Path.profileDir;
@@ -158,7 +158,7 @@ testuser5.init("http://test.gov", "http://test.gov", null,
 testnum++;
 testdesc = "Test downgrade from v999 storage";
 
-yield* copyFile("signons-v999.sqlite");
+await copyFile("signons-v999.sqlite");
 // Verify the schema version in the test file.
 dbConnection = openDB("signons-v999.sqlite");
 do_check_eq(999, dbConnection.schemaVersion);
@@ -184,23 +184,23 @@ var origFile = OS.Path.join(OUTDIR, "signons-v999-2.sqlite");
 var failFile = OS.Path.join(OUTDIR, "signons-v999-2.sqlite.corrupt");
 
 // Make sure we always start clean in a clean state.
-yield* copyFile("signons-v999-2.sqlite");
-yield OS.File.remove(failFile);
+await copyFile("signons-v999-2.sqlite");
+await OS.File.remove(failFile);
 
 Assert.throws(() => reloadStorage(OUTDIR, "signons-v999-2.sqlite"),
               /Initialization failed/);
 
 // Check to ensure the DB file was renamed to .corrupt.
-do_check_false(yield OS.File.exists(origFile));
-do_check_true(yield OS.File.exists(failFile));
+do_check_false(await OS.File.exists(origFile));
+do_check_true(await OS.File.exists(failFile));
 
-yield OS.File.remove(failFile);
+await OS.File.remove(failFile);
 
 /* ========== 3 ========== */
 testnum++;
 testdesc = "Test upgrade from v1->v2 storage";
 
-yield* copyFile("signons-v1.sqlite");
+await copyFile("signons-v1.sqlite");
 // Sanity check the test file.
 dbConnection = openDB("signons-v1.sqlite");
 do_check_eq(1, dbConnection.schemaVersion);
@@ -227,7 +227,7 @@ testdesc = "Test upgrade v2->v1 storage";
 // are upgrading it again. Any logins added by the v1 code must be properly
 // upgraded.
 
-yield* copyFile("signons-v1v2.sqlite");
+await copyFile("signons-v1v2.sqlite");
 // Sanity check the test file.
 dbConnection = openDB("signons-v1v2.sqlite");
 do_check_eq(1, dbConnection.schemaVersion);
@@ -259,7 +259,7 @@ deleteFile(OUTDIR, "signons-v1v2.sqlite");
 testnum++;
 testdesc = "Test upgrade from v2->v3 storage";
 
-yield* copyFile("signons-v2.sqlite");
+await copyFile("signons-v2.sqlite");
 // Sanity check the test file.
 dbConnection = openDB("signons-v2.sqlite");
 do_check_eq(2, dbConnection.schemaVersion);
@@ -287,7 +287,7 @@ testdesc = "Test upgrade v3->v2 storage";
 // are upgrading it again. Any logins added by the v2 code must be properly
 // upgraded.
 
-yield* copyFile("signons-v2v3.sqlite");
+await copyFile("signons-v2v3.sqlite");
 // Sanity check the test file.
 dbConnection = openDB("signons-v2v3.sqlite");
 do_check_eq(2, dbConnection.schemaVersion);
@@ -319,7 +319,7 @@ deleteFile(OUTDIR, "signons-v2v3.sqlite");
 testnum++;
 testdesc = "Test upgrade from v3->v4 storage";
 
-yield* copyFile("signons-v3.sqlite");
+await copyFile("signons-v3.sqlite");
 // Sanity check the test file.
 dbConnection = openDB("signons-v3.sqlite");
 do_check_eq(3, dbConnection.schemaVersion);
@@ -346,7 +346,7 @@ for (var i = 0; i < 2; i++) {
 testnum++;
 testdesc = "Test upgrade from v3->v4->v3 storage";
 
-yield* copyFile("signons-v3v4.sqlite");
+await copyFile("signons-v3v4.sqlite");
 // Sanity check the test file.
 dbConnection = openDB("signons-v3v4.sqlite");
 do_check_eq(3, dbConnection.schemaVersion);
@@ -386,7 +386,7 @@ LoginTestUtils.assertTimeIsAboutNow(t2.timePasswordChanged);
 testnum++;
 testdesc = "Test upgrade from v4 storage";
 
-yield* copyFile("signons-v4.sqlite");
+await copyFile("signons-v4.sqlite");
 // Sanity check the test file.
 dbConnection = openDB("signons-v4.sqlite");
 do_check_eq(4, dbConnection.schemaVersion);
@@ -401,7 +401,7 @@ do_check_true(dbConnection.tableExists("moz_deleted_logins"));
 testnum++;
 testdesc = "Test upgrade from v4->v5->v4 storage";
 
-yield copyFile("signons-v4v5.sqlite");
+await copyFile("signons-v4v5.sqlite");
 // Sanity check the test file.
 dbConnection = openDB("signons-v4v5.sqlite");
 do_check_eq(4, dbConnection.schemaVersion);
@@ -415,7 +415,7 @@ do_check_true(dbConnection.tableExists("moz_deleted_logins"));
 testnum++;
 testdesc = "Test upgrade from v5->v6 storage";
 
-yield* copyFile("signons-v5v6.sqlite");
+await copyFile("signons-v5v6.sqlite");
 
 // Sanity check the test file.
 dbConnection = openDB("signons-v5v6.sqlite");
@@ -471,7 +471,7 @@ testdesc = "Corrupt database and backup";
 const filename = "signons-c.sqlite";
 const filepath = OS.Path.join(OS.Constants.Path.profileDir, filename);
 
-yield OS.File.copy(do_get_file("data/corruptDB.sqlite").path, filepath);
+await OS.File.copy(do_get_file("data/corruptDB.sqlite").path, filepath);
 
 // will init mozStorage module with corrupt database, init should fail
 Assert.throws(
@@ -479,10 +479,10 @@ Assert.throws(
   /Initialization failed/);
 
 // check that the backup file exists
-do_check_true(yield OS.File.exists(filepath + ".corrupt"));
+do_check_true(await OS.File.exists(filepath + ".corrupt"));
 
 // check that the original corrupt file has been deleted
-do_check_false(yield OS.File.exists(filepath));
+do_check_false(await OS.File.exists(filepath));
 
 // initialize the storage module again
 storage = reloadStorage(OS.Constants.Path.profileDir, filename);

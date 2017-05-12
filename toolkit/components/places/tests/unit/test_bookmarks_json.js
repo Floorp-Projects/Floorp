@@ -86,44 +86,44 @@ var test_bookmarks = {
 // Exported bookmarks file pointer.
 var bookmarksExportedFile;
 
-add_task(function* test_import_bookmarks() {
+add_task(async function test_import_bookmarks() {
   let bookmarksFile = OS.Path.join(do_get_cwd().path, "bookmarks.json");
 
-  yield BookmarkJSONUtils.importFromFile(bookmarksFile, true);
-  yield PlacesTestUtils.promiseAsyncUpdates();
-  yield testImportedBookmarks();
+  await BookmarkJSONUtils.importFromFile(bookmarksFile, true);
+  await PlacesTestUtils.promiseAsyncUpdates();
+  await testImportedBookmarks();
 });
 
-add_task(function* test_export_bookmarks() {
+add_task(async function test_export_bookmarks() {
   bookmarksExportedFile = OS.Path.join(OS.Constants.Path.profileDir,
                                        "bookmarks.exported.json");
-  yield BookmarkJSONUtils.exportToFile(bookmarksExportedFile);
-  yield PlacesTestUtils.promiseAsyncUpdates();
+  await BookmarkJSONUtils.exportToFile(bookmarksExportedFile);
+  await PlacesTestUtils.promiseAsyncUpdates();
 });
 
-add_task(function* test_import_exported_bookmarks() {
-  yield PlacesUtils.bookmarks.eraseEverything();
-  yield BookmarkJSONUtils.importFromFile(bookmarksExportedFile, true);
-  yield PlacesTestUtils.promiseAsyncUpdates();
-  yield testImportedBookmarks();
+add_task(async function test_import_exported_bookmarks() {
+  await PlacesUtils.bookmarks.eraseEverything();
+  await BookmarkJSONUtils.importFromFile(bookmarksExportedFile, true);
+  await PlacesTestUtils.promiseAsyncUpdates();
+  await testImportedBookmarks();
 });
 
-add_task(function* test_import_ontop() {
-  yield PlacesUtils.bookmarks.eraseEverything();
-  yield BookmarkJSONUtils.importFromFile(bookmarksExportedFile, true);
-  yield PlacesTestUtils.promiseAsyncUpdates();
-  yield BookmarkJSONUtils.exportToFile(bookmarksExportedFile);
-  yield PlacesTestUtils.promiseAsyncUpdates();
-  yield BookmarkJSONUtils.importFromFile(bookmarksExportedFile, true);
-  yield PlacesTestUtils.promiseAsyncUpdates();
-  yield testImportedBookmarks();
+add_task(async function test_import_ontop() {
+  await PlacesUtils.bookmarks.eraseEverything();
+  await BookmarkJSONUtils.importFromFile(bookmarksExportedFile, true);
+  await PlacesTestUtils.promiseAsyncUpdates();
+  await BookmarkJSONUtils.exportToFile(bookmarksExportedFile);
+  await PlacesTestUtils.promiseAsyncUpdates();
+  await BookmarkJSONUtils.importFromFile(bookmarksExportedFile, true);
+  await PlacesTestUtils.promiseAsyncUpdates();
+  await testImportedBookmarks();
 });
 
-add_task(function* test_clean() {
-  yield PlacesUtils.bookmarks.eraseEverything();
+add_task(async function test_clean() {
+  await PlacesUtils.bookmarks.eraseEverything();
 });
 
-function* testImportedBookmarks() {
+async function testImportedBookmarks() {
   for (let group in test_bookmarks) {
     do_print("[testImportedBookmarks()] Checking group '" + group + "'");
 
@@ -147,17 +147,17 @@ function* testImportedBookmarks() {
     do_check_eq(root.childCount, items.length);
 
     for (let key in items) {
-      yield checkItem(items[key], root.getChild(key));
+      await checkItem(items[key], root.getChild(key));
     }
 
     root.containerOpen = false;
   }
 }
 
-function* checkItem(aExpected, aNode) {
+function checkItem(aExpected, aNode) {
   let id = aNode.itemId;
 
-  return Task.spawn(function* () {
+  return (async function() {
     for (let prop in aExpected) {
       switch (prop) {
         case "type":
@@ -189,18 +189,18 @@ function* checkItem(aExpected, aNode) {
             function(aURI, aDataLen, aData, aMimeType) {
               deferred.resolve(aData);
             });
-          let data = yield deferred.promise;
+          let data = await deferred.promise;
           let base64Icon = "data:image/png;base64," +
                            base64EncodeString(String.fromCharCode.apply(String, data));
           do_check_true(base64Icon == aExpected.icon);
           break;
         case "keyword": {
-          let entry = yield PlacesUtils.keywords.fetch({ url: aNode.uri });
+          let entry = await PlacesUtils.keywords.fetch({ url: aNode.uri });
           Assert.equal(entry.keyword, aExpected.keyword);
           break;
         }
         case "guid":
-          let guid = yield PlacesUtils.promiseItemGuid(id);
+          let guid = await PlacesUtils.promiseItemGuid(id);
           do_check_eq(guid, aExpected.guid);
           break;
         case "sidebar":
@@ -208,16 +208,16 @@ function* checkItem(aExpected, aNode) {
                       id, LOAD_IN_SIDEBAR_ANNO), aExpected.sidebar);
           break;
         case "postData": {
-          let entry = yield PlacesUtils.keywords.fetch({ url: aNode.uri });
+          let entry = await PlacesUtils.keywords.fetch({ url: aNode.uri });
           Assert.equal(entry.postData, aExpected.postData);
           break;
         }
         case "charset":
           let testURI = NetUtil.newURI(aNode.uri);
-          do_check_eq((yield PlacesUtils.getCharsetForURI(testURI)), aExpected.charset);
+          do_check_eq((await PlacesUtils.getCharsetForURI(testURI)), aExpected.charset);
           break;
         case "feedUrl":
-          let livemark = yield PlacesUtils.livemarks.getLivemark({ id });
+          let livemark = await PlacesUtils.livemarks.getLivemark({ id });
           do_check_eq(livemark.siteURI.spec, aExpected.url);
           do_check_eq(livemark.feedURI.spec, aExpected.feedUrl);
           break;
@@ -228,7 +228,7 @@ function* checkItem(aExpected, aNode) {
           do_check_eq(folder.childCount, aExpected.children.length);
 
           for (let index = 0; index < aExpected.children.length; index++) {
-            yield checkItem(aExpected.children[index], folder.getChild(index));
+            await checkItem(aExpected.children[index], folder.getChild(index));
           }
 
           folder.containerOpen = false;
@@ -237,5 +237,5 @@ function* checkItem(aExpected, aNode) {
           throw new Error("Unknown property");
       }
     }
-  });
+  })();
 }

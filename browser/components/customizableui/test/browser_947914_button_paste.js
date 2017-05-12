@@ -7,15 +7,15 @@
 var initialLocation = gBrowser.currentURI.spec;
 var globalClipboard;
 
-add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
-  yield BrowserTestUtils.withNewTab({gBrowser, url: "about:blank"}, function*() {
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+  await BrowserTestUtils.withNewTab({gBrowser, url: "about:blank"}, async function() {
     info("Check paste button existence and functionality");
 
     let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
     globalClipboard = Services.clipboard.kGlobalClipboard;
 
-    yield PanelUI.show();
+    await PanelUI.show();
     info("Menu panel was opened");
 
     let pasteButton = document.getElementById("paste-button");
@@ -27,7 +27,7 @@ add_task(function*() {
 
     // test paste button by pasting text to URL bar
     gURLBar.focus();
-    yield PanelUI.show();
+    await PanelUI.show();
     info("Menu panel was opened");
 
     ok(!pasteButton.hasAttribute("disabled"), "Paste button is enabled");

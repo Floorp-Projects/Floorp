@@ -10,7 +10,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_execute() {
+add_task(async function test_execute() {
   let now = (Date.now() - 10000) * 1000;
 
   for (let i = 0; i < TOTAL_SITES; i++) {
@@ -18,7 +18,7 @@ add_task(function* test_execute() {
     let testURI = uri(site);
     let testImageURI = uri(site + "blank.gif");
     let when = now + (i * TOTAL_SITES * 1000);
-    yield PlacesTestUtils.addVisits([
+    await PlacesTestUtils.addVisits([
       { uri: testURI, visitDate: when, transition: TRANSITION_TYPED },
       { uri: testImageURI, visitDate: when + 1000, transition: TRANSITION_EMBED },
       { uri: testImageURI, visitDate: when + 2000, transition: TRANSITION_FRAMED_LINK },

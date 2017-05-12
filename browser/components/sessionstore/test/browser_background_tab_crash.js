@@ -24,7 +24,7 @@
  *        Resolves once the testing function completes and the opened tabs
  *        have been completely closed.
  */
-function* setupBackgroundTabs(testFn) {
+async function setupBackgroundTabs(testFn) {
   const REMOTE_PAGE = "http://www.example.com";
   const NON_REMOTE_PAGE = "about:robots";
 
@@ -33,18 +33,18 @@ function* setupBackgroundTabs(testFn) {
   let initialTab = gBrowser.selectedTab;
   let initialBrowser = initialTab.linkedBrowser;
   initialBrowser.loadURI(NON_REMOTE_PAGE);
-  yield BrowserTestUtils.browserLoaded(initialBrowser);
+  await BrowserTestUtils.browserLoaded(initialBrowser);
 
   // Open some tabs that should be running in the content process.
   let tab1 =
-    yield BrowserTestUtils.openNewForegroundTab(gBrowser, REMOTE_PAGE);
+    await BrowserTestUtils.openNewForegroundTab(gBrowser, REMOTE_PAGE);
   let remoteBrowser1 = tab1.linkedBrowser;
-  yield TabStateFlusher.flush(remoteBrowser1);
+  await TabStateFlusher.flush(remoteBrowser1);
 
   let tab2 =
-    yield BrowserTestUtils.openNewForegroundTab(gBrowser, REMOTE_PAGE);
+    await BrowserTestUtils.openNewForegroundTab(gBrowser, REMOTE_PAGE);
   let remoteBrowser2 = tab2.linkedBrowser;
-  yield TabStateFlusher.flush(remoteBrowser2);
+  await TabStateFlusher.flush(remoteBrowser2);
 
   // Quick sanity check - the two browsers should be remote and share the
   // same childID, or else this test is not going to work.
@@ -57,12 +57,12 @@ function* setupBackgroundTabs(testFn) {
                "Both remote browsers should share the same content process.");
 
   // Now switch back to the non-remote browser...
-  yield BrowserTestUtils.switchTab(gBrowser, initialTab);
+  await BrowserTestUtils.switchTab(gBrowser, initialTab);
 
-  yield testFn([tab1, tab2]);
+  await testFn([tab1, tab2]);
 
-  yield BrowserTestUtils.removeTab(tab1);
-  yield BrowserTestUtils.removeTab(tab2);
+  await BrowserTestUtils.removeTab(tab1);
+  await BrowserTestUtils.removeTab(tab2);
 }
 
 /**
@@ -75,7 +75,7 @@ function* setupBackgroundTabs(testFn) {
  *        Resolves once the tabs have crashed and entered the pending
  *        background state.
  */
-function* crashBackgroundTabs(tabs) {
+async function crashBackgroundTabs(tabs) {
   Assert.ok(tabs.length > 0, "Need to crash at least one tab.");
   for (let tab of tabs) {
     Assert.ok(tab.linkedBrowser.isRemoteBrowser, "tab is remote");
@@ -89,9 +89,9 @@ function* crashBackgroundTabs(tabs) {
     return promiseTabRestoring(t);
   });
 
-  yield BrowserTestUtils.crashBrowser(tabs[0].linkedBrowser, false);
-  yield Promise.all(remotenessChangePromises);
-  yield Promise.all(tabsRevived);
+  await BrowserTestUtils.crashBrowser(tabs[0].linkedBrowser, false);
+  await Promise.all(remotenessChangePromises);
+  await Promise.all(tabsRevived);
 
   // Both background tabs should now be in the pending restore
   // state.
@@ -102,10 +102,10 @@ function* crashBackgroundTabs(tabs) {
   }
 }
 
-add_task(function* setup() {
+add_task(async function setup() {
   // We'll simplify by making sure we only ever one content process for this
   // test.
-  yield SpecialPowers.pushPrefEnv({ set: [[ "dom.ipc.processCount", 1 ]] });
+  await SpecialPowers.pushPrefEnv({ set: [[ "dom.ipc.processCount", 1 ]] });
 
   // On debug builds, crashing tabs results in much thinking, which
   // slows down the test and results in intermittent test timeouts,
@@ -119,23 +119,23 @@ add_task(function* setup() {
  * selects will show the tab crash page, but the rest will restore
  * on demand.
  */
-add_task(function* test_background_crash_simple() {
-  yield setupBackgroundTabs(function*([tab1, tab2]) {
+add_task(async function test_background_crash_simple() {
+  await setupBackgroundTabs(async function([tab1, tab2]) {
     // Let's crash one of those background tabs now...
-    yield crashBackgroundTabs([tab1, tab2]);
+    await crashBackgroundTabs([tab1, tab2]);
 
     // Selecting the first tab should now send it to the tab crashed page.
     let tabCrashedPagePromise =
       BrowserTestUtils.waitForContentEvent(tab1.linkedBrowser,
                                            "AboutTabCrashedReady",
                                            false, null, true);
-    yield BrowserTestUtils.switchTab(gBrowser, tab1);
-    yield tabCrashedPagePromise;
+    await BrowserTestUtils.switchTab(gBrowser, tab1);
+    await tabCrashedPagePromise;
 
     // Selecting the second tab should restore it.
     let tabRestored = promiseTabRestored(tab2);
-    yield BrowserTestUtils.switchTab(gBrowser, tab2);
-    yield tabRestored;
+    await BrowserTestUtils.switchTab(gBrowser, tab2);
+    await tabRestored;
   });
 });
 
@@ -145,27 +145,27 @@ add_task(function* test_background_crash_simple() {
  * crash reports automatically, that the tab crashed page is not
  * shown.
  */
-add_task(function* test_background_crash_autosubmit_backlogged() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function test_background_crash_autosubmit_backlogged() {
+  await SpecialPowers.pushPrefEnv({
     set: [["browser.crashReports.unsubmittedCheck.autoSubmit", true]],
   });
 
-  yield setupBackgroundTabs(function*([tab1, tab2]) {
+  await setupBackgroundTabs(async function([tab1, tab2]) {
     // Let's crash one of those background tabs now...
-    yield crashBackgroundTabs([tab1, tab2]);
+    await crashBackgroundTabs([tab1, tab2]);
 
     // Selecting the first tab should restore it.
     let tabRestored = promiseTabRestored(tab1);
-    yield BrowserTestUtils.switchTab(gBrowser, tab1);
-    yield tabRestored;
+    await BrowserTestUtils.switchTab(gBrowser, tab1);
+    await tabRestored;
 
     // Selecting the second tab should restore it.
     tabRestored = promiseTabRestored(tab2);
-    yield BrowserTestUtils.switchTab(gBrowser, tab2);
-    yield tabRestored;
+    await BrowserTestUtils.switchTab(gBrowser, tab2);
+    await tabRestored;
   });
 
-  yield SpecialPowers.popPrefEnv();
+  await SpecialPowers.popPrefEnv();
 });
 
 /**
@@ -178,44 +178,44 @@ add_task(function* test_background_crash_autosubmit_backlogged() {
  * Visiting 4 should show us the tab crashed page, and then visiting 3
  * should restore.
  */
-add_task(function* test_background_crash_multiple() {
+add_task(async function test_background_crash_multiple() {
   let initialTab = gBrowser.selectedTab;
 
-  yield setupBackgroundTabs(function*([tab1, tab2]) {
+  await setupBackgroundTabs(async function([tab1, tab2]) {
     // Let's crash one of those background tabs now...
-    yield crashBackgroundTabs([tab1, tab2]);
+    await crashBackgroundTabs([tab1, tab2]);
 
     // Selecting the first tab should now send it to the tab crashed page.
     let tabCrashedPagePromise =
       BrowserTestUtils.waitForContentEvent(tab1.linkedBrowser,
                                            "AboutTabCrashedReady",
                                            false, null, true);
-    yield BrowserTestUtils.switchTab(gBrowser, tab1);
-    yield tabCrashedPagePromise;
+    await BrowserTestUtils.switchTab(gBrowser, tab1);
+    await tabCrashedPagePromise;
 
     // Now switch back to the original non-remote tab...
-    yield BrowserTestUtils.switchTab(gBrowser, initialTab);
+    await BrowserTestUtils.switchTab(gBrowser, initialTab);
 
-    yield setupBackgroundTabs(function*([tab3, tab4]) {
-      yield crashBackgroundTabs([tab3, tab4]);
+    await setupBackgroundTabs(async function([tab3, tab4]) {
+      await crashBackgroundTabs([tab3, tab4]);
 
       // Selecting the second tab should restore it.
       let tabRestored = promiseTabRestored(tab2);
-      yield BrowserTestUtils.switchTab(gBrowser, tab2);
-      yield tabRestored;
+      await BrowserTestUtils.switchTab(gBrowser, tab2);
+      await tabRestored;
 
       // Selecting the fourth tab should now send it to the tab crashed page.
       tabCrashedPagePromise =
         BrowserTestUtils.waitForContentEvent(tab4.linkedBrowser,
                                              "AboutTabCrashedReady",
                                              false, null, true);
-      yield BrowserTestUtils.switchTab(gBrowser, tab4);
-      yield tabCrashedPagePromise;
+      await BrowserTestUtils.switchTab(gBrowser, tab4);
+      await tabCrashedPagePromise;
 
       // Selecting the third tab should restore it.
       tabRestored = promiseTabRestored(tab3);
-      yield BrowserTestUtils.switchTab(gBrowser, tab3);
-      yield tabRestored;
+      await BrowserTestUtils.switchTab(gBrowser, tab3);
+      await tabRestored;
     });
   });
 });

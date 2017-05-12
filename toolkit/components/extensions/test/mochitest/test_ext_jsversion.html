@@ -15,7 +15,7 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* test_versioned_js() {
+add_task(async function test_versioned_js() {
   // We need to deal with escaping the close script tags.
   // May as well consolidate it into one place.
   let script = attrs => `<script ${attrs}><\/script>`;
@@ -65,17 +65,17 @@ add_task(function* test_versioned_js() {
 
   info("loading extension");
 
-  yield Promise.all([extension.startup(),
+  await Promise.all([extension.startup(),
                      extension.awaitMessage("finished")]);
 
   info("waiting for console");
 
   SimpleTest.endMonitorConsole();
-  yield waitForConsole;
+  await waitForConsole;
 
   info("unloading extension");
 
-  yield extension.unload();
+  await extension.unload();
 
   info("test complete");
 });

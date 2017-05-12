@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* () {
+add_task(async function() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs", "<all_urls>"],
@@ -62,7 +62,7 @@ add_task(function* () {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("tabs.reload_bypass_cache");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("tabs.reload_bypass_cache");
+  await extension.unload();
 });

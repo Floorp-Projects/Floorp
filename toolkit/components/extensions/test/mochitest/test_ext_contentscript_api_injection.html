@@ -25,7 +25,7 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* test_contentscript_api_injection() {
+add_task(async function test_contentscript_api_injection() {
   function contentScript() {
     let iframe = document.createElement("iframe");
     iframe.setAttribute("src", browser.runtime.getURL("content_script_iframe.html"));
@@ -67,19 +67,19 @@ add_task(function* test_contentscript_api_injection() {
     chromeScript.addMessageListener("console-message", resolve);
   });
 
-  yield extension.startup();
+  await extension.startup();
   info("extension loaded");
 
   let win = window.open("file_sample.html");
 
-  let message = yield awaitConsole;
+  let message = await awaitConsole;
 
   ok(message.message.includes("WebExt Privilege Escalation: typeof(browser) = undefined"),
      "Document does not have `browser` APIs.");
 
   win.close();
 
-  yield extension.unload();
+  await extension.unload();
   info("extension unloaded");
 });
 </script>

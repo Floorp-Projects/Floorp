@@ -25,10 +25,9 @@
  */
 
 #include "event2/event-config.h"
+#include "evconfig-private.h"
 
-#define _GNU_SOURCE
-
-#ifdef WIN32
+#ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #define WIN32_LEAN_AND_MEAN
@@ -36,77 +35,92 @@
 #undef WIN32_LEAN_AND_MEAN
 #include <io.h>
 #include <tchar.h>
+#include <process.h>
+#undef _WIN32_WINNT
+/* For structs needed by GetAdaptersAddresses */
+#define _WIN32_WINNT 0x0501
+#include <iphlpapi.h>
 #endif
 
 #include <sys/types.h>
-#ifdef _EVENT_HAVE_SYS_SOCKET_H
+#ifdef EVENT__HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
-#ifdef _EVENT_HAVE_UNISTD_H
+#ifdef EVENT__HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#ifdef _EVENT_HAVE_FCNTL_H
+#ifdef EVENT__HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
-#ifdef _EVENT_HAVE_STDLIB_H
+#ifdef EVENT__HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
 #include <errno.h>
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
-#ifdef _EVENT_HAVE_NETINET_IN_H
+#ifdef EVENT__HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif
-#ifdef _EVENT_HAVE_NETINET_IN6_H
+#ifdef EVENT__HAVE_NETINET_IN6_H
 #include <netinet/in6.h>
 #endif
-#ifdef _EVENT_HAVE_ARPA_INET_H
+#ifdef EVENT__HAVE_NETINET_TCP_H
+#include <netinet/tcp.h>
+#endif
+#ifdef EVENT__HAVE_ARPA_INET_H
 #include <arpa/inet.h>
 #endif
-
-#ifndef _EVENT_HAVE_GETTIMEOFDAY
-#include <sys/timeb.h>
 #include <time.h>
-#endif
 #include <sys/stat.h>
+#ifdef EVENT__HAVE_IFADDRS_H
+#include <ifaddrs.h>
+#endif
 
 #include "event2/util.h"
 #include "util-internal.h"
 #include "log-internal.h"
 #include "mm-internal.h"
+#include "evthread-internal.h"
 
 #include "strlcpy-internal.h"
 #include "ipv6-internal.h"
 
-#ifdef WIN32
+#ifdef _WIN32
+#define HT_NO_CACHE_HASH_VALUES
+#include "ht-internal.h"
 #define open _open
 #define read _read
 #define close _close
+#ifndef fstat
 #define fstat _fstati64
+#endif
+#ifndef stat
 #define stat _stati64
+#endif
 #define mode_t int
 #endif
 
 int
-evutil_open_closeonexec(const char *pathname, int flags, unsigned mode)
+evutil_open_closeonexec_(const char *pathname, int flags, unsigned mode)
 {
 	int fd;
 
 #ifdef O_CLOEXEC
-	flags |= O_CLOEXEC;
+	fd = open(pathname, flags|O_CLOEXEC, (mode_t)mode);
+	if (fd >= 0 || errno == EINVAL)
+		return fd;
+	/* If we got an EINVAL, fall through and try without O_CLOEXEC */
 #endif
-
-	if (flags & O_CREAT)
-		fd = open(pathname, flags, (mode_t)mode);
-	else
-		fd = open(pathname, flags);
+	fd = open(pathname, flags, (mode_t)mode);
 	if (fd < 0)
 		return -1;
 
-#if !defined(O_CLOEXEC) && defined(FD_CLOEXEC)
-	if (fcntl(fd, F_SETFD, FD_CLOEXEC) < 0)
+#if defined(FD_CLOEXEC)
+	if (fcntl(fd, F_SETFD, FD_CLOEXEC) < 0) {
+		close(fd);
 		return -1;
+	}
 #endif
 
 	return fd;
@@ -123,7 +137,7 @@ evutil_open_closeonexec(const char *pathname, int flags, unsigned mode)
    Used internally only; may go away in a future version.
  */
 int
-evutil_read_file(const char *filename, char **content_out, size_t *len_out,
+evutil_read_file_(const char *filename, char **content_out, size_t *len_out,
     int is_binary)
 {
 	int fd, r;
@@ -142,7 +156,7 @@ evutil_read_file(const char *filename, char **content_out, size_t *len_out,
 		mode |= O_BINARY;
 #endif
 
-	fd = evutil_open_closeonexec(filename, mode, 0);
+	fd = evutil_open_closeonexec_(filename, mode, 0);
 	if (fd < 0)
 		return -1;
 	if (fstat(fd, &st) || st.st_size < 0 ||
@@ -156,7 +170,7 @@ evutil_read_file(const char *filename, char **content_out, size_t *len_out,
 		return -2;
 	}
 	read_so_far = 0;
-#ifdef WIN32
+#ifdef _WIN32
 #define N_TO_READ(x) ((x) > INT_MAX) ? INT_MAX : ((int)(x))
 #else
 #define N_TO_READ(x) (x)
@@ -182,15 +196,15 @@ evutil_read_file(const char *filename, char **content_out, size_t *len_out,
 int
 evutil_socketpair(int family, int type, int protocol, evutil_socket_t fd[2])
 {
-#ifndef WIN32
+#ifndef _WIN32
 	return socketpair(family, type, protocol, fd);
 #else
-	return evutil_ersatz_socketpair(family, type, protocol, fd);
+	return evutil_ersatz_socketpair_(family, type, protocol, fd);
 #endif
 }
 
 int
-evutil_ersatz_socketpair(int family, int type, int protocol,
+evutil_ersatz_socketpair_(int family, int type, int protocol,
     evutil_socket_t fd[2])
 {
 	/* This code is originally from Tor.  Used with permission. */
@@ -200,7 +214,7 @@ evutil_ersatz_socketpair(int family, int type, int protocol,
 	 * for now, and really, when localhost is down sometimes, we
 	 * have other problems too.
 	 */
-#ifdef WIN32
+#ifdef _WIN32
 #define ERR(e) WSA##e
 #else
 #define ERR(e) e
@@ -212,16 +226,17 @@ evutil_ersatz_socketpair(int family, int type, int protocol,
 	struct sockaddr_in connect_addr;
 	ev_socklen_t size;
 	int saved_errno = -1;
-
-	if (protocol
-		|| (family != AF_INET
+	int family_test;
+	
+	family_test = family != AF_INET;
 #ifdef AF_UNIX
-		    && family != AF_UNIX
+	family_test = family_test && (family != AF_UNIX);
 #endif
-		)) {
+	if (protocol || family_test) {
 		EVUTIL_SET_SOCKET_ERROR(ERR(EAFNOSUPPORT));
 		return -1;
 	}
+	
 	if (!fd) {
 		EVUTIL_SET_SOCKET_ERROR(ERR(EINVAL));
 		return -1;
@@ -243,6 +258,9 @@ evutil_ersatz_socketpair(int family, int type, int protocol,
 	connector = socket(AF_INET, type, 0);
 	if (connector < 0)
 		goto tidy_up_and_fail;
+
+	memset(&connect_addr, 0, sizeof(connect_addr));
+
 	/* We want to find out the port number to connect to.  */
 	size = sizeof(connect_addr);
 	if (getsockname(listener, (struct sockaddr *) &connect_addr, &size) == -1)
@@ -294,9 +312,9 @@ evutil_ersatz_socketpair(int family, int type, int protocol,
 int
 evutil_make_socket_nonblocking(evutil_socket_t fd)
 {
-#ifdef WIN32
+#ifdef _WIN32
 	{
-		u_long nonblocking = 1;
+		unsigned long nonblocking = 1;
 		if (ioctlsocket(fd, FIONBIO, &nonblocking) == SOCKET_ERROR) {
 			event_sock_warn(fd, "fcntl(%d, F_GETFL)", (int)fd);
 			return -1;
@@ -309,19 +327,39 @@ evutil_make_socket_nonblocking(evutil_socket_t fd)
 			event_warn("fcntl(%d, F_GETFL)", fd);
 			return -1;
 		}
-		if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1) {
-			event_warn("fcntl(%d, F_SETFL)", fd);
-			return -1;
+		if (!(flags & O_NONBLOCK)) {
+			if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1) {
+				event_warn("fcntl(%d, F_SETFL)", fd);
+				return -1;
+			}
 		}
 	}
 #endif
 	return 0;
 }
 
+/* Faster version of evutil_make_socket_nonblocking for internal use.
+ *
+ * Requires that no F_SETFL flags were previously set on the fd.
+ */
+static int
+evutil_fast_socket_nonblocking(evutil_socket_t fd)
+{
+#ifdef _WIN32
+	return evutil_make_socket_nonblocking(fd);
+#else
+	if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1) {
+		event_warn("fcntl(%d, F_SETFL)", fd);
+		return -1;
+	}
+	return 0;
+#endif
+}
+
 int
 evutil_make_listen_socket_reuseable(evutil_socket_t sock)
 {
-#ifndef WIN32
+#if defined(SO_REUSEADDR) && !defined(_WIN32)
 	int one = 1;
 	/* REUSEADDR on Unix means, "don't hang on to this address after the
 	 * listener is closed."  On Windows, though, it means "don't keep other
@@ -334,15 +372,61 @@ evutil_make_listen_socket_reuseable(evutil_socket_t sock)
 }
 
 int
+evutil_make_listen_socket_reuseable_port(evutil_socket_t sock)
+{
+#if defined __linux__ && defined(SO_REUSEPORT)
+	int one = 1;
+	/* REUSEPORT on Linux 3.9+ means, "Multiple servers (processes or
+	 * threads) can bind to the same port if they each set the option. */
+	return setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, (void*) &one,
+	    (ev_socklen_t)sizeof(one));
+#else
+	return 0;
+#endif
+}
+
+int
+evutil_make_tcp_listen_socket_deferred(evutil_socket_t sock)
+{
+#if defined(EVENT__HAVE_NETINET_TCP_H) && defined(TCP_DEFER_ACCEPT)
+	int one = 1;
+
+	/* TCP_DEFER_ACCEPT tells the kernel to call defer accept() only after data
+	 * has arrived and ready to read */ 
+	return setsockopt(sock, IPPROTO_TCP, TCP_DEFER_ACCEPT, &one,
+		(ev_socklen_t)sizeof(one)); 
+#endif
+	return 0;
+}
+
+int
 evutil_make_socket_closeonexec(evutil_socket_t fd)
 {
-#if !defined(WIN32) && defined(_EVENT_HAVE_SETFD)
+#if !defined(_WIN32) && defined(EVENT__HAVE_SETFD)
 	int flags;
 	if ((flags = fcntl(fd, F_GETFD, NULL)) < 0) {
 		event_warn("fcntl(%d, F_GETFD)", fd);
 		return -1;
 	}
-	if (fcntl(fd, F_SETFD, flags | FD_CLOEXEC) == -1) {
+	if (!(flags & FD_CLOEXEC)) {
+		if (fcntl(fd, F_SETFD, flags | FD_CLOEXEC) == -1) {
+			event_warn("fcntl(%d, F_SETFD)", fd);
+			return -1;
+		}
+	}
+#endif
+	return 0;
+}
+
+/* Faster version of evutil_make_socket_closeonexec for internal use.
+ *
+ * Requires that no F_SETFD flags were previously set on the fd.
+ */
+static int
+evutil_fast_socket_closeonexec(evutil_socket_t fd)
+{
+#if !defined(_WIN32) && defined(EVENT__HAVE_SETFD)
+	if (fcntl(fd, F_SETFD, FD_CLOEXEC) == -1) {
 		event_warn("fcntl(%d, F_SETFD)", fd);
 		return -1;
 	}
@@ -353,7 +437,7 @@ evutil_make_socket_closeonexec(evutil_socket_t fd)
 int
 evutil_closesocket(evutil_socket_t sock)
 {
-#ifndef WIN32
+#ifndef _WIN32
 	return close(sock);
 #else
 	return closesocket(sock);
@@ -363,11 +447,11 @@ evutil_closesocket(evutil_socket_t sock)
 ev_int64_t
 evutil_strtoll(const char *s, char **endptr, int base)
 {
-#ifdef _EVENT_HAVE_STRTOLL
+#ifdef EVENT__HAVE_STRTOLL
 	return (ev_int64_t)strtoll(s, endptr, base);
-#elif _EVENT_SIZEOF_LONG == 8
+#elif EVENT__SIZEOF_LONG == 8
 	return (ev_int64_t)strtol(s, endptr, base);
-#elif defined(WIN32) && defined(_MSC_VER) && _MSC_VER < 1300
+#elif defined(_WIN32) && defined(_MSC_VER) && _MSC_VER < 1300
 	/* XXXX on old versions of MS APIs, we only support base
 	 * 10. */
 	ev_int64_t r;
@@ -383,9 +467,9 @@ evutil_strtoll(const char *s, char **endptr, int base)
 	if (endptr)
 		*endptr = (char*) s;
 	return r;
-#elif defined(WIN32)
+#elif defined(_WIN32)
 	return (ev_int64_t) _strtoi64(s, endptr, base);
-#elif defined(_EVENT_SIZEOF_LONG_LONG) && _EVENT_SIZEOF_LONG_LONG == 8
+#elif defined(EVENT__SIZEOF_LONG_LONG) && EVENT__SIZEOF_LONG_LONG == 8
 	long long r;
 	int n;
 	if (base != 10 && base != 16)
@@ -401,15 +485,15 @@ evutil_strtoll(const char *s, char **endptr, int base)
 	}
 	if (n != 1)
 		return 0;
-	while (EVUTIL_ISSPACE(*s))
+	while (EVUTIL_ISSPACE_(*s))
 		++s;
 	if (*s == '-')
 		++s;
 	if (base == 10) {
-		while (EVUTIL_ISDIGIT(*s))
+		while (EVUTIL_ISDIGIT_(*s))
 			++s;
 	} else {
-		while (EVUTIL_ISXDIGIT(*s))
+		while (EVUTIL_ISXDIGIT_(*s))
 			++s;
 	}
 	if (endptr)
@@ -420,32 +504,7 @@ evutil_strtoll(const char *s, char **endptr, int base)
 #endif
 }
 
-#ifndef _EVENT_HAVE_GETTIMEOFDAY
-/* No gettimeofday; this muse be windows. */
-int
-evutil_gettimeofday(struct timeval *tv, struct timezone *tz)
-{
-	struct _timeb tb;
-
-	if (tv == NULL)
-		return -1;
-
-	/* XXXX
-	 * _ftime is not the greatest interface here; GetSystemTimeAsFileTime
-	 * would give us better resolution, whereas something cobbled together
-	 * with GetTickCount could maybe give us monotonic behavior.
-	 *
-	 * Either way, I think this value might be skewed to ignore the
-	 * timezone, and just return local time.  That's not so good.
-	 */
-	_ftime(&tb);
-	tv->tv_sec = (long) tb.time;
-	tv->tv_usec = ((int) tb.millitm) * 1000;
-	return 0;
-}
-#endif
-
-#ifdef WIN32
+#ifdef _WIN32
 int
 evutil_socket_geterror(evutil_socket_t sock)
 {
@@ -465,7 +524,7 @@ evutil_socket_geterror(evutil_socket_t sock)
 /* XXX we should use an enum here. */
 /* 2 for connection refused, 1 for connected, 0 for not yet, -1 for error. */
 int
-evutil_socket_connect(evutil_socket_t *fd_ptr, struct sockaddr *sa, int socklen)
+evutil_socket_connect_(evutil_socket_t *fd_ptr, const struct sockaddr *sa, int socklen)
 {
 	int made_fd = 0;
 
@@ -502,7 +561,7 @@ err:
    error case, set the current socket errno to the error that happened during
    the connect operation. */
 int
-evutil_socket_finished_connecting(evutil_socket_t fd)
+evutil_socket_finished_connecting_(evutil_socket_t fd)
 {
 	int e;
 	ev_socklen_t elen = sizeof(e);
@@ -545,28 +604,150 @@ static int have_checked_interfaces, had_ipv4_address, had_ipv6_address;
  */
 #define EVUTIL_V4ADDR_IS_CLASSD(addr) ((((addr)>>24) & 0xf0) == 0xe0)
 
+static void
+evutil_found_ifaddr(const struct sockaddr *sa)
+{
+	const char ZEROES[] = "\x00\x00\x00\x00\x00\x00\x00\x00"
+	    "\x00\x00\x00\x00\x00\x00\x00\x00";
+
+	if (sa->sa_family == AF_INET) {
+		const struct sockaddr_in *sin = (struct sockaddr_in *)sa;
+		ev_uint32_t addr = ntohl(sin->sin_addr.s_addr);
+		if (addr == 0 ||
+		    EVUTIL_V4ADDR_IS_LOCALHOST(addr) ||
+		    EVUTIL_V4ADDR_IS_CLASSD(addr)) {
+			/* Not actually a usable external address. */
+		} else {
+			event_debug(("Detected an IPv4 interface"));
+			had_ipv4_address = 1;
+		}
+	} else if (sa->sa_family == AF_INET6) {
+		const struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)sa;
+		const unsigned char *addr =
+		    (unsigned char*)sin6->sin6_addr.s6_addr;
+		if (!memcmp(addr, ZEROES, 8) ||
+		    ((addr[0] & 0xfe) == 0xfc) ||
+		    (addr[0] == 0xfe && (addr[1] & 0xc0) == 0x80) ||
+		    (addr[0] == 0xfe && (addr[1] & 0xc0) == 0xc0) ||
+		    (addr[0] == 0xff)) {
+			/* This is a reserved, ipv4compat, ipv4map, loopback,
+			 * link-local, multicast, or unspecified address. */
+		} else {
+			event_debug(("Detected an IPv6 interface"));
+			had_ipv6_address = 1;
+		}
+	}
+}
+
+#ifdef _WIN32
+typedef ULONG (WINAPI *GetAdaptersAddresses_fn_t)(
+              ULONG, ULONG, PVOID, PIP_ADAPTER_ADDRESSES, PULONG);
+#endif
+
+static int
+evutil_check_ifaddrs(void)
+{
+#if defined(EVENT__HAVE_GETIFADDRS)
+	/* Most free Unixy systems provide getifaddrs, which gives us a linked list
+	 * of struct ifaddrs. */
+	struct ifaddrs *ifa = NULL;
+	const struct ifaddrs *i;
+	if (getifaddrs(&ifa) < 0) {
+		event_warn("Unable to call getifaddrs()");
+		return -1;
+	}
+
+	for (i = ifa; i; i = i->ifa_next) {
+		if (!i->ifa_addr)
+			continue;
+		evutil_found_ifaddr(i->ifa_addr);
+	}
+
+	freeifaddrs(ifa);
+	return 0;
+#elif defined(_WIN32)
+	/* Windows XP began to provide GetAdaptersAddresses. Windows 2000 had a
+	   "GetAdaptersInfo", but that's deprecated; let's just try
+	   GetAdaptersAddresses and fall back to connect+getsockname.
+	*/
+	HMODULE lib = evutil_load_windows_system_library_(TEXT("ihplapi.dll"));
+	GetAdaptersAddresses_fn_t fn;
+	ULONG size, res;
+	IP_ADAPTER_ADDRESSES *addresses = NULL, *address;
+	int result = -1;
+
+#define FLAGS (GAA_FLAG_SKIP_ANYCAST | \
+               GAA_FLAG_SKIP_MULTICAST | \
+               GAA_FLAG_SKIP_DNS_SERVER)
+
+	if (!lib)
+		goto done;
+
+	if (!(fn = (GetAdaptersAddresses_fn_t) GetProcAddress(lib, "GetAdaptersAddresses")))
+		goto done;
+
+	/* Guess how much space we need. */
+	size = 15*1024;
+	addresses = mm_malloc(size);
+	if (!addresses)
+		goto done;
+	res = fn(AF_UNSPEC, FLAGS, NULL, addresses, &size);
+	if (res == ERROR_BUFFER_OVERFLOW) {
+		/* we didn't guess that we needed enough space; try again */
+		mm_free(addresses);
+		addresses = mm_malloc(size);
+		if (!addresses)
+			goto done;
+		res = fn(AF_UNSPEC, FLAGS, NULL, addresses, &size);
+	}
+	if (res != NO_ERROR)
+		goto done;
+
+	for (address = addresses; address; address = address->Next) {
+		IP_ADAPTER_UNICAST_ADDRESS *a;
+		for (a = address->FirstUnicastAddress; a; a = a->Next) {
+			/* Yes, it's a linked list inside a linked list */
+			struct sockaddr *sa = a->Address.lpSockaddr;
+			evutil_found_ifaddr(sa);
+		}
+	}
+
+	result = 0;
+done:
+	if (lib)
+		FreeLibrary(lib);
+	if (addresses)
+		mm_free(addresses);
+	return result;
+#else
+	return -1;
+#endif
+}
+
 /* Test whether we have an ipv4 interface and an ipv6 interface.  Return 0 if
  * the test seemed successful. */
 static int
 evutil_check_interfaces(int force_recheck)
 {
-	const char ZEROES[] = "\x00\x00\x00\x00\x00\x00\x00\x00"
-	    "\x00\x00\x00\x00\x00\x00\x00\x00";
 	evutil_socket_t fd = -1;
 	struct sockaddr_in sin, sin_out;
 	struct sockaddr_in6 sin6, sin6_out;
 	ev_socklen_t sin_out_len = sizeof(sin_out);
 	ev_socklen_t sin6_out_len = sizeof(sin6_out);
 	int r;
-	char buf[128];
 	if (have_checked_interfaces && !force_recheck)
 		return 0;
 
-	/* To check whether we have an interface open for a given protocol, we
-	 * try to make a UDP 'connection' to a remote host on the internet.
-	 * We don't actually use it, so the address doesn't matter, but we
-	 * want to pick one that keep us from using a host- or link-local
-	 * interface. */
+	if (evutil_check_ifaddrs() == 0) {
+		/* Use a nice sane interface, if this system has one. */
+		return 0;
+	}
+
+	/* Ugh. There was no nice sane interface.  So to check whether we have
+	 * an interface open for a given protocol, will try to make a UDP
+	 * 'connection' to a remote host on the internet.  We don't actually
+	 * use it, so the address doesn't matter, but we want to pick one that
+	 * keep us from using a host- or link-local interface. */
 	memset(&sin, 0, sizeof(sin));
 	sin.sin_family = AF_INET;
 	sin.sin_port = htons(53);
@@ -587,21 +768,7 @@ evutil_check_interfaces(int force_recheck)
 	    connect(fd, (struct sockaddr*)&sin, sizeof(sin)) == 0 &&
 	    getsockname(fd, (struct sockaddr*)&sin_out, &sin_out_len) == 0) {
 		/* We might have an IPv4 interface. */
-		ev_uint32_t addr = ntohl(sin_out.sin_addr.s_addr);
-		if (addr == 0 ||
-		    EVUTIL_V4ADDR_IS_LOCALHOST(addr) ||
-		    EVUTIL_V4ADDR_IS_CLASSD(addr)) {
-			evutil_inet_ntop(AF_INET, &sin_out.sin_addr,
-			    buf, sizeof(buf));
-			/* This is a reserved, ipv4compat, ipv4map, loopback,
-			 * link-local or unspecified address.  The host should
-			 * never have given it to us; it could never connect
-			 * to sin. */
-			event_warnx("Got a strange local ipv4 address %s",buf);
-		} else {
-			event_debug(("Detected an IPv4 interface"));
-			had_ipv4_address = 1;
-		}
+		evutil_found_ifaddr((struct sockaddr*) &sin_out);
 	}
 	if (fd >= 0)
 		evutil_closesocket(fd);
@@ -610,21 +777,7 @@ evutil_check_interfaces(int force_recheck)
 	    connect(fd, (struct sockaddr*)&sin6, sizeof(sin6)) == 0 &&
 	    getsockname(fd, (struct sockaddr*)&sin6_out, &sin6_out_len) == 0) {
 		/* We might have an IPv6 interface. */
-		const unsigned char *addr =
-		    (unsigned char*)sin6_out.sin6_addr.s6_addr;
-		if (!memcmp(addr, ZEROES, 8) ||
-		    (addr[0] == 0xfe && (addr[1] & 0xc0) == 0x80)) {
-			/* This is a reserved, ipv4compat, ipv4map, loopback,
-			 * link-local or unspecified address.  The host should
-			 * never have given it to us; it could never connect
-			 * to sin6. */
-			evutil_inet_ntop(AF_INET6, &sin6_out.sin6_addr,
-			    buf, sizeof(buf));
-			event_warnx("Got a strange local ipv6 address %s",buf);
-		} else {
-			event_debug(("Detected an IPv4 interface"));
-			had_ipv6_address = 1;
-		}
+		evutil_found_ifaddr((struct sockaddr*) &sin6_out);
 	}
 
 	if (fd >= 0)
@@ -645,7 +798,7 @@ evutil_check_interfaces(int force_recheck)
  * allocate both a TCP and a UDP addrinfo.
  */
 struct evutil_addrinfo *
-evutil_new_addrinfo(struct sockaddr *sa, ev_socklen_t socklen,
+evutil_new_addrinfo_(struct sockaddr *sa, ev_socklen_t socklen,
     const struct evutil_addrinfo *hints)
 {
 	struct evutil_addrinfo *res;
@@ -657,11 +810,11 @@ evutil_new_addrinfo(struct sockaddr *sa, ev_socklen_t socklen,
 		struct evutil_addrinfo tmp;
 		memcpy(&tmp, hints, sizeof(tmp));
 		tmp.ai_socktype = SOCK_STREAM; tmp.ai_protocol = IPPROTO_TCP;
-		r1 = evutil_new_addrinfo(sa, socklen, &tmp);
+		r1 = evutil_new_addrinfo_(sa, socklen, &tmp);
 		if (!r1)
 			return NULL;
 		tmp.ai_socktype = SOCK_DGRAM; tmp.ai_protocol = IPPROTO_UDP;
-		r2 = evutil_new_addrinfo(sa, socklen, &tmp);
+		r2 = evutil_new_addrinfo_(sa, socklen, &tmp);
 		if (!r2) {
 			evutil_freeaddrinfo(r1);
 			return NULL;
@@ -690,7 +843,7 @@ evutil_new_addrinfo(struct sockaddr *sa, ev_socklen_t socklen,
  * the list.  Either element can be NULL, in which case we return the element
  * that is not NULL. */
 struct evutil_addrinfo *
-evutil_addrinfo_append(struct evutil_addrinfo *first,
+evutil_addrinfo_append_(struct evutil_addrinfo *first,
     struct evutil_addrinfo *append)
 {
 	struct evutil_addrinfo *ai = first;
@@ -725,7 +878,7 @@ evutil_parse_servname(const char *servname, const char *protocol,
 	int n = parse_numeric_servname(servname);
 	if (n>=0)
 		return n;
-#if defined(_EVENT_HAVE_GETSERVBYNAME) || defined(WIN32)
+#if defined(EVENT__HAVE_GETSERVBYNAME) || defined(_WIN32)
 	if (!(hints->ai_flags & EVUTIL_AI_NUMERICSERV)) {
 		struct servent *ent = getservbyname(servname, protocol);
 		if (ent) {
@@ -753,7 +906,7 @@ evutil_unparse_protoname(int proto)
 		return "sctp";
 #endif
 	default:
-#ifdef _EVENT_HAVE_GETPROTOBYNUMBER
+#ifdef EVENT__HAVE_GETPROTOBYNUMBER
 		{
 			struct protoent *ent = getprotobynumber(proto);
 			if (ent)
@@ -806,7 +959,7 @@ evutil_getaddrinfo_infer_protocols(struct evutil_addrinfo *hints)
  * set *res as getaddrinfo would.
  */
 int
-evutil_getaddrinfo_common(const char *nodename, const char *servname,
+evutil_getaddrinfo_common_(const char *nodename, const char *servname,
     struct evutil_addrinfo *hints, struct evutil_addrinfo **res, int *portnum)
 {
 	int port = 0;
@@ -848,7 +1001,7 @@ evutil_getaddrinfo_common(const char *nodename, const char *servname,
 				/* connect to ::1 */
 				sin6.sin6_addr.s6_addr[15] = 1;
 			}
-			res6 = evutil_new_addrinfo((struct sockaddr*)&sin6,
+			res6 = evutil_new_addrinfo_((struct sockaddr*)&sin6,
 			    sizeof(sin6), hints);
 			if (!res6)
 				return EVUTIL_EAI_MEMORY;
@@ -865,7 +1018,7 @@ evutil_getaddrinfo_common(const char *nodename, const char *servname,
 				/* connect to 127.0.0.1 */
 				sin.sin_addr.s_addr = htonl(0x7f000001);
 			}
-			res4 = evutil_new_addrinfo((struct sockaddr*)&sin,
+			res4 = evutil_new_addrinfo_((struct sockaddr*)&sin,
 			    sizeof(sin), hints);
 			if (!res4) {
 				if (res6)
@@ -873,7 +1026,7 @@ evutil_getaddrinfo_common(const char *nodename, const char *servname,
 				return EVUTIL_EAI_MEMORY;
 			}
 		}
-		*res = evutil_addrinfo_append(res4, res6);
+		*res = evutil_addrinfo_append_(res4, res6);
 		return 0;
 	}
 
@@ -887,7 +1040,7 @@ evutil_getaddrinfo_common(const char *nodename, const char *servname,
 			/* Got an ipv6 address. */
 			sin6.sin6_family = AF_INET6;
 			sin6.sin6_port = htons(port);
-			*res = evutil_new_addrinfo((struct sockaddr*)&sin6,
+			*res = evutil_new_addrinfo_((struct sockaddr*)&sin6,
 			    sizeof(sin6), hints);
 			if (!*res)
 				return EVUTIL_EAI_MEMORY;
@@ -903,7 +1056,7 @@ evutil_getaddrinfo_common(const char *nodename, const char *servname,
 			/* Got an ipv6 address. */
 			sin.sin_family = AF_INET;
 			sin.sin_port = htons(port);
-			*res = evutil_new_addrinfo((struct sockaddr*)&sin,
+			*res = evutil_new_addrinfo_((struct sockaddr*)&sin,
 			    sizeof(sin), hints);
 			if (!*res)
 				return EVUTIL_EAI_MEMORY;
@@ -922,7 +1075,7 @@ evutil_getaddrinfo_common(const char *nodename, const char *servname,
 	return EVUTIL_EAI_NEED_RESOLVE;
 }
 
-#ifdef _EVENT_HAVE_GETADDRINFO
+#ifdef EVENT__HAVE_GETADDRINFO
 #define USE_NATIVE_GETADDRINFO
 #endif
 
@@ -1010,7 +1163,7 @@ addrinfo_from_hostent(const struct hostent *ent,
 		sin6.sin6_family = AF_INET6;
 		sin6.sin6_port = htons(port);
 		sa = (struct sockaddr *)&sin6;
-		socklen = sizeof(struct sockaddr_in);
+		socklen = sizeof(struct sockaddr_in6);
 		addrp = &sin6.sin6_addr;
 		if (ent->h_length != sizeof(sin6.sin6_addr)) {
 			event_warnx("Weird h_length from gethostbyname");
@@ -1021,12 +1174,12 @@ addrinfo_from_hostent(const struct hostent *ent,
 
 	for (i = 0; ent->h_addr_list[i]; ++i) {
 		memcpy(addrp, ent->h_addr_list[i], ent->h_length);
-		ai = evutil_new_addrinfo(sa, socklen, hints);
+		ai = evutil_new_addrinfo_(sa, socklen, hints);
 		if (!ai) {
 			evutil_freeaddrinfo(res);
 			return NULL;
 		}
-		res = evutil_addrinfo_append(res, ai);
+		res = evutil_addrinfo_append_(res, ai);
 	}
 
 	if (res && ((hints->ai_flags & EVUTIL_AI_CANONNAME) && ent->h_name)) {
@@ -1046,7 +1199,7 @@ addrinfo_from_hostent(const struct hostent *ent,
  * that we'll only get addresses we could maybe connect to.
  */
 void
-evutil_adjust_hints_for_addrconfig(struct evutil_addrinfo *hints)
+evutil_adjust_hints_for_addrconfig_(struct evutil_addrinfo *hints)
 {
 	if (!(hints->ai_flags & EVUTIL_AI_ADDRCONFIG))
 		return;
@@ -1072,7 +1225,7 @@ static int tested_for_getaddrinfo_hacks=0;
    turns out that the bug is present, then:
 
     - If nodename==NULL and servname is numeric, we build an answer
-      ourselves using evutil_getaddrinfo_common().
+      ourselves using evutil_getaddrinfo_common_().
 
     - If nodename!=NULL and servname is numeric, then we set
       servname=NULL when calling getaddrinfo, and post-process the
@@ -1085,11 +1238,20 @@ static int tested_for_getaddrinfo_hacks=0;
      field set to 0.  We test for this so we can apply an appropriate
      workaround.
 */
+static struct evutil_addrinfo *ai_find_protocol(struct evutil_addrinfo *ai)
+{
+	while (ai) {
+		if (ai->ai_protocol)
+			return ai;
+		ai = ai->ai_next;
+	}
+	return NULL;
+}
 static void
 test_for_getaddrinfo_hacks(void)
 {
 	int r, r2;
-	struct evutil_addrinfo *ai=NULL, *ai2=NULL;
+	struct evutil_addrinfo *ai=NULL, *ai2=NULL, *ai3=NULL;
 	struct evutil_addrinfo hints;
 
 	memset(&hints,0,sizeof(hints));
@@ -1103,12 +1265,13 @@ test_for_getaddrinfo_hacks(void)
 #endif
 	    0;
 	r = getaddrinfo("1.2.3.4", "80", &hints, &ai);
+	getaddrinfo("1.2.3.4", NULL, &hints, &ai3);
 	hints.ai_socktype = SOCK_STREAM;
 	r2 = getaddrinfo("1.2.3.4", "80", &hints, &ai2);
 	if (r2 == 0 && r != 0) {
 		need_numeric_port_hack_=1;
 	}
-	if (ai2 && ai2->ai_protocol == 0) {
+	if (!ai_find_protocol(ai2) || !ai_find_protocol(ai3)) {
 		need_socktype_protocol_hack_=1;
 	}
 
@@ -1116,6 +1279,8 @@ test_for_getaddrinfo_hacks(void)
 		freeaddrinfo(ai);
 	if (ai2)
 		freeaddrinfo(ai2);
+	if (ai3)
+		freeaddrinfo(ai3);
 	tested_for_getaddrinfo_hacks=1;
 }
 
@@ -1202,7 +1367,7 @@ evutil_getaddrinfo(const char *nodename, const char *servname,
 	/* Not every system has AI_ADDRCONFIG, so fake it. */
 	if (hints.ai_family == PF_UNSPEC &&
 	    (hints.ai_flags & EVUTIL_AI_ADDRCONFIG)) {
-		evutil_adjust_hints_for_addrconfig(&hints);
+		evutil_adjust_hints_for_addrconfig_(&hints);
 	}
 #endif
 
@@ -1225,10 +1390,10 @@ evutil_getaddrinfo(const char *nodename, const char *servname,
 	 *   ever resolving even a literal IPv6 address when
 	 *   ai_addrtype is PF_UNSPEC.
 	 */
-#ifdef WIN32
+#ifdef _WIN32
 	{
 		int tmp_port;
-		err = evutil_getaddrinfo_common(nodename,servname,&hints,
+		err = evutil_getaddrinfo_common_(nodename,servname,&hints,
 		    res, &tmp_port);
 		if (err == 0 ||
 		    err == EVUTIL_EAI_MEMORY ||
@@ -1244,7 +1409,7 @@ evutil_getaddrinfo(const char *nodename, const char *servname,
 	    && ((portnum=parse_numeric_servname(servname)) >= 0);
 	if (need_np_hack) {
 		if (!nodename)
-			return evutil_getaddrinfo_common(
+			return evutil_getaddrinfo_common_(
 				NULL,servname,&hints, res, &portnum);
 		servname = NULL;
 	}
@@ -1289,9 +1454,9 @@ evutil_getaddrinfo(const char *nodename, const char *servname,
 		hints.ai_family = PF_UNSPEC;
 	}
 
-	evutil_adjust_hints_for_addrconfig(&hints);
+	evutil_adjust_hints_for_addrconfig_(&hints);
 
-	err = evutil_getaddrinfo_common(nodename, servname, &hints, res, &port);
+	err = evutil_getaddrinfo_common_(nodename, servname, &hints, res, &port);
 	if (err != EVUTIL_EAI_NEED_RESOLVE) {
 		/* We either succeeded or failed.  No need to continue */
 		return err;
@@ -1300,19 +1465,19 @@ evutil_getaddrinfo(const char *nodename, const char *servname,
 	err = 0;
 	/* Use any of the various gethostbyname_r variants as available. */
 	{
-#ifdef _EVENT_HAVE_GETHOSTBYNAME_R_6_ARG
+#ifdef EVENT__HAVE_GETHOSTBYNAME_R_6_ARG
 		/* This one is what glibc provides. */
 		char buf[2048];
 		struct hostent hostent;
 		int r;
 		r = gethostbyname_r(nodename, &hostent, buf, sizeof(buf), &ent,
 		    &err);
-#elif defined(_EVENT_HAVE_GETHOSTBYNAME_R_5_ARG)
+#elif defined(EVENT__HAVE_GETHOSTBYNAME_R_5_ARG)
 		char buf[2048];
 		struct hostent hostent;
 		ent = gethostbyname_r(nodename, &hostent, buf, sizeof(buf),
 		    &err);
-#elif defined(_EVENT_HAVE_GETHOSTBYNAME_R_3_ARG)
+#elif defined(EVENT__HAVE_GETHOSTBYNAME_R_3_ARG)
 		struct hostent_data data;
 		struct hostent hostent;
 		memset(&data, 0, sizeof(data));
@@ -1322,7 +1487,7 @@ evutil_getaddrinfo(const char *nodename, const char *servname,
 		/* fall back to gethostbyname. */
 		/* XXXX This needs a lock everywhere but Windows. */
 		ent = gethostbyname(nodename);
-#ifdef WIN32
+#ifdef _WIN32
 		err = WSAGetLastError();
 #else
 		err = h_errno;
@@ -1377,7 +1542,7 @@ evutil_getaddrinfo(const char *nodename, const char *servname,
 void
 evutil_freeaddrinfo(struct evutil_addrinfo *ai)
 {
-#ifdef _EVENT_HAVE_GETADDRINFO
+#ifdef EVENT__HAVE_GETADDRINFO
 	if (!(ai->ai_flags & EVUTIL_AI_LIBEVENT_ALLOCATED)) {
 		freeaddrinfo(ai);
 		return;
@@ -1393,34 +1558,48 @@ evutil_freeaddrinfo(struct evutil_addrinfo *ai)
 }
 
 static evdns_getaddrinfo_fn evdns_getaddrinfo_impl = NULL;
+static evdns_getaddrinfo_cancel_fn evdns_getaddrinfo_cancel_impl = NULL;
 
 void
-evutil_set_evdns_getaddrinfo_fn(evdns_getaddrinfo_fn fn)
+evutil_set_evdns_getaddrinfo_fn_(evdns_getaddrinfo_fn fn)
 {
 	if (!evdns_getaddrinfo_impl)
 		evdns_getaddrinfo_impl = fn;
+}
+void
+evutil_set_evdns_getaddrinfo_cancel_fn_(evdns_getaddrinfo_cancel_fn fn)
+{
+	if (!evdns_getaddrinfo_cancel_impl)
+		evdns_getaddrinfo_cancel_impl = fn;
 }
 
 /* Internal helper function: act like evdns_getaddrinfo if dns_base is set;
  * otherwise do a blocking resolve and pass the result to the callback in the
  * way that evdns_getaddrinfo would.
  */
-int
-evutil_getaddrinfo_async(struct evdns_base *dns_base,
+struct evdns_getaddrinfo_request *evutil_getaddrinfo_async_(
+    struct evdns_base *dns_base,
     const char *nodename, const char *servname,
     const struct evutil_addrinfo *hints_in,
     void (*cb)(int, struct evutil_addrinfo *, void *), void *arg)
 {
 	if (dns_base && evdns_getaddrinfo_impl) {
-		evdns_getaddrinfo_impl(
+		return evdns_getaddrinfo_impl(
 			dns_base, nodename, servname, hints_in, cb, arg);
 	} else {
 		struct evutil_addrinfo *ai=NULL;
 		int err;
 		err = evutil_getaddrinfo(nodename, servname, hints_in, &ai);
 		cb(err, ai, arg);
+		return NULL;
 	}
-	return 0;
+}
+
+void evutil_getaddrinfo_cancel_async_(struct evdns_getaddrinfo_request *data)
+{
+	if (evdns_getaddrinfo_cancel_impl && data) {
+		evdns_getaddrinfo_cancel_impl(data);
+	}
 }
 
 const char *
@@ -1458,7 +1637,7 @@ evutil_gai_strerror(int err)
 	case EVUTIL_EAI_SYSTEM:
 		return "system error";
 	default:
-#if defined(USE_NATIVE_GETADDRINFO) && defined(WIN32)
+#if defined(USE_NATIVE_GETADDRINFO) && defined(_WIN32)
 		return gai_strerrorA(err);
 #elif defined(USE_NATIVE_GETADDRINFO)
 		return gai_strerror(err);
@@ -1468,81 +1647,178 @@ evutil_gai_strerror(int err)
 	}
 }
 
-#ifdef WIN32
-#define E(code, s) { code, (s " [" #code " ]") }
-static struct { int code; const char *msg; } windows_socket_errors[] = {
-  E(WSAEINTR, "Interrupted function call"),
-  E(WSAEACCES, "Permission denied"),
-  E(WSAEFAULT, "Bad address"),
-  E(WSAEINVAL, "Invalid argument"),
-  E(WSAEMFILE, "Too many open files"),
-  E(WSAEWOULDBLOCK,  "Resource temporarily unavailable"),
-  E(WSAEINPROGRESS, "Operation now in progress"),
-  E(WSAEALREADY, "Operation already in progress"),
-  E(WSAENOTSOCK, "Socket operation on nonsocket"),
-  E(WSAEDESTADDRREQ, "Destination address required"),
-  E(WSAEMSGSIZE, "Message too long"),
-  E(WSAEPROTOTYPE, "Protocol wrong for socket"),
-  E(WSAENOPROTOOPT, "Bad protocol option"),
-  E(WSAEPROTONOSUPPORT, "Protocol not supported"),
-  E(WSAESOCKTNOSUPPORT, "Socket type not supported"),
-  /* What's the difference between NOTSUPP and NOSUPPORT? :) */
-  E(WSAEOPNOTSUPP, "Operation not supported"),
-  E(WSAEPFNOSUPPORT,  "Protocol family not supported"),
-  E(WSAEAFNOSUPPORT, "Address family not supported by protocol family"),
-  E(WSAEADDRINUSE, "Address already in use"),
-  E(WSAEADDRNOTAVAIL, "Cannot assign requested address"),
-  E(WSAENETDOWN, "Network is down"),
-  E(WSAENETUNREACH, "Network is unreachable"),
-  E(WSAENETRESET, "Network dropped connection on reset"),
-  E(WSAECONNABORTED, "Software caused connection abort"),
-  E(WSAECONNRESET, "Connection reset by peer"),
-  E(WSAENOBUFS, "No buffer space available"),
-  E(WSAEISCONN, "Socket is already connected"),
-  E(WSAENOTCONN, "Socket is not connected"),
-  E(WSAESHUTDOWN, "Cannot send after socket shutdown"),
-  E(WSAETIMEDOUT, "Connection timed out"),
-  E(WSAECONNREFUSED, "Connection refused"),
-  E(WSAEHOSTDOWN, "Host is down"),
-  E(WSAEHOSTUNREACH, "No route to host"),
-  E(WSAEPROCLIM, "Too many processes"),
+#ifdef _WIN32
+/* destructively remove a trailing line terminator from s */
+static void
+chomp (char *s)
+{
+	size_t len;
+	if (s && (len = strlen (s)) > 0 && s[len - 1] == '\n') {
+		s[--len] = 0;
+		if (len > 0 && s[len - 1] == '\r')
+			s[--len] = 0;
+	}
+}
 
-  /* Yes, some of these start with WSA, not WSAE. No, I don't know why. */
-  E(WSASYSNOTREADY, "Network subsystem is unavailable"),
-  E(WSAVERNOTSUPPORTED, "Winsock.dll out of range"),
-  E(WSANOTINITIALISED, "Successful WSAStartup not yet performed"),
-  E(WSAEDISCON, "Graceful shutdown now in progress"),
-#ifdef WSATYPE_NOT_FOUND
-  E(WSATYPE_NOT_FOUND, "Class type not found"),
-#endif
-  E(WSAHOST_NOT_FOUND, "Host not found"),
-  E(WSATRY_AGAIN, "Nonauthoritative host not found"),
-  E(WSANO_RECOVERY, "This is a nonrecoverable error"),
-  E(WSANO_DATA, "Valid name, no data record of requested type)"),
+/* FormatMessage returns allocated strings, but evutil_socket_error_to_string
+ * is supposed to return a string which is good indefinitely without having
+ * to be freed.  To make this work without leaking memory, we cache the
+ * string the first time FormatMessage is called on a particular error
+ * code, and then return the cached string on subsequent calls with the
+ * same code.  The strings aren't freed until libevent_global_shutdown
+ * (or never).  We use a linked list to cache the errors, because we
+ * only expect there to be a few dozen, and that should be fast enough.
+ */
 
-  /* There are some more error codes whose numeric values are marked
-   * <b>OS dependent</b>. They start with WSA_, apparently for the same
-   * reason that practitioners of some craft traditions deliberately
-   * introduce imperfections into their baskets and rugs "to allow the
-   * evil spirits to escape."  If we catch them, then our binaries
-   * might not report consistent results across versions of Windows.
-   * Thus, I'm going to let them all fall through.
-   */
-  { -1, NULL },
+struct cached_sock_errs_entry {
+	HT_ENTRY(cached_sock_errs_entry) node;
+	DWORD code;
+	char *msg; /* allocated with LocalAlloc; free with LocalFree */
 };
-#undef E
+
+static inline unsigned
+hash_cached_sock_errs(const struct cached_sock_errs_entry *e)
+{
+	/* Use Murmur3's 32-bit finalizer as an integer hash function */
+	DWORD h = e->code;
+	h ^= h >> 16;
+	h *= 0x85ebca6b;
+	h ^= h >> 13;
+	h *= 0xc2b2ae35;
+	h ^= h >> 16;
+	return h;
+}
+
+static inline int
+eq_cached_sock_errs(const struct cached_sock_errs_entry *a,
+		    const struct cached_sock_errs_entry *b)
+{
+	return a->code == b->code;
+}
+
+#ifndef EVENT__DISABLE_THREAD_SUPPORT
+static void *windows_socket_errors_lock_ = NULL;
+#endif
+
+static HT_HEAD(cached_sock_errs_map, cached_sock_errs_entry)
+     windows_socket_errors = HT_INITIALIZER();
+
+HT_PROTOTYPE(cached_sock_errs_map,
+	     cached_sock_errs_entry,
+	     node,
+	     hash_cached_sock_errs,
+	     eq_cached_sock_errs);
+
+HT_GENERATE(cached_sock_errs_map,
+	    cached_sock_errs_entry,
+	    node,
+	    hash_cached_sock_errs,
+	    eq_cached_sock_errs,
+	    0.5,
+	    mm_malloc,
+	    mm_realloc,
+	    mm_free);
+
 /** Equivalent to strerror, but for windows socket errors. */
 const char *
 evutil_socket_error_to_string(int errcode)
 {
-  /* XXXX Is there really no built-in function to do this? */
-  int i;
-  for (i=0; windows_socket_errors[i].code >= 0; ++i) {
-    if (errcode == windows_socket_errors[i].code)
-      return windows_socket_errors[i].msg;
-  }
-  return strerror(errcode);
+	struct cached_sock_errs_entry *errs, *newerr, find;
+	char *msg = NULL;
+
+	EVLOCK_LOCK(windows_socket_errors_lock_, 0);
+
+	find.code = errcode;
+	errs = HT_FIND(cached_sock_errs_map, &windows_socket_errors, &find);
+	if (errs) {
+		msg = errs->msg;
+		goto done;
+	}
+
+	if (0 != FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM |
+			       FORMAT_MESSAGE_IGNORE_INSERTS |
+			       FORMAT_MESSAGE_ALLOCATE_BUFFER,
+			       NULL, errcode, 0, (char *)&msg, 0, NULL))
+		chomp (msg);	/* because message has trailing newline */
+	else {
+		size_t len = 50;
+		/* use LocalAlloc because FormatMessage does */
+		msg = LocalAlloc(LMEM_FIXED, len);
+		if (!msg) {
+			msg = (char *)"LocalAlloc failed during Winsock error";
+			goto done;
+		}
+		evutil_snprintf(msg, len, "winsock error 0x%08x", errcode);
+	}
+
+	newerr = (struct cached_sock_errs_entry *)
+		mm_malloc(sizeof (struct cached_sock_errs_entry));
+
+	if (!newerr) {
+		LocalFree(msg);
+		msg = (char *)"malloc failed during Winsock error";
+		goto done;
+	}
+
+	newerr->code = errcode;
+	newerr->msg = msg;
+	HT_INSERT(cached_sock_errs_map, &windows_socket_errors, newerr);
+
+ done:
+	EVLOCK_UNLOCK(windows_socket_errors_lock_, 0);
+
+	return msg;
 }
+
+#ifndef EVENT__DISABLE_THREAD_SUPPORT
+int
+evutil_global_setup_locks_(const int enable_locks)
+{
+	EVTHREAD_SETUP_GLOBAL_LOCK(windows_socket_errors_lock_, 0);
+	return 0;
+}
+#endif
+
+static void
+evutil_free_sock_err_globals(void)
+{
+	struct cached_sock_errs_entry **errs, *tofree;
+
+	for (errs = HT_START(cached_sock_errs_map, &windows_socket_errors)
+		     ; errs; ) {
+		tofree = *errs;
+		errs = HT_NEXT_RMV(cached_sock_errs_map,
+				   &windows_socket_errors,
+				   errs);
+		LocalFree(tofree->msg);
+		mm_free(tofree);
+	}
+
+	HT_CLEAR(cached_sock_errs_map, &windows_socket_errors);
+
+#ifndef EVENT__DISABLE_THREAD_SUPPORT
+	if (windows_socket_errors_lock_ != NULL) {
+		EVTHREAD_FREE_LOCK(windows_socket_errors_lock_, 0);
+		windows_socket_errors_lock_ = NULL;
+	}
+#endif
+}
+
+#else
+
+#ifndef EVENT__DISABLE_THREAD_SUPPORT
+int
+evutil_global_setup_locks_(const int enable_locks)
+{
+	return 0;
+}
+#endif
+
+static void
+evutil_free_sock_err_globals(void)
+{
+}
+
 #endif
 
 int
@@ -1562,7 +1838,7 @@ evutil_vsnprintf(char *buf, size_t buflen, const char *format, va_list ap)
 	int r;
 	if (!buflen)
 		return 0;
-#if defined(_MSC_VER) || defined(WIN32)
+#if defined(_MSC_VER) || defined(_WIN32)
 	r = _vsnprintf(buf, buflen, format, ap);
 	if (r < 0)
 		r = _vscprintf(format, ap);
@@ -1586,7 +1862,7 @@ evutil_vsnprintf(char *buf, size_t buflen, const char *format, va_list ap)
 const char *
 evutil_inet_ntop(int af, const void *src, char *dst, size_t len)
 {
-#if defined(_EVENT_HAVE_INET_NTOP) && !defined(USE_INTERNAL_NTOP)
+#if defined(EVENT__HAVE_INET_NTOP) && !defined(USE_INTERNAL_NTOP)
 	return inet_ntop(af, src, dst, len);
 #else
 	if (af == AF_INET) {
@@ -1682,19 +1958,19 @@ evutil_inet_ntop(int af, const void *src, char *dst, size_t len)
 int
 evutil_inet_pton(int af, const char *src, void *dst)
 {
-#if defined(_EVENT_HAVE_INET_PTON) && !defined(USE_INTERNAL_PTON)
+#if defined(EVENT__HAVE_INET_PTON) && !defined(USE_INTERNAL_PTON)
 	return inet_pton(af, src, dst);
 #else
 	if (af == AF_INET) {
-		int a,b,c,d;
+		unsigned a,b,c,d;
 		char more;
 		struct in_addr *addr = dst;
-		if (sscanf(src, "%d.%d.%d.%d%c", &a,&b,&c,&d,&more) != 4)
+		if (sscanf(src, "%u.%u.%u.%u%c", &a,&b,&c,&d,&more) != 4)
 			return 0;
-		if (a < 0 || a > 255) return 0;
-		if (b < 0 || b > 255) return 0;
-		if (c < 0 || c > 255) return 0;
-		if (d < 0 || d > 255) return 0;
+		if (a > 255) return 0;
+		if (b > 255) return 0;
+		if (c > 255) return 0;
+		if (d > 255) return 0;
 		addr->s_addr = htonl((a<<24) | (b<<16) | (c<<8) | d);
 		return 1;
 #ifdef AF_INET6
@@ -1709,22 +1985,22 @@ evutil_inet_pton(int af, const char *src, void *dst)
 		else if (!dot)
 			eow = src+strlen(src);
 		else {
-			int byte1,byte2,byte3,byte4;
+			unsigned byte1,byte2,byte3,byte4;
 			char more;
-			for (eow = dot-1; eow >= src && EVUTIL_ISDIGIT(*eow); --eow)
+			for (eow = dot-1; eow >= src && EVUTIL_ISDIGIT_(*eow); --eow)
 				;
 			++eow;
 
 			/* We use "scanf" because some platform inet_aton()s are too lax
 			 * about IPv4 addresses of the form "1.2.3" */
-			if (sscanf(eow, "%d.%d.%d.%d%c",
+			if (sscanf(eow, "%u.%u.%u.%u%c",
 					   &byte1,&byte2,&byte3,&byte4,&more) != 4)
 				return 0;
 
-			if (byte1 > 255 || byte1 < 0 ||
-				byte2 > 255 || byte2 < 0 ||
-				byte3 > 255 || byte3 < 0 ||
-				byte4 > 255 || byte4 < 0)
+			if (byte1 > 255 ||
+			    byte2 > 255 ||
+			    byte3 > 255 ||
+			    byte4 > 255)
 				return 0;
 
 			words[6] = (byte1<<8) | byte2;
@@ -1736,7 +2012,7 @@ evutil_inet_pton(int af, const char *src, void *dst)
 		while (src < eow) {
 			if (i > 7)
 				return 0;
-			if (EVUTIL_ISXDIGIT(*src)) {
+			if (EVUTIL_ISXDIGIT_(*src)) {
 				char *next;
 				long r = strtol(src, &next, 16);
 				if (next > 4+src)
@@ -1859,7 +2135,7 @@ evutil_parse_sockaddr_port(const char *ip_as_string, struct sockaddr *out, int *
 	{
 		struct sockaddr_in6 sin6;
 		memset(&sin6, 0, sizeof(sin6));
-#ifdef _EVENT_HAVE_STRUCT_SOCKADDR_IN6_SIN6_LEN
+#ifdef EVENT__HAVE_STRUCT_SOCKADDR_IN6_SIN6_LEN
 		sin6.sin6_len = sizeof(sin6);
 #endif
 		sin6.sin6_family = AF_INET6;
@@ -1878,7 +2154,7 @@ evutil_parse_sockaddr_port(const char *ip_as_string, struct sockaddr *out, int *
 	{
 		struct sockaddr_in sin;
 		memset(&sin, 0, sizeof(sin));
-#ifdef _EVENT_HAVE_STRUCT_SOCKADDR_IN_SIN_LEN
+#ifdef EVENT__HAVE_STRUCT_SOCKADDR_IN_SIN_LEN
 		sin.sin_len = sizeof(sin);
 #endif
 		sin.sin_family = AF_INET;
@@ -1895,7 +2171,7 @@ evutil_parse_sockaddr_port(const char *ip_as_string, struct sockaddr *out, int *
 }
 
 const char *
-evutil_format_sockaddr_port(const struct sockaddr *sa, char *out, size_t outlen)
+evutil_format_sockaddr_port_(const struct sockaddr *sa, char *out, size_t outlen)
 {
 	char b[128];
 	const char *res=NULL;
@@ -2019,7 +2295,7 @@ static const unsigned char EVUTIL_TOLOWER_TABLE[256] = {
 };
 
 #define IMPL_CTYPE_FN(name)						\
-	int EVUTIL_##name(char c) {					\
+	int EVUTIL_##name##_(char c) {					\
 		ev_uint8_t u = c;					\
 		return !!(EVUTIL_##name##_TABLE[(u >> 5) & 7] & (1 << (u & 31))); \
 	}
@@ -2032,11 +2308,11 @@ IMPL_CTYPE_FN(ISPRINT)
 IMPL_CTYPE_FN(ISLOWER)
 IMPL_CTYPE_FN(ISUPPER)
 
-char EVUTIL_TOLOWER(char c)
+char EVUTIL_TOLOWER_(char c)
 {
 	return ((char)EVUTIL_TOLOWER_TABLE[(ev_uint8_t)c]);
 }
-char EVUTIL_TOUPPER(char c)
+char EVUTIL_TOUPPER_(char c)
 {
 	return ((char)EVUTIL_TOUPPER_TABLE[(ev_uint8_t)c]);
 }
@@ -2045,8 +2321,8 @@ evutil_ascii_strcasecmp(const char *s1, const char *s2)
 {
 	char c1, c2;
 	while (1) {
-		c1 = EVUTIL_TOLOWER(*s1++);
-		c2 = EVUTIL_TOLOWER(*s2++);
+		c1 = EVUTIL_TOLOWER_(*s1++);
+		c2 = EVUTIL_TOLOWER_(*s2++);
 		if (c1 < c2)
 			return -1;
 		else if (c1 > c2)
@@ -2059,8 +2335,8 @@ int evutil_ascii_strncasecmp(const char *s1, const char *s2, size_t n)
 {
 	char c1, c2;
 	while (n--) {
-		c1 = EVUTIL_TOLOWER(*s1++);
-		c2 = EVUTIL_TOLOWER(*s2++);
+		c1 = EVUTIL_TOLOWER_(*s1++);
+		c2 = EVUTIL_TOLOWER_(*s2++);
 		if (c1 < c2)
 			return -1;
 		else if (c1 > c2)
@@ -2071,18 +2347,39 @@ int evutil_ascii_strncasecmp(const char *s1, const char *s2, size_t n)
 	return 0;
 }
 
+void
+evutil_rtrim_lws_(char *str)
+{
+	char *cp;
+
+	if (str == NULL)
+		return;
+
+	if ((cp = strchr(str, '\0')) == NULL || (cp == str))
+		return;
+
+	--cp;
+
+	while (*cp == ' ' || *cp == '\t') {
+		*cp = '\0';
+		if (cp == str)
+			break;
+		--cp;
+	}
+}
+
 static int
 evutil_issetugid(void)
 {
-#ifdef _EVENT_HAVE_ISSETUGID
+#ifdef EVENT__HAVE_ISSETUGID
 	return issetugid();
 #else
 
-#ifdef _EVENT_HAVE_GETEUID
+#ifdef EVENT__HAVE_GETEUID
 	if (getuid() != geteuid())
 		return 1;
 #endif
-#ifdef _EVENT_HAVE_GETEGID
+#ifdef EVENT__HAVE_GETEGID
 	if (getgid() != getegid())
 		return 1;
 #endif
@@ -2091,7 +2388,7 @@ evutil_issetugid(void)
 }
 
 const char *
-evutil_getenv(const char *varname)
+evutil_getenv_(const char *varname)
 {
 	if (evutil_issetugid())
 		return NULL;
@@ -2099,14 +2396,52 @@ evutil_getenv(const char *varname)
 	return getenv(varname);
 }
 
-long
-_evutil_weakrand(void)
+ev_uint32_t
+evutil_weakrand_seed_(struct evutil_weakrand_state *state, ev_uint32_t seed)
 {
-#ifdef WIN32
-	return rand();
+	if (seed == 0) {
+		struct timeval tv;
+		evutil_gettimeofday(&tv, NULL);
+		seed = (ev_uint32_t)tv.tv_sec + (ev_uint32_t)tv.tv_usec;
+#ifdef _WIN32
+		seed += (ev_uint32_t) _getpid();
 #else
-	return random();
+		seed += (ev_uint32_t) getpid();
 #endif
+	}
+	state->seed = seed;
+	return seed;
+}
+
+ev_int32_t
+evutil_weakrand_(struct evutil_weakrand_state *state)
+{
+	/* This RNG implementation is a linear congruential generator, with
+	 * modulus 2^31, multiplier 1103515245, and addend 12345.  It's also
+	 * used by OpenBSD, and by Glibc's TYPE_0 RNG.
+	 *
+	 * The linear congruential generator is not an industrial-strength
+	 * RNG!  It's fast, but it can have higher-order patterns.  Notably,
+	 * the low bits tend to have periodicity.
+	 */
+	state->seed = ((state->seed) * 1103515245 + 12345) & 0x7fffffff;
+	return (ev_int32_t)(state->seed);
+}
+
+ev_int32_t
+evutil_weakrand_range_(struct evutil_weakrand_state *state, ev_int32_t top)
+{
+	ev_int32_t divisor, result;
+
+	/* We can't just do weakrand() % top, since the low bits of the LCG
+	 * are less random than the high ones.  (Specifically, since the LCG
+	 * modulus is 2^N, every 2^m for m<N will divide the modulus, and so
+	 * therefore the low m bits of the LCG will have period 2^m.) */
+	divisor = EVUTIL_WEAKRAND_MAX / top;
+	do {
+		result = evutil_weakrand_(state) / divisor;
+	} while (result >= top);
+	return result;
 }
 
 /**
@@ -2122,7 +2457,7 @@ evutil_memclear_(void *mem, size_t len)
 }
 
 int
-evutil_sockaddr_is_loopback(const struct sockaddr *addr)
+evutil_sockaddr_is_loopback_(const struct sockaddr *addr)
 {
 	static const char LOOPBACK_S6[16] =
 	    "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\1";
@@ -2136,20 +2471,8 @@ evutil_sockaddr_is_loopback(const struct sockaddr *addr)
 	return 0;
 }
 
-#define MAX_SECONDS_IN_MSEC_LONG \
-	(((LONG_MAX) - 999) / 1000)
-
-long
-evutil_tv_to_msec(const struct timeval *tv)
-{
-	if (tv->tv_usec > 1000000 || tv->tv_sec > MAX_SECONDS_IN_MSEC_LONG)
-		return -1;
-
-	return (tv->tv_sec * 1000) + ((tv->tv_usec + 999) / 1000);
-}
-
 int
-evutil_hex_char_to_int(char c)
+evutil_hex_char_to_int_(char c)
 {
 	switch(c)
 	{
@@ -2173,9 +2496,9 @@ evutil_hex_char_to_int(char c)
 	return -1;
 }
 
-#ifdef WIN32
-HANDLE
-evutil_load_windows_system_library(const TCHAR *library_name)
+#ifdef _WIN32
+HMODULE
+evutil_load_windows_system_library_(const TCHAR *library_name)
 {
   TCHAR path[MAX_PATH];
   unsigned n;
@@ -2188,3 +2511,183 @@ evutil_load_windows_system_library(const TCHAR *library_name)
 }
 #endif
 
+/* Internal wrapper around 'socket' to provide Linux-style support for
+ * syscall-saving methods where available.
+ *
+ * In addition to regular socket behavior, you can use a bitwise or to set the
+ * flags EVUTIL_SOCK_NONBLOCK and EVUTIL_SOCK_CLOEXEC in the 'type' argument,
+ * to make the socket nonblocking or close-on-exec with as few syscalls as
+ * possible.
+ */
+evutil_socket_t
+evutil_socket_(int domain, int type, int protocol)
+{
+	evutil_socket_t r;
+#if defined(SOCK_NONBLOCK) && defined(SOCK_CLOEXEC)
+	r = socket(domain, type, protocol);
+	if (r >= 0)
+		return r;
+	else if ((type & (SOCK_NONBLOCK|SOCK_CLOEXEC)) == 0)
+		return -1;
+#endif
+#define SOCKET_TYPE_MASK (~(EVUTIL_SOCK_NONBLOCK|EVUTIL_SOCK_CLOEXEC))
+	r = socket(domain, type & SOCKET_TYPE_MASK, protocol);
+	if (r < 0)
+		return -1;
+	if (type & EVUTIL_SOCK_NONBLOCK) {
+		if (evutil_fast_socket_nonblocking(r) < 0) {
+			evutil_closesocket(r);
+			return -1;
+		}
+	}
+	if (type & EVUTIL_SOCK_CLOEXEC) {
+		if (evutil_fast_socket_closeonexec(r) < 0) {
+			evutil_closesocket(r);
+			return -1;
+		}
+	}
+	return r;
+}
+
+/* Internal wrapper around 'accept' or 'accept4' to provide Linux-style
+ * support for syscall-saving methods where available.
+ *
+ * In addition to regular accept behavior, you can set one or more of flags
+ * EVUTIL_SOCK_NONBLOCK and EVUTIL_SOCK_CLOEXEC in the 'flags' argument, to
+ * make the socket nonblocking or close-on-exec with as few syscalls as
+ * possible.
+ */
+evutil_socket_t
+evutil_accept4_(evutil_socket_t sockfd, struct sockaddr *addr,
+    ev_socklen_t *addrlen, int flags)
+{
+	evutil_socket_t result;
+#if defined(EVENT__HAVE_ACCEPT4) && defined(SOCK_CLOEXEC) && defined(SOCK_NONBLOCK)
+	result = accept4(sockfd, addr, addrlen, flags);
+	if (result >= 0 || (errno != EINVAL && errno != ENOSYS)) {
+		/* A nonnegative result means that we succeeded, so return.
+		 * Failing with EINVAL means that an option wasn't supported,
+		 * and failing with ENOSYS means that the syscall wasn't
+		 * there: in those cases we want to fall back.  Otherwise, we
+		 * got a real error, and we should return. */
+		return result;
+	}
+#endif
+	result = accept(sockfd, addr, addrlen);
+	if (result < 0)
+		return result;
+
+	if (flags & EVUTIL_SOCK_CLOEXEC) {
+		if (evutil_fast_socket_closeonexec(result) < 0) {
+			evutil_closesocket(result);
+			return -1;
+		}
+	}
+	if (flags & EVUTIL_SOCK_NONBLOCK) {
+		if (evutil_fast_socket_nonblocking(result) < 0) {
+			evutil_closesocket(result);
+			return -1;
+		}
+	}
+	return result;
+}
+
+/* Internal function: Set fd[0] and fd[1] to a pair of fds such that writes on
+ * fd[0] get read from fd[1].  Make both fds nonblocking and close-on-exec.
+ * Return 0 on success, -1 on failure.
+ */
+int
+evutil_make_internal_pipe_(evutil_socket_t fd[2])
+{
+	/*
+	  Making the second socket nonblocking is a bit subtle, given that we
+	  ignore any EAGAIN returns when writing to it, and you don't usally
+	  do that for a nonblocking socket. But if the kernel gives us EAGAIN,
+	  then there's no need to add any more data to the buffer, since
+	  the main thread is already either about to wake up and drain it,
+	  or woken up and in the process of draining it.
+	*/
+
+#if defined(EVENT__HAVE_PIPE2)
+	if (pipe2(fd, O_NONBLOCK|O_CLOEXEC) == 0)
+		return 0;
+#endif
+#if defined(EVENT__HAVE_PIPE)
+	if (pipe(fd) == 0) {
+		if (evutil_fast_socket_nonblocking(fd[0]) < 0 ||
+		    evutil_fast_socket_nonblocking(fd[1]) < 0 ||
+		    evutil_fast_socket_closeonexec(fd[0]) < 0 ||
+		    evutil_fast_socket_closeonexec(fd[1]) < 0) {
+			close(fd[0]);
+			close(fd[1]);
+			fd[0] = fd[1] = -1;
+			return -1;
+		}
+		return 0;
+	} else {
+		event_warn("%s: pipe", __func__);
+	}
+#endif
+
+#ifdef _WIN32
+#define LOCAL_SOCKETPAIR_AF AF_INET
+#else
+#define LOCAL_SOCKETPAIR_AF AF_UNIX
+#endif
+	if (evutil_socketpair(LOCAL_SOCKETPAIR_AF, SOCK_STREAM, 0, fd) == 0) {
+		if (evutil_fast_socket_nonblocking(fd[0]) < 0 ||
+		    evutil_fast_socket_nonblocking(fd[1]) < 0 ||
+		    evutil_fast_socket_closeonexec(fd[0]) < 0 ||
+		    evutil_fast_socket_closeonexec(fd[1]) < 0) {
+			evutil_closesocket(fd[0]);
+			evutil_closesocket(fd[1]);
+			fd[0] = fd[1] = -1;
+			return -1;
+		}
+		return 0;
+	}
+	fd[0] = fd[1] = -1;
+	return -1;
+}
+
+/* Wrapper around eventfd on systems that provide it.  Unlike the system
+ * eventfd, it always supports EVUTIL_EFD_CLOEXEC and EVUTIL_EFD_NONBLOCK as
+ * flags.  Returns -1 on error or if eventfd is not supported.
+ */
+evutil_socket_t
+evutil_eventfd_(unsigned initval, int flags)
+{
+#if defined(EVENT__HAVE_EVENTFD) && defined(EVENT__HAVE_SYS_EVENTFD_H)
+	int r;
+#if defined(EFD_CLOEXEC) && defined(EFD_NONBLOCK)
+	r = eventfd(initval, flags);
+	if (r >= 0 || flags == 0)
+		return r;
+#endif
+	r = eventfd(initval, 0);
+	if (r < 0)
+		return r;
+	if (flags & EVUTIL_EFD_CLOEXEC) {
+		if (evutil_fast_socket_closeonexec(r) < 0) {
+			evutil_closesocket(r);
+			return -1;
+		}
+	}
+	if (flags & EVUTIL_EFD_NONBLOCK) {
+		if (evutil_fast_socket_nonblocking(r) < 0) {
+			evutil_closesocket(r);
+			return -1;
+		}
+	}
+	return r;
+#else
+	return -1;
+#endif
+}
+
+void
+evutil_free_globals_(void)
+{
+	evutil_free_secure_rng_globals_();
+	evutil_free_sock_err_globals();
+}

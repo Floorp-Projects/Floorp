@@ -25,43 +25,43 @@ const TESTCASES = [
     initWidth: 200, initHeight: 100  },
 ];
 
-add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({"set":
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({"set":
     [["privacy.resistFingerprinting", true]]
   });
 
   // Calculate the popup window's chrome UI size for tests of outerWidth/Height.
-  let popUpChromeUISize = yield calcPopUpWindowChromeUISize();
+  let popUpChromeUISize = await calcPopUpWindowChromeUISize();
 
   gPopupChromeUIWidth = popUpChromeUISize.chromeWidth;
   gPopupChromeUIHeight = popUpChromeUISize.chromeHeight;
 
   // Calculate the maximum available size.
-  let maxAvailSize = yield calcMaximumAvailSize(gPopupChromeUIWidth,
+  let maxAvailSize = await calcMaximumAvailSize(gPopupChromeUIWidth,
                                                 gPopupChromeUIHeight);
 
   gMaxAvailWidth = maxAvailSize.maxAvailWidth;
   gMaxAvailHeight = maxAvailSize.maxAvailHeight;
 });
 
-add_task(function* test_window_size_setting() {
+add_task(async function test_window_size_setting() {
   // Open a tab to test.
-  let tab = yield BrowserTestUtils.openNewForegroundTab(
+  let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser, TEST_PATH + "file_dummy.html");
 
   for (let test of TESTCASES) {
     // Test window.innerWidth and window.innerHeight.
-    yield testWindowSizeSetting(tab.linkedBrowser, test.settingWidth, test.settingHeight,
+    await testWindowSizeSetting(tab.linkedBrowser, test.settingWidth, test.settingHeight,
                                 test.targetWidth, test.targetHeight, test.initWidth,
                                 test.initHeight, false, gMaxAvailWidth, gMaxAvailHeight,
                                 gPopupChromeUIWidth, gPopupChromeUIHeight);
 
     // test window.outerWidth and window.outerHeight.
-    yield testWindowSizeSetting(tab.linkedBrowser, test.settingWidth, test.settingHeight,
+    await testWindowSizeSetting(tab.linkedBrowser, test.settingWidth, test.settingHeight,
                                 test.targetWidth, test.targetHeight, test.initWidth,
                                 test.initHeight, true, gMaxAvailWidth, gMaxAvailHeight,
                                 gPopupChromeUIWidth, gPopupChromeUIHeight);
   }
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });

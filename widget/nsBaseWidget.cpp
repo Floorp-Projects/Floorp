@@ -316,42 +316,9 @@ void nsBaseWidget::DestroyLayerManager()
 }
 
 void
-nsBaseWidget::OnRenderingDeviceReset(uint64_t aSeqNo)
+nsBaseWidget::OnRenderingDeviceReset()
 {
-  if (!mLayerManager || !mCompositorSession) {
-    return;
-  }
-
-  nsTArray<LayersBackend> backendHints;
-  gfxPlatform::GetPlatform()->GetCompositorBackends(ComputeShouldAccelerate(), backendHints);
-
-  // If the existing compositor does not use acceleration, and this widget
-  // should not be accelerated, then there's no point in resetting.
-  //
-  // Note that if this widget should be accelerated, but instead has a basic
-  // compositor, we still reset just in case we're now in the position to get
-  // accelerated layers again.
-  RefPtr<ClientLayerManager> clm = mLayerManager->AsClientLayerManager();
-  if (!ComputeShouldAccelerate() &&
-      clm->GetCompositorBackendType() == LayersBackend::LAYERS_BASIC)
-  {
-    return;
-  }
-
-  // Recreate the compositor.
-  TextureFactoryIdentifier identifier;
-  if (!mCompositorSession->Reset(backendHints, aSeqNo, &identifier)) {
-    // No action was taken, so we don't have to do anything.
-    return;
-  }
-
-  // Invalidate all layers.
-  FrameLayerBuilder::InvalidateAllLayers(mLayerManager);
-
-  // Update the texture factory identifier.
-  clm->UpdateTextureFactoryIdentifier(identifier, aSeqNo);
-  ImageBridgeChild::IdentifyCompositorTextureHost(identifier);
-  gfx::VRManagerChild::IdentifyTextureHost(identifier);
+  DestroyLayerManager();
 }
 
 void

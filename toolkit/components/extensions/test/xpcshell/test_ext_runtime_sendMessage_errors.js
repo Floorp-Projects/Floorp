@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* test_sendMessage_error() {
+add_task(async function test_sendMessage_error() {
   async function background() {
     let circ = {};
     circ.circ = circ;
@@ -51,9 +51,9 @@ add_task(function* test_sendMessage_error() {
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitFinish("sendMessage parameter validation");
+  await extension.awaitFinish("sendMessage parameter validation");
 
-  yield extension.unload();
+  await extension.unload();
 });

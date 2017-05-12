@@ -23,9 +23,9 @@ const FILES = gTestPath.replace("browser_isSynthetic.js", "")
                        .replace("chrome://mochitests/content/", "http://example.com/");
 
 function waitForPageShow(browser) {
-  return ContentTask.spawn(browser, null, function*() {
+  return ContentTask.spawn(browser, null, async function() {
     Cu.import("resource://gre/modules/PromiseUtils.jsm");
-    yield new Promise(resolve => {
+    await new Promise(resolve => {
       let listener = () => {
         removeEventListener("pageshow", listener, true);
         resolve();
@@ -35,35 +35,35 @@ function waitForPageShow(browser) {
   });
 }
 
-add_task(function*() {
+add_task(async function() {
   let tab = gBrowser.addTab("about:blank");
   let browser = tab.linkedBrowser;
-  yield BrowserTestUtils.browserLoaded(browser);
+  await BrowserTestUtils.browserLoaded(browser);
   let listener = new LocationChangeListener(browser);
 
   is(browser.isSyntheticDocument, false, "Should not be synthetic");
 
   let loadPromise = waitForPageShow(browser);
   browser.loadURI("data:text/html;charset=utf-8,<html/>");
-  yield loadPromise;
+  await loadPromise;
   is(listener.wasSynthetic, false, "Should not be synthetic");
   is(browser.isSyntheticDocument, false, "Should not be synthetic");
 
   loadPromise = waitForPageShow(browser);
   browser.loadURI(FILES + "empty.png");
-  yield loadPromise;
+  await loadPromise;
   is(listener.wasSynthetic, true, "Should be synthetic");
   is(browser.isSyntheticDocument, true, "Should be synthetic");
 
   loadPromise = waitForPageShow(browser);
   browser.goBack();
-  yield loadPromise;
+  await loadPromise;
   is(listener.wasSynthetic, false, "Should not be synthetic");
   is(browser.isSyntheticDocument, false, "Should not be synthetic");
 
   loadPromise = waitForPageShow(browser);
   browser.goForward();
-  yield loadPromise;
+  await loadPromise;
   is(listener.wasSynthetic, true, "Should be synthetic");
   is(browser.isSyntheticDocument, true, "Should be synthetic");
 

@@ -62,8 +62,6 @@
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
                                   "resource://gre/modules/PromiseUtils.jsm");
 
@@ -263,7 +261,7 @@ var BookmarkPropertiesPanel = {
    * This method should be called by the onload of the Bookmark Properties
    * dialog to initialize the state of the panel.
    */
-  onDialogLoad: Task.async(function* () {
+  async onDialogLoad() {
     this._determineItemInfo();
 
     document.title = this._getDialogTitle();
@@ -317,7 +315,7 @@ var BookmarkPropertiesPanel = {
         acceptButton.disabled = gEditItemOverlay.readOnly;
         break;
       case ACTION_ADD:
-        this._node = yield this._promiseNewItem();
+        this._node = await this._promiseNewItem();
         // Edit the new item
         gEditItemOverlay.initPanel({ node: this._node
                                    , hiddenRows: this._hiddenRows
@@ -349,7 +347,7 @@ var BookmarkPropertiesPanel = {
         }
       }
     }
-  }),
+  },
 
   // nsIDOMEventListener
   handleEvent: function BPP_handleEvent(aEvent) {
@@ -382,9 +380,9 @@ var BookmarkPropertiesPanel = {
       return;
     if (PlacesUIUtils.useAsyncTransactions) {
       this._batchBlockingDeferred = PromiseUtils.defer();
-      PlacesTransactions.batch(function* () {
-        yield this._batchBlockingDeferred.promise;
-      }.bind(this));
+      PlacesTransactions.batch(async () => {
+        await this._batchBlockingDeferred.promise;
+      });
     } else {
       PlacesUtils.transactionManager.beginBatch(null);
     }
@@ -585,7 +583,7 @@ var BookmarkPropertiesPanel = {
                                              childItemsTransactions);
   },
 
-  _createNewItem: Task.async(function* () {
+  async _createNewItem() {
     let [container, index] = this._getInsertionPointDetails();
     let txn;
     switch (this._itemType) {
@@ -603,15 +601,15 @@ var BookmarkPropertiesPanel = {
     PlacesUtils.transactionManager.doTransaction(txn);
     // This is a temporary hack until we use PlacesTransactions.jsm
     if (txn._promise) {
-      yield txn._promise;
+      await txn._promise;
     }
 
-    let folderGuid = yield PlacesUtils.promiseItemGuid(container);
-    let bm = yield PlacesUtils.bookmarks.fetch({
+    let folderGuid = await PlacesUtils.promiseItemGuid(container);
+    let bm = await PlacesUtils.bookmarks.fetch({
       parentGuid: folderGuid,
       index
     });
-    this._itemId = yield PlacesUtils.promiseItemId(bm.guid);
+    this._itemId = await PlacesUtils.promiseItemId(bm.guid);
 
     return Object.freeze({
       itemId: this._itemId,
@@ -622,14 +620,14 @@ var BookmarkPropertiesPanel = {
               Ci.nsINavHistoryResultNode.RESULT_TYPE_URI :
               Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER
     });
-  }),
+  },
 
-  _promiseNewItem: Task.async(function* () {
+  async _promiseNewItem() {
     if (!PlacesUIUtils.useAsyncTransactions)
       return this._createNewItem();
 
     let [containerId, index] = this._getInsertionPointDetails();
-    let parentGuid = yield PlacesUtils.promiseItemGuid(containerId);
+    let parentGuid = await PlacesUtils.promiseItemGuid(containerId);
     let annotations = [];
     if (this._description) {
       annotations.push({ name: PlacesUIUtils.DESCRIPTION_ANNO
@@ -652,26 +650,26 @@ var BookmarkPropertiesPanel = {
       if (this._charSet && !PrivateBrowsingUtils.isWindowPrivate(window))
         PlacesUtils.setCharsetForURI(this._uri, this._charSet);
 
-      itemGuid = yield PlacesTransactions.NewBookmark(info).transact();
+      itemGuid = await PlacesTransactions.NewBookmark(info).transact();
     } else if (this._itemType == LIVEMARK_CONTAINER) {
       info.feedUrl = this._feedURI;
       if (this._siteURI)
         info.siteUrl = this._siteURI;
 
-      itemGuid = yield PlacesTransactions.NewLivemark(info).transact();
+      itemGuid = await PlacesTransactions.NewLivemark(info).transact();
     } else if (this._itemType == BOOKMARK_FOLDER) {
-      itemGuid = yield PlacesTransactions.NewFolder(info).transact();
+      itemGuid = await PlacesTransactions.NewFolder(info).transact();
       for (let uri of this._URIs) {
-        let placeInfo = yield PlacesUtils.promisePlaceInfo(uri);
+        let placeInfo = await PlacesUtils.promisePlaceInfo(uri);
         let title = placeInfo ? placeInfo.title : "";
-        yield PlacesTransactions.transact({ parentGuid: itemGuid, uri, title });
+        await PlacesTransactions.transact({ parentGuid: itemGuid, uri, title });
       }
     } else {
       throw new Error(`unexpected value for _itemType:  ${this._itemType}`);
     }
 
     this._itemGuid = itemGuid;
-    this._itemId = yield PlacesUtils.promiseItemId(itemGuid);
+    this._itemId = await PlacesUtils.promiseItemId(itemGuid);
     return Object.freeze({
       itemId: this._itemId,
       bookmarkGuid: this._itemGuid,
@@ -681,5 +679,5 @@ var BookmarkPropertiesPanel = {
               Ci.nsINavHistoryResultNode.RESULT_TYPE_URI :
               Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER
     });
-  })
+  }
 };

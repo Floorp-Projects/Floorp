@@ -1,20 +1,20 @@
 "use strict"
 
-add_task(function* () {
+add_task(async function() {
   info("Bug 479348 - Properties on a root should be read-only.");
 
-  yield withSidebarTree("bookmarks", function* (tree) {
+  await withSidebarTree("bookmarks", async function(tree) {
     let itemId = PlacesUIUtils.leftPaneQueries["UnfiledBookmarks"];
     tree.selectItems([itemId]);
     ok(tree.controller.isCommandEnabled("placesCmd_show:info"),
        "'placesCmd_show:info' on current selected node is enabled");
 
-    yield withBookmarksDialog(
+    await withBookmarksDialog(
       true,
       function openDialog() {
         tree.controller.doCommand("placesCmd_show:info");
       },
-      function* test(dialogWin) {
+      async function test(dialogWin) {
         // Check that the dialog is read-only.
         ok(dialogWin.gEditItemOverlay.readOnly, "Dialog is read-only");
         // Check that accept button is disabled
@@ -33,7 +33,7 @@ add_task(function* () {
            PlacesUtils.bookmarks.getItemTitle(PlacesUtils.unfiledBookmarksFolderId),
            "Root title is correct");
         // Check the shortcut's title.
-        let bookmark = yield PlacesUtils.bookmarks.fetch(tree.selectedNode.bookmarkGuid);
+        let bookmark = await PlacesUtils.bookmarks.fetch(tree.selectedNode.bookmarkGuid);
         is(bookmark.title, null,
            "Shortcut title is null");
       }

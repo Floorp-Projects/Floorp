@@ -95,7 +95,7 @@ const PINNED_STATE = {
  *   be loaded by default, and therefore should end up remote.
  *
  */
-function* runScenarios(scenarios) {
+async function runScenarios(scenarios) {
   for (let [scenarioIndex, scenario] of scenarios.entries()) {
     info("Running scenario " + scenarioIndex);
     Assert.ok(scenario.initialSelectedTab > 0,
@@ -103,7 +103,7 @@ function* runScenarios(scenarios) {
 
     // First, we need to create the initial conditions, so we
     // open a new window to put into our starting state...
-    let win = yield BrowserTestUtils.openNewBrowserWindow();
+    let win = await BrowserTestUtils.openNewBrowserWindow();
     let tabbrowser = win.gBrowser;
     Assert.ok(tabbrowser.selectedBrowser.isRemoteBrowser,
               "The initial browser should be remote.");
@@ -114,7 +114,7 @@ function* runScenarios(scenarios) {
         // The window starts with one tab, so we need to create
         // any of the additional ones required by this test.
         info("Opening a new tab");
-        tab = yield BrowserTestUtils.openNewForegroundTab(tabbrowser)
+        tab = await BrowserTestUtils.openNewForegroundTab(tabbrowser)
       } else {
         info("Using the selected tab");
         tab = tabbrowser.selectedTab;
@@ -127,7 +127,7 @@ function* runScenarios(scenarios) {
     // And select the requested tab.
     let tabToSelect = tabbrowser.tabs[scenario.initialSelectedTab - 1];
     if (tabbrowser.selectedTab != tabToSelect) {
-      yield BrowserTestUtils.switchTab(tabbrowser, tabToSelect);
+      await BrowserTestUtils.switchTab(tabbrowser, tabToSelect);
     }
 
     // Okay, time to test!
@@ -145,7 +145,7 @@ function* runScenarios(scenarios) {
                    `for the tab at index ${i}`);
     }
 
-    yield BrowserTestUtils.closeWindow(win);
+    await BrowserTestUtils.closeWindow(win);
   }
 }
 
@@ -154,13 +154,13 @@ function* runScenarios(scenarios) {
  * a variety of initial remoteness states. For this particular
  * set of tests, we assume that tabs are restoring on demand.
  */
-add_task(function*() {
+add_task(async function() {
   // This test opens and closes windows, which might bog down
   // a debug build long enough to time out the test, so we
   // extend the tolerance on timeouts.
   requestLongerTimeout(5);
 
-  yield SpecialPowers.pushPrefEnv({
+  await SpecialPowers.pushPrefEnv({
     "set": [["browser.sessionstore.restore_on_demand", true]],
   });
 
@@ -246,5 +246,5 @@ add_task(function*() {
     },
   ];
 
-  yield* runScenarios(TEST_SCENARIOS);
+  await runScenarios(TEST_SCENARIOS);
 });

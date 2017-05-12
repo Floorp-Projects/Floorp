@@ -8,18 +8,18 @@ MockFilePicker.init(window);
  * TestCase for bug 564387
  * <https://bugzilla.mozilla.org/show_bug.cgi?id=564387>
  */
-add_task(function* () {
+add_task(async function() {
   let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   gBrowser.loadURI("data:image/gif;base64,R0lGODlhEAAOALMAAOazToeHh0tLS/7LZv/0jvb29t/f3//Ub//ge8WSLf/rhf/3kdbW1mxsbP//mf///yH5BAAAAAAALAAAAAAQAA4AAARe8L1Ekyky67QZ1hLnjM5UUde0ECwLJoExKcppV0aCcGCmTIHEIUEqjgaORCMxIC6e0CcguWw6aFjsVMkkIr7g77ZKPJjPZqIyd7sJAgVGoEGv2xsBxqNgYPj/gAwXEQA7");
-  yield loadPromise;
+  await loadPromise;
 
   let popupShownPromise = BrowserTestUtils.waitForEvent(document, "popupshown");
 
-  yield BrowserTestUtils.synthesizeMouseAtCenter("img",
+  await BrowserTestUtils.synthesizeMouseAtCenter("img",
                                                  { type: "contextmenu", button: 2 },
                                                  gBrowser.selectedBrowser);
 
-  yield popupShownPromise;
+  await popupShownPromise;
 
   let showFilePickerPromise = new Promise(resolve => {
     MockFilePicker.showCallback = function(fp) {
@@ -36,10 +36,10 @@ add_task(function* () {
   var saveImageAsCommand = document.getElementById("context-saveimage");
   saveImageAsCommand.doCommand();
 
-  yield showFilePickerPromise;
+  await showFilePickerPromise;
 
   let contextMenu = document.getElementById("contentAreaContextMenu");
   let popupHiddenPromise = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
   contextMenu.hidePopup();
-  yield popupHiddenPromise;
+  await popupHiddenPromise;
 });

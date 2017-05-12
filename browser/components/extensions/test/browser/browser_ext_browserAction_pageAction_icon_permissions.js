@@ -3,7 +3,7 @@
 "use strict";
 
 // Test that an error is thrown when providing invalid icon sizes
-add_task(function* testInvalidIconSizes() {
+add_task(async function testInvalidIconSizes() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "browser_action": {},
@@ -51,15 +51,15 @@ add_task(function* testInvalidIconSizes() {
     },
   });
 
-  yield Promise.all([extension.startup(), extension.awaitFinish("setIcon with invalid icon size")]);
+  await Promise.all([extension.startup(), extension.awaitFinish("setIcon with invalid icon size")]);
 
-  yield extension.unload();
+  await extension.unload();
 });
 
 
 // Test that default icon details in the manifest.json file are handled
 // correctly.
-add_task(function* testDefaultDetails() {
+add_task(async function testDefaultDetails() {
   // TODO: Test localized variants.
   let icons = [
     "foo/bar.png",
@@ -100,12 +100,12 @@ add_task(function* testDefaultDetails() {
       },
     });
 
-    yield Promise.all([extension.startup(), extension.awaitMessage("ready")]);
+    await Promise.all([extension.startup(), extension.awaitMessage("ready")]);
 
     let browserActionId = makeWidgetId(extension.id) + "-browser-action";
     let pageActionId = makeWidgetId(extension.id) + "-page-action";
 
-    yield promiseAnimationFrame();
+    await promiseAnimationFrame();
 
     let browserActionButton = document.getElementById(browserActionId);
     let image = getListStyleImage(browserActionButton);
@@ -117,7 +117,7 @@ add_task(function* testDefaultDetails() {
 
     ok(expectedURL.test(image), `page action image ${image} matches ${expectedURL}`);
 
-    yield extension.unload();
+    await extension.unload();
 
     let node = document.getElementById(pageActionId);
     is(node, null, "pageAction image removed from document");
@@ -126,7 +126,7 @@ add_task(function* testDefaultDetails() {
 
 
 // Check that attempts to load a privileged URL as an icon image fail.
-add_task(function* testSecureURLsDenied() {
+add_task(async function testSecureURLsDenied() {
   // Test URLs passed to setIcon.
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -160,14 +160,14 @@ add_task(function* testSecureURLsDenied() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitFinish("setIcon security tests");
-  yield extension.unload();
+  await extension.awaitFinish("setIcon security tests");
+  await extension.unload();
 });
 
 
-add_task(function* testSecureManifestURLsDenied() {
+add_task(async function testSecureManifestURLsDenied() {
   // Test URLs included in the manifest.
 
   let urls = ["chrome://browser/content/browser.xul",
@@ -201,12 +201,12 @@ add_task(function* testSecureManifestURLsDenied() {
         },
       });
 
-      yield Assert.rejects(extension.startup(),
+      await Assert.rejects(extension.startup(),
                            null,
                            "Manifest rejected");
 
       SimpleTest.endMonitorConsole();
-      yield waitForConsole;
+      await waitForConsole;
     }
   }
 });

@@ -4,7 +4,7 @@
 
 /* exported testCookies */
 
-function* testCookies(options) {
+async function testCookies(options) {
   // Changing the options object is a bit of a hack, but it allows us to easily
   // pass an expiration date to the background script.
   options.expiry = Date.now() / 1000 + 3600;
@@ -104,16 +104,16 @@ function* testCookies(options) {
   cookieSvc.add(domain, "/", "deleted", "bar", options.secure, false, false, options.expiry);
 
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitMessage("change-cookies");
+  await extension.awaitMessage("change-cookies");
   cookieSvc.add(domain, "/", "x", "y", options.secure, false, false, options.expiry);
   cookieSvc.add(domain, "/", "x", "z", options.secure, false, false, options.expiry);
   cookieSvc.remove(domain, "x", "/", false, {});
   extension.sendMessage("cookies-changed");
 
-  yield extension.awaitFinish("cookie-permissions");
-  yield extension.unload();
+  await extension.awaitFinish("cookie-permissions");
+  await extension.unload();
 
 
   function getCookies(host) {

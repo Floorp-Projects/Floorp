@@ -1,4 +1,4 @@
-add_task(function* invalid_input_throws() {
+add_task(async function invalid_input_throws() {
   Assert.throws(() => PlacesUtils.bookmarks.search(),
                 /Query object is required/);
   Assert.throws(() => PlacesUtils.bookmarks.search(null),
@@ -13,19 +13,19 @@ add_task(function* invalid_input_throws() {
                 /Query must be an object or a string/);
 });
 
-add_task(function* search_bookmark() {
-  yield PlacesUtils.bookmarks.eraseEverything();
+add_task(async function search_bookmark() {
+  await PlacesUtils.bookmarks.eraseEverything();
 
-  let bm1 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+  let bm1 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                  url: "http://example.com/",
                                                  title: "a bookmark" });
-  let bm2 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+  let bm2 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                  url: "http://example.org/",
                                                  title: "another bookmark" });
-  let bm3 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.menuGuid,
+  let bm3 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.menuGuid,
                                                  url: "http://menu.org/",
                                                  title: "an on-menu bookmark" });
-  let bm4 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+  let bm4 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.toolbarGuid,
                                                  url: "http://toolbar.org/",
                                                  title: "an on-toolbar bookmark" });
   checkBookmarkObject(bm1);
@@ -34,64 +34,64 @@ add_task(function* search_bookmark() {
   checkBookmarkObject(bm4);
 
   // finds a result by query
-  let results = yield PlacesUtils.bookmarks.search("example.com");
+  let results = await PlacesUtils.bookmarks.search("example.com");
   Assert.equal(results.length, 1);
   checkBookmarkObject(results[0]);
   Assert.deepEqual(bm1, results[0]);
 
   // finds multiple results
-  results = yield PlacesUtils.bookmarks.search("example");
+  results = await PlacesUtils.bookmarks.search("example");
   Assert.equal(results.length, 2);
   checkBookmarkObject(results[0]);
   checkBookmarkObject(results[1]);
 
   // finds menu bookmarks
-  results = yield PlacesUtils.bookmarks.search("an on-menu bookmark");
+  results = await PlacesUtils.bookmarks.search("an on-menu bookmark");
   Assert.equal(results.length, 1);
   checkBookmarkObject(results[0]);
   Assert.deepEqual(bm3, results[0]);
 
   // finds toolbar bookmarks
-  results = yield PlacesUtils.bookmarks.search("an on-toolbar bookmark");
+  results = await PlacesUtils.bookmarks.search("an on-toolbar bookmark");
   Assert.equal(results.length, 1);
   checkBookmarkObject(results[0]);
   Assert.deepEqual(bm4, results[0]);
 
-  yield PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.bookmarks.eraseEverything();
 });
 
-add_task(function* search_bookmark_by_query_object() {
-  let bm1 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+add_task(async function search_bookmark_by_query_object() {
+  let bm1 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                  url: "http://example.com/",
                                                  title: "a bookmark" });
-  let bm2 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+  let bm2 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                  url: "http://example.org/",
                                                  title: "another bookmark" });
   checkBookmarkObject(bm1);
   checkBookmarkObject(bm2);
 
-  let results = yield PlacesUtils.bookmarks.search({query: "example.com"});
+  let results = await PlacesUtils.bookmarks.search({query: "example.com"});
   Assert.equal(results.length, 1);
   checkBookmarkObject(results[0]);
 
   Assert.deepEqual(bm1, results[0]);
 
-  results = yield PlacesUtils.bookmarks.search({query: "example"});
+  results = await PlacesUtils.bookmarks.search({query: "example"});
   Assert.equal(results.length, 2);
   checkBookmarkObject(results[0]);
   checkBookmarkObject(results[1]);
 
-  yield PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.bookmarks.eraseEverything();
 });
 
-add_task(function* search_bookmark_by_url() {
-  let bm1 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+add_task(async function search_bookmark_by_url() {
+  let bm1 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                  url: "http://example.com/",
                                                  title: "a bookmark" });
-  let bm2 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+  let bm2 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                  url: "http://example.org/path",
                                                  title: "another bookmark" });
-  let bm3 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+  let bm3 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                  url: "http://example.org/path",
                                                  title: "third bookmark" });
   checkBookmarkObject(bm1);
@@ -99,36 +99,36 @@ add_task(function* search_bookmark_by_url() {
   checkBookmarkObject(bm3);
 
   // finds the correct result by url
-  let results = yield PlacesUtils.bookmarks.search({url: "http://example.com/"});
+  let results = await PlacesUtils.bookmarks.search({url: "http://example.com/"});
   Assert.equal(results.length, 1);
   checkBookmarkObject(results[0]);
   Assert.deepEqual(bm1, results[0]);
 
   // normalizes the url
-  results = yield PlacesUtils.bookmarks.search({url: "http:/example.com"});
+  results = await PlacesUtils.bookmarks.search({url: "http:/example.com"});
   Assert.equal(results.length, 1);
   checkBookmarkObject(results[0]);
   Assert.deepEqual(bm1, results[0]);
 
   // returns multiple matches
-  results = yield PlacesUtils.bookmarks.search({url: "http://example.org/path"});
+  results = await PlacesUtils.bookmarks.search({url: "http://example.org/path"});
   Assert.equal(results.length, 2);
 
   // requires exact match
-  results = yield PlacesUtils.bookmarks.search({url: "http://example.org/"});
+  results = await PlacesUtils.bookmarks.search({url: "http://example.org/"});
   Assert.equal(results.length, 0);
 
-  yield PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.bookmarks.eraseEverything();
 });
 
-add_task(function* search_bookmark_by_title() {
-  let bm1 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+add_task(async function search_bookmark_by_title() {
+  let bm1 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                  url: "http://example.com/",
                                                  title: "a bookmark" });
-  let bm2 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+  let bm2 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                  url: "http://example.org/path",
                                                  title: "another bookmark" });
-  let bm3 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+  let bm3 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                  url: "http://example.net/",
                                                  title: "another bookmark" });
   checkBookmarkObject(bm1);
@@ -136,30 +136,30 @@ add_task(function* search_bookmark_by_title() {
   checkBookmarkObject(bm3);
 
   // finds the correct result by title
-  let results = yield PlacesUtils.bookmarks.search({title: "a bookmark"});
+  let results = await PlacesUtils.bookmarks.search({title: "a bookmark"});
   Assert.equal(results.length, 1);
   checkBookmarkObject(results[0]);
   Assert.deepEqual(bm1, results[0]);
 
   // returns multiple matches
-  results = yield PlacesUtils.bookmarks.search({title: "another bookmark"});
+  results = await PlacesUtils.bookmarks.search({title: "another bookmark"});
   Assert.equal(results.length, 2);
 
   // requires exact match
-  results = yield PlacesUtils.bookmarks.search({title: "bookmark"});
+  results = await PlacesUtils.bookmarks.search({title: "bookmark"});
   Assert.equal(results.length, 0);
 
-  yield PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.bookmarks.eraseEverything();
 });
 
-add_task(function* search_bookmark_combinations() {
-  let bm1 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+add_task(async function search_bookmark_combinations() {
+  let bm1 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                  url: "http://example.com/",
                                                  title: "a bookmark" });
-  let bm2 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+  let bm2 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                  url: "http://example.org/path",
                                                  title: "another bookmark" });
-  let bm3 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+  let bm3 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                  url: "http://example.net/",
                                                  title: "third bookmark" });
   checkBookmarkObject(bm1);
@@ -167,44 +167,44 @@ add_task(function* search_bookmark_combinations() {
   checkBookmarkObject(bm3);
 
   // finds the correct result if title and url match
-  let results = yield PlacesUtils.bookmarks.search({url: "http://example.com/", title: "a bookmark"});
+  let results = await PlacesUtils.bookmarks.search({url: "http://example.com/", title: "a bookmark"});
   Assert.equal(results.length, 1);
   checkBookmarkObject(results[0]);
   Assert.deepEqual(bm1, results[0]);
 
   // does not match if query is not matching but url and title match
-  results = yield PlacesUtils.bookmarks.search({url: "http://example.com/", title: "a bookmark", query: "nonexistent"});
+  results = await PlacesUtils.bookmarks.search({url: "http://example.com/", title: "a bookmark", query: "nonexistent"});
   Assert.equal(results.length, 0);
 
   // does not match if one parameter is not matching
-  results = yield PlacesUtils.bookmarks.search({url: "http://what.ever", title: "a bookmark"});
+  results = await PlacesUtils.bookmarks.search({url: "http://what.ever", title: "a bookmark"});
   Assert.equal(results.length, 0);
 
   // query only matches if other fields match as well
-  results = yield PlacesUtils.bookmarks.search({query: "bookmark", url: "http://example.net/"});
+  results = await PlacesUtils.bookmarks.search({query: "bookmark", url: "http://example.net/"});
   Assert.equal(results.length, 1);
   checkBookmarkObject(results[0]);
   Assert.deepEqual(bm3, results[0]);
 
   // non-matching query will also return no results
-  results = yield PlacesUtils.bookmarks.search({query: "nonexistent", url: "http://example.net/"});
+  results = await PlacesUtils.bookmarks.search({query: "nonexistent", url: "http://example.net/"});
   Assert.equal(results.length, 0);
 
-  yield PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.bookmarks.eraseEverything();
 });
 
-add_task(function* search_folder() {
-  let folder = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.menuGuid,
+add_task(async function search_folder() {
+  let folder = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.menuGuid,
                                                  type: PlacesUtils.bookmarks.TYPE_FOLDER,
                                                  title: "a test folder" });
-  let bm = yield PlacesUtils.bookmarks.insert({ parentGuid: folder.guid,
+  let bm = await PlacesUtils.bookmarks.insert({ parentGuid: folder.guid,
                                                  url: "http://example.com/",
                                                  title: "a bookmark" });
   checkBookmarkObject(folder);
   checkBookmarkObject(bm);
 
   // also finds folders
-  let results = yield PlacesUtils.bookmarks.search("a test folder");
+  let results = await PlacesUtils.bookmarks.search("a test folder");
   Assert.equal(results.length, 1);
   checkBookmarkObject(results[0]);
   Assert.equal(folder.title, results[0].title);
@@ -212,48 +212,48 @@ add_task(function* search_folder() {
   Assert.equal(folder.parentGuid, results[0].parentGuid);
 
   // finds elements in folders
-  results = yield PlacesUtils.bookmarks.search("example.com");
+  results = await PlacesUtils.bookmarks.search("example.com");
   Assert.equal(results.length, 1);
   checkBookmarkObject(results[0]);
   Assert.deepEqual(bm, results[0]);
   Assert.equal(folder.guid, results[0].parentGuid);
 
-  yield PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.bookmarks.eraseEverything();
 });
 
-add_task(function* search_excludes_separators() {
-  let bm1 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+add_task(async function search_excludes_separators() {
+  let bm1 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                  url: "http://example.com/",
                                                  title: "a bookmark" });
-  let bm2 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+  let bm2 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                  type: PlacesUtils.bookmarks.TYPE_SEPARATOR });
 
   checkBookmarkObject(bm1);
   checkBookmarkObject(bm2);
 
-  let results = yield PlacesUtils.bookmarks.search({});
+  let results = await PlacesUtils.bookmarks.search({});
   Assert.ok(results.findIndex(bookmark => { return bookmark.guid == bm1.guid }) > -1,
             "The bookmark was found in the results.");
   Assert.equal(-1, results.findIndex(bookmark => { return bookmark.guid == bm2.guid }),
             "The separator was excluded from the results.");
 
-  yield PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.bookmarks.eraseEverything();
 });
 
-add_task(function* search_excludes_tags() {
-  let bm1 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+add_task(async function search_excludes_tags() {
+  let bm1 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                  url: "http://example.com/",
                                                  title: "a bookmark" });
   checkBookmarkObject(bm1);
   PlacesUtils.tagging.tagURI(uri(bm1.url.href), ["Test Tag"]);
 
-  let results = yield PlacesUtils.bookmarks.search("example.com");
+  let results = await PlacesUtils.bookmarks.search("example.com");
   // If tags are not being excluded, this would return two results, one representing the tag.
   Assert.equal(1, results.length, "A single object was returned from search.");
   Assert.deepEqual(bm1, results[0], "The bookmark was returned.");
 
-  results = yield PlacesUtils.bookmarks.search("Test Tag");
+  results = await PlacesUtils.bookmarks.search("Test Tag");
   Assert.equal(0, results.length, "The tag folder was not returned.");
 
-  yield PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.bookmarks.eraseEverything();
 });

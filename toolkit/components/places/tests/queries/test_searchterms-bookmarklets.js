@@ -21,8 +21,8 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_initalize() {
-  yield task_populateDB(testData);
+add_task(async function test_initalize() {
+  await task_populateDB(testData);
 });
 
 add_test(function test_search_by_title() {

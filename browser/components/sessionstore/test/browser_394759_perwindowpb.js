@@ -14,42 +14,42 @@ const TESTS = [
 ];
 
 function promiseTestOpenCloseWindow(aIsPrivate, aTest) {
-  return Task.spawn(function*() {
-    let win = yield BrowserTestUtils.openNewBrowserWindow({ "private": aIsPrivate });
+  return (async function() {
+    let win = await BrowserTestUtils.openNewBrowserWindow({ "private": aIsPrivate });
     win.gBrowser.selectedBrowser.loadURI(aTest.url);
-    yield promiseBrowserLoaded(win.gBrowser.selectedBrowser);
-    yield Promise.resolve();
+    await promiseBrowserLoaded(win.gBrowser.selectedBrowser);
+    await Promise.resolve();
     // Mark the window with some unique data to be restored later on.
     ss.setWindowValue(win, aTest.key, aTest.value);
-    yield TabStateFlusher.flushWindow(win);
+    await TabStateFlusher.flushWindow(win);
     // Close.
-    yield BrowserTestUtils.closeWindow(win);
-  });
+    await BrowserTestUtils.closeWindow(win);
+  })();
 }
 
 function promiseTestOnWindow(aIsPrivate, aValue) {
-  return Task.spawn(function*() {
-    let win = yield BrowserTestUtils.openNewBrowserWindow({ "private": aIsPrivate });
-    yield TabStateFlusher.flushWindow(win);
+  return (async function() {
+    let win = await BrowserTestUtils.openNewBrowserWindow({ "private": aIsPrivate });
+    await TabStateFlusher.flushWindow(win);
     let data = JSON.parse(ss.getClosedWindowData())[0];
     is(ss.getClosedWindowCount(), 1, "Check that the closed window count hasn't changed");
     ok(JSON.stringify(data).indexOf(aValue) > -1,
        "Check the closed window data was stored correctly");
     registerCleanupFunction(() => BrowserTestUtils.closeWindow(win));
-  });
+  })();
 }
 
-add_task(function* init() {
+add_task(async function init() {
   forgetClosedWindows();
   while (ss.getClosedTabCount(window) > 0) {
     ss.forgetClosedTab(window, 0);
   }
 });
 
-add_task(function* main() {
-  yield promiseTestOpenCloseWindow(false, TESTS[0]);
-  yield promiseTestOpenCloseWindow(true, TESTS[1]);
-  yield promiseTestOnWindow(false, TESTS[0].value);
-  yield promiseTestOnWindow(true, TESTS[0].value);
+add_task(async function main() {
+  await promiseTestOpenCloseWindow(false, TESTS[0]);
+  await promiseTestOpenCloseWindow(true, TESTS[1]);
+  await promiseTestOnWindow(false, TESTS[0].value);
+  await promiseTestOnWindow(true, TESTS[0].value);
 });
 

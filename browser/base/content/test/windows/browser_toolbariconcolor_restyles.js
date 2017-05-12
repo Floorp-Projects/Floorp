@@ -3,19 +3,19 @@
 /**
  * Ensure redundant style flushes are not triggered when switching between windows
  */
-add_task(function* test_toolbar_element_restyles_on_activation() {
+add_task(async function test_toolbar_element_restyles_on_activation() {
   let restyles = {
     win1:  {},
     win2:  {}
   };
 
   // create a window and snapshot the elementsStyled
-  let win1 = yield BrowserTestUtils.openNewBrowserWindow();
-  yield new Promise(resolve => waitForFocus(resolve, win1));
+  let win1 = await BrowserTestUtils.openNewBrowserWindow();
+  await new Promise(resolve => waitForFocus(resolve, win1));
 
   // create a 2nd window and snapshot the elementsStyled
-  let win2 = yield BrowserTestUtils.openNewBrowserWindow();
-  yield new Promise(resolve => waitForFocus(resolve, win2));
+  let win2 = await BrowserTestUtils.openNewBrowserWindow();
+  await new Promise(resolve => waitForFocus(resolve, win2));
 
   // Flush any pending styles before we take a measurement.
   win1.getComputedStyle(win1.document.firstElementChild);
@@ -48,6 +48,6 @@ add_task(function* test_toolbar_element_restyles_on_activation() {
   is(restyles.win2.activate - restyles.win2.deactivate, 0,
       "No elements restyled when re-activating/deactivating a window");
 
-  yield BrowserTestUtils.closeWindow(win1);
-  yield BrowserTestUtils.closeWindow(win2);
+  await BrowserTestUtils.closeWindow(win1);
+  await BrowserTestUtils.closeWindow(win2);
 });

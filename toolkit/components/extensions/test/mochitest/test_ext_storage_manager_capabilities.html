@@ -13,8 +13,8 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
     "set": [
       ["dom.storageManager.enabled", true],
       ["dom.storageManager.prompt.testing", true],
@@ -23,7 +23,7 @@ add_task(function* setup() {
   });
 });
 
-add_task(function* test_backgroundScript() {
+add_task(async function test_backgroundScript() {
   function background() {
     browser.test.assertTrue(navigator.storage !== undefined, "Has storage api interface");
 
@@ -39,12 +39,12 @@ add_task(function* test_backgroundScript() {
     background,
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("navigation_storage_api.done");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("navigation_storage_api.done");
+  await extension.unload();
 });
 
-add_task(function* test_contentScript() {
+add_task(async function test_contentScript() {
   function contentScript() {
     // Should not access storage api in non-secure context.
     browser.test.assertEq(undefined, navigator.storage,
@@ -67,18 +67,18 @@ add_task(function* test_contentScript() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
   // Open an explicit URL for testing Storage API in an insecure context.
   let win = window.open("http://example.com/tests/toolkit/components/extensions/test/mochitest/file_sample.html");
 
-  yield extension.awaitFinish("navigation_storage_api.done");
+  await extension.awaitFinish("navigation_storage_api.done");
 
-  yield extension.unload();
+  await extension.unload();
   win.close();
 });
 
-add_task(function* test_contentScriptSecure() {
+add_task(async function test_contentScriptSecure() {
   function contentScript() {
     browser.test.assertTrue(navigator.storage !== undefined, "Has storage api interface");
 
@@ -107,19 +107,19 @@ add_task(function* test_contentScriptSecure() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
   // Open an explicit URL for testing Storage API in a secure context.
   let win = window.open("file_sample.html");
 
-  yield extension.awaitFinish("navigation_storage_api.done");
+  await extension.awaitFinish("navigation_storage_api.done");
 
-  yield extension.unload();
+  await extension.unload();
   win.close();
 });
 
-add_task(function* cleanup() {
-  yield SpecialPowers.popPrefEnv();
+add_task(async function cleanup() {
+  await SpecialPowers.popPrefEnv();
 });
 </script>
 

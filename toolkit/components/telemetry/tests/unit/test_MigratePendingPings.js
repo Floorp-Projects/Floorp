@@ -28,15 +28,15 @@ async function createFakeAppDir() {
   await makeFakeAppDir();
 }
 
-add_task(function* setup() {
+add_task(async function setup() {
   // Init the profile.
   do_get_profile();
-  yield createFakeAppDir();
+  await createFakeAppDir();
   // Make sure we don't generate unexpected pings due to pref changes.
-  yield setEmptyPrefWatchlist();
+  await setEmptyPrefWatchlist();
 });
 
-add_task(function* test_migrateUnsentPings() {
+add_task(async function test_migrateUnsentPings() {
   const PINGS = [
     {
       type: "crash",
@@ -57,14 +57,14 @@ add_task(function* test_migrateUnsentPings() {
   // Create some pending pings outside of the user profile.
   for (let ping of PINGS) {
     const pingPath = OS.Path.join(APPDATA_PINGS_DIR, ping.id + ".json");
-    yield TelemetryStorage.savePingToFile(ping, pingPath, true);
+    await TelemetryStorage.savePingToFile(ping, pingPath, true);
   }
 
   // Make sure the pending ping list is empty.
-  yield TelemetryStorage.testClearPendingPings();
+  await TelemetryStorage.testClearPendingPings();
 
   // Start the migration from TelemetryStorage.
-  let pendingPings = yield TelemetryStorage.loadPendingPingList();
+  let pendingPings = await TelemetryStorage.loadPendingPingList();
   Assert.equal(pendingPings.length, 2,
                "TelemetryStorage must have migrated 2 pings.");
 
@@ -74,7 +74,7 @@ add_task(function* test_migrateUnsentPings() {
               "The ping must have been migrated.");
 
     // Try to load the migrated ping from the user profile.
-    let migratedPing = yield TelemetryStorage.loadPendingPing(ping.id);
+    let migratedPing = await TelemetryStorage.loadPendingPing(ping.id);
     Assert.equal(ping.id, migratedPing.id, "Should have loaded the correct ping id.");
     Assert.equal(ping.type, migratedPing.type,
                  "Should have loaded the correct ping type.");
@@ -83,14 +83,14 @@ add_task(function* test_migrateUnsentPings() {
 
     // Verify that the pings are no longer outside of the user profile.
     const pingPath = OS.Path.join(APPDATA_PINGS_DIR, ping.id + ".json");
-    Assert.ok(!(yield OS.File.exists(pingPath)),
+    Assert.ok(!(await OS.File.exists(pingPath)),
               "The ping should not be in the Pending Pings directory anymore.");
   }
 
   // Delete the UAppData directory and make sure nothing breaks.
-  yield OS.File.removeDir(APP_DATA_DIR, {ignorePermissions: true});
-  Assert.ok(!(yield OS.File.exists(APP_DATA_DIR)),
+  await OS.File.removeDir(APP_DATA_DIR, {ignorePermissions: true});
+  Assert.ok(!(await OS.File.exists(APP_DATA_DIR)),
             "The UAppData directory must not exist anymore.");
   TelemetryStorage.reset();
-  yield TelemetryStorage.loadPendingPingList();
+  await TelemetryStorage.loadPendingPingList();
 });

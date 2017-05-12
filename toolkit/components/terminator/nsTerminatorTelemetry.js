@@ -22,8 +22,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
   "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
   "resource://gre/modules/Promise.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
   "resource://gre/modules/Timer.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
@@ -50,17 +48,17 @@ nsTerminatorTelemetry.prototype = {
   // nsIObserver
 
   observe: function DS_observe(aSubject, aTopic, aData) {
-    Task.spawn(function*() {
+    (async function() {
       //
       // This data is hardly critical, reading it can wait for a few seconds.
       //
-      yield new Promise(resolve => setTimeout(resolve, 3000));
+      await new Promise(resolve => setTimeout(resolve, 3000));
 
       let PATH = OS.Path.join(OS.Constants.Path.localProfileDir,
         "ShutdownDuration.json");
       let raw;
       try {
-        raw = yield OS.File.read(PATH, { encoding: "utf-8" });
+        raw = await OS.File.read(PATH, { encoding: "utf-8" });
       } catch (ex) {
         if (!ex.becauseNoSuchFile) {
           throw ex;
@@ -94,7 +92,7 @@ nsTerminatorTelemetry.prototype = {
       // Inform observers that we are done.
       Services.obs.notifyObservers(null,
         "shutdown-terminator-telemetry-updated");
-    });
+    })();
   },
 };
 

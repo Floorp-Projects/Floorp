@@ -236,11 +236,11 @@ function listenForUnexpectedPopupShown() {
   };
 }
 
-function* promiseNoUnexpectedPopupShown() {
+async function promiseNoUnexpectedPopupShown() {
   gPopupShownExpected = false;
   listenForUnexpectedPopupShown();
   SimpleTest.requestFlakyTimeout("Giving a chance for an unexpected popupshown to occur");
-  yield new Promise(resolve => setTimeout(resolve, 1000));
+  await new Promise(resolve => setTimeout(resolve, 1000));
 }
 
 /**

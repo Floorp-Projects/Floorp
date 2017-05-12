@@ -7,16 +7,16 @@
 "use strict";
 
 // Test removing a list of pages
-add_task(function* test_remove_many() {
+add_task(async function test_remove_many() {
   // This is set so that we are guarenteed to trigger REMOVE_PAGES_CHUNKLEN.
   const SIZE = 1000;
 
-  yield PlacesTestUtils.clearHistory();
-  yield PlacesUtils.bookmarks.eraseEverything();
+  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.bookmarks.eraseEverything();
 
   do_print("Adding a witness page");
   let WITNESS_URI = NetUtil.newURI("http://mozilla.com/test_browserhistory/test_remove/" + Math.random());
-  yield PlacesTestUtils.addVisits(WITNESS_URI);
+  await PlacesTestUtils.addVisits(WITNESS_URI);
   Assert.ok(page_in_database(WITNESS_URI), "Witness page added");
 
   do_print("Generating samples");
@@ -41,7 +41,7 @@ add_task(function* test_remove_many() {
     do_print("Pushing: " + uri.spec);
     pages.push(page);
 
-    yield PlacesTestUtils.addVisits(page);
+    await PlacesTestUtils.addVisits(page);
     page.guid = do_get_guid_for_uri(uri);
     if (hasBookmark) {
       PlacesUtils.bookmarks.insertBookmark(
@@ -113,7 +113,7 @@ add_task(function* test_remove_many() {
 
   do_print("Removing the pages and checking the callbacks");
 
-  let removed = yield PlacesUtils.history.remove(keys, page => {
+  let removed = await PlacesUtils.history.remove(keys, page => {
     let origin = pages.find(candidate => candidate.uri.spec == page.url.href);
 
     Assert.ok(origin, "onResult has a valid page");
@@ -143,7 +143,7 @@ add_task(function* test_remove_many() {
   Assert.notEqual(page_in_database(WITNESS_URI), 0, "Witness URI is still here");
 });
 
-add_task(function* cleanup() {
-  yield PlacesTestUtils.clearHistory();
-  yield PlacesUtils.bookmarks.eraseEverything();
+add_task(async function cleanup() {
+  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.bookmarks.eraseEverything();
 });

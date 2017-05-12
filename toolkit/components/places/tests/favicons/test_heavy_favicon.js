@@ -6,7 +6,7 @@
  * it should be downsized until it can be stored, rather than thrown away.
  */
 
-add_task(function* () {
+add_task(async function() {
   let file = do_get_file("noise.png");
   let icon = {
     file,
@@ -22,11 +22,11 @@ add_task(function* () {
             "The test icon file size must be larger than Ci.nsIFaviconService.MAX_FAVICON_BUFFER_SIZE")
 
   let pageURI = uri("http://foo.bar/");
-  yield PlacesTestUtils.addVisits(pageURI);
+  await PlacesTestUtils.addVisits(pageURI);
 
   PlacesUtils.favicons.replaceFaviconData(icon.uri, icon.data, icon.data.length,
                                           icon.mimetype);
-  yield setFaviconForPage(pageURI, icon.uri);
-  Assert.equal(yield getFaviconUrlForPage(pageURI), icon.uri.spec,
+  await setFaviconForPage(pageURI, icon.uri);
+  Assert.equal(await getFaviconUrlForPage(pageURI), icon.uri.spec,
                "A resampled version of the icon should be stored");
 });

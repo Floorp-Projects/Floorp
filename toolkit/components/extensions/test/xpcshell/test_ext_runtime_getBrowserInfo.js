@@ -3,11 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-add_task(function* setup() {
+add_task(async function setup() {
   ExtensionTestUtils.mockAppInfo();
 });
 
-add_task(function* test_getBrowserInfo() {
+add_task(async function test_getBrowserInfo() {
   async function background() {
     let info = await browser.runtime.getBrowserInfo();
 
@@ -20,7 +20,7 @@ add_task(function* test_getBrowserInfo() {
   }
 
   const extension = ExtensionTestUtils.loadExtension({background});
-  yield extension.startup();
-  yield extension.awaitFinish("runtime.getBrowserInfo");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("runtime.getBrowserInfo");
+  await extension.unload();
 });

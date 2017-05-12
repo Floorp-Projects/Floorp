@@ -100,7 +100,7 @@ function run_test() {
   run_next_test()
 }
 
-add_task(function* () {
+add_task(async function() {
   let jsonFile = OS.Path.join(OS.Constants.Path.profileDir, "bookmarks.json");
 
   // populate db
@@ -110,7 +110,7 @@ add_task(function* () {
     aTest.validate();
   });
 
-  yield BookmarkJSONUtils.exportToFile(jsonFile);
+  await BookmarkJSONUtils.exportToFile(jsonFile);
 
   // clean
   tests.forEach(function(aTest) {
@@ -118,7 +118,7 @@ add_task(function* () {
   });
 
   // restore json file
-  yield BookmarkJSONUtils.importFromFile(jsonFile, true);
+  await BookmarkJSONUtils.importFromFile(jsonFile, true);
 
   // validate
   tests.forEach(function(aTest) {
@@ -126,5 +126,5 @@ add_task(function* () {
   });
 
   // clean up
-  yield OS.File.remove(jsonFile);
+  await OS.File.remove(jsonFile);
 });

@@ -52,26 +52,26 @@ const PREF_NEWTAB_DIRECTORYSOURCE = "browser.newtabpage.directory.source";
  * This test ensures that there are no unexpected
  * uninterruptible reflows when opening new tabs.
  */
-add_task(function*() {
+add_task(async function() {
   let DirectoryLinksProvider = Cu.import("resource:///modules/DirectoryLinksProvider.jsm", {}).DirectoryLinksProvider;
   let NewTabUtils = Cu.import("resource://gre/modules/NewTabUtils.jsm", {}).NewTabUtils;
   let Promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
 
   // resolves promise when directory links are downloaded and written to disk
   function watchLinksChangeOnce() {
-    let deferred = Promise.defer();
-    let observer = {
-      onManyLinksChanged: () => {
-        DirectoryLinksProvider.removeObserver(observer);
-        NewTabUtils.links.populateCache(() => {
-          NewTabUtils.allPages.update();
-          deferred.resolve();
-        }, true);
-      }
-    };
-    observer.onDownloadFail = observer.onManyLinksChanged;
-    DirectoryLinksProvider.addObserver(observer);
-    return deferred.promise;
+    return new Promise(resolve => {
+      let observer = {
+        onManyLinksChanged: () => {
+          DirectoryLinksProvider.removeObserver(observer);
+          NewTabUtils.links.populateCache(() => {
+            NewTabUtils.allPages.update();
+            resolve();
+          }, true);
+        }
+      };
+      observer.onDownloadFail = observer.onManyLinksChanged;
+      DirectoryLinksProvider.addObserver(observer);
+    });
   }
 
   let gOrigDirectorySource = Services.prefs.getCharPref(PREF_NEWTAB_DIRECTORYSOURCE);
@@ -86,7 +86,7 @@ add_task(function*() {
   Services.prefs.setCharPref(PREF_NEWTAB_DIRECTORYSOURCE, 'data:application/json,{"test":1}');
 
   // run tests when directory source change completes
-  yield watchLinksChangeOnce();
+  await watchLinksChangeOnce();
 
   // Perform a click in the top left of content to ensure the mouse isn't
   // hovering over any of the tiles
@@ -105,7 +105,7 @@ add_task(function*() {
   BrowserOpenTab();
 
   // Wait until the tabopen animation has finished.
-  yield waitForTransitionEnd();
+  await waitForTransitionEnd();
 
   // Remove reflow observer and clean up.
   docShell.removeWeakReflowObserver(observer);

@@ -8,6 +8,7 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.mozglue.GeckoLoader;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -47,8 +48,10 @@ public class GeckoThread extends Thread {
         @WrapForJNI PROFILE_READY(5),
         // After initializing frontend JS
         @WrapForJNI RUNNING(6),
-        // After leaving Gecko event loop
+        // After granting request to shutdown
         @WrapForJNI EXITING(3),
+        // After granting request to restart
+        @WrapForJNI RESTARTING(3),
         // After exiting GeckoThread (corresponding to "Gecko:Exited" event)
         @WrapForJNI EXITED(0);
 
@@ -413,9 +416,12 @@ public class GeckoThread extends Thread {
         GeckoLoader.nativeRun(args, mCrashFileDescriptor, mIPCFileDescriptor);
 
         // And... we're done.
+        final boolean restarting = isState(State.RESTARTING);
         setState(State.EXITED);
 
-        EventDispatcher.getInstance().dispatch("Gecko:Exited", null);
+        final GeckoBundle data = new GeckoBundle(1);
+        data.putBoolean("restart", restarting);
+        EventDispatcher.getInstance().dispatch("Gecko:Exited", data);
 
         // Remove pumpMessageLoop() idle handler
         Looper.myQueue().removeIdleHandler(idleHandler);

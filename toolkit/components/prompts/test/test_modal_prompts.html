@@ -18,7 +18,7 @@ Prompter tests: modal prompts
 <pre id="test">
 <script class="testbody" type="text/javascript">
 /* import-globals-from prompt_common.js */
-function* runTests() {
+async function runTests() {
     const { NetUtil } = SpecialPowers.Cu.import("resource://gre/modules/NetUtil.jsm");
     let state, action, promptDone;
     ok(true, "Running tests (isTabModal=" + isTabModal + ", usePromptService=" + usePromptService + ")");
@@ -71,7 +71,7 @@ function* runTests() {
         promptArgs.unshift(window);
     prompter.alert.apply(null, promptArgs);
 
-    yield promptDone;
+    await promptDone;
 
     // =====
     info("Starting test: AlertCheck (null checkbox label, so it's hidden)");
@@ -101,7 +101,7 @@ function* runTests() {
         promptArgs.unshift(window);
     prompter.alertCheck.apply(null, promptArgs);
 
-    yield promptDone;
+    await promptDone;
 
     // =====
     info("Starting test: AlertCheck");
@@ -134,7 +134,7 @@ function* runTests() {
     prompter.alertCheck.apply(null, promptArgs);
     is(checkVal.value, true, "checkbox was checked");
 
-    yield promptDone;
+    await promptDone;
 
     // =====
     info("Starting test: Confirm (ok)");
@@ -165,7 +165,7 @@ function* runTests() {
     isOK = prompter.confirm.apply(null, promptArgs);
     is(isOK, true, "checked expected retval");
 
-    yield promptDone;
+    await promptDone;
 
     // =====
     info("Starting test: Confirm (cancel)");
@@ -196,7 +196,7 @@ function* runTests() {
     isOK = prompter.confirm.apply(null, promptArgs);
     is(isOK, false, "checked expected retval");
 
-    yield promptDone;
+    await promptDone;
 
     // =====
     info("Starting test: ConfirmCheck (ok, null checkbox label)");
@@ -227,7 +227,7 @@ function* runTests() {
     isOK = prompter.confirmCheck.apply(null, promptArgs);
     is(isOK, true, "checked expected retval");
 
-    yield promptDone;
+    await promptDone;
 
     // =====
     info("Starting test: ConfirmCheck (cancel, null checkbox label)");
@@ -258,7 +258,7 @@ function* runTests() {
     isOK = prompter.confirmCheck.apply(null, promptArgs);
     is(isOK, false, "checked expected retval");
 
-    yield promptDone;
+    await promptDone;
 
     // =====
     info("Starting test: ConfirmCheck (ok)");
@@ -292,7 +292,7 @@ function* runTests() {
     is(isOK, true, "checked expected retval");
     is(checkVal.value, true, "expected checkbox setting");
 
-    yield promptDone;
+    await promptDone;
 
     // =====
     info("Starting test: ConfirmCheck (cancel)");
@@ -326,7 +326,7 @@ function* runTests() {
     is(isOK, false, "checked expected retval");
     is(checkVal.value, true, "expected checkbox setting");
 
-    yield promptDone;
+    await promptDone;
 
     // =====
     info("Starting test: Prompt (ok, no default text)");
@@ -360,7 +360,7 @@ function* runTests() {
     is(isOK, true, "checked expected retval");
     is(textVal.value, "bacon", "checking expected text value");
 
-    yield promptDone;
+    await promptDone;
 
     // =====
     info("Starting test: Prompt (ok, default text)");
@@ -393,7 +393,7 @@ function* runTests() {
     is(isOK, true, "checked expected retval");
     is(textVal.value, "kittens", "checking expected text value");
 
-    yield promptDone;
+    await promptDone;
 
     // =====
     info("Starting test: Prompt (cancel, default text)");
@@ -426,7 +426,7 @@ function* runTests() {
     is(isOK, false, "checked expected retval");
     is(textVal.value, "puppies", "checking expected text value");
 
-    yield promptDone;
+    await promptDone;
 
     // =====
     info("Starting test: Prompt (cancel, default text modified)");
@@ -460,7 +460,7 @@ function* runTests() {
     is(isOK, false, "checked expected retval");
     is(textVal.value, "puppies", "checking expected text value");
 
-    yield promptDone;
+    await promptDone;
 
     // =====
     info("Starting test: Prompt (ok, with checkbox)");
@@ -496,7 +496,7 @@ function* runTests() {
     is(textVal.value, "tribbles", "checking expected text value");
     is(checkVal.value, true, "expected checkbox setting");
 
-    yield promptDone;
+    await promptDone;
 
     // =====
     info("Starting test: Prompt (cancel, with checkbox)");
@@ -532,7 +532,7 @@ function* runTests() {
     is(textVal.value, "tribbles", "checking expected text value");
     is(checkVal.value, false, "expected checkbox setting");
 
-    yield promptDone;
+    await promptDone;
 
     // =====
     // Just two tests for this, since password manager already tests this extensively.
@@ -573,7 +573,7 @@ function* runTests() {
     is(passVal.value, "newssh", "checking expected pass value");
     is(checkVal.value, true, "expected checkbox setting");
 
-    yield promptDone;
+    await promptDone;
 
     // =====
     info("Starting test: PromptUsernameAndPassword (cancel)");
@@ -613,7 +613,7 @@ function* runTests() {
     is(passVal.value, "ssh", "checking expected pass value");
     is(checkVal.value, false, "expected checkbox setting");
 
-    yield promptDone;
+    await promptDone;
 
     // =====
     info("Starting test: PromptPassword (ok)");
@@ -650,7 +650,7 @@ function* runTests() {
     is(passVal.value, "newssh", "checking expected pass value");
     is(checkVal.value, true, "expected checkbox setting");
 
-    yield promptDone;
+    await promptDone;
 
     // =====
     info("Starting test: PromptPassword (cancel)");
@@ -687,7 +687,7 @@ function* runTests() {
     is(passVal.value, "ssh", "checking expected pass value");
     is(checkVal.value, false, "expected checkbox setting");
 
-    yield promptDone;
+    await promptDone;
 
     // =====
     info("Starting test: ConfirmEx (ok/cancel, ok)");
@@ -721,7 +721,7 @@ function* runTests() {
     clickedButton = prompter.confirmEx.apply(null, promptArgs);
     is(clickedButton, 0, "checked expected button num click");
 
-    yield promptDone;
+    await promptDone;
 
     // =====
     info("Starting test: ConfirmEx (yes/no, cancel)");
@@ -755,7 +755,7 @@ function* runTests() {
     clickedButton = prompter.confirmEx.apply(null, promptArgs);
     is(clickedButton, 1, "checked expected button num click");
 
-    yield promptDone;
+    await promptDone;
 
     // =====
     info("Starting test: ConfirmEx (buttons from args, checkbox, ok)");
@@ -797,7 +797,7 @@ function* runTests() {
     is(clickedButton, 0, "checked expected button num click");
     is(checkVal.value, true, "expected checkbox setting");
 
-    yield promptDone;
+    await promptDone;
 
     // =====
     info("Starting test: ConfirmEx (buttons from args, checkbox, cancel)");
@@ -840,7 +840,7 @@ function* runTests() {
     is(clickedButton, 1, "checked expected button num click");
     is(checkVal.value, true, "expected checkbox setting");
 
-    yield promptDone;
+    await promptDone;
 
     // =====
     info("Starting test: ConfirmEx (buttons from args, checkbox, button3)");
@@ -883,7 +883,7 @@ function* runTests() {
     is(clickedButton, 2, "checked expected button num click");
     is(checkVal.value, true, "expected checkbox setting");
 
-    yield promptDone;
+    await promptDone;
 
     // =====
     // (skipped for E10S and tabmodal tests: window is required)
@@ -914,7 +914,7 @@ function* runTests() {
           promptArgs.unshift(null);
         prompter.alert.apply(null, promptArgs);
 
-        yield promptDone;
+        await promptDone;
     }
 
 
@@ -958,7 +958,7 @@ function* runTests() {
         clickedButton = prompter.confirmEx.apply(null, promptArgs);
         is(clickedButton, 0, "checked expected button num click");
 
-        yield promptDone;
+        await promptDone;
     }
 
     // promptAuth already tested via password manager but do a few specific things here.
@@ -1012,7 +1012,7 @@ function* runTests() {
         is(authinfo.password, "password", "checking filled password");
         is(checkVal.value, true, "expected checkbox setting");
 
-        yield promptDone;
+        await promptDone;
     }
 
 
@@ -1059,7 +1059,7 @@ function* runTests() {
         is(authinfo.password, "password", "checking filled password");
         is(checkVal.value, true, "expected checkbox setting");
 
-        yield promptDone;
+        await promptDone;
     }
 
     info("Starting test: promptAuth for a cross-origin and a empty realm");
@@ -1103,7 +1103,7 @@ function* runTests() {
         is(authinfo.password, "password", "checking filled password");
         is(checkVal.value, false, "expected checkbox setting");
 
-        yield promptDone;
+        await promptDone;
     }
 
     info("Starting test: promptAuth for a cross-origin with realm");
@@ -1147,7 +1147,7 @@ function* runTests() {
         is(authinfo.password, "password", "checking filled password");
         is(checkVal.value, false, "expected checkbox setting");
 
-        yield promptDone;
+        await promptDone;
     }
 }
 
@@ -1160,21 +1160,21 @@ let usePromptService;
  * - 3rd pass: with tab-modal prompts. Can't opt into these via * nsIPromptService.
  */
 
-add_task(function* runPromptTests() {
+add_task(async function runPromptTests() {
   info("Process type: " + SpecialPowers.Services.appinfo.processType);
 
   isTabModal = false; usePromptService = true;
   info("Running tests with: isTabModal=" + isTabModal + ", usePromptService=" + usePromptService);
-  yield* runTests();
+  await runTests();
 
   isTabModal = false; usePromptService = false;
   info("Running tests with: isTabModal=" + isTabModal + ", usePromptService=" + usePromptService);
-  yield* runTests();
+  await runTests();
 
   if (SpecialPowers.getBoolPref("prompts.tab_modal.enabled")) {
       isTabModal = true; usePromptService = false;
       info("Running tests with: isTabModal=" + isTabModal + ", usePromptService=" + usePromptService);
-      yield* runTests();
+      await runTests();
   }
 });
 

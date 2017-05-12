@@ -39,10 +39,10 @@ function onNotify(callback) {
 /**
  * Asynchronous task that adds a visit to the history database.
  */
-function* task_add_visit(uri, timestamp, transition) {
+async function task_add_visit(uri, timestamp, transition) {
   uri = uri || NetUtil.newURI("http://firefox.com/");
   timestamp = timestamp || Date.now() * 1000;
-  yield PlacesTestUtils.addVisits({
+  await PlacesTestUtils.addVisits({
     uri,
     transition: transition || TRANSITION_TYPED,
     visitDate: timestamp
@@ -50,7 +50,7 @@ function* task_add_visit(uri, timestamp, transition) {
   return [uri, timestamp];
 }
 
-add_task(function* test_onVisit() {
+add_task(async function test_onVisit() {
   let promiseNotify = onNotify(function onVisit(aURI, aVisitID, aTime,
                                                 aSessionID, aReferringID,
                                                 aTransitionType, aGUID,
@@ -68,11 +68,11 @@ add_task(function* test_onVisit() {
   });
   let testuri = NetUtil.newURI("http://firefox.com/");
   let testtime = Date.now() * 1000;
-  yield task_add_visit(testuri, testtime);
-  yield promiseNotify;
+  await task_add_visit(testuri, testtime);
+  await promiseNotify;
 });
 
-add_task(function* test_onVisit() {
+add_task(async function test_onVisit() {
   let promiseNotify = onNotify(function onVisit(aURI, aVisitID, aTime,
                                                 aSessionID, aReferringID,
                                                 aTransitionType, aGUID,
@@ -90,11 +90,11 @@ add_task(function* test_onVisit() {
   });
   let testuri = NetUtil.newURI("http://hidden.firefox.com/");
   let testtime = Date.now() * 1000;
-  yield task_add_visit(testuri, testtime, TRANSITION_FRAMED_LINK);
-  yield promiseNotify;
+  await task_add_visit(testuri, testtime, TRANSITION_FRAMED_LINK);
+  await promiseNotify;
 });
 
-add_task(function* test_multiple_onVisit() {
+add_task(async function test_multiple_onVisit() {
   let testuri = NetUtil.newURI("http://self.firefox.com/");
   let promiseNotifications = new Promise(resolve => {
     let observer = {
@@ -134,28 +134,28 @@ add_task(function* test_multiple_onVisit() {
     };
     PlacesUtils.history.addObserver(observer);
   });
-  yield PlacesTestUtils.addVisits([
+  await PlacesTestUtils.addVisits([
     { uri: testuri, transition: TRANSITION_LINK },
     { uri: testuri, referrer: testuri, transition: TRANSITION_LINK },
     { uri: testuri, transition: TRANSITION_TYPED },
   ]);
-  yield promiseNotifications;
+  await promiseNotifications;
 });
 
-add_task(function* test_onDeleteURI() {
+add_task(async function test_onDeleteURI() {
   let promiseNotify = onNotify(function onDeleteURI(aURI, aGUID, aReason) {
     Assert.ok(aURI.equals(testuri));
     // Can't use do_check_guid_for_uri() here because the visit is already gone.
     Assert.equal(aGUID, testguid);
     Assert.equal(aReason, Ci.nsINavHistoryObserver.REASON_DELETED);
   });
-  let [testuri] = yield task_add_visit();
+  let [testuri] = await task_add_visit();
   let testguid = do_get_guid_for_uri(testuri);
-  yield PlacesUtils.history.remove(testuri);
-  yield promiseNotify;
+  await PlacesUtils.history.remove(testuri);
+  await promiseNotify;
 });
 
-add_task(function* test_onDeleteVisits() {
+add_task(async function test_onDeleteVisits() {
   let promiseNotify = onNotify(function onDeleteVisits(aURI, aVisitTime, aGUID,
                                                        aReason) {
     Assert.ok(aURI.equals(testuri));
@@ -165,34 +165,34 @@ add_task(function* test_onDeleteVisits() {
     Assert.equal(aVisitTime, 0); // All visits have been removed.
   });
   let msecs24hrsAgo = Date.now() - (86400 * 1000);
-  let [testuri] = yield task_add_visit(undefined, msecs24hrsAgo * 1000);
+  let [testuri] = await task_add_visit(undefined, msecs24hrsAgo * 1000);
   // Add a bookmark so the page is not removed.
   PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
                                        testuri,
                                        PlacesUtils.bookmarks.DEFAULT_INDEX,
                                        "test");
   let testguid = do_get_guid_for_uri(testuri);
-  yield PlacesUtils.history.remove(testuri);
-  yield promiseNotify;
+  await PlacesUtils.history.remove(testuri);
+  await promiseNotify;
 });
 
-add_task(function* test_onTitleChanged() {
+add_task(async function test_onTitleChanged() {
   let promiseNotify = onNotify(function onTitleChanged(aURI, aTitle, aGUID) {
     Assert.ok(aURI.equals(testuri));
     Assert.equal(aTitle, title);
     do_check_guid_for_uri(aURI, aGUID);
   });
 
-  let [testuri] = yield task_add_visit();
+  let [testuri] = await task_add_visit();
   let title = "test-title";
-  yield PlacesTestUtils.addVisits({
+  await PlacesTestUtils.addVisits({
     uri: testuri,
     title
   });
-  yield promiseNotify;
+  await promiseNotify;
 });
 
-add_task(function* test_onPageChanged() {
+add_task(async function test_onPageChanged() {
   let promiseNotify = onNotify(function onPageChanged(aURI, aChangedAttribute,
                                                       aNewValue, aGUID) {
     Assert.equal(aChangedAttribute, Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON);
@@ -201,7 +201,7 @@ add_task(function* test_onPageChanged() {
     do_check_guid_for_uri(aURI, aGUID);
   });
 
-  let [testuri] = yield task_add_visit();
+  let [testuri] = await task_add_visit();
 
   // The new favicon for the page must have data associated with it in order to
   // receive the onPageChanged notification.  To keep this test self-contained,
@@ -211,5 +211,5 @@ add_task(function* test_onPageChanged() {
                                                  PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
                                                  null,
                                                  Services.scriptSecurityManager.getSystemPrincipal());
-  yield promiseNotify;
+  await promiseNotify;
 });

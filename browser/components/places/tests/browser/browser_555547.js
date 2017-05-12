@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(function* test() {
+add_task(async function test() {
   let sidebarBox = document.getElementById("sidebar-box");
   is(sidebarBox.hidden, true, "The sidebar should be hidden");
 
@@ -12,10 +12,10 @@ add_task(function* test() {
   let toolbar = document.getElementById("PersonalToolbar");
   let wasCollapsed = toolbar.collapsed;
   if (wasCollapsed) {
-    yield promiseSetToolbarVisibility(toolbar, true);
+    await promiseSetToolbarVisibility(toolbar, true);
   }
 
-  let sidebar = yield promiseLoadedSidebar("viewBookmarksSidebar");
+  let sidebar = await promiseLoadedSidebar("viewBookmarksSidebar");
   registerCleanupFunction(() => {
     SidebarUI.hide();
   });
@@ -49,7 +49,7 @@ add_task(function* test() {
   ok(controller == treeController, "tree controller was returned");
 
   if (wasCollapsed) {
-    yield promiseSetToolbarVisibility(toolbar, false);
+    await promiseSetToolbarVisibility(toolbar, false);
   }
 });
 

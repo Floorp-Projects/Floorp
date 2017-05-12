@@ -5,7 +5,7 @@
 description: Rest object doesn't contain non-enumerable properties (arrow function expression (default parameter))
 esid: sec-arrow-function-definitions-runtime-semantics-evaluation
 es6id: 14.2.16
-features: [destructuring-binding, default-parameters]
+features: [object-rest, destructuring-binding, default-parameters]
 flags: [generated]
 includes: [propertyHelper.js]
 info: |

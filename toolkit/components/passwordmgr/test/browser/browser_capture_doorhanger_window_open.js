@@ -24,31 +24,31 @@ function withTestTabUntilStorageChange(aPageFile, aTaskFn) {
   return BrowserTestUtils.withNewTab({
     gBrowser,
     url: "http://mochi.test:8888" + DIRECTORY_PATH + aPageFile,
-  }, function*(browser) {
+  }, async function(browser) {
     ok(true, "loaded " + aPageFile);
     info("running test case task");
-    yield* aTaskFn();
+    await aTaskFn();
     info("waiting for storage change");
-    yield storageChangedPromised;
+    await storageChangedPromised;
   });
 }
 
-add_task(function* setup() {
-  yield SimpleTest.promiseFocus(window);
+add_task(async function setup() {
+  await SimpleTest.promiseFocus(window);
 });
 
-add_task(function* test_saveChromeHiddenAutoClose() {
+add_task(async function test_saveChromeHiddenAutoClose() {
   let notifShownPromise = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
   // query arguments are: username, password, features, auto-close (delimited by '|')
   let url = "subtst_notifications_11.html?notifyu1|notifyp1|" +
             "menubar=no,toolbar=no,location=no|autoclose";
-  yield withTestTabUntilStorageChange(url, function*() {
+  await withTestTabUntilStorageChange(url, async function() {
     info("waiting for popupshown");
-    yield notifShownPromise;
+    await notifShownPromise;
     // the popup closes and the doorhanger should appear in the opener
     let popup = getCaptureDoorhanger("password-save");
     ok(popup, "got notification popup");
-    yield* checkDoorhangerUsernamePassword("notifyu1", "notifyp1");
+    await checkDoorhangerUsernamePassword("notifyu1", "notifyp1");
     // Sanity check, no logins should exist yet.
     let logins = Services.logins.getAllLogins();
     is(logins.length, 0, "Should not have any logins yet");
@@ -64,15 +64,15 @@ add_task(function* test_saveChromeHiddenAutoClose() {
   is(login.password, "notifyp1", "Check the password used on the new entry");
 });
 
-add_task(function* test_changeChromeHiddenAutoClose() {
+add_task(async function test_changeChromeHiddenAutoClose() {
   let notifShownPromise = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
   let url = "subtst_notifications_11.html?notifyu1|pass2|menubar=no,toolbar=no,location=no|autoclose";
-  yield withTestTabUntilStorageChange(url, function*() {
+  await withTestTabUntilStorageChange(url, async function() {
     info("waiting for popupshown");
-    yield notifShownPromise;
+    await notifShownPromise;
     let popup = getCaptureDoorhanger("password-change");
     ok(popup, "got notification popup");
-    yield* checkDoorhangerUsernamePassword("notifyu1", "pass2");
+    await checkDoorhangerUsernamePassword("notifyu1", "pass2");
     clickDoorhangerButton(popup, CHANGE_BUTTON);
   });
 
@@ -92,17 +92,17 @@ add_task(function* test_changeChromeHiddenAutoClose() {
   login1.password = "notifyp1";
 });
 
-add_task(function* test_saveChromeVisibleSameWindow() {
+add_task(async function test_saveChromeVisibleSameWindow() {
   // This test actually opens a new tab in the same window with default browser settings.
   let url = "subtst_notifications_11.html?notifyu2|notifyp2||";
   let notifShownPromise = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
-  yield withTestTabUntilStorageChange(url, function*() {
-    yield notifShownPromise;
+  await withTestTabUntilStorageChange(url, async function() {
+    await notifShownPromise;
     let popup = getCaptureDoorhanger("password-save");
     ok(popup, "got notification popup");
-    yield* checkDoorhangerUsernamePassword("notifyu2", "notifyp2");
+    await checkDoorhangerUsernamePassword("notifyu2", "notifyp2");
     clickDoorhangerButton(popup, REMEMBER_BUTTON);
-    yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
   });
 
   // Check result of clicking Remember
@@ -114,16 +114,16 @@ add_task(function* test_saveChromeVisibleSameWindow() {
   is(login.timesUsed, 1, "Check times used on new entry");
 });
 
-add_task(function* test_changeChromeVisibleSameWindow() {
+add_task(async function test_changeChromeVisibleSameWindow() {
   let url = "subtst_notifications_11.html?notifyu2|pass2||";
   let notifShownPromise = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
-  yield withTestTabUntilStorageChange(url, function*() {
-    yield notifShownPromise;
+  await withTestTabUntilStorageChange(url, async function() {
+    await notifShownPromise;
     let popup = getCaptureDoorhanger("password-change");
     ok(popup, "got notification popup");
-    yield* checkDoorhangerUsernamePassword("notifyu2", "pass2");
+    await checkDoorhangerUsernamePassword("notifyu2", "pass2");
     clickDoorhangerButton(popup, CHANGE_BUTTON);
-    yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
   });
 
   // Check to make sure we updated the password, timestamps and use count for

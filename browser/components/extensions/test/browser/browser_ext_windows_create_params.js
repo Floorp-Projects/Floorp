@@ -4,7 +4,7 @@
 
 
 // Tests that incompatible parameters can't be used together.
-add_task(function* testWindowCreateParams() {
+add_task(async function testWindowCreateParams() {
   let extension = ExtensionTestUtils.loadExtension({
     async background() {
       try {
@@ -27,7 +27,7 @@ add_task(function* testWindowCreateParams() {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("window-create-params");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("window-create-params");
+  await extension.unload();
 });

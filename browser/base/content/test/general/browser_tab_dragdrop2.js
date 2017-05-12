@@ -7,13 +7,13 @@ const URI = ROOT + "browser_tab_dragdrop2_frame1.xul";
 // After the tests were run, tear off the tab into a new window and run popup
 // tests a second time. We don't care about tests results, exceptions and
 // crashes will be caught.
-add_task(function* () {
+add_task(async function() {
   // Open a new window.
   let args = "chrome,all,dialog=no";
   let win = window.openDialog(getBrowserURL(), "_blank", args, URI);
 
   // Wait until the tests were run.
-  yield promiseTestsDone(win);
+  await promiseTestsDone(win);
   ok(true, "tests succeeded");
 
   // Create a second tab so that we can move the original one out.
@@ -31,7 +31,7 @@ add_task(function* () {
   win2.addEventListener("TestsDone", onTestsDone);
 
   // Wait until the original tab is gone and the new window is ready.
-  yield Promise.all([tabClosed, promiseDelayedStartupFinished(win2)]);
+  await Promise.all([tabClosed, promiseDelayedStartupFinished(win2)]);
 
   // Remove the 'TestsDone' event listener as now
   // we're kicking off a new test run manually.
@@ -40,12 +40,12 @@ add_task(function* () {
   // Run tests once again.
   let promise = promiseTestsDone(win2);
   win2.content.test_panels();
-  yield promise;
+  await promise;
   ok(true, "tests succeeded a second time");
 
   // Cleanup.
-  yield promiseWindowClosed(win2);
-  yield promiseWindowClosed(win);
+  await promiseWindowClosed(win2);
+  await promiseWindowClosed(win);
 });
 
 function promiseTestsDone(win) {

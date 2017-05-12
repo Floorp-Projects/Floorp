@@ -15,11 +15,11 @@ function run_test() {
  * - with a non-existing file (should fail);
  * - with inconsistent arguments (should fail).
  */
-add_task(function*() {
+add_task(async function() {
   // Attempt to open a file that does not exist, ensure that it yields the
   // appropriate error.
   try {
-    let fd = yield OS.File.open(OS.Path.join(".", "This file does not exist"));
+    let fd = await OS.File.open(OS.Path.join(".", "This file does not exist"));
     do_check_true(false, "File opening 1 succeeded (it should fail)");
   } catch (err if err instanceof OS.File.Error && err.becauseNoSuchFile) {
     do_print("File opening 1 failed " + err);
@@ -29,7 +29,7 @@ add_task(function*() {
   // serialization, ensure that it yields the appropriate error.
   do_print("Attempting to open a file with wrong arguments");
   try {
-    let fd = yield OS.File.open(1, 2, 3);
+    let fd = await OS.File.open(1, 2, 3);
     do_check_true(false, "File opening 2 succeeded (it should fail)" + fd);
   } catch (err) {
     do_print("File opening 2 failed " + err);
@@ -41,27 +41,27 @@ add_task(function*() {
 
   // Attempt to open a file correctly
   do_print("Attempting to open a file correctly");
-  let openedFile = yield OS.File.open(OS.Path.join(do_get_cwd().path, "test_open.js"));
+  let openedFile = await OS.File.open(OS.Path.join(do_get_cwd().path, "test_open.js"));
   do_print("File opened correctly");
 
   do_print("Attempting to close a file correctly");
-  yield openedFile.close();
+  await openedFile.close();
 
   do_print("Attempting to close a file again");
-  yield openedFile.close();
+  await openedFile.close();
 });
 
 /**
  * Test the error thrown by OS.File.open when attempting to open a directory
  * that does not exist.
  */
-add_task(function* test_error_attributes () {
+add_task(async function test_error_attributes () {
 
   let dir = OS.Path.join(do_get_profile().path, "test_osfileErrorAttrs");
   let fpath = OS.Path.join(dir, "test_error_attributes.txt");
 
   try {
-    yield OS.File.open(fpath, {truncate: true}, {});
+    await OS.File.open(fpath, {truncate: true}, {});
     do_check_true(false, "Opening path suceeded (it should fail) " + fpath);
   } catch (err) {
     do_check_true(err instanceof OS.File.Error);

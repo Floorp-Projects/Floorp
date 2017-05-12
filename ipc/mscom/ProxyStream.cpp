@@ -12,6 +12,7 @@
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
+#include "nsPrintfCString.h"
 #endif
 
 #include <windows.h>

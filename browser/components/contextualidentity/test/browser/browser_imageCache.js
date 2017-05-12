@@ -30,14 +30,14 @@ function fileHandler(metadata, response) {
   response.bodyOutputStream.write(body, body.length);
 }
 
-add_task(function* setup() {
+add_task(async function setup() {
   // make sure userContext is enabled.
-  yield SpecialPowers.pushPrefEnv({"set": [["privacy.userContext.enabled", true]]});
+  await SpecialPowers.pushPrefEnv({"set": [["privacy.userContext.enabled", true]]});
 });
 
 // opens `uri' in a new tab with the provided userContextId and focuses it.
 // returns the newly opened tab
-function* openTabInUserContext(uri, userContextId) {
+async function openTabInUserContext(uri, userContextId) {
   // open the tab in the correct userContextId
   let tab = gBrowser.addTab(uri, {userContextId});
 
@@ -46,13 +46,13 @@ function* openTabInUserContext(uri, userContextId) {
   tab.ownerGlobal.focus();
 
   let browser = gBrowser.getBrowserForTab(tab);
-  yield BrowserTestUtils.browserLoaded(browser);
+  await BrowserTestUtils.browserLoaded(browser);
   return tab;
 }
 
-add_task(function* test() {
+add_task(async function test() {
   for (let userContextId = 0; userContextId < NUM_USER_CONTEXTS; userContextId++) {
-    let tab = yield* openTabInUserContext(FILE_URI, userContextId);
+    let tab = await openTabInUserContext(FILE_URI, userContextId);
     gBrowser.removeTab(tab);
   }
   is(gHits, NUM_USER_CONTEXTS, "should get an image request for each user contexts");

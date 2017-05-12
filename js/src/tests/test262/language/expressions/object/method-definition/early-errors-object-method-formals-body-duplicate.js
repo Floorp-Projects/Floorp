@@ -11,6 +11,6 @@ negative:
   type: SyntaxError
 ---*/
 
-!{
+({
   async function foo(bar) { let bar; }
-}
+})

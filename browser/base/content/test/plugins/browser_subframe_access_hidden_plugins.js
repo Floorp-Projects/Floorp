@@ -12,7 +12,7 @@ const DOMAIN_2 = "http://mochi.test:8888";
  * document, we should let subframes of that document access
  * navigator.plugins without showing the notification bar.
  */
-add_task(function* setup() {
+add_task(async function setup() {
   // We'll make the Test Plugin click-to-play.
   let originalPluginState = getTestPluginEnabledState();
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
@@ -22,12 +22,12 @@ add_task(function* setup() {
   });
 
   // And then make the plugin hidden.
-  yield SpecialPowers.pushPrefEnv({
+  await SpecialPowers.pushPrefEnv({
     set: [[HIDDEN_CTP_PLUGIN_PREF, TEST_PLUGIN_NAME]],
   });
 });
 
-add_task(function* test_plugin_accessible_in_subframe() {
+add_task(async function test_plugin_accessible_in_subframe() {
   // Let's make it so that DOMAIN_1 allows the test plugin to
   // be activated. This permission will be cleaned up inside
   // our registerCleanupFunction when the test ends.
@@ -41,12 +41,12 @@ add_task(function* test_plugin_accessible_in_subframe() {
                                   Ci.nsIPermissionManager.EXPIRE_NEVER,
                                   0 /* expireTime */);
 
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: DOMAIN_1
-  }, function*(browser) {
-    yield ContentTask.spawn(browser, [TEST_PLUGIN_NAME, DOMAIN_2],
-                            function*([pluginName, domain2]) {
+  }, async function(browser) {
+    await ContentTask.spawn(browser, [TEST_PLUGIN_NAME, DOMAIN_2],
+                            async function([pluginName, domain2]) {
       Assert.ok(content.navigator.plugins[pluginName],
                 "Top-level document should find Test Plugin");
 
@@ -55,7 +55,7 @@ add_task(function* test_plugin_accessible_in_subframe() {
       subframe.src = domain2;
       let loadedPromise = ContentTaskUtils.waitForEvent(subframe, "load");
       content.document.body.appendChild(subframe);
-      yield loadedPromise;
+      await loadedPromise;
 
       // Instead of waiting for a notification bar that should never come,
       // we'll make sure that the HiddenPlugin event never fires in content

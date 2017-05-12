@@ -9,26 +9,26 @@ Cu.importGlobalProperties(["URL"]);
 
 
 // Test removing a single page
-add_task(function* test_remove_single() {
-  yield PlacesTestUtils.clearHistory();
-  yield PlacesUtils.bookmarks.eraseEverything();
+add_task(async function test_remove_single() {
+  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.bookmarks.eraseEverything();
 
 
   let WITNESS_URI = NetUtil.newURI("http://mozilla.com/test_browserhistory/test_remove/" + Math.random());
-  yield PlacesTestUtils.addVisits(WITNESS_URI);
+  await PlacesTestUtils.addVisits(WITNESS_URI);
   Assert.ok(page_in_database(WITNESS_URI));
 
-  let remover = Task.async(function*(name, filter, options) {
+  let remover = async function(name, filter, options) {
     do_print(name);
     do_print(JSON.stringify(options));
     do_print("Setting up visit");
 
     let uri = NetUtil.newURI("http://mozilla.com/test_browserhistory/test_remove/" + Math.random());
     let title = "Visit " + Math.random();
-    yield PlacesTestUtils.addVisits({uri, title});
+    await PlacesTestUtils.addVisits({uri, title});
     Assert.ok(visits_in_database(uri), "History entry created");
 
-    let removeArg = yield filter(uri);
+    let removeArg = await filter(uri);
 
     if (options.addBookmark) {
       PlacesUtils.bookmarks.insertBookmark(
@@ -91,7 +91,7 @@ add_task(function* test_remove_single() {
     if (options.useCallback) {
       let onRowCalled = false;
       let guid = do_get_guid_for_uri(uri);
-      removed = yield PlacesUtils.history.remove(removeArg, page => {
+      removed = await PlacesUtils.history.remove(removeArg, page => {
         Assert.equal(onRowCalled, false, "Callback has not been called yet");
         onRowCalled = true;
         Assert.equal(page.url.href, uri.spec, "Callback provides the correct url");
@@ -100,10 +100,10 @@ add_task(function* test_remove_single() {
       });
       Assert.ok(onRowCalled, "Callback has been called");
     } else {
-      removed = yield PlacesUtils.history.remove(removeArg);
+      removed = await PlacesUtils.history.remove(removeArg);
     }
 
-    yield promiseObserved;
+    await promiseObserved;
     PlacesUtils.history.removeObserver(observer);
 
     Assert.equal(visits_in_database(uri), 0, "History entry has disappeared");
@@ -116,32 +116,32 @@ add_task(function* test_remove_single() {
       Assert.ok(!removed, "The page was not removed, as there was a bookmark");
       Assert.notEqual(page_in_database(uri), 0, "The page is still present");
     }
-  });
+  };
 
   try {
     for (let useCallback of [false, true]) {
       for (let addBookmark of [false, true]) {
         let options = { useCallback, addBookmark };
-        yield remover("Testing History.remove() with a single URI", x => x, options);
-        yield remover("Testing History.remove() with a single string url", x => x.spec, options);
-        yield remover("Testing History.remove() with a single string guid", x => do_get_guid_for_uri(x), options);
-        yield remover("Testing History.remove() with a single URI in an array", x => [x], options);
-        yield remover("Testing History.remove() with a single string url in an array", x => [x.spec], options);
-        yield remover("Testing History.remove() with a single string guid in an array", x => [do_get_guid_for_uri(x)], options);
+        await remover("Testing History.remove() with a single URI", x => x, options);
+        await remover("Testing History.remove() with a single string url", x => x.spec, options);
+        await remover("Testing History.remove() with a single string guid", x => do_get_guid_for_uri(x), options);
+        await remover("Testing History.remove() with a single URI in an array", x => [x], options);
+        await remover("Testing History.remove() with a single string url in an array", x => [x.spec], options);
+        await remover("Testing History.remove() with a single string guid in an array", x => [do_get_guid_for_uri(x)], options);
       }
     }
   } finally {
-    yield PlacesTestUtils.clearHistory();
+    await PlacesTestUtils.clearHistory();
   }
 });
 
-add_task(function* cleanup() {
-  yield PlacesTestUtils.clearHistory();
-  yield PlacesUtils.bookmarks.eraseEverything();
+add_task(async function cleanup() {
+  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.bookmarks.eraseEverything();
 });
 
 // Test the various error cases
-add_task(function* test_error_cases() {
+add_task(async function test_error_cases() {
   Assert.throws(
     () => PlacesUtils.history.remove(),
     /TypeError: Invalid url/,
@@ -205,9 +205,9 @@ add_task(function* test_error_cases() {
   }
 });
 
-add_task(function* test_orphans() {
+add_task(async function test_orphans() {
   let uri = NetUtil.newURI("http://moz.org/");
-  yield PlacesTestUtils.addVisits({ uri });
+  await PlacesTestUtils.addVisits({ uri });
 
   PlacesUtils.favicons.setAndFetchFaviconForPage(
     uri, SMALLPNG_DATA_URI, true, PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
@@ -215,11 +215,11 @@ add_task(function* test_orphans() {
   PlacesUtils.annotations.setPageAnnotation(uri, "test", "restval", 0,
                                             PlacesUtils.annotations.EXPIRE_NEVER);
 
-  yield PlacesUtils.history.remove(uri);
-  Assert.ok(!(yield PlacesTestUtils.isPageInDB(uri)), "Page should have been removed");
+  await PlacesUtils.history.remove(uri);
+  Assert.ok(!(await PlacesTestUtils.isPageInDB(uri)), "Page should have been removed");
 
-  let db = yield PlacesUtils.promiseDBConnection();
-  let rows = yield db.execute(`SELECT (SELECT count(*) FROM moz_annos) +
+  let db = await PlacesUtils.promiseDBConnection();
+  let rows = await db.execute(`SELECT (SELECT count(*) FROM moz_annos) +
                                       (SELECT count(*) FROM moz_icons) +
                                       (SELECT count(*) FROM moz_pages_w_icons) +
                                       (SELECT count(*) FROM moz_icons_to_pages) AS count`);

@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* test_execute_page_action_without_popup() {
+add_task(async function test_execute_page_action_without_popup() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "commands": {
@@ -53,12 +53,12 @@ add_task(function* test_execute_page_action_without_popup() {
     EventUtils.synthesizeKey("3", {altKey: true, shiftKey: true});
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("page-action-without-popup");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("page-action-without-popup");
+  await extension.unload();
 });
 
-add_task(function* test_execute_page_action_with_popup() {
+add_task(async function test_execute_page_action_with_popup() {
   let scriptPage = url => `<html><head><meta charset="utf-8"><script src="${url}"></script></head><body>Test Popup</body></html>`;
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -127,7 +127,7 @@ add_task(function* test_execute_page_action_with_popup() {
     EventUtils.synthesizeKey("3", {altKey: true, shiftKey: true});
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("page-action-with-popup");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("page-action-with-popup");
+  await extension.unload();
 });

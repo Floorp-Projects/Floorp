@@ -15,9 +15,9 @@ var gAllBookmarksFolderIdGetter;
 var gReferenceHierarchy;
 var gLeftPaneFolderId;
 
-add_task(function* () {
+add_task(async function() {
   // We want empty roots.
-  yield PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.bookmarks.eraseEverything();
 
   // Sanity check.
   Assert.ok(!!PlacesUIUtils);
@@ -31,16 +31,16 @@ add_task(function* () {
   do_register_cleanup(() => PlacesUtils.bookmarks.eraseEverything());
 });
 
-add_task(function* () {
+add_task(async function() {
   // Add a third party bogus annotated item.  Should not be removed.
-  let folder = yield PlacesUtils.bookmarks.insert({
+  let folder = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     title: "test",
     index: PlacesUtils.bookmarks.DEFAULT_INDEX,
     type: PlacesUtils.bookmarks.TYPE_FOLDER
   });
 
-  let folderId = yield PlacesUtils.promiseItemId(folder.guid);
+  let folderId = await PlacesUtils.promiseItemId(folder.guid);
   PlacesUtils.annotations.setItemAnnotation(folderId, ORGANIZER_QUERY_ANNO,
                                             "test", 0,
                                             PlacesUtils.annotations.EXPIRE_NEVER);
@@ -52,7 +52,7 @@ add_task(function* () {
 
   while (gTests.length) {
     // Run current test.
-    yield Task.spawn(gTests.shift());
+    await gTests.shift();
 
     // Regenerate getters.
     Object.defineProperty(PlacesUIUtils, "leftPaneFolderId", gLeftPaneFolderIdGetter);
@@ -63,7 +63,7 @@ add_task(function* () {
     let leftPaneHierarchy = folderIdToHierarchy(gLeftPaneFolderId)
     Assert.equal(gReferenceHierarchy, leftPaneHierarchy);
 
-    folder = yield PlacesUtils.bookmarks.fetch({guid: folder.guid});
+    folder = await PlacesUtils.bookmarks.fetch({guid: folder.guid});
     Assert.equal(folder.title, "test");
   }
 });
@@ -71,76 +71,76 @@ add_task(function* () {
 // Corruption cases.
 var gTests = [
 
-  function* test1() {
+  function test1() {
     print("1. Do nothing, checks test calibration.");
   },
 
-  function* test2() {
+  async function test2() {
     print("2. Delete the left pane folder.");
-    let guid = yield PlacesUtils.promiseItemGuid(gLeftPaneFolderId);
-    yield PlacesUtils.bookmarks.remove(guid);
+    let guid = await PlacesUtils.promiseItemGuid(gLeftPaneFolderId);
+    await PlacesUtils.bookmarks.remove(guid);
   },
 
-  function* test3() {
+  async function test3() {
     print("3. Delete a child of the left pane folder.");
-    let guid = yield PlacesUtils.promiseItemGuid(gLeftPaneFolderId);
-    let bm = yield PlacesUtils.bookmarks.fetch({parentGuid: guid, index: 0});
-    yield PlacesUtils.bookmarks.remove(bm.guid);
+    let guid = await PlacesUtils.promiseItemGuid(gLeftPaneFolderId);
+    let bm = await PlacesUtils.bookmarks.fetch({parentGuid: guid, index: 0});
+    await PlacesUtils.bookmarks.remove(bm.guid);
   },
 
-  function* test4() {
+  async function test4() {
     print("4. Delete AllBookmarks.");
-    let guid = yield PlacesUtils.promiseItemGuid(PlacesUIUtils.allBookmarksFolderId);
-    yield PlacesUtils.bookmarks.remove(guid);
+    let guid = await PlacesUtils.promiseItemGuid(PlacesUIUtils.allBookmarksFolderId);
+    await PlacesUtils.bookmarks.remove(guid);
   },
 
-  function* test5() {
+  async function test5() {
     print("5. Create a duplicated left pane folder.");
-    let folder = yield PlacesUtils.bookmarks.insert({
+    let folder = await PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       title: "PlacesRoot",
       index: PlacesUtils.bookmarks.DEFAULT_INDEX,
       type: PlacesUtils.bookmarks.TYPE_FOLDER
     });
 
-    let folderId = yield PlacesUtils.promiseItemId(folder.guid);
+    let folderId = await PlacesUtils.promiseItemId(folder.guid);
     PlacesUtils.annotations.setItemAnnotation(folderId, ORGANIZER_FOLDER_ANNO,
                                               "PlacesRoot", 0,
                                               PlacesUtils.annotations.EXPIRE_NEVER);
   },
 
-  function* test6() {
+  async function test6() {
     print("6. Create a duplicated left pane query.");
-    let folder = yield PlacesUtils.bookmarks.insert({
+    let folder = await PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       title: "AllBookmarks",
       index: PlacesUtils.bookmarks.DEFAULT_INDEX,
       type: PlacesUtils.bookmarks.TYPE_FOLDER
     });
 
-    let folderId = yield PlacesUtils.promiseItemId(folder.guid);
+    let folderId = await PlacesUtils.promiseItemId(folder.guid);
     PlacesUtils.annotations.setItemAnnotation(folderId, ORGANIZER_QUERY_ANNO,
                                               "AllBookmarks", 0,
                                               PlacesUtils.annotations.EXPIRE_NEVER);
   },
 
-  function* test7() {
+  function test7() {
     print("7. Remove the left pane folder annotation.");
     PlacesUtils.annotations.removeItemAnnotation(gLeftPaneFolderId,
                                                  ORGANIZER_FOLDER_ANNO);
   },
 
-  function* test8() {
+  function test8() {
     print("8. Remove a left pane query annotation.");
     PlacesUtils.annotations.removeItemAnnotation(PlacesUIUtils.allBookmarksFolderId,
                                                  ORGANIZER_QUERY_ANNO);
   },
 
-  function* test9() {
+  async function test9() {
     print("9. Remove a child of AllBookmarks.");
-    let guid = yield PlacesUtils.promiseItemGuid(PlacesUIUtils.allBookmarksFolderId);
-    let bm = yield PlacesUtils.bookmarks.fetch({parentGuid: guid, index: 0});
-    yield PlacesUtils.bookmarks.remove(bm.guid);
+    let guid = await PlacesUtils.promiseItemGuid(PlacesUIUtils.allBookmarksFolderId);
+    let bm = await PlacesUtils.bookmarks.fetch({parentGuid: guid, index: 0});
+    await PlacesUtils.bookmarks.remove(bm.guid);
   }
 
 ];

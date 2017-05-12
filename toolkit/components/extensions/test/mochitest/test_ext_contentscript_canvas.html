@@ -10,7 +10,7 @@
 <script>
 "use strict";
 
-add_task(function* test_drawWindow() {
+add_task(async function test_drawWindow() {
   const permissions = [
     "<all_urls>",
   ];
@@ -37,20 +37,20 @@ add_task(function* test_drawWindow() {
   const first = ExtensionTestUtils.loadExtension({manifest: {permissions, content_scripts}, files});
   const second = ExtensionTestUtils.loadExtension({manifest: {content_scripts}, files});
 
-  yield first.startup();
-  yield second.startup();
+  await first.startup();
+  await second.startup();
 
   const win = window.open("https://example.org/tests/toolkit/components/extensions/test/mochitest/file_to_drawWindow.html");
 
-  const colour = yield first.awaitMessage("success");
+  const colour = await first.awaitMessage("success");
   is(colour, "255,255,153", "drawWindow() call was successful: #ff9 == rgb(255,255,153)");
 
-  const error = yield second.awaitMessage("error");
+  const error = await second.awaitMessage("error");
   is(error, "ctx.drawWindow is not a function", "drawWindow() method not awailable without permission");
 
   win.close();
-  yield first.unload();
-  yield second.unload();
+  await first.unload();
+  await second.unload();
 });
 
 add_task(async function test_tainted_canvas() {

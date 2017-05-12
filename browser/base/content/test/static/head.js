@@ -12,7 +12,6 @@ const ZipReader = new Components.Constructor("@mozilla.org/libjar/zip-reader;1",
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 
 
 /**
@@ -28,16 +27,16 @@ function generateURIsFromDirTree(dir, extensions) {
     extensions = [extensions];
   }
   let dirQueue = [dir.path];
-  return Task.spawn(function*() {
+  return (async function() {
     let rv = [];
     while (dirQueue.length) {
       let nextDir = dirQueue.shift();
-      let {subdirs, files} = yield iterateOverPath(nextDir, extensions);
+      let {subdirs, files} = await iterateOverPath(nextDir, extensions);
       dirQueue.push(...subdirs);
       rv.push(...files);
     }
     return rv;
-  });
+  })();
 }
 
 /**
@@ -80,17 +79,17 @@ function iterateOverPath(path, extensions) {
   };
 
   return new Promise((resolve, reject) => {
-    Task.spawn(function* () {
+    (async function() {
       try {
         // Iterate through the directory
-        yield iterator.forEach(pathEntryIterator);
+        await iterator.forEach(pathEntryIterator);
         resolve({files, subdirs});
       } catch (ex) {
         reject(ex);
       } finally {
         iterator.close();
       }
-    });
+    })();
   });
 }
 

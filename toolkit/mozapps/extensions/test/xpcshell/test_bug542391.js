@@ -276,7 +276,7 @@ function check_state_v3_2([a1, a2, a3, a4, a5, a6]) {
 
 // Install all the test add-ons, disable two of them and "upgrade" the app to
 // version 2 which will appDisable one.
-add_task(function* init() {
+add_task(async function init() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
 
   Services.prefs.setBoolPref(PREF_EM_SHOW_MISMATCH_UI, true);
@@ -306,13 +306,13 @@ add_task(function* init() {
   dest.remove(true);
 
   // Load up an initial set of add-ons
-  yield promiseInstallAllFiles([do_get_addon("min1max1"),
+  await promiseInstallAllFiles([do_get_addon("min1max1"),
                                 do_get_addon("min1max2"),
                                 do_get_addon("upgradeable1x2-3_1"),
                                 do_get_addon("min1max3"),
                                 do_get_addon("min1max3b"),
                                 do_get_addon("override1x2-1x3")]);
-  yield promiseRestartManager();
+  await promiseRestartManager();
 
   check_startup_changes("installed", []);
   check_startup_changes("updated", []);
@@ -321,19 +321,19 @@ add_task(function* init() {
   check_startup_changes("enabled", []);
 
   // user-disable two add-ons
-  let [a2, a4] = yield promiseAddonsByIDs(["min1max2@tests.mozilla.org",
+  let [a2, a4] = await promiseAddonsByIDs(["min1max2@tests.mozilla.org",
                                            "min1max3@tests.mozilla.org"]);
   do_check_true(a2 != null && a4 != null);
   a2.userDisabled = true;
   a4.userDisabled = true;
-  yield promiseRestartManager();
+  await promiseRestartManager();
   check_startup_changes("installed", []);
   check_startup_changes("updated", []);
   check_startup_changes("uninstalled", []);
   check_startup_changes("disabled", []);
   check_startup_changes("enabled", []);
 
-  let addons = yield promiseAddonsByIDs(["min1max1@tests.mozilla.org",
+  let addons = await promiseAddonsByIDs(["min1max1@tests.mozilla.org",
                                          "min1max2@tests.mozilla.org",
                                          "upgradeable1x2-3@tests.mozilla.org",
                                          "min1max3@tests.mozilla.org",
@@ -343,7 +343,7 @@ add_task(function* init() {
 
   // Restart as version 2, add-on _1 should become app-disabled
   WindowWatcher.expected = true;
-  yield promiseRestartManager("2");
+  await promiseRestartManager("2");
   check_startup_changes("installed", []);
   check_startup_changes("updated", []);
   check_startup_changes("uninstalled", []);
@@ -351,7 +351,7 @@ add_task(function* init() {
   check_startup_changes("enabled", []);
   do_check_false(WindowWatcher.expected);
 
-  addons = yield promiseAddonsByIDs(["min1max1@tests.mozilla.org",
+  addons = await promiseAddonsByIDs(["min1max1@tests.mozilla.org",
                                      "min1max2@tests.mozilla.org",
                                      "upgradeable1x2-3@tests.mozilla.org",
                                      "min1max3@tests.mozilla.org",
@@ -364,11 +364,11 @@ add_task(function* init() {
 // upgradeable1x2-3 and override1x2-1x3
 // Only the newly disabled add-ons should be passed to the
 // upgrade window
-add_task(function* run_test_1() {
+add_task(async function run_test_1() {
   gCheckUpdates = true;
   WindowWatcher.expected = true;
 
-  yield promiseRestartManager("3");
+  await promiseRestartManager("3");
   check_startup_changes("installed", []);
   check_startup_changes("updated", []);
   check_startup_changes("uninstalled", []);
@@ -377,7 +377,7 @@ add_task(function* run_test_1() {
   do_check_false(WindowWatcher.expected);
   gCheckUpdates = false;
 
-  let addons = yield promiseAddonsByIDs(["min1max1@tests.mozilla.org",
+  let addons = await promiseAddonsByIDs(["min1max1@tests.mozilla.org",
                                          "min1max2@tests.mozilla.org",
                                          "upgradeable1x2-3@tests.mozilla.org",
                                          "min1max3@tests.mozilla.org",
@@ -392,9 +392,9 @@ add_task(function* run_test_1() {
 
 // Downgrade to version 2 which will remove appDisable from two add-ons
 // Still displays the compat window, because metadata is not recently updated
-add_task(function* run_test_2() {
+add_task(async function run_test_2() {
   WindowWatcher.expected = true;
-  yield promiseRestartManager("2");
+  await promiseRestartManager("2");
   check_startup_changes("installed", []);
   check_startup_changes("updated", []);
   check_startup_changes("uninstalled", []);
@@ -402,7 +402,7 @@ add_task(function* run_test_2() {
   check_startup_changes("enabled", ["upgradeable1x2-3@tests.mozilla.org"]);
   do_check_false(WindowWatcher.expected);
 
-  let addons = yield promiseAddonsByIDs(["min1max1@tests.mozilla.org",
+  let addons = await promiseAddonsByIDs(["min1max1@tests.mozilla.org",
                                          "min1max2@tests.mozilla.org",
                                          "upgradeable1x2-3@tests.mozilla.org",
                                          "min1max3@tests.mozilla.org",
@@ -415,13 +415,13 @@ add_task(function* run_test_2() {
 // upgradeable1x2-3, because we already have the override
 // stored in our DB for override1x2-1x3. Ensure that when
 // the upgrade dialog updates an add-on no restart is necessary
-add_task(function* run_test_5() {
+add_task(async function run_test_5() {
   Services.prefs.setBoolPref(PREF_EM_SHOW_MISMATCH_UI, true);
   // tell the mock compatibility window to install the available upgrade
   gInstallUpdate = true;
 
   WindowWatcher.expected = true;
-  yield promiseRestartManager("3");
+  await promiseRestartManager("3");
   check_startup_changes("installed", []);
   check_startup_changes("updated", ["upgradeable1x2-3@tests.mozilla.org"]);
   check_startup_changes("uninstalled", []);
@@ -430,7 +430,7 @@ add_task(function* run_test_5() {
   do_check_false(WindowWatcher.expected);
   gInstallUpdate = false;
 
-  let addons = yield promiseAddonsByIDs(["min1max1@tests.mozilla.org",
+  let addons = await promiseAddonsByIDs(["min1max1@tests.mozilla.org",
                                          "min1max2@tests.mozilla.org",
                                          "upgradeable1x2-3@tests.mozilla.org",
                                          "min1max3@tests.mozilla.org",
@@ -444,9 +444,9 @@ add_task(function* run_test_5() {
 
 // Downgrade to version 1 which will appEnable all the add-ons
 // except upgradeable1x2-3; the update we installed isn't compatible with 1
-add_task(function* run_test_6() {
+add_task(async function run_test_6() {
   WindowWatcher.expected = true;
-  yield promiseRestartManager("1");
+  await promiseRestartManager("1");
   check_startup_changes("installed", []);
   check_startup_changes("updated", []);
   check_startup_changes("uninstalled", []);
@@ -454,7 +454,7 @@ add_task(function* run_test_6() {
   check_startup_changes("enabled", ["min1max1@tests.mozilla.org"]);
   do_check_false(WindowWatcher.expected);
 
-  let addons = yield promiseAddonsByIDs(["min1max1@tests.mozilla.org",
+  let addons = await promiseAddonsByIDs(["min1max1@tests.mozilla.org",
                                          "min1max2@tests.mozilla.org",
                                          "upgradeable1x2-3@tests.mozilla.org",
                                          "min1max3@tests.mozilla.org",

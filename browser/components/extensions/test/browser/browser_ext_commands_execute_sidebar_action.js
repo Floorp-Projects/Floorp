@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* test_execute_sidebar_action() {
+add_task(async function test_execute_sidebar_action() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "commands": {
@@ -40,13 +40,13 @@ add_task(function* test_execute_sidebar_action() {
     },
   });
 
-  yield extension.startup();
-  yield SimpleTest.promiseFocus(window);
+  await extension.startup();
+  await SimpleTest.promiseFocus(window);
   // Since we didn't set useAddonManager, the sidebar will not be automatically
   // opened for this test.
   ok(document.getElementById("sidebar-box").hidden, "sidebar box is not visible");
   // Send the key to open the sidebar.
   EventUtils.synthesizeKey("j", {altKey: true, shiftKey: true});
-  yield extension.awaitFinish("execute-sidebar-action-opened");
-  yield extension.unload();
+  await extension.awaitFinish("execute-sidebar-action-opened");
+  await extension.unload();
 });

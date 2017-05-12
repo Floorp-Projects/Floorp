@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-add_task(function* () {
+add_task(async function() {
   let charsToDelete, deletedURLTab, fullURLTab, partialURLTab, testPartialURL, testURL;
 
   charsToDelete = 5;
@@ -17,7 +17,7 @@ add_task(function* () {
   deletedURLTab.linkedBrowser.loadURI(testURL);
   fullURLTab.linkedBrowser.loadURI(testURL);
   partialURLTab.linkedBrowser.loadURI(testURL);
-  yield Promise.all([loaded1, loaded2, loaded3]);
+  await Promise.all([loaded1, loaded2, loaded3]);
 
   testURL = gURLBar.trimValue(testURL);
   testPartialURL = testURL.substr(0, (testURL.length - charsToDelete));
@@ -28,16 +28,16 @@ add_task(function* () {
     gBrowser.removeTab(deletedURLTab);
   }
 
-  function* cycleTabs() {
-    yield BrowserTestUtils.switchTab(gBrowser, fullURLTab);
+  async function cycleTabs() {
+    await BrowserTestUtils.switchTab(gBrowser, fullURLTab);
     is(gURLBar.textValue, testURL, "gURLBar.textValue should be testURL after switching back to fullURLTab");
 
-    yield BrowserTestUtils.switchTab(gBrowser, partialURLTab);
+    await BrowserTestUtils.switchTab(gBrowser, partialURLTab);
     is(gURLBar.textValue, testPartialURL, "gURLBar.textValue should be testPartialURL after switching back to partialURLTab");
-    yield BrowserTestUtils.switchTab(gBrowser, deletedURLTab);
+    await BrowserTestUtils.switchTab(gBrowser, deletedURLTab);
     is(gURLBar.textValue, "", 'gURLBar.textValue should be "" after switching back to deletedURLTab');
 
-    yield BrowserTestUtils.switchTab(gBrowser, fullURLTab);
+    await BrowserTestUtils.switchTab(gBrowser, fullURLTab);
     is(gURLBar.textValue, testURL, "gURLBar.textValue should be testURL after switching back to fullURLTab");
   }
 
@@ -55,27 +55,27 @@ add_task(function* () {
     });
   }
 
-  function* prepareDeletedURLTab() {
-    yield BrowserTestUtils.switchTab(gBrowser, deletedURLTab);
+  async function prepareDeletedURLTab() {
+    await BrowserTestUtils.switchTab(gBrowser, deletedURLTab);
     is(gURLBar.textValue, testURL, "gURLBar.textValue should be testURL after initial switch to deletedURLTab");
 
     // simulate the user removing the whole url from the location bar
     gPrefService.setBoolPref("browser.urlbar.clickSelectsAll", true);
 
-    yield urlbarBackspace();
+    await urlbarBackspace();
     is(gURLBar.textValue, "", 'gURLBar.textValue should be "" (just set)');
     if (gPrefService.prefHasUserValue("browser.urlbar.clickSelectsAll")) {
       gPrefService.clearUserPref("browser.urlbar.clickSelectsAll");
     }
   }
 
-  function* prepareFullURLTab() {
-    yield BrowserTestUtils.switchTab(gBrowser, fullURLTab);
+  async function prepareFullURLTab() {
+    await BrowserTestUtils.switchTab(gBrowser, fullURLTab);
     is(gURLBar.textValue, testURL, "gURLBar.textValue should be testURL after initial switch to fullURLTab");
   }
 
-  function* preparePartialURLTab() {
-    yield BrowserTestUtils.switchTab(gBrowser, partialURLTab);
+  async function preparePartialURLTab() {
+    await BrowserTestUtils.switchTab(gBrowser, partialURLTab);
     is(gURLBar.textValue, testURL, "gURLBar.textValue should be testURL after initial switch to partialURLTab");
 
     // simulate the user removing part of the url from the location bar
@@ -83,7 +83,7 @@ add_task(function* () {
 
     let deleted = 0;
     while (deleted < charsToDelete) {
-      yield urlbarBackspace(arguments.callee);
+      await urlbarBackspace(arguments.callee);
       deleted++;
     }
 
@@ -96,12 +96,12 @@ add_task(function* () {
   // prepare the three tabs required by this test
 
   // First tab
-  yield* prepareFullURLTab();
-  yield* preparePartialURLTab();
-  yield* prepareDeletedURLTab();
+  await prepareFullURLTab();
+  await preparePartialURLTab();
+  await prepareDeletedURLTab();
 
   // now cycle the tabs and make sure everything looks good
-  yield* cycleTabs();
+  await cycleTabs();
   cleanUp();
 });
 

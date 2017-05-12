@@ -96,7 +96,7 @@ function remove(filename, recursive = false) {
   file.remove(recursive);
 }
 
-add_task(function* test_downloads() {
+add_task(async function test_downloads() {
   setup();
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -125,27 +125,27 @@ add_task(function* test_downloads() {
     localPath.remove(false);
   }
 
-  yield extension.startup();
-  yield extension.awaitMessage("ready");
+  await extension.startup();
+  await extension.awaitMessage("ready");
   do_print("extension started");
 
   // Call download() with just the url property.
-  yield testDownload({url: FILE_URL}, FILE_NAME, FILE_LEN, "just source");
+  await testDownload({url: FILE_URL}, FILE_NAME, FILE_LEN, "just source");
 
   // Call download() with a filename property.
-  yield testDownload({
+  await testDownload({
     url: FILE_URL,
     filename: "newpath.txt",
   }, "newpath.txt", FILE_LEN, "source and filename");
 
   // Call download() with a filename with subdirs.
-  yield testDownload({
+  await testDownload({
     url: FILE_URL,
     filename: "sub/dir/file",
   }, ["sub", "dir", "file"], FILE_LEN, "source and filename with subdirs");
 
   // Call download() with a filename with existing subdirs.
-  yield testDownload({
+  await testDownload({
     url: FILE_URL,
     filename: "sub/dir/file2",
   }, ["sub", "dir", "file2"], FILE_LEN, "source and filename with existing subdirs");
@@ -153,7 +153,7 @@ add_task(function* test_downloads() {
   // Only run Windows path separator test on Windows.
   if (WINDOWS) {
     // Call download() with a filename with Windows path separator.
-    yield testDownload({
+    await testDownload({
       url: FILE_URL,
       filename: "sub\\dir\\file3",
     }, ["sub", "dir", "file3"], FILE_LEN, "filename with Windows path separator");
@@ -161,7 +161,7 @@ add_task(function* test_downloads() {
   remove("sub", true);
 
   // Call download(), filename with subdir, skipping parts.
-  yield testDownload({
+  await testDownload({
     url: FILE_URL,
     filename: "skip//part",
   }, ["skip", "part"], FILE_LEN, "source, filename, with subdir, skipping parts");
@@ -169,7 +169,7 @@ add_task(function* test_downloads() {
 
   // Check conflictAction of "uniquify".
   touch(FILE_NAME);
-  yield testDownload({
+  await testDownload({
     url: FILE_URL,
     conflictAction: "uniquify",
   }, FILE_NAME_UNIQUE, FILE_LEN, "conflictAction=uniquify");
@@ -178,19 +178,19 @@ add_task(function* test_downloads() {
 
   // Check conflictAction of "overwrite".
   touch(FILE_NAME);
-  yield testDownload({
+  await testDownload({
     url: FILE_URL,
     conflictAction: "overwrite",
   }, FILE_NAME, FILE_LEN, "conflictAction=overwrite");
 
   // Try to download in invalid url
-  yield download({url: "this is not a valid URL"}).then(msg => {
+  await download({url: "this is not a valid URL"}).then(msg => {
     equal(msg.status, "error", "downloads.download() fails with invalid url");
     ok(/not a valid URL/.test(msg.errmsg), "error message for invalid url is correct");
   });
 
   // Try to download to an empty path.
-  yield download({
+  await download({
     url: FILE_URL,
     filename: "",
   }).then(msg => {
@@ -200,7 +200,7 @@ add_task(function* test_downloads() {
 
   // Try to download to an absolute path.
   const absolutePath = OS.Path.join(WINDOWS ? "\\tmp" : "/tmp", "file_download.txt");
-  yield download({
+  await download({
     url: FILE_URL,
     filename: absolutePath,
   }).then(msg => {
@@ -209,7 +209,7 @@ add_task(function* test_downloads() {
   });
 
   if (WINDOWS) {
-    yield download({
+    await download({
       url: FILE_URL,
       filename: "C:\\file_download.txt",
     }).then(msg => {
@@ -219,7 +219,7 @@ add_task(function* test_downloads() {
   }
 
   // Try to download to a relative path containing ..
-  yield download({
+  await download({
     url: FILE_URL,
     filename: OS.Path.join("..", "file_download.txt"),
   }).then(msg => {
@@ -228,7 +228,7 @@ add_task(function* test_downloads() {
   });
 
   // Try to download to a long relative path containing ..
-  yield download({
+  await download({
     url: FILE_URL,
     filename: OS.Path.join("foo", "..", "..", "file_download.txt"),
   }).then(msg => {
@@ -238,22 +238,22 @@ add_task(function* test_downloads() {
 
   // Try to download a blob url
   const BLOB_STRING = "Hello, world";
-  yield testDownload({
+  await testDownload({
     blobme: [BLOB_STRING],
     filename: FILE_NAME,
   }, FILE_NAME, BLOB_STRING.length, "blob url");
   extension.sendMessage("killTheBlob");
 
   // Try to download a blob url without a given filename
-  yield testDownload({
+  await testDownload({
     blobme: [BLOB_STRING],
   }, "download", BLOB_STRING.length, "blob url with no filename");
   extension.sendMessage("killTheBlob");
 
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* test_download_post() {
+add_task(async function test_download_post() {
   const server = createHttpServer();
   const url = `http://localhost:${server.identity.primaryPort}/post-log`;
 
@@ -295,7 +295,7 @@ add_task(function* test_download_post() {
 
   const manifest = {permissions: ["downloads"]};
   const extension = ExtensionTestUtils.loadExtension({background, manifest});
-  yield extension.startup();
+  await extension.startup();
 
   function download(options) {
     options.url = url;
@@ -306,49 +306,49 @@ add_task(function* test_download_post() {
   }
 
   // Test method option.
-  let result = yield download({});
+  let result = await download({});
   ok(result.ok, "download works without the method option, defaults to GET");
   confirm("GET");
 
-  result = yield download({method: "PUT"});
+  result = await download({method: "PUT"});
   ok(!result.ok, "download rejected with PUT method");
   ok(/method: Invalid enumeration/.test(result.err), "descriptive error message");
 
-  result = yield download({method: "POST"});
+  result = await download({method: "POST"});
   ok(result.ok, "download works with POST method");
   confirm("POST");
 
   // Test body option values.
-  result = yield download({body: []});
+  result = await download({body: []});
   ok(!result.ok, "download rejected because of non-string body");
   ok(/body: Expected string/.test(result.err), "descriptive error message");
 
-  result = yield download({method: "POST", body: "of work"});
+  result = await download({method: "POST", body: "of work"});
   ok(result.ok, "download works with POST method and body");
   confirm("POST", {"Content-Length": 7}, "of work");
 
   // Test custom headers.
-  result = yield download({headers: [{name: "X-Custom"}]});
+  result = await download({headers: [{name: "X-Custom"}]});
   ok(!result.ok, "download rejected because of missing header value");
   ok(/"value" is required/.test(result.err), "descriptive error message");
 
-  result = yield download({headers: [{name: "X-Custom", value: "13"}]});
+  result = await download({headers: [{name: "X-Custom", value: "13"}]});
   ok(result.ok, "download works with a custom header");
   confirm("GET", {"X-Custom": "13"});
 
   // Test forbidden headers.
-  result = yield download({headers: [{name: "DNT", value: "1"}]});
+  result = await download({headers: [{name: "DNT", value: "1"}]});
   ok(!result.ok, "download rejected because of forbidden header name DNT");
   ok(/Forbidden request header/.test(result.err), "descriptive error message");
 
-  result = yield download({headers: [{name: "Proxy-Connection", value: "keep"}]});
+  result = await download({headers: [{name: "Proxy-Connection", value: "keep"}]});
   ok(!result.ok, "download rejected because of forbidden header name prefix Proxy-");
   ok(/Forbidden request header/.test(result.err), "descriptive error message");
 
-  result = yield download({headers: [{name: "Sec-ret", value: "13"}]});
+  result = await download({headers: [{name: "Sec-ret", value: "13"}]});
   ok(!result.ok, "download rejected because of forbidden header name prefix Sec-");
   ok(/Forbidden request header/.test(result.err), "descriptive error message");
 
   remove("post-log");
-  yield extension.unload();
+  await extension.unload();
 });

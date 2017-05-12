@@ -5,6 +5,7 @@
 info: If B = 110xxxxx (n = 2) and (k + 2) + 3 >= length, throw URIError
 es5id: 15.1.3.2_A1.4_T1
 description: Complex tests. B = [0xC0 - 0xDF]
+includes: [decimalToHexString.js]
 ---*/
 
 var errorCount = 0;
@@ -17,9 +18,9 @@ for (var index = 0xC0; index <= 0xDF; index++) {
   var str = "";
   var result = true;
   for (var len = 0; len < 3; len++) {
-    var hex = decimalToHexString(index);
+    var hex = decimalToPercentHexString(index);
     try {
-      decodeURIComponent("%" + hex.substring(2) + str);      
+      decodeURIComponent(hex + str);
     } catch (e) { 
       if ((e instanceof URIError) === true) continue;                
     }
@@ -58,30 +59,6 @@ if (errorCount > 0) {
     $ERROR('#' + hexP + ' ');
   }     
   $ERROR('Total error: ' + errorCount + ' bad Unicode character in ' + count + ' ');
-}
-
-function decimalToHexString(n) {
-  n = Number(n);
-  var h = "";
-  for (var i = 3; i >= 0; i--) {
-    if (n >= Math.pow(16, i)) {
-      var t = Math.floor(n / Math.pow(16, i));
-      n -= t * Math.pow(16, i);
-      if ( t >= 10 ) {
-        if ( t == 10 ) { h += "A"; }
-        if ( t == 11 ) { h += "B"; }
-        if ( t == 12 ) { h += "C"; }
-        if ( t == 13 ) { h += "D"; }
-        if ( t == 14 ) { h += "E"; }
-        if ( t == 15 ) { h += "F"; }
-      } else {
-        h += String(t);
-      }
-    } else {
-      h += "0";
-    }
-  }
-  return h;
 }
 
 reportCompare(0, 0);

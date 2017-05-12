@@ -203,16 +203,16 @@ function endCustomizing(aWindow = window) {
     return true;
   }
   Services.prefs.setBoolPref("browser.uiCustomization.disableAnimation", true);
-  let deferredEndCustomizing = Promise.defer();
-  function onCustomizationEnds() {
-    Services.prefs.setBoolPref("browser.uiCustomization.disableAnimation", false);
-    aWindow.gNavToolbox.removeEventListener("aftercustomization", onCustomizationEnds);
-    deferredEndCustomizing.resolve();
-  }
-  aWindow.gNavToolbox.addEventListener("aftercustomization", onCustomizationEnds);
-  aWindow.gCustomizeMode.exit();
+  return new Promise(resolve => {
+    function onCustomizationEnds() {
+      Services.prefs.setBoolPref("browser.uiCustomization.disableAnimation", false);
+      aWindow.gNavToolbox.removeEventListener("aftercustomization", onCustomizationEnds);
+      resolve();
+    }
+    aWindow.gNavToolbox.addEventListener("aftercustomization", onCustomizationEnds);
+    aWindow.gCustomizeMode.exit();
 
-  return deferredEndCustomizing.promise;
+  });
 }
 
 function startCustomizing(aWindow = window) {
@@ -220,53 +220,53 @@ function startCustomizing(aWindow = window) {
     return null;
   }
   Services.prefs.setBoolPref("browser.uiCustomization.disableAnimation", true);
-  let deferred = Promise.defer();
-  function onCustomizing() {
-    aWindow.gNavToolbox.removeEventListener("customizationready", onCustomizing);
-    Services.prefs.setBoolPref("browser.uiCustomization.disableAnimation", false);
-    deferred.resolve();
-  }
-  aWindow.gNavToolbox.addEventListener("customizationready", onCustomizing);
-  aWindow.gCustomizeMode.enter();
-  return deferred.promise;
+  return new Promise(resolve => {
+    function onCustomizing() {
+      aWindow.gNavToolbox.removeEventListener("customizationready", onCustomizing);
+      Services.prefs.setBoolPref("browser.uiCustomization.disableAnimation", false);
+      resolve();
+    }
+    aWindow.gNavToolbox.addEventListener("customizationready", onCustomizing);
+    aWindow.gCustomizeMode.enter();
+  });
 }
 
 function promiseObserverNotified(aTopic) {
-  let deferred = Promise.defer();
-  Services.obs.addObserver(function onNotification(subject, topic, data) {
-    Services.obs.removeObserver(onNotification, topic);
-      deferred.resolve({subject, data});
-    }, aTopic);
-  return deferred.promise;
+  return new Promise(resolve => {
+    Services.obs.addObserver(function onNotification(subject, topic, data) {
+      Services.obs.removeObserver(onNotification, topic);
+        resolve({subject, data});
+      }, aTopic);
+  });
 }
 
 function openAndLoadWindow(aOptions, aWaitForDelayedStartup = false) {
-  let deferred = Promise.defer();
-  let win = OpenBrowserWindow(aOptions);
-  if (aWaitForDelayedStartup) {
-    Services.obs.addObserver(function onDS(aSubject, aTopic, aData) {
-      if (aSubject != win) {
-        return;
-      }
-      Services.obs.removeObserver(onDS, "browser-delayed-startup-finished");
-      deferred.resolve(win);
-    }, "browser-delayed-startup-finished");
+  return new Promise(resolve => {
+    let win = OpenBrowserWindow(aOptions);
+    if (aWaitForDelayedStartup) {
+      Services.obs.addObserver(function onDS(aSubject, aTopic, aData) {
+        if (aSubject != win) {
+          return;
+        }
+        Services.obs.removeObserver(onDS, "browser-delayed-startup-finished");
+        resolve(win);
+      }, "browser-delayed-startup-finished");
 
-  } else {
-    win.addEventListener("load", function() {
-      deferred.resolve(win);
-    }, {once: true});
-  }
-  return deferred.promise;
+    } else {
+      win.addEventListener("load", function() {
+        resolve(win);
+      }, {once: true});
+    }
+  });
 }
 
 function promiseWindowClosed(win) {
-  let deferred = Promise.defer();
-  win.addEventListener("unload", function() {
-    deferred.resolve();
-  }, {once: true});
-  win.close();
-  return deferred.promise;
+  return new Promise(resolve => {
+    win.addEventListener("unload", function() {
+      resolve();
+    }, {once: true});
+    win.close();
+  });
 }
 
 function promisePanelShown(win) {
@@ -280,17 +280,17 @@ function promiseOverflowShown(win) {
 }
 
 function promisePanelElementShown(win, aPanel) {
-  let deferred = Promise.defer();
-  let timeoutId = win.setTimeout(() => {
-    deferred.reject("Panel did not show within 20 seconds.");
-  }, 20000);
-  function onPanelOpen(e) {
-    aPanel.removeEventListener("popupshown", onPanelOpen);
-    win.clearTimeout(timeoutId);
-    deferred.resolve();
-  }
-  aPanel.addEventListener("popupshown", onPanelOpen);
-  return deferred.promise;
+  return new Promise((resolve, reject) => {
+    let timeoutId = win.setTimeout(() => {
+      reject("Panel did not show within 20 seconds.");
+    }, 20000);
+    function onPanelOpen(e) {
+      aPanel.removeEventListener("popupshown", onPanelOpen);
+      win.clearTimeout(timeoutId);
+      resolve();
+    }
+    aPanel.addEventListener("popupshown", onPanelOpen);
+  });
 }
 
 function promisePanelHidden(win) {
@@ -304,17 +304,17 @@ function promiseOverflowHidden(win) {
 }
 
 function promisePanelElementHidden(win, aPanel) {
-  let deferred = Promise.defer();
-  let timeoutId = win.setTimeout(() => {
-    deferred.reject("Panel did not hide within 20 seconds.");
-  }, 20000);
-  function onPanelClose(e) {
-    aPanel.removeEventListener("popuphidden", onPanelClose);
-    win.clearTimeout(timeoutId);
-    deferred.resolve();
-  }
-  aPanel.addEventListener("popuphidden", onPanelClose);
-  return deferred.promise;
+  return new Promise((resolve, reject) => {
+    let timeoutId = win.setTimeout(() => {
+      reject("Panel did not hide within 20 seconds.");
+    }, 20000);
+    function onPanelClose(e) {
+      aPanel.removeEventListener("popuphidden", onPanelClose);
+      win.clearTimeout(timeoutId);
+      resolve();
+    }
+    aPanel.addEventListener("popuphidden", onPanelClose);
+  });
 }
 
 function isPanelUIOpen() {
@@ -322,33 +322,33 @@ function isPanelUIOpen() {
 }
 
 function subviewShown(aSubview) {
-  let deferred = Promise.defer();
-  let win = aSubview.ownerGlobal;
-  let timeoutId = win.setTimeout(() => {
-    deferred.reject("Subview (" + aSubview.id + ") did not show within 20 seconds.");
-  }, 20000);
-  function onViewShowing(e) {
-    aSubview.removeEventListener("ViewShowing", onViewShowing);
-    win.clearTimeout(timeoutId);
-    deferred.resolve();
-  }
-  aSubview.addEventListener("ViewShowing", onViewShowing);
-  return deferred.promise;
+  return new Promise((resolve, reject) => {
+    let win = aSubview.ownerGlobal;
+    let timeoutId = win.setTimeout(() => {
+      reject("Subview (" + aSubview.id + ") did not show within 20 seconds.");
+    }, 20000);
+    function onViewShowing(e) {
+      aSubview.removeEventListener("ViewShowing", onViewShowing);
+      win.clearTimeout(timeoutId);
+      resolve();
+    }
+    aSubview.addEventListener("ViewShowing", onViewShowing);
+  });
 }
 
 function subviewHidden(aSubview) {
-  let deferred = Promise.defer();
-  let win = aSubview.ownerGlobal;
-  let timeoutId = win.setTimeout(() => {
-    deferred.reject("Subview (" + aSubview.id + ") did not hide within 20 seconds.");
-  }, 20000);
-  function onViewHiding(e) {
-    aSubview.removeEventListener("ViewHiding", onViewHiding);
-    win.clearTimeout(timeoutId);
-    deferred.resolve();
-  }
-  aSubview.addEventListener("ViewHiding", onViewHiding);
-  return deferred.promise;
+  return new Promise((resolve, reject) => {
+    let win = aSubview.ownerGlobal;
+    let timeoutId = win.setTimeout(() => {
+      reject("Subview (" + aSubview.id + ") did not hide within 20 seconds.");
+    }, 20000);
+    function onViewHiding(e) {
+      aSubview.removeEventListener("ViewHiding", onViewHiding);
+      win.clearTimeout(timeoutId);
+      resolve();
+    }
+    aSubview.addEventListener("ViewHiding", onViewHiding);
+  });
 }
 
 function waitForCondition(aConditionFn, aMaxTries = 50, aCheckInterval = 100) {
@@ -372,9 +372,9 @@ function waitForCondition(aConditionFn, aMaxTries = 50, aCheckInterval = 100) {
 }
 
 function waitFor(aTimeout = 100) {
-  let deferred = Promise.defer();
-  setTimeout(() => deferred.resolve(), aTimeout);
-  return deferred.promise;
+  return new Promise(resolve => {
+    setTimeout(() => resolve(), aTimeout);
+  });
 }
 
 /**
@@ -401,29 +401,29 @@ function promiseTabLoadEvent(aTab, aURL) {
  * @return {Promise} resolved when navigation has finished.
  */
 function promiseTabHistoryNavigation(aDirection = -1, aConditionFn) {
-  let deferred = Promise.defer();
+  return new Promise((resolve, reject) => {
 
-  let timeoutId = setTimeout(() => {
-    gBrowser.removeEventListener("pageshow", listener, true);
-    deferred.reject("Pageshow did not happen within " + kTabEventFailureTimeoutInMs + "ms");
-  }, kTabEventFailureTimeoutInMs);
+    let timeoutId = setTimeout(() => {
+      gBrowser.removeEventListener("pageshow", listener, true);
+      reject("Pageshow did not happen within " + kTabEventFailureTimeoutInMs + "ms");
+    }, kTabEventFailureTimeoutInMs);
 
-  function listener(event) {
-    gBrowser.removeEventListener("pageshow", listener, true);
-    clearTimeout(timeoutId);
+    function listener(event) {
+      gBrowser.removeEventListener("pageshow", listener, true);
+      clearTimeout(timeoutId);
 
-    if (aConditionFn) {
-      waitForCondition(aConditionFn).then(() => deferred.resolve(),
-                                          aReason => deferred.reject(aReason));
-    } else {
-      deferred.resolve();
+      if (aConditionFn) {
+        waitForCondition(aConditionFn).then(() => resolve(),
+                                            aReason => reject(aReason));
+      } else {
+        resolve();
+      }
     }
-  }
-  gBrowser.addEventListener("pageshow", listener, true);
+    gBrowser.addEventListener("pageshow", listener, true);
 
-  content.history.go(aDirection);
+    content.history.go(aDirection);
 
-  return deferred.promise;
+  });
 }
 
 /**
@@ -479,16 +479,16 @@ function popupHidden(aPopup) {
  *  yield popupHiddenPromise;
  */
 function promisePopupEvent(aPopup, aEventSuffix) {
-  let deferred = Promise.defer();
-  let eventType = "popup" + aEventSuffix;
+  return new Promise(resolve => {
+    let eventType = "popup" + aEventSuffix;
 
-  function onPopupEvent(e) {
-    aPopup.removeEventListener(eventType, onPopupEvent);
-    deferred.resolve();
-  }
+    function onPopupEvent(e) {
+      aPopup.removeEventListener(eventType, onPopupEvent);
+      resolve();
+    }
 
-  aPopup.addEventListener(eventType, onPopupEvent);
-  return deferred.promise;
+    aPopup.addEventListener(eventType, onPopupEvent);
+  });
 }
 
 // This is a simpler version of the context menu check that

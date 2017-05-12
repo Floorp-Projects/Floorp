@@ -28,7 +28,7 @@ function convertPropertyBag(aBag) {
   return result;
 }
 
-add_task(function* setup() {
+add_task(async function setup() {
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Test Plug-in");
 
   // The test harness sets MOZ_CRASHREPORTER_NO_REPORT, which disables plugin
@@ -61,20 +61,20 @@ add_task(function* setup() {
  * Test that plugin crash submissions still work properly after
  * click-to-play activation.
  */
-add_task(function*() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function() {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: PLUGIN_PAGE,
-  }, function* (browser) {
+  }, async function(browser) {
     // Work around for delayed PluginBindingAttached
-    yield promiseUpdatePluginBindings(browser);
+    await promiseUpdatePluginBindings(browser);
 
-    let pluginInfo = yield promiseForPluginInfo("test", browser);
+    let pluginInfo = await promiseForPluginInfo("test", browser);
     ok(!pluginInfo.activated, "Plugin should not be activated");
 
     // Simulate clicking the "Allow Always" button.
     let notification = PopupNotifications.getNotification("click-to-play-plugins", browser);
-    yield promiseForNotificationShown(notification, browser);
+    await promiseForNotificationShown(notification, browser);
     PopupNotifications.panel.firstChild._primaryButton.click();
 
     // Prepare a crash report topic observer that only returns when
@@ -85,11 +85,11 @@ add_task(function*() {
     let crashReportPromise = TestUtils.topicObserved("crash-report-status",
                                                      crashReportChecker);
 
-    yield ContentTask.spawn(browser, null, function*() {
+    await ContentTask.spawn(browser, null, async function() {
       let plugin = content.document.getElementById("test");
       plugin.QueryInterface(Ci.nsIObjectLoadingContent);
 
-      yield ContentTaskUtils.waitForCondition(() => {
+      await ContentTaskUtils.waitForCondition(() => {
         return plugin.activated;
       }, "Waited too long for plugin to activate.");
 
@@ -108,7 +108,7 @@ add_task(function*() {
       // asynchronous.
       let statusDiv;
 
-      yield ContentTaskUtils.waitForCondition(() => {
+      await ContentTaskUtils.waitForCondition(() => {
         statusDiv = getUI("submitStatus");
         return statusDiv.getAttribute("status") == "please";
       }, "Waited too long for plugin to show crash report UI");
@@ -134,12 +134,12 @@ add_task(function*() {
 
       // And wait for the parent to say that the crash report was submitted
       // successfully.
-      yield ContentTaskUtils.waitForCondition(() => {
+      await ContentTaskUtils.waitForCondition(() => {
         return statusDiv.getAttribute("status") == "success";
       }, "Timed out waiting for plugin binding to be in success state");
     });
 
-    let [subject, ] = yield crashReportPromise;
+    let [subject, ] = await crashReportPromise;
 
     ok(subject instanceof Ci.nsIPropertyBag,
        "The crash report subject should be an nsIPropertyBag.");
@@ -168,15 +168,15 @@ add_task(function*() {
  * Test that plugin crash submissions still work properly after
  * click-to-play with the notification bar.
  */
-add_task(function*() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function() {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: PLUGIN_SMALL_PAGE,
-  }, function* (browser) {
+  }, async function(browser) {
     // Work around for delayed PluginBindingAttached
-    yield promiseUpdatePluginBindings(browser);
+    await promiseUpdatePluginBindings(browser);
 
-    let pluginInfo = yield promiseForPluginInfo("test", browser);
+    let pluginInfo = await promiseForPluginInfo("test", browser);
     ok(pluginInfo.activated, "Plugin should be activated from previous test");
 
     // Prepare a crash report topic observer that only returns when
@@ -187,11 +187,11 @@ add_task(function*() {
     let crashReportPromise = TestUtils.topicObserved("crash-report-status",
                                                      crashReportChecker);
 
-    yield ContentTask.spawn(browser, null, function*() {
+    await ContentTask.spawn(browser, null, async function() {
       let plugin = content.document.getElementById("test");
       plugin.QueryInterface(Ci.nsIObjectLoadingContent);
 
-      yield ContentTaskUtils.waitForCondition(() => {
+      await ContentTaskUtils.waitForCondition(() => {
         return plugin.activated;
       }, "Waited too long for plugin to activate.");
 
@@ -201,7 +201,7 @@ add_task(function*() {
     });
 
     // Wait for the notification bar to be displayed.
-    let notification = yield waitForNotificationBar("plugin-crashed", browser);
+    let notification = await waitForNotificationBar("plugin-crashed", browser);
 
     // Then click the button to submit the crash report.
     let buttons = notification.querySelectorAll(".notification-button");
@@ -211,7 +211,7 @@ add_task(function*() {
     let submitButton = buttons[1];
     submitButton.click();
 
-    let [subject, ] = yield crashReportPromise;
+    let [subject, ] = await crashReportPromise;
 
     ok(subject instanceof Ci.nsIPropertyBag,
        "The crash report subject should be an nsIPropertyBag.");

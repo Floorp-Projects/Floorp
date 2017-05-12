@@ -67,7 +67,7 @@ function promiseAlertPosition(alertService) {
   });
 }
 
-add_task(function* test_multiple_alerts() {
+add_task(async function test_multiple_alerts() {
   if (!("@mozilla.org/alerts-service;1" in Cc)) {
     todo(false, "Alerts service does not exist in this application.");
     return;
@@ -84,13 +84,13 @@ add_task(function* test_multiple_alerts() {
     return;
   }
 
-  var firstAlertPosition = yield promiseAlertPosition(alertService);
+  var firstAlertPosition = await promiseAlertPosition(alertService);
   if (!firstAlertPosition) {
     ok(true, "Platform does not use XUL alerts.");
     return;
   }
 
-  var secondAlertPosition = yield promiseAlertPosition(alertService);
+  var secondAlertPosition = await promiseAlertPosition(alertService);
   is(secondAlertPosition.x, firstAlertPosition.x, "Second alert should be opened in the same position.");
   is(secondAlertPosition.y, firstAlertPosition.y, "Second alert should be opened in the same position.");
 });

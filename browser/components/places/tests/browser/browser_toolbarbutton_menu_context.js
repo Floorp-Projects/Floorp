@@ -5,38 +5,38 @@ var contextMenu = document.getElementById("placesContext");
 var newBookmarkItem = document.getElementById("placesContext_new:bookmark");
 
 waitForExplicitFinish();
-add_task(function* testPopup() {
+add_task(async function testPopup() {
   info("Checking popup context menu before moving the bookmarks button");
-  yield checkPopupContextMenu();
+  await checkPopupContextMenu();
   let pos = CustomizableUI.getPlacementOfWidget("bookmarks-menu-button").position;
   CustomizableUI.addWidgetToArea("bookmarks-menu-button", CustomizableUI.AREA_PANEL);
   CustomizableUI.addWidgetToArea("bookmarks-menu-button", CustomizableUI.AREA_NAVBAR, pos);
   info("Checking popup context menu after moving the bookmarks button");
-  yield checkPopupContextMenu();
+  await checkPopupContextMenu();
 });
 
-function* checkPopupContextMenu() {
+async function checkPopupContextMenu() {
   let dropmarker = document.getAnonymousElementByAttribute(bookmarksMenuButton, "anonid", "dropmarker");
   BMB_menuPopup.setAttribute("style", "transition: none;");
   let popupShownPromise = onPopupEvent(BMB_menuPopup, "shown");
   EventUtils.synthesizeMouseAtCenter(dropmarker, {});
   info("Waiting for bookmarks menu to be shown.");
-  yield popupShownPromise;
+  await popupShownPromise;
   let contextMenuShownPromise = onPopupEvent(contextMenu, "shown");
   EventUtils.synthesizeMouseAtCenter(BMB_showAllBookmarks, {type: "contextmenu", button: 2 });
   info("Waiting for context menu on bookmarks menu to be shown.");
-  yield contextMenuShownPromise;
+  await contextMenuShownPromise;
   ok(!newBookmarkItem.hasAttribute("disabled"), "New bookmark item shouldn't be disabled");
   let contextMenuHiddenPromise = onPopupEvent(contextMenu, "hidden");
   contextMenu.hidePopup();
   BMB_menuPopup.removeAttribute("style");
   info("Waiting for context menu on bookmarks menu to be hidden.");
-  yield contextMenuHiddenPromise;
+  await contextMenuHiddenPromise;
   let popupHiddenPromise = onPopupEvent(BMB_menuPopup, "hidden");
   // Can't use synthesizeMouseAtCenter because the dropdown panel is in the way
   EventUtils.synthesizeKey("VK_ESCAPE", {});
   info("Waiting for bookmarks menu to be hidden.");
-  yield popupHiddenPromise;
+  await popupHiddenPromise;
 }
 
 function onPopupEvent(popup, evt) {

@@ -39,7 +39,7 @@ const olderthansixmonths = today - (DAY_MICROSEC * 31 * 7);
  * appropriate.  This function is an asynchronous task, it can be called using
  * "Task.spawn" or using the "yield" function inside another task.
  */
-function* task_populateDB(aArray) {
+async function task_populateDB(aArray) {
   // Iterate over aArray and execute all instructions.
   for (let arrayItem of aArray) {
     try {
@@ -48,7 +48,7 @@ function* task_populateDB(aArray) {
       var qdata = new queryData(arrayItem);
       if (qdata.isVisit) {
         // Then we should add a visit for this node
-        yield PlacesTestUtils.addVisits({
+        await PlacesTestUtils.addVisits({
           uri: uri(qdata.uri),
           transition: qdata.transType,
           visitDate: qdata.lastVisit,
@@ -89,7 +89,7 @@ function* task_populateDB(aArray) {
 
       if (qdata.isDetails) {
         // Then we add extraneous page details for testing
-        yield PlacesTestUtils.addVisits({
+        await PlacesTestUtils.addVisits({
           uri: uri(qdata.uri),
           visitDate: qdata.lastVisit,
           title: qdata.title
@@ -127,7 +127,7 @@ function* task_populateDB(aArray) {
       }
 
       if (qdata.isFolder) {
-        yield PlacesUtils.bookmarks.insert({
+        await PlacesUtils.bookmarks.insert({
           parentGuid: qdata.parentGuid,
           type: PlacesUtils.bookmarks.TYPE_FOLDER,
           title: qdata.title,
@@ -136,8 +136,8 @@ function* task_populateDB(aArray) {
       }
 
       if (qdata.isLivemark) {
-        yield PlacesUtils.livemarks.addLivemark({ title: qdata.title
-                                                , parentId: (yield PlacesUtils.promiseItemId(qdata.parentGuid))
+        await PlacesUtils.livemarks.addLivemark({ title: qdata.title
+                                                , parentId: (await PlacesUtils.promiseItemId(qdata.parentGuid))
                                                 , index: qdata.index
                                                 , feedURI: uri(qdata.feedURI)
                                                 , siteURI: uri(qdata.uri)
@@ -160,10 +160,10 @@ function* task_populateDB(aArray) {
           data.lastModified = new Date(qdata.lastModified / 1000);
         }
 
-        yield PlacesUtils.bookmarks.insert(data);
+        await PlacesUtils.bookmarks.insert(data);
 
         if (qdata.keyword) {
-          yield PlacesUtils.keywords.insert({ url: qdata.uri,
+          await PlacesUtils.keywords.insert({ url: qdata.uri,
                                               keyword: qdata.keyword });
         }
       }
@@ -173,7 +173,7 @@ function* task_populateDB(aArray) {
       }
 
       if (qdata.isSeparator) {
-        yield PlacesUtils.bookmarks.insert({
+        await PlacesUtils.bookmarks.insert({
           parentGuid: qdata.parentGuid,
           type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
           index: qdata.index

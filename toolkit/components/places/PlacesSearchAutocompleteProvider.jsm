@@ -14,7 +14,6 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "SearchSuggestionController",
@@ -215,14 +214,14 @@ this.PlacesSearchAutocompleteProvider = Object.freeze({
    *           iconUrl: Icon associated to the match, or null if not available.
    *         }
    */
-  findMatchByToken: Task.async(function* (searchToken) {
-    yield this.ensureInitialized();
+  async findMatchByToken(searchToken) {
+    await this.ensureInitialized();
 
     // Match at the beginning for now.  In the future, an "options" argument may
     // allow the matching behavior to be tuned.
     return SearchAutocompleteProviderInternal.priorityMatches
                                              .find(m => m.token.startsWith(searchToken));
-  }),
+  },
 
   /**
    * Matches a given search string to an item that should be included by
@@ -240,18 +239,18 @@ this.PlacesSearchAutocompleteProvider = Object.freeze({
    *           iconUrl: Icon associated to the match, or null if not available.
    *         }
    */
-  findMatchByAlias: Task.async(function* (searchToken) {
-    yield this.ensureInitialized();
+  async findMatchByAlias(searchToken) {
+    await this.ensureInitialized();
 
     return SearchAutocompleteProviderInternal.aliasMatches
              .find(m => m.alias.toLocaleLowerCase() == searchToken.toLocaleLowerCase());
-  }),
+  },
 
-  getDefaultMatch: Task.async(function* () {
-    yield this.ensureInitialized();
+  async getDefaultMatch() {
+    await this.ensureInitialized();
 
     return SearchAutocompleteProviderInternal.defaultMatch;
-  }),
+  },
 
   /**
    * Synchronously determines if the provided URL represents results from a

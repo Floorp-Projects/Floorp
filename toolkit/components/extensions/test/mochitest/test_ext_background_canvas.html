@@ -13,7 +13,7 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* test_background_canvas() {
+add_task(async function test_background_canvas() {
   function background() {
     try {
       let canvas = document.createElement("canvas");
@@ -37,9 +37,9 @@ add_task(function* test_background_canvas() {
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
 
-  yield extension.startup();
-  yield extension.awaitFinish("background-canvas");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("background-canvas");
+  await extension.unload();
 });
 </script>
 

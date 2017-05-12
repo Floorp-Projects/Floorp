@@ -24,7 +24,7 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* test_contentscript_create_iframe() {
+add_task(async function test_contentscript_create_iframe() {
   function background() {
     browser.runtime.onMessage.addListener((msg, sender) => {
       let {name, availableAPIs, manifest, testGetManifest} = msg;
@@ -112,12 +112,12 @@ add_task(function* test_contentscript_create_iframe() {
     extension.onMessage("content-script-iframe-loaded", () => { resolve(); });
   });
 
-  yield extension.startup();
+  await extension.startup();
   info("extension loaded");
 
   let win = window.open("file_sample.html");
 
-  yield Promise.all([waitForLoad(win), contentScriptIframeCreatedPromise]);
+  await Promise.all([waitForLoad(win), contentScriptIframeCreatedPromise]);
   info("content script privileged iframe loaded and executed");
 
   info("testing APIs availability once the extension is unloaded...");
@@ -127,7 +127,7 @@ add_task(function* test_contentscript_create_iframe() {
   ok(iframeWindow, "content script enabled iframe found");
   ok(/content_script_iframe\.html$/.test(iframeWindow.location), "the found iframe has the expected URL");
 
-  yield extension.unload();
+  await extension.unload();
   info("extension unloaded");
 
   info("test content script APIs not accessible from the frame once the extension is unloaded");

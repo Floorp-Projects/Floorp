@@ -4,74 +4,74 @@
 
 "use strict";
 
-add_task(function* () {
+add_task(async function() {
   for (let i = 0; i < 3; ++i) {
     let tab = gBrowser.addTab("http://example.com/", { userContextId: i });
     let browser = tab.linkedBrowser;
 
-    yield promiseBrowserLoaded(browser);
+    await promiseBrowserLoaded(browser);
 
     let tab2 = gBrowser.duplicateTab(tab);
     Assert.equal(tab2.getAttribute("usercontextid"), i);
     let browser2 = tab2.linkedBrowser;
-    yield promiseTabRestored(tab2)
+    await promiseTabRestored(tab2)
 
-    yield ContentTask.spawn(browser2, { expectedId: i }, function* (args) {
+    await ContentTask.spawn(browser2, { expectedId: i }, async function(args) {
       let loadContext = docShell.QueryInterface(Ci.nsILoadContext);
       Assert.equal(loadContext.originAttributes.userContextId,
         args.expectedId, "The docShell has the correct userContextId");
     });
 
-    yield promiseRemoveTab(tab);
-    yield promiseRemoveTab(tab2);
+    await promiseRemoveTab(tab);
+    await promiseRemoveTab(tab2);
   }
 });
 
-add_task(function* () {
+add_task(async function() {
   let tab = gBrowser.addTab("http://example.com/", { userContextId: 1 });
   let browser = tab.linkedBrowser;
 
-  yield promiseBrowserLoaded(browser);
+  await promiseBrowserLoaded(browser);
 
   gBrowser.selectedTab = tab;
 
   let tab2 = gBrowser.duplicateTab(tab);
   let browser2 = tab2.linkedBrowser;
-  yield promiseTabRestored(tab2)
+  await promiseTabRestored(tab2)
 
-  yield ContentTask.spawn(browser2, { expectedId: 1 }, function* (args) {
+  await ContentTask.spawn(browser2, { expectedId: 1 }, async function(args) {
     Assert.equal(docShell.getOriginAttributes().userContextId,
                  args.expectedId,
                  "The docShell has the correct userContextId");
   });
 
-  yield promiseRemoveTab(tab);
-  yield promiseRemoveTab(tab2);
+  await promiseRemoveTab(tab);
+  await promiseRemoveTab(tab2);
 });
 
-add_task(function* () {
+add_task(async function() {
   let tab = gBrowser.addTab("http://example.com/", { userContextId: 1 });
   let browser = tab.linkedBrowser;
 
-  yield promiseBrowserLoaded(browser);
+  await promiseBrowserLoaded(browser);
 
   gBrowser.removeTab(tab);
 
   let tab2 = ss.undoCloseTab(window, 0);
   Assert.equal(tab2.getAttribute("usercontextid"), 1);
-  yield promiseTabRestored(tab2);
-  yield ContentTask.spawn(tab2.linkedBrowser, { expectedId: 1 }, function* (args) {
+  await promiseTabRestored(tab2);
+  await ContentTask.spawn(tab2.linkedBrowser, { expectedId: 1 }, async function(args) {
     Assert.equal(docShell.getOriginAttributes().userContextId,
                  args.expectedId,
                  "The docShell has the correct userContextId");
   });
 
-  yield promiseRemoveTab(tab2);
+  await promiseRemoveTab(tab2);
 });
 
 // Opens "uri" in a new tab with the provided userContextId and focuses it.
 // Returns the newly opened tab.
-function* openTabInUserContext(userContextId) {
+async function openTabInUserContext(userContextId) {
   // Open the tab in the correct userContextId.
   let tab = gBrowser.addTab("http://example.com", { userContextId });
 
@@ -80,7 +80,7 @@ function* openTabInUserContext(userContextId) {
   tab.ownerGlobal.focus();
 
   let browser = gBrowser.getBrowserForTab(tab);
-  yield BrowserTestUtils.browserLoaded(browser);
+  await BrowserTestUtils.browserLoaded(browser);
   return { tab, browser };
 }
 
@@ -95,7 +95,7 @@ function waitForNewCookie() {
   });
 }
 
-add_task(function* test() {
+add_task(async function test() {
   const USER_CONTEXTS = [
     "default",
     "personal",
@@ -106,7 +106,7 @@ add_task(function* test() {
   const { TabStateFlusher } = Cu.import("resource:///modules/sessionstore/TabStateFlusher.jsm", {});
 
   // Make sure userContext is enabled.
-  yield SpecialPowers.pushPrefEnv({
+  await SpecialPowers.pushPrefEnv({
     "set": [ [ "privacy.userContext.enabled", true ] ]
   });
 
@@ -118,16 +118,16 @@ add_task(function* test() {
     let cookie = USER_CONTEXTS[userContextId];
 
     // Open our tab in the given user context.
-    let { tab, browser } = yield* openTabInUserContext(userContextId);
+    let { tab, browser } = await openTabInUserContext(userContextId);
 
-    yield Promise.all([
+    await Promise.all([
       waitForNewCookie(),
       ContentTask.spawn(browser, cookie,
         passedCookie => content.document.cookie = passedCookie)
     ]);
 
     // Ensure the tab's session history is up-to-date.
-    yield TabStateFlusher.flush(browser);
+    await TabStateFlusher.flush(browser);
 
     // Remove the tab.
     gBrowser.removeTab(tab);

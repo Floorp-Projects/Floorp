@@ -9,7 +9,7 @@ SimpleTest.requestCompleteLog();
 Services.scriptloader.loadSubScript(new URL("head_sessions.js", gTestPath).href,
                                     this);
 
-add_task(function* test_sessions_get_recently_closed_private() {
+add_task(async function test_sessions_get_recently_closed_private() {
   function background() {
     browser.test.onMessage.addListener((msg, filter) => {
       if (msg == "check-sessions") {
@@ -28,34 +28,34 @@ add_task(function* test_sessions_get_recently_closed_private() {
   });
 
   // Open a private browsing window.
-  let privateWin = yield BrowserTestUtils.openNewBrowserWindow({private: true});
+  let privateWin = await BrowserTestUtils.openNewBrowserWindow({private: true});
 
-  yield extension.startup();
+  await extension.startup();
 
   let {Management: {global: {windowTracker}}} = Cu.import("resource://gre/modules/Extension.jsm", {});
   let privateWinId = windowTracker.getId(privateWin);
 
   extension.sendMessage("check-sessions");
-  let recentlyClosed = yield extension.awaitMessage("recentlyClosed");
+  let recentlyClosed = await extension.awaitMessage("recentlyClosed");
   recordInitialTimestamps(recentlyClosed.map(item => item.lastModified));
 
   // Open and close two tabs in the private window
-  let tab = yield BrowserTestUtils.openNewForegroundTab(privateWin.gBrowser, "http://example.com");
-  yield BrowserTestUtils.removeTab(tab);
+  let tab = await BrowserTestUtils.openNewForegroundTab(privateWin.gBrowser, "http://example.com");
+  await BrowserTestUtils.removeTab(tab);
 
-  tab = yield BrowserTestUtils.openNewForegroundTab(privateWin.gBrowser, "http://example.com");
-  yield BrowserTestUtils.removeTab(tab);
+  tab = await BrowserTestUtils.openNewForegroundTab(privateWin.gBrowser, "http://example.com");
+  await BrowserTestUtils.removeTab(tab);
 
   extension.sendMessage("check-sessions");
-  recentlyClosed = yield extension.awaitMessage("recentlyClosed");
+  recentlyClosed = await extension.awaitMessage("recentlyClosed");
   checkRecentlyClosed(recentlyClosed.filter(onlyNewItemsFilter), 2, privateWinId, true);
 
   // Close the private window.
-  yield BrowserTestUtils.closeWindow(privateWin);
+  await BrowserTestUtils.closeWindow(privateWin);
 
   extension.sendMessage("check-sessions");
-  recentlyClosed = yield extension.awaitMessage("recentlyClosed");
+  recentlyClosed = await extension.awaitMessage("recentlyClosed");
   is(recentlyClosed.filter(onlyNewItemsFilter).length, 0, "the closed private window info was not found in recently closed data");
 
-  yield extension.unload();
+  await extension.unload();
 });

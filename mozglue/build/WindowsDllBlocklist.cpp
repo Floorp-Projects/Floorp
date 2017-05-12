@@ -64,12 +64,16 @@ struct DllBlockInfo {
   //
   // If the USE_TIMESTAMP flag is set, then we use the timestamp from
   // the IMAGE_FILE_HEADER in lieu of a version number.
+  //
+  // If the CHILD_PROCESSES_ONLY flag is set, then the dll is blocked
+  // only when we are a child process.
   unsigned long long maxVersion;
 
   enum {
     FLAGS_DEFAULT = 0,
     BLOCK_WIN8PLUS_ONLY = 1,
     USE_TIMESTAMP = 4,
+    CHILD_PROCESSES_ONLY = 8
   } flags;
 };
 
@@ -263,6 +267,7 @@ static const char kUser32BeforeBlocklistParameter[] = "User32BeforeBlocklist=1\n
 static const int kUser32BeforeBlocklistParameterLen =
   sizeof(kUser32BeforeBlocklistParameter) - 1;
 
+static uint32_t sInitFlags;
 static bool sBlocklistInitAttempted;
 static bool sBlocklistInitFailed;
 static bool sUser32BeforeBlocklist;
@@ -647,8 +652,13 @@ patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileNam
     printf_stderr("LdrLoadDll: info->name: '%s'\n", info->name);
 #endif
 
-    if ((info->flags == DllBlockInfo::BLOCK_WIN8PLUS_ONLY) &&
+    if ((info->flags & DllBlockInfo::BLOCK_WIN8PLUS_ONLY) &&
         !IsWin8OrLater()) {
+      goto continue_loading;
+    }
+
+    if ((info->flags & DllBlockInfo::CHILD_PROCESSES_ONLY) &&
+        !(sInitFlags & eDllBlocklistInitFlagIsChildProcess)) {
       goto continue_loading;
     }
 
@@ -725,11 +735,12 @@ WindowsDllInterceptor NtDllIntercept;
 } // namespace
 
 MFBT_API void
-DllBlocklist_Initialize()
+DllBlocklist_Initialize(uint32_t aInitFlags)
 {
   if (sBlocklistInitAttempted) {
     return;
   }
+  sInitFlags = aInitFlags;
   sBlocklistInitAttempted = true;
 
   // In order to be effective against AppInit DLLs, the blocklist must be

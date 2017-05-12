@@ -104,9 +104,9 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_abstime_annotation_uri() {
+add_task(async function test_abstime_annotation_uri() {
   // Initialize database
-  yield task_populateDB(testData);
+  await task_populateDB(testData);
 
   // Query
   var query = PlacesUtils.history.getNewQuery();
@@ -139,12 +139,12 @@ add_task(function* test_abstime_annotation_uri() {
   do_print("change title");
   var change1 = [{isDetails: true, uri: "http://foo.com/",
                   title: "mo"}, ];
-  yield task_populateDB(change1);
+  await task_populateDB(change1);
   do_check_false(isInResult({uri: "http://foo.com/"}, root));
 
   var change2 = [{isDetails: true, uri: "http://foo.com/",
                   title: "moz", lastvisit: endTime}, ];
-  yield task_populateDB(change2);
+  await task_populateDB(change2);
   dump_table("moz_places");
   do_check_false(isInResult({uri: "http://foo.com/"}, root));
 
@@ -152,7 +152,7 @@ add_task(function* test_abstime_annotation_uri() {
   var change3 = [{isPageAnnotation: true,
                   uri: "http://foo.com/",
                   annoName: badAnnoName, annoVal: "test"}];
-  yield task_populateDB(change3);
+  await task_populateDB(change3);
   do_print("LiveUpdate by removing annotation");
   do_check_false(isInResult({uri: "http://foo.com/"}, root));
 

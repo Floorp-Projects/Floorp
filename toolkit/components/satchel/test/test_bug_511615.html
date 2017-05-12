@@ -122,8 +122,8 @@ function doClickWithMouseEventUnprivileged() {
 
 let input = $_(1, "field1");
 
-add_task(function* test_initialize() {
-  yield new Promise(resolve => updateFormHistory([
+add_task(async function test_initialize() {
+  await new Promise(resolve => updateFormHistory([
     { op: "remove" },
     { op: "add", fieldname: "field1", value: "value1" },
     { op: "add", fieldname: "field1", value: "value2" },
@@ -137,7 +137,7 @@ add_task(function* test_initialize() {
   ], resolve));
 });
 
-add_task(function* test_untrusted_events_ignored() {
+add_task(async function test_untrusted_events_ignored() {
   // The autocomplete popup should not open from untrusted events.
   for (let triggerFn of [
     () => input.focus(),
@@ -152,13 +152,13 @@ add_task(function* test_untrusted_events_ignored() {
   ]) {
     // We must wait for the entire timeout for each individual test, because the
     // next event in the list might prevent the popup from opening.
-    yield expectPopupDoesNotOpen(triggerFn);
+    await expectPopupDoesNotOpen(triggerFn);
   }
 
   // A privileged key press will actually open the popup.
   let popupShown = waitForNextPopup();
   doKey("down");
-  yield popupShown;
+  await popupShown;
 
   // The selected autocomplete item should not change from untrusted events.
   for (let triggerFn of [
@@ -166,13 +166,13 @@ add_task(function* test_untrusted_events_ignored() {
     () => doKeyUnprivileged("page_down"),
   ]) {
     triggerFn();
-    yield checkSelectedIndexAfterResponseTime(-1);
+    await checkSelectedIndexAfterResponseTime(-1);
   }
 
   // A privileged key press will actually change the selected index.
   let indexChanged = new Promise(resolve => notifySelectedIndex(0, resolve));
   doKey("down");
-  yield indexChanged;
+  await indexChanged;
 
   // The selected autocomplete item should not change and it should not be
   // possible to use it from untrusted events.
@@ -186,7 +186,7 @@ add_task(function* test_untrusted_events_ignored() {
     () => doKeyUnprivileged("return"),
   ]) {
     triggerFn();
-    yield checkSelectedIndexAfterResponseTime(0);
+    await checkSelectedIndexAfterResponseTime(0);
     is(input.value, "", "The selected item should not have been used.");
   }
 

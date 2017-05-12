@@ -14,10 +14,10 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_execute() {
+add_task(async function test_execute() {
   // add pages to history
-  yield PlacesTestUtils.addVisits(TEST_URI);
-  yield PlacesTestUtils.addVisits(TEST_BOOKMARKED_URI);
+  await PlacesTestUtils.addVisits(TEST_URI);
+  await PlacesTestUtils.addVisits(TEST_BOOKMARKED_URI);
 
   // create bookmarks on TEST_BOOKMARKED_URI
   PlacesUtils.bookmarks.insertBookmark(
@@ -30,23 +30,23 @@ add_task(function* test_execute() {
               TEST_BOOKMARKED_URI.spec);
 
   // set charset on not-bookmarked page
-  yield PlacesUtils.setCharsetForURI(TEST_URI, charset);
+  await PlacesUtils.setCharsetForURI(TEST_URI, charset);
   // set charset on bookmarked page
-  yield PlacesUtils.setCharsetForURI(TEST_BOOKMARKED_URI, charset);
+  await PlacesUtils.setCharsetForURI(TEST_BOOKMARKED_URI, charset);
 
   // check that we have created a page annotation
   do_check_eq(PlacesUtils.annotations.getPageAnnotation(TEST_URI, CHARSET_ANNO), charset);
 
   // get charset from not-bookmarked page
-  do_check_eq((yield PlacesUtils.getCharsetForURI(TEST_URI)), charset);
+  do_check_eq((await PlacesUtils.getCharsetForURI(TEST_URI)), charset);
 
   // get charset from bookmarked page
-  do_check_eq((yield PlacesUtils.getCharsetForURI(TEST_BOOKMARKED_URI)), charset);
+  do_check_eq((await PlacesUtils.getCharsetForURI(TEST_BOOKMARKED_URI)), charset);
 
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
 
   // ensure that charset has gone for not-bookmarked page
-  do_check_neq((yield PlacesUtils.getCharsetForURI(TEST_URI)), charset);
+  do_check_neq((await PlacesUtils.getCharsetForURI(TEST_URI)), charset);
 
   // check that page annotation has been removed
   try {
@@ -55,9 +55,9 @@ add_task(function* test_execute() {
   } catch (e) {}
 
   // ensure that charset still exists for bookmarked page
-  do_check_eq((yield PlacesUtils.getCharsetForURI(TEST_BOOKMARKED_URI)), charset);
+  do_check_eq((await PlacesUtils.getCharsetForURI(TEST_BOOKMARKED_URI)), charset);
 
   // remove charset from bookmark and check that has gone
-  yield PlacesUtils.setCharsetForURI(TEST_BOOKMARKED_URI, "");
-  do_check_neq((yield PlacesUtils.getCharsetForURI(TEST_BOOKMARKED_URI)), charset);
+  await PlacesUtils.setCharsetForURI(TEST_BOOKMARKED_URI, "");
+  do_check_neq((await PlacesUtils.getCharsetForURI(TEST_BOOKMARKED_URI)), charset);
 });

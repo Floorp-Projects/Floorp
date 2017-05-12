@@ -18,23 +18,23 @@ function promiseObserve(name) {
   });
 }
 
-add_task(function* () {
-  yield SpecialPowers.pushPrefEnv({"set": [["places.history.enabled", false]]});
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({"set": [["places.history.enabled", false]]});
 
   let visitUriPromise = promiseObserve("uri-visit-saved");
 
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, INITIAL_URL);
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, INITIAL_URL);
 
-  yield SpecialPowers.popPrefEnv();
+  await SpecialPowers.popPrefEnv();
 
   let browserLoadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   gBrowser.loadURI(FINAL_URL);
-  yield browserLoadedPromise;
+  await browserLoadedPromise;
 
-  let subject = yield visitUriPromise;
+  let subject = await visitUriPromise;
   let uri = subject.QueryInterface(Ci.nsIURI);
   is(uri.spec, FINAL_URL, "received expected visit");
 
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
   gBrowser.removeCurrentTab();
 });

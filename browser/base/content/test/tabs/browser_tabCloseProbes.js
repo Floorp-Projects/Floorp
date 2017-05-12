@@ -24,10 +24,10 @@ function assertCount(snapshot, expectedCount) {
                `Should only be ${expectedCount} collected value.`);
 }
 
-add_task(function* setup() {
+add_task(async function setup() {
   // These probes are opt-in, meaning we only capture them if extended
   // Telemetry recording is enabled.
-  yield SpecialPowers.pushPrefEnv({
+  await SpecialPowers.pushPrefEnv({
     set: [["toolkit.telemetry.enabled", true]]
   });
 
@@ -42,14 +42,14 @@ add_task(function* setup() {
  * Tests the FX_TAB_CLOSE_TIME_ANIM_MS probe by closing a tab with the tab
  * close animation.
  */
-add_task(function* test_close_time_anim_probe() {
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser);
-  yield BrowserTestUtils.waitForCondition(() => tab._fullyOpen);
+add_task(async function test_close_time_anim_probe() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+  await BrowserTestUtils.waitForCondition(() => tab._fullyOpen);
 
   gAnimHistogram.clear();
   gNoAnimHistogram.clear();
 
-  yield BrowserTestUtils.removeTab(tab, { animate: true });
+  await BrowserTestUtils.removeTab(tab, { animate: true });
 
   assertCount(gAnimHistogram.snapshot(), 1);
   assertCount(gNoAnimHistogram.snapshot(), 0);
@@ -62,14 +62,14 @@ add_task(function* test_close_time_anim_probe() {
  * Tests the FX_TAB_CLOSE_TIME_NO_ANIM_MS probe by closing a tab without the
  * tab close animation.
  */
-add_task(function* test_close_time_no_anim_probe() {
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser);
-  yield BrowserTestUtils.waitForCondition(() => tab._fullyOpen);
+add_task(async function test_close_time_no_anim_probe() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+  await BrowserTestUtils.waitForCondition(() => tab._fullyOpen);
 
   gAnimHistogram.clear();
   gNoAnimHistogram.clear();
 
-  yield BrowserTestUtils.removeTab(tab, { animate: false });
+  await BrowserTestUtils.removeTab(tab, { animate: false });
 
   assertCount(gAnimHistogram.snapshot(), 0);
   assertCount(gNoAnimHistogram.snapshot(), 1);

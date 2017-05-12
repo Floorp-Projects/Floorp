@@ -1618,7 +1618,7 @@ var Impl = {
     cpml.addMessageListener(MESSAGE_TELEMETRY_GET_CHILD_THREAD_HANGS, this);
     cpml.addMessageListener(MESSAGE_TELEMETRY_GET_CHILD_USS, this);
 
-    let delayedTask = new DeferredTask(function* () {
+    let delayedTask = new DeferredTask(() => {
       this._initialized = true;
 
       this.attachObservers();
@@ -1627,7 +1627,7 @@ var Impl = {
       if (Telemetry.canRecordExtended) {
         GCTelemetry.init();
       }
-    }.bind(this), testing ? TELEMETRY_TEST_DELAY : TELEMETRY_DELAY);
+    }, testing ? TELEMETRY_TEST_DELAY : TELEMETRY_DELAY);
 
     delayedTask.arm();
   },

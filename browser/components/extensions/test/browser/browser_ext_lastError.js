@@ -1,6 +1,6 @@
 "use strict";
 
-function* sendMessage(options) {
+async function sendMessage(options) {
   function background(options) {
     browser.runtime.sendMessage(result => {
       browser.test.assertEq(undefined, result, "Argument value");
@@ -18,14 +18,14 @@ function* sendMessage(options) {
     background: `(${background})(${JSON.stringify(options)})`,
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitMessage("done");
+  await extension.awaitMessage("done");
 
-  yield extension.unload();
+  await extension.unload();
 }
 
-add_task(function* testLastError() {
+add_task(async function testLastError() {
   // Not necessary in browser-chrome tests, but monitorConsole gripes
   // if we don't call it.
   SimpleTest.waitForExplicitFinish();
@@ -37,10 +37,10 @@ add_task(function* testLastError() {
       SimpleTest.monitorConsole(resolve, [{message: /message argument is missing/, forbid: true}]);
     });
 
-    yield sendMessage({checkLastError: api});
+    await sendMessage({checkLastError: api});
 
     SimpleTest.endMonitorConsole();
-    yield waitForConsole;
+    await waitForConsole;
   }
 
   // Check that we do have a console message when lastError is not checked.
@@ -48,8 +48,8 @@ add_task(function* testLastError() {
     SimpleTest.monitorConsole(resolve, [{message: /Unchecked lastError value: Error: runtime.sendMessage's message argument is missing/}]);
   });
 
-  yield sendMessage({});
+  await sendMessage({});
 
   SimpleTest.endMonitorConsole();
-  yield waitForConsole;
+  await waitForConsole;
 });

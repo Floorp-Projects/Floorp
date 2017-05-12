@@ -16,12 +16,12 @@ function run_test() {
  * Tests that the watcher correctly notifies of a file modification when watching
  * a single path.
  */
-add_task(function* test_watch_single_path_file_modification() {
+add_task(async function test_watch_single_path_file_modification() {
 
   // Create and watch a sub-directory of the profile directory so we don't
   // catch notifications we're not interested in (i.e. "startupCache").
   let watchedDir = OS.Path.join(OS.Constants.Path.profileDir, "filewatcher_playground");
-  yield OS.File.makeDir(watchedDir);
+  await OS.File.makeDir(watchedDir);
 
   let tempFileName = "test_filemodification.tmp";
 
@@ -32,23 +32,23 @@ add_task(function* test_watch_single_path_file_modification() {
   // Create a file within the directory to be watched. We do this
   // before watching the directory so we do not get the creation notification.
   let tmpFilePath = OS.Path.join(watchedDir, tempFileName);
-  yield OS.File.writeAtomic(tmpFilePath, "some data");
+  await OS.File.writeAtomic(tmpFilePath, "some data");
 
   // Add the profile directory to the watch list and wait for the file watcher
   // to start watching it.
-  yield promiseAddPath(watcher, watchedDir, deferred.resolve, deferred.reject);
+  await promiseAddPath(watcher, watchedDir, deferred.resolve, deferred.reject);
 
   // Once ready, modify the file to trigger the notification.
-  yield OS.File.writeAtomic(tmpFilePath, "some new data");
+  await OS.File.writeAtomic(tmpFilePath, "some new data");
 
   // Wait until the watcher informs us that the file has changed.
-  let changed = yield deferred.promise;
+  let changed = await deferred.promise;
   do_check_eq(changed, tmpFilePath);
 
   // Remove the watch and free the associated memory (we need to
   // reuse 'deferred.resolve' and 'deferred.reject' to unregister).
-  yield promiseRemovePath(watcher, watchedDir, deferred.resolve, deferred.reject);
+  await promiseRemovePath(watcher, watchedDir, deferred.resolve, deferred.reject);
 
   // Remove the test directory and all of its content.
-  yield OS.File.removeDir(watchedDir);
+  await OS.File.removeDir(watchedDir);
 });

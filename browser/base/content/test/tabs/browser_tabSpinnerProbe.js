@@ -54,7 +54,7 @@ function sum(aArray) {
  *                  - FX_TAB_SWITCH_SPINNER_VISIBLE_MS
  *                  - FX_TAB_SWITCH_SPINNER_VISIBLE_LONG_MS
  */
-function* testProbe(aProbe) {
+async function testProbe(aProbe) {
   info(`Testing probe: ${aProbe}`);
   let histogram = Services.telemetry.getHistogramById(aProbe);
   let buckets = histogram.snapshot().ranges.filter(function(value) {
@@ -68,23 +68,23 @@ function* testProbe(aProbe) {
   let dataURI1 = makeDataURI(delayTime);
   let dataURI2 = makeDataURI();
 
-  let tab1 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, dataURI1);
+  let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, dataURI1);
   histogram.clear();
   // Queue a hang in the content process when the
   // event loop breathes next.
-  ContentTask.spawn(tab1.linkedBrowser, null, function*() {
+  ContentTask.spawn(tab1.linkedBrowser, null, async function() {
     content.wrappedJSObject.hang();
   });
-  let tab2 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, dataURI2);
+  let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, dataURI2);
   let snapshot = histogram.snapshot();
-  yield BrowserTestUtils.removeTab(tab2);
-  yield BrowserTestUtils.removeTab(tab1);
+  await BrowserTestUtils.removeTab(tab2);
+  await BrowserTestUtils.removeTab(tab1);
   ok(sum(snapshot.counts) > 0,
    `Spinner probe should now have a value in some bucket`);
 }
 
-add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
     set: [
       ["dom.ipc.processCount", 1],
       // We can interrupt JS to paint now, which is great for

@@ -23,8 +23,9 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include "../util-internal.h"
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <winsock2.h>
 #include <windows.h>
 #include <ws2tcpip.h>
@@ -34,18 +35,18 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#ifdef _EVENT_HAVE_SYS_TIME_H
+#ifdef EVENT__HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
 #include <sys/queue.h>
-#ifndef WIN32
+#ifndef _WIN32
 #include <sys/socket.h>
 #include <signal.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #endif
-#ifdef _EVENT_HAVE_NETINET_IN6_H
+#ifdef EVENT__HAVE_NETINET_IN6_H
 #include <netinet/in6.h>
 #endif
 #ifdef HAVE_NETDB_H
@@ -67,8 +68,6 @@
 #include "log-internal.h"
 #include "regress.h"
 #include "regress_testutils.h"
-
-#include "../util-internal.h"
 
 /* globals */
 static struct evdns_server_port *dns_port;
@@ -130,17 +129,28 @@ end:
 void
 regress_clean_dnsserver(void)
 {
-	if (dns_port)
+	if (dns_port) {
 		evdns_close_server_port(dns_port);
-	if (dns_sock >= 0)
+		dns_port = NULL;
+	}
+	if (dns_sock >= 0) {
 		evutil_closesocket(dns_sock);
+		dns_sock = -1;
+	}
 }
 
+static void strtolower(char *s)
+{
+	while (*s) {
+		*s = EVUTIL_TOLOWER_(*s);
+		++s;
+	}
+}
 void
 regress_dns_server_cb(struct evdns_server_request *req, void *data)
 {
 	struct regress_dns_server_table *tab = data;
-	const char *question;
+	char *question;
 
 	if (req->nquestions != 1)
 		TT_DIE(("Only handling one question at a time; got %d",
@@ -155,6 +165,9 @@ regress_dns_server_cb(struct evdns_server_request *req, void *data)
 		TT_DIE(("Unexpected question: '%s'", question));
 
 	++tab->seen;
+
+	if (tab->lower)
+		strtolower(question);
 
 	if (!strcmp(tab->anstype, "err")) {
 		int err = atoi(tab->ans);

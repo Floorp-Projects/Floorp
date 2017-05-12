@@ -9,12 +9,12 @@
  * The temporary directory downloads saves to, should be only readable
  * for the current user.
  */
-add_task(function* test_private_temp() {
+add_task(async function test_private_temp() {
 
-  let download = yield promiseStartExternalHelperAppServiceDownload(
+  let download = await promiseStartExternalHelperAppServiceDownload(
                                                          httpUrl("empty.txt"));
 
-  yield promiseDownloadStopped(download);
+  await promiseDownloadStopped(download);
 
   var targetFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
   targetFile.initWithPath(download.target.path);

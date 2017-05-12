@@ -746,12 +746,12 @@ BrowserGlue.prototype = {
     Services.prefs.setIntPref("browser.slowStartup.samples", samples);
   },
 
-  _calculateProfileAgeInDays: Task.async(function* () {
+  async _calculateProfileAgeInDays() {
     let ProfileAge = Cu.import("resource://gre/modules/ProfileAge.jsm", {}).ProfileAge;
     let profileAge = new ProfileAge(null, null);
 
-    let creationDate = yield profileAge.created;
-    let resetDate = yield profileAge.reset;
+    let creationDate = await profileAge.created;
+    let resetDate = await profileAge.reset;
 
     // if the profile was reset, consider the
     // reset date for its age.
@@ -759,7 +759,7 @@ BrowserGlue.prototype = {
 
     const ONE_DAY = 24 * 60 * 60 * 1000;
     return (Date.now() - profileDate) / ONE_DAY;
-  }),
+  },
 
   _showSlowStartupNotification(profileAge) {
     if (profileAge < 90) // 3 months
@@ -1496,7 +1496,7 @@ BrowserGlue.prototype = {
         () => BookmarkHTMLUtils.exportToFile(BookmarkHTMLUtils.defaultPath));
     }
 
-    Task.spawn(function* () {
+    (async () => {
       // Check if Safe Mode or the user has required to restore bookmarks from
       // default profile's bookmarks.html
       let restoreDefaultBookmarks = false;
@@ -1505,7 +1505,7 @@ BrowserGlue.prototype = {
           Services.prefs.getBoolPref("browser.bookmarks.restore_default_bookmarks");
         if (restoreDefaultBookmarks) {
           // Ensure that we already have a bookmarks backup for today.
-          yield this._backupBookmarks();
+          await this._backupBookmarks();
           importBookmarks = true;
         }
       } catch (ex) {}
@@ -1518,15 +1518,15 @@ BrowserGlue.prototype = {
       // from bookmarks.html, we will try to restore from JSON
       if (importBookmarks && !restoreDefaultBookmarks && !importBookmarksHTML) {
         // get latest JSON backup
-        lastBackupFile = yield PlacesBackups.getMostRecentBackup();
+        lastBackupFile = await PlacesBackups.getMostRecentBackup();
         if (lastBackupFile) {
           // restore from JSON backup
-          yield BookmarkJSONUtils.importFromFile(lastBackupFile, true);
+          await BookmarkJSONUtils.importFromFile(lastBackupFile, true);
           importBookmarks = false;
         } else {
           // We have created a new database but we don't have any backup available
           importBookmarks = true;
-          if (yield OS.File.exists(BookmarkHTMLUtils.defaultPath)) {
+          if (await OS.File.exists(BookmarkHTMLUtils.defaultPath)) {
             // If bookmarks.html is available in current profile import it...
             importBookmarksHTML = true;
           } else {
@@ -1545,8 +1545,8 @@ BrowserGlue.prototype = {
         // Now apply distribution customized bookmarks.
         // This should always run after Places initialization.
         try {
-          yield this._distributionCustomizer.applyBookmarks();
-          yield this.ensurePlacesDefaultQueriesInitialized();
+          await this._distributionCustomizer.applyBookmarks();
+          await this.ensurePlacesDefaultQueriesInitialized();
         } catch (e) {
           Cu.reportError(e);
         }
@@ -1562,24 +1562,24 @@ BrowserGlue.prototype = {
         if (restoreDefaultBookmarks) {
           // User wants to restore bookmarks.html file from default profile folder
           bookmarksUrl = "chrome://browser/locale/bookmarks.html";
-        } else if (yield OS.File.exists(BookmarkHTMLUtils.defaultPath)) {
+        } else if (await OS.File.exists(BookmarkHTMLUtils.defaultPath)) {
           bookmarksUrl = OS.Path.toFileURI(BookmarkHTMLUtils.defaultPath);
         }
 
         if (bookmarksUrl) {
           // Import from bookmarks.html file.
           try {
-            yield BookmarkHTMLUtils.importFromURL(bookmarksUrl, true);
+            await BookmarkHTMLUtils.importFromURL(bookmarksUrl, true);
           } catch (e) {
             Cu.reportError("Bookmarks.html file could be corrupt. " + e);
           }
           try {
             // Now apply distribution customized bookmarks.
             // This should always run after Places initialization.
-            yield this._distributionCustomizer.applyBookmarks();
+            await this._distributionCustomizer.applyBookmarks();
             // Ensure that smart bookmarks are created once the operation is
             // complete.
-            yield this.ensurePlacesDefaultQueriesInitialized();
+            await this.ensurePlacesDefaultQueriesInitialized();
           } catch (e) {
             Cu.reportError(e);
           }
@@ -1603,7 +1603,7 @@ BrowserGlue.prototype = {
         // If there is no backup, or the last bookmarks backup is too old, use
         // a more aggressive idle observer.
         if (lastBackupFile === undefined)
-          lastBackupFile = yield PlacesBackups.getMostRecentBackup();
+          lastBackupFile = await PlacesBackups.getMostRecentBackup();
         if (!lastBackupFile) {
             this._bookmarksBackupIdleTime /= 2;
         } else {
@@ -1631,7 +1631,7 @@ BrowserGlue.prototype = {
         this._idleService.addIdleObserver(this, this._bookmarksBackupIdleTime);
       }
 
-    }.bind(this)).catch(ex => {
+    })().catch(ex => {
       Cu.reportError(ex);
     }).then(() => {
       // NB: deliberately after the catch so that we always do this, even if
@@ -1644,16 +1644,16 @@ BrowserGlue.prototype = {
    * If a backup for today doesn't exist, this creates one.
    */
   _backupBookmarks: function BG__backupBookmarks() {
-    return Task.spawn(function*() {
-      let lastBackupFile = yield PlacesBackups.getMostRecentBackup();
+    return (async function() {
+      let lastBackupFile = await PlacesBackups.getMostRecentBackup();
       // Should backup bookmarks if there are no backups or the maximum
       // interval between backups elapsed.
       if (!lastBackupFile ||
           new Date() - PlacesBackups.getDateForFile(lastBackupFile) > BOOKMARKS_BACKUP_MIN_INTERVAL_DAYS * 86400000) {
         let maxBackups = Services.prefs.getIntPref("browser.bookmarks.max_backups");
-        yield PlacesBackups.create(maxBackups);
+        await PlacesBackups.create(maxBackups);
       }
-    });
+    })();
   },
 
   /**
@@ -2025,7 +2025,7 @@ BrowserGlue.prototype = {
     this._sanitizer.sanitize(aParentWindow);
   },
 
-  ensurePlacesDefaultQueriesInitialized: Task.async(function* () {
+  async ensurePlacesDefaultQueriesInitialized() {
     // This is the current smart bookmarks version, it must be increased every
     // time they change.
     // When adding a new smart bookmark below, its newInVersion property must
@@ -2081,14 +2081,14 @@ BrowserGlue.prototype = {
         if (queryId in smartBookmarks) {
           // Known smart bookmark.
           let smartBookmark = smartBookmarks[queryId];
-          smartBookmark.guid = yield PlacesUtils.promiseItemGuid(itemId);
+          smartBookmark.guid = await PlacesUtils.promiseItemGuid(itemId);
 
           if (!smartBookmark.url) {
-            yield PlacesUtils.bookmarks.remove(smartBookmark.guid);
+            await PlacesUtils.bookmarks.remove(smartBookmark.guid);
             continue;
           }
 
-          let bm = yield PlacesUtils.bookmarks.fetch(smartBookmark.guid);
+          let bm = await PlacesUtils.bookmarks.fetch(smartBookmark.guid);
           smartBookmark.parentGuid = bm.parentGuid;
           smartBookmark.index = bm.index;
         } else {
@@ -2113,7 +2113,7 @@ BrowserGlue.prototype = {
         // Remove old version of the smart bookmark if it exists, since it
         // will be replaced in place.
         if (smartBookmark.guid) {
-          yield PlacesUtils.bookmarks.remove(smartBookmark.guid);
+          await PlacesUtils.bookmarks.remove(smartBookmark.guid);
         }
 
         // Create the new smart bookmark and store its updated guid.
@@ -2123,8 +2123,8 @@ BrowserGlue.prototype = {
           else if (smartBookmark.parentGuid == PlacesUtils.bookmarks.menuGuid)
             smartBookmark.index = menuIndex++;
         }
-        smartBookmark = yield PlacesUtils.bookmarks.insert(smartBookmark);
-        let itemId = yield PlacesUtils.promiseItemId(smartBookmark.guid);
+        smartBookmark = await PlacesUtils.bookmarks.insert(smartBookmark);
+        let itemId = await PlacesUtils.promiseItemId(smartBookmark.guid);
         PlacesUtils.annotations.setItemAnnotation(itemId,
                                                   SMART_BOOKMARKS_ANNO,
                                                   queryId, 0,
@@ -2135,11 +2135,11 @@ BrowserGlue.prototype = {
       // separator below them in the bookmarks menu.
       if (smartBookmarksCurrentVersion == 0 &&
           smartBookmarkItemIds.length == 0) {
-        let bm = yield PlacesUtils.bookmarks.fetch({ parentGuid: PlacesUtils.bookmarks.menuGuid,
+        let bm = await PlacesUtils.bookmarks.fetch({ parentGuid: PlacesUtils.bookmarks.menuGuid,
                                                      index: menuIndex });
         // Don't add a separator if the menu was empty or there is one already.
         if (bm && bm.type != PlacesUtils.bookmarks.TYPE_SEPARATOR) {
-          yield PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
+          await PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
                                                parentGuid: PlacesUtils.bookmarks.menuGuid,
                                                index: menuIndex });
         }
@@ -2150,7 +2150,7 @@ BrowserGlue.prototype = {
       Services.prefs.setIntPref(SMART_BOOKMARKS_PREF, SMART_BOOKMARKS_VERSION);
       Services.prefs.savePrefFile(null);
     }
-  }),
+  },
 
   /**
    * Open preferences even if there are no open windows.

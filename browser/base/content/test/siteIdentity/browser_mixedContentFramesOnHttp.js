@@ -12,14 +12,14 @@
 
 const TEST_URL = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "http://example.com") + "file_mixedContentFramesOnHttp.html";
 
-add_task(function *() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
     "set": [
       ["security.mixed_content.block_active_content", true],
       ["security.mixed_content.block_display_content", false]
     ]});
 
-  yield BrowserTestUtils.withNewTab(TEST_URL, function*(browser) {
+  await BrowserTestUtils.withNewTab(TEST_URL, function(browser) {
     isSecurityState(browser, "insecure");
     assertMixedContentBlockingState(browser, {activeLoaded: false, activeBlocked: false, passiveLoaded: true});
   });

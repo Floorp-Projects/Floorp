@@ -69,7 +69,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function*() {
+add_task(async function() {
   // make json file
   let jsonFile = OS.Path.join(OS.Constants.Path.profileDir, "bookmarks.json");
 
@@ -90,7 +90,7 @@ add_task(function*() {
     }
   });
 
-  yield BookmarkJSONUtils.exportToFile(jsonFile);
+  await BookmarkJSONUtils.exportToFile(jsonFile);
 
   // clean
   tests.forEach(function(aTest) {
@@ -99,7 +99,7 @@ add_task(function*() {
 
   // restore json file
   try {
-    yield BookmarkJSONUtils.importFromFile(jsonFile, true);
+    await BookmarkJSONUtils.importFromFile(jsonFile, true);
   } catch (ex) { do_throw("couldn't import the exported file: " + ex); }
 
   // validate
@@ -108,5 +108,5 @@ add_task(function*() {
   });
 
   // clean up
-  yield OS.File.remove(jsonFile);
+  await OS.File.remove(jsonFile);
 });

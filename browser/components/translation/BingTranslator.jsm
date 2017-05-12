@@ -11,7 +11,6 @@ this.EXPORTED_SYMBOLS = [ "BingTranslator" ];
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://gre/modules/Http.jsm");
 
@@ -59,7 +58,7 @@ this.BingTranslator.prototype = {
    *                             task is finished.
    */
   translate() {
-    return Task.spawn(function *() {
+    return (async () => {
       let currentIndex = 0;
       this._onFinishedDeferred = Promise.defer();
 
@@ -70,7 +69,7 @@ this.BingTranslator.prototype = {
         // let's take the opportunity of the chunkification process to
         // allow for the event loop to attend other pending events
         // before we continue.
-        yield CommonUtils.laterTickResolvingPromise();
+        await CommonUtils.laterTickResolvingPromise();
 
         // Determine the data for the next request.
         let request = this._generateNextTranslationRequest(currentIndex);
@@ -91,7 +90,7 @@ this.BingTranslator.prototype = {
       }
 
       return this._onFinishedDeferred.promise;
-    }.bind(this));
+    })();
   },
 
   /**
@@ -286,9 +285,9 @@ BingRequest.prototype = {
    * Initiates the request
    */
   fireRequest() {
-    return Task.spawn(function *() {
+    return (async () => {
       // Prepare authentication.
-      let token = yield BingTokenManager.getToken();
+      let token = await BingTokenManager.getToken();
       let auth = "Bearer " + token;
 
       // Prepare URL.
@@ -319,26 +318,26 @@ BingRequest.prototype = {
         "</TranslateArrayRequest>";
 
       // Set up request options.
-      let deferred = Promise.defer();
-      let options = {
-        onLoad: (responseText, xhr) => {
-          deferred.resolve(this);
-        },
-        onError(e, responseText, xhr) {
-          deferred.reject(xhr);
-        },
-        postData: requestString,
-        headers
-      };
+      return new Promise((resolve, reject) => {
+        let options = {
+          onLoad: (responseText, xhr) => {
+            resolve(this);
+          },
+          onError(e, responseText, xhr) {
+            reject(xhr);
+          },
+          postData: requestString,
+          headers
+        };
 
-      // Fire the request.
-      let request = httpRequest(url, options);
+        // Fire the request.
+        let request = httpRequest(url, options);
 
-      // Override the response MIME type.
-      request.overrideMimeType("text/xml");
-      this.networkRequest = request;
-      return deferred.promise;
-    }.bind(this));
+        // Override the response MIME type.
+        request.overrideMimeType("text/xml");
+        this.networkRequest = request;
+      });
+    })();
   }
 };
 

@@ -7,11 +7,11 @@
 requestLongerTimeout(2);
 
 // Restoring default should reset theme and show an "undo" option which undoes the restoring operation.
-add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   let homeButtonId = "home-button";
   CustomizableUI.removeWidgetFromArea(homeButtonId);
-  yield startCustomizing();
+  await startCustomizing();
   ok(!CustomizableUI.inDefaultState, "Not in default state to begin with");
   is(CustomizableUI.getPlacementOfWidget(homeButtonId), null, "Home button is in palette");
   let undoResetButton = document.getElementById("customization-undo-reset-button");
@@ -22,7 +22,7 @@ add_task(function*() {
   let popupShownPromise = popupShown(popup);
   EventUtils.synthesizeMouseAtCenter(themesButton, {});
   info("Clicked on themes button");
-  yield popupShownPromise;
+  await popupShownPromise;
 
   let recommendedHeader = document.getElementById("customization-lwtheme-menu-recommended");
   let firstLWTheme = recommendedHeader.nextSibling;
@@ -30,28 +30,28 @@ add_task(function*() {
   let themeChangedPromise = promiseObserverNotified("lightweight-theme-changed");
   firstLWTheme.doCommand();
   info("Clicked on first theme");
-  yield themeChangedPromise;
+  await themeChangedPromise;
 
   is(LightweightThemeManager.currentTheme.id, firstLWThemeId, "Theme changed to first option");
 
-  yield gCustomizeMode.reset();
+  await gCustomizeMode.reset();
 
   ok(CustomizableUI.inDefaultState, "In default state after reset");
   is(undoResetButton.hidden, false, "The undo button is visible after reset");
   is(LightweightThemeManager.currentTheme, null, "Theme reset to default");
 
-  yield gCustomizeMode.undoReset()
+  await gCustomizeMode.undoReset()
 
   is(LightweightThemeManager.currentTheme.id, firstLWThemeId, "Theme has been reset from default to original choice");
   ok(!CustomizableUI.inDefaultState, "Not in default state after undo-reset");
   is(undoResetButton.hidden, true, "The undo button is hidden after clicking on the undo button");
   is(CustomizableUI.getPlacementOfWidget(homeButtonId), null, "Home button is in palette");
 
-  yield gCustomizeMode.reset();
+  await gCustomizeMode.reset();
 });
 
 // Performing an action after a reset will hide the reset button.
-add_task(function*() {
+add_task(async function() {
   let homeButtonId = "home-button";
   CustomizableUI.removeWidgetFromArea(homeButtonId);
   ok(!CustomizableUI.inDefaultState, "Not in default state to begin with");
@@ -59,7 +59,7 @@ add_task(function*() {
   let undoResetButton = document.getElementById("customization-undo-reset-button");
   is(undoResetButton.hidden, true, "The undo button is hidden before reset");
 
-  yield gCustomizeMode.reset();
+  await gCustomizeMode.reset();
 
   ok(CustomizableUI.inDefaultState, "In default state after reset");
   is(undoResetButton.hidden, false, "The undo button is visible after reset");
@@ -69,20 +69,20 @@ add_task(function*() {
 });
 
 // "Restore defaults", exiting customize, and re-entering shouldn't show the Undo button
-add_task(function*() {
+add_task(async function() {
   let undoResetButton = document.getElementById("customization-undo-reset-button");
   is(undoResetButton.hidden, true, "The undo button is hidden before a reset");
   ok(!CustomizableUI.inDefaultState, "The browser should not be in default state");
-  yield gCustomizeMode.reset();
+  await gCustomizeMode.reset();
 
   is(undoResetButton.hidden, false, "The undo button is visible after a reset");
-  yield endCustomizing();
-  yield startCustomizing();
+  await endCustomizing();
+  await startCustomizing();
   is(undoResetButton.hidden, true, "The undo reset button should be hidden after entering customization mode");
 });
 
 // Bug 971626 - Restore Defaults should collapse the Title Bar
-add_task(function*() {
+add_task(async function() {
   if (Services.appinfo.OS != "WINNT" &&
       Services.appinfo.OS != "Darwin") {
     return;
@@ -103,7 +103,7 @@ add_task(function*() {
   ok(!CustomizableUI.inDefaultState, "With titlebar flipped, no longer default");
   is(undoResetButton.hidden, true, "Undo reset button should be hidden after pref change");
 
-  yield gCustomizeMode.reset();
+  await gCustomizeMode.reset();
   ok(restoreDefaultsButton.disabled, "Restore defaults button should be disabled after reset");
   is(titleBarButton.hasAttribute("checked"), !defaultValue, "Title bar button should reflect default value after reset");
   is(Services.prefs.getBoolPref(prefName), defaultValue, "Reset should reset drawInTitlebar");
@@ -111,7 +111,7 @@ add_task(function*() {
   is(undoResetButton.hidden, false, "Undo reset button should be visible after reset");
   ok(!undoResetButton.disabled, "Undo reset button should be enabled after reset");
 
-  yield gCustomizeMode.undoReset();
+  await gCustomizeMode.undoReset();
   ok(!restoreDefaultsButton.disabled, "Restore defaults button should be enabled after undo-reset");
   is(titleBarButton.hasAttribute("checked"), defaultValue, "Title bar button should reflect undo-reset value");
   ok(!CustomizableUI.inDefaultState, "No longer in default state after undo");
@@ -123,7 +123,7 @@ add_task(function*() {
   is(undoResetButton.hidden, true, "Undo reset button should be hidden at end of test");
 });
 
-add_task(function* asyncCleanup() {
-  yield gCustomizeMode.reset();
-  yield endCustomizing();
+add_task(async function asyncCleanup() {
+  await gCustomizeMode.reset();
+  await endCustomizing();
 });

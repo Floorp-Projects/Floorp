@@ -4,8 +4,8 @@
 
 const PAGE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html";
 
-add_task(function* () {
-  let tab1 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
+add_task(async function() {
+  let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
 
   gBrowser.selectedTab = tab1;
 
@@ -30,26 +30,26 @@ add_task(function* () {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish();
+  await extension.startup();
+  await extension.awaitFinish();
 
-  let contentAreaContextMenu = yield openContextMenu("#img1");
+  let contentAreaContextMenu = await openContextMenu("#img1");
   let item = contentAreaContextMenu.getElementsByAttribute("label", "Click me!");
   is(item.length, 1, "contextMenu item for image was found");
-  yield closeContextMenu();
+  await closeContextMenu();
 
-  contentAreaContextMenu = yield openContextMenu("body");
+  contentAreaContextMenu = await openContextMenu("body");
   item = contentAreaContextMenu.getElementsByAttribute("label", "Click me!");
   is(item.length, 1, "contextMenu item for page was found");
-  yield closeContextMenu();
+  await closeContextMenu();
 
-  yield extension.unload();
+  await extension.unload();
 
-  yield BrowserTestUtils.removeTab(tab1);
+  await BrowserTestUtils.removeTab(tab1);
 });
 
-add_task(function* () {
-  let tab1 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
+add_task(async function() {
+  let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
 
   gBrowser.selectedTab = tab1;
 
@@ -137,8 +137,8 @@ add_task(function* () {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("contextmenus");
+  await extension.startup();
+  await extension.awaitFinish("contextmenus");
 
   let expectedClickInfo = {
     menuItemId: "ext-image",
@@ -156,7 +156,7 @@ add_task(function* () {
     is(expectedClickInfo.pageSrc, result.tab.url, "click info page source is the right tab");
   }
 
-  let extensionMenuRoot = yield openExtensionContextMenu();
+  let extensionMenuRoot = await openExtensionContextMenu();
 
   // Check some menu items
   let items = extensionMenuRoot.getElementsByAttribute("label", "image");
@@ -175,16 +175,16 @@ add_task(function* () {
   is(items[0].childNodes[0].childNodes.length, 2, "child items for parent were found (context=image)");
 
   // Click on ext-image item and check the click results
-  yield closeExtensionContextMenu(image);
+  await closeExtensionContextMenu(image);
 
-  let result = yield extension.awaitMessage("onclick");
+  let result = await extension.awaitMessage("onclick");
   checkClickInfo(result);
-  result = yield extension.awaitMessage("browser.contextMenus.onClicked");
+  result = await extension.awaitMessage("browser.contextMenus.onClicked");
   checkClickInfo(result);
 
 
   // Test "editable" context and OnClick data property.
-  extensionMenuRoot = yield openExtensionContextMenu("#edit-me");
+  extensionMenuRoot = await openExtensionContextMenu("#edit-me");
 
   // Check some menu items.
   items = extensionMenuRoot.getElementsByAttribute("label", "editable");
@@ -192,7 +192,7 @@ add_task(function* () {
   let editable = items[0];
 
   // Click on ext-editable item and check the click results.
-  yield closeExtensionContextMenu(editable);
+  await closeExtensionContextMenu(editable);
 
   expectedClickInfo = {
     menuItemId: "ext-editable",
@@ -200,29 +200,29 @@ add_task(function* () {
     editable: true,
   };
 
-  result = yield extension.awaitMessage("onclick");
+  result = await extension.awaitMessage("onclick");
   checkClickInfo(result);
-  result = yield extension.awaitMessage("browser.contextMenus.onClicked");
+  result = await extension.awaitMessage("browser.contextMenus.onClicked");
   checkClickInfo(result);
 
-  extensionMenuRoot = yield openExtensionContextMenu("#password");
+  extensionMenuRoot = await openExtensionContextMenu("#password");
   items = extensionMenuRoot.getElementsByAttribute("label", "password");
   is(items.length, 1, "contextMenu item for password input element was found (context=password)");
   let password = items[0];
-  yield closeExtensionContextMenu(password);
+  await closeExtensionContextMenu(password);
   expectedClickInfo = {
     menuItemId: "ext-password",
     pageUrl: PAGE,
     editable: true,
   };
 
-  result = yield extension.awaitMessage("onclick");
+  result = await extension.awaitMessage("onclick");
   checkClickInfo(result);
-  result = yield extension.awaitMessage("browser.contextMenus.onClicked");
+  result = await extension.awaitMessage("browser.contextMenus.onClicked");
   checkClickInfo(result);
 
   // Select some text
-  yield ContentTask.spawn(gBrowser.selectedBrowser, { }, function* (arg) {
+  await ContentTask.spawn(gBrowser.selectedBrowser, { }, async function(arg) {
     let doc = content.document;
     let range = doc.createRange();
     let selection = content.getSelection();
@@ -234,24 +234,24 @@ add_task(function* () {
   });
 
   // Bring up context menu again
-  extensionMenuRoot = yield openExtensionContextMenu();
+  extensionMenuRoot = await openExtensionContextMenu();
 
   // Check some menu items
   items = extensionMenuRoot.getElementsByAttribute("label", "Without onclick property");
   is(items.length, 1, "contextMenu item was found (context=page)");
 
-  yield closeExtensionContextMenu(items[0]);
+  await closeExtensionContextMenu(items[0]);
 
   expectedClickInfo = {
     menuItemId: "ext-without-onclick",
     pageUrl: PAGE,
   };
 
-  result = yield extension.awaitMessage("browser.contextMenus.onClicked");
+  result = await extension.awaitMessage("browser.contextMenus.onClicked");
   checkClickInfo(result);
 
   // Bring up context menu again
-  extensionMenuRoot = yield openExtensionContextMenu();
+  extensionMenuRoot = await openExtensionContextMenu();
 
   // Check some menu items
   items = extensionMenuRoot.getElementsByAttribute("label", "selection is: 'just some text 123456789012345678901234567890...'");
@@ -261,7 +261,7 @@ add_task(function* () {
   items = extensionMenuRoot.getElementsByAttribute("label", "selection");
   is(items.length, 0, "contextMenu item label update worked (context=selection)");
 
-  yield closeExtensionContextMenu(selectionItem);
+  await closeExtensionContextMenu(selectionItem);
 
   expectedClickInfo = {
     menuItemId: "ext-selection",
@@ -269,22 +269,22 @@ add_task(function* () {
     selectionText: "just some text 1234567890123456789012345678901234567890123456789012345678901234567890123456789012",
   };
 
-  result = yield extension.awaitMessage("onclick");
+  result = await extension.awaitMessage("onclick");
   checkClickInfo(result);
-  result = yield extension.awaitMessage("browser.contextMenus.onClicked");
+  result = await extension.awaitMessage("browser.contextMenus.onClicked");
   checkClickInfo(result);
 
-  let contentAreaContextMenu = yield openContextMenu("#img1");
+  let contentAreaContextMenu = await openContextMenu("#img1");
   items = contentAreaContextMenu.getElementsByAttribute("ext-type", "top-level-menu");
   is(items.length, 0, "top level item was not found (after removeAll()");
-  yield closeContextMenu();
+  await closeContextMenu();
 
-  yield extension.unload();
-  yield BrowserTestUtils.removeTab(tab1);
+  await extension.unload();
+  await BrowserTestUtils.removeTab(tab1);
 });
 
-add_task(function* testRemoveAllWithTwoExtensions() {
-  const tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
+add_task(async function testRemoveAllWithTwoExtensions() {
+  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
   const manifest = {permissions: ["contextMenus"]};
 
   const first = ExtensionTestUtils.loadExtension({manifest, background() {
@@ -314,18 +314,18 @@ add_task(function* testRemoveAllWithTwoExtensions() {
     });
   }});
 
-  yield first.startup();
-  yield second.startup();
+  await first.startup();
+  await second.startup();
 
-  function* confirmMenuItems(...items) {
+  async function confirmMenuItems(...items) {
     // Round-trip to extension to make sure that the context menu state has been
     // updated by the async contextMenus.create / contextMenus.removeAll calls.
     first.sendMessage("ping");
     second.sendMessage("ping");
-    yield first.awaitMessage("pong-alpha");
-    yield second.awaitMessage("pong-beta");
+    await first.awaitMessage("pong-alpha");
+    await second.awaitMessage("pong-beta");
 
-    const menu = yield openContextMenu();
+    const menu = await openContextMenu();
     for (const id of ["alpha", "beta", "gamma"]) {
       const expected = items.includes(id);
       const found = menu.getElementsByAttribute("label", id);
@@ -336,23 +336,23 @@ add_task(function* testRemoveAllWithTwoExtensions() {
   }
 
   // Confirm alpha, beta exist; click alpha to remove it.
-  const alpha = yield confirmMenuItems("alpha", "beta");
-  yield closeExtensionContextMenu(alpha);
+  const alpha = await confirmMenuItems("alpha", "beta");
+  await closeExtensionContextMenu(alpha);
 
   // Confirm only beta exists.
-  yield confirmMenuItems("beta");
-  yield closeContextMenu();
+  await confirmMenuItems("beta");
+  await closeContextMenu();
 
   // Create gamma, confirm, click.
   first.sendMessage("create");
-  const beta = yield confirmMenuItems("beta", "gamma");
-  yield closeExtensionContextMenu(beta);
+  const beta = await confirmMenuItems("beta", "gamma");
+  await closeExtensionContextMenu(beta);
 
   // Confirm only gamma is left.
-  yield confirmMenuItems("gamma");
-  yield closeContextMenu();
+  await confirmMenuItems("gamma");
+  await closeContextMenu();
 
-  yield first.unload();
-  yield second.unload();
-  yield BrowserTestUtils.removeTab(tab);
+  await first.unload();
+  await second.unload();
+  await BrowserTestUtils.removeTab(tab);
 });

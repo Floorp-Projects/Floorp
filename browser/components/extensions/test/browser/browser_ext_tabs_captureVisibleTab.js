@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-function* runTest(options) {
+async function runTest(options) {
   options.neutral = [0xaa, 0xaa, 0xaa];
 
   let html = `
@@ -22,7 +22,7 @@ function* runTest(options) {
   `;
 
   let url = `data:text/html,${encodeURIComponent(html)}`;
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, url, true);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url, true);
 
   tab.linkedBrowser.fullZoom = options.fullZoom;
 
@@ -115,26 +115,26 @@ function* runTest(options) {
     background: `(${background})(${JSON.stringify(options)})`,
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitFinish("captureVisibleTab");
+  await extension.awaitFinish("captureVisibleTab");
 
-  yield extension.unload();
+  await extension.unload();
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 }
 
-add_task(function* testCaptureVisibleTab() {
-  yield runTest({color: [0, 0, 0], fullZoom: 1});
+add_task(async function testCaptureVisibleTab() {
+  await runTest({color: [0, 0, 0], fullZoom: 1});
 
-  yield runTest({color: [0, 0, 0], fullZoom: 2});
+  await runTest({color: [0, 0, 0], fullZoom: 2});
 
-  yield runTest({color: [0, 0, 0], fullZoom: 0.5});
+  await runTest({color: [0, 0, 0], fullZoom: 0.5});
 
-  yield runTest({color: [255, 255, 255], fullZoom: 1});
+  await runTest({color: [255, 255, 255], fullZoom: 1});
 });
 
-add_task(function* testCaptureVisibleTabPermissions() {
+add_task(async function testCaptureVisibleTabPermissions() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
@@ -147,9 +147,9 @@ add_task(function* testCaptureVisibleTabPermissions() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitFinish("captureVisibleTabPermissions");
+  await extension.awaitFinish("captureVisibleTabPermissions");
 
-  yield extension.unload();
+  await extension.unload();
 });

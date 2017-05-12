@@ -1,7 +1,6 @@
 var { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 Cu.import("resource://gre/modules/NewTabUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.importGlobalProperties(["btoa"]);
@@ -35,15 +34,15 @@ function isVisitDateOK(timestampMS) {
 
 // a set up function to prep the activity stream provider
 function setUpActivityStreamTest() {
-  return Task.spawn(function*() {
-    yield PlacesTestUtils.clearHistory();
-    yield PlacesUtils.bookmarks.eraseEverything();
+  return (async function() {
+    await PlacesTestUtils.clearHistory();
+    await PlacesUtils.bookmarks.eraseEverything();
     let faviconExpiredPromise = new Promise(resolve => {
       Services.obs.addObserver(resolve, "places-favicons-expired");
     });
     PlacesUtils.favicons.expireAllFavicons();
-    yield faviconExpiredPromise;
-  });
+    await faviconExpiredPromise;
+  })();
 }
 
 function do_check_links(actualLinks, expectedLinks) {

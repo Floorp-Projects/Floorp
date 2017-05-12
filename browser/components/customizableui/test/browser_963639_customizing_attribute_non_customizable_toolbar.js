@@ -6,7 +6,7 @@
 
 const kToolbar = "test-toolbar-963639-non-customizable-customizing-attribute";
 
-add_task(function*() {
+add_task(async function() {
   info("Test for Bug 963639 - CustomizeMode _onToolbarVisibilityChange sets @customizing on non-customizable toolbars");
 
   let toolbar = document.createElement("toolbar");
@@ -21,12 +21,12 @@ add_task(function*() {
   toolbar.setAttribute("toolbarname", "NonCustomizableToolbarCustomizingAttribute");
   toolbar.setAttribute("collapsed", "true");
 
-  yield startCustomizing();
+  await startCustomizing();
   window.setToolbarVisibility(toolbar, "true");
   isnot(toolbar.getAttribute("customizing"), "true",
         "Toolbar doesn't have the customizing attribute");
 
-  yield endCustomizing();
+  await endCustomizing();
   gNavToolbox.removeChild(toolbar);
 
   is(gNavToolbox.getElementsByAttribute("id", kToolbar).length, 0,

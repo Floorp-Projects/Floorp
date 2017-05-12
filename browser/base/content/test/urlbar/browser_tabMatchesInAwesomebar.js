@@ -16,7 +16,7 @@ var gController = Cc["@mozilla.org/autocomplete/controller;1"].
 
 var gTabCounter = 0;
 
-add_task(function* step_1() {
+add_task(async function step_1() {
   info("Running step 1");
   let maxResults = Services.prefs.getIntPref("browser.urlbar.maxRichResults");
   let promises = [];
@@ -25,11 +25,11 @@ add_task(function* step_1() {
     promises.push(loadTab(tab, TEST_URL_BASES[0] + (++gTabCounter)));
   }
 
-  yield Promise.all(promises);
-  yield ensure_opentabs_match_db();
+  await Promise.all(promises);
+  await ensure_opentabs_match_db();
 });
 
-add_task(function* step_2() {
+add_task(async function step_2() {
   info("Running step 2");
   gBrowser.selectTabAtIndex(1);
   gBrowser.removeCurrentTab();
@@ -40,60 +40,60 @@ add_task(function* step_2() {
   for (let i = 1; i < gBrowser.tabs.length; i++)
     promises.push(loadTab(gBrowser.tabs[i], TEST_URL_BASES[1] + (++gTabCounter)));
 
-  yield Promise.all(promises);
-  yield ensure_opentabs_match_db();
+  await Promise.all(promises);
+  await ensure_opentabs_match_db();
 });
 
-add_task(function* step_3() {
+add_task(async function step_3() {
   info("Running step 3");
   let promises = [];
   for (let i = 1; i < gBrowser.tabs.length; i++)
     promises.push(loadTab(gBrowser.tabs[i], TEST_URL_BASES[0] + gTabCounter));
 
-  yield Promise.all(promises);
-  yield ensure_opentabs_match_db();
+  await Promise.all(promises);
+  await ensure_opentabs_match_db();
 });
 
-add_task(function* step_4() {
+add_task(async function step_4() {
   info("Running step 4 - ensure we don't register subframes as open pages");
   let tab = gBrowser.addTab();
   tab.linkedBrowser.loadURI('data:text/html,<body><iframe src=""></iframe></body>');
-  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
-  yield ContentTask.spawn(tab.linkedBrowser, null, function* () {
+  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
     let iframe_loaded = ContentTaskUtils.waitForEvent(content.document, "load", true);
     content.document.querySelector("iframe").src = "http://test2.example.org/";
-    yield iframe_loaded;
+    await iframe_loaded;
   });
 
-  yield ensure_opentabs_match_db();
+  await ensure_opentabs_match_db();
 });
 
-add_task(function* step_5() {
+add_task(async function step_5() {
   info("Running step 5 - remove tab immediately");
   let tab = gBrowser.addTab("about:logo");
-  yield BrowserTestUtils.removeTab(tab);
-  yield ensure_opentabs_match_db();
+  await BrowserTestUtils.removeTab(tab);
+  await ensure_opentabs_match_db();
 });
 
-add_task(function* step_6() {
+add_task(async function step_6() {
   info("Running step 6 - check swapBrowsersAndCloseOther preserves registered switch-to-tab result");
   let tabToKeep = gBrowser.addTab();
   let tab = gBrowser.addTab();
   tab.linkedBrowser.loadURI("about:mozilla");
-  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   gBrowser.updateBrowserRemoteness(tabToKeep.linkedBrowser, tab.linkedBrowser.isRemoteBrowser);
   gBrowser.swapBrowsersAndCloseOther(tabToKeep, tab);
 
-  yield ensure_opentabs_match_db()
+  await ensure_opentabs_match_db()
 
-  yield BrowserTestUtils.removeTab(tabToKeep);
+  await BrowserTestUtils.removeTab(tabToKeep);
 
-  yield ensure_opentabs_match_db();
+  await ensure_opentabs_match_db();
 });
 
-add_task(function* step_7() {
+add_task(async function step_7() {
   info("Running step 7 - close all tabs");
 
   Services.prefs.clearUserPref("browser.sessionstore.restore_on_demand");
@@ -105,13 +105,13 @@ add_task(function* step_7() {
     gBrowser.removeCurrentTab();
   }
 
-  yield ensure_opentabs_match_db();
+  await ensure_opentabs_match_db();
 });
 
-add_task(function* cleanup() {
+add_task(async function cleanup() {
   info("Cleaning up");
 
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
 });
 
 function loadTab(tab, url) {

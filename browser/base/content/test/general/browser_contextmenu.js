@@ -20,12 +20,12 @@ const chrome_base = "chrome://mochitests/content/browser/browser/base/content/te
 Services.scriptloader.loadSubScript(chrome_base + "contextmenu_common.js", this);
 
 // Below are test cases for XUL element
-add_task(function* test_xul_text_link_label() {
+add_task(async function test_xul_text_link_label() {
   let url = chrome_base + "subtst_contextmenu_xul.xul";
 
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
-  yield test_contextmenu("#test-xul-text-link-label",
+  await test_contextmenu("#test-xul-text-link-label",
     ["context-openlinkintab", true,
      ...(hasContainers ? ["context-openlinkinusercontext-menu", true] : []),
      // We need a blank entry here because the containers submenu is
@@ -49,32 +49,32 @@ add_task(function* test_xul_text_link_label() {
 
 // Below are test cases for HTML element
 
-add_task(function* test_setup_html() {
+add_task(async function test_setup_html() {
   let url = example_base + "subtst_contextmenu.html";
 
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
-  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let doc = content.document;
     let videoIframe = doc.querySelector("#test-video-in-iframe");
     let video = videoIframe.contentDocument.querySelector("video");
     let awaitPause = ContentTaskUtils.waitForEvent(video, "pause");
-    yield ContentTaskUtils.waitForCondition(() => !video.paused, "Making sure video is playing before calling pause");
+    await ContentTaskUtils.waitForCondition(() => !video.paused, "Making sure video is playing before calling pause");
     video.pause();
-    yield awaitPause;
+    await awaitPause;
 
     let audioIframe = doc.querySelector("#test-audio-in-iframe");
     // media documents always use a <video> tag.
     let audio = audioIframe.contentDocument.querySelector("video");
     awaitPause = ContentTaskUtils.waitForEvent(audio, "pause");
-    yield ContentTaskUtils.waitForCondition(() => !audio.paused, "Making sure audio is playing before calling pause");
+    await ContentTaskUtils.waitForCondition(() => !audio.paused, "Making sure audio is playing before calling pause");
     audio.pause();
-    yield awaitPause;
+    await awaitPause;
   });
 });
 
 let plainTextItems;
-add_task(function* test_plaintext() {
+add_task(async function test_plaintext() {
   plainTextItems = ["context-navigation",   null,
                         ["context-back",         false,
                          "context-forward",      false,
@@ -90,13 +90,13 @@ add_task(function* test_plaintext() {
                     "context-viewsource",   true,
                     "context-viewinfo",     true
                    ];
-  yield test_contextmenu("#test-text", plainTextItems, {
+  await test_contextmenu("#test-text", plainTextItems, {
     maybeScreenshotsPresent: true
   });
 });
 
-add_task(function* test_link() {
-  yield test_contextmenu("#test-link",
+add_task(async function test_link() {
+  await test_contextmenu("#test-link",
     ["context-openlinkintab", true,
      ...(hasContainers ? ["context-openlinkinusercontext-menu", true] : []),
      // We need a blank entry here because the containers submenu is
@@ -114,16 +114,16 @@ add_task(function* test_link() {
   );
 });
 
-add_task(function* test_mailto() {
-  yield test_contextmenu("#test-mailto",
+add_task(async function test_mailto() {
+  await test_contextmenu("#test-mailto",
     ["context-copyemail", true,
      "context-searchselect", true
     ]
   );
 });
 
-add_task(function* test_image() {
-  yield test_contextmenu("#test-image",
+add_task(async function test_image() {
+  await test_contextmenu("#test-image",
     ["context-viewimage",            true,
      "context-copyimage-contents",   true,
      "context-copyimage",            true,
@@ -136,8 +136,8 @@ add_task(function* test_image() {
   );
 });
 
-add_task(function* test_canvas() {
-  yield test_contextmenu("#test-canvas",
+add_task(async function test_canvas() {
+  await test_contextmenu("#test-canvas",
     ["context-viewimage",    true,
      "context-saveimage",    true,
      "context-selectall",    true
@@ -147,8 +147,8 @@ add_task(function* test_canvas() {
   );
 });
 
-add_task(function* test_video_ok() {
-  yield test_contextmenu("#test-video-ok",
+add_task(async function test_video_ok() {
+  await test_contextmenu("#test-video-ok",
     ["context-media-play",         true,
      "context-media-mute",         true,
      "context-media-playbackrate", null,
@@ -173,8 +173,8 @@ add_task(function* test_video_ok() {
   );
 });
 
-add_task(function* test_audio_in_video() {
-  yield test_contextmenu("#test-audio-in-video",
+add_task(async function test_audio_in_video() {
+  await test_contextmenu("#test-audio-in-video",
     ["context-media-play",         true,
      "context-media-mute",         true,
      "context-media-playbackrate", null,
@@ -194,8 +194,8 @@ add_task(function* test_audio_in_video() {
   );
 });
 
-add_task(function* test_video_bad() {
-  yield test_contextmenu("#test-video-bad",
+add_task(async function test_video_bad() {
+  await test_contextmenu("#test-video-bad",
     ["context-media-play",         false,
      "context-media-mute",         false,
      "context-media-playbackrate", null,
@@ -220,8 +220,8 @@ add_task(function* test_video_bad() {
   );
 });
 
-add_task(function* test_video_bad2() {
-  yield test_contextmenu("#test-video-bad2",
+add_task(async function test_video_bad2() {
+  await test_contextmenu("#test-video-bad2",
     ["context-media-play",         false,
      "context-media-mute",         false,
      "context-media-playbackrate", null,
@@ -246,8 +246,8 @@ add_task(function* test_video_bad2() {
   );
 });
 
-add_task(function* test_iframe() {
-  yield test_contextmenu("#test-iframe",
+add_task(async function test_iframe() {
+  await test_contextmenu("#test-iframe",
     ["context-navigation", null,
          ["context-back",         false,
           "context-forward",      false,
@@ -280,8 +280,8 @@ add_task(function* test_iframe() {
   );
 });
 
-add_task(function* test_video_in_iframe() {
-  yield test_contextmenu("#test-video-in-iframe",
+add_task(async function test_video_in_iframe() {
+  await test_contextmenu("#test-video-in-iframe",
     ["context-media-play",         true,
      "context-media-mute",         true,
      "context-media-playbackrate", null,
@@ -318,8 +318,8 @@ add_task(function* test_video_in_iframe() {
   );
 });
 
-add_task(function* test_audio_in_iframe() {
-  yield test_contextmenu("#test-audio-in-iframe",
+add_task(async function test_audio_in_iframe() {
+  await test_contextmenu("#test-audio-in-iframe",
     ["context-media-play",         true,
      "context-media-mute",         true,
      "context-media-playbackrate", null,
@@ -350,8 +350,8 @@ add_task(function* test_audio_in_iframe() {
   );
 });
 
-add_task(function* test_image_in_iframe() {
-  yield test_contextmenu("#test-image-in-iframe",
+add_task(async function test_image_in_iframe() {
+  await test_contextmenu("#test-image-in-iframe",
     ["context-viewimage",            true,
      "context-copyimage-contents",   true,
      "context-copyimage",            true,
@@ -376,7 +376,7 @@ add_task(function* test_image_in_iframe() {
   );
 });
 
-add_task(function* test_textarea() {
+add_task(async function test_textarea() {
   // Disabled since this is seeing spell-check-enabled
   // instead of spell-add-dictionaries-main
   todo(false, "spell checker tests are failing, bug 1246296");
@@ -401,7 +401,7 @@ add_task(function* test_textarea() {
   */
 });
 
-add_task(function* test_textarea_spellcheck() {
+add_task(async function test_textarea_spellcheck() {
   todo(false, "spell checker tests are failing, bug 1246296");
 
   /*
@@ -436,13 +436,13 @@ add_task(function* test_textarea_spellcheck() {
   */
 });
 
-add_task(function* test_plaintext2() {
-  yield test_contextmenu("#test-text", plainTextItems, {
+add_task(async function test_plaintext2() {
+  await test_contextmenu("#test-text", plainTextItems, {
     maybeScreenshotsPresent: true
   });
 });
 
-add_task(function* test_undo_add_to_dictionary() {
+add_task(async function test_undo_add_to_dictionary() {
   todo(false, "spell checker tests are failing, bug 1246296");
 
   /*
@@ -475,7 +475,7 @@ add_task(function* test_undo_add_to_dictionary() {
   */
 });
 
-add_task(function* test_contenteditable() {
+add_task(async function test_contenteditable() {
   todo(false, "spell checker tests are failing, bug 1246296");
 
   /*
@@ -503,16 +503,16 @@ add_task(function* test_contenteditable() {
   */
 });
 
-add_task(function* test_copylinkcommand() {
-  yield test_contextmenu("#test-link", null, {
-    *postCheckContextMenuFn() {
+add_task(async function test_copylinkcommand() {
+  await test_contextmenu("#test-link", null, {
+    async postCheckContextMenuFn() {
       document.commandDispatcher
               .getControllerForCommand("cmd_copyLink")
               .doCommand("cmd_copyLink");
 
       // The easiest way to check the clipboard is to paste the contents
       // into a textbox.
-      yield ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
+      await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
         let doc = content.document;
         let input = doc.getElementById("test-input");
         input.focus();
@@ -521,7 +521,7 @@ add_task(function* test_copylinkcommand() {
       document.commandDispatcher
               .getControllerForCommand("cmd_paste")
               .doCommand("cmd_paste");
-      yield ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
+      await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
         let doc = content.document;
         let input = doc.getElementById("test-input");
         Assert.equal(input.value, "http://mozilla.com/", "paste for command cmd_paste");
@@ -530,8 +530,8 @@ add_task(function* test_copylinkcommand() {
   });
 });
 
-add_task(function* test_pagemenu() {
-  yield test_contextmenu("#test-pagemenu",
+add_task(async function test_pagemenu() {
+  await test_contextmenu("#test-pagemenu",
     ["context-navigation",   null,
          ["context-back",         false,
           "context-forward",      false,
@@ -567,11 +567,11 @@ add_task(function* test_pagemenu() {
      "context-viewsource",   true,
      "context-viewinfo",     true
     ],
-    {*postCheckContextMenuFn() {
+    {async postCheckContextMenuFn() {
       let item = contextMenu.getElementsByAttribute("generateditemid", "1")[0];
       ok(item, "Got generated XUL menu item");
       item.doCommand();
-      yield ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
+      await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
         let pagemenu = content.document.getElementById("test-pagemenu");
         Assert.ok(!pagemenu.hasAttribute("hopeless"), "attribute got removed");
       });
@@ -580,8 +580,8 @@ add_task(function* test_pagemenu() {
   });
 });
 
-add_task(function* test_dom_full_screen() {
-  yield test_contextmenu("#test-dom-full-screen",
+add_task(async function test_dom_full_screen() {
+  await test_contextmenu("#test-dom-full-screen",
     ["context-navigation",           null,
          ["context-back",            false,
           "context-forward",         false,
@@ -602,35 +602,35 @@ add_task(function* test_dom_full_screen() {
     {
       maybeScreenshotsPresent: true,
       shiftkey: true,
-      *preCheckContextMenuFn() {
-        yield pushPrefs(["full-screen-api.allow-trusted-requests-only", false],
+      async preCheckContextMenuFn() {
+        await pushPrefs(["full-screen-api.allow-trusted-requests-only", false],
                         ["full-screen-api.transition-duration.enter", "0 0"],
                         ["full-screen-api.transition-duration.leave", "0 0"])
-        yield ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
+        await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
           let doc = content.document;
           let win = doc.defaultView;
           let full_screen_element = doc.getElementById("test-dom-full-screen");
           let awaitFullScreenChange =
             ContentTaskUtils.waitForEvent(win, "fullscreenchange");
           full_screen_element.requestFullscreen();
-          yield awaitFullScreenChange;
+          await awaitFullScreenChange;
         });
       },
-      *postCheckContextMenuFn() {
-        yield ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
+      async postCheckContextMenuFn() {
+        await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
           let win = content.document.defaultView;
           let awaitFullScreenChange =
             ContentTaskUtils.waitForEvent(win, "fullscreenchange");
           content.document.exitFullscreen();
-          yield awaitFullScreenChange;
+          await awaitFullScreenChange;
         });
       }
     }
   );
 });
 
-add_task(function* test_pagemenu2() {
-  yield test_contextmenu("#test-text",
+add_task(async function test_pagemenu2() {
+  await test_contextmenu("#test-text",
     ["context-navigation", null,
          ["context-back",         false,
           "context-forward",      false,
@@ -651,8 +651,8 @@ add_task(function* test_pagemenu2() {
   );
 });
 
-add_task(function* test_select_text() {
-  yield test_contextmenu("#test-select-text",
+add_task(async function test_select_text() {
+  await test_contextmenu("#test-select-text",
     ["context-copy",                        true,
      "context-selectall",                   true,
      "---",                                 null,
@@ -662,15 +662,15 @@ add_task(function* test_select_text() {
     {
       offsetX: 6,
       offsetY: 6,
-      *preCheckContextMenuFn() {
-        yield selectText("#test-select-text");
+      async preCheckContextMenuFn() {
+        await selectText("#test-select-text");
       }
     }
   );
 });
 
-add_task(function* test_select_text_link() {
-  yield test_contextmenu("#test-select-text-link",
+add_task(async function test_select_text_link() {
+  await test_contextmenu("#test-select-text-link",
     ["context-openlinkincurrent",           true,
      "context-openlinkintab",               true,
      ...(hasContainers ? ["context-openlinkinusercontext-menu", true] : []),
@@ -691,11 +691,11 @@ add_task(function* test_select_text_link() {
     {
       offsetX: 6,
       offsetY: 6,
-      *preCheckContextMenuFn() {
-        yield selectText("#test-select-text-link");
+      async preCheckContextMenuFn() {
+        await selectText("#test-select-text-link");
       },
-      *postCheckContextMenuFn() {
-        yield ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
+      async postCheckContextMenuFn() {
+        await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
           let win = content.document.defaultView;
           win.getSelection().removeAllRanges();
         });
@@ -704,8 +704,8 @@ add_task(function* test_select_text_link() {
   );
 });
 
-add_task(function* test_imagelink() {
-  yield test_contextmenu("#test-image-link",
+add_task(async function test_imagelink() {
+  await test_contextmenu("#test-image-link",
     ["context-openlinkintab", true,
      ...(hasContainers ? ["context-openlinkinusercontext-menu", true] : []),
      // We need a blank entry here because the containers submenu is
@@ -731,7 +731,7 @@ add_task(function* test_imagelink() {
   );
 });
 
-add_task(function* test_select_input_text() {
+add_task(async function test_select_input_text() {
   todo(false, "spell checker tests are failing, bug 1246296");
 
   /*
@@ -763,7 +763,7 @@ add_task(function* test_select_input_text() {
   */
 });
 
-add_task(function* test_select_input_text_password() {
+add_task(async function test_select_input_text_password() {
   todo(false, "spell checker tests are failing, bug 1246296");
 
   /*
@@ -805,8 +805,8 @@ add_task(function* test_select_input_text_password() {
   */
 });
 
-add_task(function* test_click_to_play_blocked_plugin() {
-  yield test_contextmenu("#test-plugin",
+add_task(async function test_click_to_play_blocked_plugin() {
+  await test_contextmenu("#test-plugin",
     ["context-navigation", null,
          ["context-back",         false,
           "context-forward",      false,
@@ -827,19 +827,19 @@ add_task(function* test_click_to_play_blocked_plugin() {
     ],
     {
       maybeScreenshotsPresent: true,
-      *preCheckContextMenuFn() {
+      preCheckContextMenuFn() {
         pushPrefs(["plugins.click_to_play", true]);
         setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
       },
-      *postCheckContextMenuFn() {
+      postCheckContextMenuFn() {
         getTestPlugin().enabledState = Ci.nsIPluginTag.STATE_ENABLED;
       }
     }
   );
 });
 
-add_task(function* test_longdesc() {
-  yield test_contextmenu("#test-longdesc",
+add_task(async function test_longdesc() {
+  await test_contextmenu("#test-longdesc",
     ["context-viewimage",            true,
      "context-copyimage-contents",   true,
      "context-copyimage",            true,
@@ -853,8 +853,8 @@ add_task(function* test_longdesc() {
   );
 });
 
-add_task(function* test_srcdoc() {
-  yield test_contextmenu("#test-srcdoc",
+add_task(async function test_srcdoc() {
+  await test_contextmenu("#test-srcdoc",
     ["context-navigation", null,
          ["context-back",         false,
           "context-forward",      false,
@@ -882,7 +882,7 @@ add_task(function* test_srcdoc() {
   );
 });
 
-add_task(function* test_input_spell_false() {
+add_task(async function test_input_spell_false() {
   todo(false, "spell checker tests are failing, bug 1246296");
 
   /*
@@ -902,11 +902,11 @@ add_task(function* test_input_spell_false() {
 
 const remoteClientsFixture = [ { id: 1, name: "Foo"}, { id: 2, name: "Bar"} ];
 
-add_task(function* test_plaintext_sendpagetodevice() {
+add_task(async function test_plaintext_sendpagetodevice() {
   if (!gSync.sendTabToDeviceEnabled) {
     return;
   }
-  yield ensureSyncReady();
+  await ensureSyncReady();
   const oldGetter = setupRemoteClientsFixture(remoteClientsFixture);
 
   let plainTextItemsWithSendPage =
@@ -931,24 +931,24 @@ add_task(function* test_plaintext_sendpagetodevice() {
                     "context-viewsource",   true,
                     "context-viewinfo",     true
                    ];
-  yield test_contextmenu("#test-text", plainTextItemsWithSendPage, {
+  await test_contextmenu("#test-text", plainTextItemsWithSendPage, {
       maybeScreenshotsPresent: true,
-      *onContextMenuShown() {
-        yield openMenuItemSubmenu("context-sendpagetodevice");
+      async onContextMenuShown() {
+        await openMenuItemSubmenu("context-sendpagetodevice");
       }
     });
 
   restoreRemoteClients(oldGetter);
 });
 
-add_task(function* test_link_sendlinktodevice() {
+add_task(async function test_link_sendlinktodevice() {
   if (!gSync.sendTabToDeviceEnabled) {
     return;
   }
-  yield ensureSyncReady();
+  await ensureSyncReady();
   const oldGetter = setupRemoteClientsFixture(remoteClientsFixture);
 
-  yield test_contextmenu("#test-link",
+  await test_contextmenu("#test-link",
     ["context-openlinkintab", true,
      ...(hasContainers ? ["context-openlinkinusercontext-menu", true] : []),
      // We need a blank entry here because the containers submenu is
@@ -970,15 +970,15 @@ add_task(function* test_link_sendlinktodevice() {
        "*All Devices", true], null,
     ],
     {
-      *onContextMenuShown() {
-        yield openMenuItemSubmenu("context-sendlinktodevice");
+      async onContextMenuShown() {
+        await openMenuItemSubmenu("context-sendlinktodevice");
       }
     });
 
   restoreRemoteClients(oldGetter);
 });
 
-add_task(function* test_cleanup_html() {
+add_task(async function test_cleanup_html() {
   gBrowser.removeCurrentTab();
 });
 
@@ -989,8 +989,8 @@ add_task(function* test_cleanup_html() {
  *        A selector passed to querySelector to find
  *        the element that will be referenced.
  */
-function* selectText(selector) {
-  yield ContentTask.spawn(gBrowser.selectedBrowser, selector, function*(contentSelector) {
+async function selectText(selector) {
+  await ContentTask.spawn(gBrowser.selectedBrowser, selector, async function(contentSelector) {
     info(`Selecting text of ${contentSelector}`);
     let doc = content.document;
     let win = doc.defaultView;

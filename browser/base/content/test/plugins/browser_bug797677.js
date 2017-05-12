@@ -5,7 +5,7 @@ var gConsoleErrors = 0;
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 
-add_task(function* () {
+add_task(async function() {
   registerCleanupFunction(function() {
     clearAllPluginPermissions();
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
@@ -29,13 +29,13 @@ add_task(function* () {
   };
   consoleService.registerListener(errorListener);
 
-  yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_bug797677.html");
+  await promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_bug797677.html");
 
-  let pluginInfo = yield promiseForPluginInfo("plugin");
+  let pluginInfo = await promiseForPluginInfo("plugin");
   is(pluginInfo.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_UNSUPPORTED, "plugin should not have been found.");
 
   // simple cpows
-  yield ContentTask.spawn(gTestBrowser, null, function() {
+  await ContentTask.spawn(gTestBrowser, null, function() {
     let plugin = content.document.getElementById("plugin");
     ok(plugin, "plugin should be in the page");
   });

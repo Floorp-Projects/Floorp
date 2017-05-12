@@ -21,7 +21,7 @@ function promiseAddonStartup(extension) {
  * from a content script and that the received port contains the expected sender
  * tab info.
  */
-add_task(function* test_legacy_extension_context_contentscript_connection() {
+add_task(async function test_legacy_extension_context_contentscript_connection() {
   function backgroundScript() {
     // Extract the assigned uuid from the background page url and send it
     // in a test message.
@@ -85,7 +85,7 @@ add_task(function* test_legacy_extension_context_contentscript_connection() {
 
   extension.startup();
 
-  let extensionInstance = yield waitForExtensionInstance;
+  let extensionInstance = await waitForExtensionInstance;
 
   // Connect to the target extension.id as an external context
   // using the given custom sender info.
@@ -111,13 +111,13 @@ add_task(function* test_legacy_extension_context_contentscript_connection() {
 
   ok(legacyContext.api, "Got the API object");
 
-  yield waitForExtensionReady;
+  await waitForExtensionReady;
 
   extension.sendMessage("open-test-tab");
 
-  let {tab} = yield extension.awaitMessage("get-expected-sender-info");
+  let {tab} = await extension.awaitMessage("get-expected-sender-info");
 
-  let {singleMsg, msgSender} = yield waitMessage;
+  let {singleMsg, msgSender} = await waitMessage;
   is(singleMsg, "webextension -> legacy_extension message",
      "Got the expected message");
   ok(msgSender, "Got a message sender object");
@@ -128,9 +128,9 @@ add_task(function* test_legacy_extension_context_contentscript_connection() {
   is(msgSender.tab.id, tab.id, "The port sender has the expected tab.id");
 
   // Wait confirmation that the reply has been received.
-  yield extension.awaitMessage("got-reply-message");
+  await extension.awaitMessage("got-reply-message");
 
-  let port = yield waitConnectPort;
+  let port = await waitConnectPort;
 
   ok(port, "Got the Port API object");
   ok(port.sender, "The port has a sender property");
@@ -148,7 +148,7 @@ add_task(function* test_legacy_extension_context_contentscript_connection() {
 
   port.postMessage("legacy_extension -> webextension port message");
 
-  let msg = yield waitPortMessage;
+  let msg = await waitPortMessage;
 
   is(msg, "webextension -> legacy_extension port message",
      "LegacyExtensionContext received the expected message from the webextension");
@@ -161,13 +161,13 @@ add_task(function* test_legacy_extension_context_contentscript_connection() {
 
   extension.sendMessage("close-current-tab");
 
-  yield waitForDisconnect;
+  await waitForDisconnect;
 
   info("Got the disconnect event on tab closed");
 
-  let success = yield waitForTestDone;
+  let success = await waitForTestDone;
 
   ok(success, "Test completed successfully");
 
-  yield extension.unload();
+  await extension.unload();
 });

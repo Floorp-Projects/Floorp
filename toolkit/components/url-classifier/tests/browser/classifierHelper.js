@@ -6,7 +6,6 @@
 // Unfortunately, browser tests cannot load that script as it is too reliant on
 // being loaded in the content process.
 
-Cu.import("resource://gre/modules/Task.jsm");
 
 let dbService = Cc["@mozilla.org/url-classifier/dbservice;1"]
                 .getService(Ci.nsIUrlClassifierDBService);
@@ -165,13 +164,13 @@ classifierHelper.reloadDatabase = function() {
 }
 
 classifierHelper._update = function(update) {
-  return Task.spawn(function* () {
+  return (async function() {
     // beginUpdate may fail if there's an existing update in progress
     // retry until success or testcase timeout.
     let success = false;
     while (!success) {
       try {
-        yield new Promise((resolve, reject) => {
+        await new Promise((resolve, reject) => {
           let listener = {
             QueryInterface: function(iid)
             {
@@ -199,10 +198,10 @@ classifierHelper._update = function(update) {
         success = true;
       } catch(e) {
         // Wait 1 second before trying again.
-        yield new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
-  });
+  })();
 };
 
 classifierHelper._cleanup = function() {

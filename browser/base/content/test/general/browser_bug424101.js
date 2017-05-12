@@ -1,7 +1,7 @@
 /* Make sure that the context menu appears on form elements */
 
-add_task(function *() {
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, "data:text/html,test");
+add_task(async function() {
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, "data:text/html,test");
 
   let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
 
@@ -23,9 +23,9 @@ add_task(function *() {
   for (let index = 0; index < tests.length; index++) {
     let test = tests[index];
 
-    yield ContentTask.spawn(gBrowser.selectedBrowser,
+    await ContentTask.spawn(gBrowser.selectedBrowser,
                             { element: test.element, type: test.type, index },
-                            function* (arg) {
+                            async function(arg) {
       let element = content.document.createElement(arg.element);
       element.id = "element" + arg.index;
       if (arg.type) {
@@ -35,9 +35,9 @@ add_task(function *() {
     });
 
     let popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
-    yield BrowserTestUtils.synthesizeMouseAtCenter("#element" + index,
+    await BrowserTestUtils.synthesizeMouseAtCenter("#element" + index,
           { type: "contextmenu", button: 2}, gBrowser.selectedBrowser);
-    yield popupShownPromise;
+    await popupShownPromise;
 
     let typeAttr = test.type ? "type=" + test.type + " " : "";
     is(gContextMenu.shouldDisplay, true,
@@ -45,7 +45,7 @@ add_task(function *() {
 
     let popupHiddenPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popuphidden");
     contentAreaContextMenu.hidePopup();
-    yield popupHiddenPromise;
+    await popupHiddenPromise;
   }
 
   gBrowser.removeCurrentTab();

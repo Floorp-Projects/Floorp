@@ -13,36 +13,36 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_setup() {
+add_task(async function test_setup() {
   do_get_profile();
-  yield makeFakeAppDir();
+  await makeFakeAppDir();
 });
 
-add_task(function* test_main_process_crash() {
+add_task(async function test_main_process_crash() {
   let cm = Services.crashmanager;
   Assert.ok(cm, "CrashManager available.");
 
   let basename;
-  let deferred = Promise.defer();
-  do_crash(
-    function() {
-      // TelemetrySession setup will trigger the session annotation
-      let scope = {};
-      Components.utils.import("resource://gre/modules/TelemetryController.jsm", scope);
-      scope.TelemetryController.testSetup();
-      crashType = CrashTestUtils.CRASH_MOZ_CRASH;
-      crashReporter.annotateCrashReport("ShutdownProgress", "event-test");
-    },
-    (minidump, extra) => {
-      basename = minidump.leafName;
-      cm._eventsDirs = [getEventDir()];
-      cm.aggregateEventsFiles().then(deferred.resolve, deferred.reject);
-    },
-    true);
+  let count = await new Promise((resolve, reject) => {
+    do_crash(
+      function() {
+        // TelemetrySession setup will trigger the session annotation
+        let scope = {};
+        Components.utils.import("resource://gre/modules/TelemetryController.jsm", scope);
+        scope.TelemetryController.testSetup();
+        crashType = CrashTestUtils.CRASH_MOZ_CRASH;
+        crashReporter.annotateCrashReport("ShutdownProgress", "event-test");
+      },
+      (minidump, extra) => {
+        basename = minidump.leafName;
+        cm._eventsDirs = [getEventDir()];
+        cm.aggregateEventsFiles().then(resolve, reject);
+      },
+      true);
 
-  let count = yield deferred.promise;
+  });
   Assert.equal(count, 1, "A single crash event file was seen.");
-  let crashes = yield cm.getCrashes();
+  let crashes = await cm.getCrashes();
   Assert.equal(crashes.length, 1);
   let crash = crashes[0];
   Assert.ok(crash.isOfType(cm.PROCESS_TYPE_MAIN, cm.CRASH_TYPE_CRASH));

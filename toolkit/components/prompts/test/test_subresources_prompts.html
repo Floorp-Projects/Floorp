@@ -35,7 +35,7 @@ var iframe1Loaded = onloadPromiseFor("iframe_diff_origin");
 var iframe2Loaded = onloadPromiseFor("iframe_same_origin");
 var iframe_prompt = document.getElementById("iframe_prompt");
 
-add_task(function* runTest() {
+add_task(async function runTest() {
   // This test depends on tab modal prompts being enabled.
   if (!isTabModal) {
     todo(false, "Test disabled when tab modal prompts are not enabled.");
@@ -43,9 +43,9 @@ add_task(function* runTest() {
   }
 
   info("Ensuring iframe1 has loaded...");
-  yield iframe1Loaded;
+  await iframe1Loaded;
   info("Ensuring iframe2 has loaded...");
-  yield iframe2Loaded;
+  await iframe2Loaded;
   let state, action;
 
   state = {
@@ -71,7 +71,7 @@ add_task(function* runTest() {
   var button = document.querySelector("button");
   dispatchMouseEvent(button, "click");
 
-  yield promptDone;
+  await promptDone;
 
 
   // mostly reusing same state/action
@@ -83,7 +83,7 @@ add_task(function* runTest() {
   button = SpecialPowers.wrap(iframe.contentWindow).document.getElementById("btn1");
   dispatchMouseEvent(button, "click");
 
-  yield promptDone;
+  await promptDone;
 
 
   // mostly reusing same state/action
@@ -95,7 +95,7 @@ add_task(function* runTest() {
   button = iframe.contentWindow.document.getElementById("btn1");
   dispatchMouseEvent(button, "click");
 
-  yield promptDone;
+  await promptDone;
 
 
   // mostly reusing same state/action
@@ -105,10 +105,10 @@ add_task(function* runTest() {
   button = iframe.contentWindow.document.getElementById("btn2");
   dispatchMouseEvent(button, "click");
 
-  yield promptDone;
+  await promptDone;
 });
 
-add_task(function* runTestAuth() {
+add_task(async function runTestAuth() {
   // Following tests chack prompt message for a cross-origin and not
   // cross-origin subresources load
 
@@ -145,8 +145,8 @@ add_task(function* runTestAuth() {
 
   var iframe3Loaded = onloadPromiseFor("iframe_prompt");
   iframe_prompt.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
-  yield promptDone;
-  yield iframe3Loaded;
+  await promptDone;
+  await iframe3Loaded;
   checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1"},
                       iframe_prompt.contentDocument);
 
@@ -182,8 +182,8 @@ add_task(function* runTestAuth() {
 
   iframe3Loaded = onloadPromiseFor("iframe_prompt");
   iframe_prompt.src = "http://example.com/tests/toolkit/components/prompts/test/authenticate.sjs?user=mochiuser2&pass=mochipass2&realm=mochitest";
-  yield promptDone;
-  yield iframe3Loaded;
+  await promptDone;
+  await iframe3Loaded;
   checkEchoedAuthInfo({user: "mochiuser2", pass: "mochipass2"},
                       SpecialPowers.wrap(iframe_prompt.contentWindow).document);
 });

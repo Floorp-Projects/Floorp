@@ -19,7 +19,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_annos_expire_history() {
+add_task(async function test_annos_expire_history() {
   // Set interval to a large value so we don't expire on it.
   setInterval(3600); // 1h
 
@@ -30,7 +30,7 @@ add_task(function* test_annos_expire_history() {
   let now = getExpirablePRTime();
   for (let i = 0; i < 5; i++) {
     let pageURI = uri("http://page_anno." + i + ".mozilla.org/");
-    yield PlacesTestUtils.addVisits({ uri: pageURI, visitDate: now++ });
+    await PlacesTestUtils.addVisits({ uri: pageURI, visitDate: now++ });
     as.setPageAnnotation(pageURI, "page_expire1", "test", 0, as.EXPIRE_WITH_HISTORY);
     as.setPageAnnotation(pageURI, "page_expire2", "test", 0, as.EXPIRE_WITH_HISTORY);
   }
@@ -44,8 +44,8 @@ add_task(function* test_annos_expire_history() {
   for (let i = 0; i < 5; i++) {
     let pageURI = uri("http://item_anno." + i + ".mozilla.org/");
     // We also add a visit before bookmarking.
-    yield PlacesTestUtils.addVisits({ uri: pageURI, visitDate: now++ });
-    yield PlacesUtils.bookmarks.insert({
+    await PlacesTestUtils.addVisits({ uri: pageURI, visitDate: now++ });
+    await PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       url: pageURI,
       title: null
@@ -65,7 +65,7 @@ add_task(function* test_annos_expire_history() {
   // We won't expire these visits, so the annotations should survive.
   for (let i = 0; i < 5; i++) {
     let pageURI = uri("http://persist_page_anno." + i + ".mozilla.org/");
-    yield PlacesTestUtils.addVisits({ uri: pageURI, visitDate: now++ });
+    await PlacesTestUtils.addVisits({ uri: pageURI, visitDate: now++ });
     as.setPageAnnotation(pageURI, "page_persist1", "test", 0, as.EXPIRE_WITH_HISTORY);
     as.setPageAnnotation(pageURI, "page_persist2", "test", 0, as.EXPIRE_WITH_HISTORY);
   }
@@ -76,7 +76,7 @@ add_task(function* test_annos_expire_history() {
   do_check_eq(pages.length, 5);
 
   // Expire all visits for the first 5 pages and the bookmarks.
-  yield promiseForceExpirationStep(10);
+  await promiseForceExpirationStep(10);
 
   pages = as.getPagesWithAnnotation("page_expire1");
   do_check_eq(pages.length, 0);
