@@ -390,7 +390,15 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         # historical data.
         coerce_fields = ["low", "high", "n_values", "n_buckets"]
         if not self._strict_type_checks:
+            # This handles some old non-numeric expressions.
+            EXPRESSIONS = {
+                "JS::gcreason::NUM_TELEMETRY_REASONS": 101,
+                "mozilla::StartupTimeline::MAX_EVENT_ID": 12,
+            }
+
             def try_to_coerce_to_number(v):
+                if v in EXPRESSIONS:
+                    return EXPRESSIONS[v]
                 try:
                     return eval(v, {})
                 except:
