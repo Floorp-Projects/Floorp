@@ -10,6 +10,7 @@
 #include "LayersLogging.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/gfx/DrawEventRecorder.h"
+#include "mozilla/layers/ScrollingLayersHelper.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/layers/UpdateImageHelper.h"
@@ -78,6 +79,7 @@ WebRenderPaintedLayerBlob::RenderLayer(wr::DisplayListBuilder& aBuilder,
   DebugOnly<bool> ok = recorder->CopyRecording((char*)bytes.AsSlice().begin().get(), bytes.AsSlice().length());
   MOZ_ASSERT(ok);
 
+  ScrollingLayersHelper scroller(this, aBuilder, aSc);
   StackingContextHelper sc(aSc, aBuilder, this);
   LayerRect rect = Bounds();
   DumpLayerInfo("PaintedLayer", rect);

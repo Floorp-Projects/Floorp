@@ -8,6 +8,7 @@
 #include "gfxPrefs.h"
 #include "LayersLogging.h"
 #include "mozilla/webrender/WebRenderTypes.h"
+#include "mozilla/layers/ScrollingLayersHelper.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 
 #include "mozilla/gfx/2D.h"
@@ -24,6 +25,8 @@ WebRenderTextLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     if (mBounds.IsEmpty()) {
         return;
     }
+
+    ScrollingLayersHelper scroller(this, aBuilder, aSc);
 
     LayerRect rect = LayerRect::FromUnknownRect(
         // I am not 100% sure this is correct, but it probably is. Because:
