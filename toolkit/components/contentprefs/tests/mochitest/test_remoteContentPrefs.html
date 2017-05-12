@@ -212,8 +212,7 @@
 
       var tests = { test1, test2, test3, test4 };
       function testHandler(mm, testName) {
-        let test = tests[testName];
-        (test(mm))().then(() => {
+        tests[testName](mm).then(() => {
           mm.sendAsyncMessage(`testRemoteContentPrefs:${testName}Finished`, {});
         }).catch((e) => {
           mm.sendAsyncMessage("testRemoteContentPrefs:fail", { reason: e });

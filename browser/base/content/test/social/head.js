@@ -80,7 +80,7 @@ function runSocialTestWithProvider(manifest, callback, finishcallback) {
   function finishIfDone(callFinish) {
     finishCount++;
     if (finishCount == manifests.length)
-      (finishCleanUp)().then(finishcallback || defaultFinishChecks);
+      finishCleanUp().then(finishcallback || defaultFinishChecks);
   }
   function removeAddedProviders(cleanup) {
     manifests.forEach(function(m) {

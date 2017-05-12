@@ -221,7 +221,7 @@ this.TestRunner = {
     };
 
     log.debug("_onConfigurationReady");
-    return (delayedScreenshot)();
+    return delayedScreenshot();
   },
 
   _comboName(combo) {

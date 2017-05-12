@@ -1192,7 +1192,7 @@ var PageInfoListener = {
   // Only called once to get the media tab's media elements from the content page.
   getMediaInfo(document, window, strings) {
     let frameList = this.goThroughFrames(document, window);
-    (() => this.processFrames(document, frameList, strings))();
+    this.processFrames(document, frameList, strings);
   },
 
   goThroughFrames(document, window) {

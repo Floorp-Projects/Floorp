@@ -532,7 +532,7 @@ async function runTests(tests, options = {}) {
 
   for (let testCase of tests) {
     info(testCase.desc);
-    await (testCase.run(browser))();
+    await testCase.run(browser);
     await cleanup();
   }
 

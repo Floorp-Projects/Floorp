@@ -164,7 +164,7 @@ add_task(async function checkWrongSystemTimeWarning() {
   await SpecialPowers.pushPrefEnv({set: [[PREF_BLOCKLIST_CLOCK_SKEW_SECONDS, skew]]});
 
   info("Loading a bad cert page with a skewed clock");
-  let message = await (setUpPage)();
+  let message = await setUpPage();
 
   isnot(message.divDisplay, "none", "Wrong time message information is visible");
   ok(message.text.includes("clock appears to show the wrong time"),
@@ -185,7 +185,7 @@ add_task(async function checkWrongSystemTimeWarning() {
   await SpecialPowers.pushPrefEnv({set: [[PREF_BLOCKLIST_CLOCK_SKEW_SECONDS, skew]]});
 
   info("Loading a bad cert page with a skewed clock");
-  message = await (setUpPage)();
+  message = await setUpPage();
 
   isnot(message.divDisplay, "none", "Wrong time message information is visible");
   ok(message.text.includes("clock appears to show the wrong time"),
@@ -201,7 +201,7 @@ add_task(async function checkWrongSystemTimeWarning() {
   await SpecialPowers.pushPrefEnv({set: [[PREF_BLOCKLIST_CLOCK_SKEW_SECONDS, skew]]});
 
   info("Loading a bad cert page with an only slightly skewed clock");
-  message = await (setUpPage)();
+  message = await setUpPage();
 
   is(message.divDisplay, "none", "Wrong time message information is not visible");
 
@@ -212,7 +212,7 @@ add_task(async function checkWrongSystemTimeWarning() {
   await SpecialPowers.pushPrefEnv({set: [[PREF_BLOCKLIST_CLOCK_SKEW_SECONDS, skew]]});
 
   info("Loading a bad cert page with no skewed clock");
-  message = await (setUpPage)();
+  message = await setUpPage();
 
   is(message.divDisplay, "none", "Wrong time message information is not visible");
 

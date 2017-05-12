@@ -539,7 +539,7 @@ var TransactionsManager = {
       let rv;
       try {
         // We should return here, but bug 958949 makes that impossible.
-        rv = (await (aTask)());
+        rv = await aTask();
       } finally {
         this._batching = false;
         this._createdBatchEntry = false;

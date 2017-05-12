@@ -67,11 +67,14 @@ function run_test() {
     gPrefs.setBoolPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_FORCE_SUPPORTED, addon.id),
                        true);
   }
-  GMPScope.GMPProvider.shutdown();
-  GMPScope.GMPProvider.startup();
 
   run_next_test();
 }
+
+add_task(async function init() {
+  await GMPScope.GMPProvider.shutdown();
+  GMPScope.GMPProvider.startup();
+});
 
 add_task(async function test_notInstalled() {
   for (let addon of gMockAddons.values()) {
@@ -195,7 +198,7 @@ add_task(async function test_globalEmeDisabled() {
   Assert.equal(addons.length, gMockEmeAddons.size);
 
   gPrefs.setBoolPref(GMPScope.GMPPrefs.KEY_EME_ENABLED, false);
-  GMPScope.GMPProvider.shutdown();
+  await GMPScope.GMPProvider.shutdown();
   GMPScope.GMPProvider.startup();
   for (let addon of addons) {
     Assert.ok(!addon.isActive);
@@ -205,7 +208,7 @@ add_task(async function test_globalEmeDisabled() {
     Assert.equal(addon.permissions, 0);
   }
   gPrefs.setBoolPref(GMPScope.GMPPrefs.KEY_EME_ENABLED, true);
-  GMPScope.GMPProvider.shutdown();
+  await GMPScope.GMPProvider.shutdown();
   GMPScope.GMPProvider.startup();
 });
 

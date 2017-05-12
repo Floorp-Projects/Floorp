@@ -406,16 +406,20 @@ if (this.addMessageListener) {
     sendAsyncMessage("doneSetup");
   });
 
-  addMessageListener("loadRecipes", async function(recipes) {
-    var recipeParent = await LoginManagerParent.recipeParentPromise;
-    await recipeParent.load(recipes);
-    sendAsyncMessage("loadedRecipes", recipes);
+  addMessageListener("loadRecipes", function(recipes) {
+    (async function() {
+      var recipeParent = await LoginManagerParent.recipeParentPromise;
+      await recipeParent.load(recipes);
+      sendAsyncMessage("loadedRecipes", recipes);
+    })();
   });
 
-  addMessageListener("resetRecipes", async function() {
-    let recipeParent = await LoginManagerParent.recipeParentPromise;
-    await recipeParent.reset();
-    sendAsyncMessage("recipesReset");
+  addMessageListener("resetRecipes", function() {
+    (async function() {
+      let recipeParent = await LoginManagerParent.recipeParentPromise;
+      await recipeParent.reset();
+      sendAsyncMessage("recipesReset");
+    })();
   });
 
   addMessageListener("proxyLoginManager", msg => {
