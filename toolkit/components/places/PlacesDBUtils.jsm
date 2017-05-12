@@ -272,7 +272,8 @@ this.PlacesDBUtils = {
        WHERE type = 4
           OR anno_attribute_id IN (
          SELECT id FROM moz_anno_attributes
-         WHERE name BETWEEN 'weave/' AND 'weave0'
+         WHERE name = 'downloads/destinationFileName' OR
+               name BETWEEN 'weave/' AND 'weave0'
        )`);
     cleanupStatements.push(deleteObsoleteAnnos);
 

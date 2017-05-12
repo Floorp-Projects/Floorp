@@ -62,8 +62,6 @@ namespace places {
 
 #define DESTINATIONFILEURI_ANNO \
         NS_LITERAL_CSTRING("downloads/destinationFileURI")
-#define DESTINATIONFILENAME_ANNO \
-        NS_LITERAL_CSTRING("downloads/destinationFileName")
 
 ////////////////////////////////////////////////////////////////////////////////
 //// VisitData
@@ -1519,14 +1517,6 @@ public:
     nsresult rv = aPlaceInfo->GetUri(getter_AddRefs(source));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIFile> destinationFile;
-    rv = destinationFileURL->GetFile(getter_AddRefs(destinationFile));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsAutoString destinationFileName;
-    rv = destinationFile->GetLeafName(destinationFileName);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     nsAutoCString destinationURISpec;
     rv = destinationFileURL->GetSpec(destinationURISpec);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1544,15 +1534,6 @@ public:
     );
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = annosvc->SetPageAnnotationString(
-      source,
-      DESTINATIONFILENAME_ANNO,
-      destinationFileName,
-      0,
-      nsIAnnotationService::EXPIRE_WITH_HISTORY
-    );
-    NS_ENSURE_SUCCESS(rv, rv);
-
     nsAutoString title;
     rv = aPlaceInfo->GetTitle(title);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1562,6 +1543,14 @@ public:
     // history title with the name of the destination file, to allow it to be
     // visible and searchable in history results.
     if (title.IsEmpty()) {
+      nsCOMPtr<nsIFile> destinationFile;
+      rv = destinationFileURL->GetFile(getter_AddRefs(destinationFile));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsAutoString destinationFileName;
+      rv = destinationFile->GetLeafName(destinationFileName);
+      NS_ENSURE_SUCCESS(rv, rv);
+
       rv = mHistory->SetURITitle(source, destinationFileName);
       NS_ENSURE_SUCCESS(rv, rv);
     }

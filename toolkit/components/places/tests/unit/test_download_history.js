@@ -207,10 +207,9 @@ add_test(function test_dh_details() {
 
   let titleSet = false;
   let destinationFileUriSet = false;
-  let destinationFileNameSet = false;
 
   function checkFinished() {
-    if (titleSet && destinationFileUriSet && destinationFileNameSet) {
+    if (titleSet && destinationFileUriSet) {
       PlacesUtils.annotations.removeObserver(annoObserver);
       PlacesUtils.history.removeObserver(historyObserver);
 
@@ -226,10 +225,6 @@ add_test(function test_dh_details() {
           case "downloads/destinationFileURI":
             destinationFileUriSet = true;
             do_check_eq(value, destFileUri.spec);
-            break;
-          case "downloads/destinationFileName":
-            destinationFileNameSet = true;
-            do_check_eq(value, DEST_FILE_NAME);
             break;
         }
         checkFinished();
