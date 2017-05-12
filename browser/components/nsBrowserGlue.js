@@ -16,6 +16,9 @@ Cu.import("resource://gre/modules/AsyncPrefs.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "WindowsUIUtils", "@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils");
 XPCOMUtils.defineLazyServiceGetter(this, "AlertsService", "@mozilla.org/alerts-service;1", "nsIAlertsService");
+XPCOMUtils.defineLazyGetter(this, "WeaveService", () =>
+  Cc["@mozilla.org/weave/service;1"].getService().wrappedJSObject
+);
 
 // lazy module getters
 
@@ -973,6 +976,10 @@ BrowserGlue.prototype = {
 
     AutoCompletePopup.init();
     DateTimePickerHelper.init();
+    // Check if Sync is configured
+    if (Services.prefs.prefHasUserValue("services.sync.username")) {
+      WeaveService.init();
+    }
 
     this._firstWindowTelemetry(aWindow);
     this._firstWindowLoaded();
