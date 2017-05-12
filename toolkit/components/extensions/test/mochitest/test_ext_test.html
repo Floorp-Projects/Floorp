@@ -153,19 +153,19 @@ function verifyTestResults(results, shortName, expectedProtocol) {
   is(results[expectations.length], undefined, "No more results");
 }
 
-add_task(function* test_test_in_background() {
+add_task(async function test_test_in_background() {
   let extensionData = {
     background: `(${testScript})()`,
   };
 
   let extension = loadExtensionAndInterceptTest(extensionData);
-  yield extension.startup();
-  let results = yield extension.awaitResults();
+  await extension.startup();
+  let results = await extension.awaitResults();
   verifyTestResults(results, "background page", "moz-extension:");
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* test_test_in_content_script() {
+add_task(async function test_test_in_content_script() {
   let extensionData = {
     manifest: {
       content_scripts: [{
@@ -179,12 +179,12 @@ add_task(function* test_test_in_content_script() {
   };
 
   let extension = loadExtensionAndInterceptTest(extensionData);
-  yield extension.startup();
+  await extension.startup();
   let win = window.open("file_sample.html");
-  let results = yield extension.awaitResults();
+  let results = await extension.awaitResults();
   win.close();
   verifyTestResults(results, "content script", "http:");
-  yield extension.unload();
+  await extension.unload();
 });
 </script>
 </body>

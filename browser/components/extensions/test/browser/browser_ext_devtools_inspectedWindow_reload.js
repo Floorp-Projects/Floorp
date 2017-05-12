@@ -12,10 +12,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "devtools",
                                   "resource://devtools/shared/Loader.jsm");
 
 // Small helper which provides the common steps to the following reload test cases.
-function* runReloadTestCase({urlParams, background, devtoolsPage, testCase}) {
+async function runReloadTestCase({urlParams, background, devtoolsPage, testCase}) {
   const BASE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/";
   const TEST_TARGET_URL = `${BASE}file_inspectedwindow_reload_target.sjs?${urlParams}`;
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_TARGET_URL);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_TARGET_URL);
 
   let extension = ExtensionTestUtils.loadExtension({
     background,
@@ -37,31 +37,31 @@ function* runReloadTestCase({urlParams, background, devtoolsPage, testCase}) {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
   let target = devtools.TargetFactory.forTab(tab);
 
-  yield gDevTools.showToolbox(target, "webconsole");
+  await gDevTools.showToolbox(target, "webconsole");
   info("developer toolbox opened");
 
   // Wait the test extension to be ready.
-  yield extension.awaitMessage("devtools_inspected_window_reload.ready");
+  await extension.awaitMessage("devtools_inspected_window_reload.ready");
 
   info("devtools page ready");
 
   // Run the test case.
-  yield testCase(extension);
+  await testCase(extension);
 
-  yield gDevTools.closeToolbox(target);
+  await gDevTools.closeToolbox(target);
 
-  yield target.destroy();
+  await target.destroy();
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 
-  yield extension.unload();
+  await extension.unload();
 }
 
-add_task(function* test_devtools_inspectedWindow_reload_ignore_cache() {
+add_task(async function test_devtools_inspectedWindow_reload_ignore_cache() {
   function background() {
     // Wait until the devtools page is ready to run the test.
     browser.runtime.onMessage.addListener(async (msg) => {
@@ -134,19 +134,19 @@ add_task(function* test_devtools_inspectedWindow_reload_ignore_cache() {
     browser.runtime.sendMessage("devtools_page.ready");
   }
 
-  yield runReloadTestCase({
+  await runReloadTestCase({
     urlParams: "test=cache",
     background, devtoolsPage,
-    testCase: function* (extension) {
+    testCase: async function(extension) {
       for (const testMessage of ["no-ignore-cache", "ignore-cache"]) {
         extension.sendMessage(testMessage);
-        yield extension.awaitMessage("devtools_inspectedWindow_reload_checkIgnoreCache.done");
+        await extension.awaitMessage("devtools_inspectedWindow_reload_checkIgnoreCache.done");
       }
     },
   });
 });
 
-add_task(function* test_devtools_inspectedWindow_reload_custom_user_agent() {
+add_task(async function test_devtools_inspectedWindow_reload_custom_user_agent() {
   function background() {
     browser.runtime.onMessage.addListener(async (msg) => {
       if (msg !== "devtools_page.ready") {
@@ -214,22 +214,22 @@ add_task(function* test_devtools_inspectedWindow_reload_custom_user_agent() {
     browser.runtime.sendMessage("devtools_page.ready");
   }
 
-  yield runReloadTestCase({
+  await runReloadTestCase({
     urlParams: "test=user-agent",
     background, devtoolsPage,
-    testCase: function* (extension) {
+    testCase: async function(extension) {
       extension.sendMessage("no-custom-user-agent");
 
-      yield extension.awaitMessage("devtools_inspectedWindow_reload_checkUserAgent.done");
+      await extension.awaitMessage("devtools_inspectedWindow_reload_checkUserAgent.done");
 
       extension.sendMessage("custom-user-agent");
 
-      yield extension.awaitMessage("devtools_inspectedWindow_reload_checkUserAgent.done");
+      await extension.awaitMessage("devtools_inspectedWindow_reload_checkUserAgent.done");
     },
   });
 });
 
-add_task(function* test_devtools_inspectedWindow_reload_injected_script() {
+add_task(async function test_devtools_inspectedWindow_reload_injected_script() {
   function background() {
     function getIframesTextContent() {
       let docs = [];
@@ -320,17 +320,17 @@ add_task(function* test_devtools_inspectedWindow_reload_injected_script() {
     browser.runtime.sendMessage("devtools_page.ready");
   }
 
-  yield runReloadTestCase({
+  await runReloadTestCase({
     urlParams: "test=injected-script&frames=3",
     background, devtoolsPage,
-    testCase: function* (extension) {
+    testCase: async function(extension) {
       extension.sendMessage("no-injected-script");
 
-      yield extension.awaitMessage("devtools_inspectedWindow_reload_injectedScript.done");
+      await extension.awaitMessage("devtools_inspectedWindow_reload_injectedScript.done");
 
       extension.sendMessage("injected-script");
 
-      yield extension.awaitMessage("devtools_inspectedWindow_reload_injectedScript.done");
+      await extension.awaitMessage("devtools_inspectedWindow_reload_injectedScript.done");
     },
   });
 });

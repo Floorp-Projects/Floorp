@@ -12,13 +12,13 @@
 const PAGE_1 = "data:text/html,<html><body>A%20regular,%20everyday,%20normal%20page.";
 const PAGE_2 = "data:text/html,<html><body>Another%20regular,%20everyday,%20normal%20page.";
 
-add_task(function* setup() {
-  yield pushPrefs(["dom.ipc.processCount", 1],
+add_task(async function setup() {
+  await pushPrefs(["dom.ipc.processCount", 1],
                   ["toolkit.cosmeticAnimations.enabled", false],
                   ["browser.sessionstore.restore_on_demand", false]);
 });
 
-add_task(function* test_revive_bg_tabs_on_demand() {
+add_task(async function test_revive_bg_tabs_on_demand() {
   let newTab1 = gBrowser.addTab(PAGE_1);
   let browser1 = newTab1.linkedBrowser;
   gBrowser.selectedTab = newTab1;
@@ -26,20 +26,20 @@ add_task(function* test_revive_bg_tabs_on_demand() {
   let newTab2 = gBrowser.addTab(PAGE_2);
   let browser2 = newTab2.linkedBrowser;
 
-  yield BrowserTestUtils.browserLoaded(browser1);
-  yield BrowserTestUtils.browserLoaded(browser2);
+  await BrowserTestUtils.browserLoaded(browser1);
+  await BrowserTestUtils.browserLoaded(browser2);
 
-  yield TabStateFlusher.flush(browser2);
+  await TabStateFlusher.flush(browser2);
 
   // Now crash the selected tab
   let windowReady = BrowserTestUtils.waitForEvent(window, "SSWindowStateReady");
-  yield BrowserTestUtils.crashBrowser(browser1);
+  await BrowserTestUtils.crashBrowser(browser1);
 
   ok(newTab1.hasAttribute("crashed"), "Selected tab should be crashed");
   ok(!newTab2.hasAttribute("crashed"), "Background tab should not be crashed");
 
   // Wait until we've had a chance to restore all tabs immediately
-  yield windowReady;
+  await windowReady;
 
   // But we should not have restored the background tab
   ok(newTab2.hasAttribute("pending"), "Background tab should be pending");
@@ -47,10 +47,10 @@ add_task(function* test_revive_bg_tabs_on_demand() {
   // Now select newTab2 to make sure it restores.
   let newTab2Restored = promiseTabRestored(newTab2);
   gBrowser.selectedTab = newTab2;
-  yield newTab2Restored;
+  await newTab2Restored;
 
   ok(browser2.isRemoteBrowser, "Restored browser should be remote");
 
-  yield BrowserTestUtils.removeTab(newTab1);
-  yield BrowserTestUtils.removeTab(newTab2);
+  await BrowserTestUtils.removeTab(newTab1);
+  await BrowserTestUtils.removeTab(newTab2);
 });

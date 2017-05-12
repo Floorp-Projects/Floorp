@@ -9,9 +9,12 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 /* import-globals-from ../../../../../testing/modules/sinon-1.16.1.js */
 Services.scriptloader.loadSubScript("resource://testing-common/sinon-1.16.1.js");
 
-const TEST_HOST = "example.com";
-const TEST_ORIGIN = "http://" + TEST_HOST;
-const TEST_BASE_URL = TEST_ORIGIN + "/browser/browser/components/preferences/in-content/tests/";
+const TEST_QUOTA_USAGE_HOST = "example.com";
+const TEST_QUOTA_USAGE_ORIGIN = "https://" + TEST_QUOTA_USAGE_HOST;
+const TEST_QUOTA_USAGE_URL = TEST_QUOTA_USAGE_ORIGIN + "/browser/browser/components/preferences/in-content/tests/site_data_test.html";
+const TEST_OFFLINE_HOST = "example.org";
+const TEST_OFFLINE_ORIGIN = "https://" + TEST_OFFLINE_HOST;
+const TEST_OFFLINE_URL = TEST_OFFLINE_ORIGIN + "/browser/browser/components/preferences/in-content/tests/offline/offline.html";
 const REMOVE_DIALOG_URL = "chrome://browser/content/preferences/siteDataRemoveSelected.xul";
 
 const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
@@ -32,82 +35,6 @@ const mockOfflineAppCacheHelper = {
 
   unregister() {
     OfflineAppCacheHelper.clear = this.originalClear;
-  }
-};
-
-const mockSiteDataManager = {
-  sites: new Map([
-    [
-      "https://account.xyz.com/",
-      {
-        usage: 1024 * 200,
-        host: "account.xyz.com",
-        status: Ci.nsIPermissionManager.ALLOW_ACTION
-      }
-    ],
-    [
-      "https://shopping.xyz.com/",
-      {
-        usage: 1024 * 100,
-        host: "shopping.xyz.com",
-        status: Ci.nsIPermissionManager.DENY_ACTION
-      }
-    ],
-    [
-      "https://video.bar.com/",
-      {
-        usage: 1024 * 20,
-        host: "video.bar.com",
-        status: Ci.nsIPermissionManager.ALLOW_ACTION
-      }
-    ],
-    [
-      "https://music.bar.com/",
-      {
-        usage: 1024 * 10,
-        host: "music.bar.com",
-        status: Ci.nsIPermissionManager.DENY_ACTION
-      }
-    ],
-    [
-      "https://books.foo.com/",
-      {
-        usage: 1024 * 2,
-        host: "books.foo.com",
-        status: Ci.nsIPermissionManager.ALLOW_ACTION
-      }
-    ],
-    [
-      "https://news.foo.com/",
-      {
-        usage: 1024,
-        host: "news.foo.com",
-        status: Ci.nsIPermissionManager.DENY_ACTION
-      }
-    ]
-  ]),
-
-  _originalGetSites: null,
-
-  getSites() {
-    let list = [];
-    this.sites.forEach((data, origin) => {
-      list.push({
-        usage: data.usage,
-        status: data.status,
-        uri: NetUtil.newURI(origin)
-      });
-    });
-    return Promise.resolve(list);
-  },
-
-  register() {
-    this._originalGetSites = SiteDataManager.getSites;
-    SiteDataManager.getSites = this.getSites.bind(this);
-  },
-
-  unregister() {
-    SiteDataManager.getSites = this._originalGetSites;
   }
 };
 
@@ -167,12 +94,53 @@ registerCleanupFunction(function() {
   mockOfflineAppCacheHelper.unregister();
 });
 
-// Test buttons are disabled and loading message shown while updating sites
-add_task(function *() {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
+// Test listing site using quota usage or site using appcache
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
+
+  // Open a test site which would save into appcache
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_OFFLINE_URL);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+  // Open a test site which would save into quota manager
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_QUOTA_USAGE_URL);
+  await waitForEvent(gBrowser.selectedBrowser.contentWindow, "test-indexedDB-done");
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
   let updatedPromise = promiseSiteDataManagerSitesUpdated();
-  yield openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
-  yield updatedPromise;
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  await updatedPromise;
+  await openSiteDataSettingsDialog();
+  let doc = gBrowser.selectedBrowser.contentDocument;
+  let dialogFrame = doc.getElementById("dialogFrame");
+  let frameDoc = dialogFrame.contentDocument;
+
+  let siteItems = frameDoc.getElementsByTagName("richlistitem");
+  is(siteItems.length, 2, "Should list sites using quota usage or appcache");
+
+  let appcacheSite = frameDoc.querySelector(`richlistitem[host="${TEST_OFFLINE_HOST}"]`);
+  ok(appcacheSite, "Should list site using appcache");
+
+  let qoutaUsageSite = frameDoc.querySelector(`richlistitem[host="${TEST_QUOTA_USAGE_HOST}"]`);
+  ok(qoutaUsageSite, "Should list site using quota usage");
+
+  // Always remember to clean up
+  OfflineAppCacheHelper.clear();
+  await new Promise(resolve => {
+    let principal = Services.scriptSecurityManager
+                            .createCodebasePrincipalFromOrigin(TEST_QUOTA_USAGE_ORIGIN);
+    let request = Services.qms.clearStoragesForPrincipal(principal, null, true);
+    request.callback = resolve;
+  });
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+// Test buttons are disabled and loading message shown while updating sites
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
+  let updatedPromise = promiseSiteDataManagerSitesUpdated();
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  await updatedPromise;
 
   let actual = null;
   let expected = null;
@@ -183,7 +151,7 @@ add_task(function *() {
   let totalSiteDataSizeLabel = doc.getElementById("totalSiteDataSize");
   is(clearBtn.disabled, false, "Should enable clear button after sites updated");
   is(settingsButton.disabled, false, "Should enable settings button after sites updated");
-  yield SiteDataManager.getTotalUsage()
+  await SiteDataManager.getTotalUsage()
                        .then(usage => {
                          actual = totalSiteDataSizeLabel.textContent;
                          expected = prefStrBundle.getFormattedString(
@@ -201,7 +169,7 @@ add_task(function *() {
   Services.obs.notifyObservers(null, "sitedatamanager:sites-updated");
   is(clearBtn.disabled, false, "Should enable clear button after sites updated");
   is(settingsButton.disabled, false, "Should enable settings button after sites updated");
-  yield SiteDataManager.getTotalUsage()
+  await SiteDataManager.getTotalUsage()
                        .then(usage => {
                          actual = totalSiteDataSizeLabel.textContent;
                          expected = prefStrBundle.getFormattedString(
@@ -209,23 +177,24 @@ add_task(function *() {
                           is(actual, expected, "Should show the right total site data size");
                        });
 
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
-add_task(function* () {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
-  addPersistentStoragePerm(TEST_ORIGIN);
+// Test the function of the "Clear All Data" button
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
+  addPersistentStoragePerm(TEST_QUOTA_USAGE_ORIGIN);
 
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_BASE_URL + "site_data_test.html");
-  yield waitForEvent(gBrowser.selectedBrowser.contentWindow, "test-indexedDB-done");
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_QUOTA_USAGE_URL);
+  await waitForEvent(gBrowser.selectedBrowser.contentWindow, "test-indexedDB-done");
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
-  yield openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
 
   // Test the initial states
-  let cacheUsage = yield cacheUsageGetter.get();
-  let quotaUsage = yield getQuotaUsage(TEST_ORIGIN);
-  let totalUsage = yield SiteDataManager.getTotalUsage();
+  let cacheUsage = await cacheUsageGetter.get();
+  let quotaUsage = await getQuotaUsage(TEST_QUOTA_USAGE_ORIGIN);
+  let totalUsage = await SiteDataManager.getTotalUsage();
   Assert.greater(cacheUsage, 0, "The cache usage should not be 0");
   Assert.greater(quotaUsage, 0, "The quota usage should not be 0");
   Assert.greater(totalUsage, 0, "The total usage should not be 0");
@@ -236,15 +205,15 @@ add_task(function* () {
   let cancelPromise = promiseAlertDialogOpen("cancel");
   let clearBtn = doc.getElementById("clearSiteDataButton");
   clearBtn.doCommand();
-  yield cancelPromise;
+  await cancelPromise;
 
   // Test the items are not removed
-  let status = getPersistentStoragePermStatus(TEST_ORIGIN);
+  let status = getPersistentStoragePermStatus(TEST_QUOTA_USAGE_ORIGIN);
   is(status, Ci.nsIPermissionManager.ALLOW_ACTION, "Should not remove permission");
 
-  cacheUsage = yield cacheUsageGetter.get();
-  quotaUsage = yield getQuotaUsage(TEST_ORIGIN);
-  totalUsage = yield SiteDataManager.getTotalUsage();
+  cacheUsage = await cacheUsageGetter.get();
+  quotaUsage = await getQuotaUsage(TEST_QUOTA_USAGE_ORIGIN);
+  totalUsage = await SiteDataManager.getTotalUsage();
   Assert.greater(cacheUsage, 0, "The cache usage should not be 0");
   Assert.greater(quotaUsage, 0, "The quota usage should not be 0");
   Assert.greater(totalUsage, 0, "The total usage should not be 0");
@@ -258,37 +227,58 @@ add_task(function* () {
 
   mockOfflineAppCacheHelper.register();
   clearBtn.doCommand();
-  yield acceptPromise;
-  yield updatePromise;
+  await acceptPromise;
+  await updatePromise;
   mockOfflineAppCacheHelper.unregister();
 
   // Test all the items are removed
-  yield cookiesClearedPromise;
+  await cookiesClearedPromise;
 
   ok(mockOfflineAppCacheHelper.clear.calledOnce, "Should clear app cache");
 
-  status = getPersistentStoragePermStatus(TEST_ORIGIN);
+  status = getPersistentStoragePermStatus(TEST_QUOTA_USAGE_ORIGIN);
   is(status, Ci.nsIPermissionManager.UNKNOWN_ACTION, "Should remove permission");
 
-  cacheUsage = yield cacheUsageGetter.get();
-  quotaUsage = yield getQuotaUsage(TEST_ORIGIN);
-  totalUsage = yield SiteDataManager.getTotalUsage();
-  is(cacheUsage, 0, "The cahce usage should be removed");
+  cacheUsage = await cacheUsageGetter.get();
+  quotaUsage = await getQuotaUsage(TEST_QUOTA_USAGE_ORIGIN);
+  totalUsage = await SiteDataManager.getTotalUsage();
+  is(cacheUsage, 0, "The cache usage should be removed");
   is(quotaUsage, 0, "The quota usage should be removed");
   is(totalUsage, 0, "The total usage should be removed");
   // Test accepting "Clear All Data" ends
 
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
-add_task(function* () {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
+// Test sorting
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
+  mockSiteDataManager.register(SiteDataManager);
+  mockSiteDataManager.fakeSites = [
+    {
+      usage: 1024,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("https://account.xyz.com"),
+      persisted: true
+    },
+    {
+      usage: 1024 * 2,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("https://books.foo.com"),
+      persisted: false
+    },
+    {
+      usage: 1024 * 3,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("http://cinema.bar.com"),
+      persisted: true
+    },
+  ];
 
-  mockSiteDataManager.register();
   let updatePromise = promiseSiteDataManagerSitesUpdated();
-  yield openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
-  yield updatePromise;
-  yield openSiteDataSettingsDialog();
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  await updatePromise;
+  await openSiteDataSettingsDialog();
 
   let doc = gBrowser.selectedBrowser.contentDocument;
   let dialogFrame = doc.getElementById("dialogFrame");
@@ -297,22 +287,9 @@ add_task(function* () {
   let usageCol = frameDoc.getElementById("usageCol");
   let statusCol = frameDoc.getElementById("statusCol");
   let sitesList = frameDoc.getElementById("sitesList");
-  let mockSites = mockSiteDataManager.sites;
 
   // Test default sorting
-  assertSortByHost("ascending");
-
-  // Test sorting on the host column
-  hostCol.click();
-  assertSortByHost("descending");
-  hostCol.click();
-  assertSortByHost("ascending");
-
-  // Test sorting on the permission status column
-  statusCol.click();
-  assertSortByStatus("ascending");
-  statusCol.click();
-  assertSortByStatus("descending");
+  assertSortByUsage("descending");
 
   // Test sorting on the usage column
   usageCol.click();
@@ -320,17 +297,27 @@ add_task(function* () {
   usageCol.click();
   assertSortByUsage("descending");
 
+  // Test sorting on the host column
+  hostCol.click();
+  assertSortByHost("ascending");
+  hostCol.click();
+  assertSortByHost("descending");
+
+  // Test sorting on the permission status column
+  statusCol.click();
+  assertSortByStatus("ascending");
+  statusCol.click();
+  assertSortByStatus("descending");
+
   mockSiteDataManager.unregister();
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   function assertSortByHost(order) {
     let siteItems = sitesList.getElementsByTagName("richlistitem");
     for (let i = 0; i < siteItems.length - 1; ++i) {
-      let aOrigin = siteItems[i].getAttribute("data-origin");
-      let bOrigin = siteItems[i + 1].getAttribute("data-origin");
-      let a = mockSites.get(aOrigin);
-      let b = mockSites.get(bOrigin);
-      let result = a.host.localeCompare(b.host);
+      let aHost = siteItems[i].getAttribute("host");
+      let bHost = siteItems[i + 1].getAttribute("host");
+      let result = aHost.localeCompare(bHost);
       if (order == "ascending") {
         Assert.lessOrEqual(result, 0, "Should sort sites in the ascending order by host");
       } else {
@@ -342,11 +329,16 @@ add_task(function* () {
   function assertSortByStatus(order) {
     let siteItems = sitesList.getElementsByTagName("richlistitem");
     for (let i = 0; i < siteItems.length - 1; ++i) {
-      let aOrigin = siteItems[i].getAttribute("data-origin");
-      let bOrigin = siteItems[i + 1].getAttribute("data-origin");
-      let a = mockSites.get(aOrigin);
-      let b = mockSites.get(bOrigin);
-      let result = a.status - b.status;
+      let aHost = siteItems[i].getAttribute("host");
+      let bHost = siteItems[i + 1].getAttribute("host");
+      let a = findSiteByHost(aHost);
+      let b = findSiteByHost(bHost);
+      let result = 0;
+      if (a.persisted && !b.persisted) {
+        result = 1;
+      } else if (!a.persisted && b.persisted) {
+        result = -1;
+      }
       if (order == "ascending") {
         Assert.lessOrEqual(result, 0, "Should sort sites in the ascending order by permission status");
       } else {
@@ -358,10 +350,10 @@ add_task(function* () {
   function assertSortByUsage(order) {
     let siteItems = sitesList.getElementsByTagName("richlistitem");
     for (let i = 0; i < siteItems.length - 1; ++i) {
-      let aOrigin = siteItems[i].getAttribute("data-origin");
-      let bOrigin = siteItems[i + 1].getAttribute("data-origin");
-      let a = mockSites.get(aOrigin);
-      let b = mockSites.get(bOrigin);
+      let aHost = siteItems[i].getAttribute("host");
+      let bHost = siteItems[i + 1].getAttribute("host");
+      let a = findSiteByHost(aHost);
+      let b = findSiteByHost(bHost);
       let result = a.usage - b.usage;
       if (order == "ascending") {
         Assert.lessOrEqual(result, 0, "Should sort sites in the ascending order by usage");
@@ -370,34 +362,65 @@ add_task(function* () {
       }
     }
   }
+
+  function findSiteByHost(host) {
+    return mockSiteDataManager.fakeSites.find(site => site.principal.URI.host == host);
+  }
 });
 
-add_task(function* () {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
+// Test search on the host column
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
+  mockSiteDataManager.register(SiteDataManager);
+  mockSiteDataManager.fakeSites = [
+    {
+      usage: 1024,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("https://account.xyz.com"),
+      persisted: true
+    },
+    {
+      usage: 1024,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("https://shopping.xyz.com"),
+      persisted: false
+    },
+    {
+      usage: 1024,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("http://cinema.bar.com"),
+      persisted: true
+    },
+    {
+      usage: 1024,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("http://email.bar.com"),
+      persisted: false
+    },
+  ];
+  let fakeHosts = mockSiteDataManager.fakeSites.map(site => site.principal.URI.host);
 
-  mockSiteDataManager.register();
   let updatePromise = promiseSiteDataManagerSitesUpdated();
-  yield openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
-  yield updatePromise;
-  yield openSiteDataSettingsDialog();
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  await updatePromise;
+  await openSiteDataSettingsDialog();
 
   let doc = gBrowser.selectedBrowser.contentDocument;
   let frameDoc = doc.getElementById("dialogFrame").contentDocument;
   let searchBox = frameDoc.getElementById("searchBox");
-  let mockOrigins = Array.from(mockSiteDataManager.sites.keys());
 
   searchBox.value = "xyz";
   searchBox.doCommand();
-  assertSitesListed(doc, mockOrigins.filter(o => o.includes("xyz")));
+  assertSitesListed(doc, fakeHosts.filter(host => host.includes("xyz")));
 
   searchBox.value = "bar";
   searchBox.doCommand();
-  assertSitesListed(doc, mockOrigins.filter(o => o.includes("bar")));
+  assertSitesListed(doc, fakeHosts.filter(host => host.includes("bar")));
 
   searchBox.value = "";
   searchBox.doCommand();
-  assertSitesListed(doc, mockOrigins);
+  assertSitesListed(doc, fakeHosts);
 
   mockSiteDataManager.unregister();
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

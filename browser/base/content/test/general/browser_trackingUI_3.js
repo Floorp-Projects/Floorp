@@ -14,7 +14,7 @@ registerCleanupFunction(function() {
   Services.prefs.clearUserPref(PB_PREF);
 });
 
-add_task(function* testNormalBrowsing() {
+add_task(async function testNormalBrowsing() {
   let TrackingProtection = gBrowser.ownerGlobal.TrackingProtection;
   ok(TrackingProtection, "TP is attached to the browser window");
 
@@ -31,8 +31,8 @@ add_task(function* testNormalBrowsing() {
   ok(!TrackingProtection.enabled, "TP is disabled (ENABLED=false,PB=true)");
 });
 
-add_task(function* testPrivateBrowsing() {
-  let privateWin = yield promiseOpenAndLoadWindow({private: true}, true);
+add_task(async function testPrivateBrowsing() {
+  let privateWin = await promiseOpenAndLoadWindow({private: true}, true);
   let TrackingProtection = privateWin.gBrowser.ownerGlobal.TrackingProtection;
   ok(TrackingProtection, "TP is attached to the browser window");
 

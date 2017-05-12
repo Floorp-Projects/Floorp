@@ -1644,15 +1644,9 @@ jit::JitActivation::traceIonRecovery(JSTracer* trc)
 
 WasmActivation::WasmActivation(JSContext* cx)
   : Activation(cx, Wasm),
-    entrySP_(nullptr),
     exitFP_(nullptr),
     exitReason_(wasm::ExitReason::Fixed::None)
 {
-    (void) entrySP_;  // silence "unused private member" warning
-
-    prevWasm_ = cx->wasmActivationStack_;
-    cx->wasmActivationStack_ = this;
-
     // Now that the WasmActivation is fully initialized, make it visible to
     // asynchronous profiling.
     registerProfiling();
@@ -1666,13 +1660,10 @@ WasmActivation::~WasmActivation()
     MOZ_ASSERT(!interrupted());
     MOZ_ASSERT(exitFP_ == nullptr);
     MOZ_ASSERT(exitReason_.isNone());
-
-    MOZ_ASSERT(cx_->wasmActivationStack_ == this);
-    cx_->wasmActivationStack_ = prevWasm_;
 }
 
 void
-WasmActivation::unwindExitFP(uint8_t* exitFP)
+WasmActivation::unwindExitFP(wasm::Frame* exitFP)
 {
     exitFP_ = exitFP;
     exitReason_ = wasm::ExitReason::Fixed::None;
@@ -1691,7 +1682,10 @@ WasmActivation::startInterrupt(void* pc, uint8_t* fp)
     MOZ_ASSERT(compartment()->wasm.lookupCode(pc)->lookupRange(pc)->isFunction());
 
     cx_->runtime()->setWasmResumePC(pc);
-    exitFP_ = fp;
+    exitFP_ = reinterpret_cast<wasm::Frame*>(fp);
+
+    MOZ_ASSERT(cx() == exitFP_->tls->cx);
+    MOZ_ASSERT(compartment() == exitFP_->tls->instance->compartment());
 
     MOZ_ASSERT(interrupted());
 }

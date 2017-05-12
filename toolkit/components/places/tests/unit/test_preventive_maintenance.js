@@ -1058,7 +1058,7 @@ tests.push({
   name: "L.2",
   desc: "Recalculate visit_count and last_visit_date",
 
-  *setup() {
+  async setup() {
     function setVisitCount(aURL, aValue) {
       let stmt = mDBConn.createStatement(
         `UPDATE moz_places SET visit_count = :count WHERE url_hash = hash(:url)
@@ -1083,18 +1083,18 @@ tests.push({
     let now = Date.now() * 1000;
     // Add a page with 1 visit.
     let url = "http://1.moz.org/";
-    yield PlacesTestUtils.addVisits({ uri: uri(url), visitDate: now++ });
+    await PlacesTestUtils.addVisits({ uri: uri(url), visitDate: now++ });
     // Add a page with 1 visit and set wrong visit_count.
     url = "http://2.moz.org/";
-    yield PlacesTestUtils.addVisits({ uri: uri(url), visitDate: now++ });
+    await PlacesTestUtils.addVisits({ uri: uri(url), visitDate: now++ });
     setVisitCount(url, 10);
     // Add a page with 1 visit and set wrong last_visit_date.
     url = "http://3.moz.org/";
-    yield PlacesTestUtils.addVisits({ uri: uri(url), visitDate: now++ });
+    await PlacesTestUtils.addVisits({ uri: uri(url), visitDate: now++ });
     setLastVisitDate(url, now++);
     // Add a page with 1 visit and set wrong stats.
     url = "http://4.moz.org/";
-    yield PlacesTestUtils.addVisits({ uri: uri(url), visitDate: now++ });
+    await PlacesTestUtils.addVisits({ uri: uri(url), visitDate: now++ });
     setVisitCount(url, 10);
     setLastVisitDate(url, now++);
 
@@ -1137,8 +1137,8 @@ tests.push({
   name: "L.3",
   desc: "recalculate hidden for redirects.",
 
-  *setup() {
-    yield PlacesTestUtils.addVisits([
+  async setup() {
+    await PlacesTestUtils.addVisits([
       { uri: NetUtil.newURI("http://l3.moz.org/"),
         transition: TRANSITION_TYPED },
       { uri: NetUtil.newURI("http://l3.moz.org/redirecting/"),
@@ -1185,24 +1185,24 @@ tests.push({
   name: "L.4",
   desc: "recalculate foreign_count.",
 
-  *setup() {
-    this._pageGuid = (yield PlacesUtils.history.insert({ url: "http://l4.moz.org/",
+  async setup() {
+    this._pageGuid = (await PlacesUtils.history.insert({ url: "http://l4.moz.org/",
                                                          visits: [{ date: new Date() }] })).guid;
-    yield PlacesUtils.bookmarks.insert({ url: "http://l4.moz.org/",
+    await PlacesUtils.bookmarks.insert({ url: "http://l4.moz.org/",
                                          parentGuid: PlacesUtils.bookmarks.unfiledGuid});
-    yield PlacesUtils.keywords.insert({ url: "http://l4.moz.org/", keyword: "kw" });
-    Assert.equal((yield this._getForeignCount()), 2);
+    await PlacesUtils.keywords.insert({ url: "http://l4.moz.org/", keyword: "kw" });
+    Assert.equal((await this._getForeignCount()), 2);
   },
 
-  *_getForeignCount() {
-    let db = yield PlacesUtils.promiseDBConnection();
-    let rows = yield db.execute(`SELECT foreign_count FROM moz_places
+  async _getForeignCount() {
+    let db = await PlacesUtils.promiseDBConnection();
+    let rows = await db.execute(`SELECT foreign_count FROM moz_places
                                  WHERE guid = :guid`, { guid: this._pageGuid });
     return rows[0].getResultByName("foreign_count");
   },
 
-  *check() {
-    Assert.equal((yield this._getForeignCount()), 2);
+  async check() {
+    Assert.equal((await this._getForeignCount()), 2);
   }
 });
 
@@ -1212,25 +1212,25 @@ tests.push({
   name: "L.5",
   desc: "recalculate hashes when missing.",
 
-  *setup() {
-    this._pageGuid = (yield PlacesUtils.history.insert({ url: "http://l5.moz.org/",
+  async setup() {
+    this._pageGuid = (await PlacesUtils.history.insert({ url: "http://l5.moz.org/",
                                                          visits: [{ date: new Date() }] })).guid;
-    Assert.ok((yield this._getHash()) > 0);
-    yield PlacesUtils.withConnectionWrapper("change url hash", Task.async(function* (db) {
-      yield db.execute(`UPDATE moz_places SET url_hash = 0`);
-    }));
-    Assert.equal((yield this._getHash()), 0);
+    Assert.ok((await this._getHash()) > 0);
+    await PlacesUtils.withConnectionWrapper("change url hash", async function(db) {
+      await db.execute(`UPDATE moz_places SET url_hash = 0`);
+    });
+    Assert.equal((await this._getHash()), 0);
   },
 
-  *_getHash() {
-    let db = yield PlacesUtils.promiseDBConnection();
-    let rows = yield db.execute(`SELECT url_hash FROM moz_places
+  async _getHash() {
+    let db = await PlacesUtils.promiseDBConnection();
+    let rows = await db.execute(`SELECT url_hash FROM moz_places
                                  WHERE guid = :guid`, { guid: this._pageGuid });
     return rows[0].getResultByName("url_hash");
   },
 
-  *check() {
-    Assert.ok((yield this._getHash()) > 0);
+  async check() {
+    Assert.ok((await this._getHash()) > 0);
   }
 });
 
@@ -1246,9 +1246,9 @@ tests.push({
   _bookmarkId: null,
   _separatorId: null,
 
-  *setup() {
+  async setup() {
     // use valid api calls to create a bunch of items
-    yield PlacesTestUtils.addVisits([
+    await PlacesTestUtils.addVisits([
       { uri: this._uri1 },
       { uri: this._uri2 },
     ]);
@@ -1267,16 +1267,16 @@ tests.push({
                                  PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
                                  null,
                                  Services.scriptSecurityManager.getSystemPrincipal());
-    yield PlacesUtils.keywords.insert({ url: this._uri1.spec, keyword: "testkeyword" });
+    await PlacesUtils.keywords.insert({ url: this._uri1.spec, keyword: "testkeyword" });
     as.setPageAnnotation(this._uri2, "anno", "anno", 0, as.EXPIRE_NEVER);
     as.setItemAnnotation(this._bookmarkId, "anno", "anno", 0, as.EXPIRE_NEVER);
   },
 
-  check: Task.async(function* () {
+  async check() {
     // Check that all items are correct
-    let isVisited = yield promiseIsURIVisited(this._uri1);
+    let isVisited = await promiseIsURIVisited(this._uri1);
     do_check_true(isVisited);
-    isVisited = yield promiseIsURIVisited(this._uri2);
+    isVisited = await promiseIsURIVisited(this._uri2);
     do_check_true(isVisited);
 
     do_check_eq(bs.getBookmarkURI(this._bookmarkId).spec, this._uri1.spec);
@@ -1285,22 +1285,22 @@ tests.push({
     do_check_eq(bs.getItemType(this._separatorId), bs.TYPE_SEPARATOR);
 
     do_check_eq(ts.getTagsForURI(this._uri1).length, 1);
-    do_check_eq((yield PlacesUtils.keywords.fetch({ url: this._uri1.spec })).keyword, "testkeyword");
+    do_check_eq((await PlacesUtils.keywords.fetch({ url: this._uri1.spec })).keyword, "testkeyword");
     do_check_eq(as.getPageAnnotation(this._uri2, "anno"), "anno");
     do_check_eq(as.getItemAnnotation(this._bookmarkId, "anno"), "anno");
 
-    yield new Promise(resolve => {
+    await new Promise(resolve => {
       fs.getFaviconURLForPage(this._uri2, aFaviconURI => {
         do_check_true(aFaviconURI.equals(SMALLPNG_DATA_URI));
         resolve();
       });
     });
-  })
+  }
 });
 
 // ------------------------------------------------------------------------------
 
-add_task(function* test_preventive_maintenance() {
+add_task(async function test_preventive_maintenance() {
   // Get current bookmarks max ID for cleanup
   let stmt = mDBConn.createStatement("SELECT MAX(id) FROM moz_bookmarks");
   stmt.executeStep();
@@ -1310,20 +1310,20 @@ add_task(function* test_preventive_maintenance() {
 
   for (let test of tests) {
     dump("\nExecuting test: " + test.name + "\n*** " + test.desc + "\n");
-    yield test.setup();
+    await test.setup();
 
     let promiseMaintenanceFinished =
         promiseTopicObserved(FINISHED_MAINTENANCE_NOTIFICATION_TOPIC);
     Services.prefs.clearUserPref("places.database.lastMaintenance");
     let callbackInvoked = false;
     PlacesDBUtils.maintenanceOnIdle(() => callbackInvoked = true);
-    yield promiseMaintenanceFinished;
+    await promiseMaintenanceFinished;
     do_check_true(callbackInvoked);
 
     // Check the lastMaintenance time has been saved.
     do_check_neq(Services.prefs.getIntPref("places.database.lastMaintenance"), null);
 
-    yield test.check();
+    await test.check();
 
     cleanDatabase();
   }

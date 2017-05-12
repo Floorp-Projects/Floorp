@@ -65,13 +65,21 @@ function transformPacket(packet) {
           parameters = null;
           break;
         case "time":
-          // We don't show anything for console.time calls to match Chrome's behaviour.
           parameters = null;
-          type = MESSAGE_TYPE.NULL_MESSAGE;
+          if (timer && timer.error) {
+            messageText = l10n.getFormatStr(timer.error, [timer.name]);
+            level = MESSAGE_LEVEL.WARN;
+          } else {
+            // We don't show anything for console.time calls to match Chrome's behaviour.
+            type = MESSAGE_TYPE.NULL_MESSAGE;
+          }
           break;
         case "timeEnd":
           parameters = null;
-          if (timer) {
+          if (timer && timer.error) {
+            messageText = l10n.getFormatStr(timer.error, [timer.name]);
+            level = MESSAGE_LEVEL.WARN;
+          } else if (timer) {
             // We show the duration to users when calls console.timeEnd() is called,
             // if corresponding console.time() was called before.
             let duration = Math.round(timer.duration * 100) / 100;

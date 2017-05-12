@@ -3,9 +3,9 @@
 
 "use strict";
 
-add_task(function* () {
+add_task(async function() {
   let tab = gBrowser.addTab("about:blank");
-  yield promiseBrowserLoaded(tab.linkedBrowser);
+  await promiseBrowserLoaded(tab.linkedBrowser);
 
   is(tab.linkedBrowser.currentURI.spec, "about:blank",
      "we will be removing an about:blank tab");
@@ -13,7 +13,7 @@ add_task(function* () {
   let r = `rand-${Math.random()}`;
   ss.setTabValue(tab, "foobar", r);
 
-  yield promiseRemoveTab(tab);
+  await promiseRemoveTab(tab);
   let closedTabData = ss.getClosedTabData(window);
   ok(!closedTabData.includes(r), "tab not stored in _closedTabs");
 });

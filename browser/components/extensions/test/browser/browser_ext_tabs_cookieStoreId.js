@@ -2,14 +2,14 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* setup() {
+add_task(async function setup() {
   // make sure userContext is enabled.
   return SpecialPowers.pushPrefEnv({"set": [
     ["privacy.userContext.enabled", true],
   ]});
 });
 
-add_task(function* () {
+add_task(async function() {
   info("Start testing tabs.create with cookieStoreId");
 
   let testCases = [
@@ -136,22 +136,22 @@ add_task(function* () {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
   info("Tests must be ready...");
   extension.sendMessage("be-ready");
-  yield extension.awaitMessage("ready");
+  await extension.awaitMessage("ready");
   info("Tests are ready to run!");
 
   for (let test of testCases) {
     info(`test tab.create with cookieStoreId: "${test.cookieStoreId}"`);
     extension.sendMessage("test", test);
-    yield extension.awaitMessage("test-done");
+    await extension.awaitMessage("test-done");
   }
 
   info("Waiting for shutting down...");
   extension.sendMessage("finish");
-  yield extension.awaitMessage("gone");
+  await extension.awaitMessage("gone");
 
-  yield extension.unload();
+  await extension.unload();
 });

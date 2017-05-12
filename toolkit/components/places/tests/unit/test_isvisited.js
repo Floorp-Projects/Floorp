@@ -8,30 +8,30 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_execute() {
+add_task(async function test_execute() {
   var referrer = uri("about:blank");
 
   // add a http:// uri
   var uri1 = uri("http://mozilla.com");
-  yield PlacesTestUtils.addVisits({uri: uri1, referrer});
+  await PlacesTestUtils.addVisits({uri: uri1, referrer});
   do_check_guid_for_uri(uri1);
-  do_check_true(yield promiseIsURIVisited(uri1));
+  do_check_true(await promiseIsURIVisited(uri1));
 
   // add a https:// uri
   var uri2 = uri("https://etrade.com");
-  yield PlacesTestUtils.addVisits({uri: uri2, referrer});
+  await PlacesTestUtils.addVisits({uri: uri2, referrer});
   do_check_guid_for_uri(uri2);
-  do_check_true(yield promiseIsURIVisited(uri2));
+  do_check_true(await promiseIsURIVisited(uri2));
 
   // add a ftp:// uri
   var uri3 = uri("ftp://ftp.mozilla.org");
-  yield PlacesTestUtils.addVisits({uri: uri3, referrer});
+  await PlacesTestUtils.addVisits({uri: uri3, referrer});
   do_check_guid_for_uri(uri3);
-  do_check_true(yield promiseIsURIVisited(uri3));
+  do_check_true(await promiseIsURIVisited(uri3));
 
   // check if a nonexistent uri is visited
   var uri4 = uri("http://foobarcheese.com");
-  do_check_false(yield promiseIsURIVisited(uri4));
+  do_check_false(await promiseIsURIVisited(uri4));
 
   // check that certain schemes never show up as visited
   // even if we attempt to add them to history
@@ -65,7 +65,7 @@ add_task(function* test_execute() {
       }, error => {
         do_check_true(error.message.includes("No items were added to history"));
       });
-      do_check_false(yield promiseIsURIVisited(cantAddUri));
+      do_check_false(await promiseIsURIVisited(cantAddUri));
     }
   }
 });

@@ -17,16 +17,16 @@ function waitForAddresses() {
   });
 }
 
-registerCleanupFunction(function* () {
-  let addresses = yield getAddresses();
+registerCleanupFunction(async function() {
+  let addresses = await getAddresses();
   if (addresses.length) {
-    yield removeAddresses(addresses.map(address => address.guid));
+    await removeAddresses(addresses.map(address => address.guid));
   }
 });
 
-add_task(function* test_manageProfilesInitialState() {
-  yield BrowserTestUtils.withNewTab({gBrowser, url: MANAGE_PROFILES_DIALOG_URL}, function* (browser) {
-    yield ContentTask.spawn(browser, TEST_SELECTORS, (args) => {
+add_task(async function test_manageProfilesInitialState() {
+  await BrowserTestUtils.withNewTab({gBrowser, url: MANAGE_PROFILES_DIALOG_URL}, async function(browser) {
+    await ContentTask.spawn(browser, TEST_SELECTORS, (args) => {
       let selAddresses = content.document.querySelector(args.selAddresses);
       let btnRemove = content.document.querySelector(args.btnRemove);
       let btnEdit = content.document.querySelector(args.btnEdit);
@@ -40,13 +40,13 @@ add_task(function* test_manageProfilesInitialState() {
   });
 });
 
-add_task(function* test_removingSingleAndMultipleProfiles() {
-  yield saveAddress(TEST_ADDRESS_1);
-  yield saveAddress(TEST_ADDRESS_2);
-  yield saveAddress(TEST_ADDRESS_3);
+add_task(async function test_removingSingleAndMultipleProfiles() {
+  await saveAddress(TEST_ADDRESS_1);
+  await saveAddress(TEST_ADDRESS_2);
+  await saveAddress(TEST_ADDRESS_3);
 
   let win = window.openDialog(MANAGE_PROFILES_DIALOG_URL);
-  yield waitForAddresses();
+  await waitForAddresses();
 
   let selAddresses = win.document.querySelector(TEST_SELECTORS.selAddresses);
   let btnRemove = win.document.querySelector(TEST_SELECTORS.btnRemove);
@@ -58,7 +58,7 @@ add_task(function* test_removingSingleAndMultipleProfiles() {
   is(btnRemove.disabled, false, "Remove button enabled");
   is(btnEdit.disabled, false, "Edit button enabled");
   EventUtils.synthesizeMouseAtCenter(btnRemove, {}, win);
-  yield waitForAddresses();
+  await waitForAddresses();
   is(selAddresses.length, 2, "Two addresses left");
 
   EventUtils.synthesizeMouseAtCenter(selAddresses.children[0], {}, win);
@@ -67,24 +67,24 @@ add_task(function* test_removingSingleAndMultipleProfiles() {
   is(btnEdit.disabled, true, "Edit button disabled when multi-select");
 
   EventUtils.synthesizeMouseAtCenter(btnRemove, {}, win);
-  yield waitForAddresses();
+  await waitForAddresses();
   is(selAddresses.length, 0, "All addresses are removed");
 
   win.close();
 });
 
-add_task(function* test_profilesDialogWatchesStorageChanges() {
+add_task(async function test_profilesDialogWatchesStorageChanges() {
   let win = window.openDialog(MANAGE_PROFILES_DIALOG_URL);
-  yield waitForAddresses();
+  await waitForAddresses();
 
   let selAddresses = win.document.querySelector(TEST_SELECTORS.selAddresses);
 
-  yield saveAddress(TEST_ADDRESS_1);
-  let addresses = yield waitForAddresses();
+  await saveAddress(TEST_ADDRESS_1);
+  let addresses = await waitForAddresses();
   is(selAddresses.length, 1, "One address is shown");
 
-  yield removeAddresses([addresses[0].guid]);
-  yield waitForAddresses();
+  await removeAddresses([addresses[0].guid]);
+  await waitForAddresses();
   is(selAddresses.length, 0, "Address is removed");
   win.close();
 });

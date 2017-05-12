@@ -10,6 +10,14 @@
 #include "SkBlitter.h"
 #include "SkRasterClip.h"
 
+#ifdef SK_NO_ANALYTIC_AA
+    std::atomic<bool> gSkUseAnalyticAA{false};
+#else
+    std::atomic<bool> gSkUseAnalyticAA{true};
+#endif
+
+std::atomic<bool> gSkForceAnalyticAA{false};
+
 static inline void blitrect(SkBlitter* blitter, const SkIRect& r) {
     blitter->blitRect(r.fLeft, r.fTop, r.width(), r.height());
 }

@@ -1208,6 +1208,16 @@ nsProtocolProxyService::AsyncResolveInternal(nsIChannel *channel, uint32_t flags
     nsCOMPtr<nsIProxyInfo> pi;
     bool usePACThread;
 
+    // adapt to realtime changes in the system proxy service
+    if (mProxyConfig == PROXYCONFIG_SYSTEM) {
+        nsCOMPtr<nsISystemProxySettings> sp2 =
+            do_GetService(NS_SYSTEMPROXYSETTINGS_CONTRACTID);
+        if (sp2 != mSystemProxySettings) {
+            mSystemProxySettings = sp2;
+            ResetPACThread();
+        }
+    }
+
     // SystemProxySettings and PAC files can block the main thread
     // but if neither of them are in use, we can just do the work
     // right here and directly invoke the callback

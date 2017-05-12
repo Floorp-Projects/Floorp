@@ -9,8 +9,8 @@ const TEST_PAGE = "http://mochi.test:8888/browser/browser/components/" +
 const key = Math.random().toString();
 
 // Define the testing function
-function* doTest(aBrowser) {
-  return yield ContentTask.spawn(aBrowser, key, function(contentKey) {
+async function doTest(aBrowser) {
+  return await ContentTask.spawn(aBrowser, key, function(contentKey) {
     let value = content.localStorage.getItem(contentKey);
     if (value === null) {
       // No value is found, so we create one.

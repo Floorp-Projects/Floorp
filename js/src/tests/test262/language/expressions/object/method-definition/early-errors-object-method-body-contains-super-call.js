@@ -10,6 +10,6 @@ negative:
   phase: early
   type: SyntaxError
 ---*/
-!{
+({
   async foo () { super() }
-}
+})

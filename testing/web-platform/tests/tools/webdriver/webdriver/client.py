@@ -1,7 +1,3 @@
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
 import urlparse
 
 import error
@@ -20,7 +16,7 @@ def command(func):
 
         if session.session_id is None:
             session.start()
-        assert session.session_id != None
+        assert session.session_id is not None
 
         return func(self, *args, **kwargs)
 
@@ -89,26 +85,30 @@ class ActionSequence(object):
             .key_up("a") \
             .perform()
     """
-    def __init__(self, session, action_type, input_id):
+    def __init__(self, session, action_type, input_id, pointer_params=None):
         """Represents a sequence of actions of one type for one input source.
 
         :param session: WebDriver session.
         :param action_type: Action type; may be "none", "key", or "pointer".
         :param input_id: ID of input source.
+        :param pointer_params: Optional dictionary of pointer parameters.
         """
         self.session = session
-        # TODO take advantage of remote end generating uuid
         self._id = input_id
         self._type = action_type
         self._actions = []
+        self._pointer_params = pointer_params
 
     @property
     def dict(self):
-        return {
-          "type": self._type,
-          "id": self._id,
-          "actions": self._actions,
+        d = {
+            "type": self._type,
+            "id": self._id,
+            "actions": self._actions,
         }
+        if self._pointer_params is not None:
+            d["parameters"] = self._pointer_params
+        return d
 
     @command
     def perform(self):
@@ -232,6 +232,7 @@ class Actions(object):
         """
         return ActionSequence(self.session, *args, **kwargs)
 
+
 class Window(object):
     def __init__(self, session):
         self.session = session
@@ -244,7 +245,8 @@ class Window(object):
 
     @size.setter
     @command
-    def size(self, (width, height)):
+    def size(self, data):
+        width, height = data
         body = {"width": width, "height": height}
         self.session.send_session_command("POST", "window/rect", body)
 
@@ -256,7 +258,8 @@ class Window(object):
 
     @position.setter
     @command
-    def position(self, (x, y)):
+    def position(self, data):
+        data = x, y
         body = {"x": x, "y": y}
         self.session.send_session_command("POST", "window/rect", body)
 
@@ -333,12 +336,11 @@ class UserPrompt(object):
 
 
 class Session(object):
-    def __init__(self, host, port, url_prefix="/", desired_capabilities=None,
-                 required_capabilities=None, extension=None, timeout=None):
+    def __init__(self, host, port, url_prefix="/", capabilities=None,
+                 timeout=None, extension=None):
         self.transport = transport.HTTPWireProtocol(
             host, port, url_prefix, timeout=timeout)
-        self.desired_capabilities = desired_capabilities
-        self.required_capabilities = required_capabilities
+        self.capabilities = capabilities
         self.session_id = None
         self.timeouts = None
         self.window = None
@@ -369,13 +371,8 @@ class Session(object):
 
         body = {}
 
-        caps = {}
-        if self.desired_capabilities is not None:
-            caps["desiredCapabilities"] = self.desired_capabilities
-        if self.required_capabilities is not None:
-            caps["requiredCapabilities"] = self.required_capabilities
-        #body["capabilities"] = caps
-        body = caps
+        if self.capabilities is not None:
+            body["capabilities"] = self.capabilities
 
         value = self.send_command("POST", "session", body=body)
         self.session_id = value["sessionId"]
@@ -618,12 +615,8 @@ class Element(object):
         self.send_element_command("POST", self.url("clear"), {})
 
     @command
-    def send_keys(self, keys):
-        if isinstance(keys, (str, unicode)):
-            keys = [char for char in keys]
-
-        body = {"value": keys}
-        return self.send_element_command("POST", "value", body)
+    def send_keys(self, text):
+        return self.send_element_command("POST", "value", {"text": text})
 
     @property
     @command

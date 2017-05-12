@@ -54,45 +54,45 @@ function run_test() {
 
 // Updating the pref without changing the app version won't disable add-ons
 // immediately but will after a signing check
-add_task(function*() {
+add_task(async function() {
   Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_REQUIRED, false);
   startupManager();
 
   // Install the signed add-on
-  yield promiseInstallAllFiles([do_get_file(DATA + "unsigned_bootstrap_2.xpi")]);
+  await promiseInstallAllFiles([do_get_file(DATA + "unsigned_bootstrap_2.xpi")]);
 
-  let addon = yield promiseAddonByID(ID);
+  let addon = await promiseAddonByID(ID);
   do_check_neq(addon, null);
   do_check_false(addon.appDisabled);
   do_check_true(addon.isActive);
   do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_MISSING);
 
-  yield promiseShutdownManager();
+  await promiseShutdownManager();
 
   Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_REQUIRED, true);
 
   startupManager();
 
-  addon = yield promiseAddonByID(ID);
+  addon = await promiseAddonByID(ID);
   do_check_neq(addon, null);
   do_check_false(addon.appDisabled);
   do_check_true(addon.isActive);
   do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_MISSING);
 
   // Update checks shouldn't affect the add-on
-  yield AddonManagerInternal.backgroundUpdateCheck();
-  addon = yield promiseAddonByID(ID);
+  await AddonManagerInternal.backgroundUpdateCheck();
+  addon = await promiseAddonByID(ID);
   do_check_neq(addon, null);
   do_check_false(addon.appDisabled);
   do_check_true(addon.isActive);
   do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_MISSING);
 
-  let changes = yield verifySignatures();
+  let changes = await verifySignatures();
 
   do_check_eq(changes.disabled.length, 1);
   do_check_eq(changes.disabled[0], ID);
 
-  addon = yield promiseAddonByID(ID);
+  addon = await promiseAddonByID(ID);
   do_check_neq(addon, null);
   do_check_true(addon.appDisabled);
   do_check_false(addon.isActive);
@@ -100,31 +100,31 @@ add_task(function*() {
 
   addon.uninstall();
 
-  yield promiseShutdownManager();
+  await promiseShutdownManager();
 });
 
 // Updating the pref with changing the app version will disable add-ons
 // immediately
-add_task(function*() {
+add_task(async function() {
   Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_REQUIRED, false);
   startupManager();
 
   // Install the signed add-on
-  yield promiseInstallAllFiles([do_get_file(DATA + "unsigned_bootstrap_2.xpi")]);
+  await promiseInstallAllFiles([do_get_file(DATA + "unsigned_bootstrap_2.xpi")]);
 
-  let addon = yield promiseAddonByID(ID);
+  let addon = await promiseAddonByID(ID);
   do_check_neq(addon, null);
   do_check_false(addon.appDisabled);
   do_check_true(addon.isActive);
   do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_MISSING);
 
-  yield promiseShutdownManager();
+  await promiseShutdownManager();
 
   Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_REQUIRED, true);
   gAppInfo.version = 5.0
   startupManager(true);
 
-  addon = yield promiseAddonByID(ID);
+  addon = await promiseAddonByID(ID);
   do_check_neq(addon, null);
   do_check_true(addon.appDisabled);
   do_check_false(addon.isActive);
@@ -132,5 +132,5 @@ add_task(function*() {
 
   addon.uninstall();
 
-  yield promiseShutdownManager();
+  await promiseShutdownManager();
 });

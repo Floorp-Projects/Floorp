@@ -1,10 +1,10 @@
 requestLongerTimeout(2);
-add_task(function* () {
+add_task(async function() {
   function pushPref(name, value) {
     return SpecialPowers.pushPrefEnv({"set": [[name, value]]});
   }
 
-  yield pushPref("general.autoScroll", true);
+  await pushPref("general.autoScroll", true);
 
   const expectScrollNone = 0;
   const expectScrollVert = 1;
@@ -92,21 +92,21 @@ body > div > div {width: 1000px;height: 1000px;}\
     if (test.dataUri) {
       let loadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
       gBrowser.loadURI(test.dataUri);
-      yield loadedPromise;
+      await loadedPromise;
       continue;
      }
 
     let prefsChanged = (test.middlemousepastepref == false || test.middlemousepastepref == true);
     if (prefsChanged) {
-      yield pushPref("middlemouse.paste", test.middlemousepastepref);
+      await pushPref("middlemouse.paste", test.middlemousepastepref);
     }
 
-    yield BrowserTestUtils.synthesizeMouse("#" + test.elem, 50, 80, { button: 1 },
+    await BrowserTestUtils.synthesizeMouse("#" + test.elem, 50, 80, { button: 1 },
                                            gBrowser.selectedBrowser);
 
     // This ensures bug 605127 is fixed: pagehide in an unrelated document
     // should not cancel the autoscroll.
-    yield ContentTask.spawn(gBrowser.selectedBrowser, { }, function* () {
+    await ContentTask.spawn(gBrowser.selectedBrowser, { }, async function() {
       var iframe = content.document.getElementById("iframe");
 
       if (iframe) {
@@ -121,19 +121,19 @@ body > div > div {width: 1000px;height: 1000px;}\
 
     is(document.activeElement, gBrowser.selectedBrowser, "Browser still focused after autoscroll started");
 
-    yield BrowserTestUtils.synthesizeMouse("#" + test.elem, 100, 100,
+    await BrowserTestUtils.synthesizeMouse("#" + test.elem, 100, 100,
                                            { type: "mousemove", clickCount: "0" },
                                            gBrowser.selectedBrowser);
 
     if (prefsChanged) {
-      yield SpecialPowers.popPrefEnv();
+      await SpecialPowers.popPrefEnv();
     }
 
     // Start checking for the scroll.
     let firstTimestamp = undefined;
     let timeCompensation;
     do {
-      let timestamp = yield new Promise(resolve => window.requestAnimationFrame(resolve));
+      let timestamp = await new Promise(resolve => window.requestAnimationFrame(resolve));
       if (firstTimestamp === undefined) {
         firstTimestamp = timestamp;
       }
@@ -161,12 +161,12 @@ body > div > div {width: 1000px;height: 1000px;}\
     let scrollVert = test.expected & expectScrollVert;
     let scrollHori = test.expected & expectScrollHori;
 
-    yield ContentTask.spawn(gBrowser.selectedBrowser,
+    await ContentTask.spawn(gBrowser.selectedBrowser,
                             { scrollVert,
                               scrollHori,
                               elemid: test.elem,
                               checkWindow: test.testwindow },
-      function* (args) {
+      async function(args) {
         let msg = "";
         if (args.checkWindow) {
           if (!((args.scrollVert && content.scrollY > 0) ||
@@ -200,7 +200,7 @@ body > div > div {width: 1000px;height: 1000px;}\
 
     // Before continuing the test, we need to ensure that the IPC
     // message that stops autoscrolling has had time to arrive.
-    yield new Promise(resolve => executeSoon(resolve));
+    await new Promise(resolve => executeSoon(resolve));
   }
 
   // remove 2 tabs that were opened by middle-click on links
@@ -209,5 +209,5 @@ body > div > div {width: 1000px;height: 1000px;}\
   }
 
   // wait for focus to fix a failure in the next test if the latter runs too soon.
-  yield SimpleTest.promiseFocus();
+  await SimpleTest.promiseFocus();
 });

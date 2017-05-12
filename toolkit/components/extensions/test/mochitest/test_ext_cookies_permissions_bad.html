@@ -15,7 +15,7 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* init() {
+add_task(async function init() {
   // We need to trigger a cookie eviction in order to test our batch delete
   // observer.
   SpecialPowers.setIntPref("network.cookie.maxPerHost", 3);
@@ -24,9 +24,9 @@ add_task(function* init() {
   });
 });
 
-add_task(function* test_bad_cookie_permissions() {
+add_task(async function test_bad_cookie_permissions() {
   info("Test non-matching, non-secure domain with non-secure cookie");
-  yield testCookies({
+  await testCookies({
     permissions: ["http://example.com/", "cookies"],
     url: "http://example.net/",
     domain: "example.net",
@@ -36,7 +36,7 @@ add_task(function* test_bad_cookie_permissions() {
   });
 
   info("Test non-matching, secure domain with non-secure cookie");
-  yield testCookies({
+  await testCookies({
     permissions: ["https://example.com/", "cookies"],
     url: "https://example.net/",
     domain: "example.net",
@@ -46,7 +46,7 @@ add_task(function* test_bad_cookie_permissions() {
   });
 
   info("Test non-matching, secure domain with secure cookie");
-  yield testCookies({
+  await testCookies({
     permissions: ["https://example.com/", "cookies"],
     url: "https://example.net/",
     domain: "example.net",
@@ -56,7 +56,7 @@ add_task(function* test_bad_cookie_permissions() {
   });
 
   info("Test matching subdomain with superdomain privileges, secure cookie (http)");
-  yield testCookies({
+  await testCookies({
     permissions: ["http://foo.bar.example.com/", "cookies"],
     url: "http://foo.bar.example.com/",
     domain: ".example.com",
@@ -66,7 +66,7 @@ add_task(function* test_bad_cookie_permissions() {
   });
 
   info("Test matching, non-secure domain with secure cookie");
-  yield testCookies({
+  await testCookies({
     permissions: ["http://example.com/", "cookies"],
     url: "http://example.com/",
     domain: "example.com",
@@ -76,7 +76,7 @@ add_task(function* test_bad_cookie_permissions() {
   });
 
   info("Test matching, non-secure host, secure URL");
-  yield testCookies({
+  await testCookies({
     permissions: ["http://example.com/", "cookies"],
     url: "https://example.com/",
     domain: "example.com",
@@ -86,7 +86,7 @@ add_task(function* test_bad_cookie_permissions() {
   });
 
   info("Test non-matching domain");
-  yield testCookies({
+  await testCookies({
     permissions: ["http://example.com/", "cookies"],
     url: "http://example.com/",
     domain: "example.net",
@@ -96,7 +96,7 @@ add_task(function* test_bad_cookie_permissions() {
   });
 
   info("Test invalid scheme");
-  yield testCookies({
+  await testCookies({
     permissions: ["ftp://example.com/", "cookies"],
     url: "ftp://example.com/",
     domain: "example.com",

@@ -68,19 +68,19 @@ function openDetailsView(aId) {
   EventUtils.synthesizeMouseAtCenter(item, { clickCount: 1 }, gManagerWindow);
   EventUtils.synthesizeMouseAtCenter(item, { clickCount: 2 }, gManagerWindow);
 
-  let deferred = Promise.defer();
-  wait_for_view_load(gManagerWindow, deferred.resolve);
-  return deferred.promise;
+  return new Promise(resolve => {
+    wait_for_view_load(gManagerWindow, resolve);
+  });
 }
 
-add_task(function* initializeState() {
+add_task(async function initializeState() {
   gPrefs.setBoolPref(GMPScope.GMPPrefs.KEY_LOGGING_DUMP, true);
   gPrefs.setIntPref(GMPScope.GMPPrefs.KEY_LOGGING_LEVEL, 0);
 
-  gManagerWindow = yield open_manager();
+  gManagerWindow = await open_manager();
   gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
-  registerCleanupFunction(Task.async(function*() {
+  registerCleanupFunction(async function() {
     Services.obs.removeObserver(gOptionsObserver, AddonManager.OPTIONS_NOTIFICATION_DISPLAYED);
 
     for (let addon of gMockAddons) {
@@ -95,9 +95,9 @@ add_task(function* initializeState() {
     gPrefs.clearUserPref(GMPScope.GMPPrefs.KEY_LOGGING_LEVEL);
     gPrefs.clearUserPref(GMPScope.GMPPrefs.KEY_UPDATE_LAST_CHECK);
     gPrefs.clearUserPref(GMPScope.GMPPrefs.KEY_EME_ENABLED);
-    yield GMPScope.GMPProvider.shutdown();
+    await GMPScope.GMPProvider.shutdown();
     GMPScope.GMPProvider.startup();
-  }));
+  });
 
   Services.obs.addObserver(gOptionsObserver, AddonManager.OPTIONS_NOTIFICATION_DISPLAYED);
 
@@ -112,13 +112,13 @@ add_task(function* initializeState() {
     gPrefs.setBoolPref(getKey(GMPScope.GMPPrefs.KEY_PLUGIN_VISIBLE, addon.id), true);
     gPrefs.setBoolPref(getKey(GMPScope.GMPPrefs.KEY_PLUGIN_FORCE_SUPPORTED, addon.id), true);
   }
-  yield GMPScope.GMPProvider.shutdown();
+  await GMPScope.GMPProvider.shutdown();
   GMPScope.GMPProvider.startup();
 });
 
-add_task(function* testNotInstalledDisabled() {
+add_task(async function testNotInstalledDisabled() {
   Assert.ok(gCategoryUtilities.isTypeVisible("plugin"), "Plugin tab visible.");
-  yield gCategoryUtilities.openType("plugin");
+  await gCategoryUtilities.openType("plugin");
 
   for (let addon of gMockAddons) {
     let item = get_addon_element(gManagerWindow, addon.id);
@@ -143,9 +143,9 @@ add_task(function* testNotInstalledDisabled() {
   }
 });
 
-add_task(function* testNotInstalledDisabledDetails() {
+add_task(async function testNotInstalledDisabledDetails() {
   for (let addon of gMockAddons) {
-    yield openDetailsView(addon.id);
+    await openDetailsView(addon.id);
     let doc = gManagerWindow.document;
 
     let el = doc.getElementsByClassName("disabled-postfix")[0];
@@ -156,11 +156,11 @@ add_task(function* testNotInstalledDisabledDetails() {
     is_element_hidden(el, "Warning notification is hidden.");
     el = doc.getElementsByTagName("setting")[0];
 
-    yield gCategoryUtilities.openType("plugin");
+    await gCategoryUtilities.openType("plugin");
   }
 });
 
-add_task(function* testNotInstalled() {
+add_task(async function testNotInstalled() {
   for (let addon of gMockAddons) {
     gPrefs.setBoolPref(getKey(GMPScope.GMPPrefs.KEY_PLUGIN_ENABLED, addon.id), true);
     let item = get_addon_element(gManagerWindow, addon.id);
@@ -185,9 +185,9 @@ add_task(function* testNotInstalled() {
   }
 });
 
-add_task(function* testNotInstalledDetails() {
+add_task(async function testNotInstalledDetails() {
   for (let addon of gMockAddons) {
-    yield openDetailsView(addon.id);
+    await openDetailsView(addon.id);
     let doc = gManagerWindow.document;
 
     let el = doc.getElementsByClassName("disabled-postfix")[0];
@@ -198,11 +198,11 @@ add_task(function* testNotInstalledDetails() {
     is_element_visible(el, "Warning notification is visible.");
     el = doc.getElementsByTagName("setting")[0];
 
-    yield gCategoryUtilities.openType("plugin");
+    await gCategoryUtilities.openType("plugin");
   }
 });
 
-add_task(function* testInstalled() {
+add_task(async function testInstalled() {
   for (let addon of gMockAddons) {
     gPrefs.setIntPref(getKey(GMPScope.GMPPrefs.KEY_PLUGIN_LAST_UPDATE, addon.id),
                       TEST_DATE.getTime());
@@ -231,9 +231,9 @@ add_task(function* testInstalled() {
   }
 });
 
-add_task(function* testInstalledDetails() {
+add_task(async function testInstalledDetails() {
   for (let addon of gMockAddons) {
-    yield openDetailsView(addon.id);
+    await openDetailsView(addon.id);
     let doc = gManagerWindow.document;
 
     let el = doc.getElementsByClassName("disabled-postfix")[0];
@@ -245,25 +245,25 @@ add_task(function* testInstalledDetails() {
     el = doc.getElementsByTagName("setting")[0];
 
     let contextMenu = doc.getElementById("addonitem-popup");
-    let deferred = Promise.defer();
-    let listener = () => {
-      contextMenu.removeEventListener("popupshown", listener);
-      deferred.resolve();
-    };
-    contextMenu.addEventListener("popupshown", listener);
-    el = doc.getElementsByClassName("detail-view-container")[0];
-    EventUtils.synthesizeMouse(el, 4, 4, { }, gManagerWindow);
-    EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
-    yield deferred.promise;
+    await new Promise(resolve => {
+      let listener = () => {
+        contextMenu.removeEventListener("popupshown", listener);
+        resolve();
+      };
+      contextMenu.addEventListener("popupshown", listener);
+      el = doc.getElementsByClassName("detail-view-container")[0];
+      EventUtils.synthesizeMouse(el, 4, 4, { }, gManagerWindow);
+      EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
+    });
     let menuSep = doc.getElementById("addonitem-menuseparator");
     is_element_hidden(menuSep, "Menu separator is hidden.");
     contextMenu.hidePopup();
 
-    yield gCategoryUtilities.openType("plugin");
+    await gCategoryUtilities.openType("plugin");
   }
 });
 
-add_task(function* testInstalledGlobalEmeDisabled() {
+add_task(async function testInstalledGlobalEmeDisabled() {
   gPrefs.setBoolPref(GMPScope.GMPPrefs.KEY_EME_ENABLED, false);
   for (let addon of gMockAddons) {
     let item = get_addon_element(gManagerWindow, addon.id);
@@ -276,7 +276,7 @@ add_task(function* testInstalledGlobalEmeDisabled() {
   gPrefs.setBoolPref(GMPScope.GMPPrefs.KEY_EME_ENABLED, true);
 });
 
-add_task(function* testPreferencesButton() {
+add_task(async function testPreferencesButton() {
 
   let prefValues = [
     { enabled: false, version: "" },
@@ -289,30 +289,30 @@ add_task(function* testPreferencesButton() {
     dump("Testing preferences button with pref settings: " +
          JSON.stringify(preferences) + "\n");
     for (let addon of gMockAddons) {
-      yield close_manager(gManagerWindow);
-      gManagerWindow = yield open_manager();
+      await close_manager(gManagerWindow);
+      gManagerWindow = await open_manager();
       gCategoryUtilities = new CategoryUtilities(gManagerWindow);
       gPrefs.setCharPref(getKey(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, addon.id),
                          preferences.version);
       gPrefs.setBoolPref(getKey(GMPScope.GMPPrefs.KEY_PLUGIN_ENABLED, addon.id),
                          preferences.enabled);
 
-      yield gCategoryUtilities.openType("plugin");
+      await gCategoryUtilities.openType("plugin");
       let doc = gManagerWindow.document;
       let item = get_addon_element(gManagerWindow, addon.id);
 
       let button = doc.getAnonymousElementByAttribute(item, "anonid", "preferences-btn");
       EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
-      let deferred = Promise.defer();
-      wait_for_view_load(gManagerWindow, deferred.resolve);
-      yield deferred.promise;
+      await new Promise(resolve => {
+        wait_for_view_load(gManagerWindow, resolve);
+      });
 
       is(gOptionsObserver.lastDisplayed, addon.id);
     }
   }
 });
 
-add_task(function* testUpdateButton() {
+add_task(async function testUpdateButton() {
   gPrefs.clearUserPref(GMPScope.GMPPrefs.KEY_UPDATE_LAST_CHECK);
 
   let originalInstallManager = GMPScope.GMPInstallManager;
@@ -324,7 +324,7 @@ add_task(function* testUpdateButton() {
   });
 
   for (let addon of gMockAddons) {
-    yield gCategoryUtilities.openType("plugin");
+    await gCategoryUtilities.openType("plugin");
     let doc = gManagerWindow.document;
     let item = get_addon_element(gManagerWindow, addon.id);
 
@@ -333,14 +333,14 @@ add_task(function* testUpdateButton() {
 
     let button = doc.getAnonymousElementByAttribute(item, "anonid", "preferences-btn");
     EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
-    let deferred = Promise.defer();
-    wait_for_view_load(gManagerWindow, deferred.resolve);
-    yield deferred.promise;
+    await new Promise(resolve => {
+      wait_for_view_load(gManagerWindow, resolve);
+    });
 
     button = doc.getElementById("detail-findUpdates-btn");
     Assert.ok(button != null, "Got detail-findUpdates-btn");
     EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
-    yield gInstallDeferred.promise;
+    await gInstallDeferred.promise;
 
     Assert.equal(gInstalledAddonId, addon.id);
   }
@@ -352,15 +352,15 @@ add_task(function* testUpdateButton() {
   });
 });
 
-add_task(function* testEmeSupport() {
+add_task(async function testEmeSupport() {
   for (let addon of gMockAddons) {
     gPrefs.clearUserPref(getKey(GMPScope.GMPPrefs.KEY_PLUGIN_FORCE_SUPPORTED, addon.id));
   }
-  yield GMPScope.GMPProvider.shutdown();
+  await GMPScope.GMPProvider.shutdown();
   GMPScope.GMPProvider.startup();
 
   for (let addon of gMockAddons) {
-    yield gCategoryUtilities.openType("plugin");
+    await gCategoryUtilities.openType("plugin");
     let item = get_addon_element(gManagerWindow, addon.id);
     if (addon.id == GMPScope.EME_ADOBE_ID) {
       if (AppConstants.isPlatformAndVersionAtLeast("win", "6")) {
@@ -387,11 +387,11 @@ add_task(function* testEmeSupport() {
     gPrefs.setBoolPref(getKey(GMPScope.GMPPrefs.KEY_PLUGIN_VISIBLE, addon.id), true);
     gPrefs.setBoolPref(getKey(GMPScope.GMPPrefs.KEY_PLUGIN_FORCE_SUPPORTED, addon.id), true);
   }
-  yield GMPScope.GMPProvider.shutdown();
+  await GMPScope.GMPProvider.shutdown();
   GMPScope.GMPProvider.startup();
 
 });
 
-add_task(function* test_cleanup() {
-  yield close_manager(gManagerWindow);
+add_task(async function test_cleanup() {
+  await close_manager(gManagerWindow);
 });

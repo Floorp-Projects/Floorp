@@ -24,9 +24,9 @@ function promiseNewEngine(basename) {
   });
 }
 
-add_task(function* test_remove() {
-  yield promiseNewEngine("testEngine_dupe.xml");
-  yield promiseNewEngine("testEngine.xml");
+add_task(async function test_remove() {
+  await promiseNewEngine("testEngine_dupe.xml");
+  await promiseNewEngine("testEngine.xml");
   Services.prefs.setCharPref("browser.search.hiddenOneOffs", testPref);
 
   info("Removing testEngine_dupe.xml");
@@ -49,11 +49,11 @@ add_task(function* test_remove() {
      "hiddenOneOffs is empty after removing all hidden engines.");
 });
 
-add_task(function* test_add() {
-  yield promiseNewEngine("testEngine.xml");
+add_task(async function test_add() {
+  await promiseNewEngine("testEngine.xml");
   info("setting prefs to " + testPref);
   Services.prefs.setCharPref("browser.search.hiddenOneOffs", testPref);
-  yield promiseNewEngine("testEngine_dupe.xml");
+  await promiseNewEngine("testEngine_dupe.xml");
 
   let hiddenOneOffs =
     Services.prefs.getCharPref("browser.search.hiddenOneOffs").split(",");
@@ -66,13 +66,13 @@ add_task(function* test_add() {
      "Adding an engine does not remove engines from hidden list.");
 });
 
-add_task(function* test_diacritics() {
+add_task(async function test_diacritics() {
   const diacritic_engine = "Foo \u2661";
   let Preferences =
     Cu.import("resource://gre/modules/Preferences.jsm", {}).Preferences;
 
   Preferences.set("browser.search.hiddenOneOffs", diacritic_engine);
-  yield promiseNewEngine("testEngine_diacritics.xml");
+  await promiseNewEngine("testEngine_diacritics.xml");
 
   let hiddenOneOffs =
     Preferences.get("browser.search.hiddenOneOffs").split(",");

@@ -15,7 +15,7 @@ startupManager();
 /**
  *  Schema change with no application update reloads metadata.
  */
-add_task(function* schema_change() {
+add_task(async function schema_change() {
   const ID = "schema-change@tests.mozilla.org";
 
   let xpiFile = createTempXPIFile({
@@ -30,14 +30,14 @@ add_task(function* schema_change() {
     }]
   });
 
-  yield promiseInstallFile(xpiFile);
+  await promiseInstallFile(xpiFile);
 
-  let addon = yield promiseAddonByID(ID);
+  let addon = await promiseAddonByID(ID);
 
   notEqual(addon, null, "Got an addon object as expected");
   equal(addon.version, "1.0", "Got the expected version");
 
-  yield promiseShutdownManager();
+  await promiseShutdownManager();
 
   xpiFile = createTempXPIFile({
     id: ID,
@@ -62,21 +62,21 @@ add_task(function* schema_change() {
 
   file.lastModifiedTime = timestamp;
 
-  yield promiseStartupManager();
+  await promiseStartupManager();
 
-  addon = yield promiseAddonByID(ID);
+  addon = await promiseAddonByID(ID);
   notEqual(addon, null, "Got an addon object as expected");
   equal(addon.version, "2.0", "Got the expected version");
 
   let waitUninstall = promiseAddonEvent("onUninstalled");
   addon.uninstall();
-  yield waitUninstall;
+  await waitUninstall;
 });
 
 /**
  *  Application update with no schema change does not reload metadata.
  */
-add_task(function* schema_change() {
+add_task(async function schema_change() {
   const ID = "schema-change@tests.mozilla.org";
 
   let xpiFile = createTempXPIFile({
@@ -91,14 +91,14 @@ add_task(function* schema_change() {
     }]
   });
 
-  yield promiseInstallFile(xpiFile);
+  await promiseInstallFile(xpiFile);
 
-  let addon = yield promiseAddonByID(ID);
+  let addon = await promiseAddonByID(ID);
 
   notEqual(addon, null, "Got an addon object as expected");
   equal(addon.version, "1.0", "Got the expected version");
 
-  yield promiseShutdownManager();
+  await promiseShutdownManager();
 
   xpiFile = createTempXPIFile({
     id: ID,
@@ -122,21 +122,21 @@ add_task(function* schema_change() {
 
   file.lastModifiedTime = timestamp;
 
-  yield promiseStartupManager();
+  await promiseStartupManager();
 
-  addon = yield promiseAddonByID(ID);
+  addon = await promiseAddonByID(ID);
   notEqual(addon, null, "Got an addon object as expected");
   equal(addon.version, "1.0", "Got the expected version");
 
   let waitUninstall = promiseAddonEvent("onUninstalled");
   addon.uninstall();
-  yield waitUninstall;
+  await waitUninstall;
 });
 
 /**
  *  App update and a schema change causes a reload of the manifest.
  */
-add_task(function* schema_change_app_update() {
+add_task(async function schema_change_app_update() {
   const ID = "schema-change@tests.mozilla.org";
 
   let xpiFile = createTempXPIFile({
@@ -151,14 +151,14 @@ add_task(function* schema_change_app_update() {
     }]
   });
 
-  yield promiseInstallFile(xpiFile);
+  await promiseInstallFile(xpiFile);
 
-  let addon = yield promiseAddonByID(ID);
+  let addon = await promiseAddonByID(ID);
 
   notEqual(addon, null, "Got an addon object as expected");
   equal(addon.version, "1.0", "Got the expected version");
 
-  yield promiseShutdownManager();
+  await promiseShutdownManager();
 
   xpiFile = createTempXPIFile({
     id: ID,
@@ -184,22 +184,22 @@ add_task(function* schema_change_app_update() {
 
   file.lastModifiedTime = timestamp;
 
-  yield promiseStartupManager();
+  await promiseStartupManager();
 
-  addon = yield promiseAddonByID(ID);
+  addon = await promiseAddonByID(ID);
   notEqual(addon, null, "Got an addon object as expected");
   equal(addon.appDisabled, false);
   equal(addon.version, "2.0", "Got the expected version");
 
   let waitUninstall = promiseAddonEvent("onUninstalled");
   addon.uninstall();
-  yield waitUninstall;
+  await waitUninstall;
 });
 
 /**
  *  No schema change, no manifest reload.
  */
-add_task(function* schema_change() {
+add_task(async function schema_change() {
   const ID = "schema-change@tests.mozilla.org";
 
   let xpiFile = createTempXPIFile({
@@ -214,14 +214,14 @@ add_task(function* schema_change() {
     }]
   });
 
-  yield promiseInstallFile(xpiFile);
+  await promiseInstallFile(xpiFile);
 
-  let addon = yield promiseAddonByID(ID);
+  let addon = await promiseAddonByID(ID);
 
   notEqual(addon, null, "Got an addon object as expected");
   equal(addon.version, "1.0", "Got the expected version");
 
-  yield promiseShutdownManager();
+  await promiseShutdownManager();
 
   xpiFile = createTempXPIFile({
     id: ID,
@@ -244,21 +244,21 @@ add_task(function* schema_change() {
 
   file.lastModifiedTime = timestamp;
 
-  yield promiseStartupManager();
+  await promiseStartupManager();
 
-  addon = yield promiseAddonByID(ID);
+  addon = await promiseAddonByID(ID);
   notEqual(addon, null, "Got an addon object as expected");
   equal(addon.version, "1.0", "Got the expected version");
 
   let waitUninstall = promiseAddonEvent("onUninstalled");
   addon.uninstall();
-  yield waitUninstall;
+  await waitUninstall;
 });
 
 /**
  *  Modified timestamp on the XPI causes a reload of the manifest.
  */
-add_task(function* schema_change() {
+add_task(async function schema_change() {
   const ID = "schema-change@tests.mozilla.org";
 
   let xpiFile = createTempXPIFile({
@@ -273,14 +273,14 @@ add_task(function* schema_change() {
     }]
   });
 
-  yield promiseInstallFile(xpiFile);
+  await promiseInstallFile(xpiFile);
 
-  let addon = yield promiseAddonByID(ID);
+  let addon = await promiseAddonByID(ID);
 
   notEqual(addon, null, "Got an addon object as expected");
   equal(addon.version, "1.0", "Got the expected version");
 
-  yield promiseShutdownManager();
+  await promiseShutdownManager();
 
   xpiFile = createTempXPIFile({
     id: ID,
@@ -305,13 +305,13 @@ add_task(function* schema_change() {
 
   file.lastModifiedTime = timestamp;
 
-  yield promiseStartupManager();
+  await promiseStartupManager();
 
-  addon = yield promiseAddonByID(ID);
+  addon = await promiseAddonByID(ID);
   notEqual(addon, null, "Got an addon object as expected");
   equal(addon.version, "2.0", "Got the expected version");
 
   let waitUninstall = promiseAddonEvent("onUninstalled");
   addon.uninstall();
-  yield waitUninstall;
+  await waitUninstall;
 });

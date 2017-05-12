@@ -18,13 +18,6 @@ var pathParts = gTestPath.split("/");
 // Drop the test filename
 pathParts.splice(pathParts.length - 1, pathParts.length);
 
-var gTestInWindow = /-window$/.test(pathParts[pathParts.length - 1]);
-
-// Drop the UI type
-if (gTestInWindow) {
-  pathParts.splice(pathParts.length - 1, pathParts.length);
-}
-
 const RELATIVE_DIR = pathParts.slice(4).join("/") + "/";
 
 const TESTROOT = "http://example.com/" + RELATIVE_DIR;
@@ -63,8 +56,6 @@ var PREF_CHECK_COMPATIBILITY;
 var gPendingTests = [];
 var gTestsRun = 0;
 var gTestStart = null;
-
-var gUseInContentUI = !gTestInWindow && ("switchToTabHavingURI" in window);
 
 var gRestorePrefs = [{name: PREF_LOGGING_ENABLED},
                      {name: PREF_CUSTOM_XPINSTALL_CONFIRMATION_UI},
@@ -228,7 +219,7 @@ function run_next_test() {
   executeSoon(() => log_exceptions(test));
 }
 
-var get_tooltip_info = Task.async(function*(addon) {
+var get_tooltip_info = async function(addon) {
   let managerWindow = addon.ownerGlobal;
 
   // The popup code uses a triggering event's target to set the
@@ -241,13 +232,13 @@ var get_tooltip_info = Task.async(function*(addon) {
 
   let promise = BrowserTestUtils.waitForEvent(tooltip, "popupshown");
   tooltip.openPopup(nameNode, "after_start", 0, 0, false, false, event);
-  yield promise;
+  await promise;
 
   let tiptext = tooltip.label;
 
   promise = BrowserTestUtils.waitForEvent(tooltip, "popuphidden");
   tooltip.hidePopup();
-  yield promise;
+  await promise;
 
   let expectedName = addon.getAttribute("name");
   ok(tiptext.substring(0, expectedName.length), expectedName,
@@ -263,7 +254,7 @@ var get_tooltip_info = Task.async(function*(addon) {
     name: tiptext.substring(0, expectedName.length),
     version: tiptext.substring(expectedName.length + 1)
   };
-});
+};
 
 function get_addon_file_url(aFilename) {
   try {
@@ -407,28 +398,18 @@ function open_manager(aView, aCallback, aLoadCallback, aLongerTimeout) {
       }, aManagerWindow);
     }
 
-    if (gUseInContentUI) {
-      info("Loading manager window in tab");
-      Services.obs.addObserver(function(aSubject, aTopic, aData) {
-        Services.obs.removeObserver(arguments.callee, aTopic);
-        if (aSubject.location.href != MANAGER_URI) {
-          info("Ignoring load event for " + aSubject.location.href);
-          return;
-        }
-        setup_manager(aSubject);
-      }, "EM-loaded");
+    info("Loading manager window in tab");
+    Services.obs.addObserver(function(aSubject, aTopic, aData) {
+      Services.obs.removeObserver(arguments.callee, aTopic);
+      if (aSubject.location.href != MANAGER_URI) {
+        info("Ignoring load event for " + aSubject.location.href);
+        return;
+      }
+      setup_manager(aSubject);
+    }, "EM-loaded");
 
-      gBrowser.selectedTab = gBrowser.addTab();
-      switchToTabHavingURI(MANAGER_URI, true);
-    } else {
-      info("Loading manager window in dialog");
-      Services.obs.addObserver(function(aSubject, aTopic, aData) {
-        Services.obs.removeObserver(arguments.callee, aTopic);
-        setup_manager(aSubject);
-      }, "EM-loaded");
-
-      openDialog(MANAGER_URI);
-    }
+    gBrowser.selectedTab = gBrowser.addTab();
+    switchToTabHavingURI(MANAGER_URI, true);
   });
 
   // The promise resolves with the manager window, so it is passed to the callback

@@ -7,8 +7,8 @@ registerCleanupFunction(function() {
     gBrowser.removeTab(gBrowser.tabs[1]);
 });
 
-add_task(function*() {
-  let prefs = yield openPreferencesViaOpenPreferencesAPI("paneContent", undefined, {leaveOpen: true});
+add_task(async function() {
+  let prefs = await openPreferencesViaOpenPreferencesAPI("paneContent", undefined, {leaveOpen: true});
   is(prefs.selectedPane, "paneContent", "Content pane was selected");
 
   let doc = gBrowser.contentDocument;
@@ -34,11 +34,11 @@ add_task(function*() {
 
   let checkboxChanged = waitForEvent(checkbox, "command")
   checkbox.click();
-  yield checkboxChanged;
+  await checkboxChanged;
   ok(alertService.manualDoNotDisturb, "Do not disturb should be enabled when checked");
 
   checkboxChanged = waitForEvent(checkbox, "command")
   checkbox.click();
-  yield checkboxChanged;
+  await checkboxChanged;
   ok(!alertService.manualDoNotDisturb, "Do not disturb should be disabled when unchecked");
 });

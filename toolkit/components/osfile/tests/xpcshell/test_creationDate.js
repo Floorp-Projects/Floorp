@@ -9,7 +9,7 @@ function run_test() {
  * Test to ensure that deprecation warning is issued on use
  * of creationDate.
  */
-add_task(function* test_deprecatedCreationDate () {
+add_task(async function test_deprecatedCreationDate () {
   let deferred = Promise.defer();
   let consoleListener = {
     observe: function (aMessage) {
@@ -21,11 +21,11 @@ add_task(function* test_deprecatedCreationDate () {
       }
     }
   };
-  let currentDir = yield OS.File.getCurrentDirectory();
+  let currentDir = await OS.File.getCurrentDirectory();
   let path = OS.Path.join(currentDir, "test_creationDate.js");
 
   Services.console.registerListener(consoleListener);
-  (yield OS.File.stat(path)).creationDate;
+  (await OS.File.stat(path)).creationDate;
 });
 
 add_task(do_test_finished);

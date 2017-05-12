@@ -2,7 +2,7 @@ var rootDir = getRootDirectory(gTestPath);
 const gTestRoot = rootDir.replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
 var gPluginHost = Components.classes["@mozilla.org/plugin/host;1"].getService(Components.interfaces.nsIPluginHost);
 
-add_task(function* () {
+add_task(async function() {
   registerCleanupFunction(function() {
     clearAllPluginPermissions();
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
@@ -14,7 +14,7 @@ add_task(function* () {
   });
 });
 
-add_task(function* () {
+add_task(async function() {
   Services.prefs.setBoolPref("extensions.blocklist.suppressUI", true);
 
   gBrowser.selectedTab = gBrowser.addTab();
@@ -24,13 +24,13 @@ add_task(function* () {
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Test Plug-in");
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Second Test Plug-in");
 
-  yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_test.html");
+  await promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_test.html");
 
   // Work around for delayed PluginBindingAttached
-  yield promiseUpdatePluginBindings(gBrowser.selectedBrowser);
+  await promiseUpdatePluginBindings(gBrowser.selectedBrowser);
 
   // Tests that the overlay can be hidden for plugins using the close icon.
-  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
@@ -48,16 +48,16 @@ add_task(function* () {
 });
 
 // Test that the overlay cannot be interacted with after the user closes the overlay
-add_task(function* () {
+add_task(async function() {
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Test Plug-in");
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Second Test Plug-in");
 
-  yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_test.html");
+  await promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_test.html");
 
   // Work around for delayed PluginBindingAttached
-  yield promiseUpdatePluginBindings(gBrowser.selectedBrowser);
+  await promiseUpdatePluginBindings(gBrowser.selectedBrowser);
 
-  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");

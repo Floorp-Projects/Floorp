@@ -5,15 +5,15 @@
  * don't show up in the foreground tab, but only in the background tab that
  * they belong to.
  */
-add_task(function* test_background_notifications_dont_reshow_in_foreground() {
+add_task(async function test_background_notifications_dont_reshow_in_foreground() {
   // Our initial tab will be A. Let's open two more tabs B and C, but keep
   // A selected. Then, we'll trigger a PopupNotification in C, and then make
   // it reshow.
   let tabB = gBrowser.addTab("http://example.com/");
-  yield BrowserTestUtils.browserLoaded(tabB.linkedBrowser);
+  await BrowserTestUtils.browserLoaded(tabB.linkedBrowser);
 
   let tabC = gBrowser.addTab("http://example.com/");
-  yield BrowserTestUtils.browserLoaded(tabC.linkedBrowser);
+  await BrowserTestUtils.browserLoaded(tabC.linkedBrowser);
 
   let seenEvents = [];
 
@@ -30,7 +30,7 @@ add_task(function* test_background_notifications_dont_reshow_in_foreground() {
                             null, null, options);
   Assert.deepEqual(seenEvents, [], "Should have seen no events yet.");
 
-  yield BrowserTestUtils.switchTab(gBrowser, tabB);
+  await BrowserTestUtils.switchTab(gBrowser, tabB);
   Assert.deepEqual(seenEvents, [], "Should have seen no events yet.");
 
   notification.reshow();
@@ -38,8 +38,8 @@ add_task(function* test_background_notifications_dont_reshow_in_foreground() {
 
   let panelShown =
     BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
-  yield BrowserTestUtils.switchTab(gBrowser, tabC);
-  yield panelShown;
+  await BrowserTestUtils.switchTab(gBrowser, tabC);
+  await panelShown;
 
   Assert.equal(seenEvents.length, 2, "Should have seen two events.");
   Assert.equal(seenEvents[0], "showing", "Should have said popup was showing.");
@@ -48,8 +48,8 @@ add_task(function* test_background_notifications_dont_reshow_in_foreground() {
   let panelHidden =
     BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popuphidden");
   PopupNotifications.remove(notification);
-  yield panelHidden;
+  await panelHidden;
 
-  yield BrowserTestUtils.removeTab(tabB);
-  yield BrowserTestUtils.removeTab(tabC);
+  await BrowserTestUtils.removeTab(tabB);
+  await BrowserTestUtils.removeTab(tabC);
 });

@@ -17,7 +17,7 @@ const BOOTSTRAP_REASONS = {
 
 // Install an unsigned add-on with no existing add-on present.
 // Restart and make sure it is still around.
-add_task(function*() {
+add_task(async function() {
   let extInstallCalled = false;
   AddonManager.addInstallListener({
     onExternalInstall: (aInstall) => {
@@ -45,7 +45,7 @@ add_task(function*() {
     }
   });
 
-  yield AddonManager.installAddonFromSources(do_get_file("data/from_sources/"));
+  await AddonManager.installAddonFromSources(do_get_file("data/from_sources/"));
 
   do_check_true(extInstallCalled);
   do_check_true(installingCalled);
@@ -55,7 +55,7 @@ add_task(function*() {
   equal(install.reason, BOOTSTRAP_REASONS.ADDON_INSTALL);
   BootstrapMonitor.checkAddonStarted(ID, "1.0");
 
-  let addon = yield promiseAddonByID(ID);
+  let addon = await promiseAddonByID(ID);
 
   do_check_neq(addon, null);
   do_check_eq(addon.version, "1.0");
@@ -66,15 +66,15 @@ add_task(function*() {
   do_check_eq(addon.type, "extension");
   do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
 
   install = BootstrapMonitor.checkAddonInstalled(ID, "1.0");
   equal(install.reason, BOOTSTRAP_REASONS.ADDON_INSTALL);
   BootstrapMonitor.checkAddonStarted(ID, "1.0");
 
-  addon = yield promiseAddonByID(ID);
+  addon = await promiseAddonByID(ID);
   do_check_neq(addon, null);
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
 });
 

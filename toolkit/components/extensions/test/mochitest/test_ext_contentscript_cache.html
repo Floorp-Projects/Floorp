@@ -13,7 +13,7 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* test_contentscript_cache() {
+add_task(async function test_contentscript_cache() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       content_scripts: [{
@@ -39,9 +39,9 @@ add_task(function* test_contentscript_cache() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  let origin = yield extension.awaitMessage("origin");
+  let origin = await extension.awaitMessage("origin");
   let scriptUrl = `${origin}/content_script.js`;
 
   let {ExtensionManager} = SpecialPowers.Cu.import("resource://gre/modules/ExtensionChild.jsm", {});
@@ -51,7 +51,7 @@ add_task(function* test_contentscript_cache() {
   is(ext.staticScripts.size, 0, "Should have no cached scripts");
 
   let win = window.open("http://example.com/");
-  yield extension.awaitMessage("content-script-loaded");
+  await extension.awaitMessage("content-script-loaded");
 
   if (AppConstants.platform !== "android") {
     is(ext.staticScripts.size, 1, "Should have one cached script");
@@ -79,11 +79,11 @@ add_task(function* test_contentscript_cache() {
   }
 
   SimpleTest.requestFlakyTimeout("Required to test expiry timeout");
-  yield new Promise(resolve => setTimeout(resolve, 3000));
+  await new Promise(resolve => setTimeout(resolve, 3000));
   is(ext.staticScripts.size, 0, "Should have no cached scripts");
 
   if (chromeScript) {
-    yield chromeScriptDone;
+    await chromeScriptDone;
     chromeScript.destroy();
   }
 
@@ -91,7 +91,7 @@ add_task(function* test_contentscript_cache() {
 
 
   win = window.open("http://example.com/");
-  yield extension.awaitMessage("content-script-loaded");
+  await extension.awaitMessage("content-script-loaded");
 
   is(ext.staticScripts.size, 1, "Should have one cached script");
   ok(ext.staticScripts.has(scriptUrl));
@@ -102,7 +102,7 @@ add_task(function* test_contentscript_cache() {
 
   win.close();
 
-  yield extension.unload();
+  await extension.unload();
 });
 </script>
 

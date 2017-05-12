@@ -62,15 +62,15 @@ function spawnInNewReaderTab(url, func) {
   return BrowserTestUtils.withNewTab(
     { gBrowser,
       url: `about:reader?url=${encodeURIComponent(url)}` },
-      function* (browser) {
-        yield ContentTask.spawn(browser, null, function* () {
+      async function(browser) {
+        await ContentTask.spawn(browser, null, async function() {
           Components.utils.import("chrome://mochitests/content/browser/" +
             "toolkit/components/narrate/test/NarrateTestUtils.jsm");
 
-          yield NarrateTestUtils.getReaderReadyPromise(content);
+          await NarrateTestUtils.getReaderReadyPromise(content);
         });
 
-        yield ContentTask.spawn(browser, null, func);
+        await ContentTask.spawn(browser, null, func);
       });
 }
 

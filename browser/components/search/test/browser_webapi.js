@@ -30,10 +30,10 @@ function promiseDialogOpened() {
   });
 }
 
-add_task(function* test_working() {
+add_task(async function test_working() {
   gBrowser.selectedTab = AddSearchProvider(ROOT + "testEngine.xml");
 
-  let dialog = yield promiseDialogOpened();
+  let dialog = await promiseDialogOpened();
   is(dialog.args.promptType, "confirmEx", "Should see the confirmation dialog.");
   is(dialog.args.text, getString("addEngineConfirmation", "Foo", "example.com"),
      "Should have seen the right install message");
@@ -42,10 +42,10 @@ add_task(function* test_working() {
   gBrowser.removeCurrentTab();
 });
 
-add_task(function* test_HTTP() {
+add_task(async function test_HTTP() {
   gBrowser.selectedTab = AddSearchProvider(ROOT.replace("http:", "HTTP:") + "testEngine.xml");
 
-  let dialog = yield promiseDialogOpened();
+  let dialog = await promiseDialogOpened();
   is(dialog.args.promptType, "confirmEx", "Should see the confirmation dialog.");
   is(dialog.args.text, getString("addEngineConfirmation", "Foo", "example.com"),
      "Should have seen the right install message");
@@ -54,10 +54,10 @@ add_task(function* test_HTTP() {
   gBrowser.removeCurrentTab();
 });
 
-add_task(function* test_relative() {
+add_task(async function test_relative() {
   gBrowser.selectedTab = AddSearchProvider("testEngine.xml");
 
-  let dialog = yield promiseDialogOpened();
+  let dialog = await promiseDialogOpened();
   is(dialog.args.promptType, "confirmEx", "Should see the confirmation dialog.");
   is(dialog.args.text, getString("addEngineConfirmation", "Foo", "example.com"),
      "Should have seen the right install message");
@@ -66,11 +66,11 @@ add_task(function* test_relative() {
   gBrowser.removeCurrentTab();
 });
 
-add_task(function* test_invalid() {
+add_task(async function test_invalid() {
   let url = "z://foobar";
   gBrowser.selectedTab = AddSearchProvider(url);
 
-  let dialog = yield promiseDialogOpened();
+  let dialog = await promiseDialogOpened();
   is(dialog.args.promptType, "alert", "Should see the alert dialog.");
   is(dialog.args.text, getString("error_invalid_engine_msg2", brandName, url),
      "Should have seen the right error message")
@@ -79,11 +79,11 @@ add_task(function* test_invalid() {
   gBrowser.removeCurrentTab();
 });
 
-add_task(function* test_missing() {
+add_task(async function test_missing() {
   let url = ROOT + "foobar.xml";
   gBrowser.selectedTab = AddSearchProvider(url);
 
-  let dialog = yield promiseDialogOpened();
+  let dialog = await promiseDialogOpened();
   is(dialog.args.promptType, "alert", "Should see the alert dialog.");
   is(dialog.args.text, getString("error_loading_engine_msg2", brandName, url),
      "Should have seen the right error message")
@@ -92,11 +92,11 @@ add_task(function* test_missing() {
   gBrowser.removeCurrentTab();
 });
 
-add_task(function* test_missing_namespace() {
+add_task(async function test_missing_namespace() {
   let url = ROOT + "testEngine_missing_namespace.xml";
   gBrowser.selectedTab = AddSearchProvider(url);
 
-  let dialog = yield promiseDialogOpened();
+  let dialog = await promiseDialogOpened();
   is(dialog.args.promptType, "alert", "Should see the alert dialog.");
   is(dialog.args.text, getString("error_invalid_engine_msg2", brandName, url),
      "Should have seen the right error message")

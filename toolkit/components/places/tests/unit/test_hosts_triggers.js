@@ -80,7 +80,7 @@ var urls = [{uri: NetUtil.newURI("http://visit1.mozilla.org"),
 
 const NEW_URL = "http://different.mozilla.org/";
 
-add_task(function* test_moz_hosts_update() {
+add_task(async function test_moz_hosts_update() {
   let places = [];
   urls.forEach(function(url) {
     let place = { uri: url.uri,
@@ -89,22 +89,22 @@ add_task(function* test_moz_hosts_update() {
     places.push(place);
   });
 
-  yield PlacesTestUtils.addVisits(places);
+  await PlacesTestUtils.addVisits(places);
 
   checkHostInMozHosts(urls[0].uri, urls[0].typed, urls[0].prefix);
   checkHostInMozHosts(urls[1].uri, urls[1].typed, urls[1].prefix);
   checkHostInMozHosts(urls[2].uri, urls[2].typed, urls[2].prefix);
 });
 
-add_task(function* test_remove_places() {
-  yield PlacesUtils.history.remove(urls.map(x => x.uri));
+add_task(async function test_remove_places() {
+  await PlacesUtils.history.remove(urls.map(x => x.uri));
 
   for (let idx in urls) {
     checkHostNotInMozHosts(urls[idx].uri, urls[idx].typed, urls[idx].prefix);
   }
 });
 
-add_task(function* test_bookmark_changes() {
+add_task(async function test_bookmark_changes() {
   let testUri = NetUtil.newURI("http://test.mozilla.org");
 
   let itemId = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
@@ -117,7 +117,7 @@ add_task(function* test_bookmark_changes() {
   // Change the hostname
   PlacesUtils.bookmarks.changeBookmarkURI(itemId, NetUtil.newURI(NEW_URL));
 
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
 
   let newUri = NetUtil.newURI(NEW_URL);
   do_check_true(isHostInMozPlaces(newUri));
@@ -125,17 +125,17 @@ add_task(function* test_bookmark_changes() {
   checkHostNotInMozHosts(NetUtil.newURI("http://test.mozilla.org"), false, null);
 });
 
-add_task(function* test_bookmark_removal() {
+add_task(async function test_bookmark_removal() {
   let itemId = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId,
                                                     PlacesUtils.bookmarks.DEFAULT_INDEX);
   let newUri = NetUtil.newURI(NEW_URL);
   PlacesUtils.bookmarks.removeItem(itemId);
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
 
   checkHostNotInMozHosts(newUri, false, null);
 });
 
-add_task(function* test_moz_hosts_typed_update() {
+add_task(async function test_moz_hosts_typed_update() {
   const TEST_URI = NetUtil.newURI("http://typed.mozilla.com");
   let places = [{ uri: TEST_URI
                 , title: "test for " + TEST_URI.spec
@@ -145,14 +145,14 @@ add_task(function* test_moz_hosts_typed_update() {
                 , transition: TRANSITION_TYPED
                 }];
 
-  yield PlacesTestUtils.addVisits(places);
+  await PlacesTestUtils.addVisits(places);
 
   checkHostInMozHosts(TEST_URI, true, null);
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
 });
 
-add_task(function* test_moz_hosts_www_remove() {
-  function* test_removal(aURIToRemove, aURIToKeep, aCallback) {
+add_task(async function test_moz_hosts_www_remove() {
+  async function test_removal(aURIToRemove, aURIToKeep, aCallback) {
     let places = [{ uri: aURIToRemove
                   , title: "test for " + aURIToRemove.spec
                   , transition: TRANSITION_TYPED
@@ -162,11 +162,11 @@ add_task(function* test_moz_hosts_www_remove() {
                   , transition: TRANSITION_TYPED
                   }];
 
-    yield PlacesTestUtils.addVisits(places);
+    await PlacesTestUtils.addVisits(places);
     print("removing " + aURIToRemove.spec + " keeping " + aURIToKeep);
     dump_table("moz_hosts");
     dump_table("moz_places");
-    yield PlacesUtils.history.remove(aURIToRemove);
+    await PlacesUtils.history.remove(aURIToRemove);
     let prefix = /www/.test(aURIToKeep.spec) ? "www." : null;
     dump_table("moz_hosts");
     dump_table("moz_places");
@@ -175,16 +175,16 @@ add_task(function* test_moz_hosts_www_remove() {
 
   const TEST_URI = NetUtil.newURI("http://rem.mozilla.com");
   const TEST_WWW_URI = NetUtil.newURI("http://www.rem.mozilla.com");
-  yield test_removal(TEST_URI, TEST_WWW_URI);
-  yield test_removal(TEST_WWW_URI, TEST_URI);
-  yield PlacesTestUtils.clearHistory();
+  await test_removal(TEST_URI, TEST_WWW_URI);
+  await test_removal(TEST_WWW_URI, TEST_URI);
+  await PlacesTestUtils.clearHistory();
 });
 
-add_task(function* test_moz_hosts_ftp_matchall() {
+add_task(async function test_moz_hosts_ftp_matchall() {
   const TEST_URI_1 = NetUtil.newURI("ftp://www.mozilla.com/");
   const TEST_URI_2 = NetUtil.newURI("ftp://mozilla.com/");
 
-  yield PlacesTestUtils.addVisits([
+  await PlacesTestUtils.addVisits([
     { uri: TEST_URI_1, transition: TRANSITION_TYPED },
     { uri: TEST_URI_2, transition: TRANSITION_TYPED }
   ]);
@@ -192,11 +192,11 @@ add_task(function* test_moz_hosts_ftp_matchall() {
   checkHostInMozHosts(TEST_URI_1, true, "ftp://");
 });
 
-add_task(function* test_moz_hosts_ftp_not_matchall() {
+add_task(async function test_moz_hosts_ftp_not_matchall() {
   const TEST_URI_1 = NetUtil.newURI("http://mozilla.com/");
   const TEST_URI_2 = NetUtil.newURI("ftp://mozilla.com/");
 
-  yield PlacesTestUtils.addVisits([
+  await PlacesTestUtils.addVisits([
     { uri: TEST_URI_1, transition: TRANSITION_TYPED },
     { uri: TEST_URI_2, transition: TRANSITION_TYPED }
   ]);
@@ -204,7 +204,7 @@ add_task(function* test_moz_hosts_ftp_not_matchall() {
   checkHostInMozHosts(TEST_URI_1, true, null);
 });
 
-add_task(function* test_moz_hosts_update_2() {
+add_task(async function test_moz_hosts_update_2() {
   // Check that updating trigger takes into account prefixes for different
   // rev_hosts.
   const TEST_URI_1 = NetUtil.newURI("https://www.google.it/");
@@ -214,7 +214,7 @@ add_task(function* test_moz_hosts_update_2() {
                 },
                 { uri: TEST_URI_2
                 }];
-  yield PlacesTestUtils.addVisits(places);
+  await PlacesTestUtils.addVisits(places);
 
   checkHostInMozHosts(TEST_URI_1, true, "https://www.");
 });
@@ -351,7 +351,7 @@ const hostsUpdateTests = [{
   }]
 }];
 
-add_task(function* test_moz_hosts_update() {
+add_task(async function test_moz_hosts_update() {
   for (const section of hostsUpdateTests) {
     do_print(section.title);
 
@@ -359,10 +359,10 @@ add_task(function* test_moz_hosts_update() {
       do_print(test.title);
 
       if ("visits" in test) {
-        yield PlacesTestUtils.addVisits(test.visits);
+        await PlacesTestUtils.addVisits(test.visits);
       }
       if ("remove" in test) {
-        yield PlacesUtils.history.remove(test.remove);
+        await PlacesUtils.history.remove(test.remove);
       }
       checkHostInMozHosts(test.expect[0], test.expect[1], test.expect[2]);
     }

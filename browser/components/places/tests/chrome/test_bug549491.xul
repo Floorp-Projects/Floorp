@@ -47,10 +47,10 @@
     function runTest() {
       SimpleTest.waitForExplicitFinish();
 
-      Task.spawn(function* () {
-        yield PlacesTestUtils.clearHistory();
+      (async function() {
+        await PlacesTestUtils.clearHistory();
 
-        yield PlacesTestUtils.addVisits({
+        await PlacesTestUtils.addVisits({
           uri: Services.io.newURI("http://example.tld/"),
           transition: PlacesUtils.history.TRANSITION_TYPED
         });
@@ -71,8 +71,8 @@
         ok(true, "No exceptions thrown");
 
         // Cleanup.
-        yield PlacesTestUtils.clearHistory();
-      }).then(SimpleTest.finish);
+        await PlacesTestUtils.clearHistory();
+      })().then(SimpleTest.finish);
     }
   ]]></script>
 </window>

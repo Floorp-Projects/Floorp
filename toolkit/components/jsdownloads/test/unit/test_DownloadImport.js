@@ -65,10 +65,10 @@ var gDownloadsRowNonImportable;
  * @rejects If an error occurred during the database creation.
  */
 function promiseEmptyDatabaseConnection({aPath, aSchemaVersion}) {
-  return Task.spawn(function* () {
-    let connection = yield Sqlite.openConnection({ path: aPath });
+  return (async function() {
+    let connection = await Sqlite.openConnection({ path: aPath });
 
-    yield connection.execute("CREATE TABLE moz_downloads ("
+    await connection.execute("CREATE TABLE moz_downloads ("
                              + "id INTEGER PRIMARY KEY,"
                              + "name TEXT,"
                              + "source TEXT,"
@@ -87,10 +87,10 @@ function promiseEmptyDatabaseConnection({aPath, aSchemaVersion}) {
                              + "autoResume INTEGER NOT NULL DEFAULT 0,"
                              + "guid TEXT)");
 
-    yield connection.setSchemaVersion(aSchemaVersion);
+    await connection.setSchemaVersion(aSchemaVersion);
 
     return connection;
-  });
+  })();
 }
 
 /**
@@ -161,33 +161,33 @@ function promiseTableCount(aConnection) {
  * @rejects When there's a problem accessing the URL.
  */
 function promiseEntityID(aUrl) {
-  let deferred = Promise.defer();
-  let entityID = "";
-  let channel = NetUtil.newChannel({
-    uri: NetUtil.newURI(aUrl),
-    loadUsingSystemPrincipal: true
+  return new Promise((resolve, reject) => {
+    let entityID = "";
+    let channel = NetUtil.newChannel({
+      uri: NetUtil.newURI(aUrl),
+      loadUsingSystemPrincipal: true
+    });
+
+    channel.asyncOpen2({
+      onStartRequest(aRequest) {
+        if (aRequest instanceof Ci.nsIResumableChannel) {
+          entityID = aRequest.entityID;
+        }
+        aRequest.cancel(Cr.NS_BINDING_ABORTED);
+      },
+
+      onStopRequest(aRequest, aContext, aStatusCode) {
+        if (aStatusCode == Cr.NS_BINDING_ABORTED) {
+          resolve(entityID);
+        } else {
+          reject("Unexpected status code received");
+        }
+      },
+
+      onDataAvailable() {}
+    });
+
   });
-
-  channel.asyncOpen2({
-    onStartRequest(aRequest) {
-      if (aRequest instanceof Ci.nsIResumableChannel) {
-        entityID = aRequest.entityID;
-      }
-      aRequest.cancel(Cr.NS_BINDING_ABORTED);
-    },
-
-    onStopRequest(aRequest, aContext, aStatusCode) {
-      if (aStatusCode == Cr.NS_BINDING_ABORTED) {
-        deferred.resolve(entityID);
-      } else {
-        deferred.reject("Unexpected status code received");
-      }
-    },
-
-    onDataAvailable() {}
-  });
-
-  return deferred.promise;
 }
 
 /**
@@ -264,7 +264,7 @@ function getStartTime(aOffset) {
  * @rejects Never
  */
 function checkDownload(aDownload, aDownloadRow) {
-  return Task.spawn(function*() {
+  return (async function() {
     do_check_eq(aDownload.source.url, aDownloadRow.source);
     do_check_eq(aDownload.source.referrer, aDownloadRow.referrer);
 
@@ -276,7 +276,7 @@ function checkDownload(aDownload, aDownloadRow) {
 
     if (aDownloadRow.expectedResume) {
       do_check_true(!aDownload.stopped || aDownload.succeeded);
-      yield promiseDownloadStopped(aDownload);
+      await promiseDownloadStopped(aDownload);
 
       do_check_true(aDownload.succeeded);
       do_check_eq(aDownload.progress, 100);
@@ -310,7 +310,7 @@ function checkDownload(aDownload, aDownloadRow) {
       let fileToCheck = aDownloadRow.expectedResume
                         ? aDownload.target.path
                         : aDownload.target.partFilePath;
-      yield promiseVerifyContents(fileToCheck, aDownloadRow.expectedContent);
+      await promiseVerifyContents(fileToCheck, aDownloadRow.expectedContent);
     }
 
     do_check_eq(aDownload.contentType, aDownloadRow.expectedContentType);
@@ -318,7 +318,7 @@ function checkDownload(aDownload, aDownloadRow) {
 
     do_check_eq(aDownload.launchWhenSucceeded,
                 aDownloadRow.preferredAction != Ci.nsIMIMEInfo.saveToDisk);
-  });
+  })();
 }
 
 // Preparation tasks
@@ -327,10 +327,10 @@ function checkDownload(aDownload, aDownloadRow) {
  * Prepares the list of downloads to be added to the database that should
  * be imported by the import procedure.
  */
-add_task(function* prepareDownloadsToImport() {
+add_task(async function prepareDownloadsToImport() {
 
   let sourceUrl = httpUrl("source.txt");
-  let sourceEntityId = yield promiseEntityID(sourceUrl);
+  let sourceEntityId = await promiseEntityID(sourceUrl);
 
   gDownloadsRowToImport = [
     // Paused download with autoResume and a partial file. By
@@ -341,7 +341,7 @@ add_task(function* prepareDownloadsToImport() {
     {
       source: sourceUrl,
       target: getDownloadTarget("inprogress1.txt"),
-      tempPath: yield getPartialFile("inprogress1.txt.part", true),
+      tempPath: await getPartialFile("inprogress1.txt.part", true),
       startTime: getStartTime(1),
       state: DOWNLOAD_PAUSED,
       referrer: httpUrl("referrer1"),
@@ -372,7 +372,7 @@ add_task(function* prepareDownloadsToImport() {
     {
       source: sourceUrl,
       target: getDownloadTarget("inprogress2.txt"),
-      tempPath: yield getPartialFile("inprogress2.txt.part", true),
+      tempPath: await getPartialFile("inprogress2.txt.part", true),
       startTime: getStartTime(2),
       state: DOWNLOAD_PAUSED,
       referrer: httpUrl("referrer2"),
@@ -394,7 +394,7 @@ add_task(function* prepareDownloadsToImport() {
     {
       source: sourceUrl,
       target: getDownloadTarget("inprogress3.txt"),
-      tempPath: yield getPartialFile("inprogress3.txt.part"),
+      tempPath: await getPartialFile("inprogress3.txt.part"),
       startTime: getStartTime(3),
       state: DOWNLOAD_PAUSED,
       referrer: httpUrl("referrer3"),
@@ -509,7 +509,7 @@ add_task(function* prepareDownloadsToImport() {
     {
       source: sourceUrl,
       target: getDownloadTarget("inprogress8.txt"),
-      tempPath: yield getPartialFile("inprogress8.txt.part", true),
+      tempPath: await getPartialFile("inprogress8.txt.part", true),
       startTime: getStartTime(8),
       state: DOWNLOAD_DOWNLOADING,
       referrer: httpUrl("referrer8"),
@@ -533,7 +533,7 @@ add_task(function* prepareDownloadsToImport() {
  * Prepares the list of downloads to be added to the database that should
  * *not* be imported by the import procedure.
  */
-add_task(function* prepareNonImportableDownloads() {
+add_task(async function prepareNonImportableDownloads() {
   gDownloadsRowNonImportable = [
     // Download with no source (should never happen in normal circumstances).
     {
@@ -656,13 +656,13 @@ add_task(function* prepareNonImportableDownloads() {
  * import of that data to the new Downloads API to verify that the import
  * worked correctly.
  */
-add_task(function* test_downloadImport() {
+add_task(async function test_downloadImport() {
   let connection = null;
   let downloadsSqlite = getTempFile("downloads.sqlite").path;
 
   try {
     // Set up the database.
-    connection = yield promiseEmptyDatabaseConnection({
+    connection = await promiseEmptyDatabaseConnection({
       aPath: downloadsSqlite,
       aSchemaVersion: 9
     });
@@ -670,30 +670,30 @@ add_task(function* test_downloadImport() {
     // Insert both the importable and non-importable
     // downloads together.
     for (let downloadRow of gDownloadsRowToImport) {
-      yield promiseInsertRow(connection, downloadRow);
+      await promiseInsertRow(connection, downloadRow);
     }
 
     for (let downloadRow of gDownloadsRowNonImportable) {
-      yield promiseInsertRow(connection, downloadRow);
+      await promiseInsertRow(connection, downloadRow);
     }
 
     // Check that every item was inserted.
-    do_check_eq((yield promiseTableCount(connection)),
+    do_check_eq((await promiseTableCount(connection)),
                 gDownloadsRowToImport.length +
                 gDownloadsRowNonImportable.length);
   } finally {
     // Close the connection so that DownloadImport can open it.
-    yield connection.close();
+    await connection.close();
   }
 
   // Import items.
-  let list = yield promiseNewList(false);
-  yield new DownloadImport(list, downloadsSqlite).import();
-  let items = yield list.getAll();
+  let list = await promiseNewList(false);
+  await new DownloadImport(list, downloadsSqlite).import();
+  let items = await list.getAll();
 
   do_check_eq(items.length, gDownloadsRowToImport.length);
 
   for (let i = 0; i < gDownloadsRowToImport.length; i++) {
-    yield checkDownload(items[i], gDownloadsRowToImport[i]);
+    await checkDownload(items[i], gDownloadsRowToImport[i]);
   }
 })

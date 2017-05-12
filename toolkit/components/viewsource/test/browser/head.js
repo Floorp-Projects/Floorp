@@ -76,7 +76,7 @@ function waitForViewSourceWindow() {
  * @param browser - the <xul:browser> to open view source for.
  * @returns the new tab or window which shows the source.
  */
-function* openViewSource(browser) {
+async function openViewSource(browser) {
   let openPromise;
   if (Services.prefs.getBoolPref("view_source.tab")) {
     openPromise = BrowserTestUtils.waitForNewTab(gBrowser, null);
@@ -86,7 +86,7 @@ function* openViewSource(browser) {
 
   window.BrowserViewSource(browser);
 
-  return (yield openPromise);
+  return (await openPromise);
 }
 
 /**
@@ -98,14 +98,14 @@ function* openViewSource(browser) {
  *                       within an existing selection.
  * @returns the new tab / window which shows the source.
  */
-function* openViewPartialSource(aCSSSelector) {
+async function openViewPartialSource(aCSSSelector) {
   let contentAreaContextMenuPopup =
     document.getElementById("contentAreaContextMenu");
   let popupShownPromise =
     BrowserTestUtils.waitForEvent(contentAreaContextMenuPopup, "popupshown");
-  yield BrowserTestUtils.synthesizeMouseAtCenter(aCSSSelector,
+  await BrowserTestUtils.synthesizeMouseAtCenter(aCSSSelector,
           { type: "contextmenu", button: 2 }, gBrowser.selectedBrowser);
-  yield popupShownPromise;
+  await popupShownPromise;
 
   let openPromise;
   if (Services.prefs.getBoolPref("view_source.tab")) {
@@ -118,9 +118,9 @@ function* openViewPartialSource(aCSSSelector) {
     BrowserTestUtils.waitForEvent(contentAreaContextMenuPopup, "popuphidden");
   let item = document.getElementById("context-viewpartialsource-selection");
   EventUtils.synthesizeMouseAtCenter(item, {});
-  yield popupHiddenPromise;
+  await popupHiddenPromise;
 
-  return (yield openPromise);
+  return (await openPromise);
 }
 
 /**
@@ -130,20 +130,20 @@ function* openViewPartialSource(aCSSSelector) {
  * @param aCSSSelector - used to specify the frame to view the source of.
  * @returns the new tab which shows the source.
  */
-function* openViewFrameSourceTab(aCSSSelector) {
+async function openViewFrameSourceTab(aCSSSelector) {
   let contentAreaContextMenuPopup =
     document.getElementById("contentAreaContextMenu");
   let popupShownPromise =
     BrowserTestUtils.waitForEvent(contentAreaContextMenuPopup, "popupshown");
-  yield BrowserTestUtils.synthesizeMouseAtCenter(aCSSSelector,
+  await BrowserTestUtils.synthesizeMouseAtCenter(aCSSSelector,
           { type: "contextmenu", button: 2 }, gBrowser.selectedBrowser);
-  yield popupShownPromise;
+  await popupShownPromise;
 
   let frameContextMenu = document.getElementById("frame");
   popupShownPromise =
     BrowserTestUtils.waitForEvent(frameContextMenu, "popupshown");
   EventUtils.synthesizeMouseAtCenter(frameContextMenu, {});
-  yield popupShownPromise;
+  await popupShownPromise;
 
   let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, null);
 
@@ -151,9 +151,9 @@ function* openViewFrameSourceTab(aCSSSelector) {
     BrowserTestUtils.waitForEvent(frameContextMenu, "popuphidden");
   let item = document.getElementById("context-viewframesource");
   EventUtils.synthesizeMouseAtCenter(item, {});
-  yield popupHiddenPromise;
+  await popupHiddenPromise;
 
-  return (yield newTabPromise);
+  return (await newTabPromise);
 }
 
 registerCleanupFunction(function() {
@@ -187,21 +187,21 @@ function waitForSourceLoaded(tabOrWindow) {
  *                       children will be selected.
  * @returns the new tab / window which shows the source.
  */
-function* openDocumentSelect(aURI, aCSSSelector) {
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, aURI);
+async function openDocumentSelect(aURI, aCSSSelector) {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, aURI);
   registerCleanupFunction(function() {
     gBrowser.removeTab(tab);
   });
 
-  yield ContentTask.spawn(gBrowser.selectedBrowser, { selector: aCSSSelector }, function* (arg) {
+  await ContentTask.spawn(gBrowser.selectedBrowser, { selector: aCSSSelector }, async function(arg) {
     let element = content.document.querySelector(arg.selector);
     content.getSelection().selectAllChildren(element);
   });
 
-  let tabOrWindow = yield openViewPartialSource(aCSSSelector);
+  let tabOrWindow = await openViewPartialSource(aCSSSelector);
 
   // Wait until the source has been loaded.
-  yield waitForSourceLoaded(tabOrWindow);
+  await waitForSourceLoaded(tabOrWindow);
 
   return tabOrWindow;
 }

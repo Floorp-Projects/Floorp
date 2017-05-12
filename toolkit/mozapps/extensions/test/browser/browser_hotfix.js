@@ -89,30 +89,30 @@ add_task(function setup() {
   });
 });
 
-add_task(function* check_no_cert_checks() {
+add_task(async function check_no_cert_checks() {
   Services.prefs.setBoolPref(PREF_EM_CERT_CHECKATTRIBUTES, false);
-  yield Promise.all([
+  await Promise.all([
     promiseSuccessfulInstall(),
     AddonManagerPrivate.backgroundUpdateCheck()
   ]);
 });
 
-add_task(function* check_wrong_cert_fingerprint() {
+add_task(async function check_wrong_cert_fingerprint() {
   Services.prefs.setBoolPref(PREF_EM_CERT_CHECKATTRIBUTES, true);
   Services.prefs.setCharPref(PREF_EM_HOTFIX_CERTS + "1.sha1Fingerprint", "foo");
 
-  yield Promise.all([
+  await Promise.all([
     promiseFailedInstall(),
     AddonManagerPrivate.backgroundUpdateCheck()
   ]);
   Services.prefs.clearUserPref(PREF_EM_HOTFIX_CERTS + "1.sha1Fingerprint");
 });
 
-add_task(function* check_right_cert_fingerprint() {
+add_task(async function check_right_cert_fingerprint() {
   Services.prefs.setBoolPref(PREF_EM_CERT_CHECKATTRIBUTES, true);
   Services.prefs.setCharPref(PREF_EM_HOTFIX_CERTS + "1.sha1Fingerprint", "3E:B9:4E:07:12:FE:3C:01:41:46:13:46:FC:84:52:1A:8C:BE:1D:A2");
 
-  yield Promise.all([
+  await Promise.all([
     promiseSuccessfulInstall(),
     AddonManagerPrivate.backgroundUpdateCheck()
   ]);
@@ -120,12 +120,12 @@ add_task(function* check_right_cert_fingerprint() {
   Services.prefs.clearUserPref(PREF_EM_HOTFIX_CERTS + "1.sha1Fingerprint");
 });
 
-add_task(function* check_multi_cert_fingerprint_1() {
+add_task(async function check_multi_cert_fingerprint_1() {
   Services.prefs.setBoolPref(PREF_EM_CERT_CHECKATTRIBUTES, true);
   Services.prefs.setCharPref(PREF_EM_HOTFIX_CERTS + "1.sha1Fingerprint", "3E:B9:4E:07:12:FE:3C:01:41:46:13:46:FC:84:52:1A:8C:BE:1D:A2");
   Services.prefs.setCharPref(PREF_EM_HOTFIX_CERTS + "2.sha1Fingerprint", "foo");
 
-  yield Promise.all([
+  await Promise.all([
     promiseSuccessfulInstall(),
     AddonManagerPrivate.backgroundUpdateCheck()
   ]);
@@ -134,12 +134,12 @@ add_task(function* check_multi_cert_fingerprint_1() {
   Services.prefs.clearUserPref(PREF_EM_HOTFIX_CERTS + "2.sha1Fingerprint");
 });
 
-add_task(function* check_multi_cert_fingerprint_2() {
+add_task(async function check_multi_cert_fingerprint_2() {
   Services.prefs.setBoolPref(PREF_EM_CERT_CHECKATTRIBUTES, true);
   Services.prefs.setCharPref(PREF_EM_HOTFIX_CERTS + "1.sha1Fingerprint", "foo");
   Services.prefs.setCharPref(PREF_EM_HOTFIX_CERTS + "2.sha1Fingerprint", "3E:B9:4E:07:12:FE:3C:01:41:46:13:46:FC:84:52:1A:8C:BE:1D:A2");
 
-  yield Promise.all([
+  await Promise.all([
     promiseSuccessfulInstall(),
     AddonManagerPrivate.backgroundUpdateCheck()
   ]);
@@ -148,21 +148,21 @@ add_task(function* check_multi_cert_fingerprint_2() {
   Services.prefs.clearUserPref(PREF_EM_HOTFIX_CERTS + "2.sha1Fingerprint");
 });
 
-add_task(function* check_no_cert_no_checks() {
+add_task(async function check_no_cert_no_checks() {
   Services.prefs.setBoolPref(PREF_EM_CERT_CHECKATTRIBUTES, false);
   Services.prefs.setCharPref(PREF_EM_HOTFIX_URL, TESTROOT + "unsigned_hotfix.rdf");
 
-  yield Promise.all([
+  await Promise.all([
     promiseSuccessfulInstall(),
     AddonManagerPrivate.backgroundUpdateCheck()
   ]);
 });
 
-add_task(function* check_no_cert_cert_fingerprint_check() {
+add_task(async function check_no_cert_cert_fingerprint_check() {
   Services.prefs.setBoolPref(PREF_EM_CERT_CHECKATTRIBUTES, true);
   Services.prefs.setCharPref(PREF_EM_HOTFIX_CERTS + "1.sha1Fingerprint", "3E:B9:4E:07:12:FE:3C:01:41:46:13:46:FC:84:52:1A:8C:BE:1D:A2");
 
-  yield Promise.all([
+  await Promise.all([
     promiseFailedInstall(),
     AddonManagerPrivate.backgroundUpdateCheck()
   ]);

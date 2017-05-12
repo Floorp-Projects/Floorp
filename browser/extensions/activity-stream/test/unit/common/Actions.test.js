@@ -1,9 +1,25 @@
 const {
+  actionTypes: at,
   actionCreators: ac,
   actionUtils: au,
   MAIN_MESSAGE_TYPE,
-  CONTENT_MESSAGE_TYPE
+  CONTENT_MESSAGE_TYPE,
+  UI_CODE,
+  BACKGROUND_PROCESS,
+  globalImportContext
 } = require("common/Actions.jsm");
+
+describe("Actions", () => {
+  it("should set globalImportContext to UI_CODE", () => {
+    assert.equal(globalImportContext, UI_CODE);
+  });
+});
+
+describe("ActionTypes", () => {
+  it("should be in alpha order", () => {
+    assert.equal(Object.keys(at).join(", "), Object.keys(at).sort().join(", "));
+  });
+});
 
 describe("ActionCreators", () => {
   describe("_RouteMessage", () => {
@@ -32,6 +48,11 @@ describe("ActionCreators", () => {
         data: "BAR",
         meta: {from: CONTENT_MESSAGE_TYPE, to: MAIN_MESSAGE_TYPE}
       });
+    });
+    it("should add the fromTarget if it was supplied", () => {
+      const action = {type: "FOO", data: "BAR"};
+      const newAction = ac.SendToMain(action, "port123");
+      assert.equal(newAction.meta.fromTarget, "port123");
     });
     describe("isSendToMain", () => {
       it("should return true if action is SendToMain", () => {
@@ -88,6 +109,52 @@ describe("ActionCreators", () => {
         assert.isFalse(au.isBroadcastToContent({type: "FOO"}));
         assert.isFalse(au.isBroadcastToContent(ac.SendToContent({type: "FOO"}, "foo123")));
       });
+    });
+  });
+  describe("UserEvent", () => {
+    it("should include the given data", () => {
+      const data = {action: "foo"};
+      assert.equal(ac.UserEvent(data).data, data);
+    });
+    it("should wrap with SendToMain", () => {
+      const action = ac.UserEvent({action: "foo"});
+      assert.isTrue(au.isSendToMain(action), "isSendToMain");
+    });
+  });
+  describe("UndesiredEvent", () => {
+    it("should include the given data", () => {
+      const data = {action: "foo"};
+      assert.equal(ac.UndesiredEvent(data).data, data);
+    });
+    it("should wrap with SendToMain if in UI code", () => {
+      assert.isTrue(au.isSendToMain(ac.UndesiredEvent({action: "foo"})), "isSendToMain");
+    });
+    it("should not wrap with SendToMain if in UI code", () => {
+      const action = ac.UndesiredEvent({action: "foo"}, BACKGROUND_PROCESS);
+      assert.isFalse(au.isSendToMain(action), "isSendToMain");
+    });
+  });
+  describe("PerfEvent", () => {
+    it("should include the right data", () => {
+      const data = {action: "foo"};
+      assert.equal(ac.UndesiredEvent(data).data, data);
+    });
+    it("should wrap with SendToMain if in UI code", () => {
+      assert.isTrue(au.isSendToMain(ac.PerfEvent({action: "foo"})), "isSendToMain");
+    });
+    it("should not wrap with SendToMain if in UI code", () => {
+      const action = ac.PerfEvent({action: "foo"}, BACKGROUND_PROCESS);
+      assert.isFalse(au.isSendToMain(action), "isSendToMain");
+    });
+  });
+});
+
+describe("ActionUtils", () => {
+  describe("getPortIdOfSender", () => {
+    it("should return the PortID from a SendToMain action", () => {
+      const portID = "foo123";
+      const result = au.getPortIdOfSender(ac.SendToMain({type: "FOO"}, portID));
+      assert.equal(result, portID);
     });
   });
 });

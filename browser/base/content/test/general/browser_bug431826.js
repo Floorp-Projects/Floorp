@@ -2,20 +2,20 @@ function remote(task) {
   return ContentTask.spawn(gBrowser.selectedBrowser, null, task);
 }
 
-add_task(function* () {
+add_task(async function() {
   gBrowser.selectedTab = gBrowser.addTab();
 
   let promise = BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser);
   gBrowser.loadURI("https://nocert.example.com/");
-  yield promise;
+  await promise;
 
-  yield remote(() => {
+  await remote(() => {
     // Confirm that we are displaying the contributed error page, not the default
     let uri = content.document.documentURI;
     Assert.ok(uri.startsWith("about:certerror"), "Broken page should go to about:certerror, not about:neterror");
   });
 
-  yield remote(() => {
+  await remote(() => {
     let div = content.document.getElementById("badCertAdvancedPanel");
     // Confirm that the expert section is collapsed
     Assert.ok(div, "Advanced content div should exist");
@@ -28,9 +28,9 @@ add_task(function* () {
 
   promise = BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser);
   gBrowser.reload();
-  yield promise;
+  await promise;
 
-  yield remote(() => {
+  await remote(() => {
     let div = content.document.getElementById("badCertAdvancedPanel");
     Assert.ok(div, "Advanced content div should exist");
     Assert.equal(div.ownerGlobal.getComputedStyle(div).display,

@@ -498,7 +498,7 @@
        position="bottomcenter topright"
        noautofocus="true">
   <photonpanelmultiview id="appMenu-multiView" mainViewId="appMenu-mainView">
-    <panelview id="appMenu-mainView" class="cui-widget-panelview PanelUI-subView">
+    <panelview id="appMenu-mainView" class="PanelUI-subView">
       <vbox class="panel-subview-body">
         <vbox id="appMenu-addon-banners"/>
         <toolbarbutton class="panel-banner-item"
@@ -575,6 +575,27 @@
                        label="&viewCustomizeToolbar.label;"
                        command="cmd_CustomizeToolbars"
                        />
+        <toolbarseparator/>
+        <toolbarbutton id="appMenu-more-button"
+                       class="subviewbutton subviewbutton-nav"
+                       label="&moreMenu.label;"
+                       closemenu="none"
+                       oncommand="PanelUI.showSubView('appMenu-moreView', this)"/>
+      </vbox>
+    </panelview>
+    <panelview id="appMenu-moreView" title="&moreMenu.label;" class="PanelUI-subView">
+      <vbox class="panel-subview-body">
+        <toolbarbutton id="appMenu-characterencoding-button"
+                       class="subviewbutton subviewbutton-nav"
+                       label="&charsetMenu2.label;"
+                       closemenu="none"
+                       oncommand="PanelUI.showSubView('PanelUI-characterEncodingView', this, null, true)"/>
+        <toolbarbutton id="appMenu-workoffline-button"
+                       class="subviewbutton"
+                       label="&goOfflineCmd.label;"
+                       type="checkbox"
+                       observes="workOfflineMenuitemState"
+                       oncommand="BrowserOffline.toggleOfflineStatus();"/>
       </vbox>
     </panelview>
   </photonpanelmultiview>

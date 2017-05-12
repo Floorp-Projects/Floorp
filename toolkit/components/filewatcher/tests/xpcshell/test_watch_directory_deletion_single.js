@@ -16,7 +16,7 @@ function run_test() {
  * Tests that the watcher correctly notifies of a directory deletion when watching
  * a single path.
  */
-add_task(function* test_watch_single_path_directory_deletion() {
+add_task(async function test_watch_single_path_directory_deletion() {
 
   let watchedDir = OS.Constants.Path.profileDir;
   let tempDirName = "test";
@@ -27,20 +27,20 @@ add_task(function* test_watch_single_path_directory_deletion() {
   let deferred = Promise.defer();
 
   // Create a directory within the watched directory.
-  yield OS.File.makeDir(tmpDirPath);
+  await OS.File.makeDir(tmpDirPath);
 
   // Add the profile directory to the watch list and wait for the file watcher
   // to start watching it.
-  yield promiseAddPath(watcher, watchedDir, deferred.resolve, deferred.reject);
+  await promiseAddPath(watcher, watchedDir, deferred.resolve, deferred.reject);
 
   // Remove the directory.
   OS.File.removeDir(tmpDirPath);
 
   // Wait until the watcher informs us that the file has changed.
-  let changed = yield deferred.promise;
+  let changed = await deferred.promise;
   do_check_eq(changed, tmpDirPath);
 
   // Remove the watch and free the associated memory (we need to
   // reuse 'deferred.resolve' and 'deferred.reject' to unregister).
-  yield promiseRemovePath(watcher, watchedDir, deferred.resolve, deferred.reject);
+  await promiseRemovePath(watcher, watchedDir, deferred.resolve, deferred.reject);
 });

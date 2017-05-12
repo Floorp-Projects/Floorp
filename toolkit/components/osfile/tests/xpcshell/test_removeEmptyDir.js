@@ -20,7 +20,7 @@ function run_test() {
 /**
  * Test OS.File.removeEmptyDir
  */
-add_task(function*() {
+add_task(async function() {
   // Set up profile. We create the directory in the profile, because the profile
   // is removed after every test run.
   do_get_profile();
@@ -28,18 +28,18 @@ add_task(function*() {
   let dir = OS.Path.join(OS.Constants.Path.profileDir, "directory");
 
   // Sanity checking for the test
-  do_check_false((yield OS.File.exists(dir)));
+  do_check_false((await OS.File.exists(dir)));
 
   // Remove non-existent directory
-  yield OS.File.removeEmptyDir(dir);
+  await OS.File.removeEmptyDir(dir);
 
   // Remove non-existent directory with ignoreAbsent
-  yield OS.File.removeEmptyDir(dir, {ignoreAbsent: true});
+  await OS.File.removeEmptyDir(dir, {ignoreAbsent: true});
 
   // Remove non-existent directory with ignoreAbsent false
   let exception = null;
   try {
-    yield OS.File.removeEmptyDir(dir, {ignoreAbsent: false});
+    await OS.File.removeEmptyDir(dir, {ignoreAbsent: false});
   } catch (ex) {
     exception = ex;
   }
@@ -49,7 +49,7 @@ add_task(function*() {
   do_check_true(exception.becauseNoSuchFile);
 
   // Remove empty directory
-  yield OS.File.makeDir(dir);
-  yield OS.File.removeEmptyDir(dir);
-  do_check_false((yield OS.File.exists(dir)));
+  await OS.File.makeDir(dir);
+  await OS.File.removeEmptyDir(dir);
+  do_check_false((await OS.File.exists(dir)));
 });

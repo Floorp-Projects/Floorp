@@ -1549,6 +1549,7 @@
         <parameter name="aLoadInBackground"/>
         <parameter name="aReplace"/>
         <body><![CDATA[
+          let aTriggeringPrincipal;
           let aAllowThirdPartyFixup;
           let aTargetTab;
           let aNewIndex = -1;
@@ -1565,6 +1566,7 @@
                                     params.newIndex : aNewIndex;
             aPostDatas            = params.postDatas || aPostDatas;
             aUserContextId        = params.userContextId;
+            aTriggeringPrincipal  = params.triggeringPrincipal;
           }
 
           if (!aURIs.length)
@@ -1602,7 +1604,8 @@
             }
             try {
               browser.loadURIWithFlags(aURIs[0], {
-                flags, postData: aPostDatas[0]
+                flags, postData: aPostDatas[0],
+                triggeringPrincipal: aTriggeringPrincipal,
               });
             } catch (e) {
               // Ignore failure in case a URI is wrong, so we can continue
@@ -1614,7 +1617,8 @@
               skipAnimation: multiple,
               allowThirdPartyFixup: aAllowThirdPartyFixup,
               postData: aPostDatas[0],
-              userContextId: aUserContextId
+              userContextId: aUserContextId,
+              triggeringPrincipal: aTriggeringPrincipal,
             });
             if (aNewIndex !== -1) {
               this.moveTabTo(firstTabAdded, aNewIndex);
@@ -1628,7 +1632,8 @@
               skipAnimation: true,
               allowThirdPartyFixup: aAllowThirdPartyFixup,
               postData: aPostDatas[i],
-              userContextId: aUserContextId
+              userContextId: aUserContextId,
+              triggeringPrincipal: aTriggeringPrincipal,
             });
             if (targetTabIndex !== -1)
               this.moveTabTo(tab, ++tabNum);
@@ -2144,8 +2149,8 @@
           <![CDATA[
             "use strict";
 
-            // If browser is already inserted don't do anything.
-            if (aTab.linkedPanel) {
+            // If browser is already inserted or window is closed don't do anything.
+            if (aTab.linkedPanel || window.closed) {
               return;
             }
 
@@ -2274,9 +2279,17 @@
 
             var t = document.createElementNS(NS_XUL, "tab");
 
-            var uriIsAboutBlank = !aURI || aURI == "about:blank";
+            aURI = aURI || "about:blank";
 
-            if (!aURI || isBlankPageURL(aURI)) {
+            let lazyBrowserURI;
+            if (aCreateLazyBrowser && aURI != "about:blank") {
+              lazyBrowserURI = Services.io.newURI(aURI);
+              aURI = "about:blank";
+            }
+
+            var uriIsAboutBlank = aURI == "about:blank";
+
+            if (isBlankPageURL(aURI)) {
               t.setAttribute("label", this.mStringBundle.getString("tabs.emptyTabTitle"));
             } else if (aURI.toLowerCase().startsWith("javascript:")) {
               // This can go away when bug 672618 or bug 55696 are fixed.
@@ -2388,6 +2401,13 @@
             // If the caller opts in, create a lazy browser.
             if (aCreateLazyBrowser) {
               this._createLazyBrowser(t);
+
+              if (lazyBrowserURI) {
+                // Lazy browser must be explicitly registered so tab will appear as
+                // a switch-to-tab candidate in autocomplete.
+                this._unifiedComplete.registerOpenPage(lazyBrowserURI, aUserContextId);
+                b.registeredOpenURI = lazyBrowserURI;
+              }
             } else {
               this._insertBrowser(t);
             }

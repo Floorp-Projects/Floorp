@@ -19,6 +19,7 @@ parent:
   async WriteData(nsCString data);
   // Signals that writing to the output stream is done.
   async Close();
+
   async __delete__();
 
 child:
@@ -26,6 +27,14 @@ child:
   // This may mean that opening the output stream has failed or that writing to
   // the stream has returned an error.
   async Error(nsresult err);
+
+both:
+  // After sending this message, the parent will respond by sending DeleteSelf
+  // back to the child, after which it is guaranteed to not send any more IPC
+  // messages.
+  // When receiving this message, the child will send __delete__ tearing down
+  // the IPC channel.
+  async DeleteSelf();
 };
 
 } // namespace net

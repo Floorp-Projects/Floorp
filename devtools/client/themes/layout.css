@@ -92,18 +92,21 @@
 
 .grid-outline-border {
   fill: none;
+  stroke: currentColor;
   stroke-width: 0.75;
   vector-effect: non-scaling-stroke;
 }
 
 .grid-outline-cell {
   pointer-events: all;
+  stroke: currentColor;
   stroke-dasharray: 0.5, 2;
   vector-effect: non-scaling-stroke;
 }
 
 .grid-outline-cell:hover {
   opacity: 0.45;
+  fill: currentColor;
 }
 
 .grid-outline-line {

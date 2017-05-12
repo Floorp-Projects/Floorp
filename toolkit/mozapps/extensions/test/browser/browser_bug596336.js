@@ -7,10 +7,10 @@
 
 var gManagerWindow;
 
-add_task(function* test() {
+add_task(async function test() {
   waitForExplicitFinish();
 
-  gManagerWindow = yield open_manager("addons://list/extension");
+  gManagerWindow = await open_manager("addons://list/extension");
 });
 
 function get_list_item_count() {
@@ -39,7 +39,7 @@ function install_addon(aXpi) {
   });
 }
 
-var check_addon = Task.async(function*(aAddon, aVersion) {
+var check_addon = async function(aAddon, aVersion) {
   is(get_list_item_count(), 1, "Should be one item in the list");
   is(aAddon.version, aVersion, "Add-on should have the right version");
 
@@ -49,25 +49,25 @@ var check_addon = Task.async(function*(aAddon, aVersion) {
   // Force XBL to apply
   item.clientTop;
 
-  let { version } = yield get_tooltip_info(item);
+  let { version } = await get_tooltip_info(item);
   is(version, aVersion, "Version should be correct");
 
   if (aAddon.userDisabled)
     is_element_visible(get_class_node(item, "disabled-postfix"), "Disabled postfix should be hidden");
   else
     is_element_hidden(get_class_node(item, "disabled-postfix"), "Disabled postfix should be hidden");
-});
+};
 
 // Install version 1 then upgrade to version 2 with the manager open
-add_task(function*() {
-  yield install_addon("browser_bug596336_1");
-  let [aAddon] = yield promiseAddonsByIDs(["bug596336-1@tests.mozilla.org"]);
-  yield check_addon(aAddon, "1.0");
+add_task(async function() {
+  await install_addon("browser_bug596336_1");
+  let [aAddon] = await promiseAddonsByIDs(["bug596336-1@tests.mozilla.org"]);
+  await check_addon(aAddon, "1.0");
   ok(!aAddon.userDisabled, "Add-on should not be disabled");
 
-  yield install_addon("browser_bug596336_2");
-  [aAddon] = yield promiseAddonsByIDs(["bug596336-1@tests.mozilla.org"]);
-  yield check_addon(aAddon, "2.0");
+  await install_addon("browser_bug596336_2");
+  [aAddon] = await promiseAddonsByIDs(["bug596336-1@tests.mozilla.org"]);
+  await check_addon(aAddon, "2.0");
   ok(!aAddon.userDisabled, "Add-on should not be disabled");
 
   aAddon.uninstall();
@@ -77,16 +77,16 @@ add_task(function*() {
 
 // Install version 1 mark it as disabled then upgrade to version 2 with the
 // manager open
-add_task(function*() {
-  yield install_addon("browser_bug596336_1");
-  let [aAddon] = yield promiseAddonsByIDs(["bug596336-1@tests.mozilla.org"]);
+add_task(async function() {
+  await install_addon("browser_bug596336_1");
+  let [aAddon] = await promiseAddonsByIDs(["bug596336-1@tests.mozilla.org"]);
   aAddon.userDisabled = true;
-  yield check_addon(aAddon, "1.0");
+  await check_addon(aAddon, "1.0");
   ok(aAddon.userDisabled, "Add-on should be disabled");
 
-  yield install_addon("browser_bug596336_2");
-  [aAddon] = yield promiseAddonsByIDs(["bug596336-1@tests.mozilla.org"]);
-  yield check_addon(aAddon, "2.0");
+  await install_addon("browser_bug596336_2");
+  [aAddon] = await promiseAddonsByIDs(["bug596336-1@tests.mozilla.org"]);
+  await check_addon(aAddon, "2.0");
   ok(aAddon.userDisabled, "Add-on should be disabled");
 
   aAddon.uninstall();
@@ -96,10 +96,10 @@ add_task(function*() {
 
 // Install version 1 click the remove button and then upgrade to version 2 with
 // the manager open
-add_task(function*() {
-  yield install_addon("browser_bug596336_1");
-  let [aAddon] = yield promiseAddonsByIDs(["bug596336-1@tests.mozilla.org"]);
-  yield check_addon(aAddon, "1.0");
+add_task(async function() {
+  await install_addon("browser_bug596336_1");
+  let [aAddon] = await promiseAddonsByIDs(["bug596336-1@tests.mozilla.org"]);
+  await check_addon(aAddon, "1.0");
   ok(!aAddon.userDisabled, "Add-on should not be disabled");
 
   let item = get_addon_element(gManagerWindow, "bug596336-1@tests.mozilla.org");
@@ -111,9 +111,9 @@ add_task(function*() {
   ok(!!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should be pending uninstall");
   is_element_visible(get_class_node(item, "pending"), "Pending message should be visible");
 
-  yield install_addon("browser_bug596336_2");
-  [aAddon] = yield promiseAddonsByIDs(["bug596336-1@tests.mozilla.org"]);
-  yield check_addon(aAddon, "2.0");
+  await install_addon("browser_bug596336_2");
+  [aAddon] = await promiseAddonsByIDs(["bug596336-1@tests.mozilla.org"]);
+  await check_addon(aAddon, "2.0");
   ok(!aAddon.userDisabled, "Add-on should not be disabled");
 
   aAddon.uninstall();
@@ -123,11 +123,11 @@ add_task(function*() {
 
 // Install version 1, disable it, click the remove button and then upgrade to
 // version 2 with the manager open
-add_task(function*() {
-  yield install_addon("browser_bug596336_1");
-  let [aAddon] = yield promiseAddonsByIDs(["bug596336-1@tests.mozilla.org"]);
+add_task(async function() {
+  await install_addon("browser_bug596336_1");
+  let [aAddon] = await promiseAddonsByIDs(["bug596336-1@tests.mozilla.org"]);
   aAddon.userDisabled = true;
-  yield check_addon(aAddon, "1.0");
+  await check_addon(aAddon, "1.0");
   ok(aAddon.userDisabled, "Add-on should be disabled");
 
   let item = get_addon_element(gManagerWindow, "bug596336-1@tests.mozilla.org");
@@ -139,9 +139,9 @@ add_task(function*() {
   ok(!!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should be pending uninstall");
   is_element_visible(get_class_node(item, "pending"), "Pending message should be visible");
 
-  yield install_addon("browser_bug596336_2");
-  [aAddon] = yield promiseAddonsByIDs(["bug596336-1@tests.mozilla.org"]);
-  yield check_addon(aAddon, "2.0");
+  await install_addon("browser_bug596336_2");
+  [aAddon] = await promiseAddonsByIDs(["bug596336-1@tests.mozilla.org"]);
+  await check_addon(aAddon, "2.0");
   ok(aAddon.userDisabled, "Add-on should be disabled");
 
   aAddon.uninstall();

@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-add_task(function* invalid_input_throws() {
+add_task(async function invalid_input_throws() {
   Assert.throws(() => PlacesUtils.bookmarks.reorder(),
                 /Invalid value for property 'guid'/);
   Assert.throws(() => PlacesUtils.bookmarks.reorder(null),
@@ -34,13 +34,13 @@ add_task(function* invalid_input_throws() {
                 /Invalid GUID found in the sorted children array/);
 });
 
-add_task(function* reorder_nonexistent_guid() {
-  yield Assert.rejects(PlacesUtils.bookmarks.reorder("123456789012", [ "012345678901" ]),
+add_task(async function reorder_nonexistent_guid() {
+  await Assert.rejects(PlacesUtils.bookmarks.reorder("123456789012", [ "012345678901" ]),
                        /No folder found for the provided GUID/,
                        "Should throw for nonexisting guid");
 });
 
-add_task(function* reorder() {
+add_task(async function reorder() {
   let bookmarks = [
     { url: "http://example1.com/",
       parentGuid: PlacesUtils.bookmarks.unfiledGuid
@@ -61,7 +61,7 @@ add_task(function* reorder() {
 
   let sorted = [];
   for (let bm of bookmarks) {
-    sorted.push(yield PlacesUtils.bookmarks.insert(bm));
+    sorted.push(await PlacesUtils.bookmarks.insert(bm));
   }
 
   // Check the initial append sorting.
@@ -75,10 +75,10 @@ add_task(function* reorder() {
     dump("Expected order: " + sortedGuids.join() + "\n");
     // Add a nonexisting guid to the array, to ensure nothing will break.
     sortedGuids.push("123456789012");
-    yield PlacesUtils.bookmarks.reorder(PlacesUtils.bookmarks.unfiledGuid,
+    await PlacesUtils.bookmarks.reorder(PlacesUtils.bookmarks.unfiledGuid,
                                         sortedGuids);
     for (let i = 0; i < sorted.length; ++i) {
-      let item = yield PlacesUtils.bookmarks.fetch(sorted[i].guid);
+      let item = await PlacesUtils.bookmarks.fetch(sorted[i].guid);
       Assert.equal(item.index, i);
     }
   }
@@ -90,10 +90,10 @@ add_task(function* reorder() {
     // currently have. No entries should change order.
     let sortedGuids = [ sorted[0].guid, sorted[3].guid ];
     dump("Expected order: " + sorted.map(b => b.guid).join() + "\n");
-    yield PlacesUtils.bookmarks.reorder(PlacesUtils.bookmarks.unfiledGuid,
+    await PlacesUtils.bookmarks.reorder(PlacesUtils.bookmarks.unfiledGuid,
                                         sortedGuids);
     for (let i = 0; i < sorted.length; ++i) {
-      let item = yield PlacesUtils.bookmarks.fetch(sorted[i].guid);
+      let item = await PlacesUtils.bookmarks.fetch(sorted[i].guid);
       Assert.equal(item.index, i);
     }
   }
@@ -104,16 +104,16 @@ add_task(function* reorder() {
     sorted = [ sorted[1], sorted[0] ].concat(sorted.slice(2));
     let sortedGuids = [ sorted[0].guid, sorted[1].guid ];
     dump("Expected order: " + sorted.map(b => b.guid).join() + "\n");
-    yield PlacesUtils.bookmarks.reorder(PlacesUtils.bookmarks.unfiledGuid,
+    await PlacesUtils.bookmarks.reorder(PlacesUtils.bookmarks.unfiledGuid,
                                         sortedGuids);
     for (let i = 0; i < sorted.length; ++i) {
-      let item = yield PlacesUtils.bookmarks.fetch(sorted[i].guid);
+      let item = await PlacesUtils.bookmarks.fetch(sorted[i].guid);
       Assert.equal(item.index, i);
     }
   }
   // Use triangular numbers to detect skipped position.
-  let db = yield PlacesUtils.promiseDBConnection();
-  let rows = yield db.execute(
+  let db = await PlacesUtils.promiseDBConnection();
+  let rows = await db.execute(
     `SELECT parent
      FROM moz_bookmarks
      GROUP BY parent
@@ -121,35 +121,35 @@ add_task(function* reorder() {
   Assert.equal(rows.length, 0, "All the bookmarks should have consistent positions");
 });
 
-add_task(function* move_and_reorder() {
+add_task(async function move_and_reorder() {
   // Start clean.
-  yield PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.bookmarks.eraseEverything();
 
-  let bm1 = yield PlacesUtils.bookmarks.insert({
+  let bm1 = await PlacesUtils.bookmarks.insert({
     url: "http://example1.com/",
     parentGuid: PlacesUtils.bookmarks.unfiledGuid
   });
-  let f1 = yield PlacesUtils.bookmarks.insert({
+  let f1 = await PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     parentGuid: PlacesUtils.bookmarks.unfiledGuid
   });
-  let bm2 = yield PlacesUtils.bookmarks.insert({
+  let bm2 = await PlacesUtils.bookmarks.insert({
     url: "http://example2.com/",
     parentGuid: f1.guid
   });
-  let f2 = yield PlacesUtils.bookmarks.insert({
+  let f2 = await PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     parentGuid: PlacesUtils.bookmarks.unfiledGuid
   });
-  let bm3 = yield PlacesUtils.bookmarks.insert({
+  let bm3 = await PlacesUtils.bookmarks.insert({
     url: "http://example3.com/",
     parentGuid: f2.guid
   });
-  let bm4 = yield PlacesUtils.bookmarks.insert({
+  let bm4 = await PlacesUtils.bookmarks.insert({
     url: "http://example4.com/",
     parentGuid: f2.guid
   });
-  let bm5 = yield PlacesUtils.bookmarks.insert({
+  let bm5 = await PlacesUtils.bookmarks.insert({
     url: "http://example5.com/",
     parentGuid: f2.guid
   });
@@ -157,49 +157,49 @@ add_task(function* move_and_reorder() {
   // Invert f2 children.
   // This is critical to reproduce the bug, cause it inverts the position
   // compared to the natural insertion order.
-  yield PlacesUtils.bookmarks.reorder(f2.guid, [bm5.guid, bm4.guid, bm3.guid]);
+  await PlacesUtils.bookmarks.reorder(f2.guid, [bm5.guid, bm4.guid, bm3.guid]);
 
   bm1.parentGuid = f1.guid;
   bm1.index = 0;
-  yield PlacesUtils.bookmarks.update(bm1);
+  await PlacesUtils.bookmarks.update(bm1);
 
-  bm1 = yield PlacesUtils.bookmarks.fetch(bm1.guid);
+  bm1 = await PlacesUtils.bookmarks.fetch(bm1.guid);
   Assert.equal(bm1.index, 0);
-  bm2 = yield PlacesUtils.bookmarks.fetch(bm2.guid);
+  bm2 = await PlacesUtils.bookmarks.fetch(bm2.guid);
   Assert.equal(bm2.index, 1);
-  bm3 = yield PlacesUtils.bookmarks.fetch(bm3.guid);
+  bm3 = await PlacesUtils.bookmarks.fetch(bm3.guid);
   Assert.equal(bm3.index, 2);
-  bm4 = yield PlacesUtils.bookmarks.fetch(bm4.guid);
+  bm4 = await PlacesUtils.bookmarks.fetch(bm4.guid);
   Assert.equal(bm4.index, 1);
-  bm5 = yield PlacesUtils.bookmarks.fetch(bm5.guid);
+  bm5 = await PlacesUtils.bookmarks.fetch(bm5.guid);
   Assert.equal(bm5.index, 0);
 
   // No-op reorder on f1 children.
   // Nothing should change. Though, due to bug 1293365 this was causing children
   // of other folders to get messed up.
-  yield PlacesUtils.bookmarks.reorder(f1.guid, [bm1.guid, bm2.guid]);
+  await PlacesUtils.bookmarks.reorder(f1.guid, [bm1.guid, bm2.guid]);
 
-  bm1 = yield PlacesUtils.bookmarks.fetch(bm1.guid);
+  bm1 = await PlacesUtils.bookmarks.fetch(bm1.guid);
   Assert.equal(bm1.index, 0);
-  bm2 = yield PlacesUtils.bookmarks.fetch(bm2.guid);
+  bm2 = await PlacesUtils.bookmarks.fetch(bm2.guid);
   Assert.equal(bm2.index, 1);
-  bm3 = yield PlacesUtils.bookmarks.fetch(bm3.guid);
+  bm3 = await PlacesUtils.bookmarks.fetch(bm3.guid);
   Assert.equal(bm3.index, 2);
-  bm4 = yield PlacesUtils.bookmarks.fetch(bm4.guid);
+  bm4 = await PlacesUtils.bookmarks.fetch(bm4.guid);
   Assert.equal(bm4.index, 1);
-  bm5 = yield PlacesUtils.bookmarks.fetch(bm5.guid);
+  bm5 = await PlacesUtils.bookmarks.fetch(bm5.guid);
   Assert.equal(bm5.index, 0);
 });
 
-add_task(function* reorder_empty_folder_invalid_children() {
+add_task(async function reorder_empty_folder_invalid_children() {
   // Start clean.
-  yield PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.bookmarks.eraseEverything();
 
-  let f1 = yield PlacesUtils.bookmarks.insert({
+  let f1 = await PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     parentGuid: PlacesUtils.bookmarks.unfiledGuid
   });
   // Specifying a child that doesn't exist should cause that to be ignored.
   // However, before bug 1333304, doing this on an empty folder threw.
-  yield PlacesUtils.bookmarks.reorder(f1.guid, ["123456789012"]);
+  await PlacesUtils.bookmarks.reorder(f1.guid, ["123456789012"]);
 });

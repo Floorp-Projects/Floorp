@@ -33,7 +33,7 @@ function stored(needles) {
   return true;
 }
 
-add_task(function* () {
+add_task(async function() {
   registerCleanupFunction(function() {
     clearAllPluginPermissions();
     Services.prefs.clearUserPref("plugins.click_to_play");
@@ -53,7 +53,7 @@ add_task(function* () {
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
 });
 
-function* setPrefs(cookies, pluginData) {
+function setPrefs(cookies, pluginData) {
   sanitizer = new Sanitizer();
   sanitizer.ignoreTimespan = false;
   sanitizer.prefDomain = "privacy.cpd.";
@@ -70,14 +70,14 @@ function* setPrefs(cookies, pluginData) {
   itemPrefs.setBoolPref("pluginData", pluginData);
 }
 
-function* testClearingData(url) {
+async function testClearingData(url) {
   // Load page to set data for the plugin.
   gBrowser.selectedTab = gBrowser.addTab();
   gTestBrowser = gBrowser.selectedBrowser;
 
-  yield promiseTabLoadEvent(gBrowser.selectedTab, url);
+  await promiseTabLoadEvent(gBrowser.selectedTab, url);
 
-  yield promiseUpdatePluginBindings(gTestBrowser);
+  await promiseUpdatePluginBindings(gTestBrowser);
 
   ok(stored(["foo.com", "bar.com", "baz.com", "qux.com"]),
     "Data stored for sites");
@@ -88,7 +88,7 @@ function* testClearingData(url) {
   // clearing all data regardless of age.
   let now_uSec = Date.now() * 1000;
   sanitizer.range = [now_uSec - 20 * 1000000, now_uSec];
-  yield sanitizer.sanitize();
+  await sanitizer.sanitize();
 
   if (url == testURL1) {
     ok(stored(["bar.com", "qux.com"]), "Data stored for sites");
@@ -97,7 +97,7 @@ function* testClearingData(url) {
 
     // Clear everything.
     sanitizer.range = null;
-    yield sanitizer.sanitize();
+    await sanitizer.sanitize();
   }
 
   ok(!stored(null), "All data cleared");
@@ -106,14 +106,14 @@ function* testClearingData(url) {
   gTestBrowser = null;
 }
 
-add_task(function* () {
+add_task(async function() {
   // Test when santizing cookies.
-  yield setPrefs(true, false);
-  yield testClearingData(testURL1);
-  yield testClearingData(testURL2);
+  await setPrefs(true, false);
+  await testClearingData(testURL1);
+  await testClearingData(testURL2);
 
   // Test when santizing pluginData.
-  yield setPrefs(false, true);
-  yield testClearingData(testURL1);
-  yield testClearingData(testURL2);
+  await setPrefs(false, true);
+  await testClearingData(testURL1);
+  await testClearingData(testURL2);
 });

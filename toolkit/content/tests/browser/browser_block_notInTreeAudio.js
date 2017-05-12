@@ -42,46 +42,46 @@ function play_not_in_tree_audio() {
   }, 1000);
 }
 
-add_task(function* setup_test_preference() {
-  yield SpecialPowers.pushPrefEnv({"set": [
+add_task(async function setup_test_preference() {
+  await SpecialPowers.pushPrefEnv({"set": [
     ["media.useAudioChannelService.testing", true],
     ["media.block-autoplay-until-in-foreground", true]
   ]});
 });
 
-add_task(function* block_not_in_tree_media() {
+add_task(async function block_not_in_tree_media() {
   info("- open new background tab -");
   let tab = window.gBrowser.addTab("about:blank");
   tab.linkedBrowser.loadURI(PAGE);
-  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   info("- tab should not be blocked -");
-  yield waitForTabBlockEvent(tab, false);
+  await waitForTabBlockEvent(tab, false);
 
   info("- check audio's suspend state -");
-  yield ContentTask.spawn(tab.linkedBrowser, SuspendedType.NONE_SUSPENDED,
+  await ContentTask.spawn(tab.linkedBrowser, SuspendedType.NONE_SUSPENDED,
                           check_audio_suspended);
 
   info("- check audio's playing state -");
-  yield ContentTask.spawn(tab.linkedBrowser, true,
+  await ContentTask.spawn(tab.linkedBrowser, true,
                           check_audio_pause_state);
 
   info("- playing audio -");
-  yield ContentTask.spawn(tab.linkedBrowser, null,
+  await ContentTask.spawn(tab.linkedBrowser, null,
                           play_not_in_tree_audio);
 
   info("- tab should be blocked -");
-  yield waitForTabBlockEvent(tab, true);
+  await waitForTabBlockEvent(tab, true);
 
   info("- switch tab -");
-  yield BrowserTestUtils.switchTab(window.gBrowser, tab);
+  await BrowserTestUtils.switchTab(window.gBrowser, tab);
 
   info("- tab should be resumed -");
-  yield waitForTabBlockEvent(tab, false);
+  await waitForTabBlockEvent(tab, false);
 
   info("- tab should be audible -");
-  yield waitForTabPlayingEvent(tab, true);
+  await waitForTabPlayingEvent(tab, true);
 
   info("- remove tab -");
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });

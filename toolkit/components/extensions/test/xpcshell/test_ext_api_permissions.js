@@ -12,7 +12,7 @@ function getNextContext() {
   });
 }
 
-add_task(function* test_storage_api_without_permissions() {
+add_task(async function test_storage_api_without_permissions() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
       // Force API initialization.
@@ -29,9 +29,9 @@ add_task(function* test_storage_api_without_permissions() {
   });
 
   let contextPromise = getNextContext();
-  yield extension.startup();
+  await extension.startup();
 
-  let context = yield contextPromise;
+  let context = await contextPromise;
 
   // Force API initialization.
   void context.apiObj;
@@ -39,10 +39,10 @@ add_task(function* test_storage_api_without_permissions() {
   ok(!("storage" in context.apiObj),
      "The storage API should not be initialized");
 
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* test_storage_api_with_permissions() {
+add_task(async function test_storage_api_with_permissions() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
       browser.storage.onChanged.addListener(() => {});
@@ -54,9 +54,9 @@ add_task(function* test_storage_api_with_permissions() {
   });
 
   let contextPromise = getNextContext();
-  yield extension.startup();
+  await extension.startup();
 
-  let context = yield contextPromise;
+  let context = await contextPromise;
 
   // Force API initialization.
   void context.apiObj;
@@ -64,5 +64,5 @@ add_task(function* test_storage_api_with_permissions() {
   equal(typeof context.apiObj.storage, "object",
         "The storage API should be initialized");
 
-  yield extension.unload();
+  await extension.unload();
 });

@@ -22,8 +22,8 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_disthidden() {
-  yield asyncInit();
+add_task(async function test_disthidden() {
+  await asyncInit();
 
   do_check_true(Services.search.isInitialized);
 

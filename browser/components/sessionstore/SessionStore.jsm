@@ -155,7 +155,6 @@ const RESTORE_TAB_CONTENT_REASON = {
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
-Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/TelemetryStopwatch.jsm", this);
 Cu.import("resource://gre/modules/TelemetryTimestamps.jsm", this);
 Cu.import("resource://gre/modules/Timer.jsm", this);
@@ -1633,7 +1632,7 @@ var SessionStoreInternal = {
    *
    * @return Promise
    */
-  flushAllWindowsAsync: Task.async(function*(progress = {}) {
+  async flushAllWindowsAsync(progress = {}) {
     let windowPromises = new Map();
     // We collect flush promises and close each window immediately so that
     // the user can't start changing any window state while we're waiting
@@ -1658,7 +1657,7 @@ var SessionStoreInternal = {
     // We'll iterate through the Promise array, yielding each one, so as to
     // provide useful progress information to AsyncShutdown.
     for (let [win, promise] of windowPromises) {
-      yield promise;
+      await promise;
       this._collectWindowData(win);
       progress.current++;
     }
@@ -1669,7 +1668,7 @@ var SessionStoreInternal = {
     if (activeWindow)
       this.activeWindowSSiCache = activeWindow.__SSi || "";
     DirtyWindows.clear();
-  }),
+  },
 
   /**
    * On last browser window close
@@ -3278,10 +3277,21 @@ var SessionStoreInternal = {
       this._prefBranch.getBoolPref("sessionstore.restore_on_demand");
 
     for (var t = 0; t < newTabCount; t++) {
-      let userContextId = winData.tabs[t].userContextId;
+      let tabData = winData.tabs[t];
+
+      let userContextId = tabData.userContextId;
       let select = t == selectTab - 1;
-      let createLazyBrowser = restoreTabsLazily && !select && !winData.tabs[t].pinned;
-      let tab = tabbrowser.addTab("about:blank",
+      let createLazyBrowser = restoreTabsLazily && !select && !tabData.pinned;
+
+      let url = "about:blank";
+      if (createLazyBrowser) {
+        // Let tabbrowser know the future URI because progress listeners won't
+        // get onLocationChange notification before the browser is inserted.
+        let activeIndex = (tabData.index || tabData.entries.length) - 1;
+        url = tabData.entries[activeIndex].url;
+      }
+
+      let tab = tabbrowser.addTab(url,
                                   { createLazyBrowser,
                                     skipAnimation: true,
                                     userContextId,
@@ -3301,7 +3311,7 @@ var SessionStoreInternal = {
 
       tabs.push(tab);
 
-      if (winData.tabs[t].hidden) {
+      if (tabData.hidden) {
         tabbrowser.hideTab(tabs[t]);
       }
     }

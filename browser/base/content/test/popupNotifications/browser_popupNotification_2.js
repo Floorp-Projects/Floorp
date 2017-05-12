@@ -55,22 +55,22 @@ var tests = [
 
   // Test that persistence allows the notification to persist across reloads
   { id: "Test#3",
-    *run() {
+    async run() {
       this.oldSelectedTab = gBrowser.selectedTab;
-      yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+      await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.addOptions({
         persistence: 2
       });
       this.notification = showNotification(this.notifyObj);
     },
-    *onShown(popup) {
+    async onShown(popup) {
       this.complete = false;
-      yield promiseTabLoadEvent(gBrowser.selectedTab, "http://example.org/");
-      yield promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/");
+      await promiseTabLoadEvent(gBrowser.selectedTab, "http://example.org/");
+      await promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/");
       // Next load will remove the notification
       this.complete = true;
-      yield promiseTabLoadEvent(gBrowser.selectedTab, "http://example.org/");
+      await promiseTabLoadEvent(gBrowser.selectedTab, "http://example.org/");
     },
     onHidden(popup) {
       ok(this.complete, "Should only have hidden the notification after 3 page loads");
@@ -81,9 +81,9 @@ var tests = [
   },
   // Test that a timeout allows the notification to persist across reloads
   { id: "Test#4",
-    *run() {
+    async run() {
       this.oldSelectedTab = gBrowser.selectedTab;
-      yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+      await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
       this.notifyObj = new BasicNotification(this.id);
       // Set a timeout of 10 minutes that should never be hit
       this.notifyObj.addOptions({
@@ -91,14 +91,14 @@ var tests = [
       });
       this.notification = showNotification(this.notifyObj);
     },
-    *onShown(popup) {
+    async onShown(popup) {
       this.complete = false;
-      yield promiseTabLoadEvent(gBrowser.selectedTab, "http://example.org/");
-      yield promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/");
+      await promiseTabLoadEvent(gBrowser.selectedTab, "http://example.org/");
+      await promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/");
       // Next load will hide the notification
       this.notification.options.timeout = Date.now() - 1;
       this.complete = true;
-      yield promiseTabLoadEvent(gBrowser.selectedTab, "http://example.org/");
+      await promiseTabLoadEvent(gBrowser.selectedTab, "http://example.org/");
     },
     onHidden(popup) {
       ok(this.complete, "Should only have hidden the notification after the timeout was passed");
@@ -110,20 +110,20 @@ var tests = [
   // Test that setting persistWhileVisible allows a visible notification to
   // persist across location changes
   { id: "Test#5",
-    *run() {
+    async run() {
       this.oldSelectedTab = gBrowser.selectedTab;
-      yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+      await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.addOptions({
         persistWhileVisible: true
       });
       this.notification = showNotification(this.notifyObj);
     },
-    *onShown(popup) {
+    async onShown(popup) {
       this.complete = false;
 
-      yield promiseTabLoadEvent(gBrowser.selectedTab, "http://example.org/");
-      yield promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/");
+      await promiseTabLoadEvent(gBrowser.selectedTab, "http://example.org/");
+      await promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/");
       // Notification should persist across location changes
       this.complete = true;
       dismissNotification(popup);
@@ -171,13 +171,13 @@ var tests = [
   },
   // Test that popupnotifications without popups have anchor icons shown
   { id: "Test#7",
-    *run() {
+    async run() {
       let notifyObj = new BasicNotification(this.id);
       notifyObj.anchorID = "geo-notification-icon";
       notifyObj.addOptions({neverShow: true});
       let promiseTopic = promiseTopicObserved("PopupNotifications-updateNotShowing");
       showNotification(notifyObj);
-      yield promiseTopic;
+      await promiseTopic;
       isnot(document.getElementById("geo-notification-icon").boxObject.width, 0,
             "geo anchor should be visible");
       goNext();

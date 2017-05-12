@@ -18,7 +18,7 @@ function makeURI(url) {
 }
 
 // Tests that loadURI accepts a referrer and it is included in the load.
-add_task(function* test_referrer() {
+add_task(async function test_referrer() {
   gBrowser.selectedTab = gBrowser.addTab();
   let browser = gBrowser.selectedBrowser;
 
@@ -26,9 +26,9 @@ add_task(function* test_referrer() {
                                 Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
                                 makeURI(DUMMY2), null, null,
                                 SYSTEMPRINCIPAL);
-  yield waitForLoad(DUMMY1);
+  await waitForLoad(DUMMY1);
 
-  yield ContentTask.spawn(browser, [ DUMMY1, DUMMY2 ], function([dummy1, dummy2]) {
+  await ContentTask.spawn(browser, [ DUMMY1, DUMMY2 ], function([dummy1, dummy2]) {
     is(content.location.href, dummy1, "Should have loaded the right URL");
     is(content.document.referrer, dummy2, "Should have the right referrer");
   });
@@ -37,7 +37,7 @@ add_task(function* test_referrer() {
 });
 
 // Tests that remote access to webnavigation.sessionHistory works.
-add_task(function* test_history() {
+add_task(async function test_history() {
   function checkHistoryIndex(browser, n) {
     return ContentTask.spawn(browser, n, function(n) {
       let history = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -52,15 +52,15 @@ add_task(function* test_history() {
                                 Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
                                 null, null, null,
                                 SYSTEMPRINCIPAL);
-  yield waitForLoad(DUMMY1);
+  await waitForLoad(DUMMY1);
 
   browser.webNavigation.loadURI(DUMMY2,
                                 Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
                                 null, null, null,
                                 SYSTEMPRINCIPAL);
-  yield waitForLoad(DUMMY2);
+  await waitForLoad(DUMMY2);
 
-  yield ContentTask.spawn(browser, [DUMMY1, DUMMY2], function([dummy1, dummy2]) {
+  await ContentTask.spawn(browser, [DUMMY1, DUMMY2], function([dummy1, dummy2]) {
     let history = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                           .getInterface(Ci.nsISHistory);
     is(history.count, 2, "Should be two history items");
@@ -73,24 +73,24 @@ add_task(function* test_history() {
 
   let promise = waitForPageShow();
   browser.webNavigation.goBack();
-  yield promise;
-  yield checkHistoryIndex(browser, 0);
+  await promise;
+  await checkHistoryIndex(browser, 0);
 
   promise = waitForPageShow();
   browser.webNavigation.goForward();
-  yield promise;
-  yield checkHistoryIndex(browser, 1);
+  await promise;
+  await checkHistoryIndex(browser, 1);
 
   promise = waitForPageShow();
   browser.webNavigation.gotoIndex(0);
-  yield promise;
-  yield checkHistoryIndex(browser, 0);
+  await promise;
+  await checkHistoryIndex(browser, 0);
 
   gBrowser.removeCurrentTab();
 });
 
 // Tests that load flags are passed through to the content process.
-add_task(function* test_flags() {
+add_task(async function test_flags() {
   function checkHistory(browser, { count, index }) {
     return ContentTask.spawn(browser, [ DUMMY2, count, index ],
       function([ dummy2, count, index ]) {
@@ -110,27 +110,27 @@ add_task(function* test_flags() {
                                 Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
                                 null, null, null,
                                 SYSTEMPRINCIPAL);
-  yield waitForLoad(DUMMY1);
+  await waitForLoad(DUMMY1);
 
   browser.webNavigation.loadURI(DUMMY2,
                                 Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY,
                                 null, null, null,
                                 SYSTEMPRINCIPAL);
-  yield waitForLoad(DUMMY2);
-  yield checkHistory(browser, { count: 1, index: 0 });
+  await waitForLoad(DUMMY2);
+  await checkHistory(browser, { count: 1, index: 0 });
 
   browser.webNavigation.loadURI(DUMMY1,
                                 Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY,
                                 null, null, null,
                                 SYSTEMPRINCIPAL);
-  yield waitForLoad(DUMMY1);
-  yield checkHistory(browser, { count: 1, index: 0 });
+  await waitForLoad(DUMMY1);
+  await checkHistory(browser, { count: 1, index: 0 });
 
   gBrowser.removeCurrentTab();
 });
 
 // Tests that attempts to use unsupported arguments throw an exception.
-add_task(function* test_badarguments() {
+add_task(async function test_badarguments() {
   if (!gMultiProcessBrowser)
     return;
 

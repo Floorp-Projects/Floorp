@@ -49,15 +49,6 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
                                           BuildConfig.USER_AGENT_GECKOVIEW_MOBILE;
     }
 
-    // Bug 908775: Implement this
-    @Override
-    public void doRestart() {}
-
-    @Override
-    public void setFullScreen(final boolean fullscreen) {
-        // This API doesn't make sense for GeckoView, so we do nothing for now.
-    }
-
     // Bug 908779: Implement this
     @Override
     public void addPluginView(final View view) {}

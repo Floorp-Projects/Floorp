@@ -4,8 +4,8 @@
 
 "use strict";
 
-add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   const kNormalLabel = "Character Encoding";
   CustomizableUI.addWidgetToArea("characterencoding-button", CustomizableUI.AREA_NAVBAR);
   let characterEncoding = document.getElementById("characterencoding-button");
@@ -13,7 +13,7 @@ add_task(function*() {
   characterEncoding.setAttribute("label", "\u00ad" + kNormalLabel);
   CustomizableUI.addWidgetToArea("characterencoding-button", CustomizableUI.AREA_PANEL);
 
-  yield PanelUI.show();
+  await PanelUI.show();
 
   is(characterEncoding.getAttribute("auto-hyphens"), "off",
      "Hyphens should be disabled if the &shy; character is present in the label");
@@ -23,11 +23,11 @@ add_task(function*() {
 
   let hiddenPanelPromise = promisePanelHidden(window);
   PanelUI.toggle();
-  yield hiddenPanelPromise;
+  await hiddenPanelPromise;
 
   characterEncoding.setAttribute("label", kNormalLabel);
 
-  yield PanelUI.show();
+  await PanelUI.show();
 
   isnot(characterEncoding.getAttribute("auto-hyphens"), "off",
         "Hyphens should not be disabled if the &shy; character is not present in the label");
@@ -37,11 +37,11 @@ add_task(function*() {
 
   hiddenPanelPromise = promisePanelHidden(window);
   PanelUI.toggle();
-  yield hiddenPanelPromise;
+  await hiddenPanelPromise;
 
   characterEncoding.setAttribute("label", "\u00ad" + kNormalLabel);
   CustomizableUI.removeWidgetFromArea("characterencoding-button");
-  yield startCustomizing();
+  await startCustomizing();
 
   isnot(characterEncoding.getAttribute("auto-hyphens"), "off",
         "Hyphens should not be disabled when the widget is in the palette");
@@ -53,7 +53,7 @@ add_task(function*() {
   multilineTextCS = getComputedStyle(multilineText);
   is(multilineTextCS.MozHyphens, "manual", "-moz-hyphens should be set to manual when the &shy; character is present in customization mode.")
 
-  yield endCustomizing();
+  await endCustomizing();
 
   CustomizableUI.addWidgetToArea("characterencoding-button", CustomizableUI.AREA_NAVBAR);
   ok(!characterEncoding.hasAttribute("auto-hyphens"),
@@ -62,7 +62,7 @@ add_task(function*() {
   characterEncoding.setAttribute("label", kOriginalLabel);
 });
 
-add_task(function* asyncCleanup() {
-  yield endCustomizing();
-  yield resetCustomization();
+add_task(async function asyncCleanup() {
+  await endCustomizing();
+  await resetCustomization();
 });

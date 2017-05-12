@@ -21,10 +21,10 @@
  * @returns Promise
  */
 function promiseCrashReport(expectedExtra = {}) {
-  return Task.spawn(function*() {
+  return (async function() {
     info("Starting wait on crash-report-status");
     let [subject, ] =
-      yield TestUtils.topicObserved("crash-report-status", (unused, data) => {
+      await TestUtils.topicObserved("crash-report-status", (unused, data) => {
         return data == "success";
       });
     info("Topic observed!");
@@ -67,7 +67,7 @@ function promiseCrashReport(expectedExtra = {}) {
         }
       }
     }
-  });
+  })();
 }
 
 

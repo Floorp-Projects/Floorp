@@ -23,19 +23,20 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include "../minheap-internal.h"
 
 #include <stdlib.h>
 #include "event2/event_struct.h"
 
 #include "tinytest.h"
 #include "tinytest_macros.h"
-#include "../minheap-internal.h"
+#include "regress.h"
 
 static void
 set_random_timeout(struct event *ev)
 {
-	ev->ev_timeout.tv_sec = rand();
-	ev->ev_timeout.tv_usec = rand() & 0xfffff;
+	ev->ev_timeout.tv_sec = test_weakrand();
+	ev->ev_timeout.tv_usec = test_weakrand() & 0xfffff;
 	ev->ev_timeout_pos.min_heap_idx = -1;
 }
 
@@ -58,38 +59,38 @@ test_heap_randomized(void *ptr)
 	struct event *e, *last_e;
 	int i;
 
-	min_heap_ctor(&heap);
+	min_heap_ctor_(&heap);
 
 	for (i = 0; i < 1024; ++i) {
 		inserted[i] = malloc(sizeof(struct event));
 		set_random_timeout(inserted[i]);
-		min_heap_push(&heap, inserted[i]);
+		min_heap_push_(&heap, inserted[i]);
 	}
 	check_heap(&heap);
 
-	tt_assert(min_heap_size(&heap) == 1024);
+	tt_assert(min_heap_size_(&heap) == 1024);
 
 	for (i = 0; i < 512; ++i) {
-		min_heap_erase(&heap, inserted[i]);
+		min_heap_erase_(&heap, inserted[i]);
 		if (0 == (i % 32))
 			check_heap(&heap);
 	}
-	tt_assert(min_heap_size(&heap) == 512);
+	tt_assert(min_heap_size_(&heap) == 512);
 
-	last_e = min_heap_pop(&heap);
+	last_e = min_heap_pop_(&heap);
 	while (1) {
-		e = min_heap_pop(&heap);
+		e = min_heap_pop_(&heap);
 		if (!e)
 			break;
 		tt_want(evutil_timercmp(&last_e->ev_timeout,
 			&e->ev_timeout, <=));
 	}
-	tt_assert(min_heap_size(&heap) == 0);
+	tt_assert(min_heap_size_(&heap) == 0);
 end:
 	for (i = 0; i < 1024; ++i)
 		free(inserted[i]);
 
-	min_heap_dtor(&heap);
+	min_heap_dtor_(&heap);
 }
 
 struct testcase_t minheap_testcases[] = {

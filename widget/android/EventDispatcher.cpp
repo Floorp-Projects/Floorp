@@ -546,7 +546,7 @@ UnboxData(jni::String::Param aEvent, JSContext* aCx, jni::Object::Param aData,
     } else if (!jniData || jniData.IsInstanceOf<java::GeckoBundle>()) {
         rv = UnboxBundle(aCx, jniData, aOut);
     }
-    if (rv != NS_ERROR_INVALID_ARG) {
+    if (rv != NS_ERROR_INVALID_ARG || !aEvent) {
         return rv;
     }
 
@@ -719,6 +719,22 @@ EventDispatcher::DispatchOnGecko(ListenersList* list, const nsAString& aEvent,
     return NS_OK;
 }
 
+java::EventDispatcher::NativeCallbackDelegate::LocalRef
+EventDispatcher::WrapCallback(nsIAndroidEventCallback* aCallback)
+{
+    java::EventDispatcher::NativeCallbackDelegate::LocalRef
+            callback(jni::GetGeckoThreadEnv());
+
+    if (aCallback) {
+        callback = java::EventDispatcher::NativeCallbackDelegate::New();
+        NativeCallbackDelegateSupport::AttachNative(
+                callback,
+                MakeUnique<NativeCallbackDelegateSupport>(
+                        aCallback, mDOMWindow));
+    }
+    return callback;
+}
+
 NS_IMETHODIMP
 EventDispatcher::Dispatch(JS::HandleValue aEvent, JS::HandleValue aData,
                           nsIAndroidEventCallback* aCallback, JSContext* aCx)
@@ -751,18 +767,32 @@ EventDispatcher::Dispatch(JS::HandleValue aEvent, JS::HandleValue aData,
     NS_ENSURE_SUCCESS(rv, JS_IsExceptionPending(aCx) ? NS_OK : rv);
 
     dom::AutoNoJSAPI nojsapi;
+    mDispatcher->DispatchToThreads(event, data, WrapCallback(aCallback));
+    return NS_OK;
+}
 
-    java::EventDispatcher::NativeCallbackDelegate::LocalRef
-            callback(data.Env());
-    if (aCallback) {
-        callback = java::EventDispatcher::NativeCallbackDelegate::New();
-        NativeCallbackDelegateSupport::AttachNative(
-                callback,
-                MakeUnique<NativeCallbackDelegateSupport>(
-                        aCallback, mDOMWindow));
+nsresult
+EventDispatcher::Dispatch(const char16_t* aEvent,
+                          java::GeckoBundle::Param aData,
+                          nsIAndroidEventCallback* aCallback)
+{
+    nsDependentString event(aEvent);
+
+    ListenersList* list = mListenersMap.Get(event);
+    if (list) {
+        dom::AutoJSAPI jsapi;
+        JS::RootedValue data(jsapi.cx());
+        nsresult rv = UnboxData(/* Event */ nullptr, jsapi.cx(), aData, &data,
+                                /* BundleOnly */ true);
+        NS_ENSURE_SUCCESS(rv, rv);
+        return DispatchOnGecko(list, event, data, aCallback);
     }
 
-    mDispatcher->DispatchToThreads(event, data, callback);
+    if (!mDispatcher) {
+        return NS_OK;
+    }
+
+    mDispatcher->DispatchToThreads(event, aData, WrapCallback(aCallback));
     return NS_OK;
 }
 

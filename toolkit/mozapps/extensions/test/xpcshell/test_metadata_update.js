@@ -62,7 +62,7 @@ function now() {
 }
 
 // First time with a new profile, so we don't have a cache.lastUpdate pref
-add_task(function* checkFirstMetadata() {
+add_task(async function checkFirstMetadata() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
 
   Services.prefs.setBoolPref(PREF_EM_SHOW_MISMATCH_UI, true);
@@ -92,7 +92,7 @@ add_task(function* checkFirstMetadata() {
   startupManager();
 
   // Make sure that updating metadata for the first time sets the lastUpdate preference
-  yield AddonRepository.repopulateCache();
+  await AddonRepository.repopulateCache();
   do_print("Update done, getting last update");
   let lastUpdate = Services.prefs.getIntPref(PREF_METADATA_LASTUPDATE);
   do_check_true(lastUpdate > 0);
@@ -100,60 +100,60 @@ add_task(function* checkFirstMetadata() {
   // Make sure updating metadata again updates the preference
   let oldUpdate = lastUpdate - 2 * DEFAULT_METADATA_UPDATETHRESHOLD_SEC;
   Services.prefs.setIntPref(PREF_METADATA_LASTUPDATE, oldUpdate);
-  yield AddonRepository.repopulateCache();
+  await AddonRepository.repopulateCache();
   do_check_neq(oldUpdate, Services.prefs.getIntPref(PREF_METADATA_LASTUPDATE));
 });
 
 // First upgrade with no lastUpdate pref and no add-ons changing shows UI
-add_task(function* upgrade_no_lastupdate() {
+add_task(async function upgrade_no_lastupdate() {
   Services.prefs.clearUserPref(PREF_METADATA_LASTUPDATE);
 
   WindowWatcher.expected = true;
-  yield promiseRestartManager("2");
+  await promiseRestartManager("2");
   do_check_false(WindowWatcher.expected);
 });
 
 // Upgrade with lastUpdate more than default threshold and no add-ons changing shows UI
-add_task(function* upgrade_old_lastupdate() {
+add_task(async function upgrade_old_lastupdate() {
   let oldEnough = now() - DEFAULT_METADATA_UPDATETHRESHOLD_SEC - 1000;
   Services.prefs.setIntPref(PREF_METADATA_LASTUPDATE, oldEnough);
 
   WindowWatcher.expected = true;
   // upgrade, downgrade, it has the same effect on the code path under test
-  yield promiseRestartManager("1");
+  await promiseRestartManager("1");
   do_check_false(WindowWatcher.expected);
 });
 
 // Upgrade with lastUpdate less than default threshold and no add-ons changing doesn't show
-add_task(function* upgrade_young_lastupdate() {
+add_task(async function upgrade_young_lastupdate() {
   let notOldEnough = now() - DEFAULT_METADATA_UPDATETHRESHOLD_SEC + 1000;
   Services.prefs.setIntPref(PREF_METADATA_LASTUPDATE, notOldEnough);
 
   WindowWatcher.expected = false;
-  yield promiseRestartManager("2");
+  await promiseRestartManager("2");
   do_check_false(WindowWatcher.expected);
 });
 
 // Repeat more-than and less-than but with updateThreshold preference set
 // Upgrade with lastUpdate more than pref threshold and no add-ons changing shows UI
 const TEST_UPDATETHRESHOLD_SEC = 50000;
-add_task(function* upgrade_old_pref_lastupdate() {
+add_task(async function upgrade_old_pref_lastupdate() {
   Services.prefs.setIntPref(PREF_METADATA_UPDATETHRESHOLD_SEC, TEST_UPDATETHRESHOLD_SEC);
 
   let oldEnough = now() - TEST_UPDATETHRESHOLD_SEC - 1000;
   Services.prefs.setIntPref(PREF_METADATA_LASTUPDATE, oldEnough);
 
   WindowWatcher.expected = true;
-  yield promiseRestartManager("1");
+  await promiseRestartManager("1");
   do_check_false(WindowWatcher.expected);
 });
 
 // Upgrade with lastUpdate less than pref threshold and no add-ons changing doesn't show
-add_task(function* upgrade_young_pref_lastupdate() {
+add_task(async function upgrade_young_pref_lastupdate() {
   let notOldEnough = now() - TEST_UPDATETHRESHOLD_SEC + 1000;
   Services.prefs.setIntPref(PREF_METADATA_LASTUPDATE, notOldEnough);
 
   WindowWatcher.expected = false;
-  yield promiseRestartManager("2");
+  await promiseRestartManager("2");
   do_check_false(WindowWatcher.expected);
 });

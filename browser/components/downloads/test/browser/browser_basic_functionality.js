@@ -3,15 +3,15 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-registerCleanupFunction(function*() {
-  yield task_resetState();
+registerCleanupFunction(async function() {
+  await task_resetState();
 });
 
 /**
  * Make sure the downloads panel can display items in the right order and
  * contains the expected data.
  */
-add_task(function* test_basic_functionality() {
+add_task(async function test_basic_functionality() {
   // Display one of each download state.
   const DownloadData = [
     { state: DownloadsCommon.DOWNLOAD_NOTSTARTED },
@@ -22,10 +22,10 @@ add_task(function* test_basic_functionality() {
   ];
 
   // Wait for focus first
-  yield promiseFocus();
+  await promiseFocus();
 
   // Ensure that state is reset in case previous tests didn't finish.
-  yield task_resetState();
+  await task_resetState();
 
   // For testing purposes, show all the download items at once.
   var originalCountLimit = DownloadsView.kItemCountLimit;
@@ -35,10 +35,10 @@ add_task(function* test_basic_functionality() {
   });
 
   // Populate the downloads database with the data required by this test.
-  yield task_addDownloads(DownloadData);
+  await task_addDownloads(DownloadData);
 
   // Open the user interface and wait for data to be fully loaded.
-  yield task_openPanel();
+  await task_openPanel();
 
   // Test item data and count.  This also tests the ordering of the display.
   let richlistbox = document.getElementById("downloadsListBox");

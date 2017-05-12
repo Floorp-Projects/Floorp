@@ -205,9 +205,11 @@ toolbar:-moz-lwtheme-darktext {
   box-shadow: none !important;
 }
 
+%ifndef MOZ_PHOTON_THEME
 #forward-button > .toolbarbutton-icon {
   border-inline-start: none !important;
 }
+%endif
 
 /* Override a box shadow for disabled back button */
 #main-window:not([customizing]) #back-button[disabled] > .toolbarbutton-icon {
@@ -232,17 +234,6 @@ toolbar:-moz-lwtheme-darktext {
   padding-bottom: 2px;
 }
 
-#back-button:hover:active:not([disabled="true"]) {
-  -moz-image-region: rect(18px, 54px, 36px, 36px);
-}
-
-/* Use smaller back button icon */
-@media (min-resolution: 2dppx) {
-  #back-button:hover:active:not([disabled="true"]) {
-    -moz-image-region: rect(36px, 108px, 72px, 72px);
-  }
-}
-
 /* URL bar and search bar*/
 #urlbar,
 #navigator-toolbox .searchbar-textbox {
@@ -259,7 +250,9 @@ toolbar:-moz-lwtheme-darktext {
 %include identity-block/icons.inc.css
 
 #urlbar {
+%ifndef MOZ_PHOTON_THEME
   border-inline-start: none !important;
+%endif
   opacity: 1 !important;
 }
 

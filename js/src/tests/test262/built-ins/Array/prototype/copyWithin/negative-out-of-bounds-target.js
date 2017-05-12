@@ -24,10 +24,26 @@ assert(
 
 assert(
   compareArray(
+    [1, 2, 3, 4, 5].copyWithin(-Infinity, 0),
+    [1, 2, 3, 4, 5]
+  ),
+  '[1, 2, 3, 4, 5].copyWithin(-Infinity, 0) -> [1, 2, 3, 4, 5]'
+);
+
+assert(
+  compareArray(
     [0, 1, 2, 3, 4].copyWithin(-10, 2),
     [2, 3, 4, 3, 4]
   ),
   '[0, 1, 2, 3, 4].copyWithin(-10, 2) -> [2, 3, 4, 3, 4]'
+);
+
+assert(
+  compareArray(
+    [1, 2, 3, 4, 5].copyWithin(-Infinity, 2),
+    [3, 4, 5, 4, 5]
+  ),
+  '[1, 2, 3, 4, 5].copyWithin(-Infinity, 2) -> [3, 4, 5, 4, 5]'
 );
 
 reportCompare(0, 0);

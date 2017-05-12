@@ -109,32 +109,32 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function*() {
+add_task(async function() {
   // make json file
   let jsonFile = OS.Path.join(OS.Constants.Path.profileDir, "bookmarks.json");
 
   // populate db
   test.populate();
 
-  yield BookmarkJSONUtils.exportToFile(jsonFile);
+  await BookmarkJSONUtils.exportToFile(jsonFile);
 
   // restore json file
-  yield BookmarkJSONUtils.importFromFile(jsonFile, true);
+  await BookmarkJSONUtils.importFromFile(jsonFile, true);
 
   // validate without removing all bookmarks
   // restore do not remove backup exclude entries
   test.validate(false);
 
   // cleanup
-  yield PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.bookmarks.eraseEverything();
   // manually remove the excluded root
   PlacesUtils.bookmarks.removeItem(test._excludeRootId);
   // restore json file
-  yield BookmarkJSONUtils.importFromFile(jsonFile, true);
+  await BookmarkJSONUtils.importFromFile(jsonFile, true);
 
   // validate after a complete bookmarks cleanup
   test.validate(true);
 
   // clean up
-  yield OS.File.remove(jsonFile);
+  await OS.File.remove(jsonFile);
 });

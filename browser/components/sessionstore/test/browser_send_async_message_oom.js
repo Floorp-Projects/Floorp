@@ -10,7 +10,7 @@ const HISTOGRAM_NAME = "FX_SESSION_RESTORE_SEND_UPDATE_CAUSED_OOM";
  * to Telemetry.
  */
 
-add_task(function* init() {
+add_task(async function init() {
   Services.telemetry.canRecordExtended = true;
 });
 
@@ -35,14 +35,14 @@ function frameScript() {
   mm.sendSyncMessage = wrap(mm.sendSyncMessage);
 }
 
-add_task(function*() {
+add_task(async function() {
   // Capture original state.
   let snapshot = Services.telemetry.getHistogramById(HISTOGRAM_NAME).snapshot();
 
   // Open a browser, configure it to cause OOM.
   let newTab = gBrowser.addTab("about:robots");
   let browser = newTab.linkedBrowser;
-  yield ContentTask.spawn(browser, null, frameScript);
+  await ContentTask.spawn(browser, null, frameScript);
 
 
   let promiseReported = new Promise(resolve => {
@@ -58,10 +58,10 @@ add_task(function*() {
   });
 
   // The frame script should report an error.
-  yield promiseReported;
+  await promiseReported;
 
   // Give us some time to handle that error.
-  yield new Promise(resolve => setTimeout(resolve, 10));
+  await new Promise(resolve => setTimeout(resolve, 10));
 
   // By now, Telemetry should have been updated.
   let snapshot2 = Services.telemetry.getHistogramById(HISTOGRAM_NAME).snapshot();
@@ -70,6 +70,6 @@ add_task(function*() {
   Assert.ok(snapshot2.sum > snapshot.sum);
 });
 
-add_task(function* cleanup() {
+add_task(async function cleanup() {
   Services.telemetry.canRecordExtended = false;
 });

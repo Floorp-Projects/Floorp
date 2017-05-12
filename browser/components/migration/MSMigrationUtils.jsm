@@ -11,7 +11,6 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource:///modules/MigrationUtils.jsm");
 
 Cu.importGlobalProperties(["FileReader"]);
@@ -364,26 +363,26 @@ Bookmarks.prototype = {
   },
 
   migrate: function B_migrate(aCallback) {
-    return Task.spawn(function* () {
+    return (async () => {
       // Import to the bookmarks menu.
       let folderGuid = PlacesUtils.bookmarks.menuGuid;
       if (!MigrationUtils.isStartupMigration) {
         folderGuid =
-          yield MigrationUtils.createImportedBookmarksFolder(this.importedAppLabel, folderGuid);
+          await MigrationUtils.createImportedBookmarksFolder(this.importedAppLabel, folderGuid);
       }
-      yield this._migrateFolder(this._favoritesFolder, folderGuid);
-    }.bind(this)).then(() => aCallback(true),
+      await this._migrateFolder(this._favoritesFolder, folderGuid);
+    })().then(() => aCallback(true),
                        e => { Cu.reportError(e); aCallback(false) });
   },
 
-  _migrateFolder: Task.async(function* (aSourceFolder, aDestFolderGuid) {
-    let bookmarks = yield this._getBookmarksInFolder(aSourceFolder);
+  async _migrateFolder(aSourceFolder, aDestFolderGuid) {
+    let bookmarks = await this._getBookmarksInFolder(aSourceFolder);
     if (bookmarks.length) {
-      yield MigrationUtils.insertManyBookmarksWrapper(bookmarks, aDestFolderGuid);
+      await MigrationUtils.insertManyBookmarksWrapper(bookmarks, aDestFolderGuid);
     }
-  }),
+  },
 
-  _getBookmarksInFolder: Task.async(function* (aSourceFolder) {
+  async _getBookmarksInFolder(aSourceFolder) {
     // TODO (bug 741993): the favorites order is stored in the Registry, at
     // HCU\Software\Microsoft\Windows\CurrentVersion\Explorer\MenuOrder\Favorites
     // for IE, and in a similar location for Edge.
@@ -405,11 +404,11 @@ Bookmarks.prototype = {
             let folderGuid = PlacesUtils.bookmarks.toolbarGuid;
             if (!MigrationUtils.isStartupMigration) {
               folderGuid =
-                yield MigrationUtils.createImportedBookmarksFolder(this.importedAppLabel, folderGuid);
+                await MigrationUtils.createImportedBookmarksFolder(this.importedAppLabel, folderGuid);
             }
-            yield this._migrateFolder(entry, folderGuid);
+            await this._migrateFolder(entry, folderGuid);
           } else if (entry.isReadable()) {
-            let childBookmarks = yield this._getBookmarksInFolder(entry);
+            let childBookmarks = await this._getBookmarksInFolder(entry);
             rv.push({
               type: PlacesUtils.bookmarks.TYPE_FOLDER,
               title: entry.leafName,
@@ -432,7 +431,7 @@ Bookmarks.prototype = {
       }
     }
     return rv;
-  }),
+  },
 
 };
 

@@ -4,8 +4,8 @@ const PATH = getRootDirectory(gTestPath).replace("chrome://mochitests/content", 
 const TEST_PAGE = PATH + "file_triggeringprincipal_oa.html";
 const DUMMY_PAGE = PATH + "empty_file.html";
 
-add_task(function* test_principal_right_click_open_link_in_new_private_win() {
-  yield BrowserTestUtils.withNewTab(TEST_PAGE, function*(browser) {
+add_task(async function test_principal_right_click_open_link_in_new_private_win() {
+  await BrowserTestUtils.withNewTab(TEST_PAGE, async function(browser) {
     let promiseNewWindow = BrowserTestUtils.waitForNewWindow(true, DUMMY_PAGE);
 
     // simulate right-click open link in new private window
@@ -17,9 +17,9 @@ add_task(function* test_principal_right_click_open_link_in_new_private_win() {
     BrowserTestUtils.synthesizeMouseAtCenter("#checkPrincipalOA",
                                              { type: "contextmenu", button: 2 },
                                              gBrowser.selectedBrowser);
-    let privateWin = yield promiseNewWindow;
+    let privateWin = await promiseNewWindow;
 
-    yield ContentTask.spawn(privateWin.gBrowser.selectedBrowser, {DUMMY_PAGE, TEST_PAGE}, function*({DUMMY_PAGE, TEST_PAGE}) { // eslint-disable-line
+    await ContentTask.spawn(privateWin.gBrowser.selectedBrowser, {DUMMY_PAGE, TEST_PAGE}, async function({DUMMY_PAGE, TEST_PAGE}) { // eslint-disable-line
 
       let channel = content.document.docShell.currentDocumentChannel;
       is(channel.URI.spec, DUMMY_PAGE,
@@ -33,6 +33,6 @@ add_task(function* test_principal_right_click_open_link_in_new_private_win() {
       is(triggeringPrincipal.originAttributes.privateBrowsingId, 1,
          "must have correct privateBrowsingId");
     });
-    yield BrowserTestUtils.closeWindow(privateWin);
+    await BrowserTestUtils.closeWindow(privateWin);
   });
 });

@@ -4,7 +4,7 @@
  */
 "use strict"
 
-add_task(function* () {
+add_task(async function() {
   const BASE_URL = "http://example.org/browser/browser/components/places/tests/browser/";
   const TEST_PAGES = [
     BASE_URL + "bookmark_dummy_1.html",
@@ -16,7 +16,7 @@ add_task(function* () {
     return BrowserTestUtils.openNewForegroundTab(gBrowser, url);
   }
 
-  let tabs = yield Promise.all(TEST_PAGES.map(promiseAddTab));
+  let tabs = await Promise.all(TEST_PAGES.map(promiseAddTab));
 
   let URIs = PlacesCommandHook.uniqueCurrentPages;
   is(URIs.length, 3, "Only unique pages are returned");
@@ -31,7 +31,7 @@ add_task(function* () {
     "New Tab", "Bookmark Dummy 1", "Bookmark Dummy 2"
   ], "Correct titles are returned");
 
-  registerCleanupFunction(function* () {
-    yield Promise.all(tabs.map(BrowserTestUtils.removeTab));
+  registerCleanupFunction(async function() {
+    await Promise.all(tabs.map(BrowserTestUtils.removeTab));
   });
 });

@@ -1022,17 +1022,17 @@ for (let test of testParams) {
     });
   });
 
-  add_task(function* cleanup() {
-    let addons = yield AddonManager.getAddonsByTypes(["extension"]);
+  add_task(async function cleanup() {
+    let addons = await AddonManager.getAddonsByTypes(["extension"]);
 
     for (let addon of addons)
       addon.uninstall();
 
-    yield promiseRestartManager();
+    await promiseRestartManager();
 
     shutdownManager();
 
-    yield new Promise(do_execute_soon);
+    await new Promise(do_execute_soon);
   });
 }
 
