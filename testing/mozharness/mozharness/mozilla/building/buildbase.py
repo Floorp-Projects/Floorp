@@ -1918,28 +1918,9 @@ or run without that action (ie: --no-{action})"
             'subtests': [],
         }
 
-    def generate_build_stats(self):
-        """grab build stats following a compile.
-
-        This action handles all statistics from a build: 'count_ctors'
-        and then posts to graph server the results.
-        We only post to graph server for non nightly build
-        """
-        if self.config.get('forced_artifact_build'):
-            self.info('Skipping due to forced artifact build.')
-            return
-
+    def _get_package_metrics(self):
         import tarfile
         import zipfile
-        c = self.config
-
-        if c.get('enable_count_ctors'):
-            self.info("counting ctors...")
-            self._count_ctors()
-        else:
-            self.info("ctors counts are disabled for this build.")
-
-        # Report some important file sizes for display in treeherder
 
         dirs = self.query_abs_dirs()
         packageName = self.query_buildbot_property('packageFilename')
@@ -1994,12 +1975,53 @@ or run without that action (ie: --no-{action})"
                                     subtests[name] = size
                 for name in subtests:
                     if subtests[name] is not None:
-                        self.info('TinderboxPrint: Size of %s<br/>%s bytes\n' % (
-                            name, subtests[name]))
-                        size_measurements.append({'name': name, 'value': subtests[name]})
+                        self.info('TinderboxPrint: Size of %s<br/>%s bytes\n' %
+                                  (name, subtests[name]))
+                        size_measurements.append(
+                            {'name': name, 'value': subtests[name]})
             except:
                 self.info('Unable to search %s for component sizes.' % installer)
                 size_measurements = []
+
+        if not installer_size and not size_measurements:
+            return
+
+        if installer.endswith('.apk'): # Android
+            yield {
+                "name": "installer size",
+                "value": installer_size,
+                "alertChangeType": "absolute",
+                "alertThreshold": (200 * 1024),
+                "subtests": size_measurements
+            }
+        else:
+            yield {
+                "name": "installer size",
+                "value": installer_size,
+                "alertThreshold": 1.0,
+                "subtests": size_measurements
+            }
+
+    def generate_build_stats(self):
+        """grab build stats following a compile.
+
+        This action handles all statistics from a build: 'count_ctors'
+        and then posts to graph server the results.
+        We only post to graph server for non nightly build
+        """
+        if self.config.get('forced_artifact_build'):
+            self.info('Skipping due to forced artifact build.')
+            return
+
+        c = self.config
+
+        if c.get('enable_count_ctors'):
+            self.info("counting ctors...")
+            self._count_ctors()
+        else:
+            self.info("ctors counts are disabled for this build.")
+
+        # Report some important file sizes for display in treeherder
 
         perfherder_data = {
             "framework": {
@@ -2007,22 +2029,9 @@ or run without that action (ie: --no-{action})"
             },
             "suites": [],
         }
-        if (installer_size or size_measurements) and not c.get('debug_build'):
-            if installer.endswith('.apk'): # Android
-                perfherder_data["suites"].append({
-                    "name": "installer size",
-                    "value": installer_size,
-                    "alertChangeType": "absolute",
-                    "alertThreshold": (200 * 1024),
-                    "subtests": size_measurements
-                })
-            else:
-                perfherder_data["suites"].append({
-                    "name": "installer size",
-                    "value": installer_size,
-                    "alertThreshold": 1.0,
-                    "subtests": size_measurements
-                })
+
+        if not c.get('debug_build'):
+            perfherder_data['suites'].extend(self._get_package_metrics())
 
         # Extract compiler warnings count.
         warnings = self.get_output_from_command(
