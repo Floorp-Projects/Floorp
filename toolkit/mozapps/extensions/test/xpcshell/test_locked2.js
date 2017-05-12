@@ -164,7 +164,7 @@ add_task(async function() {
   if (!OS.Constants.Win) {
     gExtensionsJSON.permissions = 0;
   }
-  startupManager(false);
+  await promiseStartupManager(false);
 
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED, []);
@@ -225,7 +225,7 @@ add_task(async function() {
   }
   await file.close();
   gExtensionsJSON.permissions = filePermissions;
-  startupManager();
+  await promiseStartupManager();
 
   // On Unix, we can save the DB even when the original file wasn't
   // readable, so our changes were saved. On Windows,
