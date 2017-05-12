@@ -1416,13 +1416,6 @@
             var browser = this.getBrowserForTab(aTab);
             var title = browser.contentTitle;
 
-            if (aTab._suppressTransientLabel) {
-              delete aTab._suppressTransientLabel;
-              if (!title) {
-                return false;
-              }
-            }
-
             if (!title) {
               if (browser.currentURI.spec) {
                 try {
