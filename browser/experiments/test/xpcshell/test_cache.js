@@ -319,7 +319,7 @@ add_task(function* test_expiration() {
   let now = null;
   let experiments = null;
 
-  let setDateAndRestartExperiments = new Task.async(function* (newDate) {
+  let setDateAndRestartExperiments = Task.async(function* (newDate) {
     now = newDate;
     defineNow(gPolicy, now);
 

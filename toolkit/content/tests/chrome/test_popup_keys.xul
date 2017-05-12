@@ -47,7 +47,7 @@ function waitForEvent(target, eventName) {
 
 function runTests()
 {
-  Task.async(function* () {
+  Task.spawn(function* () {
     var popup = $("popup");
     popup.enableKeyboardNavigator(false);
     is(popup.getAttribute("ignorekeys"), "true", "keys disabled");
@@ -106,7 +106,7 @@ function runTests()
     yield popupHiddenPromise;
 
     SimpleTest.finish();
-  })();
+  });
 }
 
 function attrModified(event)

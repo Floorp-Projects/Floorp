@@ -734,6 +734,7 @@ function cleanUpForContext(extension, context) {
 /**
  * Generate a promise that produces the Collection for an extension.
  *
+ * @param {CryptoCollection} cryptoCollection
  * @param {Extension} extension
  *                    The extension whose collection needs to
  *                    be opened.
