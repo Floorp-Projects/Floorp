@@ -5470,6 +5470,14 @@ BytecodeEmitter::wrapWithDestructuringIteratorCloseTryNote(int32_t iterDepth, In
 {
     MOZ_ASSERT(this->stackDepth >= iterDepth);
 
+    // Pad a nop at the beginning of the bytecode covered by the trynote so
+    // that when unwinding environments, we may unwind to the scope
+    // corresponding to the pc *before* the start, in case the first bytecode
+    // emitted by |emitter| is the start of an inner scope. See comment above
+    // UnwindEnvironmentToTryPc.
+    if (!emit1(JSOP_TRY_DESTRUCTURING_ITERCLOSE))
+        return false;
+
     ptrdiff_t start = offset();
     if (!emitter(this))
         return false;
