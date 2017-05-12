@@ -1629,6 +1629,12 @@ CompositorBridgeParent::DeallocPWebRenderBridgeParent(PWebRenderBridgeParent* aA
   return true;
 }
 
+RefPtr<WebRenderBridgeParent>
+CompositorBridgeParent::GetWebRenderBridgeParent() const
+{
+  return mWrBridge;
+}
+
 void
 CompositorBridgeParent::SetWebRenderProfilerEnabled(bool aEnabled)
 {

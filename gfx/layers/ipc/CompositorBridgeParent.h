@@ -452,6 +452,8 @@ public:
                                                       TextureFactoryIdentifier* aTextureFactoryIdentifier,
                                                       uint32_t* aIdNamespace) override;
   bool DeallocPWebRenderBridgeParent(PWebRenderBridgeParent* aActor) override;
+  RefPtr<WebRenderBridgeParent> GetWebRenderBridgeParent() const;
+
   static void SetWebRenderProfilerEnabled(bool aEnabled);
 
   static CompositorBridgeParent* GetCompositorBridgeParentFromLayersId(const uint64_t& aLayersId);
