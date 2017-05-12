@@ -51,13 +51,13 @@ public class Telemetry {
     }
 
     public Telemetry queuePing(final String pingType) {
+        if (!configuration.isCollectionEnabled()) {
+            return this;
+        }
+
         executor.submit(new Runnable() {
             @Override
             public void run() {
-                if (!configuration.isCollectionEnabled()) {
-                    return;
-                }
-
                 final TelemetryPingBuilder pingBuilder = pingBuilders.get(pingType);
 
                 if (!pingBuilder.canBuild()) {
@@ -76,6 +76,10 @@ public class Telemetry {
     }
 
     public Telemetry queueEvent(final TelemetryEvent event) {
+        if (!configuration.isCollectionEnabled()) {
+            return this;
+        }
+
         executor.submit(new Runnable() {
             @Override
             public void run() {
@@ -93,22 +97,18 @@ public class Telemetry {
         return this;
     }
 
-    public TelemetryPingBuilder getBuilder(String pingType) {
-        return pingBuilders.get(pingType);
-    }
-
     public Collection<TelemetryPingBuilder> getBuilders() {
         return pingBuilders.values();
     }
 
     public Telemetry scheduleUpload() {
+        if (!configuration.isUploadEnabled()) {
+            return this;
+        }
+
         executor.submit(new Runnable() {
             @Override
             public void run() {
-                if (!configuration.isUploadEnabled()) {
-                    return;
-                }
-
                 scheduler.scheduleUpload(configuration);
             }
         });
