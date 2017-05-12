@@ -20,6 +20,7 @@ from mozharness.base.config import parse_config_file
 from mozharness.base.errors import PythonErrorList
 from mozharness.base.log import OutputParser, DEBUG, ERROR, CRITICAL
 from mozharness.base.log import INFO, WARNING
+from mozharness.base.python import Python3Virtualenv
 from mozharness.mozilla.blob_upload import BlobUploadMixin, blobupload_config_options
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
 from mozharness.base.vcs.vcsbase import MercurialScript
@@ -88,7 +89,8 @@ class TalosOutputParser(OutputParser):
         super(TalosOutputParser, self).parse_single_line(line)
 
 
-class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin):
+class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
+            Python3Virtualenv):
     """
     install and run Talos tests:
     https://wiki.mozilla.org/Buildbot/Talos
