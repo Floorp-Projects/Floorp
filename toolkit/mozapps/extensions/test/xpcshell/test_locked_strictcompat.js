@@ -148,7 +148,7 @@ add_task(async function init() {
   writeInstallRDFForExtension(theme2, profileDir);
 
   // Startup the profile and setup the initial state
-  startupManager();
+  await promiseStartupManager();
 
   // New profile so new add-ons are ignored
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
@@ -271,7 +271,7 @@ add_task(async function run_test_1() {
   if (!OS.Constants.Win) {
     gExtensionsJSON.permissions = 0;
   }
-  startupManager(false);
+  await promiseStartupManager(false);
 
   // Shouldn't have seen any startup changes
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
@@ -365,7 +365,7 @@ add_task(async function run_test_1() {
   } catch (e) {
     // We're expecting an error here.
   }
-  startupManager(false);
+  await promiseStartupManager(false);
 
   // Shouldn't have seen any startup changes
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
@@ -453,7 +453,7 @@ add_task(async function run_test_1() {
   do_print("Unlocking " + gExtensionsJSON.path);
   await file.close();
   gExtensionsJSON.permissions = filePermissions;
-  startupManager(false);
+  await promiseStartupManager(false);
 
   // Shouldn't have seen any startup changes
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
