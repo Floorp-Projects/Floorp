@@ -4,64 +4,51 @@
 
 async function check_has_child(aParentGuid, aChildGuid) {
   let parentTree = await PlacesUtils.promiseBookmarksTree(aParentGuid);
-  do_check_true("children" in parentTree);
-  do_check_true(parentTree.children.find( e => e.guid == aChildGuid ) != null);
+  Assert.ok("children" in parentTree);
+  Assert.notEqual(parentTree.children.find( e => e.guid == aChildGuid ), null);
 }
 
 async function compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
   // itemId==-1 indicates a non-bookmark node, which is unexpected.
-  do_check_neq(aNode.itemId, -1);
+  Assert.notEqual(aNode.itemId, -1);
 
   function check_unset(...aProps) {
-    aProps.forEach( p => { do_check_false(p in aItem); } );
+    for (let p of aProps) {
+      if (p in aItem) {
+        Assert.ok(false, `Unexpected property ${p} with value ${aItem[p]}`);
+      }
+    }
   }
-  function strict_eq_check(v1, v2) {
-    dump("v1: " + v1 + " v2: " + v2 + "\n");
-    do_check_eq(typeof v1, typeof v2);
-    do_check_eq(v1, v2);
-  }
+
   function compare_prop(aItemProp, aNodeProp = aItemProp, aOptional = false) {
     if (aOptional && aNode[aNodeProp] === null)
       check_unset(aItemProp);
     else
-      strict_eq_check(aItem[aItemProp], aNode[aNodeProp]);
-  }
-  function compare_prop_to_value(aItemProp, aValue, aOptional = true) {
-    if (aOptional && aValue === null)
-      check_unset(aItemProp);
-    else
-      strict_eq_check(aItem[aItemProp], aValue);
+      Assert.strictEqual(aItem[aItemProp], aNode[aNodeProp]);
   }
 
   // Bug 1013053 - bookmarkIndex is unavailable for the query's root
-  if (aNode.bookmarkIndex == -1) {
-    compare_prop_to_value("index",
-                          PlacesUtils.bookmarks.getItemIndex(aNode.itemId),
-                          false);
-  } else {
+  if (aNode.bookmarkIndex == -1)
+    Assert.strictEqual(aItem.index, PlacesUtils.bookmarks.getItemIndex(aNode.itemId));
+  else
     compare_prop("index", "bookmarkIndex");
-  }
 
   compare_prop("dateAdded");
   compare_prop("lastModified");
 
   if (aIsRootItem && aNode.itemId != PlacesUtils.placesRootId) {
-    do_check_true("parentGuid" in aItem);
+    Assert.ok("parentGuid" in aItem);
     await check_has_child(aItem.parentGuid, aItem.guid)
   } else {
     check_unset("parentGuid");
   }
 
   let expectedAnnos = PlacesUtils.getAnnotationsForItem(aItem.id);
-  if (expectedAnnos.length > 0) {
-    let annosToString = annos => {
-      return annos.map(a => a.name + ":" + a.value).sort().join(",");
-    };
-    do_check_true(Array.isArray(aItem.annos))
-    do_check_eq(annosToString(aItem.annos), annosToString(expectedAnnos));
-  } else {
+  if (expectedAnnos.length > 0)
+    Assert.deepEqual(aItem.annos, expectedAnnos);
+  else
     check_unset("annos");
-  }
+
   const BOOKMARK_ONLY_PROPS = ["uri", "iconuri", "tags", "charset", "keyword"];
   const FOLDER_ONLY_PROPS = ["children", "root"];
 
@@ -69,7 +56,7 @@ async function compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
 
   switch (aNode.type) {
     case Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER:
-      do_check_eq(aItem.type, PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER);
+      Assert.equal(aItem.type, PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER);
       compare_prop("title", "title", true);
       check_unset(...BOOKMARK_ONLY_PROPS);
 
@@ -89,8 +76,8 @@ async function compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
       }
 
       if (expectedChildrenNodes.length > 0) {
-        do_check_true(Array.isArray(aItem.children));
-        do_check_eq(aItem.children.length, expectedChildrenNodes.length);
+        Assert.ok(Array.isArray(aItem.children));
+        Assert.equal(aItem.children.length, expectedChildrenNodes.length);
         for (let i = 0; i < aItem.children.length; i++) {
           nodesCount +=
             await compareToNode(aItem.children[i], expectedChildrenNodes[i],
@@ -100,38 +87,24 @@ async function compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
         check_unset("children");
       }
 
-      switch (aItem.id) {
-      case PlacesUtils.placesRootId:
-        compare_prop_to_value("root", "placesRoot");
-        break;
-      case PlacesUtils.bookmarksMenuFolderId:
-        compare_prop_to_value("root", "bookmarksMenuFolder");
-        break;
-      case PlacesUtils.toolbarFolderId:
-        compare_prop_to_value("root", "toolbarFolder");
-        break;
-      case PlacesUtils.unfiledBookmarksFolderId:
-        compare_prop_to_value("root", "unfiledBookmarksFolder");
-        break;
-      case PlacesUtils.mobileFolderId:
-        compare_prop_to_value("root", "mobileFolder");
-        break;
-      default:
+      let rootName = mapItemIdToInternalRootName(aItem.id);
+      if (rootName)
+        Assert.equal(aItem.root, rootName);
+      else
         check_unset("root");
-      }
       break;
     case Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR:
-      do_check_eq(aItem.type, PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR);
+      Assert.equal(aItem.type, PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR);
       check_unset(...BOOKMARK_ONLY_PROPS, ...FOLDER_ONLY_PROPS);
       break;
     default:
-      do_check_eq(aItem.type, PlacesUtils.TYPE_X_MOZ_PLACE);
+      Assert.equal(aItem.type, PlacesUtils.TYPE_X_MOZ_PLACE);
       compare_prop("uri");
       // node.tags's format is "a, b" whilst promiseBoookmarksTree is "a,b"
       if (aNode.tags === null)
         check_unset("tags");
       else
-        compare_prop_to_value("tags", aNode.tags.replace(/, /g, ","), false);
+        Assert.equal(aItem.tags, aNode.tags.replace(/, /g, ","));
 
       if (aNode.icon) {
         try {
@@ -147,11 +120,17 @@ async function compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
       check_unset(...FOLDER_ONLY_PROPS);
 
       let itemURI = uri(aNode.uri);
-      compare_prop_to_value("charset",
-                            await PlacesUtils.getCharsetForURI(itemURI));
+      let expectedCharset = await PlacesUtils.getCharsetForURI(itemURI);
+      if (expectedCharset)
+        Assert.equal(aItem.charset, expectedCharset);
+      else
+        check_unset("charset");
 
       let entry = await PlacesUtils.keywords.fetch({ url: aNode.uri });
-      compare_prop_to_value("keyword", entry ? entry.keyword : null);
+      if (entry)
+        Assert.equal(aItem.keyword, entry.keyword);
+      else
+        check_unset("keyword");
 
       if ("title" in aItem)
         compare_prop("title");
@@ -160,7 +139,7 @@ async function compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
   }
 
   if (aIsRootItem)
-    do_check_eq(aItem.itemsCount, nodesCount);
+    Assert.strictEqual(aItem.itemsCount, nodesCount);
 
   return nodesCount;
 }
@@ -187,7 +166,7 @@ async function new_folder(aInfo) {
 // DO NOT COPY THIS LOGIC:  It is done here to accomplish a more comprehensive
 // test of the API (the entire hierarchy data is available in the very test).
 async function test_promiseBookmarksTreeForEachNode(aNode, aOptions, aExcludedGuids) {
-  do_check_true(aNode.bookmarkGuid && aNode.bookmarkGuid.length > 0);
+  Assert.ok(aNode.bookmarkGuid && aNode.bookmarkGuid.length > 0);
   let item = await PlacesUtils.promiseBookmarksTree(aNode.bookmarkGuid, aOptions);
   await compareToNode(item, aNode, true, aExcludedGuids);
 
@@ -250,6 +229,6 @@ add_task(async function() {
     },
     includeItemIds: true
   }, [PlacesUtils.bookmarks.menuGuid]);
-  do_check_eq(guidsPassedToExcludeCallback.size, 5);
-  do_check_eq(placesRootWithoutTheMenu.children.length, 3);
+  Assert.equal(guidsPassedToExcludeCallback.size, 5);
+  Assert.equal(placesRootWithoutTheMenu.children.length, 3);
 });
