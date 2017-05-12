@@ -38,7 +38,7 @@ add_task(async function test_removeByFilter() {
         title: "test bookmark"
       });
     }
-    checkBeforeRemove();
+    await checkBeforeRemove();
 
     // Take care of any observers (due to bookmarks)
     let { observer, promiseObserved } = getObserverPromise(bookmarkedUri);
@@ -58,12 +58,12 @@ add_task(async function test_removeByFilter() {
     } else {
       removed = await PlacesUtils.history.removeByFilter(filter);
     }
-    checkAfterRemove();
+    await checkAfterRemove();
     await promiseObserved;
     if (observer) {
       PlacesUtils.history.removeObserver(observer);
       // Remove the added bookmarks as they interfere with following tests
-      PlacesUtils.bookmarks.eraseEverything();
+      await PlacesUtils.bookmarks.eraseEverything();
     }
       Assert.ok((await PlacesTestUtils.isPageInDB(witnessURI)), "Witness URI is still in database");
     return removed;
@@ -146,48 +146,48 @@ add_task(async function test_removeByFilter() {
       // Case A 1: Dates
       await removeByFilterTester(sameHostVisits,
                                  { beginDate: new Date(2004, 1, 1), endDate: new Date(2006, 1, 1) },
-                                 () => assertInDB(remoteUriList[0]),
-                                 () => checkClosure(remoteUriList[0]),
+                                 async () => await assertInDB(remoteUriList[0]),
+                                 async () => await checkClosure(remoteUriList[0]),
                                  callbackUse, bookmarkedUri(remoteUriList));
       // Case A 2: Single Sub-host
       await removeByFilterTester(sameHostVisits, { host: "mozilla.org" },
-                                 () => assertInDB(remoteUriList[0]),
-                                 () => checkClosure(remoteUriList[0]),
+                                 async () => await assertInDB(remoteUriList[0]),
+                                 async () => await checkClosure(remoteUriList[0]),
                                  callbackUse, bookmarkedUri(remoteUriList));
       // Case A 3: Multiple subhost
       await removeByFilterTester(randomHostVisits, { host: "*.mozilla.org" },
-                                 () => remoteUriList.forEach(assertInDB),
-                                 () => checkableArray(remoteUriList).forEach(checkClosure),
+                                 async () => { for (let uri of remoteUriList) await assertInDB(uri); },
+                                 async () => { for (let uri of checkableArray(remoteUriList)) await checkClosure(uri) },
                                  callbackUse, bookmarkedUri(remoteUriList));
     }
 
     // Case A 4: Localhost
     await removeByFilterTester(localhostVisits, { host: "localhost" },
-                               () => localhostUriList.forEach(assertInDB),
-                               () => localhostUriList.forEach(assertNotInDB),
+                               async () => { for (let uri of localhostUriList) await assertInDB(uri) },
+                               async () => { for (let uri of localhostUriList) await assertNotInDB(uri) },
                                callbackUse);
     // Case A 5: Local Files
     await removeByFilterTester(fileVisits, { host: "" },
-                               () => fileUriList.forEach(assertInDB),
-                               () => fileUriList.forEach(assertNotInDB),
+                               async () => { for (let uri of fileUriList) await assertInDB(uri) },
+                               async () => { for (let uri of fileUriList) await assertNotInDB(uri) },
                                callbackUse);
 
     // Case B: Tests which do not remove anything (inverses)
     // Case B 1: Date
     await removeByFilterTester(sameHostVisits,
                                { beginDate: new Date(2001, 1, 1), endDate: new Date(2002, 1, 1) },
-                               () => assertInDB(remoteUriList[0]),
-                               () => assertInDB(remoteUriList[0]),
+                               async () => await assertInDB(remoteUriList[0]),
+                               async () => await assertInDB(remoteUriList[0]),
                                callbackUse);
     // Case B 2 : Single subhost
     await removeByFilterTester(sameHostVisits, { host: "notthere.org" },
-                               () => assertInDB(remoteUriList[0]),
-                               () => assertInDB(remoteUriList[0]),
+                               async () => await assertInDB(remoteUriList[0]),
+                               async () => await assertInDB(remoteUriList[0]),
                                callbackUse);
     // Case B 3 : Multiple subhosts
     await removeByFilterTester(randomHostVisits, { host: "*.notthere.org" },
-                               () => remoteUriList.forEach(assertInDB),
-                               () => remoteUriList.forEach(assertInDB),
+                               async () => { for (let uri of remoteUriList) await assertInDB(uri) },
+                               async () => { for (let uri of remoteUriList) await assertInDB(uri) },
                                callbackUse);
 
     // Case C: Combination Cases
@@ -196,16 +196,16 @@ add_task(async function test_removeByFilter() {
                                { host: "mozilla.org",
                                  beginDate: new Date(2004, 1, 1),
                                  endDate: new Date(2006, 1, 1) },
-                               () => assertInDB(remoteUriList[0]),
-                               () => assertNotInDB(remoteUriList[0]),
+                               async () => await assertInDB(remoteUriList[0]),
+                               async () => await assertNotInDB(remoteUriList[0]),
                                callbackUse);
     // Case C 2: multiple subhost
     await removeByFilterTester(randomHostVisits,
                                { host: "*.mozilla.org",
                                  beginDate: new Date(2005, 1, 1),
                                  endDate: new Date(2017, 1, 1) },
-                               () => remoteUriList.forEach(assertInDB),
-                               () => remoteUriList.forEach(assertNotInDB),
+                               async () => { for (let uri of remoteUriList) await assertInDB(uri) },
+                               async () => { for (let uri of remoteUriList) await assertNotInDB(uri) },
                                callbackUse);
   }
 });
