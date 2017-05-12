@@ -205,7 +205,7 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
   }
 
   WebRenderScrollData scrollData;
-  if (mWidget->AsyncPanZoomEnabled()) {
+  if (AsyncPanZoomEnabled()) {
     if (mIsFirstPaint) {
       scrollData.SetIsFirstPaint();
       mIsFirstPaint = false;
@@ -231,6 +231,12 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
   ClearMutatedLayers();
 
   return true;
+}
+
+bool
+WebRenderLayerManager::AsyncPanZoomEnabled() const
+{
+  return mWidget->AsyncPanZoomEnabled();
 }
 
 void
