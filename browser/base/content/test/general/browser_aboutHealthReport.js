@@ -66,26 +66,26 @@ var gTests = [
                     HTTPS_BASE + "healthreport_testRemoteCommands.html");
   },
   run(iframe) {
-    let deferred = Promise.defer();
-    let results = 0;
-    try {
-      iframe.contentWindow.addEventListener("FirefoxHealthReportTestResponse", function evtHandler(event) {
-        let data = event.detail.data;
-        if (data.type == "testResult") {
-          ok(data.pass, data.info);
-          results++;
-        } else if (data.type == "testsComplete") {
-          is(results, data.count, "Checking number of results received matches the number of tests that should have run");
-          iframe.contentWindow.removeEventListener("FirefoxHealthReportTestResponse", evtHandler, true);
-          deferred.resolve();
-        }
-      }, true);
+    return new Promise((resolve, reject) => {
+      let results = 0;
+      try {
+        iframe.contentWindow.addEventListener("FirefoxHealthReportTestResponse", function evtHandler(event) {
+          let data = event.detail.data;
+          if (data.type == "testResult") {
+            ok(data.pass, data.info);
+            results++;
+          } else if (data.type == "testsComplete") {
+            is(results, data.count, "Checking number of results received matches the number of tests that should have run");
+            iframe.contentWindow.removeEventListener("FirefoxHealthReportTestResponse", evtHandler, true);
+            resolve();
+          }
+        }, true);
 
-    } catch (e) {
-      ok(false, "Failed to get all commands");
-      deferred.reject();
-    }
-    return deferred.promise;
+      } catch (e) {
+        ok(false, "Failed to get all commands");
+        reject();
+      }
+    });
   }
 },
 
@@ -114,18 +114,18 @@ function test() {
 }
 
 function promiseNewTabLoadEvent(aUrl, aEventType = "load") {
-  let deferred = Promise.defer();
-  let tab = gBrowser.selectedTab = gBrowser.addTab(aUrl);
-  tab.linkedBrowser.addEventListener(aEventType, function(event) {
-    let iframe = tab.linkedBrowser.contentDocument.getElementById("remote-report");
-      iframe.addEventListener("load", function frameLoad(e) {
-        if (iframe.contentWindow.location.href == "about:blank" ||
-            e.target != iframe) {
-          return;
-        }
-        iframe.removeEventListener("load", frameLoad);
-        deferred.resolve(iframe);
-      });
-    }, {capture: true, once: true});
-  return deferred.promise;
+  return new Promise(resolve => {
+    let tab = gBrowser.selectedTab = gBrowser.addTab(aUrl);
+    tab.linkedBrowser.addEventListener(aEventType, function(event) {
+      let iframe = tab.linkedBrowser.contentDocument.getElementById("remote-report");
+        iframe.addEventListener("load", function frameLoad(e) {
+          if (iframe.contentWindow.location.href == "about:blank" ||
+              e.target != iframe) {
+            return;
+          }
+          iframe.removeEventListener("load", frameLoad);
+          resolve(iframe);
+        });
+      }, {capture: true, once: true});
+  });
 }

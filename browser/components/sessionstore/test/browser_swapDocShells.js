@@ -18,9 +18,9 @@ add_task(async function() {
 });
 
 function promiseDelayedStartupFinished(win) {
-  let deferred = Promise.defer();
-  whenDelayedStartupFinished(win, deferred.resolve);
-  return deferred.promise;
+  return new Promise(resolve => {
+    whenDelayedStartupFinished(win, resolve);
+  });
 }
 
 function promiseBrowserHasURL(browser, url) {

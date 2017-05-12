@@ -57,44 +57,44 @@ function getDomainExceptions() {
 }
 
 function getInfoBar() {
-  let deferred = Promise.defer();
-  let infobar =
-    gBrowser.getNotificationBox().getNotificationWithValue("translation");
+  return new Promise(resolve => {
+    let infobar =
+      gBrowser.getNotificationBox().getNotificationWithValue("translation");
 
-  if (!infobar) {
-    deferred.resolve();
-  } else {
-    // Wait for all animations to finish
-    Promise.all(infobar.getAnimations().map(animation => animation.finished))
-      .then(() => deferred.resolve(infobar));
-  }
+    if (!infobar) {
+      resolve();
+    } else {
+      // Wait for all animations to finish
+      Promise.all(infobar.getAnimations().map(animation => animation.finished))
+        .then(() => resolve(infobar));
+    }
 
-  return deferred.promise;
+  });
 }
 
 function openPopup(aPopup) {
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  aPopup.addEventListener("popupshown", function() {
-    deferred.resolve();
-  }, {once: true});
+    aPopup.addEventListener("popupshown", function() {
+      resolve();
+    }, {once: true});
 
-  aPopup.focus();
-  // One down event to open the popup.
-  EventUtils.synthesizeKey("VK_DOWN",
-                           { altKey: !navigator.platform.includes("Mac") });
+    aPopup.focus();
+    // One down event to open the popup.
+    EventUtils.synthesizeKey("VK_DOWN",
+                             { altKey: !navigator.platform.includes("Mac") });
 
-  return deferred.promise;
+  });
 }
 
 function waitForWindowLoad(aWin) {
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  aWin.addEventListener("load", function() {
-    deferred.resolve();
-  }, {capture: true, once: true});
+    aWin.addEventListener("load", function() {
+      resolve();
+    }, {capture: true, once: true});
 
-  return deferred.promise;
+  });
 }
 
 

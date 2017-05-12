@@ -72,24 +72,24 @@ add_task(async function test_add_visit() {
 
   // Add a visit to the bookmark and wait for the observer.
   let visitId;
-  let deferUpdatePlaces = Promise.defer();
-  PlacesUtils.asyncHistory.updatePlaces({
-    uri: NetUtil.newURI("http://book.ma.rk/"),
-    visits: [{ transitionType: TRANSITION_TYPED, visitDate: NOW }]
-  }, {
-    handleError: function TAV_handleError() {
-      deferUpdatePlaces.reject(new Error("Unexpected error in adding visit."));
-    },
-    handleResult(aPlaceInfo) {
-      visitId = aPlaceInfo.visits[0].visitId;
-    },
-    handleCompletion: function TAV_handleCompletion() {
-      deferUpdatePlaces.resolve();
-    }
-  });
+  await new Promise((resolve, reject) => {
+    PlacesUtils.asyncHistory.updatePlaces({
+      uri: NetUtil.newURI("http://book.ma.rk/"),
+      visits: [{ transitionType: TRANSITION_TYPED, visitDate: NOW }]
+    }, {
+      handleError: function TAV_handleError() {
+        reject(new Error("Unexpected error in adding visit."));
+      },
+      handleResult(aPlaceInfo) {
+        visitId = aPlaceInfo.visits[0].visitId;
+      },
+      handleCompletion: function TAV_handleCompletion() {
+        resolve();
+      }
+    });
 
-  // Wait for both the observer and the asynchronous update, in any order.
-  await deferUpdatePlaces.promise;
+    // Wait for both the observer and the asynchronous update, in any order.
+  });
   await observerPromise;
 
   // Check that both asynchronous results are consistent.
@@ -127,24 +127,24 @@ add_task(async function shutdown() {
   // places-connection-closed.
   // Notice this code is not using helpers cause it depends on a very specific
   // order, a change in the helpers code could make this test useless.
-  let deferred = Promise.defer();
+  await new Promise(resolve => {
 
-  Services.obs.addObserver(function onNotification() {
-    Services.obs.removeObserver(onNotification, "places-will-close-connection");
-    do_check_true(true, "Observed fake places shutdown");
+    Services.obs.addObserver(function onNotification() {
+      Services.obs.removeObserver(onNotification, "places-will-close-connection");
+      do_check_true(true, "Observed fake places shutdown");
 
-    Services.tm.dispatchToMainThread(() => {
-      // WARNING: this is very bad, never use out of testing code.
-      PlacesUtils.bookmarks.QueryInterface(Ci.nsINavHistoryObserver)
-                           .onPageChanged(NetUtil.newURI("http://book.ma.rk/"),
-                                          Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON,
-                                          "test", "test");
-      deferred.resolve(promiseTopicObserved("places-connection-closed"));
-    });
-  }, "places-will-close-connection");
-  shutdownPlaces();
+      Services.tm.dispatchToMainThread(() => {
+        // WARNING: this is very bad, never use out of testing code.
+        PlacesUtils.bookmarks.QueryInterface(Ci.nsINavHistoryObserver)
+                             .onPageChanged(NetUtil.newURI("http://book.ma.rk/"),
+                                            Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON,
+                                            "test", "test");
+        resolve(promiseTopicObserved("places-connection-closed"));
+      });
+    }, "places-will-close-connection");
+    shutdownPlaces();
 
-  await deferred.promise;
+  });
 });
 
 function run_test() {

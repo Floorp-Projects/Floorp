@@ -31,9 +31,9 @@ function waitForCondition(condition, nextTest, errorMsg, retryTimes) {
 }
 
 function promiseWaitForCondition(aConditionFn, retryTimes) {
-  let deferred = Promise.defer();
-  waitForCondition(aConditionFn, deferred.resolve, "Condition didn't pass.", retryTimes);
-  return deferred.promise;
+  return new Promise(resolve => {
+    waitForCondition(aConditionFn, resolve, "Condition didn't pass.", retryTimes);
+  });
 }
 
 /**
@@ -137,15 +137,15 @@ async function assertWebRTCIndicatorStatus(expected) {
 
       if (document.readyState != "complete") {
         info("Waiting for the sharing indicator's document to load");
-        let deferred = Promise.defer();
-        document.addEventListener("readystatechange",
-                                  function onReadyStateChange() {
-          if (document.readyState != "complete")
-            return;
-          document.removeEventListener("readystatechange", onReadyStateChange);
-          deferred.resolve();
+        await new Promise(resolve => {
+          document.addEventListener("readystatechange",
+                                    function onReadyStateChange() {
+            if (document.readyState != "complete")
+              return;
+            document.removeEventListener("readystatechange", onReadyStateChange);
+            resolve();
+          });
         });
-        await deferred.promise;
       }
 
       for (let item of ["video", "audio", "screen"]) {
@@ -166,12 +166,12 @@ function promisePopupEvent(popup, eventSuffix) {
     return Promise.resolve();
 
   let eventType = "popup" + eventSuffix;
-  let deferred = Promise.defer();
-  popup.addEventListener(eventType, function(event) {
-    deferred.resolve();
-  }, {once: true});
+  return new Promise(resolve => {
+    popup.addEventListener(eventType, function(event) {
+      resolve();
+    }, {once: true});
 
-  return deferred.promise;
+  });
 }
 
 function promiseNotificationShown(notification) {
@@ -274,47 +274,47 @@ function promiseMessage(aMessage, aAction) {
 }
 
 function promisePopupNotificationShown(aName, aAction) {
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  PopupNotifications.panel.addEventListener("popupshown", function() {
-    ok(!!PopupNotifications.getNotification(aName), aName + " notification shown");
-    ok(PopupNotifications.isPanelOpen, "notification panel open");
-    ok(!!PopupNotifications.panel.firstChild, "notification panel populated");
+    PopupNotifications.panel.addEventListener("popupshown", function() {
+      ok(!!PopupNotifications.getNotification(aName), aName + " notification shown");
+      ok(PopupNotifications.isPanelOpen, "notification panel open");
+      ok(!!PopupNotifications.panel.firstChild, "notification panel populated");
 
-    deferred.resolve();
-  }, {once: true});
+      resolve();
+    }, {once: true});
 
-  if (aAction)
-    aAction();
+    if (aAction)
+      aAction();
 
-  return deferred.promise;
+  });
 }
 
 function promisePopupNotification(aName) {
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  waitForCondition(() => PopupNotifications.getNotification(aName),
-                   () => {
-    ok(!!PopupNotifications.getNotification(aName),
-       aName + " notification appeared");
+    waitForCondition(() => PopupNotifications.getNotification(aName),
+                     () => {
+      ok(!!PopupNotifications.getNotification(aName),
+         aName + " notification appeared");
 
-    deferred.resolve();
-  }, "timeout waiting for popup notification " + aName);
+      resolve();
+    }, "timeout waiting for popup notification " + aName);
 
-  return deferred.promise;
+  });
 }
 
 function promiseNoPopupNotification(aName) {
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  waitForCondition(() => !PopupNotifications.getNotification(aName),
-                   () => {
-    ok(!PopupNotifications.getNotification(aName),
-       aName + " notification removed");
-    deferred.resolve();
-  }, "timeout waiting for popup notification " + aName + " to disappear");
+    waitForCondition(() => !PopupNotifications.getNotification(aName),
+                     () => {
+      ok(!PopupNotifications.getNotification(aName),
+         aName + " notification removed");
+      resolve();
+    }, "timeout waiting for popup notification " + aName + " to disappear");
 
-  return deferred.promise;
+  });
 }
 
 const kActionAlways = 1;

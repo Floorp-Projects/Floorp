@@ -49,13 +49,13 @@ add_task(async function test_setup() {
 });
 
 function isApplicable(experiment) {
-  let deferred = Promise.defer();
-  experiment.isApplicable().then(
-    result => deferred.resolve({ applicable: true,  reason: null }),
-    reason => deferred.resolve({ applicable: false, reason })
-  );
+  return new Promise(resolve => {
+    experiment.isApplicable().then(
+      result => resolve({ applicable: true,  reason: null }),
+      reason => resolve({ applicable: false, reason })
+    );
 
-  return deferred.promise;
+  });
 }
 
 add_task(async function test_startStop() {

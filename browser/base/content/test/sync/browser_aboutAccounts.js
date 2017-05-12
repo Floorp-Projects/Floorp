@@ -409,12 +409,12 @@ function test() {
 
 function promiseOneMessage(tab, messageName) {
   let mm = tab.linkedBrowser.messageManager;
-  let deferred = Promise.defer();
-  mm.addMessageListener(messageName, function onmessage(message) {
-    mm.removeMessageListener(messageName, onmessage);
-    deferred.resolve(message);
+  return new Promise(resolve => {
+    mm.addMessageListener(messageName, function onmessage(message) {
+      mm.removeMessageListener(messageName, onmessage);
+      resolve(message);
+    });
   });
-  return deferred.promise;
 }
 
 function promiseNewTabLoadEvent(aUrl) {
@@ -432,34 +432,34 @@ function promiseNewTabLoadEvent(aUrl) {
 // Returns a promise which is resolved with the iframe's URL after a new
 // tab is created and the iframe in that tab loads.
 function promiseNewTabWithIframeLoadEvent(aUrl) {
-  let deferred = Promise.defer();
-  let tab = gBrowser.selectedTab = gBrowser.addTab(aUrl);
-  let browser = tab.linkedBrowser;
-  let mm = browser.messageManager;
+  return new Promise(resolve => {
+    let tab = gBrowser.selectedTab = gBrowser.addTab(aUrl);
+    let browser = tab.linkedBrowser;
+    let mm = browser.messageManager;
 
-  // give it an e10s-friendly content script to help with our tests,
-  // and wait for it to tell us about the iframe load.
-  mm.addMessageListener("test:iframe:load", function onFrameLoad(message) {
-    mm.removeMessageListener("test:iframe:load", onFrameLoad);
-    deferred.resolve([tab, message.data.url]);
+    // give it an e10s-friendly content script to help with our tests,
+    // and wait for it to tell us about the iframe load.
+    mm.addMessageListener("test:iframe:load", function onFrameLoad(message) {
+      mm.removeMessageListener("test:iframe:load", onFrameLoad);
+      resolve([tab, message.data.url]);
+    });
+    mm.loadFrameScript(CHROME_BASE + "content_aboutAccounts.js", true);
   });
-  mm.loadFrameScript(CHROME_BASE + "content_aboutAccounts.js", true);
-  return deferred.promise;
 }
 
 function checkVisibilities(tab, data) {
   let ids = Object.keys(data);
   let mm = tab.linkedBrowser.messageManager;
-  let deferred = Promise.defer();
-  mm.addMessageListener("test:check-visibilities-response", function onResponse(message) {
-    mm.removeMessageListener("test:check-visibilities-response", onResponse);
-    for (let id of ids) {
-      is(message.data[id], data[id], "Element '" + id + "' has correct visibility");
-    }
-    deferred.resolve();
+  return new Promise(resolve => {
+    mm.addMessageListener("test:check-visibilities-response", function onResponse(message) {
+      mm.removeMessageListener("test:check-visibilities-response", onResponse);
+      for (let id of ids) {
+        is(message.data[id], data[id], "Element '" + id + "' has correct visibility");
+      }
+      resolve();
+    });
+    mm.sendAsyncMessage("test:check-visibilities", {ids});
   });
-  mm.sendAsyncMessage("test:check-visibilities", {ids});
-  return deferred.promise;
 }
 
 // watch out - these will fire observers which if you aren't careful, may

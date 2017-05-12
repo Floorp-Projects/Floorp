@@ -61,12 +61,12 @@ function uri(aURIString) {
  * @rejects JavaScript exception.
  */
 function promiseIsURIVisited(aURI) {
-  let deferred = Promise.defer();
-  PlacesUtils.asyncHistory.isURIVisited(aURI, function(unused, aIsVisited) {
-    deferred.resolve(aIsVisited);
-  });
+  return new Promise(resolve => {
+    PlacesUtils.asyncHistory.isURIVisited(aURI, function(unused, aIsVisited) {
+      resolve(aIsVisited);
+    });
 
-  return deferred.promise;
+  });
 }
 
 /**
@@ -209,13 +209,13 @@ function check_permission_exists(aURI, aExists) {
  *        The URI to add a preference for.
  */
 function add_preference(aURI) {
-  let deferred = Promise.defer();
-  let cp = Cc["@mozilla.org/content-pref/service;1"].
-             getService(Ci.nsIContentPrefService2);
-  cp.set(aURI.spec, PREFERENCE_NAME, "foo", null, {
-    handleCompletion: () => deferred.resolve()
+  return new Promise(resolve => {
+    let cp = Cc["@mozilla.org/content-pref/service;1"].
+               getService(Ci.nsIContentPrefService2);
+    cp.set(aURI.spec, PREFERENCE_NAME, "foo", null, {
+      handleCompletion: () => resolve()
+    });
   });
-  return deferred.promise;
 }
 
 /**
@@ -225,15 +225,15 @@ function add_preference(aURI) {
  *        The URI to check if a preference exists.
  */
 function preference_exists(aURI) {
-  let deferred = Promise.defer();
-  let cp = Cc["@mozilla.org/content-pref/service;1"].
-             getService(Ci.nsIContentPrefService2);
-  let exists = false;
-  cp.getByDomainAndName(aURI.spec, PREFERENCE_NAME, null, {
-    handleResult: () => exists = true,
-    handleCompletion: () => deferred.resolve(exists)
+  return new Promise(resolve => {
+    let cp = Cc["@mozilla.org/content-pref/service;1"].
+               getService(Ci.nsIContentPrefService2);
+    let exists = false;
+    cp.getByDomainAndName(aURI.spec, PREFERENCE_NAME, null, {
+      handleResult: () => exists = true,
+      handleCompletion: () => resolve(exists)
+    });
   });
-  return deferred.promise;
 }
 
 // Test Functions
@@ -374,22 +374,22 @@ async function test_permission_manager_not_cleared_with_uri_contains_domain() {
 }
 
 function waitForPurgeNotification() {
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  let observer = {
-    observe(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(observer, "browser:purge-domain-data");
-      // test_storage_cleared needs this extra executeSoon because
-      // the DOMStorage clean-up is also listening to this same observer
-      // which is run synchronously.
-      Services.tm.dispatchToMainThread(function() {
-        deferred.resolve();
-      });
-    }
-  };
-  Services.obs.addObserver(observer, "browser:purge-domain-data");
+    let observer = {
+      observe(aSubject, aTopic, aData) {
+        Services.obs.removeObserver(observer, "browser:purge-domain-data");
+        // test_storage_cleared needs this extra executeSoon because
+        // the DOMStorage clean-up is also listening to this same observer
+        // which is run synchronously.
+        Services.tm.dispatchToMainThread(function() {
+          resolve();
+        });
+      }
+    };
+    Services.obs.addObserver(observer, "browser:purge-domain-data");
 
-  return deferred.promise;
+  });
 }
 
 // Content Preferences

@@ -27,9 +27,9 @@ function closeFindbarAndWait(findbar) {
 }
 
 function pushPrefs(...aPrefs) {
-  let deferred = Promise.defer();
-  SpecialPowers.pushPrefEnv({"set": aPrefs}, deferred.resolve);
-  return deferred.promise;
+  return new Promise(resolve => {
+    SpecialPowers.pushPrefEnv({"set": aPrefs}, resolve);
+  });
 }
 
 /**

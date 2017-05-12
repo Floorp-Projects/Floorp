@@ -78,16 +78,16 @@ add_task(async function add_test_engines() {
 // Begin tests
 
 add_task(async function simple_no_result_callback() {
-  let deferred = Promise.defer();
-  let controller = new SearchSuggestionController((result) => {
-    do_check_eq(result.term, "no remote");
-    do_check_eq(result.local.length, 0);
-    do_check_eq(result.remote.length, 0);
-    deferred.resolve();
-  });
+  await new Promise(resolve => {
+    let controller = new SearchSuggestionController((result) => {
+      do_check_eq(result.term, "no remote");
+      do_check_eq(result.local.length, 0);
+      do_check_eq(result.remote.length, 0);
+      resolve();
+    });
 
-  controller.fetch("no remote", false, getEngine);
-  await deferred.promise;
+    controller.fetch("no remote", false, getEngine);
+  });
 });
 
 add_task(async function simple_no_result_callback_and_promise() {
@@ -551,21 +551,21 @@ add_task(async function test_userContextId() {
 // Helpers
 
 function updateSearchHistory(operation, value) {
-  let deferred = Promise.defer();
-  FormHistory.update({
-                       op: operation,
-                       fieldname: "searchbar-history",
-                       value,
-                     },
-                     {
-                       handleError(error) {
-                         do_throw("Error occurred updating form history: " + error);
-                         deferred.reject(error);
+  return new Promise((resolve, reject) => {
+    FormHistory.update({
+                         op: operation,
+                         fieldname: "searchbar-history",
+                         value,
                        },
-                       handleCompletion(reason) {
-                         if (!reason)
-                           deferred.resolve();
-                       }
-                     });
-  return deferred.promise;
+                       {
+                         handleError(error) {
+                           do_throw("Error occurred updating form history: " + error);
+                           reject(error);
+                         },
+                         handleCompletion(reason) {
+                           if (!reason)
+                             resolve();
+                         }
+                       });
+  });
 }

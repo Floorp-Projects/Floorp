@@ -17,16 +17,16 @@ const kSmallWidth = 400;
  * resolves as soon as the menu is ready for interaction.
  */
 function bookmarksMenuPanelShown() {
-  let deferred = Promise.defer();
-  let bookmarksMenuPopup = document.getElementById("BMB_bookmarksPopup");
-  let onTransitionEnd = (e) => {
-    if (e.target == bookmarksMenuPopup) {
-      bookmarksMenuPopup.removeEventListener("transitionend", onTransitionEnd);
-      deferred.resolve();
+  return new Promise(resolve => {
+    let bookmarksMenuPopup = document.getElementById("BMB_bookmarksPopup");
+    let onTransitionEnd = (e) => {
+      if (e.target == bookmarksMenuPopup) {
+        bookmarksMenuPopup.removeEventListener("transitionend", onTransitionEnd);
+        resolve();
+      }
     }
-  }
-  bookmarksMenuPopup.addEventListener("transitionend", onTransitionEnd);
-  return deferred.promise;
+    bookmarksMenuPopup.addEventListener("transitionend", onTransitionEnd);
+  });
 }
 
 /**

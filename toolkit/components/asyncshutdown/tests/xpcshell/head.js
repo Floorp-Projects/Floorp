@@ -142,13 +142,13 @@ function longRunningAsyncTask(resolution = undefined, outResult = {}) {
   if (!("countFinished" in outResult)) {
     outResult.countFinished = 0;
   }
-  let deferred = Promise.defer();
-  do_timeout(100, function() {
-    ++outResult.countFinished;
-    outResult.isFinished = true;
-    deferred.resolve(resolution);
+  return new Promise(resolve => {
+    do_timeout(100, function() {
+      ++outResult.countFinished;
+      outResult.isFinished = true;
+      resolve(resolution);
+    });
   });
-  return deferred.promise;
 }
 
 function get_exn(f) {

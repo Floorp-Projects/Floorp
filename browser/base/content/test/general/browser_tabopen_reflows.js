@@ -59,19 +59,19 @@ add_task(async function() {
 
   // resolves promise when directory links are downloaded and written to disk
   function watchLinksChangeOnce() {
-    let deferred = Promise.defer();
-    let observer = {
-      onManyLinksChanged: () => {
-        DirectoryLinksProvider.removeObserver(observer);
-        NewTabUtils.links.populateCache(() => {
-          NewTabUtils.allPages.update();
-          deferred.resolve();
-        }, true);
-      }
-    };
-    observer.onDownloadFail = observer.onManyLinksChanged;
-    DirectoryLinksProvider.addObserver(observer);
-    return deferred.promise;
+    return new Promise(resolve => {
+      let observer = {
+        onManyLinksChanged: () => {
+          DirectoryLinksProvider.removeObserver(observer);
+          NewTabUtils.links.populateCache(() => {
+            NewTabUtils.allPages.update();
+            resolve();
+          }, true);
+        }
+      };
+      observer.onDownloadFail = observer.onManyLinksChanged;
+      DirectoryLinksProvider.addObserver(observer);
+    });
   }
 
   let gOrigDirectorySource = Services.prefs.getCharPref(PREF_NEWTAB_DIRECTORYSOURCE);

@@ -8,42 +8,42 @@ var dbConnection; // used for deleted table tests
 Cu.import("resource://gre/modules/Promise.jsm");
 
 function countDeletedEntries(expected) {
-  let deferred = Promise.defer();
-  let stmt = dbConnection.createAsyncStatement("SELECT COUNT(*) AS numEntries FROM moz_deleted_formhistory");
-  stmt.executeAsync({
-    handleResult(resultSet) {
-      do_check_eq(expected, resultSet.getNextRow().getResultByName("numEntries"));
-      deferred.resolve();
-    },
-    handleError(error) {
-      do_throw("Error occurred counting deleted entries: " + error);
-      deferred.reject();
-    },
-    handleCompletion() {
-      stmt.finalize();
-    }
+  return new Promise((resolve, reject) => {
+    let stmt = dbConnection.createAsyncStatement("SELECT COUNT(*) AS numEntries FROM moz_deleted_formhistory");
+    stmt.executeAsync({
+      handleResult(resultSet) {
+        do_check_eq(expected, resultSet.getNextRow().getResultByName("numEntries"));
+        resolve();
+      },
+      handleError(error) {
+        do_throw("Error occurred counting deleted entries: " + error);
+        reject();
+      },
+      handleCompletion() {
+        stmt.finalize();
+      }
+    });
   });
-  return deferred.promise;
 }
 
 function checkTimeDeleted(guid, checkFunction) {
-  let deferred = Promise.defer();
-  let stmt = dbConnection.createAsyncStatement("SELECT timeDeleted FROM moz_deleted_formhistory WHERE guid = :guid");
-  stmt.params.guid = guid;
-  stmt.executeAsync({
-    handleResult(resultSet) {
-      checkFunction(resultSet.getNextRow().getResultByName("timeDeleted"));
-      deferred.resolve();
-    },
-    handleError(error) {
-      do_throw("Error occurred getting deleted entries: " + error);
-      deferred.reject();
-    },
-    handleCompletion() {
-      stmt.finalize();
-    }
+  return new Promise((resolve, reject) => {
+    let stmt = dbConnection.createAsyncStatement("SELECT timeDeleted FROM moz_deleted_formhistory WHERE guid = :guid");
+    stmt.params.guid = guid;
+    stmt.executeAsync({
+      handleResult(resultSet) {
+        checkFunction(resultSet.getNextRow().getResultByName("timeDeleted"));
+        resolve();
+      },
+      handleError(error) {
+        do_throw("Error occurred getting deleted entries: " + error);
+        reject();
+      },
+      handleCompletion() {
+        stmt.finalize();
+      }
+    });
   });
-  return deferred.promise;
 }
 
 function promiseUpdateEntry(op, name, value) {
@@ -73,23 +73,23 @@ function promiseUpdate(change) {
 }
 
 function promiseSearchEntries(terms, params) {
-  let deferred = Promise.defer();
-  let results = [];
-  FormHistory.search(terms, params,
-                     { handleResult: result => results.push(result),
-                       handleError(error) {
-                         do_throw("Error occurred searching form history: " + error);
-                         deferred.reject(error);
-                       },
-                       handleCompletion(reason) { if (!reason) deferred.resolve(results); }
-                     });
-  return deferred.promise;
+  return new Promise((resolve, reject) => {
+    let results = [];
+    FormHistory.search(terms, params,
+                       { handleResult: result => results.push(result),
+                         handleError(error) {
+                           do_throw("Error occurred searching form history: " + error);
+                           reject(error);
+                         },
+                         handleCompletion(reason) { if (!reason) resolve(results); }
+                       });
+  });
 }
 
 function promiseCountEntries(name, value, checkFn) {
-  let deferred = Promise.defer();
-  countEntries(name, value, function(result) { checkFn(result); deferred.resolve(); } );
-  return deferred.promise;
+  return new Promise(resolve => {
+    countEntries(name, value, function(result) { checkFn(result); resolve(); } );
+  });
 }
 
 add_task(async function() {

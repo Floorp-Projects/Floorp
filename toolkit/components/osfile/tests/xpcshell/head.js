@@ -51,31 +51,31 @@ function add_test_pair(generator) {
  */
 function reference_fetch_file(path, test) {
   do_print("Fetching file " + path);
-  let deferred = Promise.defer();
-  let file = new FileUtils.File(path);
-  NetUtil.asyncFetch({
-    uri: NetUtil.newURI(file),
-    loadUsingSystemPrincipal: true
-  }, function(stream, status) {
-      if (!Components.isSuccessCode(status)) {
-        deferred.reject(status);
-        return;
-      }
-      let result, reject;
-      try {
-        result = NetUtil.readInputStreamToString(stream, stream.available());
-      } catch (x) {
-        reject = x;
-      }
-      stream.close();
-      if (reject) {
-        deferred.reject(reject);
-      } else {
-        deferred.resolve(result);
-      }
-    });
+  return new Promise((resolve, reject) => {
+    let file = new FileUtils.File(path);
+    NetUtil.asyncFetch({
+      uri: NetUtil.newURI(file),
+      loadUsingSystemPrincipal: true
+    }, function(stream, status) {
+        if (!Components.isSuccessCode(status)) {
+          reject(status);
+          return;
+        }
+        let result, reject;
+        try {
+          result = NetUtil.readInputStreamToString(stream, stream.available());
+        } catch (x) {
+          reject = x;
+        }
+        stream.close();
+        if (reject) {
+          reject(reject);
+        } else {
+          resolve(result);
+        }
+      });
 
-  return deferred.promise;
+  });
 };
 
 /**

@@ -58,27 +58,27 @@ add_task(async function test_nsNavHistory_DecayFrecency_and_nsNavHistory_FixInva
 });
 
 function onFrecencyChanged(expectedURI) {
-  let deferred = Promise.defer();
-  let obs = new NavHistoryObserver();
-  obs.onFrecencyChanged =
-    (uri, newFrecency, guid, hidden, visitDate) => {
-      PlacesUtils.history.removeObserver(obs);
-      do_check_true(!!uri);
-      do_check_true(uri.equals(expectedURI));
-      deferred.resolve();
-    };
-  PlacesUtils.history.addObserver(obs);
-  return deferred.promise;
+  return new Promise(resolve => {
+    let obs = new NavHistoryObserver();
+    obs.onFrecencyChanged =
+      (uri, newFrecency, guid, hidden, visitDate) => {
+        PlacesUtils.history.removeObserver(obs);
+        do_check_true(!!uri);
+        do_check_true(uri.equals(expectedURI));
+        resolve();
+      };
+    PlacesUtils.history.addObserver(obs);
+  });
 }
 
 function onManyFrecenciesChanged() {
-  let deferred = Promise.defer();
-  let obs = new NavHistoryObserver();
-  obs.onManyFrecenciesChanged = () => {
-    PlacesUtils.history.removeObserver(obs);
-    do_check_true(true);
-    deferred.resolve();
-  };
-  PlacesUtils.history.addObserver(obs);
-  return deferred.promise;
+  return new Promise(resolve => {
+    let obs = new NavHistoryObserver();
+    obs.onManyFrecenciesChanged = () => {
+      PlacesUtils.history.removeObserver(obs);
+      do_check_true(true);
+      resolve();
+    };
+    PlacesUtils.history.addObserver(obs);
+  });
 }

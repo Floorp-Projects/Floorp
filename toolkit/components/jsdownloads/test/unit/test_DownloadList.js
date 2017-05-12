@@ -39,27 +39,27 @@ function getExpirablePRTime() {
  * @rejects JavaScript exception.
  */
 function promiseExpirableDownloadVisit(aSourceUrl) {
-  let deferred = Promise.defer();
-  PlacesUtils.asyncHistory.updatePlaces(
-    {
-      uri: NetUtil.newURI(aSourceUrl || httpUrl("source.txt")),
-      visits: [{
-        transitionType: Ci.nsINavHistoryService.TRANSITION_DOWNLOAD,
-        visitDate: getExpirablePRTime(),
-      }]
-    },
-    {
-      handleError: function handleError(aResultCode, aPlaceInfo) {
-        let ex = new Components.Exception("Unexpected error in adding visits.",
-                                          aResultCode);
-        deferred.reject(ex);
+  return new Promise((resolve, reject) => {
+    PlacesUtils.asyncHistory.updatePlaces(
+      {
+        uri: NetUtil.newURI(aSourceUrl || httpUrl("source.txt")),
+        visits: [{
+          transitionType: Ci.nsINavHistoryService.TRANSITION_DOWNLOAD,
+          visitDate: getExpirablePRTime(),
+        }]
       },
-      handleResult() {},
-      handleCompletion: function handleCompletion() {
-        deferred.resolve();
-      }
-    });
-  return deferred.promise;
+      {
+        handleError: function handleError(aResultCode, aPlaceInfo) {
+          let ex = new Components.Exception("Unexpected error in adding visits.",
+                                            aResultCode);
+          reject(ex);
+        },
+        handleResult() {},
+        handleCompletion: function handleCompletion() {
+          resolve();
+        }
+      });
+  });
 }
 
 // Tests

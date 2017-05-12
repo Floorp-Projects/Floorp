@@ -119,15 +119,15 @@ function constructFixtureURL(filename) {
  * @param String url  A URL to be loaded in the new tab.
  */
 function promiseTestPageLoad(url) {
-  let deferred = Promise.defer();
-  let tab = gBrowser.selectedTab = gBrowser.addTab(url);
-  let browser = gBrowser.selectedBrowser;
-  browser.addEventListener("load", function listener() {
-    if (browser.currentURI.spec == "about:blank")
-      return;
-    info("Page loaded: " + browser.currentURI.spec);
-    browser.removeEventListener("load", listener, true);
-    deferred.resolve(tab);
-  }, true);
-  return deferred.promise;
+  return new Promise(resolve => {
+    let tab = gBrowser.selectedTab = gBrowser.addTab(url);
+    let browser = gBrowser.selectedBrowser;
+    browser.addEventListener("load", function listener() {
+      if (browser.currentURI.spec == "about:blank")
+        return;
+      info("Page loaded: " + browser.currentURI.spec);
+      browser.removeEventListener("load", listener, true);
+      resolve(tab);
+    }, true);
+  });
 }

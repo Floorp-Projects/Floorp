@@ -161,33 +161,33 @@ function promiseTableCount(aConnection) {
  * @rejects When there's a problem accessing the URL.
  */
 function promiseEntityID(aUrl) {
-  let deferred = Promise.defer();
-  let entityID = "";
-  let channel = NetUtil.newChannel({
-    uri: NetUtil.newURI(aUrl),
-    loadUsingSystemPrincipal: true
+  return new Promise((resolve, reject) => {
+    let entityID = "";
+    let channel = NetUtil.newChannel({
+      uri: NetUtil.newURI(aUrl),
+      loadUsingSystemPrincipal: true
+    });
+
+    channel.asyncOpen2({
+      onStartRequest(aRequest) {
+        if (aRequest instanceof Ci.nsIResumableChannel) {
+          entityID = aRequest.entityID;
+        }
+        aRequest.cancel(Cr.NS_BINDING_ABORTED);
+      },
+
+      onStopRequest(aRequest, aContext, aStatusCode) {
+        if (aStatusCode == Cr.NS_BINDING_ABORTED) {
+          resolve(entityID);
+        } else {
+          reject("Unexpected status code received");
+        }
+      },
+
+      onDataAvailable() {}
+    });
+
   });
-
-  channel.asyncOpen2({
-    onStartRequest(aRequest) {
-      if (aRequest instanceof Ci.nsIResumableChannel) {
-        entityID = aRequest.entityID;
-      }
-      aRequest.cancel(Cr.NS_BINDING_ABORTED);
-    },
-
-    onStopRequest(aRequest, aContext, aStatusCode) {
-      if (aStatusCode == Cr.NS_BINDING_ABORTED) {
-        deferred.resolve(entityID);
-      } else {
-        deferred.reject("Unexpected status code received");
-      }
-    },
-
-    onDataAvailable() {}
-  });
-
-  return deferred.promise;
 }
 
 /**

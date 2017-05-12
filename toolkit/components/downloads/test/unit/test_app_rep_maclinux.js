@@ -164,54 +164,54 @@ function processUpdateRequest() {
 
 // Set up the local whitelist.
 function waitForUpdates() {
-  let deferred = Promise.defer();
-  gHttpServer.registerPathHandler("/downloads", function(request, response) {
-    let blob = processUpdateRequest();
-    response.setHeader("Content-Type",
-                       "application/vnd.google.safebrowsing-update", false);
-    response.setStatusLine(request.httpVersion, 200, "OK");
-    response.bodyOutputStream.write(blob, blob.length);
+  return new Promise((resolve, reject) => {
+    gHttpServer.registerPathHandler("/downloads", function(request, response) {
+      let blob = processUpdateRequest();
+      response.setHeader("Content-Type",
+                         "application/vnd.google.safebrowsing-update", false);
+      response.setStatusLine(request.httpVersion, 200, "OK");
+      response.bodyOutputStream.write(blob, blob.length);
+    });
+
+    let streamUpdater = Cc["@mozilla.org/url-classifier/streamupdater;1"]
+      .getService(Ci.nsIUrlClassifierStreamUpdater);
+
+    // Load up some update chunks for the safebrowsing server to serve. This
+    // particular chunk contains the hash of whitelisted.com/ and
+    // sb-ssl.google.com/safebrowsing/csd/certificate/.
+    registerTableUpdate("goog-downloadwhite-digest256", "data/digest.chunk");
+
+    // Resolve the promise once processing the updates is complete.
+    function updateSuccess(aEvent) {
+      // Timeout of n:1000 is constructed in processUpdateRequest above and
+      // passed back in the callback in nsIUrlClassifierStreamUpdater on success.
+      do_check_eq("1000", aEvent);
+      do_print("All data processed");
+      resolve(true);
+    }
+    // Just throw if we ever get an update or download error.
+    function handleError(aEvent) {
+      do_throw("We didn't download or update correctly: " + aEvent);
+      reject();
+    }
+    streamUpdater.downloadUpdates(
+      "goog-downloadwhite-digest256",
+      "goog-downloadwhite-digest256;\n",
+      true,
+      "http://localhost:4444/downloads",
+      updateSuccess, handleError, handleError);
   });
-
-  let streamUpdater = Cc["@mozilla.org/url-classifier/streamupdater;1"]
-    .getService(Ci.nsIUrlClassifierStreamUpdater);
-
-  // Load up some update chunks for the safebrowsing server to serve. This
-  // particular chunk contains the hash of whitelisted.com/ and
-  // sb-ssl.google.com/safebrowsing/csd/certificate/.
-  registerTableUpdate("goog-downloadwhite-digest256", "data/digest.chunk");
-
-  // Resolve the promise once processing the updates is complete.
-  function updateSuccess(aEvent) {
-    // Timeout of n:1000 is constructed in processUpdateRequest above and
-    // passed back in the callback in nsIUrlClassifierStreamUpdater on success.
-    do_check_eq("1000", aEvent);
-    do_print("All data processed");
-    deferred.resolve(true);
-  }
-  // Just throw if we ever get an update or download error.
-  function handleError(aEvent) {
-    do_throw("We didn't download or update correctly: " + aEvent);
-    deferred.reject();
-  }
-  streamUpdater.downloadUpdates(
-    "goog-downloadwhite-digest256",
-    "goog-downloadwhite-digest256;\n",
-    true,
-    "http://localhost:4444/downloads",
-    updateSuccess, handleError, handleError);
-  return deferred.promise;
 }
 
 function promiseQueryReputation(query, expectedShouldBlock) {
-  let deferred = Promise.defer();
-  function onComplete(aShouldBlock, aStatus) {
-    do_check_eq(Cr.NS_OK, aStatus);
-    do_check_eq(aShouldBlock, expectedShouldBlock);
-    deferred.resolve(true);
-  }
-  gAppRep.queryReputation(query, onComplete);
-  return deferred.promise;
+  return new Promise(resolve => {
+    function onComplete(aShouldBlock, aStatus) {
+      do_check_eq(Cr.NS_OK, aStatus);
+      do_check_eq(aShouldBlock, expectedShouldBlock);
+      resolve(true);
+    }
+    gAppRep.queryReputation(query, onComplete);
+  });
 }
 
 add_task(async function() {
@@ -263,16 +263,16 @@ add_task(async function test_disabled() {
   let query = {sourceURI: createURI("http://example.com"),
                suggestedFileName: "noop.bat",
                fileSize: 12};
-  let deferred = Promise.defer();
-  gAppRep.queryReputation(query,
-    function onComplete(aShouldBlock, aStatus) {
-      // We should be getting NS_ERROR_NOT_AVAILABLE if the service is disabled
-      do_check_eq(Cr.NS_ERROR_NOT_AVAILABLE, aStatus);
-      do_check_false(aShouldBlock);
-      deferred.resolve(true);
-    }
-  );
-  await deferred.promise;
+  await new Promise(resolve => {
+    gAppRep.queryReputation(query,
+      function onComplete(aShouldBlock, aStatus) {
+        // We should be getting NS_ERROR_NOT_AVAILABLE if the service is disabled
+        do_check_eq(Cr.NS_ERROR_NOT_AVAILABLE, aStatus);
+        do_check_false(aShouldBlock);
+        resolve(true);
+      }
+    );
+  });
 });
 
 add_task(async function test_disabled_through_lists() {
@@ -284,16 +284,16 @@ add_task(async function test_disabled_through_lists() {
   let query = {sourceURI: createURI("http://example.com"),
                suggestedFileName: "noop.bat",
                fileSize: 12};
-  let deferred = Promise.defer();
-  gAppRep.queryReputation(query,
-    function onComplete(aShouldBlock, aStatus) {
-      // We should be getting NS_ERROR_NOT_AVAILABLE if the service is disabled
-      do_check_eq(Cr.NS_ERROR_NOT_AVAILABLE, aStatus);
-      do_check_false(aShouldBlock);
-      deferred.resolve(true);
-    }
-  );
-  await deferred.promise;
+  await new Promise(resolve => {
+    gAppRep.queryReputation(query,
+      function onComplete(aShouldBlock, aStatus) {
+        // We should be getting NS_ERROR_NOT_AVAILABLE if the service is disabled
+        do_check_eq(Cr.NS_ERROR_NOT_AVAILABLE, aStatus);
+        do_check_false(aShouldBlock);
+        resolve(true);
+      }
+    );
+  });
 });
 add_task(async function test_teardown() {
   gStillRunning = false;

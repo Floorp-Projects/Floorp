@@ -68,9 +68,9 @@ function openDetailsView(aId) {
   EventUtils.synthesizeMouseAtCenter(item, { clickCount: 1 }, gManagerWindow);
   EventUtils.synthesizeMouseAtCenter(item, { clickCount: 2 }, gManagerWindow);
 
-  let deferred = Promise.defer();
-  wait_for_view_load(gManagerWindow, deferred.resolve);
-  return deferred.promise;
+  return new Promise(resolve => {
+    wait_for_view_load(gManagerWindow, resolve);
+  });
 }
 
 add_task(async function initializeState() {
@@ -245,16 +245,16 @@ add_task(async function testInstalledDetails() {
     el = doc.getElementsByTagName("setting")[0];
 
     let contextMenu = doc.getElementById("addonitem-popup");
-    let deferred = Promise.defer();
-    let listener = () => {
-      contextMenu.removeEventListener("popupshown", listener);
-      deferred.resolve();
-    };
-    contextMenu.addEventListener("popupshown", listener);
-    el = doc.getElementsByClassName("detail-view-container")[0];
-    EventUtils.synthesizeMouse(el, 4, 4, { }, gManagerWindow);
-    EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
-    await deferred.promise;
+    await new Promise(resolve => {
+      let listener = () => {
+        contextMenu.removeEventListener("popupshown", listener);
+        resolve();
+      };
+      contextMenu.addEventListener("popupshown", listener);
+      el = doc.getElementsByClassName("detail-view-container")[0];
+      EventUtils.synthesizeMouse(el, 4, 4, { }, gManagerWindow);
+      EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
+    });
     let menuSep = doc.getElementById("addonitem-menuseparator");
     is_element_hidden(menuSep, "Menu separator is hidden.");
     contextMenu.hidePopup();
@@ -303,9 +303,9 @@ add_task(async function testPreferencesButton() {
 
       let button = doc.getAnonymousElementByAttribute(item, "anonid", "preferences-btn");
       EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
-      let deferred = Promise.defer();
-      wait_for_view_load(gManagerWindow, deferred.resolve);
-      await deferred.promise;
+      await new Promise(resolve => {
+        wait_for_view_load(gManagerWindow, resolve);
+      });
 
       is(gOptionsObserver.lastDisplayed, addon.id);
     }
@@ -333,9 +333,9 @@ add_task(async function testUpdateButton() {
 
     let button = doc.getAnonymousElementByAttribute(item, "anonid", "preferences-btn");
     EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
-    let deferred = Promise.defer();
-    wait_for_view_load(gManagerWindow, deferred.resolve);
-    await deferred.promise;
+    await new Promise(resolve => {
+      wait_for_view_load(gManagerWindow, resolve);
+    });
 
     button = doc.getElementById("detail-findUpdates-btn");
     Assert.ok(button != null, "Got detail-findUpdates-btn");

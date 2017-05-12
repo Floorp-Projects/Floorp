@@ -42,18 +42,18 @@ async function getDummyDatabase(name, extraOptions = {}) {
 }
 
 function sleep(ms) {
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  let timer = Cc["@mozilla.org/timer;1"]
-                .createInstance(Ci.nsITimer);
+    let timer = Cc["@mozilla.org/timer;1"]
+                  .createInstance(Ci.nsITimer);
 
-  timer.initWithCallback({
-    notify() {
-      deferred.resolve();
-    },
-  }, ms, timer.TYPE_ONE_SHOT);
+    timer.initWithCallback({
+      notify() {
+        resolve();
+      },
+    }, ms, timer.TYPE_ONE_SHOT);
 
-  return deferred.promise;
+  });
 }
 
 function run_test() {

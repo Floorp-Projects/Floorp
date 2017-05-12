@@ -97,28 +97,28 @@ add_task(async function() {
   // reusing it prevents a potential race between unload handlers where the
   // one from promiseWindowClosed could fire before the onWindowClosed
   // (and therefore onAreaNodeRegistered) one, causing the test to fail.
-  let windowCloseDeferred = Promise.defer();
-  listener = {
-    onAreaNodeUnregistered(aArea, aNode, aReason) {
-      if (aArea == TOOLBARID) {
-        is(aNode, otherTB, "Should be informed about other toolbar");
-        is(aReason, CustomizableUI.REASON_WINDOW_CLOSED, "Reason should be correct.");
-        wasInformedCorrectlyOfAreaDisappearing = (aReason === CustomizableUI.REASON_WINDOW_CLOSED);
-      }
-    },
-    onWindowClosed(aWindow) {
-      if (aWindow == otherWin) {
-        windowCloseDeferred.resolve(aWindow);
-      } else {
-        info("Other window was closed!");
-        info("Other window title: " + (aWindow.document && aWindow.document.title));
-        info("Our window title: " + (otherWin.document && otherWin.document.title));
-      }
-    },
-  };
-  CustomizableUI.addListener(listener);
-  otherWin.close();
-  let windowClosed = await windowCloseDeferred.promise;
+  let windowClosed = await new Promise(resolve => {
+    listener = {
+      onAreaNodeUnregistered(aArea, aNode, aReason) {
+        if (aArea == TOOLBARID) {
+          is(aNode, otherTB, "Should be informed about other toolbar");
+          is(aReason, CustomizableUI.REASON_WINDOW_CLOSED, "Reason should be correct.");
+          wasInformedCorrectlyOfAreaDisappearing = (aReason === CustomizableUI.REASON_WINDOW_CLOSED);
+        }
+      },
+      onWindowClosed(aWindow) {
+        if (aWindow == otherWin) {
+          resolve(aWindow);
+        } else {
+          info("Other window was closed!");
+          info("Other window title: " + (aWindow.document && aWindow.document.title));
+          info("Our window title: " + (otherWin.document && otherWin.document.title));
+        }
+      },
+    };
+    CustomizableUI.addListener(listener);
+    otherWin.close();
+  });
 
   is(windowClosed, otherWin, "Window should have sent onWindowClosed notification.");
   ok(wasInformedCorrectlyOfAreaDisappearing, "Should be told about window closing.");
