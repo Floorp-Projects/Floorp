@@ -13,7 +13,7 @@ macosx64/debug:
         max-run-time: 36000
     run:
         using: mozharness
-        actions: [get-secrets build update]
+        actions: [get-secrets build generate-build-stats update]
         config:
             - builds/releng_base_mac_64_cross_builds.py
             - balrog/production.py
@@ -36,7 +36,7 @@ macosx64/opt:
         implementation: buildbot-bridge
     run:
         using: mozharness
-        actions: [get-secrets build update]
+        actions: [get-secrets build generate-build-stats update]
         config:
             - builds/releng_base_mac_64_builds.py
             - balrog/production.py
@@ -59,7 +59,7 @@ macosx64-qr/debug:
         max-run-time: 36000
     run:
         using: mozharness
-        actions: [get-secrets build update]
+        actions: [get-secrets build generate-build-stats update]
         config:
             - builds/releng_base_mac_64_cross_builds.py
             - balrog/production.py
@@ -84,7 +84,7 @@ macosx64-qr/opt:
         max-run-time: 36000
     run:
         using: mozharness
-        actions: [get-secrets build update]
+        actions: [get-secrets build generate-build-stats update]
         config:
             - builds/releng_base_mac_64_cross_builds.py
             - balrog/production.py
@@ -109,7 +109,7 @@ macosx64-add-on-devel/opt:
         max-run-time: 36000
     run:
        using: mozharness
-       actions: [get-secrets build update]
+       actions: [get-secrets build generate-build-stats update]
        config:
             - builds/releng_base_mac_64_cross_builds.py
             - balrog/production.py
@@ -137,7 +137,7 @@ macosx64-nightly/opt:
         max-run-time: 36000
     run:
         using: mozharness
-        actions: [get-secrets build update]
+        actions: [get-secrets build generate-build-stats update]
         config:
             - builds/releng_base_mac_64_cross_builds.py
             - disable_signing.py

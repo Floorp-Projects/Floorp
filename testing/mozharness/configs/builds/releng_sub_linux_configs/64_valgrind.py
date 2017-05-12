@@ -9,6 +9,7 @@ config = {
         'checkout-sources',
         #'setup-mock',
         'build',
+        # 'generate-build-stats',
         #'upload-files',
         #'sendchange',
         'check-test',
