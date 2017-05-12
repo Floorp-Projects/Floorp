@@ -12,7 +12,7 @@ import android.os.AsyncTask;
 import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 
-import org.mozilla.focus.utils.Locales;
+import org.mozilla.focus.locale.Locales;
 import org.mozilla.focus.widget.InlineAutocompleteEditText;
 
 import java.io.BufferedReader;

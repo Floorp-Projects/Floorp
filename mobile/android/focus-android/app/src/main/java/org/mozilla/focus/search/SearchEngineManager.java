@@ -16,8 +16,8 @@ import android.util.Log;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.focus.locale.Locales;
 import org.mozilla.focus.utils.IOUtils;
-import org.mozilla.focus.utils.Locales;
 import org.mozilla.focus.utils.Settings;
 
 import java.io.IOException;

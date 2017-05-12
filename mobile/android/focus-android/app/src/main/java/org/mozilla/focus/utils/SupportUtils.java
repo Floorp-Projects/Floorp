@@ -9,6 +9,8 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
 
+import org.mozilla.focus.locale.Locales;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Locale;
