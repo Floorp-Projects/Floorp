@@ -17,6 +17,8 @@
 namespace mozilla {
 namespace layers {
 
+using namespace mozilla::gfx;
+
 WebRenderBridgeChild::WebRenderBridgeChild(const wr::PipelineId& aPipelineId)
   : mReadLockSequenceNumber(0)
   , mIsInTransaction(false)
