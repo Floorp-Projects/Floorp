@@ -119,6 +119,8 @@ LOCAL_INCLUDES += [
 ]
 
 EXTRA_COMPONENTS += [
+    'UAOverridesBootstrapper.js',
+    'UAOverridesBootstrapper.manifest',
     'WellKnownOpportunisticUtils.js',
     'WellKnownOpportunisticUtils.manifest',
 ]

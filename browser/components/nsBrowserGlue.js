@@ -34,7 +34,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "AlertsService", "@mozilla.org/alerts-s
           RemotePrompt:false, SelfSupportBackend:false, SessionStore:false,
           ShellService:false, SimpleServiceDiscovery:false, TabCrashHandler:false,
           Task:false, UITour:false, WebChannel:false,
-          WindowsRegistry:false, webrtcUI:false, UserAgentOverrides: false */
+          WindowsRegistry:false, webrtcUI:false */
 
 /**
  * IF YOU ADD OR REMOVE FROM THIS LIST, PLEASE UPDATE THE LIST ABOVE AS WELL.
@@ -90,7 +90,6 @@ let initializedModules = {};
   ["WebChannel", "resource://gre/modules/WebChannel.jsm"],
   ["WindowsRegistry", "resource://gre/modules/WindowsRegistry.jsm"],
   ["webrtcUI", "resource:///modules/webrtcUI.jsm", "init"],
-  ["UserAgentOverrides", "resource://gre/modules/UserAgentOverrides.jsm"],
 ].forEach(([name, resource, init]) => {
   if (init) {
     XPCOMUtils.defineLazyGetter(this, name, () => {
@@ -532,8 +531,6 @@ BrowserGlue.prototype = {
       // and e10s are active together.
       E10SAccessibilityCheck.init();
     }
-
-    UserAgentOverrides.init();
   },
 
   // cleanup (called on application shutdown)
@@ -577,8 +574,6 @@ BrowserGlue.prototype = {
     os.removeObserver(this, "browser-search-engine-modified");
     os.removeObserver(this, "flash-plugin-hang");
     os.removeObserver(this, "xpi-signature-changed");
-
-    UserAgentOverrides.uninit();
   },
 
   _onAppDefaults: function BG__onAppDefaults() {
