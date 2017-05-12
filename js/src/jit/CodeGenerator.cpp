@@ -8954,7 +8954,26 @@ CodeGenerator::emitArrayPopShift(LInstruction* lir, const MArrayPopShift* mir, R
         Address elementFlags(elementsTemp, ObjectElements::offsetOfFlags());
         Imm32 bit(ObjectElements::NONWRITABLE_ARRAY_LENGTH);
         masm.branchTest32(Assembler::NonZero, elementFlags, bit, ool->entry());
+    }
 
+    if (mir->mode() == MArrayPopShift::Shift) {
+        // Don't save the elementsTemp register.
+        LiveRegisterSet temps;
+        temps.add(elementsTemp);
+
+        saveVolatile(temps);
+        masm.setupUnalignedABICall(elementsTemp);
+        masm.passABIArg(obj);
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, js::ArrayShiftMoveElements));
+        restoreVolatile(temps);
+
+        if (mir->unboxedType() == JSVAL_TYPE_MAGIC) {
+            // Reload elementsTemp as ArrayShiftMoveElements may have moved it.
+            masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), elementsTemp);
+        }
+    }
+
+    if (mir->unboxedType() == JSVAL_TYPE_MAGIC) {
         // Now adjust length and initializedLength.
         masm.store32(lengthTemp, Address(elementsTemp, ObjectElements::offsetOfLength()));
         masm.store32(lengthTemp, Address(elementsTemp, ObjectElements::offsetOfInitializedLength()));
@@ -8963,19 +8982,6 @@ CodeGenerator::emitArrayPopShift(LInstruction* lir, const MArrayPopShift* mir, R
         // initializedLength.
         masm.store32(lengthTemp, Address(obj, UnboxedArrayObject::offsetOfLength()));
         masm.add32(Imm32(-1), Address(obj, UnboxedArrayObject::offsetOfCapacityIndexAndInitializedLength()));
-    }
-
-    if (mir->mode() == MArrayPopShift::Shift) {
-        // Don't save the temp registers.
-        LiveRegisterSet temps;
-        temps.add(elementsTemp);
-        temps.add(lengthTemp);
-
-        saveVolatile(temps);
-        masm.setupUnalignedABICall(lengthTemp);
-        masm.passABIArg(obj);
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, js::ArrayShiftMoveElements));
-        restoreVolatile(temps);
     }
 
     masm.bind(&done);

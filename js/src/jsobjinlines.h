@@ -99,10 +99,11 @@ JSObject::finalize(js::FreeOp* fop)
                 // Don't free the elements until object finalization finishes,
                 // so that other objects can access these elements while they
                 // are themselves finalized.
+                MOZ_ASSERT(elements->numShiftedElements() == 0);
                 fop->freeLater(elements);
             }
         } else {
-            fop->free_(elements);
+            fop->free_(nobj->getUnshiftedElementsHeader());
         }
     }
 

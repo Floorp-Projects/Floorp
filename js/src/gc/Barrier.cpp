@@ -47,19 +47,26 @@ IsMarkedBlack(JSObject* obj)
 bool
 HeapSlot::preconditionForSet(NativeObject* owner, Kind kind, uint32_t slot) const
 {
-    return kind == Slot
-         ? &owner->getSlotRef(slot) == this
-         : &owner->getDenseElement(slot) == (const Value*)this;
+    if (kind == Slot)
+        return &owner->getSlotRef(slot) == this;
+
+    uint32_t numShifted = owner->getElementsHeader()->numShiftedElements();
+    MOZ_ASSERT(slot >= numShifted);
+    return &owner->getDenseElement(slot - numShifted) == (const Value*)this;
 }
 
 void
 HeapSlot::assertPreconditionForWriteBarrierPost(NativeObject* obj, Kind kind, uint32_t slot,
                                                 const Value& target) const
 {
-    if (kind == Slot)
+    if (kind == Slot) {
         MOZ_ASSERT(obj->getSlotAddressUnchecked(slot)->get() == target);
-    else
-        MOZ_ASSERT(static_cast<HeapSlot*>(obj->getDenseElements() + slot)->get() == target);
+    } else {
+        uint32_t numShifted = obj->getElementsHeader()->numShiftedElements();
+        MOZ_ASSERT(slot >= numShifted);
+        MOZ_ASSERT(static_cast<HeapSlot*>(obj->getDenseElements() + (slot - numShifted))->get() ==
+                   target);
+    }
 
     CheckEdgeIsNotBlackToGray(obj, target);
 }

@@ -194,7 +194,7 @@ child.addEventListener('load', () => {
                             resolve();
                     });
                 }) : Promise.resolve()).then(getClientUrls).then(urls => {
-                    assert_true(urls.every(url => { return url !== new Request('../PresentationReceiver_create-manual.html').url }),
+                    assert_true(urls.every(url => { return url !== new Request('../PresentationReceiver_create-manual.https.html').url }),
                                 'A window client in a controlling user agent is not accessible to a service worker on a receiving user agent.');
                 });
         };
