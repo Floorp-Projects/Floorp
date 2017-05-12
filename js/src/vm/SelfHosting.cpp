@@ -185,7 +185,22 @@ static bool
 intrinsic_IsConstructor(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setBoolean(IsConstructor(args[0]));
+    MOZ_ASSERT(args.length() == 1);
+
+    RootedValue val(cx, args[0]);
+    if (!IsConstructor(val)) {
+        args.rval().setBoolean(false);
+        return true;
+    }
+
+    RootedObject obj(cx, &val.toObject());
+    if (!IsWrapper(obj)) {
+        args.rval().setBoolean(true);
+        return true;
+    }
+
+    obj = UncheckedUnwrap(obj);
+    args.rval().setBoolean(obj && obj->isConstructor());
     return true;
 }
 
