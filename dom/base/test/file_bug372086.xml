@@ -1,0 +1,2 @@
+<?xml version="1.0"?>
+<bindings xmlns="http://www.mozilla.org/xbl"><binding id="test"><content>ghi<children/>jkl</content></binding></bindings>
