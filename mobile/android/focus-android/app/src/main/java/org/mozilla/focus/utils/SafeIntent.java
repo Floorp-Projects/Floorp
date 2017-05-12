@@ -13,6 +13,7 @@ package org.mozilla.focus.utils;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -108,6 +109,18 @@ public class SafeIntent {
     public CharSequence getCharSequenceExtra(final String name) {
         try {
             return intent.getCharSequenceExtra(name);
+        } catch (OutOfMemoryError e) {
+            Log.w(LOGTAG, "Couldn't get intent extras: OOM. Malformed?");
+            return null;
+        } catch (RuntimeException e) {
+            Log.w(LOGTAG, "Couldn't get intent extras.", e);
+            return null;
+        }
+    }
+
+    public <T extends Parcelable> T getParcelableExtra(final String name) {
+        try {
+            return intent.getParcelableExtra(name);
         } catch (OutOfMemoryError e) {
             Log.w(LOGTAG, "Couldn't get intent extras: OOM. Malformed?");
             return null;
