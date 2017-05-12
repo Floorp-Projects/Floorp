@@ -174,32 +174,32 @@ function installedExperimentAddons() {
 // addons are uninstalled.
 function uninstallAddons(addons) {
   let ids = new Set(addons.map(addon => addon.id));
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  let listener = {};
-  listener.onUninstalled = addon => {
-    if (!ids.has(addon.id)) {
-      return;
+    let listener = {};
+    listener.onUninstalled = addon => {
+      if (!ids.has(addon.id)) {
+        return;
+      }
+
+      ids.delete(addon.id);
+      if (ids.size == 0) {
+        AddonManager.removeAddonListener(listener);
+        resolve();
+      }
+    };
+
+    AddonManager.addAddonListener(listener);
+
+    for (let addon of addons) {
+      // Disabling the add-on before uninstalling is necessary to cause tests to
+      // pass. This might be indicative of a bug in XPIProvider.
+      // TODO follow up in bug 992396.
+      addon.userDisabled = true;
+      addon.uninstall();
     }
 
-    ids.delete(addon.id);
-    if (ids.size == 0) {
-      AddonManager.removeAddonListener(listener);
-      deferred.resolve();
-    }
-  };
-
-  AddonManager.addAddonListener(listener);
-
-  for (let addon of addons) {
-    // Disabling the add-on before uninstalling is necessary to cause tests to
-    // pass. This might be indicative of a bug in XPIProvider.
-    // TODO follow up in bug 992396.
-    addon.userDisabled = true;
-    addon.uninstall();
-  }
-
-  return deferred.promise;
+  });
 }
 
 /**
@@ -934,44 +934,44 @@ Experiments.Experiments.prototype = {
     let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
 
     this._networkRequest = xhr;
-    let deferred = Promise.defer();
+    return new Promise((resolve, reject) => {
 
-    let log = this._log;
-    let errorhandler = (evt) => {
-      log.error("httpGetRequest::onError() - Error making request to " + url + ": " + evt.type);
-      deferred.reject(new Error("Experiments - XHR error for " + url + " - " + evt.type));
-      this._networkRequest = null;
-    };
-    xhr.onerror = errorhandler;
-    xhr.ontimeout = errorhandler;
-    xhr.onabort = errorhandler;
-
-    xhr.onload = (event) => {
-      if (xhr.status !== 200 && xhr.state !== 0) {
-        log.error("httpGetRequest::onLoad() - Request to " + url + " returned status " + xhr.status);
-        deferred.reject(new Error("Experiments - XHR status for " + url + " is " + xhr.status));
+      let log = this._log;
+      let errorhandler = (evt) => {
+        log.error("httpGetRequest::onError() - Error making request to " + url + ": " + evt.type);
+        reject(new Error("Experiments - XHR error for " + url + " - " + evt.type));
         this._networkRequest = null;
-        return;
+      };
+      xhr.onerror = errorhandler;
+      xhr.ontimeout = errorhandler;
+      xhr.onabort = errorhandler;
+
+      xhr.onload = (event) => {
+        if (xhr.status !== 200 && xhr.state !== 0) {
+          log.error("httpGetRequest::onLoad() - Request to " + url + " returned status " + xhr.status);
+          reject(new Error("Experiments - XHR status for " + url + " is " + xhr.status));
+          this._networkRequest = null;
+          return;
+        }
+
+        resolve(xhr.responseText);
+        this._networkRequest = null;
+      };
+
+      try {
+        xhr.open("GET", url);
+
+        if (xhr.channel instanceof Ci.nsISupportsPriority) {
+          xhr.channel.priority = Ci.nsISupportsPriority.PRIORITY_LOWEST;
+        }
+
+        xhr.timeout = MANIFEST_FETCH_TIMEOUT_MSEC;
+        xhr.send(null);
+      } catch (e) {
+        this._log.error("httpGetRequest() - Error opening request to " + url + ": " + e);
+        return Promise.reject(new Error("Experiments - Error opening XHR for " + url));
       }
-
-      deferred.resolve(xhr.responseText);
-      this._networkRequest = null;
-    };
-
-    try {
-      xhr.open("GET", url);
-
-      if (xhr.channel instanceof Ci.nsISupportsPriority) {
-        xhr.channel.priority = Ci.nsISupportsPriority.PRIORITY_LOWEST;
-      }
-
-      xhr.timeout = MANIFEST_FETCH_TIMEOUT_MSEC;
-      xhr.send(null);
-    } catch (e) {
-      this._log.error("httpGetRequest() - Error opening request to " + url + ": " + e);
-      return Promise.reject(new Error("Experiments - Error opening XHR for " + url));
-    }
-    return deferred.promise;
+    });
   },
 
   /*
@@ -1968,35 +1968,35 @@ Experiments.ExperimentEntry.prototype = {
       throw new Error("Experiment addon requires a restart: " + addon.id);
     }
 
-    let deferred = Promise.defer();
+    await new Promise((resolve, reject) => {
 
-    // Else we need to enable it.
-    let listener = {
-      onEnabled: enabledAddon => {
-        if (enabledAddon.id != addon.id) {
-          return;
-        }
+      // Else we need to enable it.
+      let listener = {
+        onEnabled: enabledAddon => {
+          if (enabledAddon.id != addon.id) {
+            return;
+          }
 
-        AddonManager.removeAddonListener(listener);
-        deferred.resolve();
-      },
-    };
-
-    for (let handler of ["onDisabled", "onOperationCancelled", "onUninstalled"]) {
-      listener[handler] = (evtAddon) => {
-        if (evtAddon.id != addon.id) {
-          return;
-        }
-
-        AddonManager.removeAddonListener(listener);
-        deferred.reject("Failed to enable addon " + addon.id + " due to: " + handler);
+          AddonManager.removeAddonListener(listener);
+          resolve();
+        },
       };
-    }
 
-    this._log.info("reconcileAddonState() - Activating add-on: " + addon.id);
-    AddonManager.addAddonListener(listener);
-    addon.userDisabled = false;
-    await deferred.promise;
+      for (let handler of ["onDisabled", "onOperationCancelled", "onUninstalled"]) {
+        listener[handler] = (evtAddon) => {
+          if (evtAddon.id != addon.id) {
+            return;
+          }
+
+          AddonManager.removeAddonListener(listener);
+          reject("Failed to enable addon " + addon.id + " due to: " + handler);
+        };
+      }
+
+      this._log.info("reconcileAddonState() - Activating add-on: " + addon.id);
+      AddonManager.addAddonListener(listener);
+      addon.userDisabled = false;
+    });
     changes |= this.ADDON_CHANGE_ENABLE;
 
     this._log.info("reconcileAddonState() - Add-on has been enabled: " + addon.id);
@@ -2049,13 +2049,13 @@ Experiments.ExperimentEntry.prototype = {
       throw new Error("shouldStop must not be called on disabled experiments.");
     }
 
-    let deferred = Promise.defer();
-    this.isApplicable().then(
-      () => deferred.resolve({shouldStop: false}),
-      reason => deferred.resolve({shouldStop: true, reason})
-    );
+    return new Promise(resolve => {
+      this.isApplicable().then(
+        () => resolve({shouldStop: false}),
+        reason => resolve({shouldStop: true, reason})
+      );
 
-    return deferred.promise;
+    });
   },
 
   /*

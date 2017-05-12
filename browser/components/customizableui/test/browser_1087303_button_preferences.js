@@ -33,19 +33,19 @@ add_task(function asyncCleanup() {
 });
 
 function waitForPageLoad(aTab) {
-  let deferred = Promise.defer();
+  return new Promise((resolve, reject) => {
 
-  let timeoutId = setTimeout(() => {
-    aTab.linkedBrowser.removeEventListener("load", onTabLoad, true);
-    deferred.reject("Page didn't load within " + 20000 + "ms");
-  }, 20000);
+    let timeoutId = setTimeout(() => {
+      aTab.linkedBrowser.removeEventListener("load", onTabLoad, true);
+      reject("Page didn't load within " + 20000 + "ms");
+    }, 20000);
 
-  function onTabLoad(event) {
-    clearTimeout(timeoutId);
-    aTab.linkedBrowser.removeEventListener("load", onTabLoad, true);
-    info("Tab event received: load");
-    deferred.resolve();
- }
-  aTab.linkedBrowser.addEventListener("load", onTabLoad, true, true);
-  return deferred.promise;
+    function onTabLoad(event) {
+      clearTimeout(timeoutId);
+      aTab.linkedBrowser.removeEventListener("load", onTabLoad, true);
+      info("Tab event received: load");
+      resolve();
+   }
+    aTab.linkedBrowser.addEventListener("load", onTabLoad, true, true);
+  });
 }

@@ -40,13 +40,13 @@ this.configureLogging = function() {
 };
 
 this.sleep = function(wait) {
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  setTimeout(() => {
-    deferred.resolve();
-  }, wait);
+    setTimeout(() => {
+      resolve();
+    }, wait);
 
-  return deferred.promise;
+  });
 };
 
 this.TestingCrashManager = function(options) {

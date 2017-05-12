@@ -72,19 +72,19 @@ add_task(async function test_replaceFaviconDataFromDataURL_validHistoryURI() {
   iconsvc.replaceFaviconDataFromDataURL(favicon.uri, createDataURLForFavicon(favicon), 0,
                                         Services.scriptSecurityManager.getSystemPrincipal());
 
-  let deferSetAndFetchFavicon = Promise.defer();
-  iconsvc.setAndFetchFaviconForPage(pageURI, favicon.uri, true,
-    PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
-    function test_replaceFaviconDataFromDataURL_validHistoryURI_check(aURI, aDataLen, aData, aMimeType) {
-      checkCallbackSucceeded(aMimeType, aData, favicon.mimetype, favicon.data);
-      checkFaviconDataForPage(
-        pageURI, favicon.mimetype, favicon.data,
-        function test_replaceFaviconDataFromDataURL_validHistoryURI_callback() {
-          favicon.file.remove(false);
-          deferSetAndFetchFavicon.resolve();
-        });
-    }, Services.scriptSecurityManager.getSystemPrincipal());
-  await deferSetAndFetchFavicon.promise;
+  await new Promise(resolve => {
+    iconsvc.setAndFetchFaviconForPage(pageURI, favicon.uri, true,
+      PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+      function test_replaceFaviconDataFromDataURL_validHistoryURI_check(aURI, aDataLen, aData, aMimeType) {
+        checkCallbackSucceeded(aMimeType, aData, favicon.mimetype, favicon.data);
+        checkFaviconDataForPage(
+          pageURI, favicon.mimetype, favicon.data,
+          function test_replaceFaviconDataFromDataURL_validHistoryURI_callback() {
+            favicon.file.remove(false);
+            resolve();
+          });
+      }, Services.scriptSecurityManager.getSystemPrincipal());
+  });
 
   await PlacesTestUtils.clearHistory();
 });
@@ -101,21 +101,21 @@ add_task(async function test_replaceFaviconDataFromDataURL_overrideDefaultFavico
   iconsvc.replaceFaviconDataFromDataURL(firstFavicon.uri, createDataURLForFavicon(secondFavicon), 0,
                                         Services.scriptSecurityManager.getSystemPrincipal());
 
-  let deferSetAndFetchFavicon = Promise.defer();
-  iconsvc.setAndFetchFaviconForPage(
-    pageURI, firstFavicon.uri, true,
-    PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
-    function test_replaceFaviconDataFromDataURL_overrideDefaultFavicon_check(aURI, aDataLen, aData, aMimeType) {
-      checkCallbackSucceeded(aMimeType, aData, secondFavicon.mimetype, secondFavicon.data);
-      checkFaviconDataForPage(
-        pageURI, secondFavicon.mimetype, secondFavicon.data,
-        function test_replaceFaviconDataFromDataURL_overrideDefaultFavicon_callback() {
-          firstFavicon.file.remove(false);
-          secondFavicon.file.remove(false);
-          deferSetAndFetchFavicon.resolve();
-        });
-    }, Services.scriptSecurityManager.getSystemPrincipal());
-  await deferSetAndFetchFavicon.promise;
+  await new Promise(resolve => {
+    iconsvc.setAndFetchFaviconForPage(
+      pageURI, firstFavicon.uri, true,
+      PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+      function test_replaceFaviconDataFromDataURL_overrideDefaultFavicon_check(aURI, aDataLen, aData, aMimeType) {
+        checkCallbackSucceeded(aMimeType, aData, secondFavicon.mimetype, secondFavicon.data);
+        checkFaviconDataForPage(
+          pageURI, secondFavicon.mimetype, secondFavicon.data,
+          function test_replaceFaviconDataFromDataURL_overrideDefaultFavicon_callback() {
+            firstFavicon.file.remove(false);
+            secondFavicon.file.remove(false);
+            resolve();
+          });
+      }, Services.scriptSecurityManager.getSystemPrincipal());
+  });
 
   await PlacesTestUtils.clearHistory();
 });
@@ -129,27 +129,27 @@ add_task(async function test_replaceFaviconDataFromDataURL_replaceExisting() {
   let firstFavicon = createFavicon("favicon4.png");
   let secondFavicon = createFavicon("favicon5.png");
 
-  let deferSetAndFetchFavicon = Promise.defer();
-  iconsvc.setAndFetchFaviconForPage(
-    pageURI, firstFavicon.uri, true,
-    PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
-    function test_replaceFaviconDataFromDataURL_replaceExisting_firstSet_check(aURI, aDataLen, aData, aMimeType) {
-      checkCallbackSucceeded(aMimeType, aData, firstFavicon.mimetype, firstFavicon.data);
-      checkFaviconDataForPage(
-        pageURI, firstFavicon.mimetype, firstFavicon.data,
-        function test_replaceFaviconDataFromDataURL_replaceExisting_firstCallback() {
-          iconsvc.replaceFaviconDataFromDataURL(firstFavicon.uri, createDataURLForFavicon(secondFavicon), 0,
-                                                Services.scriptSecurityManager.getSystemPrincipal());
-          checkFaviconDataForPage(
-            pageURI, secondFavicon.mimetype, secondFavicon.data,
-            function test_replaceFaviconDataFromDataURL_replaceExisting_secondCallback() {
-              firstFavicon.file.remove(false);
-              secondFavicon.file.remove(false);
-              deferSetAndFetchFavicon.resolve();
-            });
-        });
-    }, Services.scriptSecurityManager.getSystemPrincipal());
-  await deferSetAndFetchFavicon.promise;
+  await new Promise(resolve => {
+    iconsvc.setAndFetchFaviconForPage(
+      pageURI, firstFavicon.uri, true,
+      PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+      function test_replaceFaviconDataFromDataURL_replaceExisting_firstSet_check(aURI, aDataLen, aData, aMimeType) {
+        checkCallbackSucceeded(aMimeType, aData, firstFavicon.mimetype, firstFavicon.data);
+        checkFaviconDataForPage(
+          pageURI, firstFavicon.mimetype, firstFavicon.data,
+          function test_replaceFaviconDataFromDataURL_replaceExisting_firstCallback() {
+            iconsvc.replaceFaviconDataFromDataURL(firstFavicon.uri, createDataURLForFavicon(secondFavicon), 0,
+                                                  Services.scriptSecurityManager.getSystemPrincipal());
+            checkFaviconDataForPage(
+              pageURI, secondFavicon.mimetype, secondFavicon.data,
+              function test_replaceFaviconDataFromDataURL_replaceExisting_secondCallback() {
+                firstFavicon.file.remove(false);
+                secondFavicon.file.remove(false);
+                resolve();
+              });
+          });
+      }, Services.scriptSecurityManager.getSystemPrincipal());
+  });
 
   await PlacesTestUtils.clearHistory();
 });
@@ -166,21 +166,21 @@ add_task(async function test_replaceFaviconDataFromDataURL_unrelatedReplace() {
   iconsvc.replaceFaviconDataFromDataURL(unrelatedFavicon.uri, createDataURLForFavicon(unrelatedFavicon), 0,
                                         Services.scriptSecurityManager.getSystemPrincipal());
 
-  let deferSetAndFetchFavicon = Promise.defer();
-  iconsvc.setAndFetchFaviconForPage(
-    pageURI, favicon.uri, true,
-    PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
-    function test_replaceFaviconDataFromDataURL_unrelatedReplace_check(aURI, aDataLen, aData, aMimeType) {
-      checkCallbackSucceeded(aMimeType, aData, favicon.mimetype, favicon.data);
-      checkFaviconDataForPage(
-        pageURI, favicon.mimetype, favicon.data,
-        function test_replaceFaviconDataFromDataURL_unrelatedReplace_callback() {
-          favicon.file.remove(false);
-          unrelatedFavicon.file.remove(false);
-          deferSetAndFetchFavicon.resolve();
-        });
-    }, Services.scriptSecurityManager.getSystemPrincipal());
-  await deferSetAndFetchFavicon.promise;
+  await new Promise(resolve => {
+    iconsvc.setAndFetchFaviconForPage(
+      pageURI, favicon.uri, true,
+      PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+      function test_replaceFaviconDataFromDataURL_unrelatedReplace_check(aURI, aDataLen, aData, aMimeType) {
+        checkCallbackSucceeded(aMimeType, aData, favicon.mimetype, favicon.data);
+        checkFaviconDataForPage(
+          pageURI, favicon.mimetype, favicon.data,
+          function test_replaceFaviconDataFromDataURL_unrelatedReplace_callback() {
+            favicon.file.remove(false);
+            unrelatedFavicon.file.remove(false);
+            resolve();
+          });
+      }, Services.scriptSecurityManager.getSystemPrincipal());
+  });
 
   await PlacesTestUtils.clearHistory();
 });
@@ -229,21 +229,21 @@ add_task(async function test_replaceFaviconDataFromDataURL_twiceReplace() {
   iconsvc.replaceFaviconDataFromDataURL(firstFavicon.uri, createDataURLForFavicon(secondFavicon), 0,
                                         Services.scriptSecurityManager.getSystemPrincipal());
 
-  let deferSetAndFetchFavicon = Promise.defer();
-  iconsvc.setAndFetchFaviconForPage(
-    pageURI, firstFavicon.uri, true,
-    PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
-    function test_replaceFaviconDataFromDataURL_twiceReplace_check(aURI, aDataLen, aData, aMimeType) {
-      checkCallbackSucceeded(aMimeType, aData, secondFavicon.mimetype, secondFavicon.data);
-      checkFaviconDataForPage(
-        pageURI, secondFavicon.mimetype, secondFavicon.data,
-        function test_replaceFaviconDataFromDataURL_twiceReplace_callback() {
-          firstFavicon.file.remove(false);
-          secondFavicon.file.remove(false);
-          deferSetAndFetchFavicon.resolve();
-        });
-    }, Services.scriptSecurityManager.getSystemPrincipal());
-  await deferSetAndFetchFavicon.promise;
+  await new Promise(resolve => {
+    iconsvc.setAndFetchFaviconForPage(
+      pageURI, firstFavicon.uri, true,
+      PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+      function test_replaceFaviconDataFromDataURL_twiceReplace_check(aURI, aDataLen, aData, aMimeType) {
+        checkCallbackSucceeded(aMimeType, aData, secondFavicon.mimetype, secondFavicon.data);
+        checkFaviconDataForPage(
+          pageURI, secondFavicon.mimetype, secondFavicon.data,
+          function test_replaceFaviconDataFromDataURL_twiceReplace_callback() {
+            firstFavicon.file.remove(false);
+            secondFavicon.file.remove(false);
+            resolve();
+          });
+      }, Services.scriptSecurityManager.getSystemPrincipal());
+  });
 
   await PlacesTestUtils.clearHistory();
 });
@@ -263,21 +263,21 @@ add_task(async function test_replaceFaviconDataFromDataURL_afterRegularAssign() 
   iconsvc.replaceFaviconDataFromDataURL(firstFavicon.uri, createDataURLForFavicon(secondFavicon), 0,
                                         Services.scriptSecurityManager.getSystemPrincipal());
 
-  let deferSetAndFetchFavicon = Promise.defer();
-  iconsvc.setAndFetchFaviconForPage(
-    pageURI, firstFavicon.uri, true,
-    PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
-    function test_replaceFaviconDataFromDataURL_afterRegularAssign_check(aURI, aDataLen, aData, aMimeType) {
-      checkCallbackSucceeded(aMimeType, aData, secondFavicon.mimetype, secondFavicon.data);
-      checkFaviconDataForPage(
-        pageURI, secondFavicon.mimetype, secondFavicon.data,
-        function test_replaceFaviconDataFromDataURL_afterRegularAssign_callback() {
-          firstFavicon.file.remove(false);
-          secondFavicon.file.remove(false);
-          deferSetAndFetchFavicon.resolve();
-        });
-    }, Services.scriptSecurityManager.getSystemPrincipal());
-  await deferSetAndFetchFavicon.promise;
+  await new Promise(resolve => {
+    iconsvc.setAndFetchFaviconForPage(
+      pageURI, firstFavicon.uri, true,
+      PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+      function test_replaceFaviconDataFromDataURL_afterRegularAssign_check(aURI, aDataLen, aData, aMimeType) {
+        checkCallbackSucceeded(aMimeType, aData, secondFavicon.mimetype, secondFavicon.data);
+        checkFaviconDataForPage(
+          pageURI, secondFavicon.mimetype, secondFavicon.data,
+          function test_replaceFaviconDataFromDataURL_afterRegularAssign_callback() {
+            firstFavicon.file.remove(false);
+            secondFavicon.file.remove(false);
+            resolve();
+          });
+      }, Services.scriptSecurityManager.getSystemPrincipal());
+  });
 
   await PlacesTestUtils.clearHistory();
 });
@@ -297,21 +297,21 @@ add_task(async function test_replaceFaviconDataFromDataURL_beforeRegularAssign()
     firstFavicon.uri, secondFavicon.data, secondFavicon.data.length,
     secondFavicon.mimetype);
 
-  let deferSetAndFetchFavicon = Promise.defer();
-  iconsvc.setAndFetchFaviconForPage(
-    pageURI, firstFavicon.uri, true,
-    PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
-    function test_replaceFaviconDataFromDataURL_beforeRegularAssign_check(aURI, aDataLen, aData, aMimeType) {
-      checkCallbackSucceeded(aMimeType, aData, secondFavicon.mimetype, secondFavicon.data);
-      checkFaviconDataForPage(
-        pageURI, secondFavicon.mimetype, secondFavicon.data,
-        function test_replaceFaviconDataFromDataURL_beforeRegularAssign_callback() {
-          firstFavicon.file.remove(false);
-          secondFavicon.file.remove(false);
-          deferSetAndFetchFavicon.resolve();
-        });
-    }, Services.scriptSecurityManager.getSystemPrincipal());
-  await deferSetAndFetchFavicon.promise;
+  await new Promise(resolve => {
+    iconsvc.setAndFetchFaviconForPage(
+      pageURI, firstFavicon.uri, true,
+      PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+      function test_replaceFaviconDataFromDataURL_beforeRegularAssign_check(aURI, aDataLen, aData, aMimeType) {
+        checkCallbackSucceeded(aMimeType, aData, secondFavicon.mimetype, secondFavicon.data);
+        checkFaviconDataForPage(
+          pageURI, secondFavicon.mimetype, secondFavicon.data,
+          function test_replaceFaviconDataFromDataURL_beforeRegularAssign_callback() {
+            firstFavicon.file.remove(false);
+            secondFavicon.file.remove(false);
+            resolve();
+          });
+      }, Services.scriptSecurityManager.getSystemPrincipal());
+  });
 
   await PlacesTestUtils.clearHistory();
 });

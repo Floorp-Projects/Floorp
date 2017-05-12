@@ -159,17 +159,17 @@ function startAddonManagerOnly() {
 }
 
 function getExperimentAddons(previous = false) {
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  AddonManager.getAddonsByTypes(["experiment"], (addons) => {
-    if (previous) {
-      deferred.resolve(addons);
-    } else {
-      deferred.resolve(addons.filter(a => !a.appDisabled));
-    }
+    AddonManager.getAddonsByTypes(["experiment"], (addons) => {
+      if (previous) {
+        resolve(addons);
+      } else {
+        resolve(addons.filter(a => !a.appDisabled));
+      }
+    });
+
   });
-
-  return deferred.promise;
 }
 
 function createAppInfo(ID = "xpcshell@tests.mozilla.org", name = "XPCShell",

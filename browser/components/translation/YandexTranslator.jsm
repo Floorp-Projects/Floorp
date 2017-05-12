@@ -311,21 +311,21 @@ YandexRequest.prototype = {
       }
 
       // Set up request options.
-      let deferred = Promise.defer();
-      let options = {
-        onLoad: (responseText, xhr) => {
-          deferred.resolve(this);
-        },
-        onError(e, responseText, xhr) {
-          deferred.reject(xhr);
-        },
-        postData: params
-      };
+      return new Promise((resolve, reject) => {
+        let options = {
+          onLoad: (responseText, xhr) => {
+            resolve(this);
+          },
+          onError(e, responseText, xhr) {
+            reject(xhr);
+          },
+          postData: params
+        };
 
-      // Fire the request.
-      this.networkRequest = httpRequest(url, options);
+        // Fire the request.
+        this.networkRequest = httpRequest(url, options);
 
-      return deferred.promise;
+      });
     })();
   }
 };

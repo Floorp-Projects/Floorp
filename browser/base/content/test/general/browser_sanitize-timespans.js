@@ -19,27 +19,27 @@ var FormHistory = (Components.utils.import("resource://gre/modules/FormHistory.j
 var Downloads = (Components.utils.import("resource://gre/modules/Downloads.jsm", {})).Downloads;
 
 function promiseFormHistoryRemoved() {
-  let deferred = Promise.defer();
-  Services.obs.addObserver(function onfh() {
-    Services.obs.removeObserver(onfh, "satchel-storage-changed");
-    deferred.resolve();
-  }, "satchel-storage-changed");
-  return deferred.promise;
+  return new Promise(resolve => {
+    Services.obs.addObserver(function onfh() {
+      Services.obs.removeObserver(onfh, "satchel-storage-changed");
+      resolve();
+    }, "satchel-storage-changed");
+  });
 }
 
 function promiseDownloadRemoved(list) {
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  let view = {
-    onDownloadRemoved(download) {
-      list.removeView(view);
-      deferred.resolve();
-    }
-  };
+    let view = {
+      onDownloadRemoved(download) {
+        list.removeView(view);
+        resolve();
+      }
+    };
 
-  list.addView(view);
+    list.addView(view);
 
-  return deferred.promise;
+  });
 }
 
 add_task(async function test() {
@@ -50,27 +50,27 @@ add_task(async function test() {
 });
 
 function countEntries(name, message, check) {
-  let deferred = Promise.defer();
+  return new Promise((resolve, reject) => {
 
-  var obj = {};
-  if (name !== null)
-    obj.fieldname = name;
+    var obj = {};
+    if (name !== null)
+      obj.fieldname = name;
 
-  let count;
-  FormHistory.count(obj, { handleResult: result => count = result,
-                           handleError(error) {
-                             deferred.reject(error)
-                             throw new Error("Error occurred searching form history: " + error);
-                           },
-                           handleCompletion(reason) {
-                             if (!reason) {
-                               check(count, message);
-                               deferred.resolve();
-                             }
-                           },
-                         });
+    let count;
+    FormHistory.count(obj, { handleResult: result => count = result,
+                             handleError(error) {
+                               reject(error)
+                               throw new Error("Error occurred searching form history: " + error);
+                             },
+                             handleCompletion(reason) {
+                               if (!reason) {
+                                 check(count, message);
+                                 resolve();
+                               }
+                             },
+                           });
 
-  return deferred.promise;
+  });
 }
 
 async function onHistoryReady() {
@@ -445,72 +445,72 @@ async function onHistoryReady() {
 }
 
 function setupHistory() {
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  let places = [];
+    let places = [];
 
-  function addPlace(aURI, aTitle, aVisitDate) {
-    places.push({
-      uri: aURI,
-      title: aTitle,
-      visits: [{
-        visitDate: aVisitDate,
-        transitionType: Ci.nsINavHistoryService.TRANSITION_LINK
-      }]
+    function addPlace(aURI, aTitle, aVisitDate) {
+      places.push({
+        uri: aURI,
+        title: aTitle,
+        visits: [{
+          visitDate: aVisitDate,
+          transitionType: Ci.nsINavHistoryService.TRANSITION_LINK
+        }]
+      });
+    }
+
+    addPlace(makeURI("http://10minutes.com/"), "10 minutes ago", now_uSec - 10 * kUsecPerMin);
+    addPlace(makeURI("http://1hour.com/"), "Less than 1 hour ago", now_uSec - 45 * kUsecPerMin);
+    addPlace(makeURI("http://1hour10minutes.com/"), "1 hour 10 minutes ago", now_uSec - 70 * kUsecPerMin);
+    addPlace(makeURI("http://2hour.com/"), "Less than 2 hours ago", now_uSec - 90 * kUsecPerMin);
+    addPlace(makeURI("http://2hour10minutes.com/"), "2 hours 10 minutes ago", now_uSec - 130 * kUsecPerMin);
+    addPlace(makeURI("http://4hour.com/"), "Less than 4 hours ago", now_uSec - 180 * kUsecPerMin);
+    addPlace(makeURI("http://4hour10minutes.com/"), "4 hours 10 minutesago", now_uSec - 250 * kUsecPerMin);
+
+    let today = new Date();
+    today.setHours(0);
+    today.setMinutes(0);
+    today.setSeconds(1);
+    addPlace(makeURI("http://today.com/"), "Today", today.getTime() * 1000);
+
+    let lastYear = new Date();
+    lastYear.setFullYear(lastYear.getFullYear() - 1);
+    addPlace(makeURI("http://before-today.com/"), "Before Today", lastYear.getTime() * 1000);
+    PlacesUtils.asyncHistory.updatePlaces(places, {
+      handleError: () => ok(false, "Unexpected error in adding visit."),
+      handleResult: () => { },
+      handleCompletion: () => resolve()
     });
-  }
 
-  addPlace(makeURI("http://10minutes.com/"), "10 minutes ago", now_uSec - 10 * kUsecPerMin);
-  addPlace(makeURI("http://1hour.com/"), "Less than 1 hour ago", now_uSec - 45 * kUsecPerMin);
-  addPlace(makeURI("http://1hour10minutes.com/"), "1 hour 10 minutes ago", now_uSec - 70 * kUsecPerMin);
-  addPlace(makeURI("http://2hour.com/"), "Less than 2 hours ago", now_uSec - 90 * kUsecPerMin);
-  addPlace(makeURI("http://2hour10minutes.com/"), "2 hours 10 minutes ago", now_uSec - 130 * kUsecPerMin);
-  addPlace(makeURI("http://4hour.com/"), "Less than 4 hours ago", now_uSec - 180 * kUsecPerMin);
-  addPlace(makeURI("http://4hour10minutes.com/"), "4 hours 10 minutesago", now_uSec - 250 * kUsecPerMin);
-
-  let today = new Date();
-  today.setHours(0);
-  today.setMinutes(0);
-  today.setSeconds(1);
-  addPlace(makeURI("http://today.com/"), "Today", today.getTime() * 1000);
-
-  let lastYear = new Date();
-  lastYear.setFullYear(lastYear.getFullYear() - 1);
-  addPlace(makeURI("http://before-today.com/"), "Before Today", lastYear.getTime() * 1000);
-  PlacesUtils.asyncHistory.updatePlaces(places, {
-    handleError: () => ok(false, "Unexpected error in adding visit."),
-    handleResult: () => { },
-    handleCompletion: () => deferred.resolve()
   });
-
-  return deferred.promise;
 }
 
 async function setupFormHistory() {
 
   function searchEntries(terms, params) {
-    let deferred = Promise.defer();
+    return new Promise((resolve, reject) => {
 
-    let results = [];
-    FormHistory.search(terms, params, { handleResult: result => results.push(result),
-                                        handleError(error) {
-                                          deferred.reject(error);
-                                          throw new Error("Error occurred searching form history: " + error);
-                                        },
-                                        handleCompletion(reason) { deferred.resolve(results); }
-                                      });
-    return deferred.promise;
+      let results = [];
+      FormHistory.search(terms, params, { handleResult: result => results.push(result),
+                                          handleError(error) {
+                                            reject(error);
+                                            throw new Error("Error occurred searching form history: " + error);
+                                          },
+                                          handleCompletion(reason) { resolve(results); }
+                                        });
+    });
   }
 
   function update(changes) {
-    let deferred = Promise.defer();
-    FormHistory.update(changes, { handleError(error) {
-                                    deferred.reject(error);
-                                    throw new Error("Error occurred searching form history: " + error);
-                                  },
-                                  handleCompletion(reason) { deferred.resolve(); }
-                                });
-    return deferred.promise;
+    return new Promise((resolve, reject) => {
+      FormHistory.update(changes, { handleError(error) {
+                                      reject(error);
+                                      throw new Error("Error occurred searching form history: " + error);
+                                    },
+                                    handleCompletion(reason) { resolve(); }
+                                  });
+    });
   }
 
   // Make sure we've got a clean DB to start with, then add the entries we'll be testing.

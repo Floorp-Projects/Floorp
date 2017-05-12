@@ -2,23 +2,23 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function promiseGetPlacesInfo(aPlacesIdentifiers) {
-  let deferred = Promise.defer();
-  PlacesUtils.asyncHistory.getPlacesInfo(aPlacesIdentifiers, {
-    _results: [],
-    _errors: [],
+  return new Promise(resolve => {
+    PlacesUtils.asyncHistory.getPlacesInfo(aPlacesIdentifiers, {
+      _results: [],
+      _errors: [],
 
-    handleResult: function handleResult(aPlaceInfo) {
-      this._results.push(aPlaceInfo);
-    },
-    handleError: function handleError(aResultCode, aPlaceInfo) {
-      this._errors.push({ resultCode: aResultCode, info: aPlaceInfo });
-    },
-    handleCompletion: function handleCompletion() {
-      deferred.resolve({ errors: this._errors, results: this._results });
-    }
+      handleResult: function handleResult(aPlaceInfo) {
+        this._results.push(aPlaceInfo);
+      },
+      handleError: function handleError(aResultCode, aPlaceInfo) {
+        this._errors.push({ resultCode: aResultCode, info: aPlaceInfo });
+      },
+      handleCompletion: function handleCompletion() {
+        resolve({ errors: this._errors, results: this._results });
+      }
+    });
+
   });
-
-  return deferred.promise;
 }
 
 function ensurePlacesInfoObjectsAreEqual(a, b) {

@@ -49,32 +49,32 @@ let observer = {
 // count of reflows isn't what is expected, it causes a test failure and logs
 // the stack trace of all seen reflows.
 function countReflows(testfn, expected) {
-  let deferred = Promise.defer();
-  observer.reflows = [];
-  let docShell = panel.ownerGlobal
-                  .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                  .getInterface(Components.interfaces.nsIWebNavigation)
-                  .QueryInterface(Components.interfaces.nsIDocShell);
-  docShell.addWeakReflowObserver(observer);
-  testfn().then(() => {
-    docShell.removeWeakReflowObserver(observer);
-    SimpleTest.is(observer.reflows.length, expected, "correct number of reflows");
-    if (observer.reflows.length != expected) {
-      SimpleTest.info("stack traces of reflows:\n" + observer.reflows.join("\n") + "\n");
-    }
-    deferred.resolve();
+  return new Promise(resolve => {
+    observer.reflows = [];
+    let docShell = panel.ownerGlobal
+                    .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                    .getInterface(Components.interfaces.nsIWebNavigation)
+                    .QueryInterface(Components.interfaces.nsIDocShell);
+    docShell.addWeakReflowObserver(observer);
+    testfn().then(() => {
+      docShell.removeWeakReflowObserver(observer);
+      SimpleTest.is(observer.reflows.length, expected, "correct number of reflows");
+      if (observer.reflows.length != expected) {
+        SimpleTest.info("stack traces of reflows:\n" + observer.reflows.join("\n") + "\n");
+      }
+      resolve();
+    });
   });
-  return deferred.promise
 }
 
 function openPopup() {
-  let deferred = Promise.defer();
-  panel.addEventListener("popupshown", function popupshown() {
-    panel.removeEventListener("popupshown", popupshown);
-    deferred.resolve();
+  return new Promise(resolve => {
+    panel.addEventListener("popupshown", function popupshown() {
+      panel.removeEventListener("popupshown", popupshown);
+      resolve();
+    });
+    panel.openPopup(anchor, "before_start");
   });
-  panel.openPopup(anchor, "before_start");
-  return deferred.promise
 }
 
 // ********************

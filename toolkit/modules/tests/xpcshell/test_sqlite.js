@@ -16,18 +16,18 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-common/async.js");
 
 function sleep(ms) {
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  let timer = Cc["@mozilla.org/timer;1"]
-                .createInstance(Ci.nsITimer);
+    let timer = Cc["@mozilla.org/timer;1"]
+                  .createInstance(Ci.nsITimer);
 
-  timer.initWithCallback({
-    notify() {
-      deferred.resolve();
-    },
-  }, ms, timer.TYPE_ONE_SHOT);
+    timer.initWithCallback({
+      notify() {
+        resolve();
+      },
+    }, ms, timer.TYPE_ONE_SHOT);
 
-  return deferred.promise;
+  });
 }
 
 // When testing finalization, use this to tell Sqlite.jsm to not throw
@@ -255,15 +255,15 @@ add_task(async function test_close_cached() {
 add_task(async function test_execute_invalid_statement() {
   let c = await getDummyDatabase("invalid_statement");
 
-  let deferred = Promise.defer();
+  await new Promise(resolve => {
 
-  do_check_eq(c._connectionData._anonymousStatements.size, 0);
+    do_check_eq(c._connectionData._anonymousStatements.size, 0);
 
-  c.execute("SELECT invalid FROM unknown").then(do_throw, function onError(error) {
-    deferred.resolve();
+    c.execute("SELECT invalid FROM unknown").then(do_throw, function onError(error) {
+      resolve();
+    });
+
   });
-
-  await deferred.promise;
 
   // Ensure we don't leak the statement instance.
   do_check_eq(c._connectionData._anonymousStatements.size, 0);

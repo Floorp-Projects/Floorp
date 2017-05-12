@@ -74,9 +74,9 @@ function testNavigation() {
 }
 
 function waitForNextTurn() {
-  let deferred = Promise.defer();
-  setTimeout(() => deferred.resolve(), 0);
-  return deferred.promise;
+  return new Promise(resolve => {
+    setTimeout(() => resolve(), 0);
+  });
 }
 
 var finishTestStarted  = false;

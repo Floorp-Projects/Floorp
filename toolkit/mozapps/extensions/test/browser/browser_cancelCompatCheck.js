@@ -46,19 +46,19 @@ var ao10 = { file: "browser_bug557956_10", id: "bug557956-10@tests.mozilla.org"}
 
 // Return a promise that resolves after the specified delay in MS
 function delayMS(aDelay) {
-  let deferred = Promise.defer();
-  setTimeout(deferred.resolve, aDelay);
-  return deferred.promise;
+  return new Promise(resolve => {
+    setTimeout(resolve, aDelay);
+  });
 }
 
 // Return a promise that resolves when the specified observer topic is notified
 function promise_observer(aTopic) {
-  let deferred = Promise.defer();
-  Services.obs.addObserver(function observe(aSubject, aObsTopic, aData) {
-    Services.obs.removeObserver(arguments.callee, aObsTopic);
-    deferred.resolve([aSubject, aData]);
-  }, aTopic);
-  return deferred.promise;
+  return new Promise(resolve => {
+    Services.obs.addObserver(function observe(aSubject, aObsTopic, aData) {
+      Services.obs.removeObserver(arguments.callee, aObsTopic);
+      resolve([aSubject, aData]);
+    }, aTopic);
+  });
 }
 
 // Install a set of addons using a bogus update URL so that we can force
@@ -66,135 +66,135 @@ function promise_observer(aTopic) {
 // @param aUpdateURL The real update URL to use after the add-ons are installed
 function promise_install_test_addons(aAddonList, aUpdateURL) {
   info("Starting add-on installs");
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  // Use a blank update URL
-  Services.prefs.setCharPref(PREF_UPDATEURL, TESTROOT + "missing.rdf");
+    // Use a blank update URL
+    Services.prefs.setCharPref(PREF_UPDATEURL, TESTROOT + "missing.rdf");
 
-  let installPromises = Promise.all(
-    aAddonList.map(addon => AddonManager.getInstallForURL(`${TESTROOT}addons/${addon.file}.xpi`,
-                                                          null, "application/x-xpinstall")));
+    let installPromises = Promise.all(
+      aAddonList.map(addon => AddonManager.getInstallForURL(`${TESTROOT}addons/${addon.file}.xpi`,
+                                                            null, "application/x-xpinstall")));
 
-  installPromises.then(installs => {
-    var listener = {
-      installCount: 0,
+    installPromises.then(installs => {
+      var listener = {
+        installCount: 0,
 
-      onInstallEnded() {
-        this.installCount++;
-        if (this.installCount == installs.length) {
-          info("Done add-on installs");
-          // Switch to the test update URL
-          Services.prefs.setCharPref(PREF_UPDATEURL, aUpdateURL);
-          deferred.resolve();
+        onInstallEnded() {
+          this.installCount++;
+          if (this.installCount == installs.length) {
+            info("Done add-on installs");
+            // Switch to the test update URL
+            Services.prefs.setCharPref(PREF_UPDATEURL, aUpdateURL);
+            resolve();
+          }
         }
+      };
+
+      for (let install of installs) {
+        install.addListener(listener);
+        install.install();
       }
-    };
+    });
 
-    for (let install of installs) {
-      install.addListener(listener);
-      install.install();
-    }
   });
-
-  return deferred.promise;
 }
 
 function promise_addons_by_ids(aAddonIDs) {
   info("promise_addons_by_ids " + aAddonIDs.toSource());
-  let deferred = Promise.defer();
-  AddonManager.getAddonsByIDs(aAddonIDs, deferred.resolve);
-  return deferred.promise;
+  return new Promise(resolve => {
+    AddonManager.getAddonsByIDs(aAddonIDs, resolve);
+  });
 }
 
 async function promise_uninstall_test_addons() {
   info("Starting add-on uninstalls");
   let addons = await promise_addons_by_ids([ao1.id, ao2.id, ao3.id, ao4.id, ao5.id,
                                             ao6.id, ao7.id, ao8.id, ao9.id, ao10.id]);
-  let deferred = Promise.defer();
-  let uninstallCount = addons.length;
-  let listener = {
-    onUninstalled(aAddon) {
-      if (aAddon) {
-        info("Finished uninstalling " + aAddon.id);
-      }
-      if (--uninstallCount == 0) {
-        info("Done add-on uninstalls");
-        AddonManager.removeAddonListener(listener);
-        deferred.resolve();
-      }
-    }};
-  AddonManager.addAddonListener(listener);
-  for (let addon of addons) {
-    if (addon)
-      addon.uninstall();
-    else
-      listener.onUninstalled(null);
-  }
-  await deferred.promise;
+  await new Promise(resolve => {
+    let uninstallCount = addons.length;
+    let listener = {
+      onUninstalled(aAddon) {
+        if (aAddon) {
+          info("Finished uninstalling " + aAddon.id);
+        }
+        if (--uninstallCount == 0) {
+          info("Done add-on uninstalls");
+          AddonManager.removeAddonListener(listener);
+          resolve();
+        }
+      }};
+    AddonManager.addAddonListener(listener);
+    for (let addon of addons) {
+      if (addon)
+        addon.uninstall();
+      else
+        listener.onUninstalled(null);
+    }
+  });
 }
 
 // Returns promise{window}, resolves with a handle to the compatibility
 // check window
 function promise_open_compatibility_window(aInactiveAddonIds) {
-  let deferred = Promise.defer();
-  // This will reset the longer timeout multiplier to 2 which will give each
-  // test that calls open_compatibility_window a minimum of 60 seconds to
-  // complete.
-  requestLongerTimeout(2);
+  return new Promise(resolve => {
+    // This will reset the longer timeout multiplier to 2 which will give each
+    // test that calls open_compatibility_window a minimum of 60 seconds to
+    // complete.
+    requestLongerTimeout(2);
 
-  var variant = Cc["@mozilla.org/variant;1"].
-                createInstance(Ci.nsIWritableVariant);
-  variant.setFromVariant(aInactiveAddonIds);
+    var variant = Cc["@mozilla.org/variant;1"].
+                  createInstance(Ci.nsIWritableVariant);
+    variant.setFromVariant(aInactiveAddonIds);
 
-  // Cannot be modal as we want to interract with it, shouldn't cause problems
-  // with testing though.
-  var features = "chrome,centerscreen,dialog,titlebar";
-  var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-           getService(Ci.nsIWindowWatcher);
-  var win = ww.openWindow(null, URI_EXTENSION_UPDATE_DIALOG, "", features, variant);
+    // Cannot be modal as we want to interract with it, shouldn't cause problems
+    // with testing though.
+    var features = "chrome,centerscreen,dialog,titlebar";
+    var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+             getService(Ci.nsIWindowWatcher);
+    var win = ww.openWindow(null, URI_EXTENSION_UPDATE_DIALOG, "", features, variant);
 
-  win.addEventListener("load", function() {
-    function page_shown(aEvent) {
-      if (aEvent.target.pageid)
-        info("Page " + aEvent.target.pageid + " shown");
-    }
+    win.addEventListener("load", function() {
+      function page_shown(aEvent) {
+        if (aEvent.target.pageid)
+          info("Page " + aEvent.target.pageid + " shown");
+      }
 
-    win.removeEventListener("load", arguments.callee);
+      win.removeEventListener("load", arguments.callee);
 
-    info("Compatibility dialog opened");
+      info("Compatibility dialog opened");
 
-    win.addEventListener("pageshow", page_shown);
-    win.addEventListener("unload", function() {
-      win.removeEventListener("pageshow", page_shown);
-      dump("Compatibility dialog closed\n");
-    }, {once: true});
+      win.addEventListener("pageshow", page_shown);
+      win.addEventListener("unload", function() {
+        win.removeEventListener("pageshow", page_shown);
+        dump("Compatibility dialog closed\n");
+      }, {once: true});
 
-    deferred.resolve(win);
+      resolve(win);
+    });
   });
-  return deferred.promise;
 }
 
 function promise_window_close(aWindow) {
-  let deferred = Promise.defer();
-  aWindow.addEventListener("unload", function() {
-    deferred.resolve(aWindow);
-  }, {once: true});
-  return deferred.promise;
+  return new Promise(resolve => {
+    aWindow.addEventListener("unload", function() {
+      resolve(aWindow);
+    }, {once: true});
+  });
 }
 
 function promise_page(aWindow, aPageId) {
-  let deferred = Promise.defer();
-  var page = aWindow.document.getElementById(aPageId);
-  if (aWindow.document.getElementById("updateWizard").currentPage === page) {
-    deferred.resolve(aWindow);
-  } else {
-    page.addEventListener("pageshow", function() {
-      executeSoon(function() {
-        deferred.resolve(aWindow);
-      });
-    }, {once: true});
-  }
-  return deferred.promise;
+  return new Promise(resolve => {
+    var page = aWindow.document.getElementById(aPageId);
+    if (aWindow.document.getElementById("updateWizard").currentPage === page) {
+      resolve(aWindow);
+    } else {
+      page.addEventListener("pageshow", function() {
+        executeSoon(function() {
+          resolve(aWindow);
+        });
+      }, {once: true});
+    }
+  });
 }
 
 // These add-ons became inactive during the upgrade
@@ -263,9 +263,9 @@ add_task(async function cancel_during_repopulate() {
   ok(!repo.AddonRepository.isSearching, "Background installs are done");
 
   // There should be no active updates
-  let getInstalls = Promise.defer();
-  AddonManager.getAllInstalls(getInstalls.resolve);
-  let installs = await getInstalls.promise;
+  let installs = await new Promise(resolve => {
+    AddonManager.getAllInstalls(resolve);
+  });
   is(installs.length, 0, "There should be no active installs after background installs are done");
 
   // addon8 should have updated in the background,
@@ -332,9 +332,9 @@ add_task(async function cancel_during_findUpdates() {
   ok(!a8.isCompatible, "addon8 should not have been upgraded");
   ok(a9.isCompatible, "addon9 should have been upgraded");
 
-  let getInstalls = Promise.defer();
-  AddonManager.getAllInstalls(getInstalls.resolve);
-  let installs = await getInstalls.promise;
+  let installs = await new Promise(resolve => {
+    AddonManager.getAllInstalls(resolve);
+  });
   is(installs.length, 0, "There should be no active installs after the dialog is cancelled 2");
 
   info("findUpdates done");
@@ -393,9 +393,9 @@ add_task(async function cancel_mismatch() {
   ok(a9.isCompatible, "addon9 should have been upgraded");
 
   // Make sure there are no pending addon installs
-  let pInstalls = Promise.defer();
-  AddonManager.getAllInstalls(pInstalls.resolve);
-  let installs = await pInstalls.promise;
+  let installs = await new Promise(resolve => {
+    AddonManager.getAllInstalls(resolve);
+  });
   ok(installs.length == 0, "No remaining add-on installs (" + installs.toSource() + ")");
 
   await promise_uninstall_test_addons();
@@ -440,9 +440,9 @@ add_task(async function cancel_mismatch_no_updates() {
   ok(a6.isCompatible, "addon6 should have become compatible");
 
   // Make sure there are no pending addon installs
-  let pInstalls = Promise.defer();
-  AddonManager.getAllInstalls(pInstalls.resolve);
-  let installs = await pInstalls.promise;
+  let installs = await new Promise(resolve => {
+    AddonManager.getAllInstalls(resolve);
+  });
   ok(installs.length == 0, "No remaining add-on installs (" + installs.toSource() + ")");
 
   await promise_uninstall_test_addons();

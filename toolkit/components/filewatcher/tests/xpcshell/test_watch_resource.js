@@ -21,12 +21,12 @@ add_task(async function test_watching_non_existing() {
 
   // Instantiate the native watcher.
   let watcher = makeWatcher();
-  let deferred = Promise.defer();
+  let error = await new Promise((resolve, reject) => {
 
-  // Try watch a path which doesn't exist.
-  watcher.addPath(notExistingDir, deferred.reject, deferred.resolve);
+    // Try watch a path which doesn't exist.
+    watcher.addPath(notExistingDir, reject, resolve);
 
-  // Wait until the watcher informs us that there was an error.
-  let error = await deferred.promise;
+    // Wait until the watcher informs us that there was an error.
+  });
   do_check_eq(error, Components.results.NS_ERROR_FILE_NOT_FOUND);
 });

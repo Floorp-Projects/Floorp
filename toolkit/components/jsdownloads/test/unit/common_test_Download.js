@@ -1635,20 +1635,20 @@ add_task(async function test_cancel_midway_restart_with_content_encoding() {
   let download = await promiseStartDownload(httpUrl("interruptible_gzip.txt"));
 
   // The first time, cancel the download midway.
-  let deferCancel = Promise.defer();
-  let onchange = function() {
-    if (!download.stopped && !download.canceled &&
-        download.currentBytes == TEST_DATA_SHORT_GZIP_ENCODED_FIRST.length) {
-      deferCancel.resolve(download.cancel());
-    }
-  };
+  await new Promise(resolve => {
+    let onchange = function() {
+      if (!download.stopped && !download.canceled &&
+          download.currentBytes == TEST_DATA_SHORT_GZIP_ENCODED_FIRST.length) {
+        resolve(download.cancel());
+      }
+    };
 
-  // Register for the notification, but also call the function directly in
-  // case the download already reached the expected progress.
-  download.onchange = onchange;
-  onchange();
+    // Register for the notification, but also call the function directly in
+    // case the download already reached the expected progress.
+    download.onchange = onchange;
+    onchange();
 
-  await deferCancel.promise;
+  });
 
   do_check_true(download.stopped);
 

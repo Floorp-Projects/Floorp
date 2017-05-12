@@ -16,13 +16,13 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
  * @rejects Never.
  */
 function promiseTopicObserved(topic) {
-  let deferred = Promise.defer();
-  info("Waiting for observer topic " + topic);
-  Services.obs.addObserver(function PTO_observe(obsSubject, obsTopic, obsData) {
-    Services.obs.removeObserver(PTO_observe, obsTopic);
-    deferred.resolve([obsSubject, obsData]);
-  }, topic);
-  return deferred.promise;
+  return new Promise(resolve => {
+    info("Waiting for observer topic " + topic);
+    Services.obs.addObserver(function PTO_observe(obsSubject, obsTopic, obsData) {
+      Services.obs.removeObserver(PTO_observe, obsTopic);
+      resolve([obsSubject, obsData]);
+    }, topic);
+  });
 }
 
 /**

@@ -86,31 +86,31 @@ var maketest = function(prefix, test) {
  */
 var reference_fetch_file = function reference_fetch_file(path, test) {
   test.info("Fetching file " + path);
-  let promise = Promise.defer();
-  let file = new FileUtils.File(path);
-  NetUtil.asyncFetch({
-    uri: NetUtil.newURI(file),
-    loadUsingSystemPrincipal: true
-  }, function(stream, status) {
-      if (!Components.isSuccessCode(status)) {
-        promise.reject(status);
-        return;
-      }
-      let result, reject;
-      try {
-        result = NetUtil.readInputStreamToString(stream, stream.available());
-      } catch (x) {
-        reject = x;
-      }
-      stream.close();
-      if (reject) {
-        promise.reject(reject);
-      } else {
-        promise.resolve(result);
-      }
-    });
+  return new Promise((resolve, reject) => {
+    let file = new FileUtils.File(path);
+    NetUtil.asyncFetch({
+      uri: NetUtil.newURI(file),
+      loadUsingSystemPrincipal: true
+    }, function(stream, status) {
+        if (!Components.isSuccessCode(status)) {
+          reject(status);
+          return;
+        }
+        let result, reject;
+        try {
+          result = NetUtil.readInputStreamToString(stream, stream.available());
+        } catch (x) {
+          reject = x;
+        }
+        stream.close();
+        if (reject) {
+          reject(reject);
+        } else {
+          resolve(result);
+        }
+      });
 
-  return promise.promise;
+  });
 };
 
 var reference_dir_contents = function reference_dir_contents(path) {

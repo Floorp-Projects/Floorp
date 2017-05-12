@@ -67,18 +67,18 @@ add_task(async function maintenance_foreign_count_test() {
   await PlacesTestUtils.addVisits(T_URI);
 
   // Adjust the foreign_count for the added entry to an incorrect value
-  let deferred = Promise.defer();
-  let stmt = DBConn().createAsyncStatement(
-    `UPDATE moz_places SET foreign_count = 10 WHERE url_hash = hash(:t_url)
-                                                AND url = :t_url `);
-  stmt.params.t_url = T_URI.spec;
-  stmt.executeAsync({
-    handleCompletion() {
-      deferred.resolve();
-    }
+  await new Promise(resolve => {
+    let stmt = DBConn().createAsyncStatement(
+      `UPDATE moz_places SET foreign_count = 10 WHERE url_hash = hash(:t_url)
+                                                  AND url = :t_url `);
+    stmt.params.t_url = T_URI.spec;
+    stmt.executeAsync({
+      handleCompletion() {
+        resolve();
+      }
+    });
+    stmt.finalize();
   });
-  stmt.finalize();
-  await deferred.promise;
   Assert.equal((await getForeignCountForURL(conn, T_URI)), 10);
 
   // Run maintenance

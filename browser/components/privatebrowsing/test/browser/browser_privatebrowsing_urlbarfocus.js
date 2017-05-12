@@ -16,11 +16,11 @@ function checkUrlbarFocus(win) {
 }
 
 function openNewPrivateWindow() {
-  let deferred = Promise.defer();
-  whenNewWindowLoaded({private: true}, win => {
-    executeSoon(() => deferred.resolve(win));
+  return new Promise(resolve => {
+    whenNewWindowLoaded({private: true}, win => {
+      executeSoon(() => resolve(win));
+    });
   });
-  return deferred.promise;
 }
 
 add_task(async function() {

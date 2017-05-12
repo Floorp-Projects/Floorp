@@ -110,9 +110,9 @@ add_task(async function flush_on_tabclose_racy() {
 });
 
 function promiseNewWindow() {
-  let deferred = Promise.defer();
-  whenNewWindowLoaded({private: false}, deferred.resolve);
-  return deferred.promise;
+  return new Promise(resolve => {
+    whenNewWindowLoaded({private: false}, resolve);
+  });
 }
 
 async function createTabWithStorageData(urls, win = window) {

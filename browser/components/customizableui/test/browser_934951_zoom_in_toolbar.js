@@ -59,32 +59,32 @@ add_task(async function() {
 });
 
 function promiseObserverNotification(aObserver) {
-  let deferred = Promise.defer();
-  function notificationCallback(e) {
-    Services.obs.removeObserver(notificationCallback, aObserver);
-    clearTimeout(timeoutId);
-    deferred.resolve();
-  }
-  let timeoutId = setTimeout(() => {
-    Services.obs.removeObserver(notificationCallback, aObserver);
-    deferred.reject("Notification '" + aObserver + "' did not happen within 20 seconds.");
-  }, kTimeoutInMS);
-  Services.obs.addObserver(notificationCallback, aObserver);
-  return deferred.promise;
+  return new Promise((resolve, reject) => {
+    function notificationCallback(e) {
+      Services.obs.removeObserver(notificationCallback, aObserver);
+      clearTimeout(timeoutId);
+      resolve();
+    }
+    let timeoutId = setTimeout(() => {
+      Services.obs.removeObserver(notificationCallback, aObserver);
+      reject("Notification '" + aObserver + "' did not happen within 20 seconds.");
+    }, kTimeoutInMS);
+    Services.obs.addObserver(notificationCallback, aObserver);
+  });
 }
 
 function promiseTabSelect() {
-  let deferred = Promise.defer();
-  let container = window.gBrowser.tabContainer;
-  let timeoutId = setTimeout(() => {
-    container.removeEventListener("TabSelect", callback);
-    deferred.reject("TabSelect did not happen within 20 seconds");
-  }, kTimeoutInMS);
-  function callback(e) {
-    container.removeEventListener("TabSelect", callback);
-    clearTimeout(timeoutId);
-    executeSoon(deferred.resolve);
-  }
-  container.addEventListener("TabSelect", callback);
-  return deferred.promise;
+  return new Promise((resolve, reject) => {
+    let container = window.gBrowser.tabContainer;
+    let timeoutId = setTimeout(() => {
+      container.removeEventListener("TabSelect", callback);
+      reject("TabSelect did not happen within 20 seconds");
+    }, kTimeoutInMS);
+    function callback(e) {
+      container.removeEventListener("TabSelect", callback);
+      clearTimeout(timeoutId);
+      executeSoon(resolve);
+    }
+    container.addEventListener("TabSelect", callback);
+  });
 }

@@ -64,32 +64,32 @@ function promiseOpenAndLoadWindow(aOptions) {
  * @rejects if a valid load event is not received within a meaningful interval
  */
 function promiseTabLoadEvent(tab, url, eventType = "load") {
-  let deferred = Promise.defer();
-  info("Wait tab event: " + eventType);
+  return new Promise(resolve => {
+    info("Wait tab event: " + eventType);
 
-  function handle(event) {
-    if (event.originalTarget != tab.linkedBrowser.contentDocument ||
-        event.target.location.href == "about:blank" ||
-        (url && event.target.location.href != url)) {
-      info("Skipping spurious '" + eventType + "'' event" +
-           " for " + event.target.location.href);
-      return;
+    function handle(event) {
+      if (event.originalTarget != tab.linkedBrowser.contentDocument ||
+          event.target.location.href == "about:blank" ||
+          (url && event.target.location.href != url)) {
+        info("Skipping spurious '" + eventType + "'' event" +
+             " for " + event.target.location.href);
+        return;
+      }
+      // Remove reference to tab from the cleanup function:
+      realCleanup = () => {};
+      tab.linkedBrowser.removeEventListener(eventType, handle, true);
+      info("Tab event received: " + eventType);
+      resolve(event);
     }
-    // Remove reference to tab from the cleanup function:
-    realCleanup = () => {};
-    tab.linkedBrowser.removeEventListener(eventType, handle, true);
-    info("Tab event received: " + eventType);
-    deferred.resolve(event);
-  }
 
-  // Juggle a bit to avoid leaks:
-  let realCleanup = () => tab.linkedBrowser.removeEventListener(eventType, handle, true);
-  registerCleanupFunction(() => realCleanup());
+    // Juggle a bit to avoid leaks:
+    let realCleanup = () => tab.linkedBrowser.removeEventListener(eventType, handle, true);
+    registerCleanupFunction(() => realCleanup());
 
-  tab.linkedBrowser.addEventListener(eventType, handle, true, true);
-  if (url)
-    tab.linkedBrowser.loadURI(url);
-  return deferred.promise;
+    tab.linkedBrowser.addEventListener(eventType, handle, true, true);
+    if (url)
+      tab.linkedBrowser.loadURI(url);
+  });
 }
 
 function promiseWindowClosed(win) {
@@ -107,30 +107,30 @@ function promiseWindowClosed(win) {
 
 
 function promiseFocus() {
-  let deferred = Promise.defer();
-  waitForFocus(deferred.resolve);
-  return deferred.promise;
+  return new Promise(resolve => {
+    waitForFocus(resolve);
+  });
 }
 
 function promisePanelOpened() {
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  if (DownloadsPanel.panel && DownloadsPanel.panel.state == "open") {
-    return deferred.resolve();
-  }
+    if (DownloadsPanel.panel && DownloadsPanel.panel.state == "open") {
+      return resolve();
+    }
 
-  // Hook to wait until the panel is shown.
-  let originalOnPopupShown = DownloadsPanel.onPopupShown;
-  DownloadsPanel.onPopupShown = function() {
-    DownloadsPanel.onPopupShown = originalOnPopupShown;
-    originalOnPopupShown.apply(this, arguments);
+    // Hook to wait until the panel is shown.
+    let originalOnPopupShown = DownloadsPanel.onPopupShown;
+    DownloadsPanel.onPopupShown = function() {
+      DownloadsPanel.onPopupShown = originalOnPopupShown;
+      originalOnPopupShown.apply(this, arguments);
 
-    // Defer to the next tick of the event loop so that we don't continue
-    // processing during the DOM event handler itself.
-    setTimeout(deferred.resolve, 0);
-  };
+      // Defer to the next tick of the event loop so that we don't continue
+      // processing during the DOM event handler itself.
+      setTimeout(resolve, 0);
+    };
 
-  return deferred.promise;
+  });
 }
 
 async function task_resetState() {

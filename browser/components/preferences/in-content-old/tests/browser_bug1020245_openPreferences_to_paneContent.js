@@ -24,18 +24,18 @@ add_task(async function() {
 });
 
 function openPreferencesViaHash(aPane) {
-  let deferred = Promise.defer();
-  gBrowser.selectedTab = gBrowser.addTab("about:preferences" + (aPane ? "#" + aPane : ""));
-  let newTabBrowser = gBrowser.selectedBrowser;
+  return new Promise(resolve => {
+    gBrowser.selectedTab = gBrowser.addTab("about:preferences" + (aPane ? "#" + aPane : ""));
+    let newTabBrowser = gBrowser.selectedBrowser;
 
-  newTabBrowser.addEventListener("Initialized", function() {
-    newTabBrowser.contentWindow.addEventListener("load", function() {
-      let win = gBrowser.contentWindow;
-      let selectedPane = win.history.state;
-      gBrowser.removeCurrentTab();
-      deferred.resolve({selectedPane});
-    }, {once: true});
-  }, {capture: true, once: true});
+    newTabBrowser.addEventListener("Initialized", function() {
+      newTabBrowser.contentWindow.addEventListener("load", function() {
+        let win = gBrowser.contentWindow;
+        let selectedPane = win.history.state;
+        gBrowser.removeCurrentTab();
+        resolve({selectedPane});
+      }, {once: true});
+    }, {capture: true, once: true});
 
-  return deferred.promise;
+  });
 }

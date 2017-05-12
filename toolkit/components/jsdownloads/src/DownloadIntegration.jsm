@@ -492,26 +492,26 @@ this.DownloadIntegration = {
         verdict: "",
       });
     }
-    let deferred = Promise.defer();
-    let aReferrer = null;
-    if (aDownload.source.referrer) {
-      aReferrer = NetUtil.newURI(aDownload.source.referrer);
-    }
-    gApplicationReputationService.queryReputation({
-      sourceURI: NetUtil.newURI(aDownload.source.url),
-      referrerURI: aReferrer,
-      fileSize: aDownload.currentBytes,
-      sha256Hash: hash,
-      suggestedFileName: OS.Path.basename(aDownload.target.path),
-      signatureInfo: sigInfo,
-      redirects: channelRedirects },
-      function onComplete(aShouldBlock, aRv, aVerdict) {
-        deferred.resolve({
-          shouldBlock: aShouldBlock,
-          verdict: (aShouldBlock && kVerdictMap[aVerdict]) || "",
+    return new Promise(resolve => {
+      let aReferrer = null;
+      if (aDownload.source.referrer) {
+        aReferrer = NetUtil.newURI(aDownload.source.referrer);
+      }
+      gApplicationReputationService.queryReputation({
+        sourceURI: NetUtil.newURI(aDownload.source.url),
+        referrerURI: aReferrer,
+        fileSize: aDownload.currentBytes,
+        sha256Hash: hash,
+        suggestedFileName: OS.Path.basename(aDownload.target.path),
+        signatureInfo: sigInfo,
+        redirects: channelRedirects },
+        function onComplete(aShouldBlock, aRv, aVerdict) {
+          resolve({
+            shouldBlock: aShouldBlock,
+            verdict: (aShouldBlock && kVerdictMap[aVerdict]) || "",
+          });
         });
-      });
-    return deferred.promise;
+    });
   },
 
 #ifdef XP_WIN

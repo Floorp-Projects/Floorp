@@ -198,43 +198,43 @@ add_task(async function() {
 });
 
 function promiseFindFinished(searchText, highlightOn) {
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  let findbar = gBrowser.getFindBar();
-  findbar.startFind(findbar.FIND_NORMAL);
-  let highlightElement = findbar.getElement("highlight");
-  if (highlightElement.checked != highlightOn)
-    highlightElement.click();
-  executeSoon(() => {
-    findbar._findField.value = searchText;
+    let findbar = gBrowser.getFindBar();
+    findbar.startFind(findbar.FIND_NORMAL);
+    let highlightElement = findbar.getElement("highlight");
+    if (highlightElement.checked != highlightOn)
+      highlightElement.click();
+    executeSoon(() => {
+      findbar._findField.value = searchText;
 
-    let resultListener;
-    // When highlighting is on the finder sends a second "FOUND" message after
-    // the search wraps. This causes timing problems with e10s. waitMore
-    // forces foundOrTimeout wait for the second "FOUND" message before
-    // resolving the promise.
-    let waitMore = highlightOn;
-    let findTimeout = setTimeout(() => foundOrTimedout(null), 2000);
-    let foundOrTimedout = function(aData) {
-      if (aData !== null && waitMore) {
-        waitMore = false;
-        return;
+      let resultListener;
+      // When highlighting is on the finder sends a second "FOUND" message after
+      // the search wraps. This causes timing problems with e10s. waitMore
+      // forces foundOrTimeout wait for the second "FOUND" message before
+      // resolving the promise.
+      let waitMore = highlightOn;
+      let findTimeout = setTimeout(() => foundOrTimedout(null), 2000);
+      let foundOrTimedout = function(aData) {
+        if (aData !== null && waitMore) {
+          waitMore = false;
+          return;
+        }
+        if (aData === null)
+          info("Result listener not called, timeout reached.");
+        clearTimeout(findTimeout);
+        findbar.browser.finder.removeResultListener(resultListener);
+        resolve();
       }
-      if (aData === null)
-        info("Result listener not called, timeout reached.");
-      clearTimeout(findTimeout);
-      findbar.browser.finder.removeResultListener(resultListener);
-      deferred.resolve();
-    }
 
-    resultListener = {
-      onFindResult: foundOrTimedout
-    };
-    findbar.browser.finder.addResultListener(resultListener);
-    findbar._find();
+      resultListener = {
+        onFindResult: foundOrTimedout
+      };
+      findbar.browser.finder.addResultListener(resultListener);
+      findbar._find();
+    });
+
   });
-
-  return deferred.promise;
 }
 
 function promiseRemotenessChange(tab, shouldBeRemote) {

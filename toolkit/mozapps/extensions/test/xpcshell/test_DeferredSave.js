@@ -100,46 +100,46 @@ function setQuickMockTimer() {
  *         is called
  */
 function setPromiseMockTimer() {
-  let waiter = Promise.defer();
-  let mockTimer = {
-    callback: null,
-    delay: null,
-    type: null,
-    isCancelled: false,
+  return new Promise(resolve => {
+    let mockTimer = {
+      callback: null,
+      delay: null,
+      type: null,
+      isCancelled: false,
 
-    initWithCallback(aFunction, aDelay, aType) {
-      do_print("Starting timer, delay = " + aDelay);
-      this.callback = aFunction;
-      this.delay = aDelay;
-      this.type = aType;
-      // cancelled timers can be re-used
-      this.isCancelled = false;
-      waiter.resolve(this);
-    },
-    cancel() {
-      do_print("Cancelled mock timer");
-      this.callback = null;
-      this.delay = null;
-      this.type = null;
-      this.isCancelled = true;
-      // If initWithCallback was never called, resolve to let tests check for cancel
-      waiter.resolve(this);
-    }
-  };
-  DSContext.MakeTimer = () => {
-    do_print("Creating mock timer");
-    return mockTimer;
-  };
-  return waiter.promise;
+      initWithCallback(aFunction, aDelay, aType) {
+        do_print("Starting timer, delay = " + aDelay);
+        this.callback = aFunction;
+        this.delay = aDelay;
+        this.type = aType;
+        // cancelled timers can be re-used
+        this.isCancelled = false;
+        resolve(this);
+      },
+      cancel() {
+        do_print("Cancelled mock timer");
+        this.callback = null;
+        this.delay = null;
+        this.type = null;
+        this.isCancelled = true;
+        // If initWithCallback was never called, resolve to let tests check for cancel
+        resolve(this);
+      }
+    };
+    DSContext.MakeTimer = () => {
+      do_print("Creating mock timer");
+      return mockTimer;
+    };
+  });
 }
 
 /**
  * Return a Promise<null> that resolves after the specified number of milliseconds
  */
 function delay(aDelayMS) {
-  let deferred = Promise.defer();
-  do_timeout(aDelayMS, () => deferred.resolve(null));
-  return deferred.promise;
+  return new Promise(resolve => {
+    do_timeout(aDelayMS, () => resolve(null));
+  });
 }
 
 function run_test() {
@@ -250,24 +250,24 @@ add_task(async function dirty_while_writing() {
   let thirdData = "Third data";
   let firstCallback_happened = false;
   let secondCallback_happened = false;
-  let writeStarted = Promise.defer();
+  let writer = await new Promise(resolve => {
 
-  function writeCallback(aTester) {
-    writeStarted.resolve(aTester.waDeferred);
-  }
+    function writeCallback(aTester) {
+      resolve(aTester.waDeferred);
+    }
 
-  setQuickMockTimer();
-  do_print("First save");
-  tester.save(firstData, writeCallback).then(
-    count => {
-      do_check_false(firstCallback_happened);
-      do_check_false(secondCallback_happened);
-      do_check_eq(tester.writtenData, firstData);
-      firstCallback_happened = true;
-    }, do_report_unexpected_exception);
+    setQuickMockTimer();
+    do_print("First save");
+    tester.save(firstData, writeCallback).then(
+      count => {
+        do_check_false(firstCallback_happened);
+        do_check_false(secondCallback_happened);
+        do_check_eq(tester.writtenData, firstData);
+        firstCallback_happened = true;
+      }, do_report_unexpected_exception);
 
-  do_print("waiting for writer");
-  let writer = await writeStarted.promise;
+    do_print("waiting for writer");
+  });
   do_print("Write started");
 
   // Delay a bit, modify the data and call saveChanges, delay a bit more,
@@ -331,20 +331,20 @@ add_task(async function flush_during_write() {
   let tester = DeferredSaveTester();
   let dataToSave = "Flush during write";
   let firstCallback_happened = false;
-  let writeStarted = Promise.defer();
+  let writer = await new Promise(resolve => {
 
-  function writeCallback(aTester) {
-    writeStarted.resolve(aTester.waDeferred);
-  }
+    function writeCallback(aTester) {
+      resolve(aTester.waDeferred);
+    }
 
-  setQuickMockTimer();
-  tester.save(dataToSave, writeCallback).then(
-    count => {
-      do_check_false(firstCallback_happened);
-      firstCallback_happened = true;
-    }, do_report_unexpected_exception);
+    setQuickMockTimer();
+    tester.save(dataToSave, writeCallback).then(
+      count => {
+        do_check_false(firstCallback_happened);
+        firstCallback_happened = true;
+      }, do_report_unexpected_exception);
 
-  let writer = await writeStarted.promise;
+  });
 
   // call flush with the write callback disabled, delay a bit more, complete in-progress write
   let flushing = tester.flush(disabled_write_callback);

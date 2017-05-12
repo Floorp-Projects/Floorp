@@ -9,31 +9,31 @@ registerCleanupFunction(function() {
 });
 
 function promiseNotification(aBrowser, value, expected, input) {
-  let deferred = Promise.defer();
-  let notificationBox = aBrowser.getNotificationBox(aBrowser.selectedBrowser);
-  if (expected) {
-    info("Waiting for " + value + " notification");
-    let checkForNotification = function() {
-      if (notificationBox.getNotificationWithValue(value)) {
-        info("Saw the notification");
-        notificationObserver.disconnect();
-        notificationObserver = null;
-        deferred.resolve();
+  return new Promise(resolve => {
+    let notificationBox = aBrowser.getNotificationBox(aBrowser.selectedBrowser);
+    if (expected) {
+      info("Waiting for " + value + " notification");
+      let checkForNotification = function() {
+        if (notificationBox.getNotificationWithValue(value)) {
+          info("Saw the notification");
+          notificationObserver.disconnect();
+          notificationObserver = null;
+          resolve();
+        }
       }
+      if (notificationObserver) {
+        notificationObserver.disconnect();
+      }
+      notificationObserver = new MutationObserver(checkForNotification);
+      notificationObserver.observe(notificationBox, {childList: true});
+    } else {
+      setTimeout(() => {
+        is(notificationBox.getNotificationWithValue(value), null,
+           `We are expecting to not get a notification for ${input}`);
+        resolve();
+      }, 1000);
     }
-    if (notificationObserver) {
-      notificationObserver.disconnect();
-    }
-    notificationObserver = new MutationObserver(checkForNotification);
-    notificationObserver.observe(notificationBox, {childList: true});
-  } else {
-    setTimeout(() => {
-      is(notificationBox.getNotificationWithValue(value), null,
-         `We are expecting to not get a notification for ${input}`);
-      deferred.resolve();
-    }, 1000);
-  }
-  return deferred.promise;
+  });
 }
 
 async function runURLBarSearchTest({valueToOpen, expectSearch, expectNotification, aWindow = window}) {
@@ -131,9 +131,9 @@ function get_test_function_for_localhost_with_hostname(hostName, isPrivate) {
       let promiseWin = BrowserTestUtils.waitForNewWindow();
       win = OpenBrowserWindow({private: true});
       await promiseWin;
-      let deferredOpenFocus = Promise.defer();
-      waitForFocus(deferredOpenFocus.resolve, win);
-      await deferredOpenFocus.promise;
+      await new Promise(resolve => {
+        waitForFocus(resolve, win);
+      });
     } else {
       win = window;
     }
@@ -174,10 +174,10 @@ function get_test_function_for_localhost_with_hostname(hostName, isPrivate) {
     if (isPrivate) {
       info("Waiting for private window to close");
       await BrowserTestUtils.closeWindow(win);
-      let deferredFocus = Promise.defer();
-      info("Waiting for focus");
-      waitForFocus(deferredFocus.resolve, window);
-      await deferredFocus.promise;
+      await new Promise(resolve => {
+        info("Waiting for focus");
+        waitForFocus(resolve, window);
+      });
     }
   }
 }

@@ -1428,22 +1428,22 @@ Engine.prototype = {
    * succeeds.
    */
   _retrieveSearchXMLData: function SRCH_ENG__retrieveSearchXMLData(aURL) {
-    let deferred = Promise.defer();
-    let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
-                    createInstance(Ci.nsIXMLHttpRequest);
-    request.overrideMimeType("text/xml");
-    request.onload = (aEvent) => {
-      let responseXML = aEvent.target.responseXML;
-      this._data = responseXML.documentElement;
-      deferred.resolve();
-    };
-    request.onerror = function(aEvent) {
-      deferred.resolve();
-    };
-    request.open("GET", aURL, true);
-    request.send();
+    return new Promise(resolve => {
+      let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
+                      createInstance(Ci.nsIXMLHttpRequest);
+      request.overrideMimeType("text/xml");
+      request.onload = (aEvent) => {
+        let responseXML = aEvent.target.responseXML;
+        this._data = responseXML.documentElement;
+        resolve();
+      };
+      request.onerror = function(aEvent) {
+        resolve();
+      };
+      request.open("GET", aURL, true);
+      request.send();
 
-    return deferred.promise;
+    });
   },
 
   _initFromURISync: function SRCH_ENG_initFromURISync(uri) {

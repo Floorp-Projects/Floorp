@@ -20,31 +20,31 @@ add_task(async function test_remoteWebNavigation_postdata() {
   let server = new obj.HttpServer();
   server.start(-1);
 
-  let loadDeferred = Promise.defer();
+  await new Promise(resolve => {
 
-  server.registerPathHandler("/test", (request, response) => {
-    let body = obj.CommonUtils.readBytesFromInputStream(request.bodyInputStream);
-    is(body, "success", "request body is correct");
-    is(request.method, "POST", "request was a post");
-    response.write("Received from POST: " + body);
-    loadDeferred.resolve();
+    server.registerPathHandler("/test", (request, response) => {
+      let body = obj.CommonUtils.readBytesFromInputStream(request.bodyInputStream);
+      is(body, "success", "request body is correct");
+      is(request.method, "POST", "request was a post");
+      response.write("Received from POST: " + body);
+      resolve();
+    });
+
+    let i = server.identity;
+    let path = i.primaryScheme + "://" + i.primaryHost + ":" + i.primaryPort + "/test";
+
+    let postdata =
+      "Content-Length: 7\r\n" +
+      "Content-Type: application/x-www-form-urlencoded\r\n" +
+      "\r\n" +
+      "success";
+
+    openUILinkIn(path, "tab", null, makeInputStream(postdata));
+
   });
-
-  let i = server.identity;
-  let path = i.primaryScheme + "://" + i.primaryHost + ":" + i.primaryPort + "/test";
-
-  let postdata =
-    "Content-Length: 7\r\n" +
-    "Content-Type: application/x-www-form-urlencoded\r\n" +
-    "\r\n" +
-    "success";
-
-  openUILinkIn(path, "tab", null, makeInputStream(postdata));
-
-  await loadDeferred.promise;
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
-  let serverStoppedDeferred = Promise.defer();
-  server.stop(function() { serverStoppedDeferred.resolve(); });
-  await serverStoppedDeferred.promise;
+  await new Promise(resolve => {
+    server.stop(function() { resolve(); });
+  });
 });

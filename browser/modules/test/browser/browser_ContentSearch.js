@@ -300,16 +300,16 @@ function checkMsg(actualMsg, expectedMsgData) {
 }
 
 function waitForMsg(name, type) {
-  let deferred = Promise.defer();
-  info("Waiting for " + name + " message " + type + "...");
-  gMsgMan.addMessageListener(name, function onMsg(msg) {
-    info("Received " + name + " message " + msg.data.type + "\n");
-    if (msg.data.type == type) {
-      gMsgMan.removeMessageListener(name, onMsg);
-      deferred.resolve(msg);
-    }
+  return new Promise(resolve => {
+    info("Waiting for " + name + " message " + type + "...");
+    gMsgMan.addMessageListener(name, function onMsg(msg) {
+      info("Received " + name + " message " + msg.data.type + "\n");
+      if (msg.data.type == type) {
+        gMsgMan.removeMessageListener(name, onMsg);
+        resolve(msg);
+      }
+    });
   });
-  return deferred.promise;
 }
 
 function waitForTestMsg(type) {
@@ -346,23 +346,23 @@ function waitForNewEngine(basename, numImages) {
 }
 
 function addTab() {
-  let deferred = Promise.defer();
-  let tab = gBrowser.addTab();
-  gBrowser.selectedTab = tab;
-  tab.linkedBrowser.addEventListener("load", function() {
-    let url = getRootDirectory(gTestPath) + TEST_CONTENT_SCRIPT_BASENAME;
-    gMsgMan = tab.linkedBrowser.messageManager;
-    gMsgMan.sendAsyncMessage(CONTENT_SEARCH_MSG, {
-      type: "AddToWhitelist",
-      data: ["about:blank"],
-    });
-    waitForMsg(CONTENT_SEARCH_MSG, "AddToWhitelistAck").then(() => {
-      gMsgMan.loadFrameScript(url, false);
-      deferred.resolve();
-    });
-  }, {capture: true, once: true});
-  registerCleanupFunction(() => gBrowser.removeTab(tab));
-  return deferred.promise;
+  return new Promise(resolve => {
+    let tab = gBrowser.addTab();
+    gBrowser.selectedTab = tab;
+    tab.linkedBrowser.addEventListener("load", function() {
+      let url = getRootDirectory(gTestPath) + TEST_CONTENT_SCRIPT_BASENAME;
+      gMsgMan = tab.linkedBrowser.messageManager;
+      gMsgMan.sendAsyncMessage(CONTENT_SEARCH_MSG, {
+        type: "AddToWhitelist",
+        data: ["about:blank"],
+      });
+      waitForMsg(CONTENT_SEARCH_MSG, "AddToWhitelistAck").then(() => {
+        gMsgMan.loadFrameScript(url, false);
+        resolve();
+      });
+    }, {capture: true, once: true});
+    registerCleanupFunction(() => gBrowser.removeTab(tab));
+  });
 }
 
 var currentStateObj = async function() {
@@ -396,21 +396,21 @@ function arrayBufferFromDataURI(uri) {
   if (!uri) {
     return Promise.resolve(null);
   }
-  let deferred = Promise.defer();
-  let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
-            createInstance(Ci.nsIXMLHttpRequest);
-  xhr.open("GET", uri, true);
-  xhr.responseType = "arraybuffer";
-  xhr.onerror = () => {
-    deferred.resolve(null);
-  };
-  xhr.onload = () => {
-    deferred.resolve(xhr.response);
-  };
-  try {
-    xhr.send();
-  } catch (err) {
-    return Promise.resolve(null);
-  }
-  return deferred.promise;
+  return new Promise(resolve => {
+    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
+              createInstance(Ci.nsIXMLHttpRequest);
+    xhr.open("GET", uri, true);
+    xhr.responseType = "arraybuffer";
+    xhr.onerror = () => {
+      resolve(null);
+    };
+    xhr.onload = () => {
+      resolve(xhr.response);
+    };
+    try {
+      xhr.send();
+    } catch (err) {
+      return Promise.resolve(null);
+    }
+  });
 }

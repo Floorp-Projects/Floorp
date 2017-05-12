@@ -386,16 +386,16 @@ add_task(async function cycleEngines() {
   await msg("key", { key: "VK_DOWN", waitForSuggestions: true });
 
   let promiseEngineChange = function(newEngineName) {
-    let deferred = Promise.defer();
-    Services.obs.addObserver(function resolver(subj, topic, data) {
-      if (data != "engine-current") {
-        return;
-      }
-      SimpleTest.is(subj.name, newEngineName, "Engine cycled correctly");
-      Services.obs.removeObserver(resolver, "browser-search-engine-modified");
-      deferred.resolve();
-    }, "browser-search-engine-modified");
-    return deferred.promise;
+    return new Promise(resolve => {
+      Services.obs.addObserver(function resolver(subj, topic, data) {
+        if (data != "engine-current") {
+          return;
+        }
+        SimpleTest.is(subj.name, newEngineName, "Engine cycled correctly");
+        Services.obs.removeObserver(resolver, "browser-search-engine-modified");
+        resolve();
+      }, "browser-search-engine-modified");
+    });
   }
 
   let p = promiseEngineChange(TEST_ENGINE_PREFIX + " " + TEST_ENGINE_2_BASENAME);
@@ -665,15 +665,15 @@ function msg(type, data = null) {
     type,
     data,
   });
-  let deferred = Promise.defer();
-  gMsgMan.addMessageListener(TEST_MSG, function onMsg(msgObj) {
-    if (msgObj.data.type != type) {
-      return;
-    }
-    gMsgMan.removeMessageListener(TEST_MSG, onMsg);
-    deferred.resolve(msgObj.data.data);
+  return new Promise(resolve => {
+    gMsgMan.addMessageListener(TEST_MSG, function onMsg(msgObj) {
+      if (msgObj.data.type != type) {
+        return;
+      }
+      gMsgMan.removeMessageListener(TEST_MSG, onMsg);
+      resolve(msgObj.data.data);
+    });
   });
-  return deferred.promise;
 }
 
 function checkState(actualState, expectedInputVal, expectedSuggestions,
@@ -737,16 +737,16 @@ async function promiseTab() {
 }
 
 function promiseMsg(name, type, msgMan) {
-  let deferred = Promise.defer();
-  info("Waiting for " + name + " message " + type + "...");
-  msgMan.addMessageListener(name, function onMsg(msgObj) {
-    info("Received " + name + " message " + msgObj.data.type + "\n");
-    if (msgObj.data.type == type) {
-      msgMan.removeMessageListener(name, onMsg);
-      deferred.resolve(msgObj);
-    }
+  return new Promise(resolve => {
+    info("Waiting for " + name + " message " + type + "...");
+    msgMan.addMessageListener(name, function onMsg(msgObj) {
+      info("Received " + name + " message " + msgObj.data.type + "\n");
+      if (msgObj.data.type == type) {
+        msgMan.removeMessageListener(name, onMsg);
+        resolve(msgObj);
+      }
+    });
   });
-  return deferred.promise;
 }
 
 function setUpEngines() {
