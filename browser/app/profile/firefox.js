@@ -1638,7 +1638,7 @@ pref("browser.formautofill.experimental", true);
 #else
 pref("browser.formautofill.experimental", false);
 #endif
-pref("browser.formautofill.enabled", true);
+pref("extensions.formautofill.addresses.enabled", true);
 pref("browser.formautofill.loglevel", "Warn");
 
 // Whether or not to restore a session with lazy-browser tabs.
