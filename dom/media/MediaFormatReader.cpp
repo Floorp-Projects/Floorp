@@ -294,7 +294,7 @@ LocalAllocPolicy::ProcessRequest()
 
   GlobalAllocPolicy::Instance(mTrack).Alloc()->Then(
     mOwnerThread, __func__,
-    [self, token](Token* aToken) {
+    [self, token](RefPtr<Token> aToken) {
       self->mTokenRequest.Complete();
       token->Append(aToken);
       self->mPendingPromise.Resolve(token, __func__);
@@ -588,9 +588,9 @@ MediaFormatReader::DecoderFactory::RunStage(Data& aData)
       MOZ_ASSERT(!aData.mToken);
       aData.mPolicy->Alloc()->Then(
         mOwner->OwnerThread(), __func__,
-        [this, &aData] (Token* aToken) {
+        [this, &aData] (RefPtr<Token> aToken) {
           aData.mTokenRequest.Complete();
-          aData.mToken = aToken;
+          aData.mToken = aToken.forget();
           aData.mStage = Stage::CreateDecoder;
           RunStage(aData);
         },

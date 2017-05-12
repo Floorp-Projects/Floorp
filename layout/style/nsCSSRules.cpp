@@ -36,7 +36,6 @@
 #include "nsDOMClassInfoID.h"
 #include "mozilla/dom/CSSStyleDeclarationBinding.h"
 #include "mozilla/dom/CSSImportRuleBinding.h"
-#include "mozilla/dom/CSSMozDocumentRuleBinding.h"
 #include "mozilla/dom/CSSFontFaceRuleBinding.h"
 #include "mozilla/dom/CSSFontFeatureValuesRuleBinding.h"
 #include "mozilla/dom/CSSKeyframeRuleBinding.h"
@@ -526,12 +525,12 @@ MediaRule::AppendConditionText(nsAString& aOutput) const
 }
 
 DocumentRule::DocumentRule(uint32_t aLineNumber, uint32_t aColumnNumber)
-  : ConditionRule(aLineNumber, aColumnNumber)
+  : dom::CSSMozDocumentRule(aLineNumber, aColumnNumber)
 {
 }
 
 DocumentRule::DocumentRule(const DocumentRule& aCopy)
-  : ConditionRule(aCopy)
+  : dom::CSSMozDocumentRule(aCopy)
   , mURLs(new URL(*aCopy.mURLs))
 {
 }
@@ -545,10 +544,7 @@ NS_IMPL_RELEASE_INHERITED(DocumentRule, ConditionRule)
 
 // QueryInterface implementation for DocumentRule
 NS_INTERFACE_MAP_BEGIN(DocumentRule)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSGroupingRule)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSConditionRule)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSMozDocumentRule)
-NS_INTERFACE_MAP_END_INHERITING(ConditionRule)
+NS_INTERFACE_MAP_END_INHERITING(dom::CSSMozDocumentRule)
 
 #ifdef DEBUG
 /* virtual */ void
@@ -590,24 +586,11 @@ DocumentRule::List(FILE* out, int32_t aIndent) const
 }
 #endif
 
-/* virtual */ int32_t
-DocumentRule::GetType() const
-{
-  return Rule::DOCUMENT_RULE;
-}
-
 /* virtual */ already_AddRefed<Rule>
 DocumentRule::Clone() const
 {
   RefPtr<Rule> clone = new DocumentRule(*this);
   return clone.forget();
-}
-
-uint16_t
-DocumentRule::Type() const
-{
-  // XXX What should really happen here?
-  return nsIDOMCSSRule::UNKNOWN_RULE;
 }
 
 void
@@ -616,25 +599,6 @@ DocumentRule::GetCssTextImpl(nsAString& aCssText) const
   aCssText.AssignLiteral("@-moz-document ");
   AppendConditionText(aCssText);
   GroupRule::AppendRulesToCssText(aCssText);
-}
-
-// nsIDOMCSSGroupingRule methods
-NS_IMETHODIMP
-DocumentRule::GetCssRules(nsIDOMCSSRuleList* *aRuleList)
-{
-  return GroupRule::GetCssRules(aRuleList);
-}
-
-NS_IMETHODIMP
-DocumentRule::InsertRule(const nsAString & aRule, uint32_t aIndex, uint32_t* _retval)
-{
-  return GroupRule::InsertRule(aRule, aIndex, _retval);
-}
-
-NS_IMETHODIMP
-DocumentRule::DeleteRule(uint32_t aIndex)
-{
-  return GroupRule::DeleteRule(aIndex);
 }
 
 // nsIDOMCSSConditionRule methods
@@ -650,13 +614,6 @@ NS_IMETHODIMP
 DocumentRule::SetConditionText(const nsAString& aConditionText)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-void
-DocumentRule::SetConditionText(const nsAString& aConditionText,
-                               ErrorResult& aRv)
-{
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 
 // GroupRule interface
@@ -751,13 +708,6 @@ DocumentRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   // - mURLs
 
   return n;
-}
-
-/* virtual */ JSObject*
-DocumentRule::WrapObject(JSContext* aCx,
-                         JS::Handle<JSObject*> aGivenProto)
-{
-  return CSSMozDocumentRuleBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void

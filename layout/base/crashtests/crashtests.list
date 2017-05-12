@@ -305,7 +305,7 @@ load 481806-1.html
 load 483604-1.xhtml
 load 485501-1.html
 load 487544-1.html
-load 488390-1.xhtml
+skip-if(stylo) load 488390-1.xhtml # bug 1361235
 load 489691.html
 load 490376-1.xhtml
 load 490559-1.html
