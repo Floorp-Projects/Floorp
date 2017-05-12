@@ -25,7 +25,7 @@ function hasProp(obj) {
   };
 }
 
-add_task(function* test_search() {
+add_task(async function test_search() {
   ContentSearch.init();
   let observerPromise = new Promise(resolve => {
     Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
@@ -36,11 +36,11 @@ add_task(function* test_search() {
     }, "browser-search-service");
   });
   Services.search.init();
-  yield observerPromise;
+  await observerPromise;
   do_check_true(Services.search.isInitialized);
 
   // get initial state of search and check it has correct properties
-  let state = yield NewTabSearchProvider.search.asyncGetState();
+  let state = await NewTabSearchProvider.search.asyncGetState();
   let stateProps = hasProp(state);
   ["engines", "currentEngine"].forEach(stateProps);
 
@@ -75,7 +75,7 @@ add_task(function* test_search() {
   let expectedEngineName = Services.search.currentEngine.name;
 
   // emitter should fire and return the new engine
-  let [eventName, actualEngineName] = yield promise;
+  let [eventName, actualEngineName] = await promise;
   equal(eventName, "browser-search-engine-modified", `emitter sent the correct event ${eventName}`);
   equal(expectedEngineName, actualEngineName, `emitter set the correct engine ${expectedEngineName}`);
   NewTabSearchProvider.search.uninit();

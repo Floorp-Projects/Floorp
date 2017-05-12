@@ -10,7 +10,6 @@
 #include "js/TypeDecls.h"
 #include "mozilla/ErrorResult.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIDOMLocation.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsPIDOMWindow.h"
 #include "nsString.h"
@@ -27,15 +26,14 @@ namespace dom {
 // Location: Script "location" object
 //*****************************************************************************
 
-class Location final : public nsIDOMLocation
+class Location final : public nsISupports
                      , public nsWrapperCache
 {
 public:
   Location(nsPIDOMWindowInner* aWindow, nsIDocShell *aDocShell);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Location,
-                                                         nsIDOMLocation)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Location)
 
   // WebIDL API:
   void Assign(const nsAString& aUrl,

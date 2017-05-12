@@ -6,21 +6,21 @@
 
 var button, menuButton;
 /* Clicking a button should close the panel */
-add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   button = document.createElement("toolbarbutton");
   button.id = "browser_940307_button";
   button.setAttribute("label", "Button");
   PanelUI.contents.appendChild(button);
-  yield PanelUI.show();
+  await PanelUI.show();
   let hiddenAgain = promisePanelHidden(window);
   EventUtils.synthesizeMouseAtCenter(button, {});
-  yield hiddenAgain;
+  await hiddenAgain;
   button.remove();
 });
 
 /* Clicking a menu button should close the panel, opening the popup shouldn't.  */
-add_task(function*() {
+add_task(async function() {
   menuButton = document.createElement("toolbarbutton");
   menuButton.setAttribute("type", "menu-button");
   menuButton.id = "browser_940307_menubutton";
@@ -37,41 +37,41 @@ add_task(function*() {
   menuButton.appendChild(menuPopup);
   PanelUI.contents.appendChild(menuButton);
 
-  yield PanelUI.show();
+  await PanelUI.show();
   let hiddenAgain = promisePanelHidden(window);
   let innerButton = document.getAnonymousElementByAttribute(menuButton, "anonid", "button");
   EventUtils.synthesizeMouseAtCenter(innerButton, {});
-  yield hiddenAgain;
+  await hiddenAgain;
 
   // Now click the dropmarker to show the menu
-  yield PanelUI.show();
+  await PanelUI.show();
   hiddenAgain = promisePanelHidden(window);
   let menuShown = promisePanelElementShown(window, menuPopup);
   let dropmarker = document.getAnonymousElementByAttribute(menuButton, "type", "menu-button");
   EventUtils.synthesizeMouseAtCenter(dropmarker, {});
-  yield menuShown;
+  await menuShown;
   // Panel should stay open:
   ok(isPanelUIOpen(), "Panel should still be open");
   let menuHidden = promisePanelElementHidden(window, menuPopup);
   // Then click the menu item to close all the things
   EventUtils.synthesizeMouseAtCenter(menuItem, {});
-  yield menuHidden;
-  yield hiddenAgain;
+  await menuHidden;
+  await hiddenAgain;
   menuButton.remove();
 });
 
-add_task(function*() {
+add_task(async function() {
   let searchbar = document.getElementById("searchbar");
   gCustomizeMode.addToPanel(searchbar);
   let placement = CustomizableUI.getPlacementOfWidget("search-container");
   is(placement.area, CustomizableUI.AREA_PANEL, "Should be in panel");
-  yield PanelUI.show();
-  yield waitForCondition(() => "value" in searchbar && searchbar.value === "");
+  await PanelUI.show();
+  await waitForCondition(() => "value" in searchbar && searchbar.value === "");
 
   // Focusing a non-empty searchbox will cause us to open the
   // autocomplete panel and search for suggestions, which would
   // trigger network requests. Temporarily disable suggestions.
-  yield SpecialPowers.pushPrefEnv({set: [["browser.search.suggest.enabled", false]]});
+  await SpecialPowers.pushPrefEnv({set: [["browser.search.suggest.enabled", false]]});
 
   searchbar.value = "foo";
   searchbar.focus();
@@ -80,14 +80,14 @@ add_task(function*() {
   let contextmenu = document.getAnonymousElementByAttribute(textbox, "anonid", "input-box-contextmenu");
   let contextMenuShown = promisePanelElementShown(window, contextmenu);
   EventUtils.synthesizeMouseAtCenter(searchbar, {type: "contextmenu", button: 2});
-  yield contextMenuShown;
+  await contextMenuShown;
 
   ok(isPanelUIOpen(), "Panel should still be open");
 
   let selectAll = contextmenu.querySelector("[cmd='cmd_selectAll']");
   let contextMenuHidden = promisePanelElementHidden(window, contextmenu);
   EventUtils.synthesizeMouseAtCenter(selectAll, {});
-  yield contextMenuHidden;
+  await contextMenuHidden;
 
   // Hide the suggestion panel.
   searchbar.textbox.popup.hidePopup();
@@ -96,7 +96,7 @@ add_task(function*() {
 
   let hiddenPanelPromise = promisePanelHidden(window);
   EventUtils.synthesizeKey("VK_ESCAPE", {});
-  yield hiddenPanelPromise;
+  await hiddenPanelPromise;
   ok(!isPanelUIOpen(), "Panel should no longer be open");
 
   // We focused the search bar earlier - ensure we don't keep doing that.
@@ -105,19 +105,19 @@ add_task(function*() {
   CustomizableUI.reset();
 });
 
-add_task(function*() {
+add_task(async function() {
   button = document.createElement("toolbarbutton");
   button.id = "browser_946166_button_disabled";
   button.setAttribute("disabled", "true");
   button.setAttribute("label", "Button");
   PanelUI.contents.appendChild(button);
-  yield PanelUI.show();
+  await PanelUI.show();
   EventUtils.synthesizeMouseAtCenter(button, {});
   is(PanelUI.panel.state, "open", "Popup stays open");
   button.removeAttribute("disabled");
   let hiddenAgain = promisePanelHidden(window);
   EventUtils.synthesizeMouseAtCenter(button, {});
-  yield hiddenAgain;
+  await hiddenAgain;
   button.remove();
 });
 

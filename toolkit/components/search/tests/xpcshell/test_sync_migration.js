@@ -12,17 +12,17 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_sync_metadata_migration() {
+add_task(async function test_sync_metadata_migration() {
   do_check_false(Services.search.isInitialized);
   Services.search.getEngines();
   do_check_true(Services.search.isInitialized);
-  yield promiseAfterCache();
+  await promiseAfterCache();
 
   // Check that the entries are placed as specified correctly
-  let metadata = yield promiseEngineMetadata();
+  let metadata = await promiseEngineMetadata();
   do_check_eq(metadata["engine"].order, 1);
   do_check_eq(metadata["engine"].alias, "foo");
 
-  metadata = yield promiseGlobalMetadata();
+  metadata = await promiseGlobalMetadata();
   do_check_eq(metadata["searchDefaultExpir"], 1471013469846);
 });

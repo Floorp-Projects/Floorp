@@ -129,9 +129,9 @@ XPCOMUtils.defineLazyGetter(this, "ALL_BUILTIN_ITEMS", function() {
   const SPECIAL_CASES = [
     "back-button",
     "forward-button",
-    "urlbar-stop-button",
+    "stop-button",
     "urlbar-go-button",
-    "urlbar-reload-button",
+    "reload-button",
     "searchbar",
     "cut-button",
     "copy-button",

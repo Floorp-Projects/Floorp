@@ -5,7 +5,7 @@
 
 const TEST_URL = "http://mochi.test:8888/browser/browser/base/content/test/general/file_favicon_change.html"
 
-add_task(function*() {
+add_task(async function() {
   let extraTab = gBrowser.selectedTab = gBrowser.addTab();
   extraTab.linkedBrowser.loadURI(TEST_URL);
   let tabLoaded = BrowserTestUtils.browserLoaded(extraTab.linkedBrowser);
@@ -26,15 +26,15 @@ add_task(function*() {
     }
   });
   observer.observe(extraTab, {attributes: true});
-  yield tabLoaded;
-  yield haveChanged.promise;
+  await tabLoaded;
+  await haveChanged.promise;
   haveChanged = new Promise.defer();
   expectedFavicon = "http://example.org/other-icon";
   ContentTask.spawn(extraTab.linkedBrowser, null, function() {
     let ev = new content.CustomEvent("PleaseChangeFavicon", {});
     content.dispatchEvent(ev);
   });
-  yield haveChanged.promise;
+  await haveChanged.promise;
   observer.disconnect();
   gBrowser.removeTab(extraTab);
 });

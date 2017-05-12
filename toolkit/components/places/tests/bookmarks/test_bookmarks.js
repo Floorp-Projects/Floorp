@@ -80,7 +80,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_bookmarks() {
+add_task(async function test_bookmarks() {
   bs.addObserver(bookmarksObserver);
 
   // test special folders
@@ -330,7 +330,7 @@ add_task(function* test_bookmarks() {
   do_check_eq("bar", k);
 
   // test PlacesUtils.keywords.fetch()
-  let u = yield PlacesUtils.keywords.fetch("bar");
+  let u = await PlacesUtils.keywords.fetch("bar");
   do_check_eq("http://keywordtest.com/", u.url);
   // test removeFolderChildren
   // 1) add/remove each child type (bookmark, separator, folder)
@@ -588,7 +588,7 @@ add_task(function* test_bookmarks() {
   // bug 378820
   let uri1 = uri("http://foo.tld/a");
   bs.insertBookmark(testRoot, uri1, bs.DEFAULT_INDEX, "");
-  yield PlacesTestUtils.addVisits(uri1);
+  await PlacesTestUtils.addVisits(uri1);
 
   // bug 646993 - test bookmark titles longer than the maximum allowed length
   let title15 = Array(TITLE_LENGTH_MAX + 5).join("X");

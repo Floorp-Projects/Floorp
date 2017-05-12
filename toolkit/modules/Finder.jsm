@@ -10,7 +10,6 @@ const { interfaces: Ci, classes: Cc, utils: Cu } = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Geometry.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
   "resource://gre/modules/BrowserUtils.jsm");
@@ -238,9 +237,9 @@ Finder.prototype = {
     return searchString;
   },
 
-  highlight: Task.async(function* (aHighlight, aWord, aLinksOnly) {
-    yield this.highlighter.highlight(aHighlight, aWord, aLinksOnly);
-  }),
+  async highlight(aHighlight, aWord, aLinksOnly) {
+    await this.highlighter.highlight(aHighlight, aWord, aLinksOnly);
+  },
 
   getInitialSelection() {
     this._getWindow().setTimeout(() => {

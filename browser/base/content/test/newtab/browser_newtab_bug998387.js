@@ -1,15 +1,15 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-add_task(function* () {
+add_task(async function() {
   // set max rows to 1, to avoid scroll events by clicking middle button
-  yield pushPrefs(["browser.newtabpage.rows", 1]);
-  yield setLinks("0");
-  yield* addNewTabPageTab();
+  await pushPrefs(["browser.newtabpage.rows", 1]);
+  await setLinks("0");
+  await addNewTabPageTab();
   // we need a second newtab to honor max rows
-  yield* addNewTabPageTab();
+  await addNewTabPageTab();
 
-  yield ContentTask.spawn(gBrowser.selectedBrowser, {index: 0}, function* (args) {
+  await ContentTask.spawn(gBrowser.selectedBrowser, {index: 0}, async function(args) {
     let {site} = content.wrappedJSObject.gGrid.cells[args.index];
 
     let origOnClick = site.onClick;
@@ -28,12 +28,12 @@ add_task(function* () {
   });
 
   // Send a middle-click and make sure it happened
-  yield BrowserTestUtils.synthesizeMouseAtCenter(".newtab-control-block",
+  await BrowserTestUtils.synthesizeMouseAtCenter(".newtab-control-block",
                                                  {button: 1}, gBrowser.selectedBrowser);
 
-  yield messagePromise;
+  await messagePromise;
   ok(true, "middle click triggered click listener");
 
   // Make sure the cell didn't actually get blocked
-  yield* checkGrid("0");
+  await checkGrid("0");
 });

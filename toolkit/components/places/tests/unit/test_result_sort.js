@@ -10,24 +10,24 @@ const NHQO = Ci.nsINavHistoryQueryOptions;
  * Waits for onItemVisited notifications to be received.
  */
 function promiseOnItemVisited() {
-  let defer = Promise.defer();
-  let bookmarksObserver = {
-    __proto__: NavBookmarkObserver.prototype,
-    onItemVisited: function BO_onItemVisited() {
-      PlacesUtils.bookmarks.removeObserver(this);
-      // Enqueue to be sure that all onItemVisited notifications ran.
-      do_execute_soon(defer.resolve);
-    }
-  };
-  PlacesUtils.bookmarks.addObserver(bookmarksObserver);
-  return defer.promise;
+  return new Promise(resolve => {
+    let bookmarksObserver = {
+      __proto__: NavBookmarkObserver.prototype,
+      onItemVisited: function BO_onItemVisited() {
+        PlacesUtils.bookmarks.removeObserver(this);
+        // Enqueue to be sure that all onItemVisited notifications ran.
+        do_execute_soon(resolve);
+      }
+    };
+    PlacesUtils.bookmarks.addObserver(bookmarksObserver);
+  });
 }
 
 function run_test() {
   run_next_test();
 }
 
-add_task(function* test() {
+add_task(async function test() {
   let testFolder = PlacesUtils.bookmarks.createFolder(
     PlacesUtils.bookmarks.placesRoot,
     "Result-sort functionality tests root",
@@ -86,8 +86,8 @@ add_task(function* test() {
   do_print("Sort by keyword asc");
   result.sortingMode = NHQO.SORT_BY_KEYWORD_ASCENDING;
   checkOrder(id3, id2, id1);  // no keywords set - falling back to title sort
-  yield PlacesUtils.keywords.insert({ url: uri1.spec, keyword: "a" });
-  yield PlacesUtils.keywords.insert({ url: uri2.spec, keyword: "z" });
+  await PlacesUtils.keywords.insert({ url: uri1.spec, keyword: "a" });
+  await PlacesUtils.keywords.insert({ url: uri2.spec, keyword: "z" });
   checkOrder(id3, id1, id2);
 
   // XXXtodo: test history sortings (visit count, visit date)
@@ -117,8 +117,8 @@ add_task(function* test() {
   // items for that visit, and then notifies onItemVisited.  Thus we must
   // explicitly wait for that.
   let waitForVisited = promiseOnItemVisited();
-  yield PlacesTestUtils.addVisits({ uri: uri2, transition: TRANSITION_TYPED });
-  yield waitForVisited;
+  await PlacesTestUtils.addVisits({ uri: uri2, transition: TRANSITION_TYPED });
+  await waitForVisited;
 
   do_print("Sort by frecency desc");
   result.sortingMode = NHQO.SORT_BY_FRECENCY_DESCENDING;

@@ -26,7 +26,6 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
@@ -799,7 +798,7 @@ nsPlacesExpiration.prototype = {
     return this._expireOnIdle;
   },
 
-  _loadPrefs: Task.async(function* () {
+  async _loadPrefs() {
     // Get the user's limit, if it was set.
     this._urisLimit = this._prefBranch.getIntPref(PREF_MAX_URIS,
                                                   PREF_MAX_URIS_NOTSET);
@@ -841,7 +840,7 @@ nsPlacesExpiration.prototype = {
       // Calculate avg size of a URI in the database.
       let db;
       try {
-        db = yield PlacesUtils.promiseDBConnection();
+        db = await PlacesUtils.promiseDBConnection();
       } catch (ex) {
         // We may have been initialized late in the shutdown process, maybe
         // by a call to clear history on shutdown.
@@ -850,11 +849,11 @@ nsPlacesExpiration.prototype = {
         // application life-cycle.
       }
       if (db) {
-        let pageSize = (yield db.execute(`PRAGMA page_size`))[0].getResultByIndex(0);
-        let pageCount = (yield db.execute(`PRAGMA page_count`))[0].getResultByIndex(0);
-        let freelistCount = (yield db.execute(`PRAGMA freelist_count`))[0].getResultByIndex(0);
+        let pageSize = (await db.execute(`PRAGMA page_size`))[0].getResultByIndex(0);
+        let pageCount = (await db.execute(`PRAGMA page_count`))[0].getResultByIndex(0);
+        let freelistCount = (await db.execute(`PRAGMA freelist_count`))[0].getResultByIndex(0);
         let dbSize = (pageCount - freelistCount) * pageSize;
-        let uriCount = (yield db.execute(`SELECT count(*) FROM moz_places`))[0].getResultByIndex(0);
+        let uriCount = (await db.execute(`SELECT count(*) FROM moz_places`))[0].getResultByIndex(0);
         let avgURISize = Math.ceil(dbSize / uriCount);
         // For new profiles this value may be too large, due to the Sqlite header,
         // or Infinity when there are no pages.  Thus we must limit it.
@@ -875,7 +874,7 @@ nsPlacesExpiration.prototype = {
     if (this._interval <= 0) {
       this._interval = PREF_INTERVAL_SECONDS_NOTSET;
     }
-  }),
+  },
 
   /**
    * Evaluates the real number of pages in the database and the value currently
@@ -923,13 +922,13 @@ nsPlacesExpiration.prototype = {
    */
   _expireWithActionAndLimit:
   function PEX__expireWithActionAndLimit(aAction, aLimit) {
-    Task.spawn(function*() {
+    (async () => {
       // Ensure that we'll run statements with the most up-to-date pref values.
       // On shutdown we cannot do this, since we must enqueue the expiration
       // statements synchronously before the connection goes away.
       // TODO (Bug 1275878): handle this properly through a shutdown blocker.
       if (!this._shuttingDown)
-        yield this._loadPrefsPromise;
+        await this._loadPrefsPromise;
 
       // Skip expiration during batch mode.
       if (this._inBatchMode)
@@ -948,7 +947,7 @@ nsPlacesExpiration.prototype = {
 
       // Execute statements asynchronously in a transaction.
       this._db.executeAsync(boundStatements, boundStatements.length, this);
-    }.bind(this)).catch(Cu.reportError);
+    })().catch(Cu.reportError);
   },
 
   /**

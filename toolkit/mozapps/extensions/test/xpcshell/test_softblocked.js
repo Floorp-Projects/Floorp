@@ -70,7 +70,7 @@ function run_test() {
 
 // Tests that an appDisabled add-on that becomes softBlocked remains disabled
 // when becoming appEnabled
-add_task(function* () {
+add_task(async function() {
   writeInstallRDFForExtension({
     id: "softblock1@tests.mozilla.org",
     version: "1.0",
@@ -84,7 +84,7 @@ add_task(function* () {
 
   startupManager();
 
-  let s1 = yield promiseAddonByID("softblock1@tests.mozilla.org");
+  let s1 = await promiseAddonByID("softblock1@tests.mozilla.org");
 
   // Make sure to mark it as previously enabled.
   s1.userDisabled = false;
@@ -93,15 +93,15 @@ add_task(function* () {
   do_check_true(s1.appDisabled);
   do_check_false(s1.isActive);
 
-  yield load_blocklist("test_softblocked1.xml");
+  await load_blocklist("test_softblocked1.xml");
 
   do_check_true(s1.softDisabled);
   do_check_true(s1.appDisabled);
   do_check_false(s1.isActive);
 
-  yield promiseRestartManager("2");
+  await promiseRestartManager("2");
 
-  s1 = yield promiseAddonByID("softblock1@tests.mozilla.org");
+  s1 = await promiseAddonByID("softblock1@tests.mozilla.org");
 
   do_check_true(s1.softDisabled);
   do_check_false(s1.appDisabled);

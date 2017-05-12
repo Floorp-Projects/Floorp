@@ -403,8 +403,7 @@ static void twoPointConicalCode(const SkShader::GradientInfo& info,
     SkScalar dy = info.fPoint[1].fY - info.fPoint[0].fY;
     SkScalar r0 = info.fRadius[0];
     SkScalar dr = info.fRadius[1] - info.fRadius[0];
-    SkScalar a = SkScalarMul(dx, dx) + SkScalarMul(dy, dy) -
-                 SkScalarMul(dr, dr);
+    SkScalar a = dx * dx + dy * dy - dr * dr;
 
     // First compute t, if the pixel falls outside the cone, then we'll end
     // with 'false' on the stack, otherwise we'll push 'true' with t below it
@@ -422,12 +421,12 @@ static void twoPointConicalCode(const SkShader::GradientInfo& info,
     function->writeText(" mul exch ");
     SkPDFUtils::AppendScalar(dx, function);
     function->writeText(" mul add ");
-    SkPDFUtils::AppendScalar(SkScalarMul(r0, dr), function);
+    SkPDFUtils::AppendScalar(r0 * dr, function);
     function->writeText(" add -2 mul dup dup mul\n");
 
     // c = x^2 + y^2 + radius0^2
     function->writeText("4 2 roll dup mul exch dup mul add ");
-    SkPDFUtils::AppendScalar(SkScalarMul(r0, r0), function);
+    SkPDFUtils::AppendScalar(r0 * r0, function);
     function->writeText(" sub dup 4 1 roll\n");
 
     // Contents of the stack at this point: c, b, b^2, c
@@ -453,7 +452,7 @@ static void twoPointConicalCode(const SkShader::GradientInfo& info,
         // root t for which radius(t) > 0
 
         // compute the discriminant (b^2 - 4ac)
-        SkPDFUtils::AppendScalar(SkScalarMul(SkIntToScalar(4), a), function);
+        SkPDFUtils::AppendScalar(a * 4, function);
         function->writeText(" mul sub dup\n");
 
         // if d >= 0, proceed
@@ -578,6 +577,9 @@ sk_sp<SkPDFObject> SkPDFShader::GetPDFShader(SkPDFDocument* doc,
                                              const SkMatrix& matrix,
                                              const SkIRect& surfaceBBox,
                                              SkScalar rasterScale) {
+    if (surfaceBBox.isEmpty()) {
+        return nullptr;
+    }
     SkBitmap image;
     State state(shader, matrix, surfaceBBox, rasterScale, &image);
     return get_pdf_shader_by_state(
@@ -1214,8 +1216,15 @@ bool SkPDFShader::State::operator==(const SkPDFShader::State& b) const {
 SkPDFShader::State::State(SkShader* shader, const SkMatrix& canvasTransform,
                           const SkIRect& bbox, SkScalar rasterScale,
                           SkBitmap* imageDst)
-        : fCanvasTransform(canvasTransform),
-          fBBox(bbox) {
+        : fType(SkShader::kNone_GradientType)
+        , fInfo{0, nullptr, nullptr, {{0.0f, 0.0f}, {0.0f, 0.0f}},
+                {0.0f, 0.0f}, SkShader::kClamp_TileMode, 0}
+        , fCanvasTransform(canvasTransform)
+        , fShaderTransform{SkMatrix::I()}
+        , fBBox(bbox)
+        , fBitmapKey{{0, 0, 0, 0}, 0}
+        , fImageTileModes{SkShader::kClamp_TileMode,
+                          SkShader::kClamp_TileMode} {
     SkASSERT(imageDst);
     fInfo.fColorCount = 0;
     fInfo.fColors = nullptr;
@@ -1260,10 +1269,10 @@ SkPDFShader::State::State(SkShader* shader, const SkMatrix& canvasTransform,
         rasterScale *= SkScalarSqrt(kMaxBitmapArea / bitmapArea);
     }
 
-    SkISize size = SkISize::Make(SkScalarRoundToInt(rasterScale * bbox.width()),
-                                 SkScalarRoundToInt(rasterScale * bbox.height()));
-    SkSize scale = SkSize::Make(SkIntToScalar(size.width()) / shaderRect.width(),
-                                SkIntToScalar(size.height()) / shaderRect.height());
+    SkISize size = {SkScalarRoundToInt(rasterScale * bbox.width()),
+                    SkScalarRoundToInt(rasterScale * bbox.height())};
+    SkSize scale = {SkIntToScalar(size.width()) / shaderRect.width(),
+                    SkIntToScalar(size.height()) / shaderRect.height()};
 
     imageDst->allocN32Pixels(size.width(), size.height());
     imageDst->eraseColor(SK_ColorTRANSPARENT);

@@ -9,7 +9,7 @@
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
 
-add_task(function* test() {
+add_task(async function test() {
   const TEST_URL = "http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/browser_privatebrowsing_placesTitleNoUpdate.html"
   const TEST_URI = Services.io.newURI(TEST_URL);
   const TITLE_1 = "Title 1";
@@ -36,10 +36,10 @@ add_task(function* test() {
     });
   }
 
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
 
   let tabToClose = gBrowser.selectedTab = gBrowser.addTab(TEST_URL);
-  yield waitForTitleChanged();
+  await waitForTitleChanged();
   is(PlacesUtils.history.getPageTitle(TEST_URI), TITLE_1, "The title matches the orignal title after first visit");
 
   let place = {
@@ -56,14 +56,14 @@ add_task(function* test() {
     handleCompletion() {}
   });
 
-  yield waitForTitleChanged();
+  await waitForTitleChanged();
   is(PlacesUtils.history.getPageTitle(TEST_URI), TITLE_2, "The title matches the updated title after updating visit");
 
-  let privateWin = yield BrowserTestUtils.openNewBrowserWindow({private: true});
-  yield BrowserTestUtils.browserLoaded(privateWin.gBrowser.addTab(TEST_URL).linkedBrowser);
+  let privateWin = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  await BrowserTestUtils.browserLoaded(privateWin.gBrowser.addTab(TEST_URL).linkedBrowser);
 
   is(PlacesUtils.history.getPageTitle(TEST_URI), TITLE_2, "The title remains the same after visiting in private window");
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
 
   // Cleanup
   BrowserTestUtils.closeWindow(privateWin);

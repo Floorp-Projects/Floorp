@@ -26,7 +26,6 @@
     var Cu = Components.utils;
 
     Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-    Components.utils.import("resource://gre/modules/Task.jsm");
     Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
     XPCOMUtils.defineLazyModuleGetter(window,
       "PlacesUIUtils", "resource:///modules/PlacesUIUtils.jsm");

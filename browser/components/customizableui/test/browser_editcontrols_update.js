@@ -44,41 +44,41 @@ function expectCommandUpdate(count, testWindow = window) {
   });
 }
 
-add_task(function* test_init() {
+add_task(async function test_init() {
   // Put something on the clipboard to verify that the paste button is properly enabled during the test.
   let clipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     SimpleTest.waitForClipboard("Sample", function() { clipboardHelper.copyString("Sample"); }, resolve);
   });
 
   // Open and close the panel first so that it is fully initialized.
-  yield PanelUI.show();
+  await PanelUI.show();
   let hiddenPromise = promisePanelHidden(window);
   PanelUI.hide();
-  yield hiddenPromise;
+  await hiddenPromise;
 });
 
 // Test updating when the panel is open with the edit-controls on the panel.
 // Updates should occur.
-add_task(function* test_panelui_opened() {
+add_task(async function test_panelui_opened() {
   gURLBar.focus();
   gURLBar.value = "test";
 
-  yield PanelUI.show();
+  await PanelUI.show();
 
   checkState(false, "Update when edit-controls is on panel and visible");
 
   let overridePromise = expectCommandUpdate(1);
   gURLBar.select();
-  yield overridePromise;
+  await overridePromise;
 
   checkState(true, "Update when edit-controls is on panel and selection changed");
 
   overridePromise = expectCommandUpdate(0);
   let hiddenPromise = promisePanelHidden(window);
   PanelUI.hide();
-  yield hiddenPromise;
-  yield overridePromise;
+  await hiddenPromise;
+  await overridePromise;
 
   // Check that updates do not occur after the panel has been closed.
   checkState(true, "Update when edit-controls is on panel and hidden");
@@ -87,16 +87,16 @@ add_task(function* test_panelui_opened() {
   // main menubar shortcuts will work properly.
   overridePromise = expectCommandUpdate(isMac ? 1 : 0);
   gURLBar.select();
-  yield overridePromise;
+  await overridePromise;
   checkState(true, "Update when edit-controls is on panel, hidden and selection changed");
 });
 
 // Test updating when the edit-controls are moved to the toolbar.
-add_task(function* test_panelui_customize_to_toolbar() {
-  yield startCustomizing();
+add_task(async function test_panelui_customize_to_toolbar() {
+  await startCustomizing();
   let navbar = document.getElementById("nav-bar").customizationTarget;
   simulateItemDrag(document.getElementById("edit-controls"), navbar);
-  yield endCustomizing();
+  await endCustomizing();
 
   // updateEditUIVisibility should be called when customization ends but isn't. See bug 1359790.
   updateEditUIVisibility();
@@ -105,21 +105,21 @@ add_task(function* test_panelui_customize_to_toolbar() {
   gURLBar.select();
   gURLBar.focus();
   gURLBar.value = "other";
-  yield overridePromise;
+  await overridePromise;
   checkState(false, "Update when edit-controls on toolbar and focused");
 
   overridePromise = expectCommandUpdate(1);
   gURLBar.select();
-  yield overridePromise;
+  await overridePromise;
   checkState(true, "Update when edit-controls on toolbar and selection changed");
 });
 
 // Test updating when the edit-controls are moved to the palette.
-add_task(function* test_panelui_customize_to_palette() {
-  yield startCustomizing();
+add_task(async function test_panelui_customize_to_palette() {
+  await startCustomizing();
   let palette = document.getElementById("customization-palette");
   simulateItemDrag(document.getElementById("edit-controls"), palette);
-  yield endCustomizing();
+  await endCustomizing();
 
   // updateEditUIVisibility should be called when customization ends but isn't. See bug 1359790.
   updateEditUIVisibility();
@@ -128,35 +128,35 @@ add_task(function* test_panelui_customize_to_palette() {
   gURLBar.focus();
   gURLBar.value = "other";
   gURLBar.select();
-  yield overridePromise;
+  await overridePromise;
 
   // If the UI isn't found, the command is set to be enabled.
   checkState(true, "Update when edit-controls is on palette, hidden and selection changed");
 });
 
-add_task(function* finish() {
-  yield resetCustomization();
+add_task(async function finish() {
+  await resetCustomization();
 });
 
 // Test updating in the initial state when the edit-controls are on the panel but
 // have not yet been created. This needs to be done in a new window to ensure that
 // other tests haven't opened the panel.
-add_task(function* test_initial_state() {
-  let testWindow = yield BrowserTestUtils.openNewBrowserWindow();
-  yield SimpleTest.promiseFocus(testWindow);
+add_task(async function test_initial_state() {
+  let testWindow = await BrowserTestUtils.openNewBrowserWindow();
+  await SimpleTest.promiseFocus(testWindow);
 
   let overridePromise = expectCommandUpdate(isMac, testWindow);
 
   testWindow.gURLBar.focus();
   testWindow.gURLBar.value = "test";
 
-  yield overridePromise;
+  await overridePromise;
 
   // Commands won't update when no edit UI is present. They default to being
   // enabled so that keyboard shortcuts will work. The real enabled state will
   // be checked when shortcut is pressed.
   checkState(!isMac, "No update when edit-controls is on panel and not visible", testWindow);
 
-  yield BrowserTestUtils.closeWindow(testWindow);
-  yield SimpleTest.promiseFocus(window);
+  await BrowserTestUtils.closeWindow(testWindow);
+  await SimpleTest.promiseFocus(window);
 });

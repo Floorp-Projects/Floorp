@@ -179,10 +179,15 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
 
     gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
 
-    uint64_t resetSeqNo = GPUProcessManager::Get()->GetNextDeviceResetSequenceNumber();
     nsTArray<nsWindow*> windows = EnumAllWindows();
     for (nsWindow* window : windows) {
-      window->OnRenderingDeviceReset(resetSeqNo);
+      window->OnRenderingDeviceReset();
+    }
+
+    nsTArray<mozilla::dom::ContentParent*> children;
+    mozilla::dom::ContentParent::GetAll(children);
+    for (const auto& child : children) {
+      child->OnCompositorDeviceReset();
     }
 
     gfxCriticalNote << "(nsWindow) Finished device reset.";

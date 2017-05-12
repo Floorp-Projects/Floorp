@@ -21,6 +21,12 @@ module.exports = {
     "no-implied-eval": "error",
     "no-eval": "error",
   },
+  // The html plugin is enabled via a command line option on eslint. To avoid
+  // bad interactions with the xml preprocessor in eslint-plugin-mozilla, we
+  // turn off processing of the html plugin for .xml files.
+  "settings": {
+    "html/xml-extensions": [ ".xhtml" ]
+  },
   "env": {
     "es6": true
   },

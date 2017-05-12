@@ -17,8 +17,8 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_defaultresourceicon() {
-  yield asyncInit();
+add_task(async function test_defaultresourceicon() {
+  await asyncInit();
 
   let engine1 = Services.search.getEngineByName("engine-resourceicon");
   do_check_eq(engine1.iconURI.spec, "resource://search-plugins/icon16.png");

@@ -3,7 +3,7 @@
 
 // See also browser/base/content/test/newtab/.
 
-add_task(function* validCacheMidPopulation() {
+add_task(async function validCacheMidPopulation() {
   let expectedLinks = makeLinks(0, 3, 1);
 
   let provider = new TestProvider(done => done(expectedLinks));
@@ -18,7 +18,7 @@ add_task(function* validCacheMidPopulation() {
   do_check_false(NewTabUtils.isTopSiteGivenProvider("example1.com", provider));
   do_check_links(NewTabUtils.getProviderLinks(provider), []);
 
-  yield promise;
+  await promise;
 
   // Once the cache is populated, we get the expected results
   do_check_true(NewTabUtils.isTopSiteGivenProvider("example1.com", provider));
@@ -26,7 +26,7 @@ add_task(function* validCacheMidPopulation() {
   NewTabUtils.links.removeProvider(provider);
 });
 
-add_task(function* notifyLinkDelete() {
+add_task(async function notifyLinkDelete() {
   let expectedLinks = makeLinks(0, 3, 1);
 
   let provider = new TestProvider(done => done(expectedLinks));
@@ -34,7 +34,7 @@ add_task(function* notifyLinkDelete() {
 
   NewTabUtils.initWithoutProviders();
   NewTabUtils.links.addProvider(provider);
-  yield new Promise(resolve => NewTabUtils.links.populateCache(resolve));
+  await new Promise(resolve => NewTabUtils.links.populateCache(resolve));
 
   do_check_links(NewTabUtils.links.getLinks(), expectedLinks);
 
@@ -61,17 +61,17 @@ add_task(function* notifyLinkDelete() {
   NewTabUtils.links.removeProvider(provider);
 });
 
-add_task(function* populatePromise() {
+add_task(async function populatePromise() {
   let count = 0;
   let expectedLinks = makeLinks(0, 10, 2);
 
-  let getLinksFcn = Task.async(function* (callback) {
+  let getLinksFcn = async function(callback) {
     // Should not be calling getLinksFcn twice
     count++;
     do_check_eq(count, 1);
-    yield Promise.resolve();
+    await Promise.resolve();
     callback(expectedLinks);
-  });
+  };
 
   let provider = new TestProvider(getLinksFcn);
 
@@ -85,7 +85,7 @@ add_task(function* populatePromise() {
   });
 });
 
-add_task(function* isTopSiteGivenProvider() {
+add_task(async function isTopSiteGivenProvider() {
   let expectedLinks = makeLinks(0, 10, 2);
 
   // The lowest 2 frecencies have the same base domain.
@@ -96,7 +96,7 @@ add_task(function* isTopSiteGivenProvider() {
 
   NewTabUtils.initWithoutProviders();
   NewTabUtils.links.addProvider(provider);
-  yield new Promise(resolve => NewTabUtils.links.populateCache(resolve));
+  await new Promise(resolve => NewTabUtils.links.populateCache(resolve));
 
   do_check_eq(NewTabUtils.isTopSiteGivenProvider("example2.com", provider), true);
   do_check_eq(NewTabUtils.isTopSiteGivenProvider("example1.com", provider), false);
@@ -124,7 +124,7 @@ add_task(function* isTopSiteGivenProvider() {
   NewTabUtils.links.removeProvider(provider);
 });
 
-add_task(function* multipleProviders() {
+add_task(async function multipleProviders() {
   // Make each provider generate NewTabUtils.links.maxNumLinks links to check
   // that no more than maxNumLinks are actually returned in the merged list.
   let evenLinks = makeLinks(0, 2 * NewTabUtils.links.maxNumLinks, 2);
@@ -136,7 +136,7 @@ add_task(function* multipleProviders() {
   NewTabUtils.links.addProvider(evenProvider);
   NewTabUtils.links.addProvider(oddProvider);
 
-  yield new Promise(resolve => NewTabUtils.links.populateCache(resolve));
+  await new Promise(resolve => NewTabUtils.links.populateCache(resolve));
 
   let links = NewTabUtils.links.getLinks();
   let expectedLinks = makeLinks(NewTabUtils.links.maxNumLinks,
@@ -149,14 +149,14 @@ add_task(function* multipleProviders() {
   NewTabUtils.links.removeProvider(oddProvider);
 });
 
-add_task(function* changeLinks() {
+add_task(async function changeLinks() {
   let expectedLinks = makeLinks(0, 20, 2);
   let provider = new TestProvider(done => done(expectedLinks));
 
   NewTabUtils.initWithoutProviders();
   NewTabUtils.links.addProvider(provider);
 
-  yield new Promise(resolve => NewTabUtils.links.populateCache(resolve));
+  await new Promise(resolve => NewTabUtils.links.populateCache(resolve));
 
   do_check_links(NewTabUtils.links.getLinks(), expectedLinks);
 
@@ -199,7 +199,7 @@ add_task(function* changeLinks() {
 
   // Since _populateProviderCache() is async, we must wait until the provider's
   // populate promise has been resolved.
-  yield NewTabUtils.links._providers.get(provider).populatePromise;
+  await NewTabUtils.links._providers.get(provider).populatePromise;
 
   // NewTabUtils.links will now repopulate its cache
   do_check_links(NewTabUtils.links.getLinks(), expectedLinks);
@@ -207,28 +207,28 @@ add_task(function* changeLinks() {
   NewTabUtils.links.removeProvider(provider);
 });
 
-add_task(function* oneProviderAlreadyCached() {
+add_task(async function oneProviderAlreadyCached() {
   let links1 = makeLinks(0, 10, 1);
   let provider1 = new TestProvider(done => done(links1));
 
   NewTabUtils.initWithoutProviders();
   NewTabUtils.links.addProvider(provider1);
 
-  yield new Promise(resolve => NewTabUtils.links.populateCache(resolve));
+  await new Promise(resolve => NewTabUtils.links.populateCache(resolve));
   do_check_links(NewTabUtils.links.getLinks(), links1);
 
   let links2 = makeLinks(10, 20, 1);
   let provider2 = new TestProvider(done => done(links2));
   NewTabUtils.links.addProvider(provider2);
 
-  yield new Promise(resolve => NewTabUtils.links.populateCache(resolve));
+  await new Promise(resolve => NewTabUtils.links.populateCache(resolve));
   do_check_links(NewTabUtils.links.getLinks(), links2.concat(links1));
 
   NewTabUtils.links.removeProvider(provider1);
   NewTabUtils.links.removeProvider(provider2);
 });
 
-add_task(function* newLowRankedLink() {
+add_task(async function newLowRankedLink() {
   // Init a provider with 10 links and make its maximum number also 10.
   let links = makeLinks(0, 10, 1);
   let provider = new TestProvider(done => done(links));
@@ -237,7 +237,7 @@ add_task(function* newLowRankedLink() {
   NewTabUtils.initWithoutProviders();
   NewTabUtils.links.addProvider(provider);
 
-  yield new Promise(resolve => NewTabUtils.links.populateCache(resolve));
+  await new Promise(resolve => NewTabUtils.links.populateCache(resolve));
   do_check_links(NewTabUtils.links.getLinks(), links);
 
   // Notify of a new link that's low-ranked enough not to make the list.
@@ -255,7 +255,7 @@ add_task(function* newLowRankedLink() {
   NewTabUtils.links.removeProvider(provider);
 });
 
-add_task(function* extractSite() {
+add_task(async function extractSite() {
   // All these should extract to the same site
   [ "mozilla.org",
     "m.mozilla.org",
@@ -307,7 +307,7 @@ add_task(function* extractSite() {
   });
 });
 
-add_task(function* faviconBytesToDataURI() {
+add_task(async function faviconBytesToDataURI() {
   let tests = [
         [{favicon: "bar".split("").map(s => s.charCodeAt(0)), mimeType: "foo"}],
         [{favicon: "bar".split("").map(s => s.charCodeAt(0)), mimeType: "foo", xxyy: "quz"}]
@@ -323,13 +323,13 @@ add_task(function* faviconBytesToDataURI() {
   }
 });
 
-add_task(function* addFavicons() {
-  yield setUpActivityStreamTest();
+add_task(async function addFavicons() {
+  await setUpActivityStreamTest();
   let provider = NewTabUtils.activityStreamProvider;
 
   // start by passing in a bad uri and check that we get a null favicon back
   let links = [{url: "mozilla.com"}];
-  yield provider._addFavicons(links);
+  await provider._addFavicons(links);
   Assert.equal(links[0].favicon, null, "Got a null favicon because we passed in a bad url");
   Assert.equal(links[0].mimeType, null, "Got a null mime type because we passed in a bad url");
 
@@ -341,68 +341,68 @@ add_task(function* addFavicons() {
   let visit = [
     {uri: links[0].url, visitDate: timeDaysAgo(0), transition: PlacesUtils.history.TRANSITION_TYPED}
   ];
-  yield PlacesTestUtils.addVisits(visit);
+  await PlacesTestUtils.addVisits(visit);
 
   let faviconData = new Map();
   faviconData.set("https://mozilla.com", base64URL);
-  yield PlacesTestUtils.addFavicons(faviconData);
+  await PlacesTestUtils.addFavicons(faviconData);
 
-  yield provider._addFavicons(links);
+  await provider._addFavicons(links);
   Assert.equal(links[0].mimeType, "image/png", "Got the right mime type before deleting it");
   Assert.equal(links[0].faviconLength, links[0].favicon.length, "Got the right length for the byte array");
   Assert.equal(provider._faviconBytesToDataURI(links)[0].favicon, base64URL, "Got the right favicon");
 });
 
-add_task(function* getTopFrecentSites() {
-  yield setUpActivityStreamTest();
+add_task(async function getTopFrecentSites() {
+  await setUpActivityStreamTest();
 
   let provider = NewTabUtils.activityStreamLinks;
-  let links = yield provider.getTopSites();
+  let links = await provider.getTopSites();
   Assert.equal(links.length, 0, "empty history yields empty links");
 
   // add a visit
   let testURI = "http://mozilla.com/";
-  yield PlacesTestUtils.addVisits(testURI);
+  await PlacesTestUtils.addVisits(testURI);
 
-  links = yield provider.getTopSites();
+  links = await provider.getTopSites();
   Assert.equal(links.length, 1, "adding a visit yields a link");
   Assert.equal(links[0].url, testURI, "added visit corresponds to added url");
   Assert.equal(links[0].eTLD, "com", "added visit mozilla.com has 'com' eTLD");
 });
 
-add_task(function* getTopFrecentSites_dedupeWWW() {
-  yield setUpActivityStreamTest();
+add_task(async function getTopFrecentSites_dedupeWWW() {
+  await setUpActivityStreamTest();
 
   let provider = NewTabUtils.activityStreamLinks;
 
-  let links = yield provider.getTopSites();
+  let links = await provider.getTopSites();
   Assert.equal(links.length, 0, "empty history yields empty links");
 
   // add a visit without www
   let testURI = "http://mozilla.com";
-  yield PlacesTestUtils.addVisits(testURI);
+  await PlacesTestUtils.addVisits(testURI);
 
   // add a visit with www
   testURI = "http://www.mozilla.com";
-  yield PlacesTestUtils.addVisits(testURI);
+  await PlacesTestUtils.addVisits(testURI);
 
   // Test combined frecency score
-  links = yield provider.getTopSites();
+  links = await provider.getTopSites();
   Assert.equal(links.length, 1, "adding both www. and no-www. yields one link");
   Assert.equal(links[0].frecency, 200, "frecency scores are combined");
 
   // add another page visit with www and without www
   testURI = "http://mozilla.com/page";
-  yield PlacesTestUtils.addVisits(testURI);
+  await PlacesTestUtils.addVisits(testURI);
   testURI = "http://www.mozilla.com/page";
-  yield PlacesTestUtils.addVisits(testURI);
-  links = yield provider.getTopSites();
+  await PlacesTestUtils.addVisits(testURI);
+  links = await provider.getTopSites();
   Assert.equal(links.length, 1, "adding both www. and no-www. yields one link");
   Assert.equal(links[0].frecency, 200, "frecency scores are combined ignoring extra pages");
 });
 
-add_task(function* getTopFrencentSites_maxLimit() {
-  yield setUpActivityStreamTest();
+add_task(async function getTopFrencentSites_maxLimit() {
+  await setUpActivityStreamTest();
 
   let provider = NewTabUtils.activityStreamLinks;
 
@@ -410,16 +410,16 @@ add_task(function* getTopFrencentSites_maxLimit() {
   const MANY_LINKS = 20;
   for (let i = 0; i < MANY_LINKS; i++) {
     let testURI = `http://mozilla${i}.com`;
-    yield PlacesTestUtils.addVisits(testURI);
+    await PlacesTestUtils.addVisits(testURI);
   }
 
-  let links = yield provider.getTopSites();
+  let links = await provider.getTopSites();
   Assert.ok(links.length < MANY_LINKS, "query default limited to less than many");
   Assert.ok(links.length > 6, "query default to more than visible count");
 });
 
-add_task(function* getTopFrecentSites_order() {
-  yield setUpActivityStreamTest();
+add_task(async function getTopFrecentSites_order() {
+  await setUpActivityStreamTest();
 
   let provider = NewTabUtils.activityStreamLinks;
   let {TRANSITION_TYPED} = PlacesUtils.history;
@@ -438,7 +438,7 @@ add_task(function* getTopFrecentSites_order() {
     {uri: "https://mozilla4.com/3", visitDate: timeLater}
   ];
 
-  let links = yield provider.getTopSites();
+  let links = await provider.getTopSites();
   Assert.equal(links.length, 0, "empty history yields empty links");
 
   let base64URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAA" +
@@ -448,10 +448,10 @@ add_task(function* getTopFrecentSites_order() {
   let faviconData = new Map();
   faviconData.set("https://mozilla3.com/2", base64URL);
 
-  yield PlacesTestUtils.addVisits(visits);
-  yield PlacesTestUtils.addFavicons(faviconData);
+  await PlacesTestUtils.addVisits(visits);
+  await PlacesTestUtils.addFavicons(faviconData);
 
-  links = yield provider.getTopSites();
+  links = await provider.getTopSites();
   Assert.equal(links.length, visits.length, "number of links added is the same as obtain by getTopFrecentSites");
 
   // first link doesn't have a favicon
@@ -475,8 +475,8 @@ add_task(function* getTopFrecentSites_order() {
   Assert.ok(isVisitDateOK(links[3].lastVisitDate), "visit date within expected range");
 });
 
-add_task(function* activitySteamProvider_deleteHistoryLink() {
-  yield setUpActivityStreamTest();
+add_task(async function activitySteamProvider_deleteHistoryLink() {
+  await setUpActivityStreamTest();
 
   let provider = NewTabUtils.activityStreamLinks;
 
@@ -489,25 +489,25 @@ add_task(function* activitySteamProvider_deleteHistoryLink() {
     {uri: "https://mozilla2.com/1", visitDate: timeDaysAgo(0)}
   ];
 
-  let size = yield NewTabUtils.activityStreamProvider.getHistorySize();
+  let size = await NewTabUtils.activityStreamProvider.getHistorySize();
   Assert.equal(size, 0, "empty history has size 0");
 
-  yield PlacesTestUtils.addVisits(visits);
+  await PlacesTestUtils.addVisits(visits);
 
-  size = yield NewTabUtils.activityStreamProvider.getHistorySize();
+  size = await NewTabUtils.activityStreamProvider.getHistorySize();
   Assert.equal(size, 2, "expected history size");
 
   // delete a link
-  let deleted = yield provider.deleteHistoryEntry("https://mozilla2.com/1");
+  let deleted = await provider.deleteHistoryEntry("https://mozilla2.com/1");
   Assert.equal(deleted, true, "link is deleted");
 
   // ensure that there's only one link left
-  size = yield NewTabUtils.activityStreamProvider.getHistorySize();
+  size = await NewTabUtils.activityStreamProvider.getHistorySize();
   Assert.equal(size, 1, "expected history size");
 });
 
-add_task(function* activityStream_addBookmark() {
-  yield setUpActivityStreamTest();
+add_task(async function activityStream_addBookmark() {
+  await setUpActivityStreamTest();
 
   let provider = NewTabUtils.activityStreamLinks;
   let bookmarks = [
@@ -515,31 +515,31 @@ add_task(function* activityStream_addBookmark() {
     "https://mozilla1.com/1"
   ];
 
-  let bookmarksSize = yield NewTabUtils.activityStreamProvider.getBookmarksSize();
+  let bookmarksSize = await NewTabUtils.activityStreamProvider.getBookmarksSize();
   Assert.equal(bookmarksSize, 0, "empty bookmarks yields 0 size");
 
   for (let url of bookmarks) {
-    yield provider.addBookmark(url);
+    await provider.addBookmark(url);
   }
-  bookmarksSize = yield NewTabUtils.activityStreamProvider.getBookmarksSize();
+  bookmarksSize = await NewTabUtils.activityStreamProvider.getBookmarksSize();
   Assert.equal(bookmarksSize, 2, "size 2 for 2 bookmarks added");
 });
 
-add_task(function* activityStream_getBookmark() {
-    yield setUpActivityStreamTest();
+add_task(async function activityStream_getBookmark() {
+    await setUpActivityStreamTest();
 
     let provider = NewTabUtils.activityStreamLinks;
-    let bookmark = yield provider.addBookmark("https://mozilla1.com/0");
+    let bookmark = await provider.addBookmark("https://mozilla1.com/0");
 
-    let result = yield NewTabUtils.activityStreamProvider.getBookmark(bookmark.guid);
+    let result = await NewTabUtils.activityStreamProvider.getBookmark(bookmark.guid);
     Assert.equal(result.bookmarkGuid, bookmark.guid, "got the correct bookmark guid");
     Assert.equal(result.bookmarkTitle, bookmark.title, "got the correct bookmark title");
     Assert.equal(result.lastModified, bookmark.lastModified.getTime(), "got the correct bookmark time");
     Assert.equal(result.url, bookmark.url.href, "got the correct bookmark url");
 });
 
-add_task(function* activityStream_deleteBookmark() {
-  yield setUpActivityStreamTest();
+add_task(async function activityStream_deleteBookmark() {
+  await setUpActivityStreamTest();
 
   let provider = NewTabUtils.activityStreamLinks;
   let bookmarks = [
@@ -547,27 +547,27 @@ add_task(function* activityStream_deleteBookmark() {
     {url: "https://mozilla1.com/1", parentGuid: PlacesUtils.bookmarks.unfiledGuid, type: PlacesUtils.bookmarks.TYPE_BOOKMARK}
   ];
 
-  let bookmarksSize = yield NewTabUtils.activityStreamProvider.getBookmarksSize();
+  let bookmarksSize = await NewTabUtils.activityStreamProvider.getBookmarksSize();
   Assert.equal(bookmarksSize, 0, "empty bookmarks yields 0 size");
 
   for (let placeInfo of bookmarks) {
-    yield PlacesUtils.bookmarks.insert(placeInfo);
+    await PlacesUtils.bookmarks.insert(placeInfo);
   }
 
-  bookmarksSize = yield NewTabUtils.activityStreamProvider.getBookmarksSize();
+  bookmarksSize = await NewTabUtils.activityStreamProvider.getBookmarksSize();
   Assert.equal(bookmarksSize, 2, "size 2 for 2 bookmarks added");
 
-  let bookmarkGuid = yield new Promise(resolve => PlacesUtils.bookmarks.fetch(
+  let bookmarkGuid = await new Promise(resolve => PlacesUtils.bookmarks.fetch(
     {url: bookmarks[0].url}, bookmark => resolve(bookmark.guid)));
-  let deleted = yield provider.deleteBookmark(bookmarkGuid);
+  let deleted = await provider.deleteBookmark(bookmarkGuid);
   Assert.equal(deleted.guid, bookmarkGuid, "the correct bookmark was deleted");
 
-  bookmarksSize = yield NewTabUtils.activityStreamProvider.getBookmarksSize();
+  bookmarksSize = await NewTabUtils.activityStreamProvider.getBookmarksSize();
   Assert.equal(bookmarksSize, 1, "size 1 after deleting");
 });
 
-add_task(function* activityStream_blockedURLs() {
-  yield setUpActivityStreamTest();
+add_task(async function activityStream_blockedURLs() {
+  await setUpActivityStreamTest();
 
   let provider = NewTabUtils.activityStreamLinks;
   NewTabUtils.blockedLinks.addObserver(provider);
@@ -583,13 +583,13 @@ add_task(function* activityStream_blockedURLs() {
     {uri: "https://example3.com/", visitDate: timeEarlier, transition: TRANSITION_TYPED},
     {uri: "https://example4.com/", visitDate: timeEarlier, transition: TRANSITION_TYPED}
   ];
-  yield PlacesTestUtils.addVisits(visits);
-  yield PlacesUtils.bookmarks.insert({url: "https://example5.com/", parentGuid: PlacesUtils.bookmarks.unfiledGuid, type: PlacesUtils.bookmarks.TYPE_BOOKMARK});
+  await PlacesTestUtils.addVisits(visits);
+  await PlacesUtils.bookmarks.insert({url: "https://example5.com/", parentGuid: PlacesUtils.bookmarks.unfiledGuid, type: PlacesUtils.bookmarks.TYPE_BOOKMARK});
 
   let sizeQueryResult;
 
   // bookmarks
-  sizeQueryResult = yield NewTabUtils.activityStreamProvider.getBookmarksSize();
+  sizeQueryResult = await NewTabUtils.activityStreamProvider.getBookmarksSize();
   Assert.equal(sizeQueryResult, 1, "got the correct bookmark size");
 });
 

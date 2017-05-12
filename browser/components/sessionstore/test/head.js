@@ -274,11 +274,11 @@ function promiseRecoveryFileContents() {
   });
 }
 
-var promiseForEachSessionRestoreFile = Task.async(function*(cb) {
+var promiseForEachSessionRestoreFile = async function(cb) {
   for (let key of SessionFile.Paths.loadOrder) {
     let data = "";
     try {
-      data = yield OS.File.read(SessionFile.Paths[key], { encoding: "utf-8" });
+      data = await OS.File.read(SessionFile.Paths[key], { encoding: "utf-8" });
     } catch (ex) {
       // Ignore missing files
       if (!(ex instanceof OS.File.Error && ex.becauseNoSuchFile)) {
@@ -287,7 +287,7 @@ var promiseForEachSessionRestoreFile = Task.async(function*(cb) {
     }
     cb(data, key);
   }
-});
+};
 
 function promiseBrowserLoaded(aBrowser, ignoreSubFrames = true, wantLoad = null) {
   return BrowserTestUtils.browserLoaded(aBrowser, !ignoreSubFrames, wantLoad);
@@ -522,7 +522,7 @@ function promiseRemoveTab(tab) {
 
 // Write DOMSessionStorage data to the given browser.
 function modifySessionStorage(browser, storageData, storageOptions = {}) {
-  return ContentTask.spawn(browser, [storageData, storageOptions], function* ([data, options]) {
+  return ContentTask.spawn(browser, [storageData, storageOptions], async function([data, options]) {
     let frame = content;
     if (options && "frameIndex" in options) {
       frame = content.frames[options.frameIndex];
@@ -558,9 +558,9 @@ function popPrefs() {
   return SpecialPowers.popPrefEnv();
 }
 
-function* checkScroll(tab, expected, msg) {
+async function checkScroll(tab, expected, msg) {
   let browser = tab.linkedBrowser;
-  yield TabStateFlusher.flush(browser);
+  await TabStateFlusher.flush(browser);
 
   let scroll = JSON.parse(ss.getTabState(tab)).scroll || null;
   is(JSON.stringify(scroll), JSON.stringify(expected), msg);

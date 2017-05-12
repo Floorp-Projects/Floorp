@@ -50,7 +50,7 @@ function test() {
     // Need a promise to keep track of when we've added our handler.
     let mm = gBrowser.selectedBrowser.messageManager;
     let onCachedAttached = BrowserTestUtils.waitForMessage(mm, "Test:OnCachedAttached");
-    let gotCached = ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
+    let gotCached = ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
       return new Promise(resolve => {
         content.window.applicationCache.oncached = function() {
           setTimeout(resolve, 0);

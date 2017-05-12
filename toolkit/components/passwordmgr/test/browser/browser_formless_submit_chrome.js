@@ -4,48 +4,48 @@
 
 "use strict";
 
-function* fillTestPage(aBrowser) {
-  yield ContentTask.spawn(aBrowser, null, function*() {
+async function fillTestPage(aBrowser) {
+  await ContentTask.spawn(aBrowser, null, async function() {
     content.document.getElementById("form-basic-username").value = "my_username";
     content.document.getElementById("form-basic-password").value = "my_password";
   });
   info("fields filled");
 }
 
-function* withTestPage(aTaskFn) {
+function withTestPage(aTaskFn) {
   return BrowserTestUtils.withNewTab({
     gBrowser,
     url: "https://example.com" + DIRECTORY_PATH + "formless_basic.html",
-  }, function*(aBrowser) {
+  }, async function(aBrowser) {
     info("tab opened");
-    yield fillTestPage(aBrowser);
-    yield* aTaskFn(aBrowser);
+    await fillTestPage(aBrowser);
+    await aTaskFn(aBrowser);
 
     // Give a chance for the doorhanger to appear
-    yield new Promise(resolve => SimpleTest.executeSoon(resolve));
+    await new Promise(resolve => SimpleTest.executeSoon(resolve));
     ok(!getCaptureDoorhanger("any"), "No doorhanger should be present");
   });
 }
 
-add_task(function* setup() {
-  yield SimpleTest.promiseFocus(window);
+add_task(async function setup() {
+  await SimpleTest.promiseFocus(window);
 });
 
-add_task(function* test_urlbar_new_URL() {
-  yield withTestPage(function*(aBrowser) {
+add_task(async function test_urlbar_new_URL() {
+  await withTestPage(async function(aBrowser) {
     gURLBar.value = "";
     let focusPromise = BrowserTestUtils.waitForEvent(gURLBar, "focus");
     gURLBar.focus();
-    yield focusPromise;
+    await focusPromise;
     info("focused");
     EventUtils.sendString("http://mochi.test:8888/");
     EventUtils.synthesizeKey("VK_RETURN", {});
-    yield BrowserTestUtils.browserLoaded(aBrowser, false, "http://mochi.test:8888/");
+    await BrowserTestUtils.browserLoaded(aBrowser, false, "http://mochi.test:8888/");
   });
 });
 
-add_task(function* test_urlbar_fragment_enter() {
-  yield withTestPage(function*(aBrowser) {
+add_task(async function test_urlbar_fragment_enter() {
+  await withTestPage(function(aBrowser) {
     gURLBar.focus();
     EventUtils.synthesizeKey("VK_RIGHT", {});
     EventUtils.sendString("#fragment");
@@ -53,74 +53,81 @@ add_task(function* test_urlbar_fragment_enter() {
   });
 });
 
-add_task(function* test_backButton_forwardButton() {
-  yield withTestPage(function*(aBrowser) {
+add_task(async function test_backButton_forwardButton() {
+  await withTestPage(async function(aBrowser) {
     // Load a new page in the tab so we can test going back
     aBrowser.loadURI("https://example.com" + DIRECTORY_PATH + "formless_basic.html?second");
-    yield BrowserTestUtils.browserLoaded(aBrowser, false,
+    await BrowserTestUtils.browserLoaded(aBrowser, false,
                                          "https://example.com" + DIRECTORY_PATH +
                                          "formless_basic.html?second");
-    yield fillTestPage(aBrowser);
+    await fillTestPage(aBrowser);
 
     let forwardButton = document.getElementById("forward-button");
-    // We need to wait for the forward button transition to complete before we
-    // can click it, so we hook up a listener to wait for it to be ready.
-    let forwardTransitionPromise = BrowserTestUtils.waitForEvent(forwardButton, "transitionend");
+
+    let forwardTransitionPromise;
+    if (forwardButton.nextSibling == gURLBar) {
+      // We need to wait for the forward button transition to complete before we
+      // can click it, so we hook up a listener to wait for it to be ready.
+      forwardTransitionPromise = BrowserTestUtils.waitForEvent(forwardButton, "transitionend");
+    }
 
     let backPromise = BrowserTestUtils.browserStopped(aBrowser);
     EventUtils.synthesizeMouseAtCenter(document.getElementById("back-button"), {});
-    yield backPromise;
+    await backPromise;
 
     // Give a chance for the doorhanger to appear
-    yield new Promise(resolve => SimpleTest.executeSoon(resolve));
+    await new Promise(resolve => SimpleTest.executeSoon(resolve));
     ok(!getCaptureDoorhanger("any"), "No doorhanger should be present");
 
     // Now go forward again after filling
-    yield fillTestPage(aBrowser);
+    await fillTestPage(aBrowser);
 
-    yield forwardTransitionPromise;
-    info("transition done");
-    yield BrowserTestUtils.waitForCondition(() => {
+    if (forwardTransitionPromise) {
+      await forwardTransitionPromise;
+      info("transition done");
+    }
+
+    await BrowserTestUtils.waitForCondition(() => {
       return forwardButton.disabled == false;
     });
     let forwardPromise = BrowserTestUtils.browserStopped(aBrowser);
     info("click the forward button");
     EventUtils.synthesizeMouseAtCenter(forwardButton, {});
-    yield forwardPromise;
+    await forwardPromise;
   });
 });
 
 
-add_task(function* test_reloadButton() {
-  yield withTestPage(function*(aBrowser) {
-    let reloadButton = document.getElementById("urlbar-reload-button");
+add_task(async function test_reloadButton() {
+  await withTestPage(async function(aBrowser) {
+    let reloadButton = document.getElementById("reload-button");
     let loadPromise = BrowserTestUtils.browserLoaded(aBrowser, false,
                                                      "https://example.com" + DIRECTORY_PATH +
                                                      "formless_basic.html");
 
-    yield BrowserTestUtils.waitForCondition(() => {
+    await BrowserTestUtils.waitForCondition(() => {
       return reloadButton.disabled == false;
     });
     EventUtils.synthesizeMouseAtCenter(reloadButton, {});
-    yield loadPromise;
+    await loadPromise;
   });
 });
 
-add_task(function* test_back_keyboard_shortcut() {
+add_task(async function test_back_keyboard_shortcut() {
   if (Services.prefs.getIntPref("browser.backspace_action") != 0) {
     ok(true, "Skipped testing backspace to go back since it's disabled");
     return;
   }
-  yield withTestPage(function*(aBrowser) {
+  await withTestPage(async function(aBrowser) {
     // Load a new page in the tab so we can test going back
     aBrowser.loadURI("https://example.com" + DIRECTORY_PATH + "formless_basic.html?second");
-    yield BrowserTestUtils.browserLoaded(aBrowser, false,
+    await BrowserTestUtils.browserLoaded(aBrowser, false,
                                          "https://example.com" + DIRECTORY_PATH +
                                          "formless_basic.html?second");
-    yield fillTestPage(aBrowser);
+    await fillTestPage(aBrowser);
 
     let backPromise = BrowserTestUtils.browserStopped(aBrowser);
     EventUtils.synthesizeKey("VK_BACK_SPACE", {});
-    yield backPromise;
+    await backPromise;
   });
 });

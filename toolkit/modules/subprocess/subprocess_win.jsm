@@ -19,7 +19,6 @@ Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/ctypes.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/subprocess/subprocess_common.jsm");
 
@@ -95,18 +94,18 @@ var SubprocessWin = {
     }
   },
 
-  isExecutableFile: Task.async(function* (path) {
+  async isExecutableFile(path) {
     if (!OS.Path.split(path).absolute) {
       return false;
     }
 
     try {
-      let info = yield OS.File.stat(path);
+      let info = await OS.File.stat(path);
       return !(info.isDir || info.isSymlink);
     } catch (e) {
       return false;
     }
-  }),
+  },
 
   /**
    * Searches for the given executable file in the system executable
@@ -124,10 +123,10 @@ var SubprocessWin = {
    *        in the search.
    * @returns {Promise<string>}
    */
-  pathSearch: Task.async(function* (bin, environment) {
+  async pathSearch(bin, environment) {
     let split = OS.Path.split(bin);
     if (split.absolute) {
-      if (yield this.isExecutableFile(bin)) {
+      if (await this.isExecutableFile(bin)) {
         return bin;
       }
       let error = new Error(`File at path "${bin}" does not exist, or is not a normal file`);
@@ -147,14 +146,14 @@ var SubprocessWin = {
     for (let dir of dirs) {
       let path = OS.Path.join(dir, bin);
 
-      if (yield this.isExecutableFile(path)) {
+      if (await this.isExecutableFile(path)) {
         return path;
       }
 
       for (let ext of exts) {
         let file = path + ext;
 
-        if (yield this.isExecutableFile(file)) {
+        if (await this.isExecutableFile(file)) {
           return file;
         }
       }
@@ -162,7 +161,7 @@ var SubprocessWin = {
     let error = new Error(`Executable not found: ${bin}`);
     error.errorCode = SubprocessConstants.ERROR_BAD_EXECUTABLE;
     throw error;
-  }),
+  },
 };
 
 var SubprocessImpl = SubprocessWin;

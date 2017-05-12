@@ -21,9 +21,9 @@ function openTabInUserContext(uri, userContextId) {
   return tab;
 }
 
-add_task(function* setup() {
+add_task(async function setup() {
   // make sure userContext is enabled.
-  yield SpecialPowers.pushPrefEnv({"set": [
+  await SpecialPowers.pushPrefEnv({"set": [
     ["privacy.userContext.enabled", true],
     ["dom.ipc.processCount", 1]
   ]});
@@ -31,7 +31,7 @@ add_task(function* setup() {
 
 let infos = [];
 
-add_task(function* test() {
+add_task(async function test() {
   // Open the same URI in multiple user contexts, and make sure we have a
   // separate service worker in each of the contexts
   for (let userContextId = 0; userContextId < NUM_USER_CONTEXTS; userContextId++) {
@@ -39,20 +39,20 @@ add_task(function* test() {
     let tab = openTabInUserContext(URI, userContextId);
 
     // wait for tab load
-    yield BrowserTestUtils.browserLoaded(gBrowser.getBrowserForTab(tab));
+    await BrowserTestUtils.browserLoaded(gBrowser.getBrowserForTab(tab));
 
     // remove the tab
     gBrowser.removeTab(tab);
   }
 
   if (!allRegistered()) {
-    yield promiseAllRegistered();
+    await promiseAllRegistered();
   }
   ok(true, "all service workers are registered");
 
   // Unregistered all service workers added in this test
   for (let info of infos) {
-    yield promiseUnregister(info);
+    await promiseUnregister(info);
   }
 });
 

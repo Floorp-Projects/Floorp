@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let checkState = Task.async(function*(browser) {
+let checkState = async function(browser) {
   // Go back and then forward, and make sure that the state objects received
   // from the popState event are as we expect them to be.
   //
@@ -66,17 +66,17 @@ let checkState = Task.async(function*(browser) {
 
   // Set some state in the page's window.  When we go back(), the page should
   // be retrieved from bfcache, and this state should still be there.
-  yield ContentTask.spawn(browser, null, function() {
+  await ContentTask.spawn(browser, null, function() {
     content.testState = "foo";
   });
 
   // Now go back.  This should trigger the popstate event handler above.
   browser.goBack();
 
-  yield deferred.promise;
-});
+  await deferred.promise;
+};
 
-add_task(function* test() {
+add_task(async function test() {
   // Tests session restore functionality of history.pushState and
   // history.replaceState().  (Bug 500328)
 
@@ -84,9 +84,9 @@ add_task(function* test() {
   // http://example.com.  We need to load the blank window first, otherwise the
   // docshell gets confused and doesn't have a current history entry.
   let state;
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, function* (browser) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, async function(browser) {
     BrowserTestUtils.loadURI(browser, "http://example.com");
-    yield BrowserTestUtils.browserLoaded(browser);
+    await BrowserTestUtils.browserLoaded(browser);
 
     // After these push/replaceState calls, the window should have three
     // history entries:
@@ -99,22 +99,22 @@ add_task(function* test() {
       history.pushState({obj2: 2}, "title-obj2", "?page2");
       history.replaceState({obj3: /^a$/}, "title-obj3");
     }
-    yield ContentTask.spawn(browser, null, contentTest);
-    yield TabStateFlusher.flush(browser);
+    await ContentTask.spawn(browser, null, contentTest);
+    await TabStateFlusher.flush(browser);
 
     state = ss.getTabState(gBrowser.getTabForBrowser(browser));
   });
 
   // Restore the state into a new tab.  Things don't work well when we
   // restore into the old tab, but that's not a real use case anyway.
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, function* (browser) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, async function(browser) {
     let tab2 = gBrowser.getTabForBrowser(browser);
 
     let tabRestoredPromise = promiseTabRestored(tab2);
     ss.setTabState(tab2, state, true);
 
     // Run checkState() once the tab finishes loading its restored state.
-    yield tabRestoredPromise;
-    yield checkState(browser);
+    await tabRestoredPromise;
+    await checkState(browser);
   });
 });

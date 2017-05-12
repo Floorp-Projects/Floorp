@@ -15,12 +15,12 @@ function run_test() {
  * Test the watcher correctly notifies of a file deletion when watching
  * a single path.
  */
-add_task(function* test_watch_single_path_file_deletion() {
+add_task(async function test_watch_single_path_file_deletion() {
 
   // Create and watch a sub-directory of the profile directory so we don't
   // catch notifications we're not interested in (i.e. "startupCache").
   let watchedDir = OS.Path.join(OS.Constants.Path.profileDir, "filewatcher_playground");
-  yield OS.File.makeDir(watchedDir);
+  await OS.File.makeDir(watchedDir);
 
   let tempFileName = "test_filedeletion.tmp";
 
@@ -31,24 +31,24 @@ add_task(function* test_watch_single_path_file_deletion() {
   // Create a file within the directory to be watched. We do this
   // before watching the directory so we do not get the creation notification.
   let tmpFilePath = OS.Path.join(watchedDir, tempFileName);
-  yield OS.File.writeAtomic(tmpFilePath, "some data");
+  await OS.File.writeAtomic(tmpFilePath, "some data");
 
   // Add the profile directory to the watch list and wait for the file watcher
   // to start watching it.
-  yield promiseAddPath(watcher, watchedDir, deferred.resolve, deferred.reject);
+  await promiseAddPath(watcher, watchedDir, deferred.resolve, deferred.reject);
 
   // Remove the file we created (should trigger a notification).
   do_print("Removing " + tmpFilePath);
-  yield OS.File.remove(tmpFilePath);
+  await OS.File.remove(tmpFilePath);
 
   // Wait until the watcher informs us that the file was deleted.
-  let changed = yield deferred.promise;
+  let changed = await deferred.promise;
   do_check_eq(changed, tmpFilePath);
 
   // Remove the watch and free the associated memory (we need to
   // reuse 'deferred.resolve' and 'deferred.reject' to unregister).
-  yield promiseRemovePath(watcher, watchedDir, deferred.resolve, deferred.reject);
+  await promiseRemovePath(watcher, watchedDir, deferred.resolve, deferred.reject);
 
   // Remove the test directory and all of its content.
-  yield OS.File.removeDir(watchedDir);
+  await OS.File.removeDir(watchedDir);
 });

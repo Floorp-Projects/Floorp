@@ -8,10 +8,10 @@ Cu.import("resource:///modules/SitePermissions.jsm", this);
 
 // This function applies combinations of different permissions and
 // checks how they override each other.
-function* checkPermissionCombinations(combinations) {
+async function checkPermissionCombinations(combinations) {
   let uri = Services.io.newURI("https://example.com");
 
-  yield BrowserTestUtils.withNewTab(uri.spec, function(browser) {
+  await BrowserTestUtils.withNewTab(uri.spec, function(browser) {
     let id = "geo";
     for (let {reverse, states, result} of combinations) {
       let loop = () => {
@@ -33,8 +33,8 @@ function* checkPermissionCombinations(combinations) {
 }
 
 // Test that passing null as scope becomes SCOPE_PERSISTENT.
-add_task(function* testDefaultScope() {
-  yield checkPermissionCombinations([{
+add_task(async function testDefaultScope() {
+  await checkPermissionCombinations([{
     states: [
       [SitePermissions.ALLOW, null],
     ],
@@ -46,8 +46,8 @@ add_task(function* testDefaultScope() {
 });
 
 // Test that "wide" scopes like PERSISTENT always override "narrower" ones like TAB.
-add_task(function* testScopeOverrides() {
-  yield checkPermissionCombinations([
+add_task(async function testScopeOverrides() {
+  await checkPermissionCombinations([
     {
       // The behavior of SCOPE_SESSION is not in line with the general behavior
       // because of the legacy nsIPermissionManager implementation.
@@ -95,8 +95,8 @@ add_task(function* testScopeOverrides() {
 
 // Test that clearing a temporary permission also removes a
 // persistent permission that was set for the same URL.
-add_task(function* testClearTempPermission() {
-  yield checkPermissionCombinations([{
+add_task(async function testClearTempPermission() {
+  await checkPermissionCombinations([{
     states: [
       [SitePermissions.BLOCK, SitePermissions.SCOPE_TEMPORARY],
       [SitePermissions.ALLOW, SitePermissions.SCOPE_PERSISTENT],
@@ -110,8 +110,8 @@ add_task(function* testClearTempPermission() {
 });
 
 // Test that states override each other when applied with the same scope.
-add_task(function* testStateOverride() {
-  yield checkPermissionCombinations([
+add_task(async function testStateOverride() {
+  await checkPermissionCombinations([
     {
       states: [
         [SitePermissions.ALLOW, SitePermissions.SCOPE_PERSISTENT],

@@ -18,23 +18,16 @@ config = {
         'check-test',
     ],
     'exes': {
-        'python2.7': sys.executable,
         'virtualenv': [
             sys.executable,
             os.path.join(
                 os.getcwd(), 'build', 'src', 'python', 'virtualenv', 'virtualenv.py'
             )
         ],
-        'mach-build': [
-            os.path.join(os.environ['MOZILLABUILD'], 'msys', 'bin', 'bash.exe'),
-            os.path.join(os.getcwd(), 'build', 'src', 'mach'),
-            '--log-no-times', 'build', '-v'
-        ],
     },
     'app_ini_path': '%(obj_dir)s/dist/bin/application.ini',
     # decides whether we want to use moz_sign_cmd in env
     'enable_signing': True,
-    'enable_ccache': False,
     'vcs_share_base': os.path.join('y:', os.sep, 'hg-shared'),
     'objdir': 'obj-firefox',
     'tooltool_script': [

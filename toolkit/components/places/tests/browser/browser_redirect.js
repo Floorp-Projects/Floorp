@@ -16,9 +16,9 @@ const TYPED_VISIT_BONUS =
 // of idle-daily).
 Services.prefs.setCharPref("places.frecency.decayRate", "1.0");
 
-registerCleanupFunction(function*() {
+registerCleanupFunction(async function() {
   Services.prefs.clearUserPref("places.frecency.decayRate");
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
 });
 
 function promiseVisitedWithFrecency(expectedRedirectFrecency, expectedTargetFrecency) {
@@ -75,7 +75,7 @@ function promiseVisitedWithFrecency(expectedRedirectFrecency, expectedTargetFrec
 let expectedRedirectSourceFrecency = 0;
 let expectedTypedVisitBonus = 0;
 
-add_task(function* redirect_check_new_typed_visit() {
+add_task(async function redirect_check_new_typed_visit() {
   // Used to verify the redirect bonus overrides the typed bonus.
   PlacesUtils.history.markPageAsTyped(REDIRECT_URI);
 
@@ -86,12 +86,12 @@ add_task(function* redirect_check_new_typed_visit() {
                                                   expectedTypedVisitBonus);
 
   let newTabPromise = BrowserTestUtils.openNewForegroundTab(gBrowser, REDIRECT_URI.spec);
-  yield Promise.all([visitedPromise, newTabPromise]);
+  await Promise.all([visitedPromise, newTabPromise]);
 
   gBrowser.removeCurrentTab();
 });
 
-add_task(function* redirect_check_second_typed_visit() {
+add_task(async function redirect_check_second_typed_visit() {
   // A second visit with a typed url.
   PlacesUtils.history.markPageAsTyped(REDIRECT_URI);
 
@@ -102,12 +102,12 @@ add_task(function* redirect_check_second_typed_visit() {
                                                   expectedTypedVisitBonus);
 
   let newTabPromise = BrowserTestUtils.openNewForegroundTab(gBrowser, REDIRECT_URI.spec);
-  yield Promise.all([visitedPromise, newTabPromise]);
+  await Promise.all([visitedPromise, newTabPromise]);
 
   gBrowser.removeCurrentTab();
 });
 
-add_task(function* redirect_check_subsequent_link_visit() {
+add_task(async function redirect_check_subsequent_link_visit() {
   // Another visit, but this time as a visited url.
   expectedRedirectSourceFrecency += REDIRECT_SOURCE_VISIT_BONUS;
   expectedTypedVisitBonus += LINK_VISIT_BONUS;
@@ -116,7 +116,7 @@ add_task(function* redirect_check_subsequent_link_visit() {
                                                   expectedTypedVisitBonus);
 
   let newTabPromise = BrowserTestUtils.openNewForegroundTab(gBrowser, REDIRECT_URI.spec);
-  yield Promise.all([visitedPromise, newTabPromise]);
+  await Promise.all([visitedPromise, newTabPromise]);
 
   gBrowser.removeCurrentTab();
 });

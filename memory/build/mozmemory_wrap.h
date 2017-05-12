@@ -36,6 +36,7 @@
  *   - jemalloc_stats
  *   - jemalloc_purge_freed_pages
  *   - jemalloc_free_dirty_pages
+ *   - jemalloc_thread_local_arena
  *   (these functions are native to mozjemalloc, and have compatibility
  *   implementations for jemalloc3)
  *
@@ -215,5 +216,7 @@
 #define jemalloc_stats_impl              mozmem_jemalloc_impl(jemalloc_stats)
 #define jemalloc_purge_freed_pages_impl  mozmem_jemalloc_impl(jemalloc_purge_freed_pages)
 #define jemalloc_free_dirty_pages_impl   mozmem_jemalloc_impl(jemalloc_free_dirty_pages)
+#define jemalloc_thread_local_arena_impl \
+          mozmem_jemalloc_impl(jemalloc_thread_local_arena)
 
 #endif /* mozmemory_wrap_h */

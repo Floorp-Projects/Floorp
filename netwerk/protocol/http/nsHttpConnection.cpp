@@ -1465,6 +1465,12 @@ nsHttpConnection::ResumeRecv()
 
     MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
+    if (mFastOpen) {
+        LOG(("nsHttpConnection::ResumeRecv - do not waiting for read during "
+             "fast open! [this=%p]\n", this));
+        return NS_OK;
+    }
+
     // mResponseThrottled is an indication from above layers to stop reading
     // the socket.
     if (mResponseThrottled) {
@@ -1477,6 +1483,7 @@ nsHttpConnection::ResumeRecv()
                                         0, nullptr);
         }
         LOG(("  throttled, and no socket input stream"));
+        NS_NOTREACHED("no socket input stream");
         return NS_OK;
     }
 
@@ -2372,6 +2379,10 @@ nsHttpConnection::CloseConnectionFastOpenTakesTooLongOrError(bool aCloseSocketTr
     {
         MutexAutoLock lock(mCallbacksLock);
         mCallbacks = nullptr;
+    }
+
+    if (mSocketIn) {
+        mSocketIn->AsyncWait(nullptr, 0, 0, nullptr);
     }
 
     mTransaction = nullptr;

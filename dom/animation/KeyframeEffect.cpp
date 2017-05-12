@@ -134,6 +134,7 @@ KeyframeEffect::SetTarget(const Nullable<ElementOrCSSPseudoElement>& aTarget)
   // too so we have a more complete picture of the type of frame sizes we
   // encounter, hence we reset the telemetry flag here.
   mRecordedContentTooLarge = false;
+  mRecordedFrameSize = false;
 }
 
 void

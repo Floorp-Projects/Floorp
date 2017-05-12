@@ -65,18 +65,18 @@ var tests = [
       });
     }).then(null, Components.utils.reportError);
   },
-  taskify(function* test_bookmarks_menu() {
+  taskify(async function test_bookmarks_menu() {
     let bookmarksMenuButton = document.getElementById("bookmarks-menu-button");
 
     is(bookmarksMenuButton.open, false, "Menu should initially be closed");
     gContentAPI.showMenu("bookmarks");
 
-    yield waitForConditionPromise(() => {
+    await waitForConditionPromise(() => {
       return bookmarksMenuButton.open;
     }, "Menu should be visible after showMenu()");
 
     gContentAPI.hideMenu("bookmarks");
-    yield waitForConditionPromise(() => {
+    await waitForConditionPromise(() => {
         return !bookmarksMenuButton.open;
     }, "Menu should be hidden after hideMenu()");
   }),

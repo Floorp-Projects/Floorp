@@ -243,7 +243,7 @@ function chromeFileExists(aURI) {
   return available > 0;
 }
 
-add_task(function* checkAllTheCSS() {
+add_task(async function checkAllTheCSS() {
   // Since we later in this test use Services.console.getMessageArray(),
   // better to not have some messages from previous tests in the array.
   Services.console.reset();
@@ -252,19 +252,19 @@ add_task(function* checkAllTheCSS() {
   // This asynchronously produces a list of URLs (sadly, mostly sync on our
   // test infrastructure because it runs against jarfiles there, and
   // our zipreader APIs are all sync)
-  let uris = yield generateURIsFromDirTree(appDir, [".css", ".manifest"]);
+  let uris = await generateURIsFromDirTree(appDir, [".css", ".manifest"]);
 
   // Create a clean iframe to load all the files into. This needs to live at a
   // chrome URI so that it's allowed to load and parse any styles.
   let testFile = getRootDirectory(gTestPath) + "dummy_page.html";
   let HiddenFrame = Cu.import("resource://gre/modules/HiddenFrame.jsm", {}).HiddenFrame;
   let hiddenFrame = new HiddenFrame();
-  let win = yield hiddenFrame.get();
+  let win = await hiddenFrame.get();
   let iframe = win.document.createElementNS("http://www.w3.org/1999/xhtml", "html:iframe");
   win.document.documentElement.appendChild(iframe);
   let iframeLoaded = BrowserTestUtils.waitForEvent(iframe, "load", true);
   iframe.contentWindow.location = testFile;
-  yield iframeLoaded;
+  await iframeLoaded;
   let doc = iframe.contentWindow.document;
 
   // Parse and remove all manifests from the list.
@@ -279,7 +279,7 @@ add_task(function* checkAllTheCSS() {
     return true;
   });
   // Wait for all manifest to be parsed
-  yield Promise.all(manifestPromises);
+  await Promise.all(manifestPromises);
 
   // We build a list of promises that get resolved when their respective
   // files have loaded and produced no errors.
@@ -316,7 +316,7 @@ add_task(function* checkAllTheCSS() {
   }
 
   // Wait for all the files to have actually loaded:
-  yield Promise.all(allPromises);
+  await Promise.all(allPromises);
 
   // Check if all the files referenced from CSS actually exist.
   for (let [image, references] of imageURIsToReferencesMap) {

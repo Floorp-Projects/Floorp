@@ -21,4 +21,4 @@
 == top-to-bottom-16x16-4bpp.bmp  bmp-size-16x16-4bpp.png
 # test that delta skips are drawn as transparent
 # taken from http://bmptestsuite.sourceforge.net/
-fails-if(stylo) == rle4-delta-320x240.bmp rle4-delta-320x240.png
+== rle4-delta-320x240.bmp rle4-delta-320x240.png

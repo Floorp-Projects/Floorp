@@ -23,11 +23,11 @@ function promiseDocument(fileName) {
 /**
  * Load a simple document.
  */
-add_task(function* simpleDoc() {
+add_task(async function simpleDoc() {
   let fileName = "metadata_simple.html";
   info(`Loading a simple page, ${fileName}`);
 
-  let doc = yield promiseDocument(fileName);
+  let doc = await promiseDocument(fileName);
   Assert.notEqual(doc, null,
                   "Should have a document to analyse");
 
@@ -42,11 +42,11 @@ add_task(function* simpleDoc() {
                "Should have expected title property");
 });
 
-add_task(function* titlesDoc() {
+add_task(async function titlesDoc() {
   let fileName = "metadata_titles.html";
   info(`Loading titles page, ${fileName}`);
 
-  let doc = yield promiseDocument(fileName);
+  let doc = await promiseDocument(fileName);
   Assert.notEqual(doc, null,
                   "Should have a document to analyse");
 
@@ -57,11 +57,11 @@ add_task(function* titlesDoc() {
                "Should use the page title, not the open graph title");
 });
 
-add_task(function* titlesFallbackDoc() {
+add_task(async function titlesFallbackDoc() {
   let fileName = "metadata_titles_fallback.html";
   info(`Loading titles page, ${fileName}`);
 
-  let doc = yield promiseDocument(fileName);
+  let doc = await promiseDocument(fileName);
   Assert.notEqual(doc, null,
                   "Should have a document to analyse");
 

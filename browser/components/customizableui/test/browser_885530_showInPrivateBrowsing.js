@@ -30,9 +30,9 @@ add_task(function() {
 // Add a widget via the API with showInPrivateBrowsing set to false
 // and ensure it does not appear in pre-existing or newly created
 // private windows.
-add_task(function*() {
-  let plain1 = yield openAndLoadWindow();
-  let private1 = yield openAndLoadWindow({private: true});
+add_task(async function() {
+  let plain1 = await openAndLoadWindow();
+  let private1 = await openAndLoadWindow({private: true});
   CustomizableUI.createWidget({
     id: kWidgetId,
     removable: true,
@@ -45,8 +45,8 @@ add_task(function*() {
 
   // Now open up some new windows. The widget should exist in the new
   // plain window, but not the new private window.
-  let plain2 = yield openAndLoadWindow();
-  let private2 = yield openAndLoadWindow({private: true});
+  let plain2 = await openAndLoadWindow();
+  let private2 = await openAndLoadWindow({private: true});
   assertWidgetExists(plain2, true);
   assertWidgetExists(private2, false);
 
@@ -72,7 +72,7 @@ add_task(function*() {
   assertWidgetExists(private1, false);
   assertWidgetExists(private2, false);
 
-  yield Promise.all([plain1, plain2, private1, private2].map(promiseWindowClosed));
+  await Promise.all([plain1, plain2, private1, private2].map(promiseWindowClosed));
 
   CustomizableUI.destroyWidget("some-widget");
 });
@@ -80,9 +80,9 @@ add_task(function*() {
 // Add a widget via the API with showInPrivateBrowsing set to true,
 // and ensure that it appears in pre-existing or newly created
 // private browsing windows.
-add_task(function*() {
-  let plain1 = yield openAndLoadWindow();
-  let private1 = yield openAndLoadWindow({private: true});
+add_task(async function() {
+  let plain1 = await openAndLoadWindow();
+  let private1 = await openAndLoadWindow({private: true});
 
   CustomizableUI.createWidget({
     id: kWidgetId,
@@ -96,8 +96,8 @@ add_task(function*() {
 
   // Now open up some new windows. The widget should exist in the new
   // plain window, but not the new private window.
-  let plain2 = yield openAndLoadWindow();
-  let private2 = yield openAndLoadWindow({private: true});
+  let plain2 = await openAndLoadWindow();
+  let private2 = await openAndLoadWindow({private: true});
 
   assertWidgetExists(plain2, true);
   assertWidgetExists(private2, true);
@@ -124,11 +124,11 @@ add_task(function*() {
   assertWidgetExists(private1, false);
   assertWidgetExists(private2, false);
 
-  yield Promise.all([plain1, plain2, private1, private2].map(promiseWindowClosed));
+  await Promise.all([plain1, plain2, private1, private2].map(promiseWindowClosed));
 
   CustomizableUI.destroyWidget("some-widget");
 });
 
-add_task(function* asyncCleanup() {
-  yield resetCustomization();
+add_task(async function asyncCleanup() {
+  await resetCustomization();
 });

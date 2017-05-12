@@ -132,7 +132,7 @@ var TestUtils = {
    *       delete operation in the file system may still be pending, preventing
    *       a new file with the same name to be created.
    */
-  getTempFile: Task.async(function* (aLeafName) {
+  async getTempFile(aLeafName) {
     // Prepend a serial number to the extension in the suggested leaf name.
     let [base, ext] = DownloadPaths.splitBaseNameAndExtension(aLeafName);
     let leafName = base + "-" + this._fileCounter + ext;
@@ -140,17 +140,17 @@ var TestUtils = {
 
     // Get a file reference under the temporary directory for this test file.
     let path = OS.Path.join(OS.Constants.Path.tmpDir, leafName);
-    Assert.ok(!(yield OS.File.exists(path)));
+    Assert.ok(!(await OS.File.exists(path)));
 
     // Ensure the file is deleted whe the test terminates.
-    add_termination_task(function* () {
-      if (yield OS.File.exists(path)) {
-        yield OS.File.remove(path);
+    add_termination_task(async function() {
+      if (await OS.File.exists(path)) {
+        await OS.File.remove(path);
       }
     });
 
     return path;
-  }),
+  },
 };
 
 /* --- Local helpers --- */
@@ -175,22 +175,22 @@ var FormAutofillTest = {
    *             promiseResult: Promise resolved by the UI when it closes.
    *           }
    */
-  showUI: Task.async(function* (aFormAutofillData) {
+  async showUI(aFormAutofillData) {
     Output.print("Opening UI with data: " + JSON.stringify(aFormAutofillData));
 
     // Wait for the initialization event before opening the window.
     let promiseUIWindow =
         TestUtils.waitForNotification("formautofill-window-initialized");
-    let ui = yield FormAutofill.integration.createRequestAutocompleteUI(
+    let ui = await FormAutofill.integration.createRequestAutocompleteUI(
                                                          aFormAutofillData);
     let promiseResult = ui.show();
 
     // The window is the subject of the observer notification.
     return {
-      uiWindow: (yield promiseUIWindow)[0],
+      uiWindow: (await promiseUIWindow)[0],
       promiseResult,
     };
-  }),
+  },
 };
 
 var TestData = {
@@ -215,36 +215,36 @@ var TestData = {
 
 /* --- Initialization and termination functions common to all tests --- */
 
-add_task_in_parent_process(function* () {
+add_task_in_parent_process(function() {
   // If required, we return a mock response instead of displaying the UI.
   let mockIntegrationFn = base => ({
-    createRequestAutocompleteUI: Task.async(function* () {
+    async createRequestAutocompleteUI() {
       // Call the base method to display the UI if override is not requested.
       if (FormAutofillTest.requestAutocompleteResponse === null) {
-        return yield base.createRequestAutocompleteUI.apply(this, arguments);
+        return await base.createRequestAutocompleteUI.apply(this, arguments);
       }
 
       // Return a mock RequestAutocompleteUI object.
       return {
-        show: Task.async(function* () {
+        async show() {
           let response = FormAutofillTest.requestAutocompleteResponse;
           Output.print("Mock UI response: " + JSON.stringify(response));
           return response;
-        }),
+        },
       };
-    }),
+    },
   });
 
   FormAutofill.registerIntegration(mockIntegrationFn);
-  add_termination_task(function* () {
+  add_termination_task(function() {
     FormAutofill.unregisterIntegration(mockIntegrationFn);
   });
 });
 
-add_task_in_both_processes(function* () {
+add_task_in_both_processes(function() {
   // We must manually enable the feature while testing.
   Services.prefs.setBoolPref("dom.forms.requestAutocomplete", true);
-  add_termination_task(function* () {
+  add_termination_task(function() {
     Services.prefs.clearUserPref("dom.forms.requestAutocomplete");
   });
 });

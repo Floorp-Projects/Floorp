@@ -462,9 +462,9 @@ let wrapper = {
   },
 };
 
-add_task(function* () {
+add_task(async function() {
   let url = "data:," + JSON.stringify(json);
-  yield Schemas.load(url);
+  await Schemas.load(url);
 
   let root = {};
   tallied = null;
@@ -927,9 +927,9 @@ let deprecatedJson = [
   },
 ];
 
-add_task(function* testDeprecation() {
+add_task(async function testDeprecation() {
   let url = "data:," + JSON.stringify(deprecatedJson);
-  yield Schemas.load(url);
+  await Schemas.load(url);
 
   let root = {};
   Schemas.inject(root, wrapper);
@@ -1081,9 +1081,9 @@ let choicesJson = [
    ]},
 ];
 
-add_task(function* testChoices() {
+add_task(async function testChoices() {
   let url = "data:," + JSON.stringify(choicesJson);
-  yield Schemas.load(url);
+  await Schemas.load(url);
 
   let root = {};
   Schemas.inject(root, wrapper);
@@ -1166,9 +1166,9 @@ let permissionsJson = [
    ]},
 ];
 
-add_task(function* testPermissions() {
+add_task(async function testPermissions() {
   let url = "data:," + JSON.stringify(permissionsJson);
-  yield Schemas.load(url);
+  await Schemas.load(url);
 
   let root = {};
   Schemas.inject(root, wrapper);
@@ -1263,10 +1263,10 @@ let nestedNamespaceJson = [
   },
 ];
 
-add_task(function* testNestedNamespace() {
+add_task(async function testNestedNamespace() {
   let url = "data:," + JSON.stringify(nestedNamespaceJson);
 
-  yield Schemas.load(url);
+  await Schemas.load(url);
 
   let root = {};
   Schemas.inject(root, wrapper);
@@ -1299,7 +1299,7 @@ add_task(function* testNestedNamespace() {
   //    "Got the expected event defined in the CustomType instance");
 });
 
-add_task(function* testLocalAPIImplementation() {
+add_task(async function testLocalAPIImplementation() {
   let countGet2 = 0;
   let countProp3 = 0;
   let countProp3SubFoo = 0;
@@ -1400,9 +1400,9 @@ let defaultsJson = [
    ]},
 ];
 
-add_task(function* testDefaults() {
+add_task(async function testDefaults() {
   let url = "data:," + JSON.stringify(defaultsJson);
-  yield Schemas.load(url);
+  await Schemas.load(url);
 
   let testingApiObj = {
     defaultFoo: function(arg) {

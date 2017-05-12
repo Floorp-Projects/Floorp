@@ -549,21 +549,9 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
 }
 
 /* Inactive elements are faded out on OSX */
-
-.toolbarbutton-1:not(:hover):-moz-window-inactive > #downloads-indicator-anchor,
-.toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-icon,
-.toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-text,
-.toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-badge-stack > .toolbarbutton-icon,
-.toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-menu-dropmarker,
-.toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon,
-.toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
-  opacity: var(--toolbarbutton-disabled-opacity);
-}
-
-#main-window:not([customizing]) .toolbarbutton-1:-moz-window-inactive[disabled="true"] > .toolbarbutton-icon,
-#main-window:not([customizing]) .toolbarbutton-1:-moz-window-inactive[disabled="true"] > .toolbarbutton-badge-stack > .toolbarbutton-icon,
-#main-window:not([customizing]) .toolbarbutton-1:-moz-window-inactive > .toolbarbutton-menubutton-button[disabled="true"] > .toolbarbutton-icon {
-  opacity: calc(var(--toolbarbutton-disabled-opacity) / 2);
+.toolbarbutton-1:not(:hover):-moz-window-inactive,
+#main-window:not([customizing]) .toolbarbutton-1:-moz-window-inactive[disabled="true"] {
+  opacity: 0.5;
 }
 
 .unified-nav-back[_moz-menuactive]:-moz-locale-dir(ltr),
@@ -576,6 +564,7 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
   list-style-image: url("chrome://browser/skin/menu-forward.png") !important;
 }
 
+%ifndef MOZ_PHOTON_THEME
 @media (-moz-mac-yosemite-theme) {
   #forward-button > .toolbarbutton-icon {
     border-top: none !important;
@@ -587,7 +576,7 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
                 0 -1px 0 0 rgba(0,0,0,0.2) inset !important;
   }
 }
-
+%endif
 
 /* ----- FULLSCREEN WINDOW CONTROLS ----- */
 
@@ -647,6 +636,7 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
   border-radius: var(--toolbarbutton-border-radius);
 }
 
+%ifndef MOZ_PHOTON_THEME
 @conditionalForwardWithUrlbar@ > #urlbar {
   border-inline-start: none;
   margin-left: 0;
@@ -676,6 +666,7 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
 @conditionalForwardWithUrlbar@:-moz-locale-dir(rtl) {
   -moz-box-direction: reverse;
 }
+%endif
 
 %include ../shared/identity-block/identity-block.inc.css
 
@@ -864,13 +855,10 @@ treechildren.searchbar-treebody::-moz-tree-row(hover) {
   border-color: hsla(0, 0%, 0%, 0.1);
 }
 
-.autocomplete-richlistitem[selected] {
-  background-color: hsl(210, 80%, 52%);
-  color: hsl(0, 0%, 100%);
-}
-
+.autocomplete-richlistitem[selected],
 treechildren.searchbar-treebody::-moz-tree-row(selected) {
   background-color: Highlight;
+  color: HighlightText;
 }
 
 .ac-title {
@@ -961,11 +949,12 @@ html|span.ac-emphasize-text-url {
 }
 
 
+%ifndef MOZ_PHOTON_THEME
 /* ----- COMBINED GO/RELOAD/STOP BUTTON IN LOCATION BAR ----- */
 
 #urlbar-go-button,
-#urlbar-reload-button,
-#urlbar-stop-button {
+#reload-button,
+#stop-button {
   margin: 0;
   list-style-image: url("chrome://browser/skin/reload-stop-go.png");
   padding: 0 9px;
@@ -990,36 +979,36 @@ html|span.ac-emphasize-text-url {
   transform: scaleX(-1);
 }
 
-#urlbar-reload-button {
+#reload-button {
   -moz-image-region: rect(0, 14px, 14px, 0);
 }
 
-#urlbar-reload-button:not([disabled]):hover:active {
+#reload-button:not([disabled]):hover:active {
   -moz-image-region: rect(14px, 14px, 28px, 0);
 }
 
-#urlbar-reload-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
+#reload-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
   transform: scaleX(-1);
 }
 
-#urlbar-stop-button {
+#stop-button {
   -moz-image-region: rect(0, 28px, 14px, 14px);
 }
 
-#urlbar-stop-button:hover:active {
+#stop-button:hover:active {
   -moz-image-region: rect(14px, 28px, 28px, 14px);
 }
 
 @media (min-resolution: 2dppx) {
   #urlbar-go-button,
-  #urlbar-reload-button,
-  #urlbar-stop-button {
+  #reload-button,
+  #stop-button {
     list-style-image: url("chrome://browser/skin/reload-stop-go@2x.png");
   }
 
   #urlbar-go-button > .toolbarbutton-icon,
-  #urlbar-reload-button > .toolbarbutton-icon,
-  #urlbar-stop-button > .toolbarbutton-icon {
+  #reload-button > .toolbarbutton-icon,
+  #stop-button > .toolbarbutton-icon {
     width: 14px;
   }
 
@@ -1031,22 +1020,23 @@ html|span.ac-emphasize-text-url {
     -moz-image-region: rect(28px, 84px, 56px, 56px);
   }
 
-  #urlbar-reload-button {
+  #reload-button {
     -moz-image-region: rect(0, 28px, 28px, 0);
   }
 
-  #urlbar-reload-button:not([disabled]):hover:active {
+  #reload-button:not([disabled]):hover:active {
     -moz-image-region: rect(28px, 28px, 56px, 0);
   }
 
-  #urlbar-stop-button {
+  #stop-button {
     -moz-image-region: rect(0, 56px, 28px, 28px);
   }
 
-  #urlbar-stop-button:hover:active {
+  #stop-button:hover:active {
     -moz-image-region: rect(28px, 56px, 56px, 28px);
   }
 }
+%endif
 
 #BMB_bookmarksPopup[side="top"],
 #BMB_bookmarksPopup[side="bottom"] {

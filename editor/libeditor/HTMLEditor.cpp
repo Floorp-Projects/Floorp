@@ -3576,15 +3576,11 @@ HTMLEditor::SelectEntireDocument(Selection* aSelection)
   // Protect the edit rules object from dying
   nsCOMPtr<nsIEditRules> rules(mRules);
 
-  // get editor root node
-  nsCOMPtr<nsIDOMElement> rootElement = do_QueryInterface(GetRoot());
-
   // is doc empty?
-  bool bDocIsEmpty;
-  nsresult rv = rules->DocumentIsEmpty(&bDocIsEmpty);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (rules->DocumentIsEmpty()) {
+    // get editor root node
+    Element* rootElement = GetRoot();
 
-  if (bDocIsEmpty) {
     // if its empty dont select entire doc - that would select the bogus node
     return aSelection->Collapse(rootElement, 0);
   }

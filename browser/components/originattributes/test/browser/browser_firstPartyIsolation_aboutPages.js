@@ -1,4 +1,4 @@
-add_task(function* setup() {
+add_task(async function setup() {
   Services.prefs.setBoolPref("privacy.firstparty.isolate", true);
 
   registerCleanupFunction(function() {
@@ -11,13 +11,13 @@ add_task(function* setup() {
  * NullPrincipal, and we also test if the firstPartyDomain of the origin
  * attributes is got from the origin itself.
  */
-add_task(function* test_remote_window_open_aboutBlank() {
-  let win = yield BrowserTestUtils.openNewBrowserWindow({ remote: true });
+add_task(async function test_remote_window_open_aboutBlank() {
+  let win = await BrowserTestUtils.openNewBrowserWindow({ remote: true });
   let browser = win.gBrowser.selectedBrowser;
 
   Assert.ok(browser.isRemoteBrowser, "should be a remote browser");
 
-  yield ContentTask.spawn(browser, {}, function* () {
+  await ContentTask.spawn(browser, {}, async function() {
     info("origin " + content.document.nodePrincipal.origin);
 
     Assert.ok(content.document.nodePrincipal.isNullPrincipal,
@@ -37,14 +37,14 @@ add_task(function* test_remote_window_open_aboutBlank() {
  * For loading the initial about:blank in non-e10s mode, it will be loaded with
  * a null principal. So we test if it has correct firstPartyDomain set.
  */
-add_task(function* test_nonremote_window_open_aboutBlank() {
-  let win = yield BrowserTestUtils.openNewBrowserWindow({remote: false});
+add_task(async function test_nonremote_window_open_aboutBlank() {
+  let win = await BrowserTestUtils.openNewBrowserWindow({remote: false});
   let browser = win.gBrowser.selectedBrowser;
 
   Assert.ok(!browser.isRemoteBrowser, "shouldn't be a remote browser");
 
   let attrs = { firstPartyDomain: "about.ef2a7dd5-93bc-417f-a698-142c3116864f.mozilla" };
-  yield ContentTask.spawn(browser, attrs, function* (expectAttrs) {
+  await ContentTask.spawn(browser, attrs, async function(expectAttrs) {
     Assert.ok(!content.document.nodePrincipal.isCodebasePrincipal,
               "The principal of non-remote about:blank should not be a codebase principal.");
     Assert.equal(content.document.nodePrincipal.originAttributes.firstPartyDomain,
@@ -67,17 +67,17 @@ function frame_script() {
 /**
  * Check if data: URI inherits firstPartyDomain from about:blank correctly.
  */
-add_task(function* test_remote_window_open_data_uri() {
-  let win = yield BrowserTestUtils.openNewBrowserWindow({ remote: true });
+add_task(async function test_remote_window_open_data_uri() {
+  let win = await BrowserTestUtils.openNewBrowserWindow({ remote: true });
   let browser = win.gBrowser.selectedBrowser;
   let mm = browser.messageManager;
   mm.loadFrameScript("data:,(" + frame_script.toString() + ")();", true);
 
-  yield BrowserTestUtils.browserLoaded(browser, false, function(url) {
+  await BrowserTestUtils.browserLoaded(browser, false, function(url) {
     return url == "data:text/plain,hello";
   });
 
-  yield ContentTask.spawn(browser, {}, function* () {
+  await ContentTask.spawn(browser, {}, async function() {
     info("origin: " + content.document.nodePrincipal.origin);
 
     Assert.ok(content.document.nodePrincipal.isNullPrincipal,
@@ -97,17 +97,17 @@ add_task(function* test_remote_window_open_data_uri() {
  * data: document contains an iframe, and we test that iframe should inherit
  * origin attributes from the data: document.
  */
-add_task(function* test_remote_window_open_data_uri2() {
-  let win = yield BrowserTestUtils.openNewBrowserWindow({ remote: true });
+add_task(async function test_remote_window_open_data_uri2() {
+  let win = await BrowserTestUtils.openNewBrowserWindow({ remote: true });
   let browser = win.gBrowser.selectedBrowser;
 
   // The iframe test2.html will fetch test2.js, which will have cookies.
   const DATA_URI = `data:text/html,
                     <iframe id="iframe1" src="http://mochi.test:8888/browser/browser/components/originattributes/test/browser/test2.html"></iframe>`;
   browser.loadURI(DATA_URI);
-  yield BrowserTestUtils.browserLoaded(browser, true);
+  await BrowserTestUtils.browserLoaded(browser, true);
 
-  yield ContentTask.spawn(browser, {}, function* () {
+  await ContentTask.spawn(browser, {}, async function() {
     info("origin " + content.document.nodePrincipal.origin);
 
     let iframe = content.document.getElementById("iframe1");
@@ -134,7 +134,7 @@ add_task(function* test_remote_window_open_data_uri2() {
 /**
  * about: pages should have firstPartyDomain set when we enable first party isolation.
  */
-add_task(function* test_aboutURL() {
+add_task(async function test_aboutURL() {
   let aboutURLs = [];
 
   // List of about: URLs that will initiate network requests.
@@ -173,10 +173,10 @@ add_task(function* test_aboutURL() {
 
   for (let url of aboutURLs) {
     let tab = gBrowser.addTab("about:" + url);
-    yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+    await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
     let attrs = { firstPartyDomain: "about.ef2a7dd5-93bc-417f-a698-142c3116864f.mozilla" };
-    yield ContentTask.spawn(tab.linkedBrowser, { attrs, url }, function* (args) {
+    await ContentTask.spawn(tab.linkedBrowser, { attrs, url }, async function(args) {
       info("loading page about:" + args.url + ", origin is " + content.document.nodePrincipal.origin);
       info("principal " + content.document.nodePrincipal);
       Assert.equal(content.document.nodePrincipal.originAttributes.firstPartyDomain,

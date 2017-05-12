@@ -1,7 +1,7 @@
 /**
  * Make sure that the form validation error message shows even if the form is in an iframe.
  */
-add_task(function* () {
+add_task(async function() {
   let uri = "<iframe src=\"data:text/html,<iframe name='t'></iframe><form target='t' action='data:text/html,'><input required id='i'><input id='s' type='submit'></form>\"</iframe>";
 
   var gInvalidFormPopup = document.getElementById("invalid-form-popup");
@@ -12,17 +12,17 @@ add_task(function* () {
   let browser = gBrowser.getBrowserForTab(tab);
   gBrowser.selectedTab = tab;
 
-  yield promiseTabLoadEvent(tab, "data:text/html," + escape(uri));
+  await promiseTabLoadEvent(tab, "data:text/html," + escape(uri));
 
   let popupShownPromise = promiseWaitForEvent(gInvalidFormPopup, "popupshown");
 
-  yield ContentTask.spawn(browser, {}, function* () {
+  await ContentTask.spawn(browser, {}, async function() {
     content.document.getElementsByTagName("iframe")[0]
            .contentDocument.getElementById("s").click();
   });
-  yield popupShownPromise;
+  await popupShownPromise;
 
-  yield ContentTask.spawn(browser, {}, function* () {
+  await ContentTask.spawn(browser, {}, async function() {
     let childdoc = content.document.getElementsByTagName("iframe")[0].contentDocument;
     Assert.equal(childdoc.activeElement, childdoc.getElementById("i"),
       "First invalid element should be focused");

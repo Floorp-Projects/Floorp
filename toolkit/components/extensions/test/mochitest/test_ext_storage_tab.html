@@ -13,7 +13,7 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* test_multiple_pages() {
+add_task(async function test_multiple_pages() {
   async function background() {
     let tabReady = new Promise(resolve => {
       browser.runtime.onMessage.addListener(function listener(msg) {
@@ -106,10 +106,10 @@ add_task(function* test_multiple_pages() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitFinish("storage-multiple");
-  yield extension.unload();
+  await extension.awaitFinish("storage-multiple");
+  await extension.unload();
 });
 
 </script>

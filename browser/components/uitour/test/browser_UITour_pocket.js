@@ -13,13 +13,13 @@ function test() {
 }
 
 var tests = [
-  taskify(function* test_menu_show_navbar() {
+  taskify(async function test_menu_show_navbar() {
     is(button.open, false, "Menu should initially be closed");
     gContentAPI.showMenu("pocket");
 
     // The panel gets created dynamically.
     let widgetPanel = null;
-    yield waitForConditionPromise(() => {
+    await waitForConditionPromise(() => {
       widgetPanel = document.getElementById("customizationui-widget-panel");
       return widgetPanel && widgetPanel.state == "open";
     }, "Menu should be visible after showMenu()");
@@ -31,13 +31,13 @@ var tests = [
     widgetPanel.hidePopup();
     checkPanelIsHidden(widgetPanel);
   }),
-  taskify(function* test_menu_show_appMenu() {
+  taskify(async function test_menu_show_appMenu() {
     CustomizableUI.addWidgetToArea("pocket-button", CustomizableUI.AREA_PANEL);
 
     is(PanelUI.multiView.hasAttribute("panelopen"), false, "Multiview should initially be closed");
     gContentAPI.showMenu("pocket");
 
-    yield waitForConditionPromise(() => {
+    await waitForConditionPromise(() => {
       return PanelUI.panel.state == "open";
     }, "Menu should be visible after showMenu()");
 

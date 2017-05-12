@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* testBackgroundWindow() {
+add_task(async function testBackgroundWindow() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
       browser.test.log("background script executed");
@@ -35,11 +35,11 @@ add_task(function* testBackgroundWindow() {
     loadCount++;
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitFinish("background sub-window test done");
+  await extension.awaitFinish("background sub-window test done");
 
   equal(loadCount, 1, "background script loaded only once");
 
-  yield extension.unload();
+  await extension.unload();
 });

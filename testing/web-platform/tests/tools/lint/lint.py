@@ -21,7 +21,28 @@ from six import binary_type, iteritems, itervalues
 from six.moves import range
 from six.moves.urllib.parse import urlsplit, urljoin
 
-here = os.path.abspath(os.path.split(__file__)[0])
+import logging
+
+logger = None
+
+def setup_logging(prefix=False):
+    global logger
+    if logger is None:
+        logger = logging.getLogger(os.path.basename(os.path.splitext(__file__)[0]))
+        handler = logging.StreamHandler(sys.stdout)
+        logger.addHandler(handler)
+    if prefix:
+        format = logging.BASIC_FORMAT
+    else:
+        format = "%(message)s"
+    formatter = logging.Formatter(format)
+    for handler in logger.handlers:
+        handler.setFormatter(formatter)
+    logger.setLevel(logging.DEBUG)
+
+
+setup_logging()
+
 
 ERROR_MSG = """You must fix all errors; for details on how to fix them, see
 https://github.com/w3c/web-platform-tests/blob/master/docs/lint-tool.md
@@ -613,12 +634,28 @@ def output_errors_text(errors):
         pos_string = path
         if line_number:
             pos_string += ":%s" % line_number
-        print("%s: %s (%s)" % (pos_string, description, error_type))
+        logger.error("%s: %s (%s)" % (pos_string, description, error_type))
+
+def output_errors_markdown(errors):
+    if not errors:
+        return
+    heading = """Got lint errors:
+
+| Error Type | Position | Message |
+|------------|----------|---------|"""
+    for line in heading.split("\n"):
+        logger.error(line)
+    for error_type, description, path, line_number in errors:
+        pos_string = path
+        if line_number:
+            pos_string += ":%s" % line_number
+        logger.error("%s | %s | %s |" % (error_type, pos_string, description))
 
 def output_errors_json(errors):
     for error_type, error, path, line_number in errors:
         print(json.dumps({"path": path, "lineno": line_number,
                           "rule": error_type, "message": error}))
+
 
 def output_error_count(error_count):
     if not error_count:
@@ -626,10 +663,11 @@ def output_error_count(error_count):
 
     by_type = " ".join("%s: %d" % item for item in error_count.items())
     count = sum(error_count.values())
+    logger.info("")
     if count == 1:
-        print("There was 1 error (%s)" % (by_type,))
+        logger.info("There was 1 error (%s)" % (by_type,))
     else:
-        print("There were %d errors (%s)" % (count, by_type))
+        logger.info("There were %d errors (%s)" % (count, by_type))
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -637,26 +675,39 @@ def parse_args():
                         help="List of paths to lint")
     parser.add_argument("--json", action="store_true",
                         help="Output machine-readable JSON format")
+    parser.add_argument("--markdown", action="store_true",
+                        help="Output markdown")
     parser.add_argument("--css-mode", action="store_true",
                         help="Run CSS testsuite specific lints")
     return parser.parse_args()
 
-def main(force_css_mode=False):
-    args = parse_args()
-    paths = list(args.paths if args.paths else all_filesystem_paths(repo_root))
-    return lint(repo_root, paths, args.json, force_css_mode or args.css_mode)
 
-def lint(repo_root, paths, output_json, css_mode):
+def main(**kwargs):
+    if kwargs.get("json") and kwargs.get("markdown"):
+        logger.critical("Cannot specify --json and --markdown")
+        sys.exit(2)
+
+    output_format = {(True, False): "json",
+                     (False, True): "markdown",
+                     (False, False): "normal"}[(kwargs.get("json", False),
+                                                kwargs.get("markdown", False))]
+
+    paths = list(kwargs.get("paths") if kwargs.get("paths") else all_filesystem_paths(repo_root))
+    if output_format == "markdown":
+        setup_logging(True)
+    return lint(repo_root, paths, output_format, kwargs.get("css_mode", False))
+
+
+def lint(repo_root, paths, output_format, css_mode):
     error_count = defaultdict(int)
     last = None
 
     with open(os.path.join(repo_root, "lint.whitelist")) as f:
         whitelist, ignored_files = parse_whitelist(f)
 
-    if output_json:
-        output_errors = output_errors_json
-    else:
-        output_errors = output_errors_text
+    output_errors = {"json": output_errors_json,
+                     "markdown": output_errors_markdown,
+                     "normal": output_errors_text}[output_format]
 
     def process_errors(errors):
         """
@@ -699,10 +750,11 @@ def lint(repo_root, paths, output_json, css_mode):
     errors = check_all_paths(repo_root, paths, css_mode)
     last = process_errors(errors) or last
 
-    if not output_json:
+    if output_format in ("normal", "markdown"):
         output_error_count(error_count)
         if error_count:
-            print(ERROR_MSG % (last[0], last[1], last[0], last[1]))
+            for line in (ERROR_MSG % (last[0], last[1], last[0], last[1])).split("\n"):
+                logger.info(line)
     return sum(itervalues(error_count))
 
 path_lints = [check_path_length, check_worker_collision]
@@ -710,6 +762,7 @@ all_paths_lints = [check_css_globally_unique]
 file_lints = [check_regexp_line, check_parsed, check_python_ast, check_script_metadata]
 
 if __name__ == "__main__":
-    error_count = main()
+    args = parse_args()
+    error_count = main(**vars(args))
     if error_count > 0:
         sys.exit(1)

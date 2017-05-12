@@ -26,11 +26,11 @@ let doneSetupPromise = new Promise(resolve => {
   });
 });
 
-add_task(function* setup() {
+add_task(async function setup() {
   info("Waiting for loads and setup");
-  yield doneSetupPromise;
+  await doneSetupPromise;
 
-  yield loadRecipes({
+  await loadRecipes({
     siteRecipes: [{
       hosts: ["mochi.test:8888"],
       usernameSelector: "input[name='recipeuname']",
@@ -110,7 +110,7 @@ const TESTCASES = [
   },
 ];
 
-add_task(function* test() {
+add_task(async function test() {
   let loginFrame = document.getElementById("loginFrame");
   let frameDoc = loginFrame.contentWindow.document;
 
@@ -123,7 +123,7 @@ add_task(function* test() {
 
     frameDoc.documentElement.innerHTML = tc.document;
     info("waiting for " + numFormLikesExpected + " processed form(s)");
-    yield processedFormPromise;
+    await processedFormPromise;
 
     let testInputs = frameDoc.documentElement.querySelectorAll("input");
     is(testInputs.length, tc.expectedInputValues.length, "Check number of inputs");

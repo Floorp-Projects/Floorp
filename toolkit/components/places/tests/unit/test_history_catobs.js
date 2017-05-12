@@ -6,7 +6,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* () {
+add_task(async function() {
   do_load_manifest("nsDummyObserver.manifest");
 
   let dummyCreated = false;
@@ -49,7 +49,7 @@ add_task(function* () {
   });
 
   // Add a visit.
-  yield PlacesTestUtils.addVisits(uri("http://typed.mozilla.org"));
+  await PlacesTestUtils.addVisits(uri("http://typed.mozilla.org"));
 
-  yield notificationsPromised;
+  await notificationsPromised;
 });

@@ -16,7 +16,6 @@ const TRANSLATION_PREF_DETECT_LANG = "browser.translation.detectLanguage";
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
-Cu.import("resource://gre/modules/Task.jsm", this);
 
 this.Translation = {
   STATE_OFFER: 0,

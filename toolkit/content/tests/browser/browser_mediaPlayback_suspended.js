@@ -64,125 +64,125 @@ function check_audio_pause_state(expectedPauseState) {
   }
 }
 
-function* suspended_pause(url, browser) {
+async function suspended_pause(url, browser) {
   info("### Start test for suspended-pause ###");
   browser.loadURI(url);
 
   info("- page should have playing audio -");
-  yield wait_for_event(browser, "DOMAudioPlaybackStarted");
+  await wait_for_event(browser, "DOMAudioPlaybackStarted");
 
   info("- the suspended state of audio should be non-suspened -");
-  yield ContentTask.spawn(browser, SuspendedType.NONE_SUSPENDED,
+  await ContentTask.spawn(browser, SuspendedType.NONE_SUSPENDED,
                                    check_audio_suspended);
 
   info("- pause playing audio -");
   browser.pauseMedia(false /* non-disposable */);
-  yield ContentTask.spawn(browser, true /* expect for pause */,
+  await ContentTask.spawn(browser, true /* expect for pause */,
                                    check_audio_pause_state);
-  yield ContentTask.spawn(browser, SuspendedType.SUSPENDED_PAUSE,
+  await ContentTask.spawn(browser, SuspendedType.SUSPENDED_PAUSE,
                                    check_audio_suspended);
 
   info("- resume paused audio -");
   browser.resumeMedia();
-  yield ContentTask.spawn(browser, false /* expect for playing */,
+  await ContentTask.spawn(browser, false /* expect for playing */,
                                    check_audio_pause_state);
-  yield ContentTask.spawn(browser, SuspendedType.NONE_SUSPENDED,
+  await ContentTask.spawn(browser, SuspendedType.NONE_SUSPENDED,
                                    check_audio_suspended);
 }
 
-function* suspended_pause_disposable(url, browser) {
+async function suspended_pause_disposable(url, browser) {
   info("### Start test for suspended-pause-disposable ###");
   browser.loadURI(url);
 
   info("- page should have playing audio -");
-  yield wait_for_event(browser, "DOMAudioPlaybackStarted");
+  await wait_for_event(browser, "DOMAudioPlaybackStarted");
 
   info("- the suspended state of audio should be non-suspened -");
-  yield ContentTask.spawn(browser, SuspendedType.NONE_SUSPENDED,
+  await ContentTask.spawn(browser, SuspendedType.NONE_SUSPENDED,
                                    check_audio_suspended);
 
   info("- pause playing audio -");
   browser.pauseMedia(true /* disposable */);
-  yield ContentTask.spawn(browser, true /* expect for pause */,
+  await ContentTask.spawn(browser, true /* expect for pause */,
                                    check_audio_pause_state);
-  yield ContentTask.spawn(browser, SuspendedType.SUSPENDED_PAUSE_DISPOSABLE,
+  await ContentTask.spawn(browser, SuspendedType.SUSPENDED_PAUSE_DISPOSABLE,
                                    check_audio_suspended);
 
   info("- resume paused audio -");
   browser.resumeMedia();
-  yield ContentTask.spawn(browser, false /* expect for playing */,
+  await ContentTask.spawn(browser, false /* expect for playing */,
                                    check_audio_pause_state);
-  yield ContentTask.spawn(browser, SuspendedType.NONE_SUSPENDED,
+  await ContentTask.spawn(browser, SuspendedType.NONE_SUSPENDED,
                                    check_audio_suspended);
 }
 
-function* suspended_stop_disposable(url, browser) {
+async function suspended_stop_disposable(url, browser) {
   info("### Start test for suspended-stop-disposable ###");
   browser.loadURI(url);
 
   info("- page should have playing audio -");
-  yield wait_for_event(browser, "DOMAudioPlaybackStarted");
+  await wait_for_event(browser, "DOMAudioPlaybackStarted");
 
   info("- the suspended state of audio should be non-suspened -");
-  yield ContentTask.spawn(browser, SuspendedType.NONE_SUSPENDED,
+  await ContentTask.spawn(browser, SuspendedType.NONE_SUSPENDED,
                                    check_audio_suspended);
 
   info("- stop playing audio -");
   browser.stopMedia();
-  yield wait_for_event(browser, "DOMAudioPlaybackStopped");
-  yield ContentTask.spawn(browser, SuspendedType.NONE_SUSPENDED,
+  await wait_for_event(browser, "DOMAudioPlaybackStopped");
+  await ContentTask.spawn(browser, SuspendedType.NONE_SUSPENDED,
                                    check_audio_suspended);
 }
 
-function* suspended_block(url, browser) {
+async function suspended_block(url, browser) {
   info("### Start test for suspended-block ###");
   browser.loadURI(url);
 
   info("- page should have playing audio -");
-  yield wait_for_event(browser, "DOMAudioPlaybackStarted");
+  await wait_for_event(browser, "DOMAudioPlaybackStarted");
 
   info("- block playing audio -");
   browser.blockMedia();
-  yield ContentTask.spawn(browser, SuspendedType.SUSPENDED_BLOCK,
+  await ContentTask.spawn(browser, SuspendedType.SUSPENDED_BLOCK,
                                    check_audio_suspended);
-  yield ContentTask.spawn(browser, null,
+  await ContentTask.spawn(browser, null,
                                    check_audio_onplay);
 
   info("- resume blocked audio -");
   browser.resumeMedia();
-  yield ContentTask.spawn(browser, SuspendedType.NONE_SUSPENDED,
+  await ContentTask.spawn(browser, SuspendedType.NONE_SUSPENDED,
                                    check_audio_suspended);
 }
 
-add_task(function* setup_test_preference() {
-  yield SpecialPowers.pushPrefEnv({"set": [
+add_task(async function setup_test_preference() {
+  await SpecialPowers.pushPrefEnv({"set": [
     ["media.useAudioChannelService.testing", true]
   ]});
 });
 
-add_task(function* test_suspended_pause() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function test_suspended_pause() {
+  await BrowserTestUtils.withNewTab({
       gBrowser,
       url: "about:blank"
     }, suspended_pause.bind(this, PAGE));
 });
 
-add_task(function* test_suspended_pause_disposable() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function test_suspended_pause_disposable() {
+  await BrowserTestUtils.withNewTab({
       gBrowser,
       url: "about:blank"
     }, suspended_pause_disposable.bind(this, PAGE));
 });
 
-add_task(function* test_suspended_stop_disposable() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function test_suspended_stop_disposable() {
+  await BrowserTestUtils.withNewTab({
       gBrowser,
       url: "about:blank"
     }, suspended_stop_disposable.bind(this, PAGE));
 });
 
-add_task(function* test_suspended_block() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function test_suspended_block() {
+  await BrowserTestUtils.withNewTab({
       gBrowser,
       url: "about:blank"
     }, suspended_block.bind(this, PAGE));

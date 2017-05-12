@@ -101,7 +101,7 @@ function setUpdateTimerPrefs() {
  *         and cleanup has been performed.
  */
 function runUpdateTest(updateParams, checkAttempts, steps) {
-  return Task.spawn(function*() {
+  return (async function() {
     registerCleanupFunction(() => {
       gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "");
       gMenuButtonUpdateBadge.uninit();
@@ -111,7 +111,7 @@ function runUpdateTest(updateParams, checkAttempts, steps) {
 
     gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
     setUpdateTimerPrefs();
-    yield SpecialPowers.pushPrefEnv({
+    await SpecialPowers.pushPrefEnv({
       set: [
         [PREF_APP_UPDATE_DOWNLOADPROMPTATTEMPTS, 0],
         [PREF_APP_UPDATE_ENABLED, true],
@@ -120,7 +120,7 @@ function runUpdateTest(updateParams, checkAttempts, steps) {
         [PREF_APP_UPDATE_LOG, DEBUG_AUS_TEST],
       ]});
 
-    yield setupTestUpdater();
+    await setupTestUpdater();
 
     let url = URL_HTTP_UPDATE_SJS +
               "?" + updateParams +
@@ -129,21 +129,21 @@ function runUpdateTest(updateParams, checkAttempts, steps) {
     setUpdateURL(url);
 
     executeSoon(() => {
-      Task.spawn(function*() {
+      (async function() {
         gAUS.checkForBackgroundUpdates();
         for (var i = 0; i < checkAttempts - 1; i++) {
-          yield waitForEvent("update-error", "check-attempt-failed");
+          await waitForEvent("update-error", "check-attempt-failed");
           gAUS.checkForBackgroundUpdates();
         }
-      });
+      })();
     });
 
     for (let step of steps) {
-      yield processStep(step);
+      await processStep(step);
     }
 
-    yield finishTestRestoreUpdaterBackup();
-  });
+    await finishTestRestoreUpdaterBackup();
+  })();
 }
 
 /**
@@ -158,7 +158,7 @@ function runUpdateTest(updateParams, checkAttempts, steps) {
  *         and cleanup has been performed.
  */
 function runUpdateProcessingTest(updates, steps) {
-  return Task.spawn(function*() {
+  return (async function() {
     registerCleanupFunction(() => {
       gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "");
       gMenuButtonUpdateBadge.reset();
@@ -176,7 +176,7 @@ function runUpdateProcessingTest(updates, steps) {
         [PREF_APP_UPDATE_LOG, DEBUG_AUS_TEST],
       ]});
 
-    yield setupTestUpdater();
+    await setupTestUpdater();
 
     writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
 
@@ -187,41 +187,44 @@ function runUpdateProcessingTest(updates, steps) {
     testPostUpdateProcessing();
 
     for (let step of steps) {
-      yield processStep(step);
+      await processStep(step);
     }
 
-    yield finishTestRestoreUpdaterBackup();
-  });
+    await finishTestRestoreUpdaterBackup();
+  })();
 }
 
-function processStep({notificationId, button, beforeClick, cleanup}) {
-  return Task.spawn(function*() {
+function processStep(step) {
+  if (typeof(step) == "function") {
+    return step();
+  }
 
-    yield BrowserTestUtils.waitForEvent(PanelUI.notificationPanel, "popupshown");
+  const {notificationId, button, beforeClick, cleanup} = step;
+  return (async function() {
+
+    await BrowserTestUtils.waitForEvent(PanelUI.notificationPanel, "popupshown");
     const shownNotification = PanelUI.activeNotification.id;
 
     is(shownNotification, notificationId, "The right notification showed up.");
     if (shownNotification != notificationId) {
       if (cleanup) {
-        yield cleanup();
+        await cleanup();
       }
       return;
     }
 
-    let notification = document.getElementById(`appMenu-${notificationId}-notification`);
-    is(notification.hidden, false, `${notificationId} notification is showing`);
+    let buttonEl = getNotificationButton(window, notificationId, button);
     if (beforeClick) {
-      yield Task.spawn(beforeClick);
+      await beforeClick();
     }
 
-    let buttonEl = document.getAnonymousElementByAttribute(notification, "anonid", button);
 
     buttonEl.click();
 
     if (cleanup) {
-      yield cleanup();
+      await cleanup();
     }
-  });
+  })();
 }
 
 /**
@@ -242,6 +245,22 @@ function waitForEvent(topic, status = null) {
       }
     }
   }, topic))
+}
+
+/**
+ * Gets the specified button for the notification.
+ *
+ * @param  window
+ *         The window to get the notification button for.
+ * @param  notificationId
+ *         The ID of the notification to get the button for.
+ * @param  button
+ *         The anonid of the button to get.
+ */
+function getNotificationButton(win, notificationId, button) {
+  let notification = win.document.getElementById(`appMenu-${notificationId}-notification`);
+  is(notification.hidden, false, `${notificationId} notification is showing`);
+  return win.document.getAnonymousElementByAttribute(notification, "anonid", button);
 }
 
 /**
@@ -270,20 +289,20 @@ function checkWhatsNewLink(id, url) {
  * runTest will be called.
  */
 function setupTestUpdater() {
-  return Task.spawn(function*() {
+  return (async function() {
     if (gUseTestUpdater) {
       try {
         restoreUpdaterBackup();
       } catch (e) {
         logTestInfo("Attempt to restore the backed up updater failed... " +
                     "will try again, Exception: " + e);
-        yield delay();
-        yield setupTestUpdater();
+        await delay();
+        await setupTestUpdater();
         return;
       }
-      yield moveRealUpdater();
+      await moveRealUpdater();
     }
-  });
+  })();
 }
 
 /**
@@ -292,7 +311,7 @@ function setupTestUpdater() {
  * copyTestUpdater to continue the setup of the test updater.
  */
 function moveRealUpdater() {
-  return Task.spawn(function*() {
+  return (async function() {
     try {
       // Move away the real updater
       let baseAppDir = getAppBaseDir();
@@ -302,13 +321,13 @@ function moveRealUpdater() {
     } catch (e) {
       logTestInfo("Attempt to move the real updater out of the way failed... " +
                   "will try again, Exception: " + e);
-      yield delay();
-      yield moveRealUpdater();
+      await delay();
+      await moveRealUpdater();
       return;
     }
 
-    yield copyTestUpdater();
-  });
+    await copyTestUpdater();
+  })();
 }
 
 /**
@@ -317,7 +336,7 @@ function moveRealUpdater() {
  * will call runTest to continue the test.
  */
 function copyTestUpdater() {
-  return Task.spawn(function*() {
+  return (async function() {
     try {
       // Copy the test updater
       let baseAppDir = getAppBaseDir();
@@ -334,10 +353,10 @@ function copyTestUpdater() {
     } catch (e) {
       logTestInfo("Attempt to copy the test updater failed... " +
                   "will try again, Exception: " + e);
-      yield delay();
-      yield copyTestUpdater();
+      await delay();
+      await copyTestUpdater();
     }
-  });
+  })();
 }
 
 /**
@@ -367,7 +386,7 @@ function restoreUpdaterBackup() {
  * finishTestDefaultWaitForWindowClosed after the restore is successful.
  */
 function finishTestRestoreUpdaterBackup() {
-  return Task.spawn(function*() {
+  return (async function() {
     if (gUseTestUpdater) {
       try {
         // Windows debug builds keep the updater file in use for a short period of
@@ -377,9 +396,9 @@ function finishTestRestoreUpdaterBackup() {
         logTestInfo("Attempt to restore the backed up updater failed... " +
                     "will try again, Exception: " + e);
 
-        yield delay();
-        yield finishTestRestoreUpdaterBackup();
+        await delay();
+        await finishTestRestoreUpdaterBackup();
       }
     }
-  });
+  })();
 }

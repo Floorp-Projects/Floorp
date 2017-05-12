@@ -10,18 +10,18 @@
 const gDialogURL = getRootDirectory(gTestPath) + "subdialog.xul";
 const gDialogURL2 = getRootDirectory(gTestPath) + "subdialog2.xul";
 
-function* open_subdialog_and_test_generic_start_state(browser, domcontentloadedFn, url = gDialogURL) {
+function open_subdialog_and_test_generic_start_state(browser, domcontentloadedFn, url = gDialogURL) {
   let domcontentloadedFnStr = domcontentloadedFn ?
     "(" + domcontentloadedFn.toString() + ")()" :
     "";
-  return ContentTask.spawn(browser, {url, domcontentloadedFnStr}, function*(args) {
+  return ContentTask.spawn(browser, {url, domcontentloadedFnStr}, async function(args) {
     let rv = { acceptCount: 0 };
     let win = content.window;
     let subdialog = win.gSubDialog;
     subdialog.open(args.url, null, rv);
 
     info("waiting for subdialog DOMFrameContentLoaded");
-    yield ContentTaskUtils.waitForEvent(win, "DOMFrameContentLoaded", true);
+    await ContentTaskUtils.waitForEvent(win, "DOMFrameContentLoaded", true);
     let result;
     if (args.domcontentloadedFnStr) {
       // eslint-disable-next-line no-eval
@@ -29,7 +29,7 @@ function* open_subdialog_and_test_generic_start_state(browser, domcontentloadedF
     }
 
     info("waiting for subdialog load");
-    yield ContentTaskUtils.waitForEvent(subdialog._frame, "load");
+    await ContentTaskUtils.waitForEvent(subdialog._frame, "load");
     info("subdialog window is loaded");
 
     let expectedStyleSheetURLs = subdialog._injectedStyleSheets.slice(0);
@@ -51,20 +51,20 @@ function* open_subdialog_and_test_generic_start_state(browser, domcontentloadedF
   });
 }
 
-function* close_subdialog_and_test_generic_end_state(browser, closingFn, closingButton, acceptCount, options) {
-  let dialogclosingPromise = ContentTask.spawn(browser, {closingButton, acceptCount}, function*(expectations) {
+async function close_subdialog_and_test_generic_end_state(browser, closingFn, closingButton, acceptCount, options) {
+  let dialogclosingPromise = ContentTask.spawn(browser, {closingButton, acceptCount}, async function(expectations) {
     let win = content.window;
     let subdialog = win.gSubDialog;
     let frame = subdialog._frame;
     info("waiting for dialogclosing");
     let closingEvent =
-      yield ContentTaskUtils.waitForEvent(frame.contentWindow, "dialogclosing");
+      await ContentTaskUtils.waitForEvent(frame.contentWindow, "dialogclosing");
     let contentClosingButton = closingEvent.detail.button;
     let actualAcceptCount = frame.contentWindow.arguments &&
                             frame.contentWindow.arguments[0].acceptCount;
 
     info("waiting for about:blank load");
-    yield ContentTaskUtils.waitForEvent(frame, "load");
+    await ContentTaskUtils.waitForEvent(frame, "load");
 
     Assert.notEqual(win.getComputedStyle(subdialog._overlay).visibility, "visible",
       "overlay is not visible");
@@ -78,25 +78,25 @@ function* close_subdialog_and_test_generic_end_state(browser, closingFn, closing
   });
 
   if (options && options.runClosingFnOutsideOfContentTask) {
-    yield closingFn();
+    await closingFn();
   } else {
     ContentTask.spawn(browser, null, closingFn);
   }
 
-  yield dialogclosingPromise;
+  await dialogclosingPromise;
 }
 
 let tab;
 
-add_task(function* test_initialize() {
-  tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:preferences");
+add_task(async function test_initialize() {
+  tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:preferences");
 });
 
-add_task(function* check_titlebar_focus_returnval_titlechanges_accepting() {
-  yield open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
+add_task(async function check_titlebar_focus_returnval_titlechanges_accepting() {
+  await open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
 
   let domtitlechangedPromise = BrowserTestUtils.waitForEvent(tab.linkedBrowser, "DOMTitleChanged");
-  yield ContentTask.spawn(tab.linkedBrowser, null, function*() {
+  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
     let dialog = content.window.gSubDialog._frame.contentWindow;
     let dialogTitleElement = content.document.getElementById("dialogTitle");
     Assert.equal(dialogTitleElement.textContent, "Sample sub-dialog",
@@ -107,71 +107,71 @@ add_task(function* check_titlebar_focus_returnval_titlechanges_accepting() {
   });
 
   info("waiting for DOMTitleChanged event");
-  yield domtitlechangedPromise;
+  await domtitlechangedPromise;
 
-  ContentTask.spawn(tab.linkedBrowser, null, function*() {
+  ContentTask.spawn(tab.linkedBrowser, null, async function() {
     let dialogTitleElement = content.document.getElementById("dialogTitle");
     Assert.equal(dialogTitleElement.textContent, "Updated title",
       "subdialog should have updated title");
   });
 
   // Accept the dialog
-  yield close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
+  await close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
     function() { content.window.gSubDialog._frame.contentDocument.documentElement.acceptDialog(); },
     "accept", 1);
 });
 
-add_task(function* check_canceling_dialog() {
-  yield open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
+add_task(async function check_canceling_dialog() {
+  await open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
 
   info("canceling the dialog");
-  yield close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
+  await close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
     function() { content.window.gSubDialog._frame.contentDocument.documentElement.cancelDialog(); },
     "cancel", 0);
 });
 
-add_task(function* check_reopening_dialog() {
-  yield open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
+add_task(async function check_reopening_dialog() {
+  await open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
   info("opening another dialog which will close the first");
-  yield open_subdialog_and_test_generic_start_state(tab.linkedBrowser, "", gDialogURL2);
+  await open_subdialog_and_test_generic_start_state(tab.linkedBrowser, "", gDialogURL2);
   info("closing as normal");
-  yield close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
+  await close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
     function() { content.window.gSubDialog._frame.contentDocument.documentElement.acceptDialog(); },
     "accept", 1);
 });
 
-add_task(function* check_opening_while_closing() {
-  yield open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
+add_task(async function check_opening_while_closing() {
+  await open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
   info("closing");
   content.window.gSubDialog.close();
   info("reopening immediately after calling .close()");
-  yield open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
-  yield close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
+  await open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
+  await close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
     function() { content.window.gSubDialog._frame.contentDocument.documentElement.acceptDialog(); },
     "accept", 1);
 
 });
 
-add_task(function* window_close_on_dialog() {
-  yield open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
+add_task(async function window_close_on_dialog() {
+  await open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
 
   info("canceling the dialog");
-  yield close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
+  await close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
     function() { content.window.gSubDialog._frame.contentWindow.window.close(); },
     null, 0);
 });
 
-add_task(function* click_close_button_on_dialog() {
-  yield open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
+add_task(async function click_close_button_on_dialog() {
+  await open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
 
   info("canceling the dialog");
-  yield close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
+  await close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
     function() { return BrowserTestUtils.synthesizeMouseAtCenter("#dialogClose", {}, tab.linkedBrowser); },
     null, 0, {runClosingFnOutsideOfContentTask: true});
 });
 
-add_task(function* background_click_should_close_dialog() {
-  yield open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
+add_task(async function background_click_should_close_dialog() {
+  await open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
 
   // Clicking on an inactive part of dialog itself should not close the dialog.
   // Click the dialog title bar here to make sure nothing happens.
@@ -183,42 +183,42 @@ add_task(function* background_click_should_close_dialog() {
   // overlay background instead of some boundary condition that a real user
   // would never click.
   info("clicking the overlay background");
-  yield close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
+  await close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
     function() { return BrowserTestUtils.synthesizeMouseAtPoint(2, 2, {}, tab.linkedBrowser); },
     null, 0, {runClosingFnOutsideOfContentTask: true});
 });
 
-add_task(function* back_navigation_on_subdialog_should_close_dialog() {
-  yield open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
+add_task(async function back_navigation_on_subdialog_should_close_dialog() {
+  await open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
 
   info("canceling the dialog");
-  yield close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
+  await close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
     function() { content.window.gSubDialog._frame.goBack(); },
     null, undefined);
 });
 
-add_task(function* back_navigation_on_browser_tab_should_close_dialog() {
-  yield open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
+add_task(async function back_navigation_on_browser_tab_should_close_dialog() {
+  await open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
 
   info("canceling the dialog");
-  yield close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
+  await close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
     function() { tab.linkedBrowser.goBack(); },
     null, undefined, {runClosingFnOutsideOfContentTask: true});
 });
 
-add_task(function* escape_should_close_dialog() {
-  yield open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
+add_task(async function escape_should_close_dialog() {
+  await open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
 
   info("canceling the dialog");
-  yield close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
+  await close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
     function() { return BrowserTestUtils.synthesizeKey("VK_ESCAPE", {}, tab.linkedBrowser); },
     "cancel", 0, {runClosingFnOutsideOfContentTask: true});
 });
 
-add_task(function* correct_width_and_height_should_be_used_for_dialog() {
-  yield open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
+add_task(async function correct_width_and_height_should_be_used_for_dialog() {
+  await open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
 
-  yield ContentTask.spawn(tab.linkedBrowser, null, function*() {
+  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
     let frameStyle = content.window.gSubDialog._frame.style;
     Assert.equal(frameStyle.width, "32em",
       "Width should be set on the frame from the dialog");
@@ -226,13 +226,13 @@ add_task(function* correct_width_and_height_should_be_used_for_dialog() {
       "Height should be set on the frame from the dialog");
   });
 
-  yield close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
+  await close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
     function() { content.window.gSubDialog._frame.contentWindow.window.close(); },
     null, 0);
 });
 
-add_task(function* wrapped_text_in_dialog_should_have_expected_scrollHeight() {
-  let oldHeight = yield open_subdialog_and_test_generic_start_state(tab.linkedBrowser, function domcontentloadedFn() {
+add_task(async function wrapped_text_in_dialog_should_have_expected_scrollHeight() {
+  let oldHeight = await open_subdialog_and_test_generic_start_state(tab.linkedBrowser, function domcontentloadedFn() {
     let frame = content.window.gSubDialog._frame;
     let doc = frame.contentDocument;
     let scrollHeight = doc.documentElement.scrollHeight;
@@ -252,7 +252,7 @@ add_task(function* wrapped_text_in_dialog_should_have_expected_scrollHeight() {
     return scrollHeight;
   });
 
-  yield ContentTask.spawn(tab.linkedBrowser, oldHeight, function*(contentOldHeight) {
+  await ContentTask.spawn(tab.linkedBrowser, oldHeight, async function(contentOldHeight) {
     let frame = content.window.gSubDialog._frame;
     let docEl = frame.contentDocument.documentElement;
     Assert.equal(frame.style.width, "32em",
@@ -263,37 +263,37 @@ add_task(function* wrapped_text_in_dialog_should_have_expected_scrollHeight() {
       "Height on the frame should be higher now");
   });
 
-  yield close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
+  await close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
     function() { content.window.gSubDialog._frame.contentWindow.window.close(); },
     null, 0);
 });
 
-add_task(function* dialog_too_tall_should_get_reduced_in_height() {
-  yield open_subdialog_and_test_generic_start_state(tab.linkedBrowser, function domcontentloadedFn() {
+add_task(async function dialog_too_tall_should_get_reduced_in_height() {
+  await open_subdialog_and_test_generic_start_state(tab.linkedBrowser, function domcontentloadedFn() {
     let frame = content.window.gSubDialog._frame;
     frame.contentDocument.documentElement.style.height = "100000px";
   });
 
-  yield ContentTask.spawn(tab.linkedBrowser, null, function*() {
+  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
     let frame = content.window.gSubDialog._frame;
     Assert.equal(frame.style.width, "32em", "Width should be set on the frame from the dialog");
     Assert.ok(parseInt(frame.style.height, 10) < content.window.innerHeight,
        "Height on the frame should be smaller than window's innerHeight");
   });
 
-  yield close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
+  await close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
     function() { content.window.gSubDialog._frame.contentWindow.window.close(); },
     null, 0);
 });
 
-add_task(function* scrollWidth_and_scrollHeight_from_subdialog_should_size_the_browser() {
-  yield open_subdialog_and_test_generic_start_state(tab.linkedBrowser, function domcontentloadedFn() {
+add_task(async function scrollWidth_and_scrollHeight_from_subdialog_should_size_the_browser() {
+  await open_subdialog_and_test_generic_start_state(tab.linkedBrowser, function domcontentloadedFn() {
     let frame = content.window.gSubDialog._frame;
     frame.contentDocument.documentElement.style.removeProperty("height");
     frame.contentDocument.documentElement.style.removeProperty("width");
   });
 
-  yield ContentTask.spawn(tab.linkedBrowser, null, function*() {
+  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
     let frame = content.window.gSubDialog._frame;
     Assert.ok(frame.style.width.endsWith("px"),
        "Width (" + frame.style.width + ") should be set to a px value of the scrollWidth from the dialog");
@@ -301,11 +301,11 @@ add_task(function* scrollWidth_and_scrollHeight_from_subdialog_should_size_the_b
        "Height (" + frame.style.height + ") should be set to a px value of the scrollHeight from the dialog");
   });
 
-  yield close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
+  await close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
     function() { content.window.gSubDialog._frame.contentWindow.window.close(); },
     null, 0);
 });
 
-add_task(function* test_shutdown() {
+add_task(async function test_shutdown() {
   gBrowser.removeTab(tab);
 });

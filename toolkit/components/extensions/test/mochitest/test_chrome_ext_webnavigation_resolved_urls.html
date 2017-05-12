@@ -14,7 +14,7 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* webnav_unresolved_uri_on_expected_URI_scheme() {
+add_task(async function webnav_unresolved_uri_on_expected_URI_scheme() {
   function background() {
     let checkURLs;
 
@@ -56,7 +56,7 @@ add_task(function* webnav_unresolved_uri_on_expected_URI_scheme() {
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
 
-  yield extension.startup();
+  await extension.startup();
 
   let checkURLs = [
     "resource://gre/modules/Services.jsm",
@@ -64,17 +64,17 @@ add_task(function* webnav_unresolved_uri_on_expected_URI_scheme() {
     "about:mozilla",
   ];
 
-  let tabURL = yield extension.awaitMessage("ready");
+  let tabURL = await extension.awaitMessage("ready");
   checkURLs.push(tabURL);
 
   extension.sendMessage("checkURLs", checkURLs);
 
   for (let url of checkURLs) {
     window.open(url);
-    yield extension.awaitMessage("next");
+    await extension.awaitMessage("next");
   }
 
-  yield extension.unload();
+  await extension.unload();
 });
 
 </script>

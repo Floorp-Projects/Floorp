@@ -6,7 +6,7 @@
  * The menu is not tested since it uses the same code as the toolbar.
  */
 
-add_task(function* () {
+add_task(async function() {
   const PAGE_URI = NetUtil.newURI("http://places.test/");
   const ICON_URI = NetUtil.newURI("http://mochi.test:8888/browser/browser/components/places/tests/browser/favicon-normal16.png");
 
@@ -14,9 +14,9 @@ add_task(function* () {
   let toolbar = document.getElementById("PersonalToolbar");
   let wasCollapsed = toolbar.collapsed;
   if (wasCollapsed) {
-    yield promiseSetToolbarVisibility(toolbar, true);
-    registerCleanupFunction(function* () {
-      yield promiseSetToolbarVisibility(toolbar, false);
+    await promiseSetToolbarVisibility(toolbar, true);
+    registerCleanupFunction(async function() {
+      await promiseSetToolbarVisibility(toolbar, false);
     });
   }
 
@@ -29,30 +29,30 @@ add_task(function* () {
   registerCleanupFunction(() => {
     SidebarUI.hide();
   });
-  yield promiseSidebarLoaded;
+  await promiseSidebarLoaded;
 
   // Add a bookmark to the bookmarks toolbar.
-  let bm = yield PlacesUtils.bookmarks.insert({
+  let bm = await PlacesUtils.bookmarks.insert({
     url: PAGE_URI,
     title: "test icon",
     parentGuid: PlacesUtils.bookmarks.toolbarGuid
   });
-  registerCleanupFunction(function* () {
-    yield PlacesUtils.bookmarks.remove(bm);
+  registerCleanupFunction(async function() {
+    await PlacesUtils.bookmarks.remove(bm);
   });
 
   // The icon is read asynchronously from the network, we don't have an easy way
   // to wait for that.
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     setTimeout(resolve, 3000);
   });
 
   let toolbarElt = getNodeForToolbarItem(bm.guid);
   let toolbarShot1 = TestUtils.screenshotArea(toolbarElt, window);
-  let sidebarRect = yield getRectForSidebarItem(bm.guid);
+  let sidebarRect = await getRectForSidebarItem(bm.guid);
   let sidebarShot1 = TestUtils.screenshotArea(sidebarRect, window);
 
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     PlacesUtils.favicons.setAndFetchFaviconForPage(
       PAGE_URI, ICON_URI, true,
       PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
@@ -63,7 +63,7 @@ add_task(function* () {
 
   // The icon is read asynchronously from the network, we don't have an easy way
   // to wait for that.
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     setTimeout(resolve, 3000);
   });
 
@@ -103,8 +103,8 @@ function getNodeForToolbarItem(guid) {
  *        GUID of the item to search.
  * @returns DOM Node of the element.
  */
-function* getRectForSidebarItem(guid) {
-  let itemId = yield PlacesUtils.promiseItemId(guid);
+async function getRectForSidebarItem(guid) {
+  let itemId = await PlacesUtils.promiseItemId(guid);
   let sidebar = document.getElementById("sidebar");
   let tree = sidebar.contentDocument.getElementById("bookmarks-view");
   tree.selectItems([itemId]);

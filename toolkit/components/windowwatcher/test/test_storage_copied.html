@@ -24,18 +24,18 @@ same domain as the opener.
       });
     }
 
-    add_task(function*() {
+    add_task(async function() {
       const TEST_VALUE = "test-value";
       // This magic value of 2 means that by default, when content tries
       // to open a new window, it'll actually open in a new window instead
       // of a new tab.
-      yield SpecialPowers.pushPrefEnv({"set": [
+      await SpecialPowers.pushPrefEnv({"set": [
         ["browser.link.open_newwindow", 2],
       ]});
 
       window.sessionStorage.setItem("test-item", TEST_VALUE);
       let win = window.open("file_storage_copied.html", "my_window");
-      let data = yield waitForMessage(win);
+      let data = await waitForMessage(win);
       is(data, TEST_VALUE, "Should have cloned the test value");
       win.close();
     });

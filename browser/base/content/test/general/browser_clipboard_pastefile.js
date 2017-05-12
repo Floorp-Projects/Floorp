@@ -1,7 +1,7 @@
 // This test is used to check that pasting files removes all non-file data from
 // event.clipboardData.
 
-add_task(function*() {
+add_task(async function() {
   var textbox = document.createElement("textbox");
   document.documentElement.appendChild(textbox);
 
@@ -9,7 +9,7 @@ add_task(function*() {
   textbox.value = "Text";
   textbox.select();
 
-  yield new Promise((resolve, reject) => {
+  await new Promise((resolve, reject) => {
     textbox.addEventListener("copy", function(event) {
       event.clipboardData.setData("text/plain", "Alternate");
       // For this test, it doesn't matter that the file isn't actually a file.
@@ -21,24 +21,24 @@ add_task(function*() {
     EventUtils.synthesizeKey("c", { accelKey: true });
   });
 
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser,
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser,
               "https://example.com/browser/browser/base/content/test/general/clipboard_pastefile.html");
   let browser = tab.linkedBrowser;
 
-  yield ContentTask.spawn(browser, { }, function* (arg) {
+  await ContentTask.spawn(browser, { }, async function(arg) {
     content.document.getElementById("input").focus();
   });
 
-  yield BrowserTestUtils.synthesizeKey("v", { accelKey: true }, browser);
+  await BrowserTestUtils.synthesizeKey("v", { accelKey: true }, browser);
 
-  let output = yield ContentTask.spawn(browser, { }, function* (arg) {
+  let output = await ContentTask.spawn(browser, { }, async function(arg) {
     return content.document.getElementById("output").textContent;
   });
   is(output, "Passed", "Paste file");
 
   textbox.focus();
 
-  yield new Promise((resolve, reject) => {
+  await new Promise((resolve, reject) => {
     textbox.addEventListener("paste", function(event) {
       let dt = event.clipboardData;
       is(dt.types.length, 3, "number of types");
@@ -55,5 +55,5 @@ add_task(function*() {
 
   document.documentElement.removeChild(textbox);
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });

@@ -4,7 +4,7 @@ var {Services} = Components.utils.import("resource://gre/modules/Services.jsm", 
 /**
  * Test optional duration reporting that can be used for telemetry.
  */
-add_task(function* duration() {
+add_task(async function duration() {
   Services.prefs.setBoolPref("toolkit.osfile.log", true);
   // Options structure passed to a OS.File copy method.
   let copyOptions = {
@@ -12,7 +12,7 @@ add_task(function* duration() {
     // measurement.
     outExecutionDuration: null
   };
-  let currentDir = yield OS.File.getCurrentDirectory();
+  let currentDir = await OS.File.getCurrentDirectory();
   let pathSource = OS.Path.join(currentDir, "test_duration.js");
   let copyFile = pathSource + ".bak";
   function testOptions(options, name) {
@@ -24,9 +24,9 @@ add_task(function* duration() {
     do_check_true(options.outExecutionDuration >= 0);
   };
   // Testing duration of OS.File.copy.
-  yield OS.File.copy(pathSource, copyFile, copyOptions);
+  await OS.File.copy(pathSource, copyFile, copyOptions);
   testOptions(copyOptions, "OS.File.copy");
-  yield OS.File.remove(copyFile);
+  await OS.File.remove(copyFile);
 
   // Trying an operation where options are cloned.
   let pathDest = OS.Path.join(OS.Constants.Path.tmpDir,
@@ -35,7 +35,7 @@ add_task(function* duration() {
   let readOptions = {
     outExecutionDuration: null
   };
-  let contents = yield OS.File.read(pathSource, undefined, readOptions);
+  let contents = await OS.File.read(pathSource, undefined, readOptions);
   testOptions(readOptions, "OS.File.read");
   // Options structure passed to a OS.File writeAtomic method.
   let writeAtomicOptions = {
@@ -44,9 +44,9 @@ add_task(function* duration() {
     outExecutionDuration: null,
     tmpPath: tmpPath
   };
-  yield OS.File.writeAtomic(pathDest, contents, writeAtomicOptions);
+  await OS.File.writeAtomic(pathDest, contents, writeAtomicOptions);
   testOptions(writeAtomicOptions, "OS.File.writeAtomic");
-  yield OS.File.remove(pathDest);
+  await OS.File.remove(pathDest);
 
   do_print("Ensuring that we can use outExecutionDuration to accumulate durations");
 
@@ -58,12 +58,12 @@ add_task(function* duration() {
   };
   let backupDuration = ARBITRARY_BASE_DURATION;
   // Testing duration of OS.File.copy.
-  yield OS.File.copy(pathSource, copyFile, copyOptions);
+  await OS.File.copy(pathSource, copyFile, copyOptions);
 
   do_check_true(copyOptions.outExecutionDuration >= backupDuration);
 
   backupDuration = copyOptions.outExecutionDuration;
-  yield OS.File.remove(copyFile, copyOptions);
+  await OS.File.remove(copyFile, copyOptions);
   do_check_true(copyOptions.outExecutionDuration >= backupDuration);
 
   // Trying an operation where options are cloned.
@@ -76,14 +76,14 @@ add_task(function* duration() {
   };
   backupDuration = writeAtomicOptions.outExecutionDuration;
 
-  yield OS.File.writeAtomic(pathDest, contents, writeAtomicOptions);
+  await OS.File.writeAtomic(pathDest, contents, writeAtomicOptions);
   do_check_true(copyOptions.outExecutionDuration >= backupDuration);
   OS.File.remove(pathDest);
 
   // Testing an operation that doesn't take arguments at all
-  let file = yield OS.File.open(pathSource);
-  yield file.stat();
-  yield file.close();
+  let file = await OS.File.open(pathSource);
+  await file.stat();
+  await file.close();
 });
 
 function run_test() {

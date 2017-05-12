@@ -254,14 +254,14 @@ var tests = [
 
     gContentAPI.showInfo("urlbar", "test title", "test text");
   },
-  taskify(function* test_info_2() {
+  taskify(async function test_info_2() {
     let popup = document.getElementById("UITourTooltip");
     let title = document.getElementById("UITourTooltipTitle");
     let desc = document.getElementById("UITourTooltipDescription");
     let icon = document.getElementById("UITourTooltipIcon");
     let buttons = document.getElementById("UITourTooltipButtons");
 
-    yield showInfoPromise("urlbar", "urlbar title", "urlbar text");
+    await showInfoPromise("urlbar", "urlbar title", "urlbar text");
 
     is(popup.popupBoxObject.anchorNode, document.getElementById("urlbar"), "Popup should be anchored to the urlbar");
     is(title.textContent, "urlbar title", "Popup should have correct title");
@@ -269,7 +269,7 @@ var tests = [
     is(icon.src, "", "Popup should have no icon");
     is(buttons.hasChildNodes(), false, "Popup should have no buttons");
 
-    yield showInfoPromise("search", "search title", "search text");
+    await showInfoPromise("search", "search title", "search text");
 
     is(popup.popupBoxObject.anchorNode, document.getElementById("searchbar"), "Popup should be anchored to the searchbar");
     is(title.textContent, "search title", "Popup should have correct title");
@@ -370,14 +370,14 @@ var tests = [
       });
     });
   },
-  taskify(function* test_treatment_tag() {
+  taskify(async function test_treatment_tag() {
     let ac = new TelemetryArchiveTesting.Checker();
-    yield ac.promiseInit();
-    yield gContentAPI.setTreatmentTag("foobar", "baz");
+    await ac.promiseInit();
+    await gContentAPI.setTreatmentTag("foobar", "baz");
     // Wait until the treatment telemetry is sent before looking in the archive.
-    yield BrowserTestUtils.waitForContentEvent(gTestTab.linkedBrowser, "mozUITourNotification", false,
+    await BrowserTestUtils.waitForContentEvent(gTestTab.linkedBrowser, "mozUITourNotification", false,
                                                event => event.detail.event === "TreatmentTag:TelemetrySent");
-    yield new Promise((resolve) => {
+    await new Promise((resolve) => {
       gContentAPI.getTreatmentTag("foobar", (data) => {
         is(data.value, "baz", "set and retrieved treatmentTag");
         ac.promiseFindPing("uitour-tag", [
@@ -395,9 +395,9 @@ var tests = [
   }),
 
   // Make sure this test is last in the file so the appMenu gets left open and done will confirm it got tore down.
-  taskify(function* cleanupMenus() {
+  taskify(async function cleanupMenus() {
     let shownPromise = promisePanelShown(window);
     gContentAPI.showMenu("appMenu");
-    yield shownPromise;
+    await shownPromise;
   }),
 ];

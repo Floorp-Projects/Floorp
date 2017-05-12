@@ -26,22 +26,22 @@ function checkIdentityPopup(icon) {
   ok(getPopupContentVerifier().textContent.includes("security exception"), "Text shows overridden certificate warning.");
 }
 
-add_task(function* () {
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser);
+add_task(async function() {
+  await BrowserTestUtils.openNewForegroundTab(gBrowser);
 
   // check that a warning is shown when loading a page with mixed content and an overridden certificate
-  yield loadBadCertPage(MIXED_CONTENT_URL);
+  await loadBadCertPage(MIXED_CONTENT_URL);
   checkIdentityPopup("connection-mixed-passive-loaded.svg#icon");
 
   // check that the crossed out icon is shown when disabling mixed content protection
   gIdentityHandler.disableMixedContentProtection();
-  yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   checkIdentityPopup("connection-mixed-active-loaded.svg#icon");
 
   // check that a warning is shown even without mixed content
-  yield BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "https://self-signed.example.com");
-  yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "https://self-signed.example.com");
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   checkIdentityPopup("connection-mixed-passive-loaded.svg#icon");
 
   // remove cert exception
@@ -49,6 +49,6 @@ add_task(function* () {
                               .getService(Ci.nsICertOverrideService);
   certOverrideService.clearValidityOverride("self-signed.example.com", -1);
 
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 

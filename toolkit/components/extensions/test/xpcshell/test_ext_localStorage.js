@@ -32,18 +32,18 @@ let extensionData = {
   background: backgroundScript,
 };
 
-add_task(function* test_localStorage() {
+add_task(async function test_localStorage() {
   const RESULTS = ["item1", "item2", "deleted", "cleared", "item1"];
 
   for (let expected of RESULTS) {
     let extension = ExtensionTestUtils.loadExtension(extensionData);
 
-    yield extension.startup();
+    await extension.startup();
 
-    let actual = yield extension.awaitMessage("result");
+    let actual = await extension.awaitMessage("result");
 
-    yield extension.awaitFinish("localStorage");
-    yield extension.unload();
+    await extension.awaitFinish("localStorage");
+    await extension.unload();
 
     equal(actual, expected, "got expected localStorage data");
   }

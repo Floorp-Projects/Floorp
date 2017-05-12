@@ -18,7 +18,6 @@
 
   <script type="application/javascript"><![CDATA[
     const {interfaces: Ci, classes: Cc, results: Cr, utils: Cu} = Components;
-    Cu.import("resource://gre/modules/Task.jsm");
     Cu.import("resource://testing-common/BrowserTestUtils.jsm");
     Cu.import("resource://testing-common/ContentTask.jsm");
     ContentTask.setTestScope(window.opener.wrappedJSObject);
@@ -34,41 +33,41 @@
     SimpleTest.requestLongerTimeout(2);
 
     function startTest() {
-      Task.spawn(function* () {
+      (async function() {
         gFindBar = document.getElementById("FindToolbar");
         for (let browserId of ["content", "content-remote"]) {
-          yield startTestWithBrowser(browserId);
+          await startTestWithBrowser(browserId);
         }
-      }).then(() => {
+      })().then(() => {
         window.close();
         SimpleTest.finish();
       });
     }
 
-    function* startTestWithBrowser(browserId) {
+    async function startTestWithBrowser(browserId) {
       info("Starting test with browser '" + browserId + "'");
       gBrowser = document.getElementById(browserId);
       gFindBar.browser = gBrowser;
       let promise = BrowserTestUtils.browserLoaded(gBrowser);
       gBrowser.loadURI("data:text/html,hello there");
-      yield promise;
-      yield onDocumentLoaded();
+      await promise;
+      await onDocumentLoaded();
     }
 
-    function* onDocumentLoaded() {
+    async function onDocumentLoaded() {
       gFindBar.open();
       gFindBar.onFindCommand();
 
-      yield testFind();
-      yield* testFindAgain();
-      yield testCaseSensitivity();
-      yield testHighlight();
+      await testFind();
+      await testFindAgain();
+      await testCaseSensitivity();
+      await testHighlight();
     }
 
     function checkSelection() {
       return new Promise(resolve => {
         SimpleTest.executeSoon(() => {
-          ContentTask.spawn(gBrowser, null, function* () {
+          ContentTask.spawn(gBrowser, null, async function() {
             let selected = content.getSelection();
             Assert.equal(String(selected), "", "No text is selected");
 
@@ -99,7 +98,7 @@
       });
     }
 
-    function* testFind() {
+    async function testFind() {
       info("Testing normal find.");
       let query = "t";
       let promise = once(gFindBar, "find");
@@ -110,31 +109,31 @@
                          false, false, 0, query.charCodeAt(0));
       gFindBar._findField.inputField.dispatchEvent(event);
 
-      let e = yield promise;
+      let e = await promise;
       ok(e.detail.query === query, "find event query should match '" + query + "'");
       // Since we're preventing the default make sure nothing was selected.
-      yield checkSelection();
+      await checkSelection();
     }
 
-    function* testFindAgain() {
+    async function testFindAgain() {
       info("Testing repeating normal find.");
       let promise = once(gFindBar, "findagain");
 
       gFindBar.onFindAgainCommand();
 
-      yield promise;
+      await promise;
       // Since we're preventing the default make sure nothing was selected.
-      yield checkSelection();
+      await checkSelection();
     }
 
-    function* testCaseSensitivity() {
+    async function testCaseSensitivity() {
       info("Testing normal case sensitivity.");
       let promise = once(gFindBar, "findcasesensitivitychange", false);
 
       let matchCaseCheckbox = gFindBar.getElement("find-case-sensitive");
       matchCaseCheckbox.click();
 
-      let e = yield promise;
+      let e = await promise;
       ok(e.detail.caseSensitive, "find should be case sensitive");
 
       // Toggle it back to the original setting.
@@ -142,10 +141,10 @@
 
       // Changing case sensitivity does the search so clear the selected text
       // before the next test.
-      yield ContentTask.spawn(gBrowser, null, () => content.getSelection().removeAllRanges());
+      await ContentTask.spawn(gBrowser, null, () => content.getSelection().removeAllRanges());
     }
 
-    function* testHighlight() {
+    async function testHighlight() {
       info("Testing find with highlight all.");
       // Update the find state so the highlight button is clickable.
       gFindBar.updateControlState(Ci.nsITypeAheadFind.FIND_FOUND, false);
@@ -156,10 +155,10 @@
       if (!highlightButton.checked)
         highlightButton.click();
 
-      let e = yield promise;
+      let e = await promise;
       ok(e.detail.highlightAll, "find event should have highlight all set");
       // Since we're preventing the default make sure nothing was highlighted.
-      yield checkSelection();
+      await checkSelection();
 
       // Toggle it back to the original setting.
       if (highlightButton.checked)

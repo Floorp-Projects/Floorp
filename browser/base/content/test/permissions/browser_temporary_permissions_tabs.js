@@ -4,11 +4,11 @@
 "use strict";
 
 // Test that temp permissions are persisted through moving tabs to new windows.
-add_task(function* testTempPermissionOnTabMove() {
+add_task(async function testTempPermissionOnTabMove() {
   let uri = NetUtil.newURI("https://example.com");
   let id = "geo";
 
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, uri.spec);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, uri.spec);
 
   SitePermissions.set(uri, id, SitePermissions.BLOCK, SitePermissions.SCOPE_TEMPORARY, tab.linkedBrowser);
 
@@ -19,7 +19,7 @@ add_task(function* testTempPermissionOnTabMove() {
 
   let promiseWin = BrowserTestUtils.waitForNewWindow();
   gBrowser.replaceTabWithWindow(tab);
-  let win = yield promiseWin;
+  let win = await promiseWin;
   tab = win.gBrowser.selectedTab;
 
   Assert.deepEqual(SitePermissions.get(uri, id, tab.linkedBrowser), {
@@ -28,16 +28,16 @@ add_task(function* testTempPermissionOnTabMove() {
   });
 
   SitePermissions.remove(uri, id, tab.linkedBrowser);
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 });
 
 // Test that temp permissions don't affect other tabs of the same URI.
-add_task(function* testTempPermissionMultipleTabs() {
+add_task(async function testTempPermissionMultipleTabs() {
   let uri = NetUtil.newURI("https://example.com");
   let id = "geo";
 
-  let tab1 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, uri.spec);
-  let tab2 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, uri.spec);
+  let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, uri.spec);
+  let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, uri.spec);
 
   SitePermissions.set(uri, id, SitePermissions.BLOCK, SitePermissions.SCOPE_TEMPORARY, tab2.linkedBrowser);
 
@@ -55,12 +55,12 @@ add_task(function* testTempPermissionMultipleTabs() {
 
   Assert.notEqual(geoIcon.boxObject.width, 0, "geo anchor should be visible");
 
-  yield BrowserTestUtils.switchTab(gBrowser, tab1);
+  await BrowserTestUtils.switchTab(gBrowser, tab1);
 
   Assert.equal(geoIcon.boxObject.width, 0, "geo anchor should not be visible");
 
   SitePermissions.remove(uri, id, tab2.linkedBrowser);
-  yield BrowserTestUtils.removeTab(tab1);
-  yield BrowserTestUtils.removeTab(tab2);
+  await BrowserTestUtils.removeTab(tab1);
+  await BrowserTestUtils.removeTab(tab2);
 });
 

@@ -32,8 +32,8 @@ function installAddon(details) {
   });
 }
 
-add_task(function*() {
-  gAddon = yield installAddon({
+add_task(async function() {
+  gAddon = await installAddon({
     manifest: {
       "options_ui": {
         "page": "options.html",
@@ -64,14 +64,14 @@ add_task(function*() {
 
   // Create another add-on with no inline options, to verify that detail
   // view switches work correctly.
-  gOtherAddon = yield installAddon({});
+  gOtherAddon = await installAddon({});
 
-  gManagerWindow = yield open_manager("addons://list/extension");
+  gManagerWindow = await open_manager("addons://list/extension");
   gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 });
 
 
-function* openDetailsBrowser(addonId) {
+async function openDetailsBrowser(addonId) {
   var addon = get_addon_element(gManagerWindow, addonId);
 
   is(addon.mAddon.optionsType, AddonManager.OPTIONS_TYPE_INLINE_BROWSER,
@@ -85,7 +85,7 @@ function* openDetailsBrowser(addonId) {
 
   EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
 
-  yield TestUtils.topicObserved(AddonManager.OPTIONS_NOTIFICATION_DISPLAYED,
+  await TestUtils.topicObserved(AddonManager.OPTIONS_NOTIFICATION_DISPLAYED,
                                 (subject, data) => data == addonId);
 
   is(gManagerWindow.gViewController.currentViewId,
@@ -110,8 +110,8 @@ function* openDetailsBrowser(addonId) {
 }
 
 
-add_task(function* test_inline_browser_addon() {
-  let browser = yield openDetailsBrowser(gAddon.id);
+add_task(async function test_inline_browser_addon() {
+  let browser = await openDetailsBrowser(gAddon.id);
 
   let body = browser.contentDocument.body;
 
@@ -128,25 +128,25 @@ add_task(function* test_inline_browser_addon() {
   // Delay long enough to avoid hitting our resize rate limit.
   let delay = () => new Promise(resolve => setTimeout(resolve, 300));
 
-  yield delay();
+  await delay();
 
   checkHeights(300);
 
   info("Increase the document height, and expect the browser to grow correspondingly");
   body.classList.toggle("bigger");
 
-  yield delay();
+  await delay();
 
   checkHeights(600);
 
   info("Decrease the document height, and expect the browser to shrink correspondingly");
   body.classList.toggle("bigger");
 
-  yield delay();
+  await delay();
 
   checkHeights(300);
 
-  yield new Promise(resolve =>
+  await new Promise(resolve =>
     gCategoryUtilities.openType("extension", resolve));
 
   browser = gManagerWindow.document.querySelector(
@@ -158,18 +158,18 @@ add_task(function* test_inline_browser_addon() {
 
 // Test that loading an add-on with no inline browser works as expected
 // after having viewed our main test add-on.
-add_task(function* test_plain_addon() {
+add_task(async function test_plain_addon() {
   var addon = get_addon_element(gManagerWindow, gOtherAddon.id);
 
   is(addon.mAddon.optionsType, null, "Add-on should have no options");
 
   addon.parentNode.ensureElementIsVisible(addon);
 
-  yield EventUtils.synthesizeMouseAtCenter(addon, { clickCount: 1 }, gManagerWindow);
+  await EventUtils.synthesizeMouseAtCenter(addon, { clickCount: 1 }, gManagerWindow);
 
   EventUtils.synthesizeMouseAtCenter(addon, { clickCount: 2 }, gManagerWindow);
 
-  yield BrowserTestUtils.waitForEvent(gManagerWindow, "ViewChanged");
+  await BrowserTestUtils.waitForEvent(gManagerWindow, "ViewChanged");
 
   is(gManagerWindow.gViewController.currentViewId,
      `addons://detail/${encodeURIComponent(gOtherAddon.id)}`,
@@ -180,17 +180,17 @@ add_task(function* test_plain_addon() {
 
   is(browser, null, "Detail view should have no inline browser");
 
-  yield new Promise(resolve =>
+  await new Promise(resolve =>
     gCategoryUtilities.openType("extension", resolve));
 });
 
 
 // Test that loading the original add-on details successfully creates a
 // browser.
-add_task(function* test_inline_browser_addon_again() {
-  let browser = yield openDetailsBrowser(gAddon.id);
+add_task(async function test_inline_browser_addon_again() {
+  let browser = await openDetailsBrowser(gAddon.id);
 
-  yield new Promise(resolve =>
+  await new Promise(resolve =>
     gCategoryUtilities.openType("extension", resolve));
 
   browser = gManagerWindow.document.querySelector(
@@ -199,8 +199,8 @@ add_task(function* test_inline_browser_addon_again() {
   is(browser, null, "Options browser should be removed from the document");
 });
 
-add_task(function*() {
-  yield close_manager(gManagerWindow);
+add_task(async function() {
+  await close_manager(gManagerWindow);
 
   gManagerWindow = null;
   gCategoryUtilities = null;

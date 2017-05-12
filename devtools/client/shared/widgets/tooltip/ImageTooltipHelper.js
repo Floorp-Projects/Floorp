@@ -132,7 +132,7 @@ function setBrokenImageTooltip(tooltip, doc) {
   div.className = "theme-comment devtools-tooltip-image-broken";
   let message = L10N.getStr("previewTooltip.image.brokenImage");
   div.textContent = message;
-  tooltip.setContent(div, {width: 150, height: 30});
+  tooltip.setContent(div);
 }
 
 module.exports.getImageDimensions = getImageDimensions;

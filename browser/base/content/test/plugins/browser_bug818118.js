@@ -1,7 +1,7 @@
 var gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
 var gTestBrowser = null;
 
-add_task(function* () {
+add_task(async function() {
   registerCleanupFunction(function() {
     clearAllPluginPermissions();
     Services.prefs.clearUserPref("plugins.click_to_play");
@@ -13,7 +13,7 @@ add_task(function* () {
   });
 });
 
-add_task(function* () {
+add_task(async function() {
   Services.prefs.setBoolPref("plugins.click_to_play", true);
 
   gBrowser.selectedTab = gBrowser.addTab();
@@ -21,19 +21,19 @@ add_task(function* () {
 
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Test Plug-in");
 
-  yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_both.html");
+  await promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_both.html");
 
   // Work around for delayed PluginBindingAttached
-  yield promiseUpdatePluginBindings(gTestBrowser);
+  await promiseUpdatePluginBindings(gTestBrowser);
 
   let popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
   ok(popupNotification, "should have a click-to-play notification");
 
-  let pluginInfo = yield promiseForPluginInfo("test");
+  let pluginInfo = await promiseForPluginInfo("test");
   is(pluginInfo.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY, "plugin should be click to play");
   ok(!pluginInfo.activated, "plugin should not be activated");
 
-  yield ContentTask.spawn(gTestBrowser, null, () => {
+  await ContentTask.spawn(gTestBrowser, null, () => {
     let unknown = content.document.getElementById("unknown");
     ok(unknown, "should have unknown plugin in page");
   });

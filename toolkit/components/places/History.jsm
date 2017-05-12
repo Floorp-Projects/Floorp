@@ -73,8 +73,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Sqlite",
                                   "resource://gre/modules/Sqlite.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
@@ -93,9 +91,6 @@ const ONRESULT_CHUNK_SIZE = 300;
 // This constant determines the maximum number of remove pages before we cycle.
 const REMOVE_PAGES_CHUNKLEN = 300;
 
-
-// Timers resolution is not always good, it can have a 16ms precision on Win.
-const TIMERS_RESOLUTION_SKEW_MS = 16;
 
 /**
  * Sends a bookmarks notification through the given observers.
@@ -182,7 +177,7 @@ this.History = Object.freeze({
       throw new TypeError("pageInfo must be an object");
     }
 
-    let info = validatePageInfo(pageInfo);
+    let info = PlacesUtils.validatePageInfo(pageInfo);
 
     return PlacesUtils.withConnectionWrapper("History.jsm: insert",
       db => insert(db, info));
@@ -249,7 +244,7 @@ this.History = Object.freeze({
     }
 
     for (let pageInfo of pageInfos) {
-      let info = validatePageInfo(pageInfo);
+      let info = PlacesUtils.validatePageInfo(pageInfo);
       infos.push(info);
     }
 
@@ -296,7 +291,7 @@ this.History = Object.freeze({
     for (let page of pages) {
       // Normalize to URL or GUID, or throw if `page` cannot
       // be normalized.
-      let normalized = normalizeToURLOrGUID(page);
+      let normalized = PlacesUtils.normalizeToURLOrGUID(page);
       if (typeof normalized === "string") {
         guids.push(normalized);
       } else {
@@ -311,14 +306,14 @@ this.History = Object.freeze({
       throw new TypeError("Invalid function: " + onResult);
     }
 
-    return Task.spawn(function* () {
+    return (async function() {
       let removedPages = false;
       let count = 0;
       while (guids.length || urls.length) {
         if (count && count % 2 == 0) {
           // Every few cycles, yield time back to the main
           // thread to avoid jank.
-          yield Promise.resolve();
+          await Promise.resolve();
         }
         count++;
         let guidsSlice = guids.splice(0, REMOVE_PAGES_CHUNKLEN);
@@ -330,13 +325,13 @@ this.History = Object.freeze({
         let pages = {guids: guidsSlice, urls: urlsSlice};
 
         let result =
-          yield PlacesUtils.withConnectionWrapper("History.jsm: remove",
+          await PlacesUtils.withConnectionWrapper("History.jsm: remove",
                                                   db => remove(db, pages, onResult));
 
         removedPages = removedPages || result;
       }
       return removedPages;
-    });
+    })();
   },
 
   /**
@@ -381,10 +376,10 @@ this.History = Object.freeze({
     let hasURL = "url" in filter;
     let hasLimit = "limit" in filter;
     if (hasBeginDate) {
-      ensureDate(filter.beginDate);
+      this.ensureDate(filter.beginDate);
     }
     if (hasEndDate) {
-      ensureDate(filter.endDate);
+      this.ensureDate(filter.endDate);
     }
     if (hasBeginDate && hasEndDate && filter.beginDate > filter.endDate) {
       throw new TypeError("`beginDate` should be at least as old as `endDate`");
@@ -411,6 +406,88 @@ this.History = Object.freeze({
 
     return PlacesUtils.withConnectionWrapper("History.jsm: removeVisitsByFilter",
       db => removeVisitsByFilter(db, filter, onResult)
+    );
+  },
+
+  /**
+   * Remove pages from the database based on a filter.
+   *
+   * Any change may be observed through nsINavHistoryObserver
+   *
+   *
+   * @param filter: An object containing a non empty subset of the following
+   * properties:
+   * - host: (string)
+   *     Hostname with subhost wildcard (at most one *), or empty for local files.
+   *     The * can be used only if it is the first character in the url, and not the host.
+   *     For example, *.mozilla.org is allowed, *.org, www.*.org or * is not allowed.
+   * - beginDate: (Date)
+   *     The first time the page was visited (inclusive)
+   * - endDate: (Date)
+   *     The last time the page was visited (inclusive)
+   * @param [optional] onResult: (function(PageInfo))
+   *      A callback invoked for each page found.
+   *
+   * @note This removes pages with at least one visit inside the timeframe.
+   *       Any visits outside the timeframe will also be removed with the page.
+   * @return (Promise)
+   *      A promise resolved once the operation is complete.
+   * @resolve (bool)
+   *      `true` if at least one page was removed, `false` otherwise.
+   * @throws (TypeError)
+   *       if `filter` does not have the expected type, in particular
+   *       if the `object` is empty, or its components do not satisfy the
+   *       criteria given above
+   */
+  removeByFilter(filter, onResult) {
+    if (!filter || typeof filter !== "object") {
+      throw new TypeError("Expected a filter object");
+    }
+
+    let hasHost = "host" in filter;
+    if (hasHost) {
+      if (typeof filter.host !== "string") {
+        throw new TypeError("`host` should be a string");
+      }
+      filter.host = filter.host.toLowerCase();
+    }
+
+    let hasBeginDate = "beginDate" in filter;
+    if (hasBeginDate) {
+      this.ensureDate(filter.beginDate);
+    }
+
+    let hasEndDate = "endDate" in filter;
+    if (hasEndDate) {
+      this.ensureDate(filter.endDate);
+    }
+
+    if (hasBeginDate && hasEndDate && filter.beginDate > filter.endDate) {
+      throw new TypeError("`beginDate` should be at least as old as `endDate`");
+    }
+
+    if (!hasBeginDate && !hasEndDate && !hasHost) {
+      throw new TypeError("Expected a non-empty filter");
+    }
+
+    // Host should follow one of these formats
+    // The first one matches `localhost` or any other custom set in hostsfile
+    // The second one matches *.mozilla.org or mozilla.com etc
+    // The third one is for local files
+    if (hasHost &&
+        !((/^[a-z0-9-]+$/).test(filter.host)) &&
+        !((/^(\*\.)?([a-z0-9-]+)(\.[a-z0-9-]+)+$/).test(filter.host)) &&
+        (filter.host !== "")) {
+      throw new TypeError("Expected well formed hostname string for `host` with atmost 1 wildcard.");
+    }
+
+    if (onResult && typeof onResult != "function") {
+      throw new TypeError("Invalid function: " + onResult);
+    }
+
+    return PlacesUtils.withConnectionWrapper(
+      "History.jsm: removeByFilter",
+      db => removeByFilter(db, filter, onResult)
     );
   },
 
@@ -444,6 +521,25 @@ this.History = Object.freeze({
     return PlacesUtils.withConnectionWrapper("History.jsm: clear",
       clear
     );
+  },
+
+  /**
+   * Is a value a valid transition type?
+   *
+   * @param transitionType: (String)
+   * @return (Boolean)
+   */
+  isValidTransition(transitionType) {
+    return Object.values(History.TRANSITIONS).includes(transitionType);
+  },
+
+  /**
+   * Throw if an object is not a Date object.
+   */
+  ensureDate(arg) {
+    if (!arg || typeof arg != "object" || arg.constructor.name != "Date") {
+      throw new TypeError("Expected a Date, got " + arg);
+    }
   },
 
   /**
@@ -506,62 +602,10 @@ this.History = Object.freeze({
 });
 
 /**
- * Validate an input PageInfo object, returning a valid PageInfo object.
- *
- * @param pageInfo: (PageInfo)
- * @return (PageInfo)
- */
-function validatePageInfo(pageInfo) {
-  let info = {
-    visits: [],
-  };
-
-  if (!pageInfo.url) {
-    throw new TypeError("PageInfo object must have a url property");
-  }
-
-  info.url = normalizeToURLOrGUID(pageInfo.url);
-
-  if (typeof pageInfo.title === "string") {
-    info.title = pageInfo.title;
-  } else if (pageInfo.title != null && pageInfo.title != undefined) {
-    throw new TypeError(`title property of PageInfo object: ${pageInfo.title} must be a string if provided`);
-  }
-
-  if (!pageInfo.visits || !Array.isArray(pageInfo.visits) || !pageInfo.visits.length) {
-    throw new TypeError("PageInfo object must have an array of visits");
-  }
-  for (let inVisit of pageInfo.visits) {
-    let visit = {
-      date: new Date(),
-      transition: inVisit.transition || History.TRANSITIONS.LINK,
-    };
-
-    if (!isValidTransitionType(visit.transition)) {
-      throw new TypeError(`transition: ${visit.transition} is not a valid transition type`);
-    }
-
-    if (inVisit.date) {
-      ensureDate(inVisit.date);
-      if (inVisit.date > (Date.now() + TIMERS_RESOLUTION_SKEW_MS)) {
-        throw new TypeError(`date: ${inVisit.date} cannot be a future date`);
-      }
-      visit.date = inVisit.date;
-    }
-
-    if (inVisit.referrer) {
-      visit.referrer = normalizeToURLOrGUID(inVisit.referrer);
-    }
-    info.visits.push(visit);
-  }
-  return info;
-}
-
-/**
  * Convert a PageInfo object into the format expected by updatePlaces.
  *
  * Note: this assumes that the PageInfo object has already been validated
- * via validatePageInfo.
+ * via PlacesUtils.validatePageInfo.
  *
  * @param pageInfo: (PageInfo)
  * @return (info)
@@ -585,50 +629,6 @@ function convertForUpdatePlaces(pageInfo) {
 }
 
 /**
- * Is a value a valid transition type?
- *
- * @param transitionType: (String)
- * @return (Boolean)
- */
-function isValidTransitionType(transitionType) {
-  return Object.values(History.TRANSITIONS).includes(transitionType);
-}
-
-/**
- * Normalize a key to either a string (if it is a valid GUID) or an
- * instance of `URL` (if it is a `URL`, `nsIURI`, or a string
- * representing a valid url).
- *
- * @throws (TypeError)
- *         If the key is neither a valid guid nor a valid url.
- */
-function normalizeToURLOrGUID(key) {
-  if (typeof key === "string") {
-    // A string may be a URL or a guid
-    if (PlacesUtils.isValidGuid(key)) {
-      return key;
-    }
-    return new URL(key);
-  }
-  if (key instanceof URL) {
-    return key;
-  }
-  if (key instanceof Ci.nsIURI) {
-    return new URL(key.spec);
-  }
-  throw new TypeError("Invalid url or guid: " + key);
-}
-
-/**
- * Throw if an object is not a Date object.
- */
-function ensureDate(arg) {
-  if (!arg || typeof arg != "object" || arg.constructor.name != "Date") {
-    throw new TypeError("Expected a Date, got " + arg);
-  }
-}
-
-/**
  * Convert a list of strings or numbers to its SQL
  * representation as a string.
  */
@@ -645,29 +645,29 @@ function sqlList(list) {
  *      The `moz_places` identifiers for the places to invalidate.
  * @return (Promise)
  */
-var invalidateFrecencies = Task.async(function*(db, idList) {
+var invalidateFrecencies = async function(db, idList) {
   if (idList.length == 0) {
     return;
   }
   let ids = sqlList(idList);
-  yield db.execute(
+  await db.execute(
     `UPDATE moz_places
      SET frecency = NOTIFY_FRECENCY(
        CALCULATE_FRECENCY(id), url, guid, hidden, last_visit_date
      ) WHERE id in (${ ids })`
   );
-  yield db.execute(
+  await db.execute(
     `UPDATE moz_places
      SET hidden = 0
      WHERE id in (${ ids })
      AND frecency <> 0`
   );
-});
+};
 
 // Inner implementation of History.clear().
-var clear = Task.async(function* (db) {
+var clear = async function(db) {
   // Remove all history.
-  yield db.execute("DELETE FROM moz_historyvisits");
+  await db.execute("DELETE FROM moz_historyvisits");
 
   // Clear the registered embed visits.
   PlacesUtils.history.clearEmbedVisits();
@@ -678,7 +678,7 @@ var clear = Task.async(function* (db) {
 
   // Invalidate frecencies for the remaining places. This must happen
   // after the notification to ensure it runs enqueued to expiration.
-  yield db.execute(
+  await db.execute(
     `UPDATE moz_places SET frecency =
      (CASE
       WHEN url_hash BETWEEN hash("place", "prefix_lo") AND
@@ -690,7 +690,7 @@ var clear = Task.async(function* (db) {
 
   // Notify frecency change observers.
   notify(observers, "onManyFrecenciesChanged");
-});
+};
 
 /**
  * Clean up pages whose history has been modified, by either
@@ -713,8 +713,8 @@ var clear = Task.async(function* (db) {
  *              be kept and its frecency updated.
  * @return (Promise)
  */
-var cleanupPages = Task.async(function*(db, pages) {
-  yield invalidateFrecencies(db, pages.filter(p => p.hasForeign || p.hasVisits).map(p => p.id));
+var cleanupPages = async function(db, pages) {
+  await invalidateFrecencies(db, pages.filter(p => p.hasForeign || p.hasVisits).map(p => p.id));
 
   let pageIdsToRemove = pages.filter(p => !p.hasForeign && !p.hasVisits).map(p => p.id);
   if (pageIdsToRemove.length > 0) {
@@ -722,23 +722,23 @@ var cleanupPages = Task.async(function*(db, pages) {
     // Note, we are already in a transaction, since callers create it.
     // Check relations regardless, to avoid creating orphans in case of
     // async race conditions.
-    yield db.execute(`DELETE FROM moz_places WHERE id IN ( ${ idsList } )
+    await db.execute(`DELETE FROM moz_places WHERE id IN ( ${ idsList } )
                       AND foreign_count = 0 AND last_visit_date ISNULL`);
     // Hosts accumulated during the places delete are updated through a trigger
     // (see nsPlacesTriggers.h).
-    yield db.executeCached(`DELETE FROM moz_updatehosts_temp`);
+    await db.executeCached(`DELETE FROM moz_updatehosts_temp`);
 
     // Expire orphans.
-    yield db.executeCached(`DELETE FROM moz_pages_w_icons
+    await db.executeCached(`DELETE FROM moz_pages_w_icons
                             WHERE page_url_hash NOT IN (SELECT url_hash FROM moz_places)`);
-    yield db.executeCached(`DELETE FROM moz_icons
+    await db.executeCached(`DELETE FROM moz_icons
                             WHERE root = 0 AND id NOT IN (SELECT icon_id FROM moz_icons_to_pages)`);
-    yield db.execute(`DELETE FROM moz_annos
+    await db.execute(`DELETE FROM moz_annos
                       WHERE place_id IN ( ${ idsList } )`);
-    yield db.execute(`DELETE FROM moz_inputhistory
+    await db.execute(`DELETE FROM moz_inputhistory
                       WHERE place_id IN ( ${ idsList } )`);
   }
-});
+};
 
 /**
  * Notify observers that pages have been removed/updated.
@@ -757,7 +757,7 @@ var cleanupPages = Task.async(function*(db, pages) {
  *              be kept and its frecency updated.
  * @return (Promise)
  */
-var notifyCleanup = Task.async(function*(db, pages) {
+var notifyCleanup = async function(db, pages) {
   let notifiedCount = 0;
   let observers = PlacesUtils.history.getObservers();
 
@@ -784,10 +784,10 @@ var notifyCleanup = Task.async(function*(db, pages) {
     if (++notifiedCount % NOTIFICATION_CHUNK_SIZE == 0) {
       // Every few notifications, yield time back to the main
       // thread to avoid jank.
-      yield Promise.resolve();
+      await Promise.resolve();
     }
   }
-});
+};
 
 /**
  * Notify an `onResult` callback of a set of operations
@@ -799,7 +799,7 @@ var notifyCleanup = Task.async(function*(db, pages) {
  *      If provided, call `onResult` with `data[0]`, `data[1]`, etc.
  *      Otherwise, do nothing.
  */
-var notifyOnResult = Task.async(function*(data, onResult) {
+var notifyOnResult = async function(data, onResult) {
   if (!onResult) {
     return;
   }
@@ -814,13 +814,13 @@ var notifyOnResult = Task.async(function*(data, onResult) {
     if (++notifiedCount % ONRESULT_CHUNK_SIZE == 0) {
       // Every few notifications, yield time back to the main
       // thread to avoid jank.
-      yield Promise.resolve();
+      await Promise.resolve();
     }
   }
-});
+};
 
 // Inner implementation of History.removeVisitsByFilter.
-var removeVisitsByFilter = Task.async(function*(db, filter, onResult = null) {
+var removeVisitsByFilter = async function(db, filter, onResult = null) {
   // 1. Determine visits that took place during the interval.  Note
   // that the database uses microseconds, while JS uses milliseconds,
   // so we need to *1000 one way and /1000 the other way.
@@ -856,7 +856,7 @@ var removeVisitsByFilter = Task.async(function*(db, filter, onResult = null) {
   let pagesToInspect = new Set();
   let onResultData = onResult ? [] : null;
 
-  yield db.executeCached(
+  await db.executeCached(
      `SELECT v.id, place_id, visit_date / 1000 AS date, visit_type FROM moz_historyvisits v
              ${optionalJoin}
              WHERE ${ conditions.join(" AND ") }${ args.limit ? " LIMIT :limit" : "" }`,
@@ -883,13 +883,13 @@ var removeVisitsByFilter = Task.async(function*(db, filter, onResult = null) {
     }
 
     let pages = [];
-    yield db.executeTransaction(function*() {
+    await db.executeTransaction(async function() {
       // 2. Remove all offending visits.
-      yield db.execute(`DELETE FROM moz_historyvisits
+      await db.execute(`DELETE FROM moz_historyvisits
                         WHERE id IN (${ sqlList(visitsToRemove) } )`);
 
       // 3. Find out which pages have been orphaned
-      yield db.execute(
+      await db.execute(
         `SELECT id, url, guid,
           (foreign_count != 0) AS has_foreign,
           (last_visit_date NOTNULL) as has_visits
@@ -908,7 +908,7 @@ var removeVisitsByFilter = Task.async(function*(db, filter, onResult = null) {
          });
 
       // 4. Clean up and notify
-      yield cleanupPages(db, pages);
+      await cleanupPages(db, pages);
     });
 
     notifyCleanup(db, pages);
@@ -919,11 +919,117 @@ var removeVisitsByFilter = Task.async(function*(db, filter, onResult = null) {
   }
 
   return visitsToRemove.length != 0;
-});
+};
 
+// Inner implementation of History.removeByFilter
+var removeByFilter = async function(db, filter, onResult = null) {
+  // 1. Create fragment for date filtration
+  let dateFilterSQLFragment = "";
+  let conditions = [];
+  let params = {};
+  if ("beginDate" in filter) {
+    conditions.push("v.visit_date >= :begin");
+    params.begin = PlacesUtils.toPRTime(filter.beginDate);
+  }
+  if ("endDate" in filter) {
+    conditions.push("v.visit_date <= :end");
+    params.end = PlacesUtils.toPRTime(filter.endDate);
+  }
+
+  if (conditions.length !== 0) {
+    dateFilterSQLFragment =
+      `EXISTS
+         (SELECT id FROM moz_historyvisits v WHERE v.place_id = h.id AND
+         ${ conditions.join(" AND ") }
+         LIMIT 1)`;
+  }
+
+  // 2. Create fragment for host and subhost filtering
+  let hostFilterSQLFragment = "";
+  if (filter.host || filter.host === "") {
+    // There are four cases that we need to consider,
+    // mozilla.org, *.mozilla.org, localhost, and local files
+
+    if (filter.host.indexOf("*") === 0) {
+      // Case 1: subhost wildcard is specified (*.mozilla.org)
+      let revHost = filter.host.slice(2).split("").reverse().join("");
+      hostFilterSQLFragment =
+        `h.rev_host between :revHostStart and :revHostEnd`;
+      params.revHostStart = revHost + ".";
+      params.revHostEnd = revHost + "/";
+    } else {
+      // This covers the rest (mozilla.org, localhost and local files)
+      let revHost = filter.host.split("").reverse().join("") + ".";
+      hostFilterSQLFragment =
+        `h.rev_host = :hostName`;
+      params.hostName = revHost;
+    }
+  }
+
+  // 3. Find out what needs to be removed
+  let fragmentArray = [hostFilterSQLFragment, dateFilterSQLFragment];
+  let query =
+      `SELECT h.id, url, rev_host, guid, title, frecency, foreign_count
+       FROM moz_places h WHERE
+       (${ fragmentArray.filter(f => f !== "").join(") AND (") })`;
+  let onResultData = onResult ? [] : null;
+  let pages = [];
+  let hasPagesToRemove = false;
+
+  await db.executeCached(
+    query,
+    params,
+    row => {
+      let hasForeign = row.getResultByName("foreign_count") != 0;
+      if (!hasForeign) {
+        hasPagesToRemove = true;
+      }
+      let id = row.getResultByName("id");
+      let guid = row.getResultByName("guid");
+      let url = row.getResultByName("url");
+      let page = {
+        id,
+        guid,
+        hasForeign,
+        hasVisits: false,
+        url: new URL(url)
+      };
+      pages.push(page);
+      if (onResult) {
+        onResultData.push({
+          guid,
+          title: row.getResultByName("title"),
+          frecency: row.getResultByName("frecency"),
+          url: new URL(url)
+        });
+      }
+    });
+
+  if (pages.length === 0) {
+    // Nothing to do
+    return false;
+  }
+
+  try {
+    await db.executeTransaction(async function() {
+      // 4. Actually remove visits
+      await db.execute(`DELETE FROM moz_historyvisits
+                        WHERE place_id IN(${ sqlList(pages.map(p => p.id)) })`);
+      // 5. Clean up and notify
+      await cleanupPages(db, pages);
+    });
+
+    notifyCleanup(db, pages);
+    notifyOnResult(onResultData, onResult);
+  } finally {
+    PlacesUtils.history.clearEmbedVisits();
+  }
+
+  return hasPagesToRemove;
+};
 
 // Inner implementation of History.remove.
-var remove = Task.async(function*(db, {guids, urls}, onResult = null) {
+var remove = async function(db, {guids, urls}, onResult = null) {
   // 1. Find out what needs to be removed
   let query =
     `SELECT id, url, guid, foreign_count, title, frecency
@@ -936,7 +1042,7 @@ var remove = Task.async(function*(db, {guids, urls}, onResult = null) {
   let onResultData = onResult ? [] : null;
   let pages = [];
   let hasPagesToRemove = false;
-  yield db.execute(query, null, Task.async(function*(row) {
+  await db.execute(query, null, async function(row) {
     let hasForeign = row.getResultByName("foreign_count") != 0;
     if (!hasForeign) {
       hasPagesToRemove = true;
@@ -960,7 +1066,7 @@ var remove = Task.async(function*(db, {guids, urls}, onResult = null) {
         url: new URL(url)
       });
     }
-  }));
+  });
 
   try {
     if (pages.length == 0) {
@@ -968,14 +1074,14 @@ var remove = Task.async(function*(db, {guids, urls}, onResult = null) {
       return false;
     }
 
-    yield db.executeTransaction(function*() {
+    await db.executeTransaction(async function() {
       // 2. Remove all visits to these pages.
-      yield db.execute(`DELETE FROM moz_historyvisits
+      await db.execute(`DELETE FROM moz_historyvisits
                         WHERE place_id IN (${ sqlList(pages.map(p => p.id)) })
                        `);
 
       // 3. Clean up and notify
-      yield cleanupPages(db, pages);
+      await cleanupPages(db, pages);
     });
 
     notifyCleanup(db, pages);
@@ -986,7 +1092,7 @@ var remove = Task.async(function*(db, {guids, urls}, onResult = null) {
   }
 
   return hasPagesToRemove;
-});
+};
 
 /**
  * Merges an updateInfo object, as returned by asyncHistory.updatePlaces
@@ -1020,7 +1126,7 @@ function mergeUpdateInfoIntoPageInfo(updateInfo, pageInfo = {}) {
 }
 
 // Inner implementation of History.insert.
-var insert = Task.async(function*(db, pageInfo) {
+var insert = async function(db, pageInfo) {
   let info = convertForUpdatePlaces(pageInfo);
 
   return new Promise((resolve, reject) => {
@@ -1036,10 +1142,10 @@ var insert = Task.async(function*(db, pageInfo) {
       }
     });
   });
-});
+};
 
 // Inner implementation of History.insertMany.
-var insertMany = Task.async(function*(db, pageInfos, onResult, onError) {
+var insertMany = async function(db, pageInfos, onResult, onError) {
   let infos = [];
   let onResultData = [];
   let onErrorData = [];
@@ -1072,4 +1178,4 @@ var insertMany = Task.async(function*(db, pageInfos, onResult, onError) {
       }
     }, true);
   });
-});
+};

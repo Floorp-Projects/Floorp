@@ -6,7 +6,7 @@ async function installTrigger(filename) {
   gBrowser.selectedBrowser.loadURI(INSTALL_PAGE);
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
-  ContentTask.spawn(gBrowser.selectedBrowser, `${BASE}/${filename}`, function*(url) {
+  ContentTask.spawn(gBrowser.selectedBrowser, `${BASE}/${filename}`, async function(url) {
     content.wrappedJSObject.installTrigger(url);
   });
 }

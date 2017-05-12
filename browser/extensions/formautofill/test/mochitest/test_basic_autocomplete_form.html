@@ -77,79 +77,79 @@ function checkFormFilled(address) {
   return Promise.all(promises);
 }
 
-function* setupAddressStorage() {
-  yield addAddress(MOCK_STORAGE[0]);
-  yield addAddress(MOCK_STORAGE[1]);
+async function setupAddressStorage() {
+  await addAddress(MOCK_STORAGE[0]);
+  await addAddress(MOCK_STORAGE[1]);
 }
 
-function* setupFormHistory() {
-  yield updateFormHistory([
+async function setupFormHistory() {
+  await updateFormHistory([
     {op: "add", fieldname: "tel", value: "1-234-567-890"},
     {op: "add", fieldname: "country", value: "US"},
   ]);
 }
 
 // Form with history only.
-add_task(function* history_only_menu_checking() {
-  yield setupFormHistory();
+add_task(async function history_only_menu_checking() {
+  await setupFormHistory();
 
   setInput("#tel", "");
   doKey("down");
-  yield expectPopup();
+  await expectPopup();
   checkMenuEntries(["1-234-567-890"]);
 });
 
 // Form with both history and address storage.
-add_task(function* check_menu_when_both_existed() {
-  yield setupAddressStorage();
+add_task(async function check_menu_when_both_existed() {
+  await setupAddressStorage();
 
   setInput("#organization", "");
   doKey("down");
-  yield expectPopup();
+  await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(address =>
     JSON.stringify({primary: address.organization, secondary: address["street-address"]})
   ));
 
   setInput("#street-address", "");
   doKey("down");
-  yield expectPopup();
+  await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(address =>
     JSON.stringify({primary: address["street-address"], secondary: address.organization})
   ));
 
   setInput("#tel", "");
   doKey("down");
-  yield expectPopup();
+  await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(address =>
     JSON.stringify({primary: address.tel, secondary: address["street-address"]})
   ));
 });
 
 // Display history search result if no matched data in addresses.
-add_task(function* check_fallback_for_mismatched_field() {
+add_task(async function check_fallback_for_mismatched_field() {
   setInput("#country", "");
   doKey("down");
-  yield expectPopup();
+  await expectPopup();
   checkMenuEntries(["US"]);
 });
 
 // Autofill the address from dropdown menu.
-add_task(function* check_fields_after_form_autofill() {
+add_task(async function check_fields_after_form_autofill() {
   setInput("#organization", "Moz");
   doKey("down");
-  yield expectPopup();
+  await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(address =>
     JSON.stringify({primary: address.organization, secondary: address["street-address"]})
   ).slice(1));
   doKey("down");
-  yield checkFormFilled(MOCK_STORAGE[1]);
+  await checkFormFilled(MOCK_STORAGE[1]);
 });
 
 // Fallback to history search after autofill address.
-add_task(function* check_fallback_after_form_autofill() {
+add_task(async function check_fallback_after_form_autofill() {
   setInput("#tel", "");
   doKey("down");
-  yield expectPopup();
+  await expectPopup();
   checkMenuEntries(["1-234-567-890"]);
 });
 

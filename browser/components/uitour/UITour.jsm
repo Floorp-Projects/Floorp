@@ -14,7 +14,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource:///modules/RecentWindow.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/TelemetryController.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 
@@ -1667,7 +1666,7 @@ this.UITour = {
       }
       aWindow.document.getElementById("identity-box").click();
     } else if (aMenuName == "pocket") {
-      this.getTarget(aWindow, "pocket").then(Task.async(function* onPocketTarget(target) {
+      this.getTarget(aWindow, "pocket").then(async function onPocketTarget(target) {
         let widgetGroupWrapper = CustomizableUI.getWidget(target.widgetName);
         if (widgetGroupWrapper.type != "view" || !widgetGroupWrapper.viewId) {
           log.error("Can't open the pocket menu without a view");
@@ -1681,7 +1680,7 @@ this.UITour = {
 
         if (placement.area == CustomizableUI.AREA_PANEL) {
           // Open the appMenu and wait for it if it's not already opened or showing a subview.
-          yield new Promise((resolve, reject) => {
+          await new Promise((resolve, reject) => {
             if (aWindow.PanelUI.panel.state != "closed") {
               if (aWindow.PanelUI.multiView.showingSubView) {
                 reject("A subview is already showing");
@@ -1704,7 +1703,7 @@ this.UITour = {
         aWindow.PanelUI.showSubView(widgetGroupWrapper.viewId,
                                     widgetWrapper.anchor,
                                     placement.area);
-      })).catch(log.error);
+      }).catch(log.error);
     }
   },
 
@@ -1882,7 +1881,7 @@ this.UITour = {
   },
 
   getAvailableTargets(aMessageManager, aChromeWindow, aCallbackID) {
-    Task.spawn(function*() {
+    (async () => {
       let window = aChromeWindow;
       let data = this.availableTargetsCache.get(window);
       if (data) {
@@ -1895,7 +1894,7 @@ this.UITour = {
       for (let targetName of this.targets.keys()) {
         promises.push(this.getTarget(window, targetName));
       }
-      let targetObjects = yield Promise.all(promises);
+      let targetObjects = await Promise.all(promises);
 
       let targetNames = [];
       for (let targetObject of targetObjects) {
@@ -1908,7 +1907,7 @@ this.UITour = {
       };
       this.availableTargetsCache.set(window, data);
       this.sendPageCallback(aMessageManager, aCallbackID, data);
-    }.bind(this)).catch(err => {
+    })().catch(err => {
       log.error(err);
       this.sendPageCallback(aMessageManager, aCallbackID, {
         targets: [],
