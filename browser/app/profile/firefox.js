@@ -1634,12 +1634,12 @@ pref("browser.crashReports.unsubmittedCheck.autoSubmit", false);
 
 // Preferences for the form autofill system extension
 #ifdef NIGHTLY_BUILD
-pref("browser.formautofill.experimental", true);
+pref("extensions.formautofill.experimental", true);
 #else
-pref("browser.formautofill.experimental", false);
+pref("extensions.formautofill.experimental", false);
 #endif
 pref("extensions.formautofill.addresses.enabled", true);
-pref("browser.formautofill.loglevel", "Warn");
+pref("extensions.formautofill.loglevel", "Warn");
 
 // Whether or not to restore a session with lazy-browser tabs.
 pref("browser.sessionstore.restore_tabs_lazily", true);

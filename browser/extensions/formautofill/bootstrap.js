@@ -41,7 +41,7 @@ let windowListener = {
 };
 
 function startup() {
-  if (!Services.prefs.getBoolPref("browser.formautofill.experimental")) {
+  if (!Services.prefs.getBoolPref("extensions.formautofill.experimental")) {
     return;
   }
 
