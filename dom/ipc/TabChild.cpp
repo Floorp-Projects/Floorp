@@ -3118,6 +3118,9 @@ TabChild::ReinitRendering()
     lf->IdentifyTextureHost(mTextureFactoryIdentifier);
   }
 
+  ImageBridgeChild::IdentifyCompositorTextureHost(mTextureFactoryIdentifier);
+  gfx::VRManagerChild::IdentifyTextureHost(mTextureFactoryIdentifier);
+
   InitAPZState();
 
   nsCOMPtr<nsIDocument> doc(GetDocument());
