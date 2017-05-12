@@ -138,7 +138,7 @@ CacheIRSpewer::valueProperty(LockGuard<Mutex>&, const char* name, const Value& v
     if (v.isInt32()) {
         j.property("value", v.toInt32());
     } else if (v.isDouble()) {
-        j.property("value", v.toDouble());
+        j.floatProperty("value", v.toDouble(), 3);
     } else if (v.isString() || v.isSymbol()) {
         JSString* str = v.isString() ? v.toString() : v.toSymbol()->description();
         if (str && str->isLinear()) {
