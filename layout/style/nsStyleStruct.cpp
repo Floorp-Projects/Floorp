@@ -39,7 +39,6 @@
 #include "nsIURI.h"
 #include "nsIDocument.h"
 #include <algorithm>
-#include "ImageLoader.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2020,15 +2019,6 @@ nsStyleImageRequest::nsStyleImageRequest(
 {
 }
 
-nsStyleImageRequest::nsStyleImageRequest(
-    Mode aModeFlags,
-    mozilla::css::ImageValue* aImageValue)
-  : mImageValue(aImageValue)
-  , mModeFlags(aModeFlags)
-  , mResolved(false)
-{
-}
-
 nsStyleImageRequest::~nsStyleImageRequest()
 {
   // We may or may not be being destroyed on the main thread.  To clean
@@ -2040,16 +2030,13 @@ nsStyleImageRequest::~nsStyleImageRequest()
                                          mRequestProxy.forget(),
                                          mImageValue.forget(),
                                          mImageTracker.forget());
-    if (NS_IsMainThread()) {
+    if (NS_IsMainThread() || !IsResolved()) {
       task->Run();
     } else {
-      if (mDocGroup) {
-        mDocGroup->Dispatch("StyleImageRequestCleanupTask",
-                            TaskCategory::Other, task.forget());
-      } else {
-        // if Resolve was not called at some point, mDocGroup is not set.
-        NS_DispatchToMainThread(task.forget());
-      }
+      MOZ_ASSERT(IsResolved() == bool(mDocGroup),
+                 "We forgot to cache mDocGroup in Resolve()?");
+      mDocGroup->Dispatch("StyleImageRequestCleanupTask",
+                          TaskCategory::Other, task.forget());
     }
   }
 
