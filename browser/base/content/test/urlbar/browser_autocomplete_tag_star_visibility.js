@@ -1,16 +1,16 @@
-add_task(function*() {
+add_task(async function() {
   registerCleanupFunction(() => {
     PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);
   });
 
-  function* addTagItem(tagName) {
+  async function addTagItem(tagName) {
     let uri = NetUtil.newURI(`http://example.com/this/is/tagged/${tagName}`);
     PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
                                          uri,
                                          PlacesUtils.bookmarks.DEFAULT_INDEX,
                                          `test ${tagName}`);
     PlacesUtils.tagging.tagURI(uri, [tagName]);
-    yield PlacesTestUtils.addVisits([{uri, title: `Test page with tag ${tagName}`}]);
+    await PlacesTestUtils.addVisits([{uri, title: `Test page with tag ${tagName}`}]);
   }
 
   // We use different tags for each part of the test, as otherwise the
@@ -77,12 +77,12 @@ add_task(function*() {
   for (let testcase of testcases) {
     info(`Test case: ${testcase.description}`);
 
-    yield addTagItem(testcase.tagName);
+    await addTagItem(testcase.tagName);
     for (let prefName of Object.keys(testcase.prefs)) {
       Services.prefs.setBoolPref(`browser.urlbar.${prefName}`, testcase.prefs[prefName]);
     }
 
-    yield promiseAutocompleteResultPopup(testcase.input);
+    await promiseAutocompleteResultPopup(testcase.input);
     let result = gURLBar.popup.richlistbox.children[1];
     ok(result && !result.collasped, "Should have result");
 
@@ -97,6 +97,6 @@ add_task(function*() {
     }
 
     gURLBar.popup.hidePopup();
-    yield promisePopupHidden(gURLBar.popup);
+    await promisePopupHidden(gURLBar.popup);
   }
 });

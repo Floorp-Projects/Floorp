@@ -63,7 +63,7 @@ function getExpirablePRTime(daysAgo = 7) {
   return dateObj.getTime() * 1000;
 }
 
-add_task(function* test_execute() {
+add_task(async function test_execute() {
   // Put some trash in the database.
   let uri = NetUtil.newURI("http://moz.org/");
 
@@ -75,7 +75,7 @@ add_task(function* test_execute() {
                                                     PlacesUtils.bookmarks.DEFAULT_INDEX,
                                                     "moz test");
   PlacesUtils.tagging.tagURI(uri, ["tag"]);
-  yield PlacesUtils.keywords.insert({ url: uri.spec, keyword: "keyword"});
+  await PlacesUtils.keywords.insert({ url: uri.spec, keyword: "keyword"});
 
   // Set a large annotation.
   let content = "";
@@ -92,7 +92,7 @@ add_task(function* test_execute() {
     .getService(Ci.nsIObserver)
     .observe(null, "gather-telemetry", null);
 
-  yield PlacesTestUtils.promiseAsyncUpdates();
+  await PlacesTestUtils.promiseAsyncUpdates();
 
   // Test expiration probes.
   let timeInMicroseconds = getExpirablePRTime(8);
@@ -103,14 +103,14 @@ add_task(function* test_execute() {
   }
 
   for (let i = 0; i < 3; i++) {
-    yield PlacesTestUtils.addVisits({
+    await PlacesTestUtils.addVisits({
       uri: NetUtil.newURI("http://" + i + ".moz.org/"),
       visitDate: newTimeInMicroseconds()
     });
   }
   Services.prefs.setIntPref("places.history.expiration.max_pages", 0);
-  yield promiseForceExpirationStep(2);
-  yield promiseForceExpirationStep(2);
+  await promiseForceExpirationStep(2);
+  await promiseForceExpirationStep(2);
 
   // Test autocomplete probes.
   /*
@@ -153,7 +153,7 @@ add_task(function* test_execute() {
                      .observe(null, "idle-daily", null);
   PlacesDBUtils.maintenanceOnIdle();
 
-  yield promiseTopicObserved("places-maintenance-finished");
+  await promiseTopicObserved("places-maintenance-finished");
 
   for (let histogramId in histograms) {
     do_print("checking histogram " + histogramId);

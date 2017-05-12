@@ -1,11 +1,11 @@
-registerCleanupFunction(function* cleanup() {
+registerCleanupFunction(function cleanup() {
   Services.search.currentEngine = originalEngine;
   let engine = Services.search.getEngineByName("MozSearch");
   Services.search.removeEngine(engine);
 });
 
 let originalEngine;
-add_task(function* test_setup() {
+add_task(async function test_setup() {
   // Opening multiple windows on debug build takes too long time.
   requestLongerTimeout(10);
 
@@ -31,21 +31,21 @@ add_task(function* test_setup() {
 });
 
 // New Window Button opens any link.
-add_task(function*() { yield dropText("mochi.test/first", 1); });
-add_task(function*() { yield dropText("javascript:'bad'", 1); });
-add_task(function*() { yield dropText("jAvascript:'bad'", 1); });
-add_task(function*() { yield dropText("mochi.test/second", 1); });
-add_task(function*() { yield dropText("data:text/html,bad", 1); });
-add_task(function*() { yield dropText("mochi.test/third", 1); });
+add_task(async function() { await dropText("mochi.test/first", 1); });
+add_task(async function() { await dropText("javascript:'bad'", 1); });
+add_task(async function() { await dropText("jAvascript:'bad'", 1); });
+add_task(async function() { await dropText("mochi.test/second", 1); });
+add_task(async function() { await dropText("data:text/html,bad", 1); });
+add_task(async function() { await dropText("mochi.test/third", 1); });
 
 // Single text/plain item, with multiple links.
-add_task(function*() { yield dropText("mochi.test/1\nmochi.test/2", 2); });
-add_task(function*() { yield dropText("javascript:'bad1'\nmochi.test/3", 2); });
-add_task(function*() { yield dropText("mochi.test/4\ndata:text/html,bad1", 2); });
+add_task(async function() { await dropText("mochi.test/1\nmochi.test/2", 2); });
+add_task(async function() { await dropText("javascript:'bad1'\nmochi.test/3", 2); });
+add_task(async function() { await dropText("mochi.test/4\ndata:text/html,bad1", 2); });
 
 // Multiple text/plain items, with single and multiple links.
-add_task(function*() {
-  yield drop([[{type: "text/plain",
+add_task(async function() {
+  await drop([[{type: "text/plain",
                 data: "mochi.test/5"}],
               [{type: "text/plain",
                 data: "mochi.test/6\nmochi.test/7"}]], 3);
@@ -53,14 +53,14 @@ add_task(function*() {
 
 // Single text/x-moz-url item, with multiple links.
 // "text/x-moz-url" has titles in even-numbered lines.
-add_task(function*() {
-  yield drop([[{type: "text/x-moz-url",
+add_task(async function() {
+  await drop([[{type: "text/x-moz-url",
                 data: "mochi.test/8\nTITLE8\nmochi.test/9\nTITLE9"}]], 2);
 });
 
 // Single item with multiple types.
-add_task(function*() {
-  yield drop([[{type: "text/plain",
+add_task(async function() {
+  await drop([[{type: "text/plain",
                 data: "mochi.test/10"},
                {type: "text/x-moz-url",
                 data: "mochi.test/11\nTITLE11"}]], 1);
@@ -70,7 +70,7 @@ function dropText(text, expectedWindowOpenCount = 0) {
   return drop([[{type: "text/plain", data: text}]], expectedWindowOpenCount);
 }
 
-function* drop(dragData, expectedWindowOpenCount = 0) {
+async function drop(dragData, expectedWindowOpenCount = 0) {
   let dragDataString = JSON.stringify(dragData);
   info(`Starting test for datagData:${dragDataString}; expectedWindowOpenCount:${expectedWindowOpenCount}`);
   let scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
@@ -104,17 +104,17 @@ function* drop(dragData, expectedWindowOpenCount = 0) {
 
   let windowsOpened = false;
   if (awaitWindowOpen) {
-    yield awaitWindowOpen;
+    await awaitWindowOpen;
     info("Got Window opened");
     windowsOpened = true;
     for (let [window, awaitStartup] of openedWindows.reverse()) {
       // Wait for startup before closing, to properly close the browser window.
-      yield awaitStartup;
-      yield BrowserTestUtils.closeWindow(window);
+      await awaitStartup;
+      await BrowserTestUtils.closeWindow(window);
     }
   }
   is(windowsOpened, !!expectedWindowOpenCount, `Windows for ${dragDataString} should only open if any of dropped items are valid`);
 
-  yield awaitDrop;
+  await awaitDrop;
   ok(true, "Got drop event");
 }

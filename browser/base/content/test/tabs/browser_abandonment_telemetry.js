@@ -63,9 +63,9 @@ const PROBE_TESTS = [
 
     category: "stop",
 
-    * prepare(browser) {},
+    prepare(browser) {},
 
-    * doAction(browser) {
+    doAction(browser) {
       document.getElementById("Browser:Stop").doCommand();
     },
   },
@@ -76,9 +76,9 @@ const PROBE_TESTS = [
 
     category: "back",
 
-    * prepare(browser) {
+    async prepare(browser) {
       browser.loadURI(PAGE_2);
-      yield BrowserTestUtils.browserLoaded(browser);
+      await BrowserTestUtils.browserLoaded(browser);
     },
 
     * doAction(browser) {
@@ -95,13 +95,13 @@ const PROBE_TESTS = [
 
     category: "forward",
 
-    * prepare(browser) {
+    async prepare(browser) {
       browser.loadURI(PAGE_2);
-      yield BrowserTestUtils.browserLoaded(browser);
+      await BrowserTestUtils.browserLoaded(browser);
       let pageShow =
         BrowserTestUtils.waitForContentEvent(browser, "pageshow");
       browser.goBack();
-      yield pageShow;
+      await pageShow;
     },
 
     * doAction(browser) {
@@ -118,12 +118,12 @@ const PROBE_TESTS = [
 
     category: "historyNavigation",
 
-    * prepare(browser) {
+    async prepare(browser) {
       browser.loadURI(PAGE_2);
-      yield BrowserTestUtils.browserLoaded(browser);
+      await BrowserTestUtils.browserLoaded(browser);
       browser.loadURI("http://example.com");
-      yield BrowserTestUtils.browserLoaded(browser);
-      yield TabStateFlusher.flush(browser);
+      await BrowserTestUtils.browserLoaded(browser);
+      await TabStateFlusher.flush(browser);
     },
 
     * doAction(browser) {
@@ -140,16 +140,16 @@ const PROBE_TESTS = [
 
     category: "historyNavigation",
 
-    * prepare(browser) {
+    async prepare(browser) {
       browser.loadURI(PAGE_2);
-      yield BrowserTestUtils.browserLoaded(browser);
+      await BrowserTestUtils.browserLoaded(browser);
       browser.loadURI("http://example.com");
-      yield BrowserTestUtils.browserLoaded(browser);
+      await BrowserTestUtils.browserLoaded(browser);
       let pageShow =
         BrowserTestUtils.waitForContentEvent(browser, "pageshow");
       browser.gotoIndex(0);
-      yield pageShow;
-      yield TabStateFlusher.flush(browser);
+      await pageShow;
+      await TabStateFlusher.flush(browser);
     },
 
     * doAction(browser) {
@@ -166,11 +166,11 @@ const PROBE_TESTS = [
 
     category: "reload",
 
-    * prepare(browser) {},
+    prepare(browser) {},
 
-    * doAction(browser) {
+    async doAction(browser) {
       document.getElementById("Browser:Reload").doCommand();
-      yield BrowserTestUtils.browserLoaded(browser);
+      await BrowserTestUtils.browserLoaded(browser);
     },
   },
 
@@ -183,11 +183,11 @@ const PROBE_TESTS = [
 
     category: "newURI",
 
-    * prepare(browser) {},
+    prepare(browser) {},
 
-    * doAction(browser) {
+    async doAction(browser) {
       openUILinkIn(PAGE_2, "current");
-      yield BrowserTestUtils.browserLoaded(browser);
+      await BrowserTestUtils.browserLoaded(browser);
     },
   },
 ]
@@ -246,7 +246,7 @@ function synthesizeHistoryNavigationToIndex(index) {
  * Goes through each of the categories for the BUSY_TAB_ABANDONED
  * probe, and tests that they're properly changed.
  */
-add_task(function* test_probes() {
+add_task(async function test_probes() {
   let oldCanRecord = Services.telemetry.canRecordExtended;
   Services.telemetry.canRecordExtended = true;
 
@@ -261,7 +261,7 @@ add_task(function* test_probes() {
   // the tab or window hosting the tab closing, see the documentation
   // above PROBE_TESTS for how to hook into this little framework.
   for (let probeTest of PROBE_TESTS) {
-    yield BrowserTestUtils.withNewTab({
+    await BrowserTestUtils.withNewTab({
       gBrowser,
       url: "http://example.com",
     }, function*(browser) {
@@ -292,14 +292,14 @@ add_task(function* test_probes() {
   histogram.clear();
   // Now test that we can close a busy tab and get the tabClosed
   // measurement bumped.
-  let newTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser);
+  let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   // As above, instead of trying to fiddle with network state
   // or anything, we'll just set this attribute to fool our
   // telemetry probes into thinking the browser is in the
   // middle of loading some resources.
   newTab.setAttribute("busy", true);
 
-  yield BrowserTestUtils.removeTab(newTab);
+  await BrowserTestUtils.removeTab(newTab);
   let snapshot = histogram.snapshot();
   assertOnlyOneTypeSet(snapshot, "tabClosed");
 });

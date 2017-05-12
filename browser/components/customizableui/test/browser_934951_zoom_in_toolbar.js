@@ -7,12 +7,12 @@
 const kTimeoutInMS = 20000;
 
 // Bug 934951 - Zoom controls percentage label doesn't update when it's in the toolbar and you navigate.
-add_task(function*() {
+add_task(async function() {
   CustomizableUI.addWidgetToArea("zoom-controls", CustomizableUI.AREA_NAVBAR);
   let tab1 = gBrowser.addTab("about:mozilla");
-  yield BrowserTestUtils.browserLoaded(tab1.linkedBrowser);
+  await BrowserTestUtils.browserLoaded(tab1.linkedBrowser);
   let tab2 = gBrowser.addTab("about:robots");
-  yield BrowserTestUtils.browserLoaded(tab2.linkedBrowser);
+  await BrowserTestUtils.browserLoaded(tab2.linkedBrowser);
   gBrowser.selectedTab = tab1;
   let zoomResetButton = document.getElementById("zoom-reset-button");
 
@@ -26,32 +26,32 @@ add_task(function*() {
   is(parseInt(zoomResetButton.label, 10), 100, "Default zoom is 100% for about:mozilla");
   let zoomChangePromise = BrowserTestUtils.waitForEvent(window, "FullZoomChange");
   FullZoom.enlarge();
-  yield zoomChangePromise;
+  await zoomChangePromise;
   is(parseInt(zoomResetButton.label, 10), 110, "Zoom is changed to 110% for about:mozilla");
 
   let tabSelectPromise = promiseObserverNotification("browser-fullZoom:location-change");
   gBrowser.selectedTab = tab2;
-  yield tabSelectPromise;
-  yield new Promise(resolve => executeSoon(resolve));
+  await tabSelectPromise;
+  await new Promise(resolve => executeSoon(resolve));
   is(parseInt(zoomResetButton.label, 10), 100, "Default zoom is 100% for about:robots");
 
   gBrowser.selectedTab = tab1;
   let zoomResetPromise = BrowserTestUtils.waitForEvent(window, "FullZoomChange");
   FullZoom.reset();
-  yield zoomResetPromise;
+  await zoomResetPromise;
   is(parseInt(zoomResetButton.label, 10), 100, "Default zoom is 100% for about:mozilla");
 
   // Test zoom label updates while navigating pages in the same tab.
   FullZoom.enlarge();
-  yield zoomChangePromise;
+  await zoomChangePromise;
   is(parseInt(zoomResetButton.label, 10), 110, "Zoom is changed to 110% for about:mozilla");
   let attributeChangePromise = promiseAttributeMutation(zoomResetButton, "label", (v) => {
     return parseInt(v, 10) == 100;
   });
-  yield promiseTabLoadEvent(tab1, "about:home");
-  yield attributeChangePromise;
+  await promiseTabLoadEvent(tab1, "about:home");
+  await attributeChangePromise;
   is(parseInt(zoomResetButton.label, 10), 100, "Default zoom is 100% for about:home");
-  yield promiseTabHistoryNavigation(-1, function() {
+  await promiseTabHistoryNavigation(-1, function() {
     return parseInt(zoomResetButton.label, 10) == 110;
   });
   is(parseInt(zoomResetButton.label, 10), 110, "Zoom is still 110% for about:mozilla");

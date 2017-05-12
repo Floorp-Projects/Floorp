@@ -8,7 +8,7 @@ add_task(function cleanup() {
   }
 });
 
-add_task(function*() {
+add_task(async function() {
   let URL_PUBLIC = "http://example.com/public/" + Math.random();
   let URL_PRIVATE = "http://example.com/private/" + Math.random();
   let tab1, tab2;
@@ -16,21 +16,21 @@ add_task(function*() {
     // Setup a public tab and a private tab
     info("Setting up public tab");
     tab1 = gBrowser.addTab(URL_PUBLIC);
-    yield promiseBrowserLoaded(tab1.linkedBrowser);
+    await promiseBrowserLoaded(tab1.linkedBrowser);
 
     info("Setting up private tab");
     tab2 = gBrowser.addTab();
-    yield promiseBrowserLoaded(tab2.linkedBrowser);
-    yield setUsePrivateBrowsing(tab2.linkedBrowser, true);
+    await promiseBrowserLoaded(tab2.linkedBrowser);
+    await setUsePrivateBrowsing(tab2.linkedBrowser, true);
     tab2.linkedBrowser.loadURI(URL_PRIVATE);
-    yield promiseBrowserLoaded(tab2.linkedBrowser);
+    await promiseBrowserLoaded(tab2.linkedBrowser);
 
     info("Flush to make sure chrome received all data.");
-    yield TabStateFlusher.flush(tab1.linkedBrowser);
-    yield TabStateFlusher.flush(tab2.linkedBrowser);
+    await TabStateFlusher.flush(tab1.linkedBrowser);
+    await TabStateFlusher.flush(tab2.linkedBrowser);
 
     info("Checking out state");
-    let state = yield promiseRecoveryFileContents();
+    let state = await promiseRecoveryFileContents();
 
     info("State: " + state);
     // Ensure that sessionstore.js only knows about the public tab
@@ -59,7 +59,7 @@ add_task(function*() {
   }
 });
 
-add_task(function* () {
+add_task(async function() {
   const FRAME_SCRIPT = "data:," +
     "docShell.QueryInterface%28Components.interfaces.nsILoadContext%29.usePrivateBrowsing%3Dtrue";
 
@@ -67,15 +67,15 @@ add_task(function* () {
   forgetClosedWindows();
 
   // Create a new window to attach our frame script to.
-  let win = yield promiseNewWindowLoaded();
+  let win = await promiseNewWindowLoaded();
   let mm = win.getGroupMessageManager("browsers");
   mm.loadFrameScript(FRAME_SCRIPT, true);
 
   // Create a new tab in the new window that will load the frame script.
   let tab = win.gBrowser.addTab("about:mozilla");
   let browser = tab.linkedBrowser;
-  yield promiseBrowserLoaded(browser);
-  yield TabStateFlusher.flush(browser);
+  await promiseBrowserLoaded(browser);
+  await TabStateFlusher.flush(browser);
 
   // Check that we consider the tab as private.
   let state = JSON.parse(ss.getTabState(tab));
@@ -88,8 +88,8 @@ add_task(function* () {
   // Create a new tab in the new window that will load the frame script.
   tab = win.gBrowser.addTab("about:mozilla");
   browser = tab.linkedBrowser;
-  yield promiseBrowserLoaded(browser);
-  yield TabStateFlusher.flush(browser);
+  await promiseBrowserLoaded(browser);
+  await TabStateFlusher.flush(browser);
 
   // Check that we consider the tab as private.
   state = JSON.parse(ss.getTabState(tab));
@@ -97,22 +97,22 @@ add_task(function* () {
 
   // Check that all private tabs are removed when the non-private
   // window is closed and we don't save windows without any tabs.
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
   is(ss.getClosedWindowCount(), 0, "no windows to restore");
 });
 
-add_task(function* () {
+add_task(async function() {
   // Clear the list of closed windows.
   forgetClosedWindows();
 
   // Create a new window to attach our frame script to.
-  let win = yield promiseNewWindowLoaded({private: true});
+  let win = await promiseNewWindowLoaded({private: true});
 
   // Create a new tab in the new window that will load the frame script.
   let tab = win.gBrowser.addTab("about:mozilla");
   let browser = tab.linkedBrowser;
-  yield promiseBrowserLoaded(browser);
-  yield TabStateFlusher.flush(browser);
+  await promiseBrowserLoaded(browser);
+  await TabStateFlusher.flush(browser);
 
   // Check that we consider the tab as private.
   let state = JSON.parse(ss.getTabState(tab));
@@ -123,7 +123,7 @@ add_task(function* () {
   is(ss.getClosedTabCount(win), 1, "there is a single tab to restore");
 
   // Ensure that closed private windows can never be restored.
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
   is(ss.getClosedWindowCount(), 0, "no windows to restore");
 });
 

@@ -1,11 +1,11 @@
 "use strict";
 
-add_task(function*() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function() {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "http://mochi.test:8888/browser/toolkit/components/tooltiptext/tests/title_test.svg",
-  }, function*(browser) {
-    yield ContentTask.spawn(browser, "", function() {
+  }, async function(browser) {
+    await ContentTask.spawn(browser, "", function() {
       let tttp = Cc["@mozilla.org/embedcomp/default-tooltiptextprovider;1"]
                  .getService(Ci.nsITooltipTextProvider);
       function checkElement(id, expectedTooltipText) {

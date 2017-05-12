@@ -71,7 +71,7 @@ var addon5 = {
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
-add_task(function*() {
+add_task(async function() {
 
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2", "2");
 
@@ -84,7 +84,7 @@ add_task(function*() {
   // Make it look like add-on 5 was installed some time in the past so the update is
   // detected
   let path = getFileForAddon(profileDir, addon5.id).path;
-  yield promiseSetExtensionModifiedTime(path, Date.now() - (60000));
+  await promiseSetExtensionModifiedTime(path, Date.now() - (60000));
 
   // Startup the profile and setup the initial state
   startupManager();
@@ -94,13 +94,13 @@ add_task(function*() {
 
   let a1, a2, a3, a4, a5, a6;
 
-  [a2] = yield promiseAddonsByIDs(["addon2@tests.mozilla.org"]);
+  [a2] = await promiseAddonsByIDs(["addon2@tests.mozilla.org"]);
   a2.userDisabled = true;
 
   restartManager();
 
   [a1, a2, a3, a4, a5] =
-    yield promiseAddonsByIDs(["addon1@tests.mozilla.org",
+    await promiseAddonsByIDs(["addon1@tests.mozilla.org",
                               "addon2@tests.mozilla.org",
                               "addon3@tests.mozilla.org",
                               "addon4@tests.mozilla.org",
@@ -110,7 +110,7 @@ add_task(function*() {
   a3.userDisabled = true;
   a4.uninstall();
 
-  yield promiseInstallAllFiles([do_get_addon("test_locked2_5"),
+  await promiseInstallAllFiles([do_get_addon("test_locked2_5"),
                                 do_get_addon("test_locked2_6")]);
   do_check_neq(a1, null);
   do_check_true(a1.isActive);
@@ -158,7 +158,7 @@ add_task(function*() {
   if (OS.Constants.libc.O_EXLOCK)
     options.unixFlags = OS.Constants.libc.O_EXLOCK;
 
-  let file = yield OS.File.open(gExtensionsJSON.path, {read: true, write: true, existing: true}, options);
+  let file = await OS.File.open(gExtensionsJSON.path, {read: true, write: true, existing: true}, options);
 
   let filePermissions = gExtensionsJSON.permissions;
   if (!OS.Constants.Win) {
@@ -170,7 +170,7 @@ add_task(function*() {
   check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED, []);
 
   [a1, a2, a3, a4, a5, a6] =
-    yield promiseAddonsByIDs(["addon1@tests.mozilla.org",
+    await promiseAddonsByIDs(["addon1@tests.mozilla.org",
                               "addon2@tests.mozilla.org",
                               "addon3@tests.mozilla.org",
                               "addon4@tests.mozilla.org",
@@ -223,7 +223,7 @@ add_task(function*() {
   } catch (e) {
     shutdownError = e;
   }
-  yield file.close();
+  await file.close();
   gExtensionsJSON.permissions = filePermissions;
   startupManager();
 
@@ -244,7 +244,7 @@ add_task(function*() {
   }
 
   [a1, a2, a3, a4, a5, a6] =
-    yield promiseAddonsByIDs(["addon1@tests.mozilla.org",
+    await promiseAddonsByIDs(["addon1@tests.mozilla.org",
                               "addon2@tests.mozilla.org",
                               "addon3@tests.mozilla.org",
                               "addon4@tests.mozilla.org",

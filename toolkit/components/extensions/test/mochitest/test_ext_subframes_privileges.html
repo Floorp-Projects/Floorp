@@ -14,7 +14,7 @@
 "use strict";
 /* eslint-disable mozilla/balanced-listeners */
 
-add_task(function* test_webext_tab_subframe_privileges() {
+add_task(async function test_webext_tab_subframe_privileges() {
   function background() {
     browser.runtime.onMessage.addListener(async ({msg, success, tabId, error}) => {
       if (msg == "webext-tab-subframe-privileges") {
@@ -80,13 +80,13 @@ add_task(function* test_webext_tab_subframe_privileges() {
   };
   let extension = ExtensionTestUtils.loadExtension(extensionData);
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitFinish("webext-tab-subframe-privileges");
-  yield extension.unload();
+  await extension.awaitFinish("webext-tab-subframe-privileges");
+  await extension.unload();
 });
 
-add_task(function* test_webext_background_subframe_privileges() {
+add_task(async function test_webext_background_subframe_privileges() {
   function backgroundSubframeScript() {
     browser.test.assertTrue(browser.tabs != undefined,
                             "Subframe of a background page has access to privileged APIs");
@@ -119,13 +119,13 @@ add_task(function* test_webext_background_subframe_privileges() {
   };
   let extension = ExtensionTestUtils.loadExtension(extensionData);
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitFinish("webext-background-subframe-privileges");
-  yield extension.unload();
+  await extension.awaitFinish("webext-background-subframe-privileges");
+  await extension.unload();
 });
 
-add_task(function* test_webext_contentscript_iframe_subframe_privileges() {
+add_task(async function test_webext_contentscript_iframe_subframe_privileges() {
   function background() {
     browser.runtime.onMessage.addListener(({name, hasTabsAPI, hasStorageAPI}) => {
       if (name == "contentscript-iframe-loaded") {
@@ -186,18 +186,18 @@ add_task(function* test_webext_contentscript_iframe_subframe_privileges() {
   };
   let extension = ExtensionTestUtils.loadExtension(extensionData);
 
-  yield extension.startup();
+  await extension.startup();
 
   let win = window.open("http://example.com");
 
-  yield extension.awaitFinish("webext-contentscript-subframe-privileges");
+  await extension.awaitFinish("webext-contentscript-subframe-privileges");
 
   win.close();
 
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* test_webext_background_remote_subframe_privileges() {
+add_task(async function test_webext_background_remote_subframe_privileges() {
   function backgroundSubframeScript() {
     window.addEventListener("message", evt => {
       browser.test.assertEq("http://mochi.test:8888", evt.origin, "postmessage origin ok");
@@ -230,10 +230,10 @@ add_task(function* test_webext_background_remote_subframe_privileges() {
   };
   let extension = ExtensionTestUtils.loadExtension(extensionData);
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitFinish("webext-background-subframe-privileges");
-  yield extension.unload();
+  await extension.awaitFinish("webext-background-subframe-privileges");
+  await extension.unload();
 });
 </script>
 

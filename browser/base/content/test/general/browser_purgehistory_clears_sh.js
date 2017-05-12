@@ -3,11 +3,11 @@
 
 const url = "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
 
-add_task(function* purgeHistoryTest() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function purgeHistoryTest() {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url,
-  }, function* purgeHistoryTestInner(browser) {
+  }, async function purgeHistoryTestInner(browser) {
     let backButton = browser.ownerDocument.getElementById("Browser:Back");
     let forwardButton = browser.ownerDocument.getElementById("Browser:Forward");
 
@@ -18,7 +18,7 @@ add_task(function* purgeHistoryTest() {
     ok(backButton.hasAttribute("disabled"), "Back button is disabled");
     ok(forwardButton.hasAttribute("disabled"), "Forward button is disabled");
 
-    yield ContentTask.spawn(browser, null, function*() {
+    await ContentTask.spawn(browser, null, async function() {
       let startHistory = content.history.length;
       content.history.pushState({}, "");
       content.history.pushState({}, "");
@@ -44,9 +44,9 @@ add_task(function* purgeHistoryTest() {
     let {Sanitizer} = tmp;
     let sanitizer = new Sanitizer();
 
-    yield sanitizer.sanitize(["history"]);
+    await sanitizer.sanitize(["history"]);
 
-    yield ContentTask.spawn(browser, null, function*() {
+    await ContentTask.spawn(browser, null, async function() {
       Assert.equal(content.history.length, 1, "SHistory correctly cleared");
     });
 

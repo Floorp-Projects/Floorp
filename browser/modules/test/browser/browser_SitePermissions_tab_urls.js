@@ -7,7 +7,7 @@
 Cu.import("resource:///modules/SitePermissions.jsm", this);
 
 // This tests the key used to store the URI -> permission map on a tab.
-add_task(function* testTemporaryPermissionTabURLs() {
+add_task(async function testTemporaryPermissionTabURLs() {
 
   // Prevent showing a dialog for https://name:password@example.com
   SpecialPowers.pushPrefEnv({set: [
@@ -23,7 +23,7 @@ add_task(function* testTemporaryPermissionTabURLs() {
 
   let id = "microphone";
 
-  yield BrowserTestUtils.withNewTab("about:blank", function*(browser) {
+  await BrowserTestUtils.withNewTab("about:blank", function*(browser) {
     for (let uri of same) {
         let loaded = BrowserTestUtils.browserLoaded(browser, false, uri.spec);
         browser.loadURI(uri.spec);

@@ -144,8 +144,8 @@ function* runTests(options) {
   yield extension.unload();
 }
 
-add_task(function* testTabSwitchContext() {
-  yield runTests({
+add_task(async function testTabSwitchContext() {
+  await runTests({
     manifest: {
       "browser_action": {
         "default_icon": "default.png",
@@ -317,8 +317,8 @@ add_task(function* testTabSwitchContext() {
   });
 });
 
-add_task(function* testDefaultTitle() {
-  yield runTests({
+add_task(async function testDefaultTitle() {
+  await runTests({
     manifest: {
       "name": "Foo Extension",
 

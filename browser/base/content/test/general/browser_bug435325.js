@@ -56,7 +56,7 @@ function checkPage(data) {
     finish();
   }, "network:offline-status-changed");
 
-  ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
+  ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     content.document.getElementById("errorTryAgain").click();
   });
 }

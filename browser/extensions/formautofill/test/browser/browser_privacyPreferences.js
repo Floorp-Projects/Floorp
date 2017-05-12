@@ -12,9 +12,9 @@ const TEST_SELECTORS = {
 
 // Visibility of form autofill group should be hidden when opening
 // preferences page.
-add_task(function* test_aboutPreferences() {
-  yield BrowserTestUtils.withNewTab({gBrowser, url: PAGE_PREFS}, function* (browser) {
-    yield ContentTask.spawn(browser, TEST_SELECTORS, (args) => {
+add_task(async function test_aboutPreferences() {
+  await BrowserTestUtils.withNewTab({gBrowser, url: PAGE_PREFS}, async function(browser) {
+    await ContentTask.spawn(browser, TEST_SELECTORS, (args) => {
       is(content.document.querySelector(args.group).hidden, true,
         "Form Autofill group should be hidden");
     });
@@ -23,9 +23,9 @@ add_task(function* test_aboutPreferences() {
 
 // Visibility of form autofill group should be visible when opening
 // directly to privacy page. Checkbox is checked by default.
-add_task(function* test_aboutPreferencesPrivacy() {
-  yield BrowserTestUtils.withNewTab({gBrowser, url: PAGE_PRIVACY}, function* (browser) {
-    yield ContentTask.spawn(browser, TEST_SELECTORS, (args) => {
+add_task(async function test_aboutPreferencesPrivacy() {
+  await BrowserTestUtils.withNewTab({gBrowser, url: PAGE_PRIVACY}, async function(browser) {
+    await ContentTask.spawn(browser, TEST_SELECTORS, (args) => {
       is(content.document.querySelector(args.group).hidden, false,
         "Form Autofill group should be visible");
       is(content.document.querySelector(args.checkbox).checked, true,
@@ -35,11 +35,11 @@ add_task(function* test_aboutPreferencesPrivacy() {
 });
 
 // Checkbox should be unchecked when form autofill is disabled.
-add_task(function* test_autofillDisabledCheckbox() {
+add_task(async function test_autofillDisabledCheckbox() {
   SpecialPowers.pushPrefEnv({set: [[PREF_AUTOFILL_ENABLED, false]]});
 
-  yield BrowserTestUtils.withNewTab({gBrowser, url: PAGE_PRIVACY}, function* (browser) {
-    yield ContentTask.spawn(browser, TEST_SELECTORS, (args) => {
+  await BrowserTestUtils.withNewTab({gBrowser, url: PAGE_PRIVACY}, async function(browser) {
+    await ContentTask.spawn(browser, TEST_SELECTORS, (args) => {
       is(content.document.querySelector(args.group).hidden, false,
         "Form Autofill group should be visible");
       is(content.document.querySelector(args.checkbox).checked, false,

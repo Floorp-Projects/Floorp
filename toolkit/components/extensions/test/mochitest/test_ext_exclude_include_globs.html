@@ -13,7 +13,7 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* test_contentscript() {
+add_task(async function test_contentscript() {
   function background() {
     browser.runtime.onMessage.addListener(([script], sender) => {
       browser.test.sendMessage("run", {script});
@@ -70,20 +70,20 @@ add_task(function* test_contentscript() {
     ran++;
   });
 
-  yield Promise.all([extension.startup(), extension.awaitMessage("running")]);
+  await Promise.all([extension.startup(), extension.awaitMessage("running")]);
   info("extension loaded");
 
   let win = window.open("http://example.org/");
-  yield Promise.all([extension.awaitMessage("run-all"), extension.awaitMessage("run-excludes-test1")]);
+  await Promise.all([extension.awaitMessage("run-all"), extension.awaitMessage("run-excludes-test1")]);
   win.close();
   is(ran, 2);
 
   win = window.open("http://test1.example.org/");
-  yield Promise.all([extension.awaitMessage("run-all"), extension.awaitMessage("run-includes-test1")]);
+  await Promise.all([extension.awaitMessage("run-all"), extension.awaitMessage("run-includes-test1")]);
   win.close();
   is(ran, 4);
 
-  yield extension.unload();
+  await extension.unload();
   info("extension unloaded");
 });
 </script>

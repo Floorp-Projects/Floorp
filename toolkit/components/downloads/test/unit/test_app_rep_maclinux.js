@@ -16,8 +16,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 
 const gAppRep = Cc["@mozilla.org/downloads/application-reputation-service;1"].
                   getService(Ci.nsIApplicationReputationService);
@@ -143,11 +141,11 @@ add_task(function test_setup() {
   gHttpServer.start(4444);
 
   do_register_cleanup(function() {
-    return Task.spawn(function* () {
-      yield new Promise(resolve => {
+    return (async function() {
+      await new Promise(resolve => {
         gHttpServer.stop(resolve);
       });
-    });
+    })();
   });
 });
 
@@ -216,47 +214,47 @@ function promiseQueryReputation(query, expectedShouldBlock) {
   return deferred.promise;
 }
 
-add_task(function* () {
+add_task(async function() {
   // Wait for Safebrowsing local list updates to complete.
-  yield waitForUpdates();
+  await waitForUpdates();
 });
 
-add_task(function* test_blocked_binary() {
+add_task(async function test_blocked_binary() {
   // We should reach the remote server for a verdict.
   Services.prefs.setBoolPref(remoteEnabledPref,
                              true);
   Services.prefs.setCharPref(appRepURLPref,
                              "http://localhost:4444/download");
   // evil.com should return a malware verdict from the remote server.
-  yield promiseQueryReputation({sourceURI: createURI("http://evil.com"),
+  await promiseQueryReputation({sourceURI: createURI("http://evil.com"),
                                 suggestedFileName: "noop.bat",
                                 fileSize: 12}, true);
 });
 
-add_task(function* test_non_binary() {
+add_task(async function test_non_binary() {
   // We should not reach the remote server for a verdict for non-binary files.
   Services.prefs.setBoolPref(remoteEnabledPref,
                              true);
   Services.prefs.setCharPref(appRepURLPref,
                              "http://localhost:4444/throw");
-  yield promiseQueryReputation({sourceURI: createURI("http://evil.com"),
+  await promiseQueryReputation({sourceURI: createURI("http://evil.com"),
                                 suggestedFileName: "noop.txt",
                                 fileSize: 12}, false);
 });
 
-add_task(function* test_good_binary() {
+add_task(async function test_good_binary() {
   // We should reach the remote server for a verdict.
   Services.prefs.setBoolPref(remoteEnabledPref,
                              true);
   Services.prefs.setCharPref(appRepURLPref,
                              "http://localhost:4444/download");
   // mozilla.com should return a not-guilty verdict from the remote server.
-  yield promiseQueryReputation({sourceURI: createURI("http://mozilla.com"),
+  await promiseQueryReputation({sourceURI: createURI("http://mozilla.com"),
                                 suggestedFileName: "noop.bat",
                                 fileSize: 12}, false);
 });
 
-add_task(function* test_disabled() {
+add_task(async function test_disabled() {
   // Explicitly disable remote checks
   Services.prefs.setBoolPref(remoteEnabledPref,
                              false);
@@ -274,10 +272,10 @@ add_task(function* test_disabled() {
       deferred.resolve(true);
     }
   );
-  yield deferred.promise;
+  await deferred.promise;
 });
 
-add_task(function* test_disabled_through_lists() {
+add_task(async function test_disabled_through_lists() {
   Services.prefs.setBoolPref(remoteEnabledPref,
                              false);
   Services.prefs.setCharPref(appRepURLPref,
@@ -295,8 +293,8 @@ add_task(function* test_disabled_through_lists() {
       deferred.resolve(true);
     }
   );
-  yield deferred.promise;
+  await deferred.promise;
 });
-add_task(function* test_teardown() {
+add_task(async function test_teardown() {
   gStillRunning = false;
 });

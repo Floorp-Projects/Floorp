@@ -5,14 +5,14 @@
  * when the last private browsing window closes, even if a chrome window
  * was opened from that private browsing window.
  */
-add_task(function* () {
-  let win = yield BrowserTestUtils.openNewBrowserWindow({private: true});
+add_task(async function() {
+  let win = await BrowserTestUtils.openNewBrowserWindow({private: true});
   let chromeWin = win.open("chrome://browser/content/places/places.xul", "_blank",
     "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar");
-  yield BrowserTestUtils.waitForEvent(chromeWin, "load");
+  await BrowserTestUtils.waitForEvent(chromeWin, "load");
   let obsPromise = TestUtils.topicObserved("last-pb-context-exited");
-  yield BrowserTestUtils.closeWindow(win);
-  yield obsPromise;
+  await BrowserTestUtils.closeWindow(win);
+  await obsPromise;
   Assert.ok(true, "Got the last-pb-context-exited notification");
   chromeWin.close();
 });

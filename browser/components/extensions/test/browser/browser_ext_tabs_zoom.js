@@ -4,9 +4,9 @@
 
 const SITE_SPECIFIC_PREF = "browser.zoom.siteSpecific";
 
-add_task(function* () {
-  let tab1 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
-  let tab2 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.net/");
+add_task(async function() {
+  let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+  let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.net/");
 
   gBrowser.selectedTab = tab1;
 
@@ -211,12 +211,12 @@ add_task(function* () {
     extension.sendMessage("msg-done", id, resp);
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitFinish("tab-zoom");
+  await extension.awaitFinish("tab-zoom");
 
-  yield extension.unload();
+  await extension.unload();
 
-  yield BrowserTestUtils.removeTab(tab1);
-  yield BrowserTestUtils.removeTab(tab2);
+  await BrowserTestUtils.removeTab(tab1);
+  await BrowserTestUtils.removeTab(tab2);
 });

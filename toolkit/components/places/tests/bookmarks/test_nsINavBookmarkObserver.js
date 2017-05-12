@@ -104,7 +104,7 @@ add_task(function setup() {
   PlacesUtils.bookmarks.addObserver(gBookmarkSkipObserver);
 });
 
-add_task(function* batch() {
+add_task(async function batch() {
   let promise = Promise.all([
     gBookmarksObserver.setup([
       { name: "onBeginUpdateBatch",
@@ -120,10 +120,10 @@ add_task(function* batch() {
       // Nothing.
     }
   }, null);
-  yield promise;
+  await promise;
 });
 
-add_task(function* onItemAdded_bookmark() {
+add_task(async function onItemAdded_bookmark() {
   const TITLE = "Bookmark 1";
   let uri = NetUtil.newURI("http://1.mozilla.org/");
   let promise = Promise.all([
@@ -148,10 +148,10 @@ add_task(function* onItemAdded_bookmark() {
   PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
                                        uri, PlacesUtils.bookmarks.DEFAULT_INDEX,
                                        TITLE);
-  yield promise;
+  await promise;
 });
 
-add_task(function* onItemAdded_separator() {
+add_task(async function onItemAdded_separator() {
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
       "onItemAdded"
@@ -173,10 +173,10 @@ add_task(function* onItemAdded_separator() {
   ])]);
   PlacesUtils.bookmarks.insertSeparator(PlacesUtils.unfiledBookmarksFolderId,
                                         PlacesUtils.bookmarks.DEFAULT_INDEX);
-  yield promise;
+  await promise;
 });
 
-add_task(function* onItemAdded_folder() {
+add_task(async function onItemAdded_folder() {
   const TITLE = "Folder 1";
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
@@ -200,10 +200,10 @@ add_task(function* onItemAdded_folder() {
   PlacesUtils.bookmarks.createFolder(PlacesUtils.unfiledBookmarksFolderId,
                                      TITLE,
                                      PlacesUtils.bookmarks.DEFAULT_INDEX);
-  yield promise;
+  await promise;
 });
 
-add_task(function* onItemChanged_title_bookmark() {
+add_task(async function onItemChanged_title_bookmark() {
   let id = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId, 0);
   const TITLE = "New title";
   let promise = Promise.all([
@@ -227,10 +227,10 @@ add_task(function* onItemChanged_title_bookmark() {
         ] },
   ])]);
   PlacesUtils.bookmarks.setItemTitle(id, TITLE);
-  yield promise;
+  await promise;
 });
 
-add_task(function* onItemChanged_tags_bookmark() {
+add_task(async function onItemChanged_tags_bookmark() {
   let id = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId, 0);
   let uri = PlacesUtils.bookmarks.getBookmarkURI(id);
   const TAG = "tag";
@@ -318,10 +318,10 @@ add_task(function* onItemChanged_tags_bookmark() {
   ])]);
   PlacesUtils.tagging.tagURI(uri, [TAG]);
   PlacesUtils.tagging.untagURI(uri, [TAG]);
-  yield promise;
+  await promise;
 });
 
-add_task(function* onItemMoved_bookmark() {
+add_task(async function onItemMoved_bookmark() {
   let id = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId, 0);
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
@@ -357,10 +357,10 @@ add_task(function* onItemMoved_bookmark() {
   ])]);
   PlacesUtils.bookmarks.moveItem(id, PlacesUtils.toolbarFolderId, 0);
   PlacesUtils.bookmarks.moveItem(id, PlacesUtils.unfiledBookmarksFolderId, 0);
-  yield promise;
+  await promise;
 });
 
-add_task(function* onItemMoved_bookmark() {
+add_task(async function onItemMoved_bookmark() {
   let id = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId, 0);
   let uri = PlacesUtils.bookmarks.getBookmarkURI(id);
   let promise = Promise.all([
@@ -381,10 +381,10 @@ add_task(function* onItemMoved_bookmark() {
         ] },
   ])]);
   PlacesTestUtils.addVisits({ uri, transition: TRANSITION_TYPED });
-  yield promise;
+  await promise;
 });
 
-add_task(function* onItemRemoved_bookmark() {
+add_task(async function onItemRemoved_bookmark() {
   let id = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId, 0);
   let uri = PlacesUtils.bookmarks.getBookmarkURI(id);
   let promise = Promise.all([
@@ -419,10 +419,10 @@ add_task(function* onItemRemoved_bookmark() {
         ] },
   ])]);
   PlacesUtils.bookmarks.removeItem(id);
-  yield promise;
+  await promise;
 });
 
-add_task(function* onItemRemoved_separator() {
+add_task(async function onItemRemoved_separator() {
   let id = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId, 0);
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
@@ -456,10 +456,10 @@ add_task(function* onItemRemoved_separator() {
         ] },
   ])]);
   PlacesUtils.bookmarks.removeItem(id);
-  yield promise;
+  await promise;
 });
 
-add_task(function* onItemRemoved_folder() {
+add_task(async function onItemRemoved_folder() {
   let id = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId, 0);
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
@@ -493,10 +493,10 @@ add_task(function* onItemRemoved_folder() {
         ] },
   ])]);
   PlacesUtils.bookmarks.removeItem(id);
-  yield promise;
+  await promise;
 });
 
-add_task(function* onItemRemoved_folder_recursive() {
+add_task(async function onItemRemoved_folder_recursive() {
   const TITLE = "Folder 3";
   const BMTITLE = "Bookmark 1";
   let uri = NetUtil.newURI("http://1.mozilla.org/");
@@ -630,7 +630,7 @@ add_task(function* onItemRemoved_folder_recursive() {
                                        BMTITLE);
 
   PlacesUtils.bookmarks.removeItem(folder);
-  yield promise;
+  await promise;
 });
 
 add_task(function cleanup() {

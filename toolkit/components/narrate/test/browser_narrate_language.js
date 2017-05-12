@@ -8,10 +8,10 @@
 
 registerCleanupFunction(teardown);
 
-add_task(function* testVoiceselectDropdownAutoclose() {
+add_task(async function testVoiceselectDropdownAutoclose() {
   setup("automatic", true);
 
-  yield spawnInNewReaderTab(TEST_ARTICLE, function* () {
+  await spawnInNewReaderTab(TEST_ARTICLE, function* () {
     let $ = content.document.querySelector.bind(content.document);
 
     yield NarrateTestUtils.waitForNarrateToggle(content);
@@ -40,10 +40,10 @@ add_task(function* testVoiceselectDropdownAutoclose() {
   });
 });
 
-add_task(function* testVoiceselectDropdownAutoclose() {
+add_task(async function testVoiceselectDropdownAutoclose() {
   setup("automatic", true);
 
-  yield spawnInNewReaderTab(TEST_ITALIAN_ARTICLE, function* () {
+  await spawnInNewReaderTab(TEST_ITALIAN_ARTICLE, function* () {
     let $ = content.document.querySelector.bind(content.document);
 
     yield NarrateTestUtils.waitForNarrateToggle(content);

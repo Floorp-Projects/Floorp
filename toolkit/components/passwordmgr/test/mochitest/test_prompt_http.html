@@ -78,7 +78,7 @@ runInParent(() => {
   pwmgr.addLogin(dedupeHttpsUpgradeLogin);
 });
 
-add_task(function* test_iframe() {
+add_task(async function test_iframe() {
   let state = {
     msg: "http://mochi.test:8888 is requesting your username and password. The site says: “mochitest”",
     title: "Authentication Required",
@@ -103,8 +103,8 @@ add_task(function* test_iframe() {
 
   var iframeLoaded = onloadPromiseFor("iframe");
   iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
-  yield promptDone;
-  yield iframeLoaded;
+  await promptDone;
+  await iframeLoaded;
   checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1"},
                       iframe.contentDocument);
 
@@ -132,8 +132,8 @@ add_task(function* test_iframe() {
   // and we should prompt for new auth.
   iframeLoaded = onloadPromiseFor("iframe");
   iframe.src = "authenticate.sjs?user=mochiuser2&pass=mochipass2&realm=mochitest2";
-  yield promptDone;
-  yield iframeLoaded;
+  await promptDone;
+  await iframeLoaded;
   checkEchoedAuthInfo({user: "mochiuser2", pass: "mochipass2"},
                       iframe.contentDocument);
 
@@ -142,7 +142,7 @@ add_task(function* test_iframe() {
   // networking layer already knows it!
   iframeLoaded = onloadPromiseFor("iframe");
   iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
-  yield iframeLoaded;
+  await iframeLoaded;
   checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1"},
                       iframe.contentDocument);
 
@@ -172,11 +172,11 @@ add_task(function* test_iframe() {
   iframeLoaded = onloadPromiseFor("iframe");
   let promptShownPromise = promisePromptShown("passwordmgr-prompt-change");
   iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1-new";
-  yield promptDone;
-  yield iframeLoaded;
+  await promptDone;
+  await iframeLoaded;
   checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1-new"},
                       iframe.contentDocument);
-  yield promptShownPromise;
+  await promptShownPromise;
 
   // Same as last test, but for a realm we haven't already authenticated
   // to (but have an existing saved login for, so that we'll trigger
@@ -204,11 +204,11 @@ add_task(function* test_iframe() {
   iframeLoaded = onloadPromiseFor("iframe");
   promptShownPromise = promisePromptShown("passwordmgr-prompt-change");
   iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-new&realm=mochitest3";
-  yield promptDone;
-  yield iframeLoaded;
+  await promptDone;
+  await iframeLoaded;
   checkEchoedAuthInfo({user: "mochiuser3", pass: "mochipass3-new"},
                       iframe.contentDocument);
-  yield promptShownPromise;
+  await promptShownPromise;
 
   // Housekeeping: Delete login4 to test the save prompt in the next test.
   runInParent(() => {
@@ -253,14 +253,14 @@ add_task(function* test_iframe() {
   iframeLoaded = onloadPromiseFor("iframe");
   promptShownPromise = promisePromptShown("passwordmgr-prompt-save");
   iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-old&realm=mochitest3";
-  yield promptDone;
-  yield iframeLoaded;
+  await promptDone;
+  await iframeLoaded;
   checkEchoedAuthInfo({user: "mochiuser3", pass: "mochipass3-old"},
                       iframe.contentDocument);
-  yield promptShownPromise;
+  await promptShownPromise;
 });
 
-add_task(function* test_schemeUpgrade() {
+add_task(async function test_schemeUpgrade() {
   let state = {
     msg: "https://example.com is requesting your username and password. " +
                   "WARNING: Your password will not be sent to the website you are currently visiting!",
@@ -287,13 +287,13 @@ add_task(function* test_schemeUpgrade() {
   let iframeLoaded = onloadPromiseFor("iframe");
   iframe.src = "https://example.com" + AUTHENTICATE_PATH +
                "?user=httpUser&pass=httpPass&realm=schemeUpgrade";
-  yield promptDone;
-  yield iframeLoaded;
+  await promptDone;
+  await iframeLoaded;
   checkEchoedAuthInfo({user: "httpUser", pass: "httpPass"},
                       SpecialPowers.wrap(iframe).contentDocument);
 });
 
-add_task(function* test_schemeDowngrade() {
+add_task(async function test_schemeDowngrade() {
   let state = {
     msg: "http://example.com is requesting your username and password. " +
                   "WARNING: Your password will not be sent to the website you are currently visiting!",
@@ -320,11 +320,11 @@ add_task(function* test_schemeDowngrade() {
   let iframeLoaded = onloadPromiseFor("iframe");
   iframe.src = "http://example.com" + AUTHENTICATE_PATH +
                "?user=unused&pass=unused&realm=schemeDowngrade";
-  yield promptDone;
-  yield iframeLoaded;
+  await promptDone;
+  await iframeLoaded;
 });
 
-add_task(function* test_schemeUpgrade_dedupe() {
+add_task(async function test_schemeUpgrade_dedupe() {
   let state = {
     msg: "https://example.org is requesting your username and password. " +
                   "WARNING: Your password will not be sent to the website you are currently visiting!",
@@ -351,8 +351,8 @@ add_task(function* test_schemeUpgrade_dedupe() {
   let iframeLoaded = onloadPromiseFor("iframe");
   iframe.src = "https://example.org" + AUTHENTICATE_PATH +
                "?user=dedupeUser&pass=httpsPass&realm=schemeUpgradeDedupe";
-  yield promptDone;
-  yield iframeLoaded;
+  await promptDone;
+  await iframeLoaded;
   checkEchoedAuthInfo({user: "dedupeUser", pass: "httpsPass"},
                       SpecialPowers.wrap(iframe).contentDocument);
 });

@@ -9,7 +9,7 @@ function pluginBindingAttached() {
   }
 }
 
-add_task(function* () {
+add_task(async function() {
   registerCleanupFunction(function() {
     gTestBrowser.removeEventListener("PluginBindingAttached", pluginBindingAttached, true, true);
     clearAllPluginPermissions();
@@ -22,7 +22,7 @@ add_task(function* () {
   });
 });
 
-add_task(function* () {
+add_task(async function() {
   gBrowser.selectedTab = gBrowser.addTab();
   gTestBrowser = gBrowser.selectedBrowser;
 
@@ -33,11 +33,11 @@ add_task(function* () {
   gTestBrowser.addEventListener("PluginBindingAttached", pluginBindingAttached, true, true);
 
   let testRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
-  yield promiseTabLoadEvent(gBrowser.selectedTab, testRoot + "plugin_bug744745.html");
+  await promiseTabLoadEvent(gBrowser.selectedTab, testRoot + "plugin_bug744745.html");
 
-  yield promiseForCondition(function() { return gNumPluginBindingsAttached == 1; });
+  await promiseForCondition(function() { return gNumPluginBindingsAttached == 1; });
 
-  yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  await ContentTask.spawn(gTestBrowser, {}, async function() {
     let plugin = content.document.getElementById("test");
     if (!plugin) {
       Assert.ok(false, "plugin element not available.");

@@ -37,8 +37,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MockRegistrar",
@@ -523,14 +521,14 @@ function promiseNewList(aIsPrivate) {
  * @rejects Never.
  */
 function promiseVerifyContents(aPath, aExpectedContents) {
-  return Task.spawn(function* () {
+  return (async function() {
     let file = new FileUtils.File(aPath);
 
-    if (!(yield OS.File.exists(aPath))) {
+    if (!(await OS.File.exists(aPath))) {
       do_throw("File does not exist: " + aPath);
     }
 
-    if ((yield OS.File.stat(aPath)).size == 0) {
+    if ((await OS.File.stat(aPath)).size == 0) {
       do_throw("File is empty: " + aPath);
     }
 
@@ -553,8 +551,8 @@ function promiseVerifyContents(aPath, aExpectedContents) {
         deferred.resolve();
       });
 
-    yield deferred.promise;
-  });
+    await deferred.promise;
+  })();
 }
 
 /**

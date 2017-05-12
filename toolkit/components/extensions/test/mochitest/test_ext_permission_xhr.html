@@ -15,7 +15,7 @@
 
 /* eslint-disable mozilla/balanced-listeners */
 
-add_task(function* test_simple() {
+add_task(async function test_simple() {
   async function runTests(cx) {
     function xhr(XMLHttpRequest) {
       return (url) => {
@@ -104,14 +104,14 @@ add_task(function* test_simple() {
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield extension.startup();
+  await extension.startup();
 
   let win = window.open("file_permission_xhr.html");
-  yield extension.awaitMessage("content-script-finished");
+  await extension.awaitMessage("content-script-finished");
   win.close();
 
-  yield extension.awaitFinish("permission_xhr");
-  yield extension.unload();
+  await extension.awaitFinish("permission_xhr");
+  await extension.unload();
 });
 </script>
 

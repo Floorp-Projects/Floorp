@@ -2,12 +2,12 @@ const PAGE = "https://example.com/browser/browser/base/content/test/general/file
 const TABATTR_REMOVAL_PREFNAME = "browser.tabs.delayHidingAudioPlayingIconMS";
 const INITIAL_TABATTR_REMOVAL_DELAY_MS = Services.prefs.getIntPref(TABATTR_REMOVAL_PREFNAME);
 
-function* wait_for_tab_playing_event(tab, expectPlaying) {
+async function wait_for_tab_playing_event(tab, expectPlaying) {
   if (tab.soundPlaying == expectPlaying) {
     ok(true, "The tab should " + (expectPlaying ? "" : "not ") + "be playing");
     return true;
   }
-  return yield BrowserTestUtils.waitForEvent(tab, "TabAttrModified", false, (event) => {
+  return await BrowserTestUtils.waitForEvent(tab, "TabAttrModified", false, (event) => {
     if (event.detail.changed.includes("soundplaying")) {
       is(tab.hasAttribute("soundplaying"), expectPlaying, "The tab should " + (expectPlaying ? "" : "not ") + "be playing");
       is(tab.soundPlaying, expectPlaying, "The tab should " + (expectPlaying ? "" : "not ") + "be playing");
@@ -17,18 +17,18 @@ function* wait_for_tab_playing_event(tab, expectPlaying) {
   });
 }
 
-function* is_audio_playing(tab) {
+async function is_audio_playing(tab) {
   let browser = tab.linkedBrowser;
-  let isPlaying = yield ContentTask.spawn(browser, {}, function* () {
+  let isPlaying = await ContentTask.spawn(browser, {}, async function() {
     let audio = content.document.querySelector("audio");
     return !audio.paused;
   });
   return isPlaying;
 }
 
-function* play(tab) {
+async function play(tab) {
   let browser = tab.linkedBrowser;
-  yield ContentTask.spawn(browser, {}, function* () {
+  await ContentTask.spawn(browser, {}, async function() {
     let audio = content.document.querySelector("audio");
     audio.play();
   });
@@ -39,10 +39,10 @@ function* play(tab) {
       return;
   }
 
-  yield wait_for_tab_playing_event(tab, true);
+  await wait_for_tab_playing_event(tab, true);
 }
 
-function* pause(tab, options) {
+async function pause(tab, options) {
   let extendedDelay = options && options.extendedDelay;
   if (extendedDelay) {
     // Use 10s to remove possibility of race condition with attr removal.
@@ -55,7 +55,7 @@ function* pause(tab, options) {
       BrowserTestUtils.waitForEvent(browser, "DOMAudioPlaybackStopped", "DOMAudioPlaybackStopped event should get fired after pause");
     let awaitTabPausedAttrModified =
       wait_for_tab_playing_event(tab, false);
-    yield ContentTask.spawn(browser, {}, function* () {
+    await ContentTask.spawn(browser, {}, async function() {
       let audio = content.document.querySelector("audio");
       audio.pause();
     });
@@ -69,11 +69,11 @@ function* pause(tab, options) {
     if (extendedDelay) {
       ok(tab.hasAttribute("soundplaying"), "The tab should still have the soundplaying attribute immediately after pausing");
 
-      yield awaitDOMAudioPlaybackStopped;
+      await awaitDOMAudioPlaybackStopped;
       ok(tab.hasAttribute("soundplaying"), "The tab should still have the soundplaying attribute immediately after DOMAudioPlaybackStopped");
     }
 
-    yield awaitTabPausedAttrModified;
+    await awaitTabPausedAttrModified;
     ok(!tab.hasAttribute("soundplaying"), "The tab should not have the soundplaying attribute after the timeout has resolved");
   } finally {
     // Make sure other tests don't timeout if an exception gets thrown above.
@@ -89,7 +89,7 @@ function disable_non_test_mouse(disable) {
   utils.disableNonTestMouseEvents(disable);
 }
 
-function* hover_icon(icon, tooltip) {
+function hover_icon(icon, tooltip) {
   disable_non_test_mouse(true);
 
   let popupShownPromise = BrowserTestUtils.waitForEvent(tooltip, "popupshown");
@@ -175,12 +175,12 @@ function get_tab_state(tab) {
   return JSON.parse(ss.getTabState(tab));
 }
 
-function* test_muting_using_menu(tab, expectMuted) {
+async function test_muting_using_menu(tab, expectMuted) {
   // Show the popup menu
   let contextMenu = document.getElementById("tabContextMenu");
   let popupShownPromise = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
   EventUtils.synthesizeMouseAtCenter(tab, {type: "contextmenu", button: 2});
-  yield popupShownPromise;
+  await popupShownPromise;
 
   // Check the menu
   let expectedLabel = expectMuted ? "Unmute Tab" : "Mute Tab";
@@ -192,12 +192,12 @@ function* test_muting_using_menu(tab, expectMuted) {
   is(toggleMute.hasAttribute("muted"), expectMuted, "Should have the correct state for the muted attribute");
   ok(!toggleMute.hasAttribute("soundplaying"), "Should not have the soundplaying attribute");
 
-  yield play(tab);
+  await play(tab);
 
   is(toggleMute.hasAttribute("muted"), expectMuted, "Should have the correct state for the muted attribute");
   is(!toggleMute.hasAttribute("soundplaying"), expectMuted, "The value of soundplaying attribute is incorrect");
 
-  yield pause(tab);
+  await pause(tab);
 
   is(toggleMute.hasAttribute("muted"), expectMuted, "Should have the correct state for the muted attribute");
   ok(!toggleMute.hasAttribute("soundplaying"), "Should not have the soundplaying attribute");
@@ -206,8 +206,8 @@ function* test_muting_using_menu(tab, expectMuted) {
   let mutedPromise = get_wait_for_mute_promise(tab, !expectMuted);
   let popupHiddenPromise = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
   EventUtils.synthesizeMouseAtCenter(toggleMute, {});
-  yield popupHiddenPromise;
-  yield mutedPromise;
+  await popupHiddenPromise;
+  await mutedPromise;
 }
 
 function* test_playing_icon_on_tab(tab, browser, isPinned) {
@@ -259,7 +259,7 @@ function* test_playing_icon_on_tab(tab, browser, isPinned) {
   yield test_muting_using_menu(tab, true);
 }
 
-function* test_swapped_browser_while_playing(oldTab, newBrowser) {
+async function test_swapped_browser_while_playing(oldTab, newBrowser) {
   // The tab was muted so it won't have soundplaying attribute even it's playing.
   ok(oldTab.hasAttribute("muted"), "Expected the correct muted attribute on the old tab");
   is(oldTab.muteReason, null, "Expected the correct muteReason attribute on the old tab");
@@ -271,7 +271,7 @@ function* test_swapped_browser_while_playing(oldTab, newBrowser) {
   });
 
   gBrowser.swapBrowsersAndCloseOther(newTab, oldTab);
-  yield AttrChangePromise;
+  await AttrChangePromise;
 
   ok(newTab.hasAttribute("muted"), "Expected the correct muted attribute on the new tab");
   is(newTab.muteReason, null, "Expected the correct muteReason property on the new tab");
@@ -279,10 +279,10 @@ function* test_swapped_browser_while_playing(oldTab, newBrowser) {
 
   let icon = document.getAnonymousElementByAttribute(newTab, "anonid",
                                                      "soundplaying-icon");
-  yield test_tooltip(icon, "Unmute tab", true);
+  await test_tooltip(icon, "Unmute tab", true);
 }
 
-function* test_swapped_browser_while_not_playing(oldTab, newBrowser) {
+async function test_swapped_browser_while_not_playing(oldTab, newBrowser) {
   ok(oldTab.hasAttribute("muted"), "Expected the correct muted attribute on the old tab");
   is(oldTab.muteReason, null, "Expected the correct muteReason property on the old tab");
   ok(!oldTab.hasAttribute("soundplaying"), "Expected the correct soundplaying attribute on the old tab");
@@ -304,14 +304,14 @@ function* test_swapped_browser_while_not_playing(oldTab, newBrowser) {
   });
 
   gBrowser.swapBrowsersAndCloseOther(newTab, oldTab);
-  yield AttrChangePromise;
+  await AttrChangePromise;
 
   ok(newTab.hasAttribute("muted"), "Expected the correct muted attribute on the new tab");
   is(newTab.muteReason, null, "Expected the correct muteReason property on the new tab");
   ok(!newTab.hasAttribute("soundplaying"), "Expected the correct soundplaying attribute on the new tab");
 
   // Wait to see if an audio-playback event is dispatched.
-  yield AudioPlaybackPromise;
+  await AudioPlaybackPromise;
 
   ok(newTab.hasAttribute("muted"), "Expected the correct muted attribute on the new tab");
   is(newTab.muteReason, null, "Expected the correct muteReason property on the new tab");
@@ -319,36 +319,36 @@ function* test_swapped_browser_while_not_playing(oldTab, newBrowser) {
 
   let icon = document.getAnonymousElementByAttribute(newTab, "anonid",
                                                      "soundplaying-icon");
-  yield test_tooltip(icon, "Unmute tab", true);
+  await test_tooltip(icon, "Unmute tab", true);
 }
 
-function* test_browser_swapping(tab, browser) {
+async function test_browser_swapping(tab, browser) {
   // First, test swapping with a playing but muted tab.
-  yield play(tab);
+  await play(tab);
 
   let icon = document.getAnonymousElementByAttribute(tab, "anonid",
                                                      "soundplaying-icon");
-  yield test_mute_tab(tab, icon, true);
+  await test_mute_tab(tab, icon, true);
 
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "about:blank",
-  }, function*(newBrowser) {
-    yield test_swapped_browser_while_playing(tab, newBrowser)
+  }, async function(newBrowser) {
+    await test_swapped_browser_while_playing(tab, newBrowser)
 
     // Now, test swapping with a muted but not playing tab.
     // Note that the tab remains muted, so we only need to pause playback.
     tab = gBrowser.getTabForBrowser(newBrowser);
-    yield pause(tab);
+    await pause(tab);
 
-    yield BrowserTestUtils.withNewTab({
+    await BrowserTestUtils.withNewTab({
       gBrowser,
       url: "about:blank",
     }, secondAboutBlankBrowser => test_swapped_browser_while_not_playing(tab, secondAboutBlankBrowser));
   });
 }
 
-function* test_click_on_pinned_tab_after_mute() {
+async function test_click_on_pinned_tab_after_mute() {
   function* taskFn(browser) {
     let tab = gBrowser.getTabForBrowser(browser);
 
@@ -385,19 +385,19 @@ function* test_click_on_pinned_tab_after_mute() {
 
   let originallySelectedTab = gBrowser.selectedTab;
 
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: PAGE
   }, taskFn);
 }
 
 // This test only does something useful in e10s!
-function* test_cross_process_load() {
-  function* taskFn(browser) {
+async function test_cross_process_load() {
+  async function taskFn(browser) {
     let tab = gBrowser.getTabForBrowser(browser);
 
     //   Start playback and wait for it to finish.
-    yield play(tab);
+    await play(tab);
 
     let soundPlayingStoppedPromise = BrowserTestUtils.waitForEvent(tab, "TabAttrModified", false,
       event => event.detail.changed.includes("soundplaying")
@@ -405,28 +405,28 @@ function* test_cross_process_load() {
 
     // Go to a different process.
     browser.loadURI("about:");
-    yield BrowserTestUtils.browserLoaded(browser);
+    await BrowserTestUtils.browserLoaded(browser);
 
-    yield soundPlayingStoppedPromise;
+    await soundPlayingStoppedPromise;
 
     ok(!tab.hasAttribute("soundplaying"), "Tab should not be playing sound any more");
     ok(!tab.soundPlaying, "Tab should not be playing sound any more");
   }
 
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: PAGE
   }, taskFn);
 }
 
-function* test_mute_keybinding() {
-  function* test_muting_using_keyboard(tab) {
+async function test_mute_keybinding() {
+  async function test_muting_using_keyboard(tab) {
     let mutedPromise = get_wait_for_mute_promise(tab, true);
     EventUtils.synthesizeKey("m", {ctrlKey: true});
-    yield mutedPromise;
+    await mutedPromise;
     mutedPromise = get_wait_for_mute_promise(tab, false);
     EventUtils.synthesizeKey("m", {ctrlKey: true});
-    yield mutedPromise;
+    await mutedPromise;
   }
   function* taskFn(browser) {
     let tab = gBrowser.getTabForBrowser(browser);
@@ -458,37 +458,37 @@ function* test_mute_keybinding() {
     gBrowser.unpinTab(tab);
   }
 
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: PAGE
   }, taskFn);
 }
 
-function* test_on_browser(browser) {
+async function test_on_browser(browser) {
   let tab = gBrowser.getTabForBrowser(browser);
 
   // Test the icon in a normal tab.
-  yield test_playing_icon_on_tab(tab, browser, false);
+  await test_playing_icon_on_tab(tab, browser, false);
 
   gBrowser.pinTab(tab);
 
   // Test the icon in a pinned tab.
-  yield test_playing_icon_on_tab(tab, browser, true);
+  await test_playing_icon_on_tab(tab, browser, true);
 
   gBrowser.unpinTab(tab);
 
   // Retest with another browser in the foreground tab
   if (gBrowser.selectedBrowser.currentURI.spec == PAGE) {
-    yield BrowserTestUtils.withNewTab({
+    await BrowserTestUtils.withNewTab({
       gBrowser,
       url: "data:text/html,test"
     }, () => test_on_browser(browser));
   } else {
-    yield test_browser_swapping(tab, browser);
+    await test_browser_swapping(tab, browser);
   }
 }
 
-function* test_delayed_tabattr_removal() {
+async function test_delayed_tabattr_removal() {
   function* taskFn(browser) {
     let tab = gBrowser.getTabForBrowser(browser);
     yield play(tab);
@@ -500,21 +500,21 @@ function* test_delayed_tabattr_removal() {
     yield pause(tab, {extendedDelay: true});
   }
 
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: PAGE
   }, taskFn);
 }
 
-add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({"set": [
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({"set": [
                                     ["browser.tabs.showAudioPlayingIcon", true],
                                   ]});
 });
 
 requestLongerTimeout(2);
-add_task(function* test_page() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function test_page() {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: PAGE
   }, test_on_browser);

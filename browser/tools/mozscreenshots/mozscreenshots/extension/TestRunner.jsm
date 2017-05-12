@@ -13,7 +13,6 @@ const HOME_PAGE = "chrome://mozscreenshots/content/lib/mozscreenshots.html";
 
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
@@ -51,7 +50,7 @@ this.TestRunner = {
   /**
    * Load specified sets, execute all combinations of them, and capture screenshots.
    */
-  start: Task.async(function*(setNames, jobName = null) {
+  async start(setNames, jobName = null) {
     let subDirs = ["mozscreenshots",
                    (new Date()).toISOString().replace(/:/g, "-") + "_" + Services.appinfo.OS];
     let screenshotPath = FileUtils.getFile("TmpD", subDirs).path;
@@ -92,18 +91,18 @@ this.TestRunner = {
 
     let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
     let selectedBrowser = browserWindow.gBrowser.selectedBrowser;
-    yield BrowserTestUtils.loadURI(selectedBrowser, HOME_PAGE);
-    yield BrowserTestUtils.browserLoaded(selectedBrowser);
+    await BrowserTestUtils.loadURI(selectedBrowser, HOME_PAGE);
+    await BrowserTestUtils.browserLoaded(selectedBrowser);
 
     for (let i = 0; i < this.combos.length; i++) {
       this.currentComboIndex = i;
-      yield this._performCombo(this.combos.item(this.currentComboIndex));
+      await this._performCombo(this.combos.item(this.currentComboIndex));
     }
 
     log.info("Done: Completed " + this.completedCombos + " out of " +
              this.combos.length + " configurations.");
     this.cleanup();
-  }),
+  },
 
   /**
    * Load sets of configurations from JSMs.
@@ -222,7 +221,7 @@ this.TestRunner = {
     };
 
     log.debug("_onConfigurationReady");
-    return Task.spawn(delayedScreenshot);
+    return (delayedScreenshot)();
   },
 
   _comboName(combo) {

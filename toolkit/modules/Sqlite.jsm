@@ -26,8 +26,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Log",
                                   "resource://gre/modules/Log.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "FinalizationWitnessService",
                                    "@mozilla.org/toolkit/finalizationwitness;1",
                                    "nsIFinalizationWitnessService");
@@ -155,8 +153,8 @@ XPCOMUtils.defineLazyGetter(this, "Barriers", () => {
    * - waits for all connections to be closed before shutdown.
    */
   AsyncShutdown.profileBeforeChange.addBlocker("Sqlite.jsm shutdown blocker",
-    Task.async(function* () {
-      yield Barriers.shutdown.wait();
+    async function() {
+      await Barriers.shutdown.wait();
       // At this stage, all clients have had a chance to open (and close)
       // their databases. Some previous close operations may still be pending,
       // so we need to wait until they are complete before proceeding.
@@ -165,11 +163,11 @@ XPCOMUtils.defineLazyGetter(this, "Barriers", () => {
       isClosed = true;
 
       // Now, wait until all databases are closed
-      yield Barriers.connections.wait();
+      await Barriers.connections.wait();
 
       // Everything closed, no finalization events to catch
       Services.obs.removeObserver(finalizationObserver, "sqlite-finalization-witness");
-    }),
+    },
 
     function status() {
       if (isClosed) {
@@ -381,13 +379,13 @@ ConnectionData.prototype = Object.freeze({
       fetchState: () => status
     });
 
-    return Task.spawn(function*() {
+    return (async function() {
       try {
-        return (yield promiseResult);
+        return (await promiseResult);
       } finally {
         this._barrier.client.removeBlocker(key, promiseComplete)
       }
-    }.bind(this));
+    }.bind(this))();
   },
   close() {
     this._closeRequested = true;
@@ -560,7 +558,7 @@ ConnectionData.prototype = Object.freeze({
         throw new Error("Transaction canceled due to a closed connection.");
       }
 
-      let transactionPromise = Task.spawn(function* () {
+      let transactionPromise = (async function() {
         // At this point we should never have an in progress transaction, since
         // they are enqueued.
         if (this._hasInProgressTransaction) {
@@ -570,7 +568,7 @@ ConnectionData.prototype = Object.freeze({
         try {
           // We catch errors in statement execution to detect nested transactions.
           try {
-            yield this.execute("BEGIN " + type + " TRANSACTION");
+            await this.execute("BEGIN " + type + " TRANSACTION");
           } catch (ex) {
             // Unfortunately, if we are wrapping an existing connection, a
             // transaction could have been started by a client of the same
@@ -590,7 +588,7 @@ ConnectionData.prototype = Object.freeze({
 
           let result;
           try {
-            result = yield Task.spawn(func);
+            result = await (func)();
           } catch (ex) {
             // It's possible that the exception has been caused by trying to
             // close the connection in the middle of a transaction.
@@ -601,7 +599,7 @@ ConnectionData.prototype = Object.freeze({
               // If we began a transaction, we must rollback it.
               if (this._hasInProgressTransaction) {
                 try {
-                  yield this.execute("ROLLBACK TRANSACTION");
+                  await this.execute("ROLLBACK TRANSACTION");
                 } catch (inner) {
                   this._log.warn("Could not roll back transaction", inner);
                 }
@@ -620,7 +618,7 @@ ConnectionData.prototype = Object.freeze({
           // If we began a transaction, we must commit it.
           if (this._hasInProgressTransaction) {
             try {
-              yield this.execute("COMMIT TRANSACTION");
+              await this.execute("COMMIT TRANSACTION");
             } catch (ex) {
               this._log.warn("Error committing transaction", ex);
               throw ex;
@@ -631,7 +629,7 @@ ConnectionData.prototype = Object.freeze({
         } finally {
           this._hasInProgressTransaction = false;
         }
-      }.bind(this));
+      }.bind(this))();
 
       // If a transaction yields on a never resolved promise, or is mistakenly
       // nested, it could hang the transactions queue forever.  Thus we timeout

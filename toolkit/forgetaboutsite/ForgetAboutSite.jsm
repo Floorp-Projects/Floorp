@@ -7,7 +7,6 @@
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
-Components.utils.import("resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
@@ -44,33 +43,33 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 this.ForgetAboutSite = {
-  removeDataFromDomain: Task.async(function* (aDomain) {
+  async removeDataFromDomain(aDomain) {
     PlacesUtils.history.removePagesFromHost(aDomain, true);
 
     let promises = [];
     // Cache
-    promises.push(Task.spawn(function*() {
+    promises.push((async function() {
       let cs = Cc["@mozilla.org/netwerk/cache-storage-service;1"].
                getService(Ci.nsICacheStorageService);
       // NOTE: there is no way to clear just that domain, so we clear out
       //       everything)
       cs.clear();
-    }).catch(ex => {
+    })().catch(ex => {
       throw new Error("Exception thrown while clearing the cache: " + ex);
     }));
 
     // Image Cache
-    promises.push(Task.spawn(function*() {
+    promises.push((async function() {
       let imageCache = Cc["@mozilla.org/image/tools;1"].
                        getService(Ci.imgITools).getImgCacheForDocument(null);
       imageCache.clearCache(false); // true=chrome, false=content
-    }).catch(ex => {
+    })().catch(ex => {
       throw new Error("Exception thrown while clearing the image cache: " + ex);
     }));
 
     // Cookies
     // Need to maximize the number of cookies cleaned here
-    promises.push(Task.spawn(function*() {
+    promises.push((async function() {
       let cm = Cc["@mozilla.org/cookiemanager;1"].
                getService(Ci.nsICookieManager2);
       let enumerator = cm.getCookiesWithOriginAttributes(JSON.stringify({}), aDomain);
@@ -78,16 +77,16 @@ this.ForgetAboutSite = {
         let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie);
         cm.remove(cookie.host, cookie.name, cookie.path, false, cookie.originAttributes);
       }
-    }).catch(ex => {
+    })().catch(ex => {
       throw new Error("Exception thrown while clearning cookies: " + ex);
     }));
 
     // EME
-    promises.push(Task.spawn(function*() {
+    promises.push((async function() {
       let mps = Cc["@mozilla.org/gecko-media-plugin-service;1"].
                 getService(Ci.mozIGeckoMediaPluginChromeService);
       mps.forgetThisSite(aDomain, JSON.stringify({}));
-    }).catch(ex => {
+    })().catch(ex => {
       throw new Error("Exception thrown while clearing Encrypted Media Extensions: " + ex);
     }));
 
@@ -110,16 +109,16 @@ this.ForgetAboutSite = {
     }
 
     // Downloads
-    promises.push(Task.spawn(function*() {
-      let list = yield Downloads.getList(Downloads.ALL);
+    promises.push((async function() {
+      let list = await Downloads.getList(Downloads.ALL);
       list.removeFinished(download => hasRootDomain(
         NetUtil.newURI(download.source.url).host, aDomain));
-    }).catch(ex => {
+    })().catch(ex => {
       throw new Error("Exception in clearing Downloads: " + ex);
     }));
 
     // Passwords
-    promises.push(Task.spawn(function*() {
+    promises.push((async function() {
       let lm = Cc["@mozilla.org/login-manager;1"].
                getService(Ci.nsILoginManager);
       // Clear all passwords for domain
@@ -127,7 +126,7 @@ this.ForgetAboutSite = {
       for (let i = 0; i < logins.length; i++)
         if (hasRootDomain(logins[i].hostname, aDomain))
           lm.removeLogin(logins[i]);
-    }).catch(ex => {
+    })().catch(ex => {
       // XXXehsan: is there a better way to do this rather than this
       // hacky comparison?
       if (ex.message.indexOf("User canceled Master Password entry") == -1) {
@@ -156,7 +155,7 @@ this.ForgetAboutSite = {
     }
 
     // Offline Storages
-    promises.push(Task.spawn(function*() {
+    promises.push((async function() {
       let qms = Cc["@mozilla.org/dom/quota-manager-service;1"].
                 getService(Ci.nsIQuotaManagerService);
       // delete data from both HTTP and HTTPS sites
@@ -171,12 +170,12 @@ this.ForgetAboutSite = {
                                    .createCodebasePrincipal(httpsURI, {});
       qms.clearStoragesForPrincipal(httpPrincipal, null, true);
       qms.clearStoragesForPrincipal(httpsPrincipal, null, true);
-    }).catch(ex => {
+    })().catch(ex => {
       throw new Error("Exception occured while clearing offline storages: " + ex);
     }));
 
     // Content Preferences
-    promises.push(Task.spawn(function*() {
+    promises.push((async function() {
       let cps2 = Cc["@mozilla.org/content-pref/service;1"].
                  getService(Ci.nsIContentPrefService2);
       cps2.removeBySubdomain(aDomain, null, {
@@ -189,20 +188,20 @@ this.ForgetAboutSite = {
         },
         handleError() {}
       });
-    }));
+    })());
 
     // Predictive network data - like cache, no way to clear this per
     // domain, so just trash it all
-    promises.push(Task.spawn(function*() {
+    promises.push((async function() {
       let np = Cc["@mozilla.org/network/predictor;1"].
                getService(Ci.nsINetworkPredictor);
       np.reset();
-    }).catch(ex => {
+    })().catch(ex => {
       throw new Error("Exception occured while clearing predictive network data: " + ex);
     }));
 
     // Push notifications.
-    promises.push(Task.spawn(function*() {
+    promises.push((async function() {
       var push = Cc["@mozilla.org/push/Service;1"].
                  getService(Ci.nsIPushService);
       push.clearForDomain(aDomain, status => {
@@ -210,10 +209,10 @@ this.ForgetAboutSite = {
           throw new Error("Exception occured while clearing push notifications: " + status);
         }
       });
-    }));
+    })());
 
     // HSTS and HPKP
-    promises.push(Task.spawn(function*() {
+    promises.push((async function() {
       let sss = Cc["@mozilla.org/ssservice;1"].
                 getService(Ci.nsISiteSecurityService);
       for (let type of [Ci.nsISiteSecurityService.HEADER_HSTS,
@@ -232,14 +231,14 @@ this.ForgetAboutSite = {
           }
         }
       }
-    }).catch(ex => {
+    })().catch(ex => {
       throw new Error("Exception thrown while clearing HSTS/HPKP: " + ex);
     }));
 
     let ErrorCount = 0;
     for (let promise of promises) {
       try {
-        yield promise;
+        await promise;
       } catch (ex) {
         Cu.reportError(ex);
         ErrorCount++;
@@ -247,5 +246,5 @@ this.ForgetAboutSite = {
     }
     if (ErrorCount !== 0)
       throw new Error(`There were a total of ${ErrorCount} errors during removal`);
-  })
+  }
 }

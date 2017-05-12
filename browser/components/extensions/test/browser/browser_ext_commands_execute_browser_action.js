@@ -98,25 +98,25 @@ function* testExecuteBrowserActionWithOptions(options = {}) {
   yield extension.unload();
 }
 
-add_task(function* test_execute_browser_action_with_popup() {
-  yield testExecuteBrowserActionWithOptions({
+add_task(async function test_execute_browser_action_with_popup() {
+  await testExecuteBrowserActionWithOptions({
     withPopup: true,
   });
 });
 
-add_task(function* test_execute_browser_action_without_popup() {
-  yield testExecuteBrowserActionWithOptions();
+add_task(async function test_execute_browser_action_without_popup() {
+  await testExecuteBrowserActionWithOptions();
 });
 
-add_task(function* test_execute_browser_action_in_hamburger_menu_with_popup() {
-  yield testExecuteBrowserActionWithOptions({
+add_task(async function test_execute_browser_action_in_hamburger_menu_with_popup() {
+  await testExecuteBrowserActionWithOptions({
     withPopup: true,
     inArea: CustomizableUI.AREA_PANEL,
   });
 });
 
-add_task(function* test_execute_browser_action_in_hamburger_menu_without_popup() {
-  yield testExecuteBrowserActionWithOptions({
+add_task(async function test_execute_browser_action_in_hamburger_menu_without_popup() {
+  await testExecuteBrowserActionWithOptions({
     inArea: CustomizableUI.AREA_PANEL,
   });
 });

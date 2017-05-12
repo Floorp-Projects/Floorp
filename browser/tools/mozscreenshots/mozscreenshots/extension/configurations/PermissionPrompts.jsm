@@ -9,7 +9,6 @@ this.EXPORTED_SYMBOLS = ["PermissionPrompts"];
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource:///modules/E10SUtils.jsm");
 Cu.import("resource://testing-common/ContentTask.jsm");
 Cu.import("resource://testing-common/BrowserTestUtils.jsm");
@@ -29,104 +28,104 @@ this.PermissionPrompts = {
 
   configurations: {
     shareDevices: {
-      applyConfig: Task.async(function*() {
-        yield closeLastTab();
-        yield clickOn("#webRTC-shareDevices");
-      }),
+      async applyConfig() {
+        await closeLastTab();
+        await clickOn("#webRTC-shareDevices");
+      },
     },
 
     shareMicrophone: {
-      applyConfig: Task.async(function*() {
-        yield closeLastTab();
-        yield clickOn("#webRTC-shareMicrophone");
-      }),
+      async applyConfig() {
+        await closeLastTab();
+        await clickOn("#webRTC-shareMicrophone");
+      },
     },
 
     shareVideoAndMicrophone: {
-      applyConfig: Task.async(function*() {
-        yield closeLastTab();
-        yield clickOn("#webRTC-shareDevices2");
-      }),
+      async applyConfig() {
+        await closeLastTab();
+        await clickOn("#webRTC-shareDevices2");
+      },
     },
 
     shareScreen: {
-      applyConfig: Task.async(function*() {
-        yield closeLastTab();
-        yield clickOn("#webRTC-shareScreen");
-      }),
+      async applyConfig() {
+        await closeLastTab();
+        await clickOn("#webRTC-shareScreen");
+      },
     },
 
     geo: {
-      applyConfig: Task.async(function*() {
-        yield closeLastTab();
-        yield clickOn("#geo");
-      }),
+      async applyConfig() {
+        await closeLastTab();
+        await clickOn("#geo");
+      },
     },
 
     persistentStorage: {
-      applyConfig: Task.async(function*() {
-        yield closeLastTab();
-        yield clickOn("#persistent-storage");
-      }),
+      async applyConfig() {
+        await closeLastTab();
+        await clickOn("#persistent-storage");
+      },
     },
 
     loginCapture: {
-      applyConfig: Task.async(function*() {
-        yield closeLastTab();
-        yield clickOn("#login-capture");
-      }),
+      async applyConfig() {
+        await closeLastTab();
+        await clickOn("#login-capture");
+      },
     },
 
     notifications: {
-      applyConfig: Task.async(function*() {
-        yield closeLastTab();
-        yield clickOn("#web-notifications");
-      }),
+      async applyConfig() {
+        await closeLastTab();
+        await clickOn("#web-notifications");
+      },
     },
 
     addons: {
-      applyConfig: Task.async(function*() {
+      async applyConfig() {
         Services.prefs.setBoolPref("xpinstall.whitelist.required", true);
 
-        yield closeLastTab();
-        yield clickOn("#addons");
-      }),
+        await closeLastTab();
+        await clickOn("#addons");
+      },
     },
 
     addonsNoWhitelist: {
-      applyConfig: Task.async(function*() {
+      async applyConfig() {
         Services.prefs.setBoolPref("xpinstall.whitelist.required", false);
 
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
         let notification = browserWindow.document.getElementById("addon-install-confirmation-notification");
 
-        yield closeLastTab();
-        yield clickOn("#addons");
+        await closeLastTab();
+        await clickOn("#addons");
 
         // We want to skip the progress-notification, so we wait for
         // the install-confirmation screen to be "not hidden" = shown.
-        yield BrowserTestUtils.waitForCondition(() => !notification.hasAttribute("hidden"),
+        await BrowserTestUtils.waitForCondition(() => !notification.hasAttribute("hidden"),
                                                 "addon install confirmation did not show", 200);
-      }),
+      },
     },
   },
 };
 
-function* closeLastTab() {
+async function closeLastTab() {
   if (!lastTab) {
     return;
   }
-  yield BrowserTestUtils.removeTab(lastTab);
+  await BrowserTestUtils.removeTab(lastTab);
   lastTab = null;
 }
 
-function* clickOn(selector) {
+async function clickOn(selector) {
   let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
 
   // Save the tab so we can close it later.
-  lastTab = yield BrowserTestUtils.openNewForegroundTab(browserWindow.gBrowser, URL);
+  lastTab = await BrowserTestUtils.openNewForegroundTab(browserWindow.gBrowser, URL);
 
-  yield ContentTask.spawn(lastTab.linkedBrowser, selector, function* (arg) {
+  await ContentTask.spawn(lastTab.linkedBrowser, selector, async function(arg) {
     E10SUtils.wrapHandlingUserInput(content, true, function() {
       let element = content.document.querySelector(arg);
       element.click();
@@ -134,5 +133,5 @@ function* clickOn(selector) {
   });
 
   // Wait for the popup to actually be shown before making the screenshot
-  yield BrowserTestUtils.waitForEvent(browserWindow.PopupNotifications.panel, "popupshown");
+  await BrowserTestUtils.waitForEvent(browserWindow.PopupNotifications.panel, "popupshown");
 }

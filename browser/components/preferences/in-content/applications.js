@@ -10,7 +10,6 @@
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/AppConstants.jsm");
-Components.utils.import("resource://gre/modules/Task.jsm");
 
 const TYPE_MAYBE_FEED = "application/vnd.mozilla.maybe.feed";
 const TYPE_MAYBE_VIDEO_FEED = "application/vnd.mozilla.maybe.video.feed";
@@ -1953,12 +1952,12 @@ var gApplicationsPane = {
   chooseFolder() {
     return this.chooseFolderTask().catch(Components.utils.reportError);
   },
-  chooseFolderTask: Task.async(function* () {
+  async chooseFolderTask() {
     let bundlePreferences = document.getElementById("bundlePreferences");
     let title = bundlePreferences.getString("chooseDownloadFolderTitle");
     let folderListPref = document.getElementById("browser.download.folderList");
-    let currentDirPref = yield this._indexToFolder(folderListPref.value);
-    let defDownloads = yield this._indexToFolder(1);
+    let currentDirPref = await this._indexToFolder(folderListPref.value);
+    let defDownloads = await this._indexToFolder(1);
     let fp = Components.classes["@mozilla.org/filepicker;1"].
              createInstance(Components.interfaces.nsIFilePicker);
 
@@ -1972,22 +1971,22 @@ var gApplicationsPane = {
       fp.displayDirectory = defDownloads;
     } else {
       // Fall back to Desktop
-      fp.displayDirectory = yield this._indexToFolder(0);
+      fp.displayDirectory = await this._indexToFolder(0);
     }
 
-    let result = yield new Promise(resolve => fp.open(resolve));
+    let result = await new Promise(resolve => fp.open(resolve));
     if (result != Components.interfaces.nsIFilePicker.returnOK) {
       return;
     }
 
     let downloadDirPref = document.getElementById("browser.download.dir");
     downloadDirPref.value = fp.file;
-    folderListPref.value = yield this._folderToIndex(fp.file);
+    folderListPref.value = await this._folderToIndex(fp.file);
     // Note, the real prefs will not be updated yet, so dnld manager's
     // userDownloadsDirectory may not return the right folder after
     // this code executes. displayDownloadDirPref will be called on
     // the assignment above to update the UI.
-  }),
+  },
 
   /**
    * Initializes the download folder display settings based on the user's
@@ -2000,7 +1999,7 @@ var gApplicationsPane = {
     return undefined;
   },
 
-  displayDownloadDirPrefTask: Task.async(function* () {
+  async displayDownloadDirPrefTask() {
     var folderListPref = document.getElementById("browser.download.folderList");
     var bundlePreferences = document.getElementById("bundlePreferences");
     var downloadFolder = document.getElementById("downloadFolder");
@@ -2030,14 +2029,14 @@ var gApplicationsPane = {
       // platforms and versions that don't support a default system downloads
       // folder. See nsDownloadManager for details.
       downloadFolder.label = bundlePreferences.getString("downloadsFolderName");
-      iconUrlSpec = fph.getURLSpecFromFile(yield this._indexToFolder(1));
+      iconUrlSpec = fph.getURLSpecFromFile(await this._indexToFolder(1));
     } else {
       // 'Desktop'
       downloadFolder.label = bundlePreferences.getString("desktopFolderName");
-      iconUrlSpec = fph.getURLSpecFromFile(yield this._getDownloadsFolder("Desktop"));
+      iconUrlSpec = fph.getURLSpecFromFile(await this._getDownloadsFolder("Desktop"));
     }
     downloadFolder.image = "moz-icon://" + iconUrlSpec + "?size=16";
-  }),
+  },
 
   /**
    * Returns the textual path of a folder in readable form.
@@ -2057,18 +2056,18 @@ var gApplicationsPane = {
    *
    * @throws if aFolder is not "Desktop" or "Downloads"
    */
-  _getDownloadsFolder: Task.async(function* (aFolder) {
+  async _getDownloadsFolder(aFolder) {
     switch (aFolder) {
       case "Desktop":
         var fileLoc = Components.classes["@mozilla.org/file/directory_service;1"]
                                     .getService(Components.interfaces.nsIProperties);
         return fileLoc.get("Desk", Components.interfaces.nsILocalFile);
       case "Downloads":
-        let downloadsDir = yield Downloads.getSystemDownloadsDirectory();
+        let downloadsDir = await Downloads.getSystemDownloadsDirectory();
         return new FileUtils.File(downloadsDir);
     }
     throw "ASSERTION FAILED: folder type should be 'Desktop' or 'Downloads'";
-  }),
+  },
 
   /**
    * Determines the type of the given folder.
@@ -2080,13 +2079,13 @@ var gApplicationsPane = {
    *          1 if aFolder is the Downloads folder,
    *          2 otherwise
    */
-  _folderToIndex: Task.async(function* (aFolder) {
-    if (!aFolder || aFolder.equals(yield this._getDownloadsFolder("Desktop")))
+  async _folderToIndex(aFolder) {
+    if (!aFolder || aFolder.equals(await this._getDownloadsFolder("Desktop")))
       return 0;
-    else if (aFolder.equals(yield this._getDownloadsFolder("Downloads")))
+    else if (aFolder.equals(await this._getDownloadsFolder("Downloads")))
       return 1;
     return 2;
-  }),
+  },
 
   /**
    * Converts an integer into the corresponding folder.
@@ -2097,15 +2096,15 @@ var gApplicationsPane = {
    *          the Downloads folder if aIndex == 1,
    *          the folder stored in browser.download.dir
    */
-  _indexToFolder: Task.async(function* (aIndex) {
+  async _indexToFolder(aIndex) {
     switch (aIndex) {
       case 0:
-        return yield this._getDownloadsFolder("Desktop");
+        return await this._getDownloadsFolder("Desktop");
       case 1:
-        return yield this._getDownloadsFolder("Downloads");
+        return await this._getDownloadsFolder("Downloads");
     }
     var currentDirPref = document.getElementById("browser.download.dir");
     return currentDirPref.value;
-  })
+  }
 
 };

@@ -201,7 +201,7 @@ var StarUI = {
 
   _overlayLoaded: false,
   _overlayLoading: false,
-  showEditBookmarkPopup: Task.async(function* (aNode, aAnchorElement, aPosition, aIsNewBookmark) {
+  async showEditBookmarkPopup(aNode, aAnchorElement, aPosition, aIsNewBookmark) {
     // Slow double-clicks (not true double-clicks) shouldn't
     // cause the panel to flicker.
     if (this.panel.state == "showing" ||
@@ -218,11 +218,11 @@ var StarUI = {
     if (typeof(aNode) == "number") {
       let itemId = aNode;
       if (PlacesUIUtils.useAsyncTransactions) {
-        let guid = yield PlacesUtils.promiseItemGuid(itemId);
-        aNode = yield PlacesUIUtils.promiseNodeLike(guid);
+        let guid = await PlacesUtils.promiseItemGuid(itemId);
+        aNode = await PlacesUIUtils.promiseNodeLike(guid);
       } else {
         aNode = { itemId };
-        yield PlacesUIUtils.completeNodeLikeObjectForItemId(aNode);
+        await PlacesUIUtils.completeNodeLikeObjectForItemId(aNode);
       }
     }
 
@@ -252,9 +252,9 @@ var StarUI = {
         this._doShowEditBookmarkPanel(aNode, aAnchorElement, aPosition);
       }
     );
-  }),
+  },
 
-  _doShowEditBookmarkPanel: Task.async(function* (aNode, aAnchorElement, aPosition) {
+  async _doShowEditBookmarkPanel(aNode, aAnchorElement, aPosition) {
     if (this.panel.state != "closed")
       return;
 
@@ -317,7 +317,7 @@ var StarUI = {
                                , focusedElement: "preferred"});
 
     this.panel.openPopup(aAnchorElement, aPosition);
-  }),
+  },
 
   panelShown:
   function SU_panelShown(aEvent) {
@@ -357,8 +357,8 @@ var StarUI = {
       return;
     if (PlacesUIUtils.useAsyncTransactions) {
       this._batchBlockingDeferred = PromiseUtils.defer();
-      PlacesTransactions.batch(function* () {
-        yield this._batchBlockingDeferred.promise;
+      PlacesTransactions.batch(async function() {
+        await this._batchBlockingDeferred.promise;
       }.bind(this));
     } else {
       PlacesUtils.transactionManager.beginBatch(null);
@@ -392,9 +392,9 @@ var PlacesCommandHook = {
    * @param [optional] aShowEditUI
    *        whether or not to show the edit-bookmark UI for the bookmark item
    */
-  bookmarkPage: Task.async(function* (aBrowser, aParent, aShowEditUI) {
+  async bookmarkPage(aBrowser, aParent, aShowEditUI) {
     if (PlacesUIUtils.useAsyncTransactions) {
-      yield this._bookmarkPagePT(aBrowser, aParent, aShowEditUI);
+      await this._bookmarkPagePT(aBrowser, aParent, aShowEditUI);
       return;
     }
 
@@ -407,7 +407,7 @@ var PlacesCommandHook = {
       var description;
       var charset;
 
-      let docInfo = yield this._getPageDetails(aBrowser);
+      let docInfo = await this._getPageDetails(aBrowser);
 
       try {
         title = docInfo.isErrorPage ? PlacesUtils.history.getPageTitle(uri)
@@ -461,28 +461,28 @@ var PlacesCommandHook = {
     } else {
       StarUI.showEditBookmarkPopup(itemId, aBrowser, "overlap", isNewBookmark);
     }
-  }),
+  },
 
   // TODO: Replace bookmarkPage code with this function once legacy
   // transactions are removed.
-  _bookmarkPagePT: Task.async(function* (aBrowser, aParentId, aShowEditUI) {
+  async _bookmarkPagePT(aBrowser, aParentId, aShowEditUI) {
     let url = new URL(aBrowser.currentURI.spec);
-    let info = yield PlacesUtils.bookmarks.fetch({ url });
+    let info = await PlacesUtils.bookmarks.fetch({ url });
     let isNewBookmark = !info;
     if (!info) {
       let parentGuid = aParentId !== undefined ?
-                         yield PlacesUtils.promiseItemGuid(aParentId) :
+                         await PlacesUtils.promiseItemGuid(aParentId) :
                          PlacesUtils.bookmarks.unfiledGuid;
       info = { url, parentGuid };
       // Bug 1148838 - Make this code work for full page plugins.
       let description = null;
       let charset = null;
 
-      let docInfo = yield this._getPageDetails(aBrowser);
+      let docInfo = await this._getPageDetails(aBrowser);
 
       try {
         info.title = docInfo.isErrorPage ?
-          (yield PlacesUtils.promisePlaceInfo(aBrowser.currentURI)).title :
+          (await PlacesUtils.promisePlaceInfo(aBrowser.currentURI)).title :
           aBrowser.contentTitle;
         info.title = info.title || url.href;
         description = docInfo.description;
@@ -503,7 +503,7 @@ var PlacesCommandHook = {
                             , value: description }];
       }
 
-      info.guid = yield PlacesTransactions.NewBookmark(info).transact();
+      info.guid = await PlacesTransactions.NewBookmark(info).transact();
 
       // Set the character-set
       if (charset && !PrivateBrowsingUtils.isBrowserPrivate(aBrowser))
@@ -517,7 +517,7 @@ var PlacesCommandHook = {
     if (!aShowEditUI)
       return;
 
-    let node = yield PlacesUIUtils.promiseNodeLikeFromFetchInfo(info);
+    let node = await PlacesUIUtils.promiseNodeLikeFromFetchInfo(info);
 
     // Try to dock the panel to:
     // 1. the bookmarks menu button
@@ -536,7 +536,7 @@ var PlacesCommandHook = {
     } else {
       StarUI.showEditBookmarkPopup(node, aBrowser, "overlap", isNewBookmark);
     }
-  }),
+  },
 
   _getPageDetails(browser) {
     return new Promise(resolve => {
@@ -569,8 +569,8 @@ var PlacesCommandHook = {
    * @param [optional] aDescription
    *        The linked page description, if available
    */
-  bookmarkLink: Task.async(function* (aParentId, aURL, aTitle, aDescription = "") {
-    let node = yield PlacesUIUtils.fetchNodeLike({ url: aURL });
+  async bookmarkLink(aParentId, aURL, aTitle, aDescription = "") {
+    let node = await PlacesUIUtils.fetchNodeLike({ url: aURL });
     if (node) {
       PlacesUIUtils.showBookmarkDialog({ action: "edit"
                                        , node
@@ -592,7 +592,7 @@ var PlacesCommandHook = {
                                                    , "loadInSidebar"
                                                    , "keyword" ]
                                      }, window.top);
-  }),
+  },
 
   /**
    * List of nsIURI objects characterizing the tabs currently open in the
@@ -655,7 +655,7 @@ var PlacesCommandHook = {
    * @subtitle  subtitle
    *            A short description of the feed. Optional.
    */
-  addLiveBookmark: Task.async(function *(url, feedTitle, feedSubtitle) {
+  async addLiveBookmark(url, feedTitle, feedSubtitle) {
     let toolbarIP = new InsertionPoint(PlacesUtils.toolbarFolderId,
                                        PlacesUtils.bookmarks.DEFAULT_INDEX,
                                        Components.interfaces.nsITreeView.DROP_ON);
@@ -664,7 +664,7 @@ var PlacesCommandHook = {
     let title = feedTitle || gBrowser.contentTitle;
     let description = feedSubtitle;
     if (!description) {
-      description = (yield this._getPageDetails(gBrowser.selectedBrowser)).description;
+      description = (await this._getPageDetails(gBrowser.selectedBrowser)).description;
     }
 
     PlacesUIUtils.showBookmarkDialog({ action: "add"
@@ -678,7 +678,7 @@ var PlacesCommandHook = {
                                                    , "siteLocation"
                                                    , "description" ]
                                      }, window);
-  }),
+  },
 
   /**
    * Opens the Places Organizer.

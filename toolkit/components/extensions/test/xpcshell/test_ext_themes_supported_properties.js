@@ -61,8 +61,8 @@ function checkProperties(actual, expected) {
   }
 }
 
-add_task(function* test_theme_supported_properties() {
-  let additionalInvalidProperties = yield getAdditionalInvalidManifestProperties();
+add_task(async function test_theme_supported_properties() {
+  let additionalInvalidProperties = await getAdditionalInvalidManifestProperties();
   let actual = validateThemeManifest([...baseManifestProperties, ...additionalInvalidProperties]);
   let expected = ["background", "permissions", "content_scripts", ...additionalInvalidProperties];
   checkProperties(actual, expected);

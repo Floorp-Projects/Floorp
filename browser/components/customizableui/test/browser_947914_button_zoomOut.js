@@ -6,13 +6,13 @@
 
 var initialPageZoom = ZoomManager.zoom;
 
-add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   info("Check zoom out button existence and functionality");
 
   is(initialPageZoom, 1, "Initial zoom factor should be 1");
 
-  yield PanelUI.show();
+  await PanelUI.show();
   info("Menu panel was opened");
 
   let zoomOutButton = document.getElementById("zoom-out-button");
@@ -28,11 +28,11 @@ add_task(function*() {
   // close the panel
   let panelHiddenPromise = promisePanelHidden(window);
   PanelUI.hide();
-  yield panelHiddenPromise;
+  await panelHiddenPromise;
   info("Menu panel was closed");
 });
 
-add_task(function* asyncCleanup() {
+add_task(async function asyncCleanup() {
   // reset zoom level
   ZoomManager.zoom = initialPageZoom;
   info("Zoom level was restored");

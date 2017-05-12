@@ -3,7 +3,7 @@
 XPCOMUtils.defineLazyModuleGetter(this, "ctypes",
                                   "resource://gre/modules/ctypes.jsm");
 
-add_task(function* () {
+add_task(async function() {
   let migrator = MigrationUtils.getMigrator("ie");
   // Sanity check for the source.
   Assert.ok(migrator.sourceExists);
@@ -100,7 +100,7 @@ add_task(function* () {
                "There are no cookies initially");
 
   // Migrate cookies.
-  yield promiseMigration(migrator, MigrationUtils.resourceTypes.COOKIES);
+  await promiseMigration(migrator, MigrationUtils.resourceTypes.COOKIES);
 
   Assert.equal(Services.cookies.countCookiesFromHost(COOKIE.host), 1,
                "Migrated the expected number of cookies");

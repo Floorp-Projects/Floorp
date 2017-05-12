@@ -14,8 +14,8 @@
  * fail to load as early as expected, but don't load at any illegal time.
  */
 
-add_task(function* testExecuteScript() {
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank", true);
+add_task(async function testExecuteScript() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank", true);
 
   async function background() {
     let tab;
@@ -97,11 +97,11 @@ add_task(function* testExecuteScript() {
     background,
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitFinish("executeScript-runAt");
+  await extension.awaitFinish("executeScript-runAt");
 
-  yield extension.unload();
+  await extension.unload();
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });

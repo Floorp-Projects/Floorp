@@ -69,7 +69,7 @@ function overrideCertDB() {
                             CERTDB_CONTRACTID, certDBFactory);
 }
 
-add_task(function*() {
+add_task(async function() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
   startupManager();
 
@@ -77,6 +77,6 @@ add_task(function*() {
   // certificate database
   overrideCertDB();
 
-  let install = yield AddonManager.getInstallForFile(do_get_addon("test_bootstrap1_1"));
+  let install = await AddonManager.getInstallForFile(do_get_addon("test_bootstrap1_1"));
   do_check_eq(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
 });

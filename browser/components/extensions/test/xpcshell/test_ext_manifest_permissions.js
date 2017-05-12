@@ -38,8 +38,8 @@ function* testPermission(options) {
   yield extension.unload();
 }
 
-add_task(function* test_browserAction() {
-  yield testPermission({
+add_task(async function test_browserAction() {
+  await testPermission({
     namespace: "browserAction",
     manifest: {
       browser_action: {},
@@ -47,8 +47,8 @@ add_task(function* test_browserAction() {
   });
 });
 
-add_task(function* test_pageAction() {
-  yield testPermission({
+add_task(async function test_pageAction() {
+  await testPermission({
     namespace: "pageAction",
     manifest: {
       page_action: {},

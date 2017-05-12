@@ -1,20 +1,20 @@
 "use strict";
 
-add_task(function* () {
+add_task(async function() {
   let tab = gBrowser.selectedTab = gBrowser.addTab("about:mozilla");
-  yield promiseBrowserLoaded(gBrowser.selectedBrowser);
+  await promiseBrowserLoaded(gBrowser.selectedBrowser);
 
   let win = gBrowser.replaceTabWithWindow(tab);
-  yield promiseDelayedStartupFinished(win);
-  yield promiseBrowserHasURL(win.gBrowser.browsers[0], "about:mozilla");
+  await promiseDelayedStartupFinished(win);
+  await promiseBrowserHasURL(win.gBrowser.browsers[0], "about:mozilla");
 
   win.duplicateTabIn(win.gBrowser.selectedTab, "tab");
-  yield promiseTabRestored(win.gBrowser.tabs[1]);
+  await promiseTabRestored(win.gBrowser.tabs[1]);
 
   let browser = win.gBrowser.browsers[1];
   is(browser.currentURI.spec, "about:mozilla", "tab was duplicated");
 
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 });
 
 function promiseDelayedStartupFinished(win) {

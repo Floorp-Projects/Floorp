@@ -73,13 +73,13 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_notInstalled() {
+add_task(async function test_notInstalled() {
   for (let addon of gMockAddons.values()) {
     gPrefs.setCharPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, addon.id), "");
     gPrefs.setBoolPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_ENABLED, addon.id), false);
   }
 
-  let addons = yield promiseAddonsByIDs([...gMockAddons.keys()]);
+  let addons = await promiseAddonsByIDs([...gMockAddons.keys()]);
   Assert.equal(addons.length, gMockAddons.size);
 
   for (let addon of addons) {
@@ -125,12 +125,12 @@ add_task(function* test_notInstalled() {
   }
 });
 
-add_task(function* test_installed() {
+add_task(async function test_installed() {
   const TEST_DATE = new Date(2013, 0, 1, 12);
   const TEST_VERSION = "1.2.3.4";
   const TEST_TIME_SEC = Math.round(TEST_DATE.getTime() / 1000);
 
-  let addons = yield promiseAddonsByIDs([...gMockAddons.keys()]);
+  let addons = await promiseAddonsByIDs([...gMockAddons.keys()]);
   Assert.equal(addons.length, gMockAddons.size);
 
   for (let addon of addons) {
@@ -174,8 +174,8 @@ add_task(function* test_installed() {
   }
 });
 
-add_task(function* test_enable() {
-  let addons = yield promiseAddonsByIDs([...gMockAddons.keys()]);
+add_task(async function test_enable() {
+  let addons = await promiseAddonsByIDs([...gMockAddons.keys()]);
   Assert.equal(addons.length, gMockAddons.size);
 
   for (let addon of addons) {
@@ -190,8 +190,8 @@ add_task(function* test_enable() {
   }
 });
 
-add_task(function* test_globalEmeDisabled() {
-  let addons = yield promiseAddonsByIDs([...gMockEmeAddons.keys()]);
+add_task(async function test_globalEmeDisabled() {
+  let addons = await promiseAddonsByIDs([...gMockEmeAddons.keys()]);
   Assert.equal(addons.length, gMockEmeAddons.size);
 
   gPrefs.setBoolPref(GMPScope.GMPPrefs.KEY_EME_ENABLED, false);
@@ -209,8 +209,8 @@ add_task(function* test_globalEmeDisabled() {
   GMPScope.GMPProvider.startup();
 });
 
-add_task(function* test_autoUpdatePrefPersistance() {
-  let addons = yield promiseAddonsByIDs([...gMockAddons.keys()]);
+add_task(async function test_autoUpdatePrefPersistance() {
+  let addons = await promiseAddonsByIDs([...gMockAddons.keys()]);
   Assert.equal(addons.length, gMockAddons.size);
 
   for (let addon of addons) {
@@ -259,7 +259,7 @@ if (![].includes) {
   }
 }
 
-add_task(function* test_pluginRegistration() {
+add_task(async function test_pluginRegistration() {
   const TEST_VERSION = "1.2.3.4";
 
   let profD = do_get_profile();
@@ -298,7 +298,7 @@ add_task(function* test_pluginRegistration() {
     gPrefs.setCharPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, addon.id),
                        TEST_VERSION);
     clearPaths();
-    yield promiseRestartManager();
+    await promiseRestartManager();
     Assert.equal(addedPaths.indexOf(file.path), -1);
     Assert.deepEqual(removedPaths, [file.path]);
 
@@ -309,14 +309,14 @@ add_task(function* test_pluginRegistration() {
     gPrefs.setCharPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, addon.id),
                        TEST_VERSION);
     clearPaths();
-    yield promiseRestartManager();
+    await promiseRestartManager();
     Assert.notEqual(addedPaths.indexOf(file.path), -1);
     Assert.deepEqual(removedPaths, []);
 
     // Setting the ABI to something invalid should cause plugin to be removed at startup.
     clearPaths();
     gPrefs.setCharPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_ABI, addon.id), "invalid-ABI");
-    yield promiseRestartManager();
+    await promiseRestartManager();
     Assert.equal(addedPaths.indexOf(file.path), -1);
     Assert.deepEqual(removedPaths, [file.path]);
 
@@ -325,7 +325,7 @@ add_task(function* test_pluginRegistration() {
     gPrefs.setCharPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, addon.id),
                        TEST_VERSION);
     gPrefs.setCharPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_ABI, addon.id), UpdateUtils.ABI);
-    yield promiseRestartManager();
+    await promiseRestartManager();
     Assert.notEqual(addedPaths.indexOf(file.path), -1);
     Assert.deepEqual(removedPaths, []);
 
@@ -337,7 +337,7 @@ add_task(function* test_pluginRegistration() {
 
     // Restarting with no version set should not trigger registration.
     clearPaths();
-    yield promiseRestartManager();
+    await promiseRestartManager();
     Assert.equal(addedPaths.indexOf(file.path), -1);
     Assert.equal(removedPaths.indexOf(file.path), -1);
 
@@ -364,7 +364,7 @@ add_task(function* test_pluginRegistration() {
 
     // Restarting with the plugin disabled should not cause registration.
     clearPaths();
-    yield promiseRestartManager();
+    await promiseRestartManager();
     Assert.equal(addedPaths.indexOf(file.path), -1);
     Assert.equal(removedPaths.indexOf(file.path), -1);
 
@@ -377,7 +377,7 @@ add_task(function* test_pluginRegistration() {
   }
 });
 
-add_task(function* test_periodicUpdate() {
+add_task(async function test_periodicUpdate() {
   Object.defineProperty(GMPScope, "GMPInstallManager", {
     value: MockGMPInstallManager,
     writable: true,
@@ -385,7 +385,7 @@ add_task(function* test_periodicUpdate() {
     configurable: true
   });
 
-  let addons = yield promiseAddonsByIDs([...gMockAddons.keys()]);
+  let addons = await promiseAddonsByIDs([...gMockAddons.keys()]);
   Assert.equal(addons.length, gMockAddons.size);
 
   for (let addon of addons) {
@@ -394,20 +394,20 @@ add_task(function* test_periodicUpdate() {
     addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DISABLE;
     gPrefs.setIntPref(GMPScope.GMPPrefs.KEY_UPDATE_LAST_CHECK, 0);
     let result =
-      yield addon.findUpdates({}, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
+      await addon.findUpdates({}, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
     Assert.strictEqual(result, false);
 
     addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_ENABLE;
     gPrefs.setIntPref(GMPScope.GMPPrefs.KEY_UPDATE_LAST_CHECK, Date.now() / 1000 - 60);
     result =
-      yield addon.findUpdates({}, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
+      await addon.findUpdates({}, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
     Assert.strictEqual(result, false);
 
     gPrefs.setIntPref(GMPScope.GMPPrefs.KEY_UPDATE_LAST_CHECK,
                      Date.now() / 1000 - 2 * GMPScope.SEC_IN_A_DAY);
     gInstalledAddonId = "";
     result =
-      yield addon.findUpdates({}, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
+      await addon.findUpdates({}, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
     Assert.strictEqual(result, true);
     Assert.equal(gInstalledAddonId, addon.id);
   }

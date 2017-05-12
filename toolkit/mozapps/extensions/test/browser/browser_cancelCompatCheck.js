@@ -106,9 +106,9 @@ function promise_addons_by_ids(aAddonIDs) {
   return deferred.promise;
 }
 
-function* promise_uninstall_test_addons() {
+async function promise_uninstall_test_addons() {
   info("Starting add-on uninstalls");
-  let addons = yield promise_addons_by_ids([ao1.id, ao2.id, ao3.id, ao4.id, ao5.id,
+  let addons = await promise_addons_by_ids([ao1.id, ao2.id, ao3.id, ao4.id, ao5.id,
                                             ao6.id, ao7.id, ao8.id, ao9.id, ao10.id]);
   let deferred = Promise.defer();
   let uninstallCount = addons.length;
@@ -130,7 +130,7 @@ function* promise_uninstall_test_addons() {
     else
       listener.onUninstalled(null);
   }
-  yield deferred.promise;
+  await deferred.promise;
 }
 
 // Returns promise{window}, resolves with a handle to the compatibility
@@ -207,20 +207,20 @@ var inactiveAddonIds = [
 ];
 
 // Make sure the addons in the list are not installed
-function* check_addons_uninstalled(aAddonList) {
-  let foundList = yield promise_addons_by_ids(aAddonList.map(a => a.id));
+async function check_addons_uninstalled(aAddonList) {
+  let foundList = await promise_addons_by_ids(aAddonList.map(a => a.id));
   for (let i = 0; i < aAddonList.length; i++) {
     ok(!foundList[i], "Addon " + aAddonList[i].id + " is not installed");
   }
   info("Add-on uninstall check complete");
-  yield true;
+  await true;
 }
 
 // Test what happens when the user cancels during AddonRepository.repopulateCache()
 // Add-ons that have updates available should not update if they were disabled before
 // For this test, addon8 became disabled during update and addon9 was previously disabled,
 // so addon8 should update and addon9 should not
-add_task(function* cancel_during_repopulate() {
+add_task(async function cancel_during_repopulate() {
   let a5, a8, a9, a10;
 
   Services.prefs.setBoolPref(PREF_STRICT_COMPAT, true);
@@ -235,49 +235,49 @@ add_task(function* cancel_during_repopulate() {
   // sure we cancel the dialog before we get the data we want to refill our
   // AddonRepository cache
   let addonList = [ao5, ao8, ao9, ao10];
-  yield promise_install_test_addons(addonList,
+  await promise_install_test_addons(addonList,
                                     TESTROOT + "cancelCompatCheck.sjs?500");
 
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
   Services.prefs.setCharPref(PREF_GETADDONS_BYIDS, TESTROOT + "browser_bug557956.xml");
 
-  [a5, a8, a9] = yield promise_addons_by_ids([ao5.id, ao8.id, ao9.id]);
+  [a5, a8, a9] = await promise_addons_by_ids([ao5.id, ao8.id, ao9.id]);
   ok(!a5.isCompatible, "addon5 should not be compatible");
   ok(!a8.isCompatible, "addon8 should not be compatible");
   ok(!a9.isCompatible, "addon9 should not be compatible");
 
-  let compatWindow = yield promise_open_compatibility_window([ao5.id, ao8.id]);
+  let compatWindow = await promise_open_compatibility_window([ao5.id, ao8.id]);
   var doc = compatWindow.document;
-  yield promise_page(compatWindow, "versioninfo");
+  await promise_page(compatWindow, "versioninfo");
 
   // Brief delay to let the update window finish requesting all add-ons and start
   // reloading the addon repository
-  yield delayMS(50);
+  await delayMS(50);
 
   info("Cancel the compatibility check dialog");
   var button = doc.documentElement.getButton("cancel");
   EventUtils.synthesizeMouse(button, 2, 2, { }, compatWindow);
 
   info("Waiting for installs to complete");
-  yield installsDone;
+  await installsDone;
   ok(!repo.AddonRepository.isSearching, "Background installs are done");
 
   // There should be no active updates
   let getInstalls = Promise.defer();
   AddonManager.getAllInstalls(getInstalls.resolve);
-  let installs = yield getInstalls.promise;
+  let installs = await getInstalls.promise;
   is(installs.length, 0, "There should be no active installs after background installs are done");
 
   // addon8 should have updated in the background,
   // addon9 was listed as previously disabled so it should not have updated
-  [a5, a8, a9, a10] = yield promise_addons_by_ids([ao5.id, ao8.id, ao9.id, ao10.id]);
+  [a5, a8, a9, a10] = await promise_addons_by_ids([ao5.id, ao8.id, ao9.id, ao10.id]);
   ok(a5.isCompatible, "addon5 should be compatible");
   ok(a8.isCompatible, "addon8 should have been upgraded");
   ok(!a9.isCompatible, "addon9 should not have been upgraded");
   ok(!a10.isCompatible, "addon10 should not be compatible");
 
   info("Updates done");
-  yield promise_uninstall_test_addons();
+  await promise_uninstall_test_addons();
   info("done uninstalling add-ons");
 });
 
@@ -285,7 +285,7 @@ add_task(function* cancel_during_repopulate() {
 // calls in gVersionInfoPage_onPageShow() to complete
 // For this test, both addon8 and addon9 were disabled by this update, but addon8
 // is set to not auto-update, so only addon9 should update in the background
-add_task(function* cancel_during_findUpdates() {
+add_task(async function cancel_during_findUpdates() {
   let a5, a8, a9;
 
   Services.prefs.setBoolPref(PREF_STRICT_COMPAT, true);
@@ -300,52 +300,52 @@ add_task(function* cancel_during_findUpdates() {
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, false);
   // No delay on the .sjs this time because we want the cache to repopulate
   let addonList = [ao3, ao5, ao6, ao7, ao8, ao9];
-  yield promise_install_test_addons(addonList,
+  await promise_install_test_addons(addonList,
                                     TESTROOT + "cancelCompatCheck.sjs");
 
-  [a8] = yield promise_addons_by_ids([ao8.id]);
+  [a8] = await promise_addons_by_ids([ao8.id]);
   a8.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DISABLE;
 
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
-  let compatWindow = yield promise_open_compatibility_window(inactiveAddonIds);
+  let compatWindow = await promise_open_compatibility_window(inactiveAddonIds);
   var doc = compatWindow.document;
-  yield promise_page(compatWindow, "versioninfo");
+  await promise_page(compatWindow, "versioninfo");
 
   info("Waiting for repository-data-updated");
-  yield observeUpdateDone;
+  await observeUpdateDone;
 
   // Quick wait to make sure the findUpdates calls get queued
-  yield delayMS(5);
+  await delayMS(5);
 
   info("Cancel the compatibility check dialog");
   var button = doc.documentElement.getButton("cancel");
   EventUtils.synthesizeMouse(button, 2, 2, { }, compatWindow);
 
   info("Waiting for installs to complete 2");
-  yield installsDone;
+  await installsDone;
   ok(!repo.AddonRepository.isSearching, "Background installs are done 2");
 
   // addon8 should have updated in the background,
   // addon9 was listed as previously disabled so it should not have updated
-  [a5, a8, a9] = yield promise_addons_by_ids([ao5.id, ao8.id, ao9.id]);
+  [a5, a8, a9] = await promise_addons_by_ids([ao5.id, ao8.id, ao9.id]);
   ok(a5.isCompatible, "addon5 should be compatible");
   ok(!a8.isCompatible, "addon8 should not have been upgraded");
   ok(a9.isCompatible, "addon9 should have been upgraded");
 
   let getInstalls = Promise.defer();
   AddonManager.getAllInstalls(getInstalls.resolve);
-  let installs = yield getInstalls.promise;
+  let installs = await getInstalls.promise;
   is(installs.length, 0, "There should be no active installs after the dialog is cancelled 2");
 
   info("findUpdates done");
-  yield promise_uninstall_test_addons();
+  await promise_uninstall_test_addons();
 });
 
 // Cancelling during the 'mismatch' screen allows add-ons that can auto-update
 // to continue updating in the background and cancels any other updates
 // Same conditions as the previous test - addon8 and addon9 have updates available,
 // addon8 is set to not auto-update so only addon9 should become compatible
-add_task(function* cancel_mismatch() {
+add_task(async function cancel_mismatch() {
   let a3, a5, a7, a8, a9;
 
   Services.prefs.setBoolPref(PREF_STRICT_COMPAT, true);
@@ -359,35 +359,35 @@ add_task(function* cancel_mismatch() {
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, false);
   // No delay on the .sjs this time because we want the cache to repopulate
   let addonList = [ao3, ao5, ao6, ao7, ao8, ao9];
-  yield promise_install_test_addons(addonList,
+  await promise_install_test_addons(addonList,
                                     TESTROOT + "cancelCompatCheck.sjs");
 
-  [a8] = yield promise_addons_by_ids([ao8.id]);
+  [a8] = await promise_addons_by_ids([ao8.id]);
   a8.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DISABLE;
 
   // Check that the addons start out not compatible.
-  [a3, a7, a8, a9] = yield promise_addons_by_ids([ao3.id, ao7.id, ao8.id, ao9.id]);
+  [a3, a7, a8, a9] = await promise_addons_by_ids([ao3.id, ao7.id, ao8.id, ao9.id]);
   ok(!a3.isCompatible, "addon3 should not be compatible");
   ok(!a7.isCompatible, "addon7 should not be compatible");
   ok(!a8.isCompatible, "addon8 should not be compatible");
   ok(!a9.isCompatible, "addon9 should not be compatible");
 
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
-  let compatWindow = yield promise_open_compatibility_window(inactiveAddonIds);
+  let compatWindow = await promise_open_compatibility_window(inactiveAddonIds);
   var doc = compatWindow.document;
   info("Wait for mismatch page");
-  yield promise_page(compatWindow, "mismatch");
+  await promise_page(compatWindow, "mismatch");
   info("Click the Don't Check button");
   var button = doc.documentElement.getButton("cancel");
   EventUtils.synthesizeMouse(button, 2, 2, { }, compatWindow);
 
-  yield promise_window_close(compatWindow);
+  await promise_window_close(compatWindow);
   info("Waiting for installs to complete in cancel_mismatch");
-  yield installsDone;
+  await installsDone;
 
   // addon8 should not have updated in the background,
   // addon9 was listed as previously disabled so it should not have updated
-  [a5, a8, a9] = yield promise_addons_by_ids([ao5.id, ao8.id, ao9.id]);
+  [a5, a8, a9] = await promise_addons_by_ids([ao5.id, ao8.id, ao9.id]);
   ok(a5.isCompatible, "addon5 should be compatible");
   ok(!a8.isCompatible, "addon8 should not have been upgraded");
   ok(a9.isCompatible, "addon9 should have been upgraded");
@@ -395,16 +395,16 @@ add_task(function* cancel_mismatch() {
   // Make sure there are no pending addon installs
   let pInstalls = Promise.defer();
   AddonManager.getAllInstalls(pInstalls.resolve);
-  let installs = yield pInstalls.promise;
+  let installs = await pInstalls.promise;
   ok(installs.length == 0, "No remaining add-on installs (" + installs.toSource() + ")");
 
-  yield promise_uninstall_test_addons();
-  yield check_addons_uninstalled(addonList);
+  await promise_uninstall_test_addons();
+  await check_addons_uninstalled(addonList);
 });
 
 // Cancelling during the 'mismatch' screen with only add-ons that have
 // no updates available
-add_task(function* cancel_mismatch_no_updates() {
+add_task(async function cancel_mismatch_no_updates() {
   let a3, a5, a6
 
   Services.prefs.setBoolPref(PREF_STRICT_COMPAT, true);
@@ -414,27 +414,27 @@ add_task(function* cancel_mismatch_no_updates() {
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, false);
   // No delay on the .sjs this time because we want the cache to repopulate
   let addonList = [ao3, ao5, ao6];
-  yield promise_install_test_addons(addonList,
+  await promise_install_test_addons(addonList,
                                     TESTROOT + "cancelCompatCheck.sjs");
 
   // Check that the addons start out not compatible.
-  [a3, a5, a6] = yield promise_addons_by_ids([ao3.id, ao5.id, ao6.id]);
+  [a3, a5, a6] = await promise_addons_by_ids([ao3.id, ao5.id, ao6.id]);
   ok(!a3.isCompatible, "addon3 should not be compatible");
   ok(!a5.isCompatible, "addon5 should not be compatible");
   ok(!a6.isCompatible, "addon6 should not be compatible");
 
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
-  let compatWindow = yield promise_open_compatibility_window([ao3.id, ao5.id, ao6.id]);
+  let compatWindow = await promise_open_compatibility_window([ao3.id, ao5.id, ao6.id]);
   var doc = compatWindow.document;
   info("Wait for mismatch page");
-  yield promise_page(compatWindow, "mismatch");
+  await promise_page(compatWindow, "mismatch");
   info("Click the Don't Check button");
   var button = doc.documentElement.getButton("cancel");
   EventUtils.synthesizeMouse(button, 2, 2, { }, compatWindow);
 
-  yield promise_window_close(compatWindow);
+  await promise_window_close(compatWindow);
 
-  [a3, a5, a6] = yield promise_addons_by_ids([ao3.id, ao5.id, ao6.id]);
+  [a3, a5, a6] = await promise_addons_by_ids([ao3.id, ao5.id, ao6.id]);
   ok(!a3.isCompatible, "addon3 should not be compatible");
   ok(a5.isCompatible, "addon5 should have become compatible");
   ok(a6.isCompatible, "addon6 should have become compatible");
@@ -442,9 +442,9 @@ add_task(function* cancel_mismatch_no_updates() {
   // Make sure there are no pending addon installs
   let pInstalls = Promise.defer();
   AddonManager.getAllInstalls(pInstalls.resolve);
-  let installs = yield pInstalls.promise;
+  let installs = await pInstalls.promise;
   ok(installs.length == 0, "No remaining add-on installs (" + installs.toSource() + ")");
 
-  yield promise_uninstall_test_addons();
-  yield check_addons_uninstalled(addonList);
+  await promise_uninstall_test_addons();
+  await check_addons_uninstalled(addonList);
 });

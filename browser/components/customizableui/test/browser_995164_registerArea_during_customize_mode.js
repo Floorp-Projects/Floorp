@@ -9,8 +9,8 @@ const TOOLBARID = "test-toolbar-added-during-customize-mode";
 // The ID of a button that is not placed (ie, is in the palette) by default
 const kNonPlacedWidgetId = "open-file-button";
 
-add_task(function*() {
-  yield startCustomizing();
+add_task(async function() {
+  await startCustomizing();
   let toolbar = createToolbarWithPlacements(TOOLBARID, []);
   CustomizableUI.addWidgetToArea(kNonPlacedWidgetId, TOOLBARID);
   let button = document.getElementById(kNonPlacedWidgetId);
@@ -27,9 +27,9 @@ add_task(function*() {
   is(CustomizableUI.getPlacementOfWidget(kNonPlacedWidgetId).area, TOOLBARID, "Button's back on toolbar");
   ok(toolbar.querySelector(`#${kNonPlacedWidgetId}`), "Button really is on toolbar.");
 
-  yield endCustomizing();
+  await endCustomizing();
   isnot(button.parentNode.localName, "toolbarpaletteitem", "Button's parent node should not be a wrapper outside customize mode.");
-  yield startCustomizing();
+  await startCustomizing();
 
   is(button.parentNode.localName, "toolbarpaletteitem", "Button's parent node should be a wrapper back in customize mode.");
 
@@ -59,7 +59,7 @@ add_task(function*() {
   is(CustomizableUI.getPlacementOfWidget(kNonPlacedWidgetId).area, TOOLBARID, "Button's back on toolbar");
   ok(toolbar.querySelector(`#${kNonPlacedWidgetId}`), "Button really is on toolbar.");
 
-  let otherWin = yield openAndLoadWindow({}, true);
+  let otherWin = await openAndLoadWindow({}, true);
   let otherTB = otherWin.document.createElementNS(kNSXUL, "toolbar");
   otherTB.id = TOOLBARID;
   otherTB.setAttribute("customizable", "true");
@@ -118,7 +118,7 @@ add_task(function*() {
   };
   CustomizableUI.addListener(listener);
   otherWin.close();
-  let windowClosed = yield windowCloseDeferred.promise;
+  let windowClosed = await windowCloseDeferred.promise;
 
   is(windowClosed, otherWin, "Window should have sent onWindowClosed notification.");
   ok(wasInformedCorrectlyOfAreaDisappearing, "Should be told about window closing.");
@@ -126,9 +126,9 @@ add_task(function*() {
   is(button.parentNode.localName, "toolbarpaletteitem", "Button's parent node should still be a wrapper.");
   ok(gCustomizeMode.areas.has(toolbar), "Toolbar should still be a customizable area for this customize mode instance.");
 
-  yield gCustomizeMode.reset();
+  await gCustomizeMode.reset();
 
-  yield endCustomizing();
+  await endCustomizing();
 
   CustomizableUI.removeListener(listener);
   wasInformedCorrectlyOfAreaDisappearing = false;

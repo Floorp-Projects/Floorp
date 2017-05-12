@@ -12,7 +12,7 @@ function makeInputStream(aString) {
   return stream; // XPConnect will QI this to nsIInputStream for us.
 }
 
-add_task(function* test_remoteWebNavigation_postdata() {
+add_task(async function test_remoteWebNavigation_postdata() {
   let obj = {};
   Cu.import("resource://testing-common/httpd.js", obj);
   Cu.import("resource://services-common/utils.js", obj);
@@ -41,10 +41,10 @@ add_task(function* test_remoteWebNavigation_postdata() {
 
   openUILinkIn(path, "tab", null, makeInputStream(postdata));
 
-  yield loadDeferred.promise;
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await loadDeferred.promise;
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   let serverStoppedDeferred = Promise.defer();
   server.stop(function() { serverStoppedDeferred.resolve(); });
-  yield serverStoppedDeferred.promise;
+  await serverStoppedDeferred.promise;
 });

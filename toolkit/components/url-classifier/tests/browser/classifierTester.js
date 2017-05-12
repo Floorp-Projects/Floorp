@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-Cu.import("resource://gre/modules/Task.jsm");
 
 var classifierTester = {
   URL_PATH: "/browser/toolkit/components/url-classifier/tests/browser/flash_block_frame.html",
@@ -242,10 +241,10 @@ var classifierTester = {
   },
 
   buildTestCaseInNewTab: function (browser, testCase) {
-    return Task.spawn(function* () {
+    return (async function() {
       let iframeDomains = testCase.domains.slice();
       let pageDomain = iframeDomains.shift();
-      let tab = yield BrowserTestUtils.openNewForegroundTab(browser,
+      let tab = await BrowserTestUtils.openNewForegroundTab(browser,
                                                             pageDomain + classifierTester.URL_PATH);
 
       let depth = 0;
@@ -256,7 +255,7 @@ var classifierTester = {
         let domainLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser, true, url);
 
         ContentTask.spawn(tab.linkedBrowser, {iframeId: classifierTester.IFRAME_ID, url: url, depth: depth},
-                          function*({iframeId, url, depth}) {
+                          async function({iframeId, url, depth}) {
           let doc = content.document;
           for (let i = 0; i < depth; ++i) {
             doc = doc.getElementById(iframeId).contentDocument;
@@ -264,17 +263,17 @@ var classifierTester = {
           doc.getElementById(iframeId).src = url;
         });
 
-        yield domainLoaded;
+        await domainLoaded;
         ++depth;
       }
       return tab;
-    });
+    })();
   },
 
   getPluginInfo: function (browser, depth) {
     return ContentTask.spawn(browser,
                              {iframeId: classifierTester.IFRAME_ID, depth: depth},
-                             function* ({iframeId, depth}) {
+                             async function({iframeId, depth}) {
       let doc = content.document;
       let win = content.window;
       for (let i = 0; i < depth; ++i) {

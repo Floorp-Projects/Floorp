@@ -11,7 +11,7 @@ function checkElements(expectPresent, l) {
   }
 }
 
-add_task(function* test_setup() {
+add_task(async function test_setup() {
   let clearValue = Services.prefs.prefHasUserValue("extensions.pocket.enabled");
   let enabledOnStartup = Services.prefs.getBoolPref("extensions.pocket.enabled");
   registerCleanupFunction(() => {
@@ -23,8 +23,8 @@ add_task(function* test_setup() {
   });
 });
 
-add_task(function*() {
-  yield promisePocketEnabled();
+add_task(async function() {
+  await promisePocketEnabled();
 
   checkWindowProperties(true, ["Pocket", "pktUI", "pktUIMessaging"]);
   checkElements(true, ["pocket-button", "panelMenu_pocket", "menu_pocket", "BMB_pocket",
@@ -33,29 +33,29 @@ add_task(function*() {
 
   // check context menu exists
   info("checking content context menu");
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "https://example.com/browser/browser/extensions/pocket/test/test.html");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "https://example.com/browser/browser/extensions/pocket/test/test.html");
 
   let contextMenu = document.getElementById("contentAreaContextMenu");
   let popupShown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
   let popupHidden = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
-  yield BrowserTestUtils.synthesizeMouseAtCenter("body", {
+  await BrowserTestUtils.synthesizeMouseAtCenter("body", {
     type: "contextmenu",
     button: 2
   }, tab.linkedBrowser);
-  yield popupShown;
+  await popupShown;
 
   checkElements(true, ["context-pocket", "context-savelinktopocket"]);
 
   contextMenu.hidePopup();
-  yield popupHidden;
-  yield BrowserTestUtils.removeTab(tab);
+  await popupHidden;
+  await BrowserTestUtils.removeTab(tab);
 
-  yield promisePocketDisabled();
+  await promisePocketDisabled();
 
   checkWindowProperties(false, ["Pocket", "pktUI", "pktUIMessaging"]);
   checkElements(false, ["pocket-button", "panelMenu_pocket", "menu_pocket", "BMB_pocket",
                        "panelMenu_pocketSeparator", "menu_pocketSeparator",
                        "BMB_pocketSeparator", "context-pocket", "context-savelinktopocket"]);
 
-  yield promisePocketReset();
+  await promisePocketReset();
 });

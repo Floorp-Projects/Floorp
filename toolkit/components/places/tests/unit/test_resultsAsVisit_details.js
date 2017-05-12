@@ -3,9 +3,9 @@
 
 const {bookmarks, history} = PlacesUtils
 
-add_task(function* test_addVisitCheckFields() {
+add_task(async function test_addVisitCheckFields() {
   let uri = NetUtil.newURI("http://test4.com/");
-  yield PlacesTestUtils.addVisits([
+  await PlacesTestUtils.addVisits([
     { uri },
     { uri, referrer: uri },
     { uri, transition: history.TRANSITION_TYPED },
@@ -59,10 +59,10 @@ add_task(function* test_addVisitCheckFields() {
 
   root.containerOpen = false;
 
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
 });
 
-add_task(function* test_bookmarkFields() {
+add_task(async function test_bookmarkFields() {
   let folder = bookmarks.createFolder(bookmarks.placesRoot, "test folder", bookmarks.DEFAULT_INDEX);
   bookmarks.insertBookmark(folder, uri("http://test4.com/"),
                            bookmarks.DEFAULT_INDEX, "test4 title");
@@ -81,5 +81,5 @@ add_task(function* test_bookmarkFields() {
 
   root.containerOpen = false;
 
-  yield bookmarks.eraseEverything();
+  await bookmarks.eraseEverything();
 });

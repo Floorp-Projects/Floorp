@@ -3,7 +3,7 @@
 
 var TEST_STATE = { windows: [{ tabs: [{ url: "about:blank" }] }] };
 
-add_task(function* () {
+add_task(async function() {
   function assertNumberOfTabs(num, msg) {
     is(gBrowser.tabs.length, num, msg);
   }
@@ -26,7 +26,7 @@ add_task(function* () {
   assertNumberOfPinnedTabs(2, "both tabs are now pinned");
 
   // run the test
-  yield promiseBrowserState(TEST_STATE);
+  await promiseBrowserState(TEST_STATE);
 
   assertNumberOfTabs(1, "one tab left after setBrowserState()");
   assertNumberOfPinnedTabs(0, "there are no pinned tabs");

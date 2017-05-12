@@ -4,7 +4,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* () {
+add_task(async function() {
   equal(AddonManager.isReady, false, "isReady should be false before startup");
 
   let gotStartupEvent = false;
@@ -31,7 +31,7 @@ add_task(function* () {
   do_print("Shutting down manager...");
   let shutdownPromise = promiseShutdownManager();
   equal(AddonManager.isReady, false, "isReady should be false when shutdown commences");
-  yield shutdownPromise;
+  await shutdownPromise;
 
   equal(AddonManager.isReady, false, "isReady should be false after shutdown");
   equal(gotStartupEvent, false, "Should not have seen onStartup event after shutdown");

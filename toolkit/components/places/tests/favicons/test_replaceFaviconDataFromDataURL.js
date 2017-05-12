@@ -62,11 +62,11 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_replaceFaviconDataFromDataURL_validHistoryURI() {
+add_task(async function test_replaceFaviconDataFromDataURL_validHistoryURI() {
   do_print("test replaceFaviconDataFromDataURL for valid history uri");
 
   let pageURI = uri("http://test1.bar/");
-  yield PlacesTestUtils.addVisits(pageURI);
+  await PlacesTestUtils.addVisits(pageURI);
 
   let favicon = createFavicon("favicon1.png");
   iconsvc.replaceFaviconDataFromDataURL(favicon.uri, createDataURLForFavicon(favicon), 0,
@@ -84,16 +84,16 @@ add_task(function* test_replaceFaviconDataFromDataURL_validHistoryURI() {
           deferSetAndFetchFavicon.resolve();
         });
     }, Services.scriptSecurityManager.getSystemPrincipal());
-  yield deferSetAndFetchFavicon.promise;
+  await deferSetAndFetchFavicon.promise;
 
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
 });
 
-add_task(function* test_replaceFaviconDataFromDataURL_overrideDefaultFavicon() {
+add_task(async function test_replaceFaviconDataFromDataURL_overrideDefaultFavicon() {
   do_print("test replaceFaviconDataFromDataURL to override a later setAndFetchFaviconForPage");
 
   let pageURI = uri("http://test2.bar/");
-  yield PlacesTestUtils.addVisits(pageURI);
+  await PlacesTestUtils.addVisits(pageURI);
 
   let firstFavicon = createFavicon("favicon2.png");
   let secondFavicon = createFavicon("favicon3.png");
@@ -115,16 +115,16 @@ add_task(function* test_replaceFaviconDataFromDataURL_overrideDefaultFavicon() {
           deferSetAndFetchFavicon.resolve();
         });
     }, Services.scriptSecurityManager.getSystemPrincipal());
-  yield deferSetAndFetchFavicon.promise;
+  await deferSetAndFetchFavicon.promise;
 
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
 });
 
-add_task(function* test_replaceFaviconDataFromDataURL_replaceExisting() {
+add_task(async function test_replaceFaviconDataFromDataURL_replaceExisting() {
   do_print("test replaceFaviconDataFromDataURL to override a previous setAndFetchFaviconForPage");
 
   let pageURI = uri("http://test3.bar");
-  yield PlacesTestUtils.addVisits(pageURI);
+  await PlacesTestUtils.addVisits(pageURI);
 
   let firstFavicon = createFavicon("favicon4.png");
   let secondFavicon = createFavicon("favicon5.png");
@@ -149,16 +149,16 @@ add_task(function* test_replaceFaviconDataFromDataURL_replaceExisting() {
             });
         });
     }, Services.scriptSecurityManager.getSystemPrincipal());
-  yield deferSetAndFetchFavicon.promise;
+  await deferSetAndFetchFavicon.promise;
 
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
 });
 
-add_task(function* test_replaceFaviconDataFromDataURL_unrelatedReplace() {
+add_task(async function test_replaceFaviconDataFromDataURL_unrelatedReplace() {
   do_print("test replaceFaviconDataFromDataURL to not make unrelated changes");
 
   let pageURI = uri("http://test4.bar/");
-  yield PlacesTestUtils.addVisits(pageURI);
+  await PlacesTestUtils.addVisits(pageURI);
 
   let favicon = createFavicon("favicon6.png");
   let unrelatedFavicon = createFavicon("favicon7.png");
@@ -180,12 +180,12 @@ add_task(function* test_replaceFaviconDataFromDataURL_unrelatedReplace() {
           deferSetAndFetchFavicon.resolve();
         });
     }, Services.scriptSecurityManager.getSystemPrincipal());
-  yield deferSetAndFetchFavicon.promise;
+  await deferSetAndFetchFavicon.promise;
 
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
 });
 
-add_task(function* test_replaceFaviconDataFromDataURL_badInputs() {
+add_task(async function test_replaceFaviconDataFromDataURL_badInputs() {
   do_print("test replaceFaviconDataFromDataURL to throw on bad inputs");
 
   let favicon = createFavicon("favicon8.png");
@@ -212,14 +212,14 @@ add_task(function* test_replaceFaviconDataFromDataURL_badInputs() {
 
   favicon.file.remove(false);
 
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
 });
 
-add_task(function* test_replaceFaviconDataFromDataURL_twiceReplace() {
+add_task(async function test_replaceFaviconDataFromDataURL_twiceReplace() {
   do_print("test replaceFaviconDataFromDataURL on multiple replacements");
 
   let pageURI = uri("http://test5.bar/");
-  yield PlacesTestUtils.addVisits(pageURI);
+  await PlacesTestUtils.addVisits(pageURI);
 
   let firstFavicon = createFavicon("favicon9.png");
   let secondFavicon = createFavicon("favicon10.png");
@@ -243,16 +243,16 @@ add_task(function* test_replaceFaviconDataFromDataURL_twiceReplace() {
           deferSetAndFetchFavicon.resolve();
         });
     }, Services.scriptSecurityManager.getSystemPrincipal());
-  yield deferSetAndFetchFavicon.promise;
+  await deferSetAndFetchFavicon.promise;
 
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
 });
 
-add_task(function* test_replaceFaviconDataFromDataURL_afterRegularAssign() {
+add_task(async function test_replaceFaviconDataFromDataURL_afterRegularAssign() {
   do_print("test replaceFaviconDataFromDataURL after replaceFaviconData");
 
   let pageURI = uri("http://test6.bar/");
-  yield PlacesTestUtils.addVisits(pageURI);
+  await PlacesTestUtils.addVisits(pageURI);
 
   let firstFavicon = createFavicon("favicon11.png");
   let secondFavicon = createFavicon("favicon12.png");
@@ -277,16 +277,16 @@ add_task(function* test_replaceFaviconDataFromDataURL_afterRegularAssign() {
           deferSetAndFetchFavicon.resolve();
         });
     }, Services.scriptSecurityManager.getSystemPrincipal());
-  yield deferSetAndFetchFavicon.promise;
+  await deferSetAndFetchFavicon.promise;
 
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
 });
 
-add_task(function* test_replaceFaviconDataFromDataURL_beforeRegularAssign() {
+add_task(async function test_replaceFaviconDataFromDataURL_beforeRegularAssign() {
   do_print("test replaceFaviconDataFromDataURL before replaceFaviconData");
 
   let pageURI = uri("http://test7.bar/");
-  yield PlacesTestUtils.addVisits(pageURI);
+  await PlacesTestUtils.addVisits(pageURI);
 
   let firstFavicon = createFavicon("favicon13.png");
   let secondFavicon = createFavicon("favicon14.png");
@@ -311,9 +311,9 @@ add_task(function* test_replaceFaviconDataFromDataURL_beforeRegularAssign() {
           deferSetAndFetchFavicon.resolve();
         });
     }, Services.scriptSecurityManager.getSystemPrincipal());
-  yield deferSetAndFetchFavicon.promise;
+  await deferSetAndFetchFavicon.promise;
 
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
 });
 
 /* toBase64 copied from image/test/unit/test_encoder_png.js */

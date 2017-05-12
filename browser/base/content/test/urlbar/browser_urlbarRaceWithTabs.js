@@ -25,33 +25,33 @@ function* addBookmark(bookmark) {
 /**
  * Check that if the user hits enter and ctrl-t at the same time, we open the URL in the right tab.
  */
-add_task(function* hitEnterLoadInRightTab() {
+add_task(async function hitEnterLoadInRightTab() {
   info("Opening new tab");
   let oldTabCreatedPromise = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabOpen");
   BrowserOpenTab();
-  let oldTab = (yield oldTabCreatedPromise).target;
+  let oldTab = (await oldTabCreatedPromise).target;
   let oldTabLoadedPromise = BrowserTestUtils.browserLoaded(oldTab.linkedBrowser, false, kURL);
   oldTabLoadedPromise.then(() => info("Old tab loaded"));
   let newTabCreatedPromise = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabOpen");
 
   info("Creating bookmark and keyword");
-  yield addBookmark({title: "Test for keyword bookmark and URL", url: kURL, keyword: "urlbarkeyword"});
+  await addBookmark({title: "Test for keyword bookmark and URL", url: kURL, keyword: "urlbarkeyword"});
   info("Filling URL bar, sending <return> and opening a tab");
   gURLBar.value = "urlbarkeyword";
   gURLBar.select();
   EventUtils.sendKey("return");
   BrowserOpenTab();
   info("Waiting for new tab");
-  let newTab = (yield newTabCreatedPromise).target;
+  let newTab = (await newTabCreatedPromise).target;
   info("Created new tab; waiting for either tab to load");
   let newTabLoadedPromise = BrowserTestUtils.browserLoaded(newTab.linkedBrowser, false, kURL);
   newTabLoadedPromise.then(() => info("New tab loaded"));
-  yield Promise.race([newTabLoadedPromise, oldTabLoadedPromise]);
+  await Promise.race([newTabLoadedPromise, oldTabLoadedPromise]);
   is(newTab.linkedBrowser.currentURI.spec, "about:newtab", "New tab still has about:newtab");
   is(oldTab.linkedBrowser.currentURI.spec, kURL, "Old tab loaded URL");
   info("Closing new tab");
-  yield BrowserTestUtils.removeTab(newTab);
+  await BrowserTestUtils.removeTab(newTab);
   info("Closing old tab");
-  yield BrowserTestUtils.removeTab(oldTab);
+  await BrowserTestUtils.removeTab(oldTab);
   info("Finished");
 });

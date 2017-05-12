@@ -54,7 +54,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_execute() {
+add_task(async function test_execute() {
   var testURI = uri("http://mozilla.com/");
   var testItemId = bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, testURI, -1, "");
   var testAnnoName = "moz-test-places/annotations";
@@ -101,7 +101,7 @@ add_task(function* test_execute() {
 
   // test getPagesWithAnnotation
   var uri2 = uri("http://www.tests.tld");
-  yield PlacesTestUtils.addVisits(uri2);
+  await PlacesTestUtils.addVisits(uri2);
   annosvc.setPageAnnotation(uri2, testAnnoName, testAnnoVal, 0, 0);
   var pages = annosvc.getPagesWithAnnotation(testAnnoName);
   do_check_eq(pages.length, 2);
@@ -153,7 +153,7 @@ add_task(function* test_execute() {
 
   // copy annotations to another uri
   var newURI = uri("http://mozilla.org");
-  yield PlacesTestUtils.addVisits(newURI);
+  await PlacesTestUtils.addVisits(newURI);
   annosvc.setPageAnnotation(testURI, "oldAnno", "new", 0, 0);
   annosvc.setPageAnnotation(newURI, "oldAnno", "old", 0, 0);
   annoNames = annosvc.getPageAnnotationNames(newURI);

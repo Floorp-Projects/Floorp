@@ -14,20 +14,20 @@ function waitForNewWindow() {
   });
 }
 
-add_task(function*() {
+add_task(async function() {
   let tab = gBrowser.selectedTab = gBrowser.addTab(url);
   let browser = tab.linkedBrowser;
-  yield promiseTabLoaded(gBrowser.selectedTab);
+  await promiseTabLoaded(gBrowser.selectedTab);
 
   is(gBrowser.contentTitle, "Test Page", "Should have the right title.")
 
   browser.loadURI(unknown_url);
-  let win = yield waitForNewWindow();
+  let win = await waitForNewWindow();
   is(win.location, "chrome://mozapps/content/downloads/unknownContentType.xul",
      "Should have seen the unknown content dialog.");
   is(gBrowser.contentTitle, "Test Page", "Should still have the right title.")
 
   win.close();
-  yield promiseWaitForFocus(window);
+  await promiseWaitForFocus(window);
   gBrowser.removeCurrentTab();
 });

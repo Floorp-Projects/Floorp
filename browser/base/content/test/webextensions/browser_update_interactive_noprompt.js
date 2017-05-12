@@ -1,7 +1,7 @@
 
 // Set some prefs that apply to all the tests in this file
-add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({set: [
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({set: [
     // We don't have pre-pinned certificates for the local mochitest server
     ["extensions.install.requireBuiltInCerts", false],
     ["extensions.update.requireBuiltInCerts", false],

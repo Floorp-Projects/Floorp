@@ -62,11 +62,11 @@ let extensionData = {
   },
 };
 
-add_task(function* test_backgroundRuntimeConnectParams() {
+add_task(async function test_backgroundRuntimeConnectParams() {
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitFinish("runtime.connect invalid params");
+  await extension.awaitFinish("runtime.connect invalid params");
 
-  yield extension.unload();
+  await extension.unload();
 });

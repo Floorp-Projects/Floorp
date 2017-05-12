@@ -18,8 +18,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 
 
 // The maximum amount of file data to buffer at a time during file extraction
@@ -112,7 +110,7 @@ this.ZipUtils = {
       return Promise.reject(e);
     }
 
-    return Task.spawn(function* () {
+    return (async function() {
       // Get all of the entries in the zip and sort them so we create directories
       // before files
       let entries = zipReader.findEntries(null);
@@ -128,7 +126,7 @@ this.ZipUtils = {
 
         if (zipentry.isDirectory) {
           try {
-            yield OS.File.makeDir(path);
+            await OS.File.makeDir(path);
           } catch (e) {
             dump("extractFilesAsync: failed to create directory " + path + "\n");
             throw e;
@@ -136,11 +134,11 @@ this.ZipUtils = {
         } else {
           let options = { unixMode: zipentry.permissions | FileUtils.PERMS_FILE };
           try {
-            let file = yield OS.File.open(path, { truncate: true }, options);
+            let file = await OS.File.open(path, { truncate: true }, options);
             if (zipentry.realSize == 0)
-              yield file.close();
+              await file.close();
             else
-              yield saveStreamAsync(path, zipReader.getInputStream(entryName), file);
+              await saveStreamAsync(path, zipReader.getInputStream(entryName), file);
           } catch (e) {
             dump("extractFilesAsync: failed to extract file " + path + "\n");
             throw e;
@@ -149,7 +147,7 @@ this.ZipUtils = {
       }
 
       zipReader.close();
-    }).then(null, (e) => {
+    })().then(null, (e) => {
       zipReader.close();
       throw e;
     });

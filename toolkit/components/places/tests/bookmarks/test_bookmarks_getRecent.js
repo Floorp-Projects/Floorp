@@ -1,4 +1,4 @@
-add_task(function* invalid_input_throws() {
+add_task(async function invalid_input_throws() {
   Assert.throws(() => PlacesUtils.bookmarks.getRecent(),
                 /numberOfItems argument is required/);
   Assert.throws(() => PlacesUtils.bookmarks.getRecent("abc"),
@@ -11,19 +11,19 @@ add_task(function* invalid_input_throws() {
                 /numberOfItems argument must be greater than zero/);
 });
 
-add_task(function* getRecent_returns_recent_bookmarks() {
-  yield PlacesUtils.bookmarks.eraseEverything();
+add_task(async function getRecent_returns_recent_bookmarks() {
+  await PlacesUtils.bookmarks.eraseEverything();
 
-  let bm1 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+  let bm1 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                  url: "http://example.com/",
                                                  title: "a bookmark" });
-  let bm2 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+  let bm2 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                  url: "http://example.org/path",
                                                  title: "another bookmark" });
-  let bm3 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+  let bm3 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                  url: "http://example.net/",
                                                  title: "another bookmark" });
-  let bm4 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+  let bm4 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                  url: "http://example.net/path",
                                                  title: "yet another bookmark" });
   checkBookmarkObject(bm1);
@@ -40,13 +40,13 @@ add_task(function* getRecent_returns_recent_bookmarks() {
 
   // Add a query bookmark.
   let queryURL = `place:folder=${PlacesUtils.bookmarksMenuFolderId}&queryType=1`;
-  let bm5 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+  let bm5 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                  url: queryURL,
                                                  title: "a test query" });
   checkBookmarkObject(bm5);
 
   // Verify that getRecent only returns actual bookmarks.
-  let results = yield PlacesUtils.bookmarks.getRecent(100);
+  let results = await PlacesUtils.bookmarks.getRecent(100);
   Assert.equal(results.length, 4, "The expected number of bookmarks was returned.");
   checkBookmarkObject(results[0]);
   Assert.deepEqual(bm4, results[0], "The first result is the expected bookmark.");
@@ -58,10 +58,10 @@ add_task(function* getRecent_returns_recent_bookmarks() {
   Assert.deepEqual(bm1, results[3], "The fourth result is the expected bookmark.");
 
   // Verify that getRecent utilizes the numberOfItems argument.
-  results = yield PlacesUtils.bookmarks.getRecent(1);
+  results = await PlacesUtils.bookmarks.getRecent(1);
   Assert.equal(results.length, 1, "The expected number of bookmarks was returned.");
   checkBookmarkObject(results[0]);
   Assert.deepEqual(bm4, results[0], "The first result is the expected bookmark.");
 
-  yield PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.bookmarks.eraseEverything();
 });

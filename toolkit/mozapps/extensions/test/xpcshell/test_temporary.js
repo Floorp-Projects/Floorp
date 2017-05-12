@@ -61,7 +61,7 @@ function waitForBootstrapEvent(expectedEvent, addonId) {
 
 // Install a temporary add-on with no existing add-on present.
 // Restart and make sure it has gone away.
-add_task(function*() {
+add_task(async function() {
   let extInstallCalled = false;
   AddonManager.addInstallListener({
     onExternalInstall: (aInstall) => {
@@ -89,7 +89,7 @@ add_task(function*() {
     }
   });
 
-  yield AddonManager.installTemporaryAddon(do_get_addon("test_bootstrap1_1"));
+  await AddonManager.installTemporaryAddon(do_get_addon("test_bootstrap1_1"));
 
   do_check_true(extInstallCalled);
   do_check_true(installingCalled);
@@ -102,7 +102,7 @@ add_task(function*() {
   let info = BootstrapMonitor.started.get(ID);
   do_check_eq(info.reason, BOOTSTRAP_REASONS.ADDON_INSTALL);
 
-  let addon = yield promiseAddonByID(ID);
+  let addon = await promiseAddonByID(ID);
 
   do_check_neq(addon, null);
   do_check_eq(addon.version, "1.0");
@@ -113,26 +113,26 @@ add_task(function*() {
   do_check_eq(addon.type, "extension");
   do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
 
   BootstrapMonitor.checkAddonNotInstalled(ID);
   BootstrapMonitor.checkAddonNotStarted(ID);
 
-  addon = yield promiseAddonByID(ID);
+  addon = await promiseAddonByID(ID);
   do_check_eq(addon, null);
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
 });
 
 // Install a temporary add-on over the top of an existing add-on.
 // Restart and make sure the existing add-on comes back.
-add_task(function*() {
-  yield promiseInstallAllFiles([do_get_addon("test_bootstrap1_1")], true);
+add_task(async function() {
+  await promiseInstallAllFiles([do_get_addon("test_bootstrap1_1")], true);
 
   BootstrapMonitor.checkAddonInstalled(ID, "1.0");
   BootstrapMonitor.checkAddonStarted(ID, "1.0");
 
-  let addon = yield promiseAddonByID(ID);
+  let addon = await promiseAddonByID(ID);
 
   do_check_neq(addon, null);
   do_check_eq(addon.version, "1.0");
@@ -163,12 +163,12 @@ add_task(function*() {
   do_get_file("data/test_temporary/bootstrap.js")
     .copyTo(unpacked_addon, "bootstrap.js");
 
-  yield AddonManager.installTemporaryAddon(unpacked_addon);
+  await AddonManager.installTemporaryAddon(unpacked_addon);
 
   BootstrapMonitor.checkAddonInstalled(ID, "3.0");
   BootstrapMonitor.checkAddonStarted(ID, "3.0");
 
-  addon = yield promiseAddonByID(ID);
+  addon = await promiseAddonByID(ID);
 
   // temporary add-on is installed and started
   do_check_neq(addon, null);
@@ -185,7 +185,7 @@ add_task(function*() {
   BootstrapMonitor.checkAddonInstalled(ID, "1.0");
   BootstrapMonitor.checkAddonStarted(ID, "1.0");
 
-  addon = yield promiseAddonByID(ID);
+  addon = await promiseAddonByID(ID);
 
   // existing add-on is back
   do_check_neq(addon, null);
@@ -217,9 +217,9 @@ add_task(function*() {
     let packed_addon = tempdir.clone();
     packed_addon.append(ID + ".xpi");
 
-    yield AddonManager.installTemporaryAddon(packed_addon);
+    await AddonManager.installTemporaryAddon(packed_addon);
 
-    addon = yield promiseAddonByID(ID);
+    addon = await promiseAddonByID(ID);
 
     // temporary add-on is installed and started
     do_check_neq(addon, null);
@@ -236,7 +236,7 @@ add_task(function*() {
     BootstrapMonitor.checkAddonInstalled(ID, "1.0");
     BootstrapMonitor.checkAddonStarted(ID, "1.0");
 
-    addon = yield promiseAddonByID(ID);
+    addon = await promiseAddonByID(ID);
 
     // existing add-on is back
     do_check_neq(addon, null);
@@ -263,11 +263,11 @@ add_task(function*() {
       }
     });
 
-    yield Promise.all([
+    await Promise.all([
       AddonManager.installTemporaryAddon(webext),
       promiseAddonStartup(),
     ]);
-    addon = yield promiseAddonByID(ID);
+    addon = await promiseAddonByID(ID);
 
     // temporary add-on is installed and started
     do_check_neq(addon, null);
@@ -293,11 +293,11 @@ add_task(function*() {
       }
     });
 
-    yield Promise.all([
+    await Promise.all([
       AddonManager.installTemporaryAddon(webext),
       promiseAddonStartup(),
     ]);
-    addon = yield promiseAddonByID(ID);
+    addon = await promiseAddonByID(ID);
 
     // temporary add-on is installed and started
     do_check_neq(addon, null);
@@ -325,11 +325,11 @@ add_task(function*() {
       }
     });
 
-    yield Promise.all([
+    await Promise.all([
       AddonManager.installTemporaryAddon(webext),
       promiseAddonStartup(),
     ]);
-    addon = yield promiseAddonByID(ID);
+    addon = await promiseAddonByID(ID);
 
     do_check_neq(addon, null);
     do_check_eq(addon.version, "6.0");
@@ -346,7 +346,7 @@ add_task(function*() {
     BootstrapMonitor.checkAddonInstalled(ID, "1.0");
     BootstrapMonitor.checkAddonStarted(ID, "1.0");
 
-    addon = yield promiseAddonByID(ID);
+    addon = await promiseAddonByID(ID);
 
     // existing add-on is back
     do_check_neq(addon, null);
@@ -365,13 +365,13 @@ add_task(function*() {
   BootstrapMonitor.checkAddonNotInstalled(ID);
   BootstrapMonitor.checkAddonNotStarted(ID);
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
 });
 
 // Install a temporary add-on over the top of an existing add-on.
 // Uninstall it and make sure the existing add-on comes back.
-add_task(function*() {
-  yield promiseInstallAllFiles([do_get_addon("test_bootstrap1_1")], true);
+add_task(async function() {
+  await promiseInstallAllFiles([do_get_addon("test_bootstrap1_1")], true);
 
   BootstrapMonitor.checkAddonInstalled(ID, "1.0");
   BootstrapMonitor.checkAddonStarted(ID, "1.0");
@@ -422,13 +422,13 @@ add_task(function*() {
     }
   });
 
-  yield AddonManager.installTemporaryAddon(unpacked_addon);
+  await AddonManager.installTemporaryAddon(unpacked_addon);
 
   do_check_true(extInstallCalled);
   do_check_true(installingCalled);
   do_check_true(installedCalled);
 
-  let addon = yield promiseAddonByID(ID);
+  let addon = await promiseAddonByID(ID);
 
   BootstrapMonitor.checkAddonNotInstalled(ID);
   BootstrapMonitor.checkAddonNotStarted(ID);
@@ -445,7 +445,7 @@ add_task(function*() {
 
   addon.uninstall();
 
-  addon = yield promiseAddonByID(ID);
+  addon = await promiseAddonByID(ID);
 
   BootstrapMonitor.checkAddonInstalled(ID);
   BootstrapMonitor.checkAddonStarted(ID);
@@ -466,12 +466,12 @@ add_task(function*() {
   BootstrapMonitor.checkAddonNotInstalled(ID);
   BootstrapMonitor.checkAddonNotStarted(ID);
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
 });
 
 // Install a temporary add-on as a version upgrade over the top of an
 // existing temporary add-on.
-add_task(function*() {
+add_task(async function() {
   const tempdir = gTmpD.clone();
 
   writeInstallRDFToDir(sampleRDFManifest, tempdir,
@@ -482,7 +482,7 @@ add_task(function*() {
   do_get_file("data/test_temporary/bootstrap.js")
     .copyTo(unpackedAddon, "bootstrap.js");
 
-  yield AddonManager.installTemporaryAddon(unpackedAddon);
+  await AddonManager.installTemporaryAddon(unpackedAddon);
 
   // Increment the version number, re-install it, and make sure it
   // gets marked as an upgrade.
@@ -494,36 +494,36 @@ add_task(function*() {
   const onUninstall = waitForBootstrapEvent("uninstall", ID);
   const onInstall = waitForBootstrapEvent("install", ID);
   const onStartup = waitForBootstrapEvent("startup", ID);
-  yield AddonManager.installTemporaryAddon(unpackedAddon);
+  await AddonManager.installTemporaryAddon(unpackedAddon);
 
-  const shutdown = yield onShutdown;
+  const shutdown = await onShutdown;
   equal(shutdown.data.version, "1.0");
   equal(shutdown.reason, BOOTSTRAP_REASONS.ADDON_UPGRADE);
 
-  const uninstall = yield onUninstall;
+  const uninstall = await onUninstall;
   equal(uninstall.data.version, "1.0");
   equal(uninstall.reason, BOOTSTRAP_REASONS.ADDON_UPGRADE);
 
-  const install = yield onInstall;
+  const install = await onInstall;
   equal(install.data.version, "2.0");
   equal(install.reason, BOOTSTRAP_REASONS.ADDON_UPGRADE);
   equal(install.data.oldVersion, "1.0");
 
-  const startup = yield onStartup;
+  const startup = await onStartup;
   equal(startup.data.version, "2.0");
   equal(startup.reason, BOOTSTRAP_REASONS.ADDON_UPGRADE);
   equal(startup.data.oldVersion, "1.0");
 
-  const addon = yield promiseAddonByID(ID);
+  const addon = await promiseAddonByID(ID);
   addon.uninstall();
 
   unpackedAddon.remove(true);
-  yield promiseRestartManager();
+  await promiseRestartManager();
 });
 
 // Install a temporary add-on as a version downgrade over the top of an
 // existing temporary add-on.
-add_task(function*() {
+add_task(async function() {
   const tempdir = gTmpD.clone();
 
   writeInstallRDFToDir(sampleRDFManifest, tempdir,
@@ -534,7 +534,7 @@ add_task(function*() {
   do_get_file("data/test_temporary/bootstrap.js")
     .copyTo(unpackedAddon, "bootstrap.js");
 
-  yield AddonManager.installTemporaryAddon(unpackedAddon);
+  await AddonManager.installTemporaryAddon(unpackedAddon);
 
   // Decrement the version number, re-install, and make sure
   // it gets marked as a downgrade.
@@ -546,34 +546,34 @@ add_task(function*() {
   const onUninstall = waitForBootstrapEvent("uninstall", ID);
   const onInstall = waitForBootstrapEvent("install", ID);
   const onStartup = waitForBootstrapEvent("startup", ID);
-  yield AddonManager.installTemporaryAddon(unpackedAddon);
+  await AddonManager.installTemporaryAddon(unpackedAddon);
 
-  const shutdown = yield onShutdown;
+  const shutdown = await onShutdown;
   equal(shutdown.data.version, "1.0");
   equal(shutdown.reason, BOOTSTRAP_REASONS.ADDON_DOWNGRADE);
 
-  const uninstall = yield onUninstall;
+  const uninstall = await onUninstall;
   equal(uninstall.data.version, "1.0");
   equal(uninstall.reason, BOOTSTRAP_REASONS.ADDON_DOWNGRADE);
 
-  const install = yield onInstall;
+  const install = await onInstall;
   equal(install.data.version, "0.8");
   equal(install.reason, BOOTSTRAP_REASONS.ADDON_DOWNGRADE);
 
-  const startup = yield onStartup;
+  const startup = await onStartup;
   equal(startup.data.version, "0.8");
   equal(startup.reason, BOOTSTRAP_REASONS.ADDON_DOWNGRADE);
 
-  const addon = yield promiseAddonByID(ID);
+  const addon = await promiseAddonByID(ID);
   addon.uninstall();
 
   unpackedAddon.remove(true);
-  yield promiseRestartManager();
+  await promiseRestartManager();
 });
 
 // Installing a temporary add-on over an existing add-on with the same
 // version number should be installed as an upgrade.
-add_task(function*() {
+add_task(async function() {
   const tempdir = gTmpD.clone();
 
   writeInstallRDFToDir(sampleRDFManifest, tempdir,
@@ -586,13 +586,13 @@ add_task(function*() {
 
   const onInitialInstall = waitForBootstrapEvent("install", ID);
   const onInitialStartup = waitForBootstrapEvent("startup", ID);
-  yield AddonManager.installTemporaryAddon(unpackedAddon);
+  await AddonManager.installTemporaryAddon(unpackedAddon);
 
-  const initialInstall = yield onInitialInstall;
+  const initialInstall = await onInitialInstall;
   equal(initialInstall.data.version, "1.0");
   equal(initialInstall.reason, BOOTSTRAP_REASONS.ADDON_INSTALL);
 
-  const initialStartup = yield onInitialStartup;
+  const initialStartup = await onInitialStartup;
   equal(initialStartup.data.version, "1.0");
   equal(initialStartup.reason, BOOTSTRAP_REASONS.ADDON_INSTALL);
 
@@ -604,40 +604,40 @@ add_task(function*() {
   const onUninstall = waitForBootstrapEvent("uninstall", ID);
   const onInstall = waitForBootstrapEvent("install", ID);
   const onStartup = waitForBootstrapEvent("startup", ID);
-  yield AddonManager.installTemporaryAddon(unpackedAddon);
+  await AddonManager.installTemporaryAddon(unpackedAddon);
 
-  const shutdown = yield onShutdown;
+  const shutdown = await onShutdown;
   equal(shutdown.data.version, "1.0");
   equal(shutdown.reason, BOOTSTRAP_REASONS.ADDON_UPGRADE);
 
-  const uninstall = yield onUninstall;
+  const uninstall = await onUninstall;
   equal(uninstall.data.version, "1.0");
   equal(uninstall.reason, BOOTSTRAP_REASONS.ADDON_UPGRADE);
 
-  const reInstall = yield onInstall;
+  const reInstall = await onInstall;
   equal(reInstall.data.version, "1.0");
   equal(reInstall.reason, BOOTSTRAP_REASONS.ADDON_UPGRADE);
 
-  const startup = yield onStartup;
+  const startup = await onStartup;
   equal(startup.data.version, "1.0");
   equal(startup.reason, BOOTSTRAP_REASONS.ADDON_UPGRADE);
 
-  const addon = yield promiseAddonByID(ID);
+  const addon = await promiseAddonByID(ID);
   addon.uninstall();
 
   unpackedAddon.remove(true);
-  yield promiseRestartManager();
+  await promiseRestartManager();
 });
 
 // Install a temporary add-on over the top of an existing disabled add-on.
 // After restart, the existing add-on should continue to be installed and disabled.
-add_task(function*() {
-  yield promiseInstallAllFiles([do_get_addon("test_bootstrap1_1")], true);
+add_task(async function() {
+  await promiseInstallAllFiles([do_get_addon("test_bootstrap1_1")], true);
 
   BootstrapMonitor.checkAddonInstalled(ID, "1.0");
   BootstrapMonitor.checkAddonStarted(ID, "1.0");
 
-  let addon = yield promiseAddonByID(ID);
+  let addon = await promiseAddonByID(ID);
 
   addon.userDisabled = true;
 
@@ -672,11 +672,11 @@ add_task(function*() {
     },
   });
 
-  yield AddonManager.installTemporaryAddon(unpacked_addon);
+  await AddonManager.installTemporaryAddon(unpacked_addon);
 
   do_check_true(extInstallCalled);
 
-  let tempAddon = yield promiseAddonByID(ID);
+  let tempAddon = await promiseAddonByID(ID);
 
   BootstrapMonitor.checkAddonInstalled(ID, "2.0");
   BootstrapMonitor.checkAddonStarted(ID);
@@ -695,7 +695,7 @@ add_task(function*() {
   unpacked_addon.remove(true);
 
   addon.userDisabled = false;
-  addon = yield promiseAddonByID(ID);
+  addon = await promiseAddonByID(ID);
 
   BootstrapMonitor.checkAddonInstalled(ID, "1.0");
   BootstrapMonitor.checkAddonStarted(ID);
@@ -715,12 +715,12 @@ add_task(function*() {
   BootstrapMonitor.checkAddonNotInstalled(ID);
   BootstrapMonitor.checkAddonNotStarted(ID);
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
 });
 
 // Installing a temporary add-on over a non-restartless add-on should fail.
-add_task(function*() {
-  yield promiseInstallAllFiles([do_get_addon("test_install1")], true);
+add_task(async function() {
+  await promiseInstallAllFiles([do_get_addon("test_install1")], true);
 
   let non_restartless_ID = "addon1@tests.mozilla.org";
 
@@ -732,7 +732,7 @@ add_task(function*() {
   BootstrapMonitor.checkAddonNotInstalled(non_restartless_ID);
   BootstrapMonitor.checkAddonNotStarted(non_restartless_ID);
 
-  let addon = yield promiseAddonByID(non_restartless_ID);
+  let addon = await promiseAddonByID(non_restartless_ID);
 
   // non-restartless add-on is installed and started
   do_check_neq(addon, null);
@@ -763,7 +763,7 @@ add_task(function*() {
   unpacked_addon.append(non_restartless_ID);
 
   try {
-    yield AddonManager.installTemporaryAddon(unpacked_addon);
+    await AddonManager.installTemporaryAddon(unpacked_addon);
     do_throw("Installing over a non-restartless add-on should return"
              + " a rejected promise");
   } catch (err) {
@@ -778,15 +778,15 @@ add_task(function*() {
   BootstrapMonitor.checkAddonNotInstalled(ID);
   BootstrapMonitor.checkAddonNotStarted(ID);
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
 });
 
 // Installing a temporary add-on when there is already a temporary
 // add-on should fail.
-add_task(function*() {
-  yield AddonManager.installTemporaryAddon(do_get_addon("test_bootstrap1_1"));
+add_task(async function() {
+  await AddonManager.installTemporaryAddon(do_get_addon("test_bootstrap1_1"));
 
-  let addon = yield promiseAddonByID(ID);
+  let addon = await promiseAddonByID(ID);
 
   BootstrapMonitor.checkAddonInstalled(ID, "1.0");
   BootstrapMonitor.checkAddonStarted(ID, "1.0");
@@ -801,35 +801,35 @@ add_task(function*() {
   do_check_false(addon.isWebExtension);
   do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
-  yield AddonManager.installTemporaryAddon(do_get_addon("test_bootstrap1_1"));
+  await AddonManager.installTemporaryAddon(do_get_addon("test_bootstrap1_1"));
 
   BootstrapMonitor.checkAddonInstalled(ID, "1.0");
   BootstrapMonitor.checkAddonStarted(ID, "1.0");
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
 
   BootstrapMonitor.checkAddonNotInstalled(ID);
   BootstrapMonitor.checkAddonNotStarted(ID);
 });
 
 // Check that a temporary add-on is marked as such.
-add_task(function*() {
-  yield AddonManager.installTemporaryAddon(do_get_addon("test_bootstrap1_1"));
-  const addon = yield promiseAddonByID(ID);
+add_task(async function() {
+  await AddonManager.installTemporaryAddon(do_get_addon("test_bootstrap1_1"));
+  const addon = await promiseAddonByID(ID);
 
   notEqual(addon, null);
   equal(addon.temporarilyInstalled, true);
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
 });
 
 // Check that a permanent add-on is not marked as temporarily installed.
-add_task(function*() {
-  yield promiseInstallAllFiles([do_get_addon("test_bootstrap1_1")], true);
-  const addon = yield promiseAddonByID(ID);
+add_task(async function() {
+  await promiseInstallAllFiles([do_get_addon("test_bootstrap1_1")], true);
+  const addon = await promiseAddonByID(ID);
 
   notEqual(addon, null);
   equal(addon.temporarilyInstalled, false);
 
-  yield promiseRestartManager();
+  await promiseRestartManager();
 });

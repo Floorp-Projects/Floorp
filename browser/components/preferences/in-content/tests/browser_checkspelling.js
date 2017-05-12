@@ -1,9 +1,9 @@
-add_task(function*() {
+add_task(async function() {
   SpecialPowers.pushPrefEnv({set: [
     ["layout.spellcheckDefault", 2]
   ]});
 
-  let prefs = yield openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
+  let prefs = await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
   is(prefs.selectedPane, "paneGeneral", "General pane was selected");
 
   let doc = gBrowser.contentDocument;
@@ -20,5 +20,5 @@ add_task(function*() {
      "checkbox should represent pref value after clicking on checkbox");
   ok(!checkbox.checked, "checkbox should not be checked after clicking on checkbox");
 
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

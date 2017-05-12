@@ -377,7 +377,6 @@ if (this.addMessageListener) {
   Cu.import("resource://gre/modules/LoginHelper.jsm");
   Cu.import("resource://gre/modules/LoginManagerParent.jsm");
   Cu.import("resource://gre/modules/Services.jsm");
-  Cu.import("resource://gre/modules/Task.jsm");
 
   function onStorageChanged(subject, topic, data) {
     sendAsyncMessage("storageChanged", {
@@ -407,17 +406,17 @@ if (this.addMessageListener) {
     sendAsyncMessage("doneSetup");
   });
 
-  addMessageListener("loadRecipes", Task.async(function*(recipes) {
-    var recipeParent = yield LoginManagerParent.recipeParentPromise;
-    yield recipeParent.load(recipes);
+  addMessageListener("loadRecipes", async function(recipes) {
+    var recipeParent = await LoginManagerParent.recipeParentPromise;
+    await recipeParent.load(recipes);
     sendAsyncMessage("loadedRecipes", recipes);
-  }));
+  });
 
-  addMessageListener("resetRecipes", Task.async(function*() {
-    let recipeParent = yield LoginManagerParent.recipeParentPromise;
-    yield recipeParent.reset();
+  addMessageListener("resetRecipes", async function() {
+    let recipeParent = await LoginManagerParent.recipeParentPromise;
+    await recipeParent.reset();
     sendAsyncMessage("recipesReset");
-  }));
+  });
 
   addMessageListener("proxyLoginManager", msg => {
     // Recreate nsILoginInfo objects from vanilla JS objects.

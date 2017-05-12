@@ -21,30 +21,30 @@ const searchInNewTabMenuItem = document.getAnonymousElementByAttribute(
   oneOffBinding, "anonid", "search-one-offs-context-open-in-new-tab"
 );
 
-add_task(function* init() {
-  yield promiseNewEngine(TEST_ENGINE_BASENAME, {
+add_task(async function init() {
+  await promiseNewEngine(TEST_ENGINE_BASENAME, {
     setAsCurrent: false,
   });
 });
 
-add_task(function* extendedTelemetryDisabled() {
-  yield SpecialPowers.pushPrefEnv({set: [["toolkit.telemetry.enabled", false]]});
-  yield doTest();
+add_task(async function extendedTelemetryDisabled() {
+  await SpecialPowers.pushPrefEnv({set: [["toolkit.telemetry.enabled", false]]});
+  await doTest();
   checkTelemetry("other");
 });
 
-add_task(function* extendedTelemetryEnabled() {
-  yield SpecialPowers.pushPrefEnv({set: [["toolkit.telemetry.enabled", true]]});
-  yield doTest();
+add_task(async function extendedTelemetryEnabled() {
+  await SpecialPowers.pushPrefEnv({set: [["toolkit.telemetry.enabled", true]]});
+  await doTest();
   checkTelemetry("other-" + TEST_ENGINE_NAME);
 });
 
-function* doTest() {
+async function doTest() {
   // Open the popup.
   let promise = promiseEvent(searchPopup, "popupshown");
   info("Opening search panel");
   EventUtils.synthesizeMouseAtCenter(searchIcon, {});
-  yield promise;
+  await promise;
 
   // Get the one-off button for the test engine.
   let oneOffButton;
@@ -63,28 +63,28 @@ function* doTest() {
     type: "contextmenu",
     button: 2,
   });
-  yield promise;
+  await promise;
 
   // Click the Search in New Tab menu item.
   promise = BrowserTestUtils.waitForNewTab(gBrowser);
   EventUtils.synthesizeMouseAtCenter(searchInNewTabMenuItem, {});
-  let tab = yield promise;
+  let tab = await promise;
 
   // By default the search will open in the background and the popup will stay open:
   promise = promiseEvent(searchPopup, "popuphidden");
   info("Closing search panel");
   EventUtils.synthesizeKey("VK_ESCAPE", {});
-  yield promise;
+  await promise;
 
   // Check the loaded tab.
   Assert.equal(tab.linkedBrowser.currentURI.spec,
                "http://mochi.test:8888/browser/browser/components/search/test/",
                "Expected search tab should have loaded");
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 
   // Move the cursor out of the panel area to avoid messing with other tests.
-  yield EventUtils.synthesizeNativeMouseMove(searchbar);
+  await EventUtils.synthesizeNativeMouseMove(searchbar);
 }
 
 function checkTelemetry(expectedEngineName) {

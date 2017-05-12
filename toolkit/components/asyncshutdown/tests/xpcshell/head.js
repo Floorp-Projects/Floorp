@@ -9,7 +9,6 @@ var Cr = Components.results;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/AsyncShutdown.jsm");
 
 var asyncShutdownService = Cc["@mozilla.org/async-shutdown-service;1"].
@@ -76,17 +75,17 @@ function makeLock(kind) {
             name: blockerName,
             state,
             blockShutdown(aBarrierClient) {
-              return Task.spawn(function*() {
+              return (async function() {
                 try {
                   if (typeof condition == "function") {
-                    yield Promise.resolve(condition());
+                    await Promise.resolve(condition());
                   } else {
-                    yield Promise.resolve(condition);
+                    await Promise.resolve(condition);
                   }
                 } finally {
                   aBarrierClient.removeBlocker(blocker);
                 }
-              });
+              })();
             },
           };
           makeLock.xpcomMap.set(condition, blocker);

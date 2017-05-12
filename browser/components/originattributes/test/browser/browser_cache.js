@@ -138,14 +138,14 @@ function* doInit(aMode) {
 // In the test function, we dynamically generate the video and audio element,
 // and assign a random suffix to their URL to isolate them across different
 // test runs.
-function* doTest(aBrowser) {
+async function doTest(aBrowser) {
 
   let argObj = {
     randomSuffix,
     urlPrefix: TEST_DOMAIN + TEST_PATH,
   };
 
-  yield ContentTask.spawn(aBrowser, argObj, function* (arg) {
+  await ContentTask.spawn(aBrowser, argObj, async function(arg) {
     let videoURL = arg.urlPrefix + "file_thirdPartyChild.video.ogv";
     let audioURL = arg.urlPrefix + "file_thirdPartyChild.audio.ogg";
     let trackURL = arg.urlPrefix + "file_thirdPartyChild.track.vtt";
@@ -158,7 +158,7 @@ function* doTest(aBrowser) {
     let audioTrack = content.document.createElement("track");
 
     // Append the audio and track element into the body, and wait until they're finished.
-    yield new Promise(resolve => {
+    await new Promise(resolve => {
       let audioLoaded = false;
       let trackLoaded = false;
 
@@ -198,7 +198,7 @@ function* doTest(aBrowser) {
     });
 
     // Append the video element into the body, and wait until it's finished.
-    yield new Promise(resolve => {
+    await new Promise(resolve => {
       let listener = () => {
         video.removeEventListener("canplaythrough", listener);
         resolve();

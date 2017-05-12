@@ -15,15 +15,15 @@ function* test_on_browser(url, browser) {
   yield wait_for_event(browser, "DOMAudioPlaybackStopped");
 }
 
-add_task(function* test_page() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function test_page() {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "about:blank",
   }, test_on_browser.bind(undefined, PAGE));
 });
 
-add_task(function* test_frame() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function test_frame() {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "about:blank",
   }, test_on_browser.bind(undefined, FRAME));

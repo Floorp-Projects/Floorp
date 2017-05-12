@@ -6,8 +6,8 @@ const DRAG_FORBIDDEN_URL = "chrome://browser/content/aboutDialog.xul";
 const DRAG_TEXT = "Firefox is awesome";
 const DRAG_WORD = "Firefox";
 
-add_task(function* checkDragURL() {
-  yield BrowserTestUtils.withNewTab(TEST_URL, function* (browser) {
+add_task(async function checkDragURL() {
+  await BrowserTestUtils.withNewTab(TEST_URL, function(browser) {
     // Have to use something other than the URL bar as a source, so picking the
     // downloads button somewhat arbitrarily:
     EventUtils.synthesizeDrop(document.getElementById("downloads-button"), gURLBar,
@@ -17,16 +17,16 @@ add_task(function* checkDragURL() {
   });
 });
 
-add_task(function* checkDragForbiddenURL() {
-  yield BrowserTestUtils.withNewTab(TEST_URL, function* (browser) {
+add_task(async function checkDragForbiddenURL() {
+  await BrowserTestUtils.withNewTab(TEST_URL, function(browser) {
     EventUtils.synthesizeDrop(document.getElementById("downloads-button"), gURLBar,
                               [[{type: "text/plain", data: DRAG_FORBIDDEN_URL}]], "copy", window);
     isnot(gURLBar.value, DRAG_FORBIDDEN_URL, "Shouldn't be allowed to drop forbidden URL on URL bar");
   });
 });
 
-add_task(function* checkDragText() {
-  yield BrowserTestUtils.withNewTab(TEST_URL, function* (browser) {
+add_task(async function checkDragText() {
+  await BrowserTestUtils.withNewTab(TEST_URL, function(browser) {
     EventUtils.synthesizeDrop(document.getElementById("downloads-button"), gURLBar,
                               [[{type: "text/plain", data: DRAG_TEXT}]], "copy", window);
     is(gURLBar.value, DRAG_TEXT, "Dragging normal text should replace the URL bar value");

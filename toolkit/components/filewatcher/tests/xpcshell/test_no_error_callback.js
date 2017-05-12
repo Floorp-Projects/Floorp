@@ -16,7 +16,7 @@ function run_test() {
  * Test the component behaves correctly when no error callback is
  * provided and an error occurs.
  */
-add_task(function* test_error_with_no_error_callback() {
+add_task(async function test_error_with_no_error_callback() {
 
   let watcher = makeWatcher();
   let testPath = "someInvalidPath";
@@ -36,12 +36,12 @@ add_task(function* test_error_with_no_error_callback() {
  * Test the component behaves correctly when no error callback is
  * provided (no error should occur).
  */
-add_task(function* test_watch_single_path_file_creation_no_error_cb() {
+add_task(async function test_watch_single_path_file_creation_no_error_cb() {
 
   // Create and watch a sub-directory of the profile directory so we don't
   // catch notifications we're not interested in (i.e. "startupCache").
   let watchedDir = OS.Path.join(OS.Constants.Path.profileDir, "filewatcher_playground");
-  yield OS.File.makeDir(watchedDir);
+  await OS.File.makeDir(watchedDir);
 
   let tempFileName = "test_filecreation.tmp";
 
@@ -50,14 +50,14 @@ add_task(function* test_watch_single_path_file_creation_no_error_cb() {
   let deferred = Promise.defer();
 
   // Watch the profile directory but do not pass an error callback.
-  yield promiseAddPath(watcher, watchedDir, deferred.resolve);
+  await promiseAddPath(watcher, watchedDir, deferred.resolve);
 
   // Create a file within the watched directory.
   let tmpFilePath = OS.Path.join(watchedDir, tempFileName);
-  yield OS.File.writeAtomic(tmpFilePath, "some data");
+  await OS.File.writeAtomic(tmpFilePath, "some data");
 
   // Wait until the watcher informs us that the file was created.
-  let changed = yield deferred.promise;
+  let changed = await deferred.promise;
   do_check_eq(changed, tmpFilePath);
 
   // Remove the watch and free the associated memory (we need to
@@ -65,5 +65,5 @@ add_task(function* test_watch_single_path_file_creation_no_error_cb() {
   watcher.removePath(watchedDir, deferred.resolve);
 
   // Remove the test directory and all of its content.
-  yield OS.File.removeDir(watchedDir);
+  await OS.File.removeDir(watchedDir);
 });

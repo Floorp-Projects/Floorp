@@ -95,22 +95,22 @@ registerCleanupFunction(function() {
 });
 
 // Test listing site using quota usage or site using appcache
-add_task(function *() {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
 
   // Open a test site which would save into appcache
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_OFFLINE_URL);
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_OFFLINE_URL);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   // Open a test site which would save into quota manager
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_QUOTA_USAGE_URL);
-  yield waitForEvent(gBrowser.selectedBrowser.contentWindow, "test-indexedDB-done");
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_QUOTA_USAGE_URL);
+  await waitForEvent(gBrowser.selectedBrowser.contentWindow, "test-indexedDB-done");
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   let updatedPromise = promiseSiteDataManagerSitesUpdated();
-  yield openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
-  yield updatedPromise;
-  yield openSiteDataSettingsDialog();
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  await updatedPromise;
+  await openSiteDataSettingsDialog();
   let doc = gBrowser.selectedBrowser.contentDocument;
   let dialogFrame = doc.getElementById("dialogFrame");
   let frameDoc = dialogFrame.contentDocument;
@@ -126,21 +126,21 @@ add_task(function *() {
 
   // Always remember to clean up
   OfflineAppCacheHelper.clear();
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     let principal = Services.scriptSecurityManager
                             .createCodebasePrincipalFromOrigin(TEST_QUOTA_USAGE_ORIGIN);
     let request = Services.qms.clearStoragesForPrincipal(principal, null, true);
     request.callback = resolve;
   });
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 // Test buttons are disabled and loading message shown while updating sites
-add_task(function *() {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
   let updatedPromise = promiseSiteDataManagerSitesUpdated();
-  yield openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
-  yield updatedPromise;
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  await updatedPromise;
 
   let actual = null;
   let expected = null;
@@ -151,7 +151,7 @@ add_task(function *() {
   let totalSiteDataSizeLabel = doc.getElementById("totalSiteDataSize");
   is(clearBtn.disabled, false, "Should enable clear button after sites updated");
   is(settingsButton.disabled, false, "Should enable settings button after sites updated");
-  yield SiteDataManager.getTotalUsage()
+  await SiteDataManager.getTotalUsage()
                        .then(usage => {
                          actual = totalSiteDataSizeLabel.textContent;
                          expected = prefStrBundle.getFormattedString(
@@ -169,7 +169,7 @@ add_task(function *() {
   Services.obs.notifyObservers(null, "sitedatamanager:sites-updated");
   is(clearBtn.disabled, false, "Should enable clear button after sites updated");
   is(settingsButton.disabled, false, "Should enable settings button after sites updated");
-  yield SiteDataManager.getTotalUsage()
+  await SiteDataManager.getTotalUsage()
                        .then(usage => {
                          actual = totalSiteDataSizeLabel.textContent;
                          expected = prefStrBundle.getFormattedString(
@@ -177,24 +177,24 @@ add_task(function *() {
                           is(actual, expected, "Should show the right total site data size");
                        });
 
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 // Test the function of the "Clear All Data" button
-add_task(function* () {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
   addPersistentStoragePerm(TEST_QUOTA_USAGE_ORIGIN);
 
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_QUOTA_USAGE_URL);
-  yield waitForEvent(gBrowser.selectedBrowser.contentWindow, "test-indexedDB-done");
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_QUOTA_USAGE_URL);
+  await waitForEvent(gBrowser.selectedBrowser.contentWindow, "test-indexedDB-done");
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
-  yield openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
 
   // Test the initial states
-  let cacheUsage = yield cacheUsageGetter.get();
-  let quotaUsage = yield getQuotaUsage(TEST_QUOTA_USAGE_ORIGIN);
-  let totalUsage = yield SiteDataManager.getTotalUsage();
+  let cacheUsage = await cacheUsageGetter.get();
+  let quotaUsage = await getQuotaUsage(TEST_QUOTA_USAGE_ORIGIN);
+  let totalUsage = await SiteDataManager.getTotalUsage();
   Assert.greater(cacheUsage, 0, "The cache usage should not be 0");
   Assert.greater(quotaUsage, 0, "The quota usage should not be 0");
   Assert.greater(totalUsage, 0, "The total usage should not be 0");
@@ -205,15 +205,15 @@ add_task(function* () {
   let cancelPromise = promiseAlertDialogOpen("cancel");
   let clearBtn = doc.getElementById("clearSiteDataButton");
   clearBtn.doCommand();
-  yield cancelPromise;
+  await cancelPromise;
 
   // Test the items are not removed
   let status = getPersistentStoragePermStatus(TEST_QUOTA_USAGE_ORIGIN);
   is(status, Ci.nsIPermissionManager.ALLOW_ACTION, "Should not remove permission");
 
-  cacheUsage = yield cacheUsageGetter.get();
-  quotaUsage = yield getQuotaUsage(TEST_QUOTA_USAGE_ORIGIN);
-  totalUsage = yield SiteDataManager.getTotalUsage();
+  cacheUsage = await cacheUsageGetter.get();
+  quotaUsage = await getQuotaUsage(TEST_QUOTA_USAGE_ORIGIN);
+  totalUsage = await SiteDataManager.getTotalUsage();
   Assert.greater(cacheUsage, 0, "The cache usage should not be 0");
   Assert.greater(quotaUsage, 0, "The quota usage should not be 0");
   Assert.greater(totalUsage, 0, "The total usage should not be 0");
@@ -227,32 +227,32 @@ add_task(function* () {
 
   mockOfflineAppCacheHelper.register();
   clearBtn.doCommand();
-  yield acceptPromise;
-  yield updatePromise;
+  await acceptPromise;
+  await updatePromise;
   mockOfflineAppCacheHelper.unregister();
 
   // Test all the items are removed
-  yield cookiesClearedPromise;
+  await cookiesClearedPromise;
 
   ok(mockOfflineAppCacheHelper.clear.calledOnce, "Should clear app cache");
 
   status = getPersistentStoragePermStatus(TEST_QUOTA_USAGE_ORIGIN);
   is(status, Ci.nsIPermissionManager.UNKNOWN_ACTION, "Should remove permission");
 
-  cacheUsage = yield cacheUsageGetter.get();
-  quotaUsage = yield getQuotaUsage(TEST_QUOTA_USAGE_ORIGIN);
-  totalUsage = yield SiteDataManager.getTotalUsage();
+  cacheUsage = await cacheUsageGetter.get();
+  quotaUsage = await getQuotaUsage(TEST_QUOTA_USAGE_ORIGIN);
+  totalUsage = await SiteDataManager.getTotalUsage();
   is(cacheUsage, 0, "The cache usage should be removed");
   is(quotaUsage, 0, "The quota usage should be removed");
   is(totalUsage, 0, "The total usage should be removed");
   // Test accepting "Clear All Data" ends
 
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 // Test sorting
-add_task(function* () {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
   mockSiteDataManager.register(SiteDataManager);
   mockSiteDataManager.fakeSites = [
     {
@@ -276,9 +276,9 @@ add_task(function* () {
   ];
 
   let updatePromise = promiseSiteDataManagerSitesUpdated();
-  yield openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
-  yield updatePromise;
-  yield openSiteDataSettingsDialog();
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  await updatePromise;
+  await openSiteDataSettingsDialog();
 
   let doc = gBrowser.selectedBrowser.contentDocument;
   let dialogFrame = doc.getElementById("dialogFrame");
@@ -310,7 +310,7 @@ add_task(function* () {
   assertSortByStatus("descending");
 
   mockSiteDataManager.unregister();
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   function assertSortByHost(order) {
     let siteItems = sitesList.getElementsByTagName("richlistitem");
@@ -369,8 +369,8 @@ add_task(function* () {
 });
 
 // Test search on the host column
-add_task(function* () {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
   mockSiteDataManager.register(SiteDataManager);
   mockSiteDataManager.fakeSites = [
     {
@@ -401,9 +401,9 @@ add_task(function* () {
   let fakeHosts = mockSiteDataManager.fakeSites.map(site => site.principal.URI.host);
 
   let updatePromise = promiseSiteDataManagerSitesUpdated();
-  yield openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
-  yield updatePromise;
-  yield openSiteDataSettingsDialog();
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  await updatePromise;
+  await openSiteDataSettingsDialog();
 
   let doc = gBrowser.selectedBrowser.contentDocument;
   let frameDoc = doc.getElementById("dialogFrame").contentDocument;
@@ -422,5 +422,5 @@ add_task(function* () {
   assertSitesListed(doc, fakeHosts);
 
   mockSiteDataManager.unregister();
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

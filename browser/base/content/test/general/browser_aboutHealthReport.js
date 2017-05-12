@@ -4,8 +4,6 @@
 
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
   "resource://gre/modules/Promise.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-  "resource://gre/modules/Task.jsm");
 
 const CHROME_BASE = "chrome://mochitests/content/browser/browser/base/content/test/general/";
 const HTTPS_BASE = "https://example.com/browser/browser/base/content/test/general/";
@@ -61,12 +59,12 @@ var gTests = [
 
 {
   desc: "Test the remote commands",
-  setup: Task.async(function*() {
+  async setup() {
     Preferences.set(TELEMETRY_LOG_PREF, "Trace");
-    yield setupPingArchive();
+    await setupPingArchive();
     Preferences.set("datareporting.healthreport.about.reportUrl",
                     HTTPS_BASE + "healthreport_testRemoteCommands.html");
-  }),
+  },
   run(iframe) {
     let deferred = Promise.defer();
     let results = 0;
@@ -99,20 +97,20 @@ function test() {
   // xxxmpc leaving this here until we resolve bug 854038 and bug 854060
   requestLongerTimeout(10);
 
-  Task.spawn(function* () {
+  (async function() {
     for (let testCase of gTests) {
       info(testCase.desc);
-      yield testCase.setup();
+      await testCase.setup();
 
-      let iframe = yield promiseNewTabLoadEvent("about:healthreport");
+      let iframe = await promiseNewTabLoadEvent("about:healthreport");
 
-      yield testCase.run(iframe);
+      await testCase.run(iframe);
 
       gBrowser.removeCurrentTab();
     }
 
     finish();
-  });
+  })();
 }
 
 function promiseNewTabLoadEvent(aUrl, aEventType = "load") {

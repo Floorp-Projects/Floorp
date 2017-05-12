@@ -70,11 +70,11 @@ var testData = [
 
   // Test escaping (%s = escaped, %S = raw)
   // UTF-8 default
-  [new bmKeywordData("bmget-escaping", "http://bmget/?esc=%s&raw=%S", null, "foé"),
-   new keywordResult("http://bmget/?esc=fo%C3%A9&raw=foé", null)],
+  [new bmKeywordData("bmget-escaping", "http://bmget/?esc=%s&raw=%S", null, "foï¿½"),
+   new keywordResult("http://bmget/?esc=fo%C3%A9&raw=foï¿½", null)],
   // Explicitly-defined ISO-8859-1
-  [new bmKeywordData("bmget-escaping2", "http://bmget/?esc=%s&raw=%S&mozcharset=ISO-8859-1", null, "foé"),
-   new keywordResult("http://bmget/?esc=fo%E9&raw=foé", null)],
+  [new bmKeywordData("bmget-escaping2", "http://bmget/?esc=%s&raw=%S&mozcharset=ISO-8859-1", null, "foï¿½"),
+   new keywordResult("http://bmget/?esc=fo%E9&raw=foï¿½", null)],
 
   // Bug 359809: Test escaping +, /, and @
   // UTF-8 default
@@ -91,8 +91,8 @@ var testData = [
    new keywordResult(null, null, true)]
 ];
 
-add_task(function* test_getshortcutoruri() {
-  yield setupKeywords();
+add_task(async function test_getshortcutoruri() {
+  await setupKeywords();
 
   for (let item of testData) {
     let [data, result] = item;
@@ -100,7 +100,7 @@ add_task(function* test_getshortcutoruri() {
     let query = data.keyword;
     if (data.searchWord)
       query += " " + data.searchWord;
-    let returnedData = yield getShortcutOrURIAndPostData(query);
+    let returnedData = await getShortcutOrURIAndPostData(query);
     // null result.url means we should expect the same query we sent in
     let expected = result.url || query;
     is(returnedData.url, expected, "got correct URL for " + data.keyword);
@@ -108,7 +108,7 @@ add_task(function* test_getshortcutoruri() {
     is(returnedData.mayInheritPrincipal, !result.isUnsafe, "got correct mayInheritPrincipal for " + data.keyword);
   }
 
-  yield cleanupKeywords();
+  await cleanupKeywords();
 });
 
 var folder = null;
@@ -137,7 +137,7 @@ function* setupKeywords() {
   }
 }
 
-function* cleanupKeywords() {
+function cleanupKeywords() {
   PlacesUtils.bookmarks.remove(folder);
   gAddedEngines.map(Services.search.removeEngine);
 }

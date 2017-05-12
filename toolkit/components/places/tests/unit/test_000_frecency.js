@@ -53,7 +53,7 @@ var matchCount = 0;
 var now = Date.now();
 var prefPrefix = "places.frecency.";
 
-function* task_initializeBucket(bucket) {
+async function task_initializeBucket(bucket) {
   let [cutoffName, weightName] = bucket;
   // get pref values
   var weight = prefs.getIntPref(prefPrefix + weightName, 0);
@@ -83,7 +83,7 @@ function* task_initializeBucket(bucket) {
           bmsvc.insertBookmark(bmsvc.unfiledBookmarksFolder, calculatedURI, bmsvc.DEFAULT_INDEX, matchTitle);
         } else {
           matchTitle = searchTerm + "UnvisitedTyped";
-          yield PlacesTestUtils.addVisits({
+          await PlacesTestUtils.addVisits({
             uri: calculatedURI,
             title: matchTitle,
             transition: visitType,
@@ -118,7 +118,7 @@ function* task_initializeBucket(bucket) {
         bmsvc.insertBookmark(bmsvc.unfiledBookmarksFolder, calculatedURI, bmsvc.DEFAULT_INDEX, matchTitle);
       } else
         matchTitle = calculatedURI.spec.substr(calculatedURI.spec.lastIndexOf("/") + 1);
-      yield PlacesTestUtils.addVisits({
+      await PlacesTestUtils.addVisits({
         uri: calculatedURI,
         transition: visitType,
         visitDate: dateInPeriod
@@ -127,7 +127,7 @@ function* task_initializeBucket(bucket) {
 
     if (calculatedURI && frecency) {
       results.push([calculatedURI, frecency, matchTitle]);
-      yield PlacesTestUtils.addVisits({
+      await PlacesTestUtils.addVisits({
         uri: calculatedURI,
         title: matchTitle,
         transition: visitType,
@@ -189,12 +189,12 @@ AutoCompleteInput.prototype = {
   }
 }
 
-add_task(function* test_frecency() {
+add_task(async function test_frecency() {
   // Disable autoFill for this test.
   Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
   do_register_cleanup(() => Services.prefs.clearUserPref("browser.urlbar.autoFill"));
   for (let bucket of bucketPrefs) {
-    yield task_initializeBucket(bucket);
+    await task_initializeBucket(bucket);
   }
 
   // sort results by frecency
@@ -205,7 +205,7 @@ add_task(function* test_frecency() {
   // DEBUG
   // results.every(function(el) { dump("result: " + el[1] + ": " + el[0].spec + " (" + el[2] + ")\n"); return true; })
 
-  yield PlacesTestUtils.promiseAsyncUpdates();
+  await PlacesTestUtils.promiseAsyncUpdates();
 
   var controller = Components.classes["@mozilla.org/autocomplete/controller;1"].
                    getService(Components.interfaces.nsIAutoCompleteController);
@@ -258,5 +258,5 @@ add_task(function* test_frecency() {
 
   controller.startSearch(searchTerm);
 
-  yield deferred.promise;
+  await deferred.promise;
 });

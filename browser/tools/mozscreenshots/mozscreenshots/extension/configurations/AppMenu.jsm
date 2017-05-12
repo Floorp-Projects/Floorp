@@ -9,7 +9,6 @@ this.EXPORTED_SYMBOLS = ["AppMenu"];
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 
 this.AppMenu = {
 
@@ -17,10 +16,10 @@ this.AppMenu = {
 
   configurations: {
     appMenuClosed: {
-      applyConfig: Task.async(function*() {
+      async applyConfig() {
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
         browserWindow.PanelUI.hide();
-      }),
+      },
     },
 
     appMenuMainView: {

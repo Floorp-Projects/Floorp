@@ -26,12 +26,12 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_nodb_pluschanges() {
-  let [engine1, engine2] = yield addTestEngines([
+add_task(async function test_nodb_pluschanges() {
+  let [engine1, engine2] = await addTestEngines([
     { name: "Test search engine", xmlFileName: "engine.xml" },
     { name: "A second test engine", xmlFileName: "engine2.xml"},
   ]);
-  yield promiseAfterCache();
+  await promiseAfterCache();
 
   let search = Services.search;
 
@@ -40,17 +40,17 @@ add_task(function* test_nodb_pluschanges() {
 
   // This is needed to avoid some reentrency issues in nsSearchService.
   do_print("Next step is forcing flush");
-  yield new Promise(resolve => do_execute_soon(resolve));
+  await new Promise(resolve => do_execute_soon(resolve));
 
   do_print("Forcing flush");
   let promiseCommit = promiseAfterCache();
   search.QueryInterface(Ci.nsIObserver)
         .observe(null, "quit-application", "");
-  yield promiseCommit;
+  await promiseCommit;
   do_print("Commit complete");
 
   // Check that the entries are placed as specified correctly
-  let metadata = yield promiseEngineMetadata();
+  let metadata = await promiseEngineMetadata();
   do_check_eq(metadata["test-search-engine"].order, 1);
   do_check_eq(metadata["a-second-test-engine"].order, 2);
 });

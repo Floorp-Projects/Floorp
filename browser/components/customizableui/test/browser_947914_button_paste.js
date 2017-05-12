@@ -7,9 +7,9 @@
 var initialLocation = gBrowser.currentURI.spec;
 var globalClipboard;
 
-add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
-  yield BrowserTestUtils.withNewTab({gBrowser, url: "about:blank"}, function*() {
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+  await BrowserTestUtils.withNewTab({gBrowser, url: "about:blank"}, function*() {
     info("Check paste button existence and functionality");
 
     let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
