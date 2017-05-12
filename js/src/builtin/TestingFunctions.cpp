@@ -6,6 +6,7 @@
 
 #include "builtin/TestingFunctions.h"
 
+#include "mozilla/Atomics.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Move.h"
 #include "mozilla/Sprintf.h"
@@ -67,11 +68,11 @@ using mozilla::Move;
 
 // If fuzzingSafe is set, remove functionality that could cause problems with
 // fuzzers. Set this via the environment variable MOZ_FUZZING_SAFE.
-static bool fuzzingSafe = false;
+static mozilla::Atomic<bool> fuzzingSafe(false);
 
 // If disableOOMFunctions is set, disable functionality that causes artificial
 // OOM conditions.
-static bool disableOOMFunctions = false;
+static mozilla::Atomic<bool> disableOOMFunctions(false);
 
 static bool
 EnvVarIsDefined(const char* name)
