@@ -190,6 +190,10 @@ private:
 
   CompositorBridgeParent* GetRootCompositorBridgeParent() const;
 
+  // Have APZ push the async scroll state to WR. Returns true if an APZ
+  // animation is in effect and we need to schedule another composition.
+  bool PushAPZStateToWR();
+
 private:
   struct PendingTransactionId {
     PendingTransactionId(wr::Epoch aEpoch, uint64_t aId)
