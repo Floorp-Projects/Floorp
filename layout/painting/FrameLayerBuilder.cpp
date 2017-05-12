@@ -1609,27 +1609,22 @@ struct CSSMaskLayerUserData : public LayerUserData
     : mMaskStyle(nsStyleImageLayers::LayerType::Mask)
   { }
 
-  CSSMaskLayerUserData(nsIFrame* aFrame, const nsIntSize& aMaskSize)
-    : mMaskSize(aMaskSize),
+  CSSMaskLayerUserData(nsIFrame* aFrame, const nsIntRect& aMaskBounds)
+    : mMaskBounds(aMaskBounds),
       mMaskStyle(aFrame->StyleSVGReset()->mMask)
   {
   }
 
   void operator=(CSSMaskLayerUserData&& aOther)
   {
-    mMaskSize = aOther.mMaskSize;
+    mMaskBounds = aOther.mMaskBounds;
     mMaskStyle = Move(aOther.mMaskStyle);
   }
 
   bool
   operator==(const CSSMaskLayerUserData& aOther) const
   {
-    // Even if the frame is valid, check the size of the display item's
-    // boundary is still necessary. For example, if we scale the masked frame
-    // by adding a transform property on it, the masked frame is valid itself
-    // but we have to regenerate mask according to the new size in device
-    // space.
-    if (mMaskSize != aOther.mMaskSize) {
+    if (!mMaskBounds.IsEqualInterior(aOther.mMaskBounds)) {
       return false;
     }
 
@@ -1637,7 +1632,7 @@ struct CSSMaskLayerUserData : public LayerUserData
   }
 
 private:
-  nsIntSize mMaskSize;
+  nsIntRect mMaskBounds;
   nsStyleImageLayers mMaskStyle;
 };
 
@@ -3906,7 +3901,7 @@ ContainerState::SetupMaskLayerForCSSMask(Layer* aLayer,
   matrix.PreTranslate(mParameters.mOffset.x, mParameters.mOffset.y, 0);
   maskLayer->SetBaseTransform(matrix);
 
-  CSSMaskLayerUserData newUserData(aMaskItem->Frame(), itemRect.Size());
+  CSSMaskLayerUserData newUserData(aMaskItem->Frame(), itemRect);
   nsRect dirtyRect;
   if (!aMaskItem->IsInvalid(dirtyRect) && *oldUserData == newUserData) {
     aLayer->SetMaskLayer(maskLayer);
