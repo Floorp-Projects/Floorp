@@ -150,6 +150,12 @@ var Bookmarks = Object.freeze({
    // be removed.  Do not rely on this, rather use the tagging service API.
    tagsGuid:    "tags________",
 
+   /**
+    * The GUIDs of the user content root folders that we support, for easy access
+    * as a set.
+    */
+   userContentRoots: ["toolbar_____", "menu________", "unfiled_____", "mobile______"],
+
   /**
    * Inserts a bookmark-item into the bookmarks tree.
    *
@@ -263,7 +269,7 @@ var Bookmarks = Object.freeze({
    * will be used for all the items inserted. Any indices or custom parentGuids
    * set on children will be ignored and overwritten.
    *
-   * @param tree
+   * @param {Object} tree
    *        object representing a tree of bookmark items to insert.
    *
    * @return {Promise} resolved when the creation is complete.
@@ -281,7 +287,7 @@ var Bookmarks = Object.freeze({
     }
 
     if (!PlacesUtils.isValidGuid(tree.guid)) {
-      throw new Error("The parent guid is not valid.");
+      throw new Error(`The parent guid is not valid (${tree.guid} ${tree.title}).`);
     }
 
     if (tree.guid == this.rootGuid) {
@@ -299,6 +305,7 @@ var Bookmarks = Object.freeze({
 
     // Serialize the tree into an array of items to insert into the db.
     let insertInfos = [];
+    let insertLivemarkInfos = [];
     let urlsThatMightNeedPlaces = [];
 
     // We want to use the same 'last added' time for all the entries
@@ -356,8 +363,14 @@ var Bookmarks = Object.freeze({
                                         (b.dateAdded && b.lastModified >= b.dateAdded) },
           index: { replaceWith: indexToUse++ },
           source: { replaceWith: source },
+          annos: {},
+          keyword: { validIf: b => b.type == TYPE_BOOKMARK },
+          charset: { validIf: b => b.type == TYPE_BOOKMARK },
+          postData: { validIf: b => b.type == TYPE_BOOKMARK },
+          tags: { validIf: b => b.type == TYPE_BOOKMARK },
           children: { validIf: b => b.type == TYPE_FOLDER && Array.isArray(b.children) }
         });
+
         if (shouldUseNullIndices) {
           insertInfo.index = null;
         }
@@ -366,6 +379,21 @@ var Bookmarks = Object.freeze({
         if (insertInfo.type == Bookmarks.TYPE_BOOKMARK) {
           urlsThatMightNeedPlaces.push(insertInfo.url);
         }
+
+        // As we don't track indexes for children of root folders, and we
+        // insert livemarks separately, we create a temporary placeholder in
+        // the bookmarks, and later we'll replace it by the real livemark.
+        if (isLivemark(insertInfo)) {
+          // Make the current insertInfo item a placeholder.
+          let livemarkInfo = Object.assign({}, insertInfo);
+
+          // Delete the annotations that make it a livemark.
+          delete insertInfo.annos;
+
+          // Now save the livemark info for later.
+          insertLivemarkInfos.push(livemarkInfo);
+        }
+
         insertInfos.push(insertInfo);
         // Process any children. We have to use info.children here rather than
         // insertInfo.children because validateBookmarkObject doesn't copy over
@@ -389,6 +417,7 @@ var Bookmarks = Object.freeze({
       }
       return lastAddedForParent;
     }
+
     // We want to validate synchronously, but we can't know the index at which
     // we're inserting into the parent. We just use NULL instead,
     // and the SQL query with which we insert will update it as necessary.
@@ -406,6 +435,9 @@ var Bookmarks = Object.freeze({
 
       await insertBookmarkTree(insertInfos, source, parent,
                                urlsThatMightNeedPlaces, lastAddedForParent);
+
+      await insertLivemarkData(insertLivemarkInfos);
+
       // Now update the indices of root items in the objects we return.
       // These may be wrong if someone else modified the table between
       // when we fetched the parent and inserted our items, but the actual
@@ -426,13 +458,32 @@ var Bookmarks = Object.freeze({
         let item = insertInfos[i];
         let itemId = itemIdMap.get(item.guid);
         let uri = item.hasOwnProperty("url") ? PlacesUtils.toURI(item.url) : null;
-        notify(observers, "onItemAdded", [ itemId, parent._id, item.index,
+        // For sub-folders, we need to make sure their children have the correct parent ids.
+        let parentId;
+        if (item.guid === parent.guid ||
+            Bookmarks.userContentRoots.includes(item.parentGuid)) {
+          // We're the item being inserted at the top-level, or we're a top-level
+          // folder, so the parent id won't have changed.
+          parentId = parent._id;
+        } else {
+          // This is a parent folder that's been updated, so we need to
+          // use the new item id.
+          parentId = itemIdMap.get(item.parentGuid);
+        }
+
+        notify(observers, "onItemAdded", [ itemId, parentId, item.index,
                                            item.type, uri, item.title || null,
                                            PlacesUtils.toPRTime(item.dateAdded), item.guid,
                                            item.parentGuid, item.source ],
                                          { isTagging: false });
         // Remove non-enumerable properties.
         delete item.source;
+
+        // Note, annotations for livemark data are deleted from insertInfo
+        // within appendInsertionInfoForInfoArray, so we won't be duplicating
+        // the insertions here.
+        await handleBookmarkItemSpecialData(itemId, item);
+
         insertInfos[i] = Object.assign({}, item);
       }
       return insertInfos;
@@ -698,18 +749,16 @@ var Bookmarks = Object.freeze({
       options.source = Bookmarks.SOURCES.DEFAULT;
     }
 
-    const folderGuids = [this.toolbarGuid, this.menuGuid, this.unfiledGuid,
-                          this.mobileGuid];
     return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: eraseEverything",
       async function(db) {
         let urls;
 
         await db.executeTransaction(async function() {
-          urls = await removeFoldersContents(db, folderGuids, options);
+          urls = await removeFoldersContents(db, Bookmarks.userContentRoots, options);
           const time = PlacesUtils.toPRTime(new Date());
           const syncChangeDelta =
             PlacesSyncUtils.bookmarks.determineSyncChangeDelta(options.source);
-          for (let folderGuid of folderGuids) {
+          for (let folderGuid of Bookmarks.userContentRoots) {
             await db.executeCached(
               `UPDATE moz_bookmarks SET lastModified = :time,
                                         syncChangeCounter = syncChangeCounter + :syncChangeDelta
@@ -1317,6 +1366,16 @@ function insertBookmark(item, parent) {
   });
 }
 
+/**
+ * Determines if a bookmark is a Livemark depending on how it is annotated.
+ *
+ * @param {Object} node The bookmark node to check.
+ * @returns {Boolean} True if the node is a Livemark, false otherwise.
+ */
+function isLivemark(node) {
+  return node.annos && node.annos.some(anno => anno.name == PlacesUtils.LMANNO_FEEDURI);
+}
+
 function insertBookmarkTree(items, source, parent, urls, lastAddedForParent) {
   return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: insertBookmarkTree", async function(db) {
     await db.executeTransaction(async function transaction() {
@@ -1355,6 +1414,102 @@ function insertBookmarkTree(items, source, parent, urls, lastAddedForParent) {
 
     return items;
   });
+}
+
+/**
+ * Handles any Livemarks within the passed items.
+ *
+ * @param {Array} items Livemark items that need to be added.
+ */
+async function insertLivemarkData(items) {
+  for (let item of items) {
+    let feedURI = null;
+    let siteURI = null;
+    item.annos = item.annos.filter(function(aAnno) {
+      switch (aAnno.name) {
+        case PlacesUtils.LMANNO_FEEDURI:
+          feedURI = NetUtil.newURI(aAnno.value);
+          return false;
+        case PlacesUtils.LMANNO_SITEURI:
+          siteURI = NetUtil.newURI(aAnno.value);
+          return false;
+        default:
+          return true;
+      }
+    });
+
+    let index = null;
+
+    // Delete the placeholder but note the index of it, so that we
+    // can insert the livemark item at the right place.
+    let placeholder = await Bookmarks.fetch(item.guid);
+    index = placeholder.index;
+
+    await Bookmarks.remove(item.guid, {source: item.source});
+
+    if (feedURI) {
+      item.feedURI = feedURI;
+      item.siteURI = siteURI;
+      item.index = index;
+
+      if (item.dateAdded) {
+        item.dateAdded = PlacesUtils.toPRTime(item.dateAdded);
+      }
+      if (item.lastModified) {
+        item.lastModified = PlacesUtils.toPRTime(item.lastModified);
+      }
+
+      let livemark = await PlacesUtils.livemarks.addLivemark(item);
+
+      let id = livemark.id;
+      if (item.annos && item.annos.length) {
+        PlacesUtils.setAnnotationsForItem(id, item.annos,
+                                          item.source);
+      }
+    }
+  }
+}
+
+/**
+ * Handles special data on a bookmark, e.g. annotations, keywords, tags, charsets,
+ * inserting the data into the appropriate place.
+ *
+ * @param {Integer} itemId The ID of the item within the bookmarks database.
+ * @param {Object} item The bookmark item with possible special data to be inserted.
+ */
+async function handleBookmarkItemSpecialData(itemId, item) {
+  if (item.annos && item.annos.length) {
+    PlacesUtils.setAnnotationsForItem(itemId, item.annos, item.source)
+  }
+  if ("keyword" in item && item.keyword) {
+    // POST data could be set in 2 ways:
+    // 1. new backups have a postData property
+    // 2. old backups have an item annotation
+    let postDataAnno = item.annos &&
+                       item.annos.find(anno => anno.name == PlacesUtils.POST_DATA_ANNO);
+    let postData = item.postData || (postDataAnno && postDataAnno.value);
+    try {
+      await PlacesUtils.keywords.insert({
+        keyword: item.keyword,
+        url: item.url,
+        postData,
+        source: item.source
+      });
+    } catch (ex) {
+      Cu.reportError(`Failed to insert keywords: ${ex}`);
+    }
+  }
+  if ("tags" in item) {
+    try {
+      PlacesUtils.tagging.tagURI(NetUtil.newURI(item.url), item.tags, item._source);
+    } catch (ex) {
+      // Invalid tag child, skip it.
+      Cu.reportError(`Unable to set tags "${item.tags.join(", ")}" for ${item.url}: ${ex}`);
+    }
+  }
+  if ("charset" in item && item.charset) {
+    await PlacesUtils.setCharsetForURI(NetUtil.newURI(item.url), item.charset);
+  }
 }
 
 // Query implementation.
