@@ -511,5 +511,5 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
             cache=self.config['tooltool_cache']
         )
         python3_path = os.path.join(output_dir, 'python3.6', 'python')
-        self.run_command([python3_path, '--version'])
+        self.run_command([python3_path, '--version'], env=self.query_env())
         return python3_path

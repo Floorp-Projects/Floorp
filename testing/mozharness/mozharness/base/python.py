@@ -811,7 +811,7 @@ class Python3Virtualenv(object):
         self.py3_initialized_venv = True
         self.py3_python_path = os.path.abspath(python_path)
         version = self.get_output_from_command(
-                    [self.py3_python_path, '--version']).split()[-1]
+                    [self.py3_python_path, '--version'], env=self.query_env()).split()[-1]
         # Using -m venv is only used on 3.5+ versions
         assert version > '3.5.0'
         self.py3_venv_path = os.path.abspath(venv_path)
@@ -843,7 +843,8 @@ class Python3Virtualenv(object):
             self.run_command(
                 '%s -m venv %s' % (self.py3_python_path, self.py3_venv_path),
                 error_list=VirtualenvErrorList,
-                halt_on_failure=True)
+                halt_on_failure=True,
+                env=self.query_env())
 
     @py3_venv_initialized
     def py3_install_modules(self, modules):
@@ -851,7 +852,7 @@ class Python3Virtualenv(object):
             raise Exception('You need to call py3_create_venv() first.')
 
         for m in modules:
-            self.run_command('%s install %s' % (self.py3_pip_path, m))
+            self.run_command('%s install %s' % (self.py3_pip_path, m), env=self.query_env())
 
     def _mozharness_pip_args(self):
         '''We have information in Mozharness configs that apply to pip'''
@@ -887,7 +888,7 @@ class Python3Virtualenv(object):
         for requirement_path in requirements:
             cmd += ['-r %s' % requirement_path]
 
-        self.run_command(' '.join(cmd))
+        self.run_command(cmd, env=self.query_env())
 
 
 # __main__ {{{1
