@@ -127,12 +127,12 @@ public:
       return;
     }
 
-    if (aDecrypted.mStatus == NoKeyErr) {
+    if (aDecrypted.mStatus == eme::NoKeyErr) {
       // Key became unusable after we sent the sample to CDM to decrypt.
       // Call Decode() again, so that the sample is enqueued for decryption
       // if the key becomes usable again.
       AttemptDecode(aDecrypted.mSample);
-    } else if (aDecrypted.mStatus != Ok) {
+    } else if (aDecrypted.mStatus != eme::Ok) {
       mDecodePromise.RejectIfExists(
         MediaResult(
           NS_ERROR_DOM_MEDIA_FATAL_ERR,
