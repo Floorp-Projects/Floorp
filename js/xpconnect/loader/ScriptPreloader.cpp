@@ -446,6 +446,7 @@ ScriptPreloader::InitCacheInternal()
         size_t offset = 0;
         while (!buf.finished()) {
             auto script = MakeUnique<CachedScript>(*this, buf);
+            MOZ_RELEASE_ASSERT(script);
 
             auto scriptData = data + script->mOffset;
             if (scriptData + script->mSize > end) {
@@ -461,7 +462,8 @@ ScriptPreloader::InitCacheInternal()
 
             script->mXDRRange.emplace(scriptData, scriptData + script->mSize);
 
-            mScripts.Put(script->mCachePath, script.release());
+            mScripts.Put(script->mCachePath, script.get());
+            Unused << script.release();
         }
 
         if (buf.error()) {
