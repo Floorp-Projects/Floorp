@@ -19,13 +19,6 @@ from taskgraph.transforms.job.common import (
 import os
 import re
 
-ARTIFACTS = [
-    # (artifact name prefix, in-image path)
-    ("public/logs/", "build/upload/logs/"),
-    ("public/test", "artifacts/"),
-    ("public/test_info/", "build/blobber_upload_dir/"),
-]
-
 BUILDER_NAME_PREFIX = {
     'linux64-pgo': 'Ubuntu VM 12.04 x64',
     'linux64': 'Ubuntu VM 12.04 x64',
@@ -331,7 +324,12 @@ def mozharness_test_on_native_engine(config, job, taskdesc):
         'name': prefix.rstrip('/'),
         'path': path.rstrip('/'),
         'type': 'directory',
-    } for (prefix, path) in ARTIFACTS]
+    } for (prefix, path) in [
+        # (artifact name prefix, in-image path relative to homedir)
+        ("public/logs/", "workspace/build/upload/logs/"),
+        ("public/test", "artifacts/"),
+        ("public/test_info/", "workspace/build/blobber_upload_dir/"),
+    ]]
 
     if test['reboot']:
         worker['reboot'] = test['reboot']
