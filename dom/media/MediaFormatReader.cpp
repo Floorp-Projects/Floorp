@@ -2346,6 +2346,8 @@ MediaFormatReader::Update(TrackType aTrack)
   }
 
   if (decoder.mError && !decoder.HasFatalError()) {
+    MOZ_RELEASE_ASSERT(!decoder.HasInternalSeekPending(),
+                       "No error can occur while an internal seek is pending");
     bool needsNewDecoder =
       decoder.mError.ref() == NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER;
     if (!needsNewDecoder
@@ -2370,9 +2372,9 @@ MediaFormatReader::Update(TrackType aTrack)
     }
 
     TimeUnit nextKeyframe;
-    if (aTrack == TrackType::kVideoTrack && !decoder.HasInternalSeekPending()
-        && NS_SUCCEEDED(
-             decoder.mTrackDemuxer->GetNextRandomAccessPoint(&nextKeyframe))) {
+    if (aTrack == TrackType::kVideoTrack &&
+        NS_SUCCEEDED(
+          decoder.mTrackDemuxer->GetNextRandomAccessPoint(&nextKeyframe))) {
       SkipVideoDemuxToNextKeyFrame(
         decoder.mLastDecodedSampleTime.refOr(TimeInterval()).Length());
     } else if (aTrack == TrackType::kAudioTrack) {
