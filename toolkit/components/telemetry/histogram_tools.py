@@ -19,6 +19,11 @@ MAX_LABEL_LENGTH = 20
 MAX_LABEL_COUNT = 100
 MIN_CATEGORICAL_BUCKET_COUNT = 50
 
+BASE_DOC_URL = ("https://gecko.readthedocs.io/en/latest/toolkit/components/"
+                "telemetry/telemetry/")
+HISTOGRAMS_DOC_URL = (BASE_DOC_URL + "collection/histograms.html")
+SCALARS_DOC_URL = (BASE_DOC_URL + "collection/scalars.html")
+
 # histogram_tools.py is used by scripts from a mozilla-central build tree
 # and also by outside consumers, such as the telemetry server.  We need
 # to ensure that importing things works in both contexts.  Therefore,
@@ -311,21 +316,21 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         field = 'record_in_processes'
         rip = definition.get(field)
 
+        DOC_URL = HISTOGRAMS_DOC_URL + "#record-in-processes"
+
         if not rip:
-            raise ParserError('Histogram "%s" must have a "%s" field.' % (name, field))
+            raise ParserError('Histogram "%s" must have a "%s" field:\n%s'
+                              % (name, field, DOC_URL))
 
         for process in rip:
             if not utils.is_valid_process_name(process):
-                raise ParserError('Histogram "%s" has unknown process "%s" in %s.' %
-                                  (name, process, field))
+                raise ParserError('Histogram "%s" has unknown process "%s" in %s.\n%s' %
+                                  (name, process, field, DOC_URL))
 
     def check_whitelisted_kind(self, name, definition):
         # We don't need to run any of these checks on the server.
         if not self._strict_type_checks or whitelists is None:
             return
-
-        DOC_URL = ("https://gecko.readthedocs.io/en/latest/toolkit/"
-                   "components/telemetry/telemetry/collection/scalars.html")
 
         # Disallow "flag" and "count" histograms on desktop, suggest to use
         # scalars instead. Allow using these histograms on Android, as we
@@ -343,7 +348,7 @@ associated with the histogram.  Returns None if no guarding is necessary."""
                                '%s\n'
                                'Are you trying to add a histogram on Android?'
                                ' Add "cpp_guard": "ANDROID" to your histogram definition.')
-                              % (hist_kind, name, hist_kind, DOC_URL))
+                              % (hist_kind, name, hist_kind, SCALARS_DOC_URL))
 
     # Check for the presence of fields that old histograms are whitelisted for.
     def check_whitelistable_fields(self, name, definition):
