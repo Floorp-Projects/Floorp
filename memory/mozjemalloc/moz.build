@@ -9,7 +9,7 @@ EXPORTS += [
 ]
 
 SOURCES += [
-    'jemalloc.c',
+    'mozjemalloc.cpp',
 ]
 FINAL_LIBRARY = 'memory'
 
@@ -29,8 +29,10 @@ LOCAL_INCLUDES += [
     '/memory/build',
 ]
 
-if CONFIG['GNU_CC']:
-    CFLAGS += ['-Wno-unused'] # too many annoying warnings from mfbt/ headers
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-unused'] # too many annoying warnings from mfbt/ headers
 
 if CONFIG['_MSC_VER']:
-    CFLAGS += ['-wd4273'] # inconsistent dll linkage (bug 558163)
+    CXXFLAGS += ['-wd4273'] # inconsistent dll linkage (bug 558163)
+
+DISABLE_STL_WRAPPING = True
