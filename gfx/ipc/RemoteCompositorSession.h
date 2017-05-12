@@ -33,7 +33,6 @@ public:
              TextureFactoryIdentifier* aOutIdentifier) override;
   void Shutdown() override;
 
-  void NotifyDeviceReset(uint64_t aSeqNo);
   void NotifySessionLost();
 
 private:

@@ -660,6 +660,8 @@ public:
 
   nsresult TransmitPermissionsForPrincipal(nsIPrincipal* aPrincipal);
 
+  void OnCompositorDeviceReset() override;
+
 protected:
   void OnChannelConnected(int32_t pid) override;
 
@@ -669,7 +671,6 @@ protected:
 
   void OnVarChanged(const GfxVarUpdate& aVar) override;
   void OnCompositorUnexpectedShutdown() override;
-  void OnCompositorDeviceReset() override;
 
 private:
   /**
