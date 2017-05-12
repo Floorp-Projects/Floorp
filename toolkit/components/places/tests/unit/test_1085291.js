@@ -1,4 +1,4 @@
-add_task(function* () {
+add_task(async function() {
   // test that nodes inserted by incremental update for bookmarks of all types
   // have the extra bookmark properties (bookmarkGuid, dateAdded, lastModified).
 
@@ -14,24 +14,24 @@ add_task(function* () {
   }
 
   // Normal bookmark.
-  yield insertAndTest({ parentGuid: root.bookmarkGuid
+  await insertAndTest({ parentGuid: root.bookmarkGuid
                       , type: PlacesUtils.bookmarks.TYPE_BOOKMARK
                       , title: "Test Bookmark"
                       , url: "http://test.url.tld" });
 
   // place: query
-  yield insertAndTest({ parentGuid: root.bookmarkGuid
+  await insertAndTest({ parentGuid: root.bookmarkGuid
                       , type: PlacesUtils.bookmarks.TYPE_BOOKMARK
                       , title: "Test Query"
                       , url: "place:folder=BOOKMARKS_MENU" });
 
   // folder
-  yield insertAndTest({ parentGuid: root.bookmarkGuid
+  await insertAndTest({ parentGuid: root.bookmarkGuid
                       , type: PlacesUtils.bookmarks.TYPE_FOLDER
                       , title: "Test Folder" });
 
   // separator
-  yield insertAndTest({ parentGuid: root.bookmarkGuid
+  await insertAndTest({ parentGuid: root.bookmarkGuid
                       , type: PlacesUtils.bookmarks.TYPE_SEPARATOR });
 
   root.containerOpen = false;

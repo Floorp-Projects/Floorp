@@ -94,11 +94,11 @@ if (AppConstants.platform === "win") {
   ];
 }
 
-add_task(function* setup() {
+add_task(async function setup() {
   do_get_profile();
 
-  yield OS.File.copy(libModulesFile, libUnicodeFile);
-  yield OS.File.copy(libModulesFile, libLongName);
+  await OS.File.copy(libModulesFile, libUnicodeFile);
+  await OS.File.copy(libModulesFile, libLongName);
 
   if (AppConstants.platform !== "android") {
     libModulesHandle = ctypes.open(libModulesFile);

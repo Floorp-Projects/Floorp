@@ -2,8 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* test_create_options() {
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:robots");
+add_task(async function test_create_options() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:robots");
   gBrowser.selectedTab = tab;
 
   // TODO: Multiple windows.
@@ -160,14 +160,14 @@ add_task(function* test_create_options() {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("tabs.create");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("tabs.create");
+  await extension.unload();
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });
 
-add_task(function* test_urlbar_focus() {
+add_task(async function test_urlbar_focus() {
   const extension = ExtensionTestUtils.loadExtension({
     background() {
       browser.tabs.onUpdated.addListener(function onUpdated(_, info) {
@@ -183,11 +183,11 @@ add_task(function* test_urlbar_focus() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
   // Test content is focused after opening a regular url
   extension.sendMessage("create", {url: "https://example.com"});
-  const [tab1] = yield Promise.all([
+  const [tab1] = await Promise.all([
     extension.awaitMessage("result"),
     extension.awaitMessage("complete"),
   ]);
@@ -195,11 +195,11 @@ add_task(function* test_urlbar_focus() {
   is(document.activeElement.tagName, "browser", "Content focused after opening a web page");
 
   extension.sendMessage("remove", tab1.id);
-  yield extension.awaitMessage("result");
+  await extension.awaitMessage("result");
 
   // Test urlbar is focused after opening an empty tab
   extension.sendMessage("create", {});
-  const tab2 = yield extension.awaitMessage("result");
+  const tab2 = await extension.awaitMessage("result");
 
   const active = document.activeElement;
   info(`Active element: ${active.tagName}, id: ${active.id}, class: ${active.className}`);
@@ -213,7 +213,7 @@ add_task(function* test_urlbar_focus() {
   ok(active.classList.contains("urlbar-input"), "Urlbar focused");
 
   extension.sendMessage("remove", tab2.id);
-  yield extension.awaitMessage("result");
+  await extension.awaitMessage("result");
 
-  yield extension.unload();
+  await extension.unload();
 });

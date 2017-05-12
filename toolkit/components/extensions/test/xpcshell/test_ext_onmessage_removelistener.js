@@ -22,9 +22,9 @@ let extensionData = {
   background: backgroundScript,
 };
 
-add_task(function* test_contentscript() {
+add_task(async function test_contentscript() {
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield extension.startup();
-  yield extension.awaitFinish("onmessage_removelistener");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("onmessage_removelistener");
+  await extension.unload();
 });

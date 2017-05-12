@@ -16,7 +16,6 @@ const Cr = Components.results;
 const {nsIHttpActivityObserver, nsISocketTransport} = Ci;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionUtils",
@@ -881,7 +880,7 @@ HttpObserverManager = {
                              requestHeaders, responseHeaders);
   },
 
-  applyChanges: Task.async(function* (kind, channel, loadContext, handlerResults, requestHeaders, responseHeaders) {
+  async applyChanges(kind, channel, loadContext, handlerResults, requestHeaders, responseHeaders) {
     let asyncHandlers = handlerResults.filter(({result}) => isThenable(result));
     let isAsync = asyncHandlers.length > 0;
     let shouldResume = false;
@@ -892,7 +891,7 @@ HttpObserverManager = {
 
         for (let value of asyncHandlers) {
           try {
-            value.result = yield value.result;
+            value.result = await value.result;
           } catch (e) {
             Cu.reportError(e);
             value.result = {};
@@ -949,9 +948,9 @@ HttpObserverManager = {
       }
 
       if (kind === "opening") {
-        yield this.runChannelListener(channel, loadContext, "modify");
+        await this.runChannelListener(channel, loadContext, "modify");
       } else if (kind === "modify") {
-        yield this.runChannelListener(channel, loadContext, "afterModify");
+        await this.runChannelListener(channel, loadContext, "afterModify");
       }
     } catch (e) {
       Cu.reportError(e);
@@ -961,7 +960,7 @@ HttpObserverManager = {
     if (shouldResume) {
       this.maybeResume(channel);
     }
-  }),
+  },
 
   shouldHookListener(listener, channel) {
     if (listener.size == 0) {

@@ -8,18 +8,18 @@ const URL = ROOT + "browser_456342_sample.xhtml";
 /**
  * Bug 456342 - Restore values from non-standard input field types.
  */
-add_task(function* test_restore_nonstandard_input_values() {
+add_task(async function test_restore_nonstandard_input_values() {
   // Add tab with various non-standard input field types.
   let tab = gBrowser.addTab(URL);
   let browser = tab.linkedBrowser;
-  yield promiseBrowserLoaded(browser);
+  await promiseBrowserLoaded(browser);
 
   // Fill in form values.
   let expectedValue = Math.random();
-  yield setFormElementValues(browser, {value: expectedValue});
+  await setFormElementValues(browser, {value: expectedValue});
 
   // Remove tab and check collected form data.
-  yield promiseRemoveTab(tab);
+  await promiseRemoveTab(tab);
   let undoItems = JSON.parse(ss.getClosedTabData(window));
   let savedFormData = undoItems[0].state.formdata;
 

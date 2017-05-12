@@ -14,13 +14,13 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
     set: [["extensions.webextensions.identity.redirectDomain", "example.com"]],
   });
 });
 
-add_task(function* test_noPermission() {
+add_task(async function test_noPermission() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
       browser.test.assertEq(undefined, browser.identity, "No identity api without permission");
@@ -28,12 +28,12 @@ add_task(function* test_noPermission() {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitMessage("done");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
 });
 
-add_task(function* test_badAuthURI() {
+add_task(async function test_badAuthURI() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "applications": {
@@ -64,12 +64,12 @@ add_task(function* test_badAuthURI() {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitMessage("done");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
 });
 
-add_task(function* test_badAuthURI() {
+add_task(async function test_badAuthURI() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": [
@@ -84,13 +84,13 @@ add_task(function* test_badAuthURI() {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitMessage("done");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
 });
 
 
-add_task(function* test_badRequestURI() {
+add_task(async function test_badRequestURI() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": [
@@ -107,12 +107,12 @@ add_task(function* test_badRequestURI() {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitMessage("done");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
 });
 
-add_task(function* test_otherRedirectURL() {
+add_task(async function test_otherRedirectURL() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": [
@@ -129,9 +129,9 @@ add_task(function* test_otherRedirectURL() {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitMessage("done");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
 });
 
 function background_launchWebAuthFlow(interactive, path, redirect = true) {
@@ -163,7 +163,7 @@ function background_launchWebAuthFlow(interactive, path, redirect = true) {
 
 // Tests the situation where the oauth provider has already granted access and
 // simply redirects the oauth client to provide the access key or code.
-add_task(function* test_autoRedirect() {
+add_task(async function test_autoRedirect() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "applications": {
@@ -179,13 +179,13 @@ add_task(function* test_autoRedirect() {
     background: `(${background_launchWebAuthFlow})(false, "redirect_auto.sjs")`,
   });
 
-  yield extension.startup();
-  yield extension.awaitMessage("done");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
 });
 
 // Tests the situation where the oauth provider has not granted access and interactive=false
-add_task(function* test_noRedirect() {
+add_task(async function test_noRedirect() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "applications": {
@@ -201,16 +201,16 @@ add_task(function* test_noRedirect() {
     background: `(${background_launchWebAuthFlow})(false, "redirect_auto.sjs", false)`,
   });
 
-  yield extension.startup();
-  yield extension.awaitMessage("done");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
 });
 
 // Tests the situation where the oauth provider must show a window where
 // presumably the user interacts, then the redirect occurs and access key or
 // code is provided.  We bypass any real interaction, but want the window to
 // open and result in a redirect.
-add_task(function* test_interaction() {
+add_task(async function test_interaction() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "applications": {
@@ -226,9 +226,9 @@ add_task(function* test_interaction() {
     background: `(${background_launchWebAuthFlow})(true, "oauth.html")`,
   });
 
-  yield extension.startup();
-  yield extension.awaitMessage("done");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
 });
 </script>
 

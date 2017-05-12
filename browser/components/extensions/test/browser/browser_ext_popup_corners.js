@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* testPopupBorderRadius() {
+add_task(async function testPopupBorderRadius() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
       browser.tabs.query({active: true, currentWindow: true}, tabs => {
@@ -31,9 +31,9 @@ add_task(function* testPopupBorderRadius() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  function* testPanel(browser, standAlone = true) {
+  async function testPanel(browser, standAlone = true) {
     let panel = getPanelForNode(browser);
     let arrowContent = document.getAnonymousElementByAttribute(panel, "class", "panel-arrowcontent");
 
@@ -46,7 +46,7 @@ add_task(function* testPopupBorderRadius() {
                  "borderBottomRightRadius", "borderBottomLeftRadius"];
 
     /* eslint-disable mozilla/no-cpows-in-tests */
-    let bodyStyle = yield ContentTask.spawn(browser, props, function* (props) {
+    let bodyStyle = await ContentTask.spawn(browser, props, async function(props) {
       let bodyStyle = content.getComputedStyle(content.document.body);
 
       return new Map(props.map(prop => [prop, bodyStyle[prop]]));
@@ -68,9 +68,9 @@ add_task(function* testPopupBorderRadius() {
     info("Test stand-alone browserAction popup");
 
     clickBrowserAction(extension);
-    let browser = yield awaitExtensionPanel(extension);
-    yield testPanel(browser);
-    yield closeBrowserAction(extension);
+    let browser = await awaitExtensionPanel(extension);
+    await testPanel(browser);
+    await closeBrowserAction(extension);
   }
 
   {
@@ -80,19 +80,19 @@ add_task(function* testPopupBorderRadius() {
     CustomizableUI.addWidgetToArea(widget.id, CustomizableUI.AREA_PANEL);
 
     clickBrowserAction(extension);
-    let browser = yield awaitExtensionPanel(extension);
-    yield testPanel(browser, false);
-    yield closeBrowserAction(extension);
+    let browser = await awaitExtensionPanel(extension);
+    await testPanel(browser, false);
+    await closeBrowserAction(extension);
   }
 
   {
     info("Test pageAction popup");
 
     clickPageAction(extension);
-    let browser = yield awaitExtensionPanel(extension);
-    yield testPanel(browser);
-    yield closePageAction(extension);
+    let browser = await awaitExtensionPanel(extension);
+    await testPanel(browser);
+    await closePageAction(extension);
   }
 
-  yield extension.unload();
+  await extension.unload();
 });

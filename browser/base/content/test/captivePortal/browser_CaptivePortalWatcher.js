@@ -34,13 +34,13 @@ let testCasesForBothSuccessAndAbort = [
    * The captive portal notification should be shown in all windows upon
    * detection, and closed automatically when the success event is fired.
    */
-  function* test_detectedWithNoBrowserWindow_Focused(aSuccess) {
-    let win1 = yield openWindowAndWaitForFocus();
-    let win2 = yield openWindowAndWaitForFocus();
+  async function test_detectedWithNoBrowserWindow_Focused(aSuccess) {
+    let win1 = await openWindowAndWaitForFocus();
+    let win2 = await openWindowAndWaitForFocus();
     // Defocus both windows.
-    yield SimpleTest.promiseFocus(window);
+    await SimpleTest.promiseFocus(window);
 
-    yield portalDetected();
+    await portalDetected();
 
     // Notification should be shown in both windows.
     ensurePortalNotification(win1);
@@ -48,18 +48,18 @@ let testCasesForBothSuccessAndAbort = [
     ensurePortalNotification(win2);
     ensureNoPortalTab(win2);
 
-    yield focusWindowAndWaitForPortalUI(false, win2);
+    await focusWindowAndWaitForPortalUI(false, win2);
 
-    yield freePortal(aSuccess);
+    await freePortal(aSuccess);
 
     ensureNoPortalNotification(win1);
     ensureNoPortalTab(win2);
     ensureNoPortalNotification(win2);
 
-    yield closeWindowAndWaitForXulWindowVisible(win2);
+    await closeWindowAndWaitForXulWindowVisible(win2);
     // No need to wait for xul-window-visible: after win2 is closed, focus
     // is restored to the default window and win1 remains in the background.
-    yield BrowserTestUtils.closeWindow(win1);
+    await BrowserTestUtils.closeWindow(win1);
   },
 
   /**
@@ -84,17 +84,17 @@ let testCasesForBothSuccessAndAbort = [
    * portal is freed before a browser window is opened. No portal
    * UI should be shown when a browser window is opened.
    */
-  function* test_detectedWithNoBrowserWindow_GoneBeforeOpen(aSuccess) {
-    yield portalDetected();
-    yield freePortal(aSuccess);
-    let win = yield openWindowAndWaitForFocus();
+  async function test_detectedWithNoBrowserWindow_GoneBeforeOpen(aSuccess) {
+    await portalDetected();
+    await freePortal(aSuccess);
+    let win = await openWindowAndWaitForFocus();
     // Wait for a while to make sure no UI is shown.
-    yield new Promise(resolve => {
+    await new Promise(resolve => {
       setTimeout(resolve, 1000);
     });
     ensureNoPortalTab(win);
     ensureNoPortalNotification(win);
-    yield closeWindowAndWaitForXulWindowVisible(win);
+    await closeWindowAndWaitForXulWindowVisible(win);
   },
 
   /**

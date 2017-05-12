@@ -42,7 +42,7 @@ function createTestBar(aLegacy) {
  *    toolbar, and resets the toolbars to default.
  */
 function checkRestoredPresence(aWidgetID, aLegacy) {
-  return Task.spawn(function* () {
+  return (async function() {
     let testBar = createTestBar(aLegacy);
     CustomizableUI.addWidgetToArea(aWidgetID, kTestBarID);
     let placement = CustomizableUI.getPlacementOfWidget(aWidgetID);
@@ -57,25 +57,25 @@ function checkRestoredPresence(aWidgetID, aLegacy) {
 
     testBar = createTestBar(aLegacy);
 
-    yield startCustomizing();
+    await startCustomizing();
     placement = CustomizableUI.getPlacementOfWidget(aWidgetID);
     is(placement.area, kTestBarID,
        "Expected " + aWidgetID + " to be in the test toolbar");
-    yield endCustomizing();
+    await endCustomizing();
 
     CustomizableUI.unregisterArea(testBar.id);
     testBar.remove();
 
-    yield resetCustomization();
-  });
+    await resetCustomization();
+  })();
 }
 
-add_task(function* () {
-  yield checkRestoredPresence("downloads-button", false);
-  yield checkRestoredPresence("downloads-button", true);
+add_task(async function() {
+  await checkRestoredPresence("downloads-button", false);
+  await checkRestoredPresence("downloads-button", true);
 });
 
-add_task(function* () {
-  yield checkRestoredPresence("characterencoding-button", false);
-  yield checkRestoredPresence("characterencoding-button", true);
+add_task(async function() {
+  await checkRestoredPresence("characterencoding-button", false);
+  await checkRestoredPresence("characterencoding-button", true);
 });

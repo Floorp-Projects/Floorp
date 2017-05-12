@@ -13,8 +13,8 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* test_webRequest_serviceworker_events() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function test_webRequest_serviceworker_events() {
+  await SpecialPowers.pushPrefEnv({
     set: [["dom.serviceWorkers.testing.enabled", true]],
   });
 
@@ -52,14 +52,14 @@ add_task(function* test_webRequest_serviceworker_events() {
     },
   });
 
-  yield extension.startup();
-  let registration = yield navigator.serviceWorker.register("webrequest_worker.js", {scope: "."});
-  yield extension.awaitMessage("done");
-  yield registration.unregister();
-  yield extension.unload();
+  await extension.startup();
+  let registration = await navigator.serviceWorker.register("webrequest_worker.js", {scope: "."});
+  await extension.awaitMessage("done");
+  await registration.unregister();
+  await extension.unload();
 });
 
-add_task(function* test_webRequest_background_events() {
+add_task(async function test_webRequest_background_events() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: [
@@ -103,9 +103,9 @@ add_task(function* test_webRequest_background_events() {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitMessage("done");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
 });
 </script>
 

@@ -1,4 +1,4 @@
-add_task(function* testMalformedXml() {
+add_task(async function testMalformedXml() {
   const updateDetailsUrl = "http://example.com/details";
   const maxBackgroundErrors = 10;
   SpecialPowers.pushPrefEnv({set: [
@@ -8,7 +8,7 @@ add_task(function* testMalformedXml() {
 
   let updateParams = "xmlMalformed=1";
 
-  yield runUpdateTest(updateParams, maxBackgroundErrors, [
+  await runUpdateTest(updateParams, maxBackgroundErrors, [
     {
       // if we fail 10 check attempts, then we want to just show the user a manual update
       // workflow.
@@ -17,8 +17,8 @@ add_task(function* testMalformedXml() {
       beforeClick() {
         checkWhatsNewLink("update-manual-whats-new", updateDetailsUrl);
       },
-      *cleanup() {
-        yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+      async cleanup() {
+        await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
         is(gBrowser.selectedBrowser.currentURI.spec,
            URL_MANUAL_UPDATE, "Landed on manual update page.")
         gBrowser.removeTab(gBrowser.selectedTab);

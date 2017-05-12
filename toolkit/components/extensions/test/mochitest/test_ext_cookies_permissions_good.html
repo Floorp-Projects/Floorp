@@ -15,7 +15,7 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* init() {
+add_task(async function init() {
   // We need to trigger a cookie eviction in order to test our batch delete
   // observer.
   SpecialPowers.setIntPref("network.cookie.maxPerHost", 3);
@@ -24,9 +24,9 @@ add_task(function* init() {
   });
 });
 
-add_task(function* test_good_cookie_permissions() {
+add_task(async function test_good_cookie_permissions() {
   info("Test matching, non-secure domain with non-secure cookie");
-  yield testCookies({
+  await testCookies({
     permissions: ["http://example.com/", "cookies"],
     url: "http://example.com/",
     domain: "example.com",
@@ -35,7 +35,7 @@ add_task(function* test_good_cookie_permissions() {
   });
 
   info("Test matching, secure domain with non-secure cookie");
-  yield testCookies({
+  await testCookies({
     permissions: ["https://example.com/", "cookies"],
     url: "https://example.com/",
     domain: "example.com",
@@ -44,7 +44,7 @@ add_task(function* test_good_cookie_permissions() {
   });
 
   info("Test matching, secure domain with secure cookie");
-  yield testCookies({
+  await testCookies({
     permissions: ["https://example.com/", "cookies"],
     url: "https://example.com/",
     domain: "example.com",
@@ -53,7 +53,7 @@ add_task(function* test_good_cookie_permissions() {
   });
 
   info("Test matching subdomain with superdomain privileges, secure cookie (https)");
-  yield testCookies({
+  await testCookies({
     permissions: ["https://foo.bar.example.com/", "cookies"],
     url: "https://foo.bar.example.com/",
     domain: ".example.com",
@@ -62,7 +62,7 @@ add_task(function* test_good_cookie_permissions() {
   });
 
   info("Test matching subdomain with superdomain privileges, non-secure cookie (https)");
-  yield testCookies({
+  await testCookies({
     permissions: ["https://foo.bar.example.com/", "cookies"],
     url: "https://foo.bar.example.com/",
     domain: ".example.com",
@@ -71,7 +71,7 @@ add_task(function* test_good_cookie_permissions() {
   });
 
   info("Test matching subdomain with superdomain privileges, non-secure cookie  (http)");
-  yield testCookies({
+  await testCookies({
     permissions: ["http://foo.bar.example.com/", "cookies"],
     url: "http://foo.bar.example.com/",
     domain: ".example.com",

@@ -4,7 +4,6 @@
 
 "use strict";
 
-Cu.import("resource://gre/modules/Task.jsm");
 const {ProfileStorage} = Cu.import("resource://formautofill/ProfileStorage.jsm", {});
 
 const TEST_STORE_FILE_NAME = "test-profile.json";
@@ -187,17 +186,17 @@ let do_check_record_matches = (expectedRecord, record) => {
   }
 };
 
-add_task(function* test_computeFields() {
+add_task(async function test_computeFields() {
   let path = getTempFile(TEST_STORE_FILE_NAME).path;
 
   let profileStorage = new ProfileStorage(path);
-  yield profileStorage.initialize();
+  await profileStorage.initialize();
 
   COMPUTE_TESTCASES.forEach(testcase => profileStorage.add(testcase.address));
-  yield profileStorage._saveImmediately();
+  await profileStorage._saveImmediately();
 
   profileStorage = new ProfileStorage(path);
-  yield profileStorage.initialize();
+  await profileStorage.initialize();
 
   let addresses = profileStorage.getAll();
 
@@ -207,17 +206,17 @@ add_task(function* test_computeFields() {
   }
 });
 
-add_task(function* test_normalizeFields() {
+add_task(async function test_normalizeFields() {
   let path = getTempFile(TEST_STORE_FILE_NAME).path;
 
   let profileStorage = new ProfileStorage(path);
-  yield profileStorage.initialize();
+  await profileStorage.initialize();
 
   NORMALIZE_TESTCASES.forEach(testcase => profileStorage.add(testcase.address));
-  yield profileStorage._saveImmediately();
+  await profileStorage._saveImmediately();
 
   profileStorage = new ProfileStorage(path);
-  yield profileStorage.initialize();
+  await profileStorage.initialize();
 
   let addresses = profileStorage.getAll();
 

@@ -5,8 +5,8 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("extensions.webapi.testing");
 });
 
-function* getListenerEvents(browser) {
-  let result = yield ContentTask.spawn(browser, null, function*() {
+async function getListenerEvents(browser) {
+  let result = await ContentTask.spawn(browser, null, async function() {
     return content.document.getElementById("result").textContent;
   });
 
@@ -25,20 +25,20 @@ provider.createAddons([
 ]);
 
 // Test disable and enable from content
-add_task(function* () {
-  yield BrowserTestUtils.withNewTab(TESTPAGE, function*(browser) {
-    let addon = yield promiseAddonByID(ID);
+add_task(async function() {
+  await BrowserTestUtils.withNewTab(TESTPAGE, async function(browser) {
+    let addon = await promiseAddonByID(ID);
     isnot(addon, null, "Test addon exists");
     is(addon.userDisabled, false, "addon is enabled");
 
     // Disable the addon from content.
-    yield ContentTask.spawn(browser, null, function* () {
+    await ContentTask.spawn(browser, null, async function() {
       return content.navigator.mozAddonManager
         .getAddonByID("test@tests.mozilla.org")
         .then(addon => { addon.setEnabled(false); });
     });
 
-    let events = yield getListenerEvents(browser);
+    let events = await getListenerEvents(browser);
     let expected = [
       {id: ID, needsRestart: false, event: "onDisabling"},
       {id: ID, needsRestart: false, event: "onDisabled"},
@@ -46,13 +46,13 @@ add_task(function* () {
     Assert.deepEqual(events, expected, "Got expected disable events");
 
     // Enable the addon from content.
-    yield ContentTask.spawn(browser, null, function* () {
+    await ContentTask.spawn(browser, null, async function() {
       return content.navigator.mozAddonManager
         .getAddonByID("test@tests.mozilla.org")
         .then(addon => { addon.setEnabled(true); });
     });
 
-    events = yield getListenerEvents(browser);
+    events = await getListenerEvents(browser);
     expected = expected.concat([
       {id: ID, needsRestart: false, event: "onEnabling"},
       {id: ID, needsRestart: false, event: "onEnabled"},

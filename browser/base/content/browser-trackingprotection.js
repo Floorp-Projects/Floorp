@@ -194,7 +194,7 @@ var TrackingProtection = {
     }
   },
 
-  showIntroPanel: Task.async(function*() {
+  async showIntroPanel() {
     let brandBundle = document.getElementById("bundle_brand");
     let brandShortName = brandBundle.getString("brandShortName");
 
@@ -225,7 +225,7 @@ var TrackingProtection = {
       },
     ];
 
-    let panelTarget = yield UITour.getTarget(window, "trackingProtection");
+    let panelTarget = await UITour.getTarget(window, "trackingProtection");
     UITour.initForBrowser(gBrowser.selectedBrowser, window);
     UITour.showInfo(window, panelTarget,
                     gNavigatorBundle.getString("trackingProtection.intro.title"),
@@ -233,5 +233,5 @@ var TrackingProtection = {
                                                         [brandShortName]),
                     undefined, buttons,
                     { closeButtonCallback: () => this.dontShowIntroPanelAgain() });
-  }),
+  },
 };

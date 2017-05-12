@@ -7,7 +7,7 @@
 const kWidgetId = "test-892956-destroyWidget-defaultPlacement";
 
 // destroyWidget should clean up defaultPlacements if the widget had a defaultArea
-add_task(function*() {
+add_task(async function() {
   ok(CustomizableUI.inDefaultState, "Should be in the default state when we start");
 
   let widgetSpec = {
@@ -19,6 +19,6 @@ add_task(function*() {
   ok(CustomizableUI.inDefaultState, "Should be in the default state when we finish");
 });
 
-add_task(function* asyncCleanup() {
-  yield resetCustomization();
+add_task(async function asyncCleanup() {
+  await resetCustomization();
 });

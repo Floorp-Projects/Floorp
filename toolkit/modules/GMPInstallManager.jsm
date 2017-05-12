@@ -25,7 +25,6 @@ Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/GMPUtils.jsm");
 Cu.import("resource://gre/modules/addons/ProductAddonChecker.jsm");
 
@@ -187,7 +186,7 @@ GMPInstallManager.prototype = {
    * @return a promise which will be resolved if all addons could be installed
    *         successfully, rejected otherwise.
    */
-  simpleCheckAndInstall: Task.async(function*() {
+  async simpleCheckAndInstall() {
     let log = getScopedLogger("GMPInstallManager.simpleCheckAndInstall");
 
     if (this._versionchangeOccurred()) {
@@ -208,7 +207,7 @@ GMPInstallManager.prototype = {
     }
 
     try {
-      let {usedFallback, gmpAddons} = yield this.checkForAddons();
+      let {usedFallback, gmpAddons} = await this.checkForAddons();
       this._updateLastCheck();
       log.info("Found " + gmpAddons.length + " addons advertised.");
       let addonsToInstall = gmpAddons.filter(function(gmpAddon) {
@@ -265,7 +264,7 @@ GMPInstallManager.prototype = {
       let failureEncountered = false;
       for (let addon of addonsToInstall) {
         try {
-          yield this.installAddon(addon);
+          await this.installAddon(addon);
           installResults.push({
             id:     addon.id,
             result: "succeeded",
@@ -288,7 +287,7 @@ GMPInstallManager.prototype = {
       log.error("Could not check for addons", e);
       throw e;
     }
-  }),
+  },
 
   /**
    * Makes sure everything is cleaned up

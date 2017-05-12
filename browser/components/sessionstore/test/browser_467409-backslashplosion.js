@@ -30,23 +30,23 @@ function createEntries(sessionData) {
   };
 }
 
-add_task(function* test_nested_about_sessionrestore() {
+add_task(async function test_nested_about_sessionrestore() {
   // Prepare a blank tab.
   let tab = gBrowser.addTab("about:blank");
   let browser = tab.linkedBrowser;
-  yield promiseBrowserLoaded(browser);
+  await promiseBrowserLoaded(browser);
 
   // test 1
-  yield promiseTabState(tab, STATE);
-  yield checkState("test1", tab);
+  await promiseTabState(tab, STATE);
+  await checkState("test1", tab);
 
   // test 2
-  yield promiseTabState(tab, STATE2);
-  yield checkState("test2", tab);
+  await promiseTabState(tab, STATE2);
+  await checkState("test2", tab);
 
   // test 3
-  yield promiseTabState(tab, STATE3);
-  yield checkState("test3", tab);
+  await promiseTabState(tab, STATE3);
+  await checkState("test3", tab);
 
   // Cleanup.
   gBrowser.removeTab(tab);

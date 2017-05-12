@@ -24,12 +24,12 @@ function promiseURIDeleted(testURI) {
   });
 }
 
-add_task(function* test_autocomplete_on_value_removed() {
+add_task(async function test_autocomplete_on_value_removed() {
   let listener = Cc["@mozilla.org/autocomplete/search;1?name=unifiedcomplete"].
                  getService(Components.interfaces.nsIAutoCompleteSimpleResultListener);
 
   let testUri = NetUtil.newURI("http://foo.mozilla.com/");
-  yield PlacesTestUtils.addVisits({
+  await PlacesTestUtils.addVisits({
     uri: testUri,
     referrer: uri("http://mozilla.com/")
   });
@@ -38,5 +38,5 @@ add_task(function* test_autocomplete_on_value_removed() {
   // call the untested code path
   listener.onValueRemoved(null, testUri.spec, true);
 
-  yield promise;
+  await promise;
 });

@@ -27,7 +27,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils", "resource://services-comm
 XPCOMUtils.defineLazyModuleGetter(this, "EventDispatcher", "resource://gre/modules/Messaging.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ReaderWorker", "resource://gre/modules/reader/ReaderWorker.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch", "resource://gre/modules/TelemetryStopwatch.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LanguageDetector", "resource:///modules/translation/LanguageDetector.jsm");
 
@@ -225,14 +224,14 @@ this.ReaderMode = {
    * @return {Promise}
    * @resolves JS object representing the article, or null if no article is found.
    */
-  parseDocument: Task.async(function* (doc) {
+  async parseDocument(doc) {
     if (!this._shouldCheckUri(doc.documentURIObject) || !this._shouldCheckUri(doc.baseURIObject, true)) {
       this.log("Reader mode disabled for URI");
       return null;
     }
 
-    return yield this._readerParse(doc);
-  }),
+    return await this._readerParse(doc);
+  },
 
   /**
    * Downloads and parses a document from a URL.
@@ -241,15 +240,15 @@ this.ReaderMode = {
    * @return {Promise}
    * @resolves JS object representing the article, or null if no article is found.
    */
-  downloadAndParseDocument: Task.async(function* (url) {
-    let doc = yield this._downloadDocument(url);
+  async downloadAndParseDocument(url) {
+    let doc = await this._downloadDocument(url);
     if (!this._shouldCheckUri(doc.documentURIObject) || !this._shouldCheckUri(doc.baseURIObject, true)) {
       this.log("Reader mode disabled for URI");
       return null;
     }
 
-    return yield this._readerParse(doc);
-  }),
+    return await this._readerParse(doc);
+  },
 
   _downloadDocument(url) {
     let histogram = Services.telemetry.getHistogramById("READER_MODE_DOWNLOAD_RESULT");
@@ -336,17 +335,17 @@ this.ReaderMode = {
    * @resolves JS object representing the article, or null if no article is found.
    * @rejects OS.File.Error
    */
-  getArticleFromCache: Task.async(function* (url) {
+  async getArticleFromCache(url) {
     let path = this._toHashedPath(url);
     try {
-      let array = yield OS.File.read(path);
+      let array = await OS.File.read(path);
       return JSON.parse(new TextDecoder().decode(array));
     } catch (e) {
       if (!(e instanceof OS.File.Error) || !e.becauseNoSuchFile)
         throw e;
       return null;
     }
-  }),
+  },
 
   /**
    * Stores an article in the cache.
@@ -356,10 +355,10 @@ this.ReaderMode = {
    * @resolves When the article is stored.
    * @rejects OS.File.Error
    */
-  storeArticleInCache: Task.async(function* (article) {
+  async storeArticleInCache(article) {
     let array = new TextEncoder().encode(JSON.stringify(article));
     let path = this._toHashedPath(article.url);
-    yield this._ensureCacheDir();
+    await this._ensureCacheDir();
     return OS.File.writeAtomic(path, array, { tmpPath: path + ".tmp" })
       .then(success => {
         OS.File.stat(path).then(info => {
@@ -371,7 +370,7 @@ this.ReaderMode = {
           });
         });
       });
-  }),
+  },
 
   /**
    * Removes an article from the cache given an article URI.
@@ -381,10 +380,10 @@ this.ReaderMode = {
    * @resolves When the article is removed.
    * @rejects OS.File.Error
    */
-  removeArticleFromCache: Task.async(function* (url) {
+  async removeArticleFromCache(url) {
     let path = this._toHashedPath(url);
-    yield OS.File.remove(path);
-  }),
+    await OS.File.remove(path);
+  },
 
   log(msg) {
     if (this.DEBUG)
@@ -435,7 +434,7 @@ this.ReaderMode = {
    * @return {Promise}
    * @resolves JS object representing the article, or null if no article is found.
    */
-  _readerParse: Task.async(function* (doc) {
+  async _readerParse(doc) {
     let histogram = Services.telemetry.getHistogramById("READER_MODE_PARSE_RESULT");
     if (this.parseNodeLimit) {
       let numTags = doc.getElementsByTagName("*").length;
@@ -460,7 +459,7 @@ this.ReaderMode = {
 
     let article = null;
     try {
-      article = yield ReaderWorker.post("parseDocument", [uriParam, serializedDoc]);
+      article = await ReaderWorker.post("parseDocument", [uriParam, serializedDoc]);
     } catch (e) {
       Cu.reportError("Error in ReaderWorker: " + e);
       histogram.add(PARSE_ERROR_WORKER);
@@ -482,7 +481,7 @@ this.ReaderMode = {
     article.title = Cc["@mozilla.org/parserutils;1"].getService(Ci.nsIParserUtils)
                                                     .convertToPlainText(article.title, flags, 0);
     if (gIsFirefoxDesktop) {
-      yield this._assignLanguage(article);
+      await this._assignLanguage(article);
       this._maybeAssignTextDirection(article);
     }
 
@@ -490,7 +489,7 @@ this.ReaderMode = {
 
     histogram.add(PARSE_SUCCESS);
     return article;
-  }),
+  },
 
   get _cryptoHash() {
     delete this._cryptoHash;

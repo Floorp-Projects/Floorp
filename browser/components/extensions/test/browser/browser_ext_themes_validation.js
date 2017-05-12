@@ -1,7 +1,7 @@
 "use strict";
 
-add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
     set: [["extensions.webextensions.themes.enabled", true]],
   });
 });
@@ -47,10 +47,10 @@ function* testThemeWithInvalidProperties(invalidProps) {
   yield waitForConsole;
 }
 
-add_task(function* test_that_theme_with_invalid_properties_fails_to_load() {
+add_task(async function test_that_theme_with_invalid_properties_fails_to_load() {
   let invalidProps = ["page_action", "browser_action", "background", "permissions", "omnibox", "commands"];
   for (let prop in invalidProps) {
-    yield testThemeWithInvalidProperties([prop]);
+    await testThemeWithInvalidProperties([prop]);
   }
-  yield testThemeWithInvalidProperties(invalidProps);
+  await testThemeWithInvalidProperties(invalidProps);
 });

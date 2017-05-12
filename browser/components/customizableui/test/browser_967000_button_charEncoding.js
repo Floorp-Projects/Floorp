@@ -6,8 +6,8 @@
 
 const TEST_PAGE = "http://mochi.test:8888/browser/browser/components/customizableui/test/support/test_967000_charEncoding_page.html";
 
-add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   info("Check Character Encoding button functionality");
 
   // add the Character Encoding button to the panel
@@ -15,7 +15,7 @@ add_task(function*() {
                                   CustomizableUI.AREA_PANEL);
 
   // check the button's functionality
-  yield PanelUI.show();
+  await PanelUI.show();
 
   let charEncodingButton = document.getElementById("characterencoding-button");
   ok(charEncodingButton, "The Character Encoding button was added to the Panel Menu");
@@ -24,16 +24,16 @@ add_task(function*() {
 
   let panelHidePromise = promisePanelHidden(window);
   PanelUI.hide();
-  yield panelHidePromise;
+  await panelHidePromise;
 
-  let newTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE, true, true);
+  let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE, true, true);
 
-  yield PanelUI.show();
+  await PanelUI.show();
   ok(!charEncodingButton.hasAttribute("disabled"), "The Character encoding button gets enabled");
   let characterEncodingView = document.getElementById("PanelUI-characterEncodingView");
   let subviewShownPromise = subviewShown(characterEncodingView);
   charEncodingButton.click();
-  yield subviewShownPromise;
+  await subviewShownPromise;
 
   ok(characterEncodingView.hasAttribute("current"), "The Character encoding panel is displayed");
 
@@ -51,13 +51,13 @@ add_task(function*() {
 
   panelHidePromise = promisePanelHidden(window);
   PanelUI.hide();
-  yield panelHidePromise;
+  await panelHidePromise;
 
-  yield BrowserTestUtils.removeTab(newTab);
+  await BrowserTestUtils.removeTab(newTab);
 });
 
-add_task(function* asyncCleanup() {
+add_task(async function asyncCleanup() {
   // reset the panel to the default state
-  yield resetCustomization();
+  await resetCustomization();
   ok(CustomizableUI.inDefaultState, "The UI is in default state again.");
 });

@@ -10,7 +10,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_execute() {
+add_task(async function test_execute() {
   let places = [];
   for (let i = 0; i < TOTAL_SITES; i++) {
     for (let j = 0; j <= i; j++) {
@@ -24,7 +24,7 @@ add_task(function* test_execute() {
                     transition: TRANSITION_FRAMED_LINK });
     }
   }
-  yield PlacesTestUtils.addVisits(places);
+  await PlacesTestUtils.addVisits(places);
 
   // test our optimized query for the "Most Visited" item
   // in the "Smart Bookmarks" folder

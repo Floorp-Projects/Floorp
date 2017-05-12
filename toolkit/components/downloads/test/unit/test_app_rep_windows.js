@@ -160,7 +160,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_setup() {
+add_task(async function test_setup() {
   // Wait 10 minutes, that is half of the external xpcshell timeout.
   do_timeout(10 * 60 * 1000, function() {
     if (gStillRunning) {
@@ -238,11 +238,11 @@ add_task(function* test_setup() {
   gHttpServer.start(4444);
 
   do_register_cleanup(function() {
-    return Task.spawn(function* () {
-      yield new Promise(resolve => {
+    return (async function() {
+      await new Promise(resolve => {
         gHttpServer.stop(resolve);
       });
-    });
+    })();
   });
 });
 
@@ -311,12 +311,12 @@ function promiseQueryReputation(query, expectedShouldBlock) {
   return deferred.promise;
 }
 
-add_task(function* () {
+add_task(async function() {
   // Wait for Safebrowsing local list updates to complete.
-  yield waitForUpdates();
+  await waitForUpdates();
 });
 
-add_task(function* test_signature_whitelists() {
+add_task(async function test_signature_whitelists() {
   // We should never get to the remote server.
   Services.prefs.setBoolPref(remoteEnabledPref,
                              true);
@@ -331,57 +331,57 @@ add_task(function* test_signature_whitelists() {
   let completionPromise = promiseSaverComplete(saver);
   saver.enableSignatureInfo();
   saver.setTarget(destFile, false);
-  yield promiseCopyToSaver(data, saver, true);
+  await promiseCopyToSaver(data, saver, true);
 
   saver.finish(Cr.NS_OK);
-  yield completionPromise;
+  await completionPromise;
 
   // Clean up.
   destFile.remove(false);
 
   // evil.com is not on the allowlist, but this binary is signed by an entity
   // whose certificate information is on the allowlist.
-  yield promiseQueryReputation({sourceURI: createURI("http://evil.com"),
+  await promiseQueryReputation({sourceURI: createURI("http://evil.com"),
                                 signatureInfo: saver.signatureInfo,
                                 fileSize: 12}, false);
 });
 
-add_task(function* test_blocked_binary() {
+add_task(async function test_blocked_binary() {
   // We should reach the remote server for a verdict.
   Services.prefs.setBoolPref(remoteEnabledPref,
                              true);
   Services.prefs.setCharPref(appRepURLPref,
                              "http://localhost:4444/download");
   // evil.com should return a malware verdict from the remote server.
-  yield promiseQueryReputation({sourceURI: createURI("http://evil.com"),
+  await promiseQueryReputation({sourceURI: createURI("http://evil.com"),
                                 suggestedFileName: "noop.bat",
                                 fileSize: 12}, true);
 });
 
-add_task(function* test_non_binary() {
+add_task(async function test_non_binary() {
   // We should not reach the remote server for a verdict for non-binary files.
   Services.prefs.setBoolPref(remoteEnabledPref,
                              true);
   Services.prefs.setCharPref(appRepURLPref,
                              "http://localhost:4444/throw");
-  yield promiseQueryReputation({sourceURI: createURI("http://evil.com"),
+  await promiseQueryReputation({sourceURI: createURI("http://evil.com"),
                                 suggestedFileName: "noop.txt",
                                 fileSize: 12}, false);
 });
 
-add_task(function* test_good_binary() {
+add_task(async function test_good_binary() {
   // We should reach the remote server for a verdict.
   Services.prefs.setBoolPref(remoteEnabledPref,
                              true);
   Services.prefs.setCharPref(appRepURLPref,
                              "http://localhost:4444/download");
   // mozilla.com should return a not-guilty verdict from the remote server.
-  yield promiseQueryReputation({sourceURI: createURI("http://mozilla.com"),
+  await promiseQueryReputation({sourceURI: createURI("http://mozilla.com"),
                                 suggestedFileName: "noop.bat",
                                 fileSize: 12}, false);
 });
 
-add_task(function* test_disabled() {
+add_task(async function test_disabled() {
   // Explicitly disable remote checks
   Services.prefs.setBoolPref(remoteEnabledPref,
                              false);
@@ -399,10 +399,10 @@ add_task(function* test_disabled() {
       deferred.resolve(true);
     }
   );
-  yield deferred.promise;
+  await deferred.promise;
 });
 
-add_task(function* test_disabled_through_lists() {
+add_task(async function test_disabled_through_lists() {
   Services.prefs.setBoolPref(remoteEnabledPref,
                              false);
   Services.prefs.setCharPref(appRepURLPref,
@@ -420,8 +420,8 @@ add_task(function* test_disabled_through_lists() {
       deferred.resolve(true);
     }
   );
-  yield deferred.promise;
+  await deferred.promise;
 });
-add_task(function* test_teardown() {
+add_task(async function test_teardown() {
   gStillRunning = false;
 });

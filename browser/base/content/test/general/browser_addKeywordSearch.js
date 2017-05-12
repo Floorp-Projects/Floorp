@@ -17,9 +17,9 @@ var testData = [
   },
 ];
 
-add_task(function*() {
+add_task(async function() {
   const TEST_URL = "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
   let count = 0;
   for (let method of ["GET", "POST"]) {
@@ -31,8 +31,8 @@ add_task(function*() {
         BrowserTestUtils.waitForEvent(contextMenu, "popupshown")
                         .then(() => gContextMenuContentData.popupNode);
 
-      yield ContentTask.spawn(tab.linkedBrowser,
-                              { action, param, method, id }, function* (args) {
+      await ContentTask.spawn(tab.linkedBrowser,
+                              { action, param, method, id }, async function(args) {
         let doc = content.document;
         let form = doc.createElement("form");
         form.id = args.id;
@@ -45,12 +45,12 @@ add_task(function*() {
         doc.body.appendChild(form);
       });
 
-      yield BrowserTestUtils.synthesizeMouseAtCenter(`#${id} > input`,
+      await BrowserTestUtils.synthesizeMouseAtCenter(`#${id} > input`,
                                                      { type: "contextmenu", button: 2 },
                                                      tab.linkedBrowser);
-      let target = yield contextMenuPromise;
+      let target = await contextMenuPromise;
 
-      yield new Promise(resolve => {
+      await new Promise(resolve => {
         let url = action || tab.linkedBrowser.currentURI.spec;
         let mm = tab.linkedBrowser.messageManager;
         let onMessage = (message) => {
@@ -73,9 +73,9 @@ add_task(function*() {
 
       let popupHiddenPromise = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
       contextMenu.hidePopup();
-      yield popupHiddenPromise;
+      await popupHiddenPromise;
     }
   }
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });

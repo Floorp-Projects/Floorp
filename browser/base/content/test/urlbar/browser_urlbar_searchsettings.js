@@ -3,14 +3,14 @@
 
 "use strict";
 
-add_task(function*() {
+add_task(async function() {
   let button = document.getElementById("urlbar-search-settings");
   if (!button) {
     ok("Skipping test");
     return;
   }
 
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, function* () {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, function* () {
     let popupopened = BrowserTestUtils.waitForEvent(gURLBar.popup, "popupshown");
 
     gURLBar.focus();

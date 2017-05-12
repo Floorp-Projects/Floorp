@@ -1618,7 +1618,7 @@ var Impl = {
     cpml.addMessageListener(MESSAGE_TELEMETRY_GET_CHILD_THREAD_HANGS, this);
     cpml.addMessageListener(MESSAGE_TELEMETRY_GET_CHILD_USS, this);
 
-    let delayedTask = new DeferredTask(function* () {
+    let delayedTask = new DeferredTask(function() {
       this._initialized = true;
 
       this.attachObservers();

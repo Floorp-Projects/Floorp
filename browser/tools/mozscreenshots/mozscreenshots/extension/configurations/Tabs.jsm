@@ -14,7 +14,6 @@ const DEFAULT_FAVICON_TAB = `data:text/html,<meta charset="utf-8">
 <title>No favicon</title>`;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 
 this.Tabs = {
@@ -22,18 +21,18 @@ this.Tabs = {
 
   configurations: {
     fiveTabs: {
-      applyConfig: Task.async(function*() {
+      async applyConfig() {
         fiveTabsHelper();
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
         hoverTab(browserWindow.gBrowser.tabs[3]);
-        yield new Promise((resolve, reject) => {
+        await new Promise((resolve, reject) => {
           setTimeout(resolve, 3000);
         });
-      }),
+      },
     },
 
     fourPinned: {
-      applyConfig: Task.async(function*() {
+      async applyConfig() {
         fiveTabsHelper();
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
         let tab = browserWindow.gBrowser.addTab(PREFS_TAB);
@@ -52,14 +51,14 @@ this.Tabs = {
         hoverTab(newTabButton);
         browserWindow.gBrowser.tabs[browserWindow.gBrowser.tabs.length - 1].
                       setAttribute("beforehovered", true);
-        yield new Promise((resolve, reject) => {
+        await new Promise((resolve, reject) => {
           setTimeout(resolve, 3000);
         });
-      }),
+      },
     },
 
     twoPinnedWithOverflow: {
-      applyConfig: Task.async(function*() {
+      async applyConfig() {
         fiveTabsHelper();
 
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
@@ -98,10 +97,10 @@ this.Tabs = {
         browserWindow.gBrowser.pinTab(browserWindow.gBrowser.tabs[2]);
         browserWindow.gBrowser.selectTabAtIndex(3);
         hoverTab(browserWindow.gBrowser.tabs[5]);
-        yield new Promise((resolve, reject) => {
+        await new Promise((resolve, reject) => {
           setTimeout(resolve, 3000);
         });
-      }),
+      },
     },
   },
 };

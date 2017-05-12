@@ -3,7 +3,7 @@
 const URL = "http://example.com/browser_switch_remoteness_";
 
 function countHistoryEntries(browser, expected) {
-  return ContentTask.spawn(browser, { expected }, function* (args) {
+  return ContentTask.spawn(browser, { expected }, async function(args) {
     let Ci = Components.interfaces;
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
     let history = webNavigation.sessionHistory.QueryInterface(Ci.nsISHistoryInternal);
@@ -12,14 +12,14 @@ function countHistoryEntries(browser, expected) {
   });
 }
 
-add_task(function* () {
+add_task(async function() {
   // Open a new window.
-  let win = yield promiseNewWindowLoaded();
+  let win = await promiseNewWindowLoaded();
 
   // Add a new tab.
   let tab = win.gBrowser.addTab("about:blank");
   let browser = tab.linkedBrowser;
-  yield promiseBrowserLoaded(browser);
+  await promiseBrowserLoaded(browser);
   ok(browser.isRemoteBrowser, "browser is remote");
 
   // Get the maximum number of preceding entries to save.
@@ -29,21 +29,21 @@ add_task(function* () {
   // Load more pages than we would save to disk on a clean shutdown.
   for (let i = 0; i < MAX_BACK + 2; i++) {
     browser.loadURI(URL + i);
-    yield promiseBrowserLoaded(browser);
+    await promiseBrowserLoaded(browser);
     ok(browser.isRemoteBrowser, "browser is still remote");
   }
 
   // Check we have the right number of shistory entries.
-  yield countHistoryEntries(browser, MAX_BACK + 2);
+  await countHistoryEntries(browser, MAX_BACK + 2);
 
   // Load a non-remote page.
   browser.loadURI("about:robots");
-  yield promiseTabRestored(tab);
+  await promiseTabRestored(tab);
   ok(!browser.isRemoteBrowser, "browser is not remote anymore");
 
   // Check that we didn't lose any shistory entries.
-  yield countHistoryEntries(browser, MAX_BACK + 3);
+  await countHistoryEntries(browser, MAX_BACK + 3);
 
   // Cleanup.
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 });

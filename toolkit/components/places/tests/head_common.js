@@ -36,8 +36,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "BookmarkJSONUtils",
                                   "resource://gre/modules/BookmarkJSONUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "BookmarkHTMLUtils",
@@ -832,11 +830,11 @@ function checkBookmarkObject(info) {
 /**
  * Reads foreign_count value for a given url.
  */
-function* foreign_count(url) {
+async function foreign_count(url) {
   if (url instanceof Ci.nsIURI)
     url = url.spec;
-  let db = yield PlacesUtils.promiseDBConnection();
-  let rows = yield db.executeCached(
+  let db = await PlacesUtils.promiseDBConnection();
+  let rows = await db.executeCached(
     `SELECT foreign_count FROM moz_places
      WHERE url_hash = hash(:url) AND url = :url
     `, { url });

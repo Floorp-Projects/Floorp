@@ -61,8 +61,6 @@ XPCOMUtils.defineLazyGetter(this, "gUnicodeConverter", function() {
   return converter;
 });
 
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
   "resource://gre/modules/Deprecated.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
@@ -272,9 +270,9 @@ this.PageThumbs = {
   // participate in this service's telemetry, which is why this method exists.
   _captureToCanvas(aBrowser, aCanvas, aArgs, aCallback) {
     if (aBrowser.isRemoteBrowser) {
-      Task.spawn(function* () {
+      (async function() {
         let data =
-          yield this._captureRemoteThumbnail(aBrowser, aCanvas.width,
+          await this._captureRemoteThumbnail(aBrowser, aCanvas.width,
                                              aCanvas.height, aArgs);
         let canvas = data.thumbnail;
         let ctx = canvas.getContext("2d");
@@ -285,7 +283,7 @@ this.PageThumbs = {
         if (aCallback) {
           aCallback(aCanvas);
         }
-      }.bind(this));
+      }.bind(this))();
       return;
     }
     // The content is a local page, grab a thumbnail sync.
@@ -374,14 +372,14 @@ this.PageThumbs = {
     let originalURL;
     let channelError = false;
 
-    Task.spawn((function* task() {
+    ((async function task() {
       if (!aBrowser.isRemoteBrowser) {
         let channel = aBrowser.docShell.currentDocumentChannel;
         originalURL = channel.originalURI.spec;
         // see if this was an error response.
         channelError = PageThumbUtils.isChannelErrorResponse(channel);
       } else {
-        let resp = yield new Promise(resolve => {
+        let resp = await new Promise(resolve => {
           let mm = aBrowser.messageManager;
           let respName = "Browser:Thumbnail:GetOriginalURL:Response";
           mm.addMessageListener(respName, function onResp(msg) {
@@ -396,9 +394,9 @@ this.PageThumbs = {
 
       let isSuccess = true;
       try {
-        let blob = yield this.captureToBlob(aBrowser);
-        let buffer = yield TaskUtils.readBlob(blob);
-        yield this._store(originalURL, url, buffer, channelError);
+        let blob = await this.captureToBlob(aBrowser);
+        let buffer = await TaskUtils.readBlob(blob);
+        await this._store(originalURL, url, buffer, channelError);
       } catch (ex) {
         Components.utils.reportError("Exception thrown during thumbnail capture: '" + ex + "'");
         isSuccess = false;
@@ -406,7 +404,7 @@ this.PageThumbs = {
       if (aCallback) {
         aCallback(isSuccess);
       }
-    }).bind(this));
+    }).bind(this))();
   },
 
   /**
@@ -449,9 +447,9 @@ this.PageThumbs = {
    * @return {Promise}
    */
   _store: function PageThumbs__store(aOriginalURL, aFinalURL, aData, aNoOverwrite) {
-    return Task.spawn(function* () {
+    return (async function() {
       let telemetryStoreTime = new Date();
-      yield PageThumbsStorage.writeData(aFinalURL, aData, aNoOverwrite);
+      await PageThumbsStorage.writeData(aFinalURL, aData, aNoOverwrite);
       Services.telemetry.getHistogramById("FX_THUMBNAILS_STORE_TIME_MS")
         .add(new Date() - telemetryStoreTime);
 
@@ -468,10 +466,10 @@ this.PageThumbs = {
       //    Sync and therefore also redirect sources appear on the newtab
       //    page. We also want thumbnails for those.
       if (aFinalURL != aOriginalURL) {
-        yield PageThumbsStorage.copy(aFinalURL, aOriginalURL, aNoOverwrite);
+        await PageThumbsStorage.copy(aFinalURL, aOriginalURL, aNoOverwrite);
         Services.obs.notifyObservers(null, "page-thumbnail:create", aOriginalURL);
       }
-    });
+    })();
   },
 
   /**
@@ -658,7 +656,7 @@ this.PageThumbsStorage = {
    *
    * @return {Promise}
    */
-  wipe: Task.async(function* Storage_wipe() {
+  wipe: async function Storage_wipe() {
     //
     // This operation may be launched during shutdown, so we need to
     // take a few precautions to ensure that:
@@ -684,7 +682,7 @@ this.PageThumbsStorage = {
 
     let promise = PageThumbsWorker.post("wipe", [this.path]);
     try {
-      yield promise;
+      await promise;
     } finally {
        // Generally, we will be done much before profileBeforeChange,
        // so let's not hoard blockers.
@@ -695,7 +693,7 @@ this.PageThumbsStorage = {
          AsyncShutdown.profileBeforeChange.removeBlocker(blocker);
        }
     }
-  }),
+  },
 
   fileExistsForURL: function Storage_fileExistsForURL(aURL) {
     return PageThumbsWorker.post("exists", [this.getFilePathForURL(aURL)]);

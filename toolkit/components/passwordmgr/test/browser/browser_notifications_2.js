@@ -1,5 +1,5 @@
-add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({"set": [
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({"set": [
     ["signon.rememberSignons.visibilityToggle", true]
   ]});
 });
@@ -10,25 +10,25 @@ add_task(function* setup() {
  *
  * Also checks that submiting an empty password throws an error.
  */
-add_task(function* test_empty_password() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function test_empty_password() {
+  await BrowserTestUtils.withNewTab({
       gBrowser,
       url: "https://example.com/browser/toolkit/components/" +
            "passwordmgr/test/browser/form_basic.html",
-    }, function* (browser) {
+    }, async function(browser) {
       // Submit the form in the content page with the credentials from the test
       // case. This will cause the doorhanger notification to be displayed.
       let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
                                                        "popupshown",
                                                        (event) => event.target == PopupNotifications.panel);
-      yield ContentTask.spawn(browser, null,
-        function* () {
+      await ContentTask.spawn(browser, null,
+        async function() {
           let doc = content.document;
           doc.getElementById("form-basic-username").value = "username";
           doc.getElementById("form-basic-password").value = "p";
           doc.getElementById("form-basic").submit();
         });
-      yield promiseShown;
+      await promiseShown;
 
       let notificationElement = PopupNotifications.panel.childNodes[0];
       let passwordTextbox = notificationElement.querySelector("#password-notification-password");
@@ -36,8 +36,8 @@ add_task(function* test_empty_password() {
 
       // Synthesize input to empty the field
       passwordTextbox.focus();
-      yield EventUtils.synthesizeKey("VK_RIGHT", {});
-      yield EventUtils.synthesizeKey("VK_BACK_SPACE", {});
+      await EventUtils.synthesizeKey("VK_RIGHT", {});
+      await EventUtils.synthesizeKey("VK_BACK_SPACE", {});
 
       let mainActionButton = notificationElement.button;
       Assert.ok(mainActionButton.disabled, "Main action button is disabled");
@@ -53,35 +53,35 @@ add_task(function* test_empty_password() {
  * Test that the doorhanger password field shows plain or * text
  * when the checkbox is checked.
  */
-add_task(function* test_toggle_password() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function test_toggle_password() {
+  await BrowserTestUtils.withNewTab({
       gBrowser,
       url: "https://example.com/browser/toolkit/components/" +
            "passwordmgr/test/browser/form_basic.html",
-    }, function* (browser) {
+    }, async function(browser) {
       // Submit the form in the content page with the credentials from the test
       // case. This will cause the doorhanger notification to be displayed.
       let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
                                                        "popupshown",
                                                        (event) => event.target == PopupNotifications.panel);
-      yield ContentTask.spawn(browser, null,
-        function* () {
+      await ContentTask.spawn(browser, null,
+        async function() {
           let doc = content.document;
           doc.getElementById("form-basic-username").value = "username";
           doc.getElementById("form-basic-password").value = "p";
           doc.getElementById("form-basic").submit();
         });
-      yield promiseShown;
+      await promiseShown;
 
       let notificationElement = PopupNotifications.panel.childNodes[0];
       let passwordTextbox = notificationElement.querySelector("#password-notification-password");
       let toggleCheckbox = notificationElement.querySelector("#password-notification-visibilityToggle");
 
-      yield EventUtils.synthesizeMouseAtCenter(toggleCheckbox, {});
+      await EventUtils.synthesizeMouseAtCenter(toggleCheckbox, {});
       Assert.ok(toggleCheckbox.checked);
       Assert.equal(passwordTextbox.type, "", "Password textbox changed to plain text");
 
-      yield EventUtils.synthesizeMouseAtCenter(toggleCheckbox, {});
+      await EventUtils.synthesizeMouseAtCenter(toggleCheckbox, {});
       Assert.ok(!toggleCheckbox.checked);
       Assert.equal(passwordTextbox.type, "password", "Password textbox changed to * text");
     });
@@ -91,12 +91,12 @@ add_task(function* test_toggle_password() {
  * Test that the doorhanger password toggle checkbox is disabled
  * when the master password is set.
  */
-add_task(function* test_checkbox_disabled_if_has_master_password() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function test_checkbox_disabled_if_has_master_password() {
+  await BrowserTestUtils.withNewTab({
       gBrowser,
       url: "https://example.com/browser/toolkit/components/" +
            "passwordmgr/test/browser/form_basic.html",
-    }, function* (browser) {
+    }, async function(browser) {
       // Submit the form in the content page with the credentials from the test
       // case. This will cause the doorhanger notification to be displayed.
       let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
@@ -105,13 +105,13 @@ add_task(function* test_checkbox_disabled_if_has_master_password() {
 
       LoginTestUtils.masterPassword.enable();
 
-      yield ContentTask.spawn(browser, null, function* () {
+      await ContentTask.spawn(browser, null, async function() {
         let doc = content.document;
         doc.getElementById("form-basic-username").value = "username";
         doc.getElementById("form-basic-password").value = "p";
         doc.getElementById("form-basic").submit();
       });
-      yield promiseShown;
+      await promiseShown;
 
       let notificationElement = PopupNotifications.panel.childNodes[0];
       let passwordTextbox = notificationElement.querySelector("#password-notification-password");

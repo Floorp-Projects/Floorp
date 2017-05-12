@@ -4,44 +4,44 @@
 /*
  * These tests make sure that the undo dialog works as expected.
  */
-add_task(function* () {
+add_task(async function() {
   // remove unpinned sites and undo it
-  yield setLinks("0,1,2,3,4,5,6,7,8");
+  await setLinks("0,1,2,3,4,5,6,7,8");
   setPinnedLinks("5");
 
-  yield* addNewTabPageTab();
-  yield* checkGrid("5p,0,1,2,3,4,6,7,8");
+  await addNewTabPageTab();
+  await checkGrid("5p,0,1,2,3,4,6,7,8");
 
-  yield blockCell(4);
-  yield blockCell(4);
-  yield* checkGrid("5p,0,1,2,6,7,8");
+  await blockCell(4);
+  await blockCell(4);
+  await checkGrid("5p,0,1,2,6,7,8");
 
-  yield* undo();
-  yield* checkGrid("5p,0,1,2,4,6,7,8");
+  await undo();
+  await checkGrid("5p,0,1,2,4,6,7,8");
 
   // now remove a pinned site and undo it
-  yield blockCell(0);
-  yield* checkGrid("0,1,2,4,6,7,8");
+  await blockCell(0);
+  await checkGrid("0,1,2,4,6,7,8");
 
-  yield* undo();
-  yield* checkGrid("5p,0,1,2,4,6,7,8");
+  await undo();
+  await checkGrid("5p,0,1,2,4,6,7,8");
 
   // remove a site and restore all
-  yield blockCell(1);
-  yield* checkGrid("5p,1,2,4,6,7,8");
+  await blockCell(1);
+  await checkGrid("5p,1,2,4,6,7,8");
 
-  yield* undoAll();
-  yield* checkGrid("5p,0,1,2,3,4,6,7,8");
+  await undoAll();
+  await checkGrid("5p,0,1,2,3,4,6,7,8");
 });
 
-function* undo() {
+async function undo() {
   let updatedPromise = whenPagesUpdated();
-  yield BrowserTestUtils.synthesizeMouseAtCenter("#newtab-undo-button", {}, gBrowser.selectedBrowser);
-  yield updatedPromise;
+  await BrowserTestUtils.synthesizeMouseAtCenter("#newtab-undo-button", {}, gBrowser.selectedBrowser);
+  await updatedPromise;
 }
 
-function* undoAll() {
+async function undoAll() {
   let updatedPromise = whenPagesUpdated();
-  yield BrowserTestUtils.synthesizeMouseAtCenter("#newtab-undo-restore-button", {}, gBrowser.selectedBrowser);
-  yield updatedPromise;
+  await BrowserTestUtils.synthesizeMouseAtCenter("#newtab-undo-restore-button", {}, gBrowser.selectedBrowser);
+  await updatedPromise;
 }

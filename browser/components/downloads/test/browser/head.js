@@ -17,8 +17,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "HttpServer",
@@ -135,18 +133,18 @@ function promisePanelOpened() {
   return deferred.promise;
 }
 
-function* task_resetState() {
+async function task_resetState() {
   // Remove all downloads.
-  let publicList = yield Downloads.getList(Downloads.PUBLIC);
-  let downloads = yield publicList.getAll();
+  let publicList = await Downloads.getList(Downloads.PUBLIC);
+  let downloads = await publicList.getAll();
   for (let download of downloads) {
     publicList.remove(download);
-    yield download.finalize(true);
+    await download.finalize(true);
   }
 
   DownloadsPanel.hidePanel();
 
-  yield promiseFocus();
+  await promiseFocus();
 }
 
 function* task_addDownloads(aItems) {
@@ -178,12 +176,12 @@ function* task_addDownloads(aItems) {
   }
 }
 
-function* task_openPanel() {
-  yield promiseFocus();
+async function task_openPanel() {
+  await promiseFocus();
 
   let promise = promisePanelOpened();
   DownloadsPanel.showPanel();
-  yield promise;
+  await promise;
 }
 
 function* setDownloadDir() {
@@ -211,8 +209,8 @@ let gHttpServer = null;
 function startServer() {
   gHttpServer = new HttpServer();
   gHttpServer.start(-1);
-  registerCleanupFunction(function*() {
-     yield new Promise(function(resolve) {
+  registerCleanupFunction(async function() {
+     await new Promise(function(resolve) {
       gHttpServer.stop(resolve);
     });
   });

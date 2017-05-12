@@ -38,7 +38,7 @@ function* testTabsCreateInvalidURL(tabsCreateURL) {
   yield extension.unload();
 }
 
-add_task(function* () {
+add_task(async function() {
   info("Start testing tabs.create on invalid URLs");
 
   let dataURLPage = `data:text/html,
@@ -59,7 +59,7 @@ add_task(function* () {
   ];
 
   for (let {tabsCreateURL} of testCases) {
-    yield* testTabsCreateInvalidURL(tabsCreateURL);
+    await testTabsCreateInvalidURL(tabsCreateURL);
   }
 
   info("done");

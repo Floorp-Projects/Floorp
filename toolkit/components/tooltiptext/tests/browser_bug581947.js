@@ -1,5 +1,5 @@
 function check(aBrowser, aElementName, aBarred, aType) {
-  return ContentTask.spawn(aBrowser, [aElementName, aBarred, aType], function*([aElementName, aBarred, aType]) {
+  return ContentTask.spawn(aBrowser, [aElementName, aBarred, aType], async function([aElementName, aBarred, aType]) {
     let e = content.document.createElement(aElementName);
     let contentElement = content.document.getElementById("content");
     contentElement.appendChild(e);
@@ -37,7 +37,7 @@ function check(aBrowser, aElementName, aBarred, aType) {
 }
 
 function todo_check(aBrowser, aElementName, aBarred) {
-  return ContentTask.spawn(aBrowser, [aElementName, aBarred], function*([aElementName, aBarred]) {
+  return ContentTask.spawn(aBrowser, [aElementName, aBarred], async function([aElementName, aBarred]) {
     let e = content.document.createElement(aElementName);
     let contentElement = content.document.getElementById("content");
     contentElement.appendChild(e);
@@ -55,8 +55,8 @@ function todo_check(aBrowser, aElementName, aBarred) {
   });
 }
 
-add_task(function*() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function() {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "data:text/html,<!DOCTYPE html><html><body><form id='content'></form></body></html>",
   }, function*(browser) {

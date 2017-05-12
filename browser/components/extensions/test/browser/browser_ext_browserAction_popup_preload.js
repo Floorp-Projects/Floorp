@@ -4,8 +4,8 @@
 
 let scriptPage = url => `<html><head><meta charset="utf-8"><script src="${url}"></script></head><body>${url}</body></html>`;
 
-add_task(function* testBrowserActionClickCanceled() {
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+add_task(async function testBrowserActionClickCanceled() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
 
   // Make sure the mouse isn't hovering over the browserAction widget.
   EventUtils.synthesizeMouseAtCenter(gURLBar, {type: "mouseover"}, window);
@@ -24,7 +24,7 @@ add_task(function* testBrowserActionClickCanceled() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
   const {GlobalManager, Management: {global: {browserActionFor}}} = Cu.import("resource://gre/modules/Extension.jsm", {});
 
@@ -71,20 +71,20 @@ add_task(function* testBrowserActionClickCanceled() {
 
   EventUtils.synthesizeMouseAtCenter(widget.node, {type: "mouseup", button: 0}, window);
 
-  yield mouseUpPromise;
+  await mouseUpPromise;
 
   is(browserAction.pendingPopup, null, "Pending popup was cleared");
   is(browserAction.pendingPopupTimeout, null, "Pending popup timeout was cleared");
 
-  yield promisePopupShown(getBrowserActionPopup(extension));
-  yield closeBrowserAction(extension);
+  await promisePopupShown(getBrowserActionPopup(extension));
+  await closeBrowserAction(extension);
 
-  yield extension.unload();
+  await extension.unload();
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });
 
-add_task(function* testBrowserActionDisabled() {
+add_task(async function testBrowserActionDisabled() {
   // Make sure the mouse isn't hovering over the browserAction widget.
   EventUtils.synthesizeMouseAtCenter(gURLBar, {type: "mouseover"}, window);
 
@@ -109,10 +109,10 @@ add_task(function* testBrowserActionDisabled() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitMessage("browserAction-disabled");
-  yield promiseAnimationFrame();
+  await extension.awaitMessage("browserAction-disabled");
+  await promiseAnimationFrame();
 
   const {GlobalManager, Management: {global: {browserActionFor}}} = Cu.import("resource://gre/modules/Extension.jsm", {});
 
@@ -153,19 +153,19 @@ add_task(function* testBrowserActionDisabled() {
 
   EventUtils.synthesizeMouseAtCenter(widget.node, {type: "mouseup", button: 0}, window);
 
-  yield mouseUpPromise;
+  await mouseUpPromise;
 
   is(browserAction.pendingPopup, null, "Have no pending popup");
   is(browserAction.pendingPopupTimeout, null, "Have no pending popup timeout");
 
   // Give the popup a chance to load and trigger a failure, if it was
   // erroneously opened.
-  yield new Promise(resolve => setTimeout(resolve, 250));
+  await new Promise(resolve => setTimeout(resolve, 250));
 
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* testBrowserActionTabPopulation() {
+add_task(async function testBrowserActionTabPopulation() {
   // Note: This test relates to https://bugzilla.mozilla.org/show_bug.cgi?id=1310019
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -189,22 +189,22 @@ add_task(function* testBrowserActionTabPopulation() {
     },
   });
 
-  let win = yield BrowserTestUtils.openNewBrowserWindow();
-  yield BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, "http://example.com/");
-  yield BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  await BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, "http://example.com/");
+  await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
 
   // Make sure the mouse isn't hovering over the browserAction widget.
   EventUtils.synthesizeMouseAtCenter(win.gURLBar, {type: "mouseover"}, win);
 
-  yield extension.startup();
+  await extension.startup();
 
   let widget = getBrowserActionWidget(extension).forWindow(win);
   EventUtils.synthesizeMouseAtCenter(widget.node, {type: "mousedown", button: 0}, win);
 
-  yield extension.awaitMessage("tabTitle");
+  await extension.awaitMessage("tabTitle");
 
   EventUtils.synthesizeMouseAtCenter(widget.node, {type: "mouseup", button: 0}, win);
 
-  yield extension.unload();
-  yield BrowserTestUtils.closeWindow(win);
+  await extension.unload();
+  await BrowserTestUtils.closeWindow(win);
 });

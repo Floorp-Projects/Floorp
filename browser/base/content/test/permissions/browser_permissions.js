@@ -4,20 +4,20 @@
 
 const PERMISSIONS_PAGE  = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "https://example.com") + "permissions.html";
 
-function* openIdentityPopup() {
+function openIdentityPopup() {
   let promise = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "popupshown");
   gIdentityHandler._identityBox.click();
   return promise;
 }
 
-function* closeIdentityPopup() {
+function closeIdentityPopup() {
   let promise = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "popuphidden");
   gIdentityHandler._identityPopup.hidePopup();
   return promise;
 }
 
-add_task(function* testMainViewVisible() {
-  yield BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, function*() {
+add_task(async function testMainViewVisible() {
+  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, function*() {
     let permissionsList = document.getElementById("identity-popup-permission-list");
     let emptyLabel = permissionsList.nextSibling.nextSibling;
 
@@ -54,8 +54,8 @@ add_task(function* testMainViewVisible() {
   });
 });
 
-add_task(function* testIdentityIcon() {
-  yield BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, function*() {
+add_task(async function testIdentityIcon() {
+  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, function() {
     SitePermissions.set(gBrowser.currentURI, "geo", SitePermissions.ALLOW);
 
     ok(gIdentityHandler._identityBox.classList.contains("grantedPermissions"),
@@ -82,8 +82,8 @@ add_task(function* testIdentityIcon() {
   });
 });
 
-add_task(function* testCancelPermission() {
-  yield BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, function*() {
+add_task(async function testCancelPermission() {
+  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, function*() {
     let permissionsList = document.getElementById("identity-popup-permission-list");
     let emptyLabel = permissionsList.nextSibling.nextSibling;
 
@@ -108,8 +108,8 @@ add_task(function* testCancelPermission() {
   });
 });
 
-add_task(function* testPermissionHints() {
-  yield BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, function*(browser) {
+add_task(async function testPermissionHints() {
+  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, function*(browser) {
     let permissionsList = document.getElementById("identity-popup-permission-list");
     let emptyHint = document.getElementById("identity-popup-permission-empty-hint");
     let reloadHint = document.getElementById("identity-popup-permission-reload-hint");
@@ -154,8 +154,8 @@ add_task(function* testPermissionHints() {
   });
 });
 
-add_task(function* testPermissionIcons() {
-  yield BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, function*() {
+add_task(async function testPermissionIcons() {
+  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, function() {
     SitePermissions.set(gBrowser.currentURI, "camera", SitePermissions.ALLOW);
     SitePermissions.set(gBrowser.currentURI, "geo", SitePermissions.BLOCK);
 

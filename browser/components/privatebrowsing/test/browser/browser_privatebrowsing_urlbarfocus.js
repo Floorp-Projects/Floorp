@@ -23,19 +23,19 @@ function openNewPrivateWindow() {
   return deferred.promise;
 }
 
-add_task(function* () {
-  let win = yield openNewPrivateWindow();
+add_task(async function() {
+  let win = await openNewPrivateWindow();
   checkUrlbarFocus(win);
   win.close();
 });
 
-add_task(function* () {
+add_task(async function() {
   aboutNewTabService.newTabURL = "about:blank";
   registerCleanupFunction(() => {
     aboutNewTabService.resetNewTabURL();
   });
 
-  let win = yield openNewPrivateWindow();
+  let win = await openNewPrivateWindow();
   checkUrlbarFocus(win);
   win.close();
 

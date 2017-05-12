@@ -41,30 +41,30 @@ function promiseManyFrecenciesChanged() {
   return deferred.promise;
 }
 
-add_task(function* setup() {
+add_task(async function setup() {
   Services.prefs.setCharPref("places.frecency.decayRate", PREF_FREC_DECAY_RATE_DEF);
 });
 
-add_task(function* test_frecency_decay() {
+add_task(async function test_frecency_decay() {
   let unvisitedBookmarkFrecency = Services.prefs.getIntPref("places.frecency.unvisitedBookmarkBonus");
 
   // Add a bookmark and check its frecency.
   let url = "http://example.com/b";
   let promiseOne = promiseFrecencyChanged(url, unvisitedBookmarkFrecency);
-  yield PlacesUtils.bookmarks.insert({
+  await PlacesUtils.bookmarks.insert({
     url,
     parentGuid: PlacesUtils.bookmarks.unfiledGuid
   });
-  yield promiseOne;
+  await promiseOne;
 
   // Trigger DecayFrecency.
   let promiseMany = promiseManyFrecenciesChanged();
   PlacesUtils.history.QueryInterface(Ci.nsIObserver)
              .observe(null, "idle-daily", "");
-  yield promiseMany;
+  await promiseMany;
 
   // Now check the new frecency is correct.
-  let newFrecency = yield PlacesTestUtils.fieldInDB(url, "frecency");
+  let newFrecency = await PlacesTestUtils.fieldInDB(url, "frecency");
 
   Assert.equal(newFrecency, Math.round(unvisitedBookmarkFrecency * PREF_FREC_DECAY_RATE_DEF),
                "Frecencies should match");

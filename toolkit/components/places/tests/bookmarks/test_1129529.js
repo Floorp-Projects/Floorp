@@ -2,7 +2,7 @@ var now = Date.now() * 1000;
 
 // Test that importing bookmark data where a bookmark has a tag longer than 100
 // chars imports everything except the tags for that bookmark.
-add_task(function* () {
+add_task(async function() {
   let aData = {
     guid: "root________",
     index: 0,
@@ -59,9 +59,9 @@ add_task(function* () {
 
   let contentType = "application/json";
   let uri = "data:" + contentType + "," + JSON.stringify(aData);
-  yield BookmarkJSONUtils.importFromURL(uri, false);
+  await BookmarkJSONUtils.importFromURL(uri, false);
 
-  let [bookmarks] = yield PlacesBackups.getBookmarksTree();
+  let [bookmarks] = await PlacesBackups.getBookmarksTree();
   let unsortedBookmarks = bookmarks.children[2].children;
   Assert.equal(unsortedBookmarks.length, 3);
 

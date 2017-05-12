@@ -25,7 +25,7 @@ function test() {
  * In particular this scenario happens for detaching the tab (ie. moving it to a new window).
  */
 var tests = [
-  taskify(function* test_move_tab_to_new_window() {
+  taskify(async function test_move_tab_to_new_window() {
     const myDocIdentifier = "Hello, I'm a unique expando to identify this document.";
 
     let highlight = document.getElementById("UITourHighlight");
@@ -43,7 +43,7 @@ var tests = [
       browserStartupDeferred.resolve(aWindow);
     }, "browser-delayed-startup-finished");
 
-    yield ContentTask.spawn(gBrowser.selectedBrowser, myDocIdentifier, contentMyDocIdentifier => {
+    await ContentTask.spawn(gBrowser.selectedBrowser, myDocIdentifier, contentMyDocIdentifier => {
       let onVisibilityChange = () => {
         if (!content.document.hidden) {
           let win = Cu.waiveXrays(content);
@@ -55,17 +55,17 @@ var tests = [
     });
     gContentAPI.showHighlight("appMenu");
 
-    yield elementVisiblePromise(highlight);
+    await elementVisiblePromise(highlight);
 
     gContentWindow = gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
-    yield browserStartupDeferred.promise;
+    await browserStartupDeferred.promise;
 
     // This highlight should be shown thanks to the visibilitychange listener.
     let newWindowHighlight = gContentWindow.document.getElementById("UITourHighlight");
-    yield elementVisiblePromise(newWindowHighlight);
+    await elementVisiblePromise(newWindowHighlight);
 
     let selectedTab = gContentWindow.gBrowser.selectedTab;
-    yield ContentTask.spawn(selectedTab.linkedBrowser, myDocIdentifier, contentMyDocIdentifier => {
+    await ContentTask.spawn(selectedTab.linkedBrowser, myDocIdentifier, contentMyDocIdentifier => {
       is(content.document.myExpando, contentMyDocIdentifier, "Document should be selected in new window");
     });
     ok(UITour.tourBrowsersByWindow && UITour.tourBrowsersByWindow.has(gContentWindow), "Window should be known");
@@ -78,7 +78,7 @@ var tests = [
 
     let shownPromise = promisePanelShown(gContentWindow);
     gContentAPI.showMenu("appMenu");
-    yield shownPromise;
+    await shownPromise;
 
     isnot(gContentWindow.PanelUI.panel.state, "closed", "Panel should be open");
     ok(gContentWindow.PanelUI.contents.children.length > 0, "Panel contents should have children");
@@ -89,6 +89,6 @@ var tests = [
     Services.obs.addObserver(onDOMWindowDestroyed, "dom-window-destroyed");
     gContentWindow.close();
 
-    yield windowDestroyedDeferred.promise;
+    await windowDestroyedDeferred.promise;
   }),
 ];

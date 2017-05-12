@@ -9,20 +9,20 @@ const URL_NESTED = getRootDirectory(gTestPath) + "browser_pageStyle_sample_neste
 /**
  * This test ensures that page style information is correctly persisted.
  */
-add_task(function* page_style() {
+add_task(async function page_style() {
   let tab = gBrowser.addTab(URL);
   let browser = tab.linkedBrowser;
-  yield promiseBrowserLoaded(browser);
-  let sheets = yield getStyleSheets(browser);
+  await promiseBrowserLoaded(browser);
+  let sheets = await getStyleSheets(browser);
 
   // Enable all style sheets one by one.
   for (let [title, /*disabled */] of sheets) {
-    yield enableStyleSheetsForSet(browser, title);
+    await enableStyleSheetsForSet(browser, title);
 
     let tab2 = gBrowser.duplicateTab(tab);
-    yield promiseTabRestored(tab2);
+    await promiseTabRestored(tab2);
 
-    let tab2Sheets = yield getStyleSheets(tab2.linkedBrowser);
+    let tab2Sheets = await getStyleSheets(tab2.linkedBrowser);
     let enabled = tab2Sheets.filter(([, disabled]) => !disabled);
 
     if (title.startsWith("fail_")) {
@@ -36,12 +36,12 @@ add_task(function* page_style() {
   }
 
   // Disable all styles and verify that this is correctly persisted.
-  yield setAuthorStyleDisabled(browser, true);
+  await setAuthorStyleDisabled(browser, true);
 
   let tab2 = gBrowser.duplicateTab(tab);
-  yield promiseTabRestored(tab2);
+  await promiseTabRestored(tab2);
 
-  let authorStyleDisabled = yield getAuthorStyleDisabled(tab2.linkedBrowser);
+  let authorStyleDisabled = await getAuthorStyleDisabled(tab2.linkedBrowser);
   ok(authorStyleDisabled, "disabled all stylesheets");
 
   // Clean up.
@@ -53,13 +53,13 @@ add_task(function* page_style() {
  * This test ensures that page style notification from nested documents are
  * received and the page style is persisted correctly.
  */
-add_task(function* nested_page_style() {
+add_task(async function nested_page_style() {
   let tab = gBrowser.addTab(URL_NESTED);
   let browser = tab.linkedBrowser;
-  yield promiseBrowserLoaded(browser);
+  await promiseBrowserLoaded(browser);
 
-  yield enableSubDocumentStyleSheetsForSet(browser, "alternate");
-  yield promiseRemoveTab(tab);
+  await enableSubDocumentStyleSheetsForSet(browser, "alternate");
+  await promiseRemoveTab(tab);
 
   let [{state: {pageStyle}}] = JSON.parse(ss.getClosedTabData(window));
   let expected = JSON.stringify({children: [{pageStyle: "alternate"}]});

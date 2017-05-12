@@ -16,7 +16,7 @@
 
 const idleService = Cc["@mozilla.org/widget/idleservice;1"].getService(Ci.nsIIdleService);
 
-add_task(function* testWithRealIdleService() {
+add_task(async function testWithRealIdleService() {
   function background() {
     browser.test.onMessage.addListener((msg, ...args) => {
       let detectionInterval = args[0];
@@ -46,18 +46,18 @@ add_task(function* testWithRealIdleService() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
   let idleTime = idleService.idleTime;
   let detectionInterval = Math.max(Math.ceil(idleTime / 1000) + 10, 15);
   info(`idleTime: ${idleTime}, detectionInterval: ${detectionInterval}`);
   extension.sendMessage("addListener", detectionInterval);
-  yield extension.awaitMessage("listenerAdded");
+  await extension.awaitMessage("listenerAdded");
   info(`Listener added. idleTime: ${idleService.idleTime}`);
-  yield extension.awaitMessage("listenerFired");
+  await extension.awaitMessage("listenerFired");
   info("Listener fired");
   extension.sendMessage("checkState", detectionInterval);
-  yield extension.awaitFinish("idle");
-  yield extension.unload();
+  await extension.awaitFinish("idle");
+  await extension.unload();
 });
 
 </script>

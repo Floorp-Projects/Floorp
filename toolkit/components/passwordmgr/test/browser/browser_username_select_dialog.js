@@ -44,12 +44,12 @@ let login1 = new nsLoginInfo("http://example.com", "http://example.com", null,
 let login1B = new nsLoginInfo("http://example.com", "http://example.com", null,
                               "notifyu1B", "notifyp1B", "user", "pass");
 
-add_task(function* test_changeUPLoginOnPUpdateForm_accept() {
+add_task(async function test_changeUPLoginOnPUpdateForm_accept() {
   info("Select an u+p login from multiple logins, on password update form, and accept.");
   Services.logins.addLogin(login1);
   Services.logins.addLogin(login1B);
 
-  yield testSubmittingLoginForm("subtst_notifications_change_p.html", function*(fieldValues) {
+  await testSubmittingLoginForm("subtst_notifications_change_p.html", function*(fieldValues) {
     is(fieldValues.username, "null", "Checking submitted username");
     is(fieldValues.password, "pass2", "Checking submitted password");
 
@@ -95,12 +95,12 @@ add_task(function* test_changeUPLoginOnPUpdateForm_accept() {
   Services.logins.removeLogin(login1B);
 });
 
-add_task(function* test_changeUPLoginOnPUpdateForm_cancel() {
+add_task(async function test_changeUPLoginOnPUpdateForm_cancel() {
   info("Select an u+p login from multiple logins, on password update form, and cancel.");
   Services.logins.addLogin(login1);
   Services.logins.addLogin(login1B);
 
-  yield testSubmittingLoginForm("subtst_notifications_change_p.html", function*(fieldValues) {
+  await testSubmittingLoginForm("subtst_notifications_change_p.html", function*(fieldValues) {
     is(fieldValues.username, "null", "Checking submitted username");
     is(fieldValues.password, "pass2", "Checking submitted password");
 

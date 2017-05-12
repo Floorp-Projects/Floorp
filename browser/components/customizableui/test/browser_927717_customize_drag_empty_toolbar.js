@@ -7,20 +7,20 @@
 const kTestToolbarId = "test-empty-drag";
 
 // Attempting to drag an item to an empty container should work.
-add_task(function*() {
-  yield createToolbarWithPlacements(kTestToolbarId, []);
-  yield startCustomizing();
+add_task(async function() {
+  await createToolbarWithPlacements(kTestToolbarId, []);
+  await startCustomizing();
   let downloadButton = document.getElementById("downloads-button");
   let customToolbar = document.getElementById(kTestToolbarId);
   simulateItemDrag(downloadButton, customToolbar);
   assertAreaPlacements(kTestToolbarId, ["downloads-button"]);
   ok(downloadButton.parentNode && downloadButton.parentNode.parentNode == customToolbar,
      "Button should really be in toolbar");
-  yield endCustomizing();
+  await endCustomizing();
   removeCustomToolbars();
 });
 
-add_task(function* asyncCleanup() {
-  yield endCustomizing();
-  yield resetCustomization();
+add_task(async function asyncCleanup() {
+  await endCustomizing();
+  await resetCustomization();
 });

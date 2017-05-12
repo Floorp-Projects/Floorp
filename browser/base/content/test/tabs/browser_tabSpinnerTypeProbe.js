@@ -8,8 +8,8 @@ const CATEGORIES = [
   "unseenNew",
 ];
 
-add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
     set: [
       // We can interrupt JS to paint now, which is great for
       // users, but bad for testing spinners. We temporarily
@@ -35,7 +35,7 @@ add_task(function* setup() {
  *        Resolves once the hang is done.
  */
 function hangContentProcess(browser, aMs) {
-  return ContentTask.spawn(browser, aMs, function*(ms) {
+  return ContentTask.spawn(browser, aMs, async function(ms) {
     let then = Date.now();
     while (Date.now() - then < ms) {
       // Let's burn some CPU...
@@ -76,23 +76,23 @@ let gHistogram = Services.telemetry
  * probe works. This means that we show a spinner for a tab that we've
  * presented before.
  */
-add_task(function* test_seen_spinner_type_probe() {
+add_task(async function test_seen_spinner_type_probe() {
   let originalTab = gBrowser.selectedTab;
 
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "http://example.com",
-  }, function*(browser) {
+  }, async function(browser) {
     // We'll switch away from the current tab, then hang it, and then switch
     // back to it. This should add to the "seen" type for the histogram.
     let testTab = gBrowser.selectedTab;
-    yield BrowserTestUtils.switchTab(gBrowser, originalTab);
+    await BrowserTestUtils.switchTab(gBrowser, originalTab);
     gHistogram.clear();
 
     let tabHangPromise = hangContentProcess(browser, 1000);
     let hangTabSwitch = BrowserTestUtils.switchTab(gBrowser, testTab);
-    yield tabHangPromise;
-    yield hangTabSwitch;
+    await tabHangPromise;
+    await hangTabSwitch;
 
     // Okay, we should have gotten an entry in our Histogram for that one.
     let snapshot = gHistogram.snapshot();
@@ -108,11 +108,11 @@ add_task(function* test_seen_spinner_type_probe() {
  * it "old" (See the NEWNESS_THRESHOLD constant in the async tabswitcher for
  * the exact definition).
  */
-add_task(function* test_unseenOld_spinner_type_probe() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function test_unseenOld_spinner_type_probe() {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "http://example.com",
-  }, function*(browser) {
+  }, async function(browser) {
     const NEWNESS_THRESHOLD = gBrowser._getSwitcher().NEWNESS_THRESHOLD;
 
     // First, create a new background tab, ensuring that it's in the same process
@@ -122,7 +122,7 @@ add_task(function* test_unseenOld_spinner_type_probe() {
       inBackground: true,
     });
 
-    yield BrowserTestUtils.browserLoaded(bgTab.linkedBrowser);
+    await BrowserTestUtils.browserLoaded(bgTab.linkedBrowser);
 
     // Now, let's fudge with the creationTime of the background tab so that
     // it seems old. We'll also add a fudge-factor to the NEWNESS_THRESHOLD of 100ms
@@ -134,14 +134,14 @@ add_task(function* test_unseenOld_spinner_type_probe() {
     gHistogram.clear();
     let tabHangPromise = hangContentProcess(browser, 1000);
     let hangTabSwitch = BrowserTestUtils.switchTab(gBrowser, bgTab);
-    yield tabHangPromise;
-    yield hangTabSwitch;
+    await tabHangPromise;
+    await hangTabSwitch;
 
     // Okay, we should have gotten an entry in our Histogram for that one.
     let snapshot = gHistogram.snapshot();
     assertOnlyOneTypeSet(snapshot, "unseenOld");
 
-    yield BrowserTestUtils.removeTab(bgTab);
+    await BrowserTestUtils.removeTab(bgTab);
   });
 });
 
@@ -152,11 +152,11 @@ add_task(function* test_unseenOld_spinner_type_probe() {
  * it "old" (See the NEWNESS_THRESHOLD constant in the async tabswitcher for
  * the exact definition).
  */
-add_task(function* test_unseenNew_spinner_type_probe() {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function test_unseenNew_spinner_type_probe() {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "http://example.com",
-  }, function*(browser) {
+  }, async function(browser) {
     // First, create a new background tab, ensuring that it's in the same process
     // as the current one.
     let bgTab = gBrowser.addTab("about:blank", {
@@ -164,7 +164,7 @@ add_task(function* test_unseenNew_spinner_type_probe() {
       inBackground: true,
     });
 
-    yield BrowserTestUtils.browserLoaded(bgTab.linkedBrowser);
+    await BrowserTestUtils.browserLoaded(bgTab.linkedBrowser);
 
     // Now, let's fudge with the creationTime of the background tab so that
     // it seems very new (created 1 minute into the future).
@@ -175,13 +175,13 @@ add_task(function* test_unseenNew_spinner_type_probe() {
     gHistogram.clear();
     let tabHangPromise = hangContentProcess(browser, 1000);
     let hangTabSwitch = BrowserTestUtils.switchTab(gBrowser, bgTab);
-    yield tabHangPromise;
-    yield hangTabSwitch;
+    await tabHangPromise;
+    await hangTabSwitch;
 
     // Okay, we should have gotten an entry in our Histogram for that one.
     let snapshot = gHistogram.snapshot();
     assertOnlyOneTypeSet(snapshot, "unseenNew");
 
-    yield BrowserTestUtils.removeTab(bgTab);
+    await BrowserTestUtils.removeTab(bgTab);
   });
 });

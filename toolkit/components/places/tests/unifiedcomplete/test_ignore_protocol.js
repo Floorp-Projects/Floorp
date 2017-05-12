@@ -6,19 +6,19 @@
  * Test bug 424509 to make sure searching for "h" doesn't match "http" of urls.
  */
 
-add_task(function* test_escape() {
+add_task(async function test_escape() {
   let uri1 = NetUtil.newURI("http://site/");
   let uri2 = NetUtil.newURI("http://happytimes/");
-  yield PlacesTestUtils.addVisits([
+  await PlacesTestUtils.addVisits([
     { uri: uri1, title: "title" },
     { uri: uri2, title: "title" }
   ]);
 
   do_print("Searching for h matches site and not http://");
-  yield check_autocomplete({
+  await check_autocomplete({
     search: "h",
     matches: [ { uri: uri2, title: "title" } ]
   });
 
-  yield cleanup();
+  await cleanup();
 });

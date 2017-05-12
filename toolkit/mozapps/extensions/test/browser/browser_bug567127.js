@@ -81,8 +81,8 @@ function checkInstallConfirmation(...urls) {
   });
 }
 
-add_task(function* test_install_from_file() {
-  gManagerWindow = yield open_manager("addons://list/extension");
+add_task(async function test_install_from_file() {
+  gManagerWindow = await open_manager("addons://list/extension");
 
   var filePaths = [
                    get_addon_file_url("browser_bug567127_1.xpi"),
@@ -96,8 +96,8 @@ add_task(function* test_install_from_file() {
 
   gManagerWindow.gViewController.doCommand("cmd_installFromFile");
 
-  yield pInstallURIClosed;
+  await pInstallURIClosed;
 
   MockFilePicker.cleanup();
-  yield close_manager(gManagerWindow);
+  await close_manager(gManagerWindow);
 });

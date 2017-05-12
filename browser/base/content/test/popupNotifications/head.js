@@ -2,8 +2,6 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
   "resource://gre/modules/Promise.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
 
@@ -31,14 +29,14 @@ function promiseTopicObserved(topic) {
  * Called after opening a new window or switching windows, this will wait until
  * we are sure that an attempt to display a notification will not fail.
  */
-function* waitForWindowReadyForPopupNotifications(win) {
+async function waitForWindowReadyForPopupNotifications(win) {
   // These are the same checks that PopupNotifications.jsm makes before it
   // allows a notification to open.
-  yield BrowserTestUtils.waitForCondition(
+  await BrowserTestUtils.waitForCondition(
     () => win.gBrowser.selectedBrowser.docShellIsActive,
     "The browser should be active"
   );
-  yield BrowserTestUtils.waitForCondition(
+  await BrowserTestUtils.waitForCondition(
     () => Services.focus.activeWindow == win,
     "The window should be active"
   );
@@ -99,12 +97,12 @@ function* runNextTest() {
     onPopupEvent("popupshown", function() {
       shownState = true;
       info("[" + nextTest.id + "] popup shown");
-      Task.spawn(() => nextTest.onShown(this))
+      (() => nextTest.onShown(this))()
           .then(undefined, ex => Assert.ok(false, "onShown failed: " + ex));
     });
     onPopupEvent("popuphidden", function() {
       info("[" + nextTest.id + "] popup hidden");
-      Task.spawn(() => nextTest.onHidden(this))
+      (() => nextTest.onHidden(this))()
           .then(() => goNext(), ex => Assert.ok(false, "onHidden failed: " + ex));
     }, () => shownState);
     info("[" + nextTest.id + "] added listeners; panel is open: " + PopupNotifications.isPanelOpen);

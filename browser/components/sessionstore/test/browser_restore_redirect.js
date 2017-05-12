@@ -6,7 +6,7 @@ const TARGET = BASE + "restore_redirect_target.html";
 /**
  * Ensure that a http redirect leaves a working tab.
  */
-add_task(function* check_http_redirect() {
+add_task(async function check_http_redirect() {
   let state = {
     entries: [{ url: BASE + "restore_redirect_http.html", triggeringPrincipal_base64}]
   };
@@ -14,11 +14,11 @@ add_task(function* check_http_redirect() {
   // Open a new tab to restore into.
   let tab = gBrowser.addTab("about:blank");
   let browser = tab.linkedBrowser;
-  yield promiseTabState(tab, state);
+  await promiseTabState(tab, state);
 
   info("Restored tab");
 
-  yield TabStateFlusher.flush(browser);
+  await TabStateFlusher.flush(browser);
   let data = TabState.collect(tab);
   is(data.entries.length, 1, "Should be one entry in session history");
   is(data.entries[0].url, TARGET, "Should be the right session history entry");
@@ -26,13 +26,13 @@ add_task(function* check_http_redirect() {
   ok(!("__SS_data" in browser), "Temporary restore data should have been cleared");
 
   // Cleanup.
-  yield promiseRemoveTab(tab);
+  await promiseRemoveTab(tab);
 });
 
 /**
  * Ensure that a js redirect leaves a working tab.
  */
-add_task(function* check_js_redirect() {
+add_task(async function check_js_redirect() {
   let state = {
     entries: [{ url: BASE + "restore_redirect_js.html", triggeringPrincipal_base64}]
   };
@@ -51,13 +51,13 @@ add_task(function* check_js_redirect() {
   // Open a new tab to restore into.
   let tab = gBrowser.addTab("about:blank");
   let browser = tab.linkedBrowser;
-  yield promiseTabState(tab, state);
+  await promiseTabState(tab, state);
 
   info("Restored tab");
 
-  yield loadPromise;
+  await loadPromise;
 
-  yield TabStateFlusher.flush(browser);
+  await TabStateFlusher.flush(browser);
   let data = TabState.collect(tab);
   is(data.entries.length, 1, "Should be one entry in session history");
   is(data.entries[0].url, TARGET, "Should be the right session history entry");
@@ -65,5 +65,5 @@ add_task(function* check_js_redirect() {
   ok(!("__SS_data" in browser), "Temporary restore data should have been cleared");
 
   // Cleanup.
-  yield promiseRemoveTab(tab);
+  await promiseRemoveTab(tab);
 });

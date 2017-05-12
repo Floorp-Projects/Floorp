@@ -13,7 +13,7 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* test_webnav_unresolved_uri_on_expected_URI_scheme() {
+add_task(async function test_webnav_unresolved_uri_on_expected_URI_scheme() {
   function background() {
     let listeners = [];
 
@@ -81,7 +81,7 @@ add_task(function* test_webnav_unresolved_uri_on_expected_URI_scheme() {
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
 
-  yield extension.startup();
+  await extension.startup();
 
   let win = window.open();
 
@@ -199,12 +199,12 @@ add_task(function* test_webnav_unresolved_uri_on_expected_URI_scheme() {
     win.location = "about:blank";
 
     extension.sendMessage("test-filters", EVENTS, data);
-    yield extension.awaitMessage("test-filter-ready");
+    await extension.awaitMessage("test-filter-ready");
 
     info(`Loading the test url: ${data.url}`);
     win.location = data.url;
 
-    yield extension.awaitMessage("test-filter-next");
+    await extension.awaitMessage("test-filter-next");
 
     info("Test scenario completed. Moving to the next test scenario.");
   }
@@ -222,37 +222,37 @@ add_task(function* test_webnav_unresolved_uri_on_expected_URI_scheme() {
   info(`Loading the initial test url: ${url}`);
   extension.sendMessage("test-filters", [event], data);
 
-  yield extension.awaitMessage("test-filter-ready");
+  await extension.awaitMessage("test-filter-ready");
   win.location = url;
-  yield extension.awaitMessage("test-filter-next");
+  await extension.awaitMessage("test-filter-next");
 
   event = "onReferenceFragmentUpdated";
   extension.sendMessage("test-filters", [event], data);
 
-  yield extension.awaitMessage("test-filter-ready");
+  await extension.awaitMessage("test-filter-ready");
   win.location = url + "#ref1";
-  yield extension.awaitMessage("test-filter-next");
+  await extension.awaitMessage("test-filter-next");
 
   info("WebNavigation event filters test onHistoryStateUpdated scenario starting...");
 
   event = "onHistoryStateUpdated";
   extension.sendMessage("test-filters", [event], data);
-  yield extension.awaitMessage("test-filter-ready");
+  await extension.awaitMessage("test-filter-ready");
 
   win.history.pushState({}, "", BASE + "/pushState_page3.html");
-  yield extension.awaitMessage("test-filter-next");
+  await extension.awaitMessage("test-filter-next");
 
   // TODO: add additional specific tests for the other webNavigation events:
   // onErrorOccurred (and onCreatedNavigationTarget on supported)
 
   info("WebNavigation event filters test scenarios completed.");
 
-  yield extension.unload();
+  await extension.unload();
 
   win.close();
 });
 
-add_task(function* test_webnav_empty_filter_validation_error() {
+add_task(async function test_webnav_empty_filter_validation_error() {
   function background() {
     let catchedException;
 
@@ -286,11 +286,11 @@ add_task(function* test_webnav_empty_filter_validation_error() {
     background,
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitFinish("webNav.emptyFilterValidationError");
+  await extension.awaitFinish("webNav.emptyFilterValidationError");
 
-  yield extension.unload();
+  await extension.unload();
 });
 
 </script>

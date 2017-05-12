@@ -11,9 +11,9 @@ registerCleanupFunction(function*() {
  * chevron properly, and then when those buttons are clicked in the overflow
  * panel that the downloads panel anchors to the chevron.
  */
-add_task(function* test_overflow_anchor() {
+add_task(async function test_overflow_anchor() {
   // Ensure that state is reset in case previous tests didn't finish.
-  yield task_resetState();
+  await task_resetState();
 
   // Record the original width of the window so we can put it back when
   // this test finishes.
@@ -34,11 +34,11 @@ add_task(function* test_overflow_anchor() {
   // Resize the window to half of its original size. That should
   // be enough to overflow the downloads button.
   window.resizeTo(oldWidth / 2, window.outerHeight);
-  yield waitForOverflowed(button, true);
+  await waitForOverflowed(button, true);
 
   let promise = promisePanelOpened();
   button.node.doCommand();
-  yield promise;
+  await promise;
 
   let panel = DownloadsPanel.panel;
   let chevron = document.getElementById("nav-bar-overflow-button");
@@ -53,12 +53,12 @@ add_task(function* test_overflow_anchor() {
   window.resizeTo(oldWidth, window.outerHeight);
 
   // The downloads button should eventually be un-overflowed.
-  yield waitForOverflowed(button, false);
+  await waitForOverflowed(button, false);
 
   // Now try opening the panel again.
   promise = promisePanelOpened();
   button.node.doCommand();
-  yield promise;
+  await promise;
 
   is(panel.anchorNode.id, "downloads-indicator-anchor");
 

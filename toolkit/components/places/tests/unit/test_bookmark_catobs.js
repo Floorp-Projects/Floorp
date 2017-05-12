@@ -5,7 +5,7 @@ function run_test() {
   run_next_test()
 }
 
-add_task(function* test_observers() {
+add_task(async function test_observers() {
   do_load_manifest("nsDummyObserver.manifest");
 
   let dummyCreated = false;
@@ -53,5 +53,5 @@ add_task(function* test_observers() {
                                        PlacesUtils.bookmarks.DEFAULT_INDEX,
                                        "bookmark");
 
-  yield notificationsPromised;
+  await notificationsPromised;
 });

@@ -55,7 +55,7 @@
     function runTest() {
       SimpleTest.waitForExplicitFinish();
 
-      Task.spawn(function* () {
+      (async function() {
         const TEST_URI = Services.io.newURI("http://www.test.me/");
         const TEST_URI2 = Services.io.newURI("http://www.test.again.me/");
         const TEST_TAG = "test-tag";
@@ -66,7 +66,7 @@
         document.getElementById("editBMPanel_tagsSelectorRow").collapsed = false;
 
         // Add a bookmark.
-        let bm = yield PlacesUtils.bookmarks.insert({
+        let bm = await PlacesUtils.bookmarks.insert({
           parentGuid: PlacesUtils.bookmarks.unfiledGuid,
           index: PlacesUtils.bookmarks.DEFAULT_INDEX,
           type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -75,7 +75,7 @@
         });
 
         // Init panel.
-        let node = yield PlacesUIUtils.promiseNodeLikeFromFetchInfo(bm);
+        let node = await PlacesUIUtils.promiseNodeLikeFromFetchInfo(bm);
         gEditItemOverlay.initPanel({ node });
 
         // Add a tag.
@@ -96,7 +96,7 @@
         checkTagsSelector([], []);
 
         // Add a second bookmark.
-        let bm2 = yield PlacesUtils.bookmarks.insert({
+        let bm2 = await PlacesUtils.bookmarks.insert({
           parentGuid: PlacesUtils.bookmarks.unfiledGuid,
           index: PlacesUtils.bookmarks.DEFAULT_INDEX,
           type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -194,9 +194,9 @@
         checkTagsSelector([], []);
 
         // Cleanup.
-        yield PlacesUtils.bookmarks.remove(bm.guid);
-        yield PlacesUtils.bookmarks.remove(bm2.guid);
-      }).then(SimpleTest.finish);
+        await PlacesUtils.bookmarks.remove(bm.guid);
+        await PlacesUtils.bookmarks.remove(bm2.guid);
+      })().then(SimpleTest.finish);
     }
   ]]>
   </script>

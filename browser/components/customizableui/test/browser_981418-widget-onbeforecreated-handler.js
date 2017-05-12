@@ -6,8 +6,8 @@
 const kWidgetId = "test-981418-widget-onbeforecreated";
 
 // Should be able to add broken view widget
-add_task(function* testAddOnBeforeCreatedWidget() {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+add_task(async function testAddOnBeforeCreatedWidget() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   let viewShownDeferred = Promise.defer();
   let onBeforeCreatedCalled = false;
   let widgetSpec = {
@@ -50,29 +50,29 @@ add_task(function* testAddOnBeforeCreatedWidget() {
       let panelShownPromise = promisePanelElementShown(window, tempPanel);
 
       let shownTimeout = setTimeout(() => viewShownDeferred.reject("Panel not shown within 20s"), 20000);
-      yield viewShownDeferred.promise;
-      yield panelShownPromise;
+      await viewShownDeferred.promise;
+      await panelShownPromise;
       clearTimeout(shownTimeout);
       ok(true, "Found view shown");
 
       let panelHiddenPromise = promisePanelElementHidden(window, tempPanel);
       tempPanel.hidePopup();
-      yield panelHiddenPromise;
+      await panelHiddenPromise;
 
       CustomizableUI.addWidgetToArea(kWidgetId, CustomizableUI.AREA_PANEL);
-      yield PanelUI.show();
+      await PanelUI.show();
 
       viewShownDeferred = Promise.defer();
       widgetNode.click();
 
       shownTimeout = setTimeout(() => viewShownDeferred.reject("Panel not shown within 20s"), 20000);
-      yield viewShownDeferred.promise;
+      await viewShownDeferred.promise;
       clearTimeout(shownTimeout);
       ok(true, "Found view shown");
 
       let panelHidden = promisePanelHidden(window);
       PanelUI.hide();
-      yield panelHidden;
+      await panelHidden;
     } catch (ex) {
       ok(false, "Unexpected exception (like a timeout for one of the yields) " +
                 "when testing view widget.");
@@ -89,6 +89,6 @@ add_task(function* testAddOnBeforeCreatedWidget() {
   ok(noError, "Should not throw an exception trying to remove the broken view widget.");
 });
 
-add_task(function* asyncCleanup() {
-  yield resetCustomization();
+add_task(async function asyncCleanup() {
+  await resetCustomization();
 });

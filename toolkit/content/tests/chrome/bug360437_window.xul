@@ -18,7 +18,6 @@
 
   <script type="application/javascript"><![CDATA[
     const {interfaces: Ci, classes: Cc, results: Cr, utils: Cu} = Components;
-    Cu.import("resource://gre/modules/Task.jsm");
     Cu.import("resource://testing-common/ContentTask.jsm");
     ContentTask.setTestScope(window.opener.wrappedJSObject);
 
@@ -31,22 +30,22 @@
     }
 
     function startTest() {
-      Task.spawn(function* () {
+      (async function() {
         gFindBar = document.getElementById("FindToolbar");
         for (let browserId of ["content", "content-remote"]) {
-          yield startTestWithBrowser(browserId);
+          await startTestWithBrowser(browserId);
         }
-      }).then(() => {
+      })().then(() => {
         window.close();
         SimpleTest.finish();
       });
     }
 
-    function* startTestWithBrowser(browserId) {
+    async function startTestWithBrowser(browserId) {
       info("Starting test with browser '" + browserId + "'");
       gBrowser = document.getElementById(browserId);
       gFindBar.browser = gBrowser;
-      let promise = ContentTask.spawn(gBrowser, null, function* () {
+      let promise = ContentTask.spawn(gBrowser, null, async function() {
         return new Promise(resolve => {
           addEventListener("DOMContentLoaded", function listener() {
             removeEventListener("DOMContentLoaded", listener);
@@ -55,16 +54,16 @@
         });
       });
       gBrowser.loadURI("data:text/html,<form><input id='input' type='text' value='text inside an input element'></form>");
-      yield promise;
-      yield onDocumentLoaded();
+      await promise;
+      await onDocumentLoaded();
     }
 
-    function* onDocumentLoaded() {
+    async function onDocumentLoaded() {
       gFindBar.onFindCommand();
 
       // Make sure the findfield is correctly focused on open
       var searchStr = "text inside an input element";
-      yield promiseEnterStringIntoFindField(searchStr);
+      await promiseEnterStringIntoFindField(searchStr);
       is(document.commandDispatcher.focusedElement,
          gFindBar._findField.inputField, "Find field isn't focused");
 
@@ -72,7 +71,7 @@
       // when the find bar is closed.
       gFindBar.close();
       gFindBar.onFindAgainCommand(false);
-      yield ContentTask.spawn(gBrowser, null, function* () {
+      await ContentTask.spawn(gBrowser, null, async function() {
         Assert.equal(content.document.activeElement,
          content.document.getElementById("input"), "Input Element isn't focused");
       });

@@ -5,7 +5,7 @@ const gTestRoot = rootDir.replace("chrome://mochitests/content/", "http://127.0.
 
 var gTestBrowser = null;
 
-add_task(function* () {
+add_task(async function() {
   registerCleanupFunction(function() {
     clearAllPluginPermissions();
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
@@ -19,7 +19,7 @@ add_task(function* () {
   });
 });
 
-add_task(function* () {
+add_task(async function() {
   Services.prefs.setBoolPref("plugins.click_to_play", true);
   Services.prefs.setBoolPref("extensions.blocklist.suppressUI", true);
 
@@ -31,25 +31,25 @@ add_task(function* () {
   let popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
   ok(!popupNotification, "Test 1, Should not have a click-to-play notification");
 
-  yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_zoom.html");
+  await promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_zoom.html");
 
   // Work around for delayed PluginBindingAttached
-  yield promiseUpdatePluginBindings(gTestBrowser);
+  await promiseUpdatePluginBindings(gTestBrowser);
 
-  yield promisePopupNotification("click-to-play-plugins");
+  await promisePopupNotification("click-to-play-plugins");
 });
 
 // Enlarges the zoom level 4 times and tests that the overlay is
 // visible after each enlargement.
-add_task(function* () {
+add_task(async function() {
   for (let count = 0; count < 4; count++) {
 
     FullZoom.enlarge();
 
     // Reload the page
-    yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_zoom.html");
-    yield promiseUpdatePluginBindings(gTestBrowser);
-    yield ContentTask.spawn(gTestBrowser, { count }, function* (args) {
+    await promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_zoom.html");
+    await promiseUpdatePluginBindings(gTestBrowser);
+    await ContentTask.spawn(gTestBrowser, { count }, async function(args) {
       let doc = content.document;
       let plugin = doc.getElementById("test");
       let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");

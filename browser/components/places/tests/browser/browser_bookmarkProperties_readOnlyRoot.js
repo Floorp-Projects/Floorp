@@ -1,9 +1,9 @@
 "use strict"
 
-add_task(function* () {
+add_task(async function() {
   info("Bug 479348 - Properties on a root should be read-only.");
 
-  yield withSidebarTree("bookmarks", function* (tree) {
+  await withSidebarTree("bookmarks", function* (tree) {
     let itemId = PlacesUIUtils.leftPaneQueries["UnfiledBookmarks"];
     tree.selectItems([itemId]);
     ok(tree.controller.isCommandEnabled("placesCmd_show:info"),

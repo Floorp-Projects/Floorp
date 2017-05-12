@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* testIncognitoPopup() {
+add_task(async function testIncognitoPopup() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
@@ -102,7 +102,7 @@ add_task(function* testIncognitoPopup() {
     clickPageAction(extension, Services.wm.getMostRecentWindow("navigator:browser"));
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("incognito");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("incognito");
+  await extension.unload();
 });

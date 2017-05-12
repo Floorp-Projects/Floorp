@@ -4,8 +4,6 @@
 
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 
 let listenerCount = 0;
 
@@ -181,17 +179,17 @@ this.bookmarks = class extends ExtensionAPI {
         get: function(idOrIdList) {
           let list = Array.isArray(idOrIdList) ? idOrIdList : [idOrIdList];
 
-          return Task.spawn(function* () {
+          return (async function() {
             let bookmarks = [];
             for (let id of list) {
-              let bookmark = yield PlacesUtils.bookmarks.fetch({guid: id});
+              let bookmark = await PlacesUtils.bookmarks.fetch({guid: id});
               if (!bookmark) {
                 throw new Error("Bookmark not found");
               }
               bookmarks.push(convert(bookmark));
             }
             return bookmarks;
-          }).catch(error => Promise.reject({message: error.message}));
+          })().catch(error => Promise.reject({message: error.message}));
         },
 
         getChildren: function(id) {

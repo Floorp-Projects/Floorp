@@ -3,12 +3,12 @@ const ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionSto
 const {Utils} = Cu.import("resource://gre/modules/sessionstore/Utils.jsm", {});
 const triggeringPrincipal_base64 = Utils.SERIALIZED_SYSTEMPRINCIPAL;
 
-add_task(function* () {
+add_task(async function() {
   waitForExplicitFinish();
 
   const tabURL = getRootDirectory(gTestPath) + "browser_bug1184989_prevent_scrolling_when_preferences_flipped.xul";
 
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: tabURL }, function* (browser) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: tabURL }, function* (browser) {
     let doc = browser.contentDocument;
     let container = doc.getElementById("container");
 
@@ -40,7 +40,7 @@ add_task(function* () {
     yield checkPageScrolling(container, "radio");
   });
 
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:preferences#search" }, function* (browser) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:preferences#search" }, function* (browser) {
     let doc = browser.contentDocument;
     let container = doc.getElementsByClassName("main-content")[0];
 
@@ -70,7 +70,7 @@ add_task(function* () {
   // Fake a post-crash tab
   ss.setTabState(tab, JSON.stringify(TAB_STATE));
 
-  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   let doc = tab.linkedBrowser.contentDocument;
 
   // Make body scrollable
@@ -79,7 +79,7 @@ add_task(function* () {
   let tabList = doc.getElementById("tabList");
   tabList.focus();
   EventUtils.synthesizeKey(" ", {});
-  yield checkPageScrolling(doc.documentElement, "session restore");
+  await checkPageScrolling(doc.documentElement, "session restore");
 
   gBrowser.removeCurrentTab();
   finish();

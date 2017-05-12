@@ -2,15 +2,15 @@
 
 const TEST_URL = "http://mochi.test:8888/browser/browser/components/places/tests/browser/keyword_form.html";
 
-add_task(function* () {
-  yield BrowserTestUtils.withNewTab({
+add_task(async function() {
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: TEST_URL,
   }, function* (browser) {
     // We must wait for the context menu code to build metadata.
     yield openContextMenuForContentSelector(browser, '#form1 > input[name="search"]');
 
-    yield withBookmarksDialog(true, AddKeywordForSearchField, function* (dialogWin) {
+    yield withBookmarksDialog(true, AddKeywordForSearchField, async function(dialogWin) {
       let acceptBtn = dialogWin.document.documentElement.getButton("accept");
       ok(acceptBtn.disabled, "Accept button is disabled");
 
@@ -22,12 +22,12 @@ add_task(function* () {
       ok(!acceptBtn.disabled, "Accept button is enabled");
 
       // The dialog is instant apply.
-      yield promiseKeywordNotification;
+      await promiseKeywordNotification;
 
       // After the notification, the keywords cache will update asynchronously.
       info("Check the keyword entry has been created");
       let entry;
-      yield waitForCondition(function* () {
+      await waitForCondition(function* () {
         entry = yield PlacesUtils.keywords.fetch("kw");
         return !!entry;
       }, "Unable to find the expected keyword");
@@ -36,19 +36,19 @@ add_task(function* () {
       is(entry.postData, "accenti%3D%E0%E8%EC%F2%F9&search%3D%25s", "POST data is correct");
 
       info("Check the charset has been saved");
-      let charset = yield PlacesUtils.getCharsetForURI(NetUtil.newURI(TEST_URL));
+      let charset = await PlacesUtils.getCharsetForURI(NetUtil.newURI(TEST_URL));
       is(charset, "windows-1252", "charset is correct");
 
       // Now check getShortcutOrURI.
-      let data = yield getShortcutOrURIAndPostData("kw test");
+      let data = await getShortcutOrURIAndPostData("kw test");
       is(getPostDataString(data.postData), "accenti=\u00E0\u00E8\u00EC\u00F2\u00F9&search=test", "getShortcutOrURI POST data is correct");
       is(data.url, TEST_URL, "getShortcutOrURI URL is correct");
     });
   });
 });
 
-add_task(function* reopen_same_field() {
-  yield PlacesUtils.keywords.insert({
+add_task(async function reopen_same_field() {
+  await PlacesUtils.keywords.insert({
     url: TEST_URL,
     keyword: "kw",
     postData: "accenti%3D%E0%E8%EC%F2%F9&search%3D%25s"
@@ -57,14 +57,14 @@ add_task(function* reopen_same_field() {
     yield PlacesUtils.keywords.remove("kw");
   });
   // Reopening on the same input field should show the existing keyword.
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: TEST_URL,
   }, function* (browser) {
     // We must wait for the context menu code to build metadata.
     yield openContextMenuForContentSelector(browser, '#form1 > input[name="search"]');
 
-    yield withBookmarksDialog(true, AddKeywordForSearchField, function* (dialogWin) {
+    yield withBookmarksDialog(true, AddKeywordForSearchField, function(dialogWin) {
       let acceptBtn = dialogWin.document.documentElement.getButton("accept");
       ok(acceptBtn.disabled, "Accept button is disabled");
 
@@ -74,8 +74,8 @@ add_task(function* reopen_same_field() {
   });
 });
 
-add_task(function* open_other_field() {
-  yield PlacesUtils.keywords.insert({
+add_task(async function open_other_field() {
+  await PlacesUtils.keywords.insert({
     url: TEST_URL,
     keyword: "kw2",
     postData: "search%3D%25s"
@@ -85,14 +85,14 @@ add_task(function* open_other_field() {
   });
   // Reopening on another field of the same page that has different postData
   // should not show the existing keyword.
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: TEST_URL,
   }, function* (browser) {
     // We must wait for the context menu code to build metadata.
     yield openContextMenuForContentSelector(browser, '#form2 > input[name="search"]');
 
-    yield withBookmarksDialog(true, AddKeywordForSearchField, function* (dialogWin) {
+    yield withBookmarksDialog(true, AddKeywordForSearchField, function(dialogWin) {
       let acceptBtn = dialogWin.document.documentElement.getButton("accept");
       ok(acceptBtn.disabled, "Accept button is disabled");
 

@@ -64,7 +64,7 @@ function clearPendingCrashReports() {
  *        crash reports. This defaults to the current date and time.
  * @returns Promise
  */
-function* createPendingCrashReports(howMany, accessDate) {
+function createPendingCrashReports(howMany, accessDate) {
   let dir = getPendingCrashReportDir();
   if (!accessDate) {
     accessDate = new Date();
@@ -107,18 +107,18 @@ function* createPendingCrashReports(howMany, accessDate) {
   // pair in the .extra file, so we'll satisfy it.
   let extraFileContents = "ServerURL=" + SERVER_URL;
 
-  return Task.spawn(function*() {
+  return (async function() {
     let uuids = [];
     for (let i = 0; i < howMany; ++i) {
       let uuid = uuidGenerator.generateUUID().toString();
       // Strip the {}...
       uuid = uuid.substring(1, uuid.length - 1);
-      yield createFile(uuid, "dmp", accessDate);
-      yield createFile(uuid, "extra", accessDate, extraFileContents);
+      await createFile(uuid, "dmp", accessDate);
+      await createFile(uuid, "extra", accessDate, extraFileContents);
       uuids.push(uuid);
     }
     return uuids;
-  });
+  })();
 }
 
 /**
@@ -171,14 +171,14 @@ function waitForIgnoredReports(reportIDs) {
 
 let gNotificationBox;
 
-add_task(function* setup() {
+add_task(async function setup() {
   // Pending crash reports are stored in the UAppData folder,
   // which exists outside of the profile folder. In order to
   // not overwrite / clear pending crash reports for the poor
   // soul who runs this test, we use AppData.jsm to point to
   // a special made-up directory inside the profile
   // directory.
-  yield makeFakeAppDir();
+  await makeFakeAppDir();
   // We'll assume that the notifications will be shown in the current
   // browser window's global notification box.
   gNotificationBox = document.getElementById("global-notificationbox");
@@ -206,7 +206,7 @@ add_task(function* setup() {
   // disabled is an intentional choice, as this allows for easier
   // simulation of startup and shutdown.
   UnsubmittedCrashHandler.uninit();
-  yield SpecialPowers.pushPrefEnv({
+  await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.crashReports.unsubmittedCheck.enabled", true],
     ],
@@ -224,11 +224,11 @@ add_task(function* setup() {
  * Tests that if there are no pending crash reports, then the
  * notification will not show up.
  */
-add_task(function* test_no_pending_no_notification() {
+add_task(async function test_no_pending_no_notification() {
   // Make absolutely sure there are no pending crash reports first...
   clearPendingCrashReports();
   let notification =
-    yield UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
+    await UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
   Assert.equal(notification, null,
                "There should not be a notification if there are no " +
                "pending crash reports");
@@ -238,10 +238,10 @@ add_task(function* test_no_pending_no_notification() {
  * Tests that there is a notification if there is one pending
  * crash report.
  */
-add_task(function* test_one_pending() {
-  yield createPendingCrashReports(1);
+add_task(async function test_one_pending() {
+  await createPendingCrashReports(1);
   let notification =
-    yield UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
+    await UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
   Assert.ok(notification, "There should be a notification");
 
   gNotificationBox.removeNotification(notification, true);
@@ -252,10 +252,10 @@ add_task(function* test_one_pending() {
  * Tests that there is a notification if there is more than one
  * pending crash report.
  */
-add_task(function* test_several_pending() {
-  yield createPendingCrashReports(3);
+add_task(async function test_several_pending() {
+  await createPendingCrashReports(3);
   let notification =
-    yield UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
+    await UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
   Assert.ok(notification, "There should be a notification");
 
   gNotificationBox.removeNotification(notification, true);
@@ -267,19 +267,19 @@ add_task(function* test_several_pending() {
  * reports are over 28 days old. Also checks that if we put a newer
  * crash with that older set, that we can still get a notification.
  */
-add_task(function* test_several_pending() {
+add_task(async function test_several_pending() {
   // Let's create some crash reports from 30 days ago.
   let oldDate = new Date(Date.now() - (30 * DAY));
-  yield createPendingCrashReports(3, oldDate);
+  await createPendingCrashReports(3, oldDate);
   let notification =
-    yield UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
+    await UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
   Assert.equal(notification, null,
                "There should not be a notification if there are only " +
                "old pending crash reports");
   // Now let's create a new one and check again
-  yield createPendingCrashReports(1);
+  await createPendingCrashReports(1);
   notification =
-    yield UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
+    await UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
   Assert.ok(notification, "There should be a notification");
 
   gNotificationBox.removeNotification(notification, true);
@@ -289,10 +289,10 @@ add_task(function* test_several_pending() {
 /**
  * Tests that the notification can submit a report.
  */
-add_task(function* test_can_submit() {
-  let reportIDs = yield createPendingCrashReports(1);
+add_task(async function test_can_submit() {
+  let reportIDs = await createPendingCrashReports(1);
   let notification =
-    yield UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
+    await UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
   Assert.ok(notification, "There should be a notification");
 
   // Attempt to submit the notification by clicking on the submit
@@ -310,7 +310,7 @@ add_task(function* test_can_submit() {
   gNotificationBox.removeNotification(notification, true);
 
   info("Waiting on reports to be received.");
-  yield promiseReports;
+  await promiseReports;
   info("Received!");
   clearPendingCrashReports();
 });
@@ -318,10 +318,10 @@ add_task(function* test_can_submit() {
 /**
  * Tests that the notification can submit multiple reports.
  */
-add_task(function* test_can_submit_several() {
-  let reportIDs = yield createPendingCrashReports(3);
+add_task(async function test_can_submit_several() {
+  let reportIDs = await createPendingCrashReports(3);
   let notification =
-    yield UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
+    await UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
   Assert.ok(notification, "There should be a notification");
 
   // Attempt to submit the notification by clicking on the submit
@@ -339,7 +339,7 @@ add_task(function* test_can_submit_several() {
   gNotificationBox.removeNotification(notification, true);
 
   info("Waiting on reports to be received.");
-  yield promiseReports;
+  await promiseReports;
   info("Received!");
   clearPendingCrashReports();
 });
@@ -348,14 +348,14 @@ add_task(function* test_can_submit_several() {
  * Tests that choosing "Send Always" flips the autoSubmit pref
  * and sends the pending crash reports.
  */
-add_task(function* test_can_submit_always() {
+add_task(async function test_can_submit_always() {
   let pref = "browser.crashReports.unsubmittedCheck.autoSubmit";
   Assert.equal(Services.prefs.getBoolPref(pref), false,
                "We should not be auto-submitting by default");
 
-  let reportIDs = yield createPendingCrashReports(1);
+  let reportIDs = await createPendingCrashReports(1);
   let notification =
-    yield UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
+    await UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
   Assert.ok(notification, "There should be a notification");
 
   // Attempt to submit the notification by clicking on the send all
@@ -373,7 +373,7 @@ add_task(function* test_can_submit_always() {
   gNotificationBox.removeNotification(notification, true);
 
   info("Waiting on reports to be received.");
-  yield promiseReports;
+  await promiseReports;
   info("Received!");
 
   // Make sure the pref was set
@@ -391,22 +391,22 @@ add_task(function* test_can_submit_always() {
  * crash reports that no notification is displayed to the
  * user.
  */
-add_task(function* test_can_auto_submit() {
-  yield SpecialPowers.pushPrefEnv({ set: [
+add_task(async function test_can_auto_submit() {
+  await SpecialPowers.pushPrefEnv({ set: [
     ["browser.crashReports.unsubmittedCheck.autoSubmit", true],
   ]});
 
-  let reportIDs = yield createPendingCrashReports(3);
+  let reportIDs = await createPendingCrashReports(3);
   let promiseReports = waitForSubmittedReports(reportIDs);
   let notification =
-    yield UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
+    await UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
   Assert.equal(notification, null, "There should be no notification");
   info("Waiting on reports to be received.");
-  yield promiseReports;
+  await promiseReports;
   info("Received!");
 
   clearPendingCrashReports();
-  yield SpecialPowers.popPrefEnv();
+  await SpecialPowers.popPrefEnv();
 });
 
 /**
@@ -414,10 +414,10 @@ add_task(function* test_can_auto_submit() {
  * then the current pending requests won't cause the notification
  * to appear again in the future.
  */
-add_task(function* test_can_ignore() {
-  let reportIDs = yield createPendingCrashReports(3);
+add_task(async function test_can_ignore() {
+  let reportIDs = await createPendingCrashReports(3);
   let notification =
-    yield UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
+    await UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
   Assert.ok(notification, "There should be a notification");
 
   // Dismiss the notification by clicking on the "X" button.
@@ -427,10 +427,10 @@ add_task(function* test_can_ignore() {
   // We'll not wait for the notification to finish its transition -
   // we'll just remove it right away.
   gNotificationBox.removeNotification(notification, true);
-  yield waitForIgnoredReports(reportIDs);
+  await waitForIgnoredReports(reportIDs);
 
   notification =
-    yield UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
+    await UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
   Assert.equal(notification, null, "There should be no notification");
 
   clearPendingCrashReports();
@@ -440,10 +440,10 @@ add_task(function* test_can_ignore() {
  * Tests that if the notification is shown, then the
  * lastShownDate is set for today.
  */
-add_task(function* test_last_shown_date() {
-  yield createPendingCrashReports(1);
+add_task(async function test_last_shown_date() {
+  await createPendingCrashReports(1);
   let notification =
-    yield UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
+    await UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
   Assert.ok(notification, "There should be a notification");
 
   let today = UnsubmittedCrashHandler.dateString(new Date());
@@ -463,10 +463,10 @@ add_task(function* test_last_shown_date() {
  * browser.crashReports.unsubmittedCheck.shutdownWhileShowing is
  * set to true.
  */
-add_task(function* test_shutdown_while_showing() {
-  yield createPendingCrashReports(1);
+add_task(async function test_shutdown_while_showing() {
+  await createPendingCrashReports(1);
   let notification =
-    yield UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
+    await UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
   Assert.ok(notification, "There should be a notification");
 
   UnsubmittedCrashHandler.uninit();
@@ -488,10 +488,10 @@ add_task(function* test_shutdown_while_showing() {
  * browser.crashReports.unsubmittedCheck.shutdownWhileShowing is
  * not set in prefs.
  */
-add_task(function* test_shutdown_while_not_showing() {
-  let reportIDs = yield createPendingCrashReports(1);
+add_task(async function test_shutdown_while_not_showing() {
+  let reportIDs = await createPendingCrashReports(1);
   let notification =
-    yield UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
+    await UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
   Assert.ok(notification, "There should be a notification");
 
   // Dismiss the notification by clicking on the "X" button.
@@ -502,7 +502,7 @@ add_task(function* test_shutdown_while_not_showing() {
   // we'll just remove it right away.
   gNotificationBox.removeNotification(notification, true);
 
-  yield waitForIgnoredReports(reportIDs);
+  await waitForIgnoredReports(reportIDs);
 
   UnsubmittedCrashHandler.uninit();
   Assert.throws(() => {
@@ -520,14 +520,14 @@ add_task(function* test_shutdown_while_not_showing() {
  * set and the lastShownDate is today, then we don't decrement
  * browser.crashReports.unsubmittedCheck.chancesUntilSuppress.
  */
-add_task(function* test_dont_decrement_chances_on_same_day() {
+add_task(async function test_dont_decrement_chances_on_same_day() {
   let initChances =
     UnsubmittedCrashHandler.prefs.getIntPref("chancesUntilSuppress");
   Assert.ok(initChances > 1, "We should start with at least 1 chance.");
 
-  yield createPendingCrashReports(1);
+  await createPendingCrashReports(1);
   let notification =
-    yield UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
+    await UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
   Assert.ok(notification, "There should be a notification");
 
   UnsubmittedCrashHandler.uninit();
@@ -549,7 +549,7 @@ add_task(function* test_dont_decrement_chances_on_same_day() {
   UnsubmittedCrashHandler.init();
 
   notification =
-      yield UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
+      await UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
   Assert.ok(notification, "There should still be a notification");
 
   let chances =
@@ -568,14 +568,14 @@ add_task(function* test_dont_decrement_chances_on_same_day() {
  * set and the lastShownDate is before today, then we decrement
  * browser.crashReports.unsubmittedCheck.chancesUntilSuppress.
  */
-add_task(function* test_decrement_chances_on_other_day() {
+add_task(async function test_decrement_chances_on_other_day() {
   let initChances =
     UnsubmittedCrashHandler.prefs.getIntPref("chancesUntilSuppress");
   Assert.ok(initChances > 1, "We should start with at least 1 chance.");
 
-  yield createPendingCrashReports(1);
+  await createPendingCrashReports(1);
   let notification =
-    yield UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
+    await UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
   Assert.ok(notification, "There should be a notification");
 
   UnsubmittedCrashHandler.uninit();
@@ -595,7 +595,7 @@ add_task(function* test_decrement_chances_on_other_day() {
   UnsubmittedCrashHandler.init();
 
   notification =
-    yield UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
+    await UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
   Assert.ok(notification, "There should still be a notification");
 
   let chances =
@@ -615,16 +615,16 @@ add_task(function* test_decrement_chances_on_other_day() {
  * browser.crashReports.unsubmittedCheck.suppressUntilDate is
  * set for some days into the future.
  */
-add_task(function* test_can_suppress_after_chances() {
+add_task(async function test_can_suppress_after_chances() {
   // Pretend that a notification was shown yesterday.
   let yesterday = UnsubmittedCrashHandler.dateString(new Date(Date.now() - DAY));
   UnsubmittedCrashHandler.prefs.setCharPref("lastShownDate", yesterday);
   UnsubmittedCrashHandler.prefs.setBoolPref("shutdownWhileShowing", true);
   UnsubmittedCrashHandler.prefs.setIntPref("chancesUntilSuppress", 0);
 
-  yield createPendingCrashReports(1);
+  await createPendingCrashReports(1);
   let notification =
-    yield UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
+    await UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
   Assert.equal(notification, null,
                "There should be no notification if we've run out of chances");
 
@@ -646,7 +646,7 @@ add_task(function* test_can_suppress_after_chances() {
  * Tests that if there's a suppression date set, then no notification
  * will be shown even if there are pending crash reports.
  */
-add_task(function* test_suppression() {
+add_task(async function test_suppression() {
   let future = UnsubmittedCrashHandler.dateString(new Date(Date.now() + (DAY * 5)));
   UnsubmittedCrashHandler.prefs.setCharPref("suppressUntilDate", future);
   UnsubmittedCrashHandler.uninit();
@@ -664,7 +664,7 @@ add_task(function* test_suppression() {
  * Tests that if there's a suppression date set, but we've exceeded
  * it, then we can show the notification again.
  */
-add_task(function* test_end_suppression() {
+add_task(async function test_end_suppression() {
   let yesterday = UnsubmittedCrashHandler.dateString(new Date(Date.now() - DAY));
   UnsubmittedCrashHandler.prefs.setCharPref("suppressUntilDate", yesterday);
   UnsubmittedCrashHandler.uninit();

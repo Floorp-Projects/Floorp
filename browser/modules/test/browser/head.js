@@ -68,14 +68,14 @@ function checkKeyedScalar(scalars, scalarName, key, expectedValue) {
  * @param {String} fieldName
  *        The name of the field to write to.
  */
-let typeInSearchField = Task.async(function* (browser, text, fieldName) {
-  yield ContentTask.spawn(browser, [fieldName, text], function* ([contentFieldName, contentText]) {
+let typeInSearchField = async function(browser, text, fieldName) {
+  await ContentTask.spawn(browser, [fieldName, text], async function([contentFieldName, contentText]) {
     // Put the focus on the search box.
     let searchInput = content.document.getElementById(contentFieldName);
     searchInput.focus();
     searchInput.value = contentText;
   });
-});
+};
 
 /**
  * Clear and get the SEARCH_COUNTS histogram.
@@ -196,21 +196,21 @@ function clickSecondaryAction(actionIndex) {
     return removePromise;
   }
 
-  return Task.spawn(function* () {
+  return (async function() {
     // Click the dropmarker arrow and wait for the menu to show up.
     let dropdownPromise =
       BrowserTestUtils.waitForEvent(popupNotification.menupopup, "popupshown");
-    yield EventUtils.synthesizeMouseAtCenter(popupNotification.menubutton, {});
-    yield dropdownPromise;
+    await EventUtils.synthesizeMouseAtCenter(popupNotification.menubutton, {});
+    await dropdownPromise;
 
     // The menuitems in the dropdown are accessible as direct children of the panel,
     // because they are injected into a <children> node in the XBL binding.
     // The target action is the menuitem at index actionIndex - 1, because the first
     // secondary action (index 0) is the button shown directly in the panel.
     let actionMenuItem = popupNotification.querySelectorAll("menuitem")[actionIndex - 1];
-    yield EventUtils.synthesizeMouseAtCenter(actionMenuItem, {});
-    yield removePromise;
-  });
+    await EventUtils.synthesizeMouseAtCenter(actionMenuItem, {});
+    await removePromise;
+  })();
 }
 
 /**

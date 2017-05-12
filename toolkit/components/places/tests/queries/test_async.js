@@ -351,17 +351,17 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_async() {
+add_task(async function test_async() {
   for (let test of tests) {
-    yield PlacesUtils.bookmarks.eraseEverything();
+    await PlacesUtils.bookmarks.eraseEverything();
 
     test.__proto__ = new Test();
-    yield test.setup();
+    await test.setup();
 
     print("------ Running test: " + test.desc);
-    yield test.run();
+    await test.run();
   }
 
-  yield PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.bookmarks.eraseEverything();
   print("All tests done, exiting");
 });
