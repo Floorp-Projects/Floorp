@@ -8,16 +8,22 @@ package org.mozilla.focus.settings;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceScreen;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.InfoActivity;
+import org.mozilla.focus.activity.SettingsActivity;
+import org.mozilla.focus.locale.LocaleManager;
+import org.mozilla.focus.locale.Locales;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.widget.DefaultBrowserPreference;
+
+import java.util.Arrays;
+import java.util.Locale;
 
 public class SettingsFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
     @Override
@@ -53,6 +59,17 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         if (preference != null) {
             preference.update();
         }
+
+        final ListPreference localePreference = (ListPreference) findPreference(getString(R.string.pref_key_locale));
+        if (localePreference != null) {
+            // TODO: get a list of localised locale names ;)
+            final CharSequence[] languageCodes = LocaleManager.getPackagedLocaleTags(getActivity()).toArray(new CharSequence[0]);
+            final CharSequence[] displayNames = Arrays.copyOf(languageCodes, languageCodes.length);
+            displayNames[0] = getString(R.string.preference_language_systemdefault);
+
+            localePreference.setEntries(displayNames);
+            localePreference.setEntryValues(languageCodes);
+        }
     }
 
     @Override
@@ -65,5 +82,34 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         TelemetryWrapper.settingsEvent(key, String.valueOf(sharedPreferences.getAll().get(key)));
+
+        if (key.equals(getString(R.string.pref_key_locale))) {
+            final ListPreference languagePreference = (ListPreference) findPreference(getString(R.string.pref_key_locale));
+            final String value = languagePreference.getValue();
+
+            final LocaleManager localeManager = LocaleManager.getInstance();
+
+            final Locale locale;
+            if (value.equals("system")) {
+                localeManager.resetToSystemLocale(getActivity());
+                locale = localeManager.getCurrentLocale(getActivity());
+            } else {
+                locale = Locales.parseLocaleCode(value);
+                localeManager.setSelectedLocale(getActivity(), value);
+            }
+            localeManager.updateConfiguration(getActivity(), locale);
+
+            // Manually notify SettingsActivity of locale changes (in most other cases activities
+            // will detect changes in onActivityResult(), but that doesn't apply to SettingsActivity).
+            getActivity().onConfigurationChanged(getActivity().getResources().getConfiguration());
+
+            // And ensure that the calling LocaleAware*Activity knows that the locale changed:
+            getActivity().setResult(SettingsActivity.ACTIVITY_RESULT_LOCALE_CHANGED);
+
+            // The easiest way to ensure we update the language is by replacing the entire fragment:
+            getFragmentManager().beginTransaction()
+                    .replace(R.id.container, new SettingsFragment())
+                    .commit();
+        }
     }
 }

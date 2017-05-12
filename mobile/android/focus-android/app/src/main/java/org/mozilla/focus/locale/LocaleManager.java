@@ -331,8 +331,7 @@ public class LocaleManager {
      */
     public static Collection<String> getPackagedLocaleTags(final Context context) {
         // TODO: figure out how to get this dynamically, either at buildtime or runtime
-        // TODO 2" move "system" into an empty String and add that later (at the UI stage)?
-        return Arrays.asList(new String[] { "system", "en-US",
+        return Arrays.asList(new String[] { "", "en-US",
                 "ar", "ast", "az", "bg", "bn-BD", "bn-IN",
                 "ca", "cs", "cy", "de", "el", "eo", "es", "es-AR", "es-CL", "es-ES", "es-MX",
                 "fa", "fr", "fy-NL","hi", "hu", "hy-AM", "in", "it", "iw", "ja", "kab", "ko",

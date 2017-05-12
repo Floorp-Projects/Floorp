@@ -8,8 +8,12 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 
 import org.mozilla.focus.R;
+import org.mozilla.focus.locale.Locales;
+import org.mozilla.focus.settings.SettingsFragment;
 
-public class SettingsActivity extends AppCompatActivity {
+public class SettingsActivity extends Locales.LocaleAwareAppCompatActivity {
+    public static int ACTIVITY_RESULT_LOCALE_CHANGED = 1;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -30,5 +34,9 @@ public class SettingsActivity extends AppCompatActivity {
                 finish();
             }
         });
+
+        getFragmentManager().beginTransaction()
+                .replace(R.id.container, new SettingsFragment())
+                .commit();
     }
 }
