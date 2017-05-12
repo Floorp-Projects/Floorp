@@ -36,6 +36,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ipc/BrowserProcessSubThread.h"
 #include "mozilla/Omnijar.h"
+#include "mozilla/SandboxSettings.h"
 #include "mozilla/Telemetry.h"
 #include "ProtocolUtils.h"
 #include <sys/stat.h>
@@ -311,7 +312,7 @@ GeckoChildProcessHost::PrepareLaunch()
 #if defined(MOZ_CONTENT_SANDBOX)
   // We need to get the pref here as the process is launched off main thread.
   if (mProcessType == GeckoProcessType_Content) {
-    mSandboxLevel = Preferences::GetInt("security.sandbox.content.level");
+    mSandboxLevel = GetEffectiveContentSandboxLevel();
     mEnableSandboxLogging =
       Preferences::GetBool("security.sandbox.logging.enabled");
   }
