@@ -1,23 +1,23 @@
 const kURL = "http://example.org/browser/browser/base/content/test/urlbar/dummy_page.html";
 
-function* addBookmark(bookmark) {
+async function addBookmark(bookmark) {
   if (bookmark.keyword) {
-    yield PlacesUtils.keywords.insert({
+    await PlacesUtils.keywords.insert({
       keyword: bookmark.keyword,
       url: bookmark.url,
     });
   }
 
-  let bm = yield PlacesUtils.bookmarks.insert({
+  let bm = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: bookmark.url,
     title: bookmark.title,
   });
 
-  registerCleanupFunction(function* () {
-    yield PlacesUtils.bookmarks.remove(bm);
+  registerCleanupFunction(async function() {
+    await PlacesUtils.bookmarks.remove(bm);
     if (bookmark.keyword) {
-      yield PlacesUtils.keywords.remove(bookmark.keyword);
+      await PlacesUtils.keywords.remove(bookmark.keyword);
     }
   });
 }

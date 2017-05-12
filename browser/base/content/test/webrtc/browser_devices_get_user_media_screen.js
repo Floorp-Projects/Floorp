@@ -360,7 +360,7 @@ var gTests = [
 
 {
   desc: "getUserMedia audio+video+screen: stop sharing",
-  run: function* checkStopSharing() {
+  run: async function checkStopSharing() {
     if (AppConstants.platform == "macosx") {
       todo(false, "Bug 1323481 - On Mac on treeherder, but not locally, requesting microphone + screen never makes the permission prompt appear, and so causes the test to timeout");
       return;
@@ -384,46 +384,46 @@ var gTests = [
       await expectObserverCalled("recording-device-events");
     }
 
-    function* check(expected = {}) {
+    async function check(expected = {}) {
       let shared = Object.keys(expected).join(" and ");
       if (shared) {
-        Assert.deepEqual((yield getMediaCaptureState()), expected,
+        Assert.deepEqual((await getMediaCaptureState()), expected,
                          "expected " + shared + " to be shared");
-        yield checkSharingUI(expected);
+        await checkSharingUI(expected);
       } else {
-        yield checkNotSharing();
+        await checkNotSharing();
       }
     }
 
     info("Share screen and microphone");
     let indicator = promiseIndicatorWindow();
-    yield share(true, false, true);
-    yield indicator;
-    yield check({audio: true, screen: "Screen"});
+    await share(true, false, true);
+    await indicator;
+    await check({audio: true, screen: "Screen"});
 
     info("Share camera");
-    yield share(false, true);
-    yield check({video: true, audio: true, screen: "Screen"});
+    await share(false, true);
+    await check({video: true, audio: true, screen: "Screen"});
 
     info("Stop the screen share, mic+cam should continue");
-    yield stopSharing("screen", true);
-    yield check({video: true, audio: true});
+    await stopSharing("screen", true);
+    await check({video: true, audio: true});
 
     info("Stop the camera, everything should stop.");
-    yield stopSharing("camera");
+    await stopSharing("camera");
 
     info("Now, share only the screen...");
     indicator = promiseIndicatorWindow();
-    yield share(false, false, true);
-    yield indicator;
-    yield check({screen: "Screen"});
+    await share(false, false, true);
+    await indicator;
+    await check({screen: "Screen"});
 
     info("... and add camera and microphone in a second request.");
-    yield share(true, true);
-    yield check({video: true, audio: true, screen: "Screen"});
+    await share(true, true);
+    await check({video: true, audio: true, screen: "Screen"});
 
     info("Stop the camera, this should stop everything.");
-    yield stopSharing("camera");
+    await stopSharing("camera");
   }
 },
 

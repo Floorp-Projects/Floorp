@@ -8,7 +8,7 @@
 var visit_count = 0;
 
 // Returns the Place ID corresponding to an added visit.
-function* task_add_visit(aURI, aVisitType) {
+async function task_add_visit(aURI, aVisitType) {
   // Add the visit asynchronously, and save its visit ID.
   let deferUpdatePlaces = new Promise((resolve, reject) => {
     PlacesUtils.asyncHistory.updatePlaces({
@@ -27,7 +27,7 @@ function* task_add_visit(aURI, aVisitType) {
     });
   });
 
-  let visitId = yield deferUpdatePlaces;
+  let visitId = await deferUpdatePlaces;
 
   // Increase visit_count if applicable
   if (aVisitType != 0 &&

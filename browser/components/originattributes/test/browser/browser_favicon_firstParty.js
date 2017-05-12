@@ -185,7 +185,7 @@ async function assignCookiesUnderFirstParty(aURL, aFirstParty, aCookieValue) {
   await BrowserTestUtils.removeTab(tabInfo.tab);
 }
 
-function* generateCookies(aThirdParty) {
+async function generateCookies(aThirdParty) {
   // we generate two different cookies for two first party domains.
   let cookies = [];
   cookies.push(Math.random().toString());
@@ -204,8 +204,8 @@ function* generateCookies(aThirdParty) {
     secondSiteURL = TEST_SITE_TWO;
   }
 
-  yield assignCookiesUnderFirstParty(firstSiteURL, TEST_SITE_ONE, cookies[0]);
-  yield assignCookiesUnderFirstParty(secondSiteURL, TEST_SITE_TWO, cookies[1]);
+  await assignCookiesUnderFirstParty(firstSiteURL, TEST_SITE_ONE, cookies[0]);
+  await assignCookiesUnderFirstParty(secondSiteURL, TEST_SITE_TWO, cookies[1]);
 
   return cookies;
 }

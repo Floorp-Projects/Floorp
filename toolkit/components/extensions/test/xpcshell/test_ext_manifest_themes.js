@@ -2,8 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-function* test_theme_property(property) {
-  let normalized = yield ExtensionTestUtils.normalizeManifest({
+async function test_theme_property(property) {
+  let normalized = await ExtensionTestUtils.normalizeManifest({
     "theme": {
       [property]: {
         "unrecognized_key": "unrecognized_value",

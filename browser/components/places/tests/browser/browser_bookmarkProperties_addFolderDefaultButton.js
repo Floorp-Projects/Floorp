@@ -15,7 +15,7 @@ add_task(async function() {
   });
   let newBookmarkId = await PlacesUtils.promiseItemId(newBookmark.guid);
 
-  await withSidebarTree("bookmarks", function* (tree) {
+  await withSidebarTree("bookmarks", async function(tree) {
     // Select the new bookmark in the sidebar.
     tree.selectItems([newBookmarkId]);
     ok(tree.controller.isCommandEnabled("placesCmd_new:folder"),
@@ -24,7 +24,7 @@ add_task(async function() {
     // Create a new folder.  Since the new bookmark is selected, and new items
     // are inserted at the index of the currently selected item, the new folder
     // will be inserted at index 0.
-    yield withBookmarksDialog(
+    await withBookmarksDialog(
       false,
       function openDialog() {
         tree.controller.doCommand("placesCmd_new:folder");

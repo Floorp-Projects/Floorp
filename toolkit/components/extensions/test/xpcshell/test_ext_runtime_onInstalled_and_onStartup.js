@@ -57,9 +57,9 @@ function background() {
   });
 }
 
-function* expectEvents(extension, {onStartupFired, onInstalledFired, onInstalledReason, onInstalledPrevious}) {
+async function expectEvents(extension, {onStartupFired, onInstalledFired, onInstalledReason, onInstalledPrevious}) {
   extension.sendMessage("get-on-installed-details");
-  let details = yield extension.awaitMessage("on-installed-details");
+  let details = await extension.awaitMessage("on-installed-details");
   if (onInstalledFired) {
     equal(details.reason, onInstalledReason, "runtime.onInstalled fired with the correct reason");
     if (onInstalledPrevious) {
@@ -70,7 +70,7 @@ function* expectEvents(extension, {onStartupFired, onInstalledFired, onInstalled
   }
 
   extension.sendMessage("did-on-startup-fire");
-  let fired = yield extension.awaitMessage("on-startup-fired");
+  let fired = await extension.awaitMessage("on-startup-fired");
   equal(fired, onStartupFired, `Expected runtime.onStartup to ${onStartupFired ? "" : "not "} fire`);
 }
 

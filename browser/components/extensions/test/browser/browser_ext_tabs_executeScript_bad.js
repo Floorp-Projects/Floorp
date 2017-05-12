@@ -2,7 +2,7 @@
 
 // This is a pretty terrible hack, but it's the best we can do until we
 // support |executeScript| callbacks and |lastError|.
-function* testHasNoPermission(params) {
+async function testHasNoPermission(params) {
   let contentSetup = params.contentSetup || (() => Promise.resolve());
 
   async function background(contentSetup) {
@@ -51,17 +51,17 @@ function* testHasNoPermission(params) {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitMessage("ready");
+  await extension.startup();
+  await extension.awaitMessage("ready");
 
   if (params.setup) {
-    yield params.setup(extension);
+    await params.setup(extension);
   }
 
   extension.sendMessage("execute-script");
 
-  yield extension.awaitFinish("executeScript");
-  yield extension.unload();
+  await extension.awaitFinish("executeScript");
+  await extension.unload();
 }
 
 add_task(async function testBadPermissions() {
@@ -98,9 +98,9 @@ add_task(async function testBadPermissions() {
       });
       return Promise.resolve();
     },
-    setup: function* (extension) {
-      yield EventUtils.synthesizeKey("k", {altKey: true, shiftKey: true});
-      yield extension.awaitMessage("tabs-command-key-pressed");
+    setup: async function(extension) {
+      await EventUtils.synthesizeKey("k", {altKey: true, shiftKey: true});
+      await extension.awaitMessage("tabs-command-key-pressed");
     },
   });
 

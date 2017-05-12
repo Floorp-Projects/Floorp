@@ -7,8 +7,8 @@ add_task(async function common_initialize() {
   await SpecialPowers.pushPrefEnv({"set": [["signon.rememberSignons", true]]});
 });
 
-registerCleanupFunction(function* cleanup_removeAllLoginsAndResetRecipes() {
-  yield SpecialPowers.popPrefEnv();
+registerCleanupFunction(async function cleanup_removeAllLoginsAndResetRecipes() {
+  await SpecialPowers.popPrefEnv();
 
   Services.logins.removeAllLogins();
 
@@ -17,7 +17,7 @@ registerCleanupFunction(function* cleanup_removeAllLoginsAndResetRecipes() {
     // No need to reset the recipes if the recipe module wasn't even loaded.
     return;
   }
-  yield recipeParent.then(recipeParentResult => recipeParentResult.reset());
+  await recipeParent.then(recipeParentResult => recipeParentResult.reset());
 });
 
 /**

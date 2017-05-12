@@ -102,7 +102,7 @@ add_task(async function searchSuggestionKeyboard() {
  * @param clickCallback Use this to open the urlbar popup and choose and click a
  *        result.
  */
-function* compareCounts(clickCallback) {
+async function compareCounts(clickCallback) {
   // Search events triggered by clicks (not the Return key in the urlbar) are
   // recorded in three places:
   // * BrowserUITelemetry
@@ -145,7 +145,7 @@ function* compareCounts(clickCallback) {
                         { value: engineID });
 
   gURLBar.focus();
-  yield clickCallback();
+  await clickCallback();
 
   // Now get the new counts and compare them to the old.
 

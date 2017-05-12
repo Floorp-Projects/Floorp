@@ -1058,7 +1058,7 @@ BookmarkExporter.prototype = {
     this._writeLine("<TITLE>Bookmarks</TITLE>");
   },
 
-  *_writeContainer(aItem, aIndent = "") {
+  async _writeContainer(aItem, aIndent = "") {
     if (aItem == this._root) {
       this._writeLine("<H1>" + escapeHtmlEntities(this._root.title) + "</H1>");
       this._writeLine("");
@@ -1077,25 +1077,25 @@ BookmarkExporter.prototype = {
 
     this._writeLine(aIndent + "<DL><p>");
     if (aItem.children)
-      yield this._writeContainerContents(aItem, aIndent);
+      await this._writeContainerContents(aItem, aIndent);
     if (aItem == this._root)
       this._writeLine(aIndent + "</DL>");
     else
       this._writeLine(aIndent + "</DL><p>");
   },
 
-  *_writeContainerContents(aItem, aIndent) {
+  async _writeContainerContents(aItem, aIndent) {
     let localIndent = aIndent + EXPORT_INDENT;
 
     for (let child of aItem.children) {
       if (child.annos && child.annos.some(anno => anno.name == PlacesUtils.LMANNO_FEEDURI)) {
         this._writeLivemark(child, localIndent);
       } else if (child.type == PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER) {
-        yield this._writeContainer(child, localIndent);
+        await this._writeContainer(child, localIndent);
       } else if (child.type == PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR) {
         this._writeSeparator(child, localIndent);
       } else {
-        yield this._writeItem(child, localIndent);
+        await this._writeItem(child, localIndent);
       }
     }
   },
@@ -1119,7 +1119,7 @@ BookmarkExporter.prototype = {
     this._writeDescription(aItem, aIndent);
   },
 
-  *_writeItem(aItem, aIndent) {
+  async _writeItem(aItem, aIndent) {
     try {
       NetUtil.newURI(aItem.uri);
     } catch (ex) {
@@ -1130,7 +1130,7 @@ BookmarkExporter.prototype = {
     this._write(aIndent + "<DT><A");
     this._writeAttribute("HREF", escapeUrl(aItem.uri));
     this._writeDateAttributes(aItem);
-    yield this._writeFaviconAttribute(aItem);
+    await this._writeFaviconAttribute(aItem);
 
     if (aItem.keyword) {
       this._writeAttribute("SHORTCUTURL", escapeHtmlEntities(aItem.keyword));

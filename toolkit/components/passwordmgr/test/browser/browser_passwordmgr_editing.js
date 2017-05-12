@@ -109,12 +109,12 @@ add_task(async function test_setup() {
 });
 
 add_task(async function test_edit_multiple_logins() {
-  function* testLoginChange(site, oldUsername, oldPassword, newUsername, newPassword) {
+  async function testLoginChange(site, oldUsername, oldPassword, newUsername, newPassword) {
     addLogin(site, oldUsername, oldPassword);
-    yield* editUsernamePromises(site, oldUsername, newUsername);
-    yield* togglePasswords();
-    yield* editPasswordPromises(site, oldPassword, newPassword);
-    yield* togglePasswords();
+    await editUsernamePromises(site, oldUsername, newUsername);
+    await togglePasswords();
+    await editPasswordPromises(site, oldPassword, newPassword);
+    await togglePasswords();
   }
 
   await testLoginChange("http://c.tn/", "userC", "passC", "usernameC", "passwordC");

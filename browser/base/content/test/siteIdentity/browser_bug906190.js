@@ -112,11 +112,11 @@ add_task(async function test_initialize() {
  */
 add_task(async function test_same_origin() {
   await doTest(HTTPS_TEST_ROOT_1 + "file_bug906190_1.html",
-               HTTPS_TEST_ROOT_1 + "file_bug906190_2.html", function* () {
+               HTTPS_TEST_ROOT_1 + "file_bug906190_2.html", async function() {
     // The doorhanger should appear but activeBlocked should be >> NOT << true,
     // because our decision of disabling the mixed content blocker is persistent
     // across tabs.
-    yield assertMixedContentBlockingState(gBrowser, {
+    await assertMixedContentBlockingState(gBrowser, {
       activeLoaded: true, activeBlocked: false, passiveLoaded: false,
     });
 
@@ -133,11 +133,11 @@ add_task(async function test_same_origin() {
  */
 add_task(async function test_different_origin() {
   await doTest(HTTPS_TEST_ROOT_1 + "file_bug906190_2.html",
-               HTTPS_TEST_ROOT_2 + "file_bug906190_2.html", function* () {
+               HTTPS_TEST_ROOT_2 + "file_bug906190_2.html", async function() {
     // The doorhanger should appear and activeBlocked should be >> TRUE <<,
     // because our decision of disabling the mixed content blocker should only
     // persist if pages are from the same domain.
-    yield assertMixedContentBlockingState(gBrowser, {
+    await assertMixedContentBlockingState(gBrowser, {
       activeLoaded: false, activeBlocked: true, passiveLoaded: false,
     });
 
@@ -156,9 +156,9 @@ add_task(async function test_different_origin() {
 add_task(async function test_same_origin_metarefresh_same_origin() {
   // file_bug906190_3_4.html redirects to page test1.example.com/* using meta-refresh
   await doTest(HTTPS_TEST_ROOT_1 + "file_bug906190_1.html",
-               HTTPS_TEST_ROOT_1 + "file_bug906190_3_4.html", function* () {
+               HTTPS_TEST_ROOT_1 + "file_bug906190_3_4.html", async function() {
     // The doorhanger should appear but activeBlocked should be >> NOT << true!
-    yield assertMixedContentBlockingState(gBrowser, {
+    await assertMixedContentBlockingState(gBrowser, {
       activeLoaded: true, activeBlocked: false, passiveLoaded: false,
     });
 
@@ -176,9 +176,9 @@ add_task(async function test_same_origin_metarefresh_same_origin() {
  */
 add_task(async function test_same_origin_metarefresh_different_origin() {
   await doTest(HTTPS_TEST_ROOT_2 + "file_bug906190_1.html",
-               HTTPS_TEST_ROOT_2 + "file_bug906190_3_4.html", function* () {
+               HTTPS_TEST_ROOT_2 + "file_bug906190_3_4.html", async function() {
     // The doorhanger should appear and activeBlocked should be >> TRUE <<.
-    yield assertMixedContentBlockingState(gBrowser, {
+    await assertMixedContentBlockingState(gBrowser, {
       activeLoaded: false, activeBlocked: true, passiveLoaded: false,
     });
 
@@ -216,9 +216,9 @@ add_task(async function test_same_origin_302redirect_same_origin() {
 add_task(async function test_same_origin_302redirect_different_origin() {
   // the sjs files returns a 302 redirect - note, different origins
   await doTest(HTTPS_TEST_ROOT_2 + "file_bug906190_1.html",
-               HTTPS_TEST_ROOT_2 + "file_bug906190.sjs", function* () {
+               HTTPS_TEST_ROOT_2 + "file_bug906190.sjs", async function() {
     // The doorhanger should appear and activeBlocked should be >> TRUE <<.
-    yield assertMixedContentBlockingState(gBrowser, {
+    await assertMixedContentBlockingState(gBrowser, {
       activeLoaded: false, activeBlocked: true, passiveLoaded: false,
     });
 

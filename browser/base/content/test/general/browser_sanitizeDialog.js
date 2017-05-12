@@ -861,11 +861,11 @@ function promiseSanitizationComplete() {
  * @param aMinutesAgo
  *        The download will be downloaded this many minutes ago
  */
-function* addDownloadWithMinutesAgo(aExpectedPathList, aMinutesAgo) {
-  let publicList = yield Downloads.getList(Downloads.PUBLIC);
+async function addDownloadWithMinutesAgo(aExpectedPathList, aMinutesAgo) {
+  let publicList = await Downloads.getList(Downloads.PUBLIC);
 
   let name = "fakefile-" + aMinutesAgo + "-minutes-ago";
-  let download = yield Downloads.createDownload({
+  let download = await Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
     target: name
   });
@@ -873,7 +873,7 @@ function* addDownloadWithMinutesAgo(aExpectedPathList, aMinutesAgo) {
   download.canceled = true;
   publicList.add(download);
 
-  ok((yield downloadExists(name)),
+  ok((await downloadExists(name)),
      "Sanity check: download " + name +
      " should exist after creating it");
 
@@ -975,9 +975,9 @@ function boolPrefIs(aPrefName, aExpectedVal, aMsg) {
  *         The path of the download to check
  * @return True if the download exists, false otherwise
  */
-function* downloadExists(aPath) {
-  let publicList = yield Downloads.getList(Downloads.PUBLIC);
-  let listArray = yield publicList.getAll();
+async function downloadExists(aPath) {
+  let publicList = await Downloads.getList(Downloads.PUBLIC);
+  let listArray = await publicList.getAll();
   return listArray.some(i => i.target.path == aPath);
 }
 
@@ -989,10 +989,10 @@ function* downloadExists(aPath) {
  * @param aShouldBeCleared
  *        True if each download should be cleared, false otherwise
  */
-function* ensureDownloadsClearedState(aDownloadIDs, aShouldBeCleared) {
+async function ensureDownloadsClearedState(aDownloadIDs, aShouldBeCleared) {
   let niceStr = aShouldBeCleared ? "no longer" : "still";
   for (let id of aDownloadIDs) {
-    is((yield downloadExists(id)), !aShouldBeCleared,
+    is((await downloadExists(id)), !aShouldBeCleared,
        "download " + id + " should " + niceStr + " exist");
   }
 }

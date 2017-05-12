@@ -59,7 +59,7 @@ add_task(async function() {
   await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "data:text/html,<!DOCTYPE html><html><body><form id='content'></form></body></html>",
-  }, function*(browser) {
+  }, async function(browser) {
     let testData = [
     /* element name, barred */
       [ "input",    false,  null],
@@ -73,7 +73,7 @@ add_task(async function() {
     ];
 
     for (let data of testData) {
-      yield check(browser, data[0], data[1], data[2]);
+      await check(browser, data[0], data[1], data[2]);
     }
 
     let todo_testData = [
@@ -81,7 +81,7 @@ add_task(async function() {
     ];
 
     for (let data of todo_testData) {
-      yield todo_check(browser, data[0], data[1]);
+      await todo_check(browser, data[0], data[1]);
     }
   });
 });

@@ -71,7 +71,7 @@ add_task(async function() {
 });
 
 
-function* openDetailsBrowser(addonId) {
+async function openDetailsBrowser(addonId) {
   var addon = get_addon_element(gManagerWindow, addonId);
 
   is(addon.mAddon.optionsType, AddonManager.OPTIONS_TYPE_INLINE_BROWSER,
@@ -85,7 +85,7 @@ function* openDetailsBrowser(addonId) {
 
   EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
 
-  yield TestUtils.topicObserved(AddonManager.OPTIONS_NOTIFICATION_DISPLAYED,
+  await TestUtils.topicObserved(AddonManager.OPTIONS_NOTIFICATION_DISPLAYED,
                                 (subject, data) => data == addonId);
 
   is(gManagerWindow.gViewController.currentViewId,

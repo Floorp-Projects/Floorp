@@ -189,7 +189,7 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
   migrateOldTrackerEntries(entries) {
     return PlacesUtils.withConnectionWrapper(
       "BookmarkSyncUtils: migrateOldTrackerEntries", function(db) {
-        return db.executeTransaction(function* () {
+        return db.executeTransaction(async function() {
           // Mark all existing bookmarks as synced, and clear their change
           // counters to avoid a full upload on the next sync. Note that
           // this means we'll miss changes made between startup and the first
@@ -200,7 +200,7 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
           // We also likely have bookmarks that don't exist on the server,
           // because the old tracker missed them. We'll eventually fix the
           // server once we decide on a repair strategy.
-          yield db.executeCached(`
+          await db.executeCached(`
             WITH RECURSIVE
             syncedItems(id) AS (
               SELECT b.id FROM moz_bookmarks b
@@ -216,9 +216,9 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
             WHERE id IN syncedItems`,
             { syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL });
 
-          yield db.executeCached(`DELETE FROM moz_bookmarks_deleted`);
+          await db.executeCached(`DELETE FROM moz_bookmarks_deleted`);
 
-          yield db.executeCached(`CREATE TEMP TABLE moz_bookmarks_tracked (
+          await db.executeCached(`CREATE TEMP TABLE moz_bookmarks_tracked (
             guid TEXT PRIMARY KEY,
             time INTEGER
           )`);
@@ -233,14 +233,14 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
               }
               let time = PlacesUtils.toPRTime(Number.isFinite(modified) ?
                                               modified : Date.now());
-              yield db.executeCached(`
+              await db.executeCached(`
                 INSERT OR IGNORE INTO moz_bookmarks_tracked (guid, time)
                 VALUES (:guid, :time)`,
                 { guid, time });
             }
 
             // Bump the change counter for existing tracked items.
-            yield db.executeCached(`
+            await db.executeCached(`
               INSERT OR REPLACE INTO moz_bookmarks (id, fk, type, parent,
                                                     position, title,
                                                     dateAdded, lastModified,
@@ -255,7 +255,7 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
             // Insert tombstones for nonexistent tracked items, using the most
             // recent deletion date for more accurate reconciliation. We assume
             // the tracked item belongs to a synced root.
-            yield db.executeCached(`
+            await db.executeCached(`
               INSERT OR REPLACE INTO moz_bookmarks_deleted (guid, dateRemoved)
               SELECT t.guid, MAX(IFNULL((SELECT dateRemoved FROM moz_bookmarks_deleted
                                          WHERE guid = t.guid), 0), t.time)
@@ -263,7 +263,7 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
               LEFT JOIN moz_bookmarks b ON t.guid = b.guid
               WHERE b.guid IS NULL`);
           } finally {
-            yield db.executeCached(`DROP TABLE moz_bookmarks_tracked`);
+            await db.executeCached(`DROP TABLE moz_bookmarks_tracked`);
           }
         });
       }
@@ -379,13 +379,13 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
         }
 
         if (syncedChanges.length || syncedTombstoneGuids.length) {
-          await db.executeTransaction(function* () {
+          await db.executeTransaction(async function() {
             for (let [guid, changeRecord] of syncedChanges) {
               // Reduce the change counter and update the sync status for
               // reconciled and uploaded items. If the bookmark was updated
               // during the sync, its change counter will still be > 0 for the
               // next sync.
-              yield db.executeCached(`
+              await db.executeCached(`
                 UPDATE moz_bookmarks
                 SET syncChangeCounter = MAX(syncChangeCounter - :syncChangeDelta, 0),
                     syncStatus = :syncStatus
@@ -394,7 +394,7 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
                   syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL });
             }
 
-            yield removeTombstones(db, syncedTombstoneGuids);
+            await removeTombstones(db, syncedTombstoneGuids);
           });
         }
 
@@ -542,23 +542,23 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
   async reset() {
     return PlacesUtils.withConnectionWrapper(
       "BookmarkSyncUtils: reset", function(db) {
-        return db.executeTransaction(function* () {
+        return db.executeTransaction(async function() {
           // Reset change counters and statuses for all bookmarks.
-          yield db.executeCached(`
+          await db.executeCached(`
             UPDATE moz_bookmarks
             SET syncChangeCounter = 1,
                 syncStatus = :syncStatus`,
             { syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NEW });
 
           // The orphan anno isn't meaningful when Sync is disconnected.
-          yield db.execute(`
+          await db.execute(`
             DELETE FROM moz_items_annos
             WHERE anno_attribute_id = (SELECT id FROM moz_anno_attributes
                                        WHERE name = :orphanAnno)`,
             { orphanAnno: BookmarkSyncUtils.SYNC_PARENT_ANNO });
 
           // Drop stale tombstones.
-          yield db.executeCached("DELETE FROM moz_bookmarks_deleted");
+          await db.executeCached("DELETE FROM moz_bookmarks_deleted");
         });
       }
     );
@@ -1788,12 +1788,12 @@ var dedupeSyncBookmark = async function(db, localGuid, remoteGuid,
   let sameParent = localParentGuid == remoteParentGuid;
   let modified = PlacesUtils.toPRTime(Date.now());
 
-  await db.executeTransaction(function* () {
+  await db.executeTransaction(async function() {
     // Change the item's old GUID to the new remote GUID. This will throw a
     // constraint error if the remote GUID already exists locally.
     BookmarkSyncLog.debug("dedupeSyncBookmark: Switching local GUID " +
                           localGuid + " to incoming GUID " + remoteGuid);
-    yield db.executeCached(`UPDATE moz_bookmarks
+    await db.executeCached(`UPDATE moz_bookmarks
       SET guid = :remoteGuid
       WHERE id = :localId`,
       { remoteGuid, localId });
@@ -1805,7 +1805,7 @@ var dedupeSyncBookmark = async function(db, localGuid, remoteGuid,
     // So we need to return a change record for the parent, and bump its
     // counter to ensure we don't lose the change if the current sync is
     // interrupted.
-    yield db.executeCached(`UPDATE moz_bookmarks
+    await db.executeCached(`UPDATE moz_bookmarks
       SET syncChangeCounter = syncChangeCounter + 1
       WHERE guid = :localParentGuid`,
       { localParentGuid });
@@ -1820,7 +1820,7 @@ var dedupeSyncBookmark = async function(db, localGuid, remoteGuid,
     // states; the incoming record on the server references a parent that isn't
     // the actual parent locally - see bug 1297955.
     if (!sameParent) {
-      yield db.executeCached(`UPDATE moz_bookmarks
+      await db.executeCached(`UPDATE moz_bookmarks
         SET syncChangeCounter = syncChangeCounter + 1
         WHERE guid = :remoteParentGuid`,
         { remoteParentGuid });
@@ -1830,7 +1830,7 @@ var dedupeSyncBookmark = async function(db, localGuid, remoteGuid,
     // bookmarks it is a logical delete.
     let localSyncStatus = rows[0].getResultByName("syncStatus");
     if (localSyncStatus == PlacesUtils.bookmarks.SYNC_STATUS.NORMAL) {
-      yield db.executeCached(`
+      await db.executeCached(`
         INSERT INTO moz_bookmarks_deleted (guid, dateRemoved)
         VALUES (:localGuid, :modified)`,
         { localGuid, modified });

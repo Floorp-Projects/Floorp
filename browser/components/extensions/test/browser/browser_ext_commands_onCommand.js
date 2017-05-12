@@ -229,13 +229,13 @@ add_task(async function test_user_defined_commands() {
   await extension.startup();
   await extension.awaitMessage("ready");
 
-  function* runTest(window) {
+  async function runTest(window) {
     for (let testCommand of testCommands) {
       if (testCommand.shortcutMac && !testCommand.shortcut && !isMac) {
         continue;
       }
       EventUtils.synthesizeKey(testCommand.key, testCommand.modifiers, window);
-      let message = yield extension.awaitMessage("oncommand");
+      let message = await extension.awaitMessage("oncommand");
       is(message, testCommand.name, `Expected onCommand listener to fire with the correct name: ${testCommand.name}`);
     }
   }

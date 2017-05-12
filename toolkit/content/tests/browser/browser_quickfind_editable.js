@@ -25,14 +25,14 @@ add_task(async function test_hotkey_on_editable_element() {
   await BrowserTestUtils.withNewTab({
     gBrowser,
     url: PAGE
-  }, function* do_tests(browser) {
-    yield test_hotkeys(browser, false);
+  }, async function do_tests(browser) {
+    await test_hotkeys(browser, false);
     const ELEMENTS = ["div", "input", "textarea"];
     for (let elem of ELEMENTS) {
-      yield focus_element(browser, elem);
-      yield test_hotkeys(browser, true);
-      yield focus_element(browser, ":root");
-      yield test_hotkeys(browser, false);
+      await focus_element(browser, elem);
+      await test_hotkeys(browser, true);
+      await focus_element(browser, ":root");
+      await test_hotkeys(browser, false);
     }
   });
 });
@@ -41,7 +41,7 @@ add_task(async function test_hotkey_on_designMode_document() {
   await BrowserTestUtils.withNewTab({
     gBrowser,
     url: DESIGNMODE_PAGE
-  }, function* do_tests(browser) {
-    yield test_hotkeys(browser, true);
+  }, async function do_tests(browser) {
+    await test_hotkeys(browser, true);
   });
 });

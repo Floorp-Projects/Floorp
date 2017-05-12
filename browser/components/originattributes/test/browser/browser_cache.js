@@ -122,8 +122,8 @@ let stopObservingChannels;
 // The init function, which clears image and network caches, and generates
 // the random value for isolating video and audio elements across different
 // test runs.
-function* doInit(aMode) {
-  yield SpecialPowers.pushPrefEnv({"set": [["network.predictor.enabled",         false],
+async function doInit(aMode) {
+  await SpecialPowers.pushPrefEnv({"set": [["network.predictor.enabled",         false],
                                            ["network.predictor.enable-prefetch", false]]});
   clearAllImageCaches();
 
@@ -219,20 +219,20 @@ async function doTest(aBrowser) {
 }
 
 // The check function, which checks the number of cache entries.
-function* doCheck(aShouldIsolate, aInputA, aInputB) {
+async function doCheck(aShouldIsolate, aInputA, aInputB) {
   let expectedEntryCount = 1;
   let data = [];
-  data = data.concat(yield cacheDataForContext(LoadContextInfo.default));
-  data = data.concat(yield cacheDataForContext(LoadContextInfo.private));
-  data = data.concat(yield cacheDataForContext(LoadContextInfo.custom(true, {})));
-  data = data.concat(yield cacheDataForContext(LoadContextInfo.custom(false, { userContextId: 1 })));
-  data = data.concat(yield cacheDataForContext(LoadContextInfo.custom(true, { userContextId: 1 })));
-  data = data.concat(yield cacheDataForContext(LoadContextInfo.custom(false, { userContextId: 2 })));
-  data = data.concat(yield cacheDataForContext(LoadContextInfo.custom(true, { userContextId: 2 })));
-  data = data.concat(yield cacheDataForContext(LoadContextInfo.custom(false, { firstPartyDomain: "example.com" })));
-  data = data.concat(yield cacheDataForContext(LoadContextInfo.custom(true, { firstPartyDomain: "example.com" })));
-  data = data.concat(yield cacheDataForContext(LoadContextInfo.custom(false, { firstPartyDomain: "example.org" })));
-  data = data.concat(yield cacheDataForContext(LoadContextInfo.custom(true, { firstPartyDomain: "example.org" })));
+  data = data.concat(await cacheDataForContext(LoadContextInfo.default));
+  data = data.concat(await cacheDataForContext(LoadContextInfo.private));
+  data = data.concat(await cacheDataForContext(LoadContextInfo.custom(true, {})));
+  data = data.concat(await cacheDataForContext(LoadContextInfo.custom(false, { userContextId: 1 })));
+  data = data.concat(await cacheDataForContext(LoadContextInfo.custom(true, { userContextId: 1 })));
+  data = data.concat(await cacheDataForContext(LoadContextInfo.custom(false, { userContextId: 2 })));
+  data = data.concat(await cacheDataForContext(LoadContextInfo.custom(true, { userContextId: 2 })));
+  data = data.concat(await cacheDataForContext(LoadContextInfo.custom(false, { firstPartyDomain: "example.com" })));
+  data = data.concat(await cacheDataForContext(LoadContextInfo.custom(true, { firstPartyDomain: "example.com" })));
+  data = data.concat(await cacheDataForContext(LoadContextInfo.custom(false, { firstPartyDomain: "example.org" })));
+  data = data.concat(await cacheDataForContext(LoadContextInfo.custom(true, { firstPartyDomain: "example.org" })));
 
   if (aShouldIsolate) {
     expectedEntryCount = 2;

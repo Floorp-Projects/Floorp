@@ -229,7 +229,7 @@ Test.prototype = {
    * This must be called before run().  It adds a bookmark and sets up the
    * test's result.  Override if need be.
    */
-  *setup() {
+  async setup() {
     // Populate the database with different types of bookmark items.
     this.data = DataHelper.makeDataArray([
       { type: "bookmark" },
@@ -237,7 +237,7 @@ Test.prototype = {
       { type: "folder" },
       { type: "bookmark", uri: "place:terms=foo" }
     ]);
-    yield task_populateDB(this.data);
+    await task_populateDB(this.data);
 
     // Make a query.
     this.query = PlacesUtils.history.getNewQuery();

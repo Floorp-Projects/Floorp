@@ -8,14 +8,14 @@ add_task(async function prepare() {
   let engine = await promiseNewSearchEngine(TEST_ENGINE_BASENAME);
   let oldCurrentEngine = Services.search.currentEngine;
   Services.search.currentEngine = engine;
-  registerCleanupFunction(function* () {
+  registerCleanupFunction(async function() {
     Services.search.currentEngine = oldCurrentEngine;
     Services.prefs.clearUserPref(SUGGEST_ALL_PREF);
     Services.prefs.clearUserPref(SUGGEST_URLBAR_PREF);
 
     // Disable the notification for future tests so it doesn't interfere with
     // them.  clearUserPref() won't work because by default the pref is false.
-    yield setUserMadeChoicePref(true);
+    await setUserMadeChoicePref(true);
 
     // Make sure the popup is closed for the next test.
     gURLBar.blur();

@@ -134,19 +134,19 @@ function findAgainAndWait() {
   });
 }
 
-function* openFindBarAndWait() {
+async function openFindBarAndWait() {
   let awaitTransitionEnd = BrowserTestUtils.waitForEvent(gFindBar, "transitionend");
   gFindBar.open();
-  yield awaitTransitionEnd;
+  await awaitTransitionEnd;
 }
 
 // This test is comparing snapshots. It is necessary to wait for the gFindBar
 // to close before taking the snapshot so the gFindBar does not take up space
 // on the new snapshot.
-function* closeFindBarAndWait() {
+async function closeFindBarAndWait() {
   let awaitTransitionEnd = BrowserTestUtils.waitForEvent(gFindBar, "transitionend", false, event => {
     return event.propertyName == "visibility";
   });
   gFindBar.close();
-  yield awaitTransitionEnd;
+  await awaitTransitionEnd;
 }

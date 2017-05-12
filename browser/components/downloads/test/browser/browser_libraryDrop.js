@@ -6,9 +6,9 @@
 XPCOMUtils.defineLazyModuleGetter(this, "HttpServer",
   "resource://testing-common/httpd.js");
 
-registerCleanupFunction(function*() {
-  yield task_resetState();
-  yield task_clearHistory();
+registerCleanupFunction(async function() {
+  await task_resetState();
+  await task_clearHistory();
 });
 
 add_task(async function test_indicatorDrop() {

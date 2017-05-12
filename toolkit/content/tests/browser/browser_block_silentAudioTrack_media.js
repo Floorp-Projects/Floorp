@@ -7,10 +7,10 @@ var SuspendedType = {
   SUSPENDED_PAUSE_DISPOSABLE: 3
 };
 
-function* click_unblock_icon(tab) {
+async function click_unblock_icon(tab) {
   let icon = document.getAnonymousElementByAttribute(tab, "anonid", "soundplaying-icon");
 
-  yield hover_icon(icon, document.getElementById("tabbrowser-tab-tooltip"));
+  await hover_icon(icon, document.getElementById("tabbrowser-tab-tooltip"));
   EventUtils.synthesizeMouseAtCenter(icon, {button: 0});
   leave_icon(icon);
 }

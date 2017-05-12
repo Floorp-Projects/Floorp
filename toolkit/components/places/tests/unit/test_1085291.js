@@ -5,8 +5,8 @@ add_task(async function() {
   // getFolderContents opens the root node.
   let root = PlacesUtils.getFolderContents(PlacesUtils.toolbarFolderId).root;
 
-  function* insertAndTest(bmInfo) {
-    bmInfo = yield PlacesUtils.bookmarks.insert(bmInfo);
+  async function insertAndTest(bmInfo) {
+    bmInfo = await PlacesUtils.bookmarks.insert(bmInfo);
     let node = root.getChild(root.childCount - 1);
     Assert.equal(node.bookmarkGuid, bmInfo.guid);
     Assert.equal(node.dateAdded, bmInfo.dateAdded * 1000);

@@ -148,7 +148,7 @@ add_task(async function() {
     });
   }
 
-  function* ctrlTabTest(tabsToSelect, tabTimes, expectedIndex) {
+  async function ctrlTabTest(tabsToSelect, tabTimes, expectedIndex) {
     selectTabs(tabsToSelect);
 
     var indexStart = gBrowser.tabContainer.selectedIndex;
@@ -158,7 +158,7 @@ add_task(async function() {
                 normalized + " tabs back in most-recently-selected order";
 
     for (let i = 0; i < tabTimes; i++) {
-      yield pressCtrlTab();
+      await pressCtrlTab();
 
       if (tabCount > 2)
        is(gBrowser.tabContainer.selectedIndex, indexStart,
@@ -169,7 +169,7 @@ add_task(async function() {
       ok(isOpen(),
          "With " + tabCount + " tabs open, Ctrl+Tab opens the preview panel");
 
-      yield releaseCtrl();
+      await releaseCtrl();
 
       ok(!isOpen(),
          "Releasing Ctrl closes the preview panel");

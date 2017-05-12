@@ -161,11 +161,11 @@ add_task(async function test_onclick_frameid() {
   await extension.startup();
   await extension.awaitMessage("ready");
 
-  function* click(selectorOrId) {
+  async function click(selectorOrId) {
     const func = (selectorOrId == "body") ? openContextMenu : openContextMenuInFrame;
-    const menu = yield func(selectorOrId);
+    const menu = await func(selectorOrId);
     const items = menu.getElementsByAttribute("label", "modify");
-    yield closeExtensionContextMenu(items[0]);
+    await closeExtensionContextMenu(items[0]);
     return extension.awaitMessage("click");
   }
 

@@ -15,10 +15,10 @@ function synthesizeKeyAndWaitForFocus(element, keyCode, options) {
 // to be focused if there are no active notification anchors.
 add_task(async function testWithoutNotifications() {
   await SpecialPowers.pushPrefEnv({"set": [["accessibility.tabfocus", 7]]});
-  await BrowserTestUtils.withNewTab("https://example.com", function*() {
-    yield synthesizeKeyAndWaitForFocus(gURLBar, "l", {accelKey: true})
+  await BrowserTestUtils.withNewTab("https://example.com", async function() {
+    await synthesizeKeyAndWaitForFocus(gURLBar, "l", {accelKey: true})
     is(document.activeElement, gURLBar.inputField, "urlbar should be focused");
-    yield synthesizeKeyAndWaitForFocus(gIdentityHandler._identityBox, "VK_TAB", {shiftKey: true})
+    await synthesizeKeyAndWaitForFocus(gIdentityHandler._identityBox, "VK_TAB", {shiftKey: true})
     is(document.activeElement, gIdentityHandler._identityBox,
        "identity block should be focused");
   });
@@ -28,18 +28,18 @@ add_task(async function testWithoutNotifications() {
 // focus before the identity block.
 add_task(async function testWithoutNotifications() {
   await SpecialPowers.pushPrefEnv({"set": [["accessibility.tabfocus", 7]]});
-  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, function*(browser) {
+  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function(browser) {
     let popupshown = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
     // Request a permission;
     BrowserTestUtils.synthesizeMouseAtCenter("#geo", {}, browser);
-    yield popupshown;
+    await popupshown;
 
-    yield synthesizeKeyAndWaitForFocus(gURLBar, "l", {accelKey: true})
+    await synthesizeKeyAndWaitForFocus(gURLBar, "l", {accelKey: true})
     is(document.activeElement, gURLBar.inputField, "urlbar should be focused");
     let geoIcon = document.getElementById("geo-notification-icon");
-    yield synthesizeKeyAndWaitForFocus(geoIcon, "VK_TAB", {shiftKey: true})
+    await synthesizeKeyAndWaitForFocus(geoIcon, "VK_TAB", {shiftKey: true})
     is(document.activeElement, geoIcon, "notification anchor should be focused");
-    yield synthesizeKeyAndWaitForFocus(gIdentityHandler._identityBox, "VK_TAB", {shiftKey: true})
+    await synthesizeKeyAndWaitForFocus(gIdentityHandler._identityBox, "VK_TAB", {shiftKey: true})
     is(document.activeElement, gIdentityHandler._identityBox,
        "identity block should be focused");
   });
@@ -48,14 +48,14 @@ add_task(async function testWithoutNotifications() {
 // Checks that with invalid pageproxystate the identity block is ignored.
 add_task(async function testInvalidPageProxyState() {
   await SpecialPowers.pushPrefEnv({"set": [["accessibility.tabfocus", 7]]});
-  await BrowserTestUtils.withNewTab("about:blank", function*(browser) {
+  await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
     // Loading about:blank will automatically focus the urlbar, which, however, can
     // race with the test code. So we only send the shortcut if the urlbar isn't focused yet.
     if (document.activeElement != gURLBar.inputField) {
-      yield synthesizeKeyAndWaitForFocus(gURLBar, "l", {accelKey: true})
+      await synthesizeKeyAndWaitForFocus(gURLBar, "l", {accelKey: true})
     }
     is(document.activeElement, gURLBar.inputField, "urlbar should be focused");
-    yield synthesizeKeyAndWaitForFocus(gBrowser.getTabForBrowser(browser), "VK_TAB", {shiftKey: true})
+    await synthesizeKeyAndWaitForFocus(gBrowser.getTabForBrowser(browser), "VK_TAB", {shiftKey: true})
     isnot(document.activeElement, gIdentityHandler._identityBox,
           "identity block should not be focused");
     // Restore focus to the url bar.

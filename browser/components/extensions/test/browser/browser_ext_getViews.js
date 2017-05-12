@@ -109,14 +109,14 @@ add_task(async function() {
   let winId1 = windowTracker.getId(win1);
   let winId2 = windowTracker.getId(win2);
 
-  function* openTab(winId) {
+  async function openTab(winId) {
     extension.sendMessage("background-open-tab", winId);
-    yield extension.awaitMessage("tab-ready");
+    await extension.awaitMessage("tab-ready");
   }
 
-  function* checkViews(kind, tabCount, popupCount, kindCount, windowId = undefined, windowCount = 0) {
+  async function checkViews(kind, tabCount, popupCount, kindCount, windowId = undefined, windowCount = 0) {
     extension.sendMessage(kind + "-check-views", windowId);
-    let counts = yield extension.awaitMessage("counts");
+    let counts = await extension.awaitMessage("counts");
     is(counts.background, 1, "background count correct");
     is(counts.tab, tabCount, "tab count correct");
     is(counts.popup, popupCount, "popup count correct");
@@ -135,13 +135,13 @@ add_task(async function() {
 
   await checkViews("background", 2, 0, 0, winId2, 1);
 
-  function* triggerPopup(win, callback) {
-    yield clickBrowserAction(extension, win);
-    yield awaitExtensionPanel(extension, win);
+  async function triggerPopup(win, callback) {
+    await clickBrowserAction(extension, win);
+    await awaitExtensionPanel(extension, win);
 
-    yield extension.awaitMessage("popup-ready");
+    await extension.awaitMessage("popup-ready");
 
-    yield callback();
+    await callback();
 
     closeBrowserAction(extension, win);
   }
@@ -152,14 +152,14 @@ add_task(async function() {
   // short timeout seems to consistently fix it.
   await new Promise(resolve => win1.setTimeout(resolve, 10));
 
-  await triggerPopup(win1, function* () {
-    yield checkViews("background", 2, 1, 0, winId1, 2);
-    yield checkViews("popup", 2, 1, 1);
+  await triggerPopup(win1, async function() {
+    await checkViews("background", 2, 1, 0, winId1, 2);
+    await checkViews("popup", 2, 1, 1);
   });
 
-  await triggerPopup(win2, function* () {
-    yield checkViews("background", 2, 1, 0, winId2, 2);
-    yield checkViews("popup", 2, 1, 1);
+  await triggerPopup(win2, async function() {
+    await checkViews("background", 2, 1, 0, winId2, 2);
+    await checkViews("popup", 2, 1, 1);
   });
 
   info("checking counts after popups");
@@ -177,18 +177,18 @@ add_task(async function() {
 
   info("opening win1 popup");
 
-  await triggerPopup(win1, function* () {
-    yield checkViews("background", 1, 1, 0);
-    yield checkViews("tab", 1, 1, 1);
-    yield checkViews("popup", 1, 1, 1);
+  await triggerPopup(win1, async function() {
+    await checkViews("background", 1, 1, 0);
+    await checkViews("tab", 1, 1, 1);
+    await checkViews("popup", 1, 1, 1);
   });
 
   info("opening win2 popup");
 
-  await triggerPopup(win2, function* () {
-    yield checkViews("background", 1, 1, 0);
-    yield checkViews("tab", 1, 1, 1);
-    yield checkViews("popup", 1, 1, 1);
+  await triggerPopup(win2, async function() {
+    await checkViews("background", 1, 1, 0);
+    await checkViews("tab", 1, 1, 1);
+    await checkViews("popup", 1, 1, 1);
   });
 
   await extension.unload();

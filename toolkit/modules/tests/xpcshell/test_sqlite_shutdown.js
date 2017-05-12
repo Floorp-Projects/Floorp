@@ -24,17 +24,17 @@ function getConnection(dbName, extraOptions = {}) {
   return Sqlite.openConnection(options);
 }
 
-function* getDummyDatabase(name, extraOptions = {}) {
+async function getDummyDatabase(name, extraOptions = {}) {
   const TABLES = {
     dirs: "id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT",
     files: "id INTEGER PRIMARY KEY AUTOINCREMENT, dir_id INTEGER, path TEXT",
   };
 
-  let c = yield getConnection(name, extraOptions);
+  let c = await getConnection(name, extraOptions);
   c._initialStatementCount = 0;
 
   for (let [k, v] of Object.entries(TABLES)) {
-    yield c.execute("CREATE TABLE " + k + "(" + v + ")");
+    await c.execute("CREATE TABLE " + k + "(" + v + ")");
     c._initialStatementCount++;
   }
 

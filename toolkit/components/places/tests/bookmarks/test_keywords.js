@@ -2,7 +2,7 @@ const URI1 = NetUtil.newURI("http://test1.mozilla.org/");
 const URI2 = NetUtil.newURI("http://test2.mozilla.org/");
 const URI3 = NetUtil.newURI("http://test3.mozilla.org/");
 
-function* check_keyword(aURI, aKeyword) {
+async function check_keyword(aURI, aKeyword) {
   if (aKeyword)
     aKeyword = aKeyword.toLowerCase();
 
@@ -16,10 +16,10 @@ function* check_keyword(aURI, aKeyword) {
   }
 
   if (aKeyword) {
-    let uri = yield PlacesUtils.keywords.fetch(aKeyword);
+    let uri = await PlacesUtils.keywords.fetch(aKeyword);
     Assert.equal(uri.url, aURI.spec);
     // Check case insensitivity.
-    uri = yield PlacesUtils.keywords.fetch(aKeyword.toUpperCase());
+    uri = await PlacesUtils.keywords.fetch(aKeyword.toUpperCase());
     Assert.equal(uri.url, aURI.spec);
   }
 }

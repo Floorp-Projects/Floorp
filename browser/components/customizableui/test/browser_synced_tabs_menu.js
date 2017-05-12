@@ -118,10 +118,10 @@ function panelUIHide() {
   return panelHidePromise;
 }
 
-function* asyncCleanup() {
+async function asyncCleanup() {
   Services.prefs.clearUserPref("identity.fxaccounts.remote.signup.uri");
   // reset the panel UI to the default state
-  yield resetCustomization();
+  await resetCustomization();
   ok(CustomizableUI.inDefaultState, "The panel UI is in default state again.");
 
   // restore the tabs

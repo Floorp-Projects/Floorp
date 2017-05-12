@@ -2,8 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-function* testKeyword(params) {
-  let normalized = yield ExtensionTestUtils.normalizeManifest({
+async function testKeyword(params) {
+  let normalized = await ExtensionTestUtils.normalizeManifest({
     "omnibox": {
       "keyword": params.keyword,
     },

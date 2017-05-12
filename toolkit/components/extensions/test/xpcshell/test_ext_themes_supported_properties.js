@@ -32,12 +32,12 @@ const baseManifestProperties = [
   "developer",
 ];
 
-function* getAdditionalInvalidManifestProperties() {
+async function getAdditionalInvalidManifestProperties() {
   let invalidProperties = [];
-  yield Schemas.load(BASE_SCHEMA_URL);
+  await Schemas.load(BASE_SCHEMA_URL);
   for (let [name, url] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCHEMAS)) {
     if (name !== "theme") {
-      yield Schemas.load(url);
+      await Schemas.load(url);
       let types = Schemas.schemaJSON.get(url)[0].types;
       types.forEach(type => {
         if (type.$extend == "WebExtensionManifest") {

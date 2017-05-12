@@ -51,7 +51,7 @@ add_task(async function test_open_add_bookmark_for_frame() {
 
 add_task(async function test_move_bookmark_whilst_add_bookmark_open() {
   info("Test moving a bookmark whilst the add bookmark for frame dialog is open.");
-  await withAddBookmarkForFrame(function* test(dialogWin) {
+  await withAddBookmarkForFrame(async function test(dialogWin) {
     let bookmarksMenuFolderName = PlacesUtils.getString("BookmarksMenuFolderTitle");
     let toolbarFolderName = PlacesUtils.getString("BookmarksToolbarFolderTitle");
 
@@ -63,7 +63,7 @@ add_task(async function test_move_bookmark_whilst_add_bookmark_open() {
                  bookmarksMenuFolderName, "The folder is the expected one.");
 
     // Check the bookmark has been created as expected.
-    let bookmark = yield PlacesUtils.bookmarks.fetch({url});
+    let bookmark = await PlacesUtils.bookmarks.fetch({url});
 
     Assert.equal(bookmark.parentGuid,
                  PlacesUtils.bookmarks.menuGuid,
@@ -73,7 +73,7 @@ add_task(async function test_move_bookmark_whilst_add_bookmark_open() {
     bookmark.parentGuid = PlacesUtils.bookmarks.toolbarGuid;
     bookmark.index = PlacesUtils.bookmarks.DEFAULT_INDEX;
 
-    yield PlacesUtils.bookmarks.update(bookmark);
+    await PlacesUtils.bookmarks.update(bookmark);
 
     Assert.equal(folderPicker.selectedItem.label,
                  toolbarFolderName, "The folder picker has changed to the new folder");

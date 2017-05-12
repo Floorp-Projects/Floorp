@@ -147,10 +147,10 @@ async function task_resetState() {
   await promiseFocus();
 }
 
-function* task_addDownloads(aItems) {
+async function task_addDownloads(aItems) {
   let startTimeMs = Date.now();
 
-  let publicList = yield Downloads.getList(Downloads.PUBLIC);
+  let publicList = await Downloads.getList(Downloads.PUBLIC);
   for (let item of aItems) {
     let download = {
       source: {
@@ -172,7 +172,7 @@ function* task_addDownloads(aItems) {
     if (item.errorObj) {
       download.errorObj = item.errorObj;
     }
-    yield publicList.add(yield Downloads.createDownload(download));
+    await publicList.add(await Downloads.createDownload(download));
   }
 }
 
@@ -184,7 +184,7 @@ async function task_openPanel() {
   await promise;
 }
 
-function* setDownloadDir() {
+async function setDownloadDir() {
   let tmpDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
   tmpDir.append("testsavedir");
   if (!tmpDir.exists()) {
@@ -198,7 +198,7 @@ function* setDownloadDir() {
     });
   }
 
-  yield SpecialPowers.pushPrefEnv({"set": [
+  await SpecialPowers.pushPrefEnv({"set": [
     ["browser.download.folderList", 2],
     ["browser.download.dir", tmpDir, Ci.nsIFile],
   ]});

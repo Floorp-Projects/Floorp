@@ -1185,13 +1185,13 @@ tests.push({
   name: "L.4",
   desc: "recalculate foreign_count.",
 
-  *setup() {
-    this._pageGuid = (yield PlacesUtils.history.insert({ url: "http://l4.moz.org/",
+  async setup() {
+    this._pageGuid = (await PlacesUtils.history.insert({ url: "http://l4.moz.org/",
                                                          visits: [{ date: new Date() }] })).guid;
-    yield PlacesUtils.bookmarks.insert({ url: "http://l4.moz.org/",
+    await PlacesUtils.bookmarks.insert({ url: "http://l4.moz.org/",
                                          parentGuid: PlacesUtils.bookmarks.unfiledGuid});
-    yield PlacesUtils.keywords.insert({ url: "http://l4.moz.org/", keyword: "kw" });
-    Assert.equal((yield this._getForeignCount()), 2);
+    await PlacesUtils.keywords.insert({ url: "http://l4.moz.org/", keyword: "kw" });
+    Assert.equal((await this._getForeignCount()), 2);
   },
 
   async _getForeignCount() {
@@ -1201,8 +1201,8 @@ tests.push({
     return rows[0].getResultByName("foreign_count");
   },
 
-  *check() {
-    Assert.equal((yield this._getForeignCount()), 2);
+  async check() {
+    Assert.equal((await this._getForeignCount()), 2);
   }
 });
 
@@ -1229,8 +1229,8 @@ tests.push({
     return rows[0].getResultByName("url_hash");
   },
 
-  *check() {
-    Assert.ok((yield this._getHash()) > 0);
+  async check() {
+    Assert.ok((await this._getHash()) > 0);
   }
 });
 

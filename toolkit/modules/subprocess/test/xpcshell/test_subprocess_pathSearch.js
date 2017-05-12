@@ -55,7 +55,7 @@ add_task(async function test_pathSearchRelative() {
 
 add_task({
   skip_if: () => AppConstants.platform != "win",
-}, function* test_pathSearch_PATHEXT() {
+}, async function test_pathSearch_PATHEXT() {
   ok(PYTHON_BIN.endsWith(".exe"), "Python executable must end with .exe");
 
   const python_bin = PYTHON_BIN.slice(0, -4);
@@ -65,7 +65,7 @@ add_task({
     PATHEXT: [".com", ".exe", ".foobar"].join(";"),
   };
 
-  let path = yield Subprocess.pathSearch(python_bin, env);
+  let path = await Subprocess.pathSearch(python_bin, env);
   equal(path, PYTHON, "Correct executable should be found in the path, with guessed extension");
 });
 // IMPORTANT: Do not add any tests beyond this point without removing

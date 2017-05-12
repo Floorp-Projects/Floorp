@@ -5,8 +5,8 @@ add_task(async function() {
   await PlacesUtils.keywords.insert({ keyword: "keyword",
                                       url: "http://example.com/?q=%s" })
 
-  registerCleanupFunction(function* () {
-    yield PlacesUtils.bookmarks.remove(bm);
+  registerCleanupFunction(async function() {
+    await PlacesUtils.bookmarks.remove(bm);
   });
 
   await promiseAutocompleteResultPopup("keyword search");

@@ -149,7 +149,7 @@ add_task(async function testSecondaryActionWorkflow() {
     url: "about:blank"
   };
 
-  await BrowserTestUtils.withNewTab(options, function*(browser) {
+  await BrowserTestUtils.withNewTab(options, async function(browser) {
     let doc = browser.ownerDocument;
 
     is(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is closed.");
@@ -173,16 +173,16 @@ add_task(async function testSecondaryActionWorkflow() {
 
     is(PanelUI.menuButton.getAttribute("badge-status"), "update-manual", "Badge is displaying on PanelUI button.");
 
-    yield PanelUI.show();
+    await PanelUI.show();
     isnot(PanelUI.menuButton.getAttribute("badge-status"), "update-manual", "Badge is hidden on PanelUI button.");
     let menuItem = PanelUI.mainView.querySelector(".panel-banner-item");
     is(menuItem.label, menuItem.getAttribute("label-update-manual"), "Showing correct label");
     is(menuItem.hidden, false, "update-manual menu item is showing.");
 
-    yield PanelUI.hide();
+    await PanelUI.hide();
     is(PanelUI.menuButton.getAttribute("badge-status"), "update-manual", "Badge is shown on PanelUI button.");
 
-    yield PanelUI.show();
+    await PanelUI.show();
     menuItem.click();
     ok(mainActionCalled, "Main action callback was called");
 
@@ -197,7 +197,7 @@ add_task(async function testSecondaryActionWorkflow() {
  *   then we display any other badges that are remaining.
  */
 add_task(async function testInteractionWithBadges() {
-  await BrowserTestUtils.withNewTab("about:blank", function*(browser) {
+  await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
     let doc = browser.ownerDocument;
 
     PanelUI.showBadgeOnlyNotification("fxa-needs-authentication");
@@ -224,7 +224,7 @@ add_task(async function testInteractionWithBadges() {
 
     is(PanelUI.menuButton.getAttribute("badge-status"), "update-manual", "Badge is displaying on PanelUI button.");
 
-    yield PanelUI.show();
+    await PanelUI.show();
     isnot(PanelUI.menuButton.getAttribute("badge-status"), "update-manual", "Badge is hidden on PanelUI button.");
     let menuItem = PanelUI.mainView.querySelector(".panel-banner-item");
     is(menuItem.label, menuItem.getAttribute("label-update-manual"), "Showing correct label");
@@ -276,7 +276,7 @@ add_task(async function testAddingBadgeWhileDoorhangerIsShowing() {
  * Tests that badges operate like a stack.
  */
 add_task(async function testMultipleBadges() {
-  await BrowserTestUtils.withNewTab("about:blank", function*(browser) {
+  await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
     let doc = browser.ownerDocument;
     let menuButton = doc.getElementById("PanelUI-menu-button");
 
@@ -307,7 +307,7 @@ add_task(async function testMultipleBadges() {
     PanelUI.removeNotification(/^fxa-/);
     is(menuButton.hasAttribute("badge-status"), false, "Should not have a badge status");
 
-    yield PanelUI.show();
+    await PanelUI.show();
     is(menuButton.hasAttribute("badge-status"), false, "Should not have a badge status (Hamburger menu opened)");
     PanelUI.hide();
 
@@ -322,7 +322,7 @@ add_task(async function testMultipleBadges() {
  * Tests that non-badges also operate like a stack.
  */
 add_task(async function testMultipleNonBadges() {
-  await BrowserTestUtils.withNewTab("about:blank", function*(browser) {
+  await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
     let doc = browser.ownerDocument;
 
     is(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is closed.");
@@ -361,7 +361,7 @@ add_task(async function testMultipleNonBadges() {
     is(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is closed.");
     is(PanelUI.menuButton.getAttribute("badge-status"), "update-restart", "update-restart badge is displaying on PanelUI button.");
 
-    yield PanelUI.show();
+    await PanelUI.show();
     isnot(PanelUI.menuButton.getAttribute("badge-status"), "update-restart", "update-restart badge is hidden on PanelUI button.");
     let menuItem = PanelUI.mainView.querySelector(".panel-banner-item");
     is(menuItem.label, menuItem.getAttribute("label-update-restart"), "Showing correct label");
@@ -373,7 +373,7 @@ add_task(async function testMultipleNonBadges() {
     is(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is closed.");
     is(PanelUI.menuButton.getAttribute("badge-status"), "update-manual", "update-manual badge is displaying on PanelUI button.");
 
-    yield PanelUI.show();
+    await PanelUI.show();
     isnot(PanelUI.menuButton.getAttribute("badge-status"), "update-manual", "update-manual badge is hidden on PanelUI button.");
     is(menuItem.label, menuItem.getAttribute("label-update-manual"), "Showing correct label");
     is(menuItem.hidden, false, "update-manual menu item is showing.");

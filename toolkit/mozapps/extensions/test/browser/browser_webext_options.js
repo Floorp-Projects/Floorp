@@ -7,10 +7,10 @@
 //  2. installing an extension (using the provider installer callable)
 //  3. opening the preferences panel for the new extension and verifying
 //     that it opens cleanly
-function* runTest(installer) {
-  let mgrWindow = yield open_manager("addons://list/extension");
+async function runTest(installer) {
+  let mgrWindow = await open_manager("addons://list/extension");
 
-  let {addon, id} = yield* installer();
+  let {addon, id} = await installer();
   isnot(addon, null, "Extension is installed");
 
   let element = get_addon_element(mgrWindow, id);
@@ -21,7 +21,7 @@ function* runTest(installer) {
 
   EventUtils.synthesizeMouseAtCenter(button, {clickCount: 1}, mgrWindow);
 
-  yield TestUtils.topicObserved(AddonManager.OPTIONS_NOTIFICATION_DISPLAYED,
+  await TestUtils.topicObserved(AddonManager.OPTIONS_NOTIFICATION_DISPLAYED,
                                 (subject, data) => data == id);
 
   is(mgrWindow.gViewController.currentViewId,
@@ -41,7 +41,7 @@ function* runTest(installer) {
   button = mgrWindow.document.getElementById("detail-prefs-btn");
   is_element_hidden(button, "Preferences button should not be visible");
 
-  yield close_manager(mgrWindow);
+  await close_manager(mgrWindow);
 
   addon.uninstall();
 }

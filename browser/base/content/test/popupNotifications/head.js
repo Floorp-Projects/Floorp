@@ -82,7 +82,7 @@ function goNext() {
   executeSoon(() => executeSoon(Task.async(runNextTest)));
 }
 
-function* runNextTest() {
+async function runNextTest() {
   if (tests.length == 0) {
     executeSoon(finish);
     return;
@@ -109,7 +109,7 @@ function* runNextTest() {
   }
 
   info("[" + nextTest.id + "] running test");
-  yield nextTest.run();
+  await nextTest.run();
 }
 
 function showNotification(notifyObj) {

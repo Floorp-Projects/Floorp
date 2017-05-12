@@ -17,19 +17,19 @@ function closeIdentityPopup() {
 }
 
 add_task(async function testMainViewVisible() {
-  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, function*() {
+  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function() {
     let permissionsList = document.getElementById("identity-popup-permission-list");
     let emptyLabel = permissionsList.nextSibling.nextSibling;
 
-    yield openIdentityPopup();
+    await openIdentityPopup();
 
     ok(!is_hidden(emptyLabel), "List of permissions is empty");
 
-    yield closeIdentityPopup();
+    await closeIdentityPopup();
 
     SitePermissions.set(gBrowser.currentURI, "camera", SitePermissions.ALLOW);
 
-    yield openIdentityPopup();
+    await openIdentityPopup();
 
     ok(is_hidden(emptyLabel), "List of permissions is not empty");
 
@@ -42,15 +42,15 @@ add_task(async function testMainViewVisible() {
     ok(img, "There is an image for the permissions");
     ok(img.classList.contains("camera-icon"), "proper class is in image class");
 
-    yield closeIdentityPopup();
+    await closeIdentityPopup();
 
     SitePermissions.remove(gBrowser.currentURI, "camera");
 
-    yield openIdentityPopup();
+    await openIdentityPopup();
 
     ok(!is_hidden(emptyLabel), "List of permissions is empty");
 
-    yield closeIdentityPopup();
+    await closeIdentityPopup();
   });
 });
 
@@ -83,14 +83,14 @@ add_task(async function testIdentityIcon() {
 });
 
 add_task(async function testCancelPermission() {
-  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, function*() {
+  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function() {
     let permissionsList = document.getElementById("identity-popup-permission-list");
     let emptyLabel = permissionsList.nextSibling.nextSibling;
 
     SitePermissions.set(gBrowser.currentURI, "geo", SitePermissions.ALLOW);
     SitePermissions.set(gBrowser.currentURI, "camera", SitePermissions.BLOCK);
 
-    yield openIdentityPopup();
+    await openIdentityPopup();
 
     ok(is_hidden(emptyLabel), "List of permissions is not empty");
 
@@ -104,27 +104,27 @@ add_task(async function testCancelPermission() {
     labels = permissionsList.querySelectorAll(".identity-popup-permission-label");
     is(labels.length, 0, "One permission should be removed");
 
-    yield closeIdentityPopup();
+    await closeIdentityPopup();
   });
 });
 
 add_task(async function testPermissionHints() {
-  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, function*(browser) {
+  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function(browser) {
     let permissionsList = document.getElementById("identity-popup-permission-list");
     let emptyHint = document.getElementById("identity-popup-permission-empty-hint");
     let reloadHint = document.getElementById("identity-popup-permission-reload-hint");
 
-    yield openIdentityPopup();
+    await openIdentityPopup();
 
     ok(!is_hidden(emptyHint), "Empty hint is visible");
     ok(is_hidden(reloadHint), "Reload hint is hidden");
 
-    yield closeIdentityPopup();
+    await closeIdentityPopup();
 
     SitePermissions.set(gBrowser.currentURI, "geo", SitePermissions.ALLOW);
     SitePermissions.set(gBrowser.currentURI, "camera", SitePermissions.BLOCK);
 
-    yield openIdentityPopup();
+    await openIdentityPopup();
 
     ok(is_hidden(emptyHint), "Empty hint is hidden");
     ok(is_hidden(reloadHint), "Reload hint is hidden");
@@ -141,16 +141,16 @@ add_task(async function testPermissionHints() {
     ok(is_hidden(emptyHint), "Empty hint is hidden");
     ok(!is_hidden(reloadHint), "Reload hint is visible");
 
-    yield closeIdentityPopup();
+    await closeIdentityPopup();
     let loaded = BrowserTestUtils.browserLoaded(browser);
     BrowserTestUtils.loadURI(browser, PERMISSIONS_PAGE);
-    yield loaded;
-    yield openIdentityPopup();
+    await loaded;
+    await openIdentityPopup();
 
     ok(!is_hidden(emptyHint), "Empty hint is visible after reloading");
     ok(is_hidden(reloadHint), "Reload hint is hidden after reloading");
 
-    yield closeIdentityPopup();
+    await closeIdentityPopup();
   });
 });
 

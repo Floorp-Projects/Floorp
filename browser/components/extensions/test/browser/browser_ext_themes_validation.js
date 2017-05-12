@@ -10,7 +10,7 @@ add_task(async function setup() {
  * Helper function for testing a theme with invalid properties.
  * @param {object} invalidProps The invalid properties to load the theme with.
  */
-function* testThemeWithInvalidProperties(invalidProps) {
+async function testThemeWithInvalidProperties(invalidProps) {
   let manifest = {
     "theme": {},
   };
@@ -41,10 +41,10 @@ function* testThemeWithInvalidProperties(invalidProps) {
     }]);
   });
 
-  yield Assert.rejects(extension.startup(), null, "Theme should fail to load if it contains invalid properties");
+  await Assert.rejects(extension.startup(), null, "Theme should fail to load if it contains invalid properties");
 
   SimpleTest.endMonitorConsole();
-  yield waitForConsole;
+  await waitForConsole;
 }
 
 add_task(async function test_that_theme_with_invalid_properties_fails_to_load() {

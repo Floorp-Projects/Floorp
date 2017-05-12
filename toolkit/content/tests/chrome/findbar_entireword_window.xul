@@ -138,12 +138,12 @@
       await onDocumentLoaded(testName);
     }
 
-    function* onDocumentLoaded(testName) {
+    async function onDocumentLoaded(testName) {
       let suite = kTests[testName];
-      yield testSimpleEntireWord(suite.testSimpleEntireWord);
-      yield testCaseSensitive(suite.testCaseSensitive);
-      yield testWordBreakChars(suite.testWordBreakChars);
-      yield testQuickfind(suite.testQuickfind);
+      await testSimpleEntireWord(suite.testSimpleEntireWord);
+      await testCaseSensitive(suite.testCaseSensitive);
+      await testWordBreakChars(suite.testWordBreakChars);
+      await testQuickfind(suite.testQuickfind);
     }
 
     var enterStringIntoFindField = async function(str, waitForResult = true) {
@@ -209,35 +209,35 @@
       }
     }
 
-    function* testSimpleEntireWord(tests) {
-      yield openFindbar();
+    async function testSimpleEntireWord(tests) {
+      await openFindbar();
       ok(!gFindBar.hidden, "testSimpleEntireWord: findbar should be open");
 
-      yield* testIterator(tests);
+      await testIterator(tests);
 
       gFindBar.close();
     }
 
-    function* testCaseSensitive(tests) {
-      yield openFindbar();
+    async function testCaseSensitive(tests) {
+      await openFindbar();
       ok(!gFindBar.hidden, "testCaseSensitive: findbar should be open");
 
       let matchCaseCheckbox = gFindBar.getElement("find-case-sensitive");
       if (!matchCaseCheckbox.hidden && !matchCaseCheckbox.checked)
         matchCaseCheckbox.click();
 
-      yield* testIterator(tests);
+      await testIterator(tests);
 
       if (!matchCaseCheckbox.hidden)
         matchCaseCheckbox.click();
       gFindBar.close();
     }
 
-    function* testWordBreakChars(tests) {
-      yield openFindbar();
+    async function testWordBreakChars(tests) {
+      await openFindbar();
       ok(!gFindBar.hidden, "testWordBreakChars: findbar should be open");
 
-      yield* testIterator(tests);
+      await testIterator(tests);
 
       gFindBar.close();
     }
