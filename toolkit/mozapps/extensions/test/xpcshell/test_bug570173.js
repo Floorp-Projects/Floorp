@@ -24,7 +24,7 @@ function run_test() {
 }
 
 // Verify that an update check returns the correct errors.
-add_task(function* () {
+add_task(async function() {
   for (let manifestType of ["rdf", "json"]) {
     writeInstallRDFForExtension({
       id: "addon1@tests.mozilla.org",
@@ -39,16 +39,16 @@ add_task(function* () {
       bootstrap: "true",
     }, profileDir);
 
-    yield promiseRestartManager();
+    await promiseRestartManager();
 
-    let addon = yield promiseAddonByID("addon1@tests.mozilla.org");
+    let addon = await promiseAddonByID("addon1@tests.mozilla.org");
 
     ok(addon);
     ok(addon.updateURL.endsWith(manifestType));
     equal(addon.version, "1.0");
 
     // We're expecting an error, so resolve when the promise is rejected.
-    let update = yield promiseFindAddonUpdates(addon, AddonManager.UPDATE_WHEN_USER_REQUESTED)
+    let update = await promiseFindAddonUpdates(addon, AddonManager.UPDATE_WHEN_USER_REQUESTED)
       .catch(Promise.resolve);
 
     ok(!update.compatibilityUpdate, "not expecting a compatibility update");

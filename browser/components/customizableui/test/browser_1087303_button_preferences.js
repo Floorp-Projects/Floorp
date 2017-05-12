@@ -6,11 +6,11 @@
 
 var newTab = null;
 
-add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   info("Check preferences button existence and functionality");
 
-  yield PanelUI.show();
+  await PanelUI.show();
   info("Menu panel was opened");
 
   let preferencesButton = document.getElementById("preferences-button");
@@ -18,7 +18,7 @@ add_task(function*() {
   preferencesButton.click();
 
   newTab = gBrowser.selectedTab;
-  yield waitForPageLoad(newTab);
+  await waitForPageLoad(newTab);
 
   let openedPage = gBrowser.currentURI.spec;
   is(openedPage, "about:preferences", "Preferences page was opened");

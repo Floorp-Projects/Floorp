@@ -47,29 +47,29 @@ let extensionData = {
   },
 };
 
-add_task(function* test_contentscript() {
+add_task(async function test_contentscript() {
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield extension.startup();
+  await extension.startup();
 
   let win = window.open("file_sample.html");
-  yield Promise.all([waitForLoad(win), extension.awaitMessage("connected")]);
+  await Promise.all([waitForLoad(win), extension.awaitMessage("connected")]);
   win.close();
-  yield extension.awaitMessage("disconnected");
+  await extension.awaitMessage("disconnected");
 
   info("win.close() succeeded");
 
   win = window.open("file_sample.html");
-  yield Promise.all([waitForLoad(win), extension.awaitMessage("connected")]);
+  await Promise.all([waitForLoad(win), extension.awaitMessage("connected")]);
 
   // Add an "unload" listener so that we don't put the window in the
   // bfcache. This way it gets destroyed immediately upon navigation.
   win.addEventListener("unload", function() {});  // eslint-disable-line mozilla/balanced-listeners
 
   win.location = "http://example.com";
-  yield extension.awaitMessage("disconnected");
+  await extension.awaitMessage("disconnected");
   win.close();
 
-  yield extension.unload();
+  await extension.unload();
   info("extension unloaded");
 });
 </script>

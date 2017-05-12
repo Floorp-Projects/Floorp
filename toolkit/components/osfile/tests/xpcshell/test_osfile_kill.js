@@ -54,12 +54,12 @@ var Scheduler = AsyncFrontGlobal.Scheduler;
  * eat rejections, there is an important difference between the value of
  * `queue` and the value returned by the first OS.File request.)
  */
-add_task(function* test_kill_race() {
+add_task(async function test_kill_race() {
   // Ensure the worker has been created and that SET_DEBUG has taken effect.
   // We have chosen OS.File.exists for our tests because it does not trigger
   // a rejection and we absolutely do not care what the operation is other
   // than it does not invoke a native fast-path.
-  yield OS.File.exists('foo.foo');
+  await OS.File.exists('foo.foo');
 
   do_print('issuing first request');
   let firstRequest = OS.File.exists('foo.bar');
@@ -84,12 +84,12 @@ add_task(function* test_kill_race() {
 
   // Wait on the killRequest so that we can schedule a new OS.File request
   // after it completes...
-  yield killRequest;
+  await killRequest;
   // ...because our ordering guarantee ensures that there is at most one
   // worker (and this usage here should not be vulnerable even with the
   // bug present), so when this completes the secondRequest has either been
   // resolved or lost.
-  yield OS.File.exists('foo.goz');
+  await OS.File.exists('foo.goz');
 
   ok(secondResolved,
      'The second request was resolved so we avoided the bug. Victory!');

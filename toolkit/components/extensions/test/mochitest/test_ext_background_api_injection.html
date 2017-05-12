@@ -13,7 +13,7 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* testBackgroundWindow() {
+add_task(async function testBackgroundWindow() {
   let extension = ExtensionTestUtils.loadExtension({
     background: function() {
       const BASE = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest";
@@ -30,14 +30,14 @@ add_task(function* testBackgroundWindow() {
     chromeScript.addMessageListener("console-message", resolve);
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  let message = yield awaitConsole;
+  let message = await awaitConsole;
 
   ok(message.message.includes("WebExt Privilege Escalation: typeof(browser) = undefined"),
      "Document does not have `browser` APIs.");
 
-  yield extension.unload();
+  await extension.unload();
 });
 
 </script>

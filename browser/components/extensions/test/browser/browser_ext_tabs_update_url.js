@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-function* testTabsUpdateURL(existentTabURL, tabsUpdateURL, isErrorExpected) {
+async function testTabsUpdateURL(existentTabURL, tabsUpdateURL, isErrorExpected) {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
@@ -43,9 +43,9 @@ function* testTabsUpdateURL(existentTabURL, tabsUpdateURL, isErrorExpected) {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  let mozExtTabURL = yield extension.awaitMessage("ready");
+  let mozExtTabURL = await extension.awaitMessage("ready");
 
   if (tabsUpdateURL == "self") {
     tabsUpdateURL = mozExtTabURL;
@@ -53,16 +53,16 @@ function* testTabsUpdateURL(existentTabURL, tabsUpdateURL, isErrorExpected) {
 
   info(`tab.update URL "${tabsUpdateURL}" on tab with URL "${existentTabURL}"`);
 
-  let tab1 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, existentTabURL);
+  let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, existentTabURL);
 
   extension.sendMessage("start", tabsUpdateURL, isErrorExpected);
-  yield extension.awaitMessage("done");
+  await extension.awaitMessage("done");
 
-  yield BrowserTestUtils.removeTab(tab1);
-  yield extension.unload();
+  await BrowserTestUtils.removeTab(tab1);
+  await extension.unload();
 }
 
-add_task(function* () {
+add_task(async function() {
   info("Start testing tabs.update on javascript URLs");
 
   let dataURLPage = `data:text/html,
@@ -103,7 +103,7 @@ add_task(function* () {
         .map((check) => Object.assign({}, check, {existentTabURL: "about:blank"}));
 
   for (let {existentTabURL, tabsUpdateURL, isErrorExpected} of testCases) {
-    yield* testTabsUpdateURL(existentTabURL, tabsUpdateURL, isErrorExpected);
+    await testTabsUpdateURL(existentTabURL, tabsUpdateURL, isErrorExpected);
   }
 
   info("done");

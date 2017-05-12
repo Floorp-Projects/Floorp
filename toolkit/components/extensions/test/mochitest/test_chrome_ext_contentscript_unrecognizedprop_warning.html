@@ -16,7 +16,7 @@
 
 const BASE = "http://mochi.test:8888/chrome/toolkit/components/extensions/test/mochitest";
 
-add_task(function* test_contentscript() {
+add_task(async function test_contentscript() {
   function background() {
     browser.runtime.onMessage.addListener(async (msg) => {
       if (msg == "loaded") {
@@ -62,17 +62,17 @@ add_task(function* test_contentscript() {
     }]);
   });
 
-  yield extension.startup();
+  await extension.startup();
 
   window.open(`${BASE}/file_sample.html`);
 
-  yield Promise.all([extension.awaitFinish("content-script-loaded")]);
+  await Promise.all([extension.awaitFinish("content-script-loaded")]);
   info("test page loaded");
 
-  yield extension.unload();
+  await extension.unload();
 
   SimpleTest.endMonitorConsole();
-  yield waitForConsole;
+  await waitForConsole;
 });
 </script>
 

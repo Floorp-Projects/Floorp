@@ -5,7 +5,7 @@
 var secureURL = "https://example.com/browser/browser/base/content/test/general/browser_star_hsts.sjs";
 var unsecureURL = "http://example.com/browser/browser/base/content/test/general/browser_star_hsts.sjs";
 
-add_task(function* test_star_redirect() {
+add_task(async function test_star_redirect() {
   registerCleanupFunction(function() {
     // Ensure to remove example.com from the HSTS list.
     let sss = Cc["@mozilla.org/ssservice;1"]
@@ -18,17 +18,17 @@ add_task(function* test_star_redirect() {
 
   let tab = gBrowser.selectedTab = gBrowser.addTab();
   // This will add the page to the HSTS cache.
-  yield promiseTabLoadEvent(tab, secureURL, secureURL);
+  await promiseTabLoadEvent(tab, secureURL, secureURL);
   // This should transparently be redirected to the secure page.
-  yield promiseTabLoadEvent(tab, unsecureURL, secureURL);
+  await promiseTabLoadEvent(tab, unsecureURL, secureURL);
 
-  yield promiseStarState(BookmarkingUI.STATUS_UNSTARRED);
+  await promiseStarState(BookmarkingUI.STATUS_UNSTARRED);
 
   let promiseBookmark = promiseOnBookmarkItemAdded(gBrowser.currentURI);
   BookmarkingUI.star.click();
   // This resolves on the next tick, so the star should have already been
   // updated at that point.
-  yield promiseBookmark;
+  await promiseBookmark;
 
   is(BookmarkingUI.status, BookmarkingUI.STATUS_STARRED, "The star is starred");
 });

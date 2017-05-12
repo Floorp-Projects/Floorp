@@ -34,8 +34,8 @@ var tests = [
   },
   // Test that for non-persistent notifications, the escape key dismisses the notification.
   { id: "Test#2",
-    *run() {
-      yield waitForWindowReadyForPopupNotifications(window);
+    async run() {
+      await waitForWindowReadyForPopupNotifications(window);
       this.notifyObj = new BasicNotification(this.id);
       this.notification = showNotification(this.notifyObj);
     },
@@ -53,7 +53,7 @@ var tests = [
   },
   // Test that the space key on an anchor element focuses an active notification
   { id: "Test#3",
-    *run() {
+    run() {
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.anchorID = "geo-notification-icon";
       this.notifyObj.addOptions({
@@ -61,7 +61,7 @@ var tests = [
       });
       this.notification = showNotification(this.notifyObj);
     },
-    *onShown(popup) {
+    onShown(popup) {
       checkPopup(popup, this.notifyObj);
       let anchor = document.getElementById(this.notifyObj.anchorID);
       anchor.focus();
@@ -132,7 +132,7 @@ var tests = [
   },
   // Test that passing the autofocus option will focus an opened notification.
   { id: "Test#5",
-    *run() {
+    run() {
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.anchorID = "geo-notification-icon";
       this.notifyObj.addOptions({
@@ -140,7 +140,7 @@ var tests = [
       });
       this.notification = showNotification(this.notifyObj);
     },
-    *onShown(popup) {
+    onShown(popup) {
       checkPopup(popup, this.notifyObj);
 
       // Initial focus on open is null because a panel itself
@@ -174,17 +174,17 @@ var tests = [
   },
   // Test that focus is not moved out of a content element if autofocus is not set.
   { id: "Test#6",
-    *run() {
+    async run() {
       let id = this.id;
-      yield BrowserTestUtils.withNewTab("data:text/html,<input id='test-input'/>", function*(browser) {
+      await BrowserTestUtils.withNewTab("data:text/html,<input id='test-input'/>", async function(browser) {
         let notifyObj = new BasicNotification(id);
-        yield ContentTask.spawn(browser, {}, function() {
+        await ContentTask.spawn(browser, {}, function() {
           content.document.getElementById("test-input").focus();
         });
 
         let opened = waitForNotificationPanel();
         let notification = showNotification(notifyObj);
-        yield opened;
+        await opened;
 
         // Check that the focused element in the chrome window
         // is either the browser in case we're running on e10s
@@ -196,7 +196,7 @@ var tests = [
         }
 
         // Check that the input field is still focused inside the browser.
-        yield ContentTask.spawn(browser, {}, function() {
+        await ContentTask.spawn(browser, {}, function() {
           is(content.document.activeElement, content.document.getElementById("test-input"));
         });
 

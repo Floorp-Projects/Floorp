@@ -2,7 +2,7 @@ var gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content
 var gTestBrowser = null;
 var gNumPluginBindingsAttached = 0;
 
-add_task(function* () {
+add_task(async function() {
   registerCleanupFunction(function() {
     clearAllPluginPermissions();
     Services.prefs.clearUserPref("plugins.click_to_play");
@@ -14,7 +14,7 @@ add_task(function* () {
   });
 });
 
-add_task(function* () {
+add_task(async function() {
   Services.prefs.setBoolPref("plugins.click_to_play", true);
 
   gBrowser.selectedTab = gBrowser.addTab();
@@ -25,11 +25,11 @@ add_task(function* () {
 
   gTestBrowser.addEventListener("PluginBindingAttached", function() { gNumPluginBindingsAttached++ }, true, true);
 
-  yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_bug820497.html");
+  await promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_bug820497.html");
 
-  yield promiseForCondition(function() { return gNumPluginBindingsAttached == 1; });
+  await promiseForCondition(function() { return gNumPluginBindingsAttached == 1; });
 
-  yield ContentTask.spawn(gTestBrowser, null, () => {
+  await ContentTask.spawn(gTestBrowser, null, () => {
     // Note we add the second plugin in the code farther down, so there's
     // no way we got here with anything but one plugin loaded.
     let doc = content.document;
@@ -39,21 +39,21 @@ add_task(function* () {
     ok(!secondtestplugin, "should not yet have second test plugin");
   });
 
-  yield promisePopupNotification("click-to-play-plugins");
+  await promisePopupNotification("click-to-play-plugins");
   let notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
   ok(notification, "should have a click-to-play notification");
 
-  yield promiseForNotificationShown(notification);
+  await promiseForNotificationShown(notification);
 
   is(notification.options.pluginData.size, 1, "should be 1 type of plugin in the popup notification");
 
-  yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  await ContentTask.spawn(gTestBrowser, {}, async function() {
     XPCNativeWrapper.unwrap(content).addSecondPlugin();
   });
 
-  yield promiseForCondition(function() { return gNumPluginBindingsAttached == 2; });
+  await promiseForCondition(function() { return gNumPluginBindingsAttached == 2; });
 
-  yield ContentTask.spawn(gTestBrowser, null, () => {
+  await ContentTask.spawn(gTestBrowser, null, () => {
     let doc = content.document;
     let testplugin = doc.getElementById("test");
     ok(testplugin, "should have test plugin");
@@ -65,7 +65,7 @@ add_task(function* () {
 
   ok(notification, "should have popup notification");
 
-  yield promiseForNotificationShown(notification);
+  await promiseForNotificationShown(notification);
 
   is(notification.options.pluginData.size, 2, "aited too long for 2 types of plugins in popup notification");
 });

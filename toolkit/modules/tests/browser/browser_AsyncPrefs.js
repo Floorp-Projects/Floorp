@@ -83,15 +83,15 @@ function* runTest() {
   }
 }
 
-add_task(function* runInParent() {
-  yield runTest();
+add_task(async function runInParent() {
+  await runTest();
   resetPrefs();
 });
 
 if (gMultiProcessBrowser) {
-  add_task(function* runInChild() {
+  add_task(async function runInChild() {
     ok(gBrowser.selectedBrowser.isRemoteBrowser, "Should actually run this in child process");
-    yield ContentTask.spawn(gBrowser.selectedBrowser, null, runTest);
+    await ContentTask.spawn(gBrowser.selectedBrowser, null, runTest);
     resetPrefs();
   });
 }

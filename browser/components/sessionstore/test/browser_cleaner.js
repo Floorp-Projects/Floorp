@@ -11,7 +11,6 @@
 
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
-Cu.import("resource://gre/modules/Task.jsm", this);
 
 const LONG_TIME_AGO = 1;
 
@@ -36,27 +35,27 @@ function getClosedState() {
 
 var CLOSED_STATE;
 
-add_task(function* init() {
+add_task(async function init() {
   forgetClosedWindows();
   while (ss.getClosedTabCount(window) > 0) {
     ss.forgetClosedTab(window, 0);
   }
 });
 
-add_task(function* test_open_and_close() {
+add_task(async function test_open_and_close() {
   let newTab1 = gBrowser.addTab(URL_TAB1);
-  yield promiseBrowserLoaded(newTab1.linkedBrowser);
+  await promiseBrowserLoaded(newTab1.linkedBrowser);
 
   let newTab2 = gBrowser.addTab(URL_TAB2);
-  yield promiseBrowserLoaded(newTab2.linkedBrowser);
+  await promiseBrowserLoaded(newTab2.linkedBrowser);
 
-  let newWin = yield promiseNewWindowLoaded();
+  let newWin = await promiseNewWindowLoaded();
   let tab = newWin.gBrowser.addTab(URL_NEWWIN);
 
-  yield promiseBrowserLoaded(tab.linkedBrowser);
+  await promiseBrowserLoaded(tab.linkedBrowser);
 
-  yield TabStateFlusher.flushWindow(window);
-  yield TabStateFlusher.flushWindow(newWin);
+  await TabStateFlusher.flushWindow(window);
+  await TabStateFlusher.flushWindow(newWin);
 
   info("1. Making sure that before closing, we don't have closedAt");
   // For the moment, no "closedAt"
@@ -69,9 +68,9 @@ add_task(function* test_open_and_close() {
   info("2. Making sure that after closing, we have closedAt");
 
   // Now close stuff, this should add closeAt
-  yield BrowserTestUtils.closeWindow(newWin);
-  yield promiseRemoveTab(newTab1);
-  yield promiseRemoveTab(newTab2);
+  await BrowserTestUtils.closeWindow(newWin);
+  await promiseRemoveTab(newTab1);
+  await promiseRemoveTab(newTab2);
 
   state = CLOSED_STATE = JSON.parse(ss.getBrowserState());
 
@@ -82,18 +81,18 @@ add_task(function* test_open_and_close() {
 });
 
 
-add_task(function* test_restore() {
+add_task(async function test_restore() {
   info("3. Making sure that after restoring, we don't have closedAt");
-  yield promiseBrowserState(CLOSED_STATE);
+  await promiseBrowserState(CLOSED_STATE);
 
   let newWin = ss.undoCloseWindow(0);
-  yield promiseDelayedStartupFinished(newWin);
+  await promiseDelayedStartupFinished(newWin);
 
   let newTab2 = ss.undoCloseTab(window, 0);
-  yield promiseTabRestored(newTab2);
+  await promiseTabRestored(newTab2);
 
   let newTab1 = ss.undoCloseTab(window, 0);
-  yield promiseTabRestored(newTab1);
+  await promiseTabRestored(newTab1);
 
   let state = JSON.parse(ss.getBrowserState());
 
@@ -102,20 +101,20 @@ add_task(function* test_restore() {
   is(state.windows[0].tabs[0].closedAt || false, false, "3. First tab doesn't have closedAt");
   is(state.windows[0].tabs[1].closedAt || false, false, "3. Second tab doesn't have closedAt");
 
-  yield BrowserTestUtils.closeWindow(newWin);
+  await BrowserTestUtils.closeWindow(newWin);
   gBrowser.removeTab(newTab1);
   gBrowser.removeTab(newTab2);
 });
 
 
-add_task(function* test_old_data() {
+add_task(async function test_old_data() {
   info("4. Removing closedAt from the sessionstore, making sure that it is added upon idle-daily");
 
   let state = getClosedState();
   delete state._closedWindows[0].closedAt;
   delete state.windows[0]._closedTabs[0].closedAt;
   delete state.windows[0]._closedTabs[1].closedAt;
-  yield promiseBrowserState(state);
+  await promiseBrowserState(state);
 
   info("Sending idle-daily");
   Services.obs.notifyObservers(null, "idle-daily");
@@ -126,14 +125,14 @@ add_task(function* test_old_data() {
   ok(isRecent(state._closedWindows[0].closedAt), "4. Second window was closed recently");
   ok(isRecent(state.windows[0]._closedTabs[0].closedAt), "4. First tab was closed recently");
   ok(isRecent(state.windows[0]._closedTabs[1].closedAt), "4. Second tab was closed recently");
-  yield promiseCleanup();
+  await promiseCleanup();
 });
 
 
-add_task(function* test_cleanup() {
+add_task(async function test_cleanup() {
 
   info("5. Altering closedAt to an old date, making sure that stuff gets collected, eventually");
-  yield promiseCleanup();
+  await promiseCleanup();
 
   let state = getClosedState();
   state._closedWindows[0].closedAt = LONG_TIME_AGO;
@@ -141,7 +140,7 @@ add_task(function* test_cleanup() {
   state.windows[0]._closedTabs[1].closedAt = Date.now();
   let url = state.windows[0]._closedTabs[1].state.entries[0].url;
 
-  yield promiseBrowserState(state);
+  await promiseBrowserState(state);
 
   info("Sending idle-daily");
   Services.obs.notifyObservers(null, "idle-daily");
@@ -152,6 +151,6 @@ add_task(function* test_cleanup() {
 
   is(state.windows[0]._closedTabs.length, 1, "5. Only one closed tab left");
   is(state.windows[0]._closedTabs[0].state.entries[0].url, url, "5. The second tab is still here");
-  yield promiseCleanup();
+  await promiseCleanup();
 });
 

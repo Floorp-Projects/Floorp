@@ -154,11 +154,11 @@ function removeXULButtonForWindow(win) {
 var otherWin;
 
 // Moving widgets in two windows, one with customize mode and one without, should work.
-add_task(function* MoveWidgetsInTwoWindows() {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
-  yield startCustomizing();
-  otherWin = yield openAndLoadWindow(null, true);
-  yield otherWin.PanelUI.ensureReady();
+add_task(async function MoveWidgetsInTwoWindows() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+  await startCustomizing();
+  otherWin = await openAndLoadWindow(null, true);
+  await otherWin.PanelUI.ensureReady();
   // Create the XUL button to use in the test in both windows.
   createXULButtonForWindow(window);
   createXULButtonForWindow(otherWin);
@@ -175,12 +175,12 @@ add_task(function* MoveWidgetsInTwoWindows() {
       checkPalette(widgetId, method);
     }
   }
-  yield promiseWindowClosed(otherWin);
+  await promiseWindowClosed(otherWin);
   otherWin = null;
-  yield endCustomizing();
+  await endCustomizing();
   removeXULButtonForWindow(window);
 });
 
-add_task(function* asyncCleanup() {
-  yield resetCustomization();
+add_task(async function asyncCleanup() {
+  await resetCustomization();
 });

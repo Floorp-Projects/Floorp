@@ -183,14 +183,14 @@ function* runTestWithIcons(icons) {
   }
 }
 
-add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
     set: [["extensions.webextensions.themes.enabled", true],
           ["extensions.webextensions.themes.icons.enabled", true]],
   });
 });
 
-add_task(function* test_all_icons() {
+add_task(async function test_all_icons() {
   let icons = [
     ["back", "fox.svg"],
     ["forward", "fox.svg"],
@@ -224,15 +224,15 @@ add_task(function* test_all_icons() {
     ["forget", "fox.svg"],
     ["pocket", "fox.svg"],
   ];
-  yield runTestWithIcons(icons);
+  await runTestWithIcons(icons);
 });
 
-add_task(function* teardown() {
+add_task(async function teardown() {
   CustomizableUI.reset();
   window.restore();
 });
 
-add_task(function* test_some_icons() {
+add_task(async function test_some_icons() {
   let icons = [
     ["back", ""],
     ["forward", ""],
@@ -266,10 +266,10 @@ add_task(function* test_some_icons() {
     ["forget", ""],
     ["pocket", "fox.svg"],
   ];
-  yield runTestWithIcons(icons);
+  await runTestWithIcons(icons);
 });
 
-add_task(function* teardown() {
+add_task(async function teardown() {
   CustomizableUI.reset();
   window.restore();
 });

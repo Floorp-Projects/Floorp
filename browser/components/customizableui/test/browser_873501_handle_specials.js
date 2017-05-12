@@ -9,7 +9,7 @@ const kToolbarName = "test-specials-toolbar";
 registerCleanupFunction(removeCustomToolbars);
 
 // Add a toolbar with two springs and the downloads button.
-add_task(function* addToolbarWith2SpringsAndDownloadsButton() {
+add_task(async function addToolbarWith2SpringsAndDownloadsButton() {
   // Create the toolbar with a single spring:
   createToolbarWithPlacements(kToolbarName, ["spring"]);
   ok(document.getElementById(kToolbarName), "Toolbar should be created.");
@@ -29,11 +29,11 @@ add_task(function* addToolbarWith2SpringsAndDownloadsButton() {
   // Try moving the downloads button to this new toolbar, between the two springs:
   CustomizableUI.addWidgetToArea("downloads-button", kToolbarName, 1);
   assertAreaPlacements(kToolbarName, [springId, "downloads-button", spring2Id]);
-  yield removeCustomToolbars();
+  await removeCustomToolbars();
 });
 
 // Add separators around the downloads button.
-add_task(function* addSeparatorsAroundDownloadsButton() {
+add_task(async function addSeparatorsAroundDownloadsButton() {
   createToolbarWithPlacements(kToolbarName, ["separator"]);
   ok(document.getElementById(kToolbarName), "Toolbar should be created.");
 
@@ -50,11 +50,11 @@ add_task(function* addSeparatorsAroundDownloadsButton() {
 
   CustomizableUI.addWidgetToArea("downloads-button", kToolbarName, 1);
   assertAreaPlacements(kToolbarName, [separatorId, "downloads-button", separator2Id]);
-  yield removeCustomToolbars();
+  await removeCustomToolbars();
 });
 
 // Add spacers around the downloads button.
-add_task(function* addSpacersAroundDownloadsButton() {
+add_task(async function addSpacersAroundDownloadsButton() {
   createToolbarWithPlacements(kToolbarName, ["spacer"]);
   ok(document.getElementById(kToolbarName), "Toolbar should be created.");
 
@@ -71,9 +71,9 @@ add_task(function* addSpacersAroundDownloadsButton() {
 
   CustomizableUI.addWidgetToArea("downloads-button", kToolbarName, 1);
   assertAreaPlacements(kToolbarName, [spacerId, "downloads-button", spacer2Id]);
-  yield removeCustomToolbars();
+  await removeCustomToolbars();
 });
 
-add_task(function* asyncCleanup() {
-  yield resetCustomization();
+add_task(async function asyncCleanup() {
+  await resetCustomization();
 });

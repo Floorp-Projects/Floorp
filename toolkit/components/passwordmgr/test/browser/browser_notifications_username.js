@@ -6,7 +6,7 @@
  *
  * We also check switching to and from empty usernames.
  */
-add_task(function* test_edit_username() {
+add_task(async function test_edit_username() {
   let testCases = [{
     usernameInPage: "username",
     usernameChangedTo: "newUsername",
@@ -61,24 +61,24 @@ add_task(function* test_edit_username() {
       }));
     }
 
-    yield BrowserTestUtils.withNewTab({
+    await BrowserTestUtils.withNewTab({
       gBrowser,
       url: "https://example.com/browser/toolkit/components/" +
            "passwordmgr/test/browser/form_basic.html",
-    }, function* (browser) {
+    }, async function(browser) {
       // Submit the form in the content page with the credentials from the test
       // case. This will cause the doorhanger notification to be displayed.
       let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
                                                        "popupshown",
                                                        (event) => event.target == PopupNotifications.panel);
-      yield ContentTask.spawn(browser, testCase.usernameInPage,
-        function* (usernameInPage) {
+      await ContentTask.spawn(browser, testCase.usernameInPage,
+        async function(usernameInPage) {
           let doc = content.document;
           doc.getElementById("form-basic-username").value = usernameInPage;
           doc.getElementById("form-basic-password").value = "password";
           doc.getElementById("form-basic").submit();
         });
-      yield promiseShown;
+      await promiseShown;
       let notificationElement = PopupNotifications.panel.childNodes[0];
       // Style flush to make sure binding is attached
       notificationElement.querySelector("#password-notification-password").clientTop;
@@ -102,7 +102,7 @@ add_task(function* test_edit_username() {
       let promiseLogin = TestUtils.topicObserved("passwordmgr-storage-changed",
                          (_, data) => data == expectedNotification);
       notificationElement.button.doCommand();
-      let [result] = yield promiseLogin;
+      let [result] = await promiseLogin;
 
       // Check that the values in the database match the expected values.
       let login = expectModifyLogin ? result.QueryInterface(Ci.nsIArray)

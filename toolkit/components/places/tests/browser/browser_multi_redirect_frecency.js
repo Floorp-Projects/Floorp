@@ -16,9 +16,9 @@ const PERM_REDIRECT_VISIT_BONUS =
 // of idle-daily).
 Services.prefs.setCharPref("places.frecency.decayRate", "1.0");
 
-registerCleanupFunction(function*() {
+registerCleanupFunction(async function() {
   Services.prefs.clearUserPref("places.frecency.decayRate");
-  yield PlacesTestUtils.clearHistory();
+  await PlacesTestUtils.clearHistory();
 });
 
 function promiseVisitedURIObserver(redirectURI, targetURI, expectedTargetFrecency) {
@@ -59,19 +59,19 @@ function promiseVisitedURIObserver(redirectURI, targetURI, expectedTargetFrecenc
   });
 }
 
-function* testURIFields(url, expectedFrecency, expectedHidden) {
-  let frecency = yield promiseFieldForUrl(url, "frecency");
+async function testURIFields(url, expectedFrecency, expectedHidden) {
+  let frecency = await promiseFieldForUrl(url, "frecency");
   is(frecency, expectedFrecency,
      `Frecency of the page is the expected one (${url.spec})`);
 
-  let hidden = yield promiseFieldForUrl(url, "hidden");
+  let hidden = await promiseFieldForUrl(url, "hidden");
   is(hidden, expectedHidden, `The redirecting page should be hidden (${url.spec})`);
 }
 
 let expectedRedirectSourceFrecency = 0;
 let expectedTargetFrecency = 0;
 
-add_task(function* test_multiple_redirect() {
+add_task(async function test_multiple_redirect() {
   // Used to verify the redirect bonus overrides the typed bonus.
   PlacesUtils.history.markPageAsTyped(REDIRECT_URI);
 
@@ -84,17 +84,17 @@ add_task(function* test_multiple_redirect() {
   let visitedURIPromise = promiseVisitedURIObserver(REDIRECT_URI, TARGET_URI, expectedTargetFrecency);
 
   let newTabPromise = BrowserTestUtils.openNewForegroundTab(gBrowser, REDIRECT_URI.spec);
-  yield Promise.all([visitedURIPromise, newTabPromise]);
+  await Promise.all([visitedURIPromise, newTabPromise]);
 
-  yield testURIFields(REDIRECT_URI, expectedRedirectSourceFrecency, 1);
-  yield testURIFields(INTERMEDIATE_URI_1, expectedRedirectSourceFrecency, 1);
-  yield testURIFields(INTERMEDIATE_URI_2, expectedRedirectSourceFrecency, 1);
-  yield testURIFields(TARGET_URI, expectedTargetFrecency, 0);
+  await testURIFields(REDIRECT_URI, expectedRedirectSourceFrecency, 1);
+  await testURIFields(INTERMEDIATE_URI_1, expectedRedirectSourceFrecency, 1);
+  await testURIFields(INTERMEDIATE_URI_2, expectedRedirectSourceFrecency, 1);
+  await testURIFields(TARGET_URI, expectedTargetFrecency, 0);
 
   gBrowser.removeCurrentTab();
 });
 
-add_task(function* redirect_check_second_typed_visit() {
+add_task(async function redirect_check_second_typed_visit() {
   // A second visit with a typed url.
   PlacesUtils.history.markPageAsTyped(REDIRECT_URI);
 
@@ -107,18 +107,18 @@ add_task(function* redirect_check_second_typed_visit() {
   let visitedURIPromise = promiseVisitedURIObserver(REDIRECT_URI, TARGET_URI, expectedTargetFrecency);
 
   let newTabPromise = BrowserTestUtils.openNewForegroundTab(gBrowser, REDIRECT_URI.spec);
-  yield Promise.all([visitedURIPromise, newTabPromise]);
+  await Promise.all([visitedURIPromise, newTabPromise]);
 
-  yield testURIFields(REDIRECT_URI, expectedRedirectSourceFrecency, 1);
-  yield testURIFields(INTERMEDIATE_URI_1, expectedRedirectSourceFrecency, 1);
-  yield testURIFields(INTERMEDIATE_URI_2, expectedRedirectSourceFrecency, 1);
-  yield testURIFields(TARGET_URI, expectedTargetFrecency, 0);
+  await testURIFields(REDIRECT_URI, expectedRedirectSourceFrecency, 1);
+  await testURIFields(INTERMEDIATE_URI_1, expectedRedirectSourceFrecency, 1);
+  await testURIFields(INTERMEDIATE_URI_2, expectedRedirectSourceFrecency, 1);
+  await testURIFields(TARGET_URI, expectedTargetFrecency, 0);
 
   gBrowser.removeCurrentTab();
 });
 
 
-add_task(function* redirect_check_subsequent_link_visit() {
+add_task(async function redirect_check_subsequent_link_visit() {
   // Another visit, but this time as a visited url.
   expectedRedirectSourceFrecency += REDIRECT_SOURCE_VISIT_BONUS;
   // TODO Bug 487813 - This should be LINK_VISIT_BONUS, however as we don't
@@ -129,12 +129,12 @@ add_task(function* redirect_check_subsequent_link_visit() {
   let visitedURIPromise = promiseVisitedURIObserver(REDIRECT_URI, TARGET_URI, expectedTargetFrecency);
 
   let newTabPromise = BrowserTestUtils.openNewForegroundTab(gBrowser, REDIRECT_URI.spec);
-  yield Promise.all([visitedURIPromise, newTabPromise]);
+  await Promise.all([visitedURIPromise, newTabPromise]);
 
-  yield testURIFields(REDIRECT_URI, expectedRedirectSourceFrecency, 1);
-  yield testURIFields(INTERMEDIATE_URI_1, expectedRedirectSourceFrecency, 1);
-  yield testURIFields(INTERMEDIATE_URI_2, expectedRedirectSourceFrecency, 1);
-  yield testURIFields(TARGET_URI, expectedTargetFrecency, 0);
+  await testURIFields(REDIRECT_URI, expectedRedirectSourceFrecency, 1);
+  await testURIFields(INTERMEDIATE_URI_1, expectedRedirectSourceFrecency, 1);
+  await testURIFields(INTERMEDIATE_URI_2, expectedRedirectSourceFrecency, 1);
+  await testURIFields(TARGET_URI, expectedTargetFrecency, 0);
 
   gBrowser.removeCurrentTab();
 });

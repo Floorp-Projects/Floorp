@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* test_popup_sendMessage_reply() {
+add_task(async function test_popup_sendMessage_reply() {
   let scriptPage = url => `<html><head><meta charset="utf-8"><script src="${url}"></script></head><body>${url}</body></html>`;
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -61,33 +61,33 @@ add_task(function* test_popup_sendMessage_reply() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
   {
     clickBrowserAction(extension);
 
-    let pong = yield extension.awaitMessage("background-ping-response");
+    let pong = await extension.awaitMessage("background-ping-response");
     is(pong, "background-pong", "Got pong");
 
-    pong = yield extension.awaitMessage("popup-ping-response");
+    pong = await extension.awaitMessage("popup-ping-response");
     is(pong, "popup-pong", "Got pong");
 
-    yield closeBrowserAction(extension);
+    await closeBrowserAction(extension);
   }
 
-  yield extension.awaitMessage("page-action-ready");
+  await extension.awaitMessage("page-action-ready");
 
   {
     clickPageAction(extension);
 
-    let pong = yield extension.awaitMessage("background-ping-response");
+    let pong = await extension.awaitMessage("background-ping-response");
     is(pong, "background-pong", "Got pong");
 
-    pong = yield extension.awaitMessage("popup-ping-response");
+    pong = await extension.awaitMessage("popup-ping-response");
     is(pong, "popup-pong", "Got pong");
 
-    yield closePageAction(extension);
+    await closePageAction(extension);
   }
 
-  yield extension.unload();
+  await extension.unload();
 });

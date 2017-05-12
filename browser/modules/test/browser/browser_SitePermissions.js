@@ -8,11 +8,11 @@ Cu.import("resource:///modules/SitePermissions.jsm", this);
 
 // This asserts that SitePermissions.set can not save ALLOW permissions
 // temporarily on a tab.
-add_task(function* testTempAllowThrows() {
+add_task(async function testTempAllowThrows() {
   let uri = Services.io.newURI("https://example.com");
   let id = "notifications";
 
-  yield BrowserTestUtils.withNewTab(uri.spec, function(browser) {
+  await BrowserTestUtils.withNewTab(uri.spec, function(browser) {
     Assert.throws(function() {
       SitePermissions.set(uri, id, SitePermissions.ALLOW, SitePermissions.SCOPE_TEMPORARY, browser);
     }, "'Block' is the only permission we can save temporarily on a tab");
@@ -20,10 +20,10 @@ add_task(function* testTempAllowThrows() {
 });
 
 // This tests the SitePermissions.getAllPermissionDetailsForBrowser function.
-add_task(function* testGetAllPermissionDetailsForBrowser() {
+add_task(async function testGetAllPermissionDetailsForBrowser() {
   let uri = Services.io.newURI("https://example.com");
 
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, uri.spec);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, uri.spec);
 
   SitePermissions.set(uri, "camera", SitePermissions.ALLOW);
   SitePermissions.set(uri, "cookie", SitePermissions.ALLOW_COOKIES_FOR_SESSION);
@@ -75,6 +75,6 @@ add_task(function* testGetAllPermissionDetailsForBrowser() {
   SitePermissions.remove(uri, "popup");
   SitePermissions.remove(uri, "geo");
 
-  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 

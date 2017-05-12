@@ -80,7 +80,7 @@ function test() {
 
 
 var tests = [
-  taskify(function* test_modal_dialog_while_opening_tooltip() {
+  taskify(async function test_modal_dialog_while_opening_tooltip() {
     let panelShown;
     let popup;
 
@@ -96,9 +96,9 @@ var tests = [
     };
     startCallbackTimer();
     executeSoon(() => alert("test"));
-    yield waitForConditionPromise(() => panelShown, "Timed out waiting for panel promise to be assigned", 100);
-    yield panelShown;
+    await waitForConditionPromise(() => panelShown, "Timed out waiting for panel promise to be assigned", 100);
+    await panelShown;
 
-    yield hideInfoPromise();
+    await hideInfoPromise();
   })
 ];

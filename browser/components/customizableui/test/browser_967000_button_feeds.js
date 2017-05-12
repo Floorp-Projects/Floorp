@@ -10,8 +10,8 @@ const TEST_FEED = "http://mochi.test:8888/browser/browser/components/customizabl
 var newTab = null;
 var initialLocation = gBrowser.currentURI.spec;
 
-add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
   info("Check Subscribe button functionality");
 
   // add the Subscribe button to the panel
@@ -19,7 +19,7 @@ add_task(function*() {
                                   CustomizableUI.AREA_PANEL);
 
   // check the button's functionality
-  yield PanelUI.show();
+  await PanelUI.show();
 
   let feedButton = document.getElementById("feed-button");
   ok(feedButton, "The Subscribe button was added to the Panel Menu");
@@ -27,18 +27,18 @@ add_task(function*() {
 
   let panelHidePromise = promisePanelHidden(window);
   PanelUI.hide();
-  yield panelHidePromise;
+  await panelHidePromise;
 
   newTab = gBrowser.selectedTab;
-  yield promiseTabLoadEvent(newTab, TEST_PAGE);
+  await promiseTabLoadEvent(newTab, TEST_PAGE);
 
-  yield PanelUI.show();
+  await PanelUI.show();
 
-  yield waitForCondition(() => !feedButton.hasAttribute("disabled"));
+  await waitForCondition(() => !feedButton.hasAttribute("disabled"));
   ok(!feedButton.hasAttribute("disabled"), "The Subscribe button gets enabled");
 
   feedButton.click();
-  yield promiseTabLoadEvent(newTab, TEST_FEED);
+  await promiseTabLoadEvent(newTab, TEST_FEED);
 
   is(gBrowser.currentURI.spec, TEST_FEED, "Subscribe page opened");
   ok(!isPanelUIOpen(), "Panel is closed");
@@ -46,13 +46,13 @@ add_task(function*() {
   if (isPanelUIOpen()) {
     panelHidePromise = promisePanelHidden(window);
     PanelUI.hide();
-    yield panelHidePromise;
+    await panelHidePromise;
   }
 });
 
-add_task(function* asyncCleanup() {
+add_task(async function asyncCleanup() {
   // reset the panel UI to the default state
-  yield resetCustomization();
+  await resetCustomization();
   ok(CustomizableUI.inDefaultState, "The UI is in default state again.");
 
   // restore the initial location

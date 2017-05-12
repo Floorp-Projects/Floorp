@@ -69,7 +69,7 @@ function checkCacheExists(aShouldExist) {
   }
 }
 
-add_task(function* setup() {
+add_task(async function setup() {
   let networkCache = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
     .getService(Ci.nsICacheStorageService);
   networkCache.clear();
@@ -80,9 +80,9 @@ IsolationTestTools.runTests(TEST_DOMAIN, setCookies, () => true);
 
 add_task(checkCacheExists(true));
 
-add_task(function* sanitize() {
+add_task(async function sanitize() {
   let sanitizer = new Sanitizer();
-  yield sanitizer.sanitize(["cookies", "cache"]);
+  await sanitizer.sanitize(["cookies", "cache"]);
 });
 
 add_task(checkCacheExists(false));

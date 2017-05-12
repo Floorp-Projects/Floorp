@@ -9,7 +9,6 @@ this.EXPORTED_SYMBOLS = ["Preferences"];
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://testing-common/TestUtils.jsm");
 Cu.import("resource://testing-common/ContentTask.jsm");
 
@@ -65,7 +64,7 @@ this.Preferences = {
   configurations: {},
 };
 
-let prefHelper = Task.async(function*(primary, customFn = null, useOldOrg = false, advanced = null) {
+let prefHelper = async function(primary, customFn = null, useOldOrg = false, advanced = null) {
   let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
   let selectedBrowser = browserWindow.gBrowser.selectedBrowser;
 
@@ -74,7 +73,7 @@ let prefHelper = Task.async(function*(primary, customFn = null, useOldOrg = fals
   }
 
   // close any dialog that might still be open
-  yield ContentTask.spawn(selectedBrowser, null, function*() {
+  await ContentTask.spawn(selectedBrowser, null, async function() {
     if (!content.window.gSubDialog) {
       return;
     }
@@ -99,16 +98,16 @@ let prefHelper = Task.async(function*(primary, customFn = null, useOldOrg = fals
     browserWindow.openPreferences(primary);
   }
 
-  yield readyPromise;
+  await readyPromise;
 
   if (customFn) {
     let customPaintPromise = paintPromise(browserWindow);
-    yield* customFn(selectedBrowser);
-    yield customPaintPromise;
+    await customFn(selectedBrowser);
+    await customPaintPromise;
   }
 
   Services.prefs.clearUserPref("browser.preferences.useOldOrganization");
-});
+};
 
 function paintPromise(browserWindow) {
   return new Promise((resolve) => {
@@ -118,44 +117,44 @@ function paintPromise(browserWindow) {
   });
 }
 
-function* scrollToBrowsingGroup(aBrowser) {
-  yield ContentTask.spawn(aBrowser, null, function* () {
+async function scrollToBrowsingGroup(aBrowser) {
+  await ContentTask.spawn(aBrowser, null, async function() {
     content.document.getElementById("browsingGroup").scrollIntoView();
   });
 }
 
-function* scrollToCacheGroup(aBrowser) {
-  yield ContentTask.spawn(aBrowser, null, function* () {
+async function scrollToCacheGroup(aBrowser) {
+  await ContentTask.spawn(aBrowser, null, async function() {
     content.document.getElementById("cacheGroup").scrollIntoView();
   });
 }
 
-function* DNTDialog(aBrowser) {
-  yield ContentTask.spawn(aBrowser, null, function* () {
+async function DNTDialog(aBrowser) {
+  await ContentTask.spawn(aBrowser, null, async function() {
     content.document.getElementById("doNotTrackSettings").click();
   });
 }
 
-function* connectionDialog(aBrowser) {
-  yield ContentTask.spawn(aBrowser, null, function* () {
+async function connectionDialog(aBrowser) {
+  await ContentTask.spawn(aBrowser, null, async function() {
     content.document.getElementById("connectionSettings").click();
   });
 }
 
-function* clearRecentHistoryDialog(aBrowser) {
-  yield ContentTask.spawn(aBrowser, null, function* () {
+async function clearRecentHistoryDialog(aBrowser) {
+  await ContentTask.spawn(aBrowser, null, async function() {
     content.document.getElementById("historyRememberClear").click();
   });
 }
 
-function* certManager(aBrowser) {
-  yield ContentTask.spawn(aBrowser, null, function* () {
+async function certManager(aBrowser) {
+  await ContentTask.spawn(aBrowser, null, async function() {
     content.document.getElementById("viewCertificatesButton").click();
   });
 }
 
-function* deviceManager(aBrowser) {
-  yield ContentTask.spawn(aBrowser, null, function* () {
+async function deviceManager(aBrowser) {
+  await ContentTask.spawn(aBrowser, null, async function() {
     content.document.getElementById("viewSecurityDevicesButton").click();
   });
 }

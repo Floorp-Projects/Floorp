@@ -17,8 +17,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
                                   "resource://gre/modules/Downloads.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadsCommon",
                                   "resource:///modules/DownloadsCommon.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
@@ -63,7 +61,7 @@ Sanitizer.prototype = {
    *        Object whose properties are options for this sanitization.
    *        TODO (bug 1167238) document options here.
    */
-  sanitize: Task.async(function*(itemsToClear = null, options = {}) {
+  async sanitize(itemsToClear = null, options = {}) {
     let progress = options.progress || {};
     let promise = this._sanitize(itemsToClear, progress);
 
@@ -86,13 +84,13 @@ Sanitizer.prototype = {
     }
 
     try {
-      yield promise;
+      await promise;
     } finally {
       Services.obs.notifyObservers(null, "sanitizer-sanitization-complete");
     }
-  }),
+  },
 
-  _sanitize: Task.async(function*(aItemsToClear, progress = {}) {
+  async _sanitize(aItemsToClear, progress = {}) {
     let seenError = false;
     let itemsToClear;
     if (Array.isArray(aItemsToClear)) {
@@ -126,7 +124,7 @@ Sanitizer.prototype = {
     let openWindowsIndex = itemsToClear.indexOf("openWindows");
     if (openWindowsIndex != -1) {
       itemsToClear.splice(openWindowsIndex, 1);
-      yield this.items.openWindows.clear();
+      await this.items.openWindows.clear();
       progress.openWindows = "cleared";
     }
 
@@ -172,7 +170,7 @@ Sanitizer.prototype = {
     }
     for (let handle of handles) {
       progress[handle.name] = "blocking";
-      yield handle.promise;
+      await handle.promise;
     }
 
     // Sanitization is complete.
@@ -184,7 +182,7 @@ Sanitizer.prototype = {
     if (seenError) {
       throw new Error("Error sanitizing");
     }
-  }),
+  },
 
   // Time span only makes sense in certain cases.  Consumers who want
   // to only clear some private data can opt in by setting this to false,
@@ -196,7 +194,7 @@ Sanitizer.prototype = {
 
   items: {
     cache: {
-      clear: Task.async(function* (range) {
+      async clear(range) {
         let seenException;
         let refObj = {};
         TelemetryStopwatch.start("FX_SANITIZE_CACHE", refObj);
@@ -224,11 +222,11 @@ Sanitizer.prototype = {
         if (seenException) {
           throw seenException;
         }
-      })
+      }
     },
 
     cookies: {
-      clear: Task.async(function* (range) {
+      async clear(range) {
         let seenException;
         let yieldCounter = 0;
         let refObj = {};
@@ -250,14 +248,14 @@ Sanitizer.prototype = {
                                  false, cookie.originAttributes);
 
                 if (++yieldCounter % YIELD_PERIOD == 0) {
-                  yield new Promise(resolve => setTimeout(resolve, 0)); // Don't block the main thread too long
+                  await new Promise(resolve => setTimeout(resolve, 0)); // Don't block the main thread too long
                 }
               }
             }
           } else {
             // Remove everything
             cookieMgr.removeAll();
-            yield new Promise(resolve => setTimeout(resolve, 0)); // Don't block the main thread too long
+            await new Promise(resolve => setTimeout(resolve, 0)); // Don't block the main thread too long
           }
         } catch (ex) {
           seenException = ex;
@@ -276,7 +274,7 @@ Sanitizer.prototype = {
 
         // Clear plugin data.
         try {
-          yield Sanitizer.clearPluginData(range);
+          await Sanitizer.clearPluginData(range);
         } catch (ex) {
           seenException = ex;
         }
@@ -284,31 +282,31 @@ Sanitizer.prototype = {
         if (seenException) {
           throw seenException;
         }
-      }),
+      },
     },
 
     offlineApps: {
-      clear: Task.async(function* (range) {
+      async clear(range) {
         Components.utils.import("resource:///modules/offlineAppCache.jsm");
         // This doesn't wait for the cleanup to be complete.
         OfflineAppCacheHelper.clear();
-      })
+      }
     },
 
     history: {
-      clear: Task.async(function* (range) {
+      async clear(range) {
         let seenException;
         let refObj = {};
         TelemetryStopwatch.start("FX_SANITIZE_HISTORY", refObj);
         try {
           if (range) {
-            yield PlacesUtils.history.removeVisitsByFilter({
+            await PlacesUtils.history.removeVisitsByFilter({
               beginDate: new Date(range[0] / 1000),
               endDate: new Date(range[1] / 1000)
             });
           } else {
             // Remove everything.
-            yield PlacesUtils.history.clear();
+            await PlacesUtils.history.clear();
           }
         } catch (ex) {
           seenException = ex;
@@ -334,11 +332,11 @@ Sanitizer.prototype = {
         if (seenException) {
           throw seenException;
         }
-      })
+      }
     },
 
     formdata: {
-      clear: Task.async(function* (range) {
+      async clear(range) {
         let seenException;
         let refObj = {};
         TelemetryStopwatch.start("FX_SANITIZE_FORMDATA", refObj);
@@ -381,7 +379,7 @@ Sanitizer.prototype = {
           if (range) {
             [ change.firstUsedStart, change.firstUsedEnd ] = range;
           }
-          yield new Promise(resolve => {
+          await new Promise(resolve => {
             FormHistory.update(change, {
               handleError(e) {
                 seenException = new Error("Error " + e.result + ": " + e.message);
@@ -399,11 +397,11 @@ Sanitizer.prototype = {
         if (seenException) {
           throw seenException;
         }
-      })
+      }
     },
 
     downloads: {
-      clear: Task.async(function* (range) {
+      async clear(range) {
         let refObj = {};
         TelemetryStopwatch.start("FX_SANITIZE_DOWNLOADS", refObj);
         try {
@@ -417,16 +415,16 @@ Sanitizer.prototype = {
           }
 
           // Clear all completed/cancelled downloads
-          let list = yield Downloads.getList(Downloads.ALL);
+          let list = await Downloads.getList(Downloads.ALL);
           list.removeFinished(filterByTime);
         } finally {
           TelemetryStopwatch.finish("FX_SANITIZE_DOWNLOADS", refObj);
         }
-      })
+      }
     },
 
     sessions: {
-      clear: Task.async(function* (range) {
+      async clear(range) {
         let refObj = {};
         TelemetryStopwatch.start("FX_SANITIZE_SESSIONS", refObj);
 
@@ -441,11 +439,11 @@ Sanitizer.prototype = {
         } finally {
           TelemetryStopwatch.finish("FX_SANITIZE_SESSIONS", refObj);
         }
-      })
+      }
     },
 
     siteSettings: {
-      clear: Task.async(function* (range) {
+      async clear(range) {
         let seenException;
         let refObj = {};
         TelemetryStopwatch.start("FX_SANITIZE_SITESETTINGS", refObj);
@@ -490,7 +488,7 @@ Sanitizer.prototype = {
 
         // Clear all push notification subscriptions
         try {
-          yield new Promise((resolve, reject) => {
+          await new Promise((resolve, reject) => {
             let push = Cc["@mozilla.org/push/Service;1"]
                          .getService(Ci.nsIPushService);
             push.clearForDomain("*", status => {
@@ -510,7 +508,7 @@ Sanitizer.prototype = {
         if (seenException) {
           throw seenException;
         }
-      })
+      }
     },
 
     openWindows: {
@@ -530,7 +528,7 @@ Sanitizer.prototype = {
           win.skipNextCanClose = false;
         }
       },
-      clear: Task.async(function* () {
+      async clear() {
         // NB: this closes all *browser* windows, not other windows like the library, about window,
         // browser console, etc.
 
@@ -636,14 +634,14 @@ Sanitizer.prototype = {
           windowList.pop().close();
         }
         newWindow.focus();
-        yield promiseReady;
-      })
+        await promiseReady;
+      }
     },
 
     pluginData: {
-      clear: Task.async(function* (range) {
-        yield Sanitizer.clearPluginData(range);
-      }),
+      async clear(range) {
+        await Sanitizer.clearPluginData(range);
+      },
     },
   }
 };
@@ -714,7 +712,7 @@ Sanitizer.getClearRange = function(ts) {
   return [startDate, endDate];
 };
 
-Sanitizer.clearPluginData = Task.async(function* (range) {
+Sanitizer.clearPluginData = async function(range) {
   // Clear plugin data.
   // As evidenced in bug 1253204, clearing plugin data can sometimes be
   // very, very long, for mysterious reasons. Unfortunately, this is not
@@ -725,7 +723,7 @@ Sanitizer.clearPluginData = Task.async(function* (range) {
   // elapsed, we proceed with the shutdown of Firefox.
   let seenException;
 
-  let promiseClearPluginData = Task.async(function* () {
+  let promiseClearPluginData = async function() {
     const FLAG_CLEAR_ALL = Ci.nsIPluginHost.FLAG_CLEAR_ALL;
     let ph = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
 
@@ -737,12 +735,12 @@ Sanitizer.clearPluginData = Task.async(function* (range) {
       let tags = ph.getPluginTags();
       for (let tag of tags) {
         try {
-          let rv = yield new Promise(resolve =>
+          let rv = await new Promise(resolve =>
             ph.clearSiteData(tag, null, FLAG_CLEAR_ALL, age, resolve)
           );
           // If the plugin doesn't support clearing by age, clear everything.
           if (rv == Components.results.NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED) {
-            yield new Promise(resolve =>
+            await new Promise(resolve =>
               ph.clearSiteData(tag, null, FLAG_CLEAR_ALL, -1, resolve)
             );
           }
@@ -751,14 +749,14 @@ Sanitizer.clearPluginData = Task.async(function* (range) {
         }
       }
     }
-  });
+  };
 
   try {
     // We don't want to wait for this operation to complete...
     promiseClearPluginData = promiseClearPluginData(range);
 
     // ... at least, not for more than 10 seconds.
-    yield Promise.race([
+    await Promise.race([
       promiseClearPluginData,
       new Promise(resolve => setTimeout(resolve, 10000 /* 10 seconds */))
     ]);
@@ -776,7 +774,7 @@ Sanitizer.clearPluginData = Task.async(function* (range) {
   if (seenException) {
     throw seenException;
   }
-});
+};
 
 Sanitizer._prefs = null;
 Sanitizer.__defineGetter__("prefs", function() {
@@ -806,7 +804,7 @@ Sanitizer.sanitize = function(aParentWindow) {
   Sanitizer.showUI(aParentWindow);
 };
 
-Sanitizer.onStartup = Task.async(function*() {
+Sanitizer.onStartup = async function() {
   // Check if we were interrupted during the last shutdown sanitization.
   let shutownSanitizationWasInterrupted =
     Preferences.get(Sanitizer.PREF_SANITIZE_ON_SHUTDOWN, false) &&
@@ -844,25 +842,25 @@ Sanitizer.onStartup = Task.async(function*() {
     let s = new Sanitizer();
     // If the json is invalid this will just throw and reject the Task.
     let itemsToClear = JSON.parse(lastInterruptedSanitization);
-    yield s.sanitize(itemsToClear);
+    await s.sanitize(itemsToClear);
   } else if (shutownSanitizationWasInterrupted) {
     // Otherwise, could be we were supposed to sanitize on shutdown but we
     // didn't have a chance, due to an earlier crash.
     // In such a case, just redo a shutdown sanitize now, during startup.
-    yield sanitizeOnShutdown();
+    await sanitizeOnShutdown();
   }
-});
+};
 
-var sanitizeOnShutdown = Task.async(function*(options = {}) {
+var sanitizeOnShutdown = async function(options = {}) {
   if (!Preferences.get(Sanitizer.PREF_SANITIZE_ON_SHUTDOWN)) {
     return;
   }
   // Need to sanitize upon shutdown
   let s = new Sanitizer();
   s.prefDomain = "privacy.clearOnShutdown.";
-  yield s.sanitize(null, options);
+  await s.sanitize(null, options);
   // We didn't crash during shutdown sanitization, so annotate it to avoid
   // sanitizing again on startup.
   Preferences.set(Sanitizer.PREF_SANITIZE_DID_SHUTDOWN, true);
   Services.prefs.savePrefFile(null);
-});
+};

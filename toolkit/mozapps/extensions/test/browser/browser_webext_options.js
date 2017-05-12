@@ -60,25 +60,25 @@ function promiseWebExtensionStartup() {
 }
 
 // Test that deferred handling of optionsURL works for a signed webextension
-add_task(function* test_options_signed() {
-  yield* runTest(function*() {
+add_task(async function test_options_signed() {
+  await runTest(async function() {
     // The extension in-tree is signed with this ID:
     const ID = "{9792932b-32b2-4567-998c-e7bf6c4c5e35}";
 
-    yield Promise.all([
+    await Promise.all([
       promiseWebExtensionStartup(),
       install_addon("addons/options_signed.xpi"),
     ]);
-    let addon = yield promiseAddonByID(ID);
+    let addon = await promiseAddonByID(ID);
 
     return {addon, id: ID};
   });
 });
 
-add_task(function* test_options_temporary() {
-  yield* runTest(function*() {
+add_task(async function test_options_temporary() {
+  await runTest(async function() {
     let dir = get_addon_file_url("options_signed").file;
-    let [addon] = yield Promise.all([
+    let [addon] = await Promise.all([
       AddonManager.installTemporaryAddon(dir),
       promiseWebExtensionStartup(),
     ]);

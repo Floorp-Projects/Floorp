@@ -14,7 +14,7 @@ function insertClassNameToMenuChildren(parentMenu) {
 }
 
 function checkSubviewButtonClass(menuId, buttonId, subviewId) {
-  return function*() {
+  return async function() {
     info("Checking for items without the subviewbutton class in " + buttonId + " widget");
     let menu = document.getElementById(menuId);
     insertClassNameToMenuChildren(menu);
@@ -25,12 +25,12 @@ function checkSubviewButtonClass(menuId, buttonId, subviewId) {
       CustomizableUI.addWidgetToArea(buttonId, CustomizableUI.AREA_PANEL);
       changedPlacement = true;
     }
-    yield PanelUI.show();
+    await PanelUI.show();
 
     let button = document.getElementById(buttonId);
     button.click();
 
-    yield waitForCondition(() => !PanelUI.multiView.hasAttribute("transitioning"));
+    await waitForCondition(() => !PanelUI.multiView.hasAttribute("transitioning"));
     let subview = document.getElementById(subviewId);
     ok(subview.firstChild, "Subview should have a kid");
     let subviewchildren = subview.querySelectorAll("toolbarbutton");
@@ -45,15 +45,15 @@ function checkSubviewButtonClass(menuId, buttonId, subviewId) {
 
     let panelHiddenPromise = promisePanelHidden(window);
     PanelUI.hide();
-    yield panelHiddenPromise;
+    await panelHiddenPromise;
 
     if (changedPlacement) {
       CustomizableUI.reset();
     }
   };
 }
-add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
 });
 
 add_task(checkSubviewButtonClass("menuWebDeveloperPopup", "developer-button", "PanelUI-developerItems"));

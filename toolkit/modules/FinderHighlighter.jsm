@@ -9,7 +9,6 @@ this.EXPORTED_SYMBOLS = ["FinderHighlighter"];
 const { interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Color", "resource://gre/modules/Color.jsm");
@@ -205,7 +204,7 @@ FinderHighlighter.prototype = {
    * @param {Boolean}  linksOnly Only consider nodes that are links for the search
    * @yield {Promise}  that resolves once the operation has finished
    */
-  highlight: Task.async(function* (highlight, word, linksOnly) {
+  async highlight(highlight, word, linksOnly) {
     let window = this.finder._getWindow();
     let dict = this.getForWindow(window);
     let controller = this.finder._getSelectionController(window);
@@ -236,7 +235,7 @@ FinderHighlighter.prototype = {
 
       if (!this._modal)
         dict.visible = true;
-      yield this.iterator.start(params);
+      await this.iterator.start(params);
       if (this._found)
         this.finder._outlineLink(true);
     } else {
@@ -247,7 +246,7 @@ FinderHighlighter.prototype = {
     }
 
     this.notifyFinished({ highlight, found: this._found });
-  }),
+  },
 
   // FinderIterator listener implementation
 

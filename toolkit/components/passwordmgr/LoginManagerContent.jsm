@@ -400,7 +400,7 @@ var LoginManagerContent = {
       log("Creating a DeferredTask to call _fetchLoginsFromParentAndFillForm soon");
       this._formLikeByRootElement.set(formLike.rootElement, formLike);
 
-      deferredTask = new DeferredTask(function* deferredInputProcessing() {
+      deferredTask = new DeferredTask(function deferredInputProcessing() {
         // Get the updated formLike instead of the one at the time of creating the DeferredTask via
         // a closure since it could be stale since FormLike.elements isn't live.
         let formLike2 = this._formLikeByRootElement.get(formLike.rootElement);

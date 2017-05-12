@@ -6,11 +6,11 @@ Cu.import("resource:///modules/webrtcUI.jsm");
 
 const ORIGIN = "https://example.com";
 
-function* tryPeerConnection(browser, expectedError = null) {
-  let errtype = yield ContentTask.spawn(browser, null, function*() {
+async function tryPeerConnection(browser, expectedError = null) {
+  let errtype = await ContentTask.spawn(browser, null, async function() {
     let pc = new content.RTCPeerConnection();
     try {
-      yield pc.createOffer({offerToReceiveAudio: true});
+      await pc.createOffer({offerToReceiveAudio: true});
       return null;
     } catch (err) {
       return err.name;
@@ -286,7 +286,7 @@ var gTests = [
 
   {
     desc: "Cancel peer request",
-    run: function* testBlockerCancel(browser) {
+    run: async function testBlockerCancel(browser) {
       let blocker, blockerPromise = new Promise(resolve => {
         blocker = params => {
           resolve();
@@ -296,11 +296,11 @@ var gTests = [
       });
       webrtcUI.addPeerConnectionBlocker(blocker);
 
-      yield ContentTask.spawn(browser, null, function*() {
+      await ContentTask.spawn(browser, null, async function() {
         (new content.RTCPeerConnection()).createOffer({offerToReceiveAudio: true});
       });
 
-      yield blockerPromise;
+      await blockerPromise;
 
       let eventPromise = new Promise(resolve => {
         webrtcUI.on("peer-request-cancel", function listener(details) {
@@ -309,11 +309,11 @@ var gTests = [
         });
       });
 
-      yield ContentTask.spawn(browser, null, function*() {
+      await ContentTask.spawn(browser, null, async function() {
         content.location.reload();
       });
 
-      let details = yield eventPromise;
+      let details = await eventPromise;
       isnot(details.callID, undefined, "peer-request-cancel event includes callID");
       is(details.origin, ORIGIN, "peer-request-cancel event has correct origin");
 

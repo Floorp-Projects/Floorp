@@ -97,13 +97,13 @@ function ensure_results(expected, searchTerm) {
 /**
  * Asynchronous task that bumps up the rank for an uri.
  */
-function* task_setCountRank(aURI, aCount, aRank, aSearch, aBookmark) {
+async function task_setCountRank(aURI, aCount, aRank, aSearch, aBookmark) {
   // Bump up the visit count for the uri.
   let visits = [];
   for (let i = 0; i < aCount; i++) {
     visits.push({ uri: aURI, visitDate: d1, transition: TRANSITION_TYPED });
   }
-  yield PlacesTestUtils.addVisits(visits);
+  await PlacesTestUtils.addVisits(visits);
 
   // Make a nsIAutoCompleteController and friends for instrumentation feedback.
   let thing = {
@@ -375,7 +375,7 @@ var deferEnsureResults;
 /**
  * Test adaptive autocomplete.
  */
-add_task(function* test_adaptive() {
+add_task(async function test_adaptive() {
   // Disable autoFill for this test.
   Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
   do_register_cleanup(() => Services.prefs.clearUserPref("browser.urlbar.autoFill"));
@@ -390,11 +390,11 @@ add_task(function* test_adaptive() {
       Services.prefs.clearUserPref("browser.urlbar.suggest." + type);
     }
 
-    yield PlacesTestUtils.clearHistory();
+    await PlacesTestUtils.clearHistory();
 
     deferEnsureResults = Promise.defer();
-    yield test();
-    yield deferEnsureResults.promise;
+    await test();
+    await deferEnsureResults.promise;
   }
 
   Services.obs.removeObserver(observer, PlacesUtils.TOPIC_FEEDBACK_UPDATED);

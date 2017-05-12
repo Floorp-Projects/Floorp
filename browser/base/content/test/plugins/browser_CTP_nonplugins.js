@@ -2,7 +2,7 @@ var rootDir = getRootDirectory(gTestPath);
 const gTestRoot = rootDir.replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
 var gPluginHost = Components.classes["@mozilla.org/plugin/host;1"].getService(Components.interfaces.nsIPluginHost);
 
-add_task(function* () {
+add_task(async function() {
   registerCleanupFunction(function() {
     clearAllPluginPermissions();
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
@@ -14,7 +14,7 @@ add_task(function* () {
   });
 });
 
-add_task(function* () {
+add_task(async function() {
   Services.prefs.setBoolPref("plugins.click_to_play", true);
   Services.prefs.setBoolPref("extensions.blocklist.suppressUI", true);
 
@@ -22,17 +22,17 @@ add_task(function* () {
 
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_DISABLED, "Test Plug-in");
 
-  yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_two_types.html");
+  await promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_two_types.html");
 
   // Work around for delayed PluginBindingAttached
-  yield promiseUpdatePluginBindings(gBrowser.selectedBrowser);
+  await promiseUpdatePluginBindings(gBrowser.selectedBrowser);
 
   // Test that the click-to-play notification is not shown for non-plugin object elements
   let popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gBrowser.selectedBrowser);
   ok(popupNotification, "Test 1, Should have a click-to-play notification");
 
   let pluginRemovedPromise = waitForEvent(gBrowser.selectedBrowser, "PluginRemoved", null, true, true);
-  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
+  await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
     let plugin = content.document.getElementById("secondtestA");
     plugin.remove();
     plugin = content.document.getElementById("secondtestB");
@@ -43,12 +43,12 @@ add_task(function* () {
     image.data = "moz.png";
     content.document.body.appendChild(image);
   });
-  yield pluginRemovedPromise;
+  await pluginRemovedPromise;
 
   popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gBrowser.selectedBrowser);
   ok(popupNotification, "Test 2, Should have a click-to-play notification");
 
-  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
+  await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
     let plugin = content.document.getElementById("test");
     plugin.remove();
   });

@@ -21,27 +21,27 @@ registerCleanupFunction(function() {
   gBrowser.removeCurrentTab();
 });
 
-add_task(function* allowLoopbackMixedContent() {
+add_task(async function allowLoopbackMixedContent() {
   Services.prefs.setBoolPref(PREF_BLOCK_DISPLAY, true);
   Services.prefs.setBoolPref(PREF_BLOCK_ACTIVE, true);
 
-  const tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
+  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
   const browser = gBrowser.getBrowserForTab(tab);
 
-  yield ContentTask.spawn(browser, null, function() {
+  await ContentTask.spawn(browser, null, function() {
     is(docShell.hasMixedDisplayContentBlocked, false, "hasMixedDisplayContentBlocked not set");
     is(docShell.hasMixedActiveContentBlocked, false, "hasMixedActiveContentBlocked not set");
   });
 
   // Check that loopback content served from the cache is not blocked.
-  yield ContentTask.spawn(browser, LOOPBACK_PNG_URL, function* (loopbackPNGUrl) {
+  await ContentTask.spawn(browser, LOOPBACK_PNG_URL, async function(loopbackPNGUrl) {
     const doc = content.document;
     const img = doc.createElement("img");
     const promiseImgLoaded = ContentTaskUtils.waitForEvent(img, "load", false);
     img.src = loopbackPNGUrl;
     Assert.ok(!img.complete, "loopback image not yet loaded");
     doc.body.appendChild(img);
-    yield promiseImgLoaded;
+    await promiseImgLoaded;
 
     const cachedImg = doc.createElement("img");
     cachedImg.src = img.src;

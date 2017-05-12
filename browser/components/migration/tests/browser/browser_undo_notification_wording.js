@@ -9,7 +9,7 @@ registerCleanupFunction(function() {
 
 const kExpectedNotificationId = "automigration-undo";
 
-add_task(function* autoMigrationUndoNotificationShows() {
+add_task(async function autoMigrationUndoNotificationShows() {
   let getNotification = browser =>
     gBrowser.getNotificationBox(browser).getNotificationWithValue(kExpectedNotificationId);
   let localizedVersionOf = str => {
@@ -38,12 +38,12 @@ add_task(function* autoMigrationUndoNotificationShows() {
   for (let subset of kSubsets) {
     let state = new Map(subset.map(item => [item, [{}]]));
     scope.AutoMigrate._setImportedItemPrefFromState(state);
-    let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, url, false);
+    let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url, false);
     let browser = tab.linkedBrowser;
 
     if (!getNotification(browser)) {
       info(`Notification for ${url} not immediately present, waiting for it.`);
-      yield BrowserTestUtils.waitForNotificationBar(gBrowser, browser, kExpectedNotificationId);
+      await BrowserTestUtils.waitForNotificationBar(gBrowser, browser, kExpectedNotificationId);
     }
 
     ok(true, `Got notification for ${url}`);
@@ -61,7 +61,7 @@ add_task(function* autoMigrationUndoNotificationShows() {
       }
     }
 
-    yield BrowserTestUtils.removeTab(tab);
+    await BrowserTestUtils.removeTab(tab);
   }
 });
 

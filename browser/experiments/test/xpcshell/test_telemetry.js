@@ -43,7 +43,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_setup() {
+add_task(async function test_setup() {
   loadAddonManager();
 
   gHttpServer = new HttpServer();
@@ -74,12 +74,12 @@ add_task(function* test_setup() {
     oneshotTimer: (callback, timeout, thisObj, name) => dummyTimer,
   });
 
-  yield removeCacheFile();
+  await removeCacheFile();
 });
 
 // Test basic starting and stopping of experiments.
 
-add_task(function* test_telemetryBasics() {
+add_task(async function test_telemetryBasics() {
   // Check TelemetryLog instead of TelemetrySession.getPayload().log because
   // TelemetrySession gets Experiments.instance() and side-effects log entries.
 
@@ -129,8 +129,8 @@ add_task(function* test_telemetryBasics() {
   let now = baseDate;
   defineNow(gPolicy, now);
 
-  yield experiments.updateManifest();
-  let list = yield experiments.getExperiments();
+  await experiments.updateManifest();
+  let list = await experiments.getExperiments();
   Assert.equal(list.length, 0, "Experiment list should be empty.");
 
   expectedLogLength += 2;
@@ -147,8 +147,8 @@ add_task(function* test_telemetryBasics() {
   now = futureDate(startDate1, 5 * MS_IN_ONE_DAY);
   defineNow(gPolicy, now);
 
-  yield experiments.updateManifest();
-  list = yield experiments.getExperiments();
+  await experiments.updateManifest();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
 
   expectedLogLength += 1;
@@ -162,8 +162,8 @@ add_task(function* test_telemetryBasics() {
   now = futureDate(endDate1, 1000);
   defineNow(gPolicy, now);
 
-  yield experiments.updateManifest();
-  list = yield experiments.getExperiments();
+  await experiments.updateManifest();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should have 1 entry.");
 
   expectedLogLength += 2;
@@ -180,8 +180,8 @@ add_task(function* test_telemetryBasics() {
   defineNow(gPolicy, now);
   gManifestObject.experiments[1].xpiHash = "sha1:0000000000000000000000000000000000000000";
 
-  yield experiments.updateManifest();
-  list = yield experiments.getExperiments();
+  await experiments.updateManifest();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 1, "Experiment list should have 1 entries.");
 
   expectedLogLength += 1;
@@ -196,8 +196,8 @@ add_task(function* test_telemetryBasics() {
   defineNow(gPolicy, now);
   gManifestObject.experiments[1].xpiHash = EXPERIMENT2_XPI_SHA1;
 
-  yield experiments.updateManifest();
-  list = yield experiments.getExperiments();
+  await experiments.updateManifest();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 2, "Experiment list should have 2 entries.");
 
   expectedLogLength += 1;
@@ -211,8 +211,8 @@ add_task(function* test_telemetryBasics() {
   now = futureDate(now, MS_IN_ONE_DAY);
   defineNow(gPolicy, now);
 
-  yield experiments.disableExperiment(TLOG.TERMINATION.ADDON_UNINSTALLED);
-  list = yield experiments.getExperiments();
+  await experiments.disableExperiment(TLOG.TERMINATION.ADDON_UNINSTALLED);
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 2, "Experiment list should have 2 entries.");
 
   expectedLogLength += 1;
@@ -228,8 +228,8 @@ add_task(function* test_telemetryBasics() {
   gManifestObject.experiments[0].id      = EXPERIMENT3_ID;
   gManifestObject.experiments[0].endTime = dateToSeconds(futureDate(now, 50 * MS_IN_ONE_DAY));
 
-  yield experiments.updateManifest();
-  list = yield experiments.getExperiments();
+  await experiments.updateManifest();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 3, "Experiment list should have 3 entries.");
 
   expectedLogLength += 1;
@@ -243,8 +243,8 @@ add_task(function* test_telemetryBasics() {
   now = futureDate(now, MS_IN_ONE_DAY);
   defineNow(gPolicy, now);
 
-  yield experiments.disableExperiment(TLOG.TERMINATION.FROM_API);
-  list = yield experiments.getExperiments();
+  await experiments.disableExperiment(TLOG.TERMINATION.FROM_API);
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 3, "Experiment list should have 3 entries.");
 
   expectedLogLength += 1;
@@ -260,8 +260,8 @@ add_task(function* test_telemetryBasics() {
   gManifestObject.experiments[0].id      = EXPERIMENT4_ID;
   gManifestObject.experiments[0].endTime = dateToSeconds(futureDate(now, 50 * MS_IN_ONE_DAY));
 
-  yield experiments.updateManifest();
-  list = yield experiments.getExperiments();
+  await experiments.updateManifest();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 4, "Experiment list should have 4 entries.");
 
   expectedLogLength += 1;
@@ -276,8 +276,8 @@ add_task(function* test_telemetryBasics() {
   defineNow(gPolicy, now);
   gManifestObject.experiments[0].os = "Plan9";
 
-  yield experiments.updateManifest();
-  list = yield experiments.getExperiments();
+  await experiments.updateManifest();
+  list = await experiments.getExperiments();
   Assert.equal(list.length, 4, "Experiment list should have 4 entries.");
 
   expectedLogLength += 1;
@@ -288,6 +288,6 @@ add_task(function* test_telemetryBasics() {
 
   // Cleanup.
 
-  yield promiseRestartManager();
-  yield removeCacheFile();
+  await promiseRestartManager();
+  await removeCacheFile();
 });

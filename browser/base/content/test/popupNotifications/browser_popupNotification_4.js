@@ -96,18 +96,18 @@ var tests = [
   },
   // Moving a tab to a new window should remove non-swappable notifications.
   { id: "Test#5",
-    *run() {
-      yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+    async run() {
+      await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
 
       let notifyObj = new BasicNotification(this.id);
 
       let shown = waitForNotificationPanel();
       showNotification(notifyObj);
-      yield shown;
+      await shown;
 
       let promiseWin = BrowserTestUtils.waitForNewWindow();
       gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
-      let win = yield promiseWin;
+      let win = await promiseWin;
 
       let anchor = win.document.getElementById("default-notification-icon");
       win.PopupNotifications._reshowNotifications(anchor);
@@ -116,16 +116,16 @@ var tests = [
       ok(notifyObj.swappingCallbackTriggered, "the swapping callback was triggered");
       ok(notifyObj.removedCallbackTriggered, "the removed callback was triggered");
 
-      yield BrowserTestUtils.closeWindow(win);
-      yield waitForWindowReadyForPopupNotifications(window);
+      await BrowserTestUtils.closeWindow(win);
+      await waitForWindowReadyForPopupNotifications(window);
 
       goNext();
     }
   },
   // Moving a tab to a new window should preserve swappable notifications.
   { id: "Test#6",
-    *run() {
-      yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+    async run() {
+      await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
       let notifyObj = new BasicNotification(this.id);
       let originalCallback = notifyObj.options.eventCallback;
       notifyObj.options.eventCallback = function(eventName) {
@@ -135,14 +135,14 @@ var tests = [
 
       let shown = waitForNotificationPanel();
       let notification = showNotification(notifyObj);
-      yield shown;
+      await shown;
 
       let promiseWin = BrowserTestUtils.waitForNewWindow();
       gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
-      let win = yield promiseWin;
-      yield waitForWindowReadyForPopupNotifications(win);
+      let win = await promiseWin;
+      await waitForWindowReadyForPopupNotifications(win);
 
-      yield new Promise(resolve => {
+      await new Promise(resolve => {
         let callback = notification.options.eventCallback;
         notification.options.eventCallback = function(eventName) {
           callback(eventName);
@@ -157,8 +157,8 @@ var tests = [
       checkPopup(win.PopupNotifications.panel, notifyObj);
       ok(notifyObj.swappingCallbackTriggered, "the swapping callback was triggered");
 
-      yield BrowserTestUtils.closeWindow(win);
-      yield waitForWindowReadyForPopupNotifications(window);
+      await BrowserTestUtils.closeWindow(win);
+      await waitForWindowReadyForPopupNotifications(window);
 
       goNext();
     }

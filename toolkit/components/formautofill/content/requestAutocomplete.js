@@ -15,15 +15,13 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 
 const RequestAutocompleteDialog = {
   resolveFn: null,
   autofillData: null,
 
   onLoad() {
-    Task.spawn(function* () {
+    (async function() {
       let args = window.arguments[0].wrappedJSObject;
       this.resolveFn = args.resolveFn;
       this.autofillData = args.autofillData;
@@ -32,7 +30,7 @@ const RequestAutocompleteDialog = {
 
       Services.obs.notifyObservers(window,
                                    "formautofill-window-initialized");
-    }.bind(this)).catch(Cu.reportError);
+    }.bind(this))().catch(Cu.reportError);
   },
 
   onAccept() {

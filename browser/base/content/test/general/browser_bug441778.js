@@ -13,14 +13,14 @@ function test() {
   const TEST_PAGE_URL = 'data:text/html,<body><iframe src=""></iframe></body>';
   const TEST_IFRAME_URL = "http://test2.example.org/";
 
-  Task.spawn(function* () {
+  (async function() {
     // Prepare the test tab
     let tab = gBrowser.addTab();
-    yield FullZoomHelper.selectTabAndWaitForLocationChange(tab);
+    await FullZoomHelper.selectTabAndWaitForLocationChange(tab);
 
     let testBrowser = tab.linkedBrowser;
 
-    yield FullZoomHelper.load(tab, TEST_PAGE_URL);
+    await FullZoomHelper.load(tab, TEST_PAGE_URL);
 
     // Change the zoom level and then save it so we can compare it to the level
     // after loading the sub-document.
@@ -41,6 +41,6 @@ function test() {
         content.document.querySelector("iframe").src = url;
       });
     });
-    yield deferred.promise;
-  }).then(finish, FullZoomHelper.failAndContinue(finish));
+    await deferred.promise;
+  })().then(finish, FullZoomHelper.failAndContinue(finish));
 }

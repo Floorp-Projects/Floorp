@@ -1,7 +1,7 @@
-add_task(function *() {
+add_task(async function() {
   let keyUps = 0;
 
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, "data:text/html,<body>");
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, "data:text/html,<body>");
 
   gURLBar.focus();
 

@@ -303,21 +303,21 @@ function* ensureEqualBookmarksTrees(aOriginal,
     yield ensureLivemarkCreatedByAddLivemark(aNew.guid);
 }
 
-function* ensureBookmarksTreeRestoredCorrectly(...aOriginalBookmarksTrees) {
+async function ensureBookmarksTreeRestoredCorrectly(...aOriginalBookmarksTrees) {
   for (let originalTree of aOriginalBookmarksTrees) {
     let restoredTree =
-      yield PlacesUtils.promiseBookmarksTree(originalTree.guid);
-    yield ensureEqualBookmarksTrees(originalTree, restoredTree);
+      await PlacesUtils.promiseBookmarksTree(originalTree.guid);
+    await ensureEqualBookmarksTrees(originalTree, restoredTree);
   }
 }
 
-function* ensureNonExistent(...aGuids) {
+async function ensureNonExistent(...aGuids) {
   for (let guid of aGuids) {
-    Assert.strictEqual((yield PlacesUtils.promiseBookmarksTree(guid)), null);
+    Assert.strictEqual((await PlacesUtils.promiseBookmarksTree(guid)), null);
   }
 }
 
-add_task(function* test_recycled_transactions() {
+add_task(async function test_recycled_transactions() {
   function* ensureTransactThrowsFor(aTransaction) {
     let [txns, undoPosition] = getTransactionsHistoryState();
     try {
@@ -328,20 +328,20 @@ add_task(function* test_recycled_transactions() {
   }
 
   let txn_a = PT.NewFolder(createTestFolderInfo());
-  yield txn_a.transact();
+  await txn_a.transact();
   ensureUndoState([[txn_a]], 0);
-  yield ensureTransactThrowsFor(txn_a);
+  await ensureTransactThrowsFor(txn_a);
 
-  yield PT.undo();
+  await PT.undo();
   ensureUndoState([[txn_a]], 1);
   ensureTransactThrowsFor(txn_a);
 
-  yield PT.clearTransactionsHistory();
+  await PT.clearTransactionsHistory();
   ensureUndoState();
   ensureTransactThrowsFor(txn_a);
 
   let txn_b = PT.NewFolder(createTestFolderInfo());
-  yield PT.batch(function* () {
+  await PT.batch(function* () {
     try {
       yield txn_a.transact();
       do_throw("Shouldn't be able to use the same transaction twice");
@@ -351,24 +351,24 @@ add_task(function* test_recycled_transactions() {
   });
   ensureUndoState([[txn_b]], 0);
 
-  yield PT.undo();
+  await PT.undo();
   ensureUndoState([[txn_b]], 1);
   ensureTransactThrowsFor(txn_a);
   ensureTransactThrowsFor(txn_b);
 
-  yield PT.clearTransactionsHistory();
+  await PT.clearTransactionsHistory();
   ensureUndoState();
   observer.reset();
 });
 
-add_task(function* test_new_folder_with_annotation() {
+add_task(async function test_new_folder_with_annotation() {
   const ANNO = { name: "TestAnno", value: "TestValue" };
   let folder_info = createTestFolderInfo();
   folder_info.index = bmStartIndex;
   folder_info.annotations = [ANNO];
   ensureUndoState();
   let txn = PT.NewFolder(folder_info);
-  folder_info.guid = yield txn.transact();
+  folder_info.guid = await txn.transact();
   let ensureDo = function* (aRedo = false) {
     ensureUndoState([[txn]], 0);
     yield ensureItemsAdded(folder_info);
@@ -386,18 +386,18 @@ add_task(function* test_new_folder_with_annotation() {
     observer.reset();
   };
 
-  yield ensureDo();
-  yield PT.undo();
-  yield ensureUndo();
-  yield PT.redo();
-  yield ensureDo(true);
-  yield PT.undo();
+  await ensureDo();
+  await PT.undo();
+  await ensureUndo();
+  await PT.redo();
+  await ensureDo(true);
+  await PT.undo();
   ensureUndo();
-  yield PT.clearTransactionsHistory();
+  await PT.clearTransactionsHistory();
   ensureUndoState();
 });
 
-add_task(function* test_new_bookmark() {
+add_task(async function test_new_bookmark() {
   let bm_info = { parentGuid: rootGuid
                 , url:        NetUtil.newURI("http://test_create_item.com")
                 , index:      bmStartIndex
@@ -405,7 +405,7 @@ add_task(function* test_new_bookmark() {
 
   ensureUndoState();
   let txn = PT.NewBookmark(bm_info);
-  bm_info.guid = yield txn.transact();
+  bm_info.guid = await txn.transact();
 
   let ensureDo = function* (aRedo = false) {
     ensureUndoState([[txn]], 0);
@@ -422,25 +422,25 @@ add_task(function* test_new_bookmark() {
     observer.reset();
   };
 
-  yield ensureDo();
-  yield PT.undo();
+  await ensureDo();
+  await PT.undo();
   ensureUndo();
-  yield PT.redo(true);
-  yield ensureDo();
-  yield PT.undo();
+  await PT.redo(true);
+  await ensureDo();
+  await PT.undo();
   ensureUndo();
 
-  yield PT.clearTransactionsHistory();
+  await PT.clearTransactionsHistory();
   ensureUndoState();
 });
 
-add_task(function* test_merge_create_folder_and_item() {
+add_task(async function test_merge_create_folder_and_item() {
   let folder_info = createTestFolderInfo();
   let bm_info = { url: NetUtil.newURI("http://test_create_item_to_folder.com")
                 , title: "Test Bookmark"
                 , index: bmStartIndex };
 
-  let [folderTxnResult, bkmTxnResult] = yield PT.batch(function* () {
+  let [folderTxnResult, bkmTxnResult] = await PT.batch(function* () {
     let folderTxn = PT.NewFolder(folder_info);
     folder_info.guid = bm_info.parentGuid = yield folderTxn.transact();
     let bkmTxn = PT.NewBookmark(bm_info);
@@ -460,19 +460,19 @@ add_task(function* test_merge_create_folder_and_item() {
     observer.reset();
   };
 
-  yield ensureDo();
-  yield PT.undo();
+  await ensureDo();
+  await PT.undo();
   ensureUndo();
-  yield PT.redo();
-  yield ensureDo();
-  yield PT.undo();
+  await PT.redo();
+  await ensureDo();
+  await PT.undo();
   ensureUndo();
 
-  yield PT.clearTransactionsHistory();
+  await PT.clearTransactionsHistory();
   ensureUndoState();
 });
 
-add_task(function* test_move_items_to_folder() {
+add_task(async function test_move_items_to_folder() {
   let folder_a_info = createTestFolderInfo("Folder A");
   let bkm_a_info = { url: new URL("http://test_move_items.com")
                    , title: "Bookmark A" };
@@ -480,7 +480,7 @@ add_task(function* test_move_items_to_folder() {
                    , title: "Bookmark B" };
 
   // Test moving items within the same folder.
-  let [folder_a_txn_result, bkm_a_txn_result, bkm_b_txn_result] = yield PT.batch(function* () {
+  let [folder_a_txn_result, bkm_a_txn_result, bkm_b_txn_result] = await PT.batch(function* () {
     let folder_a_txn = PT.NewFolder(folder_a_info);
 
     folder_a_info.guid = bkm_a_info.parentGuid = bkm_b_info.parentGuid =
@@ -496,7 +496,7 @@ add_task(function* test_move_items_to_folder() {
 
   let moveTxn = PT.Move({ guid:          bkm_a_info.guid
                         , newParentGuid: folder_a_info.guid });
-  yield moveTxn.transact();
+  await moveTxn.transact();
 
   let ensureDo = () => {
     ensureUndoState([[moveTxn], [bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result]], 0);
@@ -518,27 +518,27 @@ add_task(function* test_move_items_to_folder() {
   };
 
   ensureDo();
-  yield PT.undo();
+  await PT.undo();
   ensureUndo();
-  yield PT.redo();
+  await PT.redo();
   ensureDo();
-  yield PT.undo();
+  await PT.undo();
   ensureUndo();
 
-  yield PT.clearTransactionsHistory(false, true);
+  await PT.clearTransactionsHistory(false, true);
   ensureUndoState([[bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result]], 0);
 
   // Test moving items between folders.
   let folder_b_info = createTestFolderInfo("Folder B");
   let folder_b_txn = PT.NewFolder(folder_b_info);
-  folder_b_info.guid = yield folder_b_txn.transact();
+  folder_b_info.guid = await folder_b_txn.transact();
   ensureUndoState([ [folder_b_txn]
                   , [bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result] ], 0);
 
   moveTxn = PT.Move({ guid:          bkm_a_info.guid
                     , newParentGuid: folder_b_info.guid
                     , newIndex:      bmsvc.DEFAULT_INDEX });
-  yield moveTxn.transact();
+  await moveTxn.transact();
 
   ensureDo = () => {
     ensureUndoState([ [moveTxn]
@@ -564,29 +564,29 @@ add_task(function* test_move_items_to_folder() {
   };
 
   ensureDo();
-  yield PT.undo();
+  await PT.undo();
   ensureUndo();
-  yield PT.redo();
+  await PT.redo();
   ensureDo();
-  yield PT.undo();
+  await PT.undo();
   ensureUndo();
 
   // Clean up
-  yield PT.undo();  // folder_b_txn
-  yield PT.undo();  // folder_a_txn + the bookmarks;
+  await PT.undo();  // folder_b_txn
+  await PT.undo();  // folder_a_txn + the bookmarks;
   do_check_eq(observer.itemsRemoved.size, 4);
   ensureUndoState([ [moveTxn]
                   , [folder_b_txn]
                   , [bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result] ], 3);
-  yield PT.clearTransactionsHistory();
+  await PT.clearTransactionsHistory();
   ensureUndoState();
 });
 
-add_task(function* test_remove_folder() {
+add_task(async function test_remove_folder() {
   let folder_level_1_info = createTestFolderInfo("Folder Level 1");
   let folder_level_2_info = { title: "Folder Level 2" };
   let [folder_level_1_txn_result,
-       folder_level_2_txn_result] = yield PT.batch(function* () {
+       folder_level_2_txn_result] = await PT.batch(function* () {
     let folder_level_1_txn  = PT.NewFolder(folder_level_1_info);
     folder_level_1_info.guid = yield folder_level_1_txn.transact();
     folder_level_2_info.parentGuid = folder_level_1_info.guid;
@@ -596,80 +596,80 @@ add_task(function* test_remove_folder() {
   });
 
   ensureUndoState([[folder_level_2_txn_result, folder_level_1_txn_result]]);
-  yield ensureItemsAdded(folder_level_1_info, folder_level_2_info);
+  await ensureItemsAdded(folder_level_1_info, folder_level_2_info);
   observer.reset();
 
   let remove_folder_2_txn = PT.Remove(folder_level_2_info);
-  yield remove_folder_2_txn.transact();
+  await remove_folder_2_txn.transact();
 
   ensureUndoState([ [remove_folder_2_txn]
                   , [folder_level_2_txn_result, folder_level_1_txn_result] ]);
-  yield ensureItemsRemoved(folder_level_2_info);
+  await ensureItemsRemoved(folder_level_2_info);
 
   // Undo Remove "Folder Level 2"
-  yield PT.undo();
+  await PT.undo();
   ensureUndoState([ [remove_folder_2_txn]
                   , [folder_level_2_txn_result, folder_level_1_txn_result] ], 1);
-  yield ensureItemsAdded(folder_level_2_info);
+  await ensureItemsAdded(folder_level_2_info);
   ensureTimestampsUpdated(folder_level_2_info.guid, true);
   observer.reset();
 
   // Redo Remove "Folder Level 2"
-  yield PT.redo();
+  await PT.redo();
   ensureUndoState([ [remove_folder_2_txn]
                   , [folder_level_2_txn_result, folder_level_1_txn_result] ]);
-  yield ensureItemsRemoved(folder_level_2_info);
+  await ensureItemsRemoved(folder_level_2_info);
   observer.reset();
 
   // Undo it again
-  yield PT.undo();
+  await PT.undo();
   ensureUndoState([ [remove_folder_2_txn]
                   , [folder_level_2_txn_result, folder_level_1_txn_result] ], 1);
-  yield ensureItemsAdded(folder_level_2_info);
+  await ensureItemsAdded(folder_level_2_info);
   ensureTimestampsUpdated(folder_level_2_info.guid, true);
   observer.reset();
 
   // Undo the creation of both folders
-  yield PT.undo();
+  await PT.undo();
   ensureUndoState([ [remove_folder_2_txn]
                   , [folder_level_2_txn_result, folder_level_1_txn_result] ], 2);
-  yield ensureItemsRemoved(folder_level_2_info, folder_level_1_info);
+  await ensureItemsRemoved(folder_level_2_info, folder_level_1_info);
   observer.reset();
 
   // Redo the creation of both folders
-  yield PT.redo();
+  await PT.redo();
   ensureUndoState([ [remove_folder_2_txn]
                   , [folder_level_2_txn_result, folder_level_1_txn_result] ], 1);
-  yield ensureItemsAdded(folder_level_1_info, folder_level_2_info);
+  await ensureItemsAdded(folder_level_1_info, folder_level_2_info);
   ensureTimestampsUpdated(folder_level_1_info.guid, true);
   ensureTimestampsUpdated(folder_level_2_info.guid, true);
   observer.reset();
 
   // Redo Remove "Folder Level 2"
-  yield PT.redo();
+  await PT.redo();
   ensureUndoState([ [remove_folder_2_txn]
                   , [folder_level_2_txn_result, folder_level_1_txn_result] ]);
-  yield ensureItemsRemoved(folder_level_2_info);
+  await ensureItemsRemoved(folder_level_2_info);
   observer.reset();
 
   // Undo everything one last time
-  yield PT.undo();
+  await PT.undo();
   ensureUndoState([ [remove_folder_2_txn]
                   , [folder_level_2_txn_result, folder_level_1_txn_result] ], 1);
-  yield ensureItemsAdded(folder_level_2_info);
+  await ensureItemsAdded(folder_level_2_info);
   observer.reset();
 
-  yield PT.undo();
+  await PT.undo();
   ensureUndoState([ [remove_folder_2_txn]
                   , [folder_level_2_txn_result, folder_level_1_txn_result] ], 2);
-  yield ensureItemsRemoved(folder_level_2_info, folder_level_2_info);
+  await ensureItemsRemoved(folder_level_2_info, folder_level_2_info);
   observer.reset();
 
-  yield PT.clearTransactionsHistory();
+  await PT.clearTransactionsHistory();
   ensureUndoState();
 });
 
-add_task(function* test_add_and_remove_bookmarks_with_additional_info() {
+add_task(async function test_add_and_remove_bookmarks_with_additional_info() {
   const testURI = NetUtil.newURI("http://add.remove.tag");
   const TAG_1 = "TestTag1";
   const TAG_2 = "TestTag2";
@@ -678,37 +678,37 @@ add_task(function* test_add_and_remove_bookmarks_with_additional_info() {
   const ANNO = { name: "TestAnno", value: "TestAnnoValue" };
 
   let folder_info = createTestFolderInfo();
-  folder_info.guid = yield PT.NewFolder(folder_info).transact();
+  folder_info.guid = await PT.NewFolder(folder_info).transact();
   let ensureTags = ensureTagsForURI.bind(null, testURI);
 
   // Check that the NewBookmark transaction preserves tags.
   observer.reset();
   let b1_info = { parentGuid: folder_info.guid, url: testURI, tags: [TAG_1] };
-  b1_info.guid = yield PT.NewBookmark(b1_info).transact();
+  b1_info.guid = await PT.NewBookmark(b1_info).transact();
   ensureTags([TAG_1]);
-  yield PT.undo();
+  await PT.undo();
   ensureTags([]);
 
   observer.reset();
-  yield PT.redo();
+  await PT.redo();
   ensureTimestampsUpdated(b1_info.guid, true);
   ensureTags([TAG_1]);
 
   // Check if the Remove transaction removes and restores tags of children
   // correctly.
-  yield PT.Remove(folder_info.guid).transact();
+  await PT.Remove(folder_info.guid).transact();
   ensureTags([]);
 
   observer.reset();
-  yield PT.undo();
+  await PT.undo();
   ensureTimestampsUpdated(b1_info.guid, true);
   ensureTags([TAG_1]);
 
-  yield PT.redo();
+  await PT.redo();
   ensureTags([]);
 
   observer.reset();
-  yield PT.undo();
+  await PT.undo();
   ensureTimestampsUpdated(b1_info.guid, true);
   ensureTags([TAG_1]);
 
@@ -721,7 +721,7 @@ add_task(function* test_add_and_remove_bookmarks_with_additional_info() {
                 , keyword:     KEYWORD
                 , postData:    POST_DATA
                 , annotations: [ANNO] };
-  b2_info.guid = yield PT.NewBookmark(b2_info).transact();
+  b2_info.guid = await PT.NewBookmark(b2_info).transact();
   let b2_post_creation_changes = [
    { guid: b2_info.guid
    , isAnnoProperty: true
@@ -734,15 +734,15 @@ add_task(function* test_add_and_remove_bookmarks_with_additional_info() {
   ensureTags([TAG_1, TAG_2]);
 
   observer.reset();
-  yield PT.undo();
-  yield ensureItemsRemoved(b2_info);
+  await PT.undo();
+  await ensureItemsRemoved(b2_info);
   ensureTags([TAG_1]);
 
   // Check if Remove correctly restores keywords, tags and annotations.
   // Since both bookmarks share the same uri, they also share the keyword that
   // is not removed along with one of the bookmarks.
   observer.reset();
-  yield PT.redo();
+  await PT.redo();
   ensureItemsChanged({ guid: b2_info.guid
                      , isAnnoProperty: true
                      , property: ANNO.name
@@ -751,58 +751,58 @@ add_task(function* test_add_and_remove_bookmarks_with_additional_info() {
 
   // Test Remove for multiple items.
   observer.reset();
-  yield PT.Remove(b1_info.guid).transact();
-  yield PT.Remove(b2_info.guid).transact();
-  yield PT.Remove(folder_info.guid).transact();
-  yield ensureItemsRemoved(b1_info, b2_info, folder_info);
+  await PT.Remove(b1_info.guid).transact();
+  await PT.Remove(b2_info.guid).transact();
+  await PT.Remove(folder_info.guid).transact();
+  await ensureItemsRemoved(b1_info, b2_info, folder_info);
   ensureTags([]);
   // There is no keyword removal notification cause all bookmarks are removed
   // before the keyword itself, so there's no one to notify.
-  let entry = yield PlacesUtils.keywords.fetch(KEYWORD);
+  let entry = await PlacesUtils.keywords.fetch(KEYWORD);
   Assert.equal(entry, null, "keyword has been removed");
 
   observer.reset();
-  yield PT.undo();
-  yield ensureItemsAdded(folder_info);
+  await PT.undo();
+  await ensureItemsAdded(folder_info);
   ensureTags([]);
 
   observer.reset();
-  yield PT.undo();
+  await PT.undo();
   ensureItemsChanged(...b2_post_creation_changes);
   ensureTags([TAG_1, TAG_2]);
 
   observer.reset();
-  yield PT.undo();
-  yield ensureItemsAdded(b1_info);
+  await PT.undo();
+  await ensureItemsAdded(b1_info);
   ensureTags([TAG_1, TAG_2]);
 
   // The redo calls below cleanup everything we did.
   observer.reset();
-  yield PT.redo();
-  yield ensureItemsRemoved(b1_info);
+  await PT.redo();
+  await ensureItemsRemoved(b1_info);
   ensureTags([TAG_1, TAG_2]);
 
   observer.reset();
-  yield PT.redo();
-  yield ensureItemsRemoved(b2_info);
+  await PT.redo();
+  await ensureItemsRemoved(b2_info);
   ensureTags([]);
 
   observer.reset();
-  yield PT.redo();
-  yield ensureItemsRemoved(folder_info);
+  await PT.redo();
+  await ensureItemsRemoved(folder_info);
   ensureTags([]);
 
-  yield PT.clearTransactionsHistory();
+  await PT.clearTransactionsHistory();
   ensureUndoState();
 });
 
-add_task(function* test_creating_and_removing_a_separator() {
+add_task(async function test_creating_and_removing_a_separator() {
   let folder_info = createTestFolderInfo();
   let separator_info = {};
   let undoEntries = [];
 
   observer.reset();
-  let create_txns = yield PT.batch(function* () {
+  let create_txns = await PT.batch(function* () {
     let folder_txn = PT.NewFolder(folder_info);
     folder_info.guid = separator_info.parentGuid = yield folder_txn.transact();
     let separator_txn = PT.NewSeparator(separator_info);
@@ -814,68 +814,68 @@ add_task(function* test_creating_and_removing_a_separator() {
   ensureItemsAdded(folder_info, separator_info);
 
   observer.reset();
-  yield PT.undo();
+  await PT.undo();
   ensureUndoState(undoEntries, 1);
   ensureItemsRemoved(folder_info, separator_info);
 
   observer.reset();
-  yield PT.redo();
+  await PT.redo();
   ensureUndoState(undoEntries, 0);
   ensureItemsAdded(folder_info, separator_info);
 
   observer.reset();
   let remove_sep_txn = PT.Remove(separator_info);
-  yield remove_sep_txn.transact();
+  await remove_sep_txn.transact();
   undoEntries.unshift([remove_sep_txn]);
   ensureUndoState(undoEntries, 0);
   ensureItemsRemoved(separator_info);
 
   observer.reset();
-  yield PT.undo();
+  await PT.undo();
   ensureUndoState(undoEntries, 1);
   ensureItemsAdded(separator_info);
 
   observer.reset();
-  yield PT.undo();
+  await PT.undo();
   ensureUndoState(undoEntries, 2);
   ensureItemsRemoved(folder_info, separator_info);
 
   observer.reset();
-  yield PT.redo();
+  await PT.redo();
   ensureUndoState(undoEntries, 1);
   ensureItemsAdded(folder_info, separator_info);
 
   // Clear redo entries and check that |redo| does nothing
   observer.reset();
-  yield PT.clearTransactionsHistory(false, true);
+  await PT.clearTransactionsHistory(false, true);
   undoEntries.shift();
   ensureUndoState(undoEntries, 0);
-  yield PT.redo();
+  await PT.redo();
   ensureItemsAdded();
   ensureItemsRemoved();
 
   // Cleanup
   observer.reset();
-  yield PT.undo();
+  await PT.undo();
   ensureUndoState(undoEntries, 1);
   ensureItemsRemoved(folder_info, separator_info);
-  yield PT.clearTransactionsHistory();
+  await PT.clearTransactionsHistory();
   ensureUndoState();
 });
 
-add_task(function* test_add_and_remove_livemark() {
+add_task(async function test_add_and_remove_livemark() {
   let createLivemarkTxn = PT.NewLivemark(
     { feedUrl: NetUtil.newURI("http://test.remove.livemark")
     , parentGuid: rootGuid
     , title: "Test Remove Livemark" });
-  let guid = yield createLivemarkTxn.transact();
-  let originalInfo = yield PlacesUtils.promiseBookmarksTree(guid);
+  let guid = await createLivemarkTxn.transact();
+  let originalInfo = await PlacesUtils.promiseBookmarksTree(guid);
   Assert.ok(originalInfo);
-  yield ensureLivemarkCreatedByAddLivemark(guid);
+  await ensureLivemarkCreatedByAddLivemark(guid);
 
   let removeTxn = PT.Remove(guid);
-  yield removeTxn.transact();
-  yield ensureNonExistent(guid);
+  await removeTxn.transact();
+  await ensureNonExistent(guid);
   function* undo() {
     ensureUndoState([[removeTxn], [createLivemarkTxn]], 0);
     yield PT.undo();
@@ -895,18 +895,18 @@ add_task(function* test_add_and_remove_livemark() {
     yield ensureNonExistent(guid);
   }
 
-  yield undo();
-  yield redo();
-  yield undo();
-  yield redo();
+  await undo();
+  await redo();
+  await undo();
+  await redo();
 
   // Cleanup
-  yield undo();
+  await undo();
   observer.reset();
-  yield PT.clearTransactionsHistory();
+  await PT.clearTransactionsHistory();
 });
 
-add_task(function* test_edit_title() {
+add_task(async function test_edit_title() {
   let bm_info = { parentGuid: rootGuid
                 , url:        NetUtil.newURI("http://test_create_item.com")
                 , title:      "Original Title" };
@@ -917,32 +917,32 @@ add_task(function* test_edit_title() {
                        , newValue: aCurrentTitle});
   }
 
-  bm_info.guid = yield PT.NewBookmark(bm_info).transact();
+  bm_info.guid = await PT.NewBookmark(bm_info).transact();
 
   observer.reset();
-  yield PT.EditTitle({ guid: bm_info.guid, title: "New Title" }).transact();
+  await PT.EditTitle({ guid: bm_info.guid, title: "New Title" }).transact();
   ensureTitleChange("New Title");
 
   observer.reset();
-  yield PT.undo();
+  await PT.undo();
   ensureTitleChange("Original Title");
 
   observer.reset();
-  yield PT.redo();
+  await PT.redo();
   ensureTitleChange("New Title");
 
   // Cleanup
   observer.reset();
-  yield PT.undo();
+  await PT.undo();
   ensureTitleChange("Original Title");
-  yield PT.undo();
+  await PT.undo();
   ensureItemsRemoved(bm_info);
 
-  yield PT.clearTransactionsHistory();
+  await PT.clearTransactionsHistory();
   ensureUndoState();
 });
 
-add_task(function* test_edit_url() {
+add_task(async function test_edit_url() {
   let oldURI = NetUtil.newURI("http://old.test_editing_item_uri.com/");
   let newURI = NetUtil.newURI("http://new.test_editing_item_uri.com/");
   let bm_info = { parentGuid: rootGuid, url: oldURI, tags: ["TestTag"] };
@@ -954,106 +954,106 @@ add_task(function* test_edit_url() {
     ensureTagsForURI(aPreChangeURI, aOLdURITagsPreserved ? bm_info.tags : []);
   }
 
-  bm_info.guid = yield PT.NewBookmark(bm_info).transact();
+  bm_info.guid = await PT.NewBookmark(bm_info).transact();
   ensureTagsForURI(oldURI, bm_info.tags);
 
   // When there's a single bookmark for the same url, tags should be moved.
   observer.reset();
-  yield PT.EditUrl({ guid: bm_info.guid, url: newURI }).transact();
+  await PT.EditUrl({ guid: bm_info.guid, url: newURI }).transact();
   ensureURIAndTags(oldURI, newURI, false);
 
   observer.reset();
-  yield PT.undo();
+  await PT.undo();
   ensureURIAndTags(newURI, oldURI, false);
 
   observer.reset();
-  yield PT.redo();
+  await PT.redo();
   ensureURIAndTags(oldURI, newURI, false);
 
   observer.reset();
-  yield PT.undo();
+  await PT.undo();
   ensureURIAndTags(newURI, oldURI, false);
 
   // When there're multiple bookmarks for the same url, tags should be copied.
   let bm2_info = Object.create(bm_info);
-  bm2_info.guid = yield PT.NewBookmark(bm2_info).transact();
+  bm2_info.guid = await PT.NewBookmark(bm2_info).transact();
   let bm3_info = Object.create(bm_info);
   bm3_info.url = newURI;
-  bm3_info.guid = yield PT.NewBookmark(bm3_info).transact();
+  bm3_info.guid = await PT.NewBookmark(bm3_info).transact();
 
   observer.reset();
-  yield PT.EditUrl({ guid: bm_info.guid, url: newURI }).transact();
+  await PT.EditUrl({ guid: bm_info.guid, url: newURI }).transact();
   ensureURIAndTags(oldURI, newURI, true);
 
   observer.reset();
-  yield PT.undo();
+  await PT.undo();
   ensureURIAndTags(newURI, oldURI, true);
 
   observer.reset();
-  yield PT.redo();
+  await PT.redo();
   ensureURIAndTags(oldURI, newURI, true);
 
   // Cleanup
   observer.reset();
-  yield PT.undo();
+  await PT.undo();
   ensureURIAndTags(newURI, oldURI, true);
-  yield PT.undo();
-  yield PT.undo();
-  yield PT.undo();
+  await PT.undo();
+  await PT.undo();
+  await PT.undo();
   ensureItemsRemoved(bm3_info, bm2_info, bm_info);
 
-  yield PT.clearTransactionsHistory();
+  await PT.clearTransactionsHistory();
   ensureUndoState();
 });
 
-add_task(function* test_edit_keyword() {
+add_task(async function test_edit_keyword() {
   let bm_info = { parentGuid: rootGuid
                 , url: NetUtil.newURI("http://test.edit.keyword") };
   const KEYWORD = "test_keyword";
-  bm_info.guid = yield PT.NewBookmark(bm_info).transact();
+  bm_info.guid = await PT.NewBookmark(bm_info).transact();
   function ensureKeywordChange(aCurrentKeyword = "") {
     ensureItemsChanged({ guid: bm_info.guid
                        , property: "keyword"
                        , newValue: aCurrentKeyword });
   }
 
-  bm_info.guid = yield PT.NewBookmark(bm_info).transact();
+  bm_info.guid = await PT.NewBookmark(bm_info).transact();
 
   observer.reset();
-  yield PT.EditKeyword({ guid: bm_info.guid, keyword: KEYWORD, postData: "postData" }).transact();
+  await PT.EditKeyword({ guid: bm_info.guid, keyword: KEYWORD, postData: "postData" }).transact();
   ensureKeywordChange(KEYWORD);
-  let entry = yield PlacesUtils.keywords.fetch(KEYWORD);
+  let entry = await PlacesUtils.keywords.fetch(KEYWORD);
   Assert.equal(entry.url.href, bm_info.url.spec);
   Assert.equal(entry.postData, "postData");
 
   observer.reset();
-  yield PT.undo();
+  await PT.undo();
   ensureKeywordChange();
-  entry = yield PlacesUtils.keywords.fetch(KEYWORD);
+  entry = await PlacesUtils.keywords.fetch(KEYWORD);
   Assert.equal(entry, null);
 
   observer.reset();
-  yield PT.redo();
+  await PT.redo();
   ensureKeywordChange(KEYWORD);
-  entry = yield PlacesUtils.keywords.fetch(KEYWORD);
+  entry = await PlacesUtils.keywords.fetch(KEYWORD);
   Assert.equal(entry.url.href, bm_info.url.spec);
   Assert.equal(entry.postData, "postData");
 
   // Cleanup
   observer.reset();
-  yield PT.undo();
+  await PT.undo();
   ensureKeywordChange();
-  yield PT.undo();
+  await PT.undo();
   ensureItemsRemoved(bm_info);
 
-  yield PT.clearTransactionsHistory();
+  await PT.clearTransactionsHistory();
   ensureUndoState();
 });
 
-add_task(function* test_edit_specific_keyword() {
+add_task(async function test_edit_specific_keyword() {
   let bm_info = { parentGuid: rootGuid
                 , url: NetUtil.newURI("http://test.edit.keyword") };
-  bm_info.guid = yield PT.NewBookmark(bm_info).transact();
+  bm_info.guid = await PT.NewBookmark(bm_info).transact();
   function ensureKeywordChange(aCurrentKeyword = "", aPreviousKeyword = "") {
     ensureItemsChanged({ guid: bm_info.guid
                        , property: "keyword"
@@ -1061,58 +1061,58 @@ add_task(function* test_edit_specific_keyword() {
                        });
   }
 
-  yield PlacesUtils.keywords.insert({ keyword: "kw1", url: bm_info.url.spec, postData: "postData1" });
-  yield PlacesUtils.keywords.insert({ keyword: "kw2", url: bm_info.url.spec, postData: "postData2" });
-  bm_info.guid = yield PT.NewBookmark(bm_info).transact();
+  await PlacesUtils.keywords.insert({ keyword: "kw1", url: bm_info.url.spec, postData: "postData1" });
+  await PlacesUtils.keywords.insert({ keyword: "kw2", url: bm_info.url.spec, postData: "postData2" });
+  bm_info.guid = await PT.NewBookmark(bm_info).transact();
 
   observer.reset();
-  yield PT.EditKeyword({ guid: bm_info.guid, keyword: "keyword", oldKeyword: "kw2" }).transact();
+  await PT.EditKeyword({ guid: bm_info.guid, keyword: "keyword", oldKeyword: "kw2" }).transact();
   ensureKeywordChange("keyword", "kw2");
-  let entry = yield PlacesUtils.keywords.fetch("kw1");
+  let entry = await PlacesUtils.keywords.fetch("kw1");
   Assert.equal(entry.url.href, bm_info.url.spec);
   Assert.equal(entry.postData, "postData1");
-  entry = yield PlacesUtils.keywords.fetch("keyword");
+  entry = await PlacesUtils.keywords.fetch("keyword");
   Assert.equal(entry.url.href, bm_info.url.spec);
   Assert.equal(entry.postData, "postData2");
-  entry = yield PlacesUtils.keywords.fetch("kw2");
+  entry = await PlacesUtils.keywords.fetch("kw2");
   Assert.equal(entry, null);
 
   observer.reset();
-  yield PT.undo();
+  await PT.undo();
   ensureKeywordChange("kw2", "keyword");
-  entry = yield PlacesUtils.keywords.fetch("kw1");
+  entry = await PlacesUtils.keywords.fetch("kw1");
   Assert.equal(entry.url.href, bm_info.url.spec);
   Assert.equal(entry.postData, "postData1");
-  entry = yield PlacesUtils.keywords.fetch("kw2");
+  entry = await PlacesUtils.keywords.fetch("kw2");
   Assert.equal(entry.url.href, bm_info.url.spec);
   Assert.equal(entry.postData, "postData2");
-  entry = yield PlacesUtils.keywords.fetch("keyword");
+  entry = await PlacesUtils.keywords.fetch("keyword");
   Assert.equal(entry, null);
 
   observer.reset();
-  yield PT.redo();
+  await PT.redo();
   ensureKeywordChange("keyword", "kw2");
-  entry = yield PlacesUtils.keywords.fetch("kw1");
+  entry = await PlacesUtils.keywords.fetch("kw1");
   Assert.equal(entry.url.href, bm_info.url.spec);
   Assert.equal(entry.postData, "postData1");
-  entry = yield PlacesUtils.keywords.fetch("keyword");
+  entry = await PlacesUtils.keywords.fetch("keyword");
   Assert.equal(entry.url.href, bm_info.url.spec);
   Assert.equal(entry.postData, "postData2");
-  entry = yield PlacesUtils.keywords.fetch("kw2");
+  entry = await PlacesUtils.keywords.fetch("kw2");
   Assert.equal(entry, null);
 
   // Cleanup
   observer.reset();
-  yield PT.undo();
+  await PT.undo();
   ensureKeywordChange("kw2");
-  yield PT.undo();
+  await PT.undo();
   ensureItemsRemoved(bm_info);
 
-  yield PT.clearTransactionsHistory();
+  await PT.clearTransactionsHistory();
   ensureUndoState();
 });
 
-add_task(function* test_tag_uri() {
+add_task(async function test_tag_uri() {
   // This also tests passing uri specs.
   let bm_info_a = { url: "http://bookmarked.uri"
                   , parentGuid: rootGuid };
@@ -1120,7 +1120,7 @@ add_task(function* test_tag_uri() {
                   , parentGuid: rootGuid };
   let unbookmarked_uri = NetUtil.newURI("http://un.bookmarked.uri");
 
-  yield PT.batch(function* () {
+  await PT.batch(function* () {
     bm_info_a.guid = yield PT.NewBookmark(bm_info_a).transact();
     bm_info_b.guid = yield PT.NewBookmark(bm_info_b).transact();
   });
@@ -1165,21 +1165,21 @@ add_task(function* test_tag_uri() {
     yield ensureTagsUnset();
   }
 
-  yield doTest({ url: bm_info_a.url, tags: ["MyTag"] });
-  yield doTest({ urls: [bm_info_a.url], tag: "MyTag" });
-  yield doTest({ urls: [bm_info_a.url, bm_info_b.url], tags: ["A, B"] });
-  yield doTest({ urls: [bm_info_a.url, unbookmarked_uri], tag: "C" });
+  await doTest({ url: bm_info_a.url, tags: ["MyTag"] });
+  await doTest({ urls: [bm_info_a.url], tag: "MyTag" });
+  await doTest({ urls: [bm_info_a.url, bm_info_b.url], tags: ["A, B"] });
+  await doTest({ urls: [bm_info_a.url, unbookmarked_uri], tag: "C" });
 
   // Cleanup
   observer.reset();
-  yield PT.undo();
+  await PT.undo();
   ensureItemsRemoved(bm_info_a, bm_info_b);
 
-  yield PT.clearTransactionsHistory();
+  await PT.clearTransactionsHistory();
   ensureUndoState();
 });
 
-add_task(function* test_untag_uri() {
+add_task(async function test_untag_uri() {
   let bm_info_a = { url: NetUtil.newURI("http://bookmarked.uri")
                   , parentGuid: rootGuid
                   , tags: ["A", "B"] };
@@ -1187,7 +1187,7 @@ add_task(function* test_untag_uri() {
                   , parentGuid: rootGuid
                   , tag: "B" };
 
-  yield PT.batch(function* () {
+  await PT.batch(function* () {
     bm_info_a.guid = yield PT.NewBookmark(bm_info_a).transact();
     ensureTagsForURI(bm_info_a.url, bm_info_a.tags);
     bm_info_b.guid = yield PT.NewBookmark(bm_info_b).transact();
@@ -1235,26 +1235,26 @@ add_task(function* test_untag_uri() {
     yield ensureTagsSet();
   }
 
-  yield doTest(bm_info_a);
-  yield doTest(bm_info_b);
-  yield doTest(bm_info_a.url);
-  yield doTest(bm_info_b.url);
-  yield doTest([bm_info_a.url, bm_info_b.url]);
-  yield doTest({ urls: [bm_info_a.url, bm_info_b.url], tags: ["A", "B"] });
-  yield doTest({ urls: [bm_info_a.url, bm_info_b.url], tag: "B" });
-  yield doTest({ urls: [bm_info_a.url, bm_info_b.url], tag: "C" });
-  yield doTest({ urls: [bm_info_a.url, bm_info_b.url], tags: ["C"] });
+  await doTest(bm_info_a);
+  await doTest(bm_info_b);
+  await doTest(bm_info_a.url);
+  await doTest(bm_info_b.url);
+  await doTest([bm_info_a.url, bm_info_b.url]);
+  await doTest({ urls: [bm_info_a.url, bm_info_b.url], tags: ["A", "B"] });
+  await doTest({ urls: [bm_info_a.url, bm_info_b.url], tag: "B" });
+  await doTest({ urls: [bm_info_a.url, bm_info_b.url], tag: "C" });
+  await doTest({ urls: [bm_info_a.url, bm_info_b.url], tags: ["C"] });
 
   // Cleanup
   observer.reset();
-  yield PT.undo();
+  await PT.undo();
   ensureItemsRemoved(bm_info_a, bm_info_b);
 
-  yield PT.clearTransactionsHistory();
+  await PT.clearTransactionsHistory();
   ensureUndoState();
 });
 
-add_task(function* test_annotate() {
+add_task(async function test_annotate() {
   let bm_info = { url: NetUtil.newURI("http://test.item.annotation")
                 , parentGuid: rootGuid };
   let anno_info = { name: "TestAnno", value: "TestValue" };
@@ -1264,42 +1264,42 @@ add_task(function* test_annotate() {
                           , value: aSet ? anno_info.value : null }]);
   }
 
-  bm_info.guid = yield PT.NewBookmark(bm_info).transact();
+  bm_info.guid = await PT.NewBookmark(bm_info).transact();
 
   observer.reset();
-  yield PT.Annotate({ guid: bm_info.guid, annotation: anno_info }).transact();
+  await PT.Annotate({ guid: bm_info.guid, annotation: anno_info }).transact();
   ensureAnnoState(true);
 
   observer.reset();
-  yield PT.undo();
+  await PT.undo();
   ensureAnnoState(false);
 
   observer.reset();
-  yield PT.redo();
+  await PT.redo();
   ensureAnnoState(true);
 
   // Test removing the annotation by not passing the |value| property.
   observer.reset();
-  yield PT.Annotate({ guid: bm_info.guid,
+  await PT.Annotate({ guid: bm_info.guid,
                       annotation: { name: anno_info.name }}).transact();
   ensureAnnoState(false);
 
   observer.reset();
-  yield PT.undo();
+  await PT.undo();
   ensureAnnoState(true);
 
   observer.reset();
-  yield PT.redo();
+  await PT.redo();
   ensureAnnoState(false);
 
   // Cleanup
-  yield PT.undo();
+  await PT.undo();
   observer.reset();
 });
 
-add_task(function* test_annotate_multiple() {
-  let guid = yield PT.NewFolder(createTestFolderInfo()).transact();
-  let itemId = yield PlacesUtils.promiseItemId(guid);
+add_task(async function test_annotate_multiple() {
+  let guid = await PT.NewFolder(createTestFolderInfo()).transact();
+  let itemId = await PlacesUtils.promiseItemId(guid);
 
   function AnnoObj(aName, aValue) {
     this.name = aName;
@@ -1323,37 +1323,37 @@ add_task(function* test_annotate_multiple() {
     Assert.deepEqual(currentAnnos, expectedAnnos);
   }
 
-  yield PT.Annotate({ guid, annotations: annos(1, 2) }).transact();
+  await PT.Annotate({ guid, annotations: annos(1, 2) }).transact();
   verifyAnnoValues(1, 2);
-  yield PT.undo();
+  await PT.undo();
   verifyAnnoValues();
-  yield PT.redo();
+  await PT.redo();
   verifyAnnoValues(1, 2);
 
-  yield PT.Annotate({ guid
+  await PT.Annotate({ guid
                     , annotation: { name: "A" } }).transact();
   verifyAnnoValues(null, 2);
 
-  yield PT.Annotate({ guid
+  await PT.Annotate({ guid
                     , annotation: { name: "B", value: 0 } }).transact();
   verifyAnnoValues(null, 0);
-  yield PT.undo();
+  await PT.undo();
   verifyAnnoValues(null, 2);
-  yield PT.redo();
+  await PT.redo();
   verifyAnnoValues(null, 0);
-  yield PT.undo();
+  await PT.undo();
   verifyAnnoValues(null, 2);
-  yield PT.undo();
+  await PT.undo();
   verifyAnnoValues(1, 2);
-  yield PT.undo();
+  await PT.undo();
   verifyAnnoValues();
 
   // Cleanup
-  yield PT.undo();
+  await PT.undo();
   observer.reset();
 });
 
-add_task(function* test_sort_folder_by_name() {
+add_task(async function test_sort_folder_by_name() {
   let folder_info = createTestFolderInfo();
 
   let url = NetUtil.newURI("http://sort.by.name/");
@@ -1364,7 +1364,7 @@ add_task(function* test_sort_folder_by_name() {
   let sortedOrder = [...preSep.slice(0).reverse(),
                      sep,
                      ...postSep.slice(0).reverse()];
-  yield PT.batch(function* () {
+  await PT.batch(function* () {
     folder_info.guid = yield PT.NewFolder(folder_info).transact();
     for (let info of originalOrder) {
       info.parentGuid = folder_info.guid;
@@ -1374,7 +1374,7 @@ add_task(function* test_sort_folder_by_name() {
     }
   });
 
-  let folderId = yield PlacesUtils.promiseItemId(folder_info.guid);
+  let folderId = await PlacesUtils.promiseItemId(folder_info.guid);
   let folderContainer = PlacesUtils.getFolderContents(folderId).root;
   function ensureOrder(aOrder) {
     for (let i = 0; i < folderContainer.childCount; i++) {
@@ -1383,22 +1383,22 @@ add_task(function* test_sort_folder_by_name() {
   }
 
   ensureOrder(originalOrder);
-  yield PT.SortByName(folder_info.guid).transact();
+  await PT.SortByName(folder_info.guid).transact();
   ensureOrder(sortedOrder);
-  yield PT.undo();
+  await PT.undo();
   ensureOrder(originalOrder);
-  yield PT.redo();
+  await PT.redo();
   ensureOrder(sortedOrder);
 
   // Cleanup
   observer.reset();
-  yield PT.undo();
+  await PT.undo();
   ensureOrder(originalOrder);
-  yield PT.undo();
+  await PT.undo();
   ensureItemsRemoved(...originalOrder, folder_info);
 });
 
-add_task(function* test_livemark_txns() {
+add_task(async function test_livemark_txns() {
   let livemark_info =
     { feedUrl: NetUtil.newURI("http://test.feed.uri")
     , parentGuid: rootGuid
@@ -1438,22 +1438,22 @@ add_task(function* test_livemark_txns() {
     ensureLivemarkRemoved();
   }
 
-  yield* _testDoUndoRedoUndo()
+  await _testDoUndoRedoUndo()
   livemark_info.siteUrl = NetUtil.newURI("http://feed.site.uri");
-  yield* _testDoUndoRedoUndo();
+  await _testDoUndoRedoUndo();
 
   // Cleanup
   observer.reset();
-  yield PT.clearTransactionsHistory();
+  await PT.clearTransactionsHistory();
 });
 
-add_task(function* test_copy() {
-  function* duplicate_and_test(aOriginalGuid) {
+add_task(async function test_copy() {
+  async function duplicate_and_test(aOriginalGuid) {
     let txn = PT.Copy({ guid: aOriginalGuid, newParentGuid: rootGuid });
-    let duplicateGuid = yield txn.transact();
-    let originalInfo = yield PlacesUtils.promiseBookmarksTree(aOriginalGuid);
-    let duplicateInfo = yield PlacesUtils.promiseBookmarksTree(duplicateGuid);
-    yield ensureEqualBookmarksTrees(originalInfo, duplicateInfo, false);
+    let duplicateGuid = await txn.transact();
+    let originalInfo = await PlacesUtils.promiseBookmarksTree(aOriginalGuid);
+    let duplicateInfo = await PlacesUtils.promiseBookmarksTree(duplicateGuid);
+    await ensureEqualBookmarksTrees(originalInfo, duplicateInfo, false);
 
     function* redo() {
       yield PT.redo();
@@ -1468,15 +1468,15 @@ add_task(function* test_copy() {
       yield ensureNonExistent(aOriginalGuid, duplicateGuid);
     }
 
-    yield undo();
-    yield redo();
-    yield undo();
-    yield redo();
+    await undo();
+    await redo();
+    await undo();
+    await redo();
 
     // Cleanup. This also remove the original item.
-    yield PT.undo();
+    await PT.undo();
     observer.reset();
-    yield PT.clearTransactionsHistory();
+    await PT.clearTransactionsHistory();
   }
 
   // Test duplicating leafs (bookmark, separator, empty folder)
@@ -1490,12 +1490,12 @@ add_task(function* test_copy() {
     , title: "Test Livemark", index: 1 });
   let emptyFolderTxn = PT.NewFolder(createTestFolderInfo());
   for (let txn of [livemarkTxn, sepTxn, emptyFolderTxn]) {
-    let guid = yield txn.transact();
-    yield duplicate_and_test(guid);
+    let guid = await txn.transact();
+    await duplicate_and_test(guid);
   }
 
   // Test duplicating a folder having some contents.
-  let filledFolderGuid = yield PT.batch(function *() {
+  let filledFolderGuid = await PT.batch(function *() {
     let folderGuid = yield PT.NewFolder(createTestFolderInfo()).transact();
     let nestedFolderGuid =
       yield PT.NewFolder({ parentGuid: folderGuid
@@ -1511,79 +1511,79 @@ add_task(function* test_copy() {
     return folderGuid;
   });
 
-  yield duplicate_and_test(filledFolderGuid);
+  await duplicate_and_test(filledFolderGuid);
 
   // Cleanup
-  yield PT.clearTransactionsHistory();
+  await PT.clearTransactionsHistory();
 });
 
-add_task(function* test_array_input_for_batch() {
+add_task(async function test_array_input_for_batch() {
   let folderTxn = PT.NewFolder(createTestFolderInfo());
-  let folderGuid = yield folderTxn.transact();
+  let folderGuid = await folderTxn.transact();
 
   let sep1_txn = PT.NewSeparator({ parentGuid: folderGuid });
   let sep2_txn = PT.NewSeparator({ parentGuid: folderGuid });
-  yield PT.batch([sep1_txn, sep2_txn]);
+  await PT.batch([sep1_txn, sep2_txn]);
   ensureUndoState([[sep2_txn, sep1_txn], [folderTxn]], 0);
 
-  let ensureChildCount = function* (count) {
-    let tree = yield PlacesUtils.promiseBookmarksTree(folderGuid);
+  let ensureChildCount = async function(count) {
+    let tree = await PlacesUtils.promiseBookmarksTree(folderGuid);
     if (count == 0)
       Assert.ok(!("children" in tree));
     else
       Assert.equal(tree.children.length, count);
   };
 
-  yield ensureChildCount(2);
-  yield PT.undo();
-  yield ensureChildCount(0);
-  yield PT.redo()
-  yield ensureChildCount(2);
-  yield PT.undo();
-  yield ensureChildCount(0);
+  await ensureChildCount(2);
+  await PT.undo();
+  await ensureChildCount(0);
+  await PT.redo()
+  await ensureChildCount(2);
+  await PT.undo();
+  await ensureChildCount(0);
 
-  yield PT.undo();
-  Assert.equal((yield PlacesUtils.promiseBookmarksTree(folderGuid)), null);
+  await PT.undo();
+  Assert.equal((await PlacesUtils.promiseBookmarksTree(folderGuid)), null);
 
   // Cleanup
-  yield PT.clearTransactionsHistory();
+  await PT.clearTransactionsHistory();
 });
 
-add_task(function* test_copy_excluding_annotations() {
+add_task(async function test_copy_excluding_annotations() {
   let folderInfo = createTestFolderInfo();
   let anno = n => { return { name: n, value: 1 } };
   folderInfo.annotations = [anno("a"), anno("b"), anno("c")];
-  let folderGuid = yield PT.NewFolder(folderInfo).transact();
+  let folderGuid = await PT.NewFolder(folderInfo).transact();
 
-  let ensureAnnosSet = function* (guid, ...expectedAnnoNames) {
-    let tree = yield PlacesUtils.promiseBookmarksTree(guid);
+  let ensureAnnosSet = async function(guid, ...expectedAnnoNames) {
+    let tree = await PlacesUtils.promiseBookmarksTree(guid);
     let annoNames = "annos" in tree ?
                       tree.annos.map(a => a.name).sort() : [];
     Assert.deepEqual(annoNames, expectedAnnoNames);
   };
 
-  yield ensureAnnosSet(folderGuid, "a", "b", "c");
+  await ensureAnnosSet(folderGuid, "a", "b", "c");
 
   let excluding_a_dupeGuid =
-    yield PT.Copy({ guid: folderGuid
+    await PT.Copy({ guid: folderGuid
                   , newParentGuid: rootGuid
                   , excludingAnnotation: "a" }).transact();
-  yield ensureAnnosSet(excluding_a_dupeGuid, "b", "c");
+  await ensureAnnosSet(excluding_a_dupeGuid, "b", "c");
 
   let excluding_ac_dupeGuid =
-    yield PT.Copy({ guid: folderGuid
+    await PT.Copy({ guid: folderGuid
                   , newParentGuid: rootGuid
                   , excludingAnnotations: ["a", "c"] }).transact();
-  yield ensureAnnosSet(excluding_ac_dupeGuid, "b");
+  await ensureAnnosSet(excluding_ac_dupeGuid, "b");
 
   // Cleanup
-  yield PT.undo();
-  yield PT.undo();
-  yield PT.undo();
-  yield PT.clearTransactionsHistory();
+  await PT.undo();
+  await PT.undo();
+  await PT.undo();
+  await PT.clearTransactionsHistory();
 });
 
-add_task(function* test_invalid_uri_spec_throws() {
+add_task(async function test_invalid_uri_spec_throws() {
   Assert.throws(() =>
     PT.NewBookmark({ parentGuid: rootGuid
                    , url:        "invalid uri spec"
@@ -1596,48 +1596,48 @@ add_task(function* test_invalid_uri_spec_throws() {
            , urls: ["about:blank", "invalid uri spec"] }));
 });
 
-add_task(function* test_annotate_multiple_items() {
+add_task(async function test_annotate_multiple_items() {
   let parentGuid = rootGuid;
   let guids = [
-    yield PT.NewBookmark({ url: "about:blank", parentGuid }).transact(),
-    yield PT.NewFolder({ title: "Test Folder", parentGuid }).transact()];
+    await PT.NewBookmark({ url: "about:blank", parentGuid }).transact(),
+    await PT.NewFolder({ title: "Test Folder", parentGuid }).transact()];
 
   let annotation = { name: "TestAnno", value: "TestValue" };
-  yield PT.Annotate({ guids, annotation }).transact();
+  await PT.Annotate({ guids, annotation }).transact();
 
-  function *ensureAnnoSet() {
+  async function ensureAnnoSet() {
     for (let guid of guids) {
-      let itemId = yield PlacesUtils.promiseItemId(guid);
+      let itemId = await PlacesUtils.promiseItemId(guid);
       Assert.equal(annosvc.getItemAnnotation(itemId, annotation.name),
                    annotation.value);
     }
   }
-  function *ensureAnnoUnset() {
+  async function ensureAnnoUnset() {
     for (let guid of guids) {
-      let itemId = yield PlacesUtils.promiseItemId(guid);
+      let itemId = await PlacesUtils.promiseItemId(guid);
       Assert.ok(!annosvc.itemHasAnnotation(itemId, annotation.name));
     }
   }
 
-  yield ensureAnnoSet();
-  yield PT.undo();
-  yield ensureAnnoUnset();
-  yield PT.redo();
-  yield ensureAnnoSet();
-  yield PT.undo();
-  yield ensureAnnoUnset();
+  await ensureAnnoSet();
+  await PT.undo();
+  await ensureAnnoUnset();
+  await PT.redo();
+  await ensureAnnoSet();
+  await PT.undo();
+  await ensureAnnoUnset();
 
   // Cleanup
-  yield PT.undo();
-  yield PT.undo();
-  yield ensureNonExistent(...guids);
-  yield PT.clearTransactionsHistory();
+  await PT.undo();
+  await PT.undo();
+  await ensureNonExistent(...guids);
+  await PT.clearTransactionsHistory();
   observer.reset();
 });
 
-add_task(function* test_remove_multiple() {
+add_task(async function test_remove_multiple() {
   let guids = [];
-  yield PT.batch(function* () {
+  await PT.batch(function* () {
     let folderGuid = yield PT.NewFolder({ title: "Test Folder"
                                         , parentGuid: rootGuid }).transact();
     let nestedFolderGuid =
@@ -1655,39 +1655,39 @@ add_task(function* test_remove_multiple() {
 
   let originalInfos = [];
   for (let guid of guids) {
-    originalInfos.push(yield PlacesUtils.promiseBookmarksTree(guid));
+    originalInfos.push(await PlacesUtils.promiseBookmarksTree(guid));
   }
 
-  yield PT.Remove(guids).transact();
-  yield ensureNonExistent(...guids);
-  yield PT.undo();
-  yield ensureBookmarksTreeRestoredCorrectly(...originalInfos);
-  yield PT.redo();
-  yield ensureNonExistent(...guids);
-  yield PT.undo();
-  yield ensureBookmarksTreeRestoredCorrectly(...originalInfos);
+  await PT.Remove(guids).transact();
+  await ensureNonExistent(...guids);
+  await PT.undo();
+  await ensureBookmarksTreeRestoredCorrectly(...originalInfos);
+  await PT.redo();
+  await ensureNonExistent(...guids);
+  await PT.undo();
+  await ensureBookmarksTreeRestoredCorrectly(...originalInfos);
 
   // Undo the New* transactions batch.
-  yield PT.undo();
-  yield ensureNonExistent(...guids);
+  await PT.undo();
+  await ensureNonExistent(...guids);
 
   // Redo it.
-  yield PT.redo();
-  yield ensureBookmarksTreeRestoredCorrectly(...originalInfos);
+  await PT.redo();
+  await ensureBookmarksTreeRestoredCorrectly(...originalInfos);
 
   // Redo remove.
-  yield PT.redo();
-  yield ensureNonExistent(...guids);
+  await PT.redo();
+  await ensureNonExistent(...guids);
 
   // Cleanup
-  yield PT.clearTransactionsHistory();
+  await PT.clearTransactionsHistory();
   observer.reset();
 });
 
-add_task(function* test_remove_bookmarks_for_urls() {
+add_task(async function test_remove_bookmarks_for_urls() {
   let urls = [new URL("http://test.url.1"), new URL("http://test.url.2")];
   let guids = [];
-  yield PT.batch(function* () {
+  await PT.batch(function* () {
     for (let url of urls) {
       for (let title of ["test title a", "test title b"]) {
         let txn = PT.NewBookmark({ url, title, parentGuid: rootGuid });
@@ -1698,21 +1698,21 @@ add_task(function* test_remove_bookmarks_for_urls() {
 
   let originalInfos = [];
   for (let guid of guids) {
-    originalInfos.push(yield PlacesUtils.promiseBookmarksTree(guid));
+    originalInfos.push(await PlacesUtils.promiseBookmarksTree(guid));
   }
 
-  yield PT.RemoveBookmarksForUrls(urls).transact();
-  yield ensureNonExistent(...guids);
-  yield PT.undo();
-  yield ensureBookmarksTreeRestoredCorrectly(...originalInfos);
-  yield PT.redo();
-  yield ensureNonExistent(...guids);
-  yield PT.undo();
-  yield ensureBookmarksTreeRestoredCorrectly(...originalInfos);
+  await PT.RemoveBookmarksForUrls(urls).transact();
+  await ensureNonExistent(...guids);
+  await PT.undo();
+  await ensureBookmarksTreeRestoredCorrectly(...originalInfos);
+  await PT.redo();
+  await ensureNonExistent(...guids);
+  await PT.undo();
+  await ensureBookmarksTreeRestoredCorrectly(...originalInfos);
 
   // Cleanup.
-  yield PT.redo();
-  yield ensureNonExistent(...guids);
-  yield PT.clearTransactionsHistory();
+  await PT.redo();
+  await ensureNonExistent(...guids);
+  await PT.clearTransactionsHistory();
   observer.reset();
 });

@@ -8,7 +8,7 @@
 thisTestLeaksUncaughtRejectionsAndShouldBeFixed("TypeError: window.location is null");
 
 
-add_task(function* checkIdentityOfAboutSupport() {
+add_task(async function checkIdentityOfAboutSupport() {
   let tab = gBrowser.loadOneTab("about:support", {
     referrerURI: null,
     inBackground: false,
@@ -19,7 +19,7 @@ add_task(function* checkIdentityOfAboutSupport() {
     triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
   });
 
-  yield promiseTabLoaded(tab);
+  await promiseTabLoaded(tab);
   let identityBox = document.getElementById("identity-box");
   is(identityBox.className, "chromeUI", "Should know that we're chrome.");
   gBrowser.removeTab(tab);

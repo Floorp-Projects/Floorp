@@ -2,7 +2,7 @@
 
 Cu.import("resource://gre/modules/AppConstants.jsm");
 
-add_task(function* () {
+add_task(async function() {
   let rootDir = do_get_file("chromefiles/", true);
   let pathId;
   let subDirs = ["Google", "Chrome"];
@@ -29,10 +29,10 @@ add_task(function* () {
   // from the dir service, which means they get cached, which means we can't
   // register a fake path for them anymore.
   Cu.import("resource://gre/modules/osfile.jsm"); /* globals OS */
-  yield OS.File.makeDir(target.path, {from: rootDir.parent.path, ignoreExisting: true});
+  await OS.File.makeDir(target.path, {from: rootDir.parent.path, ignoreExisting: true});
 
   target.append("Bookmarks");
-  yield OS.File.remove(target.path, {ignoreAbsent: true});
+  await OS.File.remove(target.path, {ignoreAbsent: true});
 
   let bookmarksData = {roots: {bookmark_bar: {children: []}, other: {children: []}}};
   const MAX_BMS = 100;
@@ -70,7 +70,7 @@ add_task(function* () {
     }
   }
 
-  yield OS.File.writeAtomic(target.path, JSON.stringify(bookmarksData), {encoding: "utf-8"});
+  await OS.File.writeAtomic(target.path, JSON.stringify(bookmarksData), {encoding: "utf-8"});
 
   let migrator = MigrationUtils.getMigrator("chrome");
   // Sanity check for the source.
@@ -96,7 +96,7 @@ add_task(function* () {
     id: "Default",
     name: "Default",
   };
-  yield promiseMigration(migrator, MigrationUtils.resourceTypes.BOOKMARKS, PROFILE);
+  await promiseMigration(migrator, MigrationUtils.resourceTypes.BOOKMARKS, PROFILE);
   PlacesUtils.bookmarks.removeObserver(bmObserver);
 
   Assert.equal(itemsSeen.bookmarks, 200, "Should have seen 200 bookmarks.");

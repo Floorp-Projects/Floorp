@@ -155,7 +155,6 @@ const RESTORE_TAB_CONTENT_REASON = {
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
-Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/TelemetryStopwatch.jsm", this);
 Cu.import("resource://gre/modules/TelemetryTimestamps.jsm", this);
 Cu.import("resource://gre/modules/Timer.jsm", this);
@@ -1633,7 +1632,7 @@ var SessionStoreInternal = {
    *
    * @return Promise
    */
-  flushAllWindowsAsync: Task.async(function*(progress = {}) {
+  async flushAllWindowsAsync(progress = {}) {
     let windowPromises = new Map();
     // We collect flush promises and close each window immediately so that
     // the user can't start changing any window state while we're waiting
@@ -1658,7 +1657,7 @@ var SessionStoreInternal = {
     // We'll iterate through the Promise array, yielding each one, so as to
     // provide useful progress information to AsyncShutdown.
     for (let [win, promise] of windowPromises) {
-      yield promise;
+      await promise;
       this._collectWindowData(win);
       progress.current++;
     }
@@ -1669,7 +1668,7 @@ var SessionStoreInternal = {
     if (activeWindow)
       this.activeWindowSSiCache = activeWindow.__SSi || "";
     DirtyWindows.clear();
-  }),
+  },
 
   /**
    * On last browser window close

@@ -23,12 +23,12 @@ function test() {
     Services.prefs.clearUserPref(kShowUIPref);
   });
   tab.linkedBrowser.addEventListener("load", function() {
-    Task.spawn(function* () {
+    (async function() {
       for (let testCase of gTests) {
         info(testCase.desc);
-        yield testCase.run();
+        await testCase.run();
       }
-    }).then(finish, ex => {
+    })().then(finish, ex => {
      ok(false, "Unexpected Exception: " + ex);
      finish();
     });
@@ -212,7 +212,7 @@ var gTests = [
 
 {
   desc: "language exception list",
-  run: function* checkLanguageExceptions() {
+  run: async function checkLanguageExceptions() {
     // Put 2 languages in the pref before opening the window to check
     // the list is displayed on load.
     Services.prefs.setCharPref(kLanguagesPref, "fr,de");
@@ -221,7 +221,7 @@ var gTests = [
     let win = openDialog("chrome://browser/content/preferences/translation.xul",
                          "Browser:TranslationExceptions",
                          "", null);
-    yield waitForWindowLoad(win);
+    await waitForWindowLoad(win);
 
     // Check that the list of language exceptions is loaded.
     let getById = win.document.getElementById.bind(win.document);
@@ -266,7 +266,7 @@ var gTests = [
 
 {
   desc: "domains exception list",
-  run: function* checkDomainExceptions() {
+  run: async function checkDomainExceptions() {
     // Put 2 exceptions before opening the window to check the list is
     // displayed on load.
     let perms = Services.perms;
@@ -277,7 +277,7 @@ var gTests = [
     let win = openDialog("chrome://browser/content/preferences/translation.xul",
                          "Browser:TranslationExceptions",
                          "", null);
-    yield waitForWindowLoad(win);
+    await waitForWindowLoad(win);
 
     // Check that the list of language exceptions is loaded.
     let getById = win.document.getElementById.bind(win.document);

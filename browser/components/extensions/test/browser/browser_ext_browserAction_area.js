@@ -28,22 +28,22 @@ function* testInArea(area) {
   yield extension.unload();
 }
 
-add_task(function* testBrowserActionDefaultArea() {
-  yield testInArea();
+add_task(async function testBrowserActionDefaultArea() {
+  await testInArea();
 });
 
-add_task(function* testBrowserActionInToolbar() {
-  yield testInArea("navbar");
+add_task(async function testBrowserActionInToolbar() {
+  await testInArea("navbar");
 });
 
-add_task(function* testBrowserActionInMenuPanel() {
-  yield testInArea("menupanel");
+add_task(async function testBrowserActionInMenuPanel() {
+  await testInArea("menupanel");
 });
 
-add_task(function* testBrowserActionInTabStrip() {
-  yield testInArea("tabstrip");
+add_task(async function testBrowserActionInTabStrip() {
+  await testInArea("tabstrip");
 });
 
-add_task(function* testBrowserActionInPersonalToolbar() {
-  yield testInArea("personaltoolbar");
+add_task(async function testBrowserActionInPersonalToolbar() {
+  await testInArea("personaltoolbar");
 });

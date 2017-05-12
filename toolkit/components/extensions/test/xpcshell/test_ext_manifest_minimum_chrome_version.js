@@ -3,8 +3,8 @@
 "use strict";
 
 
-add_task(function* test_manifest_minimum_chrome_version() {
-  let normalized = yield ExtensionTestUtils.normalizeManifest({
+add_task(async function test_manifest_minimum_chrome_version() {
+  let normalized = await ExtensionTestUtils.normalizeManifest({
     "minimum_chrome_version": "42",
   });
 

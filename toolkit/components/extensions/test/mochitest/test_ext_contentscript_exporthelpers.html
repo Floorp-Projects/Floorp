@@ -13,7 +13,7 @@
 <script>
 "use strict";
 
-add_task(function* test_contentscript_exportHelpers() {
+add_task(async function test_contentscript_exportHelpers() {
   function contentScript() {
     browser.test.assertTrue(typeof cloneInto === "function");
     browser.test.assertTrue(typeof createObjectIn === "function");
@@ -80,14 +80,14 @@ add_task(function* test_contentscript_exportHelpers() {
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
 
-  yield extension.startup();
+  await extension.startup();
 
   let win = window.open("file_sample.html");
 
-  yield extension.awaitFinish("export helper test completed");
+  await extension.awaitFinish("export helper test completed");
   win.close();
 
-  yield extension.unload();
+  await extension.unload();
 });
 </script>
 

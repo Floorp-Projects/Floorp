@@ -1,9 +1,9 @@
-add_task(function* testBasicPromptNoStaging() {
+add_task(async function testBasicPromptNoStaging() {
   SpecialPowers.pushPrefEnv({set: [[PREF_APP_UPDATE_STAGING_ENABLED, false]]});
 
   let updateParams = "showPrompt=1&promptWaitTime=0";
 
-  yield runUpdateTest(updateParams, 1, [
+  await runUpdateTest(updateParams, 1, [
     {
       notificationId: "update-available",
       button: "button",

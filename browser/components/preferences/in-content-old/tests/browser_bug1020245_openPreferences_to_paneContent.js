@@ -7,19 +7,19 @@ registerCleanupFunction(function() {
   Services.prefs.clearUserPref("browser.preferences.instantApply");
 });
 
-add_task(function*() {
-  let prefs = yield openPreferencesViaOpenPreferencesAPI("paneContent");
+add_task(async function() {
+  let prefs = await openPreferencesViaOpenPreferencesAPI("paneContent");
   is(prefs.selectedPane, "paneContent", "Content pane was selected");
-  prefs = yield openPreferencesViaOpenPreferencesAPI("advanced", "updateTab");
+  prefs = await openPreferencesViaOpenPreferencesAPI("advanced", "updateTab");
   is(prefs.selectedPane, "paneAdvanced", "Advanced pane was selected");
   is(prefs.selectedAdvancedTab, "updateTab", "The update tab within the advanced prefs should be selected");
-  prefs = yield openPreferencesViaHash("privacy");
+  prefs = await openPreferencesViaHash("privacy");
   is(prefs.selectedPane, "panePrivacy", "Privacy pane is selected when hash is 'privacy'");
-  prefs = yield openPreferencesViaOpenPreferencesAPI("nonexistant-category");
+  prefs = await openPreferencesViaOpenPreferencesAPI("nonexistant-category");
   is(prefs.selectedPane, "paneGeneral", "General pane is selected by default when a nonexistant-category is requested");
-  prefs = yield openPreferencesViaHash("nonexistant-category");
+  prefs = await openPreferencesViaHash("nonexistant-category");
   is(prefs.selectedPane, "paneGeneral", "General pane is selected when hash is a nonexistant-category");
-  prefs = yield openPreferencesViaHash();
+  prefs = await openPreferencesViaHash();
   is(prefs.selectedPane, "paneGeneral", "General pane is selected by default");
 });
 

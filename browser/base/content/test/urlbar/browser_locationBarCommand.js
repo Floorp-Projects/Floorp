@@ -4,7 +4,7 @@
 const TEST_VALUE = "example.com";
 const START_VALUE = "example.org";
 
-add_task(function* setup() {
+add_task(async function setup() {
   Services.prefs.setBoolPref("browser.altClickSave", true);
 
   registerCleanupFunction(() => {
@@ -12,7 +12,7 @@ add_task(function* setup() {
   });
 });
 
-add_task(function* alt_left_click_test() {
+add_task(async function alt_left_click_test() {
   info("Running test: Alt left click");
 
   // Monkey patch saveURL() to avoid dealing with file save code paths.
@@ -27,41 +27,41 @@ add_task(function* alt_left_click_test() {
 
   triggerCommand(true, {altKey: true});
 
-  yield saveURLPromise;
+  await saveURLPromise;
   ok(true, "SaveURL was called");
   is(gURLBar.value, "", "Urlbar reverted to original value");
 });
 
-add_task(function* shift_left_click_test() {
+add_task(async function shift_left_click_test() {
   info("Running test: Shift left click");
 
   let newWindowPromise = BrowserTestUtils.waitForNewWindow();
   triggerCommand(true, {shiftKey: true});
-  let win = yield newWindowPromise;
+  let win = await newWindowPromise;
 
   // Wait for the initial browser to load.
   let browser = win.gBrowser.selectedBrowser;
   let destinationURL = "http://" + TEST_VALUE + "/";
-  yield Promise.all([
+  await Promise.all([
     BrowserTestUtils.browserLoaded(browser),
     BrowserTestUtils.waitForLocationChange(win.gBrowser, destinationURL)
   ]);
 
   info("URL should be loaded in a new window");
   is(gURLBar.value, "", "Urlbar reverted to original value");
-  yield promiseCheckChildNoFocusedElement(gBrowser.selectedBrowser);
+  await promiseCheckChildNoFocusedElement(gBrowser.selectedBrowser);
   is(document.activeElement, gBrowser.selectedBrowser, "Content window should be focused");
   is(win.gURLBar.textValue, TEST_VALUE, "New URL is loaded in new window");
 
   // Cleanup.
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 });
 
-add_task(function* right_click_test() {
+add_task(async function right_click_test() {
   info("Running test: Right click on go button");
 
   // Add a new tab.
-  yield* promiseOpenNewTab();
+  await promiseOpenNewTab();
 
   triggerCommand(true, {button: 2});
 
@@ -72,15 +72,15 @@ add_task(function* right_click_test() {
   gBrowser.removeCurrentTab();
 });
 
-add_task(function* shift_accel_left_click_test() {
+add_task(async function shift_accel_left_click_test() {
   info("Running test: Shift+Ctrl/Cmd left click on go button");
 
   // Add a new tab.
-  let tab = yield* promiseOpenNewTab();
+  let tab = await promiseOpenNewTab();
 
   let loadStartedPromise = promiseLoadStarted();
   triggerCommand(true, {accelKey: true, shiftKey: true});
-  yield loadStartedPromise;
+  await loadStartedPromise;
 
   // Check the load occurred in a new background tab.
   info("URL should be loaded in a new background tab");
@@ -97,7 +97,7 @@ add_task(function* shift_accel_left_click_test() {
   gBrowser.removeCurrentTab();
 });
 
-add_task(function* load_in_current_tab_test() {
+add_task(async function load_in_current_tab_test() {
   let tests = [
     {desc: "Simple return keypress"},
     {desc: "Left click on go button", click: true},
@@ -109,16 +109,16 @@ add_task(function* load_in_current_tab_test() {
     info(`Running test: ${test.desc}`);
 
     // Add a new tab.
-    let tab = yield* promiseOpenNewTab();
+    let tab = await promiseOpenNewTab();
 
     // Trigger a load and check it occurs in the current tab.
     let loadStartedPromise = promiseLoadStarted();
     triggerCommand(test.click || false, test.event || {});
-    yield loadStartedPromise;
+    await loadStartedPromise;
 
     info("URL should be loaded in the current tab");
     is(gURLBar.value, TEST_VALUE, "Urlbar still has the value we entered");
-    yield promiseCheckChildNoFocusedElement(gBrowser.selectedBrowser);
+    await promiseCheckChildNoFocusedElement(gBrowser.selectedBrowser);
     is(document.activeElement, gBrowser.selectedBrowser, "Content window should be focused");
     is(gBrowser.selectedTab, tab, "New URL was loaded in the current tab");
 
@@ -127,7 +127,7 @@ add_task(function* load_in_current_tab_test() {
   }
 });
 
-add_task(function* load_in_new_tab_test() {
+add_task(async function load_in_new_tab_test() {
   let tests = [
     {desc: "Ctrl/Cmd left click on go button", click: true, event: {accelKey: true}},
     {desc: "Alt+Return keypress in a dirty tab", event: {altKey: true}, url: START_VALUE}
@@ -137,17 +137,17 @@ add_task(function* load_in_new_tab_test() {
     info(`Running test: ${test.desc}`);
 
     // Add a new tab.
-    let tab = yield* promiseOpenNewTab(test.url || "about:blank");
+    let tab = await promiseOpenNewTab(test.url || "about:blank");
 
     // Trigger a load and check it occurs in the current tab.
     let tabSwitchedPromise = promiseNewTabSwitched();
     triggerCommand(test.click || false, test.event || {});
-    yield tabSwitchedPromise;
+    await tabSwitchedPromise;
 
     // Check the load occurred in a new tab.
     info("URL should be loaded in a new focused tab");
     is(gURLBar.inputField.value, TEST_VALUE, "Urlbar still has the value we entered");
-    yield promiseCheckChildNoFocusedElement(gBrowser.selectedBrowser);
+    await promiseCheckChildNoFocusedElement(gBrowser.selectedBrowser);
     is(document.activeElement, gBrowser.selectedBrowser, "Content window should be focused");
     isnot(gBrowser.selectedTab, tab, "New URL was loaded in a new tab");
 
@@ -184,12 +184,12 @@ function promiseLoadStarted() {
   });
 }
 
-function* promiseOpenNewTab(url = "about:blank") {
+async function promiseOpenNewTab(url = "about:blank") {
   let tab = gBrowser.addTab(url);
   let tabSwitchPromise = promiseNewTabSwitched(tab);
   gBrowser.selectedTab = tab;
-  yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  yield tabSwitchPromise;
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  await tabSwitchPromise;
   return tab;
 }
 
@@ -207,7 +207,7 @@ function promiseCheckChildNoFocusedElement(browser) {
     return null;
   }
 
-  return ContentTask.spawn(browser, { }, function* () {
+  return ContentTask.spawn(browser, { }, async function() {
     const fm = Components.classes["@mozilla.org/focus-manager;1"].
                           getService(Components.interfaces.nsIFocusManager);
     Assert.equal(fm.focusedElement, null, "There should be no focused element");

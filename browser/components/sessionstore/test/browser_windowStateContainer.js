@@ -2,20 +2,20 @@
 
 requestLongerTimeout(2);
 
-add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
     set: [["dom.ipc.processCount", 1]]
   });
 });
 
-add_task(function* () {
-  let win = yield BrowserTestUtils.openNewBrowserWindow();
+add_task(async function() {
+  let win = await BrowserTestUtils.openNewBrowserWindow();
 
   // Create 4 tabs with different userContextId.
   for (let userContextId = 1; userContextId < 5; userContextId++) {
     let tab = win.gBrowser.addTab("http://example.com/", {userContextId});
-    yield promiseBrowserLoaded(tab.linkedBrowser);
-    yield TabStateFlusher.flush(tab.linkedBrowser);
+    await promiseBrowserLoaded(tab.linkedBrowser);
+    await TabStateFlusher.flush(tab.linkedBrowser);
   }
 
   // Move the default tab of window to the end.
@@ -31,21 +31,21 @@ add_task(function* () {
                  "1st Window: tabs[" + i + "].userContextId should exist.");
   }
 
-  let win2 = yield BrowserTestUtils.openNewBrowserWindow();
+  let win2 = await BrowserTestUtils.openNewBrowserWindow();
 
   // Create tabs with different userContextId, but this time we create them with
   // fewer tabs and with different order with win.
   for (let userContextId = 3; userContextId > 0; userContextId--) {
     let tab = win2.gBrowser.addTab("http://example.com/", {userContextId});
-    yield promiseBrowserLoaded(tab.linkedBrowser);
-    yield TabStateFlusher.flush(tab.linkedBrowser);
+    await promiseBrowserLoaded(tab.linkedBrowser);
+    await TabStateFlusher.flush(tab.linkedBrowser);
   }
 
   ss.setWindowState(win2, JSON.stringify(winState), true);
 
   for (let i = 0; i < 4; i++) {
     let browser = win2.gBrowser.tabs[i].linkedBrowser;
-    yield ContentTask.spawn(browser, { expectedId: i + 1 }, function* (args) {
+    await ContentTask.spawn(browser, { expectedId: i + 1 }, async function(args) {
       Assert.equal(docShell.getOriginAttributes().userContextId,
                    args.expectedId,
                    "The docShell has the correct userContextId");
@@ -58,7 +58,7 @@ add_task(function* () {
 
   // Test the last tab, which doesn't have userContextId.
   let browser = win2.gBrowser.tabs[4].linkedBrowser;
-  yield ContentTask.spawn(browser, { expectedId: 0 }, function* (args) {
+  await ContentTask.spawn(browser, { expectedId: 0 }, async function(args) {
     Assert.equal(docShell.getOriginAttributes().userContextId,
                  args.expectedId,
                  "The docShell has the correct userContextId");
@@ -68,17 +68,17 @@ add_task(function* () {
                  "The document has the correct userContextId");
   });
 
-  yield BrowserTestUtils.closeWindow(win);
-  yield BrowserTestUtils.closeWindow(win2);
+  await BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win2);
 });
 
-add_task(function* () {
-  let win = yield BrowserTestUtils.openNewBrowserWindow();
-  yield TabStateFlusher.flush(win.gBrowser.selectedBrowser);
+add_task(async function() {
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  await TabStateFlusher.flush(win.gBrowser.selectedBrowser);
 
   let tab = win.gBrowser.addTab("http://example.com/", { userContextId: 1 });
-  yield promiseBrowserLoaded(tab.linkedBrowser);
-  yield TabStateFlusher.flush(tab.linkedBrowser);
+  await promiseBrowserLoaded(tab.linkedBrowser);
+  await TabStateFlusher.flush(tab.linkedBrowser);
 
   // win should have 1 default tab, and 1 container tab.
   Assert.equal(win.gBrowser.tabs.length, 2, "win should have 2 tabs");
@@ -90,22 +90,22 @@ add_task(function* () {
                  "1st Window: tabs[" + i + "].userContextId should be " + i);
   }
 
-  let win2 = yield BrowserTestUtils.openNewBrowserWindow();
+  let win2 = await BrowserTestUtils.openNewBrowserWindow();
 
   let tab2 = win2.gBrowser.addTab("http://example.com/", { userContextId: 1 });
-  yield promiseBrowserLoaded(tab2.linkedBrowser);
-  yield TabStateFlusher.flush(tab2.linkedBrowser);
+  await promiseBrowserLoaded(tab2.linkedBrowser);
+  await TabStateFlusher.flush(tab2.linkedBrowser);
 
   // Move the first normal tab to end, so the first tab of win2 will be a
   // container tab.
   win2.gBrowser.moveTabTo(win2.gBrowser.tabs[0], win2.gBrowser.tabs.length - 1);
-  yield TabStateFlusher.flush(win2.gBrowser.tabs[0].linkedBrowser);
+  await TabStateFlusher.flush(win2.gBrowser.tabs[0].linkedBrowser);
 
   ss.setWindowState(win2, JSON.stringify(winState), true);
 
   for (let i = 0; i < 2; i++) {
     let browser = win2.gBrowser.tabs[i].linkedBrowser;
-    yield ContentTask.spawn(browser, { expectedId: i }, function* (args) {
+    await ContentTask.spawn(browser, { expectedId: i }, async function(args) {
       Assert.equal(docShell.getOriginAttributes().userContextId,
                    args.expectedId,
                    "The docShell has the correct userContextId");
@@ -116,6 +116,6 @@ add_task(function* () {
     });
   }
 
-  yield BrowserTestUtils.closeWindow(win);
-  yield BrowserTestUtils.closeWindow(win2);
+  await BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win2);
 });

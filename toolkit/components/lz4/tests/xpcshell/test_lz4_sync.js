@@ -13,15 +13,15 @@ function compare_arrays(a, b) {
   return Array.prototype.join.call(a) == Array.prototype.join.call(a);
 }
 
-add_task(function*() {
+add_task(async function() {
   let path = OS.Path.join("data", "compression.lz");
-  let data = yield OS.File.read(path);
+  let data = await OS.File.read(path);
   let decompressed = Lz4.decompressFileContent(data);
   let text = (new TextDecoder()).decode(decompressed);
   do_check_eq(text, "Hello, lz4");
 });
 
-add_task(function*() {
+add_task(async function() {
   for (let length of [0, 1, 1024]) {
     let array = new Uint8Array(length);
     for (let i = 0; i < length; ++i) {

@@ -12,8 +12,8 @@ registerCleanupFunction(function() {
 
 // Right-click on an item within the overflow panel should
 // show a context menu with options to move it.
-add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
 
   overflowPanel.setAttribute("animate", "false");
 
@@ -22,13 +22,13 @@ add_task(function*() {
   ok(!navbar.hasAttribute("overflowing"), "Should start with a non-overflowing toolbar.");
   window.resizeTo(400, window.outerHeight);
 
-  yield waitForCondition(() => navbar.hasAttribute("overflowing"));
+  await waitForCondition(() => navbar.hasAttribute("overflowing"));
   ok(navbar.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
 
   let chevron = document.getElementById("nav-bar-overflow-button");
   let shownPanelPromise = promisePanelElementShown(window, overflowPanel);
   chevron.click();
-  yield shownPanelPromise;
+  await shownPanelPromise;
 
   let contextMenu = document.getElementById("toolbar-context-menu");
   let shownContextPromise = popupShown(contextMenu);
@@ -36,7 +36,7 @@ add_task(function*() {
   ok(homeButton, "home-button was found");
   is(homeButton.getAttribute("overflowedItem"), "true", "Home button is overflowing");
   EventUtils.synthesizeMouse(homeButton, 2, 2, {type: "contextmenu", button: 2});
-  yield shownContextPromise;
+  await shownContextPromise;
 
   is(overflowPanel.state, "open", "The widget overflow panel should still be open.");
 
@@ -62,8 +62,8 @@ add_task(function*() {
     moveToPanel.click();
   }
   contextMenu.hidePopup();
-  yield hiddenContextPromise;
-  yield hiddenPromise;
+  await hiddenContextPromise;
+  await hiddenPromise;
 
   let homeButtonPlacement = CustomizableUI.getPlacementOfWidget("home-button");
   ok(homeButtonPlacement, "Home button should still have a placement");
@@ -71,7 +71,7 @@ add_task(function*() {
   CustomizableUI.reset();
 
   // In some cases, it can take a tick for the navbar to overflow again. Wait for it:
-  yield waitForCondition(() => navbar.hasAttribute("overflowing"));
+  await waitForCondition(() => navbar.hasAttribute("overflowing"));
   ok(navbar.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
 
   homeButtonPlacement = CustomizableUI.getPlacementOfWidget("home-button");

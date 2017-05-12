@@ -24,10 +24,10 @@ function* testBackgroundPage(expected) {
   yield extension.unload();
 }
 
-add_task(function* test_background_incognito() {
+add_task(async function test_background_incognito() {
   do_print("Test background page incognito value with permanent private browsing disabled");
 
-  yield testBackgroundPage({incognito: false});
+  await testBackgroundPage({incognito: false});
 
   do_print("Test background page incognito value with permanent private browsing enabled");
 
@@ -36,5 +36,5 @@ add_task(function* test_background_incognito() {
     Preferences.reset("browser.privatebrowsing.autostart");
   });
 
-  yield testBackgroundPage({incognito: true});
+  await testBackgroundPage({incognito: true});
 });

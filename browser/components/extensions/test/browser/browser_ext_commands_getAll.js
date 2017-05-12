@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* () {
+add_task(async function() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "name": "Commands Extension",
@@ -88,9 +88,9 @@ add_task(function* () {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitMessage("ready");
+  await extension.startup();
+  await extension.awaitMessage("ready");
   extension.sendMessage("additional-scope", {platform: AppConstants.platform});
-  yield extension.awaitFinish("commands");
-  yield extension.unload();
+  await extension.awaitFinish("commands");
+  await extension.unload();
 });

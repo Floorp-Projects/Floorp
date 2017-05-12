@@ -1160,21 +1160,21 @@ let usePromptService;
  * - 3rd pass: with tab-modal prompts. Can't opt into these via * nsIPromptService.
  */
 
-add_task(function* runPromptTests() {
+add_task(async function runPromptTests() {
   info("Process type: " + SpecialPowers.Services.appinfo.processType);
 
   isTabModal = false; usePromptService = true;
   info("Running tests with: isTabModal=" + isTabModal + ", usePromptService=" + usePromptService);
-  yield* runTests();
+  await runTests();
 
   isTabModal = false; usePromptService = false;
   info("Running tests with: isTabModal=" + isTabModal + ", usePromptService=" + usePromptService);
-  yield* runTests();
+  await runTests();
 
   if (SpecialPowers.getBoolPref("prompts.tab_modal.enabled")) {
       isTabModal = true; usePromptService = false;
       info("Running tests with: isTabModal=" + isTabModal + ", usePromptService=" + usePromptService);
-      yield* runTests();
+      await runTests();
   }
 });
 

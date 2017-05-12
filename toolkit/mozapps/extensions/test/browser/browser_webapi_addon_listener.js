@@ -6,8 +6,8 @@ registerCleanupFunction(() => {
 });
 
 
-function* getListenerEvents(browser) {
-  let result = yield ContentTask.spawn(browser, null, function*() {
+async function getListenerEvents(browser) {
+  let result = await ContentTask.spawn(browser, null, async function() {
     return content.document.getElementById("result").textContent;
   });
 
@@ -43,16 +43,16 @@ provider.createAddons([
 ]);
 
 // Test disable of add-on requiring restart
-add_task(function* test_disable() {
-  yield BrowserTestUtils.withNewTab(TESTPAGE, function*(browser) {
-    let addon = yield promiseAddonByID(RESTART_ID);
+add_task(async function test_disable() {
+  await BrowserTestUtils.withNewTab(TESTPAGE, async function(browser) {
+    let addon = await promiseAddonByID(RESTART_ID);
     is(addon.userDisabled, false, "addon is enabled");
 
     // disable it
     addon.userDisabled = true;
     is(addon.userDisabled, true, "addon was disabled successfully");
 
-    let events = yield getListenerEvents(browser);
+    let events = await getListenerEvents(browser);
 
     // Just a single onDisabling since restart is needed to complete
     let expected = [
@@ -63,16 +63,16 @@ add_task(function* test_disable() {
 });
 
 // Test enable of add-on requiring restart
-add_task(function* test_enable() {
-  yield BrowserTestUtils.withNewTab(TESTPAGE, function*(browser) {
-    let addon = yield promiseAddonByID(RESTART_DISABLED_ID);
+add_task(async function test_enable() {
+  await BrowserTestUtils.withNewTab(TESTPAGE, async function(browser) {
+    let addon = await promiseAddonByID(RESTART_DISABLED_ID);
     is(addon.userDisabled, true, "addon is disabled");
 
     // enable it
     addon.userDisabled = false;
     is(addon.userDisabled, false, "addon was enabled successfully");
 
-    let events = yield getListenerEvents(browser);
+    let events = await getListenerEvents(browser);
 
     // Just a single onEnabling since restart is needed to complete
     let expected = [
@@ -83,9 +83,9 @@ add_task(function* test_enable() {
 });
 
 // Test enable/disable events for restartless
-add_task(function* test_restartless() {
-  yield BrowserTestUtils.withNewTab(TESTPAGE, function*(browser) {
-    let addon = yield promiseAddonByID(RESTARTLESS_ID);
+add_task(async function test_restartless() {
+  await BrowserTestUtils.withNewTab(TESTPAGE, async function(browser) {
+    let addon = await promiseAddonByID(RESTARTLESS_ID);
     is(addon.userDisabled, false, "addon is enabled");
 
     // disable it
@@ -96,7 +96,7 @@ add_task(function* test_restartless() {
     addon.userDisabled = false;
     is(addon.userDisabled, false, "addon was re-enabled successfuly");
 
-    let events = yield getListenerEvents(browser);
+    let events = await getListenerEvents(browser);
     let expected = [
       {id: RESTARTLESS_ID, needsRestart: false, event: "onDisabling"},
       {id: RESTARTLESS_ID, needsRestart: false, event: "onDisabled"},
@@ -108,8 +108,8 @@ add_task(function* test_restartless() {
 });
 
 // Test install events
-add_task(function* test_restartless() {
-  yield BrowserTestUtils.withNewTab(TESTPAGE, function*(browser) {
+add_task(async function test_restartless() {
+  await BrowserTestUtils.withNewTab(TESTPAGE, async function(browser) {
     let addon = new MockAddon(INSTALL_ID, "installme", null,
                               AddonManager.OP_NEED_RESTART_NONE);
     let install = new MockInstall(null, null, addon);
@@ -123,9 +123,9 @@ add_task(function* test_restartless() {
     provider.addInstall(install);
     install.install();
 
-    yield installPromise;
+    await installPromise;
 
-    let events = yield getListenerEvents(browser);
+    let events = await getListenerEvents(browser);
     let expected = [
       {id: INSTALL_ID, needsRestart: false, event: "onInstalling"},
       {id: INSTALL_ID, needsRestart: false, event: "onInstalled"},
@@ -135,14 +135,14 @@ add_task(function* test_restartless() {
 });
 
 // Test uninstall
-add_task(function* test_uninstall() {
-  yield BrowserTestUtils.withNewTab(TESTPAGE, function*(browser) {
-    let addon = yield promiseAddonByID(RESTARTLESS_ID);
+add_task(async function test_uninstall() {
+  await BrowserTestUtils.withNewTab(TESTPAGE, async function(browser) {
+    let addon = await promiseAddonByID(RESTARTLESS_ID);
     isnot(addon, null, "Found add-on for uninstall");
 
     addon.uninstall();
 
-    let events = yield getListenerEvents(browser);
+    let events = await getListenerEvents(browser);
     let expected = [
       {id: RESTARTLESS_ID, needsRestart: false, event: "onUninstalling"},
       {id: RESTARTLESS_ID, needsRestart: false, event: "onUninstalled"},
@@ -152,21 +152,21 @@ add_task(function* test_uninstall() {
 });
 
 // Test cancel of uninstall.
-add_task(function* test_cancel() {
-  yield BrowserTestUtils.withNewTab(TESTPAGE, function*(browser) {
-    let addon = yield promiseAddonByID(CANCEL_ID);
+add_task(async function test_cancel() {
+  await BrowserTestUtils.withNewTab(TESTPAGE, async function(browser) {
+    let addon = await promiseAddonByID(CANCEL_ID);
     isnot(addon, null, "Found add-on for cancelling uninstall");
 
     addon.uninstall();
 
-    let events = yield getListenerEvents(browser);
+    let events = await getListenerEvents(browser);
     let expected = [
       {id: CANCEL_ID, needsRestart: true, event: "onUninstalling"},
     ];
     Assert.deepEqual(events, expected, "Got expected uninstalling event");
 
     addon.cancelUninstall();
-    events = yield getListenerEvents(browser);
+    events = await getListenerEvents(browser);
     expected.push({id: CANCEL_ID, needsRestart: false, event: "onOperationCancelled"});
     Assert.deepEqual(events, expected, "Got expected cancel event");
   });

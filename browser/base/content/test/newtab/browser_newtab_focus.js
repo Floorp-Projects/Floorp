@@ -4,8 +4,8 @@
 /*
  * These tests make sure that focusing the 'New Tab Page' works as expected.
  */
-add_task(function* () {
-  yield pushPrefs(["accessibility.tabfocus", 7]);
+add_task(async function() {
+  await pushPrefs(["accessibility.tabfocus", 7]);
 
   // Focus count in new tab page.
   // 30 = 9 * 3 + 3 = 9 sites, each with link, pin and remove buttons; search
@@ -14,10 +14,10 @@ add_task(function* () {
   let FOCUS_COUNT = 30;
 
   // Create a new tab page.
-  yield setLinks("0,1,2,3,4,5,6,7,8");
+  await setLinks("0,1,2,3,4,5,6,7,8");
   setPinnedLinks("");
 
-  yield* addNewTabPageTab();
+  await addNewTabPageTab();
   gURLBar.focus();
 
   // Count the focus with the enabled page.

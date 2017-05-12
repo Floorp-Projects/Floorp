@@ -8,7 +8,7 @@
 // it for, so we can disable it for this test.
 /* eslint-disable mozilla/no-cpows-in-tests */
 
-function* setup() {
+function setup() {
   const SUGGEST_URLBAR_PREF = "browser.urlbar.suggest.searches";
   Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, false);
 
@@ -17,7 +17,7 @@ function* setup() {
   });
 }
 
-add_task(function* () {
+add_task(async function() {
   let keyword = "test";
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -93,17 +93,17 @@ add_task(function* () {
     }
   }
 
-  function* startInputSession() {
+  async function startInputSession() {
     gURLBar.focus();
     gURLBar.value = keyword;
     EventUtils.synthesizeKey(" ", {});
-    yield expectEvent("on-input-started-fired");
+    await expectEvent("on-input-started-fired");
     EventUtils.synthesizeKey("t", {});
-    yield expectEvent("on-input-changed-fired", {text: "t"});
+    await expectEvent("on-input-changed-fired", {text: "t"});
     // Wait for the autocomplete search. Note that we cannot wait for the search
     // to be complete, since the add-on doesn't communicate when it's done, so
     // just check matches count.
-    yield BrowserTestUtils.waitForCondition(() => gURLBar.controller.matchCount >= 2,
+    await BrowserTestUtils.waitForCondition(() => gURLBar.controller.matchCount >= 2,
                                             "waiting urlbar search to complete");
     return "t";
   }
@@ -250,17 +250,17 @@ add_task(function* () {
     });
   }
 
-  yield setup();
-  yield extension.startup();
+  await setup();
+  await extension.startup();
 
-  yield SimpleTest.promiseFocus(window);
+  await SimpleTest.promiseFocus(window);
 
-  yield testInputEvents();
+  await testInputEvents();
 
   // Test the heuristic result with default suggestions.
-  yield testHeuristicResult("Generated extension", false /* setDefaultSuggestion */);
-  yield testHeuristicResult("hello world", true /* setDefaultSuggestion */);
-  yield testHeuristicResult("foo bar", true /* setDefaultSuggestion */);
+  await testHeuristicResult("Generated extension", false /* setDefaultSuggestion */);
+  await testHeuristicResult("hello world", true /* setDefaultSuggestion */);
+  await testHeuristicResult("foo bar", true /* setDefaultSuggestion */);
 
   let suggestions = [
     {content: "a", description: "select a"},
@@ -269,23 +269,23 @@ add_task(function* () {
   ];
 
   extension.sendMessage("set-suggestions", {suggestions});
-  yield extension.awaitMessage("suggestions-set");
+  await extension.awaitMessage("suggestions-set");
 
   // Test each suggestion and search disposition.
-  yield testDisposition(1, "currentTab", suggestions[0].content);
-  yield testDisposition(2, "newForegroundTab", suggestions[1].content);
-  yield testDisposition(3, "newBackgroundTab", suggestions[2].content);
+  await testDisposition(1, "currentTab", suggestions[0].content);
+  await testDisposition(2, "newForegroundTab", suggestions[1].content);
+  await testDisposition(3, "newBackgroundTab", suggestions[2].content);
 
   extension.sendMessage("set-suggestions", {suggestions});
-  yield extension.awaitMessage("suggestions-set");
+  await extension.awaitMessage("suggestions-set");
 
   // Test adding suggestions asynchronously.
-  yield testSuggestions({
+  await testSuggestions({
     test: "test-multiple-suggest-calls",
     skipHeuristic: true,
     suggestions,
   });
-  yield testSuggestions({
+  await testSuggestions({
     test: "test-suggestions-after-delay",
     skipHeuristic: true,
     suggestions,
@@ -307,12 +307,12 @@ add_task(function* () {
     },
   });
 
-  yield extension2.startup();
+  await extension2.startup();
 
   // Stop monitoring the console and confirm the correct errors are logged.
   SimpleTest.endMonitorConsole();
-  yield waitForConsole;
+  await waitForConsole;
 
-  yield extension2.unload();
-  yield extension.unload();
+  await extension2.unload();
+  await extension.unload();
 });

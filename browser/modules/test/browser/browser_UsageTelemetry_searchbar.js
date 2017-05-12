@@ -17,21 +17,21 @@ function checkHistogramResults(resultIndexes, expected, histogram) {
   }
 }
 
-let searchInSearchbar = Task.async(function* (inputText) {
+let searchInSearchbar = async function(inputText) {
   let win = window;
-  yield new Promise(r => waitForFocus(r, win));
+  await new Promise(r => waitForFocus(r, win));
   let sb = BrowserSearch.searchBar;
   // Write the search query in the searchbar.
   sb.focus();
   sb.value = inputText;
   sb.textbox.controller.startSearch(inputText);
   // Wait for the popup to show.
-  yield BrowserTestUtils.waitForEvent(sb.textbox.popup, "popupshown");
+  await BrowserTestUtils.waitForEvent(sb.textbox.popup, "popupshown");
   // And then for the search to complete.
-  yield BrowserTestUtils.waitForCondition(() => sb.textbox.controller.searchStatus >=
+  await BrowserTestUtils.waitForCondition(() => sb.textbox.controller.searchStatus >=
                                                 Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH,
                                           "The search in the searchbar must complete.");
-});
+};
 
 /**
  * Click one of the entries in the search suggestion popup.
@@ -63,7 +63,7 @@ function clickSearchbarSuggestion(entryName) {
   }
 }
 
-add_task(function* setup() {
+add_task(async function setup() {
   // Create two new search engines. Mark one as the default engine, so
   // the test don't crash. We need to engines for this test as the searchbar
   // doesn't display the default search engine among the one-off engines.
@@ -87,13 +87,13 @@ add_task(function* setup() {
   Services.telemetry.canRecordExtended = true;
 
   // Enable Extended Telemetry.
-  yield SpecialPowers.pushPrefEnv({"set": [["toolkit.telemetry.enabled", true]]});
+  await SpecialPowers.pushPrefEnv({"set": [["toolkit.telemetry.enabled", true]]});
 
   // Enable event recording for the events tested here.
   Services.telemetry.setEventRecordingEnabled("navigation", true);
 
   // Make sure to restore the engine once we're done.
-  registerCleanupFunction(function* () {
+  registerCleanupFunction(function() {
     Services.telemetry.canRecordExtended = oldCanRecord;
     Services.search.currentEngine = originalEngine;
     Services.search.removeEngine(engineDefault);
@@ -102,7 +102,7 @@ add_task(function* setup() {
   });
 });
 
-add_task(function* test_plainQuery() {
+add_task(async function test_plainQuery() {
   // Let's reset the counts.
   Services.telemetry.clearScalars();
   Services.telemetry.clearEvents();
@@ -110,13 +110,13 @@ add_task(function* test_plainQuery() {
   resultMethodHist.clear();
   let search_hist = getSearchCountsHistogram();
 
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
 
   info("Simulate entering a simple search.");
   let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  yield searchInSearchbar("simple query");
+  await searchInSearchbar("simple query");
   EventUtils.sendKey("return");
-  yield p;
+  await p;
 
   // Check if the scalars contain the expected values.
   const scalars = getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true, false);
@@ -138,12 +138,12 @@ add_task(function* test_plainQuery() {
     URLBAR_SELECTED_RESULT_METHODS.enter,
     "FX_SEARCHBAR_SELECTED_RESULT_METHOD");
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });
 
 // Performs a search using the first result, a one-off button, and the Return
 // (Enter) key.
-add_task(function* test_oneOff_enter() {
+add_task(async function test_oneOff_enter() {
   // Let's reset the counts.
   Services.telemetry.clearScalars();
   Services.telemetry.clearEvents();
@@ -151,16 +151,16 @@ add_task(function* test_oneOff_enter() {
   resultMethodHist.clear();
   let search_hist = getSearchCountsHistogram();
 
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
 
   info("Perform a one-off search using the first engine.");
   let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  yield searchInSearchbar("query");
+  await searchInSearchbar("query");
 
   info("Pressing Alt+Down to highlight the first one off engine.");
   EventUtils.synthesizeKey("VK_DOWN", { altKey: true });
   EventUtils.sendKey("return");
-  yield p;
+  await p;
 
   // Check if the scalars contain the expected values.
   const scalars = getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true, false);
@@ -182,13 +182,13 @@ add_task(function* test_oneOff_enter() {
     URLBAR_SELECTED_RESULT_METHODS.enter,
     "FX_SEARCHBAR_SELECTED_RESULT_METHOD");
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });
 
 // Performs a search using the second result, a one-off button, and the Return
 // (Enter) key.  This only tests the FX_SEARCHBAR_SELECTED_RESULT_METHOD
 // histogram since test_oneOff_enter covers everything else.
-add_task(function* test_oneOff_enterSelection() {
+add_task(async function test_oneOff_enterSelection() {
   // Let's reset the counts.
   Services.telemetry.clearScalars();
   let resultMethodHist = Services.telemetry.getHistogramById("FX_SEARCHBAR_SELECTED_RESULT_METHOD");
@@ -197,7 +197,7 @@ add_task(function* test_oneOff_enterSelection() {
   // Create an engine to generate search suggestions and add it as default
   // for this test.
   const url = getRootDirectory(gTestPath) + "usageTelemetrySearchSuggestions.xml";
-  let suggestionEngine = yield new Promise((resolve, reject) => {
+  let suggestionEngine = await new Promise((resolve, reject) => {
     Services.search.addEngine(url, null, "", false, {
       onSuccess(engine) { resolve(engine) },
       onError() { reject() }
@@ -207,17 +207,17 @@ add_task(function* test_oneOff_enterSelection() {
   let previousEngine = Services.search.currentEngine;
   Services.search.currentEngine = suggestionEngine;
 
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
 
   info("Type a query. Suggestions should be generated by the test engine.");
   let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  yield searchInSearchbar("query");
+  await searchInSearchbar("query");
 
   info("Select the second result, press Alt+Down to take us to the first one-off engine.");
   EventUtils.synthesizeKey("VK_DOWN", {});
   EventUtils.synthesizeKey("VK_DOWN", { altKey: true });
   EventUtils.sendKey("return");
-  yield p;
+  await p;
 
   let resultMethods = resultMethodHist.snapshot();
   checkHistogramResults(resultMethods,
@@ -226,37 +226,37 @@ add_task(function* test_oneOff_enterSelection() {
 
   Services.search.currentEngine = previousEngine;
   Services.search.removeEngine(suggestionEngine);
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });
 
 // Performs a search using a click on a one-off button.  This only tests the
 // FX_SEARCHBAR_SELECTED_RESULT_METHOD histogram since test_oneOff_enter covers
 // everything else.
-add_task(function* test_oneOff_click() {
+add_task(async function test_oneOff_click() {
   // Let's reset the counts.
   Services.telemetry.clearScalars();
   let resultMethodHist = Services.telemetry.getHistogramById("FX_SEARCHBAR_SELECTED_RESULT_METHOD");
   resultMethodHist.clear();
 
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
 
   info("Type a query.");
   let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  yield searchInSearchbar("query");
+  await searchInSearchbar("query");
   info("Click the first one-off button.");
   BrowserSearch.searchBar.textbox.popup.oneOffButtons.getSelectableButtons(false)[0].click();
-  yield p;
+  await p;
 
   let resultMethods = resultMethodHist.snapshot();
   checkHistogramResults(resultMethods,
     URLBAR_SELECTED_RESULT_METHODS.click,
     "FX_SEARCHBAR_SELECTED_RESULT_METHOD");
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });
 
 // Clicks the first suggestion offered by the test search engine.
-add_task(function* test_suggestion_click() {
+add_task(async function test_suggestion_click() {
   // Let's reset the counts.
   Services.telemetry.clearScalars();
   Services.telemetry.clearEvents();
@@ -267,7 +267,7 @@ add_task(function* test_suggestion_click() {
   // Create an engine to generate search suggestions and add it as default
   // for this test.
   const url = getRootDirectory(gTestPath) + "usageTelemetrySearchSuggestions.xml";
-  let suggestionEngine = yield new Promise((resolve, reject) => {
+  let suggestionEngine = await new Promise((resolve, reject) => {
     Services.search.addEngine(url, null, "", false, {
       onSuccess(engine) { resolve(engine) },
       onError() { reject() }
@@ -277,14 +277,14 @@ add_task(function* test_suggestion_click() {
   let previousEngine = Services.search.currentEngine;
   Services.search.currentEngine = suggestionEngine;
 
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
 
   info("Perform a one-off search using the first engine.");
   let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  yield searchInSearchbar("query");
+  await searchInSearchbar("query");
   info("Clicking the searchbar suggestion.");
   clickSearchbarSuggestion("queryfoo");
-  yield p;
+  await p;
 
   // Check if the scalars contain the expected values.
   const scalars = getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true, false);
@@ -309,14 +309,14 @@ add_task(function* test_suggestion_click() {
 
   Services.search.currentEngine = previousEngine;
   Services.search.removeEngine(suggestionEngine);
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });
 
 // Selects and presses the Return (Enter) key on the first suggestion offered by
 // the test search engine.  This only tests the
 // FX_SEARCHBAR_SELECTED_RESULT_METHOD histogram since test_suggestion_click
 // covers everything else.
-add_task(function* test_suggestion_enterSelection() {
+add_task(async function test_suggestion_enterSelection() {
   // Let's reset the counts.
   Services.telemetry.clearScalars();
   let resultMethodHist = Services.telemetry.getHistogramById("FX_SEARCHBAR_SELECTED_RESULT_METHOD");
@@ -325,7 +325,7 @@ add_task(function* test_suggestion_enterSelection() {
   // Create an engine to generate search suggestions and add it as default
   // for this test.
   const url = getRootDirectory(gTestPath) + "usageTelemetrySearchSuggestions.xml";
-  let suggestionEngine = yield new Promise((resolve, reject) => {
+  let suggestionEngine = await new Promise((resolve, reject) => {
     Services.search.addEngine(url, null, "", false, {
       onSuccess(engine) { resolve(engine) },
       onError() { reject() }
@@ -335,15 +335,15 @@ add_task(function* test_suggestion_enterSelection() {
   let previousEngine = Services.search.currentEngine;
   Services.search.currentEngine = suggestionEngine;
 
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
 
   info("Type a query. Suggestions should be generated by the test engine.");
   let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  yield searchInSearchbar("query");
+  await searchInSearchbar("query");
   info("Select the second result and press Return.");
   EventUtils.synthesizeKey("VK_DOWN", {});
   EventUtils.sendKey("return");
-  yield p;
+  await p;
 
   let resultMethods = resultMethodHist.snapshot();
   checkHistogramResults(resultMethods,
@@ -352,5 +352,5 @@ add_task(function* test_suggestion_enterSelection() {
 
   Services.search.currentEngine = previousEngine;
   Services.search.removeEngine(suggestionEngine);
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });

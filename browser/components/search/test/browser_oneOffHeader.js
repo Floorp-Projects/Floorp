@@ -36,7 +36,7 @@ const msg = isMac ? 5 : 1;
 const utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
                     .getInterface(Ci.nsIDOMWindowUtils);
 const scale = utils.screenPixelsPerCSSPixel;
-function* synthesizeNativeMouseMove(aElement) {
+function synthesizeNativeMouseMove(aElement) {
   let rect = aElement.getBoundingClientRect();
   let win = aElement.ownerGlobal;
   let x = win.mozInnerScreenX + (rect.left + rect.right) / 2;
@@ -56,15 +56,15 @@ function* synthesizeNativeMouseMove(aElement) {
 }
 
 
-add_task(function* init() {
-  yield promiseNewEngine("testEngine.xml");
+add_task(async function init() {
+  await promiseNewEngine("testEngine.xml");
 });
 
-add_task(function* test_notext() {
+add_task(async function test_notext() {
   let promise = promiseEvent(searchPopup, "popupshown");
   info("Opening search panel");
   EventUtils.synthesizeMouseAtCenter(searchIcon, {});
-  yield promise;
+  await promise;
 
   is(header.getAttribute("selectedIndex"), 0,
      "Header has the correct index selected with no search terms.");
@@ -72,14 +72,14 @@ add_task(function* test_notext() {
   is(getHeaderText(), "Search with:",
      "Search header string is correct when no search terms have been entered");
 
-  yield synthesizeNativeMouseMove(searchSettings);
+  await synthesizeNativeMouseMove(searchSettings);
   is(header.getAttribute("selectedIndex"), 0,
      "Header has the correct index when no search terms have been entered and the Change Search Settings button is selected.");
   is(getHeaderText(), "Search with:",
      "Header has the correct text when no search terms have been entered and the Change Search Settings button is selected.");
 
   let buttons = getOneOffs();
-  yield synthesizeNativeMouseMove(buttons[0]);
+  await synthesizeNativeMouseMove(buttons[0]);
   is(header.getAttribute("selectedIndex"), 2,
      "Header has the correct index selected when a search engine has been selected");
   is(getHeaderText(), "Search " + buttons[0].engine.name,
@@ -88,10 +88,10 @@ add_task(function* test_notext() {
   promise = promiseEvent(searchPopup, "popuphidden");
   info("Closing search panel");
   EventUtils.synthesizeKey("VK_ESCAPE", {});
-  yield promise;
+  await promise;
 });
 
-add_task(function* test_text() {
+add_task(async function test_text() {
   textbox.value = "foo";
   registerCleanupFunction(() => {
     textbox.value = "";
@@ -102,7 +102,7 @@ add_task(function* test_text() {
   SimpleTest.executeSoon(() => {
     EventUtils.synthesizeMouseAtCenter(searchIcon, {});
   });
-  yield promise;
+  await promise;
 
   is(header.getAttribute("selectedIndex"), 1,
      "Header has the correct index selected with a search term.");
@@ -110,13 +110,13 @@ add_task(function* test_text() {
      "Search header string is correct when a search term has been entered");
 
   let buttons = getOneOffs();
-  yield synthesizeNativeMouseMove(buttons[0]);
+  await synthesizeNativeMouseMove(buttons[0]);
   is(header.getAttribute("selectedIndex"), 2,
      "Header has the correct index selected when a search engine has been selected");
   is(getHeaderText(), "Search " + buttons[0].engine.name,
      "Is the header text correct when search terms are entered after a search engine has been selected.");
 
-  yield synthesizeNativeMouseMove(searchSettings);
+  await synthesizeNativeMouseMove(searchSettings);
   is(header.getAttribute("selectedIndex"), 1,
      "Header has the correct index selected when search terms have been entered and the Change Search Settings button is selected.");
   is(getHeaderText(), "Search for foo with:",
@@ -128,14 +128,14 @@ add_task(function* test_text() {
     document.getAnonymousElementByAttribute(searchPopup, "anonid",
                                             "searchbar-engine");
 
-  yield synthesizeNativeMouseMove(searchbarEngine);
+  await synthesizeNativeMouseMove(searchbarEngine);
   SimpleTest.executeSoon(() => {
     EventUtils.synthesizeMouseAtCenter(searchbarEngine, {});
   });
 
   let url = Services.search.currentEngine.getSubmission(textbox.value).uri.spec;
-  yield promiseTabLoadEvent(gBrowser.selectedTab, url);
+  await promiseTabLoadEvent(gBrowser.selectedTab, url);
 
   // Move the cursor out of the panel area to avoid messing with other tests.
-  yield synthesizeNativeMouseMove(searchbar);
+  await synthesizeNativeMouseMove(searchbar);
 });

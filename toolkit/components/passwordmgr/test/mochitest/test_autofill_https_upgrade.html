@@ -41,7 +41,7 @@ function checkACForm(expectedUsername, expectedPassword) {
   is(uname.value, expectedUsername, "Checking " + formID + " username");
   is(pword.value, expectedPassword, "Checking " + formID + " password");
 }
-function* prepareLoginsAndProcessForm(url, logins = []) {
+async function prepareLoginsAndProcessForm(url, logins = []) {
   LoginManager.removeAllLogins();
 
   let dates = Date.now();
@@ -53,15 +53,15 @@ function* prepareLoginsAndProcessForm(url, logins = []) {
   }
 
   iframe.src = url;
-  yield promiseFormsProcessed();
+  await promiseFormsProcessed();
 }
 
-add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({"set": [["signon.schemeUpgrades", true]]});
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({"set": [["signon.schemeUpgrades", true]]});
 });
 
-add_task(function* test_simpleNoDupesNoAction() {
-  yield prepareLoginsAndProcessForm("https://example.com" + MISSING_ACTION_PATH, [
+add_task(async function test_simpleNoDupesNoAction() {
+  await prepareLoginsAndProcessForm("https://example.com" + MISSING_ACTION_PATH, [
     new nsLoginInfo("http://example.com", "http://example.com", null,
                     "name2", "pass2", "uname", "pword"),
   ]);
@@ -69,8 +69,8 @@ add_task(function* test_simpleNoDupesNoAction() {
   checkACForm("name2", "pass2");
 });
 
-add_task(function* test_simpleNoDupesUpgradeOriginAndAction() {
-  yield prepareLoginsAndProcessForm("https://example.com" + CROSS_ORIGIN_SECURE_PATH, [
+add_task(async function test_simpleNoDupesUpgradeOriginAndAction() {
+  await prepareLoginsAndProcessForm("https://example.com" + CROSS_ORIGIN_SECURE_PATH, [
     new nsLoginInfo("http://example.com", "http://another.domain", null,
                     "name2", "pass2", "uname", "pword"),
   ]);
@@ -78,8 +78,8 @@ add_task(function* test_simpleNoDupesUpgradeOriginAndAction() {
   checkACForm("name2", "pass2");
 });
 
-add_task(function* test_simpleNoDupesUpgradeOriginOnly() {
-  yield prepareLoginsAndProcessForm("https://example.com" + CROSS_ORIGIN_SECURE_PATH, [
+add_task(async function test_simpleNoDupesUpgradeOriginOnly() {
+  await prepareLoginsAndProcessForm("https://example.com" + CROSS_ORIGIN_SECURE_PATH, [
     new nsLoginInfo("http://example.com", "https://another.domain", null,
                     "name2", "pass2", "uname", "pword"),
   ]);
@@ -87,8 +87,8 @@ add_task(function* test_simpleNoDupesUpgradeOriginOnly() {
   checkACForm("name2", "pass2");
 });
 
-add_task(function* test_simpleNoDupesUpgradeActionOnly() {
-  yield prepareLoginsAndProcessForm("https://example.com" + CROSS_ORIGIN_SECURE_PATH, [
+add_task(async function test_simpleNoDupesUpgradeActionOnly() {
+  await prepareLoginsAndProcessForm("https://example.com" + CROSS_ORIGIN_SECURE_PATH, [
     new nsLoginInfo("https://example.com", "http://another.domain", null,
                     "name2", "pass2", "uname", "pword"),
   ]);
@@ -96,8 +96,8 @@ add_task(function* test_simpleNoDupesUpgradeActionOnly() {
   checkACForm("name2", "pass2");
 });
 
-add_task(function* test_dedupe() {
-  yield prepareLoginsAndProcessForm("https://example.com" + MISSING_ACTION_PATH, [
+add_task(async function test_dedupe() {
+  await prepareLoginsAndProcessForm("https://example.com" + MISSING_ACTION_PATH, [
     new nsLoginInfo("https://example.com", "https://example.com", null,
                     "name1", "passHTTPStoHTTPS", "uname", "pword"),
     new nsLoginInfo("http://example.com", "http://example.com", null,

@@ -54,12 +54,12 @@ let headers = {
   },
 };
 
-add_task(function* setup() {
+add_task(async function setup() {
   extension = makeExtension();
-  yield extension.startup();
+  await extension.startup();
 });
 
-add_task(function* test_newWindow() {
+add_task(async function test_newWindow() {
   let expect = {
     "file_dummy.html": {
       type: "main_frame",
@@ -72,16 +72,16 @@ add_task(function* test_newWindow() {
   // we run, and we never see the request, thus it cannot be handled as part
   // of expect above.
   extension.sendMessage("set-expected", {expect, ignore: ["favicon.ico"]});
-  yield extension.awaitMessage("continue");
+  await extension.awaitMessage("continue");
 
-  let openedWindow = yield BrowserTestUtils.openNewBrowserWindow();
-  yield BrowserTestUtils.openNewForegroundTab(openedWindow.gBrowser, dummy + "?newWindow");
+  let openedWindow = await BrowserTestUtils.openNewBrowserWindow();
+  await BrowserTestUtils.openNewForegroundTab(openedWindow.gBrowser, dummy + "?newWindow");
 
-  yield extension.awaitMessage("done");
-  yield BrowserTestUtils.closeWindow(openedWindow);
+  await extension.awaitMessage("done");
+  await BrowserTestUtils.closeWindow(openedWindow);
 });
 
-add_task(function* test_newTab() {
+add_task(async function test_newTab() {
   // again, in this window
   let expect = {
     "file_dummy.html": {
@@ -90,14 +90,14 @@ add_task(function* test_newTab() {
     },
   };
   extension.sendMessage("set-expected", {expect, ignore: ["favicon.ico"]});
-  yield extension.awaitMessage("continue");
-  let tab = yield BrowserTestUtils.openNewForegroundTab(window.gBrowser, dummy + "?newTab");
+  await extension.awaitMessage("continue");
+  let tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser, dummy + "?newTab");
 
-  yield extension.awaitMessage("done");
-  yield BrowserTestUtils.removeTab(tab);
+  await extension.awaitMessage("done");
+  await BrowserTestUtils.removeTab(tab);
 });
 
-add_task(function* test_subframe() {
+add_task(async function test_subframe() {
   let expect = {
     "file_dummy.html": {
       type: "main_frame",
@@ -106,15 +106,15 @@ add_task(function* test_subframe() {
   };
   // test a content subframe attached to hidden window
   extension.sendMessage("set-expected", {expect, ignore: ["favicon.ico"]});
-  yield extension.awaitMessage("continue");
-  let frameInfo = yield createHiddenBrowser(dummy + "?subframe");
-  yield extension.awaitMessage("done");
+  await extension.awaitMessage("continue");
+  let frameInfo = await createHiddenBrowser(dummy + "?subframe");
+  await extension.awaitMessage("done");
   // cleanup
   frameInfo.browser.remove();
   frameInfo.frame.destroy();
 });
 
-add_task(function* teardown() {
-  yield extension.unload();
+add_task(async function teardown() {
+  await extension.unload();
 });
 

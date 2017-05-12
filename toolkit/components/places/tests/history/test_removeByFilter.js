@@ -18,21 +18,21 @@
    *   Case C 2: Random subhosts, multiple visits, at least one in timeframe and hostname-wildcard
    */
 
-add_task(function* test_removeByFilter() {
+add_task(async function test_removeByFilter() {
   // Cleanup
-  yield PlacesTestUtils.clearHistory();
-  yield PlacesUtils.bookmarks.eraseEverything();
+  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.bookmarks.eraseEverything();
 
   // Adding a witness URI
   let witnessURI = NetUtil.newURI("http://witnessmozilla.org/test_browserhistory/test_removeByFilter" + Math.random());
-  yield PlacesTestUtils.addVisits(witnessURI);
-  Assert.ok((yield PlacesTestUtils.isPageInDB(witnessURI)), "Witness URI is in database");
+  await PlacesTestUtils.addVisits(witnessURI);
+  Assert.ok((await PlacesTestUtils.isPageInDB(witnessURI)), "Witness URI is in database");
 
-  let removeByFilterTester = Task.async(function*(visits, filter, checkBeforeRemove, checkAfterRemove, useCallback, bookmarkedUri) {
+  let removeByFilterTester = async function(visits, filter, checkBeforeRemove, checkAfterRemove, useCallback, bookmarkedUri) {
     // Add visits for URIs
-    yield PlacesTestUtils.addVisits(visits);
+    await PlacesTestUtils.addVisits(visits);
     if (bookmarkedUri !== null && visits.map(v => v.uri).includes(bookmarkedUri)) {
-      yield PlacesUtils.bookmarks.insert({
+      await PlacesUtils.bookmarks.insert({
         parentGuid: PlacesUtils.bookmarks.unfiledGuid,
         url: bookmarkedUri,
         title: "test bookmark"
@@ -50,24 +50,24 @@ add_task(function* test_removeByFilter() {
     if (useCallback) {
       // The amount of callbacks will be the unique URIs to remove from the database
       let netCallbacksRequired = (new Set(visits.map(v => v.uri))).size;
-      removed = yield PlacesUtils.history.removeByFilter(filter, pageInfo => {
+      removed = await PlacesUtils.history.removeByFilter(filter, pageInfo => {
         Assert.ok(PlacesUtils.validatePageInfo(pageInfo, false), "pageInfo should follow a basic format");
         Assert.ok(netCallbacksRequired > 0, "Callback called as many times as required");
         netCallbacksRequired--;
       });
     } else {
-      removed = yield PlacesUtils.history.removeByFilter(filter);
+      removed = await PlacesUtils.history.removeByFilter(filter);
     }
     checkAfterRemove();
-    yield promiseObserved;
+    await promiseObserved;
     if (observer) {
       PlacesUtils.history.removeObserver(observer);
       // Remove the added bookmarks as they interfere with following tests
       PlacesUtils.bookmarks.eraseEverything();
     }
-      Assert.ok((yield PlacesTestUtils.isPageInDB(witnessURI)), "Witness URI is still in database");
+      Assert.ok((await PlacesTestUtils.isPageInDB(witnessURI)), "Witness URI is still in database");
     return removed;
-  });
+  };
 
   const remoteUriList = [ "http://mozilla.org/test_browserhistory/test_removeByFilter/" + Math.random(),
                           "http://subdomain1.mozilla.org/test_browserhistory/test_removeByFilter/" + Math.random(),
@@ -126,11 +126,11 @@ add_task(function* test_removeByFilter() {
       title
     }
   ];
-  let assertInDB = function*(aUri) {
-      Assert.ok((yield PlacesTestUtils.isPageInDB(aUri)));
+  let assertInDB = async function(aUri) {
+      Assert.ok((await PlacesTestUtils.isPageInDB(aUri)));
   };
-  let assertNotInDB = function*(aUri) {
-    Assert.ok(!(yield PlacesTestUtils.isPageInDB(aUri)));
+  let assertNotInDB = async function(aUri) {
+    Assert.ok(!(await PlacesTestUtils.isPageInDB(aUri)));
   };
   for (let callbackUse of [true, false]) {
     // Case A Positives
@@ -144,55 +144,55 @@ add_task(function* test_removeByFilter() {
         checkClosure = function(aUri) { };
       }
       // Case A 1: Dates
-      yield removeByFilterTester(sameHostVisits,
+      await removeByFilterTester(sameHostVisits,
                                  { beginDate: new Date(2004, 1, 1), endDate: new Date(2006, 1, 1) },
                                  () => assertInDB(remoteUriList[0]),
                                  () => checkClosure(remoteUriList[0]),
                                  callbackUse, bookmarkedUri(remoteUriList));
       // Case A 2: Single Sub-host
-      yield removeByFilterTester(sameHostVisits, { host: "mozilla.org" },
+      await removeByFilterTester(sameHostVisits, { host: "mozilla.org" },
                                  () => assertInDB(remoteUriList[0]),
                                  () => checkClosure(remoteUriList[0]),
                                  callbackUse, bookmarkedUri(remoteUriList));
       // Case A 3: Multiple subhost
-      yield removeByFilterTester(randomHostVisits, { host: "*.mozilla.org" },
+      await removeByFilterTester(randomHostVisits, { host: "*.mozilla.org" },
                                  () => remoteUriList.forEach(assertInDB),
                                  () => checkableArray(remoteUriList).forEach(checkClosure),
                                  callbackUse, bookmarkedUri(remoteUriList));
     }
 
     // Case A 4: Localhost
-    yield removeByFilterTester(localhostVisits, { host: "localhost" },
+    await removeByFilterTester(localhostVisits, { host: "localhost" },
                                () => localhostUriList.forEach(assertInDB),
                                () => localhostUriList.forEach(assertNotInDB),
                                callbackUse);
     // Case A 5: Local Files
-    yield removeByFilterTester(fileVisits, { host: "" },
+    await removeByFilterTester(fileVisits, { host: "" },
                                () => fileUriList.forEach(assertInDB),
                                () => fileUriList.forEach(assertNotInDB),
                                callbackUse);
 
     // Case B: Tests which do not remove anything (inverses)
     // Case B 1: Date
-    yield removeByFilterTester(sameHostVisits,
+    await removeByFilterTester(sameHostVisits,
                                { beginDate: new Date(2001, 1, 1), endDate: new Date(2002, 1, 1) },
                                () => assertInDB(remoteUriList[0]),
                                () => assertInDB(remoteUriList[0]),
                                callbackUse);
     // Case B 2 : Single subhost
-    yield removeByFilterTester(sameHostVisits, { host: "notthere.org" },
+    await removeByFilterTester(sameHostVisits, { host: "notthere.org" },
                                () => assertInDB(remoteUriList[0]),
                                () => assertInDB(remoteUriList[0]),
                                callbackUse);
     // Case B 3 : Multiple subhosts
-    yield removeByFilterTester(randomHostVisits, { host: "*.notthere.org" },
+    await removeByFilterTester(randomHostVisits, { host: "*.notthere.org" },
                                () => remoteUriList.forEach(assertInDB),
                                () => remoteUriList.forEach(assertInDB),
                                callbackUse);
 
     // Case C: Combination Cases
     // Case C 1: single subhost
-    yield removeByFilterTester(sameHostVisits,
+    await removeByFilterTester(sameHostVisits,
                                { host: "mozilla.org",
                                  beginDate: new Date(2004, 1, 1),
                                  endDate: new Date(2006, 1, 1) },
@@ -200,7 +200,7 @@ add_task(function* test_removeByFilter() {
                                () => assertNotInDB(remoteUriList[0]),
                                callbackUse);
     // Case C 2: multiple subhost
-    yield removeByFilterTester(randomHostVisits,
+    await removeByFilterTester(randomHostVisits,
                                { host: "*.mozilla.org",
                                  beginDate: new Date(2005, 1, 1),
                                  endDate: new Date(2017, 1, 1) },
@@ -212,7 +212,7 @@ add_task(function* test_removeByFilter() {
 
 
 // Test various error cases
-add_task(function* test_error_cases() {
+add_task(async function test_error_cases() {
   Assert.throws(
     () => PlacesUtils.history.removeByFilter(),
       /TypeError: Expected a filter/

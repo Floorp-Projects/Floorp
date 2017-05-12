@@ -14,7 +14,7 @@ function page_blobify(browser, input) {
 }
 
 function page_deblobify(browser, blobURL) {
-  return ContentTask.spawn(browser, blobURL, function* (contentBlobURL) {
+  return ContentTask.spawn(browser, blobURL, async function(contentBlobURL) {
     if ("error" in contentBlobURL) {
       return contentBlobURL;
     }
@@ -45,17 +45,17 @@ function page_deblobify(browser, blobURL) {
       });
     }
 
-    let blob = yield blobURLtoBlob(contentBlobURL);
+    let blob = await blobURLtoBlob(contentBlobURL);
     if (blob == "xhr error") {
       return "xhr error";
     }
 
-    return yield blobToString(blob);
+    return await blobToString(blob);
   });
 }
 
 function workerIO(browser, scriptFile, message) {
-  return ContentTask.spawn(browser, {scriptFile, message}, function* (args) {
+  return ContentTask.spawn(browser, {scriptFile, message}, async function(args) {
     let worker = new content.Worker(args.scriptFile);
     let promise = new content.Promise(function(resolve) {
       let listenFunction = function(event) {
@@ -66,7 +66,7 @@ function workerIO(browser, scriptFile, message) {
       worker.addEventListener("message", listenFunction);
     });
     worker.postMessage(args.message);
-    return yield promise;
+    return await promise;
   });
 }
 

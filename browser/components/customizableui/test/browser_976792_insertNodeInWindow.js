@@ -13,7 +13,7 @@ Tries to replicate the situation of having a placement list like this:
 
 exists-1,trying-to-insert-this,doesn't-exist,exists-2
 */
-add_task(function*() {
+add_task(async function() {
   let testWidgetExists = [true, false, false, true];
   let widgetIds = [];
   for (let i = 0; i < testWidgetExists.length; i++) {
@@ -40,7 +40,7 @@ add_task(function*() {
   widgetIds.forEach(id => CustomizableUI.destroyWidget(id));
   btn.remove();
   removeCustomToolbars();
-  yield resetCustomization();
+  await resetCustomization();
 });
 
 
@@ -50,7 +50,7 @@ situation similar to:
 
 exists-1,exists-2,overflow-1,trying-to-insert-this,overflow-2
 */
-add_task(function*() {
+add_task(async function() {
   let navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
 
   let widgetIds = [];
@@ -68,7 +68,7 @@ add_task(function*() {
 
   let originalWindowWidth = window.outerWidth;
   window.resizeTo(400, window.outerHeight);
-  yield waitForCondition(() => navbar.hasAttribute("overflowing"));
+  await waitForCondition(() => navbar.hasAttribute("overflowing"));
 
   let testWidgetId = kTestWidgetPrefix + 3;
 
@@ -88,8 +88,8 @@ add_task(function*() {
   widgetIds.forEach(id => CustomizableUI.destroyWidget(id));
   CustomizableUI.removeWidgetFromArea(btn.id, kToolbarName);
   btn.remove();
-  yield resetCustomization();
-  yield waitForCondition(() => !navbar.hasAttribute("overflowing"));
+  await resetCustomization();
+  await waitForCondition(() => !navbar.hasAttribute("overflowing"));
 });
 
 
@@ -99,7 +99,7 @@ placements situation similar to:
 
 exists-1,exists-2,overflow-1,doesn't-exist,trying-to-insert-this,overflow-2
 */
-add_task(function*() {
+add_task(async function() {
   let navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
 
   let widgetIds = [];
@@ -117,7 +117,7 @@ add_task(function*() {
 
   let originalWindowWidth = window.outerWidth;
   window.resizeTo(400, window.outerHeight);
-  yield waitForCondition(() => navbar.hasAttribute("overflowing"));
+  await waitForCondition(() => navbar.hasAttribute("overflowing"));
 
   let testWidgetId = kTestWidgetPrefix + 3;
 
@@ -138,8 +138,8 @@ add_task(function*() {
   widgetIds.forEach(id => CustomizableUI.destroyWidget(id));
   CustomizableUI.removeWidgetFromArea(btn.id, kToolbarName);
   btn.remove();
-  yield resetCustomization();
-  yield waitForCondition(() => !navbar.hasAttribute("overflowing"));
+  await resetCustomization();
+  await waitForCondition(() => !navbar.hasAttribute("overflowing"));
 });
 
 
@@ -149,7 +149,7 @@ placements situation similar to:
 
 exists-1,exists-2,overflow-1,doesn't-exist,trying-to-insert-this,doesn't-exist
 */
-add_task(function*() {
+add_task(async function() {
   let navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
 
   let widgetIds = [];
@@ -167,7 +167,7 @@ add_task(function*() {
 
   let originalWindowWidth = window.outerWidth;
   window.resizeTo(400, window.outerHeight);
-  yield waitForCondition(() => navbar.hasAttribute("overflowing"));
+  await waitForCondition(() => navbar.hasAttribute("overflowing"));
 
   let testWidgetId = kTestWidgetPrefix + 3;
 
@@ -189,8 +189,8 @@ add_task(function*() {
   widgetIds.forEach(id => CustomizableUI.destroyWidget(id));
   CustomizableUI.removeWidgetFromArea(btn.id, kToolbarName);
   btn.remove();
-  yield resetCustomization();
-  yield waitForCondition(() => !navbar.hasAttribute("overflowing"));
+  await resetCustomization();
+  await waitForCondition(() => !navbar.hasAttribute("overflowing"));
 });
 
 
@@ -200,7 +200,7 @@ placements situation similar to:
 
 exists-1,exists-2,overflow-1,can't-overflow,trying-to-insert-this,overflow-2
 */
-add_task(function*() {
+add_task(async function() {
   let navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
 
   let widgetIds = [];
@@ -226,7 +226,7 @@ add_task(function*() {
 
   let originalWindowWidth = window.outerWidth;
   window.resizeTo(400, window.outerHeight);
-  yield waitForCondition(() => navbar.hasAttribute("overflowing"));
+  await waitForCondition(() => navbar.hasAttribute("overflowing"));
 
   // Find last widget that doesn't allow overflowing
   let nonOverflowing = navbar.customizationTarget.lastChild;
@@ -248,8 +248,8 @@ add_task(function*() {
   widgetIds.forEach(id => CustomizableUI.destroyWidget(id));
   CustomizableUI.removeWidgetFromArea(btn.id, kToolbarName);
   btn.remove();
-  yield resetCustomization();
-  yield waitForCondition(() => !navbar.hasAttribute("overflowing"));
+  await resetCustomization();
+  await waitForCondition(() => !navbar.hasAttribute("overflowing"));
 });
 
 
@@ -259,7 +259,7 @@ placements situation similar to:
 
 exists-1,exists-2,overflow-1,trying-to-insert-this,can't-overflow,overflow-2
 */
-add_task(function*() {
+add_task(async function() {
   let widgetIds = [];
   let missingId = 2;
   let nonOverflowableId = 3;
@@ -287,7 +287,7 @@ add_task(function*() {
 
   let originalWindowWidth = window.outerWidth;
   window.resizeTo(400, window.outerHeight);
-  yield waitForCondition(() => toolbarNode.hasAttribute("overflowing"));
+  await waitForCondition(() => toolbarNode.hasAttribute("overflowing"));
   ok(toolbarNode.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
 
   let btnId = kTestWidgetPrefix + missingId;
@@ -301,12 +301,12 @@ add_task(function*() {
      "insertNodeInWindow should have placed new XUL widget in correct place in DOM according to placements");
 
   window.resizeTo(originalWindowWidth, window.outerHeight);
-  yield waitForCondition(() => !toolbarNode.hasAttribute("overflowing"));
+  await waitForCondition(() => !toolbarNode.hasAttribute("overflowing"));
 
   btn.remove();
   widgetIds.forEach(id => CustomizableUI.destroyWidget(id));
   removeCustomToolbars();
-  yield resetCustomization();
+  await resetCustomization();
 });
 
 
@@ -316,7 +316,7 @@ plcements situation similar to:
 
 exists-1,trying-to-insert-this,exists-2,overflowed-1
 */
-add_task(function*() {
+add_task(async function() {
   let widgetIds = [];
   let missingId = 1;
   for (let i = 0; i < 5; i++) {
@@ -338,7 +338,7 @@ add_task(function*() {
 
   let originalWindowWidth = window.outerWidth;
   window.resizeTo(400, window.outerHeight);
-  yield waitForCondition(() => toolbarNode.hasAttribute("overflowing"));
+  await waitForCondition(() => toolbarNode.hasAttribute("overflowing"));
   ok(toolbarNode.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
 
   let btnId = kTestWidgetPrefix + missingId;
@@ -348,12 +348,12 @@ add_task(function*() {
   is(btn.parentNode.id, kToolbarName + "-target", "New XUL widget should be placed inside new toolbar");
 
   window.resizeTo(originalWindowWidth, window.outerHeight);
-  yield waitForCondition(() => !toolbarNode.hasAttribute("overflowing"));
+  await waitForCondition(() => !toolbarNode.hasAttribute("overflowing"));
 
   btn.remove();
   widgetIds.forEach(id => CustomizableUI.destroyWidget(id));
   removeCustomToolbars();
-  yield resetCustomization();
+  await resetCustomization();
 });
 
 
@@ -365,7 +365,7 @@ exists-1,exists-2,overflows-1,trying-to-insert-this
 
 Where trying-to-insert-this has overflows=false
 */
-add_task(function*() {
+add_task(async function() {
   let widgetIds = [];
   let missingId = 3;
   for (let i = 0; i < 5; i++) {
@@ -387,7 +387,7 @@ add_task(function*() {
 
   let originalWindowWidth = window.outerWidth;
   window.resizeTo(400, window.outerHeight);
-  yield waitForCondition(() => toolbarNode.hasAttribute("overflowing"));
+  await waitForCondition(() => toolbarNode.hasAttribute("overflowing"));
   ok(toolbarNode.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
 
   let btnId = kTestWidgetPrefix + missingId;
@@ -400,15 +400,15 @@ add_task(function*() {
      "insertNodeInWindow should have placed new XUL widget in correct place in DOM according to placements");
 
   window.resizeTo(originalWindowWidth, window.outerHeight);
-  yield waitForCondition(() => !toolbarNode.hasAttribute("overflowing"));
+  await waitForCondition(() => !toolbarNode.hasAttribute("overflowing"));
 
   btn.remove();
   widgetIds.forEach(id => CustomizableUI.destroyWidget(id));
   removeCustomToolbars();
-  yield resetCustomization();
+  await resetCustomization();
 });
 
 
-add_task(function* asyncCleanUp() {
-  yield resetCustomization();
+add_task(async function asyncCleanUp() {
+  await resetCustomization();
 });

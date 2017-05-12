@@ -101,8 +101,8 @@ function reloadAsyncListener(aURI, aIsVisited) {
   PlacesTestUtils.clearHistory().then(finish);
 }
 
-registerCleanupFunction(function* () {
+registerCleanupFunction(async function() {
   Services.prefs.setIntPref("network.proxy.type", proxyPrefValue);
   Services.io.offline = false;
-  yield BrowserTestUtils.removeTab(ourTab);
+  await BrowserTestUtils.removeTab(ourTab);
 });

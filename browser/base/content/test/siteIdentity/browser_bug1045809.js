@@ -5,7 +5,7 @@ const TEST_URL = getRootDirectory(gTestPath).replace("chrome://mochitests/conten
 
 var origBlockActive;
 
-add_task(function* () {
+add_task(async function() {
   registerCleanupFunction(function() {
     Services.prefs.setBoolPref(PREF_ACTIVE, origBlockActive);
     gBrowser.removeCurrentTab();
@@ -20,22 +20,22 @@ add_task(function* () {
   let tab = gBrowser.selectedTab = gBrowser.addTab();
 
   // Test 1: mixed content must be blocked
-  yield promiseTabLoadEvent(tab, TEST_URL);
-  yield* test1(gBrowser.getBrowserForTab(tab));
+  await promiseTabLoadEvent(tab, TEST_URL);
+  await test1(gBrowser.getBrowserForTab(tab));
 
-  yield promiseTabLoadEvent(tab);
+  await promiseTabLoadEvent(tab);
   // Test 2: mixed content must NOT be blocked
-  yield* test2(gBrowser.getBrowserForTab(tab));
+  await test2(gBrowser.getBrowserForTab(tab));
 
   // Test 3: mixed content must be blocked again
-  yield promiseTabLoadEvent(tab);
-  yield* test3(gBrowser.getBrowserForTab(tab));
+  await promiseTabLoadEvent(tab);
+  await test3(gBrowser.getBrowserForTab(tab));
 });
 
-function* test1(gTestBrowser) {
+async function test1(gTestBrowser) {
   assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
 
-  yield ContentTask.spawn(gTestBrowser, null, function() {
+  await ContentTask.spawn(gTestBrowser, null, function() {
     var x = content.document.getElementsByTagName("iframe")[0].contentDocument.getElementById("mixedContentContainer");
     is(x, null, "Mixed Content is NOT to be found in Test1");
   });
@@ -44,10 +44,10 @@ function* test1(gTestBrowser) {
   gIdentityHandler.disableMixedContentProtection();
 }
 
-function* test2(gTestBrowser) {
+async function test2(gTestBrowser) {
   assertMixedContentBlockingState(gTestBrowser, {activeLoaded: true, activeBlocked: false, passiveLoaded: false});
 
-  yield ContentTask.spawn(gTestBrowser, null, function() {
+  await ContentTask.spawn(gTestBrowser, null, function() {
     var x = content.document.getElementsByTagName("iframe")[0].contentDocument.getElementById("mixedContentContainer");
     isnot(x, null, "Mixed Content is to be found in Test2");
   });
@@ -56,10 +56,10 @@ function* test2(gTestBrowser) {
   gIdentityHandler.enableMixedContentProtection();
 }
 
-function* test3(gTestBrowser) {
+async function test3(gTestBrowser) {
   assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
 
-  yield ContentTask.spawn(gTestBrowser, null, function() {
+  await ContentTask.spawn(gTestBrowser, null, function() {
     var x = content.document.getElementsByTagName("iframe")[0].contentDocument.getElementById("mixedContentContainer");
     is(x, null, "Mixed Content is NOT to be found in Test3");
   });

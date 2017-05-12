@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-add_task(function*() {
+add_task(async function() {
   is(gBrowser.tabs.length, 1, "one tab is open initially");
 
   // Add several new tabs in sequence, interrupted by selecting a
@@ -16,22 +16,22 @@ add_task(function*() {
     return BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   }
 
-  yield addTab("http://mochi.test:8888/#0");
+  await addTab("http://mochi.test:8888/#0");
   gBrowser.selectedTab = tabs[0];
-  yield addTab("http://mochi.test:8888/#1");
-  yield addTab("http://mochi.test:8888/#2", gBrowser.currentURI);
-  yield addTab("http://mochi.test:8888/#3", gBrowser.currentURI);
+  await addTab("http://mochi.test:8888/#1");
+  await addTab("http://mochi.test:8888/#2", gBrowser.currentURI);
+  await addTab("http://mochi.test:8888/#3", gBrowser.currentURI);
   gBrowser.selectedTab = tabs[tabs.length - 1];
   gBrowser.selectedTab = tabs[0];
-  yield addTab("http://mochi.test:8888/#4", gBrowser.currentURI);
+  await addTab("http://mochi.test:8888/#4", gBrowser.currentURI);
   gBrowser.selectedTab = tabs[3];
-  yield addTab("http://mochi.test:8888/#5", gBrowser.currentURI);
+  await addTab("http://mochi.test:8888/#5", gBrowser.currentURI);
   gBrowser.removeTab(tabs.pop());
-  yield addTab("about:blank", gBrowser.currentURI);
+  await addTab("about:blank", gBrowser.currentURI);
   gBrowser.moveTabTo(gBrowser.selectedTab, 1);
-  yield addTab("http://mochi.test:8888/#6", gBrowser.currentURI);
-  yield addTab();
-  yield addTab("http://mochi.test:8888/#7");
+  await addTab("http://mochi.test:8888/#6", gBrowser.currentURI);
+  await addTab();
+  await addTab("http://mochi.test:8888/#7");
 
   function testPosition(tabNum, expectedPosition, msg) {
     is(Array.indexOf(gBrowser.tabs, tabs[tabNum]), expectedPosition, msg);

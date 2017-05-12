@@ -59,8 +59,8 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_searchterms_domain() {
-  yield task_populateDB(testData);
+add_task(async function test_searchterms_domain() {
+  await task_populateDB(testData);
   var query = PlacesUtils.history.getNewQuery();
   query.searchTerms = "moz";
   query.domain = "foo.com";
@@ -89,14 +89,14 @@ add_task(function* test_searchterms_domain() {
   do_print("Adding item to query");
   var change1 = [{isVisit: true, isDetails: true, uri: "http://foo.com/added.htm",
                   title: "moz", transType: PlacesUtils.history.TRANSITION_LINK}];
-  yield task_populateDB(change1);
+  await task_populateDB(change1);
   do_check_true(isInResult(change1, root));
 
   // Update an existing URI
   do_print("Updating Item");
   var change2 = [{isDetails: true, uri: "http://foo.com/changeme1.htm",
                   title: "moz" }];
-  yield task_populateDB(change2);
+  await task_populateDB(change2);
   do_check_true(isInResult(change2, root));
 
   // Add one and take one out of query set, and simply change one so that it
@@ -107,7 +107,7 @@ add_task(function* test_searchterms_domain() {
                  {isDetails: true, uri: "http://mail.foo.com/yiihah",
                   title: "moz now updated"},
                  {isDetails: true, uri: "ftp://foo.com/ftp", title: "gone"}];
-  yield task_populateDB(change3);
+  await task_populateDB(change3);
   do_check_true(isInResult({uri: "http://foo.com/changeme2.htm"}, root));
   do_check_true(isInResult({uri: "http://mail.foo.com/yiihah"}, root));
   do_check_false(isInResult({uri: "ftp://foo.com/ftp"}, root));
@@ -116,7 +116,7 @@ add_task(function* test_searchterms_domain() {
   do_print("Deleting items");
   var change4 = [{isDetails: true, uri: "https://foo.com/",
                   title: "mo,z"}];
-  yield task_populateDB(change4);
+  await task_populateDB(change4);
   do_check_false(isInResult(change4, root));
 
   root.containerOpen = false;

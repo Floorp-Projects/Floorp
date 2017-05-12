@@ -65,7 +65,7 @@ var tests = [
   },
   // Test that multiple notification icons are removed when switching tabs
   { id: "Test#3",
-    *run() {
+    async run() {
       // show the notification on old tab.
       this.notifyObjOld = new BasicNotification(this.id);
       this.notifyObjOld.anchorID = "default-notification-icon";
@@ -73,7 +73,7 @@ var tests = [
 
       // switch tab
       this.oldSelectedTab = gBrowser.selectedTab;
-      yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+      await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
 
       // show the notification on new tab.
       this.notifyObjNew = new BasicNotification(this.id);
@@ -150,8 +150,8 @@ var tests = [
   },
   // reload removes notification
   { id: "Test#6",
-    *run() {
-      yield promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/");
+    async run() {
+      await promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/");
       let notifyObj = new BasicNotification(this.id);
       notifyObj.options.eventCallback = function(eventName) {
         if (eventName == "removed") {
@@ -167,9 +167,9 @@ var tests = [
   },
   // location change in background tab removes notification
   { id: "Test#7",
-    *run() {
+    async run() {
       let oldSelectedTab = gBrowser.selectedTab;
-      let newTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+      let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
       gBrowser.selectedTab = oldSelectedTab;
       let browser = gBrowser.getBrowserForTab(newTab);
 
@@ -192,10 +192,10 @@ var tests = [
   },
   // Popup notification anchor shouldn't disappear when a notification with the same ID is re-added in a background tab
   { id: "Test#8",
-    *run() {
-      yield promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/");
+    async run() {
+      await promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/");
       let originalTab = gBrowser.selectedTab;
-      let bgTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+      let bgTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
       let anchor = document.createElement("box");
       anchor.id = "test26-anchor";
       anchor.className = "notification-anchor-icon";
@@ -227,8 +227,8 @@ var tests = [
   },
   // location change in an embedded frame should not remove a notification
   { id: "Test#9",
-    *run() {
-      yield promiseTabLoadEvent(gBrowser.selectedTab, "data:text/html;charset=utf8,<iframe%20id='iframe'%20src='http://example.com/'>");
+    async run() {
+      await promiseTabLoadEvent(gBrowser.selectedTab, "data:text/html;charset=utf8,<iframe%20id='iframe'%20src='http://example.com/'>");
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.options.eventCallback = function(eventName) {
         if (eventName == "removed") {

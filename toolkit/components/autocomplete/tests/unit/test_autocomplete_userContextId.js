@@ -14,8 +14,8 @@ function AutoCompleteSearch(aName) {
 }
 AutoCompleteSearch.prototype = Object.create(AutoCompleteSearchBase.prototype);
 
-add_task(function *test_userContextId() {
-  let searchParam = yield doSearch("test", 1);
+add_task(async function test_userContextId() {
+  let searchParam = await doSearch("test", 1);
   Assert.equal(searchParam, " user-context-id:1");
 });
 

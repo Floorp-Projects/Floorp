@@ -22,7 +22,7 @@ function getCachedAddon(id) {
 }
 
 // Test with a missing features directory
-add_task(function* test_app_addons() {
+add_task(async function test_app_addons() {
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
   Services.prefs.setCharPref(PREF_GETADDONS_BYIDS, `http://localhost:${gServer.identity.primaryPort}/get?%IDS%`);
 
@@ -32,21 +32,21 @@ add_task(function* test_app_addons() {
 
   startupManager();
 
-  yield new Promise((resolve) => {
+  await new Promise((resolve) => {
     AddonRepository.cacheAddons(["system1@tests.mozilla.org",
                                  "system2@tests.mozilla.org",
                                  "system3@tests.mozilla.org"], resolve);
   });
 
-  let cached = yield getCachedAddon("system1@tests.mozilla.org");
+  let cached = await getCachedAddon("system1@tests.mozilla.org");
   do_check_eq(cached, null);
 
-  cached = yield getCachedAddon("system2@tests.mozilla.org");
+  cached = await getCachedAddon("system2@tests.mozilla.org");
   do_check_eq(cached, null);
 
-  cached = yield getCachedAddon("system3@tests.mozilla.org");
+  cached = await getCachedAddon("system3@tests.mozilla.org");
   do_check_eq(cached, null);
 
-  yield promiseShutdownManager();
-  yield new Promise(resolve => gServer.stop(resolve));
+  await promiseShutdownManager();
+  await new Promise(resolve => gServer.stop(resolve));
 });
