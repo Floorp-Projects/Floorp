@@ -826,7 +826,8 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
             // check that the scrollbar's target scroll frame is layerized
             hitScrollbarNode->GetScrollTargetId() == apzc->GetGuid().mScrollId &&
             !apzc->IsScrollInfoLayer() && mInputQueue->GetCurrentDragBlock()) {
-          uint64_t dragBlockId = mInputQueue->GetCurrentDragBlock()->GetBlockId();
+          DragBlockState* dragBlock = mInputQueue->GetCurrentDragBlock();
+          uint64_t dragBlockId = dragBlock->GetBlockId();
           const ScrollThumbData& thumbData = hitScrollbarNode->GetScrollThumbData();
           // AsyncPanZoomController::HandleInputEvent() will call
           // TransformToLocal() on the event, but we need its mLocalOrigin now
@@ -844,6 +845,9 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
                                dragBlockId,
                                dragStart,
                                thumbData.mDirection));
+          // Content can't prevent scrollbar dragging with preventDefault(),
+          // so we don't need to wait for a content response.
+          dragBlock->SetContentResponse(false);
         }
 
         if (result == nsEventStatus_eConsumeDoDefault) {
