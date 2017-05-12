@@ -41,12 +41,14 @@ function* runEventPopupTests(url, tests) {
  *          - handler {String} string representation of the handler
  *        - beforeTest {Function} (optional) a function to execute on the page
  *        before running the test
+ *        - isSourceMapped {Boolean} (optional) true if the location
+ *        is source-mapped, requiring some extra delay before the checks
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
  * opened
  * @param {TestActorFront} testActor
  */
 function* checkEventsForNode(test, inspector, testActor) {
-  let {selector, expected, beforeTest} = test;
+  let {selector, expected, beforeTest, isSourceMapped} = test;
   let container = yield getContainerForSelector(selector, inspector);
 
   if (typeof beforeTest === "function") {
@@ -65,12 +67,22 @@ function* checkEventsForNode(test, inspector, testActor) {
 
   yield selectNode(selector, inspector);
 
+  let sourceMapPromise = null;
+  if (isSourceMapped) {
+    sourceMapPromise = tooltip.once("event-tooltip-source-map-ready");
+  }
+
   // Click button to show tooltip
   info("Clicking evHolder");
   EventUtils.synthesizeMouseAtCenter(evHolder, {},
     inspector.markup.doc.defaultView);
   yield tooltip.once("shown");
   info("tooltip shown");
+
+  if (isSourceMapped) {
+    info("Waiting for source map to be applied");
+    yield sourceMapPromise;
+  }
 
   // Check values
   let headers = tooltip.panel.querySelectorAll(".event-header");
