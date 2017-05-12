@@ -440,39 +440,23 @@ private:
 
   void RunPostTraversalTasks();
 
-  uint64_t FindSheetOfType(SheetType aType,
-                           ServoStyleSheet* aSheet);
+  void PrependSheetOfType(SheetType aType,
+                          ServoStyleSheet* aSheet);
 
-  uint64_t PrependSheetOfType(SheetType aType,
-                              ServoStyleSheet* aSheet,
-                              uint64_t aReuseUniqueID = 0);
+  void AppendSheetOfType(SheetType aType,
+                         ServoStyleSheet* aSheet);
 
-  uint64_t AppendSheetOfType(SheetType aType,
-                             ServoStyleSheet* aSheet,
-                             uint64_t aReuseUniqueID = 0);
+  void InsertSheetOfType(SheetType aType,
+                         ServoStyleSheet* aSheet,
+                         ServoStyleSheet* aBeforeSheet);
 
-  uint64_t InsertSheetOfType(SheetType aType,
-                             ServoStyleSheet* aSheet,
-                             uint64_t aBeforeUniqueID,
-                             uint64_t aReuseUniqueID = 0);
-
-  uint64_t RemoveSheetOfType(SheetType aType,
-                             ServoStyleSheet* aSheet);
-
-  struct Entry {
-    uint64_t uniqueID;
-    RefPtr<ServoStyleSheet> sheet;
-
-    // Provide a cast operator to simplify calling
-    // nsIDocument::FindDocStyleSheetInsertionPoint.
-    operator ServoStyleSheet*() const { return sheet; }
-  };
+  void RemoveSheetOfType(SheetType aType,
+                         ServoStyleSheet* aSheet);
 
   nsPresContext* mPresContext;
   UniquePtr<RawServoStyleSet> mRawSet;
   EnumeratedArray<SheetType, SheetType::Count,
-                  nsTArray<Entry>> mEntries;
-  uint64_t mUniqueIDCounter;
+                  nsTArray<RefPtr<ServoStyleSheet>>> mSheets;
   bool mAllowResolveStaleStyles;
   bool mAuthorStyleDisabled;
   bool mStylistMayNeedRebuild;
