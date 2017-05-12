@@ -41,6 +41,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/Omnijar.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/SandboxSettings.h"
 #include "mozilla/Telemetry.h"
 
 #include <stdlib.h>
@@ -686,14 +687,7 @@ nsXREDirProvider::LoadContentProcessTempDir()
 static bool
 IsContentSandboxDisabled()
 {
-  if (!BrowserTabsRemoteAutostart()) {
-    return false;
-  }
-#if defined(XP_WIN) || defined(XP_MACOSX)
-  const bool isSandboxDisabled =
-    Preferences::GetInt("security.sandbox.content.level") < 1;
-#endif
-  return isSandboxDisabled;
+  return !BrowserTabsRemoteAutostart() || (GetEffectiveContentSandboxLevel() < 1);
 }
 
 //
@@ -1661,7 +1655,7 @@ nsXREDirProvider::AppendProfilePath(nsIFile* aFile,
                                     bool aLocal)
 {
   NS_ASSERTION(aFile, "Null pointer!");
-  
+
   if (!gAppData) {
     return NS_ERROR_FAILURE;
   }
