@@ -101,7 +101,6 @@ private:
 #include "glsl/GrGLSLFragmentProcessor.h"
 #include "glsl/GrGLSLFragmentShaderBuilder.h"
 #include "SkGr.h"
-#include "SkGrPriv.h"
 #include "SkSpecialImage.h"
 #include "SkImage_Base.h"
 #include "GrContext.h"
@@ -138,10 +137,11 @@ public:
 
                 // gets deleted when the ShadowFP is destroyed, and frees the GrTexture*
                 fTexture[fNumNonAmbLights] = sk_sp<GrTexture>(shadowMap->asTextureRef(context,
-                                                           GrTextureParams::ClampNoFilter(),
-                                                           SkSourceGammaTreatment::kIgnore));
-                fDepthMapAccess[fNumNonAmbLights].reset(fTexture[fNumNonAmbLights].get());
-                this->addTextureAccess(&fDepthMapAccess[fNumNonAmbLights]);
+                                                           GrSamplerParams::ClampNoFilter(),
+                                                           SkDestinationSurfaceColorMode::kLegacy,
+                                                           nullptr));
+                fDepthMapSampler[fNumNonAmbLights].reset(fTexture[fNumNonAmbLights].get());
+                this->addTextureSampler(&fDepthMapSampler[fNumNonAmbLights]);
 
                 fDepthMapHeight[fNumNonAmbLights] = shadowMap->height();
                 fDepthMapWidth[fNumNonAmbLights] = shadowMap->width();
@@ -447,7 +447,7 @@ public:
 
         }
 
-        static void GenKey(const GrProcessor& proc, const GrGLSLCaps&,
+        static void GenKey(const GrProcessor& proc, const GrShaderCaps&,
                            GrProcessorKeyBuilder* b) {
             const ShadowFP& shadowFP = proc.cast<ShadowFP>();
             b->add32(shadowFP.fNumNonAmbLights);
@@ -461,7 +461,8 @@ public:
         }
 
     protected:
-        void onSetData(const GrGLSLProgramDataManager& pdman, const GrProcessor& proc) override {
+        void onSetData(const GrGLSLProgramDataManager& pdman,
+                       const GrFragmentProcessor& proc) override {
             const ShadowFP &shadowFP = proc.cast<ShadowFP>();
 
             for (int i = 0; i < shadowFP.numLights(); i++) {
@@ -551,15 +552,12 @@ public:
         GrGLSLProgramDataManager::UniformHandle fAmbientColorUni;
     };
 
-    void onGetGLSLProcessorKey(const GrGLSLCaps& caps, GrProcessorKeyBuilder* b) const override {
+    void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {
         GLSLShadowFP::GenKey(*this, caps, b);
     }
 
     const char* name() const override { return "shadowFP"; }
 
-    void onComputeInvariantOutput(GrInvariantOutput* inout) const override {
-        inout->mulByUnknownFourComponents();
-    }
     int32_t numLights() const { return fNumNonAmbLights; }
     const SkColor3f& ambientColor() const { return fAmbientColor; }
     bool isPointLight(int i) const {
@@ -628,7 +626,7 @@ private:
     bool             fIsRadialLight[SkShadowShader::kMaxNonAmbientLights];
     SkVector3        fLightDirOrPos[SkShadowShader::kMaxNonAmbientLights];
     SkColor3f        fLightColor[SkShadowShader::kMaxNonAmbientLights];
-    GrTextureAccess  fDepthMapAccess[SkShadowShader::kMaxNonAmbientLights];
+    TextureSampler   fDepthMapSampler[SkShadowShader::kMaxNonAmbientLights];
     sk_sp<GrTexture> fTexture[SkShadowShader::kMaxNonAmbientLights];
 
     int              fDepthMapWidth[SkShadowShader::kMaxNonAmbientLights];

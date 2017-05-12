@@ -20,13 +20,10 @@ void SkRecordDraw(const SkRecord& record,
     if (bbh) {
         // Draw only ops that affect pixels in the canvas's current clip.
         // The SkRecord and BBH were recorded in identity space.  This canvas
-        // is not necessarily in that same space.  getClipBounds() returns us
+        // is not necessarily in that same space.  getLocalClipBounds() returns us
         // this canvas' clip bounds transformed back into identity space, which
         // lets us query the BBH.
-        SkRect query;
-        if (!canvas->getClipBounds(&query)) {
-            query.setEmpty();
-        }
+        SkRect query = canvas->getLocalClipBounds();
 
         SkTDArray<int> ops;
         bbh->search(query, &ops);
@@ -85,9 +82,9 @@ DRAW(SetMatrix, setMatrix(SkMatrix::Concat(fInitialCTM, r.matrix)));
 DRAW(Concat, concat(r.matrix));
 DRAW(Translate, translate(r.dx, r.dy));
 
-DRAW(ClipPath, clipPath(r.path, r.opAA.op, r.opAA.aa));
-DRAW(ClipRRect, clipRRect(r.rrect, r.opAA.op, r.opAA.aa));
-DRAW(ClipRect, clipRect(r.rect, r.opAA.op, r.opAA.aa));
+DRAW(ClipPath, clipPath(r.path, r.opAA.op(), r.opAA.aa()));
+DRAW(ClipRRect, clipRRect(r.rrect, r.opAA.op(), r.opAA.aa()));
+DRAW(ClipRect, clipRect(r.rect, r.opAA.op(), r.opAA.aa()));
 DRAW(ClipRegion, clipRegion(r.region, r.op));
 
 #ifdef SK_EXPERIMENTAL_SHADOWING
@@ -116,7 +113,7 @@ DRAW(DrawImageNine, drawImageNine(r.image.get(), r.center, r.dst, r.paint));
 DRAW(DrawOval, drawOval(r.oval, r.paint));
 DRAW(DrawPaint, drawPaint(r.paint));
 DRAW(DrawPath, drawPath(r.path, r.paint));
-DRAW(DrawPatch, drawPatch(r.cubics, r.colors, r.texCoords, r.xmode, r.paint));
+DRAW(DrawPatch, drawPatch(r.cubics, r.colors, r.texCoords, r.bmode, r.paint));
 DRAW(DrawPicture, drawPicture(r.picture.get(), &r.matrix, r.paint));
 
 #ifdef SK_EXPERIMENTAL_SHADOWING
@@ -137,8 +134,7 @@ DRAW(DrawTextOnPath, drawTextOnPath(r.text, r.byteLength, r.path, &r.matrix, r.p
 DRAW(DrawTextRSXform, drawTextRSXform(r.text, r.byteLength, r.xforms, r.cull, r.paint));
 DRAW(DrawAtlas, drawAtlas(r.atlas.get(),
                           r.xforms, r.texs, r.colors, r.count, r.mode, r.cull, r.paint));
-DRAW(DrawVertices, drawVertices(r.vmode, r.vertexCount, r.vertices, r.texs, r.colors,
-                                r.xmode, r.indices, r.indexCount, r.paint));
+DRAW(DrawVertices, drawVertices(r.vertices, r.bmode, r.paint));
 DRAW(DrawAnnotation, drawAnnotation(r.rect, r.key.c_str(), r.value.get()));
 #undef DRAW
 
@@ -457,9 +453,7 @@ private:
         return this->adjustAndMap(dst, &op.paint);
     }
     Bounds bounds(const DrawVertices& op) const {
-        SkRect dst;
-        dst.set(op.vertices, op.vertexCount);
-        return this->adjustAndMap(dst, &op.paint);
+        return this->adjustAndMap(op.vertices->bounds(), &op.paint);
     }
 
     Bounds bounds(const DrawAtlas& op) const {

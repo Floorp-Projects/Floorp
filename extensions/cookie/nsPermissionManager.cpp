@@ -84,10 +84,15 @@ LogToConsole(const nsAString& aMsg)
 
 namespace {
 
+// The number of permissions from the kPreloadPermissions list which are present
+// in the permission manager. Used to determine if the permission manager should
+// be checked for one of these preload permissions in nsContentBlocker.
+static int32_t sPreloadPermissionCount = 0;
+
 // These permissions are special permissions which must be transmitted to the
 // content process before documents with their principals have loaded within
-// that process. For example, the permissions which are used for content
-// blocking are sent using this mechanism.
+// that process. This is because these permissions are used for content
+// blocking in nsContentBlocker.
 //
 // Permissions which are in this list are considered to have a "" permission
 // key, even if their principal would not normally have that key.
@@ -118,7 +123,6 @@ static const char* kPreloadPermissions[] = {
   "fetch",
   "image",
   "manifest"
-  // ------------------------------------------
 };
 
 // NOTE: nullptr can be passed as aType - if it is this function will return
@@ -1781,6 +1785,12 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
                                                             aExpireType, aExpireTime,
                                                             aModificationTime));
 
+      // Record a count of the number of preload permissions present in the
+      // content process.
+      if (IsPreloadPermission(mTypeArray[typeIndex].get())) {
+        sPreloadPermissionCount++;
+      }
+
       if (aDBOperation == eWriteToDB && aExpireType != nsIPermissionManager::EXPIRE_SESSION) {
         UpdateDB(op, mStmtInsert, id, origin, aType, aPermission, aExpireType, aExpireTime, aModificationTime);
       }
@@ -1802,6 +1812,12 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
       PermissionEntry oldPermissionEntry = entry->GetPermissions()[index];
       id = oldPermissionEntry.mID;
       entry->GetPermissions().RemoveElementAt(index);
+
+      // Record a count of the number of preload permissions present in the
+      // content process.
+      if (IsPreloadPermission(mTypeArray[typeIndex].get())) {
+        sPreloadPermissionCount--;
+      }
 
       if (aDBOperation == eWriteToDB)
         // We care only about the id here so we pass dummy values for all other
@@ -3246,5 +3262,12 @@ nsPermissionManager::WhenPermissionsAvailable(nsIPrincipal* aPrincipal,
     [] () {
       NS_WARNING("nsPermissionManager permission promise rejected. We're probably shutting down.");
     });
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPermissionManager::GetHasPreloadPermissions(bool* aResult)
+{
+  *aResult = sPreloadPermissionCount > 0;
   return NS_OK;
 }

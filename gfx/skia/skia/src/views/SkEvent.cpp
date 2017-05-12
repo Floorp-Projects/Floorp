@@ -6,6 +6,7 @@
  */
 
 
+#include "SkDOM.h"
 #include "SkEvent.h"
 
 void SkEvent::initialize(const char* type, size_t typeLen,
@@ -415,9 +416,8 @@ SkMSec SkEvent::EnqueueTime(SkEvent* evt, SkMSec time) {
 #include "SkEventSink.h"
 
 bool SkEvent::ProcessEvent() {
-    SkEvent*                evt = SkEvent::Dequeue();
-    SkAutoTDelete<SkEvent>  autoDelete(evt);
-    bool                    again = false;
+    std::unique_ptr<SkEvent> evt(SkEvent::Dequeue());
+    bool                     again = false;
 
     EVENT_LOGN("ProcessEvent", (int32_t)evt);
 

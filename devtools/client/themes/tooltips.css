@@ -452,6 +452,5 @@
 .devtools-tooltip-image-broken {
   box-sizing: border-box;
   height: 100%;
-  text-align: center;
-  line-height: 30px;
+  padding: 7px;
 }

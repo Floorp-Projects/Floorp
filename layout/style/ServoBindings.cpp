@@ -797,7 +797,7 @@ AttrHasSubstring(Implementor* aElement, nsIAtom* aNS, nsIAtom* aName,
   auto match = [aStr](const nsAttrValue* aValue) {
     nsAutoString str;
     aValue->ToString(str);
-    return FindInReadable(str, nsDependentAtomString(aStr));
+    return FindInReadable(nsDependentAtomString(aStr), str);
   };
   return DoMatch(aElement, aNS, aName, match);
 }
