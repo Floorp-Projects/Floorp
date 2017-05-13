@@ -24,7 +24,11 @@
 
   --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-vertical-inner-padding) + 1px);
 
+%ifdef MOZ_PHOTON_THEME
+  --toolbarbutton-border-radius: 4px;
+%else
   --toolbarbutton-border-radius: 3px;
+%endif
 
   --toolbarbutton-hover-background: hsla(0,0%,100%,.1) linear-gradient(hsla(0,0%,100%,.3), hsla(0,0%,100%,.1)) padding-box;
   --toolbarbutton-hover-bordercolor: hsla(0,0%,0%,.2);
@@ -588,6 +592,29 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
 
 /* ::::: nav-bar-inner ::::: */
 
+%ifdef MOZ_PHOTON_THEME
+
+#main-window {
+  --urlbar-border-color: hsla(240, 5%, 5%, .25);
+  --urlbar-border-color-hover: hsla(240, 5%, 5%, .35);
+  --urlbar-background-color: -moz-field;
+}
+
+%include ../shared/location-search-bar.inc.css
+
+#urlbar[focused="true"],
+.searchbar-textbox[focused="true"] {
+  border-color: -moz-mac-focusring;
+  box-shadow: var(--focus-ring-box-shadow);
+}
+
+#urlbar,
+.searchbar-textbox {
+  font: icon;
+}
+
+%else
+
 #urlbar,
 .searchbar-textbox {
   font: icon;
@@ -636,7 +663,6 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
   border-radius: var(--toolbarbutton-border-radius);
 }
 
-%ifndef MOZ_PHOTON_THEME
 @conditionalForwardWithUrlbar@ > #urlbar {
   border-inline-start: none;
   margin-left: 0;
