@@ -115,11 +115,7 @@ to mochitest command.
     * test_value_storage.html `font-variant` [167]
     * test_specified_value_serialization.html `bug-721136` [1]
 * font-feature-settings should be a subproperty of font shorthand bug 1363984
-  * test_inherit_storage.html `font-feature-settings` [2]
-  * test_initial_storage.html `font-feature-settings` [1]
-  * test_inherit_computation.html `liga` [8]
-  * test_value_storage.html `font-feature-settings` [40]
-  * test_shorthand_property_getters.html `font shorthand` [1]
+  * test_value_storage.html `font-feature-settings` [28]
 * Unsupported prefixed values
   * moz-prefixed gradient functions bug 1337655
     * test_value_storage.html `-moz-linear-gradient` [322]
