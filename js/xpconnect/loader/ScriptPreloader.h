@@ -24,7 +24,6 @@
 #include "nsIThread.h"
 
 #include "jsapi.h"
-#include "js/GCAnnotations.h"
 
 #include <prio.h>
 
@@ -208,7 +207,7 @@ private:
 
         void UpdateLoadTime(const TimeStamp& loadTime)
         {
-          if (mLoadTime.IsNull() || loadTime < mLoadTime) {
+          if (!mLoadTime || loadTime < mLoadTime) {
             mLoadTime = loadTime;
           }
         }
@@ -319,7 +318,7 @@ private:
         // XDR data which was generated from a script compiled during this
         // session, and will be written to the cache file.
         MaybeOneOf<JS::TranscodeBuffer, nsTArray<uint8_t>> mXDRData;
-    } JS_HAZ_NON_GC_POINTER;
+    };
 
     template <ScriptStatus status>
     static Matcher<CachedScript*>* Match()
