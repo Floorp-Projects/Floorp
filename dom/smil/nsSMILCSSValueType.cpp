@@ -504,7 +504,7 @@ ValueFromStringHelper(nsCSSPropertyID aPropID,
     Servo_ParseProperty(aPropID,
                         &value,
                         data,
-                        LengthParsingMode::SVG).Consume();
+                        ParsingMode::AllowUnitlessLength).Consume();
   if (!servoDeclarationBlock) {
     return nullptr;
   }
