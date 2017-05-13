@@ -572,7 +572,8 @@ nsStyleOutline::CalcDifference(const nsStyleOutline& aNewData) const
       (mActualOutlineWidth > 0 &&
        mOutlineOffset != aNewData.mOutlineOffset)) {
     return nsChangeHint_UpdateOverflow |
-           nsChangeHint_SchedulePaint;
+           nsChangeHint_SchedulePaint |
+           nsChangeHint_RepaintFrame;
   }
 
   if (mOutlineStyle != aNewData.mOutlineStyle ||
