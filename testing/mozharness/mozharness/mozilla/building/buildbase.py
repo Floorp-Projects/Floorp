@@ -750,8 +750,9 @@ or run without that action (ie: --no-{action})"
             app_ini_path = dirs['abs_app_ini_path']
         if (os.path.exists(print_conf_setting_path) and
                 os.path.exists(app_ini_path)):
+            python = self.query_exe('python2.7')
             cmd = [
-                sys.executable, os.path.join(dirs['abs_src_dir'], 'mach'), 'python',
+                python, os.path.join(dirs['abs_src_dir'], 'mach'), 'python',
                 print_conf_setting_path, app_ini_path,
                 'App', prop
             ]
@@ -1119,8 +1120,9 @@ or run without that action (ie: --no-{action})"
             return self.warning(ERROR_MSGS['tooltool_manifest_undetermined'])
         tooltool_manifest_path = os.path.join(dirs['abs_src_dir'],
                                               c['tooltool_manifest_src'])
+        python = self.query_exe('python2.7')
         cmd = [
-            sys.executable, '-u',
+            python, '-u',
             os.path.join(dirs['abs_src_dir'], 'mach'),
             'artifact',
             'toolchain',
@@ -1288,8 +1290,9 @@ or run without that action (ie: --no-{action})"
                                             dirs['abs_app_ini_path']),
                      level=error_level)
         self.info("Setting properties found in: %s" % dirs['abs_app_ini_path'])
+        python = self.query_exe('python2.7')
         base_cmd = [
-            sys.executable, os.path.join(dirs['abs_src_dir'], 'mach'), 'python',
+            python, os.path.join(dirs['abs_src_dir'], 'mach'), 'python',
             print_conf_setting_path, dirs['abs_app_ini_path'], 'App'
         ]
         properties_needed = [
@@ -1617,8 +1620,12 @@ or run without that action (ie: --no-{action})"
                 buildprops,
                 os.path.join(dirs['abs_work_dir'], 'buildprops.json'))
 
+        # use mh config override for mach build wrapper, if it exists
+        python = self.query_exe('python2.7')
+        default_mach_build = [python, 'mach', '--log-no-times', 'build', '-v']
+        mach_build = self.query_exe('mach-build', default=default_mach_build)
         return_code = self.run_command_m(
-            command=[sys.executable, 'mach', '--log-no-times', 'build', '-v'],
+            command=mach_build,
             cwd=dirs['abs_src_dir'],
             env=env,
             output_timeout=self.config.get('max_build_output_timeout', 60 * 40)
@@ -1736,8 +1743,9 @@ or run without that action (ie: --no-{action})"
     def _execute_postflight_build_mach_command(self, mach_command_args):
         env = self.query_build_env()
         env.update(self.query_mach_build_env())
+        python = self.query_exe('python2.7')
 
-        command = [sys.executable, 'mach', '--log-no-times']
+        command = [python, 'mach', '--log-no-times']
         command.extend(mach_command_args)
 
         self.run_command_m(
@@ -1754,10 +1762,11 @@ or run without that action (ie: --no-{action})"
         """generates source archives and uploads them"""
         env = self.query_build_env()
         env.update(self.query_mach_build_env())
+        python = self.query_exe('python2.7')
         dirs = self.query_abs_dirs()
 
         self.run_command_m(
-            command=[sys.executable, 'mach', '--log-no-times', 'configure'],
+            command=[python, 'mach', '--log-no-times', 'configure'],
             cwd=dirs['abs_src_dir'],
             env=env, output_timeout=60*3, halt_on_failure=True,
         )
@@ -1809,8 +1818,9 @@ or run without that action (ie: --no-{action})"
         env = self.query_build_env()
         env.update(self.query_check_test_env())
 
+        python = self.query_exe('python2.7')
         cmd = [
-            sys.executable, 'mach',
+            python, 'mach',
             '--log-no-times',
             'build',
             '-v',
@@ -2184,8 +2194,9 @@ or run without that action (ie: --no-{action})"
         env = self.query_build_env()
         env.update(self.query_mach_build_env())
 
+        python = self.query_exe('python2.7')
         return_code = self.run_command_m(
-            command=[sys.executable, 'mach', 'valgrind-test'],
+            command=[python, 'mach', 'valgrind-test'],
             cwd=self.query_abs_dirs()['abs_src_dir'],
             env=env, output_timeout=self.config.get('max_build_output_timeout', 60 * 40)
         )
