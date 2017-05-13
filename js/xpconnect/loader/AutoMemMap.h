@@ -10,7 +10,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/RangedPtr.h"
 #include "mozilla/Result.h"
-#include "mozilla/ipc/FileDescriptor.h"
 #include "nsIMemoryReporter.h"
 
 #include <prio.h>
@@ -19,8 +18,6 @@ class nsIFile;
 
 namespace mozilla {
 namespace loader {
-
-using mozilla::ipc::FileDescriptor;
 
 class AutoMemMap
 {
@@ -32,9 +29,6 @@ class AutoMemMap
         Result<Ok, nsresult>
         init(nsIFile* file, int flags = PR_RDONLY, int mode = 0,
              PRFileMapProtect prot = PR_PROT_READONLY);
-
-        Result<Ok, nsresult>
-        init(const ipc::FileDescriptor& file);
 
         bool initialized() { return addr; }
 
@@ -56,11 +50,7 @@ class AutoMemMap
 
         size_t nonHeapSizeOfExcludingThis() { return size_; }
 
-        FileDescriptor cloneFileDescriptor();
-
     private:
-        Result<Ok, nsresult> initInternal(PRFileMapProtect prot = PR_PROT_READONLY);
-
         AutoFDClose fd;
         PRFileMap* fileMap = nullptr;
 
