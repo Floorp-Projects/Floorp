@@ -50,14 +50,7 @@ interface nsIPrincipal;
 // a synthetic flavor, put into the transferable once we know the destination directory of a file drag
 #define kFilePromiseDirectoryMime   "application/x-moz-file-promise-dir"
 
-// A custom data type used by DataTransfer for securely transferring arbitrary
-// data through the drag or clipboard object without allowing websites to set
-// arbitrary data types.
 #define kCustomTypesMime "application/x-moz-custom-clipdata"
-
-// A custom data type used during drag events to allow them to occur even when
-// no data has been attached to the drag event's Transferrable.
-#define kDummyTypeMime "application/x-moz-dummy-data"
 
 %}
 
