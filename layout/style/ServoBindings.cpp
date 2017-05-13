@@ -1468,6 +1468,38 @@ Gecko_AnimationAppendKeyframe(RawGeckoKeyframeListBorrowedMut aKeyframes,
   return keyframe;
 }
 
+Keyframe*
+Gecko_GetOrCreateKeyframeAtStart(nsTArray<Keyframe>* aKeyframes,
+                                 float aOffset,
+                                 const nsTimingFunction* aTimingFunction)
+{
+  MOZ_ASSERT(aKeyframes, "The keyframe array should be valid");
+  MOZ_ASSERT(aTimingFunction, "The timing function should be valid");
+  MOZ_ASSERT(aOffset >= 0. && aOffset <= 1.,
+             "The offset should be in the range of [0.0, 1.0]");
+  MOZ_ASSERT(aKeyframes->IsEmpty() ||
+             aKeyframes->ElementAt(0).mOffset.value() >= aOffset,
+             "The offset should be less than or equal to the first keyframe's "
+             "offset if there are exisiting keyframes");
+
+  size_t keyframeIndex;
+  if (nsAnimationManager::FindMatchingKeyframe(*aKeyframes,
+                                               aOffset,
+                                               *aTimingFunction,
+                                               keyframeIndex)) {
+    return &(*aKeyframes)[keyframeIndex];
+  }
+
+  Keyframe* keyframe = aKeyframes->InsertElementAt(0);
+  keyframe->mOffset.emplace(aOffset);
+  if (aTimingFunction->mType != nsTimingFunction::Type::Linear) {
+    keyframe->mTimingFunction.emplace();
+    keyframe->mTimingFunction->Init(*aTimingFunction);
+  }
+
+  return keyframe;
+}
+
 void
 Gecko_ResetStyleCoord(nsStyleUnit* aUnit, nsStyleUnion* aValue)
 {
