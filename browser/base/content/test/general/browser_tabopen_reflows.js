@@ -23,18 +23,6 @@ const EXPECTED_REFLOWS = [
     "openUILinkIn@chrome://browser/content/utilityOverlay.js|" +
     "BrowserOpenTab@chrome://browser/content/browser.js|",
 
-  // accessing element.scrollPosition in _fillTrailingGap() flushes layout
-  "get_scrollPosition@chrome://global/content/bindings/scrollbox.xml|" +
-    "_fillTrailingGap@chrome://browser/content/tabbrowser.xml|" +
-    "_handleNewTab@chrome://browser/content/tabbrowser.xml|" +
-    "onxbltransitionend@chrome://browser/content/tabbrowser.xml|",
-
-  // SessionStore.getWindowDimensions()
-  "ssi_getWindowDimension@resource:///modules/sessionstore/SessionStore.jsm|" +
-    "ssi_updateWindowFeatures/<@resource:///modules/sessionstore/SessionStore.jsm|" +
-    "ssi_updateWindowFeatures@resource:///modules/sessionstore/SessionStore.jsm|" +
-    "ssi_collectWindowData@resource:///modules/sessionstore/SessionStore.jsm|",
-
   // selection change notification may cause querying the focused editor content
   // by IME and that will cause reflow.
   "select@chrome://global/content/bindings/textbox.xml|" +
