@@ -49,7 +49,7 @@ public:
 protected:
     virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-    void SendScriptsAndFinalize(ScriptPreloader::ScriptHash& scripts);
+    void Finalize(LinkedList<ScriptPreloader::CachedScript>& scripts);
 
 private:
     bool mWantCacheData = false;
