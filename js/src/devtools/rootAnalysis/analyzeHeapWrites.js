@@ -192,7 +192,6 @@ function treatAsSafeArgument(entry, varName, csuName)
         [/Gecko_CopyCounter.*?From/, "aContent", null],
         [/Gecko_SetContentData/, "aContent", null],
         [/Gecko_EnsureStyle.*?ArrayLength/, "aArray", null],
-        ["Gecko_AnimationAppendKeyframe", "aKeyframes", null],
         ["Gecko_GetOrCreateKeyframeAtStart", "aKeyframes", null],
         ["Gecko_GetOrCreateInitialKeyframe", "aKeyframes", null],
         ["Gecko_GetOrCreateFinalKeyframe", "aKeyframes", null],
@@ -376,7 +375,6 @@ function ignoreContents(entry)
 
         // The analysis can't cope with the indirection used for the objects
         // being initialized here.
-        "Gecko_AnimationAppendKeyframe",
         "Gecko_GetOrCreateKeyframeAtStart",
         "Gecko_GetOrCreateInitialKeyframe",
         "Gecko_GetOrCreateFinalKeyframe",
