@@ -83,6 +83,9 @@ enum class ParsingMode : uint8_t {
   // is assumed to be in user units (px).
   // https://www.w3.org/TR/SVG/coords.html#Units
   AllowUnitlessLength = 1 << 0,
+  // In SVG, out-of-range values are not treated as an error in parsing.
+  // https://www.w3.org/TR/SVG/implnote.html#RangeClamping
+  AllowAllNumericValues = 1 << 1,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ParsingMode)
