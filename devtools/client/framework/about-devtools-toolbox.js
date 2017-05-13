@@ -26,10 +26,6 @@ AboutURL.prototype = {
   newChannel: function (aURI, aLoadInfo) {
     let chan = Services.io.newChannelFromURIWithLoadInfo(this.uri, aLoadInfo);
     chan.owner = Services.scriptSecurityManager.getSystemPrincipal();
-
-    // Must set the result principal URI _after_ we've created the channel
-    // since the chrome protocol would overwrite it with a chrome:// URL.
-    aLoadInfo.resultPrincipalURI = aURI;
     return chan;
   },
 
