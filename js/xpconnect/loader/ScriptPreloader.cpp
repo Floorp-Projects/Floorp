@@ -498,7 +498,7 @@ ScriptPreloader::InitCacheInternal()
     for (auto script : mRestoredScripts) {
         // Only async decode scripts which have been used in this process type.
         if (script->mProcessTypes.contains(CurrentProcessType()) &&
-            script->mSize > MIN_OFFTHREAD_SIZE &&
+            script->AsyncDecodable() &&
             JS::CanCompileOffThread(cx, options, script->mSize)) {
             DecodeScriptOffThread(cx, script);
         } else {
@@ -555,8 +555,6 @@ ScriptPreloader::PrepareCacheWrite()
 
     AutoSafeJSAPI jsapi;
 
-    LinkedList<CachedScript> asyncScripts;
-
     for (CachedScript* next = mSavedScripts.getFirst(); next; ) {
         CachedScript* script = next;
         next = script->getNext();
@@ -579,18 +577,7 @@ ScriptPreloader::PrepareCacheWrite()
             delete script;
         } else {
             script->mSize = script->Range().length();
-
-            if (script->mSize > MIN_OFFTHREAD_SIZE) {
-                script->remove();
-                asyncScripts.insertBack(script);
-            }
         }
-    }
-
-    // Store async-decoded scripts contiguously, since they're loaded
-    // immediately at startup.
-    while (CachedScript* s = asyncScripts.popLast()) {
-        mSavedScripts.insertFront(s);
     }
 
     mDataPrepared = true;
@@ -641,9 +628,19 @@ ScriptPreloader::WriteCache()
     AutoFDClose fd;
     NS_TRY(cacheFile->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE, 0644, &fd.rwget()));
 
+    nsTArray<CachedScript*> scripts;
+    for (auto script : mSavedScripts) {
+        scripts.AppendElement(script);
+    }
+
+    // Sort scripts by load time, with async loaded scripts before sync scripts.
+    // Since async scripts are always loaded immediately at startup, it helps to
+    // have them stored contiguously.
+    scripts.Sort(CachedScript::Comparator());
+
     OutputBuffer buf;
     size_t offset = 0;
-    for (auto script : mSavedScripts) {
+    for (auto script : scripts) {
         script->mOffset = offset;
         script->Code(buf);
 
@@ -656,8 +653,7 @@ ScriptPreloader::WriteCache()
     MOZ_TRY(Write(fd, MAGIC, sizeof(MAGIC)));
     MOZ_TRY(Write(fd, headerSize, sizeof(headerSize)));
     MOZ_TRY(Write(fd, buf.Get(), buf.cursor()));
-
-    for (auto script : mSavedScripts) {
+    for (auto script : scripts) {
         MOZ_TRY(Write(fd, script->Range().begin().get(), script->mSize));
 
         if (script->mScript) {
@@ -739,12 +735,14 @@ ScriptPreloader::NoteScript(const nsCString& url, const nsCString& cachePath,
         return;
     }
 
+    script->UpdateLoadTime(TimeStamp::Now());
     script->mProcessTypes += CurrentProcessType();
 }
 
 void
 ScriptPreloader::NoteScript(const nsCString& url, const nsCString& cachePath,
-                            ProcessType processType, nsTArray<uint8_t>&& xdrData)
+                            ProcessType processType, nsTArray<uint8_t>&& xdrData,
+                            TimeStamp loadTime)
 {
     CachedScript* script = mScripts.Get(cachePath);
     bool restored = script && FindScript(mRestoredScripts, cachePath);
@@ -772,6 +770,7 @@ ScriptPreloader::NoteScript(const nsCString& url, const nsCString& cachePath,
         }
     }
 
+    script->UpdateLoadTime(loadTime);
     script->mProcessTypes += processType;
 }
 

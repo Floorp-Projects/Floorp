@@ -47,6 +47,7 @@ ScriptCacheChild::Finalize(LinkedList<ScriptPreloader::CachedScript>& scripts)
 
         data->url() = script->mURL;
         data->cachePath() = script->mCachePath;
+        data->loadTime() = script->mLoadTime;
 
         if (script->HasBuffer()) {
             auto& xdrData = script->Buffer();
@@ -83,7 +84,7 @@ ScriptCacheParent::Recv__delete__(nsTArray<ScriptData>&& scripts)
     auto& cache = ScriptPreloader::GetChildSingleton();
     for (auto& script : scripts) {
         cache.NoteScript(script.url(), script.cachePath(), processType,
-                         Move(script.xdrData()));
+                         Move(script.xdrData()), script.loadTime());
     }
 
     return IPC_OK();
