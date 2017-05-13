@@ -2868,7 +2868,6 @@
 
             // update the UI early for responsiveness
             aTab.collapsed = true;
-            this.tabContainer._fillTrailingGap();
             this._blurTab(aTab);
 
             this._removingTabs.splice(this._removingTabs.indexOf(aTab), 1);
@@ -6028,21 +6027,6 @@
         ]]></body>
       </method>
 
-      <method name="_fillTrailingGap">
-        <body><![CDATA[
-          try {
-            // if we're at the right side (and not the logical end,
-            // which is why this works for both LTR and RTL)
-            // of the tabstrip, we need to ensure that we stay
-            // completely scrolled to the right side
-            var tabStrip = this.mTabstrip;
-            if (tabStrip.scrollPosition + tabStrip.scrollClientSize >
-                tabStrip.scrollSize)
-              tabStrip.scrollByPixels(-1);
-          } catch (e) {}
-        ]]></body>
-      </method>
-
       <field name="_closingTabsSpacer">
         document.getAnonymousElementByAttribute(this, "anonid", "closing-tabs-spacer");
       </field>
@@ -6332,7 +6316,6 @@
               var width = this.mTabstrip.boxObject.width;
               if (width != this.mTabstripWidth) {
                 this.adjustTabstrip();
-                this._fillTrailingGap();
                 this._handleTabSelect(false);
                 this.mTabstripWidth = width;
               }
@@ -6487,7 +6470,6 @@
           this.adjustTabstrip();
 
           if (tab.getAttribute("selected") == "true") {
-            this._fillTrailingGap();
             this._handleTabSelect();
           } else if (!tab.hasAttribute("skipbackgroundnotify")) {
             this._notifyBackgroundTab(tab);
