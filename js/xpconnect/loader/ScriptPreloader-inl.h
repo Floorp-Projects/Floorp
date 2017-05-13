@@ -258,7 +258,8 @@ public:
     public:
         Elem& operator*() { return *this; }
 
-        ElemType get() {
+        ElemType get()
+        {
           if (done_) {
             return nullptr;
           }
