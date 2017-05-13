@@ -359,8 +359,6 @@
 @RESPATH@/components/BrowserElementParent.js
 @RESPATH@/components/FeedProcessor.manifest
 @RESPATH@/components/FeedProcessor.js
-@RESPATH@/components/UAOverridesBootstrapper.js
-@RESPATH@/components/UAOverridesBootstrapper.manifest
 @RESPATH@/components/WellKnownOpportunisticUtils.js
 @RESPATH@/components/WellKnownOpportunisticUtils.manifest
 #ifndef XP_MACOSX

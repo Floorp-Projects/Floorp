@@ -487,11 +487,6 @@ nsHttpHandler::Init()
     if (pc) {
         pc->GetParentalControlsEnabled(&mParentalControlEnabled);
     }
-
-    if (XRE_IsParentProcess()) {
-        // Load UserAgentOverrides.jsm before any HTTP request is issued.
-        nsCOMPtr<nsISupports> temp = do_GetService("@mozilla.org/network/ua-overrides-bootstrapper;1");
-    }
     return NS_OK;
 }
 
