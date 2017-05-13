@@ -73,8 +73,8 @@ enum class UpdateAnimationsTasks : uint8_t {
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(UpdateAnimationsTasks)
 
-// The mode to use when parsing lengths.
-enum class LengthParsingMode {
+// The mode to use when parsing values.
+enum class ParsingMode {
   // In CSS, lengths must have units, except for zero values, where the unit can
   // be omitted.
   // https://www.w3.org/TR/css3-values/#lengths
@@ -82,7 +82,7 @@ enum class LengthParsingMode {
   // In SVG, a coordinate or length value without a unit identifier (e.g., "25")
   // is assumed to be in user units (px).
   // https://www.w3.org/TR/SVG/coords.html#Units
-  SVG,
+  AllowUnitlessLength,
 };
 
 // The kind of style we're generating when requesting Servo to give us an
