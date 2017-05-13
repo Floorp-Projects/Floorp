@@ -10,11 +10,6 @@
 
 class nsMathMLSelectedFrame : public nsMathMLContainerFrame {
 public:
-  virtual void
-  Init(nsIContent*       aContent,
-       nsContainerFrame* aParent,
-       nsIFrame*         aPrevInFlow) override;
-
   NS_IMETHOD
   TransmitAutomaticData() override;
 
@@ -54,7 +49,9 @@ public:
 
 protected:
   explicit nsMathMLSelectedFrame(nsStyleContext* aContext) :
-    nsMathMLContainerFrame(aContext) {}
+    nsMathMLContainerFrame(aContext),
+    mSelectedFrame(nullptr),
+    mInvalidMarkup(false) {}
   virtual ~nsMathMLSelectedFrame();
   
   virtual nsIFrame* GetSelectedFrame() = 0;
