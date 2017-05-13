@@ -82,53 +82,7 @@ ScriptPreloader::GetSingleton()
     static RefPtr<ScriptPreloader> singleton;
 
     if (!singleton) {
-        if (XRE_IsParentProcess()) {
-            singleton = new ScriptPreloader();
-            singleton->mChildCache = &GetChildSingleton();
-            Unused << singleton->InitCache();
-        } else {
-            singleton = &GetChildSingleton();
-        }
-
-        ClearOnShutdown(&singleton);
-    }
-
-    return *singleton;
-}
-
-// The child singleton is available in all processes, including the parent, and
-// is used for scripts which are expected to be loaded into child processes
-// (such as process and frame scripts), or scripts that have already been loaded
-// into a child. The child caches are managed as follows:
-//
-// - Every startup, we open the cache file from the last session, move it to a
-//  new location, and begin pre-loading the scripts that are stored in it. There
-//  is a separate cache file for parent and content processes, but the parent
-//  process opens both the parent and content cache files.
-//
-// - Once startup is complete, we write a new cache file for the next session,
-//   containing only the scripts that were used during early startup, so we don't
-//   waste pre-loading scripts that may not be needed.
-//
-// - For content processes, opening and writing the cache file is handled in the
-//  parent process. The first content process of each type sends back the data
-//  for scripts that were loaded in early startup, and the parent merges them and
-//  writes them to a cache file.
-//
-// - Currently, content processes only benefit from the cache data written
-//  during the *previous* session. Ideally, new content processes should probably
-//  use the cache data written during this session if there was no previous cache
-//  file, but I'd rather do that as a follow-up.
-ScriptPreloader&
-ScriptPreloader::GetChildSingleton()
-{
-    static RefPtr<ScriptPreloader> singleton;
-
-    if (!singleton) {
         singleton = new ScriptPreloader();
-        if (XRE_IsParentProcess()) {
-            Unused << singleton->InitCache(NS_LITERAL_STRING("scriptCache-child"));
-        }
         ClearOnShutdown(&singleton);
     }
 
@@ -260,7 +214,7 @@ ScriptPreloader::FlushCache()
     // of any cache file we've already written out this session, which will
     // prevent us from falling back to the current session's cache file on the
     // next startup.
-    if (mSaveComplete && mChildCache) {
+    if (mSaveComplete) {
         mSaveComplete = false;
 
         Unused << NS_NewNamedThread("SaveScripts",
@@ -277,8 +231,7 @@ ScriptPreloader::Observe(nsISupports* subject, const char* topic, const char16_t
 
         mStartupFinished = true;
 
-
-        if (XRE_IsParentProcess() && mChildCache) {
+        if (XRE_IsParentProcess()) {
             Unused << NS_NewNamedThread("SaveScripts",
                                         getter_AddRefs(mSaveThread), this);
         }
@@ -295,7 +248,7 @@ ScriptPreloader::Observe(nsISupports* subject, const char* topic, const char16_t
 
 
 Result<nsCOMPtr<nsIFile>, nsresult>
-ScriptPreloader::GetCacheFile(const nsAString& suffix)
+ScriptPreloader::GetCacheFile(const char* leafName)
 {
     nsCOMPtr<nsIFile> cacheFile;
     NS_TRY(mProfD->Clone(getter_AddRefs(cacheFile)));
@@ -303,7 +256,7 @@ ScriptPreloader::GetCacheFile(const nsAString& suffix)
     NS_TRY(cacheFile->AppendNative(NS_LITERAL_CSTRING("startupCache")));
     Unused << cacheFile->Create(nsIFile::DIRECTORY_TYPE, 0777);
 
-    NS_TRY(cacheFile->Append(mBaseName + suffix));
+    NS_TRY(cacheFile->AppendNative(nsDependentCString(leafName)));
 
     return Move(cacheFile);
 }
@@ -316,14 +269,14 @@ ScriptPreloader::OpenCache()
     NS_TRY(NS_GetSpecialDirectory("ProfLDS", getter_AddRefs(mProfD)));
 
     nsCOMPtr<nsIFile> cacheFile;
-    MOZ_TRY_VAR(cacheFile, GetCacheFile(NS_LITERAL_STRING(".bin")));
+    MOZ_TRY_VAR(cacheFile, GetCacheFile("scriptCache.bin"));
 
     bool exists;
     NS_TRY(cacheFile->Exists(&exists));
     if (exists) {
-        NS_TRY(cacheFile->MoveTo(nullptr, mBaseName + NS_LITERAL_STRING("-current.bin")));
+        NS_TRY(cacheFile->MoveTo(nullptr, NS_LITERAL_STRING("scriptCache-current.bin")));
     } else {
-        NS_TRY(cacheFile->SetLeafName(mBaseName + NS_LITERAL_STRING("-current.bin")));
+        NS_TRY(cacheFile->SetLeafName(NS_LITERAL_STRING("scriptCache-current.bin")));
         NS_TRY(cacheFile->Exists(&exists));
         if (!exists) {
             return Err(NS_ERROR_FILE_NOT_FOUND);
@@ -338,10 +291,9 @@ ScriptPreloader::OpenCache()
 // Opens the script cache file for this session, and initializes the script
 // cache based on its contents. See WriteCache for details of the cache file.
 Result<Ok, nsresult>
-ScriptPreloader::InitCache(const nsAString& basePath)
+ScriptPreloader::InitCache()
 {
     mCacheInitialized = true;
-    mBaseName = basePath;
 
     RegisterWeakMemoryReporter(this);
 
@@ -383,7 +335,7 @@ ScriptPreloader::InitCache(const nsAString& basePath)
 
         size_t offset = 0;
         while (!buf.finished()) {
-            auto script = MakeUnique<CachedScript>(*this, buf);
+            auto script = MakeUnique<CachedScript>(buf);
 
             auto scriptData = data + script->mOffset;
             if (scriptData + script->mSize > end) {
@@ -421,7 +373,6 @@ ScriptPreloader::InitCache(const nsAString& basePath)
 
     JS::CompileOptions options(cx, JSVERSION_LATEST);
     for (auto script : mRestoredScripts) {
-        // Only async decode scripts which have been used in this process type.
         if (script->mProcessTypes.contains(CurrentProcessType()) &&
             script->mSize > MIN_OFFTHREAD_SIZE &&
             JS::CanCompileOffThread(cx, options, script->mSize)) {
@@ -450,12 +401,6 @@ void
 ScriptPreloader::PrepareCacheWrite()
 {
     MOZ_ASSERT(NS_IsMainThread());
-
-    auto cleanup = MakeScopeExit([&] () {
-        if (mChildCache) {
-            mChildCache->PrepareCacheWrite();
-        }
-    });
 
     if (mDataPrepared) {
         return;
@@ -486,20 +431,7 @@ ScriptPreloader::PrepareCacheWrite()
         CachedScript* script = next;
         next = script->getNext();
 
-        // Don't write any scripts that are also in the child cache. They'll be
-        // loaded from the child cache in that case, so there's no need to write
-        // them twice.
-        CachedScript* childScript = mChildCache ? mChildCache->mScripts.Get(script->mCachePath) : nullptr;
-        if (childScript) {
-            if (FindScript(mChildCache->mSavedScripts, script->mCachePath)) {
-                childScript->UpdateLoadTime(script->mLoadTime);
-                childScript->mProcessTypes += script->mProcessTypes;
-            } else {
-                childScript = nullptr;
-            }
-        }
-
-        if (childScript || (!script->mSize && !script->XDREncode(jsapi.cx()))) {
+        if (!script->mSize && !script->XDREncode(jsapi.cx())) {
             script->remove();
             delete script;
         } else {
@@ -555,7 +487,7 @@ ScriptPreloader::WriteCache()
     }
 
     nsCOMPtr<nsIFile> cacheFile;
-    MOZ_TRY_VAR(cacheFile, GetCacheFile(NS_LITERAL_STRING("-new.bin")));
+    MOZ_TRY_VAR(cacheFile, GetCacheFile("scriptCache-new.bin"));
 
     bool exists;
     NS_TRY(cacheFile->Exists(&exists));
@@ -587,7 +519,7 @@ ScriptPreloader::WriteCache()
         script->mXDRData.reset();
     }
 
-    NS_TRY(cacheFile->MoveTo(nullptr, mBaseName + NS_LITERAL_STRING(".bin")));
+    NS_TRY(cacheFile->MoveTo(nullptr, NS_LITERAL_STRING("scriptCache.bin")));
 
     return Ok();
 }
@@ -603,11 +535,7 @@ ScriptPreloader::Run()
     // during early startup.
     mal.Wait(10000);
 
-    auto result = WriteCache();
-    Unused << NS_WARN_IF(result.isErr());
-
-    result = mChildCache->WriteCache();
-    Unused << NS_WARN_IF(result.isErr());
+    Unused << WriteCache();
 
     mSaveComplete = true;
     NS_ReleaseOnMainThread(mSaveThread.forget());
@@ -662,7 +590,7 @@ ScriptPreloader::NoteScript(const nsCString& url, const nsCString& cachePath,
         restored->mScript = script;
         restored->mReadyToExecute = true;
     } else if (!exists) {
-        auto cachedScript = new CachedScript(*this, url, cachePath, script);
+        auto cachedScript = new CachedScript(url, cachePath, script);
         cachedScript->mProcesses += CurrentProcessType();
 
         mSavedScripts.insertBack(cachedScript);
@@ -673,15 +601,6 @@ ScriptPreloader::NoteScript(const nsCString& url, const nsCString& cachePath,
 JSScript*
 ScriptPreloader::GetCachedScript(JSContext* cx, const nsCString& path)
 {
-    // If a script is used by both the parent and the child, it's stored only
-    // in the child cache.
-    if (mChildCache) {
-        auto script = mChildCache->GetCachedScript(cx, path);
-        if (script) {
-            return script;
-        }
-    }
-
     auto script = mScripts.Get(path);
     if (script) {
         return WaitForCachedScript(cx, script);
@@ -743,7 +662,7 @@ ScriptPreloader::OffThreadDecodeCallback(void* token, void* context)
 {
     auto script = static_cast<CachedScript*>(context);
 
-    MonitorAutoLock mal(script->mCache.mMonitor);
+    MonitorAutoLock mal(GetSingleton().mMonitor);
 
     if (script->mReadyToExecute) {
         // We've already executed this script on the main thread, and opted to
@@ -751,7 +670,7 @@ ScriptPreloader::OffThreadDecodeCallback(void* token, void* context)
         // finish. So just cancel the off-thread parse rather than completing
         // it.
         NS_DispatchToMainThread(
-            NewRunnableMethod<void*>(&script->mCache,
+            NewRunnableMethod<void*>(&GetSingleton(),
                                      &ScriptPreloader::CancelOffThreadParse,
                                      token));
         return;
@@ -763,8 +682,8 @@ ScriptPreloader::OffThreadDecodeCallback(void* token, void* context)
     mal.NotifyAll();
 }
 
-ScriptPreloader::CachedScript::CachedScript(ScriptPreloader& cache, InputBuffer& buf)
-    : mCache(cache)
+inline
+ScriptPreloader::CachedScript::CachedScript(InputBuffer& buf)
 {
     Code(buf);
 }
@@ -790,7 +709,7 @@ void
 ScriptPreloader::CachedScript::Cancel()
 {
     if (mToken) {
-        mCache.mMonitor.AssertCurrentThreadOwns();
+        GetSingleton().mMonitor.AssertCurrentThreadOwns();
 
         AutoSafeJSAPI jsapi;
         JS::CancelOffThreadScriptDecoder(jsapi.cx(), mToken);
