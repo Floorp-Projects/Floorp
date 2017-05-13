@@ -211,8 +211,8 @@ def opt_seta(task, params):
         label = task.task.get('payload').get('buildername')
         bbb_task = True
 
-        # disable SETA - bug 1364421
-        return True, None
+        # never optimize with SETA for BBB- bug 1364421
+        return False, None
     else:
         label = task.label
 
