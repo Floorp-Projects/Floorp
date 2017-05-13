@@ -59,7 +59,6 @@
 #include "mozilla/layers/ContentProcessController.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layout/RenderFrameChild.h"
-#include "mozilla/loader/ScriptCacheActors.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/CaptivePortalService.h"
 #include "mozilla/Omnijar.h"
@@ -236,7 +235,6 @@ using namespace mozilla::widget;
 using namespace mozilla::system;
 #endif
 using namespace mozilla::widget;
-using mozilla::loader::PScriptCacheChild;
 
 namespace mozilla {
 
@@ -1819,31 +1817,6 @@ ContentChild::GetCPOWManager()
 mozilla::ipc::IPCResult
 ContentChild::RecvPTestShellConstructor(PTestShellChild* actor)
 {
-  return IPC_OK();
-}
-
-PScriptCacheChild*
-ContentChild::AllocPScriptCacheChild(const FileDescOrError& cacheFile, const bool& wantCacheData)
-{
-  return new loader::ScriptCacheChild();
-}
-
-bool
-ContentChild::DeallocPScriptCacheChild(PScriptCacheChild* cache)
-{
-  delete static_cast<loader::ScriptCacheChild*>(cache);
-  return true;
-}
-
-mozilla::ipc::IPCResult
-ContentChild::RecvPScriptCacheConstructor(PScriptCacheChild* actor, const FileDescOrError& cacheFile, const bool& wantCacheData)
-{
-  Maybe<FileDescriptor> fd;
-  if (cacheFile.type() == cacheFile.TFileDescriptor) {
-    fd.emplace(cacheFile.get_FileDescriptor());
-  }
-
-  static_cast<loader::ScriptCacheChild*>(actor)->Init(fd, wantCacheData);
   return IPC_OK();
 }
 
