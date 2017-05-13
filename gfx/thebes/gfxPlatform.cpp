@@ -2340,6 +2340,11 @@ gfxPlatform::InitWebRenderConfig()
 
   if (prefEnabled) {
     featureWebRender.UserEnable("Enabled by pref");
+  } else {
+    const char* env = PR_GetEnv("MOZ_WEBRENDER");
+    if (env && *env == '1') {
+      featureWebRender.UserEnable("Enabled by envvar");
+    }
   }
 
   // WebRender relies on the GPU process when on Windows
