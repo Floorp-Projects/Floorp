@@ -368,10 +368,6 @@ void Gecko_ClearWillChange(nsStyleDisplay* display, size_t length);
 void Gecko_AppendWillChange(nsStyleDisplay* display, nsIAtom* atom);
 void Gecko_CopyWillChangeFrom(nsStyleDisplay* dest, nsStyleDisplay* src);
 
-mozilla::Keyframe* Gecko_AnimationAppendKeyframe(RawGeckoKeyframeListBorrowedMut keyframes,
-                                                 float offset,
-                                                 const nsTimingFunction* timingFunction);
-
 // Searches from the beginning of |keyframes| for a Keyframe object with the
 // specified offset and timing function. If none is found, a new Keyframe object
 // with the specified |offset| and |timingFunction| will be prepended to

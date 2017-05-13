@@ -1452,22 +1452,6 @@ Gecko_CopyWillChangeFrom(nsStyleDisplay* aDest, nsStyleDisplay* aSrc)
   aDest->mWillChange.AppendElements(aSrc->mWillChange);
 }
 
-Keyframe*
-Gecko_AnimationAppendKeyframe(RawGeckoKeyframeListBorrowedMut aKeyframes,
-                              float aOffset,
-                              const nsTimingFunction* aTimingFunction)
-{
-  Keyframe* keyframe = aKeyframes->AppendElement();
-  keyframe->mOffset.emplace(aOffset);
-  if (aTimingFunction &&
-      aTimingFunction->mType != nsTimingFunction::Type::Linear) {
-    keyframe->mTimingFunction.emplace();
-    keyframe->mTimingFunction->Init(*aTimingFunction);
-  }
-
-  return keyframe;
-}
-
 enum class KeyframeSearchDirection {
   Forwards,
   Backwards,
