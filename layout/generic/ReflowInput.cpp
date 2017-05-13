@@ -133,7 +133,7 @@ FontSizeInflationListMarginAdjustment(const nsIFrame* aFrame)
         blockFrame->HasBullet() &&
         inflation > 1.0f) {
 
-      auto listStyleType = aFrame->StyleList()->GetCounterStyle()->GetStyle();
+      auto listStyleType = aFrame->StyleList()->mCounterStyle->GetStyle();
       if (listStyleType != NS_STYLE_LIST_STYLE_NONE &&
           listStyleType != NS_STYLE_LIST_STYLE_DISC &&
           listStyleType != NS_STYLE_LIST_STYLE_CIRCLE &&
