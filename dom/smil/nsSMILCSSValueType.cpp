@@ -478,18 +478,6 @@ ValueFromStringHelper(nsCSSPropertyID aPropID,
   const ServoComputedValuesWithParent servoStyles =
     { currentStyle, parentStyle };
 
-  // FIXME (bug 1357295): Handle negative values properly
-#ifdef DEBUG
-  {
-    bool isNegative = false;
-    Unused << GetNonNegativePropValue(aString, aPropID, isNegative);
-    if (isNegative) {
-      NS_WARNING("stylo: Special negative value handling not yet supported"
-                 " (bug 1357295)");
-    }
-  }
-#endif // DEBUG
-
   // Parse property
   nsIDocument* doc = aTargetElement->GetUncomposedDoc();
   if (!doc) {
@@ -504,7 +492,8 @@ ValueFromStringHelper(nsCSSPropertyID aPropID,
     Servo_ParseProperty(aPropID,
                         &value,
                         data,
-                        ParsingMode::AllowUnitlessLength).Consume();
+                        ParsingMode::AllowUnitlessLength |
+                        ParsingMode::AllowAllNumericValues).Consume();
   if (!servoDeclarationBlock) {
     return nullptr;
   }
