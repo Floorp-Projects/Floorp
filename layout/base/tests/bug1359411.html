@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html><head><script src="/tests/SimpleTest/EventUtils.js"></script><style>
+  i:before{content:"X"}
+</style></head><body onload="runTest()"><div><button type="button"><i></i></button><p></p></div><editor contenteditable="true" onfocus="sendKey('UP')">focus me, then press the UP key</editor>
+<script>var e = document.querySelector('editor'); e.focus()</script>
+<script>
+function runTest() {
+  document.body.offsetHeight;
+  var e = document.querySelector('editor');
+  e.focus()
+}
+</script>
