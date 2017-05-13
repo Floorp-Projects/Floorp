@@ -147,7 +147,7 @@ SERVO_BINDING_FUNC(Servo_ParseProperty,
                    RawServoDeclarationBlockStrong,
                    nsCSSPropertyID property, const nsACString* value,
                    RawGeckoURLExtraData* data,
-                   mozilla::LengthParsingMode length_parsing_mode)
+                   mozilla::ParsingMode parsing_mode)
 SERVO_BINDING_FUNC(Servo_ParseEasing, bool,
                    const nsAString* easing,
                    RawGeckoURLExtraData* data,
@@ -241,13 +241,13 @@ SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetProperty, bool,
                    const nsACString* property,
                    const nsACString* value, bool is_important,
                    RawGeckoURLExtraData* data,
-                   mozilla::LengthParsingMode length_parsing_mode)
+                   mozilla::ParsingMode parsing_mode)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetPropertyById, bool,
                    RawServoDeclarationBlockBorrowed declarations,
                    nsCSSPropertyID property,
                    const nsACString* value, bool is_important,
                    RawGeckoURLExtraData* data,
-                   mozilla::LengthParsingMode length_parsing_mode)
+                   mozilla::ParsingMode parsing_mode)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_RemoveProperty, void,
                    RawServoDeclarationBlockBorrowed declarations,
                    const nsACString* property)
