@@ -366,10 +366,6 @@ toolbarbutton.bookmark-item[open="true"],
   padding: 7px !important;
 }
 
-#back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
-  transform: scaleX(-1);
-}
-
 %ifdef MOZ_PHOTON_THEME
 #back-button:not(:hover):not(:active):not([open=true]) > .toolbarbutton-icon,
 #back-button[disabled=true] > .toolbarbutton-icon {
