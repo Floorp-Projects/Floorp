@@ -500,7 +500,7 @@ GMPCDMProxy::gmp_Shutdown()
   // Abort any pending decrypt jobs, to awaken any clients waiting on a job.
   for (size_t i = 0; i < mDecryptionJobs.Length(); i++) {
     DecryptJob* job = mDecryptionJobs[i];
-    job->PostResult(eme::AbortedErr);
+    job->PostResult(AbortedErr);
   }
   mDecryptionJobs.Clear();
 
@@ -696,7 +696,7 @@ GMPCDMProxy::gmp_Decrypt(RefPtr<DecryptJob> aJob)
   MOZ_ASSERT(IsOnOwnerThread());
 
   if (!mCDM) {
-    aJob->PostResult(eme::AbortedErr);
+    aJob->PostResult(AbortedErr);
     return;
   }
 
