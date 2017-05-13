@@ -436,10 +436,6 @@ ServoStyleSet::ResolvePseudoElementStyle(Element* aOriginatingElement,
                                          nsStyleContext* aParentContext,
                                          Element* aPseudoElement)
 {
-  if (aPseudoElement) {
-    NS_WARNING("stylo: We don't support CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE yet");
-  }
-
   MaybeRebuildStylist();
 
   // NB: We ignore aParentContext, on the assumption that pseudo element styles
@@ -448,9 +444,19 @@ ServoStyleSet::ResolvePseudoElementStyle(Element* aOriginatingElement,
   MOZ_ASSERT(aType < CSSPseudoElementType::Count);
   nsIAtom* pseudoTag = nsCSSPseudoElements::GetPseudoAtom(aType);
 
-  RefPtr<ServoComputedValues> computedValues =
-    Servo_ResolvePseudoStyle(aOriginatingElement, pseudoTag,
-                             /* is_probe = */ false, mRawSet.get()).Consume();
+  RefPtr<ServoComputedValues> computedValues;
+  if (aPseudoElement) {
+    MOZ_ASSERT(aType == aPseudoElement->GetPseudoElementType());
+    computedValues = Servo_ResolveStyle(aPseudoElement, mRawSet.get(),
+                                        mAllowResolveStaleStyles).Consume();
+  } else {
+    computedValues =
+      Servo_ResolvePseudoStyle(aOriginatingElement,
+                               pseudoTag,
+                               /* is_probe = */ false,
+                               mRawSet.get()).Consume();
+  }
+
   MOZ_ASSERT(computedValues);
 
   bool isBeforeOrAfter = aType == CSSPseudoElementType::before ||
