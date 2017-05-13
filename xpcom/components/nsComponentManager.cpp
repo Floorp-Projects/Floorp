@@ -49,6 +49,7 @@
 #include "nsArrayEnumerator.h"
 #include "nsStringEnumerator.h"
 #include "mozilla/FileUtils.h"
+#include "mozilla/URLPreloader.h"
 #include "mozilla/UniquePtr.h"
 #include "nsDataHashtable.h"
 
@@ -538,20 +539,12 @@ DoRegisterManifest(NSLocationType aType,
                    bool aXPTOnly)
 {
   MOZ_ASSERT(!aXPTOnly || !nsComponentManagerImpl::gComponentManager);
-  uint32_t len;
-  FileLocation::Data data;
-  UniquePtr<char[]> buf;
-  nsresult rv = aFile.GetData(data);
-  if (NS_SUCCEEDED(rv)) {
-    rv = data.GetSize(&len);
-  }
-  if (NS_SUCCEEDED(rv)) {
-    buf = MakeUnique<char[]>(len + 1);
-    rv = data.Copy(buf.get(), len);
-  }
-  if (NS_SUCCEEDED(rv)) {
-    buf[len] = '\0';
-    ParseManifest(aType, aFile, buf.get(), aChromeOnly, aXPTOnly);
+
+  auto result = URLPreloader::Read(aFile);
+  if (result.isOk()) {
+    nsCString buf(result.unwrap());
+
+    ParseManifest(aType, aFile, buf.BeginWriting(), aChromeOnly, aXPTOnly);
   } else if (NS_BOOTSTRAPPED_LOCATION != aType) {
     nsCString uri;
     aFile.GetURIString(uri);
