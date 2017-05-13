@@ -433,6 +433,8 @@ ScriptPreloader::InitCacheInternal()
         return Err(NS_ERROR_UNEXPECTED);
     }
 
+    AutoTArray<CachedScript*, 256> scripts;
+
     {
         auto cleanup = MakeScopeExit([&] () {
             mScripts.Clear();
@@ -462,6 +464,7 @@ ScriptPreloader::InitCacheInternal()
 
             script->mXDRRange.emplace(scriptData, scriptData + script->mSize);
 
+            scripts.AppendElement(script.get());
             mScripts.Put(script->mCachePath, script.get());
             Unused << script.release();
         }
@@ -482,7 +485,7 @@ ScriptPreloader::InitCacheInternal()
 
     JS::CompileOptions options(cx, JSVERSION_LATEST);
 
-    for (auto& script : IterHash(mScripts, Match<ScriptStatus::Restored>())) {
+    for (auto& script : scripts) {
         // Only async decode scripts which have been used in this process type.
         if (script->mProcessTypes.contains(CurrentProcessType()) &&
             script->AsyncDecodable() &&
