@@ -88,7 +88,7 @@ media_test_config_options = [
      {"action": "store_true",
       "dest": "enable_webrender",
       "default": False,
-      "help": "Tries to enable the WebRender compositor."}
+      "help": "Tries to enable the WebRender compositor."
       }],
 ] + (copy.deepcopy(testing_config_options))
 
