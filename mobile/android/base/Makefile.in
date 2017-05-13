@@ -78,6 +78,11 @@ ifdef MOZ_INSTALL_TRACKING
         $(NULL)
 endif
 
+
+# MOZ_ANDROID_MMA requires MOZ_ANDROID_GCM and MOZ_INSTALL_TRACKING,
+# so we don't need a separate clause adding to JAVA_CLASSPATH for
+# MMA (Leanplum) support.
+
 JAVA_CLASSPATH := $(subst $(NULL) ,:,$(strip $(JAVA_CLASSPATH)))
 
 # Library jars that we're bundling: these are subject to Proguard before inclusion
@@ -121,6 +126,10 @@ ifdef MOZ_INSTALL_TRACKING
         $(NULL)
 endif
 
+# MOZ_ANDROID_MMA requires MOZ_ANDROID_GCM and MOZ_INSTALL_TRACKING,
+# so we don't need a separate clause adding to java_bundled_libs for
+# MMA (Leanplum) support.
+
 # uniq purloined from http://stackoverflow.com/a/16151140.
 uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
 
@@ -138,6 +147,10 @@ GECKOVIEW_JARS = \
 
 ifdef MOZ_INSTALL_TRACKING
 GECKOVIEW_JARS += gecko-thirdparty-adjust_sdk.jar
+endif
+
+ifdef MOZ_ANDROID_MMA
+GECKOVIEW_JARS += gecko-thirdparty-leanplum_sdk.jar
 endif
 
 geckoview_jars_classpath := $(subst $(NULL) ,:,$(strip $(GECKOVIEW_JARS)))
@@ -159,6 +172,7 @@ endif
 ifdef MOZ_ANDROID_MLS_STUMBLER
 FENNEC_JARS += ../stumbler/stumbler.jar
 endif
+
 
 # All the jars we're compiling from source. (not to be confused with
 # java_bundled_libs, which holds the jars which we're including as binaries).
@@ -196,6 +210,9 @@ library_jars := \
 #
 # See https://bugzilla.mozilla.org/show_bug.cgi?id=1233238#c19 for symptoms and
 # more discussion.
+#
+# MOZ_ANDROID_MMA requires MOZ_INSTALL_TRACKING, so we don't need a
+# separate clause for MMA (Leanplum) support.
 ifdef MOZ_INSTALL_TRACKING
 library_jars += $(ANDROID_SDK)/optional/org.apache.http.legacy.jar
 endif # MOZ_INSTALL_TRACKING

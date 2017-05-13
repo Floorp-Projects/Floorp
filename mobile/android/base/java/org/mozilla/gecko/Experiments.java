@@ -71,6 +71,9 @@ public class Experiments {
     // Enable full bookmark management(full-page dialog, bookmark/folder modification, etc.)
     public static final String FULL_BOOKMARK_MANAGEMENT = "full-bookmark-management";
 
+    // Enable Leanplum SDK
+    public static final String LEANPLUM = "leanplum-start";
+
     /**
      * Returns if a user is in certain local experiment.
      * @param experiment Name of experiment to look up
