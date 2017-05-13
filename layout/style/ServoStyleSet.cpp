@@ -907,19 +907,19 @@ ServoStyleSet::AssertTreeIsClean()
 #endif
 
 bool
-ServoStyleSet::FillKeyframesForName(const nsString& aName,
-                                    const nsTimingFunction& aTimingFunction,
-                                    const ServoComputedValues* aComputedValues,
-                                    nsTArray<Keyframe>& aKeyframes)
+ServoStyleSet::GetKeyframesForName(const nsString& aName,
+                                   const nsTimingFunction& aTimingFunction,
+                                   const ServoComputedValues* aComputedValues,
+                                   nsTArray<Keyframe>& aKeyframes)
 {
   MaybeRebuildStylist();
 
   NS_ConvertUTF16toUTF8 name(aName);
-  return Servo_StyleSet_FillKeyframesForName(mRawSet.get(),
-                                             &name,
-                                             &aTimingFunction,
-                                             aComputedValues,
-                                             &aKeyframes);
+  return Servo_StyleSet_GetKeyframesForName(mRawSet.get(),
+                                            &name,
+                                            &aTimingFunction,
+                                            aComputedValues,
+                                            &aKeyframes);
 }
 
 nsTArray<ComputedKeyframeValues>

@@ -68,7 +68,7 @@ SERVO_BINDING_FUNC(Servo_StyleSet_InsertStyleSheetBefore, void,
 SERVO_BINDING_FUNC(Servo_StyleSet_FlushStyleSheets, void, RawServoStyleSetBorrowed set)
 SERVO_BINDING_FUNC(Servo_StyleSet_NoteStyleSheetsChanged, void,
                    RawServoStyleSetBorrowed set, bool author_style_disabled)
-SERVO_BINDING_FUNC(Servo_StyleSet_FillKeyframesForName, bool,
+SERVO_BINDING_FUNC(Servo_StyleSet_GetKeyframesForName, bool,
                    RawServoStyleSetBorrowed set,
                    const nsACString* property,
                    nsTimingFunctionBorrowed timing_function,

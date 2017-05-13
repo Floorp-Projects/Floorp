@@ -421,10 +421,10 @@ public:
     ServoStyleSet* styleSet = aPresContext->StyleSet()->AsServo();
     MOZ_ASSERT(styleSet);
     const nsTimingFunction& timingFunction = aSrc.GetTimingFunction();
-    return styleSet->FillKeyframesForName(aSrc.GetName(),
-                                          timingFunction,
-                                          mComputedValues,
-                                          aKeyframes);
+    return styleSet->GetKeyframesForName(aSrc.GetName(),
+                                         timingFunction,
+                                         mComputedValues,
+                                         aKeyframes);
   }
   void SetKeyframes(KeyframeEffectReadOnly& aEffect,
                     nsTArray<Keyframe>&& aKeyframes)
