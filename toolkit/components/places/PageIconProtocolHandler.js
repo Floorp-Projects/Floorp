@@ -17,6 +17,7 @@ function makeDefaultFaviconChannel(uri, loadInfo) {
   let channel = Services.io.newChannelFromURIWithLoadInfo(
     PlacesUtils.favicons.defaultFavicon, loadInfo);
   channel.originalURI = uri;
+  loadInfo.resultPrincipalURI = uri;
   return channel;
 }
 

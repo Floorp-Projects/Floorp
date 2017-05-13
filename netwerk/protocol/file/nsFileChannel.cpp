@@ -290,9 +290,6 @@ nsFileChannel::nsFileChannel(nsIURI *uri)
 
     SetURI(targetURI);
     SetOriginalURI(uri);
-    nsLoadFlags loadFlags = 0;
-    GetLoadFlags(&loadFlags);
-    SetLoadFlags(loadFlags | nsIChannel::LOAD_REPLACE);
   } else {
     SetURI(uri);
   }
