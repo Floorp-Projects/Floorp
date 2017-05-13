@@ -710,7 +710,7 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
   nsCOMPtr<nsISupports> componentLoader =
     do_GetService("@mozilla.org/moz/jsloader;1");
 
-  mozilla::ScriptPreloader::GetSingleton();
+  Unused << mozilla::ScriptPreloader::GetSingleton().InitCache();
   mozilla::scache::StartupCache::GetSingleton();
   mozilla::AvailableMemoryTracker::Activate();
 

@@ -1593,7 +1593,7 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
   JS::Rooted<JSScript*> script(cx);
 
   if (XRE_IsParentProcess()) {
-    script = ScriptPreloader::GetChildSingleton().GetCachedScript(cx, url);
+    script = ScriptPreloader::GetSingleton().GetCachedScript(cx, url);
   }
 
   if (!script) {
@@ -1658,7 +1658,7 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
   // We don't cache data: scripts!
   if (aShouldCache && !scheme.EqualsLiteral("data")) {
     if (XRE_IsParentProcess()) {
-      ScriptPreloader::GetChildSingleton().NoteScript(url, url, script);
+      ScriptPreloader::GetSingleton().NoteScript(url, url, script);
     }
     // Root the object also for caching.
     auto* holder = new nsMessageManagerScriptHolder(cx, script, aRunInGlobalScope);
