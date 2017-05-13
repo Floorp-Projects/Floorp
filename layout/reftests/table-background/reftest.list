@@ -1,29 +1,29 @@
 # these could be moved to crashtests
-fails-if(stylo) != backgr_border-table-cell.html empty.html
-fails-if(stylo) != backgr_border-table-column-group.html empty.html
+!= backgr_border-table-cell.html empty.html
+!= backgr_border-table-column-group.html empty.html
 # This seems to be caused by bug 527825
-asserts-if(gtkWidget,0-12) fails-if(stylo) != backgr_border-table-column.html empty.html
-asserts-if(gtkWidget,0-6) fails-if(stylo) != backgr_border-table-quirks.html empty.html
-fails-if(stylo) != backgr_border-table-row-group.html empty.html
-fails-if(stylo) != backgr_border-table-row.html empty.html
-fails-if(stylo) != backgr_border-table.html empty.html
-fails-if(stylo) != backgr_fixed-bg.html empty.html
+asserts-if(gtkWidget,0-12) != backgr_border-table-column.html empty.html
+asserts-if(gtkWidget,0-6) != backgr_border-table-quirks.html empty.html
+!= backgr_border-table-row-group.html empty.html
+!= backgr_border-table-row.html empty.html
+!= backgr_border-table.html empty.html
+!= backgr_fixed-bg.html empty.html
 != backgr_index.html empty.html
-fails-if(stylo) != backgr_layers-hide.html empty.html
-fails-if(stylo) != backgr_layers-opacity.html empty.html
-fails-if(stylo) != backgr_layers-show.html empty.html
-fails-if(stylo) != backgr_position-table-cell.html empty.html
-fails-if(stylo) != backgr_position-table-column-group.html empty.html
-fails-if(stylo) != backgr_position-table-column.html empty.html
-fails-if(stylo) != backgr_position-table-row-group.html empty.html
-fails-if(stylo) != backgr_position-table-row.html empty.html
-fails-if(stylo) != backgr_position-table.html empty.html
-fails-if(stylo) != backgr_simple-table-cell.html empty.html
-fails-if(stylo) != backgr_simple-table-column-group.html empty.html
-fails-if(stylo) != backgr_simple-table-column.html empty.html
-fails-if(stylo) != backgr_simple-table-row-group.html empty.html
-fails-if(stylo) != backgr_simple-table-row.html empty.html
-fails-if(stylo) != backgr_simple-table.html empty.html
+!= backgr_layers-hide.html empty.html
+!= backgr_layers-opacity.html empty.html
+!= backgr_layers-show.html empty.html
+!= backgr_position-table-cell.html empty.html
+!= backgr_position-table-column-group.html empty.html
+!= backgr_position-table-column.html empty.html
+!= backgr_position-table-row-group.html empty.html
+!= backgr_position-table-row.html empty.html
+!= backgr_position-table.html empty.html
+!= backgr_simple-table-cell.html empty.html
+!= backgr_simple-table-column-group.html empty.html
+!= backgr_simple-table-column.html empty.html
+!= backgr_simple-table-row-group.html empty.html
+!= backgr_simple-table-row.html empty.html
+!= backgr_simple-table.html empty.html
 
 # would also be good to test table-header-group and table-footer-group
 # (and rows and row groups in the presence of their reordering)
