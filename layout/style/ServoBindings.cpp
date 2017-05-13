@@ -1112,17 +1112,15 @@ Gecko_CopyImageOrientationFrom(nsStyleVisibility* aDst,
 }
 
 void
-Gecko_SetListStyleType(nsStyleList* style_struct, uint32_t type)
+Gecko_SetListStyleType(nsStyleList* aList, uint32_t aType)
 {
-  // Builtin counter styles are static and use no-op refcounting, and thus are
-  // safe to use off-main-thread.
-  style_struct->SetCounterStyle(CounterStyleManager::GetBuiltinStyle(type));
+  aList->mCounterStyle = CounterStyleManager::GetBuiltinStyle(aType);
 }
 
 void
-Gecko_CopyListStyleTypeFrom(nsStyleList* dst, const nsStyleList* src)
+Gecko_CopyListStyleTypeFrom(nsStyleList* aDst, const nsStyleList* aSrc)
 {
-  dst->SetCounterStyle(src->GetCounterStyle());
+  aDst->mCounterStyle = aSrc->mCounterStyle;
 }
 
 already_AddRefed<css::URLValue>

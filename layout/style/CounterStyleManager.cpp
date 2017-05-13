@@ -611,10 +611,6 @@ public:
                                      WritingMode aWritingMode,
                                      nsSubstring& aResult,
                                      bool& aIsRTL) override;
-
-  // Builtin counter style does not need refcount at all
-  NS_IMETHOD_(MozExternalRefCountType) AddRef() override { return 2; }
-  NS_IMETHOD_(MozExternalRefCountType) Release() override { return 2; }
 };
 
 /* virtual */ void
@@ -962,8 +958,6 @@ BuiltinCounterStyle::GetInitialCounterText(CounterValue aOrdinal,
 
 class DependentBuiltinCounterStyle final : public BuiltinCounterStyle
 {
-private:
-  ~DependentBuiltinCounterStyle() {}
 public:
   DependentBuiltinCounterStyle(int32_t aStyle, CounterStyleManager* aManager)
     : BuiltinCounterStyle(aStyle),
@@ -975,18 +969,12 @@ public:
 
   virtual CounterStyle* GetFallback() override;
 
-  // DependentBuiltinCounterStyle is managed in the same way as
-  // CustomCounterStyle.
-  NS_IMETHOD_(MozExternalRefCountType) AddRef() override;
-  NS_IMETHOD_(MozExternalRefCountType) Release() override;
-
   void* operator new(size_t sz, nsPresContext* aPresContext)
   {
     return aPresContext->PresShell()->AllocateByObjectID(
         eArenaObjectID_DependentBuiltinCounterStyle, sz);
   }
 
-private:
   void Destroy()
   {
     nsIPresShell* shell = mManager->PresContext()->PresShell();
@@ -994,14 +982,11 @@ private:
     shell->FreeByObjectID(eArenaObjectID_DependentBuiltinCounterStyle, this);
   }
 
+private:
+  ~DependentBuiltinCounterStyle() {}
+
   CounterStyleManager* mManager;
-
-  nsAutoRefCnt mRefCnt;
-  NS_DECL_OWNINGTHREAD
 };
-
-NS_IMPL_ADDREF(DependentBuiltinCounterStyle)
-NS_IMPL_RELEASE_WITH_DESTROY(DependentBuiltinCounterStyle, Destroy())
 
 /* virtual */ CounterStyle*
 DependentBuiltinCounterStyle::GetFallback()
@@ -1029,8 +1014,6 @@ DependentBuiltinCounterStyle::GetFallback()
 
 class CustomCounterStyle final : public CounterStyle
 {
-private:
-  ~CustomCounterStyle() {}
 public:
   CustomCounterStyle(nsIAtom* aName,
                      CounterStyleManager* aManager,
@@ -1095,25 +1078,21 @@ public:
     return mSystem == NS_STYLE_COUNTER_SYSTEM_EXTENDS;
   }
 
-  // CustomCounterStyle should be reference-counted because it may be
-  // dereferenced from the manager but still referenced by nodes and
-  // frames before the style change is propagated.
-  NS_IMETHOD_(MozExternalRefCountType) AddRef() override;
-  NS_IMETHOD_(MozExternalRefCountType) Release() override;
-
   void* operator new(size_t sz, nsPresContext* aPresContext)
   {
     return aPresContext->PresShell()->AllocateByObjectID(
         eArenaObjectID_CustomCounterStyle, sz);
   }
 
-private:
   void Destroy()
   {
     nsIPresShell* shell = mManager->PresContext()->PresShell();
     this->~CustomCounterStyle();
     shell->FreeByObjectID(eArenaObjectID_CustomCounterStyle, this);
   }
+
+private:
+  ~CustomCounterStyle() {}
 
   const nsTArray<nsString>& GetSymbols();
   const nsTArray<AdditiveSymbol>& GetAdditiveSymbols();
@@ -1190,13 +1169,7 @@ private:
   // counter must be either a builtin style or a style whose system is
   // not 'extends'.
   CounterStyle* mExtendsRoot;
-
-  nsAutoRefCnt mRefCnt;
-  NS_DECL_OWNINGTHREAD
 };
-
-NS_IMPL_ADDREF(CustomCounterStyle)
-NS_IMPL_RELEASE_WITH_DESTROY(CustomCounterStyle, Destroy())
 
 void
 CustomCounterStyle::ResetCachedData()
@@ -1987,8 +1960,8 @@ CounterStyleManager::CounterStyleManager(nsPresContext* aPresContext)
   : mPresContext(aPresContext)
 {
   // Insert the static styles into cache table
-  mCacheTable.Put(nsGkAtoms::none, GetNoneStyle());
-  mCacheTable.Put(nsGkAtoms::decimal, GetDecimalStyle());
+  mStyles.Put(nsGkAtoms::none, GetNoneStyle());
+  mStyles.Put(nsGkAtoms::decimal, GetDecimalStyle());
 }
 
 CounterStyleManager::~CounterStyleManager()
@@ -2005,25 +1978,37 @@ CounterStyleManager::InitializeBuiltinCounterStyles()
 }
 
 void
+CounterStyleManager::DestroyCounterStyle(CounterStyle* aCounterStyle)
+{
+  if (aCounterStyle->IsCustomStyle()) {
+    MOZ_ASSERT(!aCounterStyle->AsAnonymous(), "Anonymous counter styles "
+               "are not managed by CounterStyleManager");
+    static_cast<CustomCounterStyle*>(aCounterStyle)->Destroy();
+  } else if (aCounterStyle->IsDependentStyle()) {
+    static_cast<DependentBuiltinCounterStyle*>(aCounterStyle)->Destroy();
+  } else {
+    MOZ_ASSERT_UNREACHABLE("Builtin counter styles should not be destroyed");
+  }
+}
+
+void
 CounterStyleManager::Disconnect()
 {
-#ifdef DEBUG
-  for (auto iter = mCacheTable.Iter(); !iter.Done(); iter.Next()) {
-    CounterStyle* style = iter.UserData();
-    style->AddRef();
-    auto refcnt = style->Release();
-    NS_ASSERTION(!style->IsDependentStyle() || refcnt == 1,
-                 "Counter style is still referenced by other objects.");
+  CleanRetiredStyles();
+  for (auto iter = mStyles.Iter(); !iter.Done(); iter.Next()) {
+    CounterStyle* style = iter.Data();
+    if (style->IsDependentStyle()) {
+      DestroyCounterStyle(style);
+    }
   }
-#endif
-  mCacheTable.Clear();
+  mStyles.Clear();
   mPresContext = nullptr;
 }
 
 CounterStyle*
 CounterStyleManager::BuildCounterStyle(nsIAtom* aName)
 {
-  CounterStyle* data = mCacheTable.GetWeak(aName);
+  CounterStyle* data = mStyles.Get(aName);
   if (data) {
     return data;
   }
@@ -2058,7 +2043,7 @@ CounterStyleManager::BuildCounterStyle(nsIAtom* aName)
   if (!data) {
     data = GetDecimalStyle();
   }
-  mCacheTable.Put(aName, data);
+  mStyles.Put(aName, data);
   return data;
 }
 
@@ -2076,9 +2061,8 @@ bool
 CounterStyleManager::NotifyRuleChanged()
 {
   bool changed = false;
-  nsTArray<RefPtr<CounterStyle>> kungFuDeathGrip;
-  for (auto iter = mCacheTable.Iter(); !iter.Done(); iter.Next()) {
-    RefPtr<CounterStyle>& style = iter.Data();
+  for (auto iter = mStyles.Iter(); !iter.Done(); iter.Next()) {
+    CounterStyle* style = iter.Data();
     bool toBeUpdated = false;
     bool toBeRemoved = false;
     // XXXheycam ServoStyleSets do not support custom counter styles yet.  Bug
@@ -2099,7 +2083,7 @@ CounterStyleManager::NotifyRuleChanged()
       if (!style->IsCustomStyle()) {
         toBeRemoved = true;
       } else {
-        auto custom = static_cast<CustomCounterStyle*>(style.get());
+        auto custom = static_cast<CustomCounterStyle*>(style);
         if (custom->GetRule() != newRule) {
           toBeRemoved = true;
         } else if (custom->GetRuleGeneration() != newRule->GetGeneration()) {
@@ -2111,25 +2095,16 @@ CounterStyleManager::NotifyRuleChanged()
     changed = changed || toBeUpdated || toBeRemoved;
     if (toBeRemoved) {
       if (style->IsDependentStyle()) {
-        if (style->IsCustomStyle()) {
-          // Since |style| is being removed from mCacheTable, it won't be
-          // visited by our post-removal iteration. So, we have to give it a
-          // manual ResetDependentData() call. (This only really matters if
-          // something else is holding a reference and keeping it alive.)
-          static_cast<CustomCounterStyle*>(style.get())->ResetDependentData();
-        }
-        // The object has to be held here so that it will not be released
-        // before all pointers that refer to it are reset. It will be released
-        // when kungFuDeathGrip goes out of scope at the end of this function.
-        kungFuDeathGrip.AppendElement(style);
+        // Add object to retired list so we can clean them up later.
+        mRetiredStyles.AppendElement(style);
       }
       iter.Remove();
     }
   }
 
   if (changed) {
-    for (auto iter = mCacheTable.Iter(); !iter.Done(); iter.Next()) {
-      CounterStyle* style = iter.UserData();
+    for (auto iter = mStyles.Iter(); !iter.Done(); iter.Next()) {
+      CounterStyle* style = iter.Data();
       if (style->IsCustomStyle()) {
         CustomCounterStyle* custom = static_cast<CustomCounterStyle*>(style);
         custom->ResetDependentData();
@@ -2139,6 +2114,15 @@ CounterStyleManager::NotifyRuleChanged()
     }
   }
   return changed;
+}
+
+void
+CounterStyleManager::CleanRetiredStyles()
+{
+  nsTArray<CounterStyle*> list(Move(mRetiredStyles));
+  for (CounterStyle* style : list) {
+    DestroyCounterStyle(style);
+  }
 }
 
 } // namespace mozilla
