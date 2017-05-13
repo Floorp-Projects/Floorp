@@ -297,10 +297,10 @@ public:
    */
   already_AddRefed<ServoComputedValues> ResolveServoStyle(dom::Element* aElement);
 
-  bool FillKeyframesForName(const nsString& aName,
-                            const nsTimingFunction& aTimingFunction,
-                            const ServoComputedValues* aComputedValues,
-                            nsTArray<Keyframe>& aKeyframes);
+  bool GetKeyframesForName(const nsString& aName,
+                           const nsTimingFunction& aTimingFunction,
+                           const ServoComputedValues* aComputedValues,
+                           nsTArray<Keyframe>& aKeyframes);
 
   nsTArray<ComputedKeyframeValues>
   GetComputedKeyframeValuesFor(const nsTArray<Keyframe>& aKeyframes,
