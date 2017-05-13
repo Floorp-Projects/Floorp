@@ -119,6 +119,7 @@ GENERATED_FILES += [
     'AndroidManifest.xml',
     'generated/preprocessed/org/mozilla/gecko/AdjustConstants.java',
     'generated/preprocessed/org/mozilla/gecko/AppConstants.java',
+    'generated/preprocessed/org/mozilla/gecko/MmaConstants.java',
 ]
 w = GENERATED_FILES['../geckoview/generated/preprocessed/org/mozilla/geckoview/BuildConfig.java']
 w.script = 'generate_build_config.py:generate_java'
@@ -129,6 +130,9 @@ x.inputs += ['AdjustConstants.java.in']
 y = GENERATED_FILES['generated/preprocessed/org/mozilla/gecko/AppConstants.java']
 y.script = 'generate_build_config.py:generate_java'
 y.inputs += ['AppConstants.java.in']
+y = GENERATED_FILES['generated/preprocessed/org/mozilla/gecko/MmaConstants.java']
+y.script = 'generate_build_config.py:generate_java'
+y.inputs += ['MmaConstants.java.in']
 z = GENERATED_FILES['AndroidManifest.xml']
 z.script = 'generate_build_config.py:generate_android_manifest'
 z.inputs += ['AndroidManifest.xml.in']
@@ -154,11 +158,13 @@ constants_jar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'db/BrowserContract.java',
     'LocaleManager.java',
     'Locales.java',
+    'mma/MmaInterface.java',
 ]]
 constants_jar.generated_sources = [
     '../geckoview/generated/preprocessed/org/mozilla/geckoview/BuildConfig.java',
     'generated/preprocessed/org/mozilla/gecko/AdjustConstants.java',
     'generated/preprocessed/org/mozilla/gecko/AppConstants.java',
+    'generated/preprocessed/org/mozilla/gecko/MmaConstants.java',
 ]
 constants_jar.extra_jars = [
     CONFIG['ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB'],
@@ -177,6 +183,18 @@ if CONFIG['MOZ_INSTALL_TRACKING']:
 else:
     constants_jar.sources += ['java/org/mozilla/gecko/' + x for x in [
         'adjust/StubAdjustHelper.java',
+    ]]
+
+if CONFIG['MOZ_ANDROID_MMA']:
+    constants_jar.sources += ['java/org/mozilla/gecko/' + x for x in [
+        'mma/MmaLeanplumImp.java',
+    ]]
+    constants_jar.extra_jars += [
+        'gecko-thirdparty-leanplum_sdk.jar'
+    ]
+else:
+    constants_jar.sources += ['java/org/mozilla/gecko/' + x for x in [
+        'mma/MmaStubImp.java',
     ]]
 
 resjar = add_java_jar('gecko-R')
@@ -749,6 +767,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'menu/MenuItemSwitcherLayout.java',
     'menu/MenuPanel.java',
     'menu/MenuPopup.java',
+    'mma/MmaDelegate.java',
     'MotionEventInterceptor.java',
     'notifications/NotificationClient.java',
     'notifications/NotificationHelper.java',
@@ -977,7 +996,7 @@ gbjar.extra_jars += [
     CONFIG['ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB'],
     CONFIG['ANDROID_SUPPORT_V4_AAR_LIB'],
     CONFIG['ANDROID_SUPPORT_V4_AAR_INTERNAL_LIB'],
-    'constants.jar'
+    'constants.jar',
 ]
 if CONFIG['MOZ_CRASHREPORTER']:
     gbjar.sources += [ 'java/org/mozilla/gecko/CrashReporter.java' ]
@@ -1209,6 +1228,122 @@ if CONFIG['MOZ_INSTALL_TRACKING']:
         'com/adjust/sdk/Util.java'
     ] ]
     adjustjar.extra_jars += [
+        'sync-thirdparty.jar',
+    ]
+
+
+if CONFIG['MOZ_ANDROID_MMA']:
+    lpjar = add_java_jar('gecko-thirdparty-leanplum_sdk')
+    lpjar.sources += [ thirdparty_source_dir + f for f in [
+        'com/leanplum/ActionArgs.java',
+        'com/leanplum/ActionContext.java',
+        'com/leanplum/activities/LeanplumAccountAuthenticatorActivity.java',
+        'com/leanplum/activities/LeanplumActionBarActivity.java',
+        'com/leanplum/activities/LeanplumActivity.java',
+        'com/leanplum/activities/LeanplumActivityGroup.java',
+        'com/leanplum/activities/LeanplumAliasActivity.java',
+        'com/leanplum/activities/LeanplumAppCompatActivity.java',
+        'com/leanplum/activities/LeanplumExpandableListActivity.java',
+        'com/leanplum/activities/LeanplumFragmentActivity.java',
+        'com/leanplum/activities/LeanplumLauncherActivity.java',
+        'com/leanplum/activities/LeanplumListActivity.java',
+        'com/leanplum/activities/LeanplumNativeActivity.java',
+        'com/leanplum/activities/LeanplumPreferenceActivity.java',
+        'com/leanplum/activities/LeanplumTabActivity.java',
+        'com/leanplum/annotations/File.java',
+        'com/leanplum/annotations/Parser.java',
+        'com/leanplum/annotations/Variable.java',
+        'com/leanplum/CacheUpdateBlock.java',
+        'com/leanplum/callbacks/ActionCallback.java',
+        'com/leanplum/callbacks/InboxChangedCallback.java',
+        'com/leanplum/callbacks/NewsfeedChangedCallback.java',
+        'com/leanplum/callbacks/PostponableAction.java',
+        'com/leanplum/callbacks/RegisterDeviceCallback.java',
+        'com/leanplum/callbacks/RegisterDeviceFinishedCallback.java',
+        'com/leanplum/callbacks/StartCallback.java',
+        'com/leanplum/callbacks/VariableCallback.java',
+        'com/leanplum/callbacks/VariablesChangedCallback.java',
+        'com/leanplum/internal/ActionArg.java',
+        'com/leanplum/internal/ActionManager.java',
+        'com/leanplum/internal/AESCrypt.java',
+        'com/leanplum/internal/BaseActionContext.java',
+        'com/leanplum/internal/CollectionUtil.java',
+        'com/leanplum/internal/Constants.java',
+        'com/leanplum/internal/FileManager.java',
+        'com/leanplum/internal/HybiParser.java',
+        'com/leanplum/internal/JsonConverter.java',
+        'com/leanplum/internal/LeanplumInternal.java',
+        'com/leanplum/internal/LeanplumManifestHelper.java',
+        'com/leanplum/internal/LeanplumManifestParser.java',
+        'com/leanplum/internal/LeanplumMessageMatchFilter.java',
+        'com/leanplum/internal/LeanplumUIEditorWrapper.java',
+        'com/leanplum/internal/Log.java',
+        'com/leanplum/internal/OsHandler.java',
+        'com/leanplum/internal/Registration.java',
+        'com/leanplum/internal/Request.java',
+        'com/leanplum/internal/RequestFactory.java',
+        'com/leanplum/internal/ResourceQualifiers.java',
+        'com/leanplum/internal/Socket.java',
+        'com/leanplum/internal/SocketIOClient.java',
+        'com/leanplum/internal/Util.java',
+        'com/leanplum/internal/VarCache.java',
+        'com/leanplum/internal/WebSocketClient.java',
+        'com/leanplum/Leanplum.java',
+        'com/leanplum/LeanplumActivityHelper.java',
+        'com/leanplum/LeanplumApplication.java',
+        'com/leanplum/LeanplumCloudMessagingProvider.java',
+        'com/leanplum/LeanplumDeviceIdMode.java',
+        'com/leanplum/LeanplumEditorMode.java',
+        'com/leanplum/LeanplumException.java',
+        'com/leanplum/LeanplumGcmProvider.java',
+        'com/leanplum/LeanplumInbox.java',
+        'com/leanplum/LeanplumInboxMessage.java',
+        'com/leanplum/LeanplumInflater.java',
+        'com/leanplum/LeanplumLocalPushListenerService.java',
+        'com/leanplum/LeanplumLocationAccuracyType.java',
+        'com/leanplum/LeanplumManualProvider.java',
+        'com/leanplum/LeanplumPushInstanceIDService.java',
+        'com/leanplum/LeanplumPushListenerService.java',
+        'com/leanplum/LeanplumPushNotificationCustomizer.java',
+        'com/leanplum/LeanplumPushReceiver.java',
+        'com/leanplum/LeanplumPushRegistrationService.java',
+        'com/leanplum/LeanplumPushService.java',
+        'com/leanplum/LeanplumResources.java',
+        'com/leanplum/LeanplumUIEditor.java',
+        'com/leanplum/LocationManager.java',
+        'com/leanplum/messagetemplates/Alert.java',
+        'com/leanplum/messagetemplates/BaseMessageDialog.java',
+        'com/leanplum/messagetemplates/BaseMessageOptions.java',
+        'com/leanplum/messagetemplates/CenterPopup.java',
+        'com/leanplum/messagetemplates/CenterPopupOptions.java',
+        'com/leanplum/messagetemplates/Confirm.java',
+        'com/leanplum/messagetemplates/HTMLOptions.java',
+        'com/leanplum/messagetemplates/HTMLTemplate.java',
+        'com/leanplum/messagetemplates/Interstitial.java',
+        'com/leanplum/messagetemplates/InterstitialOptions.java',
+        'com/leanplum/messagetemplates/MessageTemplates.java',
+        'com/leanplum/messagetemplates/OpenURL.java',
+        'com/leanplum/messagetemplates/WebInterstitial.java',
+        'com/leanplum/messagetemplates/WebInterstitialOptions.java',
+        'com/leanplum/Newsfeed.java',
+        'com/leanplum/NewsfeedMessage.java',
+        'com/leanplum/UIEditorBridge.java',
+        'com/leanplum/utils/BitmapUtil.java',
+        'com/leanplum/utils/SharedPreferencesUtil.java',
+        'com/leanplum/utils/SizeUtil.java',
+        'com/leanplum/Var.java',
+        'com/leanplum/views/BackgroundImageView.java',
+        'com/leanplum/views/CloseButton.java',
+    ] ]
+    lpjar.extra_jars += [
+        CONFIG['ANDROID_APPCOMPAT_V7_AAR_LIB'],
+        CONFIG['ANDROID_PLAY_SERVICES_ADS_AAR_LIB'],
+        CONFIG['ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB'],
+        CONFIG['ANDROID_PLAY_SERVICES_BASE_AAR_LIB'],
+        CONFIG['ANDROID_PLAY_SERVICES_GCM_AAR_LIB'],
+        CONFIG['ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB'],
+        CONFIG['ANDROID_SUPPORT_V4_AAR_INTERNAL_LIB'],
+        CONFIG['ANDROID_SUPPORT_V4_AAR_LIB'],
         'sync-thirdparty.jar',
     ]
 

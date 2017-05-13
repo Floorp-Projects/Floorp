@@ -58,6 +58,7 @@ import org.mozilla.gecko.icons.Icons;
 import org.mozilla.gecko.media.VideoPlayer;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuItem;
+import org.mozilla.gecko.mma.MmaDelegate;
 import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.notifications.NotificationHelper;
@@ -873,7 +874,7 @@ public class BrowserApp extends GeckoApp
      * Initializes the default Switchboard URLs the first time.
      * @param intent
      */
-    private static void initSwitchboard(final Context context, final SafeIntent intent, final boolean isInAutomation) {
+    private void initSwitchboard(final Context context, final SafeIntent intent, final boolean isInAutomation) {
         if (isInAutomation) {
             Log.d(LOGTAG, "Switchboard disabled - in automation");
             return;
@@ -884,7 +885,19 @@ public class BrowserApp extends GeckoApp
 
         final String serverExtra = intent.getStringExtra(INTENT_KEY_SWITCHBOARD_SERVER);
         final String serverUrl = TextUtils.isEmpty(serverExtra) ? SWITCHBOARD_SERVER : serverExtra;
-        new AsyncConfigLoader(context, serverUrl).execute();
+        new AsyncConfigLoader(context, serverUrl) {
+            @Override
+            protected Void doInBackground(Void... params) {
+                super.doInBackground(params);
+                SwitchBoard.loadConfig(context, serverUrl);
+                if (SwitchBoard.isInExperiment(context, Experiments.LEANPLUM) &&
+                        GeckoPreferences.getBooleanPref(context, GeckoPreferences.PREFS_HEALTHREPORT_UPLOAD_ENABLED, true)) {
+                    // Do LeanPlum start/init here
+                    MmaDelegate.init(BrowserApp.this.getApplication());
+                }
+                return null;
+            }
+        }.execute();
     }
 
     private static void initTelemetryUploader(final boolean isInAutomation) {
