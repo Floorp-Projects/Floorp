@@ -22,6 +22,7 @@ config = {
         'check-test',
     ],
     'exes': {
+        'python2.7': sys.executable,
         'virtualenv': [
             sys.executable,
             os.path.join(
