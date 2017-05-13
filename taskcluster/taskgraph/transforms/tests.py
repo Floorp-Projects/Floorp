@@ -133,6 +133,9 @@ test_description_schema = Schema({
         'test-platform', 'project',
         Any(bool, 'both')),
 
+    # Whether the task should run with WebRender enabled or not.
+    Optional('webrender', default=False): bool,
+
     # The EC2 instance size to run these tests on.
     Required('instance-size', default='default'): optionally_keyed_by(
         'test-platform',
@@ -332,6 +335,15 @@ def set_defaults(config, tests):
             test.setdefault('allow-software-gl-layers', True)
         else:
             test['allow-software-gl-layers'] = False
+
+        # Enable WebRender by default on the QuantumRender test platform, since
+        # the whole point of QuantumRender is to run with WebRender enabled.
+        # If other *-qr test platforms are added they should also be checked for
+        # here; currently linux64-qr is the only one.
+        if test['test-platform'].startswith('linux64-qr'):
+            test['webrender'] = True
+        else:
+            test.setdefault('webrender', False)
 
         test.setdefault('os-groups', [])
         test.setdefault('chunks', 1)
@@ -584,6 +596,20 @@ def allow_software_gl_layers(config, tests):
             # This should be set always once bug 1296086 is resolved.
             test['mozharness'].setdefault('extra-options', [])\
                               .append("--allow-software-gl-layers")
+
+        yield test
+
+
+@transforms.add
+def enable_webrender(config, tests):
+    """
+    Handle the "webrender" property by passing a flag to mozharness if it is
+    enabled.
+    """
+    for test in tests:
+        if test.get('webrender'):
+            test['mozharness'].setdefault('extra-options', [])\
+                              .append("--enable-webrender")
 
         yield test
 
