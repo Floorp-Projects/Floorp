@@ -78,9 +78,10 @@ class Repackage(BaseScript):
     def repackage(self):
         config = self.config
         dirs = self.query_abs_dirs()
+        python = self.query_exe('python2.7')
         infile = os.path.join(config['input_home'], config['input_filename'])
         outfile = os.path.join(dirs['abs_upload_dir'], config['output_filename'])
-        command = [sys.executable, 'mach', '--log-no-times', 'repackage',
+        command = [python, 'mach', '--log-no-times', 'repackage',
                    '--input', infile,
                    '--output', outfile]
         return self.run_command(
@@ -134,7 +135,8 @@ class Repackage(BaseScript):
 
     def _run_configure(self):
         dirs = self.query_abs_dirs()
-        command = [sys.executable, 'mach', '--log-no-times', 'configure']
+        python = self.query_exe('python2.7')
+        command = [python, 'mach', '--log-no-times', 'configure']
         return self.run_command(
             command=command,
             cwd=dirs['abs_mozilla_dir'],
