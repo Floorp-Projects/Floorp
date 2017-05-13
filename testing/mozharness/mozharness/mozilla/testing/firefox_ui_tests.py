@@ -32,6 +32,12 @@ firefox_ui_tests_config_options = [
         "default": False,
         "help": "Permits a software GL implementation (such as LLVMPipe) to use the GL compositor.",
     }],
+    [["--enable-webrender"], {
+        "action": "store_true",
+        "dest": "enable_webrender",
+        "default": False,
+        "help": "Tries to enable the WebRender compositor.",
+    }],
     [['--dry-run'], {
         'dest': 'dry_run',
         'default': False,
@@ -254,6 +260,8 @@ class FirefoxUITests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
 
         if self.config['allow_software_gl_layers']:
             env['MOZ_LAYERS_ALLOW_SOFTWARE_GL'] = '1'
+        if self.config['enable_webrender']:
+            env['MOZ_WEBRENDER'] = '1'
 
         return_code = self.run_command(cmd,
                                        cwd=dirs['abs_work_dir'],
