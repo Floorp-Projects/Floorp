@@ -372,6 +372,26 @@ mozilla::Keyframe* Gecko_AnimationAppendKeyframe(RawGeckoKeyframeListBorrowedMut
                                                  float offset,
                                                  const nsTimingFunction* timingFunction);
 
+// Searches from the beginning of |keyframes| for a Keyframe object with the
+// specified offset and timing function. If none is found, a new Keyframe object
+// with the specified |offset| and |timingFunction| will be prepended to
+// |keyframes|.
+//
+// @param keyframes  An array of Keyframe objects, sorted by offset.
+//                   The first Keyframe in the array, if any, MUST have an
+//                   offset greater than or equal to |offset|.
+// @param offset  The offset to search for, or, if no suitable Keyframe is
+//                found, the offset to use for the created Keyframe.
+//                Must be a floating point number in the range [0.0, 1.0].
+// @param timingFunction  The timing function to match, or, if no suitable
+//                        Keyframe is found, to set on the created Keyframe.
+//
+// @returns  The matching or created Keyframe.
+mozilla::Keyframe* Gecko_GetOrCreateKeyframeAtStart(
+  RawGeckoKeyframeListBorrowedMut keyframes,
+  float offset,
+  const nsTimingFunction* timingFunction);
+
 // Clean up pointer-based coordinates
 void Gecko_ResetStyleCoord(nsStyleUnit* unit, nsStyleUnion* value);
 

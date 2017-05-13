@@ -193,6 +193,7 @@ function treatAsSafeArgument(entry, varName, csuName)
         [/Gecko_SetContentData/, "aContent", null],
         [/Gecko_EnsureStyle.*?ArrayLength/, "aArray", null],
         ["Gecko_AnimationAppendKeyframe", "aKeyframes", null],
+        ["Gecko_GetOrCreateKeyframeAtStart", "aKeyframes", null],
         ["Gecko_SetStyleCoordCalcValue", null, null],
         ["Gecko_StyleClipPath_SetURLValue", "aClip", null],
         ["Gecko_nsStyleFilter_SetURLValue", "aEffects", null],
@@ -374,6 +375,7 @@ function ignoreContents(entry)
         // The analysis can't cope with the indirection used for the objects
         // being initialized here.
         "Gecko_AnimationAppendKeyframe",
+        "Gecko_GetOrCreateKeyframeAtStart",
         "Gecko_NewStyleQuoteValues",
         "Gecko_NewCSSValueSharedList",
         "Gecko_NewGridTemplateAreasValue",
