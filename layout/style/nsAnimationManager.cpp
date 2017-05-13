@@ -885,40 +885,6 @@ GeckoCSSAnimationBuilder::GetKeyframePropertyValues(
   return result;
 }
 
-// Utility function to walk through |aIter| to find the Keyframe with
-// matching offset and timing function but stopping as soon as the offset
-// differs from |aOffset| (i.e. it assumes a sorted iterator).
-//
-// If a matching Keyframe is found,
-//   Returns true and sets |aIndex| to the index of the matching Keyframe
-//   within |aIter|.
-//
-// If no matching Keyframe is found,
-//   Returns false and sets |aIndex| to the index in the iterator of the
-//   first Keyframe with an offset differing to |aOffset| or, if the end
-//   of the iterator is reached, sets |aIndex| to the index after the last
-//   Keyframe.
-template <class IterType>
-static bool
-FindMatchingKeyframe(
-    IterType&& aIter,
-    double aOffset,
-    const Maybe<ComputedTimingFunction>& aTimingFunctionToMatch,
-    size_t& aIndex)
-{
-  aIndex = 0;
-  for (Keyframe& keyframe : aIter) {
-    if (keyframe.mOffset.value() != aOffset) {
-      break;
-    }
-    if (keyframe.mTimingFunction == aTimingFunctionToMatch) {
-      return true;
-    }
-    ++aIndex;
-  }
-  return false;
-}
-
 void
 GeckoCSSAnimationBuilder::FillInMissingKeyframeValues(
     nsCSSPropertyIDSet aAnimatedProperties,
@@ -932,8 +898,10 @@ GeckoCSSAnimationBuilder::FillInMissingKeyframeValues(
   // Find/create the keyframe to add start values to
   size_t startKeyframeIndex = kNotSet;
   if (!aAnimatedProperties.Equals(aPropertiesSetAtStart) &&
-      !FindMatchingKeyframe(aKeyframes, 0.0, aInheritedTimingFunction,
-                            startKeyframeIndex)) {
+      !nsAnimationManager::FindMatchingKeyframe(aKeyframes,
+                                                0.0,
+                                                aInheritedTimingFunction,
+                                                startKeyframeIndex)) {
     Keyframe newKeyframe;
     newKeyframe.mOffset.emplace(0.0);
     newKeyframe.mTimingFunction = aInheritedTimingFunction;
@@ -943,8 +911,10 @@ GeckoCSSAnimationBuilder::FillInMissingKeyframeValues(
   // Find/create the keyframe to add end values to
   size_t endKeyframeIndex = kNotSet;
   if (!aAnimatedProperties.Equals(aPropertiesSetAtEnd)) {
-    if (!FindMatchingKeyframe(Reversed(aKeyframes), 1.0,
-                              aInheritedTimingFunction, endKeyframeIndex)) {
+    if (!nsAnimationManager::FindMatchingKeyframe(Reversed(aKeyframes),
+                                                  1.0,
+                                                  aInheritedTimingFunction,
+                                                  endKeyframeIndex)) {
       Keyframe newKeyframe;
       newKeyframe.mOffset.emplace(1.0);
       newKeyframe.mTimingFunction = aInheritedTimingFunction;
