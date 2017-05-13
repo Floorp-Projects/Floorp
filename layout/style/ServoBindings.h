@@ -392,6 +392,23 @@ mozilla::Keyframe* Gecko_GetOrCreateKeyframeAtStart(
   float offset,
   const nsTimingFunction* timingFunction);
 
+// As with Gecko_GetOrCreateKeyframeAtStart except that this method will search
+// from the beginning of |keyframes| for a Keyframe with matching timing
+// function and an offset of 0.0.
+// Furthermore, if a matching Keyframe is not found, a new Keyframe will be
+// inserted after the *last* Keyframe in |keyframes| with offset 0.0.
+mozilla::Keyframe* Gecko_GetOrCreateInitialKeyframe(
+  RawGeckoKeyframeListBorrowedMut keyframes,
+  const nsTimingFunction* timingFunction);
+
+// As with Gecko_GetOrCreateKeyframeAtStart except that this method will search
+// from the *end* of |keyframes| for a Keyframe with matching timing function
+// and an offset of 1.0. If a matching Keyframe is not found, a new Keyframe
+// will be appended to the end of |keyframes|.
+mozilla::Keyframe* Gecko_GetOrCreateFinalKeyframe(
+  RawGeckoKeyframeListBorrowedMut keyframes,
+  const nsTimingFunction* timingFunction);
+
 // Clean up pointer-based coordinates
 void Gecko_ResetStyleCoord(nsStyleUnit* unit, nsStyleUnion* value);
 
