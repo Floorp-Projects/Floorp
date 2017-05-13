@@ -36,8 +36,6 @@ struct LookAndFeelInt;
 namespace mozilla {
 class RemoteSpellcheckEngineChild;
 
-using mozilla::loader::PScriptCacheChild;
-
 namespace ipc {
 class OptionalURIParams;
 class URIParams;
@@ -242,17 +240,6 @@ public:
   virtual bool DeallocPTestShellChild(PTestShellChild*) override;
 
   virtual mozilla::ipc::IPCResult RecvPTestShellConstructor(PTestShellChild*) override;
-
-  virtual PScriptCacheChild*
-  AllocPScriptCacheChild(const FileDescOrError& cacheFile,
-                         const bool& wantCacheData) override;
-
-  virtual bool DeallocPScriptCacheChild(PScriptCacheChild*) override;
-
-  virtual mozilla::ipc::IPCResult
-  RecvPScriptCacheConstructor(PScriptCacheChild*,
-                              const FileDescOrError& cacheFile,
-                              const bool& wantCacheData) override;
 
   jsipc::CPOWManager* GetCPOWManager() override;
 
