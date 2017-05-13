@@ -1592,7 +1592,9 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
   JSContext* cx = jsapi.cx();
   JS::Rooted<JSScript*> script(cx);
 
-  script = ScriptPreloader::GetChildSingleton().GetCachedScript(cx, url);
+  if (XRE_IsParentProcess()) {
+    script = ScriptPreloader::GetChildSingleton().GetCachedScript(cx, url);
+  }
 
   if (!script) {
     nsCOMPtr<nsIChannel> channel;
@@ -1655,7 +1657,9 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
   uri->GetScheme(scheme);
   // We don't cache data: scripts!
   if (aShouldCache && !scheme.EqualsLiteral("data")) {
-    ScriptPreloader::GetChildSingleton().NoteScript(url, url, script);
+    if (XRE_IsParentProcess()) {
+      ScriptPreloader::GetChildSingleton().NoteScript(url, url, script);
+    }
     // Root the object also for caching.
     auto* holder = new nsMessageManagerScriptHolder(cx, script, aRunInGlobalScope);
     sCachedScripts->Put(aURL, holder);
