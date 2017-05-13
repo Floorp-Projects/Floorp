@@ -3714,13 +3714,13 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetListStyleType()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  CounterStyle* style = StyleList()->GetCounterStyle();
+  CounterStyle* style = StyleList()->mCounterStyle;
   AnonymousCounterStyle* anonymous = style->AsAnonymous();
   nsAutoString tmp;
   if (!anonymous) {
     // want SetIdent
     nsString type;
-    StyleList()->GetListStyleType(type);
+    style->GetStyleName(type);
     nsStyleUtil::AppendEscapedCSSIdent(type, tmp);
   } else if (anonymous->IsSingleString()) {
     const nsTArray<nsString>& symbols = anonymous->GetSymbols();

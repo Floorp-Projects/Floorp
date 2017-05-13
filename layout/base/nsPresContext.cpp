@@ -2282,6 +2282,29 @@ nsPresContext::UserFontSetUpdated(gfxUserFontEntry* aUpdatedFont)
   }
 }
 
+class CounterStyleCleaner : public nsAPostRefreshObserver
+{
+public:
+  CounterStyleCleaner(nsRefreshDriver* aRefreshDriver,
+                      CounterStyleManager* aCounterStyleManager)
+    : mRefreshDriver(aRefreshDriver)
+    , mCounterStyleManager(aCounterStyleManager)
+  {
+  }
+  virtual ~CounterStyleCleaner() {}
+
+  void DidRefresh() final
+  {
+    mRefreshDriver->RemovePostRefreshObserver(this);
+    mCounterStyleManager->CleanRetiredStyles();
+    delete this;
+  }
+
+private:
+  RefPtr<nsRefreshDriver> mRefreshDriver;
+  RefPtr<CounterStyleManager> mCounterStyleManager;
+};
+
 void
 nsPresContext::FlushCounterStyles()
 {
@@ -2299,6 +2322,8 @@ nsPresContext::FlushCounterStyles()
       PresShell()->NotifyCounterStylesAreDirty();
       PostRebuildAllStyleDataEvent(NS_STYLE_HINT_REFLOW,
                                    eRestyle_ForceDescendants);
+      RefreshDriver()->AddPostRefreshObserver(
+        new CounterStyleCleaner(RefreshDriver(), mCounterStyleManager));
     }
     mCounterStylesDirty = false;
   }
