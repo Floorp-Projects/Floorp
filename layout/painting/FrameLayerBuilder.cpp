@@ -1619,9 +1619,11 @@ struct CSSMaskLayerUserData : public LayerUserData
     : mMaskStyle(nsStyleImageLayers::LayerType::Mask)
   { }
 
-  CSSMaskLayerUserData(nsIFrame* aFrame, const nsIntRect& aMaskBounds)
+  CSSMaskLayerUserData(nsIFrame* aFrame, const nsIntRect& aMaskBounds,
+                       const nsPoint& aMaskLayerOffset)
     : mMaskBounds(aMaskBounds),
-      mMaskStyle(aFrame->StyleSVGReset()->mMask)
+      mMaskStyle(aFrame->StyleSVGReset()->mMask),
+      mMaskLayerOffset(aMaskLayerOffset)
   {
   }
 
@@ -1629,6 +1631,7 @@ struct CSSMaskLayerUserData : public LayerUserData
   {
     mMaskBounds = aOther.mMaskBounds;
     mMaskStyle = Move(aOther.mMaskStyle);
+    mMaskLayerOffset = aOther.mMaskLayerOffset;
   }
 
   bool
@@ -1638,12 +1641,19 @@ struct CSSMaskLayerUserData : public LayerUserData
       return false;
     }
 
+    // Make sure we draw the same portion of the mask onto mask layer.
+    if (mMaskLayerOffset != aOther.mMaskLayerOffset) {
+      return false;
+    }
+
     return mMaskStyle == aOther.mMaskStyle;
   }
 
 private:
   nsIntRect mMaskBounds;
   nsStyleImageLayers mMaskStyle;
+  nsPoint mMaskLayerOffset; // The offset from the origin of mask bounds to
+                            // the origin of mask layer.
 };
 
 /*
@@ -3882,7 +3892,9 @@ ContainerState::SetupMaskLayerForCSSMask(Layer* aLayer,
   matrix.PreTranslate(mParameters.mOffset.x, mParameters.mOffset.y, 0);
   maskLayer->SetBaseTransform(matrix);
 
-  CSSMaskLayerUserData newUserData(aMaskItem->Frame(), itemRect);
+  nsPoint maskLayerOffset = aMaskItem->ToReferenceFrame() - bounds.TopLeft();
+    
+  CSSMaskLayerUserData newUserData(aMaskItem->Frame(), itemRect, maskLayerOffset);
   nsRect dirtyRect;
   if (!aMaskItem->IsInvalid(dirtyRect) && *oldUserData == newUserData) {
     aLayer->SetMaskLayer(maskLayer);
