@@ -49,6 +49,10 @@
 
 * skin/classic/global/dirListing/dirListing.css            (../../windows/global/dirListing/dirListing.css)
   skin/classic/global/icons/autocomplete-search.svg        (../../windows/global/icons/autocomplete-search.svg)
+  skin/classic/global/icons/close.png                      (../../windows/global/icons/close.png)
+  skin/classic/global/icons/close@2x.png                   (../../windows/global/icons/close@2x.png)
+  skin/classic/global/icons/Error.png                      (../../windows/global/icons/Error.png)
+  skin/classic/global/icons/error-64.png                   (../../windows/global/icons/error-64.png)
   skin/classic/global/icons/question-16.png                (../../windows/global/icons/question-16.png)
   skin/classic/global/icons/question-64.png                (../../windows/global/icons/question-64.png)
   skin/classic/global/icons/resizer-rtl.png                (../../windows/global/icons/resizer-rtl.png)
