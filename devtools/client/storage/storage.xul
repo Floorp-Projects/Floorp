@@ -30,6 +30,7 @@
       <menuitem id="storage-tree-popup-delete"/>
     </menupopup>
     <menupopup id="storage-table-popup">
+      <menuitem id="storage-table-popup-add"/>
       <menuitem id="storage-table-popup-delete"/>
       <menuitem id="storage-table-popup-delete-all-from"/>
       <menuitem id="storage-table-popup-delete-all"
@@ -47,6 +48,8 @@
                  type="search"
                  timeout="200"
                  placeholder="&searchBox.placeholder;"/>
+        <button id="add-button"
+                class="devtools-button add-button"></button>
         <spacer flex="1"/>
         <button class="devtools-button sidebar-toggle" hidden="true"></button>
       </hbox>

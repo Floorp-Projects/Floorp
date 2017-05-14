@@ -236,7 +236,7 @@ public:
   void SetLargeAllocationFailure(OOMState aNewState);
 
   void AnnotateAndSetOutOfMemory(OOMState* aStatePtr, OOMState aNewState);
-  void OnGC(JSGCStatus aStatus);
+  void OnGC(JSContext* aContext, JSGCStatus aStatus);
   void OnOutOfMemory();
   void OnLargeAllocationFailure();
 

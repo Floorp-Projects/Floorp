@@ -1452,20 +1452,100 @@ Gecko_CopyWillChangeFrom(nsStyleDisplay* aDest, nsStyleDisplay* aSrc)
   aDest->mWillChange.AppendElements(aSrc->mWillChange);
 }
 
-Keyframe*
-Gecko_AnimationAppendKeyframe(RawGeckoKeyframeListBorrowedMut aKeyframes,
-                              float aOffset,
-                              const nsTimingFunction* aTimingFunction)
+enum class KeyframeSearchDirection {
+  Forwards,
+  Backwards,
+};
+
+enum class KeyframeInsertPosition {
+  Prepend,
+  LastForOffset,
+};
+
+static Keyframe*
+GetOrCreateKeyframe(nsTArray<Keyframe>* aKeyframes,
+                    float aOffset,
+                    const nsTimingFunction* aTimingFunction,
+                    KeyframeSearchDirection aSearchDirection,
+                    KeyframeInsertPosition aInsertPosition)
 {
-  Keyframe* keyframe = aKeyframes->AppendElement();
+  MOZ_ASSERT(aKeyframes, "The keyframe array should be valid");
+  MOZ_ASSERT(aTimingFunction, "The timing function should be valid");
+  MOZ_ASSERT(aOffset >= 0. && aOffset <= 1.,
+             "The offset should be in the range of [0.0, 1.0]");
+
+  size_t keyframeIndex;
+  switch (aSearchDirection) {
+    case KeyframeSearchDirection::Forwards:
+      if (nsAnimationManager::FindMatchingKeyframe(*aKeyframes,
+                                                   aOffset,
+                                                   *aTimingFunction,
+                                                   keyframeIndex)) {
+        return &(*aKeyframes)[keyframeIndex];
+      }
+      break;
+    case KeyframeSearchDirection::Backwards:
+      if (nsAnimationManager::FindMatchingKeyframe(Reversed(*aKeyframes),
+                                                   aOffset,
+                                                   *aTimingFunction,
+                                                   keyframeIndex)) {
+        return &(*aKeyframes)[aKeyframes->Length() - 1 - keyframeIndex];
+      }
+      keyframeIndex = aKeyframes->Length() - 1;
+      break;
+  }
+
+  Keyframe* keyframe =
+    aKeyframes->InsertElementAt(
+      aInsertPosition == KeyframeInsertPosition::Prepend
+                         ? 0
+                         : keyframeIndex);
   keyframe->mOffset.emplace(aOffset);
-  if (aTimingFunction &&
-      aTimingFunction->mType != nsTimingFunction::Type::Linear) {
+  if (aTimingFunction->mType != nsTimingFunction::Type::Linear) {
     keyframe->mTimingFunction.emplace();
     keyframe->mTimingFunction->Init(*aTimingFunction);
   }
 
   return keyframe;
+}
+
+Keyframe*
+Gecko_GetOrCreateKeyframeAtStart(nsTArray<Keyframe>* aKeyframes,
+                                 float aOffset,
+                                 const nsTimingFunction* aTimingFunction)
+{
+  MOZ_ASSERT(aKeyframes->IsEmpty() ||
+             aKeyframes->ElementAt(0).mOffset.value() >= aOffset,
+             "The offset should be less than or equal to the first keyframe's "
+             "offset if there are exisiting keyframes");
+
+  return GetOrCreateKeyframe(aKeyframes,
+                             aOffset,
+                             aTimingFunction,
+                             KeyframeSearchDirection::Forwards,
+                             KeyframeInsertPosition::Prepend);
+}
+
+Keyframe*
+Gecko_GetOrCreateInitialKeyframe(nsTArray<Keyframe>* aKeyframes,
+                                 const nsTimingFunction* aTimingFunction)
+{
+  return GetOrCreateKeyframe(aKeyframes,
+                             0.,
+                             aTimingFunction,
+                             KeyframeSearchDirection::Forwards,
+                             KeyframeInsertPosition::LastForOffset);
+}
+
+Keyframe*
+Gecko_GetOrCreateFinalKeyframe(nsTArray<Keyframe>* aKeyframes,
+                               const nsTimingFunction* aTimingFunction)
+{
+  return GetOrCreateKeyframe(aKeyframes,
+                             1.,
+                             aTimingFunction,
+                             KeyframeSearchDirection::Backwards,
+                             KeyframeInsertPosition::LastForOffset);
 }
 
 void

@@ -715,11 +715,10 @@ nsComputedDOMStyle::GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv
   aCSSParseEnv.mPrincipal = nullptr;
 }
 
-URLExtraData*
-nsComputedDOMStyle::GetURLData() const
+nsDOMCSSDeclaration::ServoCSSParsingEnvironment
+nsComputedDOMStyle::GetServoCSSParsingEnvironment() const
 {
-  NS_RUNTIMEABORT("called nsComputedDOMStyle::GetURLData");
-  return nullptr;
+  MOZ_CRASH("called nsComputedDOMStyle::GetServoCSSParsingEnvironment");
 }
 
 void

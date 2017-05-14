@@ -184,3 +184,9 @@ class TestSize(MarionetteTestCase):
         # in X the window size may be greater than the bounds of the screen
         self.assertGreaterEqual(new["width"], self.max["width"])
         self.assertGreaterEqual(new["height"], self.max["height"])
+
+    def test_resize_to_available_screen_size(self):
+        result = self.marionette.set_window_rect(width=self.max['width'],
+                                                 height=self.max["height"])
+        self.assertEqual(result["width"], self.max["width"])
+        self.assertEqual(result["height"], self.max["height"])

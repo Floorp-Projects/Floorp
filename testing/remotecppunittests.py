@@ -4,9 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import os, sys
+import os
+import sys
 import subprocess
-import tempfile
 from zipfile import ZipFile
 import runcppunittests as cppunittests
 import mozcrash
@@ -15,7 +15,7 @@ import mozinfo
 import mozlog
 import StringIO
 import posixpath
-from mozdevice import devicemanager, devicemanagerADB
+from mozdevice import devicemanagerADB
 
 try:
     from mozbuild.base import MozbuildObject
@@ -23,7 +23,9 @@ try:
 except ImportError:
     build_obj = None
 
+
 class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
+
     def __init__(self, devmgr, options, progs):
         cppunittests.CPPUnitTests.__init__(self)
         self.options = options
@@ -59,13 +61,15 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
                 for info in apk_contents.infolist():
                     if info.filename.endswith(".so"):
                         print >> sys.stderr, "Pushing %s.." % info.filename
-                        remote_file = posixpath.join(self.remote_bin_dir, os.path.basename(info.filename))
+                        remote_file = posixpath.join(
+                            self.remote_bin_dir, os.path.basename(info.filename))
                         apk_contents.extract(info, tmpdir)
                         local_file = os.path.join(tmpdir, info.filename)
                         with open(local_file) as f:
                             # Decompress xz-compressed file.
                             if f.read(5)[1:] == '7zXZ':
-                                cmd = ['xz', '-df', '--suffix', '.so', local_file]
+                                cmd = [
+                                    'xz', '-df', '--suffix', '.so', local_file]
                                 subprocess.check_output(cmd)
                                 # xz strips the ".so" file suffix.
                                 os.rename(local_file[:-3], local_file)
@@ -78,7 +82,8 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
                     remote_file = posixpath.join(self.remote_bin_dir, file)
                     local_file = os.path.join(self.options.local_lib, file)
                     self.device.pushFile(local_file, remote_file)
-            # Additional libraries may be found in a sub-directory such as "lib/armeabi-v7a"
+            # Additional libraries may be found in a sub-directory such as
+            # "lib/armeabi-v7a"
             for subdir in ["assets", "lib"]:
                 local_arm_lib = os.path.join(self.options.local_lib, subdir)
                 if os.path.isdir(local_arm_lib):
@@ -86,20 +91,22 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
                         for file in files:
                             if (file.endswith(".so")):
                                 print >> sys.stderr, "Pushing %s.." % file
-                                remote_file = posixpath.join(self.remote_bin_dir, file)
+                                remote_file = posixpath.join(
+                                    self.remote_bin_dir, file)
                                 local_file = os.path.join(root, file)
                                 self.device.pushFile(local_file, remote_file)
 
     def push_progs(self, progs):
         for local_file in progs:
-            remote_file = posixpath.join(self.remote_bin_dir, os.path.basename(local_file))
+            remote_file = posixpath.join(
+                self.remote_bin_dir, os.path.basename(local_file))
             self.device.pushFile(local_file, remote_file)
 
     def build_environment(self):
         env = self.build_core_environment()
         env['LD_LIBRARY_PATH'] = self.remote_bin_dir
-        env["TMPDIR"]=self.remote_tmp_dir
-        env["HOME"]=self.remote_home_dir
+        env["TMPDIR"] = self.remote_tmp_dir
+        env["HOME"] = self.remote_home_dir
         env["MOZILLA_FIVE_HOME"] = self.remote_home_dir
         env["MOZ_XRE_DIR"] = self.remote_bin_dir
         if self.options.add_env:
@@ -110,7 +117,8 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
                 elif len(envdef_parts) == 1:
                     env[envdef_parts[0]] = ""
                 else:
-                    self.log.warning("invalid --addEnv option skipped: %s" % envdef)
+                    self.log.warning(
+                        "invalid --addEnv option skipped: %s" % envdef)
 
         return env
 
@@ -132,9 +140,11 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
         remote_bin = posixpath.join(self.remote_bin_dir, basename)
         self.log.test_start(basename)
         buf = StringIO.StringIO()
-        test_timeout = cppunittests.CPPUnitTests.TEST_PROC_TIMEOUT * timeout_factor
-        returncode = self.device.shell([remote_bin], buf, env=env, cwd=self.remote_home_dir,
-                                       timeout=test_timeout)
+        test_timeout = cppunittests.CPPUnitTests.TEST_PROC_TIMEOUT * \
+            timeout_factor
+        returncode = self.device.shell(
+            [remote_bin], buf, env=env, cwd=self.remote_home_dir,
+            timeout=test_timeout)
         self.log.process_output(basename, "\n%s" % buf.getvalue(),
                                 command=[remote_bin])
         with mozfile.TemporaryDirectory() as tempdir:
@@ -152,64 +162,69 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
             self.log.test_end(basename, status='PASS', expected='PASS')
         return result
 
+
 class RemoteCPPUnittestOptions(cppunittests.CPPUnittestOptions):
+
     def __init__(self):
         cppunittests.CPPUnittestOptions.__init__(self)
         defaults = {}
 
         self.add_option("--deviceIP", action="store",
-                        type = "string", dest = "device_ip",
-                        help = "ip address of remote device to test")
+                        type="string", dest="device_ip",
+                        help="ip address of remote device to test")
         defaults["device_ip"] = None
 
         self.add_option("--devicePort", action="store",
-                        type = "string", dest = "device_port",
-                        help = "port of remote device to test")
+                        type="string", dest="device_port",
+                        help="port of remote device to test")
         defaults["device_port"] = 20701
 
         self.add_option("--noSetup", action="store_false",
-                        dest = "setup",
-                        help = "do not copy any files to device (to be used only if device is already setup)")
+                        dest="setup",
+                        help="do not copy any files to device (to be used only if device is already setup)")
         defaults["setup"] = True
 
         self.add_option("--localLib", action="store",
-                        type = "string", dest = "local_lib",
-                        help = "location of libraries to push -- preferably stripped")
+                        type="string", dest="local_lib",
+                        help="location of libraries to push -- preferably stripped")
         defaults["local_lib"] = None
 
         self.add_option("--apk", action="store",
-                        type = "string", dest = "local_apk",
-                        help = "local path to Fennec APK")
+                        type="string", dest="local_apk",
+                        help="local path to Fennec APK")
         defaults["local_apk"] = None
 
         self.add_option("--localBinDir", action="store",
-                        type = "string", dest = "local_bin",
-                        help = "local path to bin directory")
-        defaults["local_bin"] = build_obj.bindir if build_obj is not None else None
+                        type="string", dest="local_bin",
+                        help="local path to bin directory")
+        defaults[
+            "local_bin"] = build_obj.bindir if build_obj is not None else None
 
-        self.add_option("--remoteTestRoot", action = "store",
-                    type = "string", dest = "remote_test_root",
-                    help = "remote directory to use as test root (eg. /data/local/tests)")
+        self.add_option("--remoteTestRoot", action="store",
+                        type="string", dest="remote_test_root",
+                        help="remote directory to use as test root (eg. /data/local/tests)")
         # /data/local/tests is used because it is usually not possible to set +x permissions
         # on binaries on /mnt/sdcard
         defaults["remote_test_root"] = "/data/local/tests"
 
-        self.add_option("--with-b2g-emulator", action = "store",
-                    type = "string", dest = "with_b2g_emulator",
-                    help = "Start B2G Emulator (specify path to b2g home)")
+        self.add_option("--with-b2g-emulator", action="store",
+                        type="string", dest="with_b2g_emulator",
+                        help="Start B2G Emulator (specify path to b2g home)")
         self.add_option("--emulator", default="arm", choices=["x86", "arm"],
-                    help = "Architecture of emulator to use: x86 or arm")
-        self.add_option("--addEnv", action = "append",
-                    type = "string", dest = "add_env",
-                    help = "additional remote environment variable definitions (eg. --addEnv \"somevar=something\")")
+                        help="Architecture of emulator to use: x86 or arm")
+        self.add_option("--addEnv", action="append",
+                        type="string", dest="add_env",
+                        help="additional remote environment variable definitions (eg. --addEnv \"somevar=something\")")
         defaults["add_env"] = None
 
         self.set_defaults(**defaults)
 
+
 def run_test_harness(options, args):
     if options.with_b2g_emulator:
         from mozrunner import B2GEmulatorRunner
-        runner = B2GEmulatorRunner(arch=options.emulator, b2g_home=options.with_b2g_emulator)
+        runner = B2GEmulatorRunner(
+            arch=options.emulator, b2g_home=options.with_b2g_emulator)
         runner.start()
         # because we just started the emulator, we need more than the
         # default number of retries here.
@@ -238,12 +253,14 @@ def run_test_harness(options, args):
                                                      options.manifest_path)
     tester = RemoteCPPUnitTests(dm, options, [item[0] for item in progs])
     try:
-        result = tester.run_tests(progs, options.xre_path, options.symbols_path)
+        result = tester.run_tests(
+            progs, options.xre_path, options.symbols_path)
     finally:
         if options.with_b2g_emulator:
             runner.cleanup()
             runner.wait()
     return result
+
 
 def main():
     parser = RemoteCPPUnittestOptions()
@@ -266,10 +283,11 @@ def main():
                                            {"tbpl": sys.stdout})
     try:
         result = run_test_harness(options, args)
-    except Exception, e:
+    except Exception as e:
         log.error(str(e))
         result = False
     sys.exit(0 if result else 1)
+
 
 if __name__ == '__main__':
     main()

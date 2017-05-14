@@ -1,6 +1,7 @@
 Cu.import("resource://gre/modules/FormHistory.jsm");
 
 const ENGINE_NAME = "engine-suggestions.xml";
+// This is fixed to match the port number in engine-suggestions.xml.
 const SERVER_PORT = 9000;
 const SUGGEST_PREF = "browser.urlbar.suggest.searches";
 const SUGGEST_ENABLED_PREF = "browser.search.suggest.enabled";
@@ -648,4 +649,244 @@ add_task(async function avoid_url_suggestions() {
   });
 
   await cleanUpSuggestions();
+});
+
+add_task(function* avoid_http_url_suggestions() {
+  Services.prefs.setBoolPref(SUGGEST_PREF, true);
+
+  setSuggestionsFn(searchStr => {
+    return [searchStr + "ed"];
+  });
+
+  yield check_autocomplete({
+    search: "htt",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch("htt", { engineName: ENGINE_NAME, heuristic: true }),
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "htted",
+          searchQuery: "htt",
+          searchSuggestion: "htted",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "ftp",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch("ftp", { engineName: ENGINE_NAME, heuristic: true }),
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "http",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch("http", { engineName: ENGINE_NAME, heuristic: true }),
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "https",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch("https", { engineName: ENGINE_NAME, heuristic: true }),
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "httpd",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch("httpd", { engineName: ENGINE_NAME, heuristic: true }),
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "httpded",
+          searchQuery: "httpd",
+          searchSuggestion: "httpded",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "http:",
+    searchParam: "enable-actions",
+    matches: [
+      {
+        uri: makeActionURI("visiturl", { url: "http://http/", input: "http:" }),
+        style: [ "action", "visiturl", "heuristic" ],
+        title: "http://http/",
+      },
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "https:",
+    searchParam: "enable-actions",
+    matches: [
+      {
+        uri: makeActionURI("visiturl", { url: "http://https/", input: "https:" }),
+        style: [ "action", "visiturl", "heuristic" ],
+        title: "http://https/",
+      },
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "ftp:",
+    searchParam: "enable-actions",
+    matches: [
+      {
+        uri: makeActionURI("visiturl", { url: "http://ftp/", input: "ftp:" }),
+        style: [ "action", "visiturl", "heuristic" ],
+        title: "http://ftp/",
+      },
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "http:/",
+    searchParam: "enable-actions",
+    matches: [
+      {
+        uri: makeActionURI("visiturl", { url: "http://http/", input: "http:/" }),
+        style: [ "action", "visiturl", "heuristic" ],
+        title: "http://http/",
+      },
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "https:/",
+    searchParam: "enable-actions",
+    matches: [
+      {
+        uri: makeActionURI("visiturl", { url: "http://https/", input: "https:/" }),
+        style: [ "action", "visiturl", "heuristic" ],
+        title: "http://https/",
+      },
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "ftp:/",
+    searchParam: "enable-actions",
+    matches: [
+      {
+        uri: makeActionURI("visiturl", { url: "http://ftp/", input: "ftp:/" }),
+        style: [ "action", "visiturl", "heuristic" ],
+        title: "http://ftp/",
+      },
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "http://",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch("http://", { engineName: ENGINE_NAME, heuristic: true }),
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "https://",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch("https://", { engineName: ENGINE_NAME, heuristic: true }),
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "ftp://",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch("ftp://", { engineName: ENGINE_NAME, heuristic: true }),
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "http://www",
+    searchParam: "enable-actions",
+    matches: [
+      {
+        uri: makeActionURI("visiturl", { url: "http://www/", input: "http://www" }),
+        style: [ "action", "visiturl", "heuristic" ],
+        title: "http://www/",
+      },
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "https://www",
+    searchParam: "enable-actions",
+    matches: [
+      {
+        uri: makeActionURI("visiturl", { url: "https://www/", input: "https://www" }),
+        style: [ "action", "visiturl", "heuristic" ],
+        title: "https://www/",
+      },
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "http://test",
+    searchParam: "enable-actions",
+    matches: [
+      {
+        uri: makeActionURI("visiturl", { url: "http://test/", input: "http://test" }),
+        style: [ "action", "visiturl", "heuristic" ],
+        title: "http://test/",
+      },
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "https://test",
+    searchParam: "enable-actions",
+    matches: [
+      {
+        uri: makeActionURI("visiturl", { url: "https://test/", input: "https://test" }),
+        style: [ "action", "visiturl", "heuristic" ],
+        title: "https://test/",
+      },
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "ftp://test",
+    searchParam: "enable-actions",
+    matches: [
+      {
+        uri: makeActionURI("visiturl", { url: "ftp://test/", input: "ftp://test" }),
+        style: [ "action", "visiturl", "heuristic" ],
+        title: "ftp://test/",
+      },
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "http://www.test",
+    searchParam: "enable-actions",
+    matches: [
+      {
+        uri: makeActionURI("visiturl", { url: "http://www.test/", input: "http://www.test" }),
+        style: [ "action", "visiturl", "heuristic" ],
+        title: "http://www.test/",
+      },
+    ],
+  });
+
+  yield cleanUpSuggestions();
 });

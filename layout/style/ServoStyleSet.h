@@ -297,10 +297,10 @@ public:
    */
   already_AddRefed<ServoComputedValues> ResolveServoStyle(dom::Element* aElement);
 
-  bool FillKeyframesForName(const nsString& aName,
-                            const nsTimingFunction& aTimingFunction,
-                            const ServoComputedValues* aComputedValues,
-                            nsTArray<Keyframe>& aKeyframes);
+  bool GetKeyframesForName(const nsString& aName,
+                           const nsTimingFunction& aTimingFunction,
+                           const ServoComputedValues* aComputedValues,
+                           nsTArray<Keyframe>& aKeyframes);
 
   nsTArray<ComputedKeyframeValues>
   GetComputedKeyframeValuesFor(const nsTArray<Keyframe>& aKeyframes,
@@ -440,39 +440,23 @@ private:
 
   void RunPostTraversalTasks();
 
-  uint32_t FindSheetOfType(SheetType aType,
-                           ServoStyleSheet* aSheet);
+  void PrependSheetOfType(SheetType aType,
+                          ServoStyleSheet* aSheet);
 
-  uint32_t PrependSheetOfType(SheetType aType,
-                              ServoStyleSheet* aSheet,
-                              uint32_t aReuseUniqueID = 0);
+  void AppendSheetOfType(SheetType aType,
+                         ServoStyleSheet* aSheet);
 
-  uint32_t AppendSheetOfType(SheetType aType,
-                             ServoStyleSheet* aSheet,
-                             uint32_t aReuseUniqueID = 0);
+  void InsertSheetOfType(SheetType aType,
+                         ServoStyleSheet* aSheet,
+                         ServoStyleSheet* aBeforeSheet);
 
-  uint32_t InsertSheetOfType(SheetType aType,
-                             ServoStyleSheet* aSheet,
-                             uint32_t aBeforeUniqueID,
-                             uint32_t aReuseUniqueID = 0);
-
-  uint32_t RemoveSheetOfType(SheetType aType,
-                             ServoStyleSheet* aSheet);
-
-  struct Entry {
-    uint32_t uniqueID;
-    RefPtr<ServoStyleSheet> sheet;
-
-    // Provide a cast operator to simplify calling
-    // nsIDocument::FindDocStyleSheetInsertionPoint.
-    operator ServoStyleSheet*() const { return sheet; }
-  };
+  void RemoveSheetOfType(SheetType aType,
+                         ServoStyleSheet* aSheet);
 
   nsPresContext* mPresContext;
   UniquePtr<RawServoStyleSet> mRawSet;
   EnumeratedArray<SheetType, SheetType::Count,
-                  nsTArray<Entry>> mEntries;
-  uint32_t mUniqueIDCounter;
+                  nsTArray<RefPtr<ServoStyleSheet>>> mSheets;
   bool mAllowResolveStaleStyles;
   bool mAuthorStyleDisabled;
   bool mStylistMayNeedRebuild;

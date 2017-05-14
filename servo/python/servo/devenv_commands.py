@@ -9,6 +9,7 @@
 
 from __future__ import print_function, unicode_literals
 from os import path, getcwd, listdir
+from time import time
 
 import sys
 import urllib2
@@ -21,10 +22,43 @@ from mach.decorators import (
 )
 
 from servo.command_base import CommandBase, cd, call
+from servo.build_commands import notify_build_done
 
 
 @CommandProvider
 class MachCommands(CommandBase):
+    def run_cargo(self, params, geckolib=False, check=False):
+        if geckolib:
+            self.set_use_stable_rust()
+            crate_dir = path.join('ports', 'geckolib')
+        else:
+            crate_dir = path.join('components', 'servo')
+
+        self.ensure_bootstrapped()
+        self.ensure_clobbered()
+        env = self.build_env(geckolib=geckolib)
+
+        if not params:
+            params = []
+
+        if check:
+            params = ['check'] + params
+
+        build_start = time()
+        if self.context.topdir == getcwd():
+            with cd(crate_dir):
+                status = call(['cargo'] + params, env=env)
+        else:
+            status = call(['cargo'] + params, env=env)
+        elapsed = time() - build_start
+
+        notify_build_done(self.config, elapsed, status == 0)
+
+        if check and status == 0:
+            print('Finished checking, binary NOT updated. Consider ./mach build before ./mach run')
+
+        return status
+
     @Command('cargo',
              description='Run Cargo',
              category='devenv')
@@ -32,15 +66,7 @@ class MachCommands(CommandBase):
         'params', default=None, nargs='...',
         help="Command-line arguments to be passed through to Cargo")
     def cargo(self, params):
-        if not params:
-            params = []
-
-        self.ensure_bootstrapped()
-
-        if self.context.topdir == getcwd():
-            with cd(path.join('components', 'servo')):
-                return call(["cargo"] + params, env=self.build_env())
-        return call(['cargo'] + params, env=self.build_env())
+        return self.run_cargo(params)
 
     @Command('cargo-geckolib',
              description='Run Cargo with the same compiler version and root crate as build-geckolib',
@@ -49,17 +75,25 @@ class MachCommands(CommandBase):
         'params', default=None, nargs='...',
         help="Command-line arguments to be passed through to Cargo")
     def cargo_geckolib(self, params):
-        if not params:
-            params = []
+        return self.run_cargo(params, geckolib=True)
 
-        self.set_use_stable_rust()
-        self.ensure_bootstrapped()
-        env = self.build_env(geckolib=True)
+    @Command('check',
+             description='Run "cargo check"',
+             category='devenv')
+    @CommandArgument(
+        'params', default=None, nargs='...',
+        help="Command-line arguments to be passed through to cargo check")
+    def check(self, params):
+        return self.run_cargo(params, check=True)
 
-        if self.context.topdir == getcwd():
-            with cd(path.join('ports', 'geckolib')):
-                return call(["cargo"] + params, env=env)
-        return call(['cargo'] + params, env=env)
+    @Command('check-geckolib',
+             description='Run "cargo check" with the same compiler version and root crate as build-geckolib',
+             category='devenv')
+    @CommandArgument(
+        'params', default=None, nargs='...',
+        help="Command-line arguments to be passed through to cargo check")
+    def check_geckolib(self, params):
+        return self.run_cargo(params, check=True, geckolib=True)
 
     @Command('cargo-update',
              description='Same as update-cargo',
@@ -226,11 +260,23 @@ class MachCommands(CommandBase):
             env=self.build_env())
 
     @Command('rustup',
-             description='Update the Rust version to latest master',
+             description='Update the Rust version to latest Nightly',
              category='devenv')
-    def rustup(self):
-        url = "https://api.github.com/repos/rust-lang/rust/git/refs/heads/master"
-        commit = json.load(urllib2.urlopen(url))["object"]["sha"]
+    @CommandArgument('--master',
+                     action='store_true',
+                     help='Use the latest commit of the "master" branch')
+    def rustup(self, master=False):
+        if master:
+            url = "https://api.github.com/repos/rust-lang/rust/git/refs/heads/master"
+            commit = json.load(urllib2.urlopen(url))["object"]["sha"]
+        else:
+            import toml
+            import re
+            url = "https://static.rust-lang.org/dist/channel-rust-nightly.toml"
+            version = toml.load(urllib2.urlopen(url))["pkg"]["rustc"]["version"]
+            short_commit = re.search("\(([0-9a-f]+) ", version).group(1)
+            url = "https://api.github.com/repos/rust-lang/rust/commits/" + short_commit
+            commit = json.load(urllib2.urlopen(url))["sha"]
         filename = path.join(self.context.topdir, "rust-commit-hash")
         with open(filename, "w") as f:
             f.write(commit + "\n")
