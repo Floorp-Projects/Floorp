@@ -1,0 +1,34 @@
+<html xmlns="http://www.w3.org/1999/xhtml" 
+      class="reftest-wait">
+<head>
+<script>
+function doDraw() {
+  var ctx = document.getElementById('canvas').getContext('2d');
+
+  var grad = ctx.createLinearGradient(120,20,300,20);
+  grad.addColorStop(0, '#0000ff');
+  grad.addColorStop(1, '#000000');
+
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,300,300);
+
+  ctx = document.getElementById('canvas2').getContext('2d');
+
+  grad = ctx.createLinearGradient(30,300,30,0);
+  grad.addColorStop(0, '#00ff00');
+  grad.addColorStop(1, '#000000');
+
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,300,300);
+
+  document.documentElement.removeAttribute('class');
+}
+</script>
+</head>
+<body onload="doDraw();">
+<canvas id="canvas" width="300" height="300" style="position: absolute; top: 30px; left: 30px;"></canvas>
+<br/><br/>
+<canvas id="canvas2" width="300" height="300" style="position: absolute; top: 360px; left: 30px;"></canvas>
+</body>
+</html>
+
