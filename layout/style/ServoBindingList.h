@@ -355,7 +355,7 @@ SERVO_BINDING_FUNC(Servo_CSSSupports, bool,
 SERVO_BINDING_FUNC(Servo_ComputedValues_GetForAnonymousBox,
                    ServoComputedValuesStrong,
                    ServoComputedValuesBorrowedOrNull parent_style_or_null,
-                   nsIAtom* pseudoTag, bool skip_display_fixup,
+                   nsIAtom* pseudo_tag, bool skip_display_fixup,
                    RawServoStyleSetBorrowed set)
 SERVO_BINDING_FUNC(Servo_ComputedValues_Inherit, ServoComputedValuesStrong,
                    RawServoStyleSetBorrowed set,
@@ -383,7 +383,8 @@ SERVO_BINDING_FUNC(Servo_ResolveStyle, ServoComputedValuesStrong,
                    RawServoStyleSetBorrowed set,
                    bool allow_stale)
 SERVO_BINDING_FUNC(Servo_ResolvePseudoStyle, ServoComputedValuesStrong,
-                   RawGeckoElementBorrowed element, nsIAtom* pseudo_tag,
+                   RawGeckoElementBorrowed element,
+                   mozilla::CSSPseudoElementType pseudo_type,
                    bool is_probe, RawServoStyleSetBorrowed set)
 SERVO_BINDING_FUNC(Servo_HasAuthorSpecifiedRules, bool,
                    RawGeckoElementBorrowed element,
@@ -400,7 +401,7 @@ SERVO_BINDING_FUNC(Servo_HasAuthorSpecifiedRules, bool,
 // performed, and this function maintains that invariant.
 SERVO_BINDING_FUNC(Servo_ResolveStyleLazily, ServoComputedValuesStrong,
                    RawGeckoElementBorrowed element,
-                   nsIAtom* pseudo_tag,
+                   mozilla::CSSPseudoElementType pseudo_type,
                    const mozilla::ServoElementSnapshotTable* snapshots,
                    RawServoStyleSetBorrowed set)
 
@@ -423,7 +424,7 @@ SERVO_BINDING_FUNC(Servo_StyleSet_GetBaseComputedValuesForElement,
                    RawServoStyleSetBorrowed set,
                    RawGeckoElementBorrowed element,
                    const mozilla::ServoElementSnapshotTable* snapshots,
-                   nsIAtom* pseudo_tag)
+                   mozilla::CSSPseudoElementType pseudo_type)
 
 // Style-struct management.
 #define STYLE_STRUCT(name, checkdata_cb)                            \
