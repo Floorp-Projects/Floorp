@@ -755,8 +755,27 @@ var gDownloadingPage = {
     var um = CoC["@mozilla.org/updates/update-manager;1"].
              getService(CoI.nsIUpdateManager);
     var activeUpdate = um.activeUpdate;
-    if (activeUpdate)
+    if (activeUpdate) {
       gUpdates.setUpdate(activeUpdate);
+
+      // It's possible the update has already been downloaded and is being
+      // applied by the time this page is shown, depending on how fast the
+      // download goes and how quickly the 'next' button is clicked to get here.
+      if (activeUpdate.state == STATE_PENDING ||
+          activeUpdate.state == STATE_PENDING_ELEVATE ||
+          activeUpdate.state == STATE_PENDING_SERVICE) {
+        if (!activeUpdate.getProperty("stagingFailed")) {
+          gUpdates.setButtons("hideButton", null, null, false);
+          gUpdates.wiz.getButton("extra1").focus();
+
+          this._setUpdateApplying();
+          return;
+        } else {
+          gUpdates.wiz.goTo("finished");
+          return;
+        }
+      }
+    }
 
     if (!gUpdates.update) {
       LOG("gDownloadingPage", "onPageShow - no valid update to download?!");
@@ -1207,10 +1226,17 @@ var gErrorPatchingPage = {
     switch (gUpdates.update.selectedPatch.state) {
       case STATE_APPLIED:
       case STATE_APPLIED_SERVICE:
-      case STATE_PENDING:
-      case STATE_PENDING_SERVICE:
         gUpdates.wiz.goTo("finished");
         break;
+      case STATE_PENDING:
+      case STATE_PENDING_SERVICE:
+        let aus = CoC["@mozilla.org/updates/update-service;1"].
+                  getService(CoI.nsIApplicationUpdateService);
+        if (!aus.canStageUpdates) {
+          gUpdates.wiz.goTo("finished");
+          break;
+        }
+      // intentional fallthrough
       case STATE_DOWNLOADING:
         gUpdates.wiz.goTo("downloading");
         break;

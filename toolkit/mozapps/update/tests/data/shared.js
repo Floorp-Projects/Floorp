@@ -15,6 +15,7 @@ const PREF_APP_UPDATE_CHANNEL                    = "app.update.channel";
 const PREF_APP_UPDATE_DOORHANGER                 = "app.update.doorhanger";
 const PREF_APP_UPDATE_DOWNLOADPROMPTATTEMPTS     = "app.update.download.attempts";
 const PREF_APP_UPDATE_DOWNLOADPROMPTMAXATTEMPTS  = "app.update.download.maxAttempts";
+const PREF_APP_UPDATE_DOWNLOADBACKGROUNDINTERVAL = "app.update.download.backgroundInterval";
 const PREF_APP_UPDATE_ENABLED                    = "app.update.enabled";
 const PREF_APP_UPDATE_IDLETIME                   = "app.update.idletime";
 const PREF_APP_UPDATE_LOG                        = "app.update.log";
