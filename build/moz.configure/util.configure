@@ -390,9 +390,14 @@ def delayed_getattr(func, key):
 # Like @depends, but the decorated function is only called if one of the
 # arguments it would be called with has a positive value (bool(value) is True)
 @template
-def depends_if(*args):
+def depends_if(*args, **kwargs):
+    if kwargs:
+        assert len(kwargs) == 1
+        when = kwargs['when']
+    else:
+        when = None
     def decorator(func):
-        @depends(*args)
+        @depends(*args, when=when)
         def wrapper(*args):
             if any(arg for arg in args):
                 return func(*args)

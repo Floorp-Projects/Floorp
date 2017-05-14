@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Log.jsm");
 
@@ -609,117 +609,6 @@ element.isWebElementReference = function (ref) {
 element.generateUUID = function() {
   let uuid = uuidGen.generateUUID().toString();
   return uuid.substring(1, uuid.length - 1);
-};
-
-/**
- * Convert any web elements in arbitrary objects to DOM elements by
- * looking them up in the seen element store.
- *
- * @param {?} obj
- *     Arbitrary object containing web elements.
- * @param {element.Store} seenEls
- *     Element store to use for lookup of web element references.
- * @param {Window} win
- *     Window.
- * @param {ShadowRoot} shadowRoot
- *     Shadow root.
- *
- * @return {?}
- *     Same object as provided by |obj| with the web elements replaced
- *     by DOM elements.
- */
-element.fromJson = function (
-    obj, seenEls, win, shadowRoot = undefined) {
-  switch (typeof obj) {
-    case "boolean":
-    case "number":
-    case "string":
-      return obj;
-
-    case "object":
-      if (obj === null) {
-        return obj;
-      }
-
-      // arrays
-      else if (Array.isArray(obj)) {
-        return obj.map(e => element.fromJson(e, seenEls, win, shadowRoot));
-      }
-
-      // web elements
-      else if (Object.keys(obj).includes(element.Key) ||
-          Object.keys(obj).includes(element.LegacyKey)) {
-        let uuid = obj[element.Key] || obj[element.LegacyKey];
-        let el = seenEls.get(uuid, {frame: win, shadowRoot: shadowRoot});
-        if (!el) {
-          throw new WebDriverError(`Unknown element: ${uuid}`);
-        }
-        return el;
-      }
-
-      // arbitrary objects
-      else {
-        let rv = {};
-        for (let prop in obj) {
-          rv[prop] = element.fromJson(obj[prop], seenEls, win, shadowRoot);
-        }
-        return rv;
-      }
-  }
-};
-
-/**
- * Convert arbitrary objects to JSON-safe primitives that can be
- * transported over the Marionette protocol.
- *
- * Any DOM elements are converted to web elements by looking them up
- * and/or adding them to the element store provided.
- *
- * @param {?} obj
- *     Object to be marshaled.
- * @param {element.Store} seenEls
- *     Element store to use for lookup of web element references.
- *
- * @return {?}
- *     Same object as provided by |obj| with the elements replaced by
- *     web elements.
- */
-element.toJson = function (obj, seenEls) {
-  let t = Object.prototype.toString.call(obj);
-
-  // null
-  if (t == "[object Undefined]" || t == "[object Null]") {
-    return null;
-  }
-
-  // literals
-  else if (t == "[object Boolean]" || t == "[object Number]" || t == "[object String]") {
-    return obj;
-  }
-
-  // Array, NodeList, HTMLCollection, et al.
-  else if (element.isCollection(obj)) {
-    return [...obj].map(el => element.toJson(el, seenEls));
-  }
-
-  // HTMLElement
-  else if ("nodeType" in obj && obj.nodeType == 1) {
-    let uuid = seenEls.add(obj);
-    return element.makeWebElement(uuid);
-  }
-
-  // arbitrary objects + files
-  else {
-    let rv = {};
-    for (let prop in obj) {
-      try {
-        rv[prop] = element.toJson(obj[prop], seenEls);
-      } catch (e if (e.result == Cr.NS_ERROR_NOT_IMPLEMENTED)) {
-        logger.debug(`Skipping ${prop}: ${e.message}`);
-      }
-    }
-    return rv;
-  }
 };
 
 /**

@@ -272,7 +272,9 @@ associated with the histogram.  Returns None if no guarding is necessary."""
 
         # We forbid new probes from using "expires_in_version" : "default" field/value pair.
         # Old ones that use this are added to the whitelist.
-        if expiration == "default" and name not in whitelists['expiry_default']:
+        if expiration == "default" and \
+           whitelists is not None and \
+           name not in whitelists['expiry_default']:
             raise ParserError('New histogram "%s" cannot have "default" %s value.' % (name, field))
 
         if re.match(r'^[1-9][0-9]*$', expiration):

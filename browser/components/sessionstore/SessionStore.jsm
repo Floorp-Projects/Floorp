@@ -2644,9 +2644,9 @@ var SessionStoreInternal = {
     // If the page has a title, set it.
     if (activePageData) {
       if (activePageData.title) {
-        tab.label = activePageData.title;
+        win.gBrowser.setInitialTabTitle(tab, activePageData.title);
       } else if (activePageData.url != "about:blank") {
-        tab.label = activePageData.url;
+        win.gBrowser.setInitialTabTitle(tab, activePageData.url);
       }
     } else if (tab.hasAttribute("customizemode")) {
       win.gCustomizeMode.setTab(tab);
@@ -3291,9 +3291,13 @@ var SessionStoreInternal = {
         url = tabData.entries[activeIndex].url;
       }
 
+      // Setting noInitialLabel is a perf optimization. Rendering tab labels
+      // would make resizing the tabs more expensive as we're adding them.
+      // Each tab will get its initial label set in restoreTab.
       let tab = tabbrowser.addTab(url,
                                   { createLazyBrowser,
                                     skipAnimation: true,
+                                    noInitialLabel: true,
                                     userContextId,
                                     skipBackgroundNotify: true });
 

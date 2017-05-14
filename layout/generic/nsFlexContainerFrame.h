@@ -330,9 +330,6 @@ protected:
                           const mozilla::LogicalPoint& aContentBoxOrigin,
                           const nsSize& aContainerSize);
 
-  bool mChildrenHaveBeenReordered; // Have we ever had to reorder our kids
-                                   // to satisfy their 'order' values?
-
   nscoord mBaselineFromLastReflow;
   // Note: the last baseline is a distance from our border-box end edge.
   nscoord mLastBaselineFromLastReflow;

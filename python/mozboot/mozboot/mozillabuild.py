@@ -64,8 +64,11 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
                 else:
                     raise
 
-    def upgrade_mercurial(self, current):
-        self.pip_install('mercurial')
+    def ensure_mercurial_modern(self):
+        # Overrides default implementation to always run pip because.
+        print('Running pip to ensure Mercurial is up-to-date...')
+        self.run([self.which('pip'), 'install', '--upgrade', 'Mercurial'])
+        return True, True
 
     def upgrade_python(self, current):
         pass
