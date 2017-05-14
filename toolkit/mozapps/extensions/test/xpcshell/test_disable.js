@@ -32,14 +32,14 @@ function run_test() {
 
   startupManager();
 
-  AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(async function(a1) {
     do_check_eq(a1, null);
     do_check_not_in_crash_annotation(addon1.id, addon1.version);
 
     writeInstallRDFForExtension(addon1, profileDir, addon1.id, "icon.png");
     gIconURL = do_get_addon_root_uri(profileDir.clone(), addon1.id) + "icon.png";
 
-    restartManager();
+    await promiseRestartManager();
 
     AddonManager.getAddonByID("addon1@tests.mozilla.org", function(newa1) {
       do_check_neq(newa1, null);

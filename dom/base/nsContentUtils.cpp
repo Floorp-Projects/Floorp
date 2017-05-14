@@ -10511,10 +10511,13 @@ nsContentUtils::UserInteractionObserver::Init()
   obs->AddObserver(this, kUserInteractionInactive, false);
   obs->AddObserver(this, kUserInteractionActive, false);
 
-  // Register ourselves as an annotator for the Background Hang Reporter, so
-  // that hang stacks are annotated with whether or not the user was
-  // interacting with the browser when the hang occurred.
-  HangMonitor::RegisterAnnotator(*this);
+  // We can't register ourselves as an annotator yet, as the HangMonitor hasn't
+  // started yet. It will have started by the time we have the chance to spin
+  // the event loop.
+  RefPtr<UserInteractionObserver> self = this;
+  NS_DispatchToMainThread(NS_NewRunnableFunction([=] () {
+        HangMonitor::RegisterAnnotator(*self);
+      }));
 }
 
 void

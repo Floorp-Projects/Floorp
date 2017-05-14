@@ -612,8 +612,8 @@ SpecialPowersObserverAPI.prototype = {
         let id = aMessage.data.id;
         let extension = this._extensions.get(id);
         this._extensions.delete(id);
-        extension.shutdown();
-        this._sendReply(aMessage, "SPExtensionMessage", {id, type: "extensionUnloaded", args: []});
+        let done = () => this._sendReply(aMessage, "SPExtensionMessage", {id, type: "extensionUnloaded", args: []});
+        extension.shutdown().then(done, done);
         return undefined;
       }
 

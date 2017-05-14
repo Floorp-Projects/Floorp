@@ -36,12 +36,12 @@ DecryptJob::PostResult(DecryptStatus aResult,
   if (aDecryptedData.Length() != mSample->Size()) {
     NS_WARNING("CDM returned incorrect number of decrypted bytes");
   }
-  if (aResult == Ok) {
+  if (aResult == eme::Ok) {
     UniquePtr<MediaRawDataWriter> writer(mSample->CreateWriter());
     PodCopy(writer->Data(),
             aDecryptedData.Elements(),
             std::min<size_t>(aDecryptedData.Length(), mSample->Size()));
-  } else if (aResult == NoKeyErr) {
+  } else if (aResult == eme::NoKeyErr) {
     NS_WARNING("CDM returned NoKeyErr");
     // We still have the encrypted sample, so we can re-enqueue it to be
     // decrypted again once the key is usable again.

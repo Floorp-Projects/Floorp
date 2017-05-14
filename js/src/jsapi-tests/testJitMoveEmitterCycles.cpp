@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if defined(JS_SIMULATOR_ARM)
+
 #include "jit/arm/Assembler-arm.h"
 #include "jit/arm/MoveEmitter-arm.h"
 #include "jit/arm/Simulator-arm.h"
@@ -528,5 +529,96 @@ BEGIN_TEST(testJitMoveEmitterCycles_autogen3)
     return true;
 }
 END_TEST(testJitMoveEmitterCycles_autogen3)
+BEGIN_TEST(testJitMoveEmitterCycles_bug1299147_1)
+{
+    using namespace js;
+    using namespace js::jit;
+    LifoAlloc lifo(LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
+    TempAllocator alloc(&lifo);
+    JitContext jc(cx, &alloc);
+    cx->runtime()->getJitRuntime(cx);
+    MacroAssembler masm;
+    MoveEmitter mover(masm);
+    MoveResolver mr;
+    mr.setAllocator(alloc);
+    Simulator* sim = Simulator::Current();
+    // S2 -> S0
+    // S2 -> S6
+    // S3 -> S1
+    // S3 -> S7
+    // D0 -> D1
+    // D0 -> D2
+    TRY(mr.addMove(MoveOperand(s2), MoveOperand(s0), MoveOp::FLOAT32));
+    TRY(mr.addMove(MoveOperand(s2), MoveOperand(s6), MoveOp::FLOAT32));
+    sim->set_s_register_from_float(2, 2);
+    TRY(mr.addMove(MoveOperand(s3), MoveOperand(s1), MoveOp::FLOAT32));
+    TRY(mr.addMove(MoveOperand(s3), MoveOperand(s7), MoveOp::FLOAT32));
+    sim->set_s_register_from_float(3, 4);
+    TRY(mr.addMove(MoveOperand(d0), MoveOperand(d1), MoveOp::FLOAT32));
+    TRY(mr.addMove(MoveOperand(d0), MoveOperand(d2), MoveOp::FLOAT32));
+    sim->set_d_register_from_double(0, 1);
+    // don't explode!
+    TRY(mr.resolve());
+    mover.emit(mr);
+    mover.finish();
+    masm.abiret();
+    JitCode* code = linkAndAllocate(cx, &masm);
+    sim->call(code->raw(), 1, 1);
+    float f;
+    double d;
+    sim->get_double_from_d_register(1, &d);
+    CHECK(d == 1);
+    sim->get_double_from_d_register(2, &d);
+    CHECK(d == 1);
+    sim->get_float_from_s_register(0, &f);
+    CHECK(int(f) == 2);
+    sim->get_float_from_s_register(6, &f);
+    CHECK(int(f) == 2);
+    sim->get_float_from_s_register(1, &f);
+    CHECK(int(f) == 4);
+    sim->get_float_from_s_register(7, &f);
+    CHECK(int(f) == 4);
+    return true;
+}
+END_TEST(testJitMoveEmitterCycles_bug1299147_1)
+BEGIN_TEST(testJitMoveEmitterCycles_bug1299147)
+{
+    using namespace js;
+    using namespace js::jit;
+    LifoAlloc lifo(LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
+    TempAllocator alloc(&lifo);
+    JitContext jc(cx, &alloc);
+    cx->runtime()->getJitRuntime(cx);
+    MacroAssembler masm;
+    MoveEmitter mover(masm);
+    MoveResolver mr;
+    mr.setAllocator(alloc);
+    Simulator* sim = Simulator::Current();
+    // S2 -> S5
+    // S2 -> S6
+    // D0 -> D1
+    TRY(mr.addMove(MoveOperand(s2), MoveOperand(s5), MoveOp::FLOAT32));
+    TRY(mr.addMove(MoveOperand(s2), MoveOperand(s6), MoveOp::FLOAT32));
+    sim->set_s_register_from_float(2, 2);
+    TRY(mr.addMove(MoveOperand(d0), MoveOperand(d1), MoveOp::FLOAT32));
+    sim->set_d_register_from_double(0, 1);
+    // don't explode!
+    TRY(mr.resolve());
+    mover.emit(mr);
+    mover.finish();
+    masm.abiret();
+    JitCode* code = linkAndAllocate(cx, &masm);
+    sim->call(code->raw(), 1, 1);
+    float f;
+    double d;
+    sim->get_double_from_d_register(1, &d);
+    CHECK(d == 1);
+    sim->get_float_from_s_register(5, &f);
+    CHECK(int(f) == 2);
+    sim->get_float_from_s_register(6, &f);
+    CHECK(int(f) == 2);
+    return true;
+}
+END_TEST(testJitMoveEmitterCycles_bug1299147)
 
-#endif
+#endif // JS_SIMULATOR_ARM

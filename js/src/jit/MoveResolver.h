@@ -252,6 +252,13 @@ class MoveOp
     bool aliases(const MoveOp& other) const {
         return aliases(other.from()) || aliases(other.to());
     }
+#ifdef JS_CODEGEN_ARM
+    void overwrite(MoveOperand& from, MoveOperand& to, Type type) {
+        from_ = from;
+        to_ = to;
+        type_ = type;
+    }
+#endif
 };
 
 class MoveResolver
@@ -297,6 +304,10 @@ class MoveResolver
 
     // Internal reset function. Does not clear lists.
     void resetState();
+
+#ifdef JS_CODEGEN_ARM
+    bool isDoubleAliasedAsSingle(const MoveOperand& move);
+#endif
 
   public:
     MoveResolver();

@@ -638,9 +638,11 @@ ExtensionManager = {
         let extension = this.extensions.get(data.id);
         this.extensions.delete(data.id);
 
-        extension.shutdown();
+        if (extension) {
+          extension.shutdown();
 
-        DocumentManager.uninitExtension(extension);
+          DocumentManager.uninitExtension(extension);
+        }
         break;
       }
 

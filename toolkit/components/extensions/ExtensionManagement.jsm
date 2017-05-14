@@ -112,6 +112,9 @@ var Service = {
   // Called when an extension is unloaded.
   shutdownExtension(uuid) {
     let extension = this.uuidMap.get(uuid);
+    if (!extension) {
+      return;
+    }
     this.uuidMap.delete(uuid);
     this.aps.setAddonHasPermissionCallback(extension.id, null);
     this.aps.setAddonLoadURICallback(extension.id, null);

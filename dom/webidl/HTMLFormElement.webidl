@@ -46,7 +46,4 @@ interface HTMLFormElement : HTMLElement {
   void reset();
   boolean checkValidity();
   boolean reportValidity();
-
-  [Pref="dom.forms.requestAutocomplete"]
-  void requestAutocomplete();
 };

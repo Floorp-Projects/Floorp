@@ -400,10 +400,10 @@ DecryptStatus
 ToDecryptStatus(GMPErr aError)
 {
   switch (aError) {
-    case GMPNoErr: return Ok;
-    case GMPNoKeyErr: return NoKeyErr;
-    case GMPAbortedErr: return AbortedErr;
-    default: return GenericErr;
+    case GMPNoErr: return eme::Ok;
+    case GMPNoKeyErr: return eme::NoKeyErr;
+    case GMPAbortedErr: return eme::AbortedErr;
+    default: return eme::GenericErr;
   }
 }
 

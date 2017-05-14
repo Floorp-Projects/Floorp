@@ -956,14 +956,19 @@ this.Extension = class extends ExtensionData {
     return super.initLocale(locale);
   }
 
-  async startup() {
-    let started = false;
+  startup() {
+    this.startupPromise = this._startup();
+    return this.startupPromise;
+  }
+
+  async _startup() {
+    this.started = false;
 
     try {
       let [, perms] = await Promise.all([this.loadManifest(), ExtensionPermissions.get(this)]);
 
       ExtensionManagement.startupExtension(this.uuid, this.addonData.resourceURI, this);
-      started = true;
+      this.started = true;
 
       if (!this.hasShutdown) {
         await this.initLocale();
@@ -1002,7 +1007,8 @@ this.Extension = class extends ExtensionData {
       dump(`Extension error: ${e.message} ${e.filename || e.fileName}:${e.lineNumber} :: ${e.stack || new Error().stack}\n`);
       Cu.reportError(e);
 
-      if (started) {
+      if (this.started) {
+        this.started = false;
         ExtensionManagement.shutdownExtension(this.uuid);
       }
 
@@ -1010,6 +1016,8 @@ this.Extension = class extends ExtensionData {
 
       throw e;
     }
+
+    this.startupPromise = null;
   }
 
   cleanupGeneratedFile() {
@@ -1031,9 +1039,21 @@ this.Extension = class extends ExtensionData {
     }).catch(Cu.reportError);
   }
 
-  shutdown(reason) {
+  async shutdown(reason) {
+    try {
+      if (this.startupPromise) {
+        await this.startupPromise;
+      }
+    } catch (e) {
+      Cu.reportError(e);
+    }
+
     this.shutdownReason = reason;
     this.hasShutdown = true;
+
+    if (!this.started) {
+      return;
+    }
 
     if (this.cleanupFile ||
         ["ADDON_INSTALL", "ADDON_UNINSTALL", "ADDON_UPGRADE", "ADDON_DOWNGRADE"].includes(reason)) {
