@@ -1105,7 +1105,10 @@ this.Extension = class extends ExtensionData {
 
     TelemetryStopwatch.start("WEBEXT_EXTENSION_STARTUP_MS", this);
     try {
-      let [, perms] = await Promise.all([this.loadManifest(), ExtensionPermissions.get(this)]);
+      let [perms] = await Promise.all([
+        ExtensionPermissions.get(this),
+        this.loadManifest(),
+      ]);
 
       if (!this.hasShutdown) {
         await this.initLocale();
