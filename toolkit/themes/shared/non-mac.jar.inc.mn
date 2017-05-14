@@ -49,6 +49,7 @@
 
 * skin/classic/global/dirListing/dirListing.css            (../../windows/global/dirListing/dirListing.css)
   skin/classic/global/icons/autocomplete-search.svg        (../../windows/global/icons/autocomplete-search.svg)
+  skin/classic/global/icons/Close.gif                      (../../windows/global/icons/Close.gif)
   skin/classic/global/icons/close.png                      (../../windows/global/icons/close.png)
   skin/classic/global/icons/close@2x.png                   (../../windows/global/icons/close@2x.png)
   skin/classic/global/icons/close-inverted.png             (../../windows/global/icons/close-inverted.png)
@@ -59,6 +60,7 @@
   skin/classic/global/icons/error-64.png                   (../../windows/global/icons/error-64.png)
   skin/classic/global/icons/expand.png                     (../../windows/global/icons/expand.png)
   skin/classic/global/icons/folder-item.png                (../../windows/global/icons/folder-item.png)
+  skin/classic/global/icons/Minimize.gif                   (../../windows/global/icons/Minimize.gif)
   skin/classic/global/icons/Print-preview.png              (../../windows/global/icons/Print-preview.png)
   skin/classic/global/icons/Portrait.png                   (../../windows/global/icons/Portrait.png)
   skin/classic/global/icons/Landscape.png                  (../../windows/global/icons/Landscape.png)
