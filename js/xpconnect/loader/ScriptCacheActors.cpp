@@ -31,14 +31,16 @@ ScriptCacheChild::Init(const Maybe<FileDescriptor>& cacheFile, bool wantCacheDat
 // Finalize the script cache for the content process, and send back data about
 // any scripts executed up to this point.
 void
-ScriptCacheChild::Finalize(LinkedList<ScriptPreloader::CachedScript>& scripts)
+ScriptCacheChild::SendScriptsAndFinalize(ScriptPreloader::ScriptHash& scripts)
 {
     MOZ_ASSERT(mWantCacheData);
 
     AutoSafeJSAPI jsapi;
 
+    auto matcher = ScriptPreloader::Match<ScriptPreloader::ScriptStatus::Saved>();
+
     nsTArray<ScriptData> dataArray;
-    for (auto script : scripts) {
+    for (auto& script : IterHash(scripts, matcher)) {
         if (!script->mSize && !script->XDREncode(jsapi.cx())) {
             continue;
         }
