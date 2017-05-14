@@ -35,6 +35,7 @@ struct nsFont;
 namespace mozilla {
   class FontFamilyList;
   enum FontFamilyType : uint32_t;
+  enum class CSSPseudoElementType : uint8_t;
   struct Keyframe;
   enum Side;
   struct StyleTransition;
@@ -329,7 +330,7 @@ void Gecko_SetOwnerDocumentNeedsStyleFlush(RawGeckoElementBorrowed element);
 // Not if we do them in Gecko...
 nsStyleContext* Gecko_GetStyleContext(RawGeckoElementBorrowed element,
                                       nsIAtom* aPseudoTagOrNull);
-nsIAtom* Gecko_GetImplementedPseudo(RawGeckoElementBorrowed element);
+mozilla::CSSPseudoElementType Gecko_GetImplementedPseudo(RawGeckoElementBorrowed element);
 nsChangeHint Gecko_CalcStyleDifference(nsStyleContext* oldstyle,
                                        ServoComputedValuesBorrowed newstyle);
 nsChangeHint Gecko_HintsHandledForDescendants(nsChangeHint aHint);
