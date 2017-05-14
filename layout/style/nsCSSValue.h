@@ -230,9 +230,7 @@ public:
   nsRefPtrHashtable<nsPtrHashKey<nsIDocument>, imgRequestProxy> mRequests;
 
 private:
-#ifdef DEBUG
-  bool mInitialized = false;
-#endif
+  bool mLoadedImage = false;
 };
 
 struct GridNamedArea {

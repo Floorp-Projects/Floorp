@@ -97,6 +97,13 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
         "default": False,
         "help": "Permits a software GL implementation (such as LLVMPipe) to use the GL compositor."
         }
+    ], [
+       ["--enable-webrender"],
+       {"action": "store_true",
+        "dest": "enable_webrender",
+        "default": False,
+        "help": "Tries to enable the WebRender compositor."
+        }
      ]] + copy.deepcopy(testing_config_options) \
         + copy.deepcopy(blobupload_config_options) \
         + copy.deepcopy(code_coverage_config_options)
@@ -311,6 +318,8 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
 
         if self.config['allow_software_gl_layers']:
             env['MOZ_LAYERS_ALLOW_SOFTWARE_GL'] = '1'
+        if self.config['enable_webrender']:
+            env['MOZ_WEBRENDER'] = '1'
 
         if not os.path.isdir(env['MOZ_UPLOAD_DIR']):
             self.mkdir_p(env['MOZ_UPLOAD_DIR'])

@@ -27,9 +27,10 @@ function promiseAddonStartup() {
 async function testSimpleIconsetParsing(manifest) {
   await promiseWriteWebManifestForExtension(manifest, profileDir);
 
-  await promiseRestartManager();
-  if (!manifest.theme)
-    await promiseAddonStartup();
+  await Promise.all([
+    promiseRestartManager(),
+    manifest.theme || promiseAddonStartup(),
+  ]);
 
   let uri = do_get_addon_root_uri(profileDir, ID);
 
@@ -60,9 +61,10 @@ async function testSimpleIconsetParsing(manifest) {
   check_icons(addon);
 
   // check if icons are persisted through a restart
-  await promiseRestartManager();
-  if (!manifest.theme)
-    await promiseAddonStartup();
+  await Promise.all([
+    promiseRestartManager(),
+    manifest.theme || promiseAddonStartup(),
+  ]);
 
   addon = await promiseAddonByID(ID);
   do_check_neq(addon, null);
@@ -70,16 +72,15 @@ async function testSimpleIconsetParsing(manifest) {
   check_icons(addon);
 
   addon.uninstall();
-
-  await promiseRestartManager();
 }
 
 async function testRetinaIconsetParsing(manifest) {
   await promiseWriteWebManifestForExtension(manifest, profileDir);
 
-  await promiseRestartManager();
-  if (!manifest.theme)
-    await promiseAddonStartup();
+  await Promise.all([
+    promiseRestartManager(),
+    manifest.theme || promiseAddonStartup(),
+  ]);
 
   let addon = await promiseAddonByID(ID);
   do_check_neq(addon, null);
@@ -100,16 +101,15 @@ async function testRetinaIconsetParsing(manifest) {
   }), uri + "icon128.png");
 
   addon.uninstall();
-
-  await promiseRestartManager();
 }
 
 async function testNoIconsParsing(manifest) {
   await promiseWriteWebManifestForExtension(manifest, profileDir);
 
-  await promiseRestartManager();
-  if (!manifest.theme)
-    await promiseAddonStartup();
+  await Promise.all([
+    promiseRestartManager(),
+    manifest.theme || promiseAddonStartup(),
+  ]);
 
   let addon = await promiseAddonByID(ID);
   do_check_neq(addon, null);
@@ -122,8 +122,6 @@ async function testNoIconsParsing(manifest) {
   equal(AddonManager.getPreferredIconURL(addon, 128), null);
 
   addon.uninstall();
-
-  await promiseRestartManager();
 }
 
 // Test simple icon set parsing
