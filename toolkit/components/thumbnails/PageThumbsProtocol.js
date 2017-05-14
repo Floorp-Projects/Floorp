@@ -88,7 +88,6 @@ Protocol.prototype = {
     let fileuri = Services.io.newFileURI(file);
     let channel = Services.io.newChannelFromURIWithLoadInfo(fileuri, aLoadInfo);
     channel.originalURI = aURI;
-    aLoadInfo.resultPrincipalURI = aURI;
     return channel;
   },
 

@@ -2916,7 +2916,7 @@ nsXPCComponents_Utils::SetWantXrays(HandleValue vscope, JSContext* cx)
 NS_IMETHODIMP
 nsXPCComponents_Utils::ForcePermissiveCOWs(JSContext* cx)
 {
-    CrashIfNotInAutomation();
+    xpc::CrashIfNotInAutomation();
     CompartmentPrivate::Get(CurrentGlobalOrNull(cx))->forcePermissiveCOWs = true;
     return NS_OK;
 }
@@ -2927,7 +2927,7 @@ nsXPCComponents_Utils::ForcePrivilegedComponentsForScope(HandleValue vscope,
 {
     if (!vscope.isObject())
         return NS_ERROR_INVALID_ARG;
-    CrashIfNotInAutomation();
+    xpc::CrashIfNotInAutomation();
     JSObject* scopeObj = js::UncheckedUnwrap(&vscope.toObject());
     XPCWrappedNativeScope* scope = ObjectScope(scopeObj);
     scope->ForcePrivilegedComponents();
@@ -3009,6 +3009,22 @@ nsXPCComponents_Utils::SetGCZeal(int32_t aValue, JSContext* cx)
 #ifdef JS_GC_ZEAL
     JS_SetGCZeal(cx, uint8_t(aValue), JS_DEFAULT_ZEAL_FREQ);
 #endif
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::GetIsInAutomation(bool* aResult)
+{
+    NS_ENSURE_ARG_POINTER(aResult);
+
+    *aResult = xpc::IsInAutomation();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::CrashIfNotInAutomation()
+{
+    xpc::CrashIfNotInAutomation();
     return NS_OK;
 }
 

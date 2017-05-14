@@ -91,9 +91,6 @@ nsGIFDecoder2::nsGIFDecoder2(RasterImage* aImage)
 {
   // Clear out the structure, excluding the arrays.
   memset(&mGIFStruct, 0, sizeof(mGIFStruct));
-
-  // Initialize as "animate once" in case no NETSCAPE2.0 extension is found.
-  mGIFStruct.loop_count = 1;
 }
 
 nsGIFDecoder2::~nsGIFDecoder2()
@@ -111,7 +108,7 @@ nsGIFDecoder2::FinishInternal()
     if (mCurrentFrameIndex == mGIFStruct.images_decoded) {
       EndImageFrame();
     }
-    PostDecodeDone(mGIFStruct.loop_count - 1);
+    PostDecodeDone(mGIFStruct.loop_count);
     mGIFOpen = false;
   }
 
@@ -746,6 +743,11 @@ nsGIFDecoder2::ReadNetscapeExtensionData(const char* aData)
     case NETSCAPE_LOOPING_EXTENSION_SUB_BLOCK_ID:
       // This is looping extension.
       mGIFStruct.loop_count = LittleEndian::readUint16(aData + 1);
+      // Zero loop count is infinite animation loop request.
+      if (mGIFStruct.loop_count == 0) {
+        mGIFStruct.loop_count = -1;
+      }
+
       return Transition::To(State::NETSCAPE_EXTENSION_SUB_BLOCK,
                             SUB_BLOCK_HEADER_LEN);
 

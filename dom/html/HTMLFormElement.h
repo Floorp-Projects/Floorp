@@ -416,8 +416,6 @@ public:
 
   js::ExpandoAndGeneration mExpandoAndGeneration;
 
-  void RequestAutocomplete();
-
 protected:
   virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 

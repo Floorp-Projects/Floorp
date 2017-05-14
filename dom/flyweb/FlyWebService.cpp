@@ -1106,7 +1106,14 @@ FlyWebService::Observe(nsISupports* aSubject, const char* aTopic,
   nsresult rv = wrapper->GetData(&innerID);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Make a copy of mServers to iterate over, because closing a server
+  // can remove entries from mServers.
+  nsCOMArray<FlyWebPublishedServer> serversCopy;
   for (FlyWebPublishedServer* server : mServers) {
+    serversCopy.AppendElement(server);
+  }
+
+  for (FlyWebPublishedServer* server : serversCopy) {
     if (server->OwnerWindowID() == innerID) {
       server->Close();
     }

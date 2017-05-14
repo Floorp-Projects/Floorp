@@ -34,7 +34,7 @@ AM_Cc["@mozilla.org/observer-service;1"]
      .addObserver(LightweightThemeObserver, "lightweight-theme-styling-update");
 
 
-function run_test() {
+async function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
@@ -80,7 +80,7 @@ function run_test() {
     }]
   }, profileDir);
 
-  startupManager();
+  await promiseStartupManager();
   // Make sure we only register once despite multiple calls
   AddonManager.addInstallListener(InstallListener);
   AddonManager.addAddonListener(AddonListener);
@@ -158,8 +158,9 @@ function run_test_1() {
   });
 }
 
-function check_test_1() {
-  restartManager();
+async function check_test_1() {
+  await promiseRestartManager();
+
   do_check_eq(Services.prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN), "theme2/1.0");
 
   AddonManager.getAddonsByIDs(["theme1@tests.mozilla.org",
@@ -190,12 +191,13 @@ function check_test_1() {
 
 // Removing the active theme should fall back to the default (not ideal in this
 // case since we don't have the default theme installed)
-function run_test_2() {
+async function run_test_2() {
   var dest = profileDir.clone();
   dest.append(do_get_expected_addon_name("theme2@tests.mozilla.org"));
   dest.remove(true);
 
-  restartManager();
+  await promiseRestartManager();
+
   do_check_eq(Services.prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN), "classic/1.0");
 
   AddonManager.getAddonsByIDs(["theme1@tests.mozilla.org",

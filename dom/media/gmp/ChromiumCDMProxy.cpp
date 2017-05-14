@@ -557,7 +557,7 @@ ChromiumCDMProxy::Decrypt(MediaRawData* aSample)
 {
   RefPtr<gmp::ChromiumCDMParent> cdm = GetCDMParent();
   if (!cdm) {
-    return DecryptPromise::CreateAndReject(DecryptResult(AbortedErr, aSample),
+    return DecryptPromise::CreateAndReject(DecryptResult(eme::AbortedErr, aSample),
                                            __func__);
   }
   RefPtr<MediaRawData> sample = aSample;

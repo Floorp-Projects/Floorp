@@ -31,7 +31,6 @@ DIRS += [
     'exthelper',
     'filewatcher',
     'finalizationwitness',
-    'formautofill',
     'find',
     'jsdownloads',
     'jsoncpp/src/lib_json',
