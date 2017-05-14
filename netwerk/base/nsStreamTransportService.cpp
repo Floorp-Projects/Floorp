@@ -559,5 +559,63 @@ nsStreamTransportService::Observe(nsISupports *subject, const char *topic,
   return NS_OK;
 }
 
+class AvailableEvent final : public Runnable
+{
+    public:
+    AvailableEvent(nsIInputStream *stream,
+                   nsIInputAvailableCallback *callback)
+        : mStream(stream)
+        , mCallback(callback)
+        , mDoingCallback(false)
+    {
+        mCallbackTarget = NS_GetCurrentThread();
+    }
+
+    NS_IMETHOD Run() override
+    {
+        if (mDoingCallback) {
+            // pong
+            mCallback->OnInputAvailableComplete(mSize, mResultForCallback);
+            mCallback = nullptr;
+        } else {
+            // ping
+            mResultForCallback = mStream->Available(&mSize);
+            mStream = nullptr;
+            mDoingCallback = true;
+
+            nsCOMPtr<nsIRunnable> event(this); // overly cute
+            mCallbackTarget->Dispatch(event.forget(), NS_DISPATCH_NORMAL);
+            mCallbackTarget = nullptr;
+        }
+        return NS_OK;
+    }
+
+private:
+    virtual ~AvailableEvent() { }
+
+    nsCOMPtr<nsIInputStream> mStream;
+    nsCOMPtr<nsIInputAvailableCallback> mCallback;
+    nsCOMPtr<nsIEventTarget> mCallbackTarget;
+    bool mDoingCallback;
+    uint64_t mSize;
+    nsresult mResultForCallback;
+};
+
+NS_IMETHODIMP
+nsStreamTransportService::InputAvailable(nsIInputStream *stream,
+                                         nsIInputAvailableCallback *callback)
+{
+    nsCOMPtr<nsIThreadPool> pool;
+    {
+        mozilla::MutexAutoLock lock(mShutdownLock);
+        if (mIsShutdown) {
+            return NS_ERROR_NOT_INITIALIZED;
+        }
+        pool = mPool;
+    }
+    nsCOMPtr<nsIRunnable> event = new AvailableEvent(stream, callback);
+    return pool->Dispatch(event.forget(), NS_DISPATCH_NORMAL);
+}
+
 } // namespace net
 } // namespace mozilla

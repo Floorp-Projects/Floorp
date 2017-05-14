@@ -36,7 +36,7 @@ to mochitest command.
   * test_webkit_device_pixel_ratio.html: -webkit-device-pixel-ratio [3]
   * browser_bug453896.js [8]
 * Animation support:
-  * test_animations.html [5]
+  * test_animations.html [1]
   * test_animations_dynamic_changes.html [1]
   * test_bug716226.html [1]
   * OMTA
@@ -51,8 +51,6 @@ to mochitest command.
     * test_animations_reverse.html [1]
   * SMIL Animation
     * test_restyles_in_smil_animation.html [2]
-  * Property parsing and computation:
-    * test_property_syntax_errors.html `animation` [20]
 * CSSOM support:
   * \@import bug 1352968
     * test_bug221428.html [1]
@@ -112,14 +110,10 @@ to mochitest command.
 * Unimplemented CSS properties:
   * font-variant-{alternates,east-asian,ligatures,numeric} properties servo/servo#15957
     * test_property_syntax_errors.html `font-variant-alternates` [2]
-    * test_value_storage.html `font-variant` [176]
+    * test_value_storage.html `font-variant` [167]
     * test_specified_value_serialization.html `bug-721136` [1]
 * font-feature-settings should be a subproperty of font shorthand bug 1363984
-  * test_inherit_storage.html `font-feature-settings` [2]
-  * test_initial_storage.html `font-feature-settings` [1]
-  * test_inherit_computation.html `liga` [8]
-  * test_value_storage.html `font-feature-settings` [40]
-  * test_shorthand_property_getters.html `font shorthand` [1]
+  * test_value_storage.html `font-feature-settings` [16]
 * Unsupported prefixed values
   * moz-prefixed gradient functions bug 1337655
     * test_value_storage.html `-moz-linear-gradient` [322]
@@ -187,8 +181,6 @@ to mochitest command.
 * clamp negative value from calc() servo/servo#15296
   * test_value_storage.html `font-size: calc(` [3]
   * ... `font-size: var(--a)` [3]
-* Negative value should be rejected
-  * test_property_syntax_errors.html `transition-duration`: servo/servo#15343 [20]
 * Quirks mode support
   * hashless color servo/servo#15341
     * test_property_syntax_errors.html `color: 000000` [22]
@@ -203,6 +195,7 @@ to mochitest command.
     * ... `rect(1, ` [2]
   * test_hover_quirk.html: hover quirks bug 1355724 [6]
 * test_pseudoelement_parsing.html: support parsing some pseudo-classes on some pseudo-elements [5]
+* test_pseudoelement_state.html: Unknown failure [8]
 * Unit should be preserved after parsing servo/servo#15346
   * test_units_time.html [1]
 * getComputedStyle style doesn't contain custom properties bug 1336891

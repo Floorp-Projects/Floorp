@@ -54,7 +54,6 @@ involved:
     * `filter.addProgressListener`
     * `ourBrowser.webProgress.addProgressListener`
   * `gBrowser._endRemoveTab`
-    * `gBrowser.tabContainer._fillTrailingGap`
     * `gBrowser._blurTab`
     * `gBrowser._tabFilters.delete`
     * `gBrowser._tabListeners.delete`

@@ -4,14 +4,26 @@
 
 //! A centralized set of stylesheets for a document.
 
+use std::slice;
 use stylearc::Arc;
 use stylesheets::Stylesheet;
 
 /// Entry for a StylesheetSet. We don't bother creating a constructor, because
 /// there's no sensible defaults for the member variables.
 pub struct StylesheetSetEntry {
-    unique_id: u32,
+    unique_id: u64,
     sheet: Arc<Stylesheet>,
+}
+
+/// A iterator over the stylesheets of a list of entries in the StylesheetSet.
+#[derive(Clone)]
+pub struct StylesheetIterator<'a>(slice::Iter<'a, StylesheetSetEntry>);
+
+impl<'a> Iterator for StylesheetIterator<'a> {
+    type Item = &'a Arc<Stylesheet>;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next().map(|entry| &entry.sheet)
+    }
 }
 
 /// The set of stylesheets effective for a given document.
@@ -46,13 +58,13 @@ impl StylesheetSet {
         self.author_style_disabled
     }
 
-    fn remove_stylesheet_if_present(&mut self, unique_id: u32) {
+    fn remove_stylesheet_if_present(&mut self, unique_id: u64) {
         self.entries.retain(|x| x.unique_id != unique_id);
     }
 
     /// Appends a new stylesheet to the current set.
     pub fn append_stylesheet(&mut self, sheet: &Arc<Stylesheet>,
-                             unique_id: u32) {
+                             unique_id: u64) {
         self.remove_stylesheet_if_present(unique_id);
         self.entries.push(StylesheetSetEntry {
             unique_id: unique_id,
@@ -63,7 +75,7 @@ impl StylesheetSet {
 
     /// Prepend a new stylesheet to the current set.
     pub fn prepend_stylesheet(&mut self, sheet: &Arc<Stylesheet>,
-                              unique_id: u32) {
+                              unique_id: u64) {
         self.remove_stylesheet_if_present(unique_id);
         self.entries.insert(0, StylesheetSetEntry {
             unique_id: unique_id,
@@ -75,8 +87,8 @@ impl StylesheetSet {
     /// Insert a given stylesheet before another stylesheet in the document.
     pub fn insert_stylesheet_before(&mut self,
                                     sheet: &Arc<Stylesheet>,
-                                    unique_id: u32,
-                                    before_unique_id: u32) {
+                                    unique_id: u64,
+                                    before_unique_id: u64) {
         self.remove_stylesheet_if_present(unique_id);
         let index = self.entries.iter().position(|x| {
             x.unique_id == before_unique_id
@@ -89,7 +101,7 @@ impl StylesheetSet {
     }
 
     /// Remove a given stylesheet from the set.
-    pub fn remove_stylesheet(&mut self, unique_id: u32) {
+    pub fn remove_stylesheet(&mut self, unique_id: u64) {
         self.remove_stylesheet_if_present(unique_id);
         self.dirty = true;
     }
@@ -108,12 +120,11 @@ impl StylesheetSet {
         self.dirty
     }
 
-    /// Flush the current set, unmarking it as dirty.
-    pub fn flush(&mut self, sheets: &mut Vec<Arc<Stylesheet>>) {
+    /// Flush the current set, unmarking it as dirty, and returns an iterator
+    /// over the new stylesheet list.
+    pub fn flush(&mut self) -> StylesheetIterator {
         self.dirty = false;
-        for entry in &self.entries {
-            sheets.push(entry.sheet.clone())
-        }
+        StylesheetIterator(self.entries.iter())
     }
 
     /// Mark the stylesheets as dirty, because something external may have

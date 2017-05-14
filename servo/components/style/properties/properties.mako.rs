@@ -29,7 +29,7 @@ use font_metrics::FontMetricsProvider;
 #[cfg(feature = "servo")] use logical_geometry::{LogicalMargin, PhysicalSide};
 use logical_geometry::WritingMode;
 use media_queries::Device;
-use parser::{LengthParsingMode, Parse, ParserContext};
+use parser::{PARSING_MODE_DEFAULT, Parse, ParserContext};
 use properties::animated_properties::TransitionProperty;
 #[cfg(feature = "servo")] use servo_config::prefs::PREFS;
 use shared_lock::StylesheetGuards;
@@ -251,6 +251,14 @@ impl LonghandIdSet {
         self.storage[bit / 32] &= !(1 << (bit % 32));
     }
 
+    /// Clear all bits
+    #[inline]
+    pub fn clear(&mut self) {
+        for cell in &mut self.storage {
+            *cell = 0
+        }
+    }
+
     /// Set the corresponding bit of TransitionProperty.
     /// This function will panic if TransitionProperty::All is given.
     pub fn set_transition_property_bit(&mut self, property: &TransitionProperty) {
@@ -379,7 +387,7 @@ impl PropertyDeclarationIdSet {
                                                      url_data,
                                                      error_reporter,
                                                      None,
-                                                     LengthParsingMode::Default,
+                                                     PARSING_MODE_DEFAULT,
                                                      quirks_mode);
                     Parser::new(&css).parse_entirely(|input| {
                         match from_shorthand {

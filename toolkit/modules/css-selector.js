@@ -87,7 +87,7 @@ const findCssSelector = function(ele) {
         return selector;
       }
       // Maybe it's unique with a tag name?
-      selector = tagName + selector;
+      selector = cssEscape(tagName) + selector;
       matches = document.querySelectorAll(selector);
       if (matches.length === 1) {
         return selector;
@@ -107,7 +107,7 @@ const findCssSelector = function(ele) {
   if (ele.parentNode !== document) {
     index = positionInNodeList(ele, ele.parentNode.children) + 1;
     selector = findCssSelector(ele.parentNode) + " > " +
-      tagName + ":nth-child(" + index + ")";
+      cssEscape(tagName) + ":nth-child(" + index + ")";
   }
 
   return selector;

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <title>
+    Test that dynamic tweaks to 'outline-offset' are reflected in the rendering.
+  </title>
+  <style>
+    #tweakMe {
+      height: 100px;
+      width: 100px;
+      background: gray;
+      outline: solid 6px black;
+      outline-offset: -10px;
+    }
+  </style>
+  <script>
+window.addEventListener("MozReftestInvalidate", function() {
+  tweakMe.style.outlineOffset = "-16px";
+  document.documentElement.removeAttribute("class");
+});
+  </script>
+</head>
+<body>
+  <div id="tweakMe"></div>
+</body>
+</html>

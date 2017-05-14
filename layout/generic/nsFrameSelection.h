@@ -45,6 +45,24 @@ struct SelectionDetails
   mozilla::UniquePtr<SelectionDetails> mNext;
 };
 
+struct SelectionCustomColors
+{
+#ifdef NS_BUILD_REFCNT_LOGGING
+  SelectionCustomColors()
+  {
+    MOZ_COUNT_CTOR(SelectionCustomColors);
+  }
+  ~SelectionCustomColors()
+  {
+    MOZ_COUNT_DTOR(SelectionCustomColors);
+  }
+#endif
+  mozilla::Maybe<nscolor> mForegroundColor;
+  mozilla::Maybe<nscolor> mBackgroundColor;
+  mozilla::Maybe<nscolor> mAltForegroundColor;
+  mozilla::Maybe<nscolor> mAltBackgroundColor;
+};
+
 class nsIPresShell;
 
 /** PeekOffsetStruct is used to group various arguments (both input and output)
