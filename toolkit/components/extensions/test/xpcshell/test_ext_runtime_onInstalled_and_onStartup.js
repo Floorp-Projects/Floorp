@@ -57,11 +57,12 @@ function background() {
   });
 }
 
-async function expectEvents(extension, {onStartupFired, onInstalledFired, onInstalledReason, onInstalledPrevious}) {
+async function expectEvents(extension, {onStartupFired, onInstalledFired, onInstalledReason, onInstalledTemporary, onInstalledPrevious}) {
   extension.sendMessage("get-on-installed-details");
   let details = await extension.awaitMessage("on-installed-details");
   if (onInstalledFired) {
     equal(details.reason, onInstalledReason, "runtime.onInstalled fired with the correct reason");
+    equal(details.temporary, onInstalledTemporary, "runtime.onInstalled fired with the correct temporary flag");
     if (onInstalledPrevious) {
       equal(details.previousVersion, onInstalledPrevious, "runtime.onInstalled after update with correct previousVersion");
     }
@@ -137,6 +138,7 @@ add_task(async function test_should_fire_on_addon_update() {
   await expectEvents(extension, {
     onStartupFired: false,
     onInstalledFired: true,
+    onInstalledTemporary: false,
     onInstalledReason: "install",
   });
 
@@ -159,6 +161,7 @@ add_task(async function test_should_fire_on_addon_update() {
   await expectEvents(extension, {
     onStartupFired: false,
     onInstalledFired: true,
+    onInstalledTemporary: false,
     onInstalledReason: "update",
     onInstalledPrevious: "1.0",
   });
@@ -191,6 +194,7 @@ add_task(async function test_should_fire_on_browser_update() {
   await expectEvents(extension, {
     onStartupFired: false,
     onInstalledFired: true,
+    onInstalledTemporary: false,
     onInstalledReason: "install",
   });
 
@@ -210,6 +214,7 @@ add_task(async function test_should_fire_on_browser_update() {
   await expectEvents(extension, {
     onStartupFired: true,
     onInstalledFired: true,
+    onInstalledTemporary: false,
     onInstalledReason: "browser_update",
   });
 
@@ -229,6 +234,7 @@ add_task(async function test_should_fire_on_browser_update() {
   await expectEvents(extension, {
     onStartupFired: true,
     onInstalledFired: true,
+    onInstalledTemporary: false,
     onInstalledReason: "browser_update",
   });
 
@@ -260,6 +266,7 @@ add_task(async function test_should_not_fire_on_reload() {
   await expectEvents(extension, {
     onStartupFired: false,
     onInstalledFired: true,
+    onInstalledTemporary: false,
     onInstalledReason: "install",
   });
 
@@ -299,6 +306,7 @@ add_task(async function test_should_not_fire_on_restart() {
   await expectEvents(extension, {
     onStartupFired: false,
     onInstalledFired: true,
+    onInstalledTemporary: false,
     onInstalledReason: "install",
   });
 
@@ -314,5 +322,36 @@ add_task(async function test_should_not_fire_on_restart() {
   });
 
   await extension.markUnloaded();
+  await promiseShutdownManager();
+});
+
+add_task(async function test_temporary_installation() {
+  const EXTENSION_ID = "test_runtime_on_installed_addon_temporary@tests.mozilla.org";
+
+  await promiseStartupManager();
+
+  let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
+    manifest: {
+      "version": "1.0",
+      "applications": {
+        "gecko": {
+          "id": EXTENSION_ID,
+        },
+      },
+    },
+    background,
+  });
+
+  await extension.startup();
+
+  await expectEvents(extension, {
+    onStartupFired: false,
+    onInstalledFired: true,
+    onInstalledReason: "install",
+    onInstalledTemporary: true,
+  });
+
+  await extension.unload();
   await promiseShutdownManager();
 });
