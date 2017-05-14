@@ -1346,7 +1346,7 @@ let IconDetails = {
 let StartupCache = {
   DB_NAME: "ExtensionStartupCache",
 
-  STORE_NAMES: Object.freeze(["locales", "manifests", "schemas"]),
+  STORE_NAMES: Object.freeze(["locales", "manifests", "permissions", "schemas"]),
 
   get file() {
     return FileUtils.getFile("ProfLD", ["startupCache", "webext.sc.lz4"]);
@@ -1397,6 +1397,7 @@ let StartupCache = {
     return Promise.all([
       this.locales.delete(id),
       this.manifests.delete(id),
+      this.permissions.delete(id),
     ]).catch(e => {
       // Ignore the error. It happens when we try to flush the add-on
       // data after the AddonManager has flushed the entire startup cache.
