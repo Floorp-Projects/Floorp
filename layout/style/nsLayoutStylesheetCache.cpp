@@ -995,7 +995,8 @@ nsLayoutStylesheetCache::BuildPreferenceSheet(RefPtr<StyleSheet>* aSheet,
     ServoStyleSheet* servoSheet = sheet->AsServo();
     // NB: The pref sheet never has @import rules.
     nsresult rv =
-      servoSheet->ParseSheet(nullptr, sheetText, uri, uri, nullptr, 0);
+      servoSheet->ParseSheet(nullptr, sheetText, uri, uri, nullptr, 0,
+                             eCompatibility_FullStandards);
     // Parsing the about:PreferenceStyleSheet URI can only fail on OOM. If we
     // are OOM before we parsed any documents we might as well abort.
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
