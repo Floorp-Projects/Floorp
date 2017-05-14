@@ -43,6 +43,8 @@ toolkit.jar:
    skin/classic/global/media/imagedoc-lightnoise.png       (global/media/imagedoc-lightnoise.png)
    skin/classic/global/media/imagedoc-darknoise.png        (global/media/imagedoc-darknoise.png)
 
+   skin/classic/global/icons/Error.png                     (global/icons/Error.png)
+
 % skin mozapps classic/1.0 %skin/classic/mozapps/
    skin/classic/mozapps/plugins/pluginProblem.css          (mozapps/plugins/pluginProblem.css)
 
