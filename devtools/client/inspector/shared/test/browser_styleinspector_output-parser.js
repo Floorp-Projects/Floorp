@@ -162,13 +162,17 @@ const TEST_DATA = [
   },
   {
     name: "background",
-    value: "radial-gradient(circle closest-side at center, orange 0%, red 100%)",
+    value: "-moz-radial-gradient(center 45deg, circle closest-side, " +
+           "orange 0%, red 100%)",
     test: fragment => {
-      is(countAll(fragment), 4);
+      is(countAll(fragment), 6);
       let colorSwatches = fragment.querySelectorAll("." + COLOR_CLASS);
       is(colorSwatches.length, 2);
       is(colorSwatches[0].textContent, "orange");
       is(colorSwatches[1].textContent, "red");
+      let angleSwatches = fragment.querySelectorAll("." + ANGLE_CLASS);
+      is(angleSwatches.length, 1);
+      is(angleSwatches[0].textContent, "45deg");
     }
   },
   {
