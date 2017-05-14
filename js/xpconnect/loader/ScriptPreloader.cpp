@@ -604,39 +604,41 @@ ScriptPreloader::WriteCache()
         NS_TRY(cacheFile->Remove(false));
     }
 
-    AutoFDClose fd;
-    NS_TRY(cacheFile->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE, 0644, &fd.rwget()));
+    {
+        AutoFDClose fd;
+        NS_TRY(cacheFile->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE, 0644, &fd.rwget()));
 
-    nsTArray<CachedScript*> scripts;
-    for (auto& script : IterHash(mScripts, Match<ScriptStatus::Saved>())) {
-        scripts.AppendElement(script);
-    }
+        nsTArray<CachedScript*> scripts;
+        for (auto& script : IterHash(mScripts, Match<ScriptStatus::Saved>())) {
+            scripts.AppendElement(script);
+        }
 
-    // Sort scripts by load time, with async loaded scripts before sync scripts.
-    // Since async scripts are always loaded immediately at startup, it helps to
-    // have them stored contiguously.
-    scripts.Sort(CachedScript::Comparator());
+        // Sort scripts by load time, with async loaded scripts before sync scripts.
+        // Since async scripts are always loaded immediately at startup, it helps to
+        // have them stored contiguously.
+        scripts.Sort(CachedScript::Comparator());
 
-    OutputBuffer buf;
-    size_t offset = 0;
-    for (auto script : scripts) {
-        script->mOffset = offset;
-        script->Code(buf);
+        OutputBuffer buf;
+        size_t offset = 0;
+        for (auto script : scripts) {
+            script->mOffset = offset;
+            script->Code(buf);
 
-        offset += script->mSize;
-    }
+            offset += script->mSize;
+        }
 
-    uint8_t headerSize[4];
-    LittleEndian::writeUint32(headerSize, buf.cursor());
+        uint8_t headerSize[4];
+        LittleEndian::writeUint32(headerSize, buf.cursor());
 
-    MOZ_TRY(Write(fd, MAGIC, sizeof(MAGIC)));
-    MOZ_TRY(Write(fd, headerSize, sizeof(headerSize)));
-    MOZ_TRY(Write(fd, buf.Get(), buf.cursor()));
-    for (auto script : scripts) {
-        MOZ_TRY(Write(fd, script->Range().begin().get(), script->mSize));
+        MOZ_TRY(Write(fd, MAGIC, sizeof(MAGIC)));
+        MOZ_TRY(Write(fd, headerSize, sizeof(headerSize)));
+        MOZ_TRY(Write(fd, buf.Get(), buf.cursor()));
+        for (auto script : scripts) {
+            MOZ_TRY(Write(fd, script->Range().begin().get(), script->mSize));
 
-        if (script->mScript) {
-            script->FreeData();
+            if (script->mScript) {
+                script->FreeData();
+            }
         }
     }
 
