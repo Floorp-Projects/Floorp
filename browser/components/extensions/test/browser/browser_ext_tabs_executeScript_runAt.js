@@ -52,10 +52,6 @@ add_task(async function testExecuteScript() {
           // races.
           browser.tabs.executeScript({
             code: "document.readyState",
-            // Testing default `runAt`.
-          }),
-          browser.tabs.executeScript({
-            code: "document.readyState",
             runAt: "document_idle",
           }),
           browser.tabs.executeScript({
@@ -81,8 +77,7 @@ add_task(async function testExecuteScript() {
         // Otherwise, try again.
         success = (states[0] == "loading" &&
                    states[1] == "interactive" &&
-                   states[2] == "complete" &&
-                   states[3] == "complete");
+                   states[2] == "complete");
       }
 
       browser.test.assertTrue(success, "Got the earliest expected states at least once");
