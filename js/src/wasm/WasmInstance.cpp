@@ -758,6 +758,28 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
     return true;
 }
 
+bool
+Instance::getFuncName(uint32_t funcIndex, UTF8Bytes* name) const
+{
+    return metadata().getFuncName(debug_->maybeBytecode(), funcIndex, name);
+}
+
+JSAtom*
+Instance::getFuncAtom(JSContext* cx, uint32_t funcIndex) const
+{
+    UTF8Bytes name;
+    if (!getFuncName(funcIndex, &name))
+        return nullptr;
+
+    return AtomizeUTF8Chars(cx, name.begin(), name.length());
+}
+
+void
+Instance::ensureProfilingLabels(bool profilingEnabled) const
+{
+    return code_->ensureProfilingLabels(debug_->maybeBytecode(), profilingEnabled);
+}
+
 void
 Instance::onMovingGrowMemory(uint8_t* prevMemoryBase)
 {
@@ -808,12 +830,12 @@ Instance::addSizeOfMisc(MallocSizeOf mallocSizeOf,
                         size_t* data) const
 {
     *data += mallocSizeOf(this) + globals_->sizeOfMisc(mallocSizeOf);
-    debug_->addSizeOfMisc(mallocSizeOf, seenMetadata, seenBytes, seenCode, code, data);
-
-    code_->addSizeOfMiscIfNotSeen(mallocSizeOf, seenMetadata, seenBytes, seenCode, code, data);
 
     for (const SharedTable& table : tables_)
          *data += table->sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenTables);
+
+    debug_->addSizeOfMisc(mallocSizeOf, seenMetadata, seenBytes, seenCode, code, data);
+    code_->addSizeOfMiscIfNotSeen(mallocSizeOf, seenMetadata, seenCode, code, data);
 }
 
 /* static */ UniqueGlobalSegment

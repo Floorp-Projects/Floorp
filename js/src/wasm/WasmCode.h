@@ -399,15 +399,12 @@ class Code : public ShareableBase<Code>
 {
     UniqueConstCodeSegment              segment_;
     SharedMetadata                      metadata_;
-    SharedBytes                         maybeBytecode_;
     ExclusiveData<CacheableCharsVector> profilingLabels_;
 
   public:
     Code();
 
-    Code(UniqueConstCodeSegment segment,
-         const Metadata& metadata,
-         const ShareableBytes* maybeBytecode);
+    Code(UniqueConstCodeSegment segment, const Metadata& metadata);
 
     const CodeSegment& segment() const { return *segment_; }
     const Metadata& metadata() const { return *metadata_; }
@@ -418,23 +415,16 @@ class Code : public ShareableBase<Code>
     const CodeRange* lookupRange(void* pc) const;
     const MemoryAccess* lookupMemoryAccess(void* pc) const;
 
-    // Return the name associated with a given function index, or generate one
-    // if none was given by the module.
-
-    bool getFuncName(uint32_t funcIndex, UTF8Bytes* name) const;
-    JSAtom* getFuncAtom(JSContext* cx, uint32_t funcIndex) const;
-
     // To save memory, profilingLabels_ are generated lazily when profiling mode
     // is enabled.
 
-    void ensureProfilingLabels(bool profilingEnabled) const;
+    void ensureProfilingLabels(const Bytes* maybeBytecode, bool profilingEnabled) const;
     const char* profilingLabel(uint32_t funcIndex) const;
 
     // about:memory reporting:
 
     void addSizeOfMiscIfNotSeen(MallocSizeOf mallocSizeOf,
                                 Metadata::SeenSet* seenMetadata,
-                                ShareableBytes::SeenSet* seenBytes,
                                 Code::SeenSet* seenCode,
                                 size_t* code,
                                 size_t* data) const;

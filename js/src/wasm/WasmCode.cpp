@@ -572,15 +572,11 @@ Metadata::getFuncName(const Bytes* maybeBytecode, uint32_t funcIndex, UTF8Bytes*
            name->append(afterFuncIndex, strlen(afterFuncIndex));
 }
 
-Code::Code(UniqueConstCodeSegment segment,
-           const Metadata& metadata,
-           const ShareableBytes* maybeBytecode)
+Code::Code(UniqueConstCodeSegment segment, const Metadata& metadata)
   : segment_(Move(segment)),
     metadata_(&metadata),
-    maybeBytecode_(maybeBytecode),
     profilingLabels_(mutexid::WasmCodeProfilingLabels, CacheableCharsVector())
 {
-    MOZ_ASSERT_IF(metadata_->debugEnabled, maybeBytecode);
 }
 
 Code::Code()
@@ -638,13 +634,8 @@ Code::deserialize(const uint8_t* cursor, const SharedBytes& bytecode, const Link
     if (!cursor)
         return nullptr;
 
-    const ShareableBytes* maybeBytecode = nullptr;
-    if (metadata->debugEnabled || !metadata->funcNames.empty())
-        maybeBytecode = bytecode.get();
-
     segment_ = UniqueConstCodeSegment(codeSegment.release());
     metadata_ = metadata;
-    maybeBytecode_ = maybeBytecode;
 
     return cursor;
 }
@@ -695,29 +686,12 @@ Code::lookupMemoryAccess(void* pc) const
     return &metadata().memoryAccesses[match];
 }
 
-bool
-Code::getFuncName(uint32_t funcIndex, UTF8Bytes* name) const
-{
-    const Bytes* maybeBytecode = maybeBytecode_ ? &maybeBytecode_.get()->bytes : nullptr;
-    return metadata().getFuncName(maybeBytecode, funcIndex, name);
-}
-
-JSAtom*
-Code::getFuncAtom(JSContext* cx, uint32_t funcIndex) const
-{
-    UTF8Bytes name;
-    if (!getFuncName(funcIndex, &name))
-        return nullptr;
-
-    return AtomizeUTF8Chars(cx, name.begin(), name.length());
-}
-
 // When enabled, generate profiling labels for every name in funcNames_ that is
 // the name of some Function CodeRange. This involves malloc() so do it now
 // since, once we start sampling, we'll be in a signal-handing context where we
 // cannot malloc.
 void
-Code::ensureProfilingLabels(bool profilingEnabled) const
+Code::ensureProfilingLabels(const Bytes* maybeBytecode, bool profilingEnabled) const
 {
     auto labels = profilingLabels_.lock();
 
@@ -738,7 +712,9 @@ Code::ensureProfilingLabels(bool profilingEnabled) const
         MOZ_ASSERT(bytecodeStr);
 
         UTF8Bytes name;
-        if (!getFuncName(codeRange.funcIndex(), &name) || !name.append(" (", 2))
+        if (!metadata_->getFuncName(maybeBytecode, codeRange.funcIndex(), &name))
+            return;
+        if (!name.append(" (", 2))
             return;
 
         if (const char* filename = metadata().filename.get()) {
@@ -782,7 +758,6 @@ Code::profilingLabel(uint32_t funcIndex) const
 void
 Code::addSizeOfMiscIfNotSeen(MallocSizeOf mallocSizeOf,
                              Metadata::SeenSet* seenMetadata,
-                             ShareableBytes::SeenSet* seenBytes,
                              Code::SeenSet* seenCode,
                              size_t* code,
                              size_t* data) const
@@ -798,7 +773,4 @@ Code::addSizeOfMiscIfNotSeen(MallocSizeOf mallocSizeOf,
              profilingLabels_.lock()->sizeOfExcludingThis(mallocSizeOf);
 
     segment_->addSizeOfMisc(mallocSizeOf, code, data);
-
-    if (maybeBytecode_)
-        *data += maybeBytecode_->sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenBytes);
 }
