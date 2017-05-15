@@ -1070,20 +1070,17 @@ ArraySpeciesCreate(JSContext* cx, HandleObject origArray, uint64_t length, Mutab
 {
     MOZ_ASSERT(length < DOUBLE_INTEGRAL_PRECISION_LIMIT);
 
-    RootedId createId(cx, NameToId(cx->names().ArraySpeciesCreate));
-    RootedFunction create(cx, JS::GetSelfHostedFunction(cx, "ArraySpeciesCreate", createId, 2));
-    if (!create)
-        return false;
-
     FixedInvokeArgs<2> args(cx);
 
     args[0].setObject(*origArray);
     args[1].set(NumberValue(length));
 
-    RootedValue callee(cx, ObjectValue(*create));
     RootedValue rval(cx);
-    if (!Call(cx, callee, UndefinedHandleValue, args, &rval))
+    if (!CallSelfHostedFunction(cx, cx->names().ArraySpeciesCreate, UndefinedHandleValue, args,
+                                &rval))
+    {
         return false;
+    }
 
     MOZ_ASSERT(rval.isObject());
     arr.set(&rval.toObject());
