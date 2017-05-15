@@ -1,5 +1,6 @@
 from itertools import chain
 import os
+import sys
 
 from mozharness.base.log import INFO
 
@@ -56,7 +57,7 @@ class BalrogMixin(object):
         self.generate_balrog_props(props_path)
 
         cmd = [
-            self.query_exe("python"),
+            sys.executable,
             submitter_script,
             "--build-properties", props_path,
             "-t", release_type,
@@ -90,7 +91,7 @@ class BalrogMixin(object):
 
     def submit_balrog_release_pusher(self, dirs):
         product = self.buildbot_config["properties"]["product"]
-        cmd = [self.query_exe("python"), os.path.join(os.path.join(dirs['abs_tools_dir'], "scripts/updates/balrog-release-pusher.py"))]
+        cmd = [sys.executable, os.path.join(os.path.join(dirs['abs_tools_dir'], "scripts/updates/balrog-release-pusher.py"))]
         cmd.extend(["--build-properties", os.path.join(dirs["base_work_dir"], "balrog_props.json")])
         cmd.extend(["--buildbot-configs", "https://hg.mozilla.org/build/buildbot-configs"])
         cmd.extend(["--release-config", os.path.join(dirs['build_dir'], self.config.get("release_config_file"))])
@@ -130,7 +131,7 @@ class BalrogMixin(object):
         )
 
         cmd = [
-            self.query_exe("python"),
+            sys.executable,
             submitter_script,
             "--credentials-file", credentials_file,
             "--api-root", c["balrog_api_root"],
