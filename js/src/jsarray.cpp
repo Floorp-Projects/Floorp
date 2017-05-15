@@ -2586,71 +2586,144 @@ js::array_unshift(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+enum class ArrayAccess {
+    Read, Write
+};
+
 /*
- * Returns true if this is a dense or unboxed array whose |count| properties
- * starting from |startingIndex| may be accessed (get, set, delete) directly
- * through its contiguous vector of elements without fear of getters, setters,
- * etc. along the prototype chain, or of enumerators requiring notification of
+ * Returns true if this is a dense or unboxed array whose properties ending at
+ * |endIndex| (exclusive) may be accessed (get, set, delete) directly through
+ * its contiguous vector of elements without fear of getters, setters, etc.
+ * along the prototype chain, or of enumerators requiring notification of
  * modifications.
  */
+template <ArrayAccess Access>
 static bool
-CanOptimizeForDenseStorage(HandleObject arr, uint64_t startingIndex, uint64_t count, JSContext* cx)
+CanOptimizeForDenseStorage(HandleObject arr, uint64_t endIndex, JSContext* cx)
 {
-    MOZ_ASSERT(startingIndex < DOUBLE_INTEGRAL_PRECISION_LIMIT);
-    MOZ_ASSERT(count < DOUBLE_INTEGRAL_PRECISION_LIMIT);
-
     /* If the desired properties overflow dense storage, we can't optimize. */
-    if (startingIndex + count > UINT32_MAX)
+    if (endIndex > UINT32_MAX)
         return false;
+
+    if (Access == ArrayAccess::Read) {
+        /*
+         * Dense storage read access is possible for any packed array as long
+         * as we only access properties within the initialized length. In all
+         * other cases we need to ensure there are no other indexed properties
+         * on this object or on the prototype chain. Callers are required to
+         * clamp the read length, so it doesn't exceed the initialized length.
+         */
+        return (IsPackedArray(arr) && endIndex <= GetAnyBoxedOrUnboxedInitializedLength(arr)) ||
+               !ObjectMayHaveExtraIndexedProperties(arr);
+    }
 
     /* There's no optimizing possible if it's not an array. */
     if (!IsBoxedOrUnboxedArray(arr))
         return false;
 
-    /* If it's a frozen array, always pick the slow path */
-    if (arr->is<ArrayObject>() && arr->as<ArrayObject>().denseElementsAreFrozen())
-        return false;
+    /* If the length is non-writable, always pick the slow path */
+    if (arr->is<ArrayObject>()) {
+        if (!arr->as<ArrayObject>().lengthIsWritable())
+            return false;
+
+        MOZ_ASSERT(!arr->as<ArrayObject>().denseElementsAreFrozen(),
+                   "writable length implies elements are not frozen");
+    }
 
     /* Also pick the slow path if the object is being iterated over. */
     if (MaybeInIteration(arr, cx))
         return false;
 
+    /* Or we attempt to write to indices outside the initialized length. */
+    if (endIndex > GetAnyBoxedOrUnboxedInitializedLength(arr))
+        return false;
+
     /*
      * Now watch out for getters and setters along the prototype chain or in
-     * other indexed properties on the object.  (Note that non-writable length
-     * is subsumed by the initializedLength comparison.)
+     * other indexed properties on the object. Packed arrays don't have any
+     * other indexed properties by definition.
      */
-    return !ObjectMayHaveExtraIndexedProperties(arr) &&
-           startingIndex + count <= GetAnyBoxedOrUnboxedInitializedLength(arr);
+    return IsPackedArray(arr) || !ObjectMayHaveExtraIndexedProperties(arr);
 }
 
-static inline bool
-ArraySpliceCopy(JSContext* cx, HandleObject arr, HandleObject obj,
-                uint64_t actualStart, uint64_t actualDeleteCount)
+static JSObject*
+CopyDenseArrayElements(JSContext* cx, HandleObject obj, uint32_t begin, uint32_t count)
 {
-    // Steps 10, 11, 11.d.
-    RootedValue fromValue(cx);
-    for (uint64_t k = 0; k < actualDeleteCount; k++) {
-        // Step 11.a (implicit).
+    size_t initlen = GetAnyBoxedOrUnboxedInitializedLength(obj);
+    MOZ_ASSERT(initlen <= UINT32_MAX, "initialized length shouldn't exceed UINT32_MAX");
+    uint32_t newlength = 0;
+    if (initlen > begin)
+        newlength = Min<uint32_t>(initlen - begin, count);
 
-        if (!CheckForInterrupt(cx))
-            return false;
+    JSObject* narr = NewFullyAllocatedArrayTryReuseGroup(cx, obj, newlength);
+    if (!narr)
+        return nullptr;
+    SetAnyBoxedOrUnboxedArrayLength(cx, narr, count);
 
-        // Steps 11.b, 11.c.i.
-        bool hole;
-        if (!HasAndGetElement(cx, obj, actualStart + k, &hole, &fromValue))
-            return false;
+    if (newlength) {
+        DebugOnly<DenseElementResult> result =
+            CopyAnyBoxedOrUnboxedDenseElements(cx, narr, obj, 0, begin, newlength);
+        MOZ_ASSERT(result.value == DenseElementResult::Success);
+    }
+    return narr;
+}
 
-        // Step 11.c.
-        if (!hole) {
-            // Step 11.c.ii.
-            if (!DefineArrayElement(cx, arr, k, fromValue))
+static bool
+CopyArrayElements(JSContext* cx, HandleObject obj, uint64_t begin, uint64_t count,
+                  HandleObject result)
+{
+    MOZ_ASSERT(IsBoxedOrUnboxedArray(result), "result is a newly allocated array object");
+    MOZ_ASSERT(GetAnyBoxedOrUnboxedArrayLength(result) == count);
+
+    uint64_t startIndex = 0;
+    RootedValue value(cx);
+
+    // Use dense storage for new indexed properties where possible.
+    if (result->is<ArrayObject>()) {
+        HandleArrayObject nresult = result.as<ArrayObject>();
+
+        uint32_t index = 0;
+        uint32_t limit = Min<uint32_t>(count, JSID_INT_MAX);
+        for (; index < limit; index++) {
+            bool hole;
+            if (!CheckForInterrupt(cx) ||
+                !HasAndGetElement(cx, obj, begin + index, &hole, &value))
+            {
                 return false;
+            }
+
+            if (!hole) {
+                DenseElementResult edResult = nresult->ensureDenseElements(cx, index, 1);
+                if (edResult != DenseElementResult::Success) {
+                    if (edResult == DenseElementResult::Failure)
+                        return false;
+
+                    MOZ_ASSERT(edResult == DenseElementResult::Incomplete);
+                    if (!DefineElement(cx, nresult, index, value))
+                        return false;
+
+                    break;
+                }
+                nresult->setDenseElementWithType(cx, index, value);
+            }
         }
+
+        startIndex = index + 1;
     }
 
-    // Step 12.
-    return SetLengthProperty(cx, arr, actualDeleteCount);
+    // Copy any remaining elements.
+    for (uint64_t i = startIndex; i < count; i++) {
+        bool hole;
+        if (!CheckForInterrupt(cx) ||
+            !HasAndGetElement(cx, obj, begin + i, &hole, &value))
+        {
+            return false;
+        }
+
+        if (!hole && !DefineArrayElement(cx, result, i, value))
+            return false;
+    }
+    return true;
 }
 
 static bool
@@ -2717,21 +2790,14 @@ array_splice_impl(JSContext* cx, unsigned argc, Value* vp, bool returnValueIsUse
         }
         uint32_t count = uint32_t(actualDeleteCount);
 
-        if (CanOptimizeForDenseStorage(obj, actualStart, count, cx)) {
+        if (CanOptimizeForDenseStorage<ArrayAccess::Read>(obj, actualStart + count, cx)) {
             MOZ_ASSERT(actualStart <= UINT32_MAX,
                        "if actualStart + count <= UINT32_MAX, then actualStart <= UINT32_MAX");
             if (returnValueIsUsed) {
-                /* Step 9. */
-                arr = NewFullyAllocatedArrayTryReuseGroup(cx, obj, count);
+                /* Steps 9-12. */
+                arr = CopyDenseArrayElements(cx, obj, uint32_t(actualStart), count);
                 if (!arr)
                     return false;
-
-                /* Steps 10-11. */
-                DebugOnly<DenseElementResult> result =
-                    CopyAnyBoxedOrUnboxedDenseElements(cx, arr, obj, 0, uint32_t(actualStart), count);
-                MOZ_ASSERT(result.value == DenseElementResult::Success);
-
-                /* Step 12 (implicit). */
             }
         } else {
             /* Step 9. */
@@ -2739,30 +2805,53 @@ array_splice_impl(JSContext* cx, unsigned argc, Value* vp, bool returnValueIsUse
             if (!arr)
                 return false;
 
-            /* Steps 10-12. */
-            if (!ArraySpliceCopy(cx, arr, obj, actualStart, count))
+            /* Steps 10-11. */
+            if (!CopyArrayElements(cx, obj, actualStart, count, arr))
                 return false;
+
+            /* Step 12 (implicit). */
         }
     } else {
         /* Steps 9. */
         if (!ArraySpeciesCreate(cx, obj, actualDeleteCount, &arr))
             return false;
 
-        /* Steps 10-12. */
-        if (!ArraySpliceCopy(cx, arr, obj, actualStart, actualDeleteCount))
+        /* Steps 10, 11, 11.d. */
+        RootedValue fromValue(cx);
+        for (uint64_t k = 0; k < actualDeleteCount; k++) {
+            /* Step 11.a (implicit). */
+
+            if (!CheckForInterrupt(cx))
+                return false;
+
+            /* Steps 11.b, 11.c.i. */
+            bool hole;
+            if (!HasAndGetElement(cx, obj, actualStart + k, &hole, &fromValue))
+                return false;
+
+            /* Step 11.c. */
+            if (!hole) {
+                /* Step 11.c.ii. */
+                if (!DefineArrayElement(cx, arr, k, fromValue))
+                    return false;
+            }
+        }
+
+        /* Step 12. */
+        if (!SetLengthProperty(cx, arr, actualDeleteCount))
             return false;
     }
 
     /* Step 14. */
     uint32_t itemCount = (args.length() >= 2) ? (args.length() - 2) : 0;
+    uint64_t finalLength = len - actualDeleteCount + itemCount;
 
     if (itemCount < actualDeleteCount) {
         /* Step 15: the array is being shrunk. */
         uint64_t sourceIndex = actualStart + actualDeleteCount;
         uint64_t targetIndex = actualStart + itemCount;
-        uint64_t finalLength = len - actualDeleteCount + itemCount;
 
-        if (CanOptimizeForDenseStorage(obj, 0, len, cx)) {
+        if (CanOptimizeForDenseStorage<ArrayAccess::Write>(obj, len, cx)) {
             MOZ_ASSERT(sourceIndex <= len && targetIndex <= len && len <= UINT32_MAX,
                        "sourceIndex and targetIndex are uint32 array indices");
             MOZ_ASSERT(finalLength < len, "finalLength is strictly less than len");
@@ -2861,7 +2950,7 @@ array_splice_impl(JSContext* cx, unsigned argc, Value* vp, bool returnValueIsUse
             }
         }
 
-        if (CanOptimizeForDenseStorage(obj, len, itemCount - deleteCount, cx)) {
+        if (CanOptimizeForDenseStorage<ArrayAccess::Write>(obj, finalLength, cx)) {
             MOZ_ASSERT((actualStart + actualDeleteCount) <= len && len <= UINT32_MAX,
                        "start and deleteCount are uint32 array indices");
             MOZ_ASSERT(actualStart + itemCount <= UINT32_MAX,
@@ -2879,7 +2968,7 @@ array_splice_impl(JSContext* cx, unsigned argc, Value* vp, bool returnValueIsUse
                 return false;
 
             /* Steps 16.a-b. */
-            SetAnyBoxedOrUnboxedInitializedLength(cx, obj, length + itemCount - deleteCount);
+            SetAnyBoxedOrUnboxedInitializedLength(cx, obj, uint32_t(finalLength));
         } else {
             RootedValue fromValue(cx);
             for (uint64_t k = len - actualDeleteCount; k > actualStart; k--) {
@@ -2919,7 +3008,6 @@ array_splice_impl(JSContext* cx, unsigned argc, Value* vp, bool returnValueIsUse
         return false;
 
     /* Step 19. */
-    uint64_t finalLength = len - actualDeleteCount + itemCount;
     if (!SetLengthProperty(cx, obj, finalLength))
         return false;
 
@@ -3046,23 +3134,6 @@ GetIndexedPropertiesInRange(JSContext* cx, HandleObject obj, uint64_t begin, uin
 }
 
 static bool
-SliceSlowly(JSContext* cx, HandleObject obj, uint64_t begin, uint64_t end, HandleObject result)
-{
-    RootedValue value(cx);
-    for (uint64_t slot = begin; slot < end; slot++) {
-        bool hole;
-        if (!CheckForInterrupt(cx) ||
-            !HasAndGetElement(cx, obj, slot, &hole, &value))
-        {
-            return false;
-        }
-        if (!hole && !DefineArrayElement(cx, result, slot - begin, value))
-            return false;
-    }
-    return true;
-}
-
-static bool
 SliceSparse(JSContext* cx, HandleObject obj, uint64_t begin, uint64_t end, HandleObject result)
 {
     MOZ_ASSERT(begin <= end);
@@ -3073,7 +3144,7 @@ SliceSparse(JSContext* cx, HandleObject obj, uint64_t begin, uint64_t end, Handl
         return false;
 
     if (!success)
-        return SliceSlowly(cx, obj, begin, end, result);
+        return CopyArrayElements(cx, obj, begin, end - begin, result);
 
     MOZ_ASSERT(end <= UINT32_MAX,
                "indices larger than UINT32_MAX should be rejected by GetIndexedPropertiesInRange");
@@ -3108,7 +3179,7 @@ NormalizeSliceTerm(T value, ArrayLength length)
 }
 
 static bool
-ArraySliceOrdinary(JSContext* cx, HandleObject obj, uint64_t length, uint64_t begin, uint64_t end,
+ArraySliceOrdinary(JSContext* cx, HandleObject obj, uint64_t begin, uint64_t end,
                    MutableHandleValue rval)
 {
     if (begin > end)
@@ -3120,23 +3191,12 @@ ArraySliceOrdinary(JSContext* cx, HandleObject obj, uint64_t length, uint64_t be
     }
     uint32_t count = uint32_t(end - begin);
 
-    if (!ObjectMayHaveExtraIndexedProperties(obj) && end <= UINT32_MAX) {
-        size_t initlen = GetAnyBoxedOrUnboxedInitializedLength(obj);
-        MOZ_ASSERT(initlen <= UINT32_MAX, "initialized length shouldn't exceed UINT32_MAX");
-        uint32_t newlength = 0;
-        if (initlen > begin)
-            newlength = Min<uint32_t>(initlen - uint32_t(begin), count);
-
-        RootedObject narr(cx, NewFullyAllocatedArrayTryReuseGroup(cx, obj, newlength));
+    if (CanOptimizeForDenseStorage<ArrayAccess::Read>(obj, end, cx)) {
+        MOZ_ASSERT(begin <= UINT32_MAX, "if end <= UINT32_MAX, then begin <= UINT32_MAX");
+        JSObject* narr = CopyDenseArrayElements(cx, obj, uint32_t(begin), count);
         if (!narr)
             return false;
-        SetAnyBoxedOrUnboxedArrayLength(cx, narr, count);
 
-        if (newlength) {
-            DebugOnly<DenseElementResult> result =
-                CopyAnyBoxedOrUnboxedDenseElements(cx, narr, obj, 0, uint32_t(begin), newlength);
-            MOZ_ASSERT(result.value == DenseElementResult::Success);
-        }
         rval.setObject(*narr);
         return true;
     }
@@ -3160,7 +3220,7 @@ ArraySliceOrdinary(JSContext* cx, HandleObject obj, uint64_t length, uint64_t be
         if (!SliceSparse(cx, obj, begin, end, narr))
             return false;
     } else {
-        if (!SliceSlowly(cx, obj, begin, end, narr))
+        if (!CopyArrayElements(cx, obj, begin, count, narr))
             return false;
     }
 
@@ -3208,7 +3268,7 @@ js::array_slice(JSContext* cx, unsigned argc, Value* vp)
 
     if (IsArraySpecies(cx, obj)) {
         /* Steps 7-12: Optimized for ordinary array. */
-        return ArraySliceOrdinary(cx, obj, length, k, final, args.rval());
+        return ArraySliceOrdinary(cx, obj, k, final, args.rval());
     }
 
     /* Step 7. */
