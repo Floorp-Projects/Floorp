@@ -41,6 +41,30 @@ add_task(function* () {
 });
 
 add_task(function* () {
+  yield loadTab(TEST_URI);
+
+  hud = yield openConsole();
+
+  let msg = yield hud.jsterm.execute("Function.prototype");
+
+  ok(msg, "output message found");
+  ok(msg.textContent.includes("function ()"),
+                              "message text check");
+
+  executeSoon(() => {
+    EventUtils.synthesizeMouse(msg.querySelector("a"), 2, 2, {}, hud.iframeWindow);
+  });
+
+  let varView = yield hud.jsterm.once("variablesview-fetched");
+  ok(varView, "object inspector opened on click");
+
+  yield findVariableViewProperties(varView, [{
+    name: "constructor",
+    value: "Function()",
+  }], { webconsole: hud });
+});
+
+add_task(function* () {
   let msg = yield hud.jsterm.execute("fooObj");
 
   ok(msg, "output message found");
