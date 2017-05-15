@@ -39,6 +39,31 @@ public:
   // IPC channel.
   void OnChannelClosed();
 
+  // To send OnStartRequestSend message over background channel.
+  bool OnStartRequestSent();
+
+  // To send OnTransportAndData message over background channel.
+  bool OnTransportAndData(const nsresult& aChannelStatus,
+                          const nsresult& aTransportStatus,
+                          const uint64_t& aOffset,
+                          const uint32_t& aCount,
+                          const nsCString& aData);
+
+  // To send OnStopRequest message over background channel.
+  bool OnStopRequest(const nsresult& aChannelStatus,
+                     const ResourceTimingStruct& aTiming);
+
+  // To send OnProgress message over background channel.
+  bool OnProgress(const int64_t& aProgress,
+                  const int64_t& aProgressMax);
+
+  // To send OnStatus message over background channel.
+  bool OnStatus(const nsresult& aStatus);
+
+  // To send FlushedForDiversion and DivertMessages messages
+  // over background channel.
+  bool OnDiversion();
+
 protected:
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
