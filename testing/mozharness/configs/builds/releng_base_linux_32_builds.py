@@ -15,6 +15,7 @@ config = {
         'checkout-sources',
         'setup-mock',
         'build',
+        'generate-build-stats',
         'upload-files',
         'sendchange',
         'check-test',
@@ -64,7 +65,6 @@ config = {
     'enable_count_ctors': True,
     'enable_talos_sendchange': False,
     'enable_unittest_sendchange': True,
-    'skip_balrog_uploads': True, # If True, rely on Funsize to update Balrog
     #########################################################################
 
 

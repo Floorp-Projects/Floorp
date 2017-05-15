@@ -276,6 +276,11 @@ void Gecko_CopyListStyleTypeFrom(nsStyleList* dst, const nsStyleList* src);
 void Gecko_SetNullImageValue(nsStyleImage* image);
 void Gecko_SetGradientImageValue(nsStyleImage* image, nsStyleGradient* gradient);
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::ImageValue, ImageValue);
+mozilla::css::ImageValue* Gecko_ImageValue_Create(ServoBundledURI aURI);
+void Gecko_SetLayerImageImageValue(nsStyleImage* image,
+                                   mozilla::css::ImageValue* aImageValue);
+
+// XXX cku: remove this function after gecko and stylo side are both ready
 void Gecko_SetUrlImageValue(nsStyleImage* image,
                             ServoBundledURI uri);
 void Gecko_SetImageElement(nsStyleImage* image, nsIAtom* atom);
@@ -290,17 +295,26 @@ nsStyleGradient* Gecko_CreateGradient(uint8_t shape,
 
 // list-style-image style.
 void Gecko_SetListStyleImageNone(nsStyleList* style_struct);
+void Gecko_SetListStyleImageImageValue(nsStyleList* style_struct,
+                                  mozilla::css::ImageValue* aImageValue);
+// XXX cku: remove this function after gecko and stylo side are both ready
 void Gecko_SetListStyleImage(nsStyleList* style_struct,
                              ServoBundledURI uri);
 void Gecko_CopyListStyleImageFrom(nsStyleList* dest, const nsStyleList* src);
 
 // cursor style.
 void Gecko_SetCursorArrayLength(nsStyleUserInterface* ui, size_t len);
+void Gecko_SetCursorImageValue(nsCursorImage* aCursor,
+                               mozilla::css::ImageValue* aImageValue);
+// XXX cku: remove this function after gecko and stylo side are both ready
 void Gecko_SetCursorImage(nsCursorImage* cursor,
                           ServoBundledURI uri);
 void Gecko_CopyCursorArrayFrom(nsStyleUserInterface* dest,
                                const nsStyleUserInterface* src);
 
+void Gecko_SetContentDataImageValue(nsStyleContentData* aList,
+                                    mozilla::css::ImageValue* aImageValue);
+// XXX cku: remove this function after gecko and stylo side are both ready
 void Gecko_SetContentDataImage(nsStyleContentData* content_data, ServoBundledURI uri);
 void Gecko_SetContentDataArray(nsStyleContentData* content_data, nsStyleContentType type, uint32_t len);
 
@@ -368,9 +382,42 @@ void Gecko_ClearWillChange(nsStyleDisplay* display, size_t length);
 void Gecko_AppendWillChange(nsStyleDisplay* display, nsIAtom* atom);
 void Gecko_CopyWillChangeFrom(nsStyleDisplay* dest, nsStyleDisplay* src);
 
-mozilla::Keyframe* Gecko_AnimationAppendKeyframe(RawGeckoKeyframeListBorrowedMut keyframes,
-                                                 float offset,
-                                                 const nsTimingFunction* timingFunction);
+// Searches from the beginning of |keyframes| for a Keyframe object with the
+// specified offset and timing function. If none is found, a new Keyframe object
+// with the specified |offset| and |timingFunction| will be prepended to
+// |keyframes|.
+//
+// @param keyframes  An array of Keyframe objects, sorted by offset.
+//                   The first Keyframe in the array, if any, MUST have an
+//                   offset greater than or equal to |offset|.
+// @param offset  The offset to search for, or, if no suitable Keyframe is
+//                found, the offset to use for the created Keyframe.
+//                Must be a floating point number in the range [0.0, 1.0].
+// @param timingFunction  The timing function to match, or, if no suitable
+//                        Keyframe is found, to set on the created Keyframe.
+//
+// @returns  The matching or created Keyframe.
+mozilla::Keyframe* Gecko_GetOrCreateKeyframeAtStart(
+  RawGeckoKeyframeListBorrowedMut keyframes,
+  float offset,
+  const nsTimingFunction* timingFunction);
+
+// As with Gecko_GetOrCreateKeyframeAtStart except that this method will search
+// from the beginning of |keyframes| for a Keyframe with matching timing
+// function and an offset of 0.0.
+// Furthermore, if a matching Keyframe is not found, a new Keyframe will be
+// inserted after the *last* Keyframe in |keyframes| with offset 0.0.
+mozilla::Keyframe* Gecko_GetOrCreateInitialKeyframe(
+  RawGeckoKeyframeListBorrowedMut keyframes,
+  const nsTimingFunction* timingFunction);
+
+// As with Gecko_GetOrCreateKeyframeAtStart except that this method will search
+// from the *end* of |keyframes| for a Keyframe with matching timing function
+// and an offset of 1.0. If a matching Keyframe is not found, a new Keyframe
+// will be appended to the end of |keyframes|.
+mozilla::Keyframe* Gecko_GetOrCreateFinalKeyframe(
+  RawGeckoKeyframeListBorrowedMut keyframes,
+  const nsTimingFunction* timingFunction);
 
 // Clean up pointer-based coordinates
 void Gecko_ResetStyleCoord(nsStyleUnit* unit, nsStyleUnion* value);

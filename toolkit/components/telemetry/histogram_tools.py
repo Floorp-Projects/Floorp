@@ -19,6 +19,11 @@ MAX_LABEL_LENGTH = 20
 MAX_LABEL_COUNT = 100
 MIN_CATEGORICAL_BUCKET_COUNT = 50
 
+BASE_DOC_URL = ("https://gecko.readthedocs.io/en/latest/toolkit/components/"
+                "telemetry/telemetry/")
+HISTOGRAMS_DOC_URL = (BASE_DOC_URL + "collection/histograms.html")
+SCALARS_DOC_URL = (BASE_DOC_URL + "collection/scalars.html")
+
 # histogram_tools.py is used by scripts from a mozilla-central build tree
 # and also by outside consumers, such as the telemetry server.  We need
 # to ensure that importing things works in both contexts.  Therefore,
@@ -272,7 +277,9 @@ associated with the histogram.  Returns None if no guarding is necessary."""
 
         # We forbid new probes from using "expires_in_version" : "default" field/value pair.
         # Old ones that use this are added to the whitelist.
-        if expiration == "default" and name not in whitelists['expiry_default']:
+        if expiration == "default" and \
+           whitelists is not None and \
+           name not in whitelists['expiry_default']:
             raise ParserError('New histogram "%s" cannot have "default" %s value.' % (name, field))
 
         if re.match(r'^[1-9][0-9]*$', expiration):
@@ -305,24 +312,27 @@ associated with the histogram.  Returns None if no guarding is necessary."""
                               (name, pattern, ', '.join(invalid)))
 
     def check_record_in_processes(self, name, definition):
+        if not self._strict_type_checks:
+            return
+
         field = 'record_in_processes'
         rip = definition.get(field)
 
+        DOC_URL = HISTOGRAMS_DOC_URL + "#record-in-processes"
+
         if not rip:
-            raise ParserError('Histogram "%s" must have a "%s" field.' % (name, field))
+            raise ParserError('Histogram "%s" must have a "%s" field:\n%s'
+                              % (name, field, DOC_URL))
 
         for process in rip:
             if not utils.is_valid_process_name(process):
-                raise ParserError('Histogram "%s" has unknown process "%s" in %s.' %
-                                  (name, process, field))
+                raise ParserError('Histogram "%s" has unknown process "%s" in %s.\n%s' %
+                                  (name, process, field, DOC_URL))
 
     def check_whitelisted_kind(self, name, definition):
         # We don't need to run any of these checks on the server.
         if not self._strict_type_checks or whitelists is None:
             return
-
-        DOC_URL = ("https://gecko.readthedocs.io/en/latest/toolkit/"
-                   "components/telemetry/telemetry/collection/scalars.html")
 
         # Disallow "flag" and "count" histograms on desktop, suggest to use
         # scalars instead. Allow using these histograms on Android, as we
@@ -340,7 +350,7 @@ associated with the histogram.  Returns None if no guarding is necessary."""
                                '%s\n'
                                'Are you trying to add a histogram on Android?'
                                ' Add "cpp_guard": "ANDROID" to your histogram definition.')
-                              % (hist_kind, name, hist_kind, DOC_URL))
+                              % (hist_kind, name, hist_kind, SCALARS_DOC_URL))
 
     # Check for the presence of fields that old histograms are whitelisted for.
     def check_whitelistable_fields(self, name, definition):
@@ -390,7 +400,15 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         # historical data.
         coerce_fields = ["low", "high", "n_values", "n_buckets"]
         if not self._strict_type_checks:
+            # This handles some old non-numeric expressions.
+            EXPRESSIONS = {
+                "JS::gcreason::NUM_TELEMETRY_REASONS": 101,
+                "mozilla::StartupTimeline::MAX_EVENT_ID": 12,
+            }
+
             def try_to_coerce_to_number(v):
+                if v in EXPRESSIONS:
+                    return EXPRESSIONS[v]
                 try:
                     return eval(v, {})
                 except:
@@ -505,10 +523,10 @@ associated with the histogram.  Returns None if no guarding is necessary."""
 
 # This hook function loads the histograms into an OrderedDict.
 # It will raise a ParserError if duplicate keys are found.
-def load_histograms_into_dict(ordered_pairs):
+def load_histograms_into_dict(ordered_pairs, strict_type_checks):
     d = collections.OrderedDict()
     for key, value in ordered_pairs:
-        if key in d:
+        if strict_type_checks and key in d:
             raise ParserError("Found duplicate key in Histograms file: %s" % key)
         d[key] = value
     return d
@@ -518,20 +536,22 @@ def load_histograms_into_dict(ordered_pairs):
 # just Histograms.json.  For each file's basename, we have a specific
 # routine to parse that file, and return a dictionary mapping histogram
 # names to histogram parameters.
-def from_Histograms_json(filename):
+def from_Histograms_json(filename, strict_type_checks):
     with open(filename, 'r') as f:
         try:
-            histograms = json.load(f, object_pairs_hook=load_histograms_into_dict)
+            def hook(ps):
+                return load_histograms_into_dict(ps, strict_type_checks)
+            histograms = json.load(f, object_pairs_hook=hook)
         except ValueError, e:
             raise ParserError("error parsing histograms in %s: %s" % (filename, e.message))
     return histograms
 
 
-def from_UseCounters_conf(filename):
+def from_UseCounters_conf(filename, strict_type_checks):
     return usecounters.generate_histograms(filename)
 
 
-def from_nsDeprecatedOperationList(filename):
+def from_nsDeprecatedOperationList(filename, strict_type_checks):
     operation_regex = re.compile('^DEPRECATED_OPERATION\\(([^)]+)\\)')
     histograms = collections.OrderedDict()
 
@@ -570,14 +590,14 @@ except ImportError:
     pass
 
 
-def from_files(filenames):
+def from_files(filenames, strict_type_checks=True):
     """Return an iterator that provides a sequence of Histograms for
 the histograms defined in filenames.
     """
     all_histograms = OrderedDict()
     for filename in filenames:
         parser = FILENAME_PARSERS[os.path.basename(filename)]
-        histograms = parser(filename)
+        histograms = parser(filename, strict_type_checks)
 
         # OrderedDicts are important, because then the iteration order over
         # the parsed histograms is stable, which makes the insertion into
@@ -613,4 +633,4 @@ the histograms defined in filenames.
             raise ParserError(msg % (', '.join(sorted(orphaned))))
 
     for (name, definition) in all_histograms.iteritems():
-        yield Histogram(name, definition, strict_type_checks=True)
+        yield Histogram(name, definition, strict_type_checks=strict_type_checks)

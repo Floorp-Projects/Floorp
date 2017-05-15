@@ -153,6 +153,15 @@ mod bindings {
             }
             if cfg!(target_os = "linux") {
                 builder = builder.clang_arg("-DOS_LINUX=1");
+                // We may be cross-compiling with a clang that defaults to
+                // a different architecture, so we should explicitly specify
+                // the bitness being used here. Specifying --target instead
+                // leads to difficulties with LLVM search paths.
+                if cfg!(target_arch = "x86") {
+                    builder = builder.clang_arg("-m32")
+                } else if cfg!(target_arch = "x86_64") {
+                    builder = builder.clang_arg("-m64")
+                }
             } else if cfg!(target_os = "solaris") {
                 builder = builder.clang_arg("-DOS_SOLARIS=1");
             } else if cfg!(target_os = "dragonfly") {
@@ -325,6 +334,7 @@ mod bindings {
             .bitfield_enum("nsChangeHint")
             .bitfield_enum("nsRestyleHint")
             .constified_enum("UpdateAnimationsTasks")
+            .constified_enum("ParsingMode")
             .parse_callbacks(Box::new(Callbacks));
         let whitelist_vars = [
             "NS_AUTHOR_SPECIFIED_.*",
@@ -479,7 +489,7 @@ mod bindings {
             "mozilla::DefaultDelete",
             "mozilla::Side",
             "mozilla::binding_danger::AssertAndSuppressCleanupPolicy",
-            "mozilla::LengthParsingMode",
+            "mozilla::ParsingMode",
             "mozilla::InheritTarget",
         ];
         let opaque_types = [
@@ -689,6 +699,7 @@ mod bindings {
             "nsCursorImage",
             "nsFont",
             "nsIAtom",
+            "nsCompatibility",
             "nsMediaFeature",
             "nsRestyleHint",
             "nsStyleBackground",
@@ -742,7 +753,7 @@ mod bindings {
             "ServoStyleSheet",
             "EffectCompositor_CascadeLevel",
             "UpdateAnimationsTasks",
-            "LengthParsingMode",
+            "ParsingMode",
             "InheritTarget",
             "URLMatchingFunction",
         ];

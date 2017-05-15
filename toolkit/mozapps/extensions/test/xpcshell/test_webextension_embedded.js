@@ -105,7 +105,8 @@ add_task(async function has_embedded_webextension_persisted() {
   // hasEmbeddedWebExtension property as expected.
   await promiseRestartManager();
 
-  let persisted = JSON.parse(Services.prefs.getCharPref("extensions.bootstrappedAddons"));
+  let persisted = aomStartup.readStartupData()["app-profile"].addons;
+
   ok(ID in persisted, "Hybrid add-on persisted to bootstrappedAddons.");
   equal(persisted[ID].hasEmbeddedWebExtension, true,
         "hasEmbeddedWebExtension flag persisted to bootstrappedAddons.");

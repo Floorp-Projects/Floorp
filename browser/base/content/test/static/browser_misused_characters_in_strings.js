@@ -186,7 +186,7 @@ var checkDTD = async function(aURISpec) {
   // https://hg.mozilla.org/mozilla-central/file/68c0b7d6f16ce5bb023e08050102b5f2fe4aacd8/python/compare-locales/compare_locales/parser.py#l233
   let entities = rawContents.match(/<!ENTITY\s+([\w\.]*)\s+("[^"]*"|'[^']*')\s*>/g);
   if (!entities) {
-    // Some files, such as requestAutocomplete.dtd, have no entities defined.
+    // Some files have no entities defined.
     return;
   }
   for (let entity of entities) {

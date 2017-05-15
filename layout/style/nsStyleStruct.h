@@ -347,6 +347,12 @@ public:
       const nsAString& aURL,
       already_AddRefed<mozilla::URLExtraData> aExtraData);
 
+  // Can be called from any thread, but Resolve() must be called later
+  // on the main thread before get() can be used.
+  nsStyleImageRequest(
+      Mode aModeFlags,
+      mozilla::css::ImageValue* aImageValue);
+
   bool Resolve(nsPresContext* aPresContext);
   bool IsResolved() const { return mResolved; }
 
@@ -1470,23 +1476,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList
 
   already_AddRefed<nsIURI> GetListStyleImageURI() const;
 
-  void GetListStyleType(nsSubstring& aType) const { mCounterStyle->GetStyleName(aType); }
-  mozilla::CounterStyle* GetCounterStyle() const
-  {
-    return mCounterStyle.get();
-  }
-  void SetCounterStyle(mozilla::CounterStyle* aStyle)
-  {
-    // NB: This function is called off-main-thread during parallel restyle, but
-    // only with builtin styles that use dummy refcounting.
-    MOZ_ASSERT(NS_IsMainThread() || !aStyle->IsDependentStyle());
-    mCounterStyle = aStyle;
-  }
-  void SetListStyleType(nsIAtom* aType, nsPresContext* aPresContext)
-  {
-    SetCounterStyle(aPresContext->CounterStyleManager()->BuildCounterStyle(aType));
-  }
-
   const nsStyleQuoteValues::QuotePairArray& GetQuotePairs() const;
 
   void SetQuotesInherit(const nsStyleList* aOther);
@@ -1496,8 +1485,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList
 
   uint8_t mListStylePosition;                  // [inherited]
   RefPtr<nsStyleImageRequest> mListStyleImage; // [inherited]
+  mozilla::CounterStylePtr mCounterStyle;      // [inherited]
 private:
-  RefPtr<mozilla::CounterStyle> mCounterStyle; // [inherited]
   RefPtr<nsStyleQuoteValues> mQuotes;   // [inherited]
   nsStyleList& operator=(const nsStyleList& aOther) = delete;
 public:

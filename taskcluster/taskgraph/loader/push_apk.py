@@ -26,7 +26,8 @@ def get_dependent_loaded_tasks(config, loaded_tasks):
         task for task in nightly_tasks if task.kind in config.get('kind-dependencies')
     )
     android_tasks = [
-        task for task in tasks_with_matching_kind if 'android' in task.label
+        task for task in tasks_with_matching_kind
+        if task.attributes.get('build_platform', '').startswith('android')
     ]
 
     return android_tasks

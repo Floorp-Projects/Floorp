@@ -85,6 +85,7 @@
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/LayerTreeOwnerTracker.h"
 #include "mozilla/layout/RenderFrameParent.h"
+#include "mozilla/loader/ScriptCacheActors.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/media/MediaParent.h"
 #include "mozilla/Move.h"
@@ -94,6 +95,7 @@
 #include "mozilla/ProcessHangMonitor.h"
 #include "mozilla/ProcessHangMonitorIPC.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/ScriptPreloader.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
@@ -284,6 +286,7 @@ using namespace mozilla::net;
 using namespace mozilla::jsipc;
 using namespace mozilla::psm;
 using namespace mozilla::widget;
+using mozilla::loader::PScriptCacheParent;
 
 // XXX Workaround for bug 986973 to maintain the existing broken semantics
 template<>
@@ -2265,14 +2268,16 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
     Unused << SendAppInfo(version, buildID, name, UAName, ID, vendor);
   }
 
-  // Initialize the message manager (and load delayed scripts) now that we
-  // have established communications with the child.
-  mMessageManager->InitWithCallback(this);
-
   // Send the child its remote type. On Mac, this needs to be sent prior
   // to the message we send to enable the Sandbox (SendStartProcessSandbox)
   // because different remote types require different sandbox privileges.
   Unused << SendRemoteType(mRemoteType);
+
+  ScriptPreloader::InitContentChild(*this);
+
+  // Initialize the message manager (and load delayed scripts) now that we
+  // have established communications with the child.
+  mMessageManager->InitWithCallback(this);
 
   // Set the subprocess's priority.  We do this early on because we're likely
   // /lowering/ the process's CPU and memory priority, which it has inherited
@@ -3118,6 +3123,19 @@ bool
 ContentParent::DeallocPTestShellParent(PTestShellParent* shell)
 {
   delete shell;
+  return true;
+}
+
+PScriptCacheParent*
+ContentParent::AllocPScriptCacheParent(const FileDescOrError& cacheFile, const bool& wantCacheData)
+{
+  return new loader::ScriptCacheParent(wantCacheData);
+}
+
+bool
+ContentParent::DeallocPScriptCacheParent(PScriptCacheParent* cache)
+{
+  delete static_cast<loader::ScriptCacheParent*>(cache);
   return true;
 }
 

@@ -80,6 +80,20 @@ public:
   {
     return !(*this == aOther);
   }
+  bool operator==(const nsTimingFunction& aOther) const
+  {
+    return mType == aOther.mType &&
+           (HasSpline()
+            ? mTimingFunction.X1() == aOther.mFunc.mX1 &&
+              mTimingFunction.Y1() == aOther.mFunc.mY1 &&
+              mTimingFunction.X2() == aOther.mFunc.mX2 &&
+              mTimingFunction.Y2() == aOther.mFunc.mY2
+            : mStepsOrFrames == aOther.mStepsOrFrames);
+  }
+  bool operator!=(const nsTimingFunction& aOther) const
+  {
+    return !(*this == aOther);
+  }
   int32_t Compare(const ComputedTimingFunction& aRhs) const;
   void AppendToString(nsAString& aResult) const;
 
@@ -104,6 +118,23 @@ private:
   nsSMILKeySpline mTimingFunction;
   uint32_t mStepsOrFrames;
 };
+
+inline bool
+operator==(const Maybe<ComputedTimingFunction>& aLHS,
+           const nsTimingFunction& aRHS)
+{
+  if (aLHS.isNothing()) {
+    return aRHS.mType == nsTimingFunction::Type::Linear;
+  }
+  return aLHS.value() == aRHS;
+}
+
+inline bool
+operator!=(const Maybe<ComputedTimingFunction>& aLHS,
+           const nsTimingFunction& aRHS)
+{
+  return !(aLHS == aRHS);
+}
 
 } // namespace mozilla
 

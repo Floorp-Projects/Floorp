@@ -33,10 +33,6 @@ protected:
                                         const nsACString& aPathname,
                                         nsACString& aResult) override;
 
-  // |result| is an inout param.  On entry to this function, *result
-  // is expected to be non-null and already addrefed.  This function
-  // may release the object stored in *result on entry and write
-  // a new pointer to an already addrefed channel to *result.
   virtual MOZ_MUST_USE nsresult SubstituteChannel(nsIURI* uri,
                                                   nsILoadInfo* aLoadInfo,
                                                   nsIChannel** result) override;

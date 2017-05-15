@@ -68,6 +68,7 @@ config = {
     # use mozmake?
     "enable_mozmake": True,
     'exes': {
+        'python2.7': sys.executable,
         'virtualenv': [
             sys.executable,
             'c:/mozilla-build/buildbotve/virtualenv.py'

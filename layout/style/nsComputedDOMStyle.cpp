@@ -715,11 +715,10 @@ nsComputedDOMStyle::GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv
   aCSSParseEnv.mPrincipal = nullptr;
 }
 
-URLExtraData*
-nsComputedDOMStyle::GetURLData() const
+nsDOMCSSDeclaration::ServoCSSParsingEnvironment
+nsComputedDOMStyle::GetServoCSSParsingEnvironment() const
 {
-  NS_RUNTIMEABORT("called nsComputedDOMStyle::GetURLData");
-  return nullptr;
+  MOZ_CRASH("called nsComputedDOMStyle::GetServoCSSParsingEnvironment");
 }
 
 void
@@ -3715,13 +3714,13 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetListStyleType()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  CounterStyle* style = StyleList()->GetCounterStyle();
+  CounterStyle* style = StyleList()->mCounterStyle;
   AnonymousCounterStyle* anonymous = style->AsAnonymous();
   nsAutoString tmp;
   if (!anonymous) {
     // want SetIdent
     nsString type;
-    StyleList()->GetListStyleType(type);
+    style->GetStyleName(type);
     nsStyleUtil::AppendEscapedCSSIdent(type, tmp);
   } else if (anonymous->IsSingleString()) {
     const nsTArray<nsString>& symbols = anonymous->GetSymbols();

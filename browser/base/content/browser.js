@@ -1143,6 +1143,11 @@ addEventListener("DOMContentLoaded", function onDCL() {
   gBrowser.updateBrowserRemoteness(initBrowser, gMultiProcessBrowser);
 });
 
+let _resolveDelayedStartup;
+var delayedStartupPromise = new Promise(resolve => {
+  _resolveDelayedStartup = resolve;
+});
+
 var gBrowserInit = {
   delayedStartupFinished: false,
 
@@ -1605,6 +1610,7 @@ var gBrowserInit = {
 
     this.delayedStartupFinished = true;
 
+    _resolveDelayedStartup();
     Services.obs.notifyObservers(window, "browser-delayed-startup-finished");
     TelemetryTimestamps.add("delayedStartupFinished");
   },

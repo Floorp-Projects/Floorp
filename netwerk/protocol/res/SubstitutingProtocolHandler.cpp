@@ -257,20 +257,11 @@ SubstitutingProtocolHandler::NewChannel2(nsIURI* uri,
   rv = NS_NewChannelInternal(result, newURI, aLoadInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsLoadFlags loadFlags = 0;
+  (*result)->GetLoadFlags(&loadFlags);
+  (*result)->SetLoadFlags(loadFlags & ~nsIChannel::LOAD_REPLACE);
   rv = (*result)->SetOriginalURI(uri);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // We must set result principal URL prior to calling SubstituteChannel
-  // because it may call NS_GetFinalChannelURI and the correct result
-  // (in this case |uri|) is already expected.
-  //
-  // We don't want to reset the result principal URL to |uri| after calling
-  // SubstituteChannel since whatever substituting protocol handler(s) set
-  // has to override anything we set here.
-  if (aLoadInfo) {
-    rv = aLoadInfo->SetResultPrincipalURI(uri);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
 
   return SubstituteChannel(uri, aLoadInfo, result);
 }

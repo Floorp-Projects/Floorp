@@ -819,7 +819,7 @@ CycleCollectedJSRuntime::GCCallback(JSContext* aContext,
   MOZ_ASSERT(CycleCollectedJSContext::Get()->Context() == aContext);
   MOZ_ASSERT(CycleCollectedJSContext::Get()->Runtime() == self);
 
-  self->OnGC(aStatus);
+  self->OnGC(aContext, aStatus);
 }
 
 /* static */ void
@@ -1423,7 +1423,8 @@ CycleCollectedJSRuntime::AnnotateAndSetOutOfMemory(OOMState* aStatePtr,
 }
 
 void
-CycleCollectedJSRuntime::OnGC(JSGCStatus aStatus)
+CycleCollectedJSRuntime::OnGC(JSContext* aContext,
+                              JSGCStatus aStatus)
 {
   switch (aStatus) {
     case JSGC_BEGIN:
@@ -1440,10 +1441,19 @@ CycleCollectedJSRuntime::OnGC(JSGCStatus aStatus)
       }
 #endif
 
-      // Do any deferred finalization of native objects.
-      FinalizeDeferredThings(JS::WasIncrementalGC(mJSRuntime)
+      // Do any deferred finalization of native objects. Normally we do this
+      // incrementally for an incremental GC, and immediately for a
+      // non-incremental GC, on the basis that the type of GC reflects how
+      // urgently resources should be destroyed. However under some circumstances
+      // (such as in js::InternalCallOrConstruct) we can end up running a
+      // non-incremental GC when there is a pending exception, and the finalizers
+      // are not set up to handle that. In that case, just run them later, after
+      // we've returned to the event loop.
+      bool finalizeIncrementally = JS::WasIncrementalGC(mJSRuntime) || JS_IsExceptionPending(aContext);
+      FinalizeDeferredThings(finalizeIncrementally
                              ? CycleCollectedJSContext::FinalizeIncrementally
                              : CycleCollectedJSContext::FinalizeNow);
+
       break;
     }
     default:

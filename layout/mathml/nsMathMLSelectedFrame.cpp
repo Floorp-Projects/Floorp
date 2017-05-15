@@ -12,19 +12,6 @@ nsMathMLSelectedFrame::~nsMathMLSelectedFrame()
 {
 }
 
-void
-nsMathMLSelectedFrame::Init(nsIContent*       aContent,
-                            nsContainerFrame* aParent,
-                            nsIFrame*         aPrevInFlow)
-{
-  // Init our local attributes
-  mInvalidMarkup = false;
-  mSelectedFrame = nullptr;
-
-  // Let the base class do the rest
-  nsMathMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
-}
-
 NS_IMETHODIMP
 nsMathMLSelectedFrame::TransmitAutomaticData()
 {

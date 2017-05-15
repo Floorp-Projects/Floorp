@@ -208,6 +208,8 @@ static bool sIsTabletPointerActivated = false;
 - (BOOL)inactiveWindowAcceptsMouseEvent:(NSEvent*)aEvent;
 - (void)updateWindowDraggableState;
 
+- (bool)beginOrEndGestureForEventPhase:(NSEvent*)aEvent;
+
 - (bool)shouldConsiderStartingSwipeFromEvent:(NSEvent*)aEvent;
 
 @end
@@ -4179,8 +4181,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (!anEvent || !mGeckoChild)
+  if (!anEvent || !mGeckoChild ||
+      [self beginOrEndGestureForEventPhase:anEvent]) {
     return;
+  }
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
@@ -4209,22 +4213,14 @@ NSEvent* gLastDragMouseDownEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-- (void)beginGestureWithEvent:(NSEvent *)anEvent
-{
-  if (!anEvent)
-    return;
-
-  mGestureState = eGestureState_StartGesture;
-  mCumulativeMagnification = 0;
-  mCumulativeRotation = 0.0;
-}
-
 - (void)magnifyWithEvent:(NSEvent *)anEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (!anEvent || !mGeckoChild)
+  if (!anEvent || !mGeckoChild ||
+      [self beginOrEndGestureForEventPhase:anEvent]) {
     return;
+  }
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
@@ -4247,16 +4243,41 @@ NSEvent* gLastDragMouseDownEvent = nil;
     return;
   }
 
-  // Setup the event.
-  WidgetSimpleGestureEvent geckoEvent(true, msg, mGeckoChild);
-  geckoEvent.mDelta = deltaZ;
-  [self convertCocoaMouseEvent:anEvent toGeckoEvent:&geckoEvent];
+  // This sends the pinch gesture value as a fake wheel event that has the
+  // control key pressed so that pages can implement custom pinch gesture
+  // handling. It may seem strange that this doesn't use a wheel event with
+  // the deltaZ property set, but this matches Chrome's behavior as described
+  // at https://code.google.com/p/chromium/issues/detail?id=289887
+  //
+  // The intent of the formula below is to produce numbers similar to Chrome's
+  // implementation of this feature. Chrome implements deltaY using the formula
+  // "-100 * log(1 + [event magnification])" which is unfortunately incorrect.
+  // All deltas for a single pinch gesture should sum to 0 if the start and end
+  // of a pinch gesture end up in the same place. This doesn't happen in Chrome
+  // because they followed Apple's misleading documentation, which implies that
+  // "1 + [event magnification]" is the scale factor. The scale factor is
+  // instead "pow(ratio, [event magnification])" so "[event magnification]" is
+  // already in log space.
+  //
+  // The multiplication by the backing scale factor below counteracts the
+  // division by the backing scale factor in WheelEvent.
+  WidgetWheelEvent geckoWheelEvent(true, EventMessage::eWheel, mGeckoChild);
+  [self convertCocoaMouseEvent:anEvent toGeckoEvent:&geckoWheelEvent];
+  double backingScale = mGeckoChild->BackingScaleFactor();
+  geckoWheelEvent.mDeltaY = -100.0 * [anEvent magnification] * backingScale;
+  geckoWheelEvent.mModifiers |= MODIFIER_CONTROL;
+  mGeckoChild->DispatchWindowEvent(geckoWheelEvent);
 
-  // Send the event.
-  mGeckoChild->DispatchWindowEvent(geckoEvent);
+  // If the fake wheel event wasn't stopped, then send a normal magnify event.
+  if (!geckoWheelEvent.mFlags.mDefaultPrevented) {
+    WidgetSimpleGestureEvent geckoEvent(true, msg, mGeckoChild);
+    geckoEvent.mDelta = deltaZ;
+    [self convertCocoaMouseEvent:anEvent toGeckoEvent:&geckoEvent];
+    mGeckoChild->DispatchWindowEvent(geckoEvent);
 
-  // Keep track of the cumulative magnification for the final "magnify" event.
-  mCumulativeMagnification += deltaZ;
+    // Keep track of the cumulative magnification for the final "magnify" event.
+    mCumulativeMagnification += deltaZ;
+  }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -4265,7 +4286,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (!anEvent || !mGeckoChild) {
+  if (!anEvent || !mGeckoChild ||
+      [self beginOrEndGestureForEventPhase:anEvent]) {
     return;
   }
 
@@ -4289,8 +4311,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (!anEvent || !mGeckoChild)
+  if (!anEvent || !mGeckoChild ||
+      [self beginOrEndGestureForEventPhase:anEvent]) {
     return;
+  }
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
@@ -4330,6 +4354,50 @@ NSEvent* gLastDragMouseDownEvent = nil;
   mCumulativeRotation += rotation;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+// `beginGestureWithEvent` and `endGestureWithEvent` are not called for
+// applications that link against the macOS 10.11 or later SDK when we're
+// running on macOS 10.11 or later. For compatibility with all supported macOS
+// versions, we have to call {begin,end}GestureWithEvent ourselves based on
+// the event phase when we're handling gestures.
+- (bool)beginOrEndGestureForEventPhase:(NSEvent*)aEvent
+{
+  if (!aEvent) {
+    return false;
+  }
+
+  bool usingElCapitanOrLaterSDK = true;
+#if !defined(MAC_OS_X_VERSION_10_11) || \
+    MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_11
+  usingElCapitanOrLaterSDK = false;
+#endif
+
+  if (nsCocoaFeatures::OnElCapitanOrLater() && usingElCapitanOrLaterSDK) {
+    if (aEvent.phase == NSEventPhaseBegan) {
+      [self beginGestureWithEvent:aEvent];
+      return true;
+    }
+
+    if (aEvent.phase == NSEventPhaseEnded ||
+        aEvent.phase == NSEventPhaseCancelled) {
+      [self endGestureWithEvent:aEvent];
+      return true;
+    }
+  }
+
+  return false;
+}
+
+- (void)beginGestureWithEvent:(NSEvent*)aEvent
+{
+  if (!aEvent) {
+    return;
+  }
+
+  mGestureState = eGestureState_StartGesture;
+  mCumulativeMagnification = 0;
+  mCumulativeRotation = 0.0;
 }
 
 - (void)endGestureWithEvent:(NSEvent *)anEvent

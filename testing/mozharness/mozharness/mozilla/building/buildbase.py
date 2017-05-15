@@ -750,8 +750,9 @@ or run without that action (ie: --no-{action})"
             app_ini_path = dirs['abs_app_ini_path']
         if (os.path.exists(print_conf_setting_path) and
                 os.path.exists(app_ini_path)):
+            python = self.query_exe('python2.7')
             cmd = [
-                sys.executable, os.path.join(dirs['abs_src_dir'], 'mach'), 'python',
+                python, os.path.join(dirs['abs_src_dir'], 'mach'), 'python',
                 print_conf_setting_path, app_ini_path,
                 'App', prop
             ]
@@ -1119,8 +1120,9 @@ or run without that action (ie: --no-{action})"
             return self.warning(ERROR_MSGS['tooltool_manifest_undetermined'])
         tooltool_manifest_path = os.path.join(dirs['abs_src_dir'],
                                               c['tooltool_manifest_src'])
+        python = self.query_exe('python2.7')
         cmd = [
-            sys.executable, '-u',
+            python, '-u',
             os.path.join(dirs['abs_src_dir'], 'mach'),
             'artifact',
             'toolchain',
@@ -1288,8 +1290,9 @@ or run without that action (ie: --no-{action})"
                                             dirs['abs_app_ini_path']),
                      level=error_level)
         self.info("Setting properties found in: %s" % dirs['abs_app_ini_path'])
+        python = self.query_exe('python2.7')
         base_cmd = [
-            sys.executable, os.path.join(dirs['abs_src_dir'], 'mach'), 'python',
+            python, os.path.join(dirs['abs_src_dir'], 'mach'), 'python',
             print_conf_setting_path, dirs['abs_app_ini_path'], 'App'
         ]
         properties_needed = [
@@ -1617,8 +1620,12 @@ or run without that action (ie: --no-{action})"
                 buildprops,
                 os.path.join(dirs['abs_work_dir'], 'buildprops.json'))
 
+        # use mh config override for mach build wrapper, if it exists
+        python = self.query_exe('python2.7')
+        default_mach_build = [python, 'mach', '--log-no-times', 'build', '-v']
+        mach_build = self.query_exe('mach-build', default=default_mach_build)
         return_code = self.run_command_m(
-            command=[sys.executable, 'mach', '--log-no-times', 'build', '-v'],
+            command=mach_build,
             cwd=dirs['abs_src_dir'],
             env=env,
             output_timeout=self.config.get('max_build_output_timeout', 60 * 40)
@@ -1630,9 +1637,6 @@ or run without that action (ie: --no-{action})"
             )
             self.fatal("'mach build' did not run successfully. Please check "
                        "log for errors.")
-
-        self.generate_build_props(console_output=True, halt_on_failure=True)
-        self._generate_build_stats()
 
     def multi_l10n(self):
         if not self.query_is_nightly():
@@ -1727,8 +1731,10 @@ or run without that action (ie: --no-{action})"
         self._taskcluster_upload(abs_files, self.routes_json['l10n'],
                                  locale='multi')
 
-    def postflight_build(self):
+    def postflight_build(self, console_output=True):
         """grabs properties from post build and calls ccache -s"""
+        self.generate_build_props(console_output=console_output,
+                                  halt_on_failure=True)
         # A list of argument lists.  Better names gratefully accepted!
         mach_commands = self.config.get('postflight_build_mach_commands', [])
         for mach_command in mach_commands:
@@ -1737,8 +1743,9 @@ or run without that action (ie: --no-{action})"
     def _execute_postflight_build_mach_command(self, mach_command_args):
         env = self.query_build_env()
         env.update(self.query_mach_build_env())
+        python = self.query_exe('python2.7')
 
-        command = [sys.executable, 'mach', '--log-no-times']
+        command = [python, 'mach', '--log-no-times']
         command.extend(mach_command_args)
 
         self.run_command_m(
@@ -1755,10 +1762,11 @@ or run without that action (ie: --no-{action})"
         """generates source archives and uploads them"""
         env = self.query_build_env()
         env.update(self.query_mach_build_env())
+        python = self.query_exe('python2.7')
         dirs = self.query_abs_dirs()
 
         self.run_command_m(
-            command=[sys.executable, 'mach', '--log-no-times', 'configure'],
+            command=[python, 'mach', '--log-no-times', 'configure'],
             cwd=dirs['abs_src_dir'],
             env=env, output_timeout=60*3, halt_on_failure=True,
         )
@@ -1810,8 +1818,9 @@ or run without that action (ie: --no-{action})"
         env = self.query_build_env()
         env.update(self.query_check_test_env())
 
+        python = self.query_exe('python2.7')
         cmd = [
-            sys.executable, 'mach',
+            python, 'mach',
             '--log-no-times',
             'build',
             '-v',
@@ -1906,15 +1915,13 @@ or run without that action (ie: --no-{action})"
             'subtests': [],
         }
 
-    def _generate_build_stats(self):
+    def generate_build_stats(self):
         """grab build stats following a compile.
 
         This action handles all statistics from a build: 'count_ctors'
         and then posts to graph server the results.
         We only post to graph server for non nightly build
         """
-        self.info('Collecting build metrics')
-
         if self.config.get('forced_artifact_build'):
             self.info('Skipping due to forced artifact build.')
             return
@@ -2167,28 +2174,15 @@ or run without that action (ie: --no-{action})"
             self.generate_balrog_props(props_path)
             return
 
-        if self.config.get('skip_balrog_uploads'):
-            self.info("Funsize will submit to balrog, skipping submission here.")
-            return
-
-        if not self.config.get("balrog_servers"):
-            self.fatal("balrog_servers not set; skipping balrog submission.")
-            return
-
-        if self.submit_balrog_updates():
-            # set the build to orange so it is at least caught
-            self.return_code = self.worst_level(
-                EXIT_STATUS_DICT[TBPL_WARNING], self.return_code,
-                AUTOMATION_EXIT_CODES[::-1]
-            )
 
     def valgrind_test(self):
         '''Execute mach's valgrind-test for memory leaks'''
         env = self.query_build_env()
         env.update(self.query_mach_build_env())
 
+        python = self.query_exe('python2.7')
         return_code = self.run_command_m(
-            command=[sys.executable, 'mach', 'valgrind-test'],
+            command=[python, 'mach', 'valgrind-test'],
             cwd=self.query_abs_dirs()['abs_src_dir'],
             env=env, output_timeout=self.config.get('max_build_output_timeout', 60 * 40)
         )
