@@ -62,7 +62,7 @@ Compartment::registerInstance(JSContext* cx, HandleWasmInstanceObject instanceOb
     Instance& instance = instanceObj->instance();
     MOZ_ASSERT(this == &instance.compartment()->wasm);
 
-    instance.code().ensureProfilingLabels(cx->runtime()->geckoProfiler().enabled());
+    instance.ensureProfilingLabels(cx->runtime()->geckoProfiler().enabled());
 
     if (instance.debugEnabled() &&
         instance.compartment()->debuggerObservesAllExecution())
@@ -130,7 +130,7 @@ void
 Compartment::ensureProfilingLabels(bool profilingEnabled)
 {
     for (Instance* instance : instances_)
-        instance->code().ensureProfilingLabels(profilingEnabled);
+        instance->ensureProfilingLabels(profilingEnabled);
 }
 
 void
