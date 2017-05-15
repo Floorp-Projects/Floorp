@@ -454,6 +454,9 @@ private:
   // MPEG frame parser used to detect frames and extract side info.
   FrameParser mParser;
 
+  // Whether we've locked onto a valid sequence of frames or not.
+  bool mFrameLock;
+
   // Current byte offset in the source stream.
   int64_t mOffset;
 
