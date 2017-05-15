@@ -23,6 +23,8 @@ add_task(async function invalid_input_throws() {
 
   Assert.throws(() => PlacesUtils.bookmarks.fetch({}),
                 /Unexpected number of conditions provided: 0/);
+  Assert.throws(() => PlacesUtils.bookmarks.fetch({ type: PlacesUtils.bookmarks.TYPE_BOOKMARK }),
+                /Unexpected number of conditions provided: 0/);
   Assert.throws(() => PlacesUtils.bookmarks.fetch({ guid: "123456789012",
                                                     parentGuid: "012345678901",
                                                     index: 0 }),
