@@ -517,19 +517,19 @@
       SHOW_THROBBER_TIMEOUT_MS: 250,
       _showThrobberTimer: null,
       _delayShowThrobberWhileResumingVideoDecoder() {
-          this._showThrobberTimer = setTimeout(() => {
-              this.statusIcon.setAttribute("type", "throbber");
-              // Show the throbber immediatelly since we have waited for SHOW_THROBBER_TIMEOUT_MS.
-              // We don't want to wait for another transition-delay(750ms) and the
-              // transition-duration(300ms).
-              this.setupStatusFader(true);
-          }, this.SHOW_THROBBER_TIMEOUT_MS);
+        this._showThrobberTimer = setTimeout(() => {
+          this.statusIcon.setAttribute("type", "throbber");
+          // Show the throbber immediately since we have waited for SHOW_THROBBER_TIMEOUT_MS.
+          // We don't want to wait for another transition-delay(750ms) and the
+          // transition-duration(300ms).
+          this.setupStatusFader(true);
+        }, this.SHOW_THROBBER_TIMEOUT_MS);
       },
       _cancelShowThrobberWhileResumingVideoDecoder() {
-          if (this._showThrobberTimer) {
-            clearTimeout(this._showThrobberTimer);
-            this._showThrobberTimer = null;
-          }
+        if (this._showThrobberTimer) {
+          clearTimeout(this._showThrobberTimer);
+          this._showThrobberTimer = null;
+        }
       },
 
       handleEvent(aEvent) {
