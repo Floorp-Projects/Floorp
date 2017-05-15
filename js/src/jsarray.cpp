@@ -155,6 +155,60 @@ js::GetLengthProperty(JSContext* cx, HandleObject obj, uint32_t* lengthp)
     return true;
 }
 
+// ES2017 7.1.15 ToLength.
+static bool
+ToLength(JSContext* cx, HandleValue v, uint64_t* out)
+{
+    if (v.isInt32()) {
+        int32_t i = v.toInt32();
+        *out = i < 0 ? 0 : i;
+        return true;
+    }
+
+    double d;
+    if (v.isDouble()) {
+        d = v.toDouble();
+    } else {
+        if (!ToNumber(cx, v, &d))
+            return false;
+    }
+
+    d = JS::ToInteger(d);
+    if (d <= 0.0)
+        *out = 0;
+    else
+        *out = uint64_t(Min(d, DOUBLE_INTEGRAL_PRECISION_LIMIT - 1));
+    return true;
+}
+
+static bool
+GetLengthProperty(JSContext* cx, HandleObject obj, uint64_t* lengthp)
+{
+    if (obj->is<ArrayObject>()) {
+        *lengthp = obj->as<ArrayObject>().length();
+        return true;
+    }
+
+    if (obj->is<UnboxedArrayObject>()) {
+        *lengthp = obj->as<UnboxedArrayObject>().length();
+        return true;
+    }
+
+    if (obj->is<ArgumentsObject>()) {
+        ArgumentsObject& argsobj = obj->as<ArgumentsObject>();
+        if (!argsobj.hasOverriddenLength()) {
+            *lengthp = argsobj.initialLength();
+            return true;
+        }
+    }
+
+    RootedValue value(cx);
+    if (!GetProperty(cx, obj, obj, cx->names().length, &value))
+        return false;
+
+    return ToLength(cx, value, lengthp);
+}
+
 /*
  * Determine if the id represents an array index.
  *
@@ -219,7 +273,19 @@ js::StringIsArrayIndex(JSLinearString* str, uint32_t* indexp)
            : ::StringIsArrayIndex(str->twoByteChars(nogc), str->length(), indexp);
 }
 
+template <typename T>
 static bool
+ToId(JSContext* cx, T index, MutableHandleId id);
+
+template <>
+bool
+ToId(JSContext* cx, uint32_t index, MutableHandleId id)
+{
+    return IndexToId(cx, index, id);
+}
+
+template <>
+bool
 ToId(JSContext* cx, uint64_t index, MutableHandleId id)
 {
     MOZ_ASSERT(index < uint64_t(DOUBLE_INTEGRAL_PRECISION_LIMIT));
@@ -235,26 +301,27 @@ ToId(JSContext* cx, uint64_t index, MutableHandleId id)
  * If the property at the given index exists, get its value into |vp| and set
  * |*hole| to false. Otherwise set |*hole| to true and |vp| to Undefined.
  */
+template <typename T>
 static bool
-HasAndGetElement(JSContext* cx, HandleObject obj, HandleObject receiver, uint32_t index,
-                 bool* hole, MutableHandleValue vp)
+HasAndGetElement(JSContext* cx, HandleObject obj, HandleObject receiver, T index, bool* hole,
+                 MutableHandleValue vp)
 {
     if (index < GetAnyBoxedOrUnboxedInitializedLength(obj)) {
-        vp.set(GetAnyBoxedOrUnboxedDenseElement(obj, index));
+        vp.set(GetAnyBoxedOrUnboxedDenseElement(obj, size_t(index)));
         if (!vp.isMagic(JS_ELEMENTS_HOLE)) {
             *hole = false;
             return true;
         }
     }
-    if (obj->is<ArgumentsObject>()) {
-        if (obj->as<ArgumentsObject>().maybeGetElement(index, vp)) {
+    if (obj->is<ArgumentsObject>() && index <= UINT32_MAX) {
+        if (obj->as<ArgumentsObject>().maybeGetElement(uint32_t(index), vp)) {
             *hole = false;
             return true;
         }
     }
 
     RootedId id(cx);
-    if (!IndexToId(cx, index, &id))
+    if (!ToId(cx, index, &id))
         return false;
 
     bool found;
@@ -271,9 +338,9 @@ HasAndGetElement(JSContext* cx, HandleObject obj, HandleObject receiver, uint32_
     return true;
 }
 
+template <typename T>
 static inline bool
-HasAndGetElement(JSContext* cx, HandleObject obj, uint32_t index, bool* hole,
-                 MutableHandleValue vp)
+HasAndGetElement(JSContext* cx, HandleObject obj, T index, bool* hole, MutableHandleValue vp)
 {
     return HasAndGetElement(cx, obj, obj, index, hole, vp);
 }
@@ -390,9 +457,38 @@ js::GetElements(JSContext* cx, HandleObject aobj, uint32_t length, Value* vp)
     return true;
 }
 
+static inline bool
+GetArrayElement(JSContext* cx, HandleObject obj, uint64_t index, MutableHandleValue vp)
+{
+    if (index < GetAnyBoxedOrUnboxedInitializedLength(obj)) {
+        vp.set(GetAnyBoxedOrUnboxedDenseElement(obj, size_t(index)));
+        if (!vp.isMagic(JS_ELEMENTS_HOLE))
+            return true;
+    }
+
+    if (obj->is<ArgumentsObject>() && index <= UINT32_MAX) {
+        if (obj->as<ArgumentsObject>().maybeGetElement(uint32_t(index), vp))
+            return true;
+    }
+
+    RootedId id(cx);
+    if (!ToId(cx, index, &id))
+        return false;
+    return GetProperty(cx, obj, obj, id, vp);
+}
+
+static inline bool
+DefineArrayElement(JSContext* cx, HandleObject obj, uint64_t index, HandleValue value)
+{
+    RootedId id(cx);
+    if (!ToId(cx, index, &id))
+        return false;
+    return DefineProperty(cx, obj, id, value);
+}
+
 // Set the value of the property at the given index to v.
 static inline bool
-SetElement(JSContext* cx, HandleObject obj, uint64_t index, HandleValue v)
+SetArrayElement(JSContext* cx, HandleObject obj, uint64_t index, HandleValue v)
 {
     RootedId id(cx);
     if (!ToId(cx, index, &id))
@@ -1186,7 +1282,7 @@ ArrayJoinKernel(JSContext* cx, SeparatorOp sepOp, HandleObject obj, uint32_t len
                 return false;
 
             // Step 7.b.
-            if (!GetElement(cx, obj, i, &v))
+            if (!GetArrayElement(cx, obj, i, &v))
                 return false;
 
             // Steps 7.c-d.
@@ -1354,11 +1450,12 @@ array_toLocaleString(JSContext* cx, unsigned argc, Value* vp)
 
 /* vector must point to rooted memory. */
 static bool
-SetArrayElements(JSContext* cx, HandleObject obj, uint32_t start,
+SetArrayElements(JSContext* cx, HandleObject obj, uint64_t start,
                  uint32_t count, const Value* vector,
                  ShouldUpdateTypes updateTypes = ShouldUpdateTypes::Update)
 {
     MOZ_ASSERT(count <= MAX_ARRAY_INDEX);
+    MOZ_ASSERT(start + count < uint64_t(DOUBLE_INTEGRAL_PRECISION_LIMIT));
 
     if (count == 0)
         return true;
@@ -1367,39 +1464,26 @@ SetArrayElements(JSContext* cx, HandleObject obj, uint32_t start,
     if (!group)
         return false;
 
-    if (!ObjectMayHaveExtraIndexedProperties(obj)) {
+    if (!ObjectMayHaveExtraIndexedProperties(obj) && start <= UINT32_MAX) {
         DenseElementResult result =
-            SetOrExtendAnyBoxedOrUnboxedDenseElements(cx, obj, start, vector, count, updateTypes);
+            SetOrExtendAnyBoxedOrUnboxedDenseElements(cx, obj, uint32_t(start), vector, count,
+                                                      updateTypes);
         if (result != DenseElementResult::Incomplete)
             return result == DenseElementResult::Success;
     }
 
-    const Value* end = vector + count;
-    while (vector < end && start <= MAX_ARRAY_INDEX) {
-        if (!CheckForInterrupt(cx) ||
-            !SetElement(cx, obj, start++, HandleValue::fromMarkedLocation(vector++)))
-        {
-            return false;
-        }
-    }
-
-    if (vector == end)
-        return true;
-
-    MOZ_ASSERT(start == MAX_ARRAY_INDEX + 1);
-    RootedValue value(cx);
     RootedId id(cx);
-    RootedValue indexv(cx);
-    double index = MAX_ARRAY_INDEX + 1;
-    do {
-        value = *vector++;
-        indexv = DoubleValue(index);
-        if (!ValueToId<CanGC>(cx, indexv, &id))
+    const Value* end = vector + count;
+    while (vector < end) {
+        if (!CheckForInterrupt(cx))
             return false;
-        if (!SetProperty(cx, obj, id, value))
+
+        if (!ToId(cx, start++, &id))
             return false;
-        index += 1;
-    } while (vector != end);
+
+        if (!SetProperty(cx, obj, id, HandleValue::fromMarkedLocation(vector++)))
+            return false;
+    }
 
     return true;
 }
@@ -1509,19 +1593,19 @@ js::array_reverse(JSContext* cx, unsigned argc, Value* vp)
         }
 
         if (!hole && !hole2) {
-            if (!SetElement(cx, obj, i, hival))
+            if (!SetArrayElement(cx, obj, i, hival))
                 return false;
-            if (!SetElement(cx, obj, len - i - 1, lowval))
+            if (!SetArrayElement(cx, obj, len - i - 1, lowval))
                 return false;
         } else if (hole && !hole2) {
-            if (!SetElement(cx, obj, i, hival))
+            if (!SetArrayElement(cx, obj, i, hival))
                 return false;
             if (!DeletePropertyOrThrow(cx, obj, len - i - 1))
                 return false;
         } else if (!hole && hole2) {
             if (!DeletePropertyOrThrow(cx, obj, i))
                 return false;
-            if (!SetElement(cx, obj, len - i - 1, lowval))
+            if (!SetArrayElement(cx, obj, len - i - 1, lowval))
                 return false;
         } else {
             // No action required.
@@ -1955,7 +2039,7 @@ FillWithUndefined(JSContext* cx, HandleObject obj, uint32_t start, uint32_t coun
     } while (false);
 
     for (uint32_t i = 0; i < count; i++) {
-        if (!CheckForInterrupt(cx) || !SetElement(cx, obj, start + i, UndefinedHandleValue))
+        if (!CheckForInterrupt(cx) || !SetArrayElement(cx, obj, start + i, UndefinedHandleValue))
             return false;
     }
 
@@ -2220,7 +2304,7 @@ js::array_pop(JSContext* cx, unsigned argc, Value* vp)
         index--;
 
         // Steps 4.c, 4.f.
-        if (!GetElement(cx, obj, index, args.rval()))
+        if (!GetArrayElement(cx, obj, index, args.rval()))
             return false;
 
         // Steps 4.d.
@@ -2355,7 +2439,7 @@ js::array_shift(JSContext* cx, unsigned argc, Value* vp)
             if (!DeletePropertyOrThrow(cx, obj, i))
                 return false;
         } else {
-            if (!SetElement(cx, obj, i, value))
+            if (!SetArrayElement(cx, obj, i, value))
                 return false;
         }
     }
@@ -2436,7 +2520,7 @@ js::array_unshift(JSContext* cx, unsigned argc, Value* vp)
                         if (!DeletePropertyOrThrow(cx, obj, upperIndex))
                             return false;
                     } else {
-                        if (!SetElement(cx, obj, upperIndex, value))
+                        if (!SetArrayElement(cx, obj, upperIndex, value))
                             return false;
                     }
                 } while (last != 0);
@@ -2515,7 +2599,7 @@ ArraySpliceCopy(JSContext* cx, HandleObject arr, HandleObject obj,
         // Step 11.c.
         if (!hole) {
             // Step 11.c.ii.
-            if (!DefineElement(cx, arr, k, fromValue))
+            if (!DefineArrayElement(cx, arr, k, fromValue))
                 return false;
         }
     }
@@ -2659,7 +2743,7 @@ array_splice_impl(JSContext* cx, unsigned argc, Value* vp, bool returnValueIsUse
                         return false;
                 } else {
                     /* Step 15.b.iv.2. */
-                    if (!SetElement(cx, obj, to, fromValue))
+                    if (!SetArrayElement(cx, obj, to, fromValue))
                         return false;
                 }
             }
@@ -2743,7 +2827,7 @@ array_splice_impl(JSContext* cx, unsigned argc, Value* vp, bool returnValueIsUse
                         return false;
                 } else {
                     /* Step 16.b.iv.2. */
-                    if (!SetElement(cx, obj, to, fromValue))
+                    if (!SetArrayElement(cx, obj, to, fromValue))
                         return false;
                 }
             }
@@ -2890,7 +2974,7 @@ SliceSlowly(JSContext* cx, HandleObject obj, uint32_t begin, uint32_t end, Handl
         {
             return false;
         }
-        if (!hole && !DefineElement(cx, result, slot - begin, value))
+        if (!hole && !DefineArrayElement(cx, result, slot - begin, value))
             return false;
     }
     return true;
@@ -2910,7 +2994,7 @@ SliceSparse(JSContext* cx, HandleObject obj, uint32_t begin, uint32_t end, Handl
         return SliceSlowly(cx, obj, begin, end, result);
 
     RootedValue value(cx);
-    for (size_t index : indexes) {
+    for (uint32_t index : indexes) {
         MOZ_ASSERT(begin <= index && index < end);
 
         bool hole;
@@ -3063,7 +3147,7 @@ js::array_slice(JSContext* cx, unsigned argc, Value* vp)
         /* Step 10.c. */
         if (!kNotPresent) {
             /* Steps 10.c.ii. */
-            if (!DefineElement(cx, arr, n, kValue))
+            if (!DefineArrayElement(cx, arr, n, kValue))
                 return false;
         }
         /* Step 10.d. */
