@@ -122,6 +122,8 @@ GROUP_RULE_FUNCS(Document)
 #undef BASIC_RULE_FUNCS
 SERVO_BINDING_FUNC(Servo_CssRules_GetFontFaceRuleAt, nsCSSFontFaceRule*,
                    ServoCssRulesBorrowed rules, uint32_t index)
+SERVO_BINDING_FUNC(Servo_CssRules_GetCounterStyleRuleAt, nsCSSCounterStyleRule*,
+                   ServoCssRulesBorrowed rules, uint32_t index)
 SERVO_BINDING_FUNC(Servo_StyleRule_GetStyle, RawServoDeclarationBlockStrong,
                    RawServoStyleRuleBorrowed rule)
 SERVO_BINDING_FUNC(Servo_StyleRule_SetStyle, void,

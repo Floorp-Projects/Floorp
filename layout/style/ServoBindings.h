@@ -51,6 +51,7 @@ namespace mozilla {
 using mozilla::FontFamilyList;
 using mozilla::FontFamilyType;
 using mozilla::ServoElementSnapshot;
+class nsCSSCounterStyleRule;
 class nsCSSFontFaceRule;
 struct nsMediaFeature;
 struct nsStyleList;
@@ -519,6 +520,12 @@ const char* Gecko_CSSKeywordString(nsCSSKeyword keyword, uint32_t* len);
 nsCSSFontFaceRule* Gecko_CSSFontFaceRule_Create(uint32_t line, uint32_t column);
 void Gecko_CSSFontFaceRule_GetCssText(const nsCSSFontFaceRule* rule, nsAString* result);
 NS_DECL_FFI_REFCOUNTING(nsCSSFontFaceRule, CSSFontFaceRule);
+
+// Counter style rule
+// Creates and returns a new (already-addrefed) nsCSSCounterStyleRule object.
+nsCSSCounterStyleRule* Gecko_CSSCounterStyle_Create(nsIAtom* name);
+void Gecko_CSSCounterStyle_GetCssText(const nsCSSCounterStyleRule* rule, nsAString* result);
+NS_DECL_FFI_REFCOUNTING(nsCSSCounterStyleRule, CSSCounterStyleRule);
 
 RawGeckoElementBorrowedOrNull Gecko_GetBody(RawGeckoPresContextBorrowed pres_context);
 

@@ -2461,7 +2461,11 @@ nsCSSCounterStyleRule::SetName(const nsAString& aName)
     mName = name;
 
     if (StyleSheet* sheet = GetStyleSheet()) {
-      sheet->AsGecko()->SetModifiedByChildRule();
+      if (sheet->IsGecko()) {
+        sheet->AsGecko()->SetModifiedByChildRule();
+      } else {
+        NS_ERROR("stylo: Dynamic change on @counter-style not yet supported");
+      }
       if (doc) {
         doc->StyleRuleChanged(sheet, this);
       }
@@ -2506,7 +2510,11 @@ nsCSSCounterStyleRule::SetDesc(nsCSSCounterDesc aDescID, const nsCSSValue& aValu
   mGeneration++;
 
   if (StyleSheet* sheet = GetStyleSheet()) {
-    sheet->AsGecko()->SetModifiedByChildRule();
+    if (sheet->IsGecko()) {
+      sheet->AsGecko()->SetModifiedByChildRule();
+    } else {
+      NS_ERROR("stylo: Dynamic change on @counter-style not yet supported");
+    }
     if (doc) {
       doc->StyleRuleChanged(sheet, this);
     }
