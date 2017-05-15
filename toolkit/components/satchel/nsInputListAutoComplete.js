@@ -19,6 +19,7 @@ InputListAutoComplete.prototype = {
     let searchResult = values.length > 0 ? Ci.nsIAutoCompleteResult.RESULT_SUCCESS
                                          : Ci.nsIAutoCompleteResult.RESULT_NOMATCH;
     let defaultIndex = values.length > 0 ? 0 : -1;
+
     return new FormAutoCompleteResult(aUntrimmedSearchString,
                                       searchResult, defaultIndex, "",
                                       values, labels, [], null);
@@ -27,36 +28,34 @@ InputListAutoComplete.prototype = {
   getListSuggestions(aField) {
     let values = [];
     let labels = [];
+    if (!aField || !aField.list) {
+      return [values, labels];
+    }
 
-    if (aField) {
-      let filter = !aField.hasAttribute("mozNoFilter");
-      let lowerFieldValue = aField.value.toLowerCase();
+    let filter = !aField.hasAttribute("mozNoFilter");
+    let lowerFieldValue = aField.value.toLowerCase();
+    let options = aField.list.options;
 
-      if (aField.list) {
-        let options = aField.list.options;
-        let length = options.length;
-        for (let i = 0; i < length; i++) {
-          let item = options.item(i);
-          let label = "";
-          if (item.label) {
-            label = item.label;
-          } else if (item.text) {
-            label = item.text;
-          } else {
-            label = item.value;
-          }
-
-          if (filter && label.toLowerCase().indexOf(lowerFieldValue) == -1) {
-            continue;
-          }
-
-          labels.push(label);
-          values.push(item.value);
-        }
+    for (let item of options) {
+      let label = "";
+      if (item.label) {
+        label = item.label;
+      } else if (item.text) {
+        label = item.text;
+      } else {
+        label = item.value;
       }
+
+      if (filter && !label.toLowerCase().includes(lowerFieldValue)) {
+        continue;
+      }
+
+      labels.push(label);
+      values.push(item.value);
     }
 
     return [values, labels];
+
   }
 };
 
