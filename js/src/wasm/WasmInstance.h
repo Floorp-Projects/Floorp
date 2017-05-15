@@ -134,6 +134,13 @@ class Instance
 
     MOZ_MUST_USE bool callExport(JSContext* cx, uint32_t funcIndex, CallArgs args);
 
+    // Return the name associated with a given function index, or generate one
+    // if none was given by the module.
+
+    bool getFuncName(uint32_t funcIndex, UTF8Bytes* name) const;
+    JSAtom* getFuncAtom(JSContext* cx, uint32_t funcIndex) const;
+    void ensureProfilingLabels(bool profilingEnabled) const;
+
     // Initially, calls to imports in wasm code call out through the generic
     // callImport method. If the imported callee gets JIT compiled and the types
     // match up, callImport will patch the code to instead call through a thunk
@@ -153,6 +160,7 @@ class Instance
     void onMovingGrowTable();
 
     // Debug support:
+
     bool debugEnabled() const { return code_->metadata().debugEnabled; }
     bool enterFrameTrapsEnabled() const { return enterFrameTrapsEnabled_; }
     void ensureEnterFrameTrapsState(JSContext* cx, bool enabled);
