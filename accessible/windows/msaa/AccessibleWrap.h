@@ -201,6 +201,10 @@ public:
 
   bool DispatchTextChangeToHandler(bool aIsInsert, const nsString& aText,
                                    int32_t aStart, uint32_t aLen);
+
+  static void AssignChildIDTo(NotNull<sdnAccessible*> aSdnAcc);
+  static void ReleaseChildID(NotNull<sdnAccessible*> aSdnAcc);
+
 protected:
   virtual ~AccessibleWrap();
 
