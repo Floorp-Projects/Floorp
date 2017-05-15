@@ -65,7 +65,6 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
     JSObject* PrepareObjectForLocation(JSContext* aCx,
                                        nsIFile* aComponentFile,
                                        nsIURI* aComponent,
-                                       bool aReuseLoaderGlobal,
                                        bool* aRealFile);
 
     nsresult ObjectForLocation(ComponentLoaderInfo& aInfo,
@@ -155,7 +154,6 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
     nsDataHashtable<nsCStringHashKey, ModuleEntry*> mInProgressImports;
 
     bool mInitialized;
-    bool mReuseLoaderGlobal;
 };
 
 #endif
