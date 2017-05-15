@@ -1904,6 +1904,28 @@ Gecko_CSSValue_SetPair(nsCSSValueBorrowedMut aCSSValue,
   aCSSValue->SetPairValue(*aXValue, *aYValue);
 }
 
+void
+Gecko_CSSValue_SetList(nsCSSValueBorrowedMut aCSSValue, uint32_t aLen)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  nsCSSValueList* item = aCSSValue->SetListValue();
+  for (uint32_t i = 1; i < aLen; ++i) {
+    item->mNext = new nsCSSValueList;
+    item = item->mNext;
+  }
+}
+
+void
+Gecko_CSSValue_SetPairList(nsCSSValueBorrowedMut aCSSValue, uint32_t aLen)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  nsCSSValuePairList* item = aCSSValue->SetPairListValue();
+  for (uint32_t i = 1; i < aLen; ++i) {
+    item->mNext = new nsCSSValuePairList;
+    item = item->mNext;
+  }
+}
+
 
 bool
 Gecko_PropertyId_IsPrefEnabled(nsCSSPropertyID id)
