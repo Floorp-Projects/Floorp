@@ -187,9 +187,6 @@ to mochitest command.
     * ... `border-spacing: ` [6]
     * ... `rect(1, ` [2]
   * test_hover_quirk.html: hover quirks bug 1355724 [6]
-* support some pseudo-classes on some pseudo-elements bug 1364412
-  * test_pseudoelement_parsing.html [5]
-  * test_pseudoelement_state.html [8]
 * Unit should be preserved after parsing servo/servo#15346
   * test_units_time.html [1]
 * getComputedStyle style doesn't contain custom properties bug 1336891
