@@ -30,12 +30,13 @@ createHTML({
 function startTest(media, token) {
   let manager = window.mediaTestManager;
   manager.started(token);
+  info("Starting test for " + media.name);
   var video = document.createElement('video');
   video.id = "id_" + media.name;
   video.width = 160;
   video.height = 120;
   video.muted = true;
-  video.loop = true;
+  video.controls = true;
   video.preload = "metadata";
   video.src = "../../test/" + media.name;
 
@@ -62,8 +63,12 @@ function startTest(media, token) {
       test.chain.replace("PC_LOCAL_GUM", [
         function PC_LOCAL_CAPTUREVIDEO(test) {
           test.pcLocal.attachLocalStream(stream);
+        },
+      ]);
+      test.chain.insertBefore("PC_LOCAL_WAIT_FOR_MEDIA_FLOW", [
+        function PC_LOCAL_START_MEDIA(test) {
           video.play();
-        }
+        },
       ]);
       return test.chain.execute();
     });
