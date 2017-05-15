@@ -217,3 +217,32 @@ add_task(async function test_filter() {
   equal(clients[0].tabs.length, 1);
   equal(clients[0].tabs[0].url, "http://foo.com/");
 });
+
+add_task(async function test_duplicatesTabsAcrossClients() {
+
+  await configureClients({
+    guid_desktop: {
+      clientName: "My Desktop",
+      tabs: [
+      {
+        urlHistory: ["http://foo.com/"],
+        title: "A test page.",
+      }],
+    },
+    guid_mobile: {
+      clientName: "My Phone",
+      tabs: [
+      {
+          urlHistory: ["http://foo.com/"],
+          title: "A test page.",
+      }],
+    },
+  });
+
+  let clients = await SyncedTabs.getTabClients();
+  equal(clients.length, 2);
+  equal(clients[0].tabs.length, 1);
+  equal(clients[1].tabs.length, 1);
+  equal(clients[0].tabs[0].url, "http://foo.com/");
+  equal(clients[1].tabs[0].url, "http://foo.com/");
+});

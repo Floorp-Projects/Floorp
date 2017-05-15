@@ -307,9 +307,8 @@ body.compact #newtab-search-container {
   fill: #616366;
   padding: 0;
   border: 1px solid;
-  border-color: hsla(210,54%,20%,.15) hsla(210,54%,20%,.17) hsla(210,54%,20%,.2);
+  border-color: hsla(210,54%,20%,.15) hsla(210,54%,20%,.17) hsla(210,54%,20%,.2) transparent;
   border-radius: 0 2px 2px 0;
-  border-inline-start: 1px solid transparent;
   box-shadow: 0 0 2px hsla(0,0%,100%,.5) inset,
               0 1px 0 hsla(0,0%,100%,.2);
   cursor: pointer;
@@ -319,8 +318,7 @@ body.compact #newtab-search-container {
 }
 
 #newtab-search-submit:dir(rtl) {
-  border-radius: 2px 0 0 2px;
-  background-image: url("chrome://browser/skin/search-arrow-go-rtl.svg"), linear-gradient(hsla(0,0%,100%,.8), hsla(0,0%,100%,.1));
+  transform: scaleX(-1);
 }
 
 #newtab-search-text:focus + #newtab-search-submit,
@@ -352,14 +350,6 @@ body.compact #newtab-search-container {
   box-shadow: 0 1px 1px hsla(211,79%,6%,.1) inset,
               0 0 1px hsla(211,79%,6%,.2) inset;
   transition-duration: 0ms;
-}
-
-#newtab-search-text:focus + #newtab-search-submit:dir(rtl),
-#newtab-search-text[keepfocus] + #newtab-search-submit:dir(rtl),
-#newtab-search-text[autofocus] + #newtab-search-submit:dir(rtl),
-#newtab-search-text + #newtab-search-submit:dir(rtl):hover {
-  background-image: url("chrome://browser/skin/search-arrow-go-rtl.svg"), linear-gradient(#4cb1ff, #1793e5);
-  fill: white;
 }
 
 /* CUSTOMIZE */

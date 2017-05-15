@@ -335,6 +335,7 @@ panelview:not([mainview]) .toolbarbutton-text,
 photonpanelmultiview panelview {
   background: var(--arrowpanel-background);
   padding: 6px 0;
+  min-width: @menuPanelWidth@;
 }
 
 photonpanelmultiview panelview[title] {

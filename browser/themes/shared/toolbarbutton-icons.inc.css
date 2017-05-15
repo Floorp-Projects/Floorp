@@ -17,11 +17,19 @@ toolbar[brighttext] :-moz-any(@primaryToolbarButtons@) {
   list-style-image: url("chrome://browser/skin/back-large.svg");
 }
 
+#back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
+  transform: scaleX(-1);
+}
+
 #forward-button {
   list-style-image: url("chrome://browser/skin/forward.svg");
 }
 
 %ifdef MOZ_PHOTON_THEME
+#forward-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
+  transform: scaleX(-1);
+}
+
 #reload-button {
   list-style-image: url("chrome://browser/skin/reload.svg");
 }

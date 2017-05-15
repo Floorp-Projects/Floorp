@@ -133,6 +133,45 @@ private:
   nsTextEditorState* mTextEditorState;
 };
 
+class MOZ_RAII AutoRestoreEditorState final
+{
+public:
+  explicit AutoRestoreEditorState(nsIEditor* aEditor,
+                                  nsIPlaintextEditor* aPlaintextEditor
+                                  MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : mEditor(aEditor)
+    , mPlaintextEditor(aPlaintextEditor)
+  {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    MOZ_ASSERT(mEditor);
+    MOZ_ASSERT(mPlaintextEditor);
+
+    uint32_t flags;
+    mEditor->GetFlags(&mSavedFlags);
+    flags = mSavedFlags;
+    flags &= ~(nsIPlaintextEditor::eEditorDisabledMask);
+    flags &= ~(nsIPlaintextEditor::eEditorReadonlyMask);
+    flags |= nsIPlaintextEditor::eEditorDontEchoPassword;
+    mEditor->SetFlags(flags);
+
+    mPlaintextEditor->GetMaxTextLength(&mSavedMaxLength);
+    mPlaintextEditor->SetMaxTextLength(-1);
+  }
+
+  ~AutoRestoreEditorState()
+  {
+     mPlaintextEditor->SetMaxTextLength(mSavedMaxLength);
+     mEditor->SetFlags(mSavedFlags);
+  }
+
+private:
+  nsIEditor* mEditor;
+  nsIPlaintextEditor* mPlaintextEditor;
+  uint32_t mSavedFlags;
+  int32_t mSavedMaxLength;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
 /*static*/
 bool
 nsITextControlElement::GetWrapPropertyEnum(nsIContent* aContent,
@@ -2551,8 +2590,9 @@ nsTextEditorState::SetValue(const nsAString& aValue, uint32_t aFlags)
         if (domSel)
         {
           selPriv = do_QueryInterface(domSel);
-          if (selPriv)
+          if (selPriv) {
             selPriv->StartBatchChanges();
+          }
         }
 
         nsCOMPtr<nsISelectionController> kungFuDeathGrip = mSelCon.get();
@@ -2577,33 +2617,24 @@ nsTextEditorState::SetValue(const nsAString& aValue, uint32_t aFlags)
 
         valueSetter.Init();
 
-        // get the flags, remove readonly and disabled, set the value,
-        // restore flags
-        uint32_t flags, savedFlags;
-        mEditor->GetFlags(&savedFlags);
-        flags = savedFlags;
-        flags &= ~(nsIPlaintextEditor::eEditorDisabledMask);
-        flags &= ~(nsIPlaintextEditor::eEditorReadonlyMask);
-        flags |= nsIPlaintextEditor::eEditorDontEchoPassword;
-        mEditor->SetFlags(flags);
+        // get the flags, remove readonly, disabled and max-length,
+        // set the value, restore flags
+        {
+          AutoRestoreEditorState restoreState(mEditor, plaintextEditor);
 
-        mTextListener->SettingValue(true);
-        bool notifyValueChanged = !!(aFlags & eSetValue_Notify);
-        mTextListener->SetValueChanged(notifyValueChanged);
+          mTextListener->SettingValue(true);
+          bool notifyValueChanged = !!(aFlags & eSetValue_Notify);
+          mTextListener->SetValueChanged(notifyValueChanged);
 
-        // Also don't enforce max-length here
-        int32_t savedMaxLength;
-        plaintextEditor->GetMaxTextLength(&savedMaxLength);
-        plaintextEditor->SetMaxTextLength(-1);
+          if (insertValue.IsEmpty()) {
+            mEditor->DeleteSelection(nsIEditor::eNone, nsIEditor::eStrip);
+          } else {
+            plaintextEditor->InsertText(insertValue);
+          }
 
-        if (insertValue.IsEmpty()) {
-          mEditor->DeleteSelection(nsIEditor::eNone, nsIEditor::eStrip);
-        } else {
-          plaintextEditor->InsertText(insertValue);
+          mTextListener->SetValueChanged(true);
+          mTextListener->SettingValue(false);
         }
-
-        mTextListener->SetValueChanged(true);
-        mTextListener->SettingValue(false);
 
         if (!weakFrame.IsAlive()) {
           // If the frame was destroyed because of a flush somewhere inside
@@ -2623,10 +2654,9 @@ nsTextEditorState::SetValue(const nsAString& aValue, uint32_t aFlags)
           }
         }
 
-        plaintextEditor->SetMaxTextLength(savedMaxLength);
-        mEditor->SetFlags(savedFlags);
-        if (selPriv)
+        if (selPriv) {
           selPriv->EndBatchChanges();
+        }
       }
     }
   } else {

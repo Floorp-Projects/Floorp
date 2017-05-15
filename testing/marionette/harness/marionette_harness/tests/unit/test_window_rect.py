@@ -121,8 +121,8 @@ class TestSize(MarionetteTestCase):
         # so reset to original size minus 1 pixel width
         start_size = self.marionette.window_size
         if start_size["width"] == self.max["width"] and start_size["height"] == self.max["height"]:
-            self.start_size["width"] -= 1
-            self.start_size["height"] -= 1
+            start_size["width"] -= 1
+            start_size["height"] -= 1
         self.marionette.set_window_size(start_size["width"], start_size["height"])
 
         self.original_size = self.marionette.window_size
