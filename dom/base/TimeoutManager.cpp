@@ -640,6 +640,7 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
   TimeStamp start = TimeStamp::Now();
 
   bool targetTimeoutSeen = false;
+  bool timeBudgetExhausted = false;
 
   // We stop iterating each list when we go past the last expired timeout from
   // that list that we have observed above.  That timeout will either be the
@@ -706,8 +707,18 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
       // Note, we only do this if we have seen the Timeout object explicitly
       // passed to RunTimeout().  The target timeout must always be executed.
       if (targetTimeoutSeen) {
+
+        // Don't waste time calling TimeStamp::Now() if we have already
+        // run out of time.
+        if (timeBudgetExhausted) {
+          timeout->mFiringDepth = 0;
+          continue;
+        }
+
+        // Otherwise re-check the time budget.
         TimeDuration elapsed = TimeStamp::Now() - start;
         if (elapsed >= timeLimit) {
+          timeBudgetExhausted = true;
           timeout->mFiringDepth = 0;
           continue;
         }
