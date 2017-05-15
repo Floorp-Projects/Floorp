@@ -3327,7 +3327,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleXUL
   mozilla::StyleBoxDirection mBoxDirection; // [reset]
   mozilla::StyleBoxOrient mBoxOrient;       // [reset]
   mozilla::StyleBoxPack mBoxPack;           // [reset]
-  bool          mStretchStack;          // [reset] see nsStyleConsts.h
+  mozilla::StyleStackSizing mStackSizing;   // [reset] see nsStyleConsts.h
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleColumn

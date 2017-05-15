@@ -460,7 +460,6 @@ fuzzy-if(skiaContent,2,3) == 339289-1.html 339289-1-ref.html
 == 345267-1c.html 345267-1-ref.html
 == 345267-1d.html 345267-1-ref.html
 != 345563-sub.xhtml 345563-sup.xhtml
-== 346189-1.xul 346189-1-ref.xul
 fuzzy-if(skiaContent,4,2) == 346774-1a.html 346774-1-ref.html
 fuzzy-if(skiaContent,4,2) == 346774-1b.html 346774-1-ref.html
 fuzzy-if(skiaContent,4,2) == 346774-1c.html 346774-1-ref.html

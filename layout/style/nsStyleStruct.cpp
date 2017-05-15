@@ -750,7 +750,7 @@ nsStyleXUL::nsStyleXUL(const nsPresContext* aContext)
   , mBoxDirection(StyleBoxDirection::Normal)
   , mBoxOrient(StyleBoxOrient::Horizontal)
   , mBoxPack(StyleBoxPack::Start)
-  , mStretchStack(true)
+  , mStackSizing(StyleStackSizing::StretchToFit)
 {
   MOZ_COUNT_CTOR(nsStyleXUL);
 }
@@ -767,7 +767,7 @@ nsStyleXUL::nsStyleXUL(const nsStyleXUL& aSource)
   , mBoxDirection(aSource.mBoxDirection)
   , mBoxOrient(aSource.mBoxOrient)
   , mBoxPack(aSource.mBoxPack)
-  , mStretchStack(aSource.mStretchStack)
+  , mStackSizing(aSource.mStackSizing)
 {
   MOZ_COUNT_CTOR(nsStyleXUL);
 }
@@ -781,7 +781,7 @@ nsStyleXUL::CalcDifference(const nsStyleXUL& aNewData) const
       mBoxOrient == aNewData.mBoxOrient &&
       mBoxPack == aNewData.mBoxPack &&
       mBoxOrdinal == aNewData.mBoxOrdinal &&
-      mStretchStack == aNewData.mStretchStack) {
+      mStackSizing == aNewData.mStackSizing) {
     return nsChangeHint(0);
   }
   if (mBoxOrdinal != aNewData.mBoxOrdinal) {
