@@ -612,7 +612,6 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
     JSAutoCompartment ac(cx, obj);
 
     RootedScript script(cx);
-    RootedFunction function(cx);
 
     nsAutoCString nativePath;
     rv = aInfo.URI()->GetSpec(nativePath);
@@ -634,7 +633,7 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
         ReadCachedScript(cache, cachePath, cx, mSystemPrincipal, &script);
     }
 
-    if (script || function) {
+    if (script) {
         LOG(("Successfully loaded %s from startupcache\n", nativePath.get()));
     } else if (cache) {
         // This is ok, it just means the script is not yet in the
@@ -645,7 +644,7 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
         JS_ClearPendingException(cx);
     }
 
-    if (!script && !function) {
+    if (!script) {
         // The script wasn't in the cache , so compile it now.
         LOG(("Slow loading %s\n", nativePath.get()));
 
@@ -744,36 +743,22 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
         }
         // Propagate the exception, if one exists. Also, don't leave the stale
         // exception on this context.
-        if (!script && !function && aPropagateExceptions &&
-            jsapi.HasException()) {
+        if (!script && aPropagateExceptions && jsapi.HasException()) {
             if (!jsapi.StealException(aException))
                 return NS_ERROR_OUT_OF_MEMORY;
         }
     }
 
-    if (!script && !function) {
+    if (!script) {
         return NS_ERROR_FAILURE;
     }
 
-    // We must have a script or a function (but not both!) here.  We have a
-    // script when we're not reusing the loader global, and a function
-    // otherwise.
-    MOZ_ASSERT(!!script != !!function);
-    MOZ_ASSERT(!!script == JS_IsGlobalObject(obj));
-
-    if (script) {
-        ScriptPreloader::GetSingleton().NoteScript(nativePath, cachePath, script);
-    }
+    ScriptPreloader::GetSingleton().NoteScript(nativePath, cachePath, script);
 
     if (writeToCache) {
         // We successfully compiled the script, so cache it.
-        if (script) {
-            rv = WriteCachedScript(cache, cachePath, cx, mSystemPrincipal,
-                                   script);
-        } else {
-            rv = WriteCachedFunction(cache, cachePath, cx, mSystemPrincipal,
-                                     function);
-        }
+        rv = WriteCachedScript(cache, cachePath, cx, mSystemPrincipal,
+                               script);
 
         // Don't treat failure to write as fatal, since we might be working
         // with a read-only cache.
@@ -788,34 +773,18 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
     // See bug 384168.
     aObject.set(obj);
 
-    RootedScript tableScript(cx, script);
-    if (!tableScript) {
-        tableScript = JS_GetFunctionScript(cx, function);
-        MOZ_ASSERT(tableScript);
-    }
-
-    aTableScript.set(tableScript);
+    aTableScript.set(script);
 
 
     {   // Scope for AutoEntryScript
 
-        // We're going to run script via JS_ExecuteScript or
-        // JS_CallFunction, so we need an AutoEntryScript.
-        // This is Gecko-specific and not in any spec.
+        // We're going to run script via JS_ExecuteScript, so we need an
+        // AutoEntryScript. This is Gecko-specific and not in any spec.
         dom::AutoEntryScript aes(CurrentGlobalOrNull(cx),
                                  "component loader load module");
         JSContext* aescx = aes.cx();
-        bool ok;
-        if (script) {
-            JS::RootedValue rval(cx);
-            ok = JS::CloneAndExecuteScript(aescx, script, &rval);
-        } else {
-            RootedValue rval(cx);
-            ok = JS_CallFunction(aescx, obj, function,
-                                 JS::HandleValueArray::empty(), &rval);
-        }
-
-        if (!ok) {
+        JS::RootedValue rval(cx);
+        if (!JS::CloneAndExecuteScript(aescx, script, &rval)) {
             if (aPropagateExceptions && aes.HasException()) {
                 // Ignore return value because we're returning an error code
                 // anyway.

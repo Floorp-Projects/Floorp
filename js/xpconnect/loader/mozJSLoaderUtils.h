@@ -24,9 +24,5 @@ nsresult
 WriteCachedScript(mozilla::scache::StartupCache* cache, nsACString& uri,
                   JSContext* cx, nsIPrincipal* systemPrincipal,
                   JS::HandleScript script);
-nsresult
-WriteCachedFunction(mozilla::scache::StartupCache* cache, nsACString& uri,
-                    JSContext* cx, nsIPrincipal* systemPrincipal,
-                    JSFunction* function);
 
 #endif /* mozJSLoaderUtils_h */

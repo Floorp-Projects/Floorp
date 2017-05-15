@@ -67,11 +67,3 @@ WriteCachedScript(StartupCache* cache, nsACString& uri, JSContext* cx,
                                    size);
     return rv;
 }
-
-nsresult
-WriteCachedFunction(StartupCache* cache, nsACString& uri, JSContext* cx,
-                    nsIPrincipal* systemPrincipal, JSFunction* function)
-{
-    // This doesn't actually work ...
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
