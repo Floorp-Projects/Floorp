@@ -35,7 +35,9 @@ struct StyleSheetInfo
   StyleSheetInfo(StyleSheetInfo& aCopy,
                  StyleSheet* aPrimarySheet);
 
-  virtual ~StyleSheetInfo() {}
+  virtual ~StyleSheetInfo();
+
+  virtual StyleSheetInfo* CloneFor(StyleSheet* aPrimarySheet) = 0;
 
   virtual void AddSheet(StyleSheet* aSheet);
   virtual void RemoveSheet(StyleSheet* aSheet);

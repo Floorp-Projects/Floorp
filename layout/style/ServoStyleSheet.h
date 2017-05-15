@@ -33,6 +33,11 @@ struct ServoStyleSheetInner : public StyleSheetInfo
   ServoStyleSheetInner(CORSMode aCORSMode,
                        ReferrerPolicy aReferrerPolicy,
                        const dom::SRIMetadata& aIntegrity);
+  ServoStyleSheetInner(ServoStyleSheetInner& aCopy,
+                       ServoStyleSheet* aPrimarySheet);
+  ~ServoStyleSheetInner();
+
+  StyleSheetInfo* CloneFor(StyleSheet* aPrimarySheet) override;
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
@@ -94,8 +99,7 @@ public:
   // version.
   css::Rule* GetDOMOwnerRule() const final;
 
-  void WillDirty() {}
-  void DidDirty() {}
+  void DidDirty() override {}
 
   virtual already_AddRefed<StyleSheet> Clone(StyleSheet* aCloneParent,
     css::ImportRule* aCloneOwnerRule,

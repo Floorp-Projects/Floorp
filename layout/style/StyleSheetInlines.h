@@ -129,10 +129,6 @@ StyleSheet::GetIntegrity(dom::SRIMetadata& aResult) const
   aResult = SheetInfo().mIntegrity;
 }
 
-void StyleSheet::WillDirty() { MOZ_STYLO_FORWARD(WillDirty, ()) }
-void StyleSheet::DidDirty() { MOZ_STYLO_FORWARD(DidDirty, ()) }
-
-
 }
 
 #endif // mozilla_StyleSheetInlines_h

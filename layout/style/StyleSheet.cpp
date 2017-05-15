@@ -50,6 +50,12 @@ StyleSheet::StyleSheet(const StyleSheet& aCopy,
   MOZ_ASSERT(mInner, "Should only copy StyleSheets with an mInner.");
   mInner->AddSheet(this);
 
+  if (mDirty) { // CSSOM's been there, force full copy now
+    NS_ASSERTION(mInner->mComplete, "Why have rules been accessed on an incomplete sheet?");
+    // FIXME: handle failure?
+    EnsureUniqueInner();
+  }
+
   if (aCopy.mMedia) {
     // XXX This is wrong; we should be keeping @import rules and
     // sheets in sync!
@@ -241,6 +247,10 @@ StyleSheetInfo::StyleSheetInfo(StyleSheetInfo& aCopy,
   AddSheet(aPrimarySheet);
 }
 
+StyleSheetInfo::~StyleSheetInfo()
+{
+}
+
 void
 StyleSheetInfo::AddSheet(StyleSheet* aSheet)
 {
@@ -386,6 +396,32 @@ StyleSheet::DeleteRule(uint32_t aIndex)
   ErrorResult rv;
   DeleteRule(aIndex, *nsContentUtils::SubjectPrincipal(), rv);
   return rv.StealNSResult();
+}
+
+void
+StyleSheet::WillDirty()
+{
+  if (mInner->mComplete) {
+    EnsureUniqueInner();
+  }
+}
+
+void
+StyleSheet::EnsureUniqueInner()
+{
+  MOZ_ASSERT(mInner->mSheets.Length() != 0,
+             "unexpected number of outers");
+  mDirty = true;
+
+  if (mInner->mSheets.Length() == 1) {
+    // already unique
+    return;
+  }
+
+  StyleSheetInfo* clone = mInner->CloneFor(this);
+  MOZ_ASSERT(clone);
+  mInner->RemoveSheet(this);
+  mInner = clone;
 }
 
 // WebIDL CSSStyleSheet API
