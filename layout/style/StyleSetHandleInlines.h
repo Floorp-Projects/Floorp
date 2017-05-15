@@ -296,6 +296,18 @@ StyleSetHandle::Ptr::CounterStyleRuleForName(nsIAtom* aName)
   FORWARD(CounterStyleRuleForName, (aName));
 }
 
+bool
+StyleSetHandle::Ptr::EnsureUniqueInnerOnCSSSheets()
+{
+  FORWARD(EnsureUniqueInnerOnCSSSheets, ());
+}
+
+void
+StyleSetHandle::Ptr::SetNeedsRestyleAfterEnsureUniqueInner()
+{
+  FORWARD(SetNeedsRestyleAfterEnsureUniqueInner, ());
+}
+
 } // namespace mozilla
 
 #undef FORWARD

@@ -43,6 +43,7 @@ ServoStyleSet::ServoStyleSet()
   , mAllowResolveStaleStyles(false)
   , mAuthorStyleDisabled(false)
   , mStylistState(StylistState::NotDirty)
+  , mNeedsRestyleAfterEnsureUniqueInner(false)
 {
 }
 
@@ -981,6 +982,17 @@ ServoStyleSet::ComputeAnimationValue(
                                       aComputedValues.mCurrentStyle,
                                       aComputedValues.mParentStyle,
                                       mRawSet.get()).Consume();
+}
+
+bool
+ServoStyleSet::EnsureUniqueInnerOnCSSSheets()
+{
+  // This is a stub until more of the functionality of nsStyleSet is
+  // replicated for Servo here.
+
+  bool res = mNeedsRestyleAfterEnsureUniqueInner;
+  mNeedsRestyleAfterEnsureUniqueInner = false;
+  return res;
 }
 
 void
