@@ -13,6 +13,7 @@
 <p id="display"></p>
 <div id="content" style="display: none"></div>
 <pre id="test"></pre>
+<script src="utils.js"></script>
 <script class="testbody" type="text/javascript">
 
   var content;
@@ -22,9 +23,8 @@
   function simpleRegister() {
     // We use the control scope for the less specific registration. The window will register a worker on controller/
     return navigator.serviceWorker.register("worker.js", { scope: "./control" })
-      .then(function(reg) {
-        registration = reg;
-      });;
+      .then(swr => waitForState(swr.installing, 'activated', swr))
+      .then(swr => registration = swr);
   }
 
   function unregister() {
