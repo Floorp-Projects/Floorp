@@ -43,7 +43,6 @@ var ParentUtils = {
   },
 };
 
-ParentUtils.cleanUpAddress();
 Services.obs.addObserver(ParentUtils, "formautofill-storage-changed");
 
 addMessageListener("FormAutofillTest:AddAddress", (msg) => {
