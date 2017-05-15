@@ -43,7 +43,7 @@ import org.mozilla.focus.web.IWebView;
 
             case WebView.HitTestResult.IMAGE_TYPE:
                 final String imageURL = hitTestResult.getExtra();
-                callback.onLongPress(new IWebView.HitTarget(false, null, false, imageURL));
+                callback.onLongPress(new IWebView.HitTarget(false, null, true, imageURL));
                 return true;
 
             case WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE:
