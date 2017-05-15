@@ -63,8 +63,8 @@ RoundupCodeLength(uint32_t codeLength)
     return JS_ROUNDUP(codeLength, ExecutableCodePageSize);
 }
 
-static uint8_t*
-AllocateCodeBytes(uint32_t codeLength)
+/* static */ CodeSegment::UniqueCodeBytes
+CodeSegment::AllocateCodeBytes(uint32_t codeLength)
 {
     codeLength = RoundupCodeLength(codeLength);
 
@@ -90,16 +90,18 @@ AllocateCodeBytes(uint32_t codeLength)
     // have the necessary JSContext.
 
     wasmCodeAllocations++;
-    return (uint8_t*)p;
+    return UniqueCodeBytes((uint8_t*)p, FreeCode(codeLength));
 }
 
-static void
-FreeCodeBytes(uint8_t* bytes, uint32_t codeLength)
+void
+CodeSegment::FreeCode::operator()(uint8_t* bytes)
 {
+    MOZ_ASSERT(codeLength);
+    MOZ_ASSERT(codeLength == RoundupCodeLength(codeLength));
+
     MOZ_ASSERT(wasmCodeAllocations > 0);
     wasmCodeAllocations--;
 
-    codeLength = RoundupCodeLength(codeLength);
 #ifdef MOZ_VTUNE
     vtune::UnmarkBytes(bytes, codeLength);
 #endif
@@ -214,7 +216,7 @@ SendCodeRangesToProfiler(const CodeSegment& cs, const Bytes& bytecode, const Met
 }
 
 /* static */ UniqueConstCodeSegment
-CodeSegment::create(jit::MacroAssembler& masm,
+CodeSegment::create(MacroAssembler& masm,
                     const ShareableBytes& bytecode,
                     const LinkData& linkData,
                     const Metadata& metadata)
@@ -227,36 +229,39 @@ CodeSegment::create(jit::MacroAssembler& masm,
 
     MOZ_ASSERT(linkData.functionCodeLength < codeLength);
 
-    uint8_t* codeBase = AllocateCodeBytes(codeLength);
-    if (!codeBase)
+    UniqueCodeBytes codeBytes = AllocateCodeBytes(codeLength);
+    if (!codeBytes)
         return nullptr;
 
     // We'll flush the icache after static linking, in initialize().
-    masm.executableCopy(codeBase, /* flushICache = */ false);
+    masm.executableCopy(codeBytes.get(), /* flushICache = */ false);
 
     // Zero the padding.
-    memset(codeBase + bytesNeeded, 0, padding);
+    memset(codeBytes.get() + bytesNeeded, 0, padding);
 
-    return create(codeBase, codeLength, bytecode, linkData, metadata);
+    return create(Move(codeBytes), codeLength, bytecode, linkData, metadata);
 }
 
 /* static */ UniqueConstCodeSegment
-CodeSegment::create(const Bytes& unlinkedBytes, const ShareableBytes& bytecode,
-                    const LinkData& linkData, const Metadata& metadata)
+CodeSegment::create(const Bytes& unlinkedBytes,
+                    const ShareableBytes& bytecode,
+                    const LinkData& linkData,
+                    const Metadata& metadata)
 {
     uint32_t codeLength = unlinkedBytes.length();
     MOZ_ASSERT(codeLength % gc::SystemPageSize() == 0);
 
-    uint8_t* codeBytes = AllocateCodeBytes(codeLength);
+    UniqueCodeBytes codeBytes = AllocateCodeBytes(codeLength);
     if (!codeBytes)
         return nullptr;
-    memcpy(codeBytes, unlinkedBytes.begin(), codeLength);
+    memcpy(codeBytes.get(), unlinkedBytes.begin(), codeLength);
 
-    return create(codeBytes, codeLength, bytecode, linkData, metadata);
+    return create(Move(codeBytes), codeLength, bytecode, linkData, metadata);
 }
 
 /* static */ UniqueConstCodeSegment
-CodeSegment::create(uint8_t* codeBase, uint32_t codeLength,
+CodeSegment::create(UniqueCodeBytes codeBytes,
+                    uint32_t codeLength,
                     const ShareableBytes& bytecode,
                     const LinkData& linkData,
                     const Metadata& metadata)
@@ -267,55 +272,43 @@ CodeSegment::create(uint8_t* codeBase, uint32_t codeLength,
     MOZ_ASSERT(linkData.unalignedAccessOffset != 0);
 
     auto cs = js::MakeUnique<CodeSegment>();
-    if (!cs) {
-        FreeCodeBytes(codeBase, codeLength);
+    if (!cs)
         return nullptr;
-    }
 
-    if (!cs->initialize(codeBase, codeLength, bytecode, linkData, metadata))
+    if (!cs->initialize(Move(codeBytes), codeLength, bytecode, linkData, metadata))
         return nullptr;
 
     return UniqueConstCodeSegment(cs.release());
 }
 
 bool
-CodeSegment::initialize(uint8_t* codeBase, uint32_t codeLength,
+CodeSegment::initialize(UniqueCodeBytes codeBytes,
+                        uint32_t codeLength,
                         const ShareableBytes& bytecode,
                         const LinkData& linkData,
                         const Metadata& metadata)
 {
     MOZ_ASSERT(bytes_ == nullptr);
 
-    bytes_ = codeBase;
-    // This CodeSegment instance now owns the code bytes, and the CodeSegment's
-    // destructor will take care of freeing those bytes in the case of error.
+    bytes_ = Move(codeBytes);
     functionLength_ = linkData.functionCodeLength;
     length_ = codeLength;
-    interruptCode_ = codeBase + linkData.interruptOffset;
-    outOfBoundsCode_ = codeBase + linkData.outOfBoundsOffset;
-    unalignedAccessCode_ = codeBase + linkData.unalignedAccessOffset;
+    interruptCode_ = bytes_.get() + linkData.interruptOffset;
+    outOfBoundsCode_ = bytes_.get() + linkData.outOfBoundsOffset;
+    unalignedAccessCode_ = bytes_.get() + linkData.unalignedAccessOffset;
 
     if (!StaticallyLink(*this, linkData))
         return false;
 
-    ExecutableAllocator::cacheFlush(codeBase, RoundupCodeLength(codeLength));
+    ExecutableAllocator::cacheFlush(bytes_.get(), RoundupCodeLength(codeLength));
 
     // Reprotect the whole region to avoid having separate RW and RX mappings.
-    if (!ExecutableAllocator::makeExecutable(codeBase, RoundupCodeLength(codeLength)))
+    if (!ExecutableAllocator::makeExecutable(bytes_.get(), RoundupCodeLength(codeLength)))
         return false;
 
     SendCodeRangesToProfiler(*this, bytecode.bytes, metadata);
 
     return true;
-}
-
-CodeSegment::~CodeSegment()
-{
-    if (!bytes_)
-        return;
-
-    MOZ_ASSERT(length() > 0);
-    FreeCodeBytes(bytes_, length());
 }
 
 UniqueConstBytes
@@ -348,7 +341,7 @@ CodeSegment::serialize(uint8_t* cursor, const LinkData& linkData) const
 {
     cursor = WriteScalar<uint32_t>(cursor, length_);
     uint8_t* base = cursor;
-    cursor = WriteBytes(cursor, bytes_, length_);
+    cursor = WriteBytes(cursor, bytes_.get(), length_);
     StaticallyUnlink(base, linkData);
     return cursor;
 }
@@ -363,17 +356,15 @@ CodeSegment::deserialize(const uint8_t* cursor, const ShareableBytes& bytecode,
         return nullptr;
 
     MOZ_ASSERT(length_ % gc::SystemPageSize() == 0);
-    uint8_t* bytes = AllocateCodeBytes(length);
+    UniqueCodeBytes bytes = AllocateCodeBytes(length);
     if (!bytes)
         return nullptr;
 
-    cursor = ReadBytes(cursor, bytes, length);
-    if (!cursor) {
-        FreeCodeBytes(bytes, length);
+    cursor = ReadBytes(cursor, bytes.get(), length);
+    if (!cursor)
         return nullptr;
-    }
 
-    if (!initialize(bytes, length, bytecode, linkData, metadata))
+    if (!initialize(Move(bytes), length, bytecode, linkData, metadata))
         return nullptr;
 
     return cursor;
