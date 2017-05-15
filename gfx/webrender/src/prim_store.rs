@@ -3,7 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use app_units::Au;
-use border::{BorderCornerClipData, BorderCornerDashClipData};
+use border::{BorderCornerClipData, BorderCornerDashClipData, BorderCornerDotClipData};
+use border::BorderCornerInstance;
 use euclid::{Size2D};
 use gpu_store::GpuStoreAddress;
 use internal_types::{SourceTexture, PackedTexel};
@@ -216,9 +217,7 @@ impl YuvImagePrimitiveGpu {
 
 #[derive(Debug, Clone)]
 pub struct BorderPrimitiveCpu {
-    // TODO(gw): Remove this when all border kinds are switched
-    //           over to the new border path!
-    pub use_new_border_path: bool,
+    pub corner_instances: [BorderCornerInstance; 4],
 }
 
 #[derive(Debug, Clone)]
@@ -392,32 +391,38 @@ impl GradientData {
 
         let mut src_stops = src_stops.into_iter();
         let first = src_stops.next().unwrap();
-        let mut cur_color = first.color;
+        let mut cur_color = first.color.premultiplied();
         debug_assert_eq!(first.offset, 0.0);
 
         if reverse_stops {
             // If the gradient is reversed, then we invert offsets and draw right-to-left
             let mut cur_idx = MAX_IDX;
             for next in src_stops {
+                let next_color = next.color.premultiplied();
                 let next_idx = Self::get_index(1.0 - next.offset);
+
                 if next_idx < cur_idx {
                     self.fill_colors(next_idx, cur_idx,
-                                     &next.color, &cur_color);
+                                     &next_color, &cur_color);
                     cur_idx = next_idx;
                 }
-                cur_color = next.color;
+
+                cur_color = next_color;
             }
             debug_assert_eq!(cur_idx, MIN_IDX);
         } else {
             let mut cur_idx = MIN_IDX;
             for next in src_stops {
+                let next_color = next.color.premultiplied();
                 let next_idx = Self::get_index(next.offset);
+
                 if next_idx > cur_idx {
                     self.fill_colors(cur_idx, next_idx,
-                                     &cur_color, &next.color);
+                                     &cur_color, &next_color);
                     cur_idx = next_idx;
                 }
-                cur_color = next.color;
+
+                cur_color = next_color;
             }
             debug_assert_eq!(cur_idx, MAX_IDX);
         }
@@ -440,7 +445,7 @@ pub struct TextRunPrimitiveGpu {
 pub struct TextRunPrimitiveCpu {
     pub font_key: FontKey,
     pub logical_font_size: Au,
-    pub blur_radius: Au,
+    pub blur_radius: f32,
     pub glyph_range: ItemRange<GlyphInstance>,
     pub glyph_count: usize,
     pub cache_dirty: bool,
@@ -1046,26 +1051,24 @@ impl PrimitiveStore {
                     let channel_count = image_cpu.format.get_plane_num();
                     debug_assert!(channel_count <= 3);
                     for channel in 0..channel_count {
-                        if image_cpu.yuv_texture_id[channel] == SourceTexture::Invalid {
-                            // Check if an external image that needs to be resolved
-                            // by the render thread.
-                            let resource_address = image_cpu.yuv_resource_address + channel as i32;
+                        // Check if an external image that needs to be resolved
+                        // by the render thread.
+                        let resource_address = image_cpu.yuv_resource_address + channel as i32;
 
-                            let (texture_id, cache_item) =
-                                PrimitiveStore::resolve_image(resource_cache,
-                                                              &mut deferred_resolves,
-                                                              image_cpu.yuv_key[channel],
-                                                              resource_address,
-                                                              ImageRendering::Auto,
-                                                              None);
-                            // texture_id
-                            image_cpu.yuv_texture_id[channel] = texture_id;
-                            // uv coordinates
-                            if let Some(cache_item) = cache_item {
-                                let resource_rect = self.gpu_resource_rects.get_mut(image_cpu.yuv_resource_address + channel as i32);
-                                resource_rect.uv0 = cache_item.uv0;
-                                resource_rect.uv1 = cache_item.uv1;
-                            }
+                        let (texture_id, cache_item) =
+                            PrimitiveStore::resolve_image(resource_cache,
+                                                          &mut deferred_resolves,
+                                                          image_cpu.yuv_key[channel],
+                                                          resource_address,
+                                                          ImageRendering::Auto,
+                                                          None);
+                        // texture_id
+                        image_cpu.yuv_texture_id[channel] = texture_id;
+                        // uv coordinates
+                        if let Some(cache_item) = cache_item {
+                            let resource_rect = self.gpu_resource_rects.get_mut(image_cpu.yuv_resource_address + channel as i32);
+                            resource_rect.uv0 = cache_item.uv0;
+                            resource_rect.uv1 = cache_item.uv1;
                         }
                     }
                 }
@@ -1235,10 +1238,9 @@ impl PrimitiveStore {
                     }
 
                     // Expand the rectangle of the text run by the blur radius.
-                    let local_rect = local_rect.inflate(text.blur_radius.to_f32_px(),
-                                                        text.blur_radius.to_f32_px());
+                    let local_rect = local_rect.inflate(text.blur_radius, text.blur_radius);
 
-                    let render_task = if text.blur_radius.0 == 0 {
+                    let render_task = if text.blur_radius == 0.0 {
                         None
                     } else {
                         // This is a text-shadow element. Create a render task that will
@@ -1249,7 +1251,7 @@ impl PrimitiveStore {
                         let cache_height = (local_rect.size.height * device_pixel_ratio).ceil() as i32;
                         let cache_size = DeviceIntSize::new(cache_width, cache_height);
                         let cache_key = PrimitiveCacheKey::TextShadow(prim_index);
-                        let blur_radius = device_length(text.blur_radius.to_f32_px(),
+                        let blur_radius = device_length(text.blur_radius,
                                                         device_pixel_ratio);
                         Some(RenderTask::new_blur(cache_key,
                                                   cache_size,
@@ -1314,7 +1316,7 @@ impl PrimitiveStore {
                     for (src, dest) in src_stops.zip(dest_stops.iter_mut()) {
                         *dest = GpuBlock32::from(GradientStopGpu {
                             offset: src.offset,
-                            color: src.color,
+                            color: src.color.premultiplied(),
                             padding: [0.0; 3],
                         });
                     }
@@ -1385,7 +1387,7 @@ define_gpu_block!(GpuBlock16: [f32; 4] =
 );
 define_gpu_block!(GpuBlock32: [f32; 8] =
     GradientStopGpu, ClipCorner, ClipRect, ImageMaskData,
-    BorderCornerClipData, BorderCornerDashClipData
+    BorderCornerClipData, BorderCornerDashClipData, BorderCornerDotClipData
 );
 define_gpu_block!(GpuBlock64: [f32; 16] =
     GradientPrimitiveGpu, RadialGradientPrimitiveGpu, BoxShadowPrimitiveGpu

@@ -4,6 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 void main(void) {
-    vec2 uv = clamp(vUv.xy, vUvBounds.xy, vUvBounds.zw);
-    oFragColor = textureLod(sCacheRGBA8, vec3(uv, vUv.z), 0.0);
+    bvec4 inside = lessThanEqual(vec4(vUvTaskBounds.xy, vUv.xy),
+                                 vec4(vUv.xy, vUvTaskBounds.zw));
+    if (all(inside)) {
+        vec2 uv = clamp(vUv.xy, vUvSampleBounds.xy, vUvSampleBounds.zw);
+        oFragColor = textureLod(sCacheRGBA8, vec3(uv, vUv.z), 0.0);
+    } else {
+        oFragColor = vec4(0.0);
+    }
 }

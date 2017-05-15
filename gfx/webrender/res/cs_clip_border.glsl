@@ -10,3 +10,5 @@ flat varying vec2 vClipCenter;
 
 flat varying vec4 vPoint_Tangent0;
 flat varying vec4 vPoint_Tangent1;
+flat varying vec3 vDotParams;
+flat varying vec2 vAlphaMask;

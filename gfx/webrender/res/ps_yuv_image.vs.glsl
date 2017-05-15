@@ -26,9 +26,11 @@ void main(void) {
     write_clip(vi.screen_pos, prim.clip_area);
 
     ResourceRect y_rect = fetch_resource_rect(prim.user_data.x);
+#ifndef WR_FEATURE_INTERLEAVED_Y_CB_CR  // only 1 channel
     ResourceRect u_rect = fetch_resource_rect(prim.user_data.x + 1);
-#ifndef WR_FEATURE_NV12
+#ifndef WR_FEATURE_NV12 // 2 channel
     ResourceRect v_rect = fetch_resource_rect(prim.user_data.x + 2);
+#endif
 #endif
 
     // If this is in WR_FEATURE_TEXTURE_RECT mode, the rect and size use
@@ -44,6 +46,7 @@ void main(void) {
     vTextureSizeY = y_st1 - y_st0;
     vTextureOffsetY = y_st0;
 
+#ifndef WR_FEATURE_INTERLEAVED_Y_CB_CR
     // This assumes the U and V surfaces have the same size.
 #ifdef WR_FEATURE_TEXTURE_RECT
     vec2 uv_texture_size_normalization_factor = vec2(1, 1);
@@ -62,10 +65,13 @@ void main(void) {
 #ifndef WR_FEATURE_NV12
     vTextureOffsetV = v_st0;
 #endif
+#endif
 
     YuvImage image = fetch_yuv_image(prim.prim_index);
     vStretchSize = image.size;
 
     vHalfTexelY = vec2(0.5) / y_texture_size_normalization_factor;
+#ifndef WR_FEATURE_INTERLEAVED_Y_CB_CR
     vHalfTexelUv = vec2(0.5) / uv_texture_size_normalization_factor;
+#endif
 }

@@ -90,6 +90,7 @@ public:
                                     InfallibleTArray<OpDestroy>&& aToDestroy,
                                     const uint64_t& aFwdTransactionId,
                                     const uint64_t& aTransactionId,
+                                    const WrSize& aContentSize,
                                     const ByteBuffer& dl,
                                     const WrBuiltDisplayListDescriptor& dlDesc,
                                     const WebRenderScrollData& aScrollData) override;
@@ -98,6 +99,7 @@ public:
                                         InfallibleTArray<OpDestroy>&& aToDestroy,
                                         const uint64_t& aFwdTransactionId,
                                         const uint64_t& aTransactionId,
+                                        const WrSize& aContentSize,
                                         const ByteBuffer& dl,
                                         const WrBuiltDisplayListDescriptor& dlDesc,
                                         const WebRenderScrollData& aScrollData) override;
@@ -170,7 +172,7 @@ private:
 
   void DeleteOldImages();
   void ProcessWebRenderCommands(const gfx::IntSize &aSize, InfallibleTArray<WebRenderParentCommand>& commands, const wr::Epoch& aEpoch,
-                                    const ByteBuffer& dl,
+                                    const WrSize& aContentSize, const ByteBuffer& dl,
                                     const WrBuiltDisplayListDescriptor& dlDesc);
   void ScheduleComposition();
   void ClearResources();
@@ -181,6 +183,7 @@ private:
                    InfallibleTArray<OpDestroy>&& aToDestroy,
                    const uint64_t& aFwdTransactionId,
                    const uint64_t& aTransactionId,
+                   const WrSize& aContentSize,
                    const ByteBuffer& dl,
                    const WrBuiltDisplayListDescriptor& dlDesc,
                    const WebRenderScrollData& aScrollData);

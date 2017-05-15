@@ -34,6 +34,7 @@ where
         ops::Sub<T, Output=T> + ops::Add<T, Output=T> +
         ops::Mul<T, Output=T> + ops::Div<T, Output=T> +
         Zero + One + Float,
+    U: fmt::Debug,
 {
     let pa = a.project_on(&dir).get_bounds();
     let pb = b.project_on(&dir).get_bounds();
@@ -48,7 +49,7 @@ fn partial_sort_by<T, F>(array: &mut [T], fun: F) where
     F: Fn(&T, &T) -> Ordering,
     T: fmt::Debug,
 {
-    debug!("\nSorting");
+    debug!("Sorting");
     if array.is_empty() {
         return
     }
@@ -152,8 +153,7 @@ impl<
         debug!("Chosen axis {:?} {:?}", axis_x, axis_y);
         // sort everything
         partial_sort_by(&mut self.result, |a, b| {
-            debug!("\t\t{:?}", a);
-            debug!("\t\t{:?}", b);
+            debug!("\t\t{:?}\n\t\t{:?}", a, b);
             //TODO: proper intersection
             // compute the origin
             let comp_x = intersect_across(a, b, axis_x);

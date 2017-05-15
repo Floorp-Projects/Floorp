@@ -187,6 +187,16 @@ struct WrPipelineId {
 
 struct WrState;
 
+struct WrSize {
+  float width;
+  float height;
+
+  bool operator==(const WrSize& aOther) const {
+    return width == aOther.width &&
+           height == aOther.height;
+  }
+};
+
 struct WrBuiltDisplayListDescriptor {
   size_t display_list_items_size;
   uint64_t builder_start_time;
@@ -301,16 +311,6 @@ struct WrBorderSide {
   bool operator==(const WrBorderSide& aOther) const {
     return color == aOther.color &&
            style == aOther.style;
-  }
-};
-
-struct WrSize {
-  float width;
-  float height;
-
-  bool operator==(const WrSize& aOther) const {
-    return width == aOther.width &&
-           height == aOther.height;
   }
 };
 
@@ -548,6 +548,7 @@ WR_FUNC;
 
 WR_INLINE
 void wr_api_finalize_builder(WrState* aState,
+                             WrSize* aContentSize,
                              WrBuiltDisplayListDescriptor* aDlDescriptor,
                              WrVecU8* aDlData)
 WR_FUNC;
@@ -579,6 +580,7 @@ void wr_api_set_root_display_list(WrAPI* aApi,
                                   float aViewportWidth,
                                   float aViewportHeight,
                                   WrPipelineId aPipelineId,
+                                  WrSize aContentSize,
                                   WrBuiltDisplayListDescriptor aDlDescriptor,
                                   uint8_t* aDlData,
                                   size_t aDlSize)
@@ -867,7 +869,8 @@ void wr_state_delete(WrState* aState)
 WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE
-WrState* wr_state_new(WrPipelineId aPipelineId)
+WrState* wr_state_new(WrPipelineId aPipelineId,
+                      WrSize aContentSize)
 WR_FUNC;
 
 WR_INLINE

@@ -192,7 +192,8 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
   mRoot->StartPendingAnimations(mAnimationReadyTime);
 
   StackingContextHelper sc;
-  wr::DisplayListBuilder builder(WrBridge()->GetPipeline());
+  WrSize contentSize { (float)size.width, (float)size.height };
+  wr::DisplayListBuilder builder(WrBridge()->GetPipeline(), contentSize);
   WebRenderLayer::ToWebRenderLayer(mRoot)->RenderLayer(builder, sc);
   WrBridge()->ClearReadLocks();
 
