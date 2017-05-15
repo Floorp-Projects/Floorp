@@ -35,7 +35,7 @@ function test() {
                                      ['browser.cache.memory.enable', false]]},
                             function() {
     var url = gTestRoot + 'browser_base_force_refresh.html';
-    var tab = gBrowser.addTab();
+    var tab = BrowserTestUtils.addTab(gBrowser);
     gBrowser.selectedTab = tab;
 
     tab.linkedBrowser.messageManager.loadFrameScript("data:,(" + encodeURIComponent(frameScript) + ")()", true);

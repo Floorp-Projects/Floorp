@@ -7,7 +7,7 @@ function test() {
   Harness.installsCompletedCallback = finish_test;
   Harness.setup();
 
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.loadURI(TESTROOT + "installchrome.html? " + encodeURIComponent(TESTROOT + "amosigned.xpi"));
 }
 

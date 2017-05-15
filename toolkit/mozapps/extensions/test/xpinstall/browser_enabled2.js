@@ -5,7 +5,7 @@ function test() {
 
   Services.prefs.setBoolPref("xpinstall.enabled", false);
 
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   ContentTask.spawn(gBrowser.selectedBrowser, TESTROOT + "enabled.html", function(url) {
     return new Promise(resolve => {

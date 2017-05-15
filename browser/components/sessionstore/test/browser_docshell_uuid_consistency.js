@@ -1,7 +1,7 @@
 // First test - open a tab and duplicate it, using session restore to restore the history into the new tab.
 add_task(async function duplicateTab() {
   const TEST_URL = "data:text/html,foo";
-  let tab = gBrowser.addTab(TEST_URL);
+  let tab = BrowserTestUtils.addTab(gBrowser, TEST_URL);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   await ContentTask.spawn(tab.linkedBrowser, null, function() {
@@ -30,7 +30,7 @@ add_task(async function duplicateTab() {
 // Second test - open a tab and navigate across processes, which triggers sessionrestore to persist history.
 add_task(async function contentToChromeNavigate() {
   const TEST_URL = "data:text/html,foo";
-  let tab = gBrowser.addTab(TEST_URL);
+  let tab = BrowserTestUtils.addTab(gBrowser, TEST_URL);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   await ContentTask.spawn(tab.linkedBrowser, null, function() {

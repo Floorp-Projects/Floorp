@@ -11,7 +11,8 @@ const TEST_URL_2 = "data:text/html,<html><body>test-doc-2</body></html>";
 add_task(function* () {
   // Unfortunately, net error page are not firing load event, so that we can't
   // use addTab helper and have to do that:
-  let tab = gBrowser.selectedTab = gBrowser.addTab("data:text/html,empty");
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser,
+                                                           "data:text/html,empty");
   yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   yield ContentTask.spawn(tab.linkedBrowser, { url: TEST_URL_1 }, function* ({ url }) {
     // Also, the neterror being privileged, the DOMContentLoaded only fires on

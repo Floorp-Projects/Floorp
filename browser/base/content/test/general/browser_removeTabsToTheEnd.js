@@ -5,8 +5,8 @@
 function test() {
   // Add two new tabs after the original tab. Pin the first one.
   let originalTab = gBrowser.selectedTab;
-  let newTab1 = gBrowser.addTab();
-  gBrowser.addTab();
+  let newTab1 = BrowserTestUtils.addTab(gBrowser);
+  BrowserTestUtils.addTab(gBrowser);
   gBrowser.pinTab(newTab1);
 
   // Check that there is only one closable tab from originalTab to the end

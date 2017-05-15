@@ -16,7 +16,7 @@ var gLock, gLock1, gLock2;
 var gCurStepIndex = -1;
 var gSteps = [
   function basicWakeLock() {
-    gTab = gBrowser.addTab(kUrlSource);
+    gTab = BrowserTestUtils.addTab(gBrowser, kUrlSource);
     gWin = gBrowser.getBrowserForTab(gTab).contentWindow;
     let browser = gBrowser.getBrowserForTab(gTab);
 
@@ -53,7 +53,7 @@ var gSteps = [
     }, {capture: true, once: true});
   },
   function multiWakeLock() {
-    gTab = gBrowser.addTab(kUrlSource);
+    gTab = BrowserTestUtils.addTab(gBrowser, kUrlSource);
     gWin = gBrowser.getBrowserForTab(gTab).contentWindow;
     let browser = gBrowser.getBrowserForTab(gTab);
 
@@ -101,9 +101,9 @@ var gSteps = [
     }, {capture: true, once: true});
   },
   function crossTabWakeLock1() {
-    gTab1 = gBrowser.addTab(kUrlSource);
+    gTab1 = BrowserTestUtils.addTab(gBrowser, kUrlSource);
     gWin1 = gBrowser.getBrowserForTab(gTab1).contentWindow;
-    gTab2 = gBrowser.addTab(kUrlSource);
+    gTab2 = BrowserTestUtils.addTab(gBrowser, kUrlSource);
     gWin2 = gBrowser.getBrowserForTab(gTab2).contentWindow;
 
     gBrowser.selectedTab = gTab1;

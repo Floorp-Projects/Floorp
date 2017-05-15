@@ -19,7 +19,7 @@ var gTests = [
 function test() {
   waitForExplicitFinish();
 
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   let searchObserver = function search_observer(aSubject, aTopic, aData) {
     let engine = aSubject.QueryInterface(Ci.nsISearchEngine);

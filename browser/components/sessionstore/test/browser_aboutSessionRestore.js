@@ -19,7 +19,7 @@ const FRAME_SCRIPT = "data:," +
 
 add_task(async function() {
   // Prepare a blank tab.
-  let tab = gBrowser.addTab("about:blank");
+  let tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 

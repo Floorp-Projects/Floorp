@@ -19,7 +19,7 @@ function test()
 function test1()
 {
   info("creating tab");
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   gBrowser.selectedBrowser.addEventListener("load", function () {
     setFinishedCallback(function(isIDBDatabase, exception) {
@@ -53,7 +53,7 @@ function test1()
 function test2()
 {
   info("creating tab");
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   gBrowser.selectedBrowser.addEventListener("load", function () {
     setFinishedCallback(function(isIDBDatabase, exception) {

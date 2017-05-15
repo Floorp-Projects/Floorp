@@ -9,10 +9,10 @@ add_task(async function test_background_notifications_dont_reshow_in_foreground(
   // Our initial tab will be A. Let's open two more tabs B and C, but keep
   // A selected. Then, we'll trigger a PopupNotification in C, and then make
   // it reshow.
-  let tabB = gBrowser.addTab("http://example.com/");
+  let tabB = BrowserTestUtils.addTab(gBrowser, "http://example.com/");
   await BrowserTestUtils.browserLoaded(tabB.linkedBrowser);
 
-  let tabC = gBrowser.addTab("http://example.com/");
+  let tabC = BrowserTestUtils.addTab(gBrowser, "http://example.com/");
   await BrowserTestUtils.browserLoaded(tabC.linkedBrowser);
 
   let seenEvents = [];

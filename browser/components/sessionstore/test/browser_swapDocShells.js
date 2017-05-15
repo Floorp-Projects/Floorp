@@ -1,7 +1,7 @@
 "use strict";
 
 add_task(async function() {
-  let tab = gBrowser.selectedTab = gBrowser.addTab("about:mozilla");
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:mozilla");
   await promiseBrowserLoaded(gBrowser.selectedBrowser);
 
   let win = gBrowser.replaceTabWithWindow(tab);

@@ -47,7 +47,7 @@ function test() {
                                      ['dom.serviceWorkers.testing.enabled', true]]},
                             function() {
     var url = gTestRoot + 'download/window.html';
-    var tab = gBrowser.addTab();
+    var tab = BrowserTestUtils.addTab(gBrowser);
     gBrowser.selectedTab = tab;
 
     Downloads.getList(Downloads.ALL).then(function(downloadList) {

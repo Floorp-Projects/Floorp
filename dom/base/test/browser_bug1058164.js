@@ -59,7 +59,7 @@ function prepareForVisibilityEvents(browser, expectedOrder) {
  */
 add_task(function* test_swap_frameloader_pagevisibility_events() {
   // Load a new tab that we'll tear out...
-  let tab = gBrowser.addTab(PAGE);
+  let tab = BrowserTestUtils.addTab(gBrowser, PAGE);
   gBrowser.selectedTab = tab;
   let firstBrowser = tab.linkedBrowser;
   yield BrowserTestUtils.browserLoaded(firstBrowser);
@@ -78,7 +78,7 @@ add_task(function* test_swap_frameloader_pagevisibility_events() {
   // Now let's send the browser back to the original window
 
   // First, create a new, empty browser tab to replace the window with
-  let newTab = gBrowser.addTab();
+  let newTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = newTab;
   let emptyBrowser = newTab.linkedBrowser;
 

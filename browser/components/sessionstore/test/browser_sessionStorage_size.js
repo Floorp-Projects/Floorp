@@ -17,7 +17,7 @@ add_task(async function test_telemetry() {
   let histogram = Services.telemetry.getHistogramById("FX_SESSION_RESTORE_DOM_STORAGE_SIZE_ESTIMATE_CHARS" + suffix);
   let snap1 = histogram.snapshot();
 
-  let tab = gBrowser.addTab(URL);
+  let tab = BrowserTestUtils.addTab(gBrowser, URL);
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 
@@ -40,7 +40,7 @@ add_task(async function test_telemetry() {
 add_task(async function test_large_content() {
   Services.prefs.setIntPref("browser.sessionstore.dom_storage_limit", 5);
 
-  let tab = gBrowser.addTab(URL);
+  let tab = BrowserTestUtils.addTab(gBrowser, URL);
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 
