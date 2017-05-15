@@ -271,7 +271,7 @@ void Gecko_CopyImageOrientationFrom(nsStyleVisibility* aDst,
                                     const nsStyleVisibility* aSrc);
 
 // Counter style.
-void Gecko_SetListStyleType(nsStyleList* style_struct, uint32_t type);
+void Gecko_SetListStyleType(nsStyleList* style_struct, nsIAtom* name);
 void Gecko_CopyListStyleTypeFrom(nsStyleList* dst, const nsStyleList* src);
 
 // background-image style.
