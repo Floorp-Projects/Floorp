@@ -2,6 +2,8 @@
 * This file contains tests for the Preferences search bar.
 */
 
+requestLongerTimeout(2);
+
 /**
  * Tests to see if search bar is being hidden when pref is turned off
  */
