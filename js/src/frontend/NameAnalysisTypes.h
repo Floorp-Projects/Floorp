@@ -80,6 +80,7 @@ enum class DeclarationKind : uint8_t
     BodyLevelFunction,
     ModuleBodyLevelFunction,
     LexicalFunction,
+    SloppyLexicalFunction,
     VarForAnnexBLexicalFunction,
     SimpleCatchParameter,
     CatchParameter
@@ -103,6 +104,7 @@ DeclarationKindToBindingKind(DeclarationKind kind)
 
       case DeclarationKind::Let:
       case DeclarationKind::LexicalFunction:
+      case DeclarationKind::SloppyLexicalFunction:
       case DeclarationKind::SimpleCatchParameter:
       case DeclarationKind::CatchParameter:
         return BindingKind::Let;
