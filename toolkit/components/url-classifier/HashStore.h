@@ -65,7 +65,8 @@ public:
       mAddPrefixes.Length() == 0 &&
       mSubPrefixes.Length() == 0 &&
       mAddCompletes.Length() == 0 &&
-      mSubCompletes.Length() == 0;
+      mSubCompletes.Length() == 0 &&
+      mMissPrefixes.Length() == 0;
   }
 
   // Throughout, uint32_t aChunk refers only to the chunk number. Chunk data is
@@ -91,6 +92,7 @@ public:
   MOZ_MUST_USE nsresult NewSubComplete(uint32_t aAddChunk,
                                        const Completion& aCompletion,
                                        uint32_t aSubChunk);
+  MOZ_MUST_USE nsresult NewMissPrefix(const Prefix& aPrefix);
 
   ChunkSet& AddChunks() { return mAddChunks; }
   ChunkSet& SubChunks() { return mSubChunks; }
@@ -105,6 +107,9 @@ public:
   AddCompleteArray& AddCompletes() { return mAddCompletes; }
   SubCompleteArray& SubCompletes() { return mSubCompletes; }
 
+  // Entries that cannot be completed.
+  MissPrefixArray& MissPrefixes() { return mMissPrefixes; }
+
   // For downcasting.
   static const int TAG = 2;
 
@@ -117,8 +122,11 @@ private:
   ChunkSet mSubExpirations;
 
   // 4-byte sha256 prefixes.
-  AddPrefixArray mAddPrefixes;
-  SubPrefixArray mSubPrefixes;
+  AddPrefixArray  mAddPrefixes;
+  SubPrefixArray  mSubPrefixes;
+
+  // This is only used by gethash so don't add this to Header.
+  MissPrefixArray mMissPrefixes;
 
   // 32-byte hashes.
   AddCompleteArray mAddCompletes;

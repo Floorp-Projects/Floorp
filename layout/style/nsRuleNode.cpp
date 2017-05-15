@@ -7954,24 +7954,28 @@ nsRuleNode::ComputeListData(void* aStartStruct,
 
   // list-style-type: string, none, inherit, initial
   const nsCSSValue* typeValue = aRuleData->ValueForListStyleType();
+  auto setListStyleType = [this, list](nsIAtom* type) {
+    list->mCounterStyle = mPresContext->
+      CounterStyleManager()->BuildCounterStyle(type);
+  };
   switch (typeValue->GetUnit()) {
     case eCSSUnit_Unset:
     case eCSSUnit_Inherit: {
       conditions.SetUncacheable();
-      list->SetCounterStyle(parentList->GetCounterStyle());
+      list->mCounterStyle = parentList->mCounterStyle;
       break;
     }
     case eCSSUnit_Initial:
-      list->SetListStyleType(nsGkAtoms::disc, mPresContext);
+      setListStyleType(nsGkAtoms::disc);
       break;
     case eCSSUnit_AtomIdent: {
-      list->SetListStyleType(typeValue->GetAtomValue(), mPresContext);
+      setListStyleType(typeValue->GetAtomValue());
       break;
     }
     case eCSSUnit_String: {
       nsString str;
       typeValue->GetStringValue(str);
-      list->SetCounterStyle(new AnonymousCounterStyle(str));
+      list->mCounterStyle = new AnonymousCounterStyle(str);
       break;
     }
     case eCSSUnit_Enumerated: {
@@ -7997,11 +8001,12 @@ nsRuleNode::ComputeListData(void* aStartStruct,
                   intValue, nsCSSProps::kListStyleKTable));
           break;
       }
-      list->SetListStyleType(name, mPresContext);
+      setListStyleType(name);
       break;
     }
     case eCSSUnit_Symbols:
-      list->SetCounterStyle(new AnonymousCounterStyle(typeValue->GetArrayValue()));
+      list->mCounterStyle =
+        new AnonymousCounterStyle(typeValue->GetArrayValue());
       break;
     case eCSSUnit_Null:
       break;

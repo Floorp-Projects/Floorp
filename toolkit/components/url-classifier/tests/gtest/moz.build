@@ -10,7 +10,7 @@ LOCAL_INCLUDES += [
 
 UNIFIED_SOURCES += [
     'Common.cpp',
-    'TestCachingV4.cpp',
+    'TestCaching.cpp',
     'TestChunkSet.cpp',
     'TestClassifier.cpp',
     'TestFailUpdate.cpp',
