@@ -90,11 +90,8 @@ nsAsyncRedirectVerifyHelper::Init(nsIChannel* oldChan, nsIChannel* newChan,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (synchronize) {
-      nsIThread *thread = NS_GetCurrentThread();
-      while (mWaitingForRedirectCallback) {
-        if (!NS_ProcessNextEvent(thread)) {
-          return NS_ERROR_UNEXPECTED;
-        }
+      if (!SpinEventLoopUntil([&]() { return !mWaitingForRedirectCallback; })) {
+        return NS_ERROR_UNEXPECTED;
       }
     }
 
