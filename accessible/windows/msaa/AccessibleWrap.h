@@ -172,7 +172,14 @@ public: // construction, destruction
    * Gecko is still responsible for drawing its own caret
    */
   void UpdateSystemCaretFor(Accessible* aAccessible);
+  static void UpdateSystemCaretFor(ProxyAccessible* aProxy,
+                                   const LayoutDeviceIntRect& aCaretRect);
 
+private:
+  static void UpdateSystemCaretFor(HWND aCaretWnd,
+                                   const LayoutDeviceIntRect& aCaretRect);
+
+public:
   /**
    * Find an accessible by the given child ID in cached documents.
    */
