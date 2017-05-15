@@ -21,10 +21,20 @@ void main(void) {
     vec2 fw = fwidth(local_pos);
     float afwidth = length(fw);
 
+    // SDF subtract edges for dash clip
+    float dash_distance = max(d0, -d1);
+
+    // Get distance from dot.
+    float dot_distance = distance(clip_relative_pos, vDotParams.xy) - vDotParams.z;
+
+    // Select between dot/dash clip based on mode.
+    float d = mix(dash_distance, dot_distance, vAlphaMask.x);
+
     // Apply AA over half a device pixel for the clip.
-    float d = smoothstep(-0.5 * afwidth,
-                         0.5 * afwidth,
-                         max(d0, -d1));
+    d = 1.0 - smoothstep(0.0, 0.5 * afwidth, d);
+
+    // Completely mask out clip if zero'ing out the rect.
+    d = d * vAlphaMask.y;
 
     oFragColor = vec4(d, 0.0, 0.0, 1.0);
 }

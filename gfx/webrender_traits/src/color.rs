@@ -12,6 +12,17 @@ pub struct ColorF {
 }
 known_heap_size!(0, ColorF);
 
+impl ColorF {
+    pub fn premultiplied(&self) -> ColorF {
+        ColorF {
+            r: self.r * self.a,
+            g: self.g * self.a,
+            b: self.b * self.a,
+            a: self.a,
+        }
+    }
+}
+
 #[repr(C)]
 #[derive(Clone, Copy, Hash, Eq, Debug, Deserialize, PartialEq, PartialOrd, Ord, Serialize)]
 pub struct ColorU {

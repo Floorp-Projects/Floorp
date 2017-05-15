@@ -58,6 +58,7 @@ public:
                           Epoch aEpoch,
                           LayerSize aViewportSize,
                           WrPipelineId pipeline_id,
+                          const WrSize& content_size,
                           WrBuiltDisplayListDescriptor dl_descriptor,
                           uint8_t *dl_data,
                           size_t dl_size);
@@ -131,7 +132,8 @@ protected:
 /// instead, so the interface may change a bit.
 class DisplayListBuilder {
 public:
-  explicit DisplayListBuilder(wr::PipelineId aId);
+  explicit DisplayListBuilder(wr::PipelineId aId,
+                              const WrSize& aContentSize);
   DisplayListBuilder(DisplayListBuilder&&) = default;
 
   ~DisplayListBuilder();
@@ -139,7 +141,8 @@ public:
   void Begin(const LayerIntSize& aSize);
 
   void End();
-  wr::BuiltDisplayList Finalize();
+  void Finalize(WrSize& aOutContentSize,
+                wr::BuiltDisplayList& aOutDisplayList);
 
   void PushStackingContext(const WrRect& aBounds, // TODO: We should work with strongly typed rects
                            const float aOpacity,

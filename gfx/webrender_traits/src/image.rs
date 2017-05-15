@@ -23,6 +23,7 @@ impl ImageKey {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct ExternalImageId(pub u64);
 
+#[repr(u32)]
 #[derive(Debug, Copy, Clone, Eq, Hash, PartialEq, Serialize, Deserialize)]
 pub enum ExternalImageType {
     Texture2DHandle,        // gl TEXTURE_2D handle

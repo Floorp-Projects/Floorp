@@ -67,11 +67,12 @@ WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
   aBuilder.PushClip(aSc.ToRelativeWrRect(clipInParentLayerSpace), imageMask);
 
   if (mItem) {
-    wr::DisplayListBuilder builder(WrBridge()->GetPipeline());
+    WrSize contentSize; // this won't actually be used by anything
+    wr::DisplayListBuilder builder(WrBridge()->GetPipeline(), contentSize);
     // We might have recycled this layer. Throw away the old commands.
     mParentCommands.Clear();
     mItem->CreateWebRenderCommands(builder, aSc, mParentCommands, this);
-    mBuiltDisplayList = builder.Finalize();
+    builder.Finalize(contentSize, mBuiltDisplayList);
   } else {
     // else we have an empty transaction and just use the
     // old commands.

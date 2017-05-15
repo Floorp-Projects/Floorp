@@ -13,6 +13,7 @@ use std::cmp;
 /// The result of one plane being cut by another one.
 /// The "cut" here is an attempt to classify a plane as being
 /// in front or in the back of another one.
+#[derive(Debug)]
 pub enum PlaneCut<T> {
     /// The planes are one the same geometrical plane.
     Sibling(T),
@@ -51,6 +52,7 @@ fn add_side<T: Plane>(side: &mut Option<Box<BspNode<T>>>, mut planes: Vec<T>) {
 
 
 /// A node in the `BspTree`, which can be considered a tree itself.
+#[derive(Clone, Debug)]
 pub struct BspNode<T> {
     values: Vec<T>,
     front: Option<Box<BspNode<T>>>,
@@ -108,12 +110,12 @@ impl<T: Plane> BspNode<T> {
 
     /// Build the draw order of this sub-tree into an `out` vector,
     /// so that the contained planes are sorted back to front according
-    /// to the view vector given as the `base` plane normal.
+    /// to the view vector defines as the `base` plane front direction.
     pub fn order(&self, base: &T, out: &mut Vec<T>) {
         let (former, latter) = match self.values.first() {
             None => return,
-            Some(ref first) if base.is_aligned(first) => (&self.back, &self.front),
-            Some(_) => (&self.front, &self.back),
+            Some(ref first) if base.is_aligned(first) => (&self.front, &self.back),
+            Some(_) => (&self.back, &self.front),
         };
 
         if let Some(ref node) = *former {
@@ -212,7 +214,7 @@ mod tests {
 
         node.order(&Plane1D(0, true), &mut out);
         let mut out2 = out.clone();
-        out2.sort_by_key(|p| p.0);
+        out2.sort_by_key(|p| -p.0);
         assert_eq!(out, out2);
     }
 }

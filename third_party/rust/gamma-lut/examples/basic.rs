@@ -5,5 +5,7 @@ fn main() {
     let gamma = 0.0;
 
     let table = gamma_lut::GammaLut::new(contrast, gamma, gamma);
-    table.print_values(0);
+    for (i, value) in table.get_table(0).iter().enumerate() {
+        println!("[{:?}] = {:?}", i, *value);
+    }
 }

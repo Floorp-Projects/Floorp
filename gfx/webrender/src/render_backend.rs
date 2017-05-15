@@ -15,15 +15,18 @@ use std::sync::mpsc::Sender;
 use texture_cache::TextureCache;
 use time::precise_time_ns;
 use thread_profiler::register_thread_with_profiler;
-use threadpool::ThreadPool;
+use rayon::ThreadPool;
 use webgl_types::{GLContextHandleWrapper, GLContextWrapper};
-use webrender_traits::{DeviceIntPoint, DeviceUintPoint, DeviceUintRect, DeviceUintSize, LayerPoint};
-use webrender_traits::{ApiMsg, BuiltDisplayList, IdNamespace, ImageData};
-use webrender_traits::{PipelineId, RenderNotifier, RenderDispatcher, WebGLCommand, WebGLContextId};
-use webrender_traits::channel::{PayloadSenderHelperMethods, PayloadReceiverHelperMethods, PayloadReceiver, PayloadSender, MsgReceiver};
-use webrender_traits::{BlobImageRenderer, VRCompositorCommand, VRCompositorHandler};
+use webrender_traits::channel::{MsgReceiver, PayloadReceiver, PayloadReceiverHelperMethods};
+use webrender_traits::channel::{PayloadSender, PayloadSenderHelperMethods};
+use webrender_traits::{ApiMsg, BlobImageRenderer, BuiltDisplayList, DeviceIntPoint};
+use webrender_traits::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, IdNamespace, ImageData};
+use webrender_traits::{LayerPoint, PipelineId, RenderDispatcher, RenderNotifier};
+use webrender_traits::{VRCompositorCommand, VRCompositorHandler, WebGLCommand, WebGLContextId};
+
 #[cfg(feature = "webgl")]
 use offscreen_gl_context::GLContextDispatcher;
+
 #[cfg(not(feature = "webgl"))]
 use webgl_types::GLContextDispatcher;
 
@@ -70,8 +73,7 @@ impl RenderBackend {
                result_tx: Sender<ResultMsg>,
                hidpi_factor: f32,
                texture_cache: TextureCache,
-               enable_aa: bool,
-               workers: Arc<Mutex<ThreadPool>>,
+               workers: Arc<ThreadPool>,
                notifier: Arc<Mutex<Option<Box<RenderNotifier>>>>,
                webrender_context_handle: Option<GLContextHandleWrapper>,
                config: FrameBuilderConfig,
@@ -81,7 +83,7 @@ impl RenderBackend {
                vr_compositor_handler: Arc<Mutex<Option<Box<VRCompositorHandler>>>>,
                initial_window_size: DeviceUintSize) -> RenderBackend {
 
-        let resource_cache = ResourceCache::new(texture_cache, workers, blob_image_renderer, enable_aa);
+        let resource_cache = ResourceCache::new(texture_cache, workers, blob_image_renderer);
 
         register_thread_with_profiler("Backend".to_string());
 
@@ -180,6 +182,7 @@ impl RenderBackend {
                                                epoch,
                                                pipeline_id,
                                                viewport_size,
+                                               content_size,
                                                display_list_descriptor,
                                                preserve_frame_state) => {
                             profile_scope!("SetDisplayList");
@@ -220,7 +223,8 @@ impl RenderBackend {
                                                             epoch,
                                                             built_display_list,
                                                             background_color,
-                                                            viewport_size);
+                                                            viewport_size,
+                                                            content_size);
                                 self.build_scene();
                             });
 
@@ -266,12 +270,12 @@ impl RenderBackend {
                                 None => self.notify_compositor_of_new_scroll_frame(false),
                             }
                         }
-                        ApiMsg::ScrollNodeWithId(origin, id) => {
+                        ApiMsg::ScrollNodeWithId(origin, id, clamp) => {
                             profile_scope!("ScrollNodeWithScrollId");
                             let frame = {
                                 let counters = &mut profile_counters.resources.texture_cache;
                                 profile_counters.total_time.profile(|| {
-                                    if self.frame.scroll_nodes(origin, id) {
+                                    if self.frame.scroll_node(origin, id, clamp) {
                                         Some(self.render(counters))
                                     } else {
                                         None

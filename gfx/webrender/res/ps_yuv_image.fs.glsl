@@ -15,10 +15,12 @@
 // [B]   [1.1643835616438356,  2.017232142857143,   8.862867620416422e-17]   [V - 128]
 //
 // For the range [0,1] instead of [0,255].
+//
+// The matrix is stored in column-major.
 const mat3 YuvColorMatrix = mat3(
-    1.16438,  0.0,      1.59603,
-    1.16438, -0.39176, -0.81297,
-    1.16438,  2.01723,  0.0
+    1.16438,  1.16438, 1.16438,
+    0.0,     -0.39176, 2.01723,
+    1.59603, -0.81297, 0.0
 );
 #elif defined(WR_FEATURE_YUV_REC709)
 // From Rec709:
@@ -27,10 +29,12 @@ const mat3 YuvColorMatrix = mat3(
 // [B]   [1.1643835616438356,  2.1124017857142854,     0.0               ]   [V - 128]
 //
 // For the range [0,1] instead of [0,255]:
+//
+// The matrix is stored in column-major.
 const mat3 YuvColorMatrix = mat3(
-    1.16438,  0.0,      1.79274,
-    1.16438, -0.21325, -0.53291,
-    1.16438,  2.11240,  0.0
+    1.16438,  1.16438,  1.16438,
+    0.0    , -0.21325,  2.11240,
+    1.79274, -0.53291,  0.0
 );
 #endif
 
@@ -54,6 +58,7 @@ void main(void) {
     vec2 st_y = vTextureOffsetY + clamp(
         relative_pos_in_rect / vStretchSize * vTextureSizeY,
         vHalfTexelY, vTextureSizeY - vHalfTexelY);
+#ifndef WR_FEATURE_INTERLEAVED_Y_CB_CR
     vec2 uv_offset = clamp(
         relative_pos_in_rect / vStretchSize * vTextureSizeUv,
         vHalfTexelUv, vTextureSizeUv - vHalfTexelUv);
@@ -61,9 +66,15 @@ void main(void) {
     // The texture coordinates of u and v are the same. So, we could skip the
     // st_v if the format is NV12.
     vec2 st_u = vTextureOffsetU + uv_offset;
+#endif
 
     vec3 yuv_value;
-#ifdef WR_FEATURE_NV12
+#ifdef WR_FEATURE_INTERLEAVED_Y_CB_CR
+    // "The Y, Cb and Cr color channels within the 422 data are mapped into
+    // the existing green, blue and red color channels."
+    // https://www.khronos.org/registry/OpenGL/extensions/APPLE/APPLE_rgb_422.txt
+    yuv_value = TEX_SAMPLE(sColor0, st_y).gbr;
+#elif defined(WR_FEATURE_NV12)
     yuv_value.x = TEX_SAMPLE(sColor0, st_y).r;
     yuv_value.yz = TEX_SAMPLE(sColor1, st_u).rg;
 #else
