@@ -184,6 +184,11 @@ uint32_t TimeoutManager::sNestingLevel = 0;
 
 namespace {
 
+// The maximum number of milliseconds to allow consecutive timer callbacks
+// to run in a single event loop runnable.
+#define DEFAULT_MAX_CONSECUTIVE_CALLBACK_MILLISECONDS 4
+uint32_t gMaxConsecutiveCallbackMilliseconds;
+
 // The maximum number of timer callbacks we will try to run in a single event
 // loop runnable.
 #define DEFAULT_TARGET_MAX_CONSECUTIVE_CALLBACKS 5
@@ -304,6 +309,10 @@ TimeoutManager::Initialize()
   Preferences::AddUintVarCache(&gTargetMaxConsecutiveCallbacks,
                                "dom.timeout.max_consecutive_callbacks",
                                DEFAULT_TARGET_MAX_CONSECUTIVE_CALLBACKS);
+
+  Preferences::AddUintVarCache(&gMaxConsecutiveCallbackMilliseconds,
+                               "dom.timeout.max_consecutive_callback_ms",
+                               DEFAULT_MAX_CONSECUTIVE_CALLBACK_MILLISECONDS);
 }
 
 uint32_t
@@ -662,6 +671,12 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
     mTrackingTimeouts.SetInsertionPoint(dummy_tracking_timeout);
   }
 
+  uint32_t timeLimitMS = std::max(1u, gMaxConsecutiveCallbackMilliseconds);
+  const TimeDuration timeLimit = TimeDuration::FromMilliseconds(timeLimitMS);
+  TimeStamp start = TimeStamp::Now();
+
+  bool targetTimeoutSeen = false;
+
   // We stop iterating each list when we go past the last expired timeout from
   // that list that we have observed above.  That timeout will either be the
   // dummy timeout for the list that the last expired timeout came from, or it
@@ -718,6 +733,24 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
         timeout->remove();
         timeout->Release();
         continue;
+      }
+
+      // Check to see if we have run out of time to execute timeout handlers.
+      // If we've exceeded our time budget simply cleanup our remaining
+      // handlers to run by marking their firing depth back to zero.
+      //
+      // Note, we only do this if we have seen the Timeout object explicitly
+      // passed to RunTimeout().  The target timeout must always be executed.
+      if (targetTimeoutSeen) {
+        TimeDuration elapsed = TimeStamp::Now() - start;
+        if (elapsed >= timeLimit) {
+          timeout->mFiringDepth = 0;
+          continue;
+        }
+      }
+
+      if (timeout == aTimeout) {
+        targetTimeoutSeen = true;
       }
 
       // This timeout is good to run
