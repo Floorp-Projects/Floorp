@@ -158,8 +158,8 @@
               <checkbox label="&engine.bookmarks.label;"
                         accesskey="&engine.bookmarks.accesskey;"
                         preference="engine.bookmarks"/>
-              <checkbox label="&engine.passwords.label;"
-                        accesskey="&engine.passwords.accesskey;"
+              <checkbox label="&engine.logins.label;"
+                        accesskey="&engine.logins.accesskey;"
                         preference="engine.passwords"/>
             </vbox>
             <vbox align="start" flex="1">
