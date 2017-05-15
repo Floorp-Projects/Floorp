@@ -641,7 +641,7 @@ nsHtml5ElementName::initializeStatics()
                                   nsHtml5TreeBuilder::TD_OR_TH | SPECIAL |
                                     SCOPING | OPTIONAL_END_TAG);
   ELT_SWITCH = new nsHtml5ElementName(
-    nsGkAtoms::_switch, nsGkAtoms::_switch, nsHtml5TreeBuilder::OTHER);
+    nsGkAtoms::svgSwitch, nsGkAtoms::svgSwitch, nsHtml5TreeBuilder::OTHER);
   ELT_TEXTPATH = new nsHtml5ElementName(
     nsGkAtoms::textpath, nsGkAtoms::textPath, nsHtml5TreeBuilder::OTHER);
   ELT_LI =
