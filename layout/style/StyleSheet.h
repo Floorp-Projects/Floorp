@@ -120,6 +120,8 @@ public:
 
   bool IsModified() const { return mDirty; }
 
+  virtual void EnsureUniqueInner();
+
   // style sheet owner info
   enum DocumentAssociationMode {
     // OwnedByDocument means mDocument owns us (possibly via a chain of other
@@ -213,8 +215,8 @@ public:
   // Changes to sheets should be inside of a WillDirty-DidDirty pair.
   // However, the calls do not need to be matched; it's ok to call
   // WillDirty and then make no change and skip the DidDirty call.
-  inline void WillDirty();
-  inline void DidDirty();
+  void WillDirty();
+  virtual void DidDirty() {}
 
   nsresult DeleteRuleFromGroup(css::GroupRule* aGroup, uint32_t aIndex);
   nsresult InsertRuleIntoGroup(const nsAString& aRule,

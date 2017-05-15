@@ -232,10 +232,11 @@ CSSStyleSheetInner::~CSSStyleSheetInner()
   }
 }
 
-CSSStyleSheetInner*
-CSSStyleSheetInner::CloneFor(CSSStyleSheet* aPrimarySheet)
+StyleSheetInfo*
+CSSStyleSheetInner::CloneFor(StyleSheet* aPrimarySheet)
 {
-  return new CSSStyleSheetInner(*this, aPrimarySheet);
+  return new CSSStyleSheetInner(*this,
+                                static_cast<CSSStyleSheet*>(aPrimarySheet));
 }
 
 void
@@ -363,16 +364,7 @@ CSSStyleSheet::CSSStyleSheet(const CSSStyleSheet& aCopy,
     mScopeElement(nullptr),
     mRuleProcessors(nullptr)
 {
-  MOZ_ASSERT(mInner, "We should have an mInner after copy.");
-  MOZ_ASSERT(mInner->mSheets.Contains(this), "Our mInner should include us.");
-
   mParent = aParentToUse;
-
-  if (mDirty) { // CSSOM's been there, force full copy now
-    NS_ASSERTION(mInner->mComplete, "Why have rules been accessed on an incomplete sheet?");
-    // FIXME: handle failure?
-    EnsureUniqueInner();
-  }
 }
 
 CSSStyleSheet::~CSSStyleSheet()
@@ -595,18 +587,7 @@ CSSStyleSheet::GetStyleRuleAt(int32_t aIndex) const
 void
 CSSStyleSheet::EnsureUniqueInner()
 {
-  mDirty = true;
-
-  MOZ_ASSERT(mInner->mSheets.Length() != 0,
-             "unexpected number of outers");
-  if (mInner->mSheets.Length() == 1) {
-    // already unique
-    return;
-  }
-  CSSStyleSheetInner* clone = Inner()->CloneFor(this);
-  MOZ_ASSERT(clone);
-  mInner->RemoveSheet(this);
-  mInner = clone;
+  StyleSheet::EnsureUniqueInner();
 
   // otherwise the rule processor has pointers to the old rules
   ClearRuleCascades();
@@ -692,14 +673,6 @@ CSSStyleSheet::ClearRuleCascades()
   if (mParent) {
     CSSStyleSheet* parent = (CSSStyleSheet*)mParent;
     parent->ClearRuleCascades();
-  }
-}
-
-void
-CSSStyleSheet::WillDirty()
-{
-  if (mInner->mComplete) {
-    EnsureUniqueInner();
   }
 }
 

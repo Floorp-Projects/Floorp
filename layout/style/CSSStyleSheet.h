@@ -59,7 +59,7 @@ struct CSSStyleSheetInner : public StyleSheetInfo
                      CSSStyleSheet* aPrimarySheet);
   ~CSSStyleSheetInner();
 
-  CSSStyleSheetInner* CloneFor(CSSStyleSheet* aPrimarySheet);
+  StyleSheetInfo* CloneFor(StyleSheet* aPrimarySheet) override;
   void RemoveSheet(StyleSheet* aSheet) override;
 
   void RebuildNameSpaces();
@@ -144,7 +144,7 @@ public:
   NS_IMETHOD StyleSheetLoaded(StyleSheet* aSheet, bool aWasAlternate,
                               nsresult aStatus) override;
 
-  void EnsureUniqueInner();
+  void EnsureUniqueInner() override;
 
   // Append all of this sheet's child sheets to aArray.
   void AppendAllChildSheets(nsTArray<CSSStyleSheet*>& aArray);
@@ -172,8 +172,7 @@ public:
   // version.
   css::Rule* GetDOMOwnerRule() const final;
 
-  void WillDirty();
-  void DidDirty();
+  void DidDirty() override;
 
 private:
   CSSStyleSheet(const CSSStyleSheet& aCopy,
