@@ -48,6 +48,7 @@ toolkit/library
   profile
   services
   startupcache
+  devtools/platform
   devtools/server
   devtools/shared
 browser/app
