@@ -596,7 +596,7 @@ nsStyleSet::AppendStyleSheet(SheetType aType, CSSStyleSheet* aSheet)
   mSheets[aType].AppendElement(aSheet);
 
   if (!present && IsCSSSheetType(aType)) {
-    aSheet->AddStyleSet(this);
+    aSheet->AddStyleSet(StyleSetHandle(this));
   }
 
   return DirtyRuleProcessors(aType);
@@ -612,7 +612,7 @@ nsStyleSet::PrependStyleSheet(SheetType aType, CSSStyleSheet* aSheet)
   mSheets[aType].InsertElementAt(0, aSheet);
 
   if (!present && IsCSSSheetType(aType)) {
-    aSheet->AddStyleSet(this);
+    aSheet->AddStyleSet(StyleSetHandle(this));
   }
 
   return DirtyRuleProcessors(aType);
@@ -626,7 +626,7 @@ nsStyleSet::RemoveStyleSheet(SheetType aType, CSSStyleSheet* aSheet)
                "Incomplete sheet being removed from style set");
   if (mSheets[aType].RemoveElement(aSheet)) {
     if (IsCSSSheetType(aType)) {
-      aSheet->DropStyleSet(this);
+      aSheet->DropStyleSet(StyleSetHandle(this));
     }
   }
 
@@ -640,7 +640,7 @@ nsStyleSet::ReplaceSheets(SheetType aType,
   bool cssSheetType = IsCSSSheetType(aType);
   if (cssSheetType) {
     for (CSSStyleSheet* sheet : mSheets[aType]) {
-      sheet->DropStyleSet(this);
+      sheet->DropStyleSet(StyleSetHandle(this));
     }
   }
 
@@ -649,7 +649,7 @@ nsStyleSet::ReplaceSheets(SheetType aType,
 
   if (cssSheetType) {
     for (CSSStyleSheet* sheet : mSheets[aType]) {
-      sheet->AddStyleSet(this);
+      sheet->AddStyleSet(StyleSetHandle(this));
     }
   }
 
@@ -672,7 +672,7 @@ nsStyleSet::InsertStyleSheetBefore(SheetType aType, CSSStyleSheet* aNewSheet,
   mSheets[aType].InsertElementAt(idx, aNewSheet);
 
   if (!present && IsCSSSheetType(aType)) {
-    aNewSheet->AddStyleSet(this);
+    aNewSheet->AddStyleSet(StyleSetHandle(this));
   }
 
   return DirtyRuleProcessors(aType);
@@ -734,7 +734,7 @@ nsStyleSet::AddDocStyleSheet(CSSStyleSheet* aSheet, nsIDocument* aDocument)
   sheets.InsertElementAt(index, aSheet);
 
   if (!present) {
-    aSheet->AddStyleSet(this);
+    aSheet->AddStyleSet(StyleSetHandle(this));
   }
 
   return DirtyRuleProcessors(type);

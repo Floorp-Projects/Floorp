@@ -12,7 +12,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/IncrementalClearCOMRuleArray.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInfo.h"
 #include "mozilla/css/SheetParsingMode.h"
@@ -31,7 +30,6 @@ class CSSRuleListImpl;
 class nsCSSRuleProcessor;
 class nsIURI;
 class nsMediaQueryResultCacheKey;
-class nsStyleSet;
 class nsPresContext;
 class nsXMLNameSpaceMap;
 
@@ -138,9 +136,6 @@ public:
   nsresult AddRuleProcessor(nsCSSRuleProcessor* aProcessor);
   nsresult DropRuleProcessor(nsCSSRuleProcessor* aProcessor);
 
-  void AddStyleSet(nsStyleSet* aStyleSet);
-  void DropStyleSet(nsStyleSet* aStyleSet);
-
   // nsICSSLoaderObserver interface
   NS_IMETHOD StyleSheetLoaded(StyleSheet* aSheet, bool aWasAlternate,
                               nsresult aStatus) override;
@@ -225,7 +220,6 @@ protected:
   RefPtr<dom::Element> mScopeElement;
 
   AutoTArray<nsCSSRuleProcessor*, 8>* mRuleProcessors;
-  nsTArray<StyleSetHandle> mStyleSets;
 
   friend class mozilla::StyleSheet;
   friend class ::nsCSSRuleProcessor;
