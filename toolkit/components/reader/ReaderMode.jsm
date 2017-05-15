@@ -445,6 +445,10 @@ this.ReaderMode = {
       }
     }
 
+    // Fetch this here before we send `doc` off to the worker thread, as later on the
+    // document might be nuked but we will still want the URI.
+    let {documentURI} = doc;
+
     let uriParam = {
       spec: doc.baseURIObject.spec,
       host: doc.baseURIObject.host,
@@ -465,6 +469,10 @@ this.ReaderMode = {
       histogram.add(PARSE_ERROR_WORKER);
     }
 
+    // Explicitly null out doc to make it clear it might not be available from this
+    // point on.
+    doc = null;
+
     if (!article) {
       this.log("Worker did not return an article");
       histogram.add(PARSE_ERROR_NO_ARTICLE);
@@ -474,7 +482,7 @@ this.ReaderMode = {
     // Readability returns a URI object based on the baseURI, but we only care
     // about the original document's URL from now on. This also avoids spoofing
     // attempts where the baseURI doesn't match the domain of the documentURI
-    article.url = doc.documentURI;
+    article.url = documentURI;
     delete article.uri;
 
     let flags = Ci.nsIDocumentEncoder.OutputSelectionOnly | Ci.nsIDocumentEncoder.OutputAbsoluteLinks;
