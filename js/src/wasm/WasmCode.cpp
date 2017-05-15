@@ -18,11 +18,8 @@
 
 #include "wasm/WasmCode.h"
 
-#include "mozilla/Atomics.h"
 #include "mozilla/BinarySearch.h"
 #include "mozilla/EnumeratedRange.h"
-
-#include "jsprf.h"
 
 #include "jit/ExecutableAllocator.h"
 #ifdef JS_ION_PERF
@@ -32,27 +29,14 @@
 #include "wasm/WasmModule.h"
 #include "wasm/WasmSerialize.h"
 
-#include "jsobjinlines.h"
-
 #include "jit/MacroAssembler-inl.h"
-#include "vm/ArrayBufferObject-inl.h"
 
 using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
-using mozilla::Atomic;
 using mozilla::BinarySearch;
 using mozilla::MakeEnumeratedRange;
 using JS::GenericNaN;
-
-// Limit the number of concurrent wasm code allocations per process. Note that
-// on Linux, the real maximum is ~32k, as each module requires 2 maps (RW/RX),
-// and the kernel's default max_map_count is ~65k.
-//
-// Note: this can be removed once writable/non-executable global data stops
-// being stored in the code segment.
-static Atomic<uint32_t> wasmCodeAllocations(0);
-static const uint32_t MaxWasmCodeAllocations = 16384;
 
 static uint32_t
 RoundupCodeLength(uint32_t codeLength)
@@ -67,9 +51,6 @@ RoundupCodeLength(uint32_t codeLength)
 CodeSegment::AllocateCodeBytes(uint32_t codeLength)
 {
     codeLength = RoundupCodeLength(codeLength);
-
-    if (wasmCodeAllocations >= MaxWasmCodeAllocations)
-        return nullptr;
 
     void* p = AllocateExecutableMemory(codeLength, ProtectionSetting::Writable);
 
@@ -89,7 +70,6 @@ CodeSegment::AllocateCodeBytes(uint32_t codeLength)
     // We account for the bytes allocated in WasmModuleObject::create, where we
     // have the necessary JSContext.
 
-    wasmCodeAllocations++;
     return UniqueCodeBytes((uint8_t*)p, FreeCode(codeLength));
 }
 
@@ -98,9 +78,6 @@ CodeSegment::FreeCode::operator()(uint8_t* bytes)
 {
     MOZ_ASSERT(codeLength);
     MOZ_ASSERT(codeLength == RoundupCodeLength(codeLength));
-
-    MOZ_ASSERT(wasmCodeAllocations > 0);
-    wasmCodeAllocations--;
 
 #ifdef MOZ_VTUNE
     vtune::UnmarkBytes(bytes, codeLength);
