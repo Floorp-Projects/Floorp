@@ -324,6 +324,11 @@ WebRenderBridgeChild::AddOpDestroy(const OpDestroy& aOp)
 void
 WebRenderBridgeChild::ReleaseCompositable(const CompositableHandle& aHandle)
 {
+  if (!IPCOpen()) {
+    // This can happen if the IPC connection was torn down, because, e.g.
+    // the GPU process died.
+    return;
+  }
   if (!DestroyInTransaction(aHandle)) {
     SendReleaseCompositable(aHandle);
   }
