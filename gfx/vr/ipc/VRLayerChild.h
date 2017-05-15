@@ -40,7 +40,7 @@ public:
 protected:
   virtual ~VRLayerChild();
   void ClearSurfaces();
-  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+  virtual mozilla::ipc::IPCResult Recv__delete__() override;
 
   uint32_t mVRDisplayID;
 
