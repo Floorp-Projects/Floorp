@@ -130,6 +130,18 @@ public class SafeIntent {
         }
     }
 
+    public <T extends Parcelable> ArrayList<T> getParcelableArrayListExtra(final String name) {
+        try {
+            return intent.getParcelableArrayListExtra(name);
+        } catch (OutOfMemoryError e) {
+            Log.w(LOGTAG, "Couldn't get intent extras: OOM. Malformed?");
+            return null;
+        } catch (RuntimeException e) {
+            Log.w(LOGTAG, "Couldn't get intent extras.", e);
+            return null;
+        }
+    }
+
     public String getAction() {
         return intent.getAction();
     }
