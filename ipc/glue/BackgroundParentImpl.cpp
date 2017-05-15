@@ -37,6 +37,7 @@
 #include "mozilla/ipc/PChildToParentStreamParent.h"
 #include "mozilla/ipc/PParentToChildStreamParent.h"
 #include "mozilla/layout/VsyncParent.h"
+#include "mozilla/net/HttpBackgroundChannelParent.h"
 #include "mozilla/dom/network/UDPSocketParent.h"
 #include "mozilla/dom/WebAuthnTransactionParent.h"
 #include "mozilla/Preferences.h"
@@ -869,6 +870,40 @@ BackgroundParentImpl::DeallocPWebAuthnTransactionParent(dom::PWebAuthnTransactio
 {
   MOZ_ASSERT(aActor);
   delete aActor;
+  return true;
+}
+
+net::PHttpBackgroundChannelParent*
+BackgroundParentImpl::AllocPHttpBackgroundChannelParent(const uint64_t& aChannelId)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  return new net::HttpBackgroundChannelParent();
+}
+
+mozilla::ipc::IPCResult
+BackgroundParentImpl::RecvPHttpBackgroundChannelConstructor(
+                                      net::PHttpBackgroundChannelParent *aActor,
+                                      const uint64_t& aChannelId)
+{
+  MOZ_ASSERT(aActor);
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  //TODO
+  return IPC_OK();
+}
+
+bool
+BackgroundParentImpl::DeallocPHttpBackgroundChannelParent(
+                                      net::PHttpBackgroundChannelParent *aActor)
+{
+  MOZ_ASSERT(aActor);
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  //TODO
   return true;
 }
 

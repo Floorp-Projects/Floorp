@@ -559,6 +559,21 @@ BackgroundChildImpl::DeallocPWebAuthnTransactionChild(PWebAuthnTransactionChild*
   return true;
 }
 
+net::PHttpBackgroundChannelChild*
+BackgroundChildImpl::AllocPHttpBackgroundChannelChild(const uint64_t& aChannelId)
+{
+  MOZ_CRASH("PHttpBackgroundChannelChild actor should be manually constructed!");
+  return nullptr;
+}
+
+bool
+BackgroundChildImpl::DeallocPHttpBackgroundChannelChild(PHttpBackgroundChannelChild* aActor)
+{
+  MOZ_ASSERT(aActor);
+  // TODO
+  return true;
+}
+
 } // namespace ipc
 } // namespace mozilla
 
