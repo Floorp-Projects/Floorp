@@ -1958,7 +1958,7 @@ var gCSSProperties = {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "stretch-to-fit" ],
-    other_values: [ "ignore" ],
+    other_values: [ "ignore", "ignore-horizontal", "ignore-vertical" ],
     invalid_values: []
   },
   "-moz-tab-size": {

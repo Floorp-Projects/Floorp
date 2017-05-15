@@ -1082,8 +1082,8 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetStackSizing()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetIdent(StyleXUL()->mStretchStack ? eCSSKeyword_stretch_to_fit :
-                eCSSKeyword_ignore);
+  val->SetIdent(nsCSSProps::ValueToKeywordEnum(StyleXUL()->mStackSizing,
+                                               nsCSSProps::kStackSizingKTable));
   return val.forget();
 }
 
