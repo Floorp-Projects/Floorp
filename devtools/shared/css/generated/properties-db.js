@@ -1234,6 +1234,8 @@ exports.CSS_PROPERTIES = {
     "supports": [],
     "values": [
       "ignore",
+      "ignore-horizontal",
+      "ignore-vertical",
       "inherit",
       "initial",
       "stretch-to-fit",
@@ -3402,6 +3404,8 @@ exports.CSS_PROPERTIES = {
       "icon",
       "ideographic",
       "ignore",
+      "ignore-horizontal",
+      "ignore-vertical",
       "inactive",
       "infinite",
       "inherit",
