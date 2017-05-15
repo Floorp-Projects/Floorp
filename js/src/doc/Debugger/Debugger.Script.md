@@ -125,8 +125,12 @@ from its prototype:
 
 `url`
 :   **If the instance refers to a `JSScript`**, the filename or URL from which
-    this script's code was loaded. If the `source` property is non-`null`,
-    then this is equal to `source.url`.
+    this script's code was loaded. For scripts created by `eval` or the
+    `Function` constructor, this may be a synthesized filename, starting with a
+    valid URL and followed by information tracking how the code was introduced
+    into the system; the entire string is not a valid URL. For
+    `Function.prototype`'s script, this is `null`. If this `Debugger.Script`'s
+    `source` property is non-`null`, then this is equal to `source.url`.
 
     **If the instance refers to WebAssembly code**, throw a `TypeError`.
 
