@@ -1059,6 +1059,7 @@ MediaDecoder::NotifyBytesDownloaded()
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
   UpdatePlaybackRate();
   GetOwner()->DownloadProgressed();
+  mResource->ThrottleReadahead(CanPlayThrough());
 }
 
 void

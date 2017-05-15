@@ -39,6 +39,8 @@ to mochitest command.
   * test_animations.html [1]
   * test_animations_dynamic_changes.html [1]
   * test_bug716226.html [1]
+  * inserting keyframes rule doesn't trigger restyle bug 1364799:
+    * test_rule_insertion.html `@keyframes` [36]
   * OMTA
     * test_animations_effect_timing_duration.html [1]
     * test_animations_effect_timing_enddelay.html [1]
@@ -78,6 +80,7 @@ to mochitest command.
   * ... `'list-style'` [30]
   * ... `'content`: various value as list-style-type in counter functions [2]
   * test_html_attribute_computed_values.html `list-style-type` [8]
+  * test_rule_insertion.html `counter` [47]
 * @page support:
   * test_bug887741_at-rules_in_declaration_lists.html `exception` [1]
 * Unimplemented \@font-face descriptors:
@@ -90,21 +93,21 @@ to mochitest command.
 * @namespace support:
   * test_namespace_rule.html: bug 1355715 [16]
 * test_dont_use_document_colors.html: support of disabling document color bug 1355716 [21]
-* test_exposed_prop_accessors.html: mainly various unsupported properties [*]
 * test_font_feature_values_parsing.html: \@font-feature-values support bug 1355721 [107]
 * Grid support bug 1341802
   * test_grid_computed_values.html [4]
   * test_grid_container_shorthands.html [65]
   * test_grid_item_shorthands.html [23]
   * test_grid_shorthand_serialization.html [28]
-  * test_compute_data_with_start_struct.html `grid-` [*]
-  * test_inherit_computation.html `grid` [*]
-  * test_inherit_storage.html `'grid` [*]
-  * ... `"grid` [*]
-  * test_initial_computation.html `grid` [*]
-  * test_initial_storage.html `grid` [*]
-  * test_property_syntax_errors.html `grid`: actually there are issues with this [*]
-  * test_value_storage.html `'grid` [*]
+  * test_compute_data_with_start_struct.html `grid-` [4]
+  * test_inherit_computation.html `grid` [8]
+  * test_inherit_storage.html `'grid` [15]
+  * ... `"grid` [4]
+  * test_initial_computation.html `grid` [16]
+  * test_initial_storage.html `grid` [38]
+  * test_property_syntax_errors.html `grid`: actually there are issues with this [548]
+  * test_value_storage.html `'grid` [637]
+  * test_exposed_prop_accessors.html `grid` [4]
 * Unimplemented prefixed properties:
   * test_variables.html `var(--var6)`: -x-system-font [1]
 * Unimplemented CSS properties:
@@ -112,8 +115,6 @@ to mochitest command.
     * test_property_syntax_errors.html `font-variant-alternates` [2]
     * test_value_storage.html `font-variant` [167]
     * test_specified_value_serialization.html `bug-721136` [1]
-* font-feature-settings should be a subproperty of font shorthand bug 1363984
-  * test_value_storage.html `font-feature-settings` [16]
 * Unsupported prefixed values
   * moz-prefixed gradient functions bug 1337655
     * test_value_storage.html `-moz-linear-gradient` [322]
@@ -161,7 +162,7 @@ to mochitest command.
   * system font serialization with subprop specified bug 1364286
     * test_system_font_serialization.html [5]
   * serialize subprops to -moz-use-system-font when using system font bug 1364289
-    * test_value_storage.html `'font'` [128]
+    * test_value_storage.html `'font'` [144]
 * Unsupported pseudo-elements or anon boxes
   * :-moz-tree bits bug 1348488
     * test_selectors.html `:-moz-tree` [10]
@@ -194,8 +195,9 @@ to mochitest command.
     * ... `border-spacing: ` [6]
     * ... `rect(1, ` [2]
   * test_hover_quirk.html: hover quirks bug 1355724 [6]
-* test_pseudoelement_parsing.html: support parsing some pseudo-classes on some pseudo-elements [5]
-* test_pseudoelement_state.html: Unknown failure [8]
+* support some pseudo-classes on some pseudo-elements bug 1364412
+  * test_pseudoelement_parsing.html [5]
+  * test_pseudoelement_state.html [8]
 * Unit should be preserved after parsing servo/servo#15346
   * test_units_time.html [1]
 * getComputedStyle style doesn't contain custom properties bug 1336891
@@ -231,7 +233,6 @@ to mochitest command.
 * test_selectors_on_anonymous_content.html: xbl and :nth-child [1]
 * test_parse_rule.html `rgb(0, 128, 0)`: color properties not getting computed [5]
 * test_selectors.html `:nth-child`: &lt;an+b&gt; parsing difference bug 1364009 [14]
-* test_rule_insertion.html: bug 1363665 [83]
 
 ## Ignore
 
