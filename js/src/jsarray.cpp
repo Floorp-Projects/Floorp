@@ -220,8 +220,10 @@ js::StringIsArrayIndex(JSLinearString* str, uint32_t* indexp)
 }
 
 static bool
-ToId(JSContext* cx, double index, MutableHandleId id)
+ToId(JSContext* cx, uint64_t index, MutableHandleId id)
 {
+    MOZ_ASSERT(index < uint64_t(DOUBLE_INTEGRAL_PRECISION_LIMIT));
+
     if (index == uint32_t(index))
         return IndexToId(cx, uint32_t(index), id);
 
@@ -390,11 +392,8 @@ js::GetElements(JSContext* cx, HandleObject aobj, uint32_t length, Value* vp)
 
 // Set the value of the property at the given index to v.
 static inline bool
-SetElement(JSContext* cx, HandleObject obj, double index, HandleValue v)
+SetElement(JSContext* cx, HandleObject obj, uint64_t index, HandleValue v)
 {
-    MOZ_ASSERT(index >= 0);
-    MOZ_ASSERT(floor(index) == index);
-
     RootedId id(cx);
     if (!ToId(cx, index, &id))
         return false;
@@ -415,11 +414,8 @@ SetElement(JSContext* cx, HandleObject obj, double index, HandleValue v)
  * non-configurable, but proxies may implement different semantics.)
  */
 static bool
-DeleteArrayElement(JSContext* cx, HandleObject obj, double index, ObjectOpResult& result)
+DeleteArrayElement(JSContext* cx, HandleObject obj, uint64_t index, ObjectOpResult& result)
 {
-    MOZ_ASSERT(index >= 0);
-    MOZ_ASSERT(floor(index) == index);
-
     if (obj->is<ArrayObject>() && !obj->isIndexed() &&
         !obj->as<NativeObject>().denseElementsAreFrozen())
     {
@@ -451,23 +447,31 @@ DeleteArrayElement(JSContext* cx, HandleObject obj, double index, ObjectOpResult
 
 /* ES6 draft rev 32 (2 Febr 2015) 7.3.7 */
 static bool
-DeletePropertyOrThrow(JSContext* cx, HandleObject obj, double index)
+DeletePropertyOrThrow(JSContext* cx, HandleObject obj, uint64_t index)
 {
     ObjectOpResult success;
     if (!DeleteArrayElement(cx, obj, index, success))
         return false;
     if (!success) {
         RootedId id(cx);
-        RootedValue indexv(cx, NumberValue(index));
-        if (!ValueToId<CanGC>(cx, indexv, &id))
+        if (!ToId(cx, index, &id))
             return false;
         return success.reportError(cx, obj, id);
     }
     return true;
 }
 
+static bool
+SetLengthProperty(JSContext* cx, HandleObject obj, uint64_t length)
+{
+    MOZ_ASSERT(length < uint64_t(DOUBLE_INTEGRAL_PRECISION_LIMIT));
+
+    RootedValue v(cx, NumberValue(length));
+    return SetProperty(cx, obj, cx->names().length, v);
+}
+
 bool
-js::SetLengthProperty(JSContext* cx, HandleObject obj, double length)
+js::SetLengthProperty(JSContext* cx, HandleObject obj, uint32_t length)
 {
     RootedValue v(cx, NumberValue(length));
     return SetProperty(cx, obj, cx->names().length, v);
@@ -2184,8 +2188,8 @@ js::array_push(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     // Steps 7-8.
-    double newlength = length + double(args.length());
-    args.rval().setNumber(newlength);
+    uint64_t newlength = length + uint64_t(args.length());
+    args.rval().setNumber(double(newlength));
     return SetLengthProperty(cx, obj, newlength);
 }
 
@@ -2315,7 +2319,7 @@ js::array_shift(JSContext* cx, unsigned argc, Value* vp)
     // Step 3.
     if (len == 0) {
         // Step 3.a.
-        if (!SetLengthProperty(cx, obj, 0))
+        if (!SetLengthProperty(cx, obj, uint32_t(0)))
             return false;
 
         // Step 3.b.
@@ -2419,7 +2423,7 @@ js::array_unshift(JSContext* cx, unsigned argc, Value* vp)
             // Steps 4.b-c.
             if (!optimized) {
                 uint32_t last = length;
-                double upperIndex = double(last) + args.length();
+                uint64_t upperIndex = uint64_t(last) + args.length();
                 RootedValue value(cx);
                 do {
                     --last; --upperIndex;
@@ -2446,13 +2450,13 @@ js::array_unshift(JSContext* cx, unsigned argc, Value* vp)
     }
 
     // Step 5.
-    double newlength = length + double(args.length());
+    uint64_t newlength = length + uint64_t(args.length());
     if (!SetLengthProperty(cx, obj, newlength))
         return false;
 
     // Step 6.
     /* Follow Perl by returning the new array length. */
-    args.rval().setNumber(newlength);
+    args.rval().setNumber(double(newlength));
     return true;
 }
 
@@ -2725,7 +2729,7 @@ array_splice_impl(JSContext* cx, unsigned argc, Value* vp, bool returnValueIsUse
                 uint32_t from = k + actualDeleteCount - 1;
 
                 /* Step 16.b.ii. */
-                double to = double(k) + itemCount - 1;
+                uint64_t to = uint64_t(k) + itemCount - 1;
 
                 /* Steps 16.b.iii, 16.b.iv.1. */
                 bool hole;
@@ -2754,7 +2758,7 @@ array_splice_impl(JSContext* cx, unsigned argc, Value* vp, bool returnValueIsUse
         return false;
 
     /* Step 19. */
-    double finalLength = double(len) - actualDeleteCount + itemCount;
+    uint64_t finalLength = uint64_t(len) - actualDeleteCount + itemCount;
     if (!SetLengthProperty(cx, obj, finalLength))
         return false;
 
