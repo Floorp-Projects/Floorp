@@ -556,6 +556,8 @@ static const char16_t* const kBinaryFileExtensions[] = {
     u".hlp", // Windows Help
     u".hqx", // Mac archive
     u".hta", // HTML trusted application
+    u".htm",
+    u".html",
     u".htt", // MS HTML template
     u".img", // Mac disk image
     u".imgpart", // Mac disk image
