@@ -75,7 +75,7 @@ fails-if(stylo) HTTP(..) == enable-sheet-4.html enable-sheet-4-ref.html # bug 13
 skip-if(stylo) HTTP(..) == enable-sheet-5.html enable-sheet-4-ref.html
 skip HTTP(..) == enable-sheet-6.html multiple-in-family-1-ref.html
 skip HTTP(..) == enable-sheet-7.html multiple-in-family-1-ref.html
-fails-if(stylo) HTTP(..) == disable-sheet-1.html disable-sheet-1-ref.html
+HTTP(..) == disable-sheet-1.html disable-sheet-1-ref.html
 # We're missing disable-sheet-{2,3,6,7} (analogs to
 # enable-sheet{2,3,6,7}) because I don't know how to detect test
 # completion for those cases.
