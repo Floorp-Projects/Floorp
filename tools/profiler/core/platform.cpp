@@ -532,19 +532,6 @@ MOZ_THREAD_LOCAL(PseudoStack*) sPseudoStack;
 // The name of the main thread.
 static const char* const kMainThreadName = "GeckoMain";
 
-static bool
-CanNotifyObservers()
-{
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-#if defined(GP_OS_android)
-  // Android ANR reporter uses the profiler off the main thread.
-  return NS_IsMainThread();
-#else
-  return true;
-#endif
-}
-
 ////////////////////////////////////////////////////////////////////////
 // BEGIN tick/unwinding code
 
@@ -1992,18 +1979,23 @@ locked_register_thread(PSLockRef aLock, const char* aName, void* stackTop)
 }
 
 static void
+NotifyObservers(const char* aTopic, nsISupports* aSubject = nullptr)
+{
+  if (!NS_IsMainThread()) {
+    nsCOMPtr<nsISupports> subject = aSubject;
+    NS_DispatchToMainThread(NS_NewRunnableFunction([=] { NotifyObservers(aTopic, subject); }));
+    return;
+  }
+
+  if (nsCOMPtr<nsIObserverService> os = services::GetObserverService()) {
+    os->NotifyObservers(aSubject, aTopic, nullptr);
+  }
+}
+
+static void
 NotifyProfilerStarted(const int aEntries, double aInterval, uint32_t aFeatures,
                       const char** aFilters, uint32_t aFilterCount)
 {
-  if (!CanNotifyObservers()) {
-    return;
-  }
-
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-  if (!os) {
-    return;
-  }
-
   nsTArray<nsCString> filtersArray;
   for (size_t i = 0; i < aFilterCount; ++i) {
     filtersArray.AppendElement(aFilters[i]);
@@ -2012,22 +2004,7 @@ NotifyProfilerStarted(const int aEntries, double aInterval, uint32_t aFeatures,
   nsCOMPtr<nsIProfilerStartParams> params =
     new nsProfilerStartParams(aEntries, aInterval, aFeatures, filtersArray);
 
-  os->NotifyObservers(params, "profiler-started", nullptr);
-}
-
-static void
-NotifyObservers(const char* aTopic)
-{
-  if (!CanNotifyObservers()) {
-    return;
-  }
-
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-  if (!os) {
-    return;
-  }
-
-  os->NotifyObservers(nullptr, aTopic, nullptr);
+  NotifyObservers("profiler-started", params);
 }
 
 static void
