@@ -2174,20 +2174,6 @@ or run without that action (ie: --no-{action})"
             self.generate_balrog_props(props_path)
             return
 
-        if self.config.get('skip_balrog_uploads'):
-            self.info("Funsize will submit to balrog, skipping submission here.")
-            return
-
-        if not self.config.get("balrog_servers"):
-            self.fatal("balrog_servers not set; skipping balrog submission.")
-            return
-
-        if self.submit_balrog_updates():
-            # set the build to orange so it is at least caught
-            self.return_code = self.worst_level(
-                EXIT_STATUS_DICT[TBPL_WARNING], self.return_code,
-                AUTOMATION_EXIT_CODES[::-1]
-            )
 
     def valgrind_test(self):
         '''Execute mach's valgrind-test for memory leaks'''

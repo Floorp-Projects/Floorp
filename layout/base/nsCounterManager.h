@@ -82,7 +82,7 @@ struct nsCounterUseNode : public nsCounterNode {
     RefPtr<nsCSSValue::Array> mCounterFunction;
 
     nsPresContext* mPresContext;
-    RefPtr<mozilla::CounterStyle> mCounterStyle;
+    mozilla::CounterStylePtr mCounterStyle;
 
     // false for counter(), true for counters()
     bool mAllCounters;
@@ -94,7 +94,6 @@ struct nsCounterUseNode : public nsCounterNode {
         : nsCounterNode(aContentIndex, USE)
         , mCounterFunction(aCounterFunction)
         , mPresContext(aPresContext)
-        , mCounterStyle(nullptr)
         , mAllCounters(aAllCounters)
     {
         NS_ASSERTION(aContentIndex <= INT32_MAX, "out of range");

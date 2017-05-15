@@ -7,6 +7,7 @@
 #include "MediaPrefs.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Types.h"
+#include "PlatformDecoderModule.h"
 #include "prlink.h"
 
 #define AV_LOG_DEBUG    48
