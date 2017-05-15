@@ -79,13 +79,24 @@ public:
   }
 
   void Spin() {
-    while (!mTopicReceived) {
-      if ((PR_IntervalNow() - mStartTime) > (WAITFORTOPIC_TIMEOUT_SECONDS * PR_USEC_PER_SEC)) {
-        // Timed out waiting for the topic.
-        do_check_true(false);
-        break;
-      }
-      (void)NS_ProcessNextEvent();
+    bool timedOut = false;
+    mozilla::SpinEventLoopUntil([&]() -> bool {
+        if (mTopicReceived) {
+          return true;
+        }
+
+        if ((PR_IntervalNow() - mStartTime) >
+            (WAITFORTOPIC_TIMEOUT_SECONDS * PR_USEC_PER_SEC)) {
+          timedOut = true;
+          return true;
+        }
+
+        return false;
+      });
+
+    if (timedOut) {
+      // Timed out waiting for the topic.
+      do_check_true(false);
     }
   }
 

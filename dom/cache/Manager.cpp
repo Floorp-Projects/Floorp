@@ -1423,11 +1423,10 @@ Manager::ShutdownAll()
 
   Factory::ShutdownAll();
 
-  while (!Factory::IsShutdownAllComplete()) {
-    if (!NS_ProcessNextEvent()) {
-      NS_WARNING("Something bad happened!");
-      break;
-    }
+  if (!mozilla::SpinEventLoopUntil([]() {
+        return Factory::IsShutdownAllComplete();
+      })) {
+    NS_WARNING("Something bad happened!");
   }
 }
 
