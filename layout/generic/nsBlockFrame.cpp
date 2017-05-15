@@ -7055,7 +7055,7 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
         !GetPrevInFlow()) {
       // Resolve style for the bullet frame
       const nsStyleList* styleList = StyleList();
-      CounterStyle* style = styleList->GetCounterStyle();
+      CounterStyle* style = styleList->mCounterStyle;
 
       CreateBulletFrameForListItem(
         style->IsBullet(),
@@ -7110,7 +7110,7 @@ nsBlockFrame::BulletIsEmpty() const
                mozilla::StyleDisplay::ListItem && HasOutsideBullet(),
                "should only care when we have an outside bullet");
   const nsStyleList* list = StyleList();
-  return list->GetCounterStyle()->IsNone() &&
+  return list->mCounterStyle->IsNone() &&
          !list->GetListStyleImage();
 }
 

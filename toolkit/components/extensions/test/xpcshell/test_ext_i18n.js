@@ -2,6 +2,7 @@
 
 Cu.import("resource://gre/modules/Preferences.jsm");
 
+ExtensionTestUtils.mockAppInfo();
 
 const server = createHttpServer();
 server.registerDirectory("/data/", do_get_file("data"));

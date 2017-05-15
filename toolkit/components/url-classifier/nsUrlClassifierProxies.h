@@ -133,22 +133,6 @@ public:
      mozilla::safebrowsing::CacheResultArray *mEntries;
   };
 
-  class CacheMissesRunnable : public mozilla::Runnable
-  {
-  public:
-    CacheMissesRunnable(nsUrlClassifierDBServiceWorker* aTarget,
-                        mozilla::safebrowsing::PrefixArray *aEntries)
-      : mTarget(aTarget)
-      , mEntries(aEntries)
-    { }
-
-    NS_DECL_NSIRUNNABLE
-
-  private:
-    RefPtr<nsUrlClassifierDBServiceWorker> mTarget;
-    mozilla::safebrowsing::PrefixArray *mEntries;
-  };
-
   class DoLocalLookupRunnable : public mozilla::Runnable
   {
   public:
@@ -169,24 +153,6 @@ public:
     nsCString mSpec;
     nsCString mTables;
     mozilla::safebrowsing::LookupResultArray* mResults;
-  };
-
-  class SetLastUpdateTimeRunnable : public mozilla::Runnable
-  {
-  public:
-    SetLastUpdateTimeRunnable(nsUrlClassifierDBServiceWorker* aTarget,
-                              const nsACString& table,
-                              uint64_t updateTime)
-      : mTarget(aTarget),
-        mTable(table),
-        mUpdateTime(updateTime)
-    { }
-
-    NS_DECL_NSIRUNNABLE
-  private:
-    RefPtr<nsUrlClassifierDBServiceWorker> mTarget;
-    nsCString mTable;
-    uint64_t mUpdateTime;
   };
 
   class ClearLastResultsRunnable : public mozilla::Runnable
@@ -210,7 +176,6 @@ public:
   nsresult CloseDb();
 
   nsresult CacheCompletions(mozilla::safebrowsing::CacheResultArray * aEntries);
-  nsresult CacheMisses(mozilla::safebrowsing::PrefixArray * aEntries);
 
 private:
   ~UrlClassifierDBServiceWorkerProxy() {}

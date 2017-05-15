@@ -7,7 +7,7 @@ const BASE_URL = `http://localhost:${server.identity.primaryPort}/data`;
 
 ExtensionTestUtils.mockAppInfo();
 
-add_task(async function test_contentscript() {
+add_task(async function test_contentscript_runAt() {
   function background() {
     browser.runtime.onMessage.addListener(([msg, expectedStates, readyState], sender) => {
       if (msg == "chrome-namespace-ok") {
@@ -59,6 +59,11 @@ add_task(async function test_contentscript() {
         },
         {
           "matches": ["http://*/*/file_sample.html"],
+          "js": ["content_script_idle.js"],
+          // Test default `run_at`.
+        },
+        {
+          "matches": ["http://*/*/file_sample.html"],
           "js": ["content_script.js"],
           "run_at": "document_idle",
         },
@@ -83,7 +88,12 @@ add_task(async function test_contentscript() {
   extension.onMessage("script-run-interactive", () => { interactiveCount++; });
 
   let completePromise = new Promise(resolve => {
-    extension.onMessage("script-run-complete", () => { completeCount++; resolve(); });
+    extension.onMessage("script-run-complete", () => {
+      completeCount++;
+      if (completeCount > 1) {
+        resolve();
+      }
+    });
   });
 
   let chromeNamespacePromise = extension.awaitMessage("chrome-namespace-ok");
@@ -98,7 +108,7 @@ add_task(async function test_contentscript() {
 
   equal(loadingCount, 1, "document_start script ran exactly once");
   equal(interactiveCount, 1, "document_end script ran exactly once");
-  equal(completeCount, 1, "document_idle script ran exactly once");
+  equal(completeCount, 2, "document_idle script ran exactly twice");
 
   await extension.unload();
 });

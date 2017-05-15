@@ -8,7 +8,7 @@ const {ProfileStorage} = Cu.import("resource://formautofill/ProfileStorage.jsm",
 
 const TEST_STORE_FILE_NAME = "test-profile.json";
 
-const COMPUTE_TESTCASES = [
+const ADDRESS_COMPUTE_TESTCASES = [
   // Empty
   {
     description: "Empty address",
@@ -83,7 +83,7 @@ const COMPUTE_TESTCASES = [
   },
 ];
 
-const NORMALIZE_TESTCASES = [
+const ADDRESS_NORMALIZE_TESTCASES = [
   // Empty
   {
     description: "Empty address",
@@ -180,48 +180,147 @@ const NORMALIZE_TESTCASES = [
   },
 ];
 
+const CREDIT_CARD_COMPUTE_TESTCASES = [
+  // Empty
+  {
+    description: "Empty credit card",
+    creditCard: {
+    },
+    expectedResult: {
+    },
+  },
+
+  // Name
+  {
+    description: "Has \"cc-name\"",
+    creditCard: {
+      "cc-name": "Timothy John Berners-Lee",
+    },
+    expectedResult: {
+      "cc-name": "Timothy John Berners-Lee",
+      "cc-given-name": "Timothy",
+      "cc-additional-name": "John",
+      "cc-family-name": "Berners-Lee",
+    },
+  },
+];
+
+const CREDIT_CARD_NORMALIZE_TESTCASES = [
+  // Empty
+  {
+    description: "Empty credit card",
+    creditCard: {
+    },
+    expectedResult: {
+    },
+  },
+
+  // Name
+  {
+    description: "Has both \"cc-name\" and the split name fields",
+    creditCard: {
+      "cc-name": "Timothy John Berners-Lee",
+      "cc-given-name": "John",
+      "cc-family-name": "Doe",
+    },
+    expectedResult: {
+      "cc-name": "Timothy John Berners-Lee",
+    },
+  },
+  {
+    description: "Has only the split name fields",
+    creditCard: {
+      "cc-given-name": "John",
+      "cc-family-name": "Doe",
+    },
+    expectedResult: {
+      "cc-name": "John Doe",
+    },
+  },
+];
+
 let do_check_record_matches = (expectedRecord, record) => {
   for (let key in expectedRecord) {
     do_check_eq(expectedRecord[key], record[key] || "");
   }
 };
 
-add_task(async function test_computeFields() {
+add_task(async function test_computeAddressFields() {
   let path = getTempFile(TEST_STORE_FILE_NAME).path;
 
   let profileStorage = new ProfileStorage(path);
   await profileStorage.initialize();
 
-  COMPUTE_TESTCASES.forEach(testcase => profileStorage.add(testcase.address));
+  ADDRESS_COMPUTE_TESTCASES.forEach(testcase => profileStorage.addresses.add(testcase.address));
   await profileStorage._saveImmediately();
 
   profileStorage = new ProfileStorage(path);
   await profileStorage.initialize();
 
-  let addresses = profileStorage.getAll();
+  let addresses = profileStorage.addresses.getAll();
 
   for (let i in addresses) {
-    do_print("Verify testcase: " + COMPUTE_TESTCASES[i].description);
-    do_check_record_matches(COMPUTE_TESTCASES[i].expectedResult, addresses[i]);
+    do_print("Verify testcase: " + ADDRESS_COMPUTE_TESTCASES[i].description);
+    do_check_record_matches(ADDRESS_COMPUTE_TESTCASES[i].expectedResult, addresses[i]);
   }
 });
 
-add_task(async function test_normalizeFields() {
+add_task(async function test_normalizeAddressFields() {
   let path = getTempFile(TEST_STORE_FILE_NAME).path;
 
   let profileStorage = new ProfileStorage(path);
   await profileStorage.initialize();
 
-  NORMALIZE_TESTCASES.forEach(testcase => profileStorage.add(testcase.address));
+  ADDRESS_NORMALIZE_TESTCASES.forEach(testcase => profileStorage.addresses.add(testcase.address));
   await profileStorage._saveImmediately();
 
   profileStorage = new ProfileStorage(path);
   await profileStorage.initialize();
 
-  let addresses = profileStorage.getAll();
+  let addresses = profileStorage.addresses.getAll();
 
   for (let i in addresses) {
-    do_print("Verify testcase: " + NORMALIZE_TESTCASES[i].description);
-    do_check_record_matches(NORMALIZE_TESTCASES[i].expectedResult, addresses[i]);
+    do_print("Verify testcase: " + ADDRESS_NORMALIZE_TESTCASES[i].description);
+    do_check_record_matches(ADDRESS_NORMALIZE_TESTCASES[i].expectedResult, addresses[i]);
+  }
+});
+
+add_task(async function test_computeCreditCardFields() {
+  let path = getTempFile(TEST_STORE_FILE_NAME).path;
+
+  let profileStorage = new ProfileStorage(path);
+  await profileStorage.initialize();
+
+  CREDIT_CARD_COMPUTE_TESTCASES.forEach(testcase => profileStorage.creditCards.add(testcase.creditCard));
+  await profileStorage._saveImmediately();
+
+  profileStorage = new ProfileStorage(path);
+  await profileStorage.initialize();
+
+  let creditCards = profileStorage.creditCards.getAll();
+
+  for (let i in creditCards) {
+    do_print("Verify testcase: " + CREDIT_CARD_COMPUTE_TESTCASES[i].description);
+    do_check_record_matches(CREDIT_CARD_COMPUTE_TESTCASES[i].expectedResult, creditCards[i]);
+  }
+});
+
+add_task(async function test_normalizeCreditCardFields() {
+  let path = getTempFile(TEST_STORE_FILE_NAME).path;
+
+  let profileStorage = new ProfileStorage(path);
+  await profileStorage.initialize();
+
+  CREDIT_CARD_NORMALIZE_TESTCASES.forEach(testcase => profileStorage.creditCards.add(testcase.creditCard));
+  await profileStorage._saveImmediately();
+
+  profileStorage = new ProfileStorage(path);
+  await profileStorage.initialize();
+
+  let creditCards = profileStorage.creditCards.getAll();
+
+  for (let i in creditCards) {
+    do_print("Verify testcase: " + CREDIT_CARD_NORMALIZE_TESTCASES[i].description);
+    do_check_record_matches(CREDIT_CARD_NORMALIZE_TESTCASES[i].expectedResult, creditCards[i]);
   }
 });
