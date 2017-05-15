@@ -134,8 +134,6 @@ class CodeSegment
         return pc >= base() && pc < (base() + length_);
     }
 
-    UniqueConstBytes unlinkedBytesForDebugging(const LinkData& linkData) const;
-
     // Structured clone support:
 
     size_t serializedSize() const;

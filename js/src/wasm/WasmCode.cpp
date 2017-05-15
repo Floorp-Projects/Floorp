@@ -248,13 +248,17 @@ CodeSegment::create(const Bytes& unlinkedBytes,
                     const LinkData& linkData,
                     const Metadata& metadata)
 {
-    uint32_t codeLength = unlinkedBytes.length();
-    MOZ_ASSERT(codeLength % gc::SystemPageSize() == 0);
+    // The unlinked bytes are a snapshot of the MacroAssembler's contents so
+    // round up just like in the MacroAssembler overload above.
+    uint32_t padding = ComputeByteAlignment(unlinkedBytes.length(), gc::SystemPageSize());
+    uint32_t codeLength = unlinkedBytes.length() + padding;
 
     UniqueCodeBytes codeBytes = AllocateCodeBytes(codeLength);
     if (!codeBytes)
         return nullptr;
-    memcpy(codeBytes.get(), unlinkedBytes.begin(), codeLength);
+
+    memcpy(codeBytes.get(), unlinkedBytes.begin(), unlinkedBytes.length());
+    memset(codeBytes.get() + unlinkedBytes.length(), 0, padding);
 
     return create(Move(codeBytes), codeLength, bytecode, linkData, metadata);
 }
@@ -309,18 +313,6 @@ CodeSegment::initialize(UniqueCodeBytes codeBytes,
     SendCodeRangesToProfiler(*this, bytecode.bytes, metadata);
 
     return true;
-}
-
-UniqueConstBytes
-CodeSegment::unlinkedBytesForDebugging(const LinkData& linkData) const
-{
-    UniqueBytes unlinkedBytes = js::MakeUnique<Bytes>();
-    if (!unlinkedBytes)
-        return nullptr;
-    if (!unlinkedBytes->append(base(), length()))
-        return nullptr;
-    StaticallyUnlink(unlinkedBytes->begin(), linkData);
-    return UniqueConstBytes(unlinkedBytes.release());
 }
 
 size_t
