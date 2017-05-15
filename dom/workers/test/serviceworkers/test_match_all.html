@@ -13,6 +13,7 @@
 <p id="display"></p>
 <div id="content" style="display: none"></div>
 <pre id="test"></pre>
+<script src="utils.js"></script>
 <script class="testbody" type="text/javascript">
   // match_all_worker will call matchAll until the worker shuts down.
   // Test passes if the browser doesn't crash on leaked promise objects.
@@ -23,7 +24,10 @@
   function simpleRegister() {
     return navigator.serviceWorker.register("match_all_worker.js",
                                             { scope: "./sw_clients/" })
-      .then((swr) => registration = swr);
+      .then((swr) => {
+        registration = swr;
+        return waitForState(swr.installing, 'activated', swr);
+      });
   }
 
   function closeAndUnregister() {
