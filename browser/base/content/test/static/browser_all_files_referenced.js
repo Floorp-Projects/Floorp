@@ -61,6 +61,9 @@ var whitelist = new Set([
   {file: "chrome://devtools/content/inspector/markup/markup.xhtml",
    isFromDevTools: true},
 
+  // Kept for add-on compatibility, should be removed in bug 851471.
+  {file: "chrome://mozapps/skin/downloads/downloadIcon.png"},
+
   // extensions/pref/autoconfig/src/nsReadConfig.cpp
   {file: "resource://gre/defaults/autoconfig/prefcalls.js"},
 
@@ -110,7 +113,6 @@ var whitelist = new Set([
 
   // browser/extensions/pdfjs/content/web/viewer.js#7450
   {file: "resource://pdf.js/web/debugger.js"},
-
 
   // Starting from here, files in the whitelist are bugs that need fixing.
   // Bug 1339420
