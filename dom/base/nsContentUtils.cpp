@@ -76,6 +76,7 @@
 #include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
 #include "nsBindingManager.h"
+#include "nsCanvasFrame.h"
 #include "nsCaret.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsCharSeparatedTokenizer.h"
@@ -10253,13 +10254,18 @@ nsContentUtils::AppendDocumentLevelNativeAnonymousContentTo(
 {
   MOZ_ASSERT(aDocument);
 
-  // XXXheycam This probably needs to find the nsCanvasFrame's NAC too.
   if (nsIPresShell* presShell = aDocument->GetShell()) {
     if (nsIFrame* scrollFrame = presShell->GetRootScrollFrame()) {
       nsIAnonymousContentCreator* creator = do_QueryFrame(scrollFrame);
       MOZ_ASSERT(creator,
                  "scroll frame should always implement nsIAnonymousContentCreator");
       creator->AppendAnonymousContentTo(aElements, 0);
+    }
+
+    if (nsCanvasFrame* canvasFrame = presShell->GetCanvasFrame()) {
+      if (Element* container = canvasFrame->GetCustomContentContainer()) {
+        aElements.AppendElement(container);
+      }
     }
   }
 }
