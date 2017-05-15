@@ -2618,7 +2618,9 @@ var SessionStoreInternal = {
 
   /**
    * Updates the label and icon for a <xul:tab> using the data from
-   * tabData.
+   * tabData. If the tab being updated happens to be the
+   * customization mode tab, this function will tell the window's
+   * CustomizeMode instance about it.
    *
    * @param tab
    *        The <xul:tab> to update.
@@ -2627,10 +2629,6 @@ var SessionStoreInternal = {
    *        not supplied, the data will be retrieved from the cache.
    */
   updateTabLabelAndIcon(tab, tabData = null) {
-    if (tab.hasAttribute("customizemode")) {
-      return;
-    }
-
     let browser = tab.linkedBrowser;
     let win = browser.ownerGlobal;
 
@@ -2650,6 +2648,8 @@ var SessionStoreInternal = {
       } else if (activePageData.url != "about:blank") {
         win.gBrowser.setInitialTabTitle(tab, activePageData.url);
       }
+    } else if (tab.hasAttribute("customizemode")) {
+      win.gCustomizeMode.setTab(tab);
     }
 
     // Restore the tab icon.
@@ -3690,10 +3690,6 @@ var SessionStoreInternal = {
         userTypedValue: tabData.userTypedValue || "",
         userTypedClear: tabData.userTypedClear || 0
       };
-    }
-
-    if (tab.hasAttribute("customizemode")) {
-      win.gCustomizeMode.setTab(tab);
     }
 
     // Update tab label and icon to show something
