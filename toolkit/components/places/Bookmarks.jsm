@@ -78,6 +78,24 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesSyncUtils",
                                   "resource://gre/modules/PlacesSyncUtils.jsm");
 
+// This is an helper to temporarily cover the need to know the tags folder
+// itemId until bug 424160 is fixed.  This exists so that startup paths won't
+// pay the price to initialize the bookmarks service just to fetch this value.
+// If the method is already initing the bookmarks service for other reasons
+// (most of the writing methods will invoke getObservers() already) it can
+// directly use the PlacesUtils.tagsFolderId property.
+var gTagsFolderId;
+async function promiseTagsFolderId() {
+  if (gTagsFolderId)
+    return gTagsFolderId;
+  let db =  await PlacesUtils.promiseDBConnection();
+  let rows = await db.execute(
+    "SELECT id FROM moz_bookmarks WHERE guid = :guid",
+    { guid: Bookmarks.tagsGuid }
+  );
+  return gTagsFolderId = rows[0].getResultByName("id");
+}
+
 const MATCH_ANYWHERE_UNMODIFIED = Ci.mozIPlacesAutoComplete.MATCH_ANYWHERE_UNMODIFIED;
 const BEHAVIOR_BOOKMARK = Ci.mozIPlacesAutoComplete.BEHAVIOR_BOOKMARK;
 
@@ -760,35 +778,45 @@ var Bookmarks = Object.freeze({
     let info = guidOrInfo;
     if (!info)
       throw new Error("Input should be a valid object");
-    if (typeof(info) != "object")
+    if (typeof(info) != "object") {
       info = { guid: guidOrInfo };
+    } else if (Object.keys(info).length == 1) {
+      // Just a faster code path.
+      if (!["url", "guid", "parentGuid", "index"].includes(Object.keys(info)[0]))
+        throw new Error(`Unexpected number of conditions provided: 0`);
+    } else {
+      // Only one condition at a time can be provided.
+      let conditionsCount = [
+        v => v.hasOwnProperty("guid"),
+        v => v.hasOwnProperty("parentGuid") && v.hasOwnProperty("index"),
+        v => v.hasOwnProperty("url")
+      ].reduce((old, fn) => old + fn(info) | 0, 0);
+      if (conditionsCount != 1)
+        throw new Error(`Unexpected number of conditions provided: ${conditionsCount}`);
+    }
 
-    // Only one condition at a time can be provided.
-    let conditionsCount = [
-      v => v.hasOwnProperty("guid"),
-      v => v.hasOwnProperty("parentGuid") && v.hasOwnProperty("index"),
-      v => v.hasOwnProperty("url")
-    ].reduce((old, fn) => old + fn(info) | 0, 0);
-    if (conditionsCount != 1)
-      throw new Error(`Unexpected number of conditions provided: ${conditionsCount}`);
+    let behavior = {};
+    if (info.hasOwnProperty("parentGuid") || info.hasOwnProperty("index")) {
+      behavior = {
+        parentGuid: { requiredIf: b => b.hasOwnProperty("index") },
+        index: { requiredIf: b => b.hasOwnProperty("parentGuid"),
+                 validIf: b => typeof(b.index) == "number" &&
+                               b.index >= 0 || b.index == this.DEFAULT_INDEX }
+      };
+    }
 
     // Even if we ignore any other unneeded property, we still validate any
     // known property to reduce likelihood of hidden bugs.
-    let fetchInfo = validateBookmarkObject(info,
-      { parentGuid: { requiredIf: b => b.hasOwnProperty("index") }
-      , index: { requiredIf: b => b.hasOwnProperty("parentGuid")
-               , validIf: b => typeof(b.index) == "number" &&
-                               b.index >= 0 || b.index == this.DEFAULT_INDEX }
-      });
+    let fetchInfo = validateBookmarkObject(info, behavior);
 
     return (async function() {
       let results;
-      if (fetchInfo.hasOwnProperty("guid"))
+      if (fetchInfo.hasOwnProperty("url"))
+        results = await fetchBookmarksByURL(fetchInfo);
+      else if (fetchInfo.hasOwnProperty("guid"))
         results = await fetchBookmark(fetchInfo);
       else if (fetchInfo.hasOwnProperty("parentGuid") && fetchInfo.hasOwnProperty("index"))
         results = await fetchBookmarkByPosition(fetchInfo);
-      else if (fetchInfo.hasOwnProperty("url"))
-        results = await fetchBookmarksByURL(fetchInfo);
 
       if (!results)
         return null;
@@ -987,11 +1015,7 @@ var Bookmarks = Object.freeze({
       }
     }
 
-    return (async function() {
-      let results = await queryBookmarks(query);
-
-      return results;
-    })();
+    return queryBookmarks(query);
   },
 });
 
@@ -1307,9 +1331,9 @@ function insertBookmarkTree(items, source, parent, urls, lastAddedForParent) {
 
 // Query implementation.
 
-function queryBookmarks(info) {
+async function queryBookmarks(info) {
   let queryParams = {
-    tags_folder: PlacesUtils.tagsFolderId,
+    tags_folder: await promiseTagsFolderId(),
     type: Bookmarks.TYPE_SEPARATOR,
   };
   // We're searching for bookmarks, so exclude tags and separators.
@@ -1336,27 +1360,27 @@ function queryBookmarks(info) {
 
   return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: queryBookmarks",
     async function(db) {
+      // _id, _childCount, _grandParentId and _parentId fields
+      // are required to be in the result by the converting function
+      // hence setting them to NULL
+      let rows = await db.executeCached(
+        `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
+                b.dateAdded, b.lastModified, b.type, b.title,
+                h.url AS url, b.parent, p.parent,
+                NULL AS _id,
+                NULL AS _childCount,
+                NULL AS _grandParentId,
+                NULL AS _parentId,
+                NULL AS _syncStatus
+         FROM moz_bookmarks b
+         LEFT JOIN moz_bookmarks p ON p.id = b.parent
+         LEFT JOIN moz_places h ON h.id = b.fk
+         ${queryString}
+        `, queryParams);
 
-    // _id, _childCount, _grandParentId and _parentId fields
-    // are required to be in the result by the converting function
-    // hence setting them to NULL
-    let rows = await db.executeCached(
-      `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
-              b.dateAdded, b.lastModified, b.type, b.title,
-              h.url AS url, b.parent, p.parent,
-              NULL AS _id,
-              NULL AS _childCount,
-              NULL AS _grandParentId,
-              NULL AS _parentId,
-              NULL AS _syncStatus
-       FROM moz_bookmarks b
-       LEFT JOIN moz_bookmarks p ON p.id = b.parent
-       LEFT JOIN moz_places h ON h.id = b.fk
-       ${queryString}
-      `, queryParams);
-
-    return rowsToItemsArray(rows);
-  });
+      return rowsToItemsArray(rows);
+    }
+  );
 }
 
 
@@ -1409,53 +1433,54 @@ function fetchBookmarkByPosition(info) {
 function fetchBookmarksByURL(info) {
   return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: fetchBookmarksByURL",
     async function(db) {
+      let tagsFolderId = await promiseTagsFolderId();
+      let rows = await db.executeCached(
+        `/* do not warn (bug no): not worth to add an index */
+        SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
+                b.dateAdded, b.lastModified, b.type, b.title, h.url AS url,
+                b.id AS _id, b.parent AS _parentId,
+                NULL AS _childCount, /* Unused for now */
+                p.parent AS _grandParentId, b.syncStatus AS _syncStatus
+        FROM moz_bookmarks b
+        JOIN moz_bookmarks p ON p.id = b.parent
+        JOIN moz_places h ON h.id = b.fk
+        WHERE h.url_hash = hash(:url) AND h.url = :url
+        AND _grandParentId <> :tagsFolderId
+        ORDER BY b.lastModified DESC
+        `, { url: info.url.href, tagsFolderId });
 
-    let rows = await db.executeCached(
-      `/* do not warn (bug no): not worth to add an index */
-       SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
-              b.dateAdded, b.lastModified, b.type, b.title, h.url AS url,
-              b.id AS _id, b.parent AS _parentId,
-              (SELECT count(*) FROM moz_bookmarks WHERE parent = b.id) AS _childCount,
-              p.parent AS _grandParentId, b.syncStatus AS _syncStatus
-       FROM moz_bookmarks b
-       LEFT JOIN moz_bookmarks p ON p.id = b.parent
-       LEFT JOIN moz_places h ON h.id = b.fk
-       WHERE h.url_hash = hash(:url) AND h.url = :url
-       AND _grandParentId <> :tags_folder
-       ORDER BY b.lastModified DESC
-      `, { url: info.url.href,
-           tags_folder: PlacesUtils.tagsFolderId });
-
-    return rows.length ? rowsToItemsArray(rows) : null;
-  });
+      return rows.length ? rowsToItemsArray(rows) : null;
+    }
+  );
 }
 
 function fetchRecentBookmarks(numberOfItems) {
   return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: fetchRecentBookmarks",
     async function(db) {
+      let tagsFolderId = await promiseTagsFolderId();
+      let rows = await db.executeCached(
+        `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
+                b.dateAdded, b.lastModified, b.type, b.title, h.url AS url,
+                NULL AS _id, NULL AS _parentId, NULL AS _childCount, NULL AS _grandParentId,
+                NULL AS _syncStatus
+        FROM moz_bookmarks b
+        JOIN moz_bookmarks p ON p.id = b.parent
+        JOIN moz_places h ON h.id = b.fk
+        WHERE p.parent <> :tagsFolderId
+        AND b.type = :type
+        AND url_hash NOT BETWEEN hash("place", "prefix_lo")
+                              AND hash("place", "prefix_hi")
+        ORDER BY b.dateAdded DESC, b.ROWID DESC
+        LIMIT :numberOfItems
+        `, {
+          tagsFolderId,
+          type: Bookmarks.TYPE_BOOKMARK,
+          numberOfItems,
+        });
 
-    let rows = await db.executeCached(
-      `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
-              b.dateAdded, b.lastModified, b.type, b.title, h.url AS url,
-              NULL AS _id, NULL AS _parentId, NULL AS _childCount, NULL AS _grandParentId,
-              NULL AS _syncStatus
-       FROM moz_bookmarks b
-       LEFT JOIN moz_bookmarks p ON p.id = b.parent
-       LEFT JOIN moz_places h ON h.id = b.fk
-       WHERE p.parent <> :tags_folder
-       AND b.type = :type
-       AND url_hash NOT BETWEEN hash("place", "prefix_lo")
-                            AND hash("place", "prefix_hi")
-       ORDER BY b.dateAdded DESC, b.ROWID DESC
-       LIMIT :numberOfItems
-      `, {
-        tags_folder: PlacesUtils.tagsFolderId,
-        type: Bookmarks.TYPE_BOOKMARK,
-        numberOfItems,
-      });
-
-    return rows.length ? rowsToItemsArray(rows) : [];
-  });
+      return rows.length ? rowsToItemsArray(rows) : [];
+    }
+  );
 }
 
 function fetchBookmarksByParent(info) {
@@ -1484,7 +1509,6 @@ function fetchBookmarksByParent(info) {
 function removeBookmark(item, options) {
   return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: removeBookmark",
     async function(db) {
-
     let isUntagging = item._grandParentId == PlacesUtils.tagsFolderId;
 
     await db.executeTransaction(async function transaction() {
