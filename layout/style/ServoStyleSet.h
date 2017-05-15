@@ -290,6 +290,13 @@ public:
   void RebuildData();
 
   /**
+   * Clears the style data, both style sheet data and cached non-inheriting
+   * style contexts, and marks the stylist as needing an unconditional full
+   * rebuild, including a device reset.
+   */
+  void ClearDataAndMarkDeviceDirty();
+
+  /**
    * Resolve style for the given element, and return it as a
    * ServoComputedValues, not an nsStyleContext.
    */
@@ -420,19 +427,51 @@ private:
   void PreTraverseSync();
 
   /**
-   * Rebuild the stylist.  This should only be called if mStylistMayNeedRebuild
-   * is true.
+   * A tri-state used to track which kind of stylist state we may need to
+   * update.
    */
-  void RebuildStylist();
+  enum class StylistState : uint8_t {
+    /** The stylist is not dirty, we should do nothing */
+    NotDirty,
+    /** The style sheets have changed, so we need to update the style data. */
+    StyleSheetsDirty,
+    /**
+     * All style data is dirty and both style sheet data and default computed
+     * values need to be recomputed.
+     */
+    FullyDirty,
+  };
+
+  /**
+   * Note that the stylist needs a style flush due to style sheet changes.
+   */
+  void SetStylistStyleSheetsDirty()
+  {
+    if (mStylistState == StylistState::NotDirty) {
+      mStylistState = StylistState::StyleSheetsDirty;
+    }
+  }
+
+  bool StylistNeedsUpdate() const
+  {
+    return mStylistState != StylistState::NotDirty;
+  }
+
+  /**
+   * Update the stylist as needed to ensure style data is up-to-date.
+   *
+   * This should only be called if StylistNeedsUpdate returns true.
+   */
+  void UpdateStylist();
 
   /**
    * Helper for correctly calling RebuildStylist without paying the cost of an
    * extra function call in the common no-rebuild-needed case.
    */
-  void MaybeRebuildStylist()
+  void UpdateStylistIfNeeded()
   {
-    if (mStylistMayNeedRebuild) {
-      RebuildStylist();
+    if (StylistNeedsUpdate()) {
+      UpdateStylist();
     }
   }
 
@@ -460,7 +499,7 @@ private:
                   nsTArray<RefPtr<ServoStyleSheet>>> mSheets;
   bool mAllowResolveStaleStyles;
   bool mAuthorStyleDisabled;
-  bool mStylistMayNeedRebuild;
+  StylistState mStylistState;
 
   // Stores pointers to our cached style contexts for non-inheriting anonymous
   // boxes.
