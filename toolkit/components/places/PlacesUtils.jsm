@@ -2067,12 +2067,13 @@ XPCOMUtils.defineLazyServiceGetter(PlacesUtils, "favicons",
                                    "@mozilla.org/browser/favicon-service;1",
                                    "mozIAsyncFavicons");
 
+XPCOMUtils.defineLazyServiceGetter(this, "bmsvc",
+                                   "@mozilla.org/browser/nav-bookmarks-service;1",
+                                   "nsINavBookmarksService");
 XPCOMUtils.defineLazyGetter(PlacesUtils, "bookmarks", () => {
-  let bm = Cc["@mozilla.org/browser/nav-bookmarks-service;1"]
-             .getService(Ci.nsINavBookmarksService);
-  return Object.freeze(new Proxy(bm, {
-    get: (target, name) => target.hasOwnProperty(name) ? target[name]
-                                                       : Bookmarks[name]
+  return Object.freeze(new Proxy(Bookmarks, {
+    get: (target, name) => Bookmarks.hasOwnProperty(name) ? Bookmarks[name]
+                                                          : bmsvc[name]
   }));
 });
 
