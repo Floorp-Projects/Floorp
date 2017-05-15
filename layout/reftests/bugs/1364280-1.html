@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<style>
+  div { color: red; }
+  div:dir(ltr) { color: green }
+</style>
+<body dir="rtl"
+      onload="window.oldColor = getComputedStyle(document.querySelector('div')).color;
+              document.body.dir = 'ltr'">
+  <div>
+    This should be green.
+  </div>
+</body>
