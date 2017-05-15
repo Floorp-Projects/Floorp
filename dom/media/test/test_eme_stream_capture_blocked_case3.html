@@ -14,11 +14,6 @@ var manager = new MediaTestManager;
 
 function startTest(test, token)
 {
-  // Three cases:
-  // 1. setting MediaKeys on an element captured by MediaElementSource should fail, and
-  // 2. creating a MediaElementSource on a media element with a MediaKeys should fail, and
-  // 3. capturing a media element with mozCaptureStream that has a MediaKeys should fail.
-
   // Case 3. capturing a media element with mozCaptureStream that has a MediaKeys should fail.
   var p1 = new EMEPromise;
   var case3token = token + "_case3";

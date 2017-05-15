@@ -14,12 +14,8 @@ var manager = new MediaTestManager;
 
 function startTest(test, token)
 {
-  // Three cases:
-  // 1. setting MediaKeys on an element captured by MediaElementSource should fail, and
-  // 2. creating a MediaElementSource on a media element with a MediaKeys should fail, and
-  // 3. capturing a media element with mozCaptureStream that has a MediaKeys should fail.
-
-  // Case 2. creating a MediaElementSource on a media element with a MediaKeys should fail.
+  // Case 2. creating a MediaElementSource on a media element should always succeed
+  //         (no matter whether it's restricted content or not), and
   var p1 = new EMEPromise;
   var case2token = token + "_case2";
   let v2 = document.createElement("video");
@@ -33,7 +29,7 @@ function startTest(test, token)
     } catch (e) {
       threw = true;
     }
-    ok(threw, "Should throw an error creating a MediaElementSource on an EME video.");
+    ok(!threw, "Should always work when creating a MediaElementSource.");
     p1.resolve();
   });
 
