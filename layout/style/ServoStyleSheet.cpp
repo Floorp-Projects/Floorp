@@ -30,6 +30,31 @@ ServoStyleSheetInner::ServoStyleSheetInner(CORSMode aCORSMode,
                                            const SRIMetadata& aIntegrity)
   : StyleSheetInfo(aCORSMode, aReferrerPolicy, aIntegrity)
 {
+  MOZ_COUNT_CTOR(ServoStyleSheetInner);
+}
+
+ServoStyleSheetInner::ServoStyleSheetInner(ServoStyleSheetInner& aCopy,
+                                           ServoStyleSheet* aPrimarySheet)
+  : StyleSheetInfo(aCopy, aPrimarySheet)
+{
+  MOZ_COUNT_CTOR(ServoStyleSheetInner);
+
+  // Actually clone aCopy's mSheet and use that as our mSheet.
+  mSheet = Servo_StyleSheet_Clone(aCopy.mSheet).Consume();
+
+  mURLData = aCopy.mURLData;
+}
+
+ServoStyleSheetInner::~ServoStyleSheetInner()
+{
+  MOZ_COUNT_DTOR(ServoStyleSheetInner);
+}
+
+StyleSheetInfo*
+ServoStyleSheetInner::CloneFor(StyleSheet* aPrimarySheet)
+{
+  return new ServoStyleSheetInner(*this,
+                                  static_cast<ServoStyleSheet*>(aPrimarySheet));
 }
 
 size_t
