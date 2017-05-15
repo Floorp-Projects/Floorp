@@ -4798,6 +4798,7 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
 
       loadInfo.mBaseURI = document->GetDocBaseURI();
       loadInfo.mLoadGroup = document->GetDocumentLoadGroup();
+      NS_ENSURE_TRUE(loadInfo.mLoadGroup, NS_ERROR_FAILURE);
 
       // Use the document's NodePrincipal as our principal if we're not being
       // called from chrome.
@@ -4832,6 +4833,10 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
           NS_ENSURE_SUCCESS(rv, rv);
         }
       }
+
+      NS_ENSURE_TRUE(NS_LoadGroupMatchesPrincipal(loadInfo.mLoadGroup,
+                                                  loadInfo.mPrincipal),
+                     NS_ERROR_FAILURE);
 
       nsCOMPtr<nsIPermissionManager> permMgr =
         do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
@@ -4951,6 +4956,9 @@ WorkerPrivate::OverrideLoadInfoLoadGroup(WorkerLoadInfo& aLoadInfo)
   MOZ_ALWAYS_SUCCEEDS(rv);
 
   aLoadInfo.mLoadGroup = loadGroup.forget();
+
+  MOZ_ASSERT(NS_LoadGroupMatchesPrincipal(aLoadInfo.mLoadGroup,
+                                          aLoadInfo.mPrincipal));
 }
 
 void
