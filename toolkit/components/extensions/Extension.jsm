@@ -316,69 +316,67 @@ this.ExtensionData = class {
     return `moz-extension://${this.uuid}/${path}`;
   }
 
-  readDirectory(path) {
-    return (async () => {
-      if (this.rootURI instanceof Ci.nsIFileURL) {
-        let uri = NetUtil.newURI(this.rootURI.resolve("./" + path));
-        let fullPath = uri.QueryInterface(Ci.nsIFileURL).file.path;
+  async readDirectory(path) {
+    if (this.rootURI instanceof Ci.nsIFileURL) {
+      let uri = NetUtil.newURI(this.rootURI.resolve("./" + path));
+      let fullPath = uri.QueryInterface(Ci.nsIFileURL).file.path;
 
-        let iter = new OS.File.DirectoryIterator(fullPath);
-        let results = [];
+      let iter = new OS.File.DirectoryIterator(fullPath);
+      let results = [];
 
-        try {
-          await iter.forEach(entry => {
-            results.push(entry);
-          });
-        } catch (e) {
-          // Always return a list, even if the directory does not exist (or is
-          // not a directory) for symmetry with the ZipReader behavior.
-        }
-        iter.close();
-
-        return results;
-      }
-
-      // FIXME: We need a way to do this without main thread IO.
-
-      let uri = this.rootURI.QueryInterface(Ci.nsIJARURI);
-
-      let file = uri.JARFile.QueryInterface(Ci.nsIFileURL).file;
-      let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(Ci.nsIZipReader);
-      zipReader.open(file);
       try {
-        let results = [];
+        await iter.forEach(entry => {
+          results.push(entry);
+        });
+      } catch (e) {
+        // Always return a list, even if the directory does not exist (or is
+        // not a directory) for symmetry with the ZipReader behavior.
+      }
+      iter.close();
 
-        // Normalize the directory path.
-        path = `${uri.JAREntry}/${path}`;
-        path = path.replace(/\/\/+/g, "/").replace(/^\/|\/$/g, "") + "/";
+      return results;
+    }
 
-        // Escape pattern metacharacters.
-        let pattern = path.replace(/[[\]()?*~|$\\]/g, "\\$&");
+    // FIXME: We need a way to do this without main thread IO.
 
-        let enumerator = zipReader.findEntries(pattern + "*");
-        while (enumerator.hasMore()) {
-          let name = enumerator.getNext();
-          if (!name.startsWith(path)) {
-            throw new Error("Unexpected ZipReader entry");
-          }
+    let uri = this.rootURI.QueryInterface(Ci.nsIJARURI);
 
-          // The enumerator returns the full path of all entries.
-          // Trim off the leading path, and filter out entries from
-          // subdirectories.
-          name = name.slice(path.length);
-          if (name && !/\/./.test(name)) {
-            results.push({
-              name: name.replace("/", ""),
-              isDir: name.endsWith("/"),
-            });
-          }
+    let file = uri.JARFile.QueryInterface(Ci.nsIFileURL).file;
+    let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(Ci.nsIZipReader);
+    zipReader.open(file);
+    try {
+      let results = [];
+
+      // Normalize the directory path.
+      path = `${uri.JAREntry}/${path}`;
+      path = path.replace(/\/\/+/g, "/").replace(/^\/|\/$/g, "") + "/";
+
+      // Escape pattern metacharacters.
+      let pattern = path.replace(/[[\]()?*~|$\\]/g, "\\$&");
+
+      let enumerator = zipReader.findEntries(pattern + "*");
+      while (enumerator.hasMore()) {
+        let name = enumerator.getNext();
+        if (!name.startsWith(path)) {
+          throw new Error("Unexpected ZipReader entry");
         }
 
-        return results;
-      } finally {
-        zipReader.close();
+        // The enumerator returns the full path of all entries.
+        // Trim off the leading path, and filter out entries from
+        // subdirectories.
+        name = name.slice(path.length);
+        if (name && !/\/./.test(name)) {
+          results.push({
+            name: name.replace("/", ""),
+            isDir: name.endsWith("/"),
+          });
+        }
       }
-    })();
+
+      return results;
+    } finally {
+      zipReader.close();
+    }
   }
 
   readJSON(path) {
@@ -569,20 +567,18 @@ this.ExtensionData = class {
 
   // Reads the locale file for the given Gecko-compatible locale code, and
   // stores its parsed contents in |this.localeMessages.get(locale)|.
-  readLocaleFile(locale) {
-    return (async () => {
-      let locales = await this.promiseLocales();
-      let dir = locales.get(locale) || locale;
-      let file = `_locales/${dir}/messages.json`;
+  async readLocaleFile(locale) {
+    let locales = await this.promiseLocales();
+    let dir = locales.get(locale) || locale;
+    let file = `_locales/${dir}/messages.json`;
 
-      try {
-        let messages = await this.readJSON(file);
-        return this.localeData.addLocale(locale, messages, this);
-      } catch (e) {
-        this.packagingError(`Loading locale file ${file}: ${e}`);
-        return new Map();
-      }
-    })();
+    try {
+      let messages = await this.readJSON(file);
+      return this.localeData.addLocale(locale, messages, this);
+    } catch (e) {
+      this.packagingError(`Loading locale file ${file}: ${e}`);
+      return new Map();
+    }
   }
 
   // Reads the list of locales available in the extension, and returns a
@@ -621,27 +617,25 @@ this.ExtensionData = class {
   // resolves to a Map of locale messages upon completion. Each key in the map
   // is a Gecko-compatible locale code, and each value is a locale data object
   // as returned by |readLocaleFile|.
-  initAllLocales() {
-    return (async () => {
-      let locales = await this.promiseLocales();
+  async initAllLocales() {
+    let locales = await this.promiseLocales();
 
-      await Promise.all(Array.from(locales.keys(),
-                                   locale => this.readLocaleFile(locale)));
+    await Promise.all(Array.from(locales.keys(),
+                                 locale => this.readLocaleFile(locale)));
 
-      let defaultLocale = this.defaultLocale;
-      if (defaultLocale) {
-        if (!locales.has(defaultLocale)) {
-          this.manifestError('Value for "default_locale" property must correspond to ' +
-                             'a directory in "_locales/". Not found: ' +
-                             JSON.stringify(`_locales/${this.manifest.default_locale}/`));
-        }
-      } else if (locales.size) {
-        this.manifestError('The "default_locale" property is required when a ' +
-                           '"_locales/" directory is present.');
+    let defaultLocale = this.defaultLocale;
+    if (defaultLocale) {
+      if (!locales.has(defaultLocale)) {
+        this.manifestError('Value for "default_locale" property must correspond to ' +
+                           'a directory in "_locales/". Not found: ' +
+                           JSON.stringify(`_locales/${this.manifest.default_locale}/`));
       }
+    } else if (locales.size) {
+      this.manifestError('The "default_locale" property is required when a ' +
+                         '"_locales/" directory is present.');
+    }
 
-      return this.localeData.messages;
-    })();
+    return this.localeData.messages;
   }
 
   // Reads the locale file for the given Gecko-compatible locale code, or the
@@ -652,24 +646,22 @@ this.ExtensionData = class {
   // of the locale specified.
   //
   // If no locales are unavailable, resolves to |null|.
-  initLocale(locale = this.defaultLocale) {
-    return (async () => {
-      if (locale == null) {
-        return null;
-      }
+  async initLocale(locale = this.defaultLocale) {
+    if (locale == null) {
+      return null;
+    }
 
-      let promises = [this.readLocaleFile(locale)];
+    let promises = [this.readLocaleFile(locale)];
 
-      let {defaultLocale} = this;
-      if (locale != defaultLocale && !this.localeData.has(defaultLocale)) {
-        promises.push(this.readLocaleFile(defaultLocale));
-      }
+    let {defaultLocale} = this;
+    if (locale != defaultLocale && !this.localeData.has(defaultLocale)) {
+      promises.push(this.readLocaleFile(defaultLocale));
+    }
 
-      let results = await Promise.all(promises);
+    let results = await Promise.all(promises);
 
-      this.localeData.selectedLocale = locale;
-      return results[0];
-    })();
+    this.localeData.selectedLocale = locale;
+    return results[0];
   }
 };
 
