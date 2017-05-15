@@ -449,6 +449,13 @@ StyleSheet::EnsureUniqueInner()
 
   // Ensure we're using the new rules.
   ClearRuleCascades();
+
+  // let our containing style sets know that if we call
+  // nsPresContext::EnsureSafeToHandOutCSSRules we will need to restyle the
+  // document
+  for (StyleSetHandle& setHandle : mStyleSets) {
+    setHandle->SetNeedsRestyleAfterEnsureUniqueInner();
+  }
 }
 
 // WebIDL CSSStyleSheet API

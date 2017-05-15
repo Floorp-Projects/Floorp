@@ -177,6 +177,9 @@ public:
     inline bool AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray);
     inline nsCSSCounterStyleRule* CounterStyleRuleForName(nsIAtom* aName);
 
+    inline bool EnsureUniqueInnerOnCSSSheets();
+    inline void SetNeedsRestyleAfterEnsureUniqueInner();
+
   private:
     // Stores a pointer to an nsStyleSet or a ServoStyleSet.  The least
     // significant bit is 0 for the former, 1 for the latter.  This is

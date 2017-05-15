@@ -122,7 +122,7 @@ public:
 
   bool IsModified() const { return mDirty; }
 
-  virtual void EnsureUniqueInner();
+  void EnsureUniqueInner();
 
   // style sheet owner info
   enum DocumentAssociationMode {
