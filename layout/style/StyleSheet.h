@@ -118,7 +118,7 @@ public:
                                              nsIDocument* aCloneDocument,
                                              nsINode* aCloneOwningNode) const = 0;
 
-  virtual bool IsModified() const = 0;
+  bool IsModified() const { return mDirty; }
 
   // style sheet owner info
   enum DocumentAssociationMode {
@@ -290,6 +290,8 @@ protected:
   // Core information we get from parsed sheets, which are shared amongst
   // StyleSheet clones.
   StyleSheetInfo* mInner;
+
+  bool mDirty; // has been modified
 
   friend class ::nsCSSRuleProcessor;
 
