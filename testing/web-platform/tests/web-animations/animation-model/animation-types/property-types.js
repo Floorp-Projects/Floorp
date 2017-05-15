@@ -1229,9 +1229,9 @@ const rectType = {
       var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]:
                                          ['rect(10px, 10px, 10px, 10px)',
-					  'rect(50px, 50px, 50px, 50px)'] },
+                                          'rect(50px, 50px, 50px, 50px)'] },
                                      { duration: 1000, fill: 'both' });
-	testAnimationSamples(
+      testAnimationSamples(
           animation, idlName,
           [{ time: 500,  expected: 'rect(30px, 30px, 30px, 30px)' }]);
     }, property + ' supports animating as a rect');
@@ -1244,7 +1244,7 @@ const rectType = {
       target.style[idlName] = 'rect(100px, 100px, 100px, 100px)';
       var animation = target.animate({ [idlName]:
                                          ['rect(10px, 10px, 10px, 10px)',
-					  'rect(10px, 10px, 10px, 10px)'] },
+                                          'rect(10px, 10px, 10px, 10px)'] },
                                      { duration: 1000, composite: 'add' });
       testAnimationSamples(
         animation, idlName,
