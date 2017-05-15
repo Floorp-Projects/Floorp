@@ -959,10 +959,13 @@ Statistics::beginSlice(const ZoneGCStats& zoneStats, JSGCInvocationKind gckind,
 
     // Slice callbacks should only fire for the outermost level.
     bool wasFullGC = zoneStats.isCollectingAllZones();
-    if (sliceCallback)
-        (*sliceCallback)(TlsContext.get(),
-                         first ? JS::GC_CYCLE_BEGIN : JS::GC_SLICE_BEGIN,
-                         JS::GCDescription(!wasFullGC, gckind, reason));
+    if (sliceCallback) {
+        JSContext* cx = TlsContext.get();
+        JS::GCDescription desc(!wasFullGC, gckind, reason);
+        if (first)
+            (*sliceCallback)(cx, JS::GC_CYCLE_BEGIN, desc);
+        (*sliceCallback)(cx, JS::GC_SLICE_BEGIN, desc);
+    }
 }
 
 void
@@ -1006,10 +1009,13 @@ Statistics::endSlice()
     // Slice callbacks should only fire for the outermost level.
     if (!aborted) {
         bool wasFullGC = zoneStats.isCollectingAllZones();
-        if (sliceCallback)
-            (*sliceCallback)(TlsContext.get(),
-                             last ? JS::GC_CYCLE_END : JS::GC_SLICE_END,
-                             JS::GCDescription(!wasFullGC, gckind, slices_.back().reason));
+        if (sliceCallback) {
+            JSContext* cx = TlsContext.get();
+            JS::GCDescription desc(!wasFullGC, gckind, slices_.back().reason);
+            (*sliceCallback)(cx, JS::GC_SLICE_END, desc);
+            if (last)
+                (*sliceCallback)(cx, JS::GC_CYCLE_END, desc);
+        }
     }
 
     // Do this after the slice callback since it uses these values.
