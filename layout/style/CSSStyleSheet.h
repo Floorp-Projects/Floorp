@@ -140,8 +140,6 @@ public:
   NS_IMETHOD StyleSheetLoaded(StyleSheet* aSheet, bool aWasAlternate,
                               nsresult aStatus) override;
 
-  void EnsureUniqueInner() override;
-
   // Append all of this sheet's child sheets to aArray.
   void AppendAllChildSheets(nsTArray<CSSStyleSheet*>& aArray);
 

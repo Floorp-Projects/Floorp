@@ -355,6 +355,16 @@ public:
     mPostTraversalTasks.AppendElement(aTask);
   }
 
+  // Returns true if a restyle of the document is needed due to cloning
+  // sheet inners.
+  bool EnsureUniqueInnerOnCSSSheets();
+
+  // Called by StyleSheet::EnsureUniqueInner to let us know it cloned
+  // its inner.
+  void SetNeedsRestyleAfterEnsureUniqueInner() {
+    mNeedsRestyleAfterEnsureUniqueInner = true;
+  }
+
 private:
   // On construction, sets sInServoTraversal to the given ServoStyleSet.
   // On destruction, clears sInServoTraversal and calls RunPostTraversalTasks.
@@ -505,6 +515,8 @@ private:
   bool mAllowResolveStaleStyles;
   bool mAuthorStyleDisabled;
   StylistState mStylistState;
+
+  bool mNeedsRestyleAfterEnsureUniqueInner;
 
   // Stores pointers to our cached style contexts for non-inheriting anonymous
   // boxes.

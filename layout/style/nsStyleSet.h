@@ -463,7 +463,7 @@ class nsStyleSet final
   // sheet inners.
   bool EnsureUniqueInnerOnCSSSheets();
 
-  // Called by CSSStyleSheet::EnsureUniqueInner to let us know it cloned
+  // Called by StyleSheet::EnsureUniqueInner to let us know it cloned
   // its inner.
   void SetNeedsRestyleAfterEnsureUniqueInner() {
     mNeedsRestyleAfterEnsureUniqueInner = true;
