@@ -97,8 +97,6 @@ public:
   void WillDirty() {}
   void DidDirty() {}
 
-  bool IsModified() const final { return false; }
-
   virtual already_AddRefed<StyleSheet> Clone(StyleSheet* aCloneParent,
     css::ImportRule* aCloneOwnerRule,
     nsIDocument* aCloneDocument,

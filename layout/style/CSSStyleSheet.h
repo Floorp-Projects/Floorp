@@ -128,8 +128,6 @@ public:
     nsIDocument* aCloneDocument,
     nsINode* aCloneOwningNode) const final;
 
-  bool IsModified() const final { return mDirty; }
-
   void SetModifiedByChildRule() {
     NS_ASSERTION(mDirty,
                  "sheet must be marked dirty before handing out child rules");
@@ -223,7 +221,6 @@ protected:
   css::ImportRule*      mOwnerRule; // weak ref
 
   RefPtr<CSSRuleListImpl> mRuleCollection;
-  bool                  mDirty; // has been modified 
   bool                  mInRuleProcessorCache;
   RefPtr<dom::Element> mScopeElement;
 
