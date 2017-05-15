@@ -595,8 +595,8 @@ CSSStyleSheet::EnsureUniqueInner()
   // let our containing style sets know that if we call
   // nsPresContext::EnsureSafeToHandOutCSSRules we will need to restyle the
   // document
-  for (nsStyleSet* styleSet : mStyleSets) {
-    styleSet->SetNeedsRestyleAfterEnsureUniqueInner();
+  for (StyleSetHandle setHandle : mStyleSets) {
+    setHandle->AsGecko()->SetNeedsRestyleAfterEnsureUniqueInner();
   }
 }
 
@@ -651,8 +651,8 @@ CSSStyleSheet::ClearRuleCascades()
   // Tell the RestyleManager for each document we're used in
   // so that they can drop any nsCSSSelector pointers (used for
   // eRestyle_SomeDescendants) in their mPendingRestyles.
-  for (nsStyleSet* styleSet : mStyleSets) {
-    styleSet->ClearSelectors();
+  for (StyleSetHandle setHandle : mStyleSets) {
+    setHandle->AsGecko()->ClearSelectors();
   }
 
   bool removedSheetFromRuleProcessorCache = false;

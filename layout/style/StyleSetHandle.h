@@ -215,6 +215,11 @@ public:
   // Make StyleSetHandle usable in boolean contexts.
   explicit operator bool() const { return !!mPtr.mValue; }
   bool operator!() const { return !mPtr.mValue; }
+  bool operator==(const StyleSetHandle& aOth) const
+  {
+    return mPtr.mValue == aOth.mPtr.mValue;
+  }
+  bool operator!=(const StyleSetHandle& aOth) const { return !(*this == aOth); }
 
   // Make StyleSetHandle behave like a smart pointer.
   Ptr* operator->() { return &mPtr; }

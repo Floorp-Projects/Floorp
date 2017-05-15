@@ -12,6 +12,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/IncrementalClearCOMRuleArray.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInfo.h"
 #include "mozilla/css/SheetParsingMode.h"
@@ -224,7 +225,7 @@ protected:
   RefPtr<dom::Element> mScopeElement;
 
   AutoTArray<nsCSSRuleProcessor*, 8>* mRuleProcessors;
-  nsTArray<nsStyleSet*> mStyleSets;
+  nsTArray<StyleSetHandle> mStyleSets;
 
   friend class mozilla::StyleSheet;
   friend class ::nsCSSRuleProcessor;
