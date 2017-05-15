@@ -199,44 +199,48 @@ const CustomizableWidgets = [
       for (let i = 0, l = staticButtons.length; i < l; ++i)
         CustomizableUI.addShortcut(staticButtons[i]);
 
-      PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
-                         .asyncExecuteLegacyQueries([query], 1, options, {
-        handleResult(aResultSet) {
-          let onItemCommand = function(aItemCommandEvent) {
-            // Only handle the click event for middle clicks, we're using the command
-            // event otherwise.
-            if (aItemCommandEvent.type == "click" &&
-                aItemCommandEvent.button != 1) {
-              return;
-            }
-            let item = aItemCommandEvent.target;
-            win.openUILink(item.getAttribute("targetURI"), aItemCommandEvent);
-            CustomizableUI.hidePanelForNode(item);
-          };
-          let fragment = doc.createDocumentFragment();
-          let row;
-          while ((row = aResultSet.getNextRow())) {
-            let uri = row.getResultByIndex(1);
-            let title = row.getResultByIndex(2);
+      aEvent.detail.addBlocker(new Promise((resolve, reject) => {
+        PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
+                           .asyncExecuteLegacyQueries([query], 1, options, {
+          handleResult(aResultSet) {
+            let onItemCommand = function(aItemCommandEvent) {
+              // Only handle the click event for middle clicks, we're using the command
+              // event otherwise.
+              if (aItemCommandEvent.type == "click" &&
+                  aItemCommandEvent.button != 1) {
+                return;
+              }
+              let item = aItemCommandEvent.target;
+              win.openUILink(item.getAttribute("targetURI"), aItemCommandEvent);
+              CustomizableUI.hidePanelForNode(item);
+            };
+            let fragment = doc.createDocumentFragment();
+            let row;
+            while ((row = aResultSet.getNextRow())) {
+              let uri = row.getResultByIndex(1);
+              let title = row.getResultByIndex(2);
 
-            let item = doc.createElementNS(kNSXUL, "toolbarbutton");
-            item.setAttribute("label", title || uri);
-            item.setAttribute("targetURI", uri);
-            item.setAttribute("class", "subviewbutton");
-            item.addEventListener("command", onItemCommand);
-            item.addEventListener("click", onItemCommand);
-            item.setAttribute("image", "page-icon:" + uri);
-            fragment.appendChild(item);
-          }
-          items.appendChild(fragment);
-        },
-        handleError(aError) {
-          log.debug("History view tried to show but had an error: " + aError);
-        },
-        handleCompletion(aReason) {
-          log.debug("History view is being shown!");
-        },
-      });
+              let item = doc.createElementNS(kNSXUL, "toolbarbutton");
+              item.setAttribute("label", title || uri);
+              item.setAttribute("targetURI", uri);
+              item.setAttribute("class", "subviewbutton");
+              item.addEventListener("command", onItemCommand);
+              item.addEventListener("click", onItemCommand);
+              item.setAttribute("image", "page-icon:" + uri);
+              fragment.appendChild(item);
+            }
+            items.appendChild(fragment);
+          },
+          handleError(aError) {
+            log.debug("History view tried to show but had an error: " + aError);
+            reject();
+          },
+          handleCompletion(aReason) {
+            log.debug("History view is being shown!");
+            resolve();
+          },
+        });
+      }));
 
       let recentlyClosedTabs = doc.getElementById("PanelUI-recentlyClosedTabs");
       while (recentlyClosedTabs.firstChild) {
