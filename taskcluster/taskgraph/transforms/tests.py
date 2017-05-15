@@ -771,7 +771,6 @@ def make_job_description(config, tests):
         jobdesc['run-on-projects'] = test['run-on-projects']
         jobdesc['scopes'] = []
         jobdesc['tags'] = test.get('tags', {})
-        jobdesc['optimizations'] = [['seta']]  # always run SETA for tests
         jobdesc['extra'] = {
             'chunks': {
                 'current': test['this-chunk'],
@@ -788,6 +787,12 @@ def make_job_description(config, tests):
             'tier': test['tier'],
             'platform': test.get('treeherder-machine-platform', test['build-platform']),
         }
+
+        # run SETA unless this is a try push
+        jobdesc['optimizations'] = optimizations = []
+        if config['project'] != 'try':
+            optimizations.append(['seta'])
+
         run = jobdesc['run'] = {}
         run['using'] = 'mozharness-test'
         run['test'] = test
