@@ -101,10 +101,10 @@ ServoStyleRuleDeclaration::GetCSSParsingEnvironment(
   GetCSSParsingEnvironmentForRule(Rule(), aCSSParseEnv);
 }
 
-URLExtraData*
-ServoStyleRuleDeclaration::GetURLData() const
+nsDOMCSSDeclaration::ServoCSSParsingEnvironment
+ServoStyleRuleDeclaration::GetServoCSSParsingEnvironment() const
 {
-  return GetURLDataForRule(Rule());
+  return GetServoCSSParsingEnvironmentForRule(Rule());
 }
 
 // -- ServoStyleRule --------------------------------------------------

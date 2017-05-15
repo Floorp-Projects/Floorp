@@ -1722,7 +1722,8 @@ nsAttrValue::ParseStyleAttribute(const nsAString& aString,
   if (ownerDoc->GetStyleBackendType() == StyleBackendType::Servo) {
     RefPtr<URLExtraData> data = new URLExtraData(baseURI, docURI,
                                                  aElement->NodePrincipal());
-    decl = ServoDeclarationBlock::FromCssText(aString, data);
+    decl = ServoDeclarationBlock::FromCssText(aString, data,
+                                              ownerDoc->GetCompatibilityMode());
   } else {
     css::Loader* cssLoader = ownerDoc->CSSLoader();
     nsCSSParser cssParser(cssLoader);

@@ -2296,6 +2296,10 @@ class AssemblerX86Shared : public AssemblerShared
         MOZ_ASSERT(HasSSE2());
         masm.vmovmskps_rr(src.encoding(), dest.encoding());
     }
+    void vpmovmskb(FloatRegister src, Register dest) {
+        MOZ_ASSERT(HasSSE2());
+        masm.vpmovmskb_rr(src.encoding(), dest.encoding());
+    }
     void vptest(FloatRegister rhs, FloatRegister lhs) {
         MOZ_ASSERT(HasSSE41());
         masm.vptest_rr(rhs.encoding(), lhs.encoding());

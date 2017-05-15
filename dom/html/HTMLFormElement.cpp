@@ -11,7 +11,6 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
-#include "mozilla/dom/AutocompleteErrorEvent.h"
 #include "mozilla/dom/nsCSPUtils.h"
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
@@ -32,7 +31,6 @@
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
 #include "nsIMutableArray.h"
-#include "nsIFormAutofillContentService.h"
 #include "mozilla/BinarySearch.h"
 #include "nsQueryObject.h"
 
@@ -284,31 +282,6 @@ HTMLFormElement::CheckValidity(bool* retVal)
 {
   *retVal = CheckValidity();
   return NS_OK;
-}
-
-void
-HTMLFormElement::RequestAutocomplete()
-{
-  bool dummy;
-  nsCOMPtr<nsIDOMWindow> window =
-    do_QueryInterface(OwnerDoc()->GetScriptHandlingObject(dummy));
-  nsCOMPtr<nsIFormAutofillContentService> formAutofillContentService =
-    do_GetService("@mozilla.org/formautofill/content-service;1");
-
-  if (!formAutofillContentService || !window) {
-    AutocompleteErrorEventInit init;
-    init.mBubbles = true;
-    init.mCancelable = false;
-    init.mReason = AutoCompleteErrorReason::Disabled;
-
-    RefPtr<AutocompleteErrorEvent> event =
-      AutocompleteErrorEvent::Constructor(this, NS_LITERAL_STRING("autocompleteerror"), init);
-
-    (new AsyncEventDispatcher(this, event))->PostDOMEvent();
-    return;
-  }
-
-  formAutofillContentService->RequestAutocomplete(this, window);
 }
 
 bool

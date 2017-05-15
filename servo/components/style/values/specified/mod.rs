@@ -539,6 +539,28 @@ impl Time {
             was_calc: true,
         }
     }
+
+    fn parse_with_clamping_mode(context: &ParserContext,
+                                input: &mut Parser,
+                                clamping_mode: AllowedNumericType) -> Result<Self, ()> {
+        match input.next() {
+            Ok(Token::Dimension(ref value, ref unit)) if clamping_mode.is_ok(value.value) => {
+                Time::parse_dimension(value.value, &unit, /* from_calc = */ false)
+            }
+            Ok(Token::Function(ref name)) if name.eq_ignore_ascii_case("calc") => {
+                match input.parse_nested_block(|i| CalcNode::parse_time(context, i)) {
+                    Ok(time) if clamping_mode.is_ok(time.seconds) => Ok(time),
+                    _ => Err(()),
+                }
+            }
+            _ => Err(())
+        }
+    }
+
+    /// Parse <time> that values are non-negative.
+    pub fn parse_non_negative(context: &ParserContext, input: &mut Parser) -> Result<Self, ()> {
+        Self::parse_with_clamping_mode(context, input, AllowedNumericType::NonNegative)
+    }
 }
 
 impl ToComputedValue for Time {
@@ -558,15 +580,7 @@ impl ToComputedValue for Time {
 
 impl Parse for Time {
     fn parse(context: &ParserContext, input: &mut Parser) -> Result<Self, ()> {
-        match input.next() {
-            Ok(Token::Dimension(ref value, ref unit)) => {
-                Time::parse_dimension(value.value, &unit, /* from_calc = */ false)
-            }
-            Ok(Token::Function(ref name)) if name.eq_ignore_ascii_case("calc") => {
-                input.parse_nested_block(|i| CalcNode::parse_time(context, i))
-            }
-            _ => Err(())
-        }
+        Self::parse_with_clamping_mode(context, input, AllowedNumericType::All)
     }
 }
 
@@ -618,12 +632,20 @@ impl Number {
 
     #[allow(missing_docs)]
     pub fn parse_non_negative(context: &ParserContext, input: &mut Parser) -> Result<Number, ()> {
-        parse_number_with_clamping_mode(context, input, AllowedNumericType::NonNegative)
+        if context.parsing_mode.allows_all_numeric_values() {
+            parse_number(context, input)
+        } else {
+            parse_number_with_clamping_mode(context, input, AllowedNumericType::NonNegative)
+        }
     }
 
     #[allow(missing_docs)]
     pub fn parse_at_least_one(context: &ParserContext, input: &mut Parser) -> Result<Number, ()> {
-        parse_number_with_clamping_mode(context, input, AllowedNumericType::AtLeastOne)
+        if context.parsing_mode.allows_all_numeric_values() {
+            parse_number(context, input)
+        } else {
+            parse_number_with_clamping_mode(context, input, AllowedNumericType::AtLeastOne)
+        }
     }
 }
 
@@ -1197,13 +1219,22 @@ impl ToComputedValue for ClipRect {
 
 impl Parse for ClipRect {
     fn parse(context: &ParserContext, input: &mut Parser) -> Result<Self, ()> {
-        use values::specified::{AllowQuirks, Length};
+        Self::parse_quirky(context, input, AllowQuirks::No)
+    }
+}
 
-        fn parse_argument(context: &ParserContext, input: &mut Parser) -> Result<Option<Length>, ()> {
+impl ClipRect {
+    /// Parses a rect(<top>, <left>, <bottom>, <right>), allowing quirks.
+    pub fn parse_quirky(context: &ParserContext, input: &mut Parser,
+                    allow_quirks: AllowQuirks) -> Result<Self, ()> {
+        use values::specified::Length;
+
+        fn parse_argument(context: &ParserContext, input: &mut Parser,
+                          allow_quirks: AllowQuirks) -> Result<Option<Length>, ()> {
             if input.try(|input| input.expect_ident_matching("auto")).is_ok() {
                 Ok(None)
             } else {
-                Length::parse_quirky(context, input, AllowQuirks::Yes).map(Some)
+                Length::parse_quirky(context, input, allow_quirks).map(Some)
             }
         }
 
@@ -1212,21 +1243,21 @@ impl Parse for ClipRect {
         }
 
         input.parse_nested_block(|input| {
-            let top = try!(parse_argument(context, input));
+            let top = try!(parse_argument(context, input, allow_quirks));
             let right;
             let bottom;
             let left;
 
             if input.try(|input| input.expect_comma()).is_ok() {
-                right = try!(parse_argument(context, input));
+                right = try!(parse_argument(context, input, allow_quirks));
                 try!(input.expect_comma());
-                bottom = try!(parse_argument(context, input));
+                bottom = try!(parse_argument(context, input, allow_quirks));
                 try!(input.expect_comma());
-                left = try!(parse_argument(context, input));
+                left = try!(parse_argument(context, input, allow_quirks));
             } else {
-                right = try!(parse_argument(context, input));
-                bottom = try!(parse_argument(context, input));
-                left = try!(parse_argument(context, input));
+                right = try!(parse_argument(context, input, allow_quirks));
+                bottom = try!(parse_argument(context, input, allow_quirks));
+                left = try!(parse_argument(context, input, allow_quirks));
             }
             Ok(ClipRect {
                 top: top,
@@ -1240,6 +1271,18 @@ impl Parse for ClipRect {
 
 /// rect(...) | auto
 pub type ClipRectOrAuto = Either<ClipRect, Auto>;
+
+impl ClipRectOrAuto {
+    /// Parses a ClipRect or Auto, allowing quirks.
+    pub fn parse_quirky(context: &ParserContext, input: &mut Parser,
+                        allow_quirks: AllowQuirks) -> Result<Self, ()> {
+        if let Ok(v) = input.try(|i| ClipRect::parse_quirky(context, i, allow_quirks)) {
+            Ok(Either::First(v))
+        } else {
+            Auto::parse(context, input).map(Either::Second)
+        }
+    }
+}
 
 /// <color> | auto
 pub type ColorOrAuto = Either<CSSColor, Auto>;

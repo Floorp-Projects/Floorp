@@ -833,8 +833,8 @@ AsyncPanZoomController::ArePointerEventsConsumable(TouchBlockState* aBlock, uint
 }
 
 template <typename Units>
-static CoordTyped<Units> GetAxisStart(AsyncDragMetrics::DragDirection aDir, const PointTyped<Units>& aValue) {
-  if (aDir == AsyncDragMetrics::HORIZONTAL) {
+static CoordTyped<Units> GetAxisStart(ScrollDirection aDir, const PointTyped<Units>& aValue) {
+  if (aDir == ScrollDirection::HORIZONTAL) {
     return aValue.x;
   } else {
     return aValue.y;
@@ -842,8 +842,8 @@ static CoordTyped<Units> GetAxisStart(AsyncDragMetrics::DragDirection aDir, cons
 }
 
 template <typename Units>
-static CoordTyped<Units> GetAxisStart(AsyncDragMetrics::DragDirection aDir, const RectTyped<Units>& aValue) {
-  if (aDir == AsyncDragMetrics::HORIZONTAL) {
+static CoordTyped<Units> GetAxisStart(ScrollDirection aDir, const RectTyped<Units>& aValue) {
+  if (aDir == ScrollDirection::HORIZONTAL) {
     return aValue.x;
   } else {
     return aValue.y;
@@ -851,8 +851,8 @@ static CoordTyped<Units> GetAxisStart(AsyncDragMetrics::DragDirection aDir, cons
 }
 
 template <typename Units>
-static IntCoordTyped<Units> GetAxisStart(AsyncDragMetrics::DragDirection aDir, const IntRectTyped<Units>& aValue) {
-  if (aDir == AsyncDragMetrics::HORIZONTAL) {
+static IntCoordTyped<Units> GetAxisStart(ScrollDirection aDir, const IntRectTyped<Units>& aValue) {
+  if (aDir == ScrollDirection::HORIZONTAL) {
     return aValue.x;
   } else {
     return aValue.y;
@@ -860,8 +860,8 @@ static IntCoordTyped<Units> GetAxisStart(AsyncDragMetrics::DragDirection aDir, c
 }
 
 template <typename Units>
-static CoordTyped<Units> GetAxisEnd(AsyncDragMetrics::DragDirection aDir, const RectTyped<Units>& aValue) {
-  if (aDir == AsyncDragMetrics::HORIZONTAL) {
+static CoordTyped<Units> GetAxisEnd(ScrollDirection aDir, const RectTyped<Units>& aValue) {
+  if (aDir == ScrollDirection::HORIZONTAL) {
     return aValue.x + aValue.width;
   } else {
     return aValue.y + aValue.height;
@@ -869,8 +869,8 @@ static CoordTyped<Units> GetAxisEnd(AsyncDragMetrics::DragDirection aDir, const 
 }
 
 template <typename Units>
-static CoordTyped<Units> GetAxisLength(AsyncDragMetrics::DragDirection aDir, const RectTyped<Units>& aValue) {
-  if (aDir == AsyncDragMetrics::HORIZONTAL) {
+static CoordTyped<Units> GetAxisLength(ScrollDirection aDir, const RectTyped<Units>& aValue) {
+  if (aDir == ScrollDirection::HORIZONTAL) {
     return aValue.width;
   } else {
     return aValue.height;
@@ -878,8 +878,8 @@ static CoordTyped<Units> GetAxisLength(AsyncDragMetrics::DragDirection aDir, con
 }
 
 template <typename FromUnits, typename ToUnits>
-static float GetAxisScale(AsyncDragMetrics::DragDirection aDir, const ScaleFactors2D<FromUnits, ToUnits>& aValue) {
-  if (aDir == AsyncDragMetrics::HORIZONTAL) {
+static float GetAxisScale(ScrollDirection aDir, const ScaleFactors2D<FromUnits, ToUnits>& aValue) {
+  if (aDir == ScrollDirection::HORIZONTAL) {
     return aValue.xScale;
   } else {
     return aValue.yScale;
@@ -911,23 +911,17 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
     return nsEventStatus_eConsumeNoDefault;
   }
 
+  const ScrollThumbData& thumbData = node->GetScrollThumbData();
+
   mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
       (uint32_t) ScrollInputMethod::ApzScrollbarDrag);
 
   ReentrantMonitorAutoEnter lock(mMonitor);
-  CSSPoint scrollFramePoint = aEvent.mLocalOrigin / GetFrameMetrics().GetZoom();
-  // The scrollbar can be transformed with the frame but the pres shell
-  // resolution is only applied to the scroll frame.
-  CSSPoint scrollbarPoint = scrollFramePoint * mFrameMetrics.GetPresShellResolution();
-  CSSRect cssCompositionBound = mFrameMetrics.CalculateCompositedRectInCssPixels();
+  CSSCoord mousePosition = ConvertScrollbarPoint(aEvent.mLocalOrigin, thumbData) -
+                           aDragMetrics.mScrollbarDragOffset;
 
-  CSSCoord mousePosition = GetAxisStart(aDragMetrics.mDirection, scrollbarPoint) -
-                        aDragMetrics.mScrollbarDragOffset -
-                        GetAxisStart(aDragMetrics.mDirection, cssCompositionBound) -
-                        GetAxisStart(aDragMetrics.mDirection, aDragMetrics.mScrollTrack);
-
-  CSSCoord scrollMax = GetAxisLength(aDragMetrics.mDirection, aDragMetrics.mScrollTrack);
-  scrollMax -= aDragMetrics.mScrollThumbLength;
+  CSSCoord scrollMax = thumbData.mScrollTrackLength;
+  scrollMax -= thumbData.mThumbLength;
 
   float scrollPercent = mousePosition / scrollMax;
 
@@ -935,14 +929,14 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
     GetAxisStart(aDragMetrics.mDirection, mFrameMetrics.GetScrollableRect().TopLeft());
   CSSCoord maxScrollPosition =
     GetAxisLength(aDragMetrics.mDirection, mFrameMetrics.GetScrollableRect()) -
-    GetAxisLength(aDragMetrics.mDirection, cssCompositionBound);
+    GetAxisLength(aDragMetrics.mDirection, mFrameMetrics.CalculateCompositedRectInCssPixels());
   CSSCoord scrollPosition = scrollPercent * maxScrollPosition;
 
   scrollPosition = std::max(scrollPosition, minScrollPosition);
   scrollPosition = std::min(scrollPosition, maxScrollPosition);
 
   CSSPoint scrollOffset = mFrameMetrics.GetScrollOffset();
-  if (aDragMetrics.mDirection == AsyncDragMetrics::HORIZONTAL) {
+  if (aDragMetrics.mDirection == ScrollDirection::HORIZONTAL) {
     scrollOffset.x = scrollPosition;
   } else {
     scrollOffset.y = scrollPosition;
@@ -1571,6 +1565,25 @@ AsyncPanZoomController::ConvertToGecko(const ScreenIntPoint& aPoint, LayoutDevic
     return true;
   }
   return false;
+}
+
+CSSCoord
+AsyncPanZoomController::ConvertScrollbarPoint(const ParentLayerPoint& aScrollbarPoint,
+                                              const ScrollThumbData& aThumbData) const
+{
+  ReentrantMonitorAutoEnter lock(mMonitor);
+
+  // First, get it into the right coordinate space.
+  CSSPoint scrollbarPoint = aScrollbarPoint / mFrameMetrics.GetZoom();
+  // The scrollbar can be transformed with the frame but the pres shell
+  // resolution is only applied to the scroll frame.
+  scrollbarPoint = scrollbarPoint * mFrameMetrics.GetPresShellResolution();
+
+  // Now, get it to be relative to the beginning of the scroll track.
+  CSSRect cssCompositionBound = mFrameMetrics.CalculateCompositedRectInCssPixels();
+  return GetAxisStart(aThumbData.mDirection, scrollbarPoint)
+      - GetAxisStart(aThumbData.mDirection, cssCompositionBound)
+      - aThumbData.mScrollTrackStart;
 }
 
 static bool
@@ -2950,6 +2963,11 @@ bool AsyncPanZoomController::IsFlingingFast() const {
 bool AsyncPanZoomController::IsPannable() const {
   ReentrantMonitorAutoEnter lock(mMonitor);
   return mX.CanScroll() || mY.CanScroll();
+}
+
+bool AsyncPanZoomController::IsScrollInfoLayer() const {
+  ReentrantMonitorAutoEnter lock(mMonitor);
+  return mFrameMetrics.IsScrollInfoLayer();
 }
 
 int32_t AsyncPanZoomController::GetLastTouchIdentifier() const {

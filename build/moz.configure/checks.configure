@@ -94,7 +94,7 @@ def checking(what, callback=None):
 @template
 @imports(_from='mozbuild.shellutil', _import='quote')
 def check_prog(var, progs, what=None, input=None, allow_missing=False,
-               paths=None):
+               paths=None, when=None):
     if input is not None:
         # Wrap input with type checking and normalization.
         @depends(input)
@@ -117,7 +117,7 @@ def check_prog(var, progs, what=None, input=None, allow_missing=False,
     progs = dependable(progs)
     paths = dependable(paths)
 
-    @depends_if(input, progs, paths)
+    @depends_if(input, progs, paths, when=when)
     @checking('for %s' % what, lambda x: quote(x) if x else 'not found')
     def check(value, progs, paths):
         if progs is None:

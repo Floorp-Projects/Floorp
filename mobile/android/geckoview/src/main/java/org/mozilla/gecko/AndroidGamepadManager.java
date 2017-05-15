@@ -129,11 +129,11 @@ public class AndroidGamepadManager {
         }
     }
 
-    @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko_priority")
+    @WrapForJNI(calledFrom = "ui")
     private static native void onGamepadChange(int id, boolean added);
-    @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko_priority")
+    @WrapForJNI(calledFrom = "ui")
     private static native void onButtonChange(int id, int button, boolean pressed, float value);
-    @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko_priority")
+    @WrapForJNI(calledFrom = "ui")
     private static native void onAxisChange(int id, boolean[] valid, float[] values);
 
     private static boolean sStarted;
@@ -184,7 +184,7 @@ public class AndroidGamepadManager {
         }
     }
 
-    @WrapForJNI(calledFrom = "gecko")
+    @WrapForJNI
     private static void onGamepadAdded(final int device_id, final int service_id) {
         ThreadUtils.postToUiThread(new Runnable() {
             @Override

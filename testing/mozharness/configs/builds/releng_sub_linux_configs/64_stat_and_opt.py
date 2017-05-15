@@ -8,6 +8,7 @@ config = {
         'checkout-sources',
         'setup-mock',
         'build',
+        # 'generate-build-stats',
     ],
     "buildbot_json_path": "buildprops.json",
     'exes': {

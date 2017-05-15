@@ -217,11 +217,6 @@ WyciwygChannelParent::RecvAsyncOpen(const URIParams& aOriginal,
     return IPC_OK();
   }
 
-  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
-  if (loadInfo) {
-    loadInfo->SetResultPrincipalURI(original);
-  }
-
   rv = mChannel->SetLoadFlags(aLoadFlags);
   if (NS_FAILED(rv)) {
     if (!SendCancelEarly(rv)) {
@@ -242,6 +237,7 @@ WyciwygChannelParent::RecvAsyncOpen(const URIParams& aOriginal,
     return IPC_OK();
   }
 
+  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
   if (loadInfo && loadInfo->GetEnforceSecurity()) {
     rv = mChannel->AsyncOpen2(this);
   }

@@ -234,7 +234,7 @@ public:
   virtual mozilla::DeclarationBlock* GetCSSDeclaration(Operation aOperation) override;
   virtual nsresult SetCSSDeclaration(mozilla::DeclarationBlock* aDecl) override;
   virtual void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv) override;
-  mozilla::URLExtraData* GetURLData() const final;
+  nsDOMCSSDeclaration::ServoCSSParsingEnvironment GetServoCSSParsingEnvironment() const final;
   virtual nsIDocument* DocToUpdate() override;
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -375,7 +375,7 @@ public:
   virtual mozilla::DeclarationBlock* GetCSSDeclaration(Operation aOperation) override;
   virtual nsresult SetCSSDeclaration(mozilla::DeclarationBlock* aDecl) override;
   virtual void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv) override;
-  mozilla::URLExtraData* GetURLData() const final;
+  nsDOMCSSDeclaration::ServoCSSParsingEnvironment GetServoCSSParsingEnvironment() const final;
   virtual nsIDocument* DocToUpdate() override;
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

@@ -266,14 +266,13 @@ pub enum AbsoluteLength {
 impl AbsoluteLength {
     fn is_zero(&self) -> bool {
         match *self {
-            AbsoluteLength::Px(0.)
-            | AbsoluteLength::In(0.)
-            | AbsoluteLength::Cm(0.)
-            | AbsoluteLength::Mm(0.)
-            | AbsoluteLength::Q(0.)
-            | AbsoluteLength::Pt(0.)
-            | AbsoluteLength::Pc(0.) => true,
-            _ => false,
+            AbsoluteLength::Px(v)
+            | AbsoluteLength::In(v)
+            | AbsoluteLength::Cm(v)
+            | AbsoluteLength::Mm(v)
+            | AbsoluteLength::Q(v)
+            | AbsoluteLength::Pt(v)
+            | AbsoluteLength::Pc(v) => v == 0.,
         }
     }
 }
@@ -631,7 +630,7 @@ impl Length {
             Token::Dimension(ref value, ref unit) if num_context.is_ok(value.value) =>
                 Length::parse_dimension(context, value.value, unit),
             Token::Number(ref value) if num_context.is_ok(value.value) => {
-                if value.value != 0. && !context.length_parsing_mode.allows_unitless_lengths() &&
+                if value.value != 0. && !context.parsing_mode.allows_unitless_lengths() &&
                    !allow_quirks.allowed(context.quirks_mode) {
                     return Err(())
                 }
@@ -973,7 +972,7 @@ impl LengthOrPercentageOrAuto {
             Token::Percentage(ref value) if num_context.is_ok(value.unit_value) =>
                 Ok(LengthOrPercentageOrAuto::Percentage(Percentage(value.unit_value))),
             Token::Number(ref value) if num_context.is_ok(value.value) => {
-                if value.value != 0. && !context.length_parsing_mode.allows_unitless_lengths() &&
+                if value.value != 0. && !context.parsing_mode.allows_unitless_lengths() &&
                    !allow_quirks.allowed(context.quirks_mode) {
                     return Err(())
                 }
@@ -1081,7 +1080,7 @@ impl LengthOrPercentageOrNone {
             Token::Percentage(ref value) if num_context.is_ok(value.unit_value) =>
                 Ok(LengthOrPercentageOrNone::Percentage(Percentage(value.unit_value))),
             Token::Number(value) if num_context.is_ok(value.value) => {
-                if value.value != 0. && !context.length_parsing_mode.allows_unitless_lengths() &&
+                if value.value != 0. && !context.parsing_mode.allows_unitless_lengths() &&
                    !allow_quirks.allowed(context.quirks_mode) {
                     return Err(())
                 }

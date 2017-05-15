@@ -15,6 +15,7 @@ config = {
         'checkout-sources',
         # 'setup-mock', windows do not use mock
         'build',
+        'generate-build-stats',
         'upload-files',
         'sendchange',
         'check-test',
@@ -22,6 +23,7 @@ config = {
     ],
     "buildbot_json_path": "buildprops.json",
     'exes': {
+        'python2.7': sys.executable,
         "buildbot": [
             sys.executable,
             'c:\\mozilla-build\\buildbotve\\scripts\\buildbot'

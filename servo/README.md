@@ -96,7 +96,7 @@ sudo emerge net-misc/curl media-libs/freeglut \
 ```
 #### On Windows (MSVC)
 
-1. Install Python for Windows (https://www.python.org/downloads/release/python-2711/). The windows x86-64 MSI installer is fine.
+1. Install Python for Windows (https://www.python.org/downloads/release/python-2711/). The Windows x86-64 MSI installer is fine.
 You should change the installation to install the "Add python.exe to Path" feature.
 
 2. Install virtualenv.
@@ -128,11 +128,10 @@ If you'd like to know which nightly build of Rust we use, see
 
 ## Building
 
-Servo is built with Cargo, the Rust package manager. We also use Mozilla's
+Servo is built with [Cargo](https://crates.io/), the Rust package manager. We also use Mozilla's
 Mach tools to orchestrate the build and other tasks.
 
 ### Normal build
-
 
 To build Servo in development mode.  This is useful for development, but
 the resulting binary is very slow.
@@ -158,6 +157,20 @@ real-world use, add the `--release` flag to create an optimized build:
 ./mach build --release
 ./mach run --release tests/html/about-mozilla.html
 ```
+
+### Checking for build errors, without building
+
+If you’re making changes to one crate that cause build errors in another crate,
+consider this instead of a full build:
+
+```sh
+./mach check
+```
+
+It will run `cargo check`, which runs the analysis phase of the compiler
+(and so shows build errors if any) but skips the code generation phase.
+This can be a lot faster than a full build,
+though of course it doesn’t produce a binary you can run.
 
 ### Building for Android target
 

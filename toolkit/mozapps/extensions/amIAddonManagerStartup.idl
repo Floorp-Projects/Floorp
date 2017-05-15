@@ -1,0 +1,36 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, builtinclass, uuid(01dfa47b-87e4-4135-877b-586d033e1b5d)]
+interface amIAddonManagerStartup : nsISupports
+{
+  /**
+   * Reads and parses startup data from the addonState.json.lz4 file, checks
+   * for modifications, and returns the result.
+   *
+   * Returns null for an empty or nonexistent state file, but throws for an
+   * invalid one.
+   */
+  [implicit_jscontext]
+  jsval readStartupData();
+
+  /**
+   * Initializes the chrome registry for the enabled, non-restartless add-on
+   * in the given state data.
+   */
+  [implicit_jscontext]
+  void initializeExtensions(in jsval locations);
+
+  /**
+   * Resets the internal state of the startup service, and allows
+   * initializeExtensions() to be called again. Does *not* fully unregister
+   * chrome registry locations for previously registered add-ons.
+   *
+   * NOT FOR USE OUTSIDE OF UNIT TESTS.
+   */
+  void reset();
+};
+

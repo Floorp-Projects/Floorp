@@ -348,6 +348,8 @@ public:
   nsresult ReadAt(int64_t aOffset, char* aBuffer,
                   uint32_t aCount, uint32_t* aBytes);
 
+  void ThrottleReadahead(bool bThrottle);
+
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
 
 private:
@@ -514,6 +516,8 @@ private:
 
   // True if associated with a private browsing window.
   const bool mIsPrivateBrowsing;
+
+  bool mThrottleReadahead = false;
 };
 
 } // namespace mozilla

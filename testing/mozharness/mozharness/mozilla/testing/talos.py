@@ -20,6 +20,7 @@ from mozharness.base.config import parse_config_file
 from mozharness.base.errors import PythonErrorList
 from mozharness.base.log import OutputParser, DEBUG, ERROR, CRITICAL
 from mozharness.base.log import INFO, WARNING
+from mozharness.base.python import Python3Virtualenv
 from mozharness.mozilla.blob_upload import BlobUploadMixin, blobupload_config_options
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
 from mozharness.base.vcs.vcsbase import MercurialScript
@@ -88,7 +89,8 @@ class TalosOutputParser(OutputParser):
         super(TalosOutputParser, self).parse_single_line(line)
 
 
-class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin):
+class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
+            Python3Virtualenv):
     """
     install and run Talos tests:
     https://wiki.mozilla.org/Buildbot/Talos
@@ -497,9 +499,7 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin):
 
     def fetch_python3(self):
         manifest_file = os.path.join(
-            self.query_abs_dirs()['base_work_dir'],
-            '..',
-            'talos',
+            self.talos_path,
             self.config['python3_manifest'][self.platform_name()])
         output_dir = self.query_abs_dirs()['abs_work_dir']
         # Slowdown: The unzipped Python3 installation gets deleted every time
@@ -509,5 +509,5 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin):
             cache=self.config['tooltool_cache']
         )
         python3_path = os.path.join(output_dir, 'python3.6', 'python')
-        self.run_command([python3_path, '--version'])
+        self.run_command([python3_path, '--version'], env=self.query_env())
         return python3_path

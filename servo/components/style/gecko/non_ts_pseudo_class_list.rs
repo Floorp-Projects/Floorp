@@ -38,7 +38,9 @@
  * possible.
  *
  * $gecko_type can be either "_" or an ident in Gecko's CSSPseudoClassType.
- * $state can be either "_" or an expression of type ElementState.
+ * $state can be either "_" or an expression of type ElementState.  If present,
+ *        the semantics are that the pseudo-class matches if any of the bits in
+ *        $state are set on the element.
  * $flags can be either "_" or an expression of type NonTSPseudoClassFlag,
  * see selector_parser.rs for more details.
  */
@@ -73,6 +75,8 @@ macro_rules! apply_non_ts_list {
                 ("-moz-broken", MozBroken, mozBroken, IN_BROKEN_STATE, _),
                 ("-moz-loading", MozLoading, mozLoading, IN_LOADING_STATE, _),
                 ("-moz-suppressed", MozSuppressed, mozSuppressed, IN_SUPPRESSED_STATE, PSEUDO_CLASS_INTERNAL),
+                ("-moz-autofill", MozAutofill, mozAutofill, IN_AUTOFILL_STATE, PSEUDO_CLASS_INTERNAL),
+                ("-moz-autofill-preview", MozAutofillPreview, mozAutofillPreview, IN_AUTOFILL_PREVIEW_STATE, PSEUDO_CLASS_INTERNAL),
 
                 ("-moz-handler-clicktoplay", MozHandlerClickToPlay, mozHandlerClickToPlay, IN_HANDLER_CLICK_TO_PLAY_STATE, PSEUDO_CLASS_INTERNAL),
                 ("-moz-handler-vulnerable-updatable", MozHandlerVulnerableUpdatable, mozHandlerVulnerableUpdatable, IN_HANDLER_VULNERABLE_UPDATABLE_STATE, PSEUDO_CLASS_INTERNAL),
