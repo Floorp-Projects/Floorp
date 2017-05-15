@@ -144,7 +144,7 @@ function runTest()
   ok(decimalWidth != cjkDecimalWidth, "decimal and cjk-decimal counter have different width")
 
   var initialCounterStyleWidth = testCounterStyle.getBoundingClientRect().width;
-  is(initialCounterStyleWidth, decimalWidth);
+  is(initialCounterStyleWidth, decimalWidth, "initial counter style is decimal");
 
   // We construct a style sheet with zero, one or two levels of conditional
   // grouping rules (taken from outerRuleInfo), with one of the inner rules
