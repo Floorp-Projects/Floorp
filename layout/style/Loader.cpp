@@ -498,7 +498,7 @@ SheetLoadData::ScheduleLoadEventIfNeeded(nsresult aStatus)
 
 bool
 LoaderReusableStyleSheets::FindReusableStyleSheet(nsIURI* aURL,
-                                                  RefPtr<CSSStyleSheet>& aResult)
+                                                  RefPtr<StyleSheet>& aResult)
 {
   MOZ_ASSERT(aURL);
   for (size_t i = mReusableSheets.Length(); i > 0; --i) {
@@ -2270,11 +2270,11 @@ Loader::LoadChildSheet(StyleSheet* aParentSheet,
   // Now that we know it's safe to load this (passes security check and not a
   // loop) do so.
   RefPtr<StyleSheet> sheet;
-  RefPtr<CSSStyleSheet> reusableSheet;
   StyleSheetState state;
-  if (aReusableSheets && aReusableSheets->FindReusableStyleSheet(aURL, reusableSheet)) {
-    sheet = reusableSheet;
-    aGeckoParentRule->SetSheet(reusableSheet);
+  if (aReusableSheets && aReusableSheets->FindReusableStyleSheet(aURL, sheet)) {
+    if (aParentSheet->IsGecko()) {
+      aGeckoParentRule->SetSheet(sheet->AsGecko());
+    }
     state = eSheetComplete;
   } else {
     bool isAlternate;
