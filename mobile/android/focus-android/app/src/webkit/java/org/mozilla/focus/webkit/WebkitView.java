@@ -8,6 +8,7 @@ package org.mozilla.focus.webkit;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.util.AttributeSet;
 import android.webkit.CookieManager;
@@ -19,6 +20,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewDatabase;
 
 import org.mozilla.focus.BuildConfig;
+import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.utils.FileUtils;
 import org.mozilla.focus.utils.ThreadUtils;
 import org.mozilla.focus.utils.UrlUtils;
@@ -204,8 +206,12 @@ public class WebkitView extends NestedWebView implements IWebView, SharedPrefere
         return new DownloadListener() {
             @Override
             public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype, long contentLength) {
+                if (!AppConstants.supportsDownloadingFiles()) {
+                    return;
+                }
+
                 if (callback != null) {
-                    final Download download = new Download(url, userAgent, contentDisposition, mimetype, contentLength);
+                    final Download download = new Download(url, userAgent, contentDisposition, mimetype, contentLength, Environment.DIRECTORY_DOWNLOADS);
                     callback.onDownloadStart(download);
                 }
             }

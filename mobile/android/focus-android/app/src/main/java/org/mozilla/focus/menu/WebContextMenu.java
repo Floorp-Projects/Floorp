@@ -11,6 +11,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v7.app.AlertDialog;
@@ -21,6 +22,7 @@ import android.widget.TextView;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
+import org.mozilla.focus.web.Download;
 import org.mozilla.focus.web.IWebView;
 
 public class WebContextMenu {
@@ -32,7 +34,7 @@ public class WebContextMenu {
         return titleView;
     }
 
-    public static void show(final @NonNull Context context, final @NonNull IWebView.HitTarget hitTarget) {
+    public static void show(final @NonNull Context context, final @NonNull IWebView.Callback callback, final @NonNull IWebView.HitTarget hitTarget) {
         if (!(hitTarget.isLink || hitTarget.isImage)) {
             // We don't support any other classes yet:
             throw new IllegalStateException("WebContextMenu can only handle long-press on images and/or links.");
@@ -66,7 +68,7 @@ public class WebContextMenu {
 
         final Dialog dialog = builder.create();
 
-        setupMenuForHitTarget(dialog, menu, hitTarget);
+        setupMenuForHitTarget(dialog, menu, callback, hitTarget);
 
         dialog.show();
     }
@@ -78,6 +80,7 @@ public class WebContextMenu {
      */
     private static void setupMenuForHitTarget(final @NonNull Dialog dialog,
                                               final @NonNull NavigationView navigationView,
+                                              final @NonNull IWebView.Callback callback,
                                               final @NonNull IWebView.HitTarget hitTarget) {
         navigationView.inflateMenu(R.menu.menu_browser_context);
 
@@ -85,6 +88,7 @@ public class WebContextMenu {
         navigationView.getMenu().findItem(R.id.menu_link_copy).setVisible(hitTarget.isLink);
         navigationView.getMenu().findItem(R.id.menu_image_share).setVisible(hitTarget.isImage);
         navigationView.getMenu().findItem(R.id.menu_image_copy).setVisible(hitTarget.isImage);
+        navigationView.getMenu().findItem(R.id.menu_image_save).setVisible(hitTarget.isImage);
 
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
@@ -106,6 +110,11 @@ public class WebContextMenu {
                         shareIntent.setType("text/plain");
                         shareIntent.putExtra(Intent.EXTRA_TEXT, hitTarget.imageURL);
                         dialog.getContext().startActivity(Intent.createChooser(shareIntent, dialog.getContext().getString(R.string.share_dialog_title)));
+                        return true;
+                    }
+                    case R.id.menu_image_save: {
+                        final Download download = new Download(hitTarget.imageURL, null, null, null, -1, Environment.DIRECTORY_PICTURES);
+                        callback.onDownloadStart(download);
                         return true;
                     }
                     case R.id.menu_link_copy:

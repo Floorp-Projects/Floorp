@@ -5,6 +5,7 @@
 
 package org.mozilla.focus.web;
 
+import android.os.Environment;
 import android.os.Parcel;
 
 import org.junit.Test;
@@ -22,13 +23,15 @@ public class DownloadTest {
                 "Focus/1.0",
                 "Content-Disposition: attachment; filename=\"filename.png\"",
                 "image/png",
-                1024);
+                1024,
+                Environment.DIRECTORY_DOWNLOADS);
 
         assertEquals("https://www.mozilla.org/image.png", download.getUrl());
         assertEquals("Focus/1.0", download.getUserAgent());
         assertEquals("Content-Disposition: attachment; filename=\"filename.png\"", download.getContentDisposition());
         assertEquals("image/png", download.getMimeType());
         assertEquals(1024, download.getContentLength());
+        assertEquals(Environment.DIRECTORY_DOWNLOADS, download.getDestinationDirectory());
     }
 
     @Test
@@ -41,7 +44,8 @@ public class DownloadTest {
                     "Focus/1.0",
                     "Content-Disposition: attachment; filename=\"filename.png\"",
                     "image/png",
-                    1024);
+                    1024,
+                    Environment.DIRECTORY_PICTURES);
             download.writeToParcel(parcel, 0);
         }
 
@@ -55,6 +59,7 @@ public class DownloadTest {
             assertEquals("Content-Disposition: attachment; filename=\"filename.png\"", download.getContentDisposition());
             assertEquals("image/png", download.getMimeType());
             assertEquals(1024, download.getContentLength());
+            assertEquals(Environment.DIRECTORY_PICTURES, download.getDestinationDirectory());
         }
     }
 }

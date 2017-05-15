@@ -266,4 +266,6 @@ be temporary, and you can try again later.</li>
     <string name="contextmenu_image_share">Share image</string>
     <!-- Label used in the contextmenu shown when long-pressing on an image -->
     <string name="contextmenu_image_copy">Copy image address</string>
+    <!-- Label used in the contextmenu shown when long-pressing on an image -->
+    <string name="contextmenu_image_save">Save image</string>
 </resources>

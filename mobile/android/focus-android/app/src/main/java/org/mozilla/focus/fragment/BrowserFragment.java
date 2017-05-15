@@ -316,15 +316,11 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
             @Override
             public void onLongPress(final IWebView.HitTarget hitTarget) {
-                WebContextMenu.show(getActivity(), hitTarget);
+                WebContextMenu.show(getActivity(), this, hitTarget);
             }
 
             @Override
             public void onDownloadStart(Download download) {
-                if (!AppConstants.supportsDownloadingFiles()) {
-                    return;
-                }
-
                 if (PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
                     // We do have the permission to write to the external storage. Proceed with the download.
                     queueDownload(download);
@@ -378,7 +374,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 .addRequestHeader("User-Agent", download.getUserAgent())
                 .addRequestHeader("Cookie", cookie)
                 .addRequestHeader("Referer", getUrl())
-                .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
+                .setDestinationInExternalPublicDir(download.getDestinationDirectory(), fileName)
                 .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                 .setMimeType(download.getMimeType());
 

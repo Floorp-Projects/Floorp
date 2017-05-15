@@ -15,4 +15,7 @@
     <item
         android:id="@+id/menu_image_copy"
         android:title="@string/contextmenu_image_copy" />
+    <item
+        android:id="@+id/menu_image_save"
+        android:title="@string/contextmenu_image_save" />
 </menu>
