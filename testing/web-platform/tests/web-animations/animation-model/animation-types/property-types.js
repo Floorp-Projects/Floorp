@@ -50,7 +50,7 @@ const discreteType = {
     });
   },
 
-  testAddition: function(property, setup, options) {
+  testAdditionOrAccumulation: function(property, setup, options, composite) {
     options.forEach(function(keyframes) {
       var [ from, to ] = keyframes;
       test(function(t) {
@@ -58,7 +58,7 @@ const discreteType = {
         var target = createTestElement(t, setup);
         target.animate({ [idlName]: [from, from] }, 1000);
         var animation = target.animate({ [idlName]: [to, to] },
-                                       { duration: 1000, composite: 'add' });
+                                       { duration: 1000, composite: composite });
         testAnimationSamples(animation, idlName,
                              [{ time: 0, expected: to.toLowerCase() }]);
       }, property + ': "' + to + '" onto "' + from + '"');
@@ -68,13 +68,20 @@ const discreteType = {
         var target = createTestElement(t, setup);
         target.animate({ [idlName]: [to, to] }, 1000);
         var animation = target.animate({ [idlName]: [from, from] },
-                                       { duration: 1000, composite: 'add' });
+                                       { duration: 1000, composite: composite });
         testAnimationSamples(animation, idlName,
                              [{ time: 0, expected: from.toLowerCase() }]);
       }, property + ': "' + from + '" onto "' + to + '"');
     });
   },
 
+  testAddition: function(property, setup, options) {
+    this.testAdditionOrAccumulation(property, setup, options, 'add');
+  },
+
+  testAccumulation: function(property, setup, options) {
+    this.testAdditionOrAccumulation(property, setup, options, 'accumulate');
+  },
 };
 
 const lengthType = {
@@ -98,13 +105,13 @@ const lengthType = {
     }, property + ' supports animating as a length of rem');
   },
 
-  testAddition: function(property, setup) {
+  testAdditionOrAccumulation: function(property, setup, composite) {
     test(function(t) {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = '10px';
       var animation = target.animate({ [idlName]: ['10px', '50px'] },
-                                     { duration: 1000, composite: 'add' });
+                                     { duration: 1000, composite: composite});
       testAnimationSamples(animation, idlName, [{ time: 0, expected: '20px' }]);
     }, property + ': length');
 
@@ -113,11 +120,18 @@ const lengthType = {
       var target = createTestElement(t, setup);
       target.style[idlName] = '1rem';
       var animation = target.animate({ [idlName]: ['1rem', '5rem'] },
-                                     { duration: 1000, composite: 'add' });
+                                     { duration: 1000, composite: composite });
       testAnimationSamples(animation, idlName, [{ time: 0, expected: '20px' }]);
     }, property + ': length of rem');
   },
 
+  testAddition: function(property, setup) {
+    this.testAdditionOrAccumulation(property, setup, 'add');
+  },
+
+  testAccumulation: function(property, setup) {
+    this.testAdditionOrAccumulation(property, setup, 'accumulate');
+  },
 };
 
 const lengthPairType = {
@@ -141,13 +155,13 @@ const lengthPairType = {
     }, property + ' supports animating as a length pair of rem');
   },
 
-  testAddition: function(property, setup) {
+  testAdditionOrAccumulation: function(property, setup, composite) {
     test(function(t) {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = '10px 10px';
       var animation = target.animate({ [idlName]: ['10px 10px', '50px 50px'] },
-                                     { duration: 1000, composite: 'add' });
+                                     { duration: 1000, composite: composite });
       testAnimationSamples(animation, idlName, [{ time: 0, expected: '20px 20px' }]);
     }, property + ': length pair');
 
@@ -156,11 +170,18 @@ const lengthPairType = {
       var target = createTestElement(t, setup);
       target.style[idlName] = '1rem 1rem';
       var animation = target.animate({ [idlName]: ['1rem 1rem', '5rem 5rem'] },
-                                     { duration: 1000, composite: 'add' });
+                                     { duration: 1000, composite: composite });
       testAnimationSamples(animation, idlName, [{ time: 0, expected: '20px 20px' }]);
     }, property + ': length pair of rem');
   },
 
+  testAddition: function(property, setup) {
+    this.testAdditionOrAccumulation(property, setup, 'add');
+  },
+
+  testAccumulation: function(property, setup) {
+    this.testAdditionOrAccumulation(property, setup, 'accumulate');
+  },
 };
 
 const percentageType = {
@@ -175,17 +196,24 @@ const percentageType = {
     }, property + ' supports animating as a percentage');
   },
 
-  testAddition: function(property, setup) {
+  testAdditionOrAccumulation: function(property, setup, composite) {
     test(function(t) {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = '60%';
       var animation = target.animate({ [idlName]: ['70%', '100%'] },
-                                     { duration: 1000, composite: 'add' });
+                                     { duration: 1000, composite: composite });
       testAnimationSamples(animation, idlName, [{ time: 0, expected: '130%' }]);
     }, property + ': percentage');
   },
 
+  testAddition: function(property, setup) {
+    this.testAdditionOrAccumulation(property, setup, 'add');
+  },
+
+  testAccumulation: function(property, setup) {
+    this.testAdditionOrAccumulation(property, setup, 'accumulate');
+  },
 };
 
 const integerType = {
@@ -200,18 +228,25 @@ const integerType = {
     }, property + ' supports animating as an integer');
   },
 
-  testAddition: function(property, setup) {
+  testAdditionOrAccumulation: function(property, setup, composite) {
     test(function(t) {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = -1;
       var animation = target.animate({ [idlName]: [-2, 2] },
-                                     { duration: 1000, composite: 'add' });
+                                     { duration: 1000, composite: composite });
       testAnimationSamples(animation, idlName,
                            [{ time: 0,    expected: '-3' }]);
     }, property + ': integer');
   },
 
+  testAddition: function(property, setup) {
+    this.testAdditionOrAccumulation(property, setup, 'add');
+  },
+
+  testAccumulation: function(property, setup) {
+    this.testAdditionOrAccumulation(property, setup, 'accumulate');
+  },
 };
 
 const positiveIntegerType = {
@@ -226,18 +261,25 @@ const positiveIntegerType = {
     }, property + ' supports animating as a positive integer');
   },
 
-  testAddition: function(property, setup) {
+  testAdditionOrAccumulation: function(property, setup, composite) {
     test(function(t) {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 1;
       var animation = target.animate({ [idlName]: [2, 5] },
-                                     { duration: 1000, composite: 'add' });
+                                     { duration: 1000, composite: composite });
       testAnimationSamples(animation, idlName,
                            [{ time: 0,    expected: '3' }]);
     }, property + ': positive integer');
   },
 
+  testAddition: function(property, setup) {
+    this.testAdditionOrAccumulation(property, setup, 'add');
+  },
+
+  testAccumulation: function(property, setup) {
+    this.testAdditionOrAccumulation(property, setup, 'accumulate');
+  },
 };
 
 const lengthPercentageOrCalcType = {
@@ -293,7 +335,7 @@ const lengthPercentageOrCalcType = {
     }, property + ' supports animating as a calc');
   },
 
-  testAddition: function(property, setup) {
+  testAdditionOrAccumulation: function(property, setup, composite) {
     lengthType.testAddition(property, setup);
     percentageType.testAddition(property, setup);
 
@@ -302,7 +344,7 @@ const lengthPercentageOrCalcType = {
       var target = createTestElement(t, setup);
       target.style[idlName] = '10px';
       var animation = target.animate({ [idlName]: ['10%', '50%'] },
-                                     { duration: 1000, composite: 'add' });
+                                     { duration: 1000, composite: composite });
       testAnimationSamples(animation, idlName,
                            [{ time: 0, expected: 'calc(10px + 10%)' }]);
     }, property + ': units "%" onto "px"');
@@ -312,7 +354,7 @@ const lengthPercentageOrCalcType = {
       var target = createTestElement(t, setup);
       target.style[idlName] = '10%';
       var animation = target.animate({ [idlName]: ['10px', '50px'] },
-                                     { duration: 1000, composite: 'add' });
+                                     { duration: 1000, composite: composite });
       testAnimationSamples(animation, idlName,
                            [{ time: 0, expected: 'calc(10px + 10%)' }]);
     }, property + ': units "px" onto "%"');
@@ -322,7 +364,7 @@ const lengthPercentageOrCalcType = {
       var target = createTestElement(t, setup);
       target.style[idlName] = '10%';
       var animation = target.animate({ [idlName]: ['2rem', '5rem'] },
-                                     { duration: 1000, composite: 'add' });
+                                     { duration: 1000, composite: composite });
       testAnimationSamples(animation, idlName,
                            [{ time: 0, expected: 'calc(20px + 10%)' }]);
     }, property + ': units "rem" onto "%"');
@@ -332,7 +374,7 @@ const lengthPercentageOrCalcType = {
       var target = createTestElement(t, setup);
       target.style[idlName] = '2rem';
       var animation = target.animate({ [idlName]: ['10%', '50%'] },
-                                     { duration: 1000, composite: 'add' });
+                                     { duration: 1000, composite: composite });
       testAnimationSamples(animation, idlName,
                            [{ time: 0, expected: 'calc(20px + 10%)' }]);
     }, property + ': units "%" onto "rem"');
@@ -342,7 +384,7 @@ const lengthPercentageOrCalcType = {
       var target = createTestElement(t, setup);
       target.style[idlName] = '2em';
       var animation = target.animate({ [idlName]: ['2rem', '5rem'] },
-                                     { duration: 1000, composite: 'add' });
+                                     { duration: 1000, composite: composite });
       testAnimationSamples(animation, idlName, [{ time: 0, expected: '40px' }]);
     }, property + ': units "rem" onto "em"');
 
@@ -351,7 +393,7 @@ const lengthPercentageOrCalcType = {
       var target = createTestElement(t, setup);
       target.style[idlName] = '2rem';
       var animation = target.animate({ [idlName]: ['2em', '5em'] },
-                                     { duration: 1000, composite: 'add' });
+                                     { duration: 1000, composite: composite });
       testAnimationSamples(animation, idlName, [{ time: 0, expected: '40px' }]);
     }, property + ': units "em" onto "rem"');
 
@@ -361,7 +403,7 @@ const lengthPercentageOrCalcType = {
       target.style[idlName] = '10px';
       var animation = target.animate({ [idlName]: ['calc(2em + 20%)',
                                                    'calc(5rem + 50%)'] },
-                                     { duration: 1000, composite: 'add' });
+                                     { duration: 1000, composite: composite });
       testAnimationSamples(animation, idlName,
                            [{ time: 0, expected: 'calc(30px + 20%)' }]);
     }, property + ': units "calc" onto "px"');
@@ -372,12 +414,19 @@ const lengthPercentageOrCalcType = {
       target.style[idlName] = 'calc(10px + 10%)';
       var animation = target.animate({ [idlName]: ['calc(20px + 20%)',
                                                    'calc(2em + 3rem + 40%)'] },
-                                     { duration: 1000, composite: 'add' });
+                                     { duration: 1000, composite: composite });
       testAnimationSamples(animation, idlName,
                            [{ time: 0, expected: 'calc(30px + 30%)' }]);
     }, property + ': calc');
   },
 
+  testAddition: function(property, setup) {
+    this.testAdditionOrAccumulation(property, setup, 'add');
+  },
+
+  testAccumulation: function(property, setup) {
+    this.testAdditionOrAccumulation(property, setup, 'accumulate');
+  },
 };
 
 const positiveNumberType = {
@@ -392,17 +441,24 @@ const positiveNumberType = {
     }, property + ' supports animating as a positive number');
   },
 
-  testAddition: function(property, setup) {
+  testAdditionOrAccumulation: function(property, setup, composite) {
     test(function(t) {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 1.1;
       var animation = target.animate({ [idlName]: [1.1, 1.5] },
-                                     { duration: 1000, composite: 'add' });
+                                     { duration: 1000, composite: composite });
       testAnimationSamples(animation, idlName, [{ time: 0, expected: '2.2' }]);
     }, property + ': positive number');
   },
 
+  testAddition: function(property, setup) {
+    this.testAdditionOrAccumulation(property, setup, 'add');
+  },
+
+  testAccumulation: function(property, setup) {
+    this.testAdditionOrAccumulation(property, setup, 'accumulate');
+  },
 };
 
 // Test using float values in the range [0, 1]
@@ -418,13 +474,13 @@ const opacityType = {
     }, property + ' supports animating as a [0, 1] number');
   },
 
-  testAddition: function(property, setup) {
+  testAdditionOrAccumulation: function(property, setup, composite) {
     test(function(t) {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 0.3;
       var animation = target.animate({ [idlName]: [0.3, 0.8] },
-                                     { duration: 1000, composite: 'add' });
+                                     { duration: 1000, composite: composite });
       testAnimationSamples(animation, idlName, [{ time: 0, expected: '0.6' }]);
     }, property + ': [0, 1] number');
 
@@ -433,11 +489,18 @@ const opacityType = {
       var target = createTestElement(t, setup);
       target.style[idlName] = 0.8;
       var animation = target.animate({ [idlName]: [0.3, 0.8] },
-                                     { duration: 1000, composite: 'add' });
+                                     { duration: 1000, composite: composite });
       testAnimationSamples(animation, idlName, [{ time: 0, expected: '1' }]);
     }, property + ': [0, 1] number (clamped)');
   },
 
+  testAddition: function(property, setup) {
+    this.testAdditionOrAccumulation(property, setup, 'add');
+  },
+
+  testAccumulation: function(property, setup) {
+    this.testAdditionOrAccumulation(property, setup, 'accumulate');
+  },
 };
 
 const visibilityType = {
@@ -501,14 +564,14 @@ const visibilityType = {
      + 'from "visible" to "hidden" with easeInOutBack easing');
   },
 
-  testAddition: function(property, setup) {
+  testAdditionOrAccumulation: function(property, setup, composite) {
     test(function(t) {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'visible';
       var animation = target.animate({ [idlName]: ['visible', 'hidden'] },
                                      { duration: 1000, fill: 'both',
-                                       composite: 'add' });
+                                       composite: composite });
       testAnimationSamples(animation, idlName,
                            [{ time: 0,    expected: 'visible' },
                             { time: 1000, expected: 'visible' }]);
@@ -520,13 +583,20 @@ const visibilityType = {
       target.style[idlName] = 'hidden';
       var animation = target.animate({ [idlName]: ['hidden', 'visible'] },
                                      { duration: 1000, fill: 'both',
-                                       composite: 'add' });
+                                       composite: composite });
       testAnimationSamples(animation, idlName,
                            [{ time: 0,    expected: 'hidden' },
                             { time: 1000, expected: 'visible' }]);
     }, property + ': onto "hidden"');
   },
 
+  testAddition: function(property, setup) {
+    this.testAdditionOrAccumulation(property, setup, 'add');
+  },
+
+  testAccumulation: function(property, setup) {
+    this.testAdditionOrAccumulation(property, setup, 'accumulate');
+  },
 };
 
 const colorType = {
@@ -592,14 +662,14 @@ const colorType = {
     }, property + ' supports animating as color of hsla()');
   },
 
-  testAddition: function(property, setup) {
+  testAdditionOrAccumulation: function(property, setup, composite) {
     test(function(t) {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
       target.style[idlName] = 'rgb(128, 128, 128)';
       var animation = target.animate({ [idlName]: ['rgb(255, 0, 0)',
                                                    'rgb(0, 0, 255)'] },
-                                     { duration: 1000, composite: 'add' });
+                                     { duration: 1000, composite: composite });
       testAnimationSamples(animation, idlName,
                            [{ time: 0,   expected: 'rgb(255, 128, 128)' },
                             // The value at 50% is interpolated
@@ -614,7 +684,7 @@ const colorType = {
       var target = createTestElement(t, setup);
       target.style[idlName] = 'rgb(128, 128, 128)';
       var animation = target.animate({ [idlName]: ['#ff0000', '#0000ff'] },
-                                     { duration: 1000, composite: 'add' });
+                                     { duration: 1000, composite: composite });
       testAnimationSamples(animation, idlName,
                            [{ time: 0,  expected: 'rgb(255, 128, 128)' }]);
     }, property + ' supports animating as color of #RGB');
@@ -625,7 +695,7 @@ const colorType = {
       target.style[idlName] = 'rgb(128, 128, 128)';
       var animation = target.animate({ [idlName]: ['hsl(0,   100%, 50%)',
                                                    'hsl(240, 100%, 50%)'] },
-                                     { duration: 1000, composite: 'add' });
+                                     { duration: 1000, composite: composite });
       testAnimationSamples(animation, idlName,
                            [{ time: 0,  expected: 'rgb(255, 128, 128)' }]);
     }, property + ' supports animating as color of hsl()');
@@ -635,7 +705,7 @@ const colorType = {
       var target = createTestElement(t, setup);
       target.style[idlName] = 'rgb(128, 128, 128)';
       var animation = target.animate({ [idlName]: ['#ff000066', '#0000ffcc'] },
-                                     { duration: 1000, composite: 'add' });
+                                     { duration: 1000, composite: composite });
       testAnimationSamples(animation, idlName,
                            [{ time: 0,  expected: 'rgb(230, 128, 128)' }]);
     }, property + ' supports animating as color of #RGBa');
@@ -646,7 +716,7 @@ const colorType = {
       target.style[idlName] = 'rgb(128, 128, 128)';
       var animation = target.animate({ [idlName]: ['rgba(255, 0, 0, 0.4)',
                                                    'rgba(0, 0, 255, 0.8)'] },
-                                     { duration: 1000, composite: 'add' });
+                                     { duration: 1000, composite: composite });
       testAnimationSamples(animation, idlName,      // Same as above.
                            [{ time: 0,  expected: 'rgb(230, 128, 128)' }]);
     }, property + ' supports animating as color of rgba()');
@@ -657,12 +727,19 @@ const colorType = {
       target.style[idlName] = 'rgb(128, 128, 128)';
       var animation = target.animate({ [idlName]: ['hsla(0,   100%, 50%, 0.4)',
                                                    'hsla(240, 100%, 50%, 0.8)'] },
-                                     { duration: 1000, composite: 'add' });
+                                     { duration: 1000, composite: composite });
       testAnimationSamples(animation, idlName,      // Same as above.
                            [{ time: 0,  expected: 'rgb(230, 128, 128)' }]);
     }, property + ' supports animating as color of hsla()');
   },
 
+  testAddition: function(property, setup) {
+    this.testAdditionOrAccumulation(property, setup, 'add');
+  },
+
+  testAccumulation: function(property, setup) {
+    this.testAdditionOrAccumulation(property, setup, 'accumulate');
+  },
 };
 
 const transformListType = {
@@ -974,6 +1051,154 @@ const transformListType = {
     }, property + ': matrix3d');
   },
 
+  testAccumulation: function(property, setup) {
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      target.style[idlName] = 'translateX(100px)';
+      var animation = target.animate({ [idlName]: ['translateX(-200px)',
+                                                   'translateX(500px)'] },
+                                     { duration: 1000, fill: 'both',
+                                       composite: 'accumulate' });
+      testAnimationSampleMatrices(animation, idlName,
+        [ { time: 0,    expected: [ 1, 0, 0, 1, -100, 0 ] },
+          { time: 1000, expected: [ 1, 0, 0, 1,  600, 0 ] }]);
+    }, property + ': translate');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      target.style[idlName] = 'rotate(45deg)';
+      var animation = target.animate({ [idlName]: ['rotate(-90deg)',
+                                                   'rotate(90deg)'] },
+                                     { duration: 1000, fill: 'both',
+                                       composite: 'accumulate' });
+
+      testAnimationSampleMatrices(animation, idlName,
+        [{ time: 0,    expected: [ Math.cos(-Math.PI / 4),
+                                   Math.sin(-Math.PI / 4),
+                                  -Math.sin(-Math.PI / 4),
+                                   Math.cos(-Math.PI / 4),
+                                   0, 0] },
+         { time: 1000, expected: [ Math.cos(Math.PI * 3 / 4),
+                                   Math.sin(Math.PI * 3 / 4),
+                                  -Math.sin(Math.PI * 3 / 4),
+                                   Math.cos(Math.PI * 3 / 4),
+                                   0, 0] }]);
+    }, property + ': rotate');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      target.style[idlName] = 'scale(2)';
+      var animation = target.animate({ [idlName]: ['scale(-3)', 'scale(5)'] },
+                                     { duration: 1000, fill: 'both',
+                                       composite: 'accumulate' });
+
+      testAnimationSampleMatrices(animation, idlName,
+                                  // scale((2 - 1) + (-3 - 1) + 1)
+        [{ time: 0,    expected: [ -2, 0, 0, -2, 0, 0 ] },
+                                  // scale((2 - 1) + (5 - 1) + 1)
+         { time: 1000, expected: [  6, 0, 0,  6, 0, 0 ] }]);
+    }, property + ': scale');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+                              // matrix(1, tan(10deg), tan(10deg), 1)
+      target.style[idlName] = 'skew(10deg, 10deg)';
+      var animation =                // matrix(1, tan(20deg), tan(-30deg), 1)
+        target.animate({ [idlName]: ['skew(-30deg, 20deg)',
+                                     // matrix(1, tan(-30deg), tan(20deg), 1)
+                                     'skew(20deg, -30deg)'] },
+                       { duration: 1000, fill: 'both', composite: 'accumulate' });
+
+      testAnimationSampleMatrices(animation, idlName,
+        [{ time: 0,    expected: [ 1, Math.tan(Math.PI/6),
+                                   Math.tan(-Math.PI/9), 1,
+                                   0, 0] },
+         { time: 1000, expected: [ 1, Math.tan(-Math.PI/9),
+                                   Math.tan(Math.PI/6), 1,
+                                   0, 0] }]);
+    }, property + ': skew');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+                               // matrix(1, 0, 0, 1, 100, 0)
+      target.style[idlName] = 'translateX(100px)';
+      var animation =                // matrix(0, 1, -1, 0, 0, 0)
+        target.animate({ [idlName]: ['rotate(90deg)',
+                                     // matrix(-1, 0, 0, -1, 0, 0)
+                                     'rotate(180deg)'] },
+                       { duration: 1000, fill: 'both', composite: 'accumulate' });
+
+      testAnimationSampleMatrices(animation, idlName,
+        [{ time: 0,    expected: [  0, 1, -1,  0, 100, 0 ] },
+         { time: 1000, expected: [ -1, 0,  0, -1, 100, 0 ] }]);
+    }, property + ': rotate on translate');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+                               // matrix(0, 1, -1, 0, 0, 0)
+      target.style[idlName] = 'rotate(90deg)';
+      var animation =                // matrix(1, 0, 0, 1, 100, 0)
+        target.animate({ [idlName]: ['translateX(100px)',
+                                     // matrix(1, 0, 0, 1, 200, 0)
+                                     'translateX(200px)'] },
+                       { duration: 1000, fill: 'both', composite: 'accumulate' });
+
+      testAnimationSampleMatrices(animation, idlName,
+        [{ time: 0,    expected: [ 0, 1, -1, 0, 100, 0 ] },
+         { time: 1000, expected: [ 0, 1, -1, 0, 200, 0 ] }]);
+    }, property + ': translate on rotate');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      target.style[idlName] = 'matrix(0, 1, -1, 0, 0, 0)';
+      var animation =                 // Same matrices as above.
+        target.animate({ [idlName]: [ 'matrix(1, 0, 0, 1, 100, 0)',
+                                      'matrix(1, 0, 0, 1, 200, 0)' ] },
+                       { duration: 1000, fill: 'both', composite: 'accumulate' });
+
+      testAnimationSampleMatrices(animation, idlName,
+        [{ time: 0,    expected: [ 0, 1, -1, 0, 100, 0 ] },
+         { time: 1000, expected: [ 0, 1, -1, 0, 200, 0 ] }]);
+    }, property + ': matrix');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      target.style[idlName] = 'rotate3d(1, 1, 0, 45deg)';
+      var animation =
+        target.animate({ [idlName]: [ 'rotate3d(1, 1, 0, -90deg)',
+                                      'rotate3d(1, 1, 0, 90deg)'] },
+                       { duration: 1000, fill: 'both', composite: 'accumulate' });
+
+      testAnimationSampleMatrices(animation, idlName,
+        [{ time: 0,    expected: rotate3dToMatrix(1, 1, 0,    -Math.PI / 4) },
+         { time: 1000, expected: rotate3dToMatrix(1, 1, 0, 3 * Math.PI / 4) }]);
+    }, property + ': rotate3d');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      // To calculate expected matrices easily, generate input matrices from
+      // rotate3d.
+      target.style[idlName] = rotate3dToMatrix3d(1, 1, 0, Math.PI / 4);
+      var from = rotate3dToMatrix3d(1, 1, 0, -Math.PI / 2);
+      var to = rotate3dToMatrix3d(1, 1, 0, Math.PI / 2);
+      var animation =
+        target.animate({ [idlName]: [ from, to ] },
+                       { duration: 1000, fill: 'both', composite: 'accumulate' });
+
+      testAnimationSampleMatrices(animation, idlName,
+        [{ time: 0,    expected: rotate3dToMatrix(1, 1, 0,    -Math.PI / 4) },
+         { time: 1000, expected: rotate3dToMatrix(1, 1, 0, 3 * Math.PI / 4) }]);
+    }, property + ': matrix3d');
+  },
 };
 
 const filterListType = {
@@ -999,6 +1224,34 @@ const filterListType = {
       testAnimationSamples(animation, idlName,
         [ { time: 0,    expected: 'blur(10px) brightness(0.8)' }]);
     }, property + ': different filter functions');
+  },
+
+  testAccumulation: function(property, setup) {
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      target.style[idlName] = 'blur(10px) brightness(0.3)';
+      var animation = target.animate({ [idlName]: ['blur(20px) brightness(0.1)',
+                                                   'blur(20px) brightness(0.1)'] },
+                                     { duration: 1000, composite: 'accumulate' });
+      // brightness(0.1) onto brightness(0.3) means
+      // brightness((0.1 - 1.0) + (0.3 - 1.0) + 1.0). The result of this formula
+      // is brightness(-0.6) that means brightness(0.0).
+      testAnimationSamples(animation, idlName,
+        [ { time: 0,    expected: 'blur(30px) brightness(0)' }]);
+    }, property + ': same ordered filter functions');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      target.style[idlName] = 'blur(10px) brightness(1.3)';
+      var animation = target.animate({ [idlName]: ['brightness(1.2) blur(20px)',
+                                                   'brightness(1.2) blur(20px)'] },
+                                     { duration: 1000, composite: 'accumulate' });
+      // Mismatched ordered functions can't be accumulated.
+      testAnimationSamples(animation, idlName,
+        [ { time: 0,    expected: 'brightness(1.2) blur(20px)' }]);
+    }, property + ': mismatched ordered filter functions');
   },
 };
 
@@ -1092,6 +1345,20 @@ const textShadowListType = {
       testAnimationSamples(animation, idlName,
         [ { time: 0, expected: 'rgb(0, 0, 0) 0px 0px 0px, ' +
                                'rgb(120, 120, 120) 10px 10px 10px' }]);
+    }, property + ': shadow');
+  },
+
+  testAccumulation: function(property, setup) {
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      target.style[idlName] = 'rgb(120, 120, 120) 10px 10px 10px';
+      var animation =
+        target.animate({ [idlName]: [ 'rgb(120, 120, 120) 10px 10px 10px',
+                                      'rgb(120, 120, 120) 10px 10px 10px'] },
+                       { duration: 1000, composite: 'accumulate' });
+      testAnimationSamples(animation, idlName,
+        [ { time: 0, expected: 'rgb(240, 240, 240) 20px 20px 20px' }]);
     }, property + ': shadow');
   },
 };
@@ -1189,6 +1456,20 @@ const boxShadowListType = {
                                'rgb(120, 120, 120) 10px 10px 10px 0px' }]);
     }, property + ': shadow');
   },
+
+  testAccumulation: function(property, setup) {
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      target.style[idlName] = 'rgb(120, 120, 120) 10px 10px 10px 10px';
+      var animation =
+        target.animate({ [idlName]: [ 'rgb(120, 120, 120) 10px 10px 10px 10px',
+                                      'rgb(120, 120, 120) 10px 10px 10px 10px'] },
+                       { duration: 1000, composite: 'accumulate' });
+      testAnimationSamples(animation, idlName,
+        [ { time: 0, expected: 'rgb(240, 240, 240) 20px 20px 20px 20px' }]);
+    }, property + ': shadow');
+  },
 };
 
 const positionType = {
@@ -1206,7 +1487,7 @@ const positionType = {
     }, property + ' supports animating as a position of percent');
   },
 
-  testAddition: function(property, setup) {
+  testAdditionOrAccumulation: function(property, setup, composite) {
     lengthPairType.testAddition(property, setup);
 
     test(function(t) {
@@ -1214,11 +1495,19 @@ const positionType = {
       var target = createTestElement(t, setup);
       target.style[idlName] = '60% 60%';
       var animation = target.animate({ [idlName]: ['70% 70%', '100% 100%'] },
-                                     { duration: 1000, composite: 'add' });
+                                     { duration: 1000, composite: composite });
       testAnimationSamples(
         animation, idlName,
         [{ time: 0, expected: calcFromPercentage(idlName, '130% 130%') }]);
     }, property + ': position of percentage');
+  },
+
+  testAddition: function(property, setup) {
+    this.testAdditionOrAccumulation(property, setup, 'add');
+  },
+
+  testAccumulation: function(property, setup) {
+    this.testAdditionOrAccumulation(property, setup, 'accumulate');
   },
 };
 
@@ -1237,7 +1526,7 @@ const rectType = {
     }, property + ' supports animating as a rect');
   },
 
-  testAddition: function(property, setup) {
+  testAdditionOrAccumulation: function(property, setup, composite) {
     test(function(t) {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
@@ -1245,11 +1534,19 @@ const rectType = {
       var animation = target.animate({ [idlName]:
                                          ['rect(10px, 10px, 10px, 10px)',
                                           'rect(10px, 10px, 10px, 10px)'] },
-                                     { duration: 1000, composite: 'add' });
+                                     { duration: 1000, composite: composite });
       testAnimationSamples(
         animation, idlName,
         [{ time: 0, expected: 'rect(110px, 110px, 110px, 110px)' }]);
     }, property + ': rect');
+  },
+
+  testAddition: function(property, setup) {
+    this.testAdditionOrAccumulation(property, setup, 'add');
+  },
+
+  testAccumulation: function(property, setup) {
+    this.testAdditionOrAccumulation(property, setup, 'accumulate');
   },
 }
 
@@ -1285,10 +1582,11 @@ const dasharrayType = {
 
   },
 
-  // Note that stroke-dasharray is non-additive property, so we should write this
-  // additive test case that animating value replaces underlying values.
+  // Note that stroke-dasharray is neither additive nor cumulative, so we should
+  // write this additive test case that animating value replaces underlying
+  // values.
   // See https://www.w3.org/TR/SVG2/painting.html#StrokeDashing.
-  testAddition: function(property, setup) {
+  testAdditionOrAccumulation: function(property, setup, composite) {
     test(function(t) {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
@@ -1296,11 +1594,19 @@ const dasharrayType = {
       var animation = target.animate({ [idlName]:
                                          ['1, 2, 3, 4, 5',
                                           '6, 7, 8, 9, 10'] },
-                                     { duration: 1000, composite: 'add' });
+                                     { duration: 1000, composite: composite });
       testAnimationSamples(
           animation, idlName,
           [{ time: 0, expected: '1, 2, 3, 4, 5' }]);
     }, property + ': dasharray');
+  },
+
+  testAddition: function(property, setup) {
+    this.testAdditionOrAccumulation(property, setup, 'add');
+  },
+
+  testAccumulation: function(property, setup) {
+    this.testAdditionOrAccumulation(property, setup, 'accumulate');
   },
 }
 
