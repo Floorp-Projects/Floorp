@@ -70,9 +70,7 @@ public:
 
   void WaitForNotification()
   {
-    while (mVisits < mExpectedVisits) {
-      (void)NS_ProcessNextEvent();
-    }
+    SpinEventLoopUntil([&]() { return mVisits >= mExpectedVisits; });
   }
 
   NS_IMETHOD Observe(nsISupports* aSubject,
@@ -411,9 +409,9 @@ test_observer_topic_dispatched()
   do_check_success(rv);
 
   // Spin the event loop as long as we have not been properly notified.
-  while (!visitedNotified || !notVisitedNotified) {
-    (void)NS_ProcessNextEvent();
-  }
+  SpinEventLoopUntil([&]() {
+      return visitedNotified && notVisitedNotified;
+    });
 
   // Unregister our observer that would not have been released.
   rv = history->UnregisterVisitedCallback(notVisitedURI, notVisitedLink);

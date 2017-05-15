@@ -2608,9 +2608,9 @@ Database::Observe(nsISupports *aSubject,
 
     // Spin the events loop until the clients are done.
     // Note, this is just for tests, specifically test_clearHistory_shutdown.js
-    while (mClientsShutdown->State() != PlacesShutdownBlocker::States::RECEIVED_DONE) {
-      (void)NS_ProcessNextEvent();
-    }
+    SpinEventLoopUntil([&]() {
+	return mClientsShutdown->State() == PlacesShutdownBlocker::States::RECEIVED_DONE;
+      });
 
     {
       nsCOMPtr<nsIAsyncShutdownClient> shutdownPhase = GetProfileBeforeChangePhase();

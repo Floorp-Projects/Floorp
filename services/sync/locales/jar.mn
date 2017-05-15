@@ -6,5 +6,4 @@
 
 @AB_CD@.jar:
 % locale weave @AB_CD@ %locale/@AB_CD@/services/
-  locale/@AB_CD@/services/errors.properties  (%errors.properties)
   locale/@AB_CD@/services/sync.properties    (%sync.properties)
