@@ -58,14 +58,14 @@ function end_test() {
   testserver.stop(do_test_finished);
 }
 
-function run_test_1() {
+async function run_test_1() {
   var time = Date.now();
   var dir = writeInstallRDFForExtension(addon1, userDir);
   setExtensionModifiedTime(dir, time);
 
   manuallyInstall(do_get_addon("test_bug655254_2"), userDir, "addon2@tests.mozilla.org");
 
-  startupManager();
+  await promiseStartupManager();
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org"], function([a1, a2]) {
@@ -81,10 +81,10 @@ function run_test_1() {
     do_check_eq(Services.prefs.getIntPref("bootstraptest.active_version"), 1);
 
     a1.findUpdates({
-      onUpdateFinished() {
-        restartManager();
+      async onUpdateFinished() {
+        await promiseRestartManager();
 
-        AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1_2) {
+        AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(async function(a1_2) {
           do_check_neq(a1_2, null);
           do_check_false(a1_2.appDisabled);
           do_check_true(a1_2.isActive);
@@ -100,7 +100,7 @@ function run_test_1() {
           userDir.append(gAppInfo.ID);
           do_check_true(userDir.exists());
 
-          startupManager(false);
+          await promiseStartupManager(false);
 
           AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                        "addon2@tests.mozilla.org"], function([a1_3, a2_3]) {
@@ -125,7 +125,7 @@ function run_test_1() {
 
 // Set up the profile
 function run_test_2() {
-  AddonManager.getAddonByID("addon2@tests.mozilla.org", callback_soon(function(a2) {
+  AddonManager.getAddonByID("addon2@tests.mozilla.org", callback_soon(async function(a2) {
    do_check_neq(a2, null);
    do_check_false(a2.appDisabled);
    do_check_true(a2.isActive);
@@ -143,7 +143,7 @@ function run_test_2() {
    userDir.append(gAppInfo.ID);
    do_check_true(userDir.exists());
 
-   startupManager(false);
+   await promiseStartupManager(false);
 
    AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                 "addon2@tests.mozilla.org"], function([a1_2, a2_2]) {

@@ -202,7 +202,7 @@ DisplayItemData::EndUpdate(nsAutoPtr<nsDisplayItemGeometry> aGeometry)
     mGeometry = aGeometry;
   }
   mClip = mItem->GetClip();
-  mFrameListChanges.Clear();
+  mChangedFrameInvalidations.SetEmpty();
 
   mItem = nullptr;
   EndUpdate();
@@ -235,7 +235,8 @@ DisplayItemData::BeginUpdate(Layer* aLayer, LayerState aState,
   AutoTArray<nsIFrame*, 4> copy(mFrameList);
   if (!copy.RemoveElement(aItem->Frame())) {
     AddFrame(aItem->Frame());
-    mFrameListChanges.AppendElement(aItem->Frame());
+    mChangedFrameInvalidations.Or(mChangedFrameInvalidations,
+                                  aItem->Frame()->GetVisualOverflowRect());
   }
 
   AutoTArray<nsIFrame*,4> mergedFrames;
@@ -243,13 +244,15 @@ DisplayItemData::BeginUpdate(Layer* aLayer, LayerState aState,
   for (uint32_t i = 0; i < mergedFrames.Length(); ++i) {
     if (!copy.RemoveElement(mergedFrames[i])) {
       AddFrame(mergedFrames[i]);
-      mFrameListChanges.AppendElement(mergedFrames[i]);
+      mChangedFrameInvalidations.Or(mChangedFrameInvalidations,
+                                    mergedFrames[i]->GetVisualOverflowRect());
     }
   }
 
   for (uint32_t i = 0; i < copy.Length(); i++) {
     RemoveFrame(copy[i]);
-    mFrameListChanges.AppendElement(copy[i]);
+    mChangedFrameInvalidations.Or(mChangedFrameInvalidations,
+                                  copy[i]->GetVisualOverflowRect());
   }
 }
 
@@ -290,10 +293,10 @@ DisplayItemData::ClearAnimationCompositorState()
   }
 }
 
-const nsTArray<nsIFrame*>&
-DisplayItemData::GetFrameListChanges()
+const nsRegion&
+DisplayItemData::GetChangedFrameInvalidations()
 {
-  return mFrameListChanges;
+  return mChangedFrameInvalidations;
 }
 
 DisplayItemData*
@@ -4552,7 +4555,7 @@ FrameLayerBuilder::ComputeGeometryChangeForItem(DisplayItemData* aData)
     // Let the display item check for geometry changes and decide what needs to be
     // repainted.
 
-    const nsTArray<nsIFrame*>& changedFrames = aData->GetFrameListChanges();
+    const nsRegion& changedFrameInvalidations = aData->GetChangedFrameInvalidations();
     aData->mGeometry->MoveBy(shift);
     item->ComputeInvalidationRegion(mDisplayListBuilder, aData->mGeometry, &combined);
 
@@ -4571,7 +4574,8 @@ FrameLayerBuilder::ComputeGeometryChangeForItem(DisplayItemData* aData)
     // AddPaintedDisplayItem instead).
     if (!combined.IsEmpty() || aData->mLayerState == LAYER_INACTIVE) {
       geometry = item->AllocateGeometry(mDisplayListBuilder);
-    } else if (aData->mClip == clip && invalid.IsEmpty() && changedFrames.Length() == 0) {
+    } else if (aData->mClip == clip && invalid.IsEmpty() &&
+               changedFrameInvalidations.IsEmpty() == 0) {
       notifyRenderingChanged = false;
     }
     aData->mClip.AddOffsetAndComputeDifference(entry->mCommonClipCount,
@@ -4583,10 +4587,7 @@ FrameLayerBuilder::ComputeGeometryChangeForItem(DisplayItemData* aData)
 
     // Add in any rect that the frame specified
     combined.Or(combined, invalid);
-
-    for (uint32_t i = 0; i < changedFrames.Length(); i++) {
-      combined.Or(combined, changedFrames[i]->GetVisualOverflowRect());
-    }
+    combined.Or(combined, changedFrameInvalidations);
 
     // Restrict invalidation to the clipped region
     nsRegion clipRegion;
@@ -6291,15 +6292,15 @@ FrameLayerBuilder::GetMostRecentGeometry(nsDisplayItem* aItem)
   return nullptr;
 }
 
-gfx::Rect
-CalculateBounds(const nsTArray<DisplayItemClip::RoundedRect>& aRects, int32_t A2D)
+static gfx::Rect
+CalculateBounds(const nsTArray<DisplayItemClip::RoundedRect>& aRects, int32_t aAppUnitsPerDevPixel)
 {
   nsRect bounds = aRects[0].mRect;
   for (uint32_t i = 1; i < aRects.Length(); ++i) {
     bounds.UnionRect(bounds, aRects[i].mRect);
    }
 
-  return gfx::ToRect(nsLayoutUtils::RectToGfxRect(bounds, A2D));
+  return gfx::Rect(bounds.ToNearestPixels(aAppUnitsPerDevPixel));
 }
 
 static void
@@ -6376,7 +6377,6 @@ ContainerState::CreateMaskLayer(Layer *aLayer,
     return maskLayer.forget();
   }
 
-  // calculate a more precise bounding rect
   gfx::Rect boundingRect = CalculateBounds(newData.mRoundedClipRects,
                                            newData.mAppUnitsPerDevPixel);
   boundingRect.Scale(mParameters.mXScale, mParameters.mYScale);

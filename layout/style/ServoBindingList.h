@@ -52,23 +52,23 @@ SERVO_BINDING_FUNC(Servo_StyleSet_Drop, void, RawServoStyleSetOwned set)
 SERVO_BINDING_FUNC(Servo_StyleSet_AppendStyleSheet, void,
                    RawServoStyleSetBorrowed set,
                    RawServoStyleSheetBorrowed sheet,
-                   uint32_t unique_id)
+                   uint64_t unique_id)
 SERVO_BINDING_FUNC(Servo_StyleSet_PrependStyleSheet, void,
                    RawServoStyleSetBorrowed set,
                    RawServoStyleSheetBorrowed sheet,
-                   uint32_t unique_id)
+                   uint64_t unique_id)
 SERVO_BINDING_FUNC(Servo_StyleSet_RemoveStyleSheet, void,
                    RawServoStyleSetBorrowed set,
-                   uint32_t unique_id)
+                   uint64_t unique_id)
 SERVO_BINDING_FUNC(Servo_StyleSet_InsertStyleSheetBefore, void,
                    RawServoStyleSetBorrowed set,
                    RawServoStyleSheetBorrowed sheet,
-                   uint32_t unique_id,
-                   uint32_t before_unique_id)
+                   uint64_t unique_id,
+                   uint64_t before_unique_id)
 SERVO_BINDING_FUNC(Servo_StyleSet_FlushStyleSheets, void, RawServoStyleSetBorrowed set)
 SERVO_BINDING_FUNC(Servo_StyleSet_NoteStyleSheetsChanged, void,
                    RawServoStyleSetBorrowed set, bool author_style_disabled)
-SERVO_BINDING_FUNC(Servo_StyleSet_FillKeyframesForName, bool,
+SERVO_BINDING_FUNC(Servo_StyleSet_GetKeyframesForName, bool,
                    RawServoStyleSetBorrowed set,
                    const nsACString* property,
                    nsTimingFunctionBorrowed timing_function,
@@ -147,7 +147,7 @@ SERVO_BINDING_FUNC(Servo_ParseProperty,
                    RawServoDeclarationBlockStrong,
                    nsCSSPropertyID property, const nsACString* value,
                    RawGeckoURLExtraData* data,
-                   mozilla::LengthParsingMode length_parsing_mode)
+                   mozilla::ParsingMode parsing_mode)
 SERVO_BINDING_FUNC(Servo_ParseEasing, bool,
                    const nsAString* easing,
                    RawGeckoURLExtraData* data,
@@ -208,7 +208,8 @@ SERVO_BINDING_FUNC(Servo_AnimationValue_Compute,
 // Style attribute
 SERVO_BINDING_FUNC(Servo_ParseStyleAttribute, RawServoDeclarationBlockStrong,
                    const nsACString* data,
-                   RawGeckoURLExtraData* extra_data)
+                   RawGeckoURLExtraData* extra_data,
+                   nsCompatibility quirks_mode)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_CreateEmpty,
                    RawServoDeclarationBlockStrong)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_Clone, RawServoDeclarationBlockStrong,
@@ -241,13 +242,13 @@ SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetProperty, bool,
                    const nsACString* property,
                    const nsACString* value, bool is_important,
                    RawGeckoURLExtraData* data,
-                   mozilla::LengthParsingMode length_parsing_mode)
+                   mozilla::ParsingMode parsing_mode)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetPropertyById, bool,
                    RawServoDeclarationBlockBorrowed declarations,
                    nsCSSPropertyID property,
                    const nsACString* value, bool is_important,
                    RawGeckoURLExtraData* data,
-                   mozilla::LengthParsingMode length_parsing_mode)
+                   mozilla::ParsingMode parsing_mode)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_RemoveProperty, void,
                    RawServoDeclarationBlockBorrowed declarations,
                    const nsACString* property)

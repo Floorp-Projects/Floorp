@@ -20,14 +20,21 @@ config = {
     'default_actions': [
         'clone-tools',
         'build',
+        'generate-build-stats',
         'check-test',
     ],
     'exes': {
+        'python2.7': sys.executable,
         'virtualenv': [
             sys.executable,
             os.path.join(
                 os.getcwd(), 'build', 'src', 'python', 'virtualenv', 'virtualenv.py'
             )
+        ],
+        'mach-build': [
+            os.path.join(os.environ['MOZILLABUILD'], 'msys', 'bin', 'bash.exe'),
+            os.path.join(os.getcwd(), 'build', 'src', 'mach'),
+            '--log-no-times', 'build', '-v'
         ],
     },
     'app_ini_path': '%(obj_dir)s/dist/bin/application.ini',

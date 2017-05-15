@@ -9,7 +9,7 @@ use servo_config::prefs::{PREFS, PrefValue};
 use servo_url::ServoUrl;
 use style::context::QuirksMode;
 use style::media_queries::{Device, MediaList, MediaType};
-use style::parser::{LengthParsingMode, Parse, ParserContext};
+use style::parser::{PARSING_MODE_DEFAULT, Parse, ParserContext};
 use style::shared_lock::SharedRwLock;
 use style::stylearc::Arc;
 use style::stylesheets::{CssRuleType, Stylesheet, Origin};
@@ -25,7 +25,7 @@ macro_rules! stylesheet {
         stylesheet!($css, $origin, $error_reporter, SharedRwLock::new())
     };
     ($css:expr, $origin:ident, $error_reporter:expr, $shared_lock:expr) => {
-        Box::new(Stylesheet::from_str(
+        Arc::new(Stylesheet::from_str(
             $css,
             ServoUrl::parse("http://localhost").unwrap(),
             Origin::$origin,
@@ -269,7 +269,7 @@ fn multiple_stylesheets_cascading() {
                     Author, error_reporter, shared_lock.clone())
     ];
 
-    let declarations = Cascade::from_stylesheets(&stylesheets, &shared_lock.read(), &device).finish();
+    let declarations = Cascade::from_stylesheets(stylesheets.iter(), &shared_lock.read(), &device).finish();
     assert_decl_len!(declarations == 3);
     assert_decl_eq!(&declarations[0], UserAgent, Zoom: Zoom::Number(1.));
     assert_decl_eq!(&declarations[1], User, MinHeight: viewport_length!(200., px));
@@ -283,7 +283,7 @@ fn multiple_stylesheets_cascading() {
         stylesheet!("@viewport { min-width: 300px !important; min-height: 300px !important; zoom: 3 !important; }",
                     Author, error_reporter, shared_lock.clone())
     ];
-    let declarations = Cascade::from_stylesheets(&stylesheets, &shared_lock.read(), &device).finish();
+    let declarations = Cascade::from_stylesheets(stylesheets.iter(), &shared_lock.read(), &device).finish();
     assert_decl_len!(declarations == 3);
     assert_decl_eq!(&declarations[0], UserAgent, MinWidth: viewport_length!(100., px), !important);
     assert_decl_eq!(&declarations[1], User, MinHeight: viewport_length!(200., px), !important);
@@ -295,7 +295,7 @@ fn constrain_viewport() {
     let url = ServoUrl::parse("http://localhost").unwrap();
     let reporter = CSSErrorReporterTest;
     let context = ParserContext::new(Origin::Author, &url, &reporter, Some(CssRuleType::Viewport),
-                                     LengthParsingMode::Default,
+                                     PARSING_MODE_DEFAULT,
                                      QuirksMode::NoQuirks);
 
     macro_rules! from_css {

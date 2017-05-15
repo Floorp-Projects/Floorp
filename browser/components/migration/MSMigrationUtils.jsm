@@ -467,8 +467,9 @@ Cookies.prototype = {
     if (!this.__cookiesFolder) {
       let cookiesFolder = Services.dirsvc.get("CookD", Ci.nsIFile);
       if (cookiesFolder.exists() && cookiesFolder.isReadable()) {
-        // Check if UAC is enabled.
-        if (Services.appinfo.QueryInterface(Ci.nsIWinAppHelper).userCanElevate) {
+        // In versions up to Windows 7, check if UAC is enabled.
+        if (AppConstants.isPlatformAndVersionAtMost("win", "6.1") &&
+            Services.appinfo.QueryInterface(Ci.nsIWinAppHelper).userCanElevate) {
           cookiesFolder.append("Low");
         }
         this.__cookiesFolder = cookiesFolder;
@@ -512,7 +513,7 @@ Cookies.prototype = {
         while (entries.hasMoreElements()) {
           let entry = entries.getNext().QueryInterface(Ci.nsIFile);
           // Skip eventual bogus entries.
-          if (!entry.isFile() || !/\.txt$/.test(entry.leafName))
+          if (!entry.isFile() || !/\.(cookie|txt)$/.test(entry.leafName))
             continue;
 
           this._readCookieFile(entry, function(aSuccess) {

@@ -45,6 +45,7 @@ include protocol PURLClassifierLocal;
 include protocol PVRManager;
 include protocol PVideoDecoderManager;
 include protocol PFlyWebPublishedServer;
+include protocol PScriptCache;
 include DOMTypes;
 include JavaScriptTypes;
 include IPCBlob;
@@ -311,6 +312,7 @@ nested(upto inside_cpow) sync protocol PContent
     manages PFlyWebPublishedServer;
     manages PURLClassifier;
     manages PURLClassifierLocal;
+    manages PScriptCache;
 
 both:
     // Depending on exactly how the new browser is being created, it might be
@@ -405,6 +407,8 @@ child:
                                 FileDescriptor ccLog);
 
     async PTestShell();
+
+    async PScriptCache(FileDescOrError cacheFile, bool wantCacheData);
 
     async RegisterChrome(ChromePackage[] packages, SubstitutionMapping[] substitutions,
                          OverrideMapping[] overrides, nsCString locale, bool reset);

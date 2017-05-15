@@ -86,6 +86,7 @@ public:
                                nsHttpConnectionInfo  *connInfo,
                                nsHttpRequestHead     *reqHeaders,
                                nsIInputStream        *reqBody,
+                               uint64_t               reqContentLength,
                                bool                   reqBodyIncludesHeaders,
                                nsIEventTarget        *consumerTarget,
                                nsIInterfaceRequestor *callbacks,
@@ -134,8 +135,6 @@ public:
     void SetRequestContext(nsIRequestContext *aRequestContext);
     void DispatchedAsBlocking();
     void RemoveDispatchedAsBlocking();
-
-    void DisableSpdy() override;
 
     nsHttpTransaction *QueryHttpTransaction() override { return this; }
 
@@ -216,6 +215,7 @@ private:
 
     bool ResponseTimeoutEnabled() const final;
 
+    void DisableSpdy() override;
     void ReuseConnectionOnRestartOK(bool reuseOk) override { mReuseOnRestart = reuseOk; }
 
     // Called right after we parsed the response head.  Checks for connection based

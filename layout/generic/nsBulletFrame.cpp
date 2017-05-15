@@ -96,7 +96,7 @@ nsBulletFrame::IsEmpty()
 bool
 nsBulletFrame::IsSelfEmpty()
 {
-  return StyleList()->GetCounterStyle()->IsNone();
+  return StyleList()->mCounterStyle->IsNone();
 }
 
 /* virtual */ void
@@ -157,11 +157,11 @@ nsBulletFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
       const nsStyleList* oldStyleList = aOldStyleContext->PeekStyleList();
       if (oldStyleList) {
         bool hadBullet = oldStyleList->GetListStyleImage() ||
-          !oldStyleList->GetCounterStyle()->IsNone();
+          !oldStyleList->mCounterStyle->IsNone();
 
         const nsStyleList* newStyleList = StyleList();
         bool hasBullet = newStyleList->GetListStyleImage() ||
-          !newStyleList->GetCounterStyle()->IsNone();
+          !newStyleList->mCounterStyle->IsNone();
 
         if (hadBullet != hasBullet) {
           accService->UpdateListBullet(PresContext()->GetPresShell(), mContent,
@@ -696,7 +696,7 @@ Maybe<BulletRenderer>
 nsBulletFrame::CreateBulletRenderer(nsRenderingContext& aRenderingContext, nsPoint aPt)
 {
   const nsStyleList* myList = StyleList();
-  CounterStyle* listStyleType = myList->GetCounterStyle();
+  CounterStyle* listStyleType = myList->mCounterStyle;
   nsMargin padding = mPadding.GetPhysicalMargin(GetWritingMode());
 
   if (myList->GetListStyleImage() && mImageRequest) {
@@ -904,7 +904,7 @@ nsBulletFrame::SetListItemOrdinal(int32_t aNextOrdinal,
 void
 nsBulletFrame::GetListItemText(nsAString& aResult)
 {
-  CounterStyle* style = StyleList()->GetCounterStyle();
+  CounterStyle* style = StyleList()->mCounterStyle;
   NS_ASSERTION(style->GetStyle() != NS_STYLE_LIST_STYLE_NONE &&
                style->GetStyle() != NS_STYLE_LIST_STYLE_DISC &&
                style->GetStyle() != NS_STYLE_LIST_STYLE_CIRCLE &&
@@ -991,7 +991,7 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
   nscoord bulletSize;
 
   nsAutoString text;
-  switch (myList->GetCounterStyle()->GetStyle()) {
+  switch (myList->mCounterStyle->GetStyle()) {
     case NS_STYLE_LIST_STYLE_NONE:
       finalSize.ISize(wm) = finalSize.BSize(wm) = 0;
       aMetrics.SetBlockStartAscent(0);
@@ -1113,7 +1113,7 @@ IsIgnoreable(const nsIFrame* aFrame, nscoord aISize)
     return false;
   }
   auto listStyle = aFrame->StyleList();
-  return listStyle->GetCounterStyle()->IsNone() &&
+  return listStyle->mCounterStyle->IsNone() &&
          !listStyle->GetListStyleImage();
 }
 
@@ -1350,7 +1350,7 @@ nsBulletFrame::GetLogicalBaseline(WritingMode aWritingMode) const
   } else {
     RefPtr<nsFontMetrics> fm =
       nsLayoutUtils::GetFontMetricsForFrame(this, GetFontSizeInflation());
-    CounterStyle* listStyleType = StyleList()->GetCounterStyle();
+    CounterStyle* listStyleType = StyleList()->mCounterStyle;
     switch (listStyleType->GetStyle()) {
       case NS_STYLE_LIST_STYLE_NONE:
         break;
@@ -1387,7 +1387,7 @@ nsBulletFrame::GetLogicalBaseline(WritingMode aWritingMode) const
 void
 nsBulletFrame::GetSpokenText(nsAString& aText)
 {
-  CounterStyle* style = StyleList()->GetCounterStyle();
+  CounterStyle* style = StyleList()->mCounterStyle;
   bool isBullet;
   style->GetSpokenCounterText(mOrdinal, GetWritingMode(), aText, isBullet);
   if (isBullet) {

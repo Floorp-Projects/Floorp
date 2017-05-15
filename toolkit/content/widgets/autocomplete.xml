@@ -1041,13 +1041,14 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           this.mIsPopupHidingTick = false;
         }, 0);
 
-        // Reset the maxRows property to the cached "normal" value, and reset
-        // _normalMaxRows so that we can detect whether it was set by the input
-        // when the popupshowing handler runs.
+        // Reset the maxRows property to the cached "normal" value (if there's
+        // any), and reset normalMaxRows so that we can detect whether it was set
+        // by the input when the popupshowing handler runs.
 
         // Null-check this.mInput; see bug 1017914
-        if (this.mInput)
+        if (this.mInput && this._normalMaxRows > 0) {
           this.mInput.maxRows = this._normalMaxRows;
+        }
         this._normalMaxRows = -1;
         // If the list was being navigated and then closed, make sure
         // we fire accessible focus event back to textbox
@@ -1091,7 +1092,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           // more results than we can show at once.
           // maxResults is the maximum number of fetched results, maxRows is the
           // maximum number of rows we show at once, without a scrollbar.
-          if (this.maxResults > this.maxRows) {
+          if (this.mPopupOpen && this.maxResults > this.maxRows) {
             // when clearing the selection (val == -1, so selectedItem will be
             // null), we want to scroll back to the top.  see bug #406194
             this.richlistbox.ensureElementIsVisible(

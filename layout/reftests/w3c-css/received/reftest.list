@@ -174,7 +174,7 @@ fuzzy(204,930) fuzzy-if(skiaContent,208,930) == css-multicol-1/multicol-width-00
 == css-multicol-1/multicol-width-003.xht css-multicol-1/multicol-width-002-ref.xht
 == css-multicol-1/multicol-width-count-001.xht css-multicol-1/multicol-width-001-ref.xht
 fails-if(!stylo) == css-multicol-1/multicol-width-count-002.xht css-multicol-1/multicol-count-002-ref.xht
-fails == css-multicol-1/multicol-width-ems-001.xht css-multicol-1/multicol-width-ems-ref.xht
+fails-if(!stylo) == css-multicol-1/multicol-width-ems-001.xht css-multicol-1/multicol-width-ems-ref.xht
 fuzzy(225,1060) == css-multicol-1/multicol-width-invalid-001.xht css-multicol-1/multicol-width-invalid-001-ref.xht
 fuzzy(225,1060) == css-multicol-1/multicol-width-large-001.xht css-multicol-1/multicol-width-invalid-001-ref.xht
 fuzzy(225,1060) == css-multicol-1/multicol-width-large-002.xht css-multicol-1/multicol-width-invalid-001-ref.xht

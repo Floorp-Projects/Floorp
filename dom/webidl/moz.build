@@ -1054,7 +1054,6 @@ if CONFIG['FUZZING']:
 GENERATED_EVENTS_WEBIDL_FILES = [
     'AddonEvent.webidl',
     'AnimationPlaybackEvent.webidl',
-    'AutocompleteErrorEvent.webidl',
     'BlobEvent.webidl',
     'CaretStateChangedEvent.webidl',
     'CloseEvent.webidl',

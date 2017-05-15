@@ -35,6 +35,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/gfx/UserData.h"
+#include "mozilla/layers/LayerAttributes.h"
 #include "nsCSSRenderingBorders.h"
 
 #include <stdint.h>
@@ -4041,6 +4042,7 @@ private:
  */
 class nsDisplayOwnLayer : public nsDisplayWrapList {
 public:
+  typedef mozilla::layers::ScrollThumbData ScrollThumbData;
 
   /**
    * nsDisplayOwnLayer constructor flags
@@ -4069,7 +4071,7 @@ public:
                     const ActiveScrolledRoot* aActiveScrolledRoot,
                     uint32_t aFlags = 0,
                     ViewID aScrollTarget = mozilla::layers::FrameMetrics::NULL_SCROLL_ID,
-                    float aScrollbarThumbRatio = 0.0f,
+                    const ScrollThumbData& aThumbData = ScrollThumbData{},
                     bool aForceActive = true);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayOwnLayer();
@@ -4094,7 +4096,11 @@ public:
 protected:
   uint32_t mFlags;
   ViewID mScrollTarget;
-  float mScrollbarThumbRatio;
+  // If this nsDisplayOwnLayer represents a scroll thumb layer, mThumbData
+  // stores information about the scroll thumb. Otherwise, mThumbData will be
+  // default-constructed (in particular with mDirection == ScrollDirection::NONE)
+  // and can be ignored.
+  ScrollThumbData mThumbData;
   bool mForceActive;
 };
 

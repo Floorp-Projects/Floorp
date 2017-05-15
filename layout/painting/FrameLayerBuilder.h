@@ -133,7 +133,7 @@ private:
     */
   void AddFrame(nsIFrame* aFrame);
   void RemoveFrame(nsIFrame* aFrame);
-  const nsTArray<nsIFrame*>& GetFrameListChanges();
+  const nsRegion& GetChangedFrameInvalidations();
 
   /**
     * Updates the contents of this item to a new set of data, instead of allocating a new
@@ -175,7 +175,7 @@ private:
     * BeginUpdate and EndUpdate.
     */
   nsDisplayItem* mItem;
-  AutoTArray<nsIFrame*, 1> mFrameListChanges;
+  nsRegion mChangedFrameInvalidations;
 
   /**
     * Used to track if data currently stored in mFramesWithLayers (from an existing

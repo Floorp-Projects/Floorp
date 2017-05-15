@@ -433,6 +433,7 @@ public:
                                   dom::SVGSVGElement* aRootElem
                                   MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     : mRootElem(aRootElem)
+    , mDidOverride(false)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mRootElem, "No SVG node to manage?");

@@ -168,6 +168,9 @@ def rust_triple_alias(host_or_target):
             ('x86_64', 'WINNT'): 'x86_64-pc-windows-msvc',
             ('x86', 'WINNT-MINGW'): 'i686-pc-windows-gnu',
             ('x86_64', 'WINNT-MINGW'): 'x86_64-pc-windows-gnu',
+            # Solaris
+            ('x86_64', 'SunOS'): 'x86_64-sun-solaris',
+            ('sparc64', 'SunOS'): 'sparcv9-sun-solaris',
         }.get((host_or_target.cpu, os_or_kernel), None)
 
         if rustc_target is None:

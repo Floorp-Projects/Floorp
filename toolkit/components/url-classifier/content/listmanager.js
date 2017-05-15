@@ -242,16 +242,6 @@ PROT_ListManager.prototype.kickoffUpdate_ = function (onDiskTableData)
       }
       log("Next update " + updateDelay + "ms from now");
 
-      // Set the last update time to verify if data is still valid.
-      let freshnessPref = "browser.safebrowsing.provider." + provider + ".lastupdatetime";
-      let freshness = this.prefs_.getPref(freshnessPref);
-      if (freshness) {
-        Object.keys(this.tablesData).forEach(function(table) {
-        if (this.tablesData[table].provider === provider) {
-          this.dbService_.setLastUpdateTime(table, freshness);
-        }}, this);
-      }
-
       this.updateCheckers_[updateUrl] =
         new G_Alarm(BindToObject(this.checkForUpdates, this, updateUrl),
                     updateDelay, false /* repeating */);

@@ -2412,7 +2412,6 @@ nsHTMLDocument::CreateAndAddWyciwygChannel(void)
     channel->SetLoadFlags(loadFlags);
 
     channel->SetOriginalURI(wcwgURI);
-    loadInfo->SetResultPrincipalURI(wcwgURI);
 
     rv = loadGroup->AddRequest(mWyciwygChannel, nullptr);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to add request to load group.");
