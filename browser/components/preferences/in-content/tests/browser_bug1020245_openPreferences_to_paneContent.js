@@ -61,7 +61,7 @@ add_task(async function() {
 
 function openPreferencesViaHash(aPane) {
   return new Promise(resolve => {
-    gBrowser.selectedTab = gBrowser.addTab("about:preferences" + (aPane ? "#" + aPane : ""));
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:preferences" + (aPane ? "#" + aPane : ""));
     let newTabBrowser = gBrowser.selectedBrowser;
 
     newTabBrowser.addEventListener("Initialized", function() {

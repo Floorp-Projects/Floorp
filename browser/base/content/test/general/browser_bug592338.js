@@ -40,7 +40,7 @@ function test_install_http() {
   var pm = Services.perms;
   pm.add(makeURI("http://example.org/"), "install", pm.ALLOW_ACTION);
 
-  gBrowser.selectedTab = gBrowser.addTab("http://example.org/browser/browser/base/content/test/general/bug592338.html");
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "http://example.org/browser/browser/base/content/test/general/bug592338.html");
   gBrowser.selectedBrowser.addEventListener("pageshow", function() {
     if (gBrowser.contentDocument.location.href == "about:blank")
       return;
@@ -67,7 +67,7 @@ function test_install_lwtheme() {
   var pm = Services.perms;
   pm.add(makeURI("https://example.com/"), "install", pm.ALLOW_ACTION);
 
-  gBrowser.selectedTab = gBrowser.addTab("https://example.com/browser/browser/base/content/test/general/bug592338.html");
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "https://example.com/browser/browser/base/content/test/general/bug592338.html");
   gBrowser.selectedBrowser.addEventListener("pageshow", function() {
     if (gBrowser.contentDocument.location.href == "about:blank")
       return;

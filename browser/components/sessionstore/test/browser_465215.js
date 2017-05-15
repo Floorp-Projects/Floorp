@@ -6,7 +6,7 @@ var uniqueValue2 = "as good as unique: " + Math.random();
 
 add_task(async function() {
   // set a unique value on a new, blank tab
-  let tab1 = gBrowser.addTab("about:blank");
+  let tab1 = BrowserTestUtils.addTab(gBrowser, "about:blank");
   await promiseBrowserLoaded(tab1.linkedBrowser);
   ss.setTabValue(tab1, uniqueName, uniqueValue1);
 

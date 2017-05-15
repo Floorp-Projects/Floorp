@@ -64,7 +64,7 @@ var waitForTabOpen = async function() {
 };
 
 var testLink = async function(aLinkIndexOrFunction, pinTab, expectNewTab, testSubFrame, aURL = TEST_URL) {
-  let appTab = gBrowser.addTab(aURL, {skipAnimation: true});
+  let appTab = BrowserTestUtils.addTab(gBrowser, aURL, {skipAnimation: true});
   if (pinTab)
     gBrowser.pinTab(appTab);
   gBrowser.selectedTab = appTab;

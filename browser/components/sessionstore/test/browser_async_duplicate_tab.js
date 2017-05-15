@@ -4,7 +4,7 @@ const URL = "data:text/html;charset=utf-8,<a href=%23>clickme</a>";
 
 add_task(async function test_duplicate() {
   // Create new tab.
-  let tab = gBrowser.addTab(URL);
+  let tab = BrowserTestUtils.addTab(gBrowser, URL);
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 
@@ -42,7 +42,7 @@ add_task(async function test_duplicate() {
 
 add_task(async function test_duplicate_remove() {
   // Create new tab.
-  let tab = gBrowser.addTab(URL);
+  let tab = BrowserTestUtils.addTab(gBrowser, URL);
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 

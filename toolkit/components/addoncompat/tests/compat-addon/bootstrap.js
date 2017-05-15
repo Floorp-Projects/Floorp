@@ -44,7 +44,7 @@ var ok, is, info;
 function testContentWindow() {
   return new Promise(function(resolve, reject) {
     const url = baseURL + "browser_addonShims_testpage.html";
-    let tab = gBrowser.addTab("about:blank");
+    let tab = BrowserTestUtils.addTab(gBrowser, "about:blank"); // eslint-disable-line no-undef
     gBrowser.selectedTab = tab;
     let browser = tab.linkedBrowser;
     addLoadListener(browser, function handler() {

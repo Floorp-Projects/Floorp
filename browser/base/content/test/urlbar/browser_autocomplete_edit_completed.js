@@ -10,7 +10,7 @@ add_task(async function() {
     await PlacesTestUtils.clearHistory();
   });
 
-  gBrowser.selectedTab = gBrowser.addTab("about:blank");
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   gURLBar.focus();
 
   await promiseAutocompleteResultPopup("http://example.com");

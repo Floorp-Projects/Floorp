@@ -9,7 +9,7 @@ add_task(async function test_switchtab_override() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, testURL);
 
   info("Opening and selecting second tab");
-  let secondTab = gBrowser.selectedTab = gBrowser.addTab();
+  let secondTab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   registerCleanupFunction(() => {
     try {
       gBrowser.removeTab(tab);

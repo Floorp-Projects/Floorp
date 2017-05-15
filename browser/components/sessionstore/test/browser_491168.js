@@ -11,7 +11,7 @@ add_task(async function() {
   }
 
   // Add a new tab.
-  let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 

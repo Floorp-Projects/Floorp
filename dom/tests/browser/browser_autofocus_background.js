@@ -1,5 +1,5 @@
 add_task(function* () {
-  let tabs = [ gBrowser.selectedTab, gBrowser.addTab() ];
+  let tabs = [ gBrowser.selectedTab, BrowserTestUtils.addTab(gBrowser) ];
 
   // The first tab has an autofocused element.
   // The second tab is exactly like the first one without the autofocus.

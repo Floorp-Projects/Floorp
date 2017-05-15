@@ -17,7 +17,7 @@ add_task(async function() {
   assertNumberOfPinnedTabs(0, "no pinned tabs so far");
 
   // setup
-  gBrowser.addTab("about:blank");
+  BrowserTestUtils.addTab(gBrowser, "about:blank");
   assertNumberOfTabs(2, "there are two tabs, now");
 
   let [tab1, tab2] = gBrowser.tabs;

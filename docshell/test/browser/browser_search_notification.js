@@ -25,7 +25,7 @@ function test() {
     }
   });
 
-  let tab = gBrowser.addTab();
+  let tab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = tab;
 
   function observer(subject, topic, data) {

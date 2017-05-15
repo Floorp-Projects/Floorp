@@ -80,7 +80,7 @@ function test() {
     return;
   } catch (e) { }
 
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedBrowser.addEventListener("load", onPageLoad, true);
   content.location = "about:logo";
 

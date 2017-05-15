@@ -16,7 +16,7 @@ add_task(async function checkReturnToPreviousPage() {
   let browser;
   let pageLoaded;
   await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
-    gBrowser.selectedTab = gBrowser.addTab(LOW_TLS_VERSION);
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, LOW_TLS_VERSION);
     browser = gBrowser.selectedBrowser;
     pageLoaded = BrowserTestUtils.waitForErrorPage(browser);
   }, false);

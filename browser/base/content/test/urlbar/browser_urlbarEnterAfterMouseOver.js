@@ -34,7 +34,7 @@ add_task(async function() {
   });
   await PlacesTestUtils.addVisits(visits);
 
-  gBrowser.selectedTab = gBrowser.addTab("about:blank");
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   await promiseAutoComplete("http://example.com/autocomplete/");
 
   let popup = gURLBar.popup;
