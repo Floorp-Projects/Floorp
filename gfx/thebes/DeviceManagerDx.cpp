@@ -16,11 +16,14 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/DeviceAttachmentsD3D11.h"
-#include "nsExceptionHandler.h"
 #include "nsIGfxInfo.h"
-#include "nsPrintfCString.h"
 #include <d3d11.h>
 #include <ddraw.h>
+
+#ifdef MOZ_CRASHREPORTER
+#include "nsExceptionHandler.h"
+#include "nsPrintfCString.h"
+#endif
 
 namespace mozilla {
 namespace gfx {
