@@ -17,7 +17,8 @@ namespace mozilla {
 class ServoSupportsRule final : public dom::CSSSupportsRule
 {
 public:
-  explicit ServoSupportsRule(RefPtr<RawServoSupportsRule> aRawRule);
+  ServoSupportsRule(RefPtr<RawServoSupportsRule> aRawRule,
+                    uint32_t aLine, uint32_t aColumn);
 
   NS_DECL_ISUPPORTS_INHERITED
 

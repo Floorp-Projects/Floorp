@@ -1981,8 +1981,8 @@ fuzzy(8,1900) == 1291528.html 1291528-ref.html
 fuzzy(255,1000) skip-if(!cocoaWidget) == 1294102-1.html 1294102-1-ref.html
 random-if(Android) fuzzy-if(skiaContent,15,50) == 1295466-1.xhtml 1295466-1-ref.xhtml #bug 982547
 fuzzy-if(Android,27,874) fuzzy-if(gtkWidget,14,29) == 1313772.xhtml 1313772-ref.xhtml # Bug 1128229
-fuzzy(2,320000) fails-if(stylo) == 1315113-1.html 1315113-1-ref.html
-fuzzy(2,20000) fails-if(stylo) == 1315113-2.html 1315113-2-ref.html
+fuzzy(2,320000) == 1315113-1.html 1315113-1-ref.html
+fuzzy(2,20000) == 1315113-2.html 1315113-2-ref.html
 == 1315632-1.html 1315632-1-ref.html
 fuzzy(2,40000) == 1316719-1a.html 1316719-1-ref.html
 fuzzy(2,40000) == 1316719-1b.html 1316719-1-ref.html

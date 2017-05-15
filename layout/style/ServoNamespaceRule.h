@@ -15,8 +15,9 @@ namespace mozilla {
 class ServoNamespaceRule : public dom::CSSNamespaceRule
 {
 public:
-  explicit ServoNamespaceRule(already_AddRefed<RawServoNamespaceRule> aRule)
-    : CSSNamespaceRule(0, 0)
+  ServoNamespaceRule(already_AddRefed<RawServoNamespaceRule> aRule,
+                     uint32_t aLine, uint32_t aColumn)
+    : CSSNamespaceRule(aLine, aColumn)
     , mRawRule(Move(aRule))
   {
   }

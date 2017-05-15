@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-macosx64-clang/opt:
+macosx64-clang:
     description: "Clang toolchain build"
     treeherder:
         kind: build
@@ -22,7 +22,7 @@ macosx64-clang/opt:
             - 'build/build-clang/**'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
 
-macosx64-clang-tidy/opt:
+macosx64-clang-tidy:
     description: "Clang-tidy build"
     index:
         product: static-analysis
@@ -46,7 +46,7 @@ macosx64-clang-tidy/opt:
             - 'build/build-clang/**'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
 
-macosx64-cctools-port/opt:
+macosx64-cctools-port:
     description: "cctools-port toolchain build"
     treeherder:
         kind: build

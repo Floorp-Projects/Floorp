@@ -775,16 +775,21 @@ var gMetadataTests = [
   },
   { name:"wavedata_u8.wav", tags: { }
   },
-  { name:"flac-s24.flac", tags: {
-      ALBUM:"Seascapes",
-      TITLE:"(La Mer) - II. Jeux de vagues. Allegro",
-      COMPOSER:"Debussy, Claude",
-      TRACKNUMBER:"2/9",
-      DISCNUMBER:"1/1",
-      encoder:"Lavf57.41.100",
-    }
-  },
 ];
+
+// Now Fennec doesn't support flac, so only test it on non-android platforms.
+if (getAndroidVersion() < 0) {
+  gMetadataTests = gMetadataTests.concat([
+    { name:"flac-s24.flac", tags: {
+        ALBUM:"Seascapes",
+        TITLE:"(La Mer) - II. Jeux de vagues. Allegro",
+        COMPOSER:"Debussy, Claude",
+        TRACKNUMBER:"2/9",
+        DISCNUMBER:"1/1",
+        encoder:"Lavf57.41.100",
+      }
+    }]);
+}
 
 // Test files for Encrypted Media Extensions
 var gEMETests = [
