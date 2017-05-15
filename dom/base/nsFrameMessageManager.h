@@ -365,10 +365,9 @@ class nsMessageManagerScriptExecutor
 public:
   static void PurgeCache();
   static void Shutdown();
-  already_AddRefed<nsIXPConnectJSObjectHolder> GetGlobal()
+  JSObject* GetGlobal()
   {
-    nsCOMPtr<nsIXPConnectJSObjectHolder> ref = mGlobal;
-    return ref.forget();
+    return mGlobal->GetJSObject();
   }
 
   void MarkScopesForCC();
