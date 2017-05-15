@@ -41,10 +41,20 @@ var FormAutofillFrameScript = {
     switch (evt.type) {
       case "focusin": {
         let element = evt.target;
+        let doc = element.ownerDocument;
+
         if (!FormAutofillUtils.isFieldEligibleForAutofill(element)) {
           return;
         }
-        FormAutofillContent.identifyAutofillFields(element.ownerDocument);
+
+        let doIdentifyAutofillFields =
+          () => setTimeout(() => FormAutofillContent.identifyAutofillFields(doc));
+
+        if (doc.readyState === "loading") {
+          doc.addEventListener("DOMContentLoaded", doIdentifyAutofillFields, {once: true});
+        } else {
+          doIdentifyAutofillFields();
+        }
         break;
       }
     }
