@@ -1476,6 +1476,19 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList
 
   already_AddRefed<nsIURI> GetListStyleImageURI() const;
 
+  // The following two methods are called from Servo code to maintain
+  // list-style-type off main thread.
+  void SetListStyleType(nsIAtom* aType)
+  {
+    mListStyleType = aType;
+    mCounterStyle = nullptr;
+  }
+  void CopyListStyleTypeFrom(const nsStyleList& aOther)
+  {
+    mListStyleType = aOther.mListStyleType;
+    mCounterStyle = aOther.mCounterStyle;
+  }
+
   const nsStyleQuoteValues::QuotePairArray& GetQuotePairs() const;
 
   void SetQuotesInherit(const nsStyleList* aOther);
@@ -1485,7 +1498,15 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList
 
   uint8_t mListStylePosition;                  // [inherited]
   RefPtr<nsStyleImageRequest> mListStyleImage; // [inherited]
+
+  // mCounterStyle is the actual field for computed list-style-type.
+  // mListStyleType is only used when we are off the main thread, so we
+  // cannot safely construct CounterStyle object. FinishStyle() will
+  // use it to setup mCounterStyle and then clear it. At any time, only
+  // one of the following two fields should be non-null.
+  nsCOMPtr<nsIAtom> mListStyleType;
   mozilla::CounterStylePtr mCounterStyle;      // [inherited]
+
 private:
   RefPtr<nsStyleQuoteValues> mQuotes;   // [inherited]
   nsStyleList& operator=(const nsStyleList& aOther) = delete;
