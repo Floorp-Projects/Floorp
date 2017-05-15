@@ -21,7 +21,7 @@ add_task(async function() {
   // Enable the reader mode button.
   Services.prefs.setBoolPref(PREF, true);
 
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.pinTab(tab);
 
   let initialTabsCount = gBrowser.tabs.length;

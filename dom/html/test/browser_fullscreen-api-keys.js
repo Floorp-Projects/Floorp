@@ -107,7 +107,7 @@ add_task(function* () {
     ["full-screen-api.transition-duration.enter", "0 0"],
     ["full-screen-api.transition-duration.leave", "0 0"]);
 
-  let tab = gBrowser.addTab(kPage);
+  let tab = BrowserTestUtils.addTab(gBrowser, kPage);
   let browser = tab.linkedBrowser;
   gBrowser.selectedTab = tab;
   registerCleanupFunction(() => gBrowser.removeTab(tab));

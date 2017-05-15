@@ -146,7 +146,7 @@ add_task(async function() {
     ["full-screen-api.transition-duration.enter", "0 0"],
     ["full-screen-api.transition-duration.leave", "0 0"]);
 
-  let tab = gBrowser.addTab(kPage);
+  let tab = BrowserTestUtils.addTab(gBrowser, kPage);
   let browser = tab.linkedBrowser;
   gBrowser.selectedTab = tab;
   await waitForDocLoadComplete();

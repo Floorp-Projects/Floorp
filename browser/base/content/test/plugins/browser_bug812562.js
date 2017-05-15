@@ -13,7 +13,7 @@ add_task(async function() {
     window.focus();
     gTestBrowser = null;
   });
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   gTestBrowser = gBrowser.selectedBrowser;
 
   Services.prefs.setBoolPref("plugins.click_to_play", true);

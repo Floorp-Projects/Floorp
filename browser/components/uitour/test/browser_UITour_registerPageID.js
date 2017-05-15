@@ -75,7 +75,7 @@ add_UITour_task(async function test_seenPageIDs_set_1() {
   let bucket = PREFIX + "UITour" + SEP + "testpage1";
   is(BrowserUITelemetry.currentBucket, bucket, "Bucket should have correct name");
 
-  gBrowser.selectedTab = gBrowser.addTab("about:blank");
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   bucket = PREFIX + "UITour" + SEP + "testpage1" + SEP + "inactive" + SEP + "1m";
   is(BrowserUITelemetry.currentBucket, bucket,
      "After switching tabs, bucket should be expiring");

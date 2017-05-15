@@ -11,11 +11,11 @@ function test() {
   is(Disabled(), true, "Bookmark All Tabs should be disabled");
 
   // Add a tab
-  let testTab1 = gBrowser.addTab();
+  let testTab1 = BrowserTestUtils.addTab(gBrowser);
   is(gBrowser.visibleTabs.length, 2, "2 tabs should be open");
   is(Disabled(), true, "Bookmark All Tabs should be disabled since there are two tabs with the same address");
 
-  let testTab2 = gBrowser.addTab("about:mozilla");
+  let testTab2 = BrowserTestUtils.addTab(gBrowser, "about:mozilla");
   is(gBrowser.visibleTabs.length, 3, "3 tabs should be open");
   // Wait for tab load, the code checks for currentURI.
   testTab2.linkedBrowser.addEventListener("load", function() {
@@ -28,7 +28,7 @@ function test() {
     is(Disabled(), true, "Bookmark All Tabs should be disabled as there is only one visible tab");
 
     // Add a tab that will get pinned
-    let pinned = gBrowser.addTab();
+    let pinned = BrowserTestUtils.addTab(gBrowser);
     is(gBrowser.visibleTabs.length, 2, "2 tabs should be visible now");
     is(Disabled(), false, "Bookmark All Tabs should be available as there are two visible tabs");
     gBrowser.pinTab(pinned);

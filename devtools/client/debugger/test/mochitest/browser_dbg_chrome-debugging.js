@@ -61,7 +61,7 @@ function testChromeActor() {
           gAttached.resolve();
 
           // Ensure that a new chrome global will be created.
-          gBrowser.selectedTab = gBrowser.addTab("about:mozilla");
+          gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:mozilla");
         }
       });
     });

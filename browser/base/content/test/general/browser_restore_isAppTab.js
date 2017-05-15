@@ -102,7 +102,7 @@ var restart = async function(browser) {
 };
 
 add_task(async function navigate() {
-  let tab = gBrowser.addTab("about:robots");
+  let tab = BrowserTestUtils.addTab(gBrowser, "about:robots");
   let browser = tab.linkedBrowser;
   gBrowser.selectedTab = tab;
   await waitForDocLoadComplete();
@@ -141,7 +141,7 @@ add_task(async function crash() {
   if (!gMultiProcessBrowser || !("nsICrashReporter" in Ci))
     return;
 
-  let tab = gBrowser.addTab(DUMMY);
+  let tab = BrowserTestUtils.addTab(gBrowser, DUMMY);
   let browser = tab.linkedBrowser;
   gBrowser.selectedTab = tab;
   await waitForDocLoadComplete();

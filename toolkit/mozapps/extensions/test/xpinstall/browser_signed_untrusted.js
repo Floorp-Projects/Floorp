@@ -13,7 +13,7 @@ function test() {
   var triggers = encodeURIComponent(JSON.stringify({
     "Untrusted Signed XPI": TESTROOT + "signed-untrusted.xpi"
   }));
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
 }
 

@@ -16,7 +16,7 @@ add_task(async function test_star_redirect() {
     gBrowser.removeCurrentTab();
   });
 
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   // This will add the page to the HSTS cache.
   await promiseTabLoadEvent(tab, secureURL, secureURL);
   // This should transparently be redirected to the secure page.

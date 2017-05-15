@@ -7,7 +7,7 @@
 var gProvider;
 
 function loadPage(aURL, aCallback, aBackground = false) {
-  let tab = gBrowser.addTab();
+  let tab = BrowserTestUtils.addTab(gBrowser);
   if (!aBackground)
     gBrowser.selectedTab = tab;
   let browser = tab.linkedBrowser;

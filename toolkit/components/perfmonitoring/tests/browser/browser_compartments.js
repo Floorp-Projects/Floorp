@@ -207,7 +207,7 @@ add_task(async function test() {
   Assert.ok(!stats0.componentsData.find(stat => stat.name.indexOf(URL) != -1),
     "The url doesn't appear yet");
 
-  let newTab = gBrowser.addTab();
+  let newTab = BrowserTestUtils.addTab(gBrowser);
   let browser = newTab.linkedBrowser;
   // Setup monitoring in the tab
   info("Setting up monitoring in the tab");

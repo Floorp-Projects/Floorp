@@ -16,7 +16,7 @@ function test() {
   waitForExplicitFinish();
 
   Services.prefs.setBoolPref(kShowUIPref, true);
-  let tab = gBrowser.addTab();
+  let tab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = tab;
   registerCleanupFunction(function() {
     gBrowser.removeTab(tab);

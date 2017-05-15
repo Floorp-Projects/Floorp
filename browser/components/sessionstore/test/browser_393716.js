@@ -13,7 +13,7 @@ add_task(async function test_set_tabstate() {
   let value = "Unique value: " + Math.random();
 
   // create a new tab
-  let tab = gBrowser.addTab(URL);
+  let tab = BrowserTestUtils.addTab(gBrowser, URL);
   ss.setTabValue(tab, key, value);
   await promiseBrowserLoaded(tab.linkedBrowser);
 
@@ -42,7 +42,7 @@ add_task(async function test_set_tabstate_and_duplicate() {
   let state = {entries: [{ url: URL, triggeringPrincipal_base64}], extData: { key2: value2 }};
 
   // create a new tab
-  let tab = gBrowser.addTab();
+  let tab = BrowserTestUtils.addTab(gBrowser);
   // set the tab's state
   ss.setTabState(tab, JSON.stringify(state));
   await promiseBrowserLoaded(tab.linkedBrowser);

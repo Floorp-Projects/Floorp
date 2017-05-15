@@ -36,7 +36,7 @@ function test() {
   waitForExplicitFinish();
 
   (async function() {
-    tabElm = gBrowser.addTab();
+    tabElm = BrowserTestUtils.addTab(gBrowser);
     await FullZoomHelper.selectTabAndWaitForLocationChange(tabElm);
     await FullZoomHelper.load(tabElm, "http://mochi.test:8888/browser/browser/base/content/test/general/zoom_test.html");
   })().then(start_test_prefNotSet, FullZoomHelper.failAndContinue(finish));

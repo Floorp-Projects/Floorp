@@ -15,14 +15,14 @@ function test() {
 
   // There should be one tab when we start the test
   let [origTab] = gBrowser.visibleTabs;
-  let hiddenTab = gBrowser.addTab();
+  let hiddenTab = BrowserTestUtils.addTab(gBrowser);
 
   is(gBrowser.visibleTabs.length, 2, "should have 2 tabs before hiding");
   gBrowser.showOnlyTheseTabs([origTab]);
   is(gBrowser.visibleTabs.length, 1, "only 1 after hiding");
   ok(hiddenTab.hidden, "sanity check that it's hidden");
 
-  gBrowser.addTab();
+  BrowserTestUtils.addTab(gBrowser);
   let state = ss.getBrowserState();
   let stateObj = JSON.parse(state);
   let tabs = stateObj.windows[0].tabs;

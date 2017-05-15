@@ -26,7 +26,7 @@ add_task(async function test() {
     // ensure doesn't go to about:tabcrashed. We start it non-remote
     // since this is how SessionStore creates all browsers before
     // they are restored.
-    let unrestoredTab = gBrowser.addTab("about:blank", {
+    let unrestoredTab = BrowserTestUtils.addTab(gBrowser, "about:blank", {
       skipAnimation: true,
       forceNotRemote: true,
     });

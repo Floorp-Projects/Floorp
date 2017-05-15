@@ -104,7 +104,7 @@ var { helpers, assert } = (function () {
  *
  * The options used by addTab include:
  * - chromeWindow: XUL window parent of created tab. a.k.a 'window' in mochitest
- * - tab: The new XUL tab element, as returned by gBrowser.addTab()
+ * - tab: The new XUL tab element, as returned by BrowserTestUtils.addTab(gBrowser)
  * - target: The debug target as defined by the devtools framework
  * - browser: The XUL browser element for the given tab
  * - isFirefox: Always true. Allows test sharing with GCLI

@@ -9,9 +9,9 @@ const kTimeoutInMS = 20000;
 // Bug 934951 - Zoom controls percentage label doesn't update when it's in the toolbar and you navigate.
 add_task(async function() {
   CustomizableUI.addWidgetToArea("zoom-controls", CustomizableUI.AREA_NAVBAR);
-  let tab1 = gBrowser.addTab("about:mozilla");
+  let tab1 = BrowserTestUtils.addTab(gBrowser, "about:mozilla");
   await BrowserTestUtils.browserLoaded(tab1.linkedBrowser);
-  let tab2 = gBrowser.addTab("about:robots");
+  let tab2 = BrowserTestUtils.addTab(gBrowser, "about:robots");
   await BrowserTestUtils.browserLoaded(tab2.linkedBrowser);
   gBrowser.selectedTab = tab1;
   let zoomResetButton = document.getElementById("zoom-reset-button");

@@ -32,7 +32,7 @@ function verifyUInotDegraded() {
 
 // ------------------------------------------------------
 function runTests() {
-  var newTab = gBrowser.addTab();
+  var newTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = newTab;
   gTestBrowser = gBrowser.selectedBrowser;
   newTab.linkedBrowser.stop();

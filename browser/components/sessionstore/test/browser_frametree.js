@@ -21,7 +21,7 @@ add_task(async function test_frametree() {
   };
 
   // Create a tab with a single frame.
-  let tab = gBrowser.addTab(URL);
+  let tab = BrowserTestUtils.addTab(gBrowser, URL);
   let browser = tab.linkedBrowser;
   await promiseNewFrameTree(browser);
   await checkFrameTree(browser, FRAME_TREE_SINGLE,
@@ -78,7 +78,7 @@ add_task(async function test_frametree_dynamic() {
   };
 
   // Add an empty tab for a start.
-  let tab = gBrowser.addTab("about:blank");
+  let tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 
