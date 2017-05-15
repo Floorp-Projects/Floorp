@@ -1296,7 +1296,7 @@ const dasharrayType = {
       var animation = target.animate({ [idlName]:
                                          ['1, 2, 3, 4, 5',
                                           '6, 7, 8, 9, 10'] },
-                                     { duration: 1000, fill: 'add' });
+                                     { duration: 1000, composite: 'add' });
       testAnimationSamples(
           animation, idlName,
           [{ time: 0, expected: '1, 2, 3, 4, 5' }]);
