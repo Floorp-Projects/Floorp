@@ -1997,3 +1997,7 @@ fails-if(stylo) == 1348481-3.html 1348481-ref.html
 == 1358375-1.html 1358375-ref.html
 == 1358375-2.html 1358375-ref.html
 == 1358375-3.html 1358375-ref.html
+== 1364280-1.html 1364280-1-ref.html
+== 1364280-2a.html 1364280-2-ref.html
+== 1364280-2b.html 1364280-2-ref.html
+== 1364280-2c.html 1364280-2-ref.html
