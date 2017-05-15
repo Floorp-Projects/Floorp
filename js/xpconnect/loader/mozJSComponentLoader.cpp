@@ -459,6 +459,53 @@ mozJSComponentLoader::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
     return n;
 }
 
+void
+mozJSComponentLoader::CreateLoaderGlobal(JSContext* aCx,
+                                         JSAddonId* aAddonID,
+                                         MutableHandleObject aGlobal)
+{
+    RefPtr<BackstagePass> backstagePass;
+    nsresult rv = NS_NewBackstagePass(getter_AddRefs(backstagePass));
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    CompartmentOptions options;
+
+    options.creationOptions()
+           .setSystemZone()
+           .setAddonId(aAddonID);
+
+    options.behaviors().setVersion(JSVERSION_LATEST);
+
+    if (xpc::SharedMemoryEnabled())
+        options.creationOptions().setSharedMemoryAndAtomicsEnabled(true);
+
+    // Defer firing OnNewGlobalObject until after the __URI__ property has
+    // been defined so the JS debugger can tell what module the global is
+    // for
+    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+    rv = nsXPConnect::XPConnect()->
+        InitClassesWithNewWrappedGlobal(aCx,
+                                        static_cast<nsIGlobalObject*>(backstagePass),
+                                        mSystemPrincipal,
+                                        nsIXPConnect::DONT_FIRE_ONNEWGLOBALHOOK,
+                                        options,
+                                        getter_AddRefs(holder));
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    RootedObject global(aCx, holder->GetJSObject());
+    NS_ENSURE_TRUE_VOID(global);
+
+    backstagePass->SetGlobalObject(global);
+
+    JSAutoCompartment ac(aCx, global);
+    if (!JS_DefineFunctions(aCx, global, gGlobalFun) ||
+        !JS_DefineProfilingFunctions(aCx, global)) {
+        return;
+    }
+
+    aGlobal.set(global);
+}
+
 // Some stack based classes for cleaning up on early return
 class FileAutoCloser
 {
@@ -484,56 +531,20 @@ mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
                                                nsIURI* aURI,
                                                bool* aRealFile)
 {
-    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-    nsresult rv = NS_OK;
     bool createdNewGlobal = false;
+    RootedObject globalObj(aCx);
 
     if (!mLoaderGlobal) {
-        RefPtr<BackstagePass> backstagePass;
-        rv = NS_NewBackstagePass(getter_AddRefs(backstagePass));
-        NS_ENSURE_SUCCESS(rv, nullptr);
-
-        CompartmentOptions options;
-
-        options.creationOptions()
-               .setSystemZone()
-               .setAddonId(MapURIToAddonID(aURI));
-
-        options.behaviors().setVersion(JSVERSION_LATEST);
-
-        if (xpc::SharedMemoryEnabled())
-            options.creationOptions().setSharedMemoryAndAtomicsEnabled(true);
-
-        // Defer firing OnNewGlobalObject until after the __URI__ property has
-        // been defined so the JS debugger can tell what module the global is
-        // for
-        rv = nsXPConnect::XPConnect()->
-            InitClassesWithNewWrappedGlobal(aCx,
-                                            static_cast<nsIGlobalObject*>(backstagePass),
-                                            mSystemPrincipal,
-                                            nsIXPConnect::DONT_FIRE_ONNEWGLOBALHOOK,
-                                            options,
-                                            getter_AddRefs(holder));
-        NS_ENSURE_SUCCESS(rv, nullptr);
-        createdNewGlobal = true;
-
-        RootedObject global(aCx, holder->GetJSObject());
-        NS_ENSURE_TRUE(global, nullptr);
-
-        backstagePass->SetGlobalObject(global);
-
-        JSAutoCompartment ac(aCx, global);
-        if (!JS_DefineFunctions(aCx, global, gGlobalFun) ||
-            !JS_DefineProfilingFunctions(aCx, global)) {
-            return nullptr;
-        }
+        CreateLoaderGlobal(aCx, MapURIToAddonID(aURI), &globalObj);
+        if (globalObj)
+            createdNewGlobal = true;
     }
 
     // |thisObj| is the object we set properties on for a particular .jsm.
     // XXX Right now, thisObj is always globalObj, but if we start
     // sharing globals between jsms, they won't be the same.
     // See bug 1186409.
-    RootedObject thisObj(aCx, holder->GetJSObject());
+    RootedObject thisObj(aCx, globalObj);
     NS_ENSURE_TRUE(thisObj, nullptr);
 
     JSAutoCompartment ac(aCx, thisObj);
@@ -543,6 +554,7 @@ mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
     // need to be extra careful checking for URIs pointing to files
     // EnsureFile may not always get called, especially on resource URIs
     // so we need to call GetFile to make sure this is a valid file
+    nsresult rv = NS_OK;
     nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(aURI, &rv);
     nsCOMPtr<nsIFile> testFile;
     if (NS_SUCCEEDED(rv)) {
@@ -581,10 +593,9 @@ mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
     if (createdNewGlobal) {
         // AutoEntryScript required to invoke debugger hook, which is a
         // Gecko-specific concept at present.
-        dom::AutoEntryScript aes(holder->GetJSObject(),
+        dom::AutoEntryScript aes(globalObj,
                                  "component loader report global");
-        RootedObject global(aes.cx(), holder->GetJSObject());
-        JS_FireOnNewGlobalObject(aes.cx(), global);
+        JS_FireOnNewGlobalObject(aes.cx(), globalObj);
     }
 
     return thisObj;
