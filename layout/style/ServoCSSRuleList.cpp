@@ -15,6 +15,7 @@
 #include "mozilla/ServoPageRule.h"
 #include "mozilla/ServoStyleRule.h"
 #include "mozilla/ServoSupportsRule.h"
+#include "nsCSSCounterStyleRule.h"
 #include "nsCSSFontFaceRule.h"
 
 namespace mozilla {
@@ -46,10 +47,13 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ServoCSSRuleList,
     if (!aRule->IsCCLeaf()) {
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mRules[i]");
       cb.NoteXPCOMChild(aRule);
-      // Note about @font-face rule again, since there is an indirect
-      // owning edge through Servo's struct that FontFaceRule in Servo
-      // owns a Gecko nsCSSFontFaceRule object.
-      if (aRule->Type() == nsIDOMCSSRule::FONT_FACE_RULE) {
+      // Note about @font-face and @counter-style rule again, since
+      // there is an indirect owning edge through Servo's struct that
+      // FontFaceRule / CounterStyleRule in Servo owns a Gecko
+      // nsCSSFontFaceRule / nsCSSCounterStyleRule object.
+      auto type = aRule->Type();
+      if (type == nsIDOMCSSRule::FONT_FACE_RULE ||
+          type == nsIDOMCSSRule::COUNTER_STYLE_RULE) {
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mRawRules[i]");
         cb.NoteXPCOMChild(aRule);
       }
@@ -99,11 +103,16 @@ ServoCSSRuleList::GetRule(uint32_t aIndex)
       CASE_RULE(SUPPORTS, Supports)
       CASE_RULE(DOCUMENT, Document)
 #undef CASE_RULE
+      // For @font-face and @counter-style rules, the function returns
+      // a borrowed Gecko rule object directly, so we don't need to
+      // create anything here. But we still need to have the style sheet
+      // and parent rule set properly.
       case nsIDOMCSSRule::FONT_FACE_RULE: {
-        // Returns a borrowed nsCSSFontFaceRule object directly, so we
-        // don't need to create anything here, but we still need to have
-        // the style sheet and parent rule set properly.
         ruleObj = Servo_CssRules_GetFontFaceRuleAt(mRawRules, aIndex);
+        break;
+      }
+      case nsIDOMCSSRule::COUNTER_STYLE_RULE: {
+        ruleObj = Servo_CssRules_GetCounterStyleRuleAt(mRawRules, aIndex);
         break;
       }
       case nsIDOMCSSRule::KEYFRAMES_RULE:
