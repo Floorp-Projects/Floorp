@@ -2704,9 +2704,7 @@ ContentParent::Observe(nsISupports* aSubject,
     // Wait for shutdown to complete, so that we receive any shutdown
     // data (e.g. telemetry) from the child before we quit.
     // This loop terminate prematurely based on mForceKillTimer.
-    while (mIPCOpen && !mCalledKillHard) {
-      NS_ProcessNextEvent(nullptr, true);
-    }
+    SpinEventLoopUntil([&]() { return !mIPCOpen || mCalledKillHard; });
     NS_ASSERTION(!mSubprocess, "Close should have nulled mSubprocess");
   }
 

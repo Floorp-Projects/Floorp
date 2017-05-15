@@ -122,11 +122,8 @@ UDPSocketChild::CreatePBackgroundSpinUntilDone()
     return NS_ERROR_FAILURE;
   }
 
-  nsIThread* thread = NS_GetCurrentThread();
-  while (!done) {
-    if (NS_WARN_IF(!NS_ProcessNextEvent(thread, true /* aMayWait */))) {
-      return NS_ERROR_FAILURE;
-    }
+  if (!SpinEventLoopUntil([&done]() { return done; })) {
+    return NS_ERROR_FAILURE;
   }
 
   if (NS_WARN_IF(!BackgroundChild::GetForCurrentThread())) {
