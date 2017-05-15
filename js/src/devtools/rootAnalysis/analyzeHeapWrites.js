@@ -154,8 +154,8 @@ function treatAsSafeArgument(entry, varName, csuName)
         // to be a way to indicate which params are out parameters, either using
         // an attribute or a naming convention.
         ["Gecko_CopyFontFamilyFrom", "dst", null],
-        ["Gecko_SetListStyleType", "style_struct", null],
-        ["Gecko_CopyListStyleTypeFrom", "dst", null],
+        ["Gecko_SetListStyleType", "aList", null],
+        ["Gecko_CopyListStyleTypeFrom", "aDst", null],
         ["Gecko_SetMozBinding", "aDisplay", null],
         [/ClassOrClassList/, /aClass/, null],
         ["Gecko_GetAtomAsUTF16", "aLength", null],

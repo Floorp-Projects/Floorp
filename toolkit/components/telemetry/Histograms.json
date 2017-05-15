@@ -4796,6 +4796,15 @@
     "bug_numbers": [1305581],
     "description": "Whether or not a variable-length prefix set loaded from disk is corrupted (true = file corrupted)."
   },
+  "URLCLASSIFIER_VLPS_LONG_PREFIXES": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "61",
+    "kind": "enumerated",
+    "n_values": 32,
+    "bug_numbers": [1322523],
+    "description": "Length of the first 20 long prefixes (> 4 bytes) received in a Safe Browsing V4 table during an update."
+  },
   "URLCLASSIFIER_LC_PREFIXES": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
