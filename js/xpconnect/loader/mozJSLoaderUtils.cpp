@@ -44,14 +44,6 @@ ReadCachedScript(StartupCache* cache, nsACString& uri, JSContext* cx,
 }
 
 nsresult
-ReadCachedFunction(StartupCache* cache, nsACString& uri, JSContext* cx,
-                   nsIPrincipal* systemPrincipal, JSFunction** functionp)
-{
-    // This doesn't actually work ...
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
 WriteCachedScript(StartupCache* cache, nsACString& uri, JSContext* cx,
                   nsIPrincipal* systemPrincipal, HandleScript script)
 {
