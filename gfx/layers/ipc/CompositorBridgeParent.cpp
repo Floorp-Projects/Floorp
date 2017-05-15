@@ -524,6 +524,12 @@ CompositorBridgeParent::RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
 }
 
 mozilla::ipc::IPCResult
+CompositorBridgeParent::RecvWaitOnTransactionProcessed()
+{
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvFlushRendering()
 {
   if (mCompositorScheduler->NeedsComposite()) {
