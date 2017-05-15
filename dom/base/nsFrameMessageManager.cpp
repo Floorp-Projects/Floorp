@@ -1679,6 +1679,12 @@ nsMessageManagerScriptExecutor::Trace(const TraceCallbacks& aCallbacks, void* aC
   }
 }
 
+void
+nsMessageManagerScriptExecutor::Unlink()
+{
+  ImplCycleCollectionUnlink(mAnonymousGlobalScopes);
+}
+
 bool
 nsMessageManagerScriptExecutor::InitChildGlobalInternal(
   nsISupports* aScope,
