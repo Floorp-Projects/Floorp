@@ -103,19 +103,8 @@ function testScript(script) {
       }
 
       navigator.serviceWorker.register("worker_wrapper.js", {scope: "."})
-        .then(function(registration) {
-          if (registration.installing) {
-            var done = false;
-            registration.installing.onstatechange = function() {
-              if (!done) {
-                done = true;
-                setupSW(registration);
-              }
-            };
-          } else {
-            setupSW(registration);
-          }
-        });
+        .then(swr => waitForState(swr.installing, 'activated', swr))
+        .then(setupSW);
     });
   }
 

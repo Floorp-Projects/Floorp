@@ -132,9 +132,7 @@ CompositorThreadHolder::Shutdown()
 
   // No locking is needed around sFinishedCompositorShutDown because it is only
   // ever accessed on the main thread.
-  while (!sFinishedCompositorShutDown) {
-    NS_ProcessNextEvent(nullptr, true);
-  }
+  SpinEventLoopUntil([&]() { return sFinishedCompositorShutDown; });
 
   CompositorBridgeParent::FinishShutdown();
 }

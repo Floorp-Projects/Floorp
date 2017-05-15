@@ -258,9 +258,9 @@ public:
     // Once shutdown begins we set the Atomic<bool> mShutdownStarted flag.
     // This prevents any new runnables from being dispatched into the
     // TaskQueue.  Therefore this loop should be finite.
-    while (!IsEmpty()) {
-      MOZ_ALWAYS_TRUE(NS_ProcessNextEvent());
-    }
+    MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() -> bool {
+        return IsEmpty();
+    }));
 
     return NS_OK;
   }

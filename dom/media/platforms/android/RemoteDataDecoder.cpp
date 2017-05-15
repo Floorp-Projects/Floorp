@@ -4,7 +4,6 @@
 
 #include "AndroidBridge.h"
 #include "AndroidDecoderModule.h"
-#include "AndroidSurfaceTexture.h"
 #include "JavaCallbacksSupport.h"
 #include "SimpleMap.h"
 #include "GLImages.h"
@@ -134,7 +133,7 @@ public:
 
       if (size > 0) {
         RefPtr<layers::Image> img = new SurfaceTextureImage(
-          mDecoder->mSurfaceTexture.get(), inputInfo.mImageSize,
+          mDecoder->mSurfaceHandle, inputInfo.mImageSize, false /* NOT continuous */,
           gl::OriginPos::BottomLeft);
 
         RefPtr<VideoData> v = VideoData::CreateFromImage(
@@ -177,18 +176,12 @@ public:
 
   RefPtr<InitPromise> Init() override
   {
-    mSurfaceTexture = AndroidSurfaceTexture::Create();
-    if (!mSurfaceTexture) {
-      NS_WARNING("Failed to create SurfaceTexture for video decode\n");
-      return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                                          __func__);
+    GeckoSurface::LocalRef surf = GeckoSurface::LocalRef(SurfaceAllocator::AcquireSurface(mConfig.mImage.width, mConfig.mImage.height, false));
+    if (!surf) {
+      return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
     }
 
-    if (!jni::IsFennec()) {
-      NS_WARNING("Remote decoding not supported in non-Fennec environment\n");
-      return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                                          __func__);
-    }
+    mSurfaceHandle = surf->GetHandle();
 
     // Register native methods.
     JavaCallbacksSupport::Init();
@@ -199,7 +192,7 @@ public:
 
     mJavaDecoder = CodecProxy::Create(false, // false indicates to create a decoder and true denotes encoder
                                       mFormat,
-                                      mSurfaceTexture->JavaSurface(),
+                                      surf,
                                       mJavaCallbacks,
                                       mDrmStubId);
     if (mJavaDecoder == nullptr) {
@@ -239,7 +232,7 @@ public:
 private:
   layers::ImageContainer* mImageContainer;
   const VideoInfo mConfig;
-  RefPtr<AndroidSurfaceTexture> mSurfaceTexture;
+  AndroidSurfaceTextureHandle mSurfaceHandle;
   SimpleMap<InputInfo> mInputInfos;
   bool mIsCodecSupportAdaptivePlayback = false;
 };
@@ -411,7 +404,6 @@ RemoteDataDecoder::CreateVideoDecoder(const CreateDecoderParams& aParams,
                                       const nsString& aDrmStubId,
                                       CDMProxy* aProxy)
 {
-
   const VideoInfo& config = aParams.VideoConfig();
   MediaFormat::LocalRef format;
   NS_ENSURE_SUCCESS(
