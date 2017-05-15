@@ -54,11 +54,6 @@ using namespace mozilla::scache;
 using namespace xpc;
 using namespace JS;
 
-// This JSClass exists to trick silly code that expects toString()ing the
-// global in a component scope to return something with "BackstagePass" in it
-// to continue working.
-static const JSClass kFakeBackstagePassJSClass = { "FakeBackstagePass" };
-
 static const char kObserverServiceContractID[] = "@mozilla.org/observer-service;1";
 static const char kJSCachePrefix[] = "jsloader";
 
@@ -196,8 +191,7 @@ mozJSComponentLoader::mozJSComponentLoader()
     : mModules(16),
       mImports(16),
       mInProgressImports(16),
-      mInitialized(false),
-      mReuseLoaderGlobal(false)
+      mInitialized(false)
 {
     MOZ_ASSERT(!sSelf, "mozJSComponentLoader should be a singleton");
 
@@ -299,8 +293,6 @@ nsresult
 mozJSComponentLoader::ReallyInit()
 {
     nsresult rv;
-
-    mReuseLoaderGlobal = Preferences::GetBool("jsloader.reuseGlobal");
 
     nsCOMPtr<nsIScriptSecurityManager> secman =
         do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
@@ -430,9 +422,7 @@ mozJSComponentLoader::LoadModule(FileLocation& aFile)
 
     // Set the location information for the new global, so that tools like
     // about:memory may use that information
-    if (!mReuseLoaderGlobal) {
-        xpc::SetLocationForGlobal(entryObj, spec);
-    }
+    xpc::SetLocationForGlobal(entryObj, spec);
 
     // The hash owns the ModuleEntry now, forget about it
     return entry.forget();
@@ -442,27 +432,7 @@ void
 mozJSComponentLoader::FindTargetObject(JSContext* aCx,
                                        MutableHandleObject aTargetObject)
 {
-    aTargetObject.set(nullptr);
-
-    RootedObject targetObject(aCx);
-    if (mReuseLoaderGlobal) {
-        JSFunction* fun = js::GetOutermostEnclosingFunctionOfScriptedCaller(aCx);
-        if (fun) {
-            JSObject* funParent = js::GetNearestEnclosingWithEnvironmentObjectForFunction(fun);
-            if (JS_GetClass(funParent) == &kFakeBackstagePassJSClass)
-                targetObject = funParent;
-        }
-    }
-
-    // The above could fail, even if mReuseLoaderGlobal, if the scripted
-    // caller is not a component/JSM (it could be a DOM scope, for
-    // instance).
-    if (!targetObject) {
-        // Our targetObject is the caller's global object. Let's get it.
-        targetObject = CurrentGlobalOrNull(aCx);
-    }
-
-    aTargetObject.set(targetObject);
+    aTargetObject.set(CurrentGlobalOrNull(aCx));
 }
 
 // This requires that the keys be strings and the values be pointers.
@@ -512,14 +482,9 @@ JSObject*
 mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
                                                nsIFile* aComponentFile,
                                                nsIURI* aURI,
-                                               bool aReuseLoaderGlobal,
                                                bool* aRealFile)
 {
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-    if (aReuseLoaderGlobal) {
-        holder = mLoaderGlobal;
-    }
-
     nsresult rv = NS_OK;
     bool createdNewGlobal = false;
 
@@ -532,7 +497,7 @@ mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
 
         options.creationOptions()
                .setSystemZone()
-               .setAddonId(aReuseLoaderGlobal ? nullptr : MapURIToAddonID(aURI));
+               .setAddonId(MapURIToAddonID(aURI));
 
         options.behaviors().setVersion(JSVERSION_LATEST);
 
@@ -562,23 +527,12 @@ mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
             !JS_DefineProfilingFunctions(aCx, global)) {
             return nullptr;
         }
-
-        if (aReuseLoaderGlobal) {
-            mLoaderGlobal = holder;
-        }
     }
 
     RootedObject obj(aCx, holder->GetJSObject());
     NS_ENSURE_TRUE(obj, nullptr);
 
     JSAutoCompartment ac(aCx, obj);
-
-    if (aReuseLoaderGlobal) {
-        // If we're reusing the loader global, we don't actually use the
-        // global, but rather we use a different object as the 'this' object.
-        obj = JS_NewObject(aCx, &kFakeBackstagePassJSClass);
-        NS_ENSURE_TRUE(obj, nullptr);
-    }
 
     *aRealFile = false;
 
@@ -651,9 +605,9 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
     nsresult rv = aInfo.EnsureURI();
     NS_ENSURE_SUCCESS(rv, rv);
     RootedObject obj(cx, PrepareObjectForLocation(cx, aComponentFile, aInfo.URI(),
-                                                  mReuseLoaderGlobal, &realFile));
+                                                  &realFile));
     NS_ENSURE_TRUE(obj, NS_ERROR_FAILURE);
-    MOZ_ASSERT(JS_IsGlobalObject(obj) == !mReuseLoaderGlobal);
+    MOZ_ASSERT(JS_IsGlobalObject(obj));
 
     JSAutoCompartment ac(cx, obj);
 
@@ -675,14 +629,9 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
     rv = PathifyURI(aInfo.URI(), cachePath);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!mReuseLoaderGlobal) {
-        script = ScriptPreloader::GetSingleton().GetCachedScript(cx, cachePath);
-        if (!script && cache) {
-            ReadCachedScript(cache, cachePath, cx, mSystemPrincipal, &script);
-        }
-    } else if (cache) {
-        ReadCachedFunction(cache, cachePath, cx, mSystemPrincipal,
-                           function.address());
+    script = ScriptPreloader::GetSingleton().GetCachedScript(cx, cachePath);
+    if (!script && cache) {
+        ReadCachedScript(cache, cachePath, cx, mSystemPrincipal, &script);
     }
 
     if (script || function) {
@@ -692,8 +641,7 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
         // cache. Could mean that the cache was corrupted and got removed,
         // but either way we're going to write this out.
         writeToCache = true;
-        // ReadCachedScript and ReadCachedFunction may have set a pending
-        // exception.
+        // ReadCachedScript may have set a pending exception.
         JS_ClearPendingException(cx);
     }
 
@@ -701,26 +649,17 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
         // The script wasn't in the cache , so compile it now.
         LOG(("Slow loading %s\n", nativePath.get()));
 
-        // Use lazy source if both of these conditions hold:
-        //
-        // (1) mReuseLoaderGlobal is false. If mReuseLoaderGlobal is true, we
-        //     can't do lazy source because we compile things as functions
-        //     (rather than script), and lazy source isn't supported in that
-        //     configuration. That's ok though, because we only do
-        //     mReuseLoaderGlobal on b2g, where we invoke setDiscardSource(true)
-        //     on the entire global.
-        //
-        // (2) We're using the startup cache. Non-lazy source + startup cache
-        //     regresses installer size (due to source code stored in XDR
-        //     encoded modules in omni.ja). Also, XDR decoding is relatively
-        //     fast. Content processes don't use the startup cache, so we want
-        //     them to use non-lazy source code to enable lazy parsing.
-        //     See bug 1303754.
+        // Use lazy source if we're using the startup cache. Non-lazy source +
+        // startup cache regresses installer size (due to source code stored in
+        // XDR encoded modules in omni.ja). Also, XDR decoding is relatively
+        // fast. When we're not using the startup cache, we want to use non-lazy
+        // source code so that we can use lazy parsing.
+        // See bug 1303754.
         CompileOptions options(cx);
-        options.setNoScriptRval(mReuseLoaderGlobal ? false : true)
+        options.setNoScriptRval(true)
                .setVersion(JSVERSION_LATEST)
                .setFileAndLine(nativePath.get(), 1)
-               .setSourceIsLazy(!mReuseLoaderGlobal && !!cache);
+               .setSourceIsLazy(!!cache);
 
         if (realFile) {
             int64_t fileSize;
@@ -766,18 +705,9 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
                 return NS_ERROR_FAILURE;
             }
 
-            if (!mReuseLoaderGlobal) {
-                Compile(cx, options, buf, fileSize32, &script);
-            } else {
-                // Note: exceptions will get handled further down;
-                // don't early return for them here.
-                AutoObjectVector envChain(cx);
-                if (envChain.append(obj)) {
-                    CompileFunction(cx, envChain,
-                                    options, nullptr, 0, nullptr,
-                                    buf, fileSize32, &function);
-                }
-            }
+            // Note: exceptions will get handled further down;
+            // don't early return for them here.
+            Compile(cx, options, buf, fileSize32, &script);
 
             PR_MemUnmap(buf, fileSize32);
         } else {
@@ -810,18 +740,7 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
 
             buf[len] = '\0';
 
-            if (!mReuseLoaderGlobal) {
-                Compile(cx, options, buf.get(), bytesRead, &script);
-            } else {
-                // Note: exceptions will get handled further down;
-                // don't early return for them here.
-                AutoObjectVector envChain(cx);
-                if (envChain.append(obj)) {
-                    CompileFunction(cx, envChain,
-                                    options, nullptr, 0, nullptr,
-                                    buf.get(), bytesRead, &function);
-                }
-            }
+            Compile(cx, options, buf.get(), bytesRead, &script);
         }
         // Propagate the exception, if one exists. Also, don't leave the stale
         // exception on this context.
@@ -923,26 +842,6 @@ void
 mozJSComponentLoader::UnloadModules()
 {
     mInitialized = false;
-
-    if (mLoaderGlobal) {
-        MOZ_ASSERT(mReuseLoaderGlobal, "How did this happen?");
-
-        dom::AutoJSAPI jsapi;
-        jsapi.Init();
-        JSContext* cx = jsapi.cx();
-        RootedObject global(cx, mLoaderGlobal->GetJSObject());
-        if (global) {
-            JSAutoCompartment ac(cx, global);
-            if (JS_HasExtensibleLexicalEnvironment(global)) {
-                JS_SetAllNonReservedSlotsToUndefined(cx, JS_ExtensibleLexicalEnvironment(global));
-            }
-            JS_SetAllNonReservedSlotsToUndefined(cx, global);
-        } else {
-            NS_WARNING("Going to leak!");
-        }
-
-        mLoaderGlobal = nullptr;
-    }
 
     mInProgressImports.Clear();
     mImports.Clear();
@@ -1141,9 +1040,7 @@ mozJSComponentLoader::ImportInto(const nsACString& aLocation,
 
         // Set the location information for the new global, so that tools like
         // about:memory may use that information
-        if (!mReuseLoaderGlobal) {
-            xpc::SetLocationForGlobal(newEntry->obj, aLocation);
-        }
+        xpc::SetLocationForGlobal(newEntry->obj, aLocation);
 
         mod = newEntry;
     }
@@ -1285,9 +1182,6 @@ mozJSComponentLoader::Unload(const nsACString & aLocation)
     if (!mInitialized) {
         return NS_OK;
     }
-
-    MOZ_RELEASE_ASSERT(!mReuseLoaderGlobal, "Module unloading not supported when "
-                                            "compartment sharing is enabled");
 
     ComponentLoaderInfo info(aLocation);
     rv = info.EnsureKey();
