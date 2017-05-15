@@ -28,7 +28,7 @@ static void ServoParsingBench() {
     NullPrincipalURI::Create(), nullptr, NullPrincipal::Create());
   for (int i = 0; i < PARSING_REPETITIONS; i++) {
     RefPtr<RawServoStyleSheet> stylesheet = Servo_StyleSheet_FromUTF8Bytes(
-      nullptr, nullptr, &css, eAuthorSheetFeatures, nullptr, data
+      nullptr, nullptr, &css, eAuthorSheetFeatures, nullptr, data, 0
     ).Consume();
   }
 }

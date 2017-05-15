@@ -95,7 +95,9 @@ void
 ServoRestyleManager::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
                                                   nsRestyleHint aRestyleHint)
 {
-  NS_WARNING("stylo: ServoRestyleManager::PostRebuildAllStyleDataEvent not implemented");
+  // TODO(emilio): We should do the stylesheet flushing + device reset async
+  // here.
+  RebuildAllStyleData(aExtraHint, aRestyleHint);
 }
 
 /* static */ void

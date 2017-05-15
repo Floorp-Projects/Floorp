@@ -313,84 +313,11 @@ toolbarbutton.chevron:-moz-locale-dir(rtl) > .toolbarbutton-icon {
 
 /* ----- BOOKMARK BUTTONS ----- */
 
-toolbarbutton.bookmark-item:not(.subviewbutton),
-#personal-bookmarks[cui-areatype="toolbar"]:not([overflowedItem=true]) > #bookmarks-toolbar-placeholder {
-  border: 0;
-  border-radius: 10000px;
-  padding: 1px 8px;
-  margin: 0 0 1px;
-}
-
-#personal-bookmarks[cui-areatype="toolbar"]:not([overflowedItem=true]) > #bookmarks-toolbar-placeholder {
-  -moz-box-orient: horizontal;
-}
-
 .bookmark-item > .toolbarbutton-menu-dropmarker {
-  list-style-image: url("chrome://browser/skin/places/folderDropArrow.png");
-  -moz-image-region: rect(0, 7px, 5px, 0);
+  list-style-image: url("chrome://browser/skin/places/arrow-down.svg");
+  fill: currentColor;
   margin-top: 1px;
   margin-inline-start: 3px;
-  margin-inline-end: -2px;
-}
-
-@media (min-resolution: 2dppx) {
-  .bookmark-item > .toolbarbutton-menu-dropmarker {
-    list-style-image: url("chrome://browser/skin/places/folderDropArrow@2x.png");
-    -moz-image-region: rect(0, 14px, 10px, 0);
-  }
-
-  .bookmark-item > .toolbarbutton-menu-dropmarker > .dropmarker-icon {
-    width: 7px;
-  }
-}
-
-.bookmark-item > .toolbarbutton-text,
-#personal-bookmarks[cui-areatype="toolbar"] > #bookmarks-toolbar-placeholder > .toolbarbutton-text {
-  display: -moz-box !important; /* Force the display of the label for bookmarks */
-}
-
-toolbarbutton.bookmark-item:not(.subviewbutton):hover {
-  background-color: rgba(0, 0, 0, .205);
-}
-
-toolbarbutton.bookmark-item:hover:not(.subviewbutton),
-toolbarbutton.bookmark-item[open="true"]:not(.subviewbutton) {
-  color: #FFF !important;
-  text-shadow: 0 1px rgba(0, 0, 0, .4) !important;
-}
-
-.bookmark-item:hover > .toolbarbutton-menu-dropmarker,
-.bookmark-item[open="true"] > .toolbarbutton-menu-dropmarker {
-  -moz-image-region: rect(5px, 7px, 10px, 0);
-}
-
-@media (min-resolution: 2dppx) {
-  .bookmark-item:hover > .toolbarbutton-menu-dropmarker,
-  .bookmark-item[open="true"] > .toolbarbutton-menu-dropmarker {
-    -moz-image-region: rect(10px, 14px, 20px, 0);
-  }
-}
-
-toolbarbutton.bookmark-item:not(.subviewbutton):active:hover,
-toolbarbutton.bookmark-item:not(.subviewbutton)[open="true"] {
-  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.4), 0 1px rgba(255, 255, 255, 0.4);
-  background-color: rgba(0, 0, 0, .5);
-}
-
-toolbarbutton.bookmark-item > menupopup {
-  margin-inline-start: 3px;
-}
-
-.bookmark-item > .toolbarbutton-icon,
-#personal-bookmarks[cui-areatype="toolbar"] > #bookmarks-toolbar-placeholder > .toolbarbutton-icon {
-  width: 16px;
-  min-height: 16px;
-  max-height: 16px;
-}
-
-.bookmark-item > .toolbarbutton-icon[label]:not([label=""]),
-.bookmark-item > .toolbarbutton-icon[type="menu"] {
-  margin-inline-end: 5px;
 }
 
 .bookmark-item[container] {

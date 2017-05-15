@@ -2095,9 +2095,9 @@ Gecko_CSSKeywordString(nsCSSKeyword aKeyword, uint32_t* aLength)
 }
 
 nsCSSFontFaceRule*
-Gecko_CSSFontFaceRule_Create()
+Gecko_CSSFontFaceRule_Create(uint32_t aLine, uint32_t aColumn)
 {
-  RefPtr<nsCSSFontFaceRule> rule = new nsCSSFontFaceRule(0, 0);
+  RefPtr<nsCSSFontFaceRule> rule = new nsCSSFontFaceRule(aLine, aColumn);
   return rule.forget().take();
 }
 

@@ -261,9 +261,13 @@ add_task(function* () {
       browser,
       testURL.toString(),
       function* (testURLFn) {
+        // eslint-disable-next-line no-shadow , no-eval
         let testURL = eval("(" + testURLFn + ")");
+        // eslint-disable-next-line no-shadow
         let ssm = Services.scriptSecurityManager;
+        // eslint-disable-next-line no-shadow
         let baseFlags = ssm.STANDARD | ssm.DONT_REPORT_ERRORS;
+        // eslint-disable-next-line no-unused-vars
         let makeURI = Cu.import("resource://gre/modules/BrowserUtils.jsm", {}).BrowserUtils.makeURI;
         let b = new content.Blob(["I am a blob"]);
         let contentBlobURI = content.URL.createObjectURL(b);

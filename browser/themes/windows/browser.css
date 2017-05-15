@@ -371,45 +371,11 @@ toolbar[brighttext] {
 
 /* ::::: bookmark buttons ::::: */
 
-toolbarbutton.bookmark-item:not(.subviewbutton),
-#personal-bookmarks[cui-areatype="toolbar"]:not([overflowedItem=true]) > #bookmarks-toolbar-placeholder {
-  margin: 0;
-  padding: 2px 3px;
-  -moz-appearance: none;
-  border: 1px solid transparent;
-  border-radius: var(--toolbarbutton-border-radius);
-  background-origin: padding-box !important;
-  background-clip: padding-box !important;
-  transition-property: background-color, border-color, box-shadow;
-  transition-duration: 150ms;
-}
-
-toolbarbutton.bookmark-item:not(.subviewbutton):hover:not([disabled="true"]):not([open]) {
-  border-color: var(--toolbarbutton-hover-bordercolor);
-  background: var(--toolbarbutton-hover-background);
-}
-
-toolbarbutton.bookmark-item:not(.subviewbutton):hover:active:not([disabled="true"]),
-toolbarbutton.bookmark-item[open="true"] {
-  border-color: var(--toolbarbutton-active-bordercolor);
-  box-shadow: var(--toolbarbutton-active-boxshadow);
-  background: var(--toolbarbutton-active-background);
-}
-
-.bookmark-item > .toolbarbutton-icon,
-#personal-bookmarks[cui-areatype="toolbar"] > #bookmarks-toolbar-placeholder > .toolbarbutton-icon {
-  width: 16px;
-  height: 16px;
-}
-
-/* Force the display of the label for bookmarks */
-.bookmark-item > .toolbarbutton-text,
-#personal-bookmarks[cui-areatype="toolbar"] > #bookmarks-toolbar-placeholder > .toolbarbutton-text {
-  display: -moz-box !important;
-}
-
 .bookmark-item > .toolbarbutton-menu-dropmarker {
-  display: none;
+  list-style-image: url("chrome://browser/skin/places/arrow-down.svg");
+  fill: currentColor;
+  margin-top: 1px;
+  margin-inline-start: 3px;
 }
 
 #bookmarks-toolbar-placeholder {

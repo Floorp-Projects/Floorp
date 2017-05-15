@@ -19,7 +19,11 @@ async function check_keyword(aExpectExists, aHref, aKeyword, aPostData = null) {
   } else {
     Assert.ok(!entry || entry.url.href != aHref,
               "The given keyword entry should not exist");
-    Assert.equal(null, await PlacesUtils.keywords.fetch({ keyword: aKeyword, url: aHref }));
+    if (aHref) {
+      Assert.equal(null, await PlacesUtils.keywords.fetch({ keyword: aKeyword, url: aHref }));
+    } else {
+      Assert.equal(null, await PlacesUtils.keywords.fetch({ keyword: aKeyword }));
+    }
   }
 }
 
@@ -78,6 +82,30 @@ function expectBookmarkNotifications() {
   PlacesUtils.bookmarks.addObserver(observer);
   return observer;
 }
+
+// This test must be the first one, since it creates the keywords cache.
+add_task(async function test_invalidURL() {
+  await PlacesTestUtils.addVisits("http://test.com/");
+  // Change to url to an invalid one, there's no API for that, so we must do
+  // that manually.
+  await PlacesUtils.withConnectionWrapper("test_invalidURL", async function(db) {
+    await db.execute(
+      `UPDATE moz_places SET url = :broken, url_hash = hash(:broken)
+       WHERE id = (SELECT id FROM moz_places WHERE url_hash = hash(:url))`,
+      { url: "http://test.com/", broken: "<invalid url>" });
+
+    await db.execute(
+      `INSERT INTO moz_keywords (keyword, place_id)
+       VALUES (:kw, (SELECT id FROM moz_places WHERE url_hash = hash(:broken)))`,
+      { broken: "<invalid url>", kw: "keyword" });
+  });
+  await check_keyword(false, "http://broken.com/", "keyword");
+  await check_keyword(false, null, "keyword");
+  await PlacesUtils.withConnectionWrapper("test_invalidURL", async function(db) {
+    let rows = await db.execute(`SELECT * FROM moz_keywords`);
+    Assert.equal(rows.length, 0, "The broken keyword should have been removed");
+  });
+});
 
 add_task(async function test_invalid_input() {
   Assert.throws(() => PlacesUtils.keywords.fetch(null),
@@ -174,7 +202,6 @@ add_task(async function test_addBookmarkAndKeyword() {
   await check_keyword(false, "http://example.com/", "keyword");
   let fc = await foreign_count("http://example.com/");
   let bookmark = await PlacesUtils.bookmarks.insert({ url: "http://example.com/",
-                                                      type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                                       parentGuid: PlacesUtils.bookmarks.unfiledGuid });
 
   let observer = expectBookmarkNotifications();
@@ -270,7 +297,6 @@ add_task(async function test_addBookmarkToURIHavingKeyword() {
 
   observer = expectBookmarkNotifications();
   let bookmark = await PlacesUtils.bookmarks.insert({ url: "http://example.com/",
-                                                      type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                                       parentGuid: PlacesUtils.bookmarks.unfiledGuid });
   Assert.equal((await foreign_count("http://example.com/")), fc + 2); // +1 bookmark
   observer.check([]);
@@ -292,11 +318,9 @@ add_task(async function test_addBookmarkToURIHavingKeyword() {
 add_task(async function test_sameKeywordDifferentURL() {
   let fc1 = await foreign_count("http://example1.com/");
   let bookmark1 = await PlacesUtils.bookmarks.insert({ url: "http://example1.com/",
-                                                       type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                                        parentGuid: PlacesUtils.bookmarks.unfiledGuid });
   let fc2 = await foreign_count("http://example2.com/");
   let bookmark2 = await PlacesUtils.bookmarks.insert({ url: "http://example2.com/",
-                                                       type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                                        parentGuid: PlacesUtils.bookmarks.unfiledGuid });
   await PlacesUtils.keywords.insert({ keyword: "keyword", url: "http://example1.com/" });
 
@@ -358,7 +382,6 @@ add_task(async function test_sameURIDifferentKeyword() {
 
   let observer = expectBookmarkNotifications();
   let bookmark = await PlacesUtils.bookmarks.insert({ url: "http://example.com/",
-                                                      type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                                       parentGuid: PlacesUtils.bookmarks.unfiledGuid });
   await PlacesUtils.keywords.insert({keyword: "keyword", url: "http://example.com/" });
 
@@ -423,10 +446,8 @@ add_task(async function test_deleteKeywordMultipleBookmarks() {
 
   let observer = expectBookmarkNotifications();
   let bookmark1 = await PlacesUtils.bookmarks.insert({ url: "http://example.com/",
-                                                       type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                                        parentGuid: PlacesUtils.bookmarks.unfiledGuid });
   let bookmark2 = await PlacesUtils.bookmarks.insert({ url: "http://example.com/",
-                                                       type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                                        parentGuid: PlacesUtils.bookmarks.unfiledGuid });
   await PlacesUtils.keywords.insert({ keyword: "keyword", url: "http://example.com/" });
 
@@ -489,7 +510,6 @@ add_task(async function test_multipleKeywordsSamePostData() {
 
 add_task(async function test_oldPostDataAPI() {
   let bookmark = await PlacesUtils.bookmarks.insert({ url: "http://example.com/",
-                                                      type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                                       parentGuid: PlacesUtils.bookmarks.unfiledGuid });
   await PlacesUtils.keywords.insert({ keyword: "keyword", url: "http://example.com/" });
   let itemId = await PlacesUtils.promiseItemId(bookmark.guid);
@@ -505,7 +525,6 @@ add_task(async function test_oldPostDataAPI() {
 
 add_task(async function test_oldKeywordsAPI() {
   let bookmark = await PlacesUtils.bookmarks.insert({ url: "http://example.com/",
-                                                    type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                                     parentGuid: PlacesUtils.bookmarks.unfiledGuid });
   await check_keyword(false, "http://example.com/", "keyword");
   let itemId = await PlacesUtils.promiseItemId(bookmark.guid);
@@ -532,7 +551,6 @@ add_task(async function test_bookmarkURLChange() {
   let fc1 = await foreign_count("http://example1.com/");
   let fc2 = await foreign_count("http://example2.com/");
   let bookmark = await PlacesUtils.bookmarks.insert({ url: "http://example1.com/",
-                                                      type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                                       parentGuid: PlacesUtils.bookmarks.unfiledGuid });
   await PlacesUtils.keywords.insert({ keyword: "keyword",
                                       url: "http://example1.com/" });
