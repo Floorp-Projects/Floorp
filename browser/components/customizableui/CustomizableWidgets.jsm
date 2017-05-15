@@ -760,8 +760,9 @@ const CustomizableWidgets = [
         // We need it right now for the case where we re-register the old-style
         // main menu panel if photon is disabled at runtime, and we automatically
         // put the widgets in there, so they get the right style in the panel.
-        onAreaNodeRegistered(aArea, aContainer) {
+        onAreaNodeRegistered: (aArea, aContainer) => {
           if (aContainer.ownerDocument == node.ownerDocument &&
+              aArea == this.currentArea &&
               aArea == CustomizableUI.AREA_PANEL) {
             updateCombinedWidgetStyle(node, aArea, true);
           }
@@ -867,8 +868,9 @@ const CustomizableWidgets = [
         // We need it right now for the case where we re-register the old-style
         // main menu panel if photon is disabled at runtime, and we automatically
         // put the widgets in there, so they get the right style in the panel.
-        onAreaNodeRegistered(aArea, aContainer) {
+        onAreaNodeRegistered: (aArea, aContainer) => {
           if (aContainer.ownerDocument == node.ownerDocument &&
+              aArea == this.currentArea &&
               aArea == CustomizableUI.AREA_PANEL) {
             updateCombinedWidgetStyle(node, aArea);
           }
