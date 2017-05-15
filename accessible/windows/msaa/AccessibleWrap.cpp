@@ -82,7 +82,7 @@ AccessibleWrap::AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
 AccessibleWrap::~AccessibleWrap()
 {
   if (mID != kNoID) {
-    sIDGen.ReleaseID(this);
+    sIDGen.ReleaseID(WrapNotNull(this));
   }
 }
 
@@ -1709,3 +1709,14 @@ AccessibleWrap::DispatchTextChangeToHandler(bool aIsInsert,
   return SUCCEEDED(hr);
 }
 
+/* static */ void
+AccessibleWrap::AssignChildIDTo(NotNull<sdnAccessible*> aSdnAcc)
+{
+  aSdnAcc->SetUniqueID(sIDGen.GetID());
+}
+
+/* static */ void
+AccessibleWrap::ReleaseChildID(NotNull<sdnAccessible*> aSdnAcc)
+{
+  sIDGen.ReleaseID(aSdnAcc);
+}

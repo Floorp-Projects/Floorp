@@ -25,6 +25,13 @@
 using namespace mozilla;
 using namespace mozilla::a11y;
 
+sdnAccessible::~sdnAccessible()
+{
+  if (mUniqueId.isSome()) {
+    AccessibleWrap::ReleaseChildID(WrapNotNull(this));
+  }
+}
+
 STDMETHODIMP
 sdnAccessible::QueryInterface(REFIID aREFIID, void** aInstancePtr)
 {
@@ -102,7 +109,11 @@ sdnAccessible::get_nodeInfo(BSTR __RPC_FAR* aNodeName,
   if (accessible) {
     *aUniqueID = AccessibleWrap::GetChildIDFor(accessible);
   } else {
-    *aUniqueID = - NS_PTR_TO_INT32(static_cast<void*>(this));
+    if (mUniqueId.isNothing()) {
+      AccessibleWrap::AssignChildIDTo(WrapNotNull(this));
+    }
+    MOZ_ASSERT(mUniqueId.isSome());
+    *aUniqueID = mUniqueId.value();
   }
 
   *aNumChildren = mNode->GetChildCount();
