@@ -1043,12 +1043,15 @@ js::IsWrappedArrayConstructor(JSContext* cx, const Value& v, bool* result)
 static bool
 IsArraySpecies(JSContext* cx, HandleObject origArray)
 {
+    if (origArray->is<NativeObject>() && !origArray->is<ArrayObject>())
+        return true;
+
     RootedValue ctor(cx);
     if (!GetPropertyPure(cx, origArray, NameToId(cx->names().constructor), ctor.address()))
         return false;
 
     if (!IsArrayConstructor(ctor))
-        return false;
+        return ctor.isUndefined();
 
     RootedObject ctorObj(cx, &ctor.toObject());
     RootedId speciesId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().species));
@@ -1475,10 +1478,6 @@ SetArrayElements(JSContext* cx, HandleObject obj, uint64_t start,
 
     if (count == 0)
         return true;
-
-    ObjectGroup* group = JSObject::getGroup(cx, obj);
-    if (!group)
-        return false;
 
     if (!ObjectMayHaveExtraIndexedProperties(obj) && start <= UINT32_MAX) {
         DenseElementResult result =
