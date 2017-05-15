@@ -8127,17 +8127,19 @@ nsContentUtils::TransferableToIPCTransferable(nsITransferable* aTransferable,
             }
             size_t length;
             int32_t stride;
-            Shmem surfaceData;
             IShmemAllocator* allocator = aChild ? static_cast<IShmemAllocator*>(aChild)
                                                 : static_cast<IShmemAllocator*>(aParent);
-            GetSurfaceData(dataSurface, &length, &stride,
-                           allocator,
-                           &surfaceData);
+            Maybe<Shmem> surfaceData = GetSurfaceData(dataSurface, &length, &stride,
+                                                      allocator);
+
+            if (surfaceData.isNothing()) {
+              continue;
+            }
 
             IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
             item->flavor() = flavorStr;
             // Turn item->data() into an nsCString prior to accessing it.
-            item->data() = surfaceData;
+            item->data() = surfaceData.ref();
 
             IPCDataTransferImage& imageDetails = item->imageDetails();
             mozilla::gfx::IntSize size = dataSurface->GetSize();
@@ -8287,7 +8289,7 @@ struct GetSurfaceDataRawBuffer
 // a shared memory buffer.
 struct GetSurfaceDataShmem
 {
-  using ReturnType = Shmem;
+  using ReturnType = Maybe<Shmem>;
   using BufferType = char*;
 
   explicit GetSurfaceDataShmem(IShmemAllocator* aAllocator)
@@ -8296,17 +8298,18 @@ struct GetSurfaceDataShmem
 
   ReturnType Allocate(size_t aSize)
   {
-    Shmem returnValue;
-    mAllocator->AllocShmem(aSize,
-                           SharedMemory::TYPE_BASIC,
-                           &returnValue);
-    return returnValue;
+    Shmem shmem;
+    if (!mAllocator->AllocShmem(aSize, SharedMemory::TYPE_BASIC, &shmem)) {
+      return Nothing();
+    }
+
+    return Some(shmem);
   }
 
   static BufferType
   GetBuffer(const ReturnType& aReturnValue)
   {
-    return aReturnValue.get<char>();
+    return aReturnValue.isSome() ? aReturnValue.ref().get<char>() : nullptr;
   }
 
   static ReturnType
@@ -8374,14 +8377,13 @@ nsContentUtils::GetSurfaceData(
   return GetSurfaceDataImpl(aSurface, aLength, aStride);
 }
 
-void
+Maybe<Shmem>
 nsContentUtils::GetSurfaceData(mozilla::gfx::DataSourceSurface* aSurface,
                                size_t* aLength, int32_t* aStride,
-                               IShmemAllocator* aAllocator,
-                               Shmem *aOutShmem)
+                               IShmemAllocator* aAllocator)
 {
-  *aOutShmem = GetSurfaceDataImpl(aSurface, aLength, aStride,
-                                  GetSurfaceDataShmem(aAllocator));
+  return GetSurfaceDataImpl(aSurface, aLength, aStride,
+                            GetSurfaceDataShmem(aAllocator));
 }
 
 mozilla::Modifiers
