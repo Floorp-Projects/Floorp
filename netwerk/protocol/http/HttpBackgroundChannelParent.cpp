@@ -12,6 +12,7 @@
 
 #include "HttpChannelParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Unused.h"
 #include "nsIBackgroundChannelRegistrar.h"
 #include "nsNetCID.h"
@@ -134,6 +135,173 @@ HttpBackgroundChannelParent::OnChannelClosed()
   }), NS_DISPATCH_NORMAL);
 
   Unused << NS_WARN_IF(NS_FAILED(rv));
+}
+
+bool
+HttpBackgroundChannelParent::OnStartRequestSent()
+{
+  LOG(("HttpBackgroundChannelParent::OnStartRequestSent [this=%p]\n", this));
+  AssertIsInMainProcess();
+
+  if (NS_WARN_IF(!mIPCOpened)) {
+    return false;
+  }
+
+  if (!IsOnBackgroundThread()) {
+    nsresult rv = mBackgroundThread->Dispatch(
+      NewRunnableMethod(this, &HttpBackgroundChannelParent::OnStartRequestSent),
+      NS_DISPATCH_NORMAL);
+
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+
+    return NS_SUCCEEDED(rv);
+  }
+
+  return SendOnStartRequestSent();
+}
+
+bool
+HttpBackgroundChannelParent::OnTransportAndData(
+                                               const nsresult& aChannelStatus,
+                                               const nsresult& aTransportStatus,
+                                               const uint64_t& aOffset,
+                                               const uint32_t& aCount,
+                                               const nsCString& aData)
+{
+  LOG(("HttpBackgroundChannelParent::OnTransportAndData [this=%p]\n", this));
+  AssertIsInMainProcess();
+
+  if (NS_WARN_IF(!mIPCOpened)) {
+    return false;
+  }
+
+  if (!IsOnBackgroundThread()) {
+    nsresult rv = mBackgroundThread->Dispatch(
+      NewRunnableMethod<const nsresult, const nsresult, const uint64_t,
+                        const uint32_t, const nsCString>
+        (this, &HttpBackgroundChannelParent::OnTransportAndData,
+         aChannelStatus, aTransportStatus, aOffset, aCount, aData),
+      NS_DISPATCH_NORMAL);
+
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+
+    return NS_SUCCEEDED(rv);
+  }
+
+  return SendOnTransportAndData(aChannelStatus, aTransportStatus,
+                                aOffset, aCount, aData);
+}
+
+bool
+HttpBackgroundChannelParent::OnStopRequest(const nsresult& aChannelStatus,
+                                           const ResourceTimingStruct& aTiming)
+{
+  LOG(("HttpBackgroundChannelParent::OnStopRequest [this=%p "
+        "status=%" PRIx32 "]\n", this, static_cast<uint32_t>(aChannelStatus)));
+  AssertIsInMainProcess();
+
+  if (NS_WARN_IF(!mIPCOpened)) {
+    return false;
+  }
+
+  if (!IsOnBackgroundThread()) {
+    nsresult rv = mBackgroundThread->Dispatch(
+      NewRunnableMethod<const nsresult, const ResourceTimingStruct>
+        (this, &HttpBackgroundChannelParent::OnStopRequest,
+         aChannelStatus, aTiming),
+      NS_DISPATCH_NORMAL);
+
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+
+    return NS_SUCCEEDED(rv);
+  }
+
+  return SendOnStopRequest(aChannelStatus, aTiming);
+}
+
+bool
+HttpBackgroundChannelParent::OnProgress(const int64_t& aProgress,
+                                        const int64_t& aProgressMax)
+{
+  LOG(("HttpBackgroundChannelParent::OnProgress [this=%p progress=%" PRId64
+       " max=%" PRId64 "]\n", this, aProgress, aProgressMax));
+  AssertIsInMainProcess();
+
+  if (NS_WARN_IF(!mIPCOpened)) {
+    return false;
+  }
+
+  if (!IsOnBackgroundThread()) {
+    nsresult rv = mBackgroundThread->Dispatch(
+      NewRunnableMethod<const int64_t, const int64_t>
+        (this, &HttpBackgroundChannelParent::OnProgress,
+         aProgress, aProgressMax),
+      NS_DISPATCH_NORMAL);
+
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+
+    return NS_SUCCEEDED(rv);
+  }
+
+  return SendOnProgress(aProgress, aProgressMax);
+}
+
+bool
+HttpBackgroundChannelParent::OnStatus(const nsresult& aStatus)
+{
+  LOG(("HttpBackgroundChannelParent::OnStatus [this=%p stauts=%" PRIx32
+       "]\n", this, static_cast<uint32_t>(aStatus)));
+  AssertIsInMainProcess();
+
+  if (NS_WARN_IF(!mIPCOpened)) {
+    return false;
+  }
+
+  if (!IsOnBackgroundThread()) {
+    nsresult rv = mBackgroundThread->Dispatch(
+      NewRunnableMethod<const nsresult>
+        (this, &HttpBackgroundChannelParent::OnStatus, aStatus),
+      NS_DISPATCH_NORMAL);
+
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+
+    return NS_SUCCEEDED(rv);
+  }
+
+  return SendOnStatus(aStatus);
+}
+
+bool
+HttpBackgroundChannelParent::OnDiversion()
+{
+  LOG(("HttpBackgroundChannelParent::OnDiversion [this=%p]\n", this));
+  AssertIsInMainProcess();
+
+  if (NS_WARN_IF(!mIPCOpened)) {
+    return false;
+  }
+
+  if (!IsOnBackgroundThread()) {
+    nsresult rv = mBackgroundThread->Dispatch(
+      NewRunnableMethod(this, &HttpBackgroundChannelParent::OnDiversion),
+      NS_DISPATCH_NORMAL);
+
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+
+    return NS_SUCCEEDED(rv);
+  }
+
+  if (!SendFlushedForDiversion()) {
+    return false;
+  }
+
+  // The listener chain should now be setup; tell HttpChannelChild to divert
+  // the OnDataAvailables and OnStopRequest to associated HttpChannelParent.
+  if (!SendDivertMessages()) {
+    return false;
+  }
+
+  return true;
 }
 
 void

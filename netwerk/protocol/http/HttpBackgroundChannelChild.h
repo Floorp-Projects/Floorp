@@ -9,6 +9,8 @@
 #define mozilla_net_HttpBackgroundChannelChild_h
 
 #include "mozilla/net/PHttpBackgroundChannelChild.h"
+#include "nsIRunnable.h"
+#include "nsTArray.h"
 
 using mozilla::ipc::IPCResult;
 
@@ -32,6 +34,10 @@ public:
   // Callback while the associated HttpChannelChild is not going to
   // handle any incoming messages over background channel.
   void OnChannelClosed();
+
+  // Callback when OnStartRequest is received and handled by HttpChannelChild.
+  // Enqueued messages in background channel will be flushed.
+  void OnStartRequestReceived();
 
   // Callback while failed to create PBackground IPC channel.
   void OnBackgroundChannelCreationFailed();
@@ -66,11 +72,30 @@ private:
   // Return false if failed.
   bool CreateBackgroundChannel();
 
+  // Check OnStartRequest is sent by parent process over main thread IPC
+  // but not yet received on child process.
+  // return true before RecvOnStartRequestSent is invoked.
+  // return false if RecvOnStartRequestSent is invoked but not
+  // OnStartRequestReceived.
+  // return true after both RecvOnStartRequestSend and OnStartRequestReceived
+  // are invoked.
+  bool IsWaitingOnStartRequest();
+
   // Associated HttpChannelChild for handling the channel events.
   // Will be removed while failed to create background channel,
   // destruction of the background channel, or explicitly dissociation
   // via OnChannelClosed callback.
   RefPtr<HttpChannelChild> mChannelChild;
+
+  // True if OnStartRequest is received by HttpChannelChild.
+  bool mStartReceived = false;
+
+  // True if OnStartRequest is sent by HttpChannelParent.
+  bool mStartSent = false;
+
+  // Store pending messages that require to be handled after OnStartRequest.
+  // Should be flushed after OnStartRequest is received and handled.
+  nsTArray<nsCOMPtr<nsIRunnable>> mQueuedRunnables;
 };
 
 } // namespace net

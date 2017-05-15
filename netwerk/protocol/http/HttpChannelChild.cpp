@@ -446,6 +446,12 @@ HttpChannelChild::RecvOnStartRequest(const nsresult& channelStatus,
                                               securityInfoSerialization,
                                               selfAddr, peerAddr, cacheKey,
                                               altDataType, altDataLen));
+
+  MOZ_ASSERT(mBgChild);
+  if (mBgChild) {
+    mBgChild->OnStartRequestReceived();
+  }
+
   return IPC_OK();
 }
 
@@ -667,22 +673,21 @@ class TransportAndDataEvent : public ChannelEvent
   uint32_t mCount;
 };
 
-mozilla::ipc::IPCResult
-HttpChannelChild::RecvOnTransportAndData(const nsresult& channelStatus,
-                                         const nsresult& transportStatus,
-                                         const uint64_t& offset,
-                                         const uint32_t& count,
-                                         const nsCString& data)
+void
+HttpChannelChild::ProcessOnTransportAndData(const nsresult& aChannelStatus,
+                                            const nsresult& aTransportStatus,
+                                            const uint64_t& aOffset,
+                                            const uint32_t& aCount,
+                                            const nsCString& aData)
 {
-  LOG(("HttpChannelChild::RecvOnTransportAndData [this=%p]\n", this));
+  LOG(("HttpChannelChild::ProcessOnTransportAndData [this=%p]\n", this));
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
                      "Should not be receiving any more callbacks from parent!");
-
-  mEventQ->RunOrEnqueue(new TransportAndDataEvent(this, channelStatus,
-                                                  transportStatus, data, offset,
-                                                  count),
+  mEventQ->RunOrEnqueue(new TransportAndDataEvent(this, aChannelStatus,
+                                                  aTransportStatus, aData,
+                                                  aOffset, aCount),
                         mDivertingToParent);
-  return IPC_OK();
 }
 
 class MaybeDivertOnDataHttpEvent : public ChannelEvent
@@ -910,17 +915,17 @@ class StopRequestEvent : public ChannelEvent
   ResourceTimingStruct mTiming;
 };
 
-mozilla::ipc::IPCResult
-HttpChannelChild::RecvOnStopRequest(const nsresult& channelStatus,
-                                    const ResourceTimingStruct& timing)
+void
+HttpChannelChild::ProcessOnStopRequest(const nsresult& aChannelStatus,
+                                       const ResourceTimingStruct& aTiming)
 {
-  LOG(("HttpChannelChild::RecvOnStopRequest [this=%p]\n", this));
+  LOG(("HttpChannelChild::ProcessOnStopRequest [this=%p]\n", this));
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
     "Should not be receiving any more callbacks from parent!");
 
-  mEventQ->RunOrEnqueue(new StopRequestEvent(this, channelStatus, timing),
+  mEventQ->RunOrEnqueue(new StopRequestEvent(this, aChannelStatus, aTiming),
                         mDivertingToParent);
-  return IPC_OK();
 }
 
 class MaybeDivertOnStopHttpEvent : public ChannelEvent
@@ -1151,12 +1156,13 @@ class ProgressEvent : public ChannelEvent
   int64_t mProgress, mProgressMax;
 };
 
-mozilla::ipc::IPCResult
-HttpChannelChild::RecvOnProgress(const int64_t& progress,
-                                 const int64_t& progressMax)
+void
+HttpChannelChild::ProcessOnProgress(const int64_t& aProgress,
+                                    const int64_t& aProgressMax)
 {
-  mEventQ->RunOrEnqueue(new ProgressEvent(this, progress, progressMax));
-  return IPC_OK();
+  LOG(("HttpChannelChild::ProcessOnProgress [this=%p]\n", this));
+  MOZ_ASSERT(NS_IsMainThread());
+  mEventQ->RunOrEnqueue(new ProgressEvent(this, aProgress, aProgressMax));
 }
 
 void
@@ -1206,11 +1212,12 @@ class StatusEvent : public ChannelEvent
   nsresult mStatus;
 };
 
-mozilla::ipc::IPCResult
-HttpChannelChild::RecvOnStatus(const nsresult& status)
+void
+HttpChannelChild::ProcessOnStatus(const nsresult& aStatus)
 {
-  mEventQ->RunOrEnqueue(new StatusEvent(this, status));
-  return IPC_OK();
+  LOG(("HttpChannelChild::ProcessOnStatus [this=%p]\n", this));
+  MOZ_ASSERT(NS_IsMainThread());
+  mEventQ->RunOrEnqueue(new StatusEvent(this, aStatus));
 }
 
 void
@@ -1307,8 +1314,8 @@ HttpChannelChild::FailedAsyncOpen(const nsresult& status)
 void
 HttpChannelChild::CleanupBackgroundChannel()
 {
-  LOG(("HttpChannelChild::CleanupBackgroundChannel [this=%p]\n", this));
-
+  LOG(("HttpChannelChild::CleanupBackgroundChannel [this=%p bgChild=%p]\n",
+       this, mBgChild.get()));
   if (!mBgChild) {
     return;
   }
@@ -1714,15 +1721,14 @@ class HttpFlushedForDiversionEvent : public ChannelEvent
   HttpChannelChild* mChild;
 };
 
-mozilla::ipc::IPCResult
-HttpChannelChild::RecvFlushedForDiversion()
+void
+HttpChannelChild::ProcessFlushedForDiversion()
 {
-  LOG(("HttpChannelChild::RecvFlushedForDiversion [this=%p]\n", this));
+  LOG(("HttpChannelChild::ProcessFlushedForDiversion [this=%p]\n", this));
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(mDivertingToParent);
 
   mEventQ->RunOrEnqueue(new HttpFlushedForDiversionEvent(this), true);
-
-  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
@@ -1760,19 +1766,17 @@ HttpChannelChild::RecvSetClassifierMatchedInfo(const ClassifierInfo& aInfo)
   return IPC_OK();
 }
 
-
-mozilla::ipc::IPCResult
-HttpChannelChild::RecvDivertMessages()
+void
+HttpChannelChild::ProcessDivertMessages()
 {
-  LOG(("HttpChannelChild::RecvDivertMessages [this=%p]\n", this));
+  LOG(("HttpChannelChild::ProcessDivertMessages [this=%p]\n", this));
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(mDivertingToParent);
   MOZ_RELEASE_ASSERT(mSuspendCount > 0);
 
   // DivertTo() has been called on parent, so we can now start sending queued
   // IPDL messages back to parent listener.
   MOZ_RELEASE_ASSERT(NS_SUCCEEDED(Resume()));
-
-  return IPC_OK();
 }
 
 // Returns true if has actually completed the redirect and cleaned up the
