@@ -86,7 +86,6 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
 
     nsCOMPtr<nsIComponentManager> mCompMgr;
     nsCOMPtr<nsIPrincipal> mSystemPrincipal;
-    nsCOMPtr<nsIXPConnectJSObjectHolder> mLoaderGlobal;
 
     class ModuleEntry : public mozilla::Module
     {
