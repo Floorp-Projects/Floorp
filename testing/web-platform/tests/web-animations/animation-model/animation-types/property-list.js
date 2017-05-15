@@ -379,7 +379,7 @@ var gCSSProperties = {
   'column-gap': {
     // https://drafts.csswg.org/css-multicol/#propdef-column-gap
     types: [ 'length',
-	     {  type: 'discrete', options: [ [ 'normal', '200px' ] ] }
+            {  type: 'discrete', options: [ [ 'normal', '200px' ] ] }
     ]
   },
   'column-rule-color': {

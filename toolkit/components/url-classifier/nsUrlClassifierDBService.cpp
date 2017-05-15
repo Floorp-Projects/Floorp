@@ -100,9 +100,6 @@ LazyLogModule gUrlClassifierDbServiceLog("UrlClassifierDbService");
 #define GETHASH_NOISE_PREF      "urlclassifier.gethashnoise"
 #define GETHASH_NOISE_DEFAULT   4
 
-#define CONFIRM_AGE_PREF        "urlclassifier.max-complete-age"
-#define CONFIRM_AGE_DEFAULT_SEC (45 * 60)
-
 // 30 minutes as the maximum negative cache duration.
 #define MAXIMUM_NEGATIVE_CACHE_DURATION_SEC (30 * 60 * 1000)
 
@@ -122,7 +119,6 @@ nsIThread* nsUrlClassifierDBService::gDbBackgroundThread = nullptr;
 // thread.
 static bool gShuttingDownThread = false;
 
-static mozilla::Atomic<uint32_t, Relaxed> gFreshnessGuarantee(CONFIRM_AGE_DEFAULT_SEC);
 static uint32_t sGethashNoise = GETHASH_NOISE_DEFAULT;
 
 NS_IMPL_ISUPPORTS(nsUrlClassifierDBServiceWorker,
@@ -197,7 +193,7 @@ nsUrlClassifierDBServiceWorker::DoLocalLookup(const nsACString& spec,
 
   // We ignore failures from Check because we'd rather return the
   // results that were found than fail.
-  mClassifier->Check(spec, tables, gFreshnessGuarantee, *results);
+  mClassifier->Check(spec, tables, *results);
 
   LOG(("Found %" PRIuSIZE " results.", results->Length()));
   return NS_OK;
@@ -265,34 +261,24 @@ nsUrlClassifierDBServiceWorker::DoLookup(const nsACString& spec,
          PR_IntervalToMilliseconds(clockEnd - clockStart)));
   }
 
-  nsAutoPtr<LookupResultArray> completes(new LookupResultArray());
-
   for (uint32_t i = 0; i < results->Length(); i++) {
     const LookupResult& lookupResult = results->ElementAt(i);
 
-    // mMissCache should only be used in V2.
-    if (!lookupResult.mProtocolV2 ||
-        !mMissCache.Contains(lookupResult.hash.fixedLengthPrefix)) {
-      completes->AppendElement(lookupResult);
-    }
-  }
-
-  for (uint32_t i = 0; i < completes->Length(); i++) {
-    if (!completes->ElementAt(i).Confirmed() &&
-        mDBService->CanComplete(completes->ElementAt(i).mTableName)) {
+    if (!lookupResult.Confirmed() &&
+        mDBService->CanComplete(lookupResult.mTableName)) {
 
       // We're going to be doing a gethash request, add some extra entries.
       // Note that we cannot pass the first two by reference, because we
       // add to completes, whicah can cause completes to reallocate and move.
-      AddNoise(completes->ElementAt(i).hash.fixedLengthPrefix,
-               completes->ElementAt(i).mTableName,
-               mGethashNoise, *completes);
+      AddNoise(lookupResult.hash.fixedLengthPrefix,
+               lookupResult.mTableName,
+               mGethashNoise, *results);
       break;
     }
   }
 
   // At this point ownership of 'results' is handed to the callback.
-  c->LookupComplete(completes.forget());
+  c->LookupComplete(results.forget());
 
   return NS_OK;
 }
@@ -683,8 +669,6 @@ nsUrlClassifierDBServiceWorker::NotifyUpdateObserver(nsresult aUpdateStatus)
                           NS_ERROR_GET_CODE(updateStatus));
   }
 
-  mMissCache.Clear();
-
   // Null out mUpdateObserver before notifying so that BeginUpdate()
   // becomes available prior to callback.
   nsCOMPtr<nsIUrlClassifierUpdateObserver> updateObserver = nullptr;
@@ -736,15 +720,8 @@ NS_IMETHODIMP
 nsUrlClassifierDBServiceWorker::ReloadDatabase()
 {
   nsTArray<nsCString> tables;
-  nsTArray<int64_t> lastUpdateTimes;
   nsresult rv = mClassifier->ActiveTables(tables);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // We need to make sure lastupdatetime is set after reload database
-  // Otherwise request will be skipped if it is not confirmed.
-  for (uint32_t table = 0; table < tables.Length(); table++) {
-    lastUpdateTimes.AppendElement(mClassifier->GetLastUpdateTime(tables[table]));
-  }
 
   // This will null out mClassifier
   rv = CloseDb();
@@ -753,13 +730,6 @@ nsUrlClassifierDBServiceWorker::ReloadDatabase()
   // Create new mClassifier and load prefixset and completions from disk.
   rv = OpenDb();
   NS_ENSURE_SUCCESS(rv, rv);
-
-  for (uint32_t table = 0; table < tables.Length(); table++) {
-    int64_t time = lastUpdateTimes[table];
-    if (time) {
-      mClassifier->SetLastUpdateTime(tables[table], lastUpdateTimes[table]);
-    }
-  }
 
   return NS_OK;
 }
@@ -864,7 +834,7 @@ nsUrlClassifierDBServiceWorker::CacheCompletions(CacheResultArray *results)
     }
     if (activeTable) {
       nsAutoPtr<ProtocolParser> pParse;
-      pParse = resultsPtr->ElementAt(i)->Ver() == CacheResult::V2 ?
+      pParse = result->Ver() == CacheResult::V2 ?
                  static_cast<ProtocolParser*>(new ProtocolParserV2()) :
                  static_cast<ProtocolParser*>(new ProtocolParserProtobuf());
 
@@ -897,15 +867,18 @@ nsUrlClassifierDBServiceWorker::CacheResultToTableUpdate(CacheResult* aCacheResu
     auto result = CacheResult::Cast<CacheResultV2>(aCacheResult);
     MOZ_ASSERT(result);
 
-    LOG(("CacheCompletion hash %X, Addchunk %d", result->completion.ToUint32(),
-         result->addChunk));
+    if (result->miss) {
+      return tuV2->NewMissPrefix(result->prefix);
+    } else {
+      LOG(("CacheCompletion hash %X, Addchunk %d", result->completion.ToUint32(),
+           result->addChunk));
 
-    nsresult rv = tuV2->NewAddComplete(result->addChunk, result->completion);
-    if (NS_FAILED(rv)) {
-      return rv;
+      nsresult rv = tuV2->NewAddComplete(result->addChunk, result->completion);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      return tuV2->NewAddChunk(result->addChunk);
     }
-    rv = tuV2->NewAddChunk(result->addChunk);
-    return rv;
   }
 
   auto tuV4 = TableUpdate::Cast<TableUpdateV4>(aUpdate);
@@ -929,21 +902,6 @@ nsUrlClassifierDBServiceWorker::CacheResultToTableUpdate(CacheResult* aCacheResu
 
   // tableUpdate object should be either V2 or V4.
   return NS_ERROR_FAILURE;
-}
-
-nsresult
-nsUrlClassifierDBServiceWorker::CacheMisses(PrefixArray *results)
-{
-  LOG(("nsUrlClassifierDBServiceWorker::CacheMisses [%p] %" PRIuSIZE,
-       this, results->Length()));
-
-  // Ownership is transferred in to us
-  nsAutoPtr<PrefixArray> resultsPtr(results);
-
-  for (uint32_t i = 0; i < resultsPtr->Length(); i++) {
-    mMissCache.AppendElement(resultsPtr->ElementAt(i));
-  }
-  return NS_OK;
 }
 
 nsresult
@@ -972,18 +930,6 @@ nsUrlClassifierDBServiceWorker::OpenDb()
   NS_ENSURE_SUCCESS(rv, rv);
 
   mClassifier = classifier;
-
-  return NS_OK;
-}
-
-nsresult
-nsUrlClassifierDBServiceWorker::SetLastUpdateTime(const nsACString &table,
-                                                  uint64_t updateTime)
-{
-  MOZ_ASSERT(!NS_IsMainThread(), "Must be on the background thread");
-  MOZ_ASSERT(mClassifier, "Classifier connection must be opened");
-
-  mClassifier->SetLastUpdateTime(table, updateTime);
 
   return NS_OK;
 }
@@ -1054,6 +1000,7 @@ private:
 
   nsresult HandleResults();
   nsresult ProcessComplete(CacheResult* aCacheResult);
+  nsresult CacheMisses();
 
   RefPtr<nsUrlClassifierDBService> mDBService;
   nsAutoPtr<LookupResultArray> mResults;
@@ -1395,22 +1342,9 @@ nsUrlClassifierLookupCallback::HandleResults()
                           MatchResultToUint(matchResult));
   }
 
-  // TODO: Bug 1333328, Refactor cache miss mechanism for v2.
   // Some parts of this gethash request generated no hits at all.
-  // Prefixes must have been removed from the database since our last update.
-  // Save the prefixes we checked to prevent repeated requests
-  // until the next update.
-  nsAutoPtr<PrefixArray> cacheMisses(new PrefixArray());
-  if (cacheMisses) {
-    for (uint32_t i = 0; i < mResults->Length(); i++) {
-      LookupResult &result = mResults->ElementAt(i);
-      if (result.mProtocolV2 && !result.Confirmed() && !result.mNoise) {
-        cacheMisses->AppendElement(result.hash.fixedLengthPrefix);
-      }
-    }
-    // Hands ownership of the miss array back to the worker thread.
-    mDBService->CacheMisses(cacheMisses.forget());
-  }
+  // Save the prefixes we checked to prevent repeated requests.
+  CacheMisses();
 
   if (mCacheResults) {
     // This hands ownership of the cache results array back to the worker
@@ -1426,6 +1360,34 @@ nsUrlClassifierLookupCallback::HandleResults()
   }
 
   return mCallback->HandleEvent(tableStr);
+}
+
+nsresult
+nsUrlClassifierLookupCallback::CacheMisses()
+{
+  for (uint32_t i = 0; i < mResults->Length(); i++) {
+    const LookupResult &result = mResults->ElementAt(i);
+    // Skip V4 because cache information is already included in the
+    // fullhash response so we don't need to manually add it here.
+    if (!result.mProtocolV2 || result.Confirmed() || result.mNoise) {
+      continue;
+    }
+
+    if (!mCacheResults) {
+      mCacheResults = new CacheResultArray();
+      if (!mCacheResults) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+
+    auto cacheResult = new CacheResultV2;
+
+    cacheResult->table = result.mTableName;
+    cacheResult->prefix = result.hash.fixedLengthPrefix;
+    cacheResult->miss = true;
+    mCacheResults->AppendElement(cacheResult);
+  }
+  return NS_OK;
 }
 
 struct Provider {
@@ -1684,8 +1646,6 @@ nsUrlClassifierDBService::Init()
 
   sGethashNoise = Preferences::GetUint(GETHASH_NOISE_PREF,
     GETHASH_NOISE_DEFAULT);
-  gFreshnessGuarantee = Preferences::GetInt(CONFIRM_AGE_PREF,
-    CONFIRM_AGE_DEFAULT_SEC);
   ReadTablesFromPrefs();
   nsresult rv;
 
@@ -1752,8 +1712,6 @@ nsUrlClassifierDBService::Init()
   //       situations. See Bug 1247798 and Bug 1244803.
   Preferences::AddUintVarCache(&sGethashNoise, GETHASH_NOISE_PREF,
     GETHASH_NOISE_DEFAULT);
-  Preferences::AddAtomicUintVarCache(&gFreshnessGuarantee, CONFIRM_AGE_PREF,
-    CONFIRM_AGE_DEFAULT_SEC);
 
   for (uint8_t i = 0; i < kObservedPrefs.Length(); i++) {
     Preferences::AddStrongObserver(this, kObservedPrefs[i].get());
@@ -2116,15 +2074,6 @@ nsUrlClassifierDBService::SetHashCompleter(const nsACString &tableName,
 }
 
 NS_IMETHODIMP
-nsUrlClassifierDBService::SetLastUpdateTime(const nsACString &tableName,
-                                            uint64_t lastUpdateTime)
-{
-  NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
-
-  return mWorkerProxy->SetLastUpdateTime(tableName, lastUpdateTime);
-}
-
-NS_IMETHODIMP
 nsUrlClassifierDBService::ClearLastResults()
 {
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
@@ -2255,14 +2204,6 @@ nsUrlClassifierDBService::CacheCompletions(CacheResultArray *results)
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
 
   return mWorkerProxy->CacheCompletions(results);
-}
-
-nsresult
-nsUrlClassifierDBService::CacheMisses(PrefixArray *results)
-{
-  NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
-
-  return mWorkerProxy->CacheMisses(results);
 }
 
 bool
