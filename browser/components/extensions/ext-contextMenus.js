@@ -147,6 +147,13 @@ var gMenuBuilder = {
     let menuPopup = element.firstChild;
     if (menuPopup && menuPopup.childNodes.length == 1) {
       let onlyChild = menuPopup.firstChild;
+
+      // Keep single checkbox items in the submenu on Linux since
+      // the extension icon overlaps the checkbox otherwise.
+      if (AppConstants.platform === "linux" && onlyChild.getAttribute("type") === "checkbox") {
+        return element;
+      }
+
       onlyChild.remove();
       return onlyChild;
     }

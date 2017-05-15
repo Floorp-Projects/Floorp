@@ -24,26 +24,54 @@ add_task(async function() {
         type: "checkbox",
       });
 
-      browser.contextMenus.create({
-        type: "separator",
-      });
+      browser.test.sendMessage("single-contextmenu-item-added");
 
-      browser.contextMenus.create({
-        title: "Checkbox",
-        type: "checkbox",
-        checked: true,
-      });
+      browser.test.onMessage.addListener(msg => {
+        if (msg !== "add-additional-menu-items") {
+          return;
+        }
 
-      browser.contextMenus.create({
-        title: "Checkbox",
-        type: "checkbox",
-      });
+        browser.contextMenus.create({
+          type: "separator",
+        });
 
-      browser.test.notifyPass("contextmenus-checkboxes");
+        browser.contextMenus.create({
+          title: "Checkbox",
+          type: "checkbox",
+          checked: true,
+        });
+
+        browser.contextMenus.create({
+          title: "Checkbox",
+          type: "checkbox",
+        });
+
+        browser.test.notifyPass("contextmenus-checkboxes");
+      });
     },
   });
 
   await extension.startup();
+
+  await extension.awaitMessage("single-contextmenu-item-added");
+
+  async function testSingleCheckboxItem() {
+    let extensionMenuRoot = await openExtensionContextMenu();
+
+    // On Linux, the single menu item should be contained in a submenu.
+    if (AppConstants.platform === "linux") {
+      let items = extensionMenuRoot.getElementsByAttribute("type", "checkbox");
+      is(items.length, 1, "single checkbox should be in the submenu on Linux");
+      await closeContextMenu();
+    } else {
+      is(extensionMenuRoot, null, "there should be no submenu for a single checkbox item");
+      await closeContextMenu();
+    }
+  }
+
+  await testSingleCheckboxItem();
+
+  extension.sendMessage("add-additional-menu-items");
   await extension.awaitFinish("contextmenus-checkboxes");
 
   function confirmCheckboxStates(extensionMenuRoot, expectedStates) {
