@@ -1540,7 +1540,7 @@ nsMessageManagerScriptExecutor::LoadScriptInternal(const nsAString& aURL,
                                  shouldCache, &script);
   }
 
-  JS::Rooted<JSObject*> global(rcx, mGlobal->GetJSObject());
+  JS::Rooted<JSObject*> global(rcx, mGlobal);
   if (global) {
     AutoEntryScript aes(global, "message manager script load");
     JSContext* cx = aes.cx();
@@ -1677,12 +1677,14 @@ nsMessageManagerScriptExecutor::Trace(const TraceCallbacks& aCallbacks, void* aC
   for (size_t i = 0, length = mAnonymousGlobalScopes.Length(); i < length; ++i) {
     aCallbacks.Trace(&mAnonymousGlobalScopes[i], "mAnonymousGlobalScopes[i]", aClosure);
   }
+  aCallbacks.Trace(&mGlobal, "mGlobal", aClosure);
 }
 
 void
 nsMessageManagerScriptExecutor::Unlink()
 {
   ImplCycleCollectionUnlink(mAnonymousGlobalScopes);
+  mGlobal = nullptr;
 }
 
 bool
@@ -1704,18 +1706,19 @@ nsMessageManagerScriptExecutor::InitChildGlobalInternal(
     options.creationOptions().setSharedMemoryAndAtomicsEnabled(true);
   }
 
+  nsCOMPtr<nsIXPConnectJSObjectHolder> globalHolder;
   nsresult rv =
     xpc->InitClassesWithNewWrappedGlobal(cx, aScope, mPrincipal,
-                                         flags, options, getter_AddRefs(mGlobal));
+                                         flags, options,
+                                         getter_AddRefs(globalHolder));
   NS_ENSURE_SUCCESS(rv, false);
 
-
-  JS::Rooted<JSObject*> global(cx, mGlobal->GetJSObject());
-  NS_ENSURE_TRUE(global, false);
+  mGlobal = globalHolder->GetJSObject();
+  NS_ENSURE_TRUE(mGlobal, false);
 
   // Set the location information for the new global, so that tools like
   // about:memory may use that information.
-  xpc::SetLocationForGlobal(global, aID);
+  xpc::SetLocationForGlobal(mGlobal, aID);
 
   DidCreateGlobal();
   return true;
