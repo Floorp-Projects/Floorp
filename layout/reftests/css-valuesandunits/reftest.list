@@ -4,7 +4,7 @@
 == unit-rem-iframe.html unit-rem-ref-iframe.html
 == unit-rem-root-fontsize.html unit-rem-ref-root-fontsize.html
 == unit-rem-root-fontsize.html unit-rem-ref2-root-fontsize.html
-fails-if(stylo) == unit-rem-root-width.html unit-rem-ref-root-width.html
+== unit-rem-root-width.html unit-rem-ref-root-width.html
 == unit-rem.svg unit-rem-ref.svg
 == unit-vh-vw.html unit-vh-vw-ref.html
 == unit-vh-vw-zoom.html unit-vh-vw-zoom-ref.html
