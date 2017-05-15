@@ -875,6 +875,7 @@ public:
     , mLength(aLength)
     , mFlags(aFlags)
   {
+    MOZ_RELEASE_ASSERT(CheckCapacity(aLength), "String is too large.");
   }
 #endif /* DEBUG || FORCE_BUILD_REFCNT_LOGGING */
 
