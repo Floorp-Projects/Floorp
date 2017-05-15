@@ -167,6 +167,16 @@ pub struct WrSize {
     height: f32,
 }
 
+impl WrSize {
+    fn new(width: f32, height: f32) -> WrSize {
+        WrSize { width: width, height: height }
+    }
+
+    fn zero() -> WrSize {
+        WrSize { width: 0.0, height: 0.0 }
+    }
+}
+
 impl<U> Into<TypedSize2D<f32, U>> for WrSize {
     fn into(self) -> TypedSize2D<f32, U> {
         TypedSize2D::new(self.width, self.height)
@@ -1013,6 +1023,7 @@ pub unsafe extern "C" fn wr_api_set_root_display_list(api: &mut WrAPI,
                                                       viewport_width: f32,
                                                       viewport_height: f32,
                                                       pipeline_id: WrPipelineId,
+                                                      content_size: WrSize,
                                                       dl_descriptor: WrBuiltDisplayListDescriptor,
                                                       dl_data: *mut u8,
                                                       dl_size: usize) {
@@ -1031,7 +1042,7 @@ pub unsafe extern "C" fn wr_api_set_root_display_list(api: &mut WrAPI,
     api.set_display_list(Some(root_background_color),
                          epoch,
                          LayoutSize::new(viewport_width, viewport_height),
-                         (pipeline_id, dl),
+                         (pipeline_id, content_size.into(), dl),
                          preserve_frame_state);
 }
 
@@ -1041,7 +1052,7 @@ pub unsafe extern "C" fn wr_api_clear_root_display_list(api: &mut WrAPI,
                                                         pipeline_id: WrPipelineId) {
     let root_background_color = ColorF::new(0.3, 0.0, 0.0, 1.0);
     let preserve_frame_state = true;
-    let frame_builder = WebRenderFrameBuilder::new(pipeline_id);
+    let frame_builder = WebRenderFrameBuilder::new(pipeline_id, WrSize::zero());
 
     api.set_display_list(Some(root_background_color),
                          epoch,
@@ -1148,10 +1159,11 @@ pub struct WebRenderFrameBuilder {
 }
 
 impl WebRenderFrameBuilder {
-    pub fn new(root_pipeline_id: WrPipelineId) -> WebRenderFrameBuilder {
+    pub fn new(root_pipeline_id: WrPipelineId,
+               content_size: WrSize) -> WebRenderFrameBuilder {
         WebRenderFrameBuilder {
             root_pipeline_id: root_pipeline_id,
-            dl_builder: webrender_traits::DisplayListBuilder::new(root_pipeline_id),
+            dl_builder: webrender_traits::DisplayListBuilder::new(root_pipeline_id, content_size.into()),
             scroll_clips_defined: HashSet::new(),
         }
     }
@@ -1163,12 +1175,14 @@ pub struct WrState {
 }
 
 #[no_mangle]
-pub extern "C" fn wr_state_new(pipeline_id: WrPipelineId) -> *mut WrState {
+pub extern "C" fn wr_state_new(pipeline_id: WrPipelineId,
+                               content_size: WrSize) -> *mut WrState {
     assert!(unsafe { is_in_main_thread() });
 
     let state = Box::new(WrState {
                              pipeline_id: pipeline_id,
-                             frame_builder: WebRenderFrameBuilder::new(pipeline_id),
+                             frame_builder: WebRenderFrameBuilder::new(pipeline_id,
+                                                                       content_size),
                          });
 
     Box::into_raw(state)
@@ -1323,7 +1337,7 @@ pub extern "C" fn wr_scroll_layer_with_id(api: &mut WrAPI,
                                           new_scroll_origin: WrPoint) {
     assert!(unsafe { is_in_compositor_thread() });
     let clip_id = ClipId::new(scroll_id, pipeline_id);
-    api.scroll_node_with_id(new_scroll_origin.into(), clip_id);
+    api.scroll_node_with_id(new_scroll_origin.into(), clip_id, ScrollClamping::NoClamping);
 }
 
 #[no_mangle]
@@ -1428,7 +1442,7 @@ pub extern "C" fn wr_dp_push_text(state: &mut WrState,
                     font_key,
                     colorf,
                     Au::from_f32_px(glyph_size),
-                    Au::from_px(0),
+                    0.0,
                     glyph_options);
 }
 
@@ -1631,11 +1645,14 @@ pub extern "C" fn wr_dp_push_box_shadow(state: &mut WrState,
 
 #[no_mangle]
 pub unsafe extern "C" fn wr_api_finalize_builder(state: &mut WrState,
+                                                 content_size: &mut WrSize,
                                                  dl_descriptor: &mut WrBuiltDisplayListDescriptor,
                                                  dl_data: &mut WrVecU8) {
     let frame_builder = mem::replace(&mut state.frame_builder,
-                                     WebRenderFrameBuilder::new(state.pipeline_id));
-    let (_, dl) = frame_builder.dl_builder.finalize();
+                                     WebRenderFrameBuilder::new(state.pipeline_id,
+                                                                WrSize::zero()));
+    let (_, size, dl) = frame_builder.dl_builder.finalize();
+    *content_size = WrSize::new(size.width, size.height);
     let (data, descriptor) = dl.into_data();
     *dl_data = WrVecU8::from_vec(data);
     *dl_descriptor = descriptor;

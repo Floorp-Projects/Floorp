@@ -102,15 +102,17 @@ WebRenderBridgeChild::DPEnd(wr::DisplayListBuilder &aBuilder,
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(mIsInTransaction);
 
-  wr::BuiltDisplayList dl = aBuilder.Finalize();
+  wr::BuiltDisplayList dl;
+  WrSize contentSize;
+  aBuilder.Finalize(contentSize, dl);
   ByteBuffer dlData(Move(dl.dl));
 
   if (aIsSync) {
     this->SendDPSyncEnd(aSize, mParentCommands, mDestroyedActors, GetFwdTransactionId(), aTransactionId,
-                        dlData, dl.dl_desc, aScrollData);
+                        contentSize, dlData, dl.dl_desc, aScrollData);
   } else {
     this->SendDPEnd(aSize, mParentCommands, mDestroyedActors, GetFwdTransactionId(), aTransactionId,
-                    dlData, dl.dl_desc, aScrollData);
+                    contentSize, dlData, dl.dl_desc, aScrollData);
   }
 
   mParentCommands.Clear();

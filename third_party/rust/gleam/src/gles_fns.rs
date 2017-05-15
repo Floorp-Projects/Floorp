@@ -35,6 +35,10 @@ impl Gl for GlesFns {
         }
     }
 
+    fn tex_buffer(&self, _target: GLenum, _internal_format: GLenum, _buffer: GLuint) {
+        panic!("not supported")
+    }
+
     fn buffer_sub_data_untyped(&self, target: GLenum, offset: isize, size: GLsizeiptr, data: *const GLvoid) {
         unsafe {
             self.ffi_gl_.BufferSubData(target,
@@ -1089,6 +1093,14 @@ impl Gl for GlesFns {
             self.ffi_gl_.GetVertexAttribfv(index, pname, result.as_mut_ptr());
             return result;
         }
+    }
+
+    fn get_vertex_attrib_pointer_v(&self, index: GLuint, pname: GLenum) -> GLsizeiptr {
+        let mut result = 0 as *mut GLvoid;
+        unsafe {
+            self.ffi_gl_.GetVertexAttribPointerv(index, pname, &mut result)
+        }
+        result as GLsizeiptr
     }
 
     fn get_buffer_parameter_iv(&self, target: GLuint, pname: GLenum) -> GLint {

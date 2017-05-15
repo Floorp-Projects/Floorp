@@ -59,7 +59,7 @@ fn from_transformed_rect() {
         TypedMatrix4D::create_rotation(0.5f32.sqrt(), 0.0, 0.5f32.sqrt(), Radians::new(5.0))
         .pre_translated(0.0, 0.0, 10.0);
     let poly = Polygon::from_transformed_rect(rect, transform, 0);
-    assert!(poly.is_valid_eps(1e-5));
+    assert!(poly.is_valid());
 }
 
 #[test]

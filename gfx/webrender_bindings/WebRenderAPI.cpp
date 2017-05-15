@@ -204,6 +204,7 @@ WebRenderAPI::SetRootDisplayList(gfx::Color aBgColor,
                                  Epoch aEpoch,
                                  LayerSize aViewportSize,
                                  WrPipelineId pipeline_id,
+                                 const WrSize& content_size,
                                  WrBuiltDisplayListDescriptor dl_descriptor,
                                  uint8_t *dl_data,
                                  size_t dl_size)
@@ -212,6 +213,7 @@ WebRenderAPI::SetRootDisplayList(gfx::Color aBgColor,
                                  aEpoch,
                                  aViewportSize.width, aViewportSize.height,
                                  pipeline_id,
+                                 content_size,
                                  dl_descriptor,
                                  dl_data,
                                  dl_size);
@@ -503,10 +505,11 @@ WebRenderAPI::RunOnRenderThread(UniquePtr<RendererEvent> aEvent)
   wr_api_send_external_event(mWrApi, event);
 }
 
-DisplayListBuilder::DisplayListBuilder(PipelineId aId)
+DisplayListBuilder::DisplayListBuilder(PipelineId aId,
+                                       const WrSize& aContentSize)
 {
   MOZ_COUNT_CTOR(DisplayListBuilder);
-  mWrState = wr_state_new(aId);
+  mWrState = wr_state_new(aId, aContentSize);
 }
 
 DisplayListBuilder::~DisplayListBuilder()
@@ -527,14 +530,14 @@ DisplayListBuilder::End()
   wr_dp_end(mWrState);
 }
 
-BuiltDisplayList
-DisplayListBuilder::Finalize()
+void
+DisplayListBuilder::Finalize(WrSize& aOutContentSize,
+                             BuiltDisplayList& aOutDisplayList)
 {
-  BuiltDisplayList dl;
   wr_api_finalize_builder(mWrState,
-                          &dl.dl_desc,
-                          &dl.dl.inner);
-  return dl;
+                          &aOutContentSize,
+                          &aOutDisplayList.dl_desc,
+                          &aOutDisplayList.dl.inner);
 }
 
 void

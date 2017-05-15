@@ -55,6 +55,12 @@ impl Gl for GlFns {
         drop(pointers);
     }
 
+    fn tex_buffer(&self, target: GLenum, internal_format: GLenum, buffer: GLuint) {
+        unsafe {
+            self.ffi_gl_.TexBuffer(target, internal_format, buffer);
+        }
+    }
+
     fn read_buffer(&self, mode: GLenum) {
         unsafe {
             self.ffi_gl_.ReadBuffer(mode);
@@ -1115,6 +1121,14 @@ impl Gl for GlFns {
             self.ffi_gl_.GetVertexAttribfv(index, pname, result.as_mut_ptr());
             return result;
         }
+    }
+
+    fn get_vertex_attrib_pointer_v(&self, index: GLuint, pname: GLenum) -> GLsizeiptr {
+        let mut result = 0 as *mut GLvoid;
+        unsafe {
+            self.ffi_gl_.GetVertexAttribPointerv(index, pname, &mut result)
+        }
+        result as GLsizeiptr
     }
 
     fn get_buffer_parameter_iv(&self, target: GLuint, pname: GLenum) -> GLint {

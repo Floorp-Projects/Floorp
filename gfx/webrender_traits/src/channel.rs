@@ -50,8 +50,7 @@ impl Payload {
         let mut built_display_list_data = vec![0; dl_size];
         payload_reader.read_exact(&mut built_display_list_data[..]).unwrap();
 
-        // TODO(new-ipc): assert_eq!(payload_reader.position(), data.len() as u64);
-
+        assert_eq!(payload_reader.position(), data.len() as u64);
 
         Payload {
             epoch: epoch,

@@ -1,6 +1,6 @@
 [package]
 name = "binary-space-partition"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Dzmitry Malyshau <kvark@mozilla.com>"]
 description = "Abstract BSP tree"
 license = "MPL-2.0"

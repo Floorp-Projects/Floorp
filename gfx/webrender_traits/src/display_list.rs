@@ -8,13 +8,14 @@ use serde::{Deserialize, Serialize, Serializer};
 use serde::ser::{SerializeSeq, SerializeMap};
 use time::precise_time_ns;
 use {BorderDetails, BorderDisplayItem, BorderWidths, BoxShadowClipMode, BoxShadowDisplayItem};
-use {ClipAndScrollInfo, ClipDisplayItem, ClipId, ClipRegion, ColorF, ComplexClipRegion, DisplayItem};
-use {ExtendMode, FilterOp, FontKey, GlyphInstance, GlyphOptions, Gradient, GradientDisplayItem};
-use {GradientStop, IframeDisplayItem, ImageDisplayItem, ImageKey, ImageMask, ImageRendering};
-use {LayoutPoint, LayoutRect, LayoutSize, LayoutTransform, MixBlendMode, PipelineId};
-use {PropertyBinding, PushStackingContextDisplayItem, RadialGradient, RadialGradientDisplayItem};
-use {RectangleDisplayItem, ScrollPolicy, SpecificDisplayItem, StackingContext, TextDisplayItem};
-use {TransformStyle, WebGLContextId, WebGLDisplayItem, YuvColorSpace, YuvData, YuvImageDisplayItem};
+use {ClipAndScrollInfo, ClipDisplayItem, ClipId, ClipRegion, ColorF, ComplexClipRegion};
+use {DisplayItem, ExtendMode, FilterOp, FontKey, GlyphInstance, GlyphOptions, Gradient};
+use {GradientDisplayItem, GradientStop, IframeDisplayItem, ImageDisplayItem, ImageKey, ImageMask};
+use {ImageRendering, LayoutPoint, LayoutRect, LayoutSize, LayoutTransform, MixBlendMode};
+use {PipelineId, PropertyBinding, PushStackingContextDisplayItem, RadialGradient};
+use {RadialGradientDisplayItem, RectangleDisplayItem, ScrollPolicy, SpecificDisplayItem};
+use {StackingContext, TextDisplayItem, TransformStyle, WebGLContextId, WebGLDisplayItem};
+use {YuvColorSpace, YuvData, YuvImageDisplayItem};
 use std::marker::PhantomData;
 
 #[repr(C)]
@@ -426,19 +427,26 @@ pub struct DisplayListBuilder {
     clip_stack: Vec<ClipAndScrollInfo>,
     next_clip_id: u64,
     builder_start_time: u64,
+
+    /// The size of the content of this display list. This is used to allow scrolling
+    /// outside the bounds of the display list items themselves.
+    content_size: LayoutSize,
 }
 
 impl DisplayListBuilder {
-    pub fn new(pipeline_id: PipelineId) -> DisplayListBuilder {
+    pub fn new(pipeline_id: PipelineId, content_size: LayoutSize) -> DisplayListBuilder {
         let start_time = precise_time_ns();
+
+        // We start at 1 here, because the root scroll id is always 0.
+        const FIRST_CLIP_ID : u64 = 1;
+
         DisplayListBuilder {
             data: Vec::with_capacity(1024 * 1024),
             pipeline_id: pipeline_id,
             clip_stack: vec![ClipAndScrollInfo::simple(ClipId::root_scroll_node(pipeline_id))],
-
-            // We start at 1 here, because the root scroll id is always 0.
-            next_clip_id: 1,
+            next_clip_id: FIRST_CLIP_ID,
             builder_start_time: start_time,
+            content_size: content_size,
         }
     }
 
@@ -552,7 +560,7 @@ impl DisplayListBuilder {
                      font_key: FontKey,
                      color: ColorF,
                      size: Au,
-                     blur_radius: Au,
+                     blur_radius: f32,
                      glyph_options: Option<GlyphOptions>) {
         // Sanity check - anything with glyphs bigger than this
         // is probably going to consume too much memory to render
@@ -953,15 +961,16 @@ impl DisplayListBuilder {
         ClipRegionToken { _unforgeable: () }
     }
 
-    pub fn finalize(self) -> (PipelineId, BuiltDisplayList) {
+    pub fn finalize(self) -> (PipelineId, LayoutSize, BuiltDisplayList) {
         let end_time = precise_time_ns();
 
         (self.pipeline_id,
+         self.content_size,
          BuiltDisplayList {
             descriptor: BuiltDisplayListDescriptor {
-            display_list_items_size: self.data.len(),
-            builder_start_time: self.builder_start_time,
-            builder_finish_time: end_time,
+                display_list_items_size: self.data.len(),
+                builder_start_time: self.builder_start_time,
+                builder_finish_time: end_time,
             },
             data: self.data,
          })

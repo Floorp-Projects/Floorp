@@ -262,9 +262,10 @@ fn main() {
     let root_background_color = ColorF::new(0.3, 0.0, 0.0, 1.0);
 
     let pipeline_id = PipelineId(0, 0);
-    let mut builder = webrender_traits::DisplayListBuilder::new(pipeline_id);
+    let layout_size = LayoutSize::new(width as f32, height as f32);
+    let mut builder = webrender_traits::DisplayListBuilder::new(pipeline_id, layout_size);
 
-    let bounds = LayoutRect::new(LayoutPoint::zero(), LayoutSize::new(width as f32, height as f32));
+    let bounds = LayoutRect::new(LayoutPoint::zero(), layout_size);
     builder.push_stacking_context(webrender_traits::ScrollPolicy::Scrollable,
                                   bounds,
                                   None,
@@ -372,7 +373,7 @@ fn main() {
                           font_key,
                           ColorF::new(1.0, 1.0, 0.0, 1.0),
                           Au::from_px(32),
-                          Au::from_px(0),
+                          0.0,
                           None);
     }
 
