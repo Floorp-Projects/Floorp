@@ -110,7 +110,6 @@ let SyncedTabsInternal = {
 
     let engine = Weave.Service.engineManager.get("tabs");
 
-    let seenURLs = new Set();
     let ntabs = 0;
 
     for (let client of Object.values(engine.getAllClients())) {
@@ -123,24 +122,14 @@ let SyncedTabsInternal = {
       for (let tab of client.tabs) {
         let url = tab.urlHistory[0];
         log.debug("remote tab", url);
-        // Note there are some issues with tracking "seen" tabs, including:
-        // * We really can't return the entire urlHistory record as we are
-        //   only checking the first entry - others might be different.
-        // * We don't update the |lastUsed| timestamp to reflect the
-        //   most-recently-seen time.
-        // In a followup we should consider simply dropping this |seenUrls|
-        // check and return duplicate records - it seems the user will be more
-        // confused by tabs not showing up on a device (because it was detected
-        // as a dupe so it only appears on a different device) than being
-        // confused by seeing the same tab on different clients.
-        if (!url || seenURLs.has(url)) {
+
+        if (!url) {
           continue;
         }
         let tabRepr = await this._makeTab(client, tab, url, showRemoteIcons);
         if (filter && !this._tabMatchesFilter(tabRepr, filter)) {
           continue;
         }
-        seenURLs.add(url);
         clientRepr.tabs.push(tabRepr);
       }
       // We return all clients, even those without tabs - the consumer should
