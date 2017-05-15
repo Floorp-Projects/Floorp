@@ -22,9 +22,7 @@ public:
     MOZ_ASSERT(mPending == 0);
 
     mPending = pending;
-    while (mPending) {
-      NS_ProcessNextEvent();
-    }
+    mozilla::SpinEventLoopUntil([&]() { return !mPending; });
     NS_ProcessPendingEvents(nullptr);
   }
 

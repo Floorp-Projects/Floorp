@@ -931,23 +931,18 @@ Service::Observe(nsISupports *, const char *aTopic, const char16_t *)
       (void)os->RemoveObserver(this, sObserverTopics[i]);
     }
 
-    bool anyOpen = false;
-    do {
-      nsTArray<RefPtr<Connection> > connections;
-      getConnections(connections);
-      anyOpen = false;
-      for (uint32_t i = 0; i < connections.Length(); i++) {
-        RefPtr<Connection> &conn = connections[i];
-        if (conn->isClosing()) {
-          anyOpen = true;
-          break;
+    SpinEventLoopUntil([&]() -> bool {
+        // We must wait until all connections are closed.
+        nsTArray<RefPtr<Connection>> connections;
+        getConnections(connections);
+        for (auto& conn : connections) {
+          if (conn->isClosing()) {
+            return false;
+          }
         }
-      }
-      if (anyOpen) {
-        nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
-        NS_ProcessNextEvent(thread);
-      }
-    } while (anyOpen);
+
+        return true;
+      });
 
     if (gShutdownChecks == SCM_CRASH) {
       nsTArray<RefPtr<Connection> > connections;

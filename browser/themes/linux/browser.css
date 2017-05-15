@@ -19,7 +19,11 @@
   --backbutton-border-color: var(--urlbar-border-color-hover);
   --backbutton-background: rgba(255,255,255,.15);
 
+%ifdef MOZ_PHOTON_THEME
+  --toolbarbutton-border-radius: 2px;
+%else
   --toolbarbutton-border-radius: 1px;
+%endif
 
   --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-vertical-inner-padding) - 1px);
 
@@ -264,11 +268,23 @@ menuitem.bookmark-item {
 #main-window {
   --urlbar-border-color: ThreeDShadow;
   --urlbar-border-color-hover: var(--urlbar-border-color);
+  --urlbar-background-color: moz-field;
 }
 
 #navigator-toolbox:-moz-lwtheme {
   --urlbar-border-color: rgba(0,0,0,.3);
 }
+
+%ifdef MOZ_PHOTON_THEME
+
+%include ../shared/location-search-bar.inc.css
+
+#urlbar[focused="true"],
+.searchbar-textbox[focused="true"] {
+  border-color: Highlight;
+}
+
+%else
 
 #urlbar,
 .searchbar-textbox {
@@ -299,6 +315,7 @@ menuitem.bookmark-item {
 .searchbar-textbox:-moz-lwtheme[focused=true] {
   background-color: white;
 }
+%endif
 
 .urlbar-textbox-container {
   -moz-appearance: none;

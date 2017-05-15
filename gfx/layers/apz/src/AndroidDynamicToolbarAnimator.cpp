@@ -278,10 +278,15 @@ AndroidDynamicToolbarAnimator::SetCompositionSize(ScreenIntSize aSize)
     return false;
   }
 
-  ScreenIntCoord prevHeight = mCompositorCompositionSize.height;
+  ScreenIntSize prevSize = mCompositorCompositionSize;
   mCompositorCompositionSize = aSize;
 
-  if (prevHeight != aSize.height) {
+  // The width has changed so the static snapshot needs to be updated
+  if ((prevSize.width != aSize.width) && (mToolbarState != eToolbarVisible)) {
+    PostMessage(STATIC_TOOLBAR_NEEDS_UPDATE);
+  }
+
+  if (prevSize.height != aSize.height) {
     UpdateControllerCompositionHeight(aSize.height);
     UpdateFixedLayerMargins();
   }

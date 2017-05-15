@@ -2858,12 +2858,7 @@ ShutdownObserver::Observe(nsISupports* aSubject,
   MOZ_ALWAYS_SUCCEEDS(
     mBackgroundThread->Dispatch(shutdownRunnable, NS_DISPATCH_NORMAL));
 
-  nsIThread* currentThread = NS_GetCurrentThread();
-  MOZ_ASSERT(currentThread);
-
-  while (!done) {
-    MOZ_ALWAYS_TRUE(NS_ProcessNextEvent(currentThread));
-  }
+  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return done; }));
 
   return NS_OK;
 }
