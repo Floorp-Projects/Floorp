@@ -39,6 +39,7 @@
 #include "nsThreadUtils.h"
 #include "ProfilerMarkerPayload.h"
 #include "shared-libraries.h"
+#include "prdtoa.h"
 #include "prtime.h"
 
 #ifdef MOZ_TASK_TRACER
@@ -2074,13 +2075,13 @@ profiler_init(void* aStackTop)
       }
     }
 
-    int interval = PROFILER_DEFAULT_INTERVAL;
+    double interval = PROFILER_DEFAULT_INTERVAL;
     const char* startupInterval = getenv("MOZ_PROFILER_STARTUP_INTERVAL");
     if (startupInterval) {
       errno = 0;
-      interval = strtol(startupInterval, nullptr, 10);
-      if (errno == 0 && 1 <= interval && interval <= 1000) {
-        LOG("- MOZ_PROFILER_STARTUP_INTERVAL = %d", interval);
+      interval = PR_strtod(startupInterval, nullptr);
+      if (errno == 0 && interval > 0.0 && interval <= 1000.0) {
+        LOG("- MOZ_PROFILER_STARTUP_INTERVAL = %f", interval);
       } else {
         PrintUsageThenExit(1);
       }
