@@ -338,6 +338,7 @@ nsDOMWindowUtils::UpdateLayerTree()
     if (view) {
       presShell->Paint(view, view->GetBounds(),
           nsIPresShell::PAINT_LAYERS | nsIPresShell::PAINT_SYNC_DECODE_IMAGES);
+      presShell->GetLayerManager()->WaitOnTransactionProcessed();
     }
   }
   return NS_OK;
