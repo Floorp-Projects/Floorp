@@ -17,7 +17,7 @@ var Services = require("Services");
 var { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 var promise = require("promise");
 var {
-  ActorPool, createExtraActors, appendExtraActors, GeneratedLocation
+  ActorPool, createExtraActors, appendExtraActors
 } = require("devtools/server/actors/common");
 var { DebuggerServer } = require("devtools/server/main");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
@@ -1402,51 +1402,6 @@ TabActor.prototype = {
       delete this._extraActors[name];
     }
   },
-
-  /**
-   * Takes a packet containing a url, line and column and returns
-   * the updated url, line and column based on the current source mapping
-   * (source mapped files, pretty prints).
-   *
-   * @param {String} request.url
-   * @param {Number} request.line
-   * @param {Number?} request.column
-   * @return {Promise<Object>}
-   */
-  onResolveLocation(request) {
-    let { url, line } = request;
-    let column = request.column || 0;
-    const scripts = this.threadActor.dbg.findScripts({ url });
-
-    if (!scripts[0] || !scripts[0].source) {
-      return promise.resolve({
-        from: this.actorID,
-        type: "resolveLocation",
-        error: "SOURCE_NOT_FOUND"
-      });
-    }
-    const source = scripts[0].source;
-    const generatedActor = this.sources.createNonSourceMappedActor(source);
-    let generatedLocation = new GeneratedLocation(
-      generatedActor, line, column);
-    return this.sources.getOriginalLocation(generatedLocation).then(loc => {
-      // If no map found, return this packet
-      if (loc.originalLine == null) {
-        return {
-          type: "resolveLocation",
-          error: "MAP_NOT_FOUND"
-        };
-      }
-
-      loc = loc.toJSON();
-      return {
-        from: this.actorID,
-        url: loc.source.url,
-        column: loc.column,
-        line: loc.line
-      };
-    });
-  },
 };
 
 /**
@@ -1462,7 +1417,6 @@ TabActor.prototype.requestTypes = {
   "switchToFrame": TabActor.prototype.onSwitchToFrame,
   "listFrames": TabActor.prototype.onListFrames,
   "listWorkers": TabActor.prototype.onListWorkers,
-  "resolveLocation": TabActor.prototype.onResolveLocation
 };
 
 exports.TabActor = TabActor;
