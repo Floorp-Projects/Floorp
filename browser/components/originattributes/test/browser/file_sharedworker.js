@@ -1,6 +1,6 @@
 self.randomValue = Math.random();
 
-/* global onconnect:true */
+/* eslint-env worker */
 
 onconnect = function(e) {
   let port = e.ports[0];
