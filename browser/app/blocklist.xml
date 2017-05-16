@@ -2644,6 +2644,11 @@
         </targetApplication>
       </versionRange>
     </pluginItem>
+    <pluginItem blockID="911f052b-77a0-46c4-bacf-9a6fd5b2044b" os="Linux">
+      <match exp="libflashplayer\.so" name="filename"/>
+      <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+      <versionRange maxVersion="25.0.0.163" minVersion="25.0.0.127" severity="0" vulnerabilitystatus="1"/>
+    </pluginItem>
     <pluginItem blockID="p34">
       <match exp="[Nn][Pp][Jj][Pp][Ii]1[56]0_[0-9]+\.[Dd][Ll][Ll]" name="filename"/>
       <versionRange>
@@ -3110,6 +3115,11 @@
       <match exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" name="filename"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
       <versionRange maxVersion="23.0.0.207" minVersion="23.0.0.205" severity="0" vulnerabilitystatus="1"/>
+    </pluginItem>
+    <pluginItem blockID="ee35afac-d936-4e77-bbb1-bf7d0656f985">
+      <match exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" name="filename"/>
+      <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+      <versionRange maxVersion="25.0.0.163" minVersion="25.0.0.127" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
     <pluginItem blockID="p418">
       <match exp="Java\(TM\) Plug-in 1\.7\.0_(1[6-9]|2[0-4])([^\d\._]|$)" name="name"/>
