@@ -8,6 +8,25 @@
 
 const TEST_URL = URL_ROOT + "doc_inspector_highlighter_cssshapes.html";
 const HIGHLIGHTER_TYPE = "ShapesHighlighter";
+const SHAPE_IDS = ["polygon", "ellipse", "rect"];
+const SHAPE_TYPES = [
+  {
+    shapeName: "polygon",
+    highlighter: "polygon"
+  },
+  {
+    shapeName: "circle",
+    highlighter: "ellipse"
+  },
+  {
+    shapeName: "ellipse",
+    highlighter: "ellipse"
+  },
+  {
+    shapeName: "inset",
+    highlighter: "rect"
+  }
+];
 
 add_task(function* () {
   let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
@@ -20,6 +39,15 @@ add_task(function* () {
   yield highlighter.finalize();
 });
 
+function* getShapeHidden(testActor, highlighterFront) {
+  let hidden = {};
+  for (let shape of SHAPE_IDS) {
+    hidden[shape] = yield testActor.getHighlighterNodeAttribute(
+      "shapes-" + shape, "hidden", highlighterFront);
+  }
+  return hidden;
+}
+
 function* isHiddenByDefault(testActor, highlighterFront) {
   info("Checking that highlighter is hidden by default");
 
@@ -31,30 +59,19 @@ function* isHiddenByDefault(testActor, highlighterFront) {
 }
 
 function* isVisibleWhenShown(testActor, inspector, highlighterFront) {
-  info("Asking to show the highlighter on the polygon node");
+  for (let { shapeName, highlighter } of SHAPE_TYPES) {
+    info(`Asking to show the highlighter on the ${shapeName} node`);
 
-  let polygonNode = yield getNodeFront("#polygon", inspector);
-  yield highlighterFront.show(polygonNode, {mode: "cssClipPath"});
+    let node = yield getNodeFront(`#${shapeName}`, inspector);
+    yield highlighterFront.show(node, {mode: "cssClipPath"});
 
-  let polygonHidden = yield testActor.getHighlighterNodeAttribute(
-    "shapes-polygon", "hidden", highlighterFront);
-  ok(!polygonHidden, "The polygon highlighter is visible");
-
-  info("Asking to show the highlighter on the circle node");
-  let circleNode = yield getNodeFront("#circle", inspector);
-  yield highlighterFront.show(circleNode, {mode: "cssClipPath"});
-
-  let ellipseHidden = yield testActor.getHighlighterNodeAttribute(
-    "shapes-ellipse", "hidden", highlighterFront);
-  polygonHidden = yield testActor.getHighlighterNodeAttribute(
-    "shapes-polygon", "hidden", highlighterFront);
-  ok(!ellipseHidden, "The circle highlighter is visible");
-  ok(polygonHidden, "The polygon highlighter is no longer visible");
+    let hidden = yield getShapeHidden(testActor, highlighterFront);
+    ok(!hidden[highlighter], `The ${shapeName} highlighter is visible`);
+  }
 
   info("Hiding the highlighter");
   yield highlighterFront.hide();
 
-  polygonHidden = yield testActor.getHighlighterNodeAttribute(
-    "shapes-polygon", "hidden", highlighterFront);
-  ok(polygonHidden, "The highlighter is hidden");
+  let hidden = yield getShapeHidden(testActor, highlighterFront);
+  ok(hidden.polygon && hidden.ellipse && hidden.rect, "The highlighter is hidden");
 }
