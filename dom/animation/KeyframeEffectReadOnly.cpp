@@ -362,6 +362,7 @@ KeyframeEffectReadOnly::DoUpdateProperties(StyleType&& aStyle)
   }
 
   mProperties = Move(properties);
+  UpadateEffectSet();
 
   for (AnimationProperty& property : mProperties) {
     property.mIsRunningOnCompositor =
@@ -1011,6 +1012,7 @@ KeyframeEffectReadOnly::UpdateTargetRegistration()
     EffectSet* effectSet =
       EffectSet::GetOrCreateEffectSet(mTarget->mElement, mTarget->mPseudoType);
     effectSet->AddEffect(*this);
+    UpadateEffectSet(effectSet);
   } else {
     UnregisterTarget();
   }
@@ -1023,6 +1025,7 @@ KeyframeEffectReadOnly::UnregisterTarget()
     EffectSet::GetEffectSet(mTarget->mElement, mTarget->mPseudoType);
   if (effectSet) {
     effectSet->RemoveEffect(*this);
+
     if (effectSet->IsEmpty()) {
       EffectSet::DestroyEffectSet(mTarget->mElement, mTarget->mPseudoType);
     }
@@ -1876,6 +1879,25 @@ KeyframeEffectReadOnly::ContainsAnimatedScale(const nsIFrame* aFrame) const
   }
 
   return false;
+}
+
+void
+KeyframeEffectReadOnly::UpadateEffectSet(EffectSet* aEffectSet) const
+{
+  EffectSet* effectSet =
+    aEffectSet ? aEffectSet
+               : EffectSet::GetEffectSet(mTarget->mElement,
+                                         mTarget->mPseudoType);
+  if (!effectSet) {
+    return;
+  }
+
+  if (HasAnimationOfProperty(eCSSProperty_opacity)) {
+    effectSet->SetMayHaveOpacityAnimation();
+  }
+  if (HasAnimationOfProperty(eCSSProperty_transform)) {
+    effectSet->SetMayHaveTransformAnimation();
+  }
 }
 
 template
