@@ -465,7 +465,7 @@ private:
                         HitTestingTreeNode* aNextSibling);
   already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const ScrollableLayerGuid& aGuid);
   already_AddRefed<HitTestingTreeNode> GetTargetNode(const ScrollableLayerGuid& aGuid,
-                                                     GuidComparator aComparator);
+                                                     GuidComparator aComparator) const;
   HitTestingTreeNode* FindTargetNode(HitTestingTreeNode* aNode,
                                      const ScrollableLayerGuid& aGuid,
                                      GuidComparator aComparator);
