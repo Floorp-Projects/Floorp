@@ -25,10 +25,12 @@ import org.mozilla.gecko.toolbar.BrowserToolbar.OnDismissListener;
 import org.mozilla.gecko.toolbar.BrowserToolbar.OnFilterListener;
 import org.mozilla.gecko.toolbar.BrowserToolbar.TabEditingState;
 import org.mozilla.gecko.util.ActivityResultHandler;
+import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.DrawableUtil;
 import org.mozilla.gecko.util.HardwareUtils;
-import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.InputOptionsUtils;
+import org.mozilla.gecko.util.StringUtils;
+import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.themed.ThemedLinearLayout;
 
 import android.content.Context;
@@ -186,8 +188,7 @@ public class ToolbarEditLayout extends ThemedLinearLayout {
         if (showKeyboardOnFocus) {
             showKeyboardOnFocus = false;
 
-            Activity activity = GeckoAppShell.getGeckoInterface().getActivity();
-            activity.runOnUiThread(new Runnable() {
+            ThreadUtils.postToUiThread(new Runnable() {
                 public void run() {
                     mEditText.requestFocus();
                     showSoftInput();
@@ -289,7 +290,7 @@ public class ToolbarEditLayout extends ThemedLinearLayout {
         Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.ACTIONBAR, "voice_input_launch");
         final Intent intent = InputOptionsUtils.createVoiceRecognizerIntent(getResources().getString(R.string.voicesearch_prompt));
 
-        Activity activity = GeckoAppShell.getGeckoInterface().getActivity();
+        final Activity activity = ActivityUtils.getActivityFromContext(getContext());
         ActivityHandlerHelper.startIntentForActivity(activity, intent, new ActivityResultHandler() {
             @Override
             public void onActivityResult(int resultCode, Intent data) {
@@ -326,7 +327,7 @@ public class ToolbarEditLayout extends ThemedLinearLayout {
         Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.ACTIONBAR, "qrcode_input_launch");
         final Intent intent = InputOptionsUtils.createQRCodeReaderIntent();
 
-        Activity activity = GeckoAppShell.getGeckoInterface().getActivity();
+        final Activity activity = ActivityUtils.getActivityFromContext(getContext());
         ActivityHandlerHelper.startIntentForActivity(activity, intent, new ActivityResultHandler() {
             @Override
             public void onActivityResult(int resultCode, Intent intent) {

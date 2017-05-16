@@ -24,7 +24,7 @@ requestLongerTimeout(2);
  * for an average page without any frames.
  */
 add_task(async function test_scroll() {
-  let tab = gBrowser.addTab(URL);
+  let tab = BrowserTestUtils.addTab(gBrowser, URL);
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 
@@ -67,7 +67,7 @@ add_task(async function test_scroll() {
  * for multiple frames of pages with framesets.
  */
 add_task(async function test_scroll_nested() {
-  let tab = gBrowser.addTab(URL_FRAMESET);
+  let tab = BrowserTestUtils.addTab(gBrowser, URL_FRAMESET);
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 

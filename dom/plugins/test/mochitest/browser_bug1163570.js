@@ -40,8 +40,8 @@ add_task(function* () {
 add_task(function* () {
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
 
-  let pluginTab = gBrowser.selectedTab = gBrowser.addTab();
-  let prefTab = gBrowser.addTab();
+  let pluginTab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
+  let prefTab = BrowserTestUtils.addTab(gBrowser);
 
   yield promiseTabLoad(pluginTab, gTestRoot + "plugin_test.html");
   yield promiseTabLoad(prefTab, "about:preferences");

@@ -15,22 +15,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=388794
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=388794">Mozilla Bug 388794</a>
 <p id="display">
-  <form action="data:text/html," target="test1" method="GET">
+  <form action="dummy_page.html" target="test1" method="GET">
     <input id="test1image" type="image" name="testImage">
   </form>
-  <form action="data:text/html," target="test2" method="GET">
+  <form action="dummy_page.html" target="test2" method="GET">
     <input id="test2image" type="image">
   </form>
-  <form action="data:text/html," target="test3" method="GET">
+  <form action="dummy_page.html" target="test3" method="GET">
     <input id="test3image" type="image" src="nnc_lockup.gif" name="testImage">
   </form>
-  <form action="data:text/html," target="test4" method="GET">
+  <form action="dummy_page.html" target="test4" method="GET">
     <input id="test4image" type="image" src="nnc_lockup.gif">
   </form>
-  <form action="data:text/html," target="test5" method="GET">
+  <form action="dummy_page.html" target="test5" method="GET">
     <input id="test5image" type="image" src="nnc_lockup.gif" name="testImage">
   </form>
-  <form action="data:text/html," target="test6" method="GET">
+  <form action="dummy_page.html" target="test6" method="GET">
     <input id="test6image" type="image" src="nnc_lockup.gif">
   </form>
   <iframe name="test1" id="test1"></iframe>
@@ -52,12 +52,12 @@ SimpleTest.waitForExplicitFinish();
 var pendingLoads = 0;
 /* Use regex due to rounding error in Fennec with C++APZ enabled */
 var hrefs = {
-  test1: /data:text\/html,\?testImage\.x=0&testImage\.y=0/,
-  test2: /data:text\/html,\?x=0&y=0/,
-  test3: /data:text\/html,\?testImage\.x=0&testImage\.y=0/,
-  test4: /data:text\/html,\?x=0&y=0/,
-  test5: /data:text\/html,\?testImage\.x=[4-6]&testImage\.y=[4-6]/,
-  test6: /data:text\/html,\?x=[4-6]&y=[4-6]/,
+  test1: /\?testImage\.x=0&testImage\.y=0/,
+  test2: /\?x=0&y=0/,
+  test3: /\?testImage\.x=0&testImage\.y=0/,
+  test4: /\?x=0&y=0/,
+  test5: /\?testImage\.x=[4-6]&testImage\.y=[4-6]/,
+  test6: /\?x=[4-6]&y=[4-6]/,
 };
 
 function submitForm(idNum) {

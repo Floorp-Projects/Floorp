@@ -16,7 +16,7 @@ add_task(async function setup() {
 
 add_task(async function test() {
   info("Creating a tab with UCI = 1...");
-  let tab = gBrowser.addTab(BASE_URI, {userContextId: 1});
+  let tab = BrowserTestUtils.addTab(gBrowser, BASE_URI, {userContextId: 1});
   is(tab.getAttribute("usercontextid"), 1, "New tab has UCI equal 1");
 
   let browser = gBrowser.getBrowserForTab(tab);

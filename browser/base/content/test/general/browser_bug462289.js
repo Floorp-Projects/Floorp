@@ -11,8 +11,8 @@ function focus_in_navbar() {
 function test() {
   waitForExplicitFinish();
 
-  tab1 = gBrowser.addTab("about:blank", {skipAnimation: true});
-  tab2 = gBrowser.addTab("about:blank", {skipAnimation: true});
+  tab1 = BrowserTestUtils.addTab(gBrowser, "about:blank", {skipAnimation: true});
+  tab2 = BrowserTestUtils.addTab(gBrowser, "about:blank", {skipAnimation: true});
 
   EventUtils.synthesizeMouseAtCenter(tab1, {});
   executeSoon(step2);

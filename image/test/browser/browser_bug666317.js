@@ -77,7 +77,7 @@ function test() {
 
   // Create and focus a new tab.
   oldTab = gBrowser.selectedTab;
-  newTab = gBrowser.addTab('data:text/html,' + pageSource);
+  newTab = BrowserTestUtils.addTab(gBrowser, 'data:text/html,' + pageSource);
   gBrowser.selectedTab = newTab;
 
   // Run step2 after the tab loads.

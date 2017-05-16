@@ -1688,6 +1688,14 @@ private:
 
 public:
     /**
+     * If key events have not been handled by content or XBL handlers, they can
+     * be offered to the system (for custom application shortcuts set in system
+     * preferences, for example).
+     */
+    virtual void
+    PostHandleKeyEvent(mozilla::WidgetKeyboardEvent* aEvent);
+
+    /**
      * Activates a native menu item at the position specified by the index
      * string. The index string is a string of positive integers separated
      * by the "|" (pipe) character. The last integer in the string represents

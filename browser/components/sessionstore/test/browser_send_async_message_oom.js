@@ -40,7 +40,7 @@ add_task(async function() {
   let snapshot = Services.telemetry.getHistogramById(HISTOGRAM_NAME).snapshot();
 
   // Open a browser, configure it to cause OOM.
-  let newTab = gBrowser.addTab("about:robots");
+  let newTab = BrowserTestUtils.addTab(gBrowser, "about:robots");
   let browser = newTab.linkedBrowser;
   await ContentTask.spawn(browser, null, frameScript);
 

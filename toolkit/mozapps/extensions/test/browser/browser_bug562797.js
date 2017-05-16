@@ -809,7 +809,7 @@ add_test(function() {
 // and forward buttons still appear when switching tabs
 add_test(function() {
 
-  var tab = gBrowser.addTab("about:addons");
+  var tab = BrowserTestUtils.addTab(gBrowser, "about:addons");
   var browser = gBrowser.getBrowserForTab(tab);
 
   browser.addEventListener("pageshow", function(event) {

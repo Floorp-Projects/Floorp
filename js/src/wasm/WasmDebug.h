@@ -97,8 +97,9 @@ class DebugState
     bool ensureSourceMap(JSContext* cx);
 
   public:
-    DebugState(SharedCode code,
-               const ShareableBytes* maybeBytecode);
+    DebugState(SharedCode code, const ShareableBytes* maybeBytecode);
+
+    const Bytes* maybeBytecode() const { return maybeBytecode_ ? &maybeBytecode_->bytes : nullptr; }
 
     // If the source bytecode was saved when this Code was constructed, this
     // method will render the binary as text. Otherwise, a diagnostic string

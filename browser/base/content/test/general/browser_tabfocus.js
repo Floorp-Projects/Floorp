@@ -127,10 +127,10 @@ function focusElementInChild(elementid, type) {
 }
 
 add_task(async function() {
-  tab1 = gBrowser.addTab();
+  tab1 = BrowserTestUtils.addTab(gBrowser);
   browser1 = gBrowser.getBrowserForTab(tab1);
 
-  tab2 = gBrowser.addTab();
+  tab2 = BrowserTestUtils.addTab(gBrowser);
   browser2 = gBrowser.getBrowserForTab(tab2);
 
   await promiseTabLoadEvent(tab1, "data:text/html," + escape(testPage1));

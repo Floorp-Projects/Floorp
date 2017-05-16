@@ -5,8 +5,8 @@
 function test() {
   waitForExplicitFinish();
 
-  let tab1 = gBrowser.addTab("about:rights");
-  let tab2 = gBrowser.addTab("about:mozilla");
+  let tab1 = BrowserTestUtils.addTab(gBrowser, "about:rights");
+  let tab2 = BrowserTestUtils.addTab(gBrowser, "about:mozilla");
 
   promiseBrowserLoaded(tab1.linkedBrowser).then(() => {
     // Tell the session storer that the tab is pinned

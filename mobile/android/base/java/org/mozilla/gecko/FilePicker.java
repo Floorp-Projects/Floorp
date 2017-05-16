@@ -5,12 +5,14 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.permissions.PermissionBlock;
 import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -43,7 +45,7 @@ public class FilePicker implements BundleEventListener {
         }
     }
 
-    protected FilePicker(Context context) {
+    private FilePicker(Context context) {
         this.context = context;
         EventDispatcher.getInstance().registerUiThreadListener(this, "FilePicker:Show");
     }
@@ -65,26 +67,35 @@ public class FilePicker implements BundleEventListener {
 
             final String[] requiredPermission = getPermissionsForMimeType(mimeType);
             final String finalMimeType = mimeType;
-            // Use activity context cause we want to prompt for runtime permission. (bug 1337692)
-            Permissions.from(GeckoAppShell.getGeckoInterface().getActivity())
-                    .withPermissions(requiredPermission)
-                    .andFallback(new Runnable() {
-                        @Override
-                        public void run() {
-                            callback.sendError(null);
-                        }
-                    })
-                    .run(new Runnable() {
-                        @Override
-                        public void run() {
-                            showFilePickerAsync(title, finalMimeType, new ResultHandler() {
-                                @Override
-                                public void gotFile(final String filename) {
-                                    callback.sendSuccess(filename);
-                                }
-                            }, tabId);
-                        }
-                    });
+
+            // Use activity context because we want to prompt for runtime permission.
+            final Activity currentActivity =
+                    GeckoActivityMonitor.getInstance().getCurrentActivity();
+            final PermissionBlock perm;
+            if (currentActivity != null) {
+                perm = Permissions.from(currentActivity);
+            } else {
+                perm = Permissions.from(context).doNotPrompt();
+            }
+
+            perm.withPermissions(requiredPermission)
+                .andFallback(new Runnable() {
+                    @Override
+                    public void run() {
+                        callback.sendError(null);
+                    }
+                })
+                .run(new Runnable() {
+                    @Override
+                    public void run() {
+                        showFilePickerAsync(title, finalMimeType, new ResultHandler() {
+                            @Override
+                            public void gotFile(final String filename) {
+                                callback.sendSuccess(filename);
+                            }
+                        }, tabId);
+                    }
+                });
         }
     }
 
@@ -228,12 +239,14 @@ public class FilePicker implements BundleEventListener {
         final FilePickerResultHandler fileHandler =
                 new FilePickerResultHandler(handler, context, tabId);
         final Intent intent = getFilePickerIntent(title, mimeType, fileHandler);
+        final Activity currentActivity =
+                GeckoActivityMonitor.getInstance().getCurrentActivity();
 
-        if (intent == null) {
+        if (intent == null || currentActivity == null) {
             handler.gotFile("");
             return;
         }
 
-        ActivityHandlerHelper.startIntent(intent, fileHandler);
+        ActivityHandlerHelper.startIntentForActivity(currentActivity, intent, fileHandler);
     }
 }

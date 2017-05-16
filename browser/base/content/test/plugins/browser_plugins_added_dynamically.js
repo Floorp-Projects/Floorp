@@ -21,7 +21,7 @@ add_task(async function() {
 // "Activate" of a given type -> plugins of that type dynamically added should
 // automatically play.
 add_task(async function() {
-  let newTab = gBrowser.addTab();
+  let newTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = newTab;
   gTestBrowser = gBrowser.selectedBrowser;
 

@@ -7,7 +7,7 @@ const iconURLSpec = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAA
 var testPage = "data:text/plain,test bug 477014";
 
 add_task(async function() {
-  let tabToDetach = gBrowser.addTab(testPage);
+  let tabToDetach = BrowserTestUtils.addTab(gBrowser, testPage);
   await waitForDocLoadComplete(tabToDetach.linkedBrowser);
 
   gBrowser.setIcon(tabToDetach, iconURLSpec,

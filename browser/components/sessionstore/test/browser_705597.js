@@ -17,7 +17,7 @@ function test() {
     Services.prefs.clearUserPref("browser.sessionstore.interval");
   });
 
-  let tab = gBrowser.addTab("about:blank");
+  let tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
 
   let browser = tab.linkedBrowser;
 

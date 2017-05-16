@@ -4,7 +4,7 @@
 "use strict";
 
 add_task(async function() {
-  let tab = gBrowser.addTab("about:blank");
+  let tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   await promiseBrowserLoaded(tab.linkedBrowser);
 
   is(tab.linkedBrowser.currentURI.spec, "about:blank",

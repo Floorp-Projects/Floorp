@@ -17,7 +17,7 @@ function test() {
     gPrefService.clearUserPref("browser.sessionstore.max_serialize_forward");
   });
 
-  let tab = gBrowser.addTab();
+  let tab = BrowserTestUtils.addTab(gBrowser);
   promiseBrowserLoaded(tab.linkedBrowser).then(() => {
     let tabState = { entries: [] };
     let max_entries = gPrefService.getIntPref("browser.sessionhistory.max_entries");

@@ -26,7 +26,7 @@ var f = document.getElementsByTagName("iframe")[0];
 
 function runTest() {
   f.contentDocument.open();
-  f.contentDocument.write('<script>window.location = "data:text/html;charset=utf-8,\\u003Cscript>parent.pass();\\u003C/script>"; document.close(); document.open(); document.write("\\u003Cscript>parent.fail();\\u003C/script>"); document.close();\u003c/script>');
+  f.contentDocument.write('<script>window.location = "file_bug753278.html"; document.close(); document.open(); document.write("\\u003Cscript>parent.fail();\\u003C/script>"); document.close();\u003c/script>');
   f.contentDocument.close();
 }
 

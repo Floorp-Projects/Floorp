@@ -13,7 +13,7 @@ function setHandlerFunc(aResultFunc) {
 function test() {
   waitForExplicitFinish();
 
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   browser = gBrowser.selectedBrowser;
   browser.addEventListener("load", function(event) {
     iconDiscovery();

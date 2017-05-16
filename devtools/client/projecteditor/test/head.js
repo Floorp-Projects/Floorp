@@ -57,7 +57,7 @@ function addTab(url) {
   info("Adding a new tab with URL: '" + url + "'");
   let def = promise.defer();
 
-  let tab = gBrowser.selectedTab = gBrowser.addTab(url);
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, url);
   BrowserTestUtils.browserLoaded(tab.linkedBrowser).then(function () {
     info("URL '" + url + "' loading complete");
     waitForFocus(() => {

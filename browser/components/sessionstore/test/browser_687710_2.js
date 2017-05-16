@@ -26,7 +26,7 @@ var state = {entries: [
 ]};
 
 add_task(async function test() {
-  let tab = gBrowser.addTab("about:blank");
+  let tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   await promiseTabState(tab, state);
   await ContentTask.spawn(tab.linkedBrowser, null, function() {
     function compareEntries(i, j, history) {

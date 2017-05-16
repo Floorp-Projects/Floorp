@@ -38,7 +38,7 @@ let gFirstPartyBasicPage = TEST_URL_PATH + "file_firstPartyBasic.html";
  */
 async function openTabInUserContext(aURL, aUserContextId) {
   // Open the tab in the correct userContextId.
-  let tab = gBrowser.addTab(aURL, {userContextId: aUserContextId});
+  let tab = BrowserTestUtils.addTab(gBrowser, aURL, {userContextId: aUserContextId});
 
   // Select tab and make sure its browser is focused.
   gBrowser.selectedTab = tab;
@@ -80,7 +80,7 @@ async function openTabInFirstParty(aURL, aFirstPartyDomain,
   let basicPageURL = aFirstPartyDomain + gFirstPartyBasicPage;
 
   // Open the tab for the basic first party page.
-  let tab = gBrowser.addTab(basicPageURL);
+  let tab = BrowserTestUtils.addTab(gBrowser, basicPageURL);
 
   // Select tab and make sure its browser is focused.
   gBrowser.selectedTab = tab;

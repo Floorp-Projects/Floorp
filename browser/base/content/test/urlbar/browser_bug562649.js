@@ -8,7 +8,7 @@ function test() {
   is(gBrowser.userTypedValue, URI, "userTypedValue matches test URI");
   is(gURLBar.value, URI, "location bar value matches test URI");
 
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.removeCurrentTab({ skipPermitUnload: true });
   is(gBrowser.userTypedValue, URI, "userTypedValue matches test URI after switching tabs");
   is(gURLBar.value, URI, "location bar value matches test URI after switching tabs");

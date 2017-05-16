@@ -7,7 +7,7 @@ function test()
 {
   waitForExplicitFinish();
 
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   content.location = "data:text/html,Test keybindings for opening Scratchpad MDN Documentation, bug 650760";
   gBrowser.selectedBrowser.addEventListener("load", function () {
     openScratchpad(runTest);

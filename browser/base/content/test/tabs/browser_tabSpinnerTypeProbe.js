@@ -117,7 +117,7 @@ add_task(async function test_unseenOld_spinner_type_probe() {
 
     // First, create a new background tab, ensuring that it's in the same process
     // as the current one.
-    let bgTab = gBrowser.addTab("about:blank", {
+    let bgTab = BrowserTestUtils.addTab(gBrowser, "about:blank", {
       sameProcessAsFrameLoader: browser.frameLoader,
       inBackground: true,
     });
@@ -159,7 +159,7 @@ add_task(async function test_unseenNew_spinner_type_probe() {
   }, async function(browser) {
     // First, create a new background tab, ensuring that it's in the same process
     // as the current one.
-    let bgTab = gBrowser.addTab("about:blank", {
+    let bgTab = BrowserTestUtils.addTab(gBrowser, "about:blank", {
       sameProcessAsFrameLoader: browser.frameLoader,
       inBackground: true,
     });

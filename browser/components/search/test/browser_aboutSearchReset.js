@@ -136,7 +136,7 @@ function test() {
       info(testCase.desc);
 
       // Create a tab to run the test.
-      let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
+      let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
 
       // Start loading about:searchreset and wait for it to complete.
       let url = "about:searchreset?data=" + encodeURIComponent(kSearchStr) +

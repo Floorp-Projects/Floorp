@@ -50,11 +50,6 @@ public class Restrictions {
             return configuration instanceof GuestProfileConfiguration;
         }
 
-        GeckoAppShell.GeckoInterface geckoInterface = GeckoAppShell.getGeckoInterface();
-        if (geckoInterface != null) {
-            return geckoInterface.getProfile().inGuestMode();
-        }
-
         return GeckoProfile.get(context).inGuestMode();
     }
 

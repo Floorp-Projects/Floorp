@@ -25,7 +25,7 @@ add_task(function* test1() {
   removePermission(testPageURL, "indexedDB");
 
   info("creating tab");
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   info("loading test page: " + testPageURL);
   gBrowser.selectedBrowser.loadURI(testPageURL);
@@ -82,7 +82,7 @@ add_task(function* test2() {
 
 add_task(function* test3() {
   info("creating tab");
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   info("loading test page: " + testPageURL);
   gBrowser.selectedBrowser.loadURI(testPageURL);

@@ -20,7 +20,7 @@ var tests = [
 ];
 
 add_task(async function() {
-    gBrowser.selectedTab = gBrowser.addTab();
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
     let browser = gBrowser.selectedBrowser;
     browser.stop(); // stop the about:blank load.
 

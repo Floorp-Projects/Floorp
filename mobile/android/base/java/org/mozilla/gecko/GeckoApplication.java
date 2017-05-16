@@ -80,6 +80,24 @@ public class GeckoApplication extends Application
         return sSessionUUID;
     }
 
+    public static String addDefaultGeckoArgs(String args) {
+        if (!AppConstants.MOZILLA_OFFICIAL) {
+            // In un-official builds, we want to load Javascript resources fresh
+            // with each build.  In official builds, the startup cache is purged by
+            // the buildid mechanism, but most un-official builds don't bump the
+            // buildid, so we purge here instead.
+            Log.w(LOG_TAG, "STARTUP PERFORMANCE WARNING: un-official build: purging the " +
+                           "startup (JavaScript) caches.");
+            args = (args != null) ? (args + " -purgecaches") : "-purgecaches";
+        }
+        return args;
+    }
+
+    public static String getDefaultUAString() {
+        return HardwareUtils.isTablet() ? AppConstants.USER_AGENT_FENNEC_TABLET :
+                                          AppConstants.USER_AGENT_FENNEC_MOBILE;
+    }
+
     public static void shutdown(final Intent restartIntent) {
         ThreadUtils.assertOnUiThread();
 

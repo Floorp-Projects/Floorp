@@ -9,7 +9,7 @@ const {TabStateFlusher} = Cu.import("resource:///modules/sessionstore/TabStateFl
  */
 add_task(async function clearURLBarAfterParentProcessURL() {
   let tab = await new Promise(resolve => {
-    gBrowser.selectedTab = gBrowser.addTab("about:preferences");
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:preferences");
     let newTabBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
     newTabBrowser.addEventListener("Initialized", function() {
       resolve(gBrowser.selectedTab);
@@ -28,7 +28,7 @@ add_task(async function clearURLBarAfterParentProcessURL() {
  */
 add_task(async function clearURLBarAfterParentProcessURLInExistingTab() {
   let tab = await new Promise(resolve => {
-    gBrowser.selectedTab = gBrowser.addTab();
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
     let newTabBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
     newTabBrowser.addEventListener("Initialized", function() {
       resolve(gBrowser.selectedTab);

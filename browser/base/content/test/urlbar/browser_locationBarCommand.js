@@ -185,7 +185,7 @@ function promiseLoadStarted() {
 }
 
 async function promiseOpenNewTab(url = "about:blank") {
-  let tab = gBrowser.addTab(url);
+  let tab = BrowserTestUtils.addTab(gBrowser, url);
   let tabSwitchPromise = promiseNewTabSwitched(tab);
   gBrowser.selectedTab = tab;
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);

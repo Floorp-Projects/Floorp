@@ -437,7 +437,7 @@ function test_restartless() {
     let triggers = encodeURIComponent(JSON.stringify({
       "XPI": "restartless.xpi"
     }));
-    gBrowser.selectedTab = gBrowser.addTab();
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
     gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
     await progressPromise;
     let installDialog = await dialogPromise;
@@ -590,7 +590,7 @@ function test_url() {
   return (async function() {
     let progressPromise = waitForProgressNotification();
     let dialogPromise = waitForInstallDialog();
-    gBrowser.selectedTab = gBrowser.addTab("about:blank");
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
     await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
     gBrowser.loadURI(TESTROOT + "amosigned.xpi");
     await progressPromise;
@@ -631,7 +631,7 @@ function test_localFile() {
         resolve();
       }, "addon-install-failed");
     });
-    gBrowser.selectedTab = gBrowser.addTab("about:blank");
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
     await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
     gBrowser.loadURI(path);
     await failPromise;
@@ -658,7 +658,7 @@ function test_tabClose() {
 
     let progressPromise = waitForProgressNotification();
     let dialogPromise = waitForInstallDialog();
-    gBrowser.selectedTab = gBrowser.addTab("about:blank");
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
     await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
     gBrowser.loadURI(TESTROOT + "amosigned.xpi");
     await progressPromise;
@@ -714,7 +714,7 @@ function test_urlBar() {
     let progressPromise = waitForProgressNotification();
     let dialogPromise = waitForInstallDialog();
 
-    gBrowser.selectedTab = gBrowser.addTab("about:blank");
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
     await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
     gURLBar.value = TESTROOT + "amosigned.xpi";
     gURLBar.focus();
@@ -744,7 +744,7 @@ function test_urlBar() {
 function test_wrongHost() {
   return (async function() {
     let requestedUrl = TESTROOT2 + "enabled.html";
-    gBrowser.selectedTab = gBrowser.addTab();
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
     let loadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, requestedUrl);
     gBrowser.loadURI(TESTROOT2 + "enabled.html");

@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.notifications;
 
+import android.app.Activity;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.ComponentName;
@@ -19,6 +20,7 @@ import android.util.Log;
 import java.util.HashMap;
 
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.GeckoActivityMonitor;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoService;
@@ -75,13 +77,13 @@ public final class NotificationClient implements NotificationListener {
                                   String persistentData) {
         // Put the strings into the intent as an URI
         // "alert:?name=<name>&cookie=<cookie>"
-        String packageName = AppConstants.ANDROID_PACKAGE_NAME;
+        String packageName = mContext.getPackageName();
         String className = AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS;
-        if (GeckoAppShell.getGeckoInterface() != null) {
-            final ComponentName comp = GeckoAppShell.getGeckoInterface()
-                                                    .getActivity().getComponentName();
-            packageName = comp.getPackageName();
-            className = comp.getClassName();
+
+        final Activity currentActivity =
+                GeckoActivityMonitor.getInstance().getCurrentActivity();
+        if (currentActivity != null) {
+            className = currentActivity.getClass().getName();
         }
         final Uri dataUri = (new Uri.Builder())
                 .scheme("moz-notification")

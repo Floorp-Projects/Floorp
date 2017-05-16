@@ -195,7 +195,7 @@ var addTab = Task.async(function* (url) {
 
   window.focus();
 
-  let tab = gBrowser.selectedTab = gBrowser.addTab(url);
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, url);
   let browser = tab.linkedBrowser;
 
   yield BrowserTestUtils.browserLoaded(browser);

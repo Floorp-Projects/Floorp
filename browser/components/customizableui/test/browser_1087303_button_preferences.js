@@ -26,7 +26,7 @@ add_task(async function() {
 
 add_task(function asyncCleanup() {
   if (gBrowser.tabs.length == 1)
-    gBrowser.addTab("about:blank");
+    BrowserTestUtils.addTab(gBrowser, "about:blank");
 
   gBrowser.removeTab(gBrowser.selectedTab);
   info("Tabs were restored");

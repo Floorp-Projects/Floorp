@@ -21,7 +21,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=691215
 
 SimpleTest.waitForExplicitFinish();
 
-var url = "data:text/xml,<root/>";
+var BASE_URI = "http://mochi.test:8888/tests/dom/xml/test/";
+var url = BASE_URI + "file_bug691215.xml";
 var w;
 
 addLoadEvent(function() {

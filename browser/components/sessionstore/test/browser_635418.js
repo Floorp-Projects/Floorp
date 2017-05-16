@@ -16,7 +16,7 @@ function test() {
   waitForSaveState(testBug635418_1);
 
   // Assumption: Only one window is open and it has one tab open.
-  gBrowser.addTab("about:mozilla");
+  BrowserTestUtils.addTab(gBrowser, "about:mozilla");
 }
 
 function testBug635418_1() {

@@ -4,7 +4,7 @@
 
 function test() {
   // Create a new tab and load about:addons
-  let blanktab = gBrowser.addTab();
+  let blanktab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = blanktab;
   BrowserOpenAddonsMgr();
 

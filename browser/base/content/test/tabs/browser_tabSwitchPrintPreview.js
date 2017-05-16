@@ -7,7 +7,7 @@ const kURL2 = "data:text/html,I shouldn't be here!";
  */
 add_task(async function() {
   await BrowserTestUtils.withNewTab(kURL1, async function(browser) {
-    let tab = gBrowser.addTab(kURL2);
+    let tab = BrowserTestUtils.addTab(gBrowser, kURL2);
     document.getElementById("cmd_printPreview").doCommand();
     gBrowser.selectedTab = tab;
     await BrowserTestUtils.waitForCondition(() => gInPrintPreviewMode, "should be in print preview mode");

@@ -11,7 +11,7 @@ const ADDITIONAL_WAIT_MS = 2000;
  */
 add_task(async function() {
   await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
-    return gBrowser.selectedTab = gBrowser.addTab("about:blank", {animate: false});
+    return gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank", {animate: false});
   }, false);
 
   let browser = gBrowser.selectedBrowser;

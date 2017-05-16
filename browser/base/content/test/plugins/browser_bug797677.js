@@ -16,7 +16,7 @@ add_task(async function() {
     gTestBrowser = null;
   });
 
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   gTestBrowser = gBrowser.selectedBrowser;
 
   let consoleService = Cc["@mozilla.org/consoleservice;1"]

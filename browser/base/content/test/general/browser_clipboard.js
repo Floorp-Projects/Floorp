@@ -7,7 +7,7 @@ var testPage = "<body style='margin: 0'>" +
                "</body>";
 
 add_task(async function() {
-  let tab = gBrowser.addTab();
+  let tab = BrowserTestUtils.addTab(gBrowser);
   let browser = gBrowser.getBrowserForTab(tab);
 
   gBrowser.selectedTab = tab;

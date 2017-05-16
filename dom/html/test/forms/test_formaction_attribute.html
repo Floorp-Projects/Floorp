@@ -25,41 +25,41 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=566160
 <iframe name='frame7' id='frame7'></iframe>
 <div id="content">
   <!-- submit controls with formaction that are validated with a CLICK -->
-  <form target="frame1" action="data:text/html,FAIL" method="GET">
+  <form target="frame1" action="FAIL.html" method="GET">
     <input name='foo' value='foo'>
-    <input type='submit' id='is' formaction="data:text/html,">
+    <input type='submit' id='is' formaction="PASS.html">
   </form>
-  <form target="frame2" action="data:text/html,FAIL" method="GET">
+  <form target="frame2" action="FAIL.html" method="GET">
     <input name='bar' value='bar'>
-    <input type='image' id='ii' formaction="data:text/html,">
+    <input type='image' id='ii' formaction="PASS.html">
   </form>
-  <form target="frame3" action="data:text/html,FAIL" method="GET">
+  <form target="frame3" action="FAIL.html" method="GET">
     <input name='tulip' value='tulip'>
-    <button type='submit' id='bs' formaction="data:text/html,">submit</button>
+    <button type='submit' id='bs' formaction="PASS.html">submit</button>
   </form>
-  <form target="frame3bis" action="data:text/html,FAIL" method="GET">
+  <form target="frame3bis" action="FAIL.html" method="GET">
     <input name='tulipbis' value='tulipbis'>
-    <button type='submit' id='bsbis' formaction="data:text/html,">submit</button>
+    <button type='submit' id='bsbis' formaction="PASS.html">submit</button>
   </form>
 
   <!-- submit controls with formaction that are validated with ENTER -->
-  <form target="frame4" action="data:text/html,FAIL" method="GET">
+  <form target="frame4" action="FAIL.html" method="GET">
     <input name='footulip' value='footulip'>
-    <input type='submit' id='is2' formaction="data:text/html,">
+    <input type='submit' id='is2' formaction="PASS.html">
   </form>
-  <form target="frame5" action="data:text/html,FAIL" method="GET">
+  <form target="frame5" action="FAIL.html" method="GET">
     <input name='foobar' value='foobar'>
-    <input type='image' id='ii2' formaction="data:text/html,">
+    <input type='image' id='ii2' formaction="PASS.html">
   </form>
-  <form target="frame6" action="data:text/html,FAIL" method="GET">
+  <form target="frame6" action="FAIL.html" method="GET">
     <input name='tulip2' value='tulip2'>
-    <button type='submit' id='bs2' formaction="data:text/html,">submit</button>
+    <button type='submit' id='bs2' formaction="PASS.html">submit</button>
   </form>
 
   <!-- check that when submitting a from from an element
        which is not a submit control, @formaction isn't used -->
-  <form target='frame7' action="data:text/html," method="GET">
-    <input id='enter' name='input' value='enter' formaction="data:text/html,FAIL">
+  <form target='frame7' action="PASS.html" method="GET">
+    <input id='enter' name='input' value='enter' formaction="FAIL.html">
   </form>
 </div>
 <pre id="test">
@@ -70,15 +70,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=566160
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(runTests);
 
+const BASE_URI = "http://mochi.test:8888/tests/dom/html/test/forms/PASS.html";
 var gTestResults = {
-  frame1: "data:text/html,?foo=foo",
-  frame2: "data:text/html,?bar=bar&x=0&y=0",
-  frame3: "data:text/html,?tulip=tulip",
-  frame3bis: "data:text/html,?tulipbis=tulipbis",
-  frame4: "data:text/html,?footulip=footulip",
-  frame5: "data:text/html,?foobar=foobar&x=0&y=0",
-  frame6: "data:text/html,?tulip2=tulip2",
-  frame7: "data:text/html,?input=enter",
+  frame1: BASE_URI + "?foo=foo",
+  frame2: BASE_URI + "?bar=bar&x=0&y=0",
+  frame3: BASE_URI + "?tulip=tulip",
+  frame3bis: BASE_URI + "?tulipbis=tulipbis",
+  frame4: BASE_URI + "?footulip=footulip",
+  frame5: BASE_URI + "?foobar=foobar&x=0&y=0",
+  frame6: BASE_URI + "?tulip2=tulip2",
+  frame7: BASE_URI + "?input=enter",
 };
 
 var gPendingLoad = 0; // Has to be set after depending on the frames number.

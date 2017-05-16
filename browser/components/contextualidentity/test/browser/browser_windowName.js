@@ -21,7 +21,7 @@ add_task(async function setup() {
 
 add_task(async function test() {
   info("Creating first tab...");
-  let tab1 = gBrowser.addTab(BASE_URI + "?old", {userContextId: 1});
+  let tab1 = BrowserTestUtils.addTab(gBrowser, BASE_URI + "?old", {userContextId: 1});
   let browser1 = gBrowser.getBrowserForTab(tab1);
   await BrowserTestUtils.browserLoaded(browser1);
   await ContentTask.spawn(browser1, null, function(opts) {
@@ -29,7 +29,7 @@ add_task(async function test() {
   });
 
   info("Creating second tab...");
-  let tab2 = gBrowser.addTab(BASE_URI + "?old", {userContextId: 2});
+  let tab2 = BrowserTestUtils.addTab(gBrowser, BASE_URI + "?old", {userContextId: 2});
   let browser2 = gBrowser.getBrowserForTab(tab2);
   await BrowserTestUtils.browserLoaded(browser2);
   await ContentTask.spawn(browser2, null, function(opts) {

@@ -128,7 +128,7 @@ function promiseTabCrashedReady(browser) {
  * page does not get added to the tab history.
  */
 add_task(async function test_crash_page_not_in_history() {
-  let newTab = gBrowser.addTab();
+  let newTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = newTab;
   let browser = newTab.linkedBrowser;
   ok(browser.isRemoteBrowser, "Should be a remote browser");
@@ -157,7 +157,7 @@ add_task(async function test_crash_page_not_in_history() {
  * we record history for that new visit.
  */
 add_task(async function test_revived_history_from_remote() {
-  let newTab = gBrowser.addTab();
+  let newTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = newTab;
   let browser = newTab.linkedBrowser;
   ok(browser.isRemoteBrowser, "Should be a remote browser");
@@ -196,7 +196,7 @@ add_task(async function test_revived_history_from_remote() {
  * we record history for that new visit.
  */
 add_task(async function test_revived_history_from_non_remote() {
-  let newTab = gBrowser.addTab();
+  let newTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = newTab;
   let browser = newTab.linkedBrowser;
   ok(browser.isRemoteBrowser, "Should be a remote browser");
@@ -234,7 +234,7 @@ add_task(async function test_revived_history_from_non_remote() {
  * it was on when it crashed.
  */
 add_task(async function test_revive_tab_from_session_store() {
-  let newTab = gBrowser.addTab();
+  let newTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = newTab;
   let browser = newTab.linkedBrowser;
   ok(browser.isRemoteBrowser, "Should be a remote browser");
@@ -243,7 +243,7 @@ add_task(async function test_revive_tab_from_session_store() {
   browser.loadURI(PAGE_1);
   await promiseBrowserLoaded(browser);
 
-  let newTab2 = gBrowser.addTab("about:blank", { sameProcessAsFrameLoader: browser.frameLoader });
+  let newTab2 = BrowserTestUtils.addTab(gBrowser, "about:blank", { sameProcessAsFrameLoader: browser.frameLoader });
   let browser2 = newTab2.linkedBrowser;
   ok(browser2.isRemoteBrowser, "Should be a remote browser");
   await promiseBrowserLoaded(browser2);
@@ -287,7 +287,7 @@ add_task(async function test_revive_tab_from_session_store() {
  * that they were on when they crashed.
  */
 add_task(async function test_revive_all_tabs_from_session_store() {
-  let newTab = gBrowser.addTab();
+  let newTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = newTab;
   let browser = newTab.linkedBrowser;
   ok(browser.isRemoteBrowser, "Should be a remote browser");
@@ -347,7 +347,7 @@ add_task(async function test_revive_all_tabs_from_session_store() {
  * Checks that about:tabcrashed can close the current tab
  */
 add_task(async function test_close_tab_after_crash() {
-  let newTab = gBrowser.addTab();
+  let newTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = newTab;
   let browser = newTab.linkedBrowser;
   ok(browser.isRemoteBrowser, "Should be a remote browser");
@@ -376,7 +376,7 @@ add_task(async function test_close_tab_after_crash() {
  * is showing about:tabcrashed
  */
 add_task(async function test_hide_restore_all_button() {
-  let newTab = gBrowser.addTab();
+  let newTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = newTab;
   let browser = newTab.linkedBrowser;
   ok(browser.isRemoteBrowser, "Should be a remote browser");
@@ -398,7 +398,7 @@ add_task(async function test_hide_restore_all_button() {
   is(restoreAllStyles.display, "none", "Restore All button should be hidden");
   ok(restoreOneButton.classList.contains("primary"), "Restore Tab button should have the primary class");
 
-  let newTab2 = gBrowser.addTab();
+  let newTab2 = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = newTab;
 
   browser.loadURI(PAGE_2);
@@ -434,7 +434,7 @@ add_task(async function test_hide_restore_all_button() {
 });
 
 add_task(async function test_aboutcrashedtabzoom() {
-  let newTab = gBrowser.addTab();
+  let newTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = newTab;
   let browser = newTab.linkedBrowser;
   ok(browser.isRemoteBrowser, "Should be a remote browser");

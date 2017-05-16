@@ -40,7 +40,7 @@ var gTests = [
 
       // After selecting a new tab, check the attribute is still there,
       // and the icon is now visible.
-      await BrowserTestUtils.switchTab(gBrowser, gBrowser.addTab());
+      await BrowserTestUtils.switchTab(gBrowser, BrowserTestUtils.addTab(gBrowser));
       is(gBrowser.selectedTab.getAttribute("sharing"), "",
          "the new tab doesn't have the 'sharing' attribute");
       is(tab.getAttribute("sharing"), aSharing,

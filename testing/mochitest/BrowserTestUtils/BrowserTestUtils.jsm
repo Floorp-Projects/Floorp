@@ -1364,4 +1364,16 @@ this.BrowserTestUtils = {
     }
     Services.ppmm.removeDelayedProcessScript(kAboutPageRegistrationContentScript);
   },
+
+  /**
+   * Opens a tab with a given uri and params object. If the params object is not set
+   * or the params parameter does not include a triggeringPricnipal then this function
+   * provides a params object using the systemPrincipal as the default triggeringPrincipal.
+   */
+  addTab(browser, uri, params = {}) {
+    if (!params.triggeringPrincipal) {
+      params.triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+    }
+    return browser.addTab(uri, params);
+  }
 };

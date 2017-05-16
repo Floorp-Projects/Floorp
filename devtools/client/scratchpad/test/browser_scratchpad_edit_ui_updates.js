@@ -11,7 +11,7 @@ var DEVTOOLS_CHROME_ENABLED = "devtools.chrome.enabled";
 function test()
 {
   waitForExplicitFinish();
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   Services.prefs.setBoolPref(DEVTOOLS_CHROME_ENABLED, false);
   gBrowser.selectedBrowser.addEventListener("load", function () {
     openScratchpad(runTests);

@@ -53,7 +53,7 @@ add_task(function* () {
 add_task(function* () {
   yield PlacesUtils.history.clear();
 
-  let tab = gBrowser.addTab(URL);
+  let tab = BrowserTestUtils.addTab(gBrowser, URL);
 
   is(yield prerenderedVisited(), false, "Should not have been visited");
 
@@ -127,7 +127,7 @@ add_task(function* () {
 add_task(function* () {
   yield PlacesUtils.history.clear();
 
-  let tab = gBrowser.addTab(URL);
+  let tab = BrowserTestUtils.addTab(gBrowser, URL);
 
   is(yield prerenderedVisited(), false, "Should not have been visited");
 

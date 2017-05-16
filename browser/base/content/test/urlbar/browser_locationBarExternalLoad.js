@@ -29,7 +29,7 @@ function promiseNewTabSwitched() {
 
 async function testURL(url, loadFunc, endFunc) {
   let tabSwitchedPromise = promiseNewTabSwitched();
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   let browser = gBrowser.selectedBrowser;
 
   let pageshowPromise = BrowserTestUtils.waitForContentEvent(browser, "pageshow");

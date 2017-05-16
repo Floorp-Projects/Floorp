@@ -58,12 +58,22 @@ typedef UniquePtr<const CodeSegment> UniqueConstCodeSegment;
 
 class CodeSegment
 {
+    // Executable code must be deallocated specially.
+    struct FreeCode {
+        uint32_t codeLength;
+        FreeCode() : codeLength(0) {}
+        explicit FreeCode(uint32_t codeLength) : codeLength(codeLength) {}
+        void operator()(uint8_t* codeBytes);
+    };
+    typedef UniquePtr<uint8_t, FreeCode> UniqueCodeBytes;
+    static UniqueCodeBytes AllocateCodeBytes(uint32_t codeLength);
+
     // bytes_ points to a single allocation of executable machine code in
     // the range [0, length_).  The range [0, functionLength_) is
     // the subrange of [0, length_) which contains function code.
-    uint8_t* bytes_;
-    uint32_t functionLength_;
-    uint32_t length_;
+    UniqueCodeBytes bytes_;
+    uint32_t        functionLength_;
+    uint32_t        length_;
 
     // These are pointers into code for stubs used for asynchronous
     // signal-handler control-flow transfer.
@@ -71,13 +81,13 @@ class CodeSegment
     uint8_t* outOfBoundsCode_;
     uint8_t* unalignedAccessCode_;
 
-    // This assumes ownership of the codeBytes, and deletes them in the event of error.
-    bool initialize(uint8_t* codeBase, uint32_t codeLength, const ShareableBytes& bytecode,
-                    const LinkData& linkData, const Metadata& metadata);
+    bool initialize(UniqueCodeBytes bytes,
+                    uint32_t codeLength,
+                    const ShareableBytes& bytecode,
+                    const LinkData& linkData,
+                    const Metadata& metadata);
 
-    // codeBytes must be executable memory.
-    // This assumes ownership of the codeBytes, and deletes them in the event of error.
-    static UniqueConstCodeSegment create(uint8_t* codeBytes,
+    static UniqueConstCodeSegment create(UniqueCodeBytes bytes,
                                          uint32_t codeLength,
                                          const ShareableBytes& bytecode,
                                          const LinkData& linkData,
@@ -87,8 +97,7 @@ class CodeSegment
     void operator=(const CodeSegment&) = delete;
 
     CodeSegment()
-      : bytes_(nullptr),
-        functionLength_(0),
+      : functionLength_(0),
         length_(0),
         interruptCode_(nullptr),
         outOfBoundsCode_(nullptr),
@@ -100,14 +109,12 @@ class CodeSegment
                                          const LinkData& linkData,
                                          const Metadata& metadata);
 
-    static UniqueConstCodeSegment create(const Bytes& codeBytes,
+    static UniqueConstCodeSegment create(const Bytes& unlinkedBytes,
                                          const ShareableBytes& bytecode,
                                          const LinkData& linkData,
                                          const Metadata& metadata);
 
-    ~CodeSegment();
-
-    uint8_t* base() const { return bytes_; }
+    uint8_t* base() const { return bytes_.get(); }
     uint32_t length() const { return length_; }
 
     uint8_t* interruptCode() const { return interruptCode_; }
@@ -127,7 +134,7 @@ class CodeSegment
         return pc >= base() && pc < (base() + length_);
     }
 
-    UniqueConstBytes unlinkedBytesForDebugging(const LinkData& linkData) const;
+    // Structured clone support:
 
     size_t serializedSize() const;
     uint8_t* serialize(uint8_t* cursor, const LinkData& linkData) const;
@@ -392,15 +399,12 @@ class Code : public ShareableBase<Code>
 {
     UniqueConstCodeSegment              segment_;
     SharedMetadata                      metadata_;
-    SharedBytes                         maybeBytecode_;
     ExclusiveData<CacheableCharsVector> profilingLabels_;
 
   public:
     Code();
 
-    Code(UniqueConstCodeSegment segment,
-         const Metadata& metadata,
-         const ShareableBytes* maybeBytecode);
+    Code(UniqueConstCodeSegment segment, const Metadata& metadata);
 
     const CodeSegment& segment() const { return *segment_; }
     const Metadata& metadata() const { return *metadata_; }
@@ -411,23 +415,16 @@ class Code : public ShareableBase<Code>
     const CodeRange* lookupRange(void* pc) const;
     const MemoryAccess* lookupMemoryAccess(void* pc) const;
 
-    // Return the name associated with a given function index, or generate one
-    // if none was given by the module.
-
-    bool getFuncName(uint32_t funcIndex, UTF8Bytes* name) const;
-    JSAtom* getFuncAtom(JSContext* cx, uint32_t funcIndex) const;
-
     // To save memory, profilingLabels_ are generated lazily when profiling mode
     // is enabled.
 
-    void ensureProfilingLabels(bool profilingEnabled) const;
+    void ensureProfilingLabels(const Bytes* maybeBytecode, bool profilingEnabled) const;
     const char* profilingLabel(uint32_t funcIndex) const;
 
     // about:memory reporting:
 
     void addSizeOfMiscIfNotSeen(MallocSizeOf mallocSizeOf,
                                 Metadata::SeenSet* seenMetadata,
-                                ShareableBytes::SeenSet* seenBytes,
                                 Code::SeenSet* seenCode,
                                 size_t* code,
                                 size_t* data) const;

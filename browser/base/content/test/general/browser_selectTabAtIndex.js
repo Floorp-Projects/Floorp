@@ -16,7 +16,7 @@ function test() {
 
   function createTabs(count) {
     for (let n = 0; n < count; n++)
-      gBrowser.addTab();
+      BrowserTestUtils.addTab(gBrowser);
   }
 
   function testKey(key, expectedTab) {

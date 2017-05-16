@@ -193,11 +193,11 @@ var gTabContent = null;
 
 add_task(async function init() {
   info("Setting up about:performance");
-  gTabAboutPerformance = gBrowser.selectedTab = gBrowser.addTab("about:performance");
+  gTabAboutPerformance = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:performance");
   await ContentTask.spawn(gTabAboutPerformance.linkedBrowser, null, frameScript);
 
   info(`Setting up ${URL}`);
-  gTabContent = gBrowser.addTab(URL);
+  gTabContent = BrowserTestUtils.addTab(gBrowser, URL);
   await ContentTask.spawn(gTabContent.linkedBrowser, null, frameScript);
 });
 
@@ -262,7 +262,7 @@ add_task(async function test_close_tab() {
     for (let mode of ["close", "reload"]) {
       let URL = `about:about?display-recent=${displayRecent}&mode=${mode}&salt=${Math.random()}`;
       info(`Setting up ${URL}`);
-      let tab = gBrowser.addTab(URL);
+      let tab = BrowserTestUtils.addTab(gBrowser, URL);
       await ContentTask.spawn(tab.linkedBrowser, null, frameScript);
       let promiseClosed = promiseTabClosed(tab);
       let promiseReloaded = promiseTabReloaded(tab);

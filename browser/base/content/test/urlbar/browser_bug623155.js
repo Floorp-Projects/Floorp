@@ -49,7 +49,7 @@ function test() {
   waitForExplicitFinish();
 
   // Load a URI in the background.
-  gNewTab = gBrowser.addTab(REDIRECT_FROM + "#BG");
+  gNewTab = BrowserTestUtils.addTab(gBrowser, REDIRECT_FROM + "#BG");
   gBrowser.getBrowserForTab(gNewTab)
           .webProgress
           .addProgressListener(gWebProgressListener,

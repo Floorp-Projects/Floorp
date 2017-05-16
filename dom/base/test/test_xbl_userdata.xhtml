@@ -28,15 +28,14 @@
 <![CDATA[
 "use strict";
 
-var url = 'data:text/html;charset=utf-8,' +
-          encodeURIComponent('<div id=t style="-moz-binding:url(' + location + '#xbl)"></div>');
+var url = '<div id=t style="-moz-binding:url(' + location + '#xbl)"></div>';
 
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(test1);
 
 function test1() {
   var iframe = document.createElement('iframe');
-  iframe.src = url;
+  iframe.srcdoc = url;
   iframe.onload = function() {
     var t = iframe.contentWindow.t;
     is(!!(t.getUserData || t.setUserData), false,

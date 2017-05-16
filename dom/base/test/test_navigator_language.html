@@ -188,7 +188,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=889335
   // to them is killed.
   tests.push(function testThatAddingAnEventDoesNotHaveSideEffects() {
     var frame = document.createElement('iframe');
-    frame.src = 'data:text/html,<script>window.onlanguagechange=function(){}<\/script>';
+    frame.srcdoc = '<script>window.onlanguagechange=function(){}<\/script>';
     document.body.appendChild(frame);
 
     frame.contentWindow.onload = function() {

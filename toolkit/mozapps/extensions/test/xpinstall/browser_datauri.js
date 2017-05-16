@@ -21,7 +21,7 @@ function test() {
     "Location": "data:text/html,<script>window.location.href='" + TESTROOT + "amosigned.xpi'</script>"
   });
 
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.loadURI(TESTROOT + "redirect.sjs?mode=redirect");
 }
 

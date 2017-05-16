@@ -119,7 +119,7 @@ function remoteResolveURI(uri) {
 }
 
 var loadTestTab = Task.async(function*() {
-  gBrowser.selectedTab = gBrowser.addTab(TEST_URL);
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, TEST_URL);
   let browser = gBrowser.selectedBrowser;
   yield BrowserTestUtils.browserLoaded(browser);
   browser.messageManager.loadFrameScript("data:,(" + frameScript.toString() + ")();", true);

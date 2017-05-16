@@ -20,7 +20,7 @@ function test() {
   }, {once: true});
 
   // create a new tab
-  let tab = gBrowser.addTab("about:mozilla");
+  let tab = BrowserTestUtils.addTab(gBrowser, "about:mozilla");
   let browser = tab.linkedBrowser;
 
   // close and restore it

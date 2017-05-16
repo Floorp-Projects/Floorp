@@ -530,7 +530,7 @@ DebugState::addSizeOfMisc(MallocSizeOf mallocSizeOf,
                           size_t* code,
                           size_t* data) const
 {
-    code_->addSizeOfMiscIfNotSeen(mallocSizeOf, seenMetadata, seenBytes, seenCode, code, data);
+    code_->addSizeOfMiscIfNotSeen(mallocSizeOf, seenMetadata, seenCode, code, data);
     if (maybeSourceMap_)
         *data += maybeSourceMap_->sizeOfExcludingThis(mallocSizeOf);
     if (maybeBytecode_)

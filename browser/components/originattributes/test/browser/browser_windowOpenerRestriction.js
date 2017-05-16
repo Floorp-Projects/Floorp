@@ -16,7 +16,7 @@ async function testPref(aIsPrefEnabled) {
   let cookieStr = "key" + Math.random().toString() + "=" + Math.random().toString();
 
   // Open the tab for the opener page.
-  let tab = gBrowser.addTab(OPENER_PAGE);
+  let tab = BrowserTestUtils.addTab(gBrowser, OPENER_PAGE);
 
   // Select this tab and make sure its browser is loaded and focused.
   gBrowser.selectedTab = tab;

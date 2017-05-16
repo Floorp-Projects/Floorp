@@ -160,7 +160,7 @@ function test2() {
       is(gHistorySwipeAnimation._trackedSnapshots.length, 2, "Length of " +
          "snapshot array is equal to 2 after loading two pages");
       let prevTab = tab;
-      tab = gBrowser.addTab("about:newtab");
+      tab = BrowserTestUtils.addTab(gBrowser, "about:newtab");
       gBrowser.selectedTab = tab;
       load(tab, HTTPROOT + "browser_bug678392-2.html" /* initial page */,
            function() {

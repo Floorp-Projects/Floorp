@@ -27,52 +27,52 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=566160
 <iframe name='frame9' id='frame9'></iframe>
 <div id="content">
   <!-- submit controls with formaction that are validated with a CLICK -->
-  <form target="frame1" action="data:text/html," method="POST">
+  <form target="frame1" action="dummy_page.html" method="POST">
     <input name='foo' value='foo'>
     <input type='submit' id='is' formmethod="GET">
   </form>
-  <form target="frame2" action="data:text/html," method="POST">
+  <form target="frame2" action="dummy_page.html" method="POST">
     <input name='bar' value='bar'>
     <input type='image' id='ii' formmethod="GET">
   </form>
-  <form target="frame3" action="data:text/html," method="POST">
+  <form target="frame3" action="dummy_page.html" method="POST">
     <input name='tulip' value='tulip'>
     <button type='submit' id='bs' formmethod="GET">submit</button>
   </form>
-  <form target="frame3bis" action="data:text/html," method="POST">
+  <form target="frame3bis" action="dummy_page.html" method="POST">
     <input name='tulipbis' value='tulipbis'>
     <button type='submit' id='bsbis' formmethod="GET">submit</button>
   </form>
 
   <!-- submit controls with formaction that are validated with ENTER -->
-  <form target="frame4" action="data:text/html," method="POST">
+  <form target="frame4" action="dummy_page.html" method="POST">
     <input name='footulip' value='footulip'>
     <input type='submit' id='is2' formmethod="GET">
   </form>
-  <form target="frame5" action="data:text/html," method="POST">
+  <form target="frame5" action="dummy_page.html" method="POST">
     <input name='foobar' value='foobar'>
     <input type='image' id='ii2' formmethod="GET">
   </form>
-  <form target="frame6" action="data:text/html," method="POST">
+  <form target="frame6" action="dummy_page.html" method="POST">
     <input name='tulip2' value='tulip2'>
     <button type='submit' id='bs2' formmethod="GET">submit</button>
   </form>
 
   <!-- check that when submitting a from from an element
        which is not a submit control, @formaction isn't used -->
-  <form target='frame7' action="data:text/html," method="GET">
+  <form target='frame7' action="dummy_page.html" method="GET">
     <input id='enter' name='input' value='enter' formmethod="POST">
   </form>
 
   <!-- If formmethod isn't set, it's default value shouldn't be used -->
-  <form target="frame8" action="data:text/html," method="POST">
+  <form target="frame8" action="dummy_page.html" method="POST">
     <input name='tulip8' value='tulip8'>
     <input type='submit' id='i8'>
   </form>
 
   <!-- If formmethod is set but has an invalid value, the default value should
        be used. -->
-  <form target="frame9" action="data:text/html," method="POST">
+  <form target="frame9" action="dummy_page.html" method="POST">
     <input name='tulip9' value='tulip9'>
     <input type='submit' id='i9' formmethod="">
   </form>
@@ -87,17 +87,18 @@ addLoadEvent(function() {
   setTimeout(runTests, 0);
 });
 
+const BASE_URI = "http://mochi.test:8888/tests/dom/html/test/dummy_page.html";
 var gTestResults = {
-  frame1: "data:text/html,?foo=foo",
-  frame2: "data:text/html,?bar=bar&x=0&y=0",
-  frame3: "data:text/html,?tulip=tulip",
-  frame3bis: "data:text/html,?tulipbis=tulipbis",
-  frame4: "data:text/html,?footulip=footulip",
-  frame5: "data:text/html,?foobar=foobar&x=0&y=0",
-  frame6: "data:text/html,?tulip2=tulip2",
-  frame7: "data:text/html,?input=enter",
-  frame8: "data:text/html,",
-  frame9: "data:text/html,?tulip9=tulip9",
+  frame1: BASE_URI + "?foo=foo",
+  frame2: BASE_URI + "?bar=bar&x=0&y=0",
+  frame3: BASE_URI + "?tulip=tulip",
+  frame3bis: BASE_URI + "?tulipbis=tulipbis",
+  frame4: BASE_URI + "?footulip=footulip",
+  frame5: BASE_URI + "?foobar=foobar&x=0&y=0",
+  frame6: BASE_URI + "?tulip2=tulip2",
+  frame7: BASE_URI + "?input=enter",
+  frame8: BASE_URI + "",
+  frame9: BASE_URI + "?tulip9=tulip9",
 };
 
 var gPendingLoad = 0; // Has to be set after depending on the frames number.
