@@ -568,16 +568,6 @@ CSSStyleSheet::GetStyleRuleAt(int32_t aIndex) const
   return Inner()->mOrderedRules.SafeObjectAt(aIndex);
 }
 
-void
-CSSStyleSheet::AppendAllChildSheets(nsTArray<CSSStyleSheet*>& aArray)
-{
-  for (StyleSheet* child = GetFirstChild(); child;
-       child = child->mNext) {
-
-    aArray.AppendElement(child->AsGecko());
-  }
-}
-
 already_AddRefed<StyleSheet>
 CSSStyleSheet::Clone(StyleSheet* aCloneParent,
                      css::ImportRule* aCloneOwnerRule,
