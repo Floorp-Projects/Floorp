@@ -68,7 +68,7 @@ skip-if(stylo) == anim-css-font-1.svg  anim-css-font-1-ref.svg
 
 # 'font-size' property, from/by/to with pixel values only
 skip-if(stylo) == anim-css-fontsize-1-from-by-px-px.svg    anim-css-fontsize-1-ref.svg
-skip-if(stylo) == anim-css-fontsize-1-from-to-px-px.svg    anim-css-fontsize-1-ref.svg
+== anim-css-fontsize-1-from-to-px-px.svg    anim-css-fontsize-1-ref.svg
 
 # 'font-size' property (accepts unitless values)
 skip-if(stylo) == anim-css-fontsize-1-from-to-no-no.svg    anim-css-fontsize-1-ref.svg
@@ -84,9 +84,9 @@ skip-if(stylo) == anim-mapped-fontsize-1-from-to-px-no.svg anim-css-fontsize-1-r
 skip-if(stylo) == anim-css-fontsize-1-from-by-pct-pct.svg  anim-css-fontsize-1-ref.svg
 skip-if(stylo) == anim-css-fontsize-1-from-by-pct-px.svg   anim-css-fontsize-1-ref.svg
 skip-if(stylo) == anim-css-fontsize-1-from-by-px-pct.svg   anim-css-fontsize-1-ref.svg
-skip-if(stylo) == anim-css-fontsize-1-from-to-pct-pct.svg  anim-css-fontsize-1-ref.svg
-skip-if(stylo) == anim-css-fontsize-1-from-to-pct-px.svg   anim-css-fontsize-1-ref.svg
-skip-if(stylo) == anim-css-fontsize-1-from-to-px-pct.svg   anim-css-fontsize-1-ref.svg
+== anim-css-fontsize-1-from-to-pct-pct.svg  anim-css-fontsize-1-ref.svg
+== anim-css-fontsize-1-from-to-pct-px.svg   anim-css-fontsize-1-ref.svg
+== anim-css-fontsize-1-from-to-px-pct.svg   anim-css-fontsize-1-ref.svg
 
 # 'font-size' property, with negative addition
 skip-if(stylo) == anim-css-fontsize-2-from-by-px-px.svg    anim-css-fontsize-2-ref.svg
@@ -94,18 +94,18 @@ skip-if(stylo) == anim-css-fontsize-2-from-by-px-em.svg    anim-css-fontsize-2-r
 skip-if(stylo) == anim-css-fontsize-2-from-by-em-em.svg    anim-css-fontsize-2-ref.svg
 
 # 'stroke-dasharray' property, from/to with pixel values only
-skip-if(!stylo) skip-if(stylo) == anim-css-strokedasharray-1.svg anim-css-strokedasharray-1-ref.svg
+skip-if(!stylo) == anim-css-strokedasharray-1.svg anim-css-strokedasharray-1-ref.svg
 
 # 'stroke-width' property, from/by/to with pixel values only
 skip-if(stylo) == anim-css-strokewidth-1-by-px-px.svg        anim-css-strokewidth-1-ref.svg
 skip-if(stylo) == anim-css-strokewidth-1-from-by-px-px.svg   anim-css-strokewidth-1-ref.svg
-skip-if(stylo) == anim-css-strokewidth-1-from-to-px-px.svg   anim-css-strokewidth-1-ref.svg
+== anim-css-strokewidth-1-from-to-px-px.svg   anim-css-strokewidth-1-ref.svg
 skip-if(stylo) == anim-css-strokewidth-1-to-px-px.svg        anim-css-strokewidth-1-ref.svg
 
 # 'stroke-width' property, from/by/to with unitless values only
 skip-if(stylo) == anim-css-strokewidth-1-by-no-no.svg        anim-css-strokewidth-1-ref.svg
 skip-if(stylo) == anim-css-strokewidth-1-from-by-no-no.svg   anim-css-strokewidth-1-ref.svg
-skip-if(stylo) == anim-css-strokewidth-1-from-to-no-no.svg   anim-css-strokewidth-1-ref.svg
+== anim-css-strokewidth-1-from-to-no-no.svg   anim-css-strokewidth-1-ref.svg
 skip-if(stylo) == anim-css-strokewidth-1-to-no-no.svg        anim-css-strokewidth-1-ref.svg
 
 # 'stroke-width' property, from/by/to with percent values
@@ -118,12 +118,12 @@ fails == anim-css-strokewidth-1-by-px-pct.svg       anim-css-strokewidth-1-ref.s
 skip-if(stylo) == anim-css-strokewidth-1-from-by-pct-pct.svg anim-css-strokewidth-1-ref.svg
 fails-if(!stylo) == anim-css-strokewidth-1-from-by-pct-px.svg  anim-css-strokewidth-1-ref.svg
 fails-if(!stylo) == anim-css-strokewidth-1-from-by-px-pct.svg  anim-css-strokewidth-1-ref.svg
-skip-if(stylo) == anim-css-strokewidth-1-from-to-pct-pct.svg anim-css-strokewidth-1-ref.svg
+== anim-css-strokewidth-1-from-to-pct-pct.svg anim-css-strokewidth-1-ref.svg
 fails-if(!stylo) skip-if(stylo) == anim-css-strokewidth-1-from-to-pct-px.svg  anim-css-strokewidth-1-ref.svg
 fails-if(!stylo) skip-if(stylo) == anim-css-strokewidth-1-from-to-px-pct.svg  anim-css-strokewidth-1-ref.svg
 skip-if(stylo) == anim-css-strokewidth-1-to-pct-pct.svg      anim-css-strokewidth-1-ref.svg
-fails-if(!stylo) skip-if(stylo) == anim-css-strokewidth-1-to-pct-px.svg       anim-css-strokewidth-1-ref.svg
-fails-if(!stylo) skip-if(stylo) == anim-css-strokewidth-1-to-px-pct.svg       anim-css-strokewidth-1-ref.svg
+fails-if(!stylo) == anim-css-strokewidth-1-to-pct-px.svg       anim-css-strokewidth-1-ref.svg
+fails-if(!stylo) == anim-css-strokewidth-1-to-px-pct.svg       anim-css-strokewidth-1-ref.svg
 
 # 'stroke-width' property, from/by/to with em values
 skip-if(stylo) == anim-css-strokewidth-1-by-px-em.svg        anim-css-strokewidth-1-ref.svg
@@ -132,19 +132,19 @@ skip-if(stylo) == anim-css-strokewidth-1-by-em-px.svg        anim-css-strokewidt
 skip-if(stylo) == anim-css-strokewidth-1-from-by-px-em.svg   anim-css-strokewidth-1-ref.svg
 skip-if(stylo) == anim-css-strokewidth-1-from-by-em-em.svg   anim-css-strokewidth-1-ref.svg
 skip-if(stylo) == anim-css-strokewidth-1-from-by-em-px.svg   anim-css-strokewidth-1-ref.svg
-skip-if(stylo) == anim-css-strokewidth-1-from-to-px-em.svg   anim-css-strokewidth-1-ref.svg
-skip-if(stylo) == anim-css-strokewidth-1-from-to-em-em.svg   anim-css-strokewidth-1-ref.svg
-skip-if(stylo) == anim-css-strokewidth-1-from-to-em-px.svg   anim-css-strokewidth-1-ref.svg
+== anim-css-strokewidth-1-from-to-px-em.svg   anim-css-strokewidth-1-ref.svg
+== anim-css-strokewidth-1-from-to-em-em.svg   anim-css-strokewidth-1-ref.svg
+== anim-css-strokewidth-1-from-to-em-px.svg   anim-css-strokewidth-1-ref.svg
 skip-if(stylo) == anim-css-strokewidth-1-to-px-em.svg        anim-css-strokewidth-1-ref.svg
 skip-if(stylo) == anim-css-strokewidth-1-to-em-em.svg        anim-css-strokewidth-1-ref.svg
 skip-if(stylo) == anim-css-strokewidth-1-to-em-px.svg        anim-css-strokewidth-1-ref.svg
 
 # 'stroke-width' property, values-array & paced calc-mode support
-skip-if(stylo) == anim-css-strokewidth-2-values-em-em.svg    anim-css-strokewidth-2-ref.svg
-skip-if(stylo) == anim-css-strokewidth-2-values-em-px.svg    anim-css-strokewidth-2-ref.svg
-skip-if(stylo) == anim-css-strokewidth-2-values-px-em.svg    anim-css-strokewidth-2-ref.svg
-fuzzy-if(skiaContent,1,360) skip-if(stylo) == anim-css-strokewidth-2-values-px-px.svg    anim-css-strokewidth-2-ref.svg
-skip-if(stylo) == anim-css-strokewidth-3-paced.svg           anim-css-strokewidth-3-ref.svg
+== anim-css-strokewidth-2-values-em-em.svg    anim-css-strokewidth-2-ref.svg
+== anim-css-strokewidth-2-values-em-px.svg    anim-css-strokewidth-2-ref.svg
+== anim-css-strokewidth-2-values-px-em.svg    anim-css-strokewidth-2-ref.svg
+fuzzy-if(skiaContent,1,360) == anim-css-strokewidth-2-values-px-px.svg    anim-css-strokewidth-2-ref.svg
+== anim-css-strokewidth-3-paced.svg           anim-css-strokewidth-3-ref.svg
 
 # 'stroke-width' property, negative addition
 skip-if(stylo) == anim-css-strokewidth-4-from-by-px-px.svg   anim-css-strokewidth-4-ref.svg
