@@ -1008,6 +1008,10 @@ protected:
             MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
             return;
           }
+        } else if (origBytes[nOrigBytes] == 0x63 &&
+                   (origBytes[nOrigBytes + 1] & kMaskMod) == kModReg) {
+          // movsxd r64, r32 (move + sign extend)
+          COPY_CODES(2);
         } else {
           // not support yet!
           MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
