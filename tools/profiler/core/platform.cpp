@@ -1714,7 +1714,7 @@ public:
 private:
   // This suspends the calling thread for the given number of microseconds.
   // Best effort timing.
-  void SleepMicro(int aMicroseconds);
+  void SleepMicro(uint32_t aMicroseconds);
 
   // The activity generation, for detecting when the sampler thread must stop.
   const uint32_t mActivityGeneration;
@@ -1858,7 +1858,7 @@ SamplerThread::Run()
     TimeDuration targetSleepDuration = targetSleepEndTime - beforeSleep;
     double sleepTime = std::max(0.0, (targetSleepDuration -
                                       lastSleepOvershoot).ToMicroseconds());
-    SleepMicro(static_cast<int>(sleepTime));
+    SleepMicro(static_cast<uint32_t>(sleepTime));
     sampleStart = TimeStamp::Now();
     lastSleepOvershoot =
       sampleStart - (beforeSleep + TimeDuration::FromMicroseconds(sleepTime));
