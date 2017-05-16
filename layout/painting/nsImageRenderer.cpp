@@ -615,7 +615,7 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
                                                                                     ConvertImageRendererToDrawFlags(mFlags));
       if (!container) {
         NS_WARNING("Failed to get image container");
-        return DrawResult::BAD_IMAGE;
+        return DrawResult::NOT_READY;
       }
       Maybe<wr::ImageKey> key = aLayer->SendImageContainer(container, aParentCommands);
       if (key.isNothing()) {
