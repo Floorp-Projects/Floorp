@@ -17,7 +17,7 @@ class VoidFunction;
 class AudioWorkletGlobalScope final : public WorkletGlobalScope
 {
 public:
-  explicit AudioWorkletGlobalScope(nsPIDOMWindowInner* aWindow);
+  AudioWorkletGlobalScope();
 
   bool
   WrapGlobalObject(JSContext* aCx, nsIPrincipal* aPrincipal,
@@ -28,7 +28,7 @@ public:
                     VoidFunction& aProcessorCtor);
 
 private:
-  ~AudioWorkletGlobalScope();
+  ~AudioWorkletGlobalScope() = default;
 };
 
 } // namespace dom
