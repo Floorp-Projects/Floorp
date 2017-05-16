@@ -8,22 +8,21 @@
 
 #include "MediaStreamGraph.h"
 
-#include "nsDataHashtable.h"
-
-#include "nsITimer.h"
-#include "mozilla/Monitor.h"
-#include "mozilla/TimeStamp.h"
-#include "nsIMemoryReporter.h"
-#include "nsINamed.h"
-#include "nsIThread.h"
-#include "nsIRunnable.h"
-#include "nsIAsyncShutdown.h"
+#include "AudioMixer.h"
+#include "GraphDriver.h"
 #include "Latency.h"
+#include "mozilla/Monitor.h"
 #include "mozilla/Services.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
-#include "GraphDriver.h"
-#include "AudioMixer.h"
+#include "nsDataHashtable.h"
+#include "nsIASyncShutdown.h"
+#include "nsIMemoryReporter.h"
+#include "nsINamed.h"
+#include "nsIRunnable.h"
+#include "nsIThread.h"
+#include "nsITimer.h"
 
 namespace mozilla {
 
