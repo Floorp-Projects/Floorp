@@ -2210,34 +2210,23 @@ nsPresContext::UpdateIsChrome()
 }
 
 bool
-nsPresContext::HasAuthorSpecifiedRules(const nsIFrame *aFrame,
-                                       uint32_t ruleTypeMask) const
+nsPresContext::HasAuthorSpecifiedRules(const nsIFrame* aFrame,
+                                       uint32_t aRuleTypeMask) const
 {
   if (mShell->StyleSet()->IsGecko()) {
     return
       nsRuleNode::HasAuthorSpecifiedRules(aFrame->StyleContext(),
-                                          ruleTypeMask,
+                                          aRuleTypeMask,
                                           UseDocumentColors());
-  } else {
-    Element *elem = aFrame->GetContent()->AsElement();
-    if (elem->IsNativeAnonymous()) {
-      elem = nsContentUtils::GetClosestNonNativeAnonymousAncestor(elem);
-    }
-    if (!elem->HasServoData()) {
-      return false;
-    }
-
-    nsIAtom *pseudoTag = aFrame->StyleContext()->GetPseudo();
-    RefPtr<RawServoRuleNode> ruleNode;
-    ruleNode = mShell->StyleSet()->AsServo()->ResolveRuleNode(elem, pseudoTag);
-    if (!ruleNode) {
-      return false;
-    }
-    return Servo_HasAuthorSpecifiedRules(ruleNode,
-                                         elem,
-                                         ruleTypeMask,
-                                         UseDocumentColors());
   }
+  Element* elem = aFrame->GetContent()->AsElement();
+
+  MOZ_ASSERT(elem->GetPseudoElementType() ==
+             aFrame->StyleContext()->GetPseudoType());
+  MOZ_ASSERT(elem->HasServoData());
+  return Servo_HasAuthorSpecifiedRules(elem,
+                                       aRuleTypeMask,
+                                       UseDocumentColors());
 }
 
 gfxUserFontSet*

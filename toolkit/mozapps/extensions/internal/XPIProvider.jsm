@@ -4468,6 +4468,7 @@ this.XPIProvider = {
                    resolve => XPIDatabase.getVisibleAddonForID(addon.id, resolve));
 
     let extraParams = {};
+    extraParams.temporarilyInstalled = aInstallLocation === TemporaryInstallLocation;
     if (oldAddon) {
       if (!oldAddon.bootstrap) {
         logger.warn("Non-restartless Add-on is already installed", addon.id);

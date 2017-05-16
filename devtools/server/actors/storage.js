@@ -15,6 +15,8 @@ const {isWindowIncluded} = require("devtools/shared/layout/utils");
 const specs = require("devtools/shared/specs/storage");
 const { Task } = require("devtools/shared/task");
 
+const DEFAULT_VALUE = "value";
+
 loader.lazyRequireGetter(this, "naturalSortCaseInsensitive",
   "devtools/client/shared/natural-sort", true);
 
@@ -673,7 +675,7 @@ StorageActors.createActor({
     let time = new Date().getTime();
     let expiry = new Date(time + 3600 * 24 * 1000).toGMTString();
 
-    doc.cookie = `${guid}=value;expires=${expiry}`;
+    doc.cookie = `${guid}=${DEFAULT_VALUE};expires=${expiry}`;
   }),
 
   removeItem: Task.async(function* (host, name) {
@@ -1134,6 +1136,14 @@ function getObjectForLocalOrSessionStorage(type) {
         { name: "name", editable: true },
         { name: "value", editable: true }
       ];
+    }),
+
+    addItem: Task.async(function* (guid, host) {
+      let storage = this.hostVsStores.get(host);
+      if (!storage) {
+        return;
+      }
+      storage.setItem(guid, DEFAULT_VALUE);
     }),
 
     /**
