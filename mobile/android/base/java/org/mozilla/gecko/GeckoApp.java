@@ -2150,12 +2150,6 @@ public abstract class GeckoApp extends GeckoActivity
     }
 
     @Override
-    public String getDefaultUAString() {
-        return HardwareUtils.isTablet() ? AppConstants.USER_AGENT_FENNEC_TABLET :
-                                          AppConstants.USER_AGENT_FENNEC_MOBILE;
-    }
-
-    @Override
     public void createShortcut(final String title, final String url) {
 
         final Tab selectedTab = Tabs.getInstance().getSelectedTab();

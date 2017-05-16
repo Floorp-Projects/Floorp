@@ -93,6 +93,11 @@ public class GeckoApplication extends Application
         return args;
     }
 
+    public static String getDefaultUAString() {
+        return HardwareUtils.isTablet() ? AppConstants.USER_AGENT_FENNEC_TABLET :
+                                          AppConstants.USER_AGENT_FENNEC_MOBILE;
+    }
+
     public static void shutdown(final Intent restartIntent) {
         ThreadUtils.assertOnUiThread();
 
