@@ -185,7 +185,7 @@
                 <menuitem id="menu_preferences"
                           label="&preferencesCmdUnix.label;"
                           accesskey="&preferencesCmdUnix.accesskey;"
-                          oncommand="openPreferences();"/>
+                          oncommand="openPreferences(undefined, {origin: 'menubar'});"/>
 #endif
 #endif
               </menupopup>
@@ -532,7 +532,7 @@
               <menuitem id="menu_preferences"
                         label="&preferencesCmd2.label;"
                         accesskey="&preferencesCmd2.accesskey;"
-                        oncommand="openPreferences();"/>
+                        oncommand="openPreferences(undefined, {origin: 'menubar'});"/>
 #endif
               </menupopup>
             </menu>

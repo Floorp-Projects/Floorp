@@ -11,9 +11,6 @@ const TEST_URI = "data:text/html;charset=utf-8," +
 const TOOL_DELAY = 1000;
 
 add_task(function* () {
-  info("Activating the storage inspector");
-  Services.prefs.setBoolPref("devtools.storage.enabled", true);
-
   yield addTab(TEST_URI);
   let Telemetry = loadTelemetryAndRecordLogs();
 
@@ -22,7 +19,4 @@ add_task(function* () {
 
   stopRecordingTelemetryLogs(Telemetry);
   gBrowser.removeCurrentTab();
-
-  info("De-activating the storage inspector");
-  Services.prefs.clearUserPref("devtools.storage.enabled");
 });

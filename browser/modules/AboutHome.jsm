@@ -138,11 +138,11 @@ var AboutHome = {
         break;
 
       case "AboutHome:Sync":
-        window.openPreferences("paneSync", { urlParams: { entrypoint: "abouthome" } });
+        window.openPreferences("paneSync", { urlParams: { entrypoint: "abouthome" }, origin: "aboutHome"  });
         break;
 
       case "AboutHome:Settings":
-        window.openPreferences();
+        window.openPreferences(undefined, {origin: "aboutHome"} );
         break;
 
       case "AboutHome:RequestUpdate":

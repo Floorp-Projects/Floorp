@@ -2874,7 +2874,9 @@ GetFontStyleForServo(Element* aElement, const nsAString& aFont,
     // We need to use ResolveTransientServoStyle, which involves traversal,
     // instead of ResolveServoStyle() because we need up-to-date style even if
     // the canvas element is display:none.
-    parentStyle = styleSet->ResolveTransientServoStyle(aElement, nullptr);
+    parentStyle =
+      styleSet->ResolveTransientServoStyle(aElement,
+                                           CSSPseudoElementType::NotPseudo);
   } else {
     RefPtr<RawServoDeclarationBlock> declarations =
       CreateFontDeclarationForServo(NS_LITERAL_STRING("10px sans-serif"),

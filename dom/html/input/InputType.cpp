@@ -205,3 +205,93 @@ InputType::MinMaxStepAttrChanged()
 {
   return NS_OK;
 }
+
+bool
+InputType::ConvertStringToNumber(nsAString& aValue,
+                                 mozilla::Decimal& aResultValue) const
+{
+  NS_WARNING("InputType::ConvertStringToNumber called");
+
+  return false;
+}
+
+bool
+InputType::ConvertNumberToString(mozilla::Decimal aValue,
+                                 nsAString& aResultString) const
+{
+  NS_WARNING("InputType::ConvertNumberToString called");
+
+  return false;
+}
+
+bool
+InputType::ParseDate(const nsAString& aValue, uint32_t* aYear, uint32_t* aMonth,
+                     uint32_t* aDay) const
+{
+  // TODO: move this function and implementation to DateTimeInpuTypeBase when
+  // refactoring is completed. Now we can only call HTMLInputElement::ParseDate
+  // from here, since the method is protected and only InputType is a friend
+  // class.
+  return mInputElement->ParseDate(aValue, aYear, aMonth, aDay);
+}
+
+bool
+InputType::ParseTime(const nsAString& aValue, uint32_t* aResult) const
+{
+  // see comment in InputType::ParseDate().
+  return mInputElement->ParseTime(aValue, aResult);
+}
+
+bool
+InputType::ParseMonth(const nsAString& aValue, uint32_t* aYear,
+                      uint32_t* aMonth) const
+{
+  // see comment in InputType::ParseDate().
+  return mInputElement->ParseMonth(aValue, aYear, aMonth);
+}
+
+bool
+InputType::ParseWeek(const nsAString& aValue, uint32_t* aYear,
+                     uint32_t* aWeek) const
+{
+  // see comment in InputType::ParseDate().
+  return mInputElement->ParseWeek(aValue, aYear, aWeek);
+}
+
+bool
+InputType::ParseDateTimeLocal(const nsAString& aValue, uint32_t* aYear,
+                              uint32_t* aMonth, uint32_t* aDay, uint32_t* aTime)
+                              const
+{
+  // see comment in InputType::ParseDate().
+  return mInputElement->ParseDateTimeLocal(aValue, aYear, aMonth, aDay, aTime);
+}
+
+int32_t
+InputType::MonthsSinceJan1970(uint32_t aYear, uint32_t aMonth) const
+{
+  // see comment in InputType::ParseDate().
+  return mInputElement->MonthsSinceJan1970(aYear, aMonth);
+}
+
+double
+InputType::DaysSinceEpochFromWeek(uint32_t aYear, uint32_t aWeek) const
+{
+  // see comment in InputType::ParseDate().
+  return mInputElement->DaysSinceEpochFromWeek(aYear, aWeek);
+}
+
+uint32_t
+InputType::DayOfWeek(uint32_t aYear, uint32_t aMonth, uint32_t aDay,
+                     bool isoWeek) const
+{
+  // see comment in InputType::ParseDate().
+  return mInputElement->DayOfWeek(aYear, aMonth, aDay, isoWeek);
+}
+
+uint32_t
+InputType::MaximumWeekInYear(uint32_t aYear) const
+{
+  // see comment in InputType::ParseDate().
+  return mInputElement->MaximumWeekInYear(aYear);
+}

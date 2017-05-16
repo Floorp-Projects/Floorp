@@ -22,6 +22,7 @@
 #include "mozilla/Base64.h"
 #include "mozilla/Unused.h"
 #include "mozilla/SizePrintfMacros.h"
+#include "mozilla/UniquePtr.h"
 #include "nsIUrlClassifierUtils.h"
 #include "nsUrlClassifierDBService.h"
 
@@ -62,7 +63,7 @@ public:
 
 private:
   nsTArray<TableUpdate*>* mUpdatesArrayRef;
-  nsTArray<nsAutoPtr<TableUpdate>> mUpdatesPointerHolder;
+  nsTArray<UniquePtr<TableUpdate>> mUpdatesPointerHolder;
 };
 
 } // End of unnamed namespace.

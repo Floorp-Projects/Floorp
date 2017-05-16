@@ -1,7 +1,7 @@
 == min-intrinsic-with-percents-across-img-cases.html min-intrinsic-with-percents-across-img-cases-ref.html
 == min-intrinsic-with-percents-across-elements.html min-intrinsic-with-percents-across-elements-ref.html
 skip-if(!webrender) pref(layers.advanced.border-layers,1) == min-intrinsic-with-percents-across-elements.html min-intrinsic-with-percents-across-elements-ref.html
-fails-if(stylo) == min-intrinsic-with-max-width-percents-across-form-controls.html min-intrinsic-with-max-width-percents-across-form-controls-ref.html
-skip-if(!webrender) pref(layers.advanced.border-layers,1) fails-if(stylo) == min-intrinsic-with-max-width-percents-across-form-controls.html min-intrinsic-with-max-width-percents-across-form-controls-ref.html
-fails-if(stylo) == min-intrinsic-with-width-percents-across-form-controls.html min-intrinsic-with-width-percents-across-form-controls-ref.html
-skip-if(!webrender) pref(layers.advanced.border-layers,1) fails-if(stylo) == min-intrinsic-with-width-percents-across-form-controls.html min-intrinsic-with-width-percents-across-form-controls-ref.html
+== min-intrinsic-with-max-width-percents-across-form-controls.html min-intrinsic-with-max-width-percents-across-form-controls-ref.html
+skip-if(!webrender) pref(layers.advanced.border-layers,1) == min-intrinsic-with-max-width-percents-across-form-controls.html min-intrinsic-with-max-width-percents-across-form-controls-ref.html
+== min-intrinsic-with-width-percents-across-form-controls.html min-intrinsic-with-width-percents-across-form-controls-ref.html
+skip-if(!webrender) pref(layers.advanced.border-layers,1) == min-intrinsic-with-width-percents-across-form-controls.html min-intrinsic-with-width-percents-across-form-controls-ref.html

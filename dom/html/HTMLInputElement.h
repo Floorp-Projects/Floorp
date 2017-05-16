@@ -1167,30 +1167,6 @@ protected:
   nsIRadioGroupContainer* GetRadioGroupContainer() const;
 
   /**
-   * Convert a string to a Decimal number in a type specific way,
-   * http://www.whatwg.org/specs/web-apps/current-work/multipage/the-input-element.html#concept-input-value-string-number
-   * ie parse a date string to a timestamp if type=date,
-   * or parse a number string to its value if type=number.
-   * @param aValue the string to be parsed.
-   * @param aResultValue the number as a Decimal.
-   * @result whether the parsing was successful.
-   */
-  bool ConvertStringToNumber(nsAString& aValue, Decimal& aResultValue) const;
-
-  /**
-   * Convert a Decimal to a string in a type specific way, ie convert a timestamp
-   * to a date string if type=date or append the number string representing the
-   * value if type=number.
-   *
-   * @param aValue the Decimal to be converted
-   * @param aResultString [out] the string representing the Decimal
-   * @return whether the function succeded, it will fail if the current input's
-   *         type is not supported or the number can't be converted to a string
-   *         as expected by the type.
-   */
-  bool ConvertNumberToString(Decimal aValue, nsAString& aResultString) const;
-
-  /**
    * Parse a color string of the form #XXXXXX where X should be hexa characters
    * @param the string to be parsed.
    * @return whether the string is a valid simple color.
@@ -1325,13 +1301,6 @@ protected:
    * result is either 52 or 53.
    */
   uint32_t MaximumWeekInYear(uint32_t aYear) const;
-
-  /**
-   * This method converts aValue (milliseconds within a day) to hours, minutes,
-   * seconds and milliseconds.
-   */
-  bool GetTimeFromMs(double aValue, uint16_t* aHours, uint16_t* aMinutes,
-                     uint16_t* aSeconds, uint16_t* aMilliseconds) const;
 
   /**
    * This methods returns true if it's a leap year.

@@ -30,8 +30,8 @@ fuzzy-if(skiaContent,1,3) == input-fieldset-legend.html input-fieldset-legend-re
 == input-checkbox-required-invalid-default.html success-ref.html
 == input-radio-required-invalid-changed.html success-ref.html
 == input-radio-required-invalid-default.html success-ref.html
-fails-if(stylo) == input-file-required-invalid-changed.html input-file-ref.html
-fails-if(stylo) == input-file-required-invalid-default.html input-file-ref.html
+== input-file-required-invalid-changed.html input-file-ref.html
+== input-file-required-invalid-default.html input-file-ref.html
 == input-radio-required.html success-ref.html
 == input-radio-customerror.html success-ref.html
 == input-radio-dyn-valid-1.html success-ref.html

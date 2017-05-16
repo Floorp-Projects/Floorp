@@ -30,7 +30,7 @@ if CONFIG['OS_TARGET'] == 'WINNT':
 
 if not CONFIG['JS_STANDALONE']:
 
-    if CONFIG['MOZ_MEMORY'] and (CONFIG['MOZ_SYSTEM_JEMALLOC'] or FORCE_SHARED_LIB):
+    if CONFIG['MOZ_MEMORY'] and FORCE_SHARED_LIB:
         pass
         # TODO: SHARED_LIBRARY_LIBS go here
     else:

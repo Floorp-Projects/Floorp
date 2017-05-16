@@ -1552,9 +1552,9 @@ var gViewController = {
         // The advanced subpanes are only supported in the old organization, which will
         // be removed by bug 1349689.
         if (Preferences.get("browser.preferences.useOldOrganization", false)) {
-          mainWindow.openAdvancedPreferences("dataChoicesTab");
+          mainWindow.openAdvancedPreferences("dataChoicesTab", {origin: "experimentsOpenPref"});
         } else {
-          mainWindow.openPreferences("paneAdvanced");
+          mainWindow.openPreferences("paneAdvanced", {origin: "experimentsOpenPref"});
         }
       },
     },

@@ -18,6 +18,11 @@ public:
   bool IsRangeUnderflow() const override;
   bool HasStepMismatch(bool aUseZeroIfValueNaN) const override;
 
+  bool ConvertStringToNumber(nsAString& aValue,
+                             mozilla::Decimal& aResultValue) const override;
+  bool ConvertNumberToString(mozilla::Decimal aValue,
+                             nsAString& aResultString) const override;
+
 protected:
   explicit NumericInputTypeBase(mozilla::dom::HTMLInputElement* aInputElement)
     : InputType(aInputElement)

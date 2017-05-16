@@ -10,10 +10,6 @@
 #  error Should not compile this file when replace-malloc is disabled
 #endif
 
-#ifdef MOZ_SYSTEM_JEMALLOC
-#  error Should not compile this file when we want to use native jemalloc
-#endif
-
 #include "mozmemory_wrap.h"
 
 /* Declare all je_* functions */
