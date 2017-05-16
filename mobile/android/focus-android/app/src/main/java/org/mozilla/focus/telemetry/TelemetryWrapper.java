@@ -57,6 +57,7 @@ public final class TelemetryWrapper {
         private static final String COPY = "copy";
         private static final String OPEN = "open";
         private static final String INTENT_URL = "intent_url";
+        private static final String INTENT_CUSTOM_TAB = "intent_custom_tab";
         private static final String TEXT_SELECTION_INTENT = "text_selection_intent";
     }
 
@@ -200,6 +201,10 @@ public final class TelemetryWrapper {
 
     public static void browseIntentEvent() {
         TelemetryEvent.create(Category.ACTION, Method.INTENT_URL, Object.APP).queue();
+    }
+
+    public static void customTabIntentEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.INTENT_CUSTOM_TAB, Object.APP).queue();
     }
 
     public static void textSelectionIntentEvent() {
