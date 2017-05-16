@@ -4,10 +4,11 @@
 # This file provides helper functions for the repository hooks for git/hg.
 
 import os
+import re
 import json
 from subprocess import check_output, CalledProcessError
-import setup_helper
 
+lintable = re.compile(r'.+\.(?:js|jsm|jsx|xml|html)$')
 ignored = 'File ignored because of a matching ignore pattern. Use "--no-ignore" to override.'
 
 
@@ -17,7 +18,7 @@ def is_lintable(filename):
     Keyword arguments:
     filename -- the file to check.
     """
-    return setup_helper.EXTENSIONS_RE.match(filename)
+    return lintable.match(filename)
 
 
 def display(print_func, output_json):
@@ -49,16 +50,10 @@ def runESLint(print_func, files):
     files -- A list of files to be checked.
     """
     try:
-        basepath = setup_helper.get_project_root()
+        basepath = get_project_root()
 
         if not basepath:
-            return False
-
-        if not setup_helper.check_node_executables_valid():
-            return False
-
-        if setup_helper.eslint_module_needs_setup():
-            setup_helper.eslint_setup()
+            return
 
         dir = os.path.join(basepath, "node_modules", ".bin")
 
@@ -73,3 +68,23 @@ def runESLint(print_func, files):
     except CalledProcessError as ex:
         display(print_func, ex.output)
         return False
+
+
+def get_project_root():
+    """Returns the absolute path to the root of the project, by looking for the
+    mach executable.
+    """
+    file_found = False
+    folder = os.getcwd()
+
+    while (folder):
+        if os.path.exists(os.path.join(folder, 'mach')):
+            file_found = True
+            break
+        else:
+            folder = os.path.dirname(folder)
+
+    if file_found:
+        return os.path.abspath(folder)
+
+    return None
