@@ -3358,3 +3358,15 @@ PluginModuleChromeParent::AnswerGetFileName(const GetFileNameFunc& aFunc,
     return IPC_FAIL_NO_REASON(this);
 #endif
 }
+
+mozilla::ipc::IPCResult
+PluginModuleChromeParent::AnswerSetCursorPos(const int &x, const int &y,
+                                             bool* aResult)
+{
+#if defined(XP_WIN)
+    *aResult = ::SetCursorPos(x, y);
+    return IPC_OK();
+#else
+    return PluginModuleParent::AnswerSetCursorPos(x, y, aResult);
+#endif
+}
