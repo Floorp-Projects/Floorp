@@ -566,7 +566,7 @@ AddonManagerStartup::InitializeExtensions(JS::HandleValue locations, JSContext* 
     for (auto e2 : loc.Addons()) {
       Addon addon(e2);
 
-      if (!addon.Bootstrapped()) {
+      if (addon.Enabled() && !addon.Bootstrapped()) {
         AddInstallLocation(addon);
 
         if (enableInterpositions && addon.ShimsEnabled()) {
