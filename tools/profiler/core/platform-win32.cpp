@@ -150,9 +150,25 @@ SamplerThread::Stop(PSLockRef aLock)
 void
 SamplerThread::SleepMicro(uint32_t aMicroseconds)
 {
-  int aMilliseconds = std::max(1u, aMicroseconds / 1000);
+  // For now, keep the old behaviour of minimum Sleep(1), even for
+  // smaller-than-usual sleeps after an overshoot, unless the user has
+  // explicitly opted into a sub-millisecond profiler interval.
+  if (mIntervalMicroseconds >= 1000) {
+    ::Sleep(std::max(1u, aMicroseconds / 1000));
+  } else {
+    TimeStamp start = TimeStamp::Now();
+    TimeStamp end = start + TimeDuration::FromMicroseconds(aMicroseconds);
 
-  ::Sleep(aMilliseconds);
+    // First, sleep for as many whole milliseconds as possible.
+    if (aMicroseconds >= 1000) {
+      ::Sleep(aMicroseconds / 1000);
+    }
+
+    // Then, spin until enough time has passed.
+    while (TimeStamp::Now() < end) {
+      _mm_pause();
+    }
+  }
 }
 
 void
