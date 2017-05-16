@@ -45,8 +45,9 @@ FormHistoryStartup.prototype = {
   pendingQuery: null,
 
   init() {
-    if (this.inited)
+    if (this.inited) {
       return;
+    }
     this.inited = true;
 
     Services.prefs.addObserver("browser.formfill.", this, true);
