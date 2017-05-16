@@ -1321,7 +1321,8 @@ public abstract class GeckoApp extends GeckoActivity
             mIgnoreLastSelectedTab = true;
 
             final String action = intent.getAction();
-            final String args = intent.getStringExtra("args");
+            final String args = GeckoApplication.addDefaultGeckoArgs(
+                    intent.getStringExtra("args"));
 
             sAlreadyLoaded = true;
             GeckoThread.initMainProcess(/* profile */ null, args,
@@ -3198,10 +3199,5 @@ public abstract class GeckoApp extends GeckoActivity
         }
         setRequestedOrientation(requestedActivityInfoOrientation);
         return true;
-    }
-
-    @Override
-    public boolean isOfficial() {
-        return AppConstants.MOZILLA_OFFICIAL;
     }
 }
