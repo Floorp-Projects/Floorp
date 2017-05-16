@@ -211,9 +211,7 @@ public abstract class GeckoApp extends GeckoActivity
     protected DoorHangerPopup mDoorHangerPopup;
     protected FormAssistPopup mFormAssistPopup;
 
-
     protected GeckoView mLayerView;
-    private AbsoluteLayout mPluginContainer;
 
     private FullScreenHolder mFullScreenPluginContainer;
     private View mFullScreenPluginView;
@@ -1675,7 +1673,6 @@ public abstract class GeckoApp extends GeckoActivity
     protected void initializeChrome() {
         mDoorHangerPopup = new DoorHangerPopup(this);
         mDoorHangerPopup.setOnVisibilityChangeListener(this);
-        mPluginContainer = (AbsoluteLayout) findViewById(R.id.plugin_container);
         mFormAssistPopup = (FormAssistPopup) findViewById(R.id.form_assist_popup);
     }
 
@@ -2886,9 +2883,6 @@ public abstract class GeckoApp extends GeckoActivity
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         Permissions.onRequestPermissionsResult(this, permissions, grantResults);
     }
-
-    @Override
-    public AbsoluteLayout getPluginContainer() { return mPluginContainer; }
 
     private static final String CPU = "cpu";
     private static final String SCREEN = "screen";

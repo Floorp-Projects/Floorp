@@ -50,12 +50,6 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
         return false;
     }
 
-    // Bug 908791: Implement this
-    @Override
-    public AbsoluteLayout getPluginContainer() {
-        return null;
-    }
-
     // Bug 908792: Implement this
     @Override
     public void invalidateOptionsMenu() {}

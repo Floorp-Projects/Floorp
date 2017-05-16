@@ -1653,7 +1653,6 @@ public class GeckoAppShell
         public void removeAppStateListener(AppStateListener listener);
         public void notifyWakeLockChanged(String topic, String state);
         public boolean areTabsShown();
-        public AbsoluteLayout getPluginContainer();
         public void invalidateOptionsMenu();
         public boolean isForegrounded();
 
