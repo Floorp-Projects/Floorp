@@ -1661,7 +1661,6 @@ public class GeckoAppShell
 
     public interface GeckoInterface {
         public @NonNull EventDispatcher getAppEventDispatcher();
-        public Activity getActivity();
         public String getDefaultUAString();
 
         public void addPluginView(View view);
