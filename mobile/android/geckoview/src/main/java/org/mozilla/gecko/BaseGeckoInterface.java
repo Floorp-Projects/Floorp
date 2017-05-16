@@ -127,10 +127,4 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
     public boolean isForegrounded() {
         return false;
     }
-
-    @Override
-    public boolean isOfficial() {
-        // By default, GeckoView consumers are not official Mozilla applications.
-        return false;
-    }
 }
