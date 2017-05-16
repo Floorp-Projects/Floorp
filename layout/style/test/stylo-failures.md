@@ -160,8 +160,6 @@ to mochitest command.
     * test_selectors.html `:-moz-tree` [10]
   * :-moz-placeholder bug 1348490
     * test_selectors.html `:-moz-placeholder` [1]
-  * ::-moz-color-swatch bug 1348492
-    * test_selectors.html `::-moz-color-swatch` [1]
 * Unsupported pseudo-classes
   * :-moz-locale-dir
     * test_selectors.html `:-moz-locale-dir` [15]
