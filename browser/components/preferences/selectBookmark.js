@@ -3,8 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// These globals are imported via placesOverlay.xul.
-/* globals PlacesUIUtils, PlacesUtils, NS_ASSERT */
+/* eslint-env mozilla/places-overlay */
 
 /**
  * SelectBookmarkDialog controls the user interface for the "Use Bookmark for

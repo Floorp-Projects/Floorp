@@ -7,11 +7,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "TestUtils",
   "resource://testing-common/TestUtils.jsm");
 
-// Imported via PlacesOverlay.xul
-/* global doGetPlacesControllerForCommand:false, PlacesControllerDragHelper:false,
-          PlacesUIUtils:false
-*/
-
 // We need to cache this before test runs...
 var cachedLeftPaneFolderIdGetter;
 var getter = PlacesUIUtils.__lookupGetter__("leftPaneFolderId");

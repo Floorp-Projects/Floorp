@@ -1,4 +1,3 @@
-/* globals XPCOMUtils, Services, PreviewProvider, registerCleanupFunction */
 "use strict";
 
 let Cu = Components.utils;

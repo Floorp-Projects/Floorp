@@ -2,8 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-/* globals Services, XPCOMUtils, Preferences, aboutNewTabService, do_register_cleanup */
-
 "use strict";
 
 const {utils: Cu} = Components;

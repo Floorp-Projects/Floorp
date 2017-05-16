@@ -1,8 +1,5 @@
 "use strict";
 
-/* global XPCOMUtils, NewTabSearchProvider, run_next_test, ok, equal, do_check_true, do_get_profile, Services */
-/* jscs:disable requireCamelCaseOrUpperCaseIdentifiers */
-
 const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
