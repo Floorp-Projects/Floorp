@@ -2081,6 +2081,7 @@ gfxPlatform::FontsPrefsChanged(const char *aPref)
     } else if (!strcmp(GFX_PREF_OPENTYPE_SVG, aPref)) {
         mOpenTypeSVGEnabled = UNINITIALIZED_VALUE;
         gfxFontCache::GetCache()->AgeAllGenerations();
+        gfxFontCache::GetCache()->NotifyGlyphsChanged();
     }
 }
 
