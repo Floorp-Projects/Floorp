@@ -201,12 +201,6 @@ to mochitest command.
 * Servo is correct but Gecko is wrong
   * flex-basis should be 0px when omitted in flex shorthand bug 1331530
     * test_flexbox_flex_shorthand.html `flex-basis` [10]
-  * should reject whole value bug 1355352
-    * test_descriptor_storage.html `unicode-range` [1]
-    * test_font_face_parser.html `U+A5` [4]
-  * Gecko clamps rather than rejects invalid unicode range bug 1355356
-    * test_font_face_parser.html `U+??????` [2]
-    * ... `12FFFF` [2]
   * Gecko rejects calc() in -webkit-gradient bug 1363349
     * test_property_syntax_errors.html `-webkit-gradient` [20]
 * test_property_syntax_errors.html `linear-gradient(0,`: unitless zero as degree [10]
