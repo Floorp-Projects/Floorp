@@ -124,6 +124,9 @@ public:
 
   void EnsureUniqueInner();
 
+  // Append all of this sheet's child sheets to aArray.
+  void AppendAllChildSheets(nsTArray<StyleSheet*>& aArray);
+
   // style sheet owner info
   enum DocumentAssociationMode {
     // OwnedByDocument means mDocument owns us (possibly via a chain of other
