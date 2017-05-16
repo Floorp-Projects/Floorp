@@ -272,10 +272,11 @@ class TlsDheSkeChangeYClient : public TlsDheSkeChangeY {
   std::shared_ptr<const TlsDheSkeChangeYServer> server_filter_;
 };
 
-/* This matrix includes: mode (stream/datagram), TLS version, what change to
+/* This matrix includes: variant (stream/datagram), TLS version, what change to
  * make to dh_Ys, whether the client will be configured to require DH named
  * groups.  Test all combinations. */
-typedef std::tuple<std::string, uint16_t, TlsDheSkeChangeY::ChangeYTo, bool>
+typedef std::tuple<SSLProtocolVariant, uint16_t, TlsDheSkeChangeY::ChangeYTo,
+                   bool>
     DamageDHYProfile;
 class TlsDamageDHYTest
     : public TlsConnectTestBase,
@@ -358,13 +359,13 @@ static const bool kTrueFalseArr[] = {true, false};
 static ::testing::internal::ParamGenerator<bool> kTrueFalse =
     ::testing::ValuesIn(kTrueFalseArr);
 
-INSTANTIATE_TEST_CASE_P(DamageYStream, TlsDamageDHYTest,
-                        ::testing::Combine(TlsConnectTestBase::kTlsModesStream,
-                                           TlsConnectTestBase::kTlsV10ToV12,
-                                           kAllY, kTrueFalse));
+INSTANTIATE_TEST_CASE_P(
+    DamageYStream, TlsDamageDHYTest,
+    ::testing::Combine(TlsConnectTestBase::kTlsVariantsStream,
+                       TlsConnectTestBase::kTlsV10ToV12, kAllY, kTrueFalse));
 INSTANTIATE_TEST_CASE_P(
     DamageYDatagram, TlsDamageDHYTest,
-    ::testing::Combine(TlsConnectTestBase::kTlsModesDatagram,
+    ::testing::Combine(TlsConnectTestBase::kTlsVariantsDatagram,
                        TlsConnectTestBase::kTlsV11V12, kAllY, kTrueFalse));
 
 class TlsDheSkeMakePEven : public TlsHandshakeFilter {

@@ -30,6 +30,7 @@
             'pkcs11p.h',
             'pkcs11t.h',
             'pkcs11u.h',
+            'pkcs11uri.h',
             'pkcs1sig.h',
             'portreg.h',
             'secasn1.h',

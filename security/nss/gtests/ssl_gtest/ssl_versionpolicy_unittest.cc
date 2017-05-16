@@ -92,12 +92,8 @@ class TestPolicyVersionRange
       public ::testing::WithParamInterface<PolicyVersionRangeInput> {
  public:
   TestPolicyVersionRange()
-      : TlsConnectTestBase(((static_cast<SSLProtocolVariant>(
-                                 std::get<0>(GetParam())) == ssl_variant_stream)
-                                ? STREAM
-                                : DGRAM),
-                           0),
-        variant_(static_cast<SSLProtocolVariant>(std::get<0>(GetParam()))),
+      : TlsConnectTestBase(std::get<0>(GetParam()), 0),
+        variant_(std::get<0>(GetParam())),
         policy_("policy", std::get<1>(GetParam()), std::get<2>(GetParam())),
         input_("input", std::get<3>(GetParam()), std::get<4>(GetParam())),
         library_("supported-by-library",
@@ -124,9 +120,7 @@ class TestPolicyVersionRange
 
   void CreateDummySocket(std::shared_ptr<DummyPrSocket>* dummy_socket,
                          ScopedPRFileDesc* ssl_fd) {
-    (*dummy_socket)
-        .reset(new DummyPrSocket(
-            "dummy", (variant_ == ssl_variant_stream) ? STREAM : DGRAM));
+    (*dummy_socket).reset(new DummyPrSocket("dummy", variant_));
     *ssl_fd = (*dummy_socket)->CreateFD();
     if (variant_ == ssl_variant_stream) {
       SSL_ImportFD(nullptr, ssl_fd->get());
@@ -275,11 +269,6 @@ static const uint16_t kExpandedVersionsArr[] = {
 static ::testing::internal::ParamGenerator<uint16_t> kExpandedVersions =
     ::testing::ValuesIn(kExpandedVersionsArr);
 
-static const SSLProtocolVariant kVariantsArr[] = {ssl_variant_stream,
-                                                  ssl_variant_datagram};
-static ::testing::internal::ParamGenerator<SSLProtocolVariant> kVariants =
-    ::testing::ValuesIn(kVariantsArr);
-
 TEST_P(TestPolicyVersionRange, TestAllTLSVersionsAndPolicyCombinations) {
   ASSERT_TRUE(variant_ == ssl_variant_stream ||
               variant_ == ssl_variant_datagram)
@@ -398,7 +387,8 @@ TEST_P(TestPolicyVersionRange, TestAllTLSVersionsAndPolicyCombinations) {
 }
 
 INSTANTIATE_TEST_CASE_P(TLSVersionRanges, TestPolicyVersionRange,
-                        ::testing::Combine(kVariants, kExpandedVersions,
+                        ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
                                            kExpandedVersions, kExpandedVersions,
+                                           kExpandedVersions,
                                            kExpandedVersions));
 }  // namespace nss_test
