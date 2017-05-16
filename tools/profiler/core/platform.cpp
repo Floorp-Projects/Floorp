@@ -298,16 +298,32 @@ private:
     }
 
     if (mInterposeObserver) {
-      mozilla::IOInterposer::Register(mozilla::IOInterposeObserver::OpAll,
-                                      mInterposeObserver.get());
+      // We need to register the observer on the main thread, because we want
+      // to observe IO that happens on the main thread.
+      if (NS_IsMainThread()) {
+        IOInterposer::Register(IOInterposeObserver::OpAll, mInterposeObserver);
+      } else {
+        RefPtr<ProfilerIOInterposeObserver> observer = mInterposeObserver;
+        NS_DispatchToMainThread(NS_NewRunnableFunction([=]() {
+          IOInterposer::Register(IOInterposeObserver::OpAll, observer);
+        }));
+      }
     }
   }
 
   ~ActivePS()
   {
     if (mInterposeObserver) {
-      mozilla::IOInterposer::Unregister(mozilla::IOInterposeObserver::OpAll,
-                                        mInterposeObserver.get());
+      // We need to unregister the observer on the main thread, because that's
+      // where we've registered it.
+      if (NS_IsMainThread()) {
+        IOInterposer::Unregister(IOInterposeObserver::OpAll, mInterposeObserver);
+      } else {
+        RefPtr<ProfilerIOInterposeObserver> observer = mInterposeObserver;
+        NS_DispatchToMainThread(NS_NewRunnableFunction([=]() {
+          IOInterposer::Unregister(IOInterposeObserver::OpAll, observer);
+        }));
+      }
     }
   }
 
@@ -450,7 +466,7 @@ private:
   SamplerThread* const mSamplerThread;
 
   // The interposer that records main thread I/O.
-  const UniquePtr<mozilla::ProfilerIOInterposeObserver> mInterposeObserver;
+  const RefPtr<mozilla::ProfilerIOInterposeObserver> mInterposeObserver;
 
   // Is the profiler paused?
   bool mIsPaused;
