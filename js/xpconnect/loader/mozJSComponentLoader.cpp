@@ -1154,7 +1154,7 @@ mozJSComponentLoader::ImportInto(const nsACString& aLocation,
     vp.set(mod->obj);
 
     if (targetObj) {
-        // cxhelper must be created before jsapi, so that jsapi is detroyed and
+        // cxhelper must be created before jsapi, so that jsapi is destroyed and
         // pops any context it has pushed before we report to the caller context.
         JSCLContextHelper cxhelper(callercx);
 
@@ -1238,7 +1238,7 @@ mozJSComponentLoader::ImportInto(const nsACString& aLocation,
 
             JSAutoCompartment target_ac(cx, targetObj);
 
-	    JS_MarkCrossZoneId(cx, symbolId);
+            JS_MarkCrossZoneId(cx, symbolId);
 
             if (!JS_WrapValue(cx, &value) ||
                 !JS_SetPropertyById(cx, targetObj, symbolId, value)) {
