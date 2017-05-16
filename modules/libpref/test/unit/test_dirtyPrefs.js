@@ -20,15 +20,26 @@ function run_test() {
   let prefFile = do_get_profile();
   prefFile.append("prefs.js");
 
+  // dirty flag only applies to the default pref file save, not all of them,
+  // so we need to set the default pref file first.  Chances are, the file
+  // does not exist, but we don't need it to - we just want to set the
+  // name/location to match
+  //
+  try {
+    ps.readUserPrefs(prefFile);
+  } catch (e) {
+    // we're fine if the file isn't there
+  }
+
   //**************************************************************************//
   // prefs are not dirty after a write
-  ps.savePrefFile(prefFile);
+  ps.savePrefFile(null);
   do_check_false(ps.dirty);
 
   // set a new a user value, we should become dirty
   userBranch.setBoolPref("DirtyTest.new.bool", true);
   do_check_true(ps.dirty);
-  ps.savePrefFile(prefFile);
+  ps.savePrefFile(null);
   // Overwrite a pref with the same value => not dirty
   userBranch.setBoolPref("DirtyTest.new.bool", true);
   do_check_false(ps.dirty);
@@ -36,14 +47,14 @@ function run_test() {
   // Repeat for the other two types
   userBranch.setIntPref("DirtyTest.new.int", 1);
   do_check_true(ps.dirty);
-  ps.savePrefFile(prefFile);
+  ps.savePrefFile(null);
   // Overwrite a pref with the same value => not dirty
   userBranch.setIntPref("DirtyTest.new.int", 1);
   do_check_false(ps.dirty);
 
   userBranch.setCharPref("DirtyTest.new.char", "oop");
   do_check_true(ps.dirty);
-  ps.savePrefFile(prefFile);
+  ps.savePrefFile(null);
   // Overwrite a pref with the same value => not dirty
   userBranch.setCharPref("DirtyTest.new.char", "oop");
   do_check_false(ps.dirty);
@@ -51,7 +62,7 @@ function run_test() {
   // change *type* of a user value -> dirty
   userBranch.setBoolPref("DirtyTest.new.char", false);
   do_check_true(ps.dirty);
-  ps.savePrefFile(prefFile);
+  ps.savePrefFile(null);
 
   // Set a default pref => not dirty (defaults don't go into prefs.js)
   defaultBranch.setBoolPref("DirtyTest.existing.bool", true);
@@ -67,9 +78,9 @@ function run_test() {
   // User value different from default, dirty
   userBranch.setBoolPref("DirtyTest.existing.bool", false);
   do_check_true(ps.dirty);
-  ps.savePrefFile(prefFile);
+  ps.savePrefFile(null);
   // Back to default value, dirty again
   userBranch.setBoolPref("DirtyTest.existing.bool", true);
   do_check_true(ps.dirty);
-  ps.savePrefFile(prefFile);
+  ps.savePrefFile(null);
 }
