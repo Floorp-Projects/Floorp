@@ -91,7 +91,7 @@ public class CustomTabConfig {
 
         ActionButtonConfig actionButtonConfig = null;
         if (intent.hasExtra(CustomTabsIntent.EXTRA_ACTION_BUTTON_BUNDLE)) {
-            final Bundle actionButtonBundle = intent.getBundleExtra(CustomTabsIntent.EXTRA_ACTION_BUTTON_BUNDLE);
+            final SafeBundle actionButtonBundle = intent.getBundleExtra(CustomTabsIntent.EXTRA_ACTION_BUTTON_BUNDLE);
 
             final String description = actionButtonBundle.getString(CustomTabsIntent.KEY_DESCRIPTION);
             final Bitmap icon = actionButtonBundle.getParcelable(CustomTabsIntent.KEY_ICON);
