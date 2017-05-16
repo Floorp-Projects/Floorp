@@ -70,7 +70,7 @@ to mochitest command.
   * test_transitions.html: pseudo elements [12]
   * Events:
     * test_animations_event_order.html [2]
-* test_computed_style.html `gradient`: -moz- and -webkit-prefixed gradient values [22]
+* test_computed_style.html `gradient`: -webkit-prefixed gradient values [13]
 * test_bug829816.html: counter-{reset,increment} serialization difference bug 1363968 [8]
 * \@counter-style support bug 1328319
   * test_counter_descriptor_storage.html [1]
@@ -116,13 +116,7 @@ to mochitest command.
     * test_value_storage.html `font-variant` [167]
     * test_specified_value_serialization.html `bug-721136` [1]
 * Unsupported prefixed values
-  * moz-prefixed gradient functions bug 1337655
-    * test_value_storage.html `-moz-linear-gradient` [322]
-    * ... `-moz-radial-gradient` [309]
-    * ... `-moz-repeating-` [298]
-    * test_specified_value_serialization.html `-moz-linear-gradient` [2]
   * serialization of prefixed gradient functions bug 1358710
-    * test_specified_value_serialization.html `-webkit-linear-gradient` [1]
     * test_specified_value_serialization.html `-webkit-radial-gradient` [1]
   * moz-prefixed intrinsic width values bug 1355402
     * test_box_size_keywords.html [16]
@@ -166,8 +160,6 @@ to mochitest command.
     * test_selectors.html `:-moz-tree` [10]
   * :-moz-placeholder bug 1348490
     * test_selectors.html `:-moz-placeholder` [1]
-  * ::-moz-color-swatch bug 1348492
-    * test_selectors.html `::-moz-color-swatch` [1]
 * Unsupported pseudo-classes
   * :-moz-locale-dir
     * test_selectors.html `:-moz-locale-dir` [15]
@@ -193,9 +185,6 @@ to mochitest command.
     * ... `border-spacing: ` [6]
     * ... `rect(1, ` [2]
   * test_hover_quirk.html: hover quirks bug 1355724 [6]
-* support some pseudo-classes on some pseudo-elements bug 1364412
-  * test_pseudoelement_parsing.html [5]
-  * test_pseudoelement_state.html [8]
 * Unit should be preserved after parsing servo/servo#15346
   * test_units_time.html [1]
 * getComputedStyle style doesn't contain custom properties bug 1336891
@@ -205,7 +194,6 @@ to mochitest command.
 * test_author_specified_style.html: support serializing color as author specified bug 1348165 [27]
 * browser_newtab_share_rule_processors.js: agent style sheet sharing [1]
 * test_selectors.html `this_better_be_unvisited`: visited handling [1]
-* test_computed_style.html `mask`: initial value of mask-repeat bug 1364273 [10]
 
 ## Assertions
 

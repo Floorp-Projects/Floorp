@@ -56,7 +56,9 @@ function processPrefFile(url) {
     let defaultBranch = Services.prefs.getDefaultBranch("");
     if ((val.startsWith("\"") && val.endsWith("\"")) ||
         (val.startsWith("'") && val.endsWith("'"))) {
-      defaultBranch.setCharPref(name, val.substr(1, val.length - 2));
+      val = val.substr(1, val.length - 2);
+      val = val.replace(/\\"/g, '"');
+      defaultBranch.setCharPref(name, val);
     } else if (val.match(/[0-9]+/)) {
       defaultBranch.setIntPref(name, parseInt(val, 10));
     } else if (val == "true" || val == "false") {
