@@ -1488,7 +1488,7 @@ MediaStreamGraphImpl::ApplyStreamUpdate(StreamUpdate* aUpdate)
 }
 
 void
-MediaStreamGraphImpl::ForceShutDown(ShutdownTicket* aShutdownTicket)
+MediaStreamGraphImpl::ForceShutDown(media::ShutdownTicket* aShutdownTicket)
 {
   NS_ASSERTION(NS_IsMainThread(), "Must be called on main thread");
   LOG(LogLevel::Debug, ("MediaStreamGraph %p ForceShutdown", this));
@@ -3561,8 +3561,8 @@ MediaStreamGraph::GetInstance(MediaStreamGraph::GraphDriverType aGraphDriverRequ
         {
           // Distribute the global async shutdown blocker in a ticket. If there
           // are zero graphs then shutdown is unblocked when we go out of scope.
-          RefPtr<MediaStreamGraphImpl::ShutdownTicket> ticket =
-              new MediaStreamGraphImpl::ShutdownTicket(gMediaStreamGraphShutdownBlocker.get());
+          auto ticket = MakeRefPtr<media::ShutdownTicket>(
+              gMediaStreamGraphShutdownBlocker.get());
           gMediaStreamGraphShutdownBlocker = nullptr;
 
           for (auto iter = gGraphs.Iter(); !iter.Done(); iter.Next()) {
@@ -3573,7 +3573,7 @@ MediaStreamGraph::GetInstance(MediaStreamGraph::GraphDriverType aGraphDriverRequ
       };
 
       gMediaStreamGraphShutdownBlocker = new Blocker();
-      nsCOMPtr<nsIAsyncShutdownClient> barrier = MediaStreamGraphImpl::GetShutdownBarrier();
+      nsCOMPtr<nsIAsyncShutdownClient> barrier = media::GetShutdownBarrier();
       nsresult rv = barrier->
           AddBlocker(gMediaStreamGraphShutdownBlocker,
                      NS_LITERAL_STRING(__FILE__), __LINE__,

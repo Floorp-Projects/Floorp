@@ -9,6 +9,24 @@
 namespace mozilla {
 namespace media {
 
+already_AddRefed<nsIAsyncShutdownClient>
+GetShutdownBarrier()
+{
+  nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdown();
+  MOZ_RELEASE_ASSERT(svc);
+
+  nsCOMPtr<nsIAsyncShutdownClient> barrier;
+  nsresult rv = svc->GetProfileBeforeChange(getter_AddRefs(barrier));
+  if (!barrier) {
+    // We are probably in a content process. We need to do cleanup at
+    // XPCOM shutdown in leakchecking builds.
+    rv = svc->GetXpcomWillShutdown(getter_AddRefs(barrier));
+  }
+  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+  MOZ_RELEASE_ASSERT(barrier);
+  return barrier.forget();
+}
+
 NS_IMPL_ISUPPORTS(ShutdownBlocker, nsIAsyncShutdownBlocker)
 
 } // namespace media
