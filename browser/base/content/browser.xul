@@ -145,7 +145,8 @@
            noautofocus="true"
            hidden="true"
            overflowpadding="4"
-           norolluponanchor="true" />
+           norolluponanchor="true"
+           nomaxresults="true" />
 
     <!-- for search with one-off buttons -->
     <panel type="autocomplete" id="PopupSearchAutoComplete" noautofocus="true" hidden="true"/>
