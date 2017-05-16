@@ -2016,8 +2016,7 @@ public abstract class GeckoApp extends GeckoActivity
         return mLayerView.getEventDispatcher();
     }
 
-    @Override
-    public GeckoProfile getProfile() {
+    protected static GeckoProfile getProfile() {
         return GeckoThread.getActiveProfile();
     }
 

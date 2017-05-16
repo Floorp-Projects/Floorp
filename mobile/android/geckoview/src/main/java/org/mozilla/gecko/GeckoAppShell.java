@@ -1661,7 +1661,6 @@ public class GeckoAppShell
 
     public interface GeckoInterface {
         public @NonNull EventDispatcher getAppEventDispatcher();
-        public GeckoProfile getProfile();
         public Activity getActivity();
         public String getDefaultUAString();
 
@@ -2014,8 +2013,8 @@ public class GeckoAppShell
         GeckoAppShell.killAnyZombies();
 
         // Then force unlock this profile
-        if (getGeckoInterface() != null) {
-            GeckoProfile profile = getGeckoInterface().getProfile();
+        final GeckoProfile profile = GeckoThread.getActiveProfile();
+        if (profile != null) {
             File lock = profile.getFile(".parentlock");
             return lock.exists() && lock.delete();
         }
