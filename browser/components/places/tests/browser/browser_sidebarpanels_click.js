@@ -17,7 +17,7 @@ function test() {
 
   // If a sidebar is already open, close it.
   if (!document.getElementById("sidebar-box").hidden) {
-    info("Unexpected sidebar found - a previous test failed to cleanup correctly");
+    ok(false, "Unexpected sidebar found - a previous test failed to cleanup correctly");
     SidebarUI.hide();
   }
 

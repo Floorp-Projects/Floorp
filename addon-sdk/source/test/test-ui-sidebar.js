@@ -1244,7 +1244,7 @@ exports.testShowToOpenXToClose = function*(assert) {
 
   assert.ok(isChecked(menuitem), 'menuitem is checked');
 
-  let closeButton = window.document.querySelector('#sidebar-header > toolbarbutton.close-icon');
+  let closeButton = window.document.querySelector('#sidebar-close');
   simulateCommand(closeButton);
 
   yield hidden.promise;

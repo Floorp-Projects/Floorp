@@ -16,29 +16,6 @@
   #sidebar-header {
     -moz-appearance: none;
     border-bottom: none;
-    text-shadow: none;
-  }
-
-  .sidebar-title,
-  #sidebar-title {
-    font-weight: bold;
-  }
-
-  .sidebar-splitter {
-    border: 0;
-    border-inline-end: 1px solid ThreeDLightShadow;
-    min-width: 0;
-    width: 3px;
-    background-color: transparent;
-    margin-inline-start: -3px;
-    position: relative;
-  }
-
-  #appcontent ~ .sidebar-splitter {
-    border-inline-start: 1px solid ThreeDLightShadow;
-    border-inline-end: none;
-    margin-inline-start: 0;
-    margin-inline-end: -3px;
   }
 
   .menu-accel,
@@ -47,16 +24,6 @@
   }
 
   @media (-moz-os-version: windows-win7) {
-    .sidebar-header:not(:-moz-lwtheme),
-    #sidebar-header:not(:-moz-lwtheme) {
-      background-color: #EEF3FA;
-    }
-
-    .sidebar-splitter,
-    #appcontent ~ .sidebar-splitter {
-      border-color: #A9B7C9;
-    }
-
     #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(:-moz-lwtheme),
     #browser-bottombox:not(:-moz-lwtheme),
     .browserContainer > findbar {
