@@ -193,11 +193,11 @@ public class StateSnapshot<T> implements TreeBuilderState<T> {
 
     @SuppressWarnings("unused") private void destructor() {
         for (int i = 0; i < stack.length; i++) {
-            stack[i].release();
+            stack[i].release(null);
         }
         for (int i = 0; i < listOfActiveFormattingElements.length; i++) {
             if (listOfActiveFormattingElements[i] != null) {
-                listOfActiveFormattingElements[i].release();                
+                listOfActiveFormattingElements[i].release(null);
             }
         }
     }

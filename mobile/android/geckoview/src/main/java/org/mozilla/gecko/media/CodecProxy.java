@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.Surface;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.gecko.gfx.GeckoSurface;
 import org.mozilla.gecko.mozglue.JNIObject;
 
 import java.io.IOException;
@@ -29,7 +30,7 @@ public final class CodecProxy {
     private ICodec mRemote;
     private boolean mIsEncoder;
     private FormatParam mFormat;
-    private Surface mOutputSurface;
+    private GeckoSurface mOutputSurface;
     private CallbacksForwarder mCallbacks;
     private String mRemoteDrmStubId;
     private Queue<Sample> mSurfaceOutputs = new ConcurrentLinkedQueue<>();
@@ -125,7 +126,7 @@ public final class CodecProxy {
     @WrapForJNI
     public static CodecProxy create(boolean isEncoder,
                                     MediaFormat format,
-                                    Surface surface,
+                                    GeckoSurface surface,
                                     Callbacks callbacks,
                                     String drmStubId) {
         return RemoteManager.getInstance().createCodec(isEncoder, format, surface, callbacks, drmStubId);
@@ -133,13 +134,13 @@ public final class CodecProxy {
 
     public static CodecProxy createCodecProxy(boolean isEncoder,
                                               MediaFormat format,
-                                              Surface surface,
+                                              GeckoSurface surface,
                                               Callbacks callbacks,
                                               String drmStubId) {
         return new CodecProxy(isEncoder, format, surface, callbacks, drmStubId);
     }
 
-    private CodecProxy(boolean isEncoder, MediaFormat format, Surface surface, Callbacks callbacks, String drmStubId) {
+    private CodecProxy(boolean isEncoder, MediaFormat format, GeckoSurface surface, Callbacks callbacks, String drmStubId) {
         mIsEncoder = isEncoder;
         mFormat = new FormatParam(format);
         mOutputSurface = surface;

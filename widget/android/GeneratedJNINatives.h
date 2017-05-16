@@ -86,7 +86,7 @@ template<class Impl>
 class GeckoAppShell::Natives : public mozilla::jni::NativeImpl<GeckoAppShell, Impl>
 {
 public:
-    static const JNINativeMethod methods[7];
+    static const JNINativeMethod methods[6];
 };
 
 template<class Impl>
@@ -103,10 +103,6 @@ const JNINativeMethod GeckoAppShell::Natives<Impl>::methods[] = {
     mozilla::jni::MakeNativeMethod<GeckoAppShell::NotifyUriVisited_t>(
             mozilla::jni::NativeStub<GeckoAppShell::NotifyUriVisited_t, Impl>
             ::template Wrap<&Impl::NotifyUriVisited>),
-
-    mozilla::jni::MakeNativeMethod<GeckoAppShell::OnFullScreenPluginHidden_t>(
-            mozilla::jni::NativeStub<GeckoAppShell::OnFullScreenPluginHidden_t, Impl>
-            ::template Wrap<&Impl::OnFullScreenPluginHidden>),
 
     mozilla::jni::MakeNativeMethod<GeckoAppShell::OnLocationChanged_t>(
             mozilla::jni::NativeStub<GeckoAppShell::OnLocationChanged_t, Impl>
@@ -336,15 +332,34 @@ template<class Impl>
 class SurfaceTextureListener::Natives : public mozilla::jni::NativeImpl<SurfaceTextureListener, Impl>
 {
 public:
-    static const JNINativeMethod methods[1];
+    static const JNINativeMethod methods[2];
 };
 
 template<class Impl>
 const JNINativeMethod SurfaceTextureListener::Natives<Impl>::methods[] = {
 
+    mozilla::jni::MakeNativeMethod<SurfaceTextureListener::DisposeNative_t>(
+            mozilla::jni::NativeStub<SurfaceTextureListener::DisposeNative_t, Impl>
+            ::template Wrap<&Impl::DisposeNative>),
+
     mozilla::jni::MakeNativeMethod<SurfaceTextureListener::OnFrameAvailable_t>(
             mozilla::jni::NativeStub<SurfaceTextureListener::OnFrameAvailable_t, Impl>
             ::template Wrap<&Impl::OnFrameAvailable>)
+};
+
+template<class Impl>
+class GeckoSurfaceTexture::Natives : public mozilla::jni::NativeImpl<GeckoSurfaceTexture, Impl>
+{
+public:
+    static const JNINativeMethod methods[1];
+};
+
+template<class Impl>
+const JNINativeMethod GeckoSurfaceTexture::Natives<Impl>::methods[] = {
+
+    mozilla::jni::MakeNativeMethod<GeckoSurfaceTexture::NativeAcquireTexture_t>(
+            mozilla::jni::NativeStub<GeckoSurfaceTexture::NativeAcquireTexture_t, Impl>
+            ::template Wrap<&Impl::NativeAcquireTexture>)
 };
 
 template<class Impl>

@@ -12,7 +12,7 @@ add_task(async function check_http_redirect() {
   };
 
   // Open a new tab to restore into.
-  let tab = gBrowser.addTab("about:blank");
+  let tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   let browser = tab.linkedBrowser;
   await promiseTabState(tab, state);
 
@@ -49,7 +49,7 @@ add_task(async function check_js_redirect() {
   });
 
   // Open a new tab to restore into.
-  let tab = gBrowser.addTab("about:blank");
+  let tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   let browser = tab.linkedBrowser;
   await promiseTabState(tab, state);
 

@@ -4790,12 +4790,7 @@ BlobParent::RecvBlobStreamSync(const uint64_t& aStart,
 
   // The actor is alive and will be doing asynchronous work to load the stream.
   // Spin a nested loop here while we wait for it.
-  nsIThread* currentThread = NS_GetCurrentThread();
-  MOZ_ASSERT(currentThread);
-
-  while (!finished) {
-    MOZ_ALWAYS_TRUE(NS_ProcessNextEvent(currentThread));
-  }
+  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return finished; }));
 
   return IPC_OK();
 }

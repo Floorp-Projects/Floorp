@@ -10,8 +10,8 @@ function press(key, expectedPos) {
 }
 
 function test() {
-  gBrowser.addTab();
-  gBrowser.addTab();
+  BrowserTestUtils.addTab(gBrowser);
+  BrowserTestUtils.addTab(gBrowser);
   is(gBrowser.tabs.length, 3, "got three tabs");
   is(gBrowser.tabs[0], gBrowser.selectedTab, "first tab is selected");
 

@@ -77,10 +77,10 @@ void
 SharedThreadPool::SpinUntilEmpty()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  while (!IsEmpty()) {
-    sMonitor->AssertNotCurrentThreadIn();
-    NS_ProcessNextEvent(NS_GetCurrentThread(), true);
-  }
+  SpinEventLoopUntil([]() -> bool {
+      sMonitor->AssertNotCurrentThreadIn();
+      return IsEmpty();
+  });
 }
 
 already_AddRefed<SharedThreadPool>

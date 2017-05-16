@@ -8,10 +8,10 @@ import java.io.File;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
-import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoProfileDirectories;
 import org.mozilla.gecko.GeckoSharedPrefs;
+import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.util.INIParser;
 import org.mozilla.gecko.util.INISection;
 
@@ -46,7 +46,8 @@ public class testGeckoProfile extends PixelTest {
         // "Default" is a custom profile set up by the test harness.
         mAsserter.info("Test using the test profile", GeckoProfile.CUSTOM_PROFILE);
         GeckoProfile profile = GeckoProfile.get(getActivity());
-        verifyProfile(profile, GeckoProfile.CUSTOM_PROFILE, ((GeckoApp) getActivity()).getProfile().getDir(), true);
+        verifyProfile(profile, GeckoProfile.CUSTOM_PROFILE,
+                      GeckoThread.getActiveProfile().getDir(), true);
 
         try {
             profile = GeckoProfile.get(null);
@@ -65,7 +66,7 @@ public class testGeckoProfile extends PixelTest {
             removeProfile(profile, true);
         } else {
             // Passing in null for a profile name, should get you the default
-            File defaultProfile = ((GeckoApp) getActivity()).getProfile().getDir();
+            File defaultProfile = GeckoThread.getActiveProfile().getDir();
             verifyProfile(profile, GeckoProfile.CUSTOM_PROFILE, defaultProfile, true);
         }
     }
@@ -116,7 +117,7 @@ public class testGeckoProfile extends PixelTest {
             f.mkdir();
         }
 
-        final File testProfileDir = ((GeckoApp) getActivity()).getProfile().getDir();
+        final File testProfileDir = GeckoThread.getActiveProfile().getDir();
         final String expectedName = name != null ? name : GeckoProfile.CUSTOM_PROFILE;
 
         final GeckoProfile profile;
@@ -182,7 +183,7 @@ public class testGeckoProfile extends PixelTest {
 
     // Tests of Guest profile methods
     private void checkGuestProfile() {
-        final File testProfileDir = ((GeckoApp) getActivity()).getProfile().getDir();
+        final File testProfileDir = GeckoThread.getActiveProfile().getDir();
 
         mAsserter.info("Test getting a guest profile", "");
         GeckoProfile profile = GeckoProfile.getGuestProfile(getActivity());

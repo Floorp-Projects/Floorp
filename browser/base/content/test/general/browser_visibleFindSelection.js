@@ -3,7 +3,7 @@ add_task(async function() {
                        "div</div><div  style='position: absolute; left: 0px; background: red; width: 200px; height: 200px;'>" +
                        "<span id='s'>div</span></div>";
 
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   await promiseTabLoadEvent(tab, "data:text/html," + escape(childContent));
   await SimpleTest.promiseFocus(gBrowser.selectedBrowser.contentWindowAsCPOW);

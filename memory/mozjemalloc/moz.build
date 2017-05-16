@@ -8,16 +8,15 @@ EXPORTS += [
     'jemalloc_types.h',
 ]
 
-if not CONFIG['MOZ_JEMALLOC4']:
-    SOURCES += [
-        'jemalloc.c',
-    ]
-    FINAL_LIBRARY = 'memory'
+SOURCES += [
+    'jemalloc.c',
+]
+FINAL_LIBRARY = 'memory'
 
-    # See bug 422055.
-    if CONFIG['OS_ARCH'] == 'SunOS' and not CONFIG['GNU_CC'] \
-            and CONFIG['MOZ_OPTIMIZE']:
-        CFLAGS += ['-xO5']
+# See bug 422055.
+if CONFIG['OS_ARCH'] == 'SunOS' and not CONFIG['GNU_CC'] \
+        and CONFIG['MOZ_OPTIMIZE']:
+    CFLAGS += ['-xO5']
 
 # For non release/esr builds, enable (some) fatal jemalloc assertions.  This
 # helps us catch memory errors.

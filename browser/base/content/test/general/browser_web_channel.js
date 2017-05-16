@@ -33,7 +33,7 @@ var gTests = [
           resolve();
         });
 
-        tab = gBrowser.addTab(HTTP_PATH + HTTP_ENDPOINT + "?generic");
+        tab = BrowserTestUtils.addTab(gBrowser, HTTP_PATH + HTTP_ENDPOINT + "?generic");
       });
     }
   },
@@ -80,7 +80,7 @@ var gTests = [
           }
         });
 
-        tab = gBrowser.addTab(HTTP_PATH + HTTP_ENDPOINT + "?twoway");
+        tab = BrowserTestUtils.addTab(gBrowser, HTTP_PATH + HTTP_ENDPOINT + "?twoway");
       });
     }
   },
@@ -195,7 +195,7 @@ var gTests = [
           resolve();
         });
 
-        tab = gBrowser.addTab(HTTP_PATH + HTTP_ENDPOINT + "?multichannel");
+        tab = BrowserTestUtils.addTab(gBrowser, HTTP_PATH + HTTP_ENDPOINT + "?multichannel");
       });
     }
   },

@@ -17,7 +17,7 @@ add_task(async function checkReturnToAboutHome() {
   let browser;
   let certErrorLoaded;
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
-    gBrowser.selectedTab = gBrowser.addTab(BAD_CERT);
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, BAD_CERT);
     browser = gBrowser.selectedBrowser;
     certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
   }, false);
@@ -126,7 +126,7 @@ add_task(async function checkWrongSystemTimeWarning() {
     let browser;
     let certErrorLoaded;
     await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
-      gBrowser.selectedTab = gBrowser.addTab(BAD_CERT);
+      gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, BAD_CERT);
       browser = gBrowser.selectedBrowser;
       certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
     }, false);
@@ -224,7 +224,7 @@ add_task(async function checkAdvancedDetails() {
   let browser;
   let certErrorLoaded;
   await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
-    gBrowser.selectedTab = gBrowser.addTab(BAD_CERT);
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, BAD_CERT);
     browser = gBrowser.selectedBrowser;
     certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
   }, false);
@@ -286,7 +286,7 @@ add_task(async function checkAdvancedDetailsForHSTS() {
   let browser;
   let certErrorLoaded;
   await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
-    gBrowser.selectedTab = gBrowser.addTab(BAD_STS_CERT);
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, BAD_STS_CERT);
     browser = gBrowser.selectedBrowser;
     certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
   }, false);
@@ -355,7 +355,7 @@ add_task(async function checkUnknownIssuerLearnMoreLink() {
   let browser;
   let certErrorLoaded;
   await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
-    gBrowser.selectedTab = gBrowser.addTab(UNKNOWN_ISSUER);
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, UNKNOWN_ISSUER);
     browser = gBrowser.selectedBrowser;
     certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
   }, false);

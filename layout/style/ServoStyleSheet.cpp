@@ -110,13 +110,14 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
 
     Inner()->mSheet =
       Servo_StyleSheet_FromUTF8Bytes(
-          aLoader, this, &input, mParsingMode, media, extraData).Consume();
+          aLoader, this, &input, mParsingMode, media, extraData, aLineNumber
+      ).Consume();
   } else {
     // TODO(emilio): Once we have proper inner cloning (which we don't right
     // now) we should update the mediaList here too, though it's slightly
     // tricky.
     Servo_StyleSheet_ClearAndUpdate(Inner()->mSheet, aLoader,
-                                    this, &input, extraData);
+                                    this, &input, extraData, aLineNumber);
   }
 
   Inner()->mURLData = extraData.forget();

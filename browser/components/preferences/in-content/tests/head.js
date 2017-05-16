@@ -30,7 +30,7 @@ function is_element_hidden(aElement, aMsg) {
 }
 
 function open_preferences(aCallback) {
-  gBrowser.selectedTab = gBrowser.addTab("about:preferences");
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:preferences");
   let newTabBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
   newTabBrowser.addEventListener("Initialized", function() {
     aCallback(gBrowser.contentWindow);
@@ -121,7 +121,7 @@ function waitForEvent(aSubject, aEventName, aTimeoutMs, aTarget) {
 
 function openPreferencesViaOpenPreferencesAPI(aPane, aOptions) {
   return new Promise(resolve => {
-    gBrowser.selectedTab = gBrowser.addTab("about:blank");
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
     openPreferences(aPane);
     let newTabBrowser = gBrowser.selectedBrowser;
 

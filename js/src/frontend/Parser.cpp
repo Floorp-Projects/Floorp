@@ -123,6 +123,7 @@ DeclarationKindString(DeclarationKind kind)
       case DeclarationKind::BodyLevelFunction:
       case DeclarationKind::ModuleBodyLevelFunction:
       case DeclarationKind::LexicalFunction:
+      case DeclarationKind::SloppyLexicalFunction:
         return "function";
       case DeclarationKind::VarForAnnexBLexicalFunction:
         return "annex b var";
@@ -1326,7 +1327,7 @@ ParseContext::tryDeclareVarHelper(HandlePropertyName name, DeclarationKind kind,
                                          kind != DeclarationKind::ForOfVar;
 
                 // Annex B.3.3 allows redeclaring functions in the same block.
-                bool annexB33Allowance = declaredKind == DeclarationKind::LexicalFunction &&
+                bool annexB33Allowance = declaredKind == DeclarationKind::SloppyLexicalFunction &&
                                          kind == DeclarationKind::VarForAnnexBLexicalFunction &&
                                          scope == innermostScope();
 
@@ -1487,6 +1488,19 @@ Parser<ParseHandler, CharT>::noteDeclaredName(HandlePropertyName name, Declarati
       }
 
       case DeclarationKind::LexicalFunction: {
+        ParseContext::Scope* scope = pc->innermostScope();
+        if (AddDeclaredNamePtr p = scope->lookupDeclaredNameForAdd(name)) {
+            reportRedeclaration(name, p->value()->kind(), pos, p->value()->pos());
+            return false;
+        } else {
+            if (!scope->addDeclaredName(pc, p, name, kind, pos.begin))
+                return false;
+        }
+
+        break;
+      }
+
+      case DeclarationKind::SloppyLexicalFunction: {
         // Functions in block have complex allowances in sloppy mode for being
         // labelled that other lexical declarations do not have. Those checks
         // are more complex than calling checkLexicalDeclarationDirectlyWithin-
@@ -1497,9 +1511,9 @@ Parser<ParseHandler, CharT>::noteDeclaredName(HandlePropertyName name, Declarati
             // It is usually an early error if there is another declaration
             // with the same name in the same scope.
             //
-            // In sloppy mode, lexical functions may redeclare other lexical
+            // Sloppy lexical functions may redeclare other sloppy lexical
             // functions for web compatibility reasons.
-            if (pc->sc()->strict() || p->value()->kind() != DeclarationKind::LexicalFunction) {
+            if (p->value()->kind() != DeclarationKind::SloppyLexicalFunction) {
                 reportRedeclaration(name, p->value()->kind(), pos, p->value()->pos());
                 return false;
             }
@@ -3857,36 +3871,35 @@ Parser<ParseHandler, CharT>::functionStmt(uint32_t toStringStart, YieldHandling 
     }
 
     // Note the declared name and check for early errors.
-    bool tryAnnexB = false;
+    DeclarationKind kind;
     if (declaredInStmt) {
         MOZ_ASSERT(declaredInStmt->kind() != StatementKind::Label);
         MOZ_ASSERT(StatementKindIsBraced(declaredInStmt->kind()));
 
-        if (!pc->sc()->strict() && generatorKind == NotGenerator && asyncKind == SyncFunction) {
-            // Under sloppy mode, try Annex B.3.3 semantics. If making an
-            // additional 'var' binding of the same name does not throw an
-            // early error, do so. This 'var' binding would be assigned
-            // the function object when its declaration is reached, not at
-            // the start of the block.
-            //
-            // This semantics is implemented upon Scope exit in
-            // Scope::propagateAndMarkAnnexBFunctionBoxes.
-            tryAnnexB = true;
-        }
-
-        if (!noteDeclaredName(name, DeclarationKind::LexicalFunction, pos()))
-            return null();
+        kind = !pc->sc()->strict() && generatorKind == NotGenerator && asyncKind == SyncFunction
+               ? DeclarationKind::SloppyLexicalFunction
+               : DeclarationKind::LexicalFunction;
     } else {
-        DeclarationKind kind = pc->atModuleLevel()
-                               ? DeclarationKind::ModuleBodyLevelFunction
-                               : DeclarationKind::BodyLevelFunction;
-        if (!noteDeclaredName(name, kind, pos()))
-            return null();
+        kind = pc->atModuleLevel()
+               ? DeclarationKind::ModuleBodyLevelFunction
+               : DeclarationKind::BodyLevelFunction;
     }
+
+    if (!noteDeclaredName(name, kind, pos()))
+        return null();
 
     Node pn = handler.newFunctionStatement(pos());
     if (!pn)
         return null();
+
+    // Under sloppy mode, try Annex B.3.3 semantics. If making an additional
+    // 'var' binding of the same name does not throw an early error, do so.
+    // This 'var' binding would be assigned the function object when its
+    // declaration is reached, not at the start of the block.
+    //
+    // This semantics is implemented upon Scope exit in
+    // Scope::propagateAndMarkAnnexBFunctionBoxes.
+    bool tryAnnexB = kind == DeclarationKind::SloppyLexicalFunction;
 
     YieldHandling newYieldHandling = GetYieldHandling(generatorKind);
     return functionDefinition(pn, toStringStart, InAllowed, newYieldHandling, name, Statement,

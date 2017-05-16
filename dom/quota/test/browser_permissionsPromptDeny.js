@@ -9,7 +9,7 @@ const testPageURL =
 add_task(function* testPermissionDenied() {
   removePermission(testPageURL, "persistent-storage");
   info("Creating tab");
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   info("Loading test page: " + testPageURL);
   gBrowser.selectedBrowser.loadURI(testPageURL);
@@ -38,7 +38,7 @@ add_task(function* testPermissionDenied() {
 
 add_task(function* testNoPermissionPrompt() {
   info("Creating tab");
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   info("Loading test page: " + testPageURL);
   gBrowser.selectedBrowser.loadURI(testPageURL);
@@ -66,7 +66,7 @@ add_task(function* testNoPermissionPrompt() {
 
 add_task(function* testPermissionDeniedDismiss() {
   info("Creating tab");
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   info("Loading test page: " + testPageURL);
   gBrowser.selectedBrowser.loadURI(testPageURL);

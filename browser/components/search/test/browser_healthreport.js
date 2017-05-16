@@ -24,7 +24,7 @@ function test() {
     }
 
     // Now perform a search and ensure the count is incremented.
-    let tab = gBrowser.addTab();
+    let tab = BrowserTestUtils.addTab(gBrowser);
     gBrowser.selectedTab = tab;
     let searchBar = BrowserSearch.searchBar;
 

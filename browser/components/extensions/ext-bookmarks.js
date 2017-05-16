@@ -176,10 +176,10 @@ this.bookmarks = class extends ExtensionAPI {
   getAPI(context) {
     return {
       bookmarks: {
-        get: function(idOrIdList) {
+        async get(idOrIdList) {
           let list = Array.isArray(idOrIdList) ? idOrIdList : [idOrIdList];
 
-          return (async function() {
+          try {
             let bookmarks = [];
             for (let id of list) {
               let bookmark = await PlacesUtils.bookmarks.fetch({guid: id});
@@ -189,7 +189,9 @@ this.bookmarks = class extends ExtensionAPI {
               bookmarks.push(convert(bookmark));
             }
             return bookmarks;
-          })().catch(error => Promise.reject({message: error.message}));
+          } catch (error) {
+            return Promise.reject({message: error.message});
+          }
         },
 
         getChildren: function(id) {

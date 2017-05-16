@@ -26,7 +26,7 @@ function runTest() {
   window.doc = win.document;
   is(window.el.prop, 2, "Unexpected prop value at load");
 
-  win.location = "data:text/html,<body onload='window.opener.loadDone()'>";
+  win.location = "file_bug310107.html";
 }
 
 function loadDone() {

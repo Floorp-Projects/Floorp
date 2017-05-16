@@ -25,8 +25,8 @@
    *   when testUrl2 was shown, we want event.persisted be false, otherwise
    *   true.
    */
-  var testUrl1 = "data:text/html,<script>onpageshow = function(e) { opener.page1Shown(e); };<" + "/script>";
-  var testUrl2 = "data:text/html,<script>onpageshow = function(e) { opener.page2Shown(e); };<" + "/script>";
+  var testUrl1 = "testUrl1_bfcache.html";
+  var testUrl2 = "testUrl2_bfcache.html";
 
   var testWin;
   var counter = 0;

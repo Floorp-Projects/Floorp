@@ -8,7 +8,7 @@ add_task(async function test() {
   let testURL = "http://mochi.test:8888/browser/" +
     "browser/components/sessionstore/test/browser_339445_sample.html";
 
-  let tab = gBrowser.addTab(testURL);
+  let tab = BrowserTestUtils.addTab(gBrowser, testURL);
   await promiseBrowserLoaded(tab.linkedBrowser);
 
   await ContentTask.spawn(tab.linkedBrowser, null, function() {

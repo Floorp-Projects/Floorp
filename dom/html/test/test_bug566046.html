@@ -29,49 +29,49 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=566046
 <iframe name='frame8' id='frame8'></iframe>
 <iframe name='frame9' id='frame9'></iframe>
 <div id="content">
-  <form target='frame1' action="data:text/html," method="GET">
+  <form target='frame1' action="dummy_page.html" method="GET">
     <input name='foo' value='foo'>
   </form>
-  <form action="data:text/html," method="GET">
+  <form action="dummy_page.html" method="GET">
     <input name='bar' value='bar'>
   </form>
   <form target="">
   </form>
 
   <!-- submit controls with formtarget that are validated with a CLICK -->
-  <form target="tulip" action="data:text/html," method="GET">
+  <form target="tulip" action="dummy_page.html" method="GET">
     <input name='tulip' value='tulip'>
     <input type='submit' id='is' formtarget='frame3'>
   </form>
-  <form action="data:text/html," method="GET">
+  <form action="dummy_page.html" method="GET">
     <input name='foobar' value='foobar'>
     <input type='image' id='ii' formtarget='frame4'>
   </form>
-  <form action="data:text/html," method="GET">
+  <form action="dummy_page.html" method="GET">
     <input name='tulip2' value='tulip2'>
     <button type='submit' id='bs' formtarget='frame5'>submit</button>
   </form>
-  <form action="data:text/html," method="GET">
+  <form action="dummy_page.html" method="GET">
     <input name='tulip3' value='tulip3'>
     <button type='submit' id='bsbis' formtarget='frame5bis'>submit</button>
   </form>
 
   <!-- submit controls with formtarget that are validated with ENTER -->
-  <form target="tulip" action="data:text/html," method="GET">
+  <form target="tulip" action="dummy_page.html" method="GET">
     <input name='footulip' value='footulip'>
     <input type='submit' id='is2' formtarget='frame6'>
   </form>
-  <form action="data:text/html," method="GET">
+  <form action="dummy_page.html" method="GET">
     <input name='tulipfoobar' value='tulipfoobar'>
     <input type='image' id='ii2' formtarget='frame7'>
   </form>
-  <form action="data:text/html," method="GET">
+  <form action="dummy_page.html" method="GET">
     <input name='tulipbar' value='tulipbar'>
     <button type='submit' id='bs2' formtarget='frame8'>submit</button>
   </form>
 
   <!-- check that a which is not a submit control do not use @formtarget -->
-  <form target='frame9' action="data:text/html," method="GET">
+  <form target='frame9' action="dummy_page.html" method="GET">
     <input id='enter' name='input' value='enter' formtarget='frame6'>
   </form>
 </div>
@@ -85,17 +85,18 @@ addLoadEvent(function() {
   setTimeout(runTests, 0);
 });
 
+const BASE_URI = "http://mochi.test:8888/tests/dom/html/test/dummy_page.html";
 var gTestResults = {
-  frame1: "data:text/html,?foo=foo",
-  frame2: "data:text/html,?bar=bar",
-  frame3: "data:text/html,?tulip=tulip",
-  frame4: "data:text/html,?foobar=foobar&x=0&y=0",
-  frame5: "data:text/html,?tulip2=tulip2",
-  frame5bis: "data:text/html,?tulip3=tulip3",
-  frame6: "data:text/html,?footulip=footulip",
-  frame7: "data:text/html,?tulipfoobar=tulipfoobar&x=0&y=0",
-  frame8: "data:text/html,?tulipbar=tulipbar",
-  frame9: "data:text/html,?input=enter",
+  frame1: BASE_URI + "?foo=foo",
+  frame2: BASE_URI + "?bar=bar",
+  frame3: BASE_URI + "?tulip=tulip",
+  frame4: BASE_URI + "?foobar=foobar&x=0&y=0",
+  frame5: BASE_URI + "?tulip2=tulip2",
+  frame5bis: BASE_URI + "?tulip3=tulip3",
+  frame6: BASE_URI + "?footulip=footulip",
+  frame7: BASE_URI + "?tulipfoobar=tulipfoobar&x=0&y=0",
+  frame8: BASE_URI + "?tulipbar=tulipbar",
+  frame9: BASE_URI + "?input=enter",
 };
 
 var gPendingLoad = 0; // Has to be set after depending on the frames number.

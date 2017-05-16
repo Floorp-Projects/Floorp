@@ -20,7 +20,7 @@ add_task(async function test_formdata() {
   // modifies their values and closes the tab.
   async function createAndRemoveTab() {
     // Create a new tab.
-    let tab = gBrowser.addTab(URL);
+    let tab = BrowserTestUtils.addTab(gBrowser, URL);
     let browser = tab.linkedBrowser;
     await promiseBrowserLoaded(browser);
 
@@ -66,7 +66,7 @@ add_task(async function test_url_check() {
   const VALUE = "value-" + Math.random();
 
   // Create a tab with an iframe containing an input field.
-  let tab = gBrowser.addTab(URL);
+  let tab = BrowserTestUtils.addTab(gBrowser, URL);
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 
@@ -109,7 +109,7 @@ add_task(async function test_nested() {
   };
 
   // Create a tab with an iframe containing an input field.
-  let tab = gBrowser.selectedTab = gBrowser.addTab(URL);
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, URL);
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 
@@ -146,7 +146,7 @@ add_task(async function test_design_mode() {
               "<script>document.designMode='on'</script>";
 
   // Load a tab with an editable document.
-  let tab = gBrowser.selectedTab = gBrowser.addTab(URL);
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, URL);
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 

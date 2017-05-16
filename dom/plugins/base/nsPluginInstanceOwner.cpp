@@ -91,6 +91,7 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 #include "ANPBase.h"
 #include "AndroidBridge.h"
 #include "ClientLayerManager.h"
+#include "FennecJNIWrappers.h"
 #include "nsWindow.h"
 
 static nsPluginInstanceOwner* sFullScreenInstance = nullptr;
@@ -165,22 +166,23 @@ nsPluginInstanceOwner::NotifyPaintWaiter(nsDisplayListBuilder* aBuilder)
 
 #if MOZ_WIDGET_ANDROID
 static void
-AttachToContainerAsSurfaceTexture(ImageContainer* container,
-                                  nsNPAPIPluginInstance* instance,
-                                  const LayoutDeviceRect& rect,
-                                  RefPtr<Image>* out_image)
+AttachToContainerAsSurface(ImageContainer* container,
+                           nsNPAPIPluginInstance* instance,
+                           const LayoutDeviceRect& rect,
+                           RefPtr<Image>* out_image)
 {
   MOZ_ASSERT(out_image);
   MOZ_ASSERT(!*out_image);
 
-  mozilla::gl::AndroidSurfaceTexture* surfTex = instance->AsSurfaceTexture();
-  if (!surfTex) {
+  java::GeckoSurface::LocalRef surface = instance->AsSurface();
+  if (!surface) {
     return;
   }
 
   RefPtr<Image> img = new SurfaceTextureImage(
-    surfTex,
+    surface->GetHandle(),
     gfx::IntSize::Truncate(rect.width, rect.height),
+    true, // continuously update without a transaction
     instance->OriginPos());
   *out_image = img;
 }
@@ -223,7 +225,7 @@ nsPluginInstanceOwner::GetImageContainer()
   if (r.width && r.height) {
     // Try to get it as an EGLImage first.
     RefPtr<Image> img;
-    AttachToContainerAsSurfaceTexture(container, mInstance, r, &img);
+    AttachToContainerAsSurface(container, mInstance, r, &img);
 
     if (img) {
       container->SetCurrentImageInTransaction(img);
@@ -1546,8 +1548,8 @@ bool nsPluginInstanceOwner::AddPluginView(const LayoutDeviceRect& aRect /* = Lay
     mJavaView = (void*)jni::GetGeckoThreadEnv()->NewGlobalRef((jobject)mJavaView);
   }
 
-  if (mFullScreen) {
-    java::GeckoAppShell::AddFullScreenPluginView(jni::Object::Ref::From(jobject(mJavaView)));
+  if (mFullScreen && jni::IsFennec()) {
+    java::GeckoApp::AddPluginView(jni::Object::Ref::From(jobject(mJavaView)));
     sFullScreenInstance = this;
   }
 
@@ -1559,8 +1561,8 @@ void nsPluginInstanceOwner::RemovePluginView()
   if (!mInstance || !mJavaView)
     return;
 
-  if (mFullScreen) {
-    java::GeckoAppShell::RemoveFullScreenPluginView(jni::Object::Ref::From(jobject(mJavaView)));
+  if (mFullScreen && jni::IsFennec()) {
+    java::GeckoApp::RemovePluginView(jni::Object::Ref::From(jobject(mJavaView)));
   }
   jni::GetGeckoThreadEnv()->DeleteGlobalRef((jobject)mJavaView);
   mJavaView = nullptr;
@@ -1585,8 +1587,9 @@ nsPluginInstanceOwner::GetImageContainerForVideo(nsNPAPIPluginInstance::VideoInf
 
   if (aVideoInfo->mDimensions.width && aVideoInfo->mDimensions.height) {
     RefPtr<Image> img = new SurfaceTextureImage(
-      aVideoInfo->mSurfaceTexture,
+      aVideoInfo->mSurface->GetHandle(),
       gfx::IntSize::Truncate(aVideoInfo->mDimensions.width, aVideoInfo->mDimensions.height),
+      true, /* continuous */
       gl::OriginPos::BottomLeft);
     container->SetCurrentImageInTransaction(img);
   }

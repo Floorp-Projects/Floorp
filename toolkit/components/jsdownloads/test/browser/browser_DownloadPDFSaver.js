@@ -74,7 +74,7 @@ add_task(async function test_createDownload_copy_not_private() {
 });
 
 add_task(async function test_cancel_pdf_download() {
-  let tab = gBrowser.addTab(getRootDirectory(gTestPath) + "testFile.html");
+  let tab = BrowserTestUtils.addTab(gBrowser, getRootDirectory(gTestPath) + "testFile.html");
   await promiseBrowserLoaded(tab.linkedBrowser);
 
   let download = await Downloads.createDownload({

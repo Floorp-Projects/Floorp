@@ -28,7 +28,7 @@ add_task(async function() {
 });
 
 add_task(async function asyncCleanup() {
-  gBrowser.addTab(initialLocation);
+  BrowserTestUtils.addTab(gBrowser, initialLocation);
   gBrowser.removeTab(gBrowser.selectedTab);
   info("Tabs were restored");
 });

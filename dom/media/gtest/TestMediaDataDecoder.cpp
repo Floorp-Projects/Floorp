@@ -35,9 +35,7 @@ public:
       [&]() { done = true; });
 
     // Wait until benchmark completes.
-    while (!done) {
-      NS_ProcessNextEvent();
-    }
+    SpinEventLoopUntil([&]() { return done; });
     return result;
   }
 

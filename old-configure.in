@@ -2208,7 +2208,6 @@ MOZ_NO_SMART_CARDS=
 NECKO_COOKIES=1
 MOZ_USE_NATIVE_POPUP_WINDOWS=
 MOZ_EXCLUDE_HYPHENATION_DICTIONARIES=
-MOZ_INSTALL_TRACKING=
 ACCESSIBILITY=1
 MOZ_TIME_MANAGER=
 MOZ_CONTENT_SANDBOX=
@@ -2628,15 +2627,6 @@ dnl = Whether to exclude hyphenations files in the build
 dnl =========================================================
 if test -n "$MOZ_EXCLUDE_HYPHENATION_DICTIONARIES"; then
     AC_DEFINE(MOZ_EXCLUDE_HYPHENATION_DICTIONARIES)
-fi
-
-dnl ========================================================
-dnl = Include install tracking on Android
-dnl ========================================================
-if test -n "$MOZ_INSTALL_TRACKING"; then
-    if test -z "$MOZ_ADJUST_SDK_KEY"; then
-        AC_MSG_ERROR([Must specify --with-adjust-sdk-keyfile when MOZ_INSTALL_TRACKING is defined!])
-    fi
 fi
 
 dnl ========================================================
@@ -4076,8 +4066,6 @@ Android|WINNT|Darwin)
 esac
 
 if test -n "$MOZ_REPLACE_MALLOC"; then
-    MOZ_SYSTEM_JEMALLOC=
-
     dnl Replace-malloc Mac linkage quirks
     if test -n "$MACOSX_DEPLOYMENT_TARGET"; then
         AC_CACHE_CHECK([how to do weak dynamic linking],
@@ -4144,15 +4132,6 @@ if test -z "$MOZ_MEMORY"; then
       ;;
   esac
 else
-  if test -n "$MOZ_JEMALLOC4" -a -z "$MOZ_REPLACE_MALLOC"; then
-    MOZ_SYSTEM_JEMALLOC=1
-    AC_CHECK_FUNCS(mallctl nallocx,,
-      [MOZ_SYSTEM_JEMALLOC=
-       break])
-    if test -n "$MOZ_SYSTEM_JEMALLOC"; then
-      AC_DEFINE(MOZ_SYSTEM_JEMALLOC)
-    fi
-  fi
   if test "x$MOZ_DEBUG" = "x1"; then
     AC_DEFINE(MOZ_MEMORY_DEBUG)
   fi
@@ -4165,7 +4144,6 @@ else
     ;;
   esac
 fi # MOZ_MEMORY
-AC_SUBST(MOZ_SYSTEM_JEMALLOC)
 AC_SUBST(MOZ_GLUE_IN_PROGRAM)
 
 # Allow the application to provide a subconfigure script.
@@ -4987,7 +4965,6 @@ AC_SUBST(MOZ_ANDROID_APPLICATION_CLASS)
 AC_SUBST(MOZ_ANDROID_BROWSER_INTENT_CLASS)
 AC_SUBST(MOZ_ANDROID_SEARCH_INTENT_CLASS)
 AC_SUBST(MOZ_EXCLUDE_HYPHENATION_DICTIONARIES)
-AC_SUBST(MOZ_INSTALL_TRACKING)
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)
 AC_SUBST(STRIP_FLAGS)
@@ -5499,10 +5476,6 @@ NSS_DISABLE_LIBPKIX=1
 AC_SUBST(NSS_DISABLE_LIBPKIX)
 
 MOZ_CREATE_CONFIG_STATUS()
-
-if test "$COMPILE_ENVIRONMENT"; then
-  MOZ_SUBCONFIGURE_JEMALLOC()
-fi
 
 # Run freetype configure script
 

@@ -4,7 +4,7 @@ add_task(async function test_keyword_bookmarklet() {
   let bm = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                 title: "bookmarklet",
                                                 url: "javascript:'1';" });
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   registerCleanupFunction(async function() {
     gBrowser.removeTab(tab);
     await PlacesUtils.bookmarks.remove(bm);
