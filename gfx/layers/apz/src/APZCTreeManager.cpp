@@ -2208,12 +2208,35 @@ APZCTreeManager::CommonAncestor(AsyncPanZoomController* aApzc1, AsyncPanZoomCont
 LayerToParentLayerMatrix4x4
 APZCTreeManager::ComputeTransformForNode(const HitTestingTreeNode* aNode) const
 {
-  AsyncPanZoomController* apzc = aNode->GetApzc();
-  return aNode->GetTransform() *
-      CompleteAsyncTransform(
-        apzc
-      ? apzc->GetCurrentAsyncTransformWithOverscroll(AsyncPanZoomController::NORMAL)
-      : AsyncTransformComponentMatrix());
+  if (AsyncPanZoomController* apzc = aNode->GetApzc()) {
+    // If the node represents scrollable content, apply the async transform
+    // from its APZC.
+    return aNode->GetTransform() *
+        CompleteAsyncTransform(
+          apzc->GetCurrentAsyncTransformWithOverscroll(AsyncPanZoomController::NORMAL));
+  } else if (aNode->IsScrollThumbNode()) {
+    // If the node represents a scrollbar thumb, compute and apply the
+    // transformation that will be applied to the thumb in
+    // AsyncCompositionManager.
+    ScrollableLayerGuid guid{aNode->GetLayersId(), 0, aNode->GetScrollTargetId()};
+    if (RefPtr<HitTestingTreeNode> scrollTargetNode = GetTargetNode(guid, &GuidComparatorIgnoringPresShell)) {
+      AsyncPanZoomController* scrollTargetApzc = scrollTargetNode->GetApzc();
+      MOZ_ASSERT(scrollTargetApzc);
+      return scrollTargetApzc->CallWithLastContentPaintMetrics(
+        [&](const FrameMetrics& aMetrics) {
+          return AsyncCompositionManager::ComputeTransformForScrollThumb(
+              aNode->GetTransform() * AsyncTransformMatrix(),
+              scrollTargetNode->GetTransform().ToUnknownMatrix(),
+              scrollTargetApzc,
+              aMetrics,
+              aNode->GetScrollThumbData(),
+              scrollTargetNode->IsAncestorOf(aNode),
+              nullptr);
+        });
+    }
+  }
+  // Otherwise, the node does not have an async transform.
+  return aNode->GetTransform() * AsyncTransformMatrix();
 }
 
 #if defined(MOZ_WIDGET_ANDROID)
