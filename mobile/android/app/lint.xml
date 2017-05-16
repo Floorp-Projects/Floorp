@@ -57,7 +57,6 @@
         <ignore path="**/mobile/android/base/java/org/mozilla/gecko/tabs/TabPanelBackButton.java"/>
         <ignore path="**/mobile/android/base/java/org/mozilla/gecko/toolbar/ToolbarEditText.java"/>
         <ignore path="**/mobile/android/base/java/org/mozilla/gecko/util/ViewUtil.java"/>
-        <ignore path="**/mobile/android/base/java/org/mozilla/gecko/webapps/WebAppActivity.java"/>
         <ignore path="**/mobile/android/base/java/org/mozilla/gecko/IntentHelper.java"/>
         <ignore path="**/media/webrtc/trunk/webrtc/modules/audio_device/android/java/src/org/webrtc/voiceengine/WebRtcAudioEffects.java"/>
         <ignore path="**/media/webrtc/trunk/webrtc/modules/audio_device/android/java/src/org/webrtc/voiceengine/WebRtcAudioRecord.java"/>
