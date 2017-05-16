@@ -5,16 +5,17 @@
 
 package org.mozilla.focus;
 
-import android.app.Application;
 import android.os.StrictMode;
 import android.preference.PreferenceManager;
 
+import org.mozilla.focus.locale.LocaleAwareApplication;
 import org.mozilla.focus.search.SearchEngineManager;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.AdjustHelper;
 import org.mozilla.focus.utils.AppConstants;
 
-public class FocusApplication extends Application {
+public class FocusApplication extends LocaleAwareApplication {
+
     @Override
     public void onCreate() {
         super.onCreate();
