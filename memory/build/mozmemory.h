@@ -24,8 +24,6 @@
 #include "mozilla/Types.h"
 #include "jemalloc_types.h"
 
-MOZ_BEGIN_EXTERN_C
-
 /*
  * On OSX, malloc/malloc.h contains the declaration for malloc_good_size,
  * which will call back in jemalloc, through the zone allocator so just use it.
@@ -88,7 +86,5 @@ MOZ_JEMALLOC_API void jemalloc_purge_freed_pages();
 MOZ_JEMALLOC_API void jemalloc_free_dirty_pages();
 
 MOZ_JEMALLOC_API void jemalloc_thread_local_arena(jemalloc_bool enabled);
-
-MOZ_END_EXTERN_C
 
 #endif /* mozmemory_h */
