@@ -330,7 +330,13 @@ public class LocaleManager {
      * Returns a list of supported locale codes
      */
     public static Collection<String> getPackagedLocaleTags(final Context context) {
-        // TODO: get the actual list : )
-        return Arrays.asList(new String[] { "system", "en-US", "en-GB", "de", "pl", "ar", "zh-TW", "zh-CN", "ru", "ko"});
+        // TODO: figure out how to get this dynamically, either at buildtime or runtime
+        // TODO 2" move "system" into an empty String and add that later (at the UI stage)?
+        return Arrays.asList(new String[] { "system", "en-US",
+                "ar", "ast", "az", "bg", "bn-BD", "bn-IN",
+                "ca", "cs", "cy", "de", "el", "eo", "es", "es-AR", "es-CL", "es-ES", "es-MX",
+                "fa", "fr", "fy-NL","hi", "hu", "hy-AM", "in", "it", "iw", "ja", "kab", "ko",
+                "lo", "nb-NO", "nl", "nn-NO", "pl", "pt", "pt-BR", "ro", "ru", "sk", "sl",
+                "sq", "sr", "sv-SE", "th", "tr", "uk", "ur", "zh-CN", "zh-TW" });
     }
 }
