@@ -53,6 +53,7 @@ public:
 
   wr::PipelineId PipelineId() { return mPipelineId; }
   wr::WebRenderAPI* GetWebRenderAPI() { return mApi; }
+  wr::Epoch WrEpoch() { return wr::NewEpoch(mWrEpoch); }
   WebRenderCompositableHolder* CompositableHolder() { return mCompositableHolder; }
   CompositorVsyncScheduler* CompositorScheduler() { return mCompositorScheduler.get(); }
 
@@ -171,9 +172,12 @@ private:
   virtual ~WebRenderBridgeParent();
 
   void DeleteOldImages();
-  void ProcessWebRenderCommands(const gfx::IntSize &aSize, InfallibleTArray<WebRenderParentCommand>& commands, const wr::Epoch& aEpoch,
-                                    const WrSize& aContentSize, const ByteBuffer& dl,
-                                    const WrBuiltDisplayListDescriptor& dlDesc);
+  void ProcessWebRenderCommands(const gfx::IntSize &aSize,
+                                InfallibleTArray<WebRenderParentCommand>& commands,
+                                const wr::Epoch& aEpoch,
+                                const WrSize& aContentSize,
+                                const ByteBuffer& dl,
+                                const WrBuiltDisplayListDescriptor& dlDesc);
   void ScheduleComposition();
   void ClearResources();
   uint64_t GetChildLayerObserverEpoch() const { return mChildLayerObserverEpoch; }

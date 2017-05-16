@@ -470,7 +470,6 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
             mApi->AddExternalImageHandle(key,
                                          descriptor,
                                          wrTexture->GetExternalImageKey());
-            mCompositableHolder->HoldExternalImage(mPipelineId, aEpoch, texture->AsWebRenderTextureHost());
           } else {
             // XXX handling YUV
             gfx::SurfaceFormat format =
@@ -479,7 +478,6 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
             mApi->AddExternalImageBuffer(key,
                                          descriptor,
                                          wrTexture->GetExternalImageKey());
-            mCompositableHolder->HoldExternalImage(mPipelineId, aEpoch, texture->AsWebRenderTextureHost());
           }
 
           break;
@@ -627,7 +625,7 @@ WebRenderBridgeParent::RecvAddExternalImageId(const ExternalImageId& aImageId,
     return IPC_OK();
   }
 
-  wrHost->SetWrCompositableHolder(mCompositableHolder);
+  wrHost->SetWrBridge(this);
   mExternalImageIds.Put(wr::AsUint64(aImageId), wrHost);
 
   return IPC_OK();
@@ -650,7 +648,7 @@ WebRenderBridgeParent::RecvAddExternalImageIdForCompositable(const ExternalImage
     return IPC_OK();
   }
 
-  wrHost->SetWrCompositableHolder(mCompositableHolder);
+  wrHost->SetWrBridge(this);
   mExternalImageIds.Put(wr::AsUint64(aImageId), wrHost);
 
   return IPC_OK();
@@ -665,7 +663,7 @@ WebRenderBridgeParent::RecvRemoveExternalImageId(const ExternalImageId& aImageId
   MOZ_ASSERT(mExternalImageIds.Get(wr::AsUint64(aImageId)).get());
   WebRenderImageHost* wrHost = mExternalImageIds.Get(wr::AsUint64(aImageId)).get();
   if (wrHost) {
-    wrHost->SetWrCompositableHolder(nullptr);
+    wrHost->SetWrBridge(nullptr);
   }
   mExternalImageIds.Remove(wr::AsUint64(aImageId));
 
@@ -878,11 +876,11 @@ WebRenderBridgeParent::ClearResources()
       DeleteOldImages();
     }
   }
-  mCompositableHolder->RemovePipeline(mPipelineId);
   for (auto iter = mExternalImageIds.Iter(); !iter.Done(); iter.Next()) {
-    iter.Data()->SetWrCompositableHolder(nullptr);
+    iter.Data()->SetWrBridge(nullptr);
   }
   mExternalImageIds.Clear();
+  mCompositableHolder->RemovePipeline(mPipelineId);
 
   if (mWidget && mCompositorScheduler) {
     mCompositorScheduler->Destroy();
