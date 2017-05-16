@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use cssparser::SourceLocation;
 use html5ever::LocalName;
 use selectors::parser::LocalName as LocalNameSelector;
 use selectors::parser::Selector;
@@ -32,15 +33,16 @@ fn get_mock_rules(css_selectors: &[&str]) -> (Vec<Vec<Rule>>, SharedRwLock) {
                     longhands::display::SpecifiedValue::block),
                 Importance::Normal
             ))),
+            source_location: SourceLocation {
+                line: 0,
+                column: 0,
+            },
         }));
 
         let guard = shared_lock.read();
         let rule = locked.read_with(&guard);
         rule.selectors.0.iter().map(|s| {
-            Rule::new(s.inner.clone(),
-                      locked.clone(),
-                      i,
-                      s.specificity)
+            Rule::new(s.clone(), locked.clone(), i)
         }).collect()
     }).collect(), shared_lock)
 }
@@ -170,22 +172,22 @@ fn test_rule_ordering_same_specificity() {
 #[test]
 fn test_get_id_name() {
     let (rules_list, _) = get_mock_rules(&[".intro", "#top"]);
-    assert_eq!(stylist::get_id_name(&rules_list[0][0].selector), None);
-    assert_eq!(stylist::get_id_name(&rules_list[1][0].selector), Some(Atom::from("top")));
+    assert_eq!(stylist::get_id_name(&rules_list[0][0].selector.inner), None);
+    assert_eq!(stylist::get_id_name(&rules_list[1][0].selector.inner), Some(Atom::from("top")));
 }
 
 #[test]
 fn test_get_class_name() {
     let (rules_list, _) = get_mock_rules(&[".intro.foo", "#top"]);
-    assert_eq!(stylist::get_class_name(&rules_list[0][0].selector), Some(Atom::from("foo")));
-    assert_eq!(stylist::get_class_name(&rules_list[1][0].selector), None);
+    assert_eq!(stylist::get_class_name(&rules_list[0][0].selector.inner), Some(Atom::from("foo")));
+    assert_eq!(stylist::get_class_name(&rules_list[1][0].selector.inner), None);
 }
 
 #[test]
 fn test_get_local_name() {
     let (rules_list, _) = get_mock_rules(&["img.foo", "#top", "IMG", "ImG"]);
     let check = |i: usize, names: Option<(&str, &str)>| {
-        assert!(stylist::get_local_name(&rules_list[i][0].selector)
+        assert!(stylist::get_local_name(&rules_list[i][0].selector.inner)
                 == names.map(|(name, lower_name)| LocalNameSelector {
                         name: LocalName::from(name),
                         lower_name: LocalName::from(lower_name) }))

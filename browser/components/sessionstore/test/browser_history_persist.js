@@ -9,7 +9,7 @@
  */
 add_task(async function check_history_not_persisted() {
   // Create an about:blank tab
-  let tab = gBrowser.addTab("about:blank");
+  let tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 
@@ -21,7 +21,7 @@ add_task(async function check_history_not_persisted() {
   browser = null;
 
   // Open a new tab to restore into.
-  tab = gBrowser.addTab("about:blank");
+  tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   browser = tab.linkedBrowser;
   await promiseTabState(tab, state);
 
@@ -53,7 +53,7 @@ add_task(async function check_history_not_persisted() {
  */
 add_task(async function check_history_default_persisted() {
   // Create an about:blank tab
-  let tab = gBrowser.addTab("about:blank");
+  let tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 
@@ -65,7 +65,7 @@ add_task(async function check_history_default_persisted() {
   browser = null;
 
   // Open a new tab to restore into.
-  tab = gBrowser.addTab("about:blank");
+  tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   browser = tab.linkedBrowser;
   await promiseTabState(tab, state);
   await ContentTask.spawn(browser, null, function() {

@@ -116,7 +116,7 @@ add_task(async function test_navigation() {
 
   info("1");
   // Create a tab and load a remote page in it
-  gBrowser.selectedTab = gBrowser.addTab("about:blank", {skipAnimation: true});
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank", {skipAnimation: true});
   let {permanentKey} = gBrowser.selectedBrowser;
   await waitForLoad("http://example.org/" + DUMMY_PATH);
   is(gBrowser.selectedBrowser.isRemoteBrowser, expectedRemote, "Remote attribute should be correct");
@@ -193,7 +193,7 @@ add_task(async function test_synchronous() {
 
   info("1");
   // Create a tab and load a remote page in it
-  gBrowser.selectedTab = gBrowser.addTab("about:blank", {skipAnimation: true});
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank", {skipAnimation: true});
   let {permanentKey} = gBrowser.selectedBrowser;
   await waitForLoad("http://example.org/" + DUMMY_PATH);
   is(gBrowser.selectedBrowser.isRemoteBrowser, expectedRemote, "Remote attribute should be correct");
@@ -233,7 +233,7 @@ add_task(async function test_loadflags() {
 
   info("1");
   // Create a tab and load a remote page in it
-  gBrowser.selectedTab = gBrowser.addTab("about:blank", {skipAnimation: true});
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank", {skipAnimation: true});
   await waitForLoadWithFlags("about:robots");
   is(gBrowser.selectedBrowser.isRemoteBrowser, false, "Remote attribute should be correct");
   await check_history();

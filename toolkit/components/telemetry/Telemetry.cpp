@@ -2527,7 +2527,6 @@ static constexpr TrackedDBEntry kTrackedDBs[] = {
   TRACKEDDB_ENTRY("addons.sqlite"),
   TRACKEDDB_ENTRY("content-prefs.sqlite"),
   TRACKEDDB_ENTRY("cookies.sqlite"),
-  TRACKEDDB_ENTRY("downloads.sqlite"),
   TRACKEDDB_ENTRY("extensions.sqlite"),
   TRACKEDDB_ENTRY("favicons.sqlite"),
   TRACKEDDB_ENTRY("formhistory.sqlite"),

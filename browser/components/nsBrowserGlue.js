@@ -16,6 +16,9 @@ Cu.import("resource://gre/modules/AsyncPrefs.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "WindowsUIUtils", "@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils");
 XPCOMUtils.defineLazyServiceGetter(this, "AlertsService", "@mozilla.org/alerts-service;1", "nsIAlertsService");
+XPCOMUtils.defineLazyGetter(this, "WeaveService", () =>
+  Cc["@mozilla.org/weave/service;1"].getService().wrappedJSObject
+);
 
 // lazy module getters
 
@@ -305,7 +308,7 @@ BrowserGlue.prototype = {
   observe: function BG_observe(subject, topic, data) {
     switch (topic) {
       case "notifications-open-settings":
-        this._openPreferences("privacy");
+        this._openPreferences("privacy", { origin: "notifOpenSettings" });
         break;
       case "prefservice:after-app-defaults":
         this._onAppDefaults();
@@ -973,6 +976,10 @@ BrowserGlue.prototype = {
 
     AutoCompletePopup.init();
     DateTimePickerHelper.init();
+    // Check if Sync is configured
+    if (Services.prefs.prefHasUserValue("services.sync.username")) {
+      WeaveService.init();
+    }
 
     this._firstWindowTelemetry(aWindow);
     this._firstWindowLoaded();
@@ -1703,7 +1710,7 @@ BrowserGlue.prototype = {
     let clickCallback = (subject, topic, data) => {
       if (topic != "alertclickcallback")
         return;
-      this._openPreferences("sync");
+      this._openPreferences("sync", { origin: "doorhanger" });
     }
     AlertsService.showAlertNotification(null, title, body, true, null, clickCallback);
   },
@@ -2286,7 +2293,7 @@ BrowserGlue.prototype = {
     let clickCallback = (subject, topic, data) => {
       if (topic != "alertclickcallback")
         return;
-      this._openPreferences("sync");
+      this._openPreferences("sync", { origin: "devDisconnectedAlert"});
     }
     AlertsService.showAlertNotification(null, title, body, true, null, clickCallback);
   },

@@ -152,6 +152,9 @@ add_task(async function testMatchDataURI() {
       `,
       "page.js": function() {
         browser.test.onMessage.addListener((msg, url) => {
+          if (msg !== "navigate") {
+            return;
+          }
           window.location.href = url;
         });
       },
@@ -174,7 +177,10 @@ add_task(async function testMatchDataURI() {
       });
 
       browser.test.onMessage.addListener(async msg => {
-        browser.test.assertRejects(
+        if (msg !== "execute") {
+          return;
+        }
+        await browser.test.assertRejects(
           browser.tabs.executeScript({
             code: "location.href;",
             allFrames: true,

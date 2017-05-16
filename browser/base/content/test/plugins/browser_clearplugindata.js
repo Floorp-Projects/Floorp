@@ -72,7 +72,7 @@ function setPrefs(cookies, pluginData) {
 
 async function testClearingData(url) {
   // Load page to set data for the plugin.
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   gTestBrowser = gBrowser.selectedBrowser;
 
   await promiseTabLoadEvent(gBrowser.selectedTab, url);

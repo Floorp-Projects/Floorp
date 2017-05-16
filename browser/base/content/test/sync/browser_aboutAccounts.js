@@ -418,7 +418,7 @@ function promiseOneMessage(tab, messageName) {
 }
 
 function promiseNewTabLoadEvent(aUrl) {
-  let tab = gBrowser.selectedTab = gBrowser.addTab(aUrl);
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, aUrl);
   let browser = tab.linkedBrowser;
   let mm = browser.messageManager;
 
@@ -433,7 +433,7 @@ function promiseNewTabLoadEvent(aUrl) {
 // tab is created and the iframe in that tab loads.
 function promiseNewTabWithIframeLoadEvent(aUrl) {
   return new Promise(resolve => {
-    let tab = gBrowser.selectedTab = gBrowser.addTab(aUrl);
+    let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, aUrl);
     let browser = tab.linkedBrowser;
     let mm = browser.messageManager;
 

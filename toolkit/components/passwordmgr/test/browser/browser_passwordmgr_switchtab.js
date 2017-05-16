@@ -8,7 +8,7 @@ var { interfaces: Ci } = Components;
 add_task(async function test() {
   await new Promise(resolve => {
 
-  let tab = gBrowser.addTab();
+  let tab = BrowserTestUtils.addTab(gBrowser);
   isnot(tab, gBrowser.selectedTab, "New tab shouldn't be selected");
 
   let listener = {

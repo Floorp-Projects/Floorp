@@ -28,7 +28,7 @@ function test() {
 
   testState(false);
 
-  let pinnedTab = gBrowser.addTab("about:blank");
+  let pinnedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   gBrowser.pinTab(pinnedTab);
 
   // Just pinning the tab shouldn't change the key state.

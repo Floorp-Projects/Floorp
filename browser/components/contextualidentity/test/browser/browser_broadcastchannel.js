@@ -8,7 +8,7 @@ const URI = BASE_ORIGIN +
 // returns the newly opened tab
 async function openTabInUserContext(uri, userContextId) {
   // open the tab in the correct userContextId
-  let tab = gBrowser.addTab(uri, {userContextId});
+  let tab = BrowserTestUtils.addTab(gBrowser, uri, {userContextId});
 
   // select tab and make sure its browser is focused
   gBrowser.selectedTab = tab;

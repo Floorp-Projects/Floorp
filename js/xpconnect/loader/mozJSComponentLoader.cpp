@@ -59,7 +59,6 @@ using namespace JS;
 // to continue working.
 static const JSClass kFakeBackstagePassJSClass = { "FakeBackstagePass" };
 
-static const char kXPConnectServiceContractID[] = "@mozilla.org/js/xpc/XPConnect;1";
 static const char kObserverServiceContractID[] = "@mozilla.org/observer-service;1";
 static const char kJSCachePrefix[] = "jsloader";
 
@@ -381,11 +380,6 @@ mozJSComponentLoader::LoadModule(FileLocation& aFile)
         return nullptr;
     }
 
-    nsCOMPtr<nsIXPConnect> xpc = do_GetService(kXPConnectServiceContractID,
-                                               &rv);
-    if (NS_FAILED(rv))
-        return nullptr;
-
     nsCOMPtr<nsIComponentManager> cm;
     rv = NS_GetComponentManager(getter_AddRefs(cm));
     if (NS_FAILED(rv))
@@ -420,8 +414,9 @@ mozJSComponentLoader::LoadModule(FileLocation& aFile)
         return nullptr;
     }
 
-    rv = xpc->WrapJS(cx, jsGetFactoryObj,
-                     NS_GET_IID(xpcIJSGetFactory), getter_AddRefs(entry->getfactoryobj));
+    rv = nsXPConnect::XPConnect()->WrapJS(cx, jsGetFactoryObj,
+                                          NS_GET_IID(xpcIJSGetFactory),
+                                          getter_AddRefs(entry->getfactoryobj));
     if (NS_FAILED(rv)) {
         /* XXX report error properly */
 #ifdef DEBUG
@@ -527,9 +522,6 @@ mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
     }
 
     nsresult rv = NS_OK;
-    nsCOMPtr<nsIXPConnect> xpc =
-        do_GetService(kXPConnectServiceContractID, &rv);
-    NS_ENSURE_SUCCESS(rv, nullptr);
     bool createdNewGlobal = false;
 
     if (!mLoaderGlobal) {
@@ -551,12 +543,13 @@ mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
         // Defer firing OnNewGlobalObject until after the __URI__ property has
         // been defined so the JS debugger can tell what module the global is
         // for
-        rv = xpc->InitClassesWithNewWrappedGlobal(aCx,
-                                                  static_cast<nsIGlobalObject*>(backstagePass),
-                                                  mSystemPrincipal,
-                                                  nsIXPConnect::DONT_FIRE_ONNEWGLOBALHOOK,
-                                                  options,
-                                                  getter_AddRefs(holder));
+        rv = nsXPConnect::XPConnect()->
+            InitClassesWithNewWrappedGlobal(aCx,
+                                            static_cast<nsIGlobalObject*>(backstagePass),
+                                            mSystemPrincipal,
+                                            nsIXPConnect::DONT_FIRE_ONNEWGLOBALHOOK,
+                                            options,
+                                            getter_AddRefs(holder));
         NS_ENSURE_SUCCESS(rv, nullptr);
         createdNewGlobal = true;
 
@@ -605,9 +598,9 @@ mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
         if (XRE_IsParentProcess()) {
             RootedObject locationObj(aCx);
 
-            rv = xpc->WrapNative(aCx, obj, aComponentFile,
-                                 NS_GET_IID(nsIFile),
-                                 locationObj.address());
+            rv = nsXPConnect::XPConnect()->WrapNative(aCx, obj, aComponentFile,
+                                                      NS_GET_IID(nsIFile),
+                                                      locationObj.address());
             NS_ENSURE_SUCCESS(rv, nullptr);
             NS_ENSURE_TRUE(locationObj, nullptr);
 

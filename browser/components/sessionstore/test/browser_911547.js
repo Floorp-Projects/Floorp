@@ -8,7 +8,7 @@
 add_task(async function test() {
   // create a tab that has a CSP
   let testURL = "http://mochi.test:8888/browser/browser/components/sessionstore/test/browser_911547_sample.html";
-  let tab = gBrowser.selectedTab = gBrowser.addTab(testURL);
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, testURL);
   gBrowser.selectedTab = tab;
 
   let browser = tab.linkedBrowser;

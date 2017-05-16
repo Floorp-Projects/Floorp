@@ -9,7 +9,7 @@ const TAB_STATE = {
 
 add_task(async function() {
   // Create a background tab.
-  let tab = gBrowser.addTab("about:blank");
+  let tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 

@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=868996
   
   function testOpenerSet() {
     // Use setTimeout to make the relevant onerror run in this window
-    var win = window.open("data:text/html,<script>opener.setTimeout(opener.basicOpenerTest, 0, this)</" + "script>");
+    var win = window.open("file1_setting_opener.html");
     // A sandbox for the window
     sb1 = new Cu.Sandbox(win, {wantXrays: true })
     sb1.win = win
@@ -49,7 +49,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=868996
     is(evalsb("win.opener", sb2), $("z").contentWindow,
        "Should be able to set the opener to a different window in a sandbox two");
 
-    win.location = "data:text/html,<script>opener.setTimeout(opener.continueOpenerTest, 0, this);</" + "script>";
+    win.location = "file2_setting_opener.html";
   }
 
   function continueOpenerTest(win) {
@@ -67,7 +67,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=868996
        "Should be able to set the opener to a primitive in a sandbox one");
     is(evalsb("win.opener", sb2), 5,
        "Should be able to set the opener to a primitive in a sandbox two");
-    win.location = "data:text/html,<script>opener.setTimeout(opener.continueOpenerTest2, 0, this);</" + "script>";
+    win.location = "file3_setting_opener.html";
   }
 
   function continueOpenerTest2(win) {
@@ -85,7 +85,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=868996
     is(evalsb("win.opener", sb2), null,
        "Setting the opener to null should be visible in sb2");
 
-    win.location = "data:text/html,Loaded";
+    win.location = "file4_setting_opener.html";
     // Now poll for that load, since we have no way for the window to
     // communicate with us now
     setTimeout(checkForLoad, 0, win);
@@ -93,7 +93,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=868996
 
   function checkForLoad(win) {
     if (!win.document.documentElement ||
-        win.document.documentElement.textContent != "Loaded") {
+        win.document.documentElement.innerText != "Loaded") {
       setTimeout(checkForLoad, 0, win);
       return;
     }

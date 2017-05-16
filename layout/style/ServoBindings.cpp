@@ -314,13 +314,10 @@ Gecko_GetStyleContext(RawGeckoElementBorrowed aElement,
   return fc->GetDisplayContentsStyleFor(aElement);
 }
 
-nsIAtom*
+CSSPseudoElementType
 Gecko_GetImplementedPseudo(RawGeckoElementBorrowed aElement)
 {
-  CSSPseudoElementType pseudo = aElement->GetPseudoElementType();
-  if (pseudo == CSSPseudoElementType::NotPseudo)
-    return nullptr;
-  return nsCSSPseudoElements::GetPseudoAtom(pseudo);
+  return aElement->GetPseudoElementType();
 }
 
 nsChangeHint
@@ -2095,9 +2092,9 @@ Gecko_CSSKeywordString(nsCSSKeyword aKeyword, uint32_t* aLength)
 }
 
 nsCSSFontFaceRule*
-Gecko_CSSFontFaceRule_Create()
+Gecko_CSSFontFaceRule_Create(uint32_t aLine, uint32_t aColumn)
 {
-  RefPtr<nsCSSFontFaceRule> rule = new nsCSSFontFaceRule(0, 0);
+  RefPtr<nsCSSFontFaceRule> rule = new nsCSSFontFaceRule(aLine, aColumn);
   return rule.forget().take();
 }
 

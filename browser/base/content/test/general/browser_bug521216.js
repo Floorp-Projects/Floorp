@@ -8,7 +8,7 @@ function test() {
   tabIndex = gBrowser.tabs.length;
   gBrowser.addTabsProgressListener(progressListener);
   gBrowser.tabContainer.addEventListener("TabOpen", TabOpen);
-  gBrowser.addTab("data:text/html,<html><head><link href='about:logo' rel='shortcut icon'>");
+  BrowserTestUtils.addTab(gBrowser, "data:text/html,<html><head><link href='about:logo' rel='shortcut icon'>");
 }
 
 function record(aName) {

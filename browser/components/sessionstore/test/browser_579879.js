@@ -1,11 +1,11 @@
 "use strict";
 
 add_task(async function() {
-  let tab1 = gBrowser.addTab("data:text/plain;charset=utf-8,foo");
+  let tab1 = BrowserTestUtils.addTab(gBrowser, "data:text/plain;charset=utf-8,foo");
   gBrowser.pinTab(tab1);
 
   await promiseBrowserLoaded(tab1.linkedBrowser);
-  let tab2 = gBrowser.addTab();
+  let tab2 = BrowserTestUtils.addTab(gBrowser);
   gBrowser.pinTab(tab2);
 
   is(Array.indexOf(gBrowser.tabs, tab1), 0, "pinned tab 1 is at the first position");

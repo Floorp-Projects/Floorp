@@ -11,7 +11,7 @@ function test() {
   var triggers = encodeURIComponent(JSON.stringify({
     "Unsigned XPI": TESTROOT + "amosigned.xpi"
   }));
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   ContentTask.spawn(gBrowser.selectedBrowser, TESTROOT + "installtrigger.html?" + triggers, url => {
     return new Promise(resolve => {

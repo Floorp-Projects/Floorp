@@ -15,6 +15,7 @@ use cascade_info::CascadeInfo;
 use context::{CurrentElementInfo, SelectorFlagsMap, SharedStyleContext, StyleContext};
 use data::{ComputedStyle, ElementData, ElementStyles, RestyleData};
 use dom::{AnimationRules, SendElement, TElement, TNode};
+use element_state::ElementState;
 use font_metrics::FontMetricsProvider;
 use properties::{CascadeFlags, ComputedValues, SKIP_ROOT_AND_ITEM_BASED_DISPLAY_FIXUP, cascade};
 use properties::longhands::display::computed_value as display;
@@ -176,7 +177,7 @@ fn element_matches_candidate<E: TElement>(element: &E,
         miss!(State)
     }
 
-    if element.get_id().is_some() {
+    if element.get_id() != candidate_element.get_id() {
         miss!(IdAttr)
     }
 
@@ -745,7 +746,6 @@ trait PrivateMatchMethods: TElement {
             animation::start_transitions_if_applicable(
                 new_animations_sender,
                 this_opaque,
-                self.as_node().to_unsafe(),
                 &**values,
                 new_values,
                 &shared_context.timer,
@@ -843,7 +843,7 @@ trait PrivateMatchMethods: TElement {
                                                           running_animation,
                                                           style,
                                                           font_metrics);
-                    if let Animation::Transition(_, _, _, ref frame, _) = *running_animation {
+                    if let Animation::Transition(_, _, ref frame, _) = *running_animation {
                         possibly_expired_animations.push(frame.property_animation.clone())
                     }
                 }
@@ -1016,13 +1016,18 @@ pub trait MatchMethods : TElement {
             None => *self,
         };
 
+        let pseudo_and_state = match implemented_pseudo {
+            Some(ref pseudo) => Some((pseudo, self.get_state())),
+            None => None,
+        };
+
         // Compute the primary rule node.
         *relations = stylist.push_applicable_declarations(&selector_matching_target,
                                                           Some(bloom),
                                                           style_attribute,
                                                           smil_override,
                                                           animation_rules,
-                                                          implemented_pseudo.as_ref(),
+                                                          pseudo_and_state,
                                                           &mut applicable_declarations,
                                                           &mut set_selector_flags);
 
@@ -1077,7 +1082,7 @@ pub trait MatchMethods : TElement {
                                                  None,
                                                  None,
                                                  AnimationRules(None, None),
-                                                 Some(&pseudo),
+                                                 Some((&pseudo, ElementState::empty())),
                                                  &mut applicable_declarations,
                                                  &mut set_selector_flags);
 

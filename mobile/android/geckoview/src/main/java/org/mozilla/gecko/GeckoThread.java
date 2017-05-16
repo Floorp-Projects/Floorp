@@ -195,7 +195,8 @@ public class GeckoThread extends Thread {
     }
 
     public static boolean initMainProcessWithProfile(final String profileName,
-                                                     final File profileDir) {
+                                                     final File profileDir,
+                                                     final String args) {
         if (profileName == null) {
             throw new IllegalArgumentException("Null profile name");
         }
@@ -215,7 +216,7 @@ public class GeckoThread extends Thread {
 
         // We haven't initialized yet; okay to initialize now.
         return initMainProcess(GeckoProfile.get(context, profileName, profileDir),
-                               /* args */ null, /* debugging */ false);
+                               args, /* debugging */ false);
     }
 
     public static boolean launch() {
@@ -319,20 +320,10 @@ public class GeckoThread extends Thread {
             }
         }
 
-        // In un-official builds, we want to load Javascript resources fresh
-        // with each build.  In official builds, the startup cache is purged by
-        // the buildid mechanism, but most un-official builds don't bump the
-        // buildid, so we purge here instead.
-        final GeckoAppShell.GeckoInterface gi = GeckoAppShell.getGeckoInterface();
-        if (gi == null || !gi.isOfficial()) {
-            Log.w(LOGTAG, "STARTUP PERFORMANCE WARNING: un-official build: purging the " +
-                          "startup (JavaScript) caches.");
-            args.add("-purgecaches");
-        }
-
         return args.toArray(new String[args.size()]);
     }
 
+    @RobocopTarget
     public static GeckoProfile getActiveProfile() {
         return INSTANCE.getProfile();
     }
@@ -404,11 +395,9 @@ public class GeckoThread extends Thread {
             }
         }
 
-        Log.w(LOGTAG, "zerdatime " + SystemClock.elapsedRealtime() +
-              " - runGecko");
+        Log.w(LOGTAG, "zerdatime " + SystemClock.elapsedRealtime() + " - runGecko");
 
-        final GeckoAppShell.GeckoInterface gi = GeckoAppShell.getGeckoInterface();
-        if (gi == null || !gi.isOfficial()) {
+        if (mDebugging) {
             Log.i(LOGTAG, "RunGecko - args = " + TextUtils.join(" ", args));
         }
 

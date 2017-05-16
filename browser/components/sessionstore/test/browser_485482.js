@@ -11,7 +11,7 @@ const URL = ROOT + "browser_485482_sample.html";
  */
 add_task(async function test_xpath_exp_for_strange_documents() {
   // Load a page with weird tag names.
-  let tab = gBrowser.addTab(URL);
+  let tab = BrowserTestUtils.addTab(gBrowser, URL);
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 

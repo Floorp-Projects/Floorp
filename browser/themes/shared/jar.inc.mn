@@ -142,7 +142,6 @@
   skin/classic/browser/search-history-icon.svg                 (../shared/search/history-icon.svg)
   skin/classic/browser/search-indicator-magnifying-glass.svg   (../shared/search/search-indicator-magnifying-glass.svg)
   skin/classic/browser/search-arrow-go.svg                     (../shared/search/search-arrow-go.svg)
-  skin/classic/browser/search-arrow-go-rtl.svg                 (../shared/search/search-arrow-go-rtl.svg)
   skin/classic/browser/gear.svg                                (../shared/search/gear.svg)
   skin/classic/browser/tabbrowser/connecting.png               (../shared/tabbrowser/connecting.png)
   skin/classic/browser/tabbrowser/connecting@2x.png            (../shared/tabbrowser/connecting@2x.png)
@@ -175,6 +174,9 @@
   skin/classic/browser/panic-panel/header-small@2x.png         (../shared/panic-panel/header-small@2x.png)
   skin/classic/browser/panic-panel/icons.png                   (../shared/panic-panel/icons.png)
   skin/classic/browser/panic-panel/icons@2x.png                (../shared/panic-panel/icons@2x.png)
+#ifndef XP_LINUX
+  skin/classic/browser/places/arrow-down.svg                   (../shared/places/arrow-down.svg)
+#endif
   skin/classic/browser/places/bookmarks-notification-finish.png (../shared/places/bookmarks-notification-finish.png)
   skin/classic/browser/places/bookmarks-notification-finish@2x.png (../shared/places/bookmarks-notification-finish@2x.png)
   skin/classic/browser/privatebrowsing/aboutPrivateBrowsing.css (../shared/privatebrowsing/aboutPrivateBrowsing.css)

@@ -8,8 +8,8 @@
  */
 
 add_task(async function() {
-  let tab1 = gBrowser.addTab("http://mochi.test:8888/#0");
-  let tab2 = gBrowser.addTab("http://mochi.test:8888/#1");
+  let tab1 = BrowserTestUtils.addTab(gBrowser, "http://mochi.test:8888/#0");
+  let tab2 = BrowserTestUtils.addTab(gBrowser, "http://mochi.test:8888/#1");
   let specificPanel = document.createElement("panel");
   specificPanel.setAttribute("tabspecific", "true");
   let generalPanel = document.createElement("panel");

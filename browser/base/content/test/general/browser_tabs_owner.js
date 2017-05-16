@@ -11,9 +11,9 @@ thisTestLeaksUncaughtRejectionsAndShouldBeFixed("TypeError: gBrowser._finalizeTa
 thisTestLeaksUncaughtRejectionsAndShouldBeFixed("TypeError: gBrowser._finalizeTabSwitch is not a function");
 
 function test() {
-  gBrowser.addTab();
-  gBrowser.addTab();
-  gBrowser.addTab();
+  BrowserTestUtils.addTab(gBrowser);
+  BrowserTestUtils.addTab(gBrowser);
+  BrowserTestUtils.addTab(gBrowser);
 
   var tabs = gBrowser.tabs;
   var owner;

@@ -17,7 +17,7 @@ const TEST_URL = "http://example.com/browser/toolkit/components/startup/tests/br
 function test() {
   waitForExplicitFinish();
 
-  gBrowser.selectedTab = gBrowser.addTab(TEST_URL);
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, TEST_URL);
   let browser = gBrowser.selectedBrowser;
 
   whenBrowserLoaded(browser, function() {

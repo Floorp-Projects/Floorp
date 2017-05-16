@@ -50,7 +50,7 @@ add_task(async function test_creation() {
   // Open a new tab, save session, ensure that the correct files exist.
   let URL_BASE = "http://example.com/?atomic_backup_test_creation=" + Math.random();
   let URL = URL_BASE + "?first_write";
-  let tab = gBrowser.addTab(URL);
+  let tab = BrowserTestUtils.addTab(gBrowser, URL);
 
   info("Testing situation after a single write");
   await promiseBrowserLoaded(tab.linkedBrowser);
@@ -91,7 +91,7 @@ add_task(async function test_creation() {
 
 var promiseSource = async function(name) {
   let URL = "http://example.com/?atomic_backup_test_recovery=" + Math.random() + "&name=" + name;
-  let tab = gBrowser.addTab(URL);
+  let tab = BrowserTestUtils.addTab(gBrowser, URL);
 
   await promiseBrowserLoaded(tab.linkedBrowser);
   await TabStateFlusher.flush(tab.linkedBrowser);

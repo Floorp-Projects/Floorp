@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=622117
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=622117">Mozilla Bug 622117</a>
 <p id="display">
   <iframe id="testframe"
-          src="data:text/html,<a href='data:text/plain,PASS' onclick='throw 1'>Click me</a>">
+          srcdoc="<a href='PASS.html' onclick='throw 1'>Click me</a>">
   </iframe>
 </p>
 <div id="content" style="display: none">
@@ -29,7 +29,7 @@ const PASSURL = "data:text/plain,PASS";
 
 SimpleTest.waitForFocus(function() {
   $("testframe").onload = function() {
-    is(this.contentDocument.documentElement.textContent, "PASS", "Should have loaded link");
+    is(this.contentDocument.documentElement.innerText, "PASS", "Should have loaded link");
     SimpleTest.finish();
   };
 

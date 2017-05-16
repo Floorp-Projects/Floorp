@@ -20,9 +20,7 @@ public:
   void AwaitFinished()
   {
     MOZ_ASSERT(NS_IsMainThread());
-    while (!mFinished) {
-      NS_ProcessNextEvent(nullptr, true);
-    }
+    mozilla::SpinEventLoopUntil([&]() { return mFinished; });
     mFinished = false;
   }
 

@@ -126,7 +126,7 @@
                             label="&translation.options.neverForSite.label;"
                             accesskey="&translation.options.neverForSite.accesskey;"/>
               <xul:menuseparator/>
-              <xul:menuitem oncommand="openPreferences('paneGeneral');"
+              <xul:menuitem oncommand="openPreferences('paneGeneral', {origin:'translationInfobar'});"
                             label="&translation.options.preferences.label;"
                             accesskey="&translation.options.preferences.accesskey;"/>
               <xul:menuitem class="subviewbutton panel-subview-footer"

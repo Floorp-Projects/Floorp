@@ -78,7 +78,7 @@ function task(contentIds) {
 }
 
 add_task(async function() {
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   let promise = ContentTask.spawn(tab.linkedBrowser, ids, task);
   tab.linkedBrowser.loadURI("data:text/html;charset=utf-8," +

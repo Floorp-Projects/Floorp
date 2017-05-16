@@ -475,6 +475,10 @@
                 "optional": true,
                 "description": "Indicates the previous version of the extension, which has just been updated. This is present only if 'reason' is 'update'."
               },
+              "temporary": {
+                "type": "boolean",
+                "description": "Indicates whether the addon is installed as a temporary extension."
+              },
               "id": {
                 "type": "string",
                 "optional": true,

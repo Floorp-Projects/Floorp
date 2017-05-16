@@ -13,7 +13,8 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
-ServoDocumentRule::ServoDocumentRule(RefPtr<RawServoDocumentRule> aRawRule)
+ServoDocumentRule::ServoDocumentRule(RefPtr<RawServoDocumentRule> aRawRule,
+                                     uint32_t aLine, uint32_t aColumn)
   : CSSMozDocumentRule(Servo_DocumentRule_GetRules(aRawRule).Consume())
   , mRawRule(Move(aRawRule))
 {

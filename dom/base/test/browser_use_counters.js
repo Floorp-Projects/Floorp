@@ -124,7 +124,7 @@ function grabHistogramsFromContent(use_counter_middlefix, page_before = null) {
 var check_use_counter_iframe = async function(file, use_counter_middlefix, check_documents=true) {
   info("checking " + file + " with histogram " + use_counter_middlefix);
 
-  let newTab = gBrowser.addTab( "about:blank");
+  let newTab = BrowserTestUtils.addTab(gBrowser,  "about:blank");
   gBrowser.selectedTab = newTab;
   newTab.linkedBrowser.stop();
 
@@ -188,7 +188,7 @@ var check_use_counter_iframe = async function(file, use_counter_middlefix, check
 var check_use_counter_img = async function(file, use_counter_middlefix) {
   info("checking " + file + " as image with histogram " + use_counter_middlefix);
 
-  let newTab = gBrowser.addTab("about:blank");
+  let newTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   gBrowser.selectedTab = newTab;
   newTab.linkedBrowser.stop();
 
@@ -254,7 +254,7 @@ var check_use_counter_img = async function(file, use_counter_middlefix) {
 var check_use_counter_direct = async function(file, use_counter_middlefix, xfail=false) {
   info("checking " + file + " with histogram " + use_counter_middlefix);
 
-  let newTab = gBrowser.addTab( "about:blank");
+  let newTab = BrowserTestUtils.addTab(gBrowser,  "about:blank");
   gBrowser.selectedTab = newTab;
   newTab.linkedBrowser.stop();
 

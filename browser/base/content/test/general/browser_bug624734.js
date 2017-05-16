@@ -16,7 +16,7 @@ function finishTest() {
 function test() {
   waitForExplicitFinish();
 
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   BrowserTestUtils.browserLoaded(tab.linkedBrowser).then(() => {
     if (BookmarkingUI.status == BookmarkingUI.STATUS_UPDATING) {
       waitForCondition(() => BookmarkingUI.status != BookmarkingUI.STATUS_UPDATING, finishTest, "BookmarkingUI was updating for too long");
