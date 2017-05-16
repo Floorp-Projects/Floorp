@@ -1664,7 +1664,7 @@ APZCTreeManager::GetTargetAPZC(const ScrollableLayerGuid& aGuid)
 
 already_AddRefed<HitTestingTreeNode>
 APZCTreeManager::GetTargetNode(const ScrollableLayerGuid& aGuid,
-                               GuidComparator aComparator)
+                               GuidComparator aComparator) const
 {
   mTreeLock.AssertCurrentThreadOwns();
   RefPtr<HitTestingTreeNode> target = DepthFirstSearchPostOrder<ReverseIterator>(mRootNode.get(),
