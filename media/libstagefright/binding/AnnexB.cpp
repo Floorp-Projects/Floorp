@@ -274,15 +274,12 @@ AnnexB::ConvertSampleToAVCC(mozilla::MediaRawData* aSample)
 already_AddRefed<mozilla::MediaByteBuffer>
 AnnexB::ExtractExtraData(const mozilla::MediaRawData* aSample)
 {
+  MOZ_ASSERT(IsAVCC(aSample));
+
   RefPtr<mozilla::MediaByteBuffer> extradata = new mozilla::MediaByteBuffer;
   if (HasSPS(aSample->mExtraData)) {
     // We already have an explicit extradata, re-use it.
     extradata = aSample->mExtraData;
-    return extradata.forget();
-  }
-
-  if (IsAnnexB(aSample)) {
-    // We can't extract data from AnnexB.
     return extradata.forget();
   }
 
@@ -295,14 +292,7 @@ AnnexB::ExtractExtraData(const mozilla::MediaRawData* aSample)
   ByteWriter ppsw(pps);
   int numPps = 0;
 
-  int nalLenSize;
-  if (IsAVCC(aSample)) {
-    nalLenSize = ((*aSample->mExtraData)[4] & 3) + 1;
-  } else {
-    // We do not have an extradata, assume it's AnnexB converted to AVCC via
-    // ConvertSampleToAVCC.
-    nalLenSize = 4;
-  }
+  int nalLenSize = ((*aSample->mExtraData)[4] & 3) + 1;
   ByteReader reader(aSample->Data(), aSample->Size());
 
   // Find SPS and PPS NALUs in AVCC data
