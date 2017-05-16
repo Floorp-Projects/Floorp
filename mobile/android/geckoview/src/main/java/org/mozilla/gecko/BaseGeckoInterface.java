@@ -27,12 +27,6 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
         return eventDispatcher;
     }
 
-    @Override
-    public String getDefaultUAString() {
-        return HardwareUtils.isTablet() ? BuildConfig.USER_AGENT_GECKOVIEW_TABLET :
-                                          BuildConfig.USER_AGENT_GECKOVIEW_MOBILE;
-    }
-
     // Bug 908779: Implement this
     @Override
     public void addPluginView(final View view) {}
