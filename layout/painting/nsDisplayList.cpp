@@ -2983,6 +2983,7 @@ nsDisplayBackgroundImage::nsDisplayBackgroundImage(const InitData& aInitData)
   , mLayer(aInitData.layer)
   , mIsRasterImage(aInitData.isRasterImage)
   , mShouldFixToViewport(aInitData.shouldFixToViewport)
+  , mImageFlags(0)
 {
   MOZ_COUNT_CTOR(nsDisplayBackgroundImage);
 
@@ -3411,11 +3412,27 @@ nsDisplayBackgroundImage::ShouldCreateOwnLayer(nsDisplayListBuilder* aBuilder,
   return NO_LAYER_NEEDED;
 }
 
+static void CheckForBorderItem(nsDisplayItem *aItem, uint32_t& aFlags)
+{
+  nsDisplayItem* nextItem = aItem->GetAbove();
+  while (nextItem && nextItem->GetType() == nsDisplayItem::TYPE_BACKGROUND) {
+    nextItem = nextItem->GetAbove();
+  }
+  if (nextItem &&
+      nextItem->Frame() == aItem->Frame() &&
+      nextItem->GetType() == nsDisplayItem::TYPE_BORDER) {
+    aFlags |= nsCSSRendering::PAINTBG_WILL_PAINT_BORDER;
+  }
+}
+
 LayerState
 nsDisplayBackgroundImage::GetLayerState(nsDisplayListBuilder* aBuilder,
                                         LayerManager* aManager,
                                         const ContainerLayerParameters& aParameters)
 {
+  mImageFlags = aBuilder->GetBackgroundPaintFlags();
+  CheckForBorderItem(this, mImageFlags);
+
   if (ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowBackgroundImage) &&
       CanBuildWebRenderDisplayItems(aManager)) {
     return LAYER_ACTIVE;
@@ -3505,7 +3522,7 @@ nsDisplayBackgroundImage::CreateWebRenderCommands(wr::DisplayListBuilder& aBuild
   nsCSSRendering::PaintBGParams params =
     nsCSSRendering::PaintBGParams::ForSingleLayer(*StyleFrame()->PresContext(),
                                                   mVisibleRect, mBackgroundRect,
-                                                  StyleFrame(), 0, mLayer,
+                                                  StyleFrame(), mImageFlags, mLayer,
                                                   CompositionOp::OP_OVER);
   params.bgClipRect = &mBounds;
 
@@ -3644,19 +3661,6 @@ nsDisplayBackgroundImage::RenderingMightDependOnPositioningAreaSizeChange()
   return false;
 }
 
-static void CheckForBorderItem(nsDisplayItem *aItem, uint32_t& aFlags)
-{
-  nsDisplayItem* nextItem = aItem->GetAbove();
-  while (nextItem && nextItem->GetType() == nsDisplayItem::TYPE_BACKGROUND) {
-    nextItem = nextItem->GetAbove();
-  }
-  if (nextItem &&
-      nextItem->Frame() == aItem->Frame() &&
-      nextItem->GetType() == nsDisplayItem::TYPE_BORDER) {
-    aFlags |= nsCSSRendering::PAINTBG_WILL_PAINT_BORDER;
-  }
-}
-
 void
 nsDisplayBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
                                 nsRenderingContext* aCtx) {
@@ -3667,9 +3671,6 @@ void
 nsDisplayBackgroundImage::PaintInternal(nsDisplayListBuilder* aBuilder,
                                         nsRenderingContext* aCtx, const nsRect& aBounds,
                                         nsRect* aClipRect) {
-  uint32_t flags = aBuilder->GetBackgroundPaintFlags();
-  CheckForBorderItem(this, flags);
-
   gfxContext* ctx = aCtx->ThebesContext();
   StyleGeometryBox clip = mBackgroundStyle->mImage.mLayers[mLayer].mClip;
 
@@ -3682,7 +3683,7 @@ nsDisplayBackgroundImage::PaintInternal(nsDisplayListBuilder* aBuilder,
   nsCSSRendering::PaintBGParams params =
     nsCSSRendering::PaintBGParams::ForSingleLayer(*StyleFrame()->PresContext(),
                                                   aBounds, mBackgroundRect,
-                                                  StyleFrame(), flags, mLayer,
+                                                  StyleFrame(), mImageFlags, mLayer,
                                                   CompositionOp::OP_OVER);
   params.bgClipRect = aClipRect;
   image::DrawResult result =
