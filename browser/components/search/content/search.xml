@@ -1460,7 +1460,7 @@
       <method name="showSettings">
         <body><![CDATA[
           BrowserUITelemetry.countSearchSettingsEvent(this.telemetryOrigin);
-          openPreferences("general-search");
+          openPreferences("general-search", {origin: "contentSearch"});
           // If the preference tab was already selected, the panel doesn't
           // close itself automatically.
           this.popup.hidePopup();

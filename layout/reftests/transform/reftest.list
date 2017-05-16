@@ -114,8 +114,8 @@ fuzzy-if(skiaContent,2,5) == stresstest-1.html stresstest-1-ref.html
 # Ensure you can't move outside an iframe
 == iframe-1.html iframe-1-ref.html
 # Bugs
-fails-if(stylo) == 601894-1.html 601894-ref.html
-fails-if(stylo) == 601894-2.html 601894-ref.html
+== 601894-1.html 601894-ref.html
+== 601894-2.html 601894-ref.html
 == 830299-1.html 830299-1-ref.html
 # Bug 722777
 == table-1a.html table-1-ref.html
