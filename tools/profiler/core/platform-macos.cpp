@@ -98,10 +98,8 @@ SamplerThread::Stop(PSLockRef aLock)
 }
 
 void
-SamplerThread::SleepMicro(int aMicroseconds)
+SamplerThread::SleepMicro(uint32_t aMicroseconds)
 {
-  aMicroseconds = std::max(0, aMicroseconds);
-
   usleep(aMicroseconds);
   // FIXME: the OSX 10.12 page for usleep says "The usleep() function is
   // obsolescent.  Use nanosleep(2) instead."  This implementation could be

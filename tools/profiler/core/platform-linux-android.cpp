@@ -332,10 +332,8 @@ SamplerThread::Stop(PSLockRef aLock)
 }
 
 void
-SamplerThread::SleepMicro(int aMicroseconds)
+SamplerThread::SleepMicro(uint32_t aMicroseconds)
 {
-  aMicroseconds = std::max(0, aMicroseconds);
-
   if (aMicroseconds >= 1000000) {
     // Use usleep for larger intervals, because the nanosleep
     // code below only supports intervals < 1 second.
