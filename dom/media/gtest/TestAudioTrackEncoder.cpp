@@ -5,8 +5,34 @@
 
 #include "gtest/gtest.h"
 #include "OpusTrackEncoder.h"
+#include "SineWaveGenerator.h"
 
 using namespace mozilla;
+
+class AudioGenerator
+{
+public:
+  AudioGenerator(int32_t aChannels, int32_t aSampleRate)
+    : mGenerator(aSampleRate, 1000)
+    , mChannels(aChannels)
+  {}
+
+  void Generate(AudioSegment& aSegment, const int32_t& aSamples)
+  {
+    RefPtr<SharedBuffer> buffer = SharedBuffer::Create(aSamples * sizeof(int16_t));
+    int16_t* dest = static_cast<int16_t*>(buffer->Data());
+    mGenerator.generate(dest, aSamples);
+    AutoTArray<const int16_t*, 1> channels;
+    for (int32_t i = 0; i < mChannels; i++) {
+      channels.AppendElement(dest);
+    }
+    aSegment.AppendFrames(buffer.forget(), channels, aSamples, PRINCIPAL_HANDLE_NONE);
+  }
+
+private:
+  SineWaveGenerator mGenerator;
+  const int32_t mChannels;
+};
 
 class TestOpusTrackEncoder : public OpusTrackEncoder
 {
