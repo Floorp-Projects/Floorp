@@ -9,7 +9,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.PopupMenu;
 import android.view.Gravity;
@@ -20,12 +19,15 @@ import android.view.ViewGroup;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.InfoActivity;
-import org.mozilla.focus.activity.SettingsActivity;
+import org.mozilla.focus.locale.LocaleAwareAppCompatActivity;
+import org.mozilla.focus.locale.LocaleAwareFragment;
 
 /**
  * Fragment displaying the "home" screen when launching the app.
  */
-public class HomeFragment extends Fragment implements View.OnClickListener, PopupMenu.OnMenuItemClickListener {
+public class HomeFragment
+        extends LocaleAwareFragment
+        implements View.OnClickListener, PopupMenu.OnMenuItemClickListener {
     public static final String FRAGMENT_TAG = "home";
 
     public static HomeFragment create() {
@@ -33,6 +35,16 @@ public class HomeFragment extends Fragment implements View.OnClickListener, Popu
     }
 
     private View fakeUrlBarView;
+
+    @Override
+    public void applyLocale() {
+        // We only show static text in this fragment, it's simplest just to reload everything:
+        getActivity()
+                .getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.container, HomeFragment.create(), HomeFragment.FRAGMENT_TAG)
+                .commit();
+    }
 
     @Override
     public void onAttach(Context context) {
@@ -93,8 +105,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener, Popu
 
         switch (id) {
             case R.id.settings:
-                Intent settingsIntent = new Intent(getActivity(), SettingsActivity.class);
-                startActivity(settingsIntent);
+                ((LocaleAwareAppCompatActivity) getActivity()).openPreferences();
                 return true;
 
             case R.id.about:
