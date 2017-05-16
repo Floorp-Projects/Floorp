@@ -300,27 +300,25 @@ static const JSClass parseTaskGlobalClass = {
 ParseTask::ParseTask(ParseTaskKind kind, JSContext* cx, JSObject* parseGlobal,
                      const char16_t* chars, size_t length,
                      JS::OffThreadCompileCallback callback, void* callbackData)
-  : kind(kind), options(cx),
+  : kind(kind), options(cx), data(AsVariant(TwoByteChars(chars, length))),
     alloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     parseGlobal(parseGlobal),
     callback(callback), callbackData(callbackData),
     script(nullptr), sourceObject(nullptr),
     overRecursed(false), outOfMemory(false)
 {
-    data.construct<TwoByteChars>(chars, length);
 }
 
 ParseTask::ParseTask(ParseTaskKind kind, JSContext* cx, JSObject* parseGlobal,
                      const JS::TranscodeRange& range,
                      JS::OffThreadCompileCallback callback, void* callbackData)
-  : kind(kind), options(cx),
+  : kind(kind), options(cx), data(AsVariant(range)),
     alloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     parseGlobal(parseGlobal),
     callback(callback), callbackData(callbackData),
     script(nullptr), sourceObject(nullptr),
     overRecursed(false), outOfMemory(false)
 {
-    data.construct<const JS::TranscodeRange>(range);
 }
 
 bool
@@ -387,7 +385,7 @@ ScriptParseTask::ScriptParseTask(JSContext* cx, JSObject* parseGlobal,
 void
 ScriptParseTask::parse(JSContext* cx)
 {
-    auto& range = data.ref<TwoByteChars>();
+    auto& range = data.as<TwoByteChars>();
     SourceBufferHolder srcBuf(range.begin().get(), range.length(), SourceBufferHolder::NoOwnership);
     script = frontend::CompileGlobalScript(cx, alloc, ScopeKind::Global,
                                            options, srcBuf,
@@ -405,7 +403,7 @@ ModuleParseTask::ModuleParseTask(JSContext* cx, JSObject* parseGlobal,
 void
 ModuleParseTask::parse(JSContext* cx)
 {
-    auto& range = data.ref<TwoByteChars>();
+    auto& range = data.as<TwoByteChars>();
     SourceBufferHolder srcBuf(range.begin().get(), range.length(), SourceBufferHolder::NoOwnership);
     ModuleObject* module = frontend::CompileModule(cx, options, srcBuf, alloc, &sourceObject);
     if (module)
@@ -425,7 +423,7 @@ ScriptDecodeTask::parse(JSContext* cx)
 {
     RootedScript resultScript(cx);
     XDROffThreadDecoder decoder(cx, alloc, &options, /* sourceObjectOut = */ &sourceObject,
-                                data.ref<const JS::TranscodeRange>());
+                                data.as<const JS::TranscodeRange>());
     decoder.codeScript(&resultScript);
     MOZ_ASSERT(bool(resultScript) == (decoder.resultCode() == JS::TranscodeResult_Ok));
     if (decoder.resultCode() == JS::TranscodeResult_Ok) {
