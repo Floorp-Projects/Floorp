@@ -739,7 +739,7 @@ void
 MediaPipeline::AddRIDExtension_m(size_t extension_id)
 {
   RUN_ON_THREAD(sts_thread_,
-                WrapRunnable(this,
+                WrapRunnable(RefPtr<MediaPipeline>(this),
                              &MediaPipeline::AddRIDExtension_s,
                              extension_id),
                 NS_DISPATCH_NORMAL);
@@ -756,7 +756,7 @@ void
 MediaPipeline::AddRIDFilter_m(const std::string& rid)
 {
   RUN_ON_THREAD(sts_thread_,
-                WrapRunnable(this,
+                WrapRunnable(RefPtr<MediaPipeline>(this),
                              &MediaPipeline::AddRIDFilter_s,
                              rid),
                 NS_DISPATCH_NORMAL);
