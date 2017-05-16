@@ -11,10 +11,6 @@ const Cu = Components.utils;
 
 this.EXPORTED_SYMBOLS = ["XPIProvider"];
 
-const CONSTANTS = {};
-Cu.import("resource://gre/modules/addons/AddonConstants.jsm", CONSTANTS);
-const { ADDON_SIGNING, REQUIRE_SIGNING } = CONSTANTS
-
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
@@ -22,6 +18,10 @@ Cu.import("resource://gre/modules/Preferences.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository",
                                   "resource://gre/modules/addons/AddonRepository.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AddonSettings",
+                                  "resource://gre/modules/addons/AddonSettings.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
+                                  "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ChromeManifestParser",
                                   "resource://gre/modules/ChromeManifestParser.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
@@ -415,8 +415,7 @@ function mustSign(aType) {
   if (!SIGNED_TYPES.has(aType))
     return false;
 
-  return ((REQUIRE_SIGNING && !Cu.isInAutomation) ||
-          Preferences.get(PREF_XPI_SIGNATURES_REQUIRED, false));
+  return AddonSettings.REQUIRE_SIGNING;
 }
 
 // Keep track of where we are in startup for telemetry
@@ -465,7 +464,7 @@ function loadLazyObjects() {
   });
 
   Object.assign(scope, {
-    ADDON_SIGNING,
+    ADDON_SIGNING: AddonSettings.ADDON_SIGNING,
     SIGNED_TYPES,
     BOOTSTRAP_REASONS,
     DB_SCHEMA,
@@ -1963,7 +1962,7 @@ function shouldVerifySignedState(aAddon) {
 
   // Otherwise only check signatures if signing is enabled and the add-on is one
   // of the signed types.
-  return ADDON_SIGNING && SIGNED_TYPES.has(aAddon.type);
+  return AddonSettings.ADDON_SIGNING && SIGNED_TYPES.has(aAddon.type);
 }
 
 /**
@@ -1986,7 +1985,7 @@ function verifyZipSignedState(aFile, aAddon) {
     });
 
   let root = Ci.nsIX509CertDB.AddonsPublicRoot;
-  if (!REQUIRE_SIGNING && Preferences.get(PREF_XPI_SIGNATURES_DEV_ROOT, false))
+  if (!AppConstants.MOZ_REQUIRE_SIGNING && Preferences.get(PREF_XPI_SIGNATURES_DEV_ROOT, false))
     root = Ci.nsIX509CertDB.AddonsStageRoot;
 
   return new Promise(resolve => {
@@ -2028,7 +2027,7 @@ function verifyDirSignedState(aDir, aAddon) {
     });
 
   let root = Ci.nsIX509CertDB.AddonsPublicRoot;
-  if (!REQUIRE_SIGNING && Preferences.get(PREF_XPI_SIGNATURES_DEV_ROOT, false))
+  if (!AppConstants.MOZ_REQUIRE_SIGNING && Preferences.get(PREF_XPI_SIGNATURES_DEV_ROOT, false))
     root = Ci.nsIX509CertDB.AddonsStageRoot;
 
   return new Promise(resolve => {
@@ -3253,7 +3252,7 @@ this.XPIProvider = {
       Services.prefs.addObserver(PREF_EM_MIN_COMPAT_PLATFORM_VERSION, this);
       Services.prefs.addObserver(PREF_E10S_ADDON_BLOCKLIST, this);
       Services.prefs.addObserver(PREF_E10S_ADDON_POLICY, this);
-      if (!REQUIRE_SIGNING || Cu.isInAutomation)
+      if (!AppConstants.MOZ_REQUIRE_SIGNING || Cu.isInAutomation)
         Services.prefs.addObserver(PREF_XPI_SIGNATURES_REQUIRED, this);
       Services.prefs.addObserver(PREF_ALLOW_NON_MPC, this);
       Services.obs.addObserver(this, NOTIFICATION_FLUSH_PERMISSIONS);
