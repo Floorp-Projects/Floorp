@@ -546,9 +546,6 @@ auto GeckoAppShell::NotifyWakeLockChanged(mozilla::jni::String::Param a0, mozill
     return mozilla::jni::Method<NotifyWakeLockChanged_t>::Call(GeckoAppShell::Context(), nullptr, a0, a1);
 }
 
-constexpr char GeckoAppShell::OnFullScreenPluginHidden_t::name[];
-constexpr char GeckoAppShell::OnFullScreenPluginHidden_t::signature[];
-
 constexpr char GeckoAppShell::OnLocationChanged_t::name[];
 constexpr char GeckoAppShell::OnLocationChanged_t::signature[];
 
