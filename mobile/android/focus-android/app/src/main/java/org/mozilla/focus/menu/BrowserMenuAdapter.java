@@ -36,15 +36,16 @@ public class BrowserMenuAdapter extends RecyclerView.Adapter<BrowserMenuViewHold
 
     private List<MenuItem> items;
 
-    public BrowserMenuAdapter(Context context, BrowserMenu menu, BrowserFragment fragment) {
+    public BrowserMenuAdapter(Context context, BrowserMenu menu, BrowserFragment fragment,
+                              final @Nullable CustomTabConfig customTabConfig) {
         this.context = context;
         this.menu = menu;
         this.fragment = fragment;
 
-        initializeMenu(fragment.getUrl());
+        initializeMenu(fragment.getUrl(), customTabConfig);
     }
 
-    private void initializeMenu(String url) {
+    private void initializeMenu(String url, final @Nullable CustomTabConfig customTabConfig) {
         final Resources resources = context.getResources();
         final Browsers browsers = new Browsers(context, url);
 

@@ -9,6 +9,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -19,16 +20,17 @@ import android.widget.PopupWindow;
 import org.mozilla.focus.R;
 import org.mozilla.focus.fragment.BrowserFragment;
 import org.mozilla.focus.utils.ViewUtils;
+import org.mozilla.focus.web.CustomTabConfig;
 
 public class BrowserMenu extends PopupWindow {
-    public BrowserMenu(Context context, BrowserFragment fragment) {
+    public BrowserMenu(Context context, BrowserFragment fragment, final @Nullable CustomTabConfig customTabConfig) {
         @SuppressLint("InflateParams") // This View will have it's params ignored anyway:
         final View view = LayoutInflater.from(context).inflate(R.layout.menu, null);
         setContentView(view);
 
         RecyclerView menuList = (RecyclerView) view.findViewById(R.id.list);
         menuList.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
-        menuList.setAdapter(new BrowserMenuAdapter(context, this, fragment));
+        menuList.setAdapter(new BrowserMenuAdapter(context, this, fragment, customTabConfig));
 
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 

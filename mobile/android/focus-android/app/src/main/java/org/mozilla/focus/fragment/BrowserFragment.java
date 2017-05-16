@@ -442,7 +442,14 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.menu:
-                BrowserMenu menu = new BrowserMenu(getActivity(), this);
+                final CustomTabConfig customTabConfig;
+                if (BrowsingSession.getInstance().isCustomTab()) {
+                    customTabConfig = BrowsingSession.getInstance().getCustomTabConfig();
+                } else {
+                    customTabConfig = null;
+                }
+
+                BrowserMenu menu = new BrowserMenu(getActivity(), this, customTabConfig);
                 menu.show(menuView);
                 break;
 
