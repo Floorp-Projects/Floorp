@@ -13235,9 +13235,11 @@ nsDocument::PrincipalFlashClassification()
 {
   nsresult rv;
 
-  // If flash blocking is disabled, it is equivalent to all sites being
-  // on neither list.
-  if (!Preferences::GetBool("plugins.flashBlock.enabled")) {
+  bool httpOnly = Preferences::GetBool("plugins.http_https_only", true);
+  bool flashBlock = Preferences::GetBool("plugins.flashBlock.enabled", false);
+
+  // If neither pref is on, skip the null-principal and principal URI checks.
+  if (!httpOnly && !flashBlock) {
     return FlashClassification::Unknown;
   }
 
@@ -13250,6 +13252,26 @@ nsDocument::PrincipalFlashClassification()
   rv = principal->GetURI(getter_AddRefs(classificationURI));
   if (NS_FAILED(rv) || !classificationURI) {
     return FlashClassification::Denied;
+  }
+
+  if (httpOnly) {
+    // Only allow plugins for documents from an HTTP/HTTPS origin. This should
+    // allow dependent data: URIs to load plugins, but not:
+    // * chrome documents
+    // * "bare" data: loads
+    // * FTP/gopher/file
+    nsAutoCString scheme;
+    rv = classificationURI->GetScheme(scheme);
+    if (NS_WARN_IF(NS_FAILED(rv)) ||
+        !(scheme.EqualsLiteral("http") || scheme.EqualsLiteral("https"))) {
+      return FlashClassification::Denied;
+    }
+  }
+
+  // If flash blocking is disabled, it is equivalent to all sites being
+  // on neither list.
+  if (!flashBlock) {
+    return FlashClassification::Unknown;
   }
 
   nsAutoCString allowTables, allowExceptionsTables,

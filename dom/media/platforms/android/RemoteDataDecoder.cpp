@@ -115,23 +115,22 @@ public:
       int64_t presentationTimeUs;
       ok &= NS_SUCCEEDED(info->PresentationTimeUs(&presentationTimeUs));
 
-      int32_t size;
-      ok &= NS_SUCCEEDED(info->Size(&size));
-
       if (!ok) {
         HandleError(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                                 RESULT_DETAIL("VideoCallBack::HandleOutput")));
         return;
       }
 
-      bool isEOS = !!(flags & MediaCodec::BUFFER_FLAG_END_OF_STREAM);
+
       InputInfo inputInfo;
-      if (!mDecoder->mInputInfos.Find(presentationTimeUs, inputInfo)
-          && !isEOS) {
+      ok = mDecoder->mInputInfos.Find(presentationTimeUs, inputInfo);
+      bool isEOS = !!(flags & MediaCodec::BUFFER_FLAG_END_OF_STREAM);
+      if (!ok && !isEOS) {
+        // Ignore output with no corresponding input.
         return;
       }
 
-      if (size > 0) {
+      if (ok && presentationTimeUs >= 0) {
         RefPtr<layers::Image> img = new SurfaceTextureImage(
           mDecoder->mSurfaceHandle, inputInfo.mImageSize, false /* NOT continuous */,
           gl::OriginPos::BottomLeft);

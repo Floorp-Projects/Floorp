@@ -236,30 +236,6 @@ zone_log(malloc_zone_t *zone, void *address)
 {
 }
 
-#ifdef MOZ_JEMALLOC4
-
-#include "jemalloc/internal/jemalloc_internal.h"
-
-static void
-zone_force_lock(malloc_zone_t *zone)
-{
-  /* /!\ This calls into jemalloc. It works because we're linked in the
-   * same library. Stolen from jemalloc's zone.c. */
-  if (isthreaded)
-    jemalloc_prefork();
-}
-
-static void
-zone_force_unlock(malloc_zone_t *zone)
-{
-  /* /!\ This calls into jemalloc. It works because we're linked in the
-   * same library. Stolen from jemalloc's zone.c. See the comment there. */
-  if (isthreaded)
-    jemalloc_postfork_child();
-}
-
-#else
-
 extern void _malloc_prefork(void);
 extern void _malloc_postfork_child(void);
 
@@ -278,8 +254,6 @@ zone_force_unlock(malloc_zone_t *zone)
    * same library. */
   _malloc_postfork_child();
 }
-
-#endif
 
 static void
 zone_statistics(malloc_zone_t *zone, malloc_statistics_t *stats)
@@ -336,9 +310,6 @@ static malloc_zone_t *get_default_zone()
 }
 
 
-#if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_JEMALLOC4)
-__attribute__((constructor))
-#endif
 void
 register_zone(void)
 {

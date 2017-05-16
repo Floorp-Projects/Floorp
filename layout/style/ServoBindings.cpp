@@ -314,13 +314,10 @@ Gecko_GetStyleContext(RawGeckoElementBorrowed aElement,
   return fc->GetDisplayContentsStyleFor(aElement);
 }
 
-nsIAtom*
+CSSPseudoElementType
 Gecko_GetImplementedPseudo(RawGeckoElementBorrowed aElement)
 {
-  CSSPseudoElementType pseudo = aElement->GetPseudoElementType();
-  if (pseudo == CSSPseudoElementType::NotPseudo)
-    return nullptr;
-  return nsCSSPseudoElements::GetPseudoAtom(pseudo);
+  return aElement->GetPseudoElementType();
 }
 
 nsChangeHint

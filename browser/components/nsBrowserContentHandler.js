@@ -215,7 +215,12 @@ function openWindow(parent, url, target, features, args, noExternalArgs) {
   return Services.ww.openWindow(parent, url, target, features, argArray);
 }
 
-function openPreferences() {
+function openPreferences(extraArgs) {
+  if (extraArgs && extraArgs.origin) {
+    Services.telemetry.getHistogramById("FX_PREFERENCES_OPENED_VIA").add(extraArgs.origin);
+  } else {
+    Services.telemetry.getHistogramById("FX_PREFERENCES_OPENED_VIA").add("other");
+  }
   var args = Components.classes["@mozilla.org/array;1"]
                      .createInstance(Components.interfaces.nsIMutableArray);
 
@@ -351,7 +356,7 @@ nsBrowserContentHandler.prototype = {
       // Handle old preference dialog URLs.
       if (chromeParam == "chrome://browser/content/pref/pref.xul" ||
           chromeParam == "chrome://browser/content/preferences/preferences.xul") {
-        openPreferences();
+        openPreferences({origin: "commandLineLegacy"});
         cmdLine.preventDefault = true;
       } else try {
         let resolvedURI = resolveURIInternal(cmdLine, chromeParam);
@@ -376,7 +381,7 @@ nsBrowserContentHandler.prototype = {
       }
     }
     if (cmdLine.handleFlag("preferences", false)) {
-      openPreferences();
+      openPreferences({origin: "commandLineLegacy"});
       cmdLine.preventDefault = true;
     }
     if (cmdLine.handleFlag("silent", false))

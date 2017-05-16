@@ -5,11 +5,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-option(env='MOZ_JEMALLOC4', help='Enable jemalloc 4')
-imply_option('--enable-jemalloc', depends_if('MOZ_JEMALLOC4')(lambda x: '4'))
+@deprecated_option(env='MOZ_JEMALLOC4')
+def moz_jemalloc4(value):
+    die('MOZ_JEMALLOC4 is deprecated')
 
 
-option('--enable-jemalloc', nargs='?', choices=('4', 'moz'), env='MOZ_MEMORY',
+option('--enable-jemalloc', env='MOZ_MEMORY',
        help='Replace memory allocator with jemalloc')
 
 @depends('--enable-jemalloc', target, build_project, c_compiler)
@@ -30,36 +31,25 @@ def jemalloc(value, target, build_project, c_compiler):
     if target.kernel == 'Linux':
         return True
 
-@depends('--enable-jemalloc')
-def jemalloc4(jemalloc):
-    if len(jemalloc) and jemalloc[0] == '4':
-        return True
-
 
 set_config('MOZ_MEMORY', jemalloc)
 set_define('MOZ_MEMORY', jemalloc)
 add_old_configure_assignment('MOZ_MEMORY', jemalloc)
 
-set_config('MOZ_JEMALLOC4', jemalloc4)
-set_define('MOZ_JEMALLOC4', jemalloc4)
-add_old_configure_assignment('MOZ_JEMALLOC4', jemalloc4)
-
 
 # Because --enable-jemalloc doesn't use a default because of the dependency
 # on the target, we can't use a js_option for it to propagate to js/src
 # through the old-configure.
-@depends(jemalloc, jemalloc4)
-def jemalloc_for_old_configure(jemalloc, jemalloc4):
-    if jemalloc:
-        return '--enable-jemalloc=4' if jemalloc4 else '--enable-jemalloc'
-    return '--disable-jemalloc'
+@depends(jemalloc)
+def jemalloc_for_old_configure(jemalloc):
+    return '--%s-jemalloc' % ('enable' if jemalloc else 'disable')
 
 add_old_configure_arg(jemalloc_for_old_configure)
 
 
-@depends(jemalloc, jemalloc4, target)
-def jemalloc_os_define(jemalloc, jemalloc4, target):
-    if jemalloc and not jemalloc4:
+@depends(jemalloc, target)
+def jemalloc_os_define(jemalloc, target):
+    if jemalloc:
         if target.kernel == 'WINNT':
             return 'MOZ_MEMORY_WINDOWS'
         if target.kernel == 'Linux':
@@ -72,9 +62,9 @@ def jemalloc_os_define(jemalloc, jemalloc4, target):
 
 set_define(jemalloc_os_define, '1')
 
-@depends(jemalloc, jemalloc4, target)
-def jemalloc_os_define_android(jemalloc, jemalloc4, target):
-    if jemalloc and not jemalloc4 and target.os == 'Android':
+@depends(jemalloc, target)
+def jemalloc_os_define_android(jemalloc, target):
+    if jemalloc and target.os == 'Android':
         return 'MOZ_MEMORY_ANDROID'
 
 set_define(jemalloc_os_define_android, '1')

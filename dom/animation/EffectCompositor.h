@@ -247,7 +247,7 @@ public:
   bool PreTraverse();
 
   // Similar to the above but only for the (pseudo-)element.
-  bool PreTraverse(dom::Element* aElement, nsIAtom* aPseudoTagOrNull);
+  bool PreTraverse(dom::Element* aElement, CSSPseudoElementType aPseudoType);
 
   // Similar to the above but for all elements in the subtree rooted
   // at aElement.

@@ -1016,24 +1016,20 @@ EffectCompositor::PreTraverseInSubtree(Element* aRoot)
 }
 
 bool
-EffectCompositor::PreTraverse(dom::Element* aElement, nsIAtom* aPseudoTagOrNull)
+EffectCompositor::PreTraverse(dom::Element* aElement,
+                              CSSPseudoElementType aPseudoType)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mPresContext->RestyleManager()->IsServo());
 
   bool found = false;
-  if (aPseudoTagOrNull &&
-      aPseudoTagOrNull != nsCSSPseudoElements::before &&
-      aPseudoTagOrNull != nsCSSPseudoElements::after) {
+  if (aPseudoType != CSSPseudoElementType::NotPseudo &&
+      aPseudoType != CSSPseudoElementType::before &&
+      aPseudoType != CSSPseudoElementType::after) {
     return found;
   }
 
-  CSSPseudoElementType pseudoType =
-    nsCSSPseudoElements::GetPseudoType(aPseudoTagOrNull,
-                                       CSSEnabledState::eForAllContent);
-
-  PseudoElementHashEntry::KeyType key = { aElement, pseudoType };
-
+  PseudoElementHashEntry::KeyType key = { aElement, aPseudoType };
 
   for (size_t i = 0; i < kCascadeLevelCount; ++i) {
     CascadeLevel cascadeLevel = CascadeLevel(i);
@@ -1050,9 +1046,9 @@ EffectCompositor::PreTraverse(dom::Element* aElement, nsIAtom* aPseudoTagOrNull)
                                       ? eRestyle_CSSTransitions
                                       : eRestyle_CSSAnimations);
 
-    EffectSet* effects = EffectSet::GetEffectSet(aElement, pseudoType);
+    EffectSet* effects = EffectSet::GetEffectSet(aElement, aPseudoType);
     if (effects) {
-      MaybeUpdateCascadeResults(aElement, pseudoType);
+      MaybeUpdateCascadeResults(aElement, aPseudoType);
 
       for (KeyframeEffectReadOnly* effect : *effects) {
         effect->GetAnimation()->WillComposeStyle();

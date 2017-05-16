@@ -1466,7 +1466,7 @@ random == 536061.html 536061-ref.html # fixedpoint division in blur code makes t
 == 537471-1.html 537471-1-ref.html
 == 537507-1.xul 537507-1-ref.xul
 == 537507-2.html 537507-2-ref.html
-fails-if(stylo) == 538909-1.html 538909-1-ref.html
+== 538909-1.html 538909-1-ref.html
 == 538935-1.html 538935-1-ref.html
 == 539226-1.html about:blank
 == 539323-1.html 539323-1-ref.html
@@ -1476,7 +1476,7 @@ fails-if(stylo) == 538909-1.html 538909-1-ref.html
 == 539880-1-dynamic.html 539880-1-ref.html
 fuzzy-if(Android,12,1000) skip-if(stylo) == 539949-1.html#test2 539949-1-ref.html#test2
 == 541382-1.html 541382-1-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)||!haveTestPlugin) == 541406-1.html 541406-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)||!haveTestPlugin) HTTP == 541406-1.html 541406-1-ref.html
 needs-focus != 542116-1.html 542116-1-ref.html
 needs-focus != 542116-2.html 542116-2-ref.html
 needs-focus != 542116-3.html 542116-3-ref.html
@@ -1484,7 +1484,7 @@ needs-focus != 542116-3.html 542116-3-ref.html
 == 542620-1.html 542620-1-ref.html
 == 545049-1.html 545049-1-ref.html
 == 546033-1.html 546033-1-ref.html
-random-if(!haveTestPlugin) == 546071-1.html 546071-1-ref.html
+random-if(!haveTestPlugin) HTTP == 546071-1.html 546071-1-ref.html
 == 549184-1.html 549184-1-ref.html
 == 550325-1.html 550325-1-ref.html
 == 550325-2.html 550325-1-ref.html
@@ -1571,7 +1571,7 @@ random-if(!winWidget) fails-if(winWidget&&!dwrite) random-if(winWidget&&dwrite) 
 == 579323-1.html 579323-1-ref.html
 == 579349-1.html 579349-1-ref.html
 == 579655-1.html 579655-1-ref.html
-skip-if(!haveTestPlugin) fails-if(Android) == 579808-1.html 579808-1-ref.html
+skip-if(!haveTestPlugin) fails-if(Android) HTTP == 579808-1.html 579808-1-ref.html
 fails-if(Android) random-if(layersGPUAccelerated) fuzzy-if(skiaContent,1,10000) == 579985-1.html 579985-1-ref.html # this bug was only for a regression in BasicLayers anyway
 skip-if(Android) == 580160-1.html 580160-1-ref.html # bug 920927 for Android; issues without the test-plugin
 fuzzy-if(asyncPan&&!layersGPUAccelerated,255,141) HTTP(..) == 580863-1.html 580863-1-ref.html
@@ -1601,7 +1601,7 @@ random-if(Android) == 594333-1.html 594333-1-ref.html
 fuzzy-if(skiaContent,1,80) == 597721-1.html 597721-1-ref.html
 random-if(winWidget) fuzzy-if(Android,38,539) fuzzy-if(skiaContent,1,480) needs-focus skip-if(stylo) == 598726-1.html 598726-1-ref.html # Fails on Windows, bug 782196
 == 599113-1.html 599113-1-ref.html
-fails-if(!haveTestPlugin) == 599476.html 599476-ref.html
+fails-if(!haveTestPlugin) HTTP == 599476.html 599476-ref.html
 == 599882-1a.html 599882-1-ref.html
 == 599882-1b.html 599882-1-ref.html
 == 599882-2.html 599882-2-ref.html
@@ -1616,7 +1616,7 @@ fuzzy-if(Android,8,20) == 602200-3.html 602200-3-ref.html
 == 602200-4.html 602200-4-ref.html
 == 603423-1.html 603423-1-ref.html
 == 604737.html 604737-ref.html
-fails-if(stylo) == 605138-1.html 605138-1-ref.html
+== 605138-1.html 605138-1-ref.html
 == 605157-1.xhtml 605157-1-ref.xhtml
 == 607267-1.html 607267-1-ref.html
 == 608636-1.html 608636-1-ref.html
@@ -1651,7 +1651,7 @@ fuzzy-if(Android,8,300) fuzzy-if(skiaContent,1,40000) == 625409-1.html 625409-1-
 == 627393-1.html about:blank
 fuzzy-if(skiaContent,1,500) == 630835-1.html about:blank
 fails-if(stylo) == 631352-1.html 631352-1-ref.html
-skip-if(!haveTestPlugin) fails-if(Android) fuzzy-if(winWidget&&!layersGPUAccelerated,102,535) fuzzy-if(skiaContent&&!Android,102,11000) == 632423-1.html 632423-1-ref.html
+skip-if(!haveTestPlugin) fails-if(Android) fuzzy-if(winWidget&&!layersGPUAccelerated,102,535) fuzzy-if(skiaContent&&!Android,102,11000) HTTP == 632423-1.html 632423-1-ref.html
 skip-if(Android) random-if(winWidget||OSX==1010) == 632781-verybig.html 632781-ref.html
 == 632781-normalsize.html 632781-ref.html
 fuzzy-if(d2d&&/^Windows\x20NT\x206\.2/.test(http.oscpu),1,559) fuzzy-if(!isDebugBuild&&gtkWidget&&/^Linux\x20i686/.test(http.oscpu),102,140) == 633344-1.html 633344-1-ref.html # bug 1103623, Linux32 from GCC update
@@ -1997,4 +1997,8 @@ fails-if(stylo) == 1348481-3.html 1348481-ref.html
 == 1358375-1.html 1358375-ref.html
 == 1358375-2.html 1358375-ref.html
 == 1358375-3.html 1358375-ref.html
+== 1364280-1.html 1364280-1-ref.html
+== 1364280-2a.html 1364280-2-ref.html
+== 1364280-2b.html 1364280-2-ref.html
+== 1364280-2c.html 1364280-2-ref.html
 == 1364335.html 1364335-ref.html

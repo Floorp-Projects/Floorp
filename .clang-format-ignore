@@ -60,7 +60,6 @@
 ^media/sphinxbase/.*
 ^media/webrtc/trunk/.*
 ^media/webrtc/signaling/src/sdp/sipcc/.*
-^memory/jemalloc/src/.*
 ^mfbt/decimal/.*
 ^mfbt/double-conversion/source/.*
 ^mfbt/lz4.*

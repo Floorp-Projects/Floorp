@@ -117,7 +117,7 @@ WaveDataDecoder::ProcessDecode(MediaRawData* aSample)
     }
   }
 
-  auto duration = media::TimeUnit::FromMicroseconds(frames / mInfo.mRate);
+  auto duration = FramesToTimeUnit(frames, mInfo.mRate);
 
   return DecodePromise::CreateAndResolve(
     DecodedData{ new AudioData(aOffset, aSample->mTime, duration, frames,

@@ -42,7 +42,7 @@ fuzzy-if(skiaContent,2,5) needs-focus skip-if(stylo) == focus-handling.html focu
 fuzzy-if(skiaContent,1,1) skip-if(stylo) == number-selected.html number-selected-ref.html
 
 # pseudo-elements not usable from content:
-fails-if(stylo) == number-pseudo-elements.html number-pseudo-elements-ref.html
+== number-pseudo-elements.html number-pseudo-elements-ref.html
 
 fails-if(stylo) == number-placeholder.html number-placeholder-ref.html
 

@@ -64,10 +64,6 @@
 #include "nsExceptionHandler.h"
 #endif
 
-#if defined(MOZ_JEMALLOC4)
-#include "mozmemory.h"
-#endif
-
 #ifdef XP_WIN
 #include <windows.h>
 #endif
@@ -152,18 +148,6 @@ public:
               mActive = false;
           }
       } else {
-#if defined(MOZ_JEMALLOC4)
-          if (mPurge) {
-              /* Jemalloc purges dirty pages regularly during free() when the
-               * ratio of dirty pages compared to active pages is higher than
-               * 1 << lg_dirty_mult. A high ratio can have an impact on
-               * performance, so we use the default ratio of 8, but force a
-               * regular purge of all remaining dirty pages, after cycle
-               * collection. */
-              Telemetry::AutoTimer<Telemetry::MEMORY_FREE_PURGED_PAGES_MS> timer;
-              jemalloc_free_dirty_pages();
-          }
-#endif
           mActive = false;
       }
       return NS_OK;
