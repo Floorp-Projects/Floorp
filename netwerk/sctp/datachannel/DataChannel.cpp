@@ -1963,6 +1963,10 @@ DataChannelConnection::Open(const nsACString& label, const nsACString& protocol,
     case DATA_CHANNEL_PARTIAL_RELIABLE_TIMED:
       prPolicy = SCTP_PR_SCTP_TTL;
       break;
+    default:
+      LOG(("ERROR: unsupported channel type: %u", type));
+      MOZ_ASSERT(false);
+      return nullptr;
   }
   if ((prPolicy == SCTP_PR_SCTP_NONE) && (prValue != 0)) {
     return nullptr;
@@ -1981,7 +1985,7 @@ DataChannelConnection::Open(const nsACString& label, const nsACString& protocol,
                                                 aStream,
                                                 DataChannel::CONNECTING,
                                                 label, protocol,
-                                                type, prValue,
+                                                prPolicy, prValue,
                                                 flags,
                                                 aListener, aContext));
   if (aExternalNegotiated) {
