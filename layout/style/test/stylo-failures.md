@@ -199,7 +199,6 @@ to mochitest command.
 * test_author_specified_style.html: support serializing color as author specified bug 1348165 [27]
 * browser_newtab_share_rule_processors.js: agent style sheet sharing [1]
 * test_selectors.html `this_better_be_unvisited`: visited handling [1]
-* test_computed_style.html `mask`: initial value of mask-repeat bug 1364273 [10]
 
 ## Assertions
 
