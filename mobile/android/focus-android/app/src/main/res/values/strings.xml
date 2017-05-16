@@ -88,6 +88,11 @@
     <!-- This label is shown below the name of the default search engine in settings -->
     <string name="preference_search_engine_default">Default</string>
 
+    <string name="preference_language">Language</string>
+    <!-- This is shown when the user hasn't set a focus specific language, i.e. when Focus
+         is using the system default language. -->
+    <string name="preference_language_systemdefault">System default</string>
+
     <!-- This is the title of the dialog for selecting a new default search engine -->
     <string name="preference_dialog_title_search_engine">Default search</string>
 
