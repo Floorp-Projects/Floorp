@@ -92,9 +92,26 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX
     });
 
-    // TODO: Append different SVG objects for different shapes.
+    // Append a rect for inset().
+    createSVGNode(this.win, {
+      nodeType: "rect",
+      parent: mainSvg,
+      attributes: {
+        "id": "rect",
+        "class": "rect",
+        "hidden": true
+      },
+      prefix: this.ID_CLASS_PREFIX
+    });
 
     return container;
+  }
+
+  get currentDimensions() {
+    return {
+      width: this.currentQuads.border[0].bounds.width,
+      height: this.currentQuads.border[0].bounds.height
+    };
   }
 
   /**
@@ -115,6 +132,14 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       name: "circle",
       prefix: "circle(",
       coordParser: this.circlePoints.bind(this)
+    }, {
+      name: "ellipse",
+      prefix: "ellipse(",
+      coordParser: this.ellipsePoints.bind(this)
+    }, {
+      name: "inset",
+      prefix: "inset(",
+      coordParser: this.insetPoints.bind(this)
     }];
 
     for (let { name, prefix, coordParser } of types) {
@@ -139,14 +164,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    */
   polygonPoints(definition) {
     return definition.split(",").map(coords => {
-      return splitCoords(coords).map((coord, i) => {
-        let size = i % 2 === 0 ? this.currentQuads.border[0].bounds.width
-                               : this.currentQuads.border[0].bounds.height;
-        if (coord.includes("calc(")) {
-          return evalCalcExpression(coord.substring(5, coord.length - 1), size);
-        }
-        return coordToPercent(coord, size);
-      });
+      return splitCoords(coords).map(this.convertCoordsToPercent.bind(this));
     });
   }
 
@@ -162,15 +180,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     // The computed value of circle() always has the keyword "at".
     let values = definition.split(" at ");
     let radius = values[0];
-    let elemWidth = this.currentQuads.border[0].bounds.width;
-    let elemHeight = this.currentQuads.border[0].bounds.height;
-    let center = splitCoords(values[1]).map((coord, i) => {
-      let size = i % 2 === 0 ? elemWidth : elemHeight;
-      if (coord.includes("calc(")) {
-        return evalCalcExpression(coord.substring(5, coord.length - 1), size);
-      }
-      return coordToPercent(coord, size);
-    });
+    let elemWidth = this.currentDimensions.width;
+    let elemHeight = this.currentDimensions.height;
+    let center = splitCoords(values[1]).map(this.convertCoordsToPercent.bind(this));
 
     if (radius === "closest-side") {
       // radius is the distance from center to closest side of reference box
@@ -195,6 +207,86 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
 
     // rx, ry, cx, ry
     return { rx: radiusX, ry: radiusY, cx: center[0], cy: center[1] };
+  }
+
+  /**
+   * Parses the definition of the CSS ellipse() function and returns the x/y radiuses and
+   * center coordinates, converted to percentages.
+   * @param {String} definition the arguments of the ellipse() function
+   * @returns {Object} an object of the form { rx, ry, cx, cy }, where rx and ry are the
+   *          radiuses for the x and y axes, and cx and cy are the x/y coordinates for the
+   *          center of the ellipse. All values are evaluated and converted to percentages
+   */
+  ellipsePoints(definition) {
+    let values = definition.split(" at ");
+    let elemWidth = this.currentDimensions.width;
+    let elemHeight = this.currentDimensions.height;
+    let center = splitCoords(values[1]).map(this.convertCoordsToPercent.bind(this));
+
+    let radii = values[0].trim().split(" ").map((radius, i) => {
+      let size = i % 2 === 0 ? elemWidth : elemHeight;
+      if (radius === "closest-side") {
+        // radius is the distance from center to closest x/y side of reference box
+        return i % 2 === 0 ? Math.min(center[0], 100 - center[0])
+                           : Math.min(center[1], 100 - center[1]);
+      } else if (radius === "farthest-side") {
+        // radius is the distance from center to farthest x/y side of reference box
+        return i % 2 === 0 ? Math.max(center[0], 100 - center[0])
+                           : Math.max(center[1], 100 - center[1]);
+      }
+      return coordToPercent(radius, size);
+    });
+
+    return { rx: radii[0], ry: radii[1], cx: center[0], cy: center[1] };
+  }
+
+  /**
+   * Parses the definition of the CSS inset() function and returns the x/y offsets and
+   * width/height of the shape, converted to percentages. Border radiuses (given after
+   * "round" in the definition) are currently ignored.
+   * @param {String} definition the arguments of the inset() function
+   * @returns {Object} an object of the form { x, y, width, height }, which are the top/
+   *          left positions and width/height of the shape.
+   */
+  insetPoints(definition) {
+    let values = definition.split(" round ");
+    let offsets = splitCoords(values[0]).map(this.convertCoordsToPercent.bind(this));
+
+    let x, y = 0;
+    let width = this.currentDimensions.width;
+    let height = this.currentDimensions.height;
+    // The offsets, like margin/padding/border, are in order: top, right, bottom, left.
+    if (offsets.length === 1) {
+      x = y = offsets[0];
+      width = height = 100 - 2 * x;
+    } else if (offsets.length === 2) {
+      y = offsets[0];
+      x = offsets[1];
+      height = 100 - 2 * y;
+      width = 100 - 2 * x;
+    } else if (offsets.length === 3) {
+      y = offsets[0];
+      x = offsets[1];
+      height = 100 - y - offsets[2];
+      width = 100 - 2 * x;
+    } else if (offsets.length === 4) {
+      y = offsets[0];
+      x = offsets[3];
+      height = 100 - y - offsets[2];
+      width = 100 - x - offsets[1];
+    }
+
+    return { x, y, width, height };
+  }
+
+  convertCoordsToPercent(coord, i) {
+    let elemWidth = this.currentDimensions.width;
+    let elemHeight = this.currentDimensions.height;
+    let size = i % 2 === 0 ? elemWidth : elemHeight;
+    if (coord.includes("calc(")) {
+      return evalCalcExpression(coord.substring(5, coord.length - 1), size);
+    }
+    return coordToPercent(coord, size);
   }
 
   /**
@@ -234,11 +326,16 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     // TODO: need other modes too.
     if (this.options.mode.startsWith("css")) {
       let property = shapeModeToCssPropertyName(this.options.mode);
+      let style = getComputedStyle(this.currentNode)[property];
 
-      let { coordinates, shapeType } =
-        this._parseCSSShapeValue(getComputedStyle(this.currentNode)[property]);
-      this.coordinates = coordinates;
-      this.shapeType = shapeType;
+      if (!style || style === "none") {
+        this.coordinates = [];
+        this.shapeType = "none";
+      } else {
+        let { coordinates, shapeType } = this._parseCSSShapeValue(style);
+        this.coordinates = coordinates;
+        this.shapeType = shapeType;
+      }
     }
 
     let newShapeCoordinates = JSON.stringify(this.coordinates);
@@ -252,6 +349,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
   _hideShapes() {
     this.getElement("ellipse").setAttribute("hidden", true);
     this.getElement("polygon").setAttribute("hidden", true);
+    this.getElement("rect").setAttribute("hidden", true);
   }
 
   /**
@@ -275,6 +373,10 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       this._updatePolygonShape(top, left, width, height);
     } else if (this.shapeType === "circle") {
       this._updateCircleShape(top, left, width, height);
+    } else if (this.shapeType === "ellipse") {
+      this._updateEllipseShape(top, left, width, height);
+    } else if (this.shapeType === "inset") {
+      this._updateInsetShape(top, left, width, height);
     }
 
     setIgnoreLayoutChanges(false, this.highlighterEnv.window.document.documentElement);
@@ -323,12 +425,56 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     ellipseEl.removeAttribute("hidden");
 
     let shadows = `${MARKER_SIZE + cx * width / 100}px
-      ${MARKER_SIZE + cy * height / 100}px 0 0,
-      ${MARKER_SIZE + (cx + rx) * width / 100}px
       ${MARKER_SIZE + cy * height / 100}px 0 0`;
 
     this.getElement("markers-container").setAttribute("style",
       `top:${top - MARKER_SIZE}px;left:${left - MARKER_SIZE}px;box-shadow:${shadows};`);
+  }
+
+  /**
+   * Update the SVG ellipse to fit the CSS ellipse.
+   * @param {Number} top the top bound of the element quads
+   * @param {Number} left the left bound of the element quads
+   * @param {Number} width the width of the element quads
+   * @param {Number} height the height of the element quads
+   */
+  _updateEllipseShape(top, left, width, height) {
+    let { rx, ry, cx, cy } = this.coordinates;
+    let ellipseEl = this.getElement("ellipse");
+    ellipseEl.setAttribute("rx", rx);
+    ellipseEl.setAttribute("ry", ry);
+    ellipseEl.setAttribute("cx", cx);
+    ellipseEl.setAttribute("cy", cy);
+    ellipseEl.removeAttribute("hidden");
+
+    let shadows = `${MARKER_SIZE + cx * width / 100}px
+      ${MARKER_SIZE + cy * height / 100}px 0 0,
+      ${MARKER_SIZE + (cx + rx) * height / 100}px
+      ${MARKER_SIZE + cy * height / 100}px 0 0,
+      ${MARKER_SIZE + cx * height / 100}px
+      ${MARKER_SIZE + (cy + ry) * height / 100}px 0 0`;
+
+    this.getElement("markers-container").setAttribute("style",
+      `top:${top - MARKER_SIZE}px;left:${left - MARKER_SIZE}px;box-shadow:${shadows};`);
+  }
+
+  /**
+   * Update the SVG rect to fit the CSS inset.
+   * @param {Number} top the top bound of the element quads
+   * @param {Number} left the left bound of the element quads
+   * @param {Number} width the width of the element quads
+   * @param {Number} height the height of the element quads
+   */
+  _updateInsetShape(top, left, width, height) {
+    let rectEl = this.getElement("rect");
+    rectEl.setAttribute("x", this.coordinates.x);
+    rectEl.setAttribute("y", this.coordinates.y);
+    rectEl.setAttribute("width", this.coordinates.width);
+    rectEl.setAttribute("height", this.coordinates.height);
+    rectEl.removeAttribute("hidden");
+
+    this.getElement("markers-container").setAttribute("style",
+      `top:${top - MARKER_SIZE}px;left:${left - MARKER_SIZE}px;box-shadow:none;`);
   }
 
   /**
