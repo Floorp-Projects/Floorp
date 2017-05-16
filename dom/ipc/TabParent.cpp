@@ -2002,6 +2002,16 @@ TabParent::RecvReplyKeyEvent(const WidgetKeyboardEvent& aEvent)
                                                       &localEvent, doc);
 
   EventDispatcher::Dispatch(mFrameElement, presContext, &localEvent);
+
+  if (!localEvent.DefaultPrevented() &&
+      !localEvent.mFlags.mIsSynthesizedForTests) {
+    nsCOMPtr<nsIWidget> widget = GetWidget();
+    if (widget) {
+      widget->PostHandleKeyEvent(&localEvent);
+      localEvent.StopPropagation();
+    }
+  }
+
   return IPC_OK();
 }
 

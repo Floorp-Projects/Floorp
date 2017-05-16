@@ -28,6 +28,7 @@
 #include "js/TypeDecls.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/UniquePtr.h"
+#include "PseudoStack.h"
 
 class SpliceableJSONWriter;
 
@@ -400,15 +401,52 @@ PROFILER_FUNC(void* profiler_get_stack_top(), nullptr)
 
 class nsISupports;
 class ProfilerMarkerPayload;
-class PseudoStack;
+
+// This exists purely for profiler_call_{enter,exit}. See the comment on the
+// definition in platform.cpp for details.
+extern MOZ_THREAD_LOCAL(PseudoStack*) sPseudoStack;
 
 // Returns a handle to pass on exit. This can check that we are popping the
 // correct callstack. Operates the same whether the profiler is active or not.
-void* profiler_call_enter(const char* aInfo,
-                          js::ProfileEntry::Category aCategory,
-                          void* aFrameAddress, bool aCopy, uint32_t aLine,
-                          const char* aDynamicString = nullptr);
-void profiler_call_exit(void* aHandle);
+//
+// A short-lived, non-owning PseudoStack reference is created between each
+// profiler_call_enter() / profiler_call_exit() call pair. RAII objects (e.g.
+// SamplerStackFrameRAII) ensure that these calls are balanced. Furthermore,
+// the RAII objects exist within the thread itself, which means they are
+// necessarily bounded by the lifetime of the thread, which ensures that the
+// references held can't be used after the PseudoStack is destroyed.
+inline void*
+profiler_call_enter(const char* aInfo,
+                    js::ProfileEntry::Category aCategory,
+                    void* aFrameAddress, bool aCopy, uint32_t aLine,
+                    const char* aDynamicString = nullptr)
+{
+  // This function runs both on and off the main thread.
+
+  PseudoStack* pseudoStack = sPseudoStack.get();
+  if (!pseudoStack) {
+    return pseudoStack;
+  }
+  pseudoStack->push(aInfo, aCategory, aFrameAddress, aCopy, aLine,
+                    aDynamicString);
+
+  // The handle is meant to support future changes but for now it is simply
+  // used to avoid having to call TLSInfo::RacyInfo() in profiler_call_exit().
+  return pseudoStack;
+}
+
+inline void
+profiler_call_exit(void* aHandle)
+{
+  // This function runs both on and off the main thread.
+
+  if (!aHandle) {
+    return;
+  }
+
+  PseudoStack* pseudoStack = static_cast<PseudoStack*>(aHandle);
+  pseudoStack->pop();
+}
 
 // Adds a marker to the PseudoStack. A no-op if the profiler is inactive or in
 // privacy mode.

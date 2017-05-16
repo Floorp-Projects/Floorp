@@ -22,12 +22,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=639720
 /** Test for Bug 639720 **/
 SimpleTest.waitForExplicitFinish();
 
+var BASE_URI = "http://mochi.test:8888/tests/dom/tests/mochitest/dom-level0/";
 var tests = [
- { url: "data:text/plain,1" },
- { url: "data:text/plain,2",
+ { url: BASE_URI + "iframe1_location_setters.html" },
+ { url: BASE_URI + "iframe2_location_setters.html",
    useDocument: true },
  { prepURL: "http://www.example.com",
-   url: "data:text/plain,3" }
+   url: BASE_URI + "iframe3_location_setters.html" }
 ];
 
 var currentTest = 0;

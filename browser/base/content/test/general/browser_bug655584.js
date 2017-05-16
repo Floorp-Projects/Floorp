@@ -5,8 +5,8 @@
 // Bug 655584 - awesomebar suggestions don't update after tab is closed
 
 add_task(async function() {
-  var tab1 = gBrowser.addTab();
-  var tab2 = gBrowser.addTab();
+  var tab1 = BrowserTestUtils.addTab(gBrowser);
+  var tab2 = BrowserTestUtils.addTab(gBrowser);
 
   // When urlbar in a new tab is focused, and a tab switch occurs,
   // the urlbar popup should be closed

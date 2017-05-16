@@ -15,7 +15,6 @@ import android.widget.AbsoluteLayout;
 
 public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
     private final Context mContext;
-    private GeckoProfile mProfile;
     private final EventDispatcher eventDispatcher;
 
     public BaseGeckoInterface(Context context) {
@@ -27,35 +26,6 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
     public EventDispatcher getAppEventDispatcher() {
         return eventDispatcher;
     }
-
-    @Override
-    public GeckoProfile getProfile() {
-        // Fall back to default profile if we didn't load a specific one
-        if (mProfile == null) {
-            mProfile = GeckoProfile.get(mContext);
-        }
-        return mProfile;
-    }
-
-    @Override
-    public Activity getActivity() {
-        // By default, GeckoView consumers do not have a distinguished current foreground Activity.
-        return null;
-    }
-
-    @Override
-    public String getDefaultUAString() {
-        return HardwareUtils.isTablet() ? BuildConfig.USER_AGENT_GECKOVIEW_TABLET :
-                                          BuildConfig.USER_AGENT_GECKOVIEW_MOBILE;
-    }
-
-    // Bug 908779: Implement this
-    @Override
-    public void addPluginView(final View view) {}
-
-    // Bug 908781: Implement this
-    @Override
-    public void removePluginView(final View view) {}
 
     @Override
     public void enableOrientationListener() {}
@@ -78,12 +48,6 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
     @Override
     public boolean areTabsShown() {
         return false;
-    }
-
-    // Bug 908791: Implement this
-    @Override
-    public AbsoluteLayout getPluginContainer() {
-        return null;
     }
 
     // Bug 908792: Implement this
@@ -141,12 +105,6 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
 
     @Override
     public boolean isForegrounded() {
-        return false;
-    }
-
-    @Override
-    public boolean isOfficial() {
-        // By default, GeckoView consumers are not official Mozilla applications.
         return false;
     }
 }

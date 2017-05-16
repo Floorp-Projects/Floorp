@@ -162,7 +162,7 @@ function test() {
   Services.prefs.setBoolPref(PREF_ACTIVE, true);
 
   // Not really sure what this is doing
-  var newTab = gBrowser.addTab();
+  var newTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = newTab;
   gTestBrowser = gBrowser.selectedBrowser;
   newTab.linkedBrowser.stop()

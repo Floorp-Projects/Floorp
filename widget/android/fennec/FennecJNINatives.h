@@ -37,6 +37,21 @@ const JNINativeMethod ANRReporter::Natives<Impl>::methods[] = {
 };
 
 template<class Impl>
+class GeckoApp::Natives : public mozilla::jni::NativeImpl<GeckoApp, Impl>
+{
+public:
+    static const JNINativeMethod methods[1];
+};
+
+template<class Impl>
+const JNINativeMethod GeckoApp::Natives<Impl>::methods[] = {
+
+    mozilla::jni::MakeNativeMethod<GeckoApp::OnFullScreenPluginHidden_t>(
+            mozilla::jni::NativeStub<GeckoApp::OnFullScreenPluginHidden_t, Impl>
+            ::template Wrap<&Impl::OnFullScreenPluginHidden>)
+};
+
+template<class Impl>
 class GeckoJavaSampler::Natives : public mozilla::jni::NativeImpl<GeckoJavaSampler, Impl>
 {
 public:

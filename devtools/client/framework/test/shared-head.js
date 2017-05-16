@@ -122,7 +122,7 @@ var addTab = Task.async(function* (url, options = { background: false, window: w
   let { gBrowser } = options.window ? options.window : window;
   let { userContextId } = options;
 
-  let tab = gBrowser.addTab(url,
+  let tab = BrowserTestUtils.addTab(gBrowser, url,
     {userContextId, preferredRemoteType: options.preferredRemoteType});
   if (!background) {
     gBrowser.selectedTab = tab;

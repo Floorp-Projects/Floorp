@@ -41,7 +41,7 @@ const CANREMOTE = "chrome://mochitests-any" + PATH;
 const MUSTREMOTE = "chrome://mochitests-content" + PATH;
 
 add_task(async function init() {
-  gBrowser.selectedTab = gBrowser.addTab("about:blank");
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
 });
 
 registerCleanupFunction(() => {

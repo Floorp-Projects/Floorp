@@ -19,7 +19,16 @@ function switchFocus()
 </script>
 </head>
 <body>
-<iframe src="data:text/html;charset=utf-8,%3Chtml%3E%0A%3Chead%3E%3C/head%3E%0A%3Cbody%3E%0A%3Cbutton%20id%3D%22a%22%20onfocus%3D%22parent.switchFocus%28%29%22%20onblur%3D%22window.frameElement.parentNode.removeChild%28window.frameElement%29%22%3ESwitching%20focus%20to%20a%20different%20program%20should%20not%20crash%20Mozilla%3C/button%3E%0A%3Cscript%3E%0Adocument.getElementById%28%27a%27%29.focus%28%29%3B%0A%3C/script%3E%0A%3C/body%3E%0A%3C/html%3E"></iframe>
+  <iframe srcdoc="<html><meta charset='utf-8'>
+      <head></head>
+      <body>
+        <button id='a' onfocus='parent.switchFocus()' onblur='window.frameElement.parentNode.removeChild(window.frameElement)'>Switching focus to a different program should not crash Mozilla</button>
+        <script>
+document.getElementById('a').focus();
+        </script>
+      </body>
+    </html>">
+  </iframe>
 
 <p id="display"></p>
 <div id="content" style="display: none"></div>

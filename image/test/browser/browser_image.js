@@ -11,7 +11,7 @@ function testBFCache() {
   function theTest() {
     var abort = false;
     var chances, gImage, gFrames;
-    gBrowser.selectedTab = gBrowser.addTab(TESTROOT + "image.html");
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, TESTROOT + "image.html");
     gBrowser.selectedBrowser.addEventListener("pageshow", function () {
       var window = gBrowser.contentWindow;
       // If false, we are in an optimized build, and we abort this and
@@ -111,7 +111,7 @@ function testSharedContainers() {
     var gImages = [];
     var gFrames;
 
-    gBrowser.selectedTab = gBrowser.addTab(TESTROOT + "image.html");
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, TESTROOT + "image.html");
     gBrowser.selectedBrowser.addEventListener("pageshow", function () {
       actOnMozImage(gBrowser.contentDocument, "img1", function(image) {
         gImages[0] = image;
@@ -129,7 +129,7 @@ function testSharedContainers() {
     }, 1500, Ci.nsITimer.TYPE_ONE_SHOT);
     yield;
 
-    gBrowser.selectedTab = gBrowser.addTab(TESTROOT + "imageX2.html");
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, TESTROOT + "imageX2.html");
     gBrowser.selectedBrowser.addEventListener("pageshow", function () {
       [1,2].forEach(function(i) {
         actOnMozImage(gBrowser.contentDocument, "img"+i, function(image) {

@@ -2005,12 +2005,7 @@ Element::SetSMILOverrideStyleDeclaration(DeclarationBlock* aDeclaration,
     if (doc) {
       nsCOMPtr<nsIPresShell> shell = doc->GetShell();
       if (shell) {
-        // Pass both eRestyle_StyleAttribute and
-        // eRestyle_StyleAttribute_Animations since we don't know if
-        // this style represents only the ticking of an existing
-        // animation or whether it's a new or changed animation.
-        shell->RestyleForAnimation(this, eRestyle_StyleAttribute |
-                                         eRestyle_StyleAttribute_Animations);
+        shell->RestyleForAnimation(this, eRestyle_StyleAttribute_Animations);
       }
     }
   }

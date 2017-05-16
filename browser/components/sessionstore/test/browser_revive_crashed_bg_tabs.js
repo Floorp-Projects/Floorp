@@ -19,11 +19,11 @@ add_task(async function setup() {
 });
 
 add_task(async function test_revive_bg_tabs_on_demand() {
-  let newTab1 = gBrowser.addTab(PAGE_1);
+  let newTab1 = BrowserTestUtils.addTab(gBrowser, PAGE_1);
   let browser1 = newTab1.linkedBrowser;
   gBrowser.selectedTab = newTab1;
 
-  let newTab2 = gBrowser.addTab(PAGE_2);
+  let newTab2 = BrowserTestUtils.addTab(gBrowser, PAGE_2);
   let browser2 = newTab2.linkedBrowser;
 
   await BrowserTestUtils.browserLoaded(browser1);

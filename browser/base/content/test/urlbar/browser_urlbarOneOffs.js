@@ -184,7 +184,7 @@ add_task(async function searchWith() {
 
 // Clicks a one-off.
 add_task(async function oneOffClick() {
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   // We are explicitly using something that looks like a url, to make the test
   // stricter. Even if it looks like a url, we should search.
@@ -205,7 +205,7 @@ add_task(async function oneOffClick() {
 
 // Presses the Return key when a one-off is selected.
 add_task(async function oneOffReturn() {
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   // We are explicitly using something that looks like a url, to make the test
   // stricter. Even if it looks like a url, we should search.

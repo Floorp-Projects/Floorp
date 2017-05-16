@@ -38,7 +38,7 @@ add_task(function *() {
 
 // Load a tab with a subframe inside it and wait until the subframe is focused
 add_task(function *() {
-  let tab = gBrowser.addTab();
+  let tab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = tab;
 
   let browser = gBrowser.getBrowserForTab(tab);

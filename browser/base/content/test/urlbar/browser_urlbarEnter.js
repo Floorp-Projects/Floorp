@@ -8,7 +8,7 @@ const START_VALUE = "example.com/%C3%B7?%C3%B7";
 
 add_task(async function() {
   info("Simple return keypress");
-  let tab = gBrowser.selectedTab = gBrowser.addTab(START_VALUE);
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, START_VALUE);
 
   gURLBar.focus();
   EventUtils.synthesizeKey("VK_RETURN", {});
