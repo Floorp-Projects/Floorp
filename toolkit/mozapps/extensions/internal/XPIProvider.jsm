@@ -229,6 +229,7 @@ const PREF_E10S_BLOCK_ENABLE          = "extensions.e10sBlocksEnabling";
 const PREF_E10S_ADDON_BLOCKLIST       = "extensions.e10s.rollout.blocklist";
 const PREF_E10S_ADDON_POLICY          = "extensions.e10s.rollout.policy";
 const PREF_E10S_HAS_NONEXEMPT_ADDON   = "extensions.e10s.rollout.hasAddon";
+const PREF_ALLOW_LEGACY               = "extensions.legacy.enabled";
 const PREF_ALLOW_NON_MPC              = "extensions.allow-non-mpc-extensions";
 
 const PREF_EM_MIN_COMPAT_APP_VERSION      = "extensions.minCompatibleAppVersion";
@@ -934,6 +935,13 @@ function isUsableAddon(aAddon) {
 
     if (aAddon.dependencies.some(id => !isActive(id)))
       return false;
+  }
+
+  if (!AddonSettings.ALLOW_LEGACY_EXTENSIONS &&
+      aAddon.type == "extension" && !aAddon.isSystem &&
+      aAddon.signedState !== AddonManager.SIGNEDSTATE_PRIVILEGED) {
+    logger.warn(`disabling legacy extension ${aAddon.id}`);
+    return false;
   }
 
   if (!ALLOW_NON_MPC && aAddon.type == "extension" &&
@@ -3254,6 +3262,7 @@ this.XPIProvider = {
       Services.prefs.addObserver(PREF_E10S_ADDON_POLICY, this);
       if (!AppConstants.MOZ_REQUIRE_SIGNING || Cu.isInAutomation)
         Services.prefs.addObserver(PREF_XPI_SIGNATURES_REQUIRED, this);
+      Services.prefs.addObserver(PREF_ALLOW_LEGACY, this);
       Services.prefs.addObserver(PREF_ALLOW_NON_MPC, this);
       Services.obs.addObserver(this, NOTIFICATION_FLUSH_PERMISSIONS);
 
@@ -4992,6 +5001,7 @@ this.XPIProvider = {
         this.updateAddonAppDisabledStates();
         break;
       case PREF_XPI_SIGNATURES_REQUIRED:
+      case PREF_ALLOW_LEGACY:
       case PREF_ALLOW_NON_MPC:
         this.updateAddonAppDisabledStates();
         break;
