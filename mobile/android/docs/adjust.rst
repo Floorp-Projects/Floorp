@@ -127,12 +127,9 @@ Add the following to your mozconfig to compile with the Adjust SDK::
 
  export MOZ_INSTALL_TRACKING=1
  export MOZ_NATIVE_DEVICES=1
- export RELEASE_OR_BETA=1
  ac_add_options --with-adjust-sdk-keyfile="$topsrcdir/mobile/android/base/adjust-sdk-sandbox.token"
 
-``MOZ_NATIVE_DEVICES`` && ``RELEASE_OR_BETA`` are required for an unknown
-reason.  If you build without them, the ``StubAdjustHelper`` will be
-returned.
+``MOZ_NATIVE_DEVICES`` is required to provide some Google Play Services dependencies.
 
 No trace of the Adjust SDK should be present in Fennec if
 ``MOZ_INSTALL_TRACKING`` is not defined.

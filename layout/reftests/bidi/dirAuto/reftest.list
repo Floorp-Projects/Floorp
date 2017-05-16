@@ -1,10 +1,10 @@
 == bdi-auto-dir-default.html bdi-auto-dir-default-ref.html
-fails-if(stylo) == dir_auto-set-contained-dir-L.html dir_auto-contained-dir-L-ref.html
-fails-if(stylo) == dir_auto-set-contained-dir-R.html dir_auto-contained-dir-R-ref.html
-fails-if(stylo) == dir_auto-set-contained-invalid-dir-L.html dir_auto-contained-dir-L-ref.html
-fails-if(stylo) == dir_auto-set-contained-invalid-dir-R.html dir_auto-contained-dir-R-ref.html
-fails-if(stylo) == dir_auto-unset-contained-dir-L.html dir_auto-unset-contained-dir-L-ref.html
-fails-if(stylo) == dir_auto-unset-contained-dir-R.html dir_auto-unset-contained-dir-R-ref.html
+== dir_auto-set-contained-dir-L.html dir_auto-contained-dir-L-ref.html
+== dir_auto-set-contained-dir-R.html dir_auto-contained-dir-R-ref.html
+== dir_auto-set-contained-invalid-dir-L.html dir_auto-contained-dir-L-ref.html
+== dir_auto-set-contained-invalid-dir-R.html dir_auto-contained-dir-R-ref.html
+== dir_auto-unset-contained-dir-L.html dir_auto-unset-contained-dir-L-ref.html
+== dir_auto-unset-contained-dir-R.html dir_auto-unset-contained-dir-R-ref.html
 == dynamicDirAuto-setLTR-Auto1.html dynamicDirAuto-refLTR-LTR.html
 == dynamicDirAuto-setLTR-Auto2.html dynamicDirAuto-refLTR-LTR.html
 == dynamicDirAuto-setLTR-Auto3.html dynamicDirAuto-refLTR-LTR.html
@@ -83,37 +83,37 @@ fails-if(stylo) == dir_auto-unset-contained-dir-R.html dir_auto-unset-contained-
 == dynamicDirAuto-setRTL-InvalidDir8.html dynamicDirAuto-refRTL-NoDir.html
 == dynamicDirAuto-addLTR-Auto.html dynamicDirAuto-refLTR-LTR.html
 == dynamicDirAuto-addRTL-Auto.html dynamicDirAuto-refRTL-RTL.html
-fails-if(stylo) == dynamicDirAuto-ChangeText-LTR1.html dynamicDirAuto-refLTR-LTR.html
+== dynamicDirAuto-ChangeText-LTR1.html dynamicDirAuto-refLTR-LTR.html
 == dynamicDirAuto-ChangeText-LTR2.html dynamicDirAuto-refLTR-LTR.html
 == dynamicDirAuto-ChangeText-LTR3.html dynamicDirAuto-refLTR-LTR.html
 == dynamicDirAuto-ChangeText-LTR4.html dynamicDirAuto-refLTR-LTR.html
 == dynamicDirAuto-ChangeText-LTR5.html dynamicDirAuto-refLTR-LTR.html
 == dynamicDirAuto-ChangeText-LTR6.html dynamicDirAuto-refLTR-LTR.html
-fails-if(stylo) == dynamicDirAuto-ChangeText-LTR7.html dynamicDirAuto-refLTR-LTR.html
+== dynamicDirAuto-ChangeText-LTR7.html dynamicDirAuto-refLTR-LTR.html
 == dynamicDirAuto-ChangeText-LTR8.html dynamicDirAuto-refLTR-LTR.html
-fails-if(stylo) == dynamicDirAuto-ChangeText-LTR9.html dynamicDirAuto-refLTR-LTR.html
+== dynamicDirAuto-ChangeText-LTR9.html dynamicDirAuto-refLTR-LTR.html
 == dynamicDirAuto-ChangeText-LTR10.html dynamicDirAuto-refLTR-LTR.html
-fails-if(stylo) == dynamicDirAuto-ChangeText-RTL1.html dynamicDirAuto-refRTL-RTL.html
-fails-if(stylo) == dynamicDirAuto-ChangeText-RTL2.html dynamicDirAuto-refRTL-RTL.html
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,30,1) fails-if(stylo) == dynamicDirAuto-ChangeText-RTL3.html dynamicDirAuto-refRTL-RTL.html
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,30,1) fails-if(stylo) == dynamicDirAuto-ChangeText-RTL4.html dynamicDirAuto-refRTL-RTL.html
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,30,1) fails-if(stylo) == dynamicDirAuto-ChangeText-RTL5.html dynamicDirAuto-refRTL-RTL.html
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,30,1) fails-if(stylo) == dynamicDirAuto-ChangeText-RTL6.html dynamicDirAuto-refRTL-RTL.html
-fails-if(stylo) == dynamicDirAuto-ChangeText-RTL7.html dynamicDirAuto-refRTL-RTL.html
-fails-if(stylo) == dynamicDirAuto-ChangeText-RTL8.html dynamicDirAuto-refRTL-RTL.html
-fails-if(stylo) == dynamicDirAuto-ChangeText-RTL9.html dynamicDirAuto-refRTL-RTL.html
-fails-if(stylo) == dynamicDirAuto-ChangeText-RTL10.html dynamicDirAuto-refRTL-RTL.html
+== dynamicDirAuto-ChangeText-RTL1.html dynamicDirAuto-refRTL-RTL.html
+== dynamicDirAuto-ChangeText-RTL2.html dynamicDirAuto-refRTL-RTL.html
+fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,30,1) == dynamicDirAuto-ChangeText-RTL3.html dynamicDirAuto-refRTL-RTL.html
+fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,30,1) == dynamicDirAuto-ChangeText-RTL4.html dynamicDirAuto-refRTL-RTL.html
+fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,30,1) == dynamicDirAuto-ChangeText-RTL5.html dynamicDirAuto-refRTL-RTL.html
+fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,30,1) == dynamicDirAuto-ChangeText-RTL6.html dynamicDirAuto-refRTL-RTL.html
+== dynamicDirAuto-ChangeText-RTL7.html dynamicDirAuto-refRTL-RTL.html
+== dynamicDirAuto-ChangeText-RTL8.html dynamicDirAuto-refRTL-RTL.html
+== dynamicDirAuto-ChangeText-RTL9.html dynamicDirAuto-refRTL-RTL.html
+== dynamicDirAuto-ChangeText-RTL10.html dynamicDirAuto-refRTL-RTL.html
 == dynamicDirAuto-DeleteText-LTR1.html dynamicDirAuto-refLTR-LTR.html
-fails-if(stylo) == dynamicDirAuto-DeleteText-LTR2.html dynamicDirAuto-refLTR-LTR.html
+== dynamicDirAuto-DeleteText-LTR2.html dynamicDirAuto-refLTR-LTR.html
 == dynamicDirAuto-DeleteText-LTR3.html dynamicDirAuto-refLTR-LTR.html
-fails-if(stylo) == dynamicDirAuto-DeleteText-RTL1.html dynamicDirAuto-refRTL-RTL.html
+== dynamicDirAuto-DeleteText-RTL1.html dynamicDirAuto-refRTL-RTL.html
 == dynamicDirAuto-DeleteText-RTL2.html dynamicDirAuto-refRTL-RTL.html
 == dynamicDirAuto-DeleteText-RTL3.html dynamicDirAuto-refRTL-RTL.html
 == 839886-1.html 839886-1-ref.html
 == 859093-1.html 859093-1-ref.html
 == 889742-1.html 889742-1-ref.html
-fails-if(stylo) == 1103348-1.html 1103348-1-ref.html
-fails-if(stylo) == 1169267-delete-add-1a.html 1169267-delete-add-1-ref.html
-fails-if(stylo) == 1169267-delete-add-1b.html 1169267-delete-add-1-ref.html
-fails-if(stylo) == 1169267-delete-add-2a.html 1169267-delete-add-2-ref.html
-fails-if(stylo) == 1169267-delete-add-2b.html 1169267-delete-add-2-ref.html
+== 1103348-1.html 1103348-1-ref.html
+== 1169267-delete-add-1a.html 1169267-delete-add-1-ref.html
+== 1169267-delete-add-1b.html 1169267-delete-add-1-ref.html
+== 1169267-delete-add-2a.html 1169267-delete-add-2-ref.html
+== 1169267-delete-add-2b.html 1169267-delete-add-2-ref.html
