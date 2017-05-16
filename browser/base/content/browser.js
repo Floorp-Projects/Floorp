@@ -1429,7 +1429,7 @@ var gBrowserInit = {
           gBrowser.loadTabs(specs, {
             inBackground: false,
             replace: true,
-            // Bug 1365232, provide correct triggeringPrincipal
+            triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
           });
         } catch (e) {}
       } else if (uriToLoad instanceof XULElement) {
@@ -1494,7 +1494,7 @@ var gBrowserInit = {
       } else {
         // Note: loadOneOrMoreURIs *must not* be called if window.arguments.length >= 3.
         // Such callers expect that window.arguments[0] is handled as a single URI.
-        loadOneOrMoreURIs(uriToLoad);
+        loadOneOrMoreURIs(uriToLoad, Services.scriptSecurityManager.getSystemPrincipal());
       }
     }
 
@@ -2160,7 +2160,7 @@ function BrowserGoHome(aEvent) {
   // openUILinkIn in utilityOverlay.js doesn't handle loading multiple pages
   switch (where) {
   case "current":
-    loadOneOrMoreURIs(homePage);
+    loadOneOrMoreURIs(homePage, Services.scriptSecurityManager.getSystemPrincipal());
     break;
   case "tabshifted":
   case "tab":
@@ -2177,7 +2177,7 @@ function BrowserGoHome(aEvent) {
   }
 }
 
-function loadOneOrMoreURIs(aURIString) {
+function loadOneOrMoreURIs(aURIString, aTriggeringPrincipal) {
   // we're not a browser window, pass the URI string to a new browser window
   if (window.location.href != getBrowserURL()) {
     window.openDialog(getBrowserURL(), "_blank", "all,dialog=no", aURIString);
@@ -2190,7 +2190,7 @@ function loadOneOrMoreURIs(aURIString) {
     gBrowser.loadTabs(aURIString.split("|"), {
       inBackground: false,
       replace: true,
-      // Bug 1365232, provide correct triggeringPrincipal
+      triggeringPrincipal: aTriggeringPrincipal,
     });
   } catch (e) {
   }
