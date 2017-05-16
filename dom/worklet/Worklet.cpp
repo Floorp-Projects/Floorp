@@ -363,10 +363,10 @@ Worklet::GetOrCreateGlobalScope(JSContext* aCx)
   if (!mScope) {
     switch (mWorkletType) {
       case eAudioWorklet:
-        mScope = new AudioWorkletGlobalScope(mWindow);
+        mScope = new AudioWorkletGlobalScope();
         break;
       case ePaintWorklet:
-        mScope = new PaintWorkletGlobalScope(mWindow);
+        mScope = new PaintWorkletGlobalScope();
         break;
     }
 

@@ -11,12 +11,7 @@
 namespace mozilla {
 namespace dom {
 
-AudioWorkletGlobalScope::AudioWorkletGlobalScope(nsPIDOMWindowInner* aWindow)
-  : WorkletGlobalScope(aWindow)
-{
-}
-
-AudioWorkletGlobalScope::~AudioWorkletGlobalScope()
+AudioWorkletGlobalScope::AudioWorkletGlobalScope()
 {
 }
 

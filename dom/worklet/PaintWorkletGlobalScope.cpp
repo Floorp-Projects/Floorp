@@ -11,12 +11,7 @@
 namespace mozilla {
 namespace dom {
 
-PaintWorkletGlobalScope::PaintWorkletGlobalScope(nsPIDOMWindowInner* aWindow)
-  : WorkletGlobalScope(aWindow)
-{
-}
-
-PaintWorkletGlobalScope::~PaintWorkletGlobalScope()
+PaintWorkletGlobalScope::PaintWorkletGlobalScope()
 {
 }
 
