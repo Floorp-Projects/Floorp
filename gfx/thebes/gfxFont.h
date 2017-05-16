@@ -308,6 +308,7 @@ public:
     }
 
     void FlushShapedWordCaches();
+    void NotifyGlyphsChanged();
 
     void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                 FontCacheSizes* aSizes) const;
