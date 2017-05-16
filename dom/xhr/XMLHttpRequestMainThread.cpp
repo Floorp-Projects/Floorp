@@ -3000,12 +3000,8 @@ XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody)
 
     if (NS_SUCCEEDED(rv)) {
       nsAutoSyncOperation sync(mSuspendedDoc);
-      nsIThread *thread = NS_GetCurrentThread();
-      while (mFlagSyncLooping) {
-        if (!NS_ProcessNextEvent(thread)) {
-          rv = NS_ERROR_UNEXPECTED;
-          break;
-        }
+      if (!SpinEventLoopUntil([&]() { return !mFlagSyncLooping; })) {
+        rv = NS_ERROR_UNEXPECTED;
       }
 
       // Time expired... We should throw.

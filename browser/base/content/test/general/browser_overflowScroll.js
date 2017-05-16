@@ -5,6 +5,7 @@ var tabs = gBrowser.tabs;
 
 var rect = ele => ele.getBoundingClientRect();
 var width = ele => rect(ele).width;
+var height = ele => rect(ele).height;
 var left = ele => rect(ele).left;
 var right = ele => rect(ele).right;
 var isLeft = (ele, msg) => is(left(ele) + tabstrip._tabMarginLeft, left(scrollbox), msg);
@@ -13,6 +14,11 @@ var elementFromPoint = x => tabstrip._elementFromPoint(x);
 var nextLeftElement = () => elementFromPoint(left(scrollbox) - 1);
 var nextRightElement = () => elementFromPoint(right(scrollbox) + 1);
 var firstScrollable = () => tabs[gBrowser._numPinnedTabs];
+
+var clickCenter = (ele, opts) => {
+  EventUtils.synthesizeMouse(ele, Math.ceil(width(ele) / 2),
+                             Math.ceil(height(ele) / 2), opts);
+}
 
 function test() {
   requestLongerTimeout(2);
@@ -60,7 +66,7 @@ function runOverflowTests(aEvent) {
      "(" + right(gBrowser.selectedTab) + " <= " + right(scrollbox) + ")");
 
   element = nextLeftElement();
-  EventUtils.synthesizeMouse(upButton, 1, 1, {});
+  clickCenter(upButton, {});
   isLeft(element, "Scrolled one tab to the left with a single click");
 
   let elementPoint = left(scrollbox) - width(scrollbox);
@@ -68,10 +74,10 @@ function runOverflowTests(aEvent) {
   if (elementPoint == right(element)) {
     element = element.nextSibling;
   }
-  EventUtils.synthesizeMouse(upButton, 1, 1, {clickCount: 2});
+  clickCenter(upButton, {clickCount: 2});
   isLeft(element, "Scrolled one page of tabs with a double click");
 
-  EventUtils.synthesizeMouse(upButton, 1, 1, {clickCount: 3});
+  clickCenter(upButton, {clickCount: 3});
   var firstScrollableLeft = left(firstScrollable());
   ok(left(scrollbox) <= firstScrollableLeft, "Scrolled to the start with a triple click " +
      "(" + left(scrollbox) + " <= " + firstScrollableLeft + ")");

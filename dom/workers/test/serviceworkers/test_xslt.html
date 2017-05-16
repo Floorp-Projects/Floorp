@@ -13,6 +13,7 @@
 <p id="display"></p>
 <div id="content"></div>
 <pre id="test"></pre>
+<script src="utils.js"></script>
 <script class="testbody" type="text/javascript">
   var registration;
   var worker;
@@ -24,18 +25,7 @@
         registration = swr;
 
         // Ensure the registration is active before continuing
-        var worker = registration.installing;
-        return new Promise((resolve) => {
-          if (worker.state === 'activated') {
-            resolve();
-            return;
-          }
-          worker.addEventListener('statechange', () => {
-            if (worker.state === 'activated') {
-              resolve();
-            }
-          });
-        });
+        return waitForState(swr.installing, 'activated');
       });
   }
 

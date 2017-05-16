@@ -310,12 +310,6 @@ nsresult nsAutoConfig::downloadAutoConfig()
     if (firstTime) {
         firstTime = false;
     
-        // Getting the current thread. If we start an AsyncOpen, the thread
-        // needs to wait before the reading of autoconfig is done
-
-        nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
-        NS_ENSURE_STATE(thread);
-    
         /* process events until we're finished. AutoConfig.jsc reading needs
            to be finished before the browser starts loading up
            We are waiting for the mLoaded which will be set through 
@@ -323,9 +317,10 @@ nsresult nsAutoConfig::downloadAutoConfig()
            There is a possibility of deadlock so we need to make sure
            that mLoaded will be set to true in any case (success/failure)
         */
-        
-        while (!mLoaded)
-            NS_ENSURE_STATE(NS_ProcessNextEvent(thread));
+
+        if (!mozilla::SpinEventLoopUntil([&]() { return mLoaded; })) {
+            return NS_ERROR_FAILURE;
+        }
         
         int32_t minutes;
         rv = mPrefBranch->GetIntPref("autoadmin.refresh_interval", 

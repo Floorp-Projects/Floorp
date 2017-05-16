@@ -20,6 +20,8 @@ import android.util.Log;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.mozilla.gecko.gfx.GeckoSurface;
+
 public final class RemoteManager implements IBinder.DeathRecipient {
     private static final String LOGTAG = "GeckoRemoteManager";
     private static final boolean DEBUG = false;
@@ -111,7 +113,7 @@ public final class RemoteManager implements IBinder.DeathRecipient {
 
     public synchronized CodecProxy createCodec(boolean isEncoder,
                                                MediaFormat format,
-                                               Surface surface,
+                                               GeckoSurface surface,
                                                CodecProxy.Callbacks callbacks,
                                                String drmStubId) {
         if (mRemote == null) {

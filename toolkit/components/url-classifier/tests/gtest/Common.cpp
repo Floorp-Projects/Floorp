@@ -56,17 +56,13 @@ nsresult SyncApplyUpdates(Classifier* aClassifier,
   }
 
   testingThread->Dispatch(r, NS_DISPATCH_NORMAL);
-  while (!done) {
-    // NS_NewCheckSummedOutputStream in HashStore::WriteFile
-    // will synchronously init NS_CRYPTO_HASH_CONTRACTID on
-    // the main thread. As a result we have to keep processing
-    // pending event until |done| becomes true. If there's no
-    // more pending event, what we only can do is wait.
-    // Condition variable doesn't work here because instrusively
-    // notifying the from NS_NewCheckSummedOutputStream() or
-    // HashStore::WriteFile() is weird.
-    MOZ_ALWAYS_TRUE(NS_ProcessNextEvent(NS_GetCurrentThread(), true));
-  }
+
+  // NS_NewCheckSummedOutputStream in HashStore::WriteFile
+  // will synchronously init NS_CRYPTO_HASH_CONTRACTID on
+  // the main thread. As a result we have to keep processing
+  // pending event until |done| becomes true. If there's no
+  // more pending event, what we only can do is wait.
+  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return done; }));
 
   return ret;
 }

@@ -299,10 +299,7 @@ GeckoMediaPluginServiceParent::Observe(nsISupports* aSubject,
         NS_DISPATCH_NORMAL);
 
       // Wait for UnloadPlugins() to do sync shutdown...
-      while (mWaitingForPluginsSyncShutdown) {
-        NS_ProcessNextEvent(NS_GetCurrentThread(), true);
-      }
-
+      SpinEventLoopUntil([&]() { return !mWaitingForPluginsSyncShutdown; });
     } else {
       // GMP thread has already shutdown.
       MOZ_ASSERT(mPlugins.IsEmpty());

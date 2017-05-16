@@ -11,10 +11,12 @@
 </head>
 <body>
 <div id="container"></div>
+<script src="utils.js"></script>
 <script class="testbody" type="text/javascript">
 
   function simpleRegister() {
-    return navigator.serviceWorker.register("worker_update.js", { scope: "workerUpdate/" });
+    return navigator.serviceWorker.register("worker_update.js", { scope: "workerUpdate/" })
+      .then(swr => waitForState(swr.installing, 'activated', swr));
   }
 
   var registration;

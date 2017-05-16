@@ -379,6 +379,8 @@ gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
     'gfx/FloatSize.java',
     'gfx/FullScreenState.java',
     'gfx/GeckoLayerClient.java',
+    'gfx/GeckoSurface.java',
+    'gfx/GeckoSurfaceTexture.java',
     'gfx/ImmutableViewportMetrics.java',
     'gfx/IntSize.java',
     'gfx/LayerView.java',
@@ -391,6 +393,8 @@ gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
     'gfx/RectUtils.java',
     'gfx/RenderTask.java',
     'gfx/StackScroller.java',
+    'gfx/SurfaceAllocator.java',
+    'gfx/SurfaceAllocatorService.java',
     'gfx/SurfaceTextureListener.java',
     'gfx/ViewTransform.java',
     'gfx/VsyncSource.java',
@@ -1262,6 +1266,7 @@ DEFINES['ANDROID_PACKAGE_NAME'] = CONFIG['ANDROID_PACKAGE_NAME']
 FINAL_TARGET_PP_FILES += ['package-name.txt.in']
 
 gvjar.sources += ['generated/org/mozilla/gecko/' + x for x in [
+    'gfx/ISurfaceAllocator.java',
     'IGeckoEditableChild.java',
     'IGeckoEditableParent.java',
     'media/ICodec.java',

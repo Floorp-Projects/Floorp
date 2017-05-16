@@ -502,6 +502,9 @@ this.XPIDatabase = {
       let addonDB = new Map();
       for (let loadedAddon of inputAddons.addons) {
         try {
+          if (!loadedAddon.path) {
+            loadedAddon.path = descriptorToPath(loadedAddon.descriptor);
+          }
           loadedAddon._sourceBundle = new nsIFile(loadedAddon.path);
         } catch (e) {
           // We can fail here when the path is invalid, usually from the

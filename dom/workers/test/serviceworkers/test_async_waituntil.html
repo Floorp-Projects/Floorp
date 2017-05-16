@@ -23,6 +23,7 @@
 <pre id="test">
 </pre>
 
+<script src="utils.js"></script>
 <script class="testbody" type="text/javascript">
 add_task(function setupPrefs() {
   return SpecialPowers.pushPrefEnv({"set": [
@@ -47,13 +48,7 @@ add_task(function* async_wait_until() {
     "async_waituntil_worker.js", { scope: "./"} )
     .then(function(registration) {
       worker = registration.installing;
-      return new Promise(function(resolve) {
-        worker.addEventListener('statechange', function() {
-          if (worker.state === 'activated') {
-            resolve(registration);
-          }
-        });
-      });
+      return waitForState(worker, 'activated', registration);
     });
 
   // The service worker will claim us when it becomes active.

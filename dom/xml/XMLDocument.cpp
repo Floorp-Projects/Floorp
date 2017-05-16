@@ -462,14 +462,9 @@ XMLDocument::Load(const nsAString& aUrl, CallerType aCallerType,
   }
 
   if (!mAsync) {
-    nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
-
     nsAutoSyncOperation sync(this);
     mLoopingForSyncLoad = true;
-    while (mLoopingForSyncLoad) {
-      if (!NS_ProcessNextEvent(thread))
-        break;
-    }
+    SpinEventLoopUntil([&]() { return !mLoopingForSyncLoad; });
 
     // We set return to true unless there was a parsing error
     Element* rootElement = GetRootElement();

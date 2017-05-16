@@ -56,7 +56,7 @@ jobs:
             # Match buildbot starts for now
             date: [{hour: 15, minute: 0}]
             mozilla-central: [{hour: 10, minute: 0}]
-            mozilla-aurora: [{hour: 7, minute: 45}]  # Buildbot uses minute 40
+            mozilla-aurora: [] # bug 1358976
             # No default
 
     - name: nightly-mochitest-valgrind

@@ -265,9 +265,9 @@ nsThreadPool::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags)
       new nsThreadSyncDispatch(thread, Move(aEvent));
     PutEvent(wrapper);
 
-    while (wrapper->IsPending()) {
-      NS_ProcessNextEvent(thread);
-    }
+    SpinEventLoopUntil([&, wrapper]() -> bool {
+        return !wrapper->IsPending();
+      }, thread);
   } else {
     NS_ASSERTION(aFlags == NS_DISPATCH_NORMAL ||
                  aFlags == NS_DISPATCH_AT_END, "unexpected dispatch flags");

@@ -13,13 +13,17 @@
 <p id="display"></p>
 <div id="content" style="display: none"></div>
 <pre id="test"></pre>
+<script src="utils.js"></script>
 <script class="testbody" type="text/javascript">
   var registration;
   var clientURL = "match_all_clients/match_all_controlled.html";
   function start() {
     return navigator.serviceWorker.register("match_all_properties_worker.js",
                                             { scope: "./match_all_clients/" })
-      .then((swr) => registration = swr);
+      .then((swr) => {
+        registration = swr;
+        return waitForState(swr.installing, 'activated', swr);
+      });
   }
 
   function unregister() {

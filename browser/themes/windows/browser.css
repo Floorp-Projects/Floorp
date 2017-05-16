@@ -19,7 +19,11 @@
 
   --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-vertical-inner-padding) - 1px);
 
+%ifdef MOZ_PHOTON_THEME
+  --toolbarbutton-border-radius: 2px;
+%else
   --toolbarbutton-border-radius: 1px;
+%endif
 
   --toolbarbutton-hover-background: rgba(0,0,0,.1);
   --toolbarbutton-hover-bordercolor: rgba(0,0,0,.2);
@@ -657,6 +661,25 @@ toolbar[brighttext] #close-button {
   --urlbar-border-color: var(--toolbarbutton-hover-bordercolor);
 }
 
+%ifdef MOZ_PHOTON_THEME
+
+@media (-moz-windows-default-theme) {
+  #main-window:not(:-moz-lwtheme) {
+    --urlbar-border-color: hsla(240, 5%, 5%, .25);
+    --urlbar-border-color-hover: hsla(240, 5%, 5%, .35);
+    --urlbar-background-color: -moz-field;
+  }
+}
+
+%include ../shared/location-search-bar.inc.css
+
+#urlbar[focused="true"],
+.searchbar-textbox[focused="true"] {
+  border-color: Highlight;
+}
+
+%else
+
 @media (-moz-windows-default-theme) {
   @media (-moz-os-version: windows-win7),
          (-moz-os-version: windows-win8) {
@@ -753,7 +776,6 @@ toolbar[brighttext] #close-button {
   background-color: white;
 }
 
-%ifndef MOZ_PHOTON_THEME
 @conditionalForwardWithUrlbar@ > #urlbar {
   border-inline-start: none;
   padding-inline-start: 0;
