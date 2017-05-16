@@ -1033,10 +1033,8 @@ public class GeckoPreferences
                 .putExtra("pref", PREFS_GEO_REPORTING)
                 .putExtra("branch", GeckoSharedPrefs.APP_PREFS_NAME)
                 .putExtra("enabled", value)
-                .putExtra("moz_mozilla_api_key", AppConstants.MOZ_MOZILLA_API_KEY);
-       if (GeckoAppShell.getGeckoInterface() != null) {
-           intent.putExtra("user_agent", GeckoAppShell.getGeckoInterface().getDefaultUAString());
-       }
+                .putExtra("moz_mozilla_api_key", AppConstants.MOZ_MOZILLA_API_KEY)
+                .putExtra("user_agent", GeckoApplication.getDefaultUAString());
        broadcastAction(context, intent);
     }
 
