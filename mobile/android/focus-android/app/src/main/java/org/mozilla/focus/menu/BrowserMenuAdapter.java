@@ -5,8 +5,11 @@
 
 package org.mozilla.focus.menu;
 
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.res.Resources;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
@@ -15,6 +18,7 @@ import org.mozilla.focus.R;
 import org.mozilla.focus.fragment.BrowserFragment;
 import org.mozilla.focus.utils.Browsers;
 import org.mozilla.focus.utils.HardwareUtils;
+import org.mozilla.focus.web.CustomTabConfig;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,10 +27,16 @@ public class BrowserMenuAdapter extends RecyclerView.Adapter<BrowserMenuViewHold
     static class MenuItem {
         public final int id;
         public final String label;
+        public final @Nullable PendingIntent pendingIntent;
 
         public MenuItem(int id, String label) {
+            this(id, label, null);
+        }
+
+        public MenuItem(int id, String label, @Nullable PendingIntent pendingIntent) {
             this.id = id;
             this.label = label;
+            this.pendingIntent = pendingIntent;
         }
     }
 
@@ -76,6 +86,20 @@ public class BrowserMenuAdapter extends RecyclerView.Adapter<BrowserMenuViewHold
         }
 
         items.add(new MenuItem(R.id.settings, resources.getString(R.string.menu_settings)));
+
+        if (customTabConfig != null) {
+            addCustomTabMenuItems(items, customTabConfig);
+        }
+    }
+
+    private void addCustomTabMenuItems(final List<MenuItem> items, final @NonNull CustomTabConfig customTabConfig) {
+        for (final CustomTabConfig.CustomTabMenuItem inputItem : customTabConfig.menuItems) {
+            final String name = inputItem.name;
+            final PendingIntent pendingIntent = inputItem.pendingIntent;
+
+            final MenuItem item = new MenuItem(R.id.custom_tab_menu_item, name, pendingIntent);
+            items.add(item);
+        }
     }
 
     @Override
@@ -88,6 +112,8 @@ public class BrowserMenuAdapter extends RecyclerView.Adapter<BrowserMenuViewHold
             return new MenuItemViewHolder(inflater.inflate(R.layout.menu_item, parent, false));
         } else if (viewType == BlockingItemViewHolder.LAYOUT_ID) {
             return new BlockingItemViewHolder(inflater.inflate(R.layout.menu_blocking_switch, parent, false), fragment);
+        } else if (viewType == CustomTabMenuItemViewHolder.LAYOUT_ID) {
+            return new CustomTabMenuItemViewHolder(inflater.inflate(R.layout.custom_tab_menu_item, parent, false));
         }
 
         throw new IllegalArgumentException("Unknown view type: " + viewType);
@@ -116,7 +142,14 @@ public class BrowserMenuAdapter extends RecyclerView.Adapter<BrowserMenuViewHold
         } else if (position == getBlockingSwitchPosition()) {
             return BlockingItemViewHolder.LAYOUT_ID;
         } else {
-            return MenuItemViewHolder.LAYOUT_ID;
+            final int actualPosition = translateToMenuPosition(position);
+            final MenuItem menuItem = items.get(actualPosition);
+
+            if (menuItem.id == R.id.custom_tab_menu_item) {
+                return CustomTabMenuItemViewHolder.LAYOUT_ID;
+            } else {
+                return MenuItemViewHolder.LAYOUT_ID;
+            }
         }
     }
 

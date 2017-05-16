@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- This is just a copy of menu_item, which exists so that the CustomTabMenuItemViewHolder
+     can have a separate ID. See that class for more background on why. <include> isn't allowed
+     at the root of a layout file, so a copy is the easiest way to get what we want.  -->
+<TextView style="@android:style/TextAppearance.Material.Menu"
+          xmlns:android="http://schemas.android.com/apk/res/android"
+          android:layout_width="match_parent"
+          android:layout_height="48dp"
+          android:background="?android:attr/selectableItemBackground"
+          android:clickable="true"
+          android:ellipsize="end"
+          android:gravity="center_vertical"
+          android:lines="1"
+          android:paddingEnd="16dp"
+          android:paddingStart="16dp"
+          android:textSize="16sp"/>
