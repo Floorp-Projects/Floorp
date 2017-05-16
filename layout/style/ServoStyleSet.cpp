@@ -987,8 +987,28 @@ ServoStyleSet::ComputeAnimationValue(
 bool
 ServoStyleSet::EnsureUniqueInnerOnCSSSheets()
 {
+  AutoTArray<StyleSheet*, 32> queue;
+  for (auto& entryArray : mSheets) {
+    for (auto& sheet : entryArray) {
+      queue.AppendElement(sheet);
+    }
+  }
   // This is a stub until more of the functionality of nsStyleSet is
   // replicated for Servo here.
+
+  // Bug 1290276 will replicate the nsStyleSet work of checking
+  // a nsBindingManager
+
+  while (!queue.IsEmpty()) {
+    uint32_t idx = queue.Length() - 1;
+    StyleSheet* sheet = queue[idx];
+    queue.RemoveElementAt(idx);
+
+    sheet->EnsureUniqueInner();
+
+    // Enqueue all the sheet's children.
+    sheet->AppendAllChildSheets(queue);
+  }
 
   bool res = mNeedsRestyleAfterEnsureUniqueInner;
   mNeedsRestyleAfterEnsureUniqueInner = false;

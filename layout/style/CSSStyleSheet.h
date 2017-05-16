@@ -140,9 +140,6 @@ public:
   NS_IMETHOD StyleSheetLoaded(StyleSheet* aSheet, bool aWasAlternate,
                               nsresult aStatus) override;
 
-  // Append all of this sheet's child sheets to aArray.
-  void AppendAllChildSheets(nsTArray<CSSStyleSheet*>& aArray);
-
   bool UseForPresentation(nsPresContext* aPresContext,
                             nsMediaQueryResultCacheKey& aKey) const;
 

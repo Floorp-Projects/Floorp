@@ -2638,9 +2638,9 @@ nsStyleSet::MediumFeaturesChanged()
 bool
 nsStyleSet::EnsureUniqueInnerOnCSSSheets()
 {
-  AutoTArray<CSSStyleSheet*, 32> queue;
+  AutoTArray<StyleSheet*, 32> queue;
   for (SheetType type : gCSSSheetTypes) {
-    for (CSSStyleSheet* sheet : mSheets[type]) {
+    for (StyleSheet* sheet : mSheets[type]) {
       queue.AppendElement(sheet);
     }
   }
@@ -2660,7 +2660,7 @@ nsStyleSet::EnsureUniqueInnerOnCSSSheets()
 
   while (!queue.IsEmpty()) {
     uint32_t idx = queue.Length() - 1;
-    CSSStyleSheet* sheet = queue[idx];
+    StyleSheet* sheet = queue[idx];
     queue.RemoveElementAt(idx);
 
     sheet->EnsureUniqueInner();
