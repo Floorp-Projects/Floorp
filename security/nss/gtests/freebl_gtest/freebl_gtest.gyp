@@ -12,6 +12,7 @@
       'type': 'executable',
       'sources': [
         'mpi_unittest.cc',
+        'dh_unittest.cc',
         '<(DEPTH)/gtests/common/gtests.cc'
       ],
       'dependencies': [
