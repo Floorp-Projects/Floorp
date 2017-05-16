@@ -146,3 +146,45 @@ function checkHostType(toolbox, hostType, previousHostType) {
       previousHostType, "The previous host is correct");
   }
 }
+
+/**
+ * Create a new <script> referencing URL.  Return a promise that
+ * resolves when this has happened
+ * @param {String} url
+ *        the url
+ * @return {Promise} a promise that resolves when the element has been created
+ */
+function createScript(url) {
+  info(`Creating script: ${url}`);
+  let mm = getFrameScript();
+  let command = `
+    let script = document.createElement("script");
+    script.setAttribute("src", "${url}");
+    document.body.appendChild(script);
+    null;
+  `;
+  return evalInDebuggee(mm, command);
+}
+
+/**
+ * Wait for the toolbox to notice that a given source is loaded
+ * @param {Toolbox} toolbox
+ * @param {String} url
+ *        the url to wait for
+ * @return {Promise} a promise that is resolved when the source is loaded
+ */
+function waitForSourceLoad(toolbox, url) {
+  info(`Waiting for source ${url} to be available...`);
+  return new Promise(resolve => {
+    let target = toolbox.target;
+
+    function sourceHandler(_, sourceEvent) {
+      if (sourceEvent && sourceEvent.source && sourceEvent.source.url === url) {
+        resolve();
+        target.off("source-updated", sourceHandler);
+      }
+    }
+
+    target.on("source-updated", sourceHandler);
+  });
+}
