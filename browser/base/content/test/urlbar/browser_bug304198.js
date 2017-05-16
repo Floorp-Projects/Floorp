@@ -6,9 +6,9 @@ add_task(async function() {
   let charsToDelete, deletedURLTab, fullURLTab, partialURLTab, testPartialURL, testURL;
 
   charsToDelete = 5;
-  deletedURLTab = gBrowser.addTab();
-  fullURLTab = gBrowser.addTab();
-  partialURLTab = gBrowser.addTab();
+  deletedURLTab = BrowserTestUtils.addTab(gBrowser);
+  fullURLTab = BrowserTestUtils.addTab(gBrowser);
+  partialURLTab = BrowserTestUtils.addTab(gBrowser);
   testURL = "http://example.org/browser/browser/base/content/test/urlbar/dummy_page.html";
 
   let loaded1 = BrowserTestUtils.browserLoaded(deletedURLTab.linkedBrowser, testURL);

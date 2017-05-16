@@ -10,7 +10,7 @@
 // Loading a toplevel frameset
 add_task(async function() {
   let testURL = getRootDirectory(gTestPath) + "browser_frame_history_index.html";
-  let tab = gBrowser.addTab(testURL);
+  let tab = BrowserTestUtils.addTab(gBrowser, testURL);
   gBrowser.selectedTab = tab;
 
   info("Opening a page with three frames, 4 loads should take place");
@@ -53,7 +53,7 @@ add_task(async function() {
 // Loading the frameset inside an iframe
 add_task(async function() {
   let testURL = getRootDirectory(gTestPath) + "browser_frame_history_index2.html";
-  let tab = gBrowser.addTab(testURL);
+  let tab = BrowserTestUtils.addTab(gBrowser, testURL);
   gBrowser.selectedTab = tab;
 
   info("iframe: Opening a page with an iframe containing three frames, 5 loads should take place");
@@ -110,7 +110,7 @@ add_task(async function() {
     ss.setBrowserState(blankState);
 
   let testURL = getRootDirectory(gTestPath) + "browser_frame_history_index_blank.html";
-  let tab = gBrowser.addTab(testURL);
+  let tab = BrowserTestUtils.addTab(gBrowser, testURL);
   gBrowser.selectedTab = tab;
   await waitForLoadsInBrowser(tab.linkedBrowser, 1);
 

@@ -36,7 +36,7 @@ function doTest() {
   var tabMinWidth = parseInt(getComputedStyle(gBrowser.selectedTab, null).minWidth);
   var tabCountForOverflow = Math.ceil(width(tabstrip) / tabMinWidth * 3);
   while (tabs.length < tabCountForOverflow)
-    gBrowser.addTab("about:blank", {skipAnimation: true});
+    BrowserTestUtils.addTab(gBrowser, "about:blank", {skipAnimation: true});
   gBrowser.pinTab(tabs[0]);
 
   tabstrip.addEventListener("overflow", runOverflowTests);

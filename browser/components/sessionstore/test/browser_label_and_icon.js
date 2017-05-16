@@ -22,7 +22,7 @@ add_task(function setup() {
  */
 add_task(async function test_label_and_icon() {
   // Create a new tab.
-  let tab = gBrowser.addTab("about:robots");
+  let tab = BrowserTestUtils.addTab(gBrowser, "about:robots");
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 
@@ -33,7 +33,7 @@ add_task(async function test_label_and_icon() {
   browser = null;
 
   // Open a new tab to restore into.
-  tab = gBrowser.addTab("about:blank");
+  tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   ss.setTabState(tab, state);
   await promiseTabRestoring(tab);
 

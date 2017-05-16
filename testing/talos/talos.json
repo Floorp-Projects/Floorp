@@ -74,6 +74,10 @@
         "g4-e10s": {
             "tests": ["basic_compositor_video", "glvideo"]
         },
+        "g5-e10s": {
+            "tests": ["ts_paint", "tp5o"],
+            "pagesets_name": "tp5n.zip"
+        },
         "svgr": {
             "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx", "cart", "tsvg_static"],
             "talos_options": ["--disable-e10s"]

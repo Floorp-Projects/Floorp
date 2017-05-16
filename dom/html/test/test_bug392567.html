@@ -44,8 +44,6 @@ function runTests()
     [jarUrl, jarUrl + "?$PARAMS"],
     [jarUrl + "?jarTest1=jarTest2", jarUrl + "?$PARAMS"],
     [jarUrl + "?jarTest3=jarTest4#jarTest5", jarUrl + "?$PARAMS#jarTest5"],
-    ["data:text/html,<html></html>", "data:text/html,<html></html>?$PARAMS"],
-    ["data:text/html,<html>How%20about%20this?</html>", "data:text/html,<html>How%20about%20this?$PARAMS"],
     [httpUrl, httpUrl + "?$PARAMS"],
     [httpUrl + "?httpTest1=httpTest2", httpUrl + "?$PARAMS"],
     [httpUrl + "?httpTest3=httpTest4#httpTest5", httpUrl + "?$PARAMS#httpTest5"],

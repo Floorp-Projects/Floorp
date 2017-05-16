@@ -18,7 +18,7 @@ add_task(async function() {
   Services.prefs.setBoolPref("plugins.click_to_play", true);
   Services.prefs.setBoolPref("extensions.blocklist.suppressUI", true);
 
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_DISABLED, "Test Plug-in");
 

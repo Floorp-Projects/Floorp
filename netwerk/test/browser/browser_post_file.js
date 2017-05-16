@@ -76,7 +76,7 @@ add_task(function*() {
 
   var postURI = OS.Path.toFileURI(postPath);
 
-  gBrowser.selectedTab = gBrowser.addTab(postURI);
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, postURI);
   let browser = gBrowser.selectedBrowser;
   browser.messageManager.loadFrameScript("data:,(" + frameScript.toString() + ")();", true);
   yield new Promise(resolve => {

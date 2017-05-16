@@ -15,14 +15,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=437361
   function testModalDialogBlockedCleanly() {
     is(true, SpecialPowers.getBoolPref("dom.disable_open_during_load"), "mozprefs sanity check");
     var rv = window.showModalDialog( // should be blocked without exception
-      "data:text/html,<html><body onload='close(); returnValue = 1;' /></html>");
+      "file1_bug437361.html");
     is(rv, null, "Modal dialog opened unexpectedly.");
   }
   
   function testModalDialogAllowed() {
     is(false, SpecialPowers.getBoolPref("dom.disable_open_during_load"), "mozprefs sanity check");
     var rv = window.showModalDialog( // should not be blocked this time
-      "data:text/html,<html><body onload='close(); returnValue = 1;' /></html>");
+      "file2_bug437361.html");
     is(rv, 1, "Problem with modal dialog returnValue.");
   }
 

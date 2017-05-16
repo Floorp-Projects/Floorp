@@ -103,7 +103,9 @@ SimpleTest.registerCleanupFunction(() => {
 function addTab(url) {
   info("Adding a new tab with URL: '" + url + "'");
   return new Promise(resolve => {
-    let tab = gBrowser.selectedTab = gBrowser.addTab(url);
+    let tab = gBrowser.selectedTab = gBrowser.addTab(url, {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
     gBrowser.selectedBrowser.addEventListener("load", function () {
       info("URL '" + url + "' loading complete");
       resolve(tab);

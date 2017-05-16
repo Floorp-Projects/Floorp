@@ -6,8 +6,8 @@ add_task(function* test() {
   gPrefService.setBoolPref("browser.ctrlTab.previews", true);
 
   let [origTab] = gBrowser.visibleTabs;
-  let tabOne = gBrowser.addTab();
-  let tabTwo = gBrowser.addTab();
+  let tabOne = BrowserTestUtils.addTab(gBrowser);
+  let tabTwo = BrowserTestUtils.addTab(gBrowser);
 
   // test the ctrlTab.tabList
   pressCtrlTab();

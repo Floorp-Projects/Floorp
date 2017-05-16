@@ -176,106 +176,102 @@ const CustomizableWidgets = [
     tooltiptext: "history-panelmenu.tooltiptext2",
     defaultArea: CustomizableUI.AREA_PANEL,
     onViewShowing(aEvent) {
-      aEvent.detail.addBlocker(new Promise((resolve, reject) => {
-        // Populate our list of history
-        const kMaxResults = 15;
-        let doc = aEvent.target.ownerDocument;
-        let win = doc.defaultView;
+      // Populate our list of history
+      const kMaxResults = 15;
+      let doc = aEvent.target.ownerDocument;
+      let win = doc.defaultView;
 
-        let options = PlacesUtils.history.getNewQueryOptions();
-        options.excludeQueries = true;
-        options.queryType = options.QUERY_TYPE_HISTORY;
-        options.sortingMode = options.SORT_BY_DATE_DESCENDING;
-        options.maxResults = kMaxResults;
-        let query = PlacesUtils.history.getNewQuery();
+      let options = PlacesUtils.history.getNewQueryOptions();
+      options.excludeQueries = true;
+      options.queryType = options.QUERY_TYPE_HISTORY;
+      options.sortingMode = options.SORT_BY_DATE_DESCENDING;
+      options.maxResults = kMaxResults;
+      let query = PlacesUtils.history.getNewQuery();
 
-        let items = doc.getElementById("PanelUI-historyItems");
-        // Clear previous history items.
-        while (items.firstChild) {
-          items.firstChild.remove();
-        }
+      let items = doc.getElementById("PanelUI-historyItems");
+      // Clear previous history items.
+      while (items.firstChild) {
+        items.firstChild.remove();
+      }
 
-        // Get all statically placed buttons to supply them with keyboard shortcuts.
-        let staticButtons = items.parentNode.getElementsByTagNameNS(kNSXUL, "toolbarbutton");
-        for (let i = 0, l = staticButtons.length; i < l; ++i)
-          CustomizableUI.addShortcut(staticButtons[i]);
+      // Get all statically placed buttons to supply them with keyboard shortcuts.
+      let staticButtons = items.parentNode.getElementsByTagNameNS(kNSXUL, "toolbarbutton");
+      for (let i = 0, l = staticButtons.length; i < l; ++i)
+        CustomizableUI.addShortcut(staticButtons[i]);
 
-        PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
-                           .asyncExecuteLegacyQueries([query], 1, options, {
-          handleResult(aResultSet) {
-            let onItemCommand = function(aItemCommandEvent) {
-              // Only handle the click event for middle clicks, we're using the command
-              // event otherwise.
-              if (aItemCommandEvent.type == "click" &&
-                  aItemCommandEvent.button != 1) {
-                return;
-              }
-              let item = aItemCommandEvent.target;
-              win.openUILink(item.getAttribute("targetURI"), aItemCommandEvent);
-              CustomizableUI.hidePanelForNode(item);
-            };
-            let fragment = doc.createDocumentFragment();
-            let row;
-            while ((row = aResultSet.getNextRow())) {
-              let uri = row.getResultByIndex(1);
-              let title = row.getResultByIndex(2);
-
-              let item = doc.createElementNS(kNSXUL, "toolbarbutton");
-              item.setAttribute("label", title || uri);
-              item.setAttribute("targetURI", uri);
-              item.setAttribute("class", "subviewbutton");
-              item.addEventListener("command", onItemCommand);
-              item.addEventListener("click", onItemCommand);
-              item.setAttribute("image", "page-icon:" + uri);
-              fragment.appendChild(item);
+      PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
+                         .asyncExecuteLegacyQueries([query], 1, options, {
+        handleResult(aResultSet) {
+          let onItemCommand = function(aItemCommandEvent) {
+            // Only handle the click event for middle clicks, we're using the command
+            // event otherwise.
+            if (aItemCommandEvent.type == "click" &&
+                aItemCommandEvent.button != 1) {
+              return;
             }
-            items.appendChild(fragment);
-          },
-          handleError(aError) {
-            log.debug("History view tried to show but had an error: " + aError);
-            reject();
-          },
-          handleCompletion(aReason) {
-            log.debug("History view is being shown!");
-            resolve();
-          },
-        });
+            let item = aItemCommandEvent.target;
+            win.openUILink(item.getAttribute("targetURI"), aItemCommandEvent);
+            CustomizableUI.hidePanelForNode(item);
+          };
+          let fragment = doc.createDocumentFragment();
+          let row;
+          while ((row = aResultSet.getNextRow())) {
+            let uri = row.getResultByIndex(1);
+            let title = row.getResultByIndex(2);
 
-        let recentlyClosedTabs = doc.getElementById("PanelUI-recentlyClosedTabs");
-        while (recentlyClosedTabs.firstChild) {
-          recentlyClosedTabs.firstChild.remove();
-        }
+            let item = doc.createElementNS(kNSXUL, "toolbarbutton");
+            item.setAttribute("label", title || uri);
+            item.setAttribute("targetURI", uri);
+            item.setAttribute("class", "subviewbutton");
+            item.addEventListener("command", onItemCommand);
+            item.addEventListener("click", onItemCommand);
+            item.setAttribute("image", "page-icon:" + uri);
+            fragment.appendChild(item);
+          }
+          items.appendChild(fragment);
+        },
+        handleError(aError) {
+          log.debug("History view tried to show but had an error: " + aError);
+        },
+        handleCompletion(aReason) {
+          log.debug("History view is being shown!");
+        },
+      });
 
-        let recentlyClosedWindows = doc.getElementById("PanelUI-recentlyClosedWindows");
-        while (recentlyClosedWindows.firstChild) {
-          recentlyClosedWindows.firstChild.remove();
-        }
+      let recentlyClosedTabs = doc.getElementById("PanelUI-recentlyClosedTabs");
+      while (recentlyClosedTabs.firstChild) {
+        recentlyClosedTabs.firstChild.remove();
+      }
 
-        let utils = RecentlyClosedTabsAndWindowsMenuUtils;
-        let tabsFragment = utils.getTabsFragment(doc.defaultView, "toolbarbutton", true,
-                                                 "menuRestoreAllTabsSubview.label");
-        let separator = doc.getElementById("PanelUI-recentlyClosedTabs-separator");
-        let elementCount = tabsFragment.childElementCount;
-        separator.hidden = !elementCount;
-        while (--elementCount >= 0) {
-          let element = tabsFragment.children[elementCount];
-          CustomizableUI.addShortcut(element);
-          element.classList.add("subviewbutton", "cui-withicon");
-        }
-        recentlyClosedTabs.appendChild(tabsFragment);
+      let recentlyClosedWindows = doc.getElementById("PanelUI-recentlyClosedWindows");
+      while (recentlyClosedWindows.firstChild) {
+        recentlyClosedWindows.firstChild.remove();
+      }
 
-        let windowsFragment = utils.getWindowsFragment(doc.defaultView, "toolbarbutton", true,
-                                                       "menuRestoreAllWindowsSubview.label");
-        separator = doc.getElementById("PanelUI-recentlyClosedWindows-separator");
-        elementCount = windowsFragment.childElementCount;
-        separator.hidden = !elementCount;
-        while (--elementCount >= 0) {
-          let element = windowsFragment.children[elementCount];
-          CustomizableUI.addShortcut(element);
-          element.classList.add("subviewbutton", "cui-withicon");
-        }
-        recentlyClosedWindows.appendChild(windowsFragment);
-      }));
+      let utils = RecentlyClosedTabsAndWindowsMenuUtils;
+      let tabsFragment = utils.getTabsFragment(doc.defaultView, "toolbarbutton", true,
+                                               "menuRestoreAllTabsSubview.label");
+      let separator = doc.getElementById("PanelUI-recentlyClosedTabs-separator");
+      let elementCount = tabsFragment.childElementCount;
+      separator.hidden = !elementCount;
+      while (--elementCount >= 0) {
+        let element = tabsFragment.children[elementCount];
+        CustomizableUI.addShortcut(element);
+        element.classList.add("subviewbutton", "cui-withicon");
+      }
+      recentlyClosedTabs.appendChild(tabsFragment);
+
+      let windowsFragment = utils.getWindowsFragment(doc.defaultView, "toolbarbutton", true,
+                                                     "menuRestoreAllWindowsSubview.label");
+      separator = doc.getElementById("PanelUI-recentlyClosedWindows-separator");
+      elementCount = windowsFragment.childElementCount;
+      separator.hidden = !elementCount;
+      while (--elementCount >= 0) {
+        let element = windowsFragment.children[elementCount];
+        CustomizableUI.addShortcut(element);
+        element.classList.add("subviewbutton", "cui-withicon");
+      }
+      recentlyClosedWindows.appendChild(windowsFragment);
     },
     onCreated(aNode) {
       // Middle clicking recently closed items won't close the panel - cope:

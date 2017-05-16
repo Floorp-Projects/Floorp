@@ -15,7 +15,7 @@ function toUnicode(input) {
 
 function test() {
 
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   registerCleanupFunction(function() {
     gBrowser.removeTab(tab);

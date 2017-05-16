@@ -66,7 +66,7 @@ add_task(async function filter_urls() {
   WebRequest.onBeforeSendHeaders.addListener(onBeforeSendHeaders, filter, ["blocking"]);
   WebRequest.onResponseStarted.addListener(onResponseStarted, filter);
 
-  gBrowser.selectedTab = gBrowser.addTab(URL);
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, URL);
 
   await waitForLoad();
 
@@ -88,7 +88,7 @@ add_task(async function filter_types() {
   WebRequest.onBeforeSendHeaders.addListener(onBeforeSendHeaders, filter, ["blocking"]);
   WebRequest.onResponseStarted.addListener(onResponseStarted, filter);
 
-  gBrowser.selectedTab = gBrowser.addTab(URL);
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, URL);
 
   await waitForLoad();
 

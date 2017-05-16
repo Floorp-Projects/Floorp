@@ -32,7 +32,7 @@ function waitForPort(url, createTab = true) {
     });
 
     if (createTab)
-      gBrowser.selectedTab = gBrowser.addTab(url);
+      gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, url);
   });
 }
 
@@ -45,7 +45,7 @@ function waitForPage(pages) {
     }
 
     pages.addMessageListener("RemotePage:Init", listener);
-    gBrowser.selectedTab = gBrowser.addTab(TEST_URL);
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, TEST_URL);
   });
 }
 

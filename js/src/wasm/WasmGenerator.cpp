@@ -1189,16 +1189,16 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
 
     UniqueConstBytes maybeDebuggingBytes;
     if (metadata_->debugEnabled) {
-        maybeDebuggingBytes = codeSegment->unlinkedBytesForDebugging(linkData_);
+        Bytes bytes;
+        if (!bytes.resize(masm_.bytesNeeded()))
+            return nullptr;
+        masm_.executableCopy(bytes.begin(), /* flushICache = */ false);
+        maybeDebuggingBytes = js::MakeUnique<Bytes>(Move(bytes));
         if (!maybeDebuggingBytes)
             return nullptr;
     }
 
-    const ShareableBytes* maybeBytecode = nullptr;
-    if (metadata_->debugEnabled || !metadata_->funcNames.empty())
-        maybeBytecode = &bytecode;
-
-    SharedCode code = js_new<Code>(Move(codeSegment), *metadata_, maybeBytecode);
+    SharedCode code = js_new<Code>(Move(codeSegment), *metadata_);
     if (!code)
         return nullptr;
 

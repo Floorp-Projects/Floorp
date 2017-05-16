@@ -18,7 +18,7 @@ add_task(async function reallyRunTests() {
 
   // This can't use openNewForegroundTab because if we focus tab2 now, we
   // won't send a focus event during test 6, further down in this file.
-  let tab2 = gBrowser.addTab(testPage);
+  let tab2 = BrowserTestUtils.addTab(gBrowser, testPage);
   browser2 = tab2.linkedBrowser;
   await BrowserTestUtils.browserLoaded(browser2);
 

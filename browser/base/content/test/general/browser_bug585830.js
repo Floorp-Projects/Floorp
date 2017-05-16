@@ -4,8 +4,8 @@
 
 function test() {
   let tab1 = gBrowser.selectedTab;
-  let tab2 = gBrowser.addTab("about:blank", {skipAnimation: true});
-  gBrowser.addTab();
+  let tab2 = BrowserTestUtils.addTab(gBrowser, "about:blank", {skipAnimation: true});
+  BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = tab2;
 
   gBrowser.removeCurrentTab({animate: true});

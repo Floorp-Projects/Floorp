@@ -17,7 +17,7 @@ function test() {
 
   pm.add(makeURI(notificationURL), "desktop-notification", pm.ALLOW_ACTION);
 
-  tab = gBrowser.addTab(notificationURL);
+  tab = BrowserTestUtils.addTab(gBrowser, notificationURL);
   gBrowser.selectedTab = tab;
   tab.linkedBrowser.addEventListener("load", onLoad, true);
 }

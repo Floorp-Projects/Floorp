@@ -3,7 +3,7 @@ var tab;
 function test() {
   waitForExplicitFinish();
 
-  tab = gBrowser.addTab();
+  tab = BrowserTestUtils.addTab(gBrowser);
   isnot(tab.getAttribute("fadein"), "true", "newly opened tab is yet to fade in");
 
   // Try to remove the tab right before the opening animation's first frame

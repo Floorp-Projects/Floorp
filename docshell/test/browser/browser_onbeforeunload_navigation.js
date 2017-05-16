@@ -155,7 +155,7 @@ function test() {
   waitForExplicitFinish();
   gBrowser.addProgressListener(tabStateListener);
 
-  testTab = gBrowser.selectedTab = gBrowser.addTab();
+  testTab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   testTab.linkedBrowser.addEventListener("load", onTabLoaded, true);
   testTab.linkedBrowser.loadURI(TEST_PAGE);
 }

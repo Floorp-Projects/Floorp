@@ -109,7 +109,7 @@ var tests = [
   // Note: test 4 to 6 share a tab.
   { id: "Test#4",
     async run() {
-      let tab = gBrowser.addTab("http://example.com/");
+      let tab = BrowserTestUtils.addTab(gBrowser, "http://example.com/");
       await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
       isnot(gBrowser.selectedTab, tab, "new tab isn't selected");
       wrongBrowserNotificationObject.browser = gBrowser.getBrowserForTab(tab);

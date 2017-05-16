@@ -30,7 +30,7 @@ add_task(async function test_reader_button() {
     Services.prefs.setBoolPref(name, value);
   });
 
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   is_element_hidden(readerButton, "Reader mode button is not present on a new tab");
   ok(!UITour.isInfoOnTarget(window, "readerMode-urlBar"),
      "Info panel shouldn't appear without the reader mode button");
@@ -77,7 +77,7 @@ add_task(async function test_reader_button() {
   let nonReadableUrl = TEST_PATH + "readerModeNonArticle.html";
 
   // Load a new tab that is NOT reader-able.
-  let newTab = gBrowser.selectedTab = gBrowser.addTab();
+  let newTab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   await promiseTabLoadEvent(newTab, nonReadableUrl);
   await promiseWaitForCondition(() => readerButton.hidden);
   is_element_hidden(readerButton, "Reader mode button is not present on a non-reader-able page");
@@ -88,7 +88,7 @@ add_task(async function test_reader_button() {
   is_element_visible(readerButton, "Reader mode button is present on a reader-able page");
 
   // Load a new tab in reader mode that is NOT reader-able in the reader mode.
-  newTab = gBrowser.selectedTab = gBrowser.addTab();
+  newTab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   let promiseAboutReaderError = BrowserTestUtils.waitForContentEvent(newTab.linkedBrowser, "AboutReaderContentError");
   await promiseTabLoadEvent(newTab, "about:reader?url=" + nonReadableUrl);
   await promiseAboutReaderError;

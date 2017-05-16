@@ -39,7 +39,7 @@ add_task(async function() {
 
   for (let url of aboutURLs) {
     info("Loading about:" + url);
-    let tab = gBrowser.addTab("about:" + url, {userContextId: 1});
+    let tab = BrowserTestUtils.addTab(gBrowser, "about:" + url, {userContextId: 1});
     await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
     ok(true, "Done loading about:" + url);

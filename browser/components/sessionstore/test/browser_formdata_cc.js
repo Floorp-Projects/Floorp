@@ -45,7 +45,7 @@ add_task(async function() {
   // field, and then removes the tab to trigger data collection.
   async function createAndRemoveTab(formValue) {
     // Create a new tab.
-    let tab = gBrowser.addTab(URL);
+    let tab = BrowserTestUtils.addTab(gBrowser, URL);
     let browser = tab.linkedBrowser;
     await promiseBrowserLoaded(browser);
 

@@ -14,7 +14,7 @@ add_task(async function test() {
   registerCleanupFunction(() => Services.prefs.clearUserPref(PREF));
 
   // Add a new tab with a nice icon.
-  let tab = gBrowser.addTab("about:robots");
+  let tab = BrowserTestUtils.addTab(gBrowser, "about:robots");
   await promiseBrowserLoaded(tab.linkedBrowser);
 
   // Check that the tab has 'image' and 'iconLoadingPrincipal' attributes.

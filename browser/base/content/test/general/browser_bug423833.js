@@ -15,7 +15,7 @@ var intervalID;
 function test() {
   waitForExplicitFinish();
 
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedBrowser.addEventListener("load", test1Setup, true);
   content.location = testPage;
 }

@@ -15,7 +15,7 @@ add_task(async function() {
     set: [["browser.sessionstore.interval", 0]]
   });
 
-  let tab = gBrowser.addTab(testURL);
+  let tab = BrowserTestUtils.addTab(gBrowser, testURL);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   await TabStateFlusher.flush(tab.linkedBrowser);
 

@@ -5,7 +5,7 @@ const PAGE_2 = "data:text/html,<html><body>Another%20regular,%20everyday,%20norm
 
 add_task(async function() {
   // Load an empty, non-remote tab at about:blank...
-  let tab = gBrowser.addTab("about:blank", {
+  let tab = BrowserTestUtils.addTab(gBrowser, "about:blank", {
     forceNotRemote: true,
   });
   gBrowser.selectedTab = tab;

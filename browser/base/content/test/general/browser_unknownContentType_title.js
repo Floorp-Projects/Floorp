@@ -15,7 +15,7 @@ function waitForNewWindow() {
 }
 
 add_task(async function() {
-  let tab = gBrowser.selectedTab = gBrowser.addTab(url);
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, url);
   let browser = tab.linkedBrowser;
   await promiseTabLoaded(gBrowser.selectedTab);
 

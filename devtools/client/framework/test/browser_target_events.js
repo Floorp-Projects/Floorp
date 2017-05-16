@@ -9,7 +9,7 @@ function test()
 {
   waitForExplicitFinish();
 
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(onLoad);
 }
 
@@ -19,7 +19,7 @@ function onLoad() {
   is(target.tab, gBrowser.selectedTab, "Target linked to the right tab.");
 
   target.once("hidden", onHidden);
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 }
 
 function onHidden() {

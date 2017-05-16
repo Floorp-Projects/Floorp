@@ -10,6 +10,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "js/ProfilingStack.h"
 #include "StoreSequencer.h"
+#include "nsISupportsImpl.h"  // for MOZ_COUNT_{CTOR,DTOR}
 
 #include <stdlib.h>
 #include <stdint.h>

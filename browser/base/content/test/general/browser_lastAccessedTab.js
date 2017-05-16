@@ -26,7 +26,7 @@ function test() {
 
 function step2() {
   isCurrent(originalTab, "selected tab has the current timestamp");
-  newTab = gBrowser.addTab("about:blank", {skipAnimation: true});
+  newTab = BrowserTestUtils.addTab(gBrowser, "about:blank", {skipAnimation: true});
   nextStep(step3);
 }
 

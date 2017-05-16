@@ -8,7 +8,7 @@ function frameScript()
 function test() {
   waitForExplicitFinish();
 
-  var newTab = gBrowser.addTab("about:blank");
+  var newTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   gBrowser.selectedTab = newTab;
 
   let browser = newTab.linkedBrowser;

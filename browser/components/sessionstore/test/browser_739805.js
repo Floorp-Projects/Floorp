@@ -16,7 +16,7 @@ function test() {
     Services.prefs.clearUserPref("browser.sessionstore.restore_on_demand");
   });
 
-  let tab = gBrowser.addTab("about:blank");
+  let tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   let browser = tab.linkedBrowser;
 
   promiseBrowserLoaded(browser).then(() => {

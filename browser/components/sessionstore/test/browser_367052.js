@@ -16,7 +16,7 @@ add_task(async function() {
   }
 
   // restore a blank tab
-  let tab = gBrowser.addTab("about:");
+  let tab = BrowserTestUtils.addTab(gBrowser, "about:");
   await promiseBrowserLoaded(tab.linkedBrowser);
 
   let count = await promiseSHistoryCount(tab.linkedBrowser);

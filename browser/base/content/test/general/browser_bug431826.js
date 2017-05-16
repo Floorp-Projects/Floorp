@@ -3,7 +3,7 @@ function remote(task) {
 }
 
 add_task(async function() {
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   let promise = BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser);
   gBrowser.loadURI("https://nocert.example.com/");

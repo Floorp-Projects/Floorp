@@ -25,7 +25,7 @@ function test()
   // on the location link. After that we check which Scratchpad window
   // is currently active (it should be the older one).
 
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedBrowser.addEventListener("load", function () {
     openScratchpad(function () {
       let sw = gScratchpadWindow;

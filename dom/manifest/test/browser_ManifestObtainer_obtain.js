@@ -153,7 +153,7 @@ add_task(function*() {
   ];
   // Open tabs an collect corresponding browsers
   let browsers = [
-    for (url of tabURLs) gBrowser.addTab(url).linkedBrowser
+    for (url of tabURLs) BrowserTestUtils.addTab(gBrowser, url).linkedBrowser
   ];
   // Once all the pages have loaded, run a bunch of tests in "parallel".
   yield Promise.all((

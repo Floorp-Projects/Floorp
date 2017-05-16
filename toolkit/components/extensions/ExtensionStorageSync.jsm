@@ -174,76 +174,70 @@ const getKBHash = async function(fxaService) {
  * getKeys() to use it.
  */
 class EncryptionRemoteTransformer {
-  encode(record) {
-    const self = this;
-    return (async function() {
-      const keyBundle = await self.getKeys();
-      if (record.ciphertext) {
-        throw new Error("Attempt to reencrypt??");
-      }
-      let id = await self.getEncodedRecordId(record);
-      if (!id) {
-        throw new Error("Record ID is missing or invalid");
-      }
+  async encode(record) {
+    const keyBundle = await this.getKeys();
+    if (record.ciphertext) {
+      throw new Error("Attempt to reencrypt??");
+    }
+    let id = await this.getEncodedRecordId(record);
+    if (!id) {
+      throw new Error("Record ID is missing or invalid");
+    }
 
-      let IV = Svc.Crypto.generateRandomIV();
-      let ciphertext = Svc.Crypto.encrypt(JSON.stringify(record),
-                                          keyBundle.encryptionKeyB64, IV);
-      let hmac = ciphertextHMAC(keyBundle, id, IV, ciphertext);
-      const encryptedResult = {ciphertext, IV, hmac, id};
+    let IV = Svc.Crypto.generateRandomIV();
+    let ciphertext = Svc.Crypto.encrypt(JSON.stringify(record),
+                                        keyBundle.encryptionKeyB64, IV);
+    let hmac = ciphertextHMAC(keyBundle, id, IV, ciphertext);
+    const encryptedResult = {ciphertext, IV, hmac, id};
 
-      // Copy over the _status field, so that we handle concurrency
-      // headers (If-Match, If-None-Match) correctly.
-      // DON'T copy over "deleted" status, because then we'd leak
-      // plaintext deletes.
-      encryptedResult._status = record._status == "deleted" ? "updated" : record._status;
-      if (record.hasOwnProperty("last_modified")) {
-        encryptedResult.last_modified = record.last_modified;
-      }
+    // Copy over the _status field, so that we handle concurrency
+    // headers (If-Match, If-None-Match) correctly.
+    // DON'T copy over "deleted" status, because then we'd leak
+    // plaintext deletes.
+    encryptedResult._status = record._status == "deleted" ? "updated" : record._status;
+    if (record.hasOwnProperty("last_modified")) {
+      encryptedResult.last_modified = record.last_modified;
+    }
 
-      return encryptedResult;
-    })();
+    return encryptedResult;
   }
 
-  decode(record) {
-    const self = this;
-    return (async function() {
-      if (!record.ciphertext) {
-        // This can happen for tombstones if a record is deleted.
-        if (record.deleted) {
-          return record;
-        }
-        throw new Error("No ciphertext: nothing to decrypt?");
+  async decode(record) {
+    if (!record.ciphertext) {
+      // This can happen for tombstones if a record is deleted.
+      if (record.deleted) {
+        return record;
       }
-      const keyBundle = await self.getKeys();
-      // Authenticate the encrypted blob with the expected HMAC
-      let computedHMAC = ciphertextHMAC(keyBundle, record.id, record.IV, record.ciphertext);
+      throw new Error("No ciphertext: nothing to decrypt?");
+    }
+    const keyBundle = await this.getKeys();
+    // Authenticate the encrypted blob with the expected HMAC
+    let computedHMAC = ciphertextHMAC(keyBundle, record.id, record.IV, record.ciphertext);
 
-      if (computedHMAC != record.hmac) {
-        Utils.throwHMACMismatch(record.hmac, computedHMAC);
-      }
+    if (computedHMAC != record.hmac) {
+      Utils.throwHMACMismatch(record.hmac, computedHMAC);
+    }
 
-      // Handle invalid data here. Elsewhere we assume that cleartext is an object.
-      let cleartext = Svc.Crypto.decrypt(record.ciphertext,
-                                         keyBundle.encryptionKeyB64, record.IV);
-      let jsonResult = JSON.parse(cleartext);
-      if (!jsonResult || typeof jsonResult !== "object") {
-        throw new Error("Decryption failed: result is <" + jsonResult + ">, not an object.");
-      }
+    // Handle invalid data here. Elsewhere we assume that cleartext is an object.
+    let cleartext = Svc.Crypto.decrypt(record.ciphertext,
+                                       keyBundle.encryptionKeyB64, record.IV);
+    let jsonResult = JSON.parse(cleartext);
+    if (!jsonResult || typeof jsonResult !== "object") {
+      throw new Error("Decryption failed: result is <" + jsonResult + ">, not an object.");
+    }
 
-      if (record.hasOwnProperty("last_modified")) {
-        jsonResult.last_modified = record.last_modified;
-      }
+    if (record.hasOwnProperty("last_modified")) {
+      jsonResult.last_modified = record.last_modified;
+    }
 
-      // _status: deleted records were deleted on a client, but
-      // uploaded as an encrypted blob so we don't leak deletions.
-      // If we get such a record, flag it as deleted.
-      if (jsonResult._status == "deleted") {
-        jsonResult.deleted = true;
-      }
+    // _status: deleted records were deleted on a client, but
+    // uploaded as an encrypted blob so we don't leak deletions.
+    // If we get such a record, flag it as deleted.
+    if (jsonResult._status == "deleted") {
+      jsonResult.deleted = true;
+    }
 
-      return jsonResult;
-    })();
+    return jsonResult;
   }
 
   /**
@@ -309,13 +303,10 @@ class KeyRingEncryptionRemoteTransformer extends EncryptionRemoteTransformer {
   // encryption fails, we can use this to try to detect whether we are
   // being compromised or if the record here was encoded with a
   // different kB.
-  encode(record) {
-    const encodePromise = super.encode(record);
-    return (async function() {
-      const encoded = await encodePromise;
-      encoded.kbHash = record.kbHash;
-      return encoded;
-    })();
+  async encode(record) {
+    const encoded = await super.encode(record);
+    encoded.kbHash = record.kbHash;
+    return encoded;
   }
 
   async decode(record) {
@@ -680,18 +671,15 @@ let CollectionKeyEncryptionRemoteTransformer = class extends EncryptionRemoteTra
     this.extensionId = extensionId;
   }
 
-  getKeys() {
-    const self = this;
-    return (async function() {
-      // FIXME: cache the crypto record for the duration of a sync cycle?
-      const collectionKeys = await self.cryptoCollection.getKeyRing();
-      if (!collectionKeys.hasKeysFor([self.extensionId])) {
-        // This should never happen. Keys should be created (and
-        // synced) at the beginning of the sync cycle.
-        throw new Error(`tried to encrypt records for ${this.extensionId}, but key is not present`);
-      }
-      return collectionKeys.keyForCollection(self.extensionId);
-    })();
+  async getKeys() {
+    // FIXME: cache the crypto record for the duration of a sync cycle?
+    const collectionKeys = await this.cryptoCollection.getKeyRing();
+    if (!collectionKeys.hasKeysFor([this.extensionId])) {
+      // This should never happen. Keys should be created (and
+      // synced) at the beginning of the sync cycle.
+      throw new Error(`tried to encrypt records for ${this.extensionId}, but key is not present`);
+    }
+    return collectionKeys.keyForCollection(this.extensionId);
   }
 
   getEncodedRecordId(record) {

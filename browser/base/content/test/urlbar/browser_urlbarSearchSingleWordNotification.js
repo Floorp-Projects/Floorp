@@ -58,7 +58,7 @@ async function runURLBarSearchTest({valueToOpen, expectSearch, expectNotificatio
 }
 
 add_task(async function test_navigate_full_domain() {
-  let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   await runURLBarSearchTest({
     valueToOpen: "www.mozilla.org",
@@ -69,7 +69,7 @@ add_task(async function test_navigate_full_domain() {
 });
 
 add_task(async function test_navigate_decimal_ip() {
-  let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   await runURLBarSearchTest({
     valueToOpen: "1234",
@@ -80,7 +80,7 @@ add_task(async function test_navigate_decimal_ip() {
 });
 
 add_task(async function test_navigate_decimal_ip_with_path() {
-  let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   await runURLBarSearchTest({
     valueToOpen: "1234/12",
@@ -91,7 +91,7 @@ add_task(async function test_navigate_decimal_ip_with_path() {
 });
 
 add_task(async function test_navigate_large_number() {
-  let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   await runURLBarSearchTest({
     valueToOpen: "123456789012345",
@@ -102,7 +102,7 @@ add_task(async function test_navigate_large_number() {
 });
 
 add_task(async function test_navigate_small_hex_number() {
-  let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   await runURLBarSearchTest({
     valueToOpen: "0x1f00ffff",
@@ -113,7 +113,7 @@ add_task(async function test_navigate_small_hex_number() {
 });
 
 add_task(async function test_navigate_large_hex_number() {
-  let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   await runURLBarSearchTest({
     valueToOpen: "0x7f0000017f000001",
@@ -187,7 +187,7 @@ add_task(get_test_function_for_localhost_with_hostname("localhost."));
 add_task(get_test_function_for_localhost_with_hostname("localhost", true));
 
 add_task(async function test_navigate_invalid_url() {
-  let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   await runURLBarSearchTest({
     valueToOpen: "mozilla is awesome",

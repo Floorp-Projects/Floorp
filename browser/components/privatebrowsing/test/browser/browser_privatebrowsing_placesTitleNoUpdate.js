@@ -38,7 +38,7 @@ add_task(async function test() {
 
   await PlacesTestUtils.clearHistory();
 
-  let tabToClose = gBrowser.selectedTab = gBrowser.addTab(TEST_URL);
+  let tabToClose = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, TEST_URL);
   await waitForTitleChanged();
   is(PlacesUtils.history.getPageTitle(TEST_URI), TITLE_1, "The title matches the orignal title after first visit");
 

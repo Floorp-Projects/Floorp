@@ -174,7 +174,7 @@ FrameIterator::functionDisplayAtom() const
     MOZ_ASSERT(!done());
 
     JSContext* cx = activation_->cx();
-    JSAtom* atom = code_->getFuncAtom(cx, codeRange_->funcIndex());
+    JSAtom* atom = instance()->getFuncAtom(cx, codeRange_->funcIndex());
     if (!atom) {
         cx->clearPendingException();
         return cx->names().empty;

@@ -16,7 +16,7 @@ function test() {
 
   let testURL = "chrome://mochitests/content/chrome/dom/base/test/file_empty.html";
 
-  let tab = gBrowser.addTab(testURL);
+  let tab = BrowserTestUtils.addTab(gBrowser, testURL);
   gBrowser.selectedTab = tab;
 
   whenBrowserLoaded(tab.linkedBrowser, function() {

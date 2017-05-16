@@ -18,12 +18,12 @@ add_task(function* test_update() {
   let url = BASE_URI + "file_multie10s_update.html";
 
   info("Creating the first tab...");
-  let tab1 = gBrowser.addTab(url);
+  let tab1 = BrowserTestUtils.addTab(gBrowser, url);
   let browser1 = gBrowser.getBrowserForTab(tab1);
   yield BrowserTestUtils.browserLoaded(browser1);
 
   info("Creating the second tab...");
-  let tab2 = gBrowser.addTab(url);
+  let tab2 = BrowserTestUtils.addTab(gBrowser, url);
   let browser2 = gBrowser.getBrowserForTab(tab2);
   yield BrowserTestUtils.browserLoaded(browser2);
 

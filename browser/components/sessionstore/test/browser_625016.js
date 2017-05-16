@@ -56,7 +56,7 @@ add_task(async function new_window() {
 add_task(async function new_tab() {
   let newTab;
   try {
-    newTab = gBrowser.addTab("about:mozilla");
+    newTab = BrowserTestUtils.addTab(gBrowser, "about:mozilla");
     await promiseBrowserLoaded(newTab.linkedBrowser);
     await TabStateFlusher.flush(newTab.linkedBrowser);
 

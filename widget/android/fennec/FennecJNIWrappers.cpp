@@ -41,6 +41,28 @@ auto DownloadsIntegration::ScanMedia(mozilla::jni::String::Param a0, mozilla::jn
     return mozilla::jni::Method<ScanMedia_t>::Call(DownloadsIntegration::Context(), nullptr, a0, a1);
 }
 
+const char GeckoApp::name[] =
+        "org/mozilla/gecko/GeckoApp";
+
+constexpr char GeckoApp::AddPluginView_t::name[];
+constexpr char GeckoApp::AddPluginView_t::signature[];
+
+auto GeckoApp::AddPluginView(mozilla::jni::Object::Param a0) -> void
+{
+    return mozilla::jni::Method<AddPluginView_t>::Call(GeckoApp::Context(), nullptr, a0);
+}
+
+constexpr char GeckoApp::OnFullScreenPluginHidden_t::name[];
+constexpr char GeckoApp::OnFullScreenPluginHidden_t::signature[];
+
+constexpr char GeckoApp::RemovePluginView_t::name[];
+constexpr char GeckoApp::RemovePluginView_t::signature[];
+
+auto GeckoApp::RemovePluginView(mozilla::jni::Object::Param a0) -> void
+{
+    return mozilla::jni::Method<RemovePluginView_t>::Call(GeckoApp::Context(), nullptr, a0);
+}
+
 const char GeckoJavaSampler::name[] =
         "org/mozilla/gecko/GeckoJavaSampler";
 

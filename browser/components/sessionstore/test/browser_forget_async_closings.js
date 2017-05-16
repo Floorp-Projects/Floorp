@@ -28,7 +28,7 @@ let forgetTabHelper = async function(forgetFn) {
      "We should have 0 closed tabs being stored.");
 
   // Create a tab worth remembering.
-  let tab = gBrowser.addTab(PAGE);
+  let tab = BrowserTestUtils.addTab(gBrowser, PAGE);
   let browser = tab.linkedBrowser;
   await BrowserTestUtils.browserLoaded(browser, false, PAGE);
   await TabStateFlusher.flush(browser);

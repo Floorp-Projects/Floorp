@@ -18,7 +18,18 @@ setTimeout(function() {
 }
 </script>
 
-<iframe src="data:application/xhtml+xml;charset=utf-8,%3Chtml%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxhtml%22%3E%0A%0A%3Ciframe%2F%3E%0A%3Cframeset%20onblur%3D%22window.frameElement.parentNode.removeChild(window.frameElement)%22%20id%3D%22frame%22%2F%3E%0A%0A%3Cscript%3E%0Afunction%20doe(i)%7B%0Adocument.getElementById('frame').focus()%3B%0Adocument.getElementsByTagName('*')%5B1%5D.focus()%3B%0A%7D%0Atop.opener.SimpleTest.waitForFocus(function%20()%20setTimeout(doe%2C%20100)%2C%20top)%3B%0A%3C%2Fscript%3E%0A%3C%2Fhtml%3E" onload="doe()" id="content"></iframe>
+<iframe srcdoc="<html xmlns='http://www.w3.org/1999/xhtml'>
+    <iframe/>
+      <frameset onblur='window.frameElement.parentNode.removeChild(window.frameElement)' id='frame'/>
+
+      <script>
+function doe(i){
+  document.getElementById('frame').focus();
+  document.getElementsByTagName('*')[1].focus();
+}
+top.opener.SimpleTest.waitForFocus(function () setTimeout(doe, 100), top);
+      </script>
+  </html>" onload="doe()" id="content"></iframe>
 </body>
 </html>
 

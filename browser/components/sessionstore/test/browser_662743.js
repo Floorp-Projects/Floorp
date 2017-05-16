@@ -60,7 +60,7 @@ function test() {
 function testTabRestoreData(aFormData, aExpectedValue, aCallback) {
   let testURL =
     getRootDirectory(gTestPath) + "browser_662743_sample.html";
-  let tab = gBrowser.addTab(testURL);
+  let tab = BrowserTestUtils.addTab(gBrowser, testURL);
 
   aFormData.url = testURL;
   let tabState = { entries: [{ url: testURL, triggeringPrincipal_base64 }], formdata: aFormData };

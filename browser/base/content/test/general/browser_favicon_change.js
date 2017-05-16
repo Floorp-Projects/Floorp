@@ -6,7 +6,7 @@
 const TEST_URL = "http://mochi.test:8888/browser/browser/base/content/test/general/file_favicon_change.html"
 
 add_task(async function() {
-  let extraTab = gBrowser.selectedTab = gBrowser.addTab();
+  let extraTab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   extraTab.linkedBrowser.loadURI(TEST_URL);
   let tabLoaded = BrowserTestUtils.browserLoaded(extraTab.linkedBrowser);
   let expectedFavicon = "http://example.org/one-icon";

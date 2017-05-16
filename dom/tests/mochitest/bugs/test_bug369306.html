@@ -89,12 +89,12 @@ function test2()
 
 function test3()
 {
-  focusShouldNotChange2("data:text/html,\<script>opener.focus();\<\/script>", test4);
+  focusShouldNotChange2("test1_bug369306.html", test4);
 }
 
 function test4()
 {
-  focusShouldNotChange2("data:text/html,\<script>blur();\<\/script>", test5);
+  focusShouldNotChange2("test2_bug369306.html", test5);
 }
 
 function test5()

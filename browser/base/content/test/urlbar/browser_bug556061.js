@@ -89,7 +89,7 @@ var tests = [
 
 function test() {
   waitForExplicitFinish();
-  testTab = gBrowser.addTab();
+  testTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = testTab;
 
   // Kick off the testing

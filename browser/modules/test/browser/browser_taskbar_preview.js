@@ -25,9 +25,9 @@ function test() {
 
   checkPreviews(1, "Browser starts with one preview");
 
-  gBrowser.addTab();
-  gBrowser.addTab();
-  gBrowser.addTab();
+  BrowserTestUtils.addTab(gBrowser);
+  BrowserTestUtils.addTab(gBrowser);
+  BrowserTestUtils.addTab(gBrowser);
 
   checkPreviews(4, "Correct number of previews after adding");
 
@@ -66,7 +66,7 @@ function test() {
   checkPreviews(1, "Expected number of previews after closing selected tab via browser");
 
   // Add a new tab
-  gBrowser.addTab();
+  BrowserTestUtils.addTab(gBrowser);
   checkPreviews(2);
   // Check default selection
   checkSelectedTab();
