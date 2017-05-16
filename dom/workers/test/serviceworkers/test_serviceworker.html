@@ -13,13 +13,14 @@
 <p id="display"></p>
 <div id="content" style="display: none"></div>
 <pre id="test"></pre>
+<script src="utils.js"></script>
 <script class="testbody" type="text/javascript">
 
   var regisration;
   function simpleRegister() {
     return navigator.serviceWorker.register("service_worker.js", {
       scope: 'service_worker_client.html'
-    });
+    }).then(swr => waitForState(swr.installing, 'activated', swr));
   }
 
   function unregister() {

@@ -1727,9 +1727,7 @@ nsPluginHost::SiteHasData(nsIPluginTag* plugin, const nsACString& domain,
   rv = library->NPP_GetSitesWithData(nsCOMPtr<nsIGetSitesWithDataCallback>(do_QueryInterface(closure)));
   NS_ENSURE_SUCCESS(rv, rv);
   // Spin the event loop while we wait for the async call to GetSitesWithData
-  while (closure->keepWaiting) {
-    NS_ProcessNextEvent(nullptr, true);
-  }
+  SpinEventLoopUntil([&]() { return !closure->keepWaiting; });
   *result = closure->result;
   return closure->retVal;
 }

@@ -246,20 +246,6 @@ skip script test262/built-ins/TypedArrays/internals/Set/tonumber-value-throws.js
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1140152
 skip script test262/built-ins/TypedArray/prototype/slice/bit-precision.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=924058
-skip script test262/built-ins/Array/prototype/pop/S15.4.4.6_A2_T2.js
-skip script test262/built-ins/Array/prototype/pop/S15.4.4.6_A3_T1.js
-skip script test262/built-ins/Array/prototype/pop/S15.4.4.6_A3_T2.js
-skip script test262/built-ins/Array/prototype/push/S15.4.4.7_A2_T2.js
-skip script test262/built-ins/Array/prototype/push/S15.4.4.7_A4_T1.js
-skip script test262/built-ins/Array/prototype/slice/create-species-undef-invalid-len.js
-skip script test262/built-ins/Array/prototype/slice/create-non-array-invalid-len.js
-skip script test262/built-ins/Array/prototype/slice/S15.4.4.10_A3_T1.js
-skip script test262/built-ins/Array/prototype/slice/S15.4.4.10_A3_T2.js
-skip script test262/built-ins/Array/prototype/splice/S15.4.4.12_A3_T1.js
-skip script test262/built-ins/Array/prototype/splice/create-non-array-invalid-len.js
-skip script test262/built-ins/Array/prototype/splice/create-species-undef-invalid-len.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1317405
 skip script test262/language/computed-property-names/class/static/method-number.js
 skip script test262/language/computed-property-names/class/static/method-string.js

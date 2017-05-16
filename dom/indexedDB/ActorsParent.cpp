@@ -12532,12 +12532,7 @@ ConnectionPool::Shutdown()
     return;
   }
 
-  nsIThread* currentThread = NS_GetCurrentThread();
-  MOZ_ASSERT(currentThread);
-
-  while (!mShutdownComplete) {
-    MOZ_ALWAYS_TRUE(NS_ProcessNextEvent(currentThread));
-  }
+  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return mShutdownComplete; }));
 }
 
 void
@@ -13494,7 +13489,7 @@ ThreadRunnable::Run()
                    "ConnectionPool::ThreadRunnable::Run",
                    js::ProfileEntry::Category::STORAGE);
 
-    nsIThread* currentThread = NS_GetCurrentThread();
+    DebugOnly<nsIThread*> currentThread = NS_GetCurrentThread();
     MOZ_ASSERT(currentThread);
 
 #ifdef DEBUG
@@ -13516,8 +13511,10 @@ ThreadRunnable::Run()
     }
 #endif // DEBUG
 
-    while (mContinueRunning) {
-      MOZ_ALWAYS_TRUE(NS_ProcessNextEvent(currentThread));
+    DebugOnly<bool> b = SpinEventLoopUntil([&]() -> bool {
+        if (!mContinueRunning) {
+          return true;
+        }
 
 #ifdef DEBUG
       if (kDEBUGTransactionThreadSleepMS) {
@@ -13526,7 +13523,14 @@ ThreadRunnable::Run()
             PR_SUCCESS);
       }
 #endif // DEBUG
-    }
+
+      return false;
+    });
+    // MSVC can't stringify lambdas, so we have to separate the expression
+    // generating the value from the assert itself.
+#if DEBUG
+    MOZ_ALWAYS_TRUE(b);
+#endif
   }
 
   return NS_OK;

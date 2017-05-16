@@ -17,6 +17,7 @@
 <p id="display"></p>
 <div id="content"></div>
 <pre id="test"></pre>
+<script src="utils.js"></script>
 <script class="testbody" type="text/javascript">
   var registration;
   var worker;
@@ -24,7 +25,10 @@
   function start() {
     return navigator.serviceWorker.register("client_focus_worker.js",
                                             { scope: "./sw_clients/focus_stealing_client.html" })
-      .then((swr) => registration = swr);
+      .then((swr) => {
+        registration = swr;
+        returun waitForState(swr.installing, 'activated', swr);
+      });
   }
 
   function unregister() {

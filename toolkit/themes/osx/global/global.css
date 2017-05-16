@@ -24,11 +24,13 @@ menulist > menupopup {
   --focus-ring-box-shadow: @focusRingShadow@;
 }
 
+%ifndef MOZ_PHOTON_THEME
 @media (-moz-mac-yosemite-theme) {
   :root {
     --focus-ring-box-shadow: @yosemiteFocusRingShadow@;
   }
 }
+%endif
 
 /* ::::: root elements ::::: */
 

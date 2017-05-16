@@ -17,6 +17,7 @@
 <pre id="test">
 </pre>
 
+<script src="utils.js"></script>
 <script class="testbody" type="text/javascript">
 
 add_task(function setupPrefs() {
@@ -44,16 +45,7 @@ function create_iframe(url) {
 add_task(function* test_nofetch_worker() {
   let registration = yield navigator.serviceWorker.register(
     "nofetch_handler_worker.js", { scope: "./nofetch_handler_worker/"} )
-    .then(function(registration) {
-      var worker = registration.installing;
-      return new Promise(function(resolve) {
-        worker.addEventListener('statechange', function() {
-          if (worker.state === 'activated') {
-            resolve(registration);
-          }
-        });
-      });
-    });
+    .then(swr => waitForState(swr.installing, 'activated', swr));
 
   let iframe = yield create_iframe("./nofetch_handler_worker/doesnt_exist.html");
   ok(!iframe.contentDocument.body.innerHTML.includes("intercepted"), "Request was not intercepted.");

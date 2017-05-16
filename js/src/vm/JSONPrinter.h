@@ -57,13 +57,12 @@ class JSONPrinter
     // uint64_t.
     void property(const char* name, size_t value);
 #endif
-    void property(const char* name, double value);
 
     void formatProperty(const char* name, const char* format, ...) MOZ_FORMAT_PRINTF(3, 4);
 
     // JSON requires decimals to be separated by periods, but the LC_NUMERIC
     // setting may cause printf to use commas in some locales.
-    enum TimePrecision { SECONDS, MILLISECONDS };
+    enum TimePrecision { SECONDS, MILLISECONDS, MICROSECONDS };
     void property(const char* name, const mozilla::TimeDuration& dur, TimePrecision precision);
 
     void floatProperty(const char* name, double value, size_t precision);

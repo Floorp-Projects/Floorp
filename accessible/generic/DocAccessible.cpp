@@ -1982,9 +1982,19 @@ DocAccessible::ContentRemoved(Accessible* aChild)
                     "container", parent, "child", aChild, nullptr);
 #endif
 
+  // XXX: event coalescence may kill us
+  RefPtr<Accessible> kungFuDeathGripChild(aChild);
+
   TreeMutation mt(parent);
   mt.BeforeRemoval(aChild);
-  MOZ_DIAGNOSTIC_ASSERT(aChild->Parent(), "Unparented #1");
+
+  if (aChild->IsDefunct()) {
+    MOZ_ASSERT_UNREACHABLE("Event coalescence killed the accessible");
+    mt.Done();
+    return;
+  }
+
+  MOZ_DIAGNOSTIC_ASSERT(aChild->Parent(), "Alive but unparented #1");
 
   if (aChild->IsRelocated()) {
     nsTArray<RefPtr<Accessible> >* owned = mARIAOwnsHash.Get(parent);

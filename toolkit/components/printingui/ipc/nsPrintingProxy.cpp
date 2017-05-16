@@ -117,9 +117,7 @@ nsPrintingProxy::ShowPrintDialog(mozIDOMWindowProxy *parent,
 
   mozilla::Unused << SendShowPrintDialog(dialog, pBrowser, inSettings);
 
-  while(!dialog->returned()) {
-    NS_ProcessNextEvent(nullptr, true);
-  }
+  SpinEventLoopUntil([&, dialog]() { return dialog->returned(); });
 
   rv = dialog->result();
   NS_ENSURE_SUCCESS(rv, rv);

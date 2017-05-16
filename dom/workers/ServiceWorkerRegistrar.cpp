@@ -989,13 +989,7 @@ ServiceWorkerRegistrar::ProfileStopped()
 
   child->SendShutdownServiceWorkerRegistrar();
 
-  nsCOMPtr<nsIThread> thread(do_GetCurrentThread());
-  while (true) {
-    MOZ_ALWAYS_TRUE(NS_ProcessNextEvent(thread));
-    if (completed) {
-      break;
-    }
-  }
+  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return completed; }));
 }
 
 void

@@ -108,12 +108,6 @@ const Timer = Components.Constructor("@mozilla.org/timer;1", "nsITimer",
 const kSaveDelayMs = 1500;
 
 /**
- * This pref indicates if we have already imported (or attempted to import)
- * the downloads database from the previous SQLite storage.
- */
-const kPrefImportedFromSqlite = "browser.download.importedFromSqlite";
-
-/**
  * List of observers to listen against
  */
 const kObserverTopics = [
@@ -230,35 +224,7 @@ this.DownloadIntegration = {
     this._store.onsaveitem = this.shouldPersistDownload.bind(this);
 
     try {
-      if (this._importedFromSqlite) {
-        await this._store.load();
-      } else {
-        let sqliteDBpath = OS.Path.join(OS.Constants.Path.profileDir,
-                                        "downloads.sqlite");
-
-        if (await OS.File.exists(sqliteDBpath)) {
-          let sqliteImport = new DownloadImport(list, sqliteDBpath);
-          await sqliteImport.import();
-
-          let importCount = (await list.getAll()).length;
-          if (importCount > 0) {
-            try {
-              await this._store.save();
-            } catch (ex) { }
-          }
-
-          // No need to wait for the file removal.
-          OS.File.remove(sqliteDBpath).then(null, Cu.reportError);
-        }
-
-        Services.prefs.setBoolPref(kPrefImportedFromSqlite, true);
-
-        // Don't even report error here because this file is pre Firefox 3
-        // and most likely doesn't exist.
-        OS.File.remove(OS.Path.join(OS.Constants.Path.profileDir,
-                                    "downloads.rdf")).catch(() => {});
-
-      }
+      await this._store.load();
     } catch (ex) {
       Cu.reportError(ex);
     }
@@ -871,20 +837,6 @@ this.DownloadIntegration = {
       return this._store.save();
     }
     return Promise.resolve();
-  },
-
-  /**
-   * Checks if we have already imported (or attempted to import)
-   * the downloads database from the previous SQLite storage.
-   *
-   * @return boolean True if we the previous DB was imported.
-   */
-  get _importedFromSqlite() {
-    try {
-      return Services.prefs.getBoolPref(kPrefImportedFromSqlite);
-    } catch (ex) {
-      return false;
-    }
   },
 };
 
