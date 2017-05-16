@@ -333,6 +333,7 @@ public class GeckoThread extends Thread {
         return args.toArray(new String[args.size()]);
     }
 
+    @RobocopTarget
     public static GeckoProfile getActiveProfile() {
         return INSTANCE.getProfile();
     }
