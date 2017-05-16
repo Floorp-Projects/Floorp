@@ -420,11 +420,6 @@ public abstract class GeckoApp extends GeckoActivity
     }
 
     @Override
-    public Activity getActivity() {
-        return this;
-    }
-
-    @Override
     public void addAppStateListener(GeckoAppShell.AppStateListener listener) {
         mAppStateListeners.add(listener);
     }

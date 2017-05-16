@@ -28,12 +28,6 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
     }
 
     @Override
-    public Activity getActivity() {
-        // By default, GeckoView consumers do not have a distinguished current foreground Activity.
-        return null;
-    }
-
-    @Override
     public String getDefaultUAString() {
         return HardwareUtils.isTablet() ? BuildConfig.USER_AGENT_GECKOVIEW_TABLET :
                                           BuildConfig.USER_AGENT_GECKOVIEW_MOBILE;

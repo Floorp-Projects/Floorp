@@ -108,9 +108,10 @@ public final class IntentHelper implements BundleEventListener {
                                           String action,
                                           String title,
                                           final boolean showPromptInPrivateBrowsing) {
-        final GeckoAppShell.GeckoInterface gi = GeckoAppShell.getGeckoInterface();
-        final Context activityContext = gi != null ? gi.getActivity() : null;
-        final Context context = activityContext != null ? activityContext : GeckoAppShell.getApplicationContext();
+        final Context activityContext =
+                GeckoActivityMonitor.getInstance().getCurrentActivity();
+        final Context context = (activityContext != null) ?
+                activityContext : GeckoAppShell.getApplicationContext();
         final Intent intent = getOpenURIIntent(context, targetURI,
                                                mimeType, action, title);
 
