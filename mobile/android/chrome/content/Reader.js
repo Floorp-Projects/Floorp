@@ -195,9 +195,16 @@ var Reader = {
     if (browser.isArticle) {
       showPageAction("drawable://reader", Strings.reader.GetStringFromName("readerView.enter"));
       UITelemetry.addEvent("show.1", "button", null, "reader_available");
+      this._sendMmaEvent("reader_available");
     } else {
       UITelemetry.addEvent("show.1", "button", null, "reader_unavailable");
     }
+  },
+
+  _sendMmaEvent: function(event) {
+      WindowEventDispatcher.sendRequest({
+          type: "Mma:"+event,
+      });
   },
 
   _showSystemUI: function(visibility) {
