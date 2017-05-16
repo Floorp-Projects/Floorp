@@ -29,7 +29,6 @@ const PREFS_WHITELIST = [
   "browser.display.",
   "browser.download.folderList",
   "browser.download.hide_plugins_without_extensions",
-  "browser.download.importedFromSqlite",
   "browser.download.lastDir.savePerSite",
   "browser.download.manager.addToRecentDocs",
   "browser.download.manager.alertOnEXEOpen",

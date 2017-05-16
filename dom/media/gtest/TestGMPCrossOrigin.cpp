@@ -1158,9 +1158,7 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
   }
 
   void AwaitFinished() {
-    while (!mFinished) {
-      NS_ProcessNextEvent(nullptr, true);
-    }
+    mozilla::SpinEventLoopUntil([&]() -> bool { return mFinished; });
     mFinished = false;
   }
 

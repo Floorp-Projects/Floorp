@@ -13,6 +13,7 @@
 <p id="display"></p>
 <div id="content" style="display: none"></div>
 <pre id="test"></pre>
+<script src="utils.js"></script>
 <script class="testbody" type="text/javascript">
   var client_iframes = [];
   var registration;
@@ -21,6 +22,8 @@
     return navigator.serviceWorker.register("match_all_advanced_worker.js",
                                             { scope: "./sw_clients/" }).then(function(swr) {
       registration = swr;
+      return waitForState(swr.installing, 'activated');
+    }).then(_ => {
       window.onmessage = function (e) {
         if (e.data === "READY") {
           ok(registration.active, "Worker is active.");

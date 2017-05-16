@@ -55,9 +55,16 @@ nsDragServiceProxy::InvokeDragSessionImpl(nsIArray* aArrayTransferables,
       if (dataSurface) {
         size_t length;
         int32_t stride;
-        Shmem surfaceData;
-        nsContentUtils::GetSurfaceData(dataSurface, &length, &stride, child,
-                                       &surfaceData);
+        Maybe<Shmem> maybeShm = nsContentUtils::GetSurfaceData(dataSurface,
+                                                               &length,
+                                                               &stride,
+                                                               child);
+        if (maybeShm.isNothing()) {
+          return NS_ERROR_FAILURE;
+        }
+
+        auto surfaceData = maybeShm.value();
+
         // Save the surface data to shared memory.
         if (!surfaceData.IsReadable() || !surfaceData.get<char>()) {
           NS_WARNING("Failed to create shared memory for drag session.");

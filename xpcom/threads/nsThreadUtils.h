@@ -175,6 +175,90 @@ extern bool NS_HasPendingEvents(nsIThread* aThread = nullptr);
 extern bool NS_ProcessNextEvent(nsIThread* aThread = nullptr,
                                 bool aMayWait = true);
 
+// A wrapper for nested event loops.
+//
+// This function is intended to make code more obvious (do you remember
+// what NS_ProcessNextEvent(nullptr, true) means?) and slightly more
+// efficient, as people often pass nullptr or NS_GetCurrentThread to
+// NS_ProcessNextEvent, which results in needless querying of the current
+// thread every time through the loop.
+//
+// You should use this function in preference to NS_ProcessNextEvent inside
+// a loop unless one of the following is true:
+//
+// * You need to pass `false` to NS_ProcessNextEvent; or
+// * You need to do unusual things around the call to NS_ProcessNextEvent,
+//   such as unlocking mutexes that you are holding.
+//
+// If you *do* need to call NS_ProcessNextEvent manually, please do call
+// NS_GetCurrentThread() outside of your loop and pass the returned pointer
+// into NS_ProcessNextEvent for a tiny efficiency win.
+namespace mozilla {
+
+// You should normally not need to deal with this template parameter.  If
+// you enjoy esoteric event loop details, read on.
+//
+// If you specify that NS_ProcessNextEvent wait for an event, it is possible
+// for NS_ProcessNextEvent to return false, i.e. to indicate that an event
+// was not processed.  This can only happen when the thread has been shut
+// down by another thread, but is still attempting to process events outside
+// of a nested event loop.
+//
+// This behavior is admittedly strange.  The scenario it deals with is the
+// following:
+//
+// * The current thread has been shut down by some owner thread.
+// * The current thread is spinning an event loop waiting for some condition
+//   to become true.
+// * Said condition is actually being fulfilled by another thread, so there
+//   are timing issues in play.
+//
+// Thus, there is a small window where the current thread's event loop
+// spinning can check the condition, find it false, and call
+// NS_ProcessNextEvent to wait for another event.  But we don't actually
+// want it to wait indefinitely, because there might not be any other events
+// in the event loop, and the current thread can't accept dispatched events
+// because it's being shut down.  Thus, actually blocking would hang the
+// thread, which is bad.  The solution, then, is to detect such a scenario
+// and not actually block inside NS_ProcessNextEvent.
+//
+// But this is a problem, because we want to return the status of
+// NS_ProcessNextEvent to the caller of SpinEventLoopUntil if possible.  In
+// the above scenario, however, we'd stop spinning prematurely and cause
+// all sorts of havoc.  We therefore have this template parameter to
+// control whether errors are ignored or passed out to the caller of
+// SpinEventLoopUntil.  The latter is the default; if you find yourself
+// wanting to use the former, you should think long and hard before doing
+// so, and write a comment like this defending your choice.
+
+enum class ProcessFailureBehavior {
+  IgnoreAndContinue,
+  ReportToCaller,
+};
+
+template<ProcessFailureBehavior Behavior = ProcessFailureBehavior::ReportToCaller,
+         typename Pred>
+bool
+SpinEventLoopUntil(Pred&& aPredicate, nsIThread* aThread = nullptr)
+{
+  nsIThread* thread = aThread ? aThread : NS_GetCurrentThread();
+
+  while (!aPredicate()) {
+    bool didSomething = NS_ProcessNextEvent(thread, true);
+
+    if (Behavior == ProcessFailureBehavior::IgnoreAndContinue) {
+      // Don't care what happened, continue on.
+      continue;
+    } else if (!didSomething) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+} // namespace mozilla
+
 /**
  * Returns true if we're in the compositor thread.
  *

@@ -173,9 +173,7 @@ AndroidBridge::AndroidBridge()
     AutoJNIClass string(jEnv, "java/lang/String");
     jStringClass = string.getGlobalRef();
 
-    if (!GetStaticIntField("android/os/Build$VERSION", "SDK_INT", &mAPIVersion, jEnv)) {
-        ALOG_BRIDGE("Failed to find API version");
-    }
+    mAPIVersion = jni::GetAPIVersion();
 
     AutoJNIClass channels(jEnv, "java/nio/channels/Channels");
     jChannels = channels.getGlobalRef();

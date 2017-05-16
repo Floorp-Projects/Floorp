@@ -14,8 +14,7 @@ print(BUGNUMBER + ": " + summary);
  **************/
 
 // ES6 ToLength clamps length values to 2^53 - 1.
-// We currently clamp to 2^32 - 1 instead. See bug 924058.
-var MAX_LENGTH = 0xffffffff;
+var MAX_LENGTH = 2**53 - 1;
 
 var a = {};
 a.length = MAX_LENGTH + 1;

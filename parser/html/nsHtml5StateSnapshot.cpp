@@ -160,11 +160,11 @@ nsHtml5StateSnapshot::~nsHtml5StateSnapshot()
 {
   MOZ_COUNT_DTOR(nsHtml5StateSnapshot);
   for (int32_t i = 0; i < stack.length; i++) {
-    stack[i]->release();
+    stack[i]->release(nullptr);
   }
   for (int32_t i = 0; i < listOfActiveFormattingElements.length; i++) {
     if (listOfActiveFormattingElements[i]) {
-      listOfActiveFormattingElements[i]->release();
+      listOfActiveFormattingElements[i]->release(nullptr);
     }
   }
 }

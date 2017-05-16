@@ -158,10 +158,7 @@ NS_IMETHODIMP nsDataObj::CStream::OnStopRequest(nsIRequest *aRequest,
 nsresult nsDataObj::CStream::WaitForCompletion()
 {
   // We are guaranteed OnStopRequest will get called, so this should be ok.
-  while (!mChannelRead) {
-    // Pump messages
-    NS_ProcessNextEvent(nullptr, true);
-  }
+  SpinEventLoopUntil([&]() { return mChannelRead; });
 
   if (!mChannelData.Length())
     mChannelResult = NS_ERROR_FAILURE;

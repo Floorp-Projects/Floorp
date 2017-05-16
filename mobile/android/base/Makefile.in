@@ -547,6 +547,7 @@ libs:: classes.dex
 GECKOVIEW_AIDLS = \
   org/mozilla/gecko/IGeckoEditableChild.aidl \
   org/mozilla/gecko/IGeckoEditableParent.aidl \
+  org/mozilla/gecko/gfx/ISurfaceAllocator.aidl \
   org/mozilla/gecko/media/ICodec.aidl \
   org/mozilla/gecko/media/ICodecCallbacks.aidl \
   org/mozilla/gecko/media/IMediaDrmBridge.aidl \

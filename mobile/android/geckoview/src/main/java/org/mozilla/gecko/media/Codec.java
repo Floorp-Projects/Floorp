@@ -20,6 +20,8 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import org.mozilla.gecko.gfx.GeckoSurface;
+
 /* package */ final class Codec extends ICodec.Stub implements IBinder.DeathRecipient {
     private static final String LOGTAG = "GeckoRemoteCodec";
     private static final boolean DEBUG = false;
@@ -348,7 +350,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
     @Override
     public synchronized boolean configure(FormatParam format,
-                                          Surface surface,
+                                          GeckoSurface surface,
                                           int flags,
                                           String drmStubId) throws RemoteException {
         if (mCallbacks == null) {

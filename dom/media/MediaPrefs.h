@@ -7,7 +7,7 @@
 #define MEDIA_PREFS_H
 
 #ifdef MOZ_WIDGET_ANDROID
-#include "AndroidBridge.h"
+#include "GeneratedJNIWrappers.h"
 #endif
 
 #include "mozilla/Atomics.h"
@@ -201,8 +201,7 @@ private:
   static int32_t MediaDecoderLimitDefault()
   {
 #ifdef MOZ_WIDGET_ANDROID
-    if (AndroidBridge::Bridge() &&
-        AndroidBridge::Bridge()->GetAPIVersion() < 18) {
+    if (jni::GetAPIVersion() < 18) {
       // Older Android versions have broken support for multiple simultaneous
       // decoders, see bug 1278574.
       return 1;

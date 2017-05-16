@@ -684,30 +684,8 @@ GLBlitHelper::BindAndUploadEGLImage(EGLImage image, GLuint target)
 bool
 GLBlitHelper::BlitSurfaceTextureImage(layers::SurfaceTextureImage* stImage)
 {
-    AndroidSurfaceTexture* surfaceTexture = stImage->GetSurfaceTexture();
-
-    ScopedBindTextureUnit boundTU(mGL, LOCAL_GL_TEXTURE0);
-
-    if (NS_FAILED(surfaceTexture->Attach(mGL, PR_MillisecondsToInterval(ATTACH_WAIT_MS))))
-        return false;
-
-    // UpdateTexImage() changes the EXTERNAL binding, so save it here
-    // so we can restore it after.
-    int oldBinding = 0;
-    mGL->fGetIntegerv(LOCAL_GL_TEXTURE_BINDING_EXTERNAL, &oldBinding);
-
-    surfaceTexture->UpdateTexImage();
-
-    gfx::Matrix4x4 transform;
-    surfaceTexture->GetTransformMatrix(transform);
-
-    mGL->fUniformMatrix4fv(mTextureTransformLoc, 1, false, &transform._11);
-    mGL->fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
-
-    surfaceTexture->Detach();
-
-    mGL->fBindTexture(LOCAL_GL_TEXTURE_EXTERNAL, oldBinding);
-    return true;
+    // FIXME
+    return false;
 }
 
 bool

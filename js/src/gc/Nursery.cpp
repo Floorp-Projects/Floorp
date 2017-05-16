@@ -509,7 +509,7 @@ FOR_EACH_NURSERY_PROFILE_TIME(EXTRACT_NAME)
 
     size_t i = 0;
     for (auto time : profileDurations_)
-        json.property(names[i++], time.ToMicroseconds());
+        json.property(names[i++], time, json.MICROSECONDS);
 
     json.endObject();
 }
