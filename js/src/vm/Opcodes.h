@@ -813,7 +813,7 @@
      * Pushes the value of local variable onto the stack.
      *   Category: Variables and Scopes
      *   Type: Local Variables
-     *   Operands: uint32_t localno
+     *   Operands: uint24_t localno
      *   Stack: => val
      */ \
     macro(JSOP_GETLOCAL,  86,"getlocal",    NULL,         4,  0,  1,  JOF_LOCAL|JOF_NAME) \
@@ -821,7 +821,7 @@
      * Stores the top stack value to the given local.
      *   Category: Variables and Scopes
      *   Type: Local Variables
-     *   Operands: uint32_t localno
+     *   Operands: uint24_t localno
      *   Stack: v => v
      */ \
     macro(JSOP_SETLOCAL,  87,"setlocal",    NULL,         4,  1,  1,  JOF_LOCAL|JOF_NAME|JOF_DETECTING) \
@@ -1429,7 +1429,7 @@
      * JS_UNINITIALIZED_LEXICAL magic, throwing an error if so.
      *   Category: Variables and Scopes
      *   Type: Local Variables
-     *   Operands: uint32_t localno
+     *   Operands: uint24_t localno
      *   Stack: =>
      */ \
     macro(JSOP_CHECKLEXICAL,  138, "checklexical", NULL,     4,  0,  0, JOF_LOCAL|JOF_NAME) \
@@ -1438,7 +1438,7 @@
      * value.
      *   Category: Variables and Scopes
      *   Type: Local Variables
-     *   Operands: uint32_t localno
+     *   Operands: uint24_t localno
      *   Stack: v => v
      */ \
     macro(JSOP_INITLEXICAL,   139, "initlexical",  NULL,      4,  1,  1, JOF_LOCAL|JOF_NAME|JOF_DETECTING) \
@@ -1748,7 +1748,7 @@
      *
      *   Category: Variables and Scopes
      *   Type: Local Variables
-     *   Operands: uint32_t localno
+     *   Operands: uint24_t localno
      *   Stack: v => v
      */ \
     macro(JSOP_THROWSETCONST,        169, "throwsetconst",        NULL, 4,  1,  1, JOF_LOCAL|JOF_NAME|JOF_DETECTING) \
