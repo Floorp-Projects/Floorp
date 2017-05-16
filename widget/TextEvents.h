@@ -240,9 +240,7 @@ public:
   // handling should be delayed until it is determined that there exists no
   // overriding access key in the content process.
   bool mAccessKeyForwardedToChild;
-  // Unique id associated with a keydown / keypress event. Used in identifing
-  // keypress events for removal from async event dispatch queue in metrofx
-  // after preventDefault is called on keydown events. It's ok if this wraps
+  // Unique id associated with a keydown / keypress event. It's ok if this wraps
   // over long periods.
   uint32_t mUniqueId;
 
