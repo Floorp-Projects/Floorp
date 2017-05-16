@@ -53,13 +53,11 @@ function FormHistoryClient({ formField, inputName }) {
         this.mm = topDocShell.QueryInterface(Ci.nsIInterfaceRequestor)
                              .getInterface(Ci.nsIContentFrameMessageManager);
     } else {
-        if (inputName == this.SEARCHBAR_ID) {
-          if (formField) {
-              throw new Error("FormHistoryClient constructed with both a " +
-                              "formField and an inputName. This is not " +
-                              "supported, and only empty results will be " +
-                              "returned.");
-          }
+        if (inputName == this.SEARCHBAR_ID && formField) {
+          throw new Error("FormHistoryClient constructed with both a " +
+                            "formField and an inputName. This is not " +
+                            "supported, and only empty results will be " +
+                            "returned.");
         }
         this.mm = Services.cpmm;
     }
@@ -210,38 +208,39 @@ FormAutoComplete.prototype = {
 
         observe(subject, topic, data) {
             let self = this._self;
-            if (topic == "nsPref:changed") {
-                let prefName = data;
-                self.log("got change to " + prefName + " preference");
 
-                switch (prefName) {
-                    case "agedWeight":
-                        self._agedWeight = self._prefBranch.getIntPref(prefName);
-                        break;
-                    case "debug":
-                        self._debug = self._prefBranch.getBoolPref(prefName);
-                        break;
-                    case "enable":
-                        self._enabled = self._prefBranch.getBoolPref(prefName);
-                        break;
-                    case "maxTimeGroupings":
-                        self._maxTimeGroupings = self._prefBranch.getIntPref(prefName);
-                        break;
-                    case "timeGroupingSize":
-                        self._timeGroupingSize = self._prefBranch.getIntPref(prefName) * 1000 * 1000;
-                        break;
-                    case "bucketSize":
-                        self._bucketSize = self._prefBranch.getIntPref(prefName);
-                        break;
-                    case "boundaryWeight":
-                        self._boundaryWeight = self._prefBranch.getIntPref(prefName);
-                        break;
-                    case "prefixWeight":
-                        self._prefixWeight = self._prefBranch.getIntPref(prefName);
-                        break;
-                    default:
-                        self.log("Oops! Pref not handled, change ignored.");
-                }
+            if (topic == "nsPref:changed") {
+              let prefName = data;
+              self.log("got change to " + prefName + " preference");
+
+              switch (prefName) {
+                  case "agedWeight":
+                      self._agedWeight = self._prefBranch.getIntPref(prefName);
+                      break;
+                  case "debug":
+                      self._debug = self._prefBranch.getBoolPref(prefName);
+                      break;
+                  case "enable":
+                      self._enabled = self._prefBranch.getBoolPref(prefName);
+                      break;
+                  case "maxTimeGroupings":
+                      self._maxTimeGroupings = self._prefBranch.getIntPref(prefName);
+                      break;
+                  case "timeGroupingSize":
+                      self._timeGroupingSize = self._prefBranch.getIntPref(prefName) * 1000 * 1000;
+                      break;
+                  case "bucketSize":
+                      self._bucketSize = self._prefBranch.getIntPref(prefName);
+                      break;
+                  case "boundaryWeight":
+                      self._boundaryWeight = self._prefBranch.getIntPref(prefName);
+                      break;
+                  case "prefixWeight":
+                      self._prefixWeight = self._prefBranch.getIntPref(prefName);
+                      break;
+                  default:
+                      self.log("Oops! Pref not handled, change ignored.");
+              }
             }
         }
     },
@@ -259,8 +258,9 @@ FormAutoComplete.prototype = {
      * window
      */
     log(message) {
-        if (!this._debug)
+        if (!this._debug) {
             return;
+        }
         dump("FormAutoComplete: " + message + "\n");
         Services.console.logStringMessage("FormAutoComplete: " + message);
     },
@@ -378,8 +378,9 @@ FormAutoComplete.prototype = {
                 let entry = entries[i];
                 // Remove results that do not contain the token
                 // XXX bug 394604 -- .toLowerCase can be wrong for some intl chars
-                if (searchTokens.some(tok => entry.textLowerCase.indexOf(tok) < 0))
+                if (searchTokens.some(tok => entry.textLowerCase.indexOf(tok) < 0)) {
                     continue;
+                }
                 this._calculateScore(entry, searchString, searchTokens);
                 this.log("Reusing autocomplete entry '" + entry.text +
                          "' (" + entry.frecency + " / " + entry.totalScore + ")");
@@ -553,8 +554,9 @@ FormAutoCompleteResult.prototype = {
     fieldName: null,
 
     _checkIndexBounds(index) {
-        if (index < 0 || index >= this.entries.length)
+        if (index < 0 || index >= this.entries.length) {
             throw Components.Exception("Index out of range.", Cr.NS_ERROR_ILLEGAL_VALUE);
+        }
     },
 
     // Allow autoCompleteSearch to get at the JS object so it can
@@ -567,13 +569,15 @@ FormAutoCompleteResult.prototype = {
     searchString: "",
     errorDescription: "",
     get defaultIndex() {
-        if (this.entries.length == 0)
+        if (this.entries.length == 0) {
             return -1;
+        }
         return 0;
     },
     get searchResult() {
-        if (this.entries.length == 0)
+        if (this.entries.length == 0) {
             return Ci.nsIAutoCompleteResult.RESULT_NOMATCH;
+        }
         return Ci.nsIAutoCompleteResult.RESULT_SUCCESS;
     },
     get matchCount() {

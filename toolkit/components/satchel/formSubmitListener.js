@@ -40,11 +40,13 @@ var satchelFormListener = {
         ccNumber = ccNumber.replace(/[\-\s]/g, "");
 
         let len = ccNumber.length;
-        if (len != 9 && len != 15 && len != 16)
+        if (len != 9 && len != 15 && len != 16) {
             return false;
+        }
 
-        if (!/^\d+$/.test(ccNumber))
+        if (!/^\d+$/.test(ccNumber)) {
             return false;
+        }
 
         let total = 0;
         for (let i = 0; i < len; i++) {
@@ -52,8 +54,9 @@ var satchelFormListener = {
             if (i % 2 == 1) {
                 // Double it, add digits together if > 10
                 ch *= 2;
-                if (ch > 9)
+                if (ch > 9) {
                     ch -= 9;
+                }
             }
             total += ch;
         }
@@ -61,8 +64,9 @@ var satchelFormListener = {
     },
 
     log(message) {
-        if (!this.debug)
+        if (!this.debug) {
             return;
+        }
         dump("satchelFormListener: " + message + "\n");
         Services.console.logStringMessage("satchelFormListener: " + message);
     },
@@ -85,41 +89,44 @@ var satchelFormListener = {
 
     notify(form, domWin, actionURI, cancelSubmit) {
         try {
-            if (!this.enabled)
+            if (!this.enabled || PrivateBrowsingUtils.isContentWindowPrivate(domWin)) {
                 return;
-
-            if (PrivateBrowsingUtils.isContentWindowPrivate(domWin))
-                return;
+            }
 
             this.log("Form submit observer notified.");
 
             if (form.hasAttribute("autocomplete") &&
-                form.getAttribute("autocomplete").toLowerCase() == "off")
+                form.getAttribute("autocomplete").toLowerCase() == "off") {
                 return;
+            }
 
             let entries = [];
             for (let i = 0; i < form.elements.length; i++) {
                 let input = form.elements[i];
-                if (!(input instanceof Ci.nsIDOMHTMLInputElement))
+                if (!(input instanceof Ci.nsIDOMHTMLInputElement)) {
                     continue;
+                }
 
                 // Only use inputs that hold text values (not including type="password")
-                if (!input.mozIsTextField(true))
+                if (!input.mozIsTextField(true)) {
                     continue;
+                }
 
                 // Bug 394612: If Login Manager marked this input, don't save it.
                 // The login manager will deal with remembering it.
 
                 // Don't save values when autocomplete=off is present.
                 if (input.hasAttribute("autocomplete") &&
-                    input.getAttribute("autocomplete").toLowerCase() == "off")
+                    input.getAttribute("autocomplete").toLowerCase() == "off") {
                     continue;
+                }
 
                 let value = input.value.trim();
 
                 // Don't save empty or unchanged values.
-                if (!value || value == input.defaultValue.trim())
+                if (!value || value == input.defaultValue.trim()) {
                     continue;
+                }
 
                 // Don't save credit card numbers.
                 if (this.isValidCCNumber(value)) {
@@ -128,8 +135,9 @@ var satchelFormListener = {
                 }
 
                 let name = input.name || input.id;
-                if (!name)
+                if (!name) {
                     continue;
+                }
 
                 if (name == "searchbar-history") {
                     this.log('addEntry for input name "' + name + '" is denied')
