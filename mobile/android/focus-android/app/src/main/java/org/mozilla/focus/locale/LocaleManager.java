@@ -33,9 +33,9 @@ import org.mozilla.focus.R;
  *   and definitionally all changes to the locale of the app must go through
  *   this.
  * * It's lazy.
- * * It relies on using the SharedPreferences file owned by the browser for performance.
+ * * It relies on using the SharedPreferences file owned by the app for performance.
  */
-public class BrowserLocaleManager {
+public class LocaleManager {
     private static final String LOG_TAG = "GeckoLocales";
 
     private static String PREF_LOCALE = null;
@@ -51,15 +51,15 @@ public class BrowserLocaleManager {
     private boolean systemLocaleDidChange;
     private BroadcastReceiver receiver;
 
-    private static final AtomicReference<BrowserLocaleManager> instance = new AtomicReference<BrowserLocaleManager>();
+    private static final AtomicReference<LocaleManager> instance = new AtomicReference<LocaleManager>();
 
-    public static BrowserLocaleManager getInstance() {
-        BrowserLocaleManager localeManager = instance.get();
+    public static LocaleManager getInstance() {
+        LocaleManager localeManager = instance.get();
         if (localeManager != null) {
             return localeManager;
         }
 
-        localeManager = new BrowserLocaleManager();
+        localeManager = new LocaleManager();
         if (instance.compareAndSet(null, localeManager)) {
             return localeManager;
         } else {
@@ -174,31 +174,6 @@ public class BrowserLocaleManager {
         return changed;
     }
 
-    /**
-     * Gecko needs to know the OS locale to compute a useful Accept-Language
-     * header. If it changed since last time, send a message to Gecko and
-     * persist the new value. If unchanged, returns immediately.
-     *
-     * @param prefs the SharedPreferences instance to use. Cannot be null.
-     * @param osLocale the new locale instance. Safe if null.
-     */
-    public static void storeAndNotifyOSLocale(final SharedPreferences prefs,
-                                              final Locale osLocale) {
-        if (osLocale == null) {
-            return;
-        }
-
-        final String lastOSLocale = prefs.getString("osLocale", null);
-        final String osLocaleString = osLocale.toString();
-
-        if (osLocaleString.equals(lastOSLocale)) {
-            return;
-        }
-
-        // Store the Java-native form.
-        prefs.edit().putString("osLocale", osLocaleString).apply();
-    }
-
     public String getAndApplyPersistedLocale(Context context) {
         initialize(context);
 
@@ -261,7 +236,7 @@ public class BrowserLocaleManager {
         // We should use setLocale, but it's unexpectedly missing
         // on real devices.
         config.locale = locale;
-        //  LayoutDirection is also updated in setLocale, do this manually.
+
         config.setLayoutDirection(locale);
 
         res.updateConfiguration(config, null);
@@ -352,33 +327,10 @@ public class BrowserLocaleManager {
     }
 
     /**
-     * Examines <code>multilocale.json</code>, returning the included list of
-     * locale codes.
-     *
-     * If <code>multilocale.json</code> is not present, returns
-     * <code>null</code>. In that case, consider {@link #getFallbackLocaleTag()}.
-     *
-     * multilocale.json currently looks like this:
-     *
-     * <code>
-     * {"locales": ["en-US", "be", "ca", "cs", "da", "de", "en-GB",
-     *              "en-ZA", "es-AR", "es-ES", "es-MX", "et", "fi",
-     *              "fr", "ga-IE", "hu", "id", "it", "ja", "ko",
-     *              "lt", "lv", "nb-NO", "nl", "pl", "pt-BR",
-     *              "pt-PT", "ro", "ru", "sk", "sl", "sv-SE", "th",
-     *              "tr", "uk", "zh-CN", "zh-TW", "en-US"]}
-     * </code>
+     * Returns a list of supported locale codes
      */
     public static Collection<String> getPackagedLocaleTags(final Context context) {
-        return Arrays.asList(new String[] { "en-US", "en-GB", "de", "pl"});
-    }
-
-    /**
-     * @return the single default locale baked into this application.
-     *         Applicable when there is no multilocale.json present.
-     */
-    @SuppressWarnings("static-method")
-    public String getFallbackLocaleTag() {
-        return FALLBACK_LOCALE_TAG;
+        // TODO: get the actual list : )
+        return Arrays.asList(new String[] { "system", "en-US", "en-GB", "de", "pl", "ar", "zh-TW", "zh-CN", "ru", "ko"});
     }
 }

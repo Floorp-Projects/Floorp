@@ -8,13 +8,9 @@ import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Set;
 
-import android.app.Activity;
 import android.content.Context;
-import android.os.Bundle;
 import android.os.LocaleList;
 import android.os.StrictMode;
-import android.support.v4.app.FragmentActivity;
-import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 
 /**
@@ -29,38 +25,19 @@ import android.text.TextUtils;
 public class Locales {
     private static final String LOGTAG = "Locales";
 
-
+    /**
+     * Is only required by locale aware activities, AND  Application. In most cases you should be
+     * using LocaleAwareAppCompatActivity or friends.
+     * @param context
+     */
     public static void initializeLocale(Context context) {
-        final BrowserLocaleManager localeManager = BrowserLocaleManager.getInstance();
+        final LocaleManager localeManager = LocaleManager.getInstance();
         final StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskReads();
         StrictMode.allowThreadDiskWrites();
         try {
             localeManager.getAndApplyPersistedLocale(context);
         } finally {
             StrictMode.setThreadPolicy(savedPolicy);
-        }
-    }
-
-    public static abstract class LocaleAwareAppCompatActivity extends AppCompatActivity {
-        @Override
-        protected void onCreate(Bundle savedInstanceState) {
-            Locales.initializeLocale(getApplicationContext());
-            super.onCreate(savedInstanceState);
-        }
-    }
-    public static abstract class LocaleAwareFragmentActivity extends FragmentActivity {
-        @Override
-        protected void onCreate(Bundle savedInstanceState) {
-            Locales.initializeLocale(getApplicationContext());
-            super.onCreate(savedInstanceState);
-        }
-    }
-
-    public static abstract class LocaleAwareActivity extends Activity {
-        @Override
-        protected void onCreate(Bundle savedInstanceState) {
-            Locales.initializeLocale(getApplicationContext());
-            super.onCreate(savedInstanceState);
         }
     }
 
