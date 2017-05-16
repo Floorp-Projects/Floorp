@@ -371,7 +371,6 @@ async function clickPageAction(extension, win = window) {
   //
   // Unfortunately, that doesn't happen automatically in browser chrome
   // tests.
-  /* globals SetPageProxyState */
   SetPageProxyState("valid");
 
   await promiseAnimationFrame(win);
