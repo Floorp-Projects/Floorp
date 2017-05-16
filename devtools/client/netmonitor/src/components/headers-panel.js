@@ -27,7 +27,7 @@ const MDNLink = createFactory(require("./mdn-link"));
 const PropertiesView = createFactory(require("./properties-view"));
 
 const { Rep } = REPS;
-const { button, div, input, textarea } = DOM;
+const { button, div, input, textarea, span } = DOM;
 
 const EDIT_AND_RESEND = L10N.getStr("netmonitor.summary.editAndResend");
 const RAW_HEADERS = L10N.getStr("netmonitor.summary.rawHeaders");
@@ -178,8 +178,8 @@ const HeadersPanel = createClass({
         code = status;
       }
 
-      let statusCodeDocURL = getHTTPStatusCodeURL(code);
-      let inputWidth = status.length + statusText.length + 1;
+      let statusCodeDocURL = getHTTPStatusCodeURL(status.toString());
+      let inputWidth = status.toString().length + statusText.length + 1;
 
       summaryStatus = (
         div({ className: "tabpanel-summary-container headers-summary" },
@@ -199,7 +199,9 @@ const HeadersPanel = createClass({
           }),
           statusCodeDocURL ? MDNLink({
             url: statusCodeDocURL,
-          }) : null,
+          }) : span({
+            className: "headers-summary learn-more-link",
+          }),
           button({
             className: "devtools-button",
             onClick: cloneSelectedRequest,
