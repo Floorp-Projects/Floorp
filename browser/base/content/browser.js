@@ -7847,6 +7847,18 @@ var gPageActionButton = {
     this.panel.hidden = false;
     this.panel.openPopup(this.button, "bottomcenter topright");
   },
+
+  copyURL() {
+    this.panel.hidePopup();
+    Cc["@mozilla.org/widget/clipboardhelper;1"]
+      .getService(Ci.nsIClipboardHelper)
+      .copyString(gBrowser.selectedBrowser.currentURI.spec);
+  },
+
+  emailLink() {
+    this.panel.hidePopup();
+    MailIntegration.sendLinkForBrowser(gBrowser.selectedBrowser);
+  },
 };
 
 function getNotificationBox(aWindow) {

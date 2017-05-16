@@ -440,13 +440,29 @@
     </panel>
 
     <panel id="page-action-panel"
+           class="cui-widget-panel"
            role="group"
            type="arrow"
            hidden="true"
            flip="slide"
            position="bottomcenter topright"
            noautofocus="true">
-      This space intentionally left blank.
+      <photonpanelmultiview id="page-action-multiView"
+                            mainViewId="page-action-mainView">
+        <panelview id="page-action-mainView"
+                   class="PanelUI-subView">
+          <vbox class="panel-subview-body">
+            <toolbarbutton id="page-action-copy-url-button"
+                           class="subviewbutton subviewbutton-iconic"
+                           label="&copyURLCmd.label;"
+                           command="PageAction:copyURL"/>
+            <toolbarbutton id="page-action-email-link-button"
+                           class="subviewbutton subviewbutton-iconic"
+                           label="&emailPageCmd.label;"
+                           command="PageAction:emailLink"/>
+          </vbox>
+        </panelview>
+      </photonpanelmultiview>
     </panel>
 
     <!-- Bookmarks and history tooltip -->
