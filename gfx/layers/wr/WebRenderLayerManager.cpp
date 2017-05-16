@@ -311,7 +311,7 @@ WebRenderLayerManager::AddImageKeyForDiscard(wr::ImageKey key)
 void
 WebRenderLayerManager::DiscardImages()
 {
-  if (!WrBridge()->IsDestroyed()) {
+  if (WrBridge()->IPCOpen()) {
     for (auto key : mImageKeys) {
       WrBridge()->SendDeleteImage(key);
     }
@@ -328,11 +328,11 @@ WebRenderLayerManager::AddCompositorAnimationsIdForDiscard(uint64_t aId)
 void
 WebRenderLayerManager::DiscardCompositorAnimations()
 {
-  if (!mDiscardedCompositorAnimationsIds.IsEmpty()) {
+  if (WrBridge()->IPCOpen() && !mDiscardedCompositorAnimationsIds.IsEmpty()) {
     WrBridge()->
       SendDeleteCompositorAnimations(mDiscardedCompositorAnimationsIds);
-    mDiscardedCompositorAnimationsIds.Clear();
   }
+  mDiscardedCompositorAnimationsIds.Clear();
 }
 
 void
