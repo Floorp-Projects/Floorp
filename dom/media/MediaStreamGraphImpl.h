@@ -17,7 +17,6 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
 #include "nsDataHashtable.h"
-#include "nsIASyncShutdown.h"
 #include "nsIMemoryReporter.h"
 #include "nsINamed.h"
 #include "nsIRunnable.h"
@@ -25,6 +24,10 @@
 #include "nsITimer.h"
 
 namespace mozilla {
+
+namespace media {
+class ShutdownTicket;
+}
 
 template <typename T>
 class LinkedList;
@@ -157,48 +160,13 @@ public:
    */
   void Dispatch(already_AddRefed<nsIRunnable>&& aRunnable);
 
-  // Shutdown helpers.
-
-  static already_AddRefed<nsIAsyncShutdownClient>
-  GetShutdownBarrier()
-  {
-    nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdown();
-    MOZ_RELEASE_ASSERT(svc);
-
-    nsCOMPtr<nsIAsyncShutdownClient> barrier;
-    nsresult rv = svc->GetProfileBeforeChange(getter_AddRefs(barrier));
-    if (!barrier) {
-      // We are probably in a content process. We need to do cleanup at
-      // XPCOM shutdown in leakchecking builds.
-      rv = svc->GetXpcomWillShutdown(getter_AddRefs(barrier));
-    }
-    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
-    MOZ_RELEASE_ASSERT(barrier);
-    return barrier.forget();
-  }
-
-  class ShutdownTicket final
-  {
-  public:
-    explicit ShutdownTicket(nsIAsyncShutdownBlocker* aBlocker) : mBlocker(aBlocker) {}
-    NS_INLINE_DECL_REFCOUNTING(ShutdownTicket)
-  private:
-    ~ShutdownTicket()
-    {
-      nsCOMPtr<nsIAsyncShutdownClient> barrier = GetShutdownBarrier();
-      barrier->RemoveBlocker(mBlocker);
-    }
-
-    nsCOMPtr<nsIAsyncShutdownBlocker> mBlocker;
-  };
-
   /**
    * Make this MediaStreamGraph enter forced-shutdown state. This state
    * will be noticed by the media graph thread, which will shut down all streams
    * and other state controlled by the media graph thread.
    * This is called during application shutdown.
    */
-  void ForceShutDown(ShutdownTicket* aShutdownTicket);
+  void ForceShutDown(media::ShutdownTicket* aShutdownTicket);
 
   /**
    * Called before the thread runs.
@@ -767,7 +735,7 @@ public:
   /**
    * Drop this reference during shutdown to unblock shutdown.
    **/
-  RefPtr<ShutdownTicket> mForceShutdownTicket;
+  RefPtr<media::ShutdownTicket> mForceShutdownTicket;
 
   /**
    * True when we have posted an event to the main thread to run
