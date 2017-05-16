@@ -29,12 +29,11 @@ import android.webkit.CookieManager;
 import android.webkit.URLUtil;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.InstallFirefoxActivity;
-import org.mozilla.focus.activity.SettingsActivity;
+import org.mozilla.focus.locale.LocaleAwareAppCompatActivity;
 import org.mozilla.focus.menu.BrowserMenu;
 import org.mozilla.focus.menu.WebContextMenu;
 import org.mozilla.focus.notification.BrowsingNotificationService;
@@ -514,8 +513,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             }
 
             case R.id.settings:
-                final Intent settingsIntent = new Intent(getActivity(), SettingsActivity.class);
-                startActivity(settingsIntent);
+                ((LocaleAwareAppCompatActivity) getActivity()).openPreferences();
                 break;
 
             case R.id.open_default: {
