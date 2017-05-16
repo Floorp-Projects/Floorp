@@ -231,6 +231,7 @@ TEST(OpusAudioTrackEncoder, FrameEncode)
   const int32_t samples = sampleRate * 5;
   generator.Generate(segment, samples);
 
+  encoder.SetStartOffset(0);
   encoder.AppendAudioSegment(Move(segment));
   encoder.AdvanceCurrentTime(samples);
 
