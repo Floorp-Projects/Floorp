@@ -1384,9 +1384,6 @@ public class GeckoAppShell
         }
     }
 
-    @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
-    public static native void onFullScreenPluginHidden(View view);
-
     /**
      * A plugin that wish to be loaded in the WebView must provide this permission
      * in their AndroidManifest.xml.

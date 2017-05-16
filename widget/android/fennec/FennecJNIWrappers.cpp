@@ -52,6 +52,9 @@ auto GeckoApp::AddPluginView(mozilla::jni::Object::Param a0) -> void
     return mozilla::jni::Method<AddPluginView_t>::Call(GeckoApp::Context(), nullptr, a0);
 }
 
+constexpr char GeckoApp::OnFullScreenPluginHidden_t::name[];
+constexpr char GeckoApp::OnFullScreenPluginHidden_t::signature[];
+
 constexpr char GeckoApp::RemovePluginView_t::name[];
 constexpr char GeckoApp::RemovePluginView_t::signature[];
 
