@@ -15,7 +15,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
-#include "mozilla/MaybeOneOf.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Variant.h"
@@ -595,7 +594,7 @@ struct ParseTask
     ParseTaskKind kind;
     OwningCompileOptions options;
 
-    mozilla::MaybeOneOf<const JS::TranscodeRange, JS::TwoByteChars> data;
+    mozilla::Variant<const JS::TranscodeRange, JS::TwoByteChars> data;
 
     LifoAlloc alloc;
 
