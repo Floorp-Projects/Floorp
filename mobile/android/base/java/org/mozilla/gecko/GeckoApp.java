@@ -1087,6 +1087,9 @@ public abstract class GeckoApp extends GeckoActivity
         }
     }
 
+    @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
+    private static native void onFullScreenPluginHidden(View view);
+
     private void showSetImageResult(final boolean success, final int message, final String path) {
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
@@ -2804,7 +2807,7 @@ public abstract class GeckoApp extends GeckoActivity
         }
 
         if (mFullScreenPluginView != null) {
-            GeckoAppShell.onFullScreenPluginHidden(mFullScreenPluginView);
+            onFullScreenPluginHidden(mFullScreenPluginView);
             removeFullScreenPluginView(mFullScreenPluginView);
             return;
         }
