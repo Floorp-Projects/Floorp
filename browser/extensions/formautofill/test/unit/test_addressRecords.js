@@ -175,6 +175,7 @@ add_task(async function test_add() {
   do_check_record_matches(addresses[1], TEST_ADDRESS_2);
 
   do_check_neq(addresses[0].guid, undefined);
+  do_check_eq(addresses[0].version, 1);
   do_check_neq(addresses[0].timeCreated, undefined);
   do_check_eq(addresses[0].timeLastModified, addresses[0].timeCreated);
   do_check_eq(addresses[0].timeLastUsed, 0);
