@@ -49,18 +49,24 @@ this.UserAgentOverrides = {
       // The http-on-useragent-request notification is disallowed in content processes.
     }
 
-    UserAgentUpdates.init(function(overrides) {
-      gOverrideForHostCache.clear();
-      if (overrides) {
-        for (let domain in overrides) {
-          overrides[domain] = getUserAgentFromOverride(overrides[domain]);
+    try {
+      UserAgentUpdates.init(function(overrides) {
+        gOverrideForHostCache.clear();
+        if (overrides) {
+          for (let domain in overrides) {
+            overrides[domain] = getUserAgentFromOverride(overrides[domain]);
+          }
+          overrides.get = function(key) { return this[key]; };
         }
-        overrides.get = function(key) { return this[key]; };
-      }
-      gUpdatedOverrides = overrides;
-    });
+        gUpdatedOverrides = overrides;
+      });
 
-    buildOverrides();
+      buildOverrides();
+    } catch (e) {
+      // UserAgentOverrides is initialized before profile is ready.
+      // UA override might not work correctly.
+    }
+
     gInitialized = true;
   },
 
