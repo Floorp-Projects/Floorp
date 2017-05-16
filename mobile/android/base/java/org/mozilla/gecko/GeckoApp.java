@@ -8,6 +8,7 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
 import org.mozilla.gecko.annotation.RobocopTarget;
+import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.UrlAnnotations;
 import org.mozilla.gecko.gfx.BitmapUtils;
@@ -1015,16 +1016,21 @@ public abstract class GeckoApp extends GeckoActivity
         mFullScreenPluginView = view;
     }
 
-    @Override
-    public void addPluginView(final View view) {
+    @WrapForJNI(calledFrom = "gecko")
+    private static void addPluginView(final View view) {
+        final Activity activity = GeckoActivityMonitor.getInstance().getCurrentActivity();
+        if (!(activity instanceof GeckoApp)) {
+            return;
+        }
 
+        final GeckoApp geckoApp = (GeckoApp) activity;
         if (ThreadUtils.isOnUiThread()) {
-            addFullScreenPluginView(view);
+            geckoApp.addFullScreenPluginView(view);
         } else {
             ThreadUtils.postToUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    addFullScreenPluginView(view);
+                    geckoApp.addFullScreenPluginView(view);
                 }
             });
         }
@@ -1061,15 +1067,21 @@ public abstract class GeckoApp extends GeckoActivity
         setFullScreen(false);
     }
 
-    @Override
-    public void removePluginView(final View view) {
+    @WrapForJNI(calledFrom = "gecko")
+    private static void removePluginView(final View view) {
+        final Activity activity = GeckoActivityMonitor.getInstance().getCurrentActivity();
+        if (!(activity instanceof GeckoApp)) {
+            return;
+        }
+
+        final GeckoApp geckoApp = (GeckoApp) activity;
         if (ThreadUtils.isOnUiThread()) {
-            removePluginView(view);
+            geckoApp.removeFullScreenPluginView(view);
         } else {
             ThreadUtils.postToUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    removeFullScreenPluginView(view);
+                    geckoApp.removeFullScreenPluginView(view);
                 }
             });
         }

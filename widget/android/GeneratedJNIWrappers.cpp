@@ -105,14 +105,6 @@ constexpr char EventDispatcher::NativeCallbackDelegate::SendSuccess_t::signature
 const char GeckoAppShell::name[] =
         "org/mozilla/gecko/GeckoAppShell";
 
-constexpr char GeckoAppShell::AddFullScreenPluginView_t::name[];
-constexpr char GeckoAppShell::AddFullScreenPluginView_t::signature[];
-
-auto GeckoAppShell::AddFullScreenPluginView(mozilla::jni::Object::Param a0) -> void
-{
-    return mozilla::jni::Method<AddFullScreenPluginView_t>::Call(GeckoAppShell::Context(), nullptr, a0);
-}
-
 constexpr char GeckoAppShell::CancelVibrate_t::name[];
 constexpr char GeckoAppShell::CancelVibrate_t::signature[];
 
@@ -577,14 +569,6 @@ constexpr char GeckoAppShell::PerformHapticFeedback_t::signature[];
 auto GeckoAppShell::PerformHapticFeedback(bool a0) -> void
 {
     return mozilla::jni::Method<PerformHapticFeedback_t>::Call(GeckoAppShell::Context(), nullptr, a0);
-}
-
-constexpr char GeckoAppShell::RemoveFullScreenPluginView_t::name[];
-constexpr char GeckoAppShell::RemoveFullScreenPluginView_t::signature[];
-
-auto GeckoAppShell::RemoveFullScreenPluginView(mozilla::jni::Object::Param a0) -> void
-{
-    return mozilla::jni::Method<RemoveFullScreenPluginView_t>::Call(GeckoAppShell::Context(), nullptr, a0);
 }
 
 constexpr char GeckoAppShell::ReportJavaCrash_t::name[];
