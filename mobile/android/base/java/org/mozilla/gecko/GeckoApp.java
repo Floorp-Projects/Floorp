@@ -8,6 +8,7 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
 import org.mozilla.gecko.annotation.RobocopTarget;
+import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.UrlAnnotations;
 import org.mozilla.gecko.gfx.BitmapUtils;
@@ -210,9 +211,7 @@ public abstract class GeckoApp extends GeckoActivity
     protected DoorHangerPopup mDoorHangerPopup;
     protected FormAssistPopup mFormAssistPopup;
 
-
     protected GeckoView mLayerView;
-    private AbsoluteLayout mPluginContainer;
 
     private FullScreenHolder mFullScreenPluginContainer;
     private View mFullScreenPluginView;
@@ -417,11 +416,6 @@ public abstract class GeckoApp extends GeckoActivity
 
     public SharedPreferences getSharedPreferencesForProfile() {
         return GeckoSharedPrefs.forProfile(this);
-    }
-
-    @Override
-    public Activity getActivity() {
-        return this;
     }
 
     @Override
@@ -1020,16 +1014,21 @@ public abstract class GeckoApp extends GeckoActivity
         mFullScreenPluginView = view;
     }
 
-    @Override
-    public void addPluginView(final View view) {
+    @WrapForJNI(calledFrom = "gecko")
+    private static void addPluginView(final View view) {
+        final Activity activity = GeckoActivityMonitor.getInstance().getCurrentActivity();
+        if (!(activity instanceof GeckoApp)) {
+            return;
+        }
 
+        final GeckoApp geckoApp = (GeckoApp) activity;
         if (ThreadUtils.isOnUiThread()) {
-            addFullScreenPluginView(view);
+            geckoApp.addFullScreenPluginView(view);
         } else {
             ThreadUtils.postToUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    addFullScreenPluginView(view);
+                    geckoApp.addFullScreenPluginView(view);
                 }
             });
         }
@@ -1066,19 +1065,28 @@ public abstract class GeckoApp extends GeckoActivity
         setFullScreen(false);
     }
 
-    @Override
-    public void removePluginView(final View view) {
+    @WrapForJNI(calledFrom = "gecko")
+    private static void removePluginView(final View view) {
+        final Activity activity = GeckoActivityMonitor.getInstance().getCurrentActivity();
+        if (!(activity instanceof GeckoApp)) {
+            return;
+        }
+
+        final GeckoApp geckoApp = (GeckoApp) activity;
         if (ThreadUtils.isOnUiThread()) {
-            removePluginView(view);
+            geckoApp.removeFullScreenPluginView(view);
         } else {
             ThreadUtils.postToUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    removeFullScreenPluginView(view);
+                    geckoApp.removeFullScreenPluginView(view);
                 }
             });
         }
     }
+
+    @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
+    private static native void onFullScreenPluginHidden(View view);
 
     private void showSetImageResult(final boolean success, final int message, final String path) {
         ThreadUtils.postToUiThread(new Runnable() {
@@ -1326,7 +1334,8 @@ public abstract class GeckoApp extends GeckoActivity
             mIgnoreLastSelectedTab = true;
 
             final String action = intent.getAction();
-            final String args = intent.getStringExtra("args");
+            final String args = GeckoApplication.addDefaultGeckoArgs(
+                    intent.getStringExtra("args"));
 
             sAlreadyLoaded = true;
             GeckoThread.initMainProcess(/* profile */ null, args,
@@ -1664,7 +1673,6 @@ public abstract class GeckoApp extends GeckoActivity
     protected void initializeChrome() {
         mDoorHangerPopup = new DoorHangerPopup(this);
         mDoorHangerPopup.setOnVisibilityChangeListener(this);
-        mPluginContainer = (AbsoluteLayout) findViewById(R.id.plugin_container);
         mFormAssistPopup = (FormAssistPopup) findViewById(R.id.form_assist_popup);
     }
 
@@ -2016,8 +2024,7 @@ public abstract class GeckoApp extends GeckoActivity
         return mLayerView.getEventDispatcher();
     }
 
-    @Override
-    public GeckoProfile getProfile() {
+    protected static GeckoProfile getProfile() {
         return GeckoThread.getActiveProfile();
     }
 
@@ -2152,12 +2159,6 @@ public abstract class GeckoApp extends GeckoActivity
             mCameraOrientationEventListener.disable();
             mCameraOrientationEventListener = null;
         }
-    }
-
-    @Override
-    public String getDefaultUAString() {
-        return HardwareUtils.isTablet() ? AppConstants.USER_AGENT_FENNEC_TABLET :
-                                          AppConstants.USER_AGENT_FENNEC_MOBILE;
     }
 
     @Override
@@ -2803,7 +2804,7 @@ public abstract class GeckoApp extends GeckoActivity
         }
 
         if (mFullScreenPluginView != null) {
-            GeckoAppShell.onFullScreenPluginHidden(mFullScreenPluginView);
+            onFullScreenPluginHidden(mFullScreenPluginView);
             removeFullScreenPluginView(mFullScreenPluginView);
             return;
         }
@@ -2882,9 +2883,6 @@ public abstract class GeckoApp extends GeckoActivity
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         Permissions.onRequestPermissionsResult(this, permissions, grantResults);
     }
-
-    @Override
-    public AbsoluteLayout getPluginContainer() { return mPluginContainer; }
 
     private static final String CPU = "cpu";
     private static final String SCREEN = "screen";
@@ -3204,10 +3202,5 @@ public abstract class GeckoApp extends GeckoActivity
         }
         setRequestedOrientation(requestedActivityInfoOrientation);
         return true;
-    }
-
-    @Override
-    public boolean isOfficial() {
-        return AppConstants.MOZILLA_OFFICIAL;
     }
 }

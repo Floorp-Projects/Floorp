@@ -115,7 +115,7 @@ function test() {
 
 function promiseNewTabLoadEvent(aUrl, aEventType = "load") {
   return new Promise(resolve => {
-    let tab = gBrowser.selectedTab = gBrowser.addTab(aUrl);
+    let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, aUrl);
     tab.linkedBrowser.addEventListener(aEventType, function(event) {
       let iframe = tab.linkedBrowser.contentDocument.getElementById("remote-report");
         iframe.addEventListener("load", function frameLoad(e) {

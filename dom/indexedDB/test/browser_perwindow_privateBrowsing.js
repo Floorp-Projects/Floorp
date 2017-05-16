@@ -17,7 +17,7 @@ function test()
 
 function test1()
 {
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedBrowser.addEventListener("load", function () {
     if (content.location != testPageURL) {
       content.location = testPageURL;

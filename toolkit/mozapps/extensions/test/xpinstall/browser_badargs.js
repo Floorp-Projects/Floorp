@@ -5,7 +5,7 @@ function test() {
   waitForExplicitFinish();
 
   var triggers = encodeURIComponent(JSON.stringify(TESTROOT + "amosigned.xpi"));
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     return new Promise(resolve => {

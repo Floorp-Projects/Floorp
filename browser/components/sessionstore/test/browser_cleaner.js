@@ -43,10 +43,10 @@ add_task(async function init() {
 });
 
 add_task(async function test_open_and_close() {
-  let newTab1 = gBrowser.addTab(URL_TAB1);
+  let newTab1 = BrowserTestUtils.addTab(gBrowser, URL_TAB1);
   await promiseBrowserLoaded(newTab1.linkedBrowser);
 
-  let newTab2 = gBrowser.addTab(URL_TAB2);
+  let newTab2 = BrowserTestUtils.addTab(gBrowser, URL_TAB2);
   await promiseBrowserLoaded(newTab2.linkedBrowser);
 
   let newWin = await promiseNewWindowLoaded();

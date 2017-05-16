@@ -17,7 +17,7 @@ Cu.import("resource://testing-common/ContentTaskUtils.jsm", this);
 function CPUBurner(url, jankThreshold) {
   info(`CPUBurner: Opening tab for ${url}\n`);
   this.url = url;
-  this.tab = gBrowser.addTab(url);
+  this.tab = BrowserTestUtils.addTab(gBrowser, url);
   this.jankThreshold = jankThreshold;
   let browser = this.tab.linkedBrowser;
   this._browser = browser;

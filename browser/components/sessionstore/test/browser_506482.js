@@ -45,7 +45,7 @@ function test() {
   let mtime0 = getSessionstorejsModificationTime();
 
   // create and select a first tab
-  let tab = gBrowser.addTab(TEST_URL);
+  let tab = BrowserTestUtils.addTab(gBrowser, TEST_URL);
   promiseBrowserLoaded(tab.linkedBrowser).then(() => {
     // step1: the above has triggered some saveStateDelayed(), sleep until
     // it's done, and get the initial sessionstore.js mtime

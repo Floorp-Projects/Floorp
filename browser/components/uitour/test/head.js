@@ -251,7 +251,7 @@ function loadUITourTestPage(callback, host = "https://example.org/") {
   let url = getRootDirectory(gTestPath) + "uitour.html";
   url = url.replace("chrome://mochitests/content/", host);
 
-  gTestTab = gBrowser.addTab(url);
+  gTestTab = BrowserTestUtils.addTab(gBrowser, url);
   gBrowser.selectedTab = gTestTab;
 
   gTestTab.linkedBrowser.addEventListener("load", function() {

@@ -15,7 +15,7 @@ function test() {
   is(numClosedTabs(), 0, "There should be 0 closed tabs.");
   ok(!isUndoCloseEnabled(), "Undo Close Tab should be disabled.");
 
-  var tab = gBrowser.addTab("http://mochi.test:8888/");
+  var tab = BrowserTestUtils.addTab(gBrowser, "http://mochi.test:8888/");
   var browser = gBrowser.getBrowserForTab(tab);
   BrowserTestUtils.browserLoaded(browser).then(() => {
     BrowserTestUtils.removeTab(tab).then(() => {

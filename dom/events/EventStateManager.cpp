@@ -2840,6 +2840,18 @@ EventStateManager::PostHandleKeyboardEvent(WidgetKeyboardEvent* aKeyboardEvent,
     return;
   }
 
+  if (!dispatchedToContentProcess) {
+    // The widget expects a reply for every keyboard event. If the event wasn't
+    // dispatched to a content process (non-e10s or no content process
+    // running), we need to short-circuit here. Otherwise, we need to wait for
+    // the content process to handle the event.
+    aKeyboardEvent->mWidget->PostHandleKeyEvent(aKeyboardEvent);
+    if (aKeyboardEvent->DefaultPrevented()) {
+      aStatus = nsEventStatus_eConsumeNoDefault;
+      return;
+    }
+  }
+
   // XXX Currently, our automated tests don't support mKeyNameIndex.
   //     Therefore, we still need to handle this with keyCode.
   switch(aKeyboardEvent->mKeyCode) {

@@ -21,7 +21,7 @@ function test1()
   removePermission(testWorkerURL, "indexedDB");
 
   info("creating tab");
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   gBrowser.selectedBrowser.addEventListener("load", function () {
     setFinishedCallback(function(isIDBDatabase, exception) {
@@ -57,7 +57,7 @@ function test2()
   removePermission(testSharedWorkerURL, "indexedDB");
 
   info("creating tab");
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   gBrowser.selectedBrowser.addEventListener("load", function () {
     setFinishedCallback(function(isIDBDatabase, exception) {

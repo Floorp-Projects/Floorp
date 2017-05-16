@@ -10,8 +10,8 @@ function test() {
 
   // Open 2 other tabs, and pin the second one. Like that, the initial tab
   // should get closed.
-  let testTab1 = gBrowser.addTab();
-  let testTab2 = gBrowser.addTab();
+  let testTab1 = BrowserTestUtils.addTab(gBrowser);
+  let testTab2 = BrowserTestUtils.addTab(gBrowser);
   gBrowser.pinTab(testTab2);
 
   // Now execute "Close other Tabs" on the first manually opened tab (tab1).

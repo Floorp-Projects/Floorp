@@ -49,6 +49,6 @@ function test() {
               getChromeDir(getResolvedURI(gTestPath));
   var rootDir = Services.io.newFileURI(dir).spec;
 
-  gBrowser.selectedTab = gBrowser.addTab(rootDir + "test-form_sjis.html");
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, rootDir + "test-form_sjis.html");
   BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(afterOpen);
 }

@@ -19,7 +19,7 @@ function test() {
       toString() { return this.URL; }
     }
   }));
-  expectedTab = gBrowser.addTab();
+  expectedTab = BrowserTestUtils.addTab(gBrowser);
   expectedTab.linkedBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
 }
 

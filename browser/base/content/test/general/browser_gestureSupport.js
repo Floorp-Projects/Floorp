@@ -641,7 +641,7 @@ function test_rotateGesturesOnTab() {
 }
 
 function test_rotateGestures() {
-  test_imageTab = gBrowser.addTab("chrome://branding/content/about-logo.png");
+  test_imageTab = BrowserTestUtils.addTab(gBrowser, "chrome://branding/content/about-logo.png");
   gBrowser.selectedTab = test_imageTab;
 
   gBrowser.selectedBrowser.addEventListener("load", test_rotateGesturesOnTab, true);

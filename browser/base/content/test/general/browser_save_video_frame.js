@@ -98,7 +98,7 @@ add_task(async function() {
     destDir.remove(true);
   });
 
-  let tab = gBrowser.addTab();
+  let tab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = tab;
   let browser = tab.linkedBrowser;
   info("Loading video tab");

@@ -12,7 +12,7 @@ function isDOMLoaded(browser) {
 // It checks if calling BrowserTestUtils.browserLoaded() yields
 // browser object.
 add_task(function*() {
-  let tab = gBrowser.addTab('http://example.com');
+  let tab = BrowserTestUtils.addTab(gBrowser, 'http://example.com');
   let browser = tab.linkedBrowser;
   yield BrowserTestUtils.browserLoaded(browser);
   yield isDOMLoaded(browser);
@@ -29,7 +29,7 @@ add_task(function*() {
   ];
   //Add tabs, get the respective browsers
   let browsers = [
-    for (u of tabURLs) gBrowser.addTab(u).linkedBrowser
+    for (u of tabURLs) BrowserTestUtils.addTab(gBrowser, u).linkedBrowser
   ];
   //wait for promises to settle
   yield Promise.all((

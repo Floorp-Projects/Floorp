@@ -284,16 +284,30 @@ public class GeckoView extends LayerView
         init(context, newSettings);
     }
 
-    public static final void preload(Context context) {
-        final GeckoProfile profile = GeckoProfile.get(
-            context.getApplicationContext());
+    /**
+     * Preload GeckoView by starting Gecko in the background, if Gecko is not already running.
+     *
+     * @param context Activity or Application Context for starting GeckoView.
+     */
+    public static void preload(final Context context) {
+        preload(context, /* geckoArgs */ null);
+    }
 
+    /**
+     * Preload GeckoView by starting Gecko with the specified arguments in the background,
+     * if Geckois not already running.
+     *
+     * @param context Activity or Application Context for starting GeckoView.
+     * @param geckoArgs Arguments to be passed to Gecko, if Gecko is not already running
+     */
+    public static void preload(final Context context, final String geckoArgs) {
+        final Context appContext = context.getApplicationContext();
         if (GeckoAppShell.getApplicationContext() == null) {
-            GeckoAppShell.setApplicationContext(context.getApplicationContext());
+            GeckoAppShell.setApplicationContext(appContext);
         }
 
-        if (GeckoThread.initMainProcess(profile,
-                                        /* args */ null,
+        if (GeckoThread.initMainProcess(GeckoProfile.get(appContext),
+                                        geckoArgs,
                                         /* debugging */ false)) {
             GeckoThread.launch();
         }

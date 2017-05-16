@@ -7,7 +7,7 @@ var newTab;
 
 add_task(async function findbar_test() {
   waitForExplicitFinish();
-  newTab = gBrowser.addTab("about:blank");
+  newTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
 
   let promise = ContentTask.spawn(newTab.linkedBrowser, null, async function() {
     await ContentTaskUtils.waitForEvent(this, "DOMContentLoaded", false);

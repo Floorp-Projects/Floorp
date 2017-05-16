@@ -56,7 +56,7 @@ function onResponseStarted(details) {
 
 add_task(async function filter_urls() {
   // First load the URL so that we set cookie foopy=1.
-  gBrowser.selectedTab = gBrowser.addTab(URL);
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, URL);
   await waitForLoad();
   gBrowser.removeCurrentTab();
 
@@ -64,7 +64,7 @@ add_task(async function filter_urls() {
   WebRequest.onBeforeSendHeaders.addListener(onBeforeSendHeaders, null, ["blocking"]);
   WebRequest.onResponseStarted.addListener(onResponseStarted, null);
 
-  gBrowser.selectedTab = gBrowser.addTab(URL);
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, URL);
 
   await waitForLoad();
 

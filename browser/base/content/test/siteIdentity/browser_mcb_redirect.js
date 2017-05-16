@@ -288,7 +288,7 @@ function test() {
   Services.prefs.setBoolPref(PREF_ACTIVE, true);
   Services.prefs.setBoolPref(PREF_DISPLAY, true);
 
-  var newTab = gBrowser.addTab();
+  var newTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = newTab;
   gTestBrowser = gBrowser.selectedBrowser;
   newTab.linkedBrowser.stop();
