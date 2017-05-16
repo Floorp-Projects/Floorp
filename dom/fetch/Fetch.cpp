@@ -282,14 +282,16 @@ public:
         return NS_OK;
       }
 
-      nsCOMPtr<nsIPrincipal> principal = proxy->GetWorkerPrivate()->GetPrincipal();
+      WorkerPrivate* workerPrivate = proxy->GetWorkerPrivate();
+      MOZ_ASSERT(workerPrivate);
+      nsCOMPtr<nsIPrincipal> principal = workerPrivate->GetPrincipal();
       MOZ_ASSERT(principal);
-      nsCOMPtr<nsILoadGroup> loadGroup = proxy->GetWorkerPrivate()->GetLoadGroup();
+      nsCOMPtr<nsILoadGroup> loadGroup = workerPrivate->GetLoadGroup();
       MOZ_ASSERT(loadGroup);
-
       // We don't track if a worker is spawned from a tracking script for now,
       // so pass false as the last argument to FetchDriver().
-      fetch = new FetchDriver(mRequest, principal, loadGroup, false);
+      fetch = new FetchDriver(mRequest, principal, loadGroup,
+                              workerPrivate->MainThreadEventTarget(), false);
       nsAutoCString spec;
       if (proxy->GetWorkerPrivate()->GetBaseURI()) {
         proxy->GetWorkerPrivate()->GetBaseURI()->GetAsciiSpec(spec);
@@ -313,6 +315,8 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
+
+  MOZ_ASSERT(aGlobal);
 
   // Double check that we have chrome privileges if the Request's content
   // policy type has been overridden.
@@ -386,7 +390,8 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
     RefPtr<MainThreadFetchResolver> resolver =
       new MainThreadFetchResolver(p, observer);
     RefPtr<FetchDriver> fetch =
-      new FetchDriver(r, principal, loadGroup, isTrackingFetch);
+      new FetchDriver(r, principal, loadGroup,
+                      aGlobal->EventTargetFor(TaskCategory::Other), isTrackingFetch);
     fetch->SetDocument(doc);
     resolver->SetLoadGroup(loadGroup);
     aRv = fetch->Fetch(signal, resolver);
