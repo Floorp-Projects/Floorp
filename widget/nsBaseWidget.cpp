@@ -1255,9 +1255,8 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 
   bool enableWR = gfx::gfxVars::UseWebRender();
   bool enableAPZ = UseAPZ();
-  if (enableWR && !gfxPrefs::APZAllowWithWebRender()) {
-    // Disable APZ on widgets using WebRender, since it doesn't work yet. Allow
-    // it on non-WR widgets or if the pref forces it on.
+  if (enableWR) {
+    // Disable APZ on widgets using WebRender, since it doesn't work yet.
     enableAPZ = false;
   }
   CompositorOptions options(enableAPZ, enableWR);
