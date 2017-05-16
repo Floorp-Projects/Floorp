@@ -28,7 +28,10 @@ const TESTCASES = [
                <input id="family-name" autocomplete="family-name">
                <input id="street-addr" autocomplete="street-address">
                <input id="city" autocomplete="address-level2">
-               <select id="country" autocomplete="country"></select>
+               <select id="country" autocomplete="country">
+                 <option/>
+                 <option value="US">United States</option>
+               </select>
                <input id="email" autocomplete="email">
                <input id="tel" autocomplete="tel"></form>`,
     fieldDetails: [
@@ -62,7 +65,10 @@ const TESTCASES = [
                <input id="family-name" autocomplete="shipping family-name">
                <input id="street-addr" autocomplete="shipping street-address">
                <input id="city" autocomplete="shipping address-level2">
-               <select id="country" autocomplete="shipping country"></select>
+               <select id="country" autocomplete="shipping country">
+                 <option/>
+                 <option value="US">United States</option>
+               </select>
                <input id='email' autocomplete="shipping email">
                <input id="tel" autocomplete="shipping tel"></form>`,
     fieldDetails: [
@@ -159,49 +165,153 @@ const TESTCASES = [
       "tel": "1234567",
     },
   },
+  {
+    description: "Form with autocomplete select elements and matching option values",
+    document: `<form>
+               <select id="country" autocomplete="shipping country">
+                 <option value=""></option>
+                 <option value="US">United States</option>
+               </select>
+               <select id="state" autocomplete="shipping address-level1">
+                 <option value=""></option>
+                 <option value="CA">California</option>
+                 <option value="WA">Washington</option>
+               </select>
+               </form>`,
+    fieldDetails: [
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "country", "element": {}},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "address-level1", "element": {}},
+    ],
+    profileData: {
+      "guid": "123",
+      "country": "US",
+      "address-level1": "CA",
+    },
+    expectedResult: {
+      "country": "US",
+      "state": "CA",
+    },
+  },
+  {
+    description: "Form with autocomplete select elements and matching option texts",
+    document: `<form>
+               <select id="country" autocomplete="shipping country">
+                 <option value=""></option>
+                 <option value="US">United States</option>
+               </select>
+               <select id="state" autocomplete="shipping address-level1">
+                 <option value=""></option>
+                 <option value="CA">California</option>
+                 <option value="WA">Washington</option>
+               </select>
+               </form>`,
+    fieldDetails: [
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "country", "element": {}},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "address-level1", "element": {}},
+    ],
+    profileData: {
+      "guid": "123",
+      "country": "United States",
+      "address-level1": "California",
+    },
+    expectedResult: {
+      "country": "US",
+      "state": "CA",
+    },
+  },
 ];
 
-for (let tc of TESTCASES) {
-  (function() {
-    let testcase = tc;
-    add_task(async function() {
-      do_print("Starting testcase: " + testcase.description);
+const TESTCASES_INPUT_UNCHANGED = [
+  {
+    description: "Form with autocomplete select elements; with default and no matching options",
+    document: `<form>
+               <select id="country" autocomplete="shipping country">
+                 <option value="US">United States</option>
+               </select>
+               <select id="state" autocomplete="shipping address-level1">
+                 <option value=""></option>
+                 <option value="CA">California</option>
+                 <option value="WA">Washington</option>
+               </select>
+               </form>`,
+    fieldDetails: [
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "country", "element": {}},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "address-level1", "element": {}},
+    ],
+    profileData: {
+      "guid": "123",
+      "country": "US",
+      "address-level1": "unknown state",
+    },
+    expectedResult: {
+      "country": "US",
+      "state": "",
+    },
+  },
+];
 
-      let doc = MockDocument.createTestDocument("http://localhost:8080/test/",
-                                                testcase.document);
-      let form = doc.querySelector("form");
-      let handler = new FormAutofillHandler(form);
-      let onChangePromises = [];
+function do_test(testcases, testFn) {
+  for (let tc of testcases) {
+    (function() {
+      let testcase = tc;
+      add_task(async function() {
+        do_print("Starting testcase: " + testcase.description);
 
-      handler.fieldDetails = testcase.fieldDetails;
-      handler.fieldDetails.forEach((field, index) => {
-        let element = doc.querySelectorAll("input, select")[index];
-        field.elementWeakRef = Cu.getWeakReference(element);
-        if (element instanceof Ci.nsIDOMHTMLSelectElement) {
-          // TODO: Bug 1364823 should remove the condition and handle filling
-          // value in <select>
-          return;
-        }
-        if (!testcase.profileData[field.fieldName]) {
-          // Avoid waiting for `change` event of a input with a blank value to
-          // be filled.
-          return;
-        }
-        onChangePromises.push(new Promise(resolve => {
-          element.addEventListener("change", () => {
-            let id = element.id;
-            Assert.equal(element.value, testcase.expectedResult[id],
-                        "Check the " + id + " fields were filled with correct data");
-            resolve();
-          }, {once: true});
-        }));
+        let doc = MockDocument.createTestDocument("http://localhost:8080/test/",
+                                                  testcase.document);
+        let form = doc.querySelector("form");
+        let handler = new FormAutofillHandler(form);
+        let promises = [];
+
+        handler.fieldDetails = testcase.fieldDetails;
+        handler.fieldDetails.forEach((field, index) => {
+          let element = doc.querySelectorAll("input, select")[index];
+          field.elementWeakRef = Cu.getWeakReference(element);
+          if (!testcase.profileData[field.fieldName]) {
+            // Avoid waiting for `change` event of a input with a blank value to
+            // be filled.
+            return;
+          }
+          promises.push(testFn(testcase, element));
+        });
+
+        handler.autofillFormFields(testcase.profileData);
+        Assert.equal(handler.filledProfileGUID, testcase.profileData.guid,
+                     "Check if filledProfileGUID is set correctly");
+        await Promise.all(promises);
       });
-
-      handler.autofillFormFields(testcase.profileData);
-
-      Assert.equal(handler.filledProfileGUID, testcase.profileData.guid,
-                   "Check if filledProfileGUID is set correctly");
-      await Promise.all(onChangePromises);
-    });
-  })();
+    })();
+  }
 }
+
+do_test(TESTCASES, (testcase, element) => {
+  return new Promise(resolve => {
+    element.addEventListener("change", () => {
+      let id = element.id;
+      Assert.equal(element.value, testcase.expectedResult[id],
+                  "Check the " + id + " field was filled with correct data");
+      resolve();
+    }, {once: true});
+  });
+});
+
+do_test(TESTCASES_INPUT_UNCHANGED, (testcase, element) => {
+  return new Promise((resolve, reject) => {
+    // Make sure no change or input event is fired when no change occurs.
+    let cleaner;
+    let timer = setTimeout(() => {
+      let id = element.id;
+      element.removeEventListener("change", cleaner);
+      element.removeEventListener("input", cleaner);
+      Assert.equal(element.value, testcase.expectedResult[id],
+                  "Check no value is changed on the " + id + " field");
+      resolve();
+    }, 1000);
+    cleaner = event => {
+      clearTimeout(timer);
+      reject(`${event.type} event should not fire`);
+    };
+    element.addEventListener("change", cleaner);
+    element.addEventListener("input", cleaner);
+  });
+});
