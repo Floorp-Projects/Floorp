@@ -438,7 +438,7 @@ mozJSComponentLoader::LoadModule(FileLocation& aFile)
     return entry.forget();
 }
 
-nsresult
+void
 mozJSComponentLoader::FindTargetObject(JSContext* aCx,
                                        MutableHandleObject aTargetObject)
 {
@@ -463,7 +463,6 @@ mozJSComponentLoader::FindTargetObject(JSContext* aCx,
     }
 
     aTargetObject.set(targetObject);
-    return NS_OK;
 }
 
 // This requires that the keys be strings and the values be pointers.
@@ -987,8 +986,7 @@ mozJSComponentLoader::Import(const nsACString& registryLocation,
                                       PromiseFlatCString(registryLocation).get());
         }
     } else {
-        nsresult rv = FindTargetObject(cx, &targetObject);
-        NS_ENSURE_SUCCESS(rv, rv);
+        FindTargetObject(cx, &targetObject);
     }
 
     Maybe<JSAutoCompartment> ac;
