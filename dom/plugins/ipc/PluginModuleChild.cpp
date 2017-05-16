@@ -107,6 +107,10 @@ typedef BOOL (WINAPI *GetOpenFileNameWPtr)(LPOPENFILENAMEW lpofn);
 static GetOpenFileNameWPtr sGetOpenFileNameWPtrStub = nullptr;
 typedef BOOL (WINAPI *GetSaveFileNameWPtr)(LPOPENFILENAMEW lpofn);
 static GetSaveFileNameWPtr sGetSaveFileNameWPtrStub = nullptr;
+
+typedef BOOL (WINAPI *SetCursorPosPtr)(int x, int y);
+static SetCursorPosPtr sSetCursorPosPtrStub = nullptr;
+
 #endif
 
 /* static */
@@ -2233,6 +2237,38 @@ PMCGetOpenFileNameW(LPOPENFILENAMEW aLpofn)
 {
     return PMCGetFileNameW(OPEN_FUNC, aLpofn);
 }
+
+BOOL WINAPI PMCSetCursorPos(int x, int y);
+
+class SetCursorPosTaskData : public PluginThreadTaskData
+{
+public:
+    SetCursorPosTaskData(int x, int y) : mX(x), mY(y) {}
+    bool RunTask() { return PMCSetCursorPos(mX, mY); }
+private:
+    int mX, mY;
+};
+
+// static
+BOOL WINAPI
+PMCSetCursorPos(int x, int y)
+{
+    if (!IsPluginThread()) {
+        SetCursorPosTaskData scpData(x, y);
+        return PostToPluginThread(&scpData);
+    }
+
+    PluginModuleChild* chromeInstance = PluginModuleChild::GetChrome();
+    if (chromeInstance) {
+        bool ret = FALSE;
+        chromeInstance->CallSetCursorPos(x, y, &ret);
+        return ret;
+    }
+
+    return sSetCursorPosPtrStub(x, y);
+}
+
+
 #endif
 
 PPluginInstanceChild*
@@ -2263,6 +2299,11 @@ PluginModuleChild::AllocPPluginInstanceChild(const nsCString& aMimeType,
         !sGetKeyStatePtrStub) {
         sUser32Intercept.AddHook("GetKeyState", reinterpret_cast<intptr_t>(PMCGetKeyState),
                                  (void**) &sGetKeyStatePtrStub);
+    }
+
+    if (!sSetCursorPosPtrStub) {
+        sUser32Intercept.AddHook("SetCursorPos", reinterpret_cast<intptr_t>(PMCSetCursorPos),
+                                 (void**) &sSetCursorPosPtrStub);
     }
 
     sComDlg32Intercept.Init("comdlg32.dll");
