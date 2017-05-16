@@ -22,6 +22,8 @@ nsTSubstring_CharT::nsTSubstring_CharT(char_type* aData, size_type aLength,
                                        uint32_t aFlags)
   : nsTStringRepr_CharT(aData, aLength, aFlags)
 {
+  MOZ_RELEASE_ASSERT(CheckCapacity(aLength), "String is too large.");
+
   if (aFlags & F_OWNED) {
     STRING_STAT_INCREMENT(Adopt);
     MOZ_LOG_CTOR(mData, "StringAdopt", 1);

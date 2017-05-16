@@ -13,6 +13,7 @@ import java.util.List;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.GeckoActivityMonitor;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.gfx.BitmapUtils;
@@ -22,6 +23,7 @@ import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 
+import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
@@ -189,8 +191,14 @@ public final class NotificationHelper implements BundleEventListener {
         notificationIntent.putExtra(COOKIE_ATTR, message.getString(COOKIE_ATTR, ""));
 
         // All intents get routed through the notificationReceiver. That lets us bail if we don't want to start Gecko
-        final ComponentName name = new ComponentName(
-                mContext, GeckoAppShell.getGeckoInterface().getActivity().getClass());
+        final Activity currentActivity =
+                GeckoActivityMonitor.getInstance().getCurrentActivity();
+        final ComponentName name;
+        if (currentActivity != null) {
+            name = new ComponentName(mContext, currentActivity.getClass());
+        } else {
+            name = new ComponentName(mContext, AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
+        }
         notificationIntent.putExtra(ORIGINAL_EXTRA_COMPONENT, name);
 
         return notificationIntent;

@@ -9,7 +9,7 @@ add_task(async function() {
   let TEST_LINK_INITIAL = "about:";
   let TEST_LINK_CHANGED = "about:support";
 
-  let appTab = gBrowser.addTab(TEST_LINK_INITIAL);
+  let appTab = BrowserTestUtils.addTab(gBrowser, TEST_LINK_INITIAL);
   let browser = appTab.linkedBrowser;
   await BrowserTestUtils.browserLoaded(browser);
 

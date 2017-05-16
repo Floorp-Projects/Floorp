@@ -16,7 +16,7 @@ function test() {
 
   Services.prefs.setBoolPref(PREF_DISABLE_OPEN_NEW_WINDOW, true);
 
-  let newTab = gBrowser.addTab(gHttpTestRoot + TEST_FILE);
+  let newTab = BrowserTestUtils.addTab(gBrowser, gHttpTestRoot + TEST_FILE);
   gBrowser.selectedTab = newTab;
 
   whenTabLoaded(newTab, function() {

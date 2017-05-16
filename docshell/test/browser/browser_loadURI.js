@@ -9,7 +9,7 @@ const gPostData = "postdata=true";
 function test() {
   waitForExplicitFinish();
 
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   registerCleanupFunction(function () {
     gBrowser.removeTab(tab);
   });

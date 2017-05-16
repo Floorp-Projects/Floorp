@@ -12,7 +12,7 @@ function test() {
     "browser/components/sessionstore/test/browser_739531_sample.html";
 
   let loadCount = 0;
-  let tab = gBrowser.addTab(testURL);
+  let tab = BrowserTestUtils.addTab(gBrowser, testURL);
   tab.linkedBrowser.addEventListener("load", function onLoad(aEvent) {
     // make sure both the page and the frame are loaded
     if (++loadCount < 2)

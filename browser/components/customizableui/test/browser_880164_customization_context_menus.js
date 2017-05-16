@@ -43,7 +43,7 @@ add_task(async function() {
 // but with tab-specific options instead.
 add_task(async function() {
   // ensure there are tabs to reload/bookmark:
-  let extraTab = gBrowser.selectedTab = gBrowser.addTab();
+  let extraTab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   await promiseTabLoadEvent(extraTab, "http://example.com/");
   let contextMenu = document.getElementById("toolbar-context-menu");
   let shownPromise = popupShown(contextMenu);

@@ -1,7 +1,7 @@
 function test() {
   waitForExplicitFinish();
 
-  var tab = gBrowser.addTab();
+  var tab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = tab;
 
   tab.linkedBrowser.addEventListener("load", function() {

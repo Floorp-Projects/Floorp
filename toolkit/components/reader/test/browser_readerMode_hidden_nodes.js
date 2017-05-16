@@ -30,7 +30,7 @@ add_task(async function test_reader_button() {
     Services.prefs.setBoolPref(name, value);
   });
 
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   is_element_hidden(readerButton, "Reader mode button is not present on a new tab");
   // Point tab to a test page that is not reader-able due to hidden nodes.
   let url = TEST_PATH + "readerModeArticleHiddenNodes.html";

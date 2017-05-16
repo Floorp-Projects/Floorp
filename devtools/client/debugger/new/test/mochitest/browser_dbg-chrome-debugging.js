@@ -77,7 +77,7 @@ add_task(function* () {
   const response = yield gClient.getProcess();
   let actor = response.form.actor;
   gThreadClient = yield attachThread(gClient, actor);
-  gBrowser.selectedTab = gBrowser.addTab("about:mozilla");
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:mozilla");
 
   // listen for a new source and global
   gThreadClient.addListener("newSource", onNewSource);

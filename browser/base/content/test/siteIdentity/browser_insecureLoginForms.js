@@ -27,7 +27,7 @@ add_task(async function test_simple() {
     ["https://example.com", false],
   ]) {
     let testUrlPath = origin + TEST_URL_PATH;
-    let tab = gBrowser.addTab(testUrlPath + "form_basic.html");
+    let tab = BrowserTestUtils.addTab(gBrowser, testUrlPath + "form_basic.html");
     let browser = tab.linkedBrowser;
     await Promise.all([
       BrowserTestUtils.switchTab(gBrowser, tab),
@@ -88,7 +88,7 @@ add_task(async function test_mixedcontent() {
 
   // Load the page with the subframe in a new tab.
   let testUrlPath = "://example.com" + TEST_URL_PATH;
-  let tab = gBrowser.addTab("https" + testUrlPath + "insecure_test.html");
+  let tab = BrowserTestUtils.addTab(gBrowser, "https" + testUrlPath + "insecure_test.html");
   let browser = tab.linkedBrowser;
   await Promise.all([
     BrowserTestUtils.switchTab(gBrowser, tab),

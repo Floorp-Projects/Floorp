@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=557087
 <p id="display"></p>
 <div id="content">
   <iframe name='t'></iframe>
-  <form target='t' action="data:text/html,">
+  <form target='t' action="dummy_page.html">
     <fieldset disabled>
       <fieldset>
         <input name='i' value='i'>
@@ -31,11 +31,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=557087
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(runTest);
 
+const BASE_URI = "http://mochi.test:8888/tests/dom/html/test/dummy_page.html";
 var testResults = [
-  "data:text/html,?",
-  "data:text/html,?",
-  "data:text/html,?i=i&t=t&s=s",
-  "data:text/html,?i=i&t=t&s=s",
+  BASE_URI,
+  BASE_URI,
+  BASE_URI + "?i=i&t=t&s=s",
+  BASE_URI + "?i=i&t=t&s=s",
 ];
 var gTestCount = 0;
 

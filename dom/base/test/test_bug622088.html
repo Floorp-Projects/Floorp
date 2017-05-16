@@ -12,7 +12,7 @@
 
 <iframe id='iframe' src='file_bug622088_inner.html'></iframe>
 
-<iframe id='dataWindow' src="data:text/html,<html><head>
+<iframe id='dataWindow' srcdoc="<html><head>
 <script>function getXHRObject() { return new XMLHttpRequest(); }</script>
 </head><body onload='parent.dataWindowLoaded()'>Hello!!</body></html>"></iframe>
 

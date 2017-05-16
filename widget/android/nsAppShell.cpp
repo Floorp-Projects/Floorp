@@ -70,6 +70,7 @@
 #include "GeckoProcessManager.h"
 #include "GeckoScreenOrientation.h"
 #include "PrefsHelper.h"
+#include "fennec/GeckoApp.h"
 #include "fennec/MemoryMonitor.h"
 #include "fennec/Telemetry.h"
 #include "fennec/ThumbnailHelper.h"
@@ -364,11 +365,6 @@ public:
                 aName->ToString(), aTopic->ToCString().get(),
                 aCookie->ToString().get());
     }
-
-    static void OnFullScreenPluginHidden(jni::Object::Param aView)
-    {
-        nsPluginInstanceOwner::ExitFullScreen(aView.Get());
-    }
 };
 
 nsAppShell::nsAppShell()
@@ -403,6 +399,7 @@ nsAppShell::nsAppShell()
 
         if (jni::IsFennec()) {
             mozilla::ANRReporter::Init();
+            mozilla::GeckoApp::Init();
             mozilla::MemoryMonitor::Init();
             mozilla::widget::Telemetry::Init();
             mozilla::ThumbnailHelper::Init();

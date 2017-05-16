@@ -12,7 +12,7 @@ function test() {
   let uniqueValue = "<b>Unique:</b> " + Date.now();
 
   var frameCount = 0;
-  let tab = gBrowser.addTab(testURL);
+  let tab = BrowserTestUtils.addTab(gBrowser, testURL);
   tab.linkedBrowser.addEventListener("load", function(aEvent) {
     // wait for all frames to load completely
     if (frameCount++ < 2)

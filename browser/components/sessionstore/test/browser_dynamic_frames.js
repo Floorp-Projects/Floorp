@@ -20,7 +20,7 @@ add_task(async function() {
               "document.body.appendChild(i);</script>";
 
   // Add a new tab with two "static" and one "dynamic" frame.
-  let tab = gBrowser.addTab(URL);
+  let tab = BrowserTestUtils.addTab(gBrowser, URL);
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 
@@ -57,7 +57,7 @@ add_task(async function() {
               "document.body.appendChild(i);</script>";
 
   // Add a new tab with one "static" and one "dynamic" frame.
-  let tab = gBrowser.addTab(URL);
+  let tab = BrowserTestUtils.addTab(gBrowser, URL);
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 

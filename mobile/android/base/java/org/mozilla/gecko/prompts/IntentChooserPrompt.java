@@ -9,6 +9,7 @@ import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.GeckoActionProvider;
 
+import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -134,7 +135,8 @@ public class IntentChooserPrompt {
     private ArrayList<PromptListItem> getItemsForIntent(Context context, Intent intent) {
         ArrayList<PromptListItem> items = new ArrayList<PromptListItem>();
         PackageManager pm = context.getPackageManager();
-        List<ResolveInfo> lri = pm.queryIntentActivityOptions(GeckoAppShell.getGeckoInterface().getActivity().getComponentName(), null, intent, 0);
+        List<ResolveInfo> lri = pm.queryIntentActivityOptions(
+                ((Activity) context).getComponentName(), null, intent, 0);
 
         // If we didn't find any activities, just return the empty list
         if (lri == null) {

@@ -17,7 +17,7 @@ add_task(async function() {
   // Make sure mixed content blocking is on
   Services.prefs.setBoolPref(PREF_ACTIVE, true);
 
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   // Test 1: mixed content must be blocked
   await promiseTabLoadEvent(tab, TEST_URL);

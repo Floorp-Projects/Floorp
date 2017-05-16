@@ -11,7 +11,7 @@ function test() {
     "browser/components/sessionstore/test/browser_461743_sample.html";
 
   let frameCount = 0;
-  let tab = gBrowser.addTab(testURL);
+  let tab = BrowserTestUtils.addTab(gBrowser, testURL);
   tab.linkedBrowser.addEventListener("load", function(aEvent) {
     // Wait for all frames to load completely.
     if (frameCount++ < 2)

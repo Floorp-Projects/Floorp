@@ -12,24 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=366770
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=366770">Mozilla Bug 366770</a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
-
-  <!-- data: URI below corresponds to:
-  <?xml version="1.0"?>
-  <bindings id="xbltestBindings" xmlns="http://www.mozilla.org/xbl">
-    <binding id="xbltest">
-      <content>PASS</content>
-      <implementation>
-        <constructor>
-          var win = XPCNativeWrapper.unwrap(window);
-          win.document.bindingConstructorRan = true;
-          win.ok(true, "binding URI with no fragment applied");
-          win.SimpleTest.finish();
-        </constructor>
-      </implementation>
-    </binding>
-  </bindings>
-  -->
-  <span id="span" style="-moz-binding: url(data:text/xml;base64,ICA8YmluZGluZ3MgaWQ9InhibHRlc3RCaW5kaW5ncyIgeG1sbnM9Imh0dHA6Ly93d3cubW96aWxsYS5vcmcveGJsIj4KICAgIDxiaW5kaW5nIGlkPSJ4Ymx0ZXN0Ij4KICAgICAgPGNvbnRlbnQ+UEFTUzwvY29udGVudD4KICAgICAgPGltcGxlbWVudGF0aW9uPgogICAgICAgIDxjb25zdHJ1Y3Rvcj4KICAgICAgICAgIHZhciB3aW4gPSBYUENOYXRpdmVXcmFwcGVyLnVud3JhcCh3aW5kb3cpOwogICAgICAgICAgd2luLmRvY3VtZW50LmJpbmRpbmdDb25zdHJ1Y3RvclJhbiA9IHRydWU7CiAgICAgICAgICB3aW4ub2sodHJ1ZSwgImJpbmRpbmcgVVJJIHdpdGggbm8gZnJhZ21lbnQgYXBwbGllZCIpOwogICAgICAgICAgd2luLlNpbXBsZVRlc3QuZmluaXNoKCk7CiAgICAgICAgPC9jb25zdHJ1Y3Rvcj4KICAgICAgPC9pbXBsZW1lbnRhdGlvbj4KICAgIDwvYmluZGluZz4KICA8L2JpbmRpbmdzPg==);"></span>
+  <span id="span" style="-moz-binding: url(file_bug366770.xml);"></span>
 
   <pre id="test">
     <script class="testbody" type="text/javascript">

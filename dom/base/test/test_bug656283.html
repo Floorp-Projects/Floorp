@@ -23,14 +23,13 @@ SimpleTest.waitForExplicitFinish();
 
 var ifr;
 function test() {
-  // First a test with data documents.
   var d = document.implementation.createHTMLDocument("");
   is(d.activeElement, d.body, "Active element should be body by default! (1)");
  
 
   ifr = document.getElementById("ifr");
   ifr.onload = test2;
-  ifr.src = "data:text/html,1";
+  ifr.srcdoc = "1";
 }
 
 var firstDoc;
@@ -39,7 +38,7 @@ function test2() {
   is(firstDoc.activeElement, firstDoc.body,
      "Active element should be body by default! (2)");
   ifr.onload = test3;
-  ifr.src = "data:text/html,<input>";
+  ifr.srcdoc = "<input>";
 }
 
 function test3() {

@@ -10,10 +10,10 @@ function test()
 {
   waitForExplicitFinish();
 
-  tab1 = gBrowser.addTab();
+  tab1 = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = tab1;
   gBrowser.selectedBrowser.addEventListener("load", function () {
-    tab2 = gBrowser.addTab();
+    tab2 = BrowserTestUtils.addTab(gBrowser);
     gBrowser.selectedTab = tab2;
     gBrowser.selectedBrowser.addEventListener("load", function () {
       openScratchpad(runTests);

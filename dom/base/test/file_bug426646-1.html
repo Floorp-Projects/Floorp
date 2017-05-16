@@ -1,7 +1,8 @@
 <html><head>
 <title>Bug 426646, Using location.replace breaks iframe history</title>
 <script type="text/javascript">
-var url1 = "data:text/html;charset=utf-8,1st%20page";
+var BASE_URI = "http://mochi.test:8888/tests/dom/base/test/";
+var url1 = BASE_URI + "iframe1_bug426646.html";
 
 function soon(f) {
   return function() { setTimeout(f, 0); };
@@ -15,7 +16,7 @@ function doe() {
 }
 
 function doe2() {
-  window.frames[0].location = 'data:text/html;charset=utf-8,2nd%20page';
+  window.frames[0].location = 'iframe2_bug426646.html';
   window.frames[0].frameElement.onload = soon(doe3);
 }
 

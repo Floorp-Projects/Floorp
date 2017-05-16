@@ -16,7 +16,7 @@ const INNER_VALUE = "inner-value-" + RAND;
  * works as expected.
  */
 add_task(async function session_storage() {
-  let tab = gBrowser.addTab(URL);
+  let tab = BrowserTestUtils.addTab(gBrowser, URL);
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 
@@ -103,7 +103,7 @@ add_task(async function session_storage() {
  * sessionStorage data collected for tabs.
  */
 add_task(async function purge_domain() {
-  let tab = gBrowser.addTab(URL);
+  let tab = BrowserTestUtils.addTab(gBrowser, URL);
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 
@@ -127,7 +127,7 @@ add_task(async function purge_domain() {
  * levels as set by the user.
  */
 add_task(async function respect_privacy_level() {
-  let tab = gBrowser.addTab(URL + "&secure");
+  let tab = BrowserTestUtils.addTab(gBrowser, URL + "&secure");
   await promiseBrowserLoaded(tab.linkedBrowser);
   await promiseRemoveTab(tab);
 
@@ -140,7 +140,7 @@ add_task(async function respect_privacy_level() {
   // Disable saving data for encrypted sites.
   Services.prefs.setIntPref("browser.sessionstore.privacy_level", 1);
 
-  tab = gBrowser.addTab(URL + "&secure");
+  tab = BrowserTestUtils.addTab(gBrowser, URL + "&secure");
   await promiseBrowserLoaded(tab.linkedBrowser);
   await promiseRemoveTab(tab);
 
@@ -154,7 +154,7 @@ add_task(async function respect_privacy_level() {
   Services.prefs.setIntPref("browser.sessionstore.privacy_level", 2);
 
   // Check that duplicating a tab copies all private data.
-  tab = gBrowser.addTab(URL + "&secure");
+  tab = BrowserTestUtils.addTab(gBrowser, URL + "&secure");
   await promiseBrowserLoaded(tab.linkedBrowser);
   let tab2 = gBrowser.duplicateTab(tab);
   await promiseTabRestored(tab2);

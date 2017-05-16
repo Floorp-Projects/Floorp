@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function test() {
-  let newTab = gBrowser.addTab("http://example.com");
+  let newTab = BrowserTestUtils.addTab(gBrowser, "http://example.com");
   waitForExplicitFinish();
   BrowserTestUtils.browserLoaded(newTab.linkedBrowser).then(mainPart);
 

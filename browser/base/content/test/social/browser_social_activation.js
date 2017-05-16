@@ -239,7 +239,7 @@ var tests = {
 
   testAddonManagerDoubleInstall(next) {
     // Create a new tab and load about:addons
-    let addonsTab = gBrowser.addTab();
+    let addonsTab = BrowserTestUtils.addTab(gBrowser);
     gBrowser.selectedTab = addonsTab;
     BrowserOpenAddonsMgr("addons://list/service");
     gBrowser.selectedBrowser.addEventListener("load", function() {

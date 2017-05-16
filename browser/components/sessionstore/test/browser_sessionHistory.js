@@ -10,7 +10,7 @@ requestLongerTimeout(2);
  */
 add_task(async function test_load_start() {
   // Create a new tab.
-  let tab = gBrowser.addTab("about:blank");
+  let tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 
@@ -40,7 +40,7 @@ add_task(async function test_hashchange() {
   const URL = "data:text/html;charset=utf-8,<a id=a href=%23>clickme</a>";
 
   // Create a new tab.
-  let tab = gBrowser.addTab(URL);
+  let tab = BrowserTestUtils.addTab(gBrowser, URL);
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 
@@ -70,7 +70,7 @@ add_task(async function test_pageshow() {
   const URL2 = "data:text/html;charset=utf-8,<h1>second</h1>";
 
   // Create a new tab.
-  let tab = gBrowser.addTab(URL);
+  let tab = BrowserTestUtils.addTab(gBrowser, URL);
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 
@@ -102,7 +102,7 @@ add_task(async function test_subframes() {
               "<a id=a2 href=http%3A//example.com/%23 target=t>clickme</a>";
 
   // Create a new tab.
-  let tab = gBrowser.addTab(URL);
+  let tab = BrowserTestUtils.addTab(gBrowser, URL);
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 
@@ -145,7 +145,7 @@ add_task(async function test_subframes() {
  */
 add_task(async function test_about_page_navigate() {
   // Create a new tab.
-  let tab = gBrowser.addTab("about:blank");
+  let tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 
@@ -176,7 +176,7 @@ add_task(async function test_about_page_navigate() {
  */
 add_task(async function test_pushstate_replacestate() {
   // Create a new tab.
-  let tab = gBrowser.addTab("http://example.com/1");
+  let tab = BrowserTestUtils.addTab(gBrowser, "http://example.com/1");
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 
@@ -223,7 +223,7 @@ add_task(async function test_slow_subframe_load() {
               "</frameset>";
 
   // Add a new tab with a slow loading subframe
-  let tab = gBrowser.addTab(URL);
+  let tab = BrowserTestUtils.addTab(gBrowser, URL);
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 

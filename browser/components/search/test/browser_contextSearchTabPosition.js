@@ -33,7 +33,7 @@ add_task(async function test() {
   let container = gBrowser.tabContainer;
   container.addEventListener("TabOpen", tabAdded);
 
-  gBrowser.addTab("about:blank");
+  BrowserTestUtils.addTab(gBrowser, "about:blank");
   BrowserSearch.loadSearchFromContext("mozilla");
   BrowserSearch.loadSearchFromContext("firefox");
 

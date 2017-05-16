@@ -15,7 +15,7 @@ function test() {
   });
   waitForExplicitFinish();
 
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   tab.linkedBrowser.addEventListener("load", (function(event) {
     let uri = makeURI(testURL);
     let bmTxn =

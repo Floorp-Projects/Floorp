@@ -21,7 +21,7 @@ public class DevToolsAuthHelper {
 
     private static final String LOGTAG = "GeckoDevToolsAuthHelper";
 
-    public static void scan(Context context, final EventCallback callback) {
+    public static void scan(final Activity context, final EventCallback callback) {
         final Intent intent = InputOptionsUtils.createQRCodeReaderIntent();
 
         intent.putExtra("PROMPT_MESSAGE", context.getString(R.string.devtools_auth_scan_header));
@@ -36,7 +36,8 @@ public class DevToolsAuthHelper {
             return;
         }
 
-        ActivityHandlerHelper.startIntent(intent, new ActivityResultHandler() {
+        ActivityHandlerHelper.startIntentForActivity(
+                context, intent, new ActivityResultHandler() {
             @Override
             public void onActivityResult(int resultCode, Intent intent) {
                 if (resultCode == Activity.RESULT_OK) {

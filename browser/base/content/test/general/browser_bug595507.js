@@ -8,7 +8,7 @@ add_task(async function() {
   ok(gInvalidFormPopup,
      "The browser should have a popup to show when a form is invalid");
 
-  let tab = gBrowser.addTab();
+  let tab = BrowserTestUtils.addTab(gBrowser);
   let browser = gBrowser.getBrowserForTab(tab);
   gBrowser.selectedTab = tab;
 

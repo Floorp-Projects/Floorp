@@ -131,7 +131,7 @@ function test() {
       finish();
     } else {
       // Create a new tab and run the test.
-      gBrowser.selectedTab = gBrowser.addTab();
+      gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
       currentTest = tests.shift();
       testPlacesPanel(function() {
                         changeSidebarDirection("ltr");

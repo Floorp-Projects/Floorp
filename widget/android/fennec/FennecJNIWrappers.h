@@ -129,6 +129,77 @@ public:
 
 };
 
+class GeckoApp : public mozilla::jni::ObjectBase<GeckoApp>
+{
+public:
+    static const char name[];
+
+    explicit GeckoApp(const Context& ctx) : ObjectBase<GeckoApp>(ctx) {}
+
+    struct AddPluginView_t {
+        typedef GeckoApp Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::Object::Param> Args;
+        static constexpr char name[] = "addPluginView";
+        static constexpr char signature[] =
+                "(Landroid/view/View;)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::GECKO;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    static auto AddPluginView(mozilla::jni::Object::Param) -> void;
+
+    struct OnFullScreenPluginHidden_t {
+        typedef GeckoApp Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::Object::Param> Args;
+        static constexpr char name[] = "onFullScreenPluginHidden";
+        static constexpr char signature[] =
+                "(Landroid/view/View;)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::UI;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::GECKO;
+    };
+
+    struct RemovePluginView_t {
+        typedef GeckoApp Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::Object::Param> Args;
+        static constexpr char name[] = "removePluginView";
+        static constexpr char signature[] =
+                "(Landroid/view/View;)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::GECKO;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    static auto RemovePluginView(mozilla::jni::Object::Param) -> void;
+
+    static const mozilla::jni::CallingThread callingThread =
+            mozilla::jni::CallingThread::ANY;
+
+    template<class Impl> class Natives;
+};
+
 class GeckoJavaSampler : public mozilla::jni::ObjectBase<GeckoJavaSampler>
 {
 public:

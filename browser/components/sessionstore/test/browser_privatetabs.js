@@ -15,11 +15,11 @@ add_task(async function() {
   try {
     // Setup a public tab and a private tab
     info("Setting up public tab");
-    tab1 = gBrowser.addTab(URL_PUBLIC);
+    tab1 = BrowserTestUtils.addTab(gBrowser, URL_PUBLIC);
     await promiseBrowserLoaded(tab1.linkedBrowser);
 
     info("Setting up private tab");
-    tab2 = gBrowser.addTab();
+    tab2 = BrowserTestUtils.addTab(gBrowser);
     await promiseBrowserLoaded(tab2.linkedBrowser);
     await setUsePrivateBrowsing(tab2.linkedBrowser, true);
     tab2.linkedBrowser.loadURI(URL_PRIVATE);

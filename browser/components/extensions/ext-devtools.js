@@ -35,28 +35,26 @@ let initDevTools;
  * @returns {Promise<TabTarget>}
  *   The cloned devtools target associated to the context.
  */
-global.getDevToolsTargetForContext = (context) => {
-  return (async function asyncGetTabTarget() {
-    if (context.devToolsTarget) {
-      await context.devToolsTarget.makeRemote();
-      return context.devToolsTarget;
-    }
-
-    if (!context.devToolsToolbox || !context.devToolsToolbox.target) {
-      throw new Error("Unable to get a TabTarget for a context not associated to any toolbox");
-    }
-
-    if (!context.devToolsToolbox.target.isLocalTab) {
-      throw new Error("Unexpected target type: only local tabs are currently supported.");
-    }
-
-    const {TabTarget} = require("devtools/client/framework/target");
-
-    context.devToolsTarget = new TabTarget(context.devToolsToolbox.target.tab);
+global.getDevToolsTargetForContext = async (context) => {
+  if (context.devToolsTarget) {
     await context.devToolsTarget.makeRemote();
-
     return context.devToolsTarget;
-  })();
+  }
+
+  if (!context.devToolsToolbox || !context.devToolsToolbox.target) {
+    throw new Error("Unable to get a TabTarget for a context not associated to any toolbox");
+  }
+
+  if (!context.devToolsToolbox.target.isLocalTab) {
+    throw new Error("Unexpected target type: only local tabs are currently supported.");
+  }
+
+  const {TabTarget} = require("devtools/client/framework/target");
+
+  context.devToolsTarget = new TabTarget(context.devToolsToolbox.target.tab);
+  await context.devToolsTarget.makeRemote();
+
+  return context.devToolsTarget;
 };
 
 /**
@@ -117,37 +115,35 @@ class DevToolsPage extends HiddenExtensionPage {
     });
   }
 
-  build() {
-    return (async () => {
-      await this.createBrowserElement();
+  async build() {
+    await this.createBrowserElement();
 
-      // Listening to new proxy contexts.
-      this.unwatchExtensionProxyContextLoad = watchExtensionProxyContextLoad(this, context => {
-        // Keep track of the toolbox and target associated to the context, which is
-        // needed by the API methods implementation.
-        context.devToolsToolbox = this.toolbox;
+    // Listening to new proxy contexts.
+    this.unwatchExtensionProxyContextLoad = watchExtensionProxyContextLoad(this, context => {
+      // Keep track of the toolbox and target associated to the context, which is
+      // needed by the API methods implementation.
+      context.devToolsToolbox = this.toolbox;
 
-        if (!this.topLevelContext) {
-          this.topLevelContext = context;
+      if (!this.topLevelContext) {
+        this.topLevelContext = context;
 
-          // Ensure this devtools page is destroyed, when the top level context proxy is
-          // closed.
-          this.topLevelContext.callOnClose(this);
+        // Ensure this devtools page is destroyed, when the top level context proxy is
+        // closed.
+        this.topLevelContext.callOnClose(this);
 
-          this.resolveTopLevelContext(context);
-        }
-      });
+        this.resolveTopLevelContext(context);
+      }
+    });
 
-      extensions.emit("extension-browser-inserted", this.browser, {
-        devtoolsToolboxInfo: {
-          inspectedWindowTabId: getTargetTabIdForToolbox(this.toolbox),
-        },
-      });
+    extensions.emit("extension-browser-inserted", this.browser, {
+      devtoolsToolboxInfo: {
+        inspectedWindowTabId: getTargetTabIdForToolbox(this.toolbox),
+      },
+    });
 
-      this.browser.loadURI(this.url);
+    this.browser.loadURI(this.url);
 
-      await this.waitForTopLevelContext;
-    })();
+    await this.waitForTopLevelContext;
   }
 
   close() {

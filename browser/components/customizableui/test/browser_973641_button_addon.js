@@ -17,7 +17,7 @@ add_task(async function() {
     id: kButton,
     type: "button",
     onClick() {
-      gBrowser.selectedTab = gBrowser.addTab("about:addons");
+      gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:addons");
     }
   };
   CustomizableUI.createWidget(widgetSpec);
@@ -62,7 +62,7 @@ function resetTabs() {
   }
 
   // restore the initial tab
-  gBrowser.addTab(initialLocation);
+  BrowserTestUtils.addTab(gBrowser, initialLocation);
   gBrowser.removeTab(gBrowser.selectedTab);
 }
 

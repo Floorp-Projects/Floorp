@@ -8,7 +8,7 @@ const URIs = [
 ];
 
 function* runTest(input, url) {
-  let tab = gBrowser.addTab(url);
+  let tab = BrowserTestUtils.addTab(gBrowser, url);
   let browser = gBrowser.getBrowserForTab(tab);
 
   yield BrowserTestUtils.browserLoaded(browser);

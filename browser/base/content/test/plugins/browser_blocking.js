@@ -22,7 +22,7 @@ add_task(async function() {
 });
 
 add_task(async function() {
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   gTestBrowser = gBrowser.selectedBrowser;
 
   updateAllTestPlugins(Ci.nsIPluginTag.STATE_CLICKTOPLAY);

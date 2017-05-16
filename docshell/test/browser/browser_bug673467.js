@@ -19,7 +19,7 @@ var doc = "data:text/html,<html><body onload='load()'>" +
 function test() {
   waitForExplicitFinish();
 
-  let tab = gBrowser.addTab(doc);
+  let tab = BrowserTestUtils.addTab(gBrowser, doc);
   let tabBrowser = tab.linkedBrowser;
 
   BrowserTestUtils.browserLoaded(tab.linkedBrowser).then(() => {

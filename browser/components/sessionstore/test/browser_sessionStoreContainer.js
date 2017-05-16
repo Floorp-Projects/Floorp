@@ -6,7 +6,7 @@
 
 add_task(async function() {
   for (let i = 0; i < 3; ++i) {
-    let tab = gBrowser.addTab("http://example.com/", { userContextId: i });
+    let tab = BrowserTestUtils.addTab(gBrowser, "http://example.com/", { userContextId: i });
     let browser = tab.linkedBrowser;
 
     await promiseBrowserLoaded(browser);
@@ -28,7 +28,7 @@ add_task(async function() {
 });
 
 add_task(async function() {
-  let tab = gBrowser.addTab("http://example.com/", { userContextId: 1 });
+  let tab = BrowserTestUtils.addTab(gBrowser, "http://example.com/", { userContextId: 1 });
   let browser = tab.linkedBrowser;
 
   await promiseBrowserLoaded(browser);
@@ -50,7 +50,7 @@ add_task(async function() {
 });
 
 add_task(async function() {
-  let tab = gBrowser.addTab("http://example.com/", { userContextId: 1 });
+  let tab = BrowserTestUtils.addTab(gBrowser, "http://example.com/", { userContextId: 1 });
   let browser = tab.linkedBrowser;
 
   await promiseBrowserLoaded(browser);
@@ -73,7 +73,7 @@ add_task(async function() {
 // Returns the newly opened tab.
 async function openTabInUserContext(userContextId) {
   // Open the tab in the correct userContextId.
-  let tab = gBrowser.addTab("http://example.com", { userContextId });
+  let tab = BrowserTestUtils.addTab(gBrowser, "http://example.com", { userContextId });
 
   // Select tab and make sure its browser is focused.
   gBrowser.selectedTab = tab;

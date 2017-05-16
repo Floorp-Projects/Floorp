@@ -77,7 +77,7 @@ add_task(async function webnav_ordering() {
     WebNavigation[event].addListener(listeners[event]);
   }
 
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   let browser = gBrowser.selectedBrowser;
   expectedBrowser = browser;
 

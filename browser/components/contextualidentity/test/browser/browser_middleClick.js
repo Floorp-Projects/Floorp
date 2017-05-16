@@ -7,7 +7,7 @@ const URI = BASE_ORIGIN +
 add_task(async function() {
   info("Opening a new container tab...");
 
-  let tab = gBrowser.addTab(URI, { userContextId: 1 });
+  let tab = BrowserTestUtils.addTab(gBrowser, URI, { userContextId: 1 });
   gBrowser.selectedTab = tab;
 
   let browser = gBrowser.getBrowserForTab(tab);

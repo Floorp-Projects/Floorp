@@ -56,6 +56,6 @@ add_task(async function asyncCleanup() {
   ok(CustomizableUI.inDefaultState, "The UI is in default state again.");
 
   // restore the initial location
-  gBrowser.addTab(initialLocation);
+  BrowserTestUtils.addTab(gBrowser, initialLocation);
   gBrowser.removeTab(newTab);
 });

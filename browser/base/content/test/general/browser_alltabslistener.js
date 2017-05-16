@@ -87,8 +87,8 @@ var gNextTest;
 function test() {
   waitForExplicitFinish();
 
-  gBackgroundTab = gBrowser.addTab();
-  gForegroundTab = gBrowser.addTab();
+  gBackgroundTab = BrowserTestUtils.addTab(gBrowser);
+  gForegroundTab = BrowserTestUtils.addTab(gBrowser);
   gBackgroundBrowser = gBrowser.getBrowserForTab(gBackgroundTab);
   gForegroundBrowser = gBrowser.getBrowserForTab(gForegroundTab);
   gBrowser.selectedTab = gForegroundTab;

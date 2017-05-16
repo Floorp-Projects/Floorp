@@ -59,7 +59,7 @@ function checkCombinations(aCombinations, aResult) {
 }
 
 function testCombination(combi, url, aCombinations, aResult) {
-  let tab = gBrowser.selectedTab = gBrowser.addTab(url);
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, url);
   let browser = gBrowser.selectedBrowser;
 
   whenLoaded(browser, () => {

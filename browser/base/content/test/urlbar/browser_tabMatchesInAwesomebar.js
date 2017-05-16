@@ -21,7 +21,7 @@ add_task(async function step_1() {
   let maxResults = Services.prefs.getIntPref("browser.urlbar.maxRichResults");
   let promises = [];
   for (let i = 0; i < maxResults - 1; i++) {
-    let tab = gBrowser.addTab();
+    let tab = BrowserTestUtils.addTab(gBrowser);
     promises.push(loadTab(tab, TEST_URL_BASES[0] + (++gTabCounter)));
   }
 
@@ -56,7 +56,7 @@ add_task(async function step_3() {
 
 add_task(async function step_4() {
   info("Running step 4 - ensure we don't register subframes as open pages");
-  let tab = gBrowser.addTab();
+  let tab = BrowserTestUtils.addTab(gBrowser);
   tab.linkedBrowser.loadURI('data:text/html,<body><iframe src=""></iframe></body>');
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
@@ -71,15 +71,15 @@ add_task(async function step_4() {
 
 add_task(async function step_5() {
   info("Running step 5 - remove tab immediately");
-  let tab = gBrowser.addTab("about:logo");
+  let tab = BrowserTestUtils.addTab(gBrowser, "about:logo");
   await BrowserTestUtils.removeTab(tab);
   await ensure_opentabs_match_db();
 });
 
 add_task(async function step_6() {
   info("Running step 6 - check swapBrowsersAndCloseOther preserves registered switch-to-tab result");
-  let tabToKeep = gBrowser.addTab();
-  let tab = gBrowser.addTab();
+  let tabToKeep = BrowserTestUtils.addTab(gBrowser);
+  let tab = BrowserTestUtils.addTab(gBrowser);
   tab.linkedBrowser.loadURI("about:mozilla");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
@@ -98,7 +98,7 @@ add_task(async function step_7() {
 
   Services.prefs.clearUserPref("browser.sessionstore.restore_on_demand");
 
-  gBrowser.addTab("about:blank", {skipAnimation: true});
+  BrowserTestUtils.addTab(gBrowser, "about:blank", {skipAnimation: true});
   while (gBrowser.tabs.length > 1) {
     info("Removing tab: " + gBrowser.tabs[0].linkedBrowser.currentURI.spec);
     gBrowser.selectTabAtIndex(0);

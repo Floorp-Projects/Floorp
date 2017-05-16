@@ -5,7 +5,7 @@
 var gTab = null;
 
 function load(url, cb) {
-  gTab = gBrowser.addTab(url);
+  gTab = BrowserTestUtils.addTab(gBrowser, url);
   gBrowser.addEventListener("load", function(event) {
     if (event.target.location != url)
       return;

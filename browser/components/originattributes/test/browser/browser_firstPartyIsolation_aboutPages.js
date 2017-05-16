@@ -172,7 +172,7 @@ add_task(async function test_aboutURL() {
   }
 
   for (let url of aboutURLs) {
-    let tab = gBrowser.addTab("about:" + url);
+    let tab = BrowserTestUtils.addTab(gBrowser, "about:" + url);
     await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
     let attrs = { firstPartyDomain: "about.ef2a7dd5-93bc-417f-a698-142c3116864f.mozilla" };

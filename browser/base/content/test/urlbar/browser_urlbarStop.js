@@ -4,7 +4,7 @@ const goodURL = "http://mochi.test:8888/";
 const badURL = "http://mochi.test:8888/whatever.html";
 
 add_task(async function() {
-  gBrowser.selectedTab = gBrowser.addTab(goodURL);
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, goodURL);
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   is(gURLBar.textValue, gURLBar.trimValue(goodURL), "location bar reflects loaded page");
 
@@ -12,7 +12,7 @@ add_task(async function() {
   is(gURLBar.textValue, gURLBar.trimValue(goodURL), "location bar reflects loaded page after stop()");
   gBrowser.removeCurrentTab();
 
-  gBrowser.selectedTab = gBrowser.addTab("about:blank");
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   is(gURLBar.textValue, "", "location bar is empty");
 
   await typeAndSubmitAndStop(badURL);

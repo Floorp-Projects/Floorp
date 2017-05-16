@@ -5,7 +5,7 @@ function test() {
 
   let testPath = getRootDirectory(gTestPath);
 
-  let tab = gBrowser.addTab(testPath + "file_bug970276_popup1.html");
+  let tab = BrowserTestUtils.addTab(gBrowser, testPath + "file_bug970276_popup1.html");
 
   tab.linkedBrowser.addEventListener("load", function() {
     let expectedIcon = testPath + "file_bug970276_favicon1.ico";

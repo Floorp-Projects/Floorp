@@ -40,7 +40,7 @@ function getEmptyFrame() {
 }
 
 async function openNewTab(uri, background) {
-  let tab = gBrowser.addTab();
+  let tab = BrowserTestUtils.addTab(gBrowser);
   let browser = gBrowser.getBrowserForTab(tab);
   if (!background) {
     gBrowser.selectedTab = tab;

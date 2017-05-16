@@ -56,7 +56,7 @@ add_task(async function test() {
 
   // An empty tab where we can load the content script without leaving it
   // behind at the end of the test.
-  gBrowser.addTab();
+  BrowserTestUtils.addTab(gBrowser);
 
   await runTests(gTests);
 });

@@ -1384,21 +1384,6 @@ public class GeckoAppShell
         }
     }
 
-    @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
-    public static native void onFullScreenPluginHidden(View view);
-
-    @WrapForJNI(calledFrom = "gecko")
-    private static void addFullScreenPluginView(View view) {
-        if (getGeckoInterface() != null)
-             getGeckoInterface().addPluginView(view);
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
-    private static void removeFullScreenPluginView(View view) {
-        if (getGeckoInterface() != null)
-            getGeckoInterface().removePluginView(view);
-    }
-
     /**
      * A plugin that wish to be loaded in the WebView must provide this permission
      * in their AndroidManifest.xml.
@@ -1661,19 +1646,13 @@ public class GeckoAppShell
 
     public interface GeckoInterface {
         public @NonNull EventDispatcher getAppEventDispatcher();
-        public GeckoProfile getProfile();
-        public Activity getActivity();
-        public String getDefaultUAString();
 
-        public void addPluginView(View view);
-        public void removePluginView(final View view);
         public void enableOrientationListener();
         public void disableOrientationListener();
         public void addAppStateListener(AppStateListener listener);
         public void removeAppStateListener(AppStateListener listener);
         public void notifyWakeLockChanged(String topic, String state);
         public boolean areTabsShown();
-        public AbsoluteLayout getPluginContainer();
         public void invalidateOptionsMenu();
         public boolean isForegrounded();
 
@@ -1736,13 +1715,6 @@ public class GeckoAppShell
          * @return URI or null.
          */
         String getDefaultChromeURI();
-
-        /**
-         * Is this an official Mozilla application, like Firefox or Thunderbird?
-         *
-         * @return true if MOZILLA_OFFICIAL.
-         */
-        boolean isOfficial();
     };
 
     private static GeckoInterface sGeckoInterface;
@@ -2014,8 +1986,8 @@ public class GeckoAppShell
         GeckoAppShell.killAnyZombies();
 
         // Then force unlock this profile
-        if (getGeckoInterface() != null) {
-            GeckoProfile profile = getGeckoInterface().getProfile();
+        final GeckoProfile profile = GeckoThread.getActiveProfile();
+        if (profile != null) {
             File lock = profile.getFile(".parentlock");
             return lock.exists() && lock.delete();
         }

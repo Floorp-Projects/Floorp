@@ -56,7 +56,7 @@ var tests = [
     }
 
     gContentAPI.observe(listener, () => {
-      gBrowser.selectedTab = gBrowser.addTab("about:blank");
+      gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
       isnot(gBrowser.selectedTab, gTestTab, "Make sure the selected tab changed");
 
       UITour.notify("test-event-background-1");
@@ -74,7 +74,7 @@ var tests = [
     }
 
     gContentAPI.observe(listener, () => {
-      blankTab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
+      blankTab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
       isnot(gBrowser.selectedTab, gTestTab, "Make sure the selected tab changed");
       gBrowser.selectedTab = gTestTab;
       is(gBrowser.selectedTab, gTestTab, "Switch back to the test tab");

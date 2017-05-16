@@ -35,7 +35,7 @@ add_task(async function test_run() {
   Services.cookies.removeAll();
 
   // Add a new tab for testing.
-  gBrowser.selectedTab = gBrowser.addTab("http://example.com/");
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "http://example.com/");
   await promiseBrowserLoaded(gBrowser.selectedBrowser);
 
   // Add a session cookie.

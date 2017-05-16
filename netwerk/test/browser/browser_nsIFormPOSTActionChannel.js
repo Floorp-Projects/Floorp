@@ -238,7 +238,7 @@ function frameScript() {
 }
 
 function loadTestTab(uri) {
-  gBrowser.selectedTab = gBrowser.addTab(uri);
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, uri);
   var browser = gBrowser.selectedBrowser;
 
   let manager = browser.messageManager;

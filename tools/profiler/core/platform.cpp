@@ -481,7 +481,12 @@ static PSMutex gPSMutex;
 class TLSInfo
 {
 public:
-  static bool Init(PSLockRef) { return sThreadInfo.init(); }
+  static bool Init(PSLockRef)
+  {
+    bool ok1 = sThreadInfo.init();
+    bool ok2 = sPseudoStack.init();
+    return ok1 && ok2;
+  }
 
   // Get the entire ThreadInfo. Accesses are guarded by gPSMutex.
   static ThreadInfo* Info(PSLockRef) { return sThreadInfo.get(); }
@@ -493,7 +498,16 @@ public:
     return info ? info->RacyInfo().get() : nullptr;
   }
 
-  static void SetInfo(PSLockRef, ThreadInfo* aInfo) { sThreadInfo.set(aInfo); }
+  // Get only the PseudoStack. Accesses are not guarded by gPSMutex. RacyInfo()
+  // can also be used to get the PseudoStack, but that is marginally slower
+  // because it requires an extra pointer indirection.
+  static PseudoStack* Stack() { return sPseudoStack.get(); }
+
+  static void SetInfo(PSLockRef, ThreadInfo* aInfo)
+  {
+    sThreadInfo.set(aInfo);
+    sPseudoStack.set(aInfo ? aInfo->RacyInfo().get() : nullptr);  // an upcast
+  }
 
 private:
   // This is a non-owning reference to the ThreadInfo; CorePS::mLiveThreads is
@@ -503,6 +517,22 @@ private:
 };
 
 MOZ_THREAD_LOCAL(ThreadInfo*) TLSInfo::sThreadInfo;
+
+// Although you can access a thread's PseudoStack via TLSInfo::sThreadInfo, we
+// also have a second TLS pointer directly to the PseudoStack. Here's why.
+//
+// - We need to be able to push to and pop from the PseudoStack in
+//   profiler_call_{enter,exit}.
+//
+// - Those two functions are hot and must be defined in GeckoProfiler.h so they
+//   can be inlined.
+//
+// - We don't want to expose TLSInfo (and ThreadInfo) in GeckoProfiler.h.
+//
+// This second pointer isn't ideal, but does provide a way to satisfy those
+// constraints. TLSInfo manages it, except for the uses in
+// profiler_call_{enter,exit}.
+MOZ_THREAD_LOCAL(PseudoStack*) sPseudoStack;
 
 // The name of the main thread.
 static const char* const kMainThreadName = "GeckoMain";
@@ -2779,15 +2809,15 @@ profiler_get_backtrace_noalloc(char *output, size_t outputSize)
     return;
   }
 
-  RacyThreadInfo* racyInfo = TLSInfo::RacyInfo();
-  if (!racyInfo) {
+  PseudoStack* pseudoStack = TLSInfo::Stack();
+  if (!pseudoStack) {
     return;
   }
 
   bool includeDynamicString = !ActivePS::FeaturePrivacy(lock);
 
-  volatile js::ProfileEntry* pseudoFrames = racyInfo->mStack;
-  uint32_t pseudoCount = racyInfo->stackSize();
+  volatile js::ProfileEntry* pseudoFrames = pseudoStack->mStack;
+  uint32_t pseudoCount = pseudoStack->stackSize();
 
   for (uint32_t i = 0; i < pseudoCount; i++) {
     const char* label = pseudoFrames[i].label();
@@ -2912,7 +2942,7 @@ profiler_get_pseudo_stack()
 {
   // This function runs both on and off the main thread.
 
-  return TLSInfo::RacyInfo();
+  return TLSInfo::Stack();
 }
 
 void
@@ -2961,45 +2991,6 @@ profiler_clear_js_context()
   // a JS thread that is in the process of disappearing.
 
   info->mContext = nullptr;
-}
-
-// A short-lived, non-owning PseudoStack reference is created between each
-// profiler_call_enter() / profiler_call_exit() call pair. RAII objects (e.g.
-// SamplerStackFrameRAII) ensure that these calls are balanced. Furthermore,
-// the RAII objects exist within the thread itself, which means they are
-// necessarily bounded by the lifetime of the thread, which ensures that the
-// references held can't be used after the PseudoStack is destroyed.
-void*
-profiler_call_enter(const char* aInfo,
-                    js::ProfileEntry::Category aCategory,
-                    void* aFrameAddress, bool aCopy, uint32_t aLine,
-                    const char* aDynamicString)
-{
-  // This function runs both on and off the main thread.
-
-  PseudoStack* pseudoStack = TLSInfo::RacyInfo();   // an upcast
-  if (!pseudoStack) {
-    return pseudoStack;
-  }
-  pseudoStack->push(aInfo, aCategory, aFrameAddress, aCopy, aLine,
-                    aDynamicString);
-
-  // The handle is meant to support future changes but for now it is simply
-  // used to avoid having to call TLSInfo::RacyInfo() in profiler_call_exit().
-  return pseudoStack;
-}
-
-void
-profiler_call_exit(void* aHandle)
-{
-  // This function runs both on and off the main thread.
-
-  if (!aHandle) {
-    return;
-  }
-
-  PseudoStack* pseudoStack = static_cast<PseudoStack*>(aHandle);
-  pseudoStack->pop();
 }
 
 void*

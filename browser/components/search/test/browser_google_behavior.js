@@ -122,7 +122,7 @@ function test() {
     }
   }
 
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   let listener = {
     onStateChange: function onStateChange(webProgress, req, flags, status) {

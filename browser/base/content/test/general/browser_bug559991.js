@@ -13,7 +13,7 @@ function test() {
   let uri = "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
 
   (async function() {
-    tab = gBrowser.addTab();
+    tab = BrowserTestUtils.addTab(gBrowser);
     await FullZoomHelper.load(tab, uri);
 
     // -------------------------------------------------------------------

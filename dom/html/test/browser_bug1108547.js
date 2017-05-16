@@ -30,7 +30,7 @@ function runPass(getterFile, finishedCallback) {
   }
 
   // First, set the cookie in a normal window.
-  gBrowser.selectedTab = gBrowser.addTab(rootDir + "file_bug1108547-1.html");
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, rootDir + "file_bug1108547-1.html");
   BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(afterOpenCookieSetter);
 
   function afterOpenCookieSetter() {
@@ -86,7 +86,7 @@ function runPass(getterFile, finishedCallback) {
     privateWin.close();
 
     // Now try to read the cookie in a normal window, and wait for a new tab to be opened.
-    gBrowser.selectedTab = gBrowser.addTab(rootDir + getterFile);
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, rootDir + getterFile);
     testBrowser = gBrowser.selectedBrowser;
     gBrowser.tabContainer.addEventListener("TabOpen", onNewTabOpened2, true);
   }

@@ -20,7 +20,7 @@ function test() {
     // scenario where we are running from a .jar and already extracted
   }
 
-  gBrowser.selectedTab = gBrowser.addTab("about:blank");
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => {
     gBrowser.loadURI(xpipath);
   });

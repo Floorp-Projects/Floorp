@@ -44,8 +44,8 @@ if (navigator.platform.startsWith("Linux arm")) { /* bugs 982875, 999429 */
   SimpleTest.expectAssertions(0, 4);
 }
 
-var page = `data:text/html;charset=UTF-8,<!DOCTYPE html>
-<html><body><p id="content"></p></body></html>`;
+var page = `<!DOCTYPE html>
+<html><meta charset='UTF-8'><body><p id="content"></p></body></html>`;
 var refFrame = document.getElementById("iframe-ref")
 var testFrame = document.getElementById("iframe-test");
 
@@ -62,9 +62,9 @@ refFrame.addEventListener("load", function() {
       SimpleTest.finish();
     }
   });
-  testFrame.src = page;
+  testFrame.srcdoc = page;
 });
-refFrame.src = page;
+refFrame.srcdoc = page;
 
 var rtl = "עִבְרִית";
 var non8bit =  "ʃ";

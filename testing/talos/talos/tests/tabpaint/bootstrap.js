@@ -156,7 +156,9 @@ var TabPaint = {
     return new Promise((resolve) => {
       this.Profiler.resume("tabpaint parent start");
 
-      gBrowser.selectedTab = gBrowser.addTab(TARGET_URI + "?" + Date.now());
+      gBrowser.selectedTab = gBrowser.addTab(TARGET_URI + "?" + Date.now(), {
+        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      });
 
       this.whenTabShown().then(({tab, delta}) => {
         this.Profiler.pause("tabpaint parent end");

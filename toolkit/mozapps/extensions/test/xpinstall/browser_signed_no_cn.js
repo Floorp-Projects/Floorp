@@ -14,7 +14,7 @@ function test() {
   const trigger = encodeURIComponent(JSON.stringify({
     "Signed XPI (O)": TESTROOT + "signed-no-cn.xpi",
   }));
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.loadURI(TESTROOT + "installtrigger.html?" + trigger);
 }
 

@@ -25,7 +25,7 @@ add_task(async function checkCaptivePortalCertErrorUI() {
   let browser;
   let certErrorLoaded;
   let errorTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
-    let tab = gBrowser.addTab(BAD_CERT_PAGE);
+    let tab = BrowserTestUtils.addTab(gBrowser, BAD_CERT_PAGE);
     gBrowser.selectedTab = tab;
     browser = gBrowser.selectedBrowser;
     certErrorLoaded = BrowserTestUtils.waitForContentEvent(browser, "DOMContentLoaded");

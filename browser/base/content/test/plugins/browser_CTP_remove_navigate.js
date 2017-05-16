@@ -25,7 +25,7 @@ add_task(async function() {
  * notification bar on the new page.
  */
 add_task(async function() {
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   // Load up a page with a plugin...
   let notificationPromise = waitForNotificationBar("plugin-hidden", gBrowser.selectedBrowser);

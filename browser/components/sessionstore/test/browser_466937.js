@@ -10,7 +10,7 @@ const URL = ROOT + "browser_466937_sample.html";
  */
 add_task(async function test_prevent_file_stealing() {
   // Add a tab with some file input fields.
-  let tab = gBrowser.addTab(URL);
+  let tab = BrowserTestUtils.addTab(gBrowser, URL);
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 

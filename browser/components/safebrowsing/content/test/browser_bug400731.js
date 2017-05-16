@@ -28,7 +28,7 @@ function test() {
   waitForExplicitFinish();
 
   waitForDBInit(() => {
-    gBrowser.selectedTab = gBrowser.addTab("http://www.itisatrap.org/firefox/its-an-attack.html");
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "http://www.itisatrap.org/firefox/its-an-attack.html");
     onDOMContentLoaded(testMalware);
   });
 }

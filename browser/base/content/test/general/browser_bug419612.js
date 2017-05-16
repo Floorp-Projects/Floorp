@@ -3,11 +3,11 @@ function test() {
 
   (async function() {
     let testPage = "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
-    let tab1 = gBrowser.addTab();
+    let tab1 = BrowserTestUtils.addTab(gBrowser);
     await FullZoomHelper.selectTabAndWaitForLocationChange(tab1);
     await FullZoomHelper.load(tab1, testPage);
 
-    let tab2 = gBrowser.addTab();
+    let tab2 = BrowserTestUtils.addTab(gBrowser);
     await FullZoomHelper.load(tab2, testPage);
 
     FullZoom.enlarge();

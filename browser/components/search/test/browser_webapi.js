@@ -8,7 +8,7 @@ function getString(key, ...params) {
 }
 
 function AddSearchProvider(...args) {
-  return gBrowser.addTab(ROOT + "webapi.html?" + encodeURIComponent(JSON.stringify(args)));
+  return BrowserTestUtils.addTab(gBrowser, ROOT + "webapi.html?" + encodeURIComponent(JSON.stringify(args)));
 }
 
 function promiseDialogOpened() {

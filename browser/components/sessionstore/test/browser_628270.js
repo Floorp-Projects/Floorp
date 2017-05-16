@@ -16,7 +16,7 @@ function test() {
   assertNumberOfTabs(1, "we start off with one tab");
 
   // setup
-  let tab = gBrowser.addTab("about:mozilla");
+  let tab = BrowserTestUtils.addTab(gBrowser, "about:mozilla");
 
   whenTabIsLoaded(tab, function() {
     // hide the newly created tab

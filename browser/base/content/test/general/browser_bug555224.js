@@ -24,7 +24,7 @@ function testInitialZoom() {
     gTestZoom = ZoomManager.zoom;
     isnot(gTestZoom, 1, "zoom level should have changed");
 
-    gBgTab = gBrowser.addTab();
+    gBgTab = BrowserTestUtils.addTab(gBrowser);
     await FullZoomHelper.load(gBgTab, "http://mochi.test:8888" + TEST_PAGE);
   })().then(testBackgroundLoad, FullZoomHelper.failAndContinue(finish));
 }
@@ -33,7 +33,7 @@ function test() {
   waitForExplicitFinish();
 
   (async function() {
-    gTestTab = gBrowser.addTab();
+    gTestTab = BrowserTestUtils.addTab(gBrowser);
     await FullZoomHelper.selectTabAndWaitForLocationChange(gTestTab);
     await FullZoomHelper.load(gTestTab, "http://example.org" + TEST_PAGE);
   })().then(testInitialZoom, FullZoomHelper.failAndContinue(finish));

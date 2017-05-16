@@ -19,7 +19,7 @@ add_task(async function() {
 
 var testSwitchToTab = async function(url, options) {
   // Create a background tab.
-  let tab = gBrowser.addTab("about:blank");
+  let tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 
