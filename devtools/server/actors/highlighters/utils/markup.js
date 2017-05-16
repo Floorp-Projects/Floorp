@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { Cc, Ci, Cu } = require("chrome");
+const { Cc, Ci, Cu, Cr } = require("chrome");
 const { getCurrentZoom, getWindowDimensions, getViewportDimensions,
   getRootBindingParent, loadSheet } = require("devtools/shared/layout/utils");
 const { on, emit } = require("sdk/event/core");
@@ -270,7 +270,23 @@ CanvasFrameAnonymousContentHelper.prototype = {
     // at least on desktop. Therefore, removing the code that was dealing with
     // that scenario, fixes when we're adding anonymous content in a tab that
     // is not the active one (see bug 1260043 and bug 1260044)
-    this._content = doc.insertAnonymousContent(node);
+    try {
+      this._content = doc.insertAnonymousContent(node);
+    } catch (e) {
+      // If the `insertAnonymousContent` fails throwing a `NS_ERROR_UNEXPECTED`, it means
+      // we don't have access to a `CustomContentContainer` yet (see bug 1365075).
+      // At this point, it could only happen on document's interactive state, and we
+      // need to wait until the `complete` state before inserting the anonymous content
+      // again.
+      if (e.result === Cr.NS_ERROR_UNEXPECTED && doc.readyState === "interactive") {
+        // The next state change will be "complete" since the current is "interactive"
+        doc.addEventListener("readystatechange", () => {
+          this._content = doc.insertAnonymousContent(node);
+        }, { once: true });
+      } else {
+        throw e;
+      }
+    }
   },
 
   _remove() {
