@@ -1110,8 +1110,8 @@ protected:
       } else if (origBytes[nOrigBytes] == 0x90) {
         // nop
         COPY_CODES(1);
-      } else if (origBytes[nOrigBytes] == 0xb8) {
-        // MOV 0xB8: http://ref.x86asm.net/coder32.html#xB8
+      } else if ((origBytes[nOrigBytes] & 0xf8) == 0xb8) {
+        // MOV r32, imm32
         COPY_CODES(5);
       } else if (origBytes[nOrigBytes] == 0x33) {
         // xor r32, r/m32
