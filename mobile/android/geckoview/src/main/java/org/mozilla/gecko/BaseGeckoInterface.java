@@ -27,14 +27,6 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
         return eventDispatcher;
     }
 
-    // Bug 908779: Implement this
-    @Override
-    public void addPluginView(final View view) {}
-
-    // Bug 908781: Implement this
-    @Override
-    public void removePluginView(final View view) {}
-
     @Override
     public void enableOrientationListener() {}
 

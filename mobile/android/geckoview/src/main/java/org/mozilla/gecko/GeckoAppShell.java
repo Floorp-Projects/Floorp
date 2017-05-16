@@ -1387,18 +1387,6 @@ public class GeckoAppShell
     @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
     public static native void onFullScreenPluginHidden(View view);
 
-    @WrapForJNI(calledFrom = "gecko")
-    private static void addFullScreenPluginView(View view) {
-        if (getGeckoInterface() != null)
-             getGeckoInterface().addPluginView(view);
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
-    private static void removeFullScreenPluginView(View view) {
-        if (getGeckoInterface() != null)
-            getGeckoInterface().removePluginView(view);
-    }
-
     /**
      * A plugin that wish to be loaded in the WebView must provide this permission
      * in their AndroidManifest.xml.
@@ -1662,8 +1650,6 @@ public class GeckoAppShell
     public interface GeckoInterface {
         public @NonNull EventDispatcher getAppEventDispatcher();
 
-        public void addPluginView(View view);
-        public void removePluginView(final View view);
         public void enableOrientationListener();
         public void disableOrientationListener();
         public void addAppStateListener(AppStateListener listener);
