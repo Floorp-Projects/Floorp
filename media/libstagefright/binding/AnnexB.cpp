@@ -250,7 +250,25 @@ AnnexB::ConvertSampleToAVCC(mozilla::MediaRawData* aSample)
     return false;
   }
   nsAutoPtr<MediaRawDataWriter> samplewriter(aSample->CreateWriter());
-  return samplewriter->Replace(nalu.begin(), nalu.length());
+  if (!samplewriter->Replace(nalu.begin(), nalu.length())) {
+    return false;
+  }
+  // Create the AVCC header.
+  RefPtr<mozilla::MediaByteBuffer> extradata = new mozilla::MediaByteBuffer;
+  static const uint8_t kFakeExtraData[] = {
+    1 /* version */,
+    0x64 /* profile (High) */,
+    0 /* profile compat (0) */,
+    40 /* level (40) */,
+    0xfc | 3 /* nal size - 1 */,
+    0xe0 /* num SPS (0) */,
+    0 /* num PPS (0) */
+  };
+  if (!extradata->AppendElements(kFakeExtraData, ArrayLength(kFakeExtraData))) {
+    return false;
+  }
+  aSample->mExtraData = extradata;
+  return true;
 }
 
 already_AddRefed<mozilla::MediaByteBuffer>
