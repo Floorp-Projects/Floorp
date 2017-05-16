@@ -17,7 +17,7 @@ class VoidFunction;
 class PaintWorkletGlobalScope final : public WorkletGlobalScope
 {
 public:
-  explicit PaintWorkletGlobalScope(nsPIDOMWindowInner* aWindow);
+  PaintWorkletGlobalScope();
 
   bool
   WrapGlobalObject(JSContext* aCx, nsIPrincipal* aPrincipal,
@@ -27,7 +27,7 @@ public:
   RegisterPaint(const nsAString& aType, VoidFunction& aProcessorCtor);
 
 private:
-  ~PaintWorkletGlobalScope();
+  ~PaintWorkletGlobalScope() = default;
 };
 
 } // namespace dom

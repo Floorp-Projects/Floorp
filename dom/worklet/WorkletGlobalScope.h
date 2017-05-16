@@ -18,7 +18,6 @@
     { 0xbf, 0xe0, 0xdf, 0x85, 0xe6, 0x56, 0x85, 0xac } }
 
 class nsIPrincipal;
-class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
@@ -34,7 +33,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WorkletGlobalScope)
 
-  explicit WorkletGlobalScope(nsPIDOMWindowInner* aWindow);
+  WorkletGlobalScope();
 
   nsIGlobalObject* GetParentObject() const
   {
@@ -61,10 +60,9 @@ public:
   Dump(const Optional<nsAString>& aString) const;
 
 protected:
-  ~WorkletGlobalScope();
+  ~WorkletGlobalScope() = default;
 
 private:
-  nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<Console> mConsole;
 };
 
