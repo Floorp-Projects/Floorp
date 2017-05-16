@@ -408,16 +408,6 @@ public:
     return 0;
   }
 
-  bool IsNull() const {
-    for (ChunkIterator ci(*const_cast<AudioSegment*>(this)); !ci.IsEnded();
-         ci.Next()) {
-      if (!ci->IsNull()) {
-        return false;
-      }
-    }
-    return true;
-  }
-
   static Type StaticType() { return AUDIO; }
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
