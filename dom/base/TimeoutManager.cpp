@@ -184,10 +184,10 @@ uint32_t TimeoutManager::sNestingLevel = 0;
 
 namespace {
 
-// The maximum number of milliseconds to allow consecutive timer callbacks
-// to run in a single event loop runnable.
-#define DEFAULT_MAX_CONSECUTIVE_CALLBACK_MILLISECONDS 4
-uint32_t gMaxConsecutiveCallbackMilliseconds;
+// The maximum number of timer callbacks we will try to run in a single event
+// loop runnable.
+#define DEFAULT_TARGET_MAX_CONSECUTIVE_CALLBACKS 5
+uint32_t gTargetMaxConsecutiveCallbacks;
 
 // The number of queued runnables within the TabGroup ThrottledEventQueue
 // at which to begin applying back pressure to the window.
@@ -301,9 +301,9 @@ TimeoutManager::Initialize()
                                "dom.timeout.back_pressure_delay_minimum_ms",
                                DEFAULT_BACK_PRESSURE_DELAY_MINIMUM_MS);
 
-  Preferences::AddUintVarCache(&gMaxConsecutiveCallbackMilliseconds,
-                               "dom.timeout.max_consecutive_callback_ms",
-                               DEFAULT_MAX_CONSECUTIVE_CALLBACK_MILLISECONDS);
+  Preferences::AddUintVarCache(&gTargetMaxConsecutiveCallbacks,
+                               "dom.timeout.max_consecutive_callbacks",
+                               DEFAULT_TARGET_MAX_CONSECUTIVE_CALLBACKS);
 }
 
 uint32_t
@@ -567,6 +567,9 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
                                        nullptr,
                                        nullptr);
 
+    uint32_t numTimersToRun = 0;
+    bool targetTimerSeen = false;
+
     while (true) {
       Timeout* timeout = expiredIter.Next();
       if (!timeout || timeout->When() > deadline) {
@@ -582,6 +585,30 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
           last_expired_normal_timeout = timeout;
         } else {
           last_expired_tracking_timeout = timeout;
+        }
+
+        numTimersToRun += 1;
+
+        // Note that we have seen our target timer.  This means we can now
+        // stop processing timers once we hit our threshold below.
+        if (timeout == aTimeout) {
+          targetTimerSeen = true;
+        }
+
+        // Run only a limited number of timers based on the configured
+        // maximum.  Note, we must always run our target timer however.
+        // Further timers that are ready will get picked up by their own
+        // nsITimer runnables when they execute.
+        //
+        // For chrome windows, however, we do coalesce all timers and
+        // do not yield the main thread.  This is partly because we
+        // trust chrome windows not to misbehave and partly because a
+        // number of browser chrome tests have races that depend on this
+        // coalescing.
+        if (targetTimerSeen &&
+            numTimersToRun >= gTargetMaxConsecutiveCallbacks &&
+            !mWindow.IsChromeWindow()) {
+          break;
         }
       }
 
@@ -635,13 +662,6 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
     mTrackingTimeouts.SetInsertionPoint(dummy_tracking_timeout);
   }
 
-  uint32_t timeLimitMS = std::max(1u, gMaxConsecutiveCallbackMilliseconds);
-  const TimeDuration timeLimit = TimeDuration::FromMilliseconds(timeLimitMS);
-  TimeStamp start = TimeStamp::Now();
-
-  bool targetTimeoutSeen = false;
-  bool timeBudgetExhausted = false;
-
   // We stop iterating each list when we go past the last expired timeout from
   // that list that we have observed above.  That timeout will either be the
   // dummy timeout for the list that the last expired timeout came from, or it
@@ -659,7 +679,7 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
                                    last_expired_tracking_timeout ?
                                      last_expired_tracking_timeout->getNext() :
                                      nullptr);
-    while (true) {
+    while (!mWindow.IsFrozen()) {
       Timeout* timeout = runIter.Next();
       MOZ_ASSERT(timeout != dummy_normal_timeout &&
                  timeout != dummy_tracking_timeout,
@@ -676,7 +696,6 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
         continue;
       }
 
-      MOZ_ASSERT_IF(mWindow.IsFrozen(), mWindow.IsSuspended());
       if (mWindow.IsSuspended()) {
         // Some timer did suspend us. Make sure the
         // rest of the timers get executed later.
@@ -693,39 +712,8 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
 
       if (!scx) {
         // No context means this window was closed or never properly
-        // initialized for this language.  This timer will never fire
-        // so just remove it.
-        timeout->remove();
-        timeout->Release();
+        // initialized for this language.
         continue;
-      }
-
-      // Check to see if we have run out of time to execute timeout handlers.
-      // If we've exceeded our time budget simply cleanup our remaining
-      // handlers to run by marking their firing depth back to zero.
-      //
-      // Note, we only do this if we have seen the Timeout object explicitly
-      // passed to RunTimeout().  The target timeout must always be executed.
-      if (targetTimeoutSeen) {
-
-        // Don't waste time calling TimeStamp::Now() if we have already
-        // run out of time.
-        if (timeBudgetExhausted) {
-          timeout->mFiringDepth = 0;
-          continue;
-        }
-
-        // Otherwise re-check the time budget.
-        TimeDuration elapsed = TimeStamp::Now() - start;
-        if (elapsed >= timeLimit) {
-          timeBudgetExhausted = true;
-          timeout->mFiringDepth = 0;
-          continue;
-        }
-      }
-
-      if (timeout == aTimeout) {
-        targetTimeoutSeen = true;
       }
 
       // This timeout is good to run
@@ -760,9 +748,6 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
 
         mNormalTimeouts.SetInsertionPoint(last_normal_insertion_point);
         mTrackingTimeouts.SetInsertionPoint(last_tracking_insertion_point);
-
-        // Since ClearAllTimeouts() was called the lists should be empty.
-        MOZ_DIAGNOSTIC_ASSERT(!HasTimeouts());
 
         return;
       }
