@@ -79,11 +79,11 @@ fails-if(stylo) == anim-fillopacity-1none.svg anim-standard-ref.svg
 fails-if(stylo) == anim-fillopacity-1css.svg  anim-standard-ref.svg
 fails-if(stylo) == anim-fillopacity-1xml.svg  anim-standard-ref.svg
 
-fuzzy-if(skiaContent,1,3600) skip-if(stylo) == anim-opacity-01.svg lime.svg
+fuzzy-if(skiaContent,1,3600) == anim-opacity-01.svg lime.svg
 
 == anim-height-done-1a.svg anim-standard-ref.svg
 == anim-height-done-1b.svg anim-standard-ref.svg
-skip-if(stylo) == anim-height-done-2.svg lime.svg
+== anim-height-done-2.svg lime.svg
 == anim-height-interp-1.svg anim-height-interp-1-ref.svg
 == anim-height-interp-2.svg anim-height-interp-2-ref.svg
 == anim-height-interp-3.svg anim-height-interp-3-ref.svg
@@ -181,7 +181,7 @@ fails-if(stylo) == anim-additive-fallback-1.svg anim-standard-ref.svg
 == anim-remove-5.svg anim-standard-ref.svg
 == anim-remove-6.svg anim-standard-ref.svg
 == anim-remove-7.svg anim-standard-ref.svg
-skip-if(stylo) == anim-remove-8css.svg anim-standard-ref.svg
+== anim-remove-8css.svg anim-standard-ref.svg
 == anim-remove-8xml.svg anim-standard-ref.svg
 fails-if(stylo) == anim-remove-9.svg anim-standard-ref.svg
 == anim-retarget-1.svg anim-standard-ref.svg
@@ -194,7 +194,7 @@ fails-if(stylo) == anim-remove-9.svg anim-standard-ref.svg
 == anim-retarget-8.svg anim-standard-ref.svg
 
 fails-if(!stylo) == anim-strokecolor-1.svg anim-standard-ref.svg # bug 436296
-skip-if(stylo) == anim-strokewidth-1xml.svg anim-standard-ref.svg
+== anim-strokewidth-1xml.svg anim-standard-ref.svg
 
 == anim-targethref-1.svg anim-standard-ref.svg
 == anim-targethref-2.svg anim-standard-ref.svg
@@ -262,8 +262,8 @@ fails-if(stylo) == smil-transitions-interaction-2a.svg lime.svg
 fails-if(stylo) == smil-transitions-interaction-2b.svg lime.svg
 == smil-transitions-interaction-3a.svg lime.svg
 == smil-transitions-interaction-3b.svg lime.svg
-skip-if(stylo) == smil-transitions-interaction-4a.svg lime.svg
-skip-if(stylo) == smil-transitions-interaction-4b.svg lime.svg
+== smil-transitions-interaction-4a.svg lime.svg
+== smil-transitions-interaction-4b.svg lime.svg
 
 # Test filtering of excessive times
 == filtered-instance-time-1.svg anim-standard-ref.svg
