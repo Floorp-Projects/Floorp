@@ -142,7 +142,7 @@ add_task(async function searchInBackgroundTab() {
     expectedURL: submissionURL,
   });
 
-  let newTab = gBrowser.addTab();
+  let newTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = newTab;
   registerCleanupFunction(() => gBrowser.removeTab(newTab));
 
@@ -347,7 +347,7 @@ function waitForNewEngine(basename, numImages) {
 
 function addTab() {
   return new Promise(resolve => {
-    let tab = gBrowser.addTab();
+    let tab = BrowserTestUtils.addTab(gBrowser);
     gBrowser.selectedTab = tab;
     tab.linkedBrowser.addEventListener("load", function() {
       let url = getRootDirectory(gTestPath) + TEST_CONTENT_SCRIPT_BASENAME;

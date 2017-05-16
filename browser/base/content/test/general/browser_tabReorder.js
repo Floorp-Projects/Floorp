@@ -4,9 +4,9 @@
 add_task(async function() {
   let initialTabsLength = gBrowser.tabs.length;
 
-  let newTab1 = gBrowser.selectedTab = gBrowser.addTab("about:robots", {skipAnimation: true});
-  let newTab2 = gBrowser.selectedTab = gBrowser.addTab("about:about", {skipAnimation: true});
-  let newTab3 = gBrowser.selectedTab = gBrowser.addTab("about:config", {skipAnimation: true});
+  let newTab1 = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:robots", {skipAnimation: true});
+  let newTab2 = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:about", {skipAnimation: true});
+  let newTab3 = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:config", {skipAnimation: true});
   registerCleanupFunction(function() {
     while (gBrowser.tabs.length > initialTabsLength) {
       gBrowser.removeTab(gBrowser.tabs[initialTabsLength]);

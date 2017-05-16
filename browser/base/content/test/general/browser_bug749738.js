@@ -9,7 +9,7 @@ const DUMMY_PAGE = "http://example.org/browser/browser/base/content/test/general
 function test() {
   waitForExplicitFinish();
 
-  let tab = gBrowser.addTab();
+  let tab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = tab;
 
   BrowserTestUtils.loadURI(tab.linkedBrowser, DUMMY_PAGE);

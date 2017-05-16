@@ -31,6 +31,11 @@ public class GeckoViewActivity extends Activity {
         Log.i(LOGTAG, "zerdatime " + SystemClock.elapsedRealtime() +
               " - application start");
 
+        if (BuildConfig.DEBUG) {
+            // In debug builds, we want to load JavaScript resources fresh with each build.
+            GeckoView.preload(this, "-purgecaches");
+        }
+
         setContentView(R.layout.geckoview_activity);
 
         mGeckoView = (GeckoView) findViewById(R.id.gecko_view);

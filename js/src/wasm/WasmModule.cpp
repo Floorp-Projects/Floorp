@@ -367,7 +367,7 @@ Module::addSizeOfMisc(MallocSizeOf mallocSizeOf,
                       size_t* code,
                       size_t* data) const
 {
-    code_->addSizeOfMiscIfNotSeen(mallocSizeOf, seenMetadata, seenBytes, seenCode, code, data);
+    code_->addSizeOfMiscIfNotSeen(mallocSizeOf, seenMetadata, seenCode, code, data);
     *data += mallocSizeOf(this) +
              assumptions_.sizeOfExcludingThis(mallocSizeOf) +
              linkData_.sizeOfExcludingThis(mallocSizeOf) +
@@ -881,12 +881,12 @@ Module::instantiate(JSContext* cx,
         // bytes that we keep around for debugging instead, because the debugger
         // may patch the pre-linked code at any time.
         if (!codeIsBusy_.compareExchange(false, true)) {
-            UniqueConstCodeSegment codeSegment = CodeSegment::create(*unlinkedCodeForDebugging_,
-                                                                     *bytecode_, linkData_,
-                                                                     metadata());
+            auto codeSegment = CodeSegment::create(*unlinkedCodeForDebugging_, *bytecode_,
+                                                   linkData_, metadata());
             if (!codeSegment)
                 return false;
-            code = js_new<Code>(Move(codeSegment), metadata(), bytecode_);
+
+            code = js_new<Code>(Move(codeSegment), metadata());
             if (!code)
                 return false;
         }

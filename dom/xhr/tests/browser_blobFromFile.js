@@ -18,7 +18,7 @@ add_task(function* test() {
   let fileURL = fileHandler.getURLSpecFromFile(file);
 
   info("Opening url: " + fileURL);
-  let tab = gBrowser.addTab(fileURL);
+  let tab = BrowserTestUtils.addTab(gBrowser, fileURL);
 
   let browser = gBrowser.getBrowserForTab(tab);
   yield BrowserTestUtils.browserLoaded(browser);

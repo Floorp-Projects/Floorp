@@ -408,7 +408,7 @@ function open_manager(aView, aCallback, aLoadCallback, aLongerTimeout) {
       setup_manager(aSubject);
     }, "EM-loaded");
 
-    gBrowser.selectedTab = gBrowser.addTab();
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
     switchToTabHavingURI(MANAGER_URI, true);
   });
 

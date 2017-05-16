@@ -375,26 +375,6 @@ public:
 
     class CameraCallback;
 
-    struct AddFullScreenPluginView_t {
-        typedef GeckoAppShell Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<
-                mozilla::jni::Object::Param> Args;
-        static constexpr char name[] = "addFullScreenPluginView";
-        static constexpr char signature[] =
-                "(Landroid/view/View;)V";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::GECKO;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    static auto AddFullScreenPluginView(mozilla::jni::Object::Param) -> void;
-
     struct CancelVibrate_t {
         typedef GeckoAppShell Owner;
         typedef void ReturnType;
@@ -1513,24 +1493,6 @@ public:
 
     static auto NotifyWakeLockChanged(mozilla::jni::String::Param, mozilla::jni::String::Param) -> void;
 
-    struct OnFullScreenPluginHidden_t {
-        typedef GeckoAppShell Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<
-                mozilla::jni::Object::Param> Args;
-        static constexpr char name[] = "onFullScreenPluginHidden";
-        static constexpr char signature[] =
-                "(Landroid/view/View;)V";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::UI;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::GECKO;
-    };
-
     struct OnLocationChanged_t {
         typedef GeckoAppShell Owner;
         typedef void ReturnType;
@@ -1623,26 +1585,6 @@ public:
     };
 
     static auto PerformHapticFeedback(bool) -> void;
-
-    struct RemoveFullScreenPluginView_t {
-        typedef GeckoAppShell Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<
-                mozilla::jni::Object::Param> Args;
-        static constexpr char name[] = "removeFullScreenPluginView";
-        static constexpr char signature[] =
-                "(Landroid/view/View;)V";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::GECKO;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    static auto RemoveFullScreenPluginView(mozilla::jni::Object::Param) -> void;
 
     struct ReportJavaCrash_t {
         typedef GeckoAppShell Owner;

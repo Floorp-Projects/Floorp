@@ -40,7 +40,7 @@ function waitForMs(aMs) {
 add_task(async function() {
   let url = kTestPage;
   let originalTab = gBrowser.selectedTab; // test tab
-  let newTab = gBrowser.addTab(url, {skipAnimation: true});
+  let newTab = BrowserTestUtils.addTab(gBrowser, url, {skipAnimation: true});
   let parentSide, childSide;
 
   // new tab added but not selected checks
@@ -100,7 +100,7 @@ add_task(async function() {
 add_task(async function() {
   let url = "about:about";
   let originalTab = gBrowser.selectedTab; // test tab
-  let newTab = gBrowser.addTab(url, {skipAnimation: true});
+  let newTab = BrowserTestUtils.addTab(gBrowser, url, {skipAnimation: true});
   let parentSide, childSide;
 
   parentSide = getParentTabState(newTab);

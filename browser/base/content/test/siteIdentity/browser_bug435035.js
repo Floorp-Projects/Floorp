@@ -3,7 +3,7 @@ const TEST_URL = getRootDirectory(gTestPath).replace("chrome://mochitests/conten
 function test() {
   waitForExplicitFinish();
 
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => {
     is(document.getElementById("identity-box").className,
        "unknownIdentity mixedDisplayContent",

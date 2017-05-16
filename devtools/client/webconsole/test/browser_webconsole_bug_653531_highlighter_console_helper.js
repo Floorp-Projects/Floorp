@@ -98,7 +98,7 @@ function performWebConsoleTests(hud) {
 function test() {
   waitForExplicitFinish();
 
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedBrowser.addEventListener("load", function () {
     waitForFocus(createDocument, content);
   }, {capture: true, once: true});

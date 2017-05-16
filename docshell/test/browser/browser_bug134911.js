@@ -10,7 +10,7 @@ function test() {
   waitForExplicitFinish();
 
   var rootDir = "http://mochi.test:8888/browser/docshell/test/browser/";
-  gBrowser.selectedTab = gBrowser.addTab(rootDir + "test-form_sjis.html");
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, rootDir + "test-form_sjis.html");
   BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(afterOpen);
 }
 

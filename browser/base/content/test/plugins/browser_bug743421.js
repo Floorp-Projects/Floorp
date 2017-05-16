@@ -16,7 +16,7 @@ add_task(async function() {
 });
 
 add_task(async function() {
-  let newTab = gBrowser.addTab();
+  let newTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = newTab;
   gTestBrowser = gBrowser.selectedBrowser;
 

@@ -126,7 +126,7 @@ const TEST_URI = "data:text/html;charset=UTF-8," + encodeURIComponent(
 let doc = null;
 function test() {
   waitForExplicitFinish();
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => {
     /* eslint-disable mozilla/no-cpows-in-tests */
     doc = content.document;

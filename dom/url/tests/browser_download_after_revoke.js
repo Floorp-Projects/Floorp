@@ -1,6 +1,6 @@
 function test () {
   waitForExplicitFinish();
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   function onLoad() {
     info("Page loaded.");

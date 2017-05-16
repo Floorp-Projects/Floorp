@@ -7,7 +7,7 @@ Services.scriptloader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/
  * Dragging an URL to a tab without userContextId set.
  */
 add_task(async function() {
-  let tab = gBrowser.addTab("http://example.com/");
+  let tab = BrowserTestUtils.addTab(gBrowser, "http://example.com/");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   let awaitDrop = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "drop");
@@ -54,7 +54,7 @@ add_task(async function() {
  * userContextId as the original tab.
  */
 add_task(async function() {
-  let tab = gBrowser.addTab("http://example.com/", {userContextId: 1});
+  let tab = BrowserTestUtils.addTab(gBrowser, "http://example.com/", {userContextId: 1});
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   let awaitDrop = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "drop");
@@ -103,10 +103,10 @@ add_task(async function() {
  * userContext 2, the link will open in tab 2 with userContext 2.
  */
 add_task(async function() {
-  let tab = gBrowser.addTab("http://example.com/", {userContextId: 1});
+  let tab = BrowserTestUtils.addTab(gBrowser, "http://example.com/", {userContextId: 1});
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
-  let tab2 = gBrowser.addTab("http://example.org/", {userContextId: 2});
+  let tab2 = BrowserTestUtils.addTab(gBrowser, "http://example.org/", {userContextId: 2});
   await BrowserTestUtils.browserLoaded(tab2.linkedBrowser);
 
   let awaitDrop = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "drop");

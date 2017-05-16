@@ -4,7 +4,7 @@ const URL = "http://mochi.test:8888/browser/browser/base/content/test/general/fe
 
 add_task(async function() {
   // Open a new tab.
-  gBrowser.selectedTab = gBrowser.addTab(URL);
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, URL);
   registerCleanupFunction(() => gBrowser.removeCurrentTab());
 
   let browser = gBrowser.selectedBrowser;

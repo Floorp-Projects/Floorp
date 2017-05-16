@@ -8,7 +8,7 @@ add_task(async function test() {
   // There should be one tab when we start the test
   let [origTab] = gBrowser.visibleTabs;
   is(gBrowser.visibleTabs.length, 1, "there is one visible tab");
-  let testTab = gBrowser.addTab();
+  let testTab = BrowserTestUtils.addTab(gBrowser);
   is(gBrowser.visibleTabs.length, 2, "there are now two visible tabs");
 
   // Check the context menu with two tabs
@@ -50,7 +50,7 @@ add_task(async function test() {
 
   // Add a tab that will get pinned
   // So now there's one pinned tab, one visible unpinned tab, and one hidden tab
-  let pinned = gBrowser.addTab();
+  let pinned = BrowserTestUtils.addTab(gBrowser);
   gBrowser.pinTab(pinned);
   is(gBrowser.visibleTabs.length, 2, "now there are two visible tabs");
 

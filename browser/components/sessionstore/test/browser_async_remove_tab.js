@@ -1,7 +1,7 @@
 "use strict";
 
 async function createTabWithRandomValue(url) {
-  let tab = gBrowser.addTab(url);
+  let tab = BrowserTestUtils.addTab(gBrowser, url);
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 

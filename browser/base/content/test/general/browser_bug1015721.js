@@ -11,8 +11,8 @@ function test() {
   waitForExplicitFinish();
 
   (async function() {
-    gTab1 = gBrowser.addTab();
-    gTab2 = gBrowser.addTab();
+    gTab1 = BrowserTestUtils.addTab(gBrowser);
+    gTab2 = BrowserTestUtils.addTab(gBrowser);
 
     await FullZoomHelper.selectTabAndWaitForLocationChange(gTab1);
     await FullZoomHelper.load(gTab1, TEST_PAGE);

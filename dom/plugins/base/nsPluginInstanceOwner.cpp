@@ -91,6 +91,7 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 #include "ANPBase.h"
 #include "AndroidBridge.h"
 #include "ClientLayerManager.h"
+#include "FennecJNIWrappers.h"
 #include "nsWindow.h"
 
 static nsPluginInstanceOwner* sFullScreenInstance = nullptr;
@@ -1547,8 +1548,8 @@ bool nsPluginInstanceOwner::AddPluginView(const LayoutDeviceRect& aRect /* = Lay
     mJavaView = (void*)jni::GetGeckoThreadEnv()->NewGlobalRef((jobject)mJavaView);
   }
 
-  if (mFullScreen) {
-    java::GeckoAppShell::AddFullScreenPluginView(jni::Object::Ref::From(jobject(mJavaView)));
+  if (mFullScreen && jni::IsFennec()) {
+    java::GeckoApp::AddPluginView(jni::Object::Ref::From(jobject(mJavaView)));
     sFullScreenInstance = this;
   }
 
@@ -1560,8 +1561,8 @@ void nsPluginInstanceOwner::RemovePluginView()
   if (!mInstance || !mJavaView)
     return;
 
-  if (mFullScreen) {
-    java::GeckoAppShell::RemoveFullScreenPluginView(jni::Object::Ref::From(jobject(mJavaView)));
+  if (mFullScreen && jni::IsFennec()) {
+    java::GeckoApp::RemovePluginView(jni::Object::Ref::From(jobject(mJavaView)));
   }
   jni::GetGeckoThreadEnv()->DeleteGlobalRef((jobject)mJavaView);
   mJavaView = nullptr;

@@ -75,7 +75,7 @@ function test() {
   waitForExplicitFinish();
 
   Services.prefs.setBoolPref(kShowUIPref, true);
-  let tab = gBrowser.addTab();
+  let tab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = tab;
   tab.linkedBrowser.addEventListener("load", function() {
     TranslationStub.browser = gBrowser.selectedBrowser;

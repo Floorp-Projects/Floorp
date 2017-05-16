@@ -407,7 +407,7 @@ add_task(async function refocus_window_doesnt_open_popup_keyboard() {
 
 // Clicking the search go button shouldn't open the popup
 add_no_popup_task(async function search_go_doesnt_open_popup() {
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   gURLBar.focus();
   textbox.value = "foo";

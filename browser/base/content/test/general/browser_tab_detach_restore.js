@@ -9,7 +9,7 @@ add_task(async function() {
   while (SessionStore.getClosedWindowCount() > 0)
     SessionStore.forgetClosedWindow(0);
 
-  let tab = gBrowser.addTab();
+  let tab = BrowserTestUtils.addTab(gBrowser);
   tab.linkedBrowser.loadURI(uri);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   await TabStateFlusher.flush(tab.linkedBrowser);

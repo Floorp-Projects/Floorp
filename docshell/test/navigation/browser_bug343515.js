@@ -52,7 +52,7 @@ function step1() {
   ok(ctx.tab0Browser.docShellIsActive, "Tab 0 should be active at test start");
 
   // Open a New Tab
-  ctx.tab1 = gBrowser.addTab(testPath + "bug343515_pg1.html");
+  ctx.tab1 = BrowserTestUtils.addTab(gBrowser, testPath + "bug343515_pg1.html");
   ctx.tab1Browser = gBrowser.getBrowserForTab(ctx.tab1);
   oneShotListener(ctx.tab1Browser, "load", step2);
 }
@@ -72,7 +72,7 @@ function step2() {
     ok(ctx.tab1Browser.docShellIsActive, "Tab 1 should be active");
 
     // Open another tab
-    ctx.tab2 = gBrowser.addTab(testPath + "bug343515_pg2.html");
+    ctx.tab2 = BrowserTestUtils.addTab(gBrowser, testPath + "bug343515_pg2.html");
     ctx.tab2Browser = gBrowser.getBrowserForTab(ctx.tab2);
 
     // bug343515_pg2.html consists of a page with two iframes,

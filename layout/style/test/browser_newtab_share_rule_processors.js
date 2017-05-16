@@ -10,7 +10,7 @@ function listener(evt) {
 function test() {
   waitForExplicitFinish();
   var testURL = getRootDirectory(gTestPath) + "newtab_share_rule_processors.html";
-  theTab = gBrowser.addTab(testURL);
+  theTab = BrowserTestUtils.addTab(gBrowser, testURL);
   theBrowser = gBrowser.getBrowserForTab(theTab);
   theBrowser.addEventListener("load", listener, true);
 }

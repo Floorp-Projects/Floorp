@@ -59,7 +59,7 @@ const receive = (topic, p, syncCallback) => {
 };
 receive.queue = [];
 
-const openTab = uri => gBrowser.selectedTab = gBrowser.addTab(uri);
+const openTab = uri => gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, uri);
 
 const sleep = ms => {
   const { promise, resolve } = Promise.defer();

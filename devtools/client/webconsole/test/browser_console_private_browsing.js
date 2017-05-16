@@ -24,8 +24,8 @@ function test() {
   start();
 
   function start() {
-    gBrowser.selectedTab = gBrowser.addTab("data:text/html;charset=utf8," +
-                                           "<p>hello world! I am not private!");
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "data:text/html;charset=utf8," +
+                                                   "<p>hello world! I am not private!");
     gBrowser.selectedBrowser.addEventListener("load", onLoadTab, true);
   }
 
