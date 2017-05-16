@@ -5160,20 +5160,6 @@ RETURN:
 #if defined(__GNUC__) && !defined(MOZ_MEMORY_DARWIN)
 #define MOZ_MEMORY_ELF
 #endif
-
-#ifdef MOZ_MEMORY_SOLARIS
-#  ifdef __SUNPRO_C
-void *
-memalign_impl(size_t alignment, size_t size);
-#pragma no_inline(memalign_impl)
-#  elif (defined(__GNUC__))
-__attribute__((noinline))
-#  endif
-#else
-#if (defined(MOZ_MEMORY_ELF))
-__attribute__((visibility ("hidden")))
-#endif
-#endif
 #endif /* MOZ_REPLACE_MALLOC */
 
 #ifdef MOZ_MEMORY_ELF
