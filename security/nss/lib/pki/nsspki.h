@@ -23,6 +23,8 @@
 #include "base.h"
 #endif /* BASE_H */
 
+#include "pkcs11uri.h"
+
 PR_BEGIN_EXTERN_C
 
 /*
@@ -1300,6 +1302,16 @@ NSSTrustDomain_IsTokenEnabled(
     NSSTrustDomain *td,
     NSSToken *token,
     NSSError *whyOpt);
+
+/*
+ * NSSTrustDomain_FindTokensByURI
+ *
+ */
+
+NSS_EXTERN NSSToken **
+NSSTrustDomain_FindTokensByURI(
+    NSSTrustDomain *td,
+    PK11URI *uri);
 
 /*
  * NSSTrustDomain_FindSlotByName

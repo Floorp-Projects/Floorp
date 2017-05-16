@@ -32,8 +32,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     bp[primeLen - 1] |= 0x01; /* set low-order bit  */
     ++count;
     assert(mp_read_unsigned_octets(&b, bp, primeLen) == MP_OKAY);
-  } while ((res = mpp_make_prime(&b, primeLen * 8, PR_FALSE, nullptr)) !=
-               MP_YES &&
+  } while ((res = mpp_make_prime(&b, primeLen * 8, PR_FALSE)) != MP_YES &&
            count < 10);
   if (res != MP_YES) {
     return 0;

@@ -218,7 +218,7 @@
               '-Wl,--version-script,<(INTERMEDIATE_DIR)/out.>(mapfile)',
             ],
           }],
-          [ 'OS=="win"', {
+          [ 'cc_use_gnu_ld!=1 and OS=="win"', {
             # On Windows, .def files are used directly as sources.
             'sources': [
               '>(mapfile)',

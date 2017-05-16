@@ -34,8 +34,7 @@ mp_err mpp_fermat_list(mp_int *a, const mp_digit *primes, mp_size nPrimes);
 mp_err mpp_pprime(mp_int *a, int nt);
 mp_err mpp_sieve(mp_int *trial, const mp_digit *primes, mp_size nPrimes,
                  unsigned char *sieve, mp_size nSieve);
-mp_err mpp_make_prime(mp_int *start, mp_size nBits, mp_size strong,
-                      unsigned long *nTries);
+mp_err mpp_make_prime(mp_int *start, mp_size nBits, mp_size strong);
 
 SEC_END_PROTOS
 

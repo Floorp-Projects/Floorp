@@ -77,6 +77,33 @@ TEST_P(TlsConnectTls13, ExporterContextEmptyIsSameAsNone) {
   ExportAndCompare(client_, server_, false);
 }
 
+TEST_P(TlsConnectGenericPre13, ExporterContextLengthTooLong) {
+  static const uint8_t kExporterContextTooLong[PR_UINT16_MAX] = {
+      0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xFF};
+
+  EnsureTlsSetup();
+  Connect();
+  CheckKeys();
+
+  static const size_t exporter_len = 10;
+  uint8_t client_value[exporter_len] = {0};
+  EXPECT_EQ(SECFailure,
+            SSL_ExportKeyingMaterial(client_->ssl_fd(), kExporterLabel,
+                                     strlen(kExporterLabel), PR_TRUE,
+                                     kExporterContextTooLong,
+                                     sizeof(kExporterContextTooLong),
+                                     client_value, sizeof(client_value)));
+  EXPECT_EQ(PORT_GetError(), SEC_ERROR_INVALID_ARGS);
+  uint8_t server_value[exporter_len] = {0xff};
+  EXPECT_EQ(SECFailure,
+            SSL_ExportKeyingMaterial(server_->ssl_fd(), kExporterLabel,
+                                     strlen(kExporterLabel), PR_TRUE,
+                                     kExporterContextTooLong,
+                                     sizeof(kExporterContextTooLong),
+                                     server_value, sizeof(server_value)));
+  EXPECT_EQ(PORT_GetError(), SEC_ERROR_INVALID_ARGS);
+}
+
 // This has a weird signature so that it can be passed to the SNI callback.
 int32_t RegularExporterShouldFail(TlsAgent* agent, const SECItem* srvNameArr,
                                   PRUint32 srvNameArrSize) {
@@ -99,6 +126,7 @@ TEST_P(TlsConnectTls13, EarlyExporter) {
   client_->Handshake();  // Send ClientHello.
   uint8_t client_value[10] = {0};
   RegularExporterShouldFail(client_.get(), nullptr, 0);
+
   EXPECT_EQ(SECSuccess,
             SSL_ExportEarlyKeyingMaterial(
                 client_->ssl_fd(), kExporterLabel, strlen(kExporterLabel),
