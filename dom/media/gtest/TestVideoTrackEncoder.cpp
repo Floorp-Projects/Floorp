@@ -260,10 +260,7 @@ TEST(VP8VideoTrackEncoder, FetchMetaData)
 // Encode test
 TEST(VP8VideoTrackEncoder, FrameEncode)
 {
-  // Initiate VP8 encoder
   TestVP8TrackEncoder encoder;
-  InitParam param = {true, 640, 480};
-  encoder.TestInit(param);
 
   // Create YUV images as source.
   nsTArray<RefPtr<Image>> images;
@@ -288,6 +285,7 @@ TEST(VP8VideoTrackEncoder, FrameEncode)
                         now + TimeDuration::FromSeconds(i));
   }
 
+  encoder.SetStartOffset(0);
   encoder.AppendVideoSegment(Move(segment));
   encoder.AdvanceCurrentTime(images.Length() * 90000);
 
@@ -299,10 +297,7 @@ TEST(VP8VideoTrackEncoder, FrameEncode)
 // Test that encoding a single frame gives useful output.
 TEST(VP8VideoTrackEncoder, SingleFrameEncode)
 {
-  // Initiate VP8 encoder
   TestVP8TrackEncoder encoder;
-  InitParam param = {true, 640, 480};
-  encoder.TestInit(param);
 
   // Pass a half-second frame to the encoder.
   YUVBufferGenerator generator;
@@ -313,6 +308,7 @@ TEST(VP8VideoTrackEncoder, SingleFrameEncode)
                       generator.GetSize(),
                       PRINCIPAL_HANDLE_NONE);
 
+  encoder.SetStartOffset(0);
   encoder.AppendVideoSegment(Move(segment));
   encoder.AdvanceCurrentTime(45000);
   encoder.NotifyEndOfStream();
@@ -337,10 +333,7 @@ TEST(VP8VideoTrackEncoder, SingleFrameEncode)
 // Test that encoding a couple of identical images gives useful output.
 TEST(VP8VideoTrackEncoder, SameFrameEncode)
 {
-  // Initiate VP8 encoder
   TestVP8TrackEncoder encoder;
-  InitParam param = {true, 640, 480};
-  encoder.TestInit(param);
 
   // Pass 15 100ms frames to the encoder.
   YUVBufferGenerator generator;
@@ -357,6 +350,7 @@ TEST(VP8VideoTrackEncoder, SameFrameEncode)
                         now + TimeDuration::FromSeconds(i * 0.1));
   }
 
+  encoder.SetStartOffset(0);
   encoder.AppendVideoSegment(Move(segment));
   encoder.AdvanceCurrentTime(15 * 9000);
   encoder.NotifyEndOfStream();
@@ -378,10 +372,7 @@ TEST(VP8VideoTrackEncoder, SameFrameEncode)
 // Test encoding a track that starts with null data
 TEST(VP8VideoTrackEncoder, NullFrameFirst)
 {
-  // Initiate VP8 encoder
   TestVP8TrackEncoder encoder;
-  InitParam param = {true, 640, 480};
-  encoder.TestInit(param);
   YUVBufferGenerator generator;
   generator.Init(mozilla::gfx::IntSize(640, 480));
   RefPtr<Image> image = generator.GenerateI420Image();
@@ -406,6 +397,7 @@ TEST(VP8VideoTrackEncoder, NullFrameFirst)
                       false,
                       now + TimeDuration::FromSeconds(0.3));
 
+  encoder.SetStartOffset(0);
   encoder.AppendVideoSegment(Move(segment));
   encoder.AdvanceCurrentTime(3 * 9000);
   encoder.NotifyEndOfStream();
@@ -427,10 +419,7 @@ TEST(VP8VideoTrackEncoder, NullFrameFirst)
 // Test encoding a track that has to skip frames.
 TEST(VP8VideoTrackEncoder, SkippedFrames)
 {
-  // Initiate VP8 encoder
   TestVP8TrackEncoder encoder;
-  InitParam param = {true, 640, 480};
-  encoder.TestInit(param);
   YUVBufferGenerator generator;
   generator.Init(mozilla::gfx::IntSize(640, 480));
   TimeStamp now = TimeStamp::Now();
@@ -447,6 +436,7 @@ TEST(VP8VideoTrackEncoder, SkippedFrames)
                         now + TimeDuration::FromMilliseconds(i));
   }
 
+  encoder.SetStartOffset(0);
   encoder.AppendVideoSegment(Move(segment));
   encoder.AdvanceCurrentTime(100 * 90);
   encoder.NotifyEndOfStream();
@@ -468,10 +458,7 @@ TEST(VP8VideoTrackEncoder, SkippedFrames)
 // Test encoding a track with frames subject to rounding errors.
 TEST(VP8VideoTrackEncoder, RoundingErrorFramesEncode)
 {
-  // Initiate VP8 encoder
   TestVP8TrackEncoder encoder;
-  InitParam param = {true, 640, 480};
-  encoder.TestInit(param);
   YUVBufferGenerator generator;
   generator.Init(mozilla::gfx::IntSize(640, 480));
   TimeStamp now = TimeStamp::Now();
@@ -497,6 +484,7 @@ TEST(VP8VideoTrackEncoder, RoundingErrorFramesEncode)
                       false,
                       now + TimeDuration::FromSeconds(0.9));
 
+  encoder.SetStartOffset(0);
   encoder.AppendVideoSegment(Move(segment));
   encoder.AdvanceCurrentTime(10 * 9000);
   encoder.NotifyEndOfStream();
@@ -518,10 +506,7 @@ TEST(VP8VideoTrackEncoder, RoundingErrorFramesEncode)
 // Test that we're encoding timestamps rather than durations.
 TEST(VP8VideoTrackEncoder, TimestampFrameEncode)
 {
-  // Initiate VP8 encoder
   TestVP8TrackEncoder encoder;
-  InitParam param = {true, 640, 480};
-  encoder.TestInit(param);
 
   // Pass 3 frames with duration 0.1s, but varying timestamps to the encoder.
   // Total duration of the segment should be the same for both.
@@ -548,6 +533,7 @@ TEST(VP8VideoTrackEncoder, TimestampFrameEncode)
                       false,
                       now + TimeDuration::FromSeconds(0.2));
 
+  encoder.SetStartOffset(0);
   encoder.AppendVideoSegment(Move(segment));
   encoder.AdvanceCurrentTime(3 * 9000);
   encoder.NotifyEndOfStream();
@@ -574,10 +560,7 @@ TEST(VP8VideoTrackEncoder, TimestampFrameEncode)
 // Test that suspending an encoding works.
 TEST(VP8VideoTrackEncoder, Suspended)
 {
-  // Initiate VP8 encoder
   TestVP8TrackEncoder encoder;
-  InitParam param = {true, 640, 480};
-  encoder.TestInit(param);
 
   // Pass 3 frames with duration 0.1s. We suspend before and resume after the
   // second frame.
@@ -592,6 +575,7 @@ TEST(VP8VideoTrackEncoder, Suspended)
                       false,
                       now);
 
+  encoder.SetStartOffset(0);
   encoder.AppendVideoSegment(Move(segment));
   encoder.AdvanceCurrentTime(9000);
 
@@ -639,10 +623,7 @@ TEST(VP8VideoTrackEncoder, Suspended)
 // Test that ending a track while the video track encoder is suspended works.
 TEST(VP8VideoTrackEncoder, SuspendedUntilEnd)
 {
-  // Initiate VP8 encoder
   TestVP8TrackEncoder encoder;
-  InitParam param = {true, 640, 480};
-  encoder.TestInit(param);
 
   // Pass 2 frames with duration 0.1s. We suspend before the second frame.
   YUVBufferGenerator generator;
@@ -656,6 +637,7 @@ TEST(VP8VideoTrackEncoder, SuspendedUntilEnd)
                       false,
                       now);
 
+  encoder.SetStartOffset(0);
   encoder.AppendVideoSegment(Move(segment));
   encoder.AdvanceCurrentTime(9000);
 
@@ -692,10 +674,7 @@ TEST(VP8VideoTrackEncoder, SuspendedUntilEnd)
 // Test that ending a track that was always suspended works.
 TEST(VP8VideoTrackEncoder, AlwaysSuspended)
 {
-  // Initiate VP8 encoder
   TestVP8TrackEncoder encoder;
-  InitParam param = {true, 640, 480};
-  encoder.TestInit(param);
 
   // Suspend and then pass a frame with duration 2s.
   YUVBufferGenerator generator;
@@ -713,6 +692,7 @@ TEST(VP8VideoTrackEncoder, AlwaysSuspended)
                       false,
                       now);
 
+  encoder.SetStartOffset(0);
   encoder.AppendVideoSegment(Move(segment));
   encoder.AdvanceCurrentTime(180000);
 
@@ -731,10 +711,7 @@ TEST(VP8VideoTrackEncoder, AlwaysSuspended)
 // Test that encoding a track that is suspended in the beginning works.
 TEST(VP8VideoTrackEncoder, SuspendedBeginning)
 {
-  // Initiate VP8 encoder
   TestVP8TrackEncoder encoder;
-  InitParam param = {true, 640, 480};
-  encoder.TestInit(param);
   TimeStamp now = TimeStamp::Now();
 
   // Suspend and pass a frame with duration 0.5s. Then resume and pass one more.
@@ -750,6 +727,7 @@ TEST(VP8VideoTrackEncoder, SuspendedBeginning)
                       false,
                       now);
 
+  encoder.SetStartOffset(0);
   encoder.AppendVideoSegment(Move(segment));
   encoder.AdvanceCurrentTime(45000);
 
@@ -787,10 +765,7 @@ TEST(VP8VideoTrackEncoder, SuspendedBeginning)
 // works.
 TEST(VP8VideoTrackEncoder, SuspendedOverlap)
 {
-  // Initiate VP8 encoder
   TestVP8TrackEncoder encoder;
-  InitParam param = {true, 640, 480};
-  encoder.TestInit(param);
 
   // Pass a 1s frame and suspend after 0.5s.
   YUVBufferGenerator generator;
@@ -804,6 +779,7 @@ TEST(VP8VideoTrackEncoder, SuspendedOverlap)
                       false,
                       now);
 
+  encoder.SetStartOffset(0);
   encoder.AppendVideoSegment(Move(segment));
 
   encoder.AdvanceCurrentTime(45000);
@@ -843,10 +819,7 @@ TEST(VP8VideoTrackEncoder, SuspendedOverlap)
 // Test that ending a track in the middle of already pushed data works.
 TEST(VP8VideoTrackEncoder, PrematureEnding)
 {
-  // Initiate VP8 encoder
   TestVP8TrackEncoder encoder;
-  InitParam param = {true, 640, 480};
-  encoder.TestInit(param);
 
   // Pass a 1s frame and end the track after 0.5s.
   YUVBufferGenerator generator;
@@ -860,6 +833,7 @@ TEST(VP8VideoTrackEncoder, PrematureEnding)
                       false,
                       now);
 
+  encoder.SetStartOffset(0);
   encoder.AppendVideoSegment(Move(segment));
   encoder.AdvanceCurrentTime(45000);
   encoder.NotifyEndOfStream();
@@ -880,10 +854,7 @@ TEST(VP8VideoTrackEncoder, PrematureEnding)
 // EOS test
 TEST(VP8VideoTrackEncoder, EncodeComplete)
 {
-  // Initiate VP8 encoder
   TestVP8TrackEncoder encoder;
-  InitParam param = {true, 640, 480};
-  encoder.TestInit(param);
 
   // track end notification.
   encoder.NotifyEndOfStream();
