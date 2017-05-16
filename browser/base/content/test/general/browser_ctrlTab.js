@@ -1,9 +1,9 @@
 add_task(async function() {
   gPrefService.setBoolPref("browser.ctrlTab.previews", true);
 
-  gBrowser.addTab();
-  gBrowser.addTab();
-  gBrowser.addTab();
+  BrowserTestUtils.addTab(gBrowser);
+  BrowserTestUtils.addTab(gBrowser);
+  BrowserTestUtils.addTab(gBrowser);
 
   checkTabs(4);
 
@@ -37,7 +37,7 @@ add_task(async function() {
     await releaseCtrl();
   }
 
-  gBrowser.addTab();
+  BrowserTestUtils.addTab(gBrowser);
   checkTabs(3);
   await ctrlTabTest([2, 1, 0], 7, 1);
 

@@ -30,7 +30,8 @@ SERVO_BINDING_FUNC(Servo_StyleSheet_FromUTF8Bytes, RawServoStyleSheetStrong,
                    const nsACString* data,
                    mozilla::css::SheetParsingMode parsing_mode,
                    const RawServoMediaList* media_list,
-                   RawGeckoURLExtraData* extra_data)
+                   RawGeckoURLExtraData* extra_data,
+                   uint32_t line_number_offset)
 SERVO_BINDING_FUNC(Servo_ImportRule_GetSheet,
                    RawServoStyleSheetStrong,
                    const RawServoImportRuleBorrowed import_rule)
@@ -40,7 +41,8 @@ SERVO_BINDING_FUNC(Servo_StyleSheet_ClearAndUpdate,
                    mozilla::css::Loader* loader,
                    mozilla::ServoStyleSheet* gecko_stylesheet,
                    const nsACString* data,
-                   RawGeckoURLExtraData* extra_data)
+                   RawGeckoURLExtraData* extra_data,
+                   uint32_t line_number_offset)
 SERVO_BINDING_FUNC(Servo_StyleSheet_HasRules, bool,
                    RawServoStyleSheetBorrowed sheet)
 SERVO_BINDING_FUNC(Servo_StyleSheet_GetRules, ServoCssRulesStrong,
@@ -100,7 +102,8 @@ SERVO_BINDING_FUNC(Servo_CssRules_DeleteRule, nsresult,
 #define BASIC_RULE_FUNCS(type_) \
   SERVO_BINDING_FUNC(Servo_CssRules_Get##type_##RuleAt, \
                      RawServo##type_##RuleStrong, \
-                     ServoCssRulesBorrowed rules, uint32_t index) \
+                     ServoCssRulesBorrowed rules, uint32_t index, \
+                     uint32_t* line, uint32_t* column) \
   SERVO_BINDING_FUNC(Servo_##type_##Rule_Debug, void, \
                      RawServo##type_##RuleBorrowed rule, nsACString* result) \
   SERVO_BINDING_FUNC(Servo_##type_##Rule_GetCssText, void, \
@@ -352,7 +355,7 @@ SERVO_BINDING_FUNC(Servo_CSSSupports, bool,
 SERVO_BINDING_FUNC(Servo_ComputedValues_GetForAnonymousBox,
                    ServoComputedValuesStrong,
                    ServoComputedValuesBorrowedOrNull parent_style_or_null,
-                   nsIAtom* pseudoTag, bool skip_display_fixup,
+                   nsIAtom* pseudo_tag, bool skip_display_fixup,
                    RawServoStyleSetBorrowed set)
 SERVO_BINDING_FUNC(Servo_ComputedValues_Inherit, ServoComputedValuesStrong,
                    RawServoStyleSetBorrowed set,
@@ -380,13 +383,10 @@ SERVO_BINDING_FUNC(Servo_ResolveStyle, ServoComputedValuesStrong,
                    RawServoStyleSetBorrowed set,
                    bool allow_stale)
 SERVO_BINDING_FUNC(Servo_ResolvePseudoStyle, ServoComputedValuesStrong,
-                   RawGeckoElementBorrowed element, nsIAtom* pseudo_tag,
+                   RawGeckoElementBorrowed element,
+                   mozilla::CSSPseudoElementType pseudo_type,
                    bool is_probe, RawServoStyleSetBorrowed set)
-SERVO_BINDING_FUNC(Servo_ResolveRuleNode, RawServoRuleNodeStrong,
-                   RawGeckoElementBorrowed element, nsIAtom* pseudo_tag,
-                   RawServoStyleSetBorrowed set)
 SERVO_BINDING_FUNC(Servo_HasAuthorSpecifiedRules, bool,
-                   RawServoRuleNodeBorrowed rule_node,
                    RawGeckoElementBorrowed element,
                    uint32_t rule_type_mask,
                    bool author_colors_allowed)
@@ -401,7 +401,7 @@ SERVO_BINDING_FUNC(Servo_HasAuthorSpecifiedRules, bool,
 // performed, and this function maintains that invariant.
 SERVO_BINDING_FUNC(Servo_ResolveStyleLazily, ServoComputedValuesStrong,
                    RawGeckoElementBorrowed element,
-                   nsIAtom* pseudo_tag,
+                   mozilla::CSSPseudoElementType pseudo_type,
                    const mozilla::ServoElementSnapshotTable* snapshots,
                    RawServoStyleSetBorrowed set)
 
@@ -424,7 +424,7 @@ SERVO_BINDING_FUNC(Servo_StyleSet_GetBaseComputedValuesForElement,
                    RawServoStyleSetBorrowed set,
                    RawGeckoElementBorrowed element,
                    const mozilla::ServoElementSnapshotTable* snapshots,
-                   nsIAtom* pseudo_tag)
+                   mozilla::CSSPseudoElementType pseudo_type)
 
 // Style-struct management.
 #define STYLE_STRUCT(name, checkdata_cb)                            \

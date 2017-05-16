@@ -13,6 +13,7 @@
 <p id="display"></p>
 <div id="content" style="display: none"></div>
 <pre id="test"></pre>
+<script src="utils.js"></script>
 <script class="testbody" type="text/javascript">
   var registration;
   var base = ["string", true, 42];
@@ -49,6 +50,7 @@
   function start() {
     return navigator.serviceWorker.register("message_posting_worker.js",
                                             { scope: "./sw_clients/" })
+      .then(swr => waitForState(swr.installing, 'activated', swr))
       .then((swr) => registration = swr);
   }
 

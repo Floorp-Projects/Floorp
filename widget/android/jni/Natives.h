@@ -44,7 +44,7 @@ namespace jni {
  *
  *       void AttachTo(const MyJavaClass::LocalRef& instance)
  *       {
- *           MyJavaClass::Natives<MyClass>::AttachInstance(
+ *           MyJavaClass::Natives<MyClass>::AttachNative(
  *                   instance, static_cast<SupportsWeakPtr<MyClass>*>(this));
  *
  *           // "instance" does NOT own "this", so the C++ object
@@ -70,7 +70,7 @@ namespace jni {
  *
  *       void AttachTo(const MyJavaClass::LocalRef& instance)
  *       {
- *           MyJavaClass::Natives<MyClass>::AttachInstance(instance, this);
+ *           MyJavaClass::Natives<MyClass>::AttachNative(instance, this);
  *
  *           // "instance" owns "this" through the RefPtr, so the C++ object
  *           // may be destroyed as soon as instance.disposeNative() is called.
@@ -91,7 +91,7 @@ namespace jni {
  *
  *       static void AttachTo(const MyJavaClass::LocalRef& instance)
  *       {
- *           MyJavaClass::Natives<MyClass>::AttachInstance(
+ *           MyJavaClass::Natives<MyClass>::AttachNative(
  *                   instance, mozilla::MakeUnique<MyClass>());
  *
  *           // "instance" owns the newly created C++ object, so the C++

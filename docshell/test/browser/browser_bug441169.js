@@ -26,7 +26,7 @@ function task() {
 function test() {
   waitForExplicitFinish();
 
-  var newTab = gBrowser.addTab();
+  var newTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = newTab;
   newBrowser = gBrowser.getBrowserForTab(newTab);
 

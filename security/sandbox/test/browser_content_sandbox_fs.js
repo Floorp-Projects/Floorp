@@ -247,7 +247,7 @@ function* testFileAccess() {
   if (fileContentProcessEnabled) {
     // open a tab in a file content process
     gBrowser.selectedTab =
-      gBrowser.addTab("about:blank", {preferredRemoteType: "file"});
+      BrowserTestUtils.addTab(gBrowser, "about:blank", {preferredRemoteType: "file"});
     // get the browser for the file content process tab
     fileBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
   }

@@ -43,7 +43,7 @@ function add_bookmark(aURI, aTitle) {
 function test() {
   waitForExplicitFinish();
 
-  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedBrowser.addEventListener("load", function() {
     waitForStarChange(false, initTest);
   }, {capture: true, once: true});

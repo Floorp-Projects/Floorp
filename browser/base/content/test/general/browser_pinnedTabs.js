@@ -27,7 +27,7 @@ function PinUnpinHandler(tab, eventName) {
 }
 
 function test() {
-  tabs = [gBrowser.selectedTab, gBrowser.addTab(), gBrowser.addTab(), gBrowser.addTab()];
+  tabs = [gBrowser.selectedTab, BrowserTestUtils.addTab(gBrowser), BrowserTestUtils.addTab(gBrowser), BrowserTestUtils.addTab(gBrowser)];
   indexTest(0, 0);
   indexTest(1, 1);
   indexTest(2, 2);

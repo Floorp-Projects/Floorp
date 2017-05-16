@@ -35,6 +35,7 @@ struct nsFont;
 namespace mozilla {
   class FontFamilyList;
   enum FontFamilyType : uint32_t;
+  enum class CSSPseudoElementType : uint8_t;
   struct Keyframe;
   enum Side;
   struct StyleTransition;
@@ -329,7 +330,7 @@ void Gecko_SetOwnerDocumentNeedsStyleFlush(RawGeckoElementBorrowed element);
 // Not if we do them in Gecko...
 nsStyleContext* Gecko_GetStyleContext(RawGeckoElementBorrowed element,
                                       nsIAtom* aPseudoTagOrNull);
-nsIAtom* Gecko_GetImplementedPseudo(RawGeckoElementBorrowed element);
+mozilla::CSSPseudoElementType Gecko_GetImplementedPseudo(RawGeckoElementBorrowed element);
 nsChangeHint Gecko_CalcStyleDifference(nsStyleContext* oldstyle,
                                        ServoComputedValuesBorrowed newstyle);
 nsChangeHint Gecko_HintsHandledForDescendants(nsChangeHint aHint);
@@ -515,7 +516,7 @@ const char* Gecko_CSSKeywordString(nsCSSKeyword keyword, uint32_t* len);
 
 // Font face rule
 // Creates and returns a new (already-addrefed) nsCSSFontFaceRule object.
-nsCSSFontFaceRule* Gecko_CSSFontFaceRule_Create();
+nsCSSFontFaceRule* Gecko_CSSFontFaceRule_Create(uint32_t line, uint32_t column);
 void Gecko_CSSFontFaceRule_GetCssText(const nsCSSFontFaceRule* rule, nsAString* result);
 NS_DECL_FFI_REFCOUNTING(nsCSSFontFaceRule, CSSFontFaceRule);
 
@@ -553,6 +554,12 @@ bool Gecko_DocumentRule_UseForPresentation(RawGeckoPresContextBorrowed,
 
 // Allocator hinting.
 void Gecko_SetJemallocThreadLocalArena(bool enabled);
+
+// Pseudo-element flags.
+#define CSS_PSEUDO_ELEMENT(name_, value_, flags_) \
+  const uint32_t SERVO_CSS_PSEUDO_ELEMENT_FLAGS_##name_ = flags_;
+#include "nsCSSPseudoElementList.h"
+#undef CSS_PSEUDO_ELEMENT
 
 #define SERVO_BINDING_FUNC(name_, return_, ...) return_ name_(__VA_ARGS__);
 #include "mozilla/ServoBindingList.h"

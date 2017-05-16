@@ -19,7 +19,11 @@
 
   --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-vertical-inner-padding) - 1px);
 
+%ifdef MOZ_PHOTON_THEME
+  --toolbarbutton-border-radius: 2px;
+%else
   --toolbarbutton-border-radius: 1px;
+%endif
 
   --toolbarbutton-hover-background: rgba(0,0,0,.1);
   --toolbarbutton-hover-bordercolor: rgba(0,0,0,.2);
@@ -371,45 +375,11 @@ toolbar[brighttext] {
 
 /* ::::: bookmark buttons ::::: */
 
-toolbarbutton.bookmark-item:not(.subviewbutton),
-#personal-bookmarks[cui-areatype="toolbar"]:not([overflowedItem=true]) > #bookmarks-toolbar-placeholder {
-  margin: 0;
-  padding: 2px 3px;
-  -moz-appearance: none;
-  border: 1px solid transparent;
-  border-radius: var(--toolbarbutton-border-radius);
-  background-origin: padding-box !important;
-  background-clip: padding-box !important;
-  transition-property: background-color, border-color, box-shadow;
-  transition-duration: 150ms;
-}
-
-toolbarbutton.bookmark-item:not(.subviewbutton):hover:not([disabled="true"]):not([open]) {
-  border-color: var(--toolbarbutton-hover-bordercolor);
-  background: var(--toolbarbutton-hover-background);
-}
-
-toolbarbutton.bookmark-item:not(.subviewbutton):hover:active:not([disabled="true"]),
-toolbarbutton.bookmark-item[open="true"] {
-  border-color: var(--toolbarbutton-active-bordercolor);
-  box-shadow: var(--toolbarbutton-active-boxshadow);
-  background: var(--toolbarbutton-active-background);
-}
-
-.bookmark-item > .toolbarbutton-icon,
-#personal-bookmarks[cui-areatype="toolbar"] > #bookmarks-toolbar-placeholder > .toolbarbutton-icon {
-  width: 16px;
-  height: 16px;
-}
-
-/* Force the display of the label for bookmarks */
-.bookmark-item > .toolbarbutton-text,
-#personal-bookmarks[cui-areatype="toolbar"] > #bookmarks-toolbar-placeholder > .toolbarbutton-text {
-  display: -moz-box !important;
-}
-
 .bookmark-item > .toolbarbutton-menu-dropmarker {
-  display: none;
+  list-style-image: url("chrome://browser/skin/places/arrow-down.svg");
+  fill: currentColor;
+  margin-top: 1px;
+  margin-inline-start: 3px;
 }
 
 #bookmarks-toolbar-placeholder {
@@ -691,6 +661,25 @@ toolbar[brighttext] #close-button {
   --urlbar-border-color: var(--toolbarbutton-hover-bordercolor);
 }
 
+%ifdef MOZ_PHOTON_THEME
+
+@media (-moz-windows-default-theme) {
+  #main-window:not(:-moz-lwtheme) {
+    --urlbar-border-color: hsla(240, 5%, 5%, .25);
+    --urlbar-border-color-hover: hsla(240, 5%, 5%, .35);
+    --urlbar-background-color: -moz-field;
+  }
+}
+
+%include ../shared/location-search-bar.inc.css
+
+#urlbar[focused="true"],
+.searchbar-textbox[focused="true"] {
+  border-color: Highlight;
+}
+
+%else
+
 @media (-moz-windows-default-theme) {
   @media (-moz-os-version: windows-win7),
          (-moz-os-version: windows-win8) {
@@ -787,7 +776,6 @@ toolbar[brighttext] #close-button {
   background-color: white;
 }
 
-%ifndef MOZ_PHOTON_THEME
 @conditionalForwardWithUrlbar@ > #urlbar {
   border-inline-start: none;
   padding-inline-start: 0;

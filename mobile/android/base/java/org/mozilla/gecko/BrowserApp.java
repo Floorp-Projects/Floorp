@@ -1712,7 +1712,11 @@ public class BrowserApp extends GeckoApp
         if (aShow) {
             mBrowserChrome.setVisibility(View.VISIBLE);
         } else {
-            mBrowserChrome.setVisibility(View.GONE);
+            // The chrome needs to be INVISIBLE instead of GONE so that
+            // it will continue update when the layout changes. This
+            // ensures the bitmap generated for the static toolbar
+            // snapshot is the correct size.
+            mBrowserChrome.setVisibility(View.INVISIBLE);
         }
 
         super.toggleChrome(aShow);
@@ -3043,7 +3047,7 @@ public class BrowserApp extends GeckoApp
         //
         // We do this here because there are glitches when unlocking a device with
         // BrowserSearch in the foreground if we use BrowserSearch.onStart/Stop.
-        getActivity().getWindow().setBackgroundDrawableResource(android.R.color.white);
+        getWindow().setBackgroundDrawableResource(android.R.color.white);
     }
 
     private void hideBrowserSearch() {

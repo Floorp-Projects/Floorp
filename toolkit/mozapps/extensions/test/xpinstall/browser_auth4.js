@@ -22,7 +22,7 @@ function test() {
   var triggers = encodeURIComponent(JSON.stringify({
     "Unsigned XPI": TESTROOT + "authRedirect.sjs?" + TESTROOT + "amosigned.xpi"
   }));
-  gNewTab = gBrowser.addTab();
+  gNewTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.getBrowserForTab(gNewTab).loadURI(TESTROOT + "installtrigger.html?" + triggers);
 }
 

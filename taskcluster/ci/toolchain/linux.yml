@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-linux64-clang/opt:
+linux64-clang:
     description: "Clang toolchain build"
     treeherder:
         kind: build
@@ -22,7 +22,7 @@ linux64-clang/opt:
             - 'build/build-clang/**'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
 
-linux64-clang-tidy/opt:
+linux64-clang-tidy:
     description: "Clang-tidy build"
     index:
         product: static-analysis
@@ -46,7 +46,7 @@ linux64-clang-tidy/opt:
             - 'build/build-clang/**'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
 
-linux64-gcc/opt:
+linux64-gcc:
     description: "GCC toolchain build"
     treeherder:
         kind: build
@@ -64,7 +64,7 @@ linux64-gcc/opt:
         resources:
             - 'build/unix/build-gcc/**'
 
-linux64-binutils/opt:
+linux64-binutils:
     description: "Binutils toolchain build"
     treeherder:
         kind: build
@@ -82,7 +82,7 @@ linux64-binutils/opt:
         resources:
             - 'build/unix/build-binutils/**'
 
-linux64-cctools-port/opt:
+linux64-cctools-port:
     description: "cctools-port toolchain build"
     treeherder:
         kind: build
@@ -101,7 +101,7 @@ linux64-cctools-port/opt:
         resources:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
 
-linux64-hfsplus/opt:
+linux64-hfsplus:
     description: "hfsplus toolchain build"
     treeherder:
         kind: build
@@ -121,7 +121,7 @@ linux64-hfsplus/opt:
             - 'build/unix/build-hfsplus/**'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
 
-linux64-libdmg/opt:
+linux64-libdmg:
     description: "libdmg-hfsplus toolchain build"
     treeherder:
         kind: build

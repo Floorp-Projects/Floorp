@@ -114,9 +114,8 @@ a {
   fill: #616366;
   padding: 0;
   border: 1px solid;
-  border-color: hsla(210,54%,20%,.15) hsla(210,54%,20%,.17) hsla(210,54%,20%,.2);
+  border-color: hsla(210,54%,20%,.15) hsla(210,54%,20%,.17) hsla(210,54%,20%,.2) transparent;
   border-radius: 0 2px 2px 0;
-  border-inline-start: 1px solid transparent;
   box-shadow: 0 0 2px hsla(0,0%,100%,.5) inset,
               0 1px 0 hsla(0,0%,100%,.2);
   cursor: pointer;
@@ -126,8 +125,7 @@ a {
 }
 
 #searchSubmit:dir(rtl) {
-  border-radius: 2px 0 0 2px;
-  background-image: url("chrome://browser/skin/search-arrow-go-rtl.svg"), linear-gradient(hsla(0,0%,100%,.8), hsla(0,0%,100%,.1));
+  transform: scaleX(-1);
 }
 
 #searchText:focus + #searchSubmit,
@@ -147,13 +145,6 @@ a {
               0 1px 0 hsla(210,54%,20%,.03);
 }
 
-#searchText:focus + #searchSubmit:dir(rtl),
-#searchText[keepfocus] + #searchSubmit:dir(rtl),
-#searchText[autofocus] + #searchSubmit:dir(rtl) {
-  background-image: url("chrome://browser/skin/search-arrow-go-rtl.svg"), linear-gradient(#4cb1ff, #1793e5);
-  fill: white;
-}
-
 #searchText + #searchSubmit:hover {
   background-image: url("chrome://browser/skin/search-arrow-go.svg"), linear-gradient(#66bdff, #0d9eff);
   fill: white;
@@ -161,11 +152,6 @@ a {
               0 0 0 1px hsla(0,0%,100%,.1) inset,
               0 1px 0 hsla(210,54%,20%,.03),
               0 0 4px hsla(206,100%,20%,.2);
-}
-
-#searchText + #searchSubmit:dir(rtl):hover {
-  background-image: url("chrome://browser/skin/search-arrow-go-rtl.svg"), linear-gradient(#66bdff, #0d9eff);
-  fill: white;
 }
 
 #searchText + #searchSubmit:hover:active {

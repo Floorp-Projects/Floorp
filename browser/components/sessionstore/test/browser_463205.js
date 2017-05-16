@@ -12,7 +12,7 @@ const URL = ROOT + "browser_463205_sample.html";
  */
 add_task(async function test_check_urls_before_restoring() {
   // Add a blank tab.
-  let tab = gBrowser.addTab("about:blank");
+  let tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 

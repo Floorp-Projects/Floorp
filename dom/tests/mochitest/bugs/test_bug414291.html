@@ -18,14 +18,14 @@ var result1 = 0;
 var result2 = 0;
 var result3 = 0;
 
-window.open("data:text/html,<html><body onload='close(); opener.result1 = 1;'>", "w1");
+window.open("file1_bug414291.html", "w1");
 is(result1, 0, "window should not be opened either as modal or loaded synchronously.");
 
-window.open("data:text/html,<html><body onload='close(); opener.result2 = 2;'>", "w2", "modal=yes");
+window.open("file2_bug414291.html", "w2", "modal=yes");
 is(result2, 0, "window should not be opened either as modal or data loaded synchronously.");
 
 if (window.showModalDialog) {
-  result3 = window.showModalDialog("data:text/html,<html><body onload='close(); returnValue = 3;'>");
+  result3 = window.showModalDialog("file3_bug414291.html");
   is(result3, 3, "window should be opened as modal.");
 }
 

@@ -2,8 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "AndroidDecoderModule.h"
-#include "AndroidBridge.h"
+#include "GeneratedJNIWrappers.h"
 #include "MediaInfo.h"
 #include "MediaPrefs.h"
 #include "OpusDecoder.h"
@@ -128,8 +127,7 @@ AndroidDecoderModule::SupportsMimeType(
   const nsACString& aMimeType,
   DecoderDoctorDiagnostics* aDiagnostics) const
 {
-  if (!AndroidBridge::Bridge() ||
-      AndroidBridge::Bridge()->GetAPIVersion() < 16) {
+  if (jni::GetAPIVersion() < 16) {
     return false;
   }
 

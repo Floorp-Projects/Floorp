@@ -1122,6 +1122,7 @@ protected:
   nsTSubstring_CharT(char_type* aData, size_type aLength, uint32_t aFlags)
     : nsTStringRepr_CharT(aData, aLength, aFlags)
   {
+    MOZ_RELEASE_ASSERT(CheckCapacity(aLength), "String is too large.");
   }
 #endif /* DEBUG || FORCE_BUILD_REFCNT_LOGGING */
 

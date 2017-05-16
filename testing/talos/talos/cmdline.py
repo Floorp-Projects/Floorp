@@ -83,7 +83,7 @@ def create_parser(mach_interface=False):
     add_arg('--spsProfile', action="store_true", dest="gecko_profile",
             help="(Deprecated - Use --geckoProfile instead.) Profile the "
                  "run and output the results in $MOZ_UPLOAD_DIR.")
-    add_arg('--spsProfileInterval', dest='gecko_profile_interval', type=int,
+    add_arg('--spsProfileInterval', dest='gecko_profile_interval', type=float,
             help="(Deprecated - Use --geckoProfileInterval instead.) How "
                  "frequently to take samples (ms)")
     add_arg('--spsProfileEntries', dest="gecko_profile_entries", type=int,
@@ -91,7 +91,7 @@ def create_parser(mach_interface=False):
                  "many samples to take with the profiler")
     add_arg('--geckoProfile', action="store_true", dest="gecko_profile",
             help="Profile the run and output the results in $MOZ_UPLOAD_DIR.")
-    add_arg('--geckoProfileInterval', dest='gecko_profile_interval', type=int,
+    add_arg('--geckoProfileInterval', dest='gecko_profile_interval', type=float,
             help="How frequently to take samples (ms)")
     add_arg('--geckoProfileEntries', dest="gecko_profile_entries", type=int,
             help="How many samples to take with the profiler")

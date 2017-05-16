@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-win32-clang-cl/opt:
+win32-clang-cl:
     description: "Clang-cl toolchain build"
     treeherder:
         kind: build
@@ -20,7 +20,7 @@ win32-clang-cl/opt:
             - 'build/build-clang/**'
             - 'taskcluster/scripts/misc/build-clang-windows-helper32.sh'
 
-win64-clang-cl/opt:
+win64-clang-cl:
     description: "Clang-cl toolchain build"
     treeherder:
         kind: build
@@ -38,7 +38,7 @@ win64-clang-cl/opt:
             - 'build/build-clang/**'
             - 'taskcluster/scripts/misc/build-clang-windows-helper64.sh'
 
-win32-clang-tidy/opt:
+win32-clang-tidy:
     description: "Clang-tidy toolchain build"
     index:
         product: static-analysis
@@ -59,7 +59,7 @@ win32-clang-tidy/opt:
             - 'build/build-clang/**'
             - 'taskcluster/scripts/misc/build-clang-windows-helper32.sh'
 
-win64-clang-tidy/opt:
+win64-clang-tidy:
     description: "Clang-tidy toolchain build"
     index:
         product: static-analysis

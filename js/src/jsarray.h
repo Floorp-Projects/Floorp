@@ -144,7 +144,7 @@ extern bool
 GetLengthProperty(JSContext* cx, HandleObject obj, uint32_t* lengthp);
 
 extern bool
-SetLengthProperty(JSContext* cx, HandleObject obj, double length);
+SetLengthProperty(JSContext* cx, HandleObject obj, uint32_t length);
 
 extern bool
 ObjectMayHaveExtraIndexedProperties(JSObject* obj);

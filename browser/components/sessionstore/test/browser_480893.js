@@ -11,7 +11,7 @@ add_task(async function() {
     ]
   });
 
-  let tab = gBrowser.addTab("about:sessionrestore");
+  let tab = BrowserTestUtils.addTab(gBrowser, "about:sessionrestore");
   gBrowser.selectedTab = tab;
   let browser = tab.linkedBrowser;
   await BrowserTestUtils.browserLoaded(browser, false, "about:sessionrestore");

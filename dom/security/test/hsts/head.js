@@ -362,7 +362,7 @@ var Observer = {
 // opens `uri' in a new tab and focuses it.
 // returns the newly opened tab
 function openTab(uri) {
-  let tab = gBrowser.addTab(uri);
+  let tab = BrowserTestUtils.addTab(gBrowser, uri);
 
   // select tab and make sure its browser is focused
   gBrowser.selectedTab = tab;

@@ -3670,7 +3670,7 @@ int main(int argc, char **argv) {
   // Here we handle the event queue for dispatches to the main thread
   // When the GTest thread is complete it will send one more dispatch
   // with gTestsComplete == true.
-  while (!gTestsComplete && NS_ProcessNextEvent());
+  SpinEventLoopUntil([&]() { return gTestsComplete; });
 
   gGtestThread->Shutdown();
 

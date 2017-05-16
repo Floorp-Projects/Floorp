@@ -19,11 +19,11 @@ function boom(event)
   switch (counter)
   {
   case 1:
-    w = window.open("data:text/html,1");
+    w = window.open("test1_bug622361.html");
     doNext();
     return;
   case 2:
-    w.location = "data:text/html,2";
+    w.location = "test2_bug622361.html";
     function next()
     {
       w.history.back();

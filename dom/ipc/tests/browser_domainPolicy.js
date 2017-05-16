@@ -28,7 +28,7 @@ function* test_domainPolicy() {
 
   // Init test
   function initProcess() {
-    tab = gBrowser.addTab();
+    tab = BrowserTestUtils.addTab(gBrowser);
     gBrowser.selectedTab = tab;
 
     let initPromise = ContentTask.spawn(tab.linkedBrowser, null, function() {

@@ -81,12 +81,12 @@ ${helpers.single_keyword("mask-mode",
 
     #[inline]
     pub fn get_initial_value() -> computed_value::T {
-        computed_value::T(RepeatKeyword::NoRepeat, RepeatKeyword::NoRepeat)
+        computed_value::T(RepeatKeyword::Repeat, RepeatKeyword::Repeat)
     }
 
     #[inline]
     pub fn get_initial_specified_value() -> SpecifiedValue {
-        SpecifiedValue::Other(RepeatKeyword::NoRepeat, None)
+        SpecifiedValue::Other(RepeatKeyword::Repeat, None)
     }
 </%helpers:vector_longhand>
 
@@ -141,9 +141,10 @@ ${helpers.single_keyword("mask-composite",
                          extra_prefixes="webkit",
                          animation_value_type="none",
                          spec="https://drafts.fxtf.org/css-masking/#propdef-mask-composite")}
-${helpers.predefined_type("mask-image", "LayerImage",
-    initial_value="computed_value::T(None)",
-    initial_specified_value="SpecifiedValue(None)",
+
+${helpers.predefined_type("mask-image", "ImageLayer",
+    initial_value="Either::First(None_)",
+    initial_specified_value="Either::First(None_)",
     spec="https://drafts.fxtf.org/css-masking/#propdef-mask-image",
     vector=True,
     products="gecko",

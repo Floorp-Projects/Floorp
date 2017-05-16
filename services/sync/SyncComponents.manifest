@@ -1,18 +1,6 @@
-# WeaveService has to restrict its registration for the app-startup category
-# to the specific list of apps that use it so it doesn't get loaded in xpcshell.
-# Thus we restrict it to these apps:
-#
-#   b2g:            {3c2e2abc-06d4-11e1-ac3b-374f68613e61}
-#   browser:        {ec8030f7-c20a-464f-9b0e-13a3a9e97384}
-#   mobile/android: {aa3c5121-dab2-40e2-81ca-7ea25febc110}
-#   mobile/xul:     {a23983c0-fd0e-11dc-95ff-0800200c9a66}
-#   suite (comm):   {92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}
-#   graphene:       {d1bfe7d9-c01e-4237-998b-7b5f960a4314}
-
 # Weave.js
 component {74b89fb0-f200-4ae8-a3ec-dd164117f6de} Weave.js
 contract @mozilla.org/weave/service;1 {74b89fb0-f200-4ae8-a3ec-dd164117f6de}
-category app-startup WeaveService service,@mozilla.org/weave/service;1 application={3c2e2abc-06d4-11e1-ac3b-374f68613e61} application={ec8030f7-c20a-464f-9b0e-13a3a9e97384} application={aa3c5121-dab2-40e2-81ca-7ea25febc110} application={a23983c0-fd0e-11dc-95ff-0800200c9a66} application={92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a} application={99bceaaa-e3c6-48c1-b981-ef9b46b67d60} application={d1bfe7d9-c01e-4237-998b-7b5f960a4314}
 component {d28f8a0b-95da-48f4-b712-caf37097be41} Weave.js
 contract @mozilla.org/network/protocol/about;1?what=sync-log {d28f8a0b-95da-48f4-b712-caf37097be41}
 

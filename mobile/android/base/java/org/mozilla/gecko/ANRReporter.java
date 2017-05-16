@@ -191,10 +191,7 @@ public final class ANRReporter extends BroadcastReceiver
     }
 
     private static File getPingFile() {
-        if (GeckoAppShell.getContext() == null) {
-            return null;
-        }
-        GeckoProfile profile = GeckoAppShell.getGeckoInterface().getProfile();
+        final GeckoProfile profile = GeckoThread.getActiveProfile();
         if (profile == null) {
             return null;
         }
