@@ -38,15 +38,6 @@ Thread::GetCurrentId()
   return GetCurrentThreadId();
 }
 
-static void
-SleepMicro(int aMicroseconds)
-{
-  aMicroseconds = std::max(0, aMicroseconds);
-  int aMilliseconds = std::max(1, aMicroseconds / 1000);
-
-  ::Sleep(aMilliseconds);
-}
-
 class PlatformData
 {
 public:
@@ -154,6 +145,15 @@ SamplerThread::Stop(PSLockRef aLock)
   if (mIntervalMicroseconds < 10 * 1000) {
     ::timeEndPeriod(mIntervalMicroseconds / 1000);
   }
+}
+
+void
+SamplerThread::SleepMicro(int aMicroseconds)
+{
+  aMicroseconds = std::max(0, aMicroseconds);
+  int aMilliseconds = std::max(1, aMicroseconds / 1000);
+
+  ::Sleep(aMilliseconds);
 }
 
 void
