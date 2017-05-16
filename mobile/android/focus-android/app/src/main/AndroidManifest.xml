@@ -58,9 +58,10 @@
             </intent-filter>
         </activity>
 
+        <!-- SettingsActivity title is set dynamically for multilocale support -->
         <activity android:name=".activity.SettingsActivity"
             android:theme="@style/SettingsTheme"
-            android:label="@string/menu_settings" />
+            android:configChanges="locale" />
 
         <activity android:name=".activity.InfoActivity"
                   android:theme="@style/InfoTheme"/>
