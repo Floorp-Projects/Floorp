@@ -899,6 +899,14 @@ class TestInfoCommand(MachCommandBase):
     @CommandArgument('--end',
         default=date.today().strftime("%Y-%m-%d"),
         help='End date (YYYY-MM-DD)')
+    @CommandArgument('--show-info', action='store_true',
+        help='Retrieve and display general test information.')
+    @CommandArgument('--show-results', action='store_true',
+        help='Retrieve and display ActiveData test result summary.')
+    @CommandArgument('--show-durations', action='store_true',
+        help='Retrieve and display ActiveData test duration summary.')
+    @CommandArgument('--show-bugs', action='store_true',
+        help='Retrieve and display related Bugzilla bugs.')
     @CommandArgument('--verbose', action='store_true',
         help='Enable debug logging.')
 
@@ -910,7 +918,21 @@ class TestInfoCommand(MachCommandBase):
         self.branches = params['branches']
         self.start = params['start']
         self.end = params['end']
+        self.show_info = params['show_info']
+        self.show_results = params['show_results']
+        self.show_durations = params['show_durations']
+        self.show_bugs = params['show_bugs']
         self.verbose = params['verbose']
+
+        if (not self.show_info and
+            not self.show_results and
+            not self.show_durations and
+            not self.show_bugs):
+            # by default, show everything
+            self.show_info = True
+            self.show_results = True
+            self.show_durations = True
+            self.show_bugs = True
 
         here = os.path.abspath(os.path.dirname(__file__))
         build_obj = MozbuildObject.from_environment(cwd=here)
@@ -935,10 +957,14 @@ class TestInfoCommand(MachCommandBase):
             if len(self.test_name) < 6:
                 print("'%s' is too short for a test name!" % self.test_name)
                 continue
-            self.set_test_name()
-            self.report_test_results()
-            self.report_test_durations()
-            self.report_bugs()
+            if self.show_info:
+                self.set_test_name()
+            if self.show_results:
+                self.report_test_results()
+            if self.show_durations:
+                self.report_test_durations()
+            if self.show_bugs:
+                self.report_bugs()
 
     def find_in_hg_or_git(self, test_name):
         if self._hg:
@@ -1025,6 +1051,10 @@ class TestInfoCommand(MachCommandBase):
                 self.robo_name = self.short_name[:robo_idx]
             if self.short_name == self.test_name:
                 self.short_name = None
+
+        if not (self.show_results or self.show_durations):
+            # no need to determine ActiveData name if not querying
+            return
 
         # activedata_test_name is name in ActiveData
         self.activedata_test_name = None
