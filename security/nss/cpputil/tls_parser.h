@@ -16,7 +16,6 @@
 #include <arpa/inet.h>
 #endif
 #include "databuffer.h"
-
 #include "sslt.h"
 
 namespace nss_test {
@@ -79,6 +78,10 @@ static const uint8_t kTls13PskDhKe = 1;
 static const uint8_t kTls13PskAuth = 0;
 static const uint8_t kTls13PskSignAuth = 1;
 
+inline std::ostream& operator<<(std::ostream& os, SSLProtocolVariant v) {
+  return os << ((v == ssl_variant_stream) ? "TLS" : "DTLS");
+}
+
 inline bool IsDtls(uint16_t version) { return (version & 0x8000) == 0x8000; }
 
 inline uint16_t NormalizeTlsVersion(uint16_t version) {
@@ -134,10 +137,6 @@ class TlsParser {
   DataBuffer buffer_;
   size_t offset_;
 };
-
-inline std::ostream& operator<<(std::ostream& os, SSLProtocolVariant v) {
-  return os << ((v == ssl_variant_stream) ? "TLS" : "DTLS");
-}
 
 }  // namespace nss_test
 

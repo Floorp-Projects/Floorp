@@ -233,6 +233,9 @@ SSL_GetPreliminaryChannelInfo(PRFileDesc *fd,
 #define F_NFIPS_NSTD 0, 0, 1, 0 /* i.e., trash */
 #define F_EXPORT 0, 1, 0, 0     /* i.e., trash */
 
+// RFC 5705
+#define MAX_CONTEXT_LEN PR_UINT16_MAX - 1
+
 static const SSLCipherSuiteInfo suiteInfo[] = {
     /* <------ Cipher suite --------------------> <auth> <KEA>  <bulk cipher> <MAC> <FIPS> */
     { 0, CS_(TLS_AES_128_GCM_SHA256), S_ANY, K_ANY, C_AESGCM, B_128, M_AEAD_128, F_FIPS_STD, A_ANY },
@@ -437,6 +440,11 @@ SSL_ExportKeyingMaterial(PRFileDesc *fd,
                               label, labelLen,
                               context, hasContext ? contextLen : 0,
                               out, outLen);
+    }
+
+    if (hasContext && contextLen > MAX_CONTEXT_LEN) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
     }
 
     /* construct PRF arguments */

@@ -227,7 +227,7 @@ TEST_P(TlsConnectTls13, TestTls13ZeroRttDowngrade) {
   client_->Set0RttEnabled(true);
 
   client_->ExpectSendAlert(kTlsAlertIllegalParameter);
-  if (mode_ == STREAM) {
+  if (variant_ == ssl_variant_stream) {
     server_->ExpectSendAlert(kTlsAlertUnexpectedMessage);
   }
   client_->Handshake();
@@ -237,7 +237,7 @@ TEST_P(TlsConnectTls13, TestTls13ZeroRttDowngrade) {
 
   // DTLS will timeout as we bump the epoch when installing the early app data
   // cipher suite. Thus the encrypted alert will be ignored.
-  if (mode_ == STREAM) {
+  if (variant_ == ssl_variant_stream) {
     // The client sends an encrypted alert message.
     ASSERT_TRUE_WAIT(
         (server_->error_code() == SSL_ERROR_RX_UNEXPECTED_APPLICATION_DATA),
@@ -269,7 +269,7 @@ TEST_P(TlsConnectTls13, TestTls13ZeroRttDowngradeEarlyData) {
   client_->Set0RttEnabled(true);
   ZeroRttSendReceive(true, false, [this]() {
     client_->ExpectSendAlert(kTlsAlertIllegalParameter);
-    if (mode_ == STREAM) {
+    if (variant_ == ssl_variant_stream) {
       server_->ExpectSendAlert(kTlsAlertUnexpectedMessage);
     }
     return true;
@@ -282,7 +282,7 @@ TEST_P(TlsConnectTls13, TestTls13ZeroRttDowngradeEarlyData) {
 
   // DTLS will timeout as we bump the epoch when installing the early app data
   // cipher suite. Thus the encrypted alert will be ignored.
-  if (mode_ == STREAM) {
+  if (variant_ == ssl_variant_stream) {
     // The server sends an alert when receiving the early app data record.
     ASSERT_TRUE_WAIT(
         (server_->error_code() == SSL_ERROR_RX_UNEXPECTED_APPLICATION_DATA),
@@ -316,7 +316,7 @@ TEST_P(TlsConnectTls13, SendTooMuchEarlyData) {
 
   PRInt32 sent;
   // Writing more than the limit will succeed in TLS, but fail in DTLS.
-  if (mode_ == STREAM) {
+  if (variant_ == ssl_variant_stream) {
     sent = PR_Write(client_->ssl_fd(), big_message,
                     static_cast<PRInt32>(strlen(big_message)));
   } else {
@@ -377,7 +377,7 @@ TEST_P(TlsConnectTls13, ReceiveTooMuchEarlyData) {
   const PRInt32 message_len = static_cast<PRInt32>(strlen(message));
   EXPECT_EQ(message_len, PR_Write(client_->ssl_fd(), message, message_len));
 
-  if (mode_ == STREAM) {
+  if (variant_ == ssl_variant_stream) {
     // This error isn't fatal for DTLS.
     ExpectAlert(server_, kTlsAlertUnexpectedMessage);
   }
@@ -388,13 +388,13 @@ TEST_P(TlsConnectTls13, ReceiveTooMuchEarlyData) {
   // Attempt to read early data.
   std::vector<uint8_t> buf(strlen(message) + 1);
   EXPECT_GT(0, PR_Read(server_->ssl_fd(), buf.data(), buf.capacity()));
-  if (mode_ == STREAM) {
+  if (variant_ == ssl_variant_stream) {
     server_->CheckErrorCode(SSL_ERROR_TOO_MUCH_EARLY_DATA);
   }
 
   client_->Handshake();  // Process the handshake.
   client_->Handshake();  // Process the alert.
-  if (mode_ == STREAM) {
+  if (variant_ == ssl_variant_stream) {
     client_->CheckErrorCode(SSL_ERROR_HANDSHAKE_UNEXPECTED_ALERT);
   }
 }

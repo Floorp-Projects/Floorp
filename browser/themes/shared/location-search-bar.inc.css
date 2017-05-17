@@ -14,9 +14,17 @@
   margin: 0 2px;
 }
 
-#urlbar:-moz-lwtheme:not(:hover):not([focused="true"]),
-.searchbar-textbox:-moz-lwtheme:not(:hover):not([focused="true"]) {
-  background-color: hsla(0, 100%, 100%, .8);
+#urlbar:-moz-lwtheme,
+.searchbar-textbox:-moz-lwtheme {
+  background-color: hsla(0,0%,100%,.8);
+  color: black;
+}
+
+#urlbar:-moz-lwtheme:hover,
+#urlbar:-moz-lwtheme[focused="true"],
+.searchbar-textbox:-moz-lwtheme:hover,
+.searchbar-textbox:-moz-lwtheme[focused="true"] {
+  background-color: white;
 }
 
 #urlbar:hover,

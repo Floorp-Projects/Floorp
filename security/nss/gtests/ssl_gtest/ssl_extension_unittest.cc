@@ -166,10 +166,8 @@ class TlsExtensionAppender : public TlsHandshakeFilter {
 
 class TlsExtensionTestBase : public TlsConnectTestBase {
  protected:
-  TlsExtensionTestBase(Mode mode, uint16_t version)
-      : TlsConnectTestBase(mode, version) {}
-  TlsExtensionTestBase(const std::string& mode, uint16_t version)
-      : TlsConnectTestBase(mode, version) {}
+  TlsExtensionTestBase(SSLProtocolVariant variant, uint16_t version)
+      : TlsConnectTestBase(variant, version) {}
 
   void ClientHelloErrorTest(std::shared_ptr<PacketFilter> filter,
                             uint8_t desc = kTlsAlertDecodeError) {
@@ -216,29 +214,31 @@ class TlsExtensionTestBase : public TlsConnectTestBase {
 class TlsExtensionTestDtls : public TlsExtensionTestBase,
                              public ::testing::WithParamInterface<uint16_t> {
  public:
-  TlsExtensionTestDtls() : TlsExtensionTestBase(DGRAM, GetParam()) {}
+  TlsExtensionTestDtls()
+      : TlsExtensionTestBase(ssl_variant_datagram, GetParam()) {}
 };
 
-class TlsExtensionTest12Plus
-    : public TlsExtensionTestBase,
-      public ::testing::WithParamInterface<std::tuple<std::string, uint16_t>> {
+class TlsExtensionTest12Plus : public TlsExtensionTestBase,
+                               public ::testing::WithParamInterface<
+                                   std::tuple<SSLProtocolVariant, uint16_t>> {
  public:
   TlsExtensionTest12Plus()
       : TlsExtensionTestBase(std::get<0>(GetParam()), std::get<1>(GetParam())) {
   }
 };
 
-class TlsExtensionTest12
-    : public TlsExtensionTestBase,
-      public ::testing::WithParamInterface<std::tuple<std::string, uint16_t>> {
+class TlsExtensionTest12 : public TlsExtensionTestBase,
+                           public ::testing::WithParamInterface<
+                               std::tuple<SSLProtocolVariant, uint16_t>> {
  public:
   TlsExtensionTest12()
       : TlsExtensionTestBase(std::get<0>(GetParam()), std::get<1>(GetParam())) {
   }
 };
 
-class TlsExtensionTest13 : public TlsExtensionTestBase,
-                           public ::testing::WithParamInterface<std::string> {
+class TlsExtensionTest13
+    : public TlsExtensionTestBase,
+      public ::testing::WithParamInterface<SSLProtocolVariant> {
  public:
   TlsExtensionTest13()
       : TlsExtensionTestBase(GetParam(), SSL_LIBRARY_VERSION_TLS_1_3) {}
@@ -266,21 +266,21 @@ class TlsExtensionTest13 : public TlsExtensionTestBase,
 class TlsExtensionTest13Stream : public TlsExtensionTestBase {
  public:
   TlsExtensionTest13Stream()
-      : TlsExtensionTestBase(STREAM, SSL_LIBRARY_VERSION_TLS_1_3) {}
+      : TlsExtensionTestBase(ssl_variant_stream, SSL_LIBRARY_VERSION_TLS_1_3) {}
 };
 
-class TlsExtensionTestGeneric
-    : public TlsExtensionTestBase,
-      public ::testing::WithParamInterface<std::tuple<std::string, uint16_t>> {
+class TlsExtensionTestGeneric : public TlsExtensionTestBase,
+                                public ::testing::WithParamInterface<
+                                    std::tuple<SSLProtocolVariant, uint16_t>> {
  public:
   TlsExtensionTestGeneric()
       : TlsExtensionTestBase(std::get<0>(GetParam()), std::get<1>(GetParam())) {
   }
 };
 
-class TlsExtensionTestPre13
-    : public TlsExtensionTestBase,
-      public ::testing::WithParamInterface<std::tuple<std::string, uint16_t>> {
+class TlsExtensionTestPre13 : public TlsExtensionTestBase,
+                              public ::testing::WithParamInterface<
+                                  std::tuple<SSLProtocolVariant, uint16_t>> {
  public:
   TlsExtensionTestPre13()
       : TlsExtensionTestBase(std::get<0>(GetParam()), std::get<1>(GetParam())) {
@@ -992,9 +992,9 @@ TEST_P(TlsExtensionTest13, OddVersionList) {
 
 // TODO: this only tests extensions in server messages.  The client can extend
 // Certificate messages, which is not checked here.
-class TlsBogusExtensionTest
-    : public TlsConnectTestBase,
-      public ::testing::WithParamInterface<std::tuple<std::string, uint16_t>> {
+class TlsBogusExtensionTest : public TlsConnectTestBase,
+                              public ::testing::WithParamInterface<
+                                  std::tuple<SSLProtocolVariant, uint16_t>> {
  public:
   TlsBogusExtensionTest()
       : TlsConnectTestBase(std::get<0>(GetParam()), std::get<1>(GetParam())) {}
@@ -1044,7 +1044,7 @@ class TlsBogusExtensionTest13 : public TlsBogusExtensionTest {
 
     client_->ExpectSendAlert(kTlsAlertUnsupportedExtension);
     client_->Handshake();
-    if (mode_ == STREAM) {
+    if (variant_ == ssl_variant_stream) {
       server_->ExpectSendAlert(kTlsAlertBadRecordMac);
     }
     server_->Handshake();
@@ -1139,40 +1139,43 @@ TEST_P(TlsConnectStream, IncludePadding) {
   EXPECT_TRUE(capture->captured());
 }
 
-INSTANTIATE_TEST_CASE_P(ExtensionStream, TlsExtensionTestGeneric,
-                        ::testing::Combine(TlsConnectTestBase::kTlsModesStream,
-                                           TlsConnectTestBase::kTlsVAll));
+INSTANTIATE_TEST_CASE_P(
+    ExtensionStream, TlsExtensionTestGeneric,
+    ::testing::Combine(TlsConnectTestBase::kTlsVariantsStream,
+                       TlsConnectTestBase::kTlsVAll));
 INSTANTIATE_TEST_CASE_P(
     ExtensionDatagram, TlsExtensionTestGeneric,
-    ::testing::Combine(TlsConnectTestBase::kTlsModesDatagram,
+    ::testing::Combine(TlsConnectTestBase::kTlsVariantsDatagram,
                        TlsConnectTestBase::kTlsV11Plus));
 INSTANTIATE_TEST_CASE_P(ExtensionDatagramOnly, TlsExtensionTestDtls,
                         TlsConnectTestBase::kTlsV11Plus);
 
 INSTANTIATE_TEST_CASE_P(ExtensionTls12Plus, TlsExtensionTest12Plus,
-                        ::testing::Combine(TlsConnectTestBase::kTlsModesAll,
+                        ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
                                            TlsConnectTestBase::kTlsV12Plus));
 
-INSTANTIATE_TEST_CASE_P(ExtensionPre13Stream, TlsExtensionTestPre13,
-                        ::testing::Combine(TlsConnectTestBase::kTlsModesStream,
-                                           TlsConnectTestBase::kTlsV10ToV12));
+INSTANTIATE_TEST_CASE_P(
+    ExtensionPre13Stream, TlsExtensionTestPre13,
+    ::testing::Combine(TlsConnectTestBase::kTlsVariantsStream,
+                       TlsConnectTestBase::kTlsV10ToV12));
 INSTANTIATE_TEST_CASE_P(ExtensionPre13Datagram, TlsExtensionTestPre13,
-                        ::testing::Combine(TlsConnectTestBase::kTlsModesAll,
+                        ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
                                            TlsConnectTestBase::kTlsV11V12));
 
 INSTANTIATE_TEST_CASE_P(ExtensionTls13, TlsExtensionTest13,
-                        TlsConnectTestBase::kTlsModesAll);
+                        TlsConnectTestBase::kTlsVariantsAll);
 
-INSTANTIATE_TEST_CASE_P(BogusExtensionStream, TlsBogusExtensionTestPre13,
-                        ::testing::Combine(TlsConnectTestBase::kTlsModesStream,
-                                           TlsConnectTestBase::kTlsV10ToV12));
+INSTANTIATE_TEST_CASE_P(
+    BogusExtensionStream, TlsBogusExtensionTestPre13,
+    ::testing::Combine(TlsConnectTestBase::kTlsVariantsStream,
+                       TlsConnectTestBase::kTlsV10ToV12));
 INSTANTIATE_TEST_CASE_P(
     BogusExtensionDatagram, TlsBogusExtensionTestPre13,
-    ::testing::Combine(TlsConnectTestBase::kTlsModesDatagram,
+    ::testing::Combine(TlsConnectTestBase::kTlsVariantsDatagram,
                        TlsConnectTestBase::kTlsV11V12));
 
 INSTANTIATE_TEST_CASE_P(BogusExtension13, TlsBogusExtensionTest13,
-                        ::testing::Combine(TlsConnectTestBase::kTlsModesAll,
+                        ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
                                            TlsConnectTestBase::kTlsV13));
 
 }  // namespace nss_test
