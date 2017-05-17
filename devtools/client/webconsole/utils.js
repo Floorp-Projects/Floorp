@@ -8,7 +8,6 @@
 
 const {Cc, Ci} = require("chrome");
 const Services = require("Services");
-const {LocalizationHelper} = require("devtools/shared/l10n");
 
 // Match the function name from the result of toString() or toSource().
 //
@@ -285,65 +284,3 @@ var WebConsoleUtils = {
 
 exports.Utils = WebConsoleUtils;
 
-// Localization
-
-WebConsoleUtils.L10n = function (bundleURI) {
-  this._helper = new LocalizationHelper(bundleURI);
-};
-
-WebConsoleUtils.L10n.prototype = {
-  /**
-   * Generates a formatted timestamp string for displaying in console messages.
-   *
-   * @param integer [milliseconds]
-   *        Optional, allows you to specify the timestamp in milliseconds since
-   *        the UNIX epoch.
-   * @return string
-   *         The timestamp formatted for display.
-   */
-  timestampString: function (milliseconds) {
-    let d = new Date(milliseconds ? milliseconds : null);
-    let hours = d.getHours(), minutes = d.getMinutes();
-    let seconds = d.getSeconds();
-    milliseconds = d.getMilliseconds();
-    let parameters = [hours, minutes, seconds, milliseconds];
-    return this.getFormatStr("timestampFormat", parameters);
-  },
-
-  /**
-   * Retrieve a localized string.
-   *
-   * @param string name
-   *        The string name you want from the Web Console string bundle.
-   * @return string
-   *         The localized string.
-   */
-  getStr: function (name) {
-    try {
-      return this._helper.getStr(name);
-    } catch (ex) {
-      console.error("Failed to get string: " + name);
-      throw ex;
-    }
-  },
-
-  /**
-   * Retrieve a localized string formatted with values coming from the given
-   * array.
-   *
-   * @param string name
-   *        The string name you want from the Web Console string bundle.
-   * @param array array
-   *        The array of values you want in the formatted string.
-   * @return string
-   *         The formatted local string.
-   */
-  getFormatStr: function (name, array) {
-    try {
-      return this._helper.getFormatStr(name, ...array);
-    } catch (ex) {
-      console.error("Failed to format string: " + name);
-      throw ex;
-    }
-  },
-};

@@ -10,8 +10,7 @@ const {Utils: WebConsoleUtils} = require("devtools/client/webconsole/utils");
 const defer = require("devtools/shared/defer");
 const Services = require("Services");
 
-const STRINGS_URI = "devtools/client/locales/webconsole.properties";
-var l10n = new WebConsoleUtils.L10n(STRINGS_URI);
+const l10n = require("devtools/client/webconsole/webconsole-l10n");
 
 const PREF_CONNECTION_TIMEOUT = "devtools.debugger.remote-timeout";
 // Web Console connection proxy

@@ -49,6 +49,7 @@ webpackConfig.resolve = {
     "devtools/client/webconsole/utils": path.join(__dirname, "new-console-output/test/fixtures/WebConsoleUtils"),
     "devtools/client/webconsole/new-console-output": path.join(__dirname, "new-console-output"),
     "devtools/client/webconsole/webconsole-connection-proxy": path.join(__dirname, "webconsole-connection-proxy"),
+    "devtools/client/webconsole/webconsole-l10n": path.join(__dirname, "webconsole-l10n"),
 
     "react": path.join(__dirname, "node_modules/react"),
     "devtools/client/shared/vendor/immutable": "immutable",
