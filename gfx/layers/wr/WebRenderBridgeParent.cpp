@@ -863,26 +863,26 @@ WebRenderBridgeParent::Resume()
 void
 WebRenderBridgeParent::ClearResources()
 {
-  if (mApi) {
-    ++mWrEpoch; // Update webrender epoch
-    mApi->ClearRootDisplayList(wr::NewEpoch(mWrEpoch), mPipelineId);
-    for (auto iter = mActiveKeys.Iter(); !iter.Done(); iter.Next()) {
-      mKeysToDelete.push_back(iter.Data());
-      iter.Remove();
-    }
-    if (!mKeysToDelete.empty()) {
-      // XXX Sync wait.
-      mApi->WaitFlushed();
-      DeleteOldImages();
-    }
+  if (!mApi) {
+    return;
   }
+
+  ++mWrEpoch; // Update webrender epoch
+  mApi->ClearRootDisplayList(wr::NewEpoch(mWrEpoch), mPipelineId);
+  // Schedule composition to clean up Pipeline
+  mCompositorScheduler->ScheduleComposition();
+  for (auto iter = mActiveKeys.Iter(); !iter.Done(); iter.Next()) {
+    mKeysToDelete.push_back(iter.Data());
+    iter.Remove();
+  }
+  DeleteOldImages();
   for (auto iter = mExternalImageIds.Iter(); !iter.Done(); iter.Next()) {
     iter.Data()->SetWrBridge(nullptr);
   }
   mExternalImageIds.Clear();
-  mCompositableHolder->RemovePipeline(mPipelineId);
+  mCompositableHolder->RemovePipeline(mPipelineId, wr::NewEpoch(mWrEpoch));
 
-  if (mWidget && mCompositorScheduler) {
+  if (mWidget) {
     mCompositorScheduler->Destroy();
   }
   mCompositorScheduler = nullptr;

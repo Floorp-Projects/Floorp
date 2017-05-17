@@ -9,6 +9,7 @@
 #include <queue>
 
 #include "mozilla/layers/TextureHost.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "nsClassHashtable.h"
 
@@ -35,7 +36,7 @@ protected:
 
 public:
   void AddPipeline(const wr::PipelineId& aPipelineId);
-  void RemovePipeline(const wr::PipelineId& aPipelineId);
+  void RemovePipeline(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch);
   void HoldExternalImage(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch, WebRenderTextureHost* aTexture);
   void Update(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch);
 
@@ -61,9 +62,9 @@ public:
 
   uint32_t GetNextResourceId() { return ++mResourceId; }
   uint32_t GetNamespace() { return mIdNamespace; }
-  WrImageKey GetImageKey()
+  wr::ImageKey GetImageKey()
   {
-    WrImageKey key;
+    wr::ImageKey key;
     key.mNamespace = GetNamespace();
     key.mHandle = GetNextResourceId();
     return key;
@@ -83,6 +84,7 @@ private:
   struct PipelineTexturesHolder {
     // Holds forwarding WebRenderTextureHosts.
     std::queue<ForwardingTextureHost> mTextureHosts;
+    Maybe<wr::Epoch> mDestroyedEpoch;
   };
 
   uint32_t mIdNamespace;
