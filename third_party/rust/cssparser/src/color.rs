@@ -143,7 +143,9 @@ impl Color {
     /// FIXME(#2) Deprecated CSS2 System Colors are not supported yet.
     pub fn parse(input: &mut Parser) -> Result<Color, ()> {
         match try!(input.next()) {
-            Token::Hash(value) | Token::IDHash(value) => parse_color_hash(&*value),
+            Token::Hash(value) | Token::IDHash(value) => {
+                Color::parse_hash(value.as_bytes())
+            },
             Token::Ident(value) => parse_color_keyword(&*value),
             Token::Function(name) => {
                 input.parse_nested_block(|arguments| {
@@ -153,6 +155,37 @@ impl Color {
             _ => Err(())
         }
     }
+
+    /// Parse a color hash, without the leading '#' character.
+    #[inline]
+    pub fn parse_hash(value: &[u8]) -> Result<Self, ()> {
+        match value.len() {
+            8 => rgba(
+                try!(from_hex(value[0])) * 16 + try!(from_hex(value[1])),
+                try!(from_hex(value[2])) * 16 + try!(from_hex(value[3])),
+                try!(from_hex(value[4])) * 16 + try!(from_hex(value[5])),
+                try!(from_hex(value[6])) * 16 + try!(from_hex(value[7])),
+            ),
+            6 => rgb(
+                try!(from_hex(value[0])) * 16 + try!(from_hex(value[1])),
+                try!(from_hex(value[2])) * 16 + try!(from_hex(value[3])),
+                try!(from_hex(value[4])) * 16 + try!(from_hex(value[5])),
+            ),
+            4 => rgba(
+                try!(from_hex(value[0])) * 17,
+                try!(from_hex(value[1])) * 17,
+                try!(from_hex(value[2])) * 17,
+                try!(from_hex(value[3])) * 17,
+            ),
+            3 => rgb(
+                try!(from_hex(value[0])) * 17,
+                try!(from_hex(value[1])) * 17,
+                try!(from_hex(value[2])) * 17,
+            ),
+            _ => Err(())
+        }
+    }
+
 }
 
 
@@ -350,37 +383,6 @@ fn from_hex(c: u8) -> Result<u8, ()> {
         b'0' ... b'9' => Ok(c - b'0'),
         b'a' ... b'f' => Ok(c - b'a' + 10),
         b'A' ... b'F' => Ok(c - b'A' + 10),
-        _ => Err(())
-    }
-}
-
-
-#[inline]
-fn parse_color_hash(value: &str) -> Result<Color, ()> {
-    let value = value.as_bytes();
-    match value.len() {
-        8 => rgba(
-            try!(from_hex(value[0])) * 16 + try!(from_hex(value[1])),
-            try!(from_hex(value[2])) * 16 + try!(from_hex(value[3])),
-            try!(from_hex(value[4])) * 16 + try!(from_hex(value[5])),
-            try!(from_hex(value[6])) * 16 + try!(from_hex(value[7])),
-        ),
-        6 => rgb(
-            try!(from_hex(value[0])) * 16 + try!(from_hex(value[1])),
-            try!(from_hex(value[2])) * 16 + try!(from_hex(value[3])),
-            try!(from_hex(value[4])) * 16 + try!(from_hex(value[5])),
-        ),
-        4 => rgba(
-            try!(from_hex(value[0])) * 17,
-            try!(from_hex(value[1])) * 17,
-            try!(from_hex(value[2])) * 17,
-            try!(from_hex(value[3])) * 17,
-        ),
-        3 => rgb(
-            try!(from_hex(value[0])) * 17,
-            try!(from_hex(value[1])) * 17,
-            try!(from_hex(value[2])) * 17,
-        ),
         _ => Err(())
     }
 }

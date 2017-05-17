@@ -409,8 +409,7 @@ class BaseWindow(BaseLib):
             if kwargs[modifier] is True:
                 keys.append(keymap[modifier])
 
-        # Bug 1125209 - Only lower-case command keys should be sent
-        keys.append(command_key.lower())
+        keys.append(command_key)
 
         self.switch_to()
 

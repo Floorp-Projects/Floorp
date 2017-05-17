@@ -202,6 +202,8 @@
   skin/classic/browser/menu-icons/addons.svg                   (../shared/menu-icons/addons.svg)
   skin/classic/browser/menu-icons/check.svg                    (../shared/menu-icons/check.svg)
   skin/classic/browser/menu-icons/customize.svg                (../shared/menu-icons/customize.svg)
+  skin/classic/browser/menu-icons/find.svg                     (../shared/menu-icons/find.svg)
+  skin/classic/browser/menu-icons/help.svg                     (../shared/menu-icons/help.svg)
   skin/classic/browser/menu-icons/library.svg                  (../shared/menu-icons/library.svg)
   skin/classic/browser/menu-icons/new-window.svg               (../shared/menu-icons/new-window.svg)
   skin/classic/browser/menu-icons/print.svg                    (../shared/menu-icons/print.svg)
