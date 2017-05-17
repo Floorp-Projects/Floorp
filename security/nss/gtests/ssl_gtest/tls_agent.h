@@ -74,7 +74,7 @@ class TlsAgent : public PollTarget {
   static const std::string kServerEcdhRsa;
   static const std::string kServerDsa;
 
-  TlsAgent(const std::string& name, Role role, Mode mode);
+  TlsAgent(const std::string& name, Role role, SSLProtocolVariant variant);
   virtual ~TlsAgent();
 
   void SetPeer(std::shared_ptr<TlsAgent>& peer) {
@@ -358,7 +358,7 @@ class TlsAgent : public PollTarget {
   void Connected();
 
   const std::string name_;
-  Mode mode_;
+  SSLProtocolVariant variant_;
   Role role_;
   uint16_t server_key_bits_;
   std::shared_ptr<DummyPrSocket> adapter_;
@@ -401,12 +401,13 @@ class TlsAgentTestBase : public ::testing::Test {
  public:
   static ::testing::internal::ParamGenerator<std::string> kTlsRolesAll;
 
-  TlsAgentTestBase(TlsAgent::Role role, Mode mode, uint16_t version = 0)
+  TlsAgentTestBase(TlsAgent::Role role, SSLProtocolVariant variant,
+                   uint16_t version = 0)
       : agent_(nullptr),
         role_(role),
-        mode_(mode),
+        variant_(variant),
         version_(version),
-        sink_adapter_(new DummyPrSocket("sink", mode)) {}
+        sink_adapter_(new DummyPrSocket("sink", variant)) {}
   virtual ~TlsAgentTestBase() {}
 
   void SetUp();
@@ -414,9 +415,9 @@ class TlsAgentTestBase : public ::testing::Test {
 
   void ExpectAlert(uint8_t alert);
 
-  static void MakeRecord(Mode mode, uint8_t type, uint16_t version,
-                         const uint8_t* buf, size_t len, DataBuffer* out,
-                         uint64_t seq_num = 0);
+  static void MakeRecord(SSLProtocolVariant variant, uint8_t type,
+                         uint16_t version, const uint8_t* buf, size_t len,
+                         DataBuffer* out, uint64_t seq_num = 0);
   void MakeRecord(uint8_t type, uint16_t version, const uint8_t* buf,
                   size_t len, DataBuffer* out, uint64_t seq_num = 0) const;
   void MakeHandshakeMessage(uint8_t hs_type, const uint8_t* data, size_t hs_len,
@@ -431,10 +432,6 @@ class TlsAgentTestBase : public ::testing::Test {
     return str == "CLIENT" ? TlsAgent::CLIENT : TlsAgent::SERVER;
   }
 
-  static inline Mode ToMode(const std::string& str) {
-    return str == "TLS" ? STREAM : DGRAM;
-  }
-
   void Init(const std::string& server_name = TlsAgent::kServerRsa);
   void Reset(const std::string& server_name = TlsAgent::kServerRsa);
 
@@ -445,28 +442,28 @@ class TlsAgentTestBase : public ::testing::Test {
 
   std::unique_ptr<TlsAgent> agent_;
   TlsAgent::Role role_;
-  Mode mode_;
+  SSLProtocolVariant variant_;
   uint16_t version_;
   // This adapter is here just to accept packets from this agent.
   std::shared_ptr<DummyPrSocket> sink_adapter_;
 };
 
-class TlsAgentTest : public TlsAgentTestBase,
-                     public ::testing::WithParamInterface<
-                         std::tuple<std::string, std::string, uint16_t>> {
+class TlsAgentTest
+    : public TlsAgentTestBase,
+      public ::testing::WithParamInterface<
+          std::tuple<std::string, SSLProtocolVariant, uint16_t>> {
  public:
   TlsAgentTest()
       : TlsAgentTestBase(ToRole(std::get<0>(GetParam())),
-                         ToMode(std::get<1>(GetParam())),
-                         std::get<2>(GetParam())) {}
+                         std::get<1>(GetParam()), std::get<2>(GetParam())) {}
 };
 
-class TlsAgentTestClient
-    : public TlsAgentTestBase,
-      public ::testing::WithParamInterface<std::tuple<std::string, uint16_t>> {
+class TlsAgentTestClient : public TlsAgentTestBase,
+                           public ::testing::WithParamInterface<
+                               std::tuple<SSLProtocolVariant, uint16_t>> {
  public:
   TlsAgentTestClient()
-      : TlsAgentTestBase(TlsAgent::CLIENT, ToMode(std::get<0>(GetParam())),
+      : TlsAgentTestBase(TlsAgent::CLIENT, std::get<0>(GetParam()),
                          std::get<1>(GetParam())) {}
 };
 
@@ -474,17 +471,20 @@ class TlsAgentTestClient13 : public TlsAgentTestClient {};
 
 class TlsAgentStreamTestClient : public TlsAgentTestBase {
  public:
-  TlsAgentStreamTestClient() : TlsAgentTestBase(TlsAgent::CLIENT, STREAM) {}
+  TlsAgentStreamTestClient()
+      : TlsAgentTestBase(TlsAgent::CLIENT, ssl_variant_stream) {}
 };
 
 class TlsAgentStreamTestServer : public TlsAgentTestBase {
  public:
-  TlsAgentStreamTestServer() : TlsAgentTestBase(TlsAgent::SERVER, STREAM) {}
+  TlsAgentStreamTestServer()
+      : TlsAgentTestBase(TlsAgent::SERVER, ssl_variant_stream) {}
 };
 
 class TlsAgentDgramTestClient : public TlsAgentTestBase {
  public:
-  TlsAgentDgramTestClient() : TlsAgentTestBase(TlsAgent::CLIENT, DGRAM) {}
+  TlsAgentDgramTestClient()
+      : TlsAgentTestBase(TlsAgent::CLIENT, ssl_variant_datagram) {}
 };
 
 inline bool operator==(const SSLVersionRange& vr1, const SSLVersionRange& vr2) {

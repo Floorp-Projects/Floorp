@@ -370,6 +370,13 @@ sec_pkcs5v2_key_length(SECAlgorithmID *algid, SECAlgorithmID *cipherAlgId)
         length = sec_pkcs5v2_aes_key_length(cipherAlg);
     } else if (p5_param.keyLength.data != NULL) {
         length = DER_GetInteger(&p5_param.keyLength);
+    } else {
+        CK_MECHANISM_TYPE cipherMech;
+        cipherMech = PK11_AlgtagToMechanism(cipherAlg);
+        if (cipherMech == CKM_INVALID_MECHANISM) {
+            goto loser;
+        }
+        length = PK11_GetMaxKeyLength(cipherMech);
     }
 
 loser:

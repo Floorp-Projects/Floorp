@@ -546,6 +546,7 @@ private:
     mozilla::TimeStamp                mOnStartRequestTimestamp;
     // Timestamp of the time the cnannel was suspended.
     mozilla::TimeStamp                mSuspendTimestamp;
+    mozilla::TimeStamp                mOnCacheEntryCheckTimestamp;
     // Total time the channel spent suspended. This value is reported to
     // telemetry in nsHttpChannel::OnStartRequest().
     uint32_t                          mSuspendTotalTime;

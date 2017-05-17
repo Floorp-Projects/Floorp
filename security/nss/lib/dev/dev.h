@@ -312,6 +312,15 @@ NSS_EXTERN PRBool
 nssToken_NeedsPINInitialization(
     NSSToken *token);
 
+NSS_EXTERN nssCryptokiObject **
+nssToken_FindObjectsByTemplate(
+    NSSToken *token,
+    nssSession *sessionOpt,
+    CK_ATTRIBUTE_PTR obj_template,
+    CK_ULONG otsize,
+    PRUint32 maximumOpt,
+    PRStatus *statusOpt);
+
 NSS_EXTERN nssCryptokiObject *
 nssToken_ImportCertificate(
     NSSToken *tok,

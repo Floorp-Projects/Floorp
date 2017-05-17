@@ -14,6 +14,7 @@
 #include "pki3hack.h"
 #include "pk11pub.h"
 #include "nssrwlk.h"
+#include "pk11priv.h"
 
 #define NSSTRUSTDOMAIN_DEFAULT_CACHE_SIZE 32
 
@@ -234,6 +235,37 @@ NSSTrustDomain_FindSlotByName(
     return NULL;
 }
 
+NSS_IMPLEMENT NSSToken **
+NSSTrustDomain_FindTokensByURI(
+    NSSTrustDomain *td,
+    PK11URI *uri)
+{
+    NSSToken *tok = NULL;
+    PK11SlotInfo *slotinfo;
+    NSSToken **tokens;
+    int count, i = 0;
+
+    NSSRWLock_LockRead(td->tokensLock);
+    count = nssList_Count(td->tokenList);
+    tokens = nss_ZNEWARRAY(NULL, NSSToken *, count + 1);
+    if (!tokens) {
+        return NULL;
+    }
+    for (tok = (NSSToken *)nssListIterator_Start(td->tokens);
+         tok != (NSSToken *)NULL;
+         tok = (NSSToken *)nssListIterator_Next(td->tokens)) {
+        if (nssToken_IsPresent(tok)) {
+            slotinfo = tok->pk11slot;
+            if (pk11_MatchUriTokenInfo(slotinfo, uri))
+                tokens[i++] = nssToken_AddRef(tok);
+        }
+    }
+    tokens[i] = NULL;
+    nssListIterator_Finish(td->tokens);
+    NSSRWLock_UnlockRead(td->tokensLock);
+    return tokens;
+}
+
 NSS_IMPLEMENT NSSToken *
 NSSTrustDomain_FindTokenByName(
     NSSTrustDomain *td,
@@ -248,8 +280,10 @@ NSSTrustDomain_FindTokenByName(
          tok = (NSSToken *)nssListIterator_Next(td->tokens)) {
         if (nssToken_IsPresent(tok)) {
             myName = nssToken_GetName(tok);
-            if (nssUTF8_Equal(tokenName, myName, &nssrv))
+            if (nssUTF8_Equal(tokenName, myName, &nssrv)) {
+                tok = nssToken_AddRef(tok);
                 break;
+            }
         }
     }
     nssListIterator_Finish(td->tokens);

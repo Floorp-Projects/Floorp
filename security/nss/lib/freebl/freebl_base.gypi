@@ -106,7 +106,7 @@
         'advapi32.lib',
       ],
       'conditions': [
-        [ 'target_arch=="x64"', {
+        [ 'cc_use_gnu_ld!=1 and target_arch=="x64"', {
           'sources': [
             'arcfour-amd64-masm.asm',
             'mpi/mpi_amd64.c',
@@ -115,7 +115,8 @@
             'intel-aes-x64-masm.asm',
             'intel-gcm-x64-masm.asm',
           ],
-        }, {
+        }],
+	      [ 'cc_use_gnu_ld!=1 and target_arch!="x64"', {
           # not x64
           'sources': [
             'mpi/mpi_x86_asm.c',
