@@ -123,13 +123,13 @@ class DependsFunction(object):
             other = self.sandbox._depends.get(other)
         assert isinstance(other, DependsFunction)
         assert self.sandbox is other.sandbox
-        return CombinedDependsFunction(self.sandbox, self.first_true,
+        return CombinedDependsFunction(self.sandbox, self.or_impl,
                                        (self, other))
 
     @staticmethod
-    def first_true(iterable):
-        # Like the builtin any(), but returns the first element that is true,
-        # instead of True. If none are true, returns the last element.
+    def or_impl(iterable):
+        # Applies "or" to all the items of iterable.
+        # e.g. if iterable contains a, b and c, returns `a or b or c`.
         for i in iterable:
             if i:
                 return i
