@@ -610,12 +610,12 @@ html|input.urlbar-input[textoverflow]:not([focused]) {
   transition: height 100ms;
 }
 
-#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"] {
+#PopupAutoCompleteRichResult > hbox[anonid="search-suggestions-notification"] {
   visibility: collapse;
   transition: margin-top 100ms;
 }
 
-#PopupAutoCompleteRichResult.showSearchSuggestionsNotification > deck[anonid="search-suggestions-notification"] {
+#PopupAutoCompleteRichResult.showSearchSuggestionsNotification > hbox[anonid="search-suggestions-notification"] {
   visibility: visible;
 }
 

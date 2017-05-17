@@ -25,12 +25,11 @@ add_task(async function searchSuggestions() {
   let oldCurrentEngine = Services.search.currentEngine;
   Services.search.currentEngine = engine;
   Services.prefs.setBoolPref(SUGGEST_ALL_PREF, true);
-  let suggestionsEnabled = Services.prefs.getBoolPref(SUGGEST_URLBAR_PREF);
   Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, true);
   registerCleanupFunction(function() {
     Services.search.currentEngine = oldCurrentEngine;
     Services.prefs.clearUserPref(SUGGEST_ALL_PREF);
-    Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, suggestionsEnabled);
+    Services.prefs.clearUserPref(SUGGEST_URLBAR_PREF);
   });
 
   await promiseAutocompleteResultPopup("foo");

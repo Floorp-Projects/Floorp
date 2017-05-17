@@ -320,11 +320,10 @@ pref("browser.urlbar.suggest.bookmark",             true);
 pref("browser.urlbar.suggest.openpage",             true);
 pref("browser.urlbar.suggest.searches",             false);
 pref("browser.urlbar.userMadeSearchSuggestionsChoice", false);
-// The suggestion opt-in notification will be shown on 4 different days.
+// 4 here means the suggestion notification will be automatically
+// hidden the 4th day, so it will actually be shown on 3 different days.
 pref("browser.urlbar.daysBeforeHidingSuggestionsPrompt", 4);
 pref("browser.urlbar.lastSuggestionsPromptDate", 20160601);
-// The suggestion opt-out hint will be hidden after being shown 4 times.
-pref("browser.urlbar.timesBeforeHidingSuggestionsHint", 4);
 
 // Limit the number of characters sent to the current search engine to fetch
 // suggestions.
