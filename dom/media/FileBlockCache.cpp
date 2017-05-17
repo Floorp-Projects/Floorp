@@ -43,7 +43,7 @@ FileBlockCache::SetCacheFile(PRFileDesc* aFD)
     }
     mInitialized = true;
     if (mIsWriteScheduled) {
-      // A write was scheduled while waiting for FD. We need to dispatch a
+      // A write was scheduled while waiting for FD. We need to run/dispatch a
       // task to service the request.
       mThread->Dispatch(this, NS_DISPATCH_NORMAL);
     }
@@ -66,10 +66,16 @@ FileBlockCache::Init()
   mIsOpen = true;
 
   if (XRE_IsParentProcess()) {
-    rv = NS_OpenAnonymousTemporaryFile(&mFD);
-    if (NS_SUCCEEDED(rv)) {
-      mInitialized = true;
-    }
+    RefPtr<FileBlockCache> self = this;
+    rv = mThread->Dispatch(NS_NewRunnableFunction([self] {
+      PRFileDesc* fd = nullptr;
+      nsresult rv = NS_OpenAnonymousTemporaryFile(&fd);
+      if (NS_SUCCEEDED(rv)) {
+        self->SetCacheFile(fd);
+      } else {
+        self->Close();
+      }
+    }), NS_DISPATCH_NORMAL);
   } else {
     // We must request a temporary file descriptor from the parent process.
     RefPtr<FileBlockCache> self = this;
