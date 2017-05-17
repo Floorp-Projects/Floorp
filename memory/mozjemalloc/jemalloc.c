@@ -341,6 +341,10 @@ void *_mmap(void *addr, size_t length, int prot, int flags,
 	} args = { addr, length, prot, flags, fd, offset };
 	return (void *) syscall(SYS_mmap, &args);
 #else
+#if defined(MOZ_MEMORY_ANDROID) && defined(__aarch64__) && defined(SYS_mmap2)
+/* Android NDK defines SYS_mmap2 for AArch64 despite it not supporting mmap2 */
+#undef SYS_mmap2
+#endif
 #ifdef SYS_mmap2
 	return (void *) syscall(SYS_mmap2, addr, length, prot, flags,
 	                       fd, offset >> 12);
