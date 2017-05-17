@@ -39,28 +39,23 @@ function() {
   testMakeCredential();
 
   function checkCredentialValid(aCredInfo) {
-    /* ScopedCredentialInfo
-    - Credential
-    -- ID: Key Handle buffer pulled from U2F Register() Response
-    -- Type: "ScopedCred"
-    - WebAuthnAttestation
-    -- Format: "u2f"
-    -- ClientData: serialized JSON
-    -- AuthenticatorData: RP ID Hash || U2F Sign() Response
-    -- Attestation: U2F Register() Response */
+    /* PublicKeyCredential : Credential
+       - rawId: Key Handle buffer pulled from U2F Register() Response
+       - response : AuthenticatorAttestationResponse : AuthenticatorResponse
+         - attestationObject: RP ID Hash || U2F Sign() Response
+         - clientDataJSON: serialized JSON
+       - clientExtensionResults: (not yet supported)
+    */
 
-    is(aCredInfo.credential.type, "ScopedCred", "Type is correct");
-    ok(aCredInfo.credential.id.length > 0, "Key ID exists");
+    ok(aCredInfo.rawId.length > 0, "Key ID exists");
 
-    is(aCredInfo.attestation.format, "u2f", "Format is correct");
-    is(aCredInfo.attestation.attestation[0], 0x05, "Reserved byte is correct");
-    ok(aCredInfo.attestation.authenticatorData.length > 0, "Authenticator data exists");
-    let clientData = JSON.parse(buffer2string(aCredInfo.attestation.clientData));
+    is(aCredInfo.response.attestationObject[0], 0x05, "Reserved byte is correct");
+    let clientData = JSON.parse(buffer2string(aCredInfo.response.clientDataJSON));
     is(clientData.challenge, bytesToBase64UrlSafe(gCredentialChallenge), "Challenge is correct");
     is(clientData.origin, window.location.origin, "Origin is correct");
     is(clientData.hashAlg, "S256", "Hash algorithm is correct");
 
-    return decodeU2FRegistration(aCredInfo.attestation.attestation)
+    return decodeU2FRegistration(aCredInfo.response.attestationObject)
     .then(function(u2fObj) {
       aCredInfo.u2fReg = u2fObj;
       return aCredInfo;
@@ -125,7 +120,9 @@ function() {
     let acct = {rpDisplayName: "none", displayName: "none", id: "none"};
     let param = {type: "ScopedCred", algorithm: "p-256"};
     let options = {rpId: document.origin,
-                   excludeList: [aCredInfo.credential]};
+                   excludeList: [{type: "ScopedCred",
+                                  id: Uint8Array.from(aCredInfo.rawId),
+                                  transports: ["usb"]}]};
 
     authn.makeCredential(acct, [param], gCredentialChallenge, options)
     .then(function() {
@@ -134,20 +131,20 @@ function() {
       SimpleTest.finish();
     })
     .catch(function(aReason) {
-      ok(aReason.toString().startsWith("NotAllowedError"), "Expect NotAllowedError, got" + aReason);
+      ok(aReason.toString().startsWith("NotAllowedError"), "Expect NotAllowedError, got " + aReason);
       testAssertion(aCredInfo);
     });
   }
 
   function testAssertion(aCredInfo) {
     let newCredential = {
-      type: aCredInfo.credential.type,
-      id: Uint8Array.from(aCredInfo.credential.id),
-      transports: [ "usb" ],
+      type: "ScopedCred",
+      id: Uint8Array.from(aCredInfo.rawId),
+      transports: ["usb"],
     }
 
     let assertOptions = {rpId: document.origin, timeoutSeconds: 5,
-                         allowList: [ newCredential ]};
+                         allowList: [newCredential]};
     authn.getAssertion(gAssertionChallenge, assertOptions)
     .then(function(aAssertion) {
       /* Pass along the pubKey. */
