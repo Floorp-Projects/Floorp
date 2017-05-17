@@ -31,6 +31,7 @@ abstract class MediaPlaybackTest extends BaseTest {
     private JavascriptBridge mJs;
 
     private static final int UI_CHANGED_WAIT_MS = 6000;
+    private static final int MEDIA_PLAYBACK_CHANGED_WAIT_MS = 15000;
 
     protected final void info(String msg) {
         mAsserter.dumpLog(msg);
@@ -118,7 +119,7 @@ abstract class MediaPlaybackTest extends BaseTest {
             public boolean isSatisfied() {
                 return tab.isAudioPlaying() == isTabPlaying;
             }
-        }, MAX_WAIT_MS);
+        }, MEDIA_PLAYBACK_CHANGED_WAIT_MS);
     }
 
     private final void waitUntilTabMediaPlaybackChanged(final Tab tab,
@@ -131,7 +132,7 @@ abstract class MediaPlaybackTest extends BaseTest {
             public boolean isSatisfied() {
                 return tab.isMediaPlaying() == isTabPlaying;
             }
-        }, MAX_WAIT_MS);
+        }, MEDIA_PLAYBACK_CHANGED_WAIT_MS);
     }
 
     /**
