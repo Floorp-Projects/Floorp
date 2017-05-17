@@ -837,7 +837,21 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
               mouseInput.mLocalOrigin, thumbData);
           // ConvertScrollbarPoint() got the drag start offset relative to
           // the scroll track. Now get it relative to the thumb.
-          dragStart -= thumbData.mThumbStart;
+          // ScrollThumbData::mThumbStart stores the offset of the thumb
+          // relative to the scroll track at the time of the last paint.
+          // Since that paint, the thumb may have acquired an async transform
+          // due to async scrolling, so look that up and apply it.
+          LayerToParentLayerMatrix4x4 thumbTransform;
+          {
+            MutexAutoLock lock(mTreeLock);
+            thumbTransform = ComputeTransformForNode(hitScrollbarNode);
+          }
+          // Only consider the translation, since we do not support both
+          // zooming and scrollbar dragging on any platform.
+          CSSCoord thumbStart = thumbData.mThumbStart
+                              + ((thumbData.mDirection == ScrollDirection::HORIZONTAL)
+                                 ? thumbTransform._41 : thumbTransform._42);
+          dragStart -= thumbStart;
           mInputQueue->ConfirmDragBlock(
               dragBlockId, apzc,
               AsyncDragMetrics(apzc->GetGuid().mScrollId,
