@@ -64,7 +64,7 @@ nsLeafFrame::Reflow(nsPresContext* aPresContext,
 
   DoReflow(aPresContext, aMetrics, aReflowInput, aStatus);
 
-  FinishAndStoreOverflow(&aMetrics);
+  FinishAndStoreOverflow(&aMetrics, aReflowInput.mStyleDisplay);
 }
 
 void
@@ -111,5 +111,5 @@ nsLeafFrame::SizeToAvailSize(const ReflowInput& aReflowInput,
                    aReflowInput.AvailableBSize());
   aDesiredSize.SetSize(wm, size);
   aDesiredSize.SetOverflowAreasToDesiredBounds();
-  FinishAndStoreOverflow(&aDesiredSize);  
+  FinishAndStoreOverflow(&aDesiredSize, aReflowInput.mStyleDisplay);
 }
