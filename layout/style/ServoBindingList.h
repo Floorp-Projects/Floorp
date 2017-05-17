@@ -31,7 +31,8 @@ SERVO_BINDING_FUNC(Servo_StyleSheet_FromUTF8Bytes, RawServoStyleSheetStrong,
                    mozilla::css::SheetParsingMode parsing_mode,
                    const RawServoMediaList* media_list,
                    RawGeckoURLExtraData* extra_data,
-                   uint32_t line_number_offset)
+                   uint32_t line_number_offset,
+                   nsCompatibility quirks_mode)
 SERVO_BINDING_FUNC(Servo_ImportRule_GetSheet,
                    RawServoStyleSheetStrong,
                    const RawServoImportRuleBorrowed import_rule)
@@ -48,6 +49,8 @@ SERVO_BINDING_FUNC(Servo_StyleSheet_HasRules, bool,
 SERVO_BINDING_FUNC(Servo_StyleSheet_GetRules, ServoCssRulesStrong,
                    RawServoStyleSheetBorrowed sheet)
 SERVO_BINDING_FUNC(Servo_StyleSet_Init, RawServoStyleSetOwned, RawGeckoPresContextOwned pres_context)
+SERVO_BINDING_FUNC(Servo_StyleSet_Clear, void,
+                   RawServoStyleSetBorrowed set)
 SERVO_BINDING_FUNC(Servo_StyleSet_RebuildData, void,
                    RawServoStyleSetBorrowed set)
 SERVO_BINDING_FUNC(Servo_StyleSet_Drop, void, RawServoStyleSetOwned set)
@@ -154,7 +157,8 @@ SERVO_BINDING_FUNC(Servo_ParseProperty,
                    RawServoDeclarationBlockStrong,
                    nsCSSPropertyID property, const nsACString* value,
                    RawGeckoURLExtraData* data,
-                   mozilla::ParsingMode parsing_mode)
+                   mozilla::ParsingMode parsing_mode,
+                   nsCompatibility quirks_mode)
 SERVO_BINDING_FUNC(Servo_ParseEasing, bool,
                    const nsAString* easing,
                    RawGeckoURLExtraData* data,
@@ -249,13 +253,15 @@ SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetProperty, bool,
                    const nsACString* property,
                    const nsACString* value, bool is_important,
                    RawGeckoURLExtraData* data,
-                   mozilla::ParsingMode parsing_mode)
+                   mozilla::ParsingMode parsing_mode,
+                   nsCompatibility quirks_mode)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetPropertyById, bool,
                    RawServoDeclarationBlockBorrowed declarations,
                    nsCSSPropertyID property,
                    const nsACString* value, bool is_important,
                    RawGeckoURLExtraData* data,
-                   mozilla::ParsingMode parsing_mode)
+                   mozilla::ParsingMode parsing_mode,
+                   nsCompatibility quirks_mode)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_RemoveProperty, void,
                    RawServoDeclarationBlockBorrowed declarations,
                    const nsACString* property)

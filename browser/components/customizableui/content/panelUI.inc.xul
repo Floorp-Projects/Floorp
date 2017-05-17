@@ -576,6 +576,11 @@
                        command="cmd_CustomizeToolbars"
                        />
         <toolbarseparator/>
+        <toolbarbutton id="appMenu-find-button"
+                       class="subviewbutton subviewbutton-iconic"
+                       label="&findOnCmd.label;"
+                       key="key_find"
+                       command="cmd_find"/>
         <toolbarbutton id="appMenu-more-button"
                        class="subviewbutton subviewbutton-nav"
                        label="&moreMenu.label;"
@@ -586,6 +591,11 @@
                        label="&webDeveloperMenu.label;"
                        closemenu="none"
                        oncommand="PanelUI.showSubView('PanelUI-developer', this, null, true)"/>
+        <toolbarbutton id="appMenu-help-button"
+                       class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                       label="&appMenuHelp.label;"
+                       closemenu="none"
+                       oncommand="PanelUI.showSubView('PanelUI-helpView', this, null, true)"/>
       </vbox>
     </panelview>
     <panelview id="appMenu-moreView" title="&moreMenu.label;" class="PanelUI-subView">

@@ -97,7 +97,8 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
                             nsIURI* aSheetURI,
                             nsIURI* aBaseURI,
                             nsIPrincipal* aSheetPrincipal,
-                            uint32_t aLineNumber)
+                            uint32_t aLineNumber,
+                            nsCompatibility aCompatMode)
 {
   MOZ_ASSERT_IF(mMedia, mMedia->IsServo());
   RefPtr<URLExtraData> extraData =
@@ -110,7 +111,8 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
 
     Inner()->mSheet =
       Servo_StyleSheet_FromUTF8Bytes(
-          aLoader, this, &input, mParsingMode, media, extraData, aLineNumber
+          aLoader, this, &input, mParsingMode, media, extraData,
+          aLineNumber, aCompatMode
       ).Consume();
   } else {
     // TODO(emilio): Once we have proper inner cloning (which we don't right

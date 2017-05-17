@@ -95,9 +95,11 @@ void
 ServoRestyleManager::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
                                                   nsRestyleHint aRestyleHint)
 {
-  // TODO(emilio): We should do the stylesheet flushing + device reset async
-  // here.
-  RebuildAllStyleData(aExtraHint, aRestyleHint);
+  StyleSet()->ClearDataAndMarkDeviceDirty();
+
+  if (Element* root = mPresContext->Document()->GetRootElement()) {
+    PostRestyleEvent(root, aRestyleHint, aExtraHint);
+  }
 }
 
 /* static */ void

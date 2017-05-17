@@ -153,6 +153,34 @@ const HEADERS = [
     canFilter: true,
   },
   {
+    name: "startTime",
+    boxName: "start-time",
+    canFilter: false,
+    subMenu: "timings",
+  },
+  {
+    name: "endTime",
+    boxName: "end-time",
+    canFilter: false,
+    subMenu: "timings",
+  },
+  {
+    name: "responseTime",
+    boxName: "response-time",
+    canFilter: false,
+    subMenu: "timings",
+  },
+  {
+    name: "duration",
+    canFilter: false,
+    subMenu: "timings",
+  },
+  {
+    name: "latency",
+    canFilter: false,
+    subMenu: "timings",
+  },
+  {
     name: "waterfall",
     canFilter: false,
   }

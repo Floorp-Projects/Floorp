@@ -15,7 +15,8 @@ Services.scriptloader.loadSubScript(
 
 const { EVENTS } = require("devtools/client/netmonitor/src/constants");
 const {
-  getFormattedIPAndPort
+  getFormattedIPAndPort,
+  getFormattedTime,
 } = require("devtools/client/netmonitor/src/utils/format-utils");
 const {
   decodeUnicodeUrl,
@@ -384,9 +385,17 @@ function verifyRequestItemTarget(document, requestList, requestItem, method,
   let query = getUrlQuery(url);
   let host = getUrlHost(url);
   let scheme = getUrlScheme(url);
-  let { httpVersion = "", remoteAddress, remotePort } = requestItem;
+  let {
+    httpVersion = "",
+    remoteAddress,
+    remotePort,
+    totalTime,
+    eventTimings = { timings: {} },
+  } = requestItem;
   let formattedIPPort = getFormattedIPAndPort(remoteAddress, remotePort);
   let remoteIP = remoteAddress ? `${formattedIPPort}` : "unknown";
+  let duration = getFormattedTime(totalTime);
+  let latency = getFormattedTime(eventTimings.timings.wait);
 
   if (fuzzyUrl) {
     ok(requestItem.method.startsWith(method), "The attached method is correct.");
@@ -436,6 +445,18 @@ function verifyRequestItemTarget(document, requestList, requestItem, method,
 
   is(target.querySelector(".requests-list-scheme").getAttribute("title"),
     scheme, "The tooltip scheme is correct.");
+
+  is(target.querySelector(".requests-list-duration").textContent,
+    duration, "The displayed duration is correct.");
+
+  is(target.querySelector(".requests-list-duration").getAttribute("title"),
+    duration, "The tooltip duration is correct.");
+
+  is(target.querySelector(".requests-list-latency").textContent,
+    latency, "The displayed latency is correct.");
+
+  is(target.querySelector(".requests-list-latency").getAttribute("title"),
+    latency, "The tooltip latency is correct.");
 
   if (status !== undefined) {
     let value = target.querySelector(".requests-list-status-icon")

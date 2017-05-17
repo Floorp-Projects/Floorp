@@ -330,7 +330,7 @@ nsDOMCSSDeclaration::ModifyDeclaration(GeckoFunc aGeckoFunc,
       return NS_ERROR_NOT_AVAILABLE;
     }
 
-    changed = aServoFunc(decl->AsServo(), servoEnv.mUrlExtraData);
+    changed = aServoFunc(decl->AsServo(), servoEnv);
   }
   if (!changed) {
     // Parsing failed -- but we don't throw an exception for that.
@@ -352,10 +352,11 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSPropertyID aPropID,
                               env.mSheetURI, env.mBaseURI, env.mPrincipal,
                               decl, changed, aIsImportant);
     },
-    [&](ServoDeclarationBlock* decl, URLExtraData* data) {
+    [&](ServoDeclarationBlock* decl, ServoCSSParsingEnvironment& env) {
       NS_ConvertUTF16toUTF8 value(aPropValue);
       return Servo_DeclarationBlock_SetPropertyById(
-        decl->Raw(), aPropID, &value, aIsImportant, data, ParsingMode::Default);
+        decl->Raw(), aPropID, &value, aIsImportant, env.mUrlExtraData,
+        ParsingMode::Default, env.mCompatMode);
     });
 }
 
@@ -373,12 +374,12 @@ nsDOMCSSDeclaration::ParseCustomPropertyValue(const nsAString& aPropertyName,
                               env.mBaseURI, env.mPrincipal, decl,
                               changed, aIsImportant);
     },
-    [&](ServoDeclarationBlock* decl, URLExtraData* data) {
+    [&](ServoDeclarationBlock* decl, ServoCSSParsingEnvironment& env) {
       NS_ConvertUTF16toUTF8 property(aPropertyName);
       NS_ConvertUTF16toUTF8 value(aPropValue);
       return Servo_DeclarationBlock_SetProperty(
-        decl->Raw(), &property, &value, aIsImportant, data,
-        ParsingMode::Default);
+        decl->Raw(), &property, &value, aIsImportant, env.mUrlExtraData,
+        ParsingMode::Default, env.mCompatMode);
     });
 }
 

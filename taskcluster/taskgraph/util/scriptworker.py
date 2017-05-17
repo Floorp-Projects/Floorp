@@ -230,7 +230,7 @@ PUSH_APK_SCOPES = {
 # See https://github.com/mozilla-releng/pushapkscript#aurora-beta-release-vs-alpha-beta-production
 PUSH_APK_GOOGLE_PLAY_TRACT = {
     'aurora': 'beta',
-    'beta': 'production',
+    'beta': 'rollout',
     'release': 'rollout',
     'default': 'invalid',
 }
@@ -253,6 +253,7 @@ PUSH_APK_ROLLOUT_PERCENTAGE = {
     # XXX Please make sure to change PUSH_APK_GOOGLE_PLAY_TRACT to 'rollout' if you add a new
     # supported project
     'release': 10,
+    'beta': 10,
     'default': None,
 }
 

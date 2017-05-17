@@ -9,13 +9,15 @@ class TestMainTabScalars(TelemetryTestCase):
 
     def test_main_tab_scalars(self):
         with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
+            tab1 = self.browser.tabbar.selected_tab
             tab2 = self.browser.tabbar.open_tab()
             self.browser.tabbar.switch_to(tab2)
             tab3 = self.browser.tabbar.open_tab()
             self.browser.tabbar.switch_to(tab3)
             self.browser.tabbar.close_tab(tab3, force=True)
             self.browser.tabbar.close_tab(tab2, force=True)
-        self.install_addon()
+            self.browser.tabbar.switch_to(tab1)
+        self.restart_browser()
         ping = self.wait_for_ping()
         assert ping['type'] == 'main'
         assert ping['clientId'] == self.client_id

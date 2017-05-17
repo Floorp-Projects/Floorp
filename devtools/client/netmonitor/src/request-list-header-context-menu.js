@@ -12,6 +12,10 @@ const stringMap = HEADERS
   .filter((header) => header.hasOwnProperty("label"))
   .reduce((acc, { name, label }) => Object.assign(acc, { [name]: label }), {});
 
+const subMenuMap = HEADERS
+  .filter((header) => header.hasOwnProperty("subMenu"))
+  .reduce((acc, { name, subMenu }) => Object.assign(acc, { [name]: subMenu }), {});
+
 class RequestListHeaderContextMenu {
   constructor({ toggleColumn, resetColumns }) {
     this.toggleColumn = toggleColumn;
@@ -33,10 +37,11 @@ class RequestListHeaderContextMenu {
    */
   open(event = {}) {
     let menu = [];
+    let subMenu = { timings: [] };
     let onlyOneColumn = this.visibleColumns.length === 1;
 
     for (let [column, shown] of this.columns) {
-      menu.push({
+      let entry = {
         id: `request-list-header-${column}-toggle`,
         label: L10N.getStr(`netmonitor.toolbar.${stringMap[column] || column}`),
         type: "checkbox",
@@ -44,11 +49,19 @@ class RequestListHeaderContextMenu {
         click: () => this.toggleColumn(column),
         // We don't want to allow hiding the last visible column
         disabled: onlyOneColumn && shown,
-      });
+      };
+      subMenuMap.hasOwnProperty(column) ?
+        subMenu[subMenuMap[column]].push(entry) :
+        menu.push(entry);
     }
 
     menu.push({ type: "separator" });
+    menu.push({
+      label: L10N.getStr("netmonitor.toolbar.timings"),
+      submenu: subMenu.timings,
+    });
 
+    menu.push({ type: "separator" });
     menu.push({
       id: "request-list-header-reset-columns",
       label: L10N.getStr("netmonitor.toolbar.resetColumns"),
