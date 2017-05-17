@@ -10,9 +10,21 @@
 /***** Interfaces to Data *****/
 
 [SecureContext, Pref="security.webauth.webauthn"]
-interface ScopedCredentialInfo {
-    readonly attribute ScopedCredential    credential;
-    readonly attribute WebAuthnAttestation attestation;
+interface PublicKeyCredential : Credential {
+    readonly attribute ArrayBuffer           rawId;
+    readonly attribute AuthenticatorResponse response;
+    // Extensions are not supported yet.
+    // readonly attribute AuthenticationExtensions clientExtensionResults;
+};
+
+[SecureContext, Pref="security.webauth.webauthn"]
+interface AuthenticatorResponse {
+    readonly attribute ArrayBuffer clientDataJSON;
+};
+
+[SecureContext, Pref="security.webauth.webauthn"]
+interface AuthenticatorAttestationResponse : AuthenticatorResponse {
+    readonly attribute ArrayBuffer attestationObject;
 };
 
 dictionary Account {
@@ -55,14 +67,6 @@ dictionary AssertionOptions {
 dictionary WebAuthnExtensions {
 };
 
-[SecureContext, Pref="security.webauth.webauthn"]
-interface WebAuthnAttestation {
-    readonly    attribute USVString     format;
-    readonly    attribute ArrayBuffer   clientData;
-    readonly    attribute ArrayBuffer   authenticatorData;
-    readonly    attribute any           attestation;
-};
-
 // Renamed from "ClientData" to avoid a collision with U2F
 dictionary WebAuthnClientData {
     required DOMString           challenge;
@@ -99,7 +103,7 @@ enum WebAuthnTransport {
 
 [SecureContext, Pref="security.webauth.webauthn"]
 interface WebAuthentication {
-    Promise<ScopedCredentialInfo> makeCredential (
+    Promise<PublicKeyCredential> makeCredential (
         Account                                 accountInformation,
         sequence<ScopedCredentialParameters>    cryptoParameters,
         BufferSource                            attestationChallenge,
