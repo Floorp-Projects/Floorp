@@ -1177,21 +1177,21 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "VideoStreamTrack",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "VRDisplay", release: false},
+    {name: "VRDisplay", releaseNonWindows: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "VRDisplayCapabilities", release: false},
+    {name: "VRDisplayCapabilities", releaseNonWindows: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "VRDisplayEvent", release: false},
+    {name: "VRDisplayEvent", releaseNonWindows: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "VREyeParameters", release: false},
+    {name: "VREyeParameters", releaseNonWindows: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "VRFieldOfView", release: false},
+    {name: "VRFieldOfView", releaseNonWindows: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "VRFrameData", release: false},
+    {name: "VRFrameData", releaseNonWindows: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "VRPose", release: false},
+    {name: "VRPose", releaseNonWindows: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "VRStageParameters", release: false},
+    {name: "VRStageParameters", releaseNonWindows: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "VTTCue",
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -1322,6 +1322,7 @@ function createInterfaceMap(isXBLScope) {
             (entry.xbl === !isXBLScope) ||
             (entry.desktop === !isDesktop) ||
             (entry.windows === !isWindows) ||
+            (entry.releaseNonWindows === !isRelease && !isWindows) ||
             (entry.mac === !isMac) ||
             (entry.linux === !isLinux) ||
             (entry.android === !isAndroid && !entry.nonReleaseAndroid && !entry.nightlyAndroid) ||
