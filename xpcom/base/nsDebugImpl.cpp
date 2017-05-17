@@ -471,6 +471,8 @@ RealBreak()
     ".object_arch armv4t\n"
 #endif
     "BKPT #0");
+#elif defined(__aarch64__)
+  asm("brk #0");
 #elif defined(SOLARIS)
 #if defined(__i386__) || defined(__i386) || defined(__x86_64__)
   asm("int $3");
@@ -549,7 +551,7 @@ Break(const char* aMsg)
   RealBreak();
 #elif defined(__GNUC__) && (defined(__i386__) || defined(__i386) || defined(__x86_64__))
   RealBreak();
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
   RealBreak();
 #elif defined(SOLARIS)
   RealBreak();
