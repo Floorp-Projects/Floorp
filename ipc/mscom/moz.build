@@ -25,6 +25,11 @@ UNIFIED_SOURCES += [
     'Utils.cpp',
 ]
 
+if CONFIG['MOZ_CRASHREPORTER']:
+    UNIFIED_SOURCES += [
+        'InterfaceRegistrationAnnotator.cpp',
+    ]
+
 if CONFIG['ACCESSIBILITY']:
     DIRS += [
         'oop',

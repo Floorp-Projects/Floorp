@@ -6,8 +6,10 @@
 
 #include <string.h>
 
+#include "base/thread.h"
 #include "gtest/gtest.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "nsIThread.h"
 #include "nsIRunnable.h"
@@ -15,6 +17,7 @@
 
 using mozilla::Monitor;
 using mozilla::MonitorAutoLock;
+using mozilla::UniquePtr;
 
 namespace CrashReporter {
 namespace {
@@ -257,6 +260,81 @@ TEST(TestCrashThreadAnnotation, TestGetFlatThreadAnnotation_ShutdownBothThreads)
         [&] (const char * aAnnotation) -> void {
     // No leftover in annnotation data.
     ASSERT_STREQ(aAnnotation, "");
+  };
+  GetFlatThreadAnnotation(getThreadAnnotationCB);
+
+  ShutdownThreadAnnotation();
+}
+
+TEST(TestCrashThreadAnnotation, TestGetFlatThreadAnnotation_TestNameOfBaseThread)
+{
+  InitThreadAnnotation();
+
+  Monitor monitor("TestCrashThreadAnnotation");
+
+  UniquePtr<base::Thread> thread1 = mozilla::MakeUnique<base::Thread>("base thread 1");
+  ASSERT_TRUE(!!thread1 && thread1->Start());
+
+  UniquePtr<base::Thread> thread2 = mozilla::MakeUnique<base::Thread>("base thread 2");
+  ASSERT_TRUE(!!thread2 && thread2->Start());
+
+  std::function<void(const char*)> getThreadAnnotationCB =
+        [&] (const char * aAnnotation) -> void {
+    ASSERT_TRUE(!!strstr(aAnnotation, "base thread 1"));
+    ASSERT_TRUE(!!strstr(aAnnotation, "base thread 2"));
+  };
+  GetFlatThreadAnnotation(getThreadAnnotationCB);
+
+  thread1->Stop();
+  thread2->Stop();
+
+  ShutdownThreadAnnotation();
+}
+
+TEST(TestCrashThreadAnnotation, TestGetFlatThreadAnnotation_TestShutdownBaseThread)
+{
+  InitThreadAnnotation();
+
+  Monitor monitor("TestCrashThreadAnnotation");
+
+  UniquePtr<base::Thread> thread1 = mozilla::MakeUnique<base::Thread>("base thread 1");
+  ASSERT_TRUE(!!thread1 && thread1->Start());
+
+  UniquePtr<base::Thread> thread2 = mozilla::MakeUnique<base::Thread>("base thread 2");
+  ASSERT_TRUE(!!thread2 && thread2->Start());
+
+  thread1->Stop();
+
+  std::function<void(const char*)> getThreadAnnotationCB =
+        [&] (const char * aAnnotation) -> void {
+    ASSERT_TRUE(!strstr(aAnnotation, "base thread 1"));
+    ASSERT_TRUE(!!strstr(aAnnotation, "base thread 2"));
+  };
+  GetFlatThreadAnnotation(getThreadAnnotationCB);
+
+  thread2->Stop();
+
+  ShutdownThreadAnnotation();
+}
+
+TEST(TestCrashThreadAnnotation, TestGetFlatThreadAnnotation_TestShutdownBothBaseThreads)
+{
+  InitThreadAnnotation();
+
+  Monitor monitor("TestCrashThreadAnnotation");
+
+  UniquePtr<base::Thread> thread1 = mozilla::MakeUnique<base::Thread>("base thread 1");
+  ASSERT_TRUE(!!thread1 && thread1->Start());
+
+  UniquePtr<base::Thread> thread2 = mozilla::MakeUnique<base::Thread>("base thread 2");
+  ASSERT_TRUE(!!thread2 && thread2->Start());
+
+  thread1->Stop();
+  thread2->Stop();
+
+  std::function<void(const char*)> getThreadAnnotationCB =
+        [&] (const char * aAnnotation) -> void {
+    ASSERT_TRUE(!strlen(aAnnotation));
   };
   GetFlatThreadAnnotation(getThreadAnnotationCB);
 

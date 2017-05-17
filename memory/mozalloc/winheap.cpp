@@ -25,7 +25,7 @@
 // becoming cumbersome, so we will likely use a malloc.h wrapper of some sort
 // and allow the use of the functions without a _impl suffix.
 #define MALLOC_DECL(name, return_type, ...) \
-  MOZ_MEMORY_API return_type name ## _impl(__VA_ARGS__);
+  extern "C" MOZ_MEMORY_API return_type name ## _impl(__VA_ARGS__);
 #define MALLOC_FUNCS MALLOC_FUNCS_MALLOC
 #include "malloc_decls.h"
 

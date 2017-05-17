@@ -5894,7 +5894,7 @@ BytecodeEmitter::emitDestructuringOpsObject(ParseNode* pattern, DestructuringFla
 
     MOZ_ASSERT(this->stackDepth > 0);                             // ... RHS
 
-    if (!emitRequireObjectCoercible())                            // ... RHS
+    if (!emit1(JSOP_CHECKOBJCOERCIBLE))                           // ... RHS
         return false;
 
     bool needsRestPropertyExcludedSet = pattern->pn_count > 1 &&
@@ -6927,42 +6927,6 @@ BytecodeEmitter::emitWith(ParseNode* pn)
         return false;
 
     return emitterScope.leave(this);
-}
-
-bool
-BytecodeEmitter::emitRequireObjectCoercible()
-{
-    // For simplicity, handle this in self-hosted code, at cost of 13 bytes of
-    // bytecode versus 1 byte for a dedicated opcode.  As more places need this
-    // behavior, we may want to reconsider this tradeoff.
-
-#ifdef DEBUG
-    auto depth = this->stackDepth;
-#endif
-    MOZ_ASSERT(depth > 0);                 // VAL
-    if (!emit1(JSOP_DUP))                  // VAL VAL
-        return false;
-
-    // Note that "intrinsic" is a misnomer: we're calling a *self-hosted*
-    // function that's not an intrinsic!  But it nonetheless works as desired.
-    if (!emitAtomOp(cx->names().RequireObjectCoercible,
-                    JSOP_GETINTRINSIC))    // VAL VAL REQUIREOBJECTCOERCIBLE
-    {
-        return false;
-    }
-    if (!emit1(JSOP_UNDEFINED))            // VAL VAL REQUIREOBJECTCOERCIBLE UNDEFINED
-        return false;
-    if (!emit2(JSOP_PICK, 2))              // VAL REQUIREOBJECTCOERCIBLE UNDEFINED VAL
-        return false;
-    if (!emitCall(JSOP_CALL_IGNORES_RV, 1))// VAL IGNORED
-        return false;
-    checkTypeSet(JSOP_CALL_IGNORES_RV);
-
-    if (!emit1(JSOP_POP))                  // VAL
-        return false;
-
-    MOZ_ASSERT(depth == this->stackDepth);
-    return true;
 }
 
 bool
