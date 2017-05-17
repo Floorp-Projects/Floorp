@@ -631,8 +631,6 @@ private:
   // Stores presentation info required for playback.
   Maybe<MediaInfo> mInfo;
 
-  nsAutoPtr<MetadataTags> mMetadataTags;
-
   mozilla::MediaMetadataManager mMetadataManager;
 
   // True if we've decoded first frames (thus having the start time) and

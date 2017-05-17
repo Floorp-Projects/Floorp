@@ -2138,7 +2138,6 @@ DecodeMetadataState::OnMetadataRead(MetadataHolder* aMetadata)
   Resource()->SetReadMode(MediaCacheStream::MODE_PLAYBACK);
 
   mMaster->mInfo.emplace(aMetadata->mInfo);
-  mMaster->mMetadataTags = aMetadata->mTags.forget();
   mMaster->mMediaSeekable = Info().mMediaSeekable;
   mMaster->mMediaSeekableOnlyInBufferedRanges =
     Info().mMediaSeekableOnlyInBufferedRanges;
@@ -2168,7 +2167,7 @@ DecodeMetadataState::OnMetadataRead(MetadataHolder* aMetadata)
 
   mMaster->mMetadataLoadedEvent.Notify(
     nsAutoPtr<MediaInfo>(new MediaInfo(aMetadata->mInfo)),
-    Move(mMaster->mMetadataTags),
+    Move(aMetadata->mTags),
     MediaDecoderEventVisibility::Observable);
 
   if (Info().IsEncrypted() && !mMaster->mCDMProxy) {
