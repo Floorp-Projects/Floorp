@@ -366,6 +366,19 @@ AudioChannelService::~AudioChannelService()
 }
 
 void
+AudioChannelService::NotifyCreatedNewAgent(AudioChannelAgent* aAgent)
+{
+  MOZ_ASSERT(aAgent);
+
+  nsCOMPtr<nsPIDOMWindowOuter> window = aAgent->Window();
+  if (!window) {
+    return;
+  }
+
+  window->NotifyCreatedNewMediaComponent();
+}
+
+void
 AudioChannelService::RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
                                                AudibleState aAudible)
 {
