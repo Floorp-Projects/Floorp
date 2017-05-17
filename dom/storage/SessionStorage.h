@@ -8,7 +8,6 @@
 #define mozilla_dom_SessionStorage_h
 
 #include "Storage.h"
-#include "nsDataHashtable.h"
 
 class nsIPrincipal;
 
@@ -88,46 +87,6 @@ private:
 
   nsString mDocumentURI;
   bool mIsPrivate;
-};
-
-class SessionStorageCache final
-{
-public:
-  NS_INLINE_DECL_REFCOUNTING(SessionStorageCache)
-
-  SessionStorageCache();
-
-  int64_t GetOriginQuotaUsage() const
-  {
-    return mOriginQuotaUsage;
-  }
-
-  uint32_t Length() const { return mKeys.Count(); }
-
-  void Key(uint32_t aIndex, nsAString& aResult);
-
-  void GetItem(const nsAString& aKey, nsAString& aResult);
-
-  void GetKeys(nsTArray<nsString>& aKeys);
-
-  nsresult SetItem(const nsAString& aKey, const nsAString& aValue,
-                   nsString& aOldValue);
-
-  nsresult RemoveItem(const nsAString& aKey,
-                      nsString& aOldValue);
-
-  void Clear();
-
-  already_AddRefed<SessionStorageCache>
-  Clone() const;
-
-private:
-  ~SessionStorageCache() = default;
-
-  bool ProcessUsageDelta(int64_t aDelta);
-
-  int64_t mOriginQuotaUsage;
-  nsDataHashtable<nsStringHashKey, nsString> mKeys;
 };
 
 } // dom namespace

@@ -20,6 +20,7 @@ UNIFIED_SOURCES += [
     'LocalStorageCache.cpp',
     'LocalStorageManager.cpp',
     'SessionStorage.cpp',
+    'SessionStorageCache.cpp',
     'SessionStorageManager.cpp',
     'Storage.cpp',
     'StorageDBThread.cpp',
