@@ -36,7 +36,7 @@ select {
 }
 
 option {
-  padding: 6px;
+  padding: 5px 10px;
 }
 
 textarea {
