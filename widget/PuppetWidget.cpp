@@ -348,14 +348,6 @@ PuppetWidget::DispatchEvent(WidgetGUIEvent* aEvent, nsEventStatus& aStatus)
     "Non-sysnthesized keyboard events should have edit commands for all types "
     "before dispatched");
 
-  AutoCacheNativeKeyCommands autoCache(this);
-  if (aEvent->mFlags.mIsSynthesizedForTests && !mNativeKeyCommandsValid) {
-    WidgetKeyboardEvent* keyEvent = aEvent->AsKeyboardEvent();
-    if (keyEvent) {
-      mTabChild->RequestNativeKeyBindings(&autoCache, keyEvent);
-    }
-  }
-
   if (aEvent->mClass == eCompositionEventClass) {
     // Store the latest native IME context of parent process's widget or
     // TextEventDispatcher if it's in this process.
