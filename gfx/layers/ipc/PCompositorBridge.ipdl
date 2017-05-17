@@ -194,9 +194,6 @@ parent:
   // synchronous repaints on resize.
   async FlushRenderingAsync();
 
-  // Make sure any pending composites have been received.
-  sync WaitOnTransactionProcessed();
-
   // Force an additional frame presentation to be executed. This is used to
   // work around a windows presentation bug (See Bug 1232042)
   async ForcePresent();
