@@ -21,8 +21,8 @@ namespace mozilla {
 namespace dom {
 
 class LocalStorage;
+class LocalStorageManager;
 class StorageUsage;
-class StorageManagerBase;
 class StorageDBBridge;
 
 // Interface class on which only the database or IPC may call.
@@ -103,7 +103,7 @@ protected:
   virtual ~StorageCache();
 
 public:
-  void Init(StorageManagerBase* aManager, bool aPersistent,
+  void Init(LocalStorageManager* aManager, bool aPersistent,
             nsIPrincipal* aPrincipal, const nsACString& aQuotaOriginScope);
 
   // Copies all data from the other storage.
@@ -174,7 +174,7 @@ public:
 private:
   // API to clear the cache data, this is invoked by chrome operations
   // like cookie deletion.
-  friend class StorageManagerBase;
+  friend class LocalStorageManager;
 
   static const uint32_t kUnloadDefault = 1 << 0;
   static const uint32_t kUnloadPrivate = 1 << 1;
@@ -218,7 +218,7 @@ private:
   // cache) we need to refer our manager since removal of the cache from the
   // hash table is handled in the destructor by call to the manager.  Cache
   // could potentially overlive the manager, hence the hard ref.
-  RefPtr<StorageManagerBase> mManager;
+  RefPtr<LocalStorageManager> mManager;
 
   // Reference to the usage counter object we check on for eTLD+1 quota limit.
   // Obtained from the manager during initialization (Init method).

@@ -7,7 +7,7 @@
 #include "StorageDBThread.h"
 #include "StorageDBUpdater.h"
 #include "StorageCache.h"
-#include "StorageManager.h"
+#include "LocalStorageManager.h"
 
 #include "nsIEffectiveTLDService.h"
 #include "nsDirectoryServiceUtils.h"

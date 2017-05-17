@@ -6,7 +6,6 @@
 
 #include "SessionStorage.h"
 #include "SessionStorageManager.h"
-#include "StorageManager.h"
 
 #include "mozilla/dom/StorageBinding.h"
 #include "mozilla/Preferences.h"
@@ -296,7 +295,7 @@ SessionStorageCache::ProcessUsageDelta(int64_t aDelta)
 {
   // Check limit per this origin
   uint64_t newOriginUsage = mOriginQuotaUsage + aDelta;
-  if (aDelta > 0 && newOriginUsage > StorageManagerBase::GetQuota()) {
+  if (aDelta > 0 && newOriginUsage > LocalStorageManager::GetQuota()) {
     return false;
   }
 

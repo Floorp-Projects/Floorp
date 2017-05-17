@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "LocalStorage.h"
+#include "LocalStorageManager.h"
 #include "StorageCache.h"
-#include "StorageManager.h"
 
 #include "nsIObserverService.h"
 #include "nsIScriptSecurityManager.h"
@@ -43,7 +43,7 @@ NS_IMPL_ADDREF_INHERITED(LocalStorage, Storage)
 NS_IMPL_RELEASE_INHERITED(LocalStorage, Storage)
 
 LocalStorage::LocalStorage(nsPIDOMWindowInner* aWindow,
-                           StorageManagerBase* aManager,
+                           LocalStorageManager* aManager,
                            StorageCache* aCache,
                            const nsAString& aDocumentURI,
                            nsIPrincipal* aPrincipal,
@@ -179,11 +179,9 @@ namespace {
 class StorageNotifierRunnable : public Runnable
 {
 public:
-  StorageNotifierRunnable(nsISupports* aSubject, const char16_t* aType,
-                          bool aPrivateBrowsing)
+  StorageNotifierRunnable(nsISupports* aSubject, bool aPrivateBrowsing)
     : Runnable("StorageNotifierRunnable")
     , mSubject(aSubject)
-    , mType(aType)
     , mPrivateBrowsing(aPrivateBrowsing)
   { }
 
@@ -191,7 +189,6 @@ public:
 
 private:
   nsCOMPtr<nsISupports> mSubject;
-  const char16_t* mType;
   const bool mPrivateBrowsing;
 };
 
@@ -205,7 +202,7 @@ StorageNotifierRunnable::Run()
                                      mPrivateBrowsing
                                        ? "dom-private-storage2-changed"
                                        : "dom-storage2-changed",
-                                     mType);
+                                     u"localStorage");
   }
   return NS_OK;
 }
@@ -217,7 +214,7 @@ LocalStorage::BroadcastChangeNotification(const nsSubstring& aKey,
                                           const nsSubstring& aOldValue,
                                           const nsSubstring& aNewValue)
 {
-  if (!XRE_IsParentProcess() && GetType() == eLocalStorage && Principal()) {
+  if (!XRE_IsParentProcess() && Principal()) {
     // If we are in a child process, we want to send a message to the parent in
     // order to broadcast the StorageEvent correctly to any child process.
     dom::ContentChild* cc = dom::ContentChild::GetSingleton();
@@ -226,13 +223,12 @@ LocalStorage::BroadcastChangeNotification(const nsSubstring& aKey,
       IPC::Principal(Principal()), mIsPrivate));
   }
 
-  DispatchStorageEvent(GetType(), mDocumentURI, aKey, aOldValue, aNewValue,
+  DispatchStorageEvent(mDocumentURI, aKey, aOldValue, aNewValue,
                        Principal(), mIsPrivate, this, false);
 }
 
 /* static */ void
-LocalStorage::DispatchStorageEvent(StorageType aStorageType,
-                                   const nsAString& aDocumentURI,
+LocalStorage::DispatchStorageEvent(const nsAString& aDocumentURI,
                                    const nsAString& aKey,
                                    const nsAString& aOldValue,
                                    const nsAString& aNewValue,
@@ -258,11 +254,7 @@ LocalStorage::DispatchStorageEvent(StorageType aStorageType,
   event->SetPrincipal(aPrincipal);
 
   RefPtr<StorageNotifierRunnable> r =
-    new StorageNotifierRunnable(event,
-                                aStorageType == eLocalStorage
-                                  ? u"localStorage"
-                                  : u"sessionStorage",
-                                aIsPrivate);
+    new StorageNotifierRunnable(event, aIsPrivate);
 
   if (aImmediateDispatch) {
     Unused << r->Run();
@@ -272,7 +264,7 @@ LocalStorage::DispatchStorageEvent(StorageType aStorageType,
 
   // If we are in the parent process and we have the principal, we want to
   // broadcast this event to every other process.
-  if (aStorageType == eLocalStorage && XRE_IsParentProcess() && aPrincipal) {
+  if (XRE_IsParentProcess() && aPrincipal) {
     for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
       Unused << cp->SendDispatchLocalStorageChange(
         nsString(aDocumentURI), nsString(aKey), nsString(aOldValue),
@@ -333,12 +325,6 @@ LocalStorage::CanUseStorage(nsIPrincipal& aSubjectPrincipal)
 
   mIsSessionOnly = access <= nsContentUtils::StorageAccess::eSessionScoped;
   return CanAccess(&aSubjectPrincipal);
-}
-
-LocalStorage::StorageType
-LocalStorage::GetType() const
-{
-  return mManager->Type();
 }
 
 // Defined in StorageManager.cpp
