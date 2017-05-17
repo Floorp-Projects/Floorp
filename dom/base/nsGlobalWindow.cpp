@@ -11120,7 +11120,7 @@ nsGlobalWindow::GetSessionStorage(ErrorResult& aError)
   if (mSessionStorage) {
     MOZ_LOG(gDOMLeakPRLog, LogLevel::Debug,
             ("nsGlobalWindow %p has %p sessionStorage", this, mSessionStorage.get()));
-    bool canAccess = mSessionStorage->CanAccess(principal);
+    bool canAccess = principal->Subsumes(mSessionStorage->Principal());
     NS_ASSERTION(canAccess,
                  "This window owned sessionStorage "
                  "that could not be accessed!");

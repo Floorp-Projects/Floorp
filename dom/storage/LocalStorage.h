@@ -76,7 +76,6 @@ public:
              ErrorResult& aRv) override;
 
   bool IsPrivate() const { return mIsPrivate; }
-  bool IsSessionOnly() const override { return mIsSessionOnly; }
 
   // aStorage can be null if this method is called by ContentChild.
   //
@@ -99,16 +98,6 @@ public:
   void
   ApplyEvent(StorageEvent* aStorageEvent);
 
-protected:
-  // The method checks whether the caller can use a storage.
-  // CanUseStorage is called before any DOM initiated operation
-  // on a storage is about to happen and ensures that the storage's
-  // session-only flag is properly set according the current settings.
-  // It is an optimization since the privileges check and session only
-  // state determination are complex and share the code (comes hand in
-  // hand together).
-  bool CanUseStorage(nsIPrincipal& aSubjectPrincipal);
-
 private:
   ~LocalStorage();
 
@@ -125,11 +114,6 @@ private:
 
   // Whether this storage is running in private-browsing window.
   bool mIsPrivate : 1;
-
-  // Whether storage is set to persist data only per session, may change
-  // dynamically and is set by CanUseStorage function that is called
-  // before any operation on the storage.
-  bool mIsSessionOnly : 1;
 
   void BroadcastChangeNotification(const nsSubstring& aKey,
                                    const nsSubstring& aOldValue,
