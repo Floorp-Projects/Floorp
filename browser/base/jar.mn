@@ -157,7 +157,7 @@ browser.jar:
 *       content/browser/hiddenWindow.xul              (content/hiddenWindow.xul)
 #ifdef XP_MACOSX
 *       content/browser/macBrowserOverlay.xul         (content/macBrowserOverlay.xul)
-*       content/browser/softwareUpdateOverlay.xul  (content/softwareUpdateOverlay.xul)
+*       content/browser/softwareUpdateOverlay.xul     (content/softwareUpdateOverlay.xul)
 #endif
 *       content/browser/viewSourceOverlay.xul         (content/viewSourceOverlay.xul)
 #ifndef XP_MACOSX

@@ -455,6 +455,19 @@ async function scheduleTestBuilds(base, args = "") {
     symbol: "mpi",
     kind: "test"
   }));
+  queue.scheduleTask(merge(base, {
+    parent: task_build,
+    command: [
+      "/bin/bash",
+      "-c",
+      "bin/checkout.sh && nss/automation/taskcluster/scripts/run_tests.sh"
+    ],
+    name: "Gtests",
+    symbol: "Gtest",
+    tests: "gtests",
+    cycle: "standard",
+    kind: "test"
+  }));
 
   return queue.submit();
 }

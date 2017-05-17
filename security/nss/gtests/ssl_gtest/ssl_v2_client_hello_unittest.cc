@@ -141,10 +141,11 @@ class SSLv2ClientHelloFilter : public PacketFilter {
 
 class SSLv2ClientHelloTestF : public TlsConnectTestBase {
  public:
-  SSLv2ClientHelloTestF() : TlsConnectTestBase(STREAM, 0), filter_(nullptr) {}
+  SSLv2ClientHelloTestF()
+      : TlsConnectTestBase(ssl_variant_stream, 0), filter_(nullptr) {}
 
-  SSLv2ClientHelloTestF(Mode mode, uint16_t version)
-      : TlsConnectTestBase(mode, version), filter_(nullptr) {}
+  SSLv2ClientHelloTestF(SSLProtocolVariant variant, uint16_t version)
+      : TlsConnectTestBase(variant, version), filter_(nullptr) {}
 
   void SetUp() {
     TlsConnectTestBase::SetUp();
@@ -193,7 +194,8 @@ class SSLv2ClientHelloTestF : public TlsConnectTestBase {
 class SSLv2ClientHelloTest : public SSLv2ClientHelloTestF,
                              public ::testing::WithParamInterface<uint16_t> {
  public:
-  SSLv2ClientHelloTest() : SSLv2ClientHelloTestF(STREAM, GetParam()) {}
+  SSLv2ClientHelloTest()
+      : SSLv2ClientHelloTestF(ssl_variant_stream, GetParam()) {}
 };
 
 // Test negotiating TLS 1.0 - 1.2.

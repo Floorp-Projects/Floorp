@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="reftest-wait">
+  <tabbox id="tab">
+    <tabs>
+      <tab label="zeroTab" id="0" />
+      <tab label="firstTab" id="1" />
+      <tab label="secondtab" id="2" />
+      <tab label="thirdTab" id="3" />
+      <tab label="fourthTab" id="4" />
+      <tab label="fifthTab" id="5" />
+      <tab label="sixthTab" id="6" />
+      <tab label="seventhTab" id="7" />
+      <tab label="eightTab" id="8" />
+      <tab label="ninthTab" id="9" />
+    </tabs>
+  </tabbox>
+
+  <script type="text/javascript">
+    // Overly try to iterate and click through the tabs
+    // since its a timing specific bug.
+    var tabCount = 10;
+    var loops = 10;
+    var i = tabCount * loops;
+
+    function clickTabs() {
+      var currentTab = i % tabCount;
+      var tab = document.getElementById(currentTab);
+      tab.click();
+
+      if (i > 0) {
+        i--;
+        // Relinquish main thread so we can paint
+        setTimeout(clickTabs, 0);
+      } else {
+        // Test finished
+        document.documentElement.removeAttribute("class");
+      }
+    }
+
+    window.addEventListener('MozReftestInvalidate', clickTabs);
+  </script>
+</window>

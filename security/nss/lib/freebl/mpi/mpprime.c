@@ -402,8 +402,7 @@ mpp_sieve(mp_int *trial, const mp_digit *primes, mp_size nPrimes,
 #define SIEVE_SIZE 32 * 1024
 
 mp_err
-mpp_make_prime(mp_int *start, mp_size nBits, mp_size strong,
-               unsigned long *nTries)
+mpp_make_prime(mp_int *start, mp_size nBits, mp_size strong)
 {
     mp_digit np;
     mp_err res;
@@ -548,8 +547,6 @@ mpp_make_prime(mp_int *start, mp_size nBits, mp_size strong,
 CLEANUP:
     mp_clear(&trial);
     mp_clear(&q);
-    if (nTries)
-        *nTries += i;
     if (sieve != NULL) {
         memset(sieve, 0, SIEVE_SIZE);
         free(sieve);

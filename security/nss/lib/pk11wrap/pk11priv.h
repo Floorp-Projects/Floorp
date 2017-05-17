@@ -14,6 +14,7 @@
 #include "seccomon.h"
 #include "pkcs7t.h"
 #include "cmsreclist.h"
+#include "pkcs11uri.h"
 
 /*
  * These are the private NSS functions. They are not exported by nss.def, and
@@ -39,12 +40,15 @@ int PK11_GetMaxKeyLength(CK_MECHANISM_TYPE type);
  * Generic Slot Management
  ************************************************************/
 CK_OBJECT_HANDLE PK11_CopyKey(PK11SlotInfo *slot, CK_OBJECT_HANDLE srcObject);
+PRBool pk11_MatchUriTokenInfo(PK11SlotInfo *slot, PK11URI *uri);
 SECStatus PK11_ReadAttribute(PK11SlotInfo *slot, CK_OBJECT_HANDLE id,
                              CK_ATTRIBUTE_TYPE type, PLArenaPool *arena, SECItem *result);
 CK_ULONG PK11_ReadULongAttribute(PK11SlotInfo *slot, CK_OBJECT_HANDLE id,
                                  CK_ATTRIBUTE_TYPE type);
 char *PK11_MakeString(PLArenaPool *arena, char *space, char *staticSring,
                       int stringLen);
+PRBool pk11_MatchString(const char *string,
+                        const char *staticString, int staticStringLen);
 int PK11_MapError(CK_RV error);
 CK_SESSION_HANDLE PK11_GetRWSession(PK11SlotInfo *slot);
 void PK11_RestoreROSession(PK11SlotInfo *slot, CK_SESSION_HANDLE rwsession);
@@ -106,6 +110,7 @@ CK_OBJECT_HANDLE PK11_FindObjectForCert(CERTCertificate *cert,
                                         void *wincx, PK11SlotInfo **pSlot);
 PK11SymKey *pk11_CopyToSlot(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
                             CK_ATTRIBUTE_TYPE operation, PK11SymKey *symKey);
+unsigned int pk11_GetPredefinedKeyLength(CK_KEY_TYPE keyType);
 
 /**********************************************************************
  *                   Certs

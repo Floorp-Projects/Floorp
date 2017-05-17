@@ -14,9 +14,9 @@
 #include "secerr.h"
 
 #include "blapi.h"
+#include "blapii.h"
 #include "secitem.h"
 #include "mpi.h"
-#include "mpprime.h"
 #include "secmpi.h"
 
 #define KEA_DERIVED_SECRET_LEN 128
@@ -46,9 +46,7 @@ DH_GenParam(int primeLen, DHParams **params)
 {
     PLArenaPool *arena;
     DHParams *dhparams;
-    unsigned char *pb = NULL;
     unsigned char *ab = NULL;
-    unsigned long counter = 0;
     mp_int p, q, a, h, psub1, test;
     mp_err err = MP_OKAY;
     SECStatus rv = SECSuccess;
@@ -81,12 +79,7 @@ DH_GenParam(int primeLen, DHParams **params)
     CHECK_MPI_OK(mp_init(&psub1));
     CHECK_MPI_OK(mp_init(&test));
     /* generate prime with MPI, uses Miller-Rabin to generate strong prime. */
-    pb = PORT_Alloc(primeLen);
-    CHECK_SEC_OK(RNG_GenerateGlobalRandomBytes(pb, primeLen));
-    pb[0] |= 0x80;            /* set high-order bit */
-    pb[primeLen - 1] |= 0x01; /* set low-order bit  */
-    CHECK_MPI_OK(mp_read_unsigned_octets(&p, pb, primeLen));
-    CHECK_MPI_OK(mpp_make_prime(&p, primeLen * 8, PR_TRUE, &counter));
+    CHECK_SEC_OK(generate_prime(&p, primeLen));
     /* construct Sophie-Germain prime q = (p-1)/2. */
     CHECK_MPI_OK(mp_sub_d(&p, 1, &psub1));
     CHECK_MPI_OK(mp_div_2(&psub1, &q));
@@ -121,8 +114,6 @@ cleanup:
     mp_clear(&h);
     mp_clear(&psub1);
     mp_clear(&test);
-    if (pb)
-        PORT_ZFree(pb, primeLen);
     if (ab)
         PORT_ZFree(ab, primeLen);
     if (err) {

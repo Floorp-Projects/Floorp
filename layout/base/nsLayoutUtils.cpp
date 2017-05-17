@@ -7112,7 +7112,8 @@ nsLayoutUtils::GetReferenceFrame(nsIFrame* aFrame)
 {
   nsIFrame *f = aFrame;
   for (;;) {
-    if (f->IsTransformed() || f->IsPreserve3DLeaf() || IsPopup(f)) {
+    const nsStyleDisplay* disp = f->StyleDisplay();
+    if (f->IsTransformed(disp) || f->IsPreserve3DLeaf(disp) || IsPopup(f)) {
       return f;
     }
     nsIFrame* parent = GetCrossDocParentFrame(f);
