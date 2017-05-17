@@ -1420,6 +1420,14 @@ nsChildView::Invalidate(const LayoutDeviceIntRect& aRect)
 bool
 nsChildView::WidgetTypeSupportsAcceleration()
 {
+  // We need to enable acceleration in popups which contain remote layer
+  // trees, since the remote content won't be rendered at all otherwise. This
+  // causes issues with transparency and drop shadows, so it should not be
+  // used by default in release builds.
+  if (HasRemoteContent()) {
+    return true;
+  }
+
   // Don't use OpenGL for transparent windows or for popup windows.
   return mView && [[mView window] isOpaque] &&
          ![[mView window] isKindOfClass:[PopupWindow class]];
@@ -1429,8 +1437,7 @@ bool
 nsChildView::ShouldUseOffMainThreadCompositing()
 {
   // Don't use OMTC for transparent windows or for popup windows.
-  if (!mView || ![[mView window] isOpaque] ||
-      [[mView window] isKindOfClass:[PopupWindow class]])
+  if (!WidgetTypeSupportsAcceleration())
     return false;
 
   return nsBaseWidget::ShouldUseOffMainThreadCompositing();
