@@ -495,20 +495,7 @@ XPCWrappedNativeScope::TraceWrappedNativesInAllScopes(JSTracer* trc)
             if (wrapper->HasExternalReference() && !wrapper->IsWrapperExpired())
                 wrapper->TraceSelf(trc);
         }
-
-        if (cur->mDOMExpandoSet) {
-            for (DOMExpandoSet::Enum e(*cur->mDOMExpandoSet); !e.empty(); e.popFront())
-                JS::TraceEdge(trc, &e.mutableFront(), "DOM expando object");
-        }
     }
-}
-
-static void
-SuspectDOMExpandos(JSObject* obj, nsCycleCollectionNoteRootCallback& cb)
-{
-    MOZ_ASSERT(dom::GetDOMClass(obj) && dom::GetDOMClass(obj)->mDOMObjectIsISupports);
-    nsISupports* native = dom::UnwrapDOMObject<nsISupports>(obj);
-    cb.NoteXPCOMRoot(native);
 }
 
 // static
@@ -518,11 +505,6 @@ XPCWrappedNativeScope::SuspectAllWrappers(nsCycleCollectionNoteRootCallback& cb)
     for (XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext) {
         for (auto i = cur->mWrappedNativeMap->Iter(); !i.Done(); i.Next()) {
             static_cast<Native2WrappedNativeMap::Entry*>(i.Get())->value->Suspect(cb);
-        }
-
-        if (cur->mDOMExpandoSet) {
-            for (DOMExpandoSet::Range r = cur->mDOMExpandoSet->all(); !r.empty(); r.popFront())
-                SuspectDOMExpandos(r.front().unbarrieredGet(), cb);
         }
     }
 }
