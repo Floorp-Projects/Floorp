@@ -150,7 +150,8 @@ module.exports = {
     let ast = helpers.getAST(content);
 
     // Discover global declarations
-    let scopeManager = escope.analyze(ast);
+    // The second parameter works around https://github.com/babel/babel-eslint/issues/470
+    let scopeManager = escope.analyze(ast, {});
     let globalScope = scopeManager.acquire(ast);
 
     let globals = Object.keys(globalScope.variables).map(v => ({
