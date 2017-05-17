@@ -1,4 +1,4 @@
-# Servers and actors
+# Architecture overview 
 
 Broadly speaking, the tools are divided in two parts: the server and the client. A **server** is anything that can be debugged: for example, your browser, but it could also be Firefox for Android, running on another device. The **client** is the front-end side of the tools, and it is what developers interact with when using the tools.
 

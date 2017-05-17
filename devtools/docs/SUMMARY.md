@@ -3,7 +3,7 @@
 
 * [Getting started](getting-started/README.md)
   * [Where is the code?](getting-started/where-is-the-code.md)
-  * [Servers and actors](getting-started/servers-and-actors.md)
+  * [Architecture overview](getting-started/architecture-overview.md)
   * [Set up to build DevTools](getting-started/build.md)
   * [Development profiles](getting-started/development-profiles.md)
 * [Bugs and issue trackers](bugs-issues.md)

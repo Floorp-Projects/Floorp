@@ -4,7 +4,7 @@ You can have various [Firefox profiles](https://developer.mozilla.org/en-US/Fire
 
 This page will guide you through configuring a new profile to enable development features such as additional logging, dumping of network packets, remote debugging, etc. which will help when working in DevTools.
 
-Many of these changes are achieved by modifying preferences in `about:config`, an special page you can access by entering that in Firefox's URL bar. The first time, it will show you a warning page. Click through and then you can start searching for preferences to modify.
+Many of these changes are achieved by modifying preferences in `about:config`, a special page you can access by entering that in Firefox's URL bar. The first time, it will show you a warning page. Click through and then you can start searching for preferences to modify.
 
 Here's [a support article](https://support.mozilla.org/t5/Manage-preferences-and-add-ons/Configuration-Editor-for-Firefox/ta-p/35030) if you need help.
 
