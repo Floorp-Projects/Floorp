@@ -16,10 +16,22 @@ using namespace StorageUtils;
 NS_IMPL_ISUPPORTS(SessionStorageManager, nsIDOMStorageManager)
 
 SessionStorageManager::SessionStorageManager()
-{}
+{
+  StorageObserver* observer = StorageObserver::Self();
+  NS_ASSERTION(observer, "No StorageObserver, cannot observe private data delete notifications!");
+
+  if (observer) {
+    observer->AddSink(this);
+  }
+}
 
 SessionStorageManager::~SessionStorageManager()
-{}
+{
+  StorageObserver* observer = StorageObserver::Self();
+  if (observer) {
+    observer->RemoveSink(this);
+  }
+}
 
 NS_IMETHODIMP
 SessionStorageManager::PrecacheStorage(nsIPrincipal* aPrincipal,
@@ -195,6 +207,70 @@ SessionStorageManager::GetLocalStorageForPrincipal(nsIPrincipal* aPrincipal,
                                                    nsIDOMStorage** aRetval)
 {
   return NS_ERROR_UNEXPECTED;
+}
+
+void
+SessionStorageManager::ClearStorages(const OriginAttributesPattern& aPattern,
+                                     const nsACString& aOriginScope)
+{
+  for (auto iter1 = mOATable.Iter(); !iter1.Done(); iter1.Next()) {
+    OriginAttributes oa;
+    DebugOnly<bool> ok = oa.PopulateFromSuffix(iter1.Key());
+    MOZ_ASSERT(ok);
+    if (!aPattern.Matches(oa)) {
+      // This table doesn't match the given origin attributes pattern
+      continue;
+    }
+
+    OriginKeyHashTable* table = iter1.Data();
+    for (auto iter2 = table->Iter(); !iter2.Done(); iter2.Next()) {
+      if (aOriginScope.IsEmpty() ||
+          StringBeginsWith(iter2.Key(), aOriginScope)) {
+        iter2.Data()->Clear();
+      }
+    }
+  }
+}
+
+nsresult
+SessionStorageManager::Observe(const char* aTopic,
+                               const nsAString& aOriginAttributesPattern,
+                               const nsACString& aOriginScope)
+{
+  OriginAttributesPattern pattern;
+  if (!pattern.Init(aOriginAttributesPattern)) {
+    NS_ERROR("Cannot parse origin attributes pattern");
+    return NS_ERROR_FAILURE;
+  }
+
+  // Clear everything, caches + database
+  if (!strcmp(aTopic, "cookie-cleared")) {
+    ClearStorages(pattern, EmptyCString());
+    return NS_OK;
+  }
+
+  // Clear from caches everything that has been stored
+  // while in session-only mode
+  if (!strcmp(aTopic, "session-only-cleared")) {
+    ClearStorages(pattern, aOriginScope);
+    return NS_OK;
+  }
+
+  // Clear everything (including so and pb data) from caches and database
+  // for the gived domain and subdomains.
+  if (!strcmp(aTopic, "domain-data-cleared")) {
+    ClearStorages(pattern, aOriginScope);
+    return NS_OK;
+  }
+
+  if (!strcmp(aTopic, "profile-change")) {
+    // For case caches are still referenced - clear them completely
+    ClearStorages(pattern, EmptyCString());
+    mOATable.Clear();
+    return NS_OK;
+  }
+
+  return NS_OK;
 }
 
 } // dom namespace
