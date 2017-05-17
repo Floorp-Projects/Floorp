@@ -5717,3 +5717,6 @@ pref("layers.advanced.caret-layers", 2);
 pref("layers.advanced.displaybuttonborder-layers", 2);
 pref("layers.advanced.outline-layers", 2);
 pref("layers.advanced.solid-color-layers", 2);
+
+// Enable lowercased response header name
+pref("dom.xhr.lowercase_header.enabled", true);
