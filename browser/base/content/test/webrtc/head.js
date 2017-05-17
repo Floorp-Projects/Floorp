@@ -202,16 +202,16 @@ function promiseObserverCalled(aTopic) {
   });
 }
 
-function expectObserverCalled(aTopic) {
+function expectObserverCalled(aTopic, aCount = 1) {
   return new Promise(resolve => {
     let mm = _mm();
     mm.addMessageListener("Test:ExpectObserverCalled:Reply",
                           function listener({data}) {
-      is(data.count, 1, "expected notification " + aTopic);
+      is(data.count, aCount, "expected notification " + aTopic);
       mm.removeMessageListener("Test:ExpectObserverCalled:Reply", listener);
       resolve();
     });
-    mm.sendAsyncMessage("Test:ExpectObserverCalled", aTopic);
+    mm.sendAsyncMessage("Test:ExpectObserverCalled", {topic: aTopic, count: aCount});
   });
 }
 
@@ -253,6 +253,24 @@ function promiseMessageReceived() {
       resolve(data);
     });
     mm.sendAsyncMessage("Test:WaitForMessage");
+  });
+}
+
+function promiseSpecificMessageReceived(aMessage, aCount = 1) {
+  return new Promise(resolve => {
+    let mm = _mm();
+    let counter = 0;
+    mm.addMessageListener("Test:MessageReceived", function listener({data}) {
+      if (data == aMessage) {
+        counter++;
+        if (counter == aCount) {
+          mm.sendAsyncMessage("Test:StopWaitForMultipleMessages");
+          mm.removeMessageListener("Test:MessageReceived", listener);
+          resolve(data);
+        }
+      }
+    });
+    mm.sendAsyncMessage("Test:WaitForMultipleMessages");
   });
 }
 
@@ -370,15 +388,16 @@ async function stopSharing(aType = "camera", aShouldKeepSharing = false) {
 }
 
 function promiseRequestDevice(aRequestAudio, aRequestVideo, aFrameId, aType,
-                              aBrowser = gBrowser.selectedBrowser) {
+                              aBrowser = gBrowser.selectedBrowser,
+                              aBadDevice = false) {
   info("requesting devices");
   return ContentTask.spawn(aBrowser,
-                           {aRequestAudio, aRequestVideo, aFrameId, aType},
+                           {aRequestAudio, aRequestVideo, aFrameId, aType, aBadDevice},
                            async function(args) {
     let global = content.wrappedJSObject;
     if (args.aFrameId)
       global = global.document.getElementById(args.aFrameId).contentWindow;
-    global.requestDevice(args.aRequestAudio, args.aRequestVideo, args.aType);
+    global.requestDevice(args.aRequestAudio, args.aRequestVideo, args.aType, args.aBadDevice);
   });
 }
 
