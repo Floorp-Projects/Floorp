@@ -19,26 +19,29 @@ public:
 
   SessionStorageCache();
 
-  int64_t GetOriginQuotaUsage() const
-  {
-    return mOriginQuotaUsage;
-  }
+  enum DataSetType {
+    eDefaultSetType,
+    eSessionSetType,
+  };
 
-  uint32_t Length() const { return mKeys.Count(); }
+  int64_t GetOriginQuotaUsage(DataSetType aDataSetType);
 
-  void Key(uint32_t aIndex, nsAString& aResult);
+  uint32_t Length(DataSetType aDataSetType);
 
-  void GetItem(const nsAString& aKey, nsAString& aResult);
+  void Key(DataSetType aDataSetType, uint32_t aIndex, nsAString& aResult);
 
-  void GetKeys(nsTArray<nsString>& aKeys);
+  void GetItem(DataSetType aDataSetType, const nsAString& aKey,
+               nsAString& aResult);
 
-  nsresult SetItem(const nsAString& aKey, const nsAString& aValue,
-                   nsString& aOldValue);
+  void GetKeys(DataSetType aDataSetType, nsTArray<nsString>& aKeys);
 
-  nsresult RemoveItem(const nsAString& aKey,
+  nsresult SetItem(DataSetType aDataSetType, const nsAString& aKey,
+                   const nsAString& aValue, nsString& aOldValue);
+
+  nsresult RemoveItem(DataSetType aDataSetType, const nsAString& aKey,
                       nsString& aOldValue);
 
-  void Clear();
+  void Clear(DataSetType aDataSetType, bool aByUserInteraction = true);
 
   already_AddRefed<SessionStorageCache>
   Clone() const;
@@ -46,10 +49,23 @@ public:
 private:
   ~SessionStorageCache() = default;
 
-  bool ProcessUsageDelta(int64_t aDelta);
+  struct DataSet
+  {
+    DataSet()
+      : mOriginQuotaUsage(0)
+    {}
 
-  int64_t mOriginQuotaUsage;
-  nsDataHashtable<nsStringHashKey, nsString> mKeys;
+    bool ProcessUsageDelta(int64_t aDelta);
+
+    int64_t mOriginQuotaUsage;
+    nsDataHashtable<nsStringHashKey, nsString> mKeys;
+  };
+
+  DataSet* Set(DataSetType aDataSetType);
+
+  DataSet mDefaultSet;
+  DataSet mSessionSet;
+  bool mSessionDataSetActive;
 };
 
 } // dom namespace
