@@ -120,6 +120,7 @@ TEST(ArenaAllocator, AllocateLargerThanArenaSize)
   EXPECT_EQ(uintptr_t(x) + 8, uintptr_t(y));
 }
 
+#ifndef MOZ_CODE_COVERAGE
 TEST(ArenaAllocator, AllocationsPerChunk)
 {
   // Test that expected number of allocations fit in one chunk.
@@ -193,6 +194,7 @@ TEST(ArenaAllocator, MemoryIsValid)
     EXPECT_EQ(x[i], kMark);
   }
 }
+#endif
 
 MOZ_DEFINE_MALLOC_SIZE_OF(TestSizeOf);
 
