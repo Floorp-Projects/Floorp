@@ -190,7 +190,11 @@ def make_s3_uploader_task(parent_task):
 
 
 def update_test_tasks(taskid, build_taskid, taskgraph):
-    """Tests task must download artifacts from uploader task."""
+    """Tests task must download artifacts from uploader task.
+
+    Notice they don't need to depend on uploader task because it finishes
+    before the build task.
+    """
     # Notice we handle buildbot-bridge, native, and generic-worker payloads
     # We can do better here in terms of graph searching
     # We could do post order search and stop as soon as we
@@ -199,7 +203,6 @@ def update_test_tasks(taskid, build_taskid, taskgraph):
     for task in taskgraph.tasks.itervalues():
         if build_taskid in task.task.get('dependencies', []):
             payload = task.task['payload']
-            task.task['dependencies'].append(taskid)
             if 'command' in payload:
                 try:
                     payload['command'] = [
