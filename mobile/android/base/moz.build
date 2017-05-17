@@ -468,6 +468,7 @@ if CONFIG['MOZ_ANDROID_HLS_SUPPORT']:
         'media/GeckoHlsDemuxerWrapper.java',
         'media/GeckoHlsPlayer.java',
         'media/GeckoHlsRendererBase.java',
+        'media/GeckoHlsResourceWrapper.java',
         'media/GeckoHlsSample.java',
         'media/GeckoHlsVideoRenderer.java',
         'media/GeckoVideoInfo.java',
