@@ -15,6 +15,10 @@
   --toolbarbutton-active-background: hsla(240,5%,5%,.15);
 
   --toolbarbutton-inner-padding: 6px;
+
+  --backbutton-background: hsla(0,100%,100%,.8);
+
+  --backbutton-border-color: hsla(240,5%,5%,.3);
 %else
   --backbutton-urlbar-overlap: 6px;
 
@@ -38,6 +42,12 @@ toolbar:-moz-lwtheme {
 
   --toolbarbutton-checkedhover-backgroundcolor: rgba(85%,85%,85%,.25);
 }
+
+%ifdef MOZ_PHOTON_THEME
+toolbar[brighttext] {
+  --backbutton-background: hsla(240,5%,5%,.1);
+}
+%endif
 
 /* ::::: primary toolbar buttons ::::: */
 
@@ -360,6 +370,19 @@ toolbarbutton.bookmark-item[open="true"],
   border-radius: 10000px !important;
   padding: 7px !important;
 }
+
+%ifdef MOZ_PHOTON_THEME
+#back-button:not([disabled]):hover > .toolbarbutton-icon {
+  background: var(--backbutton-background) !important;
+  box-shadow: 0 1px 6px hsla(0,0%,0%,.1);
+  border-color: hsla(240,5%,5%,.35);
+}
+
+#back-button:not([disabled]):hover:active > .toolbarbutton-icon {
+  background: var(--toolbarbutton-active-background) !important;
+  border-color: hsla(240,5%,5%,.40);
+}
+%endif
 
 /* bookmarks menu-button */
 
