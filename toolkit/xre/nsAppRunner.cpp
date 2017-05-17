@@ -3982,6 +3982,12 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
   }
 #endif
 
+  // Support exiting early for testing startup sequence. Bug 1360493
+  if (CheckArg("test-launch-without-hang")) {
+    *aExitFlag = true;
+    return 0;
+  }
+
 #if defined(MOZ_UPDATER) && !defined(MOZ_WIDGET_ANDROID) && !defined(MOZ_WIDGET_GONK)
   // Check for and process any available updates
   nsCOMPtr<nsIFile> updRoot;
