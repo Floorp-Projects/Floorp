@@ -1,0 +1,69 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root {
+  font-family: sans-serif;
+  margin: 40px auto;
+  min-width: 30em;
+  max-width: 60em;
+}
+table {
+  clear: both;
+  width: 90%;
+  margin: 0 auto;
+  padding-bottom: 2em;
+}
+th {
+  font-size: 130%;
+  text-align: left;
+  white-space: nowrap;
+}
+th[chromedir="rtl"] {
+  text-align: right;
+}
+/* name */
+th:first-child {
+  padding-inline-end: 2em;
+}
+/* submitted */
+th:last-child {
+  text-align: center;
+}
+:link, :visited {
+  display: block;
+  min-height: 17px;
+}
+/* date */
+td:first-child + td {
+  width: 0;
+  padding-inline-start: 1em;
+  padding-inline-end: .5em;
+  white-space: nowrap;
+}
+/* time */
+td:last-child {
+  width: 0;
+  padding-inline-start: .5em;
+  white-space: nowrap;
+}
+
+#clear-reports {
+  float: right;
+}
+#clear-reports[chromedir="rtl"] {
+  float: left;
+}
+
+.submitting {
+  background-image: url(chrome://global/skin/icons/loading.png);
+  background-repeat: no-repeat;
+  background-position: right;
+  background-size: 16px;
+}
+
+@media (min-resolution: 1.1dppx) {
+  .submitting {
+    background-image: url(chrome://global/skin/icons/loading@2x.png);
+  }
+}
