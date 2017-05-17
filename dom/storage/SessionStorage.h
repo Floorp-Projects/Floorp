@@ -16,13 +16,29 @@ namespace mozilla {
 namespace dom {
 
 class SessionStorageCache;
+class SessionStorageManager;
 
 class SessionStorage final : public Storage
 {
 public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SessionStorage, Storage)
+
   SessionStorage(nsPIDOMWindowInner* aWindow,
                  nsIPrincipal* aPrincipal,
-                 SessionStorageCache* aCache);
+                 SessionStorageCache* aCache,
+                 SessionStorageManager* aManager,
+                 const nsAString& aDocumentURI,
+                 bool aIsPrivate);
+
+  StorageType Type() const override { return eSessionStorage; }
+
+  SessionStorageManager* Manager() const { return mManager; }
+
+  SessionStorageCache* Cache() const { return mCache; }
+
+  already_AddRefed<SessionStorage>
+  Clone() const;
 
   int64_t GetOriginQuotaUsage() const override;
 
@@ -66,6 +82,10 @@ private:
                               const nsAString& aNewValue);
 
   RefPtr<SessionStorageCache> mCache;
+  RefPtr<SessionStorageManager> mManager;
+
+  nsString mDocumentURI;
+  bool mIsPrivate;
 };
 
 class SessionStorageCache final
@@ -95,6 +115,9 @@ public:
                       nsString& aOldValue);
 
   void Clear();
+
+  already_AddRefed<SessionStorageCache>
+  Clone() const;
 
 private:
   ~SessionStorageCache() = default;

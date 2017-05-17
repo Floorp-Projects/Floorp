@@ -8,6 +8,7 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM")
 
 EXPORTS.mozilla.dom += [
+    'SessionStorageManager.h',
     'Storage.h',
     'StorageIPC.h',
 ]
@@ -15,6 +16,7 @@ EXPORTS.mozilla.dom += [
 UNIFIED_SOURCES += [
     'LocalStorage.cpp',
     'SessionStorage.cpp',
+    'SessionStorageManager.cpp',
     'Storage.cpp',
     'StorageCache.cpp',
     'StorageDBThread.cpp',
@@ -22,6 +24,7 @@ UNIFIED_SOURCES += [
     'StorageIPC.cpp',
     'StorageManager.cpp',
     'StorageObserver.cpp',
+    'StorageUtils.cpp',
 ]
 
 IPDL_SOURCES += [
