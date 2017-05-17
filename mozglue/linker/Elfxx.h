@@ -110,6 +110,18 @@
 #define STR_RELOC(n) "DT_REL" # n
 #define Reloc Rel
 
+#elif defined(__aarch64__)
+#define ELFMACHINE EM_AARCH64
+
+#define R_ABS R_AARCH64_ABS64
+#define R_GLOB_DAT R_AARCH64_GLOB_DAT
+#define R_JMP_SLOT R_AARCH64_JUMP_SLOT
+#define R_RELATIVE R_AARCH64_RELATIVE
+#define RELOC(n) DT_RELA ## n
+#define UNSUPPORTED_RELOC(n) DT_REL ## n
+#define STR_RELOC(n) "DT_RELA" # n
+#define Reloc Rela
+
 #else
 #error Unknown ELF machine type
 #endif
