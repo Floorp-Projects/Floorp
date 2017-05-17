@@ -1841,12 +1841,14 @@ CompositorBridgeParent::DidComposite(TimeStamp& aCompositeStart,
 void
 CompositorBridgeParent::NotifyDidCompositeToPipeline(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch, TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd)
 {
+  if (!mWrBridge) {
+    return;
+  }
+  mWrBridge->CompositableHolder()->Update(aPipelineId, aEpoch);
+
   if (mPaused) {
     return;
   }
-  MOZ_ASSERT(mWrBridge);
-
-  mWrBridge->CompositableHolder()->Update(aPipelineId, aEpoch);
 
   if (mWrBridge->PipelineId() == aPipelineId) {
     uint64_t transactionId = mWrBridge->FlushTransactionIdsForEpoch(aEpoch);
