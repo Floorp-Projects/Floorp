@@ -313,11 +313,7 @@ toolbarbutton.bookmark-item[open="true"],
 
 :-moz-any(#back-button, #forward-button) > .toolbarbutton-icon {
   border-color: var(--backbutton-border-color) !important;
-}
-
-:-moz-any(#back-button, #forward-button):not(:hover):not(:active):not([open=true]) > .toolbarbutton-icon,
-:-moz-any(#back-button, #forward-button)[disabled=true] > .toolbarbutton-icon {
-  background: var(--backbutton-background) !important;
+  background: var(--backbutton-background);
 }
 
 #forward-button {
@@ -376,18 +372,12 @@ toolbarbutton.bookmark-item[open="true"],
 
 #back-button > .toolbarbutton-icon {
 %ifdef MOZ_PHOTON_THEME
+  background: var(--backbutton-background);
   border-color: var(--backbutton-border-color) !important;
 %endif
   border-radius: 10000px !important;
   padding: 7px !important;
 }
-
-%ifdef MOZ_PHOTON_THEME
-#back-button:not(:hover):not(:active):not([open=true]) > .toolbarbutton-icon,
-#back-button[disabled=true] > .toolbarbutton-icon {
-  background: var(--backbutton-background) !important;
-}
-%endif
 
 /* bookmarks menu-button */
 
