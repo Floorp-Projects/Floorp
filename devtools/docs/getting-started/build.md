@@ -50,7 +50,7 @@ To run the Firefox you just compiled:
 ./mach run
 ```
 
-This will run using an empty temporary profile which is discarded when you close the browser. We will look more into persistent development profiles later.<!--TODO: add link to that section when it's written-->
+This will run using an empty temporary profile which is discarded when you close the browser. We will look more into [persistent development profiles later](./development-profiles.md).
 
 ### Rebuilding
 
