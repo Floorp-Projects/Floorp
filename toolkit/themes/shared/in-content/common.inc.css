@@ -195,6 +195,17 @@ xul|menulist {
   background-color: var(--in-content-page-background);
 }
 
+html|select:not([size]):not([multiple]) {
+  background-image: url("chrome://global/skin/in-content/dropdown.svg#dropdown");
+  background-position: right 3px center;
+  background-repeat: no-repeat;
+  background-size: auto 18px;
+  font-size: inherit;
+  padding-inline-start: 5px;
+  padding-inline-end: 24px;
+  text-overflow: ellipsis;
+}
+
 html|button:enabled:hover,
 html|select:not([size]):not([multiple]):enabled:hover,
 xul|button:not([disabled="true"]):hover,
