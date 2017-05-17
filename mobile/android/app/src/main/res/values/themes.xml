@@ -105,19 +105,13 @@
     </style>
 
     <!-- Make an activity appear like an overlay. -->
-    <style name="OverlayActivity" parent="Gecko">
+    <style name="OverlayActivity.Base" parent="Gecko">
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:backgroundDimEnabled">true</item>
-
-        <!-- Set the app's title bar color in the recent app switcher.
-
-             Note: We'd prefer not to show up in the recent app switcher (bug 1137928). -->
-        <item name="android:colorPrimary">@color/text_and_tabs_tray_grey</item>
-        <!-- We display the overlay on top of other Activities so show their status bar. -->
-        <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
+    <style name="OverlayActivity" parent="OverlayActivity.Base"/>
 
     <!--
         Themes for CustomTabsActivity. Since CustomTabsActivity usually be used by 3-rd party apps,
@@ -140,9 +134,9 @@
 
         <item name="android:textColorHint">@color/tabs_tray_icon_grey</item>
     </style>
-    <style name="BookmarkToolbarStyle" parent="@style/Widget.AppCompat.Toolbar">
+    <style name="BookmarkToolbarStyle.Base" parent="@style/Widget.AppCompat.Toolbar">
         <item name="android:paddingRight">5dp</item>
-        <item name="android:paddingEnd">5dp</item>
     </style>
+    <style name="BookmarkToolbarStyle" parent="BookmarkToolbarStyle.Base"/>
 
 </resources>
