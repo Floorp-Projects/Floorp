@@ -26,6 +26,9 @@
 
   --toolbarbutton-hover-background: rgba(0,0,0,.1);
   --toolbarbutton-active-background: rgba(0,0,0,.15);
+
+  --backbutton-border-color: var(--urlbar-border-color-hover);
+  --backbutton-background: rgba(255,255,255,.15);
 %endif
 
   --toolbarbutton-hover-bordercolor: rgba(0,0,0,.2);
@@ -35,10 +38,6 @@
   --toolbarbutton-active-boxshadow: 0 0 0 1px rgba(0,0,0,.15) inset;
 
   --toolbarbutton-checkedhover-backgroundcolor: rgba(0,0,0,.1);
-
-  --backbutton-border-color: var(--urlbar-border-color-hover);
-
-  --backbutton-background: rgba(255,255,255,.15);
 
   --urlbar-dropmarker-url: url("chrome://browser/skin/urlbar-history-dropmarker.png");
   --urlbar-dropmarker-region: rect(0px, 11px, 14px, 0px);
