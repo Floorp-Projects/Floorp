@@ -5,7 +5,7 @@
 
 "use strict";
 
-const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -331,7 +331,7 @@ FormAutoComplete.prototype = {
     // a) length greater than one character (others searches are special cases) AND
     // b) the the new results will be a subset of the previous results
     if (aPreviousResult && aPreviousResult.searchString.trim().length > 1 &&
-      searchString.indexOf(aPreviousResult.searchString.trim().toLowerCase()) >= 0) {
+      searchString.includes(aPreviousResult.searchString.trim().toLowerCase())) {
       this.log("Using previous autocomplete result");
       let result = aPreviousResult;
       let wrappedResult = result.wrappedJSObject;
@@ -376,7 +376,7 @@ FormAutoComplete.prototype = {
         let entry = entries[i];
         // Remove results that do not contain the token
         // XXX bug 394604 -- .toLowerCase can be wrong for some intl chars
-        if (searchTokens.some(tok => entry.textLowerCase.indexOf(tok) < 0)) {
+        if (searchTokens.some(tok => !entry.textLowerCase.includes(tok))) {
           continue;
         }
         this._calculateScore(entry, searchString, searchTokens);
@@ -418,7 +418,7 @@ FormAutoComplete.prototype = {
       let processEntry = (aEntries) => {
         if (aField && aField.maxLength > -1) {
           result.entries =
-            aEntries.filter(function(el) { return el.text.length <= aField.maxLength; });
+            aEntries.filter(el => el.text.length <= aField.maxLength);
         } else {
           result.entries = aEntries;
         }
@@ -516,7 +516,7 @@ FormAutoComplete.prototype = {
     // for each word, calculate word boundary weights
     for (let token of searchTokens) {
       boundaryCalc += (entry.textLowerCase.indexOf(token) == 0);
-      boundaryCalc += (entry.textLowerCase.indexOf(" " + token) >= 0);
+      boundaryCalc += (entry.textLowerCase.includes(" " + token));
     }
     boundaryCalc = boundaryCalc * this._boundaryWeight;
     // now add more weight if we have a traditional prefix match and
