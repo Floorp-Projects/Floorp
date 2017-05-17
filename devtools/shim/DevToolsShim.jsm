@@ -53,6 +53,7 @@ this.DevToolsShim = {
   register: function (gDevTools) {
     this.gDevTools = gDevTools;
     this._onDevToolsRegistered();
+    this.gDevTools.emit("devtools-registered");
   },
 
   /**
@@ -60,7 +61,10 @@ this.DevToolsShim = {
    * shutdown.
    */
   unregister: function () {
-    this.gDevTools = null;
+    if (this.isInstalled()) {
+      this.gDevTools.emit("devtools-unregistered");
+      this.gDevTools = null;
+    }
   },
 
   /**
