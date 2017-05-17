@@ -505,6 +505,9 @@ private:
 
   void NotifyScrollbarDragRejected(const ScrollableLayerGuid& aGuid) const;
 
+  // Requires the caller to hold mTreeLock.
+  LayerToParentLayerMatrix4x4 ComputeTransformForNode(const HitTestingTreeNode* aNode) const;
+
 protected:
   /* The input queue where input events are held until we know enough to
    * figure out where they're going. Protected so gtests can access it.

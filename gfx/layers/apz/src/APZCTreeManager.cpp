@@ -1841,7 +1841,7 @@ APZCTreeManager::GetAPZCAtPoint(HitTestingTreeNode* aNode,
       PixelCastJustification::MovingDownToChildren));
 
   ForEachNode<ReverseIterator>(root,
-      [&hitTestPoints](HitTestingTreeNode* aNode) {
+      [&hitTestPoints, this](HitTestingTreeNode* aNode) {
         ParentLayerPoint hitTestPointForParent = ViewAs<ParentLayerPixel>(hitTestPoints.top(),
             PixelCastJustification::MovingDownToChildren);
         if (aNode->IsOutsideClip(hitTestPointForParent)) {
@@ -1854,7 +1854,8 @@ APZCTreeManager::GetAPZCAtPoint(HitTestingTreeNode* aNode,
         }
         // First check the subtree rooted at this node, because deeper nodes
         // are more "in front".
-        Maybe<LayerPoint> hitTestPoint = aNode->Untransform(hitTestPointForParent);
+        Maybe<LayerPoint> hitTestPoint = aNode->Untransform(
+            hitTestPointForParent, ComputeTransformForNode(aNode));
         APZCTM_LOG("Transformed ParentLayer point %s to layer %s\n",
                 Stringify(hitTestPointForParent).c_str(),
                 hitTestPoint ? Stringify(hitTestPoint.ref()).c_str() : "nil");
@@ -2202,6 +2203,17 @@ APZCTreeManager::CommonAncestor(AsyncPanZoomController* aApzc1, AsyncPanZoomCont
     aApzc2 = aApzc2->GetParent();
   }
   return ancestor.forget();
+}
+
+LayerToParentLayerMatrix4x4
+APZCTreeManager::ComputeTransformForNode(const HitTestingTreeNode* aNode) const
+{
+  AsyncPanZoomController* apzc = aNode->GetApzc();
+  return aNode->GetTransform() *
+      CompleteAsyncTransform(
+        apzc
+      ? apzc->GetCurrentAsyncTransformWithOverscroll(AsyncPanZoomController::NORMAL)
+      : AsyncTransformComponentMatrix());
 }
 
 #if defined(MOZ_WIDGET_ANDROID)
