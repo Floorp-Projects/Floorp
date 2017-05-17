@@ -239,7 +239,7 @@ class TestConfigure(unittest.TestCase):
     def test_imports(self):
         config = {}
         out = StringIO()
-        sandbox = ConfigureSandbox(config, {}, [], out, out)
+        sandbox = ConfigureSandbox(config, {}, ['configure'], out, out)
 
         with self.assertRaises(ImportError):
             exec_(textwrap.dedent('''
@@ -368,7 +368,7 @@ class TestConfigure(unittest.TestCase):
 
         config = {}
         out = StringIO()
-        sandbox = CountApplyImportsSandbox(config, {}, [], out, out)
+        sandbox = CountApplyImportsSandbox(config, {}, ['configure'], out, out)
 
         exec_(textwrap.dedent('''
             @template
@@ -406,7 +406,7 @@ class TestConfigure(unittest.TestCase):
     def test_decorators(self):
         config = {}
         out = StringIO()
-        sandbox = ConfigureSandbox(config, {}, [], out, out)
+        sandbox = ConfigureSandbox(config, {}, ['configure'], out, out)
 
         sandbox.include_file(mozpath.join(test_data_path, 'decorators.configure'))
 

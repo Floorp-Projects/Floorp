@@ -397,6 +397,7 @@ class CommandLineHelper(object):
         self._origins = {}
         self._last = 0
 
+        assert(argv and not argv[0].startswith('--'))
         for arg in argv[1:]:
             self.add(arg, 'command-line', self._args)
 
