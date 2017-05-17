@@ -672,6 +672,8 @@ function _setCurrentTheme(aData, aLocal) {
   Services.obs.notifyObservers(cancel, "lightweight-theme-change-requested",
                                JSON.stringify(aData));
 
+  let notify = true;
+
   if (aData) {
     let theme = LightweightThemeManager.getUsedTheme(aData.id);
     let isInstall = !theme || theme.version != aData.version;
@@ -691,10 +693,14 @@ function _setCurrentTheme(aData, aLocal) {
 
     let current = LightweightThemeManager.currentTheme;
     let usedThemes = _usedThemesExceptId(aData.id);
-    if (current && current.id != aData.id)
+    if (current && current.id != aData.id) {
       usedThemes.splice(1, 0, aData);
-    else
+    } else {
+      if (current && current.id == aData.id) {
+        notify = false;
+      }
       usedThemes.unshift(aData);
+    }
     _updateUsedThemes(usedThemes);
 
     if (isInstall)
@@ -704,8 +710,10 @@ function _setCurrentTheme(aData, aLocal) {
   if (cancel.data)
     return null;
 
-  AddonManagerPrivate.notifyAddonChanged(aData ? aData.id + ID_SUFFIX : null,
-                                         ADDON_TYPE, needsRestart);
+  if (notify) {
+    AddonManagerPrivate.notifyAddonChanged(aData ? aData.id + ID_SUFFIX : null,
+                                           ADDON_TYPE, needsRestart);
+  }
 
   return LightweightThemeManager.currentTheme;
 }
