@@ -992,6 +992,25 @@ class TestInfoCommand(MachCommandBase):
             print("Unable to validate test name '%s'!" % self.test_name)
             self.full_test_name = self.test_name
 
+        # search for full_test_name in test manifests
+        from mozbuild.testing import TestResolver
+        resolver = self._spawn(TestResolver)
+        relpath = self._wrap_path_argument(self.full_test_name).relpath()
+        tests = list(resolver.resolve_tests(paths=[relpath]))
+        if len(tests) == 1:
+            relpath = self._wrap_path_argument(tests[0]['manifest']).relpath()
+            print("%s found in manifest %s" % (self.full_test_name, relpath))
+            if tests[0].get('flavor'):
+                print("  flavor: %s" % tests[0]['flavor'])
+            if tests[0].get('skip-if'):
+                print("  skip-if: %s" % tests[0]['skip-if'])
+            if tests[0].get('fail-if'):
+                print("  fail-if: %s" % tests[0]['fail-if'])
+        elif len(tests) == 0:
+            print("%s not found in any test manifest!" % self.full_test_name)
+        else:
+            print("%s found in more than one manifest!" % self.full_test_name)
+
         # short_name is full_test_name without path
         self.short_name = None
         name_idx = self.full_test_name.rfind('/')
