@@ -19,7 +19,6 @@
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/ipc/Transport.h"
 #include "mozilla/StaticMutex.h"
-#include "mozilla/SystemGroup.h"
 #include "mozilla/Unused.h"
 #include "nsPrintfCString.h"
 
@@ -633,7 +632,6 @@ IToplevelProtocol::Open(mozilla::ipc::Transport* aTransport,
                         MessageLoop* aThread,
                         mozilla::ipc::Side aSide)
 {
-  mIsMainThreadProtocol = NS_IsMainThread();
   SetOtherProcessId(aOtherPid);
   return GetIPCChannel()->Open(aTransport, aThread, aSide);
 }
@@ -643,7 +641,6 @@ IToplevelProtocol::Open(MessageChannel* aChannel,
                         MessageLoop* aMessageLoop,
                         mozilla::ipc::Side aSide)
 {
-  mIsMainThreadProtocol = NS_IsMainThread();
   SetOtherProcessId(base::GetCurrentProcId());
   return GetIPCChannel()->Open(aChannel, aMessageLoop, aSide);
 }
@@ -818,13 +815,6 @@ IToplevelProtocol::ShmemDestroyed(const Message& aMsg)
 already_AddRefed<nsIEventTarget>
 IToplevelProtocol::GetMessageEventTarget(const Message& aMsg)
 {
-  if (IsMainThreadProtocol() && SystemGroup::Initialized()) {
-    if (aMsg.type() == SHMEM_CREATED_MESSAGE_TYPE ||
-        aMsg.type() == SHMEM_DESTROYED_MESSAGE_TYPE) {
-      return do_AddRef(SystemGroup::EventTargetFor(TaskCategory::Other));
-    }
-  }
-
   int32_t route = aMsg.routing_id();
 
   Maybe<MutexAutoLock> lock;
