@@ -185,7 +185,7 @@ LoadedElf::InitDyn(const Phdr *pt_dyn)
     switch (dyn->d_tag) {
       case DT_HASH:
         {
-          DEBUG_LOG("%s 0x%08" PRIxPTR, "DT_HASH", dyn->d_un.d_val);
+          DEBUG_LOG("%s 0x%08" PRIxPTR, "DT_HASH", uintptr_t(dyn->d_un.d_val));
           const Elf::Word *hash_table_header = \
             GetPtr<Elf::Word>(dyn->d_un.d_ptr);
           symnum = hash_table_header[1];
@@ -194,11 +194,11 @@ LoadedElf::InitDyn(const Phdr *pt_dyn)
         }
         break;
       case DT_STRTAB:
-        DEBUG_LOG("%s 0x%08" PRIxPTR, "DT_STRTAB", dyn->d_un.d_val);
+        DEBUG_LOG("%s 0x%08" PRIxPTR, "DT_STRTAB", uintptr_t(dyn->d_un.d_val));
         strtab.Init(GetPtr(dyn->d_un.d_ptr));
         break;
       case DT_SYMTAB:
-        DEBUG_LOG("%s 0x%08" PRIxPTR, "DT_SYMTAB", dyn->d_un.d_val);
+        DEBUG_LOG("%s 0x%08" PRIxPTR, "DT_SYMTAB", uintptr_t(dyn->d_un.d_val));
         symtab.Init(GetPtr(dyn->d_un.d_ptr));
         break;
     }
