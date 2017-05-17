@@ -85,13 +85,11 @@
 
 this.EXPORTED_SYMBOLS = ["FormHistory"];
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "uuidService",
                                    "@mozilla.org/uuid-generator;1",
@@ -214,7 +212,7 @@ function validateOpData(aData, aDataType) {
     thisValidFields = ["guid", "newGuid"];
   }
   for (let field in aData) {
-    if (field != "op" && thisValidFields.indexOf(field) == -1) {
+    if (field != "op" && !thisValidFields.includes(field)) {
       throw Components.Exception(
         aDataType + " query contains an unrecognized field: " + field,
         Cr.NS_ERROR_ILLEGAL_VALUE);
@@ -225,7 +223,7 @@ function validateOpData(aData, aDataType) {
 
 function validateSearchData(aData, aDataType) {
   for (let field in aData) {
-    if (field != "op" && validFields.indexOf(field) == -1 && searchFilters.indexOf(field) == -1) {
+    if (field != "op" && !validFields.includes(field) && !searchFilters.includes(field)) {
       throw Components.Exception(
         aDataType + " query contains an unrecognized field: " + field,
         Cr.NS_ERROR_ILLEGAL_VALUE);
@@ -234,7 +232,7 @@ function validateSearchData(aData, aDataType) {
 }
 
 function makeQueryPredicates(aQueryData, delimiter = " AND ") {
-  return Object.keys(aQueryData).map(function(field) {
+  return Object.keys(aQueryData).map(field => {
     switch (field) {
       case "firstUsedStart": {
         return "firstUsed >= :" + field;
@@ -532,7 +530,7 @@ var Migrators = {
    * Updates the DB schema to v3 (bug 506402).
    * Adds deleted form history table.
    */
-  dbMigrateToVersion4: function dbMigrateToVersion4() {
+  dbMigrateToVersion4() {
     if (!_dbConnection.tableExists("moz_deleted_formhistory")) {
       let table = dbSchema.tables["moz_deleted_formhistory"];
       let tSQL = Object.keys(table).map(col => [col, table[col]].join(" ")).join(", ");
@@ -642,7 +640,7 @@ function updateFormHistoryWrite(aChanges, aCallbacks) {
       case "remove":
         log("Remove from form history  " + change);
         let delStmt = makeMoveToDeletedStatement(change.guid, now, change, bindingArrays);
-        if (delStmt && stmts.indexOf(delStmt) == -1) {
+        if (delStmt && !stmts.includes(delStmt)) {
           stmts.push(delStmt);
         }
         if ("timeDeleted" in change) {
@@ -688,7 +686,7 @@ function updateFormHistoryWrite(aChanges, aCallbacks) {
     }
 
     // As identical statements are reused, only add statements if they aren't already present.
-    if (stmt && stmts.indexOf(stmt) == -1) {
+    if (stmt && !stmts.includes(stmt)) {
       stmts.push(stmt);
     }
   }
@@ -782,7 +780,7 @@ this.FormHistory = {
     return Prefs.enabled;
   },
 
-  search: function formHistorySearch(aSelectTerms, aSearchData, aCallbacks) {
+  search(aSelectTerms, aSearchData, aCallbacks) {
     // if no terms selected, select everything
     if (!aSelectTerms) {
       aSelectTerms = validFields;
@@ -811,7 +809,7 @@ this.FormHistory = {
         }
       },
 
-      handleCompletion: function searchCompletionHandler(aReason) {
+      handleCompletion(aReason) {
         if (aCallbacks && aCallbacks.handleCompletion) {
           aCallbacks.handleCompletion(aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED ? 0 : 1);
         }
@@ -821,11 +819,11 @@ this.FormHistory = {
     stmt.executeAsync(handlers);
   },
 
-  count: function formHistoryCount(aSearchData, aCallbacks) {
+  count(aSearchData, aCallbacks) {
     validateSearchData(aSearchData, "Count");
     let stmt = makeCountStatement(aSearchData);
     let handlers = {
-      handleResult: function countResultHandler(aResultSet) {
+      handleResult(aResultSet) {
         let row = aResultSet.getNextRow();
         let count = row.getResultByName("numEntries");
         if (aCallbacks && aCallbacks.handleResult) {
@@ -839,7 +837,7 @@ this.FormHistory = {
         }
       },
 
-      handleCompletion: function searchCompletionHandler(aReason) {
+      handleCompletion(aReason) {
         if (aCallbacks && aCallbacks.handleCompletion) {
           aCallbacks.handleCompletion(aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED ? 0 : 1);
         }
@@ -849,7 +847,7 @@ this.FormHistory = {
     stmt.executeAsync(handlers);
   },
 
-  update: function formHistoryUpdate(aChanges, aCallbacks) {
+  update(aChanges, aCallbacks) {
     // Used to keep track of how many searches have been started. When that number
     // are finished, updateFormHistoryWrite can be called.
     let numSearches = 0;
@@ -977,7 +975,7 @@ this.FormHistory = {
     }
   },
 
-  getAutoCompleteResults: function getAutoCompleteResults(searchString, params, aCallbacks) {
+  getAutoCompleteResults(searchString, params, aCallbacks) {
     // only do substring matching when the search string contains more than one character
     let searchTokens;
     let where = ""
@@ -1101,11 +1099,11 @@ this.FormHistory = {
   },
 
   // The remaining methods are called by FormHistoryStartup.js
-  updatePrefs: function updatePrefs() {
+  updatePrefs() {
     Prefs.initialized = false;
   },
 
-  expireOldEntries: function expireOldEntries() {
+  expireOldEntries() {
     log("expireOldEntries");
 
     // Determine how many days of history we're supposed to keep.
@@ -1124,7 +1122,7 @@ this.FormHistory = {
     });
   },
 
-  shutdown: function shutdown() { dbClose(true); }
+  shutdown() { dbClose(true); }
 };
 
 // Prevent add-ons from redefining this API
