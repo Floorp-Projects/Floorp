@@ -206,8 +206,6 @@ public:
   void ChildStatusReceived(uint64_t aChildID, bool aTelephonyChannel,
                            bool aContentOrNormalChannel, bool aAnyChannel);
 
-  void NotifyCreatedNewAgent(AudioChannelAgent* aAgent);
-
   void NotifyMediaResumedFromBlock(nsPIDOMWindowOuter* aWindow);
 
 private:
