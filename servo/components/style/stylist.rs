@@ -14,6 +14,8 @@ use dom::{AnimationRules, TElement};
 use element_state::ElementState;
 use error_reporting::RustLogReporter;
 use font_metrics::FontMetricsProvider;
+#[cfg(feature = "gecko")]
+use gecko_bindings::structs::nsIAtom;
 use keyframes::KeyframesAnimation;
 use media_queries::Device;
 use pdqsort::sort_by;
@@ -33,7 +35,7 @@ use selectors::parser::{SelectorMethods, LocalName as LocalNameSelector};
 use selectors::visitor::SelectorVisitor;
 use shared_lock::{Locked, SharedRwLockReadGuard, StylesheetGuards};
 use sink::Push;
-use smallvec::VecLike;
+use smallvec::{SmallVec, VecLike};
 use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::hash::Hash;
@@ -41,13 +43,25 @@ use std::hash::Hash;
 use std::marker::PhantomData;
 use style_traits::viewport::ViewportConstraints;
 use stylearc::Arc;
-use stylesheets::{CssRule, FontFaceRule, Origin, StyleRule, Stylesheet, UserAgentStylesheets};
+#[cfg(feature = "gecko")]
+use stylesheets::{CounterStyleRule, FontFaceRule};
+use stylesheets::{CssRule, Origin};
+use stylesheets::{StyleRule, Stylesheet, UserAgentStylesheets};
 #[cfg(feature = "servo")]
 use stylesheets::NestedRulesResult;
 use thread_state;
 use viewport::{self, MaybeNew, ViewportRule};
 
 pub use ::fnv::FnvHashMap;
+
+/// List of applicable declaration. This is a transient structure that shuttles
+/// declarations between selector matching and inserting into the rule tree, and
+/// therefore we want to avoid heap-allocation where possible.
+///
+/// In measurements on wikipedia, we pretty much never have more than 8 applicable
+/// declarations, so we could consider making this 8 entries instead of 16.
+/// However, it may depend a lot on workload, and stack space is cheap.
+pub type ApplicableDeclarationList = SmallVec<[ApplicableDeclarationBlock; 16]>;
 
 /// This structure holds all the selectors and device characteristics
 /// for a given document. The selectors are converted into `Rule`s
@@ -159,33 +173,44 @@ pub struct Stylist {
 
 /// This struct holds data which user of Stylist may want to extract
 /// from stylesheets which can be done at the same time as updating.
+#[cfg(feature = "gecko")]
 pub struct ExtraStyleData<'a> {
     /// A list of effective font-face rules and their origin.
-    #[cfg(feature = "gecko")]
     pub font_faces: &'a mut Vec<(Arc<Locked<FontFaceRule>>, Origin)>,
-
-    #[allow(missing_docs)]
-    #[cfg(feature = "servo")]
-    pub marker: PhantomData<&'a usize>,
+    /// A map of effective counter-style rules.
+    pub counter_styles: &'a mut HashMap<Atom, Arc<Locked<CounterStyleRule>>>,
 }
 
 #[cfg(feature = "gecko")]
 impl<'a> ExtraStyleData<'a> {
-    /// Clear the internal @font-face rule list.
-    fn clear_font_faces(&mut self) {
+    /// Clear the internal data.
+    fn clear(&mut self) {
         self.font_faces.clear();
+        self.counter_styles.clear();
     }
 
     /// Add the given @font-face rule.
     fn add_font_face(&mut self, rule: &Arc<Locked<FontFaceRule>>, origin: Origin) {
         self.font_faces.push((rule.clone(), origin));
     }
+
+    /// Add the given @counter-style rule.
+    fn add_counter_style(&mut self, guard: &SharedRwLockReadGuard,
+                         rule: &Arc<Locked<CounterStyleRule>>) {
+        let name = rule.read_with(guard).mName.raw::<nsIAtom>().into();
+        self.counter_styles.insert(name, rule.clone());
+    }
+}
+
+#[allow(missing_docs)]
+#[cfg(feature = "servo")]
+pub struct ExtraStyleData<'a> {
+    pub marker: PhantomData<&'a usize>,
 }
 
 #[cfg(feature = "servo")]
 impl<'a> ExtraStyleData<'a> {
-    fn clear_font_faces(&mut self) {}
-    fn add_font_face(&mut self, _: &Arc<Locked<FontFaceRule>>, _: Origin) {}
+    fn clear(&mut self) {}
 }
 
 impl Stylist {
@@ -334,7 +359,7 @@ impl Stylist {
             self.pseudos_map.insert(pseudo, PerPseudoElementSelectorMap::new());
         });
 
-        extra_data.clear_font_faces();
+        extra_data.clear();
 
         if let Some(ua_stylesheets) = ua_stylesheets {
             for stylesheet in &ua_stylesheets.user_or_user_agent_stylesheets {
@@ -434,8 +459,13 @@ impl Stylist {
                         self.animations.insert(keyframes_rule.name.as_atom().clone(), animation);
                     }
                 }
+                #[cfg(feature = "gecko")]
                 CssRule::FontFace(ref rule) => {
                     extra_data.add_font_face(&rule, stylesheet.origin);
+                }
+                #[cfg(feature = "gecko")]
+                CssRule::CounterStyle(ref rule) => {
+                    extra_data.add_counter_style(guard, &rule);
                 }
                 // We don't care about any other rule.
                 _ => {}
@@ -678,7 +708,7 @@ impl Stylist {
         };
 
 
-        let mut declarations = vec![];
+        let mut declarations = ApplicableDeclarationList::new();
         self.push_applicable_declarations(element,
                                           None,
                                           None,

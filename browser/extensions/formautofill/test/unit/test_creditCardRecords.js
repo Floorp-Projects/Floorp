@@ -62,9 +62,9 @@ let prepareTestCreditCards = async function(path) {
 
   let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                           (subject, data) => data == "add");
-  profileStorage.creditCards.add(TEST_CREDIT_CARD_1);
+  do_check_true(profileStorage.creditCards.add(TEST_CREDIT_CARD_1));
   await onChanged;
-  profileStorage.creditCards.add(TEST_CREDIT_CARD_2);
+  do_check_true(profileStorage.creditCards.add(TEST_CREDIT_CARD_2));
   await profileStorage._saveImmediately();
 };
 
@@ -150,8 +150,7 @@ add_task(async function test_get() {
   creditCards[0]["cc-name"] = "test";
   do_check_credit_card_matches(profileStorage.creditCards.get(guid), TEST_CREDIT_CARD_1);
 
-  Assert.throws(() => profileStorage.creditCards.get("INVALID_GUID"),
-    /No matching record\./);
+  do_check_eq(profileStorage.creditCards.get("INVALID_GUID"), null);
 });
 
 add_task(async function test_getByFilter() {
@@ -321,5 +320,5 @@ add_task(async function test_remove() {
 
   do_check_eq(creditCards.length, 1);
 
-  Assert.throws(() => profileStorage.creditCards.get(guid), /No matching record\./);
+  do_check_eq(profileStorage.creditCards.get(guid), null);
 });

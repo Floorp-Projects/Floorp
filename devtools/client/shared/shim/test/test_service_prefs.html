@@ -233,6 +233,19 @@ function do_tests() {
   ok(seen, "function-style observer was called");
   branch0.removeObserver("devtools.branch1.somestring", fnObserver);
 
+  // Check support for default values
+  let intPrefWithDefault =
+      Services.prefs.getIntPref("devtools.branch1.missing", 1);
+  is(intPrefWithDefault, 1, "default value returned for missing int pref");
+
+  let charPrefWithDefault =
+      Services.prefs.getCharPref("devtools.branch1.missing", "test");
+  is(charPrefWithDefault, "test", "default value returned for missing char pref");
+
+  let boolPrefWithDefault =
+      Services.prefs.getBoolPref("devtools.branch1.missing", true);
+  ok(boolPrefWithDefault, "default value returned for missing bool pref");
+
   // Clean up.
   localStorage.clear();
 

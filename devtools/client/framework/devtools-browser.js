@@ -27,6 +27,7 @@ loader.lazyRequireGetter(this, "BrowserMenus", "devtools/client/framework/browse
 loader.lazyRequireGetter(this, "appendStyleSheet", "devtools/client/shared/stylesheet-utils", true);
 
 loader.lazyImporter(this, "CustomizableUI", "resource:///modules/CustomizableUI.jsm");
+loader.lazyImporter(this, "CustomizableWidgets", "resource:///modules/CustomizableWidgets.jsm");
 loader.lazyImporter(this, "AppConstants", "resource://gre/modules/AppConstants.jsm");
 loader.lazyImporter(this, "LightweightThemeManager", "resource://gre/modules/LightweightThemeManager.jsm");
 
@@ -413,7 +414,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     if (widget && widget.provider == CustomizableUI.PROVIDER_API) {
       return;
     }
-    CustomizableUI.createWidget({
+    let item = {
       id: id,
       type: "view",
       viewId: "PanelUI-developer",
@@ -442,6 +443,11 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
         clearSubview(developerItems);
         fillSubviewFromMenuItems(itemsToDisplay, developerItems);
       },
+      onInit(anchor) {
+        // Since onBeforeCreated already bails out when initialized, we can call
+        // it right away.
+        this.onBeforeCreated(anchor.ownerDocument);
+      },
       onBeforeCreated(doc) {
         // Bug 1223127, CUI should make this easier to do.
         if (doc.getElementById("PanelUI-developerItems")) {
@@ -454,7 +460,9 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
         view.appendChild(panel);
         doc.getElementById("PanelUI-multiView").appendChild(view);
       }
-    });
+    };
+    CustomizableUI.createWidget(item);
+    CustomizableWidgets.push(item);
   },
 
   /**
