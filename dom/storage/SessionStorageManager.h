@@ -35,8 +35,14 @@ private:
           const nsAString& aOriginAttributesPattern,
           const nsACString& aOriginScope) override;
 
+  enum ClearStorageType {
+    eAll,
+    eSessionOnly,
+  };
+
   void
-  ClearStorages(const OriginAttributesPattern& aPattern,
+  ClearStorages(ClearStorageType aType,
+                const OriginAttributesPattern& aPattern,
                 const nsACString& aOriginScope);
 
   typedef nsRefPtrHashtable<nsCStringHashKey, SessionStorageCache> OriginKeyHashTable;

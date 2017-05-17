@@ -14,6 +14,10 @@
 #include "nsIPrincipal.h"
 #include "nsPIDOMWindow.h"
 
+#define DATASET IsSessionOnly()                          \
+                  ? SessionStorageCache::eSessionSetType \
+                  : SessionStorageCache::eDefaultSetType
+
 namespace mozilla {
 namespace dom {
 
@@ -56,7 +60,7 @@ SessionStorage::Clone() const
 int64_t
 SessionStorage::GetOriginQuotaUsage() const
 {
-  return mCache->GetOriginQuotaUsage();
+  return mCache->GetOriginQuotaUsage(DATASET);
 }
 
 uint32_t
@@ -68,7 +72,7 @@ SessionStorage::GetLength(nsIPrincipal& aSubjectPrincipal,
     return 0;
   }
 
-  return mCache->Length();
+  return mCache->Length(DATASET);
 }
 
 void
@@ -81,7 +85,7 @@ SessionStorage::Key(uint32_t aIndex, nsAString& aResult,
     return;
   }
 
-  mCache->Key(aIndex, aResult);
+  mCache->Key(DATASET, aIndex, aResult);
 }
 
 void
@@ -94,7 +98,7 @@ SessionStorage::GetItem(const nsAString& aKey, nsAString& aResult,
     return;
   }
 
-  mCache->GetItem(aKey, aResult);
+  mCache->GetItem(DATASET, aKey, aResult);
 }
 
 void
@@ -106,7 +110,7 @@ SessionStorage::GetSupportedNames(nsTArray<nsString>& aKeys)
     return;
   }
 
-  mCache->GetKeys(aKeys);
+  mCache->GetKeys(DATASET, aKeys);
 }
 
 void
@@ -120,7 +124,7 @@ SessionStorage::SetItem(const nsAString& aKey, const nsAString& aValue,
   }
 
   nsString oldValue;
-  nsresult rv = mCache->SetItem(aKey, aValue, oldValue);
+  nsresult rv = mCache->SetItem(DATASET, aKey, aValue, oldValue);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(rv);
     return;
@@ -144,7 +148,7 @@ SessionStorage::RemoveItem(const nsAString& aKey,
   }
 
   nsString oldValue;
-  nsresult rv = mCache->RemoveItem(aKey, oldValue);
+  nsresult rv = mCache->RemoveItem(DATASET, aKey, oldValue);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   if (rv == NS_SUCCESS_DOM_NO_OPERATION) {
@@ -163,7 +167,7 @@ SessionStorage::Clear(nsIPrincipal& aSubjectPrincipal,
     return;
   }
 
-  mCache->Clear();
+  mCache->Clear(DATASET);
   BroadcastChangeNotification(NullString(), NullString(), NullString());
 }
 

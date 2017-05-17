@@ -212,7 +212,8 @@ SessionStorageManager::GetLocalStorageForPrincipal(nsIPrincipal* aPrincipal,
 }
 
 void
-SessionStorageManager::ClearStorages(const OriginAttributesPattern& aPattern,
+SessionStorageManager::ClearStorages(ClearStorageType aType,
+                                     const OriginAttributesPattern& aPattern,
                                      const nsACString& aOriginScope)
 {
   for (auto iter1 = mOATable.Iter(); !iter1.Done(); iter1.Next()) {
@@ -228,7 +229,13 @@ SessionStorageManager::ClearStorages(const OriginAttributesPattern& aPattern,
     for (auto iter2 = table->Iter(); !iter2.Done(); iter2.Next()) {
       if (aOriginScope.IsEmpty() ||
           StringBeginsWith(iter2.Key(), aOriginScope)) {
-        iter2.Data()->Clear();
+        if (aType == eAll) {
+          iter2.Data()->Clear(SessionStorageCache::eDefaultSetType, false);
+          iter2.Data()->Clear(SessionStorageCache::eSessionSetType, false);
+        } else {
+          MOZ_ASSERT(aType == eSessionOnly);
+          iter2.Data()->Clear(SessionStorageCache::eSessionSetType, false);
+        }
       }
     }
   }
@@ -247,27 +254,27 @@ SessionStorageManager::Observe(const char* aTopic,
 
   // Clear everything, caches + database
   if (!strcmp(aTopic, "cookie-cleared")) {
-    ClearStorages(pattern, EmptyCString());
+    ClearStorages(eAll, pattern, EmptyCString());
     return NS_OK;
   }
 
   // Clear from caches everything that has been stored
   // while in session-only mode
   if (!strcmp(aTopic, "session-only-cleared")) {
-    ClearStorages(pattern, aOriginScope);
+    ClearStorages(eSessionOnly, pattern, aOriginScope);
     return NS_OK;
   }
 
   // Clear everything (including so and pb data) from caches and database
   // for the gived domain and subdomains.
   if (!strcmp(aTopic, "domain-data-cleared")) {
-    ClearStorages(pattern, aOriginScope);
+    ClearStorages(eAll, pattern, aOriginScope);
     return NS_OK;
   }
 
   if (!strcmp(aTopic, "profile-change")) {
     // For case caches are still referenced - clear them completely
-    ClearStorages(pattern, EmptyCString());
+    ClearStorages(eAll, pattern, EmptyCString());
     mOATable.Clear();
     return NS_OK;
   }
