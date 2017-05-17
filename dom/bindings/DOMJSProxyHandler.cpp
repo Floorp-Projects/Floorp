@@ -71,25 +71,6 @@ struct SetDOMProxyInformation
 SetDOMProxyInformation gSetDOMProxyInformation;
 
 // static
-void
-DOMProxyHandler::ClearExternalRefsForWrapperRelease(JSObject* obj)
-{
-  MOZ_ASSERT(IsDOMProxy(obj), "expected a DOM proxy object");
-  JS::Value v = js::GetProxyPrivate(obj);
-  if (v.isUndefined() || v.isObject()) {
-    // No expando, or an expando that we reference from our slot anyway, so
-    // don't have to clear state for.
-    return;
-  }
-
-  // Prevent having a dangling pointer to our expando from the
-  // ExpandoAndGeneration.
-  js::ExpandoAndGeneration* expandoAndGeneration =
-    static_cast<js::ExpandoAndGeneration*>(v.toPrivate());
-  expandoAndGeneration->expando = UndefinedValue();
-}
-
-// static
 JSObject*
 DOMProxyHandler::GetAndClearExpandoObject(JSObject* obj)
 {
