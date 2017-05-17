@@ -1305,33 +1305,42 @@ nsIFrame::GetMarginRectRelativeToSelf() const
 }
 
 bool
-nsIFrame::IsTransformed(const nsStyleDisplay* aStyleDisplay) const
+nsIFrame::IsTransformed(const nsStyleDisplay* aStyleDisplay,
+                        EffectSet* aEffectSet) const
 {
   MOZ_ASSERT(aStyleDisplay == StyleDisplay());
   return ((mState & NS_FRAME_MAY_BE_TRANSFORMED) &&
           (aStyleDisplay->HasTransform(this) ||
            IsSVGTransformed() ||
-           HasAnimationOfTransform()));
+           HasAnimationOfTransform(aEffectSet)));
 }
 
 bool
-nsIFrame::HasAnimationOfTransform() const
+nsIFrame::HasAnimationOfTransform(EffectSet* aEffectSet) const
 {
+  EffectSet* effects =
+    aEffectSet ? aEffectSet : EffectSet::GetEffectSet(this);
+
   return mContent &&
-    nsLayoutUtils::HasAnimationOfProperty(this, eCSSProperty_transform) &&
+    nsLayoutUtils::HasAnimationOfProperty(effects, eCSSProperty_transform) &&
     IsFrameOfType(eSupportsCSSTransforms) &&
     mContent->GetPrimaryFrame() == this;
 }
 
 bool
-nsIFrame::HasOpacityInternal(float aThreshold) const
+nsIFrame::HasOpacityInternal(float aThreshold,
+                             EffectSet* aEffectSet) const
 {
   MOZ_ASSERT(0.0 <= aThreshold && aThreshold <= 1.0, "Invalid argument");
-  return StyleEffects()->mOpacity < aThreshold ||
-         (StyleDisplay()->mWillChangeBitField & NS_STYLE_WILL_CHANGE_OPACITY) ||
-         (mContent &&
-           nsLayoutUtils::HasAnimationOfProperty(this, eCSSProperty_opacity) &&
-           mContent->GetPrimaryFrame() == this);
+  if (StyleEffects()->mOpacity < aThreshold ||
+      (StyleDisplay()->mWillChangeBitField & NS_STYLE_WILL_CHANGE_OPACITY)) {
+    return true;
+  }
+
+  EffectSet* effects =
+    aEffectSet ? aEffectSet : EffectSet::GetEffectSet(this);
+  return (mContent && mContent->GetPrimaryFrame() == this &&
+          nsLayoutUtils::HasAnimationOfProperty(effects, eCSSProperty_opacity));
 }
 
 bool
@@ -1342,7 +1351,7 @@ nsIFrame::IsSVGTransformed(gfx::Matrix *aOwnTransforms,
 }
 
 bool
-nsIFrame::Extend3DContext(const nsStyleDisplay* aStyleDisplay) const
+nsIFrame::Extend3DContext(const nsStyleDisplay* aStyleDisplay, mozilla::EffectSet* aEffectSet) const
 {
   const nsStyleDisplay* disp = StyleDisplayWithOptionalParam(aStyleDisplay);
   if (disp->mTransformStyle != NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D ||
@@ -1355,7 +1364,7 @@ nsIFrame::Extend3DContext(const nsStyleDisplay* aStyleDisplay) const
     return false;
   }
 
-  if (HasOpacity()) {
+  if (HasOpacity(aEffectSet)) {
     return false;
   }
 
@@ -1366,29 +1375,32 @@ nsIFrame::Extend3DContext(const nsStyleDisplay* aStyleDisplay) const
 }
 
 bool
-nsIFrame::Combines3DTransformWithAncestors(const nsStyleDisplay* aStyleDisplay) const
+nsIFrame::Combines3DTransformWithAncestors(const nsStyleDisplay* aStyleDisplay,
+                                           EffectSet* aEffectSet) const
 {
   MOZ_ASSERT(aStyleDisplay == StyleDisplay());
-  if (!GetParent() || !GetParent()->Extend3DContext()) {
+  if (!GetParent() || !GetParent()->Extend3DContext(aEffectSet)) {
     return false;
   }
-  return IsTransformed(aStyleDisplay) || BackfaceIsHidden(aStyleDisplay);
+  return IsTransformed(aStyleDisplay,aEffectSet) ||
+         BackfaceIsHidden(aStyleDisplay);
 }
 
 bool
-nsIFrame::In3DContextAndBackfaceIsHidden() const
+nsIFrame::In3DContextAndBackfaceIsHidden(EffectSet* aEffectSet) const
 {
   // While both tests fail most of the time, test BackfaceIsHidden()
   // first since it's likely to fail faster.
   const nsStyleDisplay* disp = StyleDisplay();
-  return BackfaceIsHidden(disp) && Combines3DTransformWithAncestors(disp);
+  return BackfaceIsHidden(disp) &&
+         Combines3DTransformWithAncestors(disp, aEffectSet);
 }
 
 bool
-nsIFrame::HasPerspective(const nsStyleDisplay* aStyleDisplay) const
+nsIFrame::HasPerspective(const nsStyleDisplay* aStyleDisplay, EffectSet* aEffectSet) const
 {
   MOZ_ASSERT(aStyleDisplay == StyleDisplay());
-  if (!IsTransformed(aStyleDisplay)) {
+  if (!IsTransformed(aStyleDisplay, aEffectSet)) {
     return false;
   }
   nsIFrame* containingBlock = GetContainingBlock(SKIP_SCROLLED_FRAME, aStyleDisplay);
@@ -2348,6 +2360,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
 
   const nsStyleDisplay* disp = StyleDisplay();
   const nsStyleEffects* effects = StyleEffects();
+  EffectSet* effectSet = EffectSet::GetEffectSet(this);
   // We can stop right away if this is a zero-opacity stacking context and
   // we're painting, and we're not animating opacity. Don't do this
   // if we're going to compute plugin geometry, since opacity-0 plugins
@@ -2359,7 +2372,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   bool opacityItemForEventsAndPluginsOnly = false;
   if (effects->mOpacity == 0.0 && aBuilder->IsForPainting() &&
       !(disp->mWillChangeBitField & NS_STYLE_WILL_CHANGE_OPACITY) &&
-      !nsLayoutUtils::HasAnimationOfProperty(this, eCSSProperty_opacity)) {
+      !nsLayoutUtils::HasAnimationOfProperty(effectSet, eCSSProperty_opacity)) {
     if (needEventRegions ||
         aBuilder->WillComputePluginGeometry()) {
       opacityItemForEventsAndPluginsOnly = true;
@@ -2372,7 +2385,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     aBuilder->AddToWillChangeBudget(this, GetSize());
   }
 
-  bool extend3DContext = Extend3DContext(disp);
+  bool extend3DContext = Extend3DContext(disp, effectSet);
   Maybe<nsDisplayListBuilder::AutoPreserves3DContext> autoPreserves3DContext;
   if (extend3DContext && !Combines3DTransformWithAncestors(disp)) {
     // Start a new preserves3d context to keep informations on
@@ -2389,8 +2402,8 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   nsRect dirtyRect = aDirtyRect;
 
   bool inTransform = aBuilder->IsInTransform();
-  bool isTransformed = IsTransformed(disp);
-  bool hasPerspective = HasPerspective();
+  bool isTransformed = IsTransformed(disp, effectSet);
+  bool hasPerspective = HasPerspective(effectSet);
   // reset blend mode so we can keep track if this stacking context needs have
   // a nsDisplayBlendContainer. Set the blend mode back when the routine exits
   // so we keep track if the parent stacking context needs a container too.
@@ -2451,7 +2464,8 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   // layer (for async animations), see
   // nsSVGIntegrationsUtils::PaintMaskAndClipPath or
   // nsSVGIntegrationsUtils::PaintFilter.
-  bool useOpacity = HasVisualOpacity() && !nsSVGUtils::CanOptimizeOpacity(this) &&
+  bool useOpacity = HasVisualOpacity(effectSet) &&
+                    !nsSVGUtils::CanOptimizeOpacity(this) &&
                     (!usingSVGEffects || nsDisplayOpacity::NeedsActiveLayer(aBuilder, this));
   bool useBlendMode = effects->mMixBlendMode != NS_STYLE_BLEND_NORMAL;
   bool useStickyPosition = disp->mPosition == NS_STYLE_POSITION_STICKY &&
@@ -3068,11 +3082,12 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
 
   // Child is composited if it's transformed, partially transparent, or has
   // SVG effects or a blend mode..
+  EffectSet* effectSet = EffectSet::GetEffectSet(this);
   const nsStyleDisplay* disp = child->StyleDisplay();
   const nsStyleEffects* effects = child->StyleEffects();
   const nsStylePosition* pos = child->StylePosition();
-  bool isVisuallyAtomic = child->HasOpacity()
-    || child->IsTransformed(disp)
+  bool isVisuallyAtomic = child->HasOpacity(effectSet)
+    || child->IsTransformed(disp, effectSet)
     // strictly speaking, 'perspective' doesn't require visual atomicity,
     // but the spec says it acts like the rest of these
     || disp->mChildPerspective.GetUnit() == eStyleUnit_Coord
@@ -8962,7 +8977,8 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
              "Don't call - overflow rects not maintained on these SVG frames");
 
   const nsStyleDisplay* disp = StyleDisplayWithOptionalParam(aStyleDisplay);
-  bool hasTransform = IsTransformed(disp);
+  EffectSet* effectSet = EffectSet::GetEffectSet(this);
+  bool hasTransform = IsTransformed(disp, effectSet);
 
   nsRect bounds(nsPoint(0, 0), aNewSize);
   // Store the passed in overflow area if we are a preserve-3d frame or we have
@@ -9075,7 +9091,7 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
 
   if (ChildrenHavePerspective(disp) && sizeChanged) {
     nsRect newBounds(nsPoint(0, 0), aNewSize);
-    RecomputePerspectiveChildrenOverflow(this);
+    RecomputePerspectiveChildrenOverflow(this, effectSet);
   }
 
   if (hasTransform) {
@@ -9100,7 +9116,7 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
        * the participants. This won't have happened yet as the code above set their overflow
        * area to empty. Manually collect these overflow areas now.
        */
-      if (Extend3DContext(disp)) {
+      if (Extend3DContext(disp, effectSet)) {
         ComputePreserve3DChildrenOverflow(aOverflowAreas);
       }
     }
@@ -9125,7 +9141,8 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
 }
 
 void
-nsIFrame::RecomputePerspectiveChildrenOverflow(const nsIFrame* aStartFrame)
+nsIFrame::RecomputePerspectiveChildrenOverflow(const nsIFrame* aStartFrame,
+                                               EffectSet* aEffectSet)
 {
   nsIFrame::ChildListIterator lists(this);
   for (; !lists.IsDone(); lists.Next()) {
@@ -9135,7 +9152,7 @@ nsIFrame::RecomputePerspectiveChildrenOverflow(const nsIFrame* aStartFrame)
       if (!child->FrameMaintainsOverflow()) {
         continue; // frame does not maintain overflow rects
       }
-      if (child->HasPerspective()) {
+      if (child->HasPerspective(aEffectSet)) {
         nsOverflowAreas* overflow = 
           child->Properties().Get(nsIFrame::InitialOverflowProperty());
         nsRect bounds(nsPoint(0, 0), child->GetSize());
@@ -9153,7 +9170,7 @@ nsIFrame::RecomputePerspectiveChildrenOverflow(const nsIFrame* aStartFrame)
         // style context. We must find any descendant frames using our size
         // (by recursing into frames that have the same containing block)
         // to update their overflow rects too.
-        child->RecomputePerspectiveChildrenOverflow(aStartFrame);
+        child->RecomputePerspectiveChildrenOverflow(aStartFrame, aEffectSet);
       }
     }
   }
