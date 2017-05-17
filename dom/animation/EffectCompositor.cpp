@@ -960,14 +960,20 @@ EffectCompositor::PreTraverseInSubtree(Element* aRoot)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mPresContext->RestyleManager()->IsServo());
 
+  // We need to force flush all throttled animations if there are any
+  // non-animation restyles.
+  bool flushThrottledRestyles = aRoot && aRoot->HasDirtyDescendantsForServo();
+
   using ElementsToRestyleIterType =
     nsDataHashtable<PseudoElementHashEntry, bool>::Iterator;
   auto getNeededRestyleTarget = [&](const ElementsToRestyleIterType& aIter)
                                 -> NonOwningAnimationTarget {
     NonOwningAnimationTarget returnTarget;
 
-    // Ignore throttled restyle.
-    if (!aIter.Data()) {
+    // If aIter.Data() is false, the element only requested a throttled
+    // (skippable) restyle, so we can skip it if flushThrottledRestyles is not
+    // true.
+    if (!flushThrottledRestyles && !aIter.Data()) {
       return returnTarget;
     }
 
@@ -1070,12 +1076,21 @@ EffectCompositor::PreTraverse(dom::Element* aElement,
 
   PseudoElementHashEntry::KeyType key = { aElement, aPseudoType };
 
+  // We need to flush all throttled animation restyles too if there are
+  // any non-animation restyles.
+  Element* elementToRestyle = GetElementToRestyle(aElement, aPseudoType);
+  bool flushThrottledRestyles = elementToRestyle &&
+                                elementToRestyle->HasDirtyDescendantsForServo();
+
   for (size_t i = 0; i < kCascadeLevelCount; ++i) {
     CascadeLevel cascadeLevel = CascadeLevel(i);
     auto& elementSet = mElementsToRestyle[cascadeLevel];
 
-    if (!elementSet.Get(key)) {
-      // Ignore throttled restyle and no restyle request.
+    // Skip if we don't have a restyle, or if we only have a throttled
+    // (skippable) restyle and we're not required to flush throttled restyles.
+    bool hasUnthrottledRestyle = false;
+    if (!elementSet.Get(key, &hasUnthrottledRestyle) ||
+        (!flushThrottledRestyles && !hasUnthrottledRestyle)) {
       continue;
     }
 
