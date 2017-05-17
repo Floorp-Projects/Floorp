@@ -894,8 +894,7 @@ imgCacheEntry::imgCacheEntry(imgLoader* loader, imgRequest* request,
    // will set this to false.
    mEvicted(true),
    mHasNoProxies(true),
-   mForcePrincipalCheck(forcePrincipalCheck),
-   mInUse(false)
+   mForcePrincipalCheck(forcePrincipalCheck)
 { }
 
 imgCacheEntry::~imgCacheEntry()
@@ -1398,8 +1397,6 @@ imgLoader::FindEntryProperties(nsIURI* uri,
                                nsIDOMDocument* aDOMDoc,
                                nsIProperties** _retval)
 {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
   *_retval = nullptr;
 
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDOMDoc);
@@ -1483,8 +1480,6 @@ imgLoader::MinimizeCaches()
 bool
 imgLoader::PutIntoCache(const ImageCacheKey& aKey, imgCacheEntry* entry)
 {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
   imgCacheTable& cache = GetCache(aKey);
 
   LOG_STATIC_FUNC_WITH_PARAM(gImgLog,
@@ -1544,8 +1539,6 @@ imgLoader::PutIntoCache(const ImageCacheKey& aKey, imgCacheEntry* entry)
 bool
 imgLoader::SetHasNoProxies(imgRequest* aRequest, imgCacheEntry* aEntry)
 {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
   LOG_STATIC_FUNC_WITH_PARAM(gImgLog,
                              "imgLoader::SetHasNoProxies", "uri",
                              aRequest->CacheKey().Spec());
@@ -1577,8 +1570,6 @@ imgLoader::SetHasNoProxies(imgRequest* aRequest, imgCacheEntry* aEntry)
 bool
 imgLoader::SetHasProxies(imgRequest* aRequest)
 {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
   VerifyCacheSizes();
 
   const ImageCacheKey& key = aRequest->CacheKey();
@@ -1906,8 +1897,6 @@ imgLoader::ValidateEntry(imgCacheEntry* aEntry,
 bool
 imgLoader::RemoveFromCache(const ImageCacheKey& aKey)
 {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
   LOG_STATIC_FUNC_WITH_PARAM(gImgLog,
                              "imgLoader::RemoveFromCache", "uri", aKey.Spec());
 
@@ -1916,10 +1905,6 @@ imgLoader::RemoveFromCache(const ImageCacheKey& aKey)
 
   RefPtr<imgCacheEntry> entry;
   if (cache.Get(aKey, getter_AddRefs(entry)) && entry) {
-    if (MOZ_UNLIKELY(entry->GetInUse())) {
-      gfxCriticalNoteOnce << "RemoveFromCache(key) removing inuse cache entry";
-    }
-
     cache.Remove(aKey);
 
     MOZ_ASSERT(!entry->Evicted(), "Evicting an already-evicted cache entry!");
@@ -1946,8 +1931,6 @@ imgLoader::RemoveFromCache(const ImageCacheKey& aKey)
 bool
 imgLoader::RemoveFromCache(imgCacheEntry* entry)
 {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
   LOG_STATIC_FUNC(gImgLog, "imgLoader::RemoveFromCache entry");
 
   RefPtr<imgRequest> request = entry->GetRequest();
@@ -1959,11 +1942,6 @@ imgLoader::RemoveFromCache(imgCacheEntry* entry)
     LOG_STATIC_FUNC_WITH_PARAM(gImgLog,
                                "imgLoader::RemoveFromCache", "entry's uri",
                                key.Spec());
-
-    if (MOZ_UNLIKELY(entry->GetInUse())) {
-      gfxCriticalNoteOnce << "RemoveFromCache(entry) removing inuse cache entry";
-      MOZ_RELEASE_ASSERT(false);
-    }
 
     cache.Remove(key);
 
@@ -2114,8 +2092,6 @@ imgLoader::LoadImage(nsIURI* aURI,
                      bool aUseUrgentStartForChannel,
                      imgRequestProxy** _retval)
 {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
   VerifyCacheSizes();
 
   NS_ASSERTION(aURI, "imgLoader::LoadImage -- NULL URI pointer");
@@ -2196,7 +2172,6 @@ imgLoader::LoadImage(nsIURI* aURI,
   imgCacheTable& cache = GetCache(key);
 
   if (cache.Get(key, getter_AddRefs(entry)) && entry) {
-    entry->SetInUse(true);
     if (ValidateEntry(entry, aURI, aInitialDocumentURI, aReferrerURI,
                       aReferrerPolicy, aLoadGroup, aObserver, aLoadingDocument,
                       requestFlags, aContentPolicyType, true, _retval,
@@ -2213,32 +2188,13 @@ imgLoader::LoadImage(nsIURI* aURI,
         request->SetCacheEntry(entry);
 
         if (mCacheTracker) {
-          if (MOZ_UNLIKELY(!entry->GetExpirationState()->IsTracked())) {
-            bool inCache = false;
-            bool cacheHasEntry = false;
-            RefPtr<imgCacheEntry> e;
-            if (cache.Get(key, getter_AddRefs(e)) && e) {
-              cacheHasEntry = true;
-              inCache = (e == entry);
-            }
-            gfxCriticalNoteOnce << "entry with no proxies is no in tracker "
-                                << "request->HasConsumers() "
-                                << (request->HasConsumers() ? "true" : "false")
-                                << " inCache " << (inCache ? "true" : "false")
-                                << " cacheHasEntry " << (cacheHasEntry ? "true" : "false");
-          }
-
           mCacheTracker->MarkUsed(entry);
         }
       }
 
       entry->Touch();
 
-      entry->SetInUse(false);
-
     } else {
-      entry->SetInUse(false);
-
       // We can't use this entry. We'll try to load it off the network, and if
       // successful, overwrite the old entry in the cache with a new one.
       entry = nullptr;
@@ -2410,8 +2366,6 @@ imgLoader::LoadImageWithChannel(nsIChannel* channel,
                                 nsIStreamListener** listener,
                                 imgRequestProxy** _retval)
 {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
   NS_ASSERTION(channel,
                "imgLoader::LoadImageWithChannel -- NULL channel pointer");
 
@@ -2449,8 +2403,6 @@ imgLoader::LoadImageWithChannel(nsIChannel* channel,
     // of post data.
     imgCacheTable& cache = GetCache(key);
     if (cache.Get(key, getter_AddRefs(entry)) && entry) {
-      entry->SetInUse(true);
-
       // We don't want to kick off another network load. So we ask
       // ValidateEntry to only do validation without creating a new proxy. If
       // it says that the entry isn't valid any more, we'll only use the entry
@@ -2485,7 +2437,6 @@ imgLoader::LoadImageWithChannel(nsIChannel* channel,
         }
 
         if (!bUseCacheCopy) {
-          entry->SetInUse(false);
           entry = nullptr;
         } else {
           request = entry->GetRequest();
@@ -2507,9 +2458,6 @@ imgLoader::LoadImageWithChannel(nsIChannel* channel,
             mCacheTracker->MarkUsed(entry);
           }
         }
-      }
-      if (entry) {
-        entry->SetInUse(false);
       }
     }
   }

@@ -142,14 +142,6 @@ public:
     return mForcePrincipalCheck;
   }
 
-  bool GetInUse() const {
-    return mInUse;
-  }
-
-  void SetInUse(bool aInUse) {
-    mInUse = aInUse;
-  }
-
   imgLoader* Loader() const
   {
     return mLoader;
@@ -184,7 +176,6 @@ private: // data
   bool mEvicted : 1;
   bool mHasNoProxies : 1;
   bool mForcePrincipalCheck : 1;
-  bool mInUse : 1;
 };
 
 #include <vector>
