@@ -13,7 +13,7 @@
 namespace mozilla {
 namespace dom {
 
-class StorageManagerBase;
+class LocalStorageManager;
 class StorageCache;
 class StorageEvent;
 
@@ -26,7 +26,7 @@ public:
 
   StorageType Type() const override { return eLocalStorage; }
 
-  StorageManagerBase* GetManager() const
+  LocalStorageManager* GetManager() const
   {
     return mManager;
   }
@@ -39,7 +39,7 @@ public:
   bool PrincipalEquals(nsIPrincipal* aPrincipal);
 
   LocalStorage(nsPIDOMWindowInner* aWindow,
-               StorageManagerBase* aManager,
+               LocalStorageManager* aManager,
                StorageCache* aCache,
                const nsAString& aDocumentURI,
                nsIPrincipal* aPrincipal,
@@ -91,8 +91,7 @@ public:
   // changes have already been applied.  This is the case for message manager
   // messages which are used by ContentTask testing logic and webextensions.
   static void
-  DispatchStorageEvent(StorageType aStorageType,
-                       const nsAString& aDocumentURI,
+  DispatchStorageEvent(const nsAString& aDocumentURI,
                        const nsAString& aKey,
                        const nsAString& aOldValue,
                        const nsAString& aNewValue,
@@ -117,11 +116,10 @@ protected:
 private:
   ~LocalStorage();
 
-  friend class StorageManagerBase;
+  friend class LocalStorageManager;
   friend class StorageCache;
 
-  nsCOMPtr<nsPIDOMWindowInner> mWindow;
-  RefPtr<StorageManagerBase> mManager;
+  RefPtr<LocalStorageManager> mManager;
   RefPtr<StorageCache> mCache;
   nsString mDocumentURI;
 

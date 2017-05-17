@@ -9,7 +9,7 @@
 #include "Storage.h"
 #include "StorageDBThread.h"
 #include "StorageIPC.h"
-#include "StorageManager.h"
+#include "LocalStorageManager.h"
 
 #include "nsAutoPtr.h"
 #include "nsDOMString.h"
@@ -122,7 +122,7 @@ StorageCache::Release(void)
 }
 
 void
-StorageCache::Init(StorageManagerBase* aManager,
+StorageCache::Init(LocalStorageManager* aManager,
                    bool aPersistent,
                    nsIPrincipal* aPrincipal,
                    const nsACString& aQuotaOriginScope)
@@ -166,7 +166,7 @@ StorageCache::Persist(const LocalStorage* aStorage) const
 const nsCString
 StorageCache::Origin() const
 {
-  return StorageManagerBase::CreateOrigin(mOriginSuffix, mOriginNoSuffix);
+  return LocalStorageManager::CreateOrigin(mOriginSuffix, mOriginNoSuffix);
 }
 
 StorageCache::Data&
@@ -218,7 +218,7 @@ StorageCache::ProcessUsageDelta(uint32_t aGetDataSetIndex, const int64_t aDelta,
   Data& data = mData[aGetDataSetIndex];
   uint64_t newOriginUsage = data.mOriginQuotaUsage + aDelta;
   if (aSource == ContentMutation &&
-      aDelta > 0 && newOriginUsage > StorageManagerBase::GetQuota()) {
+      aDelta > 0 && newOriginUsage > LocalStorageManager::GetQuota()) {
     return false;
   }
 
@@ -691,7 +691,7 @@ StorageUsage::CheckAndSetETLD1UsageDelta(uint32_t aDataSetIndex,
 
   int64_t newUsage = mUsage[aDataSetIndex] + aDelta;
   if (aSource == StorageCache::ContentMutation &&
-      aDelta > 0 && newUsage > StorageManagerBase::GetQuota()) {
+      aDelta > 0 && newUsage > LocalStorageManager::GetQuota()) {
     return false;
   }
 
@@ -721,11 +721,11 @@ StorageCache::StartDatabase()
 
     sDatabase = db.forget();
   } else {
-    // Use DOMLocalStorageManager::Ensure in case we're called from
+    // Use LocalStorageManager::Ensure in case we're called from
     // DOMSessionStorageManager's initializer and we haven't yet initialized the
     // local storage manager.
     RefPtr<StorageDBChild> db = new StorageDBChild(
-        DOMLocalStorageManager::Ensure());
+        LocalStorageManager::Ensure());
 
     nsresult rv = db->Init();
     if (NS_FAILED(rv)) {
