@@ -723,7 +723,7 @@
       <method name="audioPlaybackBlockStarted">
         <body>
           <![CDATA[
-            this._hasAnyPlayingMediaBeenBlocked = true;
+            this._audioBlocked = true;
             let event = document.createEvent("Events");
             event.initEvent("DOMAudioPlaybackBlockStarted", true, false);
             this.dispatchEvent(event);
@@ -734,10 +734,10 @@
       <method name="audioPlaybackBlockStopped">
         <body>
           <![CDATA[
-            if (!this._hasAnyPlayingMediaBeenBlocked) {
+            if (!this._audioBlocked) {
               return;
             }
-            this._hasAnyPlayingMediaBeenBlocked = false;
+            this._audioBlocked = false;
             let event = document.createEvent("Events");
             event.initEvent("DOMAudioPlaybackBlockStopped", true, false);
             this.dispatchEvent(event);
@@ -751,12 +751,10 @@
                 readonly="true"/>
 
 
-      <field name="_mediaBlocked">false</field>
-      <property name="mediaBlocked"
-                onget="return this._mediaBlocked;"
+      <field name="_audioBlocked">false</field>
+      <property name="audioBlocked"
+                onget="return this._audioBlocked;"
                 readonly="true"/>
-
-      <field name="_hasAnyPlayingMediaBeenBlocked">false</field>
 
       <method name="mute">
         <body>
@@ -807,10 +805,7 @@
       <method name="blockMedia">
         <body>
           <![CDATA[
-            if (this._mediaBlocked) {
-              return;
-            }
-            this._mediaBlocked = true;
+            this._audioBlocked = true;
             this.messageManager.sendAsyncMessage("AudioPlayback",
                                                  {type: "blockInactivePageMedia"});
           ]]>
@@ -820,16 +815,12 @@
       <method name="resumeMedia">
         <body>
           <![CDATA[
-            this._mediaBlocked = false;
+            this._audioBlocked = false;
             this.messageManager.sendAsyncMessage("AudioPlayback",
                                                  {type: "resumeMedia"});
-
-            if (this._hasAnyPlayingMediaBeenBlocked) {
-              this._hasAnyPlayingMediaBeenBlocked = false;
-              let event = document.createEvent("Events");
-              event.initEvent("DOMAudioPlaybackBlockStopped", true, false);
-              this.dispatchEvent(event);
-            }
+            let event = document.createEvent("Events");
+            event.initEvent("DOMAudioPlaybackBlockStopped", true, false);
+            this.dispatchEvent(event);
           ]]>
         </body>
       </method>
