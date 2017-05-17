@@ -206,7 +206,7 @@ const char* mozilla::dom::ContentPrefs::gInitPrefs[] = {
   "privacy.firstparty.isolate",
   "privacy.firstparty.isolate.restrict_opener_access",
   "privacy.resistFingerprinting",
-  "security.data_uri.inherit_security_context",
+  "security.data_uri.unique_opaque_origin",
   "security.fileuri.strict_origin_policy",
   "security.sandbox.content.level",
   "security.sandbox.content.tempDirSuffix",

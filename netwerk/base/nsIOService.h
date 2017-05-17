@@ -95,7 +95,7 @@ public:
 
     bool IsLinkUp();
 
-    static bool IsInheritSecurityContextForDataURIEnabled();
+    static bool IsDataURIUniqueOpaqueOrigin();
 
     // Used to count the total number of HTTP requests made
     void IncrementRequestNumber() { mTotalRequests++; }
@@ -185,7 +185,7 @@ private:
 
     bool                                 mNetworkNotifyChanged;
 
-    static bool                          sDataURIInheritSecurityContext;
+    static bool                          sIsDataURIUniqueOpaqueOrigin;
 
     uint32_t mTotalRequests;
     uint32_t mCacheWon;
