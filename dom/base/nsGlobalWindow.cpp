@@ -1007,7 +1007,8 @@ nsPIDOMWindow<T>::nsPIDOMWindow(nsPIDOMWindowOuter *aOuterWindow)
   // Make sure no actual window ends up with mWindowID == 0
   mWindowID(NextWindowID()), mHasNotifiedGlobalCreated(false),
   mMarkedCCGeneration(0), mServiceWorkersTestingEnabled(false),
-  mLargeAllocStatus(LargeAllocStatus::NONE)
+  mLargeAllocStatus(LargeAllocStatus::NONE),
+  mShouldResumeOnFirstActiveMediaComponent(false)
 {
   if (aOuterWindow) {
     mTimeoutManager =
@@ -4417,13 +4418,41 @@ nsPIDOMWindowInner::IsRunningTimeout()
 }
 
 void
+nsPIDOMWindowOuter::NotifyCreatedNewMediaComponent()
+{
+  // We would only active media component when there is any alive one.
+  mShouldResumeOnFirstActiveMediaComponent = true;
+
+  // If the document is already on the foreground but the suspend state is still
+  // suspend-block, that means the media component was created after calling
+  // MaybeActiveMediaComponents, so the window's suspend state doesn't be
+  // changed yet. Therefore, we need to call it again, because the state is only
+  // changed after there exists alive media within the window.
+  MaybeActiveMediaComponents();
+}
+
+void
 nsPIDOMWindowOuter::MaybeActiveMediaComponents()
 {
   if (IsInnerWindow()) {
     return mOuterWindow->MaybeActiveMediaComponents();
   }
 
-  if (mMediaSuspend != nsISuspendedTypes::SUSPENDED_BLOCK) {
+  // Resume the media when the tab was blocked and the tab already has
+  // alive media components.
+  if (!mShouldResumeOnFirstActiveMediaComponent ||
+      mMediaSuspend != nsISuspendedTypes::SUSPENDED_BLOCK) {
+    return;
+  }
+
+  nsCOMPtr<nsPIDOMWindowInner> inner = GetCurrentInnerWindow();
+  if (!inner) {
+    return;
+  }
+
+  // If the document is not visible, don't need to resume it.
+  nsCOMPtr<nsIDocument> doc = inner->GetExtantDoc();
+  if (!doc || doc->Hidden()) {
     return;
   }
 
