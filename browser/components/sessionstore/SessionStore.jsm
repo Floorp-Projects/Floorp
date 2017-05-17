@@ -3588,8 +3588,6 @@ var SessionStoreInternal = {
       tab.toggleMuteAudio(tabData.muteReason);
     }
 
-    tab.setMediaBlock(!!tabData.mediaBlocked);
-
     if (tabData.lastAccessed) {
       tab.updateLastAccessed(tabData.lastAccessed);
     }
