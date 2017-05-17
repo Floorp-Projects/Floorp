@@ -1718,8 +1718,11 @@ public:
    * Returns whether this frame will attempt to extend the 3d transforms of its
    * children. This requires transform-style: preserve-3d, as well as no clipping
    * or svg effects.
+   *
+   * @param aStyleDisplay:  If the caller has this->StyleDisplay(), providing
+   *   it here will improve performance.
    */
-  bool Extend3DContext() const;
+  bool Extend3DContext(const nsStyleDisplay* aStyleDisplay = nullptr) const;
 
   /**
    * Returns whether this frame has a parent that Extend3DContext() and has
@@ -1739,13 +1742,15 @@ public:
    */
   bool In3DContextAndBackfaceIsHidden() const;
 
-  bool IsPreserve3DLeaf() const {
-    return Combines3DTransformWithAncestors() && !Extend3DContext();
+  bool IsPreserve3DLeaf(const nsStyleDisplay* aStyleDisplay = nullptr) const {
+    const nsStyleDisplay* disp = StyleDisplayWithOptionalParam(aStyleDisplay);
+    return Combines3DTransformWithAncestors(disp) &&
+           !Extend3DContext(disp);
   }
 
-  bool HasPerspective() const;
+  bool HasPerspective(const nsStyleDisplay* aStyleDisplay = nullptr) const;
 
-  bool ChildrenHavePerspective() const;
+  bool ChildrenHavePerspective(const nsStyleDisplay* aStyleDisplay = nullptr) const;
 
   /**
    * Includes the overflow area of all descendants that participate in the current
@@ -3027,11 +3032,14 @@ public:
    * the overflow areas changed.
    */
   bool FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
-                              nsSize aNewSize, nsSize* aOldSize = nullptr);
+                              nsSize aNewSize, nsSize* aOldSize = nullptr,
+                              const nsStyleDisplay* aStyleDisplay = nullptr);
 
-  bool FinishAndStoreOverflow(ReflowOutput* aMetrics) {
+  bool FinishAndStoreOverflow(ReflowOutput* aMetrics,
+                              const nsStyleDisplay* aStyleDisplay = nullptr) {
     return FinishAndStoreOverflow(aMetrics->mOverflowAreas,
-                                  nsSize(aMetrics->Width(), aMetrics->Height()));
+                                  nsSize(aMetrics->Width(), aMetrics->Height()),
+                                  nullptr, aStyleDisplay);
   }
 
   /**
