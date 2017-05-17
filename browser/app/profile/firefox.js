@@ -674,13 +674,22 @@ pref("plugin.default.state", 1);
 // Plugins bundled in XPIs are enabled by default.
 pref("plugin.defaultXpi.state", 2);
 
-// Flash is enabled by default, and Java is click-to-activate by default on
-// all channels.
-pref("plugin.state.flash", 2);
+// Java is Click-to-Activate by default on all channels.
 pref("plugin.state.java", 1);
 
+// Flash is Click-to-Activate by default on Nightly,
+// Always-Activate on other channels.
 #ifdef NIGHTLY_BUILD
 pref("plugins.flashBlock.enabled", true);
+pref("plugin.state.flash", 1);
+
+// Prefer HTML5 video over Flash content, and don't
+// load plugin instances with no src declared.
+// These prefs are documented in details on all.js.
+pref("plugins.favorfallback.mode", "follow-ctp");
+pref("plugins.favorfallback.rules", "nosrc,video");
+#else
+pref("plugin.state.flash", 2);
 #endif
 
 #ifdef XP_WIN
