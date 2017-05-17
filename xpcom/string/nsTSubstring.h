@@ -999,20 +999,18 @@ public:
    * string.
    *
    *  @param  aChar -- char to be stripped
-   *  @param  aOffset -- where in this string to start stripping chars
    */
 
-  void StripChar(char_type aChar, int32_t aOffset = 0);
+  void StripChar(char_type aChar);
 
   /**
    *  This method is used to remove all occurrences of aChars from this
    * string.
    *
    *  @param  aChars -- chars to be stripped
-   *  @param  aOffset -- where in this string to start stripping chars
    */
 
-  void StripChars(const char_type* aChars, uint32_t aOffset = 0);
+  void StripChars(const char_type* aChars);
 
   /**
    * This method is used to remove all occurrences of some characters this
@@ -1030,14 +1028,13 @@ public:
    *          parameter is of ASCIIMaskArray type, but we expand the typedef
    *          to avoid having to include nsASCIIMask.h in this include file
    *          as it brings other includes.
-   *  @param  aOffset -- where in this string to start stripping chars
    */
-  void StripTaggedASCII(const std::array<bool, 128>& aToStrip, uint32_t aOffset = 0);
+  void StripTaggedASCII(const std::array<bool, 128>& aToStrip);
 
   /**
    * A shortcut to strip \r and \n.
    */
-  void StripCRLF(uint32_t aOffset = 0);
+  void StripCRLF();
 
   /**
    * If the string uses a shared buffer, this method
