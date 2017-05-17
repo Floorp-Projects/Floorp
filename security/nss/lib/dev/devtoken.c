@@ -368,8 +368,8 @@ loser:
     return (nssCryptokiObject **)NULL;
 }
 
-static nssCryptokiObject **
-find_objects_by_template(
+NSS_IMPLEMENT nssCryptokiObject **
+nssToken_FindObjectsByTemplate(
     NSSToken *token,
     nssSession *sessionOpt,
     CK_ATTRIBUTE_PTR obj_template,
@@ -581,9 +581,9 @@ nssToken_FindObjects(
                                obj_template, obj_size,
                                maximumOpt, statusOpt);
     } else {
-        objects = find_objects_by_template(token, sessionOpt,
-                                           obj_template, obj_size,
-                                           maximumOpt, statusOpt);
+        objects = nssToken_FindObjectsByTemplate(token, sessionOpt,
+                                                 obj_template, obj_size,
+                                                 maximumOpt, statusOpt);
     }
     return objects;
 }
@@ -612,9 +612,9 @@ nssToken_FindCertificatesBySubject(
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_SUBJECT, subject);
     NSS_CK_TEMPLATE_FINISH(subj_template, attr, stsize);
     /* now locate the token certs matching this template */
-    objects = find_objects_by_template(token, sessionOpt,
-                                       subj_template, stsize,
-                                       maximumOpt, statusOpt);
+    objects = nssToken_FindObjectsByTemplate(token, sessionOpt,
+                                             subj_template, stsize,
+                                             maximumOpt, statusOpt);
     return objects;
 }
 
@@ -642,9 +642,9 @@ nssToken_FindCertificatesByNickname(
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CLASS, &g_ck_class_cert);
     NSS_CK_TEMPLATE_FINISH(nick_template, attr, ntsize);
     /* now locate the token certs matching this template */
-    objects = find_objects_by_template(token, sessionOpt,
-                                       nick_template, ntsize,
-                                       maximumOpt, statusOpt);
+    objects = nssToken_FindObjectsByTemplate(token, sessionOpt,
+                                             nick_template, ntsize,
+                                             maximumOpt, statusOpt);
     if (!objects) {
         /* This is to workaround the fact that PKCS#11 doesn't specify
          * whether the '\0' should be included.  XXX Is that still true?
@@ -653,9 +653,9 @@ nssToken_FindCertificatesByNickname(
          * well, its needed by the builtin token...
          */
         nick_template[0].ulValueLen++;
-        objects = find_objects_by_template(token, sessionOpt,
-                                           nick_template, ntsize,
-                                           maximumOpt, statusOpt);
+        objects = nssToken_FindObjectsByTemplate(token, sessionOpt,
+                                                 nick_template, ntsize,
+                                                 maximumOpt, statusOpt);
     }
     return objects;
 }
@@ -732,9 +732,9 @@ nssToken_FindCertificatesByID(
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CLASS, &g_ck_class_cert);
     NSS_CK_TEMPLATE_FINISH(id_template, attr, idtsize);
     /* now locate the token certs matching this template */
-    objects = find_objects_by_template(token, sessionOpt,
-                                       id_template, idtsize,
-                                       maximumOpt, statusOpt);
+    objects = nssToken_FindObjectsByTemplate(token, sessionOpt,
+                                             id_template, idtsize,
+                                             maximumOpt, statusOpt);
     return objects;
 }
 
@@ -822,9 +822,9 @@ nssToken_FindCertificateByIssuerAndSerialNumber(
                                cert_template, ctsize,
                                1, statusOpt);
     } else {
-        objects = find_objects_by_template(token, sessionOpt,
-                                           cert_template, ctsize,
-                                           1, statusOpt);
+        objects = nssToken_FindObjectsByTemplate(token, sessionOpt,
+                                                 cert_template, ctsize,
+                                                 1, statusOpt);
     }
     if (objects) {
         rvObject = objects[0];
@@ -849,9 +849,9 @@ nssToken_FindCertificateByIssuerAndSerialNumber(
                                    cert_template, ctsize,
                                    1, statusOpt);
         } else {
-            objects = find_objects_by_template(token, sessionOpt,
-                                               cert_template, ctsize,
-                                               1, statusOpt);
+            objects = nssToken_FindObjectsByTemplate(token, sessionOpt,
+                                                     cert_template, ctsize,
+                                                     1, statusOpt);
         }
         if (objects) {
             rvObject = objects[0];
@@ -885,9 +885,9 @@ nssToken_FindCertificateByEncodedCertificate(
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_VALUE, encodedCertificate);
     NSS_CK_TEMPLATE_FINISH(cert_template, attr, ctsize);
     /* get the object handle */
-    objects = find_objects_by_template(token, sessionOpt,
-                                       cert_template, ctsize,
-                                       1, statusOpt);
+    objects = nssToken_FindObjectsByTemplate(token, sessionOpt,
+                                             cert_template, ctsize,
+                                             1, statusOpt);
     if (objects) {
         rvObject = objects[0];
         nss_ZFreeIf(objects);
@@ -917,9 +917,9 @@ nssToken_FindPrivateKeys(
     }
     NSS_CK_TEMPLATE_FINISH(key_template, attr, ktsize);
 
-    objects = find_objects_by_template(token, sessionOpt,
-                                       key_template, ktsize,
-                                       maximumOpt, statusOpt);
+    objects = nssToken_FindObjectsByTemplate(token, sessionOpt,
+                                             key_template, ktsize,
+                                             maximumOpt, statusOpt);
     return objects;
 }
 
@@ -942,9 +942,9 @@ nssToken_FindPrivateKeyByID(
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_ID, keyID);
     NSS_CK_TEMPLATE_FINISH(key_template, attr, ktsize);
 
-    objects = find_objects_by_template(token, sessionOpt,
-                                       key_template, ktsize,
-                                       1, NULL);
+    objects = nssToken_FindObjectsByTemplate(token, sessionOpt,
+                                             key_template, ktsize,
+                                             1, NULL);
     if (objects) {
         rvKey = objects[0];
         nss_ZFreeIf(objects);
@@ -971,9 +971,9 @@ nssToken_FindPublicKeyByID(
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_ID, keyID);
     NSS_CK_TEMPLATE_FINISH(key_template, attr, ktsize);
 
-    objects = find_objects_by_template(token, sessionOpt,
-                                       key_template, ktsize,
-                                       1, NULL);
+    objects = nssToken_FindObjectsByTemplate(token, sessionOpt,
+                                             key_template, ktsize,
+                                             1, NULL);
     if (objects) {
         rvKey = objects[0];
         nss_ZFreeIf(objects);
@@ -1130,9 +1130,9 @@ nssToken_FindTrustForCertificate(
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_ISSUER, certIssuer);
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_SERIAL_NUMBER, certSerial);
     NSS_CK_TEMPLATE_FINISH(tobj_template, attr, tobj_size);
-    objects = find_objects_by_template(token, session,
-                                       tobj_template, tobj_size,
-                                       1, NULL);
+    objects = nssToken_FindObjectsByTemplate(token, session,
+                                             tobj_template, tobj_size,
+                                             1, NULL);
     if (objects) {
         object = objects[0];
         nss_ZFreeIf(objects);
@@ -1215,9 +1215,9 @@ nssToken_FindCRLsBySubject(
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_SUBJECT, subject);
     NSS_CK_TEMPLATE_FINISH(crlobj_template, attr, crlobj_size);
 
-    objects = find_objects_by_template(token, session,
-                                       crlobj_template, crlobj_size,
-                                       maximumOpt, statusOpt);
+    objects = nssToken_FindObjectsByTemplate(token, session,
+                                             crlobj_template, crlobj_size,
+                                             maximumOpt, statusOpt);
     return objects;
 }
 

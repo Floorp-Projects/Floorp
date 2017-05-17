@@ -739,3 +739,11 @@ if CONFIG['CLANG_CXX']:
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     DEFINES['NOMINMAX'] = True
+
+# Generate GC statistics phase data.
+GENERATED_FILES += ['gc/StatsPhasesGenerated.h']
+StatsPhasesGeneratedHeader = GENERATED_FILES['gc/StatsPhasesGenerated.h']
+StatsPhasesGeneratedHeader.script = 'gc/GenerateStatsPhases.py:generateHeader'
+GENERATED_FILES += ['gc/StatsPhasesGenerated.cpp']
+StatsPhasesGeneratedCpp = GENERATED_FILES['gc/StatsPhasesGenerated.cpp']
+StatsPhasesGeneratedCpp.script = 'gc/GenerateStatsPhases.py:generateCpp'

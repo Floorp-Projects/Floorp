@@ -738,7 +738,7 @@ js::Nursery::doCollection(JS::gcreason::Reason reason,
 
     maybeStartProfile(ProfileKey::MarkDebugger);
     {
-        gcstats::AutoPhase ap(rt->gc.stats(), gcstats::PHASE_MARK_ROOTS);
+        gcstats::AutoPhase ap(rt->gc.stats(), gcstats::PhaseKind::MARK_ROOTS);
         Debugger::traceAllForMovingGC(&mover);
     }
     maybeEndProfile(ProfileKey::MarkDebugger);

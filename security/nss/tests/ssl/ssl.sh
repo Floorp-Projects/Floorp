@@ -1038,7 +1038,14 @@ ssl_run_all()
     ORIG_P_R_SERVERDIR=$P_R_SERVERDIR
     ORIG_P_R_CLIENTDIR=$P_R_CLIENTDIR
 
-    USER_NICKNAME=TestUser
+    # Exercise PKCS#11 URI parsing. The token actually changes its name
+    # in FIPS mode, so cope with that. Note there's also semicolon in here
+    # but it doesn't need escaping/quoting; the shell copes.
+    if [ "${CLIENT_MODE}" = "fips" ]; then
+	USER_NICKNAME="pkcs11:token=NSS%20FIPS%20140-2%20Certificate%20DB;object=TestUser"
+    else
+	USER_NICKNAME="pkcs11:token=NSS%20Certificate%20DB;object=TestUser"
+    fi
     NORM_EXT=""
     cd ${CLIENTDIR}
 
@@ -1051,7 +1058,8 @@ ssl_run_all()
     P_R_SERVERDIR=$P_R_EXT_SERVERDIR
     P_R_CLIENTDIR=$P_R_EXT_CLIENTDIR
 
-    USER_NICKNAME=ExtendedSSLUser
+    # A different URI test; specify CKA_LABEL but not the token.
+    USER_NICKNAME="pkcs11:object=ExtendedSSLUser"
     NORM_EXT="Extended Test"
     cd ${CLIENTDIR}
 

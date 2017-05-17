@@ -599,7 +599,7 @@ class Marionette(object):
         self.socket_timeout = socket_timeout
         self.crashed = 0
 
-        startup_timeout = startup_timeout or self.DEFAULT_STARTUP_TIMEOUT
+        self.startup_timeout = int(startup_timeout or self.DEFAULT_STARTUP_TIMEOUT)
         if self.bin:
             if not Marionette.is_port_available(self.port, host=self.host):
                 ex_msg = "{0}:{1} is unavailable.".format(self.host, self.port)
@@ -608,7 +608,7 @@ class Marionette(object):
             self.instance = GeckoInstance.create(
                 app, host=self.host, port=self.port, bin=self.bin, **instance_args)
             self.instance.start()
-            self.raise_for_port(timeout=startup_timeout)
+            self.raise_for_port(timeout=self.startup_timeout)
 
         self.timeout = Timeouts(self)
 
@@ -1315,6 +1315,7 @@ class Marionette(object):
 
         # Call wait_for_port() before attempting to connect in
         # the event gecko hasn't started yet.
+        timeout = timeout or self.startup_timeout
         self.wait_for_port(timeout=timeout)
         self.protocol, _ = self.client.connect()
 
