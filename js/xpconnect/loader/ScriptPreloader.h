@@ -137,7 +137,7 @@ private:
     // the next session's cache file. If it was compiled in this session, its
     // mXDRRange will initially be empty, and its mXDRData buffer will be
     // populated just before it is written to the cache file.
-    class CachedScript
+    class CachedScript : public LinkedListElement<CachedScript>
     {
     public:
         CachedScript(CachedScript&&) = default;
@@ -161,27 +161,18 @@ private:
 
         // For use with nsTArray::Sort.
         //
-        // Orders scripts by:
-        //
-        // 1) Async-decoded scripts before sync-decoded scripts, since the
-        //    former are needed immediately at startup, and should be stored
-        //    contiguously.
-        // 2) Script load time, so that scripts which are needed earlier are
-        //    stored earlier, and scripts needed at approximately the same
-        //    time are stored approximately contiguously.
+        // Orders scripts by script load time, so that scripts which are needed
+        // earlier are stored earlier, and scripts needed at approximately the
+        // same time are stored approximately contiguously.
         struct Comparator
         {
             bool Equals(const CachedScript* a, const CachedScript* b) const
             {
-              return (a->AsyncDecodable() == b->AsyncDecodable() &&
-                      a->mLoadTime == b->mLoadTime);
+              return a->mLoadTime == b->mLoadTime;
             }
 
             bool LessThan(const CachedScript* a, const CachedScript* b) const
             {
-              if (a->AsyncDecodable() != b->AsyncDecodable()) {
-                return a->AsyncDecodable();
-              }
               return a->mLoadTime < b->mLoadTime;
             }
         };
@@ -197,8 +188,6 @@ private:
 
             const ScriptStatus mStatus;
         };
-
-        void Cancel();
 
         void FreeData()
         {
@@ -216,8 +205,6 @@ private:
             mLoadTime = loadTime;
           }
         }
-
-        bool AsyncDecodable() const { return mSize > MIN_OFFTHREAD_SIZE; }
 
         // Encodes this script into XDR data, and stores the result in mXDRData.
         // Returns true on success, false on failure.
@@ -306,10 +293,6 @@ private:
         // whenever it is first executed.
         bool mReadyToExecute = false;
 
-        // The off-thread decode token for a completed off-thread decode, which
-        // has not yet been finalized on the main thread.
-        void* mToken = nullptr;
-
         // The set of processes in which this script has been used.
         EnumSet<ProcessType> mProcessTypes{};
 
@@ -334,15 +317,31 @@ private:
         return &matcher;
     }
 
-    // There's a trade-off between the time it takes to setup an off-thread
-    // decode and the time we save by doing the decode off-thread. At this
-    // point, the setup is quite expensive, and 20K is about where we start to
-    // see an improvement rather than a regression.
+    // There's a significant setup cost for each off-thread decode operation,
+    // so scripts are decoded in chunks to minimize the overhead. There's a
+    // careful balancing act in choosing the size of chunks, to minimize the
+    // number of decode operations, while also minimizing the number of buffer
+    // underruns that require the main thread to wait for a script to finish
+    // decoding.
     //
-    // This also means that we get much better performance loading one big
-    // script than several small scripts, since the setup is per-script, and the
-    // OMT compile is almost always complete by the time we need a given script.
-    static constexpr int MIN_OFFTHREAD_SIZE = 20 * 1024;
+    // For the first chunk, we don't have much time between the start of the
+    // decode operation and the time the first script is needed, so that chunk
+    // needs to be fairly small. After the first chunk is finished, we have
+    // some buffered scripts to fall back on, and a lot more breathing room,
+    // so the chunks can be a bit bigger, but still not too big.
+    static constexpr int OFF_THREAD_FIRST_CHUNK_SIZE = 128 * 1024;
+    static constexpr int OFF_THREAD_CHUNK_SIZE = 512 * 1024;
+
+    // Ideally, we want every chunk to be smaller than the chunk sizes
+    // specified above. However, if we have some number of small scripts
+    // followed by a huge script that would put us over the normal chunk size,
+    // we're better off processing them as a single chunk.
+    //
+    // In order to guarantee that the JS engine will process a chunk
+    // off-thread, it needs to be at least 100K (which is an implementation
+    // detail that can change at any time), so make sure that we always hit at
+    // least that size, with a bit of breathing room to be safe.
+    static constexpr int SMALL_SCRIPT_CHUNK_THRESHOLD = 128 * 1024;
 
     // The maximum size of scripts to re-decode on the main thread if off-thread
     // decoding hasn't finished yet. In practice, we don't hit this very often,
@@ -377,11 +376,11 @@ private:
     // decodes it synchronously on the main thread, as appropriate.
     JSScript* WaitForCachedScript(JSContext* cx, CachedScript* script);
 
-    // Begins decoding the given script in a background thread.
-    void DecodeScriptOffThread(JSContext* cx, CachedScript* script);
+    void DecodeNextBatch(size_t chunkSize);
 
     static void OffThreadDecodeCallback(void* token, void* context);
-    void CancelOffThreadParse(void* token);
+    void FinishOffThreadDecode();
+    void DoFinishOffThreadDecode();
 
     size_t ShallowHeapSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
     {
@@ -411,6 +410,22 @@ private:
     bool mSaveComplete = false;
     bool mDataPrepared = false;
     bool mCacheInvalidated = false;
+
+    // The list of scripts that we read from the initial startup cache file,
+    // but have yet to initiate a decode task for.
+    LinkedList<CachedScript> mPendingScripts;
+
+    // The lists of scripts and their sources that make up the chunk currently
+    // being decoded in a background thread.
+    JS::TranscodeSources mParsingSources;
+    Vector<CachedScript*> mParsingScripts;
+
+    // The token for the completed off-thread decode task.
+    void* mToken = nullptr;
+
+    // True if a runnable has been dispatched to the main thread to finish an
+    // off-thread decode operation.
+    bool mFinishDecodeRunnablePending = false;
 
     // The process type of the current process.
     static ProcessType sProcessType;
