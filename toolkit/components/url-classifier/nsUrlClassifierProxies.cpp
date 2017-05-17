@@ -179,6 +179,15 @@ UrlClassifierDBServiceWorkerProxy::ReloadDatabase()
   return DispatchToWorkerThread(r);
 }
 
+NS_IMETHODIMP
+UrlClassifierDBServiceWorkerProxy::ClearCache()
+{
+  nsCOMPtr<nsIRunnable> r =
+    NewRunnableMethod(mTarget,
+                      &nsUrlClassifierDBServiceWorker::ClearCache);
+  return DispatchToWorkerThread(r);
+}
+
 nsresult
 UrlClassifierDBServiceWorkerProxy::OpenDb()
 {
@@ -222,6 +231,29 @@ NS_IMETHODIMP
 UrlClassifierDBServiceWorkerProxy::ClearLastResultsRunnable::Run()
 {
   return mTarget->ClearLastResults();
+}
+
+nsresult
+UrlClassifierDBServiceWorkerProxy::GetCacheInfo(const nsACString& aTable,
+                                                nsIUrlClassifierCacheInfo** aCache)
+{
+  nsCOMPtr<nsIRunnable> r = new GetCacheInfoRunnable(mTarget, aTable, aCache);
+
+  nsIThread* t = nsUrlClassifierDBService::BackgroundThread();
+  if (!t) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // This blocks main thread but since 'GetCacheInfo' is only used by
+  // about:url-classifier so it should be fine.
+  mozilla::SyncRunnable::DispatchToThread(t, r);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+UrlClassifierDBServiceWorkerProxy::GetCacheInfoRunnable::Run()
+{
+  return mTarget->GetCacheInfo(mTable, mCache);
 }
 
 NS_IMPL_ISUPPORTS(UrlClassifierLookupCallbackProxy,
