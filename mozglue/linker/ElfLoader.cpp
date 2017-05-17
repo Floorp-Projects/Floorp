@@ -609,12 +609,12 @@ ElfLoader::~ElfLoader()
          it < list.rend(); ++it) {
       if ((*it)->AsSystemElf()) {
         DEBUG_LOG("ElfLoader::~ElfLoader(): Remaining handle for \"%s\" "
-                  "[%d direct refs, %d refs total]", (*it)->GetPath(),
-                  (*it)->DirectRefCount(), (*it)->refCount());
+                  "[%" PRIdPTR " direct refs, %" PRIdPTR " refs total]",
+                  (*it)->GetPath(), (*it)->DirectRefCount(), (*it)->refCount());
       } else {
         DEBUG_LOG("ElfLoader::~ElfLoader(): Unexpected remaining handle for \"%s\" "
-                  "[%d direct refs, %d refs total]", (*it)->GetPath(),
-                  (*it)->DirectRefCount(), (*it)->refCount());
+                  "[%" PRIdPTR " direct refs, %" PRIdPTR " refs total]",
+                  (*it)->GetPath(), (*it)->DirectRefCount(), (*it)->refCount());
         /* Not removing, since it could have references to other libraries,
          * destroying them as a side effect, and possibly leaving dangling
          * pointers in the handle list we're scanning */
