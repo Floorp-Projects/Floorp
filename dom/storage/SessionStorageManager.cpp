@@ -39,8 +39,8 @@ SessionStorageManager::CreateStorage(mozIDOMWindow* aWindow,
   nsAutoCString originKey;
   nsAutoCString originAttributes;
   nsresult rv = GenerateOriginKey(aPrincipal, originAttributes, originKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   OriginKeyHashTable* table;

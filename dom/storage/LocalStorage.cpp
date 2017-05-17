@@ -289,5 +289,16 @@ LocalStorage::GetSupportedNames(nsTArray<nsString>& aKeys)
   mCache->GetKeys(this, aKeys);
 }
 
+bool
+LocalStorage::IsForkOf(const Storage* aOther) const
+{
+  MOZ_ASSERT(aOther);
+  if (aOther->Type() != eLocalStorage) {
+    return false;
+  }
+
+  return mCache == static_cast<const LocalStorage*>(aOther)->mCache;
+}
+
 } // namespace dom
 } // namespace mozilla

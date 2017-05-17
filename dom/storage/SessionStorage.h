@@ -42,6 +42,8 @@ public:
 
   int64_t GetOriginQuotaUsage() const override;
 
+  bool IsForkOf(const Storage* aStorage) const override;
+
   // WebIDL
   uint32_t GetLength(nsIPrincipal& aSubjectPrincipal,
                      ErrorResult& aRv) override;

@@ -218,8 +218,8 @@ LocalStorageManager::GetStorageInternal(CreateMode aCreateMode,
   nsAutoCString originKey;
 
   nsresult rv = GenerateOriginKey(aPrincipal, originAttrSuffix, originKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   RefPtr<StorageCache> cache = GetCache(originAttrSuffix, originKey);

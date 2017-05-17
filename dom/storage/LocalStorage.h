@@ -45,6 +45,8 @@ public:
                nsIPrincipal* aPrincipal,
                bool aIsPrivate);
 
+  bool IsForkOf(const Storage* aOther) const override;
+
   // WebIDL
 
   int64_t GetOriginQuotaUsage() const override;
@@ -75,12 +77,6 @@ public:
 
   bool IsPrivate() const { return mIsPrivate; }
   bool IsSessionOnly() const override { return mIsSessionOnly; }
-
-  bool IsForkOf(const LocalStorage* aOther) const
-  {
-    MOZ_ASSERT(aOther);
-    return mCache == aOther->mCache;
-  }
 
   // aStorage can be null if this method is called by ContentChild.
   //
