@@ -1671,7 +1671,10 @@ public:
    * @param aStyleDisplay:  If the caller has this->StyleDisplay(), providing
    *   it here will improve performance.
    */
-  bool IsTransformed(const nsStyleDisplay* aStyleDisplay = nullptr) const;
+  bool IsTransformed(const nsStyleDisplay* aStyleDisplay) const;
+  bool IsTransformed() const {
+    return IsTransformed(StyleDisplay());
+  }
 
   /**
    * True if this frame has any animation of transform in effect.
@@ -1722,7 +1725,10 @@ public:
    * @param aStyleDisplay:  If the caller has this->StyleDisplay(), providing
    *   it here will improve performance.
    */
-  bool Extend3DContext(const nsStyleDisplay* aStyleDisplay = nullptr) const;
+  bool Extend3DContext(const nsStyleDisplay* aStyleDisplay) const;
+  bool Extend3DContext() const {
+    return Extend3DContext(StyleDisplay());
+  }
 
   /**
    * Returns whether this frame has a parent that Extend3DContext() and has
@@ -1732,8 +1738,10 @@ public:
    * @param aStyleDisplay:  If the caller has this->StyleDisplay(), providing
    *   it here will improve performance.
    */
-  bool Combines3DTransformWithAncestors(const nsStyleDisplay* aStyleDisplay
-                                          = nullptr) const;
+  bool Combines3DTransformWithAncestors(const nsStyleDisplay* aStyleDisplay) const;
+  bool Combines3DTransformWithAncestors() const {
+    return Combines3DTransformWithAncestors(StyleDisplay());
+  }
 
   /**
    * Returns whether this frame has a hidden backface and has a parent that
@@ -1742,15 +1750,26 @@ public:
    */
   bool In3DContextAndBackfaceIsHidden() const;
 
-  bool IsPreserve3DLeaf(const nsStyleDisplay* aStyleDisplay = nullptr) const {
-    const nsStyleDisplay* disp = StyleDisplayWithOptionalParam(aStyleDisplay);
-    return Combines3DTransformWithAncestors(disp) &&
-           !Extend3DContext(disp);
+  bool IsPreserve3DLeaf(const nsStyleDisplay* aStyleDisplay) const {
+    return Combines3DTransformWithAncestors(aStyleDisplay) &&
+           !Extend3DContext(aStyleDisplay);
+  }
+  bool IsPreserve3DLeaf() const {
+    return IsPreserve3DLeaf(StyleDisplay());
   }
 
-  bool HasPerspective(const nsStyleDisplay* aStyleDisplay = nullptr) const;
+  bool HasPerspective(const nsStyleDisplay* aStyleDisplay) const;
+  bool HasPerspective() const {
+    return HasPerspective(StyleDisplay());
+  }
 
-  bool ChildrenHavePerspective(const nsStyleDisplay* aStyleDisplay = nullptr) const;
+  bool ChildrenHavePerspective(const nsStyleDisplay* aStyleDisplay) const {
+    MOZ_ASSERT(aStyleDisplay == StyleDisplay());
+    return aStyleDisplay->HasPerspectiveStyle();
+  }
+  bool ChildrenHavePerspective() const {
+    return ChildrenHavePerspective(StyleDisplay());
+  }
 
   /**
    * Includes the overflow area of all descendants that participate in the current
@@ -2758,8 +2777,11 @@ public:
     // this and return the outer scroll frame.
     SKIP_SCROLLED_FRAME = 0x01
   };
-  nsIFrame* GetContainingBlock(uint32_t aFlags = 0,
-                               const nsStyleDisplay* aStyleDisplay = nullptr) const;
+  nsIFrame* GetContainingBlock(uint32_t aFlags,
+                               const nsStyleDisplay* aStyleDisplay) const;
+  nsIFrame* GetContainingBlock(uint32_t aFlags = 0) const {
+    return GetContainingBlock(aFlags, StyleDisplay());
+  }
 
   /**
    * Is this frame a containing block for floating elements?
@@ -3701,8 +3723,12 @@ public:
    * @param aStyleDisplay:  If the caller has this->StyleDisplay(), providing
    *   it here will improve performance.
    */
-  bool BackfaceIsHidden(const nsStyleDisplay* aStyleDisplay = nullptr) const {
-    return StyleDisplayWithOptionalParam(aStyleDisplay)->BackfaceIsHidden();
+  bool BackfaceIsHidden(const nsStyleDisplay* aStyleDisplay) const {
+    MOZ_ASSERT(aStyleDisplay == StyleDisplay());
+    return aStyleDisplay->BackfaceIsHidden();
+  }
+  bool BackfaceIsHidden() const {
+    return StyleDisplay()->BackfaceIsHidden();
   }
 
   /**
