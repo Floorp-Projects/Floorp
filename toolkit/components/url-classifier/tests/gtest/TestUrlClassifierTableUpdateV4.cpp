@@ -758,3 +758,65 @@ TEST(UrlClassifierTableUpdateV4, ApplyUpdateWithFixedChecksum)
   Clear();
 }
 
+// This test ensure that an empty update works correctly. Empty update
+// should be skipped by CheckValidUpdate in Classifier::UpdateTableV4.
+TEST(UrlClassifierTableUpdateV4, EmptyUpdate)
+{
+  PrefixStringMap emptyAddition;
+  nsTArray<uint32_t> emptyRemoval;
+
+   _PrefixArray array;
+  PrefixStringMap map;
+  nsCString checksum;
+
+  CalculateCheckSum(array, checksum);
+
+  // Test apply empty full/partial update before we already
+  // have data in DB.
+  testFullUpdate(emptyAddition, &checksum);
+  testPartialUpdate(emptyAddition, &emptyRemoval, &checksum, map);
+
+  // Apply an full update.
+  CreateRandomSortedPrefixArray(100, 4, 4, array);
+  CreateRandomSortedPrefixArray(10, 5, 32, array);
+  PrefixArrayToPrefixStringMap(array, map);
+  CalculateCheckSum(array, checksum);
+
+  testFullUpdate(map, &checksum);
+
+  // Test apply empty full/partial update when we already
+  // have data in DB
+  testPartialUpdate(emptyAddition, &emptyRemoval, &checksum, map);
+  testFullUpdate(emptyAddition, &checksum);
+
+  Clear();
+}
+
+// This test ensure applying an empty update directly through update algorithm
+// should be correct.
+TEST(UrlClassifierTableUpdateV4, EmptyUpdate2)
+{
+  // Setup LookupCache with initial data
+   _PrefixArray array;
+  CreateRandomSortedPrefixArray(100, 4, 4, array);
+  CreateRandomSortedPrefixArray(10, 5, 32, array);
+  UniquePtr<LookupCacheV4> cache = SetupLookupCache<LookupCacheV4>(array);
+
+  // Setup TableUpdate object with only checksum from previous update(initial data).
+  nsCString checksum;
+  CalculateCheckSum(array, checksum);
+  std::string stdChecksum;
+  stdChecksum.assign(const_cast<char*>(checksum.BeginReading()), checksum.Length());
+
+  UniquePtr<TableUpdateV4> tableUpdate = MakeUnique<TableUpdateV4>(GTEST_TABLE);
+  tableUpdate->NewChecksum(stdChecksum);
+
+  // Apply update directly through LookupCache interface
+  PrefixStringMap input, output;
+  PrefixArrayToPrefixStringMap(array, input);
+  nsresult rv = cache->ApplyUpdate(tableUpdate.get(), input, output);
+
+  ASSERT_TRUE(rv == NS_OK);
+
+  Clear();
+}
