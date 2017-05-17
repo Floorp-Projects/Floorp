@@ -17,11 +17,11 @@ EXPORTS.mozilla.dom += [
 
 UNIFIED_SOURCES += [
     'LocalStorage.cpp',
+    'LocalStorageCache.cpp',
     'LocalStorageManager.cpp',
     'SessionStorage.cpp',
     'SessionStorageManager.cpp',
     'Storage.cpp',
-    'StorageCache.cpp',
     'StorageDBThread.cpp',
     'StorageDBUpdater.cpp',
     'StorageIPC.cpp',
