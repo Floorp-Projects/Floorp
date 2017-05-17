@@ -11,7 +11,7 @@
 #include "StorageObserver.h"
 
 #include "LocalStorage.h"
-#include "StorageCache.h"
+#include "LocalStorageCache.h"
 #include "mozilla/dom/Storage.h"
 
 #include "nsTHashtable.h"
@@ -38,8 +38,8 @@ public:
   static uint32_t GetQuota();
 
   // Gets (but not ensures) cache for the given scope
-  StorageCache* GetCache(const nsACString& aOriginSuffix,
-                         const nsACString& aOriginNoSuffix);
+  LocalStorageCache* GetCache(const nsACString& aOriginSuffix,
+                              const nsACString& aOriginNoSuffix);
 
   // Returns object keeping usage cache for the scope.
   already_AddRefed<StorageUsage>
@@ -57,37 +57,37 @@ private:
                    const nsACString& aOriginScope) override;
 
   // Since nsTHashtable doesn't like multiple inheritance, we have to aggregate
-  // StorageCache into the entry.
-  class StorageCacheHashKey : public nsCStringHashKey
+  // LocalStorageCache into the entry.
+  class LocalStorageCacheHashKey : public nsCStringHashKey
   {
   public:
-    explicit StorageCacheHashKey(const nsACString* aKey)
+    explicit LocalStorageCacheHashKey(const nsACString* aKey)
       : nsCStringHashKey(aKey)
-      , mCache(new StorageCache(aKey))
+      , mCache(new LocalStorageCache(aKey))
     {}
 
-    StorageCacheHashKey(const StorageCacheHashKey& aOther)
+    LocalStorageCacheHashKey(const LocalStorageCacheHashKey& aOther)
       : nsCStringHashKey(aOther)
     {
       NS_ERROR("Shouldn't be called");
     }
 
-    StorageCache* cache() { return mCache; }
+    LocalStorageCache* cache() { return mCache; }
     // Keep the cache referenced forever, used for sessionStorage.
     void HardRef() { mCacheRef = mCache; }
 
   private:
     // weak ref only since cache references its manager.
-    StorageCache* mCache;
+    LocalStorageCache* mCache;
     // hard ref when this is sessionStorage to keep it alive forever.
-    RefPtr<StorageCache> mCacheRef;
+    RefPtr<LocalStorageCache> mCacheRef;
   };
 
   // Ensures cache for a scope, when it doesn't exist it is created and
   // initalized, this also starts preload of persistent data.
-  already_AddRefed<StorageCache> PutCache(const nsACString& aOriginSuffix,
-                                          const nsACString& aOriginNoSuffix,
-                                          nsIPrincipal* aPrincipal);
+  already_AddRefed<LocalStorageCache> PutCache(const nsACString& aOriginSuffix,
+                                               const nsACString& aOriginNoSuffix,
+                                               nsIPrincipal* aPrincipal);
 
   enum class CreateMode {
     // GetStorage: do not create if it's not already in memory.
@@ -107,7 +107,7 @@ private:
                               nsIDOMStorage** aRetval);
 
   // Suffix->origin->cache map
-  typedef nsTHashtable<StorageCacheHashKey> CacheOriginHashtable;
+  typedef nsTHashtable<LocalStorageCacheHashKey> CacheOriginHashtable;
   nsClassHashtable<nsCStringHashKey, CacheOriginHashtable> mCaches;
 
   // If mLowDiskSpace is true it indicates a low device storage situation and
@@ -130,9 +130,9 @@ private:
   // Keeps usage cache objects for eTLD+1 scopes we have touched.
   nsDataHashtable<nsCStringHashKey, RefPtr<StorageUsage> > mUsages;
 
-  friend class StorageCache;
+  friend class LocalStorageCache;
   // Releases cache since it is no longer referrered by any Storage object.
-  virtual void DropCache(StorageCache* aCache);
+  virtual void DropCache(LocalStorageCache* aCache);
 
   static LocalStorageManager* sSelf;
 };

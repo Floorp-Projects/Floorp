@@ -175,7 +175,7 @@ SessionStorage::CanUseStorage(nsIPrincipal& aSubjectPrincipal)
 {
   // This method is responsible for correct setting of mIsSessionOnly.
   // It doesn't work with mIsPrivate flag at all, since it is checked
-  // regardless mIsSessionOnly flag in DOMStorageCache code.
+  // regardless mIsSessionOnly flag in LocalStorageCache code.
 
   if (!mozilla::Preferences::GetBool("dom.storage.enabled")) {
     return false;
