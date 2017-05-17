@@ -107,7 +107,7 @@ WebRenderLayerManager::~WebRenderLayerManager()
 CompositorBridgeChild*
 WebRenderLayerManager::GetCompositorBridgeChild()
 {
-  return WrBridge()->GetCompositorBridgeChild();
+  return mWidget ? mWidget->GetRemoteRenderer() : nullptr;
 }
 
 int32_t
@@ -469,15 +469,6 @@ WebRenderLayerManager::FlushRendering()
   CompositorBridgeChild* bridge = GetCompositorBridgeChild();
   if (bridge) {
     bridge->SendFlushRendering();
-  }
-}
-
-void
-WebRenderLayerManager::WaitOnTransactionProcessed()
-{
-  CompositorBridgeChild* bridge = GetCompositorBridgeChild();
-  if (bridge) {
-    bridge->SendWaitOnTransactionProcessed();
   }
 }
 
