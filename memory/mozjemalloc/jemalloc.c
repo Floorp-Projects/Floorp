@@ -100,9 +100,6 @@
  *******************************************************************************
  */
 
-#include "mozmemory_wrap.h"
-#include "mozilla/Sprintf.h"
-
 #ifdef MOZ_MEMORY_ANDROID
 #define NO_TLS
 #endif
@@ -167,6 +164,10 @@
 #  define MALLOC_SYSV
 #endif
 
+#if defined(MOZ_MEMORY_LINUX) && !defined(MOZ_MEMORY_ANDROID)
+#define	_GNU_SOURCE /* For mremap(2). */
+#endif
+
 #include <sys/types.h>
 
 #include <errno.h>
@@ -184,13 +185,17 @@
 #include <io.h>
 #include <windows.h>
 #include <intrin.h>
-#include <algorithm>
 
 #pragma warning( disable: 4267 4996 4146 )
 
+#define	bool BOOL
+#define	false FALSE
+#define	true TRUE
+#define	inline __inline
 #define	SIZE_T_MAX SIZE_MAX
 #define	STDERR_FILENO 2
 #define	PATH_MAX MAX_PATH
+#define	vsnprintf _vsnprintf
 
 #ifndef NO_TLS
 static unsigned long tlsIndex = 0xffffffff;
@@ -301,8 +306,9 @@ typedef long ssize_t;
 
 #include "jemalloc_types.h"
 #include "linkedlist.h"
+#include "mozmemory_wrap.h"
 
-extern "C" void moz_abort();
+extern void moz_abort();
 
 /* Some tools, such as /dev/dsp wrappers, LD_PRELOAD libraries that
  * happen to override mmap() and call dlsym() from their overridden
@@ -1169,21 +1175,23 @@ static void	*huge_palloc(size_t size, size_t alignment, bool zero);
 static void	*huge_ralloc(void *ptr, size_t size, size_t oldsize);
 static void	huge_dalloc(void *ptr);
 static void	malloc_print_stats(void);
-#ifdef MOZ_MEMORY_WINDOWS
-extern "C"
-#else
+#ifndef MOZ_MEMORY_WINDOWS
 static
 #endif
 bool		malloc_init_hard(void);
 
-#ifdef MOZ_MEMORY_DARWIN
-#define FORK_HOOK extern "C"
-#else
-#define FORK_HOOK static
+#ifndef MOZ_MEMORY_DARWIN
+static
 #endif
-FORK_HOOK void _malloc_prefork(void);
-FORK_HOOK void _malloc_postfork_parent(void);
-FORK_HOOK void _malloc_postfork_child(void);
+void	_malloc_prefork(void);
+#ifndef MOZ_MEMORY_DARWIN
+static
+#endif
+void	_malloc_postfork_parent(void);
+#ifndef MOZ_MEMORY_DARWIN
+static
+#endif
+void	_malloc_postfork_child(void);
 
 /*
  * End function prototypes.
@@ -1282,7 +1290,7 @@ void	(*_malloc_message)(const char *p1, const char *p2, const char *p3,
 
 #ifdef MOZ_MEMORY_ANDROID
 // Android's pthread.h does not declare pthread_atfork() until SDK 21.
-extern "C" MOZ_EXPORT
+extern MOZ_EXPORT
 int pthread_atfork(void (*)(void), void (*)(void), void(*)(void));
 #endif
 
@@ -1490,7 +1498,7 @@ malloc_printf(const char *format, ...)
 	va_list ap;
 
 	va_start(ap, format);
-	VsprintfLiteral(buf, format, ap);
+	vsnprintf(buf, sizeof(buf), format, ap);
 	va_end(ap);
 	_malloc_message(buf, "", "", "");
 }
@@ -1508,14 +1516,14 @@ pages_decommit(void *addr, size_t size)
 	* go may not be valid. However, since we allocate at least a chunk at a
 	* time, we may touch any region in chunksized increments.
 	*/
-	size_t pages_size = std::min(size, chunksize -
+	size_t pages_size = min(size, chunksize -
 		CHUNK_ADDR2OFFSET((uintptr_t)addr));
 	while (size > 0) {
 		if (!VirtualFree(addr, pages_size, MEM_DECOMMIT))
 			moz_abort();
 		addr = (void *)((uintptr_t)addr + pages_size);
 		size -= pages_size;
-		pages_size = std::min(size, chunksize);
+		pages_size = min(size, chunksize);
 	}
 #else
 	if (mmap(addr, size, PROT_NONE, MAP_FIXED | MAP_PRIVATE | MAP_ANON, -1,
@@ -1536,14 +1544,14 @@ pages_commit(void *addr, size_t size)
 	* go may not be valid. However, since we allocate at least a chunk at a
 	* time, we may touch any region in chunksized increments.
 	*/
-	size_t pages_size = std::min(size, chunksize -
+	size_t pages_size = min(size, chunksize -
 		CHUNK_ADDR2OFFSET((uintptr_t)addr));
 	while (size > 0) {
 		if (!VirtualAlloc(addr, pages_size, MEM_COMMIT, PAGE_READWRITE))
 			moz_abort();
 		addr = (void *)((uintptr_t)addr + pages_size);
 		size -= pages_size;
-		pages_size = std::min(size, chunksize);
+		pages_size = min(size, chunksize);
 	}
 #  else
 	if (mmap(addr, size, PROT_READ | PROT_WRITE, MAP_FIXED | MAP_PRIVATE |
@@ -2258,13 +2266,13 @@ pages_purge(void *addr, size_t length)
 	* go may not be valid. However, since we allocate at least a chunk at a
 	* time, we may touch any region in chunksized increments.
 	*/
-	size_t pages_size = std::min(length, chunksize -
+	size_t pages_size = min(length, chunksize -
 		CHUNK_ADDR2OFFSET((uintptr_t)addr));
 	while (length > 0) {
 		VirtualAlloc(addr, pages_size, MEM_RESET, PAGE_READWRITE);
 		addr = (void *)((uintptr_t)addr + pages_size);
 		length -= pages_size;
-		pages_size = std::min(length, chunksize);
+		pages_size = min(length, chunksize);
 	}
 	unzeroed = true;
 #  else
@@ -4692,7 +4700,7 @@ malloc_init(void)
 #endif
 
 #if defined(MOZ_MEMORY_DARWIN)
-extern "C" void register_zone(void);
+extern void register_zone(void);
 #endif
 
 #if !defined(MOZ_MEMORY_WINDOWS)
@@ -5156,9 +5164,11 @@ RETURN:
 
 #ifdef MOZ_MEMORY_ELF
 #define MEMALIGN memalign_internal
-extern "C"
 #else
 #define MEMALIGN memalign_impl
+#endif
+
+#ifndef MOZ_MEMORY_ELF
 MOZ_MEMORY_API
 #endif
 void *
@@ -5836,12 +5846,10 @@ jemalloc_darwin_init(void)
  * passed an extra argument for the caller return address, which will be
  * ignored.
  */
-extern "C" {
-MOZ_EXPORT void (*__free_hook)(void *ptr) = free_impl;
-MOZ_EXPORT void *(*__malloc_hook)(size_t size) = malloc_impl;
-MOZ_EXPORT void *(*__realloc_hook)(void *ptr, size_t size) = realloc_impl;
-MOZ_EXPORT void *(*__memalign_hook)(size_t alignment, size_t size) = MEMALIGN;
-}
+MOZ_MEMORY_API void (*__free_hook)(void *ptr) = free_impl;
+MOZ_MEMORY_API void *(*__malloc_hook)(size_t size) = malloc_impl;
+MOZ_MEMORY_API void *(*__realloc_hook)(void *ptr, size_t size) = realloc_impl;
+MOZ_MEMORY_API void *(*__memalign_hook)(size_t alignment, size_t size) = MEMALIGN;
 
 #  elif defined(RTLD_DEEPBIND)
 /*
