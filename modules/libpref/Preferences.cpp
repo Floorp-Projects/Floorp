@@ -971,6 +971,11 @@ Preferences::ReadAndOwnUserPrefFile(nsIFile *aFile)
 nsresult
 Preferences::SavePrefFileInternal(nsIFile *aFile)
 {
+  // We allow different behavior here when aFile argument is not null,
+  // but it happens to be the same as the current file.  It is not
+  // clear that we should, but it does give us a "force" save on the
+  // unmodified pref file (see the original bug 160377 when we added this.)
+
   if (nullptr == aFile) {
     // the mDirty flag tells us if we should write to mCurrentFile
     // we only check this flag when the caller wants to write to the default
@@ -980,9 +985,14 @@ Preferences::SavePrefFileInternal(nsIFile *aFile)
 
     // It's possible that we never got a prefs file.
     nsresult rv = NS_OK;
-    if (mCurrentFile)
+    if (mCurrentFile) {
       rv = WritePrefFile(mCurrentFile);
+    }
 
+    // If we succeeded writing to mCurrentFile, reset the dirty flag
+    if (NS_SUCCEEDED(rv)) {
+      mDirty = false;
+    }
     return rv;
   } else {
     return WritePrefFile(aFile);
@@ -1045,8 +1055,6 @@ Preferences::WritePrefFile(nsIFile* aFile)
       return rv;
     }
   }
-
-  mDirty = false;
   return NS_OK;
 }
 

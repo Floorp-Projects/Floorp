@@ -56,7 +56,7 @@ struct ManifestDirective
 
   bool allowbootstrap;
 
-  // The platform/contentaccessible flags only apply to content directives.
+  // The contentaccessible flags only apply to content directives.
   bool contentflags;
 
   // Function to handle this directive. This isn't a union because C++ still
@@ -449,7 +449,6 @@ ParseManifest(NSLocationType aType, FileLocation& aFile, char* aBuf,
   nsChromeRegistry::ManifestProcessingContext chromecx(aType, aFile);
   nsresult rv;
 
-  NS_NAMED_LITERAL_STRING(kPlatform, "platform");
   NS_NAMED_LITERAL_STRING(kContentAccessible, "contentaccessible");
   NS_NAMED_LITERAL_STRING(kRemoteEnabled, "remoteenabled");
   NS_NAMED_LITERAL_STRING(kRemoteRequired, "remoterequired");
@@ -685,11 +684,6 @@ ParseManifest(NSLocationType aType, FileLocation& aFile, char* aBuf,
 
       if (directive->contentflags) {
         bool flag;
-        if (CheckFlag(kPlatform, wtoken, flag)) {
-          if (flag)
-            flags |= nsChromeRegistry::PLATFORM_PACKAGE;
-          continue;
-        }
         if (CheckFlag(kContentAccessible, wtoken, flag)) {
           if (flag)
             flags |= nsChromeRegistry::CONTENT_ACCESSIBLE;

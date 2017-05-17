@@ -87,3 +87,15 @@
 #urlbar-page-action-button > .toolbarbutton-icon {
   width: 16px;
 }
+
+#page-action-copy-url-button {
+  list-style-image: url("chrome://browser/skin/copy-url.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+#page-action-email-link-button {
+  list-style-image: url("chrome://browser/skin/email-link.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+}

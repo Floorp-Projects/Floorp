@@ -170,12 +170,12 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URLEncoder;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Vector;
 import java.util.regex.Pattern;
 
 import static org.mozilla.gecko.Tab.TabType;
@@ -271,13 +271,18 @@ public class BrowserApp extends GeckoApp
         public boolean added;   // So we can re-add after a locale change.
     }
 
+    private static class BrowserActionItemInfo extends MenuItemInfo {
+        public String uuid;
+    }
+
     // The types of guest mode dialogs we show.
     public static enum GuestModeDialog {
         ENTERING,
         LEAVING
     }
 
-    private Vector<MenuItemInfo> mAddonMenuItemsCache;
+    private ArrayList<MenuItemInfo> mAddonMenuItemsCache;
+    private ArrayList<BrowserActionItemInfo> mBrowserActionItemsCache;
     private PropertyAnimator mMainLayoutAnimator;
 
     private static final Interpolator sTabsInterpolator = new Interpolator() {
@@ -759,6 +764,8 @@ public class BrowserApp extends GeckoApp
             "Menu:Update",
             "Menu:Add",
             "Menu:Remove",
+            "Menu:AddBrowserAction",
+            "Menu:RemoveBrowserAction",
             "LightweightTheme:Update",
             "Tab:Added",
             "Video:Play",
@@ -1560,6 +1567,8 @@ public class BrowserApp extends GeckoApp
             "Menu:Update",
             "Menu:Add",
             "Menu:Remove",
+            "Menu:AddBrowserAction",
+            "Menu:RemoveBrowserAction",
             "LightweightTheme:Update",
             "Tab:Added",
             "Video:Play",
@@ -1856,6 +1865,22 @@ public class BrowserApp extends GeckoApp
 
             case "Menu:Remove":
                 removeAddonMenuItem(message.getInt("id") + ADDON_MENU_OFFSET);
+                break;
+
+            case "Menu:AddBrowserAction":
+                final BrowserActionItemInfo browserAction = new BrowserActionItemInfo();
+                browserAction.label = message.getString("name");
+                if (TextUtils.isEmpty(browserAction.label)) {
+                    Log.e(LOGTAG, "Invalid browser action name");
+                    return;
+                }
+                browserAction.id = message.getInt("id") + ADDON_MENU_OFFSET;
+                browserAction.uuid = message.getString("uuid");
+                addBrowserActionMenuItem(browserAction);
+                break;
+
+            case "Menu:RemoveBrowserAction":
+                removeBrowserActionMenuItem(message.getString("uuid"));
                 break;
 
             case "LightweightTheme:Update":
@@ -3160,7 +3185,7 @@ public class BrowserApp extends GeckoApp
 
     private void addAddonMenuItem(final MenuItemInfo info) {
         if (mAddonMenuItemsCache == null) {
-            mAddonMenuItemsCache = new Vector<MenuItemInfo>();
+            mAddonMenuItemsCache = new ArrayList<MenuItemInfo>();
         }
 
         // Mark it as added if the menu was ready.
@@ -3180,10 +3205,10 @@ public class BrowserApp extends GeckoApp
         // Remove add-on menu item from cache, if available.
         if (mAddonMenuItemsCache != null && !mAddonMenuItemsCache.isEmpty()) {
             for (MenuItemInfo item : mAddonMenuItemsCache) {
-                 if (item.id == id) {
-                     mAddonMenuItemsCache.remove(item);
-                     break;
-                 }
+                if (item.id == id) {
+                    mAddonMenuItemsCache.remove(item);
+                    break;
+                }
             }
         }
 
@@ -3225,6 +3250,79 @@ public class BrowserApp extends GeckoApp
         }
     }
 
+    /**
+     * Add the provided item to the provided menu, which should be
+     * the root (mMenu).
+     */
+    private void addBrowserActionMenuItemToMenu(final Menu menu, final BrowserActionItemInfo info) {
+        info.added = true;
+
+        final MenuItem item = menu.add(Menu.NONE, info.id, Menu.NONE, info.label);
+
+        item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                final GeckoBundle data = new GeckoBundle(1);
+                data.putString("item", info.uuid);
+                EventDispatcher.getInstance().dispatch("Menu:BrowserActionClicked", data);
+                return true;
+            }
+        });
+
+        item.setCheckable(info.checkable);
+        item.setChecked(info.checked);
+        item.setEnabled(info.enabled);
+        item.setVisible(info.visible);
+    }
+
+    /**
+     * Adds a WebExtension browser action to the menu.
+     */
+    private void addBrowserActionMenuItem(final BrowserActionItemInfo info) {
+        if (mBrowserActionItemsCache == null) {
+            mBrowserActionItemsCache = new ArrayList<BrowserActionItemInfo>();
+        }
+
+        // Mark it as added if the menu was ready.
+        info.added = (mMenu != null);
+
+        // Always cache so we can rebuild after a locale switch.
+        mBrowserActionItemsCache.add(info);
+
+        if (mMenu == null) {
+            return;
+        }
+
+        addAddonMenuItemToMenu(mMenu, info);
+    }
+
+    /**
+     * Removes a WebExtension browser action from the menu by its UUID.
+     */
+    private void removeBrowserActionMenuItem(String uuid) {
+        int id = -1;
+
+        // Remove browser action menu item from cache, if available.
+        if (mBrowserActionItemsCache != null && !mBrowserActionItemsCache.isEmpty()) {
+            for (BrowserActionItemInfo item : mBrowserActionItemsCache) {
+                if (item.uuid.equals(uuid)) {
+                    id = item.id;
+                    mBrowserActionItemsCache.remove(item);
+                    break;
+                }
+            }
+        }
+
+        if (mMenu == null || id == -1) {
+            return;
+        }
+
+        final MenuItem menuItem = mMenu.findItem(id);
+        if (menuItem != null) {
+            mMenu.removeItem(id);
+        }
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Sets mMenu = menu.
@@ -3238,6 +3336,13 @@ public class BrowserApp extends GeckoApp
 
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.browser_app_menu, mMenu);
+
+        // Add browser action menu items, if any exist.
+        if (mBrowserActionItemsCache != null && !mBrowserActionItemsCache.isEmpty()) {
+            for (BrowserActionItemInfo item : mBrowserActionItemsCache) {
+                addBrowserActionMenuItemToMenu(mMenu, item);
+            }
+        }
 
         // Add add-on menu items, if any exist.
         if (mAddonMenuItemsCache != null && !mAddonMenuItemsCache.isEmpty()) {

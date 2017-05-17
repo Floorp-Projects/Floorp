@@ -103,7 +103,7 @@
 #include <algorithm>
 #include <cmath>
 #ifdef XP_WIN
-#include "Objbase.h"
+#include "objbase.h"
 // Some Windows header defines this, so undef it as it conflicts with our
 // function of the same name.
 #undef GetCurrentTime
@@ -3361,7 +3361,7 @@ HTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded,
   if (!window) {
     return nullptr;
   }
-  if (ContainsRestrictedContent()) {
+  if (!aCaptureAudio && ContainsRestrictedContent()) {
     return nullptr;
   }
 

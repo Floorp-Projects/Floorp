@@ -667,20 +667,6 @@ TabTarget.prototype = {
     let id = this._tab ? this._tab : (this._form && this._form.actor);
     return `TabTarget:${id}`;
   },
-
-  /**
-   * @see TabActor.prototype.onResolveLocation
-   */
-  resolveLocation(loc) {
-    let deferred = defer();
-
-    this.client.request(Object.assign({
-      to: this._form.actor,
-      type: "resolveLocation",
-    }, loc), deferred.resolve);
-
-    return deferred.promise;
-  },
 };
 
 /**

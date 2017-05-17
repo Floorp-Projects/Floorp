@@ -29,8 +29,6 @@ const {PluralForm} = require("devtools/shared/plural-form");
 const {PrefObserver} = require("devtools/client/shared/prefs");
 const csscoverage = require("devtools/shared/fronts/csscoverage");
 const {console} = require("resource://gre/modules/Console.jsm");
-const promise = require("promise");
-const defer = require("devtools/shared/defer");
 const {ResponsiveUIManager} =
   require("resource://devtools/client/responsivedesign/responsivedesign.jsm");
 const {KeyCodes} = require("devtools/client/shared/keycodes");
@@ -662,7 +660,7 @@ StyleEditorUI.prototype = {
       }
     }
 
-    return promise.resolve();
+    return Promise.resolve();
   },
 
   /**
@@ -710,43 +708,41 @@ StyleEditorUI.prototype = {
       this._view.activeSummary = summary;
     });
 
-    return promise.all([editorPromise, summaryPromise]);
+    return Promise.all([editorPromise, summaryPromise]);
   },
 
   getEditorSummary: function (editor) {
-    if (editor.summary) {
-      return promise.resolve(editor.summary);
-    }
-
-    let deferred = defer();
     let self = this;
 
-    this.on("editor-added", function onAdd(e, selected) {
-      if (selected == editor) {
-        self.off("editor-added", onAdd);
-        deferred.resolve(editor.summary);
-      }
-    });
+    if (editor.summary) {
+      return Promise.resolve(editor.summary);
+    }
 
-    return deferred.promise;
+    return new Promise(resolve => {
+      this.on("editor-added", function onAdd(e, selected) {
+        if (selected == editor) {
+          self.off("editor-added", onAdd);
+          resolve(editor.summary);
+        }
+      });
+    });
   },
 
   getEditorDetails: function (editor) {
-    if (editor.details) {
-      return promise.resolve(editor.details);
-    }
-
-    let deferred = defer();
     let self = this;
 
-    this.on("editor-added", function onAdd(e, selected) {
-      if (selected == editor) {
-        self.off("editor-added", onAdd);
-        deferred.resolve(editor.details);
-      }
-    });
+    if (editor.details) {
+      return Promise.resolve(editor.details);
+    }
 
-    return deferred.promise;
+    return new Promise(resolve => {
+      this.on("editor-added", function onAdd(e, selected) {
+        if (selected == editor) {
+          self.off("editor-added", onAdd);
+          resolve(editor.details);
+        }
+      });
+    });
   },
 
   /**

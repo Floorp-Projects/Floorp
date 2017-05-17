@@ -29,8 +29,9 @@ add_task(function* () {
   let { ui } = yield openStyleEditor();
   let editor = yield ui.editors[0].getSourceEditor();
 
-  let onEditorChange = defer();
-  editor.sourceEditor.on("change", onEditorChange.resolve);
+  let onEditorChange = new Promise(resolve => {
+    editor.sourceEditor.on("change", resolve);
+  });
 
   yield toolbox.getPanel("inspector");
   yield selectNode("#testid", inspector);
@@ -43,7 +44,7 @@ add_task(function* () {
   yield onModification;
 
   yield openStyleEditor();
-  yield onEditorChange.promise;
+  yield onEditorChange;
 
   let text = editor.sourceEditor.getText();
   is(text, expectedText, "style inspector changes are synced");

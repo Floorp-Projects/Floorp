@@ -195,11 +195,6 @@ toolbar:-moz-lwtheme-darktext {
   height: auto !important;
 }
 
-#back-button > .toolbarbutton-icon {
-  /* 18px icon + 2 * 5px padding + 2 * 1px border */
-  width: 30px !important;
-}
-
 /* the normal theme adds box-shadow: <stuff> !important when the back-button is [open]. Fix: */
 #back-button[open="true"] > .toolbarbutton-icon {
   box-shadow: none !important;

@@ -1113,7 +1113,7 @@ panelview:not([mainView]) .subviewbutton.panel-subview-footer > .toolbarbutton-t
   font: menu;
 }
 
-.PanelUI-subView .subviewbutton[shortcut]::after {
+.subviewbutton[shortcut]::after {
   content: attr(shortcut);
   float: right;
   color: GrayText;
@@ -1130,8 +1130,8 @@ panelview:not([mainView]) .subviewbutton.panel-subview-footer > .toolbarbutton-t
   transform: scaleX(-1);
 }
 
-.PanelUI-subView.cui-widget-panelview .subviewbutton[shortcut]::after,
-photonpanelmultiview .PanelUI-subView .subviewbutton[shortcut]::after,
+.subviewbutton[shortcut]::after,
+.subviewbutton[shortcut]::after,
 .PanelUI-subView .subviewbutton-nav::after {
   margin-inline-start: 10px;
 }
@@ -1278,7 +1278,8 @@ menuitem.panel-subview-footer@menuStateActive@,
 #widget-overflow-scroller > toolbarseparator,
 .PanelUI-subView menuseparator,
 .PanelUI-subView toolbarseparator,
-.cui-widget-panelview menuseparator {
+.cui-widget-panelview menuseparator,
+.cui-widget-panel toolbarseparator {
   -moz-appearance: none;
   min-height: 0;
   border-top: 1px solid var(--panel-separator-color);

@@ -2850,9 +2850,21 @@ fn static_assert() {
 
 
     pub fn copy_${shorthand}_image_from(&mut self, other: &Self) {
+        use gecko_bindings::structs::nsStyleImageLayers_LayerType as LayerType;
         unsafe {
-            Gecko_CopyImageValueFrom(&mut self.gecko.${image_layers_field}.mLayers.mFirstElement.mImage,
-                                     &other.gecko.${image_layers_field}.mLayers.mFirstElement.mImage);
+            let count = other.gecko.${image_layers_field}.mImageCount;
+            unsafe {
+                Gecko_EnsureImageLayersLength(&mut self.gecko.${image_layers_field},
+                                              count as usize,
+                                              LayerType::${shorthand.capitalize()});
+            }
+
+            for (layer, other) in self.gecko.${image_layers_field}.mLayers.iter_mut()
+                                      .zip(other.gecko.${image_layers_field}.mLayers.iter())
+                                      .take(count as usize) {
+                Gecko_CopyImageValueFrom(&mut layer.mImage, &other.mImage);
+            }
+            self.gecko.${image_layers_field}.mImageCount = count;
         }
     }
 
@@ -3626,9 +3638,7 @@ fn static_assert() {
         }
 
         self.clear_overflow_sides_if_string();
-        if v.second.is_none() {
-            self.gecko.mTextOverflow.mLogicalDirections = true;
-        }
+        self.gecko.mTextOverflow.mLogicalDirections = v.second.is_none();
 
         let SpecifiedValue { ref first, ref second } = v;
         let second = second.as_ref().unwrap_or(&first);

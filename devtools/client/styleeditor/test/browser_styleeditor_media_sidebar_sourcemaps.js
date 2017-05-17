@@ -59,11 +59,11 @@ function openEditor(editor) {
 }
 
 function listenForMediaChange(UI) {
-  let deferred = defer();
-  UI.once("media-list-changed", () => {
-    deferred.resolve();
+  return new Promise(resolve => {
+    UI.once("media-list-changed", () => {
+      resolve();
+    });
   });
-  return deferred.promise;
 }
 
 function getLinkFor(editor) {

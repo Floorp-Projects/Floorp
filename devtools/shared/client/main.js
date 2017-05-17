@@ -1463,19 +1463,6 @@ TabClient.prototype = {
   attachWorker: function (workerActor, onResponse) {
     return this.client.attachWorker(workerActor, onResponse);
   },
-
-  /**
-   * Resolve a location ({ url, line, column }) to its current
-   * source mapping location.
-   *
-   * @param {String} arg[0].url
-   * @param {Number} arg[0].line
-   * @param {Number?} arg[0].column
-   */
-  resolveLocation: DebuggerClient.requester({
-    type: "resolveLocation",
-    location: arg(0)
-  }),
 };
 
 eventSource(TabClient.prototype);

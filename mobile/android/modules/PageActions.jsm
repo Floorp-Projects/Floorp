@@ -34,11 +34,11 @@ function resolveGeckoURI(aURI) {
 var PageActions = {
   _items: { },
 
-  _inited: false,
+  _initialized: false,
 
-  _maybeInit: function() {
-    if (!this._inited && Object.keys(this._items).length > 0) {
-      this._inited = true;
+  _maybeInitialize: function() {
+    if (!this._initialized && Object.keys(this._items).length) {
+      this._initialized = true;
       EventDispatcher.instance.registerListener(this, [
         "PageActions:Clicked",
         "PageActions:LongClicked",
@@ -46,9 +46,9 @@ var PageActions = {
     }
   },
 
-  _maybeUninit: function() {
-    if (this._inited && Object.keys(this._items).length == 0) {
-      this._inited = false;
+  _maybeUninitialize: function() {
+    if (this._initialized && !Object.keys(this._items).length) {
+      this._initialized = false;
       EventDispatcher.instance.unregisterListener(this, [
         "PageActions:Clicked",
         "PageActions:LongClicked",
@@ -101,7 +101,7 @@ var PageActions = {
       this._items[id].longClickCallback = aOptions.longClickCallback;
     }
 
-    this._maybeInit();
+    this._maybeInitialize();
     return id;
   },
 
@@ -112,6 +112,6 @@ var PageActions = {
     });
 
     delete this._items[id];
-    this._maybeUninit();
+    this._maybeUninitialize();
   }
 }

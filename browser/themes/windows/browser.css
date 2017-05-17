@@ -1388,38 +1388,10 @@ treechildren.searchbar-treebody::-moz-tree-row(selected) {
 
 /* ::::: content area ::::: */
 
+%include ../shared/sidebar.inc.css
+
 #sidebar {
   background-color: Window;
-}
-
-#sidebar-title {
-  padding-inline-start: 0px;
-}
-
-#sidebar-header > .close-icon {
-  -moz-appearance: none;
-  padding: 2px;
-  margin: 0;
-  border: none;
-}
-
-@media not all and (min-resolution: 1.1dppx) {
-  #sidebar-header > .close-icon:-moz-lwtheme-brighttext {
-    list-style-image: url("chrome://global/skin/icons/close-inverted.png");
-  }
-}
-
-@media (min-resolution: 1.1dppx) {
-  #sidebar-header > .close-icon:-moz-lwtheme-brighttext {
-    list-style-image: url("chrome://global/skin/icons/close-inverted@2x.png");
-  }
-}
-
-@media (-moz-os-version: windows-win7) {
-  #sidebar-header > .close-icon {
-    padding-top: 4px;
-    padding-bottom: 4px;
-  }
 }
 
 .browserContainer > findbar {
@@ -1593,18 +1565,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 toolbarbutton.chevron > .toolbarbutton-icon {
   margin: 0;
-}
-
-#sidebar-throbber[loading="true"] {
-  list-style-image: url("chrome://global/skin/icons/loading.png");
-  margin-inline-end: 4px;
-}
-
-@media (min-resolution: 1.1dppx) {
-  #sidebar-throbber[loading="true"] {
-    list-style-image: url("chrome://global/skin/icons/loading@2x.png");
-    width: 16px;
-  }
 }
 
 /* Bookmarks toolbar */
