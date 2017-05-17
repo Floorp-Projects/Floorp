@@ -3738,17 +3738,6 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
         self.properties = properties
 
     def definition_body(self):
-        if self.descriptor.proxy:
-            preserveWrapper = dedent(
-                """
-                // For DOM proxies, the only reliable way to preserve the wrapper
-                // is to force creation of the expando object.
-                JS::Rooted<JSObject*> unused(aCx,
-                  DOMProxyHandler::EnsureExpandoObject(aCx, aReflector));
-                """)
-        else:
-            preserveWrapper = "PreserveWrapper(aObject);\n"
-
         failureCode = dedent(
             """
             aCache->ReleaseWrapper(aObject);
@@ -3804,7 +3793,7 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
             // somewhat common) to have a non-null aGivenProto which is the
             // same as canonicalProto.
             if (proto != canonicalProto) {
-              $*{preserveWrapper}
+              PreserveWrapper(aObject);
             }
 
             return true;
@@ -3816,8 +3805,7 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
                                                             failureCode),
             slots=InitMemberSlots(self.descriptor, failureCode),
             setImmutablePrototype=SetImmutablePrototype(self.descriptor,
-                                                        failureCode),
-            preserveWrapper=preserveWrapper)
+                                                        failureCode))
 
 
 class CGWrapMethod(CGAbstractMethod):
