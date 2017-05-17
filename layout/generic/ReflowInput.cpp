@@ -2175,7 +2175,7 @@ ReflowInput::InitConstraints(nsPresContext* aPresContext,
   if (nullptr == mParentReflowInput || mFlags.mDummyParentReflowInput) {
     // XXXldb This doesn't mean what it used to!
     InitOffsets(wm, OffsetPercentBasis(mFrame, wm, aContainingBlockSize),
-                aFrameType, mFlags, aBorder, aPadding);
+                aFrameType, mFlags, aBorder, aPadding, mStyleDisplay);
     // Override mComputedMargin since reflow roots start from the
     // frame's boundary, which is inside the margin.
     ComputedPhysicalMargin().SizeTo(0, 0, 0, 0);
@@ -2234,7 +2234,7 @@ ReflowInput::InitConstraints(nsPresContext* aPresContext,
     WritingMode cbwm = cbrs->GetWritingMode();
     InitOffsets(cbwm, OffsetPercentBasis(mFrame, cbwm,
                                          cbSize.ConvertTo(cbwm, wm)),
-                aFrameType, mFlags, aBorder, aPadding);
+                aFrameType, mFlags, aBorder, aPadding, mStyleDisplay);
 
     // For calculating the size of this box, we use its own writing mode
     const nsStyleCoord &blockSize = mStylePosition->BSize(wm);
@@ -2506,7 +2506,8 @@ SizeComputationInput::InitOffsets(WritingMode aWM,
                                   LayoutFrameType aFrameType,
                                   ReflowInputFlags aFlags,
                                   const nsMargin* aBorder,
-                                  const nsMargin* aPadding)
+                                  const nsMargin* aPadding,
+                                  const nsStyleDisplay* aDisplay)
 {
   DISPLAY_INIT_OFFSETS(mFrame, this, aPercentBasis, aBorder, aPadding);
 
@@ -2529,7 +2530,7 @@ SizeComputationInput::InitOffsets(WritingMode aWM,
                ComputedPhysicalMargin());
 
 
-  const nsStyleDisplay *disp = mFrame->StyleDisplay();
+  const nsStyleDisplay* disp = mFrame->StyleDisplayWithOptionalParam(aDisplay);
   bool isThemed = mFrame->IsThemed(disp);
   bool needPaddingProp;
   nsIntMargin widget;
