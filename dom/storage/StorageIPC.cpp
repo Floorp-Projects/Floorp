@@ -6,7 +6,7 @@
 
 #include "StorageIPC.h"
 
-#include "StorageManager.h"
+#include "LocalStorageManager.h"
 
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
@@ -56,7 +56,7 @@ StorageDBChild::ReleaseIPDLReference()
   Release();
 }
 
-StorageDBChild::StorageDBChild(DOMLocalStorageManager* aManager)
+StorageDBChild::StorageDBChild(LocalStorageManager* aManager)
   : mManager(aManager)
   , mStatus(NS_OK)
   , mIPCOpen(false)
@@ -452,7 +452,7 @@ public:
 
   virtual const nsCString Origin() const
   {
-    return StorageManagerBase::CreateOrigin(mSuffix, mOrigin);
+    return LocalStorageManager::CreateOrigin(mSuffix, mOrigin);
   }
   virtual const nsCString& OriginNoSuffix() const { return mOrigin; }
   virtual const nsCString& OriginSuffix() const { return mSuffix; }
@@ -698,7 +698,7 @@ private:
 const nsCString
 StorageDBParent::CacheParentBridge::Origin() const
 {
-  return StorageManagerBase::CreateOrigin(mOriginSuffix, mOriginNoSuffix);
+  return LocalStorageManager::CreateOrigin(mOriginSuffix, mOriginNoSuffix);
 }
 
 bool

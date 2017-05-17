@@ -21,7 +21,7 @@ class OriginAttributesPattern;
 
 namespace dom {
 
-class DOMLocalStorageManager;
+class LocalStorageManager;
 
 // Child side of the IPC protocol, exposes as DB interface but
 // is responsible to send all requests to the parent process
@@ -33,7 +33,7 @@ class StorageDBChild final : public StorageDBBridge
   virtual ~StorageDBChild();
 
 public:
-  explicit StorageDBChild(DOMLocalStorageManager* aManager);
+  explicit StorageDBChild(LocalStorageManager* aManager);
 
   NS_IMETHOD_(MozExternalRefCountType) AddRef(void);
   NS_IMETHOD_(MozExternalRefCountType) Release(void);
@@ -100,7 +100,7 @@ private:
   NS_DECL_OWNINGTHREAD
 
   // Held to get caches to forward answers to.
-  RefPtr<DOMLocalStorageManager> mManager;
+  RefPtr<LocalStorageManager> mManager;
 
   // Origins having data hash, for optimization purposes only
   nsAutoPtr<nsTHashtable<nsCStringHashKey>> mOriginsHavingData;

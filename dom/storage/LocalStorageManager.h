@@ -25,18 +25,13 @@ class OriginAttributesPattern;
 
 namespace dom {
 
-const LocalStorage::StorageType eSessionStorage = LocalStorage::eSessionStorage;
-const LocalStorage::StorageType eLocalStorage = LocalStorage::eLocalStorage;
-
-class StorageManagerBase : public nsIDOMStorageManager
-                         , public StorageObserverSink
+class LocalStorageManager final : public nsIDOMStorageManager
+                                , public StorageObserverSink
 {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMSTORAGEMANAGER
 
 public:
-  virtual LocalStorage::StorageType Type() { return mType; }
-
   // Reads the preference for DOM storage quota
   static uint32_t GetQuota();
   // Gets (but not ensures) cache for the given scope
@@ -48,15 +43,14 @@ public:
   static nsCString CreateOrigin(const nsACString& aOriginSuffix,
                                 const nsACString& aOriginNoSuffix);
 
-protected:
-  explicit StorageManagerBase(LocalStorage::StorageType aType);
-  virtual ~StorageManagerBase();
-
 private:
+  LocalStorageManager();
+  ~LocalStorageManager();
+
   // StorageObserverSink, handler to various chrome clearing notification
-  virtual nsresult Observe(const char* aTopic,
-                           const nsAString& aOriginAttributesPattern,
-                           const nsACString& aOriginScope) override;
+  nsresult Observe(const char* aTopic,
+                   const nsAString& aOriginAttributesPattern,
+                   const nsACString& aOriginScope) override;
 
   // Since nsTHashtable doesn't like multiple inheritance, we have to aggregate
   // StorageCache into the entry.
@@ -112,8 +106,6 @@ private:
   typedef nsTHashtable<StorageCacheHashKey> CacheOriginHashtable;
   nsClassHashtable<nsCStringHashKey, CacheOriginHashtable> mCaches;
 
-  const LocalStorage::StorageType mType;
-
   // If mLowDiskSpace is true it indicates a low device storage situation and
   // so no localStorage writes are allowed. sessionStorage writes are still
   // allowed.
@@ -124,35 +116,21 @@ private:
                    const OriginAttributesPattern& aPattern,
                    const nsACString& aKeyPrefix);
 
-protected:
+  // Global getter of localStorage manager service
+  static LocalStorageManager* Self() { return sSelf; }
+
+  // Like Self, but creates an instance if we're not yet initialized.
+  static LocalStorageManager* Ensure();
+
+private:
   // Keeps usage cache objects for eTLD+1 scopes we have touched.
   nsDataHashtable<nsCStringHashKey, RefPtr<StorageUsage> > mUsages;
 
   friend class StorageCache;
   // Releases cache since it is no longer referrered by any Storage object.
   virtual void DropCache(StorageCache* aCache);
-};
 
-// Derived classes to allow two different contract ids, one for localStorage and
-// one for sessionStorage management.  localStorage manager is used as service
-// scoped to the application while sessionStorage managers are instantiated by
-// each top doc shell in the application since sessionStorages are isolated per
-// top level browsing context.  The code may easily by shared by both.
-
-class DOMLocalStorageManager final : public StorageManagerBase
-{
-public:
-  DOMLocalStorageManager();
-  virtual ~DOMLocalStorageManager();
-
-  // Global getter of localStorage manager service
-  static DOMLocalStorageManager* Self() { return sSelf; }
-
-  // Like Self, but creates an instance if we're not yet initialized.
-  static DOMLocalStorageManager* Ensure();
-
-private:
-  static DOMLocalStorageManager* sSelf;
+  static LocalStorageManager* sSelf;
 };
 
 } // namespace dom
