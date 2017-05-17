@@ -411,9 +411,19 @@ nsSliderFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
       CSSCoord thumbStart = NSAppUnitsToFloatPixels(
           isHorizontal ? thumbRect.x : thumbRect.y, appUnitsPerCss);
 
+      nsRect overflow = thumb->GetVisualOverflowRectRelativeToParent();
+      nsSize refSize = aBuilder->RootReferenceFrame()->GetSize();
+      gfxSize scale = nsLayoutUtils::GetTransformToAncestorScale(thumb);
+      if (scale.width != 0 && scale.height != 0) {
+        refSize.width /= scale.width;
+        refSize.height /= scale.height;
+      }
+      nsRect dirty = aDirtyRect.Intersect(thumbRect);
+      dirty = nsLayoutUtils::ComputePartialPrerenderArea(aDirtyRect, overflow, refSize);
+
       nsDisplayListBuilder::AutoContainerASRTracker contASRTracker(aBuilder);
       nsDisplayListCollection tempLists;
-      nsBoxFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, tempLists);
+      nsBoxFrame::BuildDisplayListForChildren(aBuilder, dirty, tempLists);
 
       // This is a bit of a hack. Collect up all descendant display items
       // and merge them into a single Content() list.

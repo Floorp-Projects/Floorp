@@ -72,6 +72,7 @@ add_task(async function setup() {
   Services.search.moveEngine(engine, 0);
 
   // Enable search suggestions in the urlbar.
+  let suggestionsEnabled = Services.prefs.getBoolPref(SUGGEST_URLBAR_PREF);
   Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, true);
 
   // Enable the urlbar one-off buttons.
@@ -96,7 +97,7 @@ add_task(async function setup() {
     Services.telemetry.canRecordExtended = oldCanRecord;
     Services.search.currentEngine = originalEngine;
     Services.search.removeEngine(engine);
-    Services.prefs.clearUserPref(SUGGEST_URLBAR_PREF);
+    Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, suggestionsEnabled);
     Services.prefs.clearUserPref(ONEOFF_URLBAR_PREF);
     await PlacesTestUtils.clearHistory();
     Services.telemetry.setEventRecordingEnabled("navigation", false);

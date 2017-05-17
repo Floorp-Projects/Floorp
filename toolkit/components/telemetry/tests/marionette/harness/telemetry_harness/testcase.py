@@ -64,7 +64,7 @@ class TelemetryTestCase(PuppeteerMixin, MarionetteTestCase):
 
     def restart_browser(self):
         """Restarts browser while maintaining the same profile and session."""
-        self.marionette.restart(clean=False, in_app=True)
+        self.restart(clean=False, in_app=True)
 
     def install_addon(self):
         trigger = Process(target=self._install_addon)
