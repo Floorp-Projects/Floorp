@@ -5,7 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SessionStorageManager.h"
+
 #include "SessionStorage.h"
+#include "SessionStorageCache.h"
 #include "StorageUtils.h"
 
 namespace mozilla {
