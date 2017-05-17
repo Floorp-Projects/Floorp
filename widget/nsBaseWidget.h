@@ -549,6 +549,8 @@ protected:
 
   nsPopupType PopupType() const { return mPopupType; }
 
+  bool HasRemoteContent() const { return mHasRemoteContent; }
+
   void NotifyRollupGeometryChange()
   {
     // XULPopupManager isn't interested in this notification, so only
@@ -683,6 +685,7 @@ protected:
   nsPopupLevel      mPopupLevel;
   nsPopupType       mPopupType;
   SizeConstraints   mSizeConstraints;
+  bool              mHasRemoteContent;
 
   CompositorWidgetDelegate* mCompositorWidgetDelegate;
 
