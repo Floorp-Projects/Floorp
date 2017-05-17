@@ -40,13 +40,13 @@
      return Promise.resolve();
    }
 
-   function keepThisScopedCredential(aScopedCredInfo) {
+   function keepThisPublicKeyCredential(aPublicKeyCredential) {
      gTrackedCredential = {
-       type: aScopedCredInfo.credential.type,
-       id: Uint8Array.from(aScopedCredInfo.credential.id),
+       type: "ScopedCred",
+       id: Uint8Array.from(aPublicKeyCredential.rawId),
        transports: [ "usb" ],
      }
-     return Promise.resolve(aScopedCredInfo);
+     return Promise.resolve(aPublicKeyCredential);
    }
 
    function runTests() {
@@ -68,7 +68,7 @@
        function() {
          // Test basic good call
          return authn.makeCredential(acct, [param], chall, {rpId: document.origin})
-                     .then(keepThisScopedCredential)
+                     .then(keepThisPublicKeyCredential)
                      .then(arrivingHereIsGood)
                      .catch(arrivingHereIsBad);
        },
