@@ -2758,7 +2758,8 @@ public:
     // this and return the outer scroll frame.
     SKIP_SCROLLED_FRAME = 0x01
   };
-  nsIFrame* GetContainingBlock(uint32_t aFlags = 0) const;
+  nsIFrame* GetContainingBlock(uint32_t aFlags = 0,
+                               const nsStyleDisplay* aStyleDisplay = nullptr) const;
 
   /**
    * Is this frame a containing block for floating elements?
@@ -3610,7 +3611,7 @@ public:
   inline bool IsAbsPosContainingBlock() const;
   inline bool IsFixedPosContainingBlock() const;
   inline bool IsRelativelyPositioned() const;
-  inline bool IsAbsolutelyPositioned() const;
+  inline bool IsAbsolutelyPositioned(const nsStyleDisplay* aStyleDisplay = nullptr) const;
 
   /**
    * Returns the vertical-align value to be used for layout, if it is one
