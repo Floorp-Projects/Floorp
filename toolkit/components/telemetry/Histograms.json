@@ -13233,5 +13233,17 @@
     "n_buckets": 100,
     "bug_numbers": [1366640],
     "description": "Time (ms) VideoFrameContainer::ClearFutureFrames spent holding a lock."
+  },
+  "IPC_SYNC_RECEIVE_MS": {
+    "record_in_processes": ["main", "content", "gpu"],
+    "alert_emails": ["michael@thelayzells.com"],
+    "bug_numbers": [1365719],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "low": 32,
+    "high": 750,
+    "n_buckets": 40,
+    "keyed": true,
+    "description": "Measures the number of milliseconds we spend processing sync IPC messages in the receiving process, keyed by message name. Note: only messages that take over 500 microseconds are included in this probe."
   }
 }
