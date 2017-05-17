@@ -190,6 +190,14 @@ nsMenuPopupFrame::Init(nsIContent*       aContent,
 }
 
 bool
+nsMenuPopupFrame::HasRemoteContent() const
+{
+  return (!mInContentShell && mPopupType == ePopupTypePanel &&
+          mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::remote,
+                                nsGkAtoms::_true, eIgnoreCase));
+}
+
+bool
 nsMenuPopupFrame::IsNoAutoHide() const
 {
   // Panels with noautohide="true" don't hide when the mouse is clicked
@@ -240,9 +248,12 @@ nsMenuPopupFrame::PopupLevel(bool aIsNoAutoHide) const
 }
 
 void
-nsMenuPopupFrame::EnsureWidget()
+nsMenuPopupFrame::EnsureWidget(bool aRecreate)
 {
   nsView* ourView = GetView();
+  if (aRecreate) {
+    ourView->DestroyWidget();
+  }
   if (!ourView->HasWidget()) {
     NS_ASSERTION(!mGeneratedChildren && !PrincipalChildList().FirstChild(),
                  "Creating widget for MenuPopupFrame with children");
@@ -291,11 +302,14 @@ nsMenuPopupFrame::CreateWidgetForView(nsView* aView)
     }
   }
 
+  bool remote = HasRemoteContent();
+
   nsTransparencyMode mode = nsLayoutUtils::GetFrameTransparency(this, this);
   nsIContent* parentContent = GetContent()->GetParent();
   nsIAtom *tag = nullptr;
   if (parentContent && parentContent->IsXULElement())
     tag = parentContent->NodeInfo()->NameAtom();
+  widgetData.mHasRemoteContent = remote;
   widgetData.mSupportTranslucency = mode == eTransparencyTransparent;
   widgetData.mDropShadow = !(mode == eTransparencyTransparent || tag == nsGkAtoms::menulist);
   widgetData.mPopupLevel = PopupLevel(widgetData.mNoAutoHide);
@@ -2233,6 +2247,13 @@ nsMenuPopupFrame::AttributeChanged(int32_t aNameSpaceID,
       pm->EnableRollup(mContent, !IsNoAutoHide());
   }
 #endif
+
+  if (aAttribute == nsGkAtoms::remote) {
+    // When the remote attribute changes, we need to create a new widget to
+    // ensure that it has the correct compositor and transparency settings to
+    // match the new value.
+    EnsureWidget(true);
+  }
 
   if (aAttribute == nsGkAtoms::followanchor) {
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
