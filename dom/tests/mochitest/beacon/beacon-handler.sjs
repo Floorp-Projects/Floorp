@@ -89,7 +89,10 @@ function handleRequest(request, response) {
       data += charcode;
     }
 
-    var mimetype = request.getHeader("Content-Type");
+    var mimetype = "";
+    if (request.hasHeader("Content-Type")) {
+      mimetype = request.getHeader("Content-Type");
+    }
 
     // check to see if this is form data.
     if (mimetype.indexOf("multipart/form-data") != -1) {
