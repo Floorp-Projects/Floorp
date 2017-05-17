@@ -71,14 +71,14 @@ fails-if(stylo) == anim-css-fontsize-1-from-by-px-px.svg    anim-css-fontsize-1-
 == anim-css-fontsize-1-from-to-px-px.svg    anim-css-fontsize-1-ref.svg
 
 # 'font-size' property (accepts unitless values)
-== anim-css-fontsize-1-from-to-no-no.svg    anim-css-fontsize-1-ref.svg
-== anim-css-fontsize-1-from-to-no-px.svg    anim-css-fontsize-1-ref.svg
-== anim-css-fontsize-1-from-to-px-no.svg    anim-css-fontsize-1-ref.svg
+fails-if(stylo) == anim-css-fontsize-1-from-to-no-no.svg    anim-css-fontsize-1-ref.svg
+fails-if(stylo) == anim-css-fontsize-1-from-to-no-px.svg    anim-css-fontsize-1-ref.svg
+fails-if(stylo) == anim-css-fontsize-1-from-to-px-no.svg    anim-css-fontsize-1-ref.svg
 
 # 'font-size' mapped attribute (accepts unitless values)
-== anim-mapped-fontsize-1-from-to-no-no.svg anim-css-fontsize-1-ref.svg
-== anim-mapped-fontsize-1-from-to-no-px.svg anim-css-fontsize-1-ref.svg
-== anim-mapped-fontsize-1-from-to-px-no.svg anim-css-fontsize-1-ref.svg
+fails-if(stylo) == anim-mapped-fontsize-1-from-to-no-no.svg anim-css-fontsize-1-ref.svg
+fails-if(stylo) == anim-mapped-fontsize-1-from-to-no-px.svg anim-css-fontsize-1-ref.svg
+fails-if(stylo) == anim-mapped-fontsize-1-from-to-px-no.svg anim-css-fontsize-1-ref.svg
 
 # 'font-size' property, from/by/to with percent values
 fails-if(stylo) == anim-css-fontsize-1-from-by-pct-pct.svg  anim-css-fontsize-1-ref.svg
