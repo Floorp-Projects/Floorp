@@ -35,6 +35,7 @@ config = {
         "populate-webroot",
         "create-virtualenv",
         "install",
+        "setup-mitmproxy",
         "run-tests",
     ],
     "default_blob_upload_servers": [
