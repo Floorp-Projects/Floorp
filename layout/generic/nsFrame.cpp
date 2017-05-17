@@ -11072,8 +11072,8 @@ void DR_State::ParseRulesFile()
       for (DR_Rule* rule = ParseRule(inFile); rule; rule = ParseRule(inFile)) {
         if (rule->mTarget) {
           LayoutFrameType fType = rule->mTarget->mFrameType;
-          DR_FrameTypeInfo* info = GetFrameTypeInfo(fType);
-          if (info) {
+          if (fType != LayoutFrameType::None) {
+            DR_FrameTypeInfo* info = GetFrameTypeInfo(fType);
             AddRule(info->mRules, *rule);
           }
           else {
