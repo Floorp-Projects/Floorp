@@ -421,7 +421,7 @@ class TestLogSubprocessOutput(unittest.TestCase):
 
     def test_non_ascii_subprocess_output(self):
         out = StringIO()
-        sandbox = ConfigureSandbox({}, {}, [], out, out)
+        sandbox = ConfigureSandbox({}, {}, ['configure'], out, out)
 
         sandbox.include_file(mozpath.join(topsrcdir, 'build',
                              'moz.configure', 'util.configure'))
