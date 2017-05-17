@@ -72,15 +72,14 @@ to mochitest command.
     * test_animations_event_order.html [2]
 * test_computed_style.html `gradient`: -webkit-prefixed gradient values [13]
 * test_bug829816.html: counter-{reset,increment} serialization difference bug 1363968 [8]
-* \@counter-style support bug 1328319
-  * test_counter_descriptor_storage.html [1]
-  * test_counter_style.html [5]
+* dynamic change on \@counter-style rule bug 1363590
+  * test_counter_style.html [11]
+  * test_counter_style.html asserts [11]
+  * test_counter_descriptor_storage.html asserts [110]
+* symbols() function and string value on list-style-type bug 1363596
   * test_value_storage.html `symbols(` [30]
-  * ... `list-style-type` [60]
-  * ... `'list-style'` [30]
-  * ... `'content`: various value as list-style-type in counter functions [2]
-  * test_html_attribute_computed_values.html `list-style-type` [8]
-  * test_rule_insertion.html `counter` [47]
+  * ... `list-style-type` [8]
+  * ... `'list-style'` [18]
 * @page support:
   * test_bug887741_at-rules_in_declaration_lists.html `exception` [1]
 * Unimplemented \@font-face descriptors:
@@ -202,12 +201,6 @@ to mochitest command.
 * Servo is correct but Gecko is wrong
   * flex-basis should be 0px when omitted in flex shorthand bug 1331530
     * test_flexbox_flex_shorthand.html `flex-basis` [10]
-  * should reject whole value bug 1355352
-    * test_descriptor_storage.html `unicode-range` [1]
-    * test_font_face_parser.html `U+A5` [4]
-  * Gecko clamps rather than rejects invalid unicode range bug 1355356
-    * test_font_face_parser.html `U+??????` [2]
-    * ... `12FFFF` [2]
   * Gecko rejects calc() in -webkit-gradient bug 1363349
     * test_property_syntax_errors.html `-webkit-gradient` [20]
 * test_property_syntax_errors.html `linear-gradient(0,`: unitless zero as degree [10]

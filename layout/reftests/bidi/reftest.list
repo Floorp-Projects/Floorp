@@ -86,8 +86,8 @@ random-if(winWidget) == 305643-1.html 305643-1-ref.html # depends on windows ver
 == 409375.html 409375-ref.html
 == 413542-1.html 413542-1-ref.html
 == 413542-2.html 413542-2-ref.html
-fails-if(stylo) == 413928-1.html 413928-1-ref.html
-fails-if(stylo) == 413928-2.html 413928-2-ref.html
+== 413928-1.html 413928-1-ref.html
+== 413928-2.html 413928-2-ref.html
 == 425338-1a.html 425338-1-ref.html
 == 425338-1b.html 425338-1-ref.html
 == 489517-1.html 489517-1-ref.html

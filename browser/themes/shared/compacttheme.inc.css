@@ -188,7 +188,7 @@ toolbar:-moz-lwtheme-darktext {
 #forward-button > .toolbarbutton-icon {
   background: var(--chrome-nav-buttons-background) !important;
   border-radius: 0 !important;
-  padding: var(--toolbarbutton-vertical-inner-padding) 5px !important;
+  padding: var(--toolbarbutton-inner-padding) 5px !important;
   margin: 0 !important;
   border: 1px solid var(--chrome-nav-bar-controls-border-color) !important;
   box-shadow: none !important;

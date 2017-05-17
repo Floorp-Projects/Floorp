@@ -31,7 +31,7 @@ fails-if(!stylo) == 1102175-1a.html 1102175-1-ref.html
 == 1105268-2-min-max-dimensions.html 1105268-2-min-max-dimensions-ref.html
 == 1106669-1-intrinsic-for-container.html 1106669-1-intrinsic-for-container-ref.html
 == 1108923-1-percentage-margins.html 1108923-1-percentage-margins-ref.html
-fails-if(stylo) == 1111944-1-list-marker.html 1111944-1-list-marker-ref.html
+== 1111944-1-list-marker.html 1111944-1-list-marker-ref.html
 fuzzy(116,94) fuzzy-if(winWidget,135,124) HTTP(..) == 1115916-1-vertical-metrics.html 1115916-1-vertical-metrics-ref.html
 == 1117210-1-vertical-baseline-snap.html 1117210-1-vertical-baseline-snap-ref.html
 fails-if(stylo) == 1117227-1-text-overflow.html 1117227-1-text-overflow-ref.html

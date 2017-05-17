@@ -18,19 +18,27 @@ const kObservedTopics = [
 ];
 
 var gObservedTopics = {};
-function observer(aSubject, aTopic, aData) {
+
+function ignoreEvent(aSubject, aTopic, aData) {
   // With e10s disabled, our content script receives notifications for the
   // preview displayed in our screen sharing permission prompt; ignore them.
   const kBrowserURL = "chrome://browser/content/browser.xul";
   const nsIPropertyBag = Components.interfaces.nsIPropertyBag;
   if (aTopic == "recording-device-events" &&
       aSubject.QueryInterface(nsIPropertyBag).getProperty("requestURL") == kBrowserURL) {
-    return;
+    return true;
   }
   if (aTopic == "recording-window-ended") {
     let win = Services.wm.getOuterWindowWithId(aData).top;
     if (win.document.documentURI == kBrowserURL)
-      return;
+      return true;
+  }
+  return false;
+}
+
+function observer(aSubject, aTopic, aData) {
+  if (ignoreEvent(aSubject, aTopic, aData)) {
+    return;
   }
 
   if (!(aTopic in gObservedTopics))
@@ -90,7 +98,16 @@ addMessageListener("Test:GetMediaCaptureState", data => {
 
 addMessageListener("Test:WaitForObserverCall", ({data}) => {
   let topic = data;
-  Services.obs.addObserver(function obs() {
+  Services.obs.addObserver(function obs(aSubject, aTopic, aData) {
+    if (aTopic != topic) {
+      is(aTopic, topic, "Wrong topic observed");
+      return;
+    }
+
+    if (ignoreEvent(aSubject, aTopic, aData)) {
+      return;
+    }
+
     sendAsyncMessage("Test:ObserverCalled", topic);
     Services.obs.removeObserver(obs, topic);
 
