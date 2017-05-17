@@ -3767,10 +3767,20 @@ NS_IMETHODIMP XMLHttpRequestMainThread::
 nsHeaderVisitor::VisitHeader(const nsACString &header, const nsACString &value)
 {
   if (mXHR.IsSafeHeader(header, mHttpChannel)) {
-    mHeaders.Append(header);
-    mHeaders.AppendLiteral(": ");
-    mHeaders.Append(value);
-    mHeaders.AppendLiteral("\r\n");
+    if (!Preferences::GetBool("dom.xhr.lowercase_header.enabled", false)) {
+      if(!mHeaderList.InsertElementSorted(HeaderEntry(header, value),
+                                          fallible)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      return NS_OK;
+    }
+
+    nsAutoCString lowerHeader(header);
+    ToLowerCase(lowerHeader);
+    if (!mHeaderList.InsertElementSorted(HeaderEntry(lowerHeader, value),
+                                         fallible)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
   return NS_OK;
 }
