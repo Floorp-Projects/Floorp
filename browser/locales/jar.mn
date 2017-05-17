@@ -20,7 +20,6 @@
     locale/browser/aboutSearchReset.dtd            (%chrome/browser/aboutSearchReset.dtd)
     locale/browser/aboutSessionRestore.dtd         (%chrome/browser/aboutSessionRestore.dtd)
     locale/browser/aboutTabCrashed.dtd             (%chrome/browser/aboutTabCrashed.dtd)
-    locale/browser/aboutSyncTabs.dtd               (%chrome/browser/aboutSyncTabs.dtd)
     locale/browser/browser.dtd                     (%chrome/browser/browser.dtd)
     locale/browser/baseMenuOverlay.dtd             (%chrome/browser/baseMenuOverlay.dtd)
     locale/browser/browser.properties              (%chrome/browser/browser.properties)
