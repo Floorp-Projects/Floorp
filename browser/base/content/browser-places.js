@@ -1674,7 +1674,7 @@ var BookmarkingUI = {
     // returning any result.
     let pendingUpdate = this._pendingUpdate = {};
 
-    PlacesUtils.bookmarks.fetch({url: this._uri}, b => guids.add(b.guid))
+    PlacesUtils.bookmarks.fetch({url: this._uri}, b => guids.add(b.guid), { concurrent: true })
       .catch(Components.utils.reportError)
       .then(() => {
          if (pendingUpdate != this._pendingUpdate) {

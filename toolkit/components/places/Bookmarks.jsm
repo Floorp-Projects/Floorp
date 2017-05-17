@@ -761,6 +761,11 @@ var Bookmarks = Object.freeze({
    *        object representing it, as defined above.
    * @param onResult [optional]
    *        Callback invoked for each found bookmark.
+   * @param options [optional]
+   *        an optional object whose properties describe options for the fetch:
+   *         - concurrent: fetches concurrently to any writes, returning results
+   *                       faster. On the negative side, it may return stale
+   *                       information missing the currently ongoing write.
    *
    * @return {Promise} resolved when the fetch is complete.
    * @resolves to an object representing the found item, as described above, or
@@ -772,7 +777,7 @@ var Bookmarks = Object.freeze({
    * @note Any unknown property in the info object is ignored.  Known properties
    *       may be overwritten.
    */
-  fetch(guidOrInfo, onResult = null) {
+  fetch(guidOrInfo, onResult = null, options = {}) {
     if (onResult && typeof onResult != "function")
       throw new Error("onResult callback must be a valid function");
     let info = guidOrInfo;
@@ -812,11 +817,11 @@ var Bookmarks = Object.freeze({
     return (async function() {
       let results;
       if (fetchInfo.hasOwnProperty("url"))
-        results = await fetchBookmarksByURL(fetchInfo);
+        results = await fetchBookmarksByURL(fetchInfo, options && options.concurrent);
       else if (fetchInfo.hasOwnProperty("guid"))
-        results = await fetchBookmark(fetchInfo);
+        results = await fetchBookmark(fetchInfo, options && options.concurrent);
       else if (fetchInfo.hasOwnProperty("parentGuid") && fetchInfo.hasOwnProperty("index"))
-        results = await fetchBookmarkByPosition(fetchInfo);
+        results = await fetchBookmarkByPosition(fetchInfo, options && options.concurrent);
 
       if (!results)
         return null;
@@ -1386,10 +1391,8 @@ async function queryBookmarks(info) {
 
 // Fetch implementation.
 
-function fetchBookmark(info) {
-  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: fetchBookmark",
-    async function(db) {
-
+async function fetchBookmark(info, concurrent) {
+  let query = async function(db) {
     let rows = await db.executeCached(
       `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
               b.dateAdded, b.lastModified, b.type, b.title, h.url AS url,
@@ -1403,14 +1406,18 @@ function fetchBookmark(info) {
       `, { guid: info.guid });
 
     return rows.length ? rowsToItemsArray(rows)[0] : null;
-  });
+  };
+  if (concurrent) {
+    let db = await PlacesUtils.promiseDBConnection();
+    return query(db);
+  }
+  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: fetchBookmark",
+                                           query);
 }
 
-function fetchBookmarkByPosition(info) {
-  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: fetchBookmarkByPosition",
-    async function(db) {
+async function fetchBookmarkByPosition(info, concurrent) {
+  let query = async function(db) {
     let index = info.index == Bookmarks.DEFAULT_INDEX ? null : info.index;
-
     let rows = await db.executeCached(
       `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
               b.dateAdded, b.lastModified, b.type, b.title, h.url AS url,
@@ -1427,31 +1434,42 @@ function fetchBookmarkByPosition(info) {
       `, { parentGuid: info.parentGuid, index });
 
     return rows.length ? rowsToItemsArray(rows)[0] : null;
-  });
+  };
+  if (concurrent) {
+    let db = await PlacesUtils.promiseDBConnection();
+    return query(db);
+  }
+  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: fetchBookmarkByPosition",
+                                           query);
 }
 
-function fetchBookmarksByURL(info) {
-  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: fetchBookmarksByURL",
-    async function(db) {
-      let tagsFolderId = await promiseTagsFolderId();
-      let rows = await db.executeCached(
-        `/* do not warn (bug no): not worth to add an index */
-        SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
-                b.dateAdded, b.lastModified, b.type, b.title, h.url AS url,
-                b.id AS _id, b.parent AS _parentId,
-                NULL AS _childCount, /* Unused for now */
-                p.parent AS _grandParentId, b.syncStatus AS _syncStatus
-        FROM moz_bookmarks b
-        JOIN moz_bookmarks p ON p.id = b.parent
-        JOIN moz_places h ON h.id = b.fk
-        WHERE h.url_hash = hash(:url) AND h.url = :url
-        AND _grandParentId <> :tagsFolderId
-        ORDER BY b.lastModified DESC
-        `, { url: info.url.href, tagsFolderId });
+async function fetchBookmarksByURL(info, concurrent) {
+  let query = async function(db) {
+    let tagsFolderId = await promiseTagsFolderId();
+    let rows = await db.executeCached(
+      `/* do not warn (bug no): not worth to add an index */
+      SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
+              b.dateAdded, b.lastModified, b.type, b.title, h.url AS url,
+              b.id AS _id, b.parent AS _parentId,
+              NULL AS _childCount, /* Unused for now */
+              p.parent AS _grandParentId, b.syncStatus AS _syncStatus
+      FROM moz_bookmarks b
+      JOIN moz_bookmarks p ON p.id = b.parent
+      JOIN moz_places h ON h.id = b.fk
+      WHERE h.url_hash = hash(:url) AND h.url = :url
+      AND _grandParentId <> :tagsFolderId
+      ORDER BY b.lastModified DESC
+      `, { url: info.url.href, tagsFolderId });
 
-      return rows.length ? rowsToItemsArray(rows) : null;
-    }
-  );
+    return rows.length ? rowsToItemsArray(rows) : null;
+  };
+
+  if (concurrent) {
+    let db = await PlacesUtils.promiseDBConnection();
+    return query(db);
+  }
+  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: fetchBookmarksByURL",
+                                           query);
 }
 
 function fetchRecentBookmarks(numberOfItems) {
