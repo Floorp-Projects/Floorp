@@ -25,21 +25,15 @@ add_task(async function test() {
   // Check that the tab has a 'muted' attribute.
   ok(tab.hasAttribute("muted"), "tab.muted exists");
 
-  tab.setMediaBlock(true /* block */);
-  // Check that the tab has a 'media-blocked' attribute.
-  ok(tab.hasAttribute("media-blocked"), "tab.media-blocked exists");
-
   // Make sure we do not persist 'image' or 'muted' attributes.
   ss.persistTabAttribute("image");
   ss.persistTabAttribute("muted");
   ss.persistTabAttribute("iconLoadingPrincipal");
-  ss.persistTabAttribute("mediaBlocked");
   let {attributes} = JSON.parse(ss.getTabState(tab));
   ok(!("image" in attributes), "'image' attribute not saved");
   ok(!("iconLoadingPrincipal" in attributes), "'iconLoadingPrincipal' attribute not saved");
   ok(!("muted" in attributes), "'muted' attribute not saved");
   ok(!("custom" in attributes), "'custom' attribute not saved");
-  ok(!("mediaBlocked" in attributes), "'mediaBlocked' attribute not saved");
 
   // Test persisting a custom attribute.
   tab.setAttribute("custom", "foobar");
