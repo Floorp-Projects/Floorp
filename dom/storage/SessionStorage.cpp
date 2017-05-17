@@ -167,27 +167,6 @@ SessionStorage::Clear(nsIPrincipal& aSubjectPrincipal,
   BroadcastChangeNotification(NullString(), NullString(), NullString());
 }
 
-bool
-SessionStorage::CanUseStorage(nsIPrincipal& aSubjectPrincipal)
-{
-  // This method is responsible for correct setting of mIsSessionOnly.
-  // It doesn't work with mIsPrivate flag at all, since it is checked
-  // regardless mIsSessionOnly flag in LocalStorageCache code.
-
-  if (!mozilla::Preferences::GetBool("dom.storage.enabled")) {
-    return false;
-  }
-
-  nsContentUtils::StorageAccess access =
-    nsContentUtils::StorageAllowedForPrincipal(Principal());
-
-  if (access == nsContentUtils::StorageAccess::eDeny) {
-    return false;
-  }
-
-  return CanAccess(&aSubjectPrincipal);
-}
-
 void
 SessionStorage::BroadcastChangeNotification(const nsAString& aKey,
                                             const nsAString& aOldValue,

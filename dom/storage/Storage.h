@@ -43,8 +43,6 @@ public:
 
   virtual int64_t GetOriginQuotaUsage() const = 0;
 
-  virtual bool CanAccess(nsIPrincipal* aPrincipal);
-
   nsIPrincipal*
   Principal() const
   {
@@ -109,7 +107,7 @@ public:
   virtual void
   Clear(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) = 0;
 
-  virtual bool IsSessionOnly() const = 0;
+  bool IsSessionOnly() const { return mIsSessionOnly; }
 
   static void
   NotifyChange(Storage* aStorage, nsIPrincipal* aPrincipal,
@@ -121,9 +119,23 @@ public:
 protected:
   virtual ~Storage();
 
+  // The method checks whether the caller can use a storage.
+  // CanUseStorage is called before any DOM initiated operation
+  // on a storage is about to happen and ensures that the storage's
+  // session-only flag is properly set according the current settings.
+  // It is an optimization since the privileges check and session only
+  // state determination are complex and share the code (comes hand in
+  // hand together).
+  bool CanUseStorage(nsIPrincipal& aSubjectPrincipal);
+
 private:
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   nsCOMPtr<nsIPrincipal> mPrincipal;
+
+  // Whether storage is set to persist data only per session, may change
+  // dynamically and is set by CanUseStorage function that is called
+  // before any operation on the storage.
+  bool mIsSessionOnly : 1;
 };
 
 } // namespace dom

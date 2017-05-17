@@ -68,12 +68,8 @@ public:
   void Clear(nsIPrincipal& aSubjectPrincipal,
              ErrorResult& aRv) override;
 
-  bool IsSessionOnly() const override { return true; }
-
 private:
   ~SessionStorage();
-
-  bool CanUseStorage(nsIPrincipal& aSubjectPrincipal);
 
   bool ProcessUsageDelta(int64_t aDelta);
 
