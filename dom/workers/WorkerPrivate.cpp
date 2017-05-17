@@ -2739,9 +2739,7 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
   mCreationTimeStamp(TimeStamp::Now()),
   mCreationTimeHighRes((double)PR_Now() / PR_USEC_PER_MSEC)
 {
-  MOZ_ASSERT_IF(!IsDedicatedWorker(),
-                !aWorkerName.IsVoid() && NS_IsMainThread());
-  MOZ_ASSERT_IF(IsDedicatedWorker(), aWorkerName.IsEmpty());
+  MOZ_ASSERT_IF(!IsDedicatedWorker(), NS_IsMainThread());
 
   if (aLoadInfo.mWindow) {
     AssertIsOnMainThread();
@@ -4447,9 +4445,6 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
   , mFetchHandlerWasAdded(false)
   , mOnLine(false)
 {
-  MOZ_ASSERT_IF(!IsDedicatedWorker(), !aWorkerName.IsVoid());
-  MOZ_ASSERT_IF(IsDedicatedWorker(), aWorkerName.IsEmpty());
-
   if (aParent) {
     aParent->AssertIsOnWorkerThread();
     aParent->GetAllPreferences(mPreferences);
@@ -4506,10 +4501,12 @@ WorkerPrivate::~WorkerPrivate()
 already_AddRefed<WorkerPrivate>
 WorkerPrivate::Constructor(const GlobalObject& aGlobal,
                            const nsAString& aScriptURL,
+                           const WorkerOptions& aOptions,
                            ErrorResult& aRv)
 {
   return WorkerPrivate::Constructor(aGlobal, aScriptURL, false,
-                                    WorkerTypeDedicated, EmptyCString(),
+                                    WorkerTypeDedicated,
+                                    NS_ConvertUTF16toUTF8(aOptions.mName),
                                     nullptr, aRv);
 }
 
@@ -4587,12 +4584,6 @@ WorkerPrivate::Constructor(JSContext* aCx,
   } else {
     AssertIsOnMainThread();
   }
-
-  // Only service and shared workers can have names.
-  MOZ_ASSERT_IF(aWorkerType != WorkerTypeDedicated,
-                !aWorkerName.IsVoid());
-  MOZ_ASSERT_IF(aWorkerType == WorkerTypeDedicated,
-                aWorkerName.IsEmpty());
 
   Maybe<WorkerLoadInfo> stackLoadInfo;
   if (!aLoadInfo) {
@@ -6921,7 +6912,7 @@ WorkerPrivate::GetOrCreateGlobalScope(JSContext* aCx)
     } else if (IsServiceWorker()) {
       globalScope = new ServiceWorkerGlobalScope(this, ServiceWorkerScope());
     } else {
-      globalScope = new DedicatedWorkerGlobalScope(this);
+      globalScope = new DedicatedWorkerGlobalScope(this, WorkerName());
     }
 
     JS::Rooted<JSObject*> global(aCx);
