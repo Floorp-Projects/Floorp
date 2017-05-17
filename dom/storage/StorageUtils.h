@@ -17,6 +17,17 @@ nsresult
 GenerateOriginKey(nsIPrincipal* aPrincipal, nsACString& aOriginAttrSuffix,
                   nsACString& aOriginKey);
 
+bool
+PrincipalsEqual(nsIPrincipal* aObjectPrincipal,
+                nsIPrincipal* aSubjectPrincipal);
+
+void
+ReverseString(const nsCSubstring& aSource, nsCSubstring& aResult);
+
+nsresult
+CreateReversedDomain(const nsACString& aAsciiDomain,
+                     nsACString& aKey);
+
 } // StorageUtils namespace
 } // dom namespace
 } // mozilla namespace

@@ -8,6 +8,7 @@
 
 #include "StorageDBThread.h"
 #include "StorageCache.h"
+#include "StorageUtils.h"
 
 #include "mozilla/BasePrincipal.h"
 #include "nsIObserverService.h"
@@ -29,6 +30,8 @@
 namespace mozilla {
 namespace dom {
 
+using namespace StorageUtils;
+
 static const char kStartupTopic[] = "sessionstore-windows-restored";
 static const uint32_t kStartupDelay = 0;
 
@@ -39,9 +42,6 @@ NS_IMPL_ISUPPORTS(StorageObserver,
                   nsISupportsWeakReference)
 
 StorageObserver* StorageObserver::sSelf = nullptr;
-
-extern nsresult
-CreateReversedDomain(const nsACString& aAsciiDomain, nsACString& aKey);
 
 // static
 nsresult

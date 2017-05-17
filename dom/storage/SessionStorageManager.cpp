@@ -180,11 +180,9 @@ SessionStorageManager::CheckStorage(nsIPrincipal* aPrincipal,
     return NS_OK;
   }
 
-/* TODO
-  if (!storage->PrincipalEquals(aPrincipal)) {
+  if (!StorageUtils::PrincipalsEqual(storage->Principal(), aPrincipal)) {
     return NS_OK;
   }
-*/
 
   *aRetval = true;
   return NS_OK;

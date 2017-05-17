@@ -9,6 +9,7 @@
 #include "Storage.h"
 #include "StorageDBThread.h"
 #include "StorageIPC.h"
+#include "StorageUtils.h"
 #include "LocalStorageManager.h"
 
 #include "nsAutoPtr.h"
@@ -546,15 +547,10 @@ StorageCache::GetOriginQuotaUsage(const LocalStorage* aStorage) const
   return mData[GetDataSetIndex(aStorage)].mOriginQuotaUsage;
 }
 
-// Defined in StorageManager.cpp
-extern bool
-PrincipalsEqual(nsIPrincipal* aObjectPrincipal,
-                nsIPrincipal* aSubjectPrincipal);
-
 bool
 StorageCache::CheckPrincipal(nsIPrincipal* aPrincipal) const
 {
-  return PrincipalsEqual(mPrincipal, aPrincipal);
+  return StorageUtils::PrincipalsEqual(mPrincipal, aPrincipal);
 }
 
 void
