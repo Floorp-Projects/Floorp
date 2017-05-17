@@ -124,6 +124,9 @@ public:
   LookupCache *GetLookupCache(const nsACString& aTable,
                               bool aForUpdate = false);
 
+  void GetCacheInfo(const nsACString& aTable,
+                    nsIUrlClassifierCacheInfo** aCache);
+
 private:
   void DropStores();
   void DeleteTables(nsIFile* aDirectory, const nsTArray<nsCString>& aTables);

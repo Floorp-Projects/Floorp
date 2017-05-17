@@ -735,6 +735,18 @@ nsUrlClassifierDBServiceWorker::ReloadDatabase()
 }
 
 NS_IMETHODIMP
+nsUrlClassifierDBServiceWorker::ClearCache()
+{
+  nsTArray<nsCString> tables;
+  nsresult rv = mClassifier->ActiveTables(tables);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mClassifier->ResetTables(Classifier::Clear_Cache, tables);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsUrlClassifierDBServiceWorker::CancelUpdate()
 {
   LOG(("nsUrlClassifierDBServiceWorker::CancelUpdate"));
@@ -941,6 +953,19 @@ nsUrlClassifierDBServiceWorker::ClearLastResults()
   if (mLastResults) {
     mLastResults->Clear();
   }
+  return NS_OK;
+}
+
+nsresult
+nsUrlClassifierDBServiceWorker::GetCacheInfo(const nsACString& aTable,
+                                             nsIUrlClassifierCacheInfo** aCache)
+{
+  MOZ_ASSERT(!NS_IsMainThread(), "Must be on the background thread");
+  if (!mClassifier) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  mClassifier->GetCacheInfo(aTable, aCache);
   return NS_OK;
 }
 
@@ -1507,6 +1532,7 @@ NS_INTERFACE_MAP_BEGIN(nsUrlClassifierDBService)
   // Only nsIURIClassifier is supported in the content process!
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIUrlClassifierDBService, XRE_IsParentProcess())
   NS_INTERFACE_MAP_ENTRY(nsIURIClassifier)
+  NS_INTERFACE_MAP_ENTRY(nsIUrlClassifierInfo)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIObserver, XRE_IsParentProcess())
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIURIClassifier)
 NS_INTERFACE_MAP_END
@@ -2196,6 +2222,24 @@ nsUrlClassifierDBService::ReloadDatabase()
   }
 
   return mWorkerProxy->ReloadDatabase();
+}
+
+NS_IMETHODIMP
+nsUrlClassifierDBService::ClearCache()
+{
+  NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
+
+  return mWorkerProxy->ClearCache();
+}
+
+
+NS_IMETHODIMP
+nsUrlClassifierDBService::GetCacheInfo(const nsACString& aTable,
+                                       nsIUrlClassifierCacheInfo** aCache)
+{
+  NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
+
+  return mWorkerProxy->GetCacheInfo(aTable, aCache);
 }
 
 nsresult

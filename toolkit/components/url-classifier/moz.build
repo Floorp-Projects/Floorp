@@ -12,6 +12,7 @@ TEST_DIRS += ['tests']
 XPIDL_SOURCES += [
     'nsIUrlClassifierDBService.idl',
     'nsIUrlClassifierHashCompleter.idl',
+    'nsIUrlClassifierInfo.idl',
     'nsIUrlClassifierPrefixSet.idl',
     'nsIUrlClassifierStreamUpdater.idl',
     'nsIUrlClassifierUtils.idl',
@@ -30,6 +31,7 @@ UNIFIED_SOURCES += [
     'LookupCacheV4.cpp',
     'nsCheckSummedOutputStream.cpp',
     'nsUrlClassifierDBService.cpp',
+    'nsUrlClassifierInfo.cpp',
     'nsUrlClassifierProxies.cpp',
     'nsUrlClassifierUtils.cpp',
     'protobuf/safebrowsing.pb.cc',

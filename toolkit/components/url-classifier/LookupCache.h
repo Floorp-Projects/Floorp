@@ -18,6 +18,7 @@
 #include "VariableLengthPrefixSet.h"
 #include "mozilla/Logging.h"
 #include "mozilla/TypedEnumBits.h"
+#include "nsIUrlClassifierInfo.h"
 
 namespace mozilla {
 namespace safebrowsing {
@@ -208,6 +209,8 @@ public:
 #if DEBUG
   void DumpCache();
 #endif
+
+  void GetCacheInfo(nsIUrlClassifierCacheInfo** aCache);
 
   virtual nsresult Open();
   virtual nsresult Init() = 0;
