@@ -66,6 +66,52 @@ GenerateOriginKey(nsIPrincipal* aPrincipal, nsACString& aOriginAttrSuffix,
   return NS_OK;
 }
 
+bool
+PrincipalsEqual(nsIPrincipal* aObjectPrincipal,
+                nsIPrincipal* aSubjectPrincipal)
+{
+  if (!aSubjectPrincipal) {
+    return true;
+  }
+
+  if (!aObjectPrincipal) {
+    return false;
+  }
+
+  return aSubjectPrincipal->Equals(aObjectPrincipal);
+}
+
+void
+ReverseString(const nsCSubstring& aSource, nsCSubstring& aResult)
+{
+  nsACString::const_iterator sourceBegin, sourceEnd;
+  aSource.BeginReading(sourceBegin);
+  aSource.EndReading(sourceEnd);
+
+  aResult.SetLength(aSource.Length());
+  nsACString::iterator destEnd;
+  aResult.EndWriting(destEnd);
+
+  while (sourceBegin != sourceEnd) {
+    *(--destEnd) = *sourceBegin;
+    ++sourceBegin;
+  }
+}
+
+nsresult
+CreateReversedDomain(const nsACString& aAsciiDomain,
+                     nsACString& aKey)
+{
+  if (aAsciiDomain.IsEmpty()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  ReverseString(aAsciiDomain, aKey);
+
+  aKey.Append('.');
+  return NS_OK;
+}
+
 } // StorageUtils namespace
 } // dom namespace
 } // mozilla namespace

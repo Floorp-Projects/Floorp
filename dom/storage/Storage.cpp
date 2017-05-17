@@ -46,5 +46,75 @@ Storage::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return StorageBinding::Wrap(aCx, this, aGivenProto);
 }
 
+namespace {
+
+class StorageNotifierRunnable : public Runnable
+{
+public:
+  StorageNotifierRunnable(nsISupports* aSubject, const char16_t *aStorageType,
+                          bool aPrivateBrowsing)
+    : Runnable("StorageNotifierRunnable")
+    , mSubject(aSubject)
+    , mStorageType(aStorageType)
+    , mPrivateBrowsing(aPrivateBrowsing)
+  {}
+
+  NS_IMETHOD
+  Run() override
+  {
+    nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+    if (observerService) {
+      observerService->NotifyObservers(mSubject,
+                                       mPrivateBrowsing
+                                         ? "dom-private-storage2-changed"
+                                         : "dom-storage2-changed",
+                                       mStorageType);
+    }
+    return NS_OK;
+  }
+
+private:
+  nsCOMPtr<nsISupports> mSubject;
+  const char16_t* mStorageType;
+  const bool mPrivateBrowsing;
+};
+
+} // namespace
+
+/* static */ void
+Storage::NotifyChange(Storage* aStorage, nsIPrincipal* aPrincipal,
+                      const nsAString& aKey,
+                      const nsAString& aOldValue, const nsAString& aNewValue,
+                      const char16_t* aStorageType,
+                      const nsAString& aDocumentURI, bool aIsPrivate,
+                      bool aImmediateDispatch)
+{
+  StorageEventInit dict;
+  dict.mBubbles = false;
+  dict.mCancelable = false;
+  dict.mKey = aKey;
+  dict.mNewValue = aNewValue;
+  dict.mOldValue = aOldValue;
+  dict.mStorageArea = aStorage;
+  dict.mUrl = aDocumentURI;
+
+  // Note, this DOM event should never reach JS. It is cloned later in
+  // nsGlobalWindow.
+  RefPtr<StorageEvent> event =
+    StorageEvent::Constructor(nullptr, NS_LITERAL_STRING("storage"), dict);
+
+  event->SetPrincipal(aPrincipal);
+
+  RefPtr<StorageNotifierRunnable> r =
+    new StorageNotifierRunnable(event, aStorageType, aIsPrivate);
+
+  if (aImmediateDispatch) {
+    Unused << r->Run();
+  } else {
+    NS_DispatchToMainThread(r, NS_DISPATCH_NORMAL);
+  }
+}
+
 } // namespace dom
 } // namespace mozilla

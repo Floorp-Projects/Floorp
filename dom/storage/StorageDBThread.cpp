@@ -7,6 +7,7 @@
 #include "StorageDBThread.h"
 #include "StorageDBUpdater.h"
 #include "StorageCache.h"
+#include "StorageUtils.h"
 #include "LocalStorageManager.h"
 
 #include "nsIEffectiveTLDService.h"
@@ -42,6 +43,8 @@
 
 namespace mozilla {
 namespace dom {
+
+using namespace StorageUtils;
 
 namespace { // anon
 
@@ -445,10 +448,6 @@ StorageDBThread::ThreadObserver::AfterProcessNextEvent(nsIThreadInternal* aThrea
 {
   return NS_OK;
 }
-
-
-extern void
-ReverseString(const nsCSubstring& aSource, nsCSubstring& aResult);
 
 nsresult
 StorageDBThread::OpenDatabaseConnection()

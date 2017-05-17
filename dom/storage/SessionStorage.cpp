@@ -196,7 +196,8 @@ SessionStorage::BroadcastChangeNotification(const nsAString& aKey,
                                             const nsAString& aOldValue,
                                             const nsAString& aNewValue)
 {
-  // TODO
+  NotifyChange(this, Principal(), aKey, aOldValue, aNewValue, u"sessionStorage",
+               mDocumentURI, mIsPrivate, false);
 }
 
 // ----------------------------------------------------------------------------
