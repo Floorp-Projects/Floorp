@@ -1228,6 +1228,12 @@ Editor.prototype = {
       this._prefObserver.destroy();
     }
 
+    // Remove the link between the document and code-mirror.
+    let cm = editors.get(this);
+    if (cm && cm.doc) {
+      cm.doc.cm = null;
+    }
+
     this.emit("destroy");
   },
 

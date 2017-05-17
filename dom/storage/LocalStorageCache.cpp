@@ -4,12 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "StorageCache.h"
+#include "LocalStorageCache.h"
 
 #include "Storage.h"
 #include "StorageDBThread.h"
 #include "StorageIPC.h"
-#include "StorageManager.h"
+#include "StorageUtils.h"
+#include "LocalStorageManager.h"
 
 #include "nsAutoPtr.h"
 #include "nsDOMString.h"
@@ -24,8 +25,8 @@ namespace dom {
 #define DOM_STORAGE_CACHE_KEEP_ALIVE_TIME_MS 20000
 
 // static
-StorageDBBridge* StorageCache::sDatabase = nullptr;
-bool StorageCache::sDatabaseDown = false;
+StorageDBBridge* LocalStorageCache::sDatabase = nullptr;
+bool LocalStorageCache::sDatabaseDown = false;
 
 namespace {
 
@@ -48,25 +49,25 @@ GetDataSetIndex(bool aPrivate, bool aSessionOnly)
 }
 
 inline uint32_t
-GetDataSetIndex(const Storage* aStorage)
+GetDataSetIndex(const LocalStorage* aStorage)
 {
   return GetDataSetIndex(aStorage->IsPrivate(), aStorage->IsSessionOnly());
 }
 
 } // namespace
 
-// StorageCacheBridge
+// LocalStorageCacheBridge
 
-NS_IMPL_ADDREF(StorageCacheBridge)
+NS_IMPL_ADDREF(LocalStorageCacheBridge)
 
 // Since there is no consumer of return value of Release, we can turn this
-// method to void to make implementation of asynchronous StorageCache::Release
-// much simpler.
-NS_IMETHODIMP_(void) StorageCacheBridge::Release(void)
+// method to void to make implementation of asynchronous
+// LocalStorageCache::Release much simpler.
+NS_IMETHODIMP_(void) LocalStorageCacheBridge::Release(void)
 {
   MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");
   nsrefcnt count = --mRefCnt;
-  NS_LOG_RELEASE(this, count, "StorageCacheBridge");
+  NS_LOG_RELEASE(this, count, "LocalStorageCacheBridge");
   if (0 == count) {
     mRefCnt = 1; /* stabilize */
     /* enable this to find non-threadsafe destructors: */
@@ -75,11 +76,11 @@ NS_IMETHODIMP_(void) StorageCacheBridge::Release(void)
   }
 }
 
-// StorageCache
+// LocalStorageCache
 
-StorageCache::StorageCache(const nsACString* aOriginNoSuffix)
+LocalStorageCache::LocalStorageCache(const nsACString* aOriginNoSuffix)
   : mOriginNoSuffix(*aOriginNoSuffix)
-  , mMonitor("StorageCache")
+  , mMonitor("LocalStorageCache")
   , mLoaded(false)
   , mLoadResult(NS_OK)
   , mInitialized(false)
@@ -87,42 +88,42 @@ StorageCache::StorageCache(const nsACString* aOriginNoSuffix)
   , mSessionOnlyDataSetActive(false)
   , mPreloadTelemetryRecorded(false)
 {
-  MOZ_COUNT_CTOR(StorageCache);
+  MOZ_COUNT_CTOR(LocalStorageCache);
 }
 
-StorageCache::~StorageCache()
+LocalStorageCache::~LocalStorageCache()
 {
   if (mManager) {
     mManager->DropCache(this);
   }
 
-  MOZ_COUNT_DTOR(StorageCache);
+  MOZ_COUNT_DTOR(LocalStorageCache);
 }
 
 NS_IMETHODIMP_(void)
-StorageCache::Release(void)
+LocalStorageCache::Release(void)
 {
   // We must actually release on the main thread since the cache removes it
   // self from the manager's hash table.  And we don't want to lock access to
   // that hash table.
   if (NS_IsMainThread()) {
-    StorageCacheBridge::Release();
+    LocalStorageCacheBridge::Release();
     return;
   }
 
-  RefPtr<nsRunnableMethod<StorageCacheBridge, void, false> > event =
-    NewNonOwningRunnableMethod(static_cast<StorageCacheBridge*>(this),
-                               &StorageCacheBridge::Release);
+  RefPtr<nsRunnableMethod<LocalStorageCacheBridge, void, false> > event =
+    NewNonOwningRunnableMethod(static_cast<LocalStorageCacheBridge*>(this),
+                               &LocalStorageCacheBridge::Release);
 
   nsresult rv = NS_DispatchToMainThread(event);
   if (NS_FAILED(rv)) {
-    NS_WARNING("StorageCache::Release() on a non-main thread");
-    StorageCacheBridge::Release();
+    NS_WARNING("LocalStorageCache::Release() on a non-main thread");
+    LocalStorageCacheBridge::Release();
   }
 }
 
 void
-StorageCache::Init(StorageManagerBase* aManager,
+LocalStorageCache::Init(LocalStorageManager* aManager,
                    bool aPersistent,
                    nsIPrincipal* aPrincipal,
                    const nsACString& aQuotaOriginScope)
@@ -132,7 +133,6 @@ StorageCache::Init(StorageManagerBase* aManager,
   }
 
   mInitialized = true;
-  mPrincipal = aPrincipal;
   aPrincipal->OriginAttributesRef().CreateSuffix(mOriginSuffix);
   mPersistent = aPersistent;
   if (aQuotaOriginScope.IsEmpty()) {
@@ -156,7 +156,7 @@ StorageCache::Init(StorageManagerBase* aManager,
 }
 
 inline bool
-StorageCache::Persist(const Storage* aStorage) const
+LocalStorageCache::Persist(const LocalStorage* aStorage) const
 {
   return mPersistent &&
          !aStorage->IsSessionOnly() &&
@@ -164,13 +164,13 @@ StorageCache::Persist(const Storage* aStorage) const
 }
 
 const nsCString
-StorageCache::Origin() const
+LocalStorageCache::Origin() const
 {
-  return StorageManagerBase::CreateOrigin(mOriginSuffix, mOriginNoSuffix);
+  return LocalStorageManager::CreateOrigin(mOriginSuffix, mOriginNoSuffix);
 }
 
-StorageCache::Data&
-StorageCache::DataSet(const Storage* aStorage)
+LocalStorageCache::Data&
+LocalStorageCache::DataSet(const LocalStorage* aStorage)
 {
   uint32_t index = GetDataSetIndex(aStorage);
 
@@ -198,15 +198,17 @@ StorageCache::DataSet(const Storage* aStorage)
 }
 
 bool
-StorageCache::ProcessUsageDelta(const Storage* aStorage, int64_t aDelta,
-                                const MutationSource aSource)
+LocalStorageCache::ProcessUsageDelta(const LocalStorage* aStorage,
+                                     int64_t aDelta,
+                                     const MutationSource aSource)
 {
   return ProcessUsageDelta(GetDataSetIndex(aStorage), aDelta, aSource);
 }
 
 bool
-StorageCache::ProcessUsageDelta(uint32_t aGetDataSetIndex, const int64_t aDelta,
-                                const MutationSource aSource)
+LocalStorageCache::ProcessUsageDelta(uint32_t aGetDataSetIndex,
+                                     const int64_t aDelta,
+                                     const MutationSource aSource)
 {
   // Check if we are in a low disk space situation
   if (aSource == ContentMutation &&
@@ -218,7 +220,7 @@ StorageCache::ProcessUsageDelta(uint32_t aGetDataSetIndex, const int64_t aDelta,
   Data& data = mData[aGetDataSetIndex];
   uint64_t newOriginUsage = data.mOriginQuotaUsage + aDelta;
   if (aSource == ContentMutation &&
-      aDelta > 0 && newOriginUsage > StorageManagerBase::GetQuota()) {
+      aDelta > 0 && newOriginUsage > LocalStorageManager::GetQuota()) {
     return false;
   }
 
@@ -234,7 +236,7 @@ StorageCache::ProcessUsageDelta(uint32_t aGetDataSetIndex, const int64_t aDelta,
 }
 
 void
-StorageCache::Preload()
+LocalStorageCache::Preload()
 {
   if (mLoaded || !mPersistent) {
     return;
@@ -274,7 +276,7 @@ private:
 } // namespace
 
 void
-StorageCache::WaitForPreload(Telemetry::HistogramID aTelemetryID)
+LocalStorageCache::WaitForPreload(Telemetry::HistogramID aTelemetryID)
 {
   if (!mPersistent) {
     return;
@@ -310,7 +312,7 @@ StorageCache::WaitForPreload(Telemetry::HistogramID aTelemetryID)
 }
 
 nsresult
-StorageCache::GetLength(const Storage* aStorage, uint32_t* aRetval)
+LocalStorageCache::GetLength(const LocalStorage* aStorage, uint32_t* aRetval)
 {
   if (Persist(aStorage)) {
     WaitForPreload(Telemetry::LOCALDOMSTORAGE_GETLENGTH_BLOCKING_MS);
@@ -324,8 +326,8 @@ StorageCache::GetLength(const Storage* aStorage, uint32_t* aRetval)
 }
 
 nsresult
-StorageCache::GetKey(const Storage* aStorage, uint32_t aIndex,
-                     nsAString& aRetval)
+LocalStorageCache::GetKey(const LocalStorage* aStorage, uint32_t aIndex,
+                           nsAString& aRetval)
 {
   // XXX: This does a linear search for the key at index, which would
   // suck if there's a large numer of indexes. Do we care? If so,
@@ -351,7 +353,8 @@ StorageCache::GetKey(const Storage* aStorage, uint32_t aIndex,
 }
 
 void
-StorageCache::GetKeys(const Storage* aStorage, nsTArray<nsString>& aKeys)
+LocalStorageCache::GetKeys(const LocalStorage* aStorage,
+                           nsTArray<nsString>& aKeys)
 {
   if (Persist(aStorage)) {
     WaitForPreload(Telemetry::LOCALDOMSTORAGE_GETALLKEYS_BLOCKING_MS);
@@ -367,8 +370,8 @@ StorageCache::GetKeys(const Storage* aStorage, nsTArray<nsString>& aKeys)
 }
 
 nsresult
-StorageCache::GetItem(const Storage* aStorage, const nsAString& aKey,
-                      nsAString& aRetval)
+LocalStorageCache::GetItem(const LocalStorage* aStorage, const nsAString& aKey,
+                           nsAString& aRetval)
 {
   if (Persist(aStorage)) {
     WaitForPreload(Telemetry::LOCALDOMSTORAGE_GETVALUE_BLOCKING_MS);
@@ -389,9 +392,9 @@ StorageCache::GetItem(const Storage* aStorage, const nsAString& aKey,
 }
 
 nsresult
-StorageCache::SetItem(const Storage* aStorage, const nsAString& aKey,
-                      const nsString& aValue, nsString& aOld,
-                      const MutationSource aSource)
+LocalStorageCache::SetItem(const LocalStorage* aStorage, const nsAString& aKey,
+                           const nsString& aValue, nsString& aOld,
+                           const MutationSource aSource)
 {
   // Size of the cache that will change after this action.
   int64_t delta = 0;
@@ -442,8 +445,9 @@ StorageCache::SetItem(const Storage* aStorage, const nsAString& aKey,
 }
 
 nsresult
-StorageCache::RemoveItem(const Storage* aStorage, const nsAString& aKey,
-                         nsString& aOld, const MutationSource aSource)
+LocalStorageCache::RemoveItem(const LocalStorage* aStorage,
+                              const nsAString& aKey,
+                              nsString& aOld, const MutationSource aSource)
 {
   if (Persist(aStorage)) {
     WaitForPreload(Telemetry::LOCALDOMSTORAGE_REMOVEKEY_BLOCKING_MS);
@@ -478,7 +482,8 @@ StorageCache::RemoveItem(const Storage* aStorage, const nsAString& aKey,
 }
 
 nsresult
-StorageCache::Clear(const Storage* aStorage, const MutationSource aSource)
+LocalStorageCache::Clear(const LocalStorage* aStorage,
+                         const MutationSource aSource)
 {
   bool refresh = false;
   if (Persist(aStorage)) {
@@ -517,48 +522,14 @@ StorageCache::Clear(const Storage* aStorage, const MutationSource aSource)
   return hadData ? NS_OK : NS_SUCCESS_DOM_NO_OPERATION;
 }
 
-void
-StorageCache::CloneFrom(const StorageCache* aThat)
-{
-  // This will never be called on anything else than SessionStorage.
-  // This means mData will never be touched on any other thread than
-  // the main thread and it never went through the loading process.
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!mPersistent);
-  MOZ_ASSERT(!(bool)aThat->mLoaded);
-
-  mLoaded = false;
-  mInitialized = aThat->mInitialized;
-  mPersistent = false;
-  mSessionOnlyDataSetActive = aThat->mSessionOnlyDataSetActive;
-
-  for (uint32_t i = 0; i < kDataSetCount; ++i) {
-    for (auto it = aThat->mData[i].mKeys.ConstIter(); !it.Done(); it.Next()) {
-      mData[i].mKeys.Put(it.Key(), it.UserData());
-    }
-    ProcessUsageDelta(i, aThat->mData[i].mOriginQuotaUsage);
-  }
-}
-
 int64_t
-StorageCache::GetOriginQuotaUsage(const Storage* aStorage) const
+LocalStorageCache::GetOriginQuotaUsage(const LocalStorage* aStorage) const
 {
   return mData[GetDataSetIndex(aStorage)].mOriginQuotaUsage;
 }
 
-// Defined in StorageManager.cpp
-extern bool
-PrincipalsEqual(nsIPrincipal* aObjectPrincipal,
-                nsIPrincipal* aSubjectPrincipal);
-
-bool
-StorageCache::CheckPrincipal(nsIPrincipal* aPrincipal) const
-{
-  return PrincipalsEqual(mPrincipal, aPrincipal);
-}
-
 void
-StorageCache::UnloadItems(uint32_t aUnloadFlags)
+LocalStorageCache::UnloadItems(uint32_t aUnloadFlags)
 {
   if (aUnloadFlags & kUnloadDefault) {
     // Must wait for preload to pass correct usage to ProcessUsageDelta
@@ -594,10 +565,10 @@ StorageCache::UnloadItems(uint32_t aUnloadFlags)
 #endif
 }
 
-// StorageCacheBridge
+// LocalStorageCacheBridge
 
 uint32_t
-StorageCache::LoadedCount()
+LocalStorageCache::LoadedCount()
 {
   MonitorAutoLock monitor(mMonitor);
   Data& data = mData[kDefaultSet];
@@ -605,7 +576,7 @@ StorageCache::LoadedCount()
 }
 
 bool
-StorageCache::LoadItem(const nsAString& aKey, const nsString& aValue)
+LocalStorageCache::LoadItem(const nsAString& aKey, const nsString& aValue)
 {
   MonitorAutoLock monitor(mMonitor);
   if (mLoaded) {
@@ -623,7 +594,7 @@ StorageCache::LoadItem(const nsAString& aKey, const nsString& aValue)
 }
 
 void
-StorageCache::LoadDone(nsresult aRv)
+LocalStorageCache::LoadDone(nsresult aRv)
 {
   MonitorAutoLock monitor(mMonitor);
   mLoadResult = aRv;
@@ -632,7 +603,7 @@ StorageCache::LoadDone(nsresult aRv)
 }
 
 void
-StorageCache::LoadWait()
+LocalStorageCache::LoadWait()
 {
   MonitorAutoLock monitor(mMonitor);
   while (!mLoaded) {
@@ -685,13 +656,13 @@ StorageUsage::LoadUsage(const int64_t aUsage)
 
 bool
 StorageUsage::CheckAndSetETLD1UsageDelta(uint32_t aDataSetIndex,
-  const int64_t aDelta, const StorageCache::MutationSource aSource)
+  const int64_t aDelta, const LocalStorageCache::MutationSource aSource)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   int64_t newUsage = mUsage[aDataSetIndex] + aDelta;
-  if (aSource == StorageCache::ContentMutation &&
-      aDelta > 0 && newUsage > StorageManagerBase::GetQuota()) {
+  if (aSource == LocalStorageCache::ContentMutation &&
+      aDelta > 0 && newUsage > LocalStorageManager::GetQuota()) {
     return false;
   }
 
@@ -702,7 +673,7 @@ StorageUsage::CheckAndSetETLD1UsageDelta(uint32_t aDataSetIndex,
 
 // static
 StorageDBBridge*
-StorageCache::StartDatabase()
+LocalStorageCache::StartDatabase()
 {
   if (sDatabase || sDatabaseDown) {
     // When sDatabaseDown is at true, sDatabase is null.
@@ -721,11 +692,11 @@ StorageCache::StartDatabase()
 
     sDatabase = db.forget();
   } else {
-    // Use DOMLocalStorageManager::Ensure in case we're called from
+    // Use LocalStorageManager::Ensure in case we're called from
     // DOMSessionStorageManager's initializer and we haven't yet initialized the
     // local storage manager.
     RefPtr<StorageDBChild> db = new StorageDBChild(
-        DOMLocalStorageManager::Ensure());
+        LocalStorageManager::Ensure());
 
     nsresult rv = db->Init();
     if (NS_FAILED(rv)) {
@@ -740,14 +711,14 @@ StorageCache::StartDatabase()
 
 // static
 StorageDBBridge*
-StorageCache::GetDatabase()
+LocalStorageCache::GetDatabase()
 {
   return sDatabase;
 }
 
 // static
 nsresult
-StorageCache::StopDatabase()
+LocalStorageCache::StopDatabase()
 {
   if (!sDatabase) {
     return NS_OK;
