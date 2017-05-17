@@ -130,9 +130,6 @@ class TestSize(MarionetteTestCase):
     def tearDown(self):
         self.marionette.set_window_size(
             self.original_size["width"], self.original_size["height"])
-        is_fullscreen = self.marionette.execute_script("return document.fullscreenElement;", sandbox=None)
-        if is_fullscreen:
-            self.marionette.fullscreen()
         super(MarionetteTestCase, self).tearDown()
 
     def test_get_types(self):
@@ -193,13 +190,3 @@ class TestSize(MarionetteTestCase):
                                                  height=self.max["height"])
         self.assertEqual(result["width"], self.max["width"])
         self.assertEqual(result["height"], self.max["height"])
-
-    def test_resize_while_fullscreen(self):
-        self.marionette.fullscreen()
-        result = self.marionette.set_window_rect(width=self.max["width"] - 100,
-                                                 height=self.max["height"] - 100)
-
-        self.assertTrue(self.marionette.execute_script("return window.fullscreenElement == null",
-                                                        sandbox=None))
-        self.assertEqual(result["width"], self.max["width"] - 100)
-        self.assertEqual(result["height"], self.max["height"] - 100)
