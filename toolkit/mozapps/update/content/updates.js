@@ -770,10 +770,10 @@ var gDownloadingPage = {
 
           this._setUpdateApplying();
           return;
-        } else {
-          gUpdates.wiz.goTo("finished");
-          return;
         }
+
+        gUpdates.wiz.goTo("finished");
+        return;
       }
     }
 
