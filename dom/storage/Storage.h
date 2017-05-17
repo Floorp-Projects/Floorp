@@ -39,6 +39,8 @@ public:
 
   virtual StorageType Type() const = 0;
 
+  virtual bool IsForkOf(const Storage* aStorage) const = 0;
+
   virtual int64_t GetOriginQuotaUsage() const = 0;
 
   virtual bool CanAccess(nsIPrincipal* aPrincipal);

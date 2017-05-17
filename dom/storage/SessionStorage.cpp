@@ -200,6 +200,17 @@ SessionStorage::BroadcastChangeNotification(const nsAString& aKey,
                mDocumentURI, mIsPrivate, false);
 }
 
+bool
+SessionStorage::IsForkOf(const Storage* aOther) const
+{
+  MOZ_ASSERT(aOther);
+  if (aOther->Type() != eSessionStorage) {
+    return false;
+  }
+
+  return mCache == static_cast<const SessionStorage*>(aOther)->mCache;
+}
+
 // ----------------------------------------------------------------------------
 // SessionStorageCache
 // ----------------------------------------------------------------------------
