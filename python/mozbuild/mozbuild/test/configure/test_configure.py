@@ -1330,6 +1330,52 @@ class TestConfigure(unittest.TestCase):
                             'FOOandBARandBAZ': foo_value and bar_value and baz_value,
                         })
 
+    def test_depends_getattr(self):
+        with self.moz_configure('''
+            @imports(_from='mozbuild.util', _import='ReadOnlyNamespace')
+            def namespace(**kwargs):
+                return ReadOnlyNamespace(**kwargs)
+
+            option('--foo', nargs=1, help='foo')
+            @depends('--foo')
+            def foo(value):
+                return value
+
+            option('--bar', nargs=1, help='bar')
+            @depends('--bar')
+            def bar(value):
+                return value or None
+
+            @depends(foo, bar)
+            def foobar(foo, bar):
+                return namespace(foo=foo, bar=bar)
+
+            set_config('FOO', foobar.foo)
+            set_config('BAR', foobar.bar)
+            set_config('BAZ', foobar.baz)
+        '''):
+            config = self.get_config()
+            self.assertEqual(config, {
+                'FOO': NegativeOptionValue(),
+            })
+
+            config = self.get_config(['--foo=foo'])
+            self.assertEqual(config, {
+                'FOO': PositiveOptionValue(('foo',)),
+            })
+
+            config = self.get_config(['--bar=bar'])
+            self.assertEqual(config, {
+                'FOO': NegativeOptionValue(),
+                'BAR': PositiveOptionValue(('bar',)),
+            })
+
+            config = self.get_config(['--foo=foo', '--bar=bar'])
+            self.assertEqual(config, {
+                'FOO': PositiveOptionValue(('foo',)),
+                'BAR': PositiveOptionValue(('bar',)),
+            })
+
 
 if __name__ == '__main__':
     main()
