@@ -1836,12 +1836,15 @@ APZCTreeManager::GetAPZCAtPoint(HitTestingTreeNode* aNode,
   // APZCs front-to-back on the screen.
   HitTestingTreeNode* resultNode;
   HitTestingTreeNode* root = aNode;
-  std::stack<ParentLayerPoint> hitTestPoints;
-  hitTestPoints.push(aHitTestPoint);
+  std::stack<LayerPoint> hitTestPoints;
+  hitTestPoints.push(ViewAs<LayerPixel>(aHitTestPoint,
+      PixelCastJustification::MovingDownToChildren));
 
   ForEachNode<ReverseIterator>(root,
       [&hitTestPoints](HitTestingTreeNode* aNode) {
-        if (aNode->IsOutsideClip(hitTestPoints.top())) {
+        ParentLayerPoint hitTestPointForParent = ViewAs<ParentLayerPixel>(hitTestPoints.top(),
+            PixelCastJustification::MovingDownToChildren);
+        if (aNode->IsOutsideClip(hitTestPointForParent)) {
           // If the point being tested is outside the clip region for this node
           // then we don't need to test against this node or any of its children.
           // Just skip it and move on.
@@ -1851,21 +1854,20 @@ APZCTreeManager::GetAPZCAtPoint(HitTestingTreeNode* aNode,
         }
         // First check the subtree rooted at this node, because deeper nodes
         // are more "in front".
-        Maybe<LayerPoint> hitTestPointForChildLayers = aNode->Untransform(hitTestPoints.top());
+        Maybe<LayerPoint> hitTestPoint = aNode->Untransform(hitTestPointForParent);
         APZCTM_LOG("Transformed ParentLayer point %s to layer %s\n",
-                Stringify(hitTestPoints.top()).c_str(),
-                hitTestPointForChildLayers ? Stringify(hitTestPointForChildLayers.ref()).c_str() : "nil");
-        if (!hitTestPointForChildLayers) {
+                Stringify(hitTestPointForParent).c_str(),
+                hitTestPoint ? Stringify(hitTestPoint.ref()).c_str() : "nil");
+        if (!hitTestPoint) {
           return TraversalFlag::Skip;
         }
-        hitTestPoints.push(ViewAs<ParentLayerPixel>(hitTestPointForChildLayers.ref(),
-            PixelCastJustification::MovingDownToChildren));
+        hitTestPoints.push(hitTestPoint.ref());
         return TraversalFlag::Continue;
       },
       [&resultNode, &hitTestPoints, &aOutHitResult](HitTestingTreeNode* aNode) {
-        hitTestPoints.pop();
         HitTestResult hitResult = aNode->HitTest(hitTestPoints.top());
-        APZCTM_LOG("Testing ParentLayer point %s against node %p\n",
+        hitTestPoints.pop();
+        APZCTM_LOG("Testing Layer point %s against node %p\n",
                 Stringify(hitTestPoints.top()).c_str(), aNode);
         if (hitResult != HitTestResult::HitNothing) {
           resultNode = aNode;

@@ -263,22 +263,13 @@ HitTestingTreeNode::Untransform(const ParentLayerPoint& aPoint) const
 }
 
 HitTestResult
-HitTestingTreeNode::HitTest(const ParentLayerPoint& aPoint) const
+HitTestingTreeNode::HitTest(const LayerPoint& aPoint) const
 {
-  // This should only ever get called if the point is inside the clip region
-  // for this node.
-  MOZ_ASSERT(!IsOutsideClip(aPoint));
-
   if (mOverride & EventRegionsOverride::ForceEmptyHitRegion) {
     return HitTestResult::HitNothing;
   }
 
-  // convert into Layer coordinate space
-  Maybe<LayerPoint> pointInLayerPixels = Untransform(aPoint);
-  if (!pointInLayerPixels) {
-    return HitTestResult::HitNothing;
-  }
-  auto point = LayerIntPoint::Round(pointInLayerPixels.ref());
+  auto point = LayerIntPoint::Round(aPoint);
 
   // test against event regions in Layer coordinate space
   if (!mEventRegions.mHitRegion.Contains(point.x, point.y)) {

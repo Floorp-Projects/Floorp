@@ -110,7 +110,7 @@ public:
   Maybe<LayerPoint> Untransform(const ParentLayerPoint& aPoint) const;
   /* Assuming aPoint is inside the clip region for this node, check which of the
    * event region spaces it falls inside. */
-  HitTestResult HitTest(const ParentLayerPoint& aPoint) const;
+  HitTestResult HitTest(const LayerPoint& aPoint) const;
   /* Returns the mOverride flag. */
   EventRegionsOverride GetEventRegionsOverride() const;
 
