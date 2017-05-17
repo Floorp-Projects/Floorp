@@ -657,14 +657,6 @@ ClientLayerManager::FlushRendering()
 }
 
 void
-ClientLayerManager::WaitOnTransactionProcessed()
-{
-  CompositorBridgeChild* remoteRenderer = GetCompositorBridgeChild();
-  if (remoteRenderer) {
-    remoteRenderer->SendWaitOnTransactionProcessed();
-  }
-}
-void
 ClientLayerManager::UpdateTextureFactoryIdentifier(const TextureFactoryIdentifier& aNewIdentifier,
                                                    uint64_t aDeviceResetSeqNo)
 {

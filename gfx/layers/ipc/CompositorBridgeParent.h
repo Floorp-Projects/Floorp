@@ -199,7 +199,6 @@ public:
                                 const gfx::IntRect& aRect) override;
   virtual mozilla::ipc::IPCResult RecvFlushRendering() override;
   virtual mozilla::ipc::IPCResult RecvFlushRenderingAsync() override;
-  virtual mozilla::ipc::IPCResult RecvWaitOnTransactionProcessed() override;
   virtual mozilla::ipc::IPCResult RecvForcePresent() override;
 
   virtual mozilla::ipc::IPCResult RecvNotifyRegionInvalidated(const nsIntRegion& aRegion) override;

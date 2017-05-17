@@ -114,7 +114,6 @@ public:
   }
 
   virtual void FlushRendering() override;
-  virtual void WaitOnTransactionProcessed() override;
   virtual void SendInvalidRegion(const nsIntRegion& aRegion) override;
 
   virtual uint32_t StartFrameTimeRecording(int32_t aBufferSize) override;

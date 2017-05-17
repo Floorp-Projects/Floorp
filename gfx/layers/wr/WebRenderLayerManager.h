@@ -88,7 +88,6 @@ public:
   virtual void RemoveDidCompositeObserver(DidCompositeObserver* aObserver) override;
 
   virtual void FlushRendering() override;
-  virtual void WaitOnTransactionProcessed() override;
 
   virtual void SendInvalidRegion(const nsIntRegion& aRegion) override;
 
