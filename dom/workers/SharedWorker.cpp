@@ -61,12 +61,12 @@ SharedWorker::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  nsCString name;
+  nsAutoString name;
   if (aOptions.IsString()) {
-    name = NS_ConvertUTF16toUTF8(aOptions.GetAsString());
+    name = aOptions.GetAsString();
   } else {
     MOZ_ASSERT(aOptions.IsWorkerOptions());
-    name = NS_ConvertUTF16toUTF8(aOptions.GetAsWorkerOptions().mName);
+    name = aOptions.GetAsWorkerOptions().mName;
   }
 
   RefPtr<SharedWorker> sharedWorker;

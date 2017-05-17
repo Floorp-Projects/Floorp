@@ -207,13 +207,13 @@ public:
 
 class DedicatedWorkerGlobalScope final : public WorkerGlobalScope
 {
-  const nsCString mName;
+  const nsString mName;
 
   ~DedicatedWorkerGlobalScope() { }
 
 public:
   DedicatedWorkerGlobalScope(WorkerPrivate* aWorkerPrivate,
-                             const nsCString& aName);
+                             const nsString& aName);
 
   virtual bool
   WrapGlobalObject(JSContext* aCx,
@@ -221,7 +221,7 @@ public:
 
   void GetName(DOMString& aName) const
   {
-    aName.AsAString() = NS_ConvertUTF8toUTF16(mName);
+    aName.AsAString() = mName;
   }
 
   void
@@ -237,13 +237,13 @@ public:
 
 class SharedWorkerGlobalScope final : public WorkerGlobalScope
 {
-  const nsCString mName;
+  const nsString mName;
 
   ~SharedWorkerGlobalScope() { }
 
 public:
   SharedWorkerGlobalScope(WorkerPrivate* aWorkerPrivate,
-                          const nsCString& aName);
+                          const nsString& aName);
 
   virtual bool
   WrapGlobalObject(JSContext* aCx,
@@ -251,7 +251,7 @@ public:
 
   void GetName(DOMString& aName) const
   {
-    aName.AsAString() = NS_ConvertUTF8toUTF16(mName);
+    aName.AsAString() = mName;
   }
 
   void
