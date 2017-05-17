@@ -307,6 +307,30 @@ add_task(async function fetch_byurl() {
   PlacesUtils.tagging.untagURI(uri(bm1.url.href), ["Test Tag"]);
 });
 
-function run_test() {
-  run_next_test();
-}
+add_task(async function fetch_concurrent() {
+  let bm1 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+                                                 url: "http://concurrent.url.com/" });
+  checkBookmarkObject(bm1);
+
+  let bm2 = await PlacesUtils.bookmarks.fetch({ url: bm1.url },
+                                              gAccumulator.callback,
+                                              { concurrent: true });
+  checkBookmarkObject(bm2);
+  Assert.equal(gAccumulator.results.length, 1);
+  Assert.deepEqual(gAccumulator.results[0], bm1);
+  Assert.deepEqual(bm1, bm2);
+  let bm3 = await PlacesUtils.bookmarks.fetch({ url: bm1.url },
+                                              gAccumulator.callback,
+                                              { concurrent: false });
+  checkBookmarkObject(bm3);
+  Assert.equal(gAccumulator.results.length, 1);
+  Assert.deepEqual(gAccumulator.results[0], bm1);
+  Assert.deepEqual(bm1, bm3);
+  let bm4 = await PlacesUtils.bookmarks.fetch({ url: bm1.url },
+                                              gAccumulator.callback,
+                                              {});
+  checkBookmarkObject(bm4);
+  Assert.equal(gAccumulator.results.length, 1);
+  Assert.deepEqual(gAccumulator.results[0], bm1);
+  Assert.deepEqual(bm1, bm4);
+});
