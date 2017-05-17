@@ -1211,12 +1211,6 @@ Navigator::SendBeaconInternal(const nsAString& aUrl,
       return false;
     }
 
-    if (aType == eBeaconTypeArrayBuffer) {
-      MOZ_ASSERT(contentTypeWithCharset.IsEmpty());
-      MOZ_ASSERT(charset.IsEmpty());
-      contentTypeWithCharset.Assign("application/octet-stream");
-    }
-
     nsCOMPtr<nsIUploadChannel2> uploadChannel = do_QueryInterface(channel);
     if (!uploadChannel) {
       aRv.Throw(NS_ERROR_FAILURE);

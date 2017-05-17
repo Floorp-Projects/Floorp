@@ -107,6 +107,8 @@ struct PK11SlotInfoStr {
     unsigned int lastState;
     /* for Stan */
     NSSToken *nssToken;
+    /* the tokeninfo struct */
+    CK_TOKEN_INFO tokenInfo;
     /* fast mechanism lookup */
     char mechanismBits[256];
 };

@@ -12,7 +12,7 @@
  * this document.
  */
 
-[Constructor(DOMString scriptURL),
+[Constructor(USVString scriptURL, optional WorkerOptions options),
  Func="mozilla::dom::workers::WorkerPrivate::WorkerAvailable",
  Exposed=(Window,DedicatedWorker,SharedWorker,System)]
 interface Worker : EventTarget {
@@ -26,7 +26,13 @@ interface Worker : EventTarget {
 
 Worker implements AbstractWorker;
 
-[Constructor(DOMString scriptURL),
+dictionary WorkerOptions {
+  // WorkerType type = "classic"; TODO: Bug 1247687
+  // RequestCredentials credentials = "omit"; // credentials is only used if type is "module" TODO: Bug 1247687
+  DOMString name = "";
+};
+
+[Constructor(USVString scriptURL),
  Func="mozilla::dom::workers::ChromeWorkerPrivate::WorkerAvailable",
  Exposed=(Window,DedicatedWorker,SharedWorker,System)]
 interface ChromeWorker : Worker {

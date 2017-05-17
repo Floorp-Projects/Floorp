@@ -14,6 +14,7 @@
 #include "secerr.h"
 #include "dev.h"
 #include "utilpars.h"
+#include "pkcs11uri.h"
 
 /* these are for displaying error messages */
 
@@ -588,6 +589,58 @@ PK11_GetModInfo(SECMODModule *mod, CK_INFO *info)
         PORT_SetError(PK11_MapError(crv));
     }
     return (crv == CKR_OK) ? SECSuccess : SECFailure;
+}
+
+char *
+PK11_GetModuleURI(SECMODModule *mod)
+{
+    CK_INFO info;
+    PK11URI *uri;
+    char *ret = NULL;
+    PK11URIAttribute attrs[3];
+    size_t nattrs = 0;
+    char libraryManufacturer[32 + 1], libraryDescription[32 + 1], libraryVersion[8];
+
+    if (PK11_GetModInfo(mod, &info) == SECFailure) {
+        return NULL;
+    }
+
+    PK11_MakeString(NULL, libraryManufacturer, (char *)info.manufacturerID,
+                    sizeof(info.manufacturerID));
+    if (*libraryManufacturer != '\0') {
+        attrs[nattrs].name = PK11URI_PATTR_LIBRARY_MANUFACTURER;
+        attrs[nattrs].value = libraryManufacturer;
+        nattrs++;
+    }
+
+    PK11_MakeString(NULL, libraryDescription, (char *)info.libraryDescription,
+                    sizeof(info.libraryDescription));
+    if (*libraryDescription != '\0') {
+        attrs[nattrs].name = PK11URI_PATTR_LIBRARY_DESCRIPTION;
+        attrs[nattrs].value = libraryDescription;
+        nattrs++;
+    }
+
+    PR_snprintf(libraryVersion, sizeof(libraryVersion), "%d.%d",
+                info.libraryVersion.major, info.libraryVersion.minor);
+    attrs[nattrs].name = PK11URI_PATTR_LIBRARY_VERSION;
+    attrs[nattrs].value = libraryVersion;
+    nattrs++;
+
+    uri = PK11URI_CreateURI(attrs, nattrs, NULL, 0);
+    if (uri == NULL) {
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        return NULL;
+    }
+
+    ret = PK11URI_FormatURI(NULL, uri);
+    PK11URI_DestroyURI(uri);
+    if (ret == NULL) {
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        return NULL;
+    }
+
+    return ret;
 }
 
 /* Determine if we have the FIP's module loaded as the default
