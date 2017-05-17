@@ -1287,7 +1287,7 @@ class TestConfigure(unittest.TestCase):
         ''' + moz_configure):
             self.get_config(['--enable-when'])
 
-    def test_depends_or(self):
+    def test_depends_binary_ops(self):
         with self.moz_configure('''
             option('--foo', nargs=1, help='foo')
             @depends('--foo')
@@ -1304,8 +1304,10 @@ class TestConfigure(unittest.TestCase):
             def baz(value):
                 return value
 
-            set_config('FOOBAR', foo | bar)
-            set_config('FOOBARBAZ', foo | bar | baz)
+            set_config('FOOorBAR', foo | bar)
+            set_config('FOOorBARorBAZ', foo | bar | baz)
+            set_config('FOOandBAR', foo & bar)
+            set_config('FOOandBARandBAZ', foo & bar & baz)
         '''):
             for foo_opt, foo_value in (
                 ('',  0),
@@ -1322,8 +1324,10 @@ class TestConfigure(unittest.TestCase):
                         config = self.get_config(
                             [x for x in (foo_opt, bar_opt, baz_opt) if x])
                         self.assertEqual(config, {
-                            'FOOBAR': foo_value or bar_value,
-                            'FOOBARBAZ': foo_value or bar_value or baz_value,
+                            'FOOorBAR': foo_value or bar_value,
+                            'FOOorBARorBAZ': foo_value or bar_value or baz_value,
+                            'FOOandBAR': foo_value and bar_value,
+                            'FOOandBARandBAZ': foo_value and bar_value and baz_value,
                         })
 
 
