@@ -18,10 +18,6 @@
   --space-above-tabbar: 9px;
   --tabs-toolbar-color: #333;
 
-  --backbutton-border-color: rgba(0,0,0,0.2);
-  --backbutton-background: linear-gradient(rgba(255,255,255,0.9),
-                                           rgba(255,255,255,0.7)) repeat-x;
-
   --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-inner-padding) + 1px);
 
 %ifdef MOZ_PHOTON_THEME
@@ -31,6 +27,10 @@
 
   --toolbarbutton-hover-background: hsla(0,0%,100%,.1) linear-gradient(hsla(0,0%,100%,.3), hsla(0,0%,100%,.1)) padding-box;
   --toolbarbutton-active-background: hsla(0,0%,0%,.02) linear-gradient(hsla(0,0%,0%,.12), transparent) border-box;
+
+  --backbutton-border-color: rgba(0,0,0,0.2);
+  --backbutton-background: linear-gradient(rgba(255,255,255,0.9),
+                                           rgba(255,255,255,0.7)) repeat-x;
 %endif
 
   --toolbarbutton-hover-bordercolor: hsla(0,0%,0%,.2);
@@ -59,12 +59,14 @@
   --urlbar-separator-color: hsla(0,0%,16%,.2);
 }
 
+%ifndef MOZ_PHOTON_THEME
 toolbar:-moz-lwtheme {
   --backbutton-background: linear-gradient(rgba(255,255,255,0.5),
                               rgba(255,255,255,0.2) 50%,
                               rgba(255,255,255,0.1) 50%,
                               rgba(255,255,255,0.2)) repeat-x;
 }
+%endif
 
 #urlbar:-moz-lwtheme:not([focused="true"]),
 .searchbar-textbox:-moz-lwtheme:not([focused="true"]) {
