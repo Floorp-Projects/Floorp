@@ -1831,7 +1831,9 @@ ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
   mWorkerPrivate = WorkerPrivate::Constructor(jsapi.cx(),
                                               scriptSpec,
                                               false, WorkerTypeService,
-                                              mInfo->Scope(), &info, error);
+                                              NullString(),
+                                              mInfo->Scope(),
+                                              &info, error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
