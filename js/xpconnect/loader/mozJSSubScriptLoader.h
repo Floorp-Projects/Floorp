@@ -37,8 +37,7 @@ private:
                     const nsAString& charset, const char* uriStr,
                     nsIIOService* serv,
                     bool wantReturnValue,
-                    JS::MutableHandleScript script,
-                    JS::MutableHandleFunction function);
+                    JS::MutableHandleScript script);
 
     nsresult ReadScriptAsync(nsIURI* uri,
                              JS::HandleObject targetObj,
