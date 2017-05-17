@@ -8,19 +8,14 @@ add_task(async function prepare() {
   let engine = await promiseNewSearchEngine(TEST_ENGINE_BASENAME);
   let oldCurrentEngine = Services.search.currentEngine;
   Services.search.currentEngine = engine;
-  let defaults = Services.prefs.getDefaultBranch("browser.urlbar.");
-  let searchSuggestionsDefault = defaults.getBoolPref("suggest.searches");
-  defaults.setBoolPref("suggest.searches", false);
-  let suggestionsEnabled = Services.prefs.getBoolPref(SUGGEST_URLBAR_PREF);
   registerCleanupFunction(async function() {
-    defaults.setBoolPref("suggest.searches", searchSuggestionsDefault);
     Services.search.currentEngine = oldCurrentEngine;
     Services.prefs.clearUserPref(SUGGEST_ALL_PREF);
-    Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, suggestionsEnabled);
+    Services.prefs.clearUserPref(SUGGEST_URLBAR_PREF);
 
     // Disable the notification for future tests so it doesn't interfere with
     // them.  clearUserPref() won't work because by default the pref is false.
-    Services.prefs.setBoolPref(CHOICE_PREF, true);
+    await setUserMadeChoicePref(true);
 
     // Make sure the popup is closed for the next test.
     gURLBar.blur();
@@ -31,14 +26,16 @@ add_task(async function prepare() {
 add_task(async function focus() {
   // Focusing the urlbar used to open the popup in order to show the
   // notification, but it doesn't anymore.  Make sure it does not.
-  setupVisibleNotification();
+  Services.prefs.setBoolPref(SUGGEST_ALL_PREF, true);
+  await setUserMadeChoicePref(false);
   gURLBar.blur();
   gURLBar.focus();
   Assert.ok(!gURLBar.popup.popupOpen, "popup should remain closed");
 });
 
 add_task(async function dismissWithoutResults() {
-  setupVisibleNotification();
+  Services.prefs.setBoolPref(SUGGEST_ALL_PREF, true);
+  await setUserMadeChoicePref(false);
   gURLBar.blur();
   gURLBar.focus();
   let popupPromise = promisePopupShown(gURLBar.popup);
@@ -63,7 +60,8 @@ add_task(async function dismissWithoutResults() {
 });
 
 add_task(async function dismissWithResults() {
-  setupVisibleNotification();
+  Services.prefs.setBoolPref(SUGGEST_ALL_PREF, true);
+  await setUserMadeChoicePref(false);
   gURLBar.blur();
   gURLBar.focus();
   await promiseAutocompleteResultPopup("foo");
@@ -86,7 +84,8 @@ add_task(async function dismissWithResults() {
 });
 
 add_task(async function disable() {
-  setupVisibleNotification();
+  Services.prefs.setBoolPref(SUGGEST_ALL_PREF, true);
+  await setUserMadeChoicePref(false);
   gURLBar.blur();
   gURLBar.focus();
   await promiseAutocompleteResultPopup("foo");
@@ -104,7 +103,9 @@ add_task(async function disable() {
 });
 
 add_task(async function enable() {
-  setupVisibleNotification();
+  Services.prefs.setBoolPref(SUGGEST_ALL_PREF, true);
+  Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, false);
+  await setUserMadeChoicePref(false);
   gURLBar.blur();
   gURLBar.focus();
   await promiseAutocompleteResultPopup("foo");
@@ -130,7 +131,6 @@ add_task(async function enable() {
 add_task(async function privateWindow() {
   // Since suggestions are disabled in private windows, the notification should
   // not appear even when suggestions are otherwise enabled.
-  setupVisibleNotification();
   let win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
   win.gURLBar.blur();
   win.gURLBar.focus();
@@ -143,7 +143,9 @@ add_task(async function privateWindow() {
 add_task(async function multipleWindows() {
   // Opening multiple windows, using their urlbars, and then dismissing the
   // notification in one should dismiss the notification in all.
-  setupVisibleNotification();
+  Services.prefs.setBoolPref(SUGGEST_ALL_PREF, true);
+  Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, false);
+  await setUserMadeChoicePref(false);
 
   gURLBar.focus();
   await promiseAutocompleteResultPopup("win1");
@@ -182,19 +184,39 @@ add_task(async function multipleWindows() {
 add_task(async function enableOutsideNotification() {
   // Setting the suggest.searches pref outside the notification (e.g., by
   // ticking the checkbox in the preferences window) should hide it.
-  setupVisibleNotification();
+  Services.prefs.setBoolPref(SUGGEST_ALL_PREF, true);
+  Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, false);
+  await setUserMadeChoicePref(false);
+
   Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, true);
   gURLBar.focus();
   await promiseAutocompleteResultPopup("foo");
   assertVisible(false);
 });
 
-function setupVisibleNotification() {
-  Services.prefs.setBoolPref(SUGGEST_ALL_PREF, true);
-  // Toggle to reset the whichNotification cache.
-  Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, true);
-  Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, false);
-  Services.prefs.setBoolPref(CHOICE_PREF, false);
+/**
+ * Setting the choice pref triggers a pref observer in the urlbar, which hides
+ * the notification if it's present.  This function returns a promise that's
+ * resolved once the observer fires.
+ *
+ * @param userMadeChoice  A boolean, the pref's new value.
+ * @return A Promise that's resolved when the observer fires -- or, if the pref
+ *         is currently the given value, that's resolved immediately.
+ */
+function setUserMadeChoicePref(userMadeChoice) {
+  return new Promise(resolve => {
+    let currentUserMadeChoice = Services.prefs.getBoolPref(CHOICE_PREF);
+    if (currentUserMadeChoice != userMadeChoice) {
+      Services.prefs.addObserver(CHOICE_PREF, function obs(subj, topic, data) {
+        Services.prefs.removeObserver(CHOICE_PREF, obs);
+        resolve();
+      });
+    }
+    Services.prefs.setBoolPref(CHOICE_PREF, userMadeChoice);
+    if (currentUserMadeChoice == userMadeChoice) {
+      resolve();
+    }
+  });
 }
 
 function suggestionsPresent() {
