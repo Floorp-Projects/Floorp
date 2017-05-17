@@ -1,0 +1,124 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1360494
+-->
+<head>
+  <title>Test for Bug 1360494</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1360494">Mozilla Bug 1360494</a>
+  <p id="display"></p>
+  <pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+/** <img src=""> tests **/
+var imgTests = ["findbarButton-next-rtl.png",
+               "findbarButton-next-rtl@2x.png",
+               "findbarButton-next.png",
+               "findbarButton-next@2x.png",
+               "findbarButton-previous-rtl.png",
+               "findbarButton-previous-rtl@2x.png",
+               "findbarButton-previous.png",
+               "findbarButton-previous@2x.png",
+               "grab.cur",
+               "grabbing.cur",
+               "loading-small.png",
+               "loading-small@2x.png",
+               "secondaryToolbarButton-firstPage.png",
+               "secondaryToolbarButton-firstPage@2x.png",
+               "secondaryToolbarButton-lastPage.png",
+               "secondaryToolbarButton-lastPage@2x.png",
+               "secondaryToolbarButton-rotateCcw.png",
+               "secondaryToolbarButton-rotateCcw@2x.png",
+               "secondaryToolbarButton-rotateCw.png",
+               "secondaryToolbarButton-rotateCw@2x.png",
+               "texture.png",
+               "toolbarButton-bookmark.png",
+               "toolbarButton-bookmark@2x.png",
+               "toolbarButton-download.png",
+               "toolbarButton-download@2x.png",
+               "toolbarButton-menuArrows.png",
+               "toolbarButton-menuArrows@2x.png",
+               "toolbarButton-pageDown-rtl.png",
+               "toolbarButton-pageDown-rtl@2x.png",
+               "toolbarButton-pageDown.png",
+               "toolbarButton-pageDown@2x.png",
+               "toolbarButton-pageUp-rtl.png",
+               "toolbarButton-pageUp-rtl@2x.png",
+               "toolbarButton-pageUp.png",
+               "toolbarButton-pageUp@2x.png",
+               "toolbarButton-presentationMode.png",
+               "toolbarButton-presentationMode@2x.png",
+               "toolbarButton-print.png",
+               "toolbarButton-print@2x.png",
+               "toolbarButton-search.png",
+               "toolbarButton-search@2x.png",
+               "toolbarButton-secondaryToolbarToggle-rtl.png",
+               "toolbarButton-secondaryToolbarToggle-rtl@2x.png",
+               "toolbarButton-secondaryToolbarToggle.png",
+               "toolbarButton-secondaryToolbarToggle@2x.png",
+               "toolbarButton-sidebarToggle-rtl.png",
+               "toolbarButton-sidebarToggle-rtl@2x.png",
+               "toolbarButton-sidebarToggle.png",
+               "toolbarButton-sidebarToggle@2x.png",
+               "toolbarButton-viewOutline-rtl.png",
+               "toolbarButton-viewOutline-rtl@2x.png",
+               "toolbarButton-viewOutline.png",
+               "toolbarButton-viewOutline@2x.png",
+               "toolbarButton-zoomIn.png",
+               "toolbarButton-zoomIn@2x.png",
+               "toolbarButton-zoomOut.png",
+               "toolbarButton-zoomOut@2x.png",
+               "treeitem-collapsed-rtl.png",
+               "treeitem-collapsed-rtl@2x.png",
+               "treeitem-collapsed.png",
+               "treeitem-collapsed@2x.png",
+               "treeitem-expanded.png",
+               "treeitem-expanded@2x.png",
+];
+
+
+
+
+
+var curImgTest = 0;
+
+function runImgTest() {
+  var test = imgTests[curImgTest++];
+  var callback = curImgTest == imgTests.length ? finishTest : runImgTest;
+  loadImage(test, callback);
+}
+
+function finishTest() {
+  SimpleTest.finish();
+}
+
+function fail(event) {
+  ok(false, "image file doesn't exist");
+  if (event.target.callback)
+    event.target.callback();
+}
+
+function success(event) {
+  ok(true);
+  if (event.target.callback)
+    event.target.callback();
+}
+
+function loadImage(uri, callback) {
+  var img = document.createElement("img");
+  img.onerror = fail;
+  img.onload = success;
+  img.callback = callback;
+  img.src = "resource://pdf.js/web/images/" + uri;
+}
+runImgTest();
+</script>
+</pre>
+</body>
+</html>

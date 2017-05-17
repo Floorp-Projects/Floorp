@@ -37,18 +37,6 @@ Thread::GetCurrentId()
   return gettid();
 }
 
-static void
-SleepMicro(int aMicroseconds)
-{
-  aMicroseconds = std::max(0, aMicroseconds);
-
-  usleep(aMicroseconds);
-  // FIXME: the OSX 10.12 page for usleep says "The usleep() function is
-  // obsolescent.  Use nanosleep(2) instead."  This implementation could be
-  // merged with the linux-android version.  Also, this doesn't handle the
-  // case where the usleep call is interrupted by a signal.
-}
-
 class PlatformData
 {
 public:
@@ -107,6 +95,16 @@ void
 SamplerThread::Stop(PSLockRef aLock)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
+}
+
+void
+SamplerThread::SleepMicro(uint32_t aMicroseconds)
+{
+  usleep(aMicroseconds);
+  // FIXME: the OSX 10.12 page for usleep says "The usleep() function is
+  // obsolescent.  Use nanosleep(2) instead."  This implementation could be
+  // merged with the linux-android version.  Also, this doesn't handle the
+  // case where the usleep call is interrupted by a signal.
 }
 
 void

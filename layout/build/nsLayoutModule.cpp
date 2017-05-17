@@ -76,14 +76,15 @@
 #include "nsJSProtocolHandler.h"
 #include "nsScriptNameSpaceManager.h"
 #include "nsIControllerContext.h"
-#include "StorageManager.h"
 #include "nsJSON.h"
 #include "nsZipArchive.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMRequest.h"
+#include "mozilla/dom/LocalStorageManager.h"
 #include "mozilla/dom/network/UDPSocketChild.h"
 #include "mozilla/dom/quota/QuotaManagerService.h"
+#include "mozilla/dom/SessionStorageManager.h"
 #include "mozilla/dom/workers/ServiceWorkerManager.h"
 #include "mozilla/dom/workers/WorkerDebuggerManager.h"
 #include "mozilla/dom/Notification.h"
@@ -256,8 +257,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(FormData)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHostObjectURI)
 NS_GENERIC_FACTORY_CONSTRUCTOR(DOMParser)
 NS_GENERIC_FACTORY_CONSTRUCTOR(Exception)
-NS_GENERIC_FACTORY_CONSTRUCTOR(DOMSessionStorageManager)
-NS_GENERIC_FACTORY_CONSTRUCTOR(DOMLocalStorageManager)
+NS_GENERIC_FACTORY_CONSTRUCTOR(LocalStorageManager)
+NS_GENERIC_FACTORY_CONSTRUCTOR(SessionStorageManager)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(DOMRequestService,
                                          DOMRequestService::FactoryCreate)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(QuotaManagerService,
@@ -916,8 +917,8 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_XMLHTTPREQUEST_CID, false, nullptr, XMLHttpRequestMainThreadConstructor },
   { &kNS_DOMPARSER_CID, false, nullptr, DOMParserConstructor },
   { &kNS_XPCEXCEPTION_CID, false, nullptr, ExceptionConstructor },
-  { &kNS_DOMSESSIONSTORAGEMANAGER_CID, false, nullptr, DOMSessionStorageManagerConstructor },
-  { &kNS_DOMLOCALSTORAGEMANAGER_CID, false, nullptr, DOMLocalStorageManagerConstructor },
+  { &kNS_DOMSESSIONSTORAGEMANAGER_CID, false, nullptr, SessionStorageManagerConstructor },
+  { &kNS_DOMLOCALSTORAGEMANAGER_CID, false, nullptr, LocalStorageManagerConstructor },
   { &kNS_DOMJSON_CID, false, nullptr, NS_NewJSON },
   { &kNS_TEXTEDITOR_CID, false, nullptr, TextEditorConstructor },
   { &kDOMREQUEST_SERVICE_CID, false, nullptr, DOMRequestServiceConstructor },

@@ -14,6 +14,7 @@
  *   addresses: [
  *     {
  *       guid,                 // 12 characters
+ *       version,              // schema version in integer
  *
  *       // address fields
  *       given-name,
@@ -45,6 +46,7 @@
  *   creditCards: [
  *     {
  *       guid,                 // 12 characters
+ *       version,              // schema version in integer
  *
  *       // credit card fields
  *       cc-name,
@@ -95,7 +97,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
 
 const PROFILE_JSON_FILE_NAME = "autofill-profiles.json";
 
-const SCHEMA_VERSION = 1;
+const STORAGE_SCHEMA_VERSION = 1;
+const ADDRESS_SCHEMA_VERSION = 1;
+const CREDIT_CARD_SCHEMA_VERSION = 1;
 
 const VALID_PROFILE_FIELDS = [
   "given-name",
@@ -121,6 +125,7 @@ const VALID_CREDIT_CARD_FIELDS = [
 
 const INTERNAL_FIELDS = [
   "guid",
+  "version",
   "timeCreated",
   "timeLastUsed",
   "timeLastModified",
@@ -144,14 +149,17 @@ class AutofillRecords {
    *        A key of "store.data".
    * @param {Array.<string>} validFields
    *        A list containing non-metadata field names.
+   * @param {number} schemaVersion
+   *        The schema version for the new record.
    */
-  constructor(store, collectionName, validFields) {
+  constructor(store, collectionName, validFields, schemaVersion) {
     FormAutofillUtils.defineLazyLogGetter(this, "AutofillRecords:" + collectionName);
 
     this.VALID_FIELDS = validFields;
 
     this._store = store;
     this._collectionName = collectionName;
+    this._schemaVersion = schemaVersion;
   }
 
   /**
@@ -161,7 +169,7 @@ class AutofillRecords {
    *          The current schema version number.
    */
   get version() {
-    return SCHEMA_VERSION;
+    return this._schemaVersion;
   }
 
   /**
@@ -169,6 +177,8 @@ class AutofillRecords {
    *
    * @param {Object} record
    *        The new record for saving.
+   * @returns {string}
+   *          The GUID of the newly added item..
    */
   add(record) {
     this.log.debug("add:", record);
@@ -182,6 +192,7 @@ class AutofillRecords {
                            .replace(/[{}-]/g, "").substring(0, 12);
     }
     recordToSave.guid = guid;
+    recordToSave.version = this.version;
 
     // Metadata
     let now = Date.now();
@@ -194,6 +205,7 @@ class AutofillRecords {
     this._store.saveSoon();
 
     Services.obs.notifyObservers(null, "formautofill-storage-changed", "add");
+    return recordToSave.guid;
   }
 
   /**
@@ -280,7 +292,7 @@ class AutofillRecords {
 
     let recordFound = this._findByGUID(guid);
     if (!recordFound) {
-      throw new Error("No matching record.");
+      return null;
     }
 
     // The record is cloned to avoid accidental modifications from outside.
@@ -371,7 +383,7 @@ class AutofillRecords {
 
 class Addresses extends AutofillRecords {
   constructor(store) {
-    super(store, "addresses", VALID_PROFILE_FIELDS);
+    super(store, "addresses", VALID_PROFILE_FIELDS, ADDRESS_SCHEMA_VERSION);
   }
 
   _recordReadProcessor(profile, {noComputedFields} = {}) {
@@ -446,7 +458,7 @@ class Addresses extends AutofillRecords {
 
 class CreditCards extends AutofillRecords {
   constructor(store) {
-    super(store, "creditCards", VALID_CREDIT_CARD_FIELDS);
+    super(store, "creditCards", VALID_CREDIT_CARD_FIELDS, CREDIT_CARD_SCHEMA_VERSION);
   }
 
   _recordReadProcessor(creditCard, {noComputedFields} = {}) {
@@ -538,6 +550,10 @@ function ProfileStorage(path) {
 }
 
 ProfileStorage.prototype = {
+  get version() {
+    return STORAGE_SCHEMA_VERSION;
+  },
+
   get addresses() {
     if (!this._addresses) {
       this._store.ensureDataReady();
@@ -573,7 +589,7 @@ ProfileStorage.prototype = {
   },
 
   _dataPostProcessor(data) {
-    data.version = SCHEMA_VERSION;
+    data.version = this.version;
     if (!data.addresses) {
       data.addresses = [];
     }

@@ -182,12 +182,8 @@ function runTest() {
       d: { "unicode-range" : "U+0-FF" }, noncanonical: true },
     { rule: _("unicode-range: U+?"),
       d: { "unicode-range" : "U+0-F" }, noncanonical: true },
-    { rule: _("unicode-range: U+??????"),
-      d: { "unicode-range" : "U+0-10FFFF" }, noncanonical: true },
     { rule: _("unicode-range: U+590-5ff;"),
       d: { "unicode-range" : "U+590-5FF" }, noncanonical: true },
-    { rule: _("unicode-range: U+A0000-12FFFF"),
-      d: { "unicode-range" : "U+A0000-10FFFF" }, noncanonical: true },
 
     { rule: _("unicode-range: U+A5, U+4E00-9FFF, U+30??, U+FF00-FF9F;"),
       d: { "unicode-range" : "U+A5, U+4E00-9FFF, U+3000-30FF, U+FF00-FF9F" },
@@ -229,6 +225,8 @@ function runTest() {
     { rule: _("unicode-range: U+0121 -1023"), d: {} },
     { rule: _("unicode-range: U+012 ?"), d: {} },
     { rule: _("unicode-range: U+01 2?"), d: {} },
+    { rule: _("unicode-range: U+A0000-12FFFF"), d: {} },
+    { rule: _("unicode-range: U+??????"), d: {} },
 
     // Thorough test of seven-digit rejection: all these are syntax errors
     { rule: _("unicode-range: U+1034560, U+A5"), d: {} },
@@ -247,12 +245,9 @@ function runTest() {
     { rule: _("unicode-range: U+A5, U+0?F"), d: {} },
     { rule: _("unicode-range: U+A5, U+0F?-E00"), d: {} },
 
-    // Descending ranges and ranges outside 0-10FFFF are ignored
-    // but do not invalidate the descriptor
-    { rule: _("unicode-range: U+A5, U+90-30"),
-      d: { "unicode-range" : "U+A5" }, noncanonical: true },
-    { rule: _("unicode-range: U+A5, U+220043"),
-      d: { "unicode-range" : "U+A5" }, noncanonical: true },
+    // Descending ranges and ranges outside 0-10FFFF are invalid
+    { rule: _("unicode-range: U+A5, U+90-30"), d: {} },
+    { rule: _("unicode-range: U+A5, U+220043"), d: {} },
 
     // font-feature-settings
     { rule: _("font-feature-settings: normal;"),

@@ -32,6 +32,13 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
 XPCOMUtils.defineLazyModuleGetter(this, "ServiceRequest",
                                   "resource://gre/modules/ServiceRequest.jsm");
 
+// The blocklist updater is the new system in charge of fetching remote data
+// securely and efficiently. It will replace the current XML-based system.
+// See Bug 1257565 and Bug 1252456.
+const BlocklistUpdater = {};
+XPCOMUtils.defineLazyModuleGetter(BlocklistUpdater, "checkVersions",
+                                  "resource://services-common/blocklist-updater.js");
+
 const TOOLKIT_ID                      = "toolkit@mozilla.org";
 const KEY_PROFILEDIR                  = "ProfD";
 const KEY_APPDIR                      = "XCurProcD";
@@ -599,14 +606,11 @@ Blocklist.prototype = {
     if (!this._isBlocklistLoaded())
       this._loadBlocklist();
 
-    // If kinto update is enabled, do the kinto update
+    // If blocklist update via Kinto is enabled, poll for changes and sync.
+    // Currently certificates blocklist relies on it by default.
     if (gPref.getBoolPref(PREF_BLOCKLIST_UPDATE_ENABLED)) {
-      const updater =
-        Components.utils.import("resource://services-common/blocklist-updater.js",
-                                {});
-      updater.checkVersions().catch(() => {
-        // Before we enable this in release, we want to collect telemetry on
-        // failed kinto updates - see bug 1254099
+      BlocklistUpdater.checkVersions().catch(() => {
+        // Bug 1254099 - Telemetry (success or errors) will be collected during this process.
       });
     }
   },

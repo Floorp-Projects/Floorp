@@ -10,7 +10,6 @@ use std::ascii::AsciiExt;
 use std::borrow::{Borrow, Cow};
 use std::cmp;
 use std::fmt::{self, Display, Debug, Write};
-use std::hash::Hash;
 use std::iter::Rev;
 use std::ops::Add;
 use std::slice;
@@ -54,7 +53,7 @@ macro_rules! with_all_bounds {
             type NamespaceUrl: $($CommonBounds)* + Default + Borrow<Self::BorrowedNamespaceUrl> + PrecomputedHash;
             type NamespacePrefix: $($InSelector)* + Default;
             type BorrowedNamespaceUrl: ?Sized + Eq;
-            type BorrowedLocalName: ?Sized + Eq + Hash;
+            type BorrowedLocalName: ?Sized + Eq;
 
             /// non tree-structural pseudo-classes
             /// (see: https://drafts.csswg.org/selectors/#structural-pseudos)
@@ -77,7 +76,7 @@ macro_rules! with_bounds {
 }
 
 with_bounds! {
-    [Clone + Eq + Hash]
+    [Clone + Eq]
     [From<String> + for<'a> From<&'a str>]
 }
 
@@ -113,7 +112,7 @@ pub trait Parser {
     }
 }
 
-#[derive(PartialEq, Eq, Hash, Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug)]
 pub struct SelectorList<Impl: SelectorImpl>(pub Vec<Selector<Impl>>);
 
 impl<Impl: SelectorImpl> SelectorList<Impl> {
@@ -136,7 +135,7 @@ const NUM_ANCESTOR_HASHES: usize = 4;
 /// information that lives on |Selector| proper. We may want to refactor things
 /// and move that information elsewhere, at which point we could rename this
 /// to |Selector|.
-#[derive(PartialEq, Eq, Hash, Clone)]
+#[derive(PartialEq, Eq, Clone)]
 pub struct SelectorInner<Impl: SelectorImpl> {
     /// The selector data.
     pub complex: ComplexSelector<Impl>,
@@ -176,11 +175,23 @@ impl<Impl: SelectorImpl> SelectorInner<Impl> {
     }
 }
 
-#[derive(PartialEq, Eq, Hash, Clone)]
+#[derive(PartialEq, Eq, Clone)]
 pub struct Selector<Impl: SelectorImpl> {
     pub inner: SelectorInner<Impl>,
     pub pseudo_element: Option<Impl::PseudoElementSelector>,
     pub specificity: u32,
+}
+
+impl<Impl: SelectorImpl> Selector<Impl> {
+    /// Whether this selector (pseudo-element part excluded) matches every element.
+    ///
+    /// Used for "pre-computed" pseudo-elements in components/style/stylist.rs
+    pub fn is_universal(&self) -> bool {
+        self.inner.complex.iter_raw().all(|c| matches!(*c,
+            Component::ExplicitUniversalType |
+            Component::ExplicitAnyNamespace
+        ))
+    }
 }
 
 pub trait SelectorMethods {
@@ -279,7 +290,7 @@ impl<Impl: SelectorImpl> SelectorMethods for Component<Impl> {
 /// We store selectors internally left-to-right (in parsing order), but the
 /// canonical iteration order is right-to-left (selector matching order). The
 /// iterators abstract over these details.
-#[derive(Clone, Eq, Hash, PartialEq)]
+#[derive(Clone, Eq, PartialEq)]
 pub struct ComplexSelector<Impl: SelectorImpl>(ArcSlice<Component<Impl>>);
 
 impl<Impl: SelectorImpl> ComplexSelector<Impl> {
@@ -405,7 +416,7 @@ impl<'a, Impl: SelectorImpl> Iterator for AncestorIter<'a, Impl> {
     }
 }
 
-#[derive(Eq, PartialEq, Clone, Copy, Debug, Hash)]
+#[derive(Eq, PartialEq, Clone, Copy, Debug)]
 pub enum Combinator {
     Child,  //  >
     Descendant,  // space
@@ -429,13 +440,20 @@ impl Combinator {
 /// optimal packing and cache performance, see [1].
 ///
 /// [1] https://bugzilla.mozilla.org/show_bug.cgi?id=1357973
-#[derive(Eq, PartialEq, Clone, Hash)]
+#[derive(Eq, PartialEq, Clone)]
 pub enum Component<Impl: SelectorImpl> {
     Combinator(Combinator),
+
+    ExplicitAnyNamespace,
+    ExplicitNoNamespace,
+    DefaultNamespace(Impl::NamespaceUrl),
+    Namespace(Impl::NamespacePrefix, Impl::NamespaceUrl),
+
+    ExplicitUniversalType,
+    LocalName(LocalName<Impl>),
+
     ID(Impl::Identifier),
     Class(Impl::ClassName),
-    LocalName(LocalName<Impl>),
-    Namespace(Namespace<Impl>),
 
     // Attribute selectors
     AttrExists(AttrSelector<Impl>),  // [foo]
@@ -490,8 +508,9 @@ impl<Impl: SelectorImpl> Component<Impl> {
                     None
                 }
             },
-            Component::Namespace(ref namespace) => {
-                Some(namespace.url.precomputed_hash())
+            Component::DefaultNamespace(ref url) |
+            Component::Namespace(_, ref url) => {
+                Some(url.precomputed_hash())
             },
             Component::ID(ref id) => {
                 Some(id.precomputed_hash())
@@ -517,34 +536,33 @@ impl<Impl: SelectorImpl> Component<Impl> {
     }
 }
 
-#[derive(Eq, PartialEq, Clone, Hash, Copy, Debug)]
+#[derive(Eq, PartialEq, Clone, Copy, Debug)]
 pub enum CaseSensitivity {
     CaseSensitive,  // Selectors spec says language-defined, but HTML says sensitive.
     CaseInsensitive,
 }
 
 
-#[derive(Eq, PartialEq, Clone, Hash)]
+#[derive(Eq, PartialEq, Clone)]
 pub struct LocalName<Impl: SelectorImpl> {
     pub name: Impl::LocalName,
     pub lower_name: Impl::LocalName,
 }
 
-#[derive(Eq, PartialEq, Clone, Hash)]
+#[derive(Eq, PartialEq, Clone)]
 pub struct AttrSelector<Impl: SelectorImpl> {
     pub name: Impl::LocalName,
     pub lower_name: Impl::LocalName,
     pub namespace: NamespaceConstraint<Impl>,
 }
 
-#[derive(Eq, PartialEq, Clone, Hash, Debug)]
+#[derive(Eq, PartialEq, Clone, Debug)]
 pub enum NamespaceConstraint<Impl: SelectorImpl> {
     Any,
     Specific(Namespace<Impl>),
 }
 
-/// FIXME(SimonSapin): should Hash only hash the URL? What is it used for?
-#[derive(Eq, PartialEq, Clone, Hash)]
+#[derive(Eq, PartialEq, Clone)]
 pub struct Namespace<Impl: SelectorImpl> {
     pub prefix: Option<Impl::NamespacePrefix>,
     pub url: Impl::NamespaceUrl,
@@ -648,7 +666,15 @@ impl<Impl: SelectorImpl> ToCss for Component<Impl> {
                 display_to_css_identifier(s, dest)
             }
             LocalName(ref s) => s.to_css(dest),
-            Namespace(ref ns) => ns.to_css(dest),
+            ExplicitUniversalType => dest.write_char('*'),
+
+            DefaultNamespace(_) => Ok(()),
+            ExplicitNoNamespace => dest.write_char('|'),
+            ExplicitAnyNamespace => dest.write_str("*|"),
+            Namespace(ref prefix, _) => {
+                display_to_css_identifier(prefix, dest)?;
+                dest.write_char('|')
+            }
 
             // Attribute selectors
             AttrExists(ref a) => {
@@ -675,7 +701,7 @@ impl<Impl: SelectorImpl> ToCss for Component<Impl> {
             // Pseudo-classes
             Negation(ref arg) => {
                 dest.write_str(":not(")?;
-                debug_assert!(arg.len() <= 1 || (arg.len() == 2 && matches!(arg[0], Component::Namespace(_))));
+                debug_assert!(single_simple_selector(arg));
                 for component in arg.iter() {
                     component.to_css(dest)?;
                 }
@@ -834,10 +860,12 @@ fn complex_selector_specificity<Impl>(selector: &ComplexSelector<Impl>)
                                          where Impl: SelectorImpl {
         match *simple_selector {
             Component::Combinator(..) => unreachable!(),
-            Component::LocalName(..) =>
-                specificity.element_selectors += 1,
-            Component::ID(..) =>
-                specificity.id_selectors += 1,
+            Component::LocalName(..) => {
+                specificity.element_selectors += 1
+            }
+            Component::ID(..) => {
+                specificity.id_selectors += 1
+            }
             Component::Class(..) |
             Component::AttrExists(..) |
             Component::AttrEqual(..) |
@@ -861,10 +889,16 @@ fn complex_selector_specificity<Impl>(selector: &ComplexSelector<Impl>)
             Component::NthLastOfType(..) |
             Component::FirstOfType | Component::LastOfType |
             Component::OnlyOfType |
-            Component::NonTSPseudoClass(..) =>
-                specificity.class_like_selectors += 1,
-
-            Component::Namespace(..) => (),
+            Component::NonTSPseudoClass(..) => {
+                specificity.class_like_selectors += 1
+            }
+            Component::ExplicitUniversalType |
+            Component::ExplicitAnyNamespace |
+            Component::ExplicitNoNamespace |
+            Component::DefaultNamespace(..) |
+            Component::Namespace(..) => {
+                // Does not affect specificity
+            }
             Component::Negation(ref negated) => {
                 for ss in negated.iter() {
                     simple_selector_specificity(&ss, specificity);
@@ -992,10 +1026,22 @@ fn parse_type_selector<P, Impl>(parser: &P, input: &mut CssParser, sequence: &mu
         None => Ok(false),
         Some((namespace, local_name)) => {
             match namespace {
-                NamespaceConstraint::Specific(ns) => {
-                    sequence.push(Component::Namespace(ns))
-                },
-                NamespaceConstraint::Any => (),
+                QNamePrefix::ImplicitAnyNamespace => {}
+                QNamePrefix::ImplicitDefaultNamespace(url) => {
+                    sequence.push(Component::DefaultNamespace(url))
+                }
+                QNamePrefix::ExplicitNamespace(prefix, url) => {
+                    sequence.push(Component::Namespace(prefix, url))
+                }
+                QNamePrefix::ExplicitNoNamespace => {
+                    sequence.push(Component::ExplicitNoNamespace)
+                }
+                QNamePrefix::ExplicitAnyNamespace => {
+                    sequence.push(Component::ExplicitAnyNamespace)
+                }
+                QNamePrefix::ImplicitNoNamespace => {
+                    unreachable!()  // Not returned with in_attr_selector = false
+                }
             }
             match local_name {
                 Some(name) => {
@@ -1004,7 +1050,9 @@ fn parse_type_selector<P, Impl>(parser: &P, input: &mut CssParser, sequence: &mu
                         name: from_cow_str(name),
                     }))
                 }
-                None => (),
+                None => {
+                    sequence.push(Component::ExplicitUniversalType)
+                }
             }
             Ok(true)
         }
@@ -1017,22 +1065,29 @@ enum SimpleSelectorParseResult<Impl: SelectorImpl> {
     PseudoElement(Impl::PseudoElementSelector),
 }
 
+#[derive(Debug)]
+enum QNamePrefix<Impl: SelectorImpl> {
+    ImplicitNoNamespace, // `foo` in attr selectors
+    ImplicitAnyNamespace, // `foo` in type selectors, without a default ns
+    ImplicitDefaultNamespace(Impl::NamespaceUrl),  // `foo` in type selectors, with a default ns
+    ExplicitNoNamespace,  // `|foo`
+    ExplicitAnyNamespace,  // `*|foo`
+    ExplicitNamespace(Impl::NamespacePrefix, Impl::NamespaceUrl),  // `prefix|foo`
+}
+
 /// * `Err(())`: Invalid selector, abort
 /// * `Ok(None)`: Not a simple selector, could be something else. `input` was not consumed.
 /// * `Ok(Some((namespace, local_name)))`: `None` for the local name means a `*` universal selector
 fn parse_qualified_name<'i, 't, P, Impl>
                        (parser: &P, input: &mut CssParser<'i, 't>,
                         in_attr_selector: bool)
-                        -> Result<Option<(NamespaceConstraint<Impl>, Option<Cow<'i, str>>)>, ()>
+                        -> Result<Option<(QNamePrefix<Impl>, Option<Cow<'i, str>>)>, ()>
     where P: Parser<Impl=Impl>, Impl: SelectorImpl
 {
     let default_namespace = |local_name| {
         let namespace = match parser.default_namespace() {
-            Some(url) => NamespaceConstraint::Specific(Namespace {
-                prefix: None,
-                url: url
-            }),
-            None => NamespaceConstraint::Any,
+            Some(url) => QNamePrefix::ImplicitDefaultNamespace(url),
+            None => QNamePrefix::ImplicitAnyNamespace,
         };
         Ok(Some((namespace, local_name)))
     };
@@ -1058,15 +1113,12 @@ fn parse_qualified_name<'i, 't, P, Impl>
                     let prefix = from_cow_str(value);
                     let result = parser.namespace_for_prefix(&prefix);
                     let url = result.ok_or(())?;
-                    explicit_namespace(input, NamespaceConstraint::Specific(Namespace {
-                        prefix: Some(prefix),
-                        url: url
-                    }))
+                    explicit_namespace(input, QNamePrefix::ExplicitNamespace(prefix, url))
                 },
                 _ => {
                     input.reset(position);
                     if in_attr_selector {
-                        Ok(Some((NamespaceConstraint::Specific(Default::default()), Some(value))))
+                        Ok(Some((QNamePrefix::ImplicitNoNamespace, Some(value))))
                     } else {
                         default_namespace(Some(value))
                     }
@@ -1076,7 +1128,9 @@ fn parse_qualified_name<'i, 't, P, Impl>
         Ok(Token::Delim('*')) => {
             let position = input.position();
             match input.next_including_whitespace() {
-                Ok(Token::Delim('|')) => explicit_namespace(input, NamespaceConstraint::Any),
+                Ok(Token::Delim('|')) => {
+                    explicit_namespace(input, QNamePrefix::ExplicitAnyNamespace)
+                }
                 _ => {
                     input.reset(position);
                     if in_attr_selector {
@@ -1088,7 +1142,7 @@ fn parse_qualified_name<'i, 't, P, Impl>
             }
         },
         Ok(Token::Delim('|')) => {
-            explicit_namespace(input, NamespaceConstraint::Specific(Default::default()))
+            explicit_namespace(input, QNamePrefix::ExplicitNoNamespace)
         }
         _ => {
             input.reset(position);
@@ -1106,7 +1160,28 @@ fn parse_attribute_selector<P, Impl>(parser: &P, input: &mut CssParser)
         None => return Err(()),
         Some((_, None)) => unreachable!(),
         Some((namespace, Some(local_name))) => AttrSelector {
-            namespace: namespace,
+            namespace: match namespace {
+                QNamePrefix::ImplicitNoNamespace |
+                QNamePrefix::ExplicitNoNamespace => {
+                    NamespaceConstraint::Specific(Namespace {
+                        prefix: None,
+                        url: Impl::NamespaceUrl::default(),
+                    })
+                }
+                QNamePrefix::ExplicitNamespace(prefix, url) => {
+                    NamespaceConstraint::Specific(Namespace {
+                        prefix: Some(prefix),
+                        url: url,
+                    })
+                }
+                QNamePrefix::ExplicitAnyNamespace => {
+                    NamespaceConstraint::Any
+                }
+                QNamePrefix::ImplicitAnyNamespace |
+                QNamePrefix::ImplicitDefaultNamespace(_) => {
+                    unreachable!()  // Not returned with in_attr_selector = true
+                }
+            },
             lower_name: from_ascii_lowercase(&local_name),
             name: from_cow_str(local_name),
         },
@@ -1189,15 +1264,31 @@ fn parse_negation<P, Impl>(parser: &P,
     let mut v = ParseVec::new();
     parse_compound_selector(parser, input, &mut v, /* inside_negation = */ true)?;
 
-    let allow = v.len() <= 1 ||
-        (v.len() == 2 && matches!(v[0], Component::Namespace(_)) &&
-         matches!(v[1], Component::LocalName(_)));
-
-    if allow {
+    if single_simple_selector(&v) {
         Ok(Component::Negation(v.into_vec().into_boxed_slice()))
     } else {
         Err(())
     }
+}
+
+// A single type selector can be represented as two components
+fn single_simple_selector<Impl: SelectorImpl>(v: &[Component<Impl>]) -> bool {
+    v.len() == 1 || (
+        v.len() == 2 &&
+        match v[1] {
+            Component::LocalName(_) | Component::ExplicitUniversalType => {
+                debug_assert!(matches!(v[0],
+                    Component::ExplicitAnyNamespace |
+                    Component::ExplicitNoNamespace |
+                    Component::DefaultNamespace(_) |
+                    Component::Namespace(..)
+                ));
+                true
+            }
+            _ => false,
+        }
+    )
+
 }
 
 /// simple_selector_sequence
@@ -1230,10 +1321,7 @@ fn parse_compound_selector<P, Impl>(
             //
             // Note that this doesn't apply to :not() and :matches() per spec.
             if !inside_negation {
-                sequence.push(Component::Namespace(Namespace {
-                    prefix: None,
-                    url: url
-                }));
+                sequence.push(Component::DefaultNamespace(url))
             }
         }
     } else {
@@ -1395,13 +1483,13 @@ pub mod tests {
     use std::fmt;
     use super::*;
 
-    #[derive(PartialEq, Clone, Debug, Hash, Eq)]
+    #[derive(PartialEq, Clone, Debug, Eq)]
     pub enum PseudoClass {
         Hover,
         Lang(String),
     }
 
-    #[derive(Eq, PartialEq, Clone, Debug, Hash)]
+    #[derive(Eq, PartialEq, Clone, Debug)]
     pub enum PseudoElement {
         Before,
         After,
@@ -1458,7 +1546,7 @@ pub mod tests {
         type PseudoElementSelector = PseudoElement;
     }
 
-    #[derive(Default, Debug, Hash, Clone, PartialEq, Eq)]
+    #[derive(Default, Debug, Clone, PartialEq, Eq, Hash)]
     pub struct DummyAtom(String);
 
     impl fmt::Display for DummyAtom {
@@ -1505,7 +1593,7 @@ pub mod tests {
             }
         }
 
-        fn parse_pseudo_element(&self, name: Cow<str>, input: &mut CssParser)
+        fn parse_pseudo_element(&self, name: Cow<str>, _input: &mut CssParser)
                                 -> Result<PseudoElement, ()> {
             match_ignore_ascii_case! { &name,
                 "before" => Ok(PseudoElement::Before),
@@ -1556,12 +1644,60 @@ pub mod tests {
         assert_eq!(parse(":lang(4)"), Err(())) ;
         assert_eq!(parse(":lang(en US)"), Err(())) ;
         assert_eq!(parse("EeÉ"), Ok(SelectorList(vec!(Selector {
-            inner: SelectorInner::from_vec(vec!(Component::LocalName(LocalName {
+            inner: SelectorInner::from_vec(vec!(
+                Component::LocalName(LocalName {
                     name: DummyAtom::from("EeÉ"),
-                    lower_name: DummyAtom::from("eeÉ") })),
-            ),
+                    lower_name: DummyAtom::from("eeÉ")
+                }),
+            )),
             pseudo_element: None,
             specificity: specificity(0, 0, 1),
+        }))));
+        assert_eq!(parse("|e"), Ok(SelectorList(vec!(Selector {
+            inner: SelectorInner::from_vec(vec!(
+                Component::ExplicitNoNamespace,
+                Component::LocalName(LocalName {
+                    name: DummyAtom::from("e"),
+                    lower_name: DummyAtom::from("e")
+                }),
+            )),
+            pseudo_element: None,
+            specificity: specificity(0, 0, 1),
+        }))));
+        // https://github.com/servo/servo/issues/16020
+        assert_eq!(parse("*|e"), Ok(SelectorList(vec!(Selector {
+            inner: SelectorInner::from_vec(vec!(
+                Component::ExplicitAnyNamespace,
+                Component::LocalName(LocalName {
+                    name: DummyAtom::from("e"),
+                    lower_name: DummyAtom::from("e")
+                }),
+            )),
+            pseudo_element: None,
+            specificity: specificity(0, 0, 1),
+        }))));
+        assert_eq!(parse("*"), Ok(SelectorList(vec!(Selector {
+            inner: SelectorInner::from_vec(vec!(
+                Component::ExplicitUniversalType,
+            )),
+            pseudo_element: None,
+            specificity: specificity(0, 0, 0),
+        }))));
+        assert_eq!(parse("|*"), Ok(SelectorList(vec!(Selector {
+            inner: SelectorInner::from_vec(vec!(
+                Component::ExplicitNoNamespace,
+                Component::ExplicitUniversalType,
+            )),
+            pseudo_element: None,
+            specificity: specificity(0, 0, 0),
+        }))));
+        assert_eq!(parse("*|*"), Ok(SelectorList(vec!(Selector {
+            inner: SelectorInner::from_vec(vec!(
+                Component::ExplicitAnyNamespace,
+                Component::ExplicitUniversalType,
+            )),
+            pseudo_element: None,
+            specificity: specificity(0, 0, 0),
         }))));
         assert_eq!(parse(".foo:lang(en-US)"), Ok(SelectorList(vec!(Selector {
             inner: SelectorInner::from_vec(vec![
@@ -1618,10 +1754,7 @@ pub mod tests {
         assert_eq!(parse_ns("svg|circle", &parser), Ok(SelectorList(vec![Selector {
             inner: SelectorInner::from_vec(
                 vec![
-                    Component::Namespace(Namespace {
-                        prefix: Some(DummyAtom("svg".into())),
-                        url: SVG.into(),
-                    }),
+                    Component::Namespace(DummyAtom("svg".into()), SVG.into()),
                     Component::LocalName(LocalName {
                         name: DummyAtom::from("circle"),
                         lower_name: DummyAtom::from("circle"),
@@ -1629,6 +1762,15 @@ pub mod tests {
                 ]),
             pseudo_element: None,
             specificity: specificity(0, 0, 1),
+        }])));
+        assert_eq!(parse_ns("svg|*", &parser), Ok(SelectorList(vec![Selector {
+            inner: SelectorInner::from_vec(
+                vec![
+                    Component::Namespace(DummyAtom("svg".into()), SVG.into()),
+                    Component::ExplicitUniversalType,
+                ]),
+            pseudo_element: None,
+            specificity: specificity(0, 0, 0),
         }])));
         // Default namespace does not apply to attribute selectors
         // https://github.com/mozilla/servo/pull/1652
@@ -1638,10 +1780,7 @@ pub mod tests {
         assert_eq!(parse_ns("[Foo]", &parser), Ok(SelectorList(vec!(Selector {
             inner: SelectorInner::from_vec(
                 vec![
-                    Component::Namespace(Namespace {
-                        prefix: None,
-                        url: MATHML.into(),
-                    }),
+                    Component::DefaultNamespace(MATHML.into()),
                     Component::AttrExists(AttrSelector {
                         name: DummyAtom::from("Foo"),
                         lower_name: DummyAtom::from("foo"),
@@ -1658,14 +1797,66 @@ pub mod tests {
         assert_eq!(parse_ns("e", &parser), Ok(SelectorList(vec!(Selector {
             inner: SelectorInner::from_vec(
                 vec!(
-                    Component::Namespace(Namespace {
-                        prefix: None,
-                        url: MATHML.into(),
-                    }),
+                    Component::DefaultNamespace(MATHML.into()),
                     Component::LocalName(LocalName {
                         name: DummyAtom::from("e"),
                         lower_name: DummyAtom::from("e") }),
                 )),
+            pseudo_element: None,
+            specificity: specificity(0, 0, 1),
+        }))));
+        assert_eq!(parse_ns("*", &parser), Ok(SelectorList(vec!(Selector {
+            inner: SelectorInner::from_vec(
+                vec!(
+                    Component::DefaultNamespace(MATHML.into()),
+                    Component::ExplicitUniversalType,
+                )),
+            pseudo_element: None,
+            specificity: specificity(0, 0, 0),
+        }))));
+        assert_eq!(parse_ns("*|*", &parser), Ok(SelectorList(vec!(Selector {
+            inner: SelectorInner::from_vec(
+                vec!(
+                    Component::ExplicitAnyNamespace,
+                    Component::ExplicitUniversalType,
+                )),
+            pseudo_element: None,
+            specificity: specificity(0, 0, 0),
+        }))));
+        // Default namespace applies to universal and type selectors inside :not and :matches,
+        // but not otherwise.
+        assert_eq!(parse_ns(":not(.cl)", &parser), Ok(SelectorList(vec!(Selector {
+            inner: SelectorInner::from_vec(vec!(
+                Component::DefaultNamespace(MATHML.into()),
+                Component::Negation(vec![
+                    Component::Class(DummyAtom::from("cl"))
+                ].into_boxed_slice()),
+            )),
+            pseudo_element: None,
+            specificity: specificity(0, 1, 0),
+        }))));
+        assert_eq!(parse_ns(":not(*)", &parser), Ok(SelectorList(vec!(Selector {
+            inner: SelectorInner::from_vec(vec!(
+                Component::DefaultNamespace(MATHML.into()),
+                Component::Negation(vec![
+                    Component::DefaultNamespace(MATHML.into()),
+                    Component::ExplicitUniversalType,
+                ].into_boxed_slice()),
+            )),
+            pseudo_element: None,
+            specificity: specificity(0, 0, 0),
+        }))));
+        assert_eq!(parse_ns(":not(e)", &parser), Ok(SelectorList(vec!(Selector {
+            inner: SelectorInner::from_vec(vec!(
+                Component::DefaultNamespace(MATHML.into()),
+                Component::Negation(vec![
+                    Component::DefaultNamespace(MATHML.into()),
+                    Component::LocalName(LocalName {
+                        name: DummyAtom::from("e"),
+                        lower_name: DummyAtom::from("e")
+                    }),
+                ].into_boxed_slice())
+            )),
             pseudo_element: None,
             specificity: specificity(0, 0, 1),
         }))));
@@ -1729,10 +1920,7 @@ pub mod tests {
         assert_eq!(parse_ns(":not(svg|circle)", &parser), Ok(SelectorList(vec!(Selector {
             inner: SelectorInner::from_vec(vec!(Component::Negation(
                 vec![
-                    Component::Namespace(Namespace {
-                        prefix: Some(DummyAtom("svg".into())),
-                        url: SVG.into(),
-                    }),
+                    Component::Namespace(DummyAtom("svg".into()), SVG.into()),
                     Component::LocalName(LocalName {
                         name: DummyAtom::from("circle"),
                         lower_name: DummyAtom::from("circle")
@@ -1741,6 +1929,46 @@ pub mod tests {
             ))),
             pseudo_element: None,
             specificity: specificity(0, 0, 1),
+        }))));
+        // https://github.com/servo/servo/issues/16017
+        assert_eq!(parse_ns(":not(*)", &parser), Ok(SelectorList(vec!(Selector {
+            inner: SelectorInner::from_vec(vec!(Component::Negation(
+                vec![
+                    Component::ExplicitUniversalType,
+                ].into_boxed_slice()
+            ))),
+            pseudo_element: None,
+            specificity: specificity(0, 0, 0),
+        }))));
+        assert_eq!(parse_ns(":not(|*)", &parser), Ok(SelectorList(vec!(Selector {
+            inner: SelectorInner::from_vec(vec!(Component::Negation(
+                vec![
+                    Component::ExplicitNoNamespace,
+                    Component::ExplicitUniversalType,
+                ].into_boxed_slice()
+            ))),
+            pseudo_element: None,
+            specificity: specificity(0, 0, 0),
+        }))));
+        assert_eq!(parse_ns(":not(*|*)", &parser), Ok(SelectorList(vec!(Selector {
+            inner: SelectorInner::from_vec(vec!(Component::Negation(
+                vec![
+                    Component::ExplicitAnyNamespace,
+                    Component::ExplicitUniversalType,
+                ].into_boxed_slice()
+            ))),
+            pseudo_element: None,
+            specificity: specificity(0, 0, 0),
+        }))));
+        assert_eq!(parse_ns(":not(svg|*)", &parser), Ok(SelectorList(vec!(Selector {
+            inner: SelectorInner::from_vec(vec!(Component::Negation(
+                vec![
+                    Component::Namespace(DummyAtom("svg".into()), SVG.into()),
+                    Component::ExplicitUniversalType,
+                ].into_boxed_slice()
+            ))),
+            pseudo_element: None,
+            specificity: specificity(0, 0, 0),
         }))));
     }
 

@@ -6,8 +6,9 @@
 
 #include "StorageDBThread.h"
 #include "StorageDBUpdater.h"
-#include "StorageCache.h"
-#include "StorageManager.h"
+#include "StorageUtils.h"
+#include "LocalStorageCache.h"
+#include "LocalStorageManager.h"
 
 #include "nsIEffectiveTLDService.h"
 #include "nsDirectoryServiceUtils.h"
@@ -43,12 +44,14 @@
 namespace mozilla {
 namespace dom {
 
+using namespace StorageUtils;
+
 namespace { // anon
 
 // This is only a compatibility code for schema version 0.  Returns the 'scope'
 // key in the schema version 0 format for the scope column.
 nsCString
-Scheme0Scope(StorageCacheBridge* aCache)
+Scheme0Scope(LocalStorageCacheBridge* aCache)
 {
   nsCString result;
 
@@ -183,7 +186,7 @@ StorageDBThread::Shutdown()
 }
 
 void
-StorageDBThread::SyncPreload(StorageCacheBridge* aCache, bool aForceSync)
+StorageDBThread::SyncPreload(LocalStorageCacheBridge* aCache, bool aForceSync)
 {
   PROFILER_LABEL_FUNC(js::ProfileEntry::Category::STORAGE);
   if (!aForceSync && aCache->LoadedCount()) {
@@ -445,10 +448,6 @@ StorageDBThread::ThreadObserver::AfterProcessNextEvent(nsIThreadInternal* aThrea
 {
   return NS_OK;
 }
-
-
-extern void
-ReverseString(const nsCSubstring& aSource, nsCSubstring& aResult);
 
 nsresult
 StorageDBThread::OpenDatabaseConnection()
@@ -786,7 +785,7 @@ OriginAttrsPatternMatchSQLFunction::OnFunctionCall(
 // StorageDBThread::DBOperation
 
 StorageDBThread::DBOperation::DBOperation(const OperationType aType,
-                                          StorageCacheBridge* aCache,
+                                          LocalStorageCacheBridge* aCache,
                                           const nsAString& aKey,
                                           const nsAString& aValue)
 : mType(aType)

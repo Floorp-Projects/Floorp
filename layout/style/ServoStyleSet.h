@@ -34,6 +34,7 @@ struct Keyframe;
 struct ServoComputedValuesWithParent;
 class ServoElementSnapshotTable;
 } // namespace mozilla
+class nsCSSCounterStyleRule;
 class nsIContent;
 class nsIDocument;
 class nsStyleContext;
@@ -306,6 +307,8 @@ public:
                                  aServoValues);
 
   bool AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray);
+
+  nsCSSCounterStyleRule* CounterStyleRuleForName(nsIAtom* aName);
 
   already_AddRefed<ServoComputedValues>
   GetBaseComputedValuesForElement(dom::Element* aElement,

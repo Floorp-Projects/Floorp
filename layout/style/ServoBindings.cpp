@@ -11,6 +11,7 @@
 #include "gfxFontFamilyList.h"
 #include "nsAnimationManager.h"
 #include "nsAttrValueInlines.h"
+#include "nsCSSCounterStyleRule.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsCSSProps.h"
 #include "nsCSSParser.h"
@@ -259,7 +260,13 @@ nsIAtom*
 Gecko_GetElementId(RawGeckoElementBorrowed aElement)
 {
   const nsAttrValue* attr = aElement->GetParsedAttr(nsGkAtoms::id);
-  return attr ? attr->GetAtomValue() : nullptr;
+  if (attr && attr->Type() == nsAttrValue::eAtom) {
+    return attr->GetAtomValue();
+  }
+  // The only case in which we should have a non-atom value here is if it's the
+  // empty string value.
+  MOZ_ASSERT_IF(attr, attr->IsEmptyString());
+  return nullptr;
 }
 
 // Dirtiness tracking.
@@ -1109,15 +1116,15 @@ Gecko_CopyImageOrientationFrom(nsStyleVisibility* aDst,
 }
 
 void
-Gecko_SetListStyleType(nsStyleList* aList, uint32_t aType)
+Gecko_SetListStyleType(nsStyleList* aList, nsIAtom* aName)
 {
-  aList->mCounterStyle = CounterStyleManager::GetBuiltinStyle(aType);
+  aList->SetListStyleType(aName);
 }
 
 void
 Gecko_CopyListStyleTypeFrom(nsStyleList* aDst, const nsStyleList* aSrc)
 {
-  aDst->mCounterStyle = aSrc->mCounterStyle;
+  aDst->CopyListStyleTypeFrom(*aSrc);
 }
 
 already_AddRefed<css::URLValue>
@@ -1778,12 +1785,6 @@ Gecko_CSSValue_GetAbsoluteLength(nsCSSValueBorrowed aCSSValue)
 }
 
 void
-Gecko_CSSValue_SetNormal(nsCSSValueBorrowedMut aCSSValue)
-{
-  aCSSValue->SetNormalValue();
-}
-
-void
 Gecko_CSSValue_SetNumber(nsCSSValueBorrowedMut aCSSValue, float aNumber)
 {
   aCSSValue->SetFloatValue(aNumber, eCSSUnit_Number);
@@ -1899,6 +1900,36 @@ nsCSSValueBorrowed
 Gecko_CSSValue_GetArrayItemConst(nsCSSValueBorrowed aCSSValue, int32_t aIndex)
 {
   return &aCSSValue->GetArrayValue()->Item(aIndex);
+}
+
+void
+Gecko_CSSValue_SetPair(nsCSSValueBorrowedMut aCSSValue,
+                       nsCSSValueBorrowed aXValue, nsCSSValueBorrowed aYValue)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  aCSSValue->SetPairValue(*aXValue, *aYValue);
+}
+
+void
+Gecko_CSSValue_SetList(nsCSSValueBorrowedMut aCSSValue, uint32_t aLen)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  nsCSSValueList* item = aCSSValue->SetListValue();
+  for (uint32_t i = 1; i < aLen; ++i) {
+    item->mNext = new nsCSSValueList;
+    item = item->mNext;
+  }
+}
+
+void
+Gecko_CSSValue_SetPairList(nsCSSValueBorrowedMut aCSSValue, uint32_t aLen)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  nsCSSValuePairList* item = aCSSValue->SetPairListValue();
+  for (uint32_t i = 1; i < aLen; ++i) {
+    item->mNext = new nsCSSValuePairList;
+    item = item->mNext;
+  }
 }
 
 
@@ -2112,6 +2143,23 @@ Gecko_CSSFontFaceRule_GetCssText(const nsCSSFontFaceRule* aRule,
 }
 
 NS_IMPL_FFI_REFCOUNTING(nsCSSFontFaceRule, CSSFontFaceRule);
+
+nsCSSCounterStyleRule*
+Gecko_CSSCounterStyle_Create(nsIAtom* aName)
+{
+  RefPtr<nsCSSCounterStyleRule> rule = new nsCSSCounterStyleRule(aName, 0, 0);
+  return rule.forget().take();
+}
+
+void
+Gecko_CSSCounterStyle_GetCssText(const nsCSSCounterStyleRule* aRule,
+                                 nsAString* aResult)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  aRule->GetCssText(*aResult);
+}
+
+NS_IMPL_FFI_REFCOUNTING(nsCSSCounterStyleRule, CSSCounterStyleRule);
 
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(nsCSSValueSharedList, CSSValueSharedList);
 

@@ -1766,16 +1766,17 @@ nsDocumentViewer::Destroy()
 
 #ifdef NS_PRINTING
   if (mPrintEngine) {
+    RefPtr<nsPrintEngine> printEngine = mozilla::Move(mPrintEngine);
 #ifdef NS_PRINT_PREVIEW
     bool doingPrintPreview;
-    mPrintEngine->GetDoingPrintPreview(&doingPrintPreview);
+    printEngine->GetDoingPrintPreview(&doingPrintPreview);
     if (doingPrintPreview) {
-      mPrintEngine->FinishPrintPreview();
+      printEngine->FinishPrintPreview();
     }
 #endif
-
-    mPrintEngine->Destroy();
-    mPrintEngine = nullptr;
+    printEngine->Destroy();
+    MOZ_ASSERT(!mPrintEngine,
+               "mPrintEngine shouldn't be recreated while destroying it");
   }
 #endif
 

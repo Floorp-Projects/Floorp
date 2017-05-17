@@ -33,6 +33,30 @@ Cc["@mozilla.org/globalmessagemanager;1"]
 XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils",
   "resource:///modules/E10SUtils.jsm");
 
+const PROCESSSELECTOR_CONTRACTID = "@mozilla.org/ipc/processselector;1";
+const OUR_PROCESSSELECTOR_CID =
+  Components.ID("{f9746211-3d53-4465-9aeb-ca0d96de0253}");
+const EXISTING_JSID = Cc[PROCESSSELECTOR_CONTRACTID];
+const DEFAULT_PROCESSSELECTOR_CID = EXISTING_JSID ?
+  Components.ID(EXISTING_JSID.number) : null;
+
+// A process selector that always asks for a new process.
+function NewProcessSelector() {
+}
+
+NewProcessSelector.prototype = {
+  classID: OUR_PROCESSSELECTOR_CID,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentProcessProvider]),
+
+  provideProcess() {
+    return Ci.nsIContentProcessProvider.NEW_PROCESS;
+  }
+};
+
+let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+let selectorFactory = XPCOMUtils._getFactory(NewProcessSelector);
+registrar.registerFactory(OUR_PROCESSSELECTOR_CID, "", null, selectorFactory);
+
 // For now, we'll allow tests to use CPOWs in this module for
 // some cases.
 Cu.permitCPOWsInScope(this);
@@ -77,7 +101,7 @@ this.BrowserTestUtils = {
         url: options
       }
     }
-    let tab = yield BrowserTestUtils.openNewForegroundTab(options.gBrowser, options.url);
+    let tab = yield BrowserTestUtils.openNewForegroundTab(options);
     let originalWindow = tab.ownerGlobal;
     let result = yield taskFn(tab.linkedBrowser);
     let finalWindow = tab.ownerGlobal;
@@ -94,9 +118,13 @@ this.BrowserTestUtils = {
   /**
    * Opens a new tab in the foreground.
    *
-   * @param {tabbrowser} tabbrowser
+   * This function takes an options object (which is preferred) or actual
+   * parameters. The names of the options must correspond to the names below.
+   * gBrowser is required and all other options are optional.
+   *
+   * @param {tabbrowser} gBrowser
    *        The tabbrowser to open the tab new in.
-   * @param {string} opening
+   * @param {string} opening (or url)
    *        May be either a string URL to load in the tab, or a function that
    *        will be called to open a foreground tab. Defaults to "about:blank".
    * @param {boolean} waitForLoad
@@ -104,32 +132,83 @@ this.BrowserTestUtils = {
    * @param {boolean} waitForStateStop
    *        True to wait for the web progress listener to send STATE_STOP for the
    *        document in the tab. Defaults to false.
+   * @param {boolean} forceNewProcess
+   *        True to force the new tab to load in a new process. Defaults to
+   *        false.
    *
    * @return {Promise}
    *         Resolves when the tab is ready and loaded as necessary.
    * @resolves The new tab.
    */
-  openNewForegroundTab(tabbrowser, opening = "about:blank", aWaitForLoad = true, aWaitForStateStop = false) {
-    let tab;
-    let promises = [
-      BrowserTestUtils.switchTab(tabbrowser, function () {
-        if (typeof opening == "function") {
-          opening();
-          tab = tabbrowser.selectedTab;
-        }
-        else {
-          tabbrowser.selectedTab = tab = tabbrowser.addTab(opening);
-        }
-      })
-    ];
+  openNewForegroundTab(tabbrowser, ...args) {
+    let options;
+    if (tabbrowser instanceof Ci.nsIDOMXULElement) {
+      // tabbrowser is a tabbrowser, read the rest of the arguments from args.
+      let [
+        opening = "about:blank",
+        waitForLoad = true,
+        waitForStateStop = false,
+        forceNewProcess = false,
+      ] = args;
 
-    if (aWaitForLoad) {
-      promises.push(BrowserTestUtils.browserLoaded(tab.linkedBrowser));
-    }
-    if (aWaitForStateStop) {
-      promises.push(BrowserTestUtils.browserStopped(tab.linkedBrowser));
+      options = { opening, waitForLoad, waitForStateStop, forceNewProcess };
+    } else {
+      if ("url" in tabbrowser && !("opening" in tabbrowser)) {
+        tabbrowser.opening = tabbrowser.url;
+      }
+
+      let {
+        opening = "about:blank",
+        waitForLoad = true,
+        waitForStateStop = false,
+        forceNewProcess = false,
+      } = tabbrowser;
+
+      tabbrowser = tabbrowser.gBrowser;
+      options = { opening, waitForLoad, waitForStateStop, forceNewProcess };
     }
 
+    let { opening: opening,
+          waitForLoad: aWaitForLoad,
+          waitForStateStop: aWaitForStateStop
+    } = options;
+
+    let promises, tab;
+    try {
+      // If we're asked to force a new process, replace the normal process
+      // selector with one that always asks for a new process.
+      // If DEFAULT_PROCESSSELECTOR_CID is null, we're in non-e10s mode and we
+      // should skip this.
+      if (options.forceNewProcess && DEFAULT_PROCESSSELECTOR_CID) {
+        registrar.registerFactory(OUR_PROCESSSELECTOR_CID, "",
+                                  PROCESSSELECTOR_CONTRACTID, null);
+      }
+
+      promises = [
+        BrowserTestUtils.switchTab(tabbrowser, function () {
+          if (typeof opening == "function") {
+            opening();
+            tab = tabbrowser.selectedTab;
+          }
+          else {
+            tabbrowser.selectedTab = tab = tabbrowser.addTab(opening);
+          }
+        })
+      ];
+
+      if (aWaitForLoad) {
+        promises.push(BrowserTestUtils.browserLoaded(tab.linkedBrowser));
+      }
+      if (aWaitForStateStop) {
+        promises.push(BrowserTestUtils.browserStopped(tab.linkedBrowser));
+      }
+    } finally {
+      // Restore the original process selector, if needed.
+      if (options.forceNewProcess && DEFAULT_PROCESSSELECTOR_CID) {
+        registrar.registerFactory(DEFAULT_PROCESSSELECTOR_CID, "",
+                                  PROCESSSELECTOR_CONTRACTID, null);
+      }
+    }
     return Promise.all(promises).then(() => tab);
   },
 

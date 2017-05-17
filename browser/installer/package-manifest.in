@@ -309,6 +309,9 @@
 @RESPATH@/components/shistory.xpt
 @RESPATH@/components/spellchecker.xpt
 @RESPATH@/components/storage.xpt
+#ifdef ENABLE_MARIONETTE
+@RESPATH@/components/remote.xpt
+#endif
 @RESPATH@/components/toolkit_asyncshutdown.xpt
 @RESPATH@/components/toolkit_filewatcher.xpt
 @RESPATH@/components/toolkit_finalizationwitness.xpt

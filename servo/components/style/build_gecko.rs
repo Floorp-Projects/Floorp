@@ -250,7 +250,14 @@ mod bindings {
                 return;
             }
         }
-        let mut result = builder.generate().expect("Unable to generate bindings").to_string();
+        let command_line_opts = builder.command_line_flags();
+        let result = builder.generate();
+        let mut result = match result {
+            Ok(bindings) => bindings.to_string(),
+            Err(_) => {
+                panic!("Failed to generate bindings, flags: {:?}", command_line_opts);
+            },
+        };
         for fixup in fixups.iter() {
             result = Regex::new(&format!(r"\b{}\b", fixup.pat)).unwrap().replace_all(&result, fixup.rep.as_str())
                 .into_owned().into();
@@ -319,6 +326,7 @@ mod bindings {
             .include(add_include("mozilla/dom/NameSpaceConstants.h"))
             .include(add_include("mozilla/LookAndFeel.h"))
             .include(add_include("mozilla/ServoBindings.h"))
+            .include(add_include("nsCSSCounterStyleRule.h"))
             .include(add_include("nsCSSFontFaceRule.h"))
             .include(add_include("nsMediaFeatures.h"))
             .include(add_include("nsMediaList.h"))
@@ -402,6 +410,7 @@ mod bindings {
             "nsBorderColors",
             "nscolor",
             "nsChangeHint",
+            "nsCSSCounterStyleRule",
             "nsCSSFontFaceRule",
             "nsCSSKeyword",
             "nsCSSPropertyID",
@@ -691,6 +700,7 @@ mod bindings {
             "StyleBasicShapeType",
             "StyleShapeSource",
             "StyleTransition",
+            "nsCSSCounterStyleRule",
             "nsCSSFontFaceRule",
             "nsCSSKeyword",
             "nsCSSPropertyID",

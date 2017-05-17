@@ -289,6 +289,41 @@
       </hbox>
       <hbox id="share-container" flex="1"/>
     </panel>
+    <panel id="sidebarMenu-popup"
+           class="cui-widget-panel"
+           role="group"
+           type="arrow"
+           hidden="true"
+           flip="slide"
+           orient="vertical"
+           position="bottomcenter topleft">
+      <toolbarbutton id="sidebar-switcher-bookmarks"
+                     class="subviewbutton subviewbutton-iconic"
+                     key="viewBookmarksSidebarKb"
+                     observes="viewBookmarksSidebar"
+                     oncommand="SidebarUI.show('viewBookmarksSidebar');">
+         <observes element="viewBookmarksSidebar" attribute="checked"/>
+       </toolbarbutton>
+      <toolbarbutton id="sidebar-switcher-history"
+                     label="&historyButton.label;"
+                     class="subviewbutton subviewbutton-iconic"
+                     key="key_gotoHistory"
+                     observes="viewHistorySidebar"
+                     oncommand="SidebarUI.show('viewHistorySidebar');">
+         <observes element="viewHistorySidebar" attribute="checked"/>
+       </toolbarbutton>
+      <toolbarbutton id="sidebar-switcher-tabs"
+                     label="&syncedTabs.sidebar.label;"
+                     class="subviewbutton subviewbutton-iconic"
+                     observes="viewTabsSidebar"
+                     oncommand="SidebarUI.show('viewTabsSidebar');">
+         <observes element="viewTabsSidebar" attribute="checked"/>
+       </toolbarbutton>
+      <toolbarseparator/>
+      <toolbarbutton label="&sidebarCloseButton.tooltip;"
+                     class="subviewbutton"
+                     oncommand="SidebarUI.hide()"/>
+    </panel>
 
     <menupopup id="toolbar-context-menu"
                onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('viewToolbarsMenuSeparator'));">
@@ -405,13 +440,29 @@
     </panel>
 
     <panel id="page-action-panel"
+           class="cui-widget-panel"
            role="group"
            type="arrow"
            hidden="true"
            flip="slide"
            position="bottomcenter topright"
            noautofocus="true">
-      This space intentionally left blank.
+      <photonpanelmultiview id="page-action-multiView"
+                            mainViewId="page-action-mainView">
+        <panelview id="page-action-mainView"
+                   class="PanelUI-subView">
+          <vbox class="panel-subview-body">
+            <toolbarbutton id="page-action-copy-url-button"
+                           class="subviewbutton subviewbutton-iconic"
+                           label="&copyURLCmd.label;"
+                           command="PageAction:copyURL"/>
+            <toolbarbutton id="page-action-email-link-button"
+                           class="subviewbutton subviewbutton-iconic"
+                           label="&emailPageCmd.label;"
+                           command="PageAction:emailLink"/>
+          </vbox>
+        </panelview>
+      </photonpanelmultiview>
     </panel>
 
     <!-- Bookmarks and history tooltip -->
@@ -795,6 +846,8 @@
                          tooltiptext="&urlbar.persistentStorageNotificationAnchor.tooltip;"/>
                 </box>
                 <image id="connection-icon"/>
+                <image id="remote-control-icon"
+                       tooltiptext="&urlbar.remoteControlNotificationAnchor.tooltip;"/>
                 <hbox id="identity-icon-labels">
                   <label id="identity-icon-label" class="plain" flex="1"/>
                   <label id="identity-icon-country-label" class="plain"/>
@@ -1115,9 +1168,14 @@
       <vbox id="browser-border-start" hidden="true" layer="true"/>
       <vbox id="sidebar-box" hidden="true" class="chromeclass-extrachrome">
         <sidebarheader id="sidebar-header" align="center">
-          <label id="sidebar-title" persist="value" flex="1" crop="end" control="sidebar"/>
+          <toolbarbutton id="sidebar-switcher-target" flex="1" class="tabbable">
+            <image id="sidebar-icon" consumeanchor="sidebar-switcher-target"/>
+            <label id="sidebar-title" persist="value" crop="end" control="sidebar"/>
+            <image id="sidebar-switcher-arrow"/>
+            <spacer flex="1"/>
+          </toolbarbutton>
           <image id="sidebar-throbber"/>
-          <toolbarbutton class="close-icon tabbable" tooltiptext="&sidebarCloseButton.tooltip;" oncommand="SidebarUI.hide();"/>
+          <toolbarbutton id="sidebar-close" class="tabbable" tooltiptext="&sidebarCloseButton.tooltip;" oncommand="SidebarUI.hide();"/>
         </sidebarheader>
         <browser id="sidebar" flex="1" autoscroll="false" disablehistory="true" disablefullscreen="true"
                   style="min-width: 14em; width: 18em; max-width: 36em;" tooltip="aHTMLTooltip"/>
