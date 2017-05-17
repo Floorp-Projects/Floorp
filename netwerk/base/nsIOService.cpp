@@ -171,7 +171,7 @@ static const char kProfileDoChange[] = "profile-do-change";
 uint32_t   nsIOService::gDefaultSegmentSize = 4096;
 uint32_t   nsIOService::gDefaultSegmentCount = 24;
 
-bool nsIOService::sDataURIInheritSecurityContext = true;
+bool nsIOService::sIsDataURIUniqueOpaqueOrigin = false;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -253,8 +253,8 @@ nsIOService::Init()
     else
         NS_WARNING("failed to get observer service");
 
-    Preferences::AddBoolVarCache(&sDataURIInheritSecurityContext,
-                                 "security.data_uri.inherit_security_context", true);
+    Preferences::AddBoolVarCache(&sIsDataURIUniqueOpaqueOrigin,
+                                 "security.data_uri.unique_opaque_origin", false);
     Preferences::AddBoolVarCache(&mOfflineMirrorsConnectivity, OFFLINE_MIRRORS_CONNECTIVITY, true);
 
     gIOService = this;
@@ -1932,9 +1932,9 @@ nsIOService::SpeculativeAnonymousConnect2(nsIURI *aURI,
 }
 
 /*static*/ bool
-nsIOService::IsInheritSecurityContextForDataURIEnabled()
+nsIOService::IsDataURIUniqueOpaqueOrigin()
 {
-  return sDataURIInheritSecurityContext;
+  return sIsDataURIUniqueOpaqueOrigin;
 }
 
 } // namespace net
