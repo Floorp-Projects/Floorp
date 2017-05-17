@@ -13,6 +13,7 @@
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInfo.h"
 #include "mozilla/URLExtraData.h"
+#include "nsCompatibility.h"
 #include "nsStringFwd.h"
 
 namespace mozilla {
@@ -67,7 +68,8 @@ public:
                                    nsIURI* aSheetURI,
                                    nsIURI* aBaseURI,
                                    nsIPrincipal* aSheetPrincipal,
-                                   uint32_t aLineNumber);
+                                   uint32_t aLineNumber,
+                                   nsCompatibility aCompatMode);
 
   /**
    * Called instead of ParseSheet to initialize the Servo stylesheet object

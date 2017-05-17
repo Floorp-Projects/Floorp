@@ -501,6 +501,7 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
 
   mSendingFramerate = 0;
   mEncoderConfig.ClearStreams();
+  mSendStreamConfig.rtp.rids.clear();
 
   unsigned short width = 320;
   unsigned short height = 240;

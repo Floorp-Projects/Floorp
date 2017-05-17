@@ -168,16 +168,8 @@ to mochitest command.
   * ... `font-size: var(--a)` [3]
 * Quirks mode support
   * hashless color servo/servo#15341
-    * test_property_syntax_errors.html `color: 000000` [22]
-    * ... `color: 96ed2a` [22]
-    * ... `color: fff` [4]
-  * unitless length servo/servo#15342
-    * test_property_syntax_errors.html ` 20 ` [6]
-    * ... `: 10 ` [6]
-    * ... ` 2 ` [26]
-    * ... `: 5 ` [84]
-    * ... `border-spacing: ` [6]
-    * ... `rect(1, ` [2]
+    * test_property_syntax_errors.html `color: 000000` [10]
+    * ... `color: 96ed2a` [10]
   * test_hover_quirk.html: hover quirks bug 1355724 [6]
 * Unit should be preserved after parsing servo/servo#15346
   * test_units_time.html [1]
