@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script type="application/javascript">
+</script>
+</head>
+<body>
+<video id="v1" style="position:absolute; left:0; top:0"></video>
+<canvas id="canvas"></canvas>
+<script type="application/javascript">
+/* READ ME first.
+The script is trying to make a reftest sample for reftest.
+HOW TO USE:
+1. Choose the first or last frame you want to generate. And set
+window.onload function to dumpFirstFrameToConsole/dumpLastFrameToConsole.
+2. Set the video.src in dumpFirstFrameToConsole/dumpLastFrameToConsole.
+3. Run the script on browser.
+4. Open console (ctrl+shift+k) to get the first/last frame.
+5. Copy the url to your xxx-ref.html(short.mp4.firstframe-ref.html).
+You might hit security error if the video.src cross origin.
+Enable "media.seekToNextFrame.enabled" for the seekToNextFrame function
+or using nightly, the seekToNextFrame() ensure the ended event fired.
+*/
+
+//window.onload = function() { setTimeout(dumpFirstFrameToConsole, 0); };
+window.onload = function() { setTimeout(dumpLastFrameToConsole, 0); };
+
+function drawVideoToConsole(v) {
+  var canvas = document.getElementById("canvas");
+  canvas.width = v.videoWidth;
+  canvas.height = v.videoHeight;
+  var ctx = canvas.getContext("2d");
+  ctx.drawImage(v, 0, 0, v.videoWidth, v.videoHeight);
+  var dataURL = canvas.toDataURL();
+  console.log(dataURL);
+}
+
+function dumpFirstFrameToConsole() {
+  var video = document.getElementById("v1");
+  video.src = "short.mp4";
+  video.preload = "metadata";
+  video.addEventListener("loadeddata", function() {
+    drawVideoToConsole(video);
+  });
+}
+
+function dumpLastFrameToConsole() {
+  var video = document.getElementById("v1");
+  video.src = "short.mp4";
+  video.preload = "metadata";
+  video.seenEnded = false;
+  // Seek to the end
+  video.addEventListener("loadeddata", function() {
+    video.currentTime = video.duration;
+    video.onseeked = () => {
+      video.onseeked = null;
+      callSeekToNextFrame();
+    };
+  });
+
+  function callSeekToNextFrame() {
+    video.seekToNextFrame().then(
+      () => {
+        if (!video.seenEnded)
+          callSeekToNextFrame();
+      },
+      () => {
+        // Reach the end, do nothing.
+      }
+    );
+  }
+
+  video.addEventListener("ended", function() {
+    video.seenEnded = true;
+    drawVideoToConsole(video);
+  });
+}
+</script>
+</body>
+</html>

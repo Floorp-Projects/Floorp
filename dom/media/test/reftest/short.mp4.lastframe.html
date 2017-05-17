@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<script type="text/javascript">
+function doTest() {
+  var video = document.getElementById("v1");
+  video.src = "../short.mp4";
+  video.preload = "metadata";
+  video.seenEnded = false;
+  // Seek to the end
+  video.addEventListener("loadeddata", function() {
+    video.currentTime = video.duration;
+    video.onseeked = () => {
+      video.onseeked = null;
+      callSeekToNextFrame();
+    };
+  });
+
+  function callSeekToNextFrame() {
+    video.seekToNextFrame().then(
+      () => {
+        if (!video.seenEnded)
+          callSeekToNextFrame();
+      },
+      () => {
+        // Reach the end, do nothing.
+      }
+    );
+  }
+
+  video.addEventListener("ended", function() {
+    video.seenEnded = true;
+    document.documentElement.removeAttribute('class');
+  });
+}
+window.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</head>
+<body>
+<video id="v1" style="position:absolute; left:0; top:0"></video>
+</body>
+</html>
