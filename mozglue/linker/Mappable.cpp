@@ -296,6 +296,7 @@ public:
      * depending on how mappings grow in the address space.
      */
 #if defined(__arm__)
+    // Address increases on ARM.
     void *buf = ::mmap(nullptr, length + PAGE_SIZE, PROT_READ | PROT_WRITE,
                        MAP_SHARED, fd, 0);
     if (buf != MAP_FAILED) {
@@ -306,7 +307,8 @@ public:
                 length, str, buf);
       return new _MappableBuffer(fd.forget(), buf, length);
     }
-#elif defined(__i386__)
+#elif defined(__i386__) || defined(__aarch64__)
+    // Address decreases on x86 and AArch64.
     size_t anon_mapping_length = length + PAGE_SIZE;
     void *buf = ::mmap(nullptr, anon_mapping_length, PROT_NONE,
                        MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
@@ -371,7 +373,7 @@ public:
     /* Free the additional page we allocated. See _MappableBuffer::Create */
 #if defined(__arm__)
     ::munmap(AlignedEndPtr(*this + GetLength(), PAGE_SIZE), PAGE_SIZE);
-#elif defined(__i386__)
+#elif defined(__i386__) || defined(__aarch64__)
     ::munmap(*this - PAGE_SIZE, GetLength() + PAGE_SIZE);
 #else
 #error need to add a case for your CPU
