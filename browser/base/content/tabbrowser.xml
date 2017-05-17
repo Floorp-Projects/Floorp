@@ -2069,7 +2069,7 @@
         "audioPlaybackStopped", "pauseMedia", "stopMedia",
         "blockMedia", "resumeMedia", "mute", "unmute", "blockedPopups", "lastURI",
         "purgeSessionHistory", "stopScroll", "startScroll",
-        "userTypedValue", "userTypedClear"
+        "userTypedValue", "userTypedClear", "mediaBlocked"
       ]</field>
 
       <method name="_createLazyBrowser">
@@ -2122,6 +2122,8 @@
                   break;
                 case "reload":
                 case "reloadWithFlags":
+                case "blockMedia":
+                case "resumeMedia":
                   getter = () => {
                     return (params) => {
                       // Wait for load handler to be instantiated before
@@ -2135,6 +2137,7 @@
                   break;
                 case "userTypedValue":
                 case "userTypedClear":
+                case "mediaBlocked":
                   getter = () => {
                     return SessionStore.getLazyTabValue(aTab, name);
                   };
