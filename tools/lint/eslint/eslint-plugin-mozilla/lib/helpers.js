@@ -520,26 +520,35 @@ module.exports = {
 
   /**
    * Gets the root directory of the repository by walking up directories from
-   * this file until a .eslintignore file is found.
+   * this file until a .eslintignore file is found. If this fails, the same
+   * procedure will be attempted from the current working dir.
    * @return {String} The absolute path of the repository directory
    */
   get rootDir() {
     if (!gRootDir) {
-      let dirName = path.dirname(module.filename);
-
-      while (true) {
-        const parsed = path.parse(dirName);
-        if (parsed.root === dirName) {
-          // We've reached the top of the filesystem
-          throw new Error("Unable to find root of repository");
+      function searchUpForIgnore(dirName) {
+        let parsed = path.parse(dirName);
+        while (parsed.root !== dirName) {
+          if (fs.existsSync(path.join(dirName, ".eslintignore"))) {
+            return dirName;
+          }
+          // Move up a level
+          dirName = parsed.dir;
+          parsed = path.parse(dirName);
         }
-        dirName = parsed.dir;
-        if (fs.existsSync(path.join(dirName, ".eslintignore"))) {
-          break;
+        return null;
+      }
+
+      let possibleRoot = searchUpForIgnore(path.dirname(module.filename));
+      if (!possibleRoot) {
+        possibleRoot = searchUpForIgnore(path.resolve());
+        if (!possibleRoot) {
+          // We've couldn't find a root from the module or CWD
+          throw new Error("Unable to find root of repository");
         }
       }
 
-      gRootDir = dirName;
+      gRootDir = possibleRoot;
     }
 
     return gRootDir;
