@@ -7,14 +7,13 @@ const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
 // Must run first.
 add_task(async function prepare() {
-  let suggestionsEnabled = Services.prefs.getBoolPref(SUGGEST_URLBAR_PREF);
   Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, true);
   let engine = await promiseNewSearchEngine(TEST_ENGINE_BASENAME);
   let oldCurrentEngine = Services.search.currentEngine;
   Services.search.currentEngine = engine;
 
   registerCleanupFunction(async function() {
-    Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, suggestionsEnabled);
+    Services.prefs.clearUserPref(SUGGEST_URLBAR_PREF);
     Services.search.currentEngine = oldCurrentEngine;
 
     // Clicking urlbar results causes visits to their associated pages, so clear

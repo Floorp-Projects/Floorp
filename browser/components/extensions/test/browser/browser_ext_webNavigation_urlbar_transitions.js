@@ -60,13 +60,12 @@ function addSearchEngine(basename) {
 
 async function prepareSearchEngine() {
   let oldCurrentEngine = Services.search.currentEngine;
-  let suggestionsEnabled = Services.prefs.getBoolPref(SUGGEST_URLBAR_PREF);
   Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, true);
   let engine = await addSearchEngine(TEST_ENGINE_BASENAME);
   Services.search.currentEngine = engine;
 
   registerCleanupFunction(async function() {
-    Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, suggestionsEnabled);
+    Services.prefs.clearUserPref(SUGGEST_URLBAR_PREF);
     Services.search.currentEngine = oldCurrentEngine;
 
     // Make sure the popup is closed for the next test.
