@@ -5606,9 +5606,9 @@
             return;
           }
 
-          if (!tab.hasAttribute("activemedia-blocked")) {
-            tab.setAttribute("activemedia-blocked", true);
-            this._tabAttrModified(tab, ["activemedia-blocked"]);
+          if (!tab.hasAttribute("blocked")) {
+            tab.setAttribute("blocked", true);
+            this._tabAttrModified(tab, ["blocked"]);
             tab.startMediaBlockTimer();
           }
         ]]>
@@ -5620,9 +5620,9 @@
             return;
           }
 
-          if (tab.hasAttribute("activemedia-blocked")) {
-            tab.removeAttribute("activemedia-blocked");
-            this._tabAttrModified(tab, ["activemedia-blocked"]);
+          if (tab.hasAttribute("blocked")) {
+            tab.removeAttribute("blocked");
+            this._tabAttrModified(tab, ["blocked"]);
             let hist = Services.telemetry.getHistogramById("TAB_AUDIO_INDICATOR_USED");
             hist.add(2 /* unblockByVisitingTab */);
             tab.finishMediaBlockTimer();
@@ -7132,7 +7132,7 @@
                      anonid="sharing-icon"
                      class="tab-sharing-icon-overlay"
                      role="presentation"/>
-          <xul:image xbl:inherits="crashed,busy,soundplaying,soundplaying-scheduledremoval,pinned,muted,selected=visuallyselected,activemedia-blocked"
+          <xul:image xbl:inherits="crashed,busy,soundplaying,soundplaying-scheduledremoval,pinned,muted,blocked,selected=visuallyselected"
                      anonid="overlay-icon"
                      class="tab-icon-overlay"
                      role="presentation"/>
@@ -7145,7 +7145,7 @@
                        xbl:inherits="xbl:text=label,accesskey,fadein,pinned,selected=visuallyselected,attention"
                        role="presentation"/>
           </xul:hbox>
-          <xul:image xbl:inherits="soundplaying,soundplaying-scheduledremoval,pinned,muted,selected=visuallyselected,activemedia-blocked"
+          <xul:image xbl:inherits="soundplaying,soundplaying-scheduledremoval,pinned,muted,blocked,selected=visuallyselected"
                      anonid="soundplaying-icon"
                      class="tab-icon-sound"
                      role="presentation"/>
@@ -7222,6 +7222,11 @@
           return this.getAttribute("muted") == "true";
         </getter>
       </property>
+      <property name="blocked" readonly="true">
+        <getter>
+          return this.getAttribute("blocked") == "true";
+        </getter>
+      </property>
       <!--
       Describes how the tab ended up in this mute state. May be any of:
 
@@ -7246,9 +7251,9 @@
         </getter>
       </property>
 
-      <property name="activeMediaBlocked" readonly="true">
+      <property name="soundBlocked" readonly="true">
         <getter>
-          return this.getAttribute("activemedia-blocked") == "true";
+          return this.getAttribute("blocked") == "true";
         </getter>
       </property>
 
@@ -7275,7 +7280,7 @@
         <getter><![CDATA[
           let iconVisible = this.hasAttribute("soundplaying") ||
                             this.hasAttribute("muted") ||
-                            this.hasAttribute("activemedia-blocked");
+                            this.hasAttribute("blocked");
           let soundPlayingIcon =
             document.getAnonymousElementByAttribute(this, "anonid", "soundplaying-icon");
           let overlayIcon =
@@ -7373,8 +7378,8 @@
           let hist = Services.telemetry.getHistogramById("TAB_AUDIO_INDICATOR_USED");
 
           if (browser.audioBlocked) {
-            this.removeAttribute("activemedia-blocked");
-            modifiedAttrs.push("activemedia-blocked");
+            this.removeAttribute("blocked");
+            modifiedAttrs.push("blocked");
 
             browser.resumeMedia();
             hist.add(3 /* unblockByClickingIcon */);
