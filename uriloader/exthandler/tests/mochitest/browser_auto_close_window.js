@@ -63,7 +63,7 @@ add_task(async function target_blank() {
   await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, function* (browser) {
     let dialogAppeared = promiseHelperAppDialog();
     let tabOpened = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabOpen").then((event) => {
-      return event.target;
+      return [ event.target, BrowserTestUtils.tabRemoved(event.target) ];
     });
 
     yield BrowserTestUtils.synthesizeMouseAtCenter("#target_blank", {}, browser);
@@ -71,7 +71,8 @@ add_task(async function target_blank() {
     let windowContext = yield dialogAppeared;
     is(windowContext.gBrowser.selectedBrowser.currentURI.spec, URL,
        "got the right windowContext");
-    let tab = yield tabOpened;
+    let [ tab, closed ] = yield tabOpened;
+    yield closed;
     is(tab.linkedBrowser, null, "tab was opened and closed");
   });
 });
@@ -91,7 +92,10 @@ add_task(async function new_window() {
     is(windowContext.gBrowser.selectedBrowser.currentURI.spec, URL,
        "got the right windowContext");
     let win = yield windowOpened;
-    is(win.closed, true, "window was opened and closed");
+
+    // The window should close on its own. If not, this test will time out.
+    yield BrowserTestUtils.domWindowClosed(win);
+    ok(win.closed, "window was opened and closed");
   });
 });
 
