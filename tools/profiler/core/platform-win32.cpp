@@ -38,15 +38,6 @@ Thread::GetCurrentId()
   return GetCurrentThreadId();
 }
 
-static void
-SleepMicro(int aMicroseconds)
-{
-  aMicroseconds = std::max(0, aMicroseconds);
-  int aMilliseconds = std::max(1, aMicroseconds / 1000);
-
-  ::Sleep(aMilliseconds);
-}
-
 class PlatformData
 {
 public:
@@ -153,6 +144,30 @@ SamplerThread::Stop(PSLockRef aLock)
   // calls.
   if (mIntervalMicroseconds < 10 * 1000) {
     ::timeEndPeriod(mIntervalMicroseconds / 1000);
+  }
+}
+
+void
+SamplerThread::SleepMicro(uint32_t aMicroseconds)
+{
+  // For now, keep the old behaviour of minimum Sleep(1), even for
+  // smaller-than-usual sleeps after an overshoot, unless the user has
+  // explicitly opted into a sub-millisecond profiler interval.
+  if (mIntervalMicroseconds >= 1000) {
+    ::Sleep(std::max(1u, aMicroseconds / 1000));
+  } else {
+    TimeStamp start = TimeStamp::Now();
+    TimeStamp end = start + TimeDuration::FromMicroseconds(aMicroseconds);
+
+    // First, sleep for as many whole milliseconds as possible.
+    if (aMicroseconds >= 1000) {
+      ::Sleep(aMicroseconds / 1000);
+    }
+
+    // Then, spin until enough time has passed.
+    while (TimeStamp::Now() < end) {
+      _mm_pause();
+    }
   }
 }
 

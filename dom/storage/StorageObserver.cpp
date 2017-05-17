@@ -6,8 +6,9 @@
 
 #include "StorageObserver.h"
 
+#include "LocalStorageCache.h"
 #include "StorageDBThread.h"
-#include "StorageCache.h"
+#include "StorageUtils.h"
 
 #include "mozilla/BasePrincipal.h"
 #include "nsIObserverService.h"
@@ -29,6 +30,8 @@
 namespace mozilla {
 namespace dom {
 
+using namespace StorageUtils;
+
 static const char kStartupTopic[] = "sessionstore-windows-restored";
 static const uint32_t kStartupDelay = 0;
 
@@ -39,9 +42,6 @@ NS_IMPL_ISUPPORTS(StorageObserver,
                   nsISupportsWeakReference)
 
 StorageObserver* StorageObserver::sSelf = nullptr;
-
-extern nsresult
-CreateReversedDomain(const nsACString& aAsciiDomain, nsACString& aKey);
 
 // static
 nsresult
@@ -176,7 +176,7 @@ StorageObserver::Observe(nsISupports* aSubject,
     if (timer == mDBThreadStartDelayTimer) {
       mDBThreadStartDelayTimer = nullptr;
 
-      StorageDBBridge* db = StorageCache::StartDatabase();
+      StorageDBBridge* db = LocalStorageCache::StartDatabase();
       NS_ENSURE_TRUE(db, NS_ERROR_FAILURE);
     }
 
@@ -189,7 +189,7 @@ StorageObserver::Observe(nsISupports* aSubject,
       return NS_OK;
     }
 
-    StorageDBBridge* db = StorageCache::StartDatabase();
+    StorageDBBridge* db = LocalStorageCache::StartDatabase();
     NS_ENSURE_TRUE(db, NS_ERROR_FAILURE);
 
     db->AsyncClearAll();
@@ -275,7 +275,7 @@ StorageObserver::Observe(nsISupports* aSubject,
     rv = CreateReversedDomain(aceDomain, originScope);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    StorageDBBridge* db = StorageCache::StartDatabase();
+    StorageDBBridge* db = LocalStorageCache::StartDatabase();
     NS_ENSURE_TRUE(db, NS_ERROR_FAILURE);
 
     db->AsyncClearMatchingOrigin(originScope);
@@ -300,7 +300,7 @@ StorageObserver::Observe(nsISupports* aSubject,
       return NS_ERROR_FAILURE;
     }
 
-    StorageDBBridge* db = StorageCache::StartDatabase();
+    StorageDBBridge* db = LocalStorageCache::StartDatabase();
     NS_ENSURE_TRUE(db, NS_ERROR_FAILURE);
 
     db->AsyncClearMatchingOriginAttributes(pattern);
@@ -318,7 +318,7 @@ StorageObserver::Observe(nsISupports* aSubject,
 
   if (!strcmp(aTopic, "profile-before-change") ||
       !strcmp(aTopic, "xpcom-shutdown")) {
-    rv = StorageCache::StopDatabase();
+    rv = LocalStorageCache::StopDatabase();
     if (NS_FAILED(rv)) {
       NS_WARNING("Error while stopping Storage DB background thread");
     }
@@ -338,7 +338,7 @@ StorageObserver::Observe(nsISupports* aSubject,
 
 #ifdef DOM_STORAGE_TESTS
   if (!strcmp(aTopic, "domstorage-test-flush-force")) {
-    StorageDBBridge* db = StorageCache::GetDatabase();
+    StorageDBBridge* db = LocalStorageCache::GetDatabase();
     if (db) {
       db->AsyncFlush();
     }

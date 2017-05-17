@@ -26,7 +26,7 @@ class mozIStorageConnection;
 namespace mozilla {
 namespace dom {
 
-class StorageCacheBridge;
+class LocalStorageCacheBridge;
 class StorageUsageBridge;
 class StorageUsage;
 
@@ -51,7 +51,8 @@ public:
   // one.  This method is responsible to keep hard reference to the cache for
   // the time of the preload or, when preload cannot be performed, call
   // LoadDone() immediately.
-  virtual void AsyncPreload(StorageCacheBridge* aCache, bool aPriority = false) = 0;
+  virtual void AsyncPreload(LocalStorageCacheBridge* aCache,
+                            bool aPriority = false) = 0;
 
   // Asynchronously fill the |usage| object with actual usage of data by its
   // scope.  The scope is eTLD+1 tops, never deeper subdomains.
@@ -59,29 +60,29 @@ public:
 
   // Synchronously fills the cache, when |aForceSync| is false and cache already
   // got some data before, the method waits for the running preload to finish
-  virtual void SyncPreload(StorageCacheBridge* aCache,
+  virtual void SyncPreload(LocalStorageCacheBridge* aCache,
                            bool aForceSync = false) = 0;
 
   // Called when an existing key is modified in the storage, schedules update to
   // the database
-  virtual nsresult AsyncAddItem(StorageCacheBridge* aCache,
+  virtual nsresult AsyncAddItem(LocalStorageCacheBridge* aCache,
                                 const nsAString& aKey,
                                 const nsAString& aValue) = 0;
 
   // Called when an existing key is modified in the storage, schedules update to
   // the database
-  virtual nsresult AsyncUpdateItem(StorageCacheBridge* aCache,
+  virtual nsresult AsyncUpdateItem(LocalStorageCacheBridge* aCache,
                                    const nsAString& aKey,
                                    const nsAString& aValue) = 0;
 
   // Called when an item is removed from the storage, schedules delete of the
   // key
-  virtual nsresult AsyncRemoveItem(StorageCacheBridge* aCache,
+  virtual nsresult AsyncRemoveItem(LocalStorageCacheBridge* aCache,
                                    const nsAString& aKey) = 0;
 
   // Called when the whole storage is cleared by the DOM API, schedules delete
   // of the scope
-  virtual nsresult AsyncClear(StorageCacheBridge* aCache) = 0;
+  virtual nsresult AsyncClear(LocalStorageCacheBridge* aCache) = 0;
 
   // Called when chrome deletes e.g. cookies, schedules delete of the whole
   // database
@@ -107,8 +108,8 @@ public:
 // The implementation of the the database engine, this directly works
 // with the sqlite or any other db API we are based on
 // This class is resposible for collecting and processing asynchronous 
-// DB operations over caches (StorageCache) communicating though 
-// StorageCacheBridge interface class
+// DB operations over caches (LocalStorageCache) communicating though 
+// LocalStorageCacheBridge interface class
 class StorageDBThread final : public StorageDBBridge
 {
 public:
@@ -148,7 +149,7 @@ public:
     } OperationType;
 
     explicit DBOperation(const OperationType aType,
-                         StorageCacheBridge* aCache = nullptr,
+                         LocalStorageCacheBridge* aCache = nullptr,
                          const nsAString& aKey = EmptyString(),
                          const nsAString& aValue = EmptyString());
     DBOperation(const OperationType aType,
@@ -194,7 +195,7 @@ public:
 
     friend class PendingOperations;
     OperationType mType;
-    RefPtr<StorageCacheBridge> mCache;
+    RefPtr<LocalStorageCacheBridge> mCache;
     RefPtr<StorageUsageBridge> mUsage;
     nsString const mKey;
     nsString const mValue;
@@ -293,7 +294,8 @@ public:
   virtual nsresult Init();
   virtual nsresult Shutdown();
 
-  virtual void AsyncPreload(StorageCacheBridge* aCache, bool aPriority = false)
+  virtual void AsyncPreload(LocalStorageCacheBridge* aCache,
+                            bool aPriority = false)
   {
     InsertDBOp(new DBOperation(aPriority
                                  ? DBOperation::opPreloadUrgent
@@ -301,14 +303,15 @@ public:
                                aCache));
   }
 
-  virtual void SyncPreload(StorageCacheBridge* aCache, bool aForce = false);
+  virtual void SyncPreload(LocalStorageCacheBridge* aCache,
+                           bool aForce = false);
 
   virtual void AsyncGetUsage(StorageUsageBridge* aUsage)
   {
     InsertDBOp(new DBOperation(DBOperation::opGetUsage, aUsage));
   }
 
-  virtual nsresult AsyncAddItem(StorageCacheBridge* aCache,
+  virtual nsresult AsyncAddItem(LocalStorageCacheBridge* aCache,
                                 const nsAString& aKey,
                                 const nsAString& aValue)
   {
@@ -316,7 +319,7 @@ public:
                                       aValue));
   }
 
-  virtual nsresult AsyncUpdateItem(StorageCacheBridge* aCache,
+  virtual nsresult AsyncUpdateItem(LocalStorageCacheBridge* aCache,
                                    const nsAString& aKey,
                                    const nsAString& aValue)
   {
@@ -324,13 +327,13 @@ public:
                                       aValue));
   }
 
-  virtual nsresult AsyncRemoveItem(StorageCacheBridge* aCache,
+  virtual nsresult AsyncRemoveItem(LocalStorageCacheBridge* aCache,
                                    const nsAString& aKey)
   {
     return InsertDBOp(new DBOperation(DBOperation::opRemoveItem, aCache, aKey));
   }
 
-  virtual nsresult AsyncClear(StorageCacheBridge* aCache)
+  virtual nsresult AsyncClear(LocalStorageCacheBridge* aCache)
   {
     return InsertDBOp(new DBOperation(DBOperation::opClear, aCache));
   }
