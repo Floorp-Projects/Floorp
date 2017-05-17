@@ -32,9 +32,22 @@ public:
 
   Storage(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal);
 
+  enum StorageType {
+    eSessionStorage,
+    eLocalStorage,
+  };
+
+  virtual StorageType Type() const = 0;
+
   virtual int64_t GetOriginQuotaUsage() const = 0;
 
   virtual bool CanAccess(nsIPrincipal* aPrincipal);
+
+  nsIPrincipal*
+  Principal() const
+  {
+    return mPrincipal;
+  }
 
   // WebIDL
   JSObject* WrapObject(JSContext* aCx,
@@ -98,12 +111,6 @@ public:
 
 protected:
   virtual ~Storage();
-
-  nsIPrincipal*
-  Principal() const
-  {
-    return mPrincipal;
-  }
 
 private:
   nsCOMPtr<nsPIDOMWindowInner> mWindow;

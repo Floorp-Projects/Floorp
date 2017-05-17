@@ -155,12 +155,6 @@ private:
   static DOMLocalStorageManager* sSelf;
 };
 
-class DOMSessionStorageManager final : public StorageManagerBase
-{
-public:
-  DOMSessionStorageManager();
-};
-
 } // namespace dom
 } // namespace mozilla
 

@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SessionStorage.h"
+#include "SessionStorageManager.h"
 #include "StorageManager.h"
 
 #include "mozilla/dom/StorageBinding.h"
@@ -20,17 +21,40 @@ namespace dom {
 // SessionStorage
 // ----------------------------------------------------------------------------
 
+NS_IMPL_CYCLE_COLLECTION_INHERITED(SessionStorage, Storage, mManager);
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SessionStorage)
+NS_INTERFACE_MAP_END_INHERITING(Storage)
+
+NS_IMPL_ADDREF_INHERITED(SessionStorage, Storage)
+NS_IMPL_RELEASE_INHERITED(SessionStorage, Storage)
+
 SessionStorage::SessionStorage(nsPIDOMWindowInner* aWindow,
                                nsIPrincipal* aPrincipal,
-                               SessionStorageCache* aCache)
+                               SessionStorageCache* aCache,
+                               SessionStorageManager* aManager,
+                               const nsAString& aDocumentURI,
+                               bool aIsPrivate)
   : Storage(aWindow, aPrincipal)
   , mCache(aCache)
+  , mManager(aManager)
+  , mDocumentURI(aDocumentURI)
+  , mIsPrivate(aIsPrivate)
 {
   MOZ_ASSERT(aCache);
 }
 
 SessionStorage::~SessionStorage()
 {
+}
+
+already_AddRefed<SessionStorage>
+SessionStorage::Clone() const
+{
+  RefPtr<SessionStorage> storage =
+    new SessionStorage(GetParentObject(), Principal(), mCache, mManager,
+                       mDocumentURI, mIsPrivate);
+  return storage.forget();
 }
 
 int64_t
@@ -279,6 +303,19 @@ SessionStorageCache::ProcessUsageDelta(int64_t aDelta)
   // Update size in our data set
   mOriginQuotaUsage = newOriginUsage;
   return true;
+}
+
+already_AddRefed<SessionStorageCache>
+SessionStorageCache::Clone() const
+{
+  RefPtr<SessionStorageCache> cache = new SessionStorageCache();
+  cache->mOriginQuotaUsage = mOriginQuotaUsage;
+
+  for (auto iter = mKeys.ConstIter(); !iter.Done(); iter.Next()) {
+    cache->mKeys.Put(iter.Key(), iter.Data());
+  }
+
+  return cache.forget();
 }
 
 } // dom namespace

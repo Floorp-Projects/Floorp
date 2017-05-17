@@ -24,12 +24,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(LocalStorage, Storage)
 
-  enum StorageType {
-    eLocalStorage = 1,
-    eSessionStorage = 2
-  };
-
-  StorageType GetType() const;
+  StorageType Type() const override { return eLocalStorage; }
 
   StorageManagerBase* GetManager() const
   {

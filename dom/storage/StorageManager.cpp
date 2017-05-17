@@ -648,17 +648,5 @@ DOMLocalStorageManager::Ensure()
   return sSelf;
 }
 
-// DOMSessionStorageManager
-
-DOMSessionStorageManager::DOMSessionStorageManager()
-  : StorageManagerBase(eSessionStorage)
-{
-  if (!XRE_IsParentProcess()) {
-    // Do this only on the child process.  The thread IPC bridge
-    // is also used to communicate chrome observer notifications.
-    StorageCache::StartDatabase();
-  }
-}
-
 } // namespace dom
 } // namespace mozilla
