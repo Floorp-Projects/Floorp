@@ -62,7 +62,6 @@ DevToolsModules(
     'webbrowser.js',
     'webconsole.js',
     'webextension-inspected-window.js',
-    'webextension-parent.js',
     'webextension.js',
     'webgl.js',
     'window.js',
