@@ -10,6 +10,18 @@
 <!ENTITY aboutUrlClassifier.providerNextUpdateTime      "Next update time">
 <!ENTITY aboutUrlClassifier.providerLastUpdateStatus    "Last update status">
 <!ENTITY aboutUrlClassifier.providerUpdateBtn           "Update">
+<!ENTITY aboutUrlClassifier.cacheTitle                  "Cache">
+<!ENTITY aboutUrlClassifier.cacheRefreshBtn             "Refresh">
+<!ENTITY aboutUrlClassifier.cacheClearBtn               "Clear">
+<!ENTITY aboutUrlClassifier.cacheTableName              "Table name">
+<!ENTITY aboutUrlClassifier.cacheNCacheEntries          "Number of negative cache entries">
+<!ENTITY aboutUrlClassifier.cachePCacheEntries          "Number of positive cache entries">
+<!ENTITY aboutUrlClassifier.cacheShowEntries            "Show entries">
+<!ENTITY aboutUrlClassifier.cacheEntries                "Cache Entries">
+<!ENTITY aboutUrlClassifier.cachePrefix                 "Prefix">
+<!ENTITY aboutUrlClassifier.cacheNCacheExpiry           "Negative cache expiry">
+<!ENTITY aboutUrlClassifier.cacheFullhash               "Full hash">
+<!ENTITY aboutUrlClassifier.cachePCacheExpiry           "Positive cache expiry">
 <!ENTITY aboutUrlClassifier.lookupTitle                 "Lookup">
 <!ENTITY aboutUrlClassifier.lookupUrl                   "Url">
 <!ENTITY aboutUrlClassifier.lookupMatch                 "Match">

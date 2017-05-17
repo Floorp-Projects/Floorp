@@ -18,7 +18,8 @@ SetupCacheEntry(LookupCacheV2* aLookupCache,
   MissPrefixArray misses;
   MissPrefixArray emptyMisses;
 
-  nsCOMPtr<nsICryptoHash> cryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID);
+  nsCOMPtr<nsICryptoHash> cryptoHash =
+    do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID);
 
   AddComplete* add = completes.AppendElement(fallible);
   add->complete.FromPlaintext(aCompletion, cryptoHash);
@@ -26,11 +27,13 @@ SetupCacheEntry(LookupCacheV2* aLookupCache,
   Prefix* prefix = misses.AppendElement(fallible);
   prefix->FromPlaintext(aCompletion, cryptoHash);
 
-  int64_t negExpirySec = aNegExpired ? EXPIRED_TIME_SEC : NOTEXPIRED_TIME_SEC;
-  aLookupCache->AddGethashResultToCache(emptyCompletes, misses, negExpirySec);
-
+  // Setup positive cache first otherwise negative cache expiry will be
+  // overwritten.
   int64_t posExpirySec = aPosExpired ? EXPIRED_TIME_SEC : NOTEXPIRED_TIME_SEC;
   aLookupCache->AddGethashResultToCache(completes, emptyMisses, posExpirySec);
+
+  int64_t negExpirySec = aNegExpired ? EXPIRED_TIME_SEC : NOTEXPIRED_TIME_SEC;
+  aLookupCache->AddGethashResultToCache(emptyCompletes, misses, negExpirySec);
 }
 
 static void
@@ -42,12 +45,14 @@ SetupCacheEntry(LookupCacheV4* aLookupCache,
   FullHashResponseMap map;
 
   Prefix prefix;
-  nsCOMPtr<nsICryptoHash> cryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID);
+  nsCOMPtr<nsICryptoHash> cryptoHash =
+    do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID);
   prefix.FromPlaintext(aCompletion, cryptoHash);
 
   CachedFullHashResponse* response = map.LookupOrAdd(prefix.ToUint32());
 
-  response->negativeCacheExpirySec = aNegExpired ? EXPIRED_TIME_SEC : NOTEXPIRED_TIME_SEC;
+  response->negativeCacheExpirySec =
+    aNegExpired ? EXPIRED_TIME_SEC : NOTEXPIRED_TIME_SEC;
   response->fullHashes.Put(GeneratePrefix(aCompletion, COMPLETE_SIZE),
                            aPosExpired ? EXPIRED_TIME_SEC : NOTEXPIRED_TIME_SEC);
 

@@ -6,11 +6,13 @@
 #include "LookupCache.h"
 #include "HashStore.h"
 #include "nsISeekableStream.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Logging.h"
 #include "nsNetUtil.h"
 #include "prprf.h"
 #include "Classifier.h"
+#include "nsUrlClassifierInfo.h"
 
 // We act as the main entry point for all the real lookups,
 // so note that those are not done to the actual HashStore.
@@ -46,6 +48,22 @@ const int CacheResultV2::VER = CacheResult::V2;
 const int CacheResultV4::VER = CacheResult::V4;
 
 const int LookupCacheV2::VER = 2;
+
+static
+void CStringToHexString(const nsACString& aIn, nsACString& aOut)
+{
+  static const char* const lut = "0123456789ABCDEF";
+
+  size_t len = aIn.Length();
+  MOZ_ASSERT(len <= COMPLETE_SIZE);
+
+  aOut.SetCapacity(2 * len);
+  for (size_t i = 0; i < aIn.Length(); ++i) {
+    const char c = static_cast<const char>(aIn[i]);
+    aOut.Append(lut[(c >> 4) & 0x0F]);
+    aOut.Append(lut[c & 15]);
+  }
+}
 
 LookupCache::LookupCache(const nsACString& aTableName,
                          const nsACString& aProvider,
@@ -211,6 +229,49 @@ LookupCache::ClearAll()
   ClearCache();
   ClearPrefixes();
   mPrimed = false;
+}
+
+void
+LookupCache::GetCacheInfo(nsIUrlClassifierCacheInfo** aCache)
+{
+  MOZ_ASSERT(aCache);
+
+  RefPtr<nsUrlClassifierCacheInfo> info = new nsUrlClassifierCacheInfo;
+  info->table = mTableName;
+
+  for (auto iter = mCache.ConstIter(); !iter.Done(); iter.Next()) {
+    RefPtr<nsUrlClassifierCacheEntry> entry = new nsUrlClassifierCacheEntry;
+
+    // Set prefix of the cache entry.
+    nsAutoCString prefix(reinterpret_cast<const char*>(&iter.Key()), PREFIX_SIZE);
+    CStringToHexString(prefix, entry->prefix);
+
+    // Set expiry of the cache entry.
+    CachedFullHashResponse* response = iter.Data();
+    entry->expirySec = response->negativeCacheExpirySec;
+
+    // Set positive cache.
+    FullHashExpiryCache& fullHashes = response->fullHashes;
+    for (auto iter2 = fullHashes.ConstIter(); !iter2.Done(); iter2.Next()) {
+      RefPtr<nsUrlClassifierPositiveCacheEntry> match =
+        new nsUrlClassifierPositiveCacheEntry;
+
+      // Set fullhash of positive cache entry.
+      CStringToHexString(iter2.Key(), match->fullhash);
+
+      // Set expiry of positive cache entry.
+      match->expirySec = iter2.Data();
+
+      entry->matches.AppendElement(
+        static_cast<nsIUrlClassifierPositiveCacheEntry*>(match));
+    }
+
+    info->entries.AppendElement(static_cast<nsIUrlClassifierCacheEntry*>(entry));
+  }
+
+  NS_ADDREF(*aCache = info);
+
+  return;
 }
 
 /* static */ bool
@@ -426,21 +487,6 @@ LookupCache::LoadPrefixSet()
 
 #if defined(DEBUG)
 static
-void CStringToHexString(const nsACString& aIn, nsACString& aOut)
-{
-  static const char* const lut = "0123456789ABCDEF";
-  // 32 bytes is the longest hash
-  size_t len = COMPLETE_SIZE;
-
-  aOut.SetCapacity(2 * len);
-  for (size_t i = 0; i < aIn.Length(); ++i) {
-    const char c = static_cast<const char>(aIn[i]);
-    aOut.Append(lut[(c >> 4) & 0x0F]);
-    aOut.Append(lut[c & 15]);
-  }
-}
-
-static
 nsCString GetFormattedTimeString(int64_t aCurTimeSec)
 {
   PRExplodedTime pret;
@@ -461,16 +507,19 @@ LookupCache::DumpCache()
 
   for (auto iter = mCache.ConstIter(); !iter.Done(); iter.Next()) {
     CachedFullHashResponse* response = iter.Data();
-    LOG(("Caches prefix: %X, Expire time: %s",
-         iter.Key(),
-         GetFormattedTimeString(response->negativeCacheExpirySec).get()));
+
+    nsAutoCString prefix;
+    CStringToHexString(
+      nsCString(reinterpret_cast<const char*>(&iter.Key()), PREFIX_SIZE), prefix);
+    LOG(("Cache prefix(%s): %s, Expiry: %s", mTableName.get(), prefix.get(),
+          GetFormattedTimeString(response->negativeCacheExpirySec).get()));
 
     FullHashExpiryCache& fullHashes = response->fullHashes;
     for (auto iter2 = fullHashes.ConstIter(); !iter2.Done(); iter2.Next()) {
-      nsAutoCString strFullhash;
-      CStringToHexString(iter2.Key(), strFullhash);
-      LOG(("  - %s, Expire time: %s", strFullhash.get(),
-           GetFormattedTimeString(iter2.Data()).get()));
+      nsAutoCString fullhash;
+      CStringToHexString(iter2.Key(), fullhash);
+      LOG(("  - %s, Expiry: %s", fullhash.get(),
+            GetFormattedTimeString(iter2.Data()).get()));
     }
   }
 }
@@ -601,18 +650,14 @@ LookupCacheV2::AddGethashResultToCache(AddCompleteArray& aAddCompletes,
       reinterpret_cast<const char*>(add.CompleteHash().buf), COMPLETE_SIZE);
 
     CachedFullHashResponse* response = mCache.LookupOrAdd(add.ToUint32());
-    // Set negative cache expiry to the same value as positive cache
-    // expiry when the gethash request returns a complete match.
-    if (response->negativeCacheExpirySec == 0) {
-      response->negativeCacheExpirySec = defaultExpirySec;
-    }
+    response->negativeCacheExpirySec = defaultExpirySec;
+
     FullHashExpiryCache& fullHashes = response->fullHashes;
     fullHashes.Put(fullhash, defaultExpirySec);
   }
 
   for (const Prefix& prefix : aMissPrefixes) {
     CachedFullHashResponse* response = mCache.LookupOrAdd(prefix.ToUint32());
-
     response->negativeCacheExpirySec = defaultExpirySec;
   }
 }
