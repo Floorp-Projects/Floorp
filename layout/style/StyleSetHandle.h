@@ -24,6 +24,7 @@ namespace dom {
 class Element;
 } // namespace dom
 } // namespace mozilla
+class nsCSSCounterStyleRule;
 struct nsFontFaceRuleContainer;
 class nsIAtom;
 class nsIContent;
@@ -174,6 +175,7 @@ public:
     inline void RootStyleContextRemoved();
 
     inline bool AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray);
+    inline nsCSSCounterStyleRule* CounterStyleRuleForName(nsIAtom* aName);
 
   private:
     // Stores a pointer to an nsStyleSet or a ServoStyleSet.  The least

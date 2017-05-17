@@ -51,6 +51,7 @@ namespace mozilla {
 using mozilla::FontFamilyList;
 using mozilla::FontFamilyType;
 using mozilla::ServoElementSnapshot;
+class nsCSSCounterStyleRule;
 class nsCSSFontFaceRule;
 struct nsMediaFeature;
 struct nsStyleList;
@@ -270,7 +271,7 @@ void Gecko_CopyImageOrientationFrom(nsStyleVisibility* aDst,
                                     const nsStyleVisibility* aSrc);
 
 // Counter style.
-void Gecko_SetListStyleType(nsStyleList* style_struct, uint32_t type);
+void Gecko_SetListStyleType(nsStyleList* style_struct, nsIAtom* name);
 void Gecko_CopyListStyleTypeFrom(nsStyleList* dst, const nsStyleList* src);
 
 // background-image style.
@@ -470,7 +471,6 @@ float Gecko_CSSValue_GetPercentage(nsCSSValueBorrowed css_value);
 nsStyleCoord::CalcValue Gecko_CSSValue_GetCalc(nsCSSValueBorrowed aCSSValue);
 
 void Gecko_CSSValue_SetAbsoluteLength(nsCSSValueBorrowedMut css_value, nscoord len);
-void Gecko_CSSValue_SetNormal(nsCSSValueBorrowedMut css_value);
 void Gecko_CSSValue_SetNumber(nsCSSValueBorrowedMut css_value, float number);
 void Gecko_CSSValue_SetKeyword(nsCSSValueBorrowedMut css_value, nsCSSKeyword keyword);
 void Gecko_CSSValue_SetPercentage(nsCSSValueBorrowedMut css_value, float percent);
@@ -485,6 +485,10 @@ void Gecko_CSSValue_SetAtomIdent(nsCSSValueBorrowedMut css_value, nsIAtom* atom)
 void Gecko_CSSValue_SetArray(nsCSSValueBorrowedMut css_value, int32_t len);
 void Gecko_CSSValue_SetURL(nsCSSValueBorrowedMut css_value, ServoBundledURI uri);
 void Gecko_CSSValue_SetInt(nsCSSValueBorrowedMut css_value, int32_t integer, nsCSSUnit unit);
+void Gecko_CSSValue_SetPair(nsCSSValueBorrowedMut css_value,
+                            nsCSSValueBorrowed xvalue, nsCSSValueBorrowed yvalue);
+void Gecko_CSSValue_SetList(nsCSSValueBorrowedMut css_value, uint32_t len);
+void Gecko_CSSValue_SetPairList(nsCSSValueBorrowedMut css_value, uint32_t len);
 void Gecko_CSSValue_Drop(nsCSSValueBorrowedMut css_value);
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsCSSValueSharedList, CSSValueSharedList);
 bool Gecko_PropertyId_IsPrefEnabled(nsCSSPropertyID id);
@@ -519,6 +523,12 @@ const char* Gecko_CSSKeywordString(nsCSSKeyword keyword, uint32_t* len);
 nsCSSFontFaceRule* Gecko_CSSFontFaceRule_Create(uint32_t line, uint32_t column);
 void Gecko_CSSFontFaceRule_GetCssText(const nsCSSFontFaceRule* rule, nsAString* result);
 NS_DECL_FFI_REFCOUNTING(nsCSSFontFaceRule, CSSFontFaceRule);
+
+// Counter style rule
+// Creates and returns a new (already-addrefed) nsCSSCounterStyleRule object.
+nsCSSCounterStyleRule* Gecko_CSSCounterStyle_Create(nsIAtom* name);
+void Gecko_CSSCounterStyle_GetCssText(const nsCSSCounterStyleRule* rule, nsAString* result);
+NS_DECL_FFI_REFCOUNTING(nsCSSCounterStyleRule, CSSCounterStyleRule);
 
 RawGeckoElementBorrowedOrNull Gecko_GetBody(RawGeckoPresContextBorrowed pres_context);
 

@@ -30,6 +30,7 @@
 #include "mozilla/css/ImportRule.h"
 #include "mozilla/css/URLMatchingFunction.h"
 #include "nsCSSRules.h"
+#include "nsCSSCounterStyleRule.h"
 #include "nsCSSFontFaceRule.h"
 #include "mozilla/css/NameSpaceRule.h"
 #include "nsTArray.h"
@@ -15075,17 +15076,14 @@ CSSParserImpl::ParseFontRanges(nsCSSValue& aValue)
     uint32_t low = mToken.mInteger;
     uint32_t high = mToken.mInteger2;
 
-    // A range that descends, or a range that is entirely outside the
-    // current range of Unicode (U+0-10FFFF) is ignored, but does not
-    // invalidate the descriptor.  A range that straddles the high end
-    // is clipped.
-    if (low <= 0x10FFFF && low <= high) {
-      if (high > 0x10FFFF)
-        high = 0x10FFFF;
-
-      ranges.AppendElement(low);
-      ranges.AppendElement(high);
+    // A range that descends, or high end exceeds the current range of
+    // Unicode (U+0-10FFFF) invalidates the descriptor.
+    if (low > high || high > 0x10FFFF) {
+      return false;
     }
+    ranges.AppendElement(low);
+    ranges.AppendElement(high);
+
     if (!ExpectSymbol(',', true))
       break;
   }
