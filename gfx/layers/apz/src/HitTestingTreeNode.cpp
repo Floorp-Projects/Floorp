@@ -247,15 +247,10 @@ HitTestingTreeNode::IsOutsideClip(const ParentLayerPoint& aPoint) const
 }
 
 Maybe<LayerPoint>
-HitTestingTreeNode::Untransform(const ParentLayerPoint& aPoint) const
+HitTestingTreeNode::Untransform(const ParentLayerPoint& aPoint,
+                                const LayerToParentLayerMatrix4x4& aTransform) const
 {
-  // convert into Layer coordinate space
-  LayerToParentLayerMatrix4x4 transform = mTransform *
-      CompleteAsyncTransform(
-        mApzc
-      ? mApzc->GetCurrentAsyncTransformWithOverscroll(AsyncPanZoomController::NORMAL)
-      : AsyncTransformComponentMatrix());
-  Maybe<ParentLayerToLayerMatrix4x4> inverse = transform.MaybeInverse();
+  Maybe<ParentLayerToLayerMatrix4x4> inverse = aTransform.MaybeInverse();
   if (inverse) {
     return UntransformBy(inverse.ref(), aPoint);
   }
@@ -301,6 +296,12 @@ EventRegionsOverride
 HitTestingTreeNode::GetEventRegionsOverride() const
 {
   return mOverride;
+}
+
+const CSSTransformMatrix&
+HitTestingTreeNode::GetTransform() const
+{
+  return mTransform;
 }
 
 void
