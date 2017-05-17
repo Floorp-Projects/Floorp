@@ -1307,8 +1307,9 @@ nsIFrame::GetMarginRectRelativeToSelf() const
 bool
 nsIFrame::IsTransformed(const nsStyleDisplay* aStyleDisplay) const
 {
+  MOZ_ASSERT(aStyleDisplay == StyleDisplay());
   return ((mState & NS_FRAME_MAY_BE_TRANSFORMED) &&
-          (StyleDisplayWithOptionalParam(aStyleDisplay)->HasTransform(this) ||
+          (aStyleDisplay->HasTransform(this) ||
            IsSVGTransformed() ||
            HasAnimationOfTransform()));
 }
@@ -1367,11 +1368,11 @@ nsIFrame::Extend3DContext(const nsStyleDisplay* aStyleDisplay) const
 bool
 nsIFrame::Combines3DTransformWithAncestors(const nsStyleDisplay* aStyleDisplay) const
 {
+  MOZ_ASSERT(aStyleDisplay == StyleDisplay());
   if (!GetParent() || !GetParent()->Extend3DContext()) {
     return false;
   }
-  const nsStyleDisplay* disp = StyleDisplayWithOptionalParam(aStyleDisplay);
-  return IsTransformed(disp) || BackfaceIsHidden(disp);
+  return IsTransformed(aStyleDisplay) || BackfaceIsHidden(aStyleDisplay);
 }
 
 bool
@@ -1386,22 +1387,15 @@ nsIFrame::In3DContextAndBackfaceIsHidden() const
 bool
 nsIFrame::HasPerspective(const nsStyleDisplay* aStyleDisplay) const
 {
-  const nsStyleDisplay* disp = StyleDisplayWithOptionalParam(aStyleDisplay);
-  if (!IsTransformed(disp)) {
+  MOZ_ASSERT(aStyleDisplay == StyleDisplay());
+  if (!IsTransformed(aStyleDisplay)) {
     return false;
   }
-  nsIFrame* containingBlock = GetContainingBlock(SKIP_SCROLLED_FRAME, disp);
+  nsIFrame* containingBlock = GetContainingBlock(SKIP_SCROLLED_FRAME, aStyleDisplay);
   if (!containingBlock) {
     return false;
   }
   return containingBlock->ChildrenHavePerspective();
-}
-
-bool
-nsIFrame::ChildrenHavePerspective(const nsStyleDisplay* aStyleDisplay) const
-{
-  const nsStyleDisplay* disp = StyleDisplayWithOptionalParam(aStyleDisplay);
-  return disp->HasPerspectiveStyle();
 }
 
 nsRect
@@ -7019,6 +7013,7 @@ nsIFrame*
 nsIFrame::GetContainingBlock(uint32_t aFlags,
                              const nsStyleDisplay* aStyleDisplay) const
 {
+  MOZ_ASSERT(aStyleDisplay == StyleDisplay());
   if (!GetParent()) {
     return nullptr;
   }
