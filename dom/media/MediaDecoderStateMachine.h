@@ -423,11 +423,6 @@ protected:
   // decode thread.
   void DecodeError(const MediaResult& aError);
 
-  // Dispatches a LoadedMetadataEvent.
-  // This is threadsafe and can be called on any thread.
-  // The decoder monitor must be held.
-  void EnqueueLoadedMetadataEvent();
-
   void EnqueueFirstFrameLoadedEvent();
 
   // Start a task to decode audio.
@@ -639,10 +634,6 @@ private:
   nsAutoPtr<MetadataTags> mMetadataTags;
 
   mozilla::MediaMetadataManager mMetadataManager;
-
-  // True if we are back from DECODER_STATE_DORMANT state and
-  // LoadedMetadataEvent was already sent.
-  bool mSentLoadedMetadataEvent;
 
   // True if we've decoded first frames (thus having the start time) and
   // notified the FirstFrameLoaded event. Note we can't initiate seek until the
