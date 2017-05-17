@@ -429,3 +429,6 @@ include ../../dom/encoding/test/reftest/reftest.list
 
 # APZ/async positioning tests
 include ../../gfx/layers/apz/test/reftest/reftest.list
+
+# Media
+include ../../dom/media/test/reftest/reftest.list
