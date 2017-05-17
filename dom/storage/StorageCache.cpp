@@ -48,7 +48,7 @@ GetDataSetIndex(bool aPrivate, bool aSessionOnly)
 }
 
 inline uint32_t
-GetDataSetIndex(const Storage* aStorage)
+GetDataSetIndex(const LocalStorage* aStorage)
 {
   return GetDataSetIndex(aStorage->IsPrivate(), aStorage->IsSessionOnly());
 }
@@ -156,7 +156,7 @@ StorageCache::Init(StorageManagerBase* aManager,
 }
 
 inline bool
-StorageCache::Persist(const Storage* aStorage) const
+StorageCache::Persist(const LocalStorage* aStorage) const
 {
   return mPersistent &&
          !aStorage->IsSessionOnly() &&
@@ -170,7 +170,7 @@ StorageCache::Origin() const
 }
 
 StorageCache::Data&
-StorageCache::DataSet(const Storage* aStorage)
+StorageCache::DataSet(const LocalStorage* aStorage)
 {
   uint32_t index = GetDataSetIndex(aStorage);
 
@@ -198,7 +198,7 @@ StorageCache::DataSet(const Storage* aStorage)
 }
 
 bool
-StorageCache::ProcessUsageDelta(const Storage* aStorage, int64_t aDelta,
+StorageCache::ProcessUsageDelta(const LocalStorage* aStorage, int64_t aDelta,
                                 const MutationSource aSource)
 {
   return ProcessUsageDelta(GetDataSetIndex(aStorage), aDelta, aSource);
@@ -310,7 +310,7 @@ StorageCache::WaitForPreload(Telemetry::HistogramID aTelemetryID)
 }
 
 nsresult
-StorageCache::GetLength(const Storage* aStorage, uint32_t* aRetval)
+StorageCache::GetLength(const LocalStorage* aStorage, uint32_t* aRetval)
 {
   if (Persist(aStorage)) {
     WaitForPreload(Telemetry::LOCALDOMSTORAGE_GETLENGTH_BLOCKING_MS);
@@ -324,7 +324,7 @@ StorageCache::GetLength(const Storage* aStorage, uint32_t* aRetval)
 }
 
 nsresult
-StorageCache::GetKey(const Storage* aStorage, uint32_t aIndex,
+StorageCache::GetKey(const LocalStorage* aStorage, uint32_t aIndex,
                      nsAString& aRetval)
 {
   // XXX: This does a linear search for the key at index, which would
@@ -351,7 +351,7 @@ StorageCache::GetKey(const Storage* aStorage, uint32_t aIndex,
 }
 
 void
-StorageCache::GetKeys(const Storage* aStorage, nsTArray<nsString>& aKeys)
+StorageCache::GetKeys(const LocalStorage* aStorage, nsTArray<nsString>& aKeys)
 {
   if (Persist(aStorage)) {
     WaitForPreload(Telemetry::LOCALDOMSTORAGE_GETALLKEYS_BLOCKING_MS);
@@ -367,7 +367,7 @@ StorageCache::GetKeys(const Storage* aStorage, nsTArray<nsString>& aKeys)
 }
 
 nsresult
-StorageCache::GetItem(const Storage* aStorage, const nsAString& aKey,
+StorageCache::GetItem(const LocalStorage* aStorage, const nsAString& aKey,
                       nsAString& aRetval)
 {
   if (Persist(aStorage)) {
@@ -389,7 +389,7 @@ StorageCache::GetItem(const Storage* aStorage, const nsAString& aKey,
 }
 
 nsresult
-StorageCache::SetItem(const Storage* aStorage, const nsAString& aKey,
+StorageCache::SetItem(const LocalStorage* aStorage, const nsAString& aKey,
                       const nsString& aValue, nsString& aOld,
                       const MutationSource aSource)
 {
@@ -442,7 +442,7 @@ StorageCache::SetItem(const Storage* aStorage, const nsAString& aKey,
 }
 
 nsresult
-StorageCache::RemoveItem(const Storage* aStorage, const nsAString& aKey,
+StorageCache::RemoveItem(const LocalStorage* aStorage, const nsAString& aKey,
                          nsString& aOld, const MutationSource aSource)
 {
   if (Persist(aStorage)) {
@@ -478,7 +478,7 @@ StorageCache::RemoveItem(const Storage* aStorage, const nsAString& aKey,
 }
 
 nsresult
-StorageCache::Clear(const Storage* aStorage, const MutationSource aSource)
+StorageCache::Clear(const LocalStorage* aStorage, const MutationSource aSource)
 {
   bool refresh = false;
   if (Persist(aStorage)) {
@@ -541,7 +541,7 @@ StorageCache::CloneFrom(const StorageCache* aThat)
 }
 
 int64_t
-StorageCache::GetOriginQuotaUsage(const Storage* aStorage) const
+StorageCache::GetOriginQuotaUsage(const LocalStorage* aStorage) const
 {
   return mData[GetDataSetIndex(aStorage)].mOriginQuotaUsage;
 }

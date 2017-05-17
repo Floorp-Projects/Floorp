@@ -24,8 +24,8 @@ class OriginAttributesPattern;
 
 namespace dom {
 
-const Storage::StorageType SessionStorage = Storage::SessionStorage;
-const Storage::StorageType LocalStorage = Storage::LocalStorage;
+const LocalStorage::StorageType eSessionStorage = LocalStorage::eSessionStorage;
+const LocalStorage::StorageType eLocalStorage = LocalStorage::eLocalStorage;
 
 class StorageManagerBase : public nsIDOMStorageManager
                          , public StorageObserverSink
@@ -34,7 +34,7 @@ class StorageManagerBase : public nsIDOMStorageManager
   NS_DECL_NSIDOMSTORAGEMANAGER
 
 public:
-  virtual Storage::StorageType Type() { return mType; }
+  virtual LocalStorage::StorageType Type() { return mType; }
 
   // Reads the preference for DOM storage quota
   static uint32_t GetQuota();
@@ -48,7 +48,7 @@ public:
                                 const nsACString& aOriginNoSuffix);
 
 protected:
-  explicit StorageManagerBase(Storage::StorageType aType);
+  explicit StorageManagerBase(LocalStorage::StorageType aType);
   virtual ~StorageManagerBase();
 
 private:
@@ -111,7 +111,7 @@ private:
   typedef nsTHashtable<StorageCacheHashKey> CacheOriginHashtable;
   nsClassHashtable<nsCStringHashKey, CacheOriginHashtable> mCaches;
 
-  const Storage::StorageType mType;
+  const LocalStorage::StorageType mType;
 
   // If mLowDiskSpace is true it indicates a low device storage situation and
   // so no localStorage writes are allowed. sessionStorage writes are still

@@ -33,7 +33,7 @@ using namespace ipc;
 
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Storage, mManager, mPrincipal, mWindow)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Storage, mWindow, mPrincipal)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Storage)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Storage)
@@ -42,28 +42,22 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Storage)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMStorage)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorage)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
-Storage::Storage(nsPIDOMWindowInner* aWindow,
-                 StorageManagerBase* aManager,
-                 StorageCache* aCache,
-                 const nsAString& aDocumentURI,
-                 nsIPrincipal* aPrincipal,
-                 bool aIsPrivate)
+Storage::Storage(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal)
   : mWindow(aWindow)
-  , mManager(aManager)
-  , mCache(aCache)
-  , mDocumentURI(aDocumentURI)
   , mPrincipal(aPrincipal)
-  , mIsPrivate(aIsPrivate)
-  , mIsSessionOnly(false)
 {
-  mCache->Preload();
+  MOZ_ASSERT(aPrincipal);
 }
 
 Storage::~Storage()
+{}
+
+bool
+Storage::CanAccess(nsIPrincipal* aPrincipal)
 {
+  return !aPrincipal || aPrincipal->Subsumes(mPrincipal);
 }
 
 /* virtual */ JSObject*
@@ -72,15 +66,44 @@ Storage::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return StorageBinding::Wrap(aCx, this, aGivenProto);
 }
 
+NS_IMPL_CYCLE_COLLECTION_INHERITED(LocalStorage, Storage, mManager);
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(LocalStorage)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+NS_INTERFACE_MAP_END_INHERITING(Storage)
+
+NS_IMPL_ADDREF_INHERITED(LocalStorage, Storage)
+NS_IMPL_RELEASE_INHERITED(LocalStorage, Storage)
+
+LocalStorage::LocalStorage(nsPIDOMWindowInner* aWindow,
+                           StorageManagerBase* aManager,
+                           StorageCache* aCache,
+                           const nsAString& aDocumentURI,
+                           nsIPrincipal* aPrincipal,
+                           bool aIsPrivate)
+  : Storage(aWindow, aPrincipal)
+  , mManager(aManager)
+  , mCache(aCache)
+  , mDocumentURI(aDocumentURI)
+  , mIsPrivate(aIsPrivate)
+  , mIsSessionOnly(false)
+{
+  mCache->Preload();
+}
+
+LocalStorage::~LocalStorage()
+{
+}
+
 int64_t
-Storage::GetOriginQuotaUsage() const
+LocalStorage::GetOriginQuotaUsage() const
 {
   return mCache->GetOriginQuotaUsage(this);
 }
 
 uint32_t
-Storage::GetLength(nsIPrincipal& aSubjectPrincipal,
-                   ErrorResult& aRv)
+LocalStorage::GetLength(nsIPrincipal& aSubjectPrincipal,
+                        ErrorResult& aRv)
 {
   if (!CanUseStorage(aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
@@ -93,9 +116,9 @@ Storage::GetLength(nsIPrincipal& aSubjectPrincipal,
 }
 
 void
-Storage::Key(uint32_t aIndex, nsAString& aResult,
-             nsIPrincipal& aSubjectPrincipal,
-             ErrorResult& aRv)
+LocalStorage::Key(uint32_t aIndex, nsAString& aResult,
+                  nsIPrincipal& aSubjectPrincipal,
+                  ErrorResult& aRv)
 {
   if (!CanUseStorage(aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
@@ -106,9 +129,9 @@ Storage::Key(uint32_t aIndex, nsAString& aResult,
 }
 
 void
-Storage::GetItem(const nsAString& aKey, nsAString& aResult,
-                 nsIPrincipal& aSubjectPrincipal,
-                 ErrorResult& aRv)
+LocalStorage::GetItem(const nsAString& aKey, nsAString& aResult,
+                      nsIPrincipal& aSubjectPrincipal,
+                      ErrorResult& aRv)
 {
   if (!CanUseStorage(aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
@@ -119,9 +142,9 @@ Storage::GetItem(const nsAString& aKey, nsAString& aResult,
 }
 
 void
-Storage::SetItem(const nsAString& aKey, const nsAString& aData,
-                 nsIPrincipal& aSubjectPrincipal,
-                 ErrorResult& aRv)
+LocalStorage::SetItem(const nsAString& aKey, const nsAString& aData,
+                      nsIPrincipal& aSubjectPrincipal,
+                      ErrorResult& aRv)
 {
   if (!CanUseStorage(aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
@@ -147,8 +170,8 @@ Storage::SetItem(const nsAString& aKey, const nsAString& aData,
 }
 
 void
-Storage::RemoveItem(const nsAString& aKey, nsIPrincipal& aSubjectPrincipal,
-                    ErrorResult& aRv)
+LocalStorage::RemoveItem(const nsAString& aKey, nsIPrincipal& aSubjectPrincipal,
+                         ErrorResult& aRv)
 {
   if (!CanUseStorage(aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
@@ -167,7 +190,7 @@ Storage::RemoveItem(const nsAString& aKey, nsIPrincipal& aSubjectPrincipal,
 }
 
 void
-Storage::Clear(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv)
+LocalStorage::Clear(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv)
 {
   if (!CanUseStorage(aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
@@ -223,33 +246,33 @@ StorageNotifierRunnable::Run()
 } // namespace
 
 void
-Storage::BroadcastChangeNotification(const nsSubstring& aKey,
-                                     const nsSubstring& aOldValue,
-                                     const nsSubstring& aNewValue)
+LocalStorage::BroadcastChangeNotification(const nsSubstring& aKey,
+                                          const nsSubstring& aOldValue,
+                                          const nsSubstring& aNewValue)
 {
-  if (!XRE_IsParentProcess() && GetType() == LocalStorage && mPrincipal) {
+  if (!XRE_IsParentProcess() && GetType() == eLocalStorage && Principal()) {
     // If we are in a child process, we want to send a message to the parent in
     // order to broadcast the StorageEvent correctly to any child process.
     dom::ContentChild* cc = dom::ContentChild::GetSingleton();
     Unused << NS_WARN_IF(!cc->SendBroadcastLocalStorageChange(
       mDocumentURI, nsString(aKey), nsString(aOldValue), nsString(aNewValue),
-      IPC::Principal(mPrincipal), mIsPrivate));
+      IPC::Principal(Principal()), mIsPrivate));
   }
 
   DispatchStorageEvent(GetType(), mDocumentURI, aKey, aOldValue, aNewValue,
-                       mPrincipal, mIsPrivate, this, false);
+                       Principal(), mIsPrivate, this, false);
 }
 
 /* static */ void
-Storage::DispatchStorageEvent(StorageType aStorageType,
-                              const nsAString& aDocumentURI,
-                              const nsAString& aKey,
-                              const nsAString& aOldValue,
-                              const nsAString& aNewValue,
-                              nsIPrincipal* aPrincipal,
-                              bool aIsPrivate,
-                              Storage* aStorage,
-                              bool aImmediateDispatch)
+LocalStorage::DispatchStorageEvent(StorageType aStorageType,
+                                   const nsAString& aDocumentURI,
+                                   const nsAString& aKey,
+                                   const nsAString& aOldValue,
+                                   const nsAString& aNewValue,
+                                   nsIPrincipal* aPrincipal,
+                                   bool aIsPrivate,
+                                   Storage* aStorage,
+                                   bool aImmediateDispatch)
 {
   StorageEventInit dict;
   dict.mBubbles = false;
@@ -269,7 +292,7 @@ Storage::DispatchStorageEvent(StorageType aStorageType,
 
   RefPtr<StorageNotifierRunnable> r =
     new StorageNotifierRunnable(event,
-                                aStorageType == LocalStorage
+                                aStorageType == eLocalStorage
                                   ? u"localStorage"
                                   : u"sessionStorage",
                                 aIsPrivate);
@@ -282,7 +305,7 @@ Storage::DispatchStorageEvent(StorageType aStorageType,
 
   // If we are in the parent process and we have the principal, we want to
   // broadcast this event to every other process.
-  if (aStorageType == LocalStorage && XRE_IsParentProcess() && aPrincipal) {
+  if (aStorageType == eLocalStorage && XRE_IsParentProcess() && aPrincipal) {
     for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
       Unused << cp->SendDispatchLocalStorageChange(
         nsString(aDocumentURI), nsString(aKey), nsString(aOldValue),
@@ -292,7 +315,7 @@ Storage::DispatchStorageEvent(StorageType aStorageType,
 }
 
 void
-Storage::ApplyEvent(StorageEvent* aStorageEvent)
+LocalStorage::ApplyEvent(StorageEvent* aStorageEvent)
 {
   MOZ_ASSERT(aStorageEvent);
 
@@ -324,7 +347,7 @@ static const char kPermissionType[] = "cookie";
 static const char kStorageEnabled[] = "dom.storage.enabled";
 
 bool
-Storage::CanUseStorage(nsIPrincipal& aSubjectPrincipal)
+LocalStorage::CanUseStorage(nsIPrincipal& aSubjectPrincipal)
 {
   // This method is responsible for correct setting of mIsSessionOnly.
   // It doesn't work with mIsPrivate flag at all, since it is checked
@@ -335,7 +358,7 @@ Storage::CanUseStorage(nsIPrincipal& aSubjectPrincipal)
   }
 
   nsContentUtils::StorageAccess access =
-    nsContentUtils::StorageAllowedForPrincipal(mPrincipal);
+    nsContentUtils::StorageAllowedForPrincipal(Principal());
 
   if (access == nsContentUtils::StorageAccess::eDeny) {
     return false;
@@ -345,16 +368,10 @@ Storage::CanUseStorage(nsIPrincipal& aSubjectPrincipal)
   return CanAccess(&aSubjectPrincipal);
 }
 
-Storage::StorageType
-Storage::GetType() const
+LocalStorage::StorageType
+LocalStorage::GetType() const
 {
   return mManager->Type();
-}
-
-nsIPrincipal*
-Storage::GetPrincipal()
-{
-  return mPrincipal;
 }
 
 // Defined in StorageManager.cpp
@@ -363,19 +380,13 @@ PrincipalsEqual(nsIPrincipal* aObjectPrincipal,
                 nsIPrincipal* aSubjectPrincipal);
 
 bool
-Storage::PrincipalEquals(nsIPrincipal* aPrincipal)
+LocalStorage::PrincipalEquals(nsIPrincipal* aPrincipal)
 {
   return PrincipalsEqual(mPrincipal, aPrincipal);
 }
 
-bool
-Storage::CanAccess(nsIPrincipal* aPrincipal)
-{
-  return !aPrincipal || aPrincipal->Subsumes(mPrincipal);
-}
-
 void
-Storage::GetSupportedNames(nsTArray<nsString>& aKeys)
+LocalStorage::GetSupportedNames(nsTArray<nsString>& aKeys)
 {
   if (!CanUseStorage(*nsContentUtils::SubjectPrincipal())) {
     // return just an empty array

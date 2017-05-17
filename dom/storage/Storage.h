@@ -26,19 +26,104 @@ class StorageManagerBase;
 class StorageCache;
 class StorageEvent;
 
-class Storage final
-  : public nsIDOMStorage
-  , public nsSupportsWeakReference
-  , public nsWrapperCache
+class Storage : public nsIDOMStorage
+              , public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Storage,
                                                          nsIDOMStorage)
 
+  Storage(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal);
+
+  virtual int64_t GetOriginQuotaUsage() const = 0;
+
+  virtual bool CanAccess(nsIPrincipal* aPrincipal);
+
+  // WebIDL
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
+
+  nsPIDOMWindowInner* GetParentObject() const
+  {
+    return mWindow;
+  }
+
+  virtual uint32_t
+  GetLength(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) = 0;
+
+  virtual void
+  Key(uint32_t aIndex, nsAString& aResult,
+      nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) = 0;
+
+  virtual void
+  GetItem(const nsAString& aKey, nsAString& aResult,
+          nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) = 0;
+
+  virtual void
+  GetSupportedNames(nsTArray<nsString>& aKeys) = 0;
+
+  void NamedGetter(const nsAString& aKey, bool& aFound, nsAString& aResult,
+                   nsIPrincipal& aSubjectPrincipal,
+                   ErrorResult& aRv)
+  {
+    GetItem(aKey, aResult, aSubjectPrincipal, aRv);
+    aFound = !aResult.IsVoid();
+  }
+
+  virtual void
+  SetItem(const nsAString& aKey, const nsAString& aValue,
+          nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) = 0;
+
+  void NamedSetter(const nsAString& aKey, const nsAString& aValue,
+                   nsIPrincipal& aSubjectPrincipal,
+                   ErrorResult& aRv)
+  {
+    SetItem(aKey, aValue, aSubjectPrincipal, aRv);
+  }
+
+  virtual void
+  RemoveItem(const nsAString& aKey, nsIPrincipal& aSubjectPrincipal,
+             ErrorResult& aRv) = 0;
+
+  void NamedDeleter(const nsAString& aKey, bool& aFound,
+                    nsIPrincipal& aSubjectPrincipal,
+                    ErrorResult& aRv)
+  {
+    RemoveItem(aKey, aSubjectPrincipal, aRv);
+
+    aFound = !aRv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION);
+  }
+
+  virtual void
+  Clear(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) = 0;
+
+  virtual bool IsSessionOnly() const = 0;
+
+protected:
+  virtual ~Storage();
+
+  nsIPrincipal*
+  Principal() const
+  {
+    return mPrincipal;
+  }
+
+private:
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
+  nsCOMPtr<nsIPrincipal> mPrincipal;
+};
+
+class LocalStorage final : public Storage
+                         , public nsSupportsWeakReference
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(LocalStorage, Storage)
+
   enum StorageType {
-    LocalStorage = 1,
-    SessionStorage = 2
+    eLocalStorage = 1,
+    eSessionStorage = 2
   };
 
   StorageType GetType() const;
@@ -53,80 +138,47 @@ public:
     return mCache;
   }
 
-  nsIPrincipal* GetPrincipal();
   bool PrincipalEquals(nsIPrincipal* aPrincipal);
-  bool CanAccess(nsIPrincipal* aPrincipal);
 
-  Storage(nsPIDOMWindowInner* aWindow,
-          StorageManagerBase* aManager,
-          StorageCache* aCache,
-          const nsAString& aDocumentURI,
-          nsIPrincipal* aPrincipal,
-          bool aIsPrivate);
+  LocalStorage(nsPIDOMWindowInner* aWindow,
+               StorageManagerBase* aManager,
+               StorageCache* aCache,
+               const nsAString& aDocumentURI,
+               nsIPrincipal* aPrincipal,
+               bool aIsPrivate);
 
   // WebIDL
-  JSObject* WrapObject(JSContext* aCx,
-                       JS::Handle<JSObject*> aGivenProto) override;
 
-  nsPIDOMWindowInner* GetParentObject() const
-  {
-    return mWindow;
-  }
-
-  int64_t GetOriginQuotaUsage() const;
+  int64_t GetOriginQuotaUsage() const override;
 
   uint32_t GetLength(nsIPrincipal& aSubjectPrincipal,
-                     ErrorResult& aRv);
+                     ErrorResult& aRv) override;
 
   void Key(uint32_t aIndex, nsAString& aResult,
            nsIPrincipal& aSubjectPrincipal,
-           ErrorResult& aRv);
+           ErrorResult& aRv) override;
 
   void GetItem(const nsAString& aKey, nsAString& aResult,
                nsIPrincipal& aSubjectPrincipal,
-               ErrorResult& aRv);
+               ErrorResult& aRv) override;
 
-  void GetSupportedNames(nsTArray<nsString>& aKeys);
-
-  void NamedGetter(const nsAString& aKey, bool& aFound, nsAString& aResult,
-                   nsIPrincipal& aSubjectPrincipal,
-                   ErrorResult& aRv)
-  {
-    GetItem(aKey, aResult, aSubjectPrincipal, aRv);
-    aFound = !aResult.IsVoid();
-  }
+  void GetSupportedNames(nsTArray<nsString>& aKeys) override;
 
   void SetItem(const nsAString& aKey, const nsAString& aValue,
                nsIPrincipal& aSubjectPrincipal,
-               ErrorResult& aRv);
-
-  void NamedSetter(const nsAString& aKey, const nsAString& aValue,
-                   nsIPrincipal& aSubjectPrincipal,
-                   ErrorResult& aRv)
-  {
-    SetItem(aKey, aValue, aSubjectPrincipal, aRv);
-  }
+               ErrorResult& aRv) override;
 
   void RemoveItem(const nsAString& aKey,
                   nsIPrincipal& aSubjectPrincipal,
-                  ErrorResult& aRv);
-
-  void NamedDeleter(const nsAString& aKey, bool& aFound,
-                    nsIPrincipal& aSubjectPrincipal,
-                    ErrorResult& aRv)
-  {
-    RemoveItem(aKey, aSubjectPrincipal, aRv);
-
-    aFound = !aRv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION);
-  }
+                  ErrorResult& aRv) override;
 
   void Clear(nsIPrincipal& aSubjectPrincipal,
-             ErrorResult& aRv);
+             ErrorResult& aRv) override;
 
   bool IsPrivate() const { return mIsPrivate; }
-  bool IsSessionOnly() const { return mIsSessionOnly; }
+  bool IsSessionOnly() const override { return mIsSessionOnly; }
 
-  bool IsForkOf(const Storage* aOther) const
+  bool IsForkOf(const LocalStorage* aOther) const
   {
     MOZ_ASSERT(aOther);
     return mCache == aOther->mCache;
@@ -165,7 +217,7 @@ protected:
   bool CanUseStorage(nsIPrincipal& aSubjectPrincipal);
 
 private:
-  ~Storage();
+  ~LocalStorage();
 
   friend class StorageManagerBase;
   friend class StorageCache;
