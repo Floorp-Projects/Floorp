@@ -10,6 +10,7 @@
 #include "nsIDOMStorageManager.h"
 #include "nsClassHashtable.h"
 #include "nsRefPtrHashtable.h"
+#include "StorageObserver.h"
 
 namespace mozilla {
 namespace dom {
@@ -17,6 +18,7 @@ namespace dom {
 class SessionStorageCache;
 
 class SessionStorageManager final : public nsIDOMStorageManager
+                                  , public StorageObserverSink
 {
 public:
   SessionStorageManager();
@@ -26,6 +28,16 @@ public:
 
 private:
   ~SessionStorageManager();
+
+  // StorageObserverSink, handler to various chrome clearing notification
+  nsresult
+  Observe(const char* aTopic,
+          const nsAString& aOriginAttributesPattern,
+          const nsACString& aOriginScope) override;
+
+  void
+  ClearStorages(const OriginAttributesPattern& aPattern,
+                const nsACString& aOriginScope);
 
   typedef nsRefPtrHashtable<nsCStringHashKey, SessionStorageCache> OriginKeyHashTable;
   nsClassHashtable<nsCStringHashKey, OriginKeyHashTable> mOATable;
