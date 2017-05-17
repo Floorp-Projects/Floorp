@@ -1705,7 +1705,15 @@ public class BrowserApp extends GeckoApp
 
     @Override
     public void toggleToolbarChrome(final boolean aShow) {
-        toggleChrome(aShow);
+        if (aShow) {
+            mBrowserChrome.setVisibility(View.VISIBLE);
+        } else {
+            // The chrome needs to be INVISIBLE instead of GONE so that
+            // it will continue update when the layout changes. This
+            // ensures the bitmap generated for the static toolbar
+            // snapshot is the correct size.
+            mBrowserChrome.setVisibility(View.INVISIBLE);
+        }
     }
 
     public void refreshToolbarHeight() {
@@ -1727,22 +1735,17 @@ public class BrowserApp extends GeckoApp
 
     @Override
     void toggleChrome(final boolean aShow) {
-        if (aShow) {
-            mBrowserChrome.setVisibility(View.VISIBLE);
-        } else {
-            // The chrome needs to be INVISIBLE instead of GONE so that
-            // it will continue update when the layout changes. This
-            // ensures the bitmap generated for the static toolbar
-            // snapshot is the correct size.
-            mBrowserChrome.setVisibility(View.INVISIBLE);
+        if (mDynamicToolbar != null) {
+            mDynamicToolbar.setVisible(aShow, VisibilityTransition.IMMEDIATE);
         }
-
         super.toggleChrome(aShow);
     }
 
     @Override
     void focusChrome() {
-        mBrowserChrome.setVisibility(View.VISIBLE);
+        if (mDynamicToolbar != null) {
+            mDynamicToolbar.setVisible(true, VisibilityTransition.IMMEDIATE);
+        }
         mActionBarFlipper.requestFocusFromTouch();
 
         super.focusChrome();
