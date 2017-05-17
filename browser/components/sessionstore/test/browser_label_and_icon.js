@@ -38,7 +38,7 @@ add_task(async function test_label_and_icon() {
   await promiseTabRestoring(tab);
 
   // Check that label and icon are set for the restoring tab.
-  ok(gBrowser.getIcon(tab).startsWith("data:image/png;"), "icon is set");
+  is(gBrowser.getIcon(tab), "chrome://browser/content/robot.ico", "icon is set");
   is(tab.label, "Gort! Klaatu barada nikto!", "label is set");
 
   let serhelper = Cc["@mozilla.org/network/serialization-helper;1"]

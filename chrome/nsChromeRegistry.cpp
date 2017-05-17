@@ -293,16 +293,6 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURI, nsIURI* *aResult)
   if (NS_FAILED(rv))
     return rv;
 
-  if (flags & PLATFORM_PACKAGE) {
-#if defined(XP_WIN)
-    path.Insert("win/", 0);
-#elif defined(XP_MACOSX)
-    path.Insert("mac/", 0);
-#else
-    path.Insert("unix/", 0);
-#endif
-  }
-
   if (!baseURI) {
     LogMessage("No chrome package registered for chrome://%s/%s/%s",
                package.get(), provider.get(), path.get());

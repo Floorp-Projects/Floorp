@@ -52,8 +52,8 @@ SourceMapURLService.prototype._onSourceUpdated = function (_, sourceEvent) {
   let { source } = sourceEvent;
   let { generatedUrl, url, actor: id, sourceMapURL } = source;
 
-  // As long as the actor is also handling source maps, we want the
-  // generated URL if it is available.  This will be going away in bug 1349354.
+  // |generatedUrl| comes from the actor and is extracted from the
+  // source code by SpiderMonkey.
   let seenUrl = generatedUrl || url;
   this._urls.set(seenUrl, { id, url: seenUrl, sourceMapURL });
 };

@@ -143,7 +143,6 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsInProcessTabChildGlobal)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsInProcessTabChildGlobal,
                                                   DOMEventTargetHelper)
    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMessageManager)
-   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
    tmp->TraverseHostObjectURIs(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -155,9 +154,8 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsInProcessTabChildGlobal,
                                                 DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMessageManager)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAnonymousGlobalScopes)
-   tmp->UnlinkHostObjectURIs();
+  tmp->nsMessageManagerScriptExecutor::Unlink();
+  tmp->UnlinkHostObjectURIs();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsInProcessTabChildGlobal)

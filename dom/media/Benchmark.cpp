@@ -90,7 +90,7 @@ VP9Benchmark::IsVP9DecodeFast()
 }
 
 Benchmark::Benchmark(MediaDataDemuxer* aDemuxer, const Parameters& aParameters)
-  : QueueObject(AbstractThread::GetCurrent())
+  : QueueObject(AbstractThread::MainThread())
   , mParameters(aParameters)
   , mKeepAliveUntilComplete(this)
   , mPlaybackState(this, aDemuxer)

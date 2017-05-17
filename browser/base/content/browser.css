@@ -494,6 +494,27 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   -moz-binding: url(chrome://browser/content/urlbarBindings.xml#urlbar);
 }
 
+/*
+ * Display visual cue that browser is under remote control by Marionette.
+ * This is to help users visually distinguish a user agent session that
+ * is under remote control from those used for normal browsing sessions.
+ *
+ * Attribute is controlled by browser.js:/gRemoteControl.
+ */
+#main-window[remotecontrol] #urlbar {
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 25px,
+    rgba(255,255,255,.3) 25px,
+    rgba(255,255,255,.3) 50px);
+  background-color: rgba(255,170,68,.8);
+  color: black;
+}
+#main-window[remotecontrol] #urlbar #identity-box {
+  background: white;
+}
+
 /* Fade out URL on overflow */
 html|input.urlbar-input[textoverflow]:not([focused]) {
   /* Don't need to worry about RTL here since we use direction:ltr for the

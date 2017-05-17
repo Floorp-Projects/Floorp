@@ -31,6 +31,14 @@ var SidebarUI = {
     this.browser = document.getElementById("sidebar");
     this._title = document.getElementById("sidebar-title");
     this._splitter = document.getElementById("sidebar-splitter");
+    this._icon = document.getElementById("sidebar-icon");
+    this._switcherPanel = document.getElementById("sidebarMenu-popup");
+    this._switcherTarget = document.getElementById("sidebar-switcher-target");
+    this._switcherArrow = document.getElementById("sidebar-switcher-arrow");
+
+    this._switcherTarget.addEventListener("command", () => {
+      this.toggleSwitcherPanel();
+    });
   },
 
   uninit() {
@@ -41,6 +49,47 @@ var SidebarUI = {
       document.persist("sidebar-box", "width");
       document.persist("sidebar-box", "src");
       document.persist("sidebar-title", "value");
+    }
+  },
+
+  /**
+   * Opens the switcher panel if it's closed, or closes it if it's open.
+   */
+  toggleSwitcherPanel() {
+    if (this._switcherPanel.state == "open" || this._switcherPanel.state == "showing") {
+      this.hideSwitcherPanel();
+    } else {
+      this.showSwitcherPanel();
+    }
+  },
+
+  hideSwitcherPanel() {
+    this._switcherPanel.hidePopup();
+  },
+
+  showSwitcherPanel() {
+    this._ensureShortcutsShown();
+    this._switcherPanel.addEventListener("popuphiding", () => {
+      this._switcherTarget.classList.remove("active");
+    }, {once: true});
+    this._switcherPanel.hidden = false;
+    this._switcherPanel.openPopup(this._icon);
+    this._switcherTarget.classList.add("active");
+  },
+
+  _addedShortcuts: false,
+  _ensureShortcutsShown() {
+    if (this._addedShortcuts) {
+      return;
+    }
+    this._addedShortcuts = true;
+    for (let button of this._switcherPanel.querySelectorAll("toolbarbutton[key]")) {
+      let keyId = button.getAttribute("key");
+      let key = document.getElementById(keyId);
+      if (!key) {
+        continue;
+      }
+      button.setAttribute("shortcut", ShortcutUtils.prettifyShortcut(key));
     }
   },
 
@@ -222,6 +271,8 @@ var SidebarUI = {
       this._box.hidden = false;
       this._splitter.hidden = false;
 
+      this.hideSwitcherPanel();
+
       this._box.setAttribute("sidebarcommand", sidebarBroadcaster.id);
       this.lastOpenedId = sidebarBroadcaster.id;
 
@@ -275,6 +326,8 @@ var SidebarUI = {
     if (!this.isOpen) {
       return;
     }
+
+    this.hideSwitcherPanel();
 
     let commandID = this._box.getAttribute("sidebarcommand");
     let sidebarBroadcaster = document.getElementById(commandID);

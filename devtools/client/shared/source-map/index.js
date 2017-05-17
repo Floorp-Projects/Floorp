@@ -503,6 +503,10 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
+	/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 	const networkRequest = __webpack_require__(7);
 	const workerUtils = __webpack_require__(8);
 
@@ -514,6 +518,10 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ },
 /* 7 */
 /***/ function(module, exports) {
+
+	/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 	function networkRequest(url, opts) {
 	  return new Promise((resolve, reject) => {
@@ -554,7 +562,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	function WorkerDispatcher() {
 	  this.msgId = 1;
 	  this.worker = null;
-	}
+	} /* This Source Code Form is subject to the terms of the Mozilla Public
+	   * License, v. 2.0. If a copy of the MPL was not distributed with this
+	   * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 	WorkerDispatcher.prototype = {
 	  start(url) {

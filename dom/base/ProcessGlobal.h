@@ -55,11 +55,7 @@ public:
 
   virtual JSObject* GetGlobalJSObject() override
   {
-    if (!mGlobal) {
-      return nullptr;
-    }
-
-    return mGlobal->GetJSObject();
+    return mGlobal;
   }
   virtual nsIPrincipal* GetPrincipal() override { return mPrincipal; }
 

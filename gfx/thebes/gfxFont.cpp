@@ -325,6 +325,14 @@ gfxFontCache::FlushShapedWordCaches()
 }
 
 void
+gfxFontCache::NotifyGlyphsChanged()
+{
+    for (auto it = mFonts.Iter(); !it.Done(); it.Next()) {
+        it.Get()->mFont->NotifyGlyphsChanged();
+    }
+}
+
+void
 gfxFontCache::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                                      FontCacheSizes* aSizes) const
 {
