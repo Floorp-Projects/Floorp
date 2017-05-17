@@ -2654,10 +2654,9 @@ NS_CompareLoadInfoAndLoadContext(nsIChannel *aChannel)
     return NS_OK;
   }
 
-  // We try to skip about:newtab and about:sync-tabs.
+  // We try to skip about:newtab.
   // about:newtab will use SystemPrincipal to download thumbnails through
   // https:// and blob URLs.
-  // about:sync-tabs will fetch icons through moz-icon://.
   bool isAboutPage = false;
   nsINode* node = loadInfo->LoadingNode();
   if (node) {
