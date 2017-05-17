@@ -12,9 +12,13 @@
 
 #include "third_party/curl/curl.h"
 
+#include "mozilla/Unused.h"
+
 namespace PingSender {
 
 using std::string;
+
+using mozilla::Unused;
 
 /**
  * A simple wrapper around libcurl "easy" functions. Provides RAII opening
@@ -135,11 +139,23 @@ CurlWrapper::Init()
   return true;
 }
 
+static size_t
+DummyWriteCallback(char *ptr, size_t size, size_t nmemb, void *userdata)
+{
+  Unused << ptr;
+  Unused << size;
+  Unused << nmemb;
+  Unused << userdata;
+
+  return size * nmemb;
+}
+
 bool
 CurlWrapper::Post(const string& url, const string& payload)
 {
   easy_setopt(mCurl, CURLOPT_URL, url.c_str());
   easy_setopt(mCurl, CURLOPT_USERAGENT, kUserAgent);
+  easy_setopt(mCurl, CURLOPT_WRITEFUNCTION, DummyWriteCallback);
 
   // Build the date header.
   std::string dateHeader = GenerateDateHeader();
