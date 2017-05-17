@@ -6,7 +6,7 @@
 
 #include "StorageIPC.h"
 
-#include "StorageManager.h"
+#include "LocalStorageManager.h"
 
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
@@ -56,7 +56,7 @@ StorageDBChild::ReleaseIPDLReference()
   Release();
 }
 
-StorageDBChild::StorageDBChild(DOMLocalStorageManager* aManager)
+StorageDBChild::StorageDBChild(LocalStorageManager* aManager)
   : mManager(aManager)
   , mStatus(NS_OK)
   , mIPCOpen(false)
@@ -96,7 +96,7 @@ StorageDBChild::Shutdown()
 }
 
 void
-StorageDBChild::AsyncPreload(StorageCacheBridge* aCache, bool aPriority)
+StorageDBChild::AsyncPreload(LocalStorageCacheBridge* aCache, bool aPriority)
 {
   if (mIPCOpen) {
     // Adding ref to cache for the time of preload.  This ensures a reference to
@@ -119,7 +119,7 @@ StorageDBChild::AsyncGetUsage(StorageUsageBridge* aUsage)
 }
 
 void
-StorageDBChild::SyncPreload(StorageCacheBridge* aCache, bool aForceSync)
+StorageDBChild::SyncPreload(LocalStorageCacheBridge* aCache, bool aForceSync)
 {
   if (NS_FAILED(mStatus)) {
     aCache->LoadDone(mStatus);
@@ -148,7 +148,7 @@ StorageDBChild::SyncPreload(StorageCacheBridge* aCache, bool aForceSync)
 }
 
 nsresult
-StorageDBChild::AsyncAddItem(StorageCacheBridge* aCache,
+StorageDBChild::AsyncAddItem(LocalStorageCacheBridge* aCache,
                              const nsAString& aKey,
                              const nsAString& aValue)
 {
@@ -163,7 +163,7 @@ StorageDBChild::AsyncAddItem(StorageCacheBridge* aCache,
 }
 
 nsresult
-StorageDBChild::AsyncUpdateItem(StorageCacheBridge* aCache,
+StorageDBChild::AsyncUpdateItem(LocalStorageCacheBridge* aCache,
                                 const nsAString& aKey,
                                 const nsAString& aValue)
 {
@@ -178,7 +178,7 @@ StorageDBChild::AsyncUpdateItem(StorageCacheBridge* aCache,
 }
 
 nsresult
-StorageDBChild::AsyncRemoveItem(StorageCacheBridge* aCache,
+StorageDBChild::AsyncRemoveItem(LocalStorageCacheBridge* aCache,
                                 const nsAString& aKey)
 {
   if (NS_FAILED(mStatus) || !mIPCOpen) {
@@ -191,7 +191,7 @@ StorageDBChild::AsyncRemoveItem(StorageCacheBridge* aCache,
 }
 
 nsresult
-StorageDBChild::AsyncClear(StorageCacheBridge* aCache)
+StorageDBChild::AsyncClear(LocalStorageCacheBridge* aCache)
 {
   if (NS_FAILED(mStatus) || !mIPCOpen) {
     return mStatus;
@@ -243,7 +243,8 @@ StorageDBChild::RecvLoadItem(const nsCString& aOriginSuffix,
                              const nsString& aKey,
                              const nsString& aValue)
 {
-  StorageCache* aCache = mManager->GetCache(aOriginSuffix, aOriginNoSuffix);
+  LocalStorageCache* aCache =
+    mManager->GetCache(aOriginSuffix, aOriginNoSuffix);
   if (aCache) {
     aCache->LoadItem(aKey, aValue);
   }
@@ -256,12 +257,13 @@ StorageDBChild::RecvLoadDone(const nsCString& aOriginSuffix,
                              const nsCString& aOriginNoSuffix,
                              const nsresult& aRv)
 {
-  StorageCache* aCache = mManager->GetCache(aOriginSuffix, aOriginNoSuffix);
+  LocalStorageCache* aCache =
+    mManager->GetCache(aOriginSuffix, aOriginNoSuffix);
   if (aCache) {
     aCache->LoadDone(aRv);
 
     // Just drop reference to this cache now since the load is done.
-    mLoadingCaches.RemoveEntry(static_cast<StorageCacheBridge*>(aCache));
+    mLoadingCaches.RemoveEntry(static_cast<LocalStorageCacheBridge*>(aCache));
   }
 
   return IPC_OK();
@@ -323,7 +325,7 @@ private:
       return NS_OK;
     }
 
-    StorageDBBridge* db = StorageCache::GetDatabase();
+    StorageDBBridge* db = LocalStorageCache::GetDatabase();
     if (db) {
       InfallibleTArray<nsCString> scopes;
       db->GetOriginsHavingData(&scopes);
@@ -398,7 +400,7 @@ StorageDBParent::RecvAsyncPreload(const nsCString& aOriginSuffix,
                                   const nsCString& aOriginNoSuffix,
                                   const bool& aPriority)
 {
-  StorageDBBridge* db = StorageCache::StartDatabase();
+  StorageDBBridge* db = LocalStorageCache::StartDatabase();
   if (!db) {
     return IPC_FAIL_NO_REASON(this);
   }
@@ -410,7 +412,7 @@ StorageDBParent::RecvAsyncPreload(const nsCString& aOriginSuffix,
 mozilla::ipc::IPCResult
 StorageDBParent::RecvAsyncGetUsage(const nsCString& aOriginNoSuffix)
 {
-  StorageDBBridge* db = StorageCache::StartDatabase();
+  StorageDBBridge* db = LocalStorageCache::StartDatabase();
   if (!db) {
     return IPC_FAIL_NO_REASON(this);
   }
@@ -424,11 +426,11 @@ StorageDBParent::RecvAsyncGetUsage(const nsCString& aOriginNoSuffix)
 
 namespace {
 
-// We need another implementation of StorageCacheBridge to do
+// We need another implementation of LocalStorageCacheBridge to do
 // synchronous IPC preload.  This class just receives Load* notifications
 // and fills the returning arguments of RecvPreload with the database
 // values for us.
-class SyncLoadCacheHelper : public StorageCacheBridge
+class SyncLoadCacheHelper : public LocalStorageCacheBridge
 {
 public:
   SyncLoadCacheHelper(const nsCString& aOriginSuffix,
@@ -452,7 +454,7 @@ public:
 
   virtual const nsCString Origin() const
   {
-    return StorageManagerBase::CreateOrigin(mSuffix, mOrigin);
+    return LocalStorageManager::CreateOrigin(mSuffix, mOrigin);
   }
   virtual const nsCString& OriginNoSuffix() const { return mOrigin; }
   virtual const nsCString& OriginSuffix() const { return mSuffix; }
@@ -509,7 +511,7 @@ StorageDBParent::RecvPreload(const nsCString& aOriginSuffix,
                              InfallibleTArray<nsString>* aValues,
                              nsresult* aRv)
 {
-  StorageDBBridge* db = StorageCache::StartDatabase();
+  StorageDBBridge* db = LocalStorageCache::StartDatabase();
   if (!db) {
     return IPC_FAIL_NO_REASON(this);
   }
@@ -528,7 +530,7 @@ StorageDBParent::RecvAsyncAddItem(const nsCString& aOriginSuffix,
                                   const nsString& aKey,
                                   const nsString& aValue)
 {
-  StorageDBBridge* db = StorageCache::StartDatabase();
+  StorageDBBridge* db = LocalStorageCache::StartDatabase();
   if (!db) {
     return IPC_FAIL_NO_REASON(this);
   }
@@ -548,7 +550,7 @@ StorageDBParent::RecvAsyncUpdateItem(const nsCString& aOriginSuffix,
                                      const nsString& aKey,
                                      const nsString& aValue)
 {
-  StorageDBBridge* db = StorageCache::StartDatabase();
+  StorageDBBridge* db = LocalStorageCache::StartDatabase();
   if (!db) {
     return IPC_FAIL_NO_REASON(this);
   }
@@ -567,7 +569,7 @@ StorageDBParent::RecvAsyncRemoveItem(const nsCString& aOriginSuffix,
                                      const nsCString& aOriginNoSuffix,
                                      const nsString& aKey)
 {
-  StorageDBBridge* db = StorageCache::StartDatabase();
+  StorageDBBridge* db = LocalStorageCache::StartDatabase();
   if (!db) {
     return IPC_FAIL_NO_REASON(this);
   }
@@ -585,7 +587,7 @@ mozilla::ipc::IPCResult
 StorageDBParent::RecvAsyncClear(const nsCString& aOriginSuffix,
                                 const nsCString& aOriginNoSuffix)
 {
-  StorageDBBridge* db = StorageCache::StartDatabase();
+  StorageDBBridge* db = LocalStorageCache::StartDatabase();
   if (!db) {
     return IPC_FAIL_NO_REASON(this);
   }
@@ -601,7 +603,7 @@ StorageDBParent::RecvAsyncClear(const nsCString& aOriginSuffix,
 mozilla::ipc::IPCResult
 StorageDBParent::RecvAsyncFlush()
 {
-  StorageDBBridge* db = StorageCache::GetDatabase();
+  StorageDBBridge* db = LocalStorageCache::GetDatabase();
   if (!db) {
     return IPC_FAIL_NO_REASON(this);
   }
@@ -698,7 +700,7 @@ private:
 const nsCString
 StorageDBParent::CacheParentBridge::Origin() const
 {
-  return StorageManagerBase::CreateOrigin(mOriginSuffix, mOriginNoSuffix);
+  return LocalStorageManager::CreateOrigin(mOriginSuffix, mOriginNoSuffix);
 }
 
 bool

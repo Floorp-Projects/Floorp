@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"/></head>
+<body>
+<style>
+.testcase {
+    display: none;
+}
+object {
+    width: 200px;
+    height: 200px;
+}
+</style>
+
+<!-- Tests that a <video> tag in the fallback content favors the fallback content -->
+<div id="testcase_video" class="testcase">
+    <object class="expected_ctp" type="application/x-shockwave-flash-test">
+        Unexpected fallback
+    </object>
+    <object class="expected_fallback" type="application/x-shockwave-flash-test">
+        <video></video>
+        Expected fallback
+    </object>
+</div>
+
+<!-- Tests that an object with no src specified (no data="") favors the fallback content -->
+<div id="testcase_nosrc" class="testcase">
+    <!-- We must use an existing and valid file here because otherwise the failed load
+         triggers the plugin's alternate content, indepedent of the favor-fallback code path -->
+    <object class="expected_ctp" type="application/x-shockwave-flash-test" data="plugin_simple_blank.swf">
+        Unexpected fallback
+    </object>
+    <object class="expected_fallback" type="application/x-shockwave-flash-test">
+        Expected fallback
+    </object>
+</div>
+
+<!-- Tests that an <embed> tag in the fallback content forces the plugin content,
+     when fallback is defaulting to true -->
+<div id="testcase_embed" class="testcase">
+    <object class="expected_ctp" type="application/x-shockwave-flash-test">
+        <embed></embed>
+        Unexpected fallback
+    </object>
+    <object class="expected_fallback" type="application/x-shockwave-flash-test">
+        Expected fallback
+    </object>
+</div>
+
+<!-- Tests that links to adobe.com inside the fallback content forces the plugin content,
+     when fallback is defaulting to true -->
+<div id="testcase_adobelink" class="testcase">
+    <object class="expected_ctp" type="application/x-shockwave-flash-test">
+        <a href="https://www.adobe.com">Go to adobe.com</a>
+        Unexpected fallback
+    </object>
+    <object class="expected_ctp" type="application/x-shockwave-flash-test">
+        <a href="https://adobe.com">Go to adobe.com</a>
+        Unexpected fallback
+    </object>
+    <object class="expected_fallback" type="application/x-shockwave-flash-test">
+        Expected fallback
+    </object>
+</div>
+
+<!-- Tests that instructions to download or install flash inside the fallback content
+     forces the plugin content, when fallback is defaulting to true -->
+<div id="testcase_installinstructions" class="testcase">
+    <object class="expected_ctp" type="application/x-shockwave-flash-test">
+        Install -- Unexpected fallback
+    </object>
+    <object class="expected_ctp" type="application/x-shockwave-flash-test">
+        Flash -- Unexpected fallback
+    </object>
+    <object class="expected_ctp" type="application/x-shockwave-flash-test">
+        Download -- Unexpected fallback
+    </object>
+    <object class="expected_fallback" type="application/x-shockwave-flash-test">
+        <!-- Tests that the words Install, Flash or Download do not trigger
+             this behavior if it's just inside a comment, and not part of
+             the text content -->
+        Expected Fallback
+    </object>
+    <object class="expected_fallback" type="application/x-shockwave-flash-test">
+        Expected fallback
+    </object>
+</div>
+
+<script>
+    let queryString = location.search;
+    let match = /^\?testcase=([a-z]+)$/.exec(queryString);
+    let testcase = match[1];
+    document.getElementById(`testcase_${testcase}`).style.display = "block";
+</script>
+</body>
+</html>
