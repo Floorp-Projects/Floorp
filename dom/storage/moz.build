@@ -8,12 +8,12 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM")
 
 EXPORTS.mozilla.dom += [
-    'SessionStorage.h',
     'Storage.h',
     'StorageIPC.h',
 ]
 
 UNIFIED_SOURCES += [
+    'LocalStorage.cpp',
     'SessionStorage.cpp',
     'Storage.cpp',
     'StorageCache.cpp',

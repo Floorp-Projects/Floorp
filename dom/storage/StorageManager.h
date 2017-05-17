@@ -10,6 +10,7 @@
 #include "nsIDOMStorageManager.h"
 #include "StorageObserver.h"
 
+#include "LocalStorage.h"
 #include "StorageCache.h"
 #include "mozilla/dom/Storage.h"
 
