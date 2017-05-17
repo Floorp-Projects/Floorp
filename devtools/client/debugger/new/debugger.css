@@ -979,14 +979,13 @@ html .arrow.expanded svg {
 .search-field .search-nav-buttons .nav-btn path {
   fill: var(--theme-comment);
 }
-
 .result-list {
   list-style: none;
-  width: 100%;
   background-color: var(--theme-toolbar-background);
   margin: 0px;
   padding: 0px;
   overflow: auto;
+  width: calc(100% - 1px); /* 1px fixes the hidden right border */
 }
 
 .result-list.big {
@@ -1004,10 +1003,7 @@ html .arrow.expanded svg {
   padding: 4px 13px;
   display: flex;
   justify-content: space-between;
-}
-
-.result-list li:first-child {
-  border-top: none;
+  border: 1px solid transparent;
 }
 
 .result-list.big li {
@@ -1022,17 +1018,16 @@ html .arrow.expanded svg {
 }
 
 .result-list li.selected {
-  border: 1px solid var(--theme-selection-background);
-}
-
-.result-list.big li.selected {
-  padding-left: 9px;
-  padding-top: 9px;
+  border-color: var(--theme-selection-background);
 }
 
 .search-bar .result-list li.selected {
   background-color: var(--theme-selection-background);
   color: white;
+}
+
+.theme-dark .search-bar .result-list li.selected {
+  background-color: var(--theme-body-background);
 }
 
 .result-list li .title {
@@ -1132,6 +1127,35 @@ html .arrow.expanded svg {
   padding-top: 5px;
   text-align: center;
 }
+.outline-list {
+  list-style-type: "-";
+}
+
+.outline-list__element {
+  color: blue;
+  padding-left: 0.5rem;
+}
+
+.function-signature {
+  line-height: 20px;
+  align-self: center;
+}
+
+.function-signature .function-name {
+  color: var(--theme-highlight-blue);
+}
+
+.function-signature .param {
+  color: var(--string-color);
+}
+
+.function-signature .paren {
+  color: var(--object-color);
+}
+
+.function-signature .comma {
+  color: var(--object-color);
+}
 .tree {
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -1157,6 +1181,10 @@ html .arrow.expanded svg {
 .tree .node.focused {
   color: white;
   background-color: var(--theme-selection-background);
+}
+
+.theme-dark .tree .node.focused {
+  background-color: var(--theme-selection-background-semitransparent);
 }
 
 html:not([dir="rtl"]) .tree .node > div {
@@ -1209,6 +1237,11 @@ html[dir="rtl"] .tree .node > div {
   transform: translate(0, 2px);
   transition: transform 0.25s ease-in-out;
   cursor: pointer;
+  padding: 5px 2px;
+}
+
+.toggle-button-start.vertical,
+.toggle-button-end.vertical {
   padding: 4px 2px;
 }
 
@@ -1239,10 +1272,6 @@ html[dir="rtl"] .toggle-button-start svg {
 
 html .toggle-button-end.vertical svg {
   transform: rotate(-90deg);
-}
-
-.toggle-button-end.vertical {
-  margin-bottom: 2px;
 }
 
 .toggle-button-start.collapsed,
@@ -1454,78 +1483,59 @@ html .toggle-button-end.vertical svg {
 .search-bar .result-list {
   max-height: 230px;
 }
-
-.function-signature {
-  line-height: 20px;
-  align-self: center;
+.object-value .unavailable {
+  color: var(--theme-comment);
+}
+.bracket-arrow {
+  position: absolute;
 }
 
-.function-signature .function-name {
-  color: var(--theme-highlight-blue);
-}
-
-.function-signature .param {
-  color: var(--string-color);
-}
-
-.function-signature .paren {
-  color: var(--object-color);
-}
-
-.function-signature .comma {
-  color: var(--object-color);
-}
-.popover {
-  position: fixed;
-  z-index: 100;
-  box-shadow: 1px 2px 4px 1px var(--theme-toolbar-background-alt);
-}
-
-.popover .gap {
-  height: 5px;
-  padding-top: 5px;
-}
-
-.popover::before,
-.popover::after {
+.bracket-arrow::before,
+.bracket-arrow::after {
   content: '';
   height: 0;
   width: 0;
   position: absolute;
   border: 7px solid transparent;
-  left: calc(20% - 7px); /* corresponds to calculation in Popover.js */
 }
 
-.popover::before {
+.bracket-arrow.up::before {
   border-bottom-color: var(--theme-splitter-color);
-  top: -9px;
+  top: -1px;
 }
 
-.theme-dark .popover::before {
+.theme-dark .bracket-arrow.up::before {
   border-bottom-color: var(--theme-body-color);
 }
 
-.popover::after {
+.bracket-arrow.up::after {
   border-bottom-color: var(--theme-body-background);
-  top: -8px;
+  top: 0px;
 }
 
-.popover.up::before {
+.bracket-arrow.down::before {
   border-bottom-color: transparent;
   border-top-color: var(--theme-splitter-color);
-  bottom: -9px;
-  top: initial;
+  top: 0px;
 }
 
-.theme-dark .popover.up::before {
+.theme-dark .bracket-arrow.down::before {
   border-top-color: var(--theme-body-color);
 }
 
-.popover.up::after {
+.bracket-arrow.down::after {
   border-bottom-color: transparent;
-  border-top-color: var(--theme-body-background);
-  bottom: -8px;
-  top: initial;
+  border-top-color: var(--theme-toolbar-background);
+  top: -1px;
+}
+.popover {
+  position: fixed;
+  z-index: 100;
+}
+
+.popover .gap {
+  height: 5px;
+  padding-top: 5px;
 }
 .popover .preview {
   background: var(--theme-body-background);
@@ -1607,6 +1617,7 @@ html .toggle-button-end.vertical svg {
 
 .add-to-expression-bar {
   border: 1px solid var(--theme-splitter-color);
+  border-top: none;
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -1633,11 +1644,15 @@ html .toggle-button-end.vertical svg {
   color: var(--theme-comment);
   cursor: pointer;
 }
-/* vim:set ts=2 sw=2 sts=2 et: */
+.editor-wrapper {
+  --debug-line-background: rgba(226, 236, 247, 0.5);
+  --debug-line-border: rgb(145, 188, 219);
+}
 
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+.theme-dark .editor-wrapper {
+  --debug-line-background: rgb(73, 82, 103);
+  --debug-line-border: rgb(119, 134, 162);
+}
 
 /**
  * There's a known codemirror flex issue with chrome that this addresses.
@@ -1675,6 +1690,10 @@ html[dir="rtl"] .editor-mount {
 
 .editor.hit-marker {
   height: 14px;
+}
+
+.editor-wrapper .highlight-lines {
+  background: var(--theme-selection-background-semitransparent);
 }
 
 .coverage-on .CodeMirror-code :not(.hit-marker) .CodeMirror-line,
@@ -1717,6 +1736,17 @@ html[dir="rtl"] .editor-mount {
   opacity: 0.3;
 }
 
+.editor.column-breakpoint svg {
+  fill: var(--theme-selection-background);
+  vertical-align: middle;
+  width: 17px;
+  height: 14px;
+}
+
+.editor.column-breakpoint.breakpoint-disabled svg {
+  opacity: 0.3;
+}
+
 .CodeMirror {
   width: 100%;
   height: 100%;
@@ -1756,13 +1786,18 @@ html[dir="rtl"] .editor-mount {
   color: var(--theme-content-color3);
 }
 
-.debug-line .CodeMirror-line {
-  background-color: var(--breakpoint-active-color) !important;
+.new-debug-line .CodeMirror-line {
+  background-color: var(--debug-line-background) !important;
+  outline: var(--debug-line-border) solid 1px;
+}
+
+.new-debug-line .CodeMirror-linenumber {
+  background-color: transparent !important;
 }
 
 /* Don't display the highlight color since the debug line
    is already highlighted */
-.debug-line .CodeMirror-activeline-background {
+.new-debug-line .CodeMirror-activeline-background {
   display: none;
 }
 
@@ -1812,13 +1847,13 @@ html[dir="rtl"] .editor-mount {
 }
 
 .why-paused {
-  background-color: var(--breakpoint-active-color);
+  background-color: var(--theme-body-background);
+  border-bottom: 1px solid var(--theme-splitter-color);
   color: var(--theme-highlight-blue);
   padding: 10px 10px 10px 20px;
   white-space: normal;
   opacity: 0.9;
   font-size: 12px;
-  font-weight: bold;
   flex: 0 1 auto;
 }
 
@@ -1829,6 +1864,10 @@ html[dir="rtl"] .editor-mount {
 .why-paused .message {
   font-size: 10px;
 }
+.breakpoints-toggle {
+  margin: 2px 3px;
+}
+
 .breakpoints-list * {
   -moz-user-select: none;
   user-select: none;
@@ -1884,6 +1923,7 @@ html .breakpoints-list .breakpoint.paused {
 
 .breakpoints-list .breakpoint-checkbox {
   margin-inline-start: 0;
+  vertical-align: -2px;
 }
 
 .breakpoints-list .breakpoint-label {
@@ -1916,8 +1956,9 @@ html .breakpoints-list .breakpoint.paused {
 
 .breakpoint .close-btn {
   position: absolute;
-  offset-inline-end: 16px;
-  top: 12px;
+  offset-inline-end: 13px;
+  offset-inline-start: auto;
+  top: 9px;
 }
 
 .breakpoint .close {
@@ -2410,10 +2451,16 @@ html .command-bar > button:disabled {
   z-index: 100;
 }
 
-html .welcomebox .toggle-button-end {
-  bottom: 11px;
+.welcomebox .toggle-button-end {
   position: absolute;
   top: auto;
+  bottom: 0;
+  offset-inline-end: 0;
+  offset-inline-start: auto;
+}
+
+html .welcomebox .toggle-button-end.collapsed {
+  bottom: 1px;
 }
 .source-header {
   border-bottom: 1px solid var(--theme-splitter-color);
@@ -2430,7 +2477,7 @@ html .welcomebox .toggle-button-end {
 
 .source-header .new-tab-btn {
   padding: 0px 4px;
-  margin-top: 8px;
+  margin-top: 4px;
   cursor: pointer;
   fill: var(--theme-comment);
   transition: 0.1s ease;
@@ -2450,15 +2497,15 @@ html .welcomebox .toggle-button-end {
   border: 1px solid transparent;
   border-top-left-radius: 2px;
   border-top-right-radius: 2px;
-  height: 30px;
   display: inline-flex;
-  align-items: center;
+  align-items: flex-end;
   position: relative;
   transition: all 0.25s ease;
   min-width: 40px;
   overflow: hidden;
-  padding: 6px;
+  padding: 5px;
   margin-inline-start: 3px;
+  margin-top: 4px;
 }
 
 .source-tab:hover {
@@ -2492,9 +2539,10 @@ html .welcomebox .toggle-button-end {
   fill: var(--theme-textbox-box-shadow);
 }
 
-.source-tab .blackBox {
+.source-tab .blackBox,
+.source-tab .prettyPrint {
   line-height: 0;
-  padding: 5px;
+  align-self: center;
 }
 
 .source-tab .blackBox svg {
@@ -2506,20 +2554,21 @@ html .welcomebox .toggle-button-end {
   fill: var(--theme-textbox-box-shadow);
 }
 
+.theme-dark .source-tab .blackBox circle {
+  fill: var(--theme-body-color);
+}
+
 .source-tab .filename {
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
-}
-
-.source-tab.pretty .filename {
-  padding-inline-start: 8px;
+  padding: 0 4px;
+  align-self: flex-start;
 }
 
 .source-tab .close-btn {
   visibility: hidden;
   line-height: 0;
-  margin-inline-start: 6px;
 }
 
 .source-tab.active .close-btn {
@@ -2536,8 +2585,8 @@ html .welcomebox .toggle-button-end {
   box-shadow: 0 4px 4px 0 var(--search-overlays-semitransparent);
   max-height: 300px;
   position: absolute;
-  right: 8px;
-  top: 35px;
+  right: 0;
+  top: 23px;
   width: var(--width);
   z-index: 1000;
 }
@@ -2559,7 +2608,6 @@ html[dir="rtl"] .dropdown {
   border: none;
   padding: 0;
   font-weight: 100;
-  margin-top: 6px;
   font-size: 14px;
 }
 
