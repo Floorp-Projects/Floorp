@@ -360,7 +360,8 @@ protected:
   nsresult             CreateNativeWindow(const NSRect &aRect,
                                           nsBorderStyle aBorderStyle,
                                           bool aRectIsFrameRect);
-  nsresult             CreatePopupContentView(const LayoutDeviceIntRect &aRect);
+  nsresult             CreatePopupContentView(const LayoutDeviceIntRect &aRect,
+                                              nsWidgetInitData* aInitData);
   void                 DestroyNativeWindow();
   void                 AdjustWindowShadow();
   void                 SetWindowBackgroundBlur();
