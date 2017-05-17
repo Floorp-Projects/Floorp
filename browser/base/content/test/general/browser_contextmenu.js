@@ -978,6 +978,59 @@ add_task(async function test_link_sendlinktodevice() {
   restoreRemoteClients(oldGetter);
 });
 
+add_task(async function test_svg_link() {
+  await test_contextmenu("#svg-with-link > a",
+    ["context-openlinkintab", true,
+     ...(hasContainers ? ["context-openlinkinusercontext-menu", true] : []),
+     // We need a blank entry here because the containers submenu is
+     // dynamically generated with no ids.
+     ...(hasContainers ? ["", null] : []),
+     "context-openlink",      true,
+     "context-openlinkprivate", true,
+     "---",                   null,
+     "context-bookmarklink",  true,
+     "context-savelink",      true,
+     ...(hasPocket ? ["context-savelinktopocket", true] : []),
+     "context-copylink",      true,
+     "context-searchselect",  true
+    ]
+  );
+
+  await test_contextmenu("#svg-with-link2 > a",
+    ["context-openlinkintab", true,
+     ...(hasContainers ? ["context-openlinkinusercontext-menu", true] : []),
+     // We need a blank entry here because the containers submenu is
+     // dynamically generated with no ids.
+     ...(hasContainers ? ["", null] : []),
+     "context-openlink",      true,
+     "context-openlinkprivate", true,
+     "---",                   null,
+     "context-bookmarklink",  true,
+     "context-savelink",      true,
+     ...(hasPocket ? ["context-savelinktopocket", true] : []),
+     "context-copylink",      true,
+     "context-searchselect",  true
+    ]
+  );
+
+  await test_contextmenu("#svg-with-link3 > a",
+    ["context-openlinkintab", true,
+     ...(hasContainers ? ["context-openlinkinusercontext-menu", true] : []),
+     // We need a blank entry here because the containers submenu is
+     // dynamically generated with no ids.
+     ...(hasContainers ? ["", null] : []),
+     "context-openlink",      true,
+     "context-openlinkprivate", true,
+     "---",                   null,
+     "context-bookmarklink",  true,
+     "context-savelink",      true,
+     ...(hasPocket ? ["context-savelinktopocket", true] : []),
+     "context-copylink",      true,
+     "context-searchselect",  true
+    ]
+  );
+});
+
 add_task(async function test_cleanup_html() {
   gBrowser.removeCurrentTab();
 });

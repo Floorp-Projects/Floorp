@@ -8,15 +8,6 @@
 // it for, so we can disable it for this test.
 /* eslint-disable mozilla/no-cpows-in-tests */
 
-function setup() {
-  const SUGGEST_URLBAR_PREF = "browser.urlbar.suggest.searches";
-  Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, false);
-
-  registerCleanupFunction(() => {
-    Services.prefs.clearUserPref(SUGGEST_URLBAR_PREF);
-  });
-}
-
 add_task(async function() {
   let keyword = "test";
 
@@ -250,7 +241,6 @@ add_task(async function() {
     });
   }
 
-  await setup();
   await extension.startup();
 
   await SimpleTest.promiseFocus(window);
