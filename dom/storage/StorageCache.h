@@ -20,7 +20,7 @@
 namespace mozilla {
 namespace dom {
 
-class Storage;
+class LocalStorage;
 class StorageUsage;
 class StorageManagerBase;
 class StorageDBBridge;
@@ -84,7 +84,7 @@ public:
     // QuotaExceededError may be returned without the mutation being applied.
     ContentMutation,
     // The mutation initially was triggered in a different process and is being
-    // propagated to this cache via Storage::ApplyEvent.  The mutation should
+    // propagated to this cache via LocalStorage::ApplyEvent.  The mutation should
     // not be sent to the sDatabase because the originating process is already
     // doing that.  (In addition to the redundant writes being wasteful, there
     // is the potential for other processes to see inconsistent state from the
@@ -110,29 +110,29 @@ public:
   void CloneFrom(const StorageCache* aThat);
 
   // Get size of per-origin data.
-  int64_t GetOriginQuotaUsage(const Storage* aStorage) const;
+  int64_t GetOriginQuotaUsage(const LocalStorage* aStorage) const;
 
   // Starts async preload of this cache if it persistent and not loaded.
   void Preload();
 
   // The set of methods that are invoked by DOM storage web API.
-  // We are passing the Storage object just to let the cache
+  // We are passing the LocalStorage object just to let the cache
   // read properties like mPrivate, mPrincipal and mSessionOnly.
   // Get* methods return error when load from the database has failed.
-  nsresult GetLength(const Storage* aStorage, uint32_t* aRetval);
-  nsresult GetKey(const Storage* aStorage, uint32_t index, nsAString& aRetval);
-  nsresult GetItem(const Storage* aStorage, const nsAString& aKey,
+  nsresult GetLength(const LocalStorage* aStorage, uint32_t* aRetval);
+  nsresult GetKey(const LocalStorage* aStorage, uint32_t index, nsAString& aRetval);
+  nsresult GetItem(const LocalStorage* aStorage, const nsAString& aKey,
                    nsAString& aRetval);
-  nsresult SetItem(const Storage* aStorage, const nsAString& aKey,
+  nsresult SetItem(const LocalStorage* aStorage, const nsAString& aKey,
                    const nsString& aValue, nsString& aOld,
                    const MutationSource aSource=ContentMutation);
-  nsresult RemoveItem(const Storage* aStorage, const nsAString& aKey,
+  nsresult RemoveItem(const LocalStorage* aStorage, const nsAString& aKey,
                       nsString& aOld,
                       const MutationSource aSource=ContentMutation);
-  nsresult Clear(const Storage* aStorage,
+  nsresult Clear(const LocalStorage* aStorage,
                  const MutationSource aSource=ContentMutation);
 
-  void GetKeys(const Storage* aStorage, nsTArray<nsString>& aKeys);
+  void GetKeys(const LocalStorage* aStorage, nsTArray<nsString>& aKeys);
 
   // Whether the principal equals principal the cache was created for
   bool CheckPrincipal(nsIPrincipal* aPrincipal) const;
@@ -193,10 +193,10 @@ private:
   void WaitForPreload(mozilla::Telemetry::HistogramID aTelemetryID);
 
   // Helper to get one of the 3 data sets (regular, private, session)
-  Data& DataSet(const Storage* aStorage);
+  Data& DataSet(const LocalStorage* aStorage);
 
   // Whether the storage change is about to persist
-  bool Persist(const Storage* aStorage) const;
+  bool Persist(const LocalStorage* aStorage) const;
 
   // Changes the quota usage on the given data set if it fits the quota.
   // If not, then false is returned and no change to the set must be done.
@@ -210,7 +210,7 @@ private:
   // user's storage through the use of multiple domains.
   bool ProcessUsageDelta(uint32_t aGetDataSetIndex, const int64_t aDelta,
                          const MutationSource aSource=ContentMutation);
-  bool ProcessUsageDelta(const Storage* aStorage, const int64_t aDelta,
+  bool ProcessUsageDelta(const LocalStorage* aStorage, const int64_t aDelta,
                          const MutationSource aSource=ContentMutation);
 
 private:
