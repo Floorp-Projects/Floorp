@@ -157,16 +157,16 @@ fuzzy-if(d2d&&layersGPUAccelerated,3,1200) == dynamic-rect-02.svg dynamic-rect-0
 == dynamic-stroke-opacity-01.svg pass.svg
 == dynamic-stroke-width-01.svg pass.svg
 == dynamic-switch-01.svg pass.svg
-fails-if(stylo) == dynamic-text-01.svg dynamic-text-01-ref.svg
-fuzzy-if(d2d&&layersGPUAccelerated,3,12739) fails-if(stylo) == dynamic-text-02.svg dynamic-text-02-ref.svg # bug 776038 for Win7, Win8
-fuzzy-if(d2d&&layersGPUAccelerated,2,10539) fails-if(stylo) == dynamic-text-03.svg dynamic-text-03-ref.svg # bug 776038 for Win7
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),47,89) fails-if(stylo) == dynamic-text-04.svg dynamic-text-04-ref.svg # bug 776038 for Win7
+== dynamic-text-01.svg dynamic-text-01-ref.svg
+fuzzy-if(d2d&&layersGPUAccelerated,3,12739) == dynamic-text-02.svg dynamic-text-02-ref.svg # bug 776038 for Win7, Win8
+fuzzy-if(d2d&&layersGPUAccelerated,2,10539) == dynamic-text-03.svg dynamic-text-03-ref.svg # bug 776038 for Win7
+fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),47,89) == dynamic-text-04.svg dynamic-text-04-ref.svg # bug 776038 for Win7
 == dynamic-text-05.svg pass.svg
 == dynamic-text-06.svg pass.svg
-fails-if(stylo) == dynamic-text-07.svg dynamic-text-07-ref.svg
-fails-if(stylo) == dynamic-text-08.svg dynamic-text-08-ref.svg
+== dynamic-text-07.svg dynamic-text-07-ref.svg
+== dynamic-text-08.svg dynamic-text-08-ref.svg
 == dynamic-text-attr-01.svg dynamic-text-attr-01-ref.svg
-fails-if(stylo) == dynamic-textPath-01.svg dynamic-textPath-01-ref.svg
+== dynamic-textPath-01.svg dynamic-textPath-01-ref.svg
 == dynamic-textPath-02.svg dynamic-textPath-02-ref.svg
 == dynamic-textPath-03.svg dynamic-textPath-03-ref.svg
 == dynamic-use-01.svg pass.svg
@@ -188,7 +188,7 @@ random == dynamic-use-nested-01b.svg dynamic-use-nested-01-ref.svg
 == fallback-color-02a.svg fallback-color-02-ref.svg
 == fallback-color-02b.svg fallback-color-02-ref.svg
 == fallback-color-03.svg pass.svg
-fuzzy-if(skiaContent,1,2) fails-if(stylo) == fallback-color-04.svg pass.svg
+fuzzy-if(skiaContent,1,2) == fallback-color-04.svg pass.svg
 == fallback-color-05.svg fallback-color-05-ref.svg
 
 == filter-basic-01.svg pass.svg
@@ -236,10 +236,10 @@ fuzzy-if(Android,18,600) == foreignObject-fixedpos-01.html foreignObject-dynamic
 
 == getElementById-a-element-01.svg pass.svg
 
-fuzzy-if(Android,9,980) fuzzy-if(skiaContent,3,32000) fails-if(stylo) == gradient-live-01a.svg gradient-live-01-ref.svg
-fuzzy-if(Android,9,980) fuzzy-if(skiaContent,3,32000) fails-if(stylo) == gradient-live-01b.svg gradient-live-01-ref.svg
-fuzzy-if(Android,9,980) fuzzy-if(skiaContent,3,32000) fails-if(stylo) == gradient-live-01c.svg gradient-live-01-ref.svg
-fuzzy-if(Android,9,980) fuzzy-if(skiaContent,3,32000) fails-if(stylo) == gradient-live-01d.svg gradient-live-01-ref.svg
+fuzzy-if(Android,9,980) fuzzy-if(skiaContent,3,32000) == gradient-live-01a.svg gradient-live-01-ref.svg
+fuzzy-if(Android,9,980) fuzzy-if(skiaContent,3,32000) == gradient-live-01b.svg gradient-live-01-ref.svg
+fuzzy-if(Android,9,980) fuzzy-if(skiaContent,3,32000) == gradient-live-01c.svg gradient-live-01-ref.svg
+fuzzy-if(Android,9,980) fuzzy-if(skiaContent,3,32000) == gradient-live-01d.svg gradient-live-01-ref.svg
 == gradient-transform-01.svg pass.svg
 == href-attr-change-restyles.svg href-attr-change-restyles-ref.svg
 fuzzy-if(skiaContent,1,550) == import-svg-01.html pass.svg
@@ -319,7 +319,7 @@ fuzzy-if(skiaContent,1,10000) == opacity-and-transform-01.svg opacity-and-transf
 
 fuzzy-if(Android,8,200) == outer-svg-border-and-padding-01.svg outer-svg-border-and-padding-01-ref.svg
 
-fuzzy-if(skiaContent,7,175) fuzzy-if(skiaContent&&webrender,1,225) fails-if(stylo) == outline.html outline-ref.html
+fuzzy-if(skiaContent,7,175) fuzzy-if(skiaContent&&webrender,1,225) == outline.html outline-ref.html
 
 == overflow-on-outer-svg-01.svg overflow-on-outer-svg-01-ref.svg
 == overflow-on-outer-svg-02a.xhtml overflow-on-outer-svg-02-ref.xhtml
@@ -333,7 +333,7 @@ fuzzy-if(skiaContent,7,175) fuzzy-if(skiaContent&&webrender,1,225) fails-if(styl
 == paint-on-maskLayer-1b.html paint-on-maskLayer-1-ref.html
 pref(layout.css.clip-path-shapes.enabled,true) == paint-on-maskLayer-1c.html paint-on-maskLayer-1-ref.html
 pref(svg.paint-order.enabled,true) == paint-order-01.svg paint-order-01-ref.svg
-pref(svg.paint-order.enabled,true) fails-if(stylo) == paint-order-02.svg paint-order-02-ref.svg
+pref(svg.paint-order.enabled,true) == paint-order-02.svg paint-order-02-ref.svg
 pref(svg.paint-order.enabled,true) == paint-order-03.svg paint-order-03-ref.svg
 
 #fuzzy(23,60) fails-if(d2d) == path-01.svg path-01-ref.svg
@@ -439,19 +439,19 @@ fuzzy-if(skiaContent,1,5500) == text-gradient-03.svg pass.svg
 HTTP(..) == text-gradient-04.svg text-gradient-04-ref.svg
 == text-in-link-01.svg text-in-link-01-ref.svg
 == text-in-link-02.svg text-in-link-02-ref.svg
-fails-if(stylo) == text-in-link-03.svg text-in-link-03-ref.svg
+== text-in-link-03.svg text-in-link-03-ref.svg
 # Tests for bug 546813: sanity-check using HTML text, then test SVG behavior.
 != text-language-00.xhtml text-language-00-ref.xhtml
 random-if(gtkWidget) != text-language-01.xhtml text-language-01-ref.xhtml # Fails on Linux tryserver due to lack of CJK fonts.
 random-if(stylo) == text-layout-01.svg text-layout-01-ref.svg
-fails-if(stylo) == text-layout-02.svg text-layout-02-ref.svg
-fails-if(stylo) == text-layout-03.svg text-layout-03-ref.svg
-fails-if(stylo) == text-layout-04.svg text-layout-04-ref.svg
+== text-layout-02.svg text-layout-02-ref.svg
+== text-layout-03.svg text-layout-03-ref.svg
+== text-layout-04.svg text-layout-04-ref.svg
 == text-layout-05.svg text-layout-05-ref.svg
-fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,3) fails-if(stylo) == text-layout-06.svg text-layout-06-ref.svg
-fails-if(stylo) == text-layout-07.svg text-layout-07-ref.svg
+fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,3) == text-layout-06.svg text-layout-06-ref.svg
+== text-layout-07.svg text-layout-07-ref.svg
 == text-layout-08.svg text-layout-08-ref.svg
-fails-if(stylo) == text-scale-01.svg text-scale-01-ref.svg
+== text-scale-01.svg text-scale-01-ref.svg
 fuzzy-if(skiaContent,2,1000) HTTP(..) == text-scale-02.svg text-scale-02-ref.svg
 HTTP(..) == text-scale-03.svg text-scale-03-ref.svg
 
@@ -465,7 +465,7 @@ HTTP(..) == text-scale-03.svg text-scale-03-ref.svg
 fuzzy(16,3) == text-stroke-scaling-02a.html text-stroke-scaling-02-ref.html # antialiasing
 fuzzy(16,3) == text-stroke-scaling-02b.html text-stroke-scaling-02-ref.html # antialiasing
 == text-stroke-scaling-02a.html text-stroke-scaling-02b.html
-fails-if(stylo) == textPath-01.svg textPath-01-ref.svg
+== textPath-01.svg textPath-01-ref.svg
 == textPath-02.svg pass.svg
 fuzzy-if(skiaContent,1,610) == textPath-03.svg pass.svg
 == textPath-04.svg pass.svg
