@@ -22,47 +22,32 @@ class nsPIDOMWindowInner;
 namespace mozilla {
 namespace dom {
 
-class StorageManagerBase;
-class StorageCache;
-class StorageEvent;
-
-class Storage final
-  : public nsIDOMStorage
-  , public nsSupportsWeakReference
-  , public nsWrapperCache
+class Storage : public nsIDOMStorage
+              , public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Storage,
                                                          nsIDOMStorage)
 
+  Storage(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal);
+
   enum StorageType {
-    LocalStorage = 1,
-    SessionStorage = 2
+    eSessionStorage,
+    eLocalStorage,
   };
 
-  StorageType GetType() const;
+  virtual StorageType Type() const = 0;
 
-  StorageManagerBase* GetManager() const
+  virtual bool IsForkOf(const Storage* aStorage) const = 0;
+
+  virtual int64_t GetOriginQuotaUsage() const = 0;
+
+  nsIPrincipal*
+  Principal() const
   {
-    return mManager;
+    return mPrincipal;
   }
-
-  StorageCache const* GetCache() const
-  {
-    return mCache;
-  }
-
-  nsIPrincipal* GetPrincipal();
-  bool PrincipalEquals(nsIPrincipal* aPrincipal);
-  bool CanAccess(nsIPrincipal* aPrincipal);
-
-  Storage(nsPIDOMWindowInner* aWindow,
-          StorageManagerBase* aManager,
-          StorageCache* aCache,
-          const nsAString& aDocumentURI,
-          nsIPrincipal* aPrincipal,
-          bool aIsPrivate);
 
   // WebIDL
   JSObject* WrapObject(JSContext* aCx,
@@ -73,20 +58,19 @@ public:
     return mWindow;
   }
 
-  int64_t GetOriginQuotaUsage() const;
+  virtual uint32_t
+  GetLength(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) = 0;
 
-  uint32_t GetLength(nsIPrincipal& aSubjectPrincipal,
-                     ErrorResult& aRv);
+  virtual void
+  Key(uint32_t aIndex, nsAString& aResult,
+      nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) = 0;
 
-  void Key(uint32_t aIndex, nsAString& aResult,
-           nsIPrincipal& aSubjectPrincipal,
-           ErrorResult& aRv);
+  virtual void
+  GetItem(const nsAString& aKey, nsAString& aResult,
+          nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) = 0;
 
-  void GetItem(const nsAString& aKey, nsAString& aResult,
-               nsIPrincipal& aSubjectPrincipal,
-               ErrorResult& aRv);
-
-  void GetSupportedNames(nsTArray<nsString>& aKeys);
+  virtual void
+  GetSupportedNames(nsTArray<nsString>& aKeys) = 0;
 
   void NamedGetter(const nsAString& aKey, bool& aFound, nsAString& aResult,
                    nsIPrincipal& aSubjectPrincipal,
@@ -96,9 +80,9 @@ public:
     aFound = !aResult.IsVoid();
   }
 
-  void SetItem(const nsAString& aKey, const nsAString& aValue,
-               nsIPrincipal& aSubjectPrincipal,
-               ErrorResult& aRv);
+  virtual void
+  SetItem(const nsAString& aKey, const nsAString& aValue,
+          nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) = 0;
 
   void NamedSetter(const nsAString& aKey, const nsAString& aValue,
                    nsIPrincipal& aSubjectPrincipal,
@@ -107,9 +91,9 @@ public:
     SetItem(aKey, aValue, aSubjectPrincipal, aRv);
   }
 
-  void RemoveItem(const nsAString& aKey,
-                  nsIPrincipal& aSubjectPrincipal,
-                  ErrorResult& aRv);
+  virtual void
+  RemoveItem(const nsAString& aKey, nsIPrincipal& aSubjectPrincipal,
+             ErrorResult& aRv) = 0;
 
   void NamedDeleter(const nsAString& aKey, bool& aFound,
                     nsIPrincipal& aSubjectPrincipal,
@@ -120,41 +104,21 @@ public:
     aFound = !aRv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION);
   }
 
-  void Clear(nsIPrincipal& aSubjectPrincipal,
-             ErrorResult& aRv);
+  virtual void
+  Clear(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) = 0;
 
-  bool IsPrivate() const { return mIsPrivate; }
   bool IsSessionOnly() const { return mIsSessionOnly; }
 
-  bool IsForkOf(const Storage* aOther) const
-  {
-    MOZ_ASSERT(aOther);
-    return mCache == aOther->mCache;
-  }
-
-  // aStorage can be null if this method is called by ContentChild.
-  //
-  // aImmediateDispatch is for use by (main-thread) IPC code so that PContent
-  // ordering can be maintained.  Without this, the event would be enqueued and
-  // run in a future turn of the event loop, potentially allowing other PContent
-  // Recv* methods to trigger script that wants to assume our localstorage
-  // changes have already been applied.  This is the case for message manager
-  // messages which are used by ContentTask testing logic and webextensions.
   static void
-  DispatchStorageEvent(StorageType aStorageType,
-                       const nsAString& aDocumentURI,
-                       const nsAString& aKey,
-                       const nsAString& aOldValue,
-                       const nsAString& aNewValue,
-                       nsIPrincipal* aPrincipal,
-                       bool aIsPrivate,
-                       Storage* aStorage,
-                       bool aImmediateDispatch);
-
-  void
-  ApplyEvent(StorageEvent* aStorageEvent);
+  NotifyChange(Storage* aStorage, nsIPrincipal* aPrincipal,
+               const nsAString& aKey, const nsAString& aOldValue,
+               const nsAString& aNewValue, const char16_t* aStorageType,
+               const nsAString& aDocumentURI, bool aIsPrivate,
+               bool aImmediateDispatch);
 
 protected:
+  virtual ~Storage();
+
   // The method checks whether the caller can use a storage.
   // CanUseStorage is called before any DOM initiated operation
   // on a storage is about to happen and ensures that the storage's
@@ -165,31 +129,13 @@ protected:
   bool CanUseStorage(nsIPrincipal& aSubjectPrincipal);
 
 private:
-  ~Storage();
-
-  friend class StorageManagerBase;
-  friend class StorageCache;
-
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
-  RefPtr<StorageManagerBase> mManager;
-  RefPtr<StorageCache> mCache;
-  nsString mDocumentURI;
-
-  // Principal this Storage (i.e. localStorage or sessionStorage) has
-  // been created for
   nsCOMPtr<nsIPrincipal> mPrincipal;
-
-  // Whether this storage is running in private-browsing window.
-  bool mIsPrivate : 1;
 
   // Whether storage is set to persist data only per session, may change
   // dynamically and is set by CanUseStorage function that is called
   // before any operation on the storage.
   bool mIsSessionOnly : 1;
-
-  void BroadcastChangeNotification(const nsSubstring& aKey,
-                                   const nsSubstring& aOldValue,
-                                   const nsSubstring& aNewValue);
 };
 
 } // namespace dom

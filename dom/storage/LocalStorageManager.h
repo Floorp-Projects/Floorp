@@ -10,7 +10,8 @@
 #include "nsIDOMStorageManager.h"
 #include "StorageObserver.h"
 
-#include "StorageCache.h"
+#include "LocalStorage.h"
+#include "LocalStorageCache.h"
 #include "mozilla/dom/Storage.h"
 
 #include "nsTHashtable.h"
@@ -24,71 +25,69 @@ class OriginAttributesPattern;
 
 namespace dom {
 
-const Storage::StorageType SessionStorage = Storage::SessionStorage;
-const Storage::StorageType LocalStorage = Storage::LocalStorage;
-
-class StorageManagerBase : public nsIDOMStorageManager
-                         , public StorageObserverSink
+class LocalStorageManager final : public nsIDOMStorageManager
+                                , public StorageObserverSink
 {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMSTORAGEMANAGER
 
 public:
-  virtual Storage::StorageType Type() { return mType; }
+  LocalStorageManager();
 
   // Reads the preference for DOM storage quota
   static uint32_t GetQuota();
+
   // Gets (but not ensures) cache for the given scope
-  StorageCache* GetCache(const nsACString& aOriginSuffix,
-                         const nsACString& aOriginNoSuffix);
+  LocalStorageCache* GetCache(const nsACString& aOriginSuffix,
+                              const nsACString& aOriginNoSuffix);
+
   // Returns object keeping usage cache for the scope.
-  already_AddRefed<StorageUsage> GetOriginUsage(const nsACString& aOriginNoSuffix);
+  already_AddRefed<StorageUsage>
+  GetOriginUsage(const nsACString& aOriginNoSuffix);
 
   static nsCString CreateOrigin(const nsACString& aOriginSuffix,
                                 const nsACString& aOriginNoSuffix);
 
-protected:
-  explicit StorageManagerBase(Storage::StorageType aType);
-  virtual ~StorageManagerBase();
-
 private:
+  ~LocalStorageManager();
+
   // StorageObserverSink, handler to various chrome clearing notification
-  virtual nsresult Observe(const char* aTopic,
-                           const nsAString& aOriginAttributesPattern,
-                           const nsACString& aOriginScope) override;
+  nsresult Observe(const char* aTopic,
+                   const nsAString& aOriginAttributesPattern,
+                   const nsACString& aOriginScope) override;
 
   // Since nsTHashtable doesn't like multiple inheritance, we have to aggregate
-  // StorageCache into the entry.
-  class StorageCacheHashKey : public nsCStringHashKey
+  // LocalStorageCache into the entry.
+  class LocalStorageCacheHashKey : public nsCStringHashKey
   {
   public:
-    explicit StorageCacheHashKey(const nsACString* aKey)
+    explicit LocalStorageCacheHashKey(const nsACString* aKey)
       : nsCStringHashKey(aKey)
-      , mCache(new StorageCache(aKey))
+      , mCache(new LocalStorageCache(aKey))
     {}
 
-    StorageCacheHashKey(const StorageCacheHashKey& aOther)
+    LocalStorageCacheHashKey(const LocalStorageCacheHashKey& aOther)
       : nsCStringHashKey(aOther)
     {
       NS_ERROR("Shouldn't be called");
     }
 
-    StorageCache* cache() { return mCache; }
+    LocalStorageCache* cache() { return mCache; }
     // Keep the cache referenced forever, used for sessionStorage.
     void HardRef() { mCacheRef = mCache; }
 
   private:
     // weak ref only since cache references its manager.
-    StorageCache* mCache;
+    LocalStorageCache* mCache;
     // hard ref when this is sessionStorage to keep it alive forever.
-    RefPtr<StorageCache> mCacheRef;
+    RefPtr<LocalStorageCache> mCacheRef;
   };
 
   // Ensures cache for a scope, when it doesn't exist it is created and
   // initalized, this also starts preload of persistent data.
-  already_AddRefed<StorageCache> PutCache(const nsACString& aOriginSuffix,
-                                          const nsACString& aOriginNoSuffix,
-                                          nsIPrincipal* aPrincipal);
+  already_AddRefed<LocalStorageCache> PutCache(const nsACString& aOriginSuffix,
+                                               const nsACString& aOriginNoSuffix,
+                                               nsIPrincipal* aPrincipal);
 
   enum class CreateMode {
     // GetStorage: do not create if it's not already in memory.
@@ -108,10 +107,8 @@ private:
                               nsIDOMStorage** aRetval);
 
   // Suffix->origin->cache map
-  typedef nsTHashtable<StorageCacheHashKey> CacheOriginHashtable;
+  typedef nsTHashtable<LocalStorageCacheHashKey> CacheOriginHashtable;
   nsClassHashtable<nsCStringHashKey, CacheOriginHashtable> mCaches;
-
-  const Storage::StorageType mType;
 
   // If mLowDiskSpace is true it indicates a low device storage situation and
   // so no localStorage writes are allowed. sessionStorage writes are still
@@ -123,41 +120,21 @@ private:
                    const OriginAttributesPattern& aPattern,
                    const nsACString& aKeyPrefix);
 
-protected:
+  // Global getter of localStorage manager service
+  static LocalStorageManager* Self() { return sSelf; }
+
+  // Like Self, but creates an instance if we're not yet initialized.
+  static LocalStorageManager* Ensure();
+
+private:
   // Keeps usage cache objects for eTLD+1 scopes we have touched.
   nsDataHashtable<nsCStringHashKey, RefPtr<StorageUsage> > mUsages;
 
-  friend class StorageCache;
+  friend class LocalStorageCache;
   // Releases cache since it is no longer referrered by any Storage object.
-  virtual void DropCache(StorageCache* aCache);
-};
+  virtual void DropCache(LocalStorageCache* aCache);
 
-// Derived classes to allow two different contract ids, one for localStorage and
-// one for sessionStorage management.  localStorage manager is used as service
-// scoped to the application while sessionStorage managers are instantiated by
-// each top doc shell in the application since sessionStorages are isolated per
-// top level browsing context.  The code may easily by shared by both.
-
-class DOMLocalStorageManager final : public StorageManagerBase
-{
-public:
-  DOMLocalStorageManager();
-  virtual ~DOMLocalStorageManager();
-
-  // Global getter of localStorage manager service
-  static DOMLocalStorageManager* Self() { return sSelf; }
-
-  // Like Self, but creates an instance if we're not yet initialized.
-  static DOMLocalStorageManager* Ensure();
-
-private:
-  static DOMLocalStorageManager* sSelf;
-};
-
-class DOMSessionStorageManager final : public StorageManagerBase
-{
-public:
-  DOMSessionStorageManager();
+  static LocalStorageManager* sSelf;
 };
 
 } // namespace dom

@@ -560,8 +560,8 @@ nsLineBox::ClearFloatEdges()
 {
   MOZ_ASSERT(IsInline(), "block line can't have float edges");
   if (mInlineData) {
-    mInlineData->mFloatEdgeIStart = NS_INTRINSIC_WIDTH_UNKNOWN;
-    mInlineData->mFloatEdgeIEnd = NS_INTRINSIC_WIDTH_UNKNOWN;
+    mInlineData->mFloatEdgeIStart = nscoord_MIN;
+    mInlineData->mFloatEdgeIEnd = nscoord_MIN;
   }
 }
 

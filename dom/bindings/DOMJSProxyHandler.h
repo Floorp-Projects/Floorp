@@ -132,16 +132,6 @@ public:
   static JSObject* GetExpandoObject(JSObject* obj);
 
   /*
-   * Clear the "external references" to this object.  If you are not
-   * nsWrapperCAche::ReleaseWrapper, you do NOT want to be calling this method.
-   *
-   * XXXbz if we nixed the DOM expando hash and just had a finalizer that
-   * cleared out the value in the ExpandoAndGeneration in the shadowing case,
-   * could we just get rid of this function altogether?
-   */
-  static void ClearExternalRefsForWrapperRelease(JSObject* obj);
-
-  /*
    * Clear the expando object for the given DOM proxy and return it.  This
    * function will ensure that the returned object is exposed to active JS if
    * the given object is exposed.
