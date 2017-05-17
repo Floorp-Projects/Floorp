@@ -96,6 +96,7 @@ FileBlockCache::FileBlockCache()
     mFDCurrentPos(0),
     mDataMutex("MediaCache.Writer.Data.Mutex"),
     mIsWriteScheduled(false),
+    mIsReading(false),
     mIsOpen(false)
 {
 }
@@ -195,7 +196,7 @@ void FileBlockCache::EnsureWriteScheduled()
   mDataMutex.AssertCurrentThreadOwns();
   MOZ_ASSERT(mIsOpen);
 
-  if (mIsWriteScheduled) {
+  if (mIsWriteScheduled || mIsReading) {
     return;
   }
   mIsWriteScheduled = true;
@@ -299,6 +300,12 @@ nsresult FileBlockCache::Run()
       return NS_ERROR_FAILURE;
     }
 
+    if (mIsReading) {
+      // We're trying to read; postpone all writes. (Reader will resume writes.)
+      mIsWriteScheduled = false;
+      return NS_OK;
+    }
+
     // Process each pending change. We pop the index out of the change
     // list, but leave the BlockChange in mBlockChanges until the change
     // is written to file. This is so that any read which happens while
@@ -347,6 +354,15 @@ nsresult FileBlockCache::Read(int64_t aOffset,
 
   if (!mIsOpen || (aOffset / BLOCK_SIZE) > INT32_MAX)
     return NS_ERROR_FAILURE;
+
+  mIsReading = true;
+  auto exitRead = MakeScopeExit([&] {
+    mIsReading = false;
+    if (!mChangeIndexList.empty()) {
+      // mReading has stopped or prevented pending writes, resume them.
+      EnsureWriteScheduled();
+    }
+  });
 
   int32_t bytesToRead = aLength;
   int64_t offset = aOffset;
