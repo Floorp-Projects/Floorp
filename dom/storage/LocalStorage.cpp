@@ -7,6 +7,7 @@
 #include "LocalStorage.h"
 #include "LocalStorageManager.h"
 #include "StorageCache.h"
+#include "StorageUtils.h"
 
 #include "nsIObserverService.h"
 #include "nsIScriptSecurityManager.h"
@@ -174,41 +175,6 @@ LocalStorage::Clear(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv)
   }
 }
 
-namespace {
-
-class StorageNotifierRunnable : public Runnable
-{
-public:
-  StorageNotifierRunnable(nsISupports* aSubject, bool aPrivateBrowsing)
-    : Runnable("StorageNotifierRunnable")
-    , mSubject(aSubject)
-    , mPrivateBrowsing(aPrivateBrowsing)
-  { }
-
-  NS_DECL_NSIRUNNABLE
-
-private:
-  nsCOMPtr<nsISupports> mSubject;
-  const bool mPrivateBrowsing;
-};
-
-NS_IMETHODIMP
-StorageNotifierRunnable::Run()
-{
-  nsCOMPtr<nsIObserverService> observerService =
-    mozilla::services::GetObserverService();
-  if (observerService) {
-    observerService->NotifyObservers(mSubject,
-                                     mPrivateBrowsing
-                                       ? "dom-private-storage2-changed"
-                                       : "dom-storage2-changed",
-                                     u"localStorage");
-  }
-  return NS_OK;
-}
-
-} // namespace
-
 void
 LocalStorage::BroadcastChangeNotification(const nsSubstring& aKey,
                                           const nsSubstring& aOldValue,
@@ -237,30 +203,8 @@ LocalStorage::DispatchStorageEvent(const nsAString& aDocumentURI,
                                    Storage* aStorage,
                                    bool aImmediateDispatch)
 {
-  StorageEventInit dict;
-  dict.mBubbles = false;
-  dict.mCancelable = false;
-  dict.mKey = aKey;
-  dict.mNewValue = aNewValue;
-  dict.mOldValue = aOldValue;
-  dict.mStorageArea = aStorage;
-  dict.mUrl = aDocumentURI;
-
-  // Note, this DOM event should never reach JS. It is cloned later in
-  // nsGlobalWindow.
-  RefPtr<StorageEvent> event =
-    StorageEvent::Constructor(nullptr, NS_LITERAL_STRING("storage"), dict);
-
-  event->SetPrincipal(aPrincipal);
-
-  RefPtr<StorageNotifierRunnable> r =
-    new StorageNotifierRunnable(event, aIsPrivate);
-
-  if (aImmediateDispatch) {
-    Unused << r->Run();
-  } else {
-    NS_DispatchToMainThread(r);
-  }
+  NotifyChange(aStorage, aPrincipal, aKey, aOldValue, aNewValue,
+               u"localStorage", aDocumentURI, aIsPrivate, aImmediateDispatch);
 
   // If we are in the parent process and we have the principal, we want to
   // broadcast this event to every other process.
@@ -327,15 +271,10 @@ LocalStorage::CanUseStorage(nsIPrincipal& aSubjectPrincipal)
   return CanAccess(&aSubjectPrincipal);
 }
 
-// Defined in StorageManager.cpp
-extern bool
-PrincipalsEqual(nsIPrincipal* aObjectPrincipal,
-                nsIPrincipal* aSubjectPrincipal);
-
 bool
 LocalStorage::PrincipalEquals(nsIPrincipal* aPrincipal)
 {
-  return PrincipalsEqual(mPrincipal, aPrincipal);
+  return StorageUtils::PrincipalsEqual(mPrincipal, aPrincipal);
 }
 
 void

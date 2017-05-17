@@ -32,19 +32,23 @@ class LocalStorageManager final : public nsIDOMStorageManager
   NS_DECL_NSIDOMSTORAGEMANAGER
 
 public:
+  LocalStorageManager();
+
   // Reads the preference for DOM storage quota
   static uint32_t GetQuota();
+
   // Gets (but not ensures) cache for the given scope
   StorageCache* GetCache(const nsACString& aOriginSuffix,
                          const nsACString& aOriginNoSuffix);
+
   // Returns object keeping usage cache for the scope.
-  already_AddRefed<StorageUsage> GetOriginUsage(const nsACString& aOriginNoSuffix);
+  already_AddRefed<StorageUsage>
+  GetOriginUsage(const nsACString& aOriginNoSuffix);
 
   static nsCString CreateOrigin(const nsACString& aOriginSuffix,
                                 const nsACString& aOriginNoSuffix);
 
 private:
-  LocalStorageManager();
   ~LocalStorageManager();
 
   // StorageObserverSink, handler to various chrome clearing notification

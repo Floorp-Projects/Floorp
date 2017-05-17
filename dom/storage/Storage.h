@@ -109,6 +109,13 @@ public:
 
   virtual bool IsSessionOnly() const = 0;
 
+  static void
+  NotifyChange(Storage* aStorage, nsIPrincipal* aPrincipal,
+               const nsAString& aKey, const nsAString& aOldValue,
+               const nsAString& aNewValue, const char16_t* aStorageType,
+               const nsAString& aDocumentURI, bool aIsPrivate,
+               bool aImmediateDispatch);
+
 protected:
   virtual ~Storage();
 

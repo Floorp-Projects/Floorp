@@ -7,6 +7,7 @@
 #include "LocalStorageManager.h"
 #include "LocalStorage.h"
 #include "StorageDBThread.h"
+#include "StorageUtils.h"
 
 #include "nsIScriptSecurityManager.h"
 #include "nsIEffectiveTLDService.h"
@@ -29,6 +30,8 @@
 namespace mozilla {
 namespace dom {
 
+using namespace StorageUtils;
+
 namespace {
 
 int32_t gQuotaLimit = DEFAULT_QUOTA_LIMIT;
@@ -50,51 +53,6 @@ LocalStorageManager::GetQuota()
   }
 
   return gQuotaLimit * 1024; // pref is in kBs
-}
-
-void
-ReverseString(const nsCSubstring& aSource, nsCSubstring& aResult)
-{
-  nsACString::const_iterator sourceBegin, sourceEnd;
-  aSource.BeginReading(sourceBegin);
-  aSource.EndReading(sourceEnd);
-
-  aResult.SetLength(aSource.Length());
-  nsACString::iterator destEnd;
-  aResult.EndWriting(destEnd);
-
-  while (sourceBegin != sourceEnd) {
-    *(--destEnd) = *sourceBegin;
-    ++sourceBegin;
-  }
-}
-
-nsresult
-CreateReversedDomain(const nsACString& aAsciiDomain,
-                     nsACString& aKey)
-{
-  if (aAsciiDomain.IsEmpty()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  ReverseString(aAsciiDomain, aKey);
-
-  aKey.Append('.');
-  return NS_OK;
-}
-
-bool
-PrincipalsEqual(nsIPrincipal* aObjectPrincipal, nsIPrincipal* aSubjectPrincipal)
-{
-  if (!aSubjectPrincipal) {
-    return true;
-  }
-
-  if (!aObjectPrincipal) {
-    return false;
-  }
-
-  return aSubjectPrincipal->Equals(aObjectPrincipal);
 }
 
 NS_IMPL_ISUPPORTS(LocalStorageManager,
@@ -133,59 +91,6 @@ LocalStorageManager::~LocalStorageManager()
 }
 
 namespace {
-
-nsresult
-AppendOriginNoSuffix(nsIPrincipal* aPrincipal, nsACString& aKey)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIURI> uri;
-  rv = aPrincipal->GetURI(getter_AddRefs(uri));
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!uri) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  nsAutoCString domainOrigin;
-  rv = uri->GetAsciiHost(domainOrigin);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (domainOrigin.IsEmpty()) {
-    // For the file:/// protocol use the exact directory as domain.
-    bool isScheme = false;
-    if (NS_SUCCEEDED(uri->SchemeIs("file", &isScheme)) && isScheme) {
-      nsCOMPtr<nsIURL> url = do_QueryInterface(uri, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = url->GetDirectory(domainOrigin);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-  }
-
-  // Append reversed domain
-  nsAutoCString reverseDomain;
-  rv = CreateReversedDomain(domainOrigin, reverseDomain);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  aKey.Append(reverseDomain);
-
-  // Append scheme
-  nsAutoCString scheme;
-  rv = uri->GetScheme(scheme);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  aKey.Append(':');
-  aKey.Append(scheme);
-
-  // Append port if any
-  int32_t port = NS_GetRealPort(uri);
-  if (port != -1) {
-    aKey.Append(nsPrintfCString(":%d", port));
-  }
-
-  return NS_OK;
-}
 
 nsresult
 CreateQuotaDBKey(nsIPrincipal* aPrincipal,
@@ -309,15 +214,12 @@ LocalStorageManager::GetStorageInternal(CreateMode aCreateMode,
                                         bool aPrivate,
                                         nsIDOMStorage** aRetval)
 {
-  nsresult rv;
-
   nsAutoCString originAttrSuffix;
-  aPrincipal->OriginAttributesRef().CreateSuffix(originAttrSuffix);
-
   nsAutoCString originKey;
-  rv = AppendOriginNoSuffix(aPrincipal, originKey);
-  if (NS_FAILED(rv)) {
-    return NS_ERROR_NOT_AVAILABLE;
+
+  nsresult rv = GenerateOriginKey(aPrincipal, originAttrSuffix, originKey);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
   RefPtr<StorageCache> cache = GetCache(originAttrSuffix, originKey);
@@ -415,11 +317,9 @@ LocalStorageManager::CheckStorage(nsIPrincipal* aPrincipal,
   }
 
   nsAutoCString suffix;
-  aPrincipal->OriginAttributesRef().CreateSuffix(suffix);
-
   nsAutoCString origin;
-  rv = AppendOriginNoSuffix(aPrincipal, origin);
-  if (NS_FAILED(rv)) {
+  rv = GenerateOriginKey(aPrincipal, suffix, origin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
