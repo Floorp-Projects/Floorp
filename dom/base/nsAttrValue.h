@@ -363,6 +363,19 @@ public:
   bool ParseNonNegativeIntValue(const nsAString& aString);
 
   /**
+   * Parse a string value into a clamped non-negative integer.
+   * This method follows the rules for parsing non-negative integer from:
+   * https://html.spec.whatwg.org/multipage/infrastructure.html#clamped-to-the-range
+   *
+   * @param aString the string to parse
+   * @param aDefault value to return for negative or invalid values
+   * @param aMin minimum value
+   * @param aMax maximum value
+   */
+  void ParseClampedNonNegativeInt(const nsAString& aString, int32_t aDefault,
+                                  int32_t aMin, int32_t aMax);
+
+  /**
    * Parse a string value into a positive integer.
    * This method follows the rules for parsing non-negative integer from:
    * http://dev.w3.org/html5/spec/infrastructure.html#rules-for-parsing-non-negative-integers
