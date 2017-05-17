@@ -299,7 +299,7 @@ typedef long ssize_t;
 
 #endif
 
-#include "mozjemalloc_types.h"
+#include "jemalloc_types.h"
 #include "linkedlist.h"
 
 extern "C" void moz_abort();
