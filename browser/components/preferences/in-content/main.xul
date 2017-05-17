@@ -562,12 +562,12 @@
 
   <hbox align="center">
     <checkbox id="useRecommendedPerformanceSettings"
-              label="&useRecommendedPerformanceSettings.label;"
-              accesskey="&useRecommendedPerformanceSettings.accesskey;"
+              label="&useRecommendedPerformanceSettings2.label;"
+              accesskey="&useRecommendedPerformanceSettings2.accesskey;"
               preference="browser.preferences.defaultPerformanceSettings.enabled"/>
     <label id="performanceSettingsLearnMore" class="learnMore text-link">&performanceSettingsLearnMore.label;</label>
   </hbox>
-  <description class="indent">&useRecommendedPerformanceSettings.description;</description>
+  <description class="indent">&useRecommendedPerformanceSettings2.description;</description>
 
   <vbox id="performanceSettings" class="indent" hidden="true">
     <checkbox id="allowHWAccel"
@@ -575,7 +575,7 @@
               accesskey="&allowHWAccel.accesskey;"
               preference="layers.acceleration.disabled"/>
     <hbox align="center">
-      <label id="limitContentProcess" accesskey="&limitContentProcess.accesskey;" control="contentProcessCount">&limitContentProcess.label;</label>
+      <label id="limitContentProcess" accesskey="&limitContentProcess2.accesskey;" control="contentProcessCount">&limitContentProcess2.label;</label>
       <menulist id="contentProcessCount" preference="dom.ipc.processCount">
         <menupopup>
           <menuitem label="1" value="1"/>
@@ -588,6 +588,6 @@
         </menupopup>
       </menulist>
     </hbox>
-    <description>&limitContentProcess.description;</description>
+    <description>&limitContentProcess2.description;</description>
   </vbox>
 </groupbox>
