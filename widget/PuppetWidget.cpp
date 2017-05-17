@@ -92,12 +92,7 @@ PuppetWidget::PuppetWidget(TabChild* aTabChild)
   , mDefaultScale(-1)
   , mCursorHotspotX(0)
   , mCursorHotspotY(0)
-  , mNativeKeyCommandsValid(false)
 {
-  mSingleLineCommands.SetCapacity(4);
-  mMultiLineCommands.SetCapacity(4);
-  mRichTextCommands.SetCapacity(4);
-
   // Setting 'Unknown' means "not yet cached".
   mInputContext.mIMEState.mEnabled = IMEState::UNKNOWN;
 
