@@ -101,7 +101,7 @@ PrincipalsEqual(nsIPrincipal* aObjectPrincipal, nsIPrincipal* aSubjectPrincipal)
 NS_IMPL_ISUPPORTS(StorageManagerBase,
                   nsIDOMStorageManager)
 
-StorageManagerBase::StorageManagerBase(Storage::StorageType aType)
+StorageManagerBase::StorageManagerBase(LocalStorage::StorageType aType)
   : mCaches(8)
   , mType(aType)
   , mLowDiskSpace(false)
@@ -254,7 +254,7 @@ StorageManagerBase::GetOriginUsage(const nsACString& aOriginNoSuffix)
 
   usage = new StorageUsage(aOriginNoSuffix);
 
-  if (mType == LocalStorage) {
+  if (mType == eLocalStorage) {
     StorageDBBridge* db = StorageCache::StartDatabase();
     if (db) {
       db->AsyncGetUsage(usage);
@@ -279,13 +279,13 @@ StorageManagerBase::PutCache(const nsACString& aOriginSuffix,
   CreateQuotaDBKey(aPrincipal, quotaOrigin);
 
   switch (mType) {
-  case SessionStorage:
+  case eSessionStorage:
     // Lifetime handled by the manager, don't persist
     entry->HardRef();
     cache->Init(this, false, aPrincipal, quotaOrigin);
     break;
 
-  case LocalStorage:
+  case eLocalStorage:
     // Lifetime handled by the cache, do persist
     cache->Init(this, true, aPrincipal, quotaOrigin);
     break;
@@ -354,7 +354,7 @@ StorageManagerBase::GetStorageInternal(CreateMode aCreateMode,
     // There is always a single instance of a cache per scope
     // in a single instance of a DOM storage manager.
     cache = PutCache(originAttrSuffix, originKey, aPrincipal);
-  } else if (mType == SessionStorage) {
+  } else if (mType == eSessionStorage) {
     if (!cache->CheckPrincipal(aPrincipal)) {
       return NS_ERROR_DOM_SECURITY_ERR;
     }
@@ -363,7 +363,7 @@ StorageManagerBase::GetStorageInternal(CreateMode aCreateMode,
   if (aRetval) {
     nsCOMPtr<nsPIDOMWindowInner> inner = nsPIDOMWindowInner::From(aWindow);
 
-    nsCOMPtr<nsIDOMStorage> storage = new Storage(
+    nsCOMPtr<nsIDOMStorage> storage = new LocalStorage(
       inner, this, cache, aDocumentURI, aPrincipal, aPrivate);
     storage.forget(aRetval);
   }
@@ -403,12 +403,12 @@ StorageManagerBase::GetStorage(mozIDOMWindow* aWindow,
 NS_IMETHODIMP
 StorageManagerBase::CloneStorage(nsIDOMStorage* aStorage)
 {
-  if (mType != SessionStorage) {
+  if (mType != eSessionStorage) {
     // Cloning is supported only for sessionStorage
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  RefPtr<Storage> storage = static_cast<Storage*>(aStorage);
+  RefPtr<LocalStorage> storage = static_cast<LocalStorage*>(aStorage);
   if (!storage) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -439,7 +439,7 @@ StorageManagerBase::CheckStorage(nsIPrincipal* aPrincipal,
 {
   nsresult rv;
 
-  RefPtr<Storage> storage = static_cast<Storage*>(aStorage);
+  RefPtr<LocalStorage> storage = static_cast<LocalStorage*>(aStorage);
   if (!storage) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -480,7 +480,7 @@ StorageManagerBase::GetLocalStorageForPrincipal(nsIPrincipal* aPrincipal,
                                                 bool aPrivate,
                                                 nsIDOMStorage** aRetval)
 {
-  if (mType != LocalStorage) {
+  if (mType != eLocalStorage) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -554,7 +554,7 @@ StorageManagerBase::Observe(const char* aTopic,
   // Clear localStorage data beloging to an origin pattern
   if (!strcmp(aTopic, "origin-attr-pattern-cleared")) {
     // sessionStorage is expected to stay
-    if (mType == SessionStorage) {
+    if (mType == eSessionStorage) {
       return NS_OK;
     }
 
@@ -570,7 +570,7 @@ StorageManagerBase::Observe(const char* aTopic,
   }
 
   if (!strcmp(aTopic, "low-disk-space")) {
-    if (mType == LocalStorage) {
+    if (mType == eLocalStorage) {
       mLowDiskSpace = true;
     }
 
@@ -578,7 +578,7 @@ StorageManagerBase::Observe(const char* aTopic,
   }
 
   if (!strcmp(aTopic, "no-low-disk-space")) {
-    if (mType == LocalStorage) {
+    if (mType == eLocalStorage) {
       mLowDiskSpace = false;
     }
 
@@ -587,7 +587,7 @@ StorageManagerBase::Observe(const char* aTopic,
 
 #ifdef DOM_STORAGE_TESTS
   if (!strcmp(aTopic, "test-reload")) {
-    if (mType != LocalStorage) {
+    if (mType != eLocalStorage) {
       return NS_OK;
     }
 
@@ -615,7 +615,7 @@ StorageManagerBase::Observe(const char* aTopic,
 // DOMLocalStorageManager
 
 DOMLocalStorageManager::DOMLocalStorageManager()
-  : StorageManagerBase(LocalStorage)
+  : StorageManagerBase(eLocalStorage)
 {
   NS_ASSERTION(!sSelf, "Somebody is trying to do_CreateInstance(\"@mozilla/dom/localStorage-manager;1\"");
   sSelf = this;
@@ -651,7 +651,7 @@ DOMLocalStorageManager::Ensure()
 // DOMSessionStorageManager
 
 DOMSessionStorageManager::DOMSessionStorageManager()
-  : StorageManagerBase(SessionStorage)
+  : StorageManagerBase(eSessionStorage)
 {
   if (!XRE_IsParentProcess()) {
     // Do this only on the child process.  The thread IPC bridge
