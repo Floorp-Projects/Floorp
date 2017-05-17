@@ -1077,6 +1077,7 @@ static __thread arena_t	*arenas_map;
 /*
  * Runtime configuration options.
  */
+MOZ_JEMALLOC_API
 const char	*_malloc_options = MOZ_MALLOC_OPTIONS;
 
 #ifndef MALLOC_PRODUCTION
@@ -1273,6 +1274,7 @@ wrtmessage(const char *p1, const char *p2, const char *p3, const char *p4)
 		return;
 }
 
+MOZ_JEMALLOC_API
 void	(*_malloc_message)(const char *p1, const char *p2, const char *p3,
 	    const char *p4) = wrtmessage;
 
