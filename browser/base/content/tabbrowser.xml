@@ -646,12 +646,6 @@
                 this.mBlank = false;
               }
 
-              // Should block media before loading content.
-              if (this.mTab.hasAttribute("media-blocked") &&
-                  !this.mTab.linkedBrowser.mediaBlocked) {
-                this.mTab.setMediaBlock(true /* block */);
-              }
-
               if (aStateFlags & nsIWebProgressListener.STATE_START) {
                 this.mRequestCount++;
               } else if (aStateFlags & nsIWebProgressListener.STATE_STOP) {
@@ -2511,10 +2505,6 @@
               });
             }
 
-            // All tabs would be blocked by default, and would be resumed when
-            // tab is visited or by clicking the play tab icon.
-            t.setAttribute("media-blocked", Services.prefs.getBoolPref("media.block-autoplay-until-in-foreground"));
-
             return t;
           ]]>
         </body>
@@ -3386,10 +3376,6 @@
             let event = document.createEvent("Events");
             event.initEvent("TabShow", true, false);
             aTab.dispatchEvent(event);
-          }
-
-          if (aTab.hasAttribute("media-blocked")) {
-            aTab.setMediaBlock(false /* unblock */);
           }
         ]]>
         </body>
@@ -4979,7 +4965,7 @@
                 "tabs.muteAudio.tooltip";
               label = stringWithShortcut(stringID, "key_toggleMute");
             } else {
-              if (tab.hasAttribute("activemedia-blocked")) {
+              if (tab.linkedBrowser.audioBlocked) {
                 stringID = "tabs.unblockAudio.tooltip";
               } else {
                 stringID = tab.linkedBrowser.audioMuted ?
@@ -7386,11 +7372,11 @@
           let modifiedAttrs = [];
           let hist = Services.telemetry.getHistogramById("TAB_AUDIO_INDICATOR_USED");
 
-          if (this.hasAttribute("activemedia-blocked")) {
+          if (browser.audioBlocked) {
             this.removeAttribute("activemedia-blocked");
             modifiedAttrs.push("activemedia-blocked");
 
-            this.setMediaBlock(false /* unblock */);
+            browser.resumeMedia();
             hist.add(3 /* unblockByClickingIcon */);
             this.finishMediaBlockTimer();
           } else {
@@ -7408,27 +7394,6 @@
             this.muteReason = aMuteReason || null;
             modifiedAttrs.push("muted");
           }
-          tabContainer.tabbrowser._tabAttrModified(this, modifiedAttrs);
-        ]]>
-        </body>
-      </method>
-
-      <method name="setMediaBlock">
-        <parameter name="aBlock"/>
-        <body>
-        <![CDATA[
-          let tabContainer = this.parentNode;
-          let browser = this.linkedBrowser;
-
-          let modifiedAttrs = [];
-          if (aBlock) {
-            this.setAttribute("media-blocked", true);
-            browser.blockMedia();
-          } else {
-            this.removeAttribute("media-blocked");
-            browser.resumeMedia();
-          }
-          modifiedAttrs.push("media-blocked");
           tabContainer.tabbrowser._tabAttrModified(this, modifiedAttrs);
         ]]>
         </body>
