@@ -813,8 +813,9 @@ this.XPIDatabase = {
       // jank-tastic! Must synchronously load DB if the theme switches from
       // an XPI theme to a lightweight theme before the DB has loaded,
       // because we're called from sync XPIProvider.addonChanged
-      logger.warn("Synchronous load of XPI database due to getAddonsByType([" +
-        aTypes.join(", ") + "])");
+      logger.warn(`Synchronous load of XPI database due to ` +
+                  `getAddonsByType([${aTypes.join(", ")}]) ` +
+                  `Stack: ${Error().stack}`);
       AddonManagerPrivate.recordSimpleMeasure("XPIDB_lateOpen_byType", XPIProvider.runPhase);
       this.syncLoadDB(true);
     }
@@ -832,7 +833,8 @@ this.XPIDatabase = {
   getVisibleAddonForInternalName(aInternalName) {
     if (!this.addonDB) {
       // This may be called when the DB hasn't otherwise been loaded
-      logger.warn("Synchronous load of XPI database due to getVisibleAddonForInternalName");
+      logger.warn(`Synchronous load of XPI database due to ` +
+                  `getVisibleAddonForInternalName. Stack: ${Error().stack}`);
       AddonManagerPrivate.recordSimpleMeasure("XPIDB_lateOpen_forInternalName",
           XPIProvider.runPhase);
       this.syncLoadDB(true);
