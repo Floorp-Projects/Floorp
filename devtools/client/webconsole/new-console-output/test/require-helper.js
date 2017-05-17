@@ -27,8 +27,6 @@ requireHacker.global_hook("default", path => {
   // Some modules depend on Chrome APIs which don't work in mocha. When such a module
   // is required, replace it with a mock version.
   switch (path) {
-    case "devtools/client/webconsole/utils":
-      return `module.exports = require("devtools/client/webconsole/new-console-output/test/fixtures/WebConsoleUtils")`;
     case "devtools/shared/l10n":
       return `module.exports = require("devtools/client/webconsole/new-console-output/test/fixtures/LocalizationHelper")`;
     case "devtools/shared/plural-form":
