@@ -17,6 +17,7 @@ try {
     const DevToolsUtils = require("devtools/shared/DevToolsUtils");
     const { dumpn } = DevToolsUtils;
     const { DebuggerServer, ActorPool } = require("devtools/server/main");
+    const { ContentActor } = require("devtools/server/actors/childtab");
 
     if (!DebuggerServer.initialized) {
       DebuggerServer.init();
@@ -33,22 +34,12 @@ try {
 
       let mm = msg.target;
       let prefix = msg.data.prefix;
-      let addonId = msg.data.addonId;
 
       let conn = DebuggerServer.connectToParent(prefix, mm);
       conn.parentMessageManager = mm;
       connections.set(prefix, conn);
 
-      let actor;
-
-      if (addonId) {
-        const { WebExtensionChildActor } = require("devtools/server/actors/webextension");
-        actor = new WebExtensionChildActor(conn, chromeGlobal, prefix, addonId);
-      } else {
-        const { ContentActor } = require("devtools/server/actors/childtab");
-        actor = new ContentActor(conn, chromeGlobal, prefix);
-      }
-
+      let actor = new ContentActor(conn, chromeGlobal, prefix);
       let actorPool = new ActorPool(conn);
       actorPool.addActor(actor);
       conn.addActorPool(actorPool);

@@ -43,7 +43,6 @@ DevToolsModules(
     'timeline.js',
     'webaudio.js',
     'webextension-inspected-window.js',
-    'webextension-parent.js',
     'webgl.js',
     'worker.js'
 )
