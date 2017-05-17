@@ -47,6 +47,7 @@ class SandboxDependsFunction(object):
     def __init__(self, unsandboxed):
         self._or = unsandboxed.__or__
         self._and = unsandboxed.__and__
+        self._getattr = unsandboxed.__getattr__
 
     def __call__(self, *arg, **kwargs):
         raise ConfigureError('The `%s` function may not be called'
@@ -63,6 +64,9 @@ class SandboxDependsFunction(object):
             raise ConfigureError('Can only do binary arithmetic operations '
                                  'with another @depends function.')
         return self._and(other).sandboxed
+
+    def __getattr__(self, key):
+        return self._getattr(key).sandboxed
 
     def __nonzero__(self):
         raise ConfigureError(
@@ -158,6 +162,19 @@ class DependsFunction(object):
             if not i:
                 return i
         return i
+
+    def __getattr__(self, key):
+        if key.startswith('_'):
+            return super(DependsFunction, self).__getattr__(key)
+        # Our function may return None or an object that simply doesn't have
+        # the wanted key. In that case, just return None.
+        return TrivialDependsFunction(
+            self.sandbox, lambda x: getattr(x, key, None), [self], self.when)
+
+
+class TrivialDependsFunction(DependsFunction):
+    '''Like a DependsFunction, but the linter won't expect it to have a
+    dependency on --help ever.'''
 
 
 class CombinedDependsFunction(DependsFunction):
