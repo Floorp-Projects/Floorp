@@ -27,6 +27,7 @@ NS_INTERFACE_MAP_END
 Storage::Storage(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal)
   : mWindow(aWindow)
   , mPrincipal(aPrincipal)
+  , mIsSessionOnly(false)
 {
   MOZ_ASSERT(aPrincipal);
 }
@@ -35,9 +36,23 @@ Storage::~Storage()
 {}
 
 bool
-Storage::CanAccess(nsIPrincipal* aPrincipal)
+Storage::CanUseStorage(nsIPrincipal& aSubjectPrincipal)
 {
-  return !aPrincipal || aPrincipal->Subsumes(mPrincipal);
+  // This method is responsible for correct setting of mIsSessionOnly.
+  if (!mozilla::Preferences::GetBool(kStorageEnabled)) {
+    return false;
+  }
+
+  nsContentUtils::StorageAccess access =
+    nsContentUtils::StorageAllowedForPrincipal(Principal());
+
+  if (access == nsContentUtils::StorageAccess::eDeny) {
+    return false;
+  }
+
+  mIsSessionOnly = access <= nsContentUtils::StorageAccess::eSessionScoped;
+
+  return aSubjectPrincipal.Subsumes(mPrincipal);
 }
 
 /* virtual */ JSObject*
