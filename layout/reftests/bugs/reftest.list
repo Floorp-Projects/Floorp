@@ -487,8 +487,8 @@ fails-if(stylo) == 348049-1.xhtml 348049-1-ref.xhtml
 == 348809-2f.html 348809-2-ref.html
 == 348809-2g.html 348809-2-ref.html
 == 348809-2h.html 348809-2-ref.html
-fails-if(stylo) == 349695-1a.html 349695-1-ref.html
-fails-if(stylo) == 349695-1b.html 349695-1-ref.html
+== 349695-1a.html 349695-1-ref.html
+== 349695-1b.html 349695-1-ref.html
 # fails with CoreText rendering due to clipping of one subpixel-antialiasing pixel at end of text
 random-if(cocoaWidget) == 350506-1.html 350506-1-ref.html
 == 351641-1a.html 351641-1-ref.html
