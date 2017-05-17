@@ -195,10 +195,9 @@ PlatformInit(PSLockRef aLock)
 }
 
 void
-TickSample::PopulateContext(void* aContext)
+TickSample::PopulateContext()
 {
   MOZ_ASSERT(mIsSynchronous);
-  MOZ_ASSERT(!aContext);
 
   asm (
       // Compute caller's %rsp by adding to %rbp:
