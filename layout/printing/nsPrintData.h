@@ -13,6 +13,7 @@
 #include "nsDeviceContext.h"
 #include "nsIPrintProgressParams.h"
 #include "nsIPrintSettings.h"
+#include "nsISupportsImpl.h"
 #include "nsTArray.h"
 #include "nsCOMArray.h"
 
@@ -37,11 +38,11 @@ class nsIWebProgressListener;
 //------------------------------------------------------------------------
 class nsPrintData {
 public:
-
   typedef enum {eIsPrinting, eIsPrintPreview } ePrintDataType;
 
   explicit nsPrintData(ePrintDataType aType);
-  ~nsPrintData(); // non-virtual
+
+  NS_INLINE_DECL_REFCOUNTING(nsPrintData)
 
   // Listener Helper Methods
   void OnEndPrinting();
@@ -93,6 +94,7 @@ private:
   nsPrintData() = delete;
   nsPrintData& operator=(const nsPrintData& aOther) = delete;
 
+  ~nsPrintData(); // non-virtual
 };
 
 #endif /* nsPrintData_h___ */
