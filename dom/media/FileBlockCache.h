@@ -189,6 +189,9 @@ private:
   // True if we've dispatched an event to commit all pending block changes
   // to file on mThread.
   bool mIsWriteScheduled;
+  // True when a read is happening. Pending writes may be postponed, to give
+  // higher priority to reads (which may be blocking the caller).
+  bool mIsReading;
   // True if the writer is ready to enqueue writes.
   bool mIsOpen;
   // True if we've got a temporary file descriptor. Note: we don't use mFD
