@@ -65,8 +65,8 @@ class Config {
 
   template <typename T>
   void AddEntry(const std::string& name, T init) {
-    entries_[name] = std::unique_ptr<ConfigEntryBase>(
-      new ConfigEntry<T>(name, init));
+    entries_[name] =
+        std::unique_ptr<ConfigEntryBase>(new ConfigEntry<T>(name, init));
   }
 
   Status ParseArgs(int argc, char** argv);

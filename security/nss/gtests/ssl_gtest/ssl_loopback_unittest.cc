@@ -130,7 +130,7 @@ TEST_P(TlsConnectTls13, CaptureAlertClient) {
   client_->ExpectSendAlert(kTlsAlertDecodeError);
   server_->Handshake();
   client_->Handshake();
-  if (mode_ == STREAM) {
+  if (variant_ == ssl_variant_stream) {
     // DTLS just drops the alert it can't decrypt.
     server_->ExpectSendAlert(kTlsAlertBadRecordMac);
   }
@@ -227,7 +227,8 @@ TEST_P(TlsConnectGeneric, ConnectWithCompressionMaybe) {
   client_->EnableCompression();
   server_->EnableCompression();
   Connect();
-  EXPECT_EQ(client_->version() < SSL_LIBRARY_VERSION_TLS_1_3 && mode_ != DGRAM,
+  EXPECT_EQ(client_->version() < SSL_LIBRARY_VERSION_TLS_1_3 &&
+                variant_ != ssl_variant_datagram,
             client_->is_compressed());
   SendReceive();
 }
@@ -320,12 +321,13 @@ TEST_F(TlsConnectStreamTls13, NegotiateShortHeaders) {
   Connect();
 }
 
-INSTANTIATE_TEST_CASE_P(GenericStream, TlsConnectGeneric,
-                        ::testing::Combine(TlsConnectTestBase::kTlsModesStream,
-                                           TlsConnectTestBase::kTlsVAll));
+INSTANTIATE_TEST_CASE_P(
+    GenericStream, TlsConnectGeneric,
+    ::testing::Combine(TlsConnectTestBase::kTlsVariantsStream,
+                       TlsConnectTestBase::kTlsVAll));
 INSTANTIATE_TEST_CASE_P(
     GenericDatagram, TlsConnectGeneric,
-    ::testing::Combine(TlsConnectTestBase::kTlsModesDatagram,
+    ::testing::Combine(TlsConnectTestBase::kTlsVariantsDatagram,
                        TlsConnectTestBase::kTlsV11Plus));
 
 INSTANTIATE_TEST_CASE_P(StreamOnly, TlsConnectStream,
@@ -333,33 +335,35 @@ INSTANTIATE_TEST_CASE_P(StreamOnly, TlsConnectStream,
 INSTANTIATE_TEST_CASE_P(DatagramOnly, TlsConnectDatagram,
                         TlsConnectTestBase::kTlsV11Plus);
 
-INSTANTIATE_TEST_CASE_P(Pre12Stream, TlsConnectPre12,
-                        ::testing::Combine(TlsConnectTestBase::kTlsModesStream,
-                                           TlsConnectTestBase::kTlsV10V11));
+INSTANTIATE_TEST_CASE_P(
+    Pre12Stream, TlsConnectPre12,
+    ::testing::Combine(TlsConnectTestBase::kTlsVariantsStream,
+                       TlsConnectTestBase::kTlsV10V11));
 INSTANTIATE_TEST_CASE_P(
     Pre12Datagram, TlsConnectPre12,
-    ::testing::Combine(TlsConnectTestBase::kTlsModesDatagram,
+    ::testing::Combine(TlsConnectTestBase::kTlsVariantsDatagram,
                        TlsConnectTestBase::kTlsV11));
 
 INSTANTIATE_TEST_CASE_P(Version12Only, TlsConnectTls12,
-                        TlsConnectTestBase::kTlsModesAll);
+                        TlsConnectTestBase::kTlsVariantsAll);
 #ifndef NSS_DISABLE_TLS_1_3
 INSTANTIATE_TEST_CASE_P(Version13Only, TlsConnectTls13,
-                        TlsConnectTestBase::kTlsModesAll);
+                        TlsConnectTestBase::kTlsVariantsAll);
 #endif
 
-INSTANTIATE_TEST_CASE_P(Pre13Stream, TlsConnectGenericPre13,
-                        ::testing::Combine(TlsConnectTestBase::kTlsModesStream,
-                                           TlsConnectTestBase::kTlsV10ToV12));
+INSTANTIATE_TEST_CASE_P(
+    Pre13Stream, TlsConnectGenericPre13,
+    ::testing::Combine(TlsConnectTestBase::kTlsVariantsStream,
+                       TlsConnectTestBase::kTlsV10ToV12));
 INSTANTIATE_TEST_CASE_P(
     Pre13Datagram, TlsConnectGenericPre13,
-    ::testing::Combine(TlsConnectTestBase::kTlsModesDatagram,
+    ::testing::Combine(TlsConnectTestBase::kTlsVariantsDatagram,
                        TlsConnectTestBase::kTlsV11V12));
 INSTANTIATE_TEST_CASE_P(Pre13StreamOnly, TlsConnectStreamPre13,
                         TlsConnectTestBase::kTlsV10ToV12);
 
 INSTANTIATE_TEST_CASE_P(Version12Plus, TlsConnectTls12Plus,
-                        ::testing::Combine(TlsConnectTestBase::kTlsModesAll,
+                        ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
                                            TlsConnectTestBase::kTlsV12Plus));
 
 }  // namespace nspr_test

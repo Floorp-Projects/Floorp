@@ -397,6 +397,7 @@ static void
 printModule(SECMODModule *module, int *count)
 {
     int slotCount = module->loaded ? module->slotCount : 0;
+    char *modUri;
     int i;
 
     if ((*count)++) {
@@ -408,6 +409,11 @@ printModule(SECMODModule *module, int *count)
         PR_fprintf(PR_STDOUT, "\tlibrary name: %s\n", module->dllName);
     }
 
+    modUri = PK11_GetModuleURI(module);
+    if (modUri) {
+        PR_fprintf(PR_STDOUT, "\t   uri: %s\n", modUri);
+        PORT_Free(modUri);
+    }
     if (slotCount == 0) {
         PR_fprintf(PR_STDOUT,
                    "\t slots: There are no slots attached to this module\n");
@@ -425,10 +431,12 @@ printModule(SECMODModule *module, int *count)
     /* Print slot and token names */
     for (i = 0; i < slotCount; i++) {
         PK11SlotInfo *slot = module->slots[i];
-
+        char *tokenUri = PK11_GetTokenURI(slot);
         PR_fprintf(PR_STDOUT, "\n");
         PR_fprintf(PR_STDOUT, "\t slot: %s\n", PK11_GetSlotName(slot));
         PR_fprintf(PR_STDOUT, "\ttoken: %s\n", PK11_GetTokenName(slot));
+        PR_fprintf(PR_STDOUT, "\t  uri: %s\n", tokenUri);
+        PORT_Free(tokenUri);
     }
     return;
 }

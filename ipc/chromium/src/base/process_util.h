@@ -48,7 +48,7 @@ typedef IO_COUNTERS IoCounters;
 struct ProcessEntry {
   int pid;
   int ppid;
-  char szExeFile[NAME_MAX + 1];
+  char szExeFile[_POSIX_PATH_MAX + 1];
 };
 
 struct IoCounters {

@@ -11,7 +11,7 @@ namespace nss_test {
 
 class GatherV2ClientHelloTest : public TlsConnectTestBase {
  public:
-  GatherV2ClientHelloTest() : TlsConnectTestBase(STREAM, 0) {}
+  GatherV2ClientHelloTest() : TlsConnectTestBase(ssl_variant_stream, 0) {}
 
   void ConnectExpectMalformedClientHello(const DataBuffer &data) {
     EnsureTlsSetup();

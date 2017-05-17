@@ -296,3 +296,14 @@ SEC_ASN1DecoderSetMaximumElementSize;
 ;+    local:
 ;+       *;
 ;+};
+;+NSSUTIL_3.31 {         # NSS Utilities 3.31 release
+;+    global:
+PK11URI_CreateURI;
+PK11URI_ParseURI;
+PK11URI_FormatURI;
+PK11URI_DestroyURI;
+PK11URI_GetPathAttribute;
+PK11URI_GetQueryAttribute;
+;+    local:
+;+       *;
+;+};

@@ -312,7 +312,8 @@ class JSFunction : public js::NativeObject
     static bool getUnresolvedLength(JSContext* cx, js::HandleFunction fun,
                                     js::MutableHandleValue v);
 
-    JSAtom* getUnresolvedName(JSContext* cx);
+    static bool getUnresolvedName(JSContext* cx, js::HandleFunction fun,
+                                  js::MutableHandleAtom v);
 
     JSAtom* explicitName() const {
         return (hasCompileTimeName() || hasGuessedAtom()) ? nullptr : atom_.get();
