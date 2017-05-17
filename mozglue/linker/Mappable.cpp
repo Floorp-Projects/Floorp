@@ -13,6 +13,7 @@
 
 #include "Mappable.h"
 
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/SizePrintfMacros.h"
 #include "mozilla/UniquePtr.h"
 
@@ -212,7 +213,8 @@ MappableExtractFile::Create(const char *name, Zip *zip, Zip::Stream *stream)
       ERROR("Couldn't initialize XZ decoder");
       return nullptr;
     }
-    DEBUG_LOG("XZStream created, compressed=%u, uncompressed=%u",
+    DEBUG_LOG("XZStream created, compressed=%" PRIuPTR
+              ", uncompressed=%" PRIuPTR,
               xzStream.Size(), xzStream.UncompressedSize());
 
     if (ftruncate(fd, xzStream.UncompressedSize()) == -1) {
@@ -226,7 +228,7 @@ MappableExtractFile::Create(const char *name, Zip *zip, Zip::Stream *stream)
       return nullptr;
     }
     const size_t written = xzStream.Decode(buffer, buffer.GetLength());
-    DEBUG_LOG("XZStream decoded %u", written);
+    DEBUG_LOG("XZStream decoded %" PRIuPTR, written);
     if (written != buffer.GetLength()) {
       ERROR("Error decoding XZ file %s", file.get());
       return nullptr;
@@ -299,7 +301,8 @@ public:
     if (buf != MAP_FAILED) {
       ::mmap(AlignedEndPtr(reinterpret_cast<char *>(buf) + length, PAGE_SIZE),
              PAGE_SIZE, PROT_NONE, MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-      DEBUG_LOG("Decompression buffer of size 0x%x in ashmem \"%s\", mapped @%p",
+      DEBUG_LOG("Decompression buffer of size 0x%" PRIxPTR
+                " in ashmem \"%s\", mapped @%p",
                 length, str, buf);
       return new _MappableBuffer(fd.forget(), buf, length);
     }
@@ -319,8 +322,8 @@ public:
         return nullptr;
       }
 
-      DEBUG_LOG("Decompression buffer of size 0x%x in ashmem \"%s\", mapped @%p",
-                length, str, actual_buf);
+      DEBUG_LOG("Decompression buffer of size 0x%" PRIxPTR
+                " in ashmem \"%s\", mapped @%p", length, str, actual_buf);
       return new _MappableBuffer(fd.forget(), actual_buf, length);
     }
 #else
