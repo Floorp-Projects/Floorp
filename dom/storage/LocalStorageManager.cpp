@@ -76,7 +76,7 @@ LocalStorageManager::LocalStorageManager()
     // Do this only on the child process.  The thread IPC bridge
     // is also used to communicate chrome observer notifications.
     // Note: must be called after we set sSelf
-    StorageCache::StartDatabase();
+    LocalStorageCache::StartDatabase();
   }
 }
 
@@ -145,12 +145,12 @@ LocalStorageManager::CreateOrigin(const nsACString& aOriginSuffix,
   return scope;
 }
 
-StorageCache*
+LocalStorageCache*
 LocalStorageManager::GetCache(const nsACString& aOriginSuffix,
                               const nsACString& aOriginNoSuffix)
 {
   CacheOriginHashtable* table = mCaches.LookupOrAdd(aOriginSuffix);
-  StorageCacheHashKey* entry = table->GetEntry(aOriginNoSuffix);
+  LocalStorageCacheHashKey* entry = table->GetEntry(aOriginNoSuffix);
   if (!entry) {
     return nullptr;
   }
@@ -168,7 +168,7 @@ LocalStorageManager::GetOriginUsage(const nsACString& aOriginNoSuffix)
 
   usage = new StorageUsage(aOriginNoSuffix);
 
-  StorageDBBridge* db = StorageCache::StartDatabase();
+  StorageDBBridge* db = LocalStorageCache::StartDatabase();
   if (db) {
     db->AsyncGetUsage(usage);
   }
@@ -178,14 +178,14 @@ LocalStorageManager::GetOriginUsage(const nsACString& aOriginNoSuffix)
   return usage.forget();
 }
 
-already_AddRefed<StorageCache>
+already_AddRefed<LocalStorageCache>
 LocalStorageManager::PutCache(const nsACString& aOriginSuffix,
                               const nsACString& aOriginNoSuffix,
                               nsIPrincipal* aPrincipal)
 {
   CacheOriginHashtable* table = mCaches.LookupOrAdd(aOriginSuffix);
-  StorageCacheHashKey* entry = table->PutEntry(aOriginNoSuffix);
-  RefPtr<StorageCache> cache = entry->cache();
+  LocalStorageCacheHashKey* entry = table->PutEntry(aOriginNoSuffix);
+  RefPtr<LocalStorageCache> cache = entry->cache();
 
   nsAutoCString quotaOrigin;
   CreateQuotaDBKey(aPrincipal, quotaOrigin);
@@ -196,7 +196,7 @@ LocalStorageManager::PutCache(const nsACString& aOriginSuffix,
 }
 
 void
-LocalStorageManager::DropCache(StorageCache* aCache)
+LocalStorageManager::DropCache(LocalStorageCache* aCache)
 {
   if (!NS_IsMainThread()) {
     NS_WARNING("StorageManager::DropCache called on a non-main thread, shutting down?");
@@ -222,7 +222,7 @@ LocalStorageManager::GetStorageInternal(CreateMode aCreateMode,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  RefPtr<StorageCache> cache = GetCache(originAttrSuffix, originKey);
+  RefPtr<LocalStorageCache> cache = GetCache(originAttrSuffix, originKey);
 
   // Get or create a cache for the given scope
   if (!cache) {
@@ -234,7 +234,7 @@ LocalStorageManager::GetStorageInternal(CreateMode aCreateMode,
     if (aCreateMode == CreateMode::CreateIfShouldPreload) {
       // This is a demand to just preload the cache, if the scope has
       // no data stored, bypass creation and preload of the cache.
-      StorageDBBridge* db = StorageCache::GetDatabase();
+      StorageDBBridge* db = LocalStorageCache::GetDatabase();
       if (db) {
         if (!db->ShouldPreloadOrigin(LocalStorageManager::CreateOrigin(originAttrSuffix, originKey))) {
           return NS_OK;
@@ -323,7 +323,7 @@ LocalStorageManager::CheckStorage(nsIPrincipal* aPrincipal,
     return rv;
   }
 
-  StorageCache* cache = GetCache(suffix, origin);
+  LocalStorageCache* cache = GetCache(suffix, origin);
   if (cache != storage->GetCache()) {
     return NS_OK;
   }
@@ -364,7 +364,7 @@ LocalStorageManager::ClearCaches(uint32_t aUnloadFlags,
     CacheOriginHashtable* table = iter1.Data();
 
     for (auto iter2 = table->Iter(); !iter2.Done(); iter2.Next()) {
-      StorageCache* cache = iter2.Get()->cache();
+      LocalStorageCache* cache = iter2.Get()->cache();
 
       if (aOriginScope.IsEmpty() ||
           StringBeginsWith(cache->OriginNoSuffix(), aOriginScope)) {
@@ -387,39 +387,39 @@ LocalStorageManager::Observe(const char* aTopic,
 
   // Clear everything, caches + database
   if (!strcmp(aTopic, "cookie-cleared")) {
-    ClearCaches(StorageCache::kUnloadComplete, pattern, EmptyCString());
+    ClearCaches(LocalStorageCache::kUnloadComplete, pattern, EmptyCString());
     return NS_OK;
   }
 
   // Clear from caches everything that has been stored
   // while in session-only mode
   if (!strcmp(aTopic, "session-only-cleared")) {
-    ClearCaches(StorageCache::kUnloadSession, pattern, aOriginScope);
+    ClearCaches(LocalStorageCache::kUnloadSession, pattern, aOriginScope);
     return NS_OK;
   }
 
   // Clear everything (including so and pb data) from caches and database
   // for the gived domain and subdomains.
   if (!strcmp(aTopic, "domain-data-cleared")) {
-    ClearCaches(StorageCache::kUnloadComplete, pattern, aOriginScope);
+    ClearCaches(LocalStorageCache::kUnloadComplete, pattern, aOriginScope);
     return NS_OK;
   }
 
   // Clear all private-browsing caches
   if (!strcmp(aTopic, "private-browsing-data-cleared")) {
-    ClearCaches(StorageCache::kUnloadPrivate, pattern, EmptyCString());
+    ClearCaches(LocalStorageCache::kUnloadPrivate, pattern, EmptyCString());
     return NS_OK;
   }
 
   // Clear localStorage data beloging to an origin pattern
   if (!strcmp(aTopic, "origin-attr-pattern-cleared")) {
-    ClearCaches(StorageCache::kUnloadComplete, pattern, EmptyCString());
+    ClearCaches(LocalStorageCache::kUnloadComplete, pattern, EmptyCString());
     return NS_OK;
   }
 
   if (!strcmp(aTopic, "profile-change")) {
     // For case caches are still referenced - clear them completely
-    ClearCaches(StorageCache::kUnloadComplete, pattern, EmptyCString());
+    ClearCaches(LocalStorageCache::kUnloadComplete, pattern, EmptyCString());
     mCaches.Clear();
     return NS_OK;
   }
@@ -437,7 +437,7 @@ LocalStorageManager::Observe(const char* aTopic,
 #ifdef DOM_STORAGE_TESTS
   if (!strcmp(aTopic, "test-reload")) {
     // This immediately completely reloads all caches from the database.
-    ClearCaches(StorageCache::kTestReload, pattern, EmptyCString());
+    ClearCaches(LocalStorageCache::kTestReload, pattern, EmptyCString());
     return NS_OK;
   }
 

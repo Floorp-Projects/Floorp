@@ -10,7 +10,7 @@
 #include "mozilla/dom/PStorageChild.h"
 #include "mozilla/dom/PStorageParent.h"
 #include "StorageDBThread.h"
-#include "StorageCache.h"
+#include "LocalStorageCache.h"
 #include "StorageObserver.h"
 #include "mozilla/Mutex.h"
 #include "nsAutoPtr.h"
@@ -44,19 +44,21 @@ public:
   virtual nsresult Init();
   virtual nsresult Shutdown();
 
-  virtual void AsyncPreload(StorageCacheBridge* aCache, bool aPriority = false);
+  virtual void AsyncPreload(LocalStorageCacheBridge* aCache,
+                            bool aPriority = false);
   virtual void AsyncGetUsage(StorageUsageBridge* aUsage);
 
-  virtual void SyncPreload(StorageCacheBridge* aCache, bool aForceSync = false);
+  virtual void SyncPreload(LocalStorageCacheBridge* aCache,
+                           bool aForceSync = false);
 
-  virtual nsresult AsyncAddItem(StorageCacheBridge* aCache,
+  virtual nsresult AsyncAddItem(LocalStorageCacheBridge* aCache,
                                 const nsAString& aKey, const nsAString& aValue);
-  virtual nsresult AsyncUpdateItem(StorageCacheBridge* aCache,
+  virtual nsresult AsyncUpdateItem(LocalStorageCacheBridge* aCache,
                                    const nsAString& aKey,
                                    const nsAString& aValue);
-  virtual nsresult AsyncRemoveItem(StorageCacheBridge* aCache,
+  virtual nsresult AsyncRemoveItem(LocalStorageCacheBridge* aCache,
                                    const nsAString& aKey);
-  virtual nsresult AsyncClear(StorageCacheBridge* aCache);
+  virtual nsresult AsyncClear(LocalStorageCacheBridge* aCache);
 
   virtual void AsyncClearAll()
   {
@@ -107,7 +109,7 @@ private:
 
   // List of caches waiting for preload.  This ensures the contract that
   // AsyncPreload call references the cache for time of the preload.
-  nsTHashtable<nsRefPtrHashKey<StorageCacheBridge>> mLoadingCaches;
+  nsTHashtable<nsRefPtrHashKey<LocalStorageCacheBridge>> mLoadingCaches;
 
   // Status of the remote database
   nsresult mStatus;
@@ -118,7 +120,7 @@ private:
 
 // Receives async requests from child processes and is responsible
 // to send back responses from the DB thread.  Exposes as a fake
-// StorageCache consumer.
+// LocalStorageCache consumer.
 // Also responsible for forwardning all chrome operation notifications
 // such as cookie cleaning etc to the child process.
 class StorageDBParent final : public PStorageParent
@@ -140,7 +142,7 @@ public:
 public:
   // Fake cache class receiving async callbacks from DB thread, sending
   // them back to appropriate cache object on the child process.
-  class CacheParentBridge : public StorageCacheBridge {
+  class CacheParentBridge : public LocalStorageCacheBridge {
   public:
     CacheParentBridge(StorageDBParent* aParentDB,
                       const nsACString& aOriginSuffix,
@@ -150,7 +152,7 @@ public:
       , mLoaded(false), mLoadedCount(0) {}
     virtual ~CacheParentBridge() {}
 
-    // StorageCacheBridge
+    // LocalStorageCacheBridge
     virtual const nsCString Origin() const;
     virtual const nsCString& OriginNoSuffix() const
       { return mOriginNoSuffix; }

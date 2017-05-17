@@ -13,8 +13,8 @@
 namespace mozilla {
 namespace dom {
 
+class LocalStorageCache;
 class LocalStorageManager;
-class StorageCache;
 class StorageEvent;
 
 class LocalStorage final : public Storage
@@ -31,7 +31,7 @@ public:
     return mManager;
   }
 
-  StorageCache const* GetCache() const
+  LocalStorageCache const* GetCache() const
   {
     return mCache;
   }
@@ -40,7 +40,7 @@ public:
 
   LocalStorage(nsPIDOMWindowInner* aWindow,
                LocalStorageManager* aManager,
-               StorageCache* aCache,
+               LocalStorageCache* aCache,
                const nsAString& aDocumentURI,
                nsIPrincipal* aPrincipal,
                bool aIsPrivate);
@@ -113,10 +113,10 @@ private:
   ~LocalStorage();
 
   friend class LocalStorageManager;
-  friend class StorageCache;
+  friend class LocalStorageCache;
 
   RefPtr<LocalStorageManager> mManager;
-  RefPtr<StorageCache> mCache;
+  RefPtr<LocalStorageCache> mCache;
   nsString mDocumentURI;
 
   // Principal this Storage (i.e. localStorage or sessionStorage) has

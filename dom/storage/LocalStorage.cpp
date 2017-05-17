@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "LocalStorage.h"
+#include "LocalStorageCache.h"
 #include "LocalStorageManager.h"
-#include "StorageCache.h"
 #include "StorageUtils.h"
 
 #include "nsIObserverService.h"
@@ -45,7 +45,7 @@ NS_IMPL_RELEASE_INHERITED(LocalStorage, Storage)
 
 LocalStorage::LocalStorage(nsPIDOMWindowInner* aWindow,
                            LocalStorageManager* aManager,
-                           StorageCache* aCache,
+                           LocalStorageCache* aCache,
                            const nsAString& aDocumentURI,
                            nsIPrincipal* aPrincipal,
                            bool aIsPrivate)
@@ -232,18 +232,18 @@ LocalStorage::ApplyEvent(StorageEvent* aStorageEvent)
   // No key means clearing the full storage.
   if (key.IsVoid()) {
     MOZ_ASSERT(value.IsVoid());
-    mCache->Clear(this, StorageCache::E10sPropagated);
+    mCache->Clear(this, LocalStorageCache::E10sPropagated);
     return;
   }
 
   // No new value means removing the key.
   if (value.IsVoid()) {
-    mCache->RemoveItem(this, key, old, StorageCache::E10sPropagated);
+    mCache->RemoveItem(this, key, old, LocalStorageCache::E10sPropagated);
     return;
   }
 
   // Otherwise, we set the new value.
-  mCache->SetItem(this, key, value, old, StorageCache::E10sPropagated);
+  mCache->SetItem(this, key, value, old, LocalStorageCache::E10sPropagated);
 }
 
 static const char kPermissionType[] = "cookie";
@@ -254,7 +254,7 @@ LocalStorage::CanUseStorage(nsIPrincipal& aSubjectPrincipal)
 {
   // This method is responsible for correct setting of mIsSessionOnly.
   // It doesn't work with mIsPrivate flag at all, since it is checked
-  // regardless mIsSessionOnly flag in DOMStorageCache code.
+  // regardless mIsSessionOnly flag in DOMLocalStorageCache code.
 
   if (!mozilla::Preferences::GetBool(kStorageEnabled)) {
     return false;

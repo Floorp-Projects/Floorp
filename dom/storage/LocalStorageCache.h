@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_StorageCache_h
-#define mozilla_dom_StorageCache_h
+#ifndef mozilla_dom_LocalStorageCache_h
+#define mozilla_dom_LocalStorageCache_h
 
 #include "nsIPrincipal.h"
 #include "nsITimer.h"
@@ -27,7 +27,7 @@ class StorageDBBridge;
 
 // Interface class on which only the database or IPC may call.
 // Used to populate the cache with DB data.
-class StorageCacheBridge
+class LocalStorageCacheBridge
 {
 public:
   NS_IMETHOD_(MozExternalRefCountType) AddRef(void);
@@ -63,7 +63,7 @@ public:
   virtual void LoadWait() = 0;
 
 protected:
-  virtual ~StorageCacheBridge() {}
+  virtual ~LocalStorageCacheBridge() {}
 
   ThreadSafeAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD
@@ -73,7 +73,7 @@ protected:
 // for persistent storage (localStorage) and hold data for non-private,
 // private and session-only cookie modes.  It is also responsible for
 // persisting data changes using the database, works as a write-back cache.
-class StorageCache : public StorageCacheBridge
+class LocalStorageCache : public LocalStorageCacheBridge
 {
 public:
   NS_IMETHOD_(void) Release(void);
@@ -95,19 +95,16 @@ public:
   };
 
   // Note: We pass aOriginNoSuffix through the ctor here, because
-  // StorageCacheHashKey's ctor is creating this class and
+  // LocalStorageCacheHashKey's ctor is creating this class and
   // accepts reversed-origin-no-suffix as an argument - the hashing key.
-  explicit StorageCache(const nsACString* aOriginNoSuffix);
+  explicit LocalStorageCache(const nsACString* aOriginNoSuffix);
 
 protected:
-  virtual ~StorageCache();
+  virtual ~LocalStorageCache();
 
 public:
   void Init(LocalStorageManager* aManager, bool aPersistent,
             nsIPrincipal* aPrincipal, const nsACString& aQuotaOriginScope);
-
-  // Copies all data from the other storage.
-  void CloneFrom(const StorageCache* aThat);
 
   // Get size of per-origin data.
   int64_t GetOriginQuotaUsage(const LocalStorage* aStorage) const;
@@ -117,7 +114,7 @@ public:
 
   // The set of methods that are invoked by DOM storage web API.
   // We are passing the LocalStorage object just to let the cache
-  // read properties like mPrivate, mPrincipal and mSessionOnly.
+  // read properties like mPrivate and mSessionOnly.
   // Get* methods return error when load from the database has failed.
   nsresult GetLength(const LocalStorage* aStorage, uint32_t* aRetval);
   nsresult GetKey(const LocalStorage* aStorage, uint32_t index, nsAString& aRetval);
@@ -134,10 +131,6 @@ public:
 
   void GetKeys(const LocalStorage* aStorage, nsTArray<nsString>& aKeys);
 
-  // Whether the principal equals principal the cache was created for
-  bool CheckPrincipal(nsIPrincipal* aPrincipal) const;
-  nsIPrincipal* Principal() const { return mPrincipal; }
-
   // Starts the database engine thread or the IPC bridge
   static StorageDBBridge* StartDatabase();
   static StorageDBBridge* GetDatabase();
@@ -145,7 +138,7 @@ public:
   // Stops the thread and flushes all uncommited data
   static nsresult StopDatabase();
 
-  // StorageCacheBridge
+  // LocalStorageCacheBridge
 
   virtual const nsCString Origin() const;
   virtual const nsCString& OriginNoSuffix() const { return mOriginNoSuffix; }
@@ -224,12 +217,6 @@ private:
   // Obtained from the manager during initialization (Init method).
   RefPtr<StorageUsage> mUsage;
 
-  // Principal the cache has been initially created for, this is used only for
-  // sessionStorage access checks since sessionStorage objects are strictly
-  // scoped by a principal. localStorage objects on the other hand are scoped
-  // by origin only.
-  nsCOMPtr<nsIPrincipal> mPrincipal;
-
   // The origin this cache belongs to in the "DB format", i.e. reversed
   nsCString mOriginNoSuffix;
 
@@ -303,17 +290,17 @@ public:
   explicit StorageUsage(const nsACString& aOriginScope);
 
   bool CheckAndSetETLD1UsageDelta(uint32_t aDataSetIndex, int64_t aUsageDelta,
-                                  const StorageCache::MutationSource aSource);
+                                  const LocalStorageCache::MutationSource aSource);
 
 private:
   virtual const nsCString& OriginScope() { return mOriginScope; }
   virtual void LoadUsage(const int64_t aUsage);
 
   nsCString mOriginScope;
-  int64_t mUsage[StorageCache::kDataSetCount];
+  int64_t mUsage[LocalStorageCache::kDataSetCount];
 };
 
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_StorageCache_h
+#endif // mozilla_dom_LocalStorageCache_h
