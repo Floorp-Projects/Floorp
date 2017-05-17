@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import argparse
 import json
 import os
 import sys
@@ -887,8 +888,8 @@ class TestInfoCommand(MachCommandBase):
     from datetime import date, timedelta
     @Command('test-info', category='testing',
         description='Display historical test result summary.')
-    @CommandArgument('test_name', nargs='?', metavar='N',
-        help='Test of interest.')
+    @CommandArgument('test_names', nargs=argparse.REMAINDER,
+        help='Test(s) of interest.')
     @CommandArgument('--branches',
         default='mozilla-central,mozilla-inbound,autoland',
         help='Report for named branches (default: mozilla-central,mozilla-inbound,autoland)')
@@ -906,15 +907,10 @@ class TestInfoCommand(MachCommandBase):
         import which
         from mozbuild.base import MozbuildObject
 
-        self.test_name = params['test_name']
         self.branches = params['branches']
         self.start = params['start']
         self.end = params['end']
         self.verbose = params['verbose']
-
-        if len(self.test_name) < 6:
-            print("'%s' is too short for a test name!" % self.test_name)
-            return
 
         here = os.path.abspath(os.path.dirname(__file__))
         build_obj = MozbuildObject.from_environment(cwd=here)
@@ -933,10 +929,16 @@ class TestInfoCommand(MachCommandBase):
             else:
                 self._git = which.which('git')
 
-        self.set_test_name()
-        self.report_test_results()
-        self.report_test_durations()
-        self.report_bugs()
+        for test_name in params['test_names']:
+            print("===== %s =====" % test_name)
+            self.test_name = test_name
+            if len(self.test_name) < 6:
+                print("'%s' is too short for a test name!" % self.test_name)
+                continue
+            self.set_test_name()
+            self.report_test_results()
+            self.report_test_durations()
+            self.report_bugs()
 
     def find_in_hg_or_git(self, test_name):
         if self._hg:
