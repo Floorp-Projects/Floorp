@@ -1292,34 +1292,39 @@ class TestConfigure(unittest.TestCase):
             option('--foo', nargs=1, help='foo')
             @depends('--foo')
             def foo(value):
-                return value or None
+                return value or 0
 
             option('--bar', nargs=1, help='bar')
             @depends('--bar')
             def bar(value):
+                return value or ''
+
+            option('--baz', nargs=1, help='baz')
+            @depends('--baz')
+            def baz(value):
                 return value
 
             set_config('FOOBAR', foo | bar)
+            set_config('FOOBARBAZ', foo | bar | baz)
         '''):
-            config = self.get_config()
-            self.assertEqual(config, {
-                'FOOBAR': NegativeOptionValue(),
-            })
-
-            config = self.get_config(['--foo=foo'])
-            self.assertEqual(config, {
-                'FOOBAR': PositiveOptionValue(('foo',)),
-            })
-
-            config = self.get_config(['--bar=bar'])
-            self.assertEqual(config, {
-                'FOOBAR': PositiveOptionValue(('bar',)),
-            })
-
-            config = self.get_config(['--foo=foo', '--bar=bar'])
-            self.assertEqual(config, {
-                'FOOBAR': PositiveOptionValue(('foo',)),
-            })
+            for foo_opt, foo_value in (
+                ('',  0),
+                ('--foo=foo', PositiveOptionValue(('foo',)))
+            ):
+                for bar_opt, bar_value in (
+                    ('', ''),
+                    ('--bar=bar', PositiveOptionValue(('bar',)))
+                ):
+                    for baz_opt, baz_value in (
+                        ('', NegativeOptionValue()),
+                        ('--baz=baz', PositiveOptionValue(('baz',)))
+                    ):
+                        config = self.get_config(
+                            [x for x in (foo_opt, bar_opt, baz_opt) if x])
+                        self.assertEqual(config, {
+                            'FOOBAR': foo_value or bar_value,
+                            'FOOBARBAZ': foo_value or bar_value or baz_value,
+                        })
 
 
 if __name__ == '__main__':
