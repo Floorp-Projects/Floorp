@@ -22,20 +22,21 @@
   --backbutton-background: linear-gradient(rgba(255,255,255,0.9),
                                            rgba(255,255,255,0.7)) repeat-x;
 
-  --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-vertical-inner-padding) + 1px);
+  --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-inner-padding) + 1px);
 
 %ifdef MOZ_PHOTON_THEME
   --toolbarbutton-border-radius: 4px;
 %else
   --toolbarbutton-border-radius: 3px;
-%endif
 
   --toolbarbutton-hover-background: hsla(0,0%,100%,.1) linear-gradient(hsla(0,0%,100%,.3), hsla(0,0%,100%,.1)) padding-box;
+  --toolbarbutton-active-background: hsla(0,0%,0%,.02) linear-gradient(hsla(0,0%,0%,.12), transparent) border-box;
+%endif
+
   --toolbarbutton-hover-bordercolor: hsla(0,0%,0%,.2);
   --toolbarbutton-hover-boxshadow: 0 1px 0 hsla(0,0%,100%,.5),
                                    0 1px 0 hsla(0,0%,100%,.5) inset;
 
-  --toolbarbutton-active-background: hsla(0,0%,0%,.02) linear-gradient(hsla(0,0%,0%,.12), transparent) border-box;
   --toolbarbutton-active-bordercolor: hsla(0,0%,0%,.3);
   --toolbarbutton-active-boxshadow: 0 1px 0 hsla(0,0%,100%,.5),
                                     0 1px 0 hsla(0,0%,0%,.05) inset,
@@ -1363,77 +1364,14 @@ html|span.ac-emphasize-text-url {
   background: url("chrome://browser/skin/subtle-pattern.png") #B3B9C1;
 }
 
+
 /* ----- SIDEBAR ELEMENTS ----- */
+
+%include ../shared/sidebar.inc.css
 
 #sidebar-box {
   -moz-appearance: -moz-mac-source-list;
-  box-shadow: inset -2px 0 0 hsla(0,0%,100%,.2);
 }
-
-sidebarheader {
-  padding: 2px 2px 0;
-  text-shadow: 0 1px 0 hsla(0,0%,100%,.5);
-}
-
-.sidebar-splitter {
-  border-inline-start: none;
-  border-inline-end: 1px solid #b4b4b4;
-  min-width: 1px;
-  width: 3px;
-  background-image: none !important;
-  background-color: transparent;
-  margin-inline-start: -3px;
-  position: relative;
-}
-
-#appcontent ~ .sidebar-splitter {
-  border-inline-start: 1px solid #ccc;
-  border-inline-end: none;
-  margin-inline-start: 0;
-  margin-inline-end: -3px;
-}
-
-.sidebar-title,
-#sidebar-title {
-  color: #596c80;
-  font-weight: bold;
-}
-
-.sidebar-title:-moz-window-inactive,
-#sidebar-title:-moz-window-inactive {
-  color: #868b92;
-}
-
-.sidebar-throbber[loading="true"],
-#sidebar-throbber[loading="true"] {
-  list-style-image: url("chrome://global/skin/icons/loading.png");
-}
-
-@media (min-resolution: 2dppx) {
-  .sidebar-throbber[loading="true"],
-  #sidebar-throbber[loading="true"] {
-    list-style-image: url("chrome://global/skin/icons/loading@2x.png");
-    width: 16px;
-  }
-}
-
-@media (-moz-mac-yosemite-theme) {
-  #sidebar-box {
-    box-shadow: none;
-  }
-
-  sidebarheader {
-    text-shadow: none;
-    font-weight: 500;
-  }
-
-  .sidebar-title,
-  #sidebar-title {
-    color: #636363;
-    font-weight: 500;
-  }
-}
-
 
 /* ----- CONTENT ----- */
 

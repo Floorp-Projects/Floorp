@@ -2850,9 +2850,21 @@ fn static_assert() {
 
 
     pub fn copy_${shorthand}_image_from(&mut self, other: &Self) {
+        use gecko_bindings::structs::nsStyleImageLayers_LayerType as LayerType;
         unsafe {
-            Gecko_CopyImageValueFrom(&mut self.gecko.${image_layers_field}.mLayers.mFirstElement.mImage,
-                                     &other.gecko.${image_layers_field}.mLayers.mFirstElement.mImage);
+            let count = other.gecko.${image_layers_field}.mImageCount;
+            unsafe {
+                Gecko_EnsureImageLayersLength(&mut self.gecko.${image_layers_field},
+                                              count as usize,
+                                              LayerType::${shorthand.capitalize()});
+            }
+
+            for (layer, other) in self.gecko.${image_layers_field}.mLayers.iter_mut()
+                                      .zip(other.gecko.${image_layers_field}.mLayers.iter())
+                                      .take(count as usize) {
+                Gecko_CopyImageValueFrom(&mut layer.mImage, &other.mImage);
+            }
+            self.gecko.${image_layers_field}.mImageCount = count;
         }
     }
 
@@ -2987,29 +2999,12 @@ fn static_assert() {
     }
 
     pub fn set_list_style_type(&mut self, v: longhands::list_style_type::computed_value::T) {
-        use properties::longhands::list_style_type::computed_value::T as Keyword;
-        <%
-            keyword = data.longhands_by_name["list-style-type"].keyword
-            # The first four are @counter-styles
-            # The rest have special fallback behavior
-            special = """upper-roman lower-roman upper-alpha lower-alpha
-                         japanese-informal japanese-formal korean-hangul-formal korean-hanja-informal
-                         korean-hanja-formal simp-chinese-informal simp-chinese-formal
-                         trad-chinese-informal trad-chinese-formal""".split()
-        %>
-        let result = match v {
-            % for value in keyword.values_for('gecko'):
-                % if value in special:
-                    // Special keywords are implemented as @counter-styles
-                    // and need to be manually set as strings
-                    Keyword::${to_rust_ident(value)} => structs::${keyword.gecko_constant("none")},
-                % else:
-                    Keyword::${to_rust_ident(value)} =>
-                        structs::${keyword.gecko_constant(value)},
-                % endif
-            % endfor
+        use values::generics::CounterStyleOrNone;
+        let name = match v.0 {
+            CounterStyleOrNone::None_ => atom!("none"),
+            CounterStyleOrNone::Name(name) => name.0,
         };
-        unsafe { Gecko_SetListStyleType(&mut self.gecko, result as u32); }
+        unsafe { Gecko_SetListStyleType(&mut self.gecko, name.as_ptr()); }
     }
 
 
@@ -3643,9 +3638,7 @@ fn static_assert() {
         }
 
         self.clear_overflow_sides_if_string();
-        if v.second.is_none() {
-            self.gecko.mTextOverflow.mLogicalDirections = true;
-        }
+        self.gecko.mTextOverflow.mLogicalDirections = v.second.is_none();
 
         let SpecifiedValue { ref first, ref second } = v;
         let second = second.as_ref().unwrap_or(&first);
@@ -4072,7 +4065,8 @@ clip-path
     pub fn set_content(&mut self, v: longhands::content::computed_value::T) {
         use properties::longhands::content::computed_value::T;
         use properties::longhands::content::computed_value::ContentItem;
-        use style_traits::ToCss;
+        use values::generics::CounterStyleOrNone;
+        use gecko_bindings::structs::nsCSSValue;
         use gecko_bindings::structs::nsStyleContentType::*;
         use gecko_bindings::bindings::Gecko_ClearAndResizeStyleContents;
 
@@ -4084,6 +4078,13 @@ clip-path
             let ptr = vec.as_mut_ptr();
             mem::forget(vec);
             ptr
+        }
+
+        fn set_counter_style(style: CounterStyleOrNone, dest: &mut nsCSSValue) {
+            dest.set_atom_ident(match style {
+                CounterStyleOrNone::None_ => atom!("none"),
+                CounterStyleOrNone::Name(name) => name.0,
+            });
         }
 
         match v {
@@ -4147,8 +4148,7 @@ clip-path
                             }
                             let mut array = unsafe { &mut **self.gecko.mContents[i].mContent.mCounters.as_mut() };
                             array[0].set_string(&name);
-                            // When we support <custom-ident> values for list-style-type this will need to be updated
-                            array[1].set_atom_ident(style.to_css_string().into());
+                            set_counter_style(style, &mut array[1]);
                         }
                         ContentItem::Counters(name, sep, style) => {
                             unsafe {
@@ -4158,8 +4158,7 @@ clip-path
                             let mut array = unsafe { &mut **self.gecko.mContents[i].mContent.mCounters.as_mut() };
                             array[0].set_string(&name);
                             array[1].set_string(&sep);
-                            // When we support <custom-ident> values for list-style-type this will need to be updated
-                            array[2].set_atom_ident(style.to_css_string().into());
+                            set_counter_style(style, &mut array[2]);
                         }
                         ContentItem::Url(ref url) => {
                             unsafe {

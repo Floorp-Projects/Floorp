@@ -163,6 +163,7 @@ void Thread::ThreadMain() {
   // Complete the initialization of our Thread object.
   thread_id_ = PlatformThread::CurrentId();
   PlatformThread::SetName(name_.c_str());
+  NS_SetCurrentThreadName(name_.c_str());
   message_loop.set_thread_name(name_);
   message_loop.set_hang_timeouts(startup_data_->options.transient_hang_timeout,
                                  startup_data_->options.permanent_hang_timeout);

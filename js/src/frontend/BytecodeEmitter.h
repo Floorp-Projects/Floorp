@@ -708,10 +708,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     template <typename NameEmitter>
     MOZ_MUST_USE bool emitDestructuringDeclsWithEmitter(ParseNode* pattern, NameEmitter emitName);
 
-    // Throw a TypeError if the value atop the stack isn't convertible to an
-    // object, with no overall effect on the stack.
-    MOZ_MUST_USE bool emitRequireObjectCoercible();
-
     enum class CopyOption {
         Filtered, Unfiltered
     };

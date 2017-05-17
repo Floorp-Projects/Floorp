@@ -112,12 +112,22 @@ def _repack(app_finder, l10n_finder, copier, formatter, non_chrome=set()):
     #     locale foo en-US path/to/files
     # keep track that the locale path for foo in app is
     # app/chrome/path/to/files.
+    # As there may be multiple locale entries with the same base, but with
+    # different flags, that tracking takes the flags into account when there
+    # are some. Example:
+    #     locale foo en-US path/to/files/win os=Win
+    #     locale foo en-US path/to/files/mac os=Darwin
+    def key(entry):
+        if entry.flags:
+            return '%s %s' % (entry.name, entry.flags)
+        return entry.name
+
     l10n_paths = {}
     for e in l10n.entries:
         if isinstance(e, ManifestChrome):
             base = mozpath.basedir(e.path, app.bases)
             l10n_paths.setdefault(base, {})
-            l10n_paths[base][e.name] = e.path
+            l10n_paths[base][key(e)] = e.path
 
     # For chrome and non chrome files or directories, store what langpack path
     # corresponds to a package path.
@@ -134,7 +144,7 @@ def _repack(app_finder, l10n_finder, copier, formatter, non_chrome=set()):
                     e.name)
                 # Allow errors to accumulate
                 continue
-            paths[e.path] = l10n_paths[base][e.name]
+            paths[e.path] = l10n_paths[base][key(e)]
 
     for pattern in non_chrome:
         for base in app.bases:

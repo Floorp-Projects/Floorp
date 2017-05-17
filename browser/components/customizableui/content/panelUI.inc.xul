@@ -581,6 +581,11 @@
                        label="&moreMenu.label;"
                        closemenu="none"
                        oncommand="PanelUI.showSubView('appMenu-moreView', this)"/>
+        <toolbarbutton id="appMenu-developer-button"
+                       class="subviewbutton subviewbutton-nav"
+                       label="&webDeveloperMenu.label;"
+                       closemenu="none"
+                       oncommand="PanelUI.showSubView('PanelUI-developer', this, null, true)"/>
       </vbox>
     </panelview>
     <panelview id="appMenu-moreView" title="&moreMenu.label;" class="PanelUI-subView">

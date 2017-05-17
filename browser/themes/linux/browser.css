@@ -25,7 +25,7 @@
   --toolbarbutton-border-radius: 1px;
 %endif
 
-  --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-vertical-inner-padding) - 1px);
+  --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-inner-padding) - 1px);
 
   --toolbarbutton-hover-background: rgba(255,255,255,.5) linear-gradient(rgba(255,255,255,.5), transparent);
   --toolbarbutton-hover-bordercolor: rgba(0,0,0,.25);
@@ -934,12 +934,11 @@ html|span.ac-emphasize-text-url {
 }
 
 /* Content area */
+
+%include ../shared/sidebar.inc.css
+
 #sidebar {
   background-color: Window;
-}
-
-#sidebar-header > .close-icon:not(:hover):-moz-lwtheme-brighttext {
-  background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 80, 16, 64);
 }
 
 .browserContainer > findbar {
@@ -1078,12 +1077,6 @@ html|span.ac-emphasize-text-url {
 
 .alltabs-item[busy] > .menu-iconic-left > .menu-iconic-icon {
   list-style-image: url("chrome://global/skin/icons/loading.png");
-}
-
-/* Sidebar */
-#sidebar-throbber[loading="true"] {
-  list-style-image: url("chrome://global/skin/icons/loading.png");
-  margin-inline-end: 4px;
 }
 
 toolbarbutton.chevron {

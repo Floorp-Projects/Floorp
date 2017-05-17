@@ -33,16 +33,14 @@ add_task(function* () {
 });
 
 function typeInEditor(editor, panelWindow) {
-  let deferred = defer();
+  return new Promise(resolve => {
+    waitForFocus(function () {
+      for (let c of TESTCASE_CSS_SOURCE) {
+        EventUtils.synthesizeKey(c, {}, panelWindow);
+      }
+      ok(editor.unsaved, "new editor has unsaved flag");
 
-  waitForFocus(function () {
-    for (let c of TESTCASE_CSS_SOURCE) {
-      EventUtils.synthesizeKey(c, {}, panelWindow);
-    }
-    ok(editor.unsaved, "new editor has unsaved flag");
-
-    deferred.resolve();
-  }, panelWindow);
-
-  return deferred.promise;
+      resolve();
+    }, panelWindow);
+  });
 }

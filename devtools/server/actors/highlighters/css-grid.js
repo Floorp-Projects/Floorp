@@ -807,7 +807,10 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     this.getElement("area-infobar-dimensions").setTextContent(dim);
 
     let container = this.getElement("area-infobar-container");
-    this._moveInfobar(container, x1, x2, y1, y2);
+    this._moveInfobar(container, x1, x2, y1, y2, {
+      position: "bottom",
+      hideIfOffscreen: true
+    });
   },
 
   _updateGridCellInfobar(rowNumber, columnNumber, x1, x2, y1, y2) {
@@ -822,7 +825,10 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     this.getElement("cell-infobar-dimensions").setTextContent(dim);
 
     let container = this.getElement("cell-infobar-container");
-    this._moveInfobar(container, x1, x2, y1, y2);
+    this._moveInfobar(container, x1, x2, y1, y2, {
+      position: "top",
+      hideIfOffscreen: true
+    });
   },
 
   /**
@@ -857,7 +863,7 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
    * @param  {Number} y2
    *         The second y-coordinate of the grid rectangle.
    */
-  _moveInfobar(container, x1, x2, y1, y2) {
+  _moveInfobar(container, x1, x2, y1, y2, options) {
     let bounds = {
       bottom: y2,
       height: y2 - y1,
@@ -869,7 +875,7 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
       y: y1,
     };
 
-    moveInfobar(container, bounds, this.win);
+    moveInfobar(container, bounds, this.win, options);
   },
 
   /**
@@ -1380,8 +1386,8 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
 
         // Update and show the info bar when only displaying a single grid area.
         if (areaName) {
-          this._updateGridAreaInfobar(area, x1, x2, y1, y2);
           this._showGridAreaInfoBar();
+          this._updateGridAreaInfobar(area, x1, x2, y1, y2);
         }
       }
     }
@@ -1430,8 +1436,8 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     let cells = this.getElement("cells");
     cells.setAttribute("d", path);
 
-    this._updateGridCellInfobar(rowNumber, columnNumber, x1, x2, y1, y2);
     this._showGridCellInfoBar();
+    this._updateGridCellInfobar(rowNumber, columnNumber, x1, x2, y1, y2);
   },
 
   /**
@@ -1479,8 +1485,8 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
       ? linePos.start + (bounds.top / currentZoom)
       : rowYPosition.start + (bounds.top / currentZoom);
 
-    this._updateGridLineInfobar(names.join(", "), lineNumber, x, y);
     this._showGridLineInfoBar();
+    this._updateGridLineInfobar(names.join(", "), lineNumber, x, y);
   },
 
   /**

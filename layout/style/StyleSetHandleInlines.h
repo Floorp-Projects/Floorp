@@ -279,6 +279,12 @@ AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray)
   FORWARD(AppendFontFaceRules, (aArray));
 }
 
+nsCSSCounterStyleRule*
+StyleSetHandle::Ptr::CounterStyleRuleForName(nsIAtom* aName)
+{
+  FORWARD(CounterStyleRuleForName, (aName));
+}
+
 } // namespace mozilla
 
 #undef FORWARD
