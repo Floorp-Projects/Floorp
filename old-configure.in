@@ -1191,6 +1191,10 @@ case "$target" in
     fi
     ;;
 
+*-solaris*)
+    MOZ_FIX_LINK_PATHS=
+    ;;
+
 esac
 
 AC_SUBST_LIST(MMX_FLAGS)
