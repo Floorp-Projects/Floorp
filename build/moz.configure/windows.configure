@@ -153,7 +153,7 @@ def valid_windows_sdk_dir(compiler, windows_sdk_dir, target_version,
 
 add_old_configure_assignment(
     'WINDOWSSDKDIR',
-    delayed_getattr(valid_windows_sdk_dir, 'path'))
+    valid_windows_sdk_dir.path)
 add_old_configure_assignment(
     'MOZ_WINSDK_MAXVER',
     depends(valid_windows_sdk_dir)(
