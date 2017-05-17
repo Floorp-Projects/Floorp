@@ -28,7 +28,6 @@
 #include "js/TypeDecls.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/UniquePtr.h"
-#include "PseudoStack.h"
 
 class SpliceableJSONWriter;
 
@@ -392,6 +391,7 @@ PROFILER_FUNC(void* profiler_get_stack_top(), nullptr)
 #include "js/ProfilingStack.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/ThreadLocal.h"
+#include "PseudoStack.h"
 #include "nscore.h"
 
 // Make sure that we can use std::min here without the Windows headers messing with us.

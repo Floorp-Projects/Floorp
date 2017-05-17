@@ -38,7 +38,7 @@ add_task(function* () {
   // position as scrolling occurs after selectStyleSheet resolves but before the
   // event is emitted.
   let selectEventPromise = waitForEditorToBeSelected(longEditor, ui);
-  ui.selectStyleSheet(longEditor.styleSheet, LINE_TO_SELECT);
+  yield ui.selectStyleSheet(longEditor.styleSheet, LINE_TO_SELECT);
   yield selectEventPromise;
 
   info("Checking that the correct line is visible after initial load");

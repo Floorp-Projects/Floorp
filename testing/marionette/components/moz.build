@@ -6,3 +6,6 @@ EXTRA_COMPONENTS += [
     "marionette.js",
     "marionette.manifest",
 ]
+
+XPIDL_MODULE = "remote"
+XPIDL_SOURCES += ["nsIMarionette.idl"]

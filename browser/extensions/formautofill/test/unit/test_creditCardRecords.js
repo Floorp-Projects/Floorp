@@ -187,6 +187,7 @@ add_task(async function test_add() {
   do_check_credit_card_matches(creditCards[1], TEST_CREDIT_CARD_2);
 
   do_check_neq(creditCards[0].guid, undefined);
+  do_check_eq(creditCards[0].version, 1);
   do_check_neq(creditCards[0].timeCreated, undefined);
   do_check_eq(creditCards[0].timeLastModified, creditCards[0].timeCreated);
   do_check_eq(creditCards[0].timeLastUsed, 0);

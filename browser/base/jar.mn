@@ -128,6 +128,7 @@ browser.jar:
         content/browser/pageinfo/feeds.xml            (content/pageinfo/feeds.xml)
         content/browser/pageinfo/permissions.js       (content/pageinfo/permissions.js)
         content/browser/pageinfo/security.js          (content/pageinfo/security.js)
+        content/browser/robot.ico                     (content/robot.ico)
         content/browser/sync/aboutSyncTabs.xul        (content/sync/aboutSyncTabs.xul)
         content/browser/sync/aboutSyncTabs.js         (content/sync/aboutSyncTabs.js)
         content/browser/sync/aboutSyncTabs.css        (content/sync/aboutSyncTabs.css)

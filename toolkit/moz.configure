@@ -704,9 +704,11 @@ def stylo(stylo_enabled, bindgen_config_paths, bindgen_enabled):
     elif not bindgen_config_paths:
         die(dedent('''\
         Could not find LLVM/Clang installation for compiling stylo build-time
-        bindgen.  Please put 'llvm-config' in your PATH, specify the
-        'LLVM_CONFIG' environment variable, or pass the '--with-libclang-path'
-        and '--with-clang-path' options to configure.'''))
+        bindgen.  Please specify the 'LLVM_CONFIG' environment variable
+        (recommended), pass the '--with-libclang-path' and '--with-clang-path'
+        options to configure, or put 'llvm-config' in your PATH.  Altering your
+        PATH may expose 'clang' as well, potentially altering your compiler,
+        which may not be what you intended.'''))
 
     return namespace(
         enabled=bool(stylo_enabled),
