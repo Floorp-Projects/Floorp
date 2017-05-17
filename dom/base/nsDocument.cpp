@@ -12261,10 +12261,6 @@ nsDocument::UpdateVisibilityState()
                                          /* cancelable = */ false);
     EnumerateActivityObservers(NotifyActivityChanged, nullptr);
   }
-
-  if (mVisibilityState == dom::VisibilityState::Visible) {
-    MaybeActiveMediaComponents();
-  }
 }
 
 VisibilityState
@@ -12298,16 +12294,6 @@ nsDocument::PostVisibilityUpdateEvent()
   nsCOMPtr<nsIRunnable> event =
     NewRunnableMethod(this, &nsDocument::UpdateVisibilityState);
   Dispatch("nsDocument::UpdateVisibilityState", TaskCategory::Other, event.forget());
-}
-
-void
-nsDocument::MaybeActiveMediaComponents()
-{
-  if (!mWindow) {
-    return;
-  }
-
-  GetWindow()->MaybeActiveMediaComponents();
 }
 
 NS_IMETHODIMP
