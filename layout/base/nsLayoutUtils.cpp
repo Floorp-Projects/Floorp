@@ -531,21 +531,27 @@ MayHaveAnimationOfProperty(EffectSet* effects, nsCSSPropertyID aProperty)
 }
 
 bool
-nsLayoutUtils::HasAnimationOfProperty(const nsIFrame* aFrame,
+nsLayoutUtils::HasAnimationOfProperty(EffectSet* aEffectSet,
                                       nsCSSPropertyID aProperty)
 {
-  EffectSet* effects = EffectSet::GetEffectSet(aFrame);
-  if (!effects || !MayHaveAnimationOfProperty(effects, aProperty)) {
+  if (!aEffectSet || !MayHaveAnimationOfProperty(aEffectSet, aProperty)) {
     return false;
   }
 
-  return HasMatchingAnimations(effects,
+  return HasMatchingAnimations(aEffectSet,
     [&aProperty](KeyframeEffectReadOnly& aEffect)
     {
       return (aEffect.IsInEffect() || aEffect.IsCurrent()) &&
              aEffect.HasAnimationOfProperty(aProperty);
     }
   );
+}
+
+bool
+nsLayoutUtils::HasAnimationOfProperty(const nsIFrame* aFrame,
+                                      nsCSSPropertyID aProperty)
+{
+  return HasAnimationOfProperty(EffectSet::GetEffectSet(aFrame), aProperty);
 }
 
 bool
