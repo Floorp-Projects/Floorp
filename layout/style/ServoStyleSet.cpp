@@ -1045,6 +1045,12 @@ ServoStyleSet::AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray)
   return true;
 }
 
+nsCSSCounterStyleRule*
+ServoStyleSet::CounterStyleRuleForName(nsIAtom* aName)
+{
+  return Servo_StyleSet_GetCounterStyleRule(mRawSet.get(), aName);
+}
+
 already_AddRefed<ServoComputedValues>
 ServoStyleSet::ResolveForDeclarations(
   ServoComputedValuesBorrowedOrNull aParentOrNull,

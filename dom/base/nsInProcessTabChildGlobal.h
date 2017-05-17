@@ -143,11 +143,7 @@ public:
   }
 
   virtual JSObject* GetGlobalJSObject() override {
-    if (!mGlobal) {
-      return nullptr;
-    }
-
-    return mGlobal->GetJSObject();
+    return mGlobal;
   }
   virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override
   {

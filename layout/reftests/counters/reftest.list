@@ -1,37 +1,37 @@
 == counter-name-case-sensitive.html counter-name-case-sensitive-ref.html
 == t1202-counter-00-b-test.html t1202-counter-00-b-reference.html
 == t1202-counter-01-b-test.html t1202-counter-01-b-reference.html
-asserts-if(stylo,4) == t1202-counter-02-b-test.html t1202-counter-02-b-reference.html
-asserts-if(stylo,4) == t1202-counter-03-b-test.html t1202-counter-03-b-reference.html
-asserts-if(stylo,4) == t1202-counter-04-b-test.html t1202-counter-04-b-reference.html
+== t1202-counter-02-b-test.html t1202-counter-02-b-reference.html
+== t1202-counter-03-b-test.html t1202-counter-03-b-reference.html
+== t1202-counter-04-b-test.html t1202-counter-04-b-reference.html
 == t1202-counter-05-b-test.html t1202-counter-05-b-reference.html
-fails-if(stylo) == t1202-counter-06-b-test.html t1202-counter-06-b-reference.html
-skip-if(stylo) == t1202-counter-07-b-test.html t1202-counter-07-b-reference.html
-skip-if(stylo) == t1202-counter-08-b-test.html t1202-counter-08-b-reference.html
-fails-if(stylo) == t1202-counter-09-b-test.html t1202-counter-09-b-reference.html
-fails-if(stylo) == t1202-counter-10-b-test.html t1202-counter-10-b-reference.html
-fails-if(stylo) == t1202-counter-11-b-test.html t1202-counter-11-b-reference.html
-skip-if(stylo) == t1202-counter-12-b-test.html t1202-counter-12-b-reference.html
-fails-if(stylo) == t1202-counter-13-b-test.html t1202-counter-13-b-reference.html
-skip-if(stylo) == t1202-counter-14-b-test.html t1202-counter-14-b-reference.html
-fails-if(stylo) == t1202-counter-15-b-test.html t1202-counter-15-b-reference.html
+== t1202-counter-06-b-test.html t1202-counter-06-b-reference.html
+== t1202-counter-07-b-test.html t1202-counter-07-b-reference.html
+== t1202-counter-08-b-test.html t1202-counter-08-b-reference.html
+== t1202-counter-09-b-test.html t1202-counter-09-b-reference.html
+== t1202-counter-10-b-test.html t1202-counter-10-b-reference.html
+== t1202-counter-11-b-test.html t1202-counter-11-b-reference.html
+== t1202-counter-12-b-test.html t1202-counter-12-b-reference.html
+== t1202-counter-13-b-test.html t1202-counter-13-b-reference.html
+== t1202-counter-14-b-test.html t1202-counter-14-b-reference.html
+== t1202-counter-15-b-test.html t1202-counter-15-b-reference.html
 == t1202-counter-16-f-test.html t1202-counter-16-f-reference.html
 == t1202-counters-00-b-test.html t1202-counters-00-b-reference.html
 == t1202-counters-01-b-test.html t1202-counters-01-b-reference.html
-asserts-if(stylo,4) == t1202-counters-02-b-test.html t1202-counters-02-b-reference.html
-asserts-if(stylo,4) == t1202-counters-03-b-test.html t1202-counters-03-b-reference.html
-asserts-if(stylo,4) == t1202-counters-04-b-test.html t1202-counters-04-b-reference.html
+== t1202-counters-02-b-test.html t1202-counters-02-b-reference.html
+== t1202-counters-03-b-test.html t1202-counters-03-b-reference.html
+== t1202-counters-04-b-test.html t1202-counters-04-b-reference.html
 == t1202-counters-05-b-test.html t1202-counters-05-b-reference.html
-fails-if(stylo) == t1202-counters-06-b-test.html t1202-counters-06-b-reference.html
-skip-if(stylo) == t1202-counters-07-b-test.html t1202-counters-07-b-reference.html
-skip-if(stylo) == t1202-counters-08-b-test.html t1202-counters-08-b-reference.html
-fails-if(stylo) == t1202-counters-09-b-test.html t1202-counters-09-b-reference.html
-fails-if(stylo) == t1202-counters-10-b-test.html t1202-counters-10-b-reference.html
-fails-if(stylo) == t1202-counters-11-b-test.html t1202-counters-11-b-reference.html
-skip-if(stylo) == t1202-counters-12-b-test.html t1202-counters-12-b-reference.html
-fails-if(stylo) == t1202-counters-13-b-test.html t1202-counters-13-b-reference.html
-skip-if(stylo) == t1202-counters-14-b-test.html t1202-counters-14-b-reference.html
-fails-if(stylo) == t1202-counters-15-b-test.html t1202-counters-15-b-reference.html
+== t1202-counters-06-b-test.html t1202-counters-06-b-reference.html
+== t1202-counters-07-b-test.html t1202-counters-07-b-reference.html
+== t1202-counters-08-b-test.html t1202-counters-08-b-reference.html
+== t1202-counters-09-b-test.html t1202-counters-09-b-reference.html
+== t1202-counters-10-b-test.html t1202-counters-10-b-reference.html
+== t1202-counters-11-b-test.html t1202-counters-11-b-reference.html
+== t1202-counters-12-b-test.html t1202-counters-12-b-reference.html
+== t1202-counters-13-b-test.html t1202-counters-13-b-reference.html
+== t1202-counters-14-b-test.html t1202-counters-14-b-reference.html
+== t1202-counters-15-b-test.html t1202-counters-15-b-reference.html
 == t1202-counters-16-c-test.html t1202-counters-16-c-reference.html
 == t1202-counters-17-d-test.html t1202-counters-17-d-reference.html
 == t1202-counters-18-f-test.html t1202-counters-18-f-reference.html
@@ -58,8 +58,8 @@ fails-if(stylo) == t1202-counters-15-b-test.html t1202-counters-15-b-reference.h
 == t120403-display-none-00-c-test.html t120403-display-none-00-c-reference.html
 == t120403-visibility-00-c-test.html t120403-visibility-00-c-reference.html
 == text-boundaries-subpixel.html text-boundaries-subpixel-ref.html
-fails-if(stylo) == counter-hebrew-test.html counter-hebrew-reference.html
-fails-if(stylo) == counters-hebrew-test.html counters-hebrew-reference.html
+== counter-hebrew-test.html counter-hebrew-reference.html
+== counters-hebrew-test.html counters-hebrew-reference.html
 fails-if(xulRuntime.XPCOMABI.match(/arm/)) == counter-reset-integer-range.html counter-reset-integer-range-ref.html # bug 989718
 == counter-ua-limits-00.html counter-ua-limits-00-ref.html
 == counter-ua-limits-01.html counter-ua-limits-01-ref.html
@@ -67,16 +67,16 @@ fails-if(xulRuntime.XPCOMABI.match(/arm/)) == counter-ua-limits-02.html counter-
 == counter-ua-limits-03.html counter-ua-limits-03-ref.html
 == counter-ua-limits-list-00.html counter-ua-limits-list-00-ref.html
 == counter-ua-limits-list-01.html counter-ua-limits-list-01-ref.html
-fails-if(stylo) == multiple-thai-counters.html multiple-thai-counters-ref.html
-fails-if(stylo) == counter-suffix.html counter-suffix-ref.html
-fails-if(stylo) == counter-cjk-decimal.html counter-cjk-decimal-ref.html
-asserts-if(stylo,4) == counter-japanese-informal.html counter-japanese-informal-ref.html
-asserts-if(stylo,4) == counter-japanese-formal.html counter-japanese-formal-ref.html
-asserts-if(stylo,4) == counter-korean-hangul-formal.html counter-korean-hangul-formal-ref.html
-asserts-if(stylo,4) == counter-korean-hanja-informal.html counter-korean-hanja-informal-ref.html
-asserts-if(stylo,4) == counter-korean-hanja-formal.html counter-korean-hanja-formal-ref.html
-asserts-if(stylo,4) == counter-simp-chinese-informal.html counter-simp-chinese-informal-ref.html
-asserts-if(stylo,4) == counter-simp-chinese-formal.html counter-simp-chinese-formal-ref.html
-asserts-if(stylo,4) == counter-trad-chinese-informal.html counter-trad-chinese-informal-ref.html
-asserts-if(stylo,4) == counter-trad-chinese-formal.html counter-trad-chinese-formal-ref.html
-asserts-if(stylo,4) == counter-ethiopic-numeric.html counter-ethiopic-numeric-ref.html
+== multiple-thai-counters.html multiple-thai-counters-ref.html
+== counter-suffix.html counter-suffix-ref.html
+== counter-cjk-decimal.html counter-cjk-decimal-ref.html
+== counter-japanese-informal.html counter-japanese-informal-ref.html
+== counter-japanese-formal.html counter-japanese-formal-ref.html
+== counter-korean-hangul-formal.html counter-korean-hangul-formal-ref.html
+== counter-korean-hanja-informal.html counter-korean-hanja-informal-ref.html
+== counter-korean-hanja-formal.html counter-korean-hanja-formal-ref.html
+== counter-simp-chinese-informal.html counter-simp-chinese-informal-ref.html
+== counter-simp-chinese-formal.html counter-simp-chinese-formal-ref.html
+== counter-trad-chinese-informal.html counter-trad-chinese-informal-ref.html
+== counter-trad-chinese-formal.html counter-trad-chinese-formal-ref.html
+== counter-ethiopic-numeric.html counter-ethiopic-numeric-ref.html

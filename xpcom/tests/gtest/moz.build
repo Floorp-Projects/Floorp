@@ -64,6 +64,9 @@ if CONFIG['WRAP_STL_INCLUDES'] and not CONFIG['CLANG_CL']:
         'TestSTLWrappers.cpp',
     ]
 
+if CONFIG['MOZ_CODE_COVERAGE']:
+    DEFINES['MOZ_CODE_COVERAGE'] = True
+
 # Compile TestAllocReplacement separately so Windows headers don't pollute
 # the global namespace for other files.
 SOURCES += [

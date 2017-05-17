@@ -622,6 +622,8 @@ function BuildConditionSandbox(aURL) {
     var xr = CC[NS_XREAPPINFO_CONTRACTID].getService(CI.nsIXULRuntime);
     var appInfo = CC[NS_XREAPPINFO_CONTRACTID].getService(CI.nsIXULAppInfo);
     sandbox.isDebugBuild = gDebug.isDebugBuild;
+    var prefs = CC["@mozilla.org/preferences-service;1"].
+                getService(CI.nsIPrefBranch);
 
     // xr.XPCOMABI throws exception for configurations without full ABI
     // support (mobile builds on ARM)
@@ -712,10 +714,11 @@ function BuildConditionSandbox(aURL) {
     sandbox.webrtc = false;
 #endif
 
+sandbox.stylo =
 #ifdef MOZ_STYLO
-    sandbox.stylo = true;
+    prefs.getBoolPref("layout.css.servo.enabled", false);
 #else
-    sandbox.stylo = false;
+    false;
 #endif
 
 #ifdef RELEASE_OR_BETA
@@ -746,8 +749,6 @@ function BuildConditionSandbox(aURL) {
     // Set a flag on sandbox if the windows default theme is active
     sandbox.windowsDefaultTheme = gContainingWindow.matchMedia("(-moz-windows-default-theme)").matches;
 
-    var prefs = CC["@mozilla.org/preferences-service;1"].
-                getService(CI.nsIPrefBranch);
     try {
         sandbox.nativeThemePref = !prefs.getBoolPref("mozilla.widget.disable-native-theme");
     } catch (e) {

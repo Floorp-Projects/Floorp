@@ -43,9 +43,9 @@ let prepareTestRecords = async function(path) {
 
   let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                           (subject, data) => data == "add");
-  profileStorage.addresses.add(TEST_ADDRESS_1);
+  do_check_true(profileStorage.addresses.add(TEST_ADDRESS_1));
   await onChanged;
-  profileStorage.addresses.add(TEST_ADDRESS_2);
+  do_check_true(profileStorage.addresses.add(TEST_ADDRESS_2));
   await profileStorage._saveImmediately();
 };
 
@@ -120,8 +120,7 @@ add_task(async function test_get() {
   address.organization = "test";
   do_check_record_matches(profileStorage.addresses.get(guid), TEST_ADDRESS_1);
 
-  Assert.throws(() => profileStorage.addresses.get("INVALID_GUID"),
-    /No matching record\./);
+  do_check_eq(profileStorage.addresses.get("INVALID_GUID"), null);
 });
 
 add_task(async function test_getByFilter() {
@@ -176,6 +175,7 @@ add_task(async function test_add() {
   do_check_record_matches(addresses[1], TEST_ADDRESS_2);
 
   do_check_neq(addresses[0].guid, undefined);
+  do_check_eq(addresses[0].version, 1);
   do_check_neq(addresses[0].timeCreated, undefined);
   do_check_eq(addresses[0].timeLastModified, addresses[0].timeCreated);
   do_check_eq(addresses[0].timeLastUsed, 0);
@@ -282,5 +282,5 @@ add_task(async function test_remove() {
 
   do_check_eq(addresses.length, 1);
 
-  Assert.throws(() => profileStorage.addresses.get(guid), /No matching record\./);
+  do_check_eq(profileStorage.addresses.get(guid), null);
 });

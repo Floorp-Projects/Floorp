@@ -4,7 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "StorageManager.h"
+#include "LocalStorageManager.h"
+#include "StorageUtils.h"
 
 #include "mozIStorageBindingParamsArray.h"
 #include "mozIStorageBindingParams.h"
@@ -21,8 +22,7 @@
 namespace mozilla {
 namespace dom {
 
-extern void
-ReverseString(const nsCSubstring& aSource, nsCSubstring& aResult);
+using namespace StorageUtils;
 
 namespace {
 

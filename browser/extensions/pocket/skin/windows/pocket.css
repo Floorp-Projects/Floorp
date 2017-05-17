@@ -1,7 +1,7 @@
 @import url("chrome://pocket-shared/skin/pocket.css");
 
 #nav-bar #pocket-button > .toolbarbutton-icon {
-  padding: calc(var(--toolbarbutton-vertical-inner-padding)) 6px;
+  padding: calc(var(--toolbarbutton-inner-padding)) 6px;
 }
 
 :-moz-any(#TabsToolbar, .widget-overflow-list) #pocket-button > .toolbarbutton-icon {

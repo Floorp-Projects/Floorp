@@ -10,4 +10,18 @@
 
 module.exports = {
   executeSoon: setImmediate,
+  isGenerator: function (fn) {
+    if (typeof fn !== "function") {
+      return false;
+    }
+    let proto = Object.getPrototypeOf(fn);
+    if (!proto) {
+      return false;
+    }
+    let ctor = proto.constructor;
+    if (!ctor) {
+      return false;
+    }
+    return ctor.name == "GeneratorFunction";
+  }
 };

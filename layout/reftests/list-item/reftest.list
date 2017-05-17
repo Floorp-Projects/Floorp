@@ -11,4 +11,4 @@ asserts(1) asserts-if(stylo,2) == ol-reversed-1b.html ol-reversed-1-ref.html # b
 == bullet-space-1.html bullet-space-1-ref.html
 == bullet-space-2.html bullet-space-2-ref.html
 == bullet-intrinsic-isize-1.html bullet-intrinsic-isize-1-ref.html
-fails-if(stylo) == bullet-intrinsic-isize-2.html bullet-intrinsic-isize-2-ref.html
+== bullet-intrinsic-isize-2.html bullet-intrinsic-isize-2-ref.html

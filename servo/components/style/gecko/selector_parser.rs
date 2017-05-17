@@ -29,7 +29,7 @@ macro_rules! pseudo_class_name {
     (bare: [$(($css:expr, $name:ident, $gecko_type:tt, $state:tt, $flags:tt),)*],
      string: [$(($s_css:expr, $s_name:ident, $s_gecko_type:tt, $s_state:tt, $s_flags:tt),)*]) => {
         #[doc = "Our representation of a non tree-structural pseudo-class."]
-        #[derive(Clone, Debug, PartialEq, Eq, Hash)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub enum NonTSPseudoClass {
             $(
                 #[doc = $css]
@@ -159,8 +159,15 @@ impl NonTSPseudoClass {
 
     /// Returns true if the given pseudoclass should trigger style sharing cache revalidation.
     pub fn needs_cache_revalidation(&self) -> bool {
+        // :dir() depends on state only, but doesn't use state_flag because its
+        // semantics don't quite match.  Nevertheless, it doesn't need cache
+        // revalidation, because we already compare states for elements and
+        // candidates.
         self.state_flag().is_empty() &&
-        !matches!(*self, NonTSPseudoClass::MozAny(_))
+        !matches!(*self,
+                  NonTSPseudoClass::MozAny(_) |
+                  NonTSPseudoClass::Dir(_) |
+                  NonTSPseudoClass::MozIsHTML)
     }
 
     /// Convert NonTSPseudoClass to Gecko's CSSPseudoClassType.
@@ -185,7 +192,7 @@ impl NonTSPseudoClass {
 }
 
 /// The dummy struct we use to implement our selector parsing.
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SelectorImpl;
 
 /// Some subset of pseudo-elements in Gecko are sensitive to some state

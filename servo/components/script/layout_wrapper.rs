@@ -44,13 +44,13 @@ use dom::node::{LayoutNodeHelpers, Node};
 use dom::text::Text;
 use gfx_traits::ByteIndex;
 use html5ever::{LocalName, Namespace};
-use msg::constellation_msg::{FrameId, PipelineId};
+use msg::constellation_msg::{BrowsingContextId, PipelineId};
 use range::Range;
 use script_layout_interface::{HTMLCanvasData, LayoutNodeType, SVGSVGData, TrustedNodeAddress};
 use script_layout_interface::{OpaqueStyleAndLayoutData, PartialPersistentLayoutData};
 use script_layout_interface::wrapper_traits::{DangerousThreadSafeLayoutNode, GetLayoutData, LayoutNode};
 use script_layout_interface::wrapper_traits::{PseudoElementType, ThreadSafeLayoutElement, ThreadSafeLayoutNode};
-use selectors::matching::{ElementSelectorFlags, StyleRelations};
+use selectors::matching::{ElementSelectorFlags, MatchingContext};
 use selectors::parser::{AttrSelector, NamespaceConstraint};
 use servo_atoms::Atom;
 use servo_url::ServoUrl;
@@ -654,7 +654,7 @@ impl<'le> ::selectors::Element for ServoLayoutElement<'le> {
 
     fn match_non_ts_pseudo_class<F>(&self,
                                     pseudo_class: &NonTSPseudoClass,
-                                    _: &mut StyleRelations,
+                                    _: &mut MatchingContext,
                                     _: &mut F)
                                     -> bool
         where F: FnMut(&Self, ElementSelectorFlags),
@@ -908,9 +908,9 @@ impl<'ln> ThreadSafeLayoutNode for ServoThreadSafeLayoutNode<'ln> {
         this.svg_data()
     }
 
-    fn iframe_frame_id(&self) -> FrameId {
+    fn iframe_browsing_context_id(&self) -> BrowsingContextId {
         let this = unsafe { self.get_jsmanaged() };
-        this.iframe_frame_id()
+        this.iframe_browsing_context_id()
     }
 
     fn iframe_pipeline_id(&self) -> PipelineId {
@@ -1152,7 +1152,7 @@ impl<'le> ::selectors::Element for ServoThreadSafeLayoutElement<'le> {
 
     fn match_non_ts_pseudo_class<F>(&self,
                                     _: &NonTSPseudoClass,
-                                    _: &mut StyleRelations,
+                                    _: &mut MatchingContext,
                                     _: &mut F)
                                     -> bool
         where F: FnMut(&Self, ElementSelectorFlags),

@@ -34,7 +34,7 @@ use inline::{FIRST_FRAGMENT_OF_ELEMENT, InlineFlow, LAST_FRAGMENT_OF_ELEMENT};
 use ipc_channel::ipc;
 use list_item::ListItemFlow;
 use model::{self, MaybeAuto, specified};
-use msg::constellation_msg::FrameId;
+use msg::constellation_msg::BrowsingContextId;
 use net_traits::image::base::PixelFormat;
 use net_traits::image_cache::UsePlaceholder;
 use range::Range;
@@ -175,7 +175,7 @@ pub struct DisplayListBuildState<'a> {
 
     /// Vector containing iframe sizes, used to inform the constellation about
     /// new iframe sizes
-    pub iframe_sizes: Vec<(FrameId, TypedSize2D<f32, CSSPixel>)>,
+    pub iframe_sizes: Vec<(BrowsingContextId, TypedSize2D<f32, CSSPixel>)>,
 
     /// A stack of clips used to cull display list entries that are outside the
     /// rendered region.
@@ -1823,7 +1823,7 @@ impl FragmentDisplayListBuilding for Fragment {
 
                     let size = Size2D::new(item.bounds().size.width.to_f32_px(),
                                            item.bounds().size.height.to_f32_px());
-                    state.iframe_sizes.push((fragment_info.frame_id, TypedSize2D::from_untyped(&size)));
+                    state.iframe_sizes.push((fragment_info.browsing_context_id, TypedSize2D::from_untyped(&size)));
 
                     state.add_display_item(item);
                 }
@@ -2236,6 +2236,14 @@ impl BlockFlowDisplayListBuilding for BlockFlow {
             }
 
             match transform {
+                Some(transform) if transform.m13 != 0.0 ||  transform.m23 != 0.0 => {
+                    // We cannot properly handle perspective transforms, because there may be a
+                    // situation where an element is transformed from outside the clip into the
+                    // clip region. Here we don't have enough information to detect when that is
+                    // happening. For the moment we just punt on trying to optimize the display
+                    // list for those cases.
+                    max_rect()
+                }
                 Some(transform) => {
                     let clip = Rect::new(Point2D::new((clip.origin.x - origin.x).to_f32_px(),
                                                       (clip.origin.y - origin.y).to_f32_px()),

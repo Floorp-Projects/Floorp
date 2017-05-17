@@ -164,3 +164,13 @@
   visibility: collapse;
 }
 
+
+/* REMOTE CONTROL ICON */
+
+#main-window[remotecontrol] #remote-control-icon {
+  list-style-image: url(chrome://browser/content/robot.ico);
+  visibility: visible;
+  width: 16px;
+  height: 16px;
+  margin-inline-start: 2px;
+}

@@ -3433,6 +3433,14 @@ nsObjectLoadingContent::HasGoodFallback() {
       }
     }
 
+    // RULE "nosrc":
+    // Use fallback content if the object has not specified an URI.
+    if (rulesList[i].EqualsLiteral("nosrc")) {
+      if (!mOriginalURI) {
+        return true;
+      }
+    }
+
     // RULE "adobelink":
     // Don't use fallback content when it has a link to adobe's website.
     if (rulesList[i].EqualsLiteral("adobelink")) {

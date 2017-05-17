@@ -47,6 +47,11 @@
   skin/classic/browser/customizableui/subView-arrow-back-inverted@2x.png  (../shared/customizableui/subView-arrow-back-inverted@2x.png)
   skin/classic/browser/customizableui/subView-arrow-back-inverted-rtl.png  (../shared/customizableui/subView-arrow-back-inverted-rtl.png)
   skin/classic/browser/customizableui/subView-arrow-back-inverted-rtl@2x.png  (../shared/customizableui/subView-arrow-back-inverted-rtl@2x.png)
+  skin/classic/browser/sidebar/arrow-dropdown.svg           (../shared/sidebar/arrow-dropdown.svg)
+  skin/classic/browser/sidebar/bookmark-filled.svg          (../shared/sidebar/bookmark-filled.svg)
+  skin/classic/browser/sidebar/close.svg                    (../shared/sidebar/close.svg)
+  skin/classic/browser/sidebar/history.svg                  (../shared/sidebar/history.svg)
+  skin/classic/browser/sidebar/sync.svg                     (../shared/sidebar/sync.svg)
   skin/classic/browser/customizableui/whimsy.png               (../shared/customizableui/whimsy.png)
   skin/classic/browser/customizableui/whimsy@2x.png            (../shared/customizableui/whimsy@2x.png)
   skin/classic/browser/downloads/contentAreaDownloadsView.css  (../shared/downloads/contentAreaDownloadsView.css)
@@ -174,7 +179,7 @@
   skin/classic/browser/panic-panel/header-small@2x.png         (../shared/panic-panel/header-small@2x.png)
   skin/classic/browser/panic-panel/icons.png                   (../shared/panic-panel/icons.png)
   skin/classic/browser/panic-panel/icons@2x.png                (../shared/panic-panel/icons@2x.png)
-#ifndef XP_LINUX
+#ifndef MOZ_WIDGET_GTK
   skin/classic/browser/places/arrow-down.svg                   (../shared/places/arrow-down.svg)
 #endif
   skin/classic/browser/places/bookmarks-notification-finish.png (../shared/places/bookmarks-notification-finish.png)
@@ -189,7 +194,9 @@
   skin/classic/browser/compacttheme/urlbar-history-dropmarker.svg (../shared/compacttheme/urlbar-history-dropmarker.svg)
   skin/classic/browser/urlbar-star.svg                         (../shared/urlbar-star.svg)
   skin/classic/browser/urlbar-tab.svg                          (../shared/urlbar-tab.svg)
-  skin/classic/browser/page-action.svg                         (../shared/page-action.svg)
+  skin/classic/browser/page-action.svg                         (../shared/icons/page-action.svg)
+  skin/classic/browser/copy-url.svg                            (../shared/icons/copy-url.svg)
+  skin/classic/browser/email-link.svg                          (../shared/icons/email-link.svg)
   skin/classic/browser/menu-icons/back.svg                     (../shared/menu-icons/back.svg)
   skin/classic/browser/menu-icons/back-small.svg               (../shared/menu-icons/back-small.svg)
   skin/classic/browser/menu-icons/addons.svg                   (../shared/menu-icons/addons.svg)

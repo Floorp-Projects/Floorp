@@ -562,7 +562,7 @@ asserts(2-8) load 944909-1.html
 load 946167-1.html
 load 947158.html
 load 949932.html
-asserts-if(Android,0-1) asserts-if(stylo,4) load 964078.html # bug 989718, bug 1296477
+asserts-if(Android,0-1) load 964078.html # bug 989718
 load 970710.html
 load 973701-1.xhtml
 load 973701-2.xhtml
