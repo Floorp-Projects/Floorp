@@ -155,14 +155,23 @@ CopyScopeData(JSContext* cx, Handle<typename ConcreteScope::Data*> data)
     }
 
     size_t dataSize = ConcreteScope::sizeOfData(data->length);
+    size_t headerSize = sizeof(typename ConcreteScope::Data);
+    MOZ_ASSERT(dataSize >= headerSize);
+    size_t extraSize = dataSize - headerSize;
+
     uint8_t* copyBytes = cx->zone()->pod_malloc<uint8_t>(dataSize);
     if (!copyBytes) {
         ReportOutOfMemory(cx);
         return nullptr;
     }
 
-    mozilla::PodCopy<uint8_t>(copyBytes, reinterpret_cast<uint8_t*>(data.get()), dataSize);
     auto dataCopy = reinterpret_cast<typename ConcreteScope::Data*>(copyBytes);
+    new (dataCopy) typename ConcreteScope::Data(*data);
+
+    uint8_t* extra = reinterpret_cast<uint8_t*>(data.get()) + headerSize;
+    uint8_t* extraCopy = copyBytes + headerSize;
+
+    mozilla::PodCopy<uint8_t>(extraCopy, extra, extraSize);
     return UniquePtr<typename ConcreteScope::Data>(dataCopy);
 }
 
@@ -201,6 +210,8 @@ NewEmptyScopeData(JSContext* cx, uint32_t length = 0)
     if (!bytes)
         ReportOutOfMemory(cx);
     auto data = reinterpret_cast<typename ConcreteScope::Data*>(bytes);
+    if (data)
+        new (data) typename ConcreteScope::Data();
     return UniquePtr<typename ConcreteScope::Data>(data);
 }
 
@@ -243,6 +254,15 @@ XDRBindingName(XDRState<XDR_DECODE>* xdr, BindingName* bindingName)
     return true;
 }
 
+template <typename ConcreteScopeData>
+static void
+DeleteScopeData(ConcreteScopeData* data)
+{
+    // Some scope Data classes have GCManagedDeletePolicy because then contain
+    // GCPtrs. Dispose of them in the appropriate way.
+    JS::DeletePolicy<ConcreteScopeData>()(data);
+}
+
 template <typename ConcreteScope, XDRMode mode>
 /* static */ bool
 Scope::XDRSizedBindingNames(XDRState<mode>* xdr, Handle<ConcreteScope*> scope,
@@ -270,7 +290,7 @@ Scope::XDRSizedBindingNames(XDRState<mode>* xdr, Handle<ConcreteScope*> scope,
     for (uint32_t i = 0; i < length; i++) {
         if (!XDRBindingName(xdr, &data->names[i])) {
             if (mode == XDR_DECODE) {
-                js_free(data);
+                DeleteScopeData(data.get());
                 data.set(nullptr);
             }
 
@@ -410,7 +430,10 @@ Scope::clone(JSContext* cx, HandleScope scope, HandleScope enclosing)
 void
 Scope::finalize(FreeOp* fop)
 {
+    MOZ_ASSERT(CurrentThreadIsGCSweeping());
     if (data_) {
+        // We don't need to call the destructors for any GCPtrs in Data because
+        // this only happens during a GC.
         fop->free_(reinterpret_cast<void*>(data_));
         data_ = 0;
     }
@@ -540,9 +563,9 @@ LexicalScope::XDR(XDRState<mode>* xdr, ScopeKind kind, HandleScope enclosing,
         return false;
 
     {
-        auto freeOnLeave = MakeScopeExit([&data]() {
+        auto deleteOnLeave = MakeScopeExit([&data]() {
             if (mode == XDR_DECODE)
-                js_free(data);
+                js_delete(data.get());
         });
 
         uint32_t firstFrameSlot;
@@ -724,9 +747,9 @@ FunctionScope::XDR(XDRState<mode>* xdr, HandleFunction fun, HandleScope enclosin
         return false;
 
     {
-        auto freeOnLeave = MakeScopeExit([&data]() {
+        auto deleteOnLeave = MakeScopeExit([&data]() {
             if (mode == XDR_DECODE)
-                js_free(data);
+                DeleteScopeData(data.get());
         });
 
         uint8_t needsEnvironment;
@@ -753,7 +776,7 @@ FunctionScope::XDR(XDRState<mode>* xdr, HandleFunction fun, HandleScope enclosin
                 MOZ_ASSERT(!data->nonPositionalFormalStart);
                 MOZ_ASSERT(!data->varStart);
                 MOZ_ASSERT(!data->nextFrameSlot);
-                js_free(data);
+                DeleteScopeData(data.get());
                 data = nullptr;
             }
 
@@ -852,9 +875,9 @@ VarScope::XDR(XDRState<mode>* xdr, ScopeKind kind, HandleScope enclosing,
         return false;
 
     {
-        auto freeOnLeave = MakeScopeExit([&data]() {
+        auto deleteOnLeave = MakeScopeExit([&data]() {
             if (mode == XDR_DECODE)
-                js_free(data);
+                js_delete(data.get());
         });
 
         uint8_t needsEnvironment;
@@ -875,7 +898,7 @@ VarScope::XDR(XDRState<mode>* xdr, ScopeKind kind, HandleScope enclosing,
         if (mode == XDR_DECODE) {
             if (!data->length) {
                 MOZ_ASSERT(!data->nextFrameSlot);
-                js_free(data);
+                DeleteScopeData(data.get());
                 data = nullptr;
             }
 
@@ -955,9 +978,9 @@ GlobalScope::XDR(XDRState<mode>* xdr, ScopeKind kind, MutableHandleScope scope)
         return false;
 
     {
-        auto freeOnLeave = MakeScopeExit([&data]() {
+        auto deleteOnLeave = MakeScopeExit([&data]() {
             if (mode == XDR_DECODE)
-                js_free(data);
+                DeleteScopeData(data.get());
         });
 
         if (!xdr->codeUint32(&data->varStart))
@@ -972,7 +995,7 @@ GlobalScope::XDR(XDRState<mode>* xdr, ScopeKind kind, MutableHandleScope scope)
                 MOZ_ASSERT(!data->varStart);
                 MOZ_ASSERT(!data->letStart);
                 MOZ_ASSERT(!data->constStart);
-                js_free(data);
+                DeleteScopeData(data.get());
                 data = nullptr;
             }
 
@@ -1078,9 +1101,9 @@ EvalScope::XDR(XDRState<mode>* xdr, ScopeKind kind, HandleScope enclosing,
     Rooted<Data*> data(cx);
 
     {
-        auto freeOnLeave = MakeScopeExit([&data]() {
+        auto deleteOnLeave = MakeScopeExit([&data]() {
             if (mode == XDR_DECODE)
-                js_free(data);
+                DeleteScopeData(data.get());
         });
 
         if (!XDRSizedBindingNames<EvalScope>(xdr, scope.as<EvalScope>(), &data))
@@ -1089,7 +1112,7 @@ EvalScope::XDR(XDRState<mode>* xdr, ScopeKind kind, HandleScope enclosing,
         if (mode == XDR_DECODE) {
             if (!data->length) {
                 MOZ_ASSERT(!data->nextFrameSlot);
-                js_free(data);
+                DeleteScopeData(data.get());
                 data = nullptr;
             }
 
