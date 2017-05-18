@@ -181,6 +181,16 @@ impl FontContext {
                                                   4);
 
         let offset_x = dimensions.left - unsafe { (*slot).bitmap_left };
+        let src_pixel_width = match pixel_mode {
+            FT_Pixel_Mode::FT_PIXEL_MODE_LCD => {
+                assert!(bitmap.width % 3 == 0);
+                bitmap.width / 3
+            },
+            _ => bitmap.width,
+        };
+        // determine the destination range of texels that `bitmap` provides data for
+        let dst_start = cmp::max(0, -offset_x);
+        let dst_end = cmp::min(dimensions.width as i32, src_pixel_width as i32 - offset_x);
 
         for y in 0 .. dimensions.height {
             let src_y = y as i32 - dimensions.top + unsafe { (*slot).bitmap_top };
@@ -193,9 +203,6 @@ impl FontContext {
             let base = unsafe {
                 bitmap.buffer.offset((src_y * bitmap.pitch) as isize)
             };
-            // determine the destination range of texels that `bitmap` provides data for
-            let dst_start = cmp::max(0, -offset_x);
-            let dst_end = cmp::min(dimensions.width as i32, bitmap.width as i32 - offset_x);
             for _x in 0 .. dst_start {
                 final_buffer.extend_from_slice(&[0xff, 0xff, 0xff, 0]);
             }

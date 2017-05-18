@@ -1044,9 +1044,7 @@ impl Renderer {
         let render_target_debug = options.render_target_debug;
         let payload_tx_for_backend = payload_tx.clone();
         let recorder = options.recorder;
-        // TODO(gw): Use a heuristic to select best # of worker threads.
-        let worker_config = ThreadPoolConfig::new().thread_name(|idx|{ format!("WebRender:Worker#{}", idx) })
-                                                   .num_threads(4);
+        let worker_config = ThreadPoolConfig::new().thread_name(|idx|{ format!("WebRender:Worker#{}", idx) });
         let workers = options.workers.take().unwrap_or_else(||{
             Arc::new(ThreadPool::new(worker_config).unwrap())
         });
