@@ -8,6 +8,7 @@ const {Cu} = require("chrome");
 const Services = require("Services");
 
 // Load gDevToolsBrowser toolbox lazily as they need gDevTools to be fully initialized
+loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
 loader.lazyRequireGetter(this, "Toolbox", "devtools/client/framework/toolbox", true);
 loader.lazyRequireGetter(this, "ToolboxHostManager", "devtools/client/framework/toolbox-host-manager", true);
 loader.lazyRequireGetter(this, "gDevToolsBrowser", "devtools/client/framework/devtools-browser", true);
@@ -467,6 +468,18 @@ DevTools.prototype = {
     yield toolbox.destroy();
     return true;
   }),
+
+  /**
+   * Wrapper on TargetFactory.forTab, constructs a Target for the provided tab.
+   *
+   * @param  {XULTab} tab
+   *         The tab to use in creating a new target.
+   *
+   * @return {TabTarget} A target object
+   */
+  getTargetForTab: function (tab) {
+    return TargetFactory.forTab(tab);
+  },
 
   /**
    * Either the SDK Loader has been destroyed by the add-on contribution
