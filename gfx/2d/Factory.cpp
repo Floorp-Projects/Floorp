@@ -546,7 +546,7 @@ Factory::CreateScaledFontForNativeFont(const NativeFont &aNativeFont,
 }
 
 already_AddRefed<NativeFontResource>
-Factory::CreateNativeFontResource(uint8_t *aData, uint32_t aSize, FontType aType)
+Factory::CreateNativeFontResource(uint8_t *aData, uint32_t aSize, FontType aType, void* aFontContext)
 {
   switch (aType) {
 #ifdef WIN32
@@ -571,7 +571,8 @@ Factory::CreateNativeFontResource(uint8_t *aData, uint32_t aSize, FontType aType
 #elif defined(XP_DARWIN)
       return NativeFontResourceMac::Create(aData, aSize);
 #elif defined(MOZ_WIDGET_GTK)
-      return NativeFontResourceFontconfig::Create(aData, aSize);
+      return NativeFontResourceFontconfig::Create(aData, aSize,
+                                                  static_cast<FT_Library>(aFontContext));
 #else
       gfxWarning() << "Unable to create cairo scaled font from truetype data";
       return nullptr;

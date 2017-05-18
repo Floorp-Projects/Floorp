@@ -17,10 +17,10 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace gfx {
 
-InlineTranslator::InlineTranslator(DrawTarget* aDT, Matrix aMatrix)
+InlineTranslator::InlineTranslator(DrawTarget* aDT, void* aFontContext)
+  : mBaseDT(aDT)
+  , mFontContext(aFontContext)
 {
-  mBaseDT = aDT;
-  mBaseTransform = aMatrix;
 }
 
 bool
