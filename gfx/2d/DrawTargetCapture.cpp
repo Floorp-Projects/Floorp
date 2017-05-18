@@ -204,6 +204,7 @@ DrawTargetCaptureImpl::ContainsOnlyColoredGlyphs(RefPtr<ScaledFont>& aScaledFont
 {
   uint8_t* start = &mDrawCommandStorage.front();
   uint8_t* current = start;
+  bool result = false;
 
   while (current < start + mDrawCommandStorage.size()) {
     DrawingCommand* command =
@@ -251,8 +252,9 @@ DrawTargetCaptureImpl::ContainsOnlyColoredGlyphs(RefPtr<ScaledFont>& aScaledFont
     aGlyphs.insert(aGlyphs.end(),
                    fillGlyphs->mGlyphs.begin(),
                    fillGlyphs->mGlyphs.end());
+    result = true;
   }
-  return true;
+  return result;
 }
 
 } // namespace gfx
