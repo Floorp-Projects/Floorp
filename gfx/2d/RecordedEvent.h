@@ -112,6 +112,7 @@ public:
                                                         SurfaceFormat aFormat);
   virtual DrawTarget *GetReferenceDrawTarget() = 0;
   virtual FontType GetDesiredFontType() = 0;
+  virtual void* GetFontContext() { return nullptr; }
 };
 
 struct ColorPatternStorage
