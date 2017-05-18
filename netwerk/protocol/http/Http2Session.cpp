@@ -964,6 +964,9 @@ Http2Session::SendHello()
     MOZ_ASSERT(mNextStreamID == kFollowerGroupID);
     CreatePriorityNode(kFollowerGroupID, kLeaderGroupID, 0, "follower");
     mNextStreamID += 2;
+    MOZ_ASSERT(mNextStreamID == kUrgentStartGroupID);
+    CreatePriorityNode(kUrgentStartGroupID, 0, 240, "urgentStart");
+    mNextStreamID += 2;
     // Hey, you! YES YOU! If you add/remove any groups here, you almost
     // certainly need to change the lookup of the stream/ID hash in
     // Http2Session::OnTransportStatus. Yeah, that's right. YOU!
@@ -2426,7 +2429,7 @@ Http2Session::OnTransportStatus(nsITransport* aTransport,
   case NS_NET_STATUS_TLS_HANDSHAKE_STARTING:
   case NS_NET_STATUS_TLS_HANDSHAKE_ENDED:
   {
-    Http2Stream *target = mStreamIDHash.Get(mUseH2Deps ? 0xD : 0x3);
+    Http2Stream *target = mStreamIDHash.Get(mUseH2Deps ? 0xF : 0x3);
     nsAHttpTransaction *transaction = target ? target->Transaction() : nullptr;
     if (transaction)
       transaction->OnTransportStatus(aTransport, aStatus, aProgress);
