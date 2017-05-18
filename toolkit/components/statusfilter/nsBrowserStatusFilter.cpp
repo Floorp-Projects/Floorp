@@ -4,14 +4,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsBrowserStatusFilter.h"
+#include "mozilla/SystemGroup.h"
 #include "nsIChannel.h"
 #include "nsITimer.h"
 #include "nsIServiceManager.h"
 #include "nsString.h"
 
-// XXX
-// XXX  DO NOT TOUCH THIS CODE UNLESS YOU KNOW WHAT YOU'RE DOING !!!
-// XXX
+using namespace mozilla;
 
 //-----------------------------------------------------------------------------
 // nsBrowserStatusFilter <public>
@@ -355,6 +354,9 @@ nsBrowserStatusFilter::StartDelayTimer()
     if (!mTimer)
         return NS_ERROR_FAILURE;
 
+    // Use the system group. The browser status filter is always used by chrome
+    // code.
+    mTimer->SetTarget(SystemGroup::EventTargetFor(TaskCategory::Other));
     return mTimer->InitWithNamedFuncCallback(
         TimeoutHandler, this, 160, nsITimer::TYPE_ONE_SHOT,
         "nsBrowserStatusFilter::TimeoutHandler");

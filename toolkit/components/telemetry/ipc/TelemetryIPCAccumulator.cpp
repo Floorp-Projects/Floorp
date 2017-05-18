@@ -11,6 +11,7 @@
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/SystemGroup.h"
 #include "mozilla/Unused.h"
 #include "nsComponentManagerUtils.h"
 #include "nsITimer.h"
@@ -21,6 +22,8 @@
 using mozilla::StaticMutex;
 using mozilla::StaticMutexAutoLock;
 using mozilla::StaticAutoPtr;
+using mozilla::SystemGroup;
+using mozilla::TaskCategory;
 using mozilla::Telemetry::Accumulation;
 using mozilla::Telemetry::KeyedAccumulation;
 using mozilla::Telemetry::ScalarActionType;
@@ -80,6 +83,7 @@ DoArmIPCTimerMainThread(const StaticMutexAutoLock& lock)
     CallCreateInstance(NS_TIMER_CONTRACTID, &gIPCTimer);
   }
   if (gIPCTimer) {
+    gIPCTimer->SetTarget(SystemGroup::EventTargetFor(TaskCategory::Other));
     gIPCTimer->InitWithNamedFuncCallback(TelemetryIPCAccumulator::IPCTimerFired,
                                          nullptr, kBatchTimeoutMs,
                                          nsITimer::TYPE_ONE_SHOT,
@@ -321,12 +325,6 @@ TelemetryIPCAccumulator::DeInitializeGlobalState()
 void
 TelemetryIPCAccumulator::DispatchToMainThread(already_AddRefed<nsIRunnable>&& aEvent)
 {
-  nsCOMPtr<nsIRunnable> event(aEvent);
-  nsCOMPtr<nsIThread> thread;
-  nsresult rv = NS_GetMainThread(getter_AddRefs(thread));
-  if (NS_FAILED(rv)) {
-    NS_WARNING("NS_FAILED DispatchToMainThread. Maybe we're shutting down?");
-    return;
-  }
-  thread->Dispatch(event, 0);
+  SystemGroup::EventTargetFor(TaskCategory::Other)->Dispatch(Move(aEvent),
+                                                             nsIEventTarget::DISPATCH_NORMAL);
 }

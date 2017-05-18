@@ -264,6 +264,8 @@ const FILE_RDF_MANIFEST               = "install.rdf";
 const FILE_WEB_MANIFEST               = "manifest.json";
 const FILE_XPI_ADDONS_LIST            = "extensions.ini";
 
+const ADDON_ID_DEFAULT_THEME          = "{972ce4c6-7e08-4474-a285-3208198ce6fd}";
+
 const KEY_PROFILEDIR                  = "ProfD";
 const KEY_ADDON_APP_DIR               = "XREAddonAppDir";
 const KEY_TEMPDIR                     = "TmpD";
@@ -4089,6 +4091,30 @@ this.XPIProvider = {
   },
 
   /**
+   * Returns the add-on state data for the restartful extensions which
+   * should be available in safe mode. In particular, this means the
+   * default theme, and only the default theme.
+   *
+   * @returns {object}
+   */
+  getSafeModeExtensions() {
+    let loc = XPIStates.getLocation(KEY_APP_GLOBAL);
+    let state = loc.get(ADDON_ID_DEFAULT_THEME);
+
+    // Use the default state data for the default theme, but always mark
+    // it enabled, in case another theme is enabled in normal mode.
+    let addonData = state.toJSON();
+    addonData.enabled = true;
+
+    return {
+      [KEY_APP_GLOBAL]: {
+        path: loc.path,
+        addons: { [ADDON_ID_DEFAULT_THEME]: addonData },
+      },
+    };
+  },
+
+  /**
    * Checks for any changes that have occurred since the last time the
    * application was launched.
    *
@@ -4205,6 +4231,12 @@ this.XPIProvider = {
         } catch (e) {
           logger.warn("Unable to remove old extension cache " + oldCache.path, e);
         }
+      }
+
+      if (Services.appinfo.inSafeMode) {
+        aomStartup.initializeExtensions(this.getSafeModeExtensions());
+        logger.debug("Initialized safe mode add-ons");
+        return false;
       }
 
       // If the application crashed before completing any pending operations then

@@ -14,5 +14,15 @@ DEFINES['LOCALE_SNAME'] = 0x5c
 
 LOCAL_INCLUDES += ['/intl/icu/source/i18n']
 
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += [
+        '-Wno-deprecated-declarations',
+        '-Wno-type-limits',
+        '-Wno-unused-but-set-variable',
+        '-Wno-unused-function',
+        '-Wno-sign-compare',
+        '-Wno-maybe-uninitialized',
+    ]
+
 include('../defs.mozbuild')
 include('sources.mozbuild')
