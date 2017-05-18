@@ -24,9 +24,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=936129
           window.runTest2();
           setTimeout(allDone);
         }
-        iframe.src = "about:blank";
+
+        // Per whatwg spec, "If the src attribute and the srcdoc attribute are
+        // both specified together, the srcdoc attribute takes priority."
+        //
+        // So if we were to use src attribute here, it will be considered as a
+        // no-op, so simply use a simple srcdoc here.
+        iframe.srcdoc = "<html></html>";
       }
-      iframe.src = "data:text/html,<script>function runTest2() { setTimeout('parent.test2Done()'); };<" + "/script>";
+      iframe.srcdoc = "<script>function runTest2() { setTimeout('parent.test2Done()'); };<" + "/script>";
     }
     window.test2DoneCalled = false;
     function test2Done()
@@ -45,7 +51,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=936129
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=936129">Mozilla Bug 936129</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-<iframe id="testFrame" src="data:text/html,<script>window.onload = function runTest1() { document.open(); setTimeout('parent.test1Done();'); document.close(); }</script>"></iframe>
+<iframe id="testFrame" src="file_settimeout_inner.html"></iframe>
 </div>
 <pre id="test">
 </pre>
