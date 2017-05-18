@@ -192,7 +192,6 @@ public:
   typedef mozilla::SVGContextPaint SVGContextPaint;
   typedef mozilla::SVGContextPaintImpl SVGContextPaintImpl;
   typedef mozilla::SVGGeometryFrame SVGGeometryFrame;
-  typedef mozilla::image::DrawResult DrawResult;
   typedef mozilla::image::imgDrawingParams imgDrawingParams;
 
   static void Init();
