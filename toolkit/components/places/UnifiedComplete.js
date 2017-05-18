@@ -1599,7 +1599,7 @@ Search.prototype = {
     // But, some schemes are expected to have no host. So we check just against
     // schemes we know should have a host. This allows new schemes to be
     // implemented without us accidentally blocking access to them.
-    let hostExpected = new Set(["http", "https", "ftp", "chrome", "resource"]);
+    let hostExpected = new Set(["http", "https", "ftp", "chrome"]);
     if (hostExpected.has(uri.scheme) && !uri.host)
       return false;
 
