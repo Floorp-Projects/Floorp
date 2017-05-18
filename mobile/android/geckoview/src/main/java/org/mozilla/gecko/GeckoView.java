@@ -108,10 +108,14 @@ public class GeckoView extends LayerView
     @WrapForJNI(dispatchTo = "proxy")
     protected static final class Window extends JNIObject {
         @WrapForJNI(skip = true)
+        public final String chromeUri;
+
+        @WrapForJNI(skip = true)
         /* package */ NativeQueue mNativeQueue;
 
         @WrapForJNI(skip = true)
-        /* package */ Window(final NativeQueue queue) {
+        /* package */ Window(final String chromeUri, final NativeQueue queue) {
+            this.chromeUri = chromeUri;
             mNativeQueue = queue;
         }
 
@@ -361,10 +365,35 @@ public class GeckoView extends LayerView
         super.onRestoreInstanceState(stateBinder.superState);
     }
 
-    protected void openWindow() {
-        if (mChromeUri == null) {
-            mChromeUri = getGeckoInterface().getDefaultChromeURI();
+    /**
+     * Return the URI of the underlying chrome window opened or to be opened, or null if
+     * using the default GeckoView URI.
+     *
+     * @return Current chrome URI or null.
+     */
+    public String getChromeUri() {
+        if (mWindow != null) {
+            return mWindow.chromeUri;
         }
+        return mChromeUri;
+    }
+
+    /**
+     * Set the URI of the underlying chrome window to be opened, or null to use the
+     * default GeckoView URI. Can only be called before the chrome window is opened during
+     * {@link #onAttachedToWindow}.
+     *
+     * @param uri New chrome URI or null.
+     */
+    public void setChromeUri(final String uri) {
+        if (mWindow != null) {
+            throw new IllegalStateException("Already opened chrome window");
+        }
+        mChromeUri = uri;
+    }
+
+    protected void openWindow() {
+        mWindow = new Window(mChromeUri, mNativeQueue);
 
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
             Window.open(mWindow, this, getCompositor(), mEventDispatcher,
@@ -399,7 +428,6 @@ public class GeckoView extends LayerView
 
         if (mWindow == null) {
             // Open a new nsWindow if we didn't have one from before.
-            mWindow = new Window(mNativeQueue);
             openWindow();
         } else {
             reattachWindow();
