@@ -677,10 +677,12 @@ def check_minimum_llvm_config_version(llvm_config):
         '''.format(version, min_version)))
 
 @depends(stylo_config, '--enable-stylo-build-bindgen',
-         llvm_config, '--with-libclang-path', '--with-clang-path')
+         llvm_config, '--with-libclang-path', '--with-clang-path',
+         host)
 @imports(_from='textwrap', _import='dedent')
 def bindgen_config_paths(stylo_config, bindgen_enabled,
-                         llvm_config, libclang_path, clang_path):
+                         llvm_config, libclang_path, clang_path,
+                         host):
     if not stylo_config.build:
         return None
 
@@ -694,7 +696,7 @@ def bindgen_config_paths(stylo_config, bindgen_enabled,
 
         check_minimum_llvm_config_version(llvm_config)
         return namespace(
-            libclang_path=invoke_llvm_config(llvm_config, '--libdir'),
+            libclang_path=invoke_llvm_config(llvm_config, '--bindir' if host.os == 'WINNT' else '--libdir'),
             clang_path=os.path.join(invoke_llvm_config(llvm_config, '--bindir'),
                                     'clang'),
         )
