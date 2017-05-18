@@ -2960,35 +2960,6 @@ public abstract class GeckoApp extends GeckoActivity
     }
 
     @Override
-    public void checkUriVisited(String uri) {
-        GlobalHistory.getInstance().checkUriVisited(uri);
-    }
-
-    @Override
-    public void markUriVisited(final String uri) {
-        final Context context = getApplicationContext();
-        final BrowserDB db = BrowserDB.from(context);
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public void run() {
-                GlobalHistory.getInstance().add(context, db, uri);
-            }
-        });
-    }
-
-    @Override
-    public void setUriTitle(final String uri, final String title) {
-        final Context context = getApplicationContext();
-        final BrowserDB db = BrowserDB.from(context);
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public void run() {
-                GlobalHistory.getInstance().update(context.getContentResolver(), db, uri, title);
-            }
-        });
-    }
-
-    @Override
     public String[] getHandlersForMimeType(String mimeType, String action) {
         Intent intent = IntentHelper.getIntentForActionString(action);
         if (mimeType != null && mimeType.length() > 0)

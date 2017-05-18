@@ -35,21 +35,6 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
     public void removeAppStateListener(GeckoAppShell.AppStateListener listener) {}
 
     @Override
-    public void checkUriVisited(String uri) {
-        // By default, no URIs are considered visited.
-    }
-
-    @Override
-    public void markUriVisited(final String uri) {
-        // By default, no URIs are marked as visited.
-    }
-
-    @Override
-    public void setUriTitle(final String uri, final String title) {
-        // By default, no titles are associated with URIs.
-    }
-
-    @Override
     public void setAccessibilityEnabled(boolean enabled) {
         // By default, take no action when accessibility is toggled on or off.
     }

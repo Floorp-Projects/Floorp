@@ -394,26 +394,6 @@ public:
 
     static auto CancelVibrate() -> void;
 
-    struct CheckURIVisited_t {
-        typedef GeckoAppShell Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<
-                mozilla::jni::String::Param> Args;
-        static constexpr char name[] = "checkUriVisited";
-        static constexpr char signature[] =
-                "(Ljava/lang/String;)V";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::GECKO;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    static auto CheckURIVisited(mozilla::jni::String::Param) -> void;
-
     struct CloseCamera_t {
         typedef GeckoAppShell Owner;
         typedef void ReturnType;
@@ -1336,26 +1316,6 @@ public:
 
     static auto LockScreenOrientation(int32_t) -> void;
 
-    struct MarkURIVisited_t {
-        typedef GeckoAppShell Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<
-                mozilla::jni::String::Param> Args;
-        static constexpr char name[] = "markUriVisited";
-        static constexpr char signature[] =
-                "(Ljava/lang/String;)V";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::GECKO;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    static auto MarkURIVisited(mozilla::jni::String::Param) -> void;
-
     struct MoveTaskToBack_t {
         typedef GeckoAppShell Owner;
         typedef void ReturnType;
@@ -1584,27 +1544,6 @@ public:
     };
 
     static auto SetScreenDepthOverride(int32_t) -> void;
-
-    struct SetURITitle_t {
-        typedef GeckoAppShell Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<
-                mozilla::jni::String::Param,
-                mozilla::jni::String::Param> Args;
-        static constexpr char name[] = "setUriTitle";
-        static constexpr char signature[] =
-                "(Ljava/lang/String;Ljava/lang/String;)V";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::GECKO;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    static auto SetURITitle(mozilla::jni::String::Param, mozilla::jni::String::Param) -> void;
 
     struct ShowNotification_t {
         typedef GeckoAppShell Owner;
