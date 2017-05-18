@@ -325,6 +325,10 @@ public:
     return nullptr;
   }
 
+  virtual void AddWRImage(wr::WebRenderAPI* aAPI,
+                          const wr::ImageKey& aImageKey,
+                          const wr::ExternalImageId& aExtID) override;
+
 protected:
   bool LockInternal();
   void UnlockInternal();
@@ -369,6 +373,10 @@ public:
   {
     return nullptr;
   }
+
+  virtual void AddWRImage(wr::WebRenderAPI* aAPI,
+                          const wr::ImageKey& aImageKey,
+                          const wr::ExternalImageId& aExtID) override;
 
 protected:
   RefPtr<ID3D11Device> GetDevice();

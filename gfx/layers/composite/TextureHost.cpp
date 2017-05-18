@@ -22,6 +22,7 @@
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/GPUVideoTextureHost.h"
 #include "mozilla/layers/WebRenderTextureHost.h"
+#include "mozilla/webrender/WebRenderAPI.h"
 #include "nsAString.h"
 #include "mozilla/RefPtr.h"                   // for nsRefPtr
 #include "nsPrintfCString.h"            // for nsPrintfCString
@@ -553,6 +554,14 @@ BufferTextureHost::Unlock()
 {
   MOZ_ASSERT(mLocked);
   mLocked = false;
+}
+
+void
+BufferTextureHost::AddWRImage(wr::WebRenderAPI* aAPI,
+                              const wr::ImageKey& aImageKey,
+                              const wr::ExternalImageId& aExtID)
+{
+  MOZ_ASSERT_UNREACHABLE("No AddWRImage() implementation for this BufferTextureHost type.");
 }
 
 void
