@@ -1,0 +1,3 @@
+devtools-shim.jar:
+%   content devtools-shim %content/
+    content/DevToolsShim.jsm  (DevToolsShim.jsm)

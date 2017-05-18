@@ -15,6 +15,7 @@ if CONFIG['MOZ_DEVTOOLS'] == 'all':
 DIRS += [
     'server',
     'shared',
+    'shim',
 ]
 
 # /browser uses DIST_SUBDIR.  We opt-in to this treatment when building
