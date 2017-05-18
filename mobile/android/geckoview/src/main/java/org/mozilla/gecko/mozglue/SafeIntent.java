@@ -12,8 +12,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 
-import org.mozilla.gecko.util.StringUtils;
-
 import java.util.ArrayList;
 
 /**
@@ -27,7 +25,6 @@ public class SafeIntent {
     private final Intent intent;
 
     public SafeIntent(final Intent intent) {
-        stripDataUri(intent);
         this.intent = intent;
     }
 
@@ -133,19 +130,5 @@ public class SafeIntent {
 
     public Intent getUnsafe() {
         return intent;
-    }
-
-    private static void stripDataUri(final Intent intent) {
-        // We should limit intent filters and check incoming intents against white-list
-        // But for now we just strip 'about:reader?url='
-        if (intent != null && intent.getData() != null) {
-            final String url = intent.getData().toString();
-            if (url != null && url.toLowerCase().startsWith("about:reader")) {
-                final String strippedUrl = StringUtils.getQueryParameter(url, "url");
-                if (strippedUrl != null) {
-                    intent.setData(Uri.parse(strippedUrl));
-                }
-            }
-        }
     }
 }
