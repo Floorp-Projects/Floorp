@@ -6075,12 +6075,12 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
            parentDisplay->mMozAppearance,
            NS_THEME_NONE);
 
-  // appearance: none | auto
+  // appearance: auto | none
   SetValue(*aRuleData->ValueForAppearance(),
            display->mAppearance, conditions,
            SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
            parentDisplay->mAppearance,
-           NS_THEME_NONE);
+           NS_THEME_AUTO);
 
   // binding: url, none, inherit
   const nsCSSValue* bindingValue = aRuleData->ValueForBinding();
