@@ -138,7 +138,7 @@ MediaDecoderReaderWrapper::Shutdown()
 }
 
 RefPtr<MediaDecoderReaderWrapper::MetadataPromise>
-MediaDecoderReaderWrapper::OnMetadataRead(RefPtr<MetadataHolder> aMetadata)
+MediaDecoderReaderWrapper::OnMetadataRead(MetadataHolder&& aMetadata)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   if (mShutdown) {
@@ -147,9 +147,9 @@ MediaDecoderReaderWrapper::OnMetadataRead(RefPtr<MetadataHolder> aMetadata)
   }
 
   if (mStartTime.isNothing()) {
-    mStartTime.emplace(aMetadata->mInfo.mStartTime);
+    mStartTime.emplace(aMetadata.mInfo->mStartTime);
   }
-  return MetadataPromise::CreateAndResolve(aMetadata.forget(), __func__);
+  return MetadataPromise::CreateAndResolve(Move(aMetadata), __func__);
 }
 
 RefPtr<MediaDecoderReaderWrapper::MetadataPromise>
