@@ -231,12 +231,14 @@ public class CustomTabsActivity extends SingleTabActivity implements Tabs.OnTabs
     public void onResume() {
         super.onResume();
         mLayerView.getDynamicToolbarAnimator().setPinned(true, PinReason.CUSTOM_TAB);
+        actionBarPresenter.onResume();
     }
 
     @Override
     public void onPause() {
         super.onPause();
         mLayerView.getDynamicToolbarAnimator().setPinned(false, PinReason.CUSTOM_TAB);
+        actionBarPresenter.onPause();
     }
 
     // Usually should use onCreateOptionsMenu() to initialize menu items. But GeckoApp overwrite
