@@ -1,5 +1,3 @@
 . "$topsrcdir/browser/config/mozconfigs/linux64/debug"
 
-export LLVM_CONFIG="${TOOLTOOL_DIR}/clang/bin/llvm-config"
-
 ac_add_options --enable-stylo
