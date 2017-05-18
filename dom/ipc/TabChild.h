@@ -590,10 +590,6 @@ public:
                                                       nsTArray<uint32_t>&& aCharCodes,
                                                       const int32_t& aModifierMask) override;
 
-  virtual mozilla::ipc::IPCResult RecvAudioChannelChangeNotification(const uint32_t& aAudioChannel,
-                                                                     const float& aVolume,
-                                                                     const bool& aMuted) override;
-
   virtual mozilla::ipc::IPCResult RecvSetUseGlobalHistory(const bool& aUse) override;
 
   virtual mozilla::ipc::IPCResult RecvHandledWindowedPluginKeyEvent(

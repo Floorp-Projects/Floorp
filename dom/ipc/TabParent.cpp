@@ -3217,33 +3217,6 @@ TabParent::GetShowInfo()
                   false, mDPI, mRounding, mDefaultScale.scale);
 }
 
-void
-TabParent::AudioChannelChangeNotification(nsPIDOMWindowOuter* aWindow,
-                                          AudioChannel aAudioChannel,
-                                          float aVolume,
-                                          bool aMuted)
-{
-  if (!mFrameElement || !mFrameElement->OwnerDoc()) {
-    return;
-  }
-
-  nsCOMPtr<nsPIDOMWindowOuter> window = mFrameElement->OwnerDoc()->GetWindow();
-  while (window) {
-    if (window == aWindow) {
-      Unused << SendAudioChannelChangeNotification(static_cast<uint32_t>(aAudioChannel),
-                                                   aVolume, aMuted);
-      break;
-    }
-
-    nsCOMPtr<nsPIDOMWindowOuter> win = window->GetScriptableParentOrNull();
-    if (!win) {
-      break;
-    }
-
-    window = win;
-  }
-}
-
 mozilla::ipc::IPCResult
 TabParent::RecvGetTabCount(uint32_t* aValue)
 {
