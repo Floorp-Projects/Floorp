@@ -1,4 +1,4 @@
-// |reftest| error:SyntaxError
+// |reftest| skip-if(release_or_beta) error:SyntaxError -- async-iteration is not released yet
 // This file was procedurally generated from the following sources:
 // - src/function-forms/dflt-params-rest.case
 // - src/function-forms/syntax/cls-expr-async-gen-meth-static.template
