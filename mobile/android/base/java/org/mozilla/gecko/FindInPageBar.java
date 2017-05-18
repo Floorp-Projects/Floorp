@@ -4,13 +4,13 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
-import android.content.ContextWrapper;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -28,27 +28,20 @@ public class FindInPageBar extends LinearLayout
     private static final String LOGTAG = "GeckoFindInPageBar";
     private static final String REQUEST_ID = "FindInPageBar";
 
-    private final Context mContext;
     /* package */ CustomEditText mFindText;
     private TextView mStatusText;
     private boolean mInflated;
-    private GeckoApp geckoApp;
+    private final GeckoApp geckoApp;
 
     public FindInPageBar(Context context, AttributeSet attrs) {
         super(context, attrs);
-        mContext = context;
         setFocusable(true);
 
-        while (context instanceof ContextWrapper) {
-            if (context instanceof GeckoApp) {
-                geckoApp = (GeckoApp) context;
-            }
-            context = ((ContextWrapper) context).getBaseContext();
-        }
+        geckoApp = (GeckoApp) ActivityUtils.getActivityFromContext(context);
     }
 
     public void inflateContent() {
-        LayoutInflater inflater = LayoutInflater.from(mContext);
+        LayoutInflater inflater = LayoutInflater.from(getContext());
         View content = inflater.inflate(R.layout.find_in_page_content, this);
 
         content.findViewById(R.id.find_prev).setOnClickListener(this);
