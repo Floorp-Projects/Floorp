@@ -132,22 +132,7 @@
 #define MALLOC_DOUBLE_PURGE
 #endif
 
-/*
- * MALLOC_PRODUCTION disables assertions and statistics gathering.  It also
- * defaults the A and J runtime options to off.  These settings are appropriate
- * for production systems.
- */
-#ifndef MOZ_MEMORY_DEBUG
-#  define	MALLOC_PRODUCTION
-#endif
-
-#ifndef MALLOC_PRODUCTION
-   /*
-    * MALLOC_DEBUG enables assertions and other sanity checks, and disables
-    * inline functions.
-    */
-#  define MALLOC_DEBUG
-
+#ifdef MOZ_DEBUG
    /* Support optional abort() on OOM. */
 #  define MALLOC_XMALLOC
 
@@ -360,7 +345,7 @@ static pthread_key_t tlsIndex;
 #endif
 #include "rb.h"
 
-#ifdef MALLOC_DEBUG
+#ifdef MOZ_DEBUG
    /* Disable inlining to make debugging easier. */
 #ifdef inline
 #undef inline
@@ -723,7 +708,7 @@ typedef rb_tree(arena_chunk_t) arena_chunk_tree_t;
 
 typedef struct arena_run_s arena_run_t;
 struct arena_run_s {
-#if defined(MALLOC_DEBUG) || defined(MOZ_JEMALLOC_HARD_ASSERTS)
+#if defined(MOZ_DEBUG) || defined(MOZ_JEMALLOC_HARD_ASSERTS)
 	uint32_t	magic;
 #  define ARENA_RUN_MAGIC 0x384adf93
 #endif
@@ -777,7 +762,7 @@ struct arena_bin_s {
 };
 
 struct arena_s {
-#if defined(MALLOC_DEBUG) || defined(MOZ_JEMALLOC_HARD_ASSERTS)
+#if defined(MOZ_DEBUG) || defined(MOZ_JEMALLOC_HARD_ASSERTS)
 	uint32_t		magic;
 #  define ARENA_MAGIC 0x947d3d24
 #endif
@@ -1065,7 +1050,7 @@ static __thread arena_t	*arenas_map;
 const uint8_t kAllocJunk = 0xe4;
 const uint8_t kAllocPoison = 0xe5;
 
-#ifndef MALLOC_PRODUCTION
+#ifdef MOZ_DEBUG
 static bool	opt_abort = true;
 static bool	opt_junk = true;
 static bool	opt_zero = false;
@@ -1259,7 +1244,7 @@ _malloc_message(const char *p1, const char *p2, const char *p3, const char *p4)
 // Note: MozTaggedAnonymousMmap() could call an LD_PRELOADed mmap
 // instead of the one defined here; use only MozTagAnonymousMemory().
 
-#ifdef MALLOC_DEBUG
+#ifdef MOZ_DEBUG
 #  define assert(e) MOZ_ASSERT(e)
 #else
 #  define assert(e)
@@ -2060,7 +2045,7 @@ f(malloc_rtree_t *rtree, uintptr_t key)					\
 	return (ret);							\
 }
 
-#ifdef MALLOC_DEBUG
+#ifdef MOZ_DEBUG
 #  define MALLOC_RTREE_LOCK(l)		malloc_spin_lock(l)
 #  define MALLOC_RTREE_UNLOCK(l)	malloc_spin_unlock(l)
 #  define MALLOC_RTREE_GET_VALIDATE
@@ -2072,7 +2057,7 @@ MALLOC_RTREE_GET_GENERATE(malloc_rtree_get_locked)
 
 #define	MALLOC_RTREE_LOCK(l)
 #define	MALLOC_RTREE_UNLOCK(l)
-#ifdef MALLOC_DEBUG
+#ifdef MOZ_DEBUG
    /*
     * Suppose that it were possible for a jemalloc-allocated chunk to be
     * munmap()ped, followed by a different allocator in another thread re-using
@@ -3097,7 +3082,7 @@ arena_purge(arena_t *arena, bool all)
 	size_t i, npages;
 	/* If all is set purge all dirty pages. */
 	size_t dirty_max = all ? 1 : opt_dirty_max;
-#ifdef MALLOC_DEBUG
+#ifdef MOZ_DEBUG
 	size_t ndirty = 0;
 	rb_foreach_begin(arena_chunk_t, link_dirty, &arena->chunks_dirty,
 	    chunk) {
@@ -3383,7 +3368,7 @@ arena_bin_nonfull_run_get(arena_t *arena, arena_bin_t *bin)
 	run->regs_minelm = 0;
 
 	run->nfree = bin->nregs;
-#if defined(MALLOC_DEBUG) || defined(MOZ_JEMALLOC_HARD_ASSERTS)
+#if defined(MOZ_DEBUG) || defined(MOZ_JEMALLOC_HARD_ASSERTS)
 	run->magic = ARENA_RUN_MAGIC;
 #endif
 
@@ -3917,7 +3902,7 @@ arena_dalloc_small(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 				run_mapelm);
 			arena_run_tree_remove(&bin->runs, run_mapelm);
 		}
-#if defined(MALLOC_DEBUG) || defined(MOZ_JEMALLOC_HARD_ASSERTS)
+#if defined(MOZ_DEBUG) || defined(MOZ_JEMALLOC_HARD_ASSERTS)
 		run->magic = 0;
 #endif
 		arena_run_dalloc(arena, run, true);
@@ -4257,7 +4242,7 @@ arena_new(arena_t *arena)
 		memset(&bin->stats, 0, sizeof(malloc_bin_stats_t));
 	}
 
-#if defined(MALLOC_DEBUG) || defined(MOZ_JEMALLOC_HARD_ASSERTS)
+#if defined(MOZ_DEBUG) || defined(MOZ_JEMALLOC_HARD_ASSERTS)
 	arena->magic = ARENA_MAGIC;
 #endif
 
@@ -4779,7 +4764,7 @@ MALLOC_OUT:
 					else if ((opt_dirty_max << 1) != 0)
 						opt_dirty_max <<= 1;
 					break;
-#ifndef MALLOC_PRODUCTION
+#ifdef MOZ_DEBUG
 				case 'j':
 					opt_junk = false;
 					break;
@@ -4846,7 +4831,7 @@ MALLOC_OUT:
 					opt_xmalloc = true;
 					break;
 #endif
-#ifndef MALLOC_PRODUCTION
+#ifdef MOZ_DEBUG
 				case 'z':
 					opt_zero = false;
 					break;
