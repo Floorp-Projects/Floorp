@@ -71,6 +71,8 @@ public:
 
   void SetWrBridge(WebRenderBridgeParent* aWrBridge);
 
+  void ClearWrBridge();
+
 protected:
   // ImageComposite
   virtual TimeStamp GetCompositionTime() const override;
@@ -78,6 +80,8 @@ protected:
   void SetCurrentTextureHost(TextureHost* aTexture);
 
   WebRenderBridgeParent* MOZ_NON_OWNING_REF mWrBridge;
+
+  uint32_t mWrBridgeBindings;
 
   CompositableTextureHostRef mCurrentTextureHost;
 };
