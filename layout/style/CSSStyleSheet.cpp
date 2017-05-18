@@ -573,9 +573,6 @@ CSSStyleSheet::EnsureUniqueInner()
 {
   StyleSheet::EnsureUniqueInner();
 
-  // otherwise the rule processor has pointers to the old rules
-  ClearRuleCascades();
-
   // let our containing style sets know that if we call
   // nsPresContext::EnsureSafeToHandOutCSSRules we will need to restyle the
   // document
@@ -628,9 +625,9 @@ CSSStyleSheet::List(FILE* out, int32_t aIndent) const
 #endif
 
 void 
-CSSStyleSheet::ClearRuleCascades()
+CSSStyleSheet::ClearRuleCascadesInternal()
 {
-  // We might be in ClearRuleCascades because we had a modification
+  // We might be in ClearRuleCascadesInternal because we had a modification
   // to the sheet that resulted in an nsCSSSelector being destroyed.
   // Tell the RestyleManager for each document we're used in
   // so that they can drop any nsCSSSelector pointers (used for
@@ -653,10 +650,6 @@ CSSStyleSheet::ClearRuleCascades()
       }
       (*iter)->ClearRuleCascades();
     }
-  }
-  if (mParent) {
-    CSSStyleSheet* parent = (CSSStyleSheet*)mParent;
-    parent->ClearRuleCascades();
   }
 }
 

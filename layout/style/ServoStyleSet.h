@@ -280,6 +280,17 @@ public:
    */
   void NoteStyleSheetsChanged();
 
+  /**
+   * Helper for correctly calling RebuildStylist without paying the cost of an
+   * extra function call in the common no-rebuild-needed case.
+   */
+  void UpdateStylistIfNeeded()
+  {
+    if (StylistNeedsUpdate()) {
+      UpdateStylist();
+    }
+  }
+
 #ifdef DEBUG
   void AssertTreeIsClean();
 #else
@@ -468,17 +479,6 @@ private:
    * This should only be called if StylistNeedsUpdate returns true.
    */
   void UpdateStylist();
-
-  /**
-   * Helper for correctly calling RebuildStylist without paying the cost of an
-   * extra function call in the common no-rebuild-needed case.
-   */
-  void UpdateStylistIfNeeded()
-  {
-    if (StylistNeedsUpdate()) {
-      UpdateStylist();
-    }
-  }
 
   already_AddRefed<ServoComputedValues>
     ResolveStyleLazily(dom::Element* aElement, CSSPseudoElementType aPseudoType);
