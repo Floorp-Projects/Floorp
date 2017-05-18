@@ -1077,6 +1077,9 @@ static __thread arena_t	*arenas_map;
  */
 const char	*_malloc_options = MOZ_MALLOC_OPTIONS;
 
+const uint8_t kAllocJunk = 0xe4;
+const uint8_t kAllocPoison = 0xe5;
+
 #ifndef MALLOC_PRODUCTION
 static bool	opt_abort = true;
 static bool	opt_junk = true;
@@ -3575,7 +3578,7 @@ arena_malloc_small(arena_t *arena, size_t size, bool zero)
 
 	if (zero == false) {
 		if (opt_junk)
-			memset(ret, 0xe4, size);
+			memset(ret, kAllocJunk, size);
 		else if (opt_zero)
 			memset(ret, 0, size);
 	} else
@@ -3603,7 +3606,7 @@ arena_malloc_large(arena_t *arena, size_t size, bool zero)
 
 	if (zero == false) {
 		if (opt_junk)
-			memset(ret, 0xe4, size);
+			memset(ret, kAllocJunk, size);
 		else if (opt_zero)
 			memset(ret, 0, size);
 	}
@@ -3697,7 +3700,7 @@ arena_palloc(arena_t *arena, size_t alignment, size_t size, size_t alloc_size)
 	malloc_spin_unlock(&arena->lock);
 
 	if (opt_junk)
-		memset(ret, 0xe4, size);
+		memset(ret, kAllocJunk, size);
 	else if (opt_zero)
 		memset(ret, 0, size);
 	return (ret);
@@ -3914,7 +3917,7 @@ arena_dalloc_small(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 	size = bin->reg_size;
 
 	if (opt_poison)
-		memset(ptr, 0xe5, size);
+		memset(ptr, kAllocPoison, size);
 
 	arena_run_reg_dalloc(run, bin, ptr, size);
 	run->nfree++;
@@ -3990,7 +3993,7 @@ arena_dalloc_large(arena_t *arena, arena_chunk_t *chunk, void *ptr)
 	size_t size = chunk->map[pageind].bits & ~pagesize_mask;
 
 	if (opt_poison)
-		memset(ptr, 0xe5, size);
+		memset(ptr, kAllocPoison, size);
 	arena->stats.allocated_large -= size;
 	arena->stats.ndalloc_large++;
 
@@ -4111,7 +4114,7 @@ arena_ralloc_large(void *ptr, size_t size, size_t oldsize)
 	if (psize == oldsize) {
 		/* Same size class. */
 		if (opt_poison && size < oldsize) {
-			memset((void *)((uintptr_t)ptr + size), 0xe5, oldsize -
+			memset((void *)((uintptr_t)ptr + size), kAllocPoison, oldsize -
 			    size);
 		}
 		return (false);
@@ -4126,7 +4129,7 @@ arena_ralloc_large(void *ptr, size_t size, size_t oldsize)
 		if (psize < oldsize) {
 			/* Fill before shrinking in order avoid a race. */
 			if (opt_poison) {
-				memset((void *)((uintptr_t)ptr + size), 0xe5,
+				memset((void *)((uintptr_t)ptr + size), kAllocPoison,
 				    oldsize - size);
 			}
 			arena_ralloc_large_shrink(arena, chunk, ptr, psize,
@@ -4192,7 +4195,7 @@ arena_ralloc(void *ptr, size_t size, size_t oldsize)
 	return (ret);
 IN_PLACE:
 	if (opt_poison && size < oldsize)
-		memset((void *)((uintptr_t)ptr + size), 0xe5, oldsize - size);
+		memset((void *)((uintptr_t)ptr + size), kAllocPoison, oldsize - size);
 	else if (opt_zero && size > oldsize)
 		memset((void *)((uintptr_t)ptr + oldsize), 0, size - oldsize);
 	return (ptr);
@@ -4435,9 +4438,9 @@ huge_palloc(size_t size, size_t alignment, bool zero)
 	if (zero == false) {
 		if (opt_junk)
 #  ifdef MALLOC_DECOMMIT
-			memset(ret, 0xe4, psize);
+			memset(ret, kAllocJunk, psize);
 #  else
-			memset(ret, 0xe4, csize);
+			memset(ret, kAllocJunk, csize);
 #  endif
 		else if (opt_zero)
 #  ifdef MALLOC_DECOMMIT
@@ -4462,7 +4465,7 @@ huge_ralloc(void *ptr, size_t size, size_t oldsize)
 	    CHUNK_CEILING(size) == CHUNK_CEILING(oldsize)) {
 		size_t psize = PAGE_CEILING(size);
 		if (opt_poison && size < oldsize) {
-			memset((void *)((uintptr_t)ptr + size), 0xe5, oldsize
+			memset((void *)((uintptr_t)ptr + size), kAllocPoison, oldsize
 			    - size);
 		}
 #ifdef MALLOC_DECOMMIT
