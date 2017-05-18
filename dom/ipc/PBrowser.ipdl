@@ -828,13 +828,6 @@ child:
                           uint32_t[] charCodes, int32_t modifierMask);
 
     /**
-     * Propagate a refresh to the child process
-     */
-    async AudioChannelChangeNotification(uint32_t aAudioChannel,
-                                         float aVolume,
-                                         bool aMuted);
-
-    /**
      * Tells the root child docShell whether or not to use
      * global history. This is sent right after the PBrowser
      * is bound to a frameloader element.

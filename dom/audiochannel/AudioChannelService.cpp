@@ -330,8 +330,7 @@ AudioChannelService::IsEnableAudioCompeting()
 }
 
 NS_INTERFACE_MAP_BEGIN(AudioChannelService)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAudioChannelService)
-  NS_INTERFACE_MAP_ENTRY(nsIAudioChannelService)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
 NS_INTERFACE_MAP_END
 
@@ -667,32 +666,6 @@ AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 void
-AudioChannelService::RefreshAgentsVolumeAndPropagate(AudioChannel aAudioChannel,
-                                                     nsPIDOMWindowOuter* aWindow)
-{
-  MOZ_ASSERT(aWindow);
-  MOZ_ASSERT(aWindow->IsOuterWindow());
-
-  nsCOMPtr<nsPIDOMWindowOuter> topWindow = aWindow->GetScriptableTop();
-  if (!topWindow) {
-    return;
-  }
-
-  AudioChannelWindow* winData = GetWindowData(topWindow->WindowID());
-  if (!winData) {
-    return;
-  }
-
-  for (uint32_t i = 0; i < mTabParents.Length(); ++i) {
-    mTabParents[i]->AudioChannelChangeNotification(aWindow, aAudioChannel,
-                                                   winData->mChannels[(uint32_t)aAudioChannel].mVolume,
-                                                   winData->mChannels[(uint32_t)aAudioChannel].mMuted);
-  }
-
-  RefreshAgentsVolume(aWindow);
-}
-
-void
 AudioChannelService::RefreshAgents(nsPIDOMWindowOuter* aWindow,
                                    const std::function<void(AudioChannelAgent*)>& aFunc)
 {
@@ -867,162 +840,6 @@ AudioChannelService::GetWindowData(uint64_t aWindowID) const
   }
 
   return nullptr;
-}
-
-float
-AudioChannelService::GetAudioChannelVolume(nsPIDOMWindowOuter* aWindow,
-                                           AudioChannel aAudioChannel)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aWindow);
-  MOZ_ASSERT(aWindow->IsOuterWindow());
-
-  AudioChannelWindow* winData = GetOrCreateWindowData(aWindow);
-  return winData->mChannels[(uint32_t)aAudioChannel].mVolume;
-}
-
-NS_IMETHODIMP
-AudioChannelService::GetAudioChannelVolume(mozIDOMWindowProxy* aWindow,
-                                           unsigned short aAudioChannel,
-                                           float* aVolume)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  auto* window = nsPIDOMWindowOuter::From(aWindow)->GetScriptableTop();
-  if (!window) {
-    *aVolume = 0.f;
-    return NS_ERROR_FAILURE;
-  }
-  *aVolume = GetAudioChannelVolume(window, (AudioChannel)aAudioChannel);
-  return NS_OK;
-}
-
-void
-AudioChannelService::SetAudioChannelVolume(nsPIDOMWindowOuter* aWindow,
-                                           AudioChannel aAudioChannel,
-                                           float aVolume)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aWindow);
-  MOZ_ASSERT(aWindow->IsOuterWindow());
-
-  MOZ_LOG(GetAudioChannelLog(), LogLevel::Debug,
-         ("AudioChannelService, SetAudioChannelVolume, window = %p, type = %" PRIu32 ", "
-          "volume = %f\n", aWindow, static_cast<uint32_t>(aAudioChannel), aVolume));
-
-  AudioChannelWindow* winData = GetOrCreateWindowData(aWindow);
-  winData->mChannels[(uint32_t)aAudioChannel].mVolume = aVolume;
-  RefreshAgentsVolumeAndPropagate(aAudioChannel, aWindow);
-}
-
-NS_IMETHODIMP
-AudioChannelService::SetAudioChannelVolume(mozIDOMWindowProxy* aWindow,
-                                           unsigned short aAudioChannel,
-                                           float aVolume)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  auto* window = nsPIDOMWindowOuter::From(aWindow)->GetScriptableTop();
-  if (!window) {
-    return NS_ERROR_FAILURE;
-  }
-  SetAudioChannelVolume(window, (AudioChannel)aAudioChannel, aVolume);
-  return NS_OK;
-}
-
-bool
-AudioChannelService::GetAudioChannelMuted(nsPIDOMWindowOuter* aWindow,
-                                          AudioChannel aAudioChannel)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aWindow);
-  MOZ_ASSERT(aWindow->IsOuterWindow());
-
-  AudioChannelWindow* winData = GetOrCreateWindowData(aWindow);
-  return winData->mChannels[(uint32_t)aAudioChannel].mMuted;
-}
-
-NS_IMETHODIMP
-AudioChannelService::GetAudioChannelMuted(mozIDOMWindowProxy* aWindow,
-                                          unsigned short aAudioChannel,
-                                          bool* aMuted)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  auto* window = nsPIDOMWindowOuter::From(aWindow)->GetScriptableTop();
-  if (!window) {
-    *aMuted = false;
-    return NS_ERROR_FAILURE;
-  }
-  *aMuted = GetAudioChannelMuted(window, (AudioChannel)aAudioChannel);
-  return NS_OK;
-}
-
-void
-AudioChannelService::SetAudioChannelMuted(nsPIDOMWindowOuter* aWindow,
-                                          AudioChannel aAudioChannel,
-                                          bool aMuted)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aWindow);
-  MOZ_ASSERT(aWindow->IsOuterWindow());
-
-  MOZ_LOG(GetAudioChannelLog(), LogLevel::Debug,
-         ("AudioChannelService, SetAudioChannelMuted, window = %p, type = %" PRIu32 ", "
-          "mute = %s\n", aWindow, static_cast<uint32_t>(aAudioChannel),
-          aMuted ? "true" : "false"));
-
-  if (aAudioChannel == AudioChannel::System) {
-    // Workaround for bug1183033, system channel type can always playback.
-    return;
-  }
-
-  AudioChannelWindow* winData = GetOrCreateWindowData(aWindow);
-  winData->mChannels[(uint32_t)aAudioChannel].mMuted = aMuted;
-  RefreshAgentsVolumeAndPropagate(aAudioChannel, aWindow);
-}
-
-NS_IMETHODIMP
-AudioChannelService::SetAudioChannelMuted(mozIDOMWindowProxy* aWindow,
-                                          unsigned short aAudioChannel,
-                                          bool aMuted)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  auto* window = nsPIDOMWindowOuter::From(aWindow)->GetScriptableTop();
-  if (!window) {
-    return NS_ERROR_FAILURE;
-  }
-  SetAudioChannelMuted(window, (AudioChannel)aAudioChannel, aMuted);
-  return NS_OK;
-}
-
-bool
-AudioChannelService::IsAudioChannelActive(nsPIDOMWindowOuter* aWindow,
-                                          AudioChannel aAudioChannel)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aWindow);
-  MOZ_ASSERT(aWindow->IsOuterWindow());
-
-  AudioChannelWindow* winData = GetOrCreateWindowData(aWindow);
-  return !!winData->mChannels[(uint32_t)aAudioChannel].mNumberOfAgents;
-}
-
-NS_IMETHODIMP
-AudioChannelService::IsAudioChannelActive(mozIDOMWindowProxy* aWindow,
-                                          unsigned short aAudioChannel,
-                                          bool* aActive)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  auto* window = nsPIDOMWindowOuter::From(aWindow)->GetScriptableTop();
-  if (!window) {
-    *aActive = false;
-    return NS_ERROR_FAILURE;
-  }
-  *aActive = IsAudioChannelActive(window, (AudioChannel)aAudioChannel);
-  return NS_OK;
 }
 
 bool
