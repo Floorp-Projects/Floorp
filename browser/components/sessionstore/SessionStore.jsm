@@ -2887,7 +2887,7 @@ var SessionStoreInternal = {
         // We want to make sure that this information is passed to restoreTab
         // whether or not a historyIndex is passed in. Thus, we extract it from
         // the loadArguments.
-        reloadInFreshProcess: !!recentLoadArguments.reloadInFreshProcess,
+        newFrameloader: recentLoadArguments.newFrameloader,
         remoteType: recentLoadArguments.remoteType,
         // Make sure that SessionStore knows that this restoration is due
         // to a navigation, as opposed to us restoring a closed window or tab.
@@ -3734,11 +3734,11 @@ var SessionStoreInternal = {
     // flip the remoteness of any browser that is not being displayed.
     this.markTabAsRestoring(aTab);
 
-    // We need a new frameloader either if we are reloading into a fresh
-    // process, or we have a browser with a grouped session history (as we don't
-    // support restoring into browsers with grouped session histories directly).
+    // We need a new frameloader if we are reloading into a browser with a
+    // grouped session history (as we don't support restoring into browsers
+    // with grouped session histories directly).
     let newFrameloader =
-      aOptions.reloadInFreshProcess || !!browser.frameLoader.groupedSHistory;
+      aOptions.newFrameloader || !!browser.frameLoader.groupedSHistory;
 
     let isRemotenessUpdate;
     if (aOptions.remoteType !== undefined) {

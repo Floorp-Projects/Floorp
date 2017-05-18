@@ -92,14 +92,9 @@ this.E10SUtils = {
 
   getRemoteTypeForURI(aURL, aMultiProcess,
                       aPreferredRemoteType = DEFAULT_REMOTE_TYPE,
-                      aCurrentUri,
-                      aLargeAllocation = false) {
+                      aCurrentUri) {
     if (!aMultiProcess) {
       return NOT_REMOTE;
-    }
-
-    if (aLargeAllocation) {
-      return LARGE_ALLOCATION_REMOTE_TYPE;
     }
 
     // loadURI in browser.xml treats null as about:blank
