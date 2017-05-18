@@ -15,16 +15,9 @@ import android.widget.AbsoluteLayout;
 
 public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
     private final Context mContext;
-    private final EventDispatcher eventDispatcher;
 
     public BaseGeckoInterface(Context context) {
         mContext = context;
-        eventDispatcher = new EventDispatcher();
-    }
-
-    @Override
-    public EventDispatcher getAppEventDispatcher() {
-        return eventDispatcher;
     }
 
     @Override
