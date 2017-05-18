@@ -231,7 +231,7 @@ var gSearchResultsPane = {
 
         let strings = this.strings;
         document.getElementById("sorry-message").textContent =
-          strings.getFormattedString("searchResults.sorryMessage", [query]);
+          strings.getFormattedString("searchResults.sorryMessage2", [query]);
         let brandName = document.getElementById("bundleBrand").getString("brandShortName");
         document.getElementById("need-help").innerHTML =
           strings.getFormattedString("searchResults.needHelp", [brandName]);

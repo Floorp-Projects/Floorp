@@ -96,6 +96,8 @@ elif CONFIG['_MSC_VER']:
     SOURCES['skia/src/opts/SkOpts_hsw.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=52']
 elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC']:
     CXXFLAGS += CONFIG['NEON_FLAGS']
+elif CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['GNU_CC']:
+    SOURCES['skia/src/opts/SkOpts_crc32.cpp'].flags += ['-march=armv8-a+crc']
 
 DEFINES['SKIA_IMPLEMENTATION'] = 1
 
@@ -152,6 +154,7 @@ def parse_sources(output):
 def generate_opt_sources():
   cpus = [('intel', 'x86', [':sse2', ':ssse3', ':sse41', ':sse42', ':avx', ':hsw']),
           ('arm', 'arm', [':armv7']),
+          ('arm64', 'arm64', [':arm64', ':crc32']),
           ('none', 'none', [':none'])]
 
   opt_sources = {}
@@ -261,6 +264,7 @@ def generate_separated_sources(platform_sources):
     },
     'intel': set(),
     'arm': set(),
+    'arm64': set(),
     'none': set(),
     'pdf': {
       'skia/src/core/SkMD5.cpp',
@@ -437,10 +441,14 @@ def write_mozbuild(sources):
   write_sources(f, sources['intel'], 4)
   write_cflags(f, sources['intel'], opt_whitelist, 'skia_opt_flags', 4)
 
-  f.write("elif CONFIG['CPU_ARCH'] in ('arm', 'aarch64') and CONFIG['GNU_CC']:\n")
+  f.write("elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC']:\n")
   write_sources(f, sources['arm'], 4)
   write_cflags(f, sources['arm'], opt_whitelist, 'skia_opt_flags', 4)
- 
+
+  f.write("elif CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['GNU_CC']:\n")
+  write_sources(f, sources['arm64'], 4)
+  write_cflags(f, sources['arm64'], opt_whitelist, 'skia_opt_flags', 4)
+
   f.write("else:\n")
   write_sources(f, sources['none'], 4)
 

@@ -2138,7 +2138,6 @@ DecodeMetadataState::OnMetadataRead(MetadataHolder* aMetadata)
   Resource()->SetReadMode(MediaCacheStream::MODE_PLAYBACK);
 
   mMaster->mInfo.emplace(aMetadata->mInfo);
-  mMaster->mMetadataTags = aMetadata->mTags.forget();
   mMaster->mMediaSeekable = Info().mMediaSeekable;
   mMaster->mMediaSeekableOnlyInBufferedRanges =
     Info().mMediaSeekableOnlyInBufferedRanges;
@@ -2166,7 +2165,10 @@ DecodeMetadataState::OnMetadataRead(MetadataHolder* aMetadata)
 
   MOZ_ASSERT(mMaster->mDuration.Ref().isSome());
 
-  mMaster->EnqueueLoadedMetadataEvent();
+  mMaster->mMetadataLoadedEvent.Notify(
+    nsAutoPtr<MediaInfo>(new MediaInfo(aMetadata->mInfo)),
+    Move(aMetadata->mTags),
+    MediaDecoderEventVisibility::Observable);
 
   if (Info().IsEncrypted() && !mMaster->mCDMProxy) {
     // Metadata parsing was successful but we're still waiting for CDM caps
@@ -2681,7 +2683,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mAmpleAudioThreshold(detail::AMPLE_AUDIO_THRESHOLD),
   mAudioCaptured(false),
   mMinimizePreroll(aDecoder->GetMinimizePreroll()),
-  mSentLoadedMetadataEvent(false),
   mSentFirstFrameLoadedEvent(false),
   mVideoDecodeSuspended(false),
   mVideoDecodeSuspendTimer(mTaskQueue),
@@ -3464,19 +3465,6 @@ MediaDecoderStateMachine::DecodeError(const MediaResult& aError)
   LOGW("Decode error");
   // Notify the decode error and MediaDecoder will shut down MDSM.
   mOnPlaybackErrorEvent.Notify(aError);
-}
-
-void
-MediaDecoderStateMachine::EnqueueLoadedMetadataEvent()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  MediaDecoderEventVisibility visibility =
-    mSentLoadedMetadataEvent ? MediaDecoderEventVisibility::Suppressed
-                             : MediaDecoderEventVisibility::Observable;
-  mMetadataLoadedEvent.Notify(nsAutoPtr<MediaInfo>(new MediaInfo(Info())),
-                              Move(mMetadataTags),
-                              visibility);
-  mSentLoadedMetadataEvent = true;
 }
 
 void

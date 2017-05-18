@@ -2,7 +2,7 @@
 
 XPCOMUtils.defineLazyGetter(this, "ExtensionManager", () => {
   const {ExtensionManager}
-    = Cu.import("resource://gre/modules/ExtensionContent.jsm", {});
+    = Cu.import("resource://gre/modules/ExtensionChild.jsm", {});
   return ExtensionManager;
 });
 Cu.import("resource://gre/modules/ExtensionPermissions.jsm");
