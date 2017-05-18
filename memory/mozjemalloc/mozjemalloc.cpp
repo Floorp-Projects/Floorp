@@ -1032,68 +1032,20 @@ static bool	opt_xmalloc = false;
 
 /******************************************************************************/
 /*
- * Begin function prototypes for non-inline static functions.
+ * Begin forward declarations.
  */
 
-static char	*umax2s(uintmax_t x, unsigned base, char *s);
-static bool	malloc_mutex_init(malloc_mutex_t *mutex);
-static bool	malloc_spin_init(malloc_spinlock_t *lock);
 #ifdef MOZ_MEMORY_DARWIN
 /* Avoid namespace collision with OS X's malloc APIs. */
 #define malloc_printf moz_malloc_printf
 #endif
-static void	malloc_printf(const char *format, ...);
-static bool	base_pages_alloc(size_t minsize);
-static void	*base_alloc(size_t size);
-static void	*base_calloc(size_t number, size_t size);
-static extent_node_t *base_node_alloc(void);
-static void	base_node_dealloc(extent_node_t *node);
-static void	stats_print(arena_t *arena);
-static void	*pages_map(void *addr, size_t size);
-static void	pages_unmap(void *addr, size_t size);
-static void	*chunk_alloc_mmap(size_t size, size_t alignment);
-static void	*chunk_recycle(extent_tree_t *chunks_szad,
-	extent_tree_t *chunks_ad, size_t size,
-	size_t alignment, bool base, bool *zero);
 static void	*chunk_alloc(size_t size, size_t alignment, bool base, bool zero);
-static void	chunk_record(extent_tree_t *chunks_szad,
-	extent_tree_t *chunks_ad, void *chunk, size_t size);
-static bool	chunk_dalloc_mmap(void *chunk, size_t size);
 static void	chunk_dealloc(void *chunk, size_t size);
-static void	arena_run_split(arena_t *arena, arena_run_t *run, size_t size,
-    bool large, bool zero);
-static void arena_chunk_init(arena_t *arena, arena_chunk_t *chunk);
-static void	arena_chunk_dealloc(arena_t *arena, arena_chunk_t *chunk);
-static arena_run_t *arena_run_alloc(arena_t *arena, arena_bin_t *bin,
-    size_t size, bool large, bool zero);
-static void	arena_purge(arena_t *arena, bool all);
-static void	arena_run_dalloc(arena_t *arena, arena_run_t *run, bool dirty);
-static void	arena_run_trim_head(arena_t *arena, arena_chunk_t *chunk,
-    arena_run_t *run, size_t oldsize, size_t newsize);
-static void	arena_run_trim_tail(arena_t *arena, arena_chunk_t *chunk,
-    arena_run_t *run, size_t oldsize, size_t newsize, bool dirty);
-static arena_run_t *arena_bin_nonfull_run_get(arena_t *arena, arena_bin_t *bin);
-static void *arena_bin_malloc_hard(arena_t *arena, arena_bin_t *bin);
-static size_t arena_bin_run_size_calc(arena_bin_t *bin, size_t min_run_size);
-static void	*arena_malloc_large(arena_t *arena, size_t size, bool zero);
-static void	*arena_palloc(arena_t *arena, size_t alignment, size_t size,
-    size_t alloc_size);
-static size_t	arena_salloc(const void *ptr);
-static void	arena_dalloc_large(arena_t *arena, arena_chunk_t *chunk,
-    void *ptr);
-static void	arena_ralloc_large_shrink(arena_t *arena, arena_chunk_t *chunk,
-    void *ptr, size_t size, size_t oldsize);
-static bool	arena_ralloc_large_grow(arena_t *arena, arena_chunk_t *chunk,
-    void *ptr, size_t size, size_t oldsize);
-static bool	arena_ralloc_large(void *ptr, size_t size, size_t oldsize);
-static void	*arena_ralloc(void *ptr, size_t size, size_t oldsize);
-static bool	arena_new(arena_t *arena);
 static arena_t	*arenas_extend();
 static void	*huge_malloc(size_t size, bool zero);
 static void	*huge_palloc(size_t size, size_t alignment, bool zero);
 static void	*huge_ralloc(void *ptr, size_t size, size_t oldsize);
 static void	huge_dalloc(void *ptr);
-static void	malloc_print_stats(void);
 #ifdef MOZ_MEMORY_WINDOWS
 extern "C"
 #else
@@ -1111,7 +1063,7 @@ FORK_HOOK void _malloc_postfork_parent(void);
 FORK_HOOK void _malloc_postfork_child(void);
 
 /*
- * End function prototypes.
+ * End forward declarations.
  */
 /******************************************************************************/
 
