@@ -416,25 +416,26 @@ struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
 typedef RefPtr<Metadata> MutableMetadata;
 typedef RefPtr<const Metadata> SharedMetadata;
 
-// Code objects own executable code and the metadata that describes it. At the
-// moment, Code objects are owned uniquely by instances since CodeSegments are
-// not shareable. However, once this restriction is removed, a single Code
-// object will be shared between a module and all its instances.
+// Code objects own executable code and the metadata that describe it. A single
+// Code object is normally shared between a module and all its instances.
 //
 // profilingLabels_ is lazily initialized, but behind a lock.
 
 class Code : public ShareableBase<Code>
 {
-    UniqueConstCodeSegment              segment_;
+    // `tier_` and the means of accessing it will change as we implement
+    // tiering.
+
+    UniqueConstCodeSegment              tier_;
     SharedMetadata                      metadata_;
     ExclusiveData<CacheableCharsVector> profilingLabels_;
 
   public:
     Code();
 
-    Code(UniqueConstCodeSegment segment, const Metadata& metadata);
+    Code(UniqueConstCodeSegment tier, const Metadata& metadata);
 
-    const CodeSegment& segment() const { return *segment_; }
+    const CodeSegment& segmentTier() const { return *tier_; }
     const MetadataTier& metadataTier() const { return metadata_->tier(); }
     const Metadata& metadata() const { return *metadata_; }
 

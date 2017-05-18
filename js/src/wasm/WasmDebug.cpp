@@ -330,7 +330,7 @@ DebugState::incrementStepModeCount(JSContext* cx, uint32_t funcIndex)
         return false;
     }
 
-    AutoWritableJitCode awjc(cx->runtime(), code_->segment().base() + codeRange.begin(),
+    AutoWritableJitCode awjc(cx->runtime(), code_->segmentTier().base() + codeRange.begin(),
                              codeRange.end() - codeRange.begin());
     AutoFlushICache afc("Code::incrementStepModeCount");
 
@@ -359,7 +359,7 @@ DebugState::decrementStepModeCount(JSContext* cx, uint32_t funcIndex)
 
     stepModeCounters_.remove(p);
 
-    AutoWritableJitCode awjc(cx->runtime(), code_->segment().base() + codeRange.begin(),
+    AutoWritableJitCode awjc(cx->runtime(), code_->segmentTier().base() + codeRange.begin(),
                              codeRange.end() - codeRange.begin());
     AutoFlushICache afc("Code::decrementStepModeCount");
 
@@ -392,15 +392,15 @@ DebugState::toggleBreakpointTrap(JSRuntime* rt, uint32_t offset, bool enabled)
         return;
     size_t debugTrapOffset = callSite->returnAddressOffset();
 
-    const CodeRange* codeRange = code_->lookupRange(code_->segment().base() + debugTrapOffset);
+    const CodeRange* codeRange = code_->lookupRange(code_->segmentTier().base() + debugTrapOffset);
     MOZ_ASSERT(codeRange && codeRange->isFunction());
 
     if (stepModeCounters_.initialized() && stepModeCounters_.lookup(codeRange->funcIndex()))
         return; // no need to toggle when step mode is enabled
 
-    AutoWritableJitCode awjc(rt, code_->segment().base(), code_->segment().length());
+    AutoWritableJitCode awjc(rt, code_->segmentTier().base(), code_->segmentTier().length());
     AutoFlushICache afc("Code::toggleBreakpointTrap");
-    AutoFlushICache::setRange(uintptr_t(code_->segment().base()), code_->segment().length());
+    AutoFlushICache::setRange(uintptr_t(code_->segmentTier().base()), code_->segmentTier().length());
     toggleDebugTrap(debugTrapOffset, enabled);
 }
 
@@ -478,7 +478,7 @@ void
 DebugState::toggleDebugTrap(uint32_t offset, bool enabled)
 {
     MOZ_ASSERT(offset);
-    uint8_t* trap = code_->segment().base() + offset;
+    uint8_t* trap = code_->segmentTier().base() + offset;
     const Uint32Vector& farJumpOffsets = metadataTier().debugTrapFarJumpOffsets;
     if (enabled) {
         MOZ_ASSERT(farJumpOffsets.length() > 0);
@@ -488,7 +488,7 @@ DebugState::toggleDebugTrap(uint32_t offset, bool enabled)
         if (i >= farJumpOffsets.length() ||
             (i > 0 && offset - farJumpOffsets[i - 1] < farJumpOffsets[i] - offset))
             i--;
-        uint8_t* farJump = code_->segment().base() + farJumpOffsets[i];
+        uint8_t* farJump = code_->segmentTier().base() + farJumpOffsets[i];
         MacroAssembler::patchNopToCall(trap, farJump);
     } else {
         MacroAssembler::patchCallToNop(trap);
@@ -510,9 +510,9 @@ DebugState::adjustEnterAndLeaveFrameTrapsState(JSContext* cx, bool enabled)
     if (wasEnabled == stillEnabled)
         return;
 
-    AutoWritableJitCode awjc(cx->runtime(), code_->segment().base(), code_->segment().length());
+    AutoWritableJitCode awjc(cx->runtime(), code_->segmentTier().base(), code_->segmentTier().length());
     AutoFlushICache afc("Code::adjustEnterAndLeaveFrameTrapsState");
-    AutoFlushICache::setRange(uintptr_t(code_->segment().base()), code_->segment().length());
+    AutoFlushICache::setRange(uintptr_t(code_->segmentTier().base()), code_->segmentTier().length());
     for (const CallSite& callSite : callSites()) {
         if (callSite.kind() != CallSite::EnterFrame && callSite.kind() != CallSite::LeaveFrame)
             continue;

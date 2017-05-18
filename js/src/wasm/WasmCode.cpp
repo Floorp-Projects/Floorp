@@ -598,8 +598,8 @@ Metadata::getFuncName(const Bytes* maybeBytecode, uint32_t funcIndex, UTF8Bytes*
            name->append(afterFuncIndex, strlen(afterFuncIndex));
 }
 
-Code::Code(UniqueConstCodeSegment segment, const Metadata& metadata)
-  : segment_(Move(segment)),
+Code::Code(UniqueConstCodeSegment tier, const Metadata& metadata)
+  : tier_(Move(tier)),
     metadata_(&metadata),
     profilingLabels_(mutexid::WasmCodeProfilingLabels, CacheableCharsVector())
 {
@@ -623,7 +623,7 @@ size_t
 Code::serializedSize() const
 {
     return metadata().serializedSize() +
-           segment().serializedSize();
+           segmentTier().serializedSize();
 }
 
 uint8_t*
@@ -632,7 +632,7 @@ Code::serialize(uint8_t* cursor, const LinkData& linkData) const
     MOZ_RELEASE_ASSERT(!metadata().debugEnabled);
 
     cursor = metadata().serialize(cursor);
-    cursor = segment().serialize(cursor, linkData);
+    cursor = segmentTier().serialize(cursor, linkData);
     return cursor;
 }
 
@@ -665,7 +665,7 @@ Code::deserialize(const uint8_t* cursor, const SharedBytes& bytecode, const Link
     if (!cursor)
         return nullptr;
 
-    segment_ = UniqueConstCodeSegment(codeSegment.release());
+    tier_ = UniqueConstCodeSegment(codeSegment.release());
     metadata_ = metadata;
 
     return cursor;
@@ -674,7 +674,7 @@ Code::deserialize(const uint8_t* cursor, const SharedBytes& bytecode, const Link
 const CallSite*
 Code::lookupCallSite(void* returnAddress) const
 {
-    uint32_t target = ((uint8_t*)returnAddress) - segment_->base();
+    uint32_t target = ((uint8_t*)returnAddress) - segmentTier().base();
     size_t lowerBound = 0;
     size_t upperBound = metadataTier().callSites.length();
 
@@ -688,7 +688,7 @@ Code::lookupCallSite(void* returnAddress) const
 const CodeRange*
 Code::lookupRange(void* pc) const
 {
-    CodeRange::OffsetInCode target((uint8_t*)pc - segment_->base());
+    CodeRange::OffsetInCode target((uint8_t*)pc - segmentTier().base());
     return LookupInSorted(metadataTier().codeRanges, target);
 }
 
@@ -704,9 +704,9 @@ struct MemoryAccessOffset
 const MemoryAccess*
 Code::lookupMemoryAccess(void* pc) const
 {
-    MOZ_ASSERT(segment_->containsFunctionPC(pc));
+    MOZ_ASSERT(segmentTier().containsFunctionPC(pc));
 
-    uint32_t target = ((uint8_t*)pc) - segment_->base();
+    uint32_t target = ((uint8_t*)pc) - segmentTier().base();
     size_t lowerBound = 0;
     size_t upperBound = metadataTier().memoryAccesses.length();
 
@@ -803,5 +803,5 @@ Code::addSizeOfMiscIfNotSeen(MallocSizeOf mallocSizeOf,
              metadata().sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenMetadata) +
              profilingLabels_.lock()->sizeOfExcludingThis(mallocSizeOf);
 
-    segment_->addSizeOfMisc(mallocSizeOf, code, data);
+    segmentTier().addSizeOfMisc(mallocSizeOf, code, data);
 }

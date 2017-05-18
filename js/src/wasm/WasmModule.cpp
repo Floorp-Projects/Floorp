@@ -392,11 +392,11 @@ Module::extractCode(JSContext* cx, MutableHandleValue vp) const
     if (!result)
         return false;
 
-    RootedObject code(cx, JS_NewUint8Array(cx, code_->segment().length()));
+    RootedObject code(cx, JS_NewUint8Array(cx, code_->segmentTier().length()));
     if (!code)
         return false;
 
-    memcpy(code->as<TypedArrayObject>().viewDataUnshared(), code_->segment().base(), code_->segment().length());
+    memcpy(code->as<TypedArrayObject>().viewDataUnshared(), code_->segmentTier().base(), code_->segmentTier().length());
 
     RootedValue value(cx, ObjectValue(*code));
     if (!JS_DefineProperty(cx, result, "code", value, JSPROP_ENUMERATE))
@@ -510,7 +510,7 @@ Module::initSegments(JSContext* cx,
         Table& table = *tables[seg.tableIndex];
         uint32_t offset = EvaluateInitExpr(globalImports, seg.offset);
         const CodeRangeVector& codeRanges = metadataTier().codeRanges;
-        uint8_t* codeBase = instance.codeBase();
+        uint8_t* codeBase = instance.codeBaseTier();
 
         for (uint32_t i = 0; i < seg.elemCodeRangeIndices.length(); i++) {
             uint32_t funcIndex = seg.elemFuncIndices[i];
@@ -522,7 +522,7 @@ Module::initSegments(JSContext* cx,
                 WasmInstanceObject* exportInstanceObj = ExportedFunctionToInstanceObject(f);
                 const CodeRange& cr = exportInstanceObj->getExportedFunctionCodeRange(f);
                 Instance& exportInstance = exportInstanceObj->instance();
-                table.set(offset + i, exportInstance.codeBase() + cr.funcTableEntry(), exportInstance);
+                table.set(offset + i, exportInstance.codeBaseTier() + cr.funcTableEntry(), exportInstance);
             } else {
                 const CodeRange& cr = codeRanges[seg.elemCodeRangeIndices[i]];
                 uint32_t entryOffset = table.isTypedFunction()
