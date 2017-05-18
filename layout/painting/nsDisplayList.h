@@ -4435,7 +4435,7 @@ public:
   /*
    * Paint mask onto aMaskContext in mFrame's coordinate space.
    */
-  void PaintMask(nsDisplayListBuilder* aBuilder, gfxContext* aMaskContext);
+  bool PaintMask(nsDisplayListBuilder* aBuilder, gfxContext* aMaskContext);
 
   const nsTArray<nsRect>& GetDestRects()
   {

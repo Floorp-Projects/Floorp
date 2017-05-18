@@ -202,7 +202,7 @@ NS_NewSVGMaskFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGMaskFrame)
 
-already_AddRefed<SourceSurface>
+mozilla::Pair<DrawResult, RefPtr<SourceSurface>>
 nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
 {
   // Make sure we break reference loops and over long reference chains:
@@ -211,7 +211,7 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
                                         &sRefChainLengthCounter);
   if (MOZ_UNLIKELY(!refChainGuard.Reference())) {
     // Break reference chain
-    return nullptr;
+    return MakePair(DrawResult::SUCCESS, RefPtr<SourceSurface>());
   }
 
   gfxRect maskArea = GetMaskArea(aParams.maskedFrame);
@@ -233,7 +233,7 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
   if (resultOverflows || maskSurfaceSize.IsEmpty()) {
     // Return value other then DrawResult::SUCCESS, so the caller can skip
     // painting the masked frame(aParams.maskedFrame).
-    return nullptr;
+    return MakePair(DrawResult::TEMPORARY_ERROR, RefPtr<SourceSurface>());
   }
 
   RefPtr<DrawTarget> maskDT =
@@ -241,7 +241,7 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
       maskSurfaceSize, SurfaceFormat::B8G8R8A8);
 
   if (!maskDT || !maskDT->IsValid()) {
-    return nullptr;
+    return MakePair(DrawResult::TEMPORARY_ERROR, RefPtr<SourceSurface>());
   }
 
   gfxMatrix maskSurfaceMatrix =
@@ -253,6 +253,7 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
 
   mMatrixForChildren = GetMaskTransform(aParams.maskedFrame) *
                        aParams.toUserSpace;
+  imgDrawingParams imgParams(aParams.flags);
 
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
@@ -266,29 +267,29 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
       m = static_cast<nsSVGElement*>(kid->GetContent())->
             PrependLocalTransformsTo(m, eUserSpaceToParent);
     }
-    nsSVGUtils::PaintFrameWithEffects(kid, *tmpCtx, m, aParams.imgParams);
+    nsSVGUtils::PaintFrameWithEffects(kid, *tmpCtx, m, imgParams);
   }
 
   RefPtr<SourceSurface> maskSnapshot = maskDT->Snapshot();
   if (!maskSnapshot) {
-    return nullptr;
+    return MakePair(DrawResult::TEMPORARY_ERROR, RefPtr<SourceSurface>());
   }
   RefPtr<DataSourceSurface> maskSurface = maskSnapshot->GetDataSurface();
   DataSourceSurface::MappedSurface map;
   if (!maskSurface ||
       !maskSurface->Map(DataSourceSurface::MapType::READ, &map)) {
-    return nullptr;
+    return MakePair(DrawResult::TEMPORARY_ERROR, RefPtr<SourceSurface>());
   }
 
   // Create alpha channel mask for output
   RefPtr<DataSourceSurface> destMaskSurface =
     Factory::CreateDataSourceSurface(maskSurfaceSize, SurfaceFormat::A8);
   if (!destMaskSurface) {
-    return nullptr;
+    return MakePair(DrawResult::TEMPORARY_ERROR, RefPtr<SourceSurface>());
   }
   DataSourceSurface::MappedSurface destMap;
   if (!destMaskSurface->Map(DataSourceSurface::MapType::WRITE, &destMap)) {
-    return nullptr;
+    return MakePair(DrawResult::TEMPORARY_ERROR, RefPtr<SourceSurface>());
   }
 
   uint8_t maskType;
@@ -321,11 +322,12 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
 
   // Moz2D transforms in the opposite direction to Thebes
   if (!maskSurfaceMatrix.Invert()) {
-    return nullptr;
+    return MakePair(DrawResult::SUCCESS, RefPtr<SourceSurface>());
   }
 
   *aParams.maskTransform = ToMatrix(maskSurfaceMatrix);
-  return destMaskSurface.forget();
+  RefPtr<SourceSurface> surface = destMaskSurface.forget();
+  return MakePair(imgParams.result, Move(surface));
 }
 
 gfxRect

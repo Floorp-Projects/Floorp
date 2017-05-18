@@ -22,7 +22,6 @@ class nsSVGClipPathFrame final : public nsSVGContainerFrame
   typedef mozilla::gfx::Matrix Matrix;
   typedef mozilla::gfx::SourceSurface SourceSurface;
   typedef mozilla::image::DrawResult DrawResult;
-  typedef mozilla::image::imgDrawingParams imgDrawingParams;
 
 protected:
   explicit nsSVGClipPathFrame(nsStyleContext* aContext)
@@ -78,7 +77,7 @@ public:
    * @param [in, optional] aExtraMasksTransform The transform to use with
    *   aExtraMask. Should be passed when aExtraMask is passed.
    */
-  already_AddRefed<SourceSurface>
+  mozilla::Pair<DrawResult, RefPtr<SourceSurface>>
   GetClipMask(gfxContext& aReferenceContext, nsIFrame* aClippedFrame,
               const gfxMatrix& aMatrix, Matrix* aMaskTransform,
               SourceSurface* aExtraMask = nullptr,
@@ -99,7 +98,7 @@ public:
    * @param [in, optional] aExtraMasksTransform The transform to use with
    *   aExtraMask. Should be passed when aExtraMask is passed.
    */
-  void
+  DrawResult
   PaintClipMask(gfxContext& aMaskContext, nsIFrame* aClippedFrame,
                 const gfxMatrix& aMatrix, Matrix* aMaskTransform,
                 SourceSurface* aExtraMask, const Matrix& aExtraMasksTransform);
