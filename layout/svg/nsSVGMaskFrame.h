@@ -9,7 +9,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/Pair.h"
 #include "gfxPattern.h"
 #include "gfxMatrix.h"
 #include "nsSVGContainerFrame.h"
@@ -60,20 +59,27 @@ public:
     float opacity;
     Matrix* maskTransform;
     uint8_t maskMode;
-    uint32_t flags;  // Image flags of the imgIContainer::FLAG_* variety.
+    imgDrawingParams& imgParams;
 
     explicit MaskParams(gfxContext* aCtx, nsIFrame* aMaskedFrame,
                         const gfxMatrix& aToUserSpace, float aOpacity,
                         Matrix* aMaskTransform, uint8_t aMaskMode,
-                        uint32_t aFlags)
+                        imgDrawingParams& aImgParams)
     : ctx(aCtx), maskedFrame(aMaskedFrame), toUserSpace(aToUserSpace),
       opacity(aOpacity), maskTransform(aMaskTransform), maskMode(aMaskMode),
-      flags(aFlags)
+      imgParams(aImgParams)
     { }
   };
 
   // nsSVGMaskFrame method:
-  mozilla::Pair<DrawResult, RefPtr<SourceSurface>>
+
+  /**
+   * Generate a mask surface for the target frame.
+   *
+   * The return surface can be null, it's the caller's responsibility to
+   * null-check before dereferencing.
+   */
+  already_AddRefed<SourceSurface>
   GetMaskForMaskedFrame(MaskParams& aParams);
 
   gfxRect

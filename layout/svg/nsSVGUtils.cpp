@@ -793,9 +793,8 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
         aFrame->StyleSVGReset()->mMask.mLayers[0].mMaskMode;
       nsSVGMaskFrame::MaskParams params(&aContext, aFrame, aTransform,
                                         maskUsage.opacity, &maskTransform,
-                                        maskMode, aImgParams.imageFlags);
-      Tie(aImgParams.result, maskSurface) =
-        maskFrame->GetMaskForMaskedFrame(params);
+                                        maskMode, aImgParams);
+      maskSurface = maskFrame->GetMaskForMaskedFrame(params);
 
       if (!maskSurface) {
         // Either entire surface is clipped out, or gfx buffer allocation
@@ -807,13 +806,10 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
 
     if (maskUsage.shouldGenerateClipMaskLayer) {
       Matrix clippedMaskTransform;
-      DrawResult clipMaskResult;
-      RefPtr<SourceSurface> clipMaskSurface;
-      Tie(clipMaskResult, clipMaskSurface) =
+      RefPtr<SourceSurface> clipMaskSurface =
         clipPathFrame->GetClipMask(aContext, aFrame, aTransform,
                                    &clippedMaskTransform, maskSurface,
                                    maskTransform);
-      aImgParams.result &= clipMaskResult;
       if (clipMaskSurface) {
         maskSurface = clipMaskSurface;
         maskTransform = clippedMaskTransform;
