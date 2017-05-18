@@ -2010,11 +2010,6 @@ public abstract class GeckoApp extends GeckoActivity
     }
 
     @RobocopTarget
-    public static @NonNull EventDispatcher getEventDispatcher() {
-        final GeckoApp geckoApp = (GeckoApp) GeckoAppShell.getGeckoInterface();
-        return geckoApp.getAppEventDispatcher();
-    }
-
     public @NonNull EventDispatcher getAppEventDispatcher() {
         if (mLayerView == null) {
             throw new IllegalStateException("Must not call getAppEventDispatcher() until after onCreate()");
