@@ -24,8 +24,6 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
   : mBuilder(&aBuilder)
 {
   WrRect scBounds = aParentSC.ToRelativeWrRect(aLayer->BoundsForStackingContext());
-  mOffsetToParent.x = scBounds.x;
-  mOffsetToParent.y = scBounds.y;
   Layer* layer = aLayer->GetLayer();
   mTransform = aTransform.valueOr(layer->GetTransform());
   mBuilder->PushStackingContext(scBounds,
@@ -44,8 +42,6 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
   : mBuilder(&aBuilder)
 {
   WrRect scBounds = aParentSC.ToRelativeWrRect(aLayer->BoundsForStackingContext());
-  mOffsetToParent.x = scBounds.x;
-  mOffsetToParent.y = scBounds.y;
   if (aTransformPtr) {
     mTransform = *aTransformPtr;
   }
@@ -89,10 +85,10 @@ StackingContextHelper::ToRelativeWrRectRounded(const LayoutDeviceRect& aRect) co
 }
 
 gfx::Matrix4x4
-StackingContextHelper::TransformToParentSC() const
+StackingContextHelper::TransformToRoot() const
 {
   gfx::Matrix4x4 inv = mTransform.Inverse();
-  inv.PostTranslate(-mOffsetToParent.x, -mOffsetToParent.y, 0);
+  inv.PostTranslate(-mOrigin.x, -mOrigin.y, 0);
   return inv;
 }
 
