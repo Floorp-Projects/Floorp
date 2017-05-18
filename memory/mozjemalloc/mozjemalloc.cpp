@@ -212,12 +212,6 @@ typedef long ssize_t;
  */
 #define JEMALLOC_MUNMAP
 
-/*
- * Enable limited chunk recycling on all platforms. Note that when
- * JEMALLOC_MUNMAP is not defined, all chunks will be recycled unconditionally.
- */
-#define JEMALLOC_RECYCLE
-
 #ifndef MOZ_MEMORY_WINDOWS
 #ifndef MOZ_MEMORY_SOLARIS
 #include <sys/cdefs.h>
@@ -839,12 +833,6 @@ struct arena_s {
 static const bool config_munmap = true;
 #else
 static const bool config_munmap = false;
-#endif
-
-#ifdef JEMALLOC_RECYCLE
-static const bool config_recycle = true;
-#else
-static const bool config_recycle = false;
 #endif
 
 /*
@@ -2324,7 +2312,7 @@ chunk_recycle(extent_tree_t *chunks_szad, extent_tree_t *chunks_ad, size_t size,
 		node = NULL;
 	}
 
-	if (config_munmap && config_recycle)
+	if (config_munmap)
 		recycled_size -= size;
 
 	malloc_mutex_unlock(&chunks_mtx);
@@ -2372,7 +2360,7 @@ chunk_alloc(size_t size, size_t alignment, bool base, bool zero)
 	assert(alignment != 0);
 	assert((alignment & chunksize_mask) == 0);
 
-	if (!config_munmap || (config_recycle && CAN_RECYCLE(size))) {
+	if (!config_munmap || CAN_RECYCLE(size)) {
 		ret = chunk_recycle(&chunks_szad_mmap, &chunks_ad_mmap,
 			size, alignment, base, &zero);
 		if (ret != NULL)
@@ -2473,7 +2461,7 @@ chunk_record(extent_tree_t *chunks_szad, extent_tree_t *chunks_ad, void *chunk,
 		xprev = prev;
 	}
 
-	if (config_munmap && config_recycle)
+	if (config_munmap)
 		recycled_size += size;
 
 label_return:
@@ -2491,7 +2479,7 @@ label_return:
 static bool
 chunk_dalloc_mmap(void *chunk, size_t size)
 {
-	if (!config_munmap || (config_recycle && CAN_RECYCLE(size) &&
+	if (!config_munmap || (CAN_RECYCLE(size) &&
 			load_acquire_z(&recycled_size) < recycle_limit))
 		return true;
 
@@ -5473,7 +5461,7 @@ jemalloc_purge_freed_pages_impl()
 			hard_purge_arena(arena);
 	}
 	malloc_spin_unlock(&arenas_lock);
-	if (!config_munmap || config_recycle) {
+	if (!config_munmap) {
 		malloc_mutex_lock(&chunks_mtx);
 		extent_node_t *node = extent_tree_szad_first(&chunks_szad_mmap);
 		while (node) {
