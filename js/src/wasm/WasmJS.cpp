@@ -815,7 +815,7 @@ WasmModuleObject::create(JSContext* cx, Module& module, HandleObject proto)
 
     obj->initReservedSlot(MODULE_SLOT, PrivateValue(&module));
     module.AddRef();
-    cx->zone()->updateJitCodeMallocBytes(module.codeLength());
+    cx->zone()->updateJitCodeMallocBytes(module.codeLengthTier());
     return obj;
 }
 
@@ -1717,7 +1717,7 @@ WasmTableObject::setImpl(JSContext* cx, const CallArgs& args)
         Instance& instance = instanceObj->instance();
         const FuncExport& funcExport = instance.metadata().lookupFuncExport(funcIndex);
         const CodeRange& codeRange = instance.metadataTier().codeRanges[funcExport.codeRangeIndex()];
-        void* code = instance.codeSegment().base() + codeRange.funcTableEntry();
+        void* code = instance.codeBaseTier() + codeRange.funcTableEntry();
         table.set(index, code, instance);
     } else {
         table.setNull(index);

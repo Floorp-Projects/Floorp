@@ -608,7 +608,7 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
     code_ = activation_->compartment()->wasm.lookupCode(pc);
     if (code_) {
         codeRange = code_->lookupRange(pc);
-        codeBase = code_->segment().base();
+        codeBase = code_->segmentTier().base();
     } else if (!LookupBuiltinThunk(pc, &codeRange, &codeBase)) {
         MOZ_ASSERT(done());
         return;
@@ -960,7 +960,7 @@ wasm::LookupFaultingInstance(WasmActivation* activation, void* pc, void* fp)
     if (!codeRange || !codeRange->isFunction())
         return nullptr;
 
-    size_t offsetInModule = ((uint8_t*)pc) - code->segment().base();
+    size_t offsetInModule = ((uint8_t*)pc) - code->segmentTier().base();
     if (offsetInModule < codeRange->funcNormalEntry() + SetFP)
         return nullptr;
     if (offsetInModule >= codeRange->ret() - PoppedFP)

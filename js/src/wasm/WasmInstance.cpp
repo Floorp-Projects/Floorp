@@ -189,7 +189,7 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
         return true;
 
     // The import may already have become optimized.
-    void* jitExitCode = codeBase() + fi.jitExitCodeOffset();
+    void* jitExitCode = codeBaseTier() + fi.jitExitCodeOffset();
     if (import.code == jitExitCode)
         return true;
 
@@ -356,7 +356,7 @@ Instance::Instance(JSContext* cx,
             const CodeRange& codeRange = calleeInstanceObj->getExportedFunctionCodeRange(f);
             Instance& calleeInstance = calleeInstanceObj->instance();
             import.tls = calleeInstance.tlsData();
-            import.code = calleeInstance.codeSegment().base() + codeRange.funcNormalEntry();
+            import.code = calleeInstance.codeBaseTier() + codeRange.funcNormalEntry();
             import.baselineScript = nullptr;
             import.obj = calleeInstanceObj;
         } else if (void* thunk = MaybeGetBuiltinThunk(f, fi.sig(), cx)) {
@@ -366,7 +366,7 @@ Instance::Instance(JSContext* cx,
             import.obj = f;
         } else {
             import.tls = tlsData();
-            import.code = codeBase() + fi.interpExitCodeOffset();
+            import.code = codeBaseTier() + fi.interpExitCodeOffset();
             import.baselineScript = nullptr;
             import.obj = f;
         }
@@ -660,7 +660,7 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
         JitActivation jitActivation(cx, /* active */ false);
 
         // Call the per-exported-function trampoline created by GenerateEntry.
-        auto funcPtr = JS_DATA_TO_FUNC_PTR(ExportFuncPtr, codeBase() + func.entryOffset());
+        auto funcPtr = JS_DATA_TO_FUNC_PTR(ExportFuncPtr, codeBaseTier() + func.entryOffset());
         if (!CALL_GENERATED_2(funcPtr, exportArgs.begin(), tlsData()))
             return false;
     }
@@ -806,7 +806,7 @@ Instance::deoptimizeImportExit(uint32_t funcImportIndex)
 {
     const FuncImport& fi = metadataTier().funcImports[funcImportIndex];
     FuncImportTls& import = funcImportTls(fi);
-    import.code = codeBase() + fi.interpExitCodeOffset();
+    import.code = codeBaseTier() + fi.interpExitCodeOffset();
     import.baselineScript = nullptr;
 }
 
