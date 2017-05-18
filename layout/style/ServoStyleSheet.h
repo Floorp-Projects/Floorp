@@ -50,6 +50,14 @@ struct ServoStyleSheetInner : public StyleSheetInfo
 /**
  * CSS style sheet object that is a wrapper for a Servo Stylesheet.
  */
+
+// CID for the ServoStyleSheet class
+// a6f31472-ab69-4beb-860f-c221431ead77
+#define NS_SERVO_STYLE_SHEET_IMPL_CID     \
+{ 0xa6f31472, 0xab69, 0x4beb, \
+  { 0x86, 0x0f, 0xc2, 0x21, 0x43, 0x1e, 0xad, 0x77 } }
+
+
 class ServoStyleSheet : public StyleSheet
 {
 public:
@@ -60,6 +68,8 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServoStyleSheet, StyleSheet)
+
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_SERVO_STYLE_SHEET_IMPL_CID)
 
   bool HasRules() const;
 
@@ -142,6 +152,8 @@ private:
 
   friend class StyleSheet;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(ServoStyleSheet, NS_SERVO_STYLE_SHEET_IMPL_CID)
 
 } // namespace mozilla
 
