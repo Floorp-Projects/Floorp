@@ -232,8 +232,8 @@ toolbar[customizing] > .overflow-button {
 /* The ids are ugly, but this should be reasonably performant, and
  * using a tagname as the last item would be less so.
  */
-#widget-overflow:not([hasdynamicitems]) #widget-overflow-fixed-separator,
-#widget-overflow-fixed-list:empty + #widget-overflow-fixed-separator {
+#widget-overflow-list:empty + #widget-overflow-fixed-separator,
+#widget-overflow:not([hasfixeditems]) #widget-overflow-fixed-separator {
   display: none;
 }
 

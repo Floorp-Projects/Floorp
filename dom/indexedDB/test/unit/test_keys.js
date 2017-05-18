@@ -8,9 +8,6 @@ var testGenerator = testSteps();
 function* testSteps()
 {
   const dbname = this.window ? window.location.pathname : "Splendid Test";
-  const RW = "readwrite"
-  let c1 = 1;
-  let c2 = 1;
 
   let openRequest = indexedDB.open(dbname, 1);
   openRequest.onerror = errorHandler;
@@ -18,14 +15,13 @@ function* testSteps()
   openRequest.onsuccess = unexpectedSuccessHandler;
   let event = yield undefined;
   let db = event.target.result;
-  let trans = event.target.transaction;
 
   // Create test stores
   let store = db.createObjectStore("store");
 
     // Test simple inserts
   var keys = [
-    -1/0,
+    -1 / 0,
     -1.7e308,
     -10000,
     -2,
@@ -40,7 +36,7 @@ function* testSteps()
     2,
     10000,
     1.7e308,
-    1/0,
+    1 / 0,
     new Date("1750-01-02"),
     new Date("1800-12-31T12:34:56.001"),
     new Date(-1000),
@@ -113,7 +109,7 @@ function* testSteps()
      "\uFFFF\x00",
     "\uFFFFZZZ",
     [],
-    [-1/0],
+    [-1 / 0],
     [-1],
     [0],
     [1],
@@ -142,8 +138,8 @@ function* testSteps()
     ["x", [[]]],
     ["x", [[[]]]],
     [[]],
-    [[],"foo"],
-    [[],[]],
+    [[], "foo"],
+    [[], []],
     [[[]]],
     [[[]], []],
     [[[]], [[]]],
@@ -158,12 +154,12 @@ function* testSteps()
     is(indexedDB.cmp(keyI, keyI), 0, i + " compared to self");
 
     function doCompare(keyI) {
-      for (var j = i-1; j >= i-10 && j >= 0; --j) {
+      for (var j = i - 1; j >= i - 10 && j >= 0; --j) {
         is(indexedDB.cmp(keyI, keys[j]), 1, i + " compared to " + j);
         is(indexedDB.cmp(keys[j], keyI), -1, j + " compared to " + i);
       }
     }
-    
+
     doCompare(keyI);
     store.add(i, keyI).onsuccess = function(e) {
       is(indexedDB.cmp(e.target.result, keyI), 0,
@@ -171,7 +167,7 @@ function* testSteps()
       ok(compareKeys(e.target.result, keyI),
          "Returned key should actually be equal");
     };
-    
+
     // Test that -0 compares the same as 0
     if (keyI === 0) {
       doCompare(-0);
@@ -204,7 +200,7 @@ function* testSteps()
   event = yield undefined;
   is(event.target.result, null, "no more results expected");
 
-  var nan = 0/0;
+  var nan = 0 / 0;
   var invalidKeys = [
     nan,
     undefined,
@@ -230,13 +226,13 @@ function* testSteps()
     [1, [/x/]],
     [1, [{}]],
     ];
-  
+
   for (i = 0; i < invalidKeys.length; ++i) {
     try {
       indexedDB.cmp(invalidKeys[i], 1);
       ok(false, "didn't throw");
     }
-    catch(ex) {
+    catch (ex) {
       ok(ex instanceof DOMException, "Threw DOMException");
       is(ex.name, "DataError", "Threw right DOMException");
       is(ex.code, 0, "Threw with right code");
@@ -245,7 +241,7 @@ function* testSteps()
       indexedDB.cmp(1, invalidKeys[i]);
       ok(false, "didn't throw2");
     }
-    catch(ex) {
+    catch (ex) {
       ok(ex instanceof DOMException, "Threw DOMException2");
       is(ex.name, "DataError", "Threw right DOMException2");
       is(ex.code, 0, "Threw with right code2");
@@ -254,7 +250,7 @@ function* testSteps()
       store.put(1, invalidKeys[i]);
       ok(false, "didn't throw3");
     }
-    catch(ex) {
+    catch (ex) {
       ok(ex instanceof DOMException, "Threw DOMException3");
       is(ex.name, "DataError", "Threw right DOMException3");
       is(ex.code, 0, "Threw with right code3");

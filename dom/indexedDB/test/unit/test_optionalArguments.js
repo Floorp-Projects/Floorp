@@ -86,7 +86,7 @@ function* testSteps()
     objectStore.get();
     ok(false, "Get with unspecified arg should have thrown");
   }
-  catch(e) {
+  catch (e) {
     ok(true, "Get with unspecified arg should have thrown");
   }
 
@@ -94,7 +94,7 @@ function* testSteps()
     objectStore.get(undefined);
     ok(false, "Get with undefined should have thrown");
   }
-  catch(e) {
+  catch (e) {
     ok(true, "Get with undefined arg should have thrown");
   }
 
@@ -102,7 +102,7 @@ function* testSteps()
     objectStore.get(null);
     ok(false, "Get with null should have thrown");
   }
-  catch(e) {
+  catch (e) {
     is(e instanceof DOMException, true,
        "Got right kind of exception");
     is(e.name, "DataError", "Correct error.");
@@ -163,7 +163,7 @@ function* testSteps()
     objectStore.delete();
     ok(false, "Delete with unspecified arg should have thrown");
   }
-  catch(e) {
+  catch (e) {
     ok(true, "Delete with unspecified arg should have thrown");
   }
 
@@ -171,7 +171,7 @@ function* testSteps()
     objectStore.delete(undefined);
     ok(false, "Delete with undefined should have thrown");
   }
-  catch(e) {
+  catch (e) {
     ok(true, "Delete with undefined arg should have thrown");
   }
 
@@ -179,7 +179,7 @@ function* testSteps()
     objectStore.delete(null);
     ok(false, "Delete with null should have thrown");
   }
-  catch(e) {
+  catch (e) {
     is(e instanceof DOMException, true,
        "Got right kind of exception");
     is(e.name, "DataError", "Correct error.");
@@ -1247,7 +1247,7 @@ function* testSteps()
     index.get();
     ok(false, "Get with unspecified arg should have thrown");
   }
-  catch(e) {
+  catch (e) {
     ok(true, "Get with unspecified arg should have thrown");
   }
 
@@ -1255,7 +1255,7 @@ function* testSteps()
     index.get(undefined);
     ok(false, "Get with undefined should have thrown");
   }
-  catch(e) {
+  catch (e) {
     ok(true, "Get with undefined arg should have thrown");
   }
 
@@ -1263,7 +1263,7 @@ function* testSteps()
     index.get(null);
     ok(false, "Get with null should have thrown");
   }
-  catch(e) {
+  catch (e) {
     is(e instanceof DOMException, true,
        "Got right kind of exception");
     is(e.name, "DataError", "Correct error.");
@@ -1359,7 +1359,7 @@ function* testSteps()
     index.getKey();
     ok(false, "Get with unspecified arg should have thrown");
   }
-  catch(e) {
+  catch (e) {
     ok(true, "Get with unspecified arg should have thrown");
   }
 
@@ -1367,7 +1367,7 @@ function* testSteps()
     index.getKey(undefined);
     ok(false, "Get with undefined should have thrown");
   }
-  catch(e) {
+  catch (e) {
     ok(true, "Get with undefined arg should have thrown");
   }
 
@@ -1375,7 +1375,7 @@ function* testSteps()
     index.getKey(null);
     ok(false, "Get with null should have thrown");
   }
-  catch(e) {
+  catch (e) {
     is(e instanceof DOMException, true,
        "Got right kind of exception");
     is(e.name, "DataError", "Correct error.");

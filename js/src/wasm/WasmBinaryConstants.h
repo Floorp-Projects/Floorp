@@ -28,6 +28,7 @@ static const uint32_t MagicNumber        = 0x6d736100; // "\0asm"
 static const uint32_t EncodingVersion    = 0x01;
 
 static const char NameSectionName[]      = "name";
+static const char SourceMappingURLSectionName[] = "sourceMappingURL";
 
 enum class SectionId
 {

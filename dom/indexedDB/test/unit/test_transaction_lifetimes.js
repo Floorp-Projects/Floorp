@@ -20,7 +20,7 @@ function* testSteps()
   event.target.transaction.oncomplete = grabEventAndContinueHandler;
 
   let os = db.createObjectStore("foo", { autoIncrement: true });
-  let index = os.createIndex("bar", "foo.bar");
+  os.createIndex("bar", "foo.bar");
   event = yield undefined;
 
   is(request.transaction, event.target,

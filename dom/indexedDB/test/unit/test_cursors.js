@@ -26,7 +26,7 @@ function* testSteps()
 
   request = objectStore.openCursor();
   request.onerror = errorHandler;
-  request.onsuccess = function (event) {
+  request.onsuccess = function(event) {
     ok(!event.target.result, "No results");
     testGenerator.next();
   }
@@ -38,7 +38,7 @@ function* testSteps()
 
   request = objectStore.openCursor();
   request.onerror = errorHandler;
-  request.onsuccess = function (event) {
+  request.onsuccess = function(event) {
     ok(!event.target.result, "No results");
     testGenerator.next();
   }
@@ -48,7 +48,7 @@ function* testSteps()
 
   request = objectStore.openCursor();
   request.onerror = errorHandler;
-  request.onsuccess = function (event) {
+  request.onsuccess = function(event) {
     ok(!event.target.result, "No results");
     testGenerator.next();
   }
@@ -58,7 +58,7 @@ function* testSteps()
 
   request = objectStore.openCursor();
   request.onerror = errorHandler;
-  request.onsuccess = function (event) {
+  request.onsuccess = function(event) {
     ok(!event.target.result, "No results");
     testGenerator.next();
   }
@@ -81,7 +81,7 @@ function* testSteps()
 
   request = objectStore.openCursor();
   request.onerror = errorHandler;
-  request.onsuccess = function (event) {
+  request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
       is(cursor.key, sortedKeys[keyIndex], "Correct key");
@@ -119,7 +119,7 @@ function* testSteps()
   let range = IDBKeyRange.bound(2000, "q");
   request = objectStore.openCursor(range);
   request.onerror = errorHandler;
-  request.onsuccess = function (event) {
+  request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
       is(cursor.key, sortedKeys[keyIndex], "Correct key");
@@ -146,7 +146,7 @@ function* testSteps()
 
   request = objectStore.openCursor();
   request.onerror = errorHandler;
-  request.onsuccess = function (event) {
+  request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
       is(cursor.key, sortedKeys[keyIndex], "Correct key");
@@ -164,7 +164,7 @@ function* testSteps()
       is(cursor.primaryKey, sortedKeys[keyIndex], "Correct primary key");
       is(cursor.value, "foo", "Correct value");
 
-      keyIndex += keyIndex ? 1: 6;
+      keyIndex += keyIndex ? 1 : 6;
     }
     else {
       testGenerator.next();
@@ -178,7 +178,7 @@ function* testSteps()
 
   request = objectStore.openCursor();
   request.onerror = errorHandler;
-  request.onsuccess = function (event) {
+  request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
       is(cursor.key, sortedKeys[keyIndex], "Correct key");
@@ -196,7 +196,7 @@ function* testSteps()
       is(cursor.primaryKey, sortedKeys[keyIndex], "Correct primary key");
       is(cursor.value, "foo", "Correct value");
 
-      keyIndex += keyIndex ? 1: 3;
+      keyIndex += keyIndex ? 1 : 3;
     }
     else {
       testGenerator.next();
@@ -210,7 +210,7 @@ function* testSteps()
 
   request = objectStore.openCursor();
   request.onerror = errorHandler;
-  request.onsuccess = function (event) {
+  request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
       is(cursor.key, sortedKeys[keyIndex], "Correct key");
@@ -244,7 +244,7 @@ function* testSteps()
   request = objectStore.openCursor();
   request.onerror = errorHandler;
   let storedCursor = null;
-  request.onsuccess = function (event) {
+  request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
       storedCursor = cursor;
@@ -291,12 +291,11 @@ function* testSteps()
   keyIndex = 0;
 
   let gotRemoveEvent = false;
-  let retval = false;
 
   request = objectStore.openCursor(null, "next");
   request.onerror = errorHandler;
   storedCursor = null;
-  request.onsuccess = function (event) {
+  request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
       storedCursor = cursor;
@@ -346,7 +345,7 @@ function* testSteps()
   request = objectStore.openCursor(null, "prev");
   request.onerror = errorHandler;
   storedCursor = null;
-  request.onsuccess = function (event) {
+  request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
       storedCursor = cursor;

@@ -526,7 +526,7 @@ CustomizeMode.prototype = {
       window.PanelUI.menuButton.disabled = false;
       if (gPhotonStructure) {
         let overflowContainer = document.getElementById("widget-overflow-scroller");
-        overflowContainer.insertBefore(window.PanelUI.overflowFixedList, overflowContainer.firstElementChild);
+        overflowContainer.appendChild(window.PanelUI.overflowFixedList);
         document.getElementById("nav-bar-overflow-button").disabled = false;
       } else {
         window.PanelUI.setMainView(window.PanelUI.mainView);

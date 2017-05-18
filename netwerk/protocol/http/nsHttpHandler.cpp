@@ -7,6 +7,8 @@
 // HttpLog.h should generally be included first
 #include "HttpLog.h"
 
+#include "prsystem.h"
+
 #include "nsHttp.h"
 #include "nsHttpHandler.h"
 #include "nsHttpChannel.h"
@@ -270,17 +272,22 @@ nsHttpHandler::SetFastOpenOSSupport()
     return;
 #else
 
-    nsCOMPtr<nsIPropertyBag2> infoService =
-        do_GetService("@mozilla.org/system-info;1");
-    MOZ_ASSERT(infoService, "Could not find a system info service");
     nsAutoCString version;
     nsresult rv;
 #ifdef ANDROID
+    nsCOMPtr<nsIPropertyBag2> infoService =
+        do_GetService("@mozilla.org/system-info;1");
+    MOZ_ASSERT(infoService, "Could not find a system info service");
     rv = infoService->GetPropertyAsACString(
         NS_LITERAL_STRING("sdk_version"), version);
 #else
-    rv = infoService->GetPropertyAsACString(
-        NS_LITERAL_STRING("version"), version);
+    char buf[SYS_INFO_BUFFER_LENGTH];
+    if (PR_GetSystemInfo(PR_SI_RELEASE, buf, sizeof(buf)) == PR_SUCCESS) {
+        version = buf;
+        rv = NS_OK;
+    } else {
+        rv = NS_ERROR_FAILURE;
+    }
 #endif
 
     LOG(("nsHttpHandler::SetFastOpenOSSupport version %s", version.get()));
