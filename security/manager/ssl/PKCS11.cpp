@@ -4,27 +4,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsCrypto.h"
+#include "PKCS11.h"
 
+#include "ScopedNSSTypes.h"
 #include "nsNSSComponent.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsServiceManagerUtils.h"
-#include "ScopedNSSTypes.h"
 
-// QueryInterface implementation for nsPkcs11
-NS_INTERFACE_MAP_BEGIN(nsPkcs11)
+namespace mozilla { namespace psm {
+
+NS_INTERFACE_MAP_BEGIN(PKCS11)
   NS_INTERFACE_MAP_ENTRY(nsIPKCS11)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(nsPkcs11)
-NS_IMPL_RELEASE(nsPkcs11)
+NS_IMPL_ADDREF(PKCS11)
+NS_IMPL_RELEASE(PKCS11)
 
-nsPkcs11::nsPkcs11()
+PKCS11::PKCS11()
 {
 }
 
-nsPkcs11::~nsPkcs11()
+PKCS11::~PKCS11()
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
@@ -35,7 +36,7 @@ nsPkcs11::~nsPkcs11()
 
 // Delete a PKCS11 module from the user's profile.
 NS_IMETHODIMP
-nsPkcs11::DeleteModule(const nsAString& aModuleName)
+PKCS11::DeleteModule(const nsAString& aModuleName)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
@@ -51,7 +52,7 @@ nsPkcs11::DeleteModule(const nsAString& aModuleName)
   // before we call SECMOD_DeleteModule, below.
 #ifndef MOZ_NO_SMART_CARDS
   {
-    mozilla::UniqueSECMODModule module(SECMOD_FindModule(moduleName.get()));
+    UniqueSECMODModule module(SECMOD_FindModule(moduleName.get()));
     if (!module) {
       return NS_ERROR_FAILURE;
     }
@@ -73,10 +74,10 @@ nsPkcs11::DeleteModule(const nsAString& aModuleName)
 
 // Add a new PKCS11 module to the user's profile.
 NS_IMETHODIMP
-nsPkcs11::AddModule(const nsAString& aModuleName,
-                    const nsAString& aLibraryFullPath,
-                    int32_t aCryptoMechanismFlags,
-                    int32_t aCipherFlags)
+PKCS11::AddModule(const nsAString& aModuleName,
+                  const nsAString& aLibraryFullPath,
+                  int32_t aCryptoMechanismFlags,
+                  int32_t aCipherFlags)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
@@ -100,7 +101,7 @@ nsPkcs11::AddModule(const nsAString& aModuleName,
   }
 
 #ifndef MOZ_NO_SMART_CARDS
-  mozilla::UniqueSECMODModule module(SECMOD_FindModule(moduleName.get()));
+  UniqueSECMODModule module(SECMOD_FindModule(moduleName.get()));
   if (!module) {
     return NS_ERROR_FAILURE;
   }
@@ -111,3 +112,5 @@ nsPkcs11::AddModule(const nsAString& aModuleName,
 
   return NS_OK;
 }
+
+} } // namespace mozilla::psm
