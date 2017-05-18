@@ -1580,8 +1580,6 @@ static AntialiasMode Get2DAAMode(gfxFont::AntialiasOption aAAOption) {
 
 class GlyphBufferAzure
 {
-    typedef mozilla::image::imgDrawingParams imgDrawingParams;
-
 public:
     GlyphBufferAzure(const TextRunDrawParams& aRunParams,
                      const FontDrawParams&    aFontParams)
@@ -1651,12 +1649,13 @@ private:
 
                 RefPtr<gfxPattern> fillPattern;
                 if (mFontParams.contextPaint) {
-                  imgDrawingParams imgParams;
-                  fillPattern =
+                  mozilla::image::DrawResult result = mozilla::image::DrawResult::SUCCESS;
+                  Tie(result, fillPattern) =
                     mFontParams.contextPaint->GetFillPattern(
                                           mRunParams.context->GetDrawTarget(),
-                                          mRunParams.context->CurrentMatrix(),
-                                          imgParams);
+                                          mRunParams.context->CurrentMatrix());
+                  // XXX cku Flush should return result to the caller?
+                  Unused << result;
                 }
                 if (!fillPattern) {
                     if (state.pattern) {
