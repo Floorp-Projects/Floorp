@@ -1666,40 +1666,6 @@ public class GeckoAppShell
         public void addAppStateListener(AppStateListener listener);
         public void removeAppStateListener(AppStateListener listener);
 
-        /**
-         * Check if the given URI is visited.
-         * <p/>
-         * If it has been visited, call {@link GeckoAppShell#notifyUriVisited(String)}.  (If it
-         * has not been visited, do nothing.)
-         * <p/>
-         * This method is always invoked on the Gecko thread.
-         *
-         * @param uri to check.
-         */
-        public void checkUriVisited(String uri);
-
-        /**
-         * Mark the given URI as visited in Gecko.
-         * <p/>
-         * Implementors may maintain some local store of visited URIs in order to be able to
-         * answer {@link #checkUriVisited(String)} requests affirmatively.
-         * <p/>
-         * This method is always invoked on the Gecko thread.
-         *
-         * @param uri to mark.
-         */
-        public void markUriVisited(final String uri);
-
-        /**
-         * Set the title of the given URI, as determined by Gecko.
-         * <p/>
-         * This method is always invoked on the Gecko thread.
-         *
-         * @param uri given.
-         * @param title to associate with the given URI.
-         */
-        public void setUriTitle(final String uri, final String title);
-
         public void setAccessibilityEnabled(boolean enabled);
 
         public boolean openUriExternal(String targetURI, String mimeType, String packageName, String className, String action, String title);
@@ -1861,33 +1827,6 @@ public class GeckoAppShell
     @WrapForJNI(calledFrom = "gecko")
     private static double[] getCurrentBatteryInformation() {
         return GeckoBatteryManager.getCurrentInformation();
-    }
-
-    @WrapForJNI(stubName = "CheckURIVisited", calledFrom = "gecko")
-    private static void checkUriVisited(String uri) {
-        final GeckoInterface geckoInterface = getGeckoInterface();
-        if (geckoInterface == null) {
-            return;
-        }
-        geckoInterface.checkUriVisited(uri);
-    }
-
-    @WrapForJNI(stubName = "MarkURIVisited", calledFrom = "gecko")
-    private static void markUriVisited(final String uri) {
-        final GeckoInterface geckoInterface = getGeckoInterface();
-        if (geckoInterface == null) {
-            return;
-        }
-        geckoInterface.markUriVisited(uri);
-    }
-
-    @WrapForJNI(stubName = "SetURITitle", calledFrom = "gecko")
-    private static void setUriTitle(final String uri, final String title) {
-        final GeckoInterface geckoInterface = getGeckoInterface();
-        if (geckoInterface == null) {
-            return;
-        }
-        geckoInterface.setUriTitle(uri, title);
     }
 
     @WrapForJNI(calledFrom = "gecko")

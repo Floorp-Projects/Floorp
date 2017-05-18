@@ -144,6 +144,33 @@ auto GeckoJavaSampler::Unpause() -> void
     return mozilla::jni::Method<Unpause_t>::Call(GeckoJavaSampler::Context(), nullptr);
 }
 
+const char GlobalHistory::name[] =
+        "org/mozilla/gecko/GlobalHistory";
+
+constexpr char GlobalHistory::CheckURIVisited_t::name[];
+constexpr char GlobalHistory::CheckURIVisited_t::signature[];
+
+auto GlobalHistory::CheckURIVisited(mozilla::jni::String::Param a0) -> void
+{
+    return mozilla::jni::Method<CheckURIVisited_t>::Call(GlobalHistory::Context(), nullptr, a0);
+}
+
+constexpr char GlobalHistory::MarkURIVisited_t::name[];
+constexpr char GlobalHistory::MarkURIVisited_t::signature[];
+
+auto GlobalHistory::MarkURIVisited(mozilla::jni::String::Param a0) -> void
+{
+    return mozilla::jni::Method<MarkURIVisited_t>::Call(GlobalHistory::Context(), nullptr, a0);
+}
+
+constexpr char GlobalHistory::SetURITitle_t::name[];
+constexpr char GlobalHistory::SetURITitle_t::signature[];
+
+auto GlobalHistory::SetURITitle(mozilla::jni::String::Param a0, mozilla::jni::String::Param a1) -> void
+{
+    return mozilla::jni::Method<SetURITitle_t>::Call(GlobalHistory::Context(), nullptr, a0, a1);
+}
+
 const char MemoryMonitor::name[] =
         "org/mozilla/gecko/MemoryMonitor";
 
