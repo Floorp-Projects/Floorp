@@ -2231,7 +2231,7 @@ var AddonManagerInternal = {
      if (!wrapper) {
        throw Error("No addon matching instanceID:", aInstanceID.toString());
      }
-     let addonId = wrapper.addonId();
+     let addonId = wrapper.id;
      logger.debug(`Registering upgrade listener for ${addonId}`);
      this.upgradeListeners.set(addonId, aCallback);
    });

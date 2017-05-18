@@ -1,15 +1,3 @@
-/* globals
-  XPCOMUtils,
-  aboutNewTabService,
-  Services,
-  ContentTask,
-  TestUtils,
-  BrowserOpenTab,
-  registerCleanupFunction,
-  is,
-  content
-*/
-
 "use strict";
 
 let Cu = Components.utils;

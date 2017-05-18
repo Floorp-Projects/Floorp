@@ -8,6 +8,7 @@ module.exports = {
 
   "globals": {
     "BroadcastChannel": false,
+    "BrowserFeedWriter": false,
     "CSSPrimitiveValue": false,
     "CSSValueList": false,
     // Specific to Firefox (Chrome code only).

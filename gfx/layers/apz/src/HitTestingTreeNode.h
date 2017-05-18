@@ -74,6 +74,8 @@ public:
   HitTestingTreeNode* GetPrevSibling() const;
   HitTestingTreeNode* GetParent() const;
 
+  bool IsAncestorOf(const HitTestingTreeNode* aOther) const;
+
   /* APZC related methods */
 
   AsyncPanZoomController* GetApzc() const;
@@ -105,14 +107,17 @@ public:
   void SetFixedPosData(FrameMetrics::ViewID aFixedPosTarget);
   FrameMetrics::ViewID GetFixedPosTarget() const;
 
-  /* Convert aPoint into the LayerPixel space for the layer corresponding to
+  /* Convert |aPoint| into the LayerPixel space for the layer corresponding to
+   * this node. |aTransform| is the complete (content + async) transform for
    * this node. */
-  Maybe<LayerPoint> Untransform(const ParentLayerPoint& aPoint) const;
+  Maybe<LayerPoint> Untransform(const ParentLayerPoint& aPoint,
+                                const LayerToParentLayerMatrix4x4& aTransform) const;
   /* Assuming aPoint is inside the clip region for this node, check which of the
    * event region spaces it falls inside. */
-  HitTestResult HitTest(const ParentLayerPoint& aPoint) const;
+  HitTestResult HitTest(const LayerPoint& aPoint) const;
   /* Returns the mOverride flag. */
   EventRegionsOverride GetEventRegionsOverride() const;
+  const CSSTransformMatrix& GetTransform() const;
 
   /* Debug helpers */
   void Dump(const char* aPrefix = "") const;

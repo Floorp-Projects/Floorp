@@ -27,9 +27,32 @@ job-defaults:
         files-changed:
             # any when.files-changed specified below in a job will be
             # appended to this list
+            - build/**
+            - config/**
+            - configure.py
+            - dom/bindings/**
+            - intl/icu/**
+            - js/moz.configure
             - js/public/**
             - js/src/**
+            - layout/tools/reftest/reftest/**
+            - Makefile.in
+            - media/webrtc/trunk/tools/gyp/**
+            - memory/**
+            - mfbt/**
+            - modules/fdlibm/**
+            - modules/zlib/src/**
+            - mozglue/**
+            - moz.build
+            - moz.configure
+            - nsprpub/**
+            - python/**
+            - taskcluster/moz.build
             - taskcluster/ci/spidermonkey/kind.yml
+            - testing/mozbase/**
+            - test.mozbuild
+            - toolkit/mozapps/installer/package-name.mk
+            - toolkit/mozapps/installer/upload-files.mk
 
 jobs:
     sm-package/opt:
@@ -41,31 +64,6 @@ jobs:
         run:
             using: spidermonkey-package
             spidermonkey-variant: plain
-        when:
-            files-changed:
-                - build/**
-                - config/**
-                - configure.py
-                - dom/bindings/**
-                - intl/icu/**
-                - js/moz.configure
-                - layout/tools/reftest/reftest/**
-                - Makefile.in
-                - media/webrtc/trunk/tools/gyp/**
-                - memory/**
-                - mfbt/**
-                - modules/fdlibm/**
-                - modules/zlib/src/**
-                - mozglue/**
-                - moz.build
-                - moz.configure
-                - nsprpub/**
-                - python/**
-                - taskcluster/moz.build
-                - testing/mozbase/**
-                - test.mozbuild
-                - toolkit/mozapps/installer/package-name.mk
-                - toolkit/mozapps/installer/upload-files.mk
 
     sm-mozjs-sys/debug:
         description: "Build js/src as the mozjs_sys Rust crate"

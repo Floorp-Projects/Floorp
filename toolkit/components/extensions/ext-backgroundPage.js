@@ -18,7 +18,6 @@ class BackgroundPage extends HiddenExtensionPage {
 
     this.page = options.page || null;
     this.isGenerated = !!options.scripts;
-    this.webNav = null;
 
     if (this.page) {
       this.url = this.extension.baseURI.resolve(this.page);
@@ -41,18 +40,6 @@ class BackgroundPage extends HiddenExtensionPage {
 
     let context = await promiseExtensionViewLoaded(this.browser);
 
-    if (this.browser.docShell) {
-      this.webNav = this.browser.docShell.QueryInterface(Ci.nsIWebNavigation);
-      let window = this.webNav.document.defaultView;
-
-      // Set the add-on's main debugger global, for use in the debugger
-      // console.
-      if (this.extension.addonData.instanceID) {
-        AddonManager.getAddonByInstanceID(this.extension.addonData.instanceID)
-                    .then(addon => addon && addon.setDebugGlobal(window));
-      }
-    }
-
     if (context) {
       // Wait until all event listeners registered by the script so far
       // to be handled.
@@ -64,11 +51,6 @@ class BackgroundPage extends HiddenExtensionPage {
   }
 
   shutdown() {
-    if (this.extension.addonData.instanceID) {
-      AddonManager.getAddonByInstanceID(this.extension.addonData.instanceID)
-                  .then(addon => addon && addon.setDebugGlobal(null));
-    }
-
     super.shutdown();
   }
 }
