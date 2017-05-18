@@ -15,49 +15,6 @@ namespace mozilla {
 namespace layers {
 
 /**
- * A texture source meant for use with MacIOSurfaceTextureHostOGL.
- *
- * It does not own any GL texture, and attaches its shared handle to one of
- * the compositor's temporary textures when binding.
- */
-class MacIOSurfaceTextureSourceOGL : public TextureSource
-                                   , public TextureSourceOGL
-{
-public:
-  MacIOSurfaceTextureSourceOGL(CompositorOGL* aCompositor,
-                               MacIOSurface* aSurface);
-  virtual ~MacIOSurfaceTextureSourceOGL();
-
-  virtual const char* Name() const override { return "MacIOSurfaceTextureSourceOGL"; }
-
-  virtual TextureSourceOGL* AsSourceOGL() override { return this; }
-
-  virtual void BindTexture(GLenum activetex,
-                           gfx::SamplingFilter aSamplingFilter) override;
-
-  virtual bool IsValid() const override { return !!gl(); }
-
-  virtual gfx::IntSize GetSize() const override;
-
-  virtual gfx::SurfaceFormat GetFormat() const override;
-
-  virtual GLenum GetTextureTarget() const override { return LOCAL_GL_TEXTURE_RECTANGLE_ARB; }
-
-  virtual GLenum GetWrapMode() const override { return LOCAL_GL_CLAMP_TO_EDGE; }
-
-  // MacIOSurfaceTextureSourceOGL doesn't own any gl texture
-  virtual void DeallocateDeviceData() override {}
-
-  virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
-
-  gl::GLContext* gl() const;
-
-protected:
-  RefPtr<CompositorOGL> mCompositor;
-  RefPtr<MacIOSurface> mSurface;
-};
-
-/**
  * A TextureHost for shared MacIOSurface
  *
  * Most of the logic actually happens in MacIOSurfaceTextureSourceOGL.
