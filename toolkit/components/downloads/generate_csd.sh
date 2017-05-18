@@ -19,7 +19,7 @@ if [ ! -e $PROTOC_PATH ]; then
   exit 1
 fi
 
-if [ ! -f nsDownloadManager.cpp ]; then
+if [ ! -f nsIApplicationReputation.idl ]; then
     echo "You must run this script in the toolkit/components/downloads" >&2
     echo "directory of the source tree." >&2
     exit 1

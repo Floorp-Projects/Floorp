@@ -609,12 +609,12 @@ ElfLoader::~ElfLoader()
          it < list.rend(); ++it) {
       if ((*it)->AsSystemElf()) {
         DEBUG_LOG("ElfLoader::~ElfLoader(): Remaining handle for \"%s\" "
-                  "[%d direct refs, %d refs total]", (*it)->GetPath(),
-                  (*it)->DirectRefCount(), (*it)->refCount());
+                  "[%" PRIdPTR " direct refs, %" PRIdPTR " refs total]",
+                  (*it)->GetPath(), (*it)->DirectRefCount(), (*it)->refCount());
       } else {
         DEBUG_LOG("ElfLoader::~ElfLoader(): Unexpected remaining handle for \"%s\" "
-                  "[%d direct refs, %d refs total]", (*it)->GetPath(),
-                  (*it)->DirectRefCount(), (*it)->refCount());
+                  "[%" PRIdPTR " direct refs, %" PRIdPTR " refs total]",
+                  (*it)->GetPath(), (*it)->DirectRefCount(), (*it)->refCount());
         /* Not removing, since it could have references to other libraries,
          * destroying them as a side effect, and possibly leaving dangling
          * pointers in the handle list we're scanning */
@@ -970,7 +970,7 @@ ElfLoader::DebuggerHelper::Remove(ElfLoader::link_map *map)
   dbg->r_brk();
 }
 
-#if defined(ANDROID)
+#if defined(ANDROID) && defined(__NR_sigaction)
 /* As some system libraries may be calling signal() or sigaction() to
  * set a SIGSEGV handler, effectively breaking MappableSeekableZStream,
  * or worse, restore our SIGSEGV handler with wrong flags (which using
@@ -1016,8 +1016,9 @@ Divert(T func, T new_func)
   *reinterpret_cast<intptr_t *>(addr + 1) =
     reinterpret_cast<uintptr_t>(new_func) - addr - 5; // target displacement
   return true;
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
   const unsigned char trampoline[] = {
+# ifdef __arm__
                             // .thumb
     0x46, 0x04,             // nop
     0x78, 0x47,             // bx pc
@@ -1025,8 +1026,15 @@ Divert(T func, T new_func)
                             // .arm
     0x04, 0xf0, 0x1f, 0xe5, // ldr pc, [pc, #-4]
                             // .word <new_func>
+# else // __aarch64__
+    0x50, 0x00, 0x00, 0x58, // ldr x16, [pc, #8]   ; x16 (aka ip0) is the first
+    0x00, 0x02, 0x1f, 0xd6, // br x16              ; intra-procedure-call
+                            // .word <new_func.lo> ; scratch register.
+                            // .word <new_func.hi>
+# endif
   };
   const unsigned char *start;
+# ifdef __arm__
   if (addr & 0x01) {
     /* Function is thumb, the actual address of the code is without the
      * least significant bit. */
@@ -1040,12 +1048,16 @@ Divert(T func, T new_func)
     /* Function is arm, we only need the arm part of the trampoline */
     start = trampoline + 6;
   }
+# else // __aarch64__
+  start = trampoline;
+#endif
 
   size_t len = sizeof(trampoline) - (start - trampoline);
   EnsureWritable w(reinterpret_cast<void *>(addr), len + sizeof(void *));
   memcpy(reinterpret_cast<void *>(addr), start, len);
   *reinterpret_cast<void **>(addr + len) = FunctionPtr(new_func);
-  cacheflush(addr, addr + len + sizeof(void *), 0);
+  __builtin___clear_cache(reinterpret_cast<char*>(addr),
+                          reinterpret_cast<char*>(addr + len + sizeof(void *)));
   return true;
 #else
   return false;
