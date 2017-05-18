@@ -298,8 +298,20 @@ pub struct RadialGradientPrimitiveCpu {
     pub cache_dirty: bool,
 }
 
-// The number of entries in a gradient data table.
-pub const GRADIENT_DATA_RESOLUTION: usize = 128;
+// The gradient entry index for the first color stop
+pub const GRADIENT_DATA_FIRST_STOP: usize = 0;
+// The gradient entry index for the last color stop
+pub const GRADIENT_DATA_LAST_STOP: usize = GRADIENT_DATA_SIZE - 1;
+
+// The start of the gradient data table
+pub const GRADIENT_DATA_TABLE_BEGIN: usize = GRADIENT_DATA_FIRST_STOP + 1;
+// The exclusive bound of the gradient data table
+pub const GRADIENT_DATA_TABLE_END: usize = GRADIENT_DATA_LAST_STOP;
+// The number of entries in the gradient data table.
+pub const GRADIENT_DATA_TABLE_SIZE: usize = 128;
+
+// The number of entries in a gradient data: GRADIENT_DATA_TABLE_SIZE + first stop entry + last stop entry
+pub const GRADIENT_DATA_SIZE: usize = GRADIENT_DATA_TABLE_SIZE + 2;
 
 #[derive(Debug, Clone, Copy)]
 #[repr(C)]
@@ -316,10 +328,12 @@ pub struct GradientDataEntry {
 // the offset within that entry bucket is used to interpolate between the two colors in that entry.
 // This layout preserves hard stops, as the end color for a given entry can differ from the start
 // color for the following entry, despite them being adjacent. Colors are stored within in BGRA8
-// format for texture upload.
+// format for texture upload. This table requires the gradient color stops to be normalized to the
+// range [0, 1]. The first and last entries hold the first and last color stop colors respectively,
+// while the entries in between hold the interpolated color stop values for the range [0, 1].
 pub struct GradientData {
-    pub colors_high: [GradientDataEntry; GRADIENT_DATA_RESOLUTION],
-    pub colors_low: [GradientDataEntry; GRADIENT_DATA_RESOLUTION],
+    pub colors_high: [GradientDataEntry; GRADIENT_DATA_SIZE],
+    pub colors_low: [GradientDataEntry; GRADIENT_DATA_SIZE],
 }
 
 impl Default for GradientData {
@@ -341,7 +355,8 @@ impl Clone for GradientData {
 }
 
 impl GradientData {
-    // Generate a color ramp between the start and end indexes from a start color to an end color.
+    /// Generate a color ramp filling the indices in [start_idx, end_idx) and interpolating
+    /// from start_color to end_color.
     fn fill_colors(&mut self, start_idx: usize, end_idx: usize, start_color: &ColorF, end_color: &ColorF) {
         // Calculate the color difference for individual steps in the ramp.
         let inv_steps = 1.0 / (end_idx - start_idx) as f32;
@@ -372,17 +387,17 @@ impl GradientData {
         }
     }
 
-    // Compute an entry index based on a gradient stop offset.
+    /// Compute an index into the gradient entry table based on a gradient stop offset. This
+    /// function maps offsets from [0, 1] to indices in [GRADIENT_DATA_TABLE_BEGIN, GRADIENT_DATA_TABLE_END].
     #[inline]
     fn get_index(offset: f32) -> usize {
-        (offset.max(0.0).min(1.0) * GRADIENT_DATA_RESOLUTION as f32).round() as usize
+        (offset.max(0.0).min(1.0)
+            * GRADIENT_DATA_TABLE_SIZE as f32
+            + GRADIENT_DATA_TABLE_BEGIN as f32).round() as usize
     }
 
     // Build the gradient data from the supplied stops, reversing them if necessary.
     fn build(&mut self, src_stops: AuxIter<GradientStop>, reverse_stops: bool) {
-
-        const MAX_IDX: usize = GRADIENT_DATA_RESOLUTION;
-        const MIN_IDX: usize = 0;
 
         // Preconditions (should be ensured by DisplayListBuilder):
         // * we have at least two stops
@@ -395,8 +410,13 @@ impl GradientData {
         debug_assert_eq!(first.offset, 0.0);
 
         if reverse_stops {
-            // If the gradient is reversed, then we invert offsets and draw right-to-left
-            let mut cur_idx = MAX_IDX;
+            // Fill in the first entry (for reversed stops) with the first color stop
+            self.fill_colors(GRADIENT_DATA_LAST_STOP, GRADIENT_DATA_LAST_STOP + 1, &cur_color, &cur_color);
+
+            // Fill in the center of the gradient table, generating a color ramp between each consecutive pair
+            // of gradient stops. Each iteration of a loop will fill the indices in [next_idx, cur_idx). The
+            // loop will then fill indices in [GRADIENT_DATA_TABLE_BEGIN, GRADIENT_DATA_TABLE_END).
+            let mut cur_idx = GRADIENT_DATA_TABLE_END;
             for next in src_stops {
                 let next_color = next.color.premultiplied();
                 let next_idx = Self::get_index(1.0 - next.offset);
@@ -409,9 +429,18 @@ impl GradientData {
 
                 cur_color = next_color;
             }
-            debug_assert_eq!(cur_idx, MIN_IDX);
+            debug_assert_eq!(cur_idx, GRADIENT_DATA_TABLE_BEGIN);
+
+            // Fill in the last entry (for reversed stops) with the last color stop
+            self.fill_colors(GRADIENT_DATA_FIRST_STOP, GRADIENT_DATA_FIRST_STOP + 1, &cur_color, &cur_color);
         } else {
-            let mut cur_idx = MIN_IDX;
+            // Fill in the first entry with the first color stop
+            self.fill_colors(GRADIENT_DATA_FIRST_STOP, GRADIENT_DATA_FIRST_STOP + 1, &cur_color, &cur_color);
+
+            // Fill in the center of the gradient table, generating a color ramp between each consecutive pair
+            // of gradient stops. Each iteration of a loop will fill the indices in [cur_idx, next_idx). The
+            // loop will then fill indices in [GRADIENT_DATA_TABLE_BEGIN, GRADIENT_DATA_TABLE_END).
+            let mut cur_idx = GRADIENT_DATA_TABLE_BEGIN;
             for next in src_stops {
                 let next_color = next.color.premultiplied();
                 let next_idx = Self::get_index(next.offset);
@@ -424,7 +453,10 @@ impl GradientData {
 
                 cur_color = next_color;
             }
-            debug_assert_eq!(cur_idx, MAX_IDX);
+            debug_assert_eq!(cur_idx, GRADIENT_DATA_TABLE_END);
+
+            // Fill in the last entry with the last color stop
+            self.fill_colors(GRADIENT_DATA_LAST_STOP, GRADIENT_DATA_LAST_STOP + 1, &cur_color, &cur_color);
         }
     }
 }

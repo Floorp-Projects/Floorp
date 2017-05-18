@@ -688,20 +688,20 @@ impl WebGLCommand {
                  chan: MsgSender<WebGLResult<WebGLParameter>>) {
         let result = match param_id {
             gl::ACTIVE_TEXTURE |
-            //gl::ALPHA_BITS |
+            gl::ALPHA_BITS |
             gl::BLEND_DST_ALPHA |
             gl::BLEND_DST_RGB |
             gl::BLEND_EQUATION_ALPHA |
             gl::BLEND_EQUATION_RGB |
             gl::BLEND_SRC_ALPHA |
             gl::BLEND_SRC_RGB |
-            //gl::BLUE_BITS |
+            gl::BLUE_BITS |
             gl::CULL_FACE_MODE |
-            //gl::DEPTH_BITS |
+            gl::DEPTH_BITS |
             gl::DEPTH_FUNC |
             gl::FRONT_FACE |
             //gl::GENERATE_MIPMAP_HINT |
-            //gl::GREEN_BITS |
+            gl::GREEN_BITS |
             //gl::IMPLEMENTATION_COLOR_READ_FORMAT |
             //gl::IMPLEMENTATION_COLOR_READ_TYPE |
             gl::MAX_COMBINED_TEXTURE_IMAGE_UNITS |
@@ -715,7 +715,7 @@ impl WebGLCommand {
             gl::MAX_VERTEX_TEXTURE_IMAGE_UNITS |
             //gl::MAX_VERTEX_UNIFORM_VECTORS |
             gl::PACK_ALIGNMENT |
-            //gl::RED_BITS |
+            gl::RED_BITS |
             gl::SAMPLE_BUFFERS |
             gl::SAMPLES |
             gl::STENCIL_BACK_FAIL |
@@ -725,7 +725,7 @@ impl WebGLCommand {
             gl::STENCIL_BACK_REF |
             gl::STENCIL_BACK_VALUE_MASK |
             gl::STENCIL_BACK_WRITEMASK |
-            //gl::STENCIL_BITS |
+            gl::STENCIL_BITS |
             gl::STENCIL_CLEAR_VALUE |
             gl::STENCIL_FAIL |
             gl::STENCIL_FUNC |
