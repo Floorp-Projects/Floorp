@@ -163,9 +163,6 @@ to mochitest command.
     * test_selectors.html `:-moz-window-inactive` [2]
   * :dir
     * test_selectors.html `:dir` [11]
-* clamp negative value from calc() servo/servo#15296
-  * test_value_storage.html `font-size: calc(` [3]
-  * ... `font-size: var(--a)` [3]
 * Quirks mode support
   * hashless color servo/servo#15341
     * test_property_syntax_errors.html `color: 000000` [10]
