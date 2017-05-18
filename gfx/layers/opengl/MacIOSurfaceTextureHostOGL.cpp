@@ -35,7 +35,13 @@ MacIOSurfaceTextureHostOGL::CreateTextureSourceForPlane(size_t aPlane)
   gl->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
   gl->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
 
-  mSurface->CGLTexImageIOSurface2D(gl::GLContextCGL::Cast(gl)->GetCGLContext(), aPlane);
+  gfx::SurfaceFormat readFormat = gfx::SurfaceFormat::UNKNOWN;
+  mSurface->CGLTexImageIOSurface2D(gl,
+                                   gl::GLContextCGL::Cast(gl)->GetCGLContext(),
+                                   aPlane,
+                                   &readFormat);
+  // With compositorOGL, we doesn't support the yuv interleaving format yet.
+  MOZ_ASSERT(readFormat != gfx::SurfaceFormat::YUV422);
 
   return new GLTextureSource(mProvider, textureHandle, LOCAL_GL_TEXTURE_RECTANGLE_ARB,
                              gfx::IntSize(mSurface->GetDevicePixelWidth(aPlane),
