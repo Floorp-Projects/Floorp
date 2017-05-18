@@ -85,6 +85,18 @@ XPCOMUtils.defineLazyServiceGetter(this, "aomStartup",
                                    "@mozilla.org/addons/addon-manager-startup;1",
                                    "amIAddonManagerStartup");
 
+Object.defineProperty(this, "gCertDB", {
+  get() {
+    delete this.gCertDB;
+    XPCOMUtils.defineConstant(this, "gCertDB",
+                              Cc["@mozilla.org/security/x509certdb;1"].
+                              getService(Ci.nsIX509CertDB))
+    return this.gCertDB;
+  },
+  configurable: true,
+  enumerable: true
+});
+
 XPCOMUtils.defineLazyGetter(this, "CertUtils", function() {
   let certUtils = {};
   Components.utils.import("resource://gre/modules/CertUtils.jsm", certUtils);
@@ -251,6 +263,8 @@ const FILE_OLD_CACHE                  = "extensions.cache";
 const FILE_RDF_MANIFEST               = "install.rdf";
 const FILE_WEB_MANIFEST               = "manifest.json";
 const FILE_XPI_ADDONS_LIST            = "extensions.ini";
+
+const ADDON_ID_DEFAULT_THEME          = "{972ce4c6-7e08-4474-a285-3208198ce6fd}";
 
 const KEY_PROFILEDIR                  = "ProfD";
 const KEY_ADDON_APP_DIR               = "XREAddonAppDir";
@@ -1943,9 +1957,6 @@ function shouldVerifySignedState(aAddon) {
   // of the signed types.
   return ADDON_SIGNING && SIGNED_TYPES.has(aAddon.type);
 }
-
-let gCertDB = Cc["@mozilla.org/security/x509certdb;1"]
-              .getService(Ci.nsIX509CertDB);
 
 /**
  * Verifies that a zip file's contents are all correctly signed by an
@@ -3658,40 +3669,40 @@ this.XPIProvider = {
   /**
    * Verifies that all installed add-ons are still correctly signed.
    */
-  verifySignatures() {
-    XPIDatabase.getAddonList(a => true, (addons) => {
-      (async function() {
-        let changes = {
-          enabled: [],
-          disabled: []
-        };
+  async verifySignatures() {
+    try {
+      let addons = await XPIDatabase.getAddonList(a => true);
 
-        for (let addon of addons) {
-          // The add-on might have vanished, we'll catch that on the next startup
-          if (!addon._sourceBundle.exists())
-            continue;
+      let changes = {
+        enabled: [],
+        disabled: []
+      };
 
-          let signedState = await verifyBundleSignedState(addon._sourceBundle, addon);
+      for (let addon of addons) {
+        // The add-on might have vanished, we'll catch that on the next startup
+        if (!addon._sourceBundle.exists())
+          continue;
 
-          if (signedState != addon.signedState) {
-            addon.signedState = signedState;
-            AddonManagerPrivate.callAddonListeners("onPropertyChanged",
-                                                   addon.wrapper,
-                                                   ["signedState"]);
-          }
+        let signedState = await verifyBundleSignedState(addon._sourceBundle, addon);
 
-          let disabled = XPIProvider.updateAddonDisabledState(addon);
-          if (disabled !== undefined)
-            changes[disabled ? "disabled" : "enabled"].push(addon.id);
+        if (signedState != addon.signedState) {
+          addon.signedState = signedState;
+          AddonManagerPrivate.callAddonListeners("onPropertyChanged",
+                                                 addon.wrapper,
+                                                 ["signedState"]);
         }
 
-        XPIDatabase.saveChanges();
+        let disabled = XPIProvider.updateAddonDisabledState(addon);
+        if (disabled !== undefined)
+          changes[disabled ? "disabled" : "enabled"].push(addon.id);
+      }
 
-        Services.obs.notifyObservers(null, "xpi-signature-changed", JSON.stringify(changes));
-      })().then(null, err => {
-        logger.error("XPI_verifySignature: " + err);
-      })
-    });
+      XPIDatabase.saveChanges();
+
+      Services.obs.notifyObservers(null, "xpi-signature-changed", JSON.stringify(changes));
+    } catch (err) {
+      logger.error("XPI_verifySignature: " + err);
+    }
   },
 
   /**
@@ -4080,6 +4091,30 @@ this.XPIProvider = {
   },
 
   /**
+   * Returns the add-on state data for the restartful extensions which
+   * should be available in safe mode. In particular, this means the
+   * default theme, and only the default theme.
+   *
+   * @returns {object}
+   */
+  getSafeModeExtensions() {
+    let loc = XPIStates.getLocation(KEY_APP_GLOBAL);
+    let state = loc.get(ADDON_ID_DEFAULT_THEME);
+
+    // Use the default state data for the default theme, but always mark
+    // it enabled, in case another theme is enabled in normal mode.
+    let addonData = state.toJSON();
+    addonData.enabled = true;
+
+    return {
+      [KEY_APP_GLOBAL]: {
+        path: loc.path,
+        addons: { [ADDON_ID_DEFAULT_THEME]: addonData },
+      },
+    };
+  },
+
+  /**
    * Checks for any changes that have occurred since the last time the
    * application was launched.
    *
@@ -4196,6 +4231,12 @@ this.XPIProvider = {
         } catch (e) {
           logger.warn("Unable to remove old extension cache " + oldCache.path, e);
         }
+      }
+
+      if (Services.appinfo.inSafeMode) {
+        aomStartup.initializeExtensions(this.getSafeModeExtensions());
+        logger.debug("Initialized safe mode add-ons");
+        return false;
       }
 
       // If the application crashed before completing any pending operations then
@@ -4558,16 +4599,7 @@ this.XPIProvider = {
 
      for (let [id, val] of this.activeAddons) {
        if (aInstanceID == val.instanceID) {
-         if (val.safeWrapper) {
-           return Promise.resolve(val.safeWrapper);
-         }
-
-         return new Promise(resolve => {
-           this.getAddonByID(id, function(addon) {
-             val.safeWrapper = new PrivateWrapper(addon);
-             resolve(val.safeWrapper);
-           });
-         });
+         return new Promise(resolve => this.getAddonByID(id, resolve));
        }
      }
 
@@ -4834,7 +4866,7 @@ this.XPIProvider = {
 
     for (let [id, val] of this.activeAddons) {
       aConnection.setAddonOptions(
-        id, { global: val.debugGlobal || val.bootstrapScope });
+        id, { global: val.bootstrapScope });
     }
   },
 
@@ -5150,8 +5182,6 @@ this.XPIProvider = {
                                aMultiprocessCompatible, aRunInSafeMode,
                                aDependencies, hasEmbeddedWebExtension) {
     this.activeAddons.set(aId, {
-      debugGlobal: null,
-      safeWrapper: null,
       bootstrapScope: null,
       // a Symbol passed to this add-on, which it can use to identify itself
       instanceID: Symbol(aId),
@@ -8112,68 +8142,6 @@ AddonWrapper.prototype = {
     return getURIForResourceInFile(addon._sourceBundle, aPath);
   }
 };
-
-/**
- * The PrivateWrapper is used to expose certain functionality only when being
- * called with the add-on instanceID, disallowing other add-ons to access it.
- */
-function PrivateWrapper(aAddon) {
-  AddonWrapper.call(this, aAddon);
-}
-
-PrivateWrapper.prototype = Object.create(AddonWrapper.prototype);
-Object.assign(PrivateWrapper.prototype, {
-  addonId() {
-    return this.id;
-  },
-
-  /**
-   * Retrieves the preferred global context to be used from the
-   * add-on debugging window.
-   *
-   * @returns  global
-   *         The object set as global context. Must be a window object.
-   */
-  getDebugGlobal(global) {
-    let activeAddon = XPIProvider.activeAddons.get(this.id);
-    if (activeAddon) {
-      return activeAddon.debugGlobal;
-    }
-
-    return null;
-  },
-
-  /**
-   * Defines a global context to be used in the console
-   * of the add-on debugging window.
-   *
-   * @param  global
-   *         The object to set as global context. Must be a window object.
-   */
-  setDebugGlobal(global) {
-    if (!global) {
-      // If the new global is null, notify the listeners regardless
-      // from the current state of the addon.
-      // NOTE: this happen after the addon has been disabled and
-      // the global will never be set to null otherwise.
-      AddonManagerPrivate.callAddonListeners("onPropertyChanged",
-                                             addonFor(this),
-                                             ["debugGlobal"]);
-    } else {
-      let activeAddon = XPIProvider.activeAddons.get(this.id);
-      if (activeAddon) {
-        let globalChanged = activeAddon.debugGlobal != global;
-        activeAddon.debugGlobal = global;
-
-        if (globalChanged) {
-          AddonManagerPrivate.callAddonListeners("onPropertyChanged",
-                                                 addonFor(this),
-                                                 ["debugGlobal"]);
-        }
-      }
-    }
-  }
-});
 
 function chooseValue(aAddon, aObj, aProp) {
   let repositoryAddon = aAddon._repositoryAddon;

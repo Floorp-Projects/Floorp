@@ -13,6 +13,7 @@
       'sources': [
         'util_utf8_unittest.cc',
         'util_b64_unittest.cc',
+	'util_pkcs11uri_unittest.cc',
         '<(DEPTH)/gtests/common/gtests.cc',
       ],
       'dependencies': [

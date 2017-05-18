@@ -3,12 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-/* globals
-  waitForExplicitFinish, whenNewWindowLoaded, whenNewTabLoaded,
-  executeSoon, registerCleanupFunction, finish, is
-*/
-/* exported test */
-
 // This test makes sure that opening a new tab in private browsing mode opens about:privatebrowsing
 function test() {
   // initialization

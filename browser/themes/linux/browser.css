@@ -268,7 +268,7 @@ menuitem.bookmark-item {
 #main-window {
   --urlbar-border-color: ThreeDShadow;
   --urlbar-border-color-hover: var(--urlbar-border-color);
-  --urlbar-background-color: moz-field;
+  --urlbar-background-color: -moz-field;
 }
 
 #navigator-toolbox:-moz-lwtheme {

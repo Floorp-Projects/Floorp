@@ -756,8 +756,7 @@ XPCJSRuntime::GCSliceCallback(JSContext* cx,
         return;
 
 #ifdef MOZ_CRASHREPORTER
-    CrashReporter::SetGarbageCollecting(progress == JS::GC_CYCLE_BEGIN ||
-                                        progress == JS::GC_SLICE_BEGIN);
+    CrashReporter::SetGarbageCollecting(progress == JS::GC_CYCLE_BEGIN);
 #endif
 
     if (self->mPrevGCSliceCallback)

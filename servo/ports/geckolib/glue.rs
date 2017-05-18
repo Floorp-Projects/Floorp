@@ -567,7 +567,8 @@ pub extern "C" fn Servo_StyleSheet_FromUTF8Bytes(loader: *mut Loader,
                                                  mode: SheetParsingMode,
                                                  media_list: *const RawServoMediaList,
                                                  extra_data: *mut URLExtraData,
-                                                 line_number_offset: u32)
+                                                 line_number_offset: u32,
+                                                 quirks_mode: nsCompatibility)
                                                  -> RawServoStyleSheetStrong {
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let input = unsafe { data.as_ref().unwrap().as_str_unchecked() };
@@ -602,7 +603,7 @@ pub extern "C" fn Servo_StyleSheet_FromUTF8Bytes(loader: *mut Loader,
     Arc::new(Stylesheet::from_str(
         input, url_data.clone(), origin, media,
         shared_lock, loader, &RustLogReporter,
-        QuirksMode::NoQuirks, line_number_offset as u64)
+        quirks_mode.into(), line_number_offset as u64)
     ).into_strong()
 }
 
@@ -1068,7 +1069,6 @@ fn get_pseudo_style(guard: &SharedRwLockReadGuard,
             d.stylist.lazily_compute_pseudo_element_style(&guards,
                                                           &element,
                                                           &pseudo,
-                                                          ElementState::empty(),
                                                           base,
                                                           &metrics)
                      .map(|s| s.values().clone())
@@ -1123,6 +1123,12 @@ pub extern "C" fn Servo_StyleSet_RebuildData(raw_data: RawServoStyleSetBorrowed)
 }
 
 #[no_mangle]
+pub extern "C" fn Servo_StyleSet_Clear(raw_data: RawServoStyleSetBorrowed) {
+    let mut data = PerDocumentStyleData::from_ffi(raw_data).borrow_mut();
+    data.clear_stylist();
+}
+
+#[no_mangle]
 pub extern "C" fn Servo_StyleSet_Drop(data: RawServoStyleSetOwned) {
     let _ = data.into_box::<PerDocumentStyleData>();
 }
@@ -1130,9 +1136,9 @@ pub extern "C" fn Servo_StyleSet_Drop(data: RawServoStyleSetOwned) {
 fn parse_property(property_id: PropertyId,
                   value: *const nsACString,
                   data: *mut URLExtraData,
-                  parsing_mode: structs::ParsingMode) -> Result<ParsedDeclaration, ()> {
+                  parsing_mode: structs::ParsingMode,
+                  quirks_mode: QuirksMode) -> Result<ParsedDeclaration, ()> {
     use style::parser::ParsingMode;
-
     let value = unsafe { value.as_ref().unwrap().as_str_unchecked() };
     let url_data = unsafe { RefPtr::from_ptr_ref(&data) };
     let parsing_mode = ParsingMode::from_bits_truncate(parsing_mode);
@@ -1142,17 +1148,18 @@ fn parse_property(property_id: PropertyId,
                           url_data,
                           &RustLogReporter,
                           parsing_mode,
-                          QuirksMode::NoQuirks)
+                          quirks_mode)
 }
 
 #[no_mangle]
 pub extern "C" fn Servo_ParseProperty(property: nsCSSPropertyID, value: *const nsACString,
                                       data: *mut URLExtraData,
-                                      parsing_mode: structs::ParsingMode)
+                                      parsing_mode: structs::ParsingMode,
+                                      quirks_mode: nsCompatibility)
                                       -> RawServoDeclarationBlockStrong {
     let id = get_property_id_from_nscsspropertyid!(property,
                                                    RawServoDeclarationBlockStrong::null());
-    match parse_property(id, value, data, parsing_mode) {
+    match parse_property(id, value, data, parsing_mode, quirks_mode.into()) {
         Ok(parsed) => {
             let global_style_data = &*GLOBAL_STYLE_DATA;
             let mut block = PropertyDeclarationBlock::new();
@@ -1311,8 +1318,9 @@ pub extern "C" fn Servo_DeclarationBlock_GetPropertyIsImportant(declarations: Ra
 
 fn set_property(declarations: RawServoDeclarationBlockBorrowed, property_id: PropertyId,
                 value: *const nsACString, is_important: bool, data: *mut URLExtraData,
-                parsing_mode: structs::ParsingMode) -> bool {
-    match parse_property(property_id, value, data, parsing_mode) {
+                parsing_mode: structs::ParsingMode,
+                quirks_mode: QuirksMode) -> bool {
+    match parse_property(property_id, value, data, parsing_mode, quirks_mode) {
         Ok(parsed) => {
             let importance = if is_important { Importance::Important } else { Importance::Normal };
             write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
@@ -1327,18 +1335,20 @@ fn set_property(declarations: RawServoDeclarationBlockBorrowed, property_id: Pro
 pub extern "C" fn Servo_DeclarationBlock_SetProperty(declarations: RawServoDeclarationBlockBorrowed,
                                                      property: *const nsACString, value: *const nsACString,
                                                      is_important: bool, data: *mut URLExtraData,
-                                                     parsing_mode: structs::ParsingMode) -> bool {
+                                                     parsing_mode: structs::ParsingMode,
+                                                     quirks_mode: nsCompatibility) -> bool {
     set_property(declarations, get_property_id_from_property!(property, false),
-                 value, is_important, data, parsing_mode)
+                 value, is_important, data, parsing_mode, quirks_mode.into())
 }
 
 #[no_mangle]
 pub extern "C" fn Servo_DeclarationBlock_SetPropertyById(declarations: RawServoDeclarationBlockBorrowed,
                                                          property: nsCSSPropertyID, value: *const nsACString,
                                                          is_important: bool, data: *mut URLExtraData,
-                                                         parsing_mode: structs::ParsingMode) -> bool {
+                                                         parsing_mode: structs::ParsingMode,
+                                                         quirks_mode: nsCompatibility) -> bool {
     set_property(declarations, get_property_id_from_nscsspropertyid!(property, false),
-                 value, is_important, data, parsing_mode)
+                 value, is_important, data, parsing_mode, quirks_mode.into())
 }
 
 fn remove_property(declarations: RawServoDeclarationBlockBorrowed, property_id: PropertyId) {
@@ -1380,7 +1390,7 @@ pub extern "C" fn Servo_MediaList_Matches(list: RawServoMediaListBorrowed,
                                           -> bool {
     let per_doc_data = PerDocumentStyleData::from_ffi(raw_data).borrow();
     read_locked_arc(list, |list: &MediaList| {
-        list.evaluate(&per_doc_data.stylist.device, QuirksMode::NoQuirks)
+        list.evaluate(&per_doc_data.stylist.device, per_doc_data.stylist.quirks_mode())
     })
 }
 
@@ -1835,10 +1845,15 @@ pub extern "C" fn Servo_DeclarationBlock_SetTextDecorationColorOverride(declarat
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_CSSSupports2(property: *const nsACString, value: *const nsACString) -> bool {
+pub extern "C" fn Servo_CSSSupports2(property: *const nsACString,
+                                     value: *const nsACString) -> bool {
     let id = get_property_id_from_property!(property, false);
 
-    parse_property(id, value, unsafe { DUMMY_URL_DATA }, structs::ParsingMode_Default).is_ok()
+    parse_property(id,
+                   value,
+                   unsafe { DUMMY_URL_DATA },
+                   structs::ParsingMode_Default,
+                   QuirksMode::NoQuirks).is_ok()
 }
 
 #[no_mangle]
@@ -2144,7 +2159,7 @@ pub extern "C" fn Servo_AnimationValue_Compute(declarations: RawServoDeclaration
         font_metrics_provider: &metrics,
         cached_system_font: None,
         in_media_query: false,
-        quirks_mode: QuirksMode::NoQuirks,
+        quirks_mode: data.stylist.quirks_mode(),
     };
 
     let global_style_data = &*GLOBAL_STYLE_DATA;

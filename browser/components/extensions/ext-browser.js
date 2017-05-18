@@ -54,7 +54,6 @@ extensions.on("page-shutdown", (type, context) => {
   }
 });
 /* eslint-enable mozilla/balanced-listeners */
-/* eslint-enable mozilla/balanced-listeners */
 
 global.openOptionsPage = (extension) => {
   let window = windowTracker.topWindow;

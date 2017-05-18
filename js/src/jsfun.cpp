@@ -540,9 +540,12 @@ fun_resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolvedp)
             if (fun->hasResolvedName())
                 return true;
 
+            RootedAtom name(cx);
+            if (!JSFunction::getUnresolvedName(cx, fun, &name))
+                return false;
+
             // Don't define an own .name property for unnamed functions.
-            JSAtom* name = fun->getUnresolvedName(cx);
-            if (name == nullptr)
+            if (!name)
                 return true;
 
             v.setString(name);
@@ -1044,7 +1047,7 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool prettyPrint)
         return nullptr;
     }
 
-    auto AppendPrelude = [&out, &fun]() {
+    auto AppendPrelude = [cx, &out, &fun]() {
         if (fun->isAsync()) {
             if (!out.append("async "))
                 return false;
@@ -1063,6 +1066,10 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool prettyPrint)
         if (fun->explicitName()) {
             if (!out.append(' '))
                 return false;
+            if (fun->isBoundFunction()) {
+                if (!out.append(cx->names().boundWithSpace))
+                    return false;
+            }
             if (!out.append(fun->explicitName()))
                 return false;
         }
@@ -1365,23 +1372,42 @@ JSFunction::getUnresolvedLength(JSContext* cx, HandleFunction fun, MutableHandle
     return true;
 }
 
-JSAtom*
-JSFunction::getUnresolvedName(JSContext* cx)
+/* static */ bool
+JSFunction::getUnresolvedName(JSContext* cx, HandleFunction fun, MutableHandleAtom v)
 {
-    MOZ_ASSERT(!IsInternalFunctionObject(*this));
-    MOZ_ASSERT(!hasResolvedName());
+    MOZ_ASSERT(!IsInternalFunctionObject(*fun));
+    MOZ_ASSERT(!fun->hasResolvedName());
 
-    if (isClassConstructor()) {
+    JSAtom* name = fun->explicitOrCompileTimeName();
+    if (fun->isClassConstructor()) {
         // It's impossible to have an empty named class expression. We use
         // empty as a sentinel when creating default class constructors.
-        MOZ_ASSERT(explicitOrCompileTimeName() != cx->names().empty);
+        MOZ_ASSERT(name != cx->names().empty);
 
         // Unnamed class expressions should not get a .name property at all.
-        return explicitOrCompileTimeName();
+        if (name)
+            v.set(name);
+        return true;
     }
 
-    return explicitOrCompileTimeName() != nullptr ? explicitOrCompileTimeName()
-                                                  : cx->names().empty;
+    if (fun->isBoundFunction()) {
+        // Bound functions are never unnamed.
+        MOZ_ASSERT(name);
+
+        StringBuffer sb(cx);
+        if (!sb.append(cx->names().boundWithSpace) || !sb.append(name))
+            return false;
+
+        JSAtom* boundName = sb.finishAtom();
+        if (!boundName)
+            return false;
+
+        v.set(boundName);
+        return true;
+    }
+
+    v.set(name != nullptr ? name : cx->names().empty);
+    return true;
 }
 
 static const js::Value&

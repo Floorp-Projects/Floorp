@@ -37,9 +37,10 @@ DoAddCacheEntryHeaders(nsHttpChannel *self,
 NS_IMPL_ISUPPORTS(InterceptedChannelBase, nsIInterceptedChannel)
 
 InterceptedChannelBase::InterceptedChannelBase(nsINetworkInterceptController* aController)
-: mController(aController)
-, mReportCollector(new ConsoleReportCollector())
-, mClosed(false)
+  : mController(aController)
+  , mReportCollector(new ConsoleReportCollector())
+  , mClosed(false)
+  , mSynthesizedOrReset(Invalid)
 {
 }
 
@@ -133,7 +134,7 @@ InterceptedChannelBase::SetReleaseHandle(nsISupports* aHandle)
 }
 
 NS_IMETHODIMP
-InterceptedChannelBase::SaveTimeStampsToUnderlyingChannel()
+InterceptedChannelBase::SaveTimeStamps()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -162,6 +163,37 @@ InterceptedChannelBase::SaveTimeStampsToUnderlyingChannel()
 
   rv = timedChannel->SetHandleFetchEventEnd(mHandleFetchEventEnd);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+  nsCOMPtr<nsIChannel> channel;
+  GetChannel(getter_AddRefs(channel));
+  if (NS_WARN_IF(!channel)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCString navigationOrSubresource = nsContentUtils::IsNonSubresourceRequest(channel) ?
+    NS_LITERAL_CSTRING("navigation") : NS_LITERAL_CSTRING("subresource");
+
+  // We may have null timestamps if the fetch dispatch runnable was cancelled
+  // and we defaulted to resuming the request.
+  if (!mFinishResponseStart.IsNull() && !mFinishResponseEnd.IsNull()) {
+    MOZ_ASSERT(mSynthesizedOrReset != Invalid);
+
+    Telemetry::HistogramID id = (mSynthesizedOrReset == Synthesized) ?
+      Telemetry::SERVICE_WORKER_FETCH_EVENT_FINISH_SYNTHESIZED_RESPONSE_MS :
+      Telemetry::SERVICE_WORKER_FETCH_EVENT_CHANNEL_RESET_MS;
+    Telemetry::Accumulate(id, navigationOrSubresource,
+      static_cast<uint32_t>((mFinishResponseEnd - mFinishResponseStart).ToMilliseconds()));
+  }
+
+  Telemetry::Accumulate(Telemetry::SERVICE_WORKER_FETCH_EVENT_DISPATCH_MS,
+    navigationOrSubresource,
+    static_cast<uint32_t>((mHandleFetchEventStart - mDispatchFetchEventStart).ToMilliseconds()));
+
+  if (!mFinishResponseEnd.IsNull()) {
+    Telemetry::Accumulate(Telemetry::SERVICE_WORKER_FETCH_INTERCEPTION_DURATION_MS,
+      navigationOrSubresource,
+      static_cast<uint32_t>((mFinishResponseEnd - mDispatchFetchEventStart).ToMilliseconds()));
+  }
 
   return rv;
 }

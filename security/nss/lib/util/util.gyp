@@ -21,6 +21,7 @@
         'nssrwlk.c',
         'oidstring.c',
         'pkcs1sig.c',
+        'pkcs11uri.c',
         'portreg.c',
         'quickder.c',
         'secalgid.c',

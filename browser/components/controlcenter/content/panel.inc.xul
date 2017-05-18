@@ -32,6 +32,7 @@
                        when-connection="secure secure-ev">&identity.connectionSecure;</description>
           <description when-connection="chrome">&identity.connectionInternal;</description>
           <description when-connection="file">&identity.connectionFile;</description>
+          <description when-connection="extension">&identity.extensionPage;</description>
 
           <vbox id="identity-popup-security-descriptions">
             <description class="identity-popup-warning-gray"

@@ -827,6 +827,10 @@ TextTrackManager::NotifyCueUpdated(TextTrackCue *aCue)
   // TODO: Add/Reorder the cue to mNewCues if we have some optimization?
   WEBVTT_LOG("NotifyCueUpdated");
   DispatchTimeMarchesOn();
+  // For the case "Texttrack.mode = hidden/showing", if the mode
+  // changing between showing and hidden, TimeMarchesOn
+  // doesn't render the cue. Call DispatchUpdateCueDisplay() explicitly.
+  DispatchUpdateCueDisplay();
 }
 
 void

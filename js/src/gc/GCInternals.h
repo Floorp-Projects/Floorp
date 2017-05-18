@@ -85,15 +85,15 @@ class MOZ_RAII AutoStopVerifyingBarriers
         // inside of an outer minor GC. This is not allowed by the
         // gc::Statistics phase tree. So we pause the "real" GC, if in fact one
         // is in progress.
-        gcstats::Phase outer = gc->stats().currentPhase();
-        if (outer != gcstats::PHASE_NONE)
+        gcstats::PhaseKind outer = gc->stats().currentPhaseKind();
+        if (outer != gcstats::PhaseKind::NONE)
             gc->stats().endPhase(outer);
-        MOZ_ASSERT(gc->stats().currentPhase() == gcstats::PHASE_NONE);
+        MOZ_ASSERT(gc->stats().currentPhaseKind() == gcstats::PhaseKind::NONE);
 
         if (restartPreVerifier)
             gc->startVerifyPreBarriers();
 
-        if (outer != gcstats::PHASE_NONE)
+        if (outer != gcstats::PhaseKind::NONE)
             gc->stats().beginPhase(outer);
     }
 };

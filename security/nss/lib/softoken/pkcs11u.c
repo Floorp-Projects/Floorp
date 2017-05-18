@@ -1649,10 +1649,8 @@ sftk_searchObjectList(SFTKSearchResults *search, SFTKObject **head,
     SFTKObject *object;
     CK_RV crv = CKR_OK;
 
+    PZ_Lock(lock);
     for (i = 0; i < size; i++) {
-        /* We need to hold the lock to copy a consistant version of
-         * the linked list. */
-        PZ_Lock(lock);
         for (object = head[i]; object != NULL; object = object->next) {
             if (sftk_objectMatch(object, theTemplate, count)) {
                 /* don't return objects that aren't yet visible */
@@ -1661,8 +1659,8 @@ sftk_searchObjectList(SFTKSearchResults *search, SFTKObject **head,
                 sftk_addHandle(search, object->handle);
             }
         }
-        PZ_Unlock(lock);
     }
+    PZ_Unlock(lock);
     return crv;
 }
 

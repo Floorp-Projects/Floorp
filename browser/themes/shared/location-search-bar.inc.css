@@ -12,11 +12,20 @@
   box-shadow: 0 1px 4px hsla(0, 0%, 0%, .05);
   padding: 0;
   margin: 0 2px;
+  min-height: 30px;
 }
 
-#urlbar:-moz-lwtheme:not(:hover):not([focused="true"]),
-.searchbar-textbox:-moz-lwtheme:not(:hover):not([focused="true"]) {
-  background-color: hsla(0, 100%, 100%, .8);
+#urlbar:-moz-lwtheme,
+.searchbar-textbox:-moz-lwtheme {
+  background-color: hsla(0,0%,100%,.8);
+  color: black;
+}
+
+#urlbar:-moz-lwtheme:hover,
+#urlbar:-moz-lwtheme[focused="true"],
+.searchbar-textbox:-moz-lwtheme:hover,
+.searchbar-textbox:-moz-lwtheme[focused="true"] {
+  background-color: white;
 }
 
 #urlbar:hover,

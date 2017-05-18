@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
-/* globals XPCOMUtils, Preferences, Services */
 "use strict";
 
 const {utils: Cu, interfaces: Ci} = Components;

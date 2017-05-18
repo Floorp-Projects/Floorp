@@ -523,7 +523,7 @@ class SelectedVersionReplacer : public TlsHandshakeFilter {
 // lower version number on resumption.
 TEST_P(TlsConnectGenericPre13, TestResumptionOverrideVersion) {
   uint16_t override_version = 0;
-  if (mode_ == STREAM) {
+  if (variant_ == ssl_variant_stream) {
     switch (version_) {
       case SSL_LIBRARY_VERSION_TLS_1_0:
         return;  // Skip the test.

@@ -102,6 +102,8 @@ CERT_FormatName(CERTName *name)
                         goto loser;
                     }
                     len += cn->len;
+                    // cn will always have BREAK after it
+                    len += BREAKLEN;
                     break;
                 case SEC_OID_AVA_COUNTRY_NAME:
                     if (country) {
@@ -112,6 +114,10 @@ CERT_FormatName(CERTName *name)
                         goto loser;
                     }
                     len += country->len;
+                    // country may have COMMA after it (if we over-count len,
+                    // that's fine - we'll just allocate a buffer larger than we
+                    // need)
+                    len += COMMALEN;
                     break;
                 case SEC_OID_AVA_LOCALITY:
                     if (loc) {
@@ -122,6 +128,8 @@ CERT_FormatName(CERTName *name)
                         goto loser;
                     }
                     len += loc->len;
+                    // loc may have COMMA after it
+                    len += COMMALEN;
                     break;
                 case SEC_OID_AVA_STATE_OR_PROVINCE:
                     if (state) {
@@ -132,6 +140,9 @@ CERT_FormatName(CERTName *name)
                         goto loser;
                     }
                     len += state->len;
+                    // state currently won't have COMMA after it, but this is a
+                    // (probably vain) attempt to future-proof this code
+                    len += COMMALEN;
                     break;
                 case SEC_OID_AVA_ORGANIZATION_NAME:
                     if (org) {
@@ -142,6 +153,8 @@ CERT_FormatName(CERTName *name)
                         goto loser;
                     }
                     len += org->len;
+                    // org will have BREAK after it
+                    len += BREAKLEN;
                     break;
                 case SEC_OID_AVA_DN_QUALIFIER:
                     if (dq) {
@@ -152,6 +165,8 @@ CERT_FormatName(CERTName *name)
                         goto loser;
                     }
                     len += dq->len;
+                    // dq will have BREAK after it
+                    len += BREAKLEN;
                     break;
                 case SEC_OID_AVA_ORGANIZATIONAL_UNIT_NAME:
                     if (ou_count < MAX_OUS) {
@@ -160,6 +175,8 @@ CERT_FormatName(CERTName *name)
                             goto loser;
                         }
                         len += orgunit[ou_count++]->len;
+                        // each ou will have BREAK after it
+                        len += BREAKLEN;
                     }
                     break;
                 case SEC_OID_AVA_DC:
@@ -169,6 +186,8 @@ CERT_FormatName(CERTName *name)
                             goto loser;
                         }
                         len += dc[dc_count++]->len;
+                        // each dc will have BREAK after it
+                        len += BREAKLEN;
                     }
                     break;
                 case SEC_OID_PKCS9_EMAIL_ADDRESS:
@@ -181,6 +200,8 @@ CERT_FormatName(CERTName *name)
                         goto loser;
                     }
                     len += email->len;
+                    // email will have BREAK after it
+                    len += BREAKLEN;
                     break;
                 default:
                     break;
@@ -188,8 +209,8 @@ CERT_FormatName(CERTName *name)
         }
     }
 
-    /* XXX - add some for formatting */
-    len += 128;
+    // there may be a final BREAK
+    len += BREAKLEN;
 
     /* allocate buffer */
     buf = (char *)PORT_Alloc(len);

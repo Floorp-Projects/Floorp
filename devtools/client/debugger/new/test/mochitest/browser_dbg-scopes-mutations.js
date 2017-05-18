@@ -83,38 +83,13 @@ add_task(async function() {
   await onPaused;
 
   is(
-    getScopeNodeLabel(dbg, 6),
-    "lastName",
-    'The sixth element in the scope panel is still "lastName"'
+    getScopeNodeLabel(dbg, 2),
+    "<this>",
+    'The second element in the scope panel is "<this>"'
   );
   is(
-    getScopeNodeValue(dbg, 6),
-    '"Doe"',
-    'The "lastName" property is still "Doe", but it should be "Pierce"' +
-      "since it was changed in the script."
+    getScopeNodeLabel(dbg, 3),
+    "phonebook",
+    'The third element in the scope panel is "phonebook"'
   );
-
-  onPaused = waitForPaused(dbg);
-  await resume(dbg);
-  await onPaused;
-  is(
-    getScopeNodeLabel(dbg, 6),
-    "lastName",
-    'The sixth element in the scope panel is still "lastName"'
-  );
-  is(
-    getScopeNodeLabel(dbg, 7),
-    "__proto__",
-    'The seventh element in the scope panel is still "__proto__", ' +
-      'but it should be now "timezone", since it was added to the "sarah" object ' +
-      "in the script"
-  );
-  is(
-    getScopeNodeValue(dbg, 7),
-    "Object",
-    'The seventh element in the scope panel has the value "Object", ' +
-      'but it should be "PST"'
-  );
-
-  await resume(dbg);
 });

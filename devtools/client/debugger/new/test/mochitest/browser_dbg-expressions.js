@@ -47,7 +47,7 @@ add_task(function*() {
 
   yield addExpression(dbg, "f");
   is(getLabel(dbg, 1), "f");
-  is(getValue(dbg, 1), "ReferenceError");
+  is(getValue(dbg, 1), "(unavailable)");
 
   yield editExpression(dbg, "oo");
   is(getLabel(dbg, 1), "foo()");

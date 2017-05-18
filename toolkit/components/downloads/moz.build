@@ -37,18 +37,6 @@ UNIFIED_SOURCES += [
     'nsDownloadManager.cpp'
 ]
 
-# SQLFunctions.cpp cannot be built in unified mode because of Windows headers.
-SOURCES += [
-    'SQLFunctions.cpp',
-]
-
-if CONFIG['OS_ARCH'] == 'WINNT':
-    # Can't build unified because we need CreateEvent which some IPC code
-    # included in LoadContext ends up undefining.
-    SOURCES += [
-        'nsDownloadScanner.cpp',
-    ]
-
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [

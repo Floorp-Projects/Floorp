@@ -18,12 +18,17 @@ const RequestListColumnCause = createFactory(require("./request-list-column-caus
 const RequestListColumnContentSize = createFactory(require("./request-list-column-content-size"));
 const RequestListColumnCookies = createFactory(require("./request-list-column-cookies"));
 const RequestListColumnDomain = createFactory(require("./request-list-column-domain"));
+const RequestListColumnDuration = createFactory(require("./request-list-column-duration"));
+const RequestListColumnEndTime = createFactory(require("./request-list-column-end-time"));
 const RequestListColumnFile = createFactory(require("./request-list-column-file"));
+const RequestListColumnLatency = createFactory(require("./request-list-column-latency"));
 const RequestListColumnMethod = createFactory(require("./request-list-column-method"));
 const RequestListColumnProtocol = createFactory(require("./request-list-column-protocol"));
 const RequestListColumnRemoteIP = createFactory(require("./request-list-column-remote-ip"));
+const RequestListColumnResponseTime = createFactory(require("./request-list-column-response-time"));
 const RequestListColumnScheme = createFactory(require("./request-list-column-scheme"));
 const RequestListColumnSetCookies = createFactory(require("./request-list-column-set-cookies"));
+const RequestListColumnStartTime = createFactory(require("./request-list-column-start-time"));
 const RequestListColumnStatus = createFactory(require("./request-list-column-status"));
 const RequestListColumnTransferredSize = createFactory(require("./request-list-column-transferred-size"));
 const RequestListColumnType = createFactory(require("./request-list-column-type"));
@@ -148,6 +153,14 @@ const RequestListItem = createClass({
         columns.get("setCookies") && RequestListColumnSetCookies({ item }),
         columns.get("transferred") && RequestListColumnTransferredSize({ item }),
         columns.get("contentSize") && RequestListColumnContentSize({ item }),
+        columns.get("startTime") &&
+          RequestListColumnStartTime({ item, firstRequestStartedMillis }),
+        columns.get("endTime") &&
+          RequestListColumnEndTime({ item, firstRequestStartedMillis }),
+        columns.get("responseTime") &&
+          RequestListColumnResponseTime({ item, firstRequestStartedMillis }),
+        columns.get("duration") && RequestListColumnDuration({ item }),
+        columns.get("latency") && RequestListColumnLatency({ item }),
         columns.get("waterfall") &&
           RequestListColumnWaterfall({ item, firstRequestStartedMillis }),
       )

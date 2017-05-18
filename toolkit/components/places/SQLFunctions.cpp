@@ -25,8 +25,6 @@
 
 using namespace mozilla::storage;
 
-// Keep the GUID-related parts of this file in sync with toolkit/downloads/SQLFunctions.cpp!
-
 ////////////////////////////////////////////////////////////////////////////////
 //// Anonymous Helpers
 

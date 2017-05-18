@@ -115,46 +115,30 @@ function makeSafe(aCallback) {
 }
 
 /**
- * A helper method to asynchronously call a function on an array
- * of objects, calling a callback when function(x) has been gathered
- * for every element of the array.
- * WARNING: not currently error-safe; if the async function does not call
- * our internal callback for any of the array elements, asyncMap will not
- * call the callback parameter.
+ * A helper method to asynchronously call a function on an array of objects.
+ * Returns a promise that resolves with the results for each function call in
+ * the same order as the aObjects array.
+ * WARNING: not currently error-safe; if the async function does not call its
+ * callback for any of the array elements, asyncMap will never resolve.
  *
  * @param  aObjects
  *         The array of objects to process asynchronously
  * @param  aMethod
  *         Function with signature function(object, function(f_of_object))
- * @param  aCallback
- *         Function with signature f([aMethod(object)]), called when all values
- *         are available
  */
-function asyncMap(aObjects, aMethod, aCallback) {
-  var resultsPending = aObjects.length;
-  var results = []
-  if (resultsPending == 0) {
-    aCallback(results);
-    return;
-  }
-
-  function asyncMap_gotValue(aIndex, aValue) {
-    results[aIndex] = aValue;
-    if (--resultsPending == 0) {
-      aCallback(results);
-    }
-  }
-
-  aObjects.map(function(aObject, aIndex, aArray) {
-    try {
-      aMethod(aObject, function(aResult) {
-        asyncMap_gotValue(aIndex, aResult);
-      });
-    } catch (e) {
-      logger.warn("Async map function failed", e);
-      asyncMap_gotValue(aIndex, undefined);
-    }
+function asyncMap(aObjects, aMethod) {
+  let methodCalls = aObjects.map(obj => {
+    return new Promise(resolve => {
+      try {
+        aMethod(obj, resolve);
+      } catch (e) {
+        logger.error("Async map function failed", e);
+        resolve(undefined);
+      }
+    });
   });
+
+  return Promise.all(methodCalls);
 }
 
 /**
@@ -717,20 +701,27 @@ this.XPIDatabase = {
    *         Function that takes an addon instance and returns
    *         true if that addon should be included in the selected array
    * @param  aCallback
-   *         Called back with an array of addons matching aFilter
-   *         or an empty array if none match
+   *         Optional and will be called with an array of addons matching
+   *         aFilter or an empty array if none match.
+   * @return a Promise that resolves to the list of add-ons matching aFilter or
+   *         an empty array if none match
    */
-  getAddonList(aFilter, aCallback) {
-    this.asyncLoadDB().then(
-      addonDB => {
-        let addonList = _filterDB(addonDB, aFilter);
-        asyncMap(addonList, getRepositoryAddon, makeSafe(aCallback));
-      })
-    .then(null,
-        error => {
-          logger.error("getAddonList failed", error);
-          makeSafe(aCallback)([]);
-        });
+  async getAddonList(aFilter, aCallback) {
+    try {
+      let addonDB = await this.asyncLoadDB();
+      let addonList = _filterDB(addonDB, aFilter);
+      let addons = await asyncMap(addonList, getRepositoryAddon);
+      if (aCallback) {
+        makeSafe(aCallback)(addons);
+      }
+      return addons;
+    } catch (error) {
+      logger.error("getAddonList failed", error);
+      if (aCallback) {
+        makeSafe(aCallback)([]);
+      }
+      return [];
+    }
   },
 
   /**

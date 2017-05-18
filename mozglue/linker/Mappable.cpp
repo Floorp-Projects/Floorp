@@ -13,6 +13,7 @@
 
 #include "Mappable.h"
 
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/SizePrintfMacros.h"
 #include "mozilla/UniquePtr.h"
 
@@ -212,7 +213,8 @@ MappableExtractFile::Create(const char *name, Zip *zip, Zip::Stream *stream)
       ERROR("Couldn't initialize XZ decoder");
       return nullptr;
     }
-    DEBUG_LOG("XZStream created, compressed=%u, uncompressed=%u",
+    DEBUG_LOG("XZStream created, compressed=%" PRIuPTR
+              ", uncompressed=%" PRIuPTR,
               xzStream.Size(), xzStream.UncompressedSize());
 
     if (ftruncate(fd, xzStream.UncompressedSize()) == -1) {
@@ -226,7 +228,7 @@ MappableExtractFile::Create(const char *name, Zip *zip, Zip::Stream *stream)
       return nullptr;
     }
     const size_t written = xzStream.Decode(buffer, buffer.GetLength());
-    DEBUG_LOG("XZStream decoded %u", written);
+    DEBUG_LOG("XZStream decoded %" PRIuPTR, written);
     if (written != buffer.GetLength()) {
       ERROR("Error decoding XZ file %s", file.get());
       return nullptr;
@@ -294,16 +296,19 @@ public:
      * depending on how mappings grow in the address space.
      */
 #if defined(__arm__)
+    // Address increases on ARM.
     void *buf = ::mmap(nullptr, length + PAGE_SIZE, PROT_READ | PROT_WRITE,
                        MAP_SHARED, fd, 0);
     if (buf != MAP_FAILED) {
       ::mmap(AlignedEndPtr(reinterpret_cast<char *>(buf) + length, PAGE_SIZE),
              PAGE_SIZE, PROT_NONE, MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-      DEBUG_LOG("Decompression buffer of size 0x%x in ashmem \"%s\", mapped @%p",
+      DEBUG_LOG("Decompression buffer of size 0x%" PRIxPTR
+                " in ashmem \"%s\", mapped @%p",
                 length, str, buf);
       return new _MappableBuffer(fd.forget(), buf, length);
     }
-#elif defined(__i386__)
+#elif defined(__i386__) || defined(__aarch64__)
+    // Address decreases on x86 and AArch64.
     size_t anon_mapping_length = length + PAGE_SIZE;
     void *buf = ::mmap(nullptr, anon_mapping_length, PROT_NONE,
                        MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
@@ -319,8 +324,8 @@ public:
         return nullptr;
       }
 
-      DEBUG_LOG("Decompression buffer of size 0x%x in ashmem \"%s\", mapped @%p",
-                length, str, actual_buf);
+      DEBUG_LOG("Decompression buffer of size 0x%" PRIxPTR
+                " in ashmem \"%s\", mapped @%p", length, str, actual_buf);
       return new _MappableBuffer(fd.forget(), actual_buf, length);
     }
 #else
@@ -368,7 +373,7 @@ public:
     /* Free the additional page we allocated. See _MappableBuffer::Create */
 #if defined(__arm__)
     ::munmap(AlignedEndPtr(*this + GetLength(), PAGE_SIZE), PAGE_SIZE);
-#elif defined(__i386__)
+#elif defined(__i386__) || defined(__aarch64__)
     ::munmap(*this - PAGE_SIZE, GetLength() + PAGE_SIZE);
 #else
 #error need to add a case for your CPU

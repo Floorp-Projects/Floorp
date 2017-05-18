@@ -973,14 +973,14 @@ class GCRuntime
     void bufferGrayRoots();
     void maybeDoCycleCollection();
     void markCompartments();
-    IncrementalProgress drainMarkStack(SliceBudget& sliceBudget, gcstats::Phase phase);
-    template <class CompartmentIterT> void markWeakReferences(gcstats::Phase phase);
-    void markWeakReferencesInCurrentGroup(gcstats::Phase phase);
-    template <class ZoneIterT, class CompartmentIterT> void markGrayReferences(gcstats::Phase phase);
+    IncrementalProgress drainMarkStack(SliceBudget& sliceBudget, gcstats::PhaseKind phase);
+    template <class CompartmentIterT> void markWeakReferences(gcstats::PhaseKind phase);
+    void markWeakReferencesInCurrentGroup(gcstats::PhaseKind phase);
+    template <class ZoneIterT, class CompartmentIterT> void markGrayReferences(gcstats::PhaseKind phase);
     void markBufferedGrayRoots(JS::Zone* zone);
-    void markGrayReferencesInCurrentGroup(gcstats::Phase phase);
-    void markAllWeakReferences(gcstats::Phase phase);
-    void markAllGrayReferences(gcstats::Phase phase);
+    void markGrayReferencesInCurrentGroup(gcstats::PhaseKind phase);
+    void markAllWeakReferences(gcstats::PhaseKind phase);
+    void markAllGrayReferences(gcstats::PhaseKind phase);
 
     void beginSweepPhase(JS::gcreason::Reason reason, AutoLockForExclusiveAccess& lock);
     void groupZonesForSweeping(JS::gcreason::Reason reason, AutoLockForExclusiveAccess& lock);
@@ -1228,8 +1228,8 @@ class GCRuntime
     /*
      * Concurrent sweep infrastructure.
      */
-    void startTask(GCParallelTask& task, gcstats::Phase phase, AutoLockHelperThreadState& locked);
-    void joinTask(GCParallelTask& task, gcstats::Phase phase, AutoLockHelperThreadState& locked);
+    void startTask(GCParallelTask& task, gcstats::PhaseKind phase, AutoLockHelperThreadState& locked);
+    void joinTask(GCParallelTask& task, gcstats::PhaseKind phase, AutoLockHelperThreadState& locked);
     friend class AutoRunParallelTask;
 
     /*
@@ -1366,9 +1366,9 @@ class GCRuntime
     }
 
     void minorGC(JS::gcreason::Reason reason,
-                 gcstats::Phase phase = gcstats::PHASE_MINOR_GC) JS_HAZ_GC_CALL;
+                 gcstats::PhaseKind phase = gcstats::PhaseKind::MINOR_GC) JS_HAZ_GC_CALL;
     void evictNursery(JS::gcreason::Reason reason = JS::gcreason::EVICT_NURSERY) {
-        minorGC(reason, gcstats::PHASE_EVICT_NURSERY);
+        minorGC(reason, gcstats::PhaseKind::EVICT_NURSERY);
     }
     void freeAllLifoBlocksAfterMinorGC(LifoAlloc* lifo);
 

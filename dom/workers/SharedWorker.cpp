@@ -12,6 +12,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/SharedWorkerBinding.h"
+#include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/Telemetry.h"
 #include "nsContentUtils.h"
 #include "nsIClassInfoImpl.h"
@@ -49,7 +50,7 @@ SharedWorker::~SharedWorker()
 already_AddRefed<SharedWorker>
 SharedWorker::Constructor(const GlobalObject& aGlobal,
                           const nsAString& aScriptURL,
-                          const mozilla::dom::Optional<nsAString>& aName,
+                          const StringOrWorkerOptions& aOptions,
                           ErrorResult& aRv)
 {
   AssertIsOnMainThread();
@@ -60,9 +61,12 @@ SharedWorker::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  nsCString name;
-  if (aName.WasPassed()) {
-    name = NS_ConvertUTF16toUTF8(aName.Value());
+  nsAutoString name;
+  if (aOptions.IsString()) {
+    name = aOptions.GetAsString();
+  } else {
+    MOZ_ASSERT(aOptions.IsWorkerOptions());
+    name = aOptions.GetAsWorkerOptions().mName;
   }
 
   RefPtr<SharedWorker> sharedWorker;

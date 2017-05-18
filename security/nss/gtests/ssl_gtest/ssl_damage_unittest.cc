@@ -82,7 +82,7 @@ TEST_P(TlsConnectTls13, DamageServerSignature) {
   filter->EnableDecryption();
   client_->ExpectSendAlert(kTlsAlertDecryptError);
   // The server can't read the client's alert, so it also sends an alert.
-  if (mode_ == STREAM) {
+  if (variant_ == ssl_variant_stream) {
     server_->ExpectSendAlert(kTlsAlertBadRecordMac);
     ConnectExpectFail();
     server_->CheckErrorCode(SSL_ERROR_BAD_MAC_READ);

@@ -6,6 +6,9 @@
 
 const {
   getAbbreviatedMimeType,
+  getEndTime,
+  getResponseTime,
+  getStartTime,
   ipToLong,
 } = require("./request-utils");
 
@@ -58,6 +61,34 @@ function protocol(first, second) {
 
 function scheme(first, second) {
   const result = compareValues(first.urlDetails.scheme, second.urlDetails.scheme);
+  return result || waterfall(first, second);
+}
+
+function startTime(first, second) {
+  const result = compareValues(getStartTime(first), getStartTime(second));
+  return result || waterfall(first, second);
+}
+
+function endTime(first, second) {
+  const result = compareValues(getEndTime(first), getEndTime(second));
+  return result || waterfall(first, second);
+}
+
+function responseTime(first, second) {
+  const result = compareValues(getResponseTime(first), getResponseTime(second));
+  return result || waterfall(first, second);
+}
+
+function duration(first, second) {
+  const result = compareValues(first.totalTime, second.totalTime);
+  return result || waterfall(first, second);
+}
+
+function latency(first, second) {
+  let { eventTimings: firstEventTimings = { timings: {} } } = first;
+  let { eventTimings: secondEventTimings = { timings: {} } } = second;
+  const result = compareValues(firstEventTimings.timings.wait,
+   secondEventTimings.timings.wait);
   return result || waterfall(first, second);
 }
 
@@ -133,5 +164,10 @@ exports.Sorters = {
   type,
   transferred,
   contentSize,
+  startTime,
+  endTime,
+  responseTime,
+  duration,
+  latency,
   waterfall,
 };

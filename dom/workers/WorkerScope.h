@@ -207,14 +207,22 @@ public:
 
 class DedicatedWorkerGlobalScope final : public WorkerGlobalScope
 {
+  const nsString mName;
+
   ~DedicatedWorkerGlobalScope() { }
 
 public:
-  explicit DedicatedWorkerGlobalScope(WorkerPrivate* aWorkerPrivate);
+  DedicatedWorkerGlobalScope(WorkerPrivate* aWorkerPrivate,
+                             const nsString& aName);
 
   virtual bool
   WrapGlobalObject(JSContext* aCx,
                    JS::MutableHandle<JSObject*> aReflector) override;
+
+  void GetName(DOMString& aName) const
+  {
+    aName.AsAString() = mName;
+  }
 
   void
   PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
@@ -229,13 +237,13 @@ public:
 
 class SharedWorkerGlobalScope final : public WorkerGlobalScope
 {
-  const nsCString mName;
+  const nsString mName;
 
   ~SharedWorkerGlobalScope() { }
 
 public:
   SharedWorkerGlobalScope(WorkerPrivate* aWorkerPrivate,
-                          const nsCString& aName);
+                          const nsString& aName);
 
   virtual bool
   WrapGlobalObject(JSContext* aCx,
@@ -243,7 +251,7 @@ public:
 
   void GetName(DOMString& aName) const
   {
-    aName.AsAString() = NS_ConvertUTF8toUTF16(mName);
+    aName.AsAString() = mName;
   }
 
   void

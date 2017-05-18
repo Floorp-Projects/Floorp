@@ -108,7 +108,7 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase>
 };
 
 template <typename T>
-static T extractUnbarriered(WriteBarrieredBase<T> v)
+static T extractUnbarriered(const WriteBarrieredBase<T>& v)
 {
     return v.get();
 }

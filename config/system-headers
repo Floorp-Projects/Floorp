@@ -989,6 +989,7 @@ sym.h
 synch.h
 syncmgr.h
 sys/atomic_op.h
+sys/auxv.h
 sys/bitypes.h
 sys/byteorder.h
 syscall.h

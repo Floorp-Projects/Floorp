@@ -32,6 +32,11 @@ const Columns = I.Record({
   setCookies: false,
   transferred: true,
   contentSize: true,
+  startTime: false,
+  endTime: false,
+  responseTime: false,
+  duration: false,
+  latency: false,
   waterfall: true,
 });
 
