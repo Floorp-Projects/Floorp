@@ -303,15 +303,10 @@
     </menupopup>
   </menu>
 
-#ifdef XP_WIN
   <menu id="sp-help-menu"
         label="&helpMenu.label;"
-        accesskey="&helpMenuWin.accesskey;">
-#else
-  <menu id="sp-help-menu"
-        label="&helpMenu.label;"
-        accesskey="&helpMenu.accesskey;">
-#endif
+        accesskey="&helpMenu.accesskey;"
+        accesskeywindows="&helpMenuWin.accesskey;">
     <menupopup id="sp-menu-help">
       <menuitem id="sp-menu-documentation"
                 label="&documentationLink.label;"

@@ -1739,6 +1739,14 @@ var Scratchpad = {
     this._setupCommandListeners();
     this._updateViewMenuItems();
     this._setupPopupShowingListeners();
+
+    // Change the accesskey for the help menu as it can be specific on Windows
+    // some localizations of Windows (ex:french, german) use "?"
+    //  for the help button in the menubar but Gnome does not.
+    if (Services.appinfo.OS == "WINNT") {
+      let helpMenu = document.getElementById("sp-help-menu");
+      helpMenu.setAttribute("accesskey", helpMenu.getAttribute("accesskeywindows"));
+    }
   },
 
   /**
