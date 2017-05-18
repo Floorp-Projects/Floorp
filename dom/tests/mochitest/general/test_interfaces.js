@@ -382,9 +382,9 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "GamepadEvent",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "GamepadHapticActuator", release: false},
+    "GamepadHapticActuator",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "GamepadPose", release: false},
+    "GamepadPose",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "HashChangeEvent",
 // IMPORTANT: Do not change this list without review from a DOM peer!
