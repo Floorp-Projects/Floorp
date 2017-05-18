@@ -20,22 +20,24 @@ public:
   virtual bool Lock() override;
   virtual void Unlock() override;
 
-  virtual gfx::IntSize GetSize() const override
-  {
-    return mSize;
-  }
-  virtual gfx::SurfaceFormat GetFormat() const override
-  {
-    return mFormat;
-  }
-
   virtual RenderBufferTextureHost* AsBufferTextureHost() override
   {
     return this;
   }
 
-  const uint8_t* GetDataForRender() const;
-  size_t GetBufferSizeForRender() const;
+  class RenderBufferData
+  {
+  public:
+    RenderBufferData(uint8_t* aData, size_t aBufferSize)
+      : mData(aData)
+      , mBufferSize(aBufferSize)
+    {
+    }
+    const uint8_t* mData;
+    size_t mBufferSize;
+  };
+
+  RenderBufferData GetBufferDataForRender(uint8_t aChannelIndex);
 
 private:
   virtual ~RenderBufferTextureHost();

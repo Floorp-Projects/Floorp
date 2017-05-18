@@ -27,9 +27,6 @@ public:
   virtual bool Lock() = 0;
   virtual void Unlock() = 0;
 
-  virtual gfx::IntSize GetSize() const = 0;
-  virtual gfx::SurfaceFormat GetFormat() const = 0;
-
   virtual RenderBufferTextureHost* AsBufferTextureHost() { return nullptr; }
   virtual RenderTextureHostOGL* AsTextureHostOGL() { return nullptr; }
 
