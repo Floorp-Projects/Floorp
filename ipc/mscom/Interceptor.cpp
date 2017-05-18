@@ -18,10 +18,63 @@
 #include "mozilla/DebugOnly.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
+#include "nsRefPtrHashtable.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace mscom {
+
+class LiveSet final
+{
+public:
+  LiveSet()
+    : mMutex("mozilla::mscom::LiveSet::mMutex")
+  {
+  }
+
+  void Lock()
+  {
+    mMutex.Lock();
+  }
+
+  void Unlock()
+  {
+    mMutex.Unlock();
+  }
+
+  void Put(IUnknown* aKey, already_AddRefed<IWeakReference> aValue)
+  {
+    mMutex.AssertCurrentThreadOwns();
+    mLiveSet.Put(aKey, Move(aValue));
+  }
+
+  RefPtr<IWeakReference> Get(IUnknown* aKey)
+  {
+    mMutex.AssertCurrentThreadOwns();
+    RefPtr<IWeakReference> result;
+    mLiveSet.Get(aKey, getter_AddRefs(result));
+    return result;
+  }
+
+  void Remove(IUnknown* aKey)
+  {
+    mMutex.AssertCurrentThreadOwns();
+    mLiveSet.Remove(aKey);
+  }
+
+  typedef BaseAutoLock<LiveSet> AutoLock;
+
+private:
+  Mutex mMutex;
+  nsRefPtrHashtable<nsPtrHashKey<IUnknown>, IWeakReference> mLiveSet;
+};
+
+static LiveSet&
+GetLiveSet()
+{
+  static LiveSet sLiveSet;
+  return sLiveSet;
+}
 
 /* static */ HRESULT
 Interceptor::Create(STAUniquePtr<IUnknown> aTarget, IInterceptorSink* aSink,
@@ -30,6 +83,14 @@ Interceptor::Create(STAUniquePtr<IUnknown> aTarget, IInterceptorSink* aSink,
   MOZ_ASSERT(aOutInterface && aTarget && aSink);
   if (!aOutInterface) {
     return E_INVALIDARG;
+  }
+
+  LiveSet::AutoLock lock(GetLiveSet());
+
+  RefPtr<IWeakReference> existingInterceptor(Move(GetLiveSet().Get(aTarget.get())));
+  if (existingInterceptor &&
+      SUCCEEDED(existingInterceptor->Resolve(aInitialIid, aOutInterface))) {
+    return S_OK;
   }
 
   *aOutInterface = nullptr;
@@ -58,6 +119,11 @@ Interceptor::Interceptor(IInterceptorSink* aSink)
 
 Interceptor::~Interceptor()
 {
+  { // Scope for lock
+    LiveSet::AutoLock lock(GetLiveSet());
+    GetLiveSet().Remove(mTarget.get());
+  }
+
   // This needs to run on the main thread because it releases target interface
   // reference counts which may not be thread-safe.
   MOZ_ASSERT(NS_IsMainThread());
@@ -236,10 +302,17 @@ Interceptor::GetInitialInterceptorForIID(REFIID aTargetIid,
     return hr;
   }
 
+  RefPtr<IWeakReference> weakRef;
+  hr = GetWeakReference(getter_AddRefs(weakRef));
+  if (FAILED(hr)) {
+    return hr;
+  }
+
   // mTarget is a weak reference to aTarget. This is safe because we transfer
   // ownership of aTarget into mInterceptorMap which remains live for the
   // lifetime of this Interceptor.
   mTarget = ToInterceptorTargetPtr(aTarget);
+  GetLiveSet().Put(mTarget.get(), weakRef.forget());
 
   // Now we transfer aTarget's ownership into mInterceptorMap.
   mInterceptorMap.AppendElement(MapEntry(aTargetIid,
