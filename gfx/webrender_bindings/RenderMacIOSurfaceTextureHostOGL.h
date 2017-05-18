@@ -26,9 +26,6 @@ public:
   virtual bool Lock() override;
   virtual void Unlock() override;
 
-  virtual gfx::IntSize GetSize() const override;
-  virtual gfx::SurfaceFormat GetFormat() const override;
-
   virtual RenderMacIOSurfaceTextureHostOGL* AsMacIOSurfaceTextureHostOGL() override
   {
     return this;
@@ -36,7 +33,8 @@ public:
 
   virtual void SetGLContext(gl::GLContext* aContext) override;
 
-  virtual GLuint GetGLHandle() override;
+  virtual gfx::IntSize GetSize(uint8_t aChannelIndex) const override;
+  virtual GLuint GetGLHandle(uint8_t aChannelIndex) const override;
 
 private:
   virtual ~RenderMacIOSurfaceTextureHostOGL();
