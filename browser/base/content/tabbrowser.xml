@@ -1753,10 +1753,13 @@
             }
 
             // NB: This works with the hack in the browser constructor that
-            // turns this normal property into a field. When switching remote
-            // type copying related browser would stop the switch and the
-            // previously related browser will no longer be relevant.
-            if (!aShouldBeRemote || currentRemoteType == aOptions.remoteType) {
+            // turns this normal property into a field.
+            if (aOptions.sameProcessAsFrameLoader) {
+              // Always set sameProcessAsFrameLoader when passed in aOptions.
+              aBrowser.sameProcessAsFrameLoader = aOptions.sameProcessAsFrameLoader;
+            } else if (!aShouldBeRemote || currentRemoteType == aOptions.remoteType) {
+              // Only copy existing sameProcessAsFrameLoader when not switching
+              // remote type otherwise it would stop the switch.
               aBrowser.sameProcessAsFrameLoader = sameProcessAsFrameLoader;
             }
 

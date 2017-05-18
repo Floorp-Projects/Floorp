@@ -1150,17 +1150,47 @@ addEventListener("DOMContentLoaded", function onDCL() {
   let initBrowser =
     document.getAnonymousElementByAttribute(gBrowser, "anonid", "initialBrowser");
 
-  // The window's first argument is a tab if and only if we are swapping tabs.
-  // We must set the browser's usercontextid before updateBrowserRemoteness(),
-  // so that the newly created remote tab child has the correct usercontextid.
+  // remoteType and sameProcessAsFrameLoader are passed through to
+  // updateBrowserRemoteness as part of an options object, which itself defaults
+  // to an empty object. So defaulting them to undefined here will cause the
+  // default behavior in updateBrowserRemoteness if they don't get set.
+  let isRemote = gMultiProcessBrowser;
+  let remoteType;
+  let sameProcessAsFrameLoader;
   if (window.arguments) {
-    let tabToOpen = window.arguments[0];
-    if (tabToOpen instanceof XULElement && tabToOpen.hasAttribute("usercontextid")) {
-      initBrowser.setAttribute("usercontextid", tabToOpen.getAttribute("usercontextid"));
+    let argToLoad = window.arguments[0];
+    if (argToLoad instanceof XULElement) {
+      // The window's first argument is a tab if and only if we are swapping tabs.
+      // We must set the browser's usercontextid before updateBrowserRemoteness(),
+      // so that the newly created remote tab child has the correct usercontextid.
+      if (argToLoad.hasAttribute("usercontextid")) {
+        initBrowser.setAttribute("usercontextid",
+                                 argToLoad.getAttribute("usercontextid"));
+      }
+
+      let linkedBrowser = argToLoad.linkedBrowser;
+      if (linkedBrowser) {
+        remoteType = linkedBrowser.remoteType;
+        isRemote = remoteType != E10SUtils.NOT_REMOTE;
+        sameProcessAsFrameLoader = linkedBrowser.frameLoader;
+      }
+    } else if (argToLoad instanceof String) {
+      // argToLoad is String, so should be a URL.
+      remoteType = E10SUtils.getRemoteTypeForURI(argToLoad, gMultiProcessBrowser);
+      isRemote = remoteType != E10SUtils.NOT_REMOTE;
+    } else if (argToLoad instanceof Ci.nsIArray) {
+      // argToLoad is nsIArray, so should be an array of URLs, set the remote
+      // type for the initial browser to match the first one.
+      let urisstring = argToLoad.queryElementAt(0, Ci.nsISupportsString);
+      remoteType = E10SUtils.getRemoteTypeForURI(urisstring.data,
+                                                 gMultiProcessBrowser);
+      isRemote = remoteType != E10SUtils.NOT_REMOTE;
     }
   }
 
-  gBrowser.updateBrowserRemoteness(initBrowser, gMultiProcessBrowser);
+  gBrowser.updateBrowserRemoteness(initBrowser, isRemote, {
+    remoteType, sameProcessAsFrameLoader
+  });
 });
 
 let _resolveDelayedStartup;
