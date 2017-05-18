@@ -206,12 +206,6 @@ typedef long ssize_t;
 #define	MALLOC_DECOMMIT
 #endif
 
-/*
- * Allow unmapping pages on all platforms. Note that if this is disabled,
- * jemalloc will never unmap anything, instead recycling pages for later use.
- */
-#define JEMALLOC_MUNMAP
-
 #ifndef MOZ_MEMORY_WINDOWS
 #ifndef MOZ_MEMORY_SOLARIS
 #include <sys/cdefs.h>
@@ -828,12 +822,6 @@ struct arena_s {
 /*
  * Data.
  */
-
-#ifdef JEMALLOC_MUNMAP
-static const bool config_munmap = true;
-#else
-static const bool config_munmap = false;
-#endif
 
 /*
  * When MALLOC_STATIC_SIZES is defined most of the parameters
@@ -2312,8 +2300,7 @@ chunk_recycle(extent_tree_t *chunks_szad, extent_tree_t *chunks_ad, size_t size,
 		node = NULL;
 	}
 
-	if (config_munmap)
-		recycled_size -= size;
+	recycled_size -= size;
 
 	malloc_mutex_unlock(&chunks_mtx);
 
@@ -2360,7 +2347,7 @@ chunk_alloc(size_t size, size_t alignment, bool base, bool zero)
 	assert(alignment != 0);
 	assert((alignment & chunksize_mask) == 0);
 
-	if (!config_munmap || CAN_RECYCLE(size)) {
+	if (CAN_RECYCLE(size)) {
 		ret = chunk_recycle(&chunks_szad_mmap, &chunks_ad_mmap,
 			size, alignment, base, &zero);
 		if (ret != NULL)
@@ -2461,8 +2448,7 @@ chunk_record(extent_tree_t *chunks_szad, extent_tree_t *chunks_ad, void *chunk,
 		xprev = prev;
 	}
 
-	if (config_munmap)
-		recycled_size += size;
+	recycled_size += size;
 
 label_return:
 	malloc_mutex_unlock(&chunks_mtx);
@@ -2479,8 +2465,7 @@ label_return:
 static bool
 chunk_dalloc_mmap(void *chunk, size_t size)
 {
-	if (!config_munmap || (CAN_RECYCLE(size) &&
-			load_acquire_z(&recycled_size) < recycle_limit))
+	if (CAN_RECYCLE(size) && load_acquire_z(&recycled_size) < recycle_limit)
 		return true;
 
 	pages_unmap(chunk, size);
@@ -5461,17 +5446,6 @@ jemalloc_purge_freed_pages_impl()
 			hard_purge_arena(arena);
 	}
 	malloc_spin_unlock(&arenas_lock);
-	if (!config_munmap) {
-		malloc_mutex_lock(&chunks_mtx);
-		extent_node_t *node = extent_tree_szad_first(&chunks_szad_mmap);
-		while (node) {
-			pages_decommit(node->addr, node->size);
-			pages_commit(node->addr, node->size);
-			node->zeroed = true;
-			node = extent_tree_szad_next(&chunks_szad_mmap, node);
-		}
-		malloc_mutex_unlock(&chunks_mtx);
-	}
 }
 
 #else /* !defined MALLOC_DOUBLE_PURGE */
