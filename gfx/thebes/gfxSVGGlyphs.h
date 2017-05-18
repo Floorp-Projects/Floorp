@@ -120,7 +120,7 @@ public:
      * @param aContextPaint Information on text context paints.
      *   See |SVGContextPaint|.
      */
-    bool RenderGlyph(gfxContext *aContext, uint32_t aGlyphId,
+    void RenderGlyph(gfxContext *aContext, uint32_t aGlyphId,
                      mozilla::SVGContextPaint* aContextPaint);
 
     /**

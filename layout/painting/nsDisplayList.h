@@ -1614,6 +1614,7 @@ public:
   typedef mozilla::layers::WebRenderParentCommand WebRenderParentCommand;
   typedef mozilla::layers::WebRenderDisplayItemLayer WebRenderDisplayItemLayer;
   typedef mozilla::LayerState LayerState;
+  typedef mozilla::image::imgDrawingParams imgDrawingParams;
   typedef class mozilla::gfx::DrawTarget DrawTarget;
 
   // This is never instantiated directly (it has pure virtual methods), so no
