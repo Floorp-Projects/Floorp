@@ -2,7 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-/* globals Services, NewTabURL, XPCOMUtils, aboutNewTabService */
 "use strict";
 
 const {utils: Cu} = Components;

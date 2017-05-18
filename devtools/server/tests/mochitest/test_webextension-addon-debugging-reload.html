@@ -1,0 +1,133 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1302702 - Test connect to a webextension addon
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Mozilla Bug</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="webextension-helpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+"use strict";
+
+// NOTE: This test installs the webextension addon using the addon manager, so that
+// it can be reloaded using the same actor RDP method used by the developer tools.
+async function test_reload_addon() {
+  const addonID = "test-webext-debugging-reload@test.mozilla.com";
+  const addonFile = generateWebExtensionXPI({
+    manifest: {
+      applications: {
+        gecko: {id: addonID},
+      },
+      background: { scripts: ["background.js"] },
+    },
+    files: {
+      "background.js": function () {
+        console.log("background page loaded");
+      },
+    },
+  });
+
+  const {addon} = await promiseInstallFile(addonFile);
+  await promiseWebExtensionStartup();
+
+  let addonTarget = await attachAddon(addonID);
+  ok(addonTarget, "Got an addon target");
+
+  const matchBackgroundPageFrame = (data) => {
+    if (data.frames) {
+      let frameFound = data.frames.filter((frame) => {
+        return frame.url && frame.url.endsWith("_generated_background_page.html");
+      }).pop();
+
+      return !!frameFound;
+    }
+
+    return false;
+  };
+
+  const matchFrameSelected = (data) => {
+    return "selected" in data;
+  };
+
+  // Test the target addon actor reload behavior.
+
+  let waitFramesUpdated = waitForFramesUpdated(addonTarget, matchBackgroundPageFrame);
+  let collectFrameSelected = collectFrameUpdates(addonTarget, matchFrameSelected);
+
+  is(ExtensionParent.DebugUtils.debugBrowserPromises.size, 1,
+     "The expected number of debug browser has been created by the addon actor");
+
+  info("Reloading the target addon");
+  reloadAddon(addonTarget, addonID);
+  await promiseWebExtensionStartup();
+
+  is(ExtensionParent.DebugUtils.debugBrowserPromises.size, 1,
+     "The number of debug browser has not been changed after an addon reload");
+
+  let frames = await waitFramesUpdated;
+  const selectedFrame = collectFrameSelected().pop();
+
+  is(selectedFrame.selected, frames[0].id, "The new background page has been selected");
+  is(addonTarget.url, frames[0].url,
+     "The addon target has the url of the selected frame");
+
+  // Test the target addon actor once reloaded twice.
+
+  waitFramesUpdated = waitForFramesUpdated(addonTarget, matchBackgroundPageFrame);
+  collectFrameSelected = collectFrameUpdates(addonTarget, matchFrameSelected);
+
+  info("Reloading the target addon again");
+  reloadAddon(addonTarget, addonID);
+  await promiseWebExtensionStartup();
+
+  frames = await waitFramesUpdated;
+  const newSelectedFrame = collectFrameSelected().pop();
+
+  ok(newSelectedFrame !== selectedFrame,
+     "The new selected frame is different from the previous on");
+  is(newSelectedFrame.selected, frames[0].id,
+     "The new background page has been selected on the second reload");
+  is(addonTarget.url, frames[0].url,
+     "The addon target has the url of the selected frame");
+
+  // Expect the target to be automatically closed when the addon
+  // is finally uninstalled.
+
+  let {client} = addonTarget;
+  let waitDebuggingClientClosed = new Promise(resolve => {
+    addonTarget.once("close", resolve);
+  });
+
+  let waitShutdown = promiseWebExtensionShutdown();
+  addon.uninstall();
+  await waitShutdown;
+
+  info("Waiting the addon target to be closed on addon uninstall");
+  await waitDebuggingClientClosed;
+
+  // Debugging client has to be closed explicitly when
+  // the target has been created as remote.
+  await client.close();
+}
+
+add_task(async function test_webextension_addon_debugging_reload_inprocess() {
+  await setWebExtensionOOPMode(false);
+  await test_reload_addon(false);
+});
+
+add_task(async function test_webextension_addon_debugging_reload_oop() {
+  await setWebExtensionOOPMode(true);
+  await test_reload_addon(true);
+});
+
+</script>
+</pre>
+</body>
+</html>

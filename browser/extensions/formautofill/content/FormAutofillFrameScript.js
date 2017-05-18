@@ -8,7 +8,7 @@
 
 "use strict";
 
-/* global content */
+/* eslint-env mozilla/frame-script */
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 

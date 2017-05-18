@@ -14,6 +14,20 @@ this.EXPORTED_SYMBOLS = ["Extension", "ExtensionData"];
  * and calls .startup() on it. It calls .shutdown() when the extension
  * unloads. Extension manages any extension-specific state in
  * the chrome process.
+ *
+ * TODO(rpl): we are current restricting the extensions to a single process
+ * (set as the current default value of the "dom.ipc.processCount.extension"
+ * preference), if we switch to use more than one extension process, we have to
+ * be sure that all the browser's frameLoader are associated to the same process,
+ * e.g. by using the `sameProcessAsFrameLoader` property.
+ * (http://searchfox.org/mozilla-central/source/dom/interfaces/base/nsIBrowser.idl)
+ *
+ * At that point we are going to keep track of the existing browsers associated to
+ * a webextension to ensure that they are all running in the same process (and we
+ * are also going to do the same with the browser element provided to the
+ * addon debugging Remote Debugging actor, e.g. because the addon has been
+ * reloaded by the user, we have to  ensure that the new extension pages are going
+ * to run in the same process of the existing addon debugging browser element).
  */
 
 const Ci = Components.interfaces;

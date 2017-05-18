@@ -748,6 +748,20 @@ private:
 
   friend class Axis;
 
+public:
+  /**
+   * Invoke |callable|, passing |mLastContentPaintMetrics| as argument,
+   * while holding the APZC lock required to access |mLastContentPaintMetrics|.
+   * This allows code outside of an AsyncPanZoomController method implementation
+   * to access |mLastContentPaintMetrics| without having to make a copy of it.
+   * Passes through the return value of |callable|.
+   */
+  template <typename Callable>
+  auto CallWithLastContentPaintMetrics(const Callable& callable) const
+    -> decltype(callable(mLastContentPaintMetrics)) {
+    ReentrantMonitorAutoEnter lock(mMonitor);
+    return callable(mLastContentPaintMetrics);
+  }
 
   /* ===================================================================
    * The functions and members in this section are used to expose

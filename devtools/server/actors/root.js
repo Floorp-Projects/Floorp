@@ -190,7 +190,10 @@ RootActor.prototype = {
     heapSnapshots: true,
     // Whether or not the timeline actor can emit DOMContentLoaded and Load
     // markers, currently in use by the network monitor. Fx45+
-    documentLoadingMarkers: true
+    documentLoadingMarkers: true,
+    // Whether or not the webextension addon actor have to be connected
+    // to retrieve the extension child process tab actors.
+    webExtensionAddonConnect: true,
   },
 
   /**
