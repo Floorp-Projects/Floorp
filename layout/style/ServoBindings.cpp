@@ -1159,22 +1159,6 @@ Gecko_SetGradientImageValue(nsStyleImage* aImage, nsStyleGradient* aGradient)
   aImage->SetGradientData(aGradient);
 }
 
-static already_AddRefed<nsStyleImageRequest>
-CreateStyleImageRequest(nsStyleImageRequest::Mode aModeFlags,
-                        ServoBundledURI aURI)
-{
-  MOZ_ASSERT(aURI.mURLString);
-  MOZ_ASSERT(aURI.mExtraData->GetReferrer());
-  MOZ_ASSERT(aURI.mExtraData->GetPrincipal());
-
-  NS_ConvertUTF8toUTF16 url(reinterpret_cast<const char*>(aURI.mURLString),
-                            aURI.mURLStringLength);
-
-  RefPtr<nsStyleImageRequest> req =
-    new nsStyleImageRequest(aModeFlags, url, do_AddRef(aURI.mExtraData));
-  return req.forget();
-}
-
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::ImageValue, ImageValue);
 
 static already_AddRefed<nsStyleImageRequest>
@@ -1204,15 +1188,6 @@ Gecko_SetLayerImageImageValue(nsStyleImage* aImage,
 
   RefPtr<nsStyleImageRequest> req =
     CreateStyleImageRequest(nsStyleImageRequest::Mode::Track, aImageValue);
-  aImage->SetImageRequest(req.forget());
-}
-
-void
-Gecko_SetUrlImageValue(nsStyleImage* aImage, ServoBundledURI aURI)
-{
-  MOZ_ASSERT(aImage);
-  RefPtr<nsStyleImageRequest> req =
-    CreateStyleImageRequest(nsStyleImageRequest::Mode::Track, aURI);
   aImage->SetImageRequest(req.forget());
 }
 
@@ -1256,13 +1231,6 @@ Gecko_SetCursorImageValue(nsCursorImage* aCursor,
 }
 
 void
-Gecko_SetCursorImage(nsCursorImage* aCursor, ServoBundledURI aURI)
-{
-  aCursor->mImage =
-    CreateStyleImageRequest(nsStyleImageRequest::Mode::Discard, aURI);
-}
-
-void
 Gecko_CopyCursorArrayFrom(nsStyleUserInterface* aDest,
                           const nsStyleUserInterface* aSrc)
 {
@@ -1277,13 +1245,6 @@ Gecko_SetContentDataImageValue(nsStyleContentData* aContent,
 
   RefPtr<nsStyleImageRequest> req =
     CreateStyleImageRequest(nsStyleImageRequest::Mode::Track, aImageValue);
-  aContent->SetImageRequest(req.forget());
-}
-
-void
-Gecko_SetContentDataImage(nsStyleContentData* aContent, ServoBundledURI aURI)
-{
-  RefPtr<nsStyleImageRequest> req = CreateStyleImageRequest(nsStyleImageRequest::Mode::Track, aURI);
   aContent->SetImageRequest(req.forget());
 }
 
@@ -1341,14 +1302,6 @@ Gecko_SetListStyleImageImageValue(nsStyleList* aList,
 
   aList->mListStyleImage =
     CreateStyleImageRequest(nsStyleImageRequest::Mode(0), aImageValue);
-}
-
-void
-Gecko_SetListStyleImage(nsStyleList* aList,
-                        ServoBundledURI aURI)
-{
-  aList->mListStyleImage =
-    CreateStyleImageRequest(nsStyleImageRequest::Mode(0), aURI);
 }
 
 void

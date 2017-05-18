@@ -745,7 +745,8 @@ KeyframeUtils::ParseProperty(nsCSSPropertyID aProperty,
   return Servo_ParseProperty(aProperty,
                              &value,
                              data,
-                             ParsingMode::Default).Consume();
+                             ParsingMode::Default,
+                             aDocument->GetCompatibilityMode()).Consume();
 }
 
 // ------------------------------------------------------------------

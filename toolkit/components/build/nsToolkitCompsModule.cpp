@@ -21,7 +21,6 @@
 
 #include "nsDownloadManager.h"
 #include "DownloadPlatform.h"
-#include "nsDownloadProxy.h"
 #include "rdf.h"
 
 #include "nsTypeAheadFind.h"
@@ -88,7 +87,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsDownloadManager,
                                          nsDownloadManager::GetSingleton)
 NS_GENERIC_FACTORY_CONSTRUCTOR(DownloadPlatform)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadProxy)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTypeAheadFind)
 
@@ -147,7 +145,6 @@ NS_DEFINE_NAMED_CID(NS_PARENTALCONTROLSSERVICE_CID);
 #endif
 NS_DEFINE_NAMED_CID(NS_DOWNLOADMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_DOWNLOADPLATFORM_CID);
-NS_DEFINE_NAMED_CID(NS_DOWNLOAD_CID);
 NS_DEFINE_NAMED_CID(NS_FIND_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_TYPEAHEADFIND_CID);
 NS_DEFINE_NAMED_CID(NS_APPLICATION_REPUTATION_SERVICE_CID);
@@ -183,7 +180,6 @@ static const Module::CIDEntry kToolkitCIDs[] = {
 #endif
   { &kNS_DOWNLOADMANAGER_CID, false, nullptr, nsDownloadManagerConstructor },
   { &kNS_DOWNLOADPLATFORM_CID, false, nullptr, DownloadPlatformConstructor },
-  { &kNS_DOWNLOAD_CID, false, nullptr, nsDownloadProxyConstructor },
   { &kNS_FIND_SERVICE_CID, false, nullptr, nsFindServiceConstructor },
   { &kNS_TYPEAHEADFIND_CID, false, nullptr, nsTypeAheadFindConstructor },
   { &kNS_APPLICATION_REPUTATION_SERVICE_CID, false, nullptr, ApplicationReputationServiceConstructor },

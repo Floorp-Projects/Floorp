@@ -190,6 +190,7 @@ StackWalkInitCriticalAddress()
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/StackWalk_windows.h"
+#include "mozilla/WindowsVersion.h"
 
 #ifdef MOZ_STATIC_JS // The standalone SM build lacks the interceptor headers.
 #include "nsWindowsDllInterceptor.h"
@@ -406,9 +407,11 @@ EnsureWalkThreadReady()
   NtDllInterceptor.AddHook("LdrUnloadDll",
                            reinterpret_cast<intptr_t>(patched_LdrUnloadDll),
                            (void**)&stub_LdrUnloadDll);
-  NtDllInterceptor.AddHook("LdrResolveDelayLoadedAPI",
-                           reinterpret_cast<intptr_t>(patched_LdrResolveDelayLoadedAPI),
-                           (void**)&stub_LdrResolveDelayLoadedAPI);
+  if (IsWin8OrLater()) { // LdrResolveDelayLoadedAPI was introduced in Win8
+    NtDllInterceptor.AddHook("LdrResolveDelayLoadedAPI",
+                             reinterpret_cast<intptr_t>(patched_LdrResolveDelayLoadedAPI),
+                             (void**)&stub_LdrResolveDelayLoadedAPI);
+  }
 #endif
 
   InitializeDbgHelpCriticalSection();

@@ -538,7 +538,7 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
 
 #urlbar,
 .searchbar-textbox {
-  font: icon;
+  font-size: 1.25em;
 }
 
 %else

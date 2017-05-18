@@ -4990,11 +4990,6 @@ if test "$MOZ_REQUIRE_SIGNING" = 1; then
   AC_DEFINE(MOZ_REQUIRE_SIGNING)
 fi
 
-AC_SUBST(MOZ_JSDOWNLOADS)
-if test -n "$MOZ_JSDOWNLOADS"; then
-  AC_DEFINE(MOZ_JSDOWNLOADS)
-fi
-
 dnl ========================================================
 dnl = Mac bundle name prefix
 dnl ========================================================

@@ -173,7 +173,6 @@ function runTest() {
 SpecialPowers.pushPrefEnv(
   {"set" : [["browser.safebrowsing.malware.enabled", true]]},
   function() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     classifierHelper.waitForInit()
       .then(() => setupTestData(inputDatas))
       .then(() => classifierHelper.addUrlToDB(inputDatas))
@@ -185,7 +184,6 @@ SpecialPowers.pushPrefEnv(
         SimpleTest.finish();
       });
   });
-</script>
 
 </script>
 </pre>

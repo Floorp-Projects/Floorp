@@ -301,7 +301,8 @@ protected:
                    mozilla::LayoutFrameType aFrameType,
                    ReflowInputFlags aFlags,
                    const nsMargin* aBorder = nullptr,
-                   const nsMargin* aPadding = nullptr);
+                   const nsMargin* aPadding = nullptr,
+                   const nsStyleDisplay* aDisplay = nullptr);
 
   /*
    * Convert nsStyleCoord to nscoord when percentages depend on the

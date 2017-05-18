@@ -702,6 +702,13 @@
       -->
       <method name="openPopup">
         <body><![CDATA[
+          // Entering customization mode after the search bar had focus causes
+          // the popup to appear again, due to focus returning after the
+          // hamburger panel closes. Don't open in that spurious event.
+          if (document.documentElement.getAttribute("customizing") == "true") {
+            return;
+          }
+
           var popup = this.popup;
           if (!popup.mPopupOpen) {
             // Initially the panel used for the searchbar (PopupSearchAutoComplete
@@ -1419,6 +1426,11 @@
         // Add weak referenced observers to invalidate our cached list of engines.
         Services.prefs.addObserver("browser.search.hiddenOneOffs", this, true);
         Services.obs.addObserver(this, "browser-search-engine-modified", true);
+
+        // Rebuild the buttons when the theme changes.  See bug 1357800 for
+        // details.  Summary: On Linux, switching between themes can cause a row
+        // of buttons to disappear.
+        Services.obs.addObserver(this, "lightweight-theme-changed", true);
       ]]></constructor>
 
       <!-- This handles events outside the one-off buttons, like on the popup

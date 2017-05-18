@@ -22,17 +22,17 @@ extern "C" {
 
 namespace nss_test {
 
-// mode, version, cipher suite
-typedef std::tuple<std::string, uint16_t, uint16_t, SSLNamedGroup,
+// variant, version, cipher suite
+typedef std::tuple<SSLProtocolVariant, uint16_t, uint16_t, SSLNamedGroup,
                    SSLSignatureScheme>
     CipherSuiteProfile;
 
 class TlsCipherSuiteTestBase : public TlsConnectTestBase {
  public:
-  TlsCipherSuiteTestBase(const std::string &mode, uint16_t version,
+  TlsCipherSuiteTestBase(SSLProtocolVariant variant, uint16_t version,
                          uint16_t cipher_suite, SSLNamedGroup group,
                          SSLSignatureScheme signature_scheme)
-      : TlsConnectTestBase(mode, version),
+      : TlsConnectTestBase(variant, version),
         cipher_suite_(cipher_suite),
         group_(group),
         signature_scheme_(signature_scheme),
@@ -259,7 +259,7 @@ TEST_P(TlsCipherSuiteTest, ReadLimit) {
   static const uint8_t payload[18] = {6};
   DataBuffer record;
   uint64_t epoch;
-  if (mode_ == DGRAM) {
+  if (variant_ == ssl_variant_datagram) {
     if (version_ == SSL_LIBRARY_VERSION_TLS_1_3) {
       epoch = 3;  // Application traffic keys.
     } else {
@@ -268,7 +268,7 @@ TEST_P(TlsCipherSuiteTest, ReadLimit) {
   } else {
     epoch = 0;
   }
-  TlsAgentTestBase::MakeRecord(mode_, kTlsApplicationDataType, version_,
+  TlsAgentTestBase::MakeRecord(variant_, kTlsApplicationDataType, version_,
                                payload, sizeof(payload), &record,
                                (epoch << 48) | record_limit());
   server_->adapter()->PacketReceived(record);
@@ -296,7 +296,7 @@ TEST_P(TlsCipherSuiteTest, WriteLimit) {
       k##name##Ciphers = ::testing::ValuesIn(k##name##CiphersArr);             \
   INSTANTIATE_TEST_CASE_P(                                                     \
       CipherSuite##name, TlsCipherSuiteTest,                                   \
-      ::testing::Combine(TlsConnectTestBase::kTlsModes##modes,                 \
+      ::testing::Combine(TlsConnectTestBase::kTlsVariants##modes,              \
                          TlsConnectTestBase::kTls##versions, k##name##Ciphers, \
                          groups, sigalgs));
 
@@ -405,7 +405,7 @@ class SecurityStatusTest
       public ::testing::WithParamInterface<SecStatusParams> {
  public:
   SecurityStatusTest()
-      : TlsCipherSuiteTestBase("TLS", GetParam().version,
+      : TlsCipherSuiteTestBase(ssl_variant_stream, GetParam().version,
                                GetParam().cipher_suite, ssl_grp_none,
                                ssl_sig_none) {}
 };

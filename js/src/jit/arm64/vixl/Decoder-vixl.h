@@ -151,9 +151,11 @@ class Decoder {
 
   // Top-level wrappers around the actual decoding function.
   void Decode(const Instruction* instr) {
+#ifdef DEBUG
     for (auto visitor : visitors_) {
       VIXL_ASSERT(visitor->IsConstVisitor());
     }
+#endif
     DecodeInstruction(instr);
   }
   void Decode(Instruction* instr) {

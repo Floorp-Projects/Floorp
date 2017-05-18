@@ -325,6 +325,9 @@ class BarrieredBase
     // BarrieredBase is not directly instantiable.
     explicit BarrieredBase(const T& v) : value(v) {}
 
+    // BarrieredBase subclasses cannot be copy constructed by default.
+    BarrieredBase(const BarrieredBase<T>& other) = default;
+
     // Storage for all barrier classes. |value| must be a GC thing reference
     // type: either a direct pointer to a GC thing or a supported tagged
     // pointer that can reference GC things, such as JS::Value or jsid. Nested

@@ -1189,7 +1189,7 @@ js::DumpHeap(JSContext* cx, FILE* fp, js::DumpHeapNurseryBehaviour nurseryBehavi
     {
         JSRuntime* rt = cx->runtime();
         js::gc::AutoPrepareForTracing prep(cx, WithAtoms);
-        gcstats::AutoPhase ap(rt->gc.stats(), gcstats::PHASE_TRACE_HEAP);
+        gcstats::AutoPhase ap(rt->gc.stats(), gcstats::PhaseKind::TRACE_HEAP);
         rt->gc.traceRuntime(&dtrc, prep.session().lock);
     }
 

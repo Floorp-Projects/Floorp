@@ -596,16 +596,51 @@ protected:
   // used to implement getAllResponseHeaders()
   class nsHeaderVisitor : public nsIHttpHeaderVisitor
   {
+    struct HeaderEntry final
+    {
+      nsCString mName;
+      nsCString mValue;
+
+      HeaderEntry(const nsACString& aName, const nsACString& aValue)
+        : mName(aName), mValue(aValue)
+      {}
+
+      bool
+      operator==(const HeaderEntry& aOther) const
+      {
+        return mName == aOther.mName;
+      }
+
+      bool
+      operator<(const HeaderEntry& aOther) const
+      {
+        return mName < aOther.mName;
+      }
+    };
+
   public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIHTTPHEADERVISITOR
     nsHeaderVisitor(const XMLHttpRequestMainThread& aXMLHttpRequest,
                     NotNull<nsIHttpChannel*> aHttpChannel)
       : mXHR(aXMLHttpRequest), mHttpChannel(aHttpChannel) {}
-    const nsACString &Headers() { return mHeaders; }
+    const nsACString &Headers()
+    {
+      for (uint32_t i = 0; i < mHeaderList.Length(); i++) {
+        HeaderEntry& header = mHeaderList.ElementAt(i);
+
+        mHeaders.Append(header.mName);
+        mHeaders.AppendLiteral(": ");
+        mHeaders.Append(header.mValue);
+        mHeaders.AppendLiteral("\r\n");
+      }
+      return mHeaders;
+    }
+
   private:
     virtual ~nsHeaderVisitor() {}
 
+    nsTArray<HeaderEntry> mHeaderList;
     nsCString mHeaders;
     const XMLHttpRequestMainThread& mXHR;
     NotNull<nsCOMPtr<nsIHttpChannel>> mHttpChannel;

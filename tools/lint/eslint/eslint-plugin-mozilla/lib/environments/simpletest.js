@@ -18,6 +18,7 @@ var helpers = require("../helpers");
 var globals = require("../globals");
 
 const simpleTestFiles = [
+  "ExtensionTestUtils.js",
   "EventUtils.js",
   "MockObjects.js",
   "SimpleTest.js",

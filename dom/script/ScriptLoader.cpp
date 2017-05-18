@@ -633,8 +633,8 @@ ScriptLoader::StartFetchingModuleDependencies(ModuleLoadRequest* aRequest)
 
   // Wait for all imports to become ready.
   RefPtr<GenericPromise::AllPromiseType> allReady =
-    GenericPromise::All(AbstractThread::GetCurrent(), importsReady);
-  allReady->Then(AbstractThread::GetCurrent(), __func__, aRequest,
+    GenericPromise::All(AbstractThread::MainThread(), importsReady);
+  allReady->Then(AbstractThread::MainThread(), __func__, aRequest,
                  &ModuleLoadRequest::DependenciesLoaded,
                  &ModuleLoadRequest::LoadFailed);
 }
@@ -856,7 +856,7 @@ ScriptLoader::StartLoad(ScriptLoadRequest* aRequest)
     ModuleLoadRequest* request = aRequest->AsModuleRequest();
     if (ModuleMapContainsModule(request)) {
       WaitForModuleFetch(request)
-        ->Then(AbstractThread::GetCurrent(), __func__, request,
+        ->Then(AbstractThread::MainThread(), __func__, request,
                &ModuleLoadRequest::ModuleLoaded,
                &ModuleLoadRequest::LoadFailed);
       return NS_OK;
@@ -2566,7 +2566,7 @@ ScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
 
   if (NS_FAILED(rv)) {
     if (sriOk && aRequest->mElement) {
-      
+
       uint32_t lineNo = aRequest->mElement->GetScriptLineNumber();
 
       nsAutoString url;

@@ -46,17 +46,11 @@ var connect = Task.async(function*() {
   if (addonID) {
     let { addons } = yield gClient.listAddons();
     let addonActor = addons.filter(addon => addon.id === addonID).pop();
-    openToolbox({
-      form: addonActor,
-      chrome: true,
-      isTabActor: addonActor.isWebExtension ? true : false
-    });
+    let isTabActor = addonActor.isWebExtension;
+    openToolbox({form: addonActor, chrome: true, isTabActor});
   } else {
     let response = yield gClient.getProcess();
-    openToolbox({
-      form: response.form,
-      chrome: true
-    });
+    openToolbox({form: response.form, chrome: true});
   }
 });
 
@@ -157,7 +151,7 @@ function bindToolboxHandlers() {
 }
 
 function setupThreadListeners(panel) {
-  updateBadgeText(panel._selectors().getPause(panel._getState()));
+  updateBadgeText(panel._selectors.getPause(panel._getState()));
 
   let onPaused = updateBadgeText.bind(null, true);
   let onResumed = updateBadgeText.bind(null, false);

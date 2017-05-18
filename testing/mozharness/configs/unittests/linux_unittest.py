@@ -116,6 +116,7 @@ config = {
                 "--use-test-media-devices",
                 "--screenshot-on-fail",
                 "--cleanup-crashes",
+                "--marionette-startup-timeout=180",
             ],
             "run_filename": "runtests.py",
             "testsdir": "mochitest"

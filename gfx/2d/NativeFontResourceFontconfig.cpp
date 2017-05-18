@@ -21,13 +21,13 @@ NativeFontResourceFontconfig::NativeFontResourceFontconfig(UniquePtr<uint8_t[]>&
 NativeFontResourceFontconfig::~NativeFontResourceFontconfig()
 {
   if (mFace) {
-    FT_Done_Face(mFace);
+    Factory::ReleaseFTFace(mFace);
     mFace = nullptr;
   }
 }
 
 already_AddRefed<NativeFontResourceFontconfig>
-NativeFontResourceFontconfig::Create(uint8_t *aFontData, uint32_t aDataLength)
+NativeFontResourceFontconfig::Create(uint8_t *aFontData, uint32_t aDataLength, FT_Library aFTLibrary)
 {
   if (!aFontData || !aDataLength) {
     return nullptr;
@@ -35,12 +35,12 @@ NativeFontResourceFontconfig::Create(uint8_t *aFontData, uint32_t aDataLength)
   UniquePtr<uint8_t[]> fontData(new uint8_t[aDataLength]);
   memcpy(fontData.get(), aFontData, aDataLength);
 
-  FT_Face face;
-  if (FT_New_Memory_Face(Factory::GetFTLibrary(), fontData.get(), aDataLength, 0, &face) != FT_Err_Ok) {
+  FT_Face face = Factory::NewFTFaceFromData(aFTLibrary, fontData.get(), aDataLength, 0);
+  if (!face) {
     return nullptr;
   }
   if (FT_Select_Charmap(face, FT_ENCODING_UNICODE) != FT_Err_Ok) {
-    FT_Done_Face(face);
+    Factory::ReleaseFTFace(face);
     return nullptr;
   }
 

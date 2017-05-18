@@ -18,7 +18,7 @@ ParseVarLenInt(const uint8_t* aBuf, size_t aBufSize, uint64_t* aValue)
   if (!aBufSize) {
     return 0;
   }
-  aBufSize = std::min(9u, aBufSize);
+  aBufSize = std::min(size_t(9), aBufSize);
 
   *aValue = aBuf[0] & 0x7F;
   size_t i = 0;

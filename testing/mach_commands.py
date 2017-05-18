@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import argparse
 import json
 import os
 import sys
@@ -887,8 +888,8 @@ class TestInfoCommand(MachCommandBase):
     from datetime import date, timedelta
     @Command('test-info', category='testing',
         description='Display historical test result summary.')
-    @CommandArgument('test_name', nargs='?', metavar='N',
-        help='Test of interest.')
+    @CommandArgument('test_names', nargs=argparse.REMAINDER,
+        help='Test(s) of interest.')
     @CommandArgument('--branches',
         default='mozilla-central,mozilla-inbound,autoland',
         help='Report for named branches (default: mozilla-central,mozilla-inbound,autoland)')
@@ -898,6 +899,14 @@ class TestInfoCommand(MachCommandBase):
     @CommandArgument('--end',
         default=date.today().strftime("%Y-%m-%d"),
         help='End date (YYYY-MM-DD)')
+    @CommandArgument('--show-info', action='store_true',
+        help='Retrieve and display general test information.')
+    @CommandArgument('--show-results', action='store_true',
+        help='Retrieve and display ActiveData test result summary.')
+    @CommandArgument('--show-durations', action='store_true',
+        help='Retrieve and display ActiveData test duration summary.')
+    @CommandArgument('--show-bugs', action='store_true',
+        help='Retrieve and display related Bugzilla bugs.')
     @CommandArgument('--verbose', action='store_true',
         help='Enable debug logging.')
 
@@ -906,15 +915,24 @@ class TestInfoCommand(MachCommandBase):
         import which
         from mozbuild.base import MozbuildObject
 
-        self.test_name = params['test_name']
         self.branches = params['branches']
         self.start = params['start']
         self.end = params['end']
+        self.show_info = params['show_info']
+        self.show_results = params['show_results']
+        self.show_durations = params['show_durations']
+        self.show_bugs = params['show_bugs']
         self.verbose = params['verbose']
 
-        if len(self.test_name) < 6:
-            print("'%s' is too short for a test name!" % self.test_name)
-            return
+        if (not self.show_info and
+            not self.show_results and
+            not self.show_durations and
+            not self.show_bugs):
+            # by default, show everything
+            self.show_info = True
+            self.show_results = True
+            self.show_durations = True
+            self.show_bugs = True
 
         here = os.path.abspath(os.path.dirname(__file__))
         build_obj = MozbuildObject.from_environment(cwd=here)
@@ -933,10 +951,20 @@ class TestInfoCommand(MachCommandBase):
             else:
                 self._git = which.which('git')
 
-        self.set_test_name()
-        self.report_test_results()
-        self.report_test_durations()
-        self.report_bugs()
+        for test_name in params['test_names']:
+            print("===== %s =====" % test_name)
+            self.test_name = test_name
+            if len(self.test_name) < 6:
+                print("'%s' is too short for a test name!" % self.test_name)
+                continue
+            if self.show_info:
+                self.set_test_name()
+            if self.show_results:
+                self.report_test_results()
+            if self.show_durations:
+                self.report_test_durations()
+            if self.show_bugs:
+                self.report_bugs()
 
     def find_in_hg_or_git(self, test_name):
         if self._hg:
@@ -990,6 +1018,25 @@ class TestInfoCommand(MachCommandBase):
             print("Unable to validate test name '%s'!" % self.test_name)
             self.full_test_name = self.test_name
 
+        # search for full_test_name in test manifests
+        from mozbuild.testing import TestResolver
+        resolver = self._spawn(TestResolver)
+        relpath = self._wrap_path_argument(self.full_test_name).relpath()
+        tests = list(resolver.resolve_tests(paths=[relpath]))
+        if len(tests) == 1:
+            relpath = self._wrap_path_argument(tests[0]['manifest']).relpath()
+            print("%s found in manifest %s" % (self.full_test_name, relpath))
+            if tests[0].get('flavor'):
+                print("  flavor: %s" % tests[0]['flavor'])
+            if tests[0].get('skip-if'):
+                print("  skip-if: %s" % tests[0]['skip-if'])
+            if tests[0].get('fail-if'):
+                print("  fail-if: %s" % tests[0]['fail-if'])
+        elif len(tests) == 0:
+            print("%s not found in any test manifest!" % self.full_test_name)
+        else:
+            print("%s found in more than one manifest!" % self.full_test_name)
+
         # short_name is full_test_name without path
         self.short_name = None
         name_idx = self.full_test_name.rfind('/')
@@ -1004,6 +1051,10 @@ class TestInfoCommand(MachCommandBase):
                 self.robo_name = self.short_name[:robo_idx]
             if self.short_name == self.test_name:
                 self.short_name = None
+
+        if not (self.show_results or self.show_durations):
+            # no need to determine ActiveData name if not querying
+            return
 
         # activedata_test_name is name in ActiveData
         self.activedata_test_name = None

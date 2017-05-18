@@ -351,15 +351,15 @@ TabTarget.prototype = {
   },
 
   get isAddon() {
-    return !!(this._form && this._form.actor && (
-      this._form.actor.match(/conn\d+\.addon\d+/) ||
-      this._form.actor.match(/conn\d+\.webExtension\d+/)
-    ));
+    return !!(this._form && this._form.actor &&
+              this._form.actor.match(/conn\d+\.addon\d+/)) || this.isWebExtension;
   },
 
   get isWebExtension() {
-    return !!(this._form && this._form.actor &&
-              this._form.actor.match(/conn\d+\.webExtension\d+/));
+    return !!(this._form && this._form.actor && (
+      this._form.actor.match(/conn\d+\.webExtension\d+/) ||
+      this._form.actor.match(/child\d+\/webExtension\d+/)
+    ));
   },
 
   get isLocalTab() {
@@ -370,12 +370,31 @@ TabTarget.prototype = {
     return !this.window;
   },
 
+  getExtensionPathName(url) {
+    // Return the url if the target is not a webextension.
+    if (!this.isWebExtension) {
+      throw new Error("Target is not a WebExtension");
+    }
+
+    try {
+      const parsedURL = new URL(url);
+      // Only moz-extension URL should be shortened into the URL pathname.
+      if (parsedURL.protocol !== "moz-extension:") {
+        return url;
+      }
+      return parsedURL.pathname;
+    } catch (e) {
+      // Return the url if unable to resolve the pathname.
+      return url;
+    }
+  },
+
   /**
    * Adds remote protocol capabilities to the target, so that it can be used
    * for tools that support the Remote Debugging Protocol even for local
    * connections.
    */
-  makeRemote: function () {
+  makeRemote: async function () {
     if (this._remote) {
       return this._remote.promise;
     }
@@ -398,6 +417,22 @@ TabTarget.prototype = {
       this._client = new DebuggerClient(DebuggerServer.connectPipe());
       // A local TabTarget will never perform chrome debugging.
       this._chrome = false;
+    } else if (this._form.isWebExtension &&
+          this.client.mainRoot.traits.webExtensionAddonConnect) {
+      // The addonActor form is related to a WebExtensionParentActor instance,
+      // which isn't a tab actor on its own, it is an actor living in the parent process
+      // with access to the addon metadata, it can control the addon (e.g. reloading it)
+      // and listen to the AddonManager events related to the lifecycle of the addon
+      // (e.g. when the addon is disabled or uninstalled ).
+      // To retrieve the TabActor instance, we call its "connect" method,
+      // (which fetches the TabActor form from a WebExtensionChildActor instance).
+      let {form} = await this._client.request({
+        to: this._form.actor, type: "connect",
+      });
+
+      this._form = form;
+      this._url = form.url;
+      this._title = form.title;
     }
 
     this._setupRemoteListeners();
@@ -498,8 +533,11 @@ TabTarget.prototype = {
       event.nativeConsoleAPI = packet.nativeConsoleAPI;
       event.isFrameSwitching = packet.isFrameSwitching;
 
-      if (!packet.isFrameSwitching) {
-        // Update the title and url unless this is a frame switch.
+      // Keep the title unmodified when a developer toolbox switches frame
+      // for a tab (Bug 1261687), but always update the title when the target
+      // is a WebExtension (where the addon name is always included in the title
+      // and the url is supposed to be updated every time the selected frame changes).
+      if (!packet.isFrameSwitching || this.isWebExtension) {
         this._url = packet.url;
         this._title = packet.title;
       }

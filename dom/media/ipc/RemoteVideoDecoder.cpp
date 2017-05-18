@@ -138,12 +138,21 @@ RemoteDecoderModule::Supports(const TrackInfo& aTrackInfo,
   return mWrapped->Supports(aTrackInfo, aDiagnostics);
 }
 
+static inline bool
+IsRemoteAcceleratedCompositor(KnowsCompositor* aKnows)
+{
+  TextureFactoryIdentifier ident = aKnows->GetTextureFactoryIdentifier();
+  return ident.mParentBackend != LayersBackend::LAYERS_BASIC &&
+         ident.mParentProcessType == GeckoProcessType_GPU;
+}
+
 already_AddRefed<MediaDataDecoder>
 RemoteDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
 {
   if (!MediaPrefs::PDMUseGPUDecoder() ||
       !aParams.mKnowsCompositor ||
-      aParams.mKnowsCompositor->GetTextureFactoryIdentifier().mParentProcessType != GeckoProcessType_GPU) {
+      !IsRemoteAcceleratedCompositor(aParams.mKnowsCompositor))
+  {
     return mWrapped->CreateVideoDecoder(aParams);
   }
 

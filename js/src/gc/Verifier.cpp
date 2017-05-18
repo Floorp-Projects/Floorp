@@ -199,7 +199,7 @@ gc::GCRuntime::startVerifyPreBarriers()
     for (auto chunk = allNonEmptyChunks(); !chunk.done(); chunk.next())
         chunk->bitmap.clear();
 
-    gcstats::AutoPhase ap(stats(), gcstats::PHASE_TRACE_HEAP);
+    gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::TRACE_HEAP);
 
     const size_t size = 64 * 1024 * 1024;
     trc->root = (VerifyNode*)js_malloc(size);
@@ -680,7 +680,7 @@ js::CheckGrayMarkingState(JSRuntime* rt)
     if (!rt->gc.areGrayBitsValid())
         return true;
 
-    gcstats::AutoPhase ap(rt->gc.stats(), gcstats::PHASE_TRACE_HEAP);
+    gcstats::AutoPhase ap(rt->gc.stats(), gcstats::PhaseKind::TRACE_HEAP);
     AutoTraceSession session(rt, JS::HeapState::Tracing);
     CheckGrayMarkingTracer tracer(rt);
     if (!tracer.init())

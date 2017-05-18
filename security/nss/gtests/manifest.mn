@@ -8,6 +8,8 @@ DEPTH      = ..
 DIRS = \
 	google_test \
 	common \
+	certdb_gtest \
+	certhigh_gtest \
 	der_gtest \
 	util_gtest \
 	pk11_gtest \

@@ -1507,14 +1507,17 @@ private:
     explicit ResumeRequest(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel)
       : mChannel(aChannel)
     {
+      mChannel->SetFinishResponseStart(TimeStamp::Now());
     }
 
     NS_IMETHOD Run() override
     {
       AssertIsOnMainThread();
 
-      mChannel->SetHandleFetchEventEnd(TimeStamp::Now());
-      mChannel->SaveTimeStampsToUnderlyingChannel();
+      TimeStamp timeStamp = TimeStamp::Now();
+      mChannel->SetHandleFetchEventEnd(timeStamp);
+      mChannel->SetChannelResetEnd(timeStamp);
+      mChannel->SaveTimeStamps();
 
       nsresult rv = mChannel->ResetInterception();
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
@@ -1828,7 +1831,9 @@ ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
   mWorkerPrivate = WorkerPrivate::Constructor(jsapi.cx(),
                                               scriptSpec,
                                               false, WorkerTypeService,
-                                              mInfo->Scope(), &info, error);
+                                              NullString(),
+                                              mInfo->Scope(),
+                                              &info, error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }

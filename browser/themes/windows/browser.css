@@ -752,7 +752,9 @@ toolbar[brighttext] #close-button {
   #urlbar,
   .searchbar-textbox {
     font-size: 1.15em;
+%ifndef MOZ_PHOTON_THEME
     min-height: 28px;
+%endif
   }
 
   :root {

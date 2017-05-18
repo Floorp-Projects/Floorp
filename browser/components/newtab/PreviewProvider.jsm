@@ -1,6 +1,3 @@
-/* global XPCOMUtils, BackgroundPageThumbs, FileUtils, PageThumbsStorage, Task, MIMEService */
-/* exported PreviewProvider */
-
 "use strict";
 
 this.EXPORTED_SYMBOLS = ["PreviewProvider"];

@@ -507,15 +507,6 @@ var gMainPane = {
       iconUrlSpec = fph.getURLSpecFromFile(currentDirPref.value);
     } else if (folderListPref.value == 1) {
       // 'Downloads'
-      // In 1.5, this pointed to a folder we created called 'My Downloads'
-      // and was available as an option in the 1.5 drop down. On XP this
-      // was in My Documents, on OSX it was in User Docs. In 2.0, we did
-      // away with the drop down option, although the special label was
-      // still supported for the folder if it existed. Because it was
-      // not exposed it was rarely used.
-      // With 3.0, a new desktop folder - 'Downloads' was introduced for
-      // platforms and versions that don't support a default system downloads
-      // folder. See nsDownloadManager for details.
       downloadFolder.label = bundlePreferences.getString("downloadsFolderName");
       iconUrlSpec = fph.getURLSpecFromFile(await this._indexToFolder(1));
     } else {

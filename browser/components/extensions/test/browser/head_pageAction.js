@@ -3,7 +3,8 @@
 "use strict";
 
 /* exported runTests */
-/* globals getListStyleImage, promiseAnimationFrame */
+// This file is imported into the same scope as head.js.
+/* import-globals-from head.js */
 
 async function runTests(options) {
   function background(getTests) {
@@ -157,4 +158,3 @@ async function runTests(options) {
     await BrowserTestUtils.closeWindow(win);
   }
 }
-

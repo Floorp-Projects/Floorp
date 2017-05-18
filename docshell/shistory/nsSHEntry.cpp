@@ -966,6 +966,9 @@ nsSHEntry::SetLastTouched(uint32_t aLastTouched)
 NS_IMETHODIMP
 nsSHEntry::SetSHistory(nsISHistory* aSHistory)
 {
-  mShared->mSHistory = do_GetWeakReference(aSHistory);
+  nsWeakPtr shistory = do_GetWeakReference(aSHistory);
+  // mSHistory can not be changed once it's set
+  MOZ_DIAGNOSTIC_ASSERT(!mShared->mSHistory || (mShared->mSHistory == shistory));
+  mShared->mSHistory = shistory;
   return NS_OK;
 }

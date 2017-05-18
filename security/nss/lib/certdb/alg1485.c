@@ -375,6 +375,7 @@ ParseRFC1485AVA(PLArenaPool* arena, const char** pbp, const char* endptr)
     const char* bp;
     int vt = -1;
     int valLen;
+    PRBool isDottedOid = PR_FALSE;
     SECOidTag kind = SEC_OID_UNKNOWN;
     SECStatus rv = SECFailure;
     SECItem derOid = { 0, NULL, 0 };
@@ -401,8 +402,9 @@ ParseRFC1485AVA(PLArenaPool* arena, const char** pbp, const char* endptr)
     }
 
     /* is this a dotted decimal OID attribute type ? */
-    if (!PL_strncasecmp("oid.", tagBuf, 4)) {
+    if (!PL_strncasecmp("oid.", tagBuf, 4) || isdigit(tagBuf[0])) {
         rv = SEC_StringToOID(arena, &derOid, tagBuf, strlen(tagBuf));
+        isDottedOid = (PRBool)(rv == SECSuccess);
     } else {
         for (n2k = name2kinds; n2k->name; n2k++) {
             SECOidData* oidrec;
@@ -428,8 +430,6 @@ ParseRFC1485AVA(PLArenaPool* arena, const char** pbp, const char* endptr)
             goto loser;
         a = CERT_CreateAVAFromRaw(arena, &derOid, &derVal);
     } else {
-        if (kind == SEC_OID_UNKNOWN)
-            goto loser;
         if (kind == SEC_OID_AVA_COUNTRY_NAME && valLen != 2)
             goto loser;
         if (vt == SEC_ASN1_PRINTABLE_STRING &&
@@ -445,7 +445,11 @@ ParseRFC1485AVA(PLArenaPool* arena, const char** pbp, const char* endptr)
 
         derVal.data = (unsigned char*)valBuf;
         derVal.len = valLen;
-        a = CERT_CreateAVAFromSECItem(arena, kind, vt, &derVal);
+        if (kind == SEC_OID_UNKNOWN && isDottedOid) {
+            a = CERT_CreateAVAFromRaw(arena, &derOid, &derVal);
+        } else {
+            a = CERT_CreateAVAFromSECItem(arena, kind, vt, &derVal);
+        }
     }
     return a;
 

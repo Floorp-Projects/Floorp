@@ -574,12 +574,12 @@ TEST_P(TlsConnectGenericPre13, ConnectECDHEmptyClientPoint) {
 }
 
 INSTANTIATE_TEST_CASE_P(KeyExchangeTest, TlsKeyExchangeTest,
-                        ::testing::Combine(TlsConnectTestBase::kTlsModesAll,
+                        ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
                                            TlsConnectTestBase::kTlsV11Plus));
 
 #ifndef NSS_DISABLE_TLS_1_3
 INSTANTIATE_TEST_CASE_P(KeyExchangeTest, TlsKeyExchangeTest13,
-                        ::testing::Combine(TlsConnectTestBase::kTlsModesAll,
+                        ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
                                            TlsConnectTestBase::kTlsV13));
 #endif
 

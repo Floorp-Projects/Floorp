@@ -1,4 +1,3 @@
-/* globals Cu, XPCOMUtils, TestUtils, aboutNewTabService, ContentTask, content, is */
 "use strict";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");

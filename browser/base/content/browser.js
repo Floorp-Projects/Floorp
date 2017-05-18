@@ -18,6 +18,10 @@ Cu.import("resource://gre/modules/NotificationDB.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
                                   "resource://gre/modules/Preferences.jsm");
 
+XPCOMUtils.defineLazyGetter(this, "extensionNameFromURI", () => {
+  return Cu.import("resource://gre/modules/ExtensionParent.jsm", {}).extensionNameFromURI;
+});
+
 // lazy module getters
 
 /* global AboutHome:false,
@@ -4508,6 +4512,10 @@ var XULBrowserWindow = {
   },
 
   setOverLink(url, anchorElt) {
+    const textToSubURI = Cc["@mozilla.org/intl/texttosuburi;1"].
+                         getService(Ci.nsITextToSubURI);
+    url = textToSubURI.unEscapeURIForUI("UTF-8", url);
+
     // Encode bidirectional formatting characters.
     // (RFC 3987 sections 3.2 and 4.1 paragraph 6)
     url = url.replace(/[\u200e\u200f\u202a\u202b\u202c\u202d\u202e]/g,
@@ -6880,6 +6888,11 @@ var gIdentityHandler = {
   _uriHasHost: false,
 
   /**
+   * Whether this is a "moz-extension:" page, loaded from a WebExtension.
+   */
+  _isExtensionPage: false,
+
+  /**
    * Whether this._uri refers to an internally implemented browser page.
    *
    * Note that this is set for some "about:" pages, but general "chrome:" URIs
@@ -7012,6 +7025,10 @@ var gIdentityHandler = {
   get _connectionIcon() {
     delete this._connectionIcon;
     return this._connectionIcon = document.getElementById("connection-icon");
+  },
+  get _extensionIcon() {
+    delete this._extensionIcon;
+    return this._extensionIcon = document.getElementById("extension-icon");
   },
   get _overrideService() {
     delete this._overrideService;
@@ -7291,7 +7308,11 @@ var gIdentityHandler = {
         icon_labels_dir = /^[\u0590-\u08ff\ufb1d-\ufdff\ufe70-\ufefc]/.test(icon_label) ?
                           "rtl" : "ltr";
       }
-
+    } else if (this._isExtensionPage) {
+      this._identityBox.className = "extensionPage";
+      let extensionName = extensionNameFromURI(this._uri);
+      icon_label = gNavigatorBundle.getFormattedString(
+        "identity.extension.label", [extensionName]);
     } else if (this._uriHasHost && this._isSecure) {
       this._identityBox.className = "verifiedDomain";
       if (this._isMixedActiveContentBlocked) {
@@ -7359,6 +7380,13 @@ var gIdentityHandler = {
 
     // Push the appropriate strings out to the UI
     this._connectionIcon.tooltipText = tooltip;
+
+    if (this._isExtensionPage) {
+      let extensionName = extensionNameFromURI(this._uri);
+      this._extensionIcon.tooltipText = gNavigatorBundle.getFormattedString(
+        "identity.extension.tooltip", [extensionName]);
+    }
+
     this._identityIconLabels.tooltipText = tooltip;
     this._identityIcon.tooltipText = gNavigatorBundle.getString("identity.icon.tooltip");
     this._identityIconLabel.value = icon_label;
@@ -7390,6 +7418,8 @@ var gIdentityHandler = {
     let connection = "not-secure";
     if (this._isSecureInternalUI) {
       connection = "chrome";
+    } else if (this._isExtensionPage) {
+      connection = "extension";
     } else if (this._isURILoadedFromFile) {
       connection = "file";
     } else if (this._isEV) {
@@ -7470,6 +7500,10 @@ var gIdentityHandler = {
       hostless = true;
     }
 
+    if (this._isExtensionPage) {
+      host = extensionNameFromURI(this._uri);
+    }
+
     // Fill in the CA name if we have a valid TLS certificate.
     if (this._isSecure || this._isCertUserOverridden) {
       verifier = this._identityIconLabels.tooltipText;
@@ -7522,6 +7556,8 @@ var gIdentityHandler = {
 
     let whitelist = /^(?:accounts|addons|cache|config|crashes|customizing|downloads|healthreport|home|license|newaddon|permissions|preferences|privatebrowsing|rights|searchreset|sessionrestore|support|welcomeback)(?:[?#]|$)/i;
     this._isSecureInternalUI = uri.schemeIs("about") && whitelist.test(uri.path);
+
+    this._isExtensionPage = uri.schemeIs("moz-extension");
 
     // Create a channel for the sole purpose of getting the resolved URI
     // of the request to determine if it's loaded from the file system.

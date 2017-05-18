@@ -58,7 +58,7 @@ public:
 
   // The maximum depth for the native stack frames that we might collect.
   // XXX: Consider moving this to a different object?
-  static const size_t sMaxNativeFrames = 25;
+  static const size_t sMaxNativeFrames = 150;
 
 private:
   typedef mozilla::Vector<const char*, sMaxInlineStorage> Impl;

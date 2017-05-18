@@ -2,8 +2,6 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-/* globals recordInitialTimestamps, onlyNewItemsFilter, checkRecentlyClosed */
-
 requestLongerTimeout(2);
 
 Services.scriptloader.loadSubScript(new URL("head_sessions.js", gTestPath).href,

@@ -28,7 +28,7 @@ add_task(async function() {
   // importing osfile will sometimes greedily fetch certain path identifiers
   // from the dir service, which means they get cached, which means we can't
   // register a fake path for them anymore.
-  Cu.import("resource://gre/modules/osfile.jsm"); /* globals OS */
+  Cu.import("resource://gre/modules/osfile.jsm");
   await OS.File.makeDir(target.path, {from: rootDir.parent.path, ignoreExisting: true});
 
   target.append("Bookmarks");

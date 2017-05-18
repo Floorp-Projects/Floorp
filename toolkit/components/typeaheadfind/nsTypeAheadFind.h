@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsComponentManagerUtils.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISelectionController.h"
 #include "nsIController.h"
