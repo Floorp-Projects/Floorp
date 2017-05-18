@@ -150,7 +150,6 @@
 
 /* Some defines from the CRT internal headers that we need here. */
 #define _CRT_SPINCOUNT 5000
-#define __crtInitCritSecAndSpinCount InitializeCriticalSectionAndSpinCount
 #include <io.h>
 #include <windows.h>
 #include <intrin.h>
@@ -1240,7 +1239,7 @@ static bool
 malloc_mutex_init(malloc_mutex_t *mutex)
 {
 #if defined(MOZ_MEMORY_WINDOWS)
-	if (! __crtInitCritSecAndSpinCount(mutex, _CRT_SPINCOUNT))
+	if (!InitializeCriticalSectionAndSpinCount(mutex, _CRT_SPINCOUNT))
 		return (true);
 #elif defined(MOZ_MEMORY_DARWIN)
 	mutex->lock = OS_SPINLOCK_INIT;
@@ -1294,7 +1293,7 @@ static bool
 malloc_spin_init(malloc_spinlock_t *lock)
 {
 #if defined(MOZ_MEMORY_WINDOWS)
-	if (! __crtInitCritSecAndSpinCount(lock, _CRT_SPINCOUNT))
+	if (!InitializeCriticalSectionAndSpinCount(lock, _CRT_SPINCOUNT))
 			return (true);
 #elif defined(MOZ_MEMORY_DARWIN)
 	lock->lock = OS_SPINLOCK_INIT;
