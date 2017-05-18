@@ -476,10 +476,9 @@
           if (aEvent.target.localName != "textbox")
             return true; // Let child buttons of autocomplete take input
 
-          // Re: urlbarDeferred, see the comment in urlbarBindings.xml.
-          if (aEvent.defaultPrevented && !aEvent.urlbarDeferred) {
+          // XXXpch this is so bogus...
+          if (aEvent.defaultPrevented)
             return false;
-          }
 
           var cancel = false;
 
