@@ -695,10 +695,12 @@ def bindgen_config_paths(stylo_config, bindgen_enabled,
             return None
 
         check_minimum_llvm_config_version(llvm_config)
+        libclang_arg = '--bindir' if host.os == 'WINNT' else '--libdir'
+        clang_path = os.path.join(invoke_llvm_config(llvm_config, '--bindir'),
+                                  'clang')
         return namespace(
-            libclang_path=invoke_llvm_config(llvm_config, '--bindir' if host.os == 'WINNT' else '--libdir'),
-            clang_path=os.path.join(invoke_llvm_config(llvm_config, '--bindir'),
-                                    'clang'),
+            libclang_path=normsep(invoke_llvm_config(llvm_config, libclang_arg)),
+            clang_path=normsep(clang_path),
         )
 
     if (not libclang_path and clang_path) or \
