@@ -298,8 +298,46 @@ printf_stderr(const char *fmt, ...)
 }
 
 typedef NTSTATUS (NTAPI *LdrLoadDll_func) (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileName, PHANDLE handle);
+static LdrLoadDll_func stub_LdrLoadDll;
 
-static LdrLoadDll_func stub_LdrLoadDll = 0;
+#ifdef _M_AMD64
+typedef decltype(RtlInstallFunctionTableCallback)* RtlInstallFunctionTableCallback_func;
+static RtlInstallFunctionTableCallback_func stub_RtlInstallFunctionTableCallback;
+
+extern uint8_t* sMsMpegJitCodeRegionStart;
+extern size_t sMsMpegJitCodeRegionSize;
+
+BOOLEAN WINAPI patched_RtlInstallFunctionTableCallback(DWORD64 TableIdentifier,
+  DWORD64 BaseAddress, DWORD Length, PGET_RUNTIME_FUNCTION_CALLBACK Callback,
+  PVOID Context, PCWSTR OutOfProcessCallbackDll)
+{
+  // msmpeg2vdec.dll sets up a function table callback for their JIT code that
+  // just terminates the process, because their JIT doesn't have unwind info.
+  // If we see this callback being registered, record the region address, so
+  // that StackWalk.cpp can avoid unwinding addresses in this region.
+  //
+  // To keep things simple I'm not tracking unloads of msmpeg2vdec.dll.
+  // Worst case the stack walker will needlessly avoid a few pages of memory.
+
+  // Tricky: GetModuleHandleExW adds a ref by default; GetModuleHandleW doesn't.
+  HMODULE callbackModule = nullptr;
+  DWORD moduleFlags = GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                      GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT;
+
+  // These GetModuleHandle calls enter a critical section on Win7.
+  AutoSuppressStackWalking suppress;
+
+  if (GetModuleHandleExW(moduleFlags, (LPWSTR)Callback, &callbackModule) &&
+      GetModuleHandleW(L"msmpeg2vdec.dll") == callbackModule) {
+      sMsMpegJitCodeRegionStart = (uint8_t*)BaseAddress;
+      sMsMpegJitCodeRegionSize = Length;
+  }
+
+  return stub_RtlInstallFunctionTableCallback(TableIdentifier, BaseAddress,
+                                              Length, Callback, Context,
+                                              OutOfProcessCallbackDll);
+}
+#endif
 
 template <class T>
 struct RVAMap {
@@ -729,6 +767,7 @@ continue_loading:
 }
 
 static WindowsDllInterceptor NtDllIntercept;
+static WindowsDllInterceptor Kernel32Intercept;
 
 MFBT_API void
 DllBlocklist_Initialize(uint32_t aInitFlags)
@@ -763,6 +802,17 @@ DllBlocklist_Initialize(uint32_t aInitFlags)
     printf_stderr("LdrLoadDll hook failed, no dll blocklisting active\n");
 #endif
   }
+
+  Kernel32Intercept.Init("kernel32.dll");
+
+#ifdef _M_AMD64
+  if (!IsWin8OrLater()) {
+    // The crash that this hook works around is only seen on Win7.
+    Kernel32Intercept.AddHook("RtlInstallFunctionTableCallback",
+                              reinterpret_cast<intptr_t>(patched_RtlInstallFunctionTableCallback),
+                              (void**)&stub_RtlInstallFunctionTableCallback);
+  }
+#endif
 }
 
 MFBT_API void

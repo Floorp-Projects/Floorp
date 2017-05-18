@@ -255,6 +255,14 @@ bool TestLdrResolveDelayLoadedAPI(void* aFunc)
   return patchedLdrResolveDelayLoadedAPI(0, 0, 0, 0, 0, 99) == 0;
 }
 
+bool TestRtlInstallFunctionTableCallback(void* aFunc)
+{
+  auto patchedRtlInstallFunctionTableCallback =
+    reinterpret_cast<decltype(RtlInstallFunctionTableCallback)*>(aFunc);
+
+  return patchedRtlInstallFunctionTableCallback(0, 0, 0, 0, 0, 0) == FALSE;
+}
+
 bool TestSetUnhandledExceptionFilter(void* aFunc)
 {
   auto patchedSetUnhandledExceptionFilter =
@@ -484,6 +492,7 @@ int main()
       TestHook(TestGetKeyState, "user32.dll", "GetKeyState") &&    // see Bug 1316415
       TestHook(TestLdrUnloadDll, "ntdll.dll", "LdrUnloadDll") &&
       MaybeTestHook(IsWin8OrLater(), TestLdrResolveDelayLoadedAPI, "ntdll.dll", "LdrResolveDelayLoadedAPI") &&
+      MaybeTestHook(!IsWin8OrLater(), TestRtlInstallFunctionTableCallback, "kernel32.dll", "RtlInstallFunctionTableCallback") &&
 #endif
       MaybeTestHook(ShouldTestTipTsf(), TestProcessCaretEvents, "tiptsf.dll", "ProcessCaretEvents") &&
 #ifdef _M_IX86
