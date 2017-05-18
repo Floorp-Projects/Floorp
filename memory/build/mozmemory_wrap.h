@@ -120,14 +120,22 @@
 
 #include "mozilla/Types.h"
 
+#ifndef MOZ_EXTERN_C
+#ifdef __cplusplus
+#define MOZ_EXTERN_C extern "C"
+#else
+#define MOZ_EXTERN_C
+#endif
+#endif
+
 #ifdef MOZ_MEMORY_IMPL
 #  if defined(MOZ_JEMALLOC_IMPL) && defined(MOZ_REPLACE_MALLOC) && !defined(MOZ_REPLACE_JEMALLOC)
 #    define mozmem_malloc_impl(a)     je_ ## a
 #    define mozmem_jemalloc_impl(a)   je_ ## a
 #  else
-#    define MOZ_JEMALLOC_API MFBT_API
+#    define MOZ_JEMALLOC_API MOZ_EXTERN_C MFBT_API
 #    ifdef MOZ_REPLACE_JEMALLOC
-#      define MOZ_MEMORY_API MFBT_API
+#      define MOZ_MEMORY_API MOZ_EXTERN_C MFBT_API
 #      define mozmem_malloc_impl(a)     replace_ ## a
 #      define mozmem_jemalloc_impl(a)   replace_ ## a
 #    elif (defined(XP_WIN) || defined(XP_DARWIN))
@@ -137,7 +145,7 @@
 #        define mozmem_malloc_impl(a)   je_ ## a
 #      endif
 #    else
-#      define MOZ_MEMORY_API MFBT_API
+#      define MOZ_MEMORY_API MOZ_EXTERN_C MFBT_API
 #      if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
 #        define MOZ_WRAP_NEW_DELETE
 #      endif
@@ -149,15 +157,15 @@
 #endif
 
 #if !defined(MOZ_MEMORY_IMPL)
-#  define MOZ_MEMORY_API MFBT_API
-#  define MOZ_JEMALLOC_API MFBT_API
+#  define MOZ_MEMORY_API MOZ_EXTERN_C MFBT_API
+#  define MOZ_JEMALLOC_API MOZ_EXTERN_C MFBT_API
 #endif
 
 #ifndef MOZ_MEMORY_API
-#  define MOZ_MEMORY_API
+#  define MOZ_MEMORY_API MOZ_EXTERN_C
 #endif
 #ifndef MOZ_JEMALLOC_API
-#  define MOZ_JEMALLOC_API
+#  define MOZ_JEMALLOC_API MOZ_EXTERN_C
 #endif
 
 #ifndef mozmem_malloc_impl

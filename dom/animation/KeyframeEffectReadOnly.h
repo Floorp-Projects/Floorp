@@ -45,6 +45,7 @@ class ErrorResult;
 struct AnimationRule;
 struct ServoComputedValuesWithParent;
 struct TimingParams;
+class EffectSet;
 
 namespace dom {
 class ElementOrCSSPseudoElement;
@@ -461,6 +462,8 @@ private:
   static bool IsGeometricProperty(const nsCSSPropertyID aProperty);
 
   static const TimeDuration OverflowRegionRefreshInterval();
+
+  void UpadateEffectSet(mozilla::EffectSet* aEffectSet = nullptr) const;
 
   // FIXME: This flag will be removed in bug 1324966.
   bool mIsComposingStyle = false;

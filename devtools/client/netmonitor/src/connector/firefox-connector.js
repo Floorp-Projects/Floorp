@@ -13,6 +13,10 @@ const { fetchHeaders, formDataURI } = require("../utils/request-utils");
 
 class FirefoxConnector {
   constructor() {
+    // Internal properties
+    this.payloadQueue = [];
+
+    // Public methods
     this.connect = this.connect.bind(this);
     this.disconnect = this.disconnect.bind(this);
     this.willNavigate = this.willNavigate.bind(this);
@@ -55,7 +59,7 @@ class FirefoxConnector {
     this.actions = actions;
     this.getState = getState;
     this.tabTarget = connection.tabConnection.tabTarget;
-    this.tabClient = this.tabTarget.isTabActor ? this.tabTarget.activeTab : null;
+
     this.webConsoleClient = this.tabTarget.activeConsole;
 
     this.tabTarget.on("will-navigate", this.willNavigate);
@@ -75,18 +79,22 @@ class FirefoxConnector {
   }
 
   async disconnect() {
-    // When debugging local or a remote instance, the connection is closed by
-    // the RemoteTarget. The webconsole actor is stopped on disconnect.
-    this.tabClient = null;
-    this.webConsoleClient = null;
+    this.actions.batchReset();
 
     // The timeline front wasn't initialized and started if the server wasn't
     // recent enough to emit the markers we were interested in.
     if (this.tabTarget.getTrait("documentLoadingMarkers") && this.timelineFront) {
       this.timelineFront.off("doc-loading", this.onDocLoadingMarker);
       await this.timelineFront.destroy();
-      this.timelineFront = null;
     }
+
+    this.tabTarget.off("will-navigate");
+    this.tabTarget.off("close");
+    this.tabTarget = null;
+    this.webConsoleClient.off("networkEvent");
+    this.webConsoleClient.off("networkEventUpdate");
+    this.webConsoleClient = null;
+    this.timelineFront = null;
   }
 
   willNavigate() {
@@ -197,7 +205,12 @@ class FirefoxConnector {
     let payload = Object.assign({}, data,
                                     imageObj, requestHeadersObj, responseHeadersObj,
                                     postDataObj, requestCookiesObj, responseCookiesObj);
-    await this.actions.updateRequest(id, payload, true);
+
+    this.pushPayloadToQueue(id, payload);
+
+    if (this.isQueuePayloadReady(id)) {
+      await this.actions.updateRequest(id, this.getPayloadFromQueue(id).payload, true);
+    }
   }
 
   async fetchImage(mimeType, responseContent) {

@@ -24,15 +24,24 @@ static mozilla::LazyLogModule gPrintingLog("printing");
 //---------------------------------------------------
 //-- nsPrintData Class Impl
 //---------------------------------------------------
-nsPrintData::nsPrintData(ePrintDataType aType) :
-  mType(aType), mDebugFilePtr(nullptr), mSelectedPO(nullptr),
-  mPrintDocList(0), mIsIFrameSelected(false),
-  mIsParentAFrameSet(false), mOnStartSent(false),
-  mIsAborted(false), mPreparingForPrint(false), mDocWasToBeDestroyed(false),
-  mShrinkToFit(false), mPrintFrameType(nsIPrintSettings::kFramesAsIs),
-  mNumPrintablePages(0), mNumPagesPrinted(0),
-  mShrinkRatio(1.0), mOrigDCScale(1.0), mPPEventListeners(nullptr),
-  mBrandName(nullptr)
+nsPrintData::nsPrintData(ePrintDataType aType)
+  : mType(aType)
+  , mDebugFilePtr(nullptr)
+  , mPrintDocList(0)
+  , mIsIFrameSelected(false)
+  , mIsParentAFrameSet(false)
+  , mOnStartSent(false)
+  , mIsAborted(false)
+  , mPreparingForPrint(false)
+  , mDocWasToBeDestroyed(false)
+  , mShrinkToFit(false)
+  , mPrintFrameType(nsIPrintSettings::kFramesAsIs)
+  , mNumPrintablePages(0)
+  , mNumPagesPrinted(0)
+  , mShrinkRatio(1.0)
+  , mOrigDCScale(1.0)
+  , mPPEventListeners(nullptr)
+  , mBrandName(nullptr)
 {
   nsCOMPtr<nsIStringBundle> brandBundle;
   nsCOMPtr<nsIStringBundleService> svc =
