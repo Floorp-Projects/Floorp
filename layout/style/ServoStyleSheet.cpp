@@ -15,7 +15,9 @@
 #include "mozilla/dom/CSSRuleList.h"
 #include "mozilla/dom/MediaList.h"
 
+
 #include "mozAutoDocUpdate.h"
+#include "nsIDOMCSSStyleSheet.h"
 
 using namespace mozilla::dom;
 
@@ -71,6 +73,10 @@ ServoStyleSheet::~ServoStyleSheet()
 
 // QueryInterface implementation for ServoStyleSheet
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ServoStyleSheet)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMCSSStyleSheet)
+  if (aIID.Equals(NS_GET_IID(ServoStyleSheet)))
+    foundInterface = reinterpret_cast<nsISupports*>(this);
+  else
 NS_INTERFACE_MAP_END_INHERITING(StyleSheet)
 
 NS_IMPL_ADDREF_INHERITED(ServoStyleSheet, StyleSheet)
