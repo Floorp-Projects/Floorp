@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-interface MozControllers;
+interface XULControllers;
 interface MozFrameLoader;
 interface MozRDFCompositeDataSource;
 interface MozRDFResource;
@@ -88,8 +88,8 @@ interface XULElement : Element {
   readonly attribute MozXULTemplateBuilder?     builder;
   [Throws]
   readonly attribute MozRDFResource?            resource;
-  [Throws]
-  readonly attribute MozControllers             controllers;
+  [Throws, ChromeOnly]
+  readonly attribute XULControllers             controllers;
   [Throws]
   readonly attribute BoxObject?                 boxObject;
 
