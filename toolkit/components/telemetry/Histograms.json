@@ -2419,6 +2419,39 @@
     "n_buckets": 100,
     "description": "Time in milliseconds between onStartRequest from the cache and onCacheEntryCheck. Report only when net wins and OCEC is before onStartRequest from net."
   },
+  "NETWORK_RACE_CACHE_BANDWITH_RACE_NETWORK_WIN": {
+    "record_in_processes": ["main", "content"],
+    "expires_in_version": "62",
+    "kind": "exponential",
+    "low": 32,
+    "high": 16777216,
+    "n_buckets": 100,
+    "description": "Amount of bytes received when we decide to race cache with network and network wins.",
+    "alert_emails": ["necko@mozilla.com", "bsmedberg@mozilla.com"],
+    "bug_numbers": [1354405]
+  },
+  "NETWORK_RACE_CACHE_BANDWITH_RACE_CACHE_WIN": {
+    "record_in_processes": ["main", "content"],
+    "expires_in_version": "62",
+    "kind": "exponential",
+    "low": 32,
+    "high": 16777216,
+    "n_buckets": 100,
+    "description": "Amount of bytes received when we decide to race cache with network and cache wins.",
+    "alert_emails": ["necko@mozilla.com", "bsmedberg@mozilla.com"],
+    "bug_numbers": [1354405]
+  },
+  "NETWORK_RACE_CACHE_BANDWITH_NOT_RACE": {
+    "record_in_processes": ["main", "content"],
+    "expires_in_version": "62",
+    "kind": "exponential",
+    "low": 32,
+    "high": 16777216,
+    "n_buckets": 100,
+    "description": "Amount of bytes received when we decide not to race cache with network.",
+    "alert_emails": ["necko@mozilla.com", "bsmedberg@mozilla.com"],
+    "bug_numbers": [1354405]
+  },
   "HTTP_AUTH_DIALOG_STATS_2": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "61",

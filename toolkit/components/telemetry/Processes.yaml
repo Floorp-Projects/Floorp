@@ -1,0 +1,17 @@
+# This lists the known child processes we collect Telemetry for.
+# The entries are keyed with the names used in Telemetry internally, the same name that is used
+# in the main pings payload, i.e. "payload/processes/<process name>". See:
+# https://gecko.readthedocs.io/en/latest/toolkit/components/telemetry/telemetry/data/main-ping.html#processes
+#
+# For now this is only used to inform the data pipeline about new processes, but will be used to
+# generate headers with C++ data later (enums, strings, ...).
+parent:
+  description: This is the main process. It is also known as the parent or chrome process.
+content:
+  description: This is for processes web content is rendered in.
+extension:
+  description: >
+    This is the WebExtension process. It is a re-used content process, with the data submitted
+    separately to avoid skewing other content process Telemetry.
+gpu:
+  description: This is the compositor or GPU process.
