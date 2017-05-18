@@ -7123,23 +7123,6 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         }
     }
 
-    enum RaceCacheAndNetStatus
-    {
-        kDidNotRaceUsedNetwork = 0,
-        kDidNotRaceUsedCache = 1,
-        kRaceUsedNetwork = 2,
-        kRaceUsedCache = 3
-    };
-
-    RaceCacheAndNetStatus rcwnStatus = kDidNotRaceUsedNetwork;
-    if (request == mTransactionPump) {
-        rcwnStatus = mRaceCacheWithNetwork ?  kRaceUsedNetwork : kDidNotRaceUsedNetwork;
-    } else if (request == mCachePump) {
-        rcwnStatus = mRaceCacheWithNetwork ? kRaceUsedCache : kDidNotRaceUsedCache;
-    }
-    Telemetry::Accumulate(Telemetry::NETWORK_RACE_CACHE_WITH_NETWORK_USAGE,
-                          rcwnStatus);
-
     nsCOMPtr<nsICompressConvStats> conv = do_QueryInterface(mCompressListener);
     if (conv) {
         conv->GetDecodedDataLength(&mDecodedBodySize);
@@ -7361,12 +7344,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         }
     }
 
-    gIOService->IncrementRequestNumber();
-    if (rcwnStatus == kRaceUsedCache) {
-        gIOService->IncrementCacheWonRequestNumber();
-    } else if (rcwnStatus == kRaceUsedNetwork) {
-        gIOService->IncrementNetWonRequestNumber();
-    }
+    ReportRcwnStats(request);
 
     // Register entry to the Performance resource timing
     mozilla::dom::Performance* documentPerformance = GetPerformance();
@@ -8860,6 +8838,44 @@ nsHttpChannel::SetDoNotTrack()
   }
 }
 
+void
+nsHttpChannel::ReportRcwnStats(nsIRequest* firstResponseRequest)
+{
+    if (!sRCWNEnabled) {
+        return;
+    }
+    enum RaceCacheAndNetStatus
+    {
+        kDidNotRaceUsedNetwork = 0,
+        kDidNotRaceUsedCache = 1,
+        kRaceUsedNetwork = 2,
+        kRaceUsedCache = 3
+    };
+    static const Telemetry::HistogramID kRcwnTelemetry[4] = {
+        Telemetry::NETWORK_RACE_CACHE_BANDWITH_NOT_RACE,
+        Telemetry::NETWORK_RACE_CACHE_BANDWITH_NOT_RACE,
+        Telemetry::NETWORK_RACE_CACHE_BANDWITH_RACE_NETWORK_WIN,
+        Telemetry::NETWORK_RACE_CACHE_BANDWITH_RACE_CACHE_WIN
+    };
+
+    RaceCacheAndNetStatus rcwnStatus = kDidNotRaceUsedNetwork;
+    if (firstResponseRequest == mTransactionPump) {
+        rcwnStatus = mRaceCacheWithNetwork ? kRaceUsedNetwork : kDidNotRaceUsedNetwork;
+    } else if (firstResponseRequest == mCachePump) {
+        rcwnStatus = mRaceCacheWithNetwork ? kRaceUsedCache : kDidNotRaceUsedCache;
+    }
+    Telemetry::Accumulate(Telemetry::NETWORK_RACE_CACHE_WITH_NETWORK_USAGE,
+                          rcwnStatus);
+    Telemetry::Accumulate(kRcwnTelemetry[rcwnStatus], mTransferSize);
+
+    gIOService->IncrementRequestNumber();
+    if (rcwnStatus == kRaceUsedCache) {
+        gIOService->IncrementCacheWonRequestNumber();
+    } else if (rcwnStatus == kRaceUsedNetwork) {
+        gIOService->IncrementNetWonRequestNumber();
+    }
+}
+
 static const size_t kPositiveBucketNumbers = 34;
 static const int64_t kPositiveBucketLevels[kPositiveBucketNumbers] =
 {
@@ -9068,7 +9084,6 @@ nsHttpChannel::MaybeRaceCacheWithNetwork()
     if (mLoadFlags & (LOAD_ONLY_FROM_CACHE | LOAD_NO_NETWORK_IO)) {
         return NS_OK;
     }
-
 
     uint32_t threshold = mCacheOpenWithPriority ? sRCWNQueueSizePriority
                                                 : sRCWNQueueSizeNormal;

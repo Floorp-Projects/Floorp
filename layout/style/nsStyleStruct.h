@@ -344,13 +344,6 @@ public:
   // on the main thread before get() can be used.
   nsStyleImageRequest(
       Mode aModeFlags,
-      const nsAString& aURL,
-      already_AddRefed<mozilla::URLExtraData> aExtraData);
-
-  // Can be called from any thread, but Resolve() must be called later
-  // on the main thread before get() can be used.
-  nsStyleImageRequest(
-      Mode aModeFlags,
       mozilla::css::ImageValue* aImageValue);
 
   bool Resolve(nsPresContext* aPresContext);
