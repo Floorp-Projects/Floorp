@@ -255,6 +255,7 @@ bool TestLdrResolveDelayLoadedAPI(void* aFunc)
   return patchedLdrResolveDelayLoadedAPI(0, 0, 0, 0, 0, 99) == 0;
 }
 
+#ifdef _M_AMD64
 bool TestRtlInstallFunctionTableCallback(void* aFunc)
 {
   auto patchedRtlInstallFunctionTableCallback =
@@ -262,6 +263,7 @@ bool TestRtlInstallFunctionTableCallback(void* aFunc)
 
   return patchedRtlInstallFunctionTableCallback(0, 0, 0, 0, 0, 0) == FALSE;
 }
+#endif
 
 bool TestSetUnhandledExceptionFilter(void* aFunc)
 {
