@@ -41,7 +41,6 @@ class nsSVGIntegrationUtils final
   typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::gfx::IntRect IntRect;
   typedef mozilla::image::DrawResult DrawResult;
-  typedef mozilla::image::imgDrawingParams imgDrawingParams;
 
 public:
   /**
@@ -153,7 +152,8 @@ public:
                                bool aHandleOpacity, uint32_t aFlags)
       : ctx(aCtx), frame(aFrame), dirtyRect(aDirtyRect),
         borderArea(aBorderArea), builder(aBuilder),
-        layerManager(aLayerManager), handleOpacity(aHandleOpacity)
+        layerManager(aLayerManager), handleOpacity(aHandleOpacity),
+        flags(aFlags)
     { }
   };
 
@@ -179,8 +179,8 @@ public:
   /**
    * Paint non-SVG frame with filter and opacity effect.
    */
-  static void
-  PaintFilter(const PaintFramesParams& aParams, imgDrawingParams& aImgParams);
+  static DrawResult
+  PaintFilter(const PaintFramesParams& aParams);
 
   /**
    * @param aRenderingContext the target rendering context in which the paint

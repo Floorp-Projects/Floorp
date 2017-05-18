@@ -196,29 +196,27 @@ nsSVGForeignObjectFrame::IsSVGTransformed(Matrix *aOwnTransform,
   return foundTransform;
 }
 
-void
+DrawResult
 nsSVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
                                   const gfxMatrix& aTransform,
-                                  imgDrawingParams& aImgParams,
-                                  const nsIntRect* aDirtyRect)
+                                  const nsIntRect* aDirtyRect,
+                                  uint32_t aFlags)
 {
   NS_ASSERTION(!NS_SVGDisplayListPaintingEnabled() ||
                (mState & NS_FRAME_IS_NONDISPLAY),
                "If display lists are enabled, only painting of non-display "
                "SVG should take this code path");
 
-  if (IsDisabled()) {
-    return;
-  }
+  if (IsDisabled())
+    return DrawResult::SUCCESS;
 
   nsIFrame* kid = PrincipalChildList().FirstChild();
-  if (!kid) {
-    return;
-  }
+  if (!kid)
+    return DrawResult::SUCCESS;
 
   if (aTransform.IsSingular()) {
     NS_WARNING("Can't render foreignObject element!");
-    return;
+    return DrawResult::SUCCESS;
   }
 
   nsRect kidDirtyRect = kid->GetVisualOverflowRect();
@@ -246,7 +244,7 @@ nsSVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
     // int32_t appUnitsPerDevPx = PresContext()->AppUnitsPerDevPixel();
     // mRect.ToOutsidePixels(appUnitsPerDevPx).Intersects(*aDirtyRect)
     if (kidDirtyRect.IsEmpty())
-      return;
+      return DrawResult::SUCCESS;
   }
 
   aContext.Save();
@@ -276,16 +274,15 @@ nsSVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
   if (SVGAutoRenderState::IsPaintingToWindow(aContext.GetDrawTarget())) {
     flags |= PaintFrameFlags::PAINT_TO_WINDOW;
   }
-  if (aImgParams.imageFlags & imgIContainer::FLAG_SYNC_DECODE) {
-    flags |= PaintFrameFlags::PAINT_SYNC_DECODE_IMAGES;
-  }
   nsRenderingContext rendCtx(&aContext);
-  Unused << nsLayoutUtils::PaintFrame(&rendCtx, kid, nsRegion(kidDirtyRect),
-                                      NS_RGBA(0,0,0,0),
-                                      nsDisplayListBuilderMode::PAINTING,
-                                      flags);
+  nsresult rv = nsLayoutUtils::PaintFrame(&rendCtx, kid, nsRegion(kidDirtyRect),
+                                         NS_RGBA(0,0,0,0),
+                                         nsDisplayListBuilderMode::PAINTING,
+                                         flags);
 
   aContext.Restore();
+
+  return NS_FAILED(rv) ? DrawResult::BAD_ARGS : DrawResult::SUCCESS;
 }
 
 nsIFrame*
