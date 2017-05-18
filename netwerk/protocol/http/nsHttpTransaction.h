@@ -313,6 +313,7 @@ private:
     Atomic<bool, ReleaseAcquire>    mResponseIsComplete;
 
     // If true, this transaction was asked to stop receiving the response.
+    // NOTE: this flag is currently unused.  A useful remnant of an old throttling algorithm.
     bool                            mThrottleResponse;
 
     // state flags, all logically boolean, but not packed together into a
@@ -377,8 +378,8 @@ public:
     // but later can be dispatched via spdy (not subject to rate pacing).
     void CancelPacing(nsresult reason);
 
-    // Forwards to the connection's ThrottleResponse.  If there is no connection
-    // at the time, we set a flag to do it on connection assignment.
+    // Called only on the socket thread.  Updates the flag whether the transaction
+    // should make the underlying connection or session stop reading from the socket.
     void ThrottleResponse(bool aThrottle);
 
 private:

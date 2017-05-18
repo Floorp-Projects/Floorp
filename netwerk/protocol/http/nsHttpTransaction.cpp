@@ -159,12 +159,7 @@ void nsHttpTransaction::ThrottleResponse(bool aThrottle)
 {
     MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-    // Just in case we suspend, get a connection, release a connection, get another connection.
     mThrottleResponse = aThrottle;
-
-    if (mConnection) {
-        mConnection->ThrottleResponse(aThrottle);
-    }
 }
 
 nsHttpTransaction::~nsHttpTransaction()
@@ -478,10 +473,6 @@ nsHttpTransaction::SetConnection(nsAHttpConnection *conn)
     {
         MutexAutoLock lock(mLock);
         mConnection = conn;
-    }
-
-    if (conn && mThrottleResponse) {
-        gHttpHandler->ThrottleTransaction(this, true);
     }
 }
 

@@ -53,7 +53,6 @@
 #include "nsComponentManagerUtils.h"
 #include "nsSocketTransportService2.h"
 #include "nsIOService.h"
-#include "nsIThrottlingService.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIXULRuntime.h"
 #include "nsCharSeparatedTokenizer.h"
@@ -713,17 +712,6 @@ nsHttpHandler::GetIOService(nsIIOService** result)
 
     NS_ADDREF(*result = mIOService);
     return NS_OK;
-}
-
-nsIThrottlingService *
-nsHttpHandler::GetThrottlingService()
-{
-    if (!mThrottlingService) {
-        nsCOMPtr<nsIThrottlingService> service = do_GetService(NS_THROTTLINGSERVICE_CONTRACTID);
-        mThrottlingService = new nsMainThreadPtrHolder<nsIThrottlingService>(service);
-    }
-
-    return mThrottlingService;
 }
 
 uint32_t
