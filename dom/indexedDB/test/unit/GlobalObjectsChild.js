@@ -3,6 +3,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+/* import-globals-from xpcshell-head-parent-process.js */
+
 function ok(cond, msg) {
   dump("ok(" + cond + ", \"" + msg + "\")");
   do_check_true(!!cond, Components.stack.caller);

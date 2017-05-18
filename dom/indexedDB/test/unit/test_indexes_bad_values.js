@@ -87,7 +87,7 @@ function* testSteps()
 
   request = objectStore.index("weight").openKeyCursor();
   request.onerror = errorHandler;
-  request.onsuccess = function (event) {
+  request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
       is(cursor.key, objectStoreDataWeightSort[keyIndex].value.weight,
@@ -110,7 +110,7 @@ function* testSteps()
 
   request = objectStore.openCursor();
   request.onerror = errorHandler;
-  request.onsuccess = function (event) {
+  request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
       keyIndex++;

@@ -14,7 +14,7 @@ function* testSteps()
   const data = { key: 1, value: "bar" };
 
   try {
-    indexedDB.open(name, { version: version, storage: "unknown" });
+    indexedDB.open(name, { version, storage: "unknown" });
     ok(false, "Should have thrown!");
   }
   catch (e) {
@@ -22,7 +22,7 @@ function* testSteps()
     is(e.name, "TypeError", "Good error name.");
   }
 
-  let request = indexedDB.open(name, { version: version,
+  let request = indexedDB.open(name, { version,
                                        storage: "persistent" });
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
@@ -59,7 +59,7 @@ function* testSteps()
 
   is(event.target.result, data.key, "Got correct key");
 
-  request = indexedDB.open(name, { version: version,
+  request = indexedDB.open(name, { version,
                                    storage: "temporary" });
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
