@@ -2166,8 +2166,8 @@ DecodeMetadataState::OnMetadataRead(MetadataHolder&& aMetadata)
   MOZ_ASSERT(mMaster->mDuration.Ref().isSome());
 
   mMaster->mMetadataLoadedEvent.Notify(
-    nsAutoPtr<MediaInfo>(aMetadata.mInfo.release()),
-    nsAutoPtr<MetadataTags>(aMetadata.mTags.release()),
+    Move(aMetadata.mInfo),
+    Move(aMetadata.mTags),
     MediaDecoderEventVisibility::Observable);
 
   if (Info().IsEncrypted() && !mMaster->mCDMProxy) {

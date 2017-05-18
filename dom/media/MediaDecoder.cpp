@@ -777,16 +777,16 @@ MediaDecoder::OnMetadataUpdate(TimedMetadata&& aMetadata)
 {
   MOZ_ASSERT(NS_IsMainThread());
   GetOwner()->RemoveMediaTracks();
-  MetadataLoaded(nsAutoPtr<MediaInfo>(new MediaInfo(*aMetadata.mInfo)),
-                 Move(aMetadata.mTags),
+  MetadataLoaded(MakeUnique<MediaInfo>(*aMetadata.mInfo),
+                 UniquePtr<MetadataTags>(aMetadata.mTags.forget()),
                  MediaDecoderEventVisibility::Observable);
   FirstFrameLoaded(Move(aMetadata.mInfo),
                    MediaDecoderEventVisibility::Observable);
 }
 
 void
-MediaDecoder::MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
-                             nsAutoPtr<MetadataTags> aTags,
+MediaDecoder::MetadataLoaded(UniquePtr<MediaInfo> aInfo,
+                             UniquePtr<MetadataTags> aTags,
                              MediaDecoderEventVisibility aEventVisibility)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -798,15 +798,15 @@ MediaDecoder::MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
 
   mMediaSeekable = aInfo->mMediaSeekable;
   mMediaSeekableOnlyInBufferedRanges = aInfo->mMediaSeekableOnlyInBufferedRanges;
-  mInfo = aInfo.forget();
+  mInfo = aInfo.release();
   GetOwner()->ConstructMediaTracks(mInfo);
 
   // Make sure the element and the frame (if any) are told about
   // our new size.
   if (aEventVisibility != MediaDecoderEventVisibility::Suppressed) {
     mFiredMetadataLoaded = true;
-    GetOwner()->MetadataLoaded(mInfo,
-                               nsAutoPtr<const MetadataTags>(aTags.forget()));
+    GetOwner()->MetadataLoaded(
+      mInfo, nsAutoPtr<const MetadataTags>(aTags.release()));
   }
   // Invalidate() will end up calling GetOwner()->UpdateMediaSize with the last
   // dimensions retrieved from the video frame container. The video frame
