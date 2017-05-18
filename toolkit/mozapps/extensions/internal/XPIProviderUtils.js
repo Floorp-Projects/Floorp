@@ -446,6 +446,7 @@ this.XPIDatabase = {
       AddonManagerPrivate.recordSimpleMeasure("XPIDB_overlapped_load", 1);
     }
     this._dbPromise = Promise.resolve(this.addonDB);
+    Services.obs.notifyObservers(this.addonDB, "xpi-database-loaded");
   },
 
   /**
@@ -572,7 +573,7 @@ this.XPIDatabase = {
     let readOptions = {
       outExecutionDuration: 0
     };
-    return this._dbPromise = OS.File.read(this.jsonFile.path, null, readOptions).then(
+    this._dbPromise = OS.File.read(this.jsonFile.path, null, readOptions).then(
       byteArray => {
         logger.debug("Async JSON file read took " + readOptions.outExecutionDuration + " MS");
         AddonManagerPrivate.recordSimpleMeasure("XPIDB_asyncRead_MS",
@@ -604,6 +605,12 @@ this.XPIDatabase = {
         }
         return this.addonDB;
       });
+
+    this._dbPromise.then(() => {
+      Services.obs.notifyObservers(this.addonDB, "xpi-database-loaded");
+    });
+
+    return this._dbPromise;
   },
 
   /**

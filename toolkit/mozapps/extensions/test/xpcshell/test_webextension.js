@@ -323,7 +323,7 @@ add_task(async function test_experiments_api() {
 
   await promiseInstallAllFiles([addonFile]);
 
-  let addons = await AddonManager.getAddonsByTypes(["apiextension"]);
+  let addons = await AddonManager.getAddonsByTypes(["extension"]);
   let addon = addons.pop();
   equal(addon.id, extensionId, "Add-on should be installed as an API extension");
 
