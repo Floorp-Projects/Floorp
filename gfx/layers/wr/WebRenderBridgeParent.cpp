@@ -443,10 +443,10 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
     switch (cmd.type()) {
       case WebRenderParentCommand::TOpAddExternalImage: {
         const OpAddExternalImage& op = cmd.get_OpAddExternalImage();
-        wr::ImageKey key = op.key();
+        Range<const wr::ImageKey> keys(&op.key(), 1);
         MOZ_ASSERT(mExternalImageIds.Get(wr::AsUint64(op.externalImageId())).get());
-        MOZ_ASSERT(!mActiveKeys.Get(wr::AsUint64(key), nullptr));
-        mActiveKeys.Put(wr::AsUint64(key), key);
+        MOZ_ASSERT(!mActiveKeys.Get(wr::AsUint64(keys[0]), nullptr));
+        mActiveKeys.Put(wr::AsUint64(keys[0]), keys[0]);
 
         RefPtr<WebRenderImageHost> host = mExternalImageIds.Get(wr::AsUint64(op.externalImageId()));
         if (!host) {
@@ -461,7 +461,7 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
         }
         WebRenderTextureHost* wrTexture = texture->AsWebRenderTextureHost();
         if (wrTexture) {
-          wrTexture->AddWRImage(mApi, key, wrTexture->GetExternalImageKey());
+          wrTexture->AddWRImage(mApi, keys, wrTexture->GetExternalImageKey());
           break;
         }
         RefPtr<DataSourceSurface> dSurf = host->GetAsSurface();
@@ -477,7 +477,52 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
         IntSize size = dSurf->GetSize();
         wr::ImageDescriptor descriptor(size, map.mStride, dSurf->GetFormat());
         auto slice = Range<uint8_t>(map.mData, size.height * map.mStride);
-        mApi->AddImage(key, descriptor, slice);
+        mApi->AddImage(keys[0], descriptor, slice);
+
+        dSurf->Unmap();
+        break;
+      }
+      case WebRenderParentCommand::TOpAddExternalVideoImage: {
+        const OpAddExternalVideoImage& op = cmd.get_OpAddExternalVideoImage();
+        MOZ_ASSERT(mExternalImageIds.Get(wr::AsUint64(op.externalImageId())).get());
+        MOZ_ASSERT(op.keys().Length() > 0);
+        Range<const wr::ImageKey> keys(&(op.keys())[0], op.keys().Length());
+        for (auto key : keys) {
+          MOZ_ASSERT(!mActiveKeys.Get(wr::AsUint64(key), nullptr));
+          mActiveKeys.Put(wr::AsUint64(key), key);
+        }
+
+        RefPtr<WebRenderImageHost> host = mExternalImageIds.Get(wr::AsUint64(op.externalImageId()));
+        if (!host) {
+          NS_ERROR("CompositableHost does not exist");
+          break;
+        }
+        // XXX select Texture for video in CompositeToTarget().
+        TextureHost* texture = host->GetAsTextureHostForComposite();
+        if (!texture) {
+          NS_ERROR("TextureHost does not exist");
+          break;
+        }
+        WebRenderTextureHost* wrTexture = texture->AsWebRenderTextureHost();
+        if (wrTexture) {
+          wrTexture->AddWRImage(mApi, keys, wrTexture->GetExternalImageKey());
+          break;
+        }
+
+        MOZ_ASSERT(keys.length() == 1);
+        RefPtr<DataSourceSurface> dSurf = host->GetAsSurface();
+        if (!dSurf) {
+          break;
+        }
+        DataSourceSurface::MappedSurface map;
+        if (!dSurf->Map(gfx::DataSourceSurface::MapType::READ, &map)) {
+          break;
+        }
+
+        IntSize size = dSurf->GetSize();
+        wr::ImageDescriptor descriptor(size, map.mStride, dSurf->GetFormat());
+        auto slice = Range<uint8_t>(map.mData, size.height * map.mStride);
+        mApi->AddImage(keys[0], descriptor, slice);
 
         dSurf->Unmap();
         break;

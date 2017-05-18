@@ -32,9 +32,14 @@ WebRenderImageLayer::~WebRenderImageLayer()
 {
   MOZ_COUNT_DTOR(WebRenderImageLayer);
   mPipelineIdRequest.DisconnectIfExists();
+
+  for (auto key : mVideoKeys) {
+    WrManager()->AddImageKeyForDiscard(key);
+  }
   if (mKey.isSome()) {
     WrManager()->AddImageKeyForDiscard(mKey.value());
   }
+
   if (mExternalImageId.isSome()) {
     WrBridge()->DeallocExternalImageId(mExternalImageId.ref());
   }
@@ -83,6 +88,17 @@ WebRenderImageLayer::ClearCachedResources()
   if (mImageClient) {
     mImageClient->ClearCachedResources();
   }
+}
+
+void
+WebRenderImageLayer::AddWRVideoImage(size_t aChannelNumber)
+{
+  for (size_t i = 0; i < aChannelNumber; ++i) {
+    WrImageKey key = GetImageKey();
+    WrManager()->AddImageKeyForDiscard(key);
+    mVideoKeys.AppendElement(key);
+  }
+  WrBridge()->AddWebRenderParentCommand(OpAddExternalVideoImage(mExternalImageId.value(), mVideoKeys));
 }
 
 void
@@ -148,23 +164,40 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
   }
   gfx::IntSize size = image->GetSize();
 
-  if (GetImageClientType() == CompositableType::IMAGE_BRIDGE) {
-    // Always allocate key
-    WrImageKey key = GetImageKey();
-    WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId.value(), key));
-    WrManager()->AddImageKeyForDiscard(key);
-    mKey = Some(key);
-  } else {
+  if (GetImageClientType() != CompositableType::IMAGE_BRIDGE) {
     // Handle CompositableType::IMAGE case
     MOZ_ASSERT(mImageClient->AsImageClientSingle());
     mKey = UpdateImageKey(mImageClient->AsImageClientSingle(),
                           mContainer,
                           mKey,
                           mExternalImageId.ref());
-  }
+    if (mKey.isNothing()) {
+      return;
+    }
+  } else {
+    // Always allocate key.
+    mVideoKeys.Clear();
 
-  if (mKey.isNothing()) {
-    return;
+    // XXX (Jerry): Remove the hardcode image format setting.
+#if defined(XP_WIN)
+    // Use libyuv to convert the buffer to rgba format. So, use 1 image key here.
+    AddWRVideoImage(1);
+#elif defined(XP_MACOSX)
+    if (gfx::gfxVars::CanUseHardwareVideoDecoding()) {
+      // Use the hardware MacIOSurface with YCbCr interleaved format. It uses 1
+      // image key.
+      AddWRVideoImage(1);
+    } else {
+      // Use libyuv.
+      AddWRVideoImage(1);
+    }
+#elif defined(MOZ_WIDGET_GTK)
+    // Use libyuv.
+    AddWRVideoImage(1);
+#elif defined(ANDROID)
+    // Use libyuv.
+    AddWRVideoImage(1);
+#endif
   }
 
   ScrollingLayersHelper scroller(this, aBuilder, aSc);
@@ -200,21 +233,26 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     // usable format here.
 #if defined(XP_WIN)
     // Use libyuv to convert the buffer to rgba format.
-    aBuilder.PushImage(sc.ToRelativeWrRect(rect), clip, filter, mKey.value());
+    MOZ_ASSERT(mVideoKeys.Length() == 1);
+    aBuilder.PushImage(sc.ToRelativeWrRect(rect), clip, filter, mVideoKeys[0]);
 #elif defined(XP_MACOSX)
     if (gfx::gfxVars::CanUseHardwareVideoDecoding()) {
       // Use the hardware MacIOSurface with YCbCr interleaved format.
-      aBuilder.PushYCbCrInterleavedImage(sc.ToRelativeWrRect(rect), clip, mKey.value(), WrYuvColorSpace::Rec601);
+      MOZ_ASSERT(mVideoKeys.Length() == 1);
+      aBuilder.PushYCbCrInterleavedImage(sc.ToRelativeWrRect(rect), clip, mVideoKeys[0], WrYuvColorSpace::Rec601);
     } else {
       // Use libyuv to convert the buffer to rgba format.
-      aBuilder.PushImage(sc.ToRelativeWrRect(rect), clip, filter, mKey.value());
+      MOZ_ASSERT(mVideoKeys.Length() == 1);
+      aBuilder.PushImage(sc.ToRelativeWrRect(rect), clip, filter, mVideoKeys[0]);
     }
 #elif defined(MOZ_WIDGET_GTK)
     // Use libyuv to convert the buffer to rgba format.
-    aBuilder.PushImage(sc.ToRelativeWrRect(rect), clip, filter, mKey.value());
+    MOZ_ASSERT(mVideoKeys.Length() == 1);
+    aBuilder.PushImage(sc.ToRelativeWrRect(rect), clip, filter, mVideoKeys[0]);
 #elif defined(ANDROID)
     // Use libyuv to convert the buffer to rgba format.
-    aBuilder.PushImage(sc.ToRelativeWrRect(rect), clip, filter, mKey.value());
+    MOZ_ASSERT(mVideoKeys.Length() == 1);
+    aBuilder.PushImage(sc.ToRelativeWrRect(rect), clip, filter, mVideoKeys[0]);
 #endif
   }
 }
