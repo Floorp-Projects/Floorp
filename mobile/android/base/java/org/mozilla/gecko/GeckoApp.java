@@ -718,9 +718,6 @@ public abstract class GeckoApp extends GeckoActivity
     public boolean autoHideTabs() { return false; }
 
     @Override
-    public boolean areTabsShown() { return false; }
-
-    @Override
     public void handleMessage(final String event, final GeckoBundle message,
                               final EventCallback callback) {
         if (event.equals("Gecko:Ready")) {
