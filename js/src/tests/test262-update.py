@@ -19,6 +19,7 @@ from itertools import chain, imap
 
 # Skip all tests which use features not supported in SpiderMonkey.
 UNSUPPORTED_FEATURES = set(["tail-call-optimization"])
+RELEASE_OR_BETA = set(["async-iteration"])
 
 @contextlib.contextmanager
 def TemporaryDirectory():
@@ -229,11 +230,20 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
     # Skip tests with unsupported features.
     if "features" in testRec:
         unsupported = UNSUPPORTED_FEATURES.intersection(testRec["features"])
+        releaseOrBeta = RELEASE_OR_BETA.intersection(testRec["features"])
         if unsupported:
-            refTestSkip.append("%s is not supported" % ",".join(list(unsupported)))
+            refTestSkip.append(
+              "%s is not supported" % ",".join(list(unsupported)))
+        elif releaseOrBeta:
+            refTestSkipIf.append(
+              ("release_or_beta",
+               "%s is not released yet" % ",".join(list(releaseOrBeta)))
+            )
         elif "SharedArrayBuffer" in testRec["features"]:
-            refTestSkipIf.append(("!this.hasOwnProperty('SharedArrayBuffer')",
-                                  "SharedArrayBuffer not yet riding the trains"))
+            refTestSkipIf.append(
+              ("!this.hasOwnProperty('SharedArrayBuffer')",
+               "SharedArrayBuffer not yet riding the trains")
+            )
 
     # Includes for every test file in a directory is collected in a single
     # shell.js file per directory level. This is done to avoid adding all
