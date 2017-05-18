@@ -435,6 +435,7 @@ gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
     'sqlite/SQLiteBridge.java',
     'sqlite/SQLiteBridgeException.java',
     'TouchEventInterceptor.java',
+    'WakeLockDelegate.java',
 ]]
 
 gvjar.sources += [geckoview_thirdparty_source_dir + f for f in [

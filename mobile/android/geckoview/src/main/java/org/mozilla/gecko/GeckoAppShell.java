@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 
-import android.annotation.SuppressLint;
 import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
@@ -39,6 +38,7 @@ import org.mozilla.gecko.util.ProxySelector;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
@@ -78,10 +78,12 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Looper;
 import android.os.ParcelFileDescriptor;
+import android.os.PowerManager;
 import android.os.SystemClock;
 import android.os.Vibrator;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.v4.util.SimpleArrayMap;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
@@ -401,8 +403,11 @@ public class GeckoAppShell
                                                        double altitude, float accuracy,
                                                        float bearing, float speed, long time);
 
-    private static class DefaultListeners
-            implements SensorEventListener, LocationListener, NotificationListener, ScreenOrientationDelegate {
+    private static class DefaultListeners implements SensorEventListener,
+                                                     LocationListener,
+                                                     NotificationListener,
+                                                     ScreenOrientationDelegate,
+                                                     WakeLockDelegate {
         @Override
         public void onAccuracyChanged(Sensor sensor, int accuracy) {
         }
@@ -533,10 +538,46 @@ public class GeckoAppShell
             // Do nothing.
         }
 
-        @Override
+        @Override // ScreenOrientationDelegate
         public boolean setRequestedOrientationForCurrentActivity(int requestedActivityInfoOrientation) {
             // Do nothing, and report that the orientation was not set.
             return false;
+        }
+
+        private SimpleArrayMap<String, PowerManager.WakeLock> mWakeLocks;
+
+        @Override // WakeLockDelegate
+        @SuppressLint("Wakelock") // We keep the wake lock independent from the function
+                                  // scope, so we need to suppress the linter warning.
+        public void setWakeLockState(final String lock, final int state) {
+            if (mWakeLocks == null) {
+                mWakeLocks = new SimpleArrayMap<>(WakeLockDelegate.LOCKS_COUNT);
+            }
+
+            PowerManager.WakeLock wl = mWakeLocks.get(lock);
+
+            if (state == WakeLockDelegate.STATE_LOCKED_FOREGROUND && wl == null) {
+                final PowerManager pm = (PowerManager)
+                        getApplicationContext().getSystemService(Context.POWER_SERVICE);
+
+                if (WakeLockDelegate.LOCK_CPU.equals(lock)) {
+                  wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, lock);
+                } else if (WakeLockDelegate.LOCK_SCREEN.equals(lock)) {
+                  // ON_AFTER_RELEASE is set, the user activity timer will be reset when the
+                  // WakeLock is released, causing the illumination to remain on a bit longer.
+                  wl = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK |
+                                      PowerManager.ON_AFTER_RELEASE, lock);
+                } else {
+                    Log.w(LOGTAG, "Unsupported wake-lock: " + lock);
+                    return;
+                }
+
+                wl.acquire();
+                mWakeLocks.put(lock, wl);
+            } else if (state != WakeLockDelegate.STATE_LOCKED_FOREGROUND && wl != null) {
+                wl.release();
+                mWakeLocks.remove(lock);
+            }
         }
     }
 
@@ -544,6 +585,7 @@ public class GeckoAppShell
     private static SensorEventListener sSensorListener = DEFAULT_LISTENERS;
     private static LocationListener sLocationListener = DEFAULT_LISTENERS;
     private static NotificationListener sNotificationListener = DEFAULT_LISTENERS;
+    private static WakeLockDelegate sWakeLockDelegate = DEFAULT_LISTENERS;
 
     /**
      * A delegate for supporting the Screen Orientation API.
@@ -580,6 +622,14 @@ public class GeckoAppShell
 
     public static void setScreenOrientationDelegate(ScreenOrientationDelegate screenOrientationDelegate) {
         sScreenOrientationDelegate = (screenOrientationDelegate != null) ? screenOrientationDelegate : DEFAULT_LISTENERS;
+    }
+
+    public static WakeLockDelegate getWakeLockDelegate() {
+        return sWakeLockDelegate;
+    }
+
+    public void setWakeLockDelegate(final WakeLockDelegate delegate) {
+        sWakeLockDelegate = (delegate != null) ? delegate : DEFAULT_LISTENERS;
     }
 
     @WrapForJNI(calledFrom = "gecko")
@@ -1649,7 +1699,6 @@ public class GeckoAppShell
         public void disableOrientationListener();
         public void addAppStateListener(AppStateListener listener);
         public void removeAppStateListener(AppStateListener listener);
-        public void notifyWakeLockChanged(String topic, String state);
         public boolean areTabsShown();
         public void invalidateOptionsMenu();
         public boolean isForegrounded();
@@ -1973,9 +2022,18 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    private static void notifyWakeLockChanged(String topic, String state) {
-        if (getGeckoInterface() != null)
-            getGeckoInterface().notifyWakeLockChanged(topic, state);
+    private static void notifyWakeLockChanged(final String topic, final String state) {
+        final int intState;
+        if ("unlocked".equals(state)) {
+            intState = WakeLockDelegate.STATE_UNLOCKED;
+        } else if ("locked-foreground".equals(state)) {
+            intState = WakeLockDelegate.STATE_LOCKED_FOREGROUND;
+        } else if ("locked-background".equals(state)) {
+            intState = WakeLockDelegate.STATE_LOCKED_BACKGROUND;
+        } else {
+            throw new IllegalArgumentException();
+        }
+        getWakeLockDelegate().setWakeLockState(topic, intState);
     }
 
     @WrapForJNI(calledFrom = "gecko")
