@@ -326,7 +326,7 @@ public:
   }
 
   virtual void AddWRImage(wr::WebRenderAPI* aAPI,
-                          const wr::ImageKey& aImageKey,
+                          Range<const wr::ImageKey>& aImageKeys,
                           const wr::ExternalImageId& aExtID) override;
 
 protected:
@@ -375,7 +375,7 @@ public:
   }
 
   virtual void AddWRImage(wr::WebRenderAPI* aAPI,
-                          const wr::ImageKey& aImageKey,
+                          Range<const wr::ImageKey>& aImageKeys,
                           const wr::ExternalImageId& aExtID) override;
 
 protected:

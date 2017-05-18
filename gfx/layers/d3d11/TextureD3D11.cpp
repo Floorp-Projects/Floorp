@@ -857,7 +857,7 @@ DXGITextureHostD3D11::BindTextureSource(CompositableTextureSourceRef& aTexture)
 
 void
 DXGITextureHostD3D11::AddWRImage(wr::WebRenderAPI* aAPI,
-                                 const wr::ImageKey& aImageKey,
+                                 Range<const wr::ImageKey>& aImageKeys,
                                  const wr::ExternalImageId& aExtID)
 {
   MOZ_ASSERT_UNREACHABLE("No AddWRImage() implementation for this DXGITextureHostD3D11 type.");
@@ -998,7 +998,7 @@ DXGIYCbCrTextureHostD3D11::BindTextureSource(CompositableTextureSourceRef& aText
 
 void
 DXGIYCbCrTextureHostD3D11::AddWRImage(wr::WebRenderAPI* aAPI,
-                                      const wr::ImageKey& aImageKey,
+                                      Range<const wr::ImageKey>& aImageKeys,
                                       const wr::ExternalImageId& aExtID)
 {
   MOZ_ASSERT_UNREACHABLE("No AddWRImage() implementation for this DXGIYCbCrTextureHostD3D11 type.");
