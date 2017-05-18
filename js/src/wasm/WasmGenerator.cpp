@@ -111,7 +111,7 @@ ModuleGenerator::initAsmJS(Metadata* asmJSMetadata)
 {
     MOZ_ASSERT(env_->isAsmJS());
 
-    if (!linkData_.initTier())
+    if (!linkData_.initTier(CompileMode::Ion))
         return false;
     linkDataTier_ = &linkData_.tier();
 
@@ -141,11 +141,17 @@ ModuleGenerator::initWasm(const CompileArgs& args)
 {
     MOZ_ASSERT(!env_->isAsmJS());
 
-    if (!linkData_.initTier())
+    bool canBaseline = BaselineCanCompile();
+    bool debugEnabled = args.debugEnabled && canBaseline;
+    compileMode_ = ((args.alwaysBaseline || debugEnabled) && canBaseline)
+                   ? CompileMode::Baseline
+                   : CompileMode::Ion;
+
+    if (!linkData_.initTier(compileMode_))
         return false;
     linkDataTier_ = &linkData_.tier();
 
-    auto metadataTier = js::MakeUnique<MetadataTier>();
+    auto metadataTier = js::MakeUnique<MetadataTier>(compileMode_);
     if (!metadataTier)
         return false;
 
@@ -157,11 +163,7 @@ ModuleGenerator::initWasm(const CompileArgs& args)
 
     MOZ_ASSERT(!isAsmJS());
 
-    bool canBaseline = BaselineCanCompile();
-    metadata_->debugEnabled = args.debugEnabled && canBaseline;
-    compileMode_ = ((args.alwaysBaseline || metadata_->debugEnabled) && canBaseline)
-                   ? CompileMode::Baseline
-                   : CompileMode::Ion;
+    metadata_->debugEnabled = debugEnabled;
 
     // For wasm, the Vectors are correctly-sized and already initialized.
 
@@ -1198,7 +1200,11 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
 
     generateBytecodeHash(bytecode);
 
-    UniqueConstCodeSegment codeSegment = CodeSegment::create(masm_, bytecode, *linkDataTier_, *metadata_);
+    UniqueConstCodeSegment codeSegment = CodeSegment::create(compileMode_,
+                                                             masm_,
+                                                             bytecode,
+                                                             *linkDataTier_,
+                                                             *metadata_);
     if (!codeSegment)
         return nullptr;
 

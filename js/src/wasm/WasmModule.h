@@ -45,6 +45,12 @@ struct LinkDataTierCacheablePod
 
 struct LinkDataTier : LinkDataTierCacheablePod
 {
+    CompileMode mode;
+
+    explicit LinkDataTier(CompileMode mode) : mode(mode) {
+        MOZ_ASSERT(mode == CompileMode::Ion || mode == CompileMode::Baseline);
+    }
+
     LinkDataTierCacheablePod& pod() { return *this; }
     const LinkDataTierCacheablePod& pod() const { return *this; }
 
@@ -84,7 +90,7 @@ struct LinkData
     LinkData() : tier_(nullptr) {}
 
     // Construct the tier_ object.
-    bool initTier();
+    bool initTier(CompileMode mode);
 
     const LinkDataTier& tier() const { MOZ_ASSERT(tier_); return *tier_; }
     LinkDataTier& tier() { MOZ_ASSERT(tier_); return *tier_; }
