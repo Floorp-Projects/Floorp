@@ -561,7 +561,25 @@ BufferTextureHost::AddWRImage(wr::WebRenderAPI* aAPI,
                               const wr::ImageKey& aImageKey,
                               const wr::ExternalImageId& aExtID)
 {
-  MOZ_ASSERT_UNREACHABLE("No AddWRImage() implementation for this BufferTextureHost type.");
+  // XXX handling YUV
+  gfx::SurfaceFormat wrFormat =
+      (GetFormat() == gfx::SurfaceFormat::YUV) ? gfx::SurfaceFormat::B8G8R8A8
+                                               : GetFormat();
+  gfx::SurfaceFormat format = GetFormat();
+  uint32_t wrStride = 0;
+
+  if (format == gfx::SurfaceFormat::YUV) {
+    // XXX this stride is used until yuv image rendering by webrender is used.
+    // Software converted RGB buffers strides are aliened to 16
+    wrStride = gfx::GetAlignedStride<16>(GetSize().width, BytesPerPixel(gfx::SurfaceFormat::B8G8R8A8));
+  } else {
+    wrStride = ImageDataSerializer::ComputeRGBStride(format, GetSize().width);
+  }
+
+  wr::ImageDescriptor descriptor(GetSize(), wrStride, wrFormat);
+  aAPI->AddExternalImageBuffer(aImageKey,
+                               descriptor,
+                               aExtID);
 }
 
 void
