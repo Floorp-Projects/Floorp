@@ -1101,8 +1101,6 @@ static bool	opt_xmalloc = false;
 static char	*umax2s(uintmax_t x, unsigned base, char *s);
 static bool	malloc_mutex_init(malloc_mutex_t *mutex);
 static bool	malloc_spin_init(malloc_spinlock_t *lock);
-static void	wrtmessage(const char *p1, const char *p2, const char *p3,
-		const char *p4);
 #ifdef MOZ_MEMORY_DARWIN
 /* Avoid namespace collision with OS X's malloc APIs. */
 #define malloc_printf moz_malloc_printf
@@ -1238,7 +1236,7 @@ umax2s(uintmax_t x, unsigned base, char *s)
 }
 
 static void
-wrtmessage(const char *p1, const char *p2, const char *p3, const char *p4)
+_malloc_message(const char *p1, const char *p2, const char *p3, const char *p4)
 {
 #if !defined(MOZ_MEMORY_WINDOWS)
 #define	_write	write
@@ -1254,9 +1252,6 @@ wrtmessage(const char *p1, const char *p2, const char *p3, const char *p4)
 	if (_write(STDERR_FILENO, p4, (unsigned int) strlen(p4)) < 0)
 		return;
 }
-
-void	(*_malloc_message)(const char *p1, const char *p2, const char *p3,
-	    const char *p4) = wrtmessage;
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
