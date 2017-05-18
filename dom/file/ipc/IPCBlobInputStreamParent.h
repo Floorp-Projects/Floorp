@@ -44,6 +44,9 @@ public:
   mozilla::ipc::IPCResult
   RecvStreamNeeded() override;
 
+  mozilla::ipc::IPCResult
+  RecvClose() override;
+
 private:
   IPCBlobInputStreamParent(const nsID& aID, uint64_t aSize,
                            nsIContentParent* aManager);
