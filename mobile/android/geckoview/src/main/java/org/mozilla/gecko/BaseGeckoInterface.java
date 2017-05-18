@@ -35,11 +35,6 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
     public void removeAppStateListener(GeckoAppShell.AppStateListener listener) {}
 
     @Override
-    public void createShortcut(String title, String URI) {
-        // By default, do nothing.
-    }
-
-    @Override
     public void checkUriVisited(String uri) {
         // By default, no URIs are considered visited.
     }

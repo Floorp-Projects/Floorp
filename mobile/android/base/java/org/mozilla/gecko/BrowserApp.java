@@ -1477,7 +1477,7 @@ public class BrowserApp extends GeckoApp
             ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
                 public void run() {
-                    GeckoAppShell.createShortcut(title, url);
+                    GeckoApplication.createShortcut(title, url);
                 }
             });
 
@@ -2075,7 +2075,7 @@ public class BrowserApp extends GeckoApp
                 if (loadIconResult != null) {
                     final Bitmap icon = loadIconResult
                         .getBestBitmap(GeckoAppShell.getPreferredIconSize());
-                    createAppShortcut(name, startUrl, manifestPath, icon);
+                    GeckoApplication.createAppShortcut(name, startUrl, manifestPath, icon);
                 } else {
                     Log.e(LOGTAG, "Failed to load icon!");
                 }
@@ -2085,7 +2085,7 @@ public class BrowserApp extends GeckoApp
             case "Website:AppInstallFailed":
                 final String title = message.getString("title");
                 final String bookmarkUrl = message.getString("url");
-                createBrowserShortcut(title, bookmarkUrl);
+                GeckoApplication.createBrowserShortcut(title, bookmarkUrl);
                 break;
 
             case "Updater:Launch":
