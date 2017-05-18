@@ -75,6 +75,8 @@ public final class TelemetryWrapper {
         private static final String BLOCKING_SWITCH = "blocking_switch";
         private static final String BROWSER = "browser";
         private static final String BROWSER_CONTEXTMENU = "browser_contextmenu";
+        private static final String CUSTOM_TAB_CLOSE_BUTTON = "custom_tab_close_button";
+        private static final String CUSTOM_TAB_ACTION_BUTTON = "custom_tab_action_button";
     }
 
     private static class Value {
@@ -211,6 +213,14 @@ public final class TelemetryWrapper {
     public static void customTabsIntentEvent(final List<String> options) {
         // List.toString() returns a nicely formatted list like "[item1, item2, etc]":
         TelemetryEvent.create(Category.ACTION, Method.INTENT_CUSTOM_TAB, Object.APP, options.toString()).queue();
+    }
+
+    public static void closeCustomTabEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.CUSTOM_TAB_CLOSE_BUTTON).queue();
+    }
+
+    public static void customTabActionButtonEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.CUSTOM_TAB_ACTION_BUTTON).queue();
     }
 
     public static void textSelectionIntentEvent() {

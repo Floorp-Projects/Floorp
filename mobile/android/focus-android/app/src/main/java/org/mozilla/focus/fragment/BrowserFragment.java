@@ -40,7 +40,6 @@ import org.mozilla.focus.menu.WebContextMenu;
 import org.mozilla.focus.notification.BrowsingNotificationService;
 import org.mozilla.focus.open.OpenWithFragment;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
-import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.utils.Browsers;
 import org.mozilla.focus.utils.IntentUtils;
 import org.mozilla.focus.utils.UrlUtils;
@@ -217,6 +216,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                     } catch (PendingIntent.CanceledException e) {
                         // There's really nothing we can do here...
                     }
+                    TelemetryWrapper.customTabActionButtonEvent();
                 }
             });
         }
@@ -581,6 +581,8 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             case R.id.customtab_close: {
                 erase();
                 getActivity().finish();
+
+                TelemetryWrapper.closeCustomTabEvent();
                 break;
             }
 
