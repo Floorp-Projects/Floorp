@@ -17,6 +17,7 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 const ID_SUFFIX              = "@personas.mozilla.org";
 const PREF_LWTHEME_TO_SELECT = "extensions.lwThemeToSelect";
 const PREF_GENERAL_SKINS_SELECTEDSKIN = "general.skins.selectedSkin";
+const PREF_SKIN_TO_SELECT             = "extensions.lastSelectedSkin";
 const ADDON_TYPE             = "theme";
 const ADDON_TYPE_WEBEXT      = "webextension-theme";
 
@@ -696,7 +697,8 @@ function _setCurrentTheme(aData, aLocal) {
     if (current && current.id != aData.id) {
       usedThemes.splice(1, 0, aData);
     } else {
-      if (current && current.id == aData.id) {
+      if (current && current.id == aData.id && !needsRestart &&
+          !Services.prefs.prefHasUserValue(PREF_SKIN_TO_SELECT)) {
         notify = false;
       }
       usedThemes.unshift(aData);
