@@ -577,10 +577,6 @@ public:
 
   layout::RenderFrameParent* GetRenderFrame();
 
-  void AudioChannelChangeNotification(nsPIDOMWindowOuter* aWindow,
-                                      AudioChannel aAudioChannel,
-                                      float aVolume,
-                                      bool aMuted);
   bool SetRenderFrame(PRenderFrameParent* aRFParent);
   bool GetRenderFrameInfo(TextureFactoryIdentifier* aTextureFactoryIdentifier,
                           uint64_t* aLayersId);

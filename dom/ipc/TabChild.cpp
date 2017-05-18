@@ -2322,27 +2322,6 @@ TabChild::RecvHandleAccessKey(const WidgetKeyboardEvent& aEvent,
 }
 
 mozilla::ipc::IPCResult
-TabChild::RecvAudioChannelChangeNotification(const uint32_t& aAudioChannel,
-                                             const float& aVolume,
-                                             const bool& aMuted)
-{
-  nsCOMPtr<nsPIDOMWindowOuter> window = do_GetInterface(WebNavigation());
-  if (window) {
-    RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
-    MOZ_ASSERT(service);
-
-    service->SetAudioChannelVolume(window,
-                                   static_cast<AudioChannel>(aAudioChannel),
-                                   aVolume);
-    service->SetAudioChannelMuted(window,
-                                  static_cast<AudioChannel>(aAudioChannel),
-                                  aMuted);
-  }
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
 TabChild::RecvSetUseGlobalHistory(const bool& aUse)
 {
   nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
