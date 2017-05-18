@@ -1666,8 +1666,6 @@ public class GeckoAppShell
         public void addAppStateListener(AppStateListener listener);
         public void removeAppStateListener(AppStateListener listener);
 
-        public void setAccessibilityEnabled(boolean enabled);
-
         public boolean openUriExternal(String targetURI, String mimeType, String packageName, String className, String action, String title);
 
         public String[] getHandlersForMimeType(String mimeType, String action);

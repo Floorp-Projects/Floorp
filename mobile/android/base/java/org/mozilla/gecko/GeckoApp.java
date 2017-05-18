@@ -2744,10 +2744,6 @@ public abstract class GeckoApp extends GeckoActivity
     }
 
     @Override
-    public void setAccessibilityEnabled(boolean enabled) {
-    }
-
-    @Override
     public boolean openUriExternal(String targetURI, String mimeType, String packageName, String className, String action, String title) {
         // Default to showing prompt in private browsing to be safe.
         return IntentHelper.openUriExternal(targetURI, mimeType, packageName, className, action, title, true);
