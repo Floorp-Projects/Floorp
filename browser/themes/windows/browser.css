@@ -662,6 +662,8 @@ toolbar[brighttext] #close-button {
   --urlbar-border-color: var(--toolbarbutton-hover-bordercolor);
 }
 
+%include ../shared/urlbar-searchbar.inc.css
+
 %ifdef MOZ_PHOTON_THEME
 
 @media (-moz-windows-default-theme) {
@@ -671,8 +673,6 @@ toolbar[brighttext] #close-button {
     --urlbar-background-color: -moz-field;
   }
 }
-
-%include ../shared/urlbar-searchbar.inc.css
 
 #urlbar[focused="true"],
 .searchbar-textbox[focused="true"] {
