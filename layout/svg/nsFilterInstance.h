@@ -56,7 +56,6 @@ class nsFilterInstance
   typedef mozilla::gfx::FilterDescription FilterDescription;
   typedef mozilla::dom::UserSpaceMetrics UserSpaceMetrics;
   typedef mozilla::image::DrawResult DrawResult;
-  typedef mozilla::image::imgDrawingParams imgDrawingParams;
 public:
   /**
    * Create a FilterDescription for the supplied filter. All coordinates in
@@ -84,12 +83,11 @@ public:
    *   frame space (i.e. relative to its origin, the top-left corner of its
    *   border box).
    */
-  static void PaintFilteredFrame(nsIFrame *aFilteredFrame,
-                                 DrawTarget* aDrawTarget,
-                                 const gfxMatrix& aTransform,
-                                 nsSVGFilterPaintCallback *aPaintCallback,
-                                 const nsRegion* aDirtyArea,
-                                 imgDrawingParams& aImgParams);
+  static DrawResult PaintFilteredFrame(nsIFrame *aFilteredFrame,
+                                       DrawTarget* aDrawTarget,
+                                       const gfxMatrix& aTransform,
+                                       nsSVGFilterPaintCallback *aPaintCallback,
+                                       const nsRegion* aDirtyArea);
 
   /**
    * Returns the post-filter area that could be dirtied when the given
@@ -169,7 +167,7 @@ private:
    * by passing it as the aPostFilterDirtyRegion argument to the
    * nsFilterInstance constructor.
    */
-  void Render(DrawTarget* aDrawTarget, imgDrawingParams& aImgParams);
+  DrawResult Render(DrawTarget* aDrawTarget);
 
   const FilterDescription& ExtractDescriptionAndAdditionalImages(nsTArray<RefPtr<SourceSurface>>& aOutAdditionalImages)
   {
@@ -222,20 +220,20 @@ private:
    * Creates a SourceSurface for either the FillPaint or StrokePaint graph
    * nodes
    */
-  void BuildSourcePaint(SourceInfo *aPrimitive, imgDrawingParams& aImgParams);
+  DrawResult BuildSourcePaint(SourceInfo *aPrimitive);
 
   /**
    * Creates a SourceSurface for either the FillPaint and StrokePaint graph
    * nodes, fills its contents and assigns it to mFillPaint.mSourceSurface and
    * mStrokePaint.mSourceSurface respectively.
    */
-  void BuildSourcePaints(imgDrawingParams& aImgParams);
+  DrawResult BuildSourcePaints();
 
   /**
    * Creates the SourceSurface for the SourceGraphic graph node, paints its
    * contents, and assigns it to mSourceGraphic.mSourceSurface.
    */
-  void BuildSourceImage(imgDrawingParams& aImgParams);
+  DrawResult BuildSourceImage();
 
   /**
    * Build the list of FilterPrimitiveDescriptions that describes the filter's

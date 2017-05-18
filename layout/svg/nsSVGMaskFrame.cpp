@@ -253,7 +253,7 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
 
   mMatrixForChildren = GetMaskTransform(aParams.maskedFrame) *
                        aParams.toUserSpace;
-  imgDrawingParams imgParams(aParams.flags);
+  DrawResult result = DrawResult::SUCCESS;
 
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
@@ -267,7 +267,8 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
       m = static_cast<nsSVGElement*>(kid->GetContent())->
             PrependLocalTransformsTo(m, eUserSpaceToParent);
     }
-    nsSVGUtils::PaintFrameWithEffects(kid, *tmpCtx, m, imgParams);
+    result &= nsSVGUtils::PaintFrameWithEffects(kid, *tmpCtx, m, nullptr,
+                                                aParams.flags);
   }
 
   RefPtr<SourceSurface> maskSnapshot = maskDT->Snapshot();
@@ -327,7 +328,7 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
 
   *aParams.maskTransform = ToMatrix(maskSurfaceMatrix);
   RefPtr<SourceSurface> surface = destMaskSurface.forget();
-  return MakePair(imgParams.result, Move(surface));
+  return MakePair(result, Move(surface));
 }
 
 gfxRect

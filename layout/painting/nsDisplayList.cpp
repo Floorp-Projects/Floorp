@@ -8734,9 +8734,9 @@ nsDisplayFilter::PaintAsLayer(nsDisplayListBuilder* aBuilder,
                                                   borderArea, aBuilder,
                                                   aManager,
                                                   mHandleOpacity, flags);
-  imgDrawingParams imgParams(flags);
-  nsSVGIntegrationUtils::PaintFilter(params, imgParams);
-  nsDisplayFilterGeometry::UpdateDrawResult(this, imgParams.result);
+
+  image::DrawResult result = nsSVGIntegrationUtils::PaintFilter(params);
+  nsDisplayFilterGeometry::UpdateDrawResult(this, result);
 }
 
 #ifdef MOZ_DUMP_PAINTING
