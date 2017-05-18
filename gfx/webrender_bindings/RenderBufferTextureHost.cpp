@@ -95,20 +95,15 @@ RenderBufferTextureHost::Unlock()
   mSurface = nullptr;
 }
 
-const uint8_t*
-RenderBufferTextureHost::GetDataForRender() const
+RenderBufferTextureHost::RenderBufferData
+RenderBufferTextureHost::GetBufferDataForRender(uint8_t aChannelIndex)
 {
-  MOZ_ASSERT(mLocked);
-  MOZ_ASSERT(mSurface);
-  return mMap.mData;
-}
+  // TODO: handle multiple channel bufferTextureHost(e.g. yuv textureHost)
+  MOZ_ASSERT(aChannelIndex < 1);
 
-size_t
-RenderBufferTextureHost::GetBufferSizeForRender() const
-{
   MOZ_ASSERT(mLocked);
   MOZ_ASSERT(mSurface);
-  return mMap.mStride * mSurface->GetSize().height;
+  return RenderBufferData(mMap.mData, mMap.mStride * mSurface->GetSize().height);
 }
 
 } // namespace wr

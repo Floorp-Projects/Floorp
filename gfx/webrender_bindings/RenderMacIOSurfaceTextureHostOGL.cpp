@@ -74,30 +74,5 @@ RenderMacIOSurfaceTextureHostOGL::DeleteTextureHandle()
   mTextureHandle = 0;
 }
 
-GLuint
-RenderMacIOSurfaceTextureHostOGL::GetGLHandle()
-{
-  return mTextureHandle;
-}
-
-gfx::IntSize
-RenderMacIOSurfaceTextureHostOGL::GetSize() const
-{
-  if (!mSurface) {
-    return gfx::IntSize();
-  }
-  return gfx::IntSize(mSurface->GetDevicePixelWidth(),
-                      mSurface->GetDevicePixelHeight());
-}
-
-gfx::SurfaceFormat
-RenderMacIOSurfaceTextureHostOGL::GetFormat() const
-{
-  if (!mSurface) {
-    return gfx::SurfaceFormat::UNKNOWN;
-  }
-  return mSurface->GetReadFormat();
-}
-
 } // namespace wr
 } // namespace mozilla
