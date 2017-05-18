@@ -33,6 +33,8 @@ import org.mozilla.telemetry.serialize.TelemetryPingSerializer;
 import org.mozilla.telemetry.storage.FileTelemetryStorage;
 import org.mozilla.telemetry.storage.TelemetryStorage;
 
+import java.util.List;
+
 public final class TelemetryWrapper {
     private static final String TELEMETRY_APP_NAME_FOCUS = "Focus";
     private static final String TELEMETRY_APP_NAME_KLAR = "Klar";
@@ -203,8 +205,12 @@ public final class TelemetryWrapper {
         TelemetryEvent.create(Category.ACTION, Method.INTENT_URL, Object.APP).queue();
     }
 
-    public static void customTabIntentEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.INTENT_CUSTOM_TAB, Object.APP).queue();
+    /**
+     * Sends a list of the custom tab options that a custom-tab intent made use of.
+     */
+    public static void customTabsIntentEvent(final List<String> options) {
+        // List.toString() returns a nicely formatted list like "[item1, item2, etc]":
+        TelemetryEvent.create(Category.ACTION, Method.INTENT_CUSTOM_TAB, Object.APP, options.toString()).queue();
     }
 
     public static void textSelectionIntentEvent() {

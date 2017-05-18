@@ -32,7 +32,7 @@ The event ping contains a list of events ([see event format on readthedocs.io](h
 * Stop session - ("action", "background", "app")
 * (Browsing) URL entered: - ("action", "type_url", "search_bar")
 * (Browsing) Incoming normal browsing intent from third-party app - ("action", "intent_url", "app")
-* (Browsing) Incoming custom tab intent from third-party app - ("action", "intent_custom_tab", "app")
+* (Browsing) Incoming custom tab intent from third-party app - ("action", "intent_custom_tab", "app", options). Options is a list of enabled custom tab options as requested by the third-party app, e.g. [hasToolbarColor, hasCloseButton] etc.
 * (Browsing) Text selection action from third-party app ("action", "text_selection_intent", "app")
 * (Browsing) Long press on image or link, or image in link ("action", "long_press", "browser")
 * (BrowserContextMenu) Context menu dismissed without any selection ("action", "cancel", "browser_contextmenu")
