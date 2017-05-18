@@ -60,6 +60,8 @@ SurfaceFormatToWrImageFormat(gfx::SurfaceFormat aFormat) {
       return Some(WrImageFormat::RGB8);
     case gfx::SurfaceFormat::A8:
       return Some(WrImageFormat::A8);
+    case gfx::SurfaceFormat::R8G8:
+      return Some(WrImageFormat::RG8);
     case gfx::SurfaceFormat::UNKNOWN:
       return Some(WrImageFormat::Invalid);
     default:
