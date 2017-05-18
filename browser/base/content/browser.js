@@ -1017,7 +1017,8 @@ function _loadURIWithFlags(browser, uri, params) {
 
   let currentRemoteType = browser.remoteType;
   let requiredRemoteType =
-    E10SUtils.getRemoteTypeForURI(uri, gMultiProcessBrowser, currentRemoteType);
+    E10SUtils.getRemoteTypeForURI(uri, gMultiProcessBrowser, currentRemoteType,
+                                  browser.currentURI);
   let mustChangeProcess = requiredRemoteType != currentRemoteType;
 
   // !requiredRemoteType means we're loading in the parent/this process.
@@ -1052,6 +1053,7 @@ function _loadURIWithFlags(browser, uri, params) {
         flags,
         referrer: referrer ? referrer.spec : null,
         referrerPolicy,
+        remoteType: requiredRemoteType,
         postData
       }
 
