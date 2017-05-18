@@ -7609,10 +7609,6 @@ nsresult
 nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
                         nsIChannel* aChannel, nsresult aStatus)
 {
-  // We can release any pressure we may have had on the throttling service and
-  // let background channels continue.
-  mThrottler.reset();
-
   if (!aChannel) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -10798,16 +10794,6 @@ nsDocShell::InternalLoad(nsIURI* aURI,
                       nsINetworkPredictor::LEARN_LOAD_TOPLEVEL, attrs);
   net::PredictorPredict(aURI, nullptr,
                         nsINetworkPredictor::PREDICT_LOAD, attrs, nullptr);
-
-  // Increase pressure on the throttling service so background channels will be
-  // appropriately de-prioritized. We need to explicitly check for http[s] here
-  // so that we don't throttle while loading, say, about:blank.
-  bool isHTTP, isHTTPS;
-  aURI->SchemeIs("http", &isHTTP);
-  aURI->SchemeIs("https", &isHTTPS);
-  if (isHTTP || isHTTPS) {
-    mThrottler.reset(new mozilla::net::Throttler());
-  }
 
   nsCOMPtr<nsIRequest> req;
   rv = DoURILoad(aURI, aOriginalURI, aLoadReplace, aReferrer,

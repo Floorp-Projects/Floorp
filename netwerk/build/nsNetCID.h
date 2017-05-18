@@ -494,17 +494,6 @@
     {0x93, 0x30, 0x18, 0x58, 0xb9, 0x9a, 0xce, 0x69} \
 }
 
-// service implementing nsIThrottlingService
-#define NS_THROTTLINGSERVICE_CONTRACTID \
-    "@mozilla.org/network/throttling-service;1"
-#define NS_THROTTLINGSERVICE_CID \
-{ /* c1c48f2b-cb9c-415e-b4f9-5e4c3476ca86 */ \
-    0xc1c48f2b, \
-    0xcb9c, \
-    0x415e, \
-    {0xb4, 0xf9, 0x5e, 0x4c, 0x34, 0x76, 0xca, 0x86} \
-}
-
 /******************************************************************************
  * netwerk/cache/ classes
  */

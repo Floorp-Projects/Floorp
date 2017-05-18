@@ -52,7 +52,6 @@ public:
   uint32_t SpdyVersion() override;
   bool TestJoinConnection(const nsACString &hostname, int32_t port) override;
   bool JoinConnection(const nsACString &hostname, int32_t port) override;
-  void ThrottleResponse(bool aThrottle) override;
 
   // When the connection is active this is called up to once every 1 second
   // return the interval (in seconds) that the connection next wants to
