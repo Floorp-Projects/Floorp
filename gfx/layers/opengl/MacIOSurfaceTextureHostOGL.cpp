@@ -119,7 +119,56 @@ MacIOSurfaceTextureHostOGL::AddWRImage(wr::WebRenderAPI* aAPI,
                                        const wr::ImageKey& aImageKey,
                                        const wr::ExternalImageId& aExtID)
 {
-  MOZ_ASSERT_UNREACHABLE("No AddWRImage() implementation for this MacIOSurfaceTextureHostOGL type.");
+  MOZ_ASSERT(mSurface);
+
+  switch (GetFormat()) {
+    case gfx::SurfaceFormat::R8G8B8X8:
+    case gfx::SurfaceFormat::R8G8B8A8: {
+      MOZ_ASSERT(mSurface->GetPlaneCount() == 0);
+      wr::ImageDescriptor descriptor(GetSize(), GetFormat());
+      aAPI->AddExternalImage(aImageKey,
+                             descriptor,
+                             aExtID,
+                             WrExternalImageBufferType::TextureRectHandle,
+                             0);
+      break;
+    }
+    case gfx::SurfaceFormat::YUV422: {
+      // This is the special buffer format. The buffer contents could be a
+      // converted RGB interleaving data or a YCbCr interleaving data depending
+      // on the different platform setting. (e.g. It will be RGB at OpenGL 2.1
+      // and YCbCr at OpenGL 3.1)
+      MOZ_ASSERT(mSurface->GetPlaneCount() == 0);
+      wr::ImageDescriptor descriptor(GetSize(), gfx::SurfaceFormat::R8G8B8X8);
+      aAPI->AddExternalImage(aImageKey,
+                             descriptor,
+                             aExtID,
+                             WrExternalImageBufferType::TextureRectHandle,
+                             0);
+      break;
+    }
+    case gfx::SurfaceFormat::NV12: {
+      MOZ_ASSERT(mSurface->GetPlaneCount() == 2);
+      wr::ImageDescriptor descriptor0(gfx::IntSize(mSurface->GetDevicePixelWidth(0), mSurface->GetDevicePixelHeight(0)),
+                                      gfx::SurfaceFormat::A8);
+      wr::ImageDescriptor descriptor1(gfx::IntSize(mSurface->GetDevicePixelWidth(1), mSurface->GetDevicePixelHeight(1)),
+                                      gfx::SurfaceFormat::R8G8);
+      aAPI->AddExternalImage(aImageKey,
+                             descriptor0,
+                             aExtID,
+                             WrExternalImageBufferType::TextureRectHandle,
+                             0);
+      aAPI->AddExternalImage(aImageKey,
+                             descriptor1,
+                             aExtID,
+                             WrExternalImageBufferType::TextureRectHandle,
+                             1);
+      break;
+    }
+    default: {
+      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    }
+  }
 }
 
 } // namespace layers
