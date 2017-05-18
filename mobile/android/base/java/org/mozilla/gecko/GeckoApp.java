@@ -2390,9 +2390,21 @@ public abstract class GeckoApp extends GeckoActivity
         return GeckoScreenOrientation.getInstance().getAndroidOrientation();
     }
 
-    @Override
-    public boolean isForegrounded() {
-        return foregrounded;
+    @WrapForJNI(calledFrom = "gecko")
+    public static void launchOrBringToFront() {
+        final Activity activity = GeckoActivityMonitor.getInstance().getCurrentActivity();
+
+        // Check that BrowserApp is not the current foreground activity.
+        if (activity instanceof BrowserApp && ((GeckoApp) activity).foregrounded) {
+            return;
+        }
+
+        Intent intent = new Intent(Intent.ACTION_MAIN);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
+                        Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
+                            AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
+        GeckoAppShell.getApplicationContext().startActivity(intent);
     }
 
     @Override

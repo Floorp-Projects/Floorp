@@ -280,18 +280,6 @@ public class GeckoAppShell
         CRASH_HANDLER.uncaughtException(null, e);
     }
 
-    @WrapForJNI
-    public static void launchOrBringToFront() {
-        GeckoInterface gi = getGeckoInterface();
-        if (gi == null || !gi.isForegrounded()) {
-            Intent intent = new Intent(Intent.ACTION_MAIN);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-            intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
-
-            getApplicationContext().startActivity(intent);
-        }
-    }
-
     private static float getLocationAccuracy(Location location) {
         float radius = location.getAccuracy();
         return (location.hasAccuracy() && radius > 0) ? radius : 1001;
@@ -1688,7 +1676,6 @@ public class GeckoAppShell
         public void disableOrientationListener();
         public void addAppStateListener(AppStateListener listener);
         public void removeAppStateListener(AppStateListener listener);
-        public boolean isForegrounded();
 
         /**
          * Create a shortcut -- generally a home-screen icon -- linking the given title to the given URI.
