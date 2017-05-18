@@ -12,9 +12,11 @@
 #include "FuzzerCorpus.h"
 #include "FuzzerInterface.h"
 #include "FuzzerInternal.h"
+#include "FuzzerIO.h"
 #include "FuzzerMutate.h"
 #include "FuzzerRandom.h"
-
+#include "FuzzerShmem.h"
+#include "FuzzerTracePC.h"
 #include <algorithm>
 #include <atomic>
 #include <chrono>
@@ -22,7 +24,6 @@
 #include <mutex>
 #include <string>
 #include <thread>
-#include <unistd.h>
 
 // This function should be present in the libFuzzer so that the client
 // binary can test for its existence.
@@ -200,10 +201,10 @@ static void PulseThread() {
   }
 }
 
-static void WorkerThread(const std::string &Cmd, std::atomic<int> *Counter,
-                        int NumJobs, std::atomic<bool> *HasErrors) {
+static void WorkerThread(const std::string &Cmd, std::atomic<unsigned> *Counter,
+                         unsigned NumJobs, std::atomic<bool> *HasErrors) {
   while (true) {
-    int C = (*Counter)++;
+    unsigned C = (*Counter)++;
     if (C >= NumJobs) break;
     std::string Log = "fuzz-" + std::to_string(C) + ".log";
     std::string ToRun = Cmd + " > " + Log + " 2>&1\n";
@@ -213,14 +214,14 @@ static void WorkerThread(const std::string &Cmd, std::atomic<int> *Counter,
     if (ExitCode != 0)
       *HasErrors = true;
     std::lock_guard<std::mutex> Lock(Mu);
-    Printf("================== Job %d exited with exit code %d ============\n",
+    Printf("================== Job %u exited with exit code %d ============\n",
            C, ExitCode);
     fuzzer::CopyFileToErr(Log);
   }
 }
 
-static std::string CloneArgsWithoutX(const std::vector<std::string> &Args,
-                                     const char *X1, const char *X2) {
+std::string CloneArgsWithoutX(const std::vector<std::string> &Args,
+                              const char *X1, const char *X2) {
   std::string Cmd;
   for (auto &S : Args) {
     if (FlagValue(S.c_str(), X1) || FlagValue(S.c_str(), X2))
@@ -230,20 +231,15 @@ static std::string CloneArgsWithoutX(const std::vector<std::string> &Args,
   return Cmd;
 }
 
-static std::string CloneArgsWithoutX(const std::vector<std::string> &Args,
-                                     const char *X) {
-  return CloneArgsWithoutX(Args, X, X);
-}
-
 static int RunInMultipleProcesses(const std::vector<std::string> &Args,
-                                  int NumWorkers, int NumJobs) {
-  std::atomic<int> Counter(0);
+                                  unsigned NumWorkers, unsigned NumJobs) {
+  std::atomic<unsigned> Counter(0);
   std::atomic<bool> HasErrors(false);
   std::string Cmd = CloneArgsWithoutX(Args, "jobs", "workers");
   std::vector<std::thread> V;
   std::thread Pulse(PulseThread);
   Pulse.detach();
-  for (int i = 0; i < NumWorkers; i++)
+  for (unsigned i = 0; i < NumWorkers; i++)
     V.push_back(std::thread(WorkerThread, Cmd, &Counter, NumJobs, &HasErrors));
   for (auto &T : V)
     T.join();
@@ -282,34 +278,107 @@ static bool AllInputsAreFiles() {
   return true;
 }
 
-int MinimizeCrashInput(const std::vector<std::string> &Args) {
+static std::string GetDedupTokenFromFile(const std::string &Path) {
+  auto S = FileToString(Path);
+  auto Beg = S.find("DEDUP_TOKEN:");
+  if (Beg == std::string::npos)
+    return "";
+  auto End = S.find('\n', Beg);
+  if (End == std::string::npos)
+    return "";
+  return S.substr(Beg, End - Beg);
+}
+
+int CleanseCrashInput(const std::vector<std::string> &Args,
+                       const FuzzingOptions &Options) {
+  if (Inputs->size() != 1 || !Flags.exact_artifact_path) {
+    Printf("ERROR: -cleanse_crash should be given one input file and"
+          " -exact_artifact_path\n");
+    exit(1);
+  }
+  std::string InputFilePath = Inputs->at(0);
+  std::string OutputFilePath = Flags.exact_artifact_path;
+  std::string BaseCmd =
+      CloneArgsWithoutX(Args, "cleanse_crash", "cleanse_crash");
+
+  auto InputPos = BaseCmd.find(" " + InputFilePath + " ");
+  assert(InputPos != std::string::npos);
+  BaseCmd.erase(InputPos, InputFilePath.size() + 1);
+
+  auto LogFilePath = DirPlusFile(
+      TmpDir(), "libFuzzerTemp." + std::to_string(GetPid()) + ".txt");
+  auto TmpFilePath = DirPlusFile(
+      TmpDir(), "libFuzzerTemp." + std::to_string(GetPid()) + ".repro");
+  auto LogFileRedirect = " > " + LogFilePath + " 2>&1 ";
+
+  auto Cmd = BaseCmd + " " + TmpFilePath + LogFileRedirect;
+
+  std::string CurrentFilePath = InputFilePath;
+  auto U = FileToVector(CurrentFilePath);
+  size_t Size = U.size();
+
+  const std::vector<uint8_t> ReplacementBytes = {' ', 0xff};
+  for (int NumAttempts = 0; NumAttempts < 5; NumAttempts++) {
+    bool Changed = false;
+    for (size_t Idx = 0; Idx < Size; Idx++) {
+      Printf("CLEANSE[%d]: Trying to replace byte %zd of %zd\n", NumAttempts,
+             Idx, Size);
+      uint8_t OriginalByte = U[Idx];
+      if (ReplacementBytes.end() != std::find(ReplacementBytes.begin(),
+                                              ReplacementBytes.end(),
+                                              OriginalByte))
+        continue;
+      for (auto NewByte : ReplacementBytes) {
+        U[Idx] = NewByte;
+        WriteToFile(U, TmpFilePath);
+        auto ExitCode = ExecuteCommand(Cmd);
+        RemoveFile(TmpFilePath);
+        if (!ExitCode) {
+          U[Idx] = OriginalByte;
+        } else {
+          Changed = true;
+          Printf("CLEANSE: Replaced byte %zd with 0x%x\n", Idx, NewByte);
+          WriteToFile(U, OutputFilePath);
+          break;
+        }
+      }
+    }
+    if (!Changed) break;
+  }
+  RemoveFile(LogFilePath);
+  return 0;
+}
+
+int MinimizeCrashInput(const std::vector<std::string> &Args,
+                       const FuzzingOptions &Options) {
   if (Inputs->size() != 1) {
     Printf("ERROR: -minimize_crash should be given one input file\n");
     exit(1);
   }
-  if (Flags.runs <= 0 && Flags.max_total_time == 0) {
-    Printf("ERROR: you need to use -runs=N or "
-           "-max_total_time=N with -minimize_crash=1\n" );
-    exit(1);
-  }
   std::string InputFilePath = Inputs->at(0);
-  std::string BaseCmd = CloneArgsWithoutX(Args, "minimize_crash");
+  std::string BaseCmd =
+      CloneArgsWithoutX(Args, "minimize_crash", "exact_artifact_path");
   auto InputPos = BaseCmd.find(" " + InputFilePath + " ");
   assert(InputPos != std::string::npos);
   BaseCmd.erase(InputPos, InputFilePath.size() + 1);
-  // BaseCmd += " >  /dev/null 2>&1 ";
+  if (Flags.runs <= 0 && Flags.max_total_time == 0) {
+    Printf("INFO: you need to specify -runs=N or "
+           "-max_total_time=N with -minimize_crash=1\n"
+           "INFO: defaulting to -max_total_time=600\n");
+    BaseCmd += " -max_total_time=600";
+  }
+
+  auto LogFilePath = DirPlusFile(
+      TmpDir(), "libFuzzerTemp." + std::to_string(GetPid()) + ".txt");
+  auto LogFileRedirect = " > " + LogFilePath + " 2>&1 ";
 
   std::string CurrentFilePath = InputFilePath;
   while (true) {
     Unit U = FileToVector(CurrentFilePath);
-    if (U.size() < 2) {
-      Printf("CRASH_MIN: '%s' is small enough\n", CurrentFilePath.c_str());
-      return 0;
-    }
     Printf("CRASH_MIN: minimizing crash input: '%s' (%zd bytes)\n",
            CurrentFilePath.c_str(), U.size());
 
-    auto Cmd = BaseCmd + " " + CurrentFilePath;
+    auto Cmd = BaseCmd + " " + CurrentFilePath + LogFileRedirect;
 
     Printf("CRASH_MIN: executing: %s\n", Cmd.c_str());
     int ExitCode = ExecuteCommand(Cmd);
@@ -320,20 +389,46 @@ int MinimizeCrashInput(const std::vector<std::string> &Args) {
     Printf("CRASH_MIN: '%s' (%zd bytes) caused a crash. Will try to minimize "
            "it further\n",
            CurrentFilePath.c_str(), U.size());
+    auto DedupToken1 = GetDedupTokenFromFile(LogFilePath);
+    if (!DedupToken1.empty())
+      Printf("CRASH_MIN: DedupToken1: %s\n", DedupToken1.c_str());
 
-    std::string ArtifactPath = "minimized-from-" + Hash(U);
+    std::string ArtifactPath =
+        Flags.exact_artifact_path
+            ? Flags.exact_artifact_path
+            : Options.ArtifactPrefix + "minimized-from-" + Hash(U);
     Cmd += " -minimize_crash_internal_step=1 -exact_artifact_path=" +
         ArtifactPath;
     Printf("CRASH_MIN: executing: %s\n", Cmd.c_str());
     ExitCode = ExecuteCommand(Cmd);
+    CopyFileToErr(LogFilePath);
     if (ExitCode == 0) {
+      if (Flags.exact_artifact_path) {
+        CurrentFilePath = Flags.exact_artifact_path;
+        WriteToFile(U, CurrentFilePath);
+      }
       Printf("CRASH_MIN: failed to minimize beyond %s (%d bytes), exiting\n",
              CurrentFilePath.c_str(), U.size());
-      return 0;
+      break;
     }
+    auto DedupToken2 = GetDedupTokenFromFile(LogFilePath);
+    if (!DedupToken2.empty())
+      Printf("CRASH_MIN: DedupToken2: %s\n", DedupToken2.c_str());
+
+    if (DedupToken1 != DedupToken2) {
+      if (Flags.exact_artifact_path) {
+        CurrentFilePath = Flags.exact_artifact_path;
+        WriteToFile(U, CurrentFilePath);
+      }
+      Printf("CRASH_MIN: mismatch in dedup tokens"
+             " (looks like a different bug). Won't minimize further\n");
+      break;
+    }
+
     CurrentFilePath = ArtifactPath;
-    Printf("\n\n\n\n\n\n*********************************\n");
+    Printf("*********************************\n");
   }
+  RemoveFile(LogFilePath);
   return 0;
 }
 
@@ -341,8 +436,11 @@ int MinimizeCrashInputInternalStep(Fuzzer *F, InputCorpus *Corpus) {
   assert(Inputs->size() == 1);
   std::string InputFilePath = Inputs->at(0);
   Unit U = FileToVector(InputFilePath);
-  assert(U.size() > 2);
   Printf("INFO: Starting MinimizeCrashInputInternalStep: %zd\n", U.size());
+  if (U.size() < 2) {
+    Printf("INFO: The input is small enough, exiting\n");
+    exit(0);
+  }
   Corpus->AddToCorpus(U, 0);
   F->SetMaxInputLen(U.size());
   F->SetMaxMutationLen(U.size() - 1);
@@ -352,23 +450,93 @@ int MinimizeCrashInputInternalStep(Fuzzer *F, InputCorpus *Corpus) {
   return 0;
 }
 
+int AnalyzeDictionary(Fuzzer *F, const std::vector<Unit>& Dict,
+                      UnitVector& Corpus) {
+  Printf("Started dictionary minimization (up to %d tests)\n",
+         Dict.size() * Corpus.size() * 2);
+
+  // Scores and usage count for each dictionary unit.
+  std::vector<int> Scores(Dict.size());
+  std::vector<int> Usages(Dict.size());
+
+  std::vector<size_t> InitialFeatures;
+  std::vector<size_t> ModifiedFeatures;
+  for (auto &C : Corpus) {
+    // Get coverage for the testcase without modifications.
+    F->ExecuteCallback(C.data(), C.size());
+    InitialFeatures.clear();
+    TPC.CollectFeatures([&](size_t Feature) -> bool {
+      InitialFeatures.push_back(Feature);
+      return true;
+    });
+
+    for (size_t i = 0; i < Dict.size(); ++i) {
+      auto Data = C;
+      auto StartPos = std::search(Data.begin(), Data.end(),
+                                  Dict[i].begin(), Dict[i].end());
+      // Skip dictionary unit, if the testcase does not contain it.
+      if (StartPos == Data.end())
+        continue;
+
+      ++Usages[i];
+      while (StartPos != Data.end()) {
+        // Replace all occurrences of dictionary unit in the testcase.
+        auto EndPos = StartPos + Dict[i].size();
+        for (auto It = StartPos; It != EndPos; ++It)
+          *It ^= 0xFF;
+
+        StartPos = std::search(EndPos, Data.end(),
+                               Dict[i].begin(), Dict[i].end());
+      }
+
+      // Get coverage for testcase with masked occurrences of dictionary unit.
+      F->ExecuteCallback(Data.data(), Data.size());
+      ModifiedFeatures.clear();
+      TPC.CollectFeatures([&](size_t Feature) -> bool {
+        ModifiedFeatures.push_back(Feature);
+        return true;
+      });
+
+      if (InitialFeatures == ModifiedFeatures)
+        --Scores[i];
+      else
+        Scores[i] += 2;
+    }
+  }
+
+  Printf("###### Useless dictionary elements. ######\n");
+  for (size_t i = 0; i < Dict.size(); ++i) {
+    // Dictionary units with positive score are treated as useful ones.
+    if (Scores[i] > 0)
+       continue;
+
+    Printf("\"");
+    PrintASCII(Dict[i].data(), Dict[i].size(), "\"");
+    Printf(" # Score: %d, Used: %d\n", Scores[i], Usages[i]);
+  }
+  Printf("###### End of useless dictionary elements. ######\n");
+  return 0;
+}
+
 int FuzzerDriver(int *argc, char ***argv, UserCallback Callback) {
   using namespace fuzzer;
   assert(argc && argv && "Argument pointers cannot be nullptr");
+  std::string Argv0((*argv)[0]);
   EF = new ExternalFunctions();
   if (EF->LLVMFuzzerInitialize)
     EF->LLVMFuzzerInitialize(argc, argv);
   const std::vector<std::string> Args(*argv, *argv + *argc);
   assert(!Args.empty());
   ProgName = new std::string(Args[0]);
+  if (Argv0 != *ProgName) {
+    Printf("ERROR: argv[0] has been modified in LLVMFuzzerInitialize\n");
+    exit(1);
+  }
   ParseFlags(Args);
   if (Flags.help) {
     PrintHelp();
     return 0;
   }
-
-  if (Flags.minimize_crash)
-    return MinimizeCrashInput(Args);
 
   if (Flags.close_fd_mask & 2)
     DupAndCloseStderr();
@@ -378,7 +546,7 @@ int FuzzerDriver(int *argc, char ***argv, UserCallback Callback) {
   if (Flags.jobs > 0 && Flags.workers == 0) {
     Flags.workers = std::min(NumberOfCpuCores() / 2, Flags.jobs);
     if (Flags.workers > 1)
-      Printf("Running %d workers\n", Flags.workers);
+      Printf("Running %u workers\n", Flags.workers);
   }
 
   if (Flags.workers > 0 && Flags.jobs > 0)
@@ -389,6 +557,9 @@ int FuzzerDriver(int *argc, char ***argv, UserCallback Callback) {
   FuzzingOptions Options;
   Options.Verbosity = Flags.verbosity;
   Options.MaxLen = Flags.max_len;
+  Options.ExperimentalLenControl = Flags.experimental_len_control;
+  if (Flags.experimental_len_control && Flags.max_len == 64)
+    Options.MaxLen = 1 << 20;
   Options.UnitTimeoutSec = Flags.timeout;
   Options.ErrorExitCode = Flags.error_exitcode;
   Options.TimeoutExitCode = Flags.timeout_exitcode;
@@ -397,7 +568,6 @@ int FuzzerDriver(int *argc, char ***argv, UserCallback Callback) {
   Options.MutateDepth = Flags.mutate_depth;
   Options.UseCounters = Flags.use_counters;
   Options.UseIndirCalls = Flags.use_indir_calls;
-  Options.UseMemcmp = Flags.use_memcmp;
   Options.UseMemmem = Flags.use_memmem;
   Options.UseCmp = Flags.use_cmp;
   Options.UseValueProfile = Flags.use_value_profile;
@@ -406,7 +576,6 @@ int FuzzerDriver(int *argc, char ***argv, UserCallback Callback) {
   Options.PreferSmall = Flags.prefer_small;
   Options.ReloadIntervalSec = Flags.reload;
   Options.OnlyASCII = Flags.only_ascii;
-  Options.OutputCSV = Flags.output_csv;
   Options.DetectLeaks = Flags.detect_leaks;
   Options.TraceMalloc = Flags.trace_malloc;
   Options.RssLimitMb = Flags.rss_limit_mb;
@@ -432,6 +601,7 @@ int FuzzerDriver(int *argc, char ***argv, UserCallback Callback) {
   Options.PrintFinalStats = Flags.print_final_stats;
   Options.PrintCorpusStats = Flags.print_corpus_stats;
   Options.PrintCoverage = Flags.print_coverage;
+  Options.DumpCoverage = Flags.dump_coverage;
   if (Flags.exit_on_src_pos)
     Options.ExitOnSrcPos = Flags.exit_on_src_pos;
   if (Flags.exit_on_item)
@@ -440,35 +610,66 @@ int FuzzerDriver(int *argc, char ***argv, UserCallback Callback) {
   unsigned Seed = Flags.seed;
   // Initialize Seed.
   if (Seed == 0)
-    Seed = (std::chrono::system_clock::now().time_since_epoch().count() << 10) +
-           getpid();
+    Seed =
+        std::chrono::system_clock::now().time_since_epoch().count() + GetPid();
   if (Flags.verbosity)
     Printf("INFO: Seed: %u\n", Seed);
 
   Random Rand(Seed);
-  MutationDispatcher MD(Rand, Options);
-  InputCorpus Corpus(Options.OutputCorpus);
-  Fuzzer F(Callback, Corpus, MD, Options);
+  auto *MD = new MutationDispatcher(Rand, Options);
+  auto *Corpus = new InputCorpus(Options.OutputCorpus);
+  auto *F = new Fuzzer(Callback, *Corpus, *MD, Options);
 
   for (auto &U: Dictionary)
     if (U.size() <= Word::GetMaxSize())
-      MD.AddWordToManualDictionary(Word(U.data(), U.size()));
+      MD->AddWordToManualDictionary(Word(U.data(), U.size()));
 
-  StartRssThread(&F, Flags.rss_limit_mb);
+  StartRssThread(F, Flags.rss_limit_mb);
 
-  // Timer
-  if (Flags.timeout > 0)
-    SetTimer(Flags.timeout / 2 + 1);
-  if (Flags.handle_segv) SetSigSegvHandler();
-  if (Flags.handle_bus) SetSigBusHandler();
-  if (Flags.handle_abrt) SetSigAbrtHandler();
-  if (Flags.handle_ill) SetSigIllHandler();
-  if (Flags.handle_fpe) SetSigFpeHandler();
-  if (Flags.handle_int) SetSigIntHandler();
-  if (Flags.handle_term) SetSigTermHandler();
+  Options.HandleAbrt = Flags.handle_abrt;
+  Options.HandleBus = Flags.handle_bus;
+  Options.HandleFpe = Flags.handle_fpe;
+  Options.HandleIll = Flags.handle_ill;
+  Options.HandleInt = Flags.handle_int;
+  Options.HandleSegv = Flags.handle_segv;
+  Options.HandleTerm = Flags.handle_term;
+  Options.HandleXfsz = Flags.handle_xfsz;
+  SetSignalHandler(Options);
+
+  if (Flags.minimize_crash)
+    return MinimizeCrashInput(Args, Options);
 
   if (Flags.minimize_crash_internal_step)
-    return MinimizeCrashInputInternalStep(&F, &Corpus);
+    return MinimizeCrashInputInternalStep(F, Corpus);
+
+  if (Flags.cleanse_crash)
+    return CleanseCrashInput(Args, Options);
+
+  if (auto Name = Flags.run_equivalence_server) {
+    SMR.Destroy(Name);
+    if (!SMR.Create(Name)) {
+       Printf("ERROR: can't create shared memory region\n");
+      return 1;
+    }
+    Printf("INFO: EQUIVALENCE SERVER UP\n");
+    while (true) {
+      SMR.WaitClient();
+      size_t Size = SMR.ReadByteArraySize();
+      SMR.WriteByteArray(nullptr, 0);
+      const Unit tmp(SMR.GetByteArray(), SMR.GetByteArray() + Size);
+      F->RunOne(tmp.data(), tmp.size());
+      SMR.PostServer();
+    }
+    return 0;
+  }
+
+  if (auto Name = Flags.use_equivalence_server) {
+    if (!SMR.Open(Name)) {
+      Printf("ERROR: can't open shared memory region\n");
+      return 1;
+    }
+    Printf("INFO: EQUIVALENCE CLIENT UP\n");
+  }
 
   if (DoPlainRun) {
     Options.SaveArtifacts = false;
@@ -479,7 +680,7 @@ int FuzzerDriver(int *argc, char ***argv, UserCallback Callback) {
       auto StartTime = system_clock::now();
       Printf("Running: %s\n", Path.c_str());
       for (int Iter = 0; Iter < Runs; Iter++)
-        RunOneTest(&F, Path.c_str(), Options.MaxLen);
+        RunOneTest(F, Path.c_str(), Options.MaxLen);
       auto StopTime = system_clock::now();
       auto MS = duration_cast<milliseconds>(StopTime - StartTime).count();
       Printf("Executed %s in %zd ms\n", Path.c_str(), (long)MS);
@@ -488,14 +689,19 @@ int FuzzerDriver(int *argc, char ***argv, UserCallback Callback) {
            "*** NOTE: fuzzing was not performed, you have only\n"
            "***       executed the target code on a fixed set of inputs.\n"
            "***\n");
-    F.PrintFinalStats();
+    F->PrintFinalStats();
     exit(0);
   }
 
   if (Flags.merge) {
     if (Options.MaxLen == 0)
-      F.SetMaxInputLen(kMaxSaneLen);
-    F.Merge(*Inputs);
+      F->SetMaxInputLen(kMaxSaneLen);
+    if (Flags.merge_control_file)
+      F->CrashResistantMergeInternalStep(Flags.merge_control_file);
+    else
+      F->CrashResistantMerge(Args, *Inputs,
+                             Flags.load_coverage_summary,
+                             Flags.save_coverage_summary);
     exit(0);
   }
 
@@ -508,26 +714,39 @@ int FuzzerDriver(int *argc, char ***argv, UserCallback Callback) {
                            TemporaryMaxLen, /*ExitOnError=*/false);
   }
 
+  if (Flags.analyze_dict) {
+    if (Dictionary.empty() || Inputs->empty()) {
+      Printf("ERROR: can't analyze dict without dict and corpus provided\n");
+      return 1;
+    }
+    if (AnalyzeDictionary(F, Dictionary, InitialCorpus)) {
+      Printf("Dictionary analysis failed\n");
+      exit(1);
+    }
+    Printf("Dictionary analysis suceeded\n");
+    exit(0);
+  }
+
   if (Options.MaxLen == 0) {
     size_t MaxLen = 0;
     for (auto &U : InitialCorpus)
       MaxLen = std::max(U.size(), MaxLen);
-    F.SetMaxInputLen(std::min(std::max(kMinDefaultLen, MaxLen), kMaxSaneLen));
+    F->SetMaxInputLen(std::min(std::max(kMinDefaultLen, MaxLen), kMaxSaneLen));
   }
 
   if (InitialCorpus.empty()) {
-    InitialCorpus.push_back(Unit({0}));
+    InitialCorpus.push_back(Unit({'\n'}));  // Valid ASCII input.
     if (Options.Verbosity)
       Printf("INFO: A corpus is not provided, starting from an empty corpus\n");
   }
-  F.ShuffleAndMinimize(&InitialCorpus);
+  F->ShuffleAndMinimize(&InitialCorpus);
   InitialCorpus.clear();  // Don't need this memory any more.
-  F.Loop();
+  F->Loop();
 
   if (Flags.verbosity)
-    Printf("Done %d runs in %zd second(s)\n", F.getTotalNumberOfRuns(),
-           F.secondsSinceProcessStartUp());
-  F.PrintFinalStats();
+    Printf("Done %zd runs in %zd second(s)\n", F->getTotalNumberOfRuns(),
+           F->secondsSinceProcessStartUp());
+  F->PrintFinalStats();
 
   exit(0);  // Don't let F destroy itself.
 }
