@@ -61,5 +61,7 @@
 }
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] > .ac-site-icon {
-  list-style-image: url(chrome://browser/skin/connection-mixed-active-loaded.svg#icon);
+  list-style-image: url(chrome://browser/skin/connection-mixed-active-loaded.svg);
+  -moz-context-properties: fill;
+  fill: GrayText;
 }
