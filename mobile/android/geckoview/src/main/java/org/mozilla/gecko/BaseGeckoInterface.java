@@ -34,10 +34,6 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
     @Override
     public void removeAppStateListener(GeckoAppShell.AppStateListener listener) {}
 
-    // Bug 908792: Implement this
-    @Override
-    public void invalidateOptionsMenu() {}
-
     @Override
     public void createShortcut(String title, String URI) {
         // By default, do nothing.

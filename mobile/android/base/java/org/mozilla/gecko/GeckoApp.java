@@ -489,9 +489,9 @@ public abstract class GeckoApp extends GeckoActivity
         return false;
     }
 
-    public void refreshChrome() { }
+    public void refreshChrome() {
+    }
 
-    @Override
     public void invalidateOptionsMenu() {
         if (mMenu == null) {
             return;
