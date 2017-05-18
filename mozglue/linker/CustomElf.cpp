@@ -65,8 +65,9 @@ void debug_phdr(const char *type, const Phdr *phdr)
             "memsz: 0x%08" PRIxPTR ", "
             "offset: 0x%08" PRIxPTR ", "
             "flags: %c%c%c)",
-            type, phdr->p_vaddr, phdr->p_filesz, phdr->p_memsz,
-            phdr->p_offset, phdr->p_flags & PF_R ? 'r' : '-',
+            type, uintptr_t(phdr->p_vaddr), uintptr_t(phdr->p_filesz),
+            uintptr_t(phdr->p_memsz), uintptr_t(phdr->p_offset),
+            phdr->p_flags & PF_R ? 'r' : '-',
             phdr->p_flags & PF_W ? 'w' : '-', phdr->p_flags & PF_X ? 'x' : '-');
 }
 
@@ -186,7 +187,7 @@ CustomElf::Load(Mappable *mappable, const char *path, int flags)
 
   if (min_vaddr != 0) {
     ERROR("%s: Unsupported minimal virtual address: 0x%08" PRIxPTR,
-        elf->GetPath(), min_vaddr);
+        elf->GetPath(), uintptr_t(min_vaddr));
     return nullptr;
   }
   if (!dyn) {
@@ -456,7 +457,7 @@ namespace {
 
 void debug_dyn(const char *type, const Dyn *dyn)
 {
-  DEBUG_LOG("%s 0x%08" PRIxPTR, type, dyn->d_un.d_val);
+  DEBUG_LOG("%s 0x%08" PRIxPTR, type, uintptr_t(dyn->d_un.d_val));
 }
 
 } /* anonymous namespace */
@@ -587,7 +588,7 @@ CustomElf::InitDyn(const Phdr *pt_dyn)
            flags &= ~DF_SYMBOLIC;
            if (flags)
              WARN("%s: unhandled flags #%" PRIxPTR" not handled",
-                 GetPath(), flags);
+                 GetPath(), uintptr_t(flags));
         }
         break;
       case DT_SONAME: /* Should match GetName(), but doesn't matter */
@@ -610,7 +611,7 @@ CustomElf::InitDyn(const Phdr *pt_dyn)
         break;
       default:
         WARN("%s: dynamic header type #%" PRIxPTR" not handled",
-            GetPath(), dyn->d_tag);
+            GetPath(), uintptr_t(dyn->d_tag));
     }
   }
 
@@ -671,7 +672,7 @@ CustomElf::Relocate()
 
     if (symptr == nullptr)
       WARN("%s: Relocation to NULL @0x%08" PRIxPTR,
-          GetPath(), rel->r_offset);
+          GetPath(), uintptr_t(rel->r_offset));
 
     /* Apply relocation */
     switch (ELF_R_TYPE(rel->r_info)) {
@@ -685,7 +686,7 @@ CustomElf::Relocate()
       break;
     default:
       ERROR("%s: Unsupported relocation type: 0x%" PRIxPTR,
-          GetPath(), ELF_R_TYPE(rel->r_info));
+          GetPath(), uintptr_t(ELF_R_TYPE(rel->r_info)));
       return false;
     }
   }
@@ -719,11 +720,11 @@ CustomElf::RelocateJumps()
       if (ELF_ST_BIND(sym.st_info) == STB_WEAK) {
         WARN("%s: Relocation to NULL @0x%08" PRIxPTR " for symbol \"%s\"",
             GetPath(),
-            rel->r_offset, strtab.GetStringAt(sym.st_name));
+            uintptr_t(rel->r_offset), strtab.GetStringAt(sym.st_name));
       } else {
         ERROR("%s: Relocation to NULL @0x%08" PRIxPTR " for symbol \"%s\"",
             GetPath(),
-            rel->r_offset, strtab.GetStringAt(sym.st_name));
+            uintptr_t(rel->r_offset), strtab.GetStringAt(sym.st_name));
         return false;
       }
     }

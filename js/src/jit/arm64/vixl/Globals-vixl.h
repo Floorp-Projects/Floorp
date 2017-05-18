@@ -76,7 +76,7 @@ const int MBytes = 1024 * KBytes;
   #define VIXL_ASSERT(condition) ((void) 0)
   #define VIXL_CHECK(condition) ((void) 0)
   #define VIXL_UNIMPLEMENTED() ((void) 0)
-  #define VIXL_UNREACHABLE() ((void) 0)
+  #define VIXL_UNREACHABLE() MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE()
 #endif
 // This is not as powerful as template based assertions, but it is simple.
 // It assumes that the descriptions are unique. If this starts being a problem,
