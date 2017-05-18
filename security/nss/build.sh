@@ -183,7 +183,10 @@ if [[ "$rebuild_nspr" = 1 && "$no_local_nspr" = 0 ]]; then
     mv -f "$nspr_config".new "$nspr_config"
 fi
 if [ "$rebuild_gyp" = 1 ]; then
-
+    if ! hash gyp 2> /dev/null; then
+        echo "Please install gyp" 1>&2
+        exit 1
+    fi
     # These extra arguments aren't used in determining whether to rebuild.
     obj_dir="$dist_dir"/$target
     gyp_params+=(-Dnss_dist_obj_dir=$obj_dir)

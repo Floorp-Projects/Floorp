@@ -3848,7 +3848,13 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
     if (mRaceCacheWithNetwork && mFirstResponseSource == RESPONSE_FROM_NETWORK) {
         LOG(("Not using cached response because we've already got one from the network\n"));
         *aResult = ENTRY_NOT_WANTED;
+
+        // Net-win indicates that mOnStartRequestTimestamp is from net.
+        int64_t savedTime = (TimeStamp::Now() - mOnStartRequestTimestamp).ToMilliseconds();
+        Telemetry::Accumulate(Telemetry::NETWORK_RACE_CACHE_WITH_NETWORK_SAVED_TIME, savedTime);
         return NS_OK;
+    } else if (mRaceCacheWithNetwork && mFirstResponseSource == RESPONSE_PENDING) {
+        mOnCacheEntryCheckTimestamp = TimeStamp::Now();
     }
 
     nsAutoCString cacheControlRequestHeader;
@@ -6894,6 +6900,17 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
             // that are not keep-alive.
         } else if (WRONG_RACING_RESPONSE_SOURCE(request)) {
             LOG(("  Early return when racing. This response not needed."));
+
+            // Net wins, but OnCacheEntryCheck was already called.
+            if (mFirstResponseSource == RESPONSE_FROM_NETWORK &&
+                !mOnCacheEntryCheckTimestamp.IsNull()) {
+                TimeStamp currentTime = TimeStamp::Now();
+                int64_t savedTime = (currentTime - mOnStartRequestTimestamp).ToMilliseconds();
+                Telemetry::Accumulate(Telemetry::NETWORK_RACE_CACHE_WITH_NETWORK_SAVED_TIME, savedTime);
+
+                int64_t diffTime = (currentTime - mOnCacheEntryCheckTimestamp).ToMilliseconds();
+                Telemetry::Accumulate(Telemetry::NETWORK_RACE_CACHE_WITH_NETWORK_OCEC_ON_START_DIFF, diffTime);
+            }
             return NS_OK;
         }
     }
@@ -7105,23 +7122,6 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
             }
         }
     }
-
-    enum RaceCacheAndNetStatus
-    {
-        kDidNotRaceUsedNetwork = 0,
-        kDidNotRaceUsedCache = 1,
-        kRaceUsedNetwork = 2,
-        kRaceUsedCache = 3
-    };
-
-    RaceCacheAndNetStatus rcwnStatus = kDidNotRaceUsedNetwork;
-    if (request == mTransactionPump) {
-        rcwnStatus = mRaceCacheWithNetwork ?  kRaceUsedNetwork : kDidNotRaceUsedNetwork;
-    } else if (request == mCachePump) {
-        rcwnStatus = mRaceCacheWithNetwork ? kRaceUsedCache : kDidNotRaceUsedCache;
-    }
-    Telemetry::Accumulate(Telemetry::NETWORK_RACE_CACHE_WITH_NETWORK_USAGE,
-                          rcwnStatus);
 
     nsCOMPtr<nsICompressConvStats> conv = do_QueryInterface(mCompressListener);
     if (conv) {
@@ -7344,12 +7344,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         }
     }
 
-    gIOService->IncrementRequestNumber();
-    if (rcwnStatus == kRaceUsedCache) {
-        gIOService->IncrementCacheWonRequestNumber();
-    } else if (rcwnStatus == kRaceUsedNetwork) {
-        gIOService->IncrementNetWonRequestNumber();
-    }
+    ReportRcwnStats(request);
 
     // Register entry to the Performance resource timing
     mozilla::dom::Performance* documentPerformance = GetPerformance();
@@ -8843,8 +8838,46 @@ nsHttpChannel::SetDoNotTrack()
   }
 }
 
+void
+nsHttpChannel::ReportRcwnStats(nsIRequest* firstResponseRequest)
+{
+    if (!sRCWNEnabled) {
+        return;
+    }
+    enum RaceCacheAndNetStatus
+    {
+        kDidNotRaceUsedNetwork = 0,
+        kDidNotRaceUsedCache = 1,
+        kRaceUsedNetwork = 2,
+        kRaceUsedCache = 3
+    };
+    static const Telemetry::HistogramID kRcwnTelemetry[4] = {
+        Telemetry::NETWORK_RACE_CACHE_BANDWITH_NOT_RACE,
+        Telemetry::NETWORK_RACE_CACHE_BANDWITH_NOT_RACE,
+        Telemetry::NETWORK_RACE_CACHE_BANDWITH_RACE_NETWORK_WIN,
+        Telemetry::NETWORK_RACE_CACHE_BANDWITH_RACE_CACHE_WIN
+    };
+
+    RaceCacheAndNetStatus rcwnStatus = kDidNotRaceUsedNetwork;
+    if (firstResponseRequest == mTransactionPump) {
+        rcwnStatus = mRaceCacheWithNetwork ? kRaceUsedNetwork : kDidNotRaceUsedNetwork;
+    } else if (firstResponseRequest == mCachePump) {
+        rcwnStatus = mRaceCacheWithNetwork ? kRaceUsedCache : kDidNotRaceUsedCache;
+    }
+    Telemetry::Accumulate(Telemetry::NETWORK_RACE_CACHE_WITH_NETWORK_USAGE,
+                          rcwnStatus);
+    Telemetry::Accumulate(kRcwnTelemetry[rcwnStatus], mTransferSize);
+
+    gIOService->IncrementRequestNumber();
+    if (rcwnStatus == kRaceUsedCache) {
+        gIOService->IncrementCacheWonRequestNumber();
+    } else if (rcwnStatus == kRaceUsedNetwork) {
+        gIOService->IncrementNetWonRequestNumber();
+    }
+}
+
 static const size_t kPositiveBucketNumbers = 34;
-static const int64_t positiveBucketLevels[kPositiveBucketNumbers] =
+static const int64_t kPositiveBucketLevels[kPositiveBucketNumbers] =
 {
 	0, 10, 20, 30, 40, 50, 60, 70, 80, 90,
 	100, 200, 300, 400, 500, 600, 700, 800, 900, 1000,
@@ -8874,10 +8907,10 @@ inline int64_t
 nsHttpChannel::ComputeTelemetryBucketNumber(int64_t difftime_ms)
 {
 	int64_t absBucketIndex =
-		std::lower_bound(positiveBucketLevels,
-                     positiveBucketLevels + kPositiveBucketNumbers,
+		std::lower_bound(kPositiveBucketLevels,
+                     kPositiveBucketLevels + kPositiveBucketNumbers,
 	                   static_cast<int64_t>(mozilla::Abs(difftime_ms)))
-		- positiveBucketLevels;
+		- kPositiveBucketLevels;
 
 	return difftime_ms >= 0 ? 40 + absBucketIndex
 	                        : 40 - absBucketIndex;
@@ -9051,7 +9084,6 @@ nsHttpChannel::MaybeRaceCacheWithNetwork()
     if (mLoadFlags & (LOAD_ONLY_FROM_CACHE | LOAD_NO_NETWORK_IO)) {
         return NS_OK;
     }
-
 
     uint32_t threshold = mCacheOpenWithPriority ? sRCWNQueueSizePriority
                                                 : sRCWNQueueSizeNormal;

@@ -198,6 +198,17 @@ HitTestingTreeNode::GetParent() const
   return mParent;
 }
 
+bool
+HitTestingTreeNode::IsAncestorOf(const HitTestingTreeNode* aOther) const
+{
+  for (const HitTestingTreeNode* cur = aOther; cur; cur = cur->GetParent()) {
+    if (cur == this) {
+      return true;
+    }
+  }
+  return false;
+}
+
 AsyncPanZoomController*
 HitTestingTreeNode::GetApzc() const
 {
@@ -247,15 +258,10 @@ HitTestingTreeNode::IsOutsideClip(const ParentLayerPoint& aPoint) const
 }
 
 Maybe<LayerPoint>
-HitTestingTreeNode::Untransform(const ParentLayerPoint& aPoint) const
+HitTestingTreeNode::Untransform(const ParentLayerPoint& aPoint,
+                                const LayerToParentLayerMatrix4x4& aTransform) const
 {
-  // convert into Layer coordinate space
-  LayerToParentLayerMatrix4x4 transform = mTransform *
-      CompleteAsyncTransform(
-        mApzc
-      ? mApzc->GetCurrentAsyncTransformWithOverscroll(AsyncPanZoomController::NORMAL)
-      : AsyncTransformComponentMatrix());
-  Maybe<ParentLayerToLayerMatrix4x4> inverse = transform.MaybeInverse();
+  Maybe<ParentLayerToLayerMatrix4x4> inverse = aTransform.MaybeInverse();
   if (inverse) {
     return UntransformBy(inverse.ref(), aPoint);
   }
@@ -263,22 +269,13 @@ HitTestingTreeNode::Untransform(const ParentLayerPoint& aPoint) const
 }
 
 HitTestResult
-HitTestingTreeNode::HitTest(const ParentLayerPoint& aPoint) const
+HitTestingTreeNode::HitTest(const LayerPoint& aPoint) const
 {
-  // This should only ever get called if the point is inside the clip region
-  // for this node.
-  MOZ_ASSERT(!IsOutsideClip(aPoint));
-
   if (mOverride & EventRegionsOverride::ForceEmptyHitRegion) {
     return HitTestResult::HitNothing;
   }
 
-  // convert into Layer coordinate space
-  Maybe<LayerPoint> pointInLayerPixels = Untransform(aPoint);
-  if (!pointInLayerPixels) {
-    return HitTestResult::HitNothing;
-  }
-  auto point = LayerIntPoint::Round(pointInLayerPixels.ref());
+  auto point = LayerIntPoint::Round(aPoint);
 
   // test against event regions in Layer coordinate space
   if (!mEventRegions.mHitRegion.Contains(point.x, point.y)) {
@@ -310,6 +307,12 @@ EventRegionsOverride
 HitTestingTreeNode::GetEventRegionsOverride() const
 {
   return mOverride;
+}
+
+const CSSTransformMatrix&
+HitTestingTreeNode::GetTransform() const
+{
+  return mTransform;
 }
 
 void

@@ -40,9 +40,8 @@ void DummyPrSocket::PacketReceived(const DataBuffer &packet) {
 }
 
 int32_t DummyPrSocket::Read(PRFileDesc *f, void *data, int32_t len) {
-  PR_ASSERT(mode_ == STREAM);
-
-  if (mode_ != STREAM) {
+  PR_ASSERT(variant_ == ssl_variant_stream);
+  if (variant_ != ssl_variant_stream) {
     PR_SetError(PR_INVALID_METHOD_ERROR, 0);
     return -1;
   }
@@ -75,7 +74,7 @@ int32_t DummyPrSocket::Recv(PRFileDesc *f, void *buf, int32_t buflen,
     return -1;
   }
 
-  if (mode() != DGRAM) {
+  if (variant() != ssl_variant_datagram) {
     return Read(f, buf, buflen);
   }
 

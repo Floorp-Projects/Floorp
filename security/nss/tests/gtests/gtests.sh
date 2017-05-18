@@ -83,7 +83,7 @@ gtest_cleanup()
 }
 
 ################## main #################################################
-GTESTS="prng_gtest der_gtest pk11_gtest util_gtest"
+GTESTS="prng_gtest certhigh_gtest certdb_gtest der_gtest pk11_gtest util_gtest freebl_gtest"
 SOURCE_DIR="$PWD"/../..
 gtest_init $0
 gtest_start

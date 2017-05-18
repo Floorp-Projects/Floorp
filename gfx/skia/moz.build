@@ -631,7 +631,7 @@ if CONFIG['INTEL_ARCHITECTURE']:
     SOURCES['skia/src/opts/SkOpts_sse41.cpp'].flags += skia_opt_flags
     SOURCES['skia/src/opts/SkOpts_sse42.cpp'].flags += skia_opt_flags
     SOURCES['skia/src/opts/SkOpts_ssse3.cpp'].flags += skia_opt_flags
-elif CONFIG['CPU_ARCH'] in ('arm', 'aarch64') and CONFIG['GNU_CC']:
+elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC']:
     SOURCES += [
         'skia/src/opts/SkBitmapProcState_arm_neon.cpp',
         'skia/src/opts/SkBitmapProcState_matrixProcs_neon.cpp',
@@ -648,6 +648,25 @@ elif CONFIG['CPU_ARCH'] in ('arm', 'aarch64') and CONFIG['GNU_CC']:
     SOURCES['skia/src/opts/SkBlitMask_opts_arm_neon.cpp'].flags += skia_opt_flags
     SOURCES['skia/src/opts/SkBlitRow_opts_arm.cpp'].flags += skia_opt_flags
     SOURCES['skia/src/opts/SkBlitRow_opts_arm_neon.cpp'].flags += skia_opt_flags
+elif CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['GNU_CC']:
+    SOURCES += [
+        'skia/src/opts/SkBitmapProcState_arm_neon.cpp',
+        'skia/src/opts/SkBitmapProcState_matrixProcs_neon.cpp',
+        'skia/src/opts/SkBitmapProcState_opts_none.cpp',
+        'skia/src/opts/SkBlitMask_opts_arm.cpp',
+        'skia/src/opts/SkBlitMask_opts_arm_neon.cpp',
+        'skia/src/opts/SkBlitRow_opts_arm.cpp',
+        'skia/src/opts/SkBlitRow_opts_arm_neon.cpp',
+        'skia/src/opts/SkOpts_crc32.cpp',
+    ]
+    SOURCES['skia/src/opts/SkBitmapProcState_arm_neon.cpp'].flags += skia_opt_flags
+    SOURCES['skia/src/opts/SkBitmapProcState_matrixProcs_neon.cpp'].flags += skia_opt_flags
+    SOURCES['skia/src/opts/SkBitmapProcState_opts_none.cpp'].flags += skia_opt_flags
+    SOURCES['skia/src/opts/SkBlitMask_opts_arm.cpp'].flags += skia_opt_flags
+    SOURCES['skia/src/opts/SkBlitMask_opts_arm_neon.cpp'].flags += skia_opt_flags
+    SOURCES['skia/src/opts/SkBlitRow_opts_arm.cpp'].flags += skia_opt_flags
+    SOURCES['skia/src/opts/SkBlitRow_opts_arm_neon.cpp'].flags += skia_opt_flags
+    SOURCES['skia/src/opts/SkOpts_crc32.cpp'].flags += skia_opt_flags
 else:
     SOURCES += [
         'skia/src/opts/SkBitmapProcState_opts_none.cpp',
@@ -719,6 +738,8 @@ elif CONFIG['_MSC_VER']:
     SOURCES['skia/src/opts/SkOpts_hsw.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=52']
 elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC']:
     CXXFLAGS += CONFIG['NEON_FLAGS']
+elif CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['GNU_CC']:
+    SOURCES['skia/src/opts/SkOpts_crc32.cpp'].flags += ['-march=armv8-a+crc']
 
 DEFINES['SKIA_IMPLEMENTATION'] = 1
 

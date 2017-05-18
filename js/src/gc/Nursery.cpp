@@ -508,8 +508,12 @@ FOR_EACH_NURSERY_PROFILE_TIME(EXTRACT_NAME)
     "" };
 
     size_t i = 0;
-    for (auto time : profileDurations_)
-        json.property(names[i++], time, json.MICROSECONDS);
+    if (trackTimings_) {
+        for (auto time : profileDurations_)
+            json.property(names[i++], time, json.MICROSECONDS);
+    } else {
+        json.property(names[0], *profileDurations_.begin(), json.MICROSECONDS);
+    }
 
     json.endObject();
 }
@@ -738,7 +742,7 @@ js::Nursery::doCollection(JS::gcreason::Reason reason,
 
     maybeStartProfile(ProfileKey::MarkDebugger);
     {
-        gcstats::AutoPhase ap(rt->gc.stats(), gcstats::PHASE_MARK_ROOTS);
+        gcstats::AutoPhase ap(rt->gc.stats(), gcstats::PhaseKind::MARK_ROOTS);
         Debugger::traceAllForMovingGC(&mover);
     }
     maybeEndProfile(ProfileKey::MarkDebugger);

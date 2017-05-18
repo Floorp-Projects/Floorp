@@ -23,7 +23,7 @@ IPDL_SOURCES += [
     'PWebBrowserPersistSerialize.ipdl',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'nsWebBrowserPersist.cpp',
     'WebBrowserPersistDocumentChild.cpp',
     'WebBrowserPersistDocumentParent.cpp',

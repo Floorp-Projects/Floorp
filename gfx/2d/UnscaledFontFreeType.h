@@ -33,7 +33,7 @@ public:
   ~UnscaledFontFreeType()
   {
     if (mOwnsFace) {
-      FT_Done_Face(mFace);
+      Factory::ReleaseFTFace(mFace);
     }
   }
 

@@ -204,14 +204,15 @@ TEST_F(TlsAgentStreamTestServer, Set0RttOptionClientHelloThenRead) {
   ProcessMessage(buffer, TlsAgent::STATE_ERROR, SSL_ERROR_BAD_MAC_READ);
 }
 
-INSTANTIATE_TEST_CASE_P(AgentTests, TlsAgentTest,
-                        ::testing::Combine(TlsAgentTestBase::kTlsRolesAll,
-                                           TlsConnectTestBase::kTlsModesStream,
-                                           TlsConnectTestBase::kTlsVAll));
+INSTANTIATE_TEST_CASE_P(
+    AgentTests, TlsAgentTest,
+    ::testing::Combine(TlsAgentTestBase::kTlsRolesAll,
+                       TlsConnectTestBase::kTlsVariantsStream,
+                       TlsConnectTestBase::kTlsVAll));
 INSTANTIATE_TEST_CASE_P(ClientTests, TlsAgentTestClient,
-                        ::testing::Combine(TlsConnectTestBase::kTlsModesAll,
+                        ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
                                            TlsConnectTestBase::kTlsVAll));
 INSTANTIATE_TEST_CASE_P(ClientTests13, TlsAgentTestClient13,
-                        ::testing::Combine(TlsConnectTestBase::kTlsModesAll,
+                        ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
                                            TlsConnectTestBase::kTlsV13));
 }  // namespace nss_test

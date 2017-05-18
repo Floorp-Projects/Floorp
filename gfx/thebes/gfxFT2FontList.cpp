@@ -85,8 +85,6 @@ public:
 
         NS_ASSERTION(!aFontEntry->mFilename.IsEmpty(),
                      "can't use AutoFTFace for fonts without a filename");
-        FT_Library ft = gfxPlatform::GetPlatform()->GetFTLibrary();
-        MOZ_ASSERT(ft);
 
         // A relative path (no initial "/") means this is a resource in
         // omnijar, not an installed font on the device.
@@ -108,15 +106,14 @@ public:
                 NS_ASSERTION(bufSize == item->RealSize(),
                              "error reading bundled font");
 
-                if (FT_Err_Ok != FT_New_Memory_Face(ft, mFontDataBuf, bufSize,
-                                                    aFontEntry->mFTFontIndex,
-                                                    &mFace)) {
+                mFace = Factory::NewFTFaceFromData(nullptr, mFontDataBuf, bufSize, aFontEntry->mFTFontIndex);
+                if (!mFace) {
                     NS_WARNING("failed to create freetype face");
                 }
             }
         } else {
-            if (FT_Err_Ok != FT_New_Face(ft, aFontEntry->mFilename.get(),
-                                         aFontEntry->mFTFontIndex, &mFace)) {
+            mFace = Factory::NewFTFace(nullptr, aFontEntry->mFilename.get(), aFontEntry->mFTFontIndex);
+            if (!mFace) {
                 NS_WARNING("failed to create freetype face");
             }
         }
@@ -128,7 +125,7 @@ public:
 
     ~AutoFTFace() {
         if (mFace && mOwnsFace) {
-            FT_Done_Face(mFace);
+            Factory::ReleaseFTFace(mFace);
             if (mFontDataBuf) {
                 free(mFontDataBuf);
             }
@@ -268,16 +265,13 @@ FT2FontEntry::CreateFontEntry(const nsAString& aFontName,
     // Ownership of aFontData is passed in here; the fontEntry must
     // retain it as long as the FT_Face needs it, and ensure it is
     // eventually deleted.
-    FT_Face face;
-    FT_Error error =
-        FT_New_Memory_Face(gfxPlatform::GetPlatform()->GetFTLibrary(),
-                           aFontData, aLength, 0, &face);
-    if (error != FT_Err_Ok) {
+    FT_Face face = Factory::NewFTFaceFromData(nullptr, aFontData, aLength, 0);
+    if (!face) {
         free((void*)aFontData);
         return nullptr;
     }
     if (FT_Err_Ok != FT_Select_Charmap(face, FT_ENCODING_UNICODE)) {
-        FT_Done_Face(face);
+        Factory::ReleaseFTFace(face);
         free((void*)aFontData);
         return nullptr;
     }
@@ -304,7 +298,7 @@ public:
 
     ~FTUserFontData()
     {
-        FT_Done_Face(mFace);
+        Factory::ReleaseFTFace(mFace);
         if (mFontData) {
             free((void*)mFontData);
         }
@@ -988,22 +982,21 @@ gfxFT2FontList::AppendFacesFromFontFile(const nsCString& aFileName,
         return;
     }
 
-    FT_Library ftLibrary = gfxPlatform::GetPlatform()->GetFTLibrary();
-    FT_Face dummy;
-    if (FT_Err_Ok == FT_New_Face(ftLibrary, aFileName.get(), -1, &dummy)) {
+    FT_Face dummy = Factory::NewFTFace(nullptr, aFileName.get(), -1);
+    if (dummy) {
         LOG(("reading font info via FreeType for %s", aFileName.get()));
         nsCString newFaceList;
         timestamp = s.st_mtime;
         filesize = s.st_size;
         for (FT_Long i = 0; i < dummy->num_faces; i++) {
-            FT_Face face;
-            if (FT_Err_Ok != FT_New_Face(ftLibrary, aFileName.get(), i, &face)) {
+            FT_Face face = Factory::NewFTFace(nullptr, aFileName.get(), i);
+            if (!face) {
                 continue;
             }
             AddFaceToList(aFileName, i, aStdFile, aVisibility, face, newFaceList);
-            FT_Done_Face(face);
+            Factory::ReleaseFTFace(face);
         }
-        FT_Done_Face(dummy);
+        Factory::ReleaseFTFace(dummy);
         if (aCache && 0 == statRetval && !newFaceList.IsEmpty()) {
             aCache->CacheFileInfo(aFileName, newFaceList, timestamp, filesize);
         }
@@ -1140,24 +1133,22 @@ gfxFT2FontList::AppendFacesFromOmnijarEntry(nsZipArchive* aArchive,
         return;
     }
 
-    FT_Library ftLibrary = gfxPlatform::GetPlatform()->GetFTLibrary();
-
-    FT_Face dummy;
-    if (FT_Err_Ok != FT_New_Memory_Face(ftLibrary, buf.get(), bufSize, 0, &dummy)) {
+    FT_Face dummy = Factory::NewFTFaceFromData(nullptr, buf.get(), bufSize, 0);
+    if (!dummy) {
         return;
     }
 
     for (FT_Long i = 0; i < dummy->num_faces; i++) {
-        FT_Face face;
-        if (FT_Err_Ok != FT_New_Memory_Face(ftLibrary, buf.get(), bufSize, i, &face)) {
+        FT_Face face = Factory::NewFTFaceFromData(nullptr, buf.get(), bufSize, i);
+        if (!face) {
             continue;
         }
         AddFaceToList(aEntryName, i, kStandard, FT2FontFamily::kVisible,
                       face, faceList);
-        FT_Done_Face(face);
+        Factory::ReleaseFTFace(face);
     }
 
-    FT_Done_Face(dummy);
+    Factory::ReleaseFTFace(dummy);
 
     if (aCache && !faceList.IsEmpty()) {
         aCache->CacheFileInfo(aEntryName, faceList, 0, bufSize);

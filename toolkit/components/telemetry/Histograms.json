@@ -2399,6 +2399,59 @@
     "n_values": 4,
     "description": "Whether we raced network with the cache. (0=network & no racing, 1=cache & no racing, 2=network & raced, 3=cache & raced)"
   },
+  "NETWORK_RACE_CACHE_WITH_NETWORK_SAVED_TIME": {
+    "record_in_processes": ["main", "content"],
+    "expires_in_version": "62",
+    "alert_emails": ["necko@mozilla.com", "bsmedberg@mozilla.com"],
+    "bug_numbers": [1354407],
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 100,
+    "description": "Time in milliseconds that we saved when we race cache with network."
+  },
+  "NETWORK_RACE_CACHE_WITH_NETWORK_OCEC_ON_START_DIFF": {
+    "record_in_processes": ["main", "content"],
+    "expires_in_version": "62",
+    "alert_emails": ["necko@mozilla.com", "bsmedberg@mozilla.com"],
+    "bug_numbers": [1354407],
+    "kind": "linear",
+    "high": 1000,
+    "n_buckets": 100,
+    "description": "Time in milliseconds between onStartRequest from the cache and onCacheEntryCheck. Report only when net wins and OCEC is before onStartRequest from net."
+  },
+  "NETWORK_RACE_CACHE_BANDWITH_RACE_NETWORK_WIN": {
+    "record_in_processes": ["main", "content"],
+    "expires_in_version": "62",
+    "kind": "exponential",
+    "low": 32,
+    "high": 16777216,
+    "n_buckets": 100,
+    "description": "Amount of bytes received when we decide to race cache with network and network wins.",
+    "alert_emails": ["necko@mozilla.com", "bsmedberg@mozilla.com"],
+    "bug_numbers": [1354405]
+  },
+  "NETWORK_RACE_CACHE_BANDWITH_RACE_CACHE_WIN": {
+    "record_in_processes": ["main", "content"],
+    "expires_in_version": "62",
+    "kind": "exponential",
+    "low": 32,
+    "high": 16777216,
+    "n_buckets": 100,
+    "description": "Amount of bytes received when we decide to race cache with network and cache wins.",
+    "alert_emails": ["necko@mozilla.com", "bsmedberg@mozilla.com"],
+    "bug_numbers": [1354405]
+  },
+  "NETWORK_RACE_CACHE_BANDWITH_NOT_RACE": {
+    "record_in_processes": ["main", "content"],
+    "expires_in_version": "62",
+    "kind": "exponential",
+    "low": 32,
+    "high": 16777216,
+    "n_buckets": 100,
+    "description": "Amount of bytes received when we decide not to race cache with network.",
+    "alert_emails": ["necko@mozilla.com", "bsmedberg@mozilla.com"],
+    "bug_numbers": [1354405]
+  },
   "HTTP_AUTH_DIALOG_STATS_2": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "61",
@@ -10866,6 +10919,57 @@
     "n_buckets": 20,
     "description": "Tracking how ServiceWorkerRegistrar loads data before the first content is shown. File bugs in Core::DOM in case of a Telemetry regression."
   },
+  "SERVICE_WORKER_FETCH_INTERCEPTION_DURATION_MS": {
+    "expires_in_version": "61",
+    "record_in_processes": ["main", "content"],
+    "kind": "exponential",
+    "bug_numbers": [1359610],
+    "high": 6000,
+    "keyed": true,
+    "n_buckets": 25,
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["sw-telemetry@mozilla.com"],
+    "description": "Time delta (ms) between when a network request is intercepted and the service worker provides a response. This includes: possible SW startup, worker thread dispatch, time until the respondWith() promise resolves, time to synthesize the response (including the body), worker thread to main thread dispatch. In the future this should include the IPC roundtrips involved in fetch interception."
+  },
+  "SERVICE_WORKER_FETCH_EVENT_DISPATCH_MS": {
+    "expires_in_version": "61",
+    "record_in_processes": ["main", "content"],
+    "bug_numbers": [1359610],
+    "kind": "exponential",
+    "high": 2000,
+    "n_buckets": 25,
+    "keyed": true,
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["sw-telemetry@mozilla.com"],
+    "description": "Time (in ms) measured between when the fetch event is dispatched by the Service Worker and before we execute the event listeners. This effectively measures the SW backlong, in the future this should also cover the IPC steps required to dispatch events to the SW."
+  },
+
+  "SERVICE_WORKER_FETCH_EVENT_FINISH_SYNTHESIZED_RESPONSE_MS": {
+    "expires_in_version": "61",
+    "record_in_processes": ["main", "content"],
+    "bug_numbers": [1359610],
+    "kind": "exponential",
+    "high": 2000,
+    "n_buckets": 25,
+    "keyed": true,
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["sw-telemetry@mozilla.com"],
+    "description": "Time (in ms) measured between when the respondWith promise resolves and when we provide the response through the intercepted channel (FinishSynthesizedResponse)."
+  },
+
+  "SERVICE_WORKER_FETCH_EVENT_CHANNEL_RESET_MS": {
+    "expires_in_version": "61",
+    "record_in_processes": ["main", "content"],
+    "bug_numbers": [1359610],
+    "kind": "exponential",
+    "high": 2000,
+    "n_buckets": 25,
+    "keyed": true,
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["sw-telemetry@mozilla.com"],
+    "description": "Time (in ms) measured between when the fetch handler finished executing and when we reset the network channel."
+  },
+
   "SERVICE_WORKER_REQUEST_PASSTHROUGH": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "50",
@@ -13001,5 +13105,15 @@
     "n_buckets": 100,
     "bug_numbers": [1345540],
     "description": "Time (ms) for the APZ handled wheel event spent in handlers."
+  },
+  "TIME_BETWEEN_UNLABELED_RUNNABLES_MS": {
+    "record_in_processes": ["content"],
+    "alert_emails": ["wmccloskey@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 30000,
+    "n_buckets": 30,
+    "bug_numbers": [1351021],
+    "description": "Every time we run an unlabeled runnable, this histogram records the time (in ms) since the last unlabeled runnable ran."
   }
 }

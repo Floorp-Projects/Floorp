@@ -4645,6 +4645,9 @@ pref("layers.bench.enabled", false);
 pref("layers.gpu-process.enabled", true);
 pref("layers.gpu-process.max_restarts", 3);
 pref("media.gpu-process-decoder", true);
+#ifdef NIGHTLY_BUILD
+pref("layers.gpu-process.allow-software", true);
+#endif
 #endif
 
 // Whether to force acceleration on, ignoring blacklists.
@@ -5718,3 +5721,6 @@ pref("layers.advanced.caret-layers", 2);
 pref("layers.advanced.displaybuttonborder-layers", 2);
 pref("layers.advanced.outline-layers", 2);
 pref("layers.advanced.solid-color-layers", 2);
+
+// Enable lowercased response header name
+pref("dom.xhr.lowercase_header.enabled", true);

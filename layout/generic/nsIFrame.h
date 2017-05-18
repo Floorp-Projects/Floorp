@@ -100,6 +100,7 @@ struct ReflowInput;
 class ReflowOutput;
 class ServoStyleSet;
 class DisplayItemData;
+class EffectSet;
 
 namespace layers {
 class Layer;
@@ -1670,31 +1671,49 @@ public:
    *
    * @param aStyleDisplay:  If the caller has this->StyleDisplay(), providing
    *   it here will improve performance.
+   * @param aEffectSet: This function may need to look up EffectSet property.
+   *   If a caller already have one, pass it in can save property look up
+   *   time; otherwise, just left it as nullptr.
    */
-  bool IsTransformed(const nsStyleDisplay* aStyleDisplay = nullptr) const;
+  bool IsTransformed(const nsStyleDisplay* aStyleDisplay, mozilla::EffectSet* aEffectSet = nullptr) const;
+  bool IsTransformed(mozilla::EffectSet* aEffectSet = nullptr) const {
+    return IsTransformed(StyleDisplay(), aEffectSet);
+  }
 
   /**
    * True if this frame has any animation of transform in effect.
+   *
+   * @param aEffectSet: This function may need to look up EffectSet property.
+   *   If a caller already have one, pass it in can save property look up
+   *   time; otherwise, just left it as nullptr.
    */
-  bool HasAnimationOfTransform() const;
+  bool HasAnimationOfTransform(mozilla::EffectSet* aEffectSet = nullptr) const;
 
   /**
    * Returns true if the frame is translucent or the frame has opacity
    * animations for the purposes of creating a stacking context.
+   *
+   * @param aEffectSet: This function may need to look up EffectSet property.
+   *   If a caller already have one, pass it in can save property look up
+   *   time; otherwise, just left it as nullptr.
    */
-  bool HasOpacity() const
+  bool HasOpacity(mozilla::EffectSet* aEffectSet = nullptr) const
   {
-    return HasOpacityInternal(1.0f);
+    return HasOpacityInternal(1.0f, aEffectSet);
   }
   /**
    * Returns true if the frame is translucent for display purposes.
+   *
+   * @param aEffectSet: This function may need to look up EffectSet property.
+   *   If a caller already have one, pass it in can save property look up
+   *   time; otherwise, just left it as nullptr.
    */
-  bool HasVisualOpacity() const
+  bool HasVisualOpacity(mozilla::EffectSet* aEffectSet = nullptr) const
   {
     // Treat an opacity value of 0.99 and above as opaque.  This is an
     // optimization aimed at Web content which use opacity:0.99 as a hint for
     // creating a stacking context only.
-    return HasOpacityInternal(0.99f);
+    return HasOpacityInternal(0.99f, aEffectSet);
   }
 
    /**
@@ -1718,8 +1737,19 @@ public:
    * Returns whether this frame will attempt to extend the 3d transforms of its
    * children. This requires transform-style: preserve-3d, as well as no clipping
    * or svg effects.
+   *
+   * @param aStyleDisplay:  If the caller has this->StyleDisplay(), providing
+   *   it here will improve performance.
+   *
+   * @param aEffectSet: This function may need to look up EffectSet property.
+   *   If a caller already have one, pass it in can save property look up
+   *   time; otherwise, just left it as nullptr.
    */
-  bool Extend3DContext() const;
+  bool Extend3DContext(const nsStyleDisplay* aStyleDisplay,
+                       mozilla::EffectSet* aEffectSet = nullptr) const;
+  bool Extend3DContext(mozilla::EffectSet* aEffectSet = nullptr) const {
+    return Extend3DContext(StyleDisplay(), aEffectSet);
+  }
 
   /**
    * Returns whether this frame has a parent that Extend3DContext() and has
@@ -1728,24 +1758,49 @@ public:
    *
    * @param aStyleDisplay:  If the caller has this->StyleDisplay(), providing
    *   it here will improve performance.
+   * @param aEffectSet: This function may need to look up EffectSet property.
+   *   If a caller already have one, pass it in can save property look up
+   *   time; otherwise, just left it as nullptr.
    */
-  bool Combines3DTransformWithAncestors(const nsStyleDisplay* aStyleDisplay
-                                          = nullptr) const;
+  bool Combines3DTransformWithAncestors(const nsStyleDisplay* aStyleDisplay,
+                                        mozilla::EffectSet* aEffectSet = nullptr) const;
+  bool Combines3DTransformWithAncestors(mozilla::EffectSet* aEffectSet = nullptr) const {
+    return Combines3DTransformWithAncestors(StyleDisplay(), aEffectSet);
+  }
 
   /**
    * Returns whether this frame has a hidden backface and has a parent that
    * Extend3DContext(). This is useful because in some cases the hidden
    * backface can safely be ignored if it could not be visible anyway.
+   *
+   * @param aEffectSet: This function may need to look up EffectSet property.
+   *   If a caller already have one, pass it in can save property look up
+   *   time; otherwise, just left it as nullptr.
    */
-  bool In3DContextAndBackfaceIsHidden() const;
+  bool In3DContextAndBackfaceIsHidden(mozilla::EffectSet* aEffectSet = nullptr) const;
 
-  bool IsPreserve3DLeaf() const {
-    return Combines3DTransformWithAncestors() && !Extend3DContext();
+  bool IsPreserve3DLeaf(const nsStyleDisplay* aStyleDisplay,
+                        mozilla::EffectSet* aEffectSet = nullptr) const {
+    return Combines3DTransformWithAncestors(aStyleDisplay) &&
+           !Extend3DContext(aStyleDisplay, aEffectSet);
+  }
+  bool IsPreserve3DLeaf(mozilla::EffectSet* aEffectSet = nullptr) const {
+    return IsPreserve3DLeaf(StyleDisplay(), aEffectSet);
   }
 
-  bool HasPerspective() const;
+  bool HasPerspective(const nsStyleDisplay* aStyleDisplay,
+                      mozilla::EffectSet* aEffectSet = nullptr) const;
+  bool HasPerspective(mozilla::EffectSet* aEffectSet = nullptr) const {
+    return HasPerspective(StyleDisplay(), aEffectSet);
+  }
 
-  bool ChildrenHavePerspective() const;
+  bool ChildrenHavePerspective(const nsStyleDisplay* aStyleDisplay) const {
+    MOZ_ASSERT(aStyleDisplay == StyleDisplay());
+    return aStyleDisplay->HasPerspectiveStyle();
+  }
+  bool ChildrenHavePerspective() const {
+    return ChildrenHavePerspective(StyleDisplay());
+  }
 
   /**
    * Includes the overflow area of all descendants that participate in the current
@@ -1753,7 +1808,8 @@ public:
    */
   void ComputePreserve3DChildrenOverflow(nsOverflowAreas& aOverflowAreas);
 
-  void RecomputePerspectiveChildrenOverflow(const nsIFrame* aStartFrame);
+  void RecomputePerspectiveChildrenOverflow(const nsIFrame* aStartFrame,
+                                            mozilla::EffectSet* aEffectSet = nullptr);
 
   /**
    * Returns the number of ancestors between this and the root of our frame tree
@@ -2753,7 +2809,11 @@ public:
     // this and return the outer scroll frame.
     SKIP_SCROLLED_FRAME = 0x01
   };
-  nsIFrame* GetContainingBlock(uint32_t aFlags = 0) const;
+  nsIFrame* GetContainingBlock(uint32_t aFlags,
+                               const nsStyleDisplay* aStyleDisplay) const;
+  nsIFrame* GetContainingBlock(uint32_t aFlags = 0) const {
+    return GetContainingBlock(aFlags, StyleDisplay());
+  }
 
   /**
    * Is this frame a containing block for floating elements?
@@ -3027,11 +3087,14 @@ public:
    * the overflow areas changed.
    */
   bool FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
-                              nsSize aNewSize, nsSize* aOldSize = nullptr);
+                              nsSize aNewSize, nsSize* aOldSize = nullptr,
+                              const nsStyleDisplay* aStyleDisplay = nullptr);
 
-  bool FinishAndStoreOverflow(ReflowOutput* aMetrics) {
+  bool FinishAndStoreOverflow(ReflowOutput* aMetrics,
+                              const nsStyleDisplay* aStyleDisplay = nullptr) {
     return FinishAndStoreOverflow(aMetrics->mOverflowAreas,
-                                  nsSize(aMetrics->Width(), aMetrics->Height()));
+                                  nsSize(aMetrics->Width(), aMetrics->Height()),
+                                  nullptr, aStyleDisplay);
   }
 
   /**
@@ -3602,7 +3665,7 @@ public:
   inline bool IsAbsPosContainingBlock() const;
   inline bool IsFixedPosContainingBlock() const;
   inline bool IsRelativelyPositioned() const;
-  inline bool IsAbsolutelyPositioned() const;
+  inline bool IsAbsolutelyPositioned(const nsStyleDisplay* aStyleDisplay = nullptr) const;
 
   /**
    * Returns the vertical-align value to be used for layout, if it is one
@@ -3692,8 +3755,12 @@ public:
    * @param aStyleDisplay:  If the caller has this->StyleDisplay(), providing
    *   it here will improve performance.
    */
-  bool BackfaceIsHidden(const nsStyleDisplay* aStyleDisplay = nullptr) const {
-    return StyleDisplayWithOptionalParam(aStyleDisplay)->BackfaceIsHidden();
+  bool BackfaceIsHidden(const nsStyleDisplay* aStyleDisplay) const {
+    MOZ_ASSERT(aStyleDisplay == StyleDisplay());
+    return aStyleDisplay->BackfaceIsHidden();
+  }
+  bool BackfaceIsHidden() const {
+    return StyleDisplay()->BackfaceIsHidden();
   }
 
   /**
@@ -3939,7 +4006,8 @@ private:
   template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
   static nsIFrame* MergeSort(nsIFrame *aSource);
 
-  bool HasOpacityInternal(float aThreshold) const;
+  bool HasOpacityInternal(float aThreshold,
+                          mozilla::EffectSet* aEffectSet = nullptr) const;
 
 #ifdef DEBUG_FRAME_DUMP
 public:

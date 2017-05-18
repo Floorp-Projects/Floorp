@@ -104,6 +104,8 @@ def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
             shell, autoconf,
             '--localdir=%s' % os.path.dirname(old_configure),
             old_configure + '.in'])
+        if not script:
+            die('Generated old-configure is empty! Check that your autoconf 2.13 program works!')
 
         # Make old-configure append to config.log, where we put our own log.
         # This could be done with a m4 macro, but it's way easier this way

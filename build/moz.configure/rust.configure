@@ -163,6 +163,7 @@ def rust_triple_alias(host_or_target):
             ('aarch64', 'Android'): 'aarch64-linux-android',
             ('arm', 'Android'): 'armv7-linux-androideabi',
             ('x86', 'Android'): 'i686-linux-android',
+            ('x86_64', 'Android'): 'x86_64-linux-android',
             # Windows
             ('x86', 'WINNT'): 'i686-pc-windows-msvc',
             ('x86_64', 'WINNT'): 'x86_64-pc-windows-msvc',

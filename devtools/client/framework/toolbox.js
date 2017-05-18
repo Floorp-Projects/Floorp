@@ -1813,8 +1813,10 @@ Toolbox.prototype = {
   _refreshHostTitle: function () {
     let title;
     if (this.target.name && this.target.name != this.target.url) {
+      const url = this.target.isWebExtension ?
+                  this.target.getExtensionPathName(this.target.url) : this.target.url;
       title = L10N.getFormatStr("toolbox.titleTemplate2", this.target.name,
-                                                          this.target.url);
+                                                          url);
     } else {
       title = L10N.getFormatStr("toolbox.titleTemplate1", this.target.url);
     }
@@ -1885,9 +1887,16 @@ Toolbox.prototype = {
       // A frame is checked if it's the selected one.
       let checked = frame.id == this.selectedFrameId;
 
+      let label = frame.url;
+
+      if (this.target.isWebExtension) {
+        // Show a shorter url for extensions page.
+        label = this.target.getExtensionPathName(frame.url);
+      }
+
       // Create menu item.
       menu.append(new MenuItem({
-        label: frame.url,
+        label,
         type: "radio",
         checked,
         click: () => {

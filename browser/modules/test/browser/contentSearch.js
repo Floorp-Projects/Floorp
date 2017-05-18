@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global addMessageListener:false, sendAsyncMessage:false, XPCOMUtils */
+/* eslint-env mozilla/frame-script */
 
 const TEST_MSG = "ContentSearchTest";
 const SERVICE_EVENT_TYPE = "ContentSearchService";

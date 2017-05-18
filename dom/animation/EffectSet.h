@@ -38,6 +38,8 @@ public:
     , mActiveIterators(0)
     , mCalledPropertyDtor(false)
 #endif
+    , mMayHaveOpacityAnim(false)
+    , mMayHaveTransformAnim(false)
   {
     MOZ_COUNT_CTOR(EffectSet);
   }
@@ -67,6 +69,11 @@ public:
 
   void AddEffect(dom::KeyframeEffectReadOnly& aEffect);
   void RemoveEffect(dom::KeyframeEffectReadOnly& aEffect);
+
+  void SetMayHaveOpacityAnimation() { mMayHaveOpacityAnim = true; }
+  bool MayHaveOpacityAnimation() const { return mMayHaveOpacityAnim; }
+  void SetMayHaveTransformAnimation() { mMayHaveTransformAnim = true; }
+  bool MayHaveTransformAnimation() const { return mMayHaveTransformAnim; }
 
 private:
   typedef nsTHashtable<nsRefPtrHashKey<dom::KeyframeEffectReadOnly>>
@@ -252,6 +259,9 @@ private:
 
   bool mCalledPropertyDtor;
 #endif
+
+  uint32_t mMayHaveOpacityAnim;
+  uint32_t mMayHaveTransformAnim;
 };
 
 } // namespace mozilla

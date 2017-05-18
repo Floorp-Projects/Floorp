@@ -483,7 +483,7 @@ int main()
 #ifdef _M_X64
       TestHook(TestGetKeyState, "user32.dll", "GetKeyState") &&    // see Bug 1316415
       TestHook(TestLdrUnloadDll, "ntdll.dll", "LdrUnloadDll") &&
-      TestHook(TestLdrResolveDelayLoadedAPI, "ntdll.dll", "LdrResolveDelayLoadedAPI") &&
+      MaybeTestHook(IsWin8OrLater(), TestLdrResolveDelayLoadedAPI, "ntdll.dll", "LdrResolveDelayLoadedAPI") &&
 #endif
       MaybeTestHook(ShouldTestTipTsf(), TestProcessCaretEvents, "tiptsf.dll", "ProcessCaretEvents") &&
 #ifdef _M_IX86

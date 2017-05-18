@@ -846,6 +846,7 @@
                          tooltiptext="&urlbar.persistentStorageNotificationAnchor.tooltip;"/>
                 </box>
                 <image id="connection-icon"/>
+                <image id="extension-icon"/>
                 <image id="remote-control-icon"
                        tooltiptext="&urlbar.remoteControlNotificationAnchor.tooltip;"/>
                 <hbox id="identity-icon-labels">

@@ -404,9 +404,9 @@ impl<'le> TElement for ServoLayoutElement<'le> {
 
     #[inline]
     fn existing_style_for_restyle_damage<'a>(&'a self,
-                                             current_cv: &'a Arc<ComputedValues>,
+                                             current_cv: &'a ComputedValues,
                                              _pseudo_element: Option<&PseudoElement>)
-                                             -> Option<&'a Arc<ComputedValues>> {
+                                             -> Option<&'a ComputedValues> {
         Some(current_cv)
     }
 
@@ -650,6 +650,14 @@ impl<'le> ::selectors::Element for ServoLayoutElement<'le> {
     #[inline]
     fn get_namespace(&self) -> &Namespace {
         self.element.namespace()
+    }
+
+    fn match_pseudo_element(&self,
+                            _pseudo: &PseudoElement,
+                            _context: &mut MatchingContext)
+                            -> bool
+    {
+        false
     }
 
     fn match_non_ts_pseudo_class<F>(&self,
@@ -1148,6 +1156,14 @@ impl<'le> ::selectors::Element for ServoThreadSafeLayoutElement<'le> {
     #[inline]
     fn get_namespace(&self) -> &Namespace {
         self.element.get_namespace()
+    }
+
+    fn match_pseudo_element(&self,
+                            _pseudo: &PseudoElement,
+                            _context: &mut MatchingContext)
+                            -> bool
+    {
+        false
     }
 
     fn match_non_ts_pseudo_class<F>(&self,

@@ -674,8 +674,8 @@ struct SDBFindStr {
     sqlite3_stmt *findstmt;
 };
 
-static const char FIND_OBJECTS_CMD[] = "SELECT ALL * FROM %s WHERE %s;";
-static const char FIND_OBJECTS_ALL_CMD[] = "SELECT ALL * FROM %s;";
+static const char FIND_OBJECTS_CMD[] = "SELECT ALL id FROM %s WHERE %s;";
+static const char FIND_OBJECTS_ALL_CMD[] = "SELECT ALL id FROM %s;";
 CK_RV
 sdb_FindObjectsInit(SDB *sdb, const CK_ATTRIBUTE *template, CK_ULONG count,
                     SDBFind **find)

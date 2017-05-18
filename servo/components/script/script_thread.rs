@@ -56,6 +56,8 @@ use dom::uievent::UIEvent;
 use dom::window::{ReflowReason, Window};
 use dom::windowproxy::WindowProxy;
 use dom::worker::TrustedWorkerAddress;
+use dom::worklet::WorkletThreadPool;
+use dom::workletglobalscope::WorkletGlobalScopeInit;
 use euclid::Rect;
 use euclid::point::Point2D;
 use hyper::header::{ContentType, HttpDate, LastModified, Headers};
@@ -481,11 +483,17 @@ pub struct ScriptThread {
 
     microtask_queue: MicrotaskQueue,
 
+    /// Microtask Queue for adding support for mutation observer microtasks
+    mutation_observer_compound_microtask_queued: Cell<bool>,
+
     /// The unit of related similar-origin browsing contexts' list of MutationObserver objects
     mutation_observers: DOMRefCell<Vec<JS<MutationObserver>>>,
 
     /// A handle to the webvr thread, if available
     webvr_thread: Option<IpcSender<WebVRMsg>>,
+
+    /// The worklet thread pool
+    worklet_thread_pool: DOMRefCell<Option<Rc<WorkletThreadPool>>>,
 
     /// A list of pipelines containing documents that finished loading all their blocking
     /// resources during a turn of the event loop.
@@ -589,12 +597,33 @@ impl ScriptThread {
         })
     }
 
+    pub fn set_mutation_observer_compound_microtask_queued(value: bool) {
+        SCRIPT_THREAD_ROOT.with(|root| {
+            let script_thread = unsafe { &*root.get().unwrap() };
+            script_thread.mutation_observer_compound_microtask_queued.set(value);
+        })
+    }
+
+    pub fn is_mutation_observer_compound_microtask_queued() -> bool {
+        SCRIPT_THREAD_ROOT.with(|root| {
+            let script_thread = unsafe { &*root.get().unwrap() };
+            return script_thread.mutation_observer_compound_microtask_queued.get();
+        })
+    }
+
     pub fn add_mutation_observer(observer: &MutationObserver) {
         SCRIPT_THREAD_ROOT.with(|root| {
             let script_thread = unsafe { &*root.get().unwrap() };
             script_thread.mutation_observers
                 .borrow_mut()
                 .push(JS::from_ref(observer));
+        })
+    }
+
+    pub fn get_mutation_observers() -> Vec<Root<MutationObserver>> {
+        SCRIPT_THREAD_ROOT.with(|root| {
+            let script_thread = unsafe { &*root.get().unwrap() };
+            script_thread.mutation_observers.borrow().iter().map(|o| Root::from_ref(&**o)).collect()
         })
     }
 
@@ -679,6 +708,24 @@ impl ScriptThread {
         }))
     }
 
+    pub fn worklet_thread_pool() -> Rc<WorkletThreadPool> {
+        SCRIPT_THREAD_ROOT.with(|root| {
+            let script_thread = unsafe { &*root.get().unwrap() };
+            script_thread.worklet_thread_pool.borrow_mut().get_or_insert_with(|| {
+                let chan = script_thread.chan.0.clone();
+                let init = WorkletGlobalScopeInit {
+                    resource_threads: script_thread.resource_threads.clone(),
+                    mem_profiler_chan: script_thread.mem_profiler_chan.clone(),
+                    time_profiler_chan: script_thread.time_profiler_chan.clone(),
+                    devtools_chan: script_thread.devtools_chan.clone(),
+                    constellation_chan: script_thread.constellation_chan.clone(),
+                    scheduler_chan: script_thread.scheduler_chan.clone(),
+                };
+                Rc::new(WorkletThreadPool::spawn(chan, init))
+            }).clone()
+        })
+    }
+
     /// Creates a new script thread.
     pub fn new(state: InitialScriptState,
                port: Receiver<MainThreadScriptMsg>,
@@ -750,11 +797,15 @@ impl ScriptThread {
 
             microtask_queue: MicrotaskQueue::default(),
 
+            mutation_observer_compound_microtask_queued: Default::default(),
+
             mutation_observers: Default::default(),
 
             layout_to_constellation_chan: state.layout_to_constellation_chan,
 
             webvr_thread: state.webvr_thread,
+
+            worklet_thread_pool: Default::default(),
 
             docs_with_no_blocking_loads: Default::default(),
 
@@ -1039,6 +1090,7 @@ impl ScriptThread {
                 ScriptThreadEventCategory::WebSocketEvent => ProfilerCategory::ScriptWebSocketEvent,
                 ScriptThreadEventCategory::WebVREvent => ProfilerCategory::ScriptWebVREvent,
                 ScriptThreadEventCategory::WorkerEvent => ProfilerCategory::ScriptWorkerEvent,
+                ScriptThreadEventCategory::WorkletEvent => ProfilerCategory::ScriptWorkletEvent,
                 ScriptThreadEventCategory::ServiceWorkerEvent => ProfilerCategory::ScriptServiceWorkerEvent,
                 ScriptThreadEventCategory::EnterFullscreen => ProfilerCategory::ScriptEnterFullscreen,
                 ScriptThreadEventCategory::ExitFullscreen => ProfilerCategory::ScriptExitFullscreen,
@@ -1123,7 +1175,7 @@ impl ScriptThread {
                 // The category of the runnable is ignored by the pattern, however
                 // it is still respected by profiling (see categorize_msg).
                 if !runnable.is_cancelled() {
-                    runnable.handler()
+                    runnable.main_thread_handler(self)
                 }
             }
             MainThreadScriptMsg::Common(CommonScriptMsg::CollectReports(reports_chan)) =>

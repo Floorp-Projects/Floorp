@@ -13,7 +13,7 @@
 #ifndef malloc_decls_h
 #  define malloc_decls_h
 
-#  include "jemalloc_types.h"
+#  include "mozjemalloc_types.h"
 
 #ifndef MALLOC_USABLE_SIZE_CONST_PTR
 #define MALLOC_USABLE_SIZE_CONST_PTR const

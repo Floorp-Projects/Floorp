@@ -2211,9 +2211,9 @@ DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress, const JS::GCDescrip
 
     case JS::GC_SLICE_END:
 
-      // The GC has more work to do, so schedule another GC slice.
+      // Schedule another GC slice if the GC has more work to do.
       nsJSContext::KillInterSliceGCTimer();
-      if (!sShuttingDown) {
+      if (!sShuttingDown && !aDesc.isComplete_) {
         CallCreateInstance("@mozilla.org/timer;1", &sInterSliceGCTimer);
         sInterSliceGCTimer->SetTarget(SystemGroup::EventTargetFor(TaskCategory::GarbageCollection));
         sInterSliceGCTimer->InitWithNamedFuncCallback(InterSliceGCTimerFired,

@@ -55,6 +55,14 @@ protected:
   TimeStamp mHandleFetchEventStart;
   TimeStamp mHandleFetchEventEnd;
 
+  TimeStamp mFinishResponseStart;
+  TimeStamp mFinishResponseEnd;
+  enum {
+    Invalid = 0,
+    Synthesized,
+    Reset
+  } mSynthesizedOrReset;
+
   virtual ~InterceptedChannelBase();
 public:
   explicit InterceptedChannelBase(nsINetworkInterceptController* aController);
@@ -111,7 +119,32 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHODIMP SaveTimeStampsToUnderlyingChannel() override;
+  NS_IMETHODIMP
+  SetFinishResponseStart(TimeStamp aTimeStamp) override
+  {
+    mFinishResponseStart = aTimeStamp;
+    return NS_OK;
+  }
+
+  NS_IMETHODIMP
+  SetFinishSynthesizedResponseEnd(TimeStamp aTimeStamp) override
+  {
+    MOZ_ASSERT(mSynthesizedOrReset == Invalid);
+    mSynthesizedOrReset = Synthesized;
+    mFinishResponseEnd = aTimeStamp;
+    return NS_OK;
+  }
+
+  NS_IMETHODIMP
+  SetChannelResetEnd(TimeStamp aTimeStamp) override
+  {
+    MOZ_ASSERT(mSynthesizedOrReset == Invalid);
+    mSynthesizedOrReset = Reset;
+    mFinishResponseEnd = aTimeStamp;
+    return NS_OK;
+  }
+
+  NS_IMETHODIMP SaveTimeStamps() override;
 
   static already_AddRefed<nsIURI>
   SecureUpgradeChannelURI(nsIChannel* aChannel);

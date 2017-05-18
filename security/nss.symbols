@@ -362,6 +362,7 @@ PK11_GetLowLevelKeyIDForPrivateKey
 PK11_GetMechanism
 PK11_GetMinimumPwdLength
 PK11_GetModInfo
+PK11_GetModuleURI
 PK11_GetNextSafe
 PK11_GetNextSymKey
 PK11_GetPadMechanism
@@ -375,6 +376,7 @@ PK11_GetSlotSeries
 PK11_GetSymKeyNickname
 PK11_GetTokenInfo
 PK11_GetTokenName
+PK11_GetTokenURI
 PK11_HasAttributeSet
 PK11_HashBuf
 PK11_HasRootCerts

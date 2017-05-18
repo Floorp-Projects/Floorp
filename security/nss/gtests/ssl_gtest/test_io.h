@@ -18,6 +18,7 @@
 #include "dummy_io.h"
 #include "prio.h"
 #include "scoped_ptrs.h"
+#include "sslt.h"
 
 namespace nss_test {
 
@@ -44,17 +45,11 @@ class PacketFilter {
   virtual Action Filter(const DataBuffer& input, DataBuffer* output) = 0;
 };
 
-enum Mode { STREAM, DGRAM };
-
-inline std::ostream& operator<<(std::ostream& os, Mode m) {
-  return os << ((m == STREAM) ? "TLS" : "DTLS");
-}
-
 class DummyPrSocket : public DummyIOLayerMethods {
  public:
-  DummyPrSocket(const std::string& name, Mode mode)
+  DummyPrSocket(const std::string& name, SSLProtocolVariant variant)
       : name_(name),
-        mode_(mode),
+        variant_(variant),
         peer_(),
         input_(),
         filter_(nullptr),
@@ -78,7 +73,7 @@ class DummyPrSocket : public DummyIOLayerMethods {
   int32_t Write(PRFileDesc* f, const void* buf, int32_t length) override;
   void CloseWrites() { writeable_ = false; }
 
-  Mode mode() const { return mode_; }
+  SSLProtocolVariant variant() const { return variant_; }
   bool readable() const { return !input_.empty(); }
 
  private:
@@ -99,7 +94,7 @@ class DummyPrSocket : public DummyIOLayerMethods {
   };
 
   const std::string name_;
-  Mode mode_;
+  SSLProtocolVariant variant_;
   std::weak_ptr<DummyPrSocket> peer_;
   std::queue<Packet> input_;
   std::shared_ptr<PacketFilter> filter_;

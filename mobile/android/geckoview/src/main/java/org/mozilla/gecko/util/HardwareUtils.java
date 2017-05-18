@@ -85,6 +85,11 @@ public final class HardwareUtils {
         return Build.CPU_ABI != null && Build.CPU_ABI.equals("armeabi-v7a");
     }
 
+    public static boolean isARM64System() {
+        // 64-bit support was introduced in 21.
+        return Build.VERSION.SDK_INT >= 21 && "arm64-v8a".equals(Build.SUPPORTED_ABIS[0]);
+    }
+
     public static boolean isX86System() {
         if (Build.CPU_ABI != null && Build.CPU_ABI.equals("x86")) {
             return true;
@@ -122,8 +127,10 @@ public final class HardwareUtils {
         // See http://developer.android.com/ndk/guides/abis.html
         final boolean isSystemX86 = isX86System();
         final boolean isSystemARM = !isSystemX86 && isARMSystem();
+        final boolean isSystemARM64 = isARM64System();
 
         boolean isAppARM = BuildConfig.ANDROID_CPU_ARCH.startsWith("armeabi-v7a");
+        boolean isAppARM64 = BuildConfig.ANDROID_CPU_ARCH.startsWith("arm64-v8a");
         boolean isAppX86 = BuildConfig.ANDROID_CPU_ARCH.startsWith("x86");
 
         // Only reject known incompatible ABIs. Better safe than sorry.
@@ -131,7 +138,8 @@ public final class HardwareUtils {
             return false;
         }
 
-        if ((isSystemX86 && isAppX86) || (isSystemARM && isAppARM)) {
+        if ((isSystemX86 && isAppX86) || (isSystemARM && isAppARM) ||
+            (isSystemARM64 && (isAppARM64 || isAppARM))) {
             return true;
         }
 

@@ -20,6 +20,7 @@ class EventChainPreVisitor;
 
 namespace dom {
 class MessagePort;
+class StringOrWorkerOptions;
 }
 } // namespace mozilla
 
@@ -43,7 +44,7 @@ class SharedWorker final : public DOMEventTargetHelper
 public:
   static already_AddRefed<SharedWorker>
   Constructor(const GlobalObject& aGlobal, const nsAString& aScriptURL,
-              const Optional<nsAString>& aName, ErrorResult& aRv);
+              const StringOrWorkerOptions& aOptions, ErrorResult& aRv);
 
   MessagePort*
   Port();

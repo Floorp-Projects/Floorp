@@ -106,7 +106,7 @@ TEST_P(TlsConnectTls13, SecondClientHelloRejectEarlyDataXtn) {
   // A new client that tries to resume with 0-RTT but doesn't send the
   // correct key share(s). The server will respond with an HRR.
   auto orig_client =
-      std::make_shared<TlsAgent>(client_->name(), TlsAgent::CLIENT, mode_);
+      std::make_shared<TlsAgent>(client_->name(), TlsAgent::CLIENT, variant_);
   client_.swap(orig_client);
   client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
                            SSL_LIBRARY_VERSION_TLS_1_3);
@@ -130,7 +130,7 @@ TEST_P(TlsConnectTls13, SecondClientHelloRejectEarlyDataXtn) {
   orig_client.reset();
 
   // Correct the DTLS message sequence number after an HRR.
-  if (mode_ == DGRAM) {
+  if (variant_ == ssl_variant_datagram) {
     client_->SetPacketFilter(
         std::make_shared<CorrectMessageSeqAfterHrrFilter>());
   }
@@ -253,7 +253,7 @@ TEST_F(TlsConnectTest, Select12AfterHelloRetryRequest) {
 
   // Here we replace the TLS server with one that does TLS 1.2 only.
   // This will happily send the client a TLS 1.2 ServerHello.
-  server_.reset(new TlsAgent(server_->name(), TlsAgent::SERVER, mode_));
+  server_.reset(new TlsAgent(server_->name(), TlsAgent::SERVER, variant_));
   client_->SetPeer(server_);
   server_->SetPeer(client_);
   server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
@@ -357,11 +357,11 @@ TEST_P(HelloRetryRequestAgentTest, HandleHelloRetryRequestCookie) {
 }
 
 INSTANTIATE_TEST_CASE_P(HelloRetryRequestAgentTests, HelloRetryRequestAgentTest,
-                        ::testing::Combine(TlsConnectTestBase::kTlsModesAll,
+                        ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
                                            TlsConnectTestBase::kTlsV13));
 #ifndef NSS_DISABLE_TLS_1_3
 INSTANTIATE_TEST_CASE_P(HelloRetryRequestKeyExchangeTests, TlsKeyExchange13,
-                        ::testing::Combine(TlsConnectTestBase::kTlsModesAll,
+                        ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
                                            TlsConnectTestBase::kTlsV13));
 #endif
 

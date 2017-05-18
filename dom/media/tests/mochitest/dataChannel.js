@@ -165,6 +165,32 @@ var commandsCheckDataChannel = [
       is(channels.indexOf(result.channel), channels.length - 1, "Last channel used");
       is(result.data, message, "Received message has the correct content.");
     });
+  },
+
+  function CREATE_NEGOTIATED_MAXPACKET_LIFE_DATA_CHANNEL(test) {
+    var options = {
+      ordered: false,
+      maxPacketLifeTime: 10
+    };
+    return test.createDataChannel(options).then(result => {
+      var sourceChannel3 = result.local;
+      var targetChannel3 = result.remote;
+      is(sourceChannel3.readyState, "open", sourceChannel3 + " is in state: 'open'");
+      is(targetChannel3.readyState, "open", targetChannel3 + " is in state: 'open'");
+
+      is(targetChannel3.binaryType, "blob", targetChannel3 + " is of binary type 'blob'");
+
+    });
+  },
+
+  function SEND_MESSAGE_THROUGH_LAST_OPENED_CHANNEL3(test) {
+    var channels = test.pcRemote.dataChannels;
+    var message = "Nice to see you working maxPacketLifeTime";
+
+    return test.send(message).then(result => {
+      is(channels.indexOf(result.channel), channels.length - 1, "Last channel used");
+      is(result.data, message, "Received message has the correct content.");
+    });
   }
 ];
 

@@ -4345,8 +4345,6 @@ struct kernel_statfs {
                          loff_t,         o)
     LSS_INLINE _syscall3(int,     readahead,      int,         f,
                          loff_t,         o, unsigned, c)
-    LSS_INLINE _syscall6(void *, mmap, void *, addr, size_t, length, int, prot,
-                         int, flags, int, fd, int64_t, offset)
   #else
     #define __NR__pread64   __NR_pread64
     #define __NR__pwrite64  __NR_pwrite64
@@ -4403,8 +4401,6 @@ struct kernel_statfs {
 
 #if defined(__aarch64__)
   LSS_INLINE _syscall3(int, dup3,  int, s, int, d, int, f)
-  LSS_INLINE _syscall6(void *, mmap, void *, addr, size_t, length, int, prot,
-                       int, flags, int, fd, int64_t, offset)
   LSS_INLINE _syscall4(int, newfstatat, int, dirfd, const char *, pathname,
                        struct kernel_stat *, buf, int, flags)
   LSS_INLINE _syscall2(int, pipe2, int *, pipefd, int, flags)

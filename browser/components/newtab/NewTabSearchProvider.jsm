@@ -1,6 +1,3 @@
-/* global XPCOMUtils, ContentSearch, Task, Services, EventEmitter */
-/* exported NewTabSearchProvider */
-
 "use strict";
 
 this.EXPORTED_SYMBOLS = ["NewTabSearchProvider"];
