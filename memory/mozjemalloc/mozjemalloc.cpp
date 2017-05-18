@@ -178,7 +178,6 @@
 
 #define	SIZE_T_MAX SIZE_MAX
 #define	STDERR_FILENO 2
-#define	PATH_MAX MAX_PATH
 
 #ifndef NO_TLS
 static unsigned long tlsIndex = 0xffffffff;
@@ -4688,7 +4687,6 @@ bool
 malloc_init_hard(void)
 {
 	unsigned i;
-	char buf[PATH_MAX + 1];
 	const char *opts;
 	long result;
 #ifndef MOZ_MEMORY_WINDOWS
@@ -4746,61 +4744,20 @@ malloc_init_hard(void)
 	pagesize_2pow = ffs((int)result) - 1;
 #endif
 
-	for (i = 0; i < 2; i++) {
-		unsigned j;
-
-		/* Get runtime configuration. */
-		switch (i) {
-		case 0:
-#ifndef MOZ_MEMORY_WINDOWS
-			if ((linklen = readlink("/etc/malloc.conf", buf,
-						sizeof(buf) - 1)) != -1) {
-				/*
-				 * Use the contents of the "/etc/malloc.conf"
-				 * symbolic link's name.
-				 */
-				buf[linklen] = '\0';
-				opts = buf;
-			} else
-#endif
-			{
-				/* No configuration specified. */
-				buf[0] = '\0';
-				opts = buf;
-			}
-			break;
-		case 1:
-			if ((opts = getenv("MALLOC_OPTIONS")) != NULL) {
-				/*
-				 * Do nothing; opts is already initialized to
-				 * the value of the MALLOC_OPTIONS environment
-				 * variable.
-				 */
-			} else {
-				/* No configuration specified. */
-				buf[0] = '\0';
-				opts = buf;
-			}
-			break;
-		default:
-			/* NOTREACHED */
-			buf[0] = '\0';
-			opts = buf;
-			assert(false);
-		}
-
-		for (j = 0; opts[j] != '\0'; j++) {
-			unsigned k, nreps;
+	/* Get runtime configuration. */
+	if ((opts = getenv("MALLOC_OPTIONS")) != NULL) {
+		for (i = 0; opts[i] != '\0'; i++) {
+			unsigned j, nreps;
 			bool nseen;
 
 			/* Parse repetition count, if any. */
-			for (nreps = 0, nseen = false;; j++, nseen = true) {
-				switch (opts[j]) {
+			for (nreps = 0, nseen = false;; i++, nseen = true) {
+				switch (opts[i]) {
 					case '0': case '1': case '2': case '3':
 					case '4': case '5': case '6': case '7':
 					case '8': case '9':
 						nreps *= 10;
-						nreps += opts[j] - '0';
+						nreps += opts[i] - '0';
 						break;
 					default:
 						goto MALLOC_OUT;
@@ -4810,8 +4767,8 @@ MALLOC_OUT:
 			if (nseen == false)
 				nreps = 1;
 
-			for (k = 0; k < nreps; k++) {
-				switch (opts[j]) {
+			for (j = 0; j < nreps; j++) {
+				switch (opts[i]) {
 				case 'a':
 					opt_abort = false;
 					break;
@@ -4905,7 +4862,7 @@ MALLOC_OUT:
 				default: {
 					char cbuf[2];
 
-					cbuf[0] = opts[j];
+					cbuf[0] = opts[i];
 					cbuf[1] = '\0';
 					_malloc_message(_getprogname(),
 					    ": (malloc) Unsupported character "
