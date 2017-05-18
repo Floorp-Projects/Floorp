@@ -8433,14 +8433,7 @@ nsGlobalWindow::ScrollTo(double aXScroll, double aYScroll)
 void
 nsGlobalWindow::ScrollTo(const ScrollToOptions& aOptions)
 {
-  // When scrolling to a non-zero offset, we need to determine whether that
-  // position is within our scrollable range, so we need updated layout
-  // information which requires a layout flush, otherwise all we need is to
-  // flush frames to be able to access our scrollable frame here.
-  FlushType flushType = (aScroll.x || aScroll.y) ?
-                          FlushType::Layout :
-                          FlushType::Frames;
-  FlushPendingNotifications(flushType);
+  FlushPendingNotifications(FlushType::Layout);
   nsIScrollableFrame *sf = GetScrollFrame();
 
   if (sf) {
@@ -8466,14 +8459,7 @@ void
 nsGlobalWindow::ScrollTo(const CSSIntPoint& aScroll,
                          const ScrollOptions& aOptions)
 {
-  // When scrolling to a non-zero offset, we need to determine whether that
-  // position is within our scrollable range, so we need updated layout
-  // information which requires a layout flush, otherwise all we need is to
-  // flush frames to be able to access our scrollable frame here.
-  FlushType flushType = (aScroll.x || aScroll.y) ?
-                          FlushType::Layout :
-                          FlushType::Frames;
-  FlushPendingNotifications(flushType);
+  FlushPendingNotifications(FlushType::Layout);
   nsIScrollableFrame *sf = GetScrollFrame();
 
   if (sf) {
