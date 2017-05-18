@@ -581,6 +581,7 @@ Statistics::formatJsonDescription(uint64_t timestamp, JSONPrinter& json) const
     json.property("total_compartments", zoneStats.compartmentCount);
     json.property("minor_gcs", counts[STAT_MINOR_GC]);
     json.property("store_buffer_overflows", counts[STAT_STOREBUFFER_OVERFLOW]);
+    json.property("slices", slices_.length());
 
     const double mmu20 = computeMMU(TimeDuration::FromMilliseconds(20));
     const double mmu50 = computeMMU(TimeDuration::FromMilliseconds(50));
@@ -958,10 +959,13 @@ Statistics::beginSlice(const ZoneGCStats& zoneStats, JSGCInvocationKind gckind,
 
     // Slice callbacks should only fire for the outermost level.
     bool wasFullGC = zoneStats.isCollectingAllZones();
-    if (sliceCallback)
-        (*sliceCallback)(TlsContext.get(),
-                         first ? JS::GC_CYCLE_BEGIN : JS::GC_SLICE_BEGIN,
-                         JS::GCDescription(!wasFullGC, gckind, reason));
+    if (sliceCallback) {
+        JSContext* cx = TlsContext.get();
+        JS::GCDescription desc(!wasFullGC, false, gckind, reason);
+        if (first)
+            (*sliceCallback)(cx, JS::GC_CYCLE_BEGIN, desc);
+        (*sliceCallback)(cx, JS::GC_SLICE_BEGIN, desc);
+    }
 }
 
 void
@@ -1005,10 +1009,13 @@ Statistics::endSlice()
     // Slice callbacks should only fire for the outermost level.
     if (!aborted) {
         bool wasFullGC = zoneStats.isCollectingAllZones();
-        if (sliceCallback)
-            (*sliceCallback)(TlsContext.get(),
-                             last ? JS::GC_CYCLE_END : JS::GC_SLICE_END,
-                             JS::GCDescription(!wasFullGC, gckind, slices_.back().reason));
+        if (sliceCallback) {
+            JSContext* cx = TlsContext.get();
+            JS::GCDescription desc(!wasFullGC, last, gckind, slices_.back().reason);
+            (*sliceCallback)(cx, JS::GC_SLICE_END, desc);
+            if (last)
+                (*sliceCallback)(cx, JS::GC_CYCLE_END, desc);
+        }
     }
 
     // Do this after the slice callback since it uses these values.

@@ -17,6 +17,7 @@
 #include "nsTObserverArray.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/NotNull.h"
+#include "mozilla/TimeStamp.h"
 #include "nsAutoPtr.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/UniquePtr.h"
@@ -98,6 +99,7 @@ private:
 
   void GetIdleEvent(nsIRunnable** aEvent, mozilla::MutexAutoLock& aProofOfLock);
   void GetEvent(bool aWait, nsIRunnable** aEvent,
+                unsigned short* aPriority,
                 mozilla::MutexAutoLock& aProofOfLock);
 
 protected:
@@ -154,6 +156,7 @@ protected:
     }
 
     bool GetEvent(bool aMayWait, nsIRunnable** aEvent,
+                  unsigned short* aPriority,
                   mozilla::MutexAutoLock& aProofOfLock);
 
     void PutEvent(nsIRunnable* aEvent, mozilla::MutexAutoLock& aProofOfLock)
@@ -269,6 +272,10 @@ protected:
   // Set to true when events posted to this thread will never run.
   bool mEventsAreDoomed;
   MainThreadFlag mIsMainThread;
+
+  // The time when we last ran an unlabeled runnable (one not associated with a
+  // SchedulerGroup).
+  mozilla::TimeStamp mLastUnlabeledRunnable;
 
   // Set to true if this thread creates a JSRuntime.
   bool mCanInvokeJS;
