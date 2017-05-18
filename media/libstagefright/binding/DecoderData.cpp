@@ -248,6 +248,8 @@ MP4VideoInfo::Update(const mp4parse_track_info* track,
     mMimeType = MEDIA_MIMETYPE_VIDEO_AVC;
   } else if (track->codec == mp4parse_codec_VP9) {
     mMimeType = NS_LITERAL_CSTRING("video/vp9");
+  } else if (track->codec == mp4parse_codec_MP4V) {
+    mMimeType = MEDIA_MIMETYPE_VIDEO_MPEG4;
   }
   mTrackId = track->track_id;
   mDuration = TimeUnit::FromMicroseconds(track->duration);
