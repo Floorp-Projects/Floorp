@@ -14,14 +14,19 @@ import org.mozilla.gecko.MmaConstants;
 
 public class MmaDelegate {
 
+    private static final String ENABLE_PREF = "mma.enabled";
+
     private static MmaInterface mmaHelper = MmaConstants.getMma();
 
+    private static final String[] prefs = { ENABLE_PREF };
+
+
     public static void init(Application application) {
-        mmaHelper.init(application);
+        setupPrefHandler(application);
     }
 
-    public void start(Context context) {
-        mmaHelper.start(context);
+    public static void stop() {
+        mmaHelper.stop();
     }
 
 }
