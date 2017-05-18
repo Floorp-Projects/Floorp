@@ -27,7 +27,7 @@ async_test(t => {
       iframeDoc.exitFullscreen();
     } else if (count == 4) {
       // Done, but set timeout to fail on extra events.
-      setTimeout(t.step_func_done());
+      step_timeout(t.step_func_done());
     }
   });
   document.onfullscreenerror = t.unreached_func('fullscreenerror event');
