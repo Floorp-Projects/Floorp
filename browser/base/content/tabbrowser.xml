@@ -1854,6 +1854,7 @@
               E10SUtils.getRemoteTypeForURI(aURL,
                                             gMultiProcessBrowser,
                                             preferredRemoteType,
+                                            aBrowser.currentURI,
                                             aOptions.freshProcess);
 
             // If this URL can't load in the current browser then flip it to the
