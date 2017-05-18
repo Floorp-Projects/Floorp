@@ -89,12 +89,6 @@ class FuncBytes
 typedef UniquePtr<FuncBytes> UniqueFuncBytes;
 typedef Vector<UniqueFuncBytes, 8, SystemAllocPolicy> UniqueFuncBytesVector;
 
-enum class CompileMode
-{
-    Baseline,
-    Ion
-};
-
 // FuncCompileUnit contains all the data necessary to produce and store the
 // results of a single function's compilation.
 

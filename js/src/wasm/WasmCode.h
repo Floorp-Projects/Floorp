@@ -70,6 +70,9 @@ class CodeSegment
     typedef UniquePtr<uint8_t, FreeCode> UniqueCodeBytes;
     static UniqueCodeBytes AllocateCodeBytes(uint32_t codeLength);
 
+    // How this code was compiled.
+    CompileMode mode_;
+
     // bytes_ points to a single allocation of executable machine code in
     // the range [0, length_).  The range [0, functionLength_) is
     // the subrange of [0, length_) which contains function code.
@@ -83,13 +86,15 @@ class CodeSegment
     uint8_t* outOfBoundsCode_;
     uint8_t* unalignedAccessCode_;
 
-    bool initialize(UniqueCodeBytes bytes,
+    bool initialize(CompileMode mode,
+                    UniqueCodeBytes bytes,
                     uint32_t codeLength,
                     const ShareableBytes& bytecode,
                     const LinkDataTier& linkData,
                     const Metadata& metadata);
 
-    static UniqueConstCodeSegment create(UniqueCodeBytes bytes,
+    static UniqueConstCodeSegment create(CompileMode mode,
+                                         UniqueCodeBytes bytes,
                                          uint32_t codeLength,
                                          const ShareableBytes& bytecode,
                                          const LinkDataTier& linkData,
@@ -99,22 +104,27 @@ class CodeSegment
     void operator=(const CodeSegment&) = delete;
 
     CodeSegment()
-      : functionLength_(0),
+      : mode_(CompileMode(-1)),
+        functionLength_(0),
         length_(0),
         interruptCode_(nullptr),
         outOfBoundsCode_(nullptr),
         unalignedAccessCode_(nullptr)
     {}
 
-    static UniqueConstCodeSegment create(jit::MacroAssembler& masm,
+    static UniqueConstCodeSegment create(CompileMode mode,
+                                         jit::MacroAssembler& masm,
                                          const ShareableBytes& bytecode,
                                          const LinkDataTier& linkData,
                                          const Metadata& metadata);
 
-    static UniqueConstCodeSegment create(const Bytes& unlinkedBytes,
+    static UniqueConstCodeSegment create(CompileMode mode,
+                                         const Bytes& unlinkedBytes,
                                          const ShareableBytes& bytecode,
                                          const LinkDataTier& linkData,
                                          const Metadata& metadata);
+
+    CompileMode mode() const { return mode_; }
 
     uint8_t* base() const { return bytes_.get(); }
     uint32_t length() const { return length_; }
@@ -339,6 +349,10 @@ typedef uint8_t ModuleHash[8];
 
 struct MetadataTier
 {
+    explicit MetadataTier(CompileMode mode) : mode(mode) {}
+
+    CompileMode           mode;
+
     MemoryAccessVector    memoryAccesses;
     CodeRangeVector       codeRanges;
     CallSiteVector        callSites;
