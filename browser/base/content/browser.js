@@ -996,6 +996,35 @@ function serializeInputStream(aStream) {
   return data;
 }
 
+/**
+ * Handles URIs when we want to deal with them in chrome code rather than pass
+ * them down to a content browser. This can avoid unnecessary process switching
+ * for the browser.
+ * @param aBrowser the browser that is attempting to load the URI
+ * @param aUri the nsIURI that is being loaded
+ * @returns true if the URI is handled, otherwise false
+ */
+function handleUriInChrome(aBrowser, aUri) {
+  if (aUri.scheme == "file") {
+    try {
+      let mimeType = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService)
+                                              .getTypeFromURI(aUri);
+      if (mimeType == "application/x-xpinstall") {
+        let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+        AddonManager.getInstallForURL(aUri.spec, install => {
+          AddonManager.installAddonFromWebpage(mimeType, aBrowser, systemPrincipal,
+                                               install);
+        }, mimeType);
+        return true;
+      }
+    } catch (e) {
+      return false;
+    }
+  }
+
+  return false;
+}
+
 // A shared function used by both remote and non-remote browser XBL bindings to
 // load a URI or redirect it to the correct process.
 function _loadURIWithFlags(browser, uri, params) {
@@ -1016,9 +1045,33 @@ function _loadURIWithFlags(browser, uri, params) {
   let postData = params.postData;
 
   let currentRemoteType = browser.remoteType;
-  let requiredRemoteType =
-    E10SUtils.getRemoteTypeForURI(uri, gMultiProcessBrowser, currentRemoteType,
-                                  browser.currentURI);
+  let requiredRemoteType;
+  try {
+    let fixupFlags = Ci.nsIURIFixup.FIXUP_FLAG_NONE;
+    if (flags & Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) {
+      fixupFlags |= Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
+    }
+    if (flags & Ci.nsIWebNavigation.LOAD_FLAGS_FIXUP_SCHEME_TYPOS) {
+      fixupFlags |= Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS;
+    }
+    let uriObject = Services.uriFixup.createFixupURI(uri, fixupFlags);
+    if (handleUriInChrome(browser, uriObject)) {
+      // If we've handled the URI in Chrome then just return here.
+      return;
+    }
+
+    // Note that I had thought that we could set uri = uriObject.spec here, to
+    // save on fixup later on, but that changes behavior and breaks tests.
+    requiredRemoteType =
+      E10SUtils.getRemoteTypeForURIObject(uriObject, gMultiProcessBrowser,
+                                          currentRemoteType, browser.currentURI);
+  } catch (e) {
+    // createFixupURI throws if it can't create a URI. If that's the case then
+    // we still need to pass down the uri because docshell handles this case.
+    requiredRemoteType = gMultiProcessBrowser ? E10SUtils.DEFAULT_REMOTE_TYPE
+                                              : E10SUtils.NOT_REMOTE;
+  }
+
   let mustChangeProcess = requiredRemoteType != currentRemoteType;
 
   // !requiredRemoteType means we're loading in the parent/this process.
