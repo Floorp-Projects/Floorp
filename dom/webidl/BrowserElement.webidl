@@ -174,11 +174,6 @@ interface BrowserElementPrivileged {
 
 // Bits needed for BrowserElementAudioChannel.
 partial interface BrowserElementPrivileged {
-  [Pure, Cached, Throws,
-   Pref="dom.mozBrowserFramesEnabled",
-   ChromeOnly]
-  readonly attribute sequence<BrowserElementAudioChannel> allowedAudioChannels;
-
   /**
    * Mutes all audio in this browser.
    */
