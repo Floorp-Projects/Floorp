@@ -115,6 +115,8 @@ LinkDataTier::serializedSize() const
 uint8_t*
 LinkDataTier::serialize(uint8_t* cursor) const
 {
+    MOZ_ASSERT(mode == CompileMode::Ion);
+
     cursor = WriteBytes(cursor, &pod(), sizeof(pod()));
     cursor = SerializePodVector(cursor, internalLinks);
     cursor = symbolicLinks.serialize(cursor);
@@ -138,10 +140,10 @@ LinkDataTier::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 }
 
 bool
-LinkData::initTier()
+LinkData::initTier(CompileMode mode)
 {
     MOZ_ASSERT(!tier_);
-    tier_ = js::MakeUnique<LinkDataTier>();
+    tier_ = js::MakeUnique<LinkDataTier>(mode);
     return tier_ != nullptr;
 }
 
@@ -259,7 +261,7 @@ Module::deserialize(const uint8_t* bytecodeBegin, size_t bytecodeSize,
         return nullptr;
 
     LinkData linkData;
-    if (!linkData.initTier())
+    if (!linkData.initTier(CompileMode::Ion))
         return nullptr;
 
     cursor = linkData.deserialize(cursor);
@@ -918,8 +920,11 @@ Module::instantiate(JSContext* cx,
         // bytes that we keep around for debugging instead, because the debugger
         // may patch the pre-linked code at any time.
         if (!codeIsBusy_.compareExchange(false, true)) {
-            auto codeSegment = CodeSegment::create(*unlinkedCodeForDebugging_, *bytecode_,
-                                                   linkData_.tier(), metadata());
+            auto codeSegment = CodeSegment::create(CompileMode::Baseline,
+                                                   *unlinkedCodeForDebugging_,
+                                                   *bytecode_,
+                                                   linkData_.tier(),
+                                                   metadata());
             if (!codeSegment)
                 return false;
 

@@ -193,7 +193,8 @@ SendCodeRangesToProfiler(const CodeSegment& cs, const Bytes& bytecode, const Met
 }
 
 /* static */ UniqueConstCodeSegment
-CodeSegment::create(MacroAssembler& masm,
+CodeSegment::create(CompileMode mode,
+                    MacroAssembler& masm,
                     const ShareableBytes& bytecode,
                     const LinkDataTier& linkData,
                     const Metadata& metadata)
@@ -216,11 +217,12 @@ CodeSegment::create(MacroAssembler& masm,
     // Zero the padding.
     memset(codeBytes.get() + bytesNeeded, 0, padding);
 
-    return create(Move(codeBytes), codeLength, bytecode, linkData, metadata);
+    return create(mode, Move(codeBytes), codeLength, bytecode, linkData, metadata);
 }
 
 /* static */ UniqueConstCodeSegment
-CodeSegment::create(const Bytes& unlinkedBytes,
+CodeSegment::create(CompileMode mode,
+                    const Bytes& unlinkedBytes,
                     const ShareableBytes& bytecode,
                     const LinkDataTier& linkData,
                     const Metadata& metadata)
@@ -237,11 +239,12 @@ CodeSegment::create(const Bytes& unlinkedBytes,
     memcpy(codeBytes.get(), unlinkedBytes.begin(), unlinkedBytes.length());
     memset(codeBytes.get() + unlinkedBytes.length(), 0, padding);
 
-    return create(Move(codeBytes), codeLength, bytecode, linkData, metadata);
+    return create(mode, Move(codeBytes), codeLength, bytecode, linkData, metadata);
 }
 
 /* static */ UniqueConstCodeSegment
-CodeSegment::create(UniqueCodeBytes codeBytes,
+CodeSegment::create(CompileMode mode,
+                    UniqueCodeBytes codeBytes,
                     uint32_t codeLength,
                     const ShareableBytes& bytecode,
                     const LinkDataTier& linkData,
@@ -256,14 +259,15 @@ CodeSegment::create(UniqueCodeBytes codeBytes,
     if (!cs)
         return nullptr;
 
-    if (!cs->initialize(Move(codeBytes), codeLength, bytecode, linkData, metadata))
+    if (!cs->initialize(mode, Move(codeBytes), codeLength, bytecode, linkData, metadata))
         return nullptr;
 
     return UniqueConstCodeSegment(cs.release());
 }
 
 bool
-CodeSegment::initialize(UniqueCodeBytes codeBytes,
+CodeSegment::initialize(CompileMode mode,
+                        UniqueCodeBytes codeBytes,
                         uint32_t codeLength,
                         const ShareableBytes& bytecode,
                         const LinkDataTier& linkData,
@@ -271,6 +275,7 @@ CodeSegment::initialize(UniqueCodeBytes codeBytes,
 {
     MOZ_ASSERT(bytes_ == nullptr);
 
+    mode_ = mode;
     bytes_ = Move(codeBytes);
     functionLength_ = linkData.functionCodeLength;
     length_ = codeLength;
@@ -308,6 +313,8 @@ CodeSegment::addSizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t* code, siz
 uint8_t*
 CodeSegment::serialize(uint8_t* cursor, const LinkDataTier& linkData) const
 {
+    MOZ_ASSERT(mode() == CompileMode::Ion);
+
     cursor = WriteScalar<uint32_t>(cursor, length_);
     uint8_t* base = cursor;
     cursor = WriteBytes(cursor, bytes_.get(), length_);
@@ -333,7 +340,7 @@ CodeSegment::deserialize(const uint8_t* cursor, const ShareableBytes& bytecode,
     if (!cursor)
         return nullptr;
 
-    if (!initialize(Move(bytes), length, bytecode, linkData, metadata))
+    if (!initialize(CompileMode::Ion, Move(bytes), length, bytecode, linkData, metadata))
         return nullptr;
 
     return cursor;
@@ -630,6 +637,7 @@ uint8_t*
 Code::serialize(uint8_t* cursor, const LinkData& linkData) const
 {
     MOZ_RELEASE_ASSERT(!metadata().debugEnabled);
+    MOZ_RELEASE_ASSERT(metadataTier().mode == CompileMode::Ion);
 
     cursor = metadata().serialize(cursor);
     cursor = segmentTier().serialize(cursor, linkData.tier());
@@ -644,7 +652,7 @@ Code::deserialize(const uint8_t* cursor, const SharedBytes& bytecode, const Link
     if (maybeMetadata) {
         metadata = maybeMetadata;
     } else {
-        auto tier = js::MakeUnique<MetadataTier>();
+        auto tier = js::MakeUnique<MetadataTier>(CompileMode::Ion);
         if (!tier)
             return nullptr;
 
