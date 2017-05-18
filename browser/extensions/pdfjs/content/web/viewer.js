@@ -4852,16 +4852,15 @@ var PDFPageView = function PDFPageViewClosure() {
     getPagePoint: function PDFPageView_getPagePoint(x, y) {
       return this.viewport.convertToPdfPoint(x, y);
     },
-    draw: function PDFPageView_draw() {
+    draw() {
       if (this.renderingState !== _pdf_rendering_queue.RenderingStates.INITIAL) {
         console.error('Must be in new state before drawing');
         this.reset();
       }
       this.renderingState = _pdf_rendering_queue.RenderingStates.RUNNING;
-      var self = this;
-      var pdfPage = this.pdfPage;
-      var div = this.div;
-      var canvasWrapper = document.createElement('div');
+      let pdfPage = this.pdfPage;
+      let div = this.div;
+      let canvasWrapper = document.createElement('div');
       canvasWrapper.style.width = div.style.width;
       canvasWrapper.style.height = div.style.height;
       canvasWrapper.classList.add('canvasWrapper');
@@ -4870,10 +4869,9 @@ var PDFPageView = function PDFPageViewClosure() {
       } else {
         div.appendChild(canvasWrapper);
       }
-      var textLayerDiv = null;
-      var textLayer = null;
+      let textLayer = null;
       if (this.textLayerFactory) {
-        textLayerDiv = document.createElement('div');
+        let textLayerDiv = document.createElement('div');
         textLayerDiv.className = 'textLayer';
         textLayerDiv.style.width = canvasWrapper.style.width;
         textLayerDiv.style.height = canvasWrapper.style.height;
@@ -4885,13 +4883,13 @@ var PDFPageView = function PDFPageViewClosure() {
         textLayer = this.textLayerFactory.createTextLayerBuilder(textLayerDiv, this.id - 1, this.viewport, this.enhanceTextSelection);
       }
       this.textLayer = textLayer;
-      var renderContinueCallback = null;
+      let renderContinueCallback = null;
       if (this.renderingQueue) {
-        renderContinueCallback = function renderContinueCallback(cont) {
-          if (!self.renderingQueue.isHighestPriority(self)) {
-            self.renderingState = _pdf_rendering_queue.RenderingStates.PAUSED;
-            self.resume = function resumeCallback() {
-              self.renderingState = _pdf_rendering_queue.RenderingStates.RUNNING;
+        renderContinueCallback = cont => {
+          if (!this.renderingQueue.isHighestPriority(this)) {
+            this.renderingState = _pdf_rendering_queue.RenderingStates.PAUSED;
+            this.resume = () => {
+              this.renderingState = _pdf_rendering_queue.RenderingStates.RUNNING;
               cont();
             };
             return;
@@ -4899,28 +4897,28 @@ var PDFPageView = function PDFPageViewClosure() {
           cont();
         };
       }
-      var finishPaintTask = function finishPaintTask(error) {
-        if (paintTask === self.paintTask) {
-          self.paintTask = null;
+      let finishPaintTask = error => {
+        if (paintTask === this.paintTask) {
+          this.paintTask = null;
         }
         if (error instanceof _pdfjs.RenderingCancelledException) {
-          self.error = null;
+          this.error = null;
           return Promise.resolve(undefined);
         }
-        self.renderingState = _pdf_rendering_queue.RenderingStates.FINISHED;
-        if (self.loadingIconDiv) {
-          div.removeChild(self.loadingIconDiv);
-          delete self.loadingIconDiv;
+        this.renderingState = _pdf_rendering_queue.RenderingStates.FINISHED;
+        if (this.loadingIconDiv) {
+          div.removeChild(this.loadingIconDiv);
+          delete this.loadingIconDiv;
         }
-        self._resetZoomLayer(true);
-        self.error = error;
-        self.stats = pdfPage.stats;
-        if (self.onAfterDraw) {
-          self.onAfterDraw();
+        this._resetZoomLayer(true);
+        this.error = error;
+        this.stats = pdfPage.stats;
+        if (this.onAfterDraw) {
+          this.onAfterDraw();
         }
-        self.eventBus.dispatch('pagerendered', {
-          source: self,
-          pageNumber: self.id,
+        this.eventBus.dispatch('pagerendered', {
+          source: this,
+          pageNumber: this.id,
           cssTransform: false
         });
         if (error) {
@@ -4928,10 +4926,10 @@ var PDFPageView = function PDFPageViewClosure() {
         }
         return Promise.resolve(undefined);
       };
-      var paintTask = this.renderer === _ui_utils.RendererType.SVG ? this.paintOnSvg(canvasWrapper) : this.paintOnCanvas(canvasWrapper);
+      let paintTask = this.renderer === _ui_utils.RendererType.SVG ? this.paintOnSvg(canvasWrapper) : this.paintOnCanvas(canvasWrapper);
       paintTask.onRenderContinue = renderContinueCallback;
       this.paintTask = paintTask;
-      var resultPromise = paintTask.promise.then(function () {
+      let resultPromise = paintTask.promise.then(function () {
         return finishPaintTask(null).then(function () {
           if (textLayer) {
             pdfPage.getTextContent({ normalizeWhitespace: true }).then(function textContentResolved(textContent) {
@@ -5024,16 +5022,16 @@ var PDFPageView = function PDFPageViewClosure() {
           cont();
         }
       };
-      renderTask.promise.then(function pdfPageRenderCallback() {
+      renderTask.promise.then(function () {
         showCanvas();
         renderCapability.resolve(undefined);
-      }, function pdfPageRenderError(error) {
+      }, function (error) {
         showCanvas();
         renderCapability.reject(error);
       });
       return result;
     },
-    paintOnSvg: function PDFPageView_paintOnSvg(wrapper) {
+    paintOnSvg(wrapper) {
       return {
         promise: Promise.reject(new Error('SVG rendering is not supported.')),
         onRenderContinue(cont) {},
@@ -5845,53 +5843,52 @@ var PDFThumbnailView = function PDFThumbnailViewClosure() {
       this.canvas.height = 0;
       delete this.canvas;
     },
-    draw: function PDFThumbnailView_draw() {
+    draw() {
       if (this.renderingState !== _pdf_rendering_queue.RenderingStates.INITIAL) {
         console.error('Must be in new state before drawing');
         return Promise.resolve(undefined);
       }
       this.renderingState = _pdf_rendering_queue.RenderingStates.RUNNING;
-      var renderCapability = (0, _pdfjs.createPromiseCapability)();
-      var self = this;
-      function thumbnailDrawCallback(error) {
-        if (renderTask === self.renderTask) {
-          self.renderTask = null;
+      let renderCapability = (0, _pdfjs.createPromiseCapability)();
+      let finishRenderTask = error => {
+        if (renderTask === this.renderTask) {
+          this.renderTask = null;
         }
         if (error instanceof _pdfjs.RenderingCancelledException) {
           renderCapability.resolve(undefined);
           return;
         }
-        self.renderingState = _pdf_rendering_queue.RenderingStates.FINISHED;
-        self._convertCanvasToImage();
+        this.renderingState = _pdf_rendering_queue.RenderingStates.FINISHED;
+        this._convertCanvasToImage();
         if (!error) {
           renderCapability.resolve(undefined);
         } else {
           renderCapability.reject(error);
         }
-      }
-      var ctx = this._getPageDrawContext();
-      var drawViewport = this.viewport.clone({ scale: this.scale });
-      var renderContinueCallback = function renderContinueCallback(cont) {
-        if (!self.renderingQueue.isHighestPriority(self)) {
-          self.renderingState = _pdf_rendering_queue.RenderingStates.PAUSED;
-          self.resume = function resumeCallback() {
-            self.renderingState = _pdf_rendering_queue.RenderingStates.RUNNING;
+      };
+      let ctx = this._getPageDrawContext();
+      let drawViewport = this.viewport.clone({ scale: this.scale });
+      let renderContinueCallback = cont => {
+        if (!this.renderingQueue.isHighestPriority(this)) {
+          this.renderingState = _pdf_rendering_queue.RenderingStates.PAUSED;
+          this.resume = () => {
+            this.renderingState = _pdf_rendering_queue.RenderingStates.RUNNING;
             cont();
           };
           return;
         }
         cont();
       };
-      var renderContext = {
+      let renderContext = {
         canvasContext: ctx,
         viewport: drawViewport
       };
-      var renderTask = this.renderTask = this.pdfPage.render(renderContext);
+      let renderTask = this.renderTask = this.pdfPage.render(renderContext);
       renderTask.onContinue = renderContinueCallback;
-      renderTask.promise.then(function pdfPageRenderCallback() {
-        thumbnailDrawCallback(null);
-      }, function pdfPageRenderError(error) {
-        thumbnailDrawCallback(error);
+      renderTask.promise.then(function () {
+        finishRenderTask(null);
+      }, function (error) {
+        finishRenderTask(error);
       });
       return renderCapability.promise;
     },
