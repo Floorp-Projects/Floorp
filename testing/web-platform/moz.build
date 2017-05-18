@@ -10,7 +10,6 @@ WEB_PLATFORM_TESTS_MANIFESTS += [
 ]
 
 TEST_HARNESS_FILES['web-platform'] += [
-    'harness/**',
     'outbound/**',
     'runtests.py',
     'wptrunner.ini'
@@ -23,9 +22,6 @@ TEST_HARNESS_FILES['web-platform'].certs = [
 ]
 
 with Files("update/**"):
-    BUG_COMPONENT = ("Testing", "web-platform-tests")
-
-with Files("harness/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 
 with Files("certs/**"):
@@ -170,6 +166,9 @@ with Files("tests/svg-aam/**"):
 
 with Files("tests/touch-events/**"):
     BUG_COMPONENT = ("Core", "DOM")
+
+with Files("tests/tools/**"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
 
 with Files("tests/uievents/**"):
     BUG_COMPONENT = ("Core", "DOM: Events")
