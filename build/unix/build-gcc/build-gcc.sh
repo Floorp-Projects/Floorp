@@ -9,6 +9,12 @@ binutils_version=2.25.1
 this_path=$(readlink -f $(dirname $0))
 make_flags='-j12'
 
+no_build=
+if [ "$1" = "--no-build" ]; then
+    no_build=1
+    shift
+fi
+
 root_dir="$1"
 if [ -z "$root_dir" -o ! -d "$root_dir" ]; then
   root_dir=$(mktemp -d)
@@ -108,6 +114,10 @@ done
 diff -u <(sort -k 2 $root_dir/downloads) $this_path/checksums
 
 patch -p1 < "${this_path}/PR64905.patch"
+
+if [ -n "$no_build" ]; then
+    exit 0
+fi
 
 cd ..
 mkdir gcc-objdir
