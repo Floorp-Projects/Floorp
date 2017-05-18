@@ -1326,7 +1326,7 @@ interface DataTransfer {
   void setDragImage(Element image, long x, long y);
 
   /* old interface */
-  readonly attribute DOMString[] types;
+  readonly attribute FrozenArray<DOMString> types;
   DOMString getData(DOMString format);
   void setData(DOMString format, DOMString data);
   void clearData(optional DOMString format);
@@ -1408,7 +1408,6 @@ typedef Window WindowProxy;
   boolean confirm(optional DOMString message = "");
   DOMString? prompt(optional DOMString message = "", optional DOMString default = "");
   void print();
-  any showModalDialog(DOMString url, optional any argument);
 
   void postMessage(any message, DOMString targetOrigin, optional sequence<Transferable> transfer);
 

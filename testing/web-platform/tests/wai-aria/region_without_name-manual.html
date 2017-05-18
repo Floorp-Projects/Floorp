@@ -103,20 +103,6 @@
                   "isNot",
                   "region"
                ]
-            ],
-            "WAIFAKE" : [
-               [
-                  "property",
-                  "role",
-                  "is",
-                  "ROLE_TABLE_CELL"
-               ],
-               [
-                  "property",
-                  "interfaces",
-                  "contains",
-                  "TableCell"
-               ]
             ]
          },
          "title" : "step 1",
@@ -131,7 +117,7 @@
   </head>
   <body>
   <p>This test examines the ARIA properties for region without name.</p>
-    <div role="region" id="test">
+    <div role="region" id="test" tabindex="-1">
     <article>This is article 1</article>
   </div>
 
