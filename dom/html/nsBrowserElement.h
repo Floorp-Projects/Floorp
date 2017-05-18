@@ -8,7 +8,6 @@
 #define nsBrowserElement_h
 
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/BrowserElementAudioChannel.h"
 
 #include "nsCOMPtr.h"
 #include "nsIBrowserElementAPI.h"
@@ -72,10 +71,6 @@ public:
 
   already_AddRefed<dom::DOMRequest> PurgeHistory(ErrorResult& aRv);
 
-  void GetAllowedAudioChannels(
-            nsTArray<RefPtr<dom::BrowserElementAudioChannel>>& aAudioChannels,
-            ErrorResult& aRv);
-
   void Mute(ErrorResult& aRv);
   void Unmute(ErrorResult& aRv);
   already_AddRefed<dom::DOMRequest> GetMuted(ErrorResult& aRv);
@@ -111,21 +106,12 @@ public:
 
   already_AddRefed<dom::DOMRequest> GetWebManifest(ErrorResult& aRv);
 
-  // Helper
-  static void GenerateAllowedAudioChannels(
-                 nsPIDOMWindowInner* aWindow,
-                 nsIFrameLoader* aFrameLoader,
-                 nsIBrowserElementAPI* aAPI,
-                 nsTArray<RefPtr<dom::BrowserElementAudioChannel>>& aAudioChannels,
-                 ErrorResult& aRv);
-
 protected:
   NS_IMETHOD_(already_AddRefed<nsFrameLoader>) GetFrameLoader() = 0;
 
   void InitBrowserElementAPI();
   void DestroyBrowserElementFrameScripts();
   nsCOMPtr<nsIBrowserElementAPI> mBrowserElementAPI;
-  nsTArray<RefPtr<dom::BrowserElementAudioChannel>> mBrowserElementAudioChannels;
 
 private:
   bool IsBrowserElementOrThrow(ErrorResult& aRv);
