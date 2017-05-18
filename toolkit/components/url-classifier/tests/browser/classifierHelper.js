@@ -143,7 +143,7 @@ classifierHelper.removeUrlFromDB = function(updateData) {
 // This API is used to expire all add/sub chunks we have updated
 // by using addUrlToDB and removeUrlFromDB.
 // Returns a Promise.
-classifierHelper.resetDB = function() {
+classifierHelper.resetDatabase = function() {
   var testUpdate = "";
   for (var update of classifierHelper._updatesToCleanup) {
     if (testUpdate.includes(update.db))
@@ -214,7 +214,7 @@ classifierHelper._cleanup = function() {
     return Promise.resolve();
   }
 
-  return classifierHelper.resetDB();
+  return classifierHelper.resetDatabase();
 };
 // Cleanup will be called at end of each testcase to remove all the urls added to database.
 registerCleanupFunction(classifierHelper._cleanup);
