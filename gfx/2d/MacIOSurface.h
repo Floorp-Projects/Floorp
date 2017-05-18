@@ -11,6 +11,12 @@
 #include <CoreVideo/CoreVideo.h>
 #include <dlfcn.h>
 
+namespace mozilla {
+namespace gl {
+class GLContext;
+}
+}
+
 struct _CGLContextObject;
 
 typedef _CGLContextObject* CGLContextObj;
@@ -120,7 +126,10 @@ public:
 
   // We would like to forward declare NSOpenGLContext, but it is an @interface
   // and this file is also used from c++, so we use a void *.
-  CGLError CGLTexImageIOSurface2D(CGLContextObj ctxt, size_t plane = 0);
+  CGLError CGLTexImageIOSurface2D(mozilla::gl::GLContext* aGL,
+                                  CGLContextObj ctxt,
+                                  size_t plane,
+                                  mozilla::gfx::SurfaceFormat* aOutReadFormat = nullptr);
   already_AddRefed<SourceSurface> GetAsSurface();
   CGContextRef CreateIOSurfaceContext();
 
