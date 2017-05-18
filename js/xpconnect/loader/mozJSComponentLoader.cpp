@@ -529,10 +529,14 @@ mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
         }
     }
 
-    RootedObject obj(aCx, holder->GetJSObject());
-    NS_ENSURE_TRUE(obj, nullptr);
+    // |thisObj| is the object we set properties on for a particular .jsm.
+    // XXX Right now, thisObj is always globalObj, but if we start
+    // sharing globals between jsms, they won't be the same.
+    // See bug 1186409.
+    RootedObject thisObj(aCx, holder->GetJSObject());
+    NS_ENSURE_TRUE(thisObj, nullptr);
 
-    JSAutoCompartment ac(aCx, obj);
+    JSAutoCompartment ac(aCx, thisObj);
 
     *aRealFile = false;
 
@@ -551,13 +555,13 @@ mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
         if (XRE_IsParentProcess()) {
             RootedObject locationObj(aCx);
 
-            rv = nsXPConnect::XPConnect()->WrapNative(aCx, obj, aComponentFile,
+            rv = nsXPConnect::XPConnect()->WrapNative(aCx, thisObj, aComponentFile,
                                                       NS_GET_IID(nsIFile),
                                                       locationObj.address());
             NS_ENSURE_SUCCESS(rv, nullptr);
             NS_ENSURE_TRUE(locationObj, nullptr);
 
-            if (!JS_DefineProperty(aCx, obj, "__LOCATION__", locationObj, 0))
+            if (!JS_DefineProperty(aCx, thisObj, "__LOCATION__", locationObj, 0))
                 return nullptr;
         }
     }
@@ -571,7 +575,7 @@ mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
     RootedString exposedUri(aCx, JS_NewStringCopyN(aCx, nativePath.get(), nativePath.Length()));
     NS_ENSURE_TRUE(exposedUri, nullptr);
 
-    if (!JS_DefineProperty(aCx, obj, "__URI__", exposedUri, 0))
+    if (!JS_DefineProperty(aCx, thisObj, "__URI__", exposedUri, 0))
         return nullptr;
 
     if (createdNewGlobal) {
@@ -583,7 +587,7 @@ mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
         JS_FireOnNewGlobalObject(aes.cx(), global);
     }
 
-    return obj;
+    return thisObj;
 }
 
 nsresult
