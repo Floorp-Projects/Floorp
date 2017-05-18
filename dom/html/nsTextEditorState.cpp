@@ -2603,20 +2603,6 @@ nsTextEditorState::SetValue(const nsAString& aValue, uint32_t aFlags)
           }
         }
 
-        nsCOMPtr<nsISelectionController> kungFuDeathGrip = mSelCon.get();
-        uint32_t currentLength = currentValue.Length();
-        uint32_t newlength = newValue.Length();
-        if (!currentLength ||
-            !StringBeginsWith(newValue, currentValue)) {
-          // Replace the whole text.
-          currentLength = 0;
-          kungFuDeathGrip->SelectAll();
-        } else {
-          // Collapse selection to the end so that we can append data.
-          mBoundFrame->SelectAllOrCollapseToEndOfText(false);
-        }
-        const nsAString& insertValue =
-          StringTail(newValue, newlength - currentLength);
         nsCOMPtr<nsIPlaintextEditor> plaintextEditor = do_QueryInterface(mEditor);
         if (!plaintextEditor || !weakFrame.IsAlive()) {
           NS_WARNING("Somehow not a plaintext editor?");
@@ -2634,10 +2620,29 @@ nsTextEditorState::SetValue(const nsAString& aValue, uint32_t aFlags)
           bool notifyValueChanged = !!(aFlags & eSetValue_Notify);
           mTextListener->SetValueChanged(notifyValueChanged);
 
-          if (insertValue.IsEmpty()) {
-            mEditor->DeleteSelection(nsIEditor::eNone, nsIEditor::eStrip);
+          if (aFlags & eSetValue_BySetUserInput) {
+            nsCOMPtr<nsISelectionController> kungFuDeathGrip = mSelCon.get();
+            uint32_t currentLength = currentValue.Length();
+            uint32_t newlength = newValue.Length();
+            if (!currentLength ||
+                !StringBeginsWith(newValue, currentValue)) {
+              // Replace the whole text.
+              currentLength = 0;
+              kungFuDeathGrip->SelectAll();
+            } else {
+              // Collapse selection to the end so that we can append data.
+              mBoundFrame->SelectAllOrCollapseToEndOfText(false);
+            }
+            const nsAString& insertValue =
+              StringTail(newValue, newlength - currentLength);
+
+            if (insertValue.IsEmpty()) {
+              mEditor->DeleteSelection(nsIEditor::eNone, nsIEditor::eStrip);
+            } else {
+              plaintextEditor->InsertText(insertValue);
+            }
           } else {
-            plaintextEditor->InsertText(insertValue);
+            plaintextEditor->SetText(newValue);
           }
 
           mTextListener->SetValueChanged(true);
