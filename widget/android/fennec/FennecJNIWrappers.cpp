@@ -71,6 +71,17 @@ auto GeckoApp::RemovePluginView(mozilla::jni::Object::Param a0) -> void
     return mozilla::jni::Method<RemovePluginView_t>::Call(GeckoApp::Context(), nullptr, a0);
 }
 
+const char GeckoApplication::name[] =
+        "org/mozilla/gecko/GeckoApplication";
+
+constexpr char GeckoApplication::CreateShortcut_t::name[];
+constexpr char GeckoApplication::CreateShortcut_t::signature[];
+
+auto GeckoApplication::CreateShortcut(mozilla::jni::String::Param a0, mozilla::jni::String::Param a1) -> void
+{
+    return mozilla::jni::Method<CreateShortcut_t>::Call(GeckoApplication::Context(), nullptr, a0, a1);
+}
+
 const char GeckoJavaSampler::name[] =
         "org/mozilla/gecko/GeckoJavaSampler";
 
