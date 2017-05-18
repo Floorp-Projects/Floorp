@@ -364,18 +364,6 @@ ServoStyleSet::PrepareAndTraverseSubtree(
 }
 
 already_AddRefed<nsStyleContext>
-ServoStyleSet::ResolveStyleFor(Element* aElement,
-                               nsStyleContext* aParentContext,
-                               LazyComputeBehavior aMayCompute,
-                               TreeMatchContext& aTreeMatchContext)
-{
-  // aTreeMatchContext is used to speed up selector matching,
-  // but if the element already has a ServoComputedValues computed in
-  // advance, then we shouldn't need to use it.
-  return ResolveStyleFor(aElement, aParentContext, aMayCompute);
-}
-
-already_AddRefed<nsStyleContext>
 ServoStyleSet::ResolveStyleForText(nsIContent* aTextNode,
                                    nsStyleContext* aParentContext)
 {
@@ -778,9 +766,13 @@ ServoStyleSet::AddDocStyleSheet(ServoStyleSheet* aSheet,
 already_AddRefed<nsStyleContext>
 ServoStyleSet::ProbePseudoElementStyle(Element* aOriginatingElement,
                                        CSSPseudoElementType aType,
-                                       nsStyleContext* aParentContext)
+                                       nsStyleContext* aParentContext,
+                                       Element* aPseudoElement)
 {
   UpdateStylistIfNeeded();
+  if (aPseudoElement) {
+    NS_ERROR("stylo: We don't support CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE yet");
+  }
 
   // NB: We ignore aParentContext, on the assumption that pseudo element styles
   // should just inherit from aOriginatingElement's primary style, which Servo
@@ -812,19 +804,6 @@ ServoStyleSet::ProbePseudoElementStyle(Element* aOriginatingElement,
   nsIAtom* pseudoTag = nsCSSPseudoElements::GetPseudoAtom(aType);
   return GetContext(computedValues.forget(), aParentContext, pseudoTag, aType,
                     isBeforeOrAfter ? aOriginatingElement : nullptr);
-}
-
-already_AddRefed<nsStyleContext>
-ServoStyleSet::ProbePseudoElementStyle(Element* aOriginatingElement,
-                                       CSSPseudoElementType aType,
-                                       nsStyleContext* aParentContext,
-                                       TreeMatchContext& aTreeMatchContext,
-                                       Element* aPseudoElement)
-{
-  if (aPseudoElement) {
-    NS_ERROR("stylo: We don't support CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE yet");
-  }
-  return ProbePseudoElementStyle(aOriginatingElement, aType, aParentContext);
 }
 
 nsRestyleHint
