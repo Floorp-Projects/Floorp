@@ -59,6 +59,13 @@
 
 #include "mozilla/CheckedInt.h"
 
+#ifdef MOZ_ENABLE_FREETYPE
+#include "ft2build.h"
+#include FT_FREETYPE_H
+
+#include "mozilla/Mutex.h"
+#endif
+
 #if defined(MOZ_LOGGING)
 GFX2D_API mozilla::LogModule*
 GetGFX2DLog()
@@ -155,6 +162,30 @@ HasCPUIDBit(unsigned int level, CPUIDRegister reg, unsigned int bit)
 #endif
 #endif
 
+#ifdef MOZ_ENABLE_FREETYPE
+extern "C" {
+
+FT_Face
+mozilla_NewFTFace(FT_Library aFTLibrary, const char* aFileName, int aFaceIndex)
+{
+  return mozilla::gfx::Factory::NewFTFace(aFTLibrary, aFileName, aFaceIndex);
+}
+
+FT_Face
+mozilla_NewFTFaceFromData(FT_Library aFTLibrary, const uint8_t* aData, size_t aDataSize, int aFaceIndex)
+{
+  return mozilla::gfx::Factory::NewFTFaceFromData(aFTLibrary, aData, aDataSize, aFaceIndex);
+}
+
+void
+mozilla_ReleaseFTFace(FT_Face aFace)
+{
+  mozilla::gfx::Factory::ReleaseFTFace(aFace);
+}
+
+}
+#endif
+
 namespace mozilla {
 namespace gfx {
 
@@ -163,6 +194,7 @@ int32_t LoggingPrefs::sGfxLogLevel = LOG_DEFAULT;
 
 #ifdef MOZ_ENABLE_FREETYPE
 FT_Library Factory::mFTLibrary = nullptr;
+Mutex* Factory::mFTLock = nullptr;
 #endif
 
 #ifdef WIN32
@@ -192,6 +224,10 @@ Factory::Init(const Config& aConfig)
   if (sConfig->mMaxTextureSize < kMinSizePref) {
     sConfig->mMaxTextureSize = kMinSizePref;
   }
+
+#ifdef MOZ_ENABLE_FREETYPE
+  mFTLock = new Mutex("Factory::mFTLock");
+#endif
 }
 
 void
@@ -204,8 +240,10 @@ Factory::ShutDown()
   }
 
 #ifdef MOZ_ENABLE_FREETYPE
-  if (mFTLibrary) {
-    mFTLibrary = nullptr;
+  mFTLibrary = nullptr;
+  if (mFTLock) {
+    delete mFTLock;
+    mFTLock = nullptr;
   }
 #endif
 }
@@ -508,7 +546,7 @@ Factory::CreateScaledFontForNativeFont(const NativeFont &aNativeFont,
 }
 
 already_AddRefed<NativeFontResource>
-Factory::CreateNativeFontResource(uint8_t *aData, uint32_t aSize, FontType aType)
+Factory::CreateNativeFontResource(uint8_t *aData, uint32_t aSize, FontType aType, void* aFontContext)
 {
   switch (aType) {
 #ifdef WIN32
@@ -533,7 +571,8 @@ Factory::CreateNativeFontResource(uint8_t *aData, uint32_t aSize, FontType aType
 #elif defined(XP_DARWIN)
       return NativeFontResourceMac::Create(aData, aSize);
 #elif defined(MOZ_WIDGET_GTK)
-      return NativeFontResourceFontconfig::Create(aData, aSize);
+      return NativeFontResourceFontconfig::Create(aData, aSize,
+                                                  static_cast<FT_Library>(aFontContext));
 #else
       gfxWarning() << "Unable to create cairo scaled font from truetype data";
       return nullptr;
@@ -621,6 +660,51 @@ Factory::GetFTLibrary()
 {
   MOZ_ASSERT(mFTLibrary);
   return mFTLibrary;
+}
+
+FT_Face
+Factory::NewFTFace(FT_Library aFTLibrary, const char* aFileName, int aFaceIndex)
+{
+  MOZ_ASSERT(mFTLock);
+  MutexAutoLock lock(*mFTLock);
+  if (!aFTLibrary) {
+    aFTLibrary = mFTLibrary;
+  }
+  FT_Face face;
+  if (FT_New_Face(aFTLibrary, aFileName, aFaceIndex, &face) != FT_Err_Ok) {
+    return nullptr;
+  }
+  return face;
+}
+
+FT_Face
+Factory::NewFTFaceFromData(FT_Library aFTLibrary, const uint8_t* aData, size_t aDataSize, int aFaceIndex)
+{
+  MOZ_ASSERT(mFTLock);
+  MutexAutoLock lock(*mFTLock);
+  if (!aFTLibrary) {
+    aFTLibrary = mFTLibrary;
+  }
+  FT_Face face;
+  if (FT_New_Memory_Face(aFTLibrary, aData, aDataSize, aFaceIndex, &face) != FT_Err_Ok) {
+    return nullptr;
+  }
+  return face;
+}
+
+void
+Factory::ReleaseFTFace(FT_Face aFace)
+{
+  // May be called during shutdown when the lock is already destroyed.
+  // However, there are no other threads using the face by this point,
+  // so it is safe to skip locking if the lock is not around.
+  if (mFTLock) {
+    mFTLock->Lock();
+  }
+  FT_Done_Face(aFace);
+  if (mFTLock) {
+    mFTLock->Unlock();
+  }
 }
 #endif
 

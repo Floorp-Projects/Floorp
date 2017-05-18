@@ -174,13 +174,16 @@ AnimationHelper::SampleAnimationForEachNode(TimeStamp aTime,
     activeAnimations = true;
 
     MOZ_ASSERT((!animation.originTime().IsNull() &&
-                animation.startTime().type() != MaybeTimeDuration::Tnull_t) ||
+                animation.startTime().type() ==
+                  MaybeTimeDuration::TTimeDuration) ||
                animation.isNotPlaying(),
                "If we are playing, we should have an origin time and a start"
                " time");
-    // If the animation is not currently playing , e.g. paused or
+    // If the animation is not currently playing, e.g. paused or
     // finished, then use the hold time to stay at the same position.
-    TimeDuration elapsedDuration = animation.isNotPlaying()
+    TimeDuration elapsedDuration =
+      animation.isNotPlaying() ||
+      animation.startTime().type() != MaybeTimeDuration::TTimeDuration
       ? animation.holdTime()
       : (aTime - animation.originTime() -
          animation.startTime().get_TimeDuration())

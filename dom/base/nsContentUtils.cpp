@@ -1218,6 +1218,7 @@ nsContentUtils::ParseHTMLInteger(const nsAString& aValue,
   int sign = 1;
   if (*iter == char16_t('-')) {
     sign = -1;
+    result |= eParseHTMLInteger_Negative;
     ++iter;
   } else if (*iter == char16_t('+')) {
     result |= eParseHTMLInteger_NonStandard;
