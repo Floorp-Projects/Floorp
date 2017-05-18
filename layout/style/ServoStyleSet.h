@@ -119,12 +119,6 @@ public:
                   nsStyleContext* aParentContext,
                   LazyComputeBehavior aMayCompute);
 
-  already_AddRefed<nsStyleContext>
-  ResolveStyleFor(dom::Element* aElement,
-                  nsStyleContext* aParentContext,
-                  LazyComputeBehavior aMayCompute,
-                  TreeMatchContext& aTreeMatchContext);
-
   // Get a style context for a text node (which no rules will match).
   //
   // The returned style context will have nsCSSAnonBoxes::mozText as its pseudo.
@@ -219,13 +213,7 @@ public:
   already_AddRefed<nsStyleContext>
   ProbePseudoElementStyle(dom::Element* aOriginatingElement,
                           mozilla::CSSPseudoElementType aType,
-                          nsStyleContext* aParentContext);
-
-  already_AddRefed<nsStyleContext>
-  ProbePseudoElementStyle(dom::Element* aOriginatingElement,
-                          mozilla::CSSPseudoElementType aType,
                           nsStyleContext* aParentContext,
-                          TreeMatchContext& aTreeMatchContext,
                           dom::Element* aPseudoElement = nullptr);
 
   // Test if style is dependent on content state
