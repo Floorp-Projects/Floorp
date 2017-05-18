@@ -67,7 +67,6 @@ add_task(function* reloadButtonReloadsAddon() {
   });
 
   const reloadButton = getReloadButton(document, ADDON_NAME);
-  is(reloadButton.disabled, false, "Reload button should not be disabled");
   is(reloadButton.title, "", "Reload button should not have a tooltip");
   const onInstalled = promiseAddonEvent("onInstalled");
 
@@ -149,9 +148,7 @@ add_task(function* onlyTempInstalledAddonsCanBeReloaded() {
   const addon = yield getAddonByID("bug1273184@tests");
 
   const reloadButton = getReloadButton(document, addon.name);
-  ok(reloadButton, "Reload button exists");
-  is(reloadButton.disabled, true, "Reload button should be disabled");
-  ok(reloadButton.title, "Disabled reload button should have a tooltip");
+  ok(!reloadButton, "There should not be a reload button");
 
   yield tearDownAddon(addon);
   yield closeAboutDebugging(tab);
