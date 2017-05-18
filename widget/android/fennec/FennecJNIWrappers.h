@@ -219,6 +219,39 @@ public:
     template<class Impl> class Natives;
 };
 
+class GeckoApplication : public mozilla::jni::ObjectBase<GeckoApplication>
+{
+public:
+    static const char name[];
+
+    explicit GeckoApplication(const Context& ctx) : ObjectBase<GeckoApplication>(ctx) {}
+
+    struct CreateShortcut_t {
+        typedef GeckoApplication Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param,
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "createShortcut";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;Ljava/lang/String;)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::GECKO;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    static auto CreateShortcut(mozilla::jni::String::Param, mozilla::jni::String::Param) -> void;
+
+    static const mozilla::jni::CallingThread callingThread =
+            mozilla::jni::CallingThread::GECKO;
+
+};
+
 class GeckoJavaSampler : public mozilla::jni::ObjectBase<GeckoJavaSampler>
 {
 public:
