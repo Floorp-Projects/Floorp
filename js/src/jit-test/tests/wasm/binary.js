@@ -232,20 +232,35 @@ function elemSection(elemArrays) {
     return { name: elemId, body };
 }
 
-function nameSection(elems) {
+function nameSection(moduleName, funcNames) {
     var body = [];
     body.push(...string(nameName));
-    body.push(...varU32(elems.length));
-    for (let fn of elems) {
-        body.push(...encodedString(fn.name, fn.nameLen));
-        if (!fn.locals) {
-           body.push(...varU32(0));
-           continue;
-        }
-        body.push(...varU32(fn.locals.length));
-        for (let local of fn.locals)
-            body.push(...encodedString(local.name, local.nameLen));
+
+    if (moduleName) {
+        body.push(...varU32(nameTypeModule));
+
+        var subsection = encodedString(moduleName);
+
+        body.push(...varU32(subsection.length));
+        body.push(...subsection);
     }
+
+    if (funcNames) {
+        body.push(...varU32(nameTypeFunction));
+
+        var subsection = varU32(funcNames.length);
+
+        var funcIndex = 0;
+        for (let f of funcNames) {
+            subsection.push(...varU32(f.index ? f.index : funcIndex));
+            subsection.push(...encodedString(f.name, f.nameLen));
+            funcIndex++;
+        }
+
+        body.push(...varU32(subsection.length));
+        body.push(...subsection);
+    }
+
     return { name: userDefinedId, body };
 }
 
@@ -380,7 +395,7 @@ wasmEval(moduleWithSections([tooBigNameSection]));
 var customDefSec = customSection("wee", 42, 13);
 var declSec = declSection([0]);
 var bodySec = bodySection([v2vBody]);
-var nameSec = nameSection([{name:'hi'}]);
+var nameSec = nameSection(null, [{name:'hi'}]);
 wasmEval(moduleWithSections([customDefSec, v2vSigSection, declSec, bodySec]));
 wasmEval(moduleWithSections([v2vSigSection, customDefSec, declSec, bodySec]));
 wasmEval(moduleWithSections([v2vSigSection, declSec, customDefSec, bodySec]));
@@ -429,7 +444,7 @@ for (var i = FirstInvalidOpcode; i <= 0xff; i++) {
 }
 
 // Checking stack trace.
-function runStackTraceTest(namesContent, expectedName) {
+function runStackTraceTest(moduleName, funcNames, expectedName) {
     var sections = [
         sigSection([v2vSig]),
         importSection([{sigIndex:0, module:"env", func:"callback"}]),
@@ -439,8 +454,8 @@ function runStackTraceTest(namesContent, expectedName) {
         customSection("whoa"),
         customSection("wee", 42),
     ];
-    if (namesContent)
-        sections.push(nameSection(namesContent));
+    if (moduleName || funcNames)
+        sections.push(nameSection(moduleName, funcNames));
     sections.push(customSection("yay", 13));
 
     var result = "";
@@ -452,16 +467,20 @@ function runStackTraceTest(namesContent, expectedName) {
     assertEq(result, expectedName);
 };
 
-runStackTraceTest(null, 'wasm-function[1]');
-runStackTraceTest([{name:'blah'}, {name: 'test'}], 'test');
-runStackTraceTest([{name:'blah'}, {name: 'test', locals: [{name: 'var1'}, {name: 'var2'}]}], 'test');
-runStackTraceTest([{name:'blah'}, {name: 'test', locals: [{name: 'var1'}, {name: 'var2'}]}], 'test');
-runStackTraceTest([{name:'blah'}, {name: 'test1'}, {name: 'test2'}], 'test1');
-runStackTraceTest([{name:'blah'}, {name: 'test☃'}], 'test☃');
-runStackTraceTest([{name:'blah'}, {name: 'te\xE0\xFF'}], 'te\xE0\xFF');
-runStackTraceTest([{name:'blah'}], 'wasm-function[1]');
-runStackTraceTest([], 'wasm-function[1]');
+runStackTraceTest(null, null, 'wasm-function[1]');
+runStackTraceTest(null, [{name:'blah'}, {name:'test'}], 'test');
+runStackTraceTest(null, [{name:'test', index:1}], 'test');
+runStackTraceTest(null, [{name:'blah'}, {name:'test', locals: [{name: 'var1'}, {name: 'var2'}]}], 'test');
+runStackTraceTest(null, [{name:'blah'}, {name:'test', locals: [{name: 'var1'}, {name: 'var2'}]}], 'test');
+runStackTraceTest(null, [{name:'blah'}, {name:'test1'}], 'test1');
+runStackTraceTest(null, [{name:'blah'}, {name:'test☃'}], 'test☃');
+runStackTraceTest(null, [{name:'blah'}, {name:'te\xE0\xFF'}], 'te\xE0\xFF');
+runStackTraceTest(null, [{name:'blah'}], 'wasm-function[1]');
+runStackTraceTest(null, [], 'wasm-function[1]');
+runStackTraceTest("", [{name:'blah'}, {name:'test'}], 'test');
+runStackTraceTest("a", [{name:'blah'}, {name:'test'}], 'test');
 // Notice that invalid names section content shall not fail the parsing
-runStackTraceTest([{name:'blah'}, {nameLen: 100, name: 'test'}], 'wasm-function[1]'); // invalid name size
-runStackTraceTest([{name:'blah'}, {name: 'test', locals: [{nameLen: 40, name: 'var1'}]}], 'wasm-function[1]'); // invalid variable name size
-runStackTraceTest([{name:'blah'}, {name: ''}], 'wasm-function[1]'); // empty name
+runStackTraceTest(null, [{name:'blah'}, {name:'test', index: 2}], 'wasm-function[1]'); // invalid index
+runStackTraceTest(null, [{name:'blah'}, {name:'test', index: 100000}], 'wasm-function[1]'); // invalid index
+runStackTraceTest(null, [{name:'blah'}, {name:'test', nameLen: 100}], 'wasm-function[1]'); // invalid name size
+runStackTraceTest(null, [{name:'blah'}, {name:''}], 'wasm-function[1]'); // empty name
