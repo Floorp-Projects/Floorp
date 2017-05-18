@@ -760,6 +760,7 @@ public class BrowserApp extends GeckoApp
             null);
 
         EventDispatcher.getInstance().registerUiThreadListener(this,
+            "Accessibility:Enabled",
             "Menu:Open",
             "Menu:Update",
             "Menu:Add",
@@ -1510,12 +1511,6 @@ public class BrowserApp extends GeckoApp
     }
 
     @Override
-    public void setAccessibilityEnabled(boolean enabled) {
-        super.setAccessibilityEnabled(enabled);
-        mDynamicToolbar.setAccessibilityEnabled(enabled);
-    }
-
-    @Override
     public void onDestroy() {
         if (mIsAbortingAppLaunch) {
             super.onDestroy();
@@ -1563,6 +1558,7 @@ public class BrowserApp extends GeckoApp
             null);
 
         EventDispatcher.getInstance().unregisterUiThreadListener(this,
+            "Accessibility:Enabled",
             "Menu:Open",
             "Menu:Update",
             "Menu:Add",
@@ -1832,6 +1828,10 @@ public class BrowserApp extends GeckoApp
                 }
 
                 FeedService.setup(this);
+                break;
+
+            case "Accessibility:Enabled":
+                mDynamicToolbar.setAccessibilityEnabled(message.getBoolean("enabled"));
                 break;
 
             case "Menu:Open":
