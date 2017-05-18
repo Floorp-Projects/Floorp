@@ -9,7 +9,7 @@
 
 #include "mozilla/Compiler.h"
 
-#if !defined(__arm__) && !(defined(LINUX) || defined(ANDROID) || defined(XP_IOS))
+#if !defined(__arm__) || !(defined(LINUX) || defined(ANDROID) || defined(XP_IOS))
 #error "This code is for Linux/iOS ARM only. Check that it works on your system, too.\nBeware that this code is highly compiler dependent."
 #endif
 

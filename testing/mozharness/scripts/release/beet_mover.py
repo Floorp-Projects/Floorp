@@ -76,6 +76,10 @@ CONFIG_OPTIONS = [
         "dest": "bucket",
         "help": "s3 bucket to move beets to.",
     }],
+    [["--product"], {
+        "dest": "product",
+        "help": "product for which artifacts are beetmoved",
+    }],
     [["--exclude"], {
         "dest": "excludes",
         "action": "append",
@@ -151,7 +155,6 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
                     "mar",
                 ],
                 "virtualenv_path": "venv",
-                'product': 'firefox',
             },
         }
         #todo do excludes need to be configured via command line for specific builds?
