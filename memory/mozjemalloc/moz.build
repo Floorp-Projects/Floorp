@@ -25,7 +25,8 @@ LOCAL_INCLUDES += [
 ]
 
 if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wno-unused'] # too many annoying warnings from mfbt/ headers
+    # too many warnings from functions generated through rb_wrab from rb.h.
+    CXXFLAGS += ['-Wno-unused-function']
 
 if CONFIG['_MSC_VER']:
     CXXFLAGS += ['-wd4273'] # inconsistent dll linkage (bug 558163)

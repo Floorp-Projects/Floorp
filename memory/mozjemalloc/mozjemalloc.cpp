@@ -993,7 +993,7 @@ static malloc_spinlock_t arenas_lock; /* Protects arenas initialization. */
  * Map of pthread_self() --> arenas[???], used for selecting an arena to use
  * for allocations.
  */
-#ifndef MOZ_MEMORY_WINDOWS
+#if !defined(MOZ_MEMORY_WINDOWS) && !defined(MOZ_MEMORY_DARWIN)
 static __thread arena_t	*arenas_map;
 #endif
 #endif
@@ -2849,7 +2849,6 @@ arena_run_split(arena_t *arena, arena_run_t *run, size_t size, bool large,
 static void
 arena_chunk_init(arena_t *arena, arena_chunk_t *chunk)
 {
-	arena_run_t *run;
 	size_t i;
 
 	arena->stats.mapped += chunksize;
@@ -2862,8 +2861,11 @@ arena_chunk_init(arena_t *arena, arena_chunk_t *chunk)
 	chunk->ndirty = 0;
 
 	/* Initialize the map to contain one maximal free untouched run. */
-	run = (arena_run_t *)((uintptr_t)chunk + (arena_chunk_header_npages <<
-	    pagesize_2pow));
+#ifdef MALLOC_DECOMMIT
+	arena_run_t *run = (arena_run_t *)((uintptr_t)chunk +
+	                   (arena_chunk_header_npages << pagesize_2pow));
+#endif
+
 	for (i = 0; i < arena_chunk_header_npages; i++)
 		chunk->map[i].bits = 0;
 	chunk->map[i].bits = arena_maxclass | CHUNK_MAP_DECOMMITTED | CHUNK_MAP_ZEROED;
@@ -4089,7 +4091,7 @@ arena_new(arena_t *arena)
 {
 	unsigned i;
 	arena_bin_t *bin;
-	size_t pow2_size, prev_run_size;
+	size_t prev_run_size;
 
 	if (malloc_spin_init(&arena->lock))
 		return (true);
@@ -4131,7 +4133,6 @@ arena_new(arena_t *arena)
 
 		bin->reg_size = quantum * (i - ntbins + 1);
 
-		pow2_size = pow2_ceil(quantum * (i - ntbins + 1));
 		prev_run_size = arena_bin_run_size_calc(bin, prev_run_size);
 
 		memset(&bin->stats, 0, sizeof(malloc_bin_stats_t));
@@ -4574,9 +4575,6 @@ malloc_init_hard(void)
 	unsigned i;
 	const char *opts;
 	long result;
-#ifndef MOZ_MEMORY_WINDOWS
-	int linklen;
-#endif
 
 #ifndef MOZ_MEMORY_WINDOWS
 	malloc_mutex_lock(&init_lock);
@@ -5356,7 +5354,6 @@ hard_purge_arena(arena_t *arena)
 	malloc_spin_lock(&arena->lock);
 
 	while (!LinkedList_IsEmpty(&arena->chunks_madvised)) {
-		LinkedList* next = arena->chunks_madvised.next;
 		arena_chunk_t *chunk =
 			LinkedList_Get(arena->chunks_madvised.next,
 				       arena_chunk_t, chunks_madvised_elem);
