@@ -150,7 +150,7 @@ class Module : public JS::WasmModule
     const ImportVector& imports() const { return imports_; }
     const ExportVector& exports() const { return exports_; }
     const Bytes& bytecode() const { return bytecode_->bytes; }
-    uint32_t codeLength() const { return code_->segment().length(); }
+    uint32_t codeLengthTier() const { return code_->segmentTier().length(); }
 
     // Instantiate this module with the given imports:
 
