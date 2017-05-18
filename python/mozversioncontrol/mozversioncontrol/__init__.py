@@ -76,6 +76,11 @@ class Repository(object):
         '''
         raise NotImplementedError
 
+    def get_files_in_working_directory(self):
+        """Obtain a list of managed files in the working directory."""
+        raise NotImplementedError
+
+
 class HgRepository(Repository):
     '''An implementation of `Repository` for Mercurial repositories.'''
     def __init__(self, path):
@@ -99,6 +104,12 @@ class HgRepository(Repository):
     def forget_add_remove_files(self, path):
         self._run('forget', path)
 
+    def get_files_in_working_directory(self):
+        # Can return backslashes on Windows. Normalize to forward slashes.
+        return list(p.replace('\\', '/') for p in
+                    self._run('files', '-0').split('\0'))
+
+
 class GitRepository(Repository):
     '''An implementation of `Repository` for Git repositories.'''
     def __init__(self, path):
@@ -116,6 +127,14 @@ class GitRepository(Repository):
     def forget_add_remove_files(self, path):
         self._run('reset', path)
 
+    def get_files_in_working_directory(self):
+        return self._run('ls-files', '-z').split('\0')
+
+
+class InvalidRepoPath(Exception):
+    """Represents a failure to find a VCS repo at a specified path."""
+
+
 def get_repository_object(path):
     '''Get a repository object for the repository at `path`.
     If `path` is not a known VCS repository, raise an exception.
@@ -125,4 +144,24 @@ def get_repository_object(path):
     elif os.path.exists(os.path.join(path, '.git')):
         return GitRepository(path)
     else:
-        raise Exception('Unknown VCS, or not a source checkout: %s' % path)
+        raise InvalidRepoPath('Unknown VCS, or not a source checkout: %s' %
+                              path)
+
+
+def get_repository_from_env():
+    """Obtain a repository object by looking at the environment."""
+    def ancestors(path):
+        while path:
+            yield path
+            path, child = os.path.split(path)
+            if child == '':
+                break
+
+    for path in ancestors(os.getcwd()):
+        try:
+            return get_repository_object(path)
+        except InvalidRepoPath:
+            continue
+
+    raise Exception('Could not find Mercurial or Git checkout for %s' %
+                    os.getcwd())

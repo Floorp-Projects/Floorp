@@ -13,7 +13,9 @@ from __future__ import print_function
 
 import os
 import sys
-from check_utils import get_all_toplevel_filenames
+
+from mozversioncontrol import get_repository_from_env
+
 
 scriptname = os.path.basename(__file__);
 expected_encoding = 'ascii'
@@ -45,10 +47,13 @@ def check_single_file(filename):
 def check_files():
     result = True
 
-    for filename in get_all_toplevel_filenames():
+    repo = get_repository_from_env()
+    root = repo.path
+
+    for filename in repo.get_files_in_working_directory():
         if filename.endswith('.msg'):
             if filename not in ignore_files:
-                if not check_single_file(filename):
+                if not check_single_file(os.path.join(root, filename)):
                     result = False
 
     return result
