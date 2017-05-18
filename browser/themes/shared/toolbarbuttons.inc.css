@@ -14,7 +14,7 @@
   --toolbarbutton-hover-background: hsla(240, 5%, 5%, .1);
   --toolbarbutton-active-background: hsla(240, 5%, 5%, .15);
 
-  --toolbarbutton-inner-padding: 5px;
+  --toolbarbutton-inner-padding: 6px;
 %else
   --backbutton-urlbar-overlap: 6px;
 
@@ -164,10 +164,10 @@ toolbarbutton.bookmark-item:not(.subviewbutton),
   padding: var(--toolbarbutton-inner-padding);
 %else
   padding: var(--toolbarbutton-inner-padding) 7px;
-%endif
   background-origin: padding-box !important;
   background-clip: padding-box !important;
   border: 1px solid transparent;
+%endif
   border-radius: var(--toolbarbutton-border-radius);
   transition-property: background-color, border-color, box-shadow;
   transition-duration: 150ms;
@@ -373,7 +373,9 @@ toolbarbutton.bookmark-item[open="true"],
 #back-button > .toolbarbutton-icon {
 %ifdef MOZ_PHOTON_THEME
   background: var(--backbutton-background);
-  border-color: var(--backbutton-border-color) !important;
+  border: 1px solid var(--backbutton-border-color);
+  background-origin: padding-box;
+  background-clip: padding-box;
 %endif
   border-radius: 10000px !important;
   padding: 7px !important;
