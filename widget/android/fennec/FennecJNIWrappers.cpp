@@ -52,6 +52,14 @@ auto GeckoApp::AddPluginView(mozilla::jni::Object::Param a0) -> void
     return mozilla::jni::Method<AddPluginView_t>::Call(GeckoApp::Context(), nullptr, a0);
 }
 
+constexpr char GeckoApp::LaunchOrBringToFront_t::name[];
+constexpr char GeckoApp::LaunchOrBringToFront_t::signature[];
+
+auto GeckoApp::LaunchOrBringToFront() -> void
+{
+    return mozilla::jni::Method<LaunchOrBringToFront_t>::Call(GeckoApp::Context(), nullptr);
+}
+
 constexpr char GeckoApp::OnFullScreenPluginHidden_t::name[];
 constexpr char GeckoApp::OnFullScreenPluginHidden_t::signature[];
 
