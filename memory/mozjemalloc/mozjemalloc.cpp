@@ -1083,12 +1083,10 @@ const uint8_t kAllocPoison = 0xe5;
 #ifndef MALLOC_PRODUCTION
 static bool	opt_abort = true;
 static bool	opt_junk = true;
-static bool	opt_poison = true;
 static bool	opt_zero = false;
 #else
 static bool	opt_abort = false;
 static const bool	opt_junk = false;
-static const bool	opt_poison = true;
 static const bool	opt_zero = false;
 #endif
 
@@ -3916,8 +3914,7 @@ arena_dalloc_small(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 	bin = run->bin;
 	size = bin->reg_size;
 
-	if (opt_poison)
-		memset(ptr, kAllocPoison, size);
+	memset(ptr, kAllocPoison, size);
 
 	arena_run_reg_dalloc(run, bin, ptr, size);
 	run->nfree++;
@@ -3992,8 +3989,7 @@ arena_dalloc_large(arena_t *arena, arena_chunk_t *chunk, void *ptr)
 	    pagesize_2pow;
 	size_t size = chunk->map[pageind].bits & ~pagesize_mask;
 
-	if (opt_poison)
-		memset(ptr, kAllocPoison, size);
+	memset(ptr, kAllocPoison, size);
 	arena->stats.allocated_large -= size;
 	arena->stats.ndalloc_large++;
 
@@ -4113,7 +4109,7 @@ arena_ralloc_large(void *ptr, size_t size, size_t oldsize)
 	psize = PAGE_CEILING(size);
 	if (psize == oldsize) {
 		/* Same size class. */
-		if (opt_poison && size < oldsize) {
+		if (size < oldsize) {
 			memset((void *)((uintptr_t)ptr + size), kAllocPoison, oldsize -
 			    size);
 		}
@@ -4128,10 +4124,8 @@ arena_ralloc_large(void *ptr, size_t size, size_t oldsize)
 
 		if (psize < oldsize) {
 			/* Fill before shrinking in order avoid a race. */
-			if (opt_poison) {
-				memset((void *)((uintptr_t)ptr + size), kAllocPoison,
-				    oldsize - size);
-			}
+			memset((void *)((uintptr_t)ptr + size), kAllocPoison,
+			    oldsize - size);
 			arena_ralloc_large_shrink(arena, chunk, ptr, psize,
 			    oldsize);
 			return (false);
@@ -4194,7 +4188,7 @@ arena_ralloc(void *ptr, size_t size, size_t oldsize)
 	idalloc(ptr);
 	return (ret);
 IN_PLACE:
-	if (opt_poison && size < oldsize)
+	if (size < oldsize)
 		memset((void *)((uintptr_t)ptr + size), kAllocPoison, oldsize - size);
 	else if (opt_zero && size > oldsize)
 		memset((void *)((uintptr_t)ptr + oldsize), 0, size - oldsize);
@@ -4464,7 +4458,7 @@ huge_ralloc(void *ptr, size_t size, size_t oldsize)
 	if (oldsize > arena_maxclass &&
 	    CHUNK_CEILING(size) == CHUNK_CEILING(oldsize)) {
 		size_t psize = PAGE_CEILING(size);
-		if (opt_poison && size < oldsize) {
+		if (size < oldsize) {
 			memset((void *)((uintptr_t)ptr + size), kAllocPoison, oldsize
 			    - size);
 		}
@@ -4583,7 +4577,6 @@ malloc_print_stats(void)
 		    "\n", "");
 		_malloc_message("Boolean MALLOC_OPTIONS: ",
 		    opt_abort ? "A" : "a", "", "");
-		_malloc_message(opt_poison ? "C" : "c", "", "", "");
 		_malloc_message(opt_junk ? "J" : "j", "", "", "");
 		_malloc_message("P", "", "", "");
 #ifdef MALLOC_SYSV
@@ -4852,14 +4845,6 @@ MALLOC_OUT:
 				case 'A':
 					opt_abort = true;
 					break;
-#ifndef MALLOC_PRODUCTION
-				case 'c':
-					opt_poison = false;
-					break;
-				case 'C':
-					opt_poison = true;
-					break;
-#endif
 				case 'f':
 					opt_dirty_max >>= 1;
 					break;
@@ -5462,7 +5447,6 @@ jemalloc_stats_impl(jemalloc_stats_t *stats)
 	 */
 	stats->opt_abort = opt_abort;
 	stats->opt_junk = opt_junk;
-	stats->opt_poison = opt_poison;
 	stats->opt_sysv =
 #ifdef MALLOC_SYSV
 	    opt_sysv ? true :
