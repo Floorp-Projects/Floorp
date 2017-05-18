@@ -1221,12 +1221,11 @@ nsSVGIntegrationUtils::DrawableFromPaintServer(nsIFrame*         aFrame,
     gfxRect overrideBounds(0, 0,
                            aPaintServerSize.width, aPaintServerSize.height);
     overrideBounds.ScaleInverse(aFrame->PresContext()->AppUnitsPerDevPixel());
-    DrawResult result = DrawResult::SUCCESS;
-    RefPtr<gfxPattern> pattern;
-    Tie(result, pattern) =
+    imgDrawingParams imgParams(aFlags);
+    RefPtr<gfxPattern> pattern =
       server->GetPaintServerPattern(aTarget, aDrawTarget,
                                     aContextMatrix, &nsStyleSVG::mFill, 1.0,
-                                    &overrideBounds);
+                                    imgParams, &overrideBounds);
 
     if (!pattern)
       return nullptr;
