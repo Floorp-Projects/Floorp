@@ -1699,7 +1699,6 @@ public class GeckoAppShell
         public void disableOrientationListener();
         public void addAppStateListener(AppStateListener listener);
         public void removeAppStateListener(AppStateListener listener);
-        public void invalidateOptionsMenu();
         public boolean isForegrounded();
 
         /**
