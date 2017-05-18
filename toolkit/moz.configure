@@ -737,6 +737,7 @@ def stylo(stylo_config, bindgen_config_paths, bindgen_enabled):
 
 set_config('MOZ_STYLO', delayed_getattr(stylo, 'build'))
 set_define('MOZ_STYLO', delayed_getattr(stylo, 'build'))
+set_define('MOZ_STYLO_ENABLE', delayed_getattr(stylo_config, 'enable'))
 
 set_config('MOZ_LIBCLANG_PATH', delayed_getattr(stylo, 'libclang_path'))
 set_config('MOZ_CLANG_PATH', delayed_getattr(stylo, 'clang_path'))
