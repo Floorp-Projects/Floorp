@@ -95,6 +95,8 @@ gfxAndroidPlatform::gfxAndroidPlatform()
     FT_New_Library(&sFreetypeMemoryRecord, &gPlatformFTLibrary);
     FT_Add_Default_Modules(gPlatformFTLibrary);
 
+    Factory::SetFTLibrary(gPlatformFTLibrary);
+
     RegisterStrongMemoryReporter(new FreetypeReporter());
 
     mOffscreenFormat = GetScreenDepth() == 16
