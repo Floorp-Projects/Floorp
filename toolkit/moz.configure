@@ -644,6 +644,7 @@ llvm_config = check_prog('LLVM_CONFIG', ('llvm-config-4.0',
                                          'llvm-config-3.9',
                                          'llvm-config39',
                                          'llvm-config',),
+                         when=delayed_getattr(stylo_config, 'build'),
                          what='llvm-config', allow_missing=True)
 
 option('--disable-stylo-build-bindgen',
