@@ -2325,16 +2325,25 @@ this.XPIProvider = {
       // XPI database so that the telemetry environment can be populated
       // with detailed addon information.
       if (!this.isDBLoaded) {
-        Services.obs.addObserver({
+        // The test-load-xpi-database event is only triggered from
+        // tests, and only as a temporary workaround for bug 1372845.
+        // This can be cleaned up when that bug is resolved.
+        const EVENTS = [ "sessionstore-windows-restored", "test-load-xpi-database" ];
+        let observer = {
           observe(subject, topic, data) {
-            Services.obs.removeObserver(this, "sessionstore-windows-restored");
+            for (let event of EVENTS) {
+              Services.obs.removeObserver(this, event);
+            }
 
             // It would be nice to defer some of the work here until we
             // have idle time but we can't yet use requestIdleCallback()
             // from chrome.  See bug 1358476.
             XPIDatabase.asyncLoadDB();
           },
-        }, "sessionstore-windows-restored");
+        };
+        for (let event of EVENTS) {
+          Services.obs.addObserver(observer, event);
+        }
       }
 
       AddonManagerPrivate.recordTimestamp("XPI_startup_end");
