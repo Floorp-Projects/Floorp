@@ -46,7 +46,8 @@ enum class ServoElementSnapshotFlags : uint8_t
 {
   State = 1 << 0,
   Attributes = 1 << 1,
-  All = State | Attributes
+  Id = 1 << 2,
+  MaybeClass = 1 << 3,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ServoElementSnapshotFlags)
