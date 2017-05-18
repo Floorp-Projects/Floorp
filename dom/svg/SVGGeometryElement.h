@@ -52,7 +52,9 @@ public:
   explicit SVGGeometryElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
   virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
-                                const nsAttrValue* aValue, bool aNotify) override;
+                                const nsAttrValue* aValue,
+                                const nsAttrValue* aOldValue,
+                                bool aNotify) override;
 
   /**
    * Causes this element to discard any Path object that GetOrBuildPath may

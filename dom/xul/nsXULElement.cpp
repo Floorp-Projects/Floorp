@@ -396,12 +396,15 @@ nsXULElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
             attrValue.SetTo(*originalValue);
         }
 
+        bool oldValueSet;
         if (originalName->IsAtom()) {
            rv = element->mAttrsAndChildren.SetAndSwapAttr(originalName->Atom(),
-                                                          attrValue);
+                                                          attrValue,
+                                                          &oldValueSet);
         } else {
             rv = element->mAttrsAndChildren.SetAndSwapAttr(originalName->NodeInfo(),
-                                                           attrValue);
+                                                           attrValue,
+                                                           &oldValueSet);
         }
         NS_ENSURE_SUCCESS(rv, rv);
         element->AddListenerFor(*originalName, true);
@@ -1069,7 +1072,8 @@ nsXULElement::BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
 
 nsresult
 nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
-                           const nsAttrValue* aValue, bool aNotify)
+                           const nsAttrValue* aValue,
+                           const nsAttrValue* aOldValue, bool aNotify)
 {
     if (aNamespaceID == kNameSpaceID_None) {
         if (aValue) {
@@ -1190,7 +1194,7 @@ nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
     }
 
     return nsStyledElement::AfterSetAttr(aNamespaceID, aName,
-                                         aValue, aNotify);
+                                         aValue, aOldValue, aNotify);
 }
 
 bool
@@ -1792,12 +1796,14 @@ nsXULElement::MakeHeavyweight(nsXULPrototypeElement* aPrototype)
             attrValue.SetTo(protoattr->mValue);
         }
 
+        bool oldValueSet;
         // XXX we might wanna have a SetAndTakeAttr that takes an nsAttrName
         if (protoattr->mName.IsAtom()) {
-            rv = mAttrsAndChildren.SetAndSwapAttr(protoattr->mName.Atom(), attrValue);
+            rv = mAttrsAndChildren.SetAndSwapAttr(protoattr->mName.Atom(),
+                                                  attrValue, &oldValueSet);
         } else {
             rv = mAttrsAndChildren.SetAndSwapAttr(protoattr->mName.NodeInfo(),
-                                                  attrValue);
+                                                  attrValue, &oldValueSet);
         }
         NS_ENSURE_SUCCESS(rv, rv);
     }
