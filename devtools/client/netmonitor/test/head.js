@@ -416,7 +416,8 @@ function verifyRequestItemTarget(document, requestList, requestItem, method,
       "The tooltip file is correct.");
   } else {
     is(target.querySelector(".requests-list-file").textContent,
-      name + (query ? "?" + query : ""), "The displayed file is correct.");
+      decodeURIComponent(name + (query ? "?" + query : "")),
+      "The displayed file is correct.");
     is(target.querySelector(".requests-list-file").getAttribute("title"),
       unicodeUrl, "The tooltip file is correct.");
   }
