@@ -1,3 +1,4 @@
+// |reftest| skip-if(release_or_beta) -- async-iteration is not released yet
 // This file was procedurally generated from the following sources:
 // - src/dstr-binding/ary-ptrn-rest-obj-prop-id.case
 // - src/dstr-binding/default/async-gen-func-expr-dflt.template
@@ -29,6 +30,7 @@ info: |
              BindingPattern with A and environment as the arguments.
        [...]
 ---*/
+let length = "outer";
 
 
 var callCount = 0;
@@ -40,9 +42,7 @@ f = async function*([...{ 0: v, 1: w, 2: x, 3: y, length: z }] = [7, 8, 9]) {
   assert.sameValue(y, undefined);
   assert.sameValue(z, 3);
 
-  assert.throws(ReferenceError, function() {
-    length;
-  });
+  assert.sameValue(length, "outer", "the length prop is not set as a binding name");
   callCount = callCount + 1;
 };
 
