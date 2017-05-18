@@ -142,7 +142,7 @@ BackTextureWithIOSurf(GLContext* gl, GLuint tex, MacIOSurface* ioSurf)
     CGLContextObj cgl = GLContextCGL::Cast(gl)->GetCGLContext();
     MOZ_ASSERT(cgl);
 
-    ioSurf->CGLTexImageIOSurface2D(cgl);
+    ioSurf->CGLTexImageIOSurface2D(gl, cgl, 0);
 }
 
 SharedSurface_IOSurface::SharedSurface_IOSurface(const RefPtr<MacIOSurface>& ioSurf,
