@@ -30,6 +30,7 @@ function SourceMapURLService(target, sourceMapService) {
  * Reset the service.  This flushes the internal cache.
  */
 SourceMapURLService.prototype.reset = function () {
+  this._sourceMapService.clearSourceMaps();
   this._urls.clear();
 };
 
