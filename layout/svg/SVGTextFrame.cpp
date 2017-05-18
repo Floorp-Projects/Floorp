@@ -3666,10 +3666,12 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
     aContext.SetMatrix(initialMatrix);
 
     RefPtr<SVGContextPaintImpl> contextPaint = new SVGContextPaintImpl();
-    DrawMode drawMode = contextPaint->Init(&aDrawTarget,
-                                           aContext.CurrentMatrix(),
-                                           frame, outerContextPaint,
-                                           aImgParams);
+    DrawMode drawMode;
+    DrawResult result = DrawResult::SUCCESS;
+    Tie(result, drawMode) = contextPaint->Init(&aDrawTarget,
+                                               aContext.CurrentMatrix(),
+                                               frame, outerContextPaint);
+    aImgParams.result &= result;
     if (drawMode & DrawMode::GLYPH_STROKE) {
       // This may change the gfxContext's transform (for non-scaling stroke),
       // in which case this needs to happen before we call SetMatrix() below.

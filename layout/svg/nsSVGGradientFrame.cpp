@@ -225,14 +225,14 @@ static void GetStopInformation(nsIFrame* aStopFrame,
   *aStopOpacity = aStopFrame->StyleSVGReset()->mStopOpacity;
 }
 
-already_AddRefed<gfxPattern>
+mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
 nsSVGGradientFrame::GetPaintServerPattern(nsIFrame* aSource,
                                           const DrawTarget* aDrawTarget,
                                           const gfxMatrix& aContextMatrix,
                                           nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
                                           float aGraphicOpacity,
-                                          imgDrawingParams& aImgParams,
-                                          const gfxRect* aOverrideBounds)
+                                          const gfxRect* aOverrideBounds,
+                                          uint32_t aFlags)
 {
   uint16_t gradientUnits = GetGradientUnits();
   MOZ_ASSERT(gradientUnits == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX ||
@@ -254,7 +254,7 @@ nsSVGGradientFrame::GetPaintServerPattern(nsIFrame* aSource,
   // the corresponding fill or stroke had "none" specified.
   if (nStops == 0) {
     RefPtr<gfxPattern> pattern = new gfxPattern(Color());
-    return do_AddRef(new gfxPattern(Color()));
+    return MakePair(DrawResult::SUCCESS, Move(pattern));
   }
 
   if (nStops == 1 || GradientVectorLengthIsZero()) {
@@ -265,7 +265,8 @@ nsSVGGradientFrame::GetPaintServerPattern(nsIFrame* aSource,
 
     Color stopColor2 = Color::FromABGR(stopColor);
     stopColor2.a *= stopOpacity * aGraphicOpacity;
-    return do_AddRef(new gfxPattern(stopColor2));
+    RefPtr<gfxPattern> pattern = new gfxPattern(stopColor2);
+    return MakePair(DrawResult::SUCCESS, Move(pattern));
   }
 
   // Get the transform list (if there is one). We do this after the returns
@@ -274,7 +275,7 @@ nsSVGGradientFrame::GetPaintServerPattern(nsIFrame* aSource,
   gfxMatrix patternMatrix = GetGradientTransform(aSource, aOverrideBounds);
 
   if (patternMatrix.IsSingular()) {
-    return nullptr;
+    return MakePair(DrawResult::SUCCESS, RefPtr<gfxPattern>());
   }
 
   // revert any vector effect transform so that the gradient appears unchanged
@@ -286,12 +287,12 @@ nsSVGGradientFrame::GetPaintServerPattern(nsIFrame* aSource,
   }
 
   if (!patternMatrix.Invert()) {
-    return nullptr;
+    return MakePair(DrawResult::SUCCESS, RefPtr<gfxPattern>());
   }
 
   RefPtr<gfxPattern> gradient = CreateGradient();
   if (!gradient) {
-    return nullptr;
+    return MakePair(DrawResult::TEMPORARY_ERROR, RefPtr<gfxPattern>());
   }
 
   uint16_t aSpread = GetSpreadMethod();
@@ -323,7 +324,7 @@ nsSVGGradientFrame::GetPaintServerPattern(nsIFrame* aSource,
     gradient->AddColorStop(offset, stopColor2);
   }
 
-  return gradient.forget();
+  return MakePair(DrawResult::SUCCESS, Move(gradient));
 }
 
 // Private (helper) methods
