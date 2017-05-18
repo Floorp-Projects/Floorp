@@ -3143,7 +3143,7 @@ pref("browser.tabs.remote.separateFileUriProcess", false);
 // This has been added in case breaking any window references between these
 // sorts of pages, which we have to do when we run them in the normal web
 // content process, causes compatibility issues.
-pref("browser.tabs.remote.allowLinkedWebInFileUriProcess", false);
+pref("browser.tabs.remote.allowLinkedWebInFileUriProcess", true);
 
 // Enable caching of Moz2D Path objects for SVG geometry elements
 pref("svg.path-caching.enabled", true);
