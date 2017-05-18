@@ -59,17 +59,6 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         if (preference != null) {
             preference.update();
         }
-
-        final ListPreference localePreference = (ListPreference) findPreference(getString(R.string.pref_key_locale));
-        if (localePreference != null) {
-            // TODO: get a list of localised locale names ;)
-            final CharSequence[] languageCodes = LocaleManager.getPackagedLocaleTags(getActivity()).toArray(new CharSequence[0]);
-            final CharSequence[] displayNames = Arrays.copyOf(languageCodes, languageCodes.length);
-            displayNames[0] = getString(R.string.preference_language_systemdefault);
-
-            localePreference.setEntries(displayNames);
-            localePreference.setEntryValues(languageCodes);
-        }
     }
 
     @Override
