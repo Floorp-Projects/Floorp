@@ -5,6 +5,7 @@
 
 #include "MacIOSurfaceTextureHostOGL.h"
 #include "mozilla/gfx/MacIOSurface.h"
+#include "mozilla/webrender/WebRenderAPI.h"
 #include "GLContextCGL.h"
 
 namespace mozilla {
@@ -111,6 +112,14 @@ gl::GLContext*
 MacIOSurfaceTextureHostOGL::gl() const
 {
   return mProvider ? mProvider->GetGLContext() : nullptr;
+}
+
+void
+MacIOSurfaceTextureHostOGL::AddWRImage(wr::WebRenderAPI* aAPI,
+                                       const wr::ImageKey& aImageKey,
+                                       const wr::ExternalImageId& aExtID)
+{
+  MOZ_ASSERT_UNREACHABLE("No AddWRImage() implementation for this MacIOSurfaceTextureHostOGL type.");
 }
 
 } // namespace layers
