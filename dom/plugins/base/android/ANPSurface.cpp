@@ -110,7 +110,7 @@ static inline void* getSurface(JNIEnv* env, jobject view) {
   env->DeleteLocalRef(holder);
   env->DeleteLocalRef(surface);
 
-  return (void*)surfacePointer;
+  return reinterpret_cast<void*>(uintptr_t(surfacePointer));
 }
 
 static ANPBitmapFormat convertPixelFormat(int32_t format) {
