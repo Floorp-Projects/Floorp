@@ -143,7 +143,7 @@ function getUrlBaseName(url) {
  * @return {string} unicode query of a url
  */
 function getUrlQuery(url) {
-  return decodeUnicodeUrl((new URL(url)).search.replace(/^\?/, ""));
+  return (new URL(url)).search.replace(/^\?/, "");
 }
 
 /**
