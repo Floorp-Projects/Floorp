@@ -30,7 +30,7 @@ using gfx::NativeFontResource;
 class InlineTranslator final : public Translator
 {
 public:
-  explicit InlineTranslator(DrawTarget* aDT, Matrix aMatrix);
+  explicit InlineTranslator(DrawTarget* aDT, void* aFontContext = nullptr);
 
   bool TranslateRecording(std::istream& aRecording);
 
@@ -175,9 +175,11 @@ public:
 
   mozilla::gfx::FontType GetDesiredFontType() final;
 
+  void* GetFontContext() final { return mFontContext; }
+
 private:
   RefPtr<DrawTarget> mBaseDT;
-  Matrix             mBaseTransform;
+  void*              mFontContext;
 
   nsRefPtrHashtable<nsPtrHashKey<void>, DrawTarget> mDrawTargets;
   nsRefPtrHashtable<nsPtrHashKey<void>, Path> mPaths;
