@@ -40,6 +40,7 @@ class nsSVGMaskFrame final : public nsSVGContainerFrame
   typedef mozilla::gfx::Matrix Matrix;
   typedef mozilla::gfx::SourceSurface SourceSurface;
   typedef mozilla::image::DrawResult DrawResult;
+  typedef mozilla::image::imgDrawingParams imgDrawingParams;
 
 protected:
   explicit nsSVGMaskFrame(nsStyleContext* aContext)
