@@ -26,7 +26,6 @@ add_task(async function test_ui_state_signedin() {
 
   gSync.updateAllUI(state);
 
-  checkFxABadge(false);
   let statusBarTooltip = gSync.appMenuStatus.getAttribute("signedinTooltiptext");
   let lastSyncTooltip = gSync.formatLastSyncDate(new Date(state.lastSync));
   checkPanelUIStatusBar({
@@ -74,7 +73,6 @@ add_task(async function test_ui_state_unconfigured() {
 
   gSync.updateAllUI(state);
 
-  checkFxABadge(false);
   let signedOffLabel = gSync.appMenuStatus.getAttribute("defaultlabel");
   let statusBarTooltip = gSync.appMenuStatus.getAttribute("signedinTooltiptext");
   checkPanelUIStatusBar({
@@ -95,7 +93,6 @@ add_task(async function test_ui_state_unverified() {
 
   gSync.updateAllUI(state);
 
-  checkFxABadge(true);
   let expectedLabel = gSync.appMenuStatus.getAttribute("unverifiedlabel");
   let tooltipText = gSync.fxaStrings.formatStringFromName("verifyDescription", [state.email], 1);
   checkPanelUIStatusBar({
@@ -118,7 +115,6 @@ add_task(async function test_ui_state_loginFailed() {
 
   gSync.updateAllUI(state);
 
-  checkFxABadge(true);
   let expectedLabel = gSync.appMenuStatus.getAttribute("errorlabel");
   let tooltipText = gSync.fxaStrings.formatStringFromName("reconnectDescription", [state.email], 1);
   checkPanelUIStatusBar({
@@ -147,17 +143,6 @@ add_task(async function test_FormatLastSyncDateMonthAgo() {
   is(monthAgoString, "Last sync: " + monthAgo.toLocaleDateString(undefined, {month: "long", day: "numeric"}),
      "The date is correctly formatted");
 });
-
-function checkFxABadge(shouldBeShown) {
-  let isShown = false;
-  for (let notification of PanelUI.notifications) {
-    if (notification.id == "fxa-needs-authentication") {
-      isShown = true;
-      break;
-    }
-  }
-  is(isShown, shouldBeShown, "the fxa badge has the right visibility");
-}
 
 function checkPanelUIStatusBar({label, tooltip, fxastatus, avatarURL, syncing, syncNowTooltip}) {
   let prefix = gPhotonStructure ? "appMenu" : "PanelUI"
