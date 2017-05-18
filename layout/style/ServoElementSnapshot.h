@@ -144,9 +144,9 @@ private:
   // we're dealing with attribute changes when we take snapshots of attributes,
   // though it can be wasted space if we deal with a lot of state-only
   // snapshots.
-  Flags mContains;
   nsTArray<ServoAttrSnapshot> mAttrs;
   ServoStateType mState;
+  Flags mContains;
   bool mIsHTMLElementInHTMLDocument;
   bool mIsInChromeDocument;
 };
