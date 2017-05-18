@@ -857,11 +857,18 @@ vec4 dither(vec4 color) {
 #endif //WR_FEATURE_DITHERING
 
 vec4 sample_gradient(float offset, float gradient_repeat, float gradient_index, vec2 gradient_size) {
-    // Either saturate or modulo the offset depending on repeat mode
-    float x = mix(clamp(offset, 0.0, 1.0), fract(offset), gradient_repeat);
+    // Modulo the offset if the gradient repeats. We don't need to clamp non-repeating
+    // gradients because the gradient data texture is bound with CLAMP_TO_EDGE, and the
+    // first and last color entries are filled with the first and last stop colors
+    float x = mix(offset, fract(offset), gradient_repeat);
 
-    // Scale to the number of gradient color entries (texture width / 2).
-    x = x * 0.5 * gradient_size.x;
+    // Calculate the color entry index to use for this offset:
+    //     offsets < 0 use the first color entry, 0
+    //     offsets from [0, 1) use the color entries in the range of [1, N-1)
+    //     offsets >= 1 use the last color entry, N-1
+    //     so transform the range [0, 1) -> [1, N-1)
+    float gradient_entries = 0.5 * gradient_size.x;
+    x = x * (gradient_entries - 2.0) + 1.0;
 
     // Calculate the texel to index into the gradient color entries:
     //     floor(x) is the gradient color entry index

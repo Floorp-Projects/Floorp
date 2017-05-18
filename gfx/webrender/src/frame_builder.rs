@@ -759,11 +759,25 @@ impl FrameBuilder {
         // subpixel AA!
         let mut render_mode = self.config.default_font_render_mode;
 
-        // If we're using sub-pixel AA by default, but we are
-        // doing a text-blur, we need to force alpha AA for the blur
-        // to produce correct results.
-        if render_mode == FontRenderMode::Subpixel && blur_radius != 0.0 {
-            render_mode = FontRenderMode::Alpha;
+        // There are some conditions under which we can't use
+        // subpixel text rendering, even if enabled.
+        if render_mode == FontRenderMode::Subpixel {
+            // text-blur shadow needs to force alpha AA.
+            if blur_radius != 0.0 {
+                render_mode = FontRenderMode::Alpha;
+            }
+
+            // text on a stacking context that has filters
+            // (e.g. opacity) can't use sub-pixel.
+            // TODO(gw): It's possible we can relax this in
+            //           the future, if we modify the way
+            //           we handle subpixel blending.
+            if let Some(sc_index) = self.stacking_context_stack.last() {
+                let stacking_context = &self.stacking_context_store[sc_index.0];
+                if stacking_context.composite_ops.count() > 0 {
+                    render_mode = FontRenderMode::Alpha;
+                }
+            }
         }
 
         let prim_cpu = TextRunPrimitiveCpu {

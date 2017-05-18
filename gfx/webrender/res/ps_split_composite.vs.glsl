@@ -16,10 +16,12 @@ SplitGeometry fetch_split_geometry(int index) {
     vec4 data1 = texelFetchOffset(sSplitGeometry, uv, 0, ivec2(1, 0));
     vec4 data2 = texelFetchOffset(sSplitGeometry, uv, 0, ivec2(2, 0));
 
-    return SplitGeometry(vec3[4](
+    SplitGeometry geo;
+    geo.points = vec3[4](
         data0.xyz, vec3(data0.w, data1.xy),
         vec3(data1.zw, data2.x), data2.yzw
-    ));
+    );
+    return geo;
 }
 
 vec3 bilerp(vec3 a, vec3 b, vec3 c, vec3 d, float s, float t) {

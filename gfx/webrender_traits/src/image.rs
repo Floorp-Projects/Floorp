@@ -117,6 +117,22 @@ impl ImageData {
             _ => false,
         }
     }
+
+    #[inline]
+    pub fn uses_texture_cache(&self) -> bool {
+        match self {
+            &ImageData::External(ext_data) => {
+                match ext_data.image_type {
+                    ExternalImageType::Texture2DHandle => false,
+                    ExternalImageType::TextureRectHandle => false,
+                    ExternalImageType::TextureExternalHandle => false,
+                    ExternalImageType::ExternalBuffer => true,
+                }
+            }
+            &ImageData::Blob(_) => true,
+            &ImageData::Raw(_) => true,
+        }
+    }
 }
 
 pub trait BlobImageRenderer: Send {
