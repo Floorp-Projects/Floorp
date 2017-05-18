@@ -136,8 +136,11 @@
 
 ; English - United States
 !if "${AB_CD}" == "en-US"
-!define FONT_NAME1 "Segoe UI"
-!define FONT_FILE1 "segoeui.ttf"
+!define FONT_NAME1 "Segoe UI Light"
+!define FONT_FILE1 "segoeuil.ttf"
+
+!define FONT_NAME2 "Segoe UI"
+!define FONT_FILE2 "segoeui.ttf"
 !endif
 
 ; English - South Africa
