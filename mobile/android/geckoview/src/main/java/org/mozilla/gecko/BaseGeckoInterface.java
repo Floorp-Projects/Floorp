@@ -34,10 +34,6 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
     @Override
     public void removeAppStateListener(GeckoAppShell.AppStateListener listener) {}
 
-    // Bug 908789: Implement this
-    @Override
-    public void notifyWakeLockChanged(String topic, String state) {}
-
     @Override
     public boolean areTabsShown() {
         return false;
