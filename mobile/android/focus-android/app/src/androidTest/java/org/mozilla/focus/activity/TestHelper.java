@@ -16,6 +16,17 @@ import android.text.format.DateUtils;
 
 import org.mozilla.focus.R;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+
+import okio.Buffer;
+import okio.Okio;
+
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
@@ -148,4 +159,41 @@ public final class TestHelper {
         );
     }
 
+
+    static Buffer readTestAsset(String filename) throws IOException {
+        try (final InputStream stream = InstrumentationRegistry.getContext().getAssets().open(filename)) {
+            return readStreamFile(stream);
+        }
+    }
+
+    static Buffer readStreamFile(InputStream file) throws IOException {
+
+        Buffer buffer = new Buffer();
+        buffer.writeAll(Okio.source(file));
+        return buffer;
+    }
+
+    static  String readFileToString(File file) throws IOException {
+        System.out.println("Reading file: " + file.getAbsolutePath());
+
+        try (final FileInputStream stream = new FileInputStream(file)) {
+            return readStreamIntoString(stream);
+        }
+    }
+
+    static  String readStreamIntoString(InputStream stream) throws IOException {
+        try (final BufferedReader reader = new BufferedReader(
+                new InputStreamReader(stream, StandardCharsets.UTF_8))) {
+
+            final StringBuilder builder = new StringBuilder();
+            String line;
+
+            while ((line = reader.readLine()) != null) {
+                builder.append(line);
+            }
+            reader.close();
+
+            return builder.toString();
+        }
+    }
 }

@@ -20,12 +20,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -107,10 +103,12 @@ public class WebViewDataTest {
 
             try {
                 webServer.enqueue(new MockResponse()
-                        .setBody(readTestAsset("test.html"))
+                        .setBody(TestHelper.readTestAsset("test.html"))
                         .addHeader("Set-Cookie", "sphere=battery; Expires=Wed, 21 Oct 2035 07:28:00 GMT;"));
                 webServer.enqueue(new MockResponse()
-                        .setBody(readTestAsset("service-worker.js"))
+                        .setBody(TestHelper.readTestAsset("rabbit.jpg")));
+                webServer.enqueue(new MockResponse()
+                        .setBody(TestHelper.readTestAsset("service-worker.js"))
                         .setHeader("Content-Type", "text/javascript"));
                 webServer.start();
             } catch (IOException e) {
@@ -179,6 +177,7 @@ public class WebViewDataTest {
 
         assertPathsHaveBeenRequested(webServer,
                 "/copper/truck/destroy?smoke=violet", // Actual URL
+                "/copper/truck/rabbit.jpg", // Our service worker is installed
                 "/copper/truck/service-worker.js"); // Our service worker is installed
 
         // Now let's assert that there are no surprises in the data directory
@@ -224,7 +223,7 @@ public class WebViewDataTest {
                 continue;
             }
 
-            final String content = readFileToString(file);
+            final String content = TestHelper.readFileToString(file);
             for (String trace : TEST_TRACES) {
                 assertFalse("File '" + name + "' should not contain any traces of browser session (" + trace + ", path=" + file.getAbsolutePath() + ")",
                         content.contains(trace));
@@ -232,36 +231,9 @@ public class WebViewDataTest {
         }
     }
 
-    private String readFileToString(File file) throws IOException {
-        System.out.println("Reading file: " + file.getAbsolutePath());
-
-        try (final FileInputStream stream = new FileInputStream(file)) {
-            return readStreamIntoString(stream);
-        }
-    }
-
     private void assertIsEmpty(File directory) {
         assertTrue(directory.isDirectory() && directory.list().length == 0);
     }
 
-    private String readTestAsset(String filename) throws IOException {
-        try (final InputStream stream = InstrumentationRegistry.getContext().getAssets().open(filename)) {
-            return readStreamIntoString(stream);
-        }
-    }
 
-    private String readStreamIntoString(InputStream stream) throws IOException {
-        try (final BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
-
-            final StringBuilder builder = new StringBuilder();
-            String line;
-
-            while ((line = reader.readLine()) != null) {
-                builder.append(line);
-            }
-            reader.close();
-
-            return builder.toString();
-        }
-    }
 }
