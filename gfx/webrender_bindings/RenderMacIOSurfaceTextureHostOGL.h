@@ -42,7 +42,7 @@ private:
 
   RefPtr<MacIOSurface> mSurface;
   RefPtr<gl::GLContext> mGL;
-  GLuint mTextureHandle;
+  GLuint mTextureHandles[3];
 };
 
 } // namespace wr
