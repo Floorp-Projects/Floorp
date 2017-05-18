@@ -2015,7 +2015,6 @@ public abstract class GeckoApp extends GeckoActivity
         return geckoApp.getAppEventDispatcher();
     }
 
-    @Override
     public @NonNull EventDispatcher getAppEventDispatcher() {
         if (mLayerView == null) {
             throw new IllegalStateException("Must not call getAppEventDispatcher() until after onCreate()");

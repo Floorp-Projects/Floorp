@@ -1645,8 +1645,6 @@ public class GeckoAppShell
     }
 
     public interface GeckoInterface {
-        public @NonNull EventDispatcher getAppEventDispatcher();
-
         public void enableOrientationListener();
         public void disableOrientationListener();
         public void addAppStateListener(AppStateListener listener);
