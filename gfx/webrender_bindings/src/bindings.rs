@@ -33,6 +33,9 @@ type WrRenderer = Renderer;
 type WrSideOffsets2Du32 = WrSideOffsets2D<u32>;
 type WrSideOffsets2Df32 = WrSideOffsets2D<f32>;
 
+/// cbindgen:field-names=[mNamespace, mHandle]
+type WrExternalImageBufferType = ExternalImageType;
+
 /// cbindgen:field-names=[mHandle]
 /// cbindgen:derive-lt=true
 /// cbindgen:derive-lte=true
@@ -953,17 +956,19 @@ pub extern "C" fn wr_api_add_blob_image(api: &mut WrAPI,
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_add_external_image_handle(api: &mut WrAPI,
-                                                   image_key: WrImageKey,
-                                                   descriptor: &WrImageDescriptor,
-                                                   external_image_id: WrExternalImageId) {
+pub extern "C" fn wr_api_add_external_image(api: &mut WrAPI,
+                                            image_key: WrImageKey,
+                                            descriptor: &WrImageDescriptor,
+                                            external_image_id: WrExternalImageId,
+                                            buffer_type: WrExternalImageBufferType,
+                                            channel_index: u8) {
     assert!(unsafe { is_in_compositor_thread() });
     api.add_image(image_key,
                   descriptor.into(),
                   ImageData::External(ExternalImageData {
                                           id: external_image_id.into(),
-                                          channel_index: 0,
-                                          image_type: ExternalImageType::Texture2DHandle,
+                                          channel_index: channel_index,
+                                          image_type: buffer_type,
                                       }),
                   None);
 }
@@ -1399,7 +1404,7 @@ pub extern "C" fn wr_dp_push_yuv_planar_image(state: &mut WrState,
                          color_space);
 }
 
-/// PUsh a 2 planar NV12 image.
+/// Push a 2 planar NV12 image.
 #[no_mangle]
 pub extern "C" fn wr_dp_push_yuv_NV12_image(state: &mut WrState,
                                             bounds: WrRect,
@@ -1414,6 +1419,23 @@ pub extern "C" fn wr_dp_push_yuv_NV12_image(state: &mut WrState,
          .push_yuv_image(bounds.into(),
                          clip.into(),
                          YuvData::NV12(image_key_0, image_key_1),
+                         color_space);
+}
+
+/// Push a yuv interleaved image.
+#[no_mangle]
+pub extern "C" fn wr_dp_push_yuv_interleaved_image(state: &mut WrState,
+                                                   bounds: WrRect,
+                                                   clip: WrClipRegionToken,
+                                                   image_key_0: WrImageKey,
+                                                   color_space: WrYuvColorSpace) {
+    assert!(unsafe { is_in_main_thread() });
+
+    state.frame_builder
+         .dl_builder
+         .push_yuv_image(bounds.into(),
+                         clip.into(),
+                         YuvData::InterleavedYCbCr(image_key_0),
                          color_space);
 }
 

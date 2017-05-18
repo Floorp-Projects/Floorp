@@ -35,6 +35,15 @@ enum class WrBoxShadowClipMode : uint32_t {
   Sentinel /* this must be last for serialization purposes. */
 };
 
+enum class WrExternalImageBufferType : uint32_t {
+  Texture2DHandle = 0,
+  TextureRectHandle = 1,
+  TextureExternalHandle = 2,
+  ExternalBuffer = 3,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+
 enum class WrExternalImageType : uint32_t {
   NativeTexture = 0,
   RawData = 1,
@@ -498,14 +507,16 @@ void wr_api_add_blob_image(WrAPI* aApi,
 WR_FUNC;
 
 WR_INLINE
-void wr_api_add_external_image_buffer(WrAPI* aApi,
-                                      WrImageKey aImageKey,
-                                      const WrImageDescriptor* aDescriptor,
-                                      WrExternalImageId aExternalImageId)
+void wr_api_add_external_image(WrAPI* aApi,
+                               WrImageKey aImageKey,
+                               const WrImageDescriptor* aDescriptor,
+                               WrExternalImageId aExternalImageId,
+                               WrExternalImageBufferType aBufferType,
+                               uint8_t aChannelIndex)
 WR_FUNC;
 
 WR_INLINE
-void wr_api_add_external_image_handle(WrAPI* aApi,
+void wr_api_add_external_image_buffer(WrAPI* aApi,
                                       WrImageKey aImageKey,
                                       const WrImageDescriptor* aDescriptor,
                                       WrExternalImageId aExternalImageId)
@@ -793,6 +804,14 @@ void wr_dp_push_yuv_NV12_image(WrState* aState,
                                WrImageKey aImageKey0,
                                WrImageKey aImageKey1,
                                WrYuvColorSpace aColorSpace)
+WR_FUNC;
+
+WR_INLINE
+void wr_dp_push_yuv_interleaved_image(WrState* aState,
+                                      WrRect aBounds,
+                                      WrClipRegionToken aClip,
+                                      WrImageKey aImageKey0,
+                                      WrYuvColorSpace aColorSpace)
 WR_FUNC;
 
 WR_INLINE

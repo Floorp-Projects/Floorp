@@ -75,13 +75,15 @@ public:
                     const ImageDescriptor& aDescriptor,
                     Range<uint8_t> aBytes);
 
-  void AddExternalImageHandle(ImageKey key,
-                              const ImageDescriptor& aDescriptor,
-                              ExternalImageId aHandle);
-
   void AddExternalImageBuffer(ImageKey key,
                               const ImageDescriptor& aDescriptor,
                               ExternalImageId aHandle);
+
+  void AddExternalImage(ImageKey key,
+                        const ImageDescriptor& aDescriptor,
+                        ExternalImageId aExtID,
+                        WrExternalImageBufferType aBufferType,
+                        uint8_t aChannelIndex);
 
   void UpdateImageBuffer(wr::ImageKey aKey,
                          const ImageDescriptor& aDescriptor,
@@ -212,6 +214,11 @@ public:
                      wr::ImageKey aImageChannel0,
                      wr::ImageKey aImageChannel1,
                      WrYuvColorSpace aColorSpace);
+
+  void PushYCbCrInterleavedImage(const WrRect& aBounds,
+                                 const WrClipRegionToken aClip,
+                                 wr::ImageKey aImageChannel0,
+                                 WrYuvColorSpace aColorSpace);
 
   void PushIFrame(const WrRect& aBounds,
                   const WrClipRegionToken aClip,

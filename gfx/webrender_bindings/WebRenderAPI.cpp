@@ -415,14 +415,18 @@ WebRenderAPI::AddBlobImage(ImageKey key, const ImageDescriptor& aDescriptor,
 }
 
 void
-WebRenderAPI::AddExternalImageHandle(ImageKey key,
-                                     const ImageDescriptor& aDescriptor,
-                                     ExternalImageId aHandle)
+WebRenderAPI::AddExternalImage(ImageKey key,
+                               const ImageDescriptor& aDescriptor,
+                               ExternalImageId aExtID,
+                               WrExternalImageBufferType aBufferType,
+                               uint8_t aChannelIndex)
 {
-  wr_api_add_external_image_handle(mWrApi,
-                                   key,
-                                   &aDescriptor,
-                                   aHandle);
+  wr_api_add_external_image(mWrApi,
+                            key,
+                            &aDescriptor,
+                            aExtID,
+                            aBufferType,
+                            aChannelIndex);
 }
 
 void
@@ -704,6 +708,19 @@ DisplayListBuilder::PushNV12Image(const WrRect& aBounds,
                             aImageChannel0,
                             aImageChannel1,
                             aColorSpace);
+}
+
+void
+DisplayListBuilder::PushYCbCrInterleavedImage(const WrRect& aBounds,
+                                              const WrClipRegionToken aClip,
+                                              wr::ImageKey aImageChannel0,
+                                              WrYuvColorSpace aColorSpace)
+{
+  wr_dp_push_yuv_interleaved_image(mWrState,
+                                   aBounds,
+                                   aClip,
+                                   aImageChannel0,
+                                   aColorSpace);
 }
 
 void
