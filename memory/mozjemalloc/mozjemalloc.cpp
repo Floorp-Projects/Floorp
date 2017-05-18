@@ -192,10 +192,6 @@ getenv(const char *name)
 	return (NULL);
 }
 
-typedef unsigned char uint8_t;
-typedef unsigned uint32_t;
-typedef unsigned long long uint64_t;
-typedef unsigned long long uintmax_t;
 #if defined(_WIN64)
 typedef long long ssize_t;
 #else
