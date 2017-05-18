@@ -164,8 +164,9 @@ var onConnectionReady = Task.async(function* ([aType, aTraits]) {
  */
 function buildAddonLink(addon, parent) {
   let a = document.createElement("a");
-  a.onclick = function () {
-    openToolbox(addon, true, "jsdebugger", false);
+  a.onclick = async function () {
+    const isTabActor = addon.isWebExtension;
+    openToolbox(addon, true, "webconsole", isTabActor);
   };
 
   a.textContent = addon.name;

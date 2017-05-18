@@ -1,6 +1,3 @@
-/* global Services, Preferences, EventEmitter, XPCOMUtils */
-/* exported NewTabPrefsProvider */
-
 "use strict";
 
 this.EXPORTED_SYMBOLS = ["NewTabPrefsProvider"];

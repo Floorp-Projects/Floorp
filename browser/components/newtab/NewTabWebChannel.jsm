@@ -1,14 +1,3 @@
-/* global
-   NewTabPrefsProvider,
-   Services,
-   EventEmitter,
-   Preferences,
-   XPCOMUtils,
-   WebChannel,
-   NewTabRemoteResources
-*/
-/* exported NewTabWebChannel */
-
 "use strict";
 
 this.EXPORTED_SYMBOLS = ["NewTabWebChannel"];

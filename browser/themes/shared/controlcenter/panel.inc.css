@@ -16,6 +16,7 @@
 #identity-popup[connection=secure] [when-connection~=secure],
 #identity-popup[connection=chrome] [when-connection~=chrome],
 #identity-popup[connection=file] [when-connection~=file],
+#identity-popup[connection=extension] [when-connection~=extension],
 /* Show insecure login forms messages when needed. */
 #identity-popup[loginforms=insecure] [when-loginforms=insecure],
 /* Show weak cipher messages when needed. */
@@ -247,6 +248,11 @@
 #identity-popup[mixedcontent~=active-loaded][isbroken] #identity-popup-securityView,
 #identity-popup[mixedcontent~=active-loaded][isbroken] #identity-popup-security-content {
   background-image: url(chrome://browser/skin/controlcenter/mcb-disabled.svg);
+}
+
+#identity-popup[connection=extension] #identity-popup-securityView,
+#identity-popup[connection=extension] #identity-popup-security-content {
+  background-image: url(chrome://browser/skin/controlcenter/extension.svg);
 }
 
 #identity-popup-security-descriptions > description {

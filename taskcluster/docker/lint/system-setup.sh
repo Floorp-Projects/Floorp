@@ -51,5 +51,13 @@ cd /setup
 
 pip install --require-hashes -r /tmp/flake8_requirements.txt
 
+###
+# tox Setup
+###
+
+cd /setup
+
+pip install --require-hashes -r /tmp/tox_requirements.txt
+
 cd /
 rm -rf /setup

@@ -14,7 +14,7 @@ var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 loader.lazyRequireGetter(this, "RootActor", "devtools/server/actors/root", true);
 loader.lazyRequireGetter(this, "BrowserAddonActor", "devtools/server/actors/addon", true);
-loader.lazyRequireGetter(this, "WebExtensionActor", "devtools/server/actors/webextension", true);
+loader.lazyRequireGetter(this, "WebExtensionParentActor", "devtools/server/actors/webextension-parent", true);
 loader.lazyRequireGetter(this, "WorkerActorList", "devtools/server/actors/worker-list", true);
 loader.lazyRequireGetter(this, "ServiceWorkerRegistrationActorList", "devtools/server/actors/worker-list", true);
 loader.lazyRequireGetter(this, "ProcessActorList", "devtools/server/actors/process", true);
@@ -835,7 +835,7 @@ BrowserAddonList.prototype.getList = function () {
       let actor = this._actorByAddonId.get(addon.id);
       if (!actor) {
         if (addon.isWebExtension) {
-          actor = new WebExtensionActor(this._connection, addon);
+          actor = new WebExtensionParentActor(this._connection, addon);
         } else {
           actor = new BrowserAddonActor(this._connection, addon);
         }
@@ -843,8 +843,10 @@ BrowserAddonList.prototype.getList = function () {
         this._actorByAddonId.set(addon.id, actor);
       }
     }
+
     deferred.resolve([...this._actorByAddonId].map(([_, actor]) => actor));
   });
+
   return deferred.promise;
 };
 

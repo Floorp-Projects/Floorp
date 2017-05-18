@@ -1,8 +1,8 @@
 /* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* vim: set sts=2 sw=2 et tw=80: */
-/* globals makeExtension */
 "use strict";
 
+/* import-globals-from ../../../../../toolkit/components/extensions/test/mochitest/head_webrequest.js */
 Services.scriptloader.loadSubScript(new URL("head_webrequest.js", gTestPath).href,
                                     this);
 
@@ -117,4 +117,3 @@ add_task(async function test_subframe() {
 add_task(async function teardown() {
   await extension.unload();
 });
-
