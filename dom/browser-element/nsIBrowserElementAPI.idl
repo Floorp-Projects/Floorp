@@ -82,13 +82,6 @@ interface nsIBrowserElementAPI : nsISupports
   void findNext(in long direction);
   void clearMatch();
 
-  void mute();
-  void unmute();
-  nsIDOMDOMRequest getMuted();
-
-  void setVolume(in float volume);
-  nsIDOMDOMRequest getVolume();
-
   void addNextPaintListener(in nsIBrowserElementNextPaintListener listener);
   void removeNextPaintListener(in nsIBrowserElementNextPaintListener listener);
 

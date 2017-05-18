@@ -71,13 +71,6 @@ public:
 
   already_AddRefed<dom::DOMRequest> PurgeHistory(ErrorResult& aRv);
 
-  void Mute(ErrorResult& aRv);
-  void Unmute(ErrorResult& aRv);
-  already_AddRefed<dom::DOMRequest> GetMuted(ErrorResult& aRv);
-
-  void SetVolume(float aVolume , ErrorResult& aRv);
-  already_AddRefed<dom::DOMRequest> GetVolume(ErrorResult& aRv);
-
   already_AddRefed<dom::DOMRequest>
   GetScreenshot(uint32_t aWidth,
                 uint32_t aHeight,
