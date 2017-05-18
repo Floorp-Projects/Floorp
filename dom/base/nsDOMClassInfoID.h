@@ -21,11 +21,6 @@ enum nsDOMClassInfoID
 
   // XUL classes
 #ifdef MOZ_XUL
-  eDOMClassInfo_XULCommandDispatcher_id,
-#endif
-  eDOMClassInfo_XULControllers_id,
-#ifdef MOZ_XUL
-  eDOMClassInfo_TreeSelection_id,
   eDOMClassInfo_TreeContentView_id,
 #endif
 
