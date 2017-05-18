@@ -52,7 +52,7 @@ WebRenderLayer::BuildWrMaskLayer(const StackingContextHelper* aUnapplySc)
     // context.
     gfx::Matrix4x4 transform = maskLayer->GetLayer()->GetTransform();
     if (aUnapplySc) {
-      transform = transform * aUnapplySc->TransformToParentSC();
+      transform = transform * aUnapplySc->TransformToRoot();
     }
 
     return maskLayer->RenderMaskLayer(transform);
