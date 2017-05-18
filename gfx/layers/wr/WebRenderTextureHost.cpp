@@ -158,13 +158,13 @@ WebRenderTextureHost::GetRGBStride()
 
 void
 WebRenderTextureHost::AddWRImage(wr::WebRenderAPI* aAPI,
-                                 const wr::ImageKey& aImageKey,
+                                 Range<const wr::ImageKey>& aImageKeys,
                                  const wr::ExternalImageId& aExtID)
 {
   MOZ_ASSERT(mWrappedTextureHost);
   MOZ_ASSERT(mExternalImageId == aExtID);
 
-  mWrappedTextureHost->AddWRImage(aAPI, aImageKey, aExtID);
+  mWrappedTextureHost->AddWRImage(aAPI, aImageKeys, aExtID);
 }
 
 } // namespace layers

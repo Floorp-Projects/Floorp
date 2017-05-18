@@ -20,6 +20,7 @@
 #include "mozilla/layers/LayersTypes.h"  // for LayerRenderState, etc
 #include "mozilla/layers/LayersSurfaces.h"
 #include "mozilla/mozalloc.h"           // for operator delete
+#include "mozilla/Range.h"
 #include "mozilla/UniquePtr.h"          // for UniquePtr
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "nsCOMPtr.h"                   // for already_AddRefed
@@ -598,7 +599,7 @@ public:
   // Add all necessary textureHost informations to WebrenderAPI. Then, WR could
   // use these informations to compose this textureHost.
   virtual void AddWRImage(wr::WebRenderAPI* aAPI,
-                          const wr::ImageKey& aImageKey,
+                          Range<const wr::ImageKey>& aImageKeys,
                           const wr::ExternalImageId& aExtID)
   {
     MOZ_ASSERT_UNREACHABLE("No AddWRImage() implementation for this TextureHost type.");
@@ -692,7 +693,7 @@ public:
   const BufferDescriptor& GetBufferDescriptor() const { return mDescriptor; }
 
   virtual void AddWRImage(wr::WebRenderAPI* aAPI,
-                          const wr::ImageKey& aImageKey,
+                          Range<const wr::ImageKey>& aImageKeys,
                           const wr::ExternalImageId& aExtID) override;
 
 protected:
