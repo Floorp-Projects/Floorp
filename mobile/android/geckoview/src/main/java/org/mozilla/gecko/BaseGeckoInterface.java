@@ -82,9 +82,4 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
         // By default, use the GeckoView-specific chrome URI.
         return "chrome://geckoview/content/geckoview.xul";
     }
-
-    @Override
-    public boolean isForegrounded() {
-        return false;
-    }
 }

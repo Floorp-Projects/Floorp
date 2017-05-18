@@ -156,6 +156,25 @@ public:
 
     static auto AddPluginView(mozilla::jni::Object::Param) -> void;
 
+    struct LaunchOrBringToFront_t {
+        typedef GeckoApp Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "launchOrBringToFront";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::GECKO;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    static auto LaunchOrBringToFront() -> void;
+
     struct OnFullScreenPluginHidden_t {
         typedef GeckoApp Owner;
         typedef void ReturnType;
