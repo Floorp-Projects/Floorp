@@ -73,10 +73,11 @@ Sampler::Disable(PSLockRef aLock)
 {
 }
 
+template<typename Func>
 void
 Sampler::SuspendAndSampleAndResumeThread(PSLockRef aLock,
-                                         TickController& aController,
-                                         TickSample& aSample)
+                                         TickSample& aSample,
+                                         const Func& aDoSample)
 {
   thread_act_t samplee_thread = aSample.mPlatformData->ProfiledThread();
 
@@ -118,7 +119,7 @@ Sampler::SuspendAndSampleAndResumeThread(PSLockRef aLock,
     aSample.mSP = reinterpret_cast<Address>(state.REGISTER_FIELD(sp));
     aSample.mFP = reinterpret_cast<Address>(state.REGISTER_FIELD(bp));
 
-    aController.Tick(aLock, aSample);
+    aDoSample();
   }
 
 #undef REGISTER_FIELD

@@ -815,15 +815,6 @@ struct NativeStack
   {}
 };
 
-class TickController
-{
-public:
-  // NOTE: This method is called when the target thread of the sample is paused.
-  // Do not allocate or attempt to grab any locks during this function call.
-  virtual void Tick(PSLockRef aLock,
-                    const TickSample& aSample) = 0;
-};
-
 Atomic<bool> WALKING_JS_STACK(false);
 
 struct AutoWalkJSStack
@@ -1289,64 +1280,30 @@ DoNativeBacktrace(PSLockRef aLock, NativeStack& aNativeStack,
 
 #endif
 
-static void
-DoSampleStackTrace(PSLockRef aLock, ProfileBuffer* aBuffer,
-                   const TickSample& aSample)
-{
-  NativeStack nativeStack;
-
-  // |nativeStack| is empty at this point.
-  MergeStacksIntoProfile(aLock, aBuffer, aSample, nativeStack);
-
-  if (ActivePS::FeatureLeaf(aLock)) {
-    aBuffer->addTag(ProfileBufferEntry::NativeLeafAddr((void*)aSample.mPC));
-  }
-}
-
-class ProfilerTickController : public TickController
-{
-public:
-  explicit ProfilerTickController(PSLockRef aLock, ProfileBuffer* aBuffer = nullptr)
-    : mBuffer(aBuffer ? aBuffer : ActivePS::Buffer(aLock))
-  {
-  }
-
-  // This function is called for each sampling period with the current program
-  // counter. It is called within a signal and so must be re-entrant.
-  void Tick(PSLockRef aLock, const TickSample& aSample) override;
-
-private:
-  ProfileBuffer* mBuffer;
-};
-
 void
-ProfilerTickController::Tick(PSLockRef aLock, const TickSample& aSample)
+Tick(PSLockRef aLock, const TickSample& aSample, ProfileBuffer* aBuffer)
 {
   MOZ_RELEASE_ASSERT(ActivePS::Exists(aLock));
 
-  mBuffer->addTagThreadId(aSample.mThreadId, aSample.mLastSample);
+  aBuffer->addTagThreadId(aSample.mThreadId, aSample.mLastSample);
 
   TimeDuration delta = aSample.mTimeStamp - CorePS::ProcessStartTime();
   aBuffer->addTag(ProfileBufferEntry::Time(delta.ToMilliseconds()));
 
+  NativeStack nativeStack;
 #if defined(HAVE_NATIVE_UNWIND)
   if (ActivePS::FeatureStackWalk(aLock)) {
-    void* pc_array[1000];
-    void* sp_array[1000];
-    NativeStack nativeStack = {
-      pc_array,
-      sp_array,
-      mozilla::ArrayLength(pc_array),
-      0
-    };
-
     DoNativeBacktrace(aLock, nativeStack, aSample);
 
-    MergeStacksIntoProfile(aLock, mBuffer, aSample, nativeStack);
+    MergeStacksIntoProfile(aLock, aBuffer, aSample, nativeStack);
   } else
 #endif
   {
-    DoSampleStackTrace(aLock, mBuffer, aSample);
+    MergeStacksIntoProfile(aLock, aBuffer, aSample, nativeStack);
+
+    if (ActivePS::FeatureLeaf(aLock)) {
+      aBuffer->addTag(ProfileBufferEntry::NativeLeafAddr((void*)aSample.mPC));
+    }
   }
 
   // Don't process the PseudoStack's markers if we're synchronously sampling
@@ -1356,27 +1313,27 @@ ProfilerTickController::Tick(PSLockRef aLock, const TickSample& aSample)
       aSample.mRacyInfo->GetPendingMarkers();
     while (pendingMarkersList && pendingMarkersList->peek()) {
       ProfilerMarker* marker = pendingMarkersList->popHead();
-      mBuffer->addStoredMarker(marker);
-      mBuffer->addTag(ProfileBufferEntry::Marker(marker));
+      aBuffer->addStoredMarker(marker);
+      aBuffer->addTag(ProfileBufferEntry::Marker(marker));
     }
   }
 
   if (aSample.mResponsiveness && aSample.mResponsiveness->HasData()) {
     TimeDuration delta =
       aSample.mResponsiveness->GetUnresponsiveDuration(aSample.mTimeStamp);
-    mBuffer->addTag(ProfileBufferEntry::Responsiveness(delta.ToMilliseconds()));
+    aBuffer->addTag(ProfileBufferEntry::Responsiveness(delta.ToMilliseconds()));
   }
 
   // rssMemory is equal to 0 when we are not recording.
   if (aSample.mRSSMemory != 0) {
     double rssMemory = static_cast<double>(aSample.mRSSMemory);
-    mBuffer->addTag(ProfileBufferEntry::ResidentMemory(rssMemory));
+    aBuffer->addTag(ProfileBufferEntry::ResidentMemory(rssMemory));
   }
 
   // ussMemory is equal to 0 when we are not recording.
   if (aSample.mUSSMemory != 0) {
     double ussMemory = static_cast<double>(aSample.mUSSMemory);
-    mBuffer->addTag(ProfileBufferEntry::UnsharedMemory(ussMemory));
+    aBuffer->addTag(ProfileBufferEntry::UnsharedMemory(ussMemory));
   }
 }
 
@@ -1780,10 +1737,15 @@ public:
   // called once, and only once, before the Sampler is destroyed.
   void Disable(PSLockRef aLock);
 
-  // This method suspends and resumes the samplee thread.
+  // This method suspends and resumes the samplee thread. It calls the passed-in
+  // function like object aDoSample while the samplee thread is suspended, after
+  // filling in register values in aSample.
+  //
+  // Func must be a function-like object of type `void()`.
+  template<typename Func>
   void SuspendAndSampleAndResumeThread(PSLockRef aLock,
-                                       TickController& aController,
-                                       TickSample& aSample);
+                                       TickSample& aSample,
+                                       const Func& aDoSample);
 
 private:
 #if defined(GP_OS_linux) || defined(GP_OS_android)
@@ -1930,9 +1892,10 @@ SamplerThread::Run()
           }
 
           TickSample sample(info, rssMemory, ussMemory);
-          ProfilerTickController controller(lock);
 
-          SuspendAndSampleAndResumeThread(lock, controller, sample);
+          SuspendAndSampleAndResumeThread(lock, sample, [&] {
+              Tick(lock, sample, ActivePS::Buffer(lock));
+            });
         }
 
 #if defined(USE_LUL_STACKWALK)
@@ -2885,8 +2848,7 @@ profiler_get_backtrace()
 #endif
 #endif
 
-  ProfilerTickController controller(lock, buffer);
-  controller.Tick(lock, sample);
+  Tick(lock, sample, buffer);
 
   return UniqueProfilerBacktrace(
     new ProfilerBacktrace("SyncProfile", tid, buffer));
@@ -3095,40 +3057,6 @@ profiler_current_thread_id()
   return Thread::GetCurrentId();
 }
 
-class SimpleTickController : public TickController
-{
-public:
-  explicit SimpleTickController(const std::function<void(void**, size_t)>& aCallback,
-                                bool aSampleNative)
-    : mCallback(aCallback)
-    , mSampleNative(aSampleNative)
-  {
-  }
-
-  void Tick(PSLockRef aLock, const TickSample& aSample) override {
-    void* pc_array[1000];
-    void* sp_array[1000];
-    NativeStack nativeStack = {
-      pc_array,
-      sp_array,
-      mozilla::ArrayLength(pc_array),
-      0
-    };
-
-#if defined(HAVE_NATIVE_UNWIND)
-    if (mSampleNative) {
-      DoNativeBacktrace(aLock, nativeStack, aSample);
-    }
-#endif
-
-    mCallback(nativeStack.pc_array, nativeStack.count);
-  }
-
-private:
-  const std::function<void(void**, size_t)>& mCallback;
-  bool mSampleNative;
-};
-
 // NOTE: The callback function passed in will be called while the target thread
 // is paused. Doing stuff in this function like allocating which may try to
 // claim locks is a surefire way to deadlock.
@@ -3137,6 +3065,10 @@ profiler_suspend_and_sample_thread(int aThreadId,
                                    const std::function<void(void**, size_t)>& aCallback,
                                    bool aSampleNative /* = true */)
 {
+  // Allocate the space for the native stack
+  NativeStack nativeStack;
+
+  // Lock the profiler mutex
   PSAutoLock lock(gPSMutex);
 
   const CorePS::ThreadVector& liveThreads = CorePS::LiveThreads(lock);
@@ -3147,8 +3079,16 @@ profiler_suspend_and_sample_thread(int aThreadId,
       // Suspend, sample, and then resume the target thread.
       Sampler sampler(lock);
       TickSample sample(info, 0, 0);
-      SimpleTickController controller(aCallback, aSampleNative);
-      sampler.SuspendAndSampleAndResumeThread(lock, controller, sample);
+      sampler.SuspendAndSampleAndResumeThread(lock, sample, [&] {
+          // The target thread is now suspended, collect a native backtrace, and
+          // call the callback.
+#if defined(HAVE_NATIVE_UNWIND)
+          if (aSampleNative) {
+            DoNativeBacktrace(lock, nativeStack, sample);
+          }
+#endif
+          aCallback(nativeStack.mPCs, nativeStack.mCount);
+        });
 
       // NOTE: Make sure to disable the sampler before it is destroyed, in case
       // the profiler is running at the same time.
