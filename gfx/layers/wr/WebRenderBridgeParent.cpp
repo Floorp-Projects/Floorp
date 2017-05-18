@@ -661,7 +661,7 @@ WebRenderBridgeParent::RecvRemoveExternalImageId(const ExternalImageId& aImageId
   MOZ_ASSERT(mExternalImageIds.Get(wr::AsUint64(aImageId)).get());
   WebRenderImageHost* wrHost = mExternalImageIds.Get(wr::AsUint64(aImageId)).get();
   if (wrHost) {
-    wrHost->SetWrBridge(nullptr);
+    wrHost->ClearWrBridge();
   }
   mExternalImageIds.Remove(wr::AsUint64(aImageId));
 
@@ -875,7 +875,7 @@ WebRenderBridgeParent::ClearResources()
   }
   DeleteOldImages();
   for (auto iter = mExternalImageIds.Iter(); !iter.Done(); iter.Next()) {
-    iter.Data()->SetWrBridge(nullptr);
+    iter.Data()->ClearWrBridge();
   }
   mExternalImageIds.Clear();
   mCompositableHolder->RemovePipeline(mPipelineId, wr::NewEpoch(mWrEpoch));
