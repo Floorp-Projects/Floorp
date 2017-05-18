@@ -141,18 +141,6 @@
 #  define	MALLOC_PRODUCTION
 #endif
 
-/*
- * Pass this set of options to jemalloc as its default. It does not override
- * the options passed via the MALLOC_OPTIONS environment variable but is
- * applied in addition to them.
- */
-#ifdef MOZ_WIDGET_GONK
-    /* Reduce the amount of unused dirty pages to 1MiB on B2G */
-#   define MOZ_MALLOC_OPTIONS "ff"
-#else
-#   define MOZ_MALLOC_OPTIONS ""
-#endif
-
 #ifndef MALLOC_PRODUCTION
    /*
     * MALLOC_DEBUG enables assertions and other sanity checks, and disables
@@ -1075,8 +1063,6 @@ static __thread arena_t	*arenas_map;
 /*
  * Runtime configuration options.
  */
-const char	*_malloc_options = MOZ_MALLOC_OPTIONS;
-
 const uint8_t kAllocJunk = 0xe4;
 const uint8_t kAllocPoison = 0xe5;
 
@@ -4760,7 +4746,7 @@ malloc_init_hard(void)
 	pagesize_2pow = ffs((int)result) - 1;
 #endif
 
-	for (i = 0; i < 3; i++) {
+	for (i = 0; i < 2; i++) {
 		unsigned j;
 
 		/* Get runtime configuration. */
@@ -4790,19 +4776,6 @@ malloc_init_hard(void)
 				 * the value of the MALLOC_OPTIONS environment
 				 * variable.
 				 */
-			} else {
-				/* No configuration specified. */
-				buf[0] = '\0';
-				opts = buf;
-			}
-			break;
-		case 2:
-			if (_malloc_options != NULL) {
-				/*
-				 * Use options that were compiled into the
-				 * program.
-				 */
-				opts = _malloc_options;
 			} else {
 				/* No configuration specified. */
 				buf[0] = '\0';
