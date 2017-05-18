@@ -1,10 +1,11 @@
+// |reftest| skip-if(release_or_beta) -- async-iteration is not released yet
 // This file was procedurally generated from the following sources:
 // - src/async-generators/yield-star-sync-throw.case
 // - src/async-generators/default/async-obj-method.template
 /*---
 description: execution order for yield* with sync iterator and throw() (Async generator method)
 esid: prod-AsyncGeneratorMethod
-features: [async-iteration, async-iteration]
+features: [async-iteration]
 flags: [generated, async]
 info: |
     Async Generator Function Definitions
