@@ -320,7 +320,7 @@
          <observes element="viewTabsSidebar" attribute="checked"/>
        </toolbarbutton>
       <toolbarseparator/>
-      <toolbarbutton label="&sidebarCloseButton.tooltip;"
+      <toolbarbutton label="&sidebarMenuClose.label;"
                      class="subviewbutton"
                      oncommand="SidebarUI.hide()"/>
     </panel>
