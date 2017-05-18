@@ -51,10 +51,10 @@ class JSONPrinter
     void property(const char* name, uint32_t value);
     void property(const char* name, int64_t value);
     void property(const char* name, uint64_t value);
-#ifdef XP_DARWIN
-    // On OSX, size_t is long unsigned, uint32_t is unsigned, and uint64_t is
-    // long long unsigned. Everywhere else, size_t matches either uint32_t or
-    // uint64_t.
+#if defined(XP_DARWIN) || defined(__OpenBSD__)
+    // On OSX and OpenBSD, size_t is long unsigned, uint32_t is unsigned, and
+    // uint64_t is long long unsigned. Everywhere else, size_t matches either
+    // uint32_t or uint64_t.
     void property(const char* name, size_t value);
 #endif
 
