@@ -239,10 +239,12 @@ toolbar:-moz-lwtheme-darktext {
   box-shadow: none !important;
 }
 
-%filter substitution
-%define selectorSuffix :-moz-lwtheme-brighttext
-%define iconVariant -white
-%include identity-block/icons.inc.css
+#identity-icon:-moz-lwtheme-brighttext,
+#tracking-protection-icon:-moz-lwtheme-brighttext,
+#connection-icon:-moz-lwtheme-brighttext,
+#extension-icon:-moz-lwtheme-brighttext {
+  fill: rgba(255,255,255,.7);
+}
 
 #urlbar {
 %ifndef MOZ_PHOTON_THEME
