@@ -1670,15 +1670,6 @@ public class GeckoAppShell
 
         public String[] getHandlersForMimeType(String mimeType, String action);
         public String[] getHandlersForURL(String url, String action);
-
-        /**
-         * URI of the underlying chrome window to be opened, or null to use the default GeckoView
-         * XUL container <tt>chrome://geckoview/content/geckoview.xul</tt>.  See
-         * <a href="https://developer.mozilla.org/en/docs/toolkit.defaultChromeURI">https://developer.mozilla.org/en/docs/toolkit.defaultChromeURI</a>
-         *
-         * @return URI or null.
-         */
-        String getDefaultChromeURI();
     };
 
     private static GeckoInterface sGeckoInterface;

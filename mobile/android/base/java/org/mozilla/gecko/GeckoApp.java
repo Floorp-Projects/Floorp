@@ -1383,6 +1383,7 @@ public abstract class GeckoApp extends GeckoActivity
         mMainLayout = (RelativeLayout) findViewById(R.id.main_layout);
         mLayerView = (GeckoView) findViewById(R.id.layer_view);
 
+        mLayerView.setChromeUri("chrome://browser/content/browser.xul");
         mLayerView.setContentListener(this);
 
         getAppEventDispatcher().registerGeckoThreadListener(this,
@@ -2972,12 +2973,6 @@ public abstract class GeckoApp extends GeckoActivity
                 TextUtils.isEmpty(action) ? Intent.ACTION_VIEW : action, "");
 
         return IntentHelper.getHandlersForIntent(intent);
-    }
-
-    @Override
-    public String getDefaultChromeURI() {
-        // Use the chrome URI specified by Gecko's defaultChromeURI pref.
-        return null;
     }
 
     public GeckoView getGeckoView() {
