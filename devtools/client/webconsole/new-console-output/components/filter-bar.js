@@ -13,7 +13,6 @@ const { getAllFilters } = require("devtools/client/webconsole/new-console-output
 const { getAllUi } = require("devtools/client/webconsole/new-console-output/selectors/ui");
 const {
   filterTextSet,
-  filtersClear,
   filterBarToggle,
   messagesClear
 } = require("devtools/client/webconsole/new-console-output/actions/index");
@@ -47,10 +46,6 @@ const FilterBar = createClass({
 
   onClickFilterBarToggle: function () {
     this.props.dispatch(filterBarToggle());
-  },
-
-  onClickFiltersClear: function () {
-    this.props.dispatch(filtersClear());
   },
 
   onSearchInput: function (e) {
