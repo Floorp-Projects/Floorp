@@ -305,6 +305,9 @@ include selection/reftest.list
 # sticky positioning
 include position-sticky/reftest.list
 
+# stylesheet cloning
+include stylesheet-cloning/reftest.list
+
 # svg/
 include svg/reftest.list
 
