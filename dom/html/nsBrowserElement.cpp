@@ -9,12 +9,9 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/BrowserElementBinding.h"
-#include "mozilla/dom/BrowserElementAudioChannel.h"
 #include "mozilla/dom/DOMRequest.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ToJSValue.h"
-
-#include "AudioChannelService.h"
 
 #include "nsComponentManagerUtils.h"
 #include "nsFrameLoader.h"
@@ -455,127 +452,6 @@ nsBrowserElement::RemoveNextPaintListener(BrowserElementNextPaintEventCallback& 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
   }
-}
-
-void
-nsBrowserElement::GetAllowedAudioChannels(
-                 nsTArray<RefPtr<BrowserElementAudioChannel>>& aAudioChannels,
-                 ErrorResult& aRv)
-{
-  aAudioChannels.Clear();
-
-  // If empty, it means that this is the first call of this method.
-  if (mBrowserElementAudioChannels.IsEmpty()) {
-    nsCOMPtr<nsIFrameLoader> frameLoader = GetFrameLoader();
-    if (NS_WARN_IF(!frameLoader)) {
-      return;
-    }
-
-    bool isMozBrowser;
-    aRv = frameLoader->GetOwnerIsMozBrowserFrame(&isMozBrowser);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return;
-    }
-
-    if (!isMozBrowser) {
-      return;
-    }
-
-    nsCOMPtr<nsIDOMElement> frameElement;
-    aRv = frameLoader->GetOwnerElement(getter_AddRefs(frameElement));
-    if (NS_WARN_IF(aRv.Failed())) {
-      return;
-    }
-
-    MOZ_ASSERT(frameElement);
-
-    nsCOMPtr<nsIDOMDocument> doc;
-    aRv = frameElement->GetOwnerDocument(getter_AddRefs(doc));
-    if (NS_WARN_IF(aRv.Failed())) {
-      return;
-    }
-
-    MOZ_ASSERT(doc);
-
-    nsCOMPtr<mozIDOMWindowProxy> win;
-    aRv = doc->GetDefaultView(getter_AddRefs(win));
-    if (NS_WARN_IF(aRv.Failed())) {
-      return;
-    }
-
-    MOZ_ASSERT(win);
-
-    auto* window = nsPIDOMWindowOuter::From(win);
-    nsPIDOMWindowInner* innerWindow = window->GetCurrentInnerWindow();
-
-    nsCOMPtr<nsIMozBrowserFrame> mozBrowserFrame =
-      do_QueryInterface(frameElement);
-    if (NS_WARN_IF(!mozBrowserFrame)) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return;
-    }
-
-    MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
-            ("nsBrowserElement, GetAllowedAudioChannels, this = %p\n", this));
-
-    GenerateAllowedAudioChannels(innerWindow, frameLoader, mBrowserElementAPI,
-                                 mBrowserElementAudioChannels, aRv);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return;
-    }
-  }
-
-  aAudioChannels.AppendElements(mBrowserElementAudioChannels);
-}
-
-/* static */ void
-nsBrowserElement::GenerateAllowedAudioChannels(
-                 nsPIDOMWindowInner* aWindow,
-                 nsIFrameLoader* aFrameLoader,
-                 nsIBrowserElementAPI* aAPI,
-                 nsTArray<RefPtr<BrowserElementAudioChannel>>& aAudioChannels,
-                 ErrorResult& aRv)
-{
-  MOZ_ASSERT(aAudioChannels.IsEmpty());
-
-  // Normal is always allowed.
-  nsTArray<RefPtr<BrowserElementAudioChannel>> channels;
-
-  RefPtr<BrowserElementAudioChannel> ac =
-    BrowserElementAudioChannel::Create(aWindow, aFrameLoader, aAPI,
-                                       AudioChannel::Normal, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  channels.AppendElement(ac);
-
-  nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();
-  if (NS_WARN_IF(!doc)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  // Since we don't have permissions anymore let only chrome windows pick a
-  // non-default channel
-  if (nsContentUtils::IsChromeDoc(doc)) {
-    const nsAttrValue::EnumTable* audioChannelTable =
-      AudioChannelService::GetAudioChannelTable();
-
-    for (uint32_t i = 0; audioChannelTable && audioChannelTable[i].tag; ++i) {
-      AudioChannel value = (AudioChannel)audioChannelTable[i].value;
-      RefPtr<BrowserElementAudioChannel> ac =
-        BrowserElementAudioChannel::Create(aWindow, aFrameLoader, aAPI,
-                                           value, aRv);
-      if (NS_WARN_IF(aRv.Failed())) {
-        return;
-      }
-
-      channels.AppendElement(ac);
-    }
-  }
-
-  aAudioChannels.SwapElements(channels);
 }
 
 already_AddRefed<DOMRequest>
