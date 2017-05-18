@@ -7,6 +7,7 @@
 
 #include "gfxPrefs.h"
 #include "LayersLogging.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/ImageClient.h"
 #include "mozilla/layers/ScrollingLayersHelper.h"
 #include "mozilla/layers/StackingContextHelper.h"
@@ -191,7 +192,31 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
                   Stringify(filter).c_str());
   }
 
-  aBuilder.PushImage(sc.ToRelativeWrRect(rect), clip, filter, mKey.value());
+  if (GetImageClientType() != CompositableType::IMAGE_BRIDGE) {
+    aBuilder.PushImage(sc.ToRelativeWrRect(rect), clip, filter, mKey.value());
+  } else {
+    // XXX (Jerry): Remove the hardcode image format setting. The format of
+    // textureClient could change from time to time. So, we just set the most
+    // usable format here.
+#if defined(XP_WIN)
+    // Use libyuv to convert the buffer to rgba format.
+    aBuilder.PushImage(sc.ToRelativeWrRect(rect), clip, filter, mKey.value());
+#elif defined(XP_MACOSX)
+    if (gfx::gfxVars::CanUseHardwareVideoDecoding()) {
+      // Use the hardware MacIOSurface with YCbCr interleaved format.
+      aBuilder.PushYCbCrInterleavedImage(sc.ToRelativeWrRect(rect), clip, mKey.value(), WrYuvColorSpace::Rec601);
+    } else {
+      // Use libyuv to convert the buffer to rgba format.
+      aBuilder.PushImage(sc.ToRelativeWrRect(rect), clip, filter, mKey.value());
+    }
+#elif defined(MOZ_WIDGET_GTK)
+    // Use libyuv to convert the buffer to rgba format.
+    aBuilder.PushImage(sc.ToRelativeWrRect(rect), clip, filter, mKey.value());
+#elif defined(ANDROID)
+    // Use libyuv to convert the buffer to rgba format.
+    aBuilder.PushImage(sc.ToRelativeWrRect(rect), clip, filter, mKey.value());
+#endif
+  }
 }
 
 Maybe<WrImageMask>
