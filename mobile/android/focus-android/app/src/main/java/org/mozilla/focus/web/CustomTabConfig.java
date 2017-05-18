@@ -74,7 +74,7 @@ public class CustomTabConfig {
         return intent.hasExtra(CustomTabsIntent.EXTRA_SESSION);
     }
 
-    private static @Nullable Bitmap getCloseButtonIcon(final Context context, final @NonNull SafeIntent intent) {
+    private static @Nullable Bitmap getCloseButtonIcon(final @NonNull Context context, final @NonNull SafeIntent intent) {
         if (!intent.hasExtra(CustomTabsIntent.EXTRA_CLOSE_BUTTON_ICON)) {
             return null;
         }
@@ -96,6 +96,47 @@ public class CustomTabConfig {
         }
     }
 
+    private static @Nullable ActionButtonConfig getActionButtonConfig(final @NonNull Context context, final @NonNull SafeIntent intent) {
+        if (!intent.hasExtra(CustomTabsIntent.EXTRA_ACTION_BUTTON_BUNDLE)) {
+            return null;
+        }
+
+        final SafeBundle actionButtonBundle = intent.getBundleExtra(CustomTabsIntent.EXTRA_ACTION_BUTTON_BUNDLE);
+
+        final String description = actionButtonBundle.getString(CustomTabsIntent.KEY_DESCRIPTION);
+        if (description == null) {
+            Log.w(LOGTAG, "Ignoring EXTRA_ACTION_BUTTON_BUNDLE due to missing description");
+            return null;
+        }
+
+
+        final Parcelable pendingIntentParcelable = actionButtonBundle.getParcelable(CustomTabsIntent.KEY_PENDING_INTENT);
+        final PendingIntent pendingIntent;
+        // See below: this might not be a PendingIntent, we need to verify ourselves
+        if (pendingIntentParcelable instanceof  PendingIntent) {
+            pendingIntent = (PendingIntent) pendingIntentParcelable;
+        } else {
+            Log.w(LOGTAG, "Ignoring EXTRA_ACTION_BUTTON_BUNDLE due to missing pendingIntent");
+            return null;
+        }
+
+        // Process the icon last: if we don't use the icon we need to recycle it, but if we've gotten
+        // to this stage we know that we have a valid description and pendingIntent, so returning
+        // an ActionButtonConfig is definitely possible (unless there's no icon, in which case there's nothing to do):
+        final Parcelable iconParcelable = actionButtonBundle.getParcelable(CustomTabsIntent.KEY_ICON);
+        final Bitmap icon;
+        // Java Generics mean that this parcelable might not be a bitmap, so we need to check and
+        // safely cast ourselves:
+        if (iconParcelable instanceof Bitmap) {
+            icon = (Bitmap) iconParcelable;
+        } else {
+            Log.w(LOGTAG, "Ignoring EXTRA_ACTION_BUTTON_BUNDLE due to missing icon");
+            return null;
+        }
+
+        return new ActionButtonConfig(description, icon, pendingIntent);
+    }
+
     /* package-private */ static CustomTabConfig parseCustomTabIntent(final @NonNull Context context, final @NonNull SafeIntent intent) {
         @ColorInt Integer toolbarColor = null;
         if (intent.hasExtra(CustomTabsIntent.EXTRA_TOOLBAR_COLOR)) {
@@ -110,22 +151,7 @@ public class CustomTabConfig {
         // for feedback on this bug: https://bugs.chromium.org/p/chromium/issues/detail?id=718654
         boolean disableUrlbarHiding = !intent.getBooleanExtra(CustomTabsIntent.EXTRA_ENABLE_URLBAR_HIDING, true);
 
-        ActionButtonConfig actionButtonConfig = null;
-        if (intent.hasExtra(CustomTabsIntent.EXTRA_ACTION_BUTTON_BUNDLE)) {
-            final SafeBundle actionButtonBundle = intent.getBundleExtra(CustomTabsIntent.EXTRA_ACTION_BUTTON_BUNDLE);
-
-            final String description = actionButtonBundle.getString(CustomTabsIntent.KEY_DESCRIPTION);
-            final Bitmap icon = actionButtonBundle.getParcelable(CustomTabsIntent.KEY_ICON);
-            final PendingIntent pendingIntent = actionButtonBundle.getParcelable(CustomTabsIntent.KEY_PENDING_INTENT);
-
-            if (description != null &&
-                    icon != null &&
-                    pendingIntent != null) {
-                actionButtonConfig = new ActionButtonConfig(description, icon, pendingIntent);
-            } else {
-                Log.w(LOGTAG, "Ignoring EXTRA_ACTION_BUTTON_BUNDLE due to missing keys");
-            }
-        }
+        final ActionButtonConfig actionButtonConfig = getActionButtonConfig(context, intent);
 
         // Share is part of the default menu, so it's simplest just to toggle it off as necessary instead
         // of creating a fake menu item here, hence we keep this as  aboolean for now:
