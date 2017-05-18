@@ -3597,21 +3597,19 @@
         <![CDATA[
           // Swap the dropped tab with a new one we create and then close
           // it in the other window (making it seem to have moved between
-          // windows).
-          let params = { eventDetail: { adoptedTab: aTab } };
+          // windows). We also ensure that the tab we create to swap into has
+          // the same remote type and process as the one we're swapping in.
+          // This makes sure we don't get a short-lived process for the new tab.
+          let linkedBrowser = aTab.linkedBrowser;
+          let params = { eventDetail: { adoptedTab: aTab },
+                         preferredRemoteType: linkedBrowser.remoteType,
+                         sameProcessAsFrameLoader: linkedBrowser.frameLoader };
           if (aTab.hasAttribute("usercontextid")) {
             // new tab must have the same usercontextid as the old one
             params.userContextId = aTab.getAttribute("usercontextid");
           }
           let newTab = this.addTab("about:blank", params);
           let newBrowser = this.getBrowserForTab(newTab);
-          let newURL = aTab.linkedBrowser.currentURI.spec;
-
-          // If we're an e10s browser window, an exception will be thrown
-          // if we attempt to drag a non-remote browser in, so we need to
-          // ensure that the remoteness of the newly created browser is
-          // appropriate for the URL of the tab being dragged in.
-          this.updateBrowserRemotenessByURL(newBrowser, newURL);
 
           // Stop the about:blank load.
           newBrowser.stop();
