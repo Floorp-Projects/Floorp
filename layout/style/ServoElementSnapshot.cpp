@@ -12,8 +12,8 @@
 namespace mozilla {
 
 ServoElementSnapshot::ServoElementSnapshot(const Element* aElement)
-  : mContains(Flags(0))
-  , mState(0)
+  : mState(0)
+  , mContains(Flags(0))
 {
   MOZ_COUNT_CTOR(ServoElementSnapshot);
   mIsHTMLElementInHTMLDocument =
