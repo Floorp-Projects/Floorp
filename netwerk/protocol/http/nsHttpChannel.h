@@ -477,6 +477,9 @@ private:
     void ReportNetVSCacheTelemetry();
     int64_t ComputeTelemetryBucketNumber(int64_t difftime_ms);
 
+    // Report telemetry and stats to about:networking
+    void ReportRcwnStats(nsIRequest* firstResponseRequest);
+
     // Create a aggregate set of the current notification callbacks
     // and ensure the transaction is updated to use it.
     void UpdateAggregateCallbacks();
