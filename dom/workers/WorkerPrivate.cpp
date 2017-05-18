@@ -266,7 +266,7 @@ private:
   }
 };
 
-struct WindowAction
+struct MOZ_RAII WindowAction
 {
   nsPIDOMWindowInner* mWindow;
   bool mDefaultAction;
