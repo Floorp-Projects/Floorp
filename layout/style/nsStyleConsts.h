@@ -1060,6 +1060,8 @@ enum class StyleGridTrackBreadth : uint8_t {
 // -moz-context-properties
 #define NS_STYLE_CONTEXT_PROPERTY_FILL          (1 << 0)
 #define NS_STYLE_CONTEXT_PROPERTY_STROKE        (1 << 1)
+#define NS_STYLE_CONTEXT_PROPERTY_FILL_OPACITY   (1 << 2)
+#define NS_STYLE_CONTEXT_PROPERTY_STROKE_OPACITY (1 << 3)
 
 /*
  * -moz-window-shadow
