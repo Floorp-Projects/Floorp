@@ -3,15 +3,10 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-     class="fieldtext"
      width="16" height="16" viewBox="0 0 16 16">
-#include ../icon-colors.inc.svg
   <style>
     use:not(:target) {
       display: none;
-    }
-    use {
-      fill-rule: evenodd;
     }
   </style>
 
@@ -22,18 +17,8 @@
     <path id="glyph-notice-hover" d="M107.5,202a2.5,2.5,0,1,1,2.5-2.5A2.5,2.5,0,0,1,107.5,202Zm0,1.039a3.5,3.5,0,0,0,1.125-.2,7.124,7.124,0,1,1-4.464-4.464,3.5,3.5,0,0,0-.2,1.125A3.54,3.54,0,0,0,107.5,203.039ZM102,201a1,1,0,1,0,1,1A1,1,0,0,0,102,201Zm1,4a1,1,0,0,0-2,0v3a1,1,0,0,0,2,0v-3Z" transform="translate(-94 -197)"/>
   </defs>
 
-  <use id="normal" xlink:href="#glyph-normal"/>
-  <use id="hover" xlink:href="#glyph-hover"/>
-  <use id="notice" xlink:href="#glyph-notice"/>
-  <use id="notice-hover" xlink:href="#glyph-notice-hover"/>
-
-  <use class="black" id="normal-black" xlink:href="#glyph-normal"/>
-  <use class="black" id="hover-black" xlink:href="#glyph-hover"/>
-  <use class="black" id="notice-black" xlink:href="#glyph-notice"/>
-  <use class="black" id="notice-hover-black" xlink:href="#glyph-notice-hover"/>
-
-  <use class="white" id="normal-white" xlink:href="#glyph-normal"/>
-  <use class="white" id="hover-white" xlink:href="#glyph-hover"/>
-  <use class="white" id="notice-white" xlink:href="#glyph-notice"/>
-  <use class="white" id="notice-hover-white" xlink:href="#glyph-notice-hover"/>
+  <use fill="context-fill" fill-rule="evenodd" id="normal" xlink:href="#glyph-normal"/>
+  <use fill="context-fill" fill-rule="evenodd" id="hover" xlink:href="#glyph-hover"/>
+  <use fill="context-fill" fill-rule="evenodd" id="notice" xlink:href="#glyph-notice"/>
+  <use fill="context-fill" fill-rule="evenodd" id="notice-hover" xlink:href="#glyph-notice-hover"/>
 </svg>

@@ -41,16 +41,12 @@ function* testSteps()
   req.onsuccess = grabEventAndContinueHandler;
   let event = yield undefined;
 
-  let dbA = event.target.result;
-
   // Keep at least one factory operation alive by deleting a database that is
   // stil open.
   req = indexedDB.open("foo-b", 1);
   req.onerror = errorHandler;
   req.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
-
-  let dbB = event.target.result;
 
   indexedDB.deleteDatabase("foo-b");
 

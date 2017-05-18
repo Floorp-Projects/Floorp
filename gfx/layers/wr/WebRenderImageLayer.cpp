@@ -106,7 +106,7 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     // And we do not want to use RefPtr<WebRenderImageLayer> here.
     Holder holder(this);
     WrManager()->AllocPipelineId()
-      ->Then(AbstractThread::GetCurrent(), __func__,
+      ->Then(AbstractThread::MainThread(), __func__,
       [holder] (const wr::PipelineId& aPipelineId) {
         holder->mPipelineIdRequest.Complete();
         holder->mPipelineId = Some(aPipelineId);
