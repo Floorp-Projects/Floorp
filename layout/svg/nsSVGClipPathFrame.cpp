@@ -172,7 +172,7 @@ nsSVGClipPathFrame::PaintClipMask(gfxContext& aMaskContext,
   // Paint our children into the mask:
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
-    result &= PaintFrameIntoMask(kid, aClippedFrame, aMaskContext, aMatrix);
+    PaintFrameIntoMask(kid, aClippedFrame, aMaskContext, aMatrix);
   }
 
   if (maskUsage.shouldGenerateClipMaskLayer) {
@@ -193,7 +193,7 @@ nsSVGClipPathFrame::PaintClipMask(gfxContext& aMaskContext,
   return result;
 }
 
-DrawResult
+void
 nsSVGClipPathFrame::PaintFrameIntoMask(nsIFrame *aFrame,
                                        nsIFrame* aClippedFrame,
                                        gfxContext& aTarget,
@@ -201,7 +201,7 @@ nsSVGClipPathFrame::PaintFrameIntoMask(nsIFrame *aFrame,
 {
   nsSVGDisplayableFrame* frame = do_QueryFrame(aFrame);
   if (!frame) {
-    return DrawResult::SUCCESS;
+    return;
   }
 
   // The CTM of each frame referencing us can be different.
@@ -211,7 +211,7 @@ nsSVGClipPathFrame::PaintFrameIntoMask(nsIFrame *aFrame,
   nsSVGEffects::EffectProperties effectProperties =
     nsSVGEffects::GetEffectProperties(aFrame);
   if (effectProperties.HasInvalidClipPath()) {
-    return DrawResult::SUCCESS;
+    return;
   }
   nsSVGClipPathFrame *clipPathThatClipsChild =
     effectProperties.GetClipPathFrame();
@@ -242,18 +242,20 @@ nsSVGClipPathFrame::PaintFrameIntoMask(nsIFrame *aFrame,
         PrependLocalTransformsTo(mMatrixForChildren, eUserSpaceToParent);
   }
 
+  // clipPath does not result in any image rendering, so we just use a dummy
+  // imgDrawingParams instead of requiring our caller to pass one.
+  image::imgDrawingParams imgParams;
+
   // Our children have NS_STATE_SVG_CLIPPATH_CHILD set on them, and
   // SVGGeometryFrame::Render checks for that state bit and paints
   // only the geometry (opaque black) if set.
-  result &= frame->PaintSVG(aTarget, toChildsUserSpace);
+  frame->PaintSVG(aTarget, toChildsUserSpace, imgParams);
 
   if (maskUsage.shouldGenerateClipMaskLayer) {
     aTarget.PopGroupAndBlend();
   } else if (maskUsage.shouldApplyClipPath) {
     aTarget.PopClip();
   }
-
-  return result;
 }
 
 mozilla::Pair<DrawResult, RefPtr<SourceSurface>>
