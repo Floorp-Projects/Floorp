@@ -190,6 +190,7 @@ class SVGTextFrame final : public nsSVGDisplayContainerFrame
   typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::gfx::Path Path;
   typedef mozilla::gfx::Point Point;
+  typedef mozilla::image::DrawResult DrawResult;
 
 protected:
   explicit SVGTextFrame(nsStyleContext* aContext)

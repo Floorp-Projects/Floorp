@@ -55,6 +55,7 @@ class nsFilterInstance
   typedef mozilla::gfx::FilterPrimitiveDescription FilterPrimitiveDescription;
   typedef mozilla::gfx::FilterDescription FilterDescription;
   typedef mozilla::dom::UserSpaceMetrics UserSpaceMetrics;
+  typedef mozilla::image::DrawResult DrawResult;
   typedef mozilla::image::imgDrawingParams imgDrawingParams;
 public:
   /**

@@ -215,6 +215,7 @@ nsSVGClipPathFrame::PaintFrameIntoMask(nsIFrame *aFrame,
 
   nsSVGUtils::MaskUsage maskUsage;
   nsSVGUtils::DetermineMaskUsage(aFrame, true, maskUsage);
+  DrawResult result = DrawResult::SUCCESS;
   if (maskUsage.shouldApplyClipPath) {
     clipPathThatClipsChild->ApplyClipPath(aTarget, aClippedFrame, aMatrix);
   } else if (maskUsage.shouldGenerateClipMaskLayer) {

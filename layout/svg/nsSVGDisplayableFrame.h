@@ -51,6 +51,7 @@ public:
   typedef mozilla::SVGAnimatedLengthList SVGAnimatedLengthList;
   typedef mozilla::SVGLengthList SVGLengthList;
   typedef mozilla::SVGUserUnitList SVGUserUnitList;
+  typedef mozilla::image::DrawResult DrawResult;
   typedef mozilla::image::imgDrawingParams imgDrawingParams;
 
   NS_DECL_QUERYFRAME_TARGET(nsSVGDisplayableFrame)
