@@ -10,7 +10,7 @@ function getRemoveButton(document, id) {
   return document.querySelector(`[data-addon-id="${id}"] .uninstall-button`);
 }
 
-add_task(function* () {
+add_task(function* removeLegacyExtension() {
   const addonID = "test-devtools@mozilla.org";
   const addonName = "test-devtools";
 
@@ -22,6 +22,35 @@ add_task(function* () {
     document,
     path: "addons/unpacked/install.rdf",
     name: addonName,
+  });
+
+  ok(getTargetEl(document, addonID), "add-on is shown");
+
+  // Click the remove button and wait for the DOM to change.
+  const addonListMutation = waitForMutation(
+    getTemporaryAddonList(document),
+    { childList: true });
+  getRemoveButton(document, addonID).click();
+  yield addonListMutation;
+
+  ok(!getTargetEl(document, addonID), "add-on is not shown");
+
+  yield closeAboutDebugging(tab);
+});
+
+add_task(function* removeWebextension() {
+  const addonID = "test-devtools-webextension@mozilla.org";
+  const addonName = "test-devtools-webextension";
+
+  const { tab, document } = yield openAboutDebugging("addons");
+  yield waitForInitialAddonList(document);
+
+  // Install this add-on, and verify that it appears in the about:debugging UI
+  yield installAddon({
+    document,
+    path: "addons/test-devtools-webextension/manifest.json",
+    name: addonName,
+    isWebExtension: true,
   });
 
   ok(getTargetEl(document, addonID), "add-on is shown");
