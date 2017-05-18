@@ -133,7 +133,7 @@ public:
   static bool
   HitTestFrameForEffects(nsIFrame* aFrame, const nsPoint& aPt);
 
-  struct MOZ_STACK_CLASS PaintFramesParams {
+  struct PaintFramesParams {
     gfxContext& ctx;
     nsIFrame* frame;
     const nsRect& dirtyRect;
@@ -143,33 +143,31 @@ public:
     bool handleOpacity; // If true, PaintMaskAndClipPath/ PaintFilter should
                         // apply css opacity.
     IntRect maskRect;
-    imgDrawingParams& imgParams;
+    uint32_t flags;     // Image flags of the imgIContainer::FLAG_* variety.
 
     explicit PaintFramesParams(gfxContext& aCtx, nsIFrame* aFrame,
                                const nsRect& aDirtyRect,
                                const nsRect& aBorderArea,
                                nsDisplayListBuilder* aBuilder,
                                mozilla::layers::LayerManager* aLayerManager,
-                               bool aHandleOpacity,
-                               imgDrawingParams& aImgParams)
+                               bool aHandleOpacity, uint32_t aFlags)
       : ctx(aCtx), frame(aFrame), dirtyRect(aDirtyRect),
         borderArea(aBorderArea), builder(aBuilder),
-        layerManager(aLayerManager), handleOpacity(aHandleOpacity),
-        imgParams(aImgParams)
+        layerManager(aLayerManager), handleOpacity(aHandleOpacity)
     { }
   };
 
   /**
    * Paint non-SVG frame with mask, clipPath and opacity effect.
    */
-  static void
+  static DrawResult
   PaintMaskAndClipPath(const PaintFramesParams& aParams);
 
   /**
    * Paint mask of non-SVG frame onto a given context, aParams.ctx.
    * aParams.ctx must contain an A8 surface.
    */
-  static void
+  static DrawResult
   PaintMask(const PaintFramesParams& aParams);
 
   /**
@@ -182,7 +180,7 @@ public:
    * Paint non-SVG frame with filter and opacity effect.
    */
   static void
-  PaintFilter(const PaintFramesParams& aParams);
+  PaintFilter(const PaintFramesParams& aParams, imgDrawingParams& aImgParams);
 
   /**
    * @param aRenderingContext the target rendering context in which the paint
