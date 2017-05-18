@@ -1,0 +1,3 @@
+JAR_MANIFESTS += ['jar.mn']
+
+XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
