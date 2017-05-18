@@ -52,9 +52,9 @@ random == rotate-1f.html rotate-1-ref.html
 != origin-1b.html origin-1-ref.html
 # -transform-origin: We should get the same images when using equivalent
 # -transform-origins.
-== origin-2a.html origin-2-ref.html
-== origin-2b.html origin-2-ref.html
-== origin-2c.html origin-2-ref.html
+fuzzy-if(webrender,1,10) == origin-2a.html origin-2-ref.html
+fuzzy-if(webrender,1,10) == origin-2b.html origin-2-ref.html
+fuzzy-if(webrender,1,10) == origin-2c.html origin-2-ref.html
 # "Translate" with percentages should be indistinguishable from translate with
 # equivalent values.
 == percent-1a.html percent-1-ref.html
