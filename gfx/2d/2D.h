@@ -1499,10 +1499,11 @@ public:
    * @param aData Pointer to the data
    * @param aSize Size of the TrueType data
    * @param aType Type of NativeFontResource that should be created.
+   * @param aFontContext Optional native font context to be used to create the NativeFontResource.
    * @return a NativeFontResource of nullptr if failed.
    */
   static already_AddRefed<NativeFontResource>
-    CreateNativeFontResource(uint8_t *aData, uint32_t aSize, FontType aType);
+    CreateNativeFontResource(uint8_t *aData, uint32_t aSize, FontType aType, void* aFontContext = nullptr);
 
   /**
    * This creates an unscaled font of the given type based on font descriptor
