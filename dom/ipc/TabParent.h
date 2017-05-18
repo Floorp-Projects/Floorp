@@ -622,9 +622,6 @@ protected:
 
   virtual mozilla::ipc::IPCResult RecvGetTabCount(uint32_t* aValue) override;
 
-  virtual mozilla::ipc::IPCResult RecvAudioChannelActivityNotification(const uint32_t& aAudioChannel,
-                                                                       const bool& aActive) override;
-
   virtual mozilla::ipc::IPCResult RecvSHistoryUpdate(const uint32_t& aCount,
                                                      const uint32_t& aLocalIndex,
                                                      const bool& aTruncate) override;
