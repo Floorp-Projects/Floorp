@@ -8,7 +8,7 @@
 
 const { createClass, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
-const { debugAddon } = require("../../modules/addon");
+const { debugAddon, uninstallAddon } = require("../../modules/addon");
 const Services = require("Services");
 
 loader.lazyImporter(this, "BrowserToolboxProcess",
@@ -88,6 +88,11 @@ module.exports = createClass({
     debugAddon(target.addonID);
   },
 
+  uninstall() {
+    let { target } = this.props;
+    uninstallAddon(target.addonID);
+  },
+
   reload() {
     let { client, target } = this.props;
     // This function sometimes returns a partial promise that only
@@ -133,7 +138,13 @@ module.exports = createClass({
           disabled: !canBeReloaded,
           title: !canBeReloaded ?
             Strings.GetStringFromName("reloadDisabledTooltip") : ""
-        }, Strings.GetStringFromName("reload"))
+        }, Strings.GetStringFromName("reload")),
+        target.temporarilyInstalled
+          ? dom.button({
+            className: "uninstall-button addon-target-button",
+            onClick: this.uninstall,
+          }, Strings.GetStringFromName("remove"))
+          : null,
       ),
     );
   }
