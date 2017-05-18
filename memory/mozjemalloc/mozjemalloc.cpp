@@ -155,8 +155,6 @@
 #include <intrin.h>
 #include <algorithm>
 
-#pragma warning( disable: 4267 4996 4146 )
-
 #define	SIZE_T_MAX SIZE_MAX
 #define	STDERR_FILENO 2
 
@@ -2037,7 +2035,7 @@ malloc_rtree_set(malloc_rtree_t *rtree, uintptr_t key, void *val)
 
 /* Return the smallest alignment multiple that is >= s. */
 #define        ALIGNMENT_CEILING(s, alignment)                                        \
-        (((s) + (alignment - 1)) & (-(alignment)))
+        (((s) + (alignment - 1)) & (~(alignment - 1)))
 
 static void *
 pages_trim(void *addr, size_t alloc_size, size_t leadsize, size_t size)
@@ -3603,7 +3601,7 @@ ipalloc(size_t alignment, size_t size)
 	 * will further round up to a power of two, but that never causes
 	 * correctness issues.
 	 */
-	ceil_size = (size + (alignment - 1)) & (-alignment);
+	ceil_size = ALIGNMENT_CEILING(size, alignment);
 	/*
 	 * (ceil_size < size) protects against the combination of maximal
 	 * alignment and size greater than maximal alignment.
