@@ -38,11 +38,6 @@
  *   #define SIZEOF_PTR_2POW ...
  *   #define RB_NO_C99_VARARRAYS
  *
- *   (Optional, see assert(3).)
- *   #define NDEBUG
- *
- *   (Required.)
- *   #include <assert.h>
  *   #include <rb.h>
  *   ...
  *
@@ -167,7 +162,7 @@ struct {								\
 	  a_field, (a_node)), (r_node));				\
     } else {								\
 	a_type *rbp_n_t = (a_tree)->rbt_root;				\
-	assert(rbp_n_t != &(a_tree)->rbt_nil);				\
+	MOZ_ASSERT(rbp_n_t != &(a_tree)->rbt_nil);			\
 	(r_node) = &(a_tree)->rbt_nil;					\
 	while (true) {							\
 	    int rbp_n_cmp = (a_cmp)((a_node), rbp_n_t);			\
@@ -179,7 +174,7 @@ struct {								\
 	    } else {							\
 		break;							\
 	    }								\
-	    assert(rbp_n_t != &(a_tree)->rbt_nil);			\
+	    MOZ_ASSERT(rbp_n_t != &(a_tree)->rbt_nil);			\
 	}								\
     }									\
 } while (0)
@@ -190,7 +185,7 @@ struct {								\
 	  a_field, (a_node)), (r_node));				\
     } else {								\
 	a_type *rbp_p_t = (a_tree)->rbt_root;				\
-	assert(rbp_p_t != &(a_tree)->rbt_nil);				\
+	MOZ_ASSERT(rbp_p_t != &(a_tree)->rbt_nil);			\
 	(r_node) = &(a_tree)->rbt_nil;					\
 	while (true) {							\
 	    int rbp_p_cmp = (a_cmp)((a_node), rbp_p_t);			\
@@ -202,7 +197,7 @@ struct {								\
 	    } else {							\
 		break;							\
 	    }								\
-	    assert(rbp_p_t != &(a_tree)->rbt_nil);			\
+	    MOZ_ASSERT(rbp_p_t != &(a_tree)->rbt_nil);			\
 	}								\
     }									\
 } while (0)
@@ -405,14 +400,14 @@ struct {								\
 		/* rbp_i_c was the right child of rbp_i_p, so rotate  */\
 		/* left in order to maintain the left-leaning         */\
 		/* invariant.                                         */\
-		assert(rbp_right_get(a_type, a_field, rbp_i_p)		\
+		MOZ_ASSERT(rbp_right_get(a_type, a_field, rbp_i_p)	\
 		  == rbp_i_c);						\
 		rbp_right_set(a_type, a_field, rbp_i_p, rbp_i_t);	\
 		rbp_lean_left(a_type, a_field, rbp_i_p, rbp_i_u);	\
 		if (rbp_left_get(a_type, a_field, rbp_i_g) == rbp_i_p) {\
 		    rbp_left_set(a_type, a_field, rbp_i_g, rbp_i_u);	\
 		} else {						\
-		    assert(rbp_right_get(a_type, a_field, rbp_i_g)	\
+		    MOZ_ASSERT(rbp_right_get(a_type, a_field, rbp_i_g)	\
 		      == rbp_i_p);					\
 		    rbp_right_set(a_type, a_field, rbp_i_g, rbp_i_u);	\
 		}							\
@@ -421,7 +416,7 @@ struct {								\
 		if (rbp_i_cmp < 0) {					\
 		    rbp_i_c = rbp_left_get(a_type, a_field, rbp_i_p);	\
 		} else {						\
-		    assert(rbp_i_cmp > 0);				\
+		    MOZ_ASSERT(rbp_i_cmp > 0);				\
 		    rbp_i_c = rbp_right_get(a_type, a_field, rbp_i_p);	\
 		}							\
 		continue;						\
@@ -433,7 +428,7 @@ struct {								\
 	if (rbp_i_cmp < 0) {						\
 	    rbp_i_c = rbp_left_get(a_type, a_field, rbp_i_c);		\
 	} else {							\
-	    assert(rbp_i_cmp > 0);					\
+	    MOZ_ASSERT(rbp_i_cmp > 0);					\
 	    rbp_i_c = rbp_right_get(a_type, a_field, rbp_i_c);		\
 	}								\
     }									\
@@ -488,7 +483,7 @@ struct {								\
 	}								\
     } else {								\
 	if (rbp_r_cmp == 0) {						\
-	    assert((a_node) == rbp_r_c);				\
+	    MOZ_ASSERT((a_node) == rbp_r_c);				\
 	    if (rbp_right_get(a_type, a_field, rbp_r_c)			\
 	      == &(a_tree)->rbt_nil) {					\
 		/* Delete root node (which is also a leaf node).      */\
@@ -548,7 +543,7 @@ struct {								\
     }									\
     if (rbp_r_cmp != 0) {						\
 	while (true) {							\
-	    assert(rbp_r_p != &(a_tree)->rbt_nil);			\
+	    MOZ_ASSERT(rbp_r_p != &(a_tree)->rbt_nil);			\
 	    rbp_r_cmp = (a_cmp)((a_node), rbp_r_c);			\
 	    if (rbp_r_cmp < 0) {					\
 		rbp_r_t = rbp_left_get(a_type, a_field, rbp_r_c);	\
@@ -561,7 +556,7 @@ struct {								\
 			rbp_left_set(a_type, a_field, rbp_r_xp,		\
 			  rbp_r_c);					\
 		    } else {						\
-			assert(rbp_right_get(a_type, a_field,		\
+			MOZ_ASSERT(rbp_right_get(a_type, a_field,	\
 			  rbp_r_xp) == (a_node));			\
 			rbp_right_set(a_type, a_field, rbp_r_xp,	\
 			  rbp_r_c);					\
@@ -577,7 +572,7 @@ struct {								\
 			rbp_left_set(a_type, a_field, rbp_r_p,		\
 			  &(a_tree)->rbt_nil);				\
 		    } else {						\
-			assert(rbp_right_get(a_type, a_field, rbp_r_p)	\
+			MOZ_ASSERT(rbp_right_get(a_type, a_field, rbp_r_p)\
 			  == rbp_r_c);					\
 			rbp_right_set(a_type, a_field, rbp_r_p,		\
 			  &(a_tree)->rbt_nil);				\
@@ -605,7 +600,7 @@ struct {								\
 		/* Check whether to delete this node (it has to be    */\
 		/* the correct node and a leaf node).                 */\
 		if (rbp_r_cmp == 0) {					\
-		    assert((a_node) == rbp_r_c);			\
+		    MOZ_ASSERT((a_node) == rbp_r_c);			\
 		    if (rbp_right_get(a_type, a_field, rbp_r_c)		\
 		      == &(a_tree)->rbt_nil) {				\
 			/* Delete leaf node.                          */\
