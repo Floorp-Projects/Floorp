@@ -7,6 +7,7 @@ package org.mozilla.focus.web;
 
 import java.lang.ref.WeakReference;
 
+import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -72,13 +73,13 @@ public class BrowsingSession {
         blockedTrackers = 0;
     }
 
-    public void loadCustomTabConfig(final @NonNull SafeIntent intent) {
+    public void loadCustomTabConfig(final @NonNull Context context, final @NonNull SafeIntent intent) {
         if (!CustomTabConfig.isCustomTabIntent(intent)) {
             customTabConfig = null;
             return;
         }
 
-        customTabConfig = CustomTabConfig.parseCustomTabIntent(intent);
+        customTabConfig = CustomTabConfig.parseCustomTabIntent(context, intent);
     }
 
     public boolean isCustomTab() {

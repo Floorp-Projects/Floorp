@@ -10,4 +10,7 @@
          If we set -1dp, the UI breaks (i.e. we don't get match_parent). For some reason adding another
          redirection via an existing attribute works... -->
     <dimen name="firstrun_container_width">@dimen/match_parent</dimen>
+
+    <!-- The custom tabs spec defines a maximum close button size, we need to define this here to enforce that sizing. -->
+    <dimen name="customtabs_close_button_max_size">24dp</dimen>
 </resources>

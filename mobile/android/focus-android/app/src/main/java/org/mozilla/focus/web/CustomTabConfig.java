@@ -1,6 +1,7 @@
 package org.mozilla.focus.web;
 
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
@@ -11,6 +12,7 @@ import android.support.annotation.Nullable;
 import android.support.customtabs.CustomTabsIntent;
 import android.util.Log;
 
+import org.mozilla.focus.R;
 import org.mozilla.focus.utils.SafeBundle;
 import org.mozilla.focus.utils.SafeIntent;
 
@@ -72,16 +74,35 @@ public class CustomTabConfig {
         return intent.hasExtra(CustomTabsIntent.EXTRA_SESSION);
     }
 
-    /* package-private */ static CustomTabConfig parseCustomTabIntent(final @NonNull SafeIntent intent) {
+    private static @Nullable Bitmap getCloseButtonIcon(final Context context, final @NonNull SafeIntent intent) {
+        if (!intent.hasExtra(CustomTabsIntent.EXTRA_CLOSE_BUTTON_ICON)) {
+            return null;
+        }
+
+        final Parcelable closeButtonParcelable = intent.getParcelableExtra(CustomTabsIntent.EXTRA_CLOSE_BUTTON_ICON);
+        if (!(closeButtonParcelable instanceof Bitmap)) {
+            return null;
+        }
+
+        final Bitmap candidateIcon = (Bitmap) closeButtonParcelable;
+        final int maxSize = context.getResources().getDimensionPixelSize(R.dimen.customtabs_close_button_max_size);
+
+        if (candidateIcon.getWidth() <= maxSize &&
+                candidateIcon.getHeight() <= maxSize){
+            return candidateIcon;
+        } else {
+            candidateIcon.recycle();
+            return null;
+        }
+    }
+
+    /* package-private */ static CustomTabConfig parseCustomTabIntent(final @NonNull Context context, final @NonNull SafeIntent intent) {
         @ColorInt Integer toolbarColor = null;
         if (intent.hasExtra(CustomTabsIntent.EXTRA_TOOLBAR_COLOR)) {
             toolbarColor = intent.getIntExtra(CustomTabsIntent.EXTRA_TOOLBAR_COLOR, -1);
         }
 
-        Bitmap closeButtonIcon = null;
-        if (intent.hasExtra(CustomTabsIntent.EXTRA_CLOSE_BUTTON_ICON)) {
-            closeButtonIcon = intent.getParcelableExtra(CustomTabsIntent.EXTRA_CLOSE_BUTTON_ICON);
-        }
+        final Bitmap closeButtonIcon = getCloseButtonIcon(context, intent);
 
         // Custom tabs in Chrome defaults to hiding the URL bar. CustomTabsIntent.Builder only offers
         // enableUrlBarHiding() which sets this value to true, which would suggest that the default
