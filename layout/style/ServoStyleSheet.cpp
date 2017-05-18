@@ -226,8 +226,11 @@ CSSRuleList*
 ServoStyleSheet::GetCssRulesInternal(ErrorResult& aRv)
 {
   if (!mRuleList) {
+    EnsureUniqueInner();
+
     RefPtr<ServoCssRules> rawRules =
       Servo_StyleSheet_GetRules(Inner()->mSheet).Consume();
+    MOZ_ASSERT(rawRules);
     mRuleList = new ServoCSSRuleList(rawRules.forget());
     mRuleList->SetStyleSheet(this);
   }
