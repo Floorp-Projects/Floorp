@@ -297,8 +297,6 @@ printf_stderr(const char *fmt, ...)
   fclose(fp);
 }
 
-namespace {
-
 typedef NTSTATUS (NTAPI *LdrLoadDll_func) (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileName, PHANDLE handle);
 
 static LdrLoadDll_func stub_LdrLoadDll = 0;
@@ -332,7 +330,7 @@ private:
   void* mRealView;
 };
 
-DWORD
+static DWORD
 GetTimestamp(const wchar_t* path)
 {
   DWORD timestamp = 0;
@@ -730,9 +728,7 @@ continue_loading:
   return stub_LdrLoadDll(filePath, flags, moduleFileName, handle);
 }
 
-WindowsDllInterceptor NtDllIntercept;
-
-} // namespace
+static WindowsDllInterceptor NtDllIntercept;
 
 MFBT_API void
 DllBlocklist_Initialize(uint32_t aInitFlags)
