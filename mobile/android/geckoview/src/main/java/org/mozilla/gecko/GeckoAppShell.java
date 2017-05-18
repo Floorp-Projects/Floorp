@@ -634,19 +634,14 @@ public class GeckoAppShell
 
     @WrapForJNI(calledFrom = "gecko")
     private static void enableSensor(int aSensortype) {
-        GeckoInterface gi = getGeckoInterface();
-        if (gi == null) {
-            return;
-        }
-        SensorManager sm = (SensorManager)
+        final SensorManager sm = (SensorManager)
             getApplicationContext().getSystemService(Context.SENSOR_SERVICE);
 
         switch (aSensortype) {
         case GeckoHalDefines.SENSOR_GAME_ROTATION_VECTOR:
             if (gGameRotationVectorSensor == null) {
-                gGameRotationVectorSensor = sm.getDefaultSensor(15);
-                    // sm.getDefaultSensor(
-                    //     Sensor.TYPE_GAME_ROTATION_VECTOR); // API >= 18
+                gGameRotationVectorSensor = sm.getDefaultSensor(
+                        Sensor.TYPE_GAME_ROTATION_VECTOR);
             }
             if (gGameRotationVectorSensor != null) {
                 sm.registerListener(getSensorListener(),
@@ -750,11 +745,7 @@ public class GeckoAppShell
 
     @WrapForJNI(calledFrom = "gecko")
     private static void disableSensor(int aSensortype) {
-        GeckoInterface gi = getGeckoInterface();
-        if (gi == null)
-            return;
-
-        SensorManager sm = (SensorManager)
+        final SensorManager sm = (SensorManager)
             getApplicationContext().getSystemService(Context.SENSOR_SERVICE);
 
         switch (aSensortype) {
@@ -1642,8 +1633,6 @@ public class GeckoAppShell
 
     @WrapForJNI
     private static Class<?> loadPluginClass(String className, String libName) {
-        if (getGeckoInterface() == null)
-            return null;
         try {
             final String packageName = getPluginPackage(libName);
             final int contextFlags = Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY;
