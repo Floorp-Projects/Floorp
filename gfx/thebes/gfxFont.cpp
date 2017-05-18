@@ -2227,10 +2227,11 @@ gfxFont::RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint,
 
     aContextPaint->InitStrokeGeometry(aContext, devUnitsPerSVGUnit);
 
-    GetFontEntry()->RenderSVGGlyph(aContext, aGlyphId, aContextPaint);
+    bool rv = GetFontEntry()->RenderSVGGlyph(aContext, aGlyphId,
+                                             aContextPaint);
     aContext->Restore();
     aContext->NewPath();
-    return true;
+    return rv;
 }
 
 bool

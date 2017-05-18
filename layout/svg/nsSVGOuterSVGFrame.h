@@ -21,8 +21,6 @@ class nsSVGForeignObjectFrame;
 class nsSVGOuterSVGFrame final : public nsSVGDisplayContainerFrame
                                , public nsISVGSVGFrame
 {
-  typedef mozilla::image::imgDrawingParams imgDrawingParams;
-
   friend nsContainerFrame*
   NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
@@ -108,10 +106,10 @@ public:
   virtual void NotifyViewportOrTransformChanged(uint32_t aFlags) override;
 
   // nsSVGDisplayableFrame methods:
-  virtual void PaintSVG(gfxContext& aContext,
-                        const gfxMatrix& aTransform,
-                        imgDrawingParams& aImgParams,
-                        const nsIntRect* aDirtyRect = nullptr) override;
+  virtual DrawResult PaintSVG(gfxContext& aContext,
+                              const gfxMatrix& aTransform,
+                              const nsIntRect* aDirtyRect = nullptr,
+                              uint32_t aFlags = 0) override;
   virtual SVGBBox GetBBoxContribution(const Matrix &aToBBoxUserspace,
                                       uint32_t aFlags) override;
 

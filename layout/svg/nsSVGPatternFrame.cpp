@@ -376,7 +376,7 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
 
   // Delay checking NS_FRAME_DRAWING_AS_PAINTSERVER bit until here so we can
   // give back a clear surface if there's a loop
-  imgDrawingParams imgParams(aFlags);
+  DrawResult result = DrawResult::SUCCESS;
   if (!(patternWithChildren->GetStateBits() & NS_FRAME_DRAWING_AS_PAINTSERVER)) {
     AutoSetRestorePaintServerState paintServer(patternWithChildren);
     for (nsIFrame* kid = firstKid; kid;
@@ -392,7 +392,8 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
                PrependLocalTransformsTo(tm, eUserSpaceToParent);
       }
 
-      nsSVGUtils::PaintFrameWithEffects(kid, *ctx, tm, imgParams);
+      result &= nsSVGUtils::PaintFrameWithEffects(kid, *ctx, tm, nullptr,
+                                                  aFlags);
     }
   }
 
@@ -405,7 +406,7 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
 
   // caller now owns the surface
   RefPtr<SourceSurface> surf = dt->Snapshot();
-  return MakePair(imgParams.result, Move(surf));
+  return MakePair(result, Move(surf));
 }
 
 /* Will probably need something like this... */

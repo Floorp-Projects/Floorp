@@ -625,16 +625,17 @@ nsDisplayOuterSVG::Paint(nsDisplayListBuilder* aBuilder,
     nsLayoutUtils::PointToGfxPoint(viewportRect.TopLeft(), appUnitsPerDevPixel);
 
   aContext->ThebesContext()->Save();
-  imgDrawingParams imgParams(aBuilder->ShouldSyncDecodeImages()
-                             ? imgIContainer::FLAG_SYNC_DECODE
-                             : imgIContainer::FLAG_SYNC_DECODE_IF_FAST);
+  uint32_t flags = aBuilder->ShouldSyncDecodeImages()
+                  ? imgIContainer::FLAG_SYNC_DECODE
+                  : imgIContainer::FLAG_SYNC_DECODE_IF_FAST;
   // We include the offset of our frame and a scale from device pixels to user
   // units (i.e. CSS px) in the matrix that we pass to our children):
   gfxMatrix tm = nsSVGUtils::GetCSSPxToDevPxMatrix(mFrame) *
                    gfxMatrix::Translation(devPixelOffset);
-  nsSVGUtils::PaintFrameWithEffects(mFrame, *aContext->ThebesContext(), tm,
-                                    imgParams, &contentAreaDirtyRect);
-  nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, imgParams.result);
+  DrawResult result =
+    nsSVGUtils::PaintFrameWithEffects(mFrame, *aContext->ThebesContext(), tm,
+                                      &contentAreaDirtyRect, flags);
+  nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
   aContext->ThebesContext()->Restore();
 
 #if defined(DEBUG) && defined(SVG_DEBUG_PAINT_TIMING)
@@ -862,18 +863,18 @@ nsSVGOuterSVGFrame::NotifyViewportOrTransformChanged(uint32_t aFlags)
 //----------------------------------------------------------------------
 // nsSVGDisplayableFrame methods:
 
-void
+DrawResult
 nsSVGOuterSVGFrame::PaintSVG(gfxContext& aContext,
                              const gfxMatrix& aTransform,
-                             imgDrawingParams& aImgParams,
-                             const nsIntRect* aDirtyRect)
+                             const nsIntRect* aDirtyRect,
+                             uint32_t aFlags)
 {
   NS_ASSERTION(PrincipalChildList().FirstChild()->IsSVGOuterSVGAnonChildFrame() &&
                !PrincipalChildList().FirstChild()->GetNextSibling(),
                "We should have a single, anonymous, child");
   nsSVGOuterSVGAnonChildFrame *anonKid =
     static_cast<nsSVGOuterSVGAnonChildFrame*>(PrincipalChildList().FirstChild());
-  anonKid->PaintSVG(aContext, aTransform, aImgParams, aDirtyRect);
+  return anonKid->PaintSVG(aContext, aTransform, aDirtyRect, aFlags);
 }
 
 SVGBBox
