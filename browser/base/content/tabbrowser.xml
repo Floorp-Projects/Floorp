@@ -1841,21 +1841,13 @@
             if (!gMultiProcessBrowser)
               return this.updateBrowserRemoteness(aBrowser, false);
 
-            // If we're in a LargeAllocation process, we prefer switching back
-            // into a normal content process, as that way we can clean up the
-            // L-A process.
             let currentRemoteType = aBrowser.getAttribute("remoteType") || null;
-            let preferredRemoteType = currentRemoteType;
 
-            if (currentRemoteType == E10SUtils.LARGE_ALLOCATION_REMOTE_TYPE) {
-              preferredRemoteType = E10SUtils.DEFAULT_REMOTE_TYPE;
-            }
             aOptions.remoteType =
               E10SUtils.getRemoteTypeForURI(aURL,
                                             gMultiProcessBrowser,
-                                            preferredRemoteType,
-                                            aBrowser.currentURI,
-                                            aOptions.freshProcess);
+                                            currentRemoteType,
+                                            aBrowser.currentURI);
 
             // If this URL can't load in the current browser then flip it to the
             // correct type.
