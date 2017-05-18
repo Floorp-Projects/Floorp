@@ -599,7 +599,7 @@ public class Tabs implements BundleEventListener {
         }
 
         Tab parent = getTab(tab.getParentId());
-        if (parent != null) {
+        if (parent != null && parent.getType() == type) {
             // If the next tab is a sibling, switch to it. Otherwise go back to the parent.
             if (nextTab != null && nextTab.getParentId() == tab.getParentId())
                 return nextTab;
