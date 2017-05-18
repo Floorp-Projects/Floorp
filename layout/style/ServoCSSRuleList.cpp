@@ -75,8 +75,8 @@ void
 ServoCSSRuleList::SetStyleSheet(StyleSheet* aStyleSheet)
 {
   mStyleSheet = aStyleSheet ? aStyleSheet->AsServo() : nullptr;
-  EnumerateInstantiatedRules([aStyleSheet](css::Rule* rule) {
-    rule->SetStyleSheet(aStyleSheet);
+  EnumerateInstantiatedRules([this](css::Rule* rule) {
+    rule->SetStyleSheet(mStyleSheet);
   });
 }
 
