@@ -275,9 +275,9 @@ menuitem.bookmark-item {
   --urlbar-border-color: rgba(0,0,0,.3);
 }
 
-%ifdef MOZ_PHOTON_THEME
-
 %include ../shared/urlbar-searchbar.inc.css
+
+%ifdef MOZ_PHOTON_THEME
 
 #urlbar[focused="true"],
 .searchbar-textbox[focused="true"] {
