@@ -156,5 +156,16 @@ WebRenderTextureHost::GetRGBStride()
   return ImageDataSerializer::ComputeRGBStride(format, GetSize().width);
 }
 
+void
+WebRenderTextureHost::AddWRImage(wr::WebRenderAPI* aAPI,
+                                 const wr::ImageKey& aImageKey,
+                                 const wr::ExternalImageId& aExtID)
+{
+  MOZ_ASSERT(mWrappedTextureHost);
+  MOZ_ASSERT(mExternalImageId == aExtID);
+
+  mWrappedTextureHost->AddWRImage(aAPI, aImageKey, aExtID);
+}
+
 } // namespace layers
 } // namespace mozilla

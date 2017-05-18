@@ -36,6 +36,10 @@ namespace ipc {
 class Shmem;
 } // namespace ipc
 
+namespace wr {
+class WebRenderAPI;
+}
+
 namespace layers {
 
 class BufferDescriptor;
@@ -591,6 +595,15 @@ public:
   virtual MacIOSurfaceTextureHostOGL* AsMacIOSurfaceTextureHost() { return nullptr; }
   virtual WebRenderTextureHost* AsWebRenderTextureHost() { return nullptr; }
 
+  // Add all necessary textureHost informations to WebrenderAPI. Then, WR could
+  // use these informations to compose this textureHost.
+  virtual void AddWRImage(wr::WebRenderAPI* aAPI,
+                          const wr::ImageKey& aImageKey,
+                          const wr::ExternalImageId& aExtID)
+  {
+    MOZ_ASSERT_UNREACHABLE("No AddWRImage() implementation for this TextureHost type.");
+  }
+
 protected:
   void ReadUnlock();
 
@@ -677,6 +690,10 @@ public:
   virtual BufferTextureHost* AsBufferTextureHost() override { return this; }
 
   const BufferDescriptor& GetBufferDescriptor() const { return mDescriptor; }
+
+  virtual void AddWRImage(wr::WebRenderAPI* aAPI,
+                          const wr::ImageKey& aImageKey,
+                          const wr::ExternalImageId& aExtID) override;
 
 protected:
   bool Upload(nsIntRegion *aRegion = nullptr);

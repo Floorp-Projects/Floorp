@@ -62,6 +62,10 @@ public:
     return mSurface;
   }
 
+  virtual void AddWRImage(wr::WebRenderAPI* aAPI,
+                          const wr::ImageKey& aImageKey,
+                          const wr::ExternalImageId& aExtID) override;
+
 protected:
   GLTextureSource* CreateTextureSourceForPlane(size_t aPlane);
 

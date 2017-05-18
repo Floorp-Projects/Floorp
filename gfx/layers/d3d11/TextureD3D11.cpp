@@ -14,6 +14,7 @@
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
+#include "mozilla/webrender/WebRenderAPI.h"
 
 namespace mozilla {
 
@@ -854,6 +855,14 @@ DXGITextureHostD3D11::BindTextureSource(CompositableTextureSourceRef& aTexture)
   return !!aTexture;
 }
 
+void
+DXGITextureHostD3D11::AddWRImage(wr::WebRenderAPI* aAPI,
+                                 const wr::ImageKey& aImageKey,
+                                 const wr::ExternalImageId& aExtID)
+{
+  MOZ_ASSERT_UNREACHABLE("No AddWRImage() implementation for this DXGITextureHostD3D11 type.");
+}
+
 DXGIYCbCrTextureHostD3D11::DXGIYCbCrTextureHostD3D11(TextureFlags aFlags,
   const SurfaceDescriptorDXGIYCbCr& aDescriptor)
   : TextureHost(aFlags)
@@ -985,6 +994,14 @@ DXGIYCbCrTextureHostD3D11::BindTextureSource(CompositableTextureSourceRef& aText
   MOZ_ASSERT(mTextureSources[0] && mTextureSources[1] && mTextureSources[2]);
   aTexture = mTextureSources[0].get();
   return !!aTexture;
+}
+
+void
+DXGIYCbCrTextureHostD3D11::AddWRImage(wr::WebRenderAPI* aAPI,
+                                      const wr::ImageKey& aImageKey,
+                                      const wr::ExternalImageId& aExtID)
+{
+  MOZ_ASSERT_UNREACHABLE("No AddWRImage() implementation for this DXGIYCbCrTextureHostD3D11 type.");
 }
 
 bool
