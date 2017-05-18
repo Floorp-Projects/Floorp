@@ -1140,35 +1140,17 @@ load_acquire_z(size_t *p)
  */
 #define	UMAX2S_BUFSIZE	65
 char *
-umax2s(uintmax_t x, unsigned base, char *s)
+umax2s(uintmax_t x, char *s)
 {
 	unsigned i;
 
 	i = UMAX2S_BUFSIZE - 1;
 	s[i] = '\0';
-	switch (base) {
-	case 10:
-		do {
-			i--;
-			s[i] = "0123456789"[x % 10];
-			x /= 10;
-		} while (x > 0);
-		break;
-	case 16:
-		do {
-			i--;
-			s[i] = "0123456789abcdef"[x & 0xf];
-			x >>= 4;
-		} while (x > 0);
-		break;
-	default:
-		do {
-			i--;
-			s[i] = "0123456789abcdefghijklmnopqrstuvwxyz"[x % base];
-			x /= base;
-		} while (x > 0);
-	}
-
+	do {
+		i--;
+		s[i] = "0123456789"[x % 10];
+		x /= 10;
+	} while (x > 0);
 	return (&s[i]);
 }
 
@@ -4459,20 +4441,20 @@ malloc_print_stats(void)
 		_malloc_message(opt_zero ? "Z" : "z", "", "", "");
 		_malloc_message("\n", "", "", "");
 
-		_malloc_message("Max arenas: ", umax2s(narenas, 10, s), "\n",
+		_malloc_message("Max arenas: ", umax2s(narenas, s), "\n",
 		    "");
-		_malloc_message("Pointer size: ", umax2s(sizeof(void *), 10, s),
+		_malloc_message("Pointer size: ", umax2s(sizeof(void *), s),
 		    "\n", "");
-		_malloc_message("Quantum size: ", umax2s(quantum, 10, s), "\n",
+		_malloc_message("Quantum size: ", umax2s(quantum, s), "\n",
 		    "");
-		_malloc_message("Max small size: ", umax2s(small_max, 10, s),
+		_malloc_message("Max small size: ", umax2s(small_max, s),
 		    "\n", "");
 		_malloc_message("Max dirty pages per arena: ",
-		    umax2s(opt_dirty_max, 10, s), "\n", "");
+		    umax2s(opt_dirty_max, s), "\n", "");
 
-		_malloc_message("Chunk size: ", umax2s(chunksize, 10, s), "",
+		_malloc_message("Chunk size: ", umax2s(chunksize, s), "",
 		    "");
-		_malloc_message(" (2^", umax2s(opt_chunk_2pow, 10, s), ")\n",
+		_malloc_message(" (2^", umax2s(opt_chunk_2pow, s), ")\n",
 		    "");
 
 		{
