@@ -140,9 +140,12 @@ public class ActionBarPresenter {
         btn.setScaleType(ImageView.ScaleType.FIT_CENTER);
 
         if (tint) {
-            DrawableCompat.setTint(icon, mTextPrimaryColor);
+            Drawable wrapped = DrawableCompat.wrap(icon);
+            DrawableCompat.setTint(wrapped, mTextPrimaryColor);
+            btn.setImageDrawable(wrapped);
+        } else {
+            btn.setImageDrawable(icon);
         }
-        btn.setImageDrawable(icon);
 
         // menu id does not matter here. We can directly bind callback to the returned-view.
         final MenuItem item = menu.add(Menu.NONE, -1, Menu.NONE, "");
@@ -188,8 +191,9 @@ public class ActionBarPresenter {
                 .getResources()
                 .getDrawable(R.drawable.ic_close_light);
 
-        DrawableCompat.setTint(icon, mTextPrimaryColor);
-        mActionBar.setHomeAsUpIndicator(icon);
+        Drawable wrapped = DrawableCompat.wrap(icon);
+        DrawableCompat.setTint(wrapped, mTextPrimaryColor);
+        mActionBar.setHomeAsUpIndicator(wrapped);
     }
 
     /**
