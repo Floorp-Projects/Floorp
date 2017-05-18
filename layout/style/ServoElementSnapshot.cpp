@@ -45,6 +45,12 @@ ServoElementSnapshot::AddAttrs(Element* aElement)
     mAttrs.AppendElement(ServoAttrSnapshot(*attrName, *attrValue));
   }
   mContains |= Flags::Attributes;
+  if (aElement->HasID()) {
+    mContains |= Flags::Id;
+  }
+  if (aElement->MayHaveClass()) {
+    mContains |= Flags::MaybeClass;
+  }
 }
 
 } // namespace mozilla
