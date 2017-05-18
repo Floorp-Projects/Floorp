@@ -183,4 +183,18 @@ add_task(async function() {
     searchParam: "enable-actions",
     matches: [ makeSearchMatch("123.12/12.1", { heuristic: true }) ]
   });
+
+  do_print("access resource:///modules");
+  await check_autocomplete({
+      search: "resource:///modules",
+    searchParam: "enable-actions",
+    matches: [ makeVisitMatch("resource:///modules", "resource:///modules", { heuristic: true }) ]
+  });
+
+  do_print("access resource://app/modules");
+  await check_autocomplete({
+      search: "resource://app/modules",
+    searchParam: "enable-actions",
+    matches: [ makeVisitMatch("resource://app/modules", "resource://app/modules", { heuristic: true }) ]
+  });
 });
