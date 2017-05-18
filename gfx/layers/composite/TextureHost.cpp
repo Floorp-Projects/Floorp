@@ -558,9 +558,10 @@ BufferTextureHost::Unlock()
 
 void
 BufferTextureHost::AddWRImage(wr::WebRenderAPI* aAPI,
-                              const wr::ImageKey& aImageKey,
+                              Range<const wr::ImageKey>& aImageKeys,
                               const wr::ExternalImageId& aExtID)
 {
+  MOZ_ASSERT(aImageKeys.length() == 1);
   // XXX handling YUV
   gfx::SurfaceFormat wrFormat =
       (GetFormat() == gfx::SurfaceFormat::YUV) ? gfx::SurfaceFormat::B8G8R8A8
@@ -577,7 +578,7 @@ BufferTextureHost::AddWRImage(wr::WebRenderAPI* aAPI,
   }
 
   wr::ImageDescriptor descriptor(GetSize(), wrStride, wrFormat);
-  aAPI->AddExternalImageBuffer(aImageKey,
+  aAPI->AddExternalImageBuffer(aImageKeys[0],
                                descriptor,
                                aExtID);
 }
