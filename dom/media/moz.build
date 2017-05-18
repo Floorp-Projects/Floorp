@@ -53,6 +53,9 @@ DIRS += [
 if CONFIG['MOZ_ANDROID_OMX']:
     DIRS += ['android']
 
+if CONFIG['MOZ_ANDROID_HLS_SUPPORT']:
+    DIRS += ['hls']
+
 if CONFIG['MOZ_FMP4']:
     DIRS += ['fmp4']
 
