@@ -95,6 +95,8 @@ DEFAULTS = dict(
         'browser.newtabpage.directory.source':
             '${webserver}/directoryLinks.json',
         'browser.newtabpage.introShown': True,
+        'browser.safebrowsing.downloads.remote.url':
+            'http://127.0.0.1/safebrowsing-dummy/downloads',
         'browser.safebrowsing.provider.google.gethashURL':
             'http://127.0.0.1/safebrowsing-dummy/gethash',
         'browser.safebrowsing.provider.google.updateURL':
@@ -111,7 +113,6 @@ DEFAULTS = dict(
             'http://127.0.0.1/trackingprotection/tour',
         'browser.safebrowsing.phishing.enabled': False,
         'browser.safebrowsing.malware.enabled': False,
-        'browser.safebrowsing.forbiddenURIs.enabled': False,
         'browser.safebrowsing.blockedURIs.enabled': False,
         'privacy.trackingprotection.enabled': False,
         'privacy.trackingprotection.pbmode.enabled': False,
