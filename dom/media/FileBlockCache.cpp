@@ -23,7 +23,6 @@ LazyLogModule gFileBlockCacheLog("FileBlockCache");
 void
 FileBlockCache::SetCacheFile(PRFileDesc* aFD)
 {
-  MOZ_ASSERT(NS_IsMainThread());
   LOG("SetFD(aFD=%p) mIsOpen=%d", aFD, mIsOpen);
 
   if (!aFD) {
@@ -55,8 +54,6 @@ nsresult
 FileBlockCache::Init()
 {
   LOG("Init()");
-
-  MOZ_ASSERT(NS_IsMainThread());
 
   MonitorAutoLock mon(mDataMonitor);
   nsresult rv = NS_NewNamedThread("FileBlockCache",
@@ -118,8 +115,6 @@ FileBlockCache::~FileBlockCache()
 void FileBlockCache::Close()
 {
   LOG("Close()");
-
-  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
   MonitorAutoLock mon(mDataMonitor);
   if (!mIsOpen) {
@@ -388,7 +383,6 @@ nsresult FileBlockCache::Read(int64_t aOffset,
 
 nsresult FileBlockCache::MoveBlock(int32_t aSourceBlockIndex, int32_t aDestBlockIndex)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   MonitorAutoLock mon(mDataMonitor);
 
   if (!mIsOpen)
