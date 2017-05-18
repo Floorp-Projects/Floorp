@@ -90,10 +90,11 @@ Sampler::Disable(PSLockRef aLock)
 {
 }
 
+template<typename Func>
 void
 Sampler::SuspendAndSampleAndResumeThread(PSLockRef aLock,
-                                         TickController& aController,
-                                         TickSample& aSample)
+                                         TickSample& aSample,
+                                         const Func& aDoSample)
 {
   HANDLE profiled_thread = aSample.mPlatformData->ProfiledThread();
   if (profiled_thread == nullptr) {
@@ -149,7 +150,7 @@ Sampler::SuspendAndSampleAndResumeThread(PSLockRef aLock,
 
   aSample.mContext = &context;
 
-  aController.Tick(aLock, aSample);
+  aDoSample();
 
   //----------------------------------------------------------------//
   // Resume the target thread.

@@ -300,10 +300,11 @@ Sampler::Disable(PSLockRef aLock)
   sigaction(SIGPROF, &mOldSigprofHandler, 0);
 }
 
+template<typename Func>
 void
 Sampler::SuspendAndSampleAndResumeThread(PSLockRef aLock,
-                                         TickController& aController,
-                                         TickSample& aSample)
+                                         TickSample& aSample,
+                                         const Func& aDoSample)
 {
   // Only one sampler thread can be sampling at once.  So we expect to have
   // complete control over |sSigHandlerCoordinator|.
@@ -358,7 +359,7 @@ Sampler::SuspendAndSampleAndResumeThread(PSLockRef aLock,
   // Extract the current PC and sp.
   FillInSample(aSample, &sSigHandlerCoordinator->mUContext);
 
-  aController.Tick(aLock, aSample);
+  aDoSample();
 
   //----------------------------------------------------------------//
   // Resume the target thread.
