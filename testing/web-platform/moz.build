@@ -10,7 +10,6 @@ WEB_PLATFORM_TESTS_MANIFESTS += [
 ]
 
 TEST_HARNESS_FILES['web-platform'] += [
-    'harness/**',
     'outbound/**',
     'runtests.py',
     'wptrunner.ini'
