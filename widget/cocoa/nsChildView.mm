@@ -1284,9 +1284,7 @@ nsChildView::PostHandleKeyEvent(mozilla::WidgetKeyboardEvent* aEvent)
   // not handled we give menu items a chance to act. This allows for handling of
   // custom shortcuts. Note that existing shortcuts cannot be reassigned yet and
   // will have been handled by keyDown: before we get here.
-  NSEvent* cocoaEvent =
-    [sNativeKeyEventsMap objectForKey:@(aEvent->mUniqueId)];
-  [sNativeKeyEventsMap removeObjectForKey:@(aEvent->mUniqueId)];
+  NSEvent* cocoaEvent = [sNativeKeyEventsMap objectForKey:@(aEvent->mUniqueId)];
   if (!cocoaEvent) {
     return;
   }
@@ -1294,6 +1292,7 @@ nsChildView::PostHandleKeyEvent(mozilla::WidgetKeyboardEvent* aEvent)
   if (SendEventToNativeMenuSystem(cocoaEvent)) {
     aEvent->PreventDefault();
   }
+  [sNativeKeyEventsMap removeObjectForKey:@(aEvent->mUniqueId)];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
