@@ -14,6 +14,19 @@ class nsIInputStream;
 namespace mozilla {
 namespace dom {
 
+class NS_NO_VTABLE IPCBlobInputStreamParentCallback
+{
+public:
+  virtual void
+  ActorDestroyed(const nsID& aID) = 0;
+
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+
+protected:
+  virtual ~IPCBlobInputStreamParentCallback()
+  { }
+};
+
 class IPCBlobInputStreamParent final
   : public mozilla::ipc::PIPCBlobInputStreamParent
 {
@@ -41,6 +54,9 @@ public:
     return mSize;
   }
 
+  void
+  SetCallback(IPCBlobInputStreamParentCallback* aCallback);
+
   mozilla::ipc::IPCResult
   RecvStreamNeeded() override;
 
@@ -61,6 +77,8 @@ private:
   // the parent actor alive. The pointers will be nullified in ActorDestroyed.
   nsIContentParent* mContentManager;
   mozilla::ipc::PBackgroundParent* mPBackgroundManager;
+
+  RefPtr<IPCBlobInputStreamParentCallback> mCallback;
 };
 
 } // namespace dom

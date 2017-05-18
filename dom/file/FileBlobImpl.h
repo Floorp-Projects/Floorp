@@ -60,6 +60,16 @@ public:
     mContentType = aType;
   }
 
+  int64_t GetFileId() override
+  {
+    return mFileId;
+  }
+
+  void SetFileId(int64_t aFileId)
+  {
+    mFileId = aFileId;
+  }
+
 protected:
   virtual ~FileBlobImpl() = default;
 
@@ -74,6 +84,7 @@ private:
 
   nsCOMPtr<nsIFile> mFile;
   bool mWholeFile;
+  int64_t mFileId;
 };
 
 } // namespace dom
