@@ -210,9 +210,6 @@ typedef long ssize_t;
 #ifndef MOZ_MEMORY_SOLARIS
 #include <sys/cdefs.h>
 #endif
-#ifndef __DECONST
-#  define __DECONST(type, var)	((type)(uintptr_t)(const void *)(var))
-#endif
 #include <sys/mman.h>
 #ifndef MADV_FREE
 #  define MADV_FREE	MADV_DONTNEED
@@ -318,10 +315,6 @@ static pthread_key_t tlsIndex;
 
 #if defined(MOZ_MEMORY_SOLARIS) && defined(MAP_ALIGN) && !defined(JEMALLOC_NEVER_USES_MAP_ALIGN)
 #define JEMALLOC_USES_MAP_ALIGN	 /* Required on Solaris 10. Might improve performance elsewhere. */
-#endif
-
-#ifndef __DECONST
-#define __DECONST(type, var) ((type)(uintptr_t)(const void *)(var))
 #endif
 
 #ifdef MOZ_MEMORY_WINDOWS
@@ -3821,7 +3814,7 @@ isalloc(const void *ptr)
 		malloc_mutex_lock(&huge_mtx);
 
 		/* Extract from tree of huge allocations. */
-		key.addr = __DECONST(void *, ptr);
+		key.addr = const_cast<void*>(ptr);
 		node = extent_tree_ad_search(&huge, &key);
 		RELEASE_ASSERT(node != NULL);
 
@@ -4403,7 +4396,7 @@ huge_ralloc(void *ptr, size_t size, size_t oldsize)
 
 			/* Update recorded size. */
 			malloc_mutex_lock(&huge_mtx);
-			key.addr = __DECONST(void *, ptr);
+			key.addr = const_cast<void*>(ptr);
 			node = extent_tree_ad_search(&huge, &key);
 			assert(node != NULL);
 			assert(node->size == oldsize);
@@ -4428,7 +4421,7 @@ huge_ralloc(void *ptr, size_t size, size_t oldsize)
                         /* Update recorded size. */
                         extent_node_t *node, key;
                         malloc_mutex_lock(&huge_mtx);
-                        key.addr = __DECONST(void *, ptr);
+                        key.addr = const_cast<void*>(ptr);
                         node = extent_tree_ad_search(&huge, &key);
                         assert(node != NULL);
                         assert(node->size == oldsize);
