@@ -910,17 +910,17 @@
             let sizedIconUrl = browser.mIconURL || "";
             if (sizedIconUrl != aTab.getAttribute("image")) {
               if (sizedIconUrl) {
-                aTab.setAttribute("image", sizedIconUrl);
                 if (!browser.mIconLoadingPrincipal ||
                     !browser.mIconLoadingPrincipal.equals(loadingPrincipal)) {
                   aTab.setAttribute("iconLoadingPrincipal",
                     this.serializationHelper.serializeToString(loadingPrincipal));
                   browser.mIconLoadingPrincipal = loadingPrincipal;
                 }
+                aTab.setAttribute("image", sizedIconUrl);
               } else {
-                aTab.removeAttribute("image");
                 aTab.removeAttribute("iconLoadingPrincipal");
                 delete browser.mIconLoadingPrincipal;
+                aTab.removeAttribute("image");
               }
               this._tabAttrModified(aTab, ["image"]);
             }
