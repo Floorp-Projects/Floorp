@@ -46,7 +46,7 @@ public:
 
 class FTUserFontData {
 public:
-    NS_INLINE_DECL_REFCOUNTING(FTUserFontData)
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FTUserFontData)
 
     explicit FTUserFontData(FT_Face aFace, const uint8_t* aData)
         : mFace(aFace), mFontData(aData)
@@ -58,7 +58,7 @@ public:
 private:
     ~FTUserFontData()
     {
-        FT_Done_Face(mFace);
+        mozilla::gfx::Factory::ReleaseFTFace(mFace);
         if (mFontData) {
             NS_Free((void*)mFontData);
         }
@@ -66,23 +66,6 @@ private:
 
     FT_Face        mFace;
     const uint8_t *mFontData;
-};
-
-class FTUserFontDataRef {
-public:
-    explicit FTUserFontDataRef(FTUserFontData *aUserFontData)
-        : mUserFontData(aUserFontData)
-    {
-    }
-
-    static void Destroy(void* aData) {
-        FTUserFontDataRef* aUserFontDataRef =
-            static_cast<FTUserFontDataRef*>(aData);
-        delete aUserFontDataRef;
-    }
-
-private:
-    RefPtr<FTUserFontData> mUserFontData;
 };
 
 // The names for the font entry and font classes should really

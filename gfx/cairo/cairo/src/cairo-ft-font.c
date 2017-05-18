@@ -104,6 +104,10 @@ static setLcdFilterFunc setLcdFilter;
  */
 #define MAX_FONT_SIZE 1000
 
+extern FT_Face mozilla_NewFTFace(FT_Library aFTLibrary, const char* aFileName, int aFaceIndex);
+extern FT_Face mozilla_NewFTFaceFromData(FT_Library aFTLibrary, const uint8_t* aData, size_t aDataSize, int aFaceIndex);
+extern void mozilla_ReleaseFTFace(FT_Face aFace);
+
 /**
  * SECTION:cairo-ft
  * @Title: FreeType Fonts
@@ -243,7 +247,7 @@ _font_map_release_face_lock_held (cairo_ft_unscaled_font_map_t *font_map,
 				  cairo_ft_unscaled_font_t *unscaled)
 {
     if (unscaled->face) {
-	FT_Done_Face (unscaled->face);
+	mozilla_ReleaseFTFace (unscaled->face);
 	unscaled->face = NULL;
 	unscaled->have_scale = FALSE;
 
@@ -669,10 +673,8 @@ _cairo_ft_unscaled_font_lock_face (cairo_ft_unscaled_font_t *unscaled)
     }
     _cairo_ft_unscaled_font_map_unlock ();
 
-    if (FT_New_Face (font_map->ft_library,
-		     unscaled->filename,
-		     unscaled->id,
-		     &face) != FT_Err_Ok)
+    face = mozilla_NewFTFace (font_map->ft_library, unscaled->filename, unscaled->id);
+    if (!face)
     {
 	unscaled->lock_count--;
 	CAIRO_MUTEX_UNLOCK (unscaled->mutex);

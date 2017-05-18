@@ -448,7 +448,7 @@ gfxFontconfigFontEntry::MaybeReleaseFTFace()
     // only close out FT_Face for system fonts, not for data fonts
     if (!mIsDataUserFont) {
         if (mFTFace) {
-            FT_Done_Face(mFTFace);
+            Factory::ReleaseFTFace(mFTFace);
             mFTFace = nullptr;
         }
         mFTFaceInitialized = false;
@@ -652,6 +652,12 @@ PrepareFontOptions(FcPattern* aPattern,
     cairo_font_options_set_antialias(aFontOptions, antialias);
 }
 
+static void
+ReleaseFTUserFontData(void* aData)
+{
+  static_cast<FTUserFontData*>(aData)->Release();
+}
+
 cairo_scaled_font_t*
 gfxFontconfigFontEntry::CreateScaledFont(FcPattern* aRenderPattern,
                                          gfxFloat aAdjustedSize,
@@ -681,10 +687,15 @@ gfxFontconfigFontEntry::CreateScaledFont(FcPattern* aRenderPattern,
         // so that it gets deleted whenever cairo decides
         NS_ASSERTION(mFTFace, "FT_Face is null when setting user data");
         NS_ASSERTION(mUserFontData, "user font data is null when setting user data");
-        cairo_font_face_set_user_data(face,
-                                      &sFcFontlistUserFontDataKey,
-                                      new FTUserFontDataRef(mUserFontData),
-                                      FTUserFontDataRef::Destroy);
+        if (cairo_font_face_set_user_data(face,
+                                          &sFcFontlistUserFontDataKey,
+                                          mUserFontData,
+                                          ReleaseFTUserFontData) != CAIRO_STATUS_SUCCESS) {
+            NS_WARNING("Failed binding FTUserFontData to Cairo font face");
+            cairo_font_face_destroy(face);
+            return nullptr;
+        }
+        mUserFontData.get()->AddRef();
     }
 
     cairo_scaled_font_t *scaledFont = nullptr;
@@ -933,8 +944,8 @@ gfxFontconfigFontEntry::CopyFontTable(uint32_t aTableTag,
         if (FcPatternGetInteger(mFontPattern, FC_INDEX, 0, &index) != FcResultMatch) {
             index = 0; // default to 0 if not found in pattern
         }
-        if (FT_New_Face(gfxFcPlatformFontList::GetFTLibrary(),
-                        (const char*)filename, index, &mFTFace) != 0) {
+        mFTFace = Factory::NewFTFace(nullptr, ToCharPtr(filename), index);
+        if (!mFTFace) {
             return NS_ERROR_FAILURE;
         }
     }
@@ -1433,16 +1444,13 @@ gfxFcPlatformFontList::MakePlatformFont(const nsAString& aFontName,
                                         const uint8_t* aFontData,
                                         uint32_t aLength)
 {
-    FT_Face face;
-    FT_Error error =
-        FT_New_Memory_Face(gfxFcPlatformFontList::GetFTLibrary(),
-                           aFontData, aLength, 0, &face);
-    if (error != FT_Err_Ok) {
+    FT_Face face = Factory::NewFTFaceFromData(nullptr, aFontData, aLength, 0);
+    if (!face) {
         NS_Free((void*)aFontData);
         return nullptr;
     }
     if (FT_Err_Ok != FT_Select_Charmap(face, FT_ENCODING_UNICODE)) {
-        FT_Done_Face(face);
+        Factory::ReleaseFTFace(face);
         NS_Free((void*)aFontData);
         return nullptr;
     }
