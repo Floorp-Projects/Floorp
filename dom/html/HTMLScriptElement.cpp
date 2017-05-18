@@ -234,13 +234,14 @@ HTMLScriptElement::SetNoModule(bool aValue, ErrorResult& aRv)
 
 nsresult
 HTMLScriptElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
-                                const nsAttrValue* aValue, bool aNotify)
+                                const nsAttrValue* aValue,
+                                const nsAttrValue* aOldValue, bool aNotify)
 {
   if (nsGkAtoms::async == aName && kNameSpaceID_None == aNamespaceID) {
     mForceAsync = false;
   }
   return nsGenericHTMLElement::AfterSetAttr(aNamespaceID, aName, aValue,
-                                            aNotify);
+                                            aOldValue, aNotify);
 }
 
 NS_IMETHODIMP
