@@ -818,6 +818,21 @@ ScriptLoader::IsBytecodeCacheEnabled()
   return sExposeTestInterfaceEnabled;
 }
 
+/* static */ bool
+ScriptLoader::IsEagerBytecodeCache()
+{
+  // When testing, we want to force use of the bytecode cache.
+  static bool sEagerBytecodeCache = false;
+  static bool sForceBytecodeCachePrefCached = false;
+  if (!sForceBytecodeCachePrefCached) {
+    sForceBytecodeCachePrefCached = true;
+    Preferences::AddBoolVarCache(&sEagerBytecodeCache,
+                                 "dom.script_loader.bytecode_cache.eager",
+                                 false);
+  }
+  return sEagerBytecodeCache;
+}
+
 nsresult
 ScriptLoader::RestartLoad(ScriptLoadRequest* aRequest)
 {
@@ -1864,19 +1879,10 @@ ScriptLoader::FillCompileOptionsForRequest(const AutoJSAPI&jsapi,
     aOptions->setElement(&elementVal.toObject());
   }
 
-  // When testing, we want to force use of the bytecode cache.
-  static bool sForceBytecodeCacheEnabled = false;
-  static bool sForceBytecodeCachePrefCached = false;
-  if (!sForceBytecodeCachePrefCached) {
-    sForceBytecodeCachePrefCached = true;
-    Preferences::AddBoolVarCache(&sForceBytecodeCacheEnabled,
-                                 "dom.script_loader.force_bytecode_cache",
-                                 false);
-  }
   // At the moment, the bytecode cache is only triggered if a script is large
   // enough to be parsed out of the main thread.  Thus, for testing purposes, we
   // force parsing any script out of the main thread.
-  if (sForceBytecodeCacheEnabled) {
+  if (IsEagerBytecodeCache()) {
     aOptions->forceAsync = true;
   }
 
