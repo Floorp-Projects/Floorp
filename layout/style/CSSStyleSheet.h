@@ -183,7 +183,7 @@ private:
 protected:
   virtual ~CSSStyleSheet();
 
-  void ClearRuleCascades();
+  void ClearRuleCascadesInternal() override;
 
   // Add the namespace mapping from this @namespace rule to our namespace map
   nsresult RegisterNamespaceRule(css::Rule* aRule);
