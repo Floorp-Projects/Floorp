@@ -609,7 +609,7 @@ OmxDataDecoder::FillCodecConfigDataToOmx()
   if (mTrackInfo->IsAudio()) {
     csc = mTrackInfo->GetAsAudioInfo()->mCodecSpecificConfig;
   } else if (mTrackInfo->IsVideo()) {
-    csc = mTrackInfo->GetAsVideoInfo()->mCodecSpecificConfig;
+    csc = mTrackInfo->GetAsVideoInfo()->mExtraData;
   }
 
   MOZ_RELEASE_ASSERT(csc);
