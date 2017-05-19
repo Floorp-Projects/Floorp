@@ -2569,9 +2569,9 @@ profiler_resume()
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  PSAutoLock lock(gPSMutex);
-
   {
+    PSAutoLock lock(gPSMutex);
+
     if (!ActivePS::Exists(lock)) {
       return;
     }
