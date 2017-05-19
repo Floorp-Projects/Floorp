@@ -374,6 +374,7 @@ function ignoreContents(entry)
         "Gecko_GetOrCreateFinalKeyframe",
         "Gecko_NewStyleQuoteValues",
         "Gecko_NewCSSValueSharedList",
+        "Gecko_NewNoneTransform",
         "Gecko_NewGridTemplateAreasValue",
         /nsCSSValue::SetCalcValue/,
         /CSSValueSerializeCalcOps::Append/,
