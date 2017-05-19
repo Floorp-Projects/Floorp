@@ -1878,9 +1878,9 @@ TabChild::RecvPluginEvent(const WidgetPluginEvent& aEvent)
 }
 
 void
-TabChild::RequestNativeKeyBindings(nsIWidget::NativeKeyBindingsType aType,
-                                   const WidgetKeyboardEvent& aEvent,
-                                   nsTArray<CommandInt>& aCommands)
+TabChild::RequestEditCommands(nsIWidget::NativeKeyBindingsType aType,
+                              const WidgetKeyboardEvent& aEvent,
+                              nsTArray<CommandInt>& aCommands)
 {
   MOZ_ASSERT(aCommands.IsEmpty());
 
@@ -1889,27 +1889,16 @@ TabChild::RequestNativeKeyBindings(nsIWidget::NativeKeyBindingsType aType,
     return;
   }
 
-  // TODO: Should retrieve edit commands only for specific type.
-  MaybeNativeKeyBinding maybeBindings;
-  if (!SendRequestNativeKeyBindings(aEvent, &maybeBindings) ||
-      maybeBindings.type() != MaybeNativeKeyBinding::TNativeKeyBinding) {
-    return;
-  }
-
-  const NativeKeyBinding& bindings = maybeBindings;
   switch (aType) {
     case nsIWidget::NativeKeyBindingsForSingleLineEditor:
-      aCommands = bindings.singleLineCommands();
-      break;
     case nsIWidget::NativeKeyBindingsForMultiLineEditor:
-      aCommands = bindings.multiLineCommands();
-      break;
     case nsIWidget::NativeKeyBindingsForRichTextEditor:
-      aCommands = bindings.richTextCommands();
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Invalid native key bindings type");
   }
+
+  SendRequestNativeKeyBindings(aType, aEvent, &aCommands);
 }
 
 mozilla::ipc::IPCResult
