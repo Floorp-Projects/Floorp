@@ -481,6 +481,11 @@ nsHttpHandler::Init()
                                 "net:current-toplevel-outer-content-windowid",
                                 true);
 
+        if (mFastOpenSupported) {
+            obsService->AddObserver(this, "captive-portal-login", true);
+            obsService->AddObserver(this, "captive-portal-login-success", true);
+        }
+
         // disabled as its a nop right now
         // obsService->AddObserver(this, "net:failed-to-process-uri-content", true);
     }
@@ -648,7 +653,6 @@ nsHttpHandler::IncrementFastOpenConsecutiveFailureCounter()
         if (mFastOpenConsecutiveFailureCounter == mFastOpenConsecutiveFailureLimit) {
             LOG(("nsHttpHandler::IncrementFastOpenConsecutiveFailureCounter - "
                  "Fast open failed too many times"));
-            SetFastOpenNotSupported();
         }
     }
 }
@@ -2315,6 +2319,11 @@ nsHttpHandler::Observe(nsISupports *subject,
                 }
             }
         }
+    } else if (!strcmp(topic, "captive-portal-login") ||
+               !strcmp(topic, "captive-portal-login-success")) {
+         // We have detected a captive portal and we will reset the Fast Open
+         // failure counter.
+         ResetFastOpenConsecutiveFailureCounter();
     }
 
     return NS_OK;
