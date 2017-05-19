@@ -214,7 +214,7 @@ FrameIterator::debugEnabled() const
 
     // Only non-imported functions can have debug frames.
     return code_->metadata().debugEnabled &&
-           codeRange_->funcIndex() >= code_->metadata().funcImports.length();
+           codeRange_->funcIndex() >= code_->metadataTier().funcImports.length();
 }
 
 DebugFrame*
