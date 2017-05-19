@@ -236,6 +236,7 @@ private:
 
   bool mPaused;
   bool mDestroyed;
+  bool mIsSnapshotting;
 
   // Can only be accessed on the compositor thread.
   WebRenderScrollData mScrollData;
