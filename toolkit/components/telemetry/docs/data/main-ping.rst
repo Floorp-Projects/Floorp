@@ -415,11 +415,9 @@ Structure:
       ...
     ]
 
-At present there are two known users of this section: Telemetry Experiments and TelemetrySend.
+At present there is one known users of this section: Telemetry Experiments.
 
 Telemetry Experiments uses it to note when experiments are activated and terminated.
-
-TelemetrySend uses it to record failures when sending Telemetry pings.
 
 webrtc
 ------
