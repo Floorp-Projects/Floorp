@@ -1105,10 +1105,6 @@ var Impl = {
    * Pull values from about:memory into corresponding histograms
    */
   gatherMemory: function gatherMemory() {
-    if (!Telemetry.canRecordExtended) {
-      return;
-    }
-
     let mgr;
     try {
       mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
@@ -1157,6 +1153,13 @@ var Impl = {
     let cc = (id, n) => h(id, Ci.nsIMemoryReporter.UNITS_COUNT_CUMULATIVE, n);
     let p = (id, n) => h(id, Ci.nsIMemoryReporter.UNITS_PERCENTAGE, n);
 
+    // GHOST_WINDOWS is opt-out as of Firefox 55
+    c("GHOST_WINDOWS", "ghostWindows");
+
+    if (!Telemetry.canRecordExtended) {
+      return;
+    }
+
     b("MEMORY_VSIZE", "vsize");
     b("MEMORY_VSIZE_MAX_CONTIGUOUS", "vsizeMaxContiguous");
     b("MEMORY_RESIDENT_FAST", "residentFast");
@@ -1170,7 +1173,6 @@ var Impl = {
     b("MEMORY_STORAGE_SQLITE", "storageSQLite");
     cc("LOW_MEMORY_EVENTS_VIRTUAL", "lowMemoryEventsVirtual");
     cc("LOW_MEMORY_EVENTS_PHYSICAL", "lowMemoryEventsPhysical");
-    c("GHOST_WINDOWS", "ghostWindows");
     cc("PAGE_FAULTS_HARD", "pageFaultsHard");
 
     if (!Utils.isContentProcess && !this._totalMemoryTimeout) {
