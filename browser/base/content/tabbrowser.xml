@@ -1000,11 +1000,15 @@
             var newTitle = "";
             var docElement = this.ownerDocument.documentElement;
             var sep = docElement.getAttribute("titlemenuseparator");
+            let tab = this.getTabForBrowser(aBrowser);
+            let docTitle;
 
-            // Strip out any null bytes in the content title, since the
-            // underlying widget implementations of nsWindow::SetTitle pass
-            // null-terminated strings to system APIs.
-            var docTitle = aBrowser.contentTitle.replace(/\0/g, "");
+            if (tab._labelIsContentTitle) {
+              // Strip out any null bytes in the content title, since the
+              // underlying widget implementations of nsWindow::SetTitle pass
+              // null-terminated strings to system APIs.
+              docTitle = tab.getAttribute("label").replace(/\0/g, "");
+            }
 
             if (!docTitle)
               docTitle = docElement.getAttribute("titledefault");
@@ -1412,13 +1416,14 @@
       <method name="setInitialTabTitle">
         <parameter name="aTab"/>
         <parameter name="aTitle"/>
+        <parameter name="aOptions"/>
         <body><![CDATA[
           if (aTitle) {
-            aTab.setAttribute("label", aTitle);
-
             // Don't replace the set label with the empty tab label or the URL
             // while the tab is loading.
             aTab._suppressTransientPlaceholderLabel = true;
+
+            this._setTabLabel(aTab, aTitle, aOptions);
           }
         ]]></body>
       </method>
@@ -1437,7 +1442,10 @@
               delete aTab._suppressTransientPlaceholderLabel;
             }
 
-            if (!title) {
+            let isContentTitle = false;
+            if (title) {
+              isContentTitle = true;
+            } else {
               if (browser.currentURI.spec) {
                 try {
                   title = this.mURIFixup.createExposableURI(browser.currentURI).spec;
@@ -1465,14 +1473,33 @@
                 title = this.mStringBundle.getString("tabs.emptyTabTitle");
             }
 
-            if (aTab.label == title)
+            return this._setTabLabel(aTab, title, { isContentTitle });
+          ]]>
+        </body>
+      </method>
+
+      <method name="_setTabLabel">
+        <parameter name="aTab"/>
+        <parameter name="aLabel"/>
+        <parameter name="aOptions"/>
+        <body>
+          <![CDATA[
+            if (!aLabel || aTab.getAttribute("label") == aLabel) {
               return false;
+            }
 
-            aTab.label = title;
-            this._tabAttrModified(aTab, ["label"]);
+            aTab.setAttribute("label", aLabel);
+            aTab._labelIsContentTitle = aOptions && aOptions.isContentTitle;
 
-            if (aTab.selected)
+            // Dispatch TabAttrModified event unless we're setting the label
+            // before the TabOpen event was dispatched.
+            if (!aOptions || !aOptions.beforeTabOpen) {
+              this._tabAttrModified(aTab, ["label"]);
+            }
+
+            if (aTab.selected) {
               this.updateTitlebar();
+            }
 
             return true;
           ]]>
@@ -2313,7 +2340,7 @@
                 t.setAttribute("label", this.mStringBundle.getString("tabs.emptyTabTitle"));
               } else {
                 // Set URL as label so that the tab isn't empty initially.
-                this.setInitialTabTitle(t, aURI);
+                this.setInitialTabTitle(t, aURI, { beforeTabOpen: true });
               }
             }
 

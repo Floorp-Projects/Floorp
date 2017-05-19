@@ -2646,7 +2646,7 @@ var SessionStoreInternal = {
     // If the page has a title, set it.
     if (activePageData) {
       if (activePageData.title) {
-        win.gBrowser.setInitialTabTitle(tab, activePageData.title);
+        win.gBrowser.setInitialTabTitle(tab, activePageData.title, { isContentTitle: true });
       } else if (activePageData.url != "about:blank") {
         win.gBrowser.setInitialTabTitle(tab, activePageData.url);
       }
