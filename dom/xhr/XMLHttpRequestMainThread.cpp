@@ -2948,7 +2948,7 @@ XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody)
 
   mIsMappedArrayBuffer = false;
   if (mResponseType == XMLHttpRequestResponseType::Arraybuffer &&
-      Preferences::GetBool("dom.mapped_arraybuffer.enabled", true)) {
+      IsMappedArrayBufferEnabled()) {
     nsCOMPtr<nsIURI> uri;
     nsAutoCString scheme;
 
@@ -3047,6 +3047,40 @@ XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody)
   }
 
   return rv;
+}
+
+/* static */
+bool
+XMLHttpRequestMainThread::IsMappedArrayBufferEnabled()
+{
+  static bool sMappedArrayBufferAdded = false;
+  static bool sIsMappedArrayBufferEnabled;
+
+  if (!sMappedArrayBufferAdded) {
+    Preferences::AddBoolVarCache(&sIsMappedArrayBufferEnabled,
+                                 "dom.mapped_arraybuffer.enabled",
+                                 true);
+    sMappedArrayBufferAdded = true;
+  }
+
+  return sIsMappedArrayBufferEnabled;
+}
+
+/* static */
+bool
+XMLHttpRequestMainThread::IsLowercaseResponseHeader()
+{
+  static bool sLowercaseResponseHeaderAdded = false;
+  static bool sIsLowercaseResponseHeaderEnabled;
+
+  if (!sLowercaseResponseHeaderAdded) {
+    Preferences::AddBoolVarCache(&sIsLowercaseResponseHeaderEnabled,
+                                 "dom.xhr.lowercase_header.enabled",
+                                 false);
+    sLowercaseResponseHeaderAdded = true;
+  }
+
+  return sIsLowercaseResponseHeaderEnabled;
 }
 
 // http://dvcs.w3.org/hg/xhr/raw-file/tip/Overview.html#dom-xmlhttprequest-setrequestheader
@@ -3767,7 +3801,7 @@ NS_IMETHODIMP XMLHttpRequestMainThread::
 nsHeaderVisitor::VisitHeader(const nsACString &header, const nsACString &value)
 {
   if (mXHR.IsSafeHeader(header, mHttpChannel)) {
-    if (!Preferences::GetBool("dom.xhr.lowercase_header.enabled", false)) {
+    if (!IsLowercaseResponseHeader()) {
       if(!mHeaderList.InsertElementSorted(HeaderEntry(header, value),
                                           fallible)) {
         return NS_ERROR_OUT_OF_MEMORY;

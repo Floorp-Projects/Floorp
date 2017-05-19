@@ -329,6 +329,12 @@ interface nsISHEntry : nsISupports
     attribute boolean scrollRestorationIsManual;
 
     /**
+     * Flag to indicate that the history entry was originally loaded in the
+     * current process. This flag does not survive a browser process switch.
+     */
+    readonly attribute boolean loadedInThisProcess;
+
+    /**
      * Set the session history it belongs to. It's only set on root entries.
      */
     [noscript] void setSHistory(in nsISHistory aSHistory);
