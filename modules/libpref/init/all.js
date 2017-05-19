@@ -5721,6 +5721,10 @@ pref("dom.moduleScripts.enabled", false);
 // event loop runnable. Minimum value of 1.
 pref("dom.timeout.max_consecutive_callbacks", 5);
 
+// Maximum amount of time in milliseconds consecutive setTimeout()/setInterval()
+// callback are allowed to run before yielding the event loop.
+pref("dom.timeout.max_consecutive_callbacks_ms", 4);
+
 #ifdef FUZZING
 pref("fuzzing.enabled", false);
 #endif
