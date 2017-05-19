@@ -194,7 +194,7 @@ mozilla::StyleSheet*
 nsXULPrototypeCache::GetStyleSheet(nsIURI* aURI,
                                    StyleBackendType aType)
 {
-    StyleSheetTable& table = TableForBackendType(aType);
+    StyleSheetTable& table = StyleSheetTableFor(aType);
     return table.GetWeak(aURI);
 }
 
@@ -204,7 +204,7 @@ nsXULPrototypeCache::PutStyleSheet(StyleSheet* aStyleSheet,
 {
     nsIURI* uri = aStyleSheet->GetSheetURI();
 
-    StyleSheetTable& table = TableForBackendType(aType);
+    StyleSheetTable& table = StyleSheetTableFor(aType);
     table.Put(uri, aStyleSheet);
 
     return NS_OK;
@@ -267,7 +267,7 @@ nsXULPrototypeCache::FlushSkinFiles()
   mozilla::StyleBackendType tableTypes[] = { StyleBackendType::Gecko,
                                              StyleBackendType::Servo };
   for (auto tableType : tableTypes) {
-    StyleSheetTable& table = TableForBackendType(tableType);
+    StyleSheetTable& table = StyleSheetTableFor(tableType);
     for (auto iter = table.Iter(); !iter.Done(); iter.Next()) {
       nsAutoCString str;
       iter.Data()->GetSheetURI()->GetPath(str);
