@@ -345,6 +345,57 @@ function* largeAllocSuccessTests() {
     });
   });
 
+  // Opening a window from the large-allocation window should prevent the
+  // process switch with reload.
+  yield BrowserTestUtils.withNewTab("about:blank", function*(aBrowser) {
+    info("Starting test 6a");
+    let pid1 = yield getPID(aBrowser);
+    is(false, yield getInLAProc(aBrowser));
+
+    let ready = Promise.all([expectProcessCreated(),
+                             BrowserTestUtils.browserLoaded(aBrowser)]);
+
+    yield ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
+      content.document.location = TEST_URI;
+    });
+
+    yield ready;
+
+    let pid2 = yield getPID(aBrowser);
+
+    isnot(pid1, pid2, "PIDs 1 and 2 should not match");
+    is(true, yield getInLAProc(aBrowser));
+
+    let stopExpectNoProcess = expectNoProcess();
+
+    let firstTab = gBrowser.selectedTab;
+    let promiseTabOpened = BrowserTestUtils.waitForNewTab(gBrowser, "about:blank");
+    yield ContentTask.spawn(aBrowser, null, () => {
+      this.__newWindow = content.window.open("about:blank");
+    });
+    yield promiseTabOpened;
+
+    if (firstTab != gBrowser.selectedTab) {
+      firstTab = yield BrowserTestUtils.switchTab(gBrowser, firstTab);
+      aBrowser = firstTab.linkedBrowser;
+    }
+    let promiseLoad = BrowserTestUtils.browserLoaded(aBrowser);
+    document.getElementById("reload-button").doCommand();
+    yield promiseLoad;
+
+    let pid3 = yield getPID(aBrowser);
+
+    is(pid3, pid2, "PIDs 2 and 3 should match");
+    is(true, yield getInLAProc(aBrowser));
+
+    stopExpectNoProcess();
+
+    yield ContentTask.spawn(aBrowser, null, () => {
+      ok(this.__newWindow, "The window should have been stored");
+      this.__newWindow.close();
+    });
+  });
+
   // Try dragging the tab into a new window when not at the maximum number of
   // Large-Allocation processes.
   yield BrowserTestUtils.withNewTab("about:blank", function*(aBrowser) {

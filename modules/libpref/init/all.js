@@ -209,6 +209,16 @@ pref("dom.keyboardevent.dispatch_during_composition", false);
 // significantly increase the number of compartments in the system.
 pref("dom.compartment_per_addon", true);
 
+// Whether to enable the JavaScript start-up cache. This causes one of the first
+// execution to record the bytecode of the JavaScript function used, and save it
+// in the existing cache entry. On the following loads of the same script, the
+// bytecode would be loaded from the cache instead of being generated once more.
+pref("dom.script_loader.bytecode_cache.enabled", false); // Not tuned yet.
+
+// Ignore the heuristics of the bytecode cache, and always record on the first
+// visit. (used for testing purposes).
+pref("dom.script_loader.bytecode_cache.eager", false);
+
 // Fastback caching - if this pref is negative, then we calculate the number
 // of content viewers to cache based on the amount of available memory.
 pref("browser.sessionhistory.max_total_viewers", -1);
@@ -3143,7 +3153,7 @@ pref("browser.tabs.remote.separateFileUriProcess", false);
 // This has been added in case breaking any window references between these
 // sorts of pages, which we have to do when we run them in the normal web
 // content process, causes compatibility issues.
-pref("browser.tabs.remote.allowLinkedWebInFileUriProcess", false);
+pref("browser.tabs.remote.allowLinkedWebInFileUriProcess", true);
 
 // Enable caching of Moz2D Path objects for SVG geometry elements
 pref("svg.path-caching.enabled", true);
