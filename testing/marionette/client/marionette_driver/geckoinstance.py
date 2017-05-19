@@ -433,7 +433,6 @@ class DesktopInstance(GeckoInstance):
         # Disable safebrowsing components
         "browser.safebrowsing.blockedURIs.enabled": False,
         "browser.safebrowsing.downloads.enabled": False,
-        "browser.safebrowsing.forbiddenURIs.enabled": False,
         "browser.safebrowsing.malware.enabled": False,
         "browser.safebrowsing.phishing.enabled": False,
 

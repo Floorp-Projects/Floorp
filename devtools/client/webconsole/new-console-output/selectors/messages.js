@@ -9,6 +9,7 @@ const { l10n } = require("devtools/client/webconsole/new-console-output/utils/me
 const { getAllFilters } = require("devtools/client/webconsole/new-console-output/selectors/filters");
 const { getLogLimit } = require("devtools/client/webconsole/new-console-output/selectors/prefs");
 const { getGripPreviewItems } = require("devtools/client/shared/components/reps/reps");
+const { getSourceNames } = require("devtools/client/shared/source-utils");
 const {
   MESSAGE_TYPE,
   MESSAGE_SOURCE
@@ -131,8 +132,9 @@ function isTextInFrame(text, frame) {
   if (!frame) {
     return false;
   }
-  return Object.values(frame)
-    .join(":")
+
+  const { short } = getSourceNames(frame.source);
+  return `${short}:${frame.line}:${frame.column}`
     .toLocaleLowerCase()
     .includes(text.toLocaleLowerCase());
 }

@@ -1316,7 +1316,7 @@ interface nsINavHistoryService : nsISupports
 
   /**
    * Gets the original title of the page.
-   * @deprecated use mozIAsyncHistory.getPlacesInfo instead.
+   * @deprecated use PlacesUtils.history.fetch instead.
    */
   AString getPageTitle(in nsIURI aURI);
 

@@ -1,0 +1,22 @@
+        <receiver android:name="com.leanplum.LeanplumPushReceiver" android:exported="false"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="com.leanplum.LeanplumPushListenerService" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Leanplum Local Push Notification Service-->
+        <service android:name="com.leanplum.LeanplumLocalPushListenerService" android:exported="false"
+            android:enabled="false" />
+
+        <!-- Leanplum GCM Instance ID Service -->
+        <service android:name="com.leanplum.LeanplumPushInstanceIDService" android:exported="false"
+            android:enabled="false">
+            <intent-filter>
+                <action android:name="com.google.android.gms.iid.InstanceID" />
+            </intent-filter>
+        </service>
+
+        <!-- Leanplum GCM/FCM Registration Service -->
+        <service android:name="com.leanplum.LeanplumPushRegistrationService" android:exported="false"
+            android:enabled="false" />

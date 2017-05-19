@@ -164,6 +164,12 @@ android {
                     exclude 'org/mozilla/gecko/adjust/AdjustHelper.java'
                 }
 
+                if (mozconfig.substs.MOZ_ANDROID_MMA) {
+                    exclude 'org/mozilla/gecko/mma/MmaStubImp.java'
+                } else {
+                    exclude 'org/mozilla/gecko/mma/MmaLeanplumImp.java'
+                }
+
                 if (!mozconfig.substs.MOZ_ANDROID_GCM) {
                     exclude 'org/mozilla/gecko/gcm/**/*.java'
                     exclude 'org/mozilla/gecko/push/**/*.java'
@@ -301,6 +307,7 @@ task syncPreprocessedCode(type: Sync, dependsOn: rootProject.generateCodeAndReso
     from("${topobjdir}/mobile/android/base/generated/preprocessed") {
         // All other preprocessed code is included in the geckoview project.
         include '**/AdjustConstants.java'
+        include '**/MmaConstants.java'
     }
 }
 

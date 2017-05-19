@@ -22,6 +22,7 @@ BROWSER_CHROME_MANIFESTS += [
     'content/test/general/browser.ini',
     'content/test/newtab/browser.ini',
     'content/test/pageinfo/browser.ini',
+    'content/test/performance/browser.ini',
     'content/test/permissions/browser.ini',
     'content/test/plugins/browser.ini',
     'content/test/popupNotifications/browser.ini',
@@ -38,7 +39,6 @@ BROWSER_CHROME_MANIFESTS += [
     'content/test/urlbar/browser.ini',
     'content/test/webextensions/browser.ini',
     'content/test/webrtc/browser.ini',
-    'content/test/windows/browser.ini',
 ]
 
 if CONFIG['MOZ_UPDATER']:

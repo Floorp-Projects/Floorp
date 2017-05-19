@@ -97,8 +97,7 @@ describe("EvaluationResult component:", () => {
       message,
       timestampsVisible: true,
     }));
-    const L10n = require("devtools/client/webconsole/new-console-output/test/fixtures/L10n");
-    const { timestampString } = new L10n();
+    const { timestampString } = require("devtools/client/webconsole/webconsole-l10n");
 
     expect(wrapper.find(".timestamp").text()).toBe(timestampString(message.timeStamp));
   });

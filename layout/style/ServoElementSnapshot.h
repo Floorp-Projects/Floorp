@@ -46,7 +46,8 @@ enum class ServoElementSnapshotFlags : uint8_t
 {
   State = 1 << 0,
   Attributes = 1 << 1,
-  All = State | Attributes
+  Id = 1 << 2,
+  MaybeClass = 1 << 3,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ServoElementSnapshotFlags)
@@ -144,9 +145,9 @@ private:
   // we're dealing with attribute changes when we take snapshots of attributes,
   // though it can be wasted space if we deal with a lot of state-only
   // snapshots.
-  Flags mContains;
   nsTArray<ServoAttrSnapshot> mAttrs;
   ServoStateType mState;
+  Flags mContains;
   bool mIsHTMLElementInHTMLDocument;
   bool mIsInChromeDocument;
 };
