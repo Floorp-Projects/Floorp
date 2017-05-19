@@ -245,6 +245,11 @@ uint32_t TimeoutManager::sNestingLevel = 0;
 
 namespace {
 
+// The maximum number of milliseconds to allow consecutive timer callbacks
+// to run in a single event loop runnable.
+#define DEFAULT_MAX_CONSECUTIVE_CALLBACKS_MILLISECONDS 4
+uint32_t gMaxConsecutiveCallbacksMilliseconds;
+
 // The maximum number of timer callbacks we will try to run in a single event
 // loop runnable.
 #define DEFAULT_TARGET_MAX_CONSECUTIVE_CALLBACKS 5
@@ -366,6 +371,10 @@ TimeoutManager::Initialize()
   Preferences::AddUintVarCache(&gTargetMaxConsecutiveCallbacks,
                                "dom.timeout.max_consecutive_callbacks",
                                DEFAULT_TARGET_MAX_CONSECUTIVE_CALLBACKS);
+
+  Preferences::AddUintVarCache(&gMaxConsecutiveCallbacksMilliseconds,
+                               "dom.timeout.max_consecutive_callbacks_ms",
+                               DEFAULT_MAX_CONSECUTIVE_CALLBACKS_MILLISECONDS);
 }
 
 uint32_t
@@ -589,6 +598,23 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
 
   NS_ASSERTION(!mWindow.IsFrozen(), "Timeout running on a window in the bfcache!");
 
+  // Limit the overall time spent in RunTimeout() to reduce jank.
+  uint32_t totalTimeLimitMS = std::max(1u, gMaxConsecutiveCallbacksMilliseconds);
+  const TimeDuration totalTimeLimit = TimeDuration::FromMilliseconds(totalTimeLimitMS);
+
+  // Allow up to 25% of our total time budget to be used figuring out which
+  // timers need to run.  This is the initial loop in this method.
+  const TimeDuration initalTimeLimit =
+    TimeDuration::FromMilliseconds(totalTimeLimit.ToMilliseconds() / 4);
+
+  // Ammortize overhead from from calling TimeStamp::Now() in the initial
+  // loop, though, by only checking for an elapsed limit every N timeouts.
+  const uint32_t kNumTimersPerInitialElapsedCheck = 100;
+
+  // Start measuring elapsed time immediately.  We won't potentially expire
+  // the time budget until at least one Timeout has run, though.
+  TimeStamp start = TimeStamp::Now();
+
   Timeout* last_expired_normal_timeout = nullptr;
   Timeout* last_expired_tracking_timeout = nullptr;
   bool     last_expired_timeout_is_normal = false;
@@ -677,10 +703,22 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
         // trust chrome windows not to misbehave and partly because a
         // number of browser chrome tests have races that depend on this
         // coalescing.
-        if (targetTimerSeen &&
-            numTimersToRun >= gTargetMaxConsecutiveCallbacks &&
-            !mWindow.IsChromeWindow()) {
-          break;
+        //
+        // Chrome windows are still subject to our time budget limit,
+        // however.  The time budget allows many timers to coallesce and
+        // chrome script should not hit this limit under normal
+        // circumstances.
+        if (targetTimerSeen) {
+          if (numTimersToRun >= gTargetMaxConsecutiveCallbacks &&
+              !mWindow.IsChromeWindow()) {
+            break;
+          }
+          if (numTimersToRun % kNumTimersPerInitialElapsedCheck == 0) {
+            TimeDuration elapsed(TimeStamp::Now() - start);
+            if (elapsed >= initalTimeLimit) {
+              break;
+            }
+          }
         }
       }
 
@@ -733,6 +771,8 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
     // the logic in ResetTimersForThrottleReduction will need to change.
     mTrackingTimeouts.SetInsertionPoint(dummy_tracking_timeout);
   }
+
+  bool targetTimeoutSeen = false;
 
   // We stop iterating each list when we go past the last expired timeout from
   // that list that we have observed above.  That timeout will either be the
@@ -787,6 +827,10 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
         timeout->remove();
         timeout->Release();
         continue;
+      }
+
+      if (timeout == aTimeout) {
+        targetTimeoutSeen = true;
       }
 
       // This timeout is good to run
@@ -854,6 +898,18 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
 
       // Release the timeout struct since it's possibly out of the list
       timeout->Release();
+
+      // Check to see if we have run out of time to execute timeout handlers.
+      // If we've exceeded our time budget then terminate the loop immediately.
+      //
+      // Note, we only do this if we have seen the Timeout object explicitly
+      // passed to RunTimeout().  The target timeout must always be executed.
+      if (targetTimeoutSeen) {
+        TimeDuration elapsed = TimeStamp::Now() - start;
+        if (elapsed >= totalTimeLimit) {
+          break;
+        }
+      }
     }
   }
 
