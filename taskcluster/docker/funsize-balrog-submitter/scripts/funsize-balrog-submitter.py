@@ -116,6 +116,7 @@ def main():
     parser.add_argument("-v", "--verbose", action="store_const",
                         dest="loglevel", const=logging.DEBUG,
                         default=logging.INFO)
+    parser.add_argument("--product", help="Override product name from application.ini")
     args = parser.parse_args()
     logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s",
                         level=args.loglevel)
@@ -156,8 +157,9 @@ def main():
             partial_info[0]["previousBuildNumber"] = e["previousBuildNumber"]
             submitter = ReleaseSubmitterV4(api_root=args.api_root, auth=auth,
                                            dummy=args.dummy)
+            productName = args.product or e["appName"]
             retry(lambda: submitter.run(
-                platform=e["platform"], productName=e["appName"],
+                platform=e["platform"], productName=productName,
                 version=e["toVersion"],
                 build_number=e["toBuildNumber"],
                 appVersion=e["version"], extVersion=e["version"],
@@ -191,9 +193,10 @@ def main():
             partial_info[0]["from_buildid"] = e["from_buildid"]
             submitter = NightlySubmitterV4(api_root=args.api_root, auth=auth,
                                            dummy=args.dummy)
+            productName = args.product or e["appName"]
             retry(lambda: submitter.run(
                 platform=e["platform"], buildID=e["to_buildid"],
-                productName=e["appName"], branch=e["branch"],
+                productName=productName, branch=e["branch"],
                 appVersion=e["version"], locale=e["locale"],
                 hashFunction='sha512', extVersion=e["version"],
                 partialInfo=partial_info, completeInfo=complete_info),
