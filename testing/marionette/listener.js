@@ -85,7 +85,6 @@ var logger = Log.repository.getLogger("Marionette");
 if (logger.ownAppenders.length == 0) {
   logger.addAppender(new Log.DumpAppender());
 }
-logger.debug("loaded listener.js");
 
 var modalHandler = function() {
   // This gets called on the system app only since it receives the mozbrowserprompt event
@@ -302,7 +301,7 @@ var loadListener = {
     logger.debug(`Received observer notification "${topic}" for "${winID}"`);
 
     switch (topic) {
-      // In the case when the currently selected frame is about to close,
+      // In the case when the currently selected frame is closed,
       // there will be no further load events. Stop listening immediately.
       case "outer-window-destroyed":
         if (curWinID === winID) {
@@ -388,6 +387,8 @@ var loadListener = {
  */
 function registerSelf() {
   let msg = {value: winUtil.outerWindowID};
+  logger.debug(`Register listener.js for window ${msg.value}`);
+
   // register will have the ID and a boolean describing if this is the main process or not
   let register = sendSyncMessage("Marionette:register", msg);
 
