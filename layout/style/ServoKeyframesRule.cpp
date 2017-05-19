@@ -261,7 +261,7 @@ ServoKeyframesRule::SetName(const nsAString& aName)
   }
 
   UpdateRule([this, &name]() {
-    Servo_KeyframesRule_SetName(mRawRule, name.forget().take());
+    Servo_KeyframesRule_SetName(mRawRule, name.forget());
   });
   return NS_OK;
 }

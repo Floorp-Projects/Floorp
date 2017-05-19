@@ -153,9 +153,9 @@ SERVO_BINDING_FUNC(Servo_Keyframe_SetStyle, void,
                    RawServoDeclarationBlockBorrowed declarations)
 SERVO_BINDING_FUNC(Servo_KeyframesRule_GetName, nsIAtom*,
                    RawServoKeyframesRuleBorrowed rule)
-// This method takes an addrefed nsIAtom.
 SERVO_BINDING_FUNC(Servo_KeyframesRule_SetName, void,
-                   RawServoKeyframesRuleBorrowed rule, nsIAtom* name)
+                   RawServoKeyframesRuleBorrowed rule,
+                   already_AddRefed<nsIAtom> name)
 SERVO_BINDING_FUNC(Servo_KeyframesRule_GetCount, uint32_t,
                    RawServoKeyframesRuleBorrowed rule)
 SERVO_BINDING_FUNC(Servo_KeyframesRule_GetKeyframe, RawServoKeyframeStrong,
