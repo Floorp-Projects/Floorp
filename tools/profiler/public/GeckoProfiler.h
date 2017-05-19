@@ -22,7 +22,6 @@
 
 #include <stdint.h>
 #include <stdarg.h>
-#include <functional>
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -377,19 +376,11 @@ PROFILER_FUNC(double profiler_time(), 0)
 
 PROFILER_FUNC_VOID(profiler_log(const char *str))
 
-PROFILER_FUNC(int profiler_current_thread_id(), 0)
-
-// This method suspends the thread identified by aThreadId, optionally samples
-// it for its native stack, and then calls the callback. The callback is passed
-// the native stack's program counters and length as two arguments if
-// aSampleNative is true.
+// Gets the stack top of the current thread.
 //
-// WARNING: The target thread is suspended during the callback. Do not try to
-// allocate or acquire any locks, or you could deadlock. The target thread will
-// have resumed by the time that this function returns.
-PROFILER_FUNC_VOID(profiler_suspend_and_sample_thread(int aThreadId,
-                                                      const std::function<void(void**, size_t)>& aCallback,
-                                                      bool aSampleNative = true))
+// The thread must have been previously registered with the profiler, otherwise
+// this method will return nullptr.
+PROFILER_FUNC(void* profiler_get_stack_top(), nullptr)
 
 // End of the functions defined whether the profiler is enabled or not.
 
