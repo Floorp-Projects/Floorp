@@ -1301,6 +1301,14 @@ pref("privacy.trackingprotection.enabled",  false);
 pref("privacy.trackingprotection.pbmode.enabled",  true);
 // Annotate channels based on the tracking protection list in all modes
 pref("privacy.trackingprotection.annotate_channels",  true);
+// First Party Isolation (double keying), disabled by default
+pref("privacy.firstparty.isolate",                        false);
+// If false, two windows in the same domain with different first party domains
+// (top level URLs) can access resources through window.opener.
+// This pref is effective only when "privacy.firstparty.isolate" is true.
+pref("privacy.firstparty.isolate.restrict_opener_access", true);
+// Anti-fingerprinting, disabled by default
+pref("privacy.resistFingerprinting", false);
 // Lower the priority of network loads for resources on the tracking protection list.
 // Note that this requires the privacy.trackingprotection.annotate_channels pref to be on in order to have any effect.
 #ifdef NIGHTLY_BUILD
