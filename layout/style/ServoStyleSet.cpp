@@ -270,7 +270,8 @@ ServoStyleSet::PreTraverseSync()
 }
 
 void
-ServoStyleSet::PreTraverse(Element* aRoot)
+ServoStyleSet::PreTraverse(Element* aRoot,
+                           EffectCompositor::AnimationRestyleType aRestyleType)
 {
   PreTraverseSync();
 
@@ -279,12 +280,13 @@ ServoStyleSet::PreTraverse(Element* aRoot)
   nsSMILAnimationController* smilController =
     mPresContext->Document()->GetAnimationController();
   if (aRoot) {
-    mPresContext->EffectCompositor()->PreTraverseInSubtree(aRoot);
+    mPresContext->EffectCompositor()
+                ->PreTraverseInSubtree(aRoot, aRestyleType);
     if (smilController) {
       smilController->PreTraverseInSubtree(aRoot);
     }
   } else {
-    mPresContext->EffectCompositor()->PreTraverse();
+    mPresContext->EffectCompositor()->PreTraverse(aRestyleType);
     if (smilController) {
       smilController->PreTraverse();
     }
@@ -310,9 +312,17 @@ ServoStyleSet::PrepareAndTraverseSubtree(
   bool isInitial = !aRoot->HasServoData();
   bool forReconstruct =
     aRestyleBehavior == TraversalRestyleBehavior::ForReconstruct;
+  bool forAnimationOnly =
+    aRestyleBehavior == TraversalRestyleBehavior::ForAnimationOnly;
   bool postTraversalRequired = Servo_TraverseSubtree(
     aRoot, mRawSet.get(), &snapshots, aRootBehavior, aRestyleBehavior);
   MOZ_ASSERT_IF(isInitial || forReconstruct, !postTraversalRequired);
+
+  // Don't need to trigger a second traversal if this restyle only needs
+  // animation-only restyle.
+  if (forAnimationOnly) {
+    return postTraversalRequired;
+  }
 
   auto root = const_cast<Element*>(aRoot);
 
@@ -324,8 +334,10 @@ ServoStyleSet::PrepareAndTraverseSubtree(
   // traversal caused, for example, the font-size to change, the SMIL style
   // won't be updated until the next tick anyway.
   EffectCompositor* compositor = mPresContext->EffectCompositor();
-  if (forReconstruct ? compositor->PreTraverseInSubtree(root)
-                     : compositor->PreTraverse()) {
+  EffectCompositor::AnimationRestyleType restyleType =
+    EffectCompositor::AnimationRestyleType::Throttled;
+  if (forReconstruct ? compositor->PreTraverseInSubtree(root, restyleType)
+                     : compositor->PreTraverse(restyleType)) {
     if (Servo_TraverseSubtree(
           aRoot, mRawSet.get(), &snapshots, aRootBehavior, aRestyleBehavior)) {
       MOZ_ASSERT(!forReconstruct);
@@ -845,6 +857,23 @@ ServoStyleSet::StyleDocument()
     if (PrepareAndTraverseSubtree(root,
                                   TraversalRootBehavior::Normal,
                                   TraversalRestyleBehavior::Normal)) {
+      postTraversalRequired = true;
+    }
+  }
+  return postTraversalRequired;
+}
+
+bool
+ServoStyleSet::StyleDocumentForAnimationOnly()
+{
+  PreTraverse(nullptr, EffectCompositor::AnimationRestyleType::Full);
+
+  bool postTraversalRequired = false;
+  DocumentStyleRootIterator iter(mPresContext->Document());
+  while (Element* root = iter.GetNextStyleRoot()) {
+    if (PrepareAndTraverseSubtree(root,
+                                  TraversalRootBehavior::Normal,
+                                  TraversalRestyleBehavior::ForAnimationOnly)) {
       postTraversalRequired = true;
     }
   }

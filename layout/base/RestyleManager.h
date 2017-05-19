@@ -180,6 +180,8 @@ public:
                                const nsAttrValue* aOldValue);
   inline nsresult ReparentStyleContext(nsIFrame* aFrame);
 
+  inline void UpdateOnlyAnimationStyles();
+
   // Get a counter that increments on every style change, that we use to
   // track whether off-main-thread animations are up-to-date.
   uint64_t GetAnimationGeneration() const { return mAnimationGeneration; }
