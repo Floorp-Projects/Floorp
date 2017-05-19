@@ -20,11 +20,11 @@ protocol PIPCBlobInputStream
 
 parent:
   async StreamNeeded();
-  async Close();
+
+  async __delete__();
 
 child:
   async StreamReady(OptionalIPCStream aStream);
-  async __delete__();
 };
 
 } // namespace dom

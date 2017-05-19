@@ -192,10 +192,6 @@ IPCBlobInputStream::Clone(nsIInputStream** aResult)
   MOZ_ASSERT(mActor);
 
   nsCOMPtr<nsIInputStream> stream = mActor->CreateStream();
-  if (!stream) {
-    return NS_ERROR_FAILURE;
-  }
-
   stream.forget(aResult);
   return NS_OK;
 }
