@@ -662,6 +662,22 @@ Factory::GetFTLibrary()
   return mFTLibrary;
 }
 
+FT_Library
+Factory::NewFTLibrary()
+{
+  FT_Library library;
+  if (FT_Init_FreeType(&library) != FT_Err_Ok) {
+    return nullptr;
+  }
+  return library;
+}
+
+void
+Factory::ReleaseFTLibrary(FT_Library aFTLibrary)
+{
+  FT_Done_FreeType(aFTLibrary);
+}
+
 FT_Face
 Factory::NewFTFace(FT_Library aFTLibrary, const char* aFileName, int aFaceIndex)
 {
