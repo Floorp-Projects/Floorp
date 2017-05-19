@@ -236,6 +236,20 @@ struct AutoLoadSystemDependencies
 {
   AutoLoadSystemDependencies()
   {
+    HMODULE module = ::GetModuleHandleW(L"kernel32.dll");
+    if (module) {
+      // SetDefaultDllDirectories is always available on Windows 8 and above. It
+      // is also available on Windows Vista, Windows Server 2008, and
+      // Windows 7 when MS KB2533623 has been applied.
+      typedef BOOL (WINAPI *SetDefaultDllDirectoriesType)(DWORD);
+      SetDefaultDllDirectoriesType setDefaultDllDirectories =
+        (SetDefaultDllDirectoriesType) GetProcAddress(module, "SetDefaultDllDirectories");
+      if (setDefaultDllDirectories) {
+        setDefaultDllDirectories(0x0800 /* LOAD_LIBRARY_SEARCH_SYSTEM32 */ );
+        return;
+      }
+    }
+
     static LPCWSTR delayDLLs[] = { L"dwmapi.dll", L"cryptbase.dll",
                                    L"SHCore.dll", L"uxtheme.dll",
                                    L"oleacc.dll", L"apphelp.dll" };
