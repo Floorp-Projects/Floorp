@@ -2000,6 +2000,7 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfo)
       case Bailout_Debugger:
       case Bailout_UninitializedThis:
       case Bailout_BadDerivedConstructorReturn:
+      case Bailout_NotPure:
         // Do nothing.
         break;
 
