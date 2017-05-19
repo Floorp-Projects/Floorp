@@ -1383,8 +1383,8 @@ for (j = 100 - max; j < 100; j++) {
     rmod_object(i);
     rnot_number(i);
     rnot_object(i);
-    rconcat_string(i);
-    rconcat_number(i);
+ // rconcat_string(i);  // Disabled by Bug 1365782
+ // rconcat_number(i);  // Disabled by Bug 1365782
     rstring_length(i);
     rarguments_length_1(i);
     rarguments_length_3(i, 0, 1);
