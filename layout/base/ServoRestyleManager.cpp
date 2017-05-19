@@ -14,6 +14,7 @@
 #include "mozilla/dom/ElementInlines.h"
 #include "nsBlockFrame.h"
 #include "nsBulletFrame.h"
+#include "nsPlaceholderFrame.h"
 #include "nsContentUtils.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsPrintfCString.h"
@@ -208,7 +209,6 @@ struct ServoRestyleManager::TextPostTraversalState
 static void
 UpdateBlockFramePseudoElements(nsBlockFrame* aFrame,
                                ServoStyleSet& aStyleSet,
-                               nsChangeHint aChangeHintForFrame,
                                nsStyleChangeList& aChangeList)
 {
   if (nsBulletFrame* bullet = aFrame->GetBullet()) {
@@ -224,17 +224,56 @@ UpdateBlockFramePseudoElements(nsBlockFrame* aFrame,
 }
 
 static void
+UpdateBackdropIfNeeded(nsIFrame* aFrame,
+                       ServoStyleSet& aStyleSet,
+                       nsStyleChangeList& aChangeList)
+{
+  const nsStyleDisplay* display = aFrame->StyleContext()->StyleDisplay();
+  if (display->mTopLayer != NS_STYLE_TOP_LAYER_TOP) {
+    return;
+  }
+
+  // Elements in the top layer are guaranteed to have absolute or fixed
+  // position per https://fullscreen.spec.whatwg.org/#new-stacking-layer.
+  MOZ_ASSERT(display->IsAbsolutelyPositionedStyle());
+
+  nsIFrame* backdropPlaceholder =
+    aFrame->GetChildList(nsIFrame::kBackdropList).FirstChild();
+  if (!backdropPlaceholder) {
+    return;
+  }
+
+  MOZ_ASSERT(backdropPlaceholder->IsPlaceholderFrame());
+  nsIFrame* backdropFrame =
+    nsPlaceholderFrame::GetRealFrameForPlaceholder(backdropPlaceholder);
+  MOZ_ASSERT(backdropFrame->IsBackdropFrame());
+  MOZ_ASSERT(backdropFrame->StyleContext()->GetPseudoType() ==
+             CSSPseudoElementType::backdrop);
+
+  RefPtr<nsStyleContext> newContext =
+    aStyleSet.ResolvePseudoElementStyle(
+        aFrame->GetContent()->AsElement(),
+        CSSPseudoElementType::backdrop,
+        aFrame->StyleContext(),
+        /* aPseudoElement = */ nullptr);
+
+  aFrame->UpdateStyleOfOwnedChildFrame(backdropFrame,
+                                       newContext,
+                                       aChangeList);
+}
+
+static void
 UpdateFramePseudoElementStyles(nsIFrame* aFrame,
                                ServoStyleSet& aStyleSet,
-                               nsChangeHint aChangeHintForFrame,
                                nsStyleChangeList& aChangeList)
 {
   if (aFrame->IsFrameOfType(nsIFrame::eBlockFrame)) {
     UpdateBlockFramePseudoElements(static_cast<nsBlockFrame*>(aFrame),
                                    aStyleSet,
-                                   aChangeHintForFrame,
                                    aChangeList);
   }
+
+  UpdateBackdropIfNeeded(aFrame, aStyleSet, aChangeList);
 }
 
 void
@@ -348,7 +387,7 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
 
     if (styleFrame) {
       styleFrame->UpdateStyleOfOwnedAnonBoxes(*aStyleSet, aChangeList, changeHint);
-      UpdateFramePseudoElementStyles(styleFrame, *aStyleSet, changeHint, aChangeList);
+      UpdateFramePseudoElementStyles(styleFrame, *aStyleSet, aChangeList);
     }
   }
 
