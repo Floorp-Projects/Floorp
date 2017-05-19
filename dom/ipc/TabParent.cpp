@@ -1444,31 +1444,15 @@ TabParent::SendRealKeyEvent(WidgetKeyboardEvent& aEvent)
   }
   aEvent.mRefPoint += GetChildProcessOffset();
 
-  MaybeNativeKeyBinding bindings;
-  bindings = void_t();
   if (aEvent.mMessage == eKeyPress) {
-    nsCOMPtr<nsIWidget> widget = GetWidget();
-
-    AutoTArray<mozilla::CommandInt, 4> singleLine;
-    AutoTArray<mozilla::CommandInt, 4> multiLine;
-    AutoTArray<mozilla::CommandInt, 4> richText;
-
-    widget->ExecuteNativeKeyBinding(
-              nsIWidget::NativeKeyBindingsForSingleLineEditor,
-              aEvent, DoCommandCallback, &singleLine);
-    widget->ExecuteNativeKeyBinding(
-              nsIWidget::NativeKeyBindingsForMultiLineEditor,
-              aEvent, DoCommandCallback, &multiLine);
-    widget->ExecuteNativeKeyBinding(
-              nsIWidget::NativeKeyBindingsForRichTextEditor,
-              aEvent, DoCommandCallback, &richText);
-
-    if (!singleLine.IsEmpty() || !multiLine.IsEmpty() || !richText.IsEmpty()) {
-      bindings = NativeKeyBinding(singleLine, multiLine, richText);
-    }
+    // XXX Should we do this only when input context indicates an editor having
+    //     focus and the key event won't cause inputting text?
+    aEvent.InitAllEditCommands();
+  } else {
+    aEvent.PreventNativeKeyBindings();
   }
 
-  return PBrowserParent::SendRealKeyEvent(aEvent, bindings);
+  return PBrowserParent::SendRealKeyEvent(aEvent);
 }
 
 bool

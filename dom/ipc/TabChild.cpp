@@ -1944,29 +1944,20 @@ TabChild::UpdateRepeatedKeyEventEndTime(const WidgetKeyboardEvent& aEvent)
 }
 
 mozilla::ipc::IPCResult
-TabChild::RecvRealKeyEvent(const WidgetKeyboardEvent& aEvent,
-                           const MaybeNativeKeyBinding& aBindings)
+TabChild::RecvRealKeyEvent(const WidgetKeyboardEvent& aEvent)
 {
   if (SkipRepeatedKeyEvent(aEvent)) {
     return IPC_OK();
   }
 
-  AutoCacheNativeKeyCommands autoCache(mPuppetWidget);
+  MOZ_ASSERT(aEvent.mMessage != eKeyPress ||
+             aEvent.AreAllEditCommandsInitialized(),
+    "eKeyPress event should have native key binding information");
 
-  if (aEvent.mMessage == eKeyPress) {
-    // If content code called preventDefault() on a keydown event, then we don't
-    // want to process any following keypress events.
-    if (mIgnoreKeyPressEvent) {
-      return IPC_OK();
-    }
-    if (aBindings.type() == MaybeNativeKeyBinding::TNativeKeyBinding) {
-      const NativeKeyBinding& bindings = aBindings;
-      autoCache.Cache(bindings.singleLineCommands(),
-                      bindings.multiLineCommands(),
-                      bindings.richTextCommands());
-    } else {
-      autoCache.CacheNoCommands();
-    }
+  // If content code called preventDefault() on a keydown event, then we don't
+  // want to process any following keypress events.
+  if (aEvent.mMessage == eKeyPress && mIgnoreKeyPressEvent) {
+    return IPC_OK();
   }
 
   WidgetKeyboardEvent localEvent(aEvent);
