@@ -8,6 +8,7 @@
 #include <inttypes.h>
 #include "gfxPrefs.h"
 #include "LayersLogging.h"
+#include "mozilla/layers/ScrollingLayersHelper.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/webrender/WebRenderTypes.h"
@@ -89,6 +90,7 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     WrBridge()->AddWebRenderParentCommand(anim);
   }
 
+  ScrollingLayersHelper scroller(this, aBuilder, aSc);
   StackingContextHelper sc(aSc, aBuilder, this, animationsId, opacityForSC, transformForSC);
 
   LayerRect rect = Bounds();
@@ -110,6 +112,8 @@ void
 WebRenderRefLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
                                const StackingContextHelper& aSc)
 {
+  ScrollingLayersHelper scroller(this, aBuilder, aSc);
+
   ParentLayerRect bounds = GetLocalTransformTyped().TransformBounds(Bounds());
   // As with WebRenderTextLayer, because we don't push a stacking context for
   // this layer, WR doesn't know about the transform on this layer. Therefore
@@ -121,7 +125,7 @@ WebRenderRefLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
       PixelCastJustification::MovingDownToChildren);
   DumpLayerInfo("RefLayer", rect);
 
-  WrClipRegion clipRegion = aBuilder.BuildClipRegion(aSc.ToRelativeWrRect(rect));
+  WrClipRegionToken clipRegion = aBuilder.PushClipRegion(aSc.ToRelativeWrRect(rect));
   aBuilder.PushIFrame(aSc.ToRelativeWrRect(rect), clipRegion, wr::AsPipelineId(mId));
 }
 

@@ -88,6 +88,7 @@ public:
   virtual void RemoveDidCompositeObserver(DidCompositeObserver* aObserver) override;
 
   virtual void FlushRendering() override;
+  virtual void WaitOnTransactionProcessed() override;
 
   virtual void SendInvalidRegion(const nsIntRegion& aRegion) override;
 
@@ -99,6 +100,8 @@ public:
   }
   virtual bool NeedsComposite() const override { return mNeedsComposite; }
   virtual void SetIsFirstPaint() override { mIsFirstPaint = true; }
+
+  bool AsyncPanZoomEnabled() const override;
 
   DrawPaintedLayerCallback GetPaintedLayerCallback() const
   { return mPaintedLayerCallback; }

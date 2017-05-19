@@ -8,7 +8,7 @@ use prim_store::{ClipData, GpuBlock32, PrimitiveStore};
 use prim_store::{CLIP_DATA_GPU_SIZE, MASK_DATA_GPU_SIZE};
 use renderer::VertexDataStore;
 use util::{ComplexClipRegionHelpers, MatrixHelpers, TransformedRect};
-use webrender_traits::{AuxiliaryLists, BorderRadius, ClipRegion, ComplexClipRegion, ImageMask};
+use webrender_traits::{BorderRadius, BuiltDisplayList, ClipRegion, ComplexClipRegion, ImageMask};
 use webrender_traits::{DeviceIntRect, LayerToWorldTransform};
 use webrender_traits::{LayerRect, LayerPoint, LayerSize};
 use std::ops::Not;
@@ -154,8 +154,7 @@ impl MaskCacheInfo {
                         debug_assert!(image.is_none());     // TODO(gw): Support >1 image mask!
                         image = Some((info, clip_store.alloc(MASK_DATA_GPU_SIZE)));
                     }
-
-                    complex_clip_count += region.complex.length;
+                    complex_clip_count += region.complex_clip_count;
                     if region_mode == RegionMode::IncludeRect {
                         complex_clip_count += 1;
                     }
@@ -163,7 +162,7 @@ impl MaskCacheInfo {
                 ClipSource::BorderCorner(ref source) => {
                     // One block for the corner header, plus one
                     // block per dash to clip out.
-                    let gpu_address = clip_store.alloc(1 + source.dash_count);
+                    let gpu_address = clip_store.alloc(1 + source.max_clip_count);
                     border_corners.push((source.clone(), gpu_address));
                 }
             }
@@ -193,8 +192,8 @@ impl MaskCacheInfo {
                   transform: &LayerToWorldTransform,
                   clip_store: &mut VertexDataStore<GpuBlock32>,
                   device_pixel_ratio: f32,
-                  aux_lists: &AuxiliaryLists) {
-        let is_aligned = transform.can_losslessly_transform_and_perspective_project_a_2d_rect();
+                  display_list: &BuiltDisplayList) {
+        let is_aligned = transform.preserves_2d_axis_alignment();
 
         // If we haven't cached this info, or if the transform type has changed
         // we need to re-calculate the number of clips.
@@ -238,7 +237,7 @@ impl MaskCacheInfo {
                             None => local_rect,
                         };
 
-                        let clips = aux_lists.complex_clip_regions(&region.complex);
+                        let clips = display_list.get(region.complex_clips);
                         if !self.is_aligned && region_mode == RegionMode::IncludeRect {
                             // we have an extra clip rect coming from the transformed layer
                             debug_assert!(self.effective_complex_clip_count < self.complex_clip_range.item_count);
@@ -254,8 +253,8 @@ impl MaskCacheInfo {
                         self.effective_complex_clip_count += clips.len();
 
                         let slice = clip_store.get_slice_mut(address, CLIP_DATA_GPU_SIZE * clips.len());
-                        for (clip, chunk) in clips.iter().zip(slice.chunks_mut(CLIP_DATA_GPU_SIZE)) {
-                            let data = ClipData::from_clip_region(clip);
+                        for (clip, chunk) in clips.zip(slice.chunks_mut(CLIP_DATA_GPU_SIZE)) {
+                            let data = ClipData::from_clip_region(&clip);
                             PrimitiveStore::populate_clip_data(chunk, data);
                             local_rect = local_rect.and_then(|r| r.intersection(&clip.rect));
                             local_inner = local_inner.and_then(|r| clip.get_inner_rect_safe()
@@ -266,10 +265,10 @@ impl MaskCacheInfo {
                 }
             }
 
-            for &(ref source, gpu_address) in &self.border_corners {
+            for &mut (ref mut source, gpu_address) in &mut self.border_corners {
                 has_border_clip = true;
                 let slice = clip_store.get_slice_mut(gpu_address,
-                                                     1 + source.dash_count);
+                                                     1 + source.max_clip_count);
                 source.populate_gpu_data(slice);
             }
 

@@ -8,6 +8,7 @@
 #include "CompositableHost.h"
 #include "mozilla/layers/WebRenderImageHost.h"
 #include "mozilla/layers/WebRenderTextureHost.h"
+#include "mozilla/webrender/WebRenderAPI.h"
 
 namespace mozilla {
 
@@ -15,7 +16,9 @@ using namespace gfx;
 
 namespace layers {
 
-WebRenderCompositableHolder::WebRenderCompositableHolder()
+WebRenderCompositableHolder::WebRenderCompositableHolder(uint32_t aIdNamespace)
+ : mIdNamespace(aIdNamespace)
+ , mResourceId(0)
 {
   MOZ_COUNT_CTOR(WebRenderCompositableHolder);
 }
@@ -23,7 +26,6 @@ WebRenderCompositableHolder::WebRenderCompositableHolder()
 WebRenderCompositableHolder::~WebRenderCompositableHolder()
 {
   MOZ_COUNT_DTOR(WebRenderCompositableHolder);
-  MOZ_ASSERT(mPipelineTexturesHolders.IsEmpty());
 }
 
 void
@@ -37,18 +39,22 @@ WebRenderCompositableHolder::AddPipeline(const wr::PipelineId& aPipelineId)
 }
 
 void
-WebRenderCompositableHolder::RemovePipeline(const wr::PipelineId& aPipelineId)
+WebRenderCompositableHolder::RemovePipeline(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch)
 {
-  uint64_t id = wr::AsUint64(aPipelineId);
-  if (mPipelineTexturesHolders.Get(id)) {
-    mPipelineTexturesHolders.Remove(id);
+  PipelineTexturesHolder* holder = mPipelineTexturesHolders.Get(wr::AsUint64(aPipelineId));
+  MOZ_ASSERT(holder);
+  if (!holder) {
+    return;
   }
+  MOZ_ASSERT(holder->mDestroyedEpoch.isNothing());
+  holder->mDestroyedEpoch = Some(aEpoch);
 }
 
 void
 WebRenderCompositableHolder::HoldExternalImage(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch, WebRenderTextureHost* aTexture)
 {
   MOZ_ASSERT(aTexture);
+
   PipelineTexturesHolder* holder = mPipelineTexturesHolders.Get(wr::AsUint64(aPipelineId));
   MOZ_ASSERT(holder);
   if (!holder) {
@@ -62,10 +68,17 @@ void
 WebRenderCompositableHolder::Update(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch)
 {
   PipelineTexturesHolder* holder = mPipelineTexturesHolders.Get(wr::AsUint64(aPipelineId));
-  if (!holder || holder->mTextureHosts.empty()) {
+  if (!holder) {
     return;
   }
 
+  // Remove Pipeline
+  if (holder->mDestroyedEpoch.isSome() && holder->mDestroyedEpoch.ref() <= aEpoch) {
+    mPipelineTexturesHolders.Remove(wr::AsUint64(aPipelineId));
+    return;
+  }
+
+  // Release TextureHosts based on Epoch
   while (!holder->mTextureHosts.empty()) {
     if (aEpoch <= holder->mTextureHosts.front().mEpoch) {
       break;

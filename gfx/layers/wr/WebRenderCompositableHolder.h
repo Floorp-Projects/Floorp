@@ -9,6 +9,7 @@
 #include <queue>
 
 #include "mozilla/layers/TextureHost.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "nsClassHashtable.h"
 
@@ -28,14 +29,14 @@ class WebRenderCompositableHolder final
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebRenderCompositableHolder)
 
-  explicit WebRenderCompositableHolder();
+  explicit WebRenderCompositableHolder(uint32_t aIdNamespace);
 
 protected:
   ~WebRenderCompositableHolder();
 
 public:
   void AddPipeline(const wr::PipelineId& aPipelineId);
-  void RemovePipeline(const wr::PipelineId& aPipelineId);
+  void RemovePipeline(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch);
   void HoldExternalImage(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch, WebRenderTextureHost* aTexture);
   void Update(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch);
 
@@ -59,6 +60,16 @@ public:
     return mCompositeUntilTime;
   }
 
+  uint32_t GetNextResourceId() { return ++mResourceId; }
+  uint32_t GetNamespace() { return mIdNamespace; }
+  wr::ImageKey GetImageKey()
+  {
+    wr::ImageKey key;
+    key.mNamespace = GetNamespace();
+    key.mHandle = GetNextResourceId();
+    return key;
+  }
+
 private:
 
   struct ForwardingTextureHost {
@@ -73,8 +84,11 @@ private:
   struct PipelineTexturesHolder {
     // Holds forwarding WebRenderTextureHosts.
     std::queue<ForwardingTextureHost> mTextureHosts;
+    Maybe<wr::Epoch> mDestroyedEpoch;
   };
 
+  uint32_t mIdNamespace;
+  uint32_t mResourceId;
   nsClassHashtable<nsUint64HashKey, PipelineTexturesHolder> mPipelineTexturesHolders;
 
   // Render time for the current composition.

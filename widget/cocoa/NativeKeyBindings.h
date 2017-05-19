@@ -21,7 +21,6 @@ typedef nsDataHashtable<nsPtrHashKey<struct objc_selector>, CommandInt>
 class NativeKeyBindings final
 {
   typedef nsIWidget::NativeKeyBindingsType NativeKeyBindingsType;
-  typedef nsIWidget::DoCommandCallback DoCommandCallback;
 
 public:
   static NativeKeyBindings* GetInstance(NativeKeyBindingsType aType);
@@ -29,9 +28,8 @@ public:
 
   void Init(NativeKeyBindingsType aType);
 
-  bool Execute(const WidgetKeyboardEvent& aEvent,
-               DoCommandCallback aCallback,
-               void* aCallbackData);
+  void GetEditCommands(const WidgetKeyboardEvent& aEvent,
+                       nsTArray<CommandInt>& aCommands);
 
 private:
   NativeKeyBindings();

@@ -27,6 +27,10 @@
 namespace mozilla {
 class MultiTouchInput;
 
+namespace wr {
+class WebRenderAPI;
+}
+
 namespace layers {
 
 class Layer;
@@ -143,6 +147,18 @@ public:
                             bool aIsFirstPaint,
                             uint64_t aOriginatingLayersId,
                             uint32_t aPaintSequenceNumber);
+
+  /**
+   * Called when webrender is enabled, from the compositor thread. This function
+   * walks through the tree of APZC instances and tells webrender about the
+   * async scroll position. It also advances APZ animations to the specified
+   * sample time. In effect it is the webrender equivalent of (part of) the
+   * code in AsyncCompositionManager.
+   * Returns true if any APZ animations are in progress and we need to keep
+   * compositing.
+   */
+  bool PushStateToWR(wr::WebRenderAPI* aWrApi,
+                     const TimeStamp& aSampleTime);
 
   /**
    * Walk the tree of APZCs and flushes the repaint requests for all the APZCS

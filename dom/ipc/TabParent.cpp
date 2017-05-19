@@ -1214,22 +1214,24 @@ TabParent::RecvDispatchKeyboardEvent(const mozilla::WidgetKeyboardEvent& aEvent)
   return IPC_OK();
 }
 
-static void
-DoCommandCallback(mozilla::Command aCommand, void* aData)
-{
-  static_cast<InfallibleTArray<mozilla::CommandInt>*>(aData)->
-    AppendElement(aCommand);
-}
-
 mozilla::ipc::IPCResult
-TabParent::RecvRequestNativeKeyBindings(const WidgetKeyboardEvent& aEvent,
-                                        MaybeNativeKeyBinding* aBindings)
+TabParent::RecvRequestNativeKeyBindings(const uint32_t& aType,
+                                        const WidgetKeyboardEvent& aEvent,
+                                        nsTArray<CommandInt>* aCommands)
 {
-  AutoTArray<mozilla::CommandInt, 4> singleLine;
-  AutoTArray<mozilla::CommandInt, 4> multiLine;
-  AutoTArray<mozilla::CommandInt, 4> richText;
+  MOZ_ASSERT(aCommands);
+  MOZ_ASSERT(aCommands->IsEmpty());
 
-  *aBindings = mozilla::void_t();
+  nsIWidget::NativeKeyBindingsType keyBindingsType =
+    static_cast<nsIWidget::NativeKeyBindingsType>(aType);
+  switch (keyBindingsType) {
+    case nsIWidget::NativeKeyBindingsForSingleLineEditor:
+    case nsIWidget::NativeKeyBindingsForMultiLineEditor:
+    case nsIWidget::NativeKeyBindingsForRichTextEditor:
+      break;
+    default:
+      return IPC_FAIL(this, "Invalid aType value");
+  }
 
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
@@ -1237,24 +1239,14 @@ TabParent::RecvRequestNativeKeyBindings(const WidgetKeyboardEvent& aEvent,
   }
 
   WidgetKeyboardEvent localEvent(aEvent);
+  localEvent.mWidget = widget;
 
   if (NS_FAILED(widget->AttachNativeKeyEvent(localEvent))) {
     return IPC_OK();
   }
 
-  widget->ExecuteNativeKeyBinding(
-            nsIWidget::NativeKeyBindingsForSingleLineEditor,
-            localEvent, DoCommandCallback, &singleLine);
-  widget->ExecuteNativeKeyBinding(
-            nsIWidget::NativeKeyBindingsForMultiLineEditor,
-            localEvent, DoCommandCallback, &multiLine);
-  widget->ExecuteNativeKeyBinding(
-            nsIWidget::NativeKeyBindingsForRichTextEditor,
-            localEvent, DoCommandCallback, &richText);
-
-  if (!singleLine.IsEmpty() || !multiLine.IsEmpty() || !richText.IsEmpty()) {
-    *aBindings = NativeKeyBinding(singleLine, multiLine, richText);
-  }
+  localEvent.InitEditCommandsFor(keyBindingsType);
+  *aCommands = localEvent.EditCommandsConstRef(keyBindingsType);
 
   return IPC_OK();
 }
@@ -1444,31 +1436,15 @@ TabParent::SendRealKeyEvent(WidgetKeyboardEvent& aEvent)
   }
   aEvent.mRefPoint += GetChildProcessOffset();
 
-  MaybeNativeKeyBinding bindings;
-  bindings = void_t();
   if (aEvent.mMessage == eKeyPress) {
-    nsCOMPtr<nsIWidget> widget = GetWidget();
-
-    AutoTArray<mozilla::CommandInt, 4> singleLine;
-    AutoTArray<mozilla::CommandInt, 4> multiLine;
-    AutoTArray<mozilla::CommandInt, 4> richText;
-
-    widget->ExecuteNativeKeyBinding(
-              nsIWidget::NativeKeyBindingsForSingleLineEditor,
-              aEvent, DoCommandCallback, &singleLine);
-    widget->ExecuteNativeKeyBinding(
-              nsIWidget::NativeKeyBindingsForMultiLineEditor,
-              aEvent, DoCommandCallback, &multiLine);
-    widget->ExecuteNativeKeyBinding(
-              nsIWidget::NativeKeyBindingsForRichTextEditor,
-              aEvent, DoCommandCallback, &richText);
-
-    if (!singleLine.IsEmpty() || !multiLine.IsEmpty() || !richText.IsEmpty()) {
-      bindings = NativeKeyBinding(singleLine, multiLine, richText);
-    }
+    // XXX Should we do this only when input context indicates an editor having
+    //     focus and the key event won't cause inputting text?
+    aEvent.InitAllEditCommands();
+  } else {
+    aEvent.PreventNativeKeyBindings();
   }
 
-  return PBrowserParent::SendRealKeyEvent(aEvent, bindings);
+  return PBrowserParent::SendRealKeyEvent(aEvent);
 }
 
 bool

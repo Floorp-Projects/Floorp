@@ -603,6 +603,77 @@ WidgetKeyboardEvent::KeyNameIndexHashtable*
 WidgetKeyboardEvent::CodeNameIndexHashtable*
   WidgetKeyboardEvent::sCodeNameIndexHashtable = nullptr;
 
+void
+WidgetKeyboardEvent::InitAllEditCommands()
+{
+  // If the event was created without widget, e.g., created event in chrome
+  // script, this shouldn't execute native key bindings.
+  if (NS_WARN_IF(!mWidget)) {
+    return;
+  }
+
+  // This event should be trusted event here and we shouldn't expose native
+  // key binding information to web contents with untrusted events.
+  if (NS_WARN_IF(!IsTrusted())) {
+    return;
+  }
+
+  MOZ_ASSERT(XRE_IsParentProcess(),
+    "It's too expensive to retrieve all edit commands from remote process");
+  MOZ_ASSERT(!AreAllEditCommandsInitialized(),
+    "Shouldn't be called two or more times");
+
+  InitEditCommandsFor(nsIWidget::NativeKeyBindingsForSingleLineEditor);
+  InitEditCommandsFor(nsIWidget::NativeKeyBindingsForMultiLineEditor);
+  InitEditCommandsFor(nsIWidget::NativeKeyBindingsForRichTextEditor);
+}
+
+void
+WidgetKeyboardEvent::InitEditCommandsFor(nsIWidget::NativeKeyBindingsType aType)
+{
+  if (NS_WARN_IF(!mWidget) || NS_WARN_IF(!IsTrusted())) {
+    return;
+  }
+
+  bool& initialized = IsEditCommandsInitializedRef(aType);
+  if (initialized) {
+    return;
+  }
+  nsTArray<CommandInt>& commands = EditCommandsRef(aType);
+  mWidget->GetEditCommands(aType, *this, commands);
+  initialized = true;
+}
+
+bool
+WidgetKeyboardEvent::ExecuteEditCommands(nsIWidget::NativeKeyBindingsType aType,
+                                         DoCommandCallback aCallback,
+                                         void* aCallbackData)
+{
+  // If the event was created without widget, e.g., created event in chrome
+  // script, this shouldn't execute native key bindings.
+  if (NS_WARN_IF(!mWidget)) {
+    return false;
+  }
+
+  // This event should be trusted event here and we shouldn't expose native
+  // key binding information to web contents with untrusted events.
+  if (NS_WARN_IF(!IsTrusted())) {
+    return false;
+  }
+
+  InitEditCommandsFor(aType);
+
+  const nsTArray<CommandInt>& commands = EditCommandsRef(aType);
+  if (commands.IsEmpty()) {
+    return false;
+  }
+
+  for (CommandInt command : commands) {
+    aCallback(static_cast<Command>(command), aCallbackData);
+  }
+  return true;
+}
+
 bool
 WidgetKeyboardEvent::ShouldCauseKeypressEvents() const
 {

@@ -34,7 +34,7 @@ XPCOMUtils.defineLazyGetter(this, "WeaveService", () =>
           PageThumbs:false, PdfJs:false, PermissionUI:false, PlacesBackups:false,
           PlacesUtils:false, PluralForm:false, PrivateBrowsingUtils:false,
           ProcessHangMonitor:false, ReaderParent:false, RecentWindow:false,
-          RemotePrompt:false, SelfSupportBackend:false, SessionStore:false,
+          RemotePrompt:false, SessionStore:false,
           ShellService:false, SimpleServiceDiscovery:false, TabCrashHandler:false,
           Task:false, UITour:false, WebChannel:false,
           WindowsRegistry:false, webrtcUI:false, UserAgentOverrides: false */
@@ -83,7 +83,6 @@ let initializedModules = {};
   ["ReaderParent", "resource:///modules/ReaderParent.jsm"],
   ["RecentWindow", "resource:///modules/RecentWindow.jsm"],
   ["RemotePrompt", "resource:///modules/RemotePrompt.jsm"],
-  ["SelfSupportBackend", "resource:///modules/SelfSupportBackend.jsm", "init"],
   ["SessionStore", "resource:///modules/sessionstore/SessionStore.jsm"],
   ["ShellService", "resource:///modules/ShellService.jsm"],
   ["SimpleServiceDiscovery", "resource://gre/modules/SimpleServiceDiscovery.jsm"],
@@ -126,10 +125,6 @@ XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
 const global = this;
 
 const listeners = {
-  observers: {
-    "sessionstore-windows-restored": ["SelfSupportBackend"],
-  },
-
   ppmm: {
     // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN ContentPrefServiceParent.init
     "ContentPrefs:FunctionCall": ["ContentPrefServiceParent"],
@@ -171,16 +166,6 @@ const listeners = {
     "webrtc:UpdateBrowserIndicators": ["webrtcUI"],
   },
 
-  observe(subject, topic, data) {
-    for (let module of this.observers[topic]) {
-      try {
-        this[module].observe(subject, topic, data);
-      } catch (e) {
-        Cu.reportError(e);
-      }
-    }
-  },
-
   receiveMessage(modules, data) {
     let val;
     for (let module of modules[data.name]) {
@@ -194,10 +179,6 @@ const listeners = {
   },
 
   init() {
-    for (let observer of Object.keys(this.observers)) {
-      Services.obs.addObserver(this, observer);
-    }
-
     let receiveMessageMM = this.receiveMessage.bind(this, this.mm);
     for (let message of Object.keys(this.mm)) {
       Services.mm.addMessageListener(message, receiveMessageMM);
