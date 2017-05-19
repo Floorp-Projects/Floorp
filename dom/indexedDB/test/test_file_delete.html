@@ -10,6 +10,8 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
   <script type="text/javascript">
+  /* import-globals-from file.js */
+  /* import-globals-from helpers.js */
   function* testSteps()
   {
     const READ_WRITE = "readwrite";
@@ -80,8 +82,8 @@
       let db = event.target.result;
       db.onerror = errorHandler;
 
-      trans = db.transaction([objectStoreName], READ_WRITE);
-      objectStore = trans.objectStore(objectStoreName);
+      let trans = db.transaction([objectStoreName], READ_WRITE);
+      let objectStore = trans.objectStore(objectStoreName);
 
       request = objectStore.get(fileData2.key);
       request.onsuccess = grabEventAndContinueHandler;

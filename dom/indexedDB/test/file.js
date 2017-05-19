@@ -3,6 +3,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+/* import-globals-from helpers.js */
+
 var bufferCache = [];
 var utils = SpecialPowers.getDOMWindowUtils(window);
 
@@ -57,12 +59,12 @@ function compareBuffers(buffer1, buffer2)
 
 function getBlob(type, view)
 {
-  return new Blob([view], {type: type});
+  return new Blob([view], {type});
 }
 
 function getFile(name, type, view)
 {
-  return new File([view], name, {type: type});
+  return new File([view], name, {type});
 }
 
 function getRandomBlob(size)

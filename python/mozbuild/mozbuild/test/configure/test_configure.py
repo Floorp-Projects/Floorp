@@ -239,7 +239,7 @@ class TestConfigure(unittest.TestCase):
     def test_imports(self):
         config = {}
         out = StringIO()
-        sandbox = ConfigureSandbox(config, {}, [], out, out)
+        sandbox = ConfigureSandbox(config, {}, ['configure'], out, out)
 
         with self.assertRaises(ImportError):
             exec_(textwrap.dedent('''
@@ -368,7 +368,7 @@ class TestConfigure(unittest.TestCase):
 
         config = {}
         out = StringIO()
-        sandbox = CountApplyImportsSandbox(config, {}, [], out, out)
+        sandbox = CountApplyImportsSandbox(config, {}, ['configure'], out, out)
 
         exec_(textwrap.dedent('''
             @template
@@ -406,7 +406,7 @@ class TestConfigure(unittest.TestCase):
     def test_decorators(self):
         config = {}
         out = StringIO()
-        sandbox = ConfigureSandbox(config, {}, [], out, out)
+        sandbox = ConfigureSandbox(config, {}, ['configure'], out, out)
 
         sandbox.include_file(mozpath.join(test_data_path, 'decorators.configure'))
 
@@ -1287,38 +1287,93 @@ class TestConfigure(unittest.TestCase):
         ''' + moz_configure):
             self.get_config(['--enable-when'])
 
-    def test_depends_or(self):
+    def test_depends_binary_ops(self):
         with self.moz_configure('''
             option('--foo', nargs=1, help='foo')
             @depends('--foo')
             def foo(value):
-                return value or None
+                return value or 0
 
             option('--bar', nargs=1, help='bar')
             @depends('--bar')
             def bar(value):
+                return value or ''
+
+            option('--baz', nargs=1, help='baz')
+            @depends('--baz')
+            def baz(value):
                 return value
 
-            set_config('FOOBAR', foo | bar)
+            set_config('FOOorBAR', foo | bar)
+            set_config('FOOorBARorBAZ', foo | bar | baz)
+            set_config('FOOandBAR', foo & bar)
+            set_config('FOOandBARandBAZ', foo & bar & baz)
+        '''):
+            for foo_opt, foo_value in (
+                ('',  0),
+                ('--foo=foo', PositiveOptionValue(('foo',)))
+            ):
+                for bar_opt, bar_value in (
+                    ('', ''),
+                    ('--bar=bar', PositiveOptionValue(('bar',)))
+                ):
+                    for baz_opt, baz_value in (
+                        ('', NegativeOptionValue()),
+                        ('--baz=baz', PositiveOptionValue(('baz',)))
+                    ):
+                        config = self.get_config(
+                            [x for x in (foo_opt, bar_opt, baz_opt) if x])
+                        self.assertEqual(config, {
+                            'FOOorBAR': foo_value or bar_value,
+                            'FOOorBARorBAZ': foo_value or bar_value or baz_value,
+                            'FOOandBAR': foo_value and bar_value,
+                            'FOOandBARandBAZ': foo_value and bar_value and baz_value,
+                        })
+
+    def test_depends_getattr(self):
+        with self.moz_configure('''
+            @imports(_from='mozbuild.util', _import='ReadOnlyNamespace')
+            def namespace(**kwargs):
+                return ReadOnlyNamespace(**kwargs)
+
+            option('--foo', nargs=1, help='foo')
+            @depends('--foo')
+            def foo(value):
+                return value
+
+            option('--bar', nargs=1, help='bar')
+            @depends('--bar')
+            def bar(value):
+                return value or None
+
+            @depends(foo, bar)
+            def foobar(foo, bar):
+                return namespace(foo=foo, bar=bar)
+
+            set_config('FOO', foobar.foo)
+            set_config('BAR', foobar.bar)
+            set_config('BAZ', foobar.baz)
         '''):
             config = self.get_config()
             self.assertEqual(config, {
-                'FOOBAR': NegativeOptionValue(),
+                'FOO': NegativeOptionValue(),
             })
 
             config = self.get_config(['--foo=foo'])
             self.assertEqual(config, {
-                'FOOBAR': PositiveOptionValue(('foo',)),
+                'FOO': PositiveOptionValue(('foo',)),
             })
 
             config = self.get_config(['--bar=bar'])
             self.assertEqual(config, {
-                'FOOBAR': PositiveOptionValue(('bar',)),
+                'FOO': NegativeOptionValue(),
+                'BAR': PositiveOptionValue(('bar',)),
             })
 
             config = self.get_config(['--foo=foo', '--bar=bar'])
             self.assertEqual(config, {
-                'FOOBAR': PositiveOptionValue(('foo',)),
+                'FOO': PositiveOptionValue(('foo',)),
+                'BAR': PositiveOptionValue(('bar',)),
             })
 
 

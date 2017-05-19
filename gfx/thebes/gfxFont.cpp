@@ -1580,6 +1580,8 @@ static AntialiasMode Get2DAAMode(gfxFont::AntialiasOption aAAOption) {
 
 class GlyphBufferAzure
 {
+    typedef mozilla::image::imgDrawingParams imgDrawingParams;
+
 public:
     GlyphBufferAzure(const TextRunDrawParams& aRunParams,
                      const FontDrawParams&    aFontParams)
@@ -1649,13 +1651,12 @@ private:
 
                 RefPtr<gfxPattern> fillPattern;
                 if (mFontParams.contextPaint) {
-                  mozilla::image::DrawResult result = mozilla::image::DrawResult::SUCCESS;
-                  Tie(result, fillPattern) =
+                  imgDrawingParams imgParams;
+                  fillPattern =
                     mFontParams.contextPaint->GetFillPattern(
                                           mRunParams.context->GetDrawTarget(),
-                                          mRunParams.context->CurrentMatrix());
-                  // XXX cku Flush should return result to the caller?
-                  Unused << result;
+                                          mRunParams.context->CurrentMatrix(),
+                                          imgParams);
                 }
                 if (!fillPattern) {
                     if (state.pattern) {
@@ -2227,11 +2228,10 @@ gfxFont::RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint,
 
     aContextPaint->InitStrokeGeometry(aContext, devUnitsPerSVGUnit);
 
-    bool rv = GetFontEntry()->RenderSVGGlyph(aContext, aGlyphId,
-                                             aContextPaint);
+    GetFontEntry()->RenderSVGGlyph(aContext, aGlyphId, aContextPaint);
     aContext->Restore();
     aContext->NewPath();
-    return rv;
+    return true;
 }
 
 bool

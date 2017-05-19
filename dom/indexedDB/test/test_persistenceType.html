@@ -10,6 +10,7 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
   <script type="text/javascript">
+    /* import-globals-from helpers.js */
     function* testSteps()
     {
       const name = window.location.pathname;
@@ -20,7 +21,7 @@
       const data = { key: 1, value: "bar" };
 
       try {
-        indexedDB.open(name, { version: version, storage: "unknown" });
+        indexedDB.open(name, { version, storage: "unknown" });
         ok(false, "Should have thrown!");
       }
       catch (e) {
@@ -29,8 +30,8 @@
       }
 
       for (let storage of storages) {
-        let request = indexedDB.open(name, { version: version,
-                                             storage: storage });
+        let request = indexedDB.open(name, { version,
+                                             storage });
 
         if (storage == "persistent" &&
             SpecialPowers.Services.appinfo.widgetToolkit == "android") {

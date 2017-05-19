@@ -360,8 +360,8 @@ public:
     // a raw pointer here.
     Reader()->ReadMetadata()
       ->Then(OwnerThread(), __func__,
-        [this] (RefPtr<MetadataHolder> aMetadata) {
-          OnMetadataRead(aMetadata);
+        [this] (MetadataHolder&& aMetadata) {
+          OnMetadataRead(Move(aMetadata));
         },
         [this] (const MediaResult& aError) {
           OnMetadataNotRead(aError);
@@ -397,7 +397,7 @@ public:
   }
 
 private:
-  void OnMetadataRead(MetadataHolder* aMetadata);
+  void OnMetadataRead(MetadataHolder&& aMetadata);
 
   void OnMetadataNotRead(const MediaResult& aError)
   {
@@ -2130,14 +2130,14 @@ StateObject::SetSeekingState(SeekJob&& aSeekJob, EventVisibility aVisibility)
 
 void
 MediaDecoderStateMachine::
-DecodeMetadataState::OnMetadataRead(MetadataHolder* aMetadata)
+DecodeMetadataState::OnMetadataRead(MetadataHolder&& aMetadata)
 {
   mMetadataRequest.Complete();
 
   // Set mode to PLAYBACK after reading metadata.
   Resource()->SetReadMode(MediaCacheStream::MODE_PLAYBACK);
 
-  mMaster->mInfo.emplace(aMetadata->mInfo);
+  mMaster->mInfo.emplace(*aMetadata.mInfo);
   mMaster->mMediaSeekable = Info().mMediaSeekable;
   mMaster->mMediaSeekableOnlyInBufferedRanges =
     Info().mMediaSeekableOnlyInBufferedRanges;
@@ -2166,8 +2166,8 @@ DecodeMetadataState::OnMetadataRead(MetadataHolder* aMetadata)
   MOZ_ASSERT(mMaster->mDuration.Ref().isSome());
 
   mMaster->mMetadataLoadedEvent.Notify(
-    nsAutoPtr<MediaInfo>(new MediaInfo(aMetadata->mInfo)),
-    Move(aMetadata->mTags),
+    Move(aMetadata.mInfo),
+    Move(aMetadata.mTags),
     MediaDecoderEventVisibility::Observable);
 
   if (Info().IsEncrypted() && !mMaster->mCDMProxy) {

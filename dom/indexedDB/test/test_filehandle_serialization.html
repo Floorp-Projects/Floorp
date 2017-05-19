@@ -10,6 +10,8 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
   <script type="text/javascript">
+  /* import-globals-from file.js */
+  /* import-globals-from helpers.js */
   function* testSteps()
   {
     const READ_WRITE = "readwrite";
@@ -20,8 +22,6 @@
     ];
 
     const objectStoreName = "Blobs";
-
-    const testFile = getRandomFile("random.bin", 100000);
 
     let databases = [];
     for (let info of databaseInfo) {
@@ -49,7 +49,7 @@
 
     let request = db1.createMutableFile("random.bin", "binary/random");
     request.onsuccess = grabEventAndContinueHandler;
-    event = yield undefined;
+    let event = yield undefined;
 
     let mutableFile = event.target.result;
     is(getFileId(mutableFile), 1, "Correct file id");

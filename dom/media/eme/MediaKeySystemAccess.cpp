@@ -662,21 +662,8 @@ GetSupportedCapabilities(const CodecType aCodecType,
     if (codecs.IsEmpty()) {
       // If container normatively implies a specific set of codecs and codec constraints:
       // Let parameters be that set.
-      if (isMP4) {
-        if (aCodecType == Audio) {
-          codecs.AppendElement(EME_CODEC_AAC);
-        } else if (aCodecType == Video) {
-          codecs.AppendElement(EME_CODEC_H264);
-        }
-      } else if (isWebM) {
-        if (aCodecType == Audio) {
-          codecs.AppendElement(EME_CODEC_VORBIS);
-        } else if (aCodecType == Video) {
-          codecs.AppendElement(EME_CODEC_VP8);
-        }
-      }
       // Otherwise: Continue to the next iteration.
-      // (Note: all containers we support have implied codecs, so don't continue here.)
+      continue;
     }
 
     // If container type is not strictly a audio/video type, continue to the next iteration.
@@ -939,8 +926,13 @@ GetSupportedConfig(const KeySystemConfig& aKeySystem,
 
   // If the videoCapabilities and audioCapabilities members in candidate
   // configuration are both empty, return NotSupported.
-  // TODO: Most sites using EME still don't pass capabilities, so we
-  // can't reject on it yet without breaking them. So add this later.
+  if (aCandidate.mAudioCapabilities.IsEmpty() &&
+      aCandidate.mVideoCapabilities.IsEmpty()) {
+    EME_LOG("MediaKeySystemConfiguration (label='%s') rejected; "
+            "no supported audio or video capabilities specified",
+            NS_ConvertUTF16toUTF8(aCandidate.mLabel).get());
+    return false;
+  }
 
   // If the videoCapabilities member in candidate configuration is non-empty:
   if (!aCandidate.mVideoCapabilities.IsEmpty()) {

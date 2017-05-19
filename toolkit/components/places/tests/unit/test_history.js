@@ -148,7 +148,7 @@ add_task(async function test_execute() {
 
   // test getPageTitle
   await PlacesTestUtils.addVisits({ uri: uri("http://example.com"), title: "title" });
-  let placeInfo = await PlacesUtils.promisePlaceInfo(uri("http://example.com"));
+  let placeInfo = await PlacesUtils.history.fetch("http://example.com");
   do_check_eq(placeInfo.title, "title");
 
   // query for the visit

@@ -363,10 +363,6 @@ DevToolsUtils.defineLazyGetter(this, "OS", () => {
   return Cu.import("resource://gre/modules/osfile.jsm", {}).OS;
 });
 
-DevToolsUtils.defineLazyGetter(this, "TextDecoder", () => {
-  return Cu.import("resource://gre/modules/osfile.jsm", {}).TextDecoder;
-});
-
 DevToolsUtils.defineLazyGetter(this, "NetworkHelper", () => {
   return require("devtools/shared/webconsole/network-helper");
 });

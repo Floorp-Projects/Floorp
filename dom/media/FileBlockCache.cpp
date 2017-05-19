@@ -31,11 +31,11 @@ FileBlockCache::SetCacheFile(PRFileDesc* aFD)
     return;
   }
   {
-    MonitorAutoLock lock(mFileMonitor);
+    MutexAutoLock lock(mFileMutex);
     mFD = aFD;
   }
   {
-    MonitorAutoLock lock(mDataMonitor);
+    MutexAutoLock lock(mDataMutex);
     if (!mIsOpen) {
       // We've been closed while waiting for the file descriptor. Bail out.
       // Rely on the destructor to close the file descriptor.
@@ -55,7 +55,7 @@ FileBlockCache::Init()
 {
   LOG("Init()");
 
-  MonitorAutoLock mon(mDataMonitor);
+  MutexAutoLock mon(mDataMutex);
   nsresult rv = NS_NewNamedThread("FileBlockCache",
                                   getter_AddRefs(mThread),
                                   nullptr,
@@ -91,11 +91,12 @@ FileBlockCache::Init()
 }
 
 FileBlockCache::FileBlockCache()
-  : mFileMonitor("MediaCache.Writer.IO.Monitor"),
+  : mFileMutex("MediaCache.Writer.IO.Mutex"),
     mFD(nullptr),
     mFDCurrentPos(0),
-    mDataMonitor("MediaCache.Writer.Data.Monitor"),
+    mDataMutex("MediaCache.Writer.Data.Mutex"),
     mIsWriteScheduled(false),
+    mIsReading(false),
     mIsOpen(false)
 {
 }
@@ -111,7 +112,7 @@ void FileBlockCache::Close()
 
   nsCOMPtr<nsIThread> thread;
   {
-    MonitorAutoLock mon(mDataMonitor);
+    MutexAutoLock mon(mDataMutex);
     if (!mIsOpen) {
       return;
     }
@@ -124,7 +125,7 @@ void FileBlockCache::Close()
 
   PRFileDesc* fd;
   {
-    MonitorAutoLock lock(mFileMonitor);
+    MutexAutoLock lock(mFileMutex);
     fd = mFD;
     mFD = nullptr;
   }
@@ -164,7 +165,7 @@ nsresult
 FileBlockCache::WriteBlock(uint32_t aBlockIndex,
   Span<const uint8_t> aData1, Span<const uint8_t> aData2)
 {
-  MonitorAutoLock mon(mDataMonitor);
+  MutexAutoLock mon(mDataMutex);
 
   if (!mIsOpen)
     return NS_ERROR_FAILURE;
@@ -192,10 +193,10 @@ FileBlockCache::WriteBlock(uint32_t aBlockIndex,
 
 void FileBlockCache::EnsureWriteScheduled()
 {
-  mDataMonitor.AssertCurrentThreadOwns();
+  mDataMutex.AssertCurrentThreadOwns();
   MOZ_ASSERT(mIsOpen);
 
-  if (mIsWriteScheduled) {
+  if (mIsWriteScheduled || mIsReading) {
     return;
   }
   mIsWriteScheduled = true;
@@ -209,7 +210,7 @@ void FileBlockCache::EnsureWriteScheduled()
 
 nsresult FileBlockCache::Seek(int64_t aOffset)
 {
-  mFileMonitor.AssertCurrentThreadOwns();
+  mFileMutex.AssertCurrentThreadOwns();
 
   if (mFDCurrentPos != aOffset) {
     MOZ_ASSERT(mFD);
@@ -229,7 +230,7 @@ nsresult FileBlockCache::ReadFromFile(int64_t aOffset,
                                       int32_t& aBytesRead)
 {
   LOG("ReadFromFile(offset=%" PRIu64 ", len=%u)", aOffset, aBytesToRead);
-  mFileMonitor.AssertCurrentThreadOwns();
+  mFileMutex.AssertCurrentThreadOwns();
   MOZ_ASSERT(mFD);
 
   nsresult res = Seek(aOffset);
@@ -248,7 +249,7 @@ nsresult FileBlockCache::WriteBlockToFile(int32_t aBlockIndex,
 {
   LOG("WriteBlockToFile(index=%u)", aBlockIndex);
 
-  mFileMonitor.AssertCurrentThreadOwns();
+  mFileMutex.AssertCurrentThreadOwns();
   MOZ_ASSERT(mFD);
 
   nsresult rv = Seek(BlockIndexToOffset(aBlockIndex));
@@ -269,7 +270,7 @@ nsresult FileBlockCache::MoveBlockInFile(int32_t aSourceBlockIndex,
 {
   LOG("MoveBlockInFile(src=%u, dest=%u)", aSourceBlockIndex, aDestBlockIndex);
 
-  mFileMonitor.AssertCurrentThreadOwns();
+  mFileMutex.AssertCurrentThreadOwns();
 
   uint8_t buf[BLOCK_SIZE];
   int32_t bytesRead = 0;
@@ -285,7 +286,7 @@ nsresult FileBlockCache::MoveBlockInFile(int32_t aSourceBlockIndex,
 nsresult FileBlockCache::Run()
 {
   NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
-  MonitorAutoLock mon(mDataMonitor);
+  MutexAutoLock mon(mDataMutex);
   NS_ASSERTION(!mChangeIndexList.empty(), "Only dispatch when there's work to do");
   NS_ASSERTION(mIsWriteScheduled, "Should report write running or scheduled.");
   MOZ_ASSERT(mFD);
@@ -299,17 +300,23 @@ nsresult FileBlockCache::Run()
       return NS_ERROR_FAILURE;
     }
 
+    if (mIsReading) {
+      // We're trying to read; postpone all writes. (Reader will resume writes.)
+      mIsWriteScheduled = false;
+      return NS_OK;
+    }
+
     // Process each pending change. We pop the index out of the change
     // list, but leave the BlockChange in mBlockChanges until the change
     // is written to file. This is so that any read which happens while
-    // we drop mDataMonitor to write will refer to the data's source in
+    // we drop mDataMutex to write will refer to the data's source in
     // memory, rather than the not-yet up to date data written to file.
     // This also ensures we will insert a new index into mChangeIndexList
     // when this happens.
 
     // Hold a reference to the change, in case another change
     // overwrites the mBlockChanges entry for this block while we drop
-    // mDataMonitor to take mFileMonitor.
+    // mDataMutex to take mFileMutex.
     int32_t blockIndex = mChangeIndexList.front();
     mChangeIndexList.pop_front();
     RefPtr<BlockChange> change = mBlockChanges[blockIndex];
@@ -317,8 +324,8 @@ nsresult FileBlockCache::Run()
                "Change index list should only contain entries for blocks "
                "with changes");
     {
-      MonitorAutoUnlock unlock(mDataMonitor);
-      MonitorAutoLock lock(mFileMonitor);
+      MutexAutoUnlock unlock(mDataMutex);
+      MutexAutoLock lock(mFileMutex);
       if (change->IsWrite()) {
         WriteBlockToFile(blockIndex, change->mData.get());
       } else if (change->IsMove()) {
@@ -326,7 +333,7 @@ nsresult FileBlockCache::Run()
       }
     }
     // If a new change has not been made to the block while we dropped
-    // mDataMonitor, clear reference to the old change. Otherwise, the old
+    // mDataMutex, clear reference to the old change. Otherwise, the old
     // reference has been cleared already.
     if (mBlockChanges[blockIndex] == change) {
       mBlockChanges[blockIndex] = nullptr;
@@ -343,10 +350,19 @@ nsresult FileBlockCache::Read(int64_t aOffset,
                               int32_t aLength,
                               int32_t* aBytes)
 {
-  MonitorAutoLock mon(mDataMonitor);
+  MutexAutoLock mon(mDataMutex);
 
   if (!mIsOpen || (aOffset / BLOCK_SIZE) > INT32_MAX)
     return NS_ERROR_FAILURE;
+
+  mIsReading = true;
+  auto exitRead = MakeScopeExit([&] {
+    mIsReading = false;
+    if (!mChangeIndexList.empty()) {
+      // mReading has stopped or prevented pending writes, resume them.
+      EnsureWriteScheduled();
+    }
+  });
 
   int32_t bytesToRead = aLength;
   int64_t offset = aOffset;
@@ -380,8 +396,8 @@ nsresult FileBlockCache::Read(int64_t aOffset,
       // from file.
       nsresult res;
       {
-        MonitorAutoUnlock unlock(mDataMonitor);
-        MonitorAutoLock lock(mFileMonitor);
+        MutexAutoUnlock unlock(mDataMutex);
+        MutexAutoLock lock(mFileMutex);
         res = ReadFromFile(BlockIndexToOffset(blockIndex) + start,
                            dst,
                            amount,
@@ -399,7 +415,7 @@ nsresult FileBlockCache::Read(int64_t aOffset,
 
 nsresult FileBlockCache::MoveBlock(int32_t aSourceBlockIndex, int32_t aDestBlockIndex)
 {
-  MonitorAutoLock mon(mDataMonitor);
+  MutexAutoLock mon(mDataMutex);
 
   if (!mIsOpen)
     return NS_ERROR_FAILURE;

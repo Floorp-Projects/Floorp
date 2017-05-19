@@ -18,7 +18,7 @@ function test()
 function test1()
 {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  gBrowser.selectedBrowser.addEventListener("load", function () {
+  gBrowser.selectedBrowser.addEventListener("load", function() {
     if (content.location != testPageURL) {
       content.location = testPageURL;
       return;
@@ -49,7 +49,7 @@ function test2()
 function test3(win)
 {
   win.gBrowser.selectedTab = win.gBrowser.addTab();
-  win.gBrowser.selectedBrowser.addEventListener("load", function () {
+  win.gBrowser.selectedBrowser.addEventListener("load", function() {
     if (win.content.location != testPageURL) {
       win.content.location = testPageURL;
       return;

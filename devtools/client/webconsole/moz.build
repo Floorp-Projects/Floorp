@@ -19,6 +19,7 @@ DevToolsModules(
     'panel.js',
     'utils.js',
     'webconsole-connection-proxy.js',
+    'webconsole-l10n.js',
     'webconsole.js',
 )
 

@@ -546,6 +546,13 @@ if (manifestNavigator().userAgent.includes("Windows") &&
                                    {name: "red-48x46.mp4", type:"video/mp4"});
 }
 
+// These files would get error after receiving "loadedmetadata", we would like
+// to check duration in "onerror" and make sure the duration is still available.
+var gDurationTests = [
+  { name:"bug603918.webm", duration:6.076 },
+  { name:"bug604067.webm", duration:6.076 }
+]
+
 // These are files that have nontrivial duration and are useful for seeking within.
 var gSeekTests = [
   { name:"r11025_s16_c1.wav", type:"audio/x-wav", duration:1.0 },

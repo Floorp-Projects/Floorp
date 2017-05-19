@@ -74,6 +74,7 @@ macro_rules! impl_to_css_for_predefined_type {
 
 impl_to_css_for_predefined_type!(f32);
 impl_to_css_for_predefined_type!(i32);
+impl_to_css_for_predefined_type!(u16);
 impl_to_css_for_predefined_type!(u32);
 impl_to_css_for_predefined_type!(::cssparser::Token<'a>);
 impl_to_css_for_predefined_type!(::cssparser::RGBA);
@@ -187,6 +188,13 @@ pub mod specified {
         All,
         /// Allow only non-negative lengths.
         NonNegative
+    }
+
+    impl Default for AllowedLengthType {
+        #[inline]
+        fn default() -> Self {
+            AllowedLengthType::All
+        }
     }
 
     impl AllowedLengthType {

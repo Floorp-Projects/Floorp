@@ -15,6 +15,7 @@
 #if LIBFUZZER_APPLE
 
 #include "FuzzerExtFunctions.h"
+#include "FuzzerIO.h"
 #include <dlfcn.h>
 
 using namespace fuzzer;
@@ -45,5 +46,7 @@ ExternalFunctions::ExternalFunctions() {
 
 #undef EXT_FUNC
 }
+
 } // namespace fuzzer
+
 #endif // LIBFUZZER_APPLE

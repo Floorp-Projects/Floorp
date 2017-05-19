@@ -62,6 +62,9 @@ fails-if(!stylo) == object-fit-fill-svg-006.xul object-fit-fill-svg-006-ref.html
 fuzzy-if(webrender,16,20) == object-position-png-001.xul object-position-png-001-ref.html
 == object-position-png-002.xul object-position-png-002-ref.html
 
+== stack-sizing-1.xul stack-sizing-1-ref.xul
+== stack-sizing-2.xul stack-sizing-2-ref.xul
+
 # Tests for rendering SVG images in a XUL <treecell>:
 # XXXdholbert: These are marked as "random" right now, since they might not
 # render the images they trying to test in time for the reftest snapshot, per

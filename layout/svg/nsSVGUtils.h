@@ -192,7 +192,7 @@ public:
   typedef mozilla::SVGContextPaint SVGContextPaint;
   typedef mozilla::SVGContextPaintImpl SVGContextPaintImpl;
   typedef mozilla::SVGGeometryFrame SVGGeometryFrame;
-  typedef mozilla::image::DrawResult DrawResult;
+  typedef mozilla::image::imgDrawingParams imgDrawingParams;
 
   static void Init();
 
@@ -290,11 +290,11 @@ public:
 
   /* Paint SVG frame with SVG effects - aDirtyRect is the area being
    * redrawn, in device pixel coordinates relative to the outer svg */
-  static DrawResult PaintFrameWithEffects(nsIFrame *aFrame,
-                                          gfxContext& aContext,
-                                          const gfxMatrix& aTransform,
-                                          const nsIntRect *aDirtyRect = nullptr,
-                                          uint32_t aFlags = 0);
+  static void PaintFrameWithEffects(nsIFrame *aFrame,
+                                    gfxContext& aContext,
+                                    const gfxMatrix& aTransform,
+                                    imgDrawingParams& aImgParams,
+                                    const nsIntRect *aDirtyRect = nullptr);
 
   /* Hit testing - check if point hits the clipPath of indicated
    * frame.  Returns true if no clipPath set. */
@@ -510,18 +510,19 @@ public:
   static nscolor GetFallbackOrPaintColor(nsStyleContext *aStyleContext,
                                          nsStyleSVGPaint nsStyleSVG::*aFillOrStroke);
 
-  static DrawResult MakeFillPatternFor(nsIFrame *aFrame,
-                                       gfxContext* aContext,
-                                       GeneralPattern* aOutPattern,
-                                       SVGContextPaint* aContextPaint = nullptr,
-                                       uint32_t aFlags = 0);
+  static void
+  MakeFillPatternFor(nsIFrame *aFrame,
+                     gfxContext* aContext,
+                     GeneralPattern* aOutPattern,
+                     imgDrawingParams& aImgParams,
+                     SVGContextPaint* aContextPaint = nullptr);
 
-  static DrawResult
+  static void
   MakeStrokePatternFor(nsIFrame* aFrame,
                        gfxContext* aContext,
                        GeneralPattern* aOutPattern,
-                       SVGContextPaint* aContextPaint = nullptr,
-                       uint32_t aFlags = 0);
+                       imgDrawingParams& aImgParams,
+                       SVGContextPaint* aContextPaint = nullptr);
 
   static float GetOpacity(nsStyleSVGOpacitySource aOpacityType,
                           const float& aOpacity,
@@ -567,7 +568,7 @@ public:
    * @param aContext the thebes aContext to draw to
    * @return true if rendering succeeded
    */
-  static bool PaintSVGGlyph(Element* aElement, gfxContext* aContext);
+  static void PaintSVGGlyph(Element* aElement, gfxContext* aContext);
 
   /**
    * Get the extents of a SVG glyph.

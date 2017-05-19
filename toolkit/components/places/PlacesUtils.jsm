@@ -1648,28 +1648,19 @@ this.PlacesUtils = {
   },
 
   /**
-   * Promised wrapper for mozIAsyncHistory::getPlacesInfo for a single place.
+   * Deprecated wrapper for History.jsm::fetch.
    *
    * @param aPlaceIdentifier
-   *        either an nsIURI or a GUID (@see getPlacesInfo)
-   * @resolves to the place info object handed to handleResult.
+   *        either an URL or a GUID (@see History.jsm::fetch)
+   * @return {Promise}.
+   * @resolve a PageInfo
+   * @reject if there is an error in the place identifier
    */
-  promisePlaceInfo: function PU_promisePlaceInfo(aPlaceIdentifier) {
-    return new Promise((resolve, reject) => {
-      PlacesUtils.asyncHistory.getPlacesInfo(aPlaceIdentifier, {
-        _placeInfo: null,
-        handleResult: function handleResult(aPlaceInfo) {
-          this._placeInfo = aPlaceInfo;
-        },
-        handleError: function handleError(aResultCode, aPlaceInfo) {
-          reject(new Components.Exception("Error", aResultCode));
-        },
-        handleCompletion() {
-          resolve(this._placeInfo);
-        }
-      });
-
-    });
+  promisePlaceInfo(aPlaceIdentifier) {
+    Deprecated.warning(`PlacesUtils.promisePlaceInfo() is deprecated.
+                        Please use PlacesUtils.history.fetch()`,
+                       "https://bugzilla.mozilla.org/show_bug.cgi?id=1350377");
+    return PlacesUtils.history.fetch(aPlaceIdentifier);
   },
 
   /**

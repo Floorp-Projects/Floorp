@@ -46,14 +46,14 @@ public:
   NS_DECL_ABSTRACT_FRAME(nsSVGGradientFrame)
 
   // nsSVGPaintServerFrame methods:
-  virtual mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
-    GetPaintServerPattern(nsIFrame* aSource,
+  virtual already_AddRefed<gfxPattern>
+    GetPaintServerPattern(nsIFrame *aSource,
                           const DrawTarget* aDrawTarget,
                           const gfxMatrix& aContextMatrix,
                           nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
-                          float aGraphicOpacity,
-                          const gfxRect* aOverrideBounds,
-                          uint32_t aFlags) override;
+                          float aOpacity,
+                          imgDrawingParams& aImgParams,
+                          const gfxRect* aOverrideBounds) override;
 
   // nsIFrame interface:
   virtual nsresult AttributeChanged(int32_t         aNameSpaceID,

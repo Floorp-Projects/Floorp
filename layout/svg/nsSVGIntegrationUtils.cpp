@@ -384,9 +384,10 @@ public:
     : mBuilder(aBuilder), mLayerManager(aManager),
       mUserSpaceToFrameSpaceOffset(aUserSpaceToFrameSpaceOffset) {}
 
-  virtual DrawResult Paint(gfxContext& aContext, nsIFrame *aTarget,
-                           const gfxMatrix& aTransform,
-                           const nsIntRect* aDirtyRect) override
+  virtual void Paint(gfxContext& aContext, nsIFrame *aTarget,
+                     const gfxMatrix& aTransform,
+                     const nsIntRect* aDirtyRect,
+                     imgDrawingParams& aImgParams) override
   {
     BasicLayerManager* basic = mLayerManager->AsBasicLayerManager();
     RefPtr<gfxContext> oldCtx = basic->GetTarget();
@@ -397,7 +398,6 @@ public:
 
     mLayerManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer, mBuilder);
     basic->SetTarget(oldCtx);
-    return DrawResult::SUCCESS;
   }
 
 private:
@@ -411,7 +411,7 @@ typedef nsSVGIntegrationUtils::PaintFramesParams PaintFramesParams;
 /**
  * Paint css-positioned-mask onto a given target(aMaskDT).
  */
-static DrawResult
+static void
 PaintMaskSurface(const PaintFramesParams& aParams,
                  DrawTarget* aMaskDT, float aOpacity, nsStyleContext* aSC,
                  const nsTArray<nsSVGMaskFrame*>& aMaskFrames,
@@ -439,7 +439,6 @@ PaintMaskSurface(const PaintFramesParams& aParams,
   // aMaskDT one at a time.
   for (int i = aMaskFrames.Length() - 1; i >= 0 ; i--) {
     nsSVGMaskFrame *maskFrame = aMaskFrames[i];
-    DrawResult result = DrawResult::SUCCESS;
     CompositionOp compositionOp = (i == int(aMaskFrames.Length() - 1))
       ? CompositionOp::OP_OVER
       : nsCSSRendering::GetGFXCompositeMode(svgReset->mMask.mLayers[i].mComposite);
@@ -452,22 +451,15 @@ PaintMaskSurface(const PaintFramesParams& aParams,
                                         cssPxToDevPxMatrix,
                                         aOpacity, &svgMaskMatrix,
                                         svgReset->mMask.mLayers[i].mMaskMode,
-                                        aParams.flags);
-      RefPtr<SourceSurface> svgMask;
-      Tie(result, svgMask) = maskFrame->GetMaskForMaskedFrame(params);
-
+                                        aParams.imgParams);
+      RefPtr<SourceSurface> svgMask = maskFrame->GetMaskForMaskedFrame(params);
       if (svgMask) {
-        MOZ_ASSERT(result == DrawResult::SUCCESS);
         gfxContextMatrixAutoSaveRestore matRestore(maskContext);
 
         maskContext->Multiply(ThebesMatrix(svgMaskMatrix));
         aMaskDT->MaskSurface(ColorPattern(Color(0.0, 0.0, 0.0, 1.0)), svgMask,
                              Point(0, 0),
                              DrawOptions(1.0, compositionOp));
-      }
-
-      if (result != DrawResult::SUCCESS) {
-        return result;
       }
     } else {
       gfxContextMatrixAutoSaveRestore matRestore(maskContext);
@@ -484,28 +476,22 @@ PaintMaskSurface(const PaintFramesParams& aParams,
                                                       i, compositionOp,
                                                       aOpacity);
 
-      result =
+      aParams.imgParams.result &=
         nsCSSRendering::PaintStyleImageLayerWithSC(params, rc, aSC,
                                               *aParams.frame->StyleBorder());
-      if (result != DrawResult::SUCCESS) {
-        return result;
-      }
     }
   }
-
-  return DrawResult::SUCCESS;
 }
 
 struct MaskPaintResult {
   RefPtr<SourceSurface> maskSurface;
   Matrix maskTransform;
-  DrawResult result;
   bool transparentBlackMask;
   bool opacityApplied;
 
   MaskPaintResult()
-    : result(DrawResult::SUCCESS), transparentBlackMask(false),
-      opacityApplied(false)
+    : transparentBlackMask(false)
+    , opacityApplied(false)
   {}
 };
 
@@ -529,8 +515,8 @@ CreateAndPaintMaskSurface(const PaintFramesParams& aParams,
     nsSVGMaskFrame::MaskParams params(&ctx, aParams.frame, cssPxToDevPxMatrix,
                                       aOpacity, &paintResult.maskTransform,
                                       svgReset->mMask.mLayers[0].mMaskMode,
-                                      aParams.flags);
-    Tie(paintResult.result, paintResult.maskSurface) =
+                                      aParams.imgParams);
+    paintResult.maskSurface =
       aMaskFrames[0]->GetMaskForMaskedFrame(params);
 
     if (!paintResult.maskSurface) {
@@ -550,7 +536,6 @@ CreateAndPaintMaskSurface(const PaintFramesParams& aParams,
       ctx.GetDrawTarget()->CreateSimilarDrawTarget(maskSurfaceRect.Size(),
                                                    SurfaceFormat::A8);
   if (!maskDT || !maskDT->IsValid()) {
-    paintResult.result = DrawResult::TEMPORARY_ERROR;
     return paintResult;
   }
 
@@ -565,12 +550,12 @@ CreateAndPaintMaskSurface(const PaintFramesParams& aParams,
   gfxMatrix maskSurfaceMatrix =
     ctx.CurrentMatrix() * gfxMatrix::Translation(-aParams.maskRect.TopLeft());
 
-  paintResult.result = PaintMaskSurface(aParams, maskDT,
-                                        paintResult.opacityApplied
-                                          ? aOpacity : 1.0,
-                                        aSC, aMaskFrames, maskSurfaceMatrix,
-                                        aOffsetToUserSpace);
-  if (paintResult.result != DrawResult::SUCCESS) {
+  PaintMaskSurface(aParams, maskDT,
+                   paintResult.opacityApplied ? aOpacity : 1.0,
+                   aSC, aMaskFrames, maskSurfaceMatrix,
+                   aOffsetToUserSpace);
+
+  if (aParams.imgParams.result != DrawResult::SUCCESS) {
     // Now we know the status of mask resource since we used it while painting.
     // According to the return value of PaintMaskSurface, we know whether mask
     // resource is resolvable or not.
@@ -757,7 +742,7 @@ private:
   gfxContext* mContext;
 };
 
-DrawResult
+void
 nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
 {
   nsSVGUtils::MaskUsage maskUsage;
@@ -766,7 +751,7 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
 
   nsIFrame* frame = aParams.frame;
   if (!ValidateSVGFrame(frame)) {
-    return DrawResult::SUCCESS;
+    return;
   }
 
   gfxContext& ctx = aParams.ctx;
@@ -775,7 +760,6 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
   nsSVGEffects::EffectProperties effectProperties =
     nsSVGEffects::GetEffectProperties(firstFrame);
 
-  DrawResult result = DrawResult::SUCCESS;
   RefPtr<DrawTarget> maskTarget = ctx.GetDrawTarget();
 
   if (maskUsage.shouldGenerateMaskLayer &&
@@ -816,7 +800,7 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
       ctx.SetColor(Color(1.0, 1.0, 1.0, 1.0));
       ctx.Fill();
 
-      return result;
+      return;
     }
   }
 
@@ -826,14 +810,11 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
     matSR.SetContext(&ctx);
 
     EffectOffsets offsets = MoveContextOriginToUserSpace(frame, aParams);
-    result = PaintMaskSurface(aParams, maskTarget,
-                              shouldPushOpacity ?  1.0 : maskUsage.opacity,
-                              firstFrame->StyleContext(), maskFrames,
-                              ctx.CurrentMatrix(),
-                              offsets.offsetToUserSpace);
-    if (result != DrawResult::SUCCESS) {
-      return result;
-    }
+    PaintMaskSurface(aParams, maskTarget,
+                     shouldPushOpacity ?  1.0 : maskUsage.opacity,
+                     firstFrame->StyleContext(), maskFrames,
+                     ctx.CurrentMatrix(),
+                     offsets.offsetToUserSpace);
   }
 
   // Paint clip-path onto ctx.
@@ -848,16 +829,13 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
     nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame();
     RefPtr<SourceSurface> maskSurface =
       maskUsage.shouldGenerateMaskLayer ? maskTarget->Snapshot() : nullptr;
-    result =
-      clipPathFrame->PaintClipMask(ctx, frame, cssPxToDevPxMatrix,
+    clipPathFrame->PaintClipMask(ctx, frame, cssPxToDevPxMatrix,
                                    &clipMaskTransform, maskSurface,
                                    ToMatrix(ctx.CurrentMatrix()));
   }
-
-  return result;
 }
 
-DrawResult
+void
 nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
 {
   MOZ_ASSERT(UsingMaskOrClipPathForFrame(aParams.frame),
@@ -878,9 +856,8 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
    * + Merge opacity and masking if both used together.
    */
   nsIFrame* frame = aParams.frame;
-  DrawResult result = DrawResult::SUCCESS;
   if (!ValidateSVGFrame(frame)) {
-    return result;
+    return;
   }
 
   nsSVGUtils::MaskUsage maskUsage;
@@ -888,7 +865,7 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
                                  maskUsage);
 
   if (maskUsage.opacity == 0.0f) {
-    return DrawResult::SUCCESS;
+    return;
   }
 
   gfxContext& context = aParams.ctx;
@@ -933,10 +910,9 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
                                   maskFrames, offsets.offsetToUserSpace);
 
       if (paintResult.transparentBlackMask) {
-        return paintResult.result;
+        return;
       }
 
-      result &= paintResult.result;
       maskSurface = paintResult.maskSurface;
       if (maskSurface) {
         shouldPushMask = true;
@@ -951,12 +927,10 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
 
       MoveContextOriginToUserSpace(firstFrame, aParams);
       Matrix clipMaskTransform;
-      DrawResult clipMaskResult;
-      RefPtr<SourceSurface> clipMaskSurface;
-      Tie(clipMaskResult, clipMaskSurface) =
+      RefPtr<SourceSurface> clipMaskSurface =
         clipPathFrame->GetClipMask(context, frame, cssPxToDevPxMatrix,
                                    &clipMaskTransform, maskSurface,
-                                   maskTransform);
+                                  maskTransform);
 
       if (clipMaskSurface) {
         maskSurface = clipMaskSurface;
@@ -964,9 +938,9 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
       } else {
         // Either entire surface is clipped out, or gfx buffer allocation
         // failure in nsSVGClipPathFrame::GetClipMask.
-        return clipMaskResult;
+        return;
       }
-      result &= clipMaskResult;
+
       shouldPushMask = true;
     }
 
@@ -1055,10 +1029,9 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
     context.PopGroupAndBlend();
   }
 
-  return result;
 }
 
-DrawResult
+void
 nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams)
 {
   MOZ_ASSERT(!aParams.builder->IsForGenerateGlyphMask(),
@@ -1068,12 +1041,12 @@ nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams)
 
   nsIFrame* frame = aParams.frame;
   if (!ValidateSVGFrame(frame)) {
-    return DrawResult::SUCCESS;
+    return;
   }
 
   float opacity = nsSVGUtils::ComputeOpacity(frame, aParams.handleOpacity);
   if (opacity == 0.0f) {
-    return DrawResult::SUCCESS;
+    return;
   }
 
   /* Properties are added lazily and may have been removed by a restyle,
@@ -1084,7 +1057,7 @@ nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams)
     nsSVGEffects::GetEffectProperties(firstFrame);
 
   if (effectProperties.HasInvalidFilter()) {
-    return DrawResult::NOT_READY;
+    return;
   }
 
   gfxContext& context = aParams.ctx;
@@ -1112,15 +1085,13 @@ nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams)
 
   gfxMatrix tm =
     scaleMatrix * nsSVGUtils::GetCSSPxToDevPxMatrix(frame);
-  DrawResult result =
-    nsFilterInstance::PaintFilteredFrame(frame, context.GetDrawTarget(),
-                                         tm, &callback, &dirtyRegion);
+  nsFilterInstance::PaintFilteredFrame(frame, context.GetDrawTarget(),
+                                       tm, &callback, &dirtyRegion,
+                                       aParams.imgParams);
 
   if (opacity != 1.0f) {
     context.PopGroupAndBlend();
   }
-
-  return result;
 }
 
 class PaintFrameCallback : public gfxDrawingCallback {
@@ -1250,12 +1221,11 @@ nsSVGIntegrationUtils::DrawableFromPaintServer(nsIFrame*         aFrame,
     gfxRect overrideBounds(0, 0,
                            aPaintServerSize.width, aPaintServerSize.height);
     overrideBounds.ScaleInverse(aFrame->PresContext()->AppUnitsPerDevPixel());
-    DrawResult result = DrawResult::SUCCESS;
-    RefPtr<gfxPattern> pattern;
-    Tie(result, pattern) =
+    imgDrawingParams imgParams(aFlags);
+    RefPtr<gfxPattern> pattern =
       server->GetPaintServerPattern(aTarget, aDrawTarget,
                                     aContextMatrix, &nsStyleSVG::mFill, 1.0,
-                                    &overrideBounds);
+                                    imgParams, &overrideBounds);
 
     if (!pattern)
       return nullptr;

@@ -2807,6 +2807,7 @@ nsDOMWindowUtils::GetUnanimatedComputedStyle(nsIDOMElement* aElement,
     RefPtr<nsComputedDOMStyle> computedStyle =
       NS_NewComputedDOMStyle(
        element, aPseudoElement, shell,
+       nsComputedDOMStyle::StyleType::eAll,
        nsComputedDOMStyle::AnimationFlag::eWithoutAnimation);
     computedStyle->GetPropertyValue(propertyID, aResult);
     return NS_OK;
