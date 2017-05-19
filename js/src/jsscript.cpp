@@ -2273,6 +2273,7 @@ ScriptSource::initFromOptions(JSContext* cx, const ReadOnlyCompileOptions& optio
 
     introductionType_ = options.introductionType;
     setIntroductionOffset(options.introductionOffset);
+    startColumn_ = options.sourceStartColumn;
     parameterListEnd_ = parameterListEnd.isSome() ? parameterListEnd.value() : 0;
 
     if (options.hasIntroductionInfo) {
