@@ -511,9 +511,9 @@ public:
 
   void NotifyPainted();
 
-  void RequestNativeKeyBindings(nsIWidget::NativeKeyBindingsType aType,
-                                const WidgetKeyboardEvent& aEvent,
-                                nsTArray<CommandInt>& aCommands);
+  void RequestEditCommands(nsIWidget::NativeKeyBindingsType aType,
+                           const WidgetKeyboardEvent& aEvent,
+                           nsTArray<CommandInt>& aCommands);
 
   /**
    * Signal to this TabChild that it should be made visible:

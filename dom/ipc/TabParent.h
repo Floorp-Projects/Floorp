@@ -393,8 +393,10 @@ public:
   LayoutDeviceToCSSScale GetLayoutDeviceToCSSScale();
 
   virtual mozilla::ipc::IPCResult
-  RecvRequestNativeKeyBindings(const mozilla::WidgetKeyboardEvent& aEvent,
-                               MaybeNativeKeyBinding* aBindings) override;
+  RecvRequestNativeKeyBindings(
+    const uint32_t& aType,
+    const mozilla::WidgetKeyboardEvent& aEvent,
+    nsTArray<mozilla::CommandInt>* aCommands) override;
 
   virtual mozilla::ipc::IPCResult
   RecvSynthesizeNativeKeyEvent(const int32_t& aNativeKeyboardLayout,

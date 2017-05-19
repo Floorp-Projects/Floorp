@@ -296,6 +296,12 @@ public:
   void InitAllEditCommands();
 
   /**
+   * Retrieves edit commands from mWidget only for aType.  This shouldn't be
+   * called when the instance is an untrusted event or doesn't have widget.
+   */
+  void InitEditCommandsFor(nsIWidget::NativeKeyBindingsType aType);
+
+  /**
    * PreventNativeKeyBindings() makes the instance to not cause any edit
    * actions even if it matches with a native key binding.
    */
@@ -549,8 +555,6 @@ private:
           "Invalid native key binding type");
     }
   }
-
-  void InitEditCommandsFor(nsIWidget::NativeKeyBindingsType aType);
 };
 
 /******************************************************************************

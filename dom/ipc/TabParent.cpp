@@ -1215,10 +1215,23 @@ TabParent::RecvDispatchKeyboardEvent(const mozilla::WidgetKeyboardEvent& aEvent)
 }
 
 mozilla::ipc::IPCResult
-TabParent::RecvRequestNativeKeyBindings(const WidgetKeyboardEvent& aEvent,
-                                        MaybeNativeKeyBinding* aBindings)
+TabParent::RecvRequestNativeKeyBindings(const uint32_t& aType,
+                                        const WidgetKeyboardEvent& aEvent,
+                                        nsTArray<CommandInt>* aCommands)
 {
-  *aBindings = mozilla::void_t();
+  MOZ_ASSERT(aCommands);
+  MOZ_ASSERT(aCommands->IsEmpty());
+
+  nsIWidget::NativeKeyBindingsType keyBindingsType =
+    static_cast<nsIWidget::NativeKeyBindingsType>(aType);
+  switch (keyBindingsType) {
+    case nsIWidget::NativeKeyBindingsForSingleLineEditor:
+    case nsIWidget::NativeKeyBindingsForMultiLineEditor:
+    case nsIWidget::NativeKeyBindingsForRichTextEditor:
+      break;
+    default:
+      return IPC_FAIL(this, "Invalid aType value");
+  }
 
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
@@ -1232,20 +1245,8 @@ TabParent::RecvRequestNativeKeyBindings(const WidgetKeyboardEvent& aEvent,
     return IPC_OK();
   }
 
-  localEvent.InitAllEditCommands();
-
-  const nsTArray<CommandInt>& multiLine =
-    localEvent.EditCommandsConstRef(
-                 nsIWidget::NativeKeyBindingsForSingleLineEditor);
-  const nsTArray<CommandInt>& singleLine =
-    localEvent.EditCommandsConstRef(
-                 nsIWidget::NativeKeyBindingsForMultiLineEditor);
-  const nsTArray<CommandInt>& richText =
-    localEvent.EditCommandsConstRef(
-                 nsIWidget::NativeKeyBindingsForRichTextEditor);
-  if (!singleLine.IsEmpty() || !multiLine.IsEmpty() || !richText.IsEmpty()) {
-    *aBindings = NativeKeyBinding(singleLine, multiLine, richText);
-  }
+  localEvent.InitEditCommandsFor(keyBindingsType);
+  *aCommands = localEvent.EditCommandsConstRef(keyBindingsType);
 
   return IPC_OK();
 }

@@ -552,7 +552,7 @@ PuppetWidget::GetEditCommands(NativeKeyBindingsType aType,
   // Validate the arguments.
   nsIWidget::GetEditCommands(aType, aEvent, aCommands);
 
-  mTabChild->RequestNativeKeyBindings(aType, aEvent, aCommands);
+  mTabChild->RequestEditCommands(aType, aEvent, aCommands);
 }
 
 LayerManager*
