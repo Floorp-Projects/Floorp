@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "IPCBlobInputStreamChild.h"
-#include "WorkerHolder.h"
 
 namespace mozilla {
 namespace dom {
@@ -14,17 +13,19 @@ namespace {
 
 // This runnable is used in case the last stream is forgotten on the 'wrong'
 // thread.
-class ShutdownRunnable final : public CancelableRunnable
+class DeleteRunnable final : public Runnable
 {
 public:
-  explicit ShutdownRunnable(IPCBlobInputStreamChild* aActor)
+  explicit DeleteRunnable(IPCBlobInputStreamChild* aActor)
     : mActor(aActor)
   {}
 
   NS_IMETHOD
   Run() override
   {
-    mActor->Shutdown();
+    if (mActor->IsAlive()) {
+      mActor->Send__delete__(mActor);
+    }
     return NS_OK;
   }
 
@@ -34,7 +35,7 @@ private:
 
 // This runnable is used in case StreamNeeded() has been called on a non-owning
 // thread.
-class StreamNeededRunnable final : public CancelableRunnable
+class StreamNeededRunnable final : public Runnable
 {
 public:
   explicit StreamNeededRunnable(IPCBlobInputStreamChild* aActor)
@@ -80,26 +81,6 @@ private:
   nsCOMPtr<nsIInputStream> mCreatedStream;
 };
 
-class IPCBlobInputStreamWorkerHolder final : public WorkerHolder
-{
-public:
-  explicit IPCBlobInputStreamWorkerHolder(IPCBlobInputStreamChild* aActor)
-    : mActor(aActor)
-  {}
-
-  bool Notify(Status aStatus) override
-  {
-    if (aStatus > Running) {
-      mActor->Shutdown();
-      // After this the WorkerHolder is gone.
-    }
-    return true;
-  }
-
-private:
-  RefPtr<IPCBlobInputStreamChild> mActor;
-};
-
 } // anonymous
 
 IPCBlobInputStreamChild::IPCBlobInputStreamChild(const nsID& aID,
@@ -109,50 +90,16 @@ IPCBlobInputStreamChild::IPCBlobInputStreamChild(const nsID& aID,
   , mSize(aSize)
   , mActorAlive(true)
   , mOwningThread(NS_GetCurrentThread())
-{
-  // If we are running in a worker, we need to send a Close() to the parent side
-  // before the thread is released.
-  if (!NS_IsMainThread()) {
-    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-    if (workerPrivate) {
-      UniquePtr<WorkerHolder> workerHolder(
-        new IPCBlobInputStreamWorkerHolder(this));
-      if (workerHolder->HoldWorker(workerPrivate, Canceling)) {
-        mWorkerHolder.swap(workerHolder);
-      }
-    }
-  }
-}
+{}
 
 IPCBlobInputStreamChild::~IPCBlobInputStreamChild()
 {}
 
 void
-IPCBlobInputStreamChild::Shutdown()
-{
-  MutexAutoLock lock(mMutex);
-
-  RefPtr<IPCBlobInputStreamChild> kungFuDeathGrip = this;
-
-  mWorkerHolder = nullptr;
-  mPendingOperations.Clear();
-
-  if (mActorAlive) {
-    SendClose();
-    mActorAlive = false;
-  }
-}
-
-void
 IPCBlobInputStreamChild::ActorDestroy(IProtocol::ActorDestroyReason aReason)
 {
-  {
-    MutexAutoLock lock(mMutex);
-    mActorAlive = false;
-  }
-
-  // Let's cleanup the workerHolder and the pending operation queue.
-  Shutdown();
+  MutexAutoLock lock(mMutex);
+  mActorAlive = false;
 }
 
 bool
@@ -167,10 +114,6 @@ IPCBlobInputStreamChild::CreateStream()
 {
   MutexAutoLock lock(mMutex);
 
-  if (!mActorAlive) {
-    return nullptr;
-  }
-
   RefPtr<IPCBlobInputStream> stream = new IPCBlobInputStream(this);
   mStreams.AppendElement(stream);
   return stream.forget();
@@ -181,7 +124,7 @@ IPCBlobInputStreamChild::ForgetStream(IPCBlobInputStream* aStream)
 {
   MOZ_ASSERT(aStream);
 
-  RefPtr<IPCBlobInputStreamChild> kungFuDeathGrip = this;
+  RefPtr<IPCBlobInputStreamChild> kungFoDeathGrip = this;
 
   {
     MutexAutoLock lock(mMutex);
@@ -193,11 +136,11 @@ IPCBlobInputStreamChild::ForgetStream(IPCBlobInputStream* aStream)
   }
 
   if (mOwningThread == NS_GetCurrentThread()) {
-    Shutdown();
+    Send__delete__(this);
     return;
   }
 
-  RefPtr<ShutdownRunnable> runnable = new ShutdownRunnable(this);
+  RefPtr<DeleteRunnable> runnable = new DeleteRunnable(this);
   mOwningThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
 }
 
@@ -206,11 +149,6 @@ IPCBlobInputStreamChild::StreamNeeded(IPCBlobInputStream* aStream,
                                       nsIEventTarget* aEventTarget)
 {
   MutexAutoLock lock(mMutex);
-
-  if (!mActorAlive) {
-    return;
-  }
-
   MOZ_ASSERT(mStreams.Contains(aStream));
 
   PendingOperation* opt = mPendingOperations.AppendElement();
@@ -237,7 +175,6 @@ IPCBlobInputStreamChild::RecvStreamReady(const OptionalIPCStream& aStream)
   {
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(!mPendingOperations.IsEmpty());
-    MOZ_ASSERT(mActorAlive);
 
     pendingStream = mPendingOperations[0].mStream;
     eventTarget = mPendingOperations[0].mEventTarget;
