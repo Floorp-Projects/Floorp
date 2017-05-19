@@ -41,9 +41,6 @@ BROWSER_CHROME_MANIFESTS += [
     'content/test/webrtc/browser.ini',
 ]
 
-if CONFIG['MOZ_UPDATER']:
-    BROWSER_CHROME_MANIFESTS += ['content/test/appUpdate/browser.ini']
-
 DEFINES['MOZ_APP_VERSION'] = CONFIG['MOZ_APP_VERSION']
 DEFINES['MOZ_APP_VERSION_DISPLAY'] = CONFIG['MOZ_APP_VERSION_DISPLAY']
 
@@ -57,12 +54,5 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'cocoa'):
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'gtk2', 'gtk3'):
     DEFINES['MENUBAR_CAN_AUTOHIDE'] = 1
-
-TEST_HARNESS_FILES.testing.mochitest.browser.browser.base.content.test.appUpdate += [
-    '/toolkit/mozapps/update/tests/chrome/update.sjs',
-    '/toolkit/mozapps/update/tests/data/shared.js',
-    '/toolkit/mozapps/update/tests/data/sharedUpdateXML.js',
-    '/toolkit/mozapps/update/tests/data/simple.mar',
-]
 
 JAR_MANIFESTS += ['jar.mn']
