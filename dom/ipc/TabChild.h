@@ -389,8 +389,7 @@ public:
                                                     const uint32_t& aDropEffect) override;
 
   virtual mozilla::ipc::IPCResult
-  RecvRealKeyEvent(const mozilla::WidgetKeyboardEvent& aEvent,
-                   const MaybeNativeKeyBinding& aBindings) override;
+  RecvRealKeyEvent(const mozilla::WidgetKeyboardEvent& aEvent) override;
 
   virtual mozilla::ipc::IPCResult RecvMouseWheelEvent(const mozilla::WidgetWheelEvent& aEvent,
                                                       const ScrollableLayerGuid& aGuid,
