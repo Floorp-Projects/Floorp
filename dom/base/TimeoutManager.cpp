@@ -250,11 +250,6 @@ namespace {
 #define DEFAULT_MAX_CONSECUTIVE_CALLBACKS_MILLISECONDS 4
 uint32_t gMaxConsecutiveCallbacksMilliseconds;
 
-// The maximum number of timer callbacks we will try to run in a single event
-// loop runnable.
-#define DEFAULT_TARGET_MAX_CONSECUTIVE_CALLBACKS 5
-uint32_t gTargetMaxConsecutiveCallbacks;
-
 // The number of queued runnables within the TabGroup ThrottledEventQueue
 // at which to begin applying back pressure to the window.
 #define DEFAULT_THROTTLED_EVENT_QUEUE_BACK_PRESSURE 5000
@@ -367,10 +362,6 @@ TimeoutManager::Initialize()
   Preferences::AddUintVarCache(&gBackPressureDelayMinimumMS,
                                "dom.timeout.back_pressure_delay_minimum_ms",
                                DEFAULT_BACK_PRESSURE_DELAY_MINIMUM_MS);
-
-  Preferences::AddUintVarCache(&gTargetMaxConsecutiveCallbacks,
-                               "dom.timeout.max_consecutive_callbacks",
-                               DEFAULT_TARGET_MAX_CONSECUTIVE_CALLBACKS);
 
   Preferences::AddUintVarCache(&gMaxConsecutiveCallbacksMilliseconds,
                                "dom.timeout.max_consecutive_callbacks_ms",
@@ -697,22 +688,7 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
         // maximum.  Note, we must always run our target timer however.
         // Further timers that are ready will get picked up by their own
         // nsITimer runnables when they execute.
-        //
-        // For chrome windows, however, we do coalesce all timers and
-        // do not yield the main thread.  This is partly because we
-        // trust chrome windows not to misbehave and partly because a
-        // number of browser chrome tests have races that depend on this
-        // coalescing.
-        //
-        // Chrome windows are still subject to our time budget limit,
-        // however.  The time budget allows many timers to coallesce and
-        // chrome script should not hit this limit under normal
-        // circumstances.
         if (targetTimerSeen) {
-          if (numTimersToRun >= gTargetMaxConsecutiveCallbacks &&
-              !mWindow.IsChromeWindow()) {
-            break;
-          }
           if (numTimersToRun % kNumTimersPerInitialElapsedCheck == 0) {
             TimeDuration elapsed(TimeStamp::Now() - start);
             if (elapsed >= initalTimeLimit) {
