@@ -96,7 +96,8 @@ public:
 
   FetchDriver(InternalRequest* aRequest,
               nsIPrincipal* aPrincipal,
-              nsILoadGroup* aLoadGroup);
+              nsILoadGroup* aLoadGroup,
+              bool aIsTrackingFetch);
 
   nsresult Fetch(FetchSignal* aSignal,
                  FetchDriverObserver* aObserver);
@@ -128,6 +129,7 @@ private:
   nsAutoPtr<SRICheckDataVerifier> mSRIDataVerifier;
   SRIMetadata mSRIMetadata;
   nsCString mWorkerScript;
+  bool mIsTrackingFetch;
 
 #ifdef DEBUG
   bool mResponseAvailableCalled;
