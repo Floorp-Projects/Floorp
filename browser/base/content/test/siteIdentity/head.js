@@ -181,7 +181,7 @@ function assertMixedContentBlockingState(tabbrowser, states = {}) {
 
     ok(!is_hidden(connectionIcon), "connection icon should be visible");
     if (activeLoaded) {
-      is(connectionIconImage, "url(\"chrome://browser/skin/connection-mixed-active-loaded.svg#icon\")",
+      is(connectionIconImage, "url(\"chrome://browser/skin/connection-mixed-active-loaded.svg\")",
         "Using active loaded icon");
     }
     if (activeBlocked && !passiveLoaded) {
@@ -189,11 +189,11 @@ function assertMixedContentBlockingState(tabbrowser, states = {}) {
         "Using active blocked icon");
     }
     if (passiveLoaded && !(activeLoaded || activeBlocked)) {
-      is(connectionIconImage, "url(\"chrome://browser/skin/connection-mixed-passive-loaded.svg#icon\")",
+      is(connectionIconImage, "url(\"chrome://browser/skin/connection-mixed-passive-loaded.svg\")",
         "Using passive loaded icon");
     }
     if (passiveLoaded && activeBlocked) {
-      is(connectionIconImage, "url(\"chrome://browser/skin/connection-mixed-passive-loaded.svg#icon\")",
+      is(connectionIconImage, "url(\"chrome://browser/skin/connection-mixed-passive-loaded.svg\")",
         "Using active blocked and passive loaded icon");
     }
   }

@@ -4,7 +4,6 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
      width="16" height="16" viewBox="0 0 16 16">
-#include ../icon-colors.inc.svg
   <style>
     g:not(:target) {
       display: none;
@@ -35,25 +34,11 @@
   </defs>
 
   <g id="enabled">
-    <use class="fieldtext" xlink:href="#shape-shield-outer" mask="url(#mask-shield-cutout)"/>
-  </g>
-  <g id="enabled-black">
-    <use class="black" xlink:href="#shape-shield-outer" mask="url(#mask-shield-cutout)"/>
-  </g>
-  <g id="enabled-white">
-    <use class="white" xlink:href="#shape-shield-outer" mask="url(#mask-shield-cutout)"/>
+    <use fill="context-fill" xlink:href="#shape-shield-outer" mask="url(#mask-shield-cutout)"/>
   </g>
 
   <g id="disabled">
-    <use class="fieldtext" xlink:href="#shape-shield-outer" mask="url(#mask-shield-cutout-disabled)"/>
-    <use xlink:href="#strike-through-red"/>
-  </g>
-  <g id="disabled-black">
-    <use class="black" xlink:href="#shape-shield-outer" mask="url(#mask-shield-cutout-disabled)"/>
-    <use xlink:href="#strike-through-red"/>
-  </g>
-  <g id="disabled-white">
-    <use class="white" xlink:href="#shape-shield-outer" mask="url(#mask-shield-cutout-disabled)"/>
+    <use fill="context-fill" xlink:href="#shape-shield-outer" mask="url(#mask-shield-cutout-disabled)"/>
     <use xlink:href="#strike-through-red"/>
   </g>
 </svg>

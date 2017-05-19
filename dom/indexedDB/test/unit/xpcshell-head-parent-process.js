@@ -3,7 +3,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-var { 'classes': Cc, 'interfaces': Ci, 'utils': Cu } = Components;
+// Tests using testGenerator are expected to define it themselves.
+/* global testGenerator */
+
+var { "classes": Cc, "interfaces": Ci, "utils": Cu } = Components;
 
 if (!("self" in this)) {
   this.self = this;
@@ -39,7 +42,7 @@ function info(name, message) {
 
 function run_test() {
   runTest();
-};
+}
 
 if (!this.runTest) {
   this.runTest = function()
@@ -71,7 +74,7 @@ function finishTest()
 
   SpecialPowers.removeFiles();
 
-  do_execute_soon(function(){
+  do_execute_soon(function() {
     do_test_finished();
   })
 }
@@ -92,7 +95,7 @@ function errorHandler(event)
 {
   try {
     dump("indexedDB error: " + event.target.error.name);
-  } catch(e) {
+  } catch (e) {
     dump("indexedDB error: " + e);
   }
   do_check_true(false);
@@ -126,7 +129,7 @@ function ExpectError(name, preventDefault)
   this._preventDefault = preventDefault;
 }
 ExpectError.prototype = {
-  handleEvent: function(event)
+  handleEvent(event)
   {
     do_check_eq(event.type, "error");
     do_check_eq(this._name, event.target.error.name);
@@ -227,7 +230,7 @@ function setTimeout(fun, timeout) {
   let timer = Components.classes["@mozilla.org/timer;1"]
                         .createInstance(Components.interfaces.nsITimer);
   var event = {
-    notify: function (timer) {
+    notify(timer) {
       fun();
     }
   };
@@ -261,7 +264,7 @@ function resetOrClearAllDatabases(callback, clear) {
     } else {
       request = quotaManagerService.reset();
     }
-  } catch(e) {
+  } catch (e) {
     if (oldPrefValue !== undefined) {
       SpecialPowers.setBoolPref(quotaPref, oldPrefValue);
     } else {
@@ -312,7 +315,7 @@ function installPackagedProfile(packageName)
 
     let file = profileDir.clone();
     let split = entryName.split("/");
-    for(let i = 0; i < split.length; i++) {
+    for (let i = 0; i < split.length; i++) {
       file.append(split[i]);
     }
 
@@ -325,7 +328,7 @@ function installPackagedProfile(packageName)
                     .createInstance(Ci.nsIFileOutputStream);
       ostream.init(file, -1, parseInt("0644", 8), 0);
 
-      let bostream = Cc['@mozilla.org/network/buffered-output-stream;1']
+      let bostream = Cc["@mozilla.org/network/buffered-output-stream;1"]
                      .createInstance(Ci.nsIBufferedOutputStream);
       bostream.init(ostream, 32768);
 
@@ -388,7 +391,7 @@ function getBlob(str)
 
 function getFile(name, type, str)
 {
-  return new File([str], name, {type: type});
+  return new File([str], name, {type});
 }
 
 function isWasmSupported()
@@ -563,36 +566,36 @@ function getPrincipal(url)
 }
 
 var SpecialPowers = {
-  isMainProcess: function() {
+  isMainProcess() {
     return Components.classes["@mozilla.org/xre/app-info;1"]
                      .getService(Components.interfaces.nsIXULRuntime)
                      .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
   },
-  notifyObservers: function(subject, topic, data) {
-    var obsvc = Cc['@mozilla.org/observer-service;1']
+  notifyObservers(subject, topic, data) {
+    var obsvc = Cc["@mozilla.org/observer-service;1"]
                    .getService(Ci.nsIObserverService);
     obsvc.notifyObservers(subject, topic, data);
   },
-  notifyObserversInParentProcess: function(subject, topic, data) {
+  notifyObserversInParentProcess(subject, topic, data) {
     if (subject) {
       throw new Error("Can't send subject to another process!");
     }
     return this.notifyObservers(subject, topic, data);
   },
-  getBoolPref: function(prefName) {
+  getBoolPref(prefName) {
     return this._getPrefs().getBoolPref(prefName);
   },
-  setBoolPref: function(prefName, value) {
+  setBoolPref(prefName, value) {
     this._getPrefs().setBoolPref(prefName, value);
   },
-  setIntPref: function(prefName, value) {
+  setIntPref(prefName, value) {
     this._getPrefs().setIntPref(prefName, value);
   },
-  clearUserPref: function(prefName) {
+  clearUserPref(prefName) {
     this._getPrefs().clearUserPref(prefName);
   },
   // Copied (and slightly adjusted) from specialpowersAPI.js
-  exactGC: function(callback) {
+  exactGC(callback) {
     let count = 0;
 
     function doPreciseGCandCC() {
@@ -612,7 +615,7 @@ var SpecialPowers = {
     doPreciseGCandCC();
   },
 
-  _getPrefs: function() {
+  _getPrefs() {
     var prefService =
       Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService);
     return prefService.getBranch(null);
@@ -631,7 +634,7 @@ var SpecialPowers = {
   },
 
   // Based on SpecialPowersObserver.prototype.receiveMessage
-  createFiles: function(requests, callback) {
+  createFiles(requests, callback) {
     let dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
     let filePaths = new Array;
     if (!this._createdFiles) {
@@ -661,15 +664,15 @@ var SpecialPowers = {
     });
 
     Promise.all(promises).then(function() {
-      setTimeout(function () {
+      setTimeout(function() {
         callback(filePaths);
       }, 0);
     });
   },
 
-  removeFiles: function() {
+  removeFiles() {
     if (this._createdFiles) {
-      this._createdFiles.forEach(function (testFile) {
+      this._createdFiles.forEach(function(testFile) {
         try {
           testFile.remove(false);
         } catch (e) {}

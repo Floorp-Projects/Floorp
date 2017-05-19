@@ -18,7 +18,7 @@ GlobalObjectsComponent.prototype =
 
   QueryInterface: XPCOMUtils.generateQI([Components.interfaces.nsISupports]),
 
-  runTest: function() {
+  runTest() {
     const name = "Splendid Test";
 
     let ok = this.ok;

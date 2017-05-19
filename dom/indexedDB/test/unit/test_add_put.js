@@ -14,7 +14,6 @@ function* testSteps()
   openRequest.onsuccess = unexpectedSuccessHandler;
   let event = yield undefined;
   let db = event.target.result;
-  let trans = event.target.transaction;
 
   for (let autoincrement of [true, false]) {
     for (let keypath of [false, true, "missing", "invalid"]) {
@@ -36,11 +35,11 @@ function* testSteps()
                                              { autoIncrement: autoincrement,
                                                keyPath: (keypath ? "id" : null) });
 
-            test = " for test " + JSON.stringify({ autoincrement: autoincrement,
-                                                   keypath: keypath,
-                                                   method: method,
-                                                   explicit: explicit === undefined ? "undefined" : explicit,
-                                                   existing: existing });
+            let test = " for test " + JSON.stringify({ autoincrement,
+                                                       keypath,
+                                                       method,
+                                                       explicit: explicit === undefined ? "undefined" : explicit,
+                                                       existing });
 
             // Insert "existing" data if needed
             if (existing) {
@@ -64,7 +63,7 @@ function* testSteps()
             }
 
             // Which arguments are passed to function
-            args = [value];
+            let args = [value];
             if (explicit === true) {
               args.push(5);
             }
@@ -138,7 +137,7 @@ function* testSteps()
     }
   }
 
-  
+
   function expectedResult(method, keypath, explicit, autoincrement, existing) {
     if (keypath && explicit)
       return "throw";

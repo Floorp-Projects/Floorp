@@ -17,6 +17,7 @@ function* testSteps()
   }
 
   // Test for IDBKeyRange and indexedDB availability in JS modules.
+  /* import-globals-from GlobalObjectsModule.jsm */
   Cu.import(getSpec("GlobalObjectsModule.jsm"));
   let test = new GlobalObjectsModule();
   test.ok = ok;

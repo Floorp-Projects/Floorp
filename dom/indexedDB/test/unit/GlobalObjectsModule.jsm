@@ -13,7 +13,7 @@ this.GlobalObjectsModule = function GlobalObjectsModule() {
 }
 
 GlobalObjectsModule.prototype = {
-  runTest: function() {
+  runTest() {
     const name = "Splendid Test";
 
     let ok = this.ok;
