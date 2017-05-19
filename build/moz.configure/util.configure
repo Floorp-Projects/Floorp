@@ -366,27 +366,6 @@ always = dependable(True)
 never = dependable(False)
 
 
-# Some @depends function return namespaces, and one could want to use one
-# specific attribute from such a namespace as a "value" given to functions
-# such as `set_config`. But those functions do not take immediate values.
-# The `delayed_getattr` function allows access to attributes from the result
-# of a @depends function in a non-immediate manner.
-#   @depends('--option')
-#   def option(value)
-#       return namespace(foo=value)
-#   set_config('FOO', delayed_getattr(option, 'foo')
-@template
-def delayed_getattr(func, key):
-    @depends(func)
-    def result(value):
-        # The @depends function we're being passed may have returned
-        # None, or an object that simply doesn't have the wanted key.
-        # In that case, just return None.
-        return getattr(value, key, None)
-
-    return result
-
-
 # Like @depends, but the decorated function is only called if one of the
 # arguments it would be called with has a positive value (bool(value) is True)
 @template

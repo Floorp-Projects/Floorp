@@ -58,7 +58,7 @@
       let request = indexedDB.open(window.location.pathname, 1);
       request.onerror = errorHandler;
       request.onsuccess = unexpectedSuccessHandler;
-      request.onupgradeneeded = function () {
+      request.onupgradeneeded = function() {
         let transaction = request.transaction;
         transaction.oncomplete = unexpectedSuccessHandler;
         transaction.onabort = grabEventAndContinueHandler
@@ -153,7 +153,7 @@
       request.onerror = errorHandler;
       request = objectStore.add({}, 1);
       request.onsuccess = unexpectedSuccessHandler;
-      request.onerror = function (event) {
+      request.onerror = function(event) {
         event.preventDefault();
         throw "STOP";
       };

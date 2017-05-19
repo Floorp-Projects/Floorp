@@ -148,6 +148,39 @@ class TestLint(unittest.TestCase):
         self.assertEquals(e.exception.message,
                           "Missing @depends for `foo`: '--help'")
 
+        # This would have failed with "Missing @depends for `foo`: '--help'"
+        # in the past, because of the reference to the builtin False.
+        with self.moz_configure('''
+            option('--foo', help='foo')
+            @depends('--foo')
+            def foo(value):
+                return False or value
+
+            option('--bar', help='bar', when=foo)
+        '''):
+            self.lint_test()
+
+        # However, when something that is normally a builtin is overridden,
+        # we should still want the dependency on --help.
+        with self.assertRaises(ConfigureError) as e:
+            with self.moz_configure('''
+                @template
+                def tmpl():
+                    False = 42
+
+                    option('--foo', help='foo')
+                    @depends('--foo')
+                    def foo(value):
+                        return False
+
+                    option('--bar', help='bar', when=foo)
+                tmpl()
+            '''):
+                self.lint_test()
+
+        self.assertEquals(e.exception.message,
+                          "Missing @depends for `foo`: '--help'")
+
         # There is a default restricted `os` module when there is no explicit
         # @imports, and it's fine to use it without a dependency on --help.
         with self.moz_configure('''

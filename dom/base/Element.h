@@ -631,25 +631,49 @@ public:
    * values will not actually be compared if we aren't notifying and we don't
    * have mutation listeners (in which case it's cheap to just return false
    * and let the caller go ahead and set the value).
-   * @param aOldValue Set to the old value of the attribute, but only if there
-   *   are event listeners. If set, the type of aOldValue will be either
+   * @param aOldValue [out] Set to the old value of the attribute, but only if
+   *   there are event listeners. If set, the type of aOldValue will be either
    *   nsAttrValue::eString or nsAttrValue::eAtom.
-   * @param aModType Set to nsIDOMMutationEvent::MODIFICATION or to
+   * @param aModType [out] Set to nsIDOMMutationEvent::MODIFICATION or to
    *   nsIDOMMutationEvent::ADDITION, but only if this helper returns true
-   * @param aHasListeners Set to true if there are mutation event listeners
-   *   listening for NS_EVENT_BITS_MUTATION_ATTRMODIFIED
+   * @param aHasListeners [out] Set to true if there are mutation event
+   *   listeners listening for NS_EVENT_BITS_MUTATION_ATTRMODIFIED
+   * @param aOldValueSet [out] Indicates whether an old attribute value has been
+   *   stored in aOldValue. The bool will be set to true if a value was stored.
    */
   bool MaybeCheckSameAttrVal(int32_t aNamespaceID, nsIAtom* aName,
                              nsIAtom* aPrefix,
                              const nsAttrValueOrString& aValue,
                              bool aNotify, nsAttrValue& aOldValue,
-                             uint8_t* aModType, bool* aHasListeners);
+                             uint8_t* aModType, bool* aHasListeners,
+                             bool* aOldValueSet);
 
+  /**
+   * Notifies mutation listeners if aNotify is true, there are mutation
+   * listeners, and the attribute value is changing.
+   *
+   * @param aNamespaceID The namespace of the attribute
+   * @param aName The local name of the attribute
+   * @param aPrefix The prefix of the attribute
+   * @param aValue The value that the attribute is being changed to
+   * @param aNotify If true, mutation listeners will be notified if they exist
+   *   and the attribute value is changing
+   * @param aOldValue [out] Set to the old value of the attribute, but only if
+   *   there are event listeners. If set, the type of aOldValue will be either
+   *   nsAttrValue::eString or nsAttrValue::eAtom.
+   * @param aModType [out] Set to nsIDOMMutationEvent::MODIFICATION or to
+   *   nsIDOMMutationEvent::ADDITION, but only if this helper returns true
+   * @param aHasListeners [out] Set to true if there are mutation event
+   *   listeners listening for NS_EVENT_BITS_MUTATION_ATTRMODIFIED
+   * @param aOldValueSet [out] Indicates whether an old attribute value has been
+   *   stored in aOldValue. The bool will be set to true if a value was stored.
+   */
   bool OnlyNotifySameValueSet(int32_t aNamespaceID, nsIAtom* aName,
                               nsIAtom* aPrefix,
                               const nsAttrValueOrString& aValue,
                               bool aNotify, nsAttrValue& aOldValue,
-                              uint8_t* aModType, bool* aHasListeners);
+                              uint8_t* aModType, bool* aHasListeners,
+                              bool* aOldValueSet);
 
   virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
                            const nsAString& aValue, bool aNotify) override;
@@ -1352,7 +1376,10 @@ protected:
    *                      its current value) is !StoresOwnData() --- in which
    *                      case the current value is probably already useless.
    *                      If the current value is StoresOwnData() (or absent),
-   *                      aOldValue will not be used.
+   *                      aOldValue will not be used. aOldValue will only be set
+   *                      in certain circumstances (there are mutation
+   *                      listeners, element is a custom element, attribute was
+   *                      not previously unset). Otherwise it will be null.
    * @param aParsedValue  parsed new value of attribute. Replaced by the
    *                      old value of the attribute. This old value is only
    *                      useful if either it or the new value is StoresOwnData.
@@ -1366,7 +1393,7 @@ protected:
   nsresult SetAttrAndNotify(int32_t aNamespaceID,
                             nsIAtom* aName,
                             nsIAtom* aPrefix,
-                            const nsAttrValue& aOldValue,
+                            const nsAttrValue* aOldValue,
                             nsAttrValue& aParsedValue,
                             uint8_t aModType,
                             bool aFireMutation,
@@ -1410,13 +1437,20 @@ protected:
    * returns true (the value of aRetval does not matter for that purpose).
    *
    * @param aName the name of the attribute
-   * @param aValue the nsAttrValue to set
+   * @param aValue the nsAttrValue to set. Will be swapped with the existing
+   *               value of the attribute if the attribute already exists.
+   * @param [out] aValueWasSet If the attribute was not set previously,
+   *                           aValue will be swapped with an empty attribute
+   *                           and aValueWasSet will be set to false. Otherwise,
+   *                           aValueWasSet will be set to true and aValue will
+   *                           contain the previous value set.
    * @param [out] aRetval the nsresult status of the operation, if any.
    * @return true if the setting was attempted, false otherwise.
    */
-  virtual bool SetMappedAttribute(nsIAtom* aName,
-                                  nsAttrValue& aValue,
-                                  nsresult* aRetval);
+  virtual bool SetAndSwapMappedAttribute(nsIAtom* aName,
+                                         nsAttrValue& aValue,
+                                         bool* aValueWasSet,
+                                         nsresult* aRetval);
 
   /**
    * Hook that is called by Element::SetAttr to allow subclasses to
@@ -1444,19 +1478,24 @@ protected:
   /**
    * Hook that is called by Element::SetAttr to allow subclasses to
    * deal with attribute sets.  This will only be called after we have called
-   * SetAndTakeAttr and AttributeChanged (that is, after we have actually set
-   * the attr).  It will always be called under a scriptblocker.
+   * SetAndSwapAttr (that is, after we have actually set the attr).  It will
+   * always be called under a scriptblocker.
    *
    * @param aNamespaceID the namespace of the attr being set
    * @param aName the localname of the attribute being set
    * @param aValue the value it's being set to.  If null, the attr is being
    *        removed.
+   * @param aOldValue the value that the attribute had previously. If null,
+   *        the attr was not previously set. This argument may not have the
+   *        correct value for SVG elements, or other cases in which the
+   *        attribute value doesn't store its own data
    * @param aNotify Whether we plan to notify document observers.
    */
   // Note that this is inlined so that when subclasses call it it gets
   // inlined.  Those calls don't go through a vtable.
   virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
-                                const nsAttrValue* aValue, bool aNotify)
+                                const nsAttrValue* aValue,
+                                const nsAttrValue* aOldValue, bool aNotify)
   {
     return NS_OK;
   }

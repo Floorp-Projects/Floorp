@@ -35,6 +35,7 @@ linux64/debug:
     test-sets:
         - common-tests
         - web-platform-tests
+        - headless
 linux64/opt:
     build-platform: linux64/opt
     test-sets:
@@ -44,6 +45,7 @@ linux64/opt:
         - desktop-screenshot-capture
         - talos
         - awsy
+        - headless
 linux64-nightly/opt:
     build-platform: linux64-nightly/opt
     test-sets:
@@ -53,6 +55,7 @@ linux64-nightly/opt:
         - desktop-screenshot-capture
         - talos
         - awsy
+        - headless
 
 # TODO: use 'pgo' and 'asan' labels here, instead of -pgo/opt
 linux64-pgo/opt:
@@ -61,11 +64,13 @@ linux64-pgo/opt:
         - common-tests
         - web-platform-tests
         - talos
+        - headless
 
 linux64-asan/opt:
     build-platform: linux64-asan/opt
     test-sets:
         - common-tests
+        - headless
 
 # Stylo builds only run a subset of tests for the moment. So give them
 # their own test set.

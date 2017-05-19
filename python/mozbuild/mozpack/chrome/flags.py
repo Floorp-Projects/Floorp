@@ -62,6 +62,9 @@ class Flag(object):
             return self.name
         return '%s=%s' % (self.name, self.value)
 
+    def __eq__(self, other):
+        return str(self) == other
+
 
 class StringFlag(object):
     '''
@@ -124,6 +127,9 @@ class StringFlag(object):
             else:
                 res.append('%s!=%s' % (self.name, val))
         return ' '.join(res)
+
+    def __eq__(self, other):
+        return str(self) == other
 
 
 class VersionFlag(object):
@@ -197,6 +203,9 @@ class VersionFlag(object):
             else:
                 res.append('%s%s%s' % (self.name, comparison, val))
         return ' '.join(res)
+
+    def __eq__(self, other):
+        return str(self) == other
 
 
 class Flags(OrderedDict):

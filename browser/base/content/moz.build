@@ -25,9 +25,6 @@ with Files("newtab/**"):
 with Files("pageinfo/**"):
     BUG_COMPONENT = ("Firefox", "Page Info Window")
 
-with Files("sync/**"):
-    BUG_COMPONENT = ("Firefox", "Sync")
-
 with Files("test/alerts/**"):
     BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")
 

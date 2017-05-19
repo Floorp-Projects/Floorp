@@ -5,6 +5,10 @@
 
 #include "nsISupports.idl"
 
+%{C++
+#define NS_PKCS11_CONTRACTID "@mozilla.org/security/pkcs11;1"
+%}
+
 [scriptable, uuid(5743f870-958e-4f02-aef2-c0afeef67f05)]
 interface nsIPKCS11 : nsISupports
 {

@@ -34,7 +34,8 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  void SetAndTakeAttr(nsIAtom* aAttrName, nsAttrValue& aValue);
+  void SetAndSwapAttr(nsIAtom* aAttrName, nsAttrValue& aValue,
+                      bool* aValueWasSet);
   const nsAttrValue* GetAttr(nsIAtom* aAttrName) const;
   const nsAttrValue* GetAttr(const nsAString& aAttrName) const;
 

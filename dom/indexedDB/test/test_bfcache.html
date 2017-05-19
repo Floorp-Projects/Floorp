@@ -9,6 +9,7 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="text/javascript">
+    /* import-globals-from helpers.js */
     var gOrigMaxTotalViewers = undefined;
     function setCachePref(enabled) {
       if (enabled) {
@@ -44,7 +45,7 @@
       is(event.data, "go", "set up database successfully");
 
       iframe.src = "bfcache_iframe2.html";
-      res = JSON.parse((yield).data);
+      let res = JSON.parse((yield).data);
       is(res.version, 2, "version was set correctly");
       is(res.storeCount, 1, "correct set of stores");
       ok(!("blockedFired" in res), "blocked shouldn't fire");

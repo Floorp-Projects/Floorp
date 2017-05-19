@@ -8433,7 +8433,17 @@ nsGlobalWindow::ScrollTo(double aXScroll, double aYScroll)
 void
 nsGlobalWindow::ScrollTo(const ScrollToOptions& aOptions)
 {
-  FlushPendingNotifications(FlushType::Layout);
+  // When scrolling to a non-zero offset, we need to determine whether that
+  // position is within our scrollable range, so we need updated layout
+  // information which requires a layout flush, otherwise all we need is to
+  // flush frames to be able to access our scrollable frame here.
+  FlushType flushType = ((aOptions.mLeft.WasPassed() &&
+                          aOptions.mLeft.Value() > 0) ||
+                         (aOptions.mTop.WasPassed() &&
+                          aOptions.mTop.Value() > 0)) ?
+                          FlushType::Layout :
+                          FlushType::Frames;
+  FlushPendingNotifications(flushType);
   nsIScrollableFrame *sf = GetScrollFrame();
 
   if (sf) {
@@ -8459,7 +8469,14 @@ void
 nsGlobalWindow::ScrollTo(const CSSIntPoint& aScroll,
                          const ScrollOptions& aOptions)
 {
-  FlushPendingNotifications(FlushType::Layout);
+  // When scrolling to a non-zero offset, we need to determine whether that
+  // position is within our scrollable range, so we need updated layout
+  // information which requires a layout flush, otherwise all we need is to
+  // flush frames to be able to access our scrollable frame here.
+  FlushType flushType = (aScroll.x || aScroll.y) ?
+                          FlushType::Layout :
+                          FlushType::Frames;
+  FlushPendingNotifications(flushType);
   nsIScrollableFrame *sf = GetScrollFrame();
 
   if (sf) {
@@ -11062,13 +11079,46 @@ nsGlobalWindow::GetComputedStyle(Element& aElt, const nsAString& aPseudoElt,
                                  ErrorResult& aError)
 {
   MOZ_ASSERT(IsInnerWindow());
-  FORWARD_TO_OUTER_OR_THROW(GetComputedStyleOuter,
-                            (aElt, aPseudoElt), aError, nullptr);
+  return GetComputedStyleHelper(aElt, aPseudoElt, false, aError);
 }
 
 already_AddRefed<nsICSSDeclaration>
-nsGlobalWindow::GetComputedStyleOuter(Element& aElt,
-                                      const nsAString& aPseudoElt)
+nsGlobalWindow::GetDefaultComputedStyle(Element& aElt,
+                                        const nsAString& aPseudoElt,
+                                        ErrorResult& aError)
+{
+  MOZ_ASSERT(IsInnerWindow());
+  return GetComputedStyleHelper(aElt, aPseudoElt, true, aError);
+}
+
+nsresult
+nsGlobalWindow::GetComputedStyleHelper(nsIDOMElement* aElt,
+                                       const nsAString& aPseudoElt,
+                                       bool aDefaultStylesOnly,
+                                       nsIDOMCSSStyleDeclaration** aReturn)
+{
+  MOZ_ASSERT(IsInnerWindow());
+
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nullptr;
+
+  nsCOMPtr<dom::Element> element = do_QueryInterface(aElt);
+  if (!element) {
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
+
+  ErrorResult rv;
+  nsCOMPtr<nsIDOMCSSStyleDeclaration> declaration =
+    GetComputedStyleHelper(*element, aPseudoElt, aDefaultStylesOnly, rv);
+  declaration.forget(aReturn);
+
+  return rv.StealNSResult();
+}
+
+already_AddRefed<nsICSSDeclaration>
+nsGlobalWindow::GetComputedStyleHelperOuter(Element& aElt,
+                                            const nsAString& aPseudoElt,
+                                            bool aDefaultStylesOnly)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
@@ -11100,9 +11150,22 @@ nsGlobalWindow::GetComputedStyleOuter(Element& aElt,
   }
 
   RefPtr<nsComputedDOMStyle> compStyle =
-    NS_NewComputedDOMStyle(&aElt, aPseudoElt, presShell);
+    NS_NewComputedDOMStyle(&aElt, aPseudoElt, presShell,
+                           aDefaultStylesOnly ? nsComputedDOMStyle::eDefaultOnly :
+                                                nsComputedDOMStyle::eAll);
 
   return compStyle.forget();
+}
+
+already_AddRefed<nsICSSDeclaration>
+nsGlobalWindow::GetComputedStyleHelper(Element& aElt,
+                                       const nsAString& aPseudoElt,
+                                       bool aDefaultStylesOnly,
+                                       ErrorResult& aError)
+{
+  FORWARD_TO_OUTER_OR_THROW(GetComputedStyleHelperOuter,
+                            (aElt, aPseudoElt, aDefaultStylesOnly),
+                            aError, nullptr);
 }
 
 Storage*

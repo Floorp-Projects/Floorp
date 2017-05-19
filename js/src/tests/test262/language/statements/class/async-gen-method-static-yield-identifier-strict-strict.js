@@ -1,4 +1,4 @@
-// |reftest| error:SyntaxError
+// |reftest| skip-if(release_or_beta) error:SyntaxError -- async-iteration is not released yet
 'use strict';
 // This file was procedurally generated from the following sources:
 // - src/async-generators/yield-identifier-strict.case
