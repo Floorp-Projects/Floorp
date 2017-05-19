@@ -957,13 +957,14 @@ EffectCompositor::SetPerformanceWarning(
 }
 
 bool
-EffectCompositor::PreTraverse()
+EffectCompositor::PreTraverse(AnimationRestyleType aRestyleType)
 {
-  return PreTraverseInSubtree(nullptr);
+  return PreTraverseInSubtree(nullptr, aRestyleType);
 }
 
 bool
-EffectCompositor::PreTraverseInSubtree(Element* aRoot)
+EffectCompositor::PreTraverseInSubtree(Element* aRoot,
+                                       AnimationRestyleType aRestyleType)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mPresContext->RestyleManager()->IsServo());
@@ -971,9 +972,13 @@ EffectCompositor::PreTraverseInSubtree(Element* aRoot)
   AutoRestore<bool> guard(mIsInPreTraverse);
   mIsInPreTraverse = true;
 
-  // We need to force flush all throttled animations if there are any
-  // non-animation restyles.
-  bool flushThrottledRestyles = aRoot && aRoot->HasDirtyDescendantsForServo();
+  // We need to force flush all throttled animations if we also have
+  // non-animation restyles (since we'll want the up-to-date animation style
+  // when we go to process them so we can trigger transitions correctly), and
+  // if we are currently flushing all throttled animation restyles.
+  bool flushThrottledRestyles =
+    (aRoot && aRoot->HasDirtyDescendantsForServo()) ||
+    aRestyleType == AnimationRestyleType::Full;
 
   using ElementsToRestyleIterType =
     nsDataHashtable<PseudoElementHashEntry, bool>::Iterator;
@@ -1092,8 +1097,9 @@ EffectCompositor::PreTraverse(dom::Element* aElement,
 
   PseudoElementHashEntry::KeyType key = { aElement, aPseudoType };
 
-  // We need to flush all throttled animation restyles too if there are
-  // any non-animation restyles.
+  // We need to flush all throttled animation restyles too if we also have
+  // non-animation restyles (since we'll want the up-to-date animation style
+  // when we go to process them so we can trigger transitions correctly).
   Element* elementToRestyle = GetElementToRestyle(aElement, aPseudoType);
   bool flushThrottledRestyles = elementToRestyle &&
                                 elementToRestyle->HasDirtyDescendantsForServo();

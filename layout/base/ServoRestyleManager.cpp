@@ -514,7 +514,8 @@ ServoRestyleManager::FrameForPseudoElement(const nsIContent* aContent,
 }
 
 void
-ServoRestyleManager::ProcessPendingRestyles()
+ServoRestyleManager::DoProcessPendingRestyles(TraversalRestyleBehavior
+                                                aRestyleBehavior)
 {
   MOZ_ASSERT(PresContext()->Document(), "No document?  Pshaw!");
   MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript(), "Missing a script blocker!");
@@ -536,6 +537,8 @@ ServoRestyleManager::ProcessPendingRestyles()
 
   ServoStyleSet* styleSet = StyleSet();
   nsIDocument* doc = PresContext()->Document();
+  bool animationOnly = aRestyleBehavior ==
+                         TraversalRestyleBehavior::ForAnimationOnly;
 
   // Ensure the refresh driver is active during traversal to avoid mutating
   // mActiveTimer and mMostRecentRefresh time.
@@ -546,12 +549,15 @@ ServoRestyleManager::ProcessPendingRestyles()
   // in a loop because certain rare paths in the frame constructor (like
   // uninstalling XBL bindings) can trigger additional style validations.
   mInStyleRefresh = true;
-  if (mHaveNonAnimationRestyles) {
+  if (mHaveNonAnimationRestyles && !animationOnly) {
     ++mAnimationGeneration;
   }
 
-  while (styleSet->StyleDocument()) {
-    ClearSnapshots();
+  while (animationOnly ? styleSet->StyleDocumentForAnimationOnly()
+                       : styleSet->StyleDocument()) {
+    if (!animationOnly) {
+      ClearSnapshots();
+    }
 
     // Recreate style contexts, and queue up change hints (which also handle
     // lazy frame construction).
@@ -582,17 +588,37 @@ ServoRestyleManager::ProcessPendingRestyles()
     IncrementRestyleGeneration();
   }
 
-  ClearSnapshots();
   FlushOverflowChangedTracker();
 
-  mHaveNonAnimationRestyles = false;
+  if (!animationOnly) {
+    ClearSnapshots();
+    styleSet->AssertTreeIsClean();
+    mHaveNonAnimationRestyles = false;
+  }
   mInStyleRefresh = false;
-  styleSet->AssertTreeIsClean();
 
   // Note: We are in the scope of |animationsWithDestroyedFrame|, so
   //       |mAnimationsWithDestroyedFrame| is still valid.
   MOZ_ASSERT(mAnimationsWithDestroyedFrame);
   mAnimationsWithDestroyedFrame->StopAnimationsForElementsWithoutFrames();
+}
+
+void
+ServoRestyleManager::ProcessPendingRestyles()
+{
+  DoProcessPendingRestyles(TraversalRestyleBehavior::Normal);
+}
+
+void
+ServoRestyleManager::UpdateOnlyAnimationStyles()
+{
+  // Bug 1365855: We also need to implement this for SMIL.
+  bool doCSS = PresContext()->EffectCompositor()->HasPendingStyleUpdates();
+  if (!doCSS) {
+    return;
+  }
+
+  DoProcessPendingRestyles(TraversalRestyleBehavior::ForAnimationOnly);
 }
 
 void
