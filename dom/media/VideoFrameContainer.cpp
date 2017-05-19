@@ -7,6 +7,8 @@
 #include "VideoFrameContainer.h"
 
 #include "mozilla/dom/HTMLMediaElement.h"
+#include "mozilla/Telemetry.h"
+
 #include "nsIFrame.h"
 #include "nsDisplayList.h"
 #include "nsSVGEffects.h"
@@ -18,6 +20,27 @@ static LazyLogModule gVideoFrameContainerLog("VideoFrameContainer");
 #define CONTAINER_LOG(type, msg) MOZ_LOG(gVideoFrameContainerLog, type, msg)
 
 #define NS_DispatchToMainThread(...) CompileError_UseAbstractMainThreadInstead
+
+namespace {
+template<Telemetry::HistogramID ID>
+class AutoTimer
+{
+  // Set a threshold to reduce performance overhead
+  // for we're measuring hot spots.
+  static const uint32_t sThresholdMS = 1000;
+public:
+  ~AutoTimer()
+  {
+    auto end = TimeStamp::Now();
+    auto diff = uint32_t((end - mStart).ToMilliseconds());
+    if (diff > sThresholdMS) {
+      Telemetry::Accumulate(ID, diff);
+    }
+  }
+private:
+  const TimeStamp mStart = TimeStamp::Now();
+};
+}
 
 VideoFrameContainer::VideoFrameContainer(dom::HTMLMediaElement* aElement,
                                          already_AddRefed<ImageContainer> aContainer)
@@ -104,6 +127,7 @@ void VideoFrameContainer::SetCurrentFrames(const VideoSegment& aSegment)
   }
 
   MutexAutoLock lock(mMutex);
+  AutoTimer<Telemetry::VFC_SETVIDEOSEGMENT_LOCK_HOLD_MS> lockHold;
 
   // Collect any new frames produced in this iteration.
   AutoTArray<ImageContainer::NonOwningImage,4> newImages;
@@ -192,6 +216,7 @@ void VideoFrameContainer::SetCurrentFrame(const gfx::IntSize& aIntrinsicSize,
 {
   if (aImage) {
     MutexAutoLock lock(mMutex);
+    AutoTimer<Telemetry::VFC_SETCURRENTFRAME_LOCK_HOLD_MS> lockHold;
     AutoTArray<ImageContainer::NonOwningImage,1> imageList;
     imageList.AppendElement(
         ImageContainer::NonOwningImage(aImage, aTargetTime, ++mFrameID));
@@ -205,6 +230,7 @@ void VideoFrameContainer::SetCurrentFrames(const gfx::IntSize& aIntrinsicSize,
                                            const nsTArray<ImageContainer::NonOwningImage>& aImages)
 {
   MutexAutoLock lock(mMutex);
+  AutoTimer<Telemetry::VFC_SETIMAGES_LOCK_HOLD_MS> lockHold;
   SetCurrentFramesLocked(aIntrinsicSize, aImages);
 }
 
@@ -273,6 +299,7 @@ void VideoFrameContainer::SetCurrentFramesLocked(const gfx::IntSize& aIntrinsicS
 void VideoFrameContainer::ClearCurrentFrame()
 {
   MutexAutoLock lock(mMutex);
+  AutoTimer<Telemetry::VFC_CLEARCURRENTFRAME_LOCK_HOLD_MS> lockHold;
 
   // See comment in SetCurrentFrame for the reasoning behind
   // using a kungFuDeathGrip here.
@@ -286,6 +313,7 @@ void VideoFrameContainer::ClearCurrentFrame()
 void VideoFrameContainer::ClearFutureFrames()
 {
   MutexAutoLock lock(mMutex);
+  AutoTimer<Telemetry::VFC_CLEARFUTUREFRAMES_LOCK_HOLD_MS> lockHold;
 
   // See comment in SetCurrentFrame for the reasoning behind
   // using a kungFuDeathGrip here.
@@ -330,7 +358,13 @@ void VideoFrameContainer::InvalidateWithFlags(uint32_t aFlags)
   bool invalidateFrame = false;
 
   {
+    Maybe<AutoTimer<Telemetry::VFC_INVALIDATE_LOCK_WAIT_MS>> lockWait;
+    lockWait.emplace();
+
     MutexAutoLock lock(mMutex);
+
+    lockWait.reset();
+    AutoTimer<Telemetry::VFC_INVALIDATE_LOCK_HOLD_MS> lockHold;
 
     // Get mImageContainerSizeChanged while holding the lock.
     invalidateFrame = mImageSizeChanged;
