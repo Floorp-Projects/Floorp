@@ -555,6 +555,11 @@ class Decoder
     void finishCustomSection(uint32_t sectionStart, uint32_t sectionSize);
     MOZ_MUST_USE bool skipCustomSection(ModuleEnvironment* env);
 
+    // The Name section has its own subsections. Like startSection, NotStart is
+    // returned as the endOffset if the given name subsection wasn't present.
+
+    MOZ_MUST_USE bool startNameSubsection(NameType nameType, uint32_t* endOffset);
+    MOZ_MUST_USE bool finishNameSubsection(uint32_t endOffset);
 
     // The infallible "unchecked" decoding functions can be used when we are
     // sure that the bytes are well-formed (by construction or due to previous

@@ -67,7 +67,6 @@ const FILE_ACTIVE_UPDATE_XML = "active-update.xml";
 const FILE_BACKUP_UPDATE_LOG = "backup-update.log";
 const FILE_LAST_UPDATE_LOG   = "last-update.log";
 const FILE_UPDATES_XML       = "updates.xml";
-const FILE_UPDATE_LINK       = "update.link";
 const FILE_UPDATE_LOG        = "update.log";
 const FILE_UPDATE_MAR        = "update.mar";
 const FILE_UPDATE_STATUS     = "update.status";
@@ -101,7 +100,6 @@ const SERVICE_COULD_NOT_LOCK_UPDATER       = 32;
 const SERVICE_INSTALLDIR_ERROR             = 33;
 const WRITE_ERROR_ACCESS_DENIED            = 35;
 const WRITE_ERROR_CALLBACK_APP             = 37;
-const FILESYSTEM_MOUNT_READWRITE_ERROR     = 43;
 const SERVICE_COULD_NOT_COPY_UPDATER       = 49;
 const SERVICE_STILL_APPLYING_TERMINATED    = 50;
 const SERVICE_STILL_APPLYING_NO_EXIT_CODE  = 51;
@@ -148,10 +146,6 @@ const SERVICE_ERRORS = [SERVICE_UPDATER_COULD_NOT_BE_STARTED,
 
 // Error codes 80 through 99 are reserved for nsUpdateService.js and are not
 // defined in common/errors.h
-const FOTA_GENERAL_ERROR                   = 80;
-const FOTA_UNKNOWN_ERROR                   = 81;
-const FOTA_FILE_OPERATION_ERROR            = 82;
-const FOTA_RECOVERY_ERROR                  = 83;
 const INVALID_UPDATER_STATE_CODE           = 98;
 const INVALID_UPDATER_STATUS_CODE          = 99;
 
@@ -190,8 +184,6 @@ const APPID_TO_TOPIC = {
   "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}": "sessionstore-windows-restored",
   // SeaMonkey
   "{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}": "sessionstore-windows-restored",
-  // Fennec
-  "{aa3c5121-dab2-40e2-81ca-7ea25febc110}": "sessionstore-windows-restored",
   // Thunderbird
   "{3550f703-e582-4d05-9a08-453d09bdfdc6}": "mail-startup-done",
   // Instantbird
@@ -931,26 +923,7 @@ function readStringFromFile(file) {
 
 function handleUpdateFailure(update, errorCode) {
   update.errorCode = parseInt(errorCode);
-  if (update.errorCode == FOTA_GENERAL_ERROR ||
-      update.errorCode == FOTA_FILE_OPERATION_ERROR ||
-      update.errorCode == FOTA_RECOVERY_ERROR ||
-      update.errorCode == FOTA_UNKNOWN_ERROR) {
-    // In the case of FOTA update errors, don't reset the state to pending. This
-    // causes the FOTA update path to try again, which is not necessarily what
-    // we want.
-    update.statusText = gUpdateBundle.GetStringFromName("statusFailed");
-
-    Cc["@mozilla.org/updates/update-prompt;1"].
-      createInstance(Ci.nsIUpdatePrompt).
-      showUpdateError(update);
-    writeStatusFile(getUpdatesDir(), STATE_FAILED + ": " + errorCode);
-    cleanupActiveUpdate();
-    return true;
-  }
-
-  // Replace with Array.prototype.includes when it has stabilized.
-  if (WRITE_ERRORS.indexOf(update.errorCode) != -1 ||
-      update.errorCode == FILESYSTEM_MOUNT_READWRITE_ERROR) {
+  if (WRITE_ERRORS.includes(update.errorCode)) {
     Cc["@mozilla.org/updates/update-prompt;1"].
       createInstance(Ci.nsIUpdatePrompt).
       showUpdateError(update);
@@ -1000,7 +973,7 @@ function handleUpdateFailure(update, errorCode) {
       update.QueryInterface(Ci.nsIWritablePropertyBag);
       update.setProperty("patchingFailed", "elevationFailure");
       let prompter = Cc["@mozilla.org/updates/update-prompt;1"].
-                 createInstance(Ci.nsIUpdatePrompt);
+                     createInstance(Ci.nsIUpdatePrompt);
       prompter.showUpdateError(update);
     } else {
       writeStatusFile(getUpdatesDir(), update.state = STATE_PENDING);
@@ -1015,8 +988,7 @@ function handleUpdateFailure(update, errorCode) {
     Services.prefs.clearUserPref(PREF_APP_UPDATE_CANCELATIONS_OSX);
   }
 
-  // Replace with Array.prototype.includes when it has stabilized.
-  if (SERVICE_ERRORS.indexOf(update.errorCode) != -1) {
+  if (SERVICE_ERRORS.includes(update.errorCode)) {
     var failCount = getPref("getIntPref",
                             PREF_APP_UPDATE_SERVICE_ERRORS, 0);
     var maxFail = getPref("getIntPref",
@@ -1073,7 +1045,7 @@ function handleFallbackToCompleteUpdate(update, postStaging) {
     LOG("handleFallbackToCompleteUpdate - install of complete or " +
         "only one patch offered failed. Notifying observers. topic: " +
         "update-error, status: unknown, " +
-        "update.patchCount: " + update.patchCount +
+        "update.patchCount: " + update.patchCount + ", " +
         "oldType: " + oldType);
     Services.obs.notifyObservers(update, "update-error", "unknown");
   }
@@ -3881,14 +3853,8 @@ UpdatePrompt.prototype = {
       return;
 
     // In some cases, we want to just show a simple alert dialog.
-    // Replace with Array.prototype.includes when it has stabilized.
     if (update.state == STATE_FAILED &&
-        (WRITE_ERRORS.indexOf(update.errorCode) != -1 ||
-         update.errorCode == FILESYSTEM_MOUNT_READWRITE_ERROR ||
-         update.errorCode == FOTA_GENERAL_ERROR ||
-         update.errorCode == FOTA_FILE_OPERATION_ERROR ||
-         update.errorCode == FOTA_RECOVERY_ERROR ||
-         update.errorCode == FOTA_UNKNOWN_ERROR)) {
+        WRITE_ERRORS.includes(update.errorCode)) {
       var title = gUpdateBundle.GetStringFromName("updaterIOErrorTitle");
       var text = gUpdateBundle.formatStringFromName("updaterIOErrorMsg",
                                                     [Services.appinfo.name,

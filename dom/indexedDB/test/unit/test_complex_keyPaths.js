@@ -35,7 +35,7 @@ function* testSteps()
     { keyPath: "foo.",    exception: true },
     { keyPath: "fo o",    exception: true },
     { keyPath: "foo ",    exception: true },
-    { keyPath: "foo[bar]",exception: true },
+    { keyPath: "foo[bar]", exception: true },
     { keyPath: "foo[1]",  exception: true },
     { keyPath: "$('id').stuff", exception: true },
     { keyPath: "foo.2.bar", exception: true },
@@ -100,7 +100,7 @@ function* testSteps()
     let store = stores[indexName];
 
     try {
-      request = store.add(info.value);
+      var request = store.add(info.value);
       ok("key" in info, "successfully created request to insert value" + test);
     } catch (e) {
       ok(!("key" in info), "threw when attempted to insert" + test);
@@ -143,7 +143,7 @@ function* testSteps()
       eval("newValue." + destProp + " = 'newKeyValue'");
     }
     else {
-      newValue = 'newKeyValue';
+      newValue = "newKeyValue";
     }
     let didThrow;
     try {
@@ -185,18 +185,18 @@ function* testSteps()
         continue;
       }
     }
-    
+
     let index = indexes[indexName];
 
     request = store.add(info.value, 1);
     if ("key" in info) {
       index.getKey(info.key).onsuccess = grabEventAndContinueHandler;
-      e = yield undefined;
+      let e = yield undefined;
       is(e.target.result, 1, "found value when reading" + test);
     }
     else {
       index.count().onsuccess = grabEventAndContinueHandler;
-      e = yield undefined;
+      let e = yield undefined;
       is(e.target.result, 0, "should be empty" + test);
     }
 
@@ -238,7 +238,7 @@ function* testSteps()
         store.add(info.v);
         ok(false, "should throw" + test);
       }
-      catch(e) {
+      catch (e) {
         ok(true, "did throw" + test);
         ok(e instanceof DOMException, "Got a DOMException" + test);
         is(e.name, "DataError", "expect a DataError" + test);

@@ -359,26 +359,48 @@ this.BrowserTestUtils = {
    *        The tabbrowser to look for the next new tab in.
    * @param {string} url
    *        A string URL to look for in the new tab. If null, allows any non-blank URL.
+   * @param {boolean} waitForLoad
+   *        True to wait for the page in the new tab to load. Defaults to false.
    *
    * @return {Promise}
-   * @resolves With the {xul:tab} when a tab is opened and its location changes to the given URL.
+   * @resolves With the {xul:tab} when a tab is opened and its location changes
+   *           to the given URL and optionally that browser has loaded.
    *
    * NB: this method will not work if you open a new tab with e.g. BrowserOpenTab
    * and the tab does not load a URL, because no onLocationChange will fire.
    */
-  waitForNewTab(tabbrowser, url) {
+  waitForNewTab(tabbrowser, url, waitForLoad = false) {
+    let urlMatches = url ? (urlToMatch) => urlToMatch == url
+                         : (urlToMatch) => urlToMatch != "about:blank";
     return new Promise((resolve, reject) => {
       tabbrowser.tabContainer.addEventListener("TabOpen", function(openEvent) {
+        let newTab = openEvent.target;
+        let newBrowser = newTab.linkedBrowser;
+        let result;
+        if (waitForLoad) {
+          // If waiting for load, resolve with promise for that, which when load
+          // completes resolves to the new tab.
+          result = BrowserTestUtils.browserLoaded(newBrowser, false, urlMatches)
+                                   .then(() => newTab);
+        } else {
+          // If not waiting for load, just resolve with the new tab.
+          result = newTab;
+        }
+
         let progressListener = {
           onLocationChange(aBrowser) {
-            if (aBrowser != openEvent.target.linkedBrowser ||
-                (url && aBrowser.currentURI.spec != url) ||
-                (!url && aBrowser.currentURI.spec == "about:blank")) {
+            // Only interested in location changes on our browser.
+            if (aBrowser != newBrowser) {
+              return;
+            }
+
+            // Check that new location is the URL we want.
+            if (!urlMatches(aBrowser.currentURI.spec)) {
               return;
             }
 
             tabbrowser.removeTabsProgressListener(progressListener);
-            resolve(openEvent.target);
+            resolve(result);
           },
         };
         tabbrowser.addTabsProgressListener(progressListener);

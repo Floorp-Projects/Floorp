@@ -1,0 +1,28 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:svg="http://www.w3.org/2000/svg">
+<head>
+  <title>Test of NS_FRAME_IS_NONDISPLAY / NS_FRAME_IS_DIRTY assertion</title>
+  <!-- reduced from layout/reftests/svg/svg-integration/conditions-outer-svg-01.xhtml
+       and modified to occur without bug 1308876 patches. -->
+  <style>
+    div { position: relative; height: 100px; width: 100px }
+    svg { position: absolute; top: 0; left: 0; height: 100%; width: 100% }
+  </style>
+  <script>
+    function run() {
+      var d = document.getElementById("d");
+      d.offsetHeight;
+      d.style.height = "50px";
+    }
+  </script>
+</head>
+<body onload="run()">
+  <div id="d">
+    <svg:svg systemLanguage="x"></svg:svg>
+  </div>
+</body>
+</html>

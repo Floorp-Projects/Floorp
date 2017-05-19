@@ -14,9 +14,6 @@
 #include <iostream>
 
 #ifdef MOZ_ENABLE_FREETYPE
-#include "ft2build.h"
-#include FT_FREETYPE_H
-
 #include "mozilla/ThreadLocal.h"
 #endif
 
@@ -56,17 +53,19 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
     return false;
   }
 
+  void* fontContext = nullptr;
 #ifdef MOZ_ENABLE_FREETYPE
   if (!sFTLibrary.init()) {
     return false;
   }
   if (!sFTLibrary.get()) {
-    FT_Library library;
-    if (FT_Init_FreeType(&library) != FT_Err_Ok) {
+    FT_Library library = gfx::Factory::NewFTLibrary();
+    if (!library) {
       return false;
     }
     sFTLibrary.set(library);
   }
+  fontContext = sFTLibrary.get();
 #endif
 
   // In bindings.rs we allocate a buffer filled with opaque white.
@@ -88,11 +87,7 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
   InMemoryStreamBuffer streamBuffer(aBlob);
   std::istream stream(&streamBuffer);
 
-#ifdef MOZ_ENABLE_FREETYPE
-  gfx::InlineTranslator translator(dt, sFTLibrary.get());
-#else
-  gfx::InlineTranslator translator(dt);
-#endif
+  gfx::InlineTranslator translator(dt, fontContext);
 
   auto ret = translator.TranslateRecording(stream);
 

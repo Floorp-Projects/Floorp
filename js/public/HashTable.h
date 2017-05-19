@@ -1070,13 +1070,21 @@ class HashTable : private AllocPolicy
         bool rekeyed;
         bool removed;
 
-        /* Not copyable. */
+        // Enum is movable but not copyable.
         Enum(const Enum&) = delete;
         void operator=(const Enum&) = delete;
 
       public:
-        template<class Map> explicit
-        Enum(Map& map) : Range(map.all()), table_(map.impl), rekeyed(false), removed(false) {}
+        template<class Map>
+        explicit Enum(Map& map)
+          : Range(map.all()), table_(map.impl), rekeyed(false), removed(false) {}
+
+        MOZ_IMPLICIT Enum(Enum&& other)
+          : Range(other), table_(other.table_), rekeyed(other.rekeyed), removed(other.removed)
+        {
+            other.rekeyed = false;
+            other.removed = false;
+        }
 
         // Removes the |front()| element from the table, leaving |front()|
         // invalid until the next call to |popFront()|. For example:

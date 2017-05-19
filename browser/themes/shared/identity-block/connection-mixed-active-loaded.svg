@@ -4,12 +4,6 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
      width="16" height="16" viewBox="0 0 16 16">
-#include ../icon-colors.inc.svg
-  <style>
-    svg > g:not(:target) {
-      display: none;
-    }
-  </style>
 
   <defs>
     <rect id="shape-lock-clasp-outer" x="4" y="2" width="8" height="10" rx="4" ry="4" />
@@ -37,18 +31,6 @@
     <line id="strike-through-red" x1="2" y1="14.1" x2="14" y2="2.5" stroke="#d92d21" stroke-width="1.8"/>
   </defs>
 
-  <g id="icon">
-    <use xlink:href="#lock" class="fieldtext"/>
-    <use xlink:href="#strike-through-red"/>
-  </g>
-
-  <g id="icon-black">
-    <use xlink:href="#lock" class="black"/>
-    <use xlink:href="#strike-through-red"/>
-  </g>
-
-  <g id="icon-white">
-    <use xlink:href="#lock" class="white"/>
-    <use xlink:href="#strike-through-red"/>
-  </g>
+  <use fill="context-fill" xlink:href="#lock"/>
+  <use xlink:href="#strike-through-red"/>
 </svg>

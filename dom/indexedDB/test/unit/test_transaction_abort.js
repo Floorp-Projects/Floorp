@@ -208,7 +208,7 @@ function* testSteps()
          "Good error");
       abortEventCount++;
       event.preventDefault();
-  };
+  }
   objectStore = db.transaction("foo", "readwrite").objectStore("foo");
 
   for (let i = 0; i < 10; i++) {

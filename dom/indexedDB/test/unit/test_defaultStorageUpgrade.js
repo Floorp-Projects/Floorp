@@ -99,12 +99,10 @@ function* testSteps()
         request = indexedDB.openForPrincipal(principal, params.dbName,
                                              params.dbOptions);
       }
+    } else if ("dbVersion" in params) {
+      request = indexedDB.open(params.dbName, params.dbVersion);
     } else {
-      if ("dbVersion" in params) {
-        request = indexedDB.open(params.dbName, params.dbVersion);
-      } else {
-        request = indexedDB.open(params.dbName, params.dbOptions);
-      }
+      request = indexedDB.open(params.dbName, params.dbOptions);
     }
     return request;
   }

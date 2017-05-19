@@ -3,7 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-var testGenerator = testSteps(); 
+var testGenerator = testSteps();
 
 function* testSteps()
 {
@@ -123,7 +123,7 @@ function* testSteps()
   }
 
   try {
-    objectStore.add({id:5}, 5);
+    objectStore.add({id: 5}, 5);
     ok(false, "add with inline key and passed key should throw!");
   }
   catch (e) {
@@ -156,28 +156,28 @@ function* testSteps()
 
   key1 = 10;
 
-  request = objectStore.add({id:key1});
+  request = objectStore.add({id: key1});
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
 
   is(event.target.result, key1, "add gave back the same key");
 
-  request = objectStore.put({id:10});
+  request = objectStore.put({id: 10});
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
 
   is(event.target.result, key1, "put gave back the same key");
 
-  request = objectStore.put({id:10});
+  request = objectStore.put({id: 10});
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
 
   is(event.target.result, key1, "put gave back the same key");
 
-  request = objectStore.add({id:10});
+  request = objectStore.add({id: 10});
   request.addEventListener("error", new ExpectError("ConstraintError", true));
   request.onsuccess = unexpectedSuccessHandler;
   event = yield undefined;
@@ -224,7 +224,7 @@ function* testSteps()
 
   key1 = event.target.result;
 
-  request = objectStore.put({id:key1});
+  request = objectStore.put({id: key1});
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
@@ -233,7 +233,7 @@ function* testSteps()
 
   key2 = 10;
 
-  request = objectStore.put({id:key2});
+  request = objectStore.put({id: key2});
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
@@ -265,7 +265,7 @@ function* testSteps()
   }
 
   try {
-    objectStore.add({id:5}, 5);
+    objectStore.add({id: 5}, 5);
     ok(false, "add with inline key and passed key should throw!");
   }
   catch (e) {

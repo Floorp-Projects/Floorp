@@ -202,6 +202,36 @@ Decoder::skipCustomSection(ModuleEnvironment* env)
     return true;
 }
 
+bool
+Decoder::startNameSubsection(NameType nameType, uint32_t* endOffset)
+{
+    const uint8_t* initialPosition = cur_;
+
+    uint32_t nameTypeValue;
+    if (!readVarU32(&nameTypeValue))
+        return false;
+
+    if (nameTypeValue != uint8_t(nameType)) {
+        cur_ = initialPosition;
+        *endOffset = NotStarted;
+        return true;
+    }
+
+    uint32_t payloadLength;
+    if (!readVarU32(&payloadLength) || payloadLength > bytesRemain())
+        return false;
+
+    *endOffset = (cur_ - beg_) + payloadLength;
+    return true;
+}
+
+bool
+Decoder::finishNameSubsection(uint32_t endOffset)
+{
+    MOZ_ASSERT(endOffset != NotStarted);
+    return endOffset == uint32_t(cur_ - beg_);
+}
+
 // Misc helpers.
 
 bool
@@ -1560,60 +1590,81 @@ DecodeDataSection(Decoder& d, ModuleEnvironment* env)
     return true;
 }
 
-static void
-MaybeDecodeNameSectionBody(Decoder& d, ModuleEnvironment* env)
+static bool
+DecodeModuleNameSubsection(Decoder& d, ModuleEnvironment* env)
 {
-    // For simplicity, ignore all failures, even OOM. Failure will simply result
-    // in the names section not being included for this module.
+    uint32_t endOffset;
+    if (!d.startNameSubsection(NameType::Module, &endOffset))
+        return false;
+    if (endOffset == Decoder::NotStarted)
+        return true;
 
-    uint32_t numFuncNames;
-    if (!d.readVarU32(&numFuncNames))
-        return;
+    // Don't use NameInBytecode for module name; instead store a copy of the
+    // string. This way supplying a module name doesn't need to save the whole
+    // bytecode. While function names are likely to be stripped in practice,
+    // module names aren't necessarily.
 
-    if (numFuncNames > MaxFuncs)
-        return;
+    uint32_t nameLength;
+    if (!d.readVarU32(&nameLength))
+        return false;
 
-    // Use a local vector (and not env->funcNames) since it could result in a
-    // partially initialized result in case of failure in the middle.
+    const uint8_t* bytes;
+    if (!d.readBytes(nameLength, &bytes))
+        return false;
+
+    // Do nothing with module name for now; a future patch will incorporate the
+    // module name into the callstack format.
+
+    return d.finishNameSubsection(endOffset);
+}
+
+static bool
+DecodeFunctionNameSubsection(Decoder& d, ModuleEnvironment* env)
+{
+    uint32_t endOffset;
+    if (!d.startNameSubsection(NameType::Function, &endOffset))
+        return false;
+    if (endOffset == Decoder::NotStarted)
+        return true;
+
+    uint32_t nameCount = 0;
+    if (!d.readVarU32(&nameCount) || nameCount > MaxFuncs)
+        return false;
+
     NameInBytecodeVector funcNames;
-    if (!funcNames.resize(numFuncNames))
-        return;
 
-    for (uint32_t i = 0; i < numFuncNames; i++) {
-        uint32_t numBytes;
-        if (!d.readVarU32(&numBytes))
-            return;
-        if (numBytes > MaxStringLength)
-            return;
+    for (uint32_t i = 0; i < nameCount; ++i) {
+        uint32_t funcIndex = 0;
+        if (!d.readVarU32(&funcIndex))
+            return false;
 
-        NameInBytecode name;
-        name.offset = d.currentOffset();
-        name.length = numBytes;
-        funcNames[i] = name;
+        // Names must refer to real functions and be given in ascending order.
+        if (funcIndex >= env->numFuncs() || funcIndex < funcNames.length())
+            return false;
 
-        if (!d.readBytes(numBytes))
-            return;
+        if (!funcNames.resize(funcIndex + 1))
+            return false;
 
-        // Skip local names for a function.
-        uint32_t numLocals;
-        if (!d.readVarU32(&numLocals))
-            return;
-        if (numLocals > MaxLocals)
-            return;
+        uint32_t nameLength = 0;
+        if (!d.readVarU32(&nameLength) || nameLength > MaxStringLength)
+            return false;
 
-        for (uint32_t j = 0; j < numLocals; j++) {
-            uint32_t numBytes;
-            if (!d.readVarU32(&numBytes))
-                return;
-            if (numBytes > MaxStringLength)
-                return;
+        NameInBytecode func;
+        func.offset = d.currentOffset();
+        func.length = nameLength;
+        funcNames[funcIndex] = func;
 
-            if (!d.readBytes(numBytes))
-                return;
-        }
+        if (!d.readBytes(nameLength))
+            return false;
     }
 
+    if (!d.finishNameSubsection(endOffset))
+        return false;
+
+    // To encourage fully valid function names subsections; only save names if
+    // the entire subsection decoded correctly.
     env->funcNames = Move(funcNames);
+    return true;
 }
 
 static bool
@@ -1627,8 +1678,17 @@ DecodeNameSection(Decoder& d, ModuleEnvironment* env)
 
     // Once started, custom sections do not report validation errors.
 
-    MaybeDecodeNameSectionBody(d, env);
+    if (!DecodeModuleNameSubsection(d, env))
+        goto finish;
 
+    if (!DecodeFunctionNameSubsection(d, env))
+        goto finish;
+
+    // The names we care about have already been extracted into 'env' so don't
+    // bother decoding the rest of the name section. finishCustomSection() will
+    // skip to the end of the name section (as it would for any other error).
+
+  finish:
     d.finishCustomSection(sectionStart, sectionSize);
     return true;
 }

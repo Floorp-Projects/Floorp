@@ -55,7 +55,7 @@ function* testSteps()
   let exception;
 
   try {
-    let transaction = db.transaction(name, "readwriteflush");
+    db.transaction(name, "readwriteflush");
   } catch (e) {
     exception = e;
   }

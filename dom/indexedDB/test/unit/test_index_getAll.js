@@ -25,23 +25,6 @@ function* testSteps()
     { name: "weight", keyPath: "weight", options: { unique: false } }
   ];
 
-  const objectStoreDataNameSort = [
-    { key: "237-23-7733", value: { name: "Ann", height: 52, weight: 110 } },
-    { key: "237-23-7732", value: { name: "Bob", height: 60, weight: 120 } },
-    { key: "237-23-7736", value: { name: "Joe", height: 65, weight: 150 } },
-    { key: "237-23-7737", value: { name: "Pat", height: 65 } },
-    { key: "237-23-7734", value: { name: "Ron", height: 73, weight: 180 } },
-    { key: "237-23-7735", value: { name: "Sue", height: 58, weight: 130 } }
-  ];
-
-  const objectStoreDataWeightSort = [
-    { key: "237-23-7733", value: { name: "Ann", height: 52, weight: 110 } },
-    { key: "237-23-7732", value: { name: "Bob", height: 60, weight: 120 } },
-    { key: "237-23-7735", value: { name: "Sue", height: 58, weight: 130 } },
-    { key: "237-23-7736", value: { name: "Joe", height: 65, weight: 150 } },
-    { key: "237-23-7734", value: { name: "Ron", height: 73, weight: 180 } }
-  ];
-
   const objectStoreDataHeightSort = [
     { key: "237-23-7733", value: { name: "Ann", height: 52, weight: 110 } },
     { key: "237-23-7735", value: { name: "Sue", height: 58, weight: 130 } },

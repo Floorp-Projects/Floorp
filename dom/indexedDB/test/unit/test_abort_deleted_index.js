@@ -56,7 +56,7 @@ function* testSteps()
   request.onerror = expectedErrorHandler("AbortError");
   txn.abort();
   try {
-    index.get('foo');
+    index.get("foo");
     ok(false, "TransactionInactiveError shall be thrown right after a deletion of an index is aborted.");
   } catch (e) {
     ok(e instanceof DOMException, "got a database exception");
@@ -66,7 +66,7 @@ function* testSteps()
   yield undefined;
 
   try {
-    index.get('foo');
+    index.get("foo");
     ok(false, "TransactionInactiveError shall be thrown after the transaction is inactive.");
   } catch (e) {
     ok(e instanceof DOMException, "got a database exception");

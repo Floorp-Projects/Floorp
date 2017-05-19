@@ -69,6 +69,7 @@ enum class PromiseRejectReason {
     SendError,
     ChannelClosed,
     HandlerRejected,
+    ActorDestroyed,
     EndGuard_,
 };
 
@@ -93,10 +94,22 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver
 
     typedef mozilla::Monitor Monitor;
 
+    // We could templatize the actor type but it would unnecessarily
+    // expand the code size. Using the actor address as the
+    // identifier is already good enough.
+    typedef void* ActorIdType;
+
     struct PromiseHolder
     {
         RefPtr<MozPromiseRefcountable> mPromise;
-        std::function<void(MozPromiseRefcountable*, const char*)> mRejectFunction;
+
+        // For rejecting and removing the pending promises when a
+        // subprotocol is destoryed.
+        ActorIdType mActorId;
+
+        std::function<void(MozPromiseRefcountable*,
+                           PromiseRejectReason,
+                           const char*)> mRejectFunction;
     };
     static Atomic<size_t> gUnresolvedPromises;
     friend class PromiseReporter;
@@ -176,7 +189,7 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver
     // Asynchronously send a message to the other side of the channel
     // and wait for asynchronous reply
     template<typename Promise>
-    bool Send(Message* aMsg, Promise* aPromise) {
+    bool Send(Message* aMsg, Promise* aPromise, ActorIdType aActorId) {
         int32_t seqno = NextSeqno();
         aMsg->set_seqno(seqno);
         if (!Send(aMsg)) {
@@ -184,10 +197,11 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver
         }
         PromiseHolder holder;
         holder.mPromise = aPromise;
+        holder.mActorId = aActorId;
         holder.mRejectFunction = [](MozPromiseRefcountable* aRejectPromise,
+                                    PromiseRejectReason aReason,
                                     const char* aRejectSite) {
-            static_cast<Promise*>(aRejectPromise)->Reject(
-                PromiseRejectReason::ChannelClosed, aRejectSite);
+            static_cast<Promise*>(aRejectPromise)->Reject(aReason, aRejectSite);
         };
         mPendingPromises.insert(std::make_pair(seqno, Move(holder)));
         gUnresolvedPromises++;
@@ -213,6 +227,10 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver
 
     // Remove and return a promise that needs reply
     already_AddRefed<MozPromiseRefcountable> PopPromise(const Message& aMsg);
+
+    // Used to reject and remove pending promises owned by the given
+    // actor when it's about to be destroyed.
+    void RejectPendingPromisesForActor(ActorIdType aActorId);
 
     // If sending a sync message returns an error, this function gives a more
     // descriptive error message.

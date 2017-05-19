@@ -1,29 +1,11 @@
 <style>
 
 .fieldtext {
-  fill: -moz-fieldtext;
-#ifdef MOZ_WIDGET_GTK
-  /* The fill-opacity needs to be sufficient for high-contrast settings, and
-     pathological Gtk themes where -moz-fieldtext provides low contrast by
-     default. */
-  fill-opacity: .7;
-#else
-  fill-opacity: .5;
-#endif
+  fill: GrayText;
 }
-
-#ifdef XP_WIN
-@media (-moz-windows-default-theme: 0) {
-  /* more opacity for high-contrast themes */
-  .fieldtext {
-    fill-opacity: .8;
-  }
-}
-#endif
 
 .highlighttext {
   fill: highlighttext;
-  fill-opacity: 1;
 }
 
 .black {

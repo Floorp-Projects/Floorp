@@ -64,6 +64,7 @@ private:
   bool mURIWasModified;
   bool mIsSrcdocEntry;
   bool mScrollRestorationIsManual;
+  bool mLoadedInThisProcess;
 };
 
 #endif /* nsSHEntry_h */

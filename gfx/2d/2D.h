@@ -31,6 +31,12 @@
 
 #include "mozilla/DebugOnly.h"
 
+#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GTK)
+  #ifndef MOZ_ENABLE_FREETYPE
+  #define MOZ_ENABLE_FREETYPE
+  #endif
+#endif
+
 struct _cairo_surface;
 typedef _cairo_surface cairo_surface_t;
 
@@ -1617,6 +1623,9 @@ public:
 #ifdef MOZ_ENABLE_FREETYPE
   static void SetFTLibrary(FT_Library aFTLibrary);
   static FT_Library GetFTLibrary();
+
+  static FT_Library NewFTLibrary();
+  static void ReleaseFTLibrary(FT_Library aFTLibrary);
 
   static FT_Face NewFTFace(FT_Library aFTLibrary, const char* aFileName, int aFaceIndex);
   static FT_Face NewFTFaceFromData(FT_Library aFTLibrary, const uint8_t* aData, size_t aDataSize, int aFaceIndex);

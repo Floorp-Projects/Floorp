@@ -2,8 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Move.h"
+
 #include "js/HashTable.h"
 #include "js/Utility.h"
+
 #include "jsapi-tests/tests.h"
 
 //#define FUZZ
@@ -388,3 +391,45 @@ BEGIN_TEST(testHashMapLookupWithDefaultOOM)
 
 END_TEST(testHashMapLookupWithDefaultOOM)
 #endif // defined(DEBUG)
+
+BEGIN_TEST(testHashTableMovableEnum)
+{
+    CHECK(set.init());
+
+    // Exercise returning a hash table Enum object from a function.
+
+    CHECK(set.put(1));
+    for (auto e = enumerateSet(); !e.empty(); e.popFront())
+        e.removeFront();
+    CHECK(set.count() == 0);
+
+    // Test moving an Enum object explicitly.
+
+    CHECK(set.put(1));
+    CHECK(set.put(2));
+    CHECK(set.put(3));
+    CHECK(set.count() == 3);
+    {
+        auto e1 = IntSet::Enum(set);
+        CHECK(!e1.empty());
+        e1.removeFront();
+        e1.popFront();
+
+        auto e2 = mozilla::Move(e1);
+        CHECK(!e2.empty());
+        e2.removeFront();
+        e2.popFront();
+    }
+
+    CHECK(set.count() == 1);
+    return true;
+}
+
+IntSet set;
+
+IntSet::Enum enumerateSet()
+{
+    return IntSet::Enum(set);
+}
+
+END_TEST(testHashTableMovableEnum)
