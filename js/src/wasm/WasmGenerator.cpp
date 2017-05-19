@@ -48,6 +48,8 @@ static const uint32_t BAD_CODE_RANGE = UINT32_MAX;
 ModuleGenerator::ModuleGenerator(UniqueChars* error)
   : compileMode_(CompileMode(-1)),
     error_(error),
+    linkDataTier_(nullptr),
+    metadataTier_(nullptr),
     numSigs_(0),
     numTables_(0),
     lifo_(GENERATOR_LIFO_DEFAULT_CHUNK_SIZE),
@@ -109,6 +111,10 @@ ModuleGenerator::initAsmJS(Metadata* asmJSMetadata)
 {
     MOZ_ASSERT(env_->isAsmJS());
 
+    if (!linkData_.initTier())
+        return false;
+    linkDataTier_ = &linkData_.tier();
+
     metadataTier_ = &asmJSMetadata->tier();
     metadata_ = asmJSMetadata;
     MOZ_ASSERT(isAsmJS());
@@ -135,6 +141,10 @@ ModuleGenerator::initWasm(const CompileArgs& args)
 {
     MOZ_ASSERT(!env_->isAsmJS());
 
+    if (!linkData_.initTier())
+        return false;
+    linkDataTier_ = &linkData_.tier();
+
     auto metadataTier = js::MakeUnique<MetadataTier>();
     if (!metadataTier)
         return false;
@@ -159,8 +169,8 @@ ModuleGenerator::initWasm(const CompileArgs& args)
     numTables_ = env_->tables.length();
 
     for (size_t i = 0; i < env_->funcImportGlobalDataOffsets.length(); i++) {
-        env_->funcImportGlobalDataOffsets[i] = linkData_.globalDataLength;
-        linkData_.globalDataLength += sizeof(FuncImportTls);
+        env_->funcImportGlobalDataOffsets[i] = metadata_->globalDataLength;
+        metadata_->globalDataLength += sizeof(FuncImportTls);
         if (!addFuncImport(*env_->funcSigs[i], env_->funcImportGlobalDataOffsets[i]))
             return false;
     }
@@ -230,8 +240,6 @@ ModuleGenerator::init(UniqueModuleEnvironment env, const CompileArgs& args,
                       Metadata* maybeAsmJSMetadata)
 {
     env_ = Move(env);
-
-    linkData_.globalDataLength = 0;
 
     if (!funcToCodeRange_.appendN(BAD_CODE_RANGE, env_->funcSigs.length()))
         return false;
@@ -638,9 +646,9 @@ ModuleGenerator::finishCodegen()
 
     // Fill in LinkData with the offsets of these stubs.
 
-    linkData_.unalignedAccessOffset = unalignedAccessExit.begin;
-    linkData_.outOfBoundsOffset = outOfBoundsExit.begin;
-    linkData_.interruptOffset = interruptExit.begin;
+    linkDataTier_->unalignedAccessOffset = unalignedAccessExit.begin;
+    linkDataTier_->outOfBoundsOffset = outOfBoundsExit.begin;
+    linkDataTier_->interruptOffset = interruptExit.begin;
 
     // Now that all other code has been emitted, patch all remaining callsites
     // then far jumps. Patching callsites can generate far jumps so there is an
@@ -663,12 +671,12 @@ ModuleGenerator::finishLinkData()
 {
     // Inflate the global bytes up to page size so that the total bytes are a
     // page size (as required by the allocator functions).
-    linkData_.globalDataLength = AlignBytes(linkData_.globalDataLength, gc::SystemPageSize());
+    metadata_->globalDataLength = AlignBytes(metadata_->globalDataLength, gc::SystemPageSize());
 
     // Add links to absolute addresses identified symbolically.
     for (size_t i = 0; i < masm_.numSymbolicAccesses(); i++) {
         SymbolicAccess src = masm_.symbolicAccess(i);
-        if (!linkData_.symbolicLinks[src.target].append(src.patchAt.offset()))
+        if (!linkDataTier_->symbolicLinks[src.target].append(src.patchAt.offset()))
             return false;
     }
 
@@ -679,10 +687,10 @@ ModuleGenerator::finishLinkData()
     // SIMD values in the constant pool.
     for (size_t i = 0; i < masm_.numCodeLabels(); i++) {
         CodeLabel cl = masm_.codeLabel(i);
-        LinkData::InternalLink inLink(LinkData::InternalLink::CodeLabel);
+        LinkDataTier::InternalLink inLink(LinkDataTier::InternalLink::CodeLabel);
         inLink.patchAtOffset = masm_.labelToPatchOffset(*cl.patchAt());
         inLink.targetOffset = cl.target()->offset();
-        if (!linkData_.internalLinks.append(inLink))
+        if (!linkDataTier_->internalLinks.append(inLink))
             return false;
     }
 
@@ -704,7 +712,7 @@ ModuleGenerator::addFuncImport(const Sig& sig, uint32_t globalDataOffset)
 bool
 ModuleGenerator::allocateGlobalBytes(uint32_t bytes, uint32_t align, uint32_t* globalDataOffset)
 {
-    CheckedInt<uint32_t> newGlobalDataLength(linkData_.globalDataLength);
+    CheckedInt<uint32_t> newGlobalDataLength(metadata_->globalDataLength);
 
     newGlobalDataLength += ComputeByteAlignment(newGlobalDataLength.value(), align);
     if (!newGlobalDataLength.isValid())
@@ -716,7 +724,7 @@ ModuleGenerator::allocateGlobalBytes(uint32_t bytes, uint32_t align, uint32_t* g
     if (!newGlobalDataLength.isValid())
         return false;
 
-    linkData_.globalDataLength = newGlobalDataLength.value();
+    metadata_->globalDataLength = newGlobalDataLength.value();
     return true;
 }
 
@@ -1007,7 +1015,7 @@ ModuleGenerator::finishFuncDefs()
             return false;
     }
 
-    linkData_.functionCodeLength = masm_.size();
+    linkDataTier_->functionCodeLength = masm_.size();
     finishedFuncDefs_ = true;
 
     // Generate wrapper functions for every import. These wrappers turn imports
@@ -1190,7 +1198,7 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
 
     generateBytecodeHash(bytecode);
 
-    UniqueConstCodeSegment codeSegment = CodeSegment::create(masm_, bytecode, linkData_, *metadata_);
+    UniqueConstCodeSegment codeSegment = CodeSegment::create(masm_, bytecode, *linkDataTier_, *metadata_);
     if (!codeSegment)
         return nullptr;
 

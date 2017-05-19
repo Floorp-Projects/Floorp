@@ -220,6 +220,7 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     // Data that is moved into the result of finish()
     Assumptions                     assumptions_;
+    LinkDataTier*                   linkDataTier_; // Owned by linkData_
     LinkData                        linkData_;
     MetadataTier*                   metadataTier_; // Owned by metadata_
     MutableMetadata                 metadata_;
