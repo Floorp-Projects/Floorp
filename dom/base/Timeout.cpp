@@ -22,7 +22,7 @@ Timeout::Timeout()
     mReason(Reason::eTimeoutOrInterval),
     mTimeoutId(0),
     mInterval(0),
-    mFiringDepth(0),
+    mFiringId(TimeoutManager::InvalidFiringId),
     mNestingLevel(0),
     mPopupState(openAllowed)
 {
