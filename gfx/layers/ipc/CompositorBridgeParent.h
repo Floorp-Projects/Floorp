@@ -199,6 +199,7 @@ public:
                                 const gfx::IntRect& aRect) override;
   virtual mozilla::ipc::IPCResult RecvFlushRendering() override;
   virtual mozilla::ipc::IPCResult RecvFlushRenderingAsync() override;
+  virtual mozilla::ipc::IPCResult RecvWaitOnTransactionProcessed() override;
   virtual mozilla::ipc::IPCResult RecvForcePresent() override;
 
   virtual mozilla::ipc::IPCResult RecvNotifyRegionInvalidated(const nsIntRegion& aRegion) override;
@@ -447,11 +448,18 @@ public:
     return mOptions;
   }
 
+  TimeDuration GetVsyncInterval() const {
+    // the variable is called "rate" but really it's an interval
+    return mVsyncRate;
+  }
+
   PWebRenderBridgeParent* AllocPWebRenderBridgeParent(const wr::PipelineId& aPipelineId,
                                                       const LayoutDeviceIntSize& aSize,
                                                       TextureFactoryIdentifier* aTextureFactoryIdentifier,
                                                       uint32_t* aIdNamespace) override;
   bool DeallocPWebRenderBridgeParent(PWebRenderBridgeParent* aActor) override;
+  RefPtr<WebRenderBridgeParent> GetWebRenderBridgeParent() const;
+
   static void SetWebRenderProfilerEnabled(bool aEnabled);
 
   static CompositorBridgeParent* GetCompositorBridgeParentFromLayersId(const uint64_t& aLayersId);

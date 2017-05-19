@@ -4,38 +4,23 @@
 
 use std::f32::consts::{FRAC_1_SQRT_2};
 use euclid::{Point2D, Rect, Size2D};
-use euclid::{TypedRect, TypedPoint2D, TypedSize2D, TypedPoint4D, TypedMatrix4D};
+use euclid::{TypedRect, TypedPoint2D, TypedSize2D, TypedMatrix4D};
 use webrender_traits::{DeviceIntRect, DeviceIntPoint, DeviceIntSize};
 use webrender_traits::{LayerRect, WorldPoint4D, LayerPoint4D, LayerToWorldTransform};
 use webrender_traits::{BorderRadius, ComplexClipRegion, LayoutRect};
 use num_traits::Zero;
 
+// Matches the definition of SK_ScalarNearlyZero in Skia.
+const NEARLY_ZERO: f32 = 1.0 / 4096.0;
+
 // TODO: Implement these in euclid!
 pub trait MatrixHelpers<Src, Dst> {
-    fn transform_point_and_perspective_project(&self, point: &TypedPoint4D<f32, Src>) -> TypedPoint2D<f32, Dst>;
     fn transform_rect(&self, rect: &TypedRect<f32, Src>) -> TypedRect<f32, Dst>;
-
-    /// Returns true if this matrix transforms an axis-aligned 2D rectangle to another axis-aligned
-    /// 2D rectangle.
-    fn can_losslessly_transform_a_2d_rect(&self) -> bool;
-
-    /// Returns true if this matrix transforms an axis-aligned 2D rectangle to another axis-
-    /// aligned 2D rectangle after perspective divide.
-    fn can_losslessly_transform_and_perspective_project_a_2d_rect(&self) -> bool;
-
-    /// Clears out the portions of the matrix that `transform_rect()` uses. This allows the use of
-    /// `transform_rect()` while keeping the Z/W transform portions of the matrix intact.
-    fn reset_after_transforming_rect(&self) -> TypedMatrix4D<f32, Src, Dst>;
-
     fn is_identity(&self) -> bool;
+    fn preserves_2d_axis_alignment(&self) -> bool;
 }
 
 impl<Src, Dst> MatrixHelpers<Src, Dst> for TypedMatrix4D<f32, Src, Dst> {
-    fn transform_point_and_perspective_project(&self, point: &TypedPoint4D<f32, Src>) -> TypedPoint2D<f32, Dst> {
-        let point = self.transform_point4d(point);
-        TypedPoint2D::new(point.x / point.w, point.y / point.w)
-    }
-
     fn transform_rect(&self, rect: &TypedRect<f32, Src>) -> TypedRect<f32, Dst> {
         let top_left = self.transform_point(&rect.origin);
         let top_right = self.transform_point(&rect.top_right());
@@ -44,25 +29,40 @@ impl<Src, Dst> MatrixHelpers<Src, Dst> for TypedMatrix4D<f32, Src, Dst> {
         TypedRect::from_points(&[top_left, top_right, bottom_right, bottom_left])
     }
 
-    fn can_losslessly_transform_a_2d_rect(&self) -> bool {
-        self.m12 == 0.0 && self.m14 == 0.0 && self.m21 == 0.0 && self.m24 == 0.0 && self.m44 == 1.0
-    }
-
-    fn can_losslessly_transform_and_perspective_project_a_2d_rect(&self) -> bool {
-        self.m12 == 0.0 && self.m21 == 0.0
-    }
-
-    fn reset_after_transforming_rect(&self) -> TypedMatrix4D<f32, Src, Dst> {
-        TypedMatrix4D::row_major(
-            1.0,      0.0,      self.m13, 0.0,
-            0.0,      1.0,      self.m23, 0.0,
-            self.m31, self.m32, self.m33, self.m34,
-            0.0,      0.0,      self.m43, 1.0,
-        )
-    }
-
     fn is_identity(&self) -> bool {
         *self == TypedMatrix4D::identity()
+    }
+
+    // A port of the preserves2dAxisAlignment function in Skia.
+    // Defined in the SkMatrix44 class.
+    fn preserves_2d_axis_alignment(&self) -> bool {
+        if self.m14 != 0.0 || self.m24 != 0.0 {
+            return false;
+        }
+
+        let mut col0 = 0;
+        let mut col1 = 0;
+        let mut row0 = 0;
+        let mut row1 = 0;
+
+        if self.m11.abs() > NEARLY_ZERO {
+            col0 += 1;
+            row0 += 1;
+        }
+        if self.m12.abs() > NEARLY_ZERO {
+            col1 += 1;
+            row0 += 1;
+        }
+        if self.m21.abs() > NEARLY_ZERO {
+            col0 += 1;
+            row1 += 1;
+        }
+        if self.m22.abs() > NEARLY_ZERO {
+            col1 += 1;
+            row1 += 1;
+        }
+
+        col0 < 2 && col1 < 2 && row0 < 2 && row1 < 2
     }
 }
 
@@ -171,7 +171,7 @@ impl TransformedRect {
                transform: &LayerToWorldTransform,
                device_pixel_ratio: f32) -> TransformedRect {
 
-        let kind = if transform.can_losslessly_transform_and_perspective_project_a_2d_rect() {
+        let kind = if transform.preserves_2d_axis_alignment() {
             TransformedRectKind::AxisAligned
         } else {
             TransformedRectKind::Complex

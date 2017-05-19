@@ -3199,6 +3199,7 @@ protected:
   bool mIsRasterImage;
   /* Whether the image should be treated as fixed to the viewport. */
   bool mShouldFixToViewport;
+  uint32_t mImageFlags;
 };
 
 enum class TableType : uint8_t {

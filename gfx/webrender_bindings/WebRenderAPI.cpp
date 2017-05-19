@@ -173,6 +173,14 @@ WebRenderAPI::~WebRenderAPI()
 }
 
 void
+WebRenderAPI::UpdateScrollPosition(const WrPipelineId& aPipelineId,
+                                   const layers::FrameMetrics::ViewID& aScrollId,
+                                   const WrPoint& aScrollPosition)
+{
+  wr_scroll_layer_with_id(mWrApi, aPipelineId, aScrollId, aScrollPosition);
+}
+
+void
 WebRenderAPI::GenerateFrame()
 {
   wr_api_generate_frame(mWrApi);
@@ -195,24 +203,20 @@ void
 WebRenderAPI::SetRootDisplayList(gfx::Color aBgColor,
                                  Epoch aEpoch,
                                  LayerSize aViewportSize,
-				 WrPipelineId pipeline_id,
-				 WrBuiltDisplayListDescriptor dl_descriptor,
-				 uint8_t *dl_data,
-				 size_t dl_size,
-				 WrAuxiliaryListsDescriptor aux_descriptor,
-				 uint8_t *aux_data,
-				 size_t aux_size)
+                                 WrPipelineId pipeline_id,
+                                 const WrSize& content_size,
+                                 WrBuiltDisplayListDescriptor dl_descriptor,
+                                 uint8_t *dl_data,
+                                 size_t dl_size)
 {
     wr_api_set_root_display_list(mWrApi,
-				 aEpoch,
-				 aViewportSize.width, aViewportSize.height,
+                                 aEpoch,
+                                 aViewportSize.width, aViewportSize.height,
                                  pipeline_id,
+                                 content_size,
                                  dl_descriptor,
                                  dl_data,
-                                 dl_size,
-                                 aux_descriptor,
-                                 aux_data,
-                                 aux_size);
+                                 dl_size);
 }
 
 void
@@ -411,14 +415,18 @@ WebRenderAPI::AddBlobImage(ImageKey key, const ImageDescriptor& aDescriptor,
 }
 
 void
-WebRenderAPI::AddExternalImageHandle(ImageKey key,
-                                     const ImageDescriptor& aDescriptor,
-                                     ExternalImageId aHandle)
+WebRenderAPI::AddExternalImage(ImageKey key,
+                               const ImageDescriptor& aDescriptor,
+                               ExternalImageId aExtID,
+                               WrExternalImageBufferType aBufferType,
+                               uint8_t aChannelIndex)
 {
-  wr_api_add_external_image_handle(mWrApi,
-                                   key,
-                                   &aDescriptor,
-                                   aHandle);
+  wr_api_add_external_image(mWrApi,
+                            key,
+                            &aDescriptor,
+                            aExtID,
+                            aBufferType,
+                            aChannelIndex);
 }
 
 void
@@ -501,10 +509,11 @@ WebRenderAPI::RunOnRenderThread(UniquePtr<RendererEvent> aEvent)
   wr_api_send_external_event(mWrApi, event);
 }
 
-DisplayListBuilder::DisplayListBuilder(PipelineId aId)
+DisplayListBuilder::DisplayListBuilder(PipelineId aId,
+                                       const WrSize& aContentSize)
 {
   MOZ_COUNT_CTOR(DisplayListBuilder);
-  mWrState = wr_state_new(aId);
+  mWrState = wr_state_new(aId, aContentSize);
 }
 
 DisplayListBuilder::~DisplayListBuilder()
@@ -525,16 +534,14 @@ DisplayListBuilder::End()
   wr_dp_end(mWrState);
 }
 
-BuiltDisplayList
-DisplayListBuilder::Finalize()
+void
+DisplayListBuilder::Finalize(WrSize& aOutContentSize,
+                             BuiltDisplayList& aOutDisplayList)
 {
-  BuiltDisplayList dl;
   wr_api_finalize_builder(mWrState,
-                          &dl.dl_desc,
-                          &dl.dl.inner,
-                          &dl.aux_desc,
-                          &dl.aux.inner);
-  return dl;
+                          &aOutContentSize,
+                          &aOutDisplayList.dl_desc,
+                          &aOutDisplayList.dl.inner);
 }
 
 void
@@ -573,13 +580,13 @@ void
 DisplayListBuilder::PushClip(const WrRect& aClipRect,
                              const WrImageMask* aMask)
 {
-  wr_dp_push_scroll_layer(mWrState, aClipRect, aClipRect, aMask);
+  wr_dp_push_clip(mWrState, aClipRect, aMask);
 }
 
 void
 DisplayListBuilder::PopClip()
 {
-  wr_dp_pop_scroll_layer(mWrState);
+  wr_dp_pop_clip(mWrState);
 }
 
 void
@@ -587,17 +594,15 @@ DisplayListBuilder::PushBuiltDisplayList(BuiltDisplayList dl)
 {
   wr_dp_push_built_display_list(mWrState,
                                 dl.dl_desc,
-                                dl.dl.Extract(),
-                                dl.aux_desc,
-                                dl.aux.Extract());
+                                dl.dl.Extract());
 }
 
 void
-DisplayListBuilder::PushScrollLayer(const WrRect& aContentRect,
-                                    const WrRect& aClipRect,
-                                    const WrImageMask* aMask)
+DisplayListBuilder::PushScrollLayer(const layers::FrameMetrics::ViewID& aScrollId,
+                                    const WrRect& aContentRect,
+                                    const WrRect& aClipRect)
 {
-  wr_dp_push_scroll_layer(mWrState, aContentRect, aClipRect, aMask);
+  wr_dp_push_scroll_layer(mWrState, aScrollId, aContentRect, aClipRect);
 }
 
 void
@@ -608,7 +613,7 @@ DisplayListBuilder::PopScrollLayer()
 
 void
 DisplayListBuilder::PushRect(const WrRect& aBounds,
-                             const WrClipRegion& aClip,
+                             const WrClipRegionToken aClip,
                              const WrColor& aColor)
 {
   wr_dp_push_rect(mWrState, aBounds, aClip, aColor);
@@ -616,7 +621,7 @@ DisplayListBuilder::PushRect(const WrRect& aBounds,
 
 void
 DisplayListBuilder::PushLinearGradient(const WrRect& aBounds,
-                                       const WrClipRegion& aClip,
+                                       const WrClipRegionToken aClip,
                                        const WrPoint& aStartPoint,
                                        const WrPoint& aEndPoint,
                                        const nsTArray<WrGradientStop>& aStops,
@@ -634,7 +639,7 @@ DisplayListBuilder::PushLinearGradient(const WrRect& aBounds,
 
 void
 DisplayListBuilder::PushRadialGradient(const WrRect& aBounds,
-                                       const WrClipRegion& aClip,
+                                       const WrClipRegionToken aClip,
                                        const WrPoint& aCenter,
                                        const WrSize& aRadius,
                                        const nsTArray<WrGradientStop>& aStops,
@@ -652,7 +657,7 @@ DisplayListBuilder::PushRadialGradient(const WrRect& aBounds,
 
 void
 DisplayListBuilder::PushImage(const WrRect& aBounds,
-                              const WrClipRegion& aClip,
+                              const WrClipRegionToken aClip,
                               wr::ImageRendering aFilter,
                               wr::ImageKey aImage)
 {
@@ -664,7 +669,7 @@ DisplayListBuilder::PushImage(const WrRect& aBounds,
 
 void
 DisplayListBuilder::PushImage(const WrRect& aBounds,
-                              const WrClipRegion& aClip,
+                              const WrClipRegionToken aClip,
                               const WrSize& aStretchSize,
                               const WrSize& aTileSpacing,
                               wr::ImageRendering aFilter,
@@ -675,7 +680,7 @@ DisplayListBuilder::PushImage(const WrRect& aBounds,
 
 void
 DisplayListBuilder::PushYCbCrPlanarImage(const WrRect& aBounds,
-                                         const WrClipRegion& aClip,
+                                         const WrClipRegionToken aClip,
                                          wr::ImageKey aImageChannel0,
                                          wr::ImageKey aImageChannel1,
                                          wr::ImageKey aImageChannel2,
@@ -692,7 +697,7 @@ DisplayListBuilder::PushYCbCrPlanarImage(const WrRect& aBounds,
 
 void
 DisplayListBuilder::PushNV12Image(const WrRect& aBounds,
-                                  const WrClipRegion& aClip,
+                                  const WrClipRegionToken aClip,
                                   wr::ImageKey aImageChannel0,
                                   wr::ImageKey aImageChannel1,
                                   WrYuvColorSpace aColorSpace)
@@ -706,8 +711,21 @@ DisplayListBuilder::PushNV12Image(const WrRect& aBounds,
 }
 
 void
+DisplayListBuilder::PushYCbCrInterleavedImage(const WrRect& aBounds,
+                                              const WrClipRegionToken aClip,
+                                              wr::ImageKey aImageChannel0,
+                                              WrYuvColorSpace aColorSpace)
+{
+  wr_dp_push_yuv_interleaved_image(mWrState,
+                                   aBounds,
+                                   aClip,
+                                   aImageChannel0,
+                                   aColorSpace);
+}
+
+void
 DisplayListBuilder::PushIFrame(const WrRect& aBounds,
-                               const WrClipRegion& aClip,
+                               const WrClipRegionToken aClip,
                                PipelineId aPipeline)
 {
   wr_dp_push_iframe(mWrState, aBounds, aClip, aPipeline);
@@ -715,7 +733,7 @@ DisplayListBuilder::PushIFrame(const WrRect& aBounds,
 
 void
 DisplayListBuilder::PushBorder(const WrRect& aBounds,
-                               const WrClipRegion& aClip,
+                               const WrClipRegionToken aClip,
                                const WrBorderWidths& aWidths,
                                const WrBorderSide& aTop,
                                const WrBorderSide& aRight,
@@ -729,7 +747,7 @@ DisplayListBuilder::PushBorder(const WrRect& aBounds,
 
 void
 DisplayListBuilder::PushBorderImage(const WrRect& aBounds,
-                                    const WrClipRegion& aClip,
+                                    const WrClipRegionToken aClip,
                                     const WrBorderWidths& aWidths,
                                     wr::ImageKey aImage,
                                     const WrNinePatchDescriptor& aPatch,
@@ -744,7 +762,7 @@ DisplayListBuilder::PushBorderImage(const WrRect& aBounds,
 
 void
 DisplayListBuilder::PushBorderGradient(const WrRect& aBounds,
-                                       const WrClipRegion& aClip,
+                                       const WrClipRegionToken aClip,
                                        const WrBorderWidths& aWidths,
                                        const WrPoint& aStartPoint,
                                        const WrPoint& aEndPoint,
@@ -760,7 +778,7 @@ DisplayListBuilder::PushBorderGradient(const WrRect& aBounds,
 
 void
 DisplayListBuilder::PushBorderRadialGradient(const WrRect& aBounds,
-                                             const WrClipRegion& aClip,
+                                             const WrClipRegionToken aClip,
                                              const WrBorderWidths& aWidths,
                                              const WrPoint& aCenter,
                                              const WrSize& aRadius,
@@ -776,7 +794,7 @@ DisplayListBuilder::PushBorderRadialGradient(const WrRect& aBounds,
 
 void
 DisplayListBuilder::PushText(const WrRect& aBounds,
-                             const WrClipRegion& aClip,
+                             const WrClipRegionToken aClip,
                              const gfx::Color& aColor,
                              wr::FontKey aFontKey,
                              Range<const WrGlyphInstance> aGlyphBuffer,
@@ -791,7 +809,7 @@ DisplayListBuilder::PushText(const WrRect& aBounds,
 
 void
 DisplayListBuilder::PushBoxShadow(const WrRect& aRect,
-                                  const WrClipRegion& aClip,
+                                  const WrClipRegionToken aClip,
                                   const WrRect& aBoxBounds,
                                   const WrPoint& aOffset,
                                   const WrColor& aColor,
@@ -806,25 +824,25 @@ DisplayListBuilder::PushBoxShadow(const WrRect& aRect,
                         aClipMode);
 }
 
-WrClipRegion
-DisplayListBuilder::BuildClipRegion(const WrRect& aMain,
-                                    const WrImageMask* aMask)
+WrClipRegionToken
+DisplayListBuilder::PushClipRegion(const WrRect& aMain,
+                                   const WrImageMask* aMask)
 {
-  return wr_dp_new_clip_region(mWrState,
-                               aMain,
-                               nullptr, 0,
-                               aMask);
+  return wr_dp_push_clip_region(mWrState,
+                                aMain,
+                                nullptr, 0,
+                                aMask);
 }
 
-WrClipRegion
-DisplayListBuilder::BuildClipRegion(const WrRect& aMain,
-                                    const nsTArray<WrComplexClipRegion>& aComplex,
-                                    const WrImageMask* aMask)
+WrClipRegionToken
+DisplayListBuilder::PushClipRegion(const WrRect& aMain,
+                                   const nsTArray<WrComplexClipRegion>& aComplex,
+                                   const WrImageMask* aMask)
 {
-  return wr_dp_new_clip_region(mWrState,
-                               aMain,
-                               aComplex.Elements(), aComplex.Length(),
-                               aMask);
+  return wr_dp_push_clip_region(mWrState,
+                                aMain,
+                                aComplex.Elements(), aComplex.Length(),
+                                aMask);
 }
 
 } // namespace wr

@@ -17,6 +17,8 @@
 namespace mozilla {
 namespace layers {
 
+using namespace mozilla::gfx;
+
 WebRenderBridgeChild::WebRenderBridgeChild(const wr::PipelineId& aPipelineId)
   : mReadLockSequenceNumber(0)
   , mIsInTransaction(false)
@@ -100,16 +102,17 @@ WebRenderBridgeChild::DPEnd(wr::DisplayListBuilder &aBuilder,
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(mIsInTransaction);
 
-  wr::BuiltDisplayList dl = aBuilder.Finalize();
+  wr::BuiltDisplayList dl;
+  WrSize contentSize;
+  aBuilder.Finalize(contentSize, dl);
   ByteBuffer dlData(Move(dl.dl));
-  ByteBuffer auxData(Move(dl.aux));
 
   if (aIsSync) {
     this->SendDPSyncEnd(aSize, mParentCommands, mDestroyedActors, GetFwdTransactionId(), aTransactionId,
-                        dlData, dl.dl_desc, auxData, dl.aux_desc, aScrollData);
+                        contentSize, dlData, dl.dl_desc, aScrollData);
   } else {
     this->SendDPEnd(aSize, mParentCommands, mDestroyedActors, GetFwdTransactionId(), aTransactionId,
-                    dlData, dl.dl_desc, auxData, dl.aux_desc, aScrollData);
+                    contentSize, dlData, dl.dl_desc, aScrollData);
   }
 
   mParentCommands.Clear();
@@ -188,8 +191,6 @@ WebRenderBridgeChild::PushGlyphs(wr::DisplayListBuilder& aBuilder, const nsTArra
   WrFontKey key = GetFontKeyForScaledFont(aFont);
   MOZ_ASSERT(key.mNamespace && key.mHandle);
 
-  WrClipRegion clipRegion = aBuilder.BuildClipRegion(aSc.ToRelativeWrRect(aClip));
-
   for (size_t i = 0; i < aGlyphs.Length(); i++) {
     GlyphArray glyph_array = aGlyphs[i];
     nsTArray<gfx::Glyph>& glyphs = glyph_array.glyphs();
@@ -202,6 +203,8 @@ WebRenderBridgeChild::PushGlyphs(wr::DisplayListBuilder& aBuilder, const nsTArra
       wr_glyph_instances[j].point = aSc.ToRelativeWrPoint(
               LayerPoint::FromUnknownPoint(glyphs[j].mPosition));
     }
+
+    WrClipRegionToken clipRegion = aBuilder.PushClipRegion(aSc.ToRelativeWrRect(aClip));
     aBuilder.PushText(aSc.ToRelativeWrRect(aBounds),
                       clipRegion,
                       glyph_array.color().value(),
@@ -323,6 +326,11 @@ WebRenderBridgeChild::AddOpDestroy(const OpDestroy& aOp)
 void
 WebRenderBridgeChild::ReleaseCompositable(const CompositableHandle& aHandle)
 {
+  if (!IPCOpen()) {
+    // This can happen if the IPC connection was torn down, because, e.g.
+    // the GPU process died.
+    return;
+  }
   if (!DestroyInTransaction(aHandle)) {
     SendReleaseCompositable(aHandle);
   }

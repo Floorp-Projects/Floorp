@@ -615,7 +615,7 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
                                                                                     ConvertImageRendererToDrawFlags(mFlags));
       if (!container) {
         NS_WARNING("Failed to get image container");
-        return DrawResult::BAD_IMAGE;
+        return DrawResult::NOT_READY;
       }
       Maybe<wr::ImageKey> key = aLayer->SendImageContainer(container, aParentCommands);
       if (key.isNothing()) {
@@ -639,7 +639,7 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
 
       LayoutDeviceSize gapSize = LayoutDeviceSize::FromAppUnits(
           aRepeatSize - aDest.Size(), appUnitsPerDevPixel);
-      aBuilder.PushImage(fill, aBuilder.BuildClipRegion(clip),
+      aBuilder.PushImage(fill, aBuilder.PushClipRegion(clip),
                          wr::ToWrSize(destRect.Size()), wr::ToWrSize(gapSize),
                          wr::ImageRendering::Auto, key.value());
       break;

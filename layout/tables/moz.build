@@ -27,6 +27,8 @@ UNIFIED_SOURCES += [
     'SpanningCellSorter.cpp',
 ]
 
+include('/ipc/chromium/chromium-config.mozbuild')
+
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
