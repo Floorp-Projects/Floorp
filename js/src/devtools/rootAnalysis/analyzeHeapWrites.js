@@ -208,6 +208,7 @@ function treatAsSafeArgument(entry, varName, csuName)
         ["Gecko_StyleShapeSource_SetURLValue", "aShape", null],
         ["Gecko_nsFont_InitSystem", "aDest", null],
         ["Gecko_StyleTransition_SetUnsupportedProperty", "aTransition", null],
+        ["Gecko_AddPropertyToSet", "aPropertySet", "null"],
     ];
     for (var [entryMatch, varMatch, csuMatch] of whitelist) {
         assert(entryMatch || varMatch || csuMatch);
@@ -391,6 +392,7 @@ function ignoreContents(entry)
         /LookAndFeel::GetColor/,
         "Gecko_CopyStyleContentsFrom",
         "Gecko_CSSValue_SetAbsoluteLength",
+        /nsCSSPropertyIDSet::AddProperty/,
     ];
     if (entry.matches(whitelist))
         return true;
