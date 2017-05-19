@@ -28,6 +28,8 @@ struct nsSVGMark;
 
 class nsSVGMarkerFrame final : public nsSVGContainerFrame
 {
+  typedef mozilla::image::imgDrawingParams imgDrawingParams;
+
   friend class nsSVGMarkerAnonChildFrame;
   friend nsContainerFrame*
   NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
@@ -75,12 +77,12 @@ public:
   }
 
   // nsSVGMarkerFrame methods:
-  DrawResult PaintMark(gfxContext& aContext,
-                      const gfxMatrix& aToMarkedFrameUserSpace,
-                      mozilla::SVGGeometryFrame *aMarkedFrame,
-                      nsSVGMark *aMark,
-                      float aStrokeWidth,
-                      uint32_t aFlags);
+  void PaintMark(gfxContext& aContext,
+                 const gfxMatrix& aToMarkedFrameUserSpace,
+                 mozilla::SVGGeometryFrame *aMarkedFrame,
+                 nsSVGMark *aMark,
+                 float aStrokeWidth,
+                 imgDrawingParams& aImgParams);
 
   SVGBBox GetMarkBBoxContribution(const Matrix &aToBBoxUserspace,
                                   uint32_t aFlags,

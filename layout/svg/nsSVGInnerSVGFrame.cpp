@@ -52,11 +52,11 @@ nsSVGInnerSVGFrame::Init(nsIContent*       aContent,
 //----------------------------------------------------------------------
 // nsSVGDisplayableFrame methods
 
-DrawResult
+void
 nsSVGInnerSVGFrame::PaintSVG(gfxContext& aContext,
                              const gfxMatrix& aTransform,
-                             const nsIntRect *aDirtyRect,
-                             uint32_t aFlags)
+                             imgDrawingParams& aImgParams,
+                             const nsIntRect *aDirtyRect)
 {
   NS_ASSERTION(!NS_SVGDisplayListPaintingEnabled() ||
                (mState & NS_FRAME_IS_NONDISPLAY),
@@ -71,7 +71,7 @@ nsSVGInnerSVGFrame::PaintSVG(gfxContext& aContext,
       GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);
 
     if (width <= 0 || height <= 0) {
-      return DrawResult::SUCCESS;
+      return;
     }
 
     autoSR.SetContext(&aContext);
@@ -80,7 +80,8 @@ nsSVGInnerSVGFrame::PaintSVG(gfxContext& aContext,
     nsSVGUtils::SetClipRect(&aContext, aTransform, clipRect);
   }
 
-  return nsSVGDisplayContainerFrame::PaintSVG(aContext, aTransform, aDirtyRect, aFlags);
+  nsSVGDisplayContainerFrame::PaintSVG(aContext, aTransform, aImgParams,
+                                       aDirtyRect);
 }
 
 void

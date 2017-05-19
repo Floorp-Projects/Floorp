@@ -58,6 +58,7 @@ FILE_PATTERNS_TO_IGNORE = ["*.#*", "*.pyc", "fake-ld.sh"]
 SPEC_BASE_PATH = "components/script/dom/"
 
 WEBIDL_STANDARDS = [
+    "//www.khronos.org/registry/webgl/extensions",
     "//www.khronos.org/registry/webgl/specs",
     "//developer.mozilla.org/en-US/docs/Web/API",
     "//dev.w3.org/2006/webapi",
@@ -447,6 +448,7 @@ def check_rust(file_name, lines):
 
     prev_use = None
     prev_open_brace = False
+    multi_line_string = False
     current_indent = 0
     prev_crate = {}
     prev_mod = {}
@@ -463,6 +465,15 @@ def check_rust(file_name, lines):
         line = original_line.strip()
         prev_indent = indent
         indent = len(original_line) - len(line)
+
+        # Hack for components/selectors/build.rs
+        if multi_line_string:
+            if line.startswith('"#'):
+                multi_line_string = False
+            else:
+                continue
+        if line.endswith('r#"'):
+            multi_line_string = True
 
         is_attribute = re.search(r"#\[.*\]", line)
         is_comment = re.search(r"^//|^/\*|^\*", line)

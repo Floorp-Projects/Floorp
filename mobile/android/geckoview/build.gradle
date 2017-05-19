@@ -97,8 +97,9 @@ dependencies {
 task syncPreprocessedCode(type: Sync, dependsOn: rootProject.generateCodeAndResources) {
     into("${project.buildDir}/generated/source/preprocessed_code")
     from("${topobjdir}/mobile/android/base/generated/preprocessed") {
-        // AdjustConstants is included in the main app project.
+        // These constants files are included in the main app project.
         exclude '**/AdjustConstants.java'
+        exclude '**/MmaConstants.java'
     }
 }
 

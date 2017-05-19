@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1365383
+-->
+<head>
+  <title>Test for Bug 1365383</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1365383">Mozilla Bug 1365383</a>
+<p id="display"></p>
+<div id="content">
+<textarea id="editor" spellcheck="true"></textarea>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  let textarea = document.getElementById("editor");
+  let editor = SpecialPowers.wrap(textarea).editor;
+  let spellChecker =
+    SpecialPowers.Cc['@mozilla.org/editor/editorspellchecker;1']
+    .createInstance(SpecialPowers.Ci.nsIEditorSpellCheck);
+
+  // Callback parameter isn't set
+  spellChecker.InitSpellChecker(editor, false);
+
+  textarea.focus();
+
+  SpecialPowers.Cu.import(
+    "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
+  .onSpellCheck(textarea, () => {
+    // Callback parameter isn't set
+    spellChecker.UpdateCurrentDictionary();
+
+    var canSpellCheck = spellChecker.canSpellCheck();
+    ok(canSpellCheck, 'spellCheck is enabled');
+    SimpleTest.finish();
+  });
+});
+</script>
+</body>
+</html>

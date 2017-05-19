@@ -67,11 +67,12 @@ using namespace mozilla::dom;
 already_AddRefed<nsComputedDOMStyle>
 NS_NewComputedDOMStyle(dom::Element* aElement, const nsAString& aPseudoElt,
                        nsIPresShell* aPresShell,
+                       nsComputedDOMStyle::StyleType aStyleType,
                        nsComputedDOMStyle::AnimationFlag aFlag)
 {
   RefPtr<nsComputedDOMStyle> computedStyle;
   computedStyle = new nsComputedDOMStyle(aElement, aPseudoElt,
-                                         aPresShell, aFlag);
+                                         aPresShell, aStyleType, aFlag);
   return computedStyle.forget();
 }
 
@@ -245,11 +246,13 @@ nsComputedStyleMap::Update()
 nsComputedDOMStyle::nsComputedDOMStyle(dom::Element* aElement,
                                        const nsAString& aPseudoElt,
                                        nsIPresShell* aPresShell,
+                                       StyleType aStyleType,
                                        AnimationFlag aFlag)
   : mDocumentWeak(nullptr)
   , mOuterFrame(nullptr)
   , mInnerFrame(nullptr)
   , mPresShell(nullptr)
+  , mStyleType(aStyleType)
   , mStyleContextGeneration(0)
   , mExposeVisitedStyle(false)
   , mResolvedStyleContext(false)
@@ -402,7 +405,8 @@ nsComputedDOMStyle::GetAuthoredPropertyValue(const nsAString& aPropertyName,
 already_AddRefed<nsStyleContext>
 nsComputedDOMStyle::GetStyleContext(Element* aElement,
                                     nsIAtom* aPseudo,
-                                    nsIPresShell* aPresShell)
+                                    nsIPresShell* aPresShell,
+                                    StyleType aStyleType)
 {
   // If the content has a pres shell, we must use it.  Otherwise we'd
   // potentially mix rule trees by using the wrong pres shell's style
@@ -418,7 +422,7 @@ nsComputedDOMStyle::GetStyleContext(Element* aElement,
 
   presShell->FlushPendingNotifications(FlushType::Style);
 
-  return GetStyleContextNoFlush(aElement, aPseudo, presShell);
+  return GetStyleContextNoFlush(aElement, aPseudo, presShell, aStyleType);
 }
 
 namespace {
@@ -453,6 +457,7 @@ public:
                        Element* aElement,
                        CSSPseudoElementType aType,
                        nsStyleContext* aParentContext,
+                       nsComputedDOMStyle::StyleType aStyleType,
                        bool aInDocWithShell)
   {
     MOZ_ASSERT(mAnimationFlag == nsComputedDOMStyle::eWithAnimation,
@@ -470,6 +475,30 @@ public:
     } else {
       result = aStyleSet->ResolveStyleFor(aElement, aParentContext,
                                           LazyComputeBehavior::Allow);
+    }
+    if (aStyleType == nsComputedDOMStyle::StyleType::eDefaultOnly) {
+      // We really only want the user and UA rules.  Filter out the other ones.
+      nsTArray< nsCOMPtr<nsIStyleRule> > rules;
+      for (nsRuleNode* ruleNode = result->RuleNode();
+           !ruleNode->IsRoot();
+           ruleNode = ruleNode->GetParent()) {
+        if (ruleNode->GetLevel() == SheetType::Agent ||
+            ruleNode->GetLevel() == SheetType::User) {
+          rules.AppendElement(ruleNode->GetRule());
+        }
+      }
+
+      // We want to build a list of user/ua rules that is in order from least to
+      // most important, so we have to reverse the list.
+      // Integer division to get "stop" is purposeful here: if length is odd, we
+      // don't have to do anything with the middle element of the array.
+      for (uint32_t i = 0, length = rules.Length(), stop = length / 2;
+           i < stop; ++i) {
+        rules[i].swap(rules[length - i - 1]);
+      }
+
+      result = aStyleSet->AsGecko()->ResolveStyleForRules(aParentContext,
+                                                          rules);
     }
     return result.forget();
   }
@@ -551,6 +580,7 @@ already_AddRefed<nsStyleContext>
 nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
                                              nsIAtom* aPseudo,
                                              nsIPresShell* aPresShell,
+                                             StyleType aStyleType,
                                              AnimationFlag aAnimationFlag)
 {
   MOZ_ASSERT(aElement, "NULL element");
@@ -572,6 +602,7 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
   // check is needed due to bug 135040 (to avoid using
   // mPrimaryFrame). Remove it once that's fixed.
   if (inDocWithShell &&
+      aStyleType == eAll &&
       !aElement->IsHTMLElement(nsGkAtoms::area)) {
     nsIFrame* frame = nullptr;
     if (aPseudo == nsCSSPseudoElements::before) {
@@ -631,6 +662,10 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
   // For Servo, compute the result directly without recursively building up
   // a throwaway style context chain.
   if (ServoStyleSet* servoSet = styleSet->GetAsServo()) {
+    if (aStyleType == eDefaultOnly) {
+      NS_WARNING("stylo: ServoStyleSets cannot supply UA-only styles yet");
+      return nullptr;
+    }
     return servoSet->ResolveTransientStyle(aElement, aPseudo, type);
   }
 
@@ -639,7 +674,7 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
   // Don't resolve parent context for document fragments.
   if (parent && parent->IsElement()) {
     parentContext = GetStyleContextNoFlush(parent->AsElement(), nullptr,
-                                           aPresShell);
+                                           aPresShell, aStyleType);
   }
 
   StyleResolver styleResolver(presContext, aAnimationFlag);
@@ -648,6 +683,7 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
     return styleResolver.ResolveWithAnimation(styleSet,
                                               aElement, type,
                                               parentContext,
+                                              aStyleType,
                                               inDocWithShell);
   }
 
@@ -789,7 +825,7 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
   // XXX the !mContent->IsHTMLElement(nsGkAtoms::area)
   // check is needed due to bug 135040 (to avoid using
   // mPrimaryFrame). Remove it once that's fixed.
-  if (!mContent->IsHTMLElement(nsGkAtoms::area)) {
+  if (mStyleType == eAll && !mContent->IsHTMLElement(nsGkAtoms::area)) {
     mOuterFrame = nullptr;
 
     if (!mPseudo) {
@@ -850,7 +886,8 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
     RefPtr<nsStyleContext> resolvedStyleContext =
       nsComputedDOMStyle::GetStyleContext(mContent->AsElement(),
                                           mPseudo,
-                                          mPresShell);
+                                          mPresShell,
+                                          mStyleType);
     if (!resolvedStyleContext) {
       ClearStyleContext();
       return;
@@ -1082,8 +1119,8 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetStackSizing()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetIdent(StyleXUL()->mStretchStack ? eCSSKeyword_stretch_to_fit :
-                eCSSKeyword_ignore);
+  val->SetIdent(nsCSSProps::ValueToKeywordEnum(StyleXUL()->mStackSizing,
+                                               nsCSSProps::kStackSizingKTable));
   return val.forget();
 }
 

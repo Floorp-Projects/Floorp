@@ -386,7 +386,7 @@ PrincipalAllowsBrowserFrame(nsIPrincipal* aPrincipal)
 /* virtual */ nsresult
 nsGenericHTMLFrameElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                         const nsAttrValue* aValue,
-                                        bool aNotify)
+                                        const nsAttrValue* aOldValue, bool aNotify)
 {
   if (aName == nsGkAtoms::scrolling && aNameSpaceID == kNameSpaceID_None) {
     if (mFrameLoader) {
@@ -418,7 +418,7 @@ nsGenericHTMLFrameElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
   }
 
   return nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName, aValue,
-                                            aNotify);
+                                            aOldValue, aNotify);
 }
 
 void

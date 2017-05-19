@@ -572,8 +572,8 @@ private:
 
   // Called when the metadata from the media file has been loaded by the
   // state machine. Call on the main thread only.
-  void MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
-                      nsAutoPtr<MetadataTags> aTags,
+  void MetadataLoaded(UniquePtr<MediaInfo> aInfo,
+                      UniquePtr<MetadataTags> aTags,
                       MediaDecoderEventVisibility aEventVisibility);
 
   MediaEventSource<void>*

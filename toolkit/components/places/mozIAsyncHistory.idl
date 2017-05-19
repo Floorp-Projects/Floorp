@@ -126,37 +126,20 @@ interface mozIVisitedStatusCallback : nsISupports
                  in boolean aVisitedStatus);
 };
 
+/**
+ * This interface contains APIs for cpp consumers.
+ * Javascript consumers should look at History.jsm instead,
+ * that is exposed through PlacesUtils.history.
+ *
+ * If you're evaluating adding a new history API, it should
+ * usually go to History.jsm, unless it needs to do long and
+ * expensive work in a batch, then it could be worth doing
+ * that in History.cpp.
+ */
+
 [scriptable, uuid(1643EFD2-A329-4733-A39D-17069C8D3B2D)]
 interface mozIAsyncHistory : nsISupports
 {
-  /**
-   * Gets the available information for the given array of places, each
-   * identified by either nsIURI or places GUID (string).
-   *
-   * The retrieved places info objects DO NOT include the visits data (the
-   * |visits| attribute is set to null).
-   *
-   * If a given place does not exist in the database, aCallback.handleError is
-   * called for it with NS_ERROR_NOT_AVAILABLE result code.
-   *
-   * @param aPlaceIdentifiers
-   *        The place[s] for which to retrieve information, identified by either
-   *        a single place GUID, a single URI, or a JS array of URIs and/or GUIDs.
-   * @param aCallback
-   *        A mozIVisitInfoCallback object which consists of callbacks to be
-   *        notified for successful or failed retrievals.
-   *        If there's no information available for a given place, aCallback
-   *        is called with a stub place info object, containing just the provided
-   *        data (GUID or URI).
-   *
-   * @throws NS_ERROR_INVALID_ARG
-   *         - Passing in NULL for aPlaceIdentifiers or aCallback.
-   *         - Not providing at least one valid GUID or URI. 
-   */
-  [implicit_jscontext]
-  void getPlacesInfo(in jsval aPlaceIdentifiers,
-                     in mozIVisitInfoCallback aCallback);
-
   /**
    * Adds a set of visits for one or more mozIPlaceInfo objects, and updates
    * each mozIPlaceInfo's title or guid.

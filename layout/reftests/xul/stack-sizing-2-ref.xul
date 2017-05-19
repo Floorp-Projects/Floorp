@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<window
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  width="400"
+  height="600"
+  align="start">
+
+<box style="background: red; width: 20px; height: 20px;"/>
+
+<box style="background: green; width: 10px; height: 20px;"/>
+
+<box style="background: blue; width: 20px; height: 10px;"/>
+
+<box style="background: yellow; width: 10px; height: 10px;"/>
+
+</window>

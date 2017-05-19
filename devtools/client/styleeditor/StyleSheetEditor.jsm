@@ -21,7 +21,7 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const {Task} = require("devtools/shared/task");
 const {FileUtils} = require("resource://gre/modules/FileUtils.jsm");
 const {NetUtil} = require("resource://gre/modules/NetUtil.jsm");
-const {TextDecoder, OS} = Cu.import("resource://gre/modules/osfile.jsm", {});
+const {OS} = Cu.import("resource://gre/modules/osfile.jsm", {});
 const {
   getString,
   showFilePicker,

@@ -114,7 +114,7 @@ private:
   }
 
   void Decode();
-  void OnMetadataRead(RefPtr<MetadataHolder> aMetadata);
+  void OnMetadataRead(MetadataHolder&& aMetadata);
   void OnMetadataNotRead(const MediaResult& aError);
   void RequestSample();
   void SampleDecoded(RefPtr<AudioData> aData);
@@ -269,9 +269,9 @@ MediaDecodeTask::Decode()
 }
 
 void
-MediaDecodeTask::OnMetadataRead(RefPtr<MetadataHolder> aMetadata)
+MediaDecodeTask::OnMetadataRead(MetadataHolder&& aMetadata)
 {
-  mMediaInfo = aMetadata->mInfo;
+  mMediaInfo = *aMetadata.mInfo;
   if (!mMediaInfo.HasAudio()) {
     mDecoderReader->Shutdown();
     ReportFailureOnMainThread(WebAudioDecodeJob::NoAudio);

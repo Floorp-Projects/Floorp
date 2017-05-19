@@ -38,8 +38,7 @@ loader.lazyRequireGetter(this, "ZoomKeys", "devtools/client/shared/zoom-keys");
 loader.lazyRequireGetter(this, "WebConsoleConnectionProxy", "devtools/client/webconsole/webconsole-connection-proxy", true);
 
 const {PluralForm} = require("devtools/shared/plural-form");
-const STRINGS_URI = "devtools/client/locales/webconsole.properties";
-var l10n = new WebConsoleUtils.L10n(STRINGS_URI);
+const l10n = require("devtools/client/webconsole/webconsole-l10n");
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 

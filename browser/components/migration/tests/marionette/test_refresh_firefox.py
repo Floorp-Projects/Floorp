@@ -170,35 +170,22 @@ class TestFirefoxRefresh(MarionetteTestCase):
         self.assertEqual(titleInBookmarks, self._bookmarkText)
 
     def checkHistory(self):
-        historyResults = self.runAsyncCode("""
-          let placeInfos = [];
-          PlacesUtils.asyncHistory.getPlacesInfo(makeURI(arguments[0]), {
-            handleError(resultCode, place) {
-              placeInfos = null;
-              marionetteScriptFinished("Unexpected error in fetching visit: " + resultCode);
-            },
-            handleResult(placeInfo) {
-              placeInfos.push(placeInfo);
-            },
-            handleCompletion() {
-              if (placeInfos) {
-                if (!placeInfos.length) {
-                  marionetteScriptFinished("No visits found");
-                } else {
-                  marionetteScriptFinished(placeInfos);
-                }
-              }
-            },
+        historyResult = self.runAsyncCode("""
+          PlacesUtils.history.fetch(arguments[0]).then(pageInfo => {
+            if (!pageInfo) {
+              marionetteScriptFinished("No visits found");
+            } else {
+              marionetteScriptFinished(pageInfo);
+            }
+          }).catch(e => {
+            marionetteScriptFinished("Unexpected error in fetching page: " + e);
           });
         """, script_args=[self._historyURL])
-        if type(historyResults) == str:
-            self.fail(historyResults)
+        if type(historyResult) == str:
+            self.fail(historyResult)
             return
 
-        historyCount = len(historyResults)
-        self.assertEqual(historyCount, 1, "Should have exactly 1 entry for URI, got %d" % historyCount)
-        if historyCount == 1:
-            self.assertEqual(historyResults[0]['title'], self._historyTitle)
+        self.assertEqual(historyResult['title'], self._historyTitle)
 
     def checkFormHistory(self):
         formFieldResults = self.runAsyncCode("""

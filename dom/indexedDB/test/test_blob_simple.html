@@ -10,6 +10,7 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
   <script type="text/javascript">
+  /* import-globals-from helpers.js */
   function* testSteps()
   {
     info("Setting up test fixtures: create an IndexedDB database and object store.");
@@ -35,7 +36,7 @@
     const BLOB_DATA = ["fun ", "times ", "all ", "around!"];
     const INDEX_KEY = 5;
     let blob = new Blob(BLOB_DATA, { type: "text/plain" });
-    let data = { blob: blob, index: INDEX_KEY };
+    let data = { blob, index: INDEX_KEY };
 
     objectStore = db.transaction("foo", "readwrite").objectStore("foo");
     objectStore.add(data).onsuccess = grabEventAndContinueHandler;
@@ -207,6 +208,7 @@
     info("Send blob to a worker, read its contents there, and verify results.");
 
     function workerScript() {
+      /* eslint-env worker */
       onmessage = function(event) {
         var reader = new FileReaderSync();
         postMessage(reader.readAsText(event.data));

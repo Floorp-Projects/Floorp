@@ -65,7 +65,8 @@ nsStackLayout::GetXULPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 
   nsIFrame* child = nsBox::GetChildXULBox(aBox);
   while (child) {
-    if (child->StyleXUL()->mStretchStack) {
+    auto stackSizing = child->StyleXUL()->mStackSizing;
+    if (stackSizing != StyleStackSizing::Ignore) {
       nsSize pref = child->GetXULPrefSize(aState);
 
       AddMargin(child, pref);
@@ -73,7 +74,15 @@ nsStackLayout::GetXULPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState)
       GetOffset(child, offset);
       pref.width += offset.LeftRight();
       pref.height += offset.TopBottom();
-      AddLargestSize(prefSize, pref);
+
+      if (pref.width > prefSize.width &&
+          stackSizing != StyleStackSizing::IgnoreHorizontal) {
+        prefSize.width = pref.width;
+      }
+      if (pref.height > prefSize.height &&
+          stackSizing != StyleStackSizing::IgnoreVertical) {
+        prefSize.height = pref.height;
+      }
     }
 
     child = nsBox::GetNextXULBox(child);
@@ -91,7 +100,8 @@ nsStackLayout::GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 
   nsIFrame* child = nsBox::GetChildXULBox(aBox);
   while (child) {
-    if (child->StyleXUL()->mStretchStack) {
+    auto stackSizing = child->StyleXUL()->mStackSizing;
+    if (stackSizing != StyleStackSizing::Ignore) {
       nsSize min = child->GetXULMinSize(aState);
 
       AddMargin(child, min);
@@ -99,7 +109,15 @@ nsStackLayout::GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
       GetOffset(child, offset);
       min.width += offset.LeftRight();
       min.height += offset.TopBottom();
-      AddLargestSize(minSize, min);
+
+      if (min.width > minSize.width &&
+          stackSizing != StyleStackSizing::IgnoreHorizontal) {
+        minSize.width = min.width;
+      }
+      if (min.height > minSize.height &&
+          stackSizing != StyleStackSizing::IgnoreVertical) {
+        minSize.height = min.height;
+      }
     }
 
     child = nsBox::GetNextXULBox(child);
@@ -117,7 +135,8 @@ nsStackLayout::GetXULMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 
   nsIFrame* child = nsBox::GetChildXULBox(aBox);
   while (child) {
-    if (child->StyleXUL()->mStretchStack) {
+    auto stackSizing = child->StyleXUL()->mStackSizing;
+    if (stackSizing != StyleStackSizing::Ignore) {
       nsSize min = child->GetXULMinSize(aState);
       nsSize max = child->GetXULMaxSize(aState);
 
@@ -128,7 +147,15 @@ nsStackLayout::GetXULMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState)
       GetOffset(child, offset);
       max.width += offset.LeftRight();
       max.height += offset.TopBottom();
-      AddSmallestSize(maxSize, max);
+
+      if (max.width < maxSize.width &&
+          stackSizing != StyleStackSizing::IgnoreHorizontal) {
+        maxSize.width = max.width;
+      }
+      if (max.height < maxSize.height &&
+          stackSizing != StyleStackSizing::IgnoreVertical) {
+        maxSize.height = max.height;
+      }
     }
 
     child = nsBox::GetNextXULBox(child);
@@ -345,14 +372,17 @@ nsStackLayout::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aState)
           childRect = child->GetRect();
           childRect.Inflate(margin);
 
-          if (child->StyleXUL()->mStretchStack) {
+          auto stackSizing = child->StyleXUL()->mStackSizing;
+          if (stackSizing != StyleStackSizing::Ignore) {
             // Did the child push back on us and get bigger?
-            if (offset.LeftRight() + childRect.width > clientRect.width) {
+            if (offset.LeftRight() + childRect.width > clientRect.width &&
+                stackSizing != StyleStackSizing::IgnoreHorizontal) {
               clientRect.width = childRect.width + offset.LeftRight();
               grow = true;
             }
 
-            if (offset.TopBottom() + childRect.height > clientRect.height) {
+            if (offset.TopBottom() + childRect.height > clientRect.height &&
+                stackSizing != StyleStackSizing::IgnoreVertical) {
               clientRect.height = childRect.height + offset.TopBottom();
               grow = true;
             }
@@ -362,7 +392,7 @@ nsStackLayout::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aState)
        child = nsBox::GetNextXULBox(child);
      }
    } while (grow);
-   
+
    // if some HTML inside us got bigger we need to force ourselves to
    // get bigger
    nsRect bounds(aBox->GetRect());

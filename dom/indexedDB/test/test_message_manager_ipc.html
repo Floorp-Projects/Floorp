@@ -11,6 +11,7 @@
 "use strict";
 
 function childFrameScript() {
+  /* eslint-env mozilla/frame-script */
   "use strict";
 
   const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
@@ -29,15 +30,15 @@ function childFrameScript() {
   Cu.importGlobalProperties(["indexedDB"]);
 
   function info(msg) {
-    sendAsyncMessage(mmName, { op: "info", msg: msg });
+    sendAsyncMessage(mmName, { op: "info", msg });
   }
 
   function ok(condition, name, diag) {
     sendAsyncMessage(mmName,
                      { op: "ok",
-                       condition: condition,
-                       name: name,
-                       diag: diag });
+                       condition,
+                       name,
+                       diag });
   }
 
   function is(a, b, name) {
@@ -47,7 +48,7 @@ function childFrameScript() {
   }
 
   function finish(result) {
-    sendAsyncMessage(mmName, { op: "done", result: result });
+    sendAsyncMessage(mmName, { op: "done", result });
   }
 
   function grabAndContinue(arg) {

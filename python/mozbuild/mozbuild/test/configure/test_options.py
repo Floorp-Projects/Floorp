@@ -665,6 +665,9 @@ class TestCommandLineHelper(unittest.TestCase):
         self.assertEquals(NegativeOptionValue(), value)
         self.assertEquals(None, option)
 
+        with self.assertRaises(AssertionError):
+            CommandLineHelper({}, ['--foo', '--bar'])
+
     def test_precedence(self):
         foo = Option('--with-foo', nargs='*')
         helper = CommandLineHelper({}, ['cmd', '--with-foo=a,b'])

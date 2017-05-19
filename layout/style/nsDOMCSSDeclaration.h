@@ -11,8 +11,10 @@
 #include "nsICSSDeclaration.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/URLExtraData.h"
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
+#include "nsCompatibility.h"
 
 class nsIPrincipal;
 class nsIDocument;
