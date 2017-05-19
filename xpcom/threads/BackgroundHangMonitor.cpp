@@ -275,6 +275,12 @@ BackgroundHangManager::~BackgroundHangManager()
 void
 BackgroundHangManager::RunMonitorThread()
 {
+  // Make sure to initialize any state required to perform stack walking as soon
+  // as possible, so it does not interfere with us collecting hang stacks. We
+  // don't want to be on the main thread, or holding the BHR lock, because this
+  // can take a long time, so we do it before grabbing the lock off-main-thread.
+  profiler_initialize_stackwalk();
+
   // Keep us locked except when waiting
   MonitorAutoLock autoLock(mLock);
 
