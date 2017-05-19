@@ -99,6 +99,12 @@ public class LocaleListPreference extends ListPreference {
         // Thus far, missing glyphs are replaced by whitespace, not a box
         // or other Unicode codepoint.
         this.characterValidator = new CharacterValidator(" ");
+    }
+
+    @Override
+    protected void onAttachedToActivity() {
+        super.onAttachedToActivity();
+
         buildList();
     }
 
