@@ -256,6 +256,7 @@ TimeoutManager::TimeoutManager(nsGlobalWindow& aWindow)
 
 TimeoutManager::~TimeoutManager()
 {
+  MOZ_DIAGNOSTIC_ASSERT(mWindow.AsInner()->InnerObjectsFreed());
   MOZ_DIAGNOSTIC_ASSERT(!mThrottleTrackingTimeoutsTimer);
 
   MOZ_LOG(gLog, LogLevel::Debug,
@@ -1472,7 +1473,8 @@ TimeoutManager::OnDocumentLoaded()
 void
 TimeoutManager::MaybeStartThrottleTrackingTimout()
 {
-  if (gTrackingTimeoutThrottlingDelay <= 0) {
+  if (gTrackingTimeoutThrottlingDelay <= 0 ||
+      mWindow.AsInner()->InnerObjectsFreed()) {
     return;
   }
 
