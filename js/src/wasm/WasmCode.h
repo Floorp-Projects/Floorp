@@ -334,7 +334,7 @@ struct MetadataCacheablePod
 
 typedef uint8_t ModuleHash[8];
 
-struct MetadataTier : public ShareableBase<MetadataTier>
+struct MetadataTier
 {
     MemoryAccessVector    memoryAccesses;
     CodeRangeVector       codeRanges;
@@ -347,21 +347,20 @@ struct MetadataTier : public ShareableBase<MetadataTier>
     WASM_DECLARE_SERIALIZABLE(MetadataTier);
 };
 
-typedef RefPtr<MetadataTier> MutableMetadataTier;
-typedef RefPtr<const MetadataTier> SharedMetadataTier;
+typedef UniquePtr<MetadataTier> UniqueMetadataTier;
 
 struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
 {
     // Both `tier_` and the means of accessing it will become more complicated
     // when tiering is implemented.
-    MutableMetadataTier tier_;
+    UniqueMetadataTier tier_;
 
     const MetadataTier& tier() const { return *tier_; }
     MetadataTier& tier() { return *tier_; }
 
-    explicit Metadata(MetadataTier* tier, ModuleKind kind = ModuleKind::Wasm)
+    explicit Metadata(UniqueMetadataTier tier, ModuleKind kind = ModuleKind::Wasm)
       : MetadataCacheablePod(kind),
-        tier_(tier)
+        tier_(Move(tier))
     {}
     virtual ~Metadata() {}
 
