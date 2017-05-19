@@ -725,7 +725,7 @@ BookmarksStore.prototype = {
     // without aborting further processing.
     let item = Async.promiseSpinningly(PlacesSyncUtils.bookmarks.insert(info));
     if (item) {
-      this._log.debug(`Created ${item.kind} ${item.syncId} under ${
+      this._log.trace(`Created ${item.kind} ${item.syncId} under ${
         item.parentSyncId}`, item);
       if (item.dateAdded != record.dateAdded) {
         this.engine._needWeakReupload.add(item.syncId);
@@ -742,7 +742,7 @@ BookmarksStore.prototype = {
     let info = record.toSyncBookmark();
     let item = Async.promiseSpinningly(PlacesSyncUtils.bookmarks.update(info));
     if (item) {
-      this._log.debug(`Updated ${item.kind} ${item.syncId} under ${
+      this._log.trace(`Updated ${item.kind} ${item.syncId} under ${
         item.parentSyncId}`, item);
       if (item.dateAdded != record.dateAdded) {
         this.engine._needWeakReupload.add(item.syncId);
