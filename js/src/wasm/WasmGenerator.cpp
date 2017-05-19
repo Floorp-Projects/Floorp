@@ -135,13 +135,15 @@ ModuleGenerator::initWasm(const CompileArgs& args)
 {
     MOZ_ASSERT(!env_->isAsmJS());
 
-    metadataTier_ = js_new<MetadataTier>();
-    if (!metadataTier_)
+    auto metadataTier = js::MakeUnique<MetadataTier>();
+    if (!metadataTier)
         return false;
 
-    metadata_ = js_new<Metadata>(metadataTier_);
+    metadata_ = js_new<Metadata>(Move(metadataTier));
     if (!metadata_)
         return false;
+
+    metadataTier_ = &metadata_->tier();
 
     MOZ_ASSERT(!isAsmJS());
 

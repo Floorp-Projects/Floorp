@@ -643,11 +643,11 @@ Code::deserialize(const uint8_t* cursor, const SharedBytes& bytecode, const Link
     if (maybeMetadata) {
         metadata = maybeMetadata;
     } else {
-        MutableMetadataTier tier(js_new<MetadataTier>());
+        auto tier = js::MakeUnique<MetadataTier>();
         if (!tier)
             return nullptr;
 
-        metadata = js_new<Metadata>(tier);
+        metadata = js_new<Metadata>(Move(tier));
         if (!metadata)
             return nullptr;
     }
