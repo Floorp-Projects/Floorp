@@ -104,20 +104,24 @@ SERVO_BINDING_FUNC(Servo_CssRules_DeleteRule, nsresult,
                    ServoCssRulesBorrowed rules, uint32_t index)
 
 // CSS Rules
+#define BASIC_RULE_FUNCS_WITHOUT_GETTER(type_) \
+  SERVO_BINDING_FUNC(Servo_##type_##_Debug, void, \
+                     RawServo##type_##Borrowed rule, nsACString* result) \
+  SERVO_BINDING_FUNC(Servo_##type_##_GetCssText, void, \
+                     RawServo##type_##Borrowed rule, nsAString* result)
 #define BASIC_RULE_FUNCS(type_) \
   SERVO_BINDING_FUNC(Servo_CssRules_Get##type_##RuleAt, \
                      RawServo##type_##RuleStrong, \
                      ServoCssRulesBorrowed rules, uint32_t index, \
                      uint32_t* line, uint32_t* column) \
-  SERVO_BINDING_FUNC(Servo_##type_##Rule_Debug, void, \
-                     RawServo##type_##RuleBorrowed rule, nsACString* result) \
-  SERVO_BINDING_FUNC(Servo_##type_##Rule_GetCssText, void, \
-                     RawServo##type_##RuleBorrowed rule, nsAString* result)
+  BASIC_RULE_FUNCS_WITHOUT_GETTER(type_##Rule)
 #define GROUP_RULE_FUNCS(type_) \
   BASIC_RULE_FUNCS(type_) \
   SERVO_BINDING_FUNC(Servo_##type_##Rule_GetRules, ServoCssRulesStrong, \
                      RawServo##type_##RuleBorrowed rule)
 BASIC_RULE_FUNCS(Style)
+BASIC_RULE_FUNCS_WITHOUT_GETTER(Keyframe)
+BASIC_RULE_FUNCS(Keyframes)
 GROUP_RULE_FUNCS(Media)
 BASIC_RULE_FUNCS(Namespace)
 BASIC_RULE_FUNCS(Page)
@@ -125,6 +129,7 @@ GROUP_RULE_FUNCS(Supports)
 GROUP_RULE_FUNCS(Document)
 #undef GROUP_RULE_FUNCS
 #undef BASIC_RULE_FUNCS
+#undef BASIC_RULE_FUNCS_WITHOUT_GETTER
 SERVO_BINDING_FUNC(Servo_CssRules_GetFontFaceRuleAt, nsCSSFontFaceRule*,
                    ServoCssRulesBorrowed rules, uint32_t index)
 SERVO_BINDING_FUNC(Servo_CssRules_GetCounterStyleRuleAt, nsCSSCounterStyleRule*,
@@ -136,6 +141,34 @@ SERVO_BINDING_FUNC(Servo_StyleRule_SetStyle, void,
                    RawServoDeclarationBlockBorrowed declarations)
 SERVO_BINDING_FUNC(Servo_StyleRule_GetSelectorText, void,
                    RawServoStyleRuleBorrowed rule, nsAString* result)
+SERVO_BINDING_FUNC(Servo_Keyframe_GetKeyText, void,
+                   RawServoKeyframeBorrowed keyframe, nsAString* result)
+// Returns whether it successfully changes the key text.
+SERVO_BINDING_FUNC(Servo_Keyframe_SetKeyText, bool,
+                   RawServoKeyframeBorrowed keyframe, const nsACString* text)
+SERVO_BINDING_FUNC(Servo_Keyframe_GetStyle, RawServoDeclarationBlockStrong,
+                   RawServoKeyframeBorrowed keyframe)
+SERVO_BINDING_FUNC(Servo_Keyframe_SetStyle, void,
+                   RawServoKeyframeBorrowed keyframe,
+                   RawServoDeclarationBlockBorrowed declarations)
+SERVO_BINDING_FUNC(Servo_KeyframesRule_GetName, nsIAtom*,
+                   RawServoKeyframesRuleBorrowed rule)
+// This method takes an addrefed nsIAtom.
+SERVO_BINDING_FUNC(Servo_KeyframesRule_SetName, void,
+                   RawServoKeyframesRuleBorrowed rule, nsIAtom* name)
+SERVO_BINDING_FUNC(Servo_KeyframesRule_GetCount, uint32_t,
+                   RawServoKeyframesRuleBorrowed rule)
+SERVO_BINDING_FUNC(Servo_KeyframesRule_GetKeyframe, RawServoKeyframeStrong,
+                   RawServoKeyframesRuleBorrowed rule, uint32_t index)
+// Returns the index of the rule, max value of uint32_t if nothing found.
+SERVO_BINDING_FUNC(Servo_KeyframesRule_FindRule, uint32_t,
+                   RawServoKeyframesRuleBorrowed rule, const nsACString* key)
+// Returns whether it successfully appends the rule.
+SERVO_BINDING_FUNC(Servo_KeyframesRule_AppendRule, bool,
+                   RawServoKeyframesRuleBorrowed rule,
+                   RawServoStyleSheetBorrowed sheet, const nsACString* css)
+SERVO_BINDING_FUNC(Servo_KeyframesRule_DeleteRule, void,
+                   RawServoKeyframesRuleBorrowed rule, uint32_t index)
 SERVO_BINDING_FUNC(Servo_MediaRule_GetMedia, RawServoMediaListStrong,
                    RawServoMediaRuleBorrowed rule)
 SERVO_BINDING_FUNC(Servo_NamespaceRule_GetPrefix, nsIAtom*,
