@@ -123,7 +123,7 @@ protected:
     void FlushSkinFiles();
 
     typedef nsRefPtrHashtable<nsURIHashKey, mozilla::StyleSheet> StyleSheetTable;
-    StyleSheetTable& TableForBackendType(mozilla::StyleBackendType aType) {
+    StyleSheetTable& StyleSheetTableFor(mozilla::StyleBackendType aType) {
       return aType == mozilla::StyleBackendType::Gecko ? mGeckoStyleSheetTable
                                                        : mServoStyleSheetTable;
     }
