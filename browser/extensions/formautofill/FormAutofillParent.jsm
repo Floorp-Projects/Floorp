@@ -275,7 +275,7 @@ FormAutofillParent.prototype = {
       // }
     } else {
       // TODO: Add first time use probe(bug 990199) and doorhanger(bug 1303510)
-      profileStorage.addresses.add(address.record);
+      // profileStorage.addresses.add(address.record);
     }
   },
 };
