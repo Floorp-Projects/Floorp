@@ -103,6 +103,11 @@ struct ImageDescriptor: public WrImageDescriptor {
   }
 };
 
+// Whenever possible, use wr::WindowId instead of manipulating uint64_t.
+inline uint64_t AsUint64(const WindowId& aId) {
+  return static_cast<uint64_t>(aId.mHandle);
+}
+
 // Whenever possible, use wr::ImageKey instead of manipulating uint64_t.
 inline uint64_t AsUint64(const ImageKey& aId) {
   return (static_cast<uint64_t>(aId.mNamespace) << 32)
