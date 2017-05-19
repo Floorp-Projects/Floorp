@@ -1610,6 +1610,7 @@ try {
                       "https://%(server)s/selfsupport-dummy/");
     prefs.setCharPref("toolkit.telemetry.server", "https://%(server)s/telemetry-dummy");
     prefs.setCharPref("browser.search.geoip.url", "https://%(server)s/geoip-dummy");
+    prefs.setCharPref("browser.safebrowsing.downloads.remote.url", "https://%(server)s/safebrowsing-dummy");
   }
 } catch (e) { }
 
