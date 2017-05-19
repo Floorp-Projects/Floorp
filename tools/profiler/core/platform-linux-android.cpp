@@ -59,7 +59,6 @@
 #include <errno.h>
 #include <stdarg.h>
 
-#include "prenv.h"
 #include "mozilla/LinuxSignal.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/DebugOnly.h"
@@ -255,19 +254,7 @@ Sampler::Sampler(PSLockRef aLock)
   // SuspendAndSampleAndResumeThread().
   , mSamplerTid(-1)
 {
-#if defined(USE_EHABI_STACKWALK)
-  mozilla::EHABIStackWalkInit();
-#elif defined(USE_LUL_STACKWALK)
-  bool createdLUL = false;
-  lul::LUL* lul = CorePS::Lul(aLock);
-  if (!lul) {
-    CorePS::SetLul(aLock, MakeUnique<lul::LUL>(logging_sink_for_LUL));
-    // Read all the unwind info currently available.
-    lul = CorePS::Lul(aLock);
-    read_procmaps(lul);
-    createdLUL = true;
-  }
-#endif
+  profiler_initialize_stackwalk();
 
   // Request profiling signals.
   struct sigaction sa;
@@ -277,21 +264,6 @@ Sampler::Sampler(PSLockRef aLock)
   if (sigaction(SIGPROF, &sa, &mOldSigprofHandler) != 0) {
     MOZ_CRASH("Error installing SIGPROF handler in the profiler");
   }
-
-#if defined(USE_LUL_STACKWALK)
-  if (createdLUL) {
-    // Switch into unwind mode. After this point, we can't add or remove any
-    // unwind info to/from this LUL instance. The only thing we can do with
-    // it is Unwind() calls.
-    lul->EnableUnwinding();
-
-    // Has a test been requested?
-    if (PR_GetEnv("MOZ_PROFILER_LUL_TEST")) {
-      int nTests = 0, nTestsPassed = 0;
-      RunLulUnitTests(&nTests, &nTestsPassed, lul);
-    }
-  }
-#endif
 }
 
 void

@@ -64,6 +64,7 @@
 #include "shared-libraries.h"
 #include "prdtoa.h"
 #include "prtime.h"
+#include "prenv.h"
 
 #ifdef MOZ_TASK_TRACER
 #include "GeckoTaskTracer.h"
@@ -169,9 +170,6 @@ class CorePS
 private:
   CorePS()
     : mProcessStartTime(TimeStamp::ProcessCreation())
-#ifdef USE_LUL_STACKWALK
-    , mLul(nullptr)
-#endif
   {}
 
   ~CorePS()
@@ -203,18 +201,17 @@ public:
   // thread that we don't have to worry about it being racy.
   static bool Exists() { return !!sInstance; }
 
-  static void AddSizeOf(PSLockRef, MallocSizeOf aMallocSizeOf,
-                        size_t& aProfSize, size_t& aLulSize)
+  static size_t SizeOf(PSLockRef, MallocSizeOf aMallocSizeOf)
   {
-    aProfSize += aMallocSizeOf(sInstance);
+    size_t profSize = aMallocSizeOf(sInstance);
 
     for (uint32_t i = 0; i < sInstance->mLiveThreads.size(); i++) {
-      aProfSize +=
+      profSize +=
         sInstance->mLiveThreads.at(i)->SizeOfIncludingThis(aMallocSizeOf);
     }
 
     for (uint32_t i = 0; i < sInstance->mDeadThreads.size(); i++) {
-      aProfSize +=
+      profSize +=
         sInstance->mDeadThreads.at(i)->SizeOfIncludingThis(aMallocSizeOf);
     }
 
@@ -225,11 +222,7 @@ public:
     // - CorePS::mDeadThreads itself (ditto)
     // - CorePS::mInterposeObserver
 
-#if defined(USE_LUL_STACKWALK)
-    if (sInstance->mLul) {
-      aLulSize += sInstance->mLul->SizeOfIncludingThis(aMallocSizeOf);
-    }
-#endif
+    return profSize;
   }
 
   // No PSLockRef is needed for this field because it's immutable.
@@ -237,14 +230,6 @@ public:
 
   PS_GET(ThreadVector&, LiveThreads)
   PS_GET(ThreadVector&, DeadThreads)
-
-#ifdef USE_LUL_STACKWALK
-  static lul::LUL* Lul(PSLockRef) { return sInstance->mLul.get(); }
-  static void SetLul(PSLockRef, UniquePtr<lul::LUL> aLul)
-  {
-    sInstance->mLul = Move(aLul);
-  }
-#endif
 
 private:
   // The singleton instance
@@ -260,11 +245,6 @@ private:
   // threads.
   ThreadVector mLiveThreads;
   ThreadVector mDeadThreads;
-
-#ifdef USE_LUL_STACKWALK
-  // LUL's state. Null prior to the first activation, non-null thereafter.
-  UniquePtr<lul::LUL> mLul;
-#endif
 };
 
 CorePS* CorePS::sInstance = nullptr;
@@ -625,6 +605,82 @@ MOZ_THREAD_LOCAL(PseudoStack*) AutoProfilerLabel::sPseudoStack;
 
 // The name of the main thread.
 static const char* const kMainThreadName = "GeckoMain";
+
+#if defined(USE_LUL_STACKWALK)
+// When we are using LUL, we are going to need to perform expensive
+// initialization before we can start getting backtraces. We don't want to be
+// holding the profiler mutex while doing that, as the main thread sometimes
+// wants to grant that and we never want to get in the way of that. Because of
+// that sLul is behind a separate mutex. We just directly use
+// mozilla::StaticMutex here as we never have to pass this lock around.
+class LulPS {
+public:
+  // Determine if LulPS::sLul has been initialized yet. If this returns true it
+  // is safe to access the unsynchronized LulPS::Get().
+  static bool Exists() {
+    // NOTE: Hold the lock here, in case we are mid initialization while this
+    // method is being called.
+    mozilla::StaticMutexAutoLock lock(sLulMutex);
+    return !!sLul;
+  }
+
+  // Get the LUL object without synchronization. This method must be called
+  // guarded by either a call to `Exists`, or after calling `GetOrCreate`
+  // earlier in the same thread.
+  //
+  // This is safe because LulPS::sLul has approximately the same lifetime as
+  // CorePS. It is initialized after CorePS, but will live until CorePS is
+  // killed. Once it has been initialized, it is safe to read without
+  // synchronization.
+  static lul::LUL* Get()
+  {
+    MOZ_RELEASE_ASSERT(sLul, "Lul must have been initialized when Get() is called");
+    return sLul;
+  }
+
+  // This method gets the LUL object, and creates it if it does not exist.
+  static lul::LUL* GetOrCreate()
+  {
+    mozilla::StaticMutexAutoLock lock(sLulMutex);
+    if (sLul) {
+      return sLul;
+    }
+
+    lul::LUL* lul = new lul::LUL(logging_sink_for_LUL);
+    read_procmaps(lul);
+
+    // Switch into unwind mode. After this point, we can't add or remove any
+    // unwind info to/from this LUL instance. The only thing we can do with
+    // it is Unwind() calls.
+    lul->EnableUnwinding();
+
+    // If unit tests were requested, run them now.
+    if (PR_GetEnv("MOZ_PROFILER_LUL_TEST")) {
+      int nTests = 0, nTestsPassed = 0;
+      RunLulUnitTests(&nTests, &nTestsPassed, lul);
+    }
+
+    sLul = lul;
+    return sLul;
+  }
+
+  static void Destroy()
+  {
+    mozilla::StaticMutexAutoLock lock(sLulMutex);
+    if (sLul) {
+      delete sLul;
+      sLul = nullptr;
+    }
+  }
+
+private:
+  static mozilla::StaticMutex sLulMutex;
+  static lul::LUL* sLul;
+};
+
+mozilla::StaticMutex LulPS::sLulMutex;
+lul::LUL* LulPS::sLul = nullptr;
+#endif
 
 ////////////////////////////////////////////////////////////////////////
 // BEGIN sampling/unwinding code
@@ -1223,7 +1279,7 @@ DoNativeBacktrace(PSLockRef aLock, const ThreadInfo& aThreadInfo,
   }
 
   size_t framePointerFramesAcquired = 0;
-  lul::LUL* lul = CorePS::Lul(aLock);
+  lul::LUL* lul = LulPS::Get();
   lul->Unwind(reinterpret_cast<uintptr_t*>(aNativeStack.mPCs),
               reinterpret_cast<uintptr_t*>(aNativeStack.mSPs),
               &aNativeStack.mCount, &framePointerFramesAcquired,
@@ -1680,7 +1736,7 @@ PrintUsageThenExit(int aExitCode)
     "  If set, the profiler saves a profile to the named file on shutdown.\n"
     "\n"
     "  MOZ_PROFILER_LUL_TEST\n"
-    "  If set to any value, runs LUL unit tests at startup.\n"
+    "  If set to any value, runs LUL unit tests when it is initialized.\n"
     "\n"
     "  This platform %s native unwinding.\n"
     "\n",
@@ -1891,7 +1947,8 @@ SamplerThread::Run()
         // involves doing I/O (fprintf, __android_log_print, etc.) and so
         // can't safely be done from the critical section inside
         // SuspendAndSampleAndResumeThread, which is why it is done here.
-        CorePS::Lul(lock)->MaybeShowStats();
+        lul::LUL* lul = LulPS::Get();
+        lul->MaybeShowStats();
 #endif
       }
     }
@@ -1955,13 +2012,12 @@ GeckoProfilerReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   size_t profSize = 0;
-  size_t lulSize = 0;
 
   {
     PSAutoLock lock(gPSMutex);
 
     if (CorePS::Exists()) {
-      CorePS::AddSizeOf(lock, GeckoProfilerMallocSizeOf, profSize, lulSize);
+      profSize += CorePS::SizeOf(lock, GeckoProfilerMallocSizeOf);
     }
 
     if (ActivePS::Exists(lock)) {
@@ -1975,6 +2031,12 @@ GeckoProfilerReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
     "by LUL).");
 
 #if defined(USE_LUL_STACKWALK)
+  size_t lulSize = 0;
+
+  if (LulPS::Exists()) {
+    lulSize += LulPS::Get()->SizeOfIncludingThis(GeckoProfilerMallocSizeOf);
+  }
+
   MOZ_COLLECT_REPORT(
     "explicit/profiler/lul", KIND_HEAP, UNITS_BYTES, lulSize,
     "Memory used by LUL, a stack unwinder used by the Gecko Profiler.");
@@ -2155,7 +2217,7 @@ profiler_init(void* aStackTop)
     // Setup support for pushing/popping labels in mozglue.
     RegisterProfilerLabelEnterExit(MozGlueLabelEnter, MozGlueLabelExit);
 
-    // (Linux-only) We could create CorePS::mLul and read unwind info into it
+    // (Linux-only) We could create LulPS::sLul and read unwind info into it
     // at this point. That would match the lifetime implied by destruction of
     // it in profiler_shutdown() just below. However, that gives a big delay on
     // startup, even if no profiling is actually to be done. So, instead, it is
@@ -2230,6 +2292,10 @@ profiler_shutdown()
     }
 
     CorePS::Destroy(lock);
+
+#ifdef USE_LUL_STACKWALK
+    LulPS::Destroy();
+#endif
 
     // We just destroyed CorePS and the ThreadInfos it contains, so we can
     // clear this thread's TLSInfo.
@@ -3077,6 +3143,17 @@ profiler_suspend_and_sample_thread(
       break;
     }
   }
+}
+
+void
+profiler_initialize_stackwalk()
+{
+#if defined(USE_EHABI_STACKWALK)
+  mozilla::EHABIStackWalkInit();
+#elif defined(USE_LUL_STACKWALK)
+  lul::LUL* lul = LulPS::GetOrCreate();
+  MOZ_RELEASE_ASSERT(lul);
+#endif
 }
 
 // END externally visible functions
