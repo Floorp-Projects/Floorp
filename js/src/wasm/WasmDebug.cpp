@@ -85,9 +85,11 @@ GeneratedSourceMap::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) cons
 }
 
 DebugState::DebugState(SharedCode code,
-                       const ShareableBytes* maybeBytecode)
+                       const ShareableBytes* maybeBytecode,
+                       bool binarySource)
   : code_(Move(code)),
     maybeBytecode_(maybeBytecode),
+    binarySource_(binarySource),
     enterAndLeaveFrameTrapsCounter_(0)
 {
     MOZ_ASSERT_IF(debugEnabled(), maybeBytecode);
@@ -100,7 +102,22 @@ const char tooBigMessage[] =
     "Unfortunately, this WebAssembly module is too big to view as text.\n"
     "We are working hard to remove this limitation.";
 
+const char notGeneratedMessage[] =
+    "WebAssembly text generation was disabled.";
+
 static const unsigned TooBig = 1000000;
+
+static const uint32_t DefaultBinarySourceColumnNumber = 1;
+
+static const CallSite*
+SlowCallSiteSearchByOffset(const Metadata& metadata, uint32_t offset)
+{
+    for (const CallSite& callSite : metadata.callSites) {
+        if (callSite.lineOrBytecode() == offset && callSite.kind() == CallSiteDesc::Breakpoint)
+            return &callSite;
+    }
+    return nullptr;
+}
 
 JSString*
 DebugState::createText(JSContext* cx)
@@ -111,6 +128,10 @@ DebugState::createText(JSContext* cx)
             return nullptr;
 
         MOZ_ASSERT(!maybeSourceMap_);
+    } else if (binarySource_) {
+        if (!buffer.append(notGeneratedMessage))
+            return nullptr;
+        return buffer.finishString();
     } else if (maybeBytecode_->bytes.length() > TooBig) {
         if (!buffer.append(tooBigMessage))
             return nullptr;
@@ -167,6 +188,13 @@ DebugState::getLineOffsets(JSContext* cx, size_t lineno, Vector<uint32_t>* offse
     if (!debugEnabled())
         return true;
 
+    if (binarySource_) {
+        const CallSite* callsite = SlowCallSiteSearchByOffset(metadata(), lineno);
+        if (callsite && !offsets->append(lineno))
+            return false;
+        return true;
+    }
+
     if (!ensureSourceMap(cx))
         return false;
 
@@ -194,11 +222,46 @@ DebugState::getLineOffsets(JSContext* cx, size_t lineno, Vector<uint32_t>* offse
 }
 
 bool
+DebugState::getAllColumnOffsets(JSContext* cx, Vector<ExprLoc>* offsets)
+{
+    if (!metadata().debugEnabled)
+        return true;
+
+    if (binarySource_) {
+        for (const CallSite& callSite : metadata().callSites) {
+            if (callSite.kind() != CallSite::Breakpoint)
+                continue;
+            uint32_t offset = callSite.lineOrBytecode();
+            if (!offsets->emplaceBack(offset, DefaultBinarySourceColumnNumber, offset))
+                return false;
+        }
+        return true;
+    }
+
+    if (!ensureSourceMap(cx))
+        return false;
+
+    if (!maybeSourceMap_)
+        return true; // no source text available, keep offsets empty.
+
+    return offsets->appendAll(maybeSourceMap_->exprlocs());
+}
+
+bool
 DebugState::getOffsetLocation(JSContext* cx, uint32_t offset, bool* found, size_t* lineno, size_t* column)
 {
     *found = false;
     if (!debugEnabled())
         return true;
+
+    if (binarySource_) {
+        if (!SlowCallSiteSearchByOffset(metadata(), offset))
+            return true; // offset was not found
+        *found = true;
+        *lineno = offset;
+        *column = DefaultBinarySourceColumnNumber;
+        return true;
+    }
 
     if (!ensureSourceMap(cx))
         return false;
@@ -223,6 +286,12 @@ DebugState::totalSourceLines(JSContext* cx, uint32_t* count)
     *count = 0;
     if (!debugEnabled())
         return true;
+
+    if (binarySource_) {
+        if (maybeBytecode_)
+            *count = maybeBytecode_->length();
+        return true;
+    }
 
     if (!ensureSourceMap(cx))
         return false;
@@ -304,16 +373,6 @@ DebugState::decrementStepModeCount(JSContext* cx, uint32_t funcIndex)
         }
     }
     return true;
-}
-
-static const CallSite*
-SlowCallSiteSearchByOffset(const Metadata& metadata, uint32_t offset)
-{
-    for (const CallSite& callSite : metadata.callSites) {
-        if (callSite.lineOrBytecode() == offset && callSite.kind() == CallSiteDesc::Breakpoint)
-            return &callSite;
-    }
-    return nullptr;
 }
 
 bool
@@ -520,6 +579,44 @@ DebugState::debugDisplayURL(JSContext* cx) const
             return nullptr;
     }
     return result.finishString();
+}
+
+bool
+DebugState::getSourceMappingURL(JSContext* cx, MutableHandleString result) const
+{
+    result.set(nullptr);
+    if (!maybeBytecode_)
+        return true;
+
+    for (const CustomSection& customSection : metadata().customSections) {
+        const NameInBytecode& sectionName = customSection.name;
+        if (strlen(SourceMappingURLSectionName) != sectionName.length ||
+            memcmp(SourceMappingURLSectionName, maybeBytecode_->begin() + sectionName.offset,
+                   sectionName.length) != 0)
+        {
+            continue;
+        }
+
+        // Parse found "SourceMappingURL" custom section.
+        Decoder d(maybeBytecode_->begin() + customSection.offset,
+                  maybeBytecode_->begin() + customSection.offset + customSection.length,
+                  customSection.offset,
+                  /* error = */ nullptr);
+        uint32_t nchars;
+        if (!d.readVarU32(&nchars))
+            return true; // ignoring invalid section data
+        const uint8_t* chars;
+        if (!d.readBytes(nchars, &chars) || d.currentPosition() != d.end())
+            return true; // ignoring invalid section data
+
+        UTF8Chars utf8Chars(reinterpret_cast<const char*>(chars), nchars);
+        JSString* str = JS_NewStringCopyUTF8N(cx, utf8Chars);
+        if (!str)
+            return false;
+        result.set(str);
+        break;
+    }
+    return true;
 }
 
 void

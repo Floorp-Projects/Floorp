@@ -71,7 +71,7 @@ function* testSteps()
 
       request = index.openCursor();
       request.onerror = errorHandler;
-      request.onsuccess = function (event) {
+      request.onsuccess = function(event) {
         is(event.target.result.value.name, "Ben", "Good object");
         executeSoon(function() { testGenerator.next(); });
       }

@@ -62,7 +62,7 @@ function* testSteps() {
     let exception = null;
     try {
       cursor.update(10);
-    } catch(e) {
+    } catch (e) {
       exception = e;
     }
     ok(!!exception, "update() throws for key cursor");
@@ -70,7 +70,7 @@ function* testSteps() {
     exception = null;
     try {
       cursor.delete();
-    } catch(e) {
+    } catch (e) {
       exception = e;
     }
     ok(!!exception, "delete() throws for key cursor");
@@ -112,7 +112,7 @@ function* testSteps() {
     let exception = null;
     try {
       cursor.update(10);
-    } catch(e) {
+    } catch (e) {
       exception = e;
     }
     ok(!!exception, "update() throws for key cursor");
@@ -120,7 +120,7 @@ function* testSteps() {
     exception = null;
     try {
       cursor.delete();
-    } catch(e) {
+    } catch (e) {
       exception = e;
     }
     ok(!!exception, "delete() throws for key cursor");
@@ -179,7 +179,7 @@ function* testSteps() {
     let exception = null;
     try {
       cursor.update(10);
-    } catch(e) {
+    } catch (e) {
       exception = e;
     }
     ok(!!exception, "update() throws for key cursor");
@@ -187,7 +187,7 @@ function* testSteps() {
     exception = null;
     try {
       cursor.delete();
-    } catch(e) {
+    } catch (e) {
       exception = e;
     }
     ok(!!exception, "delete() throws for key cursor");
@@ -231,7 +231,7 @@ function* testSteps() {
     let exception = null;
     try {
       cursor.update(10);
-    } catch(e) {
+    } catch (e) {
       exception = e;
     }
     ok(!!exception, "update() throws for key cursor");
@@ -239,7 +239,7 @@ function* testSteps() {
     exception = null;
     try {
       cursor.delete();
-    } catch(e) {
+    } catch (e) {
       exception = e;
     }
     ok(!!exception, "delete() throws for key cursor");
@@ -300,7 +300,7 @@ function* testSteps() {
     let exception = null;
     try {
       cursor.update(10);
-    } catch(e) {
+    } catch (e) {
       exception = e;
     }
     ok(!!exception, "update() throws for key cursor");
@@ -308,7 +308,7 @@ function* testSteps() {
     exception = null;
     try {
       cursor.delete();
-    } catch(e) {
+    } catch (e) {
       exception = e;
     }
     ok(!!exception, "delete() throws for key cursor");
@@ -355,7 +355,7 @@ function* testSteps() {
     let exception = null;
     try {
       cursor.update(10);
-    } catch(e) {
+    } catch (e) {
       exception = e;
     }
     ok(!!exception, "update() throws for key cursor");
@@ -363,7 +363,7 @@ function* testSteps() {
     exception = null;
     try {
       cursor.delete();
-    } catch(e) {
+    } catch (e) {
       exception = e;
     }
     ok(!!exception, "delete() throws for key cursor");

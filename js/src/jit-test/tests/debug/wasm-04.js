@@ -23,6 +23,5 @@ assertThrowsInstanceOf(() => s.sourceLength, Error);
 assertThrowsInstanceOf(() => s.global, Error);
 assertThrowsInstanceOf(() => s.getChildScripts(), Error);
 assertThrowsInstanceOf(() => s.getAllOffsets(), Error);
-assertThrowsInstanceOf(() => s.getAllColumnOffsets(), Error);
 assertThrowsInstanceOf(() => s.getBreakpoint(0), Error);
 assertThrowsInstanceOf(() => s.getOffsetsCoverage(), Error);

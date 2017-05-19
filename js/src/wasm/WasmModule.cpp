@@ -911,7 +911,8 @@ Module::instantiate(JSContext* cx,
     // provides the lazily created source text for the program, even if that
     // text is a placeholder message when debugging is not enabled.
 
-    auto debug = cx->make_unique<DebugState>(code, maybeBytecode);
+    bool binarySource = cx->compartment()->debuggerObservesBinarySource();
+    auto debug = cx->make_unique<DebugState>(code, maybeBytecode, binarySource);
     if (!debug)
         return false;
 

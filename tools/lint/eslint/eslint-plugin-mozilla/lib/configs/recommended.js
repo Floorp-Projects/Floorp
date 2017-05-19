@@ -16,6 +16,9 @@ module.exports = {
     "ChromeWindow": false,
     "ChromeWorker": false,
     "Components": false,
+    "DedicatedWorkerGlobalScope": false,
+    "IDBLocaleAwareKeyRange": false,
+    "IDBMutableFile": false,
     "ImageDocument": false,
     "InstallTrigger": false,
     // Specific to Firefox
@@ -31,6 +34,7 @@ module.exports = {
     // Note: StopIteration will likely be removed as part of removing legacy
     // generators, see bug 968038.
     "StopIteration": false,
+    "WebAssembly": false,
     // Non-standard, specific to Firefox.
     "XULElement": false,
     "dump": true,

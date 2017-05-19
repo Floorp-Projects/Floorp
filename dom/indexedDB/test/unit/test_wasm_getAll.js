@@ -23,35 +23,35 @@ function* testSteps()
     return;
   }
 
-  getWasmBinary('(module (func (result i32) (i32.const 1)))');
+  getWasmBinary("(module (func (result i32) (i32.const 1)))");
   let binary = yield undefined;
   wasmData[1].value[0] = getWasmModule(binary);
 
-  getWasmBinary('(module (func (result i32) (i32.const 2)))');
+  getWasmBinary("(module (func (result i32) (i32.const 2)))");
   binary = yield undefined;
   wasmData[1].value[1] = getWasmModule(binary);
 
-  getWasmBinary('(module (func (result i32) (i32.const 3)))');
+  getWasmBinary("(module (func (result i32) (i32.const 3)))");
   binary = yield undefined;
   wasmData[1].value[2] = getWasmModule(binary);
 
-  getWasmBinary('(module (func (result i32) (i32.const 4)))');
+  getWasmBinary("(module (func (result i32) (i32.const 4)))");
   binary = yield undefined;
   wasmData[2].value[0] = getWasmModule(binary);
 
-  getWasmBinary('(module (func (result i32) (i32.const 5)))');
+  getWasmBinary("(module (func (result i32) (i32.const 5)))");
   binary = yield undefined;
   wasmData[2].value[1] = getWasmModule(binary);
 
-  getWasmBinary('(module (func (result i32) (i32.const 6)))');
+  getWasmBinary("(module (func (result i32) (i32.const 6)))");
   binary = yield undefined;
   wasmData[2].value[2] = getWasmModule(binary);
 
-  getWasmBinary('(module (func (result i32) (i32.const 7)))');
+  getWasmBinary("(module (func (result i32) (i32.const 7)))");
   binary = yield undefined;
   wasmData[2].value[3] = getWasmModule(binary);
 
-  getWasmBinary('(module (func (result i32) (i32.const 8)))');
+  getWasmBinary("(module (func (result i32) (i32.const 8)))");
   binary = yield undefined;
   wasmData[2].value[4] = getWasmModule(binary);
 

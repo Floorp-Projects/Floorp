@@ -647,6 +647,7 @@ Debugger::Debugger(JSContext* cx, NativeObject* dbg)
     uncaughtExceptionHook(nullptr),
     enabled(true),
     allowUnobservedAsmJS(false),
+    allowWasmBinarySource(false),
     collectCoverageInfo(false),
     observedGCs(cx->runtime()),
     allocationsLog(cx),
@@ -2759,6 +2760,14 @@ Debugger::observesAsmJS() const
 }
 
 Debugger::IsObserving
+Debugger::observesBinarySource() const
+{
+    if (enabled && allowWasmBinarySource)
+        return Observing;
+    return NotObserving;
+}
+
+Debugger::IsObserving
 Debugger::observesCoverage() const
 {
     if (enabled && collectCoverageInfo)
@@ -2856,6 +2865,20 @@ Debugger::updateObservesAsmJSOnDebuggees(IsObserving observing)
             continue;
 
         comp->updateDebuggerObservesAsmJS();
+    }
+}
+
+void
+Debugger::updateObservesBinarySourceDebuggees(IsObserving observing)
+{
+    for (WeakGlobalObjectSet::Range r = debuggees.all(); !r.empty(); r.popFront()) {
+        GlobalObject* global = r.front();
+        JSCompartment* comp = global->compartment();
+
+        if (comp->debuggerObservesBinarySource() == observing)
+            continue;
+
+        comp->updateDebuggerObservesBinarySource();
     }
 }
 
@@ -3369,6 +3392,7 @@ Debugger::setEnabled(JSContext* cx, unsigned argc, Value* vp)
         // stack frame, thus the coverage does not depend on the enabled flag.
 
         dbg->updateObservesAsmJSOnDebuggees(dbg->observesAsmJS());
+        dbg->updateObservesBinarySourceDebuggees(dbg->observesBinarySource());
     }
 
     args.rval().setUndefined();
@@ -3569,6 +3593,32 @@ Debugger::setAllowUnobservedAsmJS(JSContext* cx, unsigned argc, Value* vp)
         GlobalObject* global = r.front();
         JSCompartment* comp = global->compartment();
         comp->updateDebuggerObservesAsmJS();
+    }
+
+    args.rval().setUndefined();
+    return true;
+}
+
+/* static */ bool
+Debugger::getAllowWasmBinarySource(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGGER(cx, argc, vp, "get allowWasmBinarySource", args, dbg);
+    args.rval().setBoolean(dbg->allowWasmBinarySource);
+    return true;
+}
+
+/* static */ bool
+Debugger::setAllowWasmBinarySource(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGGER(cx, argc, vp, "set allowWasmBinarySource", args, dbg);
+    if (!args.requireAtLeast(cx, "Debugger.set allowWasmBinarySource", 1))
+        return false;
+    dbg->allowWasmBinarySource = ToBoolean(args[0]);
+
+    for (WeakGlobalObjectSet::Range r = dbg->debuggees.all(); !r.empty(); r.popFront()) {
+        GlobalObject* global = r.front();
+        JSCompartment* comp = global->compartment();
+        comp->updateDebuggerObservesBinarySource();
     }
 
     args.rval().setUndefined();
@@ -4035,6 +4085,7 @@ Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global)
     AutoRestoreCompartmentDebugMode debugModeGuard(debuggeeCompartment);
     debuggeeCompartment->setIsDebuggee();
     debuggeeCompartment->updateDebuggerObservesAsmJS();
+    debuggeeCompartment->updateDebuggerObservesBinarySource();
     debuggeeCompartment->updateDebuggerObservesCoverage();
     if (observesAllExecution() && !ensureExecutionObservabilityOfCompartment(cx, debuggeeCompartment))
         return false;
@@ -4159,6 +4210,7 @@ Debugger::removeDebuggeeGlobal(FreeOp* fop, GlobalObject* global,
     } else {
         global->compartment()->updateDebuggerObservesAllExecution();
         global->compartment()->updateDebuggerObservesAsmJS();
+        global->compartment()->updateDebuggerObservesBinarySource();
         global->compartment()->updateDebuggerObservesCoverage();
     }
 }
@@ -5336,6 +5388,8 @@ const JSPropertySpec Debugger::properties[] = {
             Debugger::setUncaughtExceptionHook, 0),
     JS_PSGS("allowUnobservedAsmJS", Debugger::getAllowUnobservedAsmJS,
             Debugger::setAllowUnobservedAsmJS, 0),
+    JS_PSGS("allowWasmBinarySource", Debugger::getAllowWasmBinarySource,
+            Debugger::setAllowWasmBinarySource, 0),
     JS_PSGS("collectCoverageInfo", Debugger::getCollectCoverageInfo,
             Debugger::setCollectCoverageInfo, 0),
     JS_PSG("memory", Debugger::getMemory, 0),
@@ -6311,55 +6365,100 @@ DebuggerScript_getAllOffsets(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+class DebuggerScriptGetAllColumnOffsetsMatcher
+{
+    JSContext* cx_;
+    MutableHandleObject result_;
+
+    bool appendColumnOffsetEntry(size_t lineno, size_t column, size_t offset) {
+        RootedPlainObject entry(cx_, NewBuiltinClassInstance<PlainObject>(cx_));
+        if (!entry)
+            return false;
+
+        RootedId id(cx_, NameToId(cx_->names().lineNumber));
+        RootedValue value(cx_, NumberValue(lineno));
+        if (!DefineProperty(cx_, entry, id, value))
+            return false;
+
+        value = NumberValue(column);
+        if (!DefineProperty(cx_, entry, cx_->names().columnNumber, value))
+            return false;
+
+        id = NameToId(cx_->names().offset);
+        value = NumberValue(offset);
+        if (!DefineProperty(cx_, entry, id, value))
+            return false;
+
+        return NewbornArrayPush(cx_, result_, ObjectValue(*entry));
+    }
+
+  public:
+    explicit DebuggerScriptGetAllColumnOffsetsMatcher(JSContext* cx, MutableHandleObject result)
+      : cx_(cx), result_(result) { }
+    using ReturnType = bool;
+    ReturnType match(HandleScript script) {
+        /*
+         * First pass: determine which offsets in this script are jump targets
+         * and which positions jump to them.
+         */
+        FlowGraphSummary flowData(cx_);
+        if (!flowData.populate(cx_, script))
+            return false;
+
+        /* Second pass: build the result array. */
+        result_.set(NewDenseEmptyArray(cx_));
+        if (!result_)
+            return false;
+
+        for (BytecodeRangeWithPosition r(cx_, script); !r.empty(); r.popFront()) {
+            size_t lineno = r.frontLineNumber();
+            size_t column = r.frontColumnNumber();
+            size_t offset = r.frontOffset();
+
+            /*
+             * Make a note, if the current instruction is an entry point for
+             * the current position.
+             */
+            if (r.frontIsEntryPoint() &&
+                !flowData[offset].hasNoEdges() &&
+                (flowData[offset].lineno() != lineno ||
+                 flowData[offset].column() != column)) {
+                if (!appendColumnOffsetEntry(lineno, column, offset))
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    ReturnType match(Handle<WasmInstanceObject*> instance) {
+        Vector<wasm::ExprLoc> offsets(cx_);
+        if (!instance->instance().debug().getAllColumnOffsets(cx_, &offsets))
+            return false;
+
+        result_.set(NewDenseEmptyArray(cx_));
+        if (!result_)
+            return false;
+
+        for (uint32_t i = 0; i < offsets.length(); i++) {
+            size_t lineno = offsets[i].lineno;
+            size_t column = offsets[i].column;
+            size_t offset = offsets[i].offset;
+            if (!appendColumnOffsetEntry(lineno, column, offset))
+                return false;
+        }
+        return true;
+    }
+};
+
 static bool
 DebuggerScript_getAllColumnOffsets(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "getAllColumnOffsets", args, obj, script);
+    THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, "getAllColumnOffsets", args, obj, referent);
 
-    /*
-     * First pass: determine which offsets in this script are jump targets and
-     * which positions jump to them.
-     */
-    FlowGraphSummary flowData(cx);
-    if (!flowData.populate(cx, script))
+    RootedObject result(cx);
+    DebuggerScriptGetAllColumnOffsetsMatcher matcher(cx, &result);
+    if (!referent.match(matcher))
         return false;
-
-    /* Second pass: build the result array. */
-    RootedObject result(cx, NewDenseEmptyArray(cx));
-    if (!result)
-        return false;
-    for (BytecodeRangeWithPosition r(cx, script); !r.empty(); r.popFront()) {
-        size_t lineno = r.frontLineNumber();
-        size_t column = r.frontColumnNumber();
-        size_t offset = r.frontOffset();
-
-        /* Make a note, if the current instruction is an entry point for the current position. */
-        if (r.frontIsEntryPoint() &&
-            !flowData[offset].hasNoEdges() &&
-            (flowData[offset].lineno() != lineno ||
-             flowData[offset].column() != column)) {
-            RootedPlainObject entry(cx, NewBuiltinClassInstance<PlainObject>(cx));
-            if (!entry)
-                return false;
-
-            RootedId id(cx, NameToId(cx->names().lineNumber));
-            RootedValue value(cx, NumberValue(lineno));
-            if (!DefineProperty(cx, entry, id, value))
-                return false;
-
-            value = NumberValue(column);
-            if (!DefineProperty(cx, entry, cx->names().columnNumber, value))
-                return false;
-
-            id = NameToId(cx->names().offset);
-            value = NumberValue(offset);
-            if (!DefineProperty(cx, entry, id, value))
-                return false;
-
-            if (!NewbornArrayPush(cx, result, ObjectValue(*entry)))
-                return false;
-        }
-    }
 
     args.rval().setObject(*result);
     return true;
@@ -7212,6 +7311,11 @@ class DebuggerSourceGetTextMatcher
     }
 
     ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
+        if (wasmInstance->instance().debug().maybeBytecode() &&
+            wasmInstance->instance().debug().binarySource())
+        {
+            return NewStringCopyZ<CanGC>(cx_, "[wasm]");
+        }
         return wasmInstance->instance().debug().createText(cx_);
     }
 };
@@ -7234,6 +7338,37 @@ DebuggerSource_getText(JSContext* cx, unsigned argc, Value* vp)
 
     args.rval().setString(str);
     obj->setReservedSlot(JSSLOT_DEBUGSOURCE_TEXT, args.rval());
+    return true;
+}
+
+static bool
+DebuggerSource_getBinary(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, "(get binary)", args, obj, referent);
+
+    if (!referent.is<WasmInstanceObject*>()) {
+        ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_BAD_REFERENT,
+                              JSDVG_SEARCH_STACK, args.thisv(), nullptr,
+                              "a wasm source", nullptr);
+        return false;
+    }
+
+    RootedWasmInstanceObject wasmInstance(cx, referent.as<WasmInstanceObject*>());
+    if (!wasmInstance->instance().debug().binarySource()) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_DEBUG_NO_BINARY_SOURCE);
+        return false;
+    }
+
+    auto bytecode = wasmInstance->instance().debug().maybeBytecode();
+    size_t arrLength = bytecode ? bytecode->length() : 0;
+    RootedObject arr(cx, JS_NewUint8Array(cx, arrLength));
+    if (!arr)
+        return false;
+    if (bytecode)
+        memcpy(arr->as<TypedArrayObject>().viewDataUnshared(), bytecode->begin(), arrLength);
+
+    args.rval().setObject(*arr);
     return true;
 }
 
@@ -7482,16 +7617,43 @@ DebuggerSource_setSourceMapURL(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-struct DebuggerSourceGetSourceMapURLMatcher
+class DebuggerSourceGetSourceMapURLMatcher
 {
-    using ReturnType = const char16_t*;
+    JSContext* cx_;
+    MutableHandleString result_;
+
+  public:
+    explicit DebuggerSourceGetSourceMapURLMatcher(JSContext* cx, MutableHandleString result)
+      : cx_(cx),
+        result_(result)
+    { }
+
+    using ReturnType = bool;
     ReturnType match(HandleScriptSource sourceObject) {
         ScriptSource* ss = sourceObject->source();
         MOZ_ASSERT(ss);
-        return ss->hasSourceMapURL() ? ss->sourceMapURL() : nullptr;
+        if (!ss->hasSourceMapURL()) {
+            result_.set(nullptr);
+            return true;
+        }
+        JSString* str = JS_NewUCStringCopyZ(cx_, ss->sourceMapURL());
+        if (!str)
+            return false;
+        result_.set(str);
+        return true;
     }
     ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
-        return nullptr;
+        // sourceMapURL is not available if debugger was not in
+        // allowWasmBinarySource mode.
+        if (!wasmInstance->instance().debug().binarySource()) {
+            result_.set(nullptr);
+            return true;
+        }
+        RootedString str(cx_);
+        if (!wasmInstance->instance().debug().getSourceMappingURL(cx_, &str))
+            return false;
+        result_.set(str);
+        return true;
     }
 };
 
@@ -7500,20 +7662,20 @@ DebuggerSource_getSourceMapURL(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, "(get sourceMapURL)", args, obj, referent);
 
-    DebuggerSourceGetSourceMapURLMatcher matcher;
-    if (const char16_t* sourceMapURL = referent.match(matcher)) {
-        JSString* str = JS_NewUCStringCopyZ(cx, sourceMapURL);
-        if (!str)
-            return false;
-        args.rval().setString(str);
-    } else {
+    RootedString result(cx);
+    DebuggerSourceGetSourceMapURLMatcher matcher(cx, &result);
+    if (!referent.match(matcher))
+        return false;
+    if (result)
+        args.rval().setString(result);
+    else
         args.rval().setNull();
-    }
     return true;
 }
 
 static const JSPropertySpec DebuggerSource_properties[] = {
     JS_PSG("text", DebuggerSource_getText, 0),
+    JS_PSG("binary", DebuggerSource_getBinary, 0),
     JS_PSG("url", DebuggerSource_getURL, 0),
     JS_PSG("element", DebuggerSource_getElement, 0),
     JS_PSG("displayURL", DebuggerSource_getDisplayURL, 0),
