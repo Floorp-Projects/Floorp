@@ -148,6 +148,8 @@ Sampler::SuspendAndSampleAndResumeThread(PSLockRef aLock,
   aSample.mFP = reinterpret_cast<Address>(context.Ebp);
 #endif
 
+  aSample.mContext = &context;
+
   aDoSample();
 
   //----------------------------------------------------------------//
@@ -268,21 +270,22 @@ PlatformInit(PSLockRef aLock)
 }
 
 void
-TickSample::PopulateContext()
+TickSample::PopulateContext(CONTEXT* aContext)
 {
   MOZ_ASSERT(mIsSynchronous);
+  MOZ_ASSERT(aContext);
 
-  CONTEXT context;
-  RtlCaptureContext(&context);
+  mContext = aContext;
+  RtlCaptureContext(aContext);
 
 #if defined(GP_ARCH_amd64)
-  mPC = reinterpret_cast<Address>(context.Rip);
-  mSP = reinterpret_cast<Address>(context.Rsp);
-  mFP = reinterpret_cast<Address>(context.Rbp);
+  mPC = reinterpret_cast<Address>(aContext->Rip);
+  mSP = reinterpret_cast<Address>(aContext->Rsp);
+  mFP = reinterpret_cast<Address>(aContext->Rbp);
 #elif defined(GP_ARCH_x86)
-  mPC = reinterpret_cast<Address>(context.Eip);
-  mSP = reinterpret_cast<Address>(context.Esp);
-  mFP = reinterpret_cast<Address>(context.Ebp);
+  mPC = reinterpret_cast<Address>(aContext->Eip);
+  mSP = reinterpret_cast<Address>(aContext->Esp);
+  mFP = reinterpret_cast<Address>(aContext->Ebp);
 #endif
 }
 

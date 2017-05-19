@@ -77,8 +77,13 @@
 # define VALGRIND_MAKE_MEM_DEFINED(_addr,_len)   ((void)0)
 #endif
 
-#if defined(GP_OS_linux) || defined(GP_OS_android)
+#if defined(GP_OS_windows)
+typedef CONTEXT tick_context_t;
+#elif defined(GP_OS_darwin)
+typedef void tick_context_t;   // this type isn't used meaningfully on Mac
+#elif defined(GP_OS_linux) || defined(GP_OS_android)
 #include <ucontext.h>
+typedef ucontext_t tick_context_t;
 #endif
 
 using namespace mozilla;
@@ -568,7 +573,7 @@ public:
     , mResponsiveness(aThreadInfo->GetThreadResponsiveness())
     , mRSSMemory(aRSSMemory)    // may be zero
     , mUSSMemory(aUSSMemory)    // may be zero
-#if defined(GP_OS_linux) || defined(GP_OS_android)
+#if !defined(GP_OS_darwin)
     , mContext(nullptr)
 #endif
     , mPC(nullptr)
@@ -593,7 +598,7 @@ public:
     , mResponsiveness(nullptr)
     , mRSSMemory(0)
     , mUSSMemory(0)
-#if defined(GP_OS_linux) || defined(GP_OS_android)
+#if !defined(GP_OS_darwin)
     , mContext(nullptr)
 #endif
     , mPC(nullptr)
@@ -603,11 +608,7 @@ public:
   {}
 
   // Fills in mContext, mPC, mSP, mFP, and mLR for a synchronous sample.
-#if defined(GP_OS_linux) || defined(GP_OS_android)
-  void PopulateContext(ucontext_t* aContext);
-#else
-  void PopulateContext();
-#endif
+  void PopulateContext(tick_context_t* aContext);
 
   // False for periodic samples, true for synchronous samples.
   const bool mIsSynchronous;
@@ -636,8 +637,8 @@ public:
   // PopulateContext() for synchronous samples. They are filled in separately
   // from the other fields in this class because the code that fills them in is
   // platform-specific.
-#if defined(GP_OS_linux) || defined(GP_OS_android)
-  ucontext_t* mContext; // The context from the signal handler.
+#if !defined(GP_OS_darwin)
+  void* mContext; // The context from the signal handler.
 #endif
   Address mPC;    // Instruction pointer.
   Address mSP;    // Stack pointer.
@@ -1013,7 +1014,8 @@ static void
 DoNativeBacktrace(PSLockRef aLock, NativeStack& aNativeStack,
                   const TickSample& aSample)
 {
-  const mcontext_t* mcontext = &aSample.mContext->uc_mcontext;
+  const mcontext_t* mcontext =
+    &reinterpret_cast<ucontext_t*>(aSample.mContext)->uc_mcontext;
   mcontext_t savedContext;
   NotNull<RacyThreadInfo*> racyInfo = aSample.mRacyInfo;
 
@@ -1090,7 +1092,8 @@ static void
 DoNativeBacktrace(PSLockRef aLock, NativeStack& aNativeStack,
                   const TickSample& aSample)
 {
-  const mcontext_t* mc = &aSample.mContext->uc_mcontext;
+  const mcontext_t* mc =
+    &reinterpret_cast<ucontext_t*>(aSample.mContext)->uc_mcontext;
 
   lul::UnwindRegs startRegs;
   memset(&startRegs, 0, sizeof(startRegs));
@@ -2776,11 +2779,13 @@ profiler_get_backtrace()
   TickSample sample(info->RacyInfo(), info->mContext, platformData.get());
 
 #if defined(HAVE_NATIVE_UNWIND)
-#if defined(GP_OS_linux) || defined(GP_OS_android)
-  ucontext_t context;
+#if defined(GP_OS_windows) || defined(GP_OS_linux) || defined(GP_OS_android)
+  tick_context_t context;
   sample.PopulateContext(&context);
+#elif defined(GP_OS_darwin)
+  sample.PopulateContext(nullptr);
 #else
-  sample.PopulateContext();
+# error "unknown platform"
 #endif
 #endif
 
