@@ -65,7 +65,6 @@ DebuggerPanel.prototype = {
       };
     }
 
-    frames = frames.toJS();
     const selectedFrame = this._selectors.getSelectedFrame(this._getState());
     const selected = frames.findIndex(frame => frame.id == selectedFrame.id);
 

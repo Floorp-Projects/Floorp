@@ -14,7 +14,6 @@ if CONFIG['MOZ_GECKO_PROFILER']:
         'public/ProfilerMarkerPayload.h',
         'public/PseudoStack.h',
         'public/shared-libraries.h',
-        'public/StoreSequencer.h',
     ]
     UNIFIED_SOURCES += [
         'core/platform.cpp',
