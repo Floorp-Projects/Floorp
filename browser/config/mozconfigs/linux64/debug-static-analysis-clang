@@ -7,6 +7,9 @@ MOZ_AUTOMATION_L10N_CHECK=0
 ac_add_options --enable-debug
 ac_add_options --enable-dmd
 
+# Disable stylo until bug 1356926 is fixed and we have >= llvm39 on centos.
+ac_add_options --disable-stylo
+
 # Use Clang as specified in manifest
 export CC="$topsrcdir/clang/bin/clang"
 export CXX="$topsrcdir/clang/bin/clang++"

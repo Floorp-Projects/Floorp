@@ -7,15 +7,14 @@
 #include "CertBlocklist.h"
 #include "ContentSignatureVerifier.h"
 #include "NSSErrorsService.h"
+#include "PKCS11.h"
 #include "PSMContentListener.h"
 #include "SecretDecoderRing.h"
 #include "TransportSecurityInfo.h"
 #include "mozilla/ModuleUtils.h"
 #include "nsCURILoader.h"
 #include "nsCertOverrideService.h"
-#include "nsCrypto.h"
 #include "nsCryptoHash.h"
-#include "nsDOMCID.h" // For the NS_CRYPTO_CONTRACTID define
 #include "nsDataSignatureVerifier.h"
 #include "nsICategoryManager.h"
 #include "nsKeyModule.h"
@@ -186,7 +185,7 @@ static const mozilla::Module::CIDEntry kNSSCIDs[] = {
 #ifdef MOZ_XUL
   { &kNS_CERTTREE_CID, false, nullptr, Constructor<nsCertTree> },
 #endif
-  { &kNS_PKCS11_CID, false, nullptr, Constructor<nsPkcs11> },
+  { &kNS_PKCS11_CID, false, nullptr, Constructor<PKCS11> },
   { &kNS_CRYPTO_HASH_CID, false, nullptr,
     Constructor<nsCryptoHash, nullptr, ProcessRestriction::AnyProcess> },
   { &kNS_CRYPTO_HMAC_CID, false, nullptr,

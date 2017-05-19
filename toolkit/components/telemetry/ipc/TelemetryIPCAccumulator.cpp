@@ -81,9 +81,11 @@ DoArmIPCTimerMainThread(const StaticMutexAutoLock& lock)
   }
   if (!gIPCTimer) {
     CallCreateInstance(NS_TIMER_CONTRACTID, &gIPCTimer);
+    if (gIPCTimer) {
+      gIPCTimer->SetTarget(SystemGroup::EventTargetFor(TaskCategory::Other));
+    }
   }
   if (gIPCTimer) {
-    gIPCTimer->SetTarget(SystemGroup::EventTargetFor(TaskCategory::Other));
     gIPCTimer->InitWithNamedFuncCallback(TelemetryIPCAccumulator::IPCTimerFired,
                                          nullptr, kBatchTimeoutMs,
                                          nsITimer::TYPE_ONE_SHOT,

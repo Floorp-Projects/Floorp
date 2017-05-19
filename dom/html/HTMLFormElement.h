@@ -114,7 +114,9 @@ public:
                            nsIAtom* aPrefix, const nsAString& aValue,
                            bool aNotify) override;
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                                const nsAttrValue* aValue, bool aNotify) override;
+                                const nsAttrValue* aValue,
+                                const nsAttrValue* aOldValue,
+                                bool aNotify) override;
 
   /**
    * Forget all information about the current submission (and the fact that we

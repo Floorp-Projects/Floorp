@@ -2809,11 +2809,12 @@ public:
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx) override
   {
+    MOZ_ASSERT(aBuilder);
     DrawTargetAutoDisableSubpixelAntialiasing disable(aCtx->GetDrawTarget(),
                                                       mDisableSubpixelAA);
 
     DrawResult result = static_cast<nsTreeBodyFrame*>(mFrame)
-      ->PaintTreeBody(*aCtx, mVisibleRect, ToReferenceFrame());
+      ->PaintTreeBody(*aCtx, mVisibleRect, ToReferenceFrame(), aBuilder);
 
     nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
   }
@@ -2903,7 +2904,8 @@ nsTreeBodyFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
 DrawResult
 nsTreeBodyFrame::PaintTreeBody(nsRenderingContext& aRenderingContext,
-                               const nsRect& aDirtyRect, nsPoint aPt)
+                               const nsRect& aDirtyRect, nsPoint aPt,
+                               nsDisplayListBuilder* aBuilder)
 {
   // Update our available height and our page count.
   CalcInnerBox();
@@ -2958,8 +2960,8 @@ nsTreeBodyFrame::PaintTreeBody(nsRenderingContext& aRenderingContext,
     nsRect dirtyRect;
     if (dirtyRect.IntersectRect(aDirtyRect, rowRect + aPt) &&
         rowRect.y < (mInnerBox.y+mInnerBox.height)) {
-      result &=
-        PaintRow(i, rowRect + aPt, PresContext(), aRenderingContext, aDirtyRect, aPt);
+      result &= PaintRow(i, rowRect + aPt, PresContext(), aRenderingContext,
+                         aDirtyRect, aPt, aBuilder);
     }
   }
 
@@ -3016,12 +3018,13 @@ nsTreeBodyFrame::PaintColumn(nsTreeColumn*        aColumn,
 }
 
 DrawResult
-nsTreeBodyFrame::PaintRow(int32_t              aRowIndex,
-                          const nsRect&        aRowRect,
-                          nsPresContext*       aPresContext,
-                          nsRenderingContext& aRenderingContext,
-                          const nsRect&        aDirtyRect,
-                          nsPoint              aPt)
+nsTreeBodyFrame::PaintRow(int32_t               aRowIndex,
+                          const nsRect&         aRowRect,
+                          nsPresContext*        aPresContext,
+                          nsRenderingContext&   aRenderingContext,
+                          const nsRect&         aDirtyRect,
+                          nsPoint               aPt,
+                          nsDisplayListBuilder* aBuilder)
 {
   // We have been given a rect for our row.  We treat this row like a full-blown
   // frame, meaning that it can have borders, margins, padding, and a background.
@@ -3106,7 +3109,8 @@ nsTreeBodyFrame::PaintRow(int32_t              aRowIndex,
                          cellRect.width, originalRowRect.height);
         if (dirtyRect.IntersectRect(aDirtyRect, checkRect)) {
           result &= PaintCell(aRowIndex, primaryCol, cellRect, aPresContext,
-                              aRenderingContext, aDirtyRect, primaryX, aPt);
+                              aRenderingContext, aDirtyRect, primaryX, aPt,
+                              aBuilder);
         }
       }
 
@@ -3172,7 +3176,8 @@ nsTreeBodyFrame::PaintRow(int32_t              aRowIndex,
         nscoord dummy;
         if (dirtyRect.IntersectRect(aDirtyRect, checkRect))
           result &= PaintCell(aRowIndex, currCol, cellRect, aPresContext,
-                              aRenderingContext, aDirtyRect, dummy, aPt);
+                              aRenderingContext, aDirtyRect, dummy, aPt,
+                              aBuilder);
       }
     }
   }
@@ -3243,14 +3248,15 @@ nsTreeBodyFrame::PaintSeparator(int32_t              aRowIndex,
 }
 
 DrawResult
-nsTreeBodyFrame::PaintCell(int32_t              aRowIndex,
-                           nsTreeColumn*        aColumn,
-                           const nsRect&        aCellRect,
-                           nsPresContext*       aPresContext,
-                           nsRenderingContext& aRenderingContext,
-                           const nsRect&        aDirtyRect,
-                           nscoord&             aCurrX,
-                           nsPoint              aPt)
+nsTreeBodyFrame::PaintCell(int32_t               aRowIndex,
+                           nsTreeColumn*         aColumn,
+                           const nsRect&         aCellRect,
+                           nsPresContext*        aPresContext,
+                           nsRenderingContext&   aRenderingContext,
+                           const nsRect&         aDirtyRect,
+                           nscoord&              aCurrX,
+                           nsPoint               aPt,
+                           nsDisplayListBuilder* aBuilder)
 {
   NS_PRECONDITION(aColumn && aColumn->GetFrame(), "invalid column passed");
 
@@ -3404,7 +3410,7 @@ nsTreeBodyFrame::PaintCell(int32_t              aRowIndex,
   if (dirtyRect.IntersectRect(aDirtyRect, iconRect)) {
     result &= PaintImage(aRowIndex, aColumn, iconRect, aPresContext,
                          aRenderingContext, aDirtyRect, remainingWidth,
-                         currX);
+                         currX, aBuilder);
   }
 
   // Now paint our element, but only if we aren't a cycler column.
@@ -3432,7 +3438,7 @@ nsTreeBodyFrame::PaintCell(int32_t              aRowIndex,
             case nsITreeView::PROGRESS_UNDETERMINED:
               result &= PaintProgressMeter(aRowIndex, aColumn, elementRect,
                                            aPresContext, aRenderingContext,
-                                           aDirtyRect);
+                                           aDirtyRect, aBuilder);
               break;
             case nsITreeView::PROGRESS_NONE:
             default:
@@ -3552,14 +3558,15 @@ nsTreeBodyFrame::PaintTwisty(int32_t              aRowIndex,
 }
 
 DrawResult
-nsTreeBodyFrame::PaintImage(int32_t              aRowIndex,
-                            nsTreeColumn*        aColumn,
-                            const nsRect&        aImageRect,
-                            nsPresContext*       aPresContext,
-                            nsRenderingContext& aRenderingContext,
-                            const nsRect&        aDirtyRect,
-                            nscoord&             aRemainingWidth,
-                            nscoord&             aCurrX)
+nsTreeBodyFrame::PaintImage(int32_t               aRowIndex,
+                            nsTreeColumn*         aColumn,
+                            const nsRect&         aImageRect,
+                            nsPresContext*        aPresContext,
+                            nsRenderingContext&   aRenderingContext,
+                            const nsRect&         aDirtyRect,
+                            nscoord&              aRemainingWidth,
+                            nscoord&              aCurrX,
+                            nsDisplayListBuilder* aBuilder)
 {
   NS_PRECONDITION(aColumn && aColumn->GetFrame(), "invalid column passed");
 
@@ -3706,11 +3713,12 @@ nsTreeBodyFrame::PaintImage(int32_t              aRowIndex,
       ctx->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, opacity);
     }
 
+    uint32_t drawFlags = aBuilder && aBuilder->IsPaintingToWindow() ?
+      imgIContainer::FLAG_HIGH_QUALITY_SCALING : imgIContainer::FLAG_NONE;
     result &=
       nsLayoutUtils::DrawImage(*ctx, aPresContext, image,
         nsLayoutUtils::GetSamplingFilterForFrame(this),
-        wholeImageDest, destRect, destRect.TopLeft(), aDirtyRect,
-        imgIContainer::FLAG_NONE);
+        wholeImageDest, destRect, destRect.TopLeft(), aDirtyRect, drawFlags);
 
     if (opacity != 1.0f) {
       ctx->PopGroupAndBlend();
@@ -3940,12 +3948,13 @@ nsTreeBodyFrame::PaintCheckbox(int32_t              aRowIndex,
 }
 
 DrawResult
-nsTreeBodyFrame::PaintProgressMeter(int32_t              aRowIndex,
-                                    nsTreeColumn*        aColumn,
-                                    const nsRect&        aProgressMeterRect,
-                                    nsPresContext*      aPresContext,
-                                    nsRenderingContext& aRenderingContext,
-                                    const nsRect&        aDirtyRect)
+nsTreeBodyFrame::PaintProgressMeter(int32_t               aRowIndex,
+                                    nsTreeColumn*         aColumn,
+                                    const nsRect&         aProgressMeterRect,
+                                    nsPresContext*        aPresContext,
+                                    nsRenderingContext&   aRenderingContext,
+                                    const nsRect&         aDirtyRect,
+                                    nsDisplayListBuilder* aBuilder)
 {
   NS_PRECONDITION(aColumn && aColumn->GetFrame(), "invalid column passed");
 
@@ -3997,12 +4006,14 @@ nsTreeBodyFrame::PaintProgressMeter(int32_t              aRowIndex,
       image->GetHeight(&height);
       nsSize size(width*nsDeviceContext::AppUnitsPerCSSPixel(),
                   height*nsDeviceContext::AppUnitsPerCSSPixel());
+      uint32_t drawFlags = aBuilder && aBuilder->IsPaintingToWindow() ?
+        imgIContainer::FLAG_HIGH_QUALITY_SCALING : imgIContainer::FLAG_NONE;
       result &=
         nsLayoutUtils::DrawImage(*aRenderingContext.ThebesContext(),
           aPresContext, image,
           nsLayoutUtils::GetSamplingFilterForFrame(this),
           nsRect(meterRect.TopLeft(), size), meterRect, meterRect.TopLeft(),
-          aDirtyRect, imgIContainer::FLAG_NONE);
+          aDirtyRect, drawFlags);
     } else {
       DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
       int32_t appUnitsPerDevPixel = PresContext()->AppUnitsPerDevPixel();
@@ -4025,12 +4036,14 @@ nsTreeBodyFrame::PaintProgressMeter(int32_t              aRowIndex,
       image->GetHeight(&height);
       nsSize size(width*nsDeviceContext::AppUnitsPerCSSPixel(),
                   height*nsDeviceContext::AppUnitsPerCSSPixel());
+      uint32_t drawFlags = aBuilder && aBuilder->IsPaintingToWindow() ?
+        imgIContainer::FLAG_HIGH_QUALITY_SCALING : imgIContainer::FLAG_NONE;
       result &=
         nsLayoutUtils::DrawImage(*aRenderingContext.ThebesContext(),
           aPresContext, image,
           nsLayoutUtils::GetSamplingFilterForFrame(this),
           nsRect(meterRect.TopLeft(), size), meterRect, meterRect.TopLeft(),
-          aDirtyRect, imgIContainer::FLAG_NONE);
+          aDirtyRect, drawFlags);
     }
   }
 

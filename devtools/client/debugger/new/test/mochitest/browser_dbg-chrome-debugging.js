@@ -68,7 +68,7 @@ registerCleanupFunction(function() {
   DebuggerServer = null;
 });
 
-add_task(function* () {
+add_task(function*() {
   gClient = initDebuggerClient();
 
   const [type] = yield gClient.connect();
@@ -82,7 +82,7 @@ add_task(function* () {
   // listen for a new source and global
   gThreadClient.addListener("newSource", onNewSource);
   gClient.addListener("newGlobal", onNewGlobal);
-  yield promise.all([ gNewGlobal.promise, gNewChromeSource.promise ]);
+  yield promise.all([gNewGlobal.promise, gNewChromeSource.promise]);
 
   yield resumeAndCloseConnection();
 });

@@ -67,6 +67,7 @@ public:
                                  bool aNotify) override;
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue,
+                                const nsAttrValue* aOldValue,
                                 bool aNotify) override;
   virtual bool IsLink(nsIURI** aURI) const override;
   virtual already_AddRefed<nsIURI> GetHrefURI() const override;

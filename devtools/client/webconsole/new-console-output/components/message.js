@@ -148,6 +148,7 @@ const Message = createClass({
           stacktrace: stacktrace,
           onViewSourceInDebugger: serviceContainer.onViewSourceInDebugger,
           onViewSourceInScratchpad: serviceContainer.onViewSourceInScratchpad,
+          sourceMapService: serviceContainer.sourceMapService,
         })
       );
     }

@@ -17,6 +17,7 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 const ID_SUFFIX              = "@personas.mozilla.org";
 const PREF_LWTHEME_TO_SELECT = "extensions.lwThemeToSelect";
 const PREF_GENERAL_SKINS_SELECTEDSKIN = "general.skins.selectedSkin";
+const PREF_SKIN_TO_SELECT             = "extensions.lastSelectedSkin";
 const ADDON_TYPE             = "theme";
 const ADDON_TYPE_WEBEXT      = "webextension-theme";
 
@@ -672,6 +673,8 @@ function _setCurrentTheme(aData, aLocal) {
   Services.obs.notifyObservers(cancel, "lightweight-theme-change-requested",
                                JSON.stringify(aData));
 
+  let notify = true;
+
   if (aData) {
     let theme = LightweightThemeManager.getUsedTheme(aData.id);
     let isInstall = !theme || theme.version != aData.version;
@@ -691,10 +694,15 @@ function _setCurrentTheme(aData, aLocal) {
 
     let current = LightweightThemeManager.currentTheme;
     let usedThemes = _usedThemesExceptId(aData.id);
-    if (current && current.id != aData.id)
+    if (current && current.id != aData.id) {
       usedThemes.splice(1, 0, aData);
-    else
+    } else {
+      if (current && current.id == aData.id && !needsRestart &&
+          !Services.prefs.prefHasUserValue(PREF_SKIN_TO_SELECT)) {
+        notify = false;
+      }
       usedThemes.unshift(aData);
+    }
     _updateUsedThemes(usedThemes);
 
     if (isInstall)
@@ -704,8 +712,10 @@ function _setCurrentTheme(aData, aLocal) {
   if (cancel.data)
     return null;
 
-  AddonManagerPrivate.notifyAddonChanged(aData ? aData.id + ID_SUFFIX : null,
-                                         ADDON_TYPE, needsRestart);
+  if (notify) {
+    AddonManagerPrivate.notifyAddonChanged(aData ? aData.id + ID_SUFFIX : null,
+                                           ADDON_TYPE, needsRestart);
+  }
 
   return LightweightThemeManager.currentTheme;
 }

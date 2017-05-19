@@ -8,8 +8,8 @@
 #define FILE_BLOCK_CACHE_H_
 
 #include "mozilla/Attributes.h"
-#include "mozilla/Monitor.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/AbstractThread.h"
 #include "nsTArray.h"
@@ -143,10 +143,10 @@ private:
 
   void SetCacheFile(PRFileDesc* aFD);
 
-  // Monitor which controls access to mFD and mFDCurrentPos. Don't hold
-  // mDataMonitor while holding mFileMonitor! mFileMonitor must be owned
+  // Mutex which controls access to mFD and mFDCurrentPos. Don't hold
+  // mDataMutex while holding mFileMutex! mFileMutex must be owned
   // while accessing any of the following data fields or methods.
-  Monitor mFileMonitor;
+  Mutex mFileMutex;
   // Moves a block already committed to file.
   nsresult MoveBlockInFile(int32_t aSourceBlockIndex,
                            int32_t aDestBlockIndex);
@@ -164,14 +164,14 @@ private:
   // The current file offset in the file.
   int64_t mFDCurrentPos;
 
-  // Monitor which controls access to all data in this class, except mFD
-  // and mFDCurrentPos. Don't hold mDataMonitor while holding mFileMonitor!
-  // mDataMonitor must be owned while accessing any of the following data
+  // Mutex which controls access to all data in this class, except mFD
+  // and mFDCurrentPos. Don't hold mDataMutex while holding mFileMutex!
+  // mDataMutex must be owned while accessing any of the following data
   // fields or methods.
-  Monitor mDataMonitor;
+  Mutex mDataMutex;
   // Ensures we either are running the event to preform IO, or an event
   // has been dispatched to preform the IO.
-  // mDataMonitor must be owned while calling this.
+  // mDataMutex must be owned while calling this.
   void EnsureWriteScheduled();
 
   // Array of block changes to made. If mBlockChanges[offset/BLOCK_SIZE] == nullptr,
@@ -189,11 +189,14 @@ private:
   // True if we've dispatched an event to commit all pending block changes
   // to file on mThread.
   bool mIsWriteScheduled;
+  // True when a read is happening. Pending writes may be postponed, to give
+  // higher priority to reads (which may be blocking the caller).
+  bool mIsReading;
   // True if the writer is ready to enqueue writes.
   bool mIsOpen;
   // True if we've got a temporary file descriptor. Note: we don't use mFD
-  // directly as that's synchronized via mFileMonitor and we need to make
-  // decisions about whether we can write while holding mDataMonitor.
+  // directly as that's synchronized via mFileMutex and we need to make
+  // decisions about whether we can write while holding mDataMutex.
   bool mInitialized = false;
 };
 

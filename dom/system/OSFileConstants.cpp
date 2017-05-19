@@ -1106,8 +1106,7 @@ OSFileConstantsService::Init(JSContext *aCx)
 
   mozJSComponentLoader* loader = mozJSComponentLoader::Get();
   JS::Rooted<JSObject*> targetObj(aCx);
-  rv = loader->FindTargetObject(aCx, &targetObj);
-  NS_ENSURE_SUCCESS(rv, rv);
+  loader->FindTargetObject(aCx, &targetObj);
 
   if (!mozilla::DefineOSFileConstants(aCx, targetObj)) {
     return NS_ERROR_FAILURE;

@@ -31,6 +31,7 @@ HeadlessWidget::Create(nsIWidget* aParent,
 
   BaseCreate(nullptr, aInitData);
   mBounds = aRect;
+  mRestoreBounds = aRect;
   mVisible = true;
   mEnabled = true;
   return NS_OK;
@@ -75,6 +76,37 @@ HeadlessWidget::IsEnabled() const
   return mEnabled;
 }
 
+void
+HeadlessWidget::Move(double aX, double aY)
+{
+  double scale = BoundsUseDesktopPixels() ? GetDesktopToDeviceScale().scale : 1.0;
+  int32_t x = NSToIntRound(aX * scale);
+  int32_t y = NSToIntRound(aY * scale);
+
+  if (mWindowType == eWindowType_toplevel ||
+      mWindowType == eWindowType_dialog) {
+      SetSizeMode(nsSizeMode_Normal);
+  }
+
+  // Since a popup window's x/y coordinates are in relation to
+  // the parent, the parent might have moved so we always move a
+  // popup window.
+  if (x == mBounds.x && y == mBounds.y &&
+      mWindowType != eWindowType_popup) {
+    return;
+  }
+
+  mBounds.x = x;
+  mBounds.y = y;
+  NotifyRollupGeometryChange();
+}
+
+LayoutDeviceIntPoint
+HeadlessWidget::WidgetToScreenOffset()
+{
+  return LayoutDeviceIntPoint(mBounds.x, mBounds.y);
+}
+
 LayerManager*
 HeadlessWidget::GetLayerManager(PLayerTransactionChild* aShadowManager,
                                 LayersBackend aBackendHint,
@@ -113,6 +145,43 @@ HeadlessWidget::Resize(double aX,
     NotifyWindowMoved(aX, aY);
   }
   return Resize(aWidth, aHeight, aRepaint);
+}
+
+void
+HeadlessWidget::SetSizeMode(nsSizeMode aMode)
+{
+  if (mSizeMode == nsSizeMode_Normal) {
+    // Store the last normal size bounds so it can be restored when entering
+    // normal mode again.
+    mRestoreBounds = mBounds;
+  }
+
+  nsBaseWidget::SetSizeMode(aMode);
+
+  // Normally in real widget backends a window event would be triggered that
+  // would cause the window manager to handle resizing the window. In headless
+  // the window must manually be resized.
+  switch(aMode) {
+  case nsSizeMode_Normal: {
+    Resize(mRestoreBounds.x, mRestoreBounds.y, mRestoreBounds.width, mRestoreBounds.height, false);
+    break;
+  }
+  case nsSizeMode_Minimized:
+    break;
+  case nsSizeMode_Maximized:
+  case nsSizeMode_Fullscreen: {
+    nsCOMPtr<nsIScreen> screen = GetWidgetScreen();
+    if (screen) {
+      int32_t left, top, width, height;
+      if (NS_SUCCEEDED(screen->GetRectDisplayPix(&left, &top, &width, &height))) {
+        Resize(0, 0, width, height, true);
+      }
+    }
+    break;
+  }
+  default:
+    break;
+  }
 }
 
 nsresult

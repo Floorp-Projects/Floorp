@@ -6,7 +6,6 @@ var db;
 function startDBWork() {
   indexedDB.open(parent.location, 1).onupgradeneeded = function(e) {
     db = e.target.result;
-    var trans = e.target.transaction;
     if (db.objectStoreNames.contains("mystore")) {
       db.deleteObjectStore("mystore");
     }
@@ -33,7 +32,7 @@ function madeMod() {
     doGet();
     document.location = "about:blank";
   }
-  
+
 }
   </script>
 </head>

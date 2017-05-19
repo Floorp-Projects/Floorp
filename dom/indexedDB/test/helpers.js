@@ -3,6 +3,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+// testSteps is expected to be defined by the test using this file.
+/* global testSteps:false */
+
 var testGenerator = testSteps();
 // The test js is shared between xpcshell (which has no SpecialPowers object)
 // and content mochitests (where the |Components| object is accessible only as
@@ -12,9 +15,11 @@ var testGenerator = testSteps();
 // Even if the real |Components| doesn't exist, we might shim in a simple JS
 // placebo for compat. An easy way to differentiate this from the real thing
 // is whether the property is read-only or not.
-var c = Object.getOwnPropertyDescriptor(this, 'Components');
-if ((!c.value || c.writable) && typeof SpecialPowers === 'object')
+var c = Object.getOwnPropertyDescriptor(this, "Components");
+if ((!c.value || c.writable) && typeof SpecialPowers === "object") {
+  // eslint-disable-next-line no-native-reassign
   Components = SpecialPowers.Components;
+}
 
 function executeSoon(aFun)
 {
@@ -25,7 +30,7 @@ function executeSoon(aFun)
                    .mainThread;
 
   thread.dispatch({
-    run: function() {
+    run() {
       aFun();
     }
   }, Components.interfaces.nsIThread.DISPATCH_NORMAL);
@@ -154,7 +159,7 @@ function* testHarnessSteps() {
           break;
 
         case "clearAllDatabases":
-          clearAllDatabases(function(){
+          clearAllDatabases(function() {
             worker.postMessage({ op: "clearAllDatabasesDone" });
           });
           break;
@@ -188,7 +193,7 @@ function* testHarnessSteps() {
   } else if (testScriptFilename) {
     todo(false,
          "Skipping test in a worker because it is explicitly disabled: " +
-         disableWorkerTest);
+         window.disableWorkerTest);
   } else {
     todo(false,
          "Skipping test in a worker because it's not structured properly");
@@ -293,7 +298,7 @@ function ExpectError(name, preventDefault)
   this._preventDefault = preventDefault;
 }
 ExpectError.prototype = {
-  handleEvent: function(event)
+  handleEvent(event)
   {
     is(event.type, "error", "Got an error event");
     is(event.target.error.name, this._name, "Expected error was thrown.");
@@ -481,7 +486,7 @@ function workerScript() {
     this._preventDefault = _preventDefault_;
   }
   self.ExpectError.prototype = {
-    handleEvent: function(_event_)
+    handleEvent(_event_)
     {
       is(_event_.type, "error", "Got an error event");
       is(_event_.target.error.name, this._name, "Expected error was thrown.");
@@ -549,7 +554,7 @@ function workerScript() {
       self._expectingUncaughtException = false;
       ok(true, "Worker: expected exception [" + _file_ + ":" + _line_ + "]: '" +
          _message_ + "'");
-      return;
+      return false;
     }
     ok(false,
        "Worker: uncaught exception [" + _file_ + ":" + _line_ + "]: '" +

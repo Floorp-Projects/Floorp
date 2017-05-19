@@ -20,7 +20,7 @@ const jsmScope = Cu.import("resource://gre/modules/Services.jsm", {});
 const { Services } = jsmScope;
 // Steal various globals only available in JSM scope (and not Sandbox one)
 const { PromiseDebugging, ChromeUtils, ThreadSafeChromeUtils, HeapSnapshot,
-        atob, btoa } = jsmScope;
+        atob, btoa, TextEncoder, TextDecoder } = jsmScope;
 const { URL } = Cu.Sandbox(CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")(),
                            {wantGlobalProperties: ["URL"]});
 
@@ -215,6 +215,8 @@ exports.globals = {
   reportError: Cu.reportError,
   atob: atob,
   btoa: btoa,
+  TextEncoder: TextEncoder,
+  TextDecoder: TextDecoder,
   URL,
   loader: {
     lazyGetter: defineLazyGetter,

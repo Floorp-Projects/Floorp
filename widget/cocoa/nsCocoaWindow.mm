@@ -306,7 +306,7 @@ nsCocoaWindow::Create(nsIWidget* aParent,
     // as the child view expects a rect expressed in the dev pix of its parent
     LayoutDeviceIntRect devRect =
       RoundedToInt(newBounds * GetDesktopToDeviceScale());
-    return CreatePopupContentView(devRect);
+    return CreatePopupContentView(devRect, aInitData);
   }
 
   mIsAnimationSuppressed = aInitData->mIsAnimationSuppressed;
@@ -473,7 +473,6 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
 
   if (mWindowType == eWindowType_popup) {
     SetPopupWindowLevel();
-    [mWindow setHasShadow:YES];
     [mWindow setBackgroundColor:[NSColor clearColor]];
     [mWindow setOpaque:NO];
   } else {
@@ -498,7 +497,8 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
 }
 
 nsresult
-nsCocoaWindow::CreatePopupContentView(const LayoutDeviceIntRect &aRect)
+nsCocoaWindow::CreatePopupContentView(const LayoutDeviceIntRect &aRect,
+                                      nsWidgetInitData* aInitData)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -511,7 +511,7 @@ nsCocoaWindow::CreatePopupContentView(const LayoutDeviceIntRect &aRect)
 
   nsIWidget* thisAsWidget = static_cast<nsIWidget*>(this);
   nsresult rv = mPopupContentView->Create(thisAsWidget, nullptr, aRect,
-                                          nullptr);
+                                          aInitData);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2147,8 +2147,15 @@ nsCocoaWindow::SetWindowShadowStyle(int32_t aStyle)
   mShadowStyle = aStyle;
 
   // Shadowless windows are only supported on popups.
-  if (mWindowType == eWindowType_popup)
-    [mWindow setHasShadow:(aStyle != NS_STYLE_WINDOW_SHADOW_NONE)];
+  if (mWindowType == eWindowType_popup) {
+    MOZ_ASSERT(mPopupContentView);
+
+    // Drop shadows are not sized correctly for composited popups when they are
+    // animated, so disable them entirely if the popup is composited.
+    bool disableShadow = (aStyle == NS_STYLE_WINDOW_SHADOW_NONE ||
+                          mPopupContentView->ShouldUseOffMainThreadCompositing());
+    [mWindow setHasShadow:!disableShadow];
+  }
 
   [mWindow setUseMenuStyle:(aStyle == NS_STYLE_WINDOW_SHADOW_MENU)];
   AdjustWindowShadow();
