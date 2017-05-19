@@ -18,6 +18,8 @@
 #include "mozilla/SheetType.h"
 #include "mozilla/css/GroupRule.h"
 #include "mozilla/css/URLMatchingFunction.h"
+#include "mozilla/dom/CSSKeyframeRule.h"
+#include "mozilla/dom/CSSKeyframesRule.h"
 #include "mozilla/dom/CSSMediaRule.h"
 #include "mozilla/dom/CSSPageRule.h"
 #include "mozilla/dom/CSSSupportsRule.h"
@@ -31,8 +33,6 @@
 #include "nsIDOMCSSGroupingRule.h"
 #include "nsIDOMCSSMozDocumentRule.h"
 #include "nsIDOMCSSSupportsRule.h"
-#include "nsIDOMCSSKeyframeRule.h"
-#include "nsIDOMCSSKeyframesRule.h"
 #include "nsTArray.h"
 
 class nsMediaList;
@@ -250,15 +250,14 @@ protected:
   nsCSSKeyframeRule* MOZ_NON_OWNING_REF mRule;
 };
 
-class nsCSSKeyframeRule final : public mozilla::css::Rule,
-                                public nsIDOMCSSKeyframeRule
+class nsCSSKeyframeRule final : public mozilla::dom::CSSKeyframeRule
 {
 public:
   // Steals the contents of aKeys, and takes the reference in Declaration
   nsCSSKeyframeRule(InfallibleTArray<float>&& aKeys,
                     already_AddRefed<mozilla::css::Declaration>&& aDeclaration,
                     uint32_t aLineNumber, uint32_t aColumnNumber)
-    : mozilla::css::Rule(aLineNumber, aColumnNumber)
+    : mozilla::dom::CSSKeyframeRule(aLineNumber, aColumnNumber)
     , mKeys(mozilla::Move(aKeys))
     , mDeclaration(mozilla::Move(aDeclaration))
   {
@@ -269,25 +268,22 @@ private:
   ~nsCSSKeyframeRule();
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsCSSKeyframeRule, mozilla::css::Rule)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsCSSKeyframeRule,
+                                           mozilla::dom::CSSKeyframeRule)
   virtual bool IsCCLeaf() const override;
 
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
-  virtual int32_t GetType() const override;
-  using Rule::GetType;
   virtual already_AddRefed<mozilla::css::Rule> Clone() const override;
 
   // nsIDOMCSSKeyframeRule interface
-  NS_DECL_NSIDOMCSSKEYFRAMERULE
+  NS_IMETHOD GetKeyText(nsAString& aKeyText) final;
+  NS_IMETHOD SetKeyText(const nsAString& aKeyText) final;
 
   // WebIDL interface
-  uint16_t Type() const override;
-  void GetCssTextImpl(nsAString& aCssText) const override;
-  // The XPCOM GetKeyText is fine.
-  // The XPCOM SetKeyText is fine.
-  nsICSSDeclaration* Style();
+  void GetCssTextImpl(nsAString& aCssText) const final;
+  nsICSSDeclaration* Style() final;
 
   const nsTArray<float>& GetKeys() const     { return mKeys; }
   mozilla::css::Declaration* Declaration()   { return mDeclaration; }
@@ -295,9 +291,6 @@ public:
   void ChangeDeclaration(mozilla::css::Declaration* aDeclaration);
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
-
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
 
   void DoGetKeyText(nsAString &aKeyText) const;
 
@@ -308,13 +301,12 @@ private:
   RefPtr<nsCSSKeyframeStyleDeclaration>    mDOMDeclaration;
 };
 
-class nsCSSKeyframesRule final : public mozilla::css::GroupRule,
-                                 public nsIDOMCSSKeyframesRule
+class nsCSSKeyframesRule final : public mozilla::dom::CSSKeyframesRule
 {
 public:
   nsCSSKeyframesRule(const nsSubstring& aName,
                      uint32_t aLineNumber, uint32_t aColumnNumber)
-    : mozilla::css::GroupRule(aLineNumber, aColumnNumber)
+    : mozilla::dom::CSSKeyframesRule(aLineNumber, aColumnNumber)
     , mName(aName)
   {
   }
@@ -328,33 +320,23 @@ public:
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
-  virtual int32_t GetType() const override;
-  using Rule::GetType;
   virtual already_AddRefed<mozilla::css::Rule> Clone() const override;
 
   // nsIDOMCSSKeyframesRule interface
-  NS_DECL_NSIDOMCSSKEYFRAMESRULE
+  NS_IMETHOD GetName(nsAString& aName) final;
+  NS_IMETHOD SetName(const nsAString& aName) final;
+  NS_IMETHOD AppendRule(const nsAString& aRule) final;
+  NS_IMETHOD DeleteRule(const nsAString& aKey) final;
+  using nsIDOMCSSKeyframesRule::FindRule;
 
   // WebIDL interface
-  uint16_t Type() const override;
-  void GetCssTextImpl(nsAString& aCssText) const override;
-  // The XPCOM GetName is OK
-  // The XPCOM SetName is OK
-  using mozilla::css::GroupRule::CssRules;
-  // The XPCOM appendRule is OK, since it never throws
-  // The XPCOM deleteRule is OK, since it never throws
-  nsCSSKeyframeRule* FindRule(const nsAString& aKey);
-
-  // rest of GroupRule
-  virtual bool UseForPresentation(nsPresContext* aPresContext,
-                                    nsMediaQueryResultCacheKey& aKey) override;
+  void GetCssTextImpl(nsAString& aCssText) const final;
+  mozilla::dom::CSSRuleList* CssRules() final { return GroupRule::CssRules(); }
+  nsCSSKeyframeRule* FindRule(const nsAString& aKey) final;
 
   const nsString& GetName() { return mName; }
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
-
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
 
 private:
   uint32_t FindRuleIndexForKey(const nsAString& aKey);
