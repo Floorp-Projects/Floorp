@@ -75,8 +75,6 @@ FormAutofillParent.prototype = {
    * Initializes ProfileStorage and registers the message handler.
    */
   async init() {
-    log.debug("init");
-
     Services.obs.addObserver(this, "advanced-pane-loaded");
     Services.ppmm.addMessageListener("FormAutofill:InitStorage", this);
     Services.ppmm.addMessageListener("FormAutofill:GetAddresses", this);
