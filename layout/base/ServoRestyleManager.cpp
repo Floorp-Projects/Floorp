@@ -12,6 +12,8 @@
 #include "mozilla/Unused.h"
 #include "mozilla/dom/ChildIterator.h"
 #include "mozilla/dom/ElementInlines.h"
+#include "nsBlockFrame.h"
+#include "nsBulletFrame.h"
 #include "nsContentUtils.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsPrintfCString.h"
@@ -203,6 +205,38 @@ struct ServoRestyleManager::TextPostTraversalState
   }
 };
 
+static void
+UpdateBlockFramePseudoElements(nsBlockFrame* aFrame,
+                               ServoStyleSet& aStyleSet,
+                               nsChangeHint aChangeHintForFrame,
+                               nsStyleChangeList& aChangeList)
+{
+  if (nsBulletFrame* bullet = aFrame->GetBullet()) {
+    RefPtr<nsStyleContext> newContext =
+      aStyleSet.ResolvePseudoElementStyle(
+          aFrame->GetContent()->AsElement(),
+          bullet->StyleContext()->GetPseudoType(),
+          aFrame->StyleContext(),
+          /* aPseudoElement = */ nullptr);
+
+    aFrame->UpdateStyleOfOwnedChildFrame(bullet, newContext, aChangeList);
+  }
+}
+
+static void
+UpdateFramePseudoElementStyles(nsIFrame* aFrame,
+                               ServoStyleSet& aStyleSet,
+                               nsChangeHint aChangeHintForFrame,
+                               nsStyleChangeList& aChangeList)
+{
+  if (aFrame->IsFrameOfType(nsIFrame::eBlockFrame)) {
+    UpdateBlockFramePseudoElements(static_cast<nsBlockFrame*>(aFrame),
+                                   aStyleSet,
+                                   aChangeHintForFrame,
+                                   aChangeList);
+  }
+}
+
 void
 ServoRestyleManager::ProcessPostTraversal(Element* aElement,
                                           nsStyleContext* aParentContext,
@@ -314,6 +348,7 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
 
     if (styleFrame) {
       styleFrame->UpdateStyleOfOwnedAnonBoxes(*aStyleSet, aChangeList, changeHint);
+      UpdateFramePseudoElementStyles(styleFrame, *aStyleSet, changeHint, aChangeList);
     }
   }
 
