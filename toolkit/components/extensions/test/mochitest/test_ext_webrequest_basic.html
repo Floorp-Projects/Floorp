@@ -18,12 +18,6 @@ if (AppConstants.platform === "android") {
 
 let extension;
 add_task(async function setup() {
-  // SelfSupport has a tendency to fire when running this test alone, without
-  // a good way to turn it off we just set the url to ""
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.selfsupport.url", ""]],
-  });
-
   // Clear the image cache, since it gets in the way otherwise.
   let imgTools = SpecialPowers.Cc["@mozilla.org/image/tools;1"].getService(SpecialPowers.Ci.imgITools);
   let cache = imgTools.getImgCacheForDocument(document);

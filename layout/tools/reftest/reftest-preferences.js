@@ -63,8 +63,7 @@ user_pref("browser.search.isUS", true);
 user_pref("browser.search.countryCode", "US");
 user_pref("browser.search.geoSpecificDefaults", false);
 
-// Make sure SelfSupport doesn't hit the network.
-user_pref("browser.selfsupport.url", "https://localhost/selfsupport-dummy/");
+// Make sure Shield doesn't hit the network.
 user_pref("extensions.shield-recipe-client.api_url", "https://localhost/selfsupport-dummy/");
 
 // use about:blank, not browser.startup.homepage

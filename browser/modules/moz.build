@@ -16,9 +16,6 @@ with Files("test/browser/*ContentSearch*"):
 with Files("test/browser/*PermissionUI*"):
     BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
 
-with Files("test/browser/browser_SelfSupportBackend.js"):
-    BUG_COMPONENT = ("Toolkit", "Telemetry")
-
 with Files("test/browser/*SitePermissions*"):
     BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
 
@@ -97,9 +94,6 @@ with Files("ReaderParent.jsm"):
 with Files("Sanitizer.jsm"):
     BUG_COMPONENT = ("Firefox", "Preferences")
 
-with Files("SelfSupportBackend.jsm"):
-    BUG_COMPONENT = ("Toolkit", "Telemetry")
-
 with Files("SitePermissions.jsm"):
     BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
 
@@ -160,7 +154,6 @@ EXTRA_JS_MODULES += [
     'RecentWindow.jsm',
     'RemotePrompt.jsm',
     'Sanitizer.jsm',
-    'SelfSupportBackend.jsm',
     'SitePermissions.jsm',
     'Social.jsm',
     'SocialService.jsm',

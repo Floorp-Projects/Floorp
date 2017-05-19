@@ -627,10 +627,16 @@ EditorEventListener::KeyPress(WidgetKeyboardEvent* aKeyboardEvent)
   }
 
   nsCOMPtr<nsIDocument> doc = editorBase->GetDocument();
-  bool handled = widget->ExecuteNativeKeyBinding(
-                           nsIWidget::NativeKeyBindingsForRichTextEditor,
-                           *aKeyboardEvent, DoCommandCallback, doc);
-  if (handled) {
+
+  // WidgetKeyboardEvent::ExecuteEditCommands() requires non-nullptr mWidget.
+  // If the event is created by chrome script, it is nullptr but we need to
+  // execute native key bindings.  Therefore, we need to set widget to
+  // WidgetEvent::mWidget temporarily.
+  AutoRestore<nsCOMPtr<nsIWidget>> saveWidget(aKeyboardEvent->mWidget);
+  aKeyboardEvent->mWidget = widget;
+  if (aKeyboardEvent->ExecuteEditCommands(
+                        nsIWidget::NativeKeyBindingsForRichTextEditor,
+                        DoCommandCallback, doc)) {
     aKeyboardEvent->PreventDefault();
   }
   return NS_OK;

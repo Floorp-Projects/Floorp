@@ -164,9 +164,10 @@ using namespace mozilla::dom;
 // that the error message actually displays the sizes.
 //
 
-// We need different numbers on debug and opt to deal with the owning thread
-// pointer that comes with the non-threadsafe refcount on FragmentOrElement.
-#if defined(DEBUG) || defined(MOZ_ASAN)
+// We need different numbers on certain build types to deal with the owning
+// thread pointer that comes with the non-threadsafe refcount on
+// FragmentOrElement.
+#ifdef MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
 #define EXTRA_DOM_ELEMENT_BYTES 8
 #else
 #define EXTRA_DOM_ELEMENT_BYTES 0

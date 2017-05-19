@@ -62,7 +62,6 @@ DEFAULT_NO_CONNECTIONS_PREFS = {
     'browser.safebrowsing.provider.google.gethashURL': 'http://localhost/safebrowsing-dummy/gethash',
     'browser.safebrowsing.provider.google4.updateURL': 'http://localhost/safebrowsing4-dummy/update',
     'browser.safebrowsing.provider.google4.gethashURL': 'http://localhost/safebrowsing4-dummy/gethash',
-    'browser.selfsupport.url': 'https://localhost/selfsupport-dummy',
     'browser.safebrowsing.provider.mozilla.gethashURL': 'http://localhost/safebrowsing-dummy/gethash',
     'browser.safebrowsing.provider.mozilla.updateURL': 'http://localhost/safebrowsing-dummy/update',
 

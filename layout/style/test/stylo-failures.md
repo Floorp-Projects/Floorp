@@ -76,11 +76,7 @@ to mochitest command.
   * ... `list-style-type` [8]
   * ... `'list-style'` [18]
 * Unimplemented \@font-face descriptors:
-  * font-display bug 1355345
-    * test_descriptor_storage.html `font-display` [5]
-    * test_font_face_parser.html `font-display` [15]
   * test_font_face_parser.html `font-language-override`: bug 1355364 [8]
-  * ... `font-feature-settings`: bug 1355366 [10]
 * test_font_face_parser.html `font-weight`: keyword values should be preserved in \@font-face [4]
 * @namespace support:
   * test_namespace_rule.html: bug 1355715 [6]
@@ -156,9 +152,6 @@ to mochitest command.
   * :dir
     * test_selectors.html `:dir` [11]
 * Quirks mode support
-  * hashless color servo/servo#15341
-    * test_property_syntax_errors.html `color: 000000` [10]
-    * ... `color: 96ed2a` [10]
   * test_hover_quirk.html: hover quirks bug 1355724 [6]
 * Unit should be preserved after parsing servo/servo#15346
   * test_units_time.html [1]

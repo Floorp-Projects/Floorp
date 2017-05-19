@@ -17,7 +17,6 @@ namespace widget {
 class NativeKeyBindings final
 {
   typedef nsIWidget::NativeKeyBindingsType NativeKeyBindingsType;
-  typedef nsIWidget::DoCommandCallback DoCommandCallback;
 
 public:
   static NativeKeyBindings* GetInstance(NativeKeyBindingsType aType);
@@ -25,17 +24,15 @@ public:
 
   void Init(NativeKeyBindingsType aType);
 
-  bool Execute(const WidgetKeyboardEvent& aEvent,
-               DoCommandCallback aCallback,
-               void* aCallbackData);
+  void GetEditCommands(const WidgetKeyboardEvent& aEvent,
+                       nsTArray<CommandInt>& aCommands);
 
 private:
   ~NativeKeyBindings();
 
-  bool ExecuteInternal(const WidgetKeyboardEvent& aEvent,
-                       DoCommandCallback aCallback,
-                       void* aCallbackData,
-                       guint aKeyval);
+  bool GetEditCommandsInternal(const WidgetKeyboardEvent& aEvent,
+                               nsTArray<CommandInt>& aCommands,
+                               guint aKeyval);
 
   GtkWidget* mNativeTarget;
 

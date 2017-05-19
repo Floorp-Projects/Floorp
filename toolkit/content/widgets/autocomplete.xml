@@ -1198,8 +1198,14 @@ extends="chrome://global/content/bindings/popup.xml#popup">
       <property name="maxResults" readonly="true">
         <getter>
           <![CDATA[
-            // this is how many richlistitems will be kept around
-            // (note, this getter may be overridden)
+            // This is how many richlistitems will be kept around.
+            // Note, this getter may be overridden, or instances
+            // can have the nomaxresults attribute set to have no
+            // limit.
+            if (this.getAttribute("nomaxresults") == "true") {
+              return Infinity;
+            }
+
             return 20;
           ]]>
         </getter>

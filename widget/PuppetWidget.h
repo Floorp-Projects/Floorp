@@ -157,11 +157,10 @@ public:
                              const mozilla::Maybe<ZoomConstraints>& aConstraints) override;
   bool AsyncPanZoomEnabled() const override;
 
-  virtual bool
-  ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
-                          const mozilla::WidgetKeyboardEvent& aEvent,
-                          DoCommandCallback aCallback,
-                          void* aCallbackData) override;
+  virtual void GetEditCommands(
+                 NativeKeyBindingsType aType,
+                 const mozilla::WidgetKeyboardEvent& aEvent,
+                 nsTArray<mozilla::CommandInt>& aCommands) override;
 
   friend struct AutoCacheNativeKeyCommands;
 
@@ -393,11 +392,6 @@ private:
   int32_t mRounding;
   double mDefaultScale;
 
-  // Precomputed answers for ExecuteNativeKeyBinding
-  InfallibleTArray<mozilla::CommandInt> mSingleLineCommands;
-  InfallibleTArray<mozilla::CommandInt> mMultiLineCommands;
-  InfallibleTArray<mozilla::CommandInt> mRichTextCommands;
-
   nsCOMPtr<imgIContainer> mCustomCursor;
   uint32_t mCursorHotspotX, mCursorHotspotY;
 
@@ -411,52 +405,6 @@ protected:
 
 private:
   bool mNeedIMEStateInit;
-  bool mNativeKeyCommandsValid;
-};
-
-struct AutoCacheNativeKeyCommands
-{
-  explicit AutoCacheNativeKeyCommands(PuppetWidget* aWidget)
-    : mWidget(aWidget)
-  {
-    mSavedValid = mWidget->mNativeKeyCommandsValid;
-    mSavedSingleLine = mWidget->mSingleLineCommands;
-    mSavedMultiLine = mWidget->mMultiLineCommands;
-    mSavedRichText = mWidget->mRichTextCommands;
-  }
-
-  void Cache(const InfallibleTArray<mozilla::CommandInt>& aSingleLineCommands,
-             const InfallibleTArray<mozilla::CommandInt>& aMultiLineCommands,
-             const InfallibleTArray<mozilla::CommandInt>& aRichTextCommands)
-  {
-    mWidget->mNativeKeyCommandsValid = true;
-    mWidget->mSingleLineCommands = aSingleLineCommands;
-    mWidget->mMultiLineCommands = aMultiLineCommands;
-    mWidget->mRichTextCommands = aRichTextCommands;
-  }
-
-  void CacheNoCommands()
-  {
-    mWidget->mNativeKeyCommandsValid = true;
-    mWidget->mSingleLineCommands.Clear();
-    mWidget->mMultiLineCommands.Clear();
-    mWidget->mRichTextCommands.Clear();
-  }
-
-  ~AutoCacheNativeKeyCommands()
-  {
-    mWidget->mNativeKeyCommandsValid = mSavedValid;
-    mWidget->mSingleLineCommands = mSavedSingleLine;
-    mWidget->mMultiLineCommands = mSavedMultiLine;
-    mWidget->mRichTextCommands = mSavedRichText;
-  }
-
-private:
-  PuppetWidget* mWidget;
-  bool mSavedValid;
-  InfallibleTArray<mozilla::CommandInt> mSavedSingleLine;
-  InfallibleTArray<mozilla::CommandInt> mSavedMultiLine;
-  InfallibleTArray<mozilla::CommandInt> mSavedRichText;
 };
 
 class PuppetScreen : public nsBaseScreen
