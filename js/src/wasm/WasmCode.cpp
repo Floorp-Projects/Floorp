@@ -86,9 +86,9 @@ CodeSegment::FreeCode::operator()(uint8_t* bytes)
 }
 
 static bool
-StaticallyLink(const CodeSegment& cs, const LinkData& linkData)
+StaticallyLink(const CodeSegment& cs, const LinkDataTier& linkData)
 {
-    for (LinkData::InternalLink link : linkData.internalLinks) {
+    for (LinkDataTier::InternalLink link : linkData.internalLinks) {
         uint8_t* patchAt = cs.base() + link.patchAtOffset;
         void* target = cs.base() + link.targetOffset;
         if (link.isRawPointerPatch())
@@ -118,9 +118,9 @@ StaticallyLink(const CodeSegment& cs, const LinkData& linkData)
 }
 
 static void
-StaticallyUnlink(uint8_t* base, const LinkData& linkData)
+StaticallyUnlink(uint8_t* base, const LinkDataTier& linkData)
 {
-    for (LinkData::InternalLink link : linkData.internalLinks) {
+    for (LinkDataTier::InternalLink link : linkData.internalLinks) {
         uint8_t* patchAt = base + link.patchAtOffset;
         void* target = 0;
         if (link.isRawPointerPatch())
@@ -195,7 +195,7 @@ SendCodeRangesToProfiler(const CodeSegment& cs, const Bytes& bytecode, const Met
 /* static */ UniqueConstCodeSegment
 CodeSegment::create(MacroAssembler& masm,
                     const ShareableBytes& bytecode,
-                    const LinkData& linkData,
+                    const LinkDataTier& linkData,
                     const Metadata& metadata)
 {
     // Round up the code size to page size since this is eventually required by
@@ -222,7 +222,7 @@ CodeSegment::create(MacroAssembler& masm,
 /* static */ UniqueConstCodeSegment
 CodeSegment::create(const Bytes& unlinkedBytes,
                     const ShareableBytes& bytecode,
-                    const LinkData& linkData,
+                    const LinkDataTier& linkData,
                     const Metadata& metadata)
 {
     // The unlinked bytes are a snapshot of the MacroAssembler's contents so
@@ -244,7 +244,7 @@ CodeSegment::create(const Bytes& unlinkedBytes,
 CodeSegment::create(UniqueCodeBytes codeBytes,
                     uint32_t codeLength,
                     const ShareableBytes& bytecode,
-                    const LinkData& linkData,
+                    const LinkDataTier& linkData,
                     const Metadata& metadata)
 {
     // These should always exist and should never be first in the code segment.
@@ -266,7 +266,7 @@ bool
 CodeSegment::initialize(UniqueCodeBytes codeBytes,
                         uint32_t codeLength,
                         const ShareableBytes& bytecode,
-                        const LinkData& linkData,
+                        const LinkDataTier& linkData,
                         const Metadata& metadata)
 {
     MOZ_ASSERT(bytes_ == nullptr);
@@ -306,7 +306,7 @@ CodeSegment::addSizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t* code, siz
 }
 
 uint8_t*
-CodeSegment::serialize(uint8_t* cursor, const LinkData& linkData) const
+CodeSegment::serialize(uint8_t* cursor, const LinkDataTier& linkData) const
 {
     cursor = WriteScalar<uint32_t>(cursor, length_);
     uint8_t* base = cursor;
@@ -317,7 +317,7 @@ CodeSegment::serialize(uint8_t* cursor, const LinkData& linkData) const
 
 const uint8_t*
 CodeSegment::deserialize(const uint8_t* cursor, const ShareableBytes& bytecode,
-                         const LinkData& linkData, const Metadata& metadata)
+                         const LinkDataTier& linkData, const Metadata& metadata)
 {
     uint32_t length;
     cursor = ReadScalar<uint32_t>(cursor, &length);
@@ -632,7 +632,7 @@ Code::serialize(uint8_t* cursor, const LinkData& linkData) const
     MOZ_RELEASE_ASSERT(!metadata().debugEnabled);
 
     cursor = metadata().serialize(cursor);
-    cursor = segmentTier().serialize(cursor, linkData);
+    cursor = segmentTier().serialize(cursor, linkData.tier());
     return cursor;
 }
 
@@ -661,7 +661,7 @@ Code::deserialize(const uint8_t* cursor, const SharedBytes& bytecode, const Link
     if (!codeSegment)
         return nullptr;
 
-    cursor = codeSegment->deserialize(cursor, *bytecode, linkData, *metadata);
+    cursor = codeSegment->deserialize(cursor, *bytecode, linkData.tier(), *metadata);
     if (!cursor)
         return nullptr;
 
