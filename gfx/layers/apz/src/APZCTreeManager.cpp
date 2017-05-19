@@ -28,6 +28,7 @@
 #include "mozilla/TouchEvents.h"
 #include "mozilla/Preferences.h"        // for Preferences
 #include "mozilla/EventStateManager.h"  // for WheelPrefs
+#include "mozilla/webrender/WebRenderAPI.h"
 #include "nsDebug.h"                    // for NS_WARNING
 #include "nsPoint.h"                    // for nsIntPoint
 #include "nsThreadUtils.h"              // for NS_IsMainThread
@@ -362,6 +363,60 @@ APZCTreeManager::UpdateHitTestingTree(uint64_t aRootLayerTreeId,
   WebRenderScrollDataWrapper wrapper(&aScrollData);
   UpdateHitTestingTreeImpl(aRootLayerTreeId, wrapper, aIsFirstPaint,
                            aOriginatingLayersId, aPaintSequenceNumber);
+}
+
+bool
+APZCTreeManager::PushStateToWR(wr::WebRenderAPI* aWrApi,
+                               const TimeStamp& aSampleTime)
+{
+  APZThreadUtils::AssertOnCompositorThread();
+  MOZ_ASSERT(aWrApi);
+
+  MutexAutoLock lock(mTreeLock);
+
+  bool activeAnimations = false;
+  uint64_t lastLayersId = -1;
+  WrPipelineId lastPipelineId;
+
+  // We iterate backwards here because the HitTestingTreeNode is optimized
+  // for backwards iteration. The equivalent code in AsyncCompositionManager
+  // iterates forwards, but the direction shouldn't really matter in practice
+  // so we do what's faster. In the future, if we need to start doing the
+  // equivalent of AlignFixedAndStickyLayers here, then the order will become
+  // important and we'll need to take that into consideration.
+  ForEachNode<ReverseIterator>(mRootNode.get(),
+      [&](HitTestingTreeNode* aNode)
+      {
+        if (!aNode->IsPrimaryHolder()) {
+          return;
+        }
+        AsyncPanZoomController* apzc = aNode->GetApzc();
+        MOZ_ASSERT(apzc);
+
+        if (aNode->GetLayersId() != lastLayersId) {
+          // If we walked into or out of a subtree, we need to get the new
+          // pipeline id.
+          lastLayersId = aNode->GetLayersId();
+          const LayerTreeState* state = CompositorBridgeParent::GetIndirectShadowTree(lastLayersId);
+          MOZ_ASSERT(state && state->mWrBridge);
+          lastPipelineId = state->mWrBridge->PipelineId();
+        }
+
+        ParentLayerPoint layerTranslation = apzc->GetCurrentAsyncTransform(
+            AsyncPanZoomController::RESPECT_FORCE_DISABLE).mTranslation;
+        // The positive translation means the painted content is supposed to
+        // move down (or to the right), and that corresponds to a reduction in
+        // the scroll offset. Since we are effectively giving WR the async
+        // scroll delta here, we want to negate the translation.
+        ParentLayerPoint asyncScrollDelta = -layerTranslation;
+        aWrApi->UpdateScrollPosition(lastPipelineId, apzc->GetGuid().mScrollId,
+            wr::ToWrPoint(asyncScrollDelta));
+
+        apzc->ReportCheckerboard(aSampleTime);
+        activeAnimations |= apzc->AdvanceAnimations(aSampleTime);
+      });
+
+  return activeAnimations;
 }
 
 // Compute the clip region to be used for a layer with an APZC. This function

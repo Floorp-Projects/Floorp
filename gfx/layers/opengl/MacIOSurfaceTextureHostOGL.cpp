@@ -5,6 +5,7 @@
 
 #include "MacIOSurfaceTextureHostOGL.h"
 #include "mozilla/gfx/MacIOSurface.h"
+#include "mozilla/webrender/WebRenderAPI.h"
 #include "GLContextCGL.h"
 
 namespace mozilla {
@@ -35,7 +36,13 @@ MacIOSurfaceTextureHostOGL::CreateTextureSourceForPlane(size_t aPlane)
   gl->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
   gl->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
 
-  mSurface->CGLTexImageIOSurface2D(gl::GLContextCGL::Cast(gl)->GetCGLContext(), aPlane);
+  gfx::SurfaceFormat readFormat = gfx::SurfaceFormat::UNKNOWN;
+  mSurface->CGLTexImageIOSurface2D(gl,
+                                   gl::GLContextCGL::Cast(gl)->GetCGLContext(),
+                                   aPlane,
+                                   &readFormat);
+  // With compositorOGL, we doesn't support the yuv interleaving format yet.
+  MOZ_ASSERT(readFormat != gfx::SurfaceFormat::YUV422);
 
   return new GLTextureSource(mProvider, textureHandle, LOCAL_GL_TEXTURE_RECTANGLE_ARB,
                              gfx::IntSize(mSurface->GetDevicePixelWidth(aPlane),
@@ -107,70 +114,64 @@ MacIOSurfaceTextureHostOGL::gl() const
   return mProvider ? mProvider->GetGLContext() : nullptr;
 }
 
-MacIOSurfaceTextureSourceOGL::MacIOSurfaceTextureSourceOGL(
-                                CompositorOGL* aCompositor,
-                                MacIOSurface* aSurface)
-  : mCompositor(aCompositor)
-  , mSurface(aSurface)
-{
-  MOZ_ASSERT(aCompositor);
-  MOZ_COUNT_CTOR(MacIOSurfaceTextureSourceOGL);
-}
-
-MacIOSurfaceTextureSourceOGL::~MacIOSurfaceTextureSourceOGL()
-{
-  MOZ_COUNT_DTOR(MacIOSurfaceTextureSourceOGL);
-}
-
-gfx::IntSize
-MacIOSurfaceTextureSourceOGL::GetSize() const
-{
-  return gfx::IntSize(mSurface->GetDevicePixelWidth(),
-                      mSurface->GetDevicePixelHeight());
-}
-
-gfx::SurfaceFormat
-MacIOSurfaceTextureSourceOGL::GetFormat() const
-{
-  return mSurface->HasAlpha() ? gfx::SurfaceFormat::R8G8B8A8
-                              : gfx::SurfaceFormat::R8G8B8X8;
-}
-
 void
-MacIOSurfaceTextureSourceOGL::BindTexture(GLenum aTextureUnit,
-                                          gfx::SamplingFilter aSamplingFilter)
+MacIOSurfaceTextureHostOGL::AddWRImage(wr::WebRenderAPI* aAPI,
+                                       Range<const wr::ImageKey>& aImageKeys,
+                                       const wr::ExternalImageId& aExtID)
 {
-  gl::GLContext* gl = this->gl();
-  if (!gl || !gl->MakeCurrent()) {
-    NS_WARNING("Trying to bind a texture without a working GLContext");
-    return;
+  MOZ_ASSERT(mSurface);
+
+  switch (GetFormat()) {
+    case gfx::SurfaceFormat::R8G8B8X8:
+    case gfx::SurfaceFormat::R8G8B8A8: {
+      MOZ_ASSERT(aImageKeys.length() == 1);
+      MOZ_ASSERT(mSurface->GetPlaneCount() == 0);
+      wr::ImageDescriptor descriptor(GetSize(), GetFormat());
+      aAPI->AddExternalImage(aImageKeys[0],
+                             descriptor,
+                             aExtID,
+                             WrExternalImageBufferType::TextureRectHandle,
+                             0);
+      break;
+    }
+    case gfx::SurfaceFormat::YUV422: {
+      // This is the special buffer format. The buffer contents could be a
+      // converted RGB interleaving data or a YCbCr interleaving data depending
+      // on the different platform setting. (e.g. It will be RGB at OpenGL 2.1
+      // and YCbCr at OpenGL 3.1)
+      MOZ_ASSERT(aImageKeys.length() == 1);
+      MOZ_ASSERT(mSurface->GetPlaneCount() == 0);
+      wr::ImageDescriptor descriptor(GetSize(), gfx::SurfaceFormat::R8G8B8X8);
+      aAPI->AddExternalImage(aImageKeys[0],
+                             descriptor,
+                             aExtID,
+                             WrExternalImageBufferType::TextureRectHandle,
+                             0);
+      break;
+    }
+    case gfx::SurfaceFormat::NV12: {
+      MOZ_ASSERT(aImageKeys.length() == 2);
+      MOZ_ASSERT(mSurface->GetPlaneCount() == 2);
+      wr::ImageDescriptor descriptor0(gfx::IntSize(mSurface->GetDevicePixelWidth(0), mSurface->GetDevicePixelHeight(0)),
+                                      gfx::SurfaceFormat::A8);
+      wr::ImageDescriptor descriptor1(gfx::IntSize(mSurface->GetDevicePixelWidth(1), mSurface->GetDevicePixelHeight(1)),
+                                      gfx::SurfaceFormat::R8G8);
+      aAPI->AddExternalImage(aImageKeys[0],
+                             descriptor0,
+                             aExtID,
+                             WrExternalImageBufferType::TextureRectHandle,
+                             0);
+      aAPI->AddExternalImage(aImageKeys[1],
+                             descriptor1,
+                             aExtID,
+                             WrExternalImageBufferType::TextureRectHandle,
+                             1);
+      break;
+    }
+    default: {
+      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    }
   }
-  GLuint tex = mCompositor->GetTemporaryTexture(GetTextureTarget(), aTextureUnit);
-
-  gl->fActiveTexture(aTextureUnit);
-  gl->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, tex);
-  mSurface->CGLTexImageIOSurface2D(gl::GLContextCGL::Cast(gl)->GetCGLContext());
-  ApplySamplingFilterToBoundTexture(gl, aSamplingFilter, LOCAL_GL_TEXTURE_RECTANGLE_ARB);
-}
-
-void
-MacIOSurfaceTextureSourceOGL::SetTextureSourceProvider(TextureSourceProvider* aProvider)
-{
-  CompositorOGL* ogl = nullptr;
-  if (Compositor* compositor = aProvider->AsCompositor()) {
-    ogl = compositor->AsCompositorOGL();
-  }
-
-  mCompositor = ogl;
-  if (mCompositor && mNextSibling) {
-    mNextSibling->SetTextureSourceProvider(aProvider);
-  }
-}
-
-gl::GLContext*
-MacIOSurfaceTextureSourceOGL::gl() const
-{
-  return mCompositor ? mCompositor->gl() : nullptr;
 }
 
 } // namespace layers

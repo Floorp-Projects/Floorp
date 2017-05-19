@@ -162,7 +162,9 @@ RectTextureImage::BindIOSurfaceToTexture(gl::GLContext* aGL)
                         LOCAL_GL_TEXTURE_WRAP_S,
                         LOCAL_GL_CLAMP_TO_EDGE);
 
-    mIOSurface->CGLTexImageIOSurface2D(gl::GLContextCGL::Cast(aGL)->GetCGLContext());
+    mIOSurface->CGLTexImageIOSurface2D(aGL,
+                                       gl::GLContextCGL::Cast(aGL)->GetCGLContext(),
+                                       0);
     mGLContext = aGL;
   }
 }

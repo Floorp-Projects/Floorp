@@ -17,10 +17,10 @@ use std::env;
 use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
-use webrender_traits::{ColorF, Epoch, GlyphInstance};
+use webrender_traits::{ClipRegionToken, ColorF, DisplayListBuilder, Epoch, GlyphInstance};
 use webrender_traits::{DeviceIntPoint, DeviceUintSize, LayoutPoint, LayoutRect, LayoutSize};
 use webrender_traits::{ImageData, ImageDescriptor, ImageFormat};
-use webrender_traits::{PipelineId, TransformStyle, BoxShadowClipMode};
+use webrender_traits::{PipelineId, RenderApi, TransformStyle, BoxShadowClipMode};
 
 #[derive(Debug)]
 enum Gesture {
@@ -191,6 +191,26 @@ impl webrender_traits::RenderNotifier for Notifier {
     }
 }
 
+fn push_sub_clip(api: &RenderApi, builder: &mut DisplayListBuilder, bounds: &LayoutRect)
+                 -> ClipRegionToken {
+    let mask_image = api.generate_image_key();
+    api.add_image(mask_image,
+                  ImageDescriptor::new(2, 2, ImageFormat::A8, true),
+                  ImageData::new(vec![0, 80, 180, 255]),
+                  None);
+    let mask = webrender_traits::ImageMask {
+        image: mask_image,
+        rect: LayoutRect::new(LayoutPoint::new(75.0, 75.0), LayoutSize::new(100.0, 100.0)),
+        repeat: false,
+    };
+    let complex = webrender_traits::ComplexClipRegion::new(
+        LayoutRect::new(LayoutPoint::new(50.0, 50.0), LayoutSize::new(100.0, 100.0)),
+        webrender_traits::BorderRadius::uniform(20.0));
+
+    builder.push_clip_region(bounds, vec![complex], Some(mask))
+}
+
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     let res_path = if args.len() > 1 {
@@ -242,9 +262,10 @@ fn main() {
     let root_background_color = ColorF::new(0.3, 0.0, 0.0, 1.0);
 
     let pipeline_id = PipelineId(0, 0);
-    let mut builder = webrender_traits::DisplayListBuilder::new(pipeline_id);
+    let layout_size = LayoutSize::new(width as f32, height as f32);
+    let mut builder = webrender_traits::DisplayListBuilder::new(pipeline_id, layout_size);
 
-    let bounds = LayoutRect::new(LayoutPoint::zero(), LayoutSize::new(width as f32, height as f32));
+    let bounds = LayoutRect::new(LayoutPoint::zero(), layout_size);
     builder.push_stacking_context(webrender_traits::ScrollPolicy::Scrollable,
                                   bounds,
                                   None,
@@ -252,31 +273,15 @@ fn main() {
                                   None,
                                   webrender_traits::MixBlendMode::Normal,
                                   Vec::new());
-    let sub_clip = {
-        let mask_image = api.generate_image_key();
-        api.add_image(
-            mask_image,
-            ImageDescriptor::new(2, 2, ImageFormat::A8, true),
-            ImageData::new(vec![0, 80, 180, 255]),
-            None,
-        );
-        let mask = webrender_traits::ImageMask {
-            image: mask_image,
-            rect: LayoutRect::new(LayoutPoint::new(75.0, 75.0), LayoutSize::new(100.0, 100.0)),
-            repeat: false,
-        };
-        let complex = webrender_traits::ComplexClipRegion::new(
-            LayoutRect::new(LayoutPoint::new(50.0, 50.0), LayoutSize::new(100.0, 100.0)),
-            webrender_traits::BorderRadius::uniform(20.0));
 
-        builder.new_clip_region(&bounds, vec![complex], Some(mask))
-    };
-
+    let clip = push_sub_clip(&api, &mut builder, &bounds);
     builder.push_rect(LayoutRect::new(LayoutPoint::new(100.0, 100.0), LayoutSize::new(100.0, 100.0)),
-                      sub_clip,
+                      clip,
                       ColorF::new(0.0, 1.0, 0.0, 1.0));
+
+    let clip = push_sub_clip(&api, &mut builder, &bounds);
     builder.push_rect(LayoutRect::new(LayoutPoint::new(250.0, 100.0), LayoutSize::new(100.0, 100.0)),
-                      sub_clip,
+                      clip,
                       ColorF::new(0.0, 1.0, 0.0, 1.0));
     let border_side = webrender_traits::BorderSide {
         color: ColorF::new(0.0, 0.0, 1.0, 1.0),
@@ -295,8 +300,10 @@ fn main() {
         left: border_side,
         radius: webrender_traits::BorderRadius::uniform(20.0),
     });
+
+    let clip = push_sub_clip(&api, &mut builder, &bounds);
     builder.push_border(LayoutRect::new(LayoutPoint::new(100.0, 100.0), LayoutSize::new(100.0, 100.0)),
-                        sub_clip,
+                        clip,
                         border_widths,
                         border_details);
 
@@ -359,13 +366,14 @@ fn main() {
             },
         ];
 
+        let clip = builder.push_clip_region(&bounds, Vec::new(), None);
         builder.push_text(text_bounds,
-                          webrender_traits::ClipRegion::simple(&bounds),
+                          clip,
                           &glyphs,
                           font_key,
                           ColorF::new(1.0, 1.0, 0.0, 1.0),
                           Au::from_px(32),
-                          Au::from_px(0),
+                          0.0,
                           None);
     }
 
@@ -379,7 +387,7 @@ fn main() {
         let spread_radius = 0.0;
         let simple_border_radius = 8.0;
         let box_shadow_type = BoxShadowClipMode::Inset;
-        let full_screen_clip = builder.new_clip_region(&bounds, Vec::new(), None);
+        let full_screen_clip = builder.push_clip_region(&bounds, Vec::new(), None);
 
         builder.push_box_shadow(rect,
                                 full_screen_clip,

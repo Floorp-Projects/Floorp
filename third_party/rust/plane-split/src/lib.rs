@@ -28,6 +28,19 @@ use num_traits::{Float, One, Zero};
 pub use self::bsp::BspSplitter;
 pub use self::naive::NaiveSplitter;
 
+
+fn is_zero<T>(value: T) -> bool where
+    T: Copy + Zero + ApproxEq<T> + ops::Mul<T, Output=T> {
+    //HACK: this is rough, but the original Epsilon is too strict
+    (value * value).approx_eq(&T::zero())
+}
+
+fn is_zero_vec<T, U>(vec: TypedPoint3D<T, U>) -> bool where
+   T: Copy + Zero + ApproxEq<T> +
+      ops::Add<T, Output=T> + ops::Sub<T, Output=T> + ops::Mul<T, Output=T> {
+    vec.dot(vec).approx_eq(&T::zero())
+}
+
 /// A generic line.
 #[derive(Debug)]
 pub struct Line<T, U> {
@@ -37,21 +50,19 @@ pub struct Line<T, U> {
     pub dir: TypedPoint3D<T, U>,
 }
 
-impl<
-    T: Copy + One + Zero + PartialEq + ApproxEq<T> +
-       ops::Add<T, Output=T> + ops::Sub<T, Output=T> + ops::Mul<T, Output=T>,
-    U,
-> Line<T, U> {
+impl<T, U> Line<T, U> where
+    T: Copy + One + Zero + ApproxEq<T> +
+       ops::Add<T, Output=T> + ops::Sub<T, Output=T> + ops::Mul<T, Output=T>
+{
     /// Check if the line has consistent parameters.
     pub fn is_valid(&self) -> bool {
-        self.dir.dot(self.dir).approx_eq(&T::one())
+        is_zero(self.dir.dot(self.dir) - T::one())
     }
     /// Check if two lines match each other.
     pub fn matches(&self, other: &Self) -> bool {
         let diff = self.origin - other.origin;
-        let zero = TypedPoint3D::zero();
-        self.dir.cross(other.dir).approx_eq(&zero) &&
-        self.dir.cross(diff).approx_eq(&zero)
+        is_zero_vec(self.dir.cross(other.dir)) &&
+        is_zero_vec(self.dir.cross(diff))
     }
 }
 
@@ -91,12 +102,15 @@ pub struct LineProjection<T> {
     pub markers: [T; 4],
 }
 
-impl<T: Copy + PartialOrd + ops::Sub<T, Output=T> + ops::Add<T, Output=T>> LineProjection<T> {
+impl<T> LineProjection<T> where
+    T : Copy + PartialOrd + ops::Sub<T, Output=T> + ops::Add<T, Output=T>
+{
     /// Get the min/max of the line projection markers.
     pub fn get_bounds(&self) -> (T, T) {
         let (mut a, mut b, mut c, mut d) = (self.markers[0], self.markers[1], self.markers[2], self.markers[3]);
         // bitonic sort of 4 elements
         // we could not just use `min/max` since they require `Ord` bound
+        //TODO: make it nicer
         if a > c {
             mem::swap(&mut a, &mut c);
         }
@@ -156,12 +170,13 @@ impl<T> Intersection<T> {
     }
 }
 
-impl<T: Copy + fmt::Debug + PartialOrd + ApproxEq<T> +
+impl<T, U> Polygon<T, U> where
+    T: Copy + fmt::Debug + ApproxEq<T> +
         ops::Sub<T, Output=T> + ops::Add<T, Output=T> +
         ops::Mul<T, Output=T> + ops::Div<T, Output=T> +
         Zero + One + Float,
-     U> Polygon<T, U> {
-
+    U: fmt::Debug,
+{
     /// Construct a polygon from a transformed rectangle.
     pub fn from_transformed_rect<V>(rect: TypedRect<T, V>,
                                     transform: TypedMatrix4D<T, V, U>,
@@ -237,10 +252,9 @@ impl<T: Copy + fmt::Debug + PartialOrd + ApproxEq<T> +
 
     /// Check if all the points are indeed placed on the plane defined by
     /// the normal and offset, and the winding order is consistent.
-    /// The epsion is specified for the plane distance calculations.
-    pub fn is_valid_eps(&self, eps: T) -> bool {
+    pub fn is_valid(&self) -> bool {
         let is_planar = self.points.iter()
-                                   .all(|p| self.signed_distance_to(p).approx_eq_eps(&T::zero(), &eps));
+                                   .all(|p| is_zero(self.signed_distance_to(p)));
         let edges = [self.points[1] - self.points[0],
                      self.points[2] - self.points[1],
                      self.points[3] - self.points[2],
@@ -250,11 +264,6 @@ impl<T: Copy + fmt::Debug + PartialOrd + ApproxEq<T> +
                               .zip(edges[1..].iter())
                               .all(|(a, &b)| a.cross(b).dot(anchor) >= T::zero());
         is_planar && is_winding
-    }
-
-    /// Check validity. Similar to `is_valid_eps` but with default epsilon.
-    pub fn is_valid(&self) -> bool {
-        self.is_valid_eps(T::approx_epsilon())
     }
 
     /// Check if a convex shape defined by a set of points is completely
@@ -289,17 +298,20 @@ impl<T: Copy + fmt::Debug + PartialOrd + ApproxEq<T> +
     pub fn intersect(&self, other: &Self) -> Intersection<Line<T, U>> {
         if self.are_outside(&other.points) || other.are_outside(&self.points) {
             // one is completely outside the other
+            debug!("\t\toutside");
             return Intersection::Outside
         }
         let cross_dir = self.normal.cross(other.normal);
         if cross_dir.dot(cross_dir) < T::approx_epsilon() {
             // polygons are co-planar
+            debug!("\t\tcoplanar");
             return Intersection::Coplanar
         }
         let self_proj = self.project_on(&cross_dir);
         let other_proj = other.project_on(&cross_dir);
         if !self_proj.intersect(&other_proj) {
             // projections on the line don't intersect
+            debug!("\t\tprojection outside");
             return Intersection::Outside
         }
         // compute any point on the intersection between planes
@@ -321,9 +333,12 @@ impl<T: Copy + fmt::Debug + PartialOrd + ApproxEq<T> +
     /// doesn't belong to the polygon plane.
     pub fn split(&mut self, line: &Line<T, U>)
                  -> (Option<Polygon<T, U>>, Option<Polygon<T, U>>) {
+        debug!("\tSplitting");
         // check if the cut is within the polygon plane first
-        if !self.normal.dot(line.dir).approx_eq(&T::zero()) ||
-           !self.signed_distance_to(&line.origin).approx_eq(&T::zero()) {
+        if !is_zero(self.normal.dot(line.dir)) ||
+           !is_zero(self.signed_distance_to(&line.origin)) {
+            debug!("\t\tDoes not belong to the plane, normal dot={:?}, origin distance={:?}",
+                self.normal.dot(line.dir), self.signed_distance_to(&line.origin));
             return (None, None)
         }
         // compute the intersection points for each edge
@@ -357,7 +372,9 @@ impl<T: Copy + fmt::Debug + PartialOrd + ApproxEq<T> +
             Some(pos) => first + 1 + pos,
             None => return (None, None),
         };
+        debug!("\t\tReached complex case [{}, {}]", first, second);
         //TODO: can be optimized for when the polygon has a redundant 4th vertex
+        //TODO: can be simplified greatly if only working with triangles
         let (a, b) = (cuts[first].unwrap(), cuts[second].unwrap());
         match second-first {
             2 => {
@@ -415,7 +432,7 @@ impl<T: Copy + fmt::Debug + PartialOrd + ApproxEq<T> +
 }
 
 
-/// Generic plane splitter interface.
+/// Generic plane splitter interface
 pub trait Splitter<T, U> {
     /// Reset the splitter results.
     fn reset(&mut self);

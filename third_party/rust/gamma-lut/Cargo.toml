@@ -1,19 +1,20 @@
 [package]
 name = "gamma-lut"
-version = "0.1.6"
-authors = ["Mason Chang <mchang@mozilla.com>"]
+version = "0.2.0"
+authors = ["Mason Chang <mchang@mozilla.com>",
+           "Dzmitry Malyshau <dmalyshau@mozilla.com>"]
 description = "Rust port of Skia gamma correcting tables"
 keywords = ["gamma"]
-license_file = "LICENSE"
+license = "MPL-2.0"
 repository = "https://github.com/changm/gamma-lut-rs"
+documentation = "https://docs.rs/gamma-lut"
 
 [lib]
 name = "gamma_lut"
 path = "src/lib.rs"
 
-[[bin]]
-name = "gamma_lut_bin"
-path = "src/main.rs"
+[[example]]
+name = "basic"
 
 [dependencies]
-lazy_static = "0.2"
+log = "0.3"

@@ -12,7 +12,7 @@ Clips are defined using the ClipRegion in both cases.
 ```rust
 pub struct ClipRegion {
     pub main: LayoutRect,
-    pub complex: ItemRange,
+    pub complex: ItemRange<ComplexClip>,
     pub image_mask: Option<ImageMask>,
 }
 ```
