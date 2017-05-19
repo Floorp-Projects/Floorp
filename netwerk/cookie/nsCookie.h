@@ -100,6 +100,7 @@ class nsCookie : public nsICookie2
     inline bool IsDomain()                const { return *mHost == '.'; }
     inline bool IsSecure()                const { return mIsSecure; }
     inline bool IsHttpOnly()              const { return mIsHttpOnly; }
+    inline const OriginAttributes& OriginAttributesRef() const { return mOriginAttributes; }
 
     // setters
     inline void SetExpiry(int64_t aExpiry)        { mExpiry = aExpiry; }
