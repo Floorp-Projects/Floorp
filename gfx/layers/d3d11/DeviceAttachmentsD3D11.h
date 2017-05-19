@@ -13,10 +13,10 @@
 #include <d3d11.h>
 #include <dxgi1_2.h>
 
-struct ShaderBytes;
-
 namespace mozilla {
 namespace layers {
+
+struct ShaderBytes;
 
 class DeviceAttachmentsD3D11
 {
